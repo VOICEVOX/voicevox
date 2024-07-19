@@ -101,31 +101,17 @@
           height: `${Math.abs(cursorY - rectSelectStartY)}px`,
         }"
       ></div>
-      <!-- 他のトラックのSequencerPhraseIndicatorにまとめて透明度をかけるためのコンテナ -->
-      <div class="sequencer-phrase-indicator-container-other-track">
-        <SequencerPhraseIndicator
-          v-for="phraseInfo in phraseInfosInOtherTracks"
-          :key="phraseInfo.key"
-          :phraseKey="phraseInfo.key"
-          class="sequencer-phrase-indicator"
-          :style="{
-            width: `${phraseInfo.width}px`,
-            transform: `translateX(${phraseInfo.x - scrollX}px)`,
-          }"
-        />
-      </div>
-      <div>
-        <SequencerPhraseIndicator
-          v-for="phraseInfo in phraseInfosInSelectedTrack"
-          :key="phraseInfo.key"
-          :phraseKey="phraseInfo.key"
-          class="sequencer-phrase-indicator"
-          :style="{
-            width: `${phraseInfo.width}px`,
-            transform: `translateX(${phraseInfo.x - scrollX}px)`,
-          }"
-        />
-      </div>
+      <SequencerPhraseIndicator
+        v-for="phraseInfo in phraseInfos"
+        :key="phraseInfo.key"
+        :phraseKey="phraseInfo.key"
+        :isInSelectedTrack="phraseInfo.trackId === selectedTrackId"
+        class="sequencer-phrase-indicator"
+        :style="{
+          width: `${phraseInfo.width}px`,
+          transform: `translateX(${phraseInfo.x - scrollX}px)`,
+        }"
+      />
       <div
         class="sequencer-playhead"
         data-testid="sequencer-playhead"
@@ -1584,10 +1570,6 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   left: 0;
   height: 6px;
   border-radius: 2px;
-}
-
-.sequencer-phrase-indicator-container-other-track {
-  opacity: 0.5;
 }
 
 .sequencer-playhead {
