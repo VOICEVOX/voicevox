@@ -31,8 +31,8 @@ onMounted(async () => {
 </script>
 
 <style scoped lang="scss">
-@use "@/styles/variables" as vars;
-@use "@/styles/colors-v2" as colors;
+@use "@/styles/v2/variables" as vars;
+@use "@/styles/v2/colors" as colors;
 
 .container {
   // TODO: 親コンポーネントからheightを取得できないため一時的にcalcを使用、HelpDialogの構造を再設計後100%に変更する

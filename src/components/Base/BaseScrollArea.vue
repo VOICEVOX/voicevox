@@ -26,8 +26,8 @@ import {
 </script>
 
 <style scoped lang="scss">
-@use "@/styles/variables" as vars;
-@use "@/styles/colors-v2" as colors;
+@use "@/styles/v2/variables" as vars;
+@use "@/styles/v2/colors" as colors;
 
 .ScrollAreaRoot {
   width: 100%;

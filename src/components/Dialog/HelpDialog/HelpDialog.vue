@@ -284,8 +284,8 @@ const openLogDirectory = window.backend.openLogDirectory;
 </script>
 
 <style scoped lang="scss">
-@use "@/styles/colors-v2" as colors;
-@use "@/styles/variables" as vars;
+@use "@/styles/v2/colors" as colors;
+@use "@/styles/v2/variables" as vars;
 
 .grid {
   display: grid;
