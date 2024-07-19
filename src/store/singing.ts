@@ -270,8 +270,7 @@ const initialTrackId = TrackId(crypto.randomUUID());
 
 export const singingStorePlugin: WatchStoreStatePlugin = (store) => {
   // tracksの変更とtrackChannelStripsを同期する。
-  // NOTE: ChannelStripをVuex内に入れると変更された扱いで警告が出るため、
-  // Vuex内に入れない。
+  // NOTE: immerの差分検知はChannelStripだと動かないので、tracksの変更を監視して同期する。
   watchSyncEffect(async () => {
     if (!audioContext || !globalChannelStrip) {
       return;
