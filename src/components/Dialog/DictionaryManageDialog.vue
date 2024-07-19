@@ -123,17 +123,16 @@
                 class="word-input"
                 dense
                 :disable="uiLocked"
-                @update:modelValue="setSurfaceOrYomiText"
-                @select="handleInteraction('surface')"
-                @focus="handleInteraction('surface')"
+                @update:modelValue="setSurfaceText"
+                @focus="surfaceHandleFocus"
                 @blur="setSurface(surface)"
-                @paste="pasteOnDictionary"
+                @paste="surfacePaste"
                 @keydown.enter="yomiFocus"
               >
                 <ContextMenu
-                  ref="contextMenu"
-                  :header="contextMenuHeader"
-                  :menudata="contextMenudata"
+                  ref="surfaceContextMenu"
+                  :header="surfaceContextMenuHeader"
+                  :menudata="surfaceContextMenudata"
                 />
               </QInput>
             </div>
@@ -146,20 +145,19 @@
                 dense
                 :error="!isOnlyHiraOrKana"
                 :disable="uiLocked"
-                @update:modelValue="setSurfaceOrYomiText"
-                @select="handleInteraction('yomi')"
-                @focus="handleInteraction('yomi')"
+                @update:modelValue="setYomiText"
+                @focus="yomiHandleFocus"
                 @blur="setYomi(yomi)"
-                @paste="pasteOnDictionary"
+                @paste="yomiPaste"
                 @keydown.enter="setYomiWhenEnter"
               >
                 <template #error>
                   読みに使える文字はひらがなとカタカナのみです。
                 </template>
                 <ContextMenu
-                  ref="contextMenu"
-                  :header="contextMenuHeader"
-                  :menudata="contextMenudata"
+                  ref="yomiContextMenu"
+                  :header="yomiContextMenuHeader"
+                  :menudata="yomiContextMenudata"
                 />
               </QInput>
             </div>
@@ -282,11 +280,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import { QInput } from "quasar";
 import AudioAccent from "@/components/Talk/AudioAccent.vue";
-import { MenuItemButton, MenuItemSeparator } from "@/components/Menu/type";
 import ContextMenu from "@/components/Menu/ContextMenu.vue";
+import { useRightClickContextMenu } from "@/composables/useRightClickContextMenu";
 import { useStore } from "@/store";
 import type { FetchAudioResult } from "@/store/type";
 import { AccentPhrase, UserDictWord } from "@/openapi";
@@ -295,7 +293,6 @@ import {
   convertLongVowel,
   createKanaRegex,
 } from "@/domain/japanese";
-import { SelectionHelperForQInput } from "@/helpers/SelectionHelperForQInput";
 
 const defaultDictPriority = 5;
 
@@ -689,137 +686,25 @@ const toDialogClosedState = () => {
   dictionaryManageDialogOpenedComputed.value = false;
 };
 
-// テキスト編集エリアの右クリック
-// 参考実装: https://github.com/VOICEVOX/voicevox/pull/1374/files#diff-444f263f72d4db11fe82c672d5c232eb4c29d29dbc1ffd20e279d586b1b2c180R371-R379
-const contextMenu = ref<InstanceType<typeof ContextMenu>>();
-const contextMenuHeader = ref<string | undefined>("");
-const contextMenudata = ref<
-  [
-    MenuItemButton,
-    MenuItemButton,
-    MenuItemButton,
-    MenuItemSeparator,
-    MenuItemButton,
-  ]
->([
-  {
-    type: "button",
-    label: "切り取り",
-    onClick: async () => {
-      contextMenu.value?.hide();
-      if (inputElement.value === "surface") {
-        if (surfaceInputSelection.isEmpty) return;
+const inputElementRef = ref("");
 
-        const text = surfaceInputSelection.getAsString();
-        const start = surfaceInputSelection.selectionStart;
-        setSurfaceOrYomiText(surfaceInputSelection.getReplacedStringTo(""));
-        await nextTick();
-        navigator.clipboard.writeText(text);
-        surfaceInputSelection.setCursorPosition(start);
-      } else if (inputElement.value === "yomi") {
-        if (yomiInputSelection.isEmpty) return;
+const {
+  handleFocus: surfaceHandleFocus,
+  contextMenu: surfaceContextMenu,
+  contextMenuHeader: surfaceContextMenuHeader,
+  contextMenudata: surfaceContextMenudata,
+  setSurfaceOrYomiText: setSurfaceText,
+  pasteOnDic: surfacePaste,
+} = useRightClickContextMenu(surfaceInput, inputElementRef);
 
-        const text = yomiInputSelection.getAsString();
-        const start = yomiInputSelection.selectionStart;
-        setSurfaceOrYomiText(yomiInputSelection.getReplacedStringTo(""));
-        await nextTick();
-        navigator.clipboard.writeText(text);
-        yomiInputSelection.setCursorPosition(start);
-      }
-    },
-    disableWhenUiLocked: false,
-  },
-  {
-    type: "button",
-    label: "コピー",
-    onClick: () => {
-      contextMenu.value?.hide();
-      if (inputElement.value === "surface") {
-        if (surfaceInputSelection.isEmpty) return;
-
-        navigator.clipboard.writeText(surfaceInputSelection.getAsString());
-      } else if (inputElement.value === "yomi") {
-        if (yomiInputSelection.isEmpty) return;
-
-        navigator.clipboard.writeText(yomiInputSelection.getAsString());
-      }
-    },
-    disableWhenUiLocked: false,
-  },
-  {
-    type: "button",
-    label: "貼り付け",
-    onClick: async () => {
-      contextMenu.value?.hide();
-      paste();
-    },
-    disableWhenUiLocked: false,
-  },
-  { type: "separator" },
-  {
-    type: "button",
-    label: "全選択",
-    onClick: async () => {
-      contextMenu.value?.hide();
-      if (inputElement.value === "surface") {
-        surfaceInput.value?.select();
-      } else if (inputElement.value === "yomi") {
-        yomiInput.value?.select();
-      }
-    },
-    disableWhenUiLocked: false,
-  },
-]);
-
-const surfaceInputSelection = new SelectionHelperForQInput(surfaceInput);
-const yomiInputSelection = new SelectionHelperForQInput(yomiInput);
-
-/**
- * surface と yomi のどちらを選択しているかを取得する。
- * inputElement.value をもとに、単語か読み、どちらの <QInput> であるかを区別し、
- * それに対する切り取りやコピー、貼り付けの処理を行う
- */
-const inputElement = ref("");
-const handleInteraction = (inputName: string) => {
-  inputElement.value = inputName;
-};
-
-const setSurfaceOrYomiText = (text: string | number | null) => {
-  if (typeof text !== "string") throw new Error("typeof text !== 'string'");
-  if (inputElement.value === "surface") {
-    surface.value = text;
-  } else if (inputElement.value === "yomi") {
-    yomi.value = text;
-  }
-};
-
-const pasteOnDictionary = async (event: ClipboardEvent) => {
-  event.preventDefault();
-  paste({ text: event.clipboardData?.getData("text/plain") });
-};
-
-const paste = async (options?: { text?: string }) => {
-  const text = options ? options.text : await navigator.clipboard.readText();
-  if (text == undefined) return;
-
-  if (inputElement.value === "surface") {
-    const beforeLength = surface.value.length;
-    const end = surfaceInputSelection.selectionEnd ?? 0;
-    setSurfaceOrYomiText(surfaceInputSelection.getReplacedStringTo(text));
-    await nextTick();
-    surfaceInputSelection.setCursorPosition(
-      end + surface.value.length - beforeLength,
-    );
-  } else if (inputElement.value === "yomi") {
-    const beforeLength = yomi.value.length;
-    const end = yomiInputSelection.selectionEnd ?? 0;
-    setSurfaceOrYomiText(yomiInputSelection.getReplacedStringTo(text));
-    await nextTick();
-    yomiInputSelection.setCursorPosition(
-      end + yomi.value.length - beforeLength,
-    );
-  }
-};
+const {
+  handleFocus: yomiHandleFocus,
+  contextMenu: yomiContextMenu,
+  contextMenuHeader: yomiContextMenuHeader,
+  contextMenudata: yomiContextMenudata,
+  setSurfaceOrYomiText: setYomiText,
+  pasteOnDic: yomiPaste,
+} = useRightClickContextMenu(yomiInput, inputElementRef);
 </script>
 
 <style lang="scss" scoped>
