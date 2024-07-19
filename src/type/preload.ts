@@ -603,6 +603,7 @@ export interface CustomPaletteColor {
   lightTone: number;
   darkTone: number;
   blend: boolean;
+  contrastVs: Record<string, number>;
 }
 
 // 定義済みカスタムカラー
@@ -630,7 +631,7 @@ export interface ColorScheme {
   systemColors: Record<string, string>;
   paletteTones: Record<string, Record<number, string>>;
   customPaletteColors: Record<string, string>;
-  customDefinedColors: CustomColorGroup[];
+  customDefinedColors: Record<string, string>;
   config: ColorSchemeConfig;
 }
 

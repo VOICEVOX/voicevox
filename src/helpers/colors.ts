@@ -1,6 +1,8 @@
 import {
+  hexFromArgb,
   argbFromHex,
   Hct,
+  Contrast,
   DynamicScheme,
   SchemeContent,
   SchemeTonalSpot,
@@ -13,8 +15,6 @@ import {
   SchemeFruitSalad,
   TonalPalette,
   MaterialDynamicColors,
-  CustomColor,
-  CustomColorGroup,
   customColor,
 } from "@material/material-color-utilities";
 
@@ -24,7 +24,7 @@ import {
   ColorSchemeCorePalettes,
   ColorSchemeAdjustment,
   CustomPaletteColor,
-  CustomDefinedColor,
+  //CustomDefinedColor,
 } from "@/type/preload";
 
 const SCHEME_CONSTRUCTORS = {
@@ -50,7 +50,6 @@ const PALETTE_KEYS = [
 
 const TONES = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 99, 100] as const;
 
-// ARGBからRGBAに変換
 export const rgbaFromArgb = (argb: number, alpha: number = 1): string => {
   const r = (argb >> 16) & 255;
   const g = (argb >> 8) & 255;
@@ -58,13 +57,11 @@ export const rgbaFromArgb = (argb: number, alpha: number = 1): string => {
   return `rgba(${r}, ${g}, ${b}, ${alpha.toFixed(2)})`;
 };
 
-// RGBAから数値配列に変換
 export const arrayFromRgba = (rgba: string): number[] => {
   const match = rgba.match(/^rgba\(([0-9]+), ([0-9]+), ([0-9]+), ([0-9.]+)\)$/);
   return match ? match.slice(1, 5).map(Number) : [];
 };
 
-// パレット事前調整
 const createAdjustedPalette = (
   palette: TonalPalette,
   adjustment: ColorSchemeAdjustment,
@@ -82,7 +79,6 @@ const createAdjustedPalette = (
   return TonalPalette.fromHueAndChroma(adjustedHct.hue, adjustedHct.chroma);
 };
 
-// M3のダイナミックスキーム生成
 const generateDynamicScheme = (config: ColorSchemeConfig): DynamicScheme => {
   const {
     sourceColor,
@@ -123,14 +119,13 @@ const generateDynamicScheme = (config: ColorSchemeConfig): DynamicScheme => {
   return scheme;
 };
 
-// システムカラー生成
 const generateSystemColors = (
   scheme: DynamicScheme,
 ): Record<string, string> => {
   return Object.entries(MaterialDynamicColors).reduce(
     (acc, [name, color]) => {
       if (typeof color === "object" && "getArgb" in color) {
-        acc[name] = rgbaFromArgb(color.getArgb(scheme));
+        acc[name] = hexFromArgb(color.getArgb(scheme));
       }
       return acc;
     },
@@ -138,7 +133,6 @@ const generateSystemColors = (
   );
 };
 
-// パレットの色域生成
 const generatePaletteTones = (
   scheme: DynamicScheme,
 ): Record<ColorSchemeCorePalettes, Record<number, string>> => {
@@ -147,7 +141,7 @@ const generatePaletteTones = (
       acc[key] = Object.fromEntries(
         TONES.map((tone) => [
           tone,
-          rgbaFromArgb(
+          hexFromArgb(
             (
               scheme[`${key}Palette` as keyof DynamicScheme] as TonalPalette
             ).tone(tone),
@@ -160,21 +154,17 @@ const generatePaletteTones = (
   );
 };
 
-// カスタムカラーの調整
-// TODO: ContrastやBlendを使う
 const adjustCustomPaletteColors = (
   customColors: CustomPaletteColor[],
   scheme: DynamicScheme,
   isDark: boolean,
 ): Record<string, string> => {
-  // ソート
   const sortedColors = [...customColors].sort((a, b) => {
     const toneA = isDark ? a.darkTone : a.lightTone;
     const toneB = isDark ? b.darkTone : b.lightTone;
     return toneA - toneB;
   });
 
-  // トーンを調整
   const adjustTone = (
     tone: number,
     index: number,
@@ -195,34 +185,13 @@ const adjustCustomPaletteColors = (
       ] as TonalPalette;
       const tone = isDark ? color.darkTone : color.lightTone;
       const adjustedTone = adjustTone(tone, index, scheme.contrastLevel);
-      acc[color.name] = rgbaFromArgb(palette.tone(adjustedTone));
+      acc[color.name] = hexFromArgb(palette.tone(adjustedTone));
       return acc;
     },
     {} as Record<string, string>,
   );
 };
 
-export const generateCustomDefinedColors = (
-  sourceColorHex: string,
-  customDefinedColors: CustomDefinedColor[],
-): CustomColorGroup[] => {
-  const customColorGroups: CustomColorGroup[] = customDefinedColors.map(
-    (customDefinedColor: CustomDefinedColor) => {
-      const customColorValue = {
-        ...customDefinedColor,
-        value: argbFromHex(customDefinedColor.value),
-      };
-      return customColor(
-        argbFromHex(sourceColorHex),
-        customColorValue as CustomColor,
-      );
-    },
-  );
-
-  return customColorGroups;
-};
-
-// カラースキームの生成
 export const generateColorScheme = (config: ColorSchemeConfig): ColorScheme => {
   const scheme = generateDynamicScheme(config);
   const systemColors = generateSystemColors(scheme);
@@ -232,12 +201,16 @@ export const generateColorScheme = (config: ColorSchemeConfig): ColorScheme => {
     scheme,
     config.isDark,
   );
-  const customDefinedColors = generateCustomDefinedColors(
-    config.sourceColor,
-    config.customDefinedColors,
+
+  const customDefinedColors = config.customDefinedColors.reduce(
+    (acc, color) => {
+      acc[color.name] = color.value;
+      return acc;
+    },
+    {} as Record<string, string>,
   );
 
-  return {
+  const colorScheme = {
     scheme,
     systemColors,
     paletteTones,
@@ -245,9 +218,13 @@ export const generateColorScheme = (config: ColorSchemeConfig): ColorScheme => {
     customDefinedColors,
     config,
   };
+
+  const results = evaluateContrastAndGenerateResults(colorScheme, config);
+  printContrastResults(results);
+
+  return colorScheme;
 };
 
-// カラースキームをCSS Variablesに変換
 export const colorSchemeToCssVariables = (
   colorScheme: ColorScheme,
 ): Record<string, string> => {
@@ -284,8 +261,241 @@ export const colorSchemeToCssVariables = (
 
   Object.entries(colorScheme.customDefinedColors).forEach(([name, color]) => {
     const cssName = toKebabCase(name);
-    setColorVar("--md-custom-color-", cssName, rgbaFromArgb(color.value));
+    setColorVar("--md-custom-color-", cssName, color);
   });
 
   return cssVars;
 };
+
+interface ContrastCheckResult {
+  color1: string;
+  color2: string;
+  contrastRatio: number;
+  checkType: string;
+  wcagAANormal: boolean;
+  wcagAALarge: boolean;
+  wcagAAANormal: boolean;
+  wcagAAALarge: boolean;
+  functionalCheck: string;
+  designCheck: string;
+  expectedContrastRatio?: number;
+}
+
+function getContrastRatio(
+  color1: string,
+  color2: string,
+  colors: Record<string, string>,
+): number {
+  const hct1 = Hct.fromInt(argbFromHex(colors[color1]));
+  const hct2 = Hct.fromInt(argbFromHex(colors[color2]));
+  return Contrast.ratioOfTones(hct1.tone, hct2.tone);
+}
+
+function evaluateContrast(
+  contrastRatio: number,
+  checkType: string,
+  color1: string,
+  color2: string,
+  expectedContrastRatio?: number,
+): ContrastCheckResult {
+  const wcagAANormal = contrastRatio >= 4.5;
+  const wcagAALarge = contrastRatio >= 3;
+  const wcagAAANormal = contrastRatio >= 7;
+  const wcagAAALarge = contrastRatio >= 4.5;
+
+  // 機能チェック
+  let functionalCheck = "";
+  // デザイン基準チェック
+  let designCheck = "";
+
+  switch (checkType) {
+    case "text":
+      functionalCheck = wcagAAANormal
+        ? "Pass AAA"
+        : wcagAANormal
+          ? "Pass AA"
+          : "Fail";
+      designCheck = "N/A";
+      break;
+    case "largeText":
+      functionalCheck = wcagAAALarge
+        ? "Pass AAA"
+        : wcagAALarge
+          ? "Pass AA"
+          : "Fail";
+      designCheck = "N/A";
+      break;
+    case "ui":
+      functionalCheck = wcagAALarge ? "Pass" : "Fail";
+      designCheck = contrastRatio >= 3.0 ? "Good" : "Poor";
+      break;
+    case "structure":
+      functionalCheck = contrastRatio >= 1.5 ? "Pass" : "Fail";
+      designCheck = contrastRatio >= 1.5 ? "Good" : "Poor";
+      break;
+    case "decorative":
+      functionalCheck = "N/A";
+      designCheck = contrastRatio >= 1.2 ? "Good" : "Poor";
+      break;
+    case "custom":
+      functionalCheck = "Custom";
+      designCheck = "Custom";
+      break;
+  }
+
+  return {
+    color1,
+    color2,
+    contrastRatio,
+    checkType,
+    wcagAANormal,
+    wcagAALarge,
+    wcagAAANormal,
+    wcagAAALarge,
+    functionalCheck,
+    designCheck,
+    expectedContrastRatio,
+  };
+}
+
+export function evaluateContrastAndGenerateResults(
+  colorScheme: ColorScheme,
+  config: ColorSchemeConfig,
+): ContrastCheckResult[] {
+  const results: ContrastCheckResult[] = [];
+  const colors: Record<string, string> = {
+    ...colorScheme.systemColors,
+    ...colorScheme.customPaletteColors,
+  };
+
+  function checkContrast(
+    color1: string,
+    color2: string,
+    checkType: string,
+    expectedContrastRatio?: number,
+  ) {
+    if (!colors[color1] || !colors[color2]) {
+      return;
+    }
+
+    const contrastRatio = getContrastRatio(color1, color2, colors);
+    const result = evaluateContrast(
+      contrastRatio,
+      checkType,
+      color1,
+      color2,
+      expectedContrastRatio,
+    );
+    if (
+      expectedContrastRatio == undefined ||
+      contrastRatio < expectedContrastRatio
+    ) {
+      results.push(result);
+    }
+  }
+
+  const colorPairs = [
+    { color1: "primary", color2: "onPrimary", type: "text", expected: 4.5 },
+    {
+      color1: "primaryContainer",
+      color2: "onPrimaryContainer",
+      type: "text",
+      expected: 4.5,
+    },
+    { color1: "secondary", color2: "onSecondary", type: "text", expected: 4.5 },
+    {
+      color1: "secondaryContainer",
+      color2: "onSecondaryContainer",
+      type: "text",
+      expected: 4.5,
+    },
+    { color1: "tertiary", color2: "onTertiary", type: "text", expected: 4.5 },
+    {
+      color1: "tertiaryContainer",
+      color2: "onTertiaryContainer",
+      type: "text",
+      expected: 4.5,
+    },
+    { color1: "error", color2: "onError", type: "text", expected: 4.5 },
+    {
+      color1: "errorContainer",
+      color2: "onErrorContainer",
+      type: "text",
+      expected: 4.5,
+    },
+    {
+      color1: "background",
+      color2: "onBackground",
+      type: "text",
+      expected: 4.5,
+    },
+    { color1: "surface", color2: "onSurface", type: "text", expected: 4.5 },
+    {
+      color1: "surfaceVariant",
+      color2: "onSurfaceVariant",
+      type: "text",
+      expected: 4.5,
+    },
+    {
+      color1: "inverseSurface",
+      color2: "inverseOnSurface",
+      type: "text",
+      expected: 4.5,
+    },
+    { color1: "outline", color2: "background", type: "ui", expected: 3 },
+    { color1: "outlineVariant", color2: "surface", type: "ui", expected: 1.5 },
+  ];
+
+  colorPairs.forEach((pair) => {
+    checkContrast(pair.color1, pair.color2, pair.type, pair.expected);
+  });
+
+  ["primary", "secondary", "tertiary", "error"].forEach((color) => {
+    checkContrast(color, "background", "ui", 3);
+    checkContrast(color, "surface", "ui", 3);
+  });
+
+  config.customPaletteColors.forEach((customColor: CustomPaletteColor) => {
+    if (customColor.contrastVs) {
+      Object.entries(customColor.contrastVs).forEach(
+        ([contrastColor, expectedRatio]) => {
+          checkContrast(
+            customColor.name,
+            contrastColor,
+            "custom",
+            expectedRatio,
+          );
+        },
+      );
+    } else {
+      checkContrast(customColor.name, "background", "ui");
+      checkContrast(customColor.name, "surface", "ui");
+    }
+  });
+
+  return results;
+}
+
+export function printContrastResults(results: ContrastCheckResult[]): void {
+  if (results.length === 0) {
+    console.log("All color check passed.");
+    return;
+  }
+
+  console.warn("check following color contrast:");
+  results.forEach((result) => {
+    console.warn(`
+    Color Name: ${result.color1}
+    Compare Color Name: ${result.color2}
+    Check Type: ${result.checkType}
+    Contrast Ratio: ${result.contrastRatio.toFixed(2)}:1
+    ${result.expectedContrastRatio ? `Expect Contrast Ratio: ${result.expectedContrastRatio.toFixed(2)}:1` : ""}
+    WCAG AA (Normal Text): ${result.wcagAANormal ? "Pass" : "Fail"}
+    WCAG AA (Large Text/UI): ${result.wcagAALarge ? "Pass" : "Fail"}
+    WCAG AAA (Normal Text): ${result.wcagAAANormal ? "Pass" : "Fail"}
+    WCAG AAA (Large Text): ${result.wcagAAALarge ? "Pass" : "Fail"}
+    Functional Check: ${result.functionalCheck}
+    Design Check: ${result.designCheck}
+    `);
+  });
+}

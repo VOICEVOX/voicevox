@@ -11,119 +11,161 @@
   },
   "customPaletteColors": [
     {
-      "name": "sing-grid-cell-white",
+      "name": "singGridCellWhite",
       "palette": "neutral",
       "lightTone": 100,
       "darkTone": 15,
-      "blend": true
+      "blend": true,
+      "contrastVs": {
+        "singGridCellBlack": 1.0
+      }
     },
     {
-      "name": "sing-grid-cell-black",
+      "name": "singGridCellBlack",
       "palette": "neutral",
       "lightTone": 98,
       "darkTone": 12,
-      "blend": true
+      "blend": true,
+      "contrastVs": {
+        "singGridCellWhite": 1.0
+      }
     },
     {
-      "name": "sing-ruler-beat-line",
-      "palette": "neutralVariant",
-      "lightTone": 70,
-      "darkTone": 40,
-      "blend": true
-    },
-    {
-      "name": "sing-ruler-measure-line",
+      "name": "singRulerMeasureLine",
       "palette": "neutralVariant",
       "lightTone": 50,
       "darkTone": 50,
-      "blend": true
+      "blend": true,
+      "contrastVs": {
+        "surfaceContainer": 1.5
+      }
     },
     {
-      "name": "sing-grid-vertical-line",
+      "name": "singRulerBeatLine",
+      "palette": "neutralVariant",
+      "lightTone": 70,
+      "darkTone": 40,
+      "blend": true,
+      "contrastVs": {
+        "surfaceContainerHigh": 1.2
+      }
+    },
+    {
+      "name": "singGridVerticalLine",
       "palette": "neutral",
       "lightTone": 95,
       "darkTone": 10,
-      "blend": true
+      "blend": true,
+      "contrastVs": {
+        "singGridCellBlack": 1.2
+      }
     },
     {
-      "name": "sing-grid-horizontal-line",
+      "name": "singGridHorizontalLine",
       "palette": "neutral",
       "lightTone": 95,
       "darkTone": 10,
-      "blend": true
+      "blend": true,
+      "contrastVs": {
+        "singGridCellBlack": 1.2
+      }
     },
     {
-      "name": "sing-grid-beat-line",
+      "name": "singGridMeasureLine",
+      "palette": "neutral",
+      "lightTone": 80,
+      "darkTone": 40,
+      "blend": true,
+      "contrastVs": {
+        "singGridCellBlack": 1.5
+      }
+    },
+    {
+      "name": "singGridBeatLine",
       "palette": "neutral",
       "lightTone": 90,
       "darkTone": 0,
-      "blend": true
+      "blend": true,
+      "contrastVs": {
+        "singGridCellBlack": 1.2
+      }
     },
     {
-      "name": "sing-grid-measure-line",
+      "name": "singGridOctaveLine",
       "palette": "neutral",
       "lightTone": 80,
       "darkTone": 40,
-      "blend": true
+      "blend": true,
+      "contrastVs": {
+        "singGridCellBlack": 1.5
+      }
     },
     {
-      "name": "sing-grid-octave-line",
-      "palette": "neutral",
-      "lightTone": 80,
-      "darkTone": 40,
-      "blend": true
-    },
-    {
-      "name": "sing-piano-key-white",
+      "name": "singPianoKeyWhite",
       "palette": "neutral",
       "lightTone": 99,
       "darkTone": 70,
-      "blend": true
+      "blend": true,
+      "contrastVs": {
+        "singPianoKeyBlack": 3.0
+      }
     },
     {
-      "name": "sing-piano-key-black",
+      "name": "singPianoKeyBlack",
       "palette": "neutral",
       "lightTone": 40,
       "darkTone": 20,
-      "blend": true
+      "blend": true,
+      "contrastVs": {
+        "singPianoKeyWhite": 3.0
+      }
     },
     {
-      "name": "sing-note-bar-container",
+      "name": "singNoteBarContainer",
       "palette": "secondary",
       "lightTone": 90,
       "darkTone": 70,
-      "blend": true
+      "blend": true,
+      "contrastVs": {
+        "singGridCellBlack": 3.0
+      }
     },
     {
-      "name": "sing-note-bar-outline",
+      "name": "singNoteBarOutline",
       "palette": "neutral",
       "lightTone": 40,
       "darkTone": 30,
-      "blend": true
+      "blend": true,
+      "contrastVs": {
+        "singGridCellBlack": 3.0
+      }
     },
     {
-      "name": "sing-toolbar-container",
+      "name": "singToolbarContainer",
       "palette": "neutral",
       "lightTone": 99,
       "darkTone": 10,
-      "blend": true
+      "blend": true,
+      "contrastVs": {
+        "outline": 1.5
+      }
     }
   ],
   "customDefinedColors": [
     {
       "name": "primitive-primary",
       "value": "#A5D4AD",
-      "blend": false
+      "blend": true
     },
     {
       "name": "primitive-blue",
       "value": "#0969da",
-      "blend": false
+      "blend": true
     },
     {
       "name": "primitive-red",
       "value": "#d04756",
-      "blend": false
+      "blend": true
     }
   ]
 }
