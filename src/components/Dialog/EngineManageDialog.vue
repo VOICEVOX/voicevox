@@ -448,18 +448,20 @@ const getEngineTypeName = (name: string) => {
 };
 
 const getFeatureName = (name: keyof SupportedFeatures) => {
-  const featureNameMap: { [key in keyof SupportedFeatures]: string } = {
-    adjustMoraPitch: "モーラごとの音高の調整",
-    adjustPhonemeLength: "音素ごとの長さの調整",
-    adjustSpeedScale: "全体の話速の調整",
-    adjustPitchScale: "全体の音高の調整",
-    adjustIntonationScale: "全体の抑揚の調整",
-    adjustVolumeScale: "全体の音量の調整",
-    interrogativeUpspeak: "疑問文の自動調整",
-    synthesisMorphing: "2種類のスタイルでモーフィングした音声を合成",
-    sing: "歌唱音声合成",
-    manageLibrary: "音声ライブラリ(vvlib)の管理",
-  };
+  const featureNameMap: { [key in keyof Required<SupportedFeatures>]: string } =
+    {
+      adjustMoraPitch: "モーラごとの音高の調整",
+      adjustPhonemeLength: "音素ごとの長さの調整",
+      adjustSpeedScale: "全体の話速の調整",
+      adjustPitchScale: "全体の音高の調整",
+      adjustIntonationScale: "全体の抑揚の調整",
+      adjustVolumeScale: "全体の音量の調整",
+      interrogativeUpspeak: "疑問文の自動調整",
+      synthesisMorphing: "2種類のスタイルでモーフィングした音声を合成",
+      sing: "歌唱音声合成",
+      manageLibrary: "音声ライブラリのインストール・アンインストール",
+      returnResourceUrl: "キャラクター情報のリソースをURLで返送",
+    };
   return featureNameMap[name];
 };
 

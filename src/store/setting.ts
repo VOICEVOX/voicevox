@@ -1,7 +1,7 @@
 import { Dark, setCssVar, colors } from "quasar";
 import { SettingStoreState, SettingStoreTypes } from "./type";
-import { createUILockAction } from "./ui";
-import { createPartialStore } from "./vuex";
+import { createDotNotationUILockAction as createUILockAction } from "./ui";
+import { createDotNotationPartialStore as createPartialStore } from "./vuex";
 import {
   HotkeySettingType,
   SavingSetting,
@@ -69,10 +69,10 @@ export const settingStoreState: SettingStoreState = {
 
 export const settingStore = createPartialStore<SettingStoreTypes>({
   HYDRATE_SETTING_STORE: {
-    async action({ commit, dispatch }) {
+    async action({ mutations, actions }) {
       window.backend.hotkeySettings().then((hotkeys) => {
         hotkeys.forEach((hotkey) => {
-          dispatch("SET_HOTKEY_SETTINGS", {
+          actions.SET_HOTKEY_SETTINGS({
             data: hotkey,
           });
         });
@@ -80,40 +80,40 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
 
       const theme = await window.backend.theme();
       if (theme) {
-        commit("SET_THEME_SETTING", {
+        mutations.SET_THEME_SETTING({
           currentTheme: theme.currentTheme,
           themes: theme.availableThemes,
         });
-        dispatch("SET_THEME_SETTING", {
+        actions.SET_THEME_SETTING({
           currentTheme: theme.currentTheme,
         });
       }
 
-      dispatch("SET_ACCEPT_RETRIEVE_TELEMETRY", {
+      actions.SET_ACCEPT_RETRIEVE_TELEMETRY({
         acceptRetrieveTelemetry: await window.backend.getSetting(
           "acceptRetrieveTelemetry",
         ),
       });
 
-      dispatch("SET_ACCEPT_TERMS", {
+      actions.SET_ACCEPT_TERMS({
         acceptTerms: await window.backend.getSetting("acceptTerms"),
       });
 
-      commit("SET_SAVING_SETTING", {
+      mutations.SET_SAVING_SETTING({
         savingSetting: await window.backend.getSetting("savingSetting"),
       });
 
-      commit("SET_TOOLBAR_SETTING", {
+      mutations.SET_TOOLBAR_SETTING({
         toolbarSetting: await window.backend.getSetting("toolbarSetting"),
       });
 
-      commit("SET_EXPERIMENTAL_SETTING", {
+      mutations.SET_EXPERIMENTAL_SETTING({
         experimentalSetting: await window.backend.getSetting(
           "experimentalSetting",
         ),
       });
 
-      commit("SET_CONFIRMED_TIPS", {
+      mutations.SET_CONFIRMED_TIPS({
         confirmedTips: await window.backend.getSetting("confirmedTips"),
       });
 
@@ -125,7 +125,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
           throw new Error(
             `engineSetting is undefined. engineIdStr: ${engineIdStr}`,
           );
-        commit("SET_ENGINE_SETTING", {
+        mutations.SET_ENGINE_SETTING({
           engineId: EngineId(engineIdStr),
           engineSetting,
         });
@@ -151,7 +151,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       > = true;
 
       for (const key of rootMiscSettingKeys) {
-        commit("SET_ROOT_MISC_SETTING", {
+        mutations.SET_ROOT_MISC_SETTING({
           // Vuexの型処理でUnionが解かれてしまうのを迂回している
           // FIXME: このワークアラウンドをなくす
           key: key as never,
@@ -165,10 +165,10 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     mutation(state, { savingSetting }: { savingSetting: SavingSetting }) {
       state.savingSetting = savingSetting;
     },
-    action({ commit }, { data }: { data: SavingSetting }) {
+    action({ mutations }, { data }: { data: SavingSetting }) {
       const newData = window.backend.setSetting("savingSetting", data);
       newData.then((savingSetting) => {
-        commit("SET_SAVING_SETTING", { savingSetting });
+        mutations.SET_SAVING_SETTING({ savingSetting });
       });
     },
   },
@@ -184,9 +184,9 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       });
       if (flag) state.hotkeySettings.push(newHotkey);
     },
-    action({ commit }, { data }: { data: HotkeySettingType }) {
+    action({ mutations }, { data }: { data: HotkeySettingType }) {
       window.backend.hotkeySettings(data);
-      commit("SET_HOTKEY_SETTINGS", {
+      mutations.SET_HOTKEY_SETTINGS({
         newHotkey: data,
       });
     },
@@ -199,10 +199,10 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     ) {
       state.toolbarSetting = toolbarSetting;
     },
-    action({ commit }, { data }: { data: ToolbarSettingType }) {
+    action({ mutations }, { data }: { data: ToolbarSettingType }) {
       const newData = window.backend.setSetting("toolbarSetting", data);
       newData.then((toolbarSetting) => {
-        commit("SET_TOOLBAR_SETTING", { toolbarSetting });
+        mutations.SET_TOOLBAR_SETTING({ toolbarSetting });
       });
     },
   },
@@ -213,11 +213,11 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       // FIXME: このワークアラウンドをなくす
       state[key as never] = value;
     },
-    action({ commit }, { key, value }) {
+    action({ mutations }, { key, value }) {
       window.backend.setSetting(key, value);
       // Vuexの型処理でUnionが解かれてしまうのを迂回している
       // FIXME: このワークアラウンドをなくす
-      commit("SET_ROOT_MISC_SETTING", { key: key as never, value });
+      mutations.SET_ROOT_MISC_SETTING({ key: key as never, value });
     },
   },
 
@@ -231,7 +231,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       }
       state.themeSetting.currentTheme = currentTheme;
     },
-    action({ state, commit }, { currentTheme }: { currentTheme: string }) {
+    action({ state, mutations }, { currentTheme }: { currentTheme: string }) {
       window.backend.theme(currentTheme);
       const theme = state.themeSetting.availableThemes.find((value) => {
         return value.name == currentTheme;
@@ -275,7 +275,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
 
       window.backend.setNativeTheme(theme.isDark ? "dark" : "light");
 
-      commit("SET_THEME_SETTING", {
+      mutations.SET_THEME_SETTING({
         currentTheme: currentTheme,
       });
     },
@@ -285,7 +285,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     mutation(state, { acceptRetrieveTelemetry }) {
       state.acceptRetrieveTelemetry = acceptRetrieveTelemetry;
     },
-    action({ commit }, { acceptRetrieveTelemetry }) {
+    action({ mutations }, { acceptRetrieveTelemetry }) {
       window.dataLayer?.push({
         event: "updateAcceptRetrieveTelemetry",
         acceptRetrieveTelemetry: acceptRetrieveTelemetry == "Accepted",
@@ -294,7 +294,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         "acceptRetrieveTelemetry",
         acceptRetrieveTelemetry,
       );
-      commit("SET_ACCEPT_RETRIEVE_TELEMETRY", { acceptRetrieveTelemetry });
+      mutations.SET_ACCEPT_RETRIEVE_TELEMETRY({ acceptRetrieveTelemetry });
     },
   },
 
@@ -302,13 +302,13 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     mutation(state, { acceptTerms }) {
       state.acceptTerms = acceptTerms;
     },
-    action({ commit }, { acceptTerms }) {
+    action({ mutations }, { acceptTerms }) {
       window.dataLayer?.push({
         event: "updateAcceptTerms",
         acceptTerms: acceptTerms == "Accepted",
       });
       window.backend.setSetting("acceptTerms", acceptTerms);
-      commit("SET_ACCEPT_TERMS", { acceptTerms });
+      mutations.SET_ACCEPT_TERMS({ acceptTerms });
     },
   },
 
@@ -319,9 +319,9 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     ) {
       state.experimentalSetting = experimentalSetting;
     },
-    action({ commit }, { experimentalSetting }) {
+    action({ mutations }, { experimentalSetting }) {
       window.backend.setSetting("experimentalSetting", experimentalSetting);
-      commit("SET_EXPERIMENTAL_SETTING", { experimentalSetting });
+      mutations.SET_EXPERIMENTAL_SETTING({ experimentalSetting });
     },
   },
 
@@ -329,27 +329,27 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     mutation(state, { confirmedTips }) {
       state.confirmedTips = confirmedTips;
     },
-    action({ commit }, { confirmedTips }) {
+    action({ mutations }, { confirmedTips }) {
       window.backend.setSetting("confirmedTips", confirmedTips);
-      commit("SET_CONFIRMED_TIPS", { confirmedTips });
+      mutations.SET_CONFIRMED_TIPS({ confirmedTips });
     },
   },
 
   SET_CONFIRMED_TIP: {
-    action({ state, dispatch }, { confirmedTip }) {
+    action({ state, actions }, { confirmedTip }) {
       const confirmedTips = {
         ...state.confirmedTips,
         ...confirmedTip,
       };
 
-      dispatch("SET_CONFIRMED_TIPS", {
+      actions.SET_CONFIRMED_TIPS({
         confirmedTips: confirmedTips as ConfirmedTips,
       });
     },
   },
 
   RESET_CONFIRMED_TIPS: {
-    async action({ state, dispatch }) {
+    async action({ state, actions }) {
       const confirmedTips: { [key: string]: boolean } = {
         ...state.confirmedTips,
       };
@@ -359,7 +359,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         confirmedTips[key] = false;
       }
 
-      dispatch("SET_CONFIRMED_TIPS", {
+      actions.SET_CONFIRMED_TIPS({
         confirmedTips: confirmedTips as ConfirmedTips,
       });
     },
@@ -369,9 +369,9 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     mutation(state, { engineSetting, engineId }) {
       state.engineSettings[engineId] = engineSetting;
     },
-    async action({ commit }, { engineSetting, engineId }) {
+    async action({ mutations }, { engineSetting, engineId }) {
       await window.backend.setEngineSetting(engineId, engineSetting);
-      commit("SET_ENGINE_SETTING", { engineSetting, engineId });
+      mutations.SET_ENGINE_SETTING({ engineSetting, engineId });
     },
   },
 
@@ -381,7 +381,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
      * GPUモードでエンジン起動に失敗した場合はCPUモードに戻す。
      */
     action: createUILockAction(
-      async ({ state, dispatch }, { useGpu, engineId }) => {
+      async ({ state, actions }, { useGpu, engineId }) => {
         const isAvailableGPUMode = await window.backend.isAvailableGPUMode();
 
         // 対応するGPUがない場合に変更を続行するか問う
@@ -400,11 +400,11 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
           }
         }
 
-        dispatch("SET_ENGINE_SETTING", {
+        actions.SET_ENGINE_SETTING({
           engineSetting: { ...state.engineSettings[engineId], useGpu },
           engineId,
         });
-        const result = await dispatch("RESTART_ENGINES", {
+        const result = await actions.RESTART_ENGINES({
           engineIds: [engineId],
         });
 
@@ -417,7 +417,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
             message:
               "GPUモードでエンジンを起動できなかったためCPUモードに戻します",
           });
-          await dispatch("CHANGE_USE_GPU", { useGpu: false, engineId });
+          await actions.CHANGE_USE_GPU({ useGpu: false, engineId });
           return;
         }
       },
@@ -431,8 +431,8 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
   },
 
   APPEND_RECENTLY_USED_PROJECT: {
-    async action({ dispatch }, { filePath }) {
-      const recentlyUsedProjects = await dispatch("GET_RECENTLY_USED_PROJECTS");
+    async action({ actions }, { filePath }) {
+      const recentlyUsedProjects = await actions.GET_RECENTLY_USED_PROJECTS();
       const newRecentlyUsedProjects = [
         filePath,
         ...recentlyUsedProjects.filter((value) => value != filePath),
