@@ -1,8 +1,5 @@
 import { z } from "zod";
-import {
-  DynamicScheme,
-  CustomColorGroup,
-} from "@material/material-color-utilities";
+import { DynamicScheme } from "@material/material-color-utilities";
 import { IpcSOData } from "./ipc";
 import { AltPortInfos } from "@/store/type";
 import { Result } from "@/type/result";

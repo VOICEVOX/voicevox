@@ -15,7 +15,6 @@ import {
   SchemeFruitSalad,
   TonalPalette,
   MaterialDynamicColors,
-  customColor,
 } from "@material/material-color-utilities";
 
 import {
@@ -24,7 +23,7 @@ import {
   ColorSchemeCorePalettes,
   ColorSchemeAdjustment,
   CustomPaletteColor,
-  //CustomDefinedColor,
+  CustomDefinedColor,
 } from "@/type/preload";
 
 const SCHEME_CONSTRUCTORS = {
@@ -485,8 +484,7 @@ export function printContrastResults(results: ContrastCheckResult[]): void {
   console.warn("check following color contrast:");
   results.forEach((result) => {
     console.warn(`
-    Color Name: ${result.color1}
-    Compare Color Name: ${result.color2}
+    Colors: ${result.color1} vs ${result.color2}
     Check Type: ${result.checkType}
     Contrast Ratio: ${result.contrastRatio.toFixed(2)}:1
     ${result.expectedContrastRatio ? `Expect Contrast Ratio: ${result.expectedContrastRatio.toFixed(2)}:1` : ""}
