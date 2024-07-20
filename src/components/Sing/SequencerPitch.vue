@@ -57,14 +57,11 @@ const pitchEditData = computed(() => {
 const previewPitchEdit = computed(() => props.previewPitchEdit);
 const editFrameRate = computed(() => store.state.editFrameRate);
 
-const { systemColorsRgba } = useColorScheme();
+const { getColorRgb } = useColorScheme();
 
 // TODO: このままだとテーマ変更で更新されないため、変更に追随する必要あり
-const pitchLineColor = [...systemColorsRgba.value.outline.slice(0, 3), 255];
-const pitchEditLineColor = [
-  ...systemColorsRgba.value.primaryFixedDim.slice(0, 3),
-  255,
-];
+const pitchLineColor = [...getColorRgb("surfaceDim"), 255];
+const pitchEditLineColor = [...getColorRgb("primaryFixed"), 255];
 const originalPitchLine: PitchLine = {
   color: new Color(
     pitchLineColor[0],

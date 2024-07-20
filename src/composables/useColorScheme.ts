@@ -1,34 +1,28 @@
-import { computed, watch } from "vue";
+import Color from "colorjs.io";
+import { computed } from "vue";
 import { useStore } from "@/store";
-import { ColorSchemeConfig, ColorScheme } from "@/type/preload";
-import { colorSchemeToCssVariables, arrayFromRgba } from "@/helpers/colors";
+import { ColorSchemeConfig, ColorScheme, OKLCHCoords } from "@/type/preload";
+import { hexFromOklch } from "@/helpers/colors";
 
 export function useColorScheme() {
   const store = useStore();
 
-  const colorSchemeConfig = computed<ColorSchemeConfig | undefined>(
-    () =>
-      store.state.colorSchemeSetting.currentColorScheme?.config ?? undefined,
+  const currentColorScheme = computed<ColorScheme>(
+    () => store.state.colorSchemeSetting.currentColorScheme,
   );
-
   const availableColorSchemeConfigs = computed<ColorSchemeConfig[]>(
     () => store.state.colorSchemeSetting.availableColorSchemeConfigs,
   );
 
-  const currentColorScheme = computed<ColorScheme | undefined>(
-    () => store.state.colorSchemeSetting.currentColorScheme,
-  );
-
   const isDarkMode = computed({
-    get: () => colorSchemeConfig.value?.isDark ?? false,
+    get: () => currentColorScheme.value.config.isDark,
     set: (value: boolean) => updateColorScheme({ isDark: value }),
   });
 
   const updateColorScheme = async (
     partialConfig: Partial<ColorSchemeConfig>,
   ) => {
-    if (!colorSchemeConfig.value) return;
-    const newConfig = { ...colorSchemeConfig.value, ...partialConfig };
+    const newConfig = { ...currentColorScheme.value.config, ...partialConfig };
     await store.dispatch("SET_COLOR_SCHEME", { colorSchemeConfig: newConfig });
   };
 
@@ -41,45 +35,75 @@ export function useColorScheme() {
     }
   };
 
-  const systemColorsRgba = computed(() => {
-    if (!currentColorScheme.value) return {};
-    // RGBAに変換
-    return Object.entries(currentColorScheme.value.systemColors).reduce(
-      (acc, [key, value]) => {
-        acc[key] = arrayFromRgba(value);
-        return acc;
-      },
-      {} as Record<string, number[]>,
-    );
-  });
-
   const resetColorScheme = () => store.dispatch("INITIALIZE_COLOR_SCHEME");
 
-  const applyColorScheme = () => {
-    if (!currentColorScheme.value) return;
-    const cssVariables = colorSchemeToCssVariables(currentColorScheme.value);
+  const getCssVariables = (): Record<string, string> => {
+    const variables: Record<string, string> = {};
+    const setVariable = (prefix: string, key: string, value: OKLCHCoords) => {
+      variables[`--${prefix}-${key}`] = hexFromOklch(value);
+      variables[`--${prefix}-${key}-oklch`] =
+        `oklch(${(value[0], value[1], value[2])})`;
+    };
+
+    Object.entries(currentColorScheme.value.roles).forEach(([key, value]) =>
+      setVariable("color", key, value),
+    );
+    Object.entries(currentColorScheme.value.palette).forEach(([key, value]) =>
+      setVariable("palette", key, value),
+    );
+    Object.entries(currentColorScheme.value.customColors).forEach(
+      ([key, value]) => setVariable("custom", key, value),
+    );
+
+    return variables;
+  };
+
+  const applyColorSchemeToBody = () => {
+    const cssVariables = getCssVariables();
     Object.entries(cssVariables).forEach(([key, value]) => {
-      document.documentElement.style.setProperty(key, value);
+      document.body.style.setProperty(key, value);
     });
   };
 
-  watch(
-    currentColorScheme,
-    () => {
-      applyColorScheme();
-    },
-    { deep: true, immediate: true },
-  );
+  // NOTE: 以下とりあえず
+  const getColorOklchCoords = (colorName: string): OKLCHCoords => {
+    return (
+      currentColorScheme.value.roles[colorName] ||
+      currentColorScheme.value.palette[colorName] ||
+      currentColorScheme.value.customColors[colorName] ||
+      ""
+    );
+  };
+
+  const getColorRgb = (colorName: string): number[] => {
+    const oklchCoords = getColorOklchCoords(colorName);
+    if (!oklchCoords) return [];
+    const color = new Color(
+      `oklch(${oklchCoords[0]} ${oklchCoords[1]} ${oklchCoords[2]})`,
+    );
+    return color.srgb.map((value) => Math.round(value * 255));
+  };
+
+  const getColorHex = (colorName: string): string => {
+    const oklchCoords = getColorOklchCoords(colorName);
+    if (!oklchCoords) return "";
+    const color = new Color(
+      `oklch(${oklchCoords[0]} ${oklchCoords[1]} ${oklchCoords[2]})`,
+    );
+    return color.toString({ format: "hex" });
+  };
 
   return {
-    colorSchemeConfig,
-    systemColorsRgba,
-    availableColorSchemeConfigs,
     currentColorScheme,
+    availableColorSchemeConfigs,
     isDarkMode,
     updateColorScheme,
     selectColorScheme,
     resetColorScheme,
-    applyColorScheme,
+    getCssVariables,
+    applyColorSchemeToBody,
+    getColorOklchCoords,
+    getColorRgb,
+    getColorHex,
   };
 }

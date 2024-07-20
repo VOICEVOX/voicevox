@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { DynamicScheme } from "@material/material-color-utilities";
 import { IpcSOData } from "./ipc";
 import { AltPortInfos } from "@/store/type";
 import { Result } from "@/type/result";
@@ -564,73 +563,102 @@ export type ColorSchemeSetting = {
   availableColorSchemeConfigs: ColorSchemeConfig[];
 };
 
-// カラースキーマの種類(M3準拠)
-export type ColorSchemeVariant =
-  | "content"
-  | "tonalSpot"
-  | "neutral"
-  | "vibrant"
-  | "expressive"
-  | "fidelity"
-  | "monochrome"
-  | "rainbow"
-  | "fruitSalad";
+export type OKLCHCoords = [number, number, number];
 
-// カラーパレットのキー(M3準拠)
-export type ColorSchemeCorePalettes =
-  | "primary"
-  | "secondary"
-  | "tertiary"
-  | "neutral"
-  | "neutralVariant"
-  | "error";
-
-// カラー事前調整
-export interface ColorSchemeAdjustment {
-  hue?: number;
-  chroma?: number;
-  tone?: number;
-  hex?: string;
+export interface ColorSchemeBaseColors {
+  primary: OKLCHCoords;
+  secondary: OKLCHCoords;
+  tertiary: OKLCHCoords;
+  neutral: OKLCHCoords;
+  neutralVariant: OKLCHCoords;
+  error: OKLCHCoords;
 }
 
-// パレットから取得するカスタムカラー
-export interface CustomPaletteColor {
+export interface CustomColorConfig {
   name: string;
-  palette: ColorSchemeCorePalettes;
-  lightTone: number;
-  darkTone: number;
+  displayName: string;
+  palette: keyof ColorSchemeBaseColors;
+  lightLightness: number;
+  darkLightness: number;
   blend: boolean;
-  contrastVs: Record<string, number>;
+  contrastVs?: Record<string, number>;
 }
 
-// 定義済みカスタムカラー
-export interface CustomDefinedColor {
-  name: string;
-  value: string;
-  blend: boolean;
-}
-
-// カラースキーマのベース設定(ここから生成)
 export interface ColorSchemeConfig {
   name: string;
-  sourceColor: string;
-  variant: ColorSchemeVariant;
+  displayName: string;
+  baseColors: ColorSchemeBaseColors;
   isDark: boolean;
-  contrastLevel: number;
-  adjustments: Partial<Record<ColorSchemeCorePalettes, ColorSchemeAdjustment>>;
-  customPaletteColors: CustomPaletteColor[];
-  customDefinedColors: CustomDefinedColor[];
+  customColors?: CustomColorConfig[];
 }
 
-// カラースキーマ
 export interface ColorScheme {
-  scheme: DynamicScheme;
-  systemColors: Record<string, string>;
-  paletteTones: Record<string, Record<number, string>>;
-  customPaletteColors: Record<string, string>;
-  customDefinedColors: Record<string, string>;
   config: ColorSchemeConfig;
+  palette: Record<string, OKLCHCoords>;
+  roles: Record<string, OKLCHCoords>;
+  customColors: Record<string, OKLCHCoords>;
 }
+
+export type ColorRoleDefinition = [
+  keyof ColorSchemeBaseColors,
+  lightLightness: number,
+  darkLightness: number,
+];
+
+export const PALETTE_TONES = [
+  0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 99, 100,
+];
+
+export const COLOR_ROLES: Record<string, ColorRoleDefinition> = {
+  primary: ["primary", 40, 80],
+  onPrimary: ["primary", 100, 20],
+  primaryContainer: ["primary", 90, 30],
+  onPrimaryContainer: ["primary", 10, 90],
+  primaryFixed: ["primary", 90, 90],
+  primaryFixedDim: ["primary", 80, 80],
+  onPrimaryFixed: ["primary", 10, 10],
+  onPrimaryFixedVariant: ["primary", 30, 30],
+  secondary: ["secondary", 40, 80],
+  onSecondary: ["secondary", 100, 20],
+  secondaryContainer: ["secondary", 90, 30],
+  onSecondaryContainer: ["secondary", 10, 90],
+  secondaryFixed: ["secondary", 90, 90],
+  secondaryFixedDim: ["secondary", 80, 80],
+  onSecondaryFixed: ["secondary", 10, 10],
+  onSecondaryFixedVariant: ["secondary", 30, 30],
+  tertiary: ["tertiary", 40, 80],
+  onTertiary: ["tertiary", 100, 20],
+  tertiaryContainer: ["tertiary", 90, 30],
+  onTertiaryContainer: ["tertiary", 10, 90],
+  tertiaryFixed: ["tertiary", 90, 90],
+  tertiaryFixedDim: ["tertiary", 80, 80],
+  onTertiaryFixed: ["tertiary", 10, 10],
+  onTertiaryFixedVariant: ["tertiary", 30, 30],
+  error: ["error", 60, 80],
+  onError: ["error", 100, 20],
+  errorContainer: ["error", 90, 30],
+  onErrorContainer: ["error", 10, 90],
+  background: ["neutral", 99, 10],
+  onBackground: ["neutral", 10, 90],
+  surface: ["neutral", 99, 10],
+  onSurface: ["neutral", 10, 90],
+  surfaceVariant: ["neutralVariant", 90, 30],
+  onSurfaceVariant: ["neutralVariant", 30, 80],
+  outline: ["neutralVariant", 50, 60],
+  outlineVariant: ["neutralVariant", 80, 30],
+  shadow: ["neutral", 0, 0],
+  scrim: ["neutral", 0, 0],
+  inverseSurface: ["neutral", 20, 90],
+  inverseOnSurface: ["neutral", 95, 20],
+  inversePrimary: ["primary", 80, 40],
+  surfaceDim: ["neutral", 87, 6],
+  surfaceBright: ["neutral", 98, 24],
+  surfaceContainerLowest: ["neutral", 100, 4],
+  surfaceContainerLow: ["neutral", 96, 10],
+  surfaceContainer: ["neutral", 94, 12],
+  surfaceContainerHigh: ["neutral", 92, 17],
+  surfaceContainerHighest: ["neutral", 90, 22],
+};
 
 export const experimentalSettingSchema = z.object({
   enablePreset: z.boolean().default(false),

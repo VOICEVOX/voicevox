@@ -751,20 +751,20 @@ onUnmounted(() => {
   width: 72px;
 
   :deep(.q-slider__track) {
-    background: var(--md-sys-color-surface-variant);
-    color: var(--md-sys-color-on-surface-variant);
+    background: var(--md-sys-color-secondary-container);
+    color: var(--md-sys-color-secondary-fixed);
   }
 
   :deep(.q-slider__thumb) {
-    color: var(--md-sys-color-on-surface-variant);
+    color: var(--md-sys-color-secondary-fixed);
   }
 
   &:hover {
     :deep(.q-slider__track) {
-      color: var(--md-sys-color-on-surface-variant);
+      color: var(--md-sys-color-primary-fixed-dim);
     }
     :deep(.q-slider__thumb) {
-      color: var(--md-sys-color-on-surface-variant);
+      color: var(--md-sys-color-primary-fixed-dim);
     }
   }
 }

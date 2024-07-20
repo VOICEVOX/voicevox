@@ -1511,8 +1511,8 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 .sequencer-guideline {
   position: absolute;
   top: 0;
-  left: -1px;
-  width: 2px;
+  left: 0;
+  width: 1px;
   background: var(--md-sys-color-secondary-container);
   pointer-events: none;
 }
@@ -1569,19 +1569,19 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 
   :deep(.q-slider__track) {
     background: var(--md-sys-color-surface-variant);
-    color: var(--md-sys-color-on-surface-variant);
+    color: var(--md-sys-color-secondary-fixed);
   }
 
   :deep(.q-slider__thumb) {
-    color: var(--md-sys-color-on-surface-variant);
+    color: var(--md-sys-color-secondary-fixed);
   }
 
   &:hover {
     :deep(.q-slider__track) {
-      color: var(--md-sys-color-on-surface-variant);
+      color: var(--md-sys-color-primary-fixed-dim);
     }
     :deep(.q-slider__thumb) {
-      color: var(--md-sys-color-on-surface-variant);
+      color: var(--md-sys-color-primary-fixed-dim);
     }
   }
 }
@@ -1594,19 +1594,19 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 
   :deep(.q-slider__track) {
     background: var(--md-sys-color-surface-variant);
-    color: var(--md-sys-color-on-surface-variant);
+    color: var(--md-sys-color-secondary-fixed);
   }
 
   :deep(.q-slider__thumb) {
-    color: var(--md-sys-color-on-surface-variant);
+    color: var(--md-sys-color-secondary-fixed);
   }
 
   &:hover {
     :deep(.q-slider__track) {
-      color: var(--md-sys-color-on-surface-variant);
+      color: var(--md-sys-color-primary-fixed-dim);
     }
     :deep(.q-slider__thumb) {
-      color: var(--md-sys-color-on-surface-variant);
+      color: var(--md-sys-color-primary-fixed-dim);
     }
   }
 }
