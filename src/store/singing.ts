@@ -1708,7 +1708,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         await dispatch("SET_TIME_SIGNATURES", { timeSignatures });
         await dispatch("SET_NOTES", { notes });
 
-        commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
+        context.commit("RESET_SAVED_LAST_COMMAND_IDS");
         commit("CLEAR_COMMANDS");
         dispatch("RENDER");
       },
@@ -1751,7 +1751,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           startFrame: 0,
         });
 
-        commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
+        context.commit("RESET_SAVED_LAST_COMMAND_IDS");
         commit("CLEAR_COMMANDS");
         dispatch("RENDER");
       },

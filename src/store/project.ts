@@ -19,9 +19,10 @@ import {
   createDefaultTimeSignature,
   DEFAULT_TPQN,
 } from "@/sing/domain";
+import { EditorType } from "@/type/preload";
 
 export const projectStoreState: ProjectStoreState = {
-  savedLastCommandUnixMillisec: null,
+  savedLastCommandIds: { talk: null, song: null },
 };
 
 const applyTalkProjectToStore = async (
@@ -132,7 +133,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         await context.dispatch("CLEAR_PITCH_EDIT_DATA");
 
         context.commit("SET_PROJECT_FILEPATH", { filePath: undefined });
-        context.commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
+        context.commit("RESET_SAVED_LAST_COMMAND_IDS");
         context.commit("CLEAR_COMMANDS");
       },
     ),
@@ -211,7 +212,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           await applySongProjectToStore(dispatch, parsedProjectData.song);
 
           commit("SET_PROJECT_FILEPATH", { filePath });
-          commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
+          context.commit("RESET_SAVED_LAST_COMMAND_IDS");
           commit("CLEAR_COMMANDS");
           return true;
         } catch (err) {
@@ -314,8 +315,8 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             .then(getValueOrThrow);
           context.commit("SET_PROJECT_FILEPATH", { filePath });
           context.commit(
-            "SET_SAVED_LAST_COMMAND_UNIX_MILLISEC",
-            context.getters.LAST_COMMAND_UNIX_MILLISEC,
+            "SET_SAVED_LAST_COMMAND_IDS",
+            context.getters.LAST_COMMAND_IDS,
           );
           return true;
         } catch (err) {
@@ -372,16 +373,31 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
 
   IS_EDITED: {
     getter(state, getters) {
-      return (
-        getters.LAST_COMMAND_UNIX_MILLISEC !==
-        state.savedLastCommandUnixMillisec
-      );
+      if (
+        Object.keys(state.savedLastCommandIds) !=
+        Object.keys(getters.LAST_COMMAND_IDS)
+      )
+        throw new Error(
+          "Object.keys(state.savedLastCommandIds) != Object.keys(getters.LAST_COMMAND_IDS)",
+        );
+      return Object.keys(state.savedLastCommandIds).some((_editor) => {
+        const editor = _editor as EditorType;
+        return (
+          state.savedLastCommandIds[editor] !== getters.LAST_COMMAND_IDS[editor]
+        );
+      });
     },
   },
 
-  SET_SAVED_LAST_COMMAND_UNIX_MILLISEC: {
-    mutation(state, unixMillisec) {
-      state.savedLastCommandUnixMillisec = unixMillisec;
+  SET_SAVED_LAST_COMMAND_IDS: {
+    mutation(state, commandIds) {
+      state.savedLastCommandIds = commandIds;
+    },
+  },
+
+  RESET_SAVED_LAST_COMMAND_IDS: {
+    mutation(state) {
+      state.savedLastCommandIds = { talk: null, song: null };
     },
   },
 });
