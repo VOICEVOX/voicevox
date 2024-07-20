@@ -53,7 +53,6 @@ const className = computed(() => {
 .now-rendering {
   background-color: colors.$background;
   background-size: 28px 28px;
-  // TODO: もっといい感じのコードにする
   &.is-in-selected-track {
     border: 1px solid rgba(colors.$primary-rgb, 0.7);
     background-image: linear-gradient(
