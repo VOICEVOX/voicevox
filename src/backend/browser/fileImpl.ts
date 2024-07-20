@@ -4,6 +4,7 @@ import { openDB } from "./browserConfig";
 import { SandboxKey } from "@/type/preload";
 import { failure, success } from "@/type/result";
 import { createLogger } from "@/domain/frontend/log";
+import { uuid4 } from "@/helpers/random";
 
 const log = createLogger("fileImpl");
 
@@ -200,7 +201,7 @@ export const showOpenFilePickerImpl = async (options: {
     });
     const paths = [];
     for (const handle of handles) {
-      const fakePath = `<browser-dummy-${crypto.randomUUID()}>-${handle.name}`;
+      const fakePath = `<browser-dummy-${uuid4()}>-${handle.name}`;
       fileHandleMap.set(fakePath, handle);
       paths.push(fakePath);
     }

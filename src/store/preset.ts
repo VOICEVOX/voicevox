@@ -1,3 +1,4 @@
+import { uuid4 } from "@/helpers/random";
 import { createPartialStore } from "./vuex";
 import { PresetStoreState, PresetStoreTypes, State } from "@/store/type";
 import { Preset, PresetKey, Voice, VoiceId } from "@/type/preload";
@@ -181,7 +182,7 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
 
   ADD_PRESET: {
     async action(context, { presetData }: { presetData: Preset }) {
-      const newKey = PresetKey(crypto.randomUUID());
+      const newKey = PresetKey(uuid4());
       const newPresetItems = {
         ...context.state.presetItems,
         [newKey]: presetData,

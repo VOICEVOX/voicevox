@@ -58,9 +58,10 @@ import { AudioQuery, AccentPhrase, Speaker, SpeakerInfo } from "@/openapi";
 import { base64ImageToUri, base64ToUri } from "@/helpers/base64Helper";
 import { getValueOrThrow, ResultError } from "@/type/result";
 import { generateWriteErrorMessage } from "@/helpers/fileHelper";
+import { uuid4 } from "@/helpers/random";
 
 function generateAudioKey() {
-  return AudioKey(crypto.randomUUID());
+  return AudioKey(uuid4());
 }
 
 function parseTextFile(
