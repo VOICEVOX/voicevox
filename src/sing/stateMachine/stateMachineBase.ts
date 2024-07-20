@@ -1,35 +1,30 @@
 export interface IState<
-  State extends IState<State, Input, Context, Dispatcher>,
+  State extends IState<State, Input, Context>,
   Input,
   Context,
-  Dispatcher,
 > {
   process(payload: {
     input: Input;
     context: Context;
-    dispatcher: Dispatcher;
     setNextState: (nextState: State) => void;
   }): void;
-  onEnter(payload: { context: Context; dispatcher: Dispatcher }): void;
-  onExit(payload: { context: Context; dispatcher: Dispatcher }): void;
+  onEnter(context: Context): void;
+  onExit(context: Context): void;
 }
 
 export class StateMachine<
-  State extends IState<State, Input, Context, Dispatcher>,
+  State extends IState<State, Input, Context>,
   Input,
   Context,
-  Dispatcher,
 > {
   private readonly context: Context;
-  private readonly dispatcher: Dispatcher;
   private readonly setNextState: (nextState: State) => void;
 
   private currentState: State;
   private nextState: State | undefined;
 
-  constructor(initialState: State, context: Context, dispatcher: Dispatcher) {
+  constructor(initialState: State, context: Context) {
     this.context = context;
-    this.dispatcher = dispatcher;
     this.setNextState = (nextState: State) => {
       this.nextState = nextState;
     };
@@ -46,19 +41,12 @@ export class StateMachine<
       this.currentState.process({
         input,
         context: this.context,
-        dispatcher: this.dispatcher,
         setNextState: this.setNextState,
       });
       if (this.nextState != undefined) {
-        this.currentState.onExit({
-          context: this.context,
-          dispatcher: this.dispatcher,
-        });
+        this.currentState.onExit(this.context);
         this.currentState = this.nextState;
-        this.currentState.onEnter({
-          context: this.context,
-          dispatcher: this.dispatcher,
-        });
+        this.currentState.onEnter(this.context);
       }
     } finally {
       this.nextState = undefined;

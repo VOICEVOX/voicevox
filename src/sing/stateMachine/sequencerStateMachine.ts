@@ -39,13 +39,6 @@ type Input =
       readonly note: Note;
     };
 
-type Dispatcher = {
-  readonly deselectAllNotes: () => void;
-  readonly commandAddNotes: (notes: Note[]) => void;
-  readonly selectNotes: (noteIds: NoteId[]) => void;
-  readonly playPreviewSound: (noteNumber: number, duration?: number) => void;
-};
-
 type Context = {
   readonly snapTicks: ComputedRef<number>;
   readonly editTarget: ComputedRef<SequencerEditTarget>;
@@ -54,6 +47,13 @@ type Context = {
   readonly previewNotes: Ref<Note[]>;
   readonly sequencerBody: Ref<HTMLElement | null>;
   readonly guideLineTicks: Ref<number>;
+
+  readonly storeActions: {
+    readonly deselectAllNotes: () => void;
+    readonly commandAddNotes: (notes: Note[]) => void;
+    readonly selectNotes: (noteIds: NoteId[]) => void;
+    readonly playPreviewSound: (noteNumber: number, duration?: number) => void;
+  };
 };
 
 type State = IdleState | AddNoteState;
@@ -68,7 +68,7 @@ const getGuideLineTicks = (
   return Math.round(cursorTicks / snapTicks - 0.25) * snapTicks;
 };
 
-class IdleState implements IState<State, Input, Context, Dispatcher> {
+class IdleState implements IState<State, Input, Context> {
   readonly id = "idle";
 
   onEnter() {}
@@ -80,7 +80,6 @@ class IdleState implements IState<State, Input, Context, Dispatcher> {
   }: {
     input: Input;
     context: Context;
-    dispatcher: Dispatcher;
     setNextState: (nextState: State) => void;
   }) {
     const mouseButton = getButton(input.mouseEvent);
@@ -113,7 +112,7 @@ class IdleState implements IState<State, Input, Context, Dispatcher> {
   onExit() {}
 }
 
-class AddNoteState implements IState<State, Input, Context, Dispatcher> {
+class AddNoteState implements IState<State, Input, Context> {
   readonly id = "addNote";
 
   private readonly cursorPosAtStart: PositionOnSequencer;
@@ -153,14 +152,8 @@ class AddNoteState implements IState<State, Input, Context, Dispatcher> {
     context.guideLineTicks.value = noteEndPos;
   }
 
-  onEnter({
-    context,
-    dispatcher,
-  }: {
-    context: Context;
-    dispatcher: Dispatcher;
-  }) {
-    dispatcher.deselectAllNotes();
+  onEnter(context: Context) {
+    context.storeActions.deselectAllNotes();
 
     const guideLineTicks = getGuideLineTicks(this.cursorPosAtStart, context);
     const noteToAdd = {
@@ -192,7 +185,6 @@ class AddNoteState implements IState<State, Input, Context, Dispatcher> {
   }: {
     input: Input;
     context: Context;
-    dispatcher: Dispatcher;
     setNextState: (nextState: State) => void;
   }) {
     const mouseButton = getButton(input.mouseEvent);
@@ -208,21 +200,15 @@ class AddNoteState implements IState<State, Input, Context, Dispatcher> {
     }
   }
 
-  onExit({
-    context,
-    dispatcher,
-  }: {
-    context: Context;
-    dispatcher: Dispatcher;
-  }) {
+  onExit(context: Context) {
     const previewNotes = context.previewNotes.value;
     const previewNoteIds = previewNotes.map((value) => value.id);
 
     cancelAnimationFrame(this.previewRequestId);
-    dispatcher.commandAddNotes(context.previewNotes.value);
-    dispatcher.selectNotes(previewNoteIds);
+    context.storeActions.commandAddNotes(context.previewNotes.value);
+    context.storeActions.selectNotes(previewNoteIds);
     if (previewNotes.length === 1) {
-      dispatcher.playPreviewSound(
+      context.storeActions.playPreviewSound(
         previewNotes[0].noteNumber,
         PREVIEW_SOUND_DURATION,
       );
@@ -231,13 +217,6 @@ class AddNoteState implements IState<State, Input, Context, Dispatcher> {
   }
 }
 
-export const createStateMachineForSequencer = (
-  context: Context,
-  dispatcher: Dispatcher,
-) => {
-  return new StateMachine<State, Input, Context, Dispatcher>(
-    new IdleState(),
-    context,
-    dispatcher,
-  );
+export const createStateMachineForSequencer = (context: Context) => {
+  return new StateMachine<State, Input, Context>(new IdleState(), context);
 };
