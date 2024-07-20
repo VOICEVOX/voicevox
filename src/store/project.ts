@@ -20,6 +20,7 @@ import {
   DEFAULT_TPQN,
 } from "@/sing/domain";
 import { EditorType } from "@/type/preload";
+import { IsEqual } from "@/type/utility";
 
 export const projectStoreState: ProjectStoreState = {
   savedLastCommandIds: { talk: null, song: null },
@@ -373,13 +374,11 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
 
   IS_EDITED: {
     getter(state, getters) {
-      if (
-        Object.keys(state.savedLastCommandIds) !=
-        Object.keys(getters.LAST_COMMAND_IDS)
-      )
-        throw new Error(
-          "Object.keys(state.savedLastCommandIds) != Object.keys(getters.LAST_COMMAND_IDS)",
-        );
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const _: IsEqual<
+        typeof state.savedLastCommandIds,
+        typeof getters.LAST_COMMAND_IDS
+      > = true;
       return Object.keys(state.savedLastCommandIds).some((_editor) => {
         const editor = _editor as EditorType;
         return (

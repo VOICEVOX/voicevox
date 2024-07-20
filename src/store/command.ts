@@ -136,7 +136,7 @@ export const commandStore = createPartialStore<CommandStoreTypes>({
   LAST_COMMAND_IDS: {
     getter(state) {
       const getLastCommandId = (commands: Command[]): CommandId | null => {
-        if (commands.length > 0) return null;
+        if (commands.length == 0) return null;
         else return commands[commands.length - 1].id;
       };
 
