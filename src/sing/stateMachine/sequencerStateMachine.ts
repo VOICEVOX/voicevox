@@ -1,5 +1,5 @@
 import { ComputedRef, Ref } from "vue";
-import { IState, StateMachine } from "@/sing/stateMachine";
+import { IState, StateMachine } from "@/sing/stateMachine/stateMachineBase";
 import {
   getButton,
   getDoremiFromNoteNumber,
