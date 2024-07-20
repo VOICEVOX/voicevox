@@ -1751,7 +1751,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           startFrame: 0,
         });
 
-        context.commit("RESET_SAVED_LAST_COMMAND_IDS");
+        commit("RESET_SAVED_LAST_COMMAND_IDS");
         commit("CLEAR_COMMANDS");
         dispatch("RENDER");
       },

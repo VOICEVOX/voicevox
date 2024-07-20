@@ -213,7 +213,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           await applySongProjectToStore(dispatch, parsedProjectData.song);
 
           commit("SET_PROJECT_FILEPATH", { filePath });
-          context.commit("RESET_SAVED_LAST_COMMAND_IDS");
+          commit("RESET_SAVED_LAST_COMMAND_IDS");
           commit("CLEAR_COMMANDS");
           return true;
         } catch (err) {
