@@ -336,16 +336,6 @@ const phraseInfos = computed(() => {
     return { key, x: startX, width: endX - startX, trackId };
   });
 });
-const phraseInfosInSelectedTrack = computed(() => {
-  return phraseInfos.value.filter(
-    ({ trackId }) => trackId === selectedTrackId.value,
-  );
-});
-const phraseInfosInOtherTracks = computed(() => {
-  return phraseInfos.value.filter(
-    ({ trackId }) => trackId !== selectedTrackId.value,
-  );
-});
 
 const ctrlKey = useCommandOrControlKey();
 const editTarget = computed(() => state.sequencerEditTarget);
