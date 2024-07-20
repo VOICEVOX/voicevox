@@ -70,6 +70,8 @@ export class StateMachine<
     };
     this.currentState = initialState;
     this.nextState = undefined;
+
+    this.currentState.onEnter(this.context);
   }
 
   /**
