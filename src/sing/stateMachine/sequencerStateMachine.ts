@@ -52,7 +52,6 @@ type ComputedRefs = {
 type Refs = {
   readonly nowPreviewing: Ref<boolean>;
   readonly previewNotes: Ref<Note[]>;
-  readonly sequencerBody: Ref<HTMLElement | null>;
   readonly guideLineTicks: Ref<number>;
 };
 
@@ -233,7 +232,6 @@ export const useSequencerStateMachine = (
   const refs: Refs = {
     nowPreviewing: ref(false),
     previewNotes: ref<Note[]>([]),
-    sequencerBody: ref<HTMLElement | null>(null),
     guideLineTicks: ref(0),
   };
   const stateMachine = new StateMachine<State, Input, Context>(
@@ -248,7 +246,6 @@ export const useSequencerStateMachine = (
     stateMachine,
     nowPreviewing: computed(() => refs.nowPreviewing),
     previewNotes: computed(() => refs.previewNotes),
-    sequencerBody: computed(() => refs.sequencerBody),
     guideLineTicks: computed(() => refs.guideLineTicks),
   };
 };
