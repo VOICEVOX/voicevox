@@ -1,3 +1,8 @@
+/**
+ * このファイルのコードは実装中で、現在使われていません。
+ * issue: https://github.com/VOICEVOX/voicevox/issues/2041
+ */
+
 import { ComputedRef, Ref } from "vue";
 import { IState, StateMachine } from "@/sing/stateMachine/stateMachineBase";
 import {

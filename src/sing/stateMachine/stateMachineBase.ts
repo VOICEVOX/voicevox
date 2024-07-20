@@ -1,4 +1,9 @@
 /**
+ * このファイルのコードは実装中で、現在使われていません。
+ * issue: https://github.com/VOICEVOX/voicevox/issues/2041
+ */
+
+/**
  * ステートマシンのステートを表すインターフェース。
  *
  * @template State このインターフェースを実装するステートの型。
