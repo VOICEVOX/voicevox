@@ -3,7 +3,7 @@
  * issue: https://github.com/VOICEVOX/voicevox/issues/2041
  */
 
-import { ComputedRef, Ref } from "vue";
+import { computed, ComputedRef, ref, Ref } from "vue";
 import { IState, StateMachine } from "@/sing/stateMachine/stateMachineBase";
 import {
   getButton,
@@ -44,22 +44,26 @@ type Input =
       readonly note: Note;
     };
 
-type Context = {
+type ComputedRefs = {
   readonly snapTicks: ComputedRef<number>;
   readonly editTarget: ComputedRef<SequencerEditTarget>;
+};
 
+type Refs = {
   readonly nowPreviewing: Ref<boolean>;
   readonly previewNotes: Ref<Note[]>;
   readonly sequencerBody: Ref<HTMLElement | null>;
   readonly guideLineTicks: Ref<number>;
-
-  readonly storeActions: {
-    readonly deselectAllNotes: () => void;
-    readonly commandAddNotes: (notes: Note[]) => void;
-    readonly selectNotes: (noteIds: NoteId[]) => void;
-    readonly playPreviewSound: (noteNumber: number, duration?: number) => void;
-  };
 };
+
+type StoreActions = {
+  readonly deselectAllNotes: () => void;
+  readonly commandAddNotes: (notes: Note[]) => void;
+  readonly selectNotes: (noteIds: NoteId[]) => void;
+  readonly playPreviewSound: (noteNumber: number, duration?: number) => void;
+};
+
+type Context = ComputedRefs & Refs & { readonly storeActions: StoreActions };
 
 type State = IdleState | AddNoteState;
 
@@ -222,6 +226,29 @@ class AddNoteState implements IState<State, Input, Context> {
   }
 }
 
-export const createStateMachineForSequencer = (context: Context) => {
-  return new StateMachine<State, Input, Context>(new IdleState(), context);
+export const useSequencerStateMachine = (
+  computedRefs: ComputedRefs,
+  storeActions: StoreActions,
+) => {
+  const refs: Refs = {
+    nowPreviewing: ref(false),
+    previewNotes: ref<Note[]>([]),
+    sequencerBody: ref<HTMLElement | null>(null),
+    guideLineTicks: ref(0),
+  };
+  const stateMachine = new StateMachine<State, Input, Context>(
+    new IdleState(),
+    {
+      ...computedRefs,
+      ...refs,
+      storeActions,
+    },
+  );
+  return {
+    stateMachine,
+    nowPreviewing: computed(() => refs.nowPreviewing),
+    previewNotes: computed(() => refs.previewNotes),
+    sequencerBody: computed(() => refs.sequencerBody),
+    guideLineTicks: computed(() => refs.guideLineTicks),
+  };
 };
