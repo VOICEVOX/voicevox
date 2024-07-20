@@ -1,70 +1,85 @@
 <template>
-  <!-- NOTE: 現状オクターブごとの罫線なし -->
   <svg
     xmlns="http://www.w3.org/2000/svg"
     :width="gridWidth"
     :height="gridHeight"
     class="sequencer-grid"
+    shape-rendering="geometricPrecision"
   >
     <defs>
       <pattern
-        id="sequencer-grid-octave-cells"
+        id="sequencer-grid-pattern"
         patternUnits="userSpaceOnUse"
-        :width="gridCellWidth"
+        :width="beatWidth * beatsPerMeasure"
         :height="gridCellHeight * 12"
       >
+        <!-- セルの背景 -->
         <rect
           v-for="(keyInfo, index) in keyInfos"
-          :key="index"
+          :key="`cell-${index}`"
           x="0"
           :y="gridCellHeight * index"
-          :width="gridCellWidth"
+          :width="beatWidth * beatsPerMeasure"
           :height="gridCellHeight"
           :class="`sequencer-grid-cell sequencer-grid-cell-${keyInfo.color}`"
         />
-        <template v-for="(keyInfo, index) in keyInfos" :key="index">
+        <!-- スナップグリッド線 -->
+        <line
+          v-for="n in (beatWidth * beatsPerMeasure) / gridCellWidth"
+          :key="`snapline-${n}`"
+          :x1="gridCellWidth * n"
+          :x2="gridCellWidth * n"
+          y1="0"
+          :y2="gridCellHeight * 12"
+          class="sequencer-grid-vertical-line"
+        />
+        <!-- 水平線 -->
+        <template v-for="(keyInfo, index) in keyInfos" :key="`octave-${index}`">
+          <!-- オクターブ線 -->
           <line
             v-if="keyInfo.pitch === 'C'"
             x1="0"
-            :x2="gridCellWidth"
+            :x2="beatWidth * beatsPerMeasure"
             :y1="gridCellHeight * (index + 1)"
             :y2="gridCellHeight * (index + 1)"
-            stroke-width="1"
             class="sequencer-grid-octave-line"
           />
+          <!-- E/Fの中間線 -->
+          <line
+            v-if="keyInfo.pitch === 'F'"
+            x1="0"
+            :x2="beatWidth * beatsPerMeasure"
+            :y1="gridCellHeight * (index + 1)"
+            :y2="gridCellHeight * (index + 1)"
+            class="sequencer-grid-horizontal-line"
+          />
         </template>
-      </pattern>
-      <pattern
-        id="sequencer-grid-measure"
-        patternUnits="userSpaceOnUse"
-        :width="beatWidth * beatsPerMeasure"
-        :height="gridHeight"
-      >
+        <!-- 拍線 -->
         <line
           v-for="n in beatsPerMeasure"
-          :key="n"
-          :x1="beatWidth * (n - 1)"
-          :x2="beatWidth * (n - 1)"
+          :key="`beatline-${n}`"
+          :x1="beatWidth * n"
+          :x2="beatWidth * n"
           y1="0"
-          y2="100%"
-          stroke-width="1"
-          :class="`sequencer-grid-${n === 1 ? 'measure' : 'beat'}-line`"
+          :y2="gridCellHeight * 12"
+          class="sequencer-grid-beat-line"
+        />
+        <!-- 小節線 -->
+        <line
+          x1="0"
+          x2="0"
+          y1="0"
+          :y2="gridCellHeight * 12"
+          class="sequencer-grid-measure-line"
         />
       </pattern>
     </defs>
     <rect
       x="0"
       y="0"
-      width="100%"
-      height="100%"
-      fill="url(#sequencer-grid-octave-cells)"
-    />
-    <rect
-      x="0"
-      y="0"
-      width="100%"
-      height="100%"
-      fill="url(#sequencer-grid-measure)"
+      :width="gridWidth"
+      :height="gridHeight"
+      fill="url(#sequencer-grid-pattern)"
     />
   </svg>
 </template>
@@ -125,34 +140,43 @@ const gridHeight = computed(() => {
 
 .sequencer-grid-cell {
   display: block;
-  stroke: rgba(colors.$sequencer-sub-divider-rgb, 0.3);
-  stroke-width: 1;
+  stroke: 0;
 }
 
-.sequencer-grid-octave-cell {
-  stroke: colors.$sequencer-main-divider;
+.sequencer-grid-cell-white {
+  fill: var(--md-custom-color-sing-grid-cell-white);
+}
+
+.sequencer-grid-cell-black {
+  fill: var(--md-custom-color-sing-grid-cell-black);
+}
+
+.sequencer-grid-vertical-line {
+  stroke: var(--md-custom-color-sing-grid-vertical-line);
+  stroke-width: 1px;
+}
+
+.sequencer-grid-horizontal-line {
+  backface-visibility: hidden;
+  stroke: var(--md-custom-color-sing-grid-horizontal-line);
+  stroke-width: 1px;
 }
 
 .sequencer-grid-octave-line {
   backface-visibility: hidden;
-  stroke: colors.$sequencer-main-divider;
-}
-
-.sequencer-grid-cell-white {
-  fill: colors.$sequencer-whitekey-cell;
-}
-
-.sequencer-grid-cell-black {
-  fill: colors.$sequencer-blackkey-cell;
+  stroke: var(--md-custom-color-sing-grid-octave-line);
+  stroke-width: 1px;
 }
 
 .sequencer-grid-measure-line {
   backface-visibility: hidden;
-  stroke: colors.$sequencer-main-divider;
+  stroke: var(--md-custom-color-sing-grid-measure-line);
+  stroke-width: 2px;
 }
 
 .sequencer-grid-beat-line {
   backface-visibility: hidden;
-  stroke: colors.$sequencer-sub-divider;
+  stroke: var(--md-custom-color-sing-grid-beat-line);
+  stroke-width: 1px;
 }
 </style>

@@ -5,8 +5,8 @@
       <QSkeleton
         class="character-name skeleton"
         type="rect"
-        width="65px"
-        height="15px"
+        width="64px"
+        height="16px"
       />
       <QSkeleton
         class="character-style"
@@ -17,11 +17,7 @@
     </div>
   </div>
   <div v-else class="selected-character">
-    <QAvatar
-      v-if="selectedStyleIconPath"
-      class="character-avatar"
-      size="3.5rem"
-    >
+    <QAvatar v-if="selectedStyleIconPath" class="character-avatar" size="3rem">
       <img :src="selectedStyleIconPath" class="character-avatar-icon" />
     </QAvatar>
     <div class="character-info">
@@ -83,10 +79,22 @@ const selectedStyleIconPath = computed(() => {
 @use "@/styles/colors" as colors;
 
 .selected-character {
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 4px 0 0 4px;
   align-items: center;
   display: flex;
-  padding: 0.25rem 0.5rem 0.25rem 0.25rem;
+  padding: 4px;
   position: relative;
+  height: 56px;
+
+  &:hover {
+    border-color: var(--md-sys-color-outline);
+    background: rgba(var(--md-sys-color-secondary-container-rgb), 0.1);
+  }
+
+  &:focus {
+    border-color: var(--md-sys-color-primary);
+  }
 
   .character-avatar-icon {
     display: block;
@@ -99,33 +107,37 @@ const selectedStyleIconPath = computed(() => {
     align-items: start;
     display: flex;
     flex-direction: column;
-    margin-left: 0.5rem;
+    margin-left: 8px;
     text-align: left;
     justify-content: center;
     white-space: nowrap;
   }
+
   .character-name {
-    font-size: 0.875rem;
-    font-weight: bold;
-    line-height: 1rem;
-    padding-top: 0.5rem;
+    color: var(--md-sys-color-on-surface);
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 24px;
+    padding-top: 8px;
+    margin-bottom: 0;
 
     &.skeleton {
-      margin-top: 0.4rem;
-      margin-bottom: 0.2rem;
+      margin-top: 0;
+      margin-bottom: 8px;
     }
   }
 
   .character-style {
-    color: rgba(colors.$display-rgb, 0.6);
-    font-size: 0.75rem;
-    font-weight: bold;
-    line-height: 1rem;
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 10px;
+    font-weight: 500;
+    line-height: 16px;
+    margin-bottom: 8px;
   }
 
   .character-menu-dropdown-icon {
-    color: rgba(colors.$display-rgb, 0.8);
-    margin-left: 0.25rem;
+    color: var(--md-sys-color-on-surface-variant);
+    margin-left: 4px;
   }
 }
 </style>

@@ -22,27 +22,34 @@
       @mousedown="onBarMouseDown"
       @dblclick="onBarDoubleClick"
     >
-      <div
-        class="note-left-edge"
-        :class="{
-          'cursor-ew-resize': editTargetIsNote,
-        }"
-        @mousedown="onLeftEdgeMouseDown"
-      ></div>
-      <div
-        class="note-right-edge"
-        :class="{
-          'cursor-ew-resize': editTargetIsNote,
-        }"
-        @mousedown="onRightEdgeMouseDown"
-      ></div>
       <ContextMenu
         v-if="editTargetIsNote"
         ref="contextMenu"
         :menudata="contextMenuData"
       />
     </div>
-    <div class="note-lyric" data-testid="note-lyric">
+    <div
+      class="note-left-edge"
+      :class="{
+        'cursor-ew-resize': editTargetIsNote,
+      }"
+      @mousedown="onLeftEdgeMouseDown"
+    ></div>
+    <div
+      class="note-right-edge"
+      :class="{
+        'cursor-ew-resize': editTargetIsNote,
+      }"
+      @mousedown="onRightEdgeMouseDown"
+    ></div>
+    <div
+      class="note-lyric"
+      data-testid="note-lyric"
+      :style="{
+        fontSize: `${height > 16 ? 16 : height - 2}px`,
+        lineHeight: `${height}px`,
+      }"
+    >
       {{ lyricToDisplay }}
     </div>
     <!-- エラー内容を表示 -->
@@ -223,115 +230,152 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
   top: 0;
   left: 0;
 
-  &.below-pitch {
+  .note-lyric {
+    border-radius: 4px;
+    position: fixed;
+    left: 2px;
+    bottom: 0;
+    color: var(--md-sys-color-on-secondary-fixed);
+    font-size: 16px;
+    font-weight: 400;
+    letter-spacing: -0.1em;
+    white-space: nowrap;
+    pointer-events: none;
+    background: transparent;
+    transition: font-size 0.2s ease;
+  }
+
+  .note-bar {
+    box-sizing: border-box;
+    position: absolute;
+    width: calc(100% + 1px);
+    height: 100%;
+    background-color: var(--md-custom-color-sing-note-bar-container);
+    border: 1px solid var(--md-sys-color-secondary-fixed-dim);
+    border-radius: 4px;
+  }
+
+  .note-left-edge {
+    position: absolute;
+    top: 0;
+    left: 0;
+    border-radius: 4px 0 0 4px;
+    width: 25%;
+    min-width: 4px;
+    max-width: 8px;
+    height: 100%;
+
+    &:hover {
+      // FIXME: hoverだとカーソル位置によって適用されないので、プレビュー中に明示的にクラス指定する
+      background-color: var(--md-sys-color-secondary-fixed-dim);
+    }
+  }
+
+  .note-right-edge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    border-radius: 0 4px 4px 0;
+    width: 25%;
+    min-width: 4px;
+    max-width: 8px;
+    height: 100%;
+
+    &:hover {
+      // FIXME: hoverだとカーソル位置によって適用されないので、プレビュー中に明示的にクラス指定する
+      background-color: var(--md-sys-color-secondary-fixed-dim);
+    }
+  }
+
+  &.selected-or-preview {
     .note-bar {
-      background-color: rgba(colors.$primary-rgb, 0.18);
-      border-color: hsl(130, 35%, 78%);
+      background-color: var(--md-sys-color-primary-fixed);
+      border-color: var(--md-sys-color-primary-fixed-dim);
     }
-  }
 
-  &:not(.below-pitch) {
+    .note-lyric {
+      color: var(--md-sys-color-on-primary-fixed);
+    }
+
+    .note-right-edge:hover,
     .note-left-edge:hover {
-      // FIXME: hoverだとカーソル位置によって適用されないので、プレビュー中に明示的にクラス指定する
-      background-color: lab(80, -22.953, 14.365);
-    }
-
-    .note-right-edge:hover {
-      // FIXME: hoverだとカーソル位置によって適用されないので、プレビュー中に明示的にクラス指定する
-      background-color: lab(80, -22.953, 14.365);
-    }
-
-    &.selected-or-preview {
-      // 色は仮
-      .note-bar {
-        background-color: lab(95, -22.953, 14.365);
-        border-color: lab(65, -22.953, 14.365);
-        outline: solid 2px lab(70, -22.953, 14.365);
-      }
+      background-color: var(--md-sys-color-primary-fixed-dim);
     }
   }
-  // TODO：もっといい見た目を考える
+
   &.preview-lyric {
     .note-bar {
-      background-color: lab(90, -22.953, 14.365);
-      border-color: lab(75, -22.953, 14.365);
-      outline: solid 2px lab(80, -22.953, 14.365);
+      background-color: var(--md-sys-color-primary-fixed);
+      border-color: var(--md-sys-color-primary-fixed-dim);
+    }
+
+    .note-lyric {
+      border-bottom: 1px solid var(--md-sys-color-primary-fixed-dim);
+    }
+  }
+
+  &.preview-lyric {
+    .note-bar {
+      background-color: var(--md-sys-color-primary-fixed);
+      border-color: var(--md-sys-color-primary-fixed-dim);
     }
 
     .note-lyric {
       opacity: 0.38;
-    }
-
-    &.below-pitch {
-      .note-bar {
-        background-color: rgba(hsl(130, 100%, 50%), 0.18);
-      }
     }
   }
 
   &.overlapping,
   &.invalid-phrase {
     .note-bar {
-      background-color: rgba(colors.$warning-rgb, 0.5);
+      background-color: var(--md-sys-color-surface-variant);
+      border-color: var(--md-sys-color-error);
+    }
+
+    .note-right-edge:hover,
+    .note-left-edge:hover {
+      background-color: var(--md-sys-color-error);
     }
 
     .note-lyric {
-      opacity: 0.6;
+      color: var(--md-sys-color-on-surface-variant);
+      opacity: 0.38;
+      text-shadow: none;
     }
 
     &.selected-or-preview {
       .note-bar {
-        background-color: rgba(colors.$warning-rgb, 0.5);
-        border-color: colors.$warning;
-        outline: 2px solid rgba(colors.$warning-rgb, 0.3);
+        background-color: var(--md-sys-color-error-container);
+        border-color: var(--md-sys-color-error);
       }
     }
   }
-}
 
-.note-lyric {
-  position: absolute;
-  left: 0.125rem;
-  bottom: 0;
-  min-width: 2rem;
-  padding: 0;
-  background: transparent;
-  color: #121212;
-  font-size: 1rem;
-  font-weight: 700;
-  text-shadow:
-    -1px -1px 0 #fff,
-    1px -1px 0 #fff,
-    -1px 1px 0 #fff,
-    1px 1px 0 #fff;
-  white-space: nowrap;
-  pointer-events: none;
-}
+  &.below-pitch {
+    .note-bar {
+      background-color: var(--md-sys-color-surface-variant);
+      border-color: var(--md-sys-color-outline-variant);
+      opacity: 0.38;
+    }
 
-.note-bar {
-  box-sizing: border-box;
-  position: absolute;
-  width: calc(100% + 1px);
-  height: 100%;
-  background-color: colors.$primary;
-  border: 1px solid rgba(colors.$background-rgb, 0.5);
-  border-radius: 4px;
-}
+    .note-lyric {
+      color: var(--md-sys-color-on-surface);
+      opacity: 0.72;
+    }
 
-.note-left-edge {
-  position: absolute;
-  top: 0;
-  left: -1px;
-  width: 5px;
-  height: 100%;
-}
+    .note-right-edge:hover,
+    .note-left-edge:hover {
+      background-color: transparent;
+    }
 
-.note-right-edge {
-  position: absolute;
-  top: 0;
-  right: -1px;
-  width: 5px;
-  height: 100%;
+    &.overlapping,
+    &.invalid-phrase {
+      .note-bar {
+        background-color: var(--md-sys-color-error-container);
+        border-color: var(--md-sys-color-error);
+      }
+    }
+  }
 }
 
 .cursor-move {

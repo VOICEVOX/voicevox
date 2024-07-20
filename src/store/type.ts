@@ -30,6 +30,7 @@ import {
   SavingSetting,
   ThemeConf,
   ThemeSetting,
+  ColorSchemeSetting,
   ExperimentalSettingType,
   ToolbarSettingType,
   UpdateInfo,
@@ -52,6 +53,8 @@ import {
   RootMiscSettingType,
   EditorType,
   NoteId,
+  ColorSchemeConfig,
+  ColorScheme,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import {
@@ -1528,6 +1531,7 @@ export type SettingStoreState = {
   engineInfos: Record<EngineId, EngineInfo>;
   engineManifests: Record<EngineId, EngineManifest>;
   themeSetting: ThemeSetting;
+  colorSchemeSetting: ColorSchemeSetting;
   acceptTerms: AcceptTermsStatus;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
   experimentalSetting: ExperimentalSettingType;
@@ -1571,6 +1575,21 @@ export type SettingStoreTypes = {
   SET_THEME_SETTING: {
     mutation: { currentTheme: string; themes?: ThemeConf[] };
     action(payload: { currentTheme: string }): void;
+  };
+
+  INITIALIZE_COLOR_SCHEME: {
+    mutation: {
+      currentColorScheme: ColorScheme;
+      availableColorSchemeConfigs: ColorSchemeConfig[];
+    };
+    action(): void;
+  };
+
+  SET_COLOR_SCHEME: {
+    mutation: {
+      colorScheme: ColorScheme;
+    };
+    action(payload: { colorSchemeConfig: ColorSchemeConfig }): void;
   };
 
   SET_ACCEPT_RETRIEVE_TELEMETRY: {

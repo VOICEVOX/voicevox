@@ -243,15 +243,20 @@ const engineIcons = useEngineIcons(() => store.state.engineManifests);
 @use "@/styles/colors" as colors;
 
 .character-menu {
+  .q-menu {
+    :deep(.q-menu__container) {
+      border-radius: 1.25rem;
+    }
+  }
   .q-item {
-    color: colors.$display;
+    color: var(--md-sys-color-on-surface);
   }
   .q-btn-group {
     > .q-btn:first-child > :deep(.q-btn__content) {
       justify-content: flex-start;
     }
     > div:last-child:hover {
-      background-color: rgba(colors.$primary-rgb, 0.1);
+      background-color: rgba(var(--md-sys-color-secondary-rgb), 0.1);
     }
   }
   .engine-icon {

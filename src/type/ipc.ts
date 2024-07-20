@@ -11,6 +11,7 @@ import {
   EngineSettingType,
   EngineId,
   MessageBoxReturnValue,
+  ColorSchemeConfig,
 } from "@/type/preload";
 import { AltPortInfos } from "@/store/type";
 import { Result } from "@/type/result";
@@ -247,6 +248,11 @@ export type IpcIHData = {
   THEME: {
     args: [obj: { newData?: string }];
     return: ThemeSetting | void;
+  };
+
+  GET_COLOR_SCHEME_CONFIGS: {
+    args: [];
+    return: ColorSchemeConfig[];
   };
 
   ON_VUEX_READY: {

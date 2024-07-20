@@ -1,6 +1,11 @@
 <template>
   <div ref="sequencerRuler" class="sequencer-ruler" @click="onClick">
-    <svg xmlns="http://www.w3.org/2000/svg" :width :height>
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      :width
+      :height
+      shape-rendering="geometricPrecision"
+    >
       <defs>
         <pattern
           id="sequencer-ruler-measure"
@@ -9,15 +14,24 @@
           :width="beatWidth * beatsPerMeasure"
           :height
         >
+          <!-- 拍線 -->
           <line
             v-for="n in beatsPerMeasure"
             :key="n"
             :x1="beatWidth * (n - 1)"
             :x2="beatWidth * (n - 1)"
-            :y1="n === 1 ? 16 : 24"
+            y1="28"
             y2="100%"
             stroke-width="1"
-            :class="`sequencer-ruler-${n === 1 ? 'measure' : 'beat'}-line`"
+            class="sequencer-ruler-beat-line"
+          />
+          <line
+            x1="0"
+            x2="0"
+            y1="20"
+            y2="100%"
+            stroke-width="1"
+            class="sequencer-ruler-measure-line"
           />
         </pattern>
         <symbol id="sequencer-ruler-measure-numbers">
@@ -25,8 +39,8 @@
             v-for="measureInfo in measureInfos"
             :key="measureInfo.number"
             font-size="12"
-            :x="measureInfo.x + 4"
-            y="20"
+            :x="measureInfo.x + 6"
+            y="32"
             class="sequencer-ruler-measure-number"
           >
             {{ measureInfo.number }}
@@ -64,7 +78,7 @@ const props = withDefaults(
 );
 const store = useStore();
 const state = store.state;
-const height = ref(32);
+const height = ref(40);
 const playheadTicks = ref(0);
 const tpqn = computed(() => state.tpqn);
 const timeSignatures = computed(() => state.timeSignatures);
@@ -184,19 +198,10 @@ onUnmounted(() => {
 @use "@/styles/colors" as colors;
 
 .sequencer-ruler {
-  background: colors.$background;
+  background: var(--md-sys-color-surface-container-high);
+  height: 40px;
   position: relative;
   overflow: hidden;
-}
-
-.sequencer-ruler-border-bottom {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  border-top: 1px solid colors.$sequencer-sub-divider;
-  border-bottom: 1px solid colors.$sequencer-sub-divider;
 }
 
 .sequencer-ruler-playhead {
@@ -205,22 +210,24 @@ onUnmounted(() => {
   left: -1px;
   width: 2px;
   height: 100%;
-  background: rgba(colors.$display-rgb, 0.6);
+  background: var(--md-sys-color-inverse-surface);
   pointer-events: none;
   will-change: transform;
 }
 
 .sequencer-ruler-measure-number {
-  fill: colors.$display;
+  fill: var(--md-sys-color-on-surface-variant);
 }
 
 .sequencer-ruler-measure-line {
   backface-visibility: hidden;
-  stroke: rgba(colors.$display-rgb, 0.5);
+  stroke: var(--md-custom-color-sing-ruler-measure-line);
+  stroke-width: 2px;
 }
 
 .sequencer-ruler-beat-line {
   backface-visibility: hidden;
-  stroke: rgba(colors.$display-rgb, 0.25);
+  stroke: var(--md-custom-color-sing-ruler-beat-line);
+  stroke-width: 1px;
 }
 </style>

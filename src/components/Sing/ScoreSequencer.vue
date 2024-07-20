@@ -1437,16 +1437,14 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 .score-sequencer {
   backface-visibility: hidden;
   display: grid;
-  grid-template-rows: 30px 1fr;
+  grid-template-rows: 40px 1fr;
   grid-template-columns: 48px 1fr;
 }
 
 .sequencer-corner {
   grid-row: 1;
   grid-column: 1;
-  background: colors.$background;
-  border-top: 1px solid colors.$sequencer-sub-divider;
-  border-bottom: 1px solid colors.$sequencer-sub-divider;
+  background: var(--md-sys-color-surface-container-high);
 }
 
 .sequencer-ruler {
@@ -1471,12 +1469,51 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   }
 }
 
+.sequencer-grid {
+  display: block;
+  pointer-events: none;
+}
+
+.sequencer-grid-cell {
+  display: block;
+  stroke: var(--md-sys-color-surface-variant);
+  stroke-width: 1;
+}
+
+.sequencer-grid-octave-cell {
+  stroke: var(--md-sys-color-outline);
+}
+
+.sequencer-grid-octave-line {
+  backface-visibility: hidden;
+  stroke: var(--md-sys-color-outline);
+}
+
+.sequencer-grid-cell-white {
+  fill: var(--md-sys-color-background);
+}
+
+.sequencer-grid-cell-black {
+  fill: var(--md-sys-color-surface-variant);
+}
+
+.sequencer-grid-measure-line {
+  backface-visibility: hidden;
+  stroke: var(--md-sys-color-outline);
+}
+
+.sequencer-grid-beat-line {
+  backface-visibility: hidden;
+  stroke: var(--md-sys-color-outline);
+  opacity: 0.6;
+}
+
 .sequencer-guideline {
   position: absolute;
   top: 0;
   left: -1px;
   width: 2px;
-  background: hsl(130, 35%, 82%);
+  background: var(--md-sys-color-secondary-container);
   pointer-events: none;
 }
 
@@ -1507,15 +1544,15 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   left: -1px;
   width: 2px;
   height: 100%;
-  background: rgba(colors.$display-rgb, 0.6);
+  background: var(--md-sys-color-inverse-surface);
   will-change: transform;
 }
 
 .rect-select-preview {
   pointer-events: none;
   position: absolute;
-  border: 2px solid rgba(colors.$primary-rgb, 0.5);
-  background: rgba(colors.$primary-rgb, 0.25);
+  border: 1px dashed var(--md-sys-color-secondary);
+  background: var(--md-sys-color-secondary-container);
 }
 
 .cursor-draw {
@@ -1529,6 +1566,24 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   bottom: 16px;
   right: 32px;
   width: 80px;
+
+  :deep(.q-slider__track) {
+    background: var(--md-sys-color-surface-variant);
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  :deep(.q-slider__thumb) {
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  &:hover {
+    :deep(.q-slider__track) {
+      color: var(--md-sys-color-on-surface-variant);
+    }
+    :deep(.q-slider__thumb) {
+      color: var(--md-sys-color-on-surface-variant);
+    }
+  }
 }
 
 .zoom-y-slider {
@@ -1536,5 +1591,23 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   bottom: 40px;
   right: 16px;
   height: 80px;
+
+  :deep(.q-slider__track) {
+    background: var(--md-sys-color-surface-variant);
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  :deep(.q-slider__thumb) {
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  &:hover {
+    :deep(.q-slider__track) {
+      color: var(--md-sys-color-on-surface-variant);
+    }
+    :deep(.q-slider__thumb) {
+      color: var(--md-sys-color-on-surface-variant);
+    }
+  }
 }
 </style>

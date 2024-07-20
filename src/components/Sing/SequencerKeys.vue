@@ -1,6 +1,11 @@
 <template>
   <div ref="sequencerKeys" class="sequencer-keys">
-    <svg xmlns="http://www.w3.org/2000/svg" :width :height>
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      :width
+      :height
+      shape-rendering="geometricPrecision"
+    >
       <g
         v-for="(whiteKeyInfo, index) in whiteKeyInfos"
         :key="index"
@@ -8,8 +13,8 @@
         @mouseenter="onMouseEnter(whiteKeyInfo.noteNumber)"
       >
         <rect
-          :x="whiteKeyRects[index].x - 0.5"
-          :y="whiteKeyRects[index].y + 0.5 - offset"
+          :x="whiteKeyRects[index].x"
+          :y="whiteKeyRects[index].y - offset"
           :width="whiteKeyRects[index].width"
           :height="whiteKeyRects[index].height"
           :title="whiteKeyInfo.name"
@@ -32,8 +37,8 @@
       <rect
         v-for="(blackKeyInfo, index) in blackKeyInfos"
         :key="index"
-        :x="blackKeyRects[index].x - 0.5"
-        :y="blackKeyRects[index].y + 0.5 - offset"
+        :x="blackKeyRects[index].x"
+        :y="blackKeyRects[index].y - offset"
         :width="blackKeyRects[index].width"
         :height="blackKeyRects[index].height"
         rx="2"
@@ -175,29 +180,29 @@ onUnmounted(() => {
 
 .sequencer-keys {
   backface-visibility: hidden;
-  background: colors.$background;
+  background: var(--md-sys-color-background);
   overflow: hidden;
 }
 
 .white-key {
-  fill: colors.$sequencer-white-key;
-  stroke: colors.$sequencer-main-divider;
+  fill: var(--md-custom-color-sing-piano-key-white);
+  stroke: var(--md-sys-color-outline-variant);
 }
 
 .white-key-being-pressed {
-  fill: colors.$primary;
-  stroke: colors.$primary;
+  fill: var(--md-sys-color-secondary-fixed);
+  stroke: var(--md-sys-color-secondary-fixed);
 }
 
 .black-key {
-  fill: colors.$sequencer-black-key;
+  fill: var(--md-custom-color-sing-piano-key-black);
 }
 
 .black-key-being-pressed {
-  fill: colors.$primary;
+  fill: var(--md-sys-color-secondary-fixed);
 }
 
 .pitchname {
-  fill: colors.$sequencer-black-key;
+  fill: var(--md-sys-color-on-surface-fixed);
 }
 </style>

@@ -6,6 +6,7 @@
 import { ref, watch, computed } from "vue";
 import * as PIXI from "pixi.js";
 import AsyncLock from "async-lock";
+import { useColorScheme } from "@/composables/useColorScheme";
 import { useStore } from "@/store";
 import {
   UNVOICED_PHONEMES,
@@ -56,14 +57,32 @@ const pitchEditData = computed(() => {
 const previewPitchEdit = computed(() => props.previewPitchEdit);
 const editFrameRate = computed(() => store.state.editFrameRate);
 
+const { systemColorsRgba } = useColorScheme();
+
+// TODO: このままだとテーマ変更で更新されないため、変更に追随する必要あり
+const pitchLineColor = [...systemColorsRgba.value.outline.slice(0, 3), 255];
+const pitchEditLineColor = [
+  ...systemColorsRgba.value.primaryFixedDim.slice(0, 3),
+  255,
+];
 const originalPitchLine: PitchLine = {
-  color: new Color(171, 201, 176, 255),
-  width: 1.2,
+  color: new Color(
+    pitchLineColor[0],
+    pitchLineColor[1],
+    pitchLineColor[2],
+    pitchLineColor[3],
+  ),
+  width: 1.5,
   pitchDataMap: new Map(),
   lineStripMap: new Map(),
 };
 const pitchEditLine: PitchLine = {
-  color: new Color(146, 214, 154, 255),
+  color: new Color(
+    pitchEditLineColor[0],
+    pitchEditLineColor[1],
+    pitchEditLineColor[2],
+    pitchEditLineColor[3],
+  ),
   width: 2,
   pitchDataMap: new Map(),
   lineStripMap: new Map(),

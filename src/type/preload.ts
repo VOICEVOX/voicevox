@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DynamicScheme } from "@material/material-color-utilities";
 import { IpcSOData } from "./ipc";
 import { AltPortInfos } from "@/store/type";
 import { Result } from "@/type/result";
@@ -291,6 +292,7 @@ export interface Sandbox {
   uninstallVvppEngine(engineId: EngineId): Promise<boolean>;
   validateEngineDir(engineDir: string): Promise<EngineDirValidationResult>;
   reloadApp(obj: { isMultiEngineOffMode?: boolean }): Promise<void>;
+  getColorSchemeConfigs(): Promise<ColorSchemeConfig[]>;
 }
 
 export type AppInfos = {
@@ -557,6 +559,79 @@ export type ThemeSetting = {
   availableThemes: ThemeConf[];
 };
 
+export type ColorSchemeSetting = {
+  currentColorScheme: ColorScheme;
+  availableColorSchemeConfigs: ColorSchemeConfig[];
+};
+
+// カラースキーマの種類(M3準拠)
+export type ColorSchemeVariant =
+  | "content"
+  | "tonalSpot"
+  | "neutral"
+  | "vibrant"
+  | "expressive"
+  | "fidelity"
+  | "monochrome"
+  | "rainbow"
+  | "fruitSalad";
+
+// カラーパレットのキー(M3準拠)
+export type ColorSchemeCorePalettes =
+  | "primary"
+  | "secondary"
+  | "tertiary"
+  | "neutral"
+  | "neutralVariant"
+  | "error";
+
+// カラー事前調整
+export interface ColorSchemeAdjustment {
+  hue?: number;
+  chroma?: number;
+  tone?: number;
+  hex?: string;
+}
+
+// パレットから取得するカスタムカラー
+export interface CustomPaletteColor {
+  name: string;
+  palette: ColorSchemeCorePalettes;
+  lightTone: number;
+  darkTone: number;
+  blend: boolean;
+  contrastVs: Record<string, number>;
+}
+
+// 定義済みカスタムカラー
+export interface CustomDefinedColor {
+  name: string;
+  value: string;
+  blend: boolean;
+}
+
+// カラースキーマのベース設定(ここから生成)
+export interface ColorSchemeConfig {
+  name: string;
+  sourceColor: string;
+  variant: ColorSchemeVariant;
+  isDark: boolean;
+  contrastLevel: number;
+  adjustments: Partial<Record<ColorSchemeCorePalettes, ColorSchemeAdjustment>>;
+  customPaletteColors: CustomPaletteColor[];
+  customDefinedColors: CustomDefinedColor[];
+}
+
+// カラースキーマ
+export interface ColorScheme {
+  scheme: DynamicScheme;
+  systemColors: Record<string, string>;
+  paletteTones: Record<string, Record<number, string>>;
+  customPaletteColors: Record<string, string>;
+  customDefinedColors: Record<string, string>;
+  config: ColorSchemeConfig;
+}
+
 export const experimentalSettingSchema = z.object({
   enablePreset: z.boolean().default(false),
   shouldApplyDefaultPresetOnVoiceChanged: z.boolean().default(false),
@@ -565,6 +640,7 @@ export const experimentalSettingSchema = z.object({
   enableMultiSelect: z.boolean().default(false),
   shouldKeepTuningOnTextChange: z.boolean().default(false),
   enablePitchEditInSongEditor: z.boolean().default(false),
+  enableColorSchemeEditor: z.boolean().default(false),
 });
 
 export type ExperimentalSettingType = z.infer<typeof experimentalSettingSchema>;
