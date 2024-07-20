@@ -279,7 +279,6 @@ export const singingStorePlugin: WatchStoreStatePlugin = (store) => {
     for (const [trackId, track] of store.state.tracks) {
       if (!trackChannelStrips.has(trackId)) {
         const channelStrip = new ChannelStrip(audioContext);
-        trackChannelStrips.set(trackId, channelStrip);
         channelStrip.output.connect(globalChannelStrip.input);
 
         trackChannelStrips.set(trackId, channelStrip);
