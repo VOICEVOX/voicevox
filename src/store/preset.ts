@@ -1,5 +1,5 @@
-import { uuid4 } from "@/helpers/random";
 import { createPartialStore } from "./vuex";
+import { uuid4 } from "@/helpers/random";
 import { PresetStoreState, PresetStoreTypes, State } from "@/store/type";
 import { Preset, PresetKey, Voice, VoiceId } from "@/type/preload";
 
