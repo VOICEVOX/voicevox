@@ -244,8 +244,8 @@ export const useSequencerStateMachine = (
   );
   return {
     stateMachine,
-    nowPreviewing: computed(() => refs.nowPreviewing),
-    previewNotes: computed(() => refs.previewNotes),
-    guideLineTicks: computed(() => refs.guideLineTicks),
+    nowPreviewing: computed(() => refs.nowPreviewing.value),
+    previewNotes: computed(() => refs.previewNotes.value),
+    guideLineTicks: computed(() => refs.guideLineTicks.value),
   };
 };
