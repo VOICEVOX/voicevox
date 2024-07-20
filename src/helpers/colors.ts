@@ -23,7 +23,6 @@ import {
   ColorSchemeCorePalettes,
   ColorSchemeAdjustment,
   CustomPaletteColor,
-  CustomDefinedColor,
 } from "@/type/preload";
 
 const SCHEME_CONSTRUCTORS = {

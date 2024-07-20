@@ -1469,11 +1469,50 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   }
 }
 
+.sequencer-grid {
+  display: block;
+  pointer-events: none;
+}
+
+.sequencer-grid-cell {
+  display: block;
+  stroke: var(--md-sys-color-surface-variant);
+  stroke-width: 1;
+}
+
+.sequencer-grid-octave-cell {
+  stroke: var(--md-sys-color-outline);
+}
+
+.sequencer-grid-octave-line {
+  backface-visibility: hidden;
+  stroke: var(--md-sys-color-outline);
+}
+
+.sequencer-grid-cell-white {
+  fill: var(--md-sys-color-background);
+}
+
+.sequencer-grid-cell-black {
+  fill: var(--md-sys-color-surface-variant);
+}
+
+.sequencer-grid-measure-line {
+  backface-visibility: hidden;
+  stroke: var(--md-sys-color-outline);
+}
+
+.sequencer-grid-beat-line {
+  backface-visibility: hidden;
+  stroke: var(--md-sys-color-outline);
+  opacity: 0.6;
+}
+
 .sequencer-guideline {
   position: absolute;
   top: 0;
-  left: -0.5px;
-  width: 1px;
+  left: -1px;
+  width: 2px;
   background: var(--md-sys-color-secondary-container);
   pointer-events: none;
 }
@@ -1513,7 +1552,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   pointer-events: none;
   position: absolute;
   border: 1px dashed var(--md-sys-color-secondary);
-  background: rgba(var(--md-sys-color-secondary-container), 0.5);
+  background: var(--md-sys-color-secondary-container);
 }
 
 .cursor-draw {
