@@ -1231,7 +1231,7 @@ export type SingingStoreTypes = {
   };
 
   CALC_RENDER_DURATION: {
-    action(): number;
+    getter: number;
   };
 };
 

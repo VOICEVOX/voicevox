@@ -2097,7 +2097,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           const sampleRate = 48000; // TODO: 設定できるようにする
           const withLimiter = false; // TODO: 設定できるようにする
 
-          const renderDuration = await dispatch("CALC_RENDER_DURATION");
+          const renderDuration = getters.CALC_RENDER_DURATION;
 
           if (state.nowPlaying) {
             await dispatch("SING_STOP_AUDIO");
@@ -2403,7 +2403,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   CALC_RENDER_DURATION: {
-    action({ state, getters }) {
+    getter(state) {
       const notes = [...state.tracks.values()].flatMap((track) => track.notes);
       if (notes.length === 0) {
         return 1;
@@ -2411,7 +2411,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       notes.sort((a, b) => a.position + a.duration - (b.position + b.duration));
       const lastNote = notes[notes.length - 1];
       const lastNoteEndPosition = lastNote.position + lastNote.duration;
-      const lastNoteEndTime = getters.TICK_TO_SECOND(lastNoteEndPosition);
+      const lastNoteEndTime = tickToSecond(
+        lastNoteEndPosition,
+        state.tempos,
+        state.tpqn,
+      );
       return Math.max(1, lastNoteEndTime + 1);
     },
   },
