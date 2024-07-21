@@ -123,19 +123,6 @@ const generateNoteEvents = (notes: Note[], tempos: Tempo[], tpqn: number) => {
   });
 };
 
-const createAudioPlayerSequence = (
-  audioContext: BaseAudioContext,
-  audioEvents: AudioEvent[],
-): { audioPlayer: AudioPlayer; audioSequence: AudioSequence } => {
-  const audioPlayer = new AudioPlayer(audioContext);
-  const audioSequence: AudioSequence = {
-    type: "audio",
-    audioPlayer,
-    audioEvents,
-  };
-  return { audioPlayer, audioSequence };
-};
-
 const generateDefaultSongFileName = (
   projectName: string | undefined,
   selectedTrack: Track,
@@ -210,10 +197,12 @@ const offlineRenderTracks = async (
       singingGuide.startTime,
       singingVoice.blob,
     );
-    const { audioPlayer, audioSequence } = createAudioPlayerSequence(
-      offlineAudioContext,
+    const audioPlayer = new AudioPlayer(offlineAudioContext);
+    const audioSequence: AudioSequence = {
+      type: "audio",
+      audioPlayer,
       audioEvents,
-    );
+    };
     const channelStrip = getOrThrow(trackChannelStrips, phrase.trackId);
     audioPlayer.output.connect(channelStrip.input);
     offlineTransport.addSequence(audioSequence);
@@ -1975,10 +1964,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               singingGuide.startTime,
               singingVoice.blob,
             );
-            const { audioPlayer, audioSequence } = createAudioPlayerSequence(
-              audioContextRef,
+            const audioPlayer = new AudioPlayer(audioContext);
+            const audioSequence: AudioSequence = {
+              type: "audio",
+              audioPlayer,
               audioEvents,
-            );
+            };
             const channelStrip = getOrThrow(
               trackChannelStripsRef,
               phrase.trackId,
