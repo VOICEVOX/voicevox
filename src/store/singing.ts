@@ -2135,18 +2135,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             }
           }
 
-          const shouldPlays = shouldPlayTracks(state.tracks);
-
           const audioBuffer = await offlineRenderTracks(
             numberOfChannels,
             sampleRate,
             renderDuration,
             withLimiter,
-            new Map(
-              [...state.tracks.entries()].filter(([trackId]) =>
-                getOrThrow(shouldPlays, trackId),
-              ),
-            ),
+            state.tracks,
             state.phrases,
             state.singingGuides,
             singingVoiceCache,
