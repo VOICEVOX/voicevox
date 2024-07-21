@@ -178,7 +178,7 @@ const offlineRenderTracks = async (
     sampleRate,
   );
   const offlineTransport = new OfflineTransport();
-  const globalChannelStrip = new ChannelStrip(offlineAudioContext);
+  const mainChannelStrip = new ChannelStrip(offlineAudioContext);
   const limiter = withLimiter ? new Limiter(offlineAudioContext) : undefined;
   const clipper = new Clipper(offlineAudioContext);
   const trackChannelStrips = new Map<TrackId, ChannelStrip>();
@@ -189,7 +189,7 @@ const offlineRenderTracks = async (
     channelStrip.pan = track.pan;
     channelStrip.mute = !getOrThrow(shouldPlays, trackId);
 
-    channelStrip.output.connect(globalChannelStrip.input);
+    channelStrip.output.connect(mainChannelStrip.input);
     trackChannelStrips.set(trackId, channelStrip);
   }
 
@@ -218,12 +218,12 @@ const offlineRenderTracks = async (
     audioPlayer.output.connect(channelStrip.input);
     offlineTransport.addSequence(audioSequence);
   }
-  globalChannelStrip.volume = 1;
+  mainChannelStrip.volume = 1;
   if (limiter) {
-    globalChannelStrip.output.connect(limiter.input);
+    mainChannelStrip.output.connect(limiter.input);
     limiter.output.connect(clipper.input);
   } else {
-    globalChannelStrip.output.connect(clipper.input);
+    mainChannelStrip.output.connect(clipper.input);
   }
   clipper.output.connect(offlineAudioContext.destination);
 
@@ -238,7 +238,7 @@ const offlineRenderTracks = async (
 let audioContext: AudioContext | undefined;
 let transport: Transport | undefined;
 let previewSynth: PolySynth | undefined;
-let globalChannelStrip: ChannelStrip | undefined;
+let mainChannelStrip: ChannelStrip | undefined;
 const trackChannelStrips = new Map<TrackId, ChannelStrip>();
 let limiter: Limiter | undefined;
 let clipper: Clipper | undefined;
@@ -248,12 +248,12 @@ if (window.AudioContext) {
   audioContext = new AudioContext();
   transport = new Transport(audioContext);
   previewSynth = new PolySynth(audioContext);
-  globalChannelStrip = new ChannelStrip(audioContext);
+  mainChannelStrip = new ChannelStrip(audioContext);
   limiter = new Limiter(audioContext);
   clipper = new Clipper(audioContext);
 
-  previewSynth.output.connect(globalChannelStrip.input);
-  globalChannelStrip.output.connect(limiter.input);
+  previewSynth.output.connect(mainChannelStrip.input);
+  mainChannelStrip.output.connect(limiter.input);
   limiter.output.connect(clipper.input);
   clipper.output.connect(audioContext.destination);
 }
@@ -272,14 +272,14 @@ export const singingStorePlugin: WatchStoreStatePlugin = (store) => {
   // tracksの変更とtrackChannelStripsを同期する。
   // NOTE: immerの差分検知はChannelStripだと動かないので、tracksの変更を監視して同期する。
   watchSyncEffect(async () => {
-    if (!audioContext || !globalChannelStrip) {
+    if (!audioContext || !mainChannelStrip) {
       return;
     }
     const shouldPlays = shouldPlayTracks(store.state.tracks);
     for (const [trackId, track] of store.state.tracks) {
       if (!trackChannelStrips.has(trackId)) {
         const channelStrip = new ChannelStrip(audioContext);
-        channelStrip.output.connect(globalChannelStrip.input);
+        channelStrip.output.connect(mainChannelStrip.input);
 
         trackChannelStrips.set(trackId, channelStrip);
       }
@@ -1022,12 +1022,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.volume = volume;
     },
     async action({ commit }, { volume }) {
-      if (!globalChannelStrip) {
+      if (!mainChannelStrip) {
         throw new Error("channelStrip is undefined.");
       }
       commit("SET_VOLUME", { volume });
 
-      globalChannelStrip.volume = volume;
+      mainChannelStrip.volume = volume;
     },
   },
 
@@ -1552,7 +1552,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         if (!transport) {
           throw new Error("transport is undefined.");
         }
-        if (!globalChannelStrip) {
+        if (!mainChannelStrip) {
           throw new Error("channelStrip is undefined.");
         }
         const audioContextRef = audioContext;
