@@ -2095,7 +2095,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           );
           const numberOfChannels = 2;
           const sampleRate = 48000; // TODO: 設定できるようにする
-          const withLimiter = false; // TODO: 設定できるようにする
+          const withLimiter = true; // TODO: 設定できるようにする
 
           const renderDuration = getters.CALC_RENDER_DURATION;
 
