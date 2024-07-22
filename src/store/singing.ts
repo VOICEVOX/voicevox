@@ -1,5 +1,5 @@
 import path from "path";
-import { toRaw } from "vue";
+import { toRaw, watchSyncEffect } from "vue";
 import { createPartialStore } from "./vuex";
 import { createUILockAction } from "./ui";
 import {
@@ -21,9 +21,16 @@ import {
   SequencerEditTarget,
   PhraseSourceHash,
   Track,
+  WatchStoreStatePlugin,
 } from "./type";
 import { DEFAULT_PROJECT_NAME, sanitizeFileName } from "./utility";
-import { EngineId, NoteId, StyleId, TrackId } from "@/type/preload";
+import {
+  CharacterInfo,
+  EngineId,
+  NoteId,
+  StyleId,
+  TrackId,
+} from "@/type/preload";
 import { FrameAudioQuery, Note as NoteForRequestToEngine } from "@/openapi";
 import { ResultError, getValueOrThrow } from "@/type/result";
 import {
@@ -71,6 +78,7 @@ import {
   SEQUENCER_MIN_NUM_MEASURES,
   getNumMeasures,
   isTracksEmpty,
+  shouldPlayTracks,
 } from "@/sing/domain";
 import {
   FrequentlyUpdatedState,
@@ -88,6 +96,8 @@ import { noteSchema } from "@/domain/project/schema";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { ufProjectToVoicevox } from "@/sing/utaformatixProject/toVoicevox";
+import { convertToWavFileData } from "@/sing/convertToWavFileData";
+import { generateWriteErrorMessage } from "@/helpers/fileHelper";
 
 const logger = createLogger("store/singing");
 
@@ -113,10 +123,112 @@ const generateNoteEvents = (notes: Note[], tempos: Tempo[], tpqn: number) => {
   });
 };
 
+const generateDefaultSongFileName = (
+  projectName: string | undefined,
+  selectedTrack: Track,
+  getCharacterInfo: (
+    engineId: EngineId,
+    styleId: StyleId,
+  ) => CharacterInfo | undefined,
+) => {
+  if (projectName) {
+    return projectName + ".wav";
+  }
+
+  const singer = selectedTrack.singer;
+  if (singer) {
+    const singerName = getCharacterInfo(singer.engineId, singer.styleId)?.metas
+      .speakerName;
+    if (singerName) {
+      const notes = selectedTrack.notes.slice(0, 5);
+      const beginningPartLyrics = notes.map((note) => note.lyric).join("");
+      return sanitizeFileName(`${singerName}_${beginningPartLyrics}.wav`);
+    }
+  }
+
+  return `${DEFAULT_PROJECT_NAME}.wav`;
+};
+
+const offlineRenderTracks = async (
+  numberOfChannels: number,
+  sampleRate: number,
+  renderDuration: number,
+  withLimiter: boolean,
+  tracks: Map<TrackId, Track>,
+  phrases: Map<PhraseSourceHash, Phrase>,
+  singingGuides: Map<SingingGuideSourceHash, SingingGuide>,
+  singingVoices: Map<SingingVoiceSourceHash, SingingVoice>,
+) => {
+  const offlineAudioContext = new OfflineAudioContext(
+    numberOfChannels,
+    sampleRate * renderDuration,
+    sampleRate,
+  );
+  const offlineTransport = new OfflineTransport();
+  const mainChannelStrip = new ChannelStrip(offlineAudioContext);
+  const limiter = withLimiter ? new Limiter(offlineAudioContext) : undefined;
+  const clipper = new Clipper(offlineAudioContext);
+  const trackChannelStrips = new Map<TrackId, ChannelStrip>();
+  const shouldPlays = shouldPlayTracks(tracks);
+  for (const [trackId, track] of tracks) {
+    const channelStrip = new ChannelStrip(offlineAudioContext);
+    channelStrip.volume = track.gain;
+    channelStrip.pan = track.pan;
+    channelStrip.mute = !getOrThrow(shouldPlays, trackId);
+
+    channelStrip.output.connect(mainChannelStrip.input);
+    trackChannelStrips.set(trackId, channelStrip);
+  }
+
+  for (const phrase of phrases.values()) {
+    if (
+      phrase.singingGuideKey == undefined ||
+      phrase.singingVoiceKey == undefined ||
+      phrase.state !== "PLAYABLE"
+    ) {
+      continue;
+    }
+    const singingGuide = getOrThrow(singingGuides, phrase.singingGuideKey);
+    const singingVoice = getOrThrow(singingVoices, phrase.singingVoiceKey);
+
+    // TODO: この辺りの処理を共通化する
+    const audioEvents = await generateAudioEvents(
+      offlineAudioContext,
+      singingGuide.startTime,
+      singingVoice.blob,
+    );
+    const audioPlayer = new AudioPlayer(offlineAudioContext);
+    const audioSequence: AudioSequence = {
+      type: "audio",
+      audioPlayer,
+      audioEvents,
+    };
+    const channelStrip = getOrThrow(trackChannelStrips, phrase.trackId);
+    audioPlayer.output.connect(channelStrip.input);
+    offlineTransport.addSequence(audioSequence);
+  }
+  mainChannelStrip.volume = 1;
+  if (limiter) {
+    mainChannelStrip.output.connect(limiter.input);
+    limiter.output.connect(clipper.input);
+  } else {
+    mainChannelStrip.output.connect(clipper.input);
+  }
+  clipper.output.connect(offlineAudioContext.destination);
+
+  // スケジューリングを行い、オフラインレンダリングを実行
+  // TODO: オフラインレンダリング後にメモリーがきちんと開放されるか確認する
+  offlineTransport.schedule(0, renderDuration);
+  const audioBuffer = await offlineAudioContext.startRendering();
+
+  return audioBuffer;
+};
+
 let audioContext: AudioContext | undefined;
 let transport: Transport | undefined;
 let previewSynth: PolySynth | undefined;
-let channelStrip: ChannelStrip | undefined;
+let mainChannelStrip: ChannelStrip | undefined;
+const trackChannelStrips = new Map<TrackId, ChannelStrip>();
 let limiter: Limiter | undefined;
 let clipper: Clipper | undefined;
 
@@ -125,12 +237,12 @@ if (window.AudioContext) {
   audioContext = new AudioContext();
   transport = new Transport(audioContext);
   previewSynth = new PolySynth(audioContext);
-  channelStrip = new ChannelStrip(audioContext);
+  mainChannelStrip = new ChannelStrip(audioContext);
   limiter = new Limiter(audioContext);
   clipper = new Clipper(audioContext);
 
-  previewSynth.output.connect(channelStrip.input);
-  channelStrip.output.connect(limiter.input);
+  previewSynth.output.connect(mainChannelStrip.input);
+  mainChannelStrip.output.connect(limiter.input);
   limiter.output.connect(clipper.input);
   clipper.output.connect(audioContext.destination);
 }
@@ -144,6 +256,38 @@ const singingGuideCache = new Map<SingingGuideSourceHash, SingingGuide>();
 const singingVoiceCache = new Map<SingingVoiceSourceHash, SingingVoice>();
 
 const initialTrackId = TrackId(crypto.randomUUID());
+
+export const singingStorePlugin: WatchStoreStatePlugin = (store) => {
+  // tracksの変更とtrackChannelStripsを同期する。
+  // NOTE: immerの差分検知はChannelStripだと動かないので、tracksの変更を監視して同期する。
+  watchSyncEffect(async () => {
+    if (!audioContext || !mainChannelStrip) {
+      return;
+    }
+    const shouldPlays = shouldPlayTracks(store.state.tracks);
+    for (const [trackId, track] of store.state.tracks) {
+      if (!trackChannelStrips.has(trackId)) {
+        const channelStrip = new ChannelStrip(audioContext);
+        channelStrip.output.connect(mainChannelStrip.input);
+
+        trackChannelStrips.set(trackId, channelStrip);
+      }
+
+      const channelStrip = getOrThrow(trackChannelStrips, trackId);
+      channelStrip.volume = track.gain;
+      channelStrip.pan = track.pan;
+      channelStrip.mute = !getOrThrow(shouldPlays, trackId);
+    }
+    const channelStripTrackIds = [...trackChannelStrips.keys()];
+    for (const trackId of channelStripTrackIds) {
+      if (!store.state.tracks.has(trackId)) {
+        const channelStrip = getOrThrow(trackChannelStrips, trackId);
+        channelStrip.output.disconnect();
+        trackChannelStrips.delete(trackId);
+      }
+    }
+  });
+};
 
 /** トラックを取得する。見付からないときはフォールバックとして最初のトラックを返す。 */
 const getSelectedTrackWithFallback = (partialState: {
@@ -867,12 +1011,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.volume = volume;
     },
     async action({ commit }, { volume }) {
-      if (!channelStrip) {
+      if (!mainChannelStrip) {
         throw new Error("channelStrip is undefined.");
       }
       commit("SET_VOLUME", { volume });
 
-      channelStrip.volume = volume;
+      mainChannelStrip.volume = volume;
     },
   },
 
@@ -1397,15 +1541,29 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         if (!transport) {
           throw new Error("transport is undefined.");
         }
-        if (!channelStrip) {
+        if (!mainChannelStrip) {
           throw new Error("channelStrip is undefined.");
         }
         const audioContextRef = audioContext;
         const transportRef = transport;
-        const channelStripRef = channelStrip;
 
         // レンダリング中に変更される可能性のあるデータをコピーする
         const tracks = structuredClone(toRaw(state.tracks));
+        const trackChannelStripsRef = new Map(trackChannelStrips);
+
+        const trackIdsInTracks = new Set(tracks.keys());
+        const trackIdsInTrackChannelStrips = new Set(
+          trackChannelStripsRef.keys(),
+        );
+        // どちらかにしか存在しないtrackIdがある場合はエラーを投げる
+        if (
+          trackIdsInTracks.symmetricDifference(trackIdsInTrackChannelStrips)
+            .size > 0
+        ) {
+          throw new Error(
+            `The track ids are different: ${trackIdsInTracks} | ${trackIdsInTrackChannelStrips}`,
+          );
+        }
 
         const singerAndFrameRates = new Map(
           [...tracks].map(([trackId, track]) => [
@@ -1604,7 +1762,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               instrument: polySynth,
               noteEvents,
             };
-            polySynth.output.connect(channelStripRef.input);
+            const channelStrip = getOrThrow(
+              trackChannelStripsRef,
+              phrase.trackId,
+            );
+            polySynth.output.connect(channelStrip.input);
             transportRef.addSequence(noteSequence);
             sequences.set(phraseKey, noteSequence);
           }
@@ -1802,13 +1964,17 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               singingGuide.startTime,
               singingVoice.blob,
             );
-            const audioPlayer = new AudioPlayer(audioContextRef);
+            const audioPlayer = new AudioPlayer(audioContext);
             const audioSequence: AudioSequence = {
               type: "audio",
               audioPlayer,
               audioEvents,
             };
-            audioPlayer.output.connect(channelStripRef.input);
+            const channelStrip = getOrThrow(
+              trackChannelStripsRef,
+              phrase.trackId,
+            );
+            audioPlayer.output.connect(channelStrip.input);
             transportRef.addSequence(audioSequence);
             sequences.set(phraseKey, audioSequence);
 
@@ -1920,129 +2086,18 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   EXPORT_WAVE_FILE: {
     action: createUILockAction(
-      async ({ state, getters, commit, dispatch }, { filePath }) => {
-        const convertToWavFileData = (audioBuffer: AudioBuffer) => {
-          const bytesPerSample = 4; // Float32
-          const formatCode = 3; // WAVE_FORMAT_IEEE_FLOAT
-
-          const numberOfChannels = audioBuffer.numberOfChannels;
-          const numberOfSamples = audioBuffer.length;
-          const sampleRate = audioBuffer.sampleRate;
-          const byteRate = sampleRate * numberOfChannels * bytesPerSample;
-          const blockSize = numberOfChannels * bytesPerSample;
-          const dataSize = numberOfSamples * numberOfChannels * bytesPerSample;
-
-          const buffer = new ArrayBuffer(44 + dataSize);
-          const dataView = new DataView(buffer);
-
-          let pos = 0;
-          const writeString = (value: string) => {
-            for (let i = 0; i < value.length; i++) {
-              dataView.setUint8(pos, value.charCodeAt(i));
-              pos += 1;
-            }
-          };
-          const writeUint32 = (value: number) => {
-            dataView.setUint32(pos, value, true);
-            pos += 4;
-          };
-          const writeUint16 = (value: number) => {
-            dataView.setUint16(pos, value, true);
-            pos += 2;
-          };
-          const writeSample = (offset: number, value: number) => {
-            dataView.setFloat32(pos + offset * 4, value, true);
-          };
-
-          writeString("RIFF");
-          writeUint32(36 + dataSize); // RIFFチャンクサイズ
-          writeString("WAVE");
-          writeString("fmt ");
-          writeUint32(16); // fmtチャンクサイズ
-          writeUint16(formatCode);
-          writeUint16(numberOfChannels);
-          writeUint32(sampleRate);
-          writeUint32(byteRate);
-          writeUint16(blockSize);
-          writeUint16(bytesPerSample * 8); // 1サンプルあたりのビット数
-          writeString("data");
-          writeUint32(dataSize);
-
-          for (let i = 0; i < numberOfChannels; i++) {
-            const channelData = audioBuffer.getChannelData(i);
-            for (let j = 0; j < numberOfSamples; j++) {
-              writeSample(j * numberOfChannels + i, channelData[j]);
-            }
-          }
-
-          return buffer;
-        };
-
-        const generateWriteErrorMessage = (writeFileResult: ResultError) => {
-          if (writeFileResult.code) {
-            const code = writeFileResult.code.toUpperCase();
-
-            if (code.startsWith("ENOSPC")) {
-              return "空き容量が足りません。";
-            }
-
-            if (code.startsWith("EACCES")) {
-              return "ファイルにアクセスする許可がありません。";
-            }
-
-            if (code.startsWith("EBUSY")) {
-              return "ファイルが開かれています。";
-            }
-          }
-
-          return `何らかの理由で失敗しました。${writeFileResult.message}`;
-        };
-
-        const calcRenderDuration = () => {
-          // TODO: マルチトラックに対応する
-          const notes = getters.SELECTED_TRACK.notes;
-          if (notes.length === 0) {
-            return 1;
-          }
-          const lastNote = notes[notes.length - 1];
-          const lastNoteEndPosition = lastNote.position + lastNote.duration;
-          const lastNoteEndTime = getters.TICK_TO_SECOND(lastNoteEndPosition);
-          return Math.max(1, lastNoteEndTime + 1);
-        };
-
-        const generateDefaultSongFileName = () => {
-          const projectName = getters.PROJECT_NAME;
-          if (projectName) {
-            return projectName + ".wav";
-          }
-
-          const singer = getters.SELECTED_TRACK.singer;
-          if (singer) {
-            const singerName = getters.CHARACTER_INFO(
-              singer.engineId,
-              singer.styleId,
-            )?.metas.speakerName;
-            if (singerName) {
-              const notes = getters.SELECTED_TRACK.notes.slice(0, 5);
-              const beginningPartLyrics = notes
-                .map((note) => note.lyric)
-                .join("");
-              return sanitizeFileName(
-                `${singerName}_${beginningPartLyrics}.wav`,
-              );
-            }
-          }
-
-          return `${DEFAULT_PROJECT_NAME}.wav`;
-        };
-
+      async ({ state, commit, getters, dispatch }, { filePath }) => {
         const exportWaveFile = async (): Promise<SaveResultObject> => {
-          const fileName = generateDefaultSongFileName();
+          const fileName = generateDefaultSongFileName(
+            getters.PROJECT_NAME,
+            getters.SELECTED_TRACK,
+            getters.CHARACTER_INFO,
+          );
           const numberOfChannels = 2;
           const sampleRate = 48000; // TODO: 設定できるようにする
-          const withLimiter = false; // TODO: 設定できるようにする
+          const withLimiter = true; // TODO: 設定できるようにする
 
-          const renderDuration = calcRenderDuration();
+          const renderDuration = getters.CALC_RENDER_DURATION;
 
           if (state.nowPlaying) {
             await dispatch("SING_STOP_AUDIO");
@@ -2080,63 +2135,17 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             }
           }
 
-          const offlineAudioContext = new OfflineAudioContext(
+          const audioBuffer = await offlineRenderTracks(
             numberOfChannels,
-            sampleRate * renderDuration,
             sampleRate,
+            renderDuration,
+            withLimiter,
+            state.tracks,
+            state.phrases,
+            state.singingGuides,
+            singingVoiceCache,
           );
-          const offlineTransport = new OfflineTransport();
-          const channelStrip = new ChannelStrip(offlineAudioContext);
-          const limiter = withLimiter
-            ? new Limiter(offlineAudioContext)
-            : undefined;
-          const clipper = new Clipper(offlineAudioContext);
 
-          for (const phrase of state.phrases.values()) {
-            if (
-              phrase.singingGuideKey == undefined ||
-              phrase.singingVoiceKey == undefined ||
-              phrase.state !== "PLAYABLE"
-            ) {
-              continue;
-            }
-            const singingGuide = getOrThrow(
-              state.singingGuides,
-              phrase.singingGuideKey,
-            );
-            const singingVoice = getOrThrow(
-              singingVoices,
-              phrase.singingVoiceKey,
-            );
-
-            // TODO: この辺りの処理を共通化する
-            const audioEvents = await generateAudioEvents(
-              offlineAudioContext,
-              singingGuide.startTime,
-              singingVoice.blob,
-            );
-            const audioPlayer = new AudioPlayer(offlineAudioContext);
-            const audioSequence: AudioSequence = {
-              type: "audio",
-              audioPlayer,
-              audioEvents,
-            };
-            audioPlayer.output.connect(channelStrip.input);
-            offlineTransport.addSequence(audioSequence);
-          }
-          channelStrip.volume = 1;
-          if (limiter) {
-            channelStrip.output.connect(limiter.input);
-            limiter.output.connect(clipper.input);
-          } else {
-            channelStrip.output.connect(clipper.input);
-          }
-          clipper.output.connect(offlineAudioContext.destination);
-
-          // スケジューリングを行い、オフラインレンダリングを実行
-          // TODO: オフラインレンダリング後にメモリーがきちんと開放されるか確認する
-          offlineTransport.schedule(0, renderDuration);
-          const audioBuffer = await offlineAudioContext.startRendering();
           const waveFileData = convertToWavFileData(audioBuffer);
 
           try {
@@ -2390,6 +2399,24 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
     action({ commit }) {
       commit("UNSOLO_ALL_TRACKS");
+    },
+  },
+
+  CALC_RENDER_DURATION: {
+    getter(state) {
+      const notes = [...state.tracks.values()].flatMap((track) => track.notes);
+      if (notes.length === 0) {
+        return 1;
+      }
+      notes.sort((a, b) => a.position + a.duration - (b.position + b.duration));
+      const lastNote = notes[notes.length - 1];
+      const lastNoteEndPosition = lastNote.position + lastNote.duration;
+      const lastNoteEndTime = tickToSecond(
+        lastNoteEndPosition,
+        state.tempos,
+        state.tpqn,
+      );
+      return Math.max(1, lastNoteEndTime + 1);
     },
   },
 });

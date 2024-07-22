@@ -8,6 +8,7 @@ import {
   ActionsBase,
   StoreOptions,
   PayloadFunction,
+  Store,
 } from "./vuex";
 import { createCommandMutationTree, PayloadRecipeTree } from "./command";
 import {
@@ -120,6 +121,10 @@ export type ErrorTypeForSaveAllResultDialog = {
   path: string;
   message: string;
 };
+
+export type WatchStoreStatePlugin = (
+  store: Store<State, AllGetters, AllActions, AllMutations>,
+) => void;
 
 export type StoreType<T, U extends "getter" | "mutation" | "action"> = {
   [P in keyof T as Extract<keyof T[P], U> extends never
@@ -1223,6 +1228,10 @@ export type SingingStoreTypes = {
   UNSOLO_ALL_TRACKS: {
     mutation: undefined;
     action(): void;
+  };
+
+  CALC_RENDER_DURATION: {
+    getter: number;
   };
 };
 
