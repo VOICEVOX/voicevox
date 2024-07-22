@@ -1708,7 +1708,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         await dispatch("SET_TIME_SIGNATURES", { timeSignatures });
         await dispatch("SET_NOTES", { notes });
 
-        context.commit("RESET_SAVED_LAST_COMMAND_IDS");
+        commit("RESET_SAVED_LAST_COMMAND_IDS");
         commit("CLEAR_COMMANDS");
         dispatch("RENDER");
       },
