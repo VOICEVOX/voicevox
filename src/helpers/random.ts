@@ -22,6 +22,6 @@ export function uuid4(): string {
     return crypto.randomUUID();
   } else {
     mockCount++;
-    return `00000000-0000-0000-0000-${mockCount.toString().padStart(12, "0")}`;
+    return `00000000-0000-4000-0000-${mockCount.toString().padStart(12, "0")}`;
   }
 }
