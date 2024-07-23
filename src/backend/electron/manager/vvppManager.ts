@@ -26,7 +26,7 @@ const ZIP_MAGIC_NUMBER = Buffer.from([0x50, 0x4b, 0x03, 0x04]);
 // globのPromise化
 const globAsync = (pattern: string, options?: glob.IOptions) => {
   return new Promise<string[]>((resolve, reject) => {
-    callbackGlob(pattern, options || {}, (err, matches) => {
+    callbackGlob(pattern, options ?? {}, (err, matches) => {
       if (err) {
         reject(err);
       } else {
@@ -72,7 +72,7 @@ export class VvppManager {
   vvppEngineDir: string;
 
   willDeleteEngineIds: Set<EngineId>;
-  willReplaceEngineDirs: Array<{ from: string; to: string }>;
+  willReplaceEngineDirs: { from: string; to: string }[];
 
   private lock = new AsyncLock();
 
@@ -216,11 +216,11 @@ export class VvppManager {
             stdio: ["pipe", "pipe", "pipe"],
           });
 
-          child.stdout?.on("data", (data) => {
+          child.stdout?.on("data", (data: Buffer) => {
             log.info(`7z STDOUT: ${data.toString("utf-8")}`);
           });
 
-          child.stderr?.on("data", (data) => {
+          child.stderr?.on("data", (data: Buffer) => {
             log.error(`7z STDERR: ${data.toString("utf-8")}`);
           });
 

@@ -298,7 +298,7 @@ const duplicatedHotkey = computed(() => {
 
 // FIXME: actionはHotkeyAction型にすべき
 const deleteHotkey = (action: string) => {
-  changeHotkeySettings(action, HotkeyCombination(""));
+  void changeHotkeySettings(action, HotkeyCombination(""));
 };
 
 const getHotkeyText = (action: string, combo: string) => {
@@ -359,7 +359,7 @@ const resetHotkey = async (action: string) => {
     cancel: "初期値に戻さない",
   });
   if (result === "OK") {
-    window.backend
+    void window.backend
       .getDefaultHotkeySettings()
       .then((defaultSettings: HotkeySettingType[]) => {
         const setting = defaultSettings.find((value) => value.action == action);
@@ -378,7 +378,7 @@ const resetHotkey = async (action: string) => {
             return;
           }
         }
-        changeHotkeySettings(action, setting.combination);
+        void changeHotkeySettings(action, setting.combination);
       });
   }
 };

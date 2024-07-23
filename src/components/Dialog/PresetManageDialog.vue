@@ -95,7 +95,7 @@ const reorderPreset = (featurePresetList: (Preset & { key: PresetKey })[]) => {
   // デフォルトプリセットは表示するlistから除外しているので、末尾に追加しておかないと失われる
   const defaultPresetKeys = presetKeys.value.filter(isDefaultPresetKey);
 
-  store
+  void store
     .dispatch("SAVE_PRESET_ORDER", {
       presetKeys: [...newPresetKeys, ...defaultPresetKeys],
     })

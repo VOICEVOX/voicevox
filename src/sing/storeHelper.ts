@@ -15,7 +15,9 @@ export class FrequentlyUpdatedState<T> {
 
   set value(newValue: T) {
     this._value = newValue;
-    this.listeners.forEach((listener) => listener(newValue));
+    this.listeners.forEach((listener) => {
+      listener(newValue);
+    });
   }
 
   constructor(initialValue: T) {
@@ -76,7 +78,7 @@ export function getOverlappingNoteIds(notes: Note[]): Set<NoteId> {
   for (const event of events) {
     if (event.type === "start") {
       if (currentNotes.size === 1) {
-        overlappingNoteIds.add(currentNotes.values().next().value);
+        overlappingNoteIds.add(currentNotes.values().next().value as NoteId);
         overlappingNoteIds.add(event.noteId);
       } else if (currentNotes.size > 1) {
         overlappingNoteIds.add(event.noteId);

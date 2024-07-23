@@ -1,8 +1,41 @@
-/** @type {import('@typescript-eslint/utils').TSESLint.Linter.Config} */
+const vueEslintParser = "vue-eslint-parser";
+const vueEslintParserOptions = {
+  ecmaVersion: 2020,
+  parser: "@typescript-eslint/parser",
+};
+const tsEslintOptions = {
+  project: ["./tsconfig.json"],
+  tsconfigRootDir: __dirname,
+};
+
+const tsEslintRules = {
+  // Template String LiteralでBrandedなstringやnumberを入れられなくなるので無効化
+  "@typescript-eslint/restrict-template-expressions": "off",
+  // Storeでよくasyncなしの関数を使うので無効化
+  "@typescript-eslint/require-await": "off",
+
+  "@typescript-eslint/no-floating-promises": [
+    "error",
+    {
+      ignoreIIFE: true,
+    },
+  ],
+
+  "@typescript-eslint/no-misused-promises": [
+    "error",
+    {
+      // (...) => voidに(...) => Promise<void>を渡すのは許可
+      checksVoidReturn: false,
+    },
+  ],
+};
+
+/** @type {import('@typescript-eslint/utils').TSESLint.Linter.ConfigType} */
 module.exports = {
   root: true,
   env: {
     node: true,
+    "vue/setup-compiler-macros": true,
   },
   extends: [
     "plugin:vue/vue3-recommended",
@@ -15,11 +48,8 @@ module.exports = {
     "plugin:storybook/recommended",
   ],
   plugins: ["import"],
-  parser: "vue-eslint-parser",
-  parserOptions: {
-    ecmaVersion: 2020,
-    parser: "@typescript-eslint/parser",
-  },
+  parser: vueEslintParser,
+  parserOptions: vueEslintParserOptions,
   ignorePatterns: ["dist_electron/**/*", "dist/**/*", "node_modules/**/*"],
   rules: {
     "linebreak-style":
@@ -87,6 +117,30 @@ module.exports = {
       ],
       rules: {
         "no-console": "off",
+      },
+    },
+    {
+      files: ["./src/**/*.ts"],
+      parser: "@typescript-eslint/parser",
+      extends: ["plugin:@typescript-eslint/recommended-type-checked"],
+      parserOptions: tsEslintOptions,
+      rules: tsEslintRules,
+    },
+    {
+      files: ["*.vue"],
+      parser: vueEslintParser,
+      parserOptions: { ...vueEslintParserOptions, ...tsEslintOptions },
+      extends: ["plugin:@typescript-eslint/recommended-type-checked"],
+      rules: {
+        ...tsEslintRules,
+
+        // typescript-eslintにVueの型がanyとして認識されるので無効化
+        "@typescript-eslint/no-unsafe-member-access": "off",
+        "@typescript-eslint/no-unsafe-call": "off",
+        "@typescript-eslint/no-unsafe-assignment": "off",
+        "@typescript-eslint/no-unsafe-argument": "off",
+        "@typescript-eslint/no-unsafe-return": "off",
+        "@typescript-eslint/no-redundant-type-constituents": "off",
       },
     },
     // Electronのメインプロセス以外でelectronのimportを禁止する

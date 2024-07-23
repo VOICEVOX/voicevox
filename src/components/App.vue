@@ -106,7 +106,7 @@ onMounted(async () => {
 
   // URLパラメータに従ってマルチエンジンをオフにする
   const isMultiEngineOffMode = urlParams.get("isMultiEngineOffMode") === "true";
-  store.dispatch("SET_IS_MULTI_ENGINE_OFF_MODE", isMultiEngineOffMode);
+  void store.dispatch("SET_IS_MULTI_ENGINE_OFF_MODE", isMultiEngineOffMode);
 
   // マルチエンジンオフモードのときはデフォルトエンジンだけにする
   let engineIds: EngineId[];
@@ -132,7 +132,7 @@ onMounted(async () => {
   isEnginesReady.value = true;
 
   // エンジン起動後にダイアログを開く
-  store.dispatch("SET_DIALOG_OPEN", {
+  void store.dispatch("SET_DIALOG_OPEN", {
     isAcceptRetrieveTelemetryDialogOpen:
       store.state.acceptRetrieveTelemetry === "Unconfirmed",
     isAcceptTermsDialogOpen:

@@ -50,7 +50,7 @@ export const useLyricInput = () => {
       newNotes.push({ ...note, lyric });
     }
     previewLyrics.value = new Map();
-    store.dispatch("COMMAND_UPDATE_NOTES", { notes: newNotes });
+    void store.dispatch("COMMAND_UPDATE_NOTES", { notes: newNotes });
   };
 
   return { previewLyrics, splitAndUpdatePreview, commitPreviewLyrics };

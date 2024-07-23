@@ -4,6 +4,7 @@ import { openDB } from "./browserConfig";
 import { SandboxKey } from "@/type/preload";
 import { failure, success } from "@/type/result";
 import { createLogger } from "@/domain/frontend/log";
+import { errorIfNullish } from "@/helpers/errorIfNullish";
 
 const log = createLogger("fileImpl");
 
@@ -19,7 +20,7 @@ const storeDirectoryHandle = async (
       resolve();
     };
     request.onerror = () => {
-      reject(request.error);
+      reject(errorIfNullish(request.error));
     };
   });
 };
@@ -32,10 +33,11 @@ const fetchStoredDirectoryHandle = async (maybeDirectoryHandleName: string) => {
       const store = transaction.objectStore(directoryHandleStoreKey);
       const request = store.get(maybeDirectoryHandleName);
       request.onsuccess = () => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         resolve(request.result);
       };
       request.onerror = () => {
-        reject(request.error);
+        reject(errorIfNullish(request.error));
       };
     },
   );
@@ -44,7 +46,7 @@ const fetchStoredDirectoryHandle = async (maybeDirectoryHandleName: string) => {
 // ディレクトリ名をキーとして、Write権限を持ったFileSystemDirectoryHandleを保持する
 // writeFileに`ディレクトリ名/ファイル名`の形式でfilePathが渡ってくるため、
 // `/`で区切ってディレクトリ名を取得し、そのディレクトリ名をキーとしてdirectoryHandleMapからハンドラを取得し、fileWriteを可能にする
-const directoryHandleMap: Map<string, FileSystemDirectoryHandle> = new Map();
+const directoryHandleMap = new Map<string, FileSystemDirectoryHandle>();
 
 const showWritableDirectoryPicker = async (): Promise<
   FileSystemDirectoryHandle | undefined
@@ -145,8 +147,8 @@ export const writeFileImpl: (typeof window)[typeof SandboxKey]["writeFile"] =
         return writable.close();
       })
       .then(() => success(undefined))
-      .catch((e) => {
-        return failure(e);
+      .catch((e: unknown) => {
+        return failure(e as Error);
       });
   };
 
@@ -181,7 +183,7 @@ export const checkFileExistsImpl: (typeof window)[typeof SandboxKey]["checkFileE
   };
 
 // FileSystemFileHandleを保持するMap。キーは生成した疑似パス。
-const fileHandleMap: Map<string, FileSystemFileHandle> = new Map();
+const fileHandleMap = new Map<string, FileSystemFileHandle>();
 
 // ファイル選択ダイアログを開く
 // 返り値はファイルパスではなく、疑似パスを返す

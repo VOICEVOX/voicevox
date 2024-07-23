@@ -10,10 +10,12 @@ export type HostInfo = {
   port: number;
 };
 
-const portLog = (port: number, message: string, isNested = false) =>
+const portLog = (port: number, message: string, isNested = false) => {
   log.info(`${isNested ? "| " : ""}PORT ${port}: ${message}`);
-const portWarn = (port: number, message: string, isNested = false) =>
+};
+const portWarn = (port: number, message: string, isNested = false) => {
   log.warn(`${isNested ? "| " : ""}PORT ${port}: ${message}`);
+};
 
 export function url2HostInfo(url: URL): HostInfo {
   return {
@@ -138,7 +140,7 @@ export async function getPidFromPort(
   // Windows の場合は, lsof のように port と pid が 1to1 で取れないので, netstat の stdout をパース
   const pid = isWindows ? parse4windows(stdout) : stdout;
 
-  if (pid == undefined || !pid.length) {
+  if (!pid?.length) {
     portLog(hostInfo.port, "Assignable; Nobody uses this port!", isNested);
     return undefined;
   }

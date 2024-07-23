@@ -87,6 +87,7 @@ export function getKeyColorFromNoteNumber(noteNumber: number) {
   return mapWhiteKeys.includes(pitch) ? "white" : "black";
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 export const keyInfos = [...Array(128)]
   .map((_, noteNumber) => {
     const pitch = getPitchFromNoteNumber(noteNumber);

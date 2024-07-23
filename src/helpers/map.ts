@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 export function mapNullablePipe<T, U1>(
   source: T | undefined,
   fn1: (_: NonNullable<T>) => U1 | undefined,

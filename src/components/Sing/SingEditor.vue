@@ -55,14 +55,14 @@ const enablePitchEditInSongEditor = computed(() => {
 });
 
 const cancelExport = () => {
-  store.dispatch("CANCEL_AUDIO_EXPORT");
+  void store.dispatch("CANCEL_AUDIO_EXPORT");
 };
 
 watch(enablePitchEditInSongEditor, (value) => {
   if (value === false && store.state.sequencerEditTarget === "PITCH") {
     // ピッチ編集機能が無効になったとき編集ターゲットがピッチだったら、
     // 編集ターゲットをノートに切り替える
-    store.dispatch("SET_EDIT_TARGET", { editTarget: "NOTE" });
+    void store.dispatch("SET_EDIT_TARGET", { editTarget: "NOTE" });
   }
 });
 

@@ -69,18 +69,18 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
       if (audioElement.setSinkId) {
         audioElement
           .setSinkId(state.savingSetting.audioOutputDevice)
-          .catch((err) => {
+          .catch((err: unknown) => {
             const stop = () => {
               audioElement.pause();
               audioElement.removeEventListener("canplay", stop);
             };
             audioElement.addEventListener("canplay", stop);
-            window.backend.showMessageDialog({
+            void window.backend.showMessageDialog({
               type: "error",
               title: "エラー",
               message: "再生デバイスが見つかりません",
             });
-            throw new Error(err);
+            throw err;
           });
       }
 
@@ -106,7 +106,7 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
         }
       });
 
-      audioElement.play();
+      void audioElement.play();
 
       return audioPlayPromise;
     },

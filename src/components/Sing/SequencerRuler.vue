@@ -129,7 +129,7 @@ const playheadX = computed(() => {
 });
 
 const onClick = (event: MouseEvent) => {
-  store.dispatch("DESELECT_ALL_NOTES");
+  void store.dispatch("DESELECT_ALL_NOTES");
 
   const sequencerRulerElement = sequencerRuler.value;
   if (!sequencerRulerElement) {
@@ -137,7 +137,7 @@ const onClick = (event: MouseEvent) => {
   }
   const baseX = (props.offset + event.offsetX) / zoomX.value;
   const ticks = baseXToTick(baseX, tpqn.value);
-  store.dispatch("SET_PLAYHEAD_POSITION", { position: ticks });
+  void store.dispatch("SET_PLAYHEAD_POSITION", { position: ticks });
 };
 
 const sequencerRuler = ref<HTMLElement | null>(null);
@@ -165,7 +165,7 @@ onMounted(() => {
   });
   resizeObserver.observe(sequencerRulerElement);
 
-  store.dispatch("ADD_PLAYHEAD_POSITION_CHANGE_LISTENER", {
+  void store.dispatch("ADD_PLAYHEAD_POSITION_CHANGE_LISTENER", {
     listener: playheadPositionChangeListener,
   });
 });
@@ -173,7 +173,7 @@ onMounted(() => {
 onUnmounted(() => {
   resizeObserver?.disconnect();
 
-  store.dispatch("REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER", {
+  void store.dispatch("REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER", {
     listener: playheadPositionChangeListener,
   });
 });

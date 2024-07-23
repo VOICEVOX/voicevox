@@ -325,7 +325,7 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
       promises.push(dispatch("HYDRATE_SETTING_STORE"));
 
       await Promise.all(promises).then(() => {
-        dispatch("ON_VUEX_READY");
+        void dispatch("ON_VUEX_READY");
       });
     },
   },

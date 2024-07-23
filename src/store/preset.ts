@@ -1,6 +1,7 @@
 import { createPartialStore } from "./vuex";
 import { PresetStoreState, PresetStoreTypes, State } from "@/store/type";
 import { Preset, PresetKey, Voice, VoiceId } from "@/type/preload";
+import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 
 /**
  * configを参照して割り当てるべきpresetKeyとそのPresetを適用すべきかどうかを返す
@@ -108,7 +109,7 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
       { commit },
       { defaultPresetKeys }: { defaultPresetKeys: Record<VoiceId, PresetKey> },
     ) {
-      window.backend.setSetting("defaultPresetKeys", defaultPresetKeys);
+      void window.backend.setSetting("defaultPresetKeys", defaultPresetKeys);
       commit("SET_DEFAULT_PRESET_MAP", { defaultPresetKeys });
     },
     mutation(
@@ -132,11 +133,7 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
       });
 
       const presetConfig = await window.backend.getSetting("presets");
-      if (
-        presetConfig == undefined ||
-        presetConfig.items == undefined ||
-        presetConfig.keys == undefined
-      )
+      if (presetConfig?.items == undefined || presetConfig.keys == undefined)
         return;
       commit("SET_PRESET_ITEMS", {
         // z.BRAND型のRecordはPartialになる仕様なのでasで型を変換
@@ -167,8 +164,8 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
       }: { presetItems: Record<PresetKey, Preset>; presetKeys: PresetKey[] },
     ) {
       const result = await window.backend.setSetting("presets", {
-        items: JSON.parse(JSON.stringify(presetItems)),
-        keys: JSON.parse(JSON.stringify(presetKeys)),
+        items: cloneWithUnwrapProxy(presetItems),
+        keys: cloneWithUnwrapProxy(presetKeys),
       });
       context.commit("SET_PRESET_ITEMS", {
         // z.BRAND型のRecordはPartialになる仕様なのでasで型を変換

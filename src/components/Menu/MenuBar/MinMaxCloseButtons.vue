@@ -95,7 +95,7 @@ import { useStore } from "@/store";
 const store = useStore();
 
 const closeWindow = async () => {
-  store.dispatch("CHECK_EDITED_AND_NOT_SAVE", { closeOrReload: "close" });
+  void store.dispatch("CHECK_EDITED_AND_NOT_SAVE", { closeOrReload: "close" });
 };
 const minimizeWindow = () => window.backend.minimizeWindow();
 const maximizeWindow = () => window.backend.maximizeWindow();

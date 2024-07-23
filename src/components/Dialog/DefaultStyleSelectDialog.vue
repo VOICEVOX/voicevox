@@ -196,7 +196,7 @@ const play = (
   if (audio.src !== "") stop();
 
   audio.src = voiceSamplePaths[index];
-  audio.play();
+  void audio.play();
   playing.value = { speakerUuid, styleId, index };
 };
 const stop = () => {
@@ -212,7 +212,7 @@ const closeDialog = () => {
   const defaultStyleIds = JSON.parse(
     JSON.stringify(store.state.defaultStyleIds),
   ) as DefaultStyleId[];
-  store.dispatch("SET_DEFAULT_STYLE_IDS", [
+  void store.dispatch("SET_DEFAULT_STYLE_IDS", [
     ...defaultStyleIds.filter(
       (defaultStyleId) =>
         defaultStyleId.speakerUuid !== props.characterInfo.metas.speakerUuid,

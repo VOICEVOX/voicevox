@@ -18,6 +18,7 @@ export class ElectronConfigManager extends BaseConfigManager {
   }
 
   protected async load(): Promise<Record<string, unknown> & Metadata> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return JSON.parse(await fs.promises.readFile(this.configPath, "utf-8"));
   }
 

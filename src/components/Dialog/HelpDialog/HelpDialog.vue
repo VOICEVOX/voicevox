@@ -130,7 +130,9 @@ const store = useStore();
 const { warn } = createLogger("HelpDialog");
 
 const updateInfos = ref<UpdateInfoObject[]>();
-store.dispatch("GET_UPDATE_INFOS").then((obj) => (updateInfos.value = obj));
+void store
+  .dispatch("GET_UPDATE_INFOS")
+  .then((obj) => (updateInfos.value = obj));
 
 if (!import.meta.env.VITE_LATEST_UPDATE_INFOS_URL) {
   throw new Error(
@@ -144,10 +146,10 @@ const newUpdateResult = useFetchNewUpdateInfos(
 
 // エディタのOSSライセンス取得
 const licenses = ref<Record<string, string>[]>();
-store.dispatch("GET_OSS_LICENSES").then((obj) => (licenses.value = obj));
+void store.dispatch("GET_OSS_LICENSES").then((obj) => (licenses.value = obj));
 
 const policy = ref<string>();
-store.dispatch("GET_POLICY_TEXT").then((obj) => (policy.value = obj));
+void store.dispatch("GET_POLICY_TEXT").then((obj) => (policy.value = obj));
 
 const pagedata = computed(() => {
   const data: PageData[] = [
@@ -263,7 +265,7 @@ const pagedata = computed(() => {
 
 const selectedPageIndex = ref(0);
 
-const openLogDirectory = window.backend.openLogDirectory;
+const openLogDirectory = () => window.backend.openLogDirectory();
 </script>
 
 <style scoped lang="scss">

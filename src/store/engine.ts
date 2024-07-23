@@ -116,14 +116,18 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
       commit("SET_ENGINE_MANIFESTS", {
         engineManifests: Object.fromEntries(
           await Promise.all(
-            state.engineIds.map(
-              async (engineId) =>
-                await this.dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
-                  engineId,
-                }).then(async (instance) => [
-                  engineId,
-                  await instance.invoke("engineManifestEngineManifestGet")({}),
-                ]),
+            state.engineIds.map((engineId) =>
+              this.dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
+                engineId,
+              }).then(
+                async (instance) =>
+                  [
+                    engineId,
+                    await instance.invoke("engineManifestEngineManifestGet")(
+                      {},
+                    ),
+                  ] as const,
+              ),
             ),
           ),
         ),
@@ -257,7 +261,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
         anyNewCharacters: result.some((r) => r.anyNewCharacters),
       };
       if (mergedResult.anyNewCharacters) {
-        dispatch("SET_DIALOG_OPEN", {
+        void dispatch("SET_DIALOG_OPEN", {
           isCharacterOrderDialogOpen: true,
         });
       }
@@ -290,7 +294,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
 
   OPEN_ENGINE_DIRECTORY: {
     action(_, { engineId }) {
-      return window.backend.openEngineDirectory(engineId);
+      window.backend.openEngineDirectory(engineId);
     },
   },
 

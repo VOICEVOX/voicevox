@@ -4,7 +4,7 @@ import MarkdownIt from "markdown-it";
 const markdownItKey: InjectionKey<MarkdownIt> = Symbol("_markdownIt_");
 
 export const useMarkdownIt = (): MarkdownIt => {
-  return inject(markdownItKey) as MarkdownIt;
+  return inject(markdownItKey)!;
 };
 
 export const markdownItPlugin: Plugin = {
@@ -17,7 +17,7 @@ export const markdownItPlugin: Plugin = {
     // 全てのリンクに_blankを付ける
     // https://github.com/markdown-it/markdown-it/blob/master/docs/architecture.md#renderer
     const defaultRender =
-      md.renderer.rules.link_open ||
+      md.renderer.rules.link_open ??
       function (tokens, idx, options, _, self) {
         return self.renderToken(tokens, idx, options);
       };

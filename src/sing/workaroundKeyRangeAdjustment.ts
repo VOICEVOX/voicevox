@@ -11,9 +11,10 @@ import { CharacterInfo, EngineId } from "@/type/preload";
 
 const logger = createLogger("sing/workaroundKeyRangeAdjustment");
 
-const workaroundKeyRangeAdjustmentValues: {
-  [key: string]: { [key: string]: number };
-} = {
+const workaroundKeyRangeAdjustmentValues: Record<
+  string,
+  Record<string, number>
+> = {
   四国めたん: {
     ノーマル: -4,
     あまあま: -4,
