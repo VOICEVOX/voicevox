@@ -911,6 +911,7 @@ const renderEngineNameLabel = (engineId: EngineId) => {
   return engineInfos.value[engineId].name;
 };
 
+// トラックが複数あるときはマルチトラック機能を無効化できないようにする
 const disableMultiTrackToggle = computed(() => {
   return !(
     experimentalSetting.value.enableMultiTrack && store.state.tracks.size > 1
