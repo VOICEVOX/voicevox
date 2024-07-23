@@ -912,6 +912,7 @@ const renderEngineNameLabel = (engineId: EngineId) => {
 };
 
 // トラックが複数あるときはマルチトラック機能を無効化できないようにする
+// TODO: Undo/Redoで迂回できるので対策する
 const disableMultiTrackToggle = computed(() => {
   return !(
     experimentalSetting.value.enableMultiTrack && store.state.tracks.size > 1
