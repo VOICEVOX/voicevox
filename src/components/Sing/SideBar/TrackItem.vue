@@ -158,7 +158,6 @@ import { useStore } from "@/store";
 import ContextMenu from "@/components/Menu/ContextMenu.vue";
 import { shouldPlayTracks } from "@/sing/domain";
 import { CharacterInfo, StyleInfo, TrackId } from "@/type/preload";
-import { getOrThrow } from "@/helpers/mapHelper";
 
 const props = defineProps<{
   trackId: TrackId;
@@ -179,7 +178,7 @@ const isThereSoloTrack = computed(() =>
   [...tracks.value.values()].some((track) => track.solo),
 );
 const shouldPlayTrack = computed(() =>
-  getOrThrow(shouldPlayTracks(store.state.tracks), props.trackId),
+  shouldPlayTracks(store.state.tracks).has(props.trackId),
 );
 
 const setTrackPan = (pan: number) => {

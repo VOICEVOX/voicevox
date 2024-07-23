@@ -573,14 +573,18 @@ export const splitLyricsByMoras = (
  * ソロのトラックが存在する場合は、ソロのトラックのみ再生する。（ミュートは無視される）
  * ソロのトラックが存在しない場合は、ミュートされていないトラックを再生する。
  */
-export const shouldPlayTracks = (
-  tracks: Map<TrackId, Track>,
-): Map<TrackId, boolean> => {
+export const shouldPlayTracks = (tracks: Map<TrackId, Track>): Set<TrackId> => {
   const soloTrackExists = [...tracks.values()].some((track) => track.solo);
-  const shouldPlayMap = new Map<TrackId, boolean>();
+  const shouldPlaySet = new Set<TrackId>();
   for (const [trackKey, track] of tracks) {
-    shouldPlayMap.set(trackKey, soloTrackExists ? track.solo : !track.mute);
+    if (soloTrackExists) {
+      if (track.solo) {
+        shouldPlaySet.add(trackKey);
+      }
+    } else if (!track.mute) {
+      shouldPlaySet.add(trackKey);
+    }
   }
 
-  return shouldPlayMap;
+  return shouldPlaySet;
 };

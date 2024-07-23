@@ -174,7 +174,7 @@ const offlineRenderTracks = async (
     const channelStrip = new ChannelStrip(offlineAudioContext);
     channelStrip.volume = track.gain;
     channelStrip.pan = track.pan;
-    channelStrip.mute = !getOrThrow(shouldPlays, trackId);
+    channelStrip.mute = !shouldPlays.has(trackId);
 
     channelStrip.output.connect(mainChannelStrip.input);
     trackChannelStrips.set(trackId, channelStrip);
@@ -276,7 +276,7 @@ export const singingStorePlugin: WatchStoreStatePlugin = (store) => {
       const channelStrip = getOrThrow(trackChannelStrips, trackId);
       channelStrip.volume = track.gain;
       channelStrip.pan = track.pan;
-      channelStrip.mute = !getOrThrow(shouldPlays, trackId);
+      channelStrip.mute = !shouldPlays.has(trackId);
     }
     const channelStripTrackIds = [...trackChannelStrips.keys()];
     for (const trackId of channelStripTrackIds) {
