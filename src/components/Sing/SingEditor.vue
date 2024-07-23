@@ -62,7 +62,11 @@ const props = defineProps<{
 
 const store = useStore();
 
-const isSidebarOpen = computed(() => store.state.isSongSidebarOpen);
+const isSidebarOpen = computed(
+  () =>
+    store.state.experimentalSetting.enableMultiTrack &&
+    store.state.isSongSidebarOpen,
+);
 const sidebarWidth = ref(300);
 
 const setSidebarWidth = (width: number) => {

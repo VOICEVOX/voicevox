@@ -49,6 +49,7 @@ export const settingStoreState: SettingStoreState = {
     enableMultiSelect: false,
     shouldKeepTuningOnTextChange: false,
     enablePitchEditInSongEditor: false,
+    enableMultiTrack: false,
   },
   splitTextWhenPaste: "PERIOD_AND_NEW_LINE",
   splitterPosition: {

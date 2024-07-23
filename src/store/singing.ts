@@ -154,6 +154,7 @@ const offlineRenderTracks = async (
   sampleRate: number,
   renderDuration: number,
   withLimiter: boolean,
+  multiTrackEnabled: boolean,
   tracks: Map<TrackId, Track>,
   phrases: Map<PhraseSourceHash, Phrase>,
   singingGuides: Map<SingingGuideSourceHash, SingingGuide>,
@@ -172,9 +173,9 @@ const offlineRenderTracks = async (
   const shouldPlays = shouldPlayTracks(tracks);
   for (const [trackId, track] of tracks) {
     const channelStrip = new ChannelStrip(offlineAudioContext);
-    channelStrip.volume = track.gain;
-    channelStrip.pan = track.pan;
-    channelStrip.mute = !shouldPlays.has(trackId);
+    channelStrip.volume = multiTrackEnabled ? track.gain : 1;
+    channelStrip.pan = multiTrackEnabled ? track.pan : 0;
+    channelStrip.mute = multiTrackEnabled ? !shouldPlays.has(trackId) : false;
 
     channelStrip.output.connect(mainChannelStrip.input);
     trackChannelStrips.set(trackId, channelStrip);
@@ -274,9 +275,15 @@ export const singingStorePlugin: WatchStoreStatePlugin = (store) => {
       }
 
       const channelStrip = getOrThrow(trackChannelStrips, trackId);
-      channelStrip.volume = track.gain;
-      channelStrip.pan = track.pan;
-      channelStrip.mute = !shouldPlays.has(trackId);
+      channelStrip.volume = store.state.experimentalSetting.enableMultiTrack
+        ? track.gain
+        : 1;
+      channelStrip.pan = store.state.experimentalSetting.enableMultiTrack
+        ? track.pan
+        : 0;
+      channelStrip.mute = store.state.experimentalSetting.enableMultiTrack
+        ? !shouldPlays.has(trackId)
+        : false;
     }
     const channelStripTrackIds = [...trackChannelStrips.keys()];
     for (const trackId of channelStripTrackIds) {
@@ -2140,6 +2147,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             sampleRate,
             renderDuration,
             withLimiter,
+            state.experimentalSetting.enableMultiTrack,
             state.tracks,
             state.phrases,
             state.singingGuides,
@@ -2778,21 +2786,30 @@ export const singingCommandStore = transformCommandStore(
           trackId: TrackId;
           overwrite: boolean;
         }[] = [];
-        for (const [i, track] of tracks.entries()) {
-          if (!isValidTrack(track)) {
-            throw new Error("The track is invalid.");
+        if (state.experimentalSetting.enableMultiTrack) {
+          for (const [i, track] of tracks.entries()) {
+            if (!isValidTrack(track)) {
+              throw new Error("The track is invalid.");
+            }
+            // 空のプロジェクトならトラックを上書きする
+            if (i === 0 && isTracksEmpty([...state.tracks.values()])) {
+              payload.push({
+                track,
+                trackId: getters.SELECTED_TRACK_ID,
+                overwrite: true,
+              });
+            } else {
+              const { trackId } = await dispatch("CREATE_TRACK");
+              payload.push({ track, trackId, overwrite: false });
+            }
           }
-          // 空のプロジェクトならトラックを上書きする
-          if (i === 0 && isTracksEmpty([...state.tracks.values()])) {
-            payload.push({
-              track,
-              trackId: getters.SELECTED_TRACK_ID,
-              overwrite: true,
-            });
-          } else {
-            const { trackId } = await dispatch("CREATE_TRACK");
-            payload.push({ track, trackId, overwrite: false });
-          }
+        } else {
+          // マルチトラックが無効な場合は最初のトラックのみをインポートする
+          payload.push({
+            track: tracks[0],
+            trackId: getters.SELECTED_TRACK_ID,
+            overwrite: true,
+          });
         }
 
         commit("COMMAND_IMPORT_TRACKS", {
