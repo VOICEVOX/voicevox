@@ -243,19 +243,19 @@ const trackOptions = computed(() => {
 });
 // 選択中のトラック
 const selectedTrackIndexes = ref<number[] | null>(null);
-const selectedTrackIndex = computed({
+const selectedTrackIndex = computed<number | null>({
   get: () => {
     if (selectedTrackIndexes.value == null) {
-      return -1;
+      return null;
     }
     if (selectedTrackIndexes.value.length === 0) {
-      return -1;
+      return null;
     }
     return selectedTrackIndexes.value[0];
   },
-  set: (index: number) => {
-    if (selectedTrackIndexes.value == null) {
-      return;
+  set: (index: number | null) => {
+    if (index == null) {
+      throw new Error("assert: index != null");
     }
     selectedTrackIndexes.value = [index];
   },
