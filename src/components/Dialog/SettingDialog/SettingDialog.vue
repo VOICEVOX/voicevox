@@ -529,13 +529,13 @@
                 title="ソング：マルチトラック機能"
                 description="ONの場合、一つのプロジェクト内に複数のトラックを作成できるようになります。"
                 :modelValue="experimentalSetting.enableMultiTrack"
-                :disable="!disableMultiTrackToggle"
+                :disable="!canToggleMultiTrack"
                 @update:modelValue="
                   changeExperimentalSetting('enableMultiTrack', $event)
                 "
               >
-                <QTooltip v-if="!disableMultiTrackToggle" :delay="500">
-                  現在のプロジェクトがマルチトラック機能を利用しているため、無効化できません。
+                <QTooltip v-if="!canToggleMultiTrack" :delay="500">
+                  現在のプロジェクトに複数のトラックが存在するため、無効化できません。
                 </QTooltip>
               </ToggleCell>
             </QCard>
@@ -913,10 +913,12 @@ const renderEngineNameLabel = (engineId: EngineId) => {
 
 // トラックが複数あるときはマルチトラック機能を無効化できないようにする
 // TODO: Undo/Redoで迂回できるので対策する
-const disableMultiTrackToggle = computed(() => {
-  return !(
-    experimentalSetting.value.enableMultiTrack && store.state.tracks.size > 1
-  );
+const canToggleMultiTrack = computed(() => {
+  if (!experimentalSetting.value.enableMultiTrack) {
+    return true;
+  }
+
+  return store.state.tracks.size <= 1;
 });
 </script>
 
