@@ -10,6 +10,7 @@ import {
   MutationTree,
 } from "@/store/vuex";
 import { CommandId, EditorType } from "@/type/preload";
+import { uuid4 } from "@/helpers/random";
 
 enablePatches();
 enableMapSet();
@@ -67,7 +68,7 @@ const recordPatches =
       (draft: S) => recipe(draft, payload),
     );
     return {
-      id: CommandId(crypto.randomUUID()),
+      id: CommandId(uuid4()),
       redoPatches: doPatches,
       undoPatches: undoPatches,
     };

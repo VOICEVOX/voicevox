@@ -85,6 +85,7 @@ import { createLogger } from "@/domain/frontend/log";
 import { noteSchema } from "@/domain/project/schema";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { ufProjectToVoicevox } from "@/sing/utaformatixProject/toVoicevox";
+import { uuid4 } from "@/helpers/random";
 
 const logger = createLogger("store/singing");
 
@@ -1724,7 +1725,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const track = tracks[trackIndex];
         const notes = track.notes.map((note) => ({
           ...note,
-          id: NoteId(crypto.randomUUID()),
+          id: NoteId(uuid4()),
         }));
 
         if (tpqn !== state.tpqn) {
@@ -2144,7 +2145,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const quantizedPastePos =
           Math.round(pasteOriginPos / snapTicks) * snapTicks;
         return {
-          id: NoteId(crypto.randomUUID()),
+          id: NoteId(uuid4()),
           position: quantizedPastePos,
           duration: Number(note.duration),
           noteNumber: Number(note.noteNumber),
