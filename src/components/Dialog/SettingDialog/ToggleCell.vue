@@ -15,18 +15,12 @@
 <script setup lang="ts">
 import BaseCell, { Props } from "./BaseCell.vue";
 
-const props = withDefaults(
-  defineProps<
-    Props & {
-      modelValue: boolean;
-      // eslint-disable-next-line vue/prop-name-casing
-      "onUpdate:modelValue"?: (value: boolean) => void;
-      disable?: boolean;
-    }
-  >(),
-  {
-    "onUpdate:modelValue": () => {},
-    disable: false,
-  },
-);
+const props = defineProps<
+  Props & {
+    modelValue: boolean;
+    // eslint-disable-next-line vue/prop-name-casing
+    "onUpdate:modelValue"?: (value: boolean) => void;
+    disable?: boolean;
+  }
+>();
 </script>
