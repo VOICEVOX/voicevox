@@ -204,7 +204,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               type: "error",
               title: "エラー",
               message:
-                "このプロジェクトはマルチトラックの機能を使用して作成されていますが、現在の設定ではマルチトラックの機能を使用できません。\n" +
+                "このプロジェクトはマルチトラック機能を使用して作成されていますが、現在の設定ではマルチトラック機能を使用できません。\n" +
                 "設定の「ソング：マルチトラック機能」を有効にしてからプロジェクトを読み込んでください。",
             });
             return false;
