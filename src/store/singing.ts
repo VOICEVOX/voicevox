@@ -1555,8 +1555,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const transportRef = transport;
 
         // レンダリング中に変更される可能性のあるデータをコピーする
-        const tracks = structuredClone(toRaw(state.tracks));
+        const tracks = cloneWithUnwrapProxy(state.tracks);
         const trackChannelStripsRef = new Map(trackChannelStrips);
+        const overlappingNoteIdsRef = cloneWithUnwrapProxy(
+          state.overlappingNoteIds,
+        );
 
         const trackIdsInTracks = new Set(tracks.keys());
         const trackIdsInTrackChannelStrips = new Set(
@@ -1601,10 +1604,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           }
 
           // 重なっているノートを削除する
-          const overlappingNoteIds = getOrThrow(
-            state.overlappingNoteIds,
-            trackId,
-          );
+          const overlappingNoteIds = getOrThrow(overlappingNoteIdsRef, trackId);
           const notes = track.notes.filter(
             (value) => !overlappingNoteIds.has(value.id),
           );
