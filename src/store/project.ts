@@ -132,8 +132,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         await context.dispatch("CLEAR_PITCH_EDIT_DATA", { trackId });
 
         context.commit("SET_PROJECT_FILEPATH", { filePath: undefined });
-        context.commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
-        context.commit("CLEAR_COMMANDS");
+        context.dispatch("CLEAR_UNDO_HISTORY");
       },
     ),
   },
@@ -225,8 +224,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           await applySongProjectToStore(dispatch, parsedProjectData.song);
 
           commit("SET_PROJECT_FILEPATH", { filePath });
-          commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
-          commit("CLEAR_COMMANDS");
+          dispatch("CLEAR_UNDO_HISTORY");
           return true;
         } catch (err) {
           window.backend.logError(err);
@@ -398,6 +396,13 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
   SET_SAVED_LAST_COMMAND_UNIX_MILLISEC: {
     mutation(state, unixMillisec) {
       state.savedLastCommandUnixMillisec = unixMillisec;
+    },
+  },
+
+  CLEAR_UNDO_HISTORY: {
+    action({ commit }) {
+      commit("CLEAR_COMMANDS");
+      commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
     },
   },
 });

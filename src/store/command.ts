@@ -167,9 +167,5 @@ export const commandStore = createPartialStore<CommandStoreTypes>({
         state.redoCommands[editor].splice(0);
       }
     },
-
-    action({ commit }) {
-      commit("CLEAR_COMMANDS");
-    },
   },
 });

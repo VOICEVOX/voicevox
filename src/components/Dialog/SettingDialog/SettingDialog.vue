@@ -530,7 +530,7 @@
                 description="ONの場合、一つのプロジェクト内に複数のトラックを作成できるようになります。"
                 :modelValue="experimentalSetting.enableMultiTrack"
                 :disable="!canToggleMultiTrack"
-                @update:modelValue="toggleMultiTrack($event)"
+                @update:modelValue="setMultiTrack($event)"
               >
                 <QTooltip v-if="!canToggleMultiTrack" :delay="500">
                   現在のプロジェクトに複数のトラックが存在するため、無効化できません。
@@ -918,11 +918,11 @@ const canToggleMultiTrack = computed(() => {
   return store.state.tracks.size <= 1;
 });
 
-const toggleMultiTrack = (enableMultiTrack: boolean) => {
+const setMultiTrack = (enableMultiTrack: boolean) => {
   changeExperimentalSetting("enableMultiTrack", enableMultiTrack);
   // 無効化するときはUndo/Redoをクリアする
   if (!enableMultiTrack) {
-    store.dispatch("CLEAR_COMMANDS");
+    store.dispatch("CLEAR_UNDO_HISTORY");
   }
 };
 </script>

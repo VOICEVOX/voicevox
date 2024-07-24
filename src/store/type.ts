@@ -1422,7 +1422,6 @@ export type CommandStoreTypes = {
 
   CLEAR_COMMANDS: {
     mutation: undefined;
-    action(): void;
   };
 };
 
@@ -1697,6 +1696,10 @@ export type ProjectStoreTypes = {
 
   SET_SAVED_LAST_COMMAND_UNIX_MILLISEC: {
     mutation: number | null;
+  };
+
+  CLEAR_UNDO_HISTORY: {
+    action(): void;
   };
 };
 
