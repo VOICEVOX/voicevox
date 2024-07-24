@@ -530,9 +530,7 @@
                 description="ONの場合、一つのプロジェクト内に複数のトラックを作成できるようになります。"
                 :modelValue="experimentalSetting.enableMultiTrack"
                 :disable="!canToggleMultiTrack"
-                @update:modelValue="
-                  changeExperimentalSetting('enableMultiTrack', $event)
-                "
+                @update:modelValue="toggleMultiTrack($event)"
               >
                 <QTooltip v-if="!canToggleMultiTrack" :delay="500">
                   現在のプロジェクトに複数のトラックが存在するため、無効化できません。
@@ -912,7 +910,6 @@ const renderEngineNameLabel = (engineId: EngineId) => {
 };
 
 // トラックが複数あるときはマルチトラック機能を無効化できないようにする
-// TODO: Undo/Redoで迂回できるので対策する
 const canToggleMultiTrack = computed(() => {
   if (!experimentalSetting.value.enableMultiTrack) {
     return true;
@@ -920,6 +917,17 @@ const canToggleMultiTrack = computed(() => {
 
   return store.state.tracks.size <= 1;
 });
+
+const toggleMultiTrack = (enableMultiTrack: boolean) => {
+  if (!canToggleMultiTrack.value) {
+    return;
+  }
+  changeExperimentalSetting("enableMultiTrack", enableMultiTrack);
+  // 無効化するときはUndo/Redoをクリアする
+  if (!enableMultiTrack) {
+    store.dispatch("CLEAR_COMMANDS");
+  }
+};
 </script>
 
 <style scoped lang="scss">

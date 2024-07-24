@@ -1422,6 +1422,7 @@ export type CommandStoreTypes = {
 
   CLEAR_COMMANDS: {
     mutation: undefined;
+    action(): void;
   };
 };
 
