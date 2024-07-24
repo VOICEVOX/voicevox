@@ -4,14 +4,8 @@ import { TrackId } from "@/type/preload";
 
 const createTrack = ({ solo, mute }: { solo: boolean; mute: boolean }) => {
   const track = createDefaultTrack();
-
-  if (solo) {
-    track.solo = true;
-  }
-  if (mute) {
-    track.mute = true;
-  }
-
+  track.solo = solo;
+  track.mute = mute;
   return track;
 };
 const toTracksMap = (tracks: Track[]) => {
