@@ -14,10 +14,6 @@ const toTracksMap = (tracks: Track[]) => {
     return acc;
   }, new Map<TrackId, Track>());
 };
-const findIndices = (tracks: Map<TrackId, Track>, trackIds: Set<TrackId>) =>
-  [...trackIds].map((trackId) => {
-    return Array.from(tracks.keys()).findIndex((id) => id === trackId);
-  });
 
 describe("shouldPlayTracks", () => {
   it("ソロのトラックが存在する場合はソロのトラックのみ再生する（ミュートは無視される）", () => {
@@ -29,9 +25,10 @@ describe("shouldPlayTracks", () => {
       createTrack({ solo: false, mute: true }),
       createTrack({ solo: false, mute: true }),
     ]);
+    const trackIds = [...tracks.keys()];
 
     const result = shouldPlayTracks(tracks);
-    expect(findIndices(tracks, result).sort()).toEqual([2, 3]);
+    expect([...result]).toEqual([trackIds[2], trackIds[3]]);
   });
 
   it("ソロのトラックが存在しない場合はミュートされていないトラックを再生する", () => {
@@ -41,8 +38,9 @@ describe("shouldPlayTracks", () => {
       createTrack({ solo: false, mute: true }),
       createTrack({ solo: false, mute: true }),
     ]);
+    const trackIds = [...tracks.keys()];
 
     const result = shouldPlayTracks(tracks);
-    expect(findIndices(tracks, result).sort()).toEqual([0, 1]);
+    expect([...result]).toEqual([trackIds[0], trackIds[1]]);
   });
 });

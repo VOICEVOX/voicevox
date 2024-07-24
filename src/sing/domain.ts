@@ -575,16 +575,9 @@ export const splitLyricsByMoras = (
  */
 export const shouldPlayTracks = (tracks: Map<TrackId, Track>): Set<TrackId> => {
   const soloTrackExists = [...tracks.values()].some((track) => track.solo);
-  const shouldPlaySet = new Set<TrackId>();
-  for (const [trackKey, track] of tracks) {
-    if (soloTrackExists) {
-      if (track.solo) {
-        shouldPlaySet.add(trackKey);
-      }
-    } else if (!track.mute) {
-      shouldPlaySet.add(trackKey);
-    }
-  }
-
-  return shouldPlaySet;
+  return new Set(
+    [...tracks.entries()]
+      .filter(([, track]) => (soloTrackExists ? track.solo : !track.mute))
+      .map(([trackId]) => trackId),
+  );
 };
