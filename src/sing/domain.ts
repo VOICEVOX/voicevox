@@ -4,7 +4,6 @@ import {
   Note,
   Phrase,
   PhraseSource,
-  PhraseSourceHash,
   SingingGuide,
   SingingGuideSource,
   SingingVoiceSource,
@@ -16,10 +15,14 @@ import {
   singingVoiceSourceHashSchema,
 } from "@/store/type";
 import { FramePhoneme } from "@/openapi";
+import { TrackId } from "@/type/preload";
 
 const BEAT_TYPES = [2, 4, 8, 16];
 const MIN_BPM = 40;
 const MAX_SNAP_TYPE = 32;
+
+export const isTracksEmpty = (tracks: Track[]) =>
+  tracks.length === 0 || (tracks.length === 1 && tracks[0].notes.length === 0);
 
 export const isValidTpqn = (tpqn: number) => {
   return (
@@ -88,6 +91,14 @@ export const isValidTimeSignatures = (timeSignatures: TimeSignature[]) => {
 
 export const isValidNotes = (notes: Note[]) => {
   return notes.every((value) => isValidNote(value));
+};
+
+export const isValidTrack = (track: Track) => {
+  return (
+    isValidKeyRangeAdjustment(track.keyRangeAdjustment) &&
+    isValidVolumeRangeAdjustment(track.volumeRangeAdjustment) &&
+    isValidNotes(track.notes)
+  );
 };
 
 const tickToSecondForConstantBpm = (
@@ -277,6 +288,8 @@ export function decibelToLinear(decibelValue: number) {
   return Math.pow(10, decibelValue / 20);
 }
 
+export const DEFAULT_TRACK_NAME = "無名トラック";
+
 export const DEFAULT_TPQN = 480;
 export const DEFAULT_BPM = 120;
 export const DEFAULT_BEATS = 4;
@@ -318,11 +331,17 @@ export function createDefaultTimeSignature(
 
 export function createDefaultTrack(): Track {
   return {
+    name: DEFAULT_TRACK_NAME,
     singer: undefined,
     keyRangeAdjustment: 0,
     volumeRangeAdjustment: 0,
     notes: [],
     pitchEditData: [],
+
+    solo: false,
+    mute: false,
+    gain: 1,
+    pan: 0,
   };
 }
 
@@ -394,7 +413,7 @@ export function getEndTicksOfPhrase(phrase: Phrase) {
   return lastNote.position + lastNote.duration;
 }
 
-export function toSortedPhrases(phrases: Map<PhraseSourceHash, Phrase>) {
+export function toSortedPhrases<K extends string>(phrases: Map<K, Phrase>) {
   return [...phrases.entries()].sort((a, b) => {
     const startTicksOfPhraseA = getStartTicksOfPhrase(a[1]);
     const startTicksOfPhraseB = getStartTicksOfPhrase(b[1]);
@@ -410,10 +429,10 @@ export function toSortedPhrases(phrases: Map<PhraseSourceHash, Phrase>) {
  * - 再生位置より後のPhrase
  * - 再生位置より前のPhrase
  */
-export function selectPriorPhrase(
-  phrases: Map<PhraseSourceHash, Phrase>,
+export function selectPriorPhrase<K extends string>(
+  phrases: Map<K, Phrase>,
   position: number,
-): [PhraseSourceHash, Phrase] {
+): [K, Phrase] {
   if (phrases.size === 0) {
     throw new Error("Received empty phrases");
   }
@@ -546,4 +565,22 @@ export const splitLyricsByMoras = (
     );
   }
   return moraAndNonMoras;
+};
+
+/**
+ * トラックのミュート・ソロ状態から再生すべきトラックを判定する。
+ *
+ * ソロのトラックが存在する場合は、ソロのトラックのみ再生する。（ミュートは無視される）
+ * ソロのトラックが存在しない場合は、ミュートされていないトラックを再生する。
+ */
+export const shouldPlayTracks = (
+  tracks: Map<TrackId, Track>,
+): Map<TrackId, boolean> => {
+  const soloTrackExists = [...tracks.values()].some((track) => track.solo);
+  const shouldPlayMap = new Map<TrackId, boolean>();
+  for (const [trackKey, track] of tracks) {
+    shouldPlayMap.set(trackKey, soloTrackExists ? track.solo : !track.mute);
+  }
+
+  return shouldPlayMap;
 };

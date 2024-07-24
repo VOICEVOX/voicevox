@@ -40,16 +40,25 @@
           transform: `translateX(${guideLineX}px)`,
         }"
       ></div>
+
       <!-- undefinedだと警告が出るのでnullを渡す -->
+      <!-- TODO: ちゃんとしたトラックIDを渡す -->
+      <SequencerShadowNote
+        v-for="note in notesInOtherTracks"
+        :key="note.id"
+        :note
+      />
       <SequencerNote
         v-for="note in editTarget === 'NOTE'
-          ? notesIncludingPreviewNotes
-          : notes"
+          ? notesInSelectedTrackWithPreview
+          : notesInSelectedTrack"
         :key="note.id"
+        class="sequencer-note"
         :note
         :nowPreviewing
         :isSelected="selectedNoteIds.has(note.id)"
         :isPreview="previewNoteIds.has(note.id)"
+        :isOverlapping="overlappingNoteIdsInSelectedTrack.has(note.id)"
         :previewLyric="previewLyrics.get(note.id) || null"
         @barMousedown="onNoteBarMouseDown($event, note)"
         @barDoubleClick="onNoteBarDoubleClick($event, note)"
@@ -96,6 +105,7 @@
         v-for="phraseInfo in phraseInfos"
         :key="phraseInfo.key"
         :phraseKey="phraseInfo.key"
+        :isInSelectedTrack="phraseInfo.trackId === selectedTrackId"
         class="sequencer-phrase-indicator"
         :style="{
           width: `${phraseInfo.width}px`,
@@ -179,6 +189,7 @@ import SequencerGrid from "@/components/Sing/SequencerGrid.vue";
 import SequencerRuler from "@/components/Sing/SequencerRuler.vue";
 import SequencerKeys from "@/components/Sing/SequencerKeys.vue";
 import SequencerNote from "@/components/Sing/SequencerNote.vue";
+import SequencerShadowNote from "@/components/Sing/SequencerShadowNote.vue";
 import SequencerPhraseIndicator from "@/components/Sing/SequencerPhraseIndicator.vue";
 import CharacterPortrait from "@/components/Sing/CharacterPortrait.vue";
 import SequencerPitch from "@/components/Sing/SequencerPitch.vue";
@@ -193,6 +204,7 @@ import {
 import { applyGaussianFilter, linearInterpolation } from "@/sing/utility";
 import { useLyricInput } from "@/composables/useLyricInput";
 import { ExhaustiveError } from "@/type/utility";
+import { getOrThrow } from "@/helpers/mapHelper";
 
 type PreviewMode =
   | "ADD_NOTE"
@@ -211,23 +223,42 @@ const { warn } = createLogger("ScoreSequencer");
 const store = useStore();
 const state = store.state;
 
+// 選択中のトラックID
+const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
+
 // TPQN、テンポ、ノーツ
 const tpqn = computed(() => state.tpqn);
 const tempos = computed(() => state.tempos);
-const notes = computed(() => store.getters.SELECTED_TRACK.notes);
-const selectedNoteIds = computed(() => new Set(state.selectedNoteIds));
+const notesInSelectedTrack = computed(() => store.getters.SELECTED_TRACK.notes);
+const notesInOtherTracks = computed(() =>
+  [...store.state.tracks.entries()].flatMap(([trackId, track]) =>
+    trackId === selectedTrackId.value ? [] : track.notes,
+  ),
+);
+const overlappingNoteIdsInSelectedTrack = computed(() =>
+  getOrThrow(store.state.overlappingNoteIds, selectedTrackId.value),
+);
+const selectedNotes = computed(() =>
+  store.getters.SELECTED_TRACK.notes.filter((note) =>
+    selectedNoteIds.value.has(note.id),
+  ),
+);
+const selectedNoteIds = computed(
+  () => new Set(store.getters.SELECTED_NOTE_IDS),
+);
 const isNoteSelected = computed(() => {
   return selectedNoteIds.value.size > 0;
 });
-const selectedNotes = computed(() => {
-  return notes.value.filter((value) => selectedNoteIds.value.has(value.id));
-});
-const notesIncludingPreviewNotes = computed(() => {
+const notesInSelectedTrackWithPreview = computed(() => {
   if (nowPreviewing.value) {
     const previewNoteIds = new Set(previewNotes.value.map((value) => value.id));
     return previewNotes.value
-      .concat(notes.value.filter((value) => !previewNoteIds.has(value.id)))
-      .sort((a, b) => {
+      .concat(
+        notesInSelectedTrack.value.filter(
+          (note) => !previewNoteIds.has(note.id),
+        ),
+      )
+      .toSorted((a, b) => {
         const aIsSelectedOrPreview =
           selectedNoteIds.value.has(a.id) || previewNoteIds.has(a.id);
         const bIsSelectedOrPreview =
@@ -241,7 +272,7 @@ const notesIncludingPreviewNotes = computed(() => {
         }
       });
   } else {
-    return [...notes.value].sort((a, b) => {
+    return notesInSelectedTrack.value.toSorted((a, b) => {
       const aIsSelected = selectedNoteIds.value.has(a.id);
       const bIsSelected = selectedNoteIds.value.has(b.id);
       if (aIsSelected === bIsSelected) {
@@ -301,7 +332,8 @@ const phraseInfos = computed(() => {
     const endBaseX = tickToBaseX(endTicks, tpqn.value);
     const startX = startBaseX * zoomX.value;
     const endX = endBaseX * zoomX.value;
-    return { key, x: startX, width: endX - startX };
+    const trackId = phrase.trackId;
+    return { key, x: startX, width: endX - startX, trackId };
   });
 });
 
@@ -358,7 +390,9 @@ const prevCursorPos = { frame: 0, frequency: 0 }; // 前のカーソル位置
 
 // 歌詞を編集中のノート
 const editingLyricNote = computed(() => {
-  return notes.value.find((value) => value.id === state.editingLyricNoteId);
+  return notesInSelectedTrack.value.find(
+    (note) => note.id === state.editingLyricNoteId,
+  );
 });
 
 // 入力を補助する線
@@ -733,26 +767,26 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
         throw new Error("note is undefined.");
       }
       if (event.shiftKey) {
-        let minIndex = notes.value.length - 1;
+        let minIndex = notesInSelectedTrack.value.length - 1;
         let maxIndex = 0;
-        for (let i = 0; i < notes.value.length; i++) {
-          const noteId = notes.value[i].id;
-          if (state.selectedNoteIds.has(noteId) || noteId === note.id) {
+        for (let i = 0; i < notesInSelectedTrack.value.length; i++) {
+          const noteId = notesInSelectedTrack.value[i].id;
+          if (selectedNoteIds.value.has(noteId) || noteId === note.id) {
             minIndex = Math.min(minIndex, i);
             maxIndex = Math.max(maxIndex, i);
           }
         }
         const noteIdsToSelect: NoteId[] = [];
         for (let i = minIndex; i <= maxIndex; i++) {
-          const noteId = notes.value[i].id;
-          if (!state.selectedNoteIds.has(noteId)) {
+          const noteId = notesInSelectedTrack.value[i].id;
+          if (!selectedNoteIds.value.has(noteId)) {
             noteIdsToSelect.push(noteId);
           }
         }
         store.dispatch("SELECT_NOTES", { noteIds: noteIdsToSelect });
       } else if (isOnCommandOrCtrlKeyDown(event)) {
         store.dispatch("SELECT_NOTES", { noteIds: [note.id] });
-      } else if (!state.selectedNoteIds.has(note.id)) {
+      } else if (!selectedNoteIds.value.has(note.id)) {
         selectOnlyThis(note);
       }
       for (const note of selectedNotes.value) {
@@ -812,12 +846,18 @@ const endPreview = () => {
 
     if (edited) {
       if (previewMode === "ADD_NOTE") {
-        store.dispatch("COMMAND_ADD_NOTES", { notes: previewNotes.value });
+        store.dispatch("COMMAND_ADD_NOTES", {
+          notes: previewNotes.value,
+          trackId: selectedTrackId.value,
+        });
         store.dispatch("SELECT_NOTES", {
           noteIds: previewNotes.value.map((value) => value.id),
         });
       } else {
-        store.dispatch("COMMAND_UPDATE_NOTES", { notes: previewNotes.value });
+        store.dispatch("COMMAND_UPDATE_NOTES", {
+          notes: previewNotes.value,
+          trackId: selectedTrackId.value,
+        });
       }
       if (previewNotes.value.length === 1) {
         store.dispatch("PLAY_PREVIEW_SOUND", {
@@ -844,14 +884,16 @@ const endPreview = () => {
         data = data.map((value) => Math.exp(value));
 
         store.dispatch("COMMAND_SET_PITCH_EDIT_DATA", {
-          data,
+          pitchArray: data,
           startFrame: previewPitchEdit.value.startFrame,
+          trackId: selectedTrackId.value,
         });
       }
     } else if (previewPitchEditType === "erase") {
       store.dispatch("COMMAND_ERASE_PITCH_EDIT_DATA", {
         startFrame: previewPitchEdit.value.startFrame,
         frameLength: previewPitchEdit.value.frameLength,
+        trackId: selectedTrackId.value,
       });
     } else {
       throw new ExhaustiveError(previewPitchEditType);
@@ -870,7 +912,7 @@ const onNoteBarMouseDown = (event: MouseEvent, note: Note) => {
   const mouseButton = getButton(event);
   if (mouseButton === "LEFT_BUTTON") {
     startPreview(event, "MOVE_NOTE", note);
-  } else if (!state.selectedNoteIds.has(note.id)) {
+  } else if (!selectedNoteIds.value.has(note.id)) {
     selectOnlyThis(note);
   }
 };
@@ -892,7 +934,7 @@ const onNoteLeftEdgeMouseDown = (event: MouseEvent, note: Note) => {
   const mouseButton = getButton(event);
   if (mouseButton === "LEFT_BUTTON") {
     startPreview(event, "RESIZE_NOTE_LEFT", note);
-  } else if (!state.selectedNoteIds.has(note.id)) {
+  } else if (!selectedNoteIds.value.has(note.id)) {
     selectOnlyThis(note);
   }
 };
@@ -904,7 +946,7 @@ const onNoteRightEdgeMouseDown = (event: MouseEvent, note: Note) => {
   const mouseButton = getButton(event);
   if (mouseButton === "LEFT_BUTTON") {
     startPreview(event, "RESIZE_NOTE_RIGHT", note);
-  } else if (!state.selectedNoteIds.has(note.id)) {
+  } else if (!selectedNoteIds.value.has(note.id)) {
     selectOnlyThis(note);
   }
 };
@@ -1002,7 +1044,7 @@ const rectSelect = (additive: boolean) => {
   );
 
   const noteIdsToSelect: NoteId[] = [];
-  for (const note of notes.value) {
+  for (const note of notesInSelectedTrack.value) {
     if (
       note.position + note.duration >= startTicks &&
       note.position <= endTicks &&
@@ -1036,7 +1078,10 @@ const handleNotesArrowUp = () => {
   if (editedNotes.some((note) => note.noteNumber > 127)) {
     return;
   }
-  store.dispatch("COMMAND_UPDATE_NOTES", { notes: editedNotes });
+  store.dispatch("COMMAND_UPDATE_NOTES", {
+    notes: editedNotes,
+    trackId: selectedTrackId.value,
+  });
 
   if (editedNotes.length === 1) {
     store.dispatch("PLAY_PREVIEW_SOUND", {
@@ -1055,7 +1100,10 @@ const handleNotesArrowDown = () => {
   if (editedNotes.some((note) => note.noteNumber < 0)) {
     return;
   }
-  store.dispatch("COMMAND_UPDATE_NOTES", { notes: editedNotes });
+  store.dispatch("COMMAND_UPDATE_NOTES", {
+    notes: editedNotes,
+    trackId: selectedTrackId.value,
+  });
 
   if (editedNotes.length === 1) {
     store.dispatch("PLAY_PREVIEW_SOUND", {
@@ -1075,7 +1123,10 @@ const handleNotesArrowRight = () => {
     // TODO: 例外処理は`UPDATE_NOTES`内に移す？
     return;
   }
-  store.dispatch("COMMAND_UPDATE_NOTES", { notes: editedNotes });
+  store.dispatch("COMMAND_UPDATE_NOTES", {
+    notes: editedNotes,
+    trackId: selectedTrackId.value,
+  });
 };
 
 const handleNotesArrowLeft = () => {
@@ -1090,11 +1141,14 @@ const handleNotesArrowLeft = () => {
   ) {
     return;
   }
-  store.dispatch("COMMAND_UPDATE_NOTES", { notes: editedNotes });
+  store.dispatch("COMMAND_UPDATE_NOTES", {
+    notes: editedNotes,
+    trackId: selectedTrackId.value,
+  });
 };
 
 const handleNotesBackspaceOrDelete = () => {
-  if (state.selectedNoteIds.size === 0) {
+  if (selectedNoteIds.value.size === 0) {
     // TODO: 例外処理は`COMMAND_REMOVE_SELECTED_NOTES`内に移す？
     return;
   }
@@ -1218,6 +1272,13 @@ const playheadPositionChangeListener = (position: number) => {
   // オートスクロール
   const sequencerBodyElement = sequencerBody.value;
   if (!sequencerBodyElement) {
+    if (import.meta.env.DEV) {
+      // HMR時にここにたどり着くことがあるので、開発時は警告だけにする
+      // TODO: HMR時にここにたどり着く原因を調査して修正する
+      warn("sequencerBodyElement is null.");
+      return;
+    }
+
     throw new Error("sequencerBodyElement is null.");
   }
   const scrollLeft = sequencerBodyElement.scrollLeft;
@@ -1308,7 +1369,7 @@ registerHotkeyWithCleanup({
     if (nowPreviewing.value) {
       return;
     }
-    if (state.selectedNoteIds.size === 0) {
+    if (selectedNoteIds.value.size === 0) {
       return;
     }
     store.dispatch("COPY_NOTES_TO_CLIPBOARD");
@@ -1322,7 +1383,7 @@ registerHotkeyWithCleanup({
     if (nowPreviewing.value) {
       return;
     }
-    if (state.selectedNoteIds.size === 0) {
+    if (selectedNoteIds.value.size === 0) {
       return;
     }
     store.dispatch("COMMAND_CUT_NOTES_TO_CLIPBOARD");
@@ -1347,7 +1408,7 @@ registerHotkeyWithCleanup({
     if (nowPreviewing.value) {
       return;
     }
-    store.dispatch("SELECT_ALL_NOTES");
+    store.dispatch("SELECT_ALL_NOTES_IN_SELECTED_TRACK");
   },
 });
 
@@ -1390,7 +1451,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
       label: "すべて選択",
       onClick: async () => {
         contextMenu.value?.hide();
-        await store.dispatch("SELECT_ALL_NOTES");
+        await store.dispatch("SELECT_ALL_NOTES_IN_SELECTED_TRACK");
       },
       disableWhenUiLocked: true,
     },

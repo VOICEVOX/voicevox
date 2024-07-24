@@ -24,7 +24,7 @@ export const ufProjectFromVoicevox = (
         denominator: timeSignature.beatType,
       })),
       tracks: tracks.map((track) => ({
-        name: `無名トラック`,
+        name: track.name,
         notes: track.notes.map((note) => ({
           key: note.noteNumber,
           tickOn: convertTicks(note.position),

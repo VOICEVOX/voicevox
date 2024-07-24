@@ -2,6 +2,13 @@
   <QToolbar class="sing-toolbar">
     <!-- configs for entire song -->
     <div class="sing-configs">
+      <QBtn
+        class="q-mx-xs"
+        :icon="isSidebarOpen ? 'menu_open' : 'menu'"
+        round
+        flat
+        @click="toggleSidebar"
+      />
       <CharacterMenuButton />
       <QInput
         type="number"
@@ -210,6 +217,13 @@ const changeEditTarget = (editTarget: SequencerEditTarget) => {
   store.dispatch("SET_EDIT_TARGET", { editTarget });
 };
 
+const isSidebarOpen = computed(() => store.state.isSongSidebarOpen);
+const toggleSidebar = () => {
+  store.dispatch("SET_SONG_SIDEBAR_OPEN", {
+    isSongSidebarOpen: !isSidebarOpen.value,
+  });
+};
+
 const tempos = computed(() => store.state.tempos);
 const timeSignatures = computed(() => store.state.timeSignatures);
 const keyRangeAdjustment = computed(
@@ -218,6 +232,7 @@ const keyRangeAdjustment = computed(
 const volumeRangeAdjustment = computed(
   () => store.getters.SELECTED_TRACK.volumeRangeAdjustment,
 );
+const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
 
 const bpmInputBuffer = ref(120);
 const beatsInputBuffer = ref(4);
@@ -326,13 +341,17 @@ const setTimeSignature = () => {
 
 const setKeyRangeAdjustment = () => {
   const keyRangeAdjustment = keyRangeAdjustmentInputBuffer.value;
-  store.dispatch("COMMAND_SET_KEY_RANGE_ADJUSTMENT", { keyRangeAdjustment });
+  store.dispatch("COMMAND_SET_KEY_RANGE_ADJUSTMENT", {
+    keyRangeAdjustment,
+    trackId: selectedTrackId.value,
+  });
 };
 
 const setVolumeRangeAdjustment = () => {
   const volumeRangeAdjustment = volumeRangeAdjustmentInputBuffer.value;
   store.dispatch("COMMAND_SET_VOLUME_RANGE_ADJUSTMENT", {
     volumeRangeAdjustment,
+    trackId: selectedTrackId.value,
   });
 };
 

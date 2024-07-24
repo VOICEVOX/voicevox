@@ -1,6 +1,6 @@
 <template>
   <ToolBar />
-  <div class="sing-main">
+  <div class="sing-main" :class="{ 'sidebar-open': isSidebarOpen }">
     <EngineStartupOverlay :isCompletedInitialStartup />
     <div v-if="nowAudioExporting" class="exporting-dialog">
       <div>
@@ -19,7 +19,25 @@
         />
       </div>
     </div>
-    <ScoreSequencer />
+
+    <QSplitter
+      :modelValue="isSidebarOpen ? sidebarWidth : 0"
+      unit="px"
+      class="full-width"
+      :limits="[200, 300]"
+      :disable="!isSidebarOpen"
+      :separatorStyle="{ display: isSidebarOpen ? 'block' : 'none' }"
+      emitImmediately
+      @update:modelValue="setSidebarWidth"
+    >
+      <template #before>
+        <SideBar v-if="isSidebarOpen" />
+      </template>
+      <template #after>
+        <!-- full-heightで高さをQSplitterの高さに揃える -->
+        <ScoreSequencer class="full-height" />
+      </template>
+    </QSplitter>
   </div>
 </template>
 
@@ -27,6 +45,7 @@
 import { computed, ref, watch } from "vue";
 import ToolBar from "./ToolBar/ToolBar.vue";
 import ScoreSequencer from "./ScoreSequencer.vue";
+import SideBar from "./SideBar/SideBar.vue";
 import EngineStartupOverlay from "@/components/EngineStartupOverlay.vue";
 import { useStore } from "@/store";
 import onetimeWatch from "@/helpers/onetimeWatch";
@@ -42,7 +61,15 @@ const props = defineProps<{
 }>();
 
 const store = useStore();
-//const $q = useQuasar();
+
+const isSidebarOpen = computed(() => store.state.isSongSidebarOpen);
+const sidebarWidth = ref(300);
+
+const setSidebarWidth = (width: number) => {
+  if (isSidebarOpen.value) {
+    sidebarWidth.value = width;
+  }
+};
 
 const nowRendering = computed(() => {
   return store.state.nowRendering;
@@ -80,11 +107,15 @@ onetimeWatch(
       await store.dispatch("SET_TIME_SIGNATURES", {
         timeSignatures: [createDefaultTimeSignature(1)],
       });
-      await store.dispatch("SET_NOTES", { notes: [] });
+      const trackId = store.state.trackOrder[0];
+      await store.dispatch("SET_NOTES", { notes: [], trackId });
       // CI上のe2eテストのNemoエンジンには歌手がいないためエラーになるのでワークアラウンド
       // FIXME: 歌手をいると見せかけるmock APIを作り、ここのtry catchを削除する
       try {
-        await store.dispatch("SET_SINGER", { withRelated: true });
+        await store.dispatch("SET_SINGER", {
+          trackId,
+          withRelated: true,
+        });
       } catch (e) {
         window.backend.logError(e);
       }
