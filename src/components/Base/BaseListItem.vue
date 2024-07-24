@@ -20,9 +20,9 @@ defineEmits<{
 </script>
 
 <style scoped lang="scss">
-@use "@/styles/variables" as vars;
-@use "@/styles/mixin" as mixin;
-@use "@/styles/colors-v2" as colors;
+@use "@/styles/v2/variables" as vars;
+@use "@/styles/v2/mixin" as mixin;
+@use "@/styles/v2/colors" as colors;
 
 .listitem {
   color: colors.$display;

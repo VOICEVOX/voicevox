@@ -56,9 +56,9 @@ const props = defineProps<{
 </script>
 
 <style scoped lang="scss">
-@use "@/styles/variables" as vars;
-@use "@/styles/mixin" as mixin;
-@use "@/styles/colors-v2" as colors;
+@use "@/styles/v2/variables" as vars;
+@use "@/styles/v2/mixin" as mixin;
+@use "@/styles/v2/colors" as colors;
 
 .container {
   // TODO: 親コンポーネントからheightを取得できないため一時的にcalcを使用、HelpDialogの構造を再設計後100%に変更する
@@ -75,15 +75,13 @@ const props = defineProps<{
 }
 
 .info {
-  background-color: #e9f3e7;
-  padding: 16px;
-  border-radius: 16px;
+  border: 1px solid colors.$border;
+  background-color: colors.$surface;
+  padding: vars.$padding-2;
+  border-radius: vars.$radius-2;
 }
 
 .info-title {
-  font-size: 1.25rem;
-  font-weight: bold;
-  line-height: 2;
-  margin: 0;
+  @include mixin.headline-2;
 }
 </style>

@@ -284,8 +284,8 @@ const openLogDirectory = window.backend.openLogDirectory;
 </script>
 
 <style scoped lang="scss">
-@use "@/styles/colors-v2" as colors;
-@use "@/styles/variables" as vars;
+@use "@/styles/v2/colors" as colors;
+@use "@/styles/v2/variables" as vars;
 
 .grid {
   display: grid;
@@ -308,8 +308,8 @@ const openLogDirectory = window.backend.openLogDirectory;
 }
 
 .list-label {
-  padding: 8px 16px;
-  padding-top: 16px;
+  padding: vars.$padding-2;
+  padding-bottom: vars.$padding-1;
   color: colors.$display-sub;
 }
 
