@@ -919,9 +919,6 @@ const canToggleMultiTrack = computed(() => {
 });
 
 const toggleMultiTrack = (enableMultiTrack: boolean) => {
-  if (!canToggleMultiTrack.value) {
-    return;
-  }
   changeExperimentalSetting("enableMultiTrack", enableMultiTrack);
   // 無効化するときはUndo/Redoをクリアする
   if (!enableMultiTrack) {
