@@ -21,9 +21,11 @@ import {
   createDefaultTrack,
   DEFAULT_TPQN,
 } from "@/sing/domain";
+import { EditorType } from "@/type/preload";
+import { IsEqual } from "@/type/utility";
 
 export const projectStoreState: ProjectStoreState = {
-  savedLastCommandUnixMillisec: null,
+  savedLastCommandIds: { talk: null, song: null },
 };
 
 const applyTalkProjectToStore = async (
@@ -328,8 +330,8 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             .then(getValueOrThrow);
           context.commit("SET_PROJECT_FILEPATH", { filePath });
           context.commit(
-            "SET_SAVED_LAST_COMMAND_UNIX_MILLISEC",
-            context.getters.LAST_COMMAND_UNIX_MILLISEC,
+            "SET_SAVED_LAST_COMMAND_IDS",
+            context.getters.LAST_COMMAND_IDS,
           );
           return true;
         } catch (err) {
@@ -386,23 +388,36 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
 
   IS_EDITED: {
     getter(state, getters) {
-      return (
-        getters.LAST_COMMAND_UNIX_MILLISEC !==
-        state.savedLastCommandUnixMillisec
-      );
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const _: IsEqual<
+        typeof state.savedLastCommandIds,
+        typeof getters.LAST_COMMAND_IDS
+      > = true;
+      return Object.keys(state.savedLastCommandIds).some((_editor) => {
+        const editor = _editor as EditorType;
+        return (
+          state.savedLastCommandIds[editor] !== getters.LAST_COMMAND_IDS[editor]
+        );
+      });
     },
   },
 
-  SET_SAVED_LAST_COMMAND_UNIX_MILLISEC: {
-    mutation(state, unixMillisec) {
-      state.savedLastCommandUnixMillisec = unixMillisec;
+  SET_SAVED_LAST_COMMAND_IDS: {
+    mutation(state, commandIds) {
+      state.savedLastCommandIds = commandIds;
+    },
+  },
+
+  RESET_SAVED_LAST_COMMAND_IDS: {
+    mutation(state) {
+      state.savedLastCommandIds = { talk: null, song: null };
     },
   },
 
   CLEAR_UNDO_HISTORY: {
     action({ commit }) {
+      commit("RESET_SAVED_LAST_COMMAND_IDS");
       commit("CLEAR_COMMANDS");
-      commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
     },
   },
 });

@@ -53,6 +53,7 @@ import {
   RootMiscSettingType,
   EditorType,
   NoteId,
+  CommandId,
   TrackId,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
@@ -96,7 +97,7 @@ export type FetchAudioResult = {
 };
 
 export type Command = {
-  unixMillisec: number;
+  id: CommandId;
   undoPatches: Patch[];
   redoPatches: Patch[];
 };
@@ -1416,8 +1417,8 @@ export type CommandStoreTypes = {
     action(payload: { editor: EditorType }): void;
   };
 
-  LAST_COMMAND_UNIX_MILLISEC: {
-    getter: number | null;
+  LAST_COMMAND_IDS: {
+    getter: Record<EditorType, CommandId | null>;
   };
 
   CLEAR_COMMANDS: {
@@ -1652,7 +1653,7 @@ export type IndexStoreTypes = {
 
 export type ProjectStoreState = {
   projectFilePath?: string;
-  savedLastCommandUnixMillisec: number | null;
+  savedLastCommandIds: Record<EditorType, CommandId | null>;
 };
 
 export type ProjectStoreTypes = {
@@ -1694,8 +1695,12 @@ export type ProjectStoreTypes = {
     getter: boolean;
   };
 
-  SET_SAVED_LAST_COMMAND_UNIX_MILLISEC: {
-    mutation: number | null;
+  SET_SAVED_LAST_COMMAND_IDS: {
+    mutation: Record<EditorType, CommandId | null>;
+  };
+
+  RESET_SAVED_LAST_COMMAND_IDS: {
+    mutation: void;
   };
 
   CLEAR_UNDO_HISTORY: {
