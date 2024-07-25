@@ -2266,6 +2266,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         notes: notesToPaste,
         trackId: getters.SELECTED_TRACK_ID,
       });
+
       dispatch("RENDER");
       // 貼り付けたノートを選択する
       commit("DESELECT_ALL_NOTES");
@@ -2292,6 +2293,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         notes: quantizedNotes,
         trackId: getters.SELECTED_TRACK_ID,
       });
+
       dispatch("RENDER");
     },
   },
@@ -2334,6 +2336,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
     action({ commit, dispatch }, { trackId, solo }) {
       commit("SET_TRACK_SOLO", { trackId, solo });
+
       dispatch("RENDER");
     },
   },
@@ -2345,6 +2348,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
     action({ commit, dispatch }, { trackId, gain }) {
       commit("SET_TRACK_GAIN", { trackId, gain });
+
       dispatch("RENDER");
     },
   },
@@ -2356,6 +2360,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
     action({ commit, dispatch }, { trackId, pan }) {
       commit("SET_TRACK_PAN", { trackId, pan });
+
       dispatch("RENDER");
     },
   },
@@ -2697,6 +2702,7 @@ export const singingCommandStore = transformCommandStore(
       },
       action({ commit, dispatch }, { trackId, mute }) {
         commit("COMMAND_SET_TRACK_MUTE", { trackId, mute });
+
         dispatch("RENDER");
       },
     },
@@ -2707,6 +2713,7 @@ export const singingCommandStore = transformCommandStore(
       },
       action({ commit, dispatch }, { trackId, solo }) {
         commit("COMMAND_SET_TRACK_SOLO", { trackId, solo });
+
         dispatch("RENDER");
       },
     },
@@ -2717,6 +2724,7 @@ export const singingCommandStore = transformCommandStore(
       },
       action({ commit, dispatch }, { trackId, gain }) {
         commit("COMMAND_SET_TRACK_GAIN", { trackId, gain });
+
         dispatch("RENDER");
       },
     },
@@ -2727,6 +2735,7 @@ export const singingCommandStore = transformCommandStore(
       },
       action({ commit, dispatch }, { trackId, pan }) {
         commit("COMMAND_SET_TRACK_PAN", { trackId, pan });
+
         dispatch("RENDER");
       },
     },
