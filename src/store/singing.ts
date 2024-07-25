@@ -1,5 +1,5 @@
 import path from "path";
-import { toRaw, watchSyncEffect } from "vue";
+import { toRaw } from "vue";
 import { createPartialStore } from "./vuex";
 import { createUILockAction } from "./ui";
 import {
@@ -258,42 +258,8 @@ const singingVoiceCache = new Map<SingingVoiceSourceHash, SingingVoice>();
 
 const initialTrackId = TrackId(crypto.randomUUID());
 
-export const singingStorePlugin: WatchStoreStatePlugin = (store) => {
-  // tracksの変更とtrackChannelStripsを同期する。
-  // NOTE: immerの差分検知はChannelStripだと動かないので、tracksの変更を監視して同期する。
-  watchSyncEffect(async () => {
-    if (!audioContext || !mainChannelStrip) {
-      return;
-    }
-    const shouldPlays = shouldPlayTracks(store.state.tracks);
-    for (const [trackId, track] of store.state.tracks) {
-      if (!trackChannelStrips.has(trackId)) {
-        const channelStrip = new ChannelStrip(audioContext);
-        channelStrip.output.connect(mainChannelStrip.input);
-
-        trackChannelStrips.set(trackId, channelStrip);
-      }
-
-      const channelStrip = getOrThrow(trackChannelStrips, trackId);
-      channelStrip.volume = store.state.experimentalSetting.enableMultiTrack
-        ? track.gain
-        : 1;
-      channelStrip.pan = store.state.experimentalSetting.enableMultiTrack
-        ? track.pan
-        : 0;
-      channelStrip.mute = store.state.experimentalSetting.enableMultiTrack
-        ? !shouldPlays.has(trackId)
-        : false;
-    }
-    const channelStripTrackIds = [...trackChannelStrips.keys()];
-    for (const trackId of channelStripTrackIds) {
-      if (!store.state.tracks.has(trackId)) {
-        const channelStrip = getOrThrow(trackChannelStrips, trackId);
-        channelStrip.output.disconnect();
-        trackChannelStrips.delete(trackId);
-      }
-    }
-  });
+export const singingStorePlugin: WatchStoreStatePlugin = () => {
+  // 将来使うとき用
 };
 
 /** トラックを取得する。見付からないときはフォールバックとして最初のトラックを返す。 */
@@ -1556,23 +1522,37 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
         // レンダリング中に変更される可能性のあるデータをコピーする
         const tracks = cloneWithUnwrapProxy(state.tracks);
-        const trackChannelStripsRef = new Map(trackChannelStrips);
         const overlappingNoteIdsRef = cloneWithUnwrapProxy(
           state.overlappingNoteIds,
         );
 
-        const trackIdsInTracks = new Set(tracks.keys());
-        const trackIdsInTrackChannelStrips = new Set(
-          trackChannelStripsRef.keys(),
-        );
-        // どちらかにしか存在しないtrackIdがある場合はエラーを投げる
-        if (
-          trackIdsInTracks.symmetricDifference(trackIdsInTrackChannelStrips)
-            .size > 0
-        ) {
-          throw new Error(
-            `The track ids are different: ${trackIdsInTracks} | ${trackIdsInTrackChannelStrips}`,
-          );
+        // trackChannelStripsを同期する
+        const shouldPlays = shouldPlayTracks(tracks);
+        for (const [trackId, track] of tracks) {
+          if (!trackChannelStrips.has(trackId)) {
+            const channelStrip = new ChannelStrip(audioContext);
+            channelStrip.output.connect(mainChannelStrip.input);
+
+            trackChannelStrips.set(trackId, channelStrip);
+          }
+
+          const channelStrip = getOrThrow(trackChannelStrips, trackId);
+          channelStrip.volume = state.experimentalSetting.enableMultiTrack
+            ? track.gain
+            : 1;
+          channelStrip.pan = state.experimentalSetting.enableMultiTrack
+            ? track.pan
+            : 0;
+          channelStrip.mute = state.experimentalSetting.enableMultiTrack
+            ? !shouldPlays.has(trackId)
+            : false;
+        }
+        for (const trackId of trackChannelStrips.keys()) {
+          if (!tracks.has(trackId)) {
+            const channelStrip = getOrThrow(trackChannelStrips, trackId);
+            channelStrip.output.disconnect();
+            trackChannelStrips.delete(trackId);
+          }
         }
 
         const singerAndFrameRates = new Map(
@@ -1769,10 +1749,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               instrument: polySynth,
               noteEvents,
             };
-            const channelStrip = getOrThrow(
-              trackChannelStripsRef,
-              phrase.trackId,
-            );
+            const channelStrip = getOrThrow(trackChannelStrips, phrase.trackId);
             polySynth.output.connect(channelStrip.input);
             transportRef.addSequence(noteSequence);
             sequences.set(phraseKey, noteSequence);
@@ -1977,10 +1954,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               audioPlayer,
               audioEvents,
             };
-            const channelStrip = getOrThrow(
-              trackChannelStripsRef,
-              phrase.trackId,
-            );
+            const channelStrip = getOrThrow(trackChannelStrips, phrase.trackId);
             audioPlayer.output.connect(channelStrip.input);
             transportRef.addSequence(audioSequence);
             sequences.set(phraseKey, audioSequence);
@@ -2346,8 +2320,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const track = getOrThrow(state.tracks, trackId);
       track.mute = mute;
     },
-    action({ commit }, { trackId, mute }) {
+    action({ commit, dispatch }, { trackId, mute }) {
       commit("SET_TRACK_MUTE", { trackId, mute });
+
+      dispatch("RENDER");
     },
   },
 
@@ -2356,8 +2332,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const track = getOrThrow(state.tracks, trackId);
       track.solo = solo;
     },
-    action({ commit }, { trackId, solo }) {
+    action({ commit, dispatch }, { trackId, solo }) {
       commit("SET_TRACK_SOLO", { trackId, solo });
+      dispatch("RENDER");
     },
   },
 
@@ -2366,8 +2343,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const track = getOrThrow(state.tracks, trackId);
       track.gain = gain;
     },
-    action({ commit }, { trackId, gain }) {
+    action({ commit, dispatch }, { trackId, gain }) {
       commit("SET_TRACK_GAIN", { trackId, gain });
+      dispatch("RENDER");
     },
   },
 
@@ -2376,8 +2354,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const track = getOrThrow(state.tracks, trackId);
       track.pan = pan;
     },
-    action({ commit }, { trackId, pan }) {
+    action({ commit, dispatch }, { trackId, pan }) {
       commit("SET_TRACK_PAN", { trackId, pan });
+      dispatch("RENDER");
     },
   },
 
@@ -2696,8 +2675,10 @@ export const singingCommandStore = transformCommandStore(
       mutation(draft, { trackId }) {
         singingStore.mutations.DELETE_TRACK(draft, { trackId });
       },
-      action({ commit }, { trackId }) {
+      action({ commit, dispatch }, { trackId }) {
         commit("COMMAND_DELETE_TRACK", { trackId });
+
+        dispatch("RENDER");
       },
     },
 
@@ -2714,8 +2695,9 @@ export const singingCommandStore = transformCommandStore(
       mutation(draft, { trackId, mute }) {
         singingStore.mutations.SET_TRACK_MUTE(draft, { trackId, mute });
       },
-      action({ commit }, { trackId, mute }) {
+      action({ commit, dispatch }, { trackId, mute }) {
         commit("COMMAND_SET_TRACK_MUTE", { trackId, mute });
+        dispatch("RENDER");
       },
     },
 
@@ -2723,8 +2705,9 @@ export const singingCommandStore = transformCommandStore(
       mutation(draft, { trackId, solo }) {
         singingStore.mutations.SET_TRACK_SOLO(draft, { trackId, solo });
       },
-      action({ commit }, { trackId, solo }) {
+      action({ commit, dispatch }, { trackId, solo }) {
         commit("COMMAND_SET_TRACK_SOLO", { trackId, solo });
+        dispatch("RENDER");
       },
     },
 
@@ -2732,8 +2715,9 @@ export const singingCommandStore = transformCommandStore(
       mutation(draft, { trackId, gain }) {
         singingStore.mutations.SET_TRACK_GAIN(draft, { trackId, gain });
       },
-      action({ commit }, { trackId, gain }) {
+      action({ commit, dispatch }, { trackId, gain }) {
         commit("COMMAND_SET_TRACK_GAIN", { trackId, gain });
+        dispatch("RENDER");
       },
     },
 
@@ -2741,8 +2725,9 @@ export const singingCommandStore = transformCommandStore(
       mutation(draft, { trackId, pan }) {
         singingStore.mutations.SET_TRACK_PAN(draft, { trackId, pan });
       },
-      action({ commit }, { trackId, pan }) {
+      action({ commit, dispatch }, { trackId, pan }) {
         commit("COMMAND_SET_TRACK_PAN", { trackId, pan });
+        dispatch("RENDER");
       },
     },
 
