@@ -9,7 +9,7 @@ import {
   MutationsBase,
   MutationTree,
 } from "@/store/vuex";
-import { EditorType } from "@/type/preload";
+import { CommandId, EditorType } from "@/type/preload";
 
 enablePatches();
 enableMapSet();
@@ -67,7 +67,7 @@ const recordPatches =
       (draft: S) => recipe(draft, payload),
     );
     return {
-      unixMillisec: new Date().getTime(),
+      id: CommandId(crypto.randomUUID()),
       redoPatches: doPatches,
       undoPatches: undoPatches,
     };
@@ -133,30 +133,17 @@ export const commandStore = createPartialStore<CommandStoreTypes>({
     },
   },
 
-  LAST_COMMAND_UNIX_MILLISEC: {
+  LAST_COMMAND_IDS: {
     getter(state) {
-      const getLastCommandUnixMillisec = (
-        commands: Command[],
-      ): number | null => {
-        const lastCommand = commands[commands.length - 1];
-        // 型的にはundefinedにはならないが、lengthが0の場合はundefinedになる
-        return lastCommand ? lastCommand.unixMillisec : null;
+      const getLastCommandId = (commands: Command[]): CommandId | null => {
+        if (commands.length == 0) return null;
+        else return commands[commands.length - 1].id;
       };
 
-      const lastTalkCommandTime = getLastCommandUnixMillisec(
-        state.undoCommands["talk"],
-      );
-      const lastSongCommandTime = getLastCommandUnixMillisec(
-        state.undoCommands["song"],
-      );
-
-      if (lastTalkCommandTime != null && lastSongCommandTime != null) {
-        return Math.max(lastTalkCommandTime, lastSongCommandTime);
-      } else if (lastTalkCommandTime != null) {
-        return lastTalkCommandTime;
-      } else {
-        return lastSongCommandTime;
-      }
+      return {
+        talk: getLastCommandId(state.undoCommands["talk"]),
+        song: getLastCommandId(state.undoCommands["song"]),
+      };
     },
   },
 

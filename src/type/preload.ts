@@ -69,6 +69,10 @@ export const noteIdSchema = z.string().brand<"NoteId">();
 export type NoteId = z.infer<typeof noteIdSchema>;
 export const NoteId = (id: string): NoteId => noteIdSchema.parse(id);
 
+export const commandIdSchema = z.string().brand<"CommandId">();
+export type CommandId = z.infer<typeof commandIdSchema>;
+export const CommandId = (id: string): CommandId => commandIdSchema.parse(id);
+
 export const trackIdSchema = z.string().brand<"TrackId">();
 export type TrackId = z.infer<typeof trackIdSchema>;
 export const TrackId = (id: string): TrackId => trackIdSchema.parse(id);
