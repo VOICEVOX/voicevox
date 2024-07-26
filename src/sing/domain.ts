@@ -231,7 +231,8 @@ export function getNumMeasures(
   maxTicks = Math.max(maxTicks, lastTsPosition);
   maxTicks = Math.max(maxTicks, lastTempoPosition);
   if (notes.length > 0) {
-    const lastNote = notes[notes.length - 1];
+    const sortedNotes = notes.toSorted((a, b) => a.position - b.position);
+    const lastNote = sortedNotes[sortedNotes.length - 1];
     const lastNoteEndPosition = lastNote.position + lastNote.duration;
     maxTicks = Math.max(maxTicks, lastNoteEndPosition);
   }
