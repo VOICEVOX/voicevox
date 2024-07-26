@@ -1,134 +1,153 @@
 {
   "name": "スプリング",
-  "sourceColor": "#9cf476",
-  "variant": "content",
-  "contrastLevel": 0,
-  "adjustments": {
-    "neutral": {
-      "chroma": 0
+  "displayName": "スプリング",
+  "primary": "#f6ee1e",
+  "secondary": "#9cf476",
+  "tertiary": "#ffae52",
+  "neutral": "#9cf476",
+  "neutralVariant": "#9cf476",
+  "error": "#d04756",
+  "isDark": false,
+  "customColors": [
+    {
+      "name": "singGridCellWhite",
+      "displayName": "sing-grid-cell-white",
+      "role": "neutralVariant",
+      "lightLightness": 96,
+      "darkLightness": 15,
+      "contrastVs": {
+        "singGridCellBlack": 1.0
+      }
     },
-    "neutralVariant": {
-      "chroma": 20.1,
-      "tone": 0
+    {
+      "name": "singGridCellBlack",
+      "displayName": "sing-grid-cell-black",
+      "role": "neutralVariant",
+      "lightLightness": 93,
+      "darkLightness": 12,
+      "contrastVs": {
+        "singGridCellWhite": 1.0
+      }
     },
-    "tertiary": {
-      "hex": "#ffae52",
-      "chroma": 70,
-      "tone": 80
+    {
+      "name": "singRulerBeatLine",
+      "displayName": "sing-ruler-beat-line",
+      "role": "neutralVariant",
+      "lightLightness": 70,
+      "darkLightness": 40,
+      "contrastVs": {
+        "surfaceContainerHigh": 1.3
+      }
     },
-    "error": {
-      "hex": "#d04756"
+    {
+      "name": "singRulerMeasureLine",
+      "displayName": "sing-ruler-measure-line",
+      "role": "tertiary",
+      "lightLightness": 80,
+      "darkLightness": 70,
+      "contrastVs": {
+        "surfaceContainer": 1.5
+      }
     },
-    "primary": {
-      "hex": "#f6ee1e",
-      "chroma": 125.7,
-      "tone": 75,
-      "hue": 100
+    {
+      "name": "singGridVerticalLine",
+      "displayName": "sing-grid-vertical-line",
+      "role": "neutral",
+      "lightLightness": 90,
+      "darkLightness": 10,
+      "contrastVs": {
+        "singGridCellBlack": 1.0
+      }
     },
-    "secondary": {
-      "chroma": 28.6,
-      "tone": 50
+    {
+      "name": "singGridHorizontalLine",
+      "displayName": "sing-grid-horizontal-line",
+      "role": "neutral",
+      "lightLightness": 95,
+      "darkLightness": 10,
+      "contrastVs": {
+        "singGridCellBlack": 1.0
+      }
+    },
+    {
+      "name": "singGridBeatLine",
+      "displayName": "sing-grid-beat-line",
+      "role": "neutral",
+      "lightLightness": 90,
+      "darkLightness": 0,
+      "contrastVs": {
+        "singGridCellBlack": 1.25
+      }
+    },
+    {
+      "name": "singGridMeasureLine",
+      "displayName": "sing-grid-measure-line",
+      "role": "tertiary",
+      "lightLightness": 80,
+      "darkLightness": 40,
+      "contrastVs": {
+        "singGridCellBlack": 1.5
+      }
+    },
+    {
+      "name": "singGridOctaveLine",
+      "displayName": "sing-grid-octave-line",
+      "role": "neutral",
+      "lightLightness": 75,
+      "darkLightness": 30,
+      "contrastVs": {
+        "singGridCellBlack": 1.5
+      }
+    },
+    {
+      "name": "singPianoKeyWhite",
+      "displayName": "sing-piano-key-white",
+      "role": "neutral",
+      "lightLightness": 99,
+      "darkLightness": 60,
+      "contrastVs": {
+        "singPianoKeyBlack": 3.0
+      }
+    },
+    {
+      "name": "singPianoKeyBlack",
+      "displayName": "sing-piano-key-black",
+      "role": "neutral",
+      "lightLightness": 65,
+      "darkLightness": 20,
+      "contrastVs": {
+        "singPianoKeyWhite": 3.0
+      }
+    },
+    {
+      "name": "singNoteBarContainer",
+      "displayName": "sing-note-bar-container",
+      "role": "secondary",
+      "lightLightness": 90,
+      "darkLightness": 80,
+      "contrastVs": {
+        "singGridCellBlack": 1.2
+      }
+    },
+    {
+      "name": "singNoteBarOutline",
+      "displayName": "sing-note-bar-outline",
+      "role": "neutral",
+      "lightLightness": 40,
+      "darkLightness": 30,
+      "contrastVs": {
+        "singNoteBarContainer": 1.5
+      }
+    },
+    {
+      "name": "singToolbarContainer",
+      "displayName": "sing-toolbar-container",
+      "role": "neutralVariant",
+      "lightLightness": 100,
+      "darkLightness": 25,
+      "contrastVs": {
+        "outline": 1.5
+      }
     }
-  },
-  "customPaletteColors": [
-    {
-      "name": "sing-grid-cell-white",
-      "palette": "neutralVariant",
-      "lightTone": 96,
-      "darkTone": 15,
-      "blend": true
-    },
-    {
-      "name": "sing-grid-cell-black",
-      "palette": "neutralVariant",
-      "lightTone": 93,
-      "darkTone": 12,
-      "blend": true
-    },
-    {
-      "name": "sing-ruler-beat-line",
-      "palette": "neutralVariant",
-      "lightTone": 70,
-      "darkTone": 40,
-      "blend": true
-    },
-    {
-      "name": "sing-ruler-measure-line",
-      "palette": "tertiary",
-      "lightTone": 80,
-      "darkTone": 70,
-      "blend": true
-    },
-    {
-      "name": "sing-grid-vertical-line",
-      "palette": "neutral",
-      "lightTone": 90,
-      "darkTone": 10,
-      "blend": true
-    },
-    {
-      "name": "sing-grid-horizontal-line",
-      "palette": "neutral",
-      "lightTone": 95,
-      "darkTone": 10,
-      "blend": true
-    },
-    {
-      "name": "sing-grid-beat-line",
-      "palette": "neutral",
-      "lightTone": 90,
-      "darkTone": 0,
-      "blend": true
-    },
-    {
-      "name": "sing-grid-measure-line",
-      "palette": "tertiary",
-      "lightTone": 80,
-      "darkTone": 40,
-      "blend": true
-    },
-    {
-      "name": "sing-grid-octave-line",
-      "palette": "neutral",
-      "lightTone": 75,
-      "darkTone": 30,
-      "blend": true
-    },
-    {
-      "name": "sing-piano-key-white",
-      "palette": "neutral",
-      "lightTone": 99,
-      "darkTone": 60,
-      "blend": true
-    },
-    {
-      "name": "sing-piano-key-black",
-      "palette": "neutral",
-      "lightTone": 65,
-      "darkTone": 20,
-      "blend": true
-    },
-    {
-      "name": "sing-note-bar-container",
-      "palette": "secondary",
-      "lightTone": 90,
-      "darkTone": 80,
-      "blend": true
-    },
-    {
-      "name": "sing-note-bar-outline",
-      "palette": "neutral",
-      "lightTone": 40,
-      "darkTone": 30,
-      "blend": true
-    },
-    {
-      "name": "sing-toolbar-container",
-      "palette": "neutralVariant",
-      "lightTone": 100,
-      "darkTone": 25,
-      "blend": true
-    }
-  ],
-  "customDefinedColors": []
+  ]
 }

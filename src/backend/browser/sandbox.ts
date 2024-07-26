@@ -19,8 +19,8 @@ import {
   HotkeySettingType,
   Sandbox,
   ThemeConf,
-  ColorSchemeConfig,
 } from "@/type/preload";
+import { ColorSchemeConfig } from "@/helpers/colors";
 import {
   ContactTextFileName,
   HowToUseTextFileName,
@@ -316,7 +316,7 @@ export const api: Sandbox = {
     // ブラウザ版では、ファイルシステムから直接読み込むのではなく、
     // ビルド時に生成されたファイルを読み込む
     // NOTE: 定数にする？
-    const colorSchemeFiles = ["default.json", "none.json", "monochrome.json"];
+    const colorSchemeFiles = ["default.json", "spring.json"];
 
     // カラースキーム個別の取得
     const fetchColorScheme = async (

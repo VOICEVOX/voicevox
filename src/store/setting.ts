@@ -3,7 +3,9 @@ import { SettingStoreState, SettingStoreTypes } from "./type";
 import { createDotNotationUILockAction as createUILockAction } from "./ui";
 import { createDotNotationPartialStore as createPartialStore } from "./vuex";
 import {
-  generateColorScheme,
+  ColorScheme,
+  ColorSchemeConfig,
+  ColorSchemeFactory,
   cssVariablesFromColorScheme,
 } from "@/helpers/colors";
 import {
@@ -16,8 +18,6 @@ import {
   EngineId,
   ConfirmedTips,
   RootMiscSettingType,
-  ColorScheme,
-  ColorSchemeConfig,
 } from "@/type/preload";
 import { createLogger } from "@/domain/frontend/log";
 import { IsEqual } from "@/type/utility";
@@ -310,194 +310,24 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         const availableColorSchemeConfigs =
           await window.backend.getColorSchemeConfigs();
         // デフォルト
-        //const defaultSchemeConfigWorkaround = availableColorSchemeConfigs[0];
-        const defaultConfigTest: ColorSchemeConfig = {
-          name: "Default",
-          displayName: "デフォルト",
-          baseColors: {
-            primary: [85, 0.115, 149.64],
-            secondary: [82.62, 0.05, 149.64],
-            tertiary: [75, 0.18, 60],
-            neutral: [50, 0.001, 149.64],
-            neutralVariant: [50, 0.01, 149.64],
-            error: [59.21, 0.17, 17.843],
-          },
-          isDark: false,
-          customColors: [
-            {
-              name: "singGridCellWhite",
-              displayName: "singGridCellWhite",
-              palette: "neutral",
-              lightLightness: 100,
-              darkLightness: 15,
-              blend: true,
-              contrastVs: {
-                singGridCellBlack: 1.0,
-              },
-            },
-            {
-              name: "singGridCellBlack",
-              displayName: "singGridCellBlack",
-              palette: "neutral",
-              lightLightness: 98,
-              darkLightness: 12,
-              blend: true,
-              contrastVs: {
-                singGridCellWhite: 1.0,
-              },
-            },
-            {
-              name: "singRulerMeasureLine",
-              displayName: "singRulerMeasureLine",
-              palette: "neutralVariant",
-              lightLightness: 50,
-              darkLightness: 50,
-              blend: true,
-              contrastVs: {
-                surfaceContainer: 1.5,
-              },
-            },
-            {
-              name: "singRulerBeatLine",
-              displayName: "singRulerBeatLine",
-              palette: "neutralVariant",
-              lightLightness: 70,
-              darkLightness: 40,
-              blend: true,
-              contrastVs: {
-                surfaceContainerHigh: 1.3,
-              },
-            },
-            {
-              name: "singGridVerticalLine",
-              displayName: "singGridVerticalLine",
-              palette: "neutral",
-              lightLightness: 92,
-              darkLightness: 6,
-              blend: true,
-              contrastVs: {
-                singGridCellBlack: 1.0,
-              },
-            },
-            {
-              name: "singGridHorizontalLine",
-              displayName: "singGridHorizontalLine",
-              palette: "neutral",
-              lightLightness: 92,
-              darkLightness: 6,
-              blend: true,
-              contrastVs: {
-                singGridCellBlack: 1.0,
-              },
-            },
-            {
-              name: "singGridMeasureLine",
-              displayName: "singGridMeasureLine",
-              palette: "neutral",
-              lightLightness: 80,
-              darkLightness: 40,
-              blend: true,
-              contrastVs: {
-                singGridCellBlack: 1.5,
-              },
-            },
-            {
-              name: "singGridBeatLine",
-              displayName: "singGridBeatLine",
-              palette: "neutral",
-              lightLightness: 88,
-              darkLightness: 0,
-              blend: true,
-              contrastVs: {
-                singGridCellBlack: 1.25,
-              },
-            },
-            {
-              name: "singGridOctaveLine",
-              displayName: "singGridOctaveLine",
-              palette: "neutral",
-              lightLightness: 80,
-              darkLightness: 40,
-              blend: true,
-              contrastVs: {
-                singGridCellBlack: 1.5,
-              },
-            },
-            {
-              name: "singPianoKeyWhite",
-              displayName: "singPianoKeyWhite",
-              palette: "neutral",
-              lightLightness: 99,
-              darkLightness: 80,
-              blend: true,
-              contrastVs: {
-                singPianoKeyBlack: 3.0,
-              },
-            },
-            {
-              name: "singPianoKeyBlack",
-              displayName: "singPianoKeyBlack",
-              palette: "neutral",
-              lightLightness: 40,
-              darkLightness: 20,
-              blend: true,
-              contrastVs: {
-                singPianoKeyWhite: 3.0,
-              },
-            },
-            {
-              name: "singNoteBarContainer",
-              displayName: "singNoteBarContainer",
-              palette: "secondary",
-              lightLightness: 90,
-              darkLightness: 80,
-              blend: true,
-              contrastVs: {
-                singGridCellBlack: 1.2,
-              },
-            },
-            {
-              name: "singNoteBarOutline",
-              displayName: "singNoteBarOutline",
-              palette: "neutral",
-              lightLightness: 40,
-              darkLightness: 30,
-              blend: true,
-              contrastVs: {
-                singGridCellBlack: 3.0,
-              },
-            },
-            {
-              name: "singToolbarContainer",
-              displayName: "singToolbarContainer",
-              palette: "neutral",
-              lightLightness: 99,
-              darkLightness: 10,
-              blend: true,
-              contrastVs: {
-                outline: 1.5,
-              },
-            },
-          ],
-        };
+        const defaultSchemeConfigWorkaround = availableColorSchemeConfigs[0];
+        // カラースキーム生成部分の修正
         const isDark = state.themeSetting.currentTheme === "Dark";
-        const currentColorScheme = generateColorScheme({
-          ...defaultConfigTest,
+        const currentColorScheme = ColorSchemeFactory.create({
+          ...defaultSchemeConfigWorkaround,
           isDark,
         });
         commit("INITIALIZE_COLOR_SCHEME", {
           currentColorScheme,
           availableColorSchemeConfigs,
         });
-
-        logger.info(`Initialized color scheme`);
-
-        const cssVariables = cssVariablesFromColorScheme(currentColorScheme);
-        Object.entries(cssVariables).forEach(([key, value]) => {
+        // CSS変数の適用
+        const cssVars = cssVariablesFromColorScheme(currentColorScheme);
+        for (const [key, value] of Object.entries(cssVars)) {
           document.documentElement.style.setProperty(key, value);
-        });
+        }
       } catch (error) {
-        logger.error(`Error initializing color scheme: ${error}`);
+        logger.error(`Error setting color scheme: ${error}`);
         throw error;
       }
     }),
@@ -512,11 +342,15 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
           const isDark =
             colorSchemeConfig.isDark ??
             state.themeSetting.currentTheme === "Dark";
-          const colorScheme = generateColorScheme({
+          const colorScheme = ColorSchemeFactory.create({
             ...colorSchemeConfig,
             isDark,
           });
           commit("SET_COLOR_SCHEME", { colorScheme });
+          const cssVars = cssVariablesFromColorScheme(colorScheme);
+          for (const [key, value] of Object.entries(cssVars)) {
+            document.documentElement.style.setProperty(key, value);
+          }
           logger.info("Set color scheme");
         } catch (error) {
           logger.error(`Error setting color scheme: ${error}`);

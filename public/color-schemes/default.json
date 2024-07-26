@@ -1,171 +1,149 @@
 {
-  "name": "デフォルト",
-  "sourceColor": "#A5D4AD",
-  "variant": "tonalSpot",
-  "contrastLevel": 0.0,
-  "adjustments": {
-    "neutral": { "chroma": 0 },
-    "neutralVariant": { "chroma": 6 },
-    "tertiary": { "hex": "#ffc919" },
-    "error": { "hex": "#d04756" }
-  },
-  "customPaletteColors": [
+  "name": "Default",
+  "displayName": "デフォルト",
+  "primary": "oklch(53.99% 0.191 257.48)",
+  "error": "#d04756",
+  "isDark": false,
+  "customColors": [
     {
       "name": "singGridCellWhite",
-      "palette": "neutral",
-      "lightTone": 100,
-      "darkTone": 15,
-      "blend": true,
+      "displayName": "singGridCellWhite",
+      "role": "neutral",
+      "lightLightness": 100,
+      "darkLightness": 15,
       "contrastVs": {
         "singGridCellBlack": 1.0
       }
     },
     {
       "name": "singGridCellBlack",
-      "palette": "neutral",
-      "lightTone": 98,
-      "darkTone": 12,
-      "blend": true,
+      "displayName": "singGridCellBlack",
+      "role": "neutral",
+      "lightLightness": 98,
+      "darkLightness": 12,
       "contrastVs": {
         "singGridCellWhite": 1.0
       }
     },
     {
       "name": "singRulerMeasureLine",
-      "palette": "neutralVariant",
-      "lightTone": 50,
-      "darkTone": 50,
-      "blend": true,
+      "displayName": "singRulerMeasureLine",
+      "role": "neutralVariant",
+      "lightLightness": 50,
+      "darkLightness": 50,
       "contrastVs": {
         "surfaceContainer": 1.5
       }
     },
     {
       "name": "singRulerBeatLine",
-      "palette": "neutralVariant",
-      "lightTone": 70,
-      "darkTone": 40,
-      "blend": true,
+      "displayName": "singRulerBeatLine",
+      "role": "neutralVariant",
+      "lightLightness": 70,
+      "darkLightness": 40,
       "contrastVs": {
-        "surfaceContainerHigh": 1.2
+        "surfaceContainerHigh": 1.3
       }
     },
     {
       "name": "singGridVerticalLine",
-      "palette": "neutral",
-      "lightTone": 95,
-      "darkTone": 10,
-      "blend": true,
+      "displayName": "singGridVerticalLine",
+      "role": "neutral",
+      "lightLightness": 92,
+      "darkLightness": 6,
       "contrastVs": {
-        "singGridCellBlack": 1.2
+        "singGridCellBlack": 1.0
       }
     },
     {
       "name": "singGridHorizontalLine",
-      "palette": "neutral",
-      "lightTone": 95,
-      "darkTone": 10,
-      "blend": true,
+      "displayName": "singGridHorizontalLine",
+      "role": "neutral",
+      "lightLightness": 92,
+      "darkLightness": 6,
       "contrastVs": {
-        "singGridCellBlack": 1.2
+        "singGridCellBlack": 1.0
       }
     },
     {
       "name": "singGridMeasureLine",
-      "palette": "neutral",
-      "lightTone": 80,
-      "darkTone": 40,
-      "blend": true,
+      "displayName": "singGridMeasureLine",
+      "role": "neutral",
+      "lightLightness": 80,
+      "darkLightness": 40,
       "contrastVs": {
         "singGridCellBlack": 1.5
       }
     },
     {
       "name": "singGridBeatLine",
-      "palette": "neutral",
-      "lightTone": 90,
-      "darkTone": 0,
-      "blend": true,
+      "displayName": "singGridBeatLine",
+      "role": "neutral",
+      "lightLightness": 88,
+      "darkLightness": 0,
       "contrastVs": {
-        "singGridCellBlack": 1.2
+        "singGridCellBlack": 1.25
       }
     },
     {
       "name": "singGridOctaveLine",
-      "palette": "neutral",
-      "lightTone": 80,
-      "darkTone": 40,
-      "blend": true,
+      "displayName": "singGridOctaveLine",
+      "role": "neutral",
+      "lightLightness": 80,
+      "darkLightness": 40,
       "contrastVs": {
         "singGridCellBlack": 1.5
       }
     },
     {
       "name": "singPianoKeyWhite",
-      "palette": "neutral",
-      "lightTone": 99,
-      "darkTone": 70,
-      "blend": true,
+      "displayName": "singPianoKeyWhite",
+      "role": "neutral",
+      "lightLightness": 99,
+      "darkLightness": 80,
       "contrastVs": {
         "singPianoKeyBlack": 3.0
       }
     },
     {
       "name": "singPianoKeyBlack",
-      "palette": "neutral",
-      "lightTone": 40,
-      "darkTone": 20,
-      "blend": true,
+      "displayName": "singPianoKeyBlack",
+      "role": "neutral",
+      "lightLightness": 40,
+      "darkLightness": 20,
       "contrastVs": {
         "singPianoKeyWhite": 3.0
       }
     },
     {
       "name": "singNoteBarContainer",
-      "palette": "secondary",
-      "lightTone": 90,
-      "darkTone": 70,
-      "blend": true,
+      "displayName": "singNoteBarContainer",
+      "role": "secondary",
+      "lightLightness": 90,
+      "darkLightness": 80,
       "contrastVs": {
-        "singGridCellBlack": 3.0
-      }
-    },
-    {
-      "name": "singNoteBarOutline",
-      "palette": "neutral",
-      "lightTone": 40,
-      "darkTone": 30,
-      "blend": true,
-      "contrastVs": {
-        "singGridCellBlack": 3.0
+        "singGridCellBlack": 1.2
       }
     },
     {
       "name": "singToolbarContainer",
-      "palette": "neutral",
-      "lightTone": 99,
-      "darkTone": 10,
-      "blend": true,
+      "displayName": "singToolbarContainer",
+      "role": "neutral",
+      "lightLightness": 99,
+      "darkLightness": 10,
       "contrastVs": {
         "outline": 1.5
       }
-    }
-  ],
-  "customDefinedColors": [
-    {
-      "name": "primitive-primary",
-      "value": "#A5D4AD",
-      "blend": true
     },
     {
-      "name": "primitive-blue",
-      "value": "#0969da",
-      "blend": true
+      "name": "primitiveBlue",
+      "displayName": "primitiveBlue",
+      "sourceColor": "#0969da"
     },
     {
-      "name": "primitive-red",
-      "value": "#d04756",
-      "blend": true
+      "name": "primitiveGreen",
+      "displayName": "primitiveGreen",
+      "sourceColor": "#a5d4ad"
     }
   ]
 }

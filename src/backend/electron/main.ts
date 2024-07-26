@@ -46,8 +46,9 @@ import {
   defaultToolbarButtonSetting,
   engineSettingSchema,
   EngineId,
-  ColorSchemeConfig,
 } from "@/type/preload";
+
+import { ColorSchemeConfig } from "@/helpers/colors";
 
 type SingleInstanceLockData = {
   filePath: string | undefined;

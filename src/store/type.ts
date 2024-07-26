@@ -53,9 +53,8 @@ import {
   RootMiscSettingType,
   EditorType,
   NoteId,
-  ColorSchemeConfig,
-  ColorScheme,
 } from "@/type/preload";
+import { ColorSchemeConfig, ColorScheme } from "@/helpers/colors";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import {
   CommonDialogOptions,
