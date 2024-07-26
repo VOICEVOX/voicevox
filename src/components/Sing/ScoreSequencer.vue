@@ -102,10 +102,21 @@
         }"
       ></div>
       <SequencerPhraseIndicator
-        v-for="phraseInfo in phraseInfos"
+        v-for="phraseInfo in phraseInfosInOtherTracks"
         :key="phraseInfo.key"
         :phraseKey="phraseInfo.key"
-        :isInSelectedTrack="phraseInfo.trackId === selectedTrackId"
+        :isInSelectedTrack="false"
+        class="sequencer-phrase-indicator"
+        :style="{
+          width: `${phraseInfo.width}px`,
+          transform: `translateX(${phraseInfo.x - scrollX}px)`,
+        }"
+      />
+      <SequencerPhraseIndicator
+        v-for="phraseInfo in phraseInfosInSelectedTrack"
+        :key="phraseInfo.key"
+        :phraseKey="phraseInfo.key"
+        isInSelectedTrack
         class="sequencer-phrase-indicator"
         :style="{
           width: `${phraseInfo.width}px`,
@@ -335,6 +346,16 @@ const phraseInfos = computed(() => {
     const trackId = phrase.trackId;
     return { key, x: startX, width: endX - startX, trackId };
   });
+});
+const phraseInfosInSelectedTrack = computed(() => {
+  return phraseInfos.value.filter(
+    (info) => info.trackId === selectedTrackId.value,
+  );
+});
+const phraseInfosInOtherTracks = computed(() => {
+  return phraseInfos.value.filter(
+    (info) => info.trackId !== selectedTrackId.value,
+  );
 });
 
 const ctrlKey = useCommandOrControlKey();
