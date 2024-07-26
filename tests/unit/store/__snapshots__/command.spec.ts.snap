@@ -1,0 +1,41 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`コマンド実行で履歴が作られる 1`] = `
+{
+  "audioKeys": [
+    "00000000-0000-4000-0000-000000000001",
+  ],
+  "redoCommands": {
+    "song": [],
+    "talk": [],
+  },
+  "undoCommands": {
+    "song": [],
+    "talk": [
+      {
+        "id": "00000000-0000-4000-0000-000000000002",
+        "redoPatches": [
+          {
+            "op": "replace",
+            "path": [
+              "audioKeys",
+            ],
+            "value": [
+              "00000000-0000-4000-0000-000000000001",
+            ],
+          },
+        ],
+        "undoPatches": [
+          {
+            "op": "replace",
+            "path": [
+              "audioKeys",
+            ],
+            "value": [],
+          },
+        ],
+      },
+    ],
+  },
+}
+`;

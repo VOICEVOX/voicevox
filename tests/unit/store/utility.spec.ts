@@ -22,6 +22,7 @@ import {
   isOnCommandOrCtrlKeyDown,
   filterCharacterInfosByStyleType,
 } from "@/store/utility";
+import { uuid4 } from "@/helpers/random";
 
 function createDummyMora(text: string): Mora {
   return {
@@ -305,13 +306,13 @@ describe("filterCharacterInfosByStyleType", () => {
   const createCharacterInfo = (
     styleTypes: (undefined | "talk" | "frame_decode" | "sing")[],
   ): CharacterInfo => {
-    const engineId = EngineId(crypto.randomUUID());
+    const engineId = EngineId(uuid4());
     return {
       portraitPath: "path/to/portrait",
       metas: {
         policy: "policy",
         speakerName: "speakerName",
-        speakerUuid: SpeakerId(crypto.randomUUID()),
+        speakerUuid: SpeakerId(uuid4()),
         styles: styleTypes.map((styleType) => ({
           styleType,
           styleName: "styleName",

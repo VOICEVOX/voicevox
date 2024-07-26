@@ -6,8 +6,9 @@ import {
   createDefaultTrack,
 } from "@/sing/domain";
 import { NoteId } from "@/type/preload";
+import { uuid4 } from "@/helpers/random";
 
-const createNoteId = () => NoteId(crypto.randomUUID());
+const createNoteId = () => NoteId(uuid4());
 
 it("トラックを変換できる", async () => {
   const track = createDefaultTrack();

@@ -85,6 +85,7 @@ import { createLogger } from "@/domain/frontend/log";
 import { noteSchema } from "@/domain/project/schema";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { ufProjectToVoicevox } from "@/sing/utaformatixProject/toVoicevox";
+import { uuid4 } from "@/helpers/random";
 
 const logger = createLogger("store/singing");
 
@@ -1708,7 +1709,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         await dispatch("SET_TIME_SIGNATURES", { timeSignatures });
         await dispatch("SET_NOTES", { notes });
 
-        commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
+        commit("RESET_SAVED_LAST_COMMAND_IDS");
         commit("CLEAR_COMMANDS");
         dispatch("RENDER");
       },
@@ -1724,7 +1725,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const track = tracks[trackIndex];
         const notes = track.notes.map((note) => ({
           ...note,
-          id: NoteId(crypto.randomUUID()),
+          id: NoteId(uuid4()),
         }));
 
         if (tpqn !== state.tpqn) {
@@ -1751,7 +1752,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           startFrame: 0,
         });
 
-        commit("SET_SAVED_LAST_COMMAND_UNIX_MILLISEC", null);
+        commit("RESET_SAVED_LAST_COMMAND_IDS");
         commit("CLEAR_COMMANDS");
         dispatch("RENDER");
       },
@@ -2144,7 +2145,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const quantizedPastePos =
           Math.round(pasteOriginPos / snapTicks) * snapTicks;
         return {
-          id: NoteId(crypto.randomUUID()),
+          id: NoteId(uuid4()),
           position: quantizedPastePos,
           duration: Number(note.duration),
           noteNumber: Number(note.noteNumber),

@@ -301,3 +301,13 @@ const handleCancel = () => {
   onDialogCancel();
 };
 </script>
+
+<style scoped lang="scss">
+// detailsタグのスタイル
+details {
+  summary {
+    display: list-item;
+    cursor: pointer;
+  }
+}
+</style>

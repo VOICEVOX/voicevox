@@ -193,6 +193,7 @@ import {
 import { applyGaussianFilter, linearInterpolation } from "@/sing/utility";
 import { useLyricInput } from "@/composables/useLyricInput";
 import { ExhaustiveError } from "@/type/utility";
+import { uuid4 } from "@/helpers/random";
 
 type PreviewMode =
   | "ADD_NOTE"
@@ -720,7 +721,7 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
         return;
       }
       note = {
-        id: NoteId(crypto.randomUUID()),
+        id: NoteId(uuid4()),
         position: guideLineTicks,
         duration: snapTicks.value,
         noteNumber: cursorNoteNumber,

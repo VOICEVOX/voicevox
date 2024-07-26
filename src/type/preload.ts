@@ -70,6 +70,10 @@ export const noteIdSchema = z.string().brand<"NoteId">();
 export type NoteId = z.infer<typeof noteIdSchema>;
 export const NoteId = (id: string): NoteId => noteIdSchema.parse(id);
 
+export const commandIdSchema = z.string().brand<"CommandId">();
+export type CommandId = z.infer<typeof commandIdSchema>;
+export const CommandId = (id: string): CommandId => commandIdSchema.parse(id);
+
 // 共通のアクション名
 export const actionPostfixSelectNthCharacter = "番目のキャラクターを選択";
 
