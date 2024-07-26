@@ -55,7 +55,7 @@ import {
   NoteId,
   CommandId,
 } from "@/type/preload";
-import { ColorSchemeConfig, ColorScheme } from "@/helpers/colors";
+import { ColorSchemeConfig, ColorScheme } from "@/sing/colorScheme/types";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import {
   CommonDialogOptions,

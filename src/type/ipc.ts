@@ -11,8 +11,8 @@ import {
   EngineSettingType,
   EngineId,
   MessageBoxReturnValue,
-  ColorSchemeConfig,
 } from "@/type/preload";
+import { ColorSchemeConfig } from "@/sing/colorScheme/types";
 import { AltPortInfos } from "@/store/type";
 import { Result } from "@/type/result";
 

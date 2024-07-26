@@ -20,7 +20,7 @@ import {
   Sandbox,
   ThemeConf,
 } from "@/type/preload";
-import { ColorSchemeConfig } from "@/helpers/colors";
+import { ColorSchemeConfig } from "@/sing/colorScheme/types";
 import {
   ContactTextFileName,
   HowToUseTextFileName,
@@ -316,7 +316,7 @@ export const api: Sandbox = {
     // ブラウザ版では、ファイルシステムから直接読み込むのではなく、
     // ビルド時に生成されたファイルを読み込む
     // NOTE: 定数にする？
-    const colorSchemeFiles = ["default.json", "spring.json"];
+    const colorSchemeFiles = ["default.json"];
 
     // カラースキーム個別の取得
     const fetchColorScheme = async (

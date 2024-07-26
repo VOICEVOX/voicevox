@@ -2,7 +2,7 @@ import { z } from "zod";
 import { IpcSOData } from "./ipc";
 import { AltPortInfos } from "@/store/type";
 import { Result } from "@/type/result";
-import { ColorScheme, ColorSchemeConfig } from "@/helpers/colors";
+import { ColorScheme, ColorSchemeConfig } from "@/sing/colorScheme/types";
 
 export const isProduction = import.meta.env.MODE === "production";
 export const isElectron = import.meta.env.VITE_TARGET === "electron";

@@ -48,7 +48,7 @@ import {
   EngineId,
 } from "@/type/preload";
 
-import { ColorSchemeConfig } from "@/helpers/colors";
+import { ColorSchemeConfig } from "@/sing/colorScheme/types";
 
 type SingleInstanceLockData = {
   filePath: string | undefined;

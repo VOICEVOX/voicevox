@@ -1,149 +1,113 @@
 {
   "name": "Default",
   "displayName": "デフォルト",
-  "primary": "oklch(53.99% 0.191 257.48)",
+  "primary": "#a5d4ad",
   "error": "#d04756",
-  "isDark": false,
-  "customColors": [
+  "aliasColors": [
     {
       "name": "singGridCellWhite",
       "displayName": "singGridCellWhite",
-      "role": "neutral",
-      "lightLightness": 100,
-      "darkLightness": 15,
-      "contrastVs": {
-        "singGridCellBlack": 1.0
-      }
+      "palette": "neutral",
+      "light": 1.0,
+      "dark": 0.28
     },
     {
       "name": "singGridCellBlack",
       "displayName": "singGridCellBlack",
-      "role": "neutral",
-      "lightLightness": 98,
-      "darkLightness": 12,
-      "contrastVs": {
-        "singGridCellWhite": 1.0
-      }
+      "palette": "neutral",
+      "light": 0.98,
+      "dark": 0.24
     },
     {
       "name": "singRulerMeasureLine",
       "displayName": "singRulerMeasureLine",
-      "role": "neutralVariant",
-      "lightLightness": 50,
-      "darkLightness": 50,
-      "contrastVs": {
-        "surfaceContainer": 1.5
-      }
+      "palette": "neutralVariant",
+      "light": 0.64,
+      "dark": 0.64
     },
     {
       "name": "singRulerBeatLine",
       "displayName": "singRulerBeatLine",
-      "role": "neutralVariant",
-      "lightLightness": 70,
-      "darkLightness": 40,
-      "contrastVs": {
-        "surfaceContainerHigh": 1.3
-      }
+      "palette": "neutralVariant",
+      "light": 0.72,
+      "dark": 0.48
     },
     {
       "name": "singGridVerticalLine",
       "displayName": "singGridVerticalLine",
-      "role": "neutral",
-      "lightLightness": 92,
-      "darkLightness": 6,
-      "contrastVs": {
-        "singGridCellBlack": 1.0
-      }
+      "palette": "neutral",
+      "light": 0.92,
+      "dark": 0.20
     },
     {
       "name": "singGridHorizontalLine",
       "displayName": "singGridHorizontalLine",
-      "role": "neutral",
-      "lightLightness": 92,
-      "darkLightness": 6,
-      "contrastVs": {
-        "singGridCellBlack": 1.0
-      }
+      "palette": "neutral",
+      "light": 0.92,
+      "dark": 0.20
     },
     {
       "name": "singGridMeasureLine",
       "displayName": "singGridMeasureLine",
-      "role": "neutral",
-      "lightLightness": 80,
-      "darkLightness": 40,
-      "contrastVs": {
-        "singGridCellBlack": 1.5
-      }
+      "palette": "neutral",
+      "light": 0.84,
+      "dark": 0.4
     },
     {
       "name": "singGridBeatLine",
       "displayName": "singGridBeatLine",
-      "role": "neutral",
-      "lightLightness": 88,
-      "darkLightness": 0,
-      "contrastVs": {
-        "singGridCellBlack": 1.25
-      }
+      "palette": "neutral",
+      "light": 0.88,
+      "dark": 0
     },
     {
       "name": "singGridOctaveLine",
       "displayName": "singGridOctaveLine",
-      "role": "neutral",
-      "lightLightness": 80,
-      "darkLightness": 40,
-      "contrastVs": {
-        "singGridCellBlack": 1.5
-      }
+      "palette": "neutral",
+      "light": 0.84,
+      "dark": 0.4
     },
     {
       "name": "singPianoKeyWhite",
       "displayName": "singPianoKeyWhite",
-      "role": "neutral",
-      "lightLightness": 99,
-      "darkLightness": 80,
-      "contrastVs": {
-        "singPianoKeyBlack": 3.0
-      }
+      "palette": "neutral",
+      "light": 0.99,
+      "dark": 0.72
     },
     {
       "name": "singPianoKeyBlack",
       "displayName": "singPianoKeyBlack",
-      "role": "neutral",
-      "lightLightness": 40,
-      "darkLightness": 20,
-      "contrastVs": {
-        "singPianoKeyWhite": 3.0
-      }
+      "palette": "neutral",
+      "light": 0.48,
+      "dark": 0.32
     },
     {
       "name": "singNoteBarContainer",
       "displayName": "singNoteBarContainer",
-      "role": "secondary",
-      "lightLightness": 90,
-      "darkLightness": 80,
-      "contrastVs": {
-        "singGridCellBlack": 1.2
-      }
+      "palette": "secondary",
+      "light": 0.92,
+      "dark": 0.8
     },
     {
       "name": "singToolbarContainer",
       "displayName": "singToolbarContainer",
-      "role": "neutral",
-      "lightLightness": 99,
-      "darkLightness": 10,
-      "contrastVs": {
-        "outline": 1.5
-      }
-    },
+      "palette": "neutral",
+      "light": 0.99,
+      "dark": 0.24
+    }
+  ],
+  "customColors": [
     {
       "name": "primitiveBlue",
       "displayName": "primitiveBlue",
-      "sourceColor": "#0969da"
+      "sourceColor": "#0969da",
+      "palette": "primary"
     },
     {
       "name": "primitiveGreen",
       "displayName": "primitiveGreen",
-      "sourceColor": "#a5d4ad"
+      "sourceColor": "#a5d4ad",
+      "palette": "primary"
     }
   ]
 }

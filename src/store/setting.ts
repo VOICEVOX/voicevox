@@ -2,12 +2,11 @@ import { Dark, setCssVar, colors } from "quasar";
 import { SettingStoreState, SettingStoreTypes } from "./type";
 import { createDotNotationUILockAction as createUILockAction } from "./ui";
 import { createDotNotationPartialStore as createPartialStore } from "./vuex";
+import { ColorScheme, ColorSchemeConfig } from "@/sing/colorScheme/types";
 import {
-  ColorScheme,
-  ColorSchemeConfig,
-  ColorSchemeFactory,
+  createColorScheme,
   cssVariablesFromColorScheme,
-} from "@/helpers/colors";
+} from "@/sing/colorScheme";
 import {
   HotkeySettingType,
   SavingSetting,
@@ -313,18 +312,26 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         const defaultSchemeConfigWorkaround = availableColorSchemeConfigs[0];
         // カラースキーム生成部分の修正
         const isDark = state.themeSetting.currentTheme === "Dark";
-        const currentColorScheme = ColorSchemeFactory.create({
-          ...defaultSchemeConfigWorkaround,
-          isDark,
-        });
+        // カラースキーム生成
+        const currentColorScheme = createColorScheme(
+          defaultSchemeConfigWorkaround as ColorSchemeConfig,
+        );
         commit("INITIALIZE_COLOR_SCHEME", {
           currentColorScheme,
           availableColorSchemeConfigs,
         });
         // CSS変数の適用
         const cssVars = cssVariablesFromColorScheme(currentColorScheme);
+        // ダーク/ライトモードに応じてCSS変数を適用
         for (const [key, value] of Object.entries(cssVars)) {
-          document.documentElement.style.setProperty(key, value);
+          if (isDark) {
+            const darkCSSKey = key.replace("-dark", "");
+            console.log(darkCSSKey, value);
+            document.documentElement.style.setProperty(darkCSSKey, value);
+          } else {
+            const lightCSSKey = key.replace("-light", "");
+            document.documentElement.style.setProperty(lightCSSKey, value);
+          }
         }
       } catch (error) {
         logger.error(`Error setting color scheme: ${error}`);
@@ -339,17 +346,20 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     action: createUILockAction(
       async ({ commit, state }, { colorSchemeConfig }) => {
         try {
-          const isDark =
-            colorSchemeConfig.isDark ??
-            state.themeSetting.currentTheme === "Dark";
-          const colorScheme = ColorSchemeFactory.create({
-            ...colorSchemeConfig,
-            isDark,
-          });
+          const isDark = state.themeSetting.currentTheme === "Dark";
+          const colorScheme = createColorScheme(colorSchemeConfig);
           commit("SET_COLOR_SCHEME", { colorScheme });
+          // CSS変数の適用
           const cssVars = cssVariablesFromColorScheme(colorScheme);
+          // ダーク/ライトモードに応じてCSS変数を適用
           for (const [key, value] of Object.entries(cssVars)) {
-            document.documentElement.style.setProperty(key, value);
+            if (isDark) {
+              const darkCSSKey = key.replace("-dark", "");
+              document.documentElement.style.setProperty(darkCSSKey, value);
+            } else {
+              const lightCSSKey = key.replace("-light", "");
+              document.documentElement.style.setProperty(lightCSSKey, value);
+            }
           }
           logger.info("Set color scheme");
         } catch (error) {
