@@ -298,7 +298,6 @@ export const singingStoreState: SingingStoreState = {
   sequencerSnapType: 16,
   sequencerEditTarget: "NOTE",
   _selectedNoteIds: new Set(),
-  overlappingNoteIds: new Map([[initialTrackId, new Set()]]),
   nowPlaying: false,
   volume: 0,
   startRenderingRequested: false,
@@ -577,15 +576,19 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  OVERLAPPING_NOTE_IDS: {
+    getter: (state) => (trackId) => {
+      const notes = getOrThrow(state.tracks, trackId).notes;
+      return getOverlappingNoteIds(notes);
+    },
+  },
+
   SET_NOTES: {
     mutation(state, { notes, trackId }) {
-      state.overlappingNoteIds.clear();
       state.editingLyricNoteId = undefined;
       state._selectedNoteIds.clear();
       const selectedTrack = getOrThrow(state.tracks, trackId);
       selectedTrack.notes = notes;
-
-      state.overlappingNoteIds.set(trackId, getOverlappingNoteIds(notes));
     },
     async action({ commit, dispatch }, { notes, trackId }) {
       if (!isValidNotes(notes)) {
@@ -603,7 +606,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const newNotes = [...selectedTrack.notes, ...notes];
       newNotes.sort((a, b) => a.position - b.position);
       selectedTrack.notes = newNotes;
-      state.overlappingNoteIds.set(trackId, getOverlappingNoteIds(newNotes));
     },
   },
 
@@ -617,10 +619,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       selectedTrack.notes = selectedTrack.notes
         .map((value) => notesMap.get(value.id) ?? value)
         .sort((a, b) => a.position - b.position);
-      state.overlappingNoteIds.set(
-        trackId,
-        getOverlappingNoteIds(selectedTrack.notes),
-      );
     },
   },
 
@@ -640,11 +638,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       selectedTrack.notes = selectedTrack.notes.filter((value) => {
         return !noteIdsSet.has(value.id);
       });
-
-      state.overlappingNoteIds.set(
-        trackId,
-        getOverlappingNoteIds(selectedTrack.notes),
-      );
     },
   },
 
@@ -1062,7 +1055,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     mutation(state, { trackId, track }) {
       state.tracks.set(trackId, track);
       state.trackOrder.push(trackId);
-      state.overlappingNoteIds.set(trackId, new Set());
     },
     action({ state, commit, dispatch }, { trackId, track }) {
       if (state.tracks.has(trackId)) {
@@ -1082,7 +1074,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.tracks.delete(trackId);
       const trackIndex = state.trackOrder.indexOf(trackId);
       state.trackOrder = state.trackOrder.filter((value) => value !== trackId);
-      state.overlappingNoteIds.delete(trackId);
       if (state._selectedTrackId === trackId) {
         state._selectedTrackId =
           state.trackOrder[trackIndex === 0 ? 0 : trackIndex - 1];
@@ -1115,9 +1106,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   SET_TRACK: {
     mutation(state, { trackId, track }) {
       state.tracks.set(trackId, track);
-      state.overlappingNoteIds.set(trackId, new Set());
     },
-    async action({ state, commit, dispatch }, { trackId, track }) {
+    async action({ state, commit }, { trackId, track }) {
       if (!isValidTrack(track)) {
         throw new Error("The track is invalid.");
       }
@@ -1126,29 +1116,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
 
       commit("SET_TRACK", { trackId, track });
-      // 色々な処理を動かすため、二重にセットする
-      // TODO: もっとスマートな方法を考える
-      await dispatch("SET_SINGER", {
-        singer: track.singer,
-        trackId,
-      });
-      await dispatch("SET_KEY_RANGE_ADJUSTMENT", {
-        keyRangeAdjustment: track.keyRangeAdjustment,
-        trackId,
-      });
-      await dispatch("SET_VOLUME_RANGE_ADJUSTMENT", {
-        volumeRangeAdjustment: track.volumeRangeAdjustment,
-        trackId,
-      });
-      await dispatch("SET_NOTES", { notes: track.notes, trackId });
-      await dispatch("CLEAR_PITCH_EDIT_DATA", {
-        trackId,
-      }); // FIXME: SET_PITCH_EDIT_DATAがセッターになれば不要
-      await dispatch("SET_PITCH_EDIT_DATA", {
-        pitchArray: track.pitchEditData,
-        startFrame: 0,
-        trackId,
-      });
     },
   },
 
@@ -1156,25 +1123,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     mutation(state, { tracks }) {
       state.tracks = tracks;
       state.trackOrder = Array.from(tracks.keys());
-      state.overlappingNoteIds = new Map(
-        [...tracks.keys()].map((trackId) => [trackId, new Set()]),
-      );
-      state.overlappingNoteInfos = new Map(
-        [...tracks.keys()].map((trackId) => [trackId, new Map()]),
-      );
       state._selectedTrackId = state.trackOrder[0];
     },
-    async action({ commit, dispatch }, { tracks }) {
+    async action({ commit }, { tracks }) {
       if (![...tracks.values()].every((track) => isValidTrack(track))) {
         throw new Error("The track is invalid.");
       }
       commit("SET_TRACKS", { tracks });
-
-      for (const [trackId, track] of tracks) {
-        // 色々な処理を動かすため、二重にセットする
-        // TODO: もっとスマートな方法を考える
-        await dispatch("SET_TRACK", { trackId, track });
-      }
     },
   },
 
@@ -1522,8 +1477,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
         // レンダリング中に変更される可能性のあるデータをコピーする
         const tracks = cloneWithUnwrapProxy(state.tracks);
-        const overlappingNoteIdsRef = cloneWithUnwrapProxy(
-          state.overlappingNoteIds,
+
+        const overlappingNoteIdsRef = new Map(
+          [...tracks.keys()].map((trackId) => [
+            trackId,
+            getters.OVERLAPPING_NOTE_IDS(trackId),
+          ]),
         );
 
         // trackChannelStripsを同期する

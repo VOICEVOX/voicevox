@@ -839,7 +839,6 @@ export type SingingStoreState = {
   sequencerSnapType: number;
   sequencerEditTarget: SequencerEditTarget;
   _selectedNoteIds: Set<NoteId>;
-  overlappingNoteIds: Map<TrackId, Set<NoteId>>;
   editingLyricNoteId?: NoteId;
   nowPlaying: boolean;
   volume: number;
@@ -921,6 +920,10 @@ export type SingingStoreTypes = {
 
   ALL_NOTE_IDS: {
     getter: Set<NoteId>;
+  };
+
+  OVERLAPPING_NOTE_IDS: {
+    getter(trackId: TrackId): Set<NoteId>;
   };
 
   SET_NOTES: {

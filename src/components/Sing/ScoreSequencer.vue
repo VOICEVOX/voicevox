@@ -215,7 +215,6 @@ import {
 import { applyGaussianFilter, linearInterpolation } from "@/sing/utility";
 import { useLyricInput } from "@/composables/useLyricInput";
 import { ExhaustiveError } from "@/type/utility";
-import { getOrThrow } from "@/helpers/mapHelper";
 
 type PreviewMode =
   | "ADD_NOTE"
@@ -247,7 +246,7 @@ const notesInOtherTracks = computed(() =>
   ),
 );
 const overlappingNoteIdsInSelectedTrack = computed(() =>
-  getOrThrow(store.state.overlappingNoteIds, selectedTrackId.value),
+  store.getters.OVERLAPPING_NOTE_IDS(selectedTrackId.value),
 );
 const selectedNotes = computed(() =>
   store.getters.SELECTED_TRACK.notes.filter((note) =>
