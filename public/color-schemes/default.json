@@ -1,113 +1,109 @@
 {
   "name": "Default",
   "displayName": "デフォルト",
-  "primary": "#a5d4ad",
-  "error": "#d04756",
+  "baseColors": {
+    "primary": "#a5d4ad",
+    "error": "#d04756"
+  },
   "aliasColors": [
     {
       "name": "singGridCellWhite",
       "displayName": "singGridCellWhite",
-      "palette": "neutral",
-      "light": 1.0,
-      "dark": 0.28
+      "role": "neutral",
+      "lightShade": 1.0,
+      "darkShade": 0.28
     },
     {
       "name": "singGridCellBlack",
       "displayName": "singGridCellBlack",
-      "palette": "neutral",
-      "light": 0.98,
-      "dark": 0.24
+      "role": "neutral",
+      "lightShade": 0.98,
+      "darkShade": 0.24
     },
     {
       "name": "singRulerMeasureLine",
       "displayName": "singRulerMeasureLine",
-      "palette": "neutralVariant",
-      "light": 0.64,
-      "dark": 0.64
+      "role": "neutralVariant",
+      "lightShade": 0.64,
+      "darkShade": 0.64
     },
     {
       "name": "singRulerBeatLine",
       "displayName": "singRulerBeatLine",
-      "palette": "neutralVariant",
-      "light": 0.72,
-      "dark": 0.48
+      "role": "neutralVariant",
+      "lightShade": 0.72,
+      "darkShade": 0.48
     },
     {
       "name": "singGridVerticalLine",
       "displayName": "singGridVerticalLine",
-      "palette": "neutral",
-      "light": 0.92,
-      "dark": 0.20
+      "role": "neutral",
+      "lightShade": 0.92,
+      "darkShade": 0.20
     },
     {
       "name": "singGridHorizontalLine",
       "displayName": "singGridHorizontalLine",
-      "palette": "neutral",
-      "light": 0.92,
-      "dark": 0.20
+      "role": "neutral",
+      "lightShade": 0.92,
+      "darkShade": 0.20
     },
     {
       "name": "singGridMeasureLine",
       "displayName": "singGridMeasureLine",
-      "palette": "neutral",
-      "light": 0.84,
-      "dark": 0.4
+      "role": "neutral",
+      "lightShade": 0.84,
+      "darkShade": 0.4
     },
     {
       "name": "singGridBeatLine",
       "displayName": "singGridBeatLine",
-      "palette": "neutral",
-      "light": 0.88,
-      "dark": 0
+      "role": "neutral",
+      "lightShade": 0.88,
+      "darkShade": 0
     },
     {
       "name": "singGridOctaveLine",
       "displayName": "singGridOctaveLine",
-      "palette": "neutral",
-      "light": 0.84,
-      "dark": 0.4
+      "role": "neutral",
+      "lightShade": 0.84,
+      "darkShade": 0.4
     },
     {
       "name": "singPianoKeyWhite",
       "displayName": "singPianoKeyWhite",
-      "palette": "neutral",
-      "light": 0.99,
-      "dark": 0.72
+      "role": "neutral",
+      "lightShade": 0.99,
+      "darkShade": 0.72
     },
     {
       "name": "singPianoKeyBlack",
       "displayName": "singPianoKeyBlack",
-      "palette": "neutral",
-      "light": 0.48,
-      "dark": 0.32
+      "role": "neutral",
+      "lightShade": 0.48,
+      "darkShade": 0.32
     },
     {
       "name": "singNoteBarContainer",
       "displayName": "singNoteBarContainer",
-      "palette": "secondary",
-      "light": 0.92,
-      "dark": 0.8
+      "role": "secondary",
+      "lightShade": 0.92,
+      "darkShade": 0.8
     },
     {
       "name": "singToolbarContainer",
       "displayName": "singToolbarContainer",
-      "palette": "neutral",
-      "light": 0.99,
-      "dark": 0.24
+      "role": "neutral",
+      "lightShade": 0.99,
+      "darkShade": 0.24
     }
   ],
   "customColors": [
     {
-      "name": "primitiveBlue",
-      "displayName": "primitiveBlue",
-      "sourceColor": "#0969da",
-      "palette": "primary"
-    },
-    {
-      "name": "primitiveGreen",
-      "displayName": "primitiveGreen",
-      "sourceColor": "#a5d4ad",
-      "palette": "primary"
+      "name": "link",
+      "displayName": "link",
+      "color": "#0969da",
+      "role": "custom"
     }
   ]
 }

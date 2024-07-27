@@ -20,6 +20,7 @@
       </div>
     </div>
     <ScoreSequencer />
+    <ColorSchemeEditor v-if="currentColorScheme && showColorSchemeEditor" />
   </div>
 </template>
 
@@ -27,7 +28,7 @@
 import { computed, ref, watch } from "vue";
 import ToolBar from "./ToolBar/ToolBar.vue";
 import ScoreSequencer from "./ScoreSequencer.vue";
-// import ColorSchemeEditor from "@/components/Sing/ColorSchemeEditor.vue";
+import ColorSchemeEditor from "@/components/Sing/ColorSchemeEditor.vue";
 import EngineStartupOverlay from "@/components/EngineStartupOverlay.vue";
 import { useStore } from "@/store";
 import onetimeWatch from "@/helpers/onetimeWatch";
@@ -57,13 +58,12 @@ const enablePitchEditInSongEditor = computed(() => {
   return store.state.experimentalSetting.enablePitchEditInSongEditor;
 });
 
-/*
-const enableColorSchemeEditor = computed(() => {
+const showColorSchemeEditor = computed(() => {
   return (
-    store.state.colorSchemeSetting &&
+    currentColorScheme.value != null &&
     store.state.experimentalSetting.enableColorSchemeEditor
   );
-}); */
+});
 
 const cancelExport = () => {
   store.dispatch("CANCEL_AUDIO_EXPORT");
@@ -75,10 +75,6 @@ watch(enablePitchEditInSongEditor, (value) => {
     // 編集ターゲットをノートに切り替える
     store.dispatch("SET_EDIT_TARGET", { editTarget: "NOTE" });
   }
-});
-
-watch(currentColorScheme, (value) => {
-  console.log(value);
 });
 
 const isCompletedInitialStartup = ref(false);

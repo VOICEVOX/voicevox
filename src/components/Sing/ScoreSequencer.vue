@@ -1445,7 +1445,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 .sequencer-corner {
   grid-row: 1;
   grid-column: 1;
-  background: var(--md-sys-color-surface-container-high);
+  background: var(--scheme-color-surface-container-high);
 }
 
 .sequencer-ruler {
@@ -1477,35 +1477,35 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 
 .sequencer-grid-cell {
   display: block;
-  stroke: var(--md-sys-color-surface-variant);
+  stroke: var(--scheme-color-surface-variant);
   stroke-width: 1;
 }
 
 .sequencer-grid-octave-cell {
-  stroke: var(--md-sys-color-outline);
+  stroke: var(--scheme-color-outline);
 }
 
 .sequencer-grid-octave-line {
   backface-visibility: hidden;
-  stroke: var(--md-sys-color-outline);
+  stroke: var(--scheme-color-outline);
 }
 
 .sequencer-grid-cell-white {
-  fill: var(--md-sys-color-background);
+  fill: var(--scheme-color-background);
 }
 
 .sequencer-grid-cell-black {
-  fill: var(--md-sys-color-surface-variant);
+  fill: var(--scheme-color-surface-variant);
 }
 
 .sequencer-grid-measure-line {
   backface-visibility: hidden;
-  stroke: var(--md-sys-color-outline);
+  stroke: var(--scheme-color-outline);
 }
 
 .sequencer-grid-beat-line {
   backface-visibility: hidden;
-  stroke: var(--md-sys-color-outline);
+  stroke: var(--scheme-color-outline);
   opacity: 0.6;
 }
 
@@ -1514,7 +1514,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   top: 0;
   left: 0;
   width: 1px;
-  background: var(--md-sys-color-secondary-container);
+  background: var(--scheme-color-secondary-container);
   pointer-events: none;
 }
 
@@ -1545,15 +1545,15 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   left: -1px;
   width: 2px;
   height: 100%;
-  background: var(--md-sys-color-inverse-surface);
+  background: var(--scheme-color-inverse-surface);
   will-change: transform;
 }
 
 .rect-select-preview {
   pointer-events: none;
   position: absolute;
-  border: 1px dashed var(--md-sys-color-secondary);
-  background: oklch(var(--md-sys-color-secondary-container) / 1);
+  border: 1px dashed var(--scheme-color-secondary);
+  background: oklch(var(--scheme-color-secondary-container) / 1);
 }
 
 .cursor-draw {
@@ -1569,20 +1569,20 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   width: 80px;
 
   :deep(.q-slider__track) {
-    background: var(--md-sys-color-surface-variant);
-    color: var(--md-sys-color-secondary-fixed);
+    background: var(--scheme-color-surface-variant);
+    color: var(--scheme-color-secondary-fixed);
   }
 
   :deep(.q-slider__thumb) {
-    color: var(--md-sys-color-secondary-fixed);
+    color: var(--scheme-color-secondary-fixed);
   }
 
   &:hover {
     :deep(.q-slider__track) {
-      color: var(--md-sys-color-primary-fixed-dim);
+      color: var(--scheme-color-primary-fixed-dim);
     }
     :deep(.q-slider__thumb) {
-      color: var(--md-sys-color-primary-fixed-dim);
+      color: var(--scheme-color-primary-fixed-dim);
     }
   }
 }
@@ -1594,20 +1594,20 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   height: 80px;
 
   :deep(.q-slider__track) {
-    background: var(--md-sys-color-surface-variant);
-    color: var(--md-sys-color-secondary-fixed);
+    background: var(--scheme-color-surface-variant);
+    color: var(--scheme-color-secondary-fixed);
   }
 
   :deep(.q-slider__thumb) {
-    color: var(--md-sys-color-secondary-fixed);
+    color: var(--scheme-color-secondary-fixed);
   }
 
   &:hover {
     :deep(.q-slider__track) {
-      color: var(--md-sys-color-primary-fixed-dim);
+      color: var(--scheme-color-primary-fixed-dim);
     }
     :deep(.q-slider__thumb) {
-      color: var(--md-sys-color-primary-fixed-dim);
+      color: var(--scheme-color-primary-fixed-dim);
     }
   }
 }

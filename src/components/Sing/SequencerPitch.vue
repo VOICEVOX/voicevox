@@ -30,7 +30,6 @@ import {
 import { ExhaustiveError } from "@/type/utility";
 import { createLogger } from "@/domain/frontend/log";
 import { getLast } from "@/sing/utility";
-import { mdiConsoleNetwork } from "@quasar/extras/mdi-v5";
 
 type PitchLine = {
   readonly color: Color;
@@ -58,7 +57,7 @@ const pitchEditData = computed(() => {
 const previewPitchEdit = computed(() => props.previewPitchEdit);
 const editFrameRate = computed(() => store.state.editFrameRate);
 
-const { getColorFromRole } = useColorScheme();
+const { isDarkMode, getColorFromRole } = useColorScheme();
 
 // TODO: このままだとテーマ変更で更新されないため、変更に追随する必要あり
 const pitchLineColorRGB = (getColorFromRole("outline", "rgb") as number[]) || [
@@ -68,7 +67,7 @@ const pitchLineColor = [
   pitchLineColorRGB[0],
   pitchLineColorRGB[1],
   pitchLineColorRGB[2],
-  255,
+  isDarkMode.value ? 228 : 168,
 ];
 const pitchEditLineColorRGB = (getColorFromRole(
   "primaryFixed",

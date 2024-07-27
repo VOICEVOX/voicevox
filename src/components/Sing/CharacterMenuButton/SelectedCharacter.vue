@@ -79,7 +79,7 @@ const selectedStyleIconPath = computed(() => {
 @use "@/styles/colors" as colors;
 
 .selected-character {
-  border: 1px solid var(--md-sys-color-outline-variant);
+  border: 1px solid var(--scheme-color-outline-variant);
   border-radius: 4px 0 0 4px;
   align-items: center;
   display: flex;
@@ -88,12 +88,12 @@ const selectedStyleIconPath = computed(() => {
   height: 56px;
 
   &:hover {
-    border-color: var(--md-sys-color-outline);
-    background: rgba(var(--md-sys-color-secondary-container-rgb), 0.1);
+    border-color: var(--scheme-color-outline);
+    background: rgba(var(--scheme-color-secondary-container-rgb), 0.1);
   }
 
   &:focus {
-    border-color: var(--md-sys-color-primary);
+    border-color: var(--scheme-color-primary);
   }
 
   .character-avatar-icon {
@@ -114,7 +114,7 @@ const selectedStyleIconPath = computed(() => {
   }
 
   .character-name {
-    color: var(--md-sys-color-on-surface);
+    color: var(--scheme-color-on-surface);
     font-size: 15px;
     font-weight: 500;
     line-height: 24px;
@@ -128,7 +128,7 @@ const selectedStyleIconPath = computed(() => {
   }
 
   .character-style {
-    color: var(--md-sys-color-on-surface-variant);
+    color: var(--scheme-color-on-surface-variant);
     font-size: 10px;
     font-weight: 500;
     line-height: 16px;
@@ -136,7 +136,7 @@ const selectedStyleIconPath = computed(() => {
   }
 
   .character-menu-dropdown-icon {
-    color: var(--md-sys-color-on-surface-variant);
+    color: var(--scheme-color-on-surface-variant);
     margin-left: 4px;
   }
 }

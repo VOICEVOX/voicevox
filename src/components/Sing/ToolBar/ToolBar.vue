@@ -469,7 +469,7 @@ onUnmounted(() => {
 
 // フィールドデフォルト
 :deep(.q-field__native) {
-  color: var(--md-sys-color-on-surface);
+  color: var(--scheme-color-on-surface);
   text-align: center;
   font-size: 16px;
   font-weight: 500;
@@ -477,13 +477,13 @@ onUnmounted(() => {
 
 /* QInput のアウトラインをoutline-variantにする */
 :deep(.q-input .q-field__control:before, .q-select .q-field__control:before) {
-  border: 1px solid var(--md-sys-color-outline-variant);
+  border: 1px solid var(--scheme-color-outline-variant);
 }
 
 // ラベルのフォントサイズを小さくする()
 :deep(.q-input .q-field__label, .q-select .q-field__label) {
   font-size: 14px;
-  color: var(--md-sys-color-on-surface-variant);
+  color: var(--scheme-color-on-surface-variant);
 }
 
 // type:number
@@ -496,13 +496,13 @@ onUnmounted(() => {
   // スピンボタンのホバー状態
   &:hover::-webkit-inner-spin-button,
   &:hover::-webkit-outer-spin-button {
-    background: var(--md-sys-color-surface-container-highest);
+    background: var(--scheme-color-surface-container-highest);
   }
 
   // スピンボタンのアクティブ状態
   &:active::-webkit-inner-spin-button,
   &:active::-webkit-outer-spin-button {
-    background: var(--md-sys-color-surface-container-low);
+    background: var(--scheme-color-surface-container-low);
   }
 }
 
@@ -510,18 +510,18 @@ onUnmounted(() => {
     .q-input .q-field__control:hover:before,
     .q-select .q-field__control:hover:before
   ) {
-  border: 1px solid var(--md-sys-color-outline);
+  border: 1px solid var(--scheme-color-outline);
 }
 
 // オプションメニュー全体の背景色
 :deep(.q-menu) {
-  background: var(--md-sys-color-surface-container);
+  background: var(--scheme-color-surface-container);
 }
 
 // TODO: アクティブ色が効かないので修正したい
 :deep(.q-menu .q-item--active) {
-  //background-color: var(--md-sys-color-secondary-container);
-  color: var(--md-sys-color-primary);
+  //background-color: var(--scheme-color-secondary-container);
+  color: var(--scheme-color-primary);
 }
 
 :deep(.sing-time-signature-field .q-field__control) {
@@ -542,7 +542,7 @@ onUnmounted(() => {
 }
 
 .sing-toolbar {
-  background: var(--md-custom-color-sing-toolbar-container);
+  background: var(--scheme-color-sing-toolbar-container);
   align-items: center;
   display: flex;
   justify-content: space-between;
@@ -566,7 +566,7 @@ onUnmounted(() => {
 
 .sing-adjustment {
   height: 56px;
-  border: 1px solid var(--md-sys-color-outline-variant);
+  border: 1px solid var(--scheme-color-outline-variant);
   border-left: 0;
   border-radius: 0 4px 4px 0;
   padding: 0 0 0 8px;
@@ -588,7 +588,7 @@ onUnmounted(() => {
 
     &:hover:before {
       border-color: transparent;
-      border-bottom: 1px solid var(--md-sys-color-outline);
+      border-bottom: 1px solid var(--scheme-color-outline);
     }
   }
 }
@@ -606,7 +606,7 @@ onUnmounted(() => {
 
     &:hover:before {
       border-color: transparent;
-      border-bottom: 1px solid var(--md-sys-color-outline);
+      border-bottom: 1px solid var(--scheme-color-outline);
     }
   }
 }
@@ -637,7 +637,7 @@ onUnmounted(() => {
     top: 7px;
     margin-left: 8px;
     transform: translateY(0) !important;
-    color: var(--md-sys-color-on-surface-variant);
+    color: var(--scheme-color-on-surface-variant);
     opacity: 0.9;
   }
 
@@ -646,11 +646,11 @@ onUnmounted(() => {
   }
 
   :deep(.q-field__control:before) {
-    border-color: var(--md-sys-color-outline-variant);
+    border-color: var(--scheme-color-outline-variant);
   }
 
   :deep(.q-field__control:hover:before) {
-    border-color: var(--md-sys-color-outline);
+    border-color: var(--scheme-color-outline);
   }
 }
 
@@ -671,19 +671,19 @@ onUnmounted(() => {
 
 .sing-beats-separator {
   font-weight: 500;
-  color: var(--md-sys-color-on-surface-variant);
+  color: var(--scheme-color-on-surface-variant);
   pointer-events: none;
   transform: translateY(8px);
   opacity: 0.56;
 }
 
 .sing-transport-button {
-  color: var(--md-sys-color-on-surface-variant);
+  color: var(--scheme-color-on-surface-variant);
 }
 
 .sing-playback-button {
-  background: var(--md-sys-color-secondary-container);
-  color: var(--md-sys-color-on-secondary-container);
+  background: var(--scheme-color-secondary-container);
+  color: var(--scheme-color-on-secondary-container);
   &:before {
     box-shadow: none;
   }
@@ -703,14 +703,14 @@ onUnmounted(() => {
   font-size: 28px;
   font-weight: 700;
   margin-left: 16px;
-  color: var(--md-sys-color-on-surface);
+  color: var(--scheme-color-on-surface);
 }
 
 .sing-playhead-position-millisec {
   font-size: 16px;
   font-weight: 700;
   margin: 10px 0 0 2px;
-  color: var(--md-sys-color-on-surface);
+  color: var(--scheme-color-on-surface);
 }
 
 .sing-controls {
@@ -726,7 +726,7 @@ onUnmounted(() => {
 
 .sing-undo-button,
 .sing-redo-button {
-  color: var(--md-sys-color-on-surface-variant);
+  color: var(--scheme-color-on-surface-variant);
   width: 40px;
   height: 40px;
   &.disabled {
@@ -742,7 +742,7 @@ onUnmounted(() => {
   opacity: 0.6;
 
   :deep {
-    color: var(--md-sys-color-on-surface-variant);
+    color: var(--scheme-color-on-surface-variant);
   }
 }
 
@@ -751,20 +751,20 @@ onUnmounted(() => {
   width: 72px;
 
   :deep(.q-slider__track) {
-    background: var(--md-sys-color-secondary-container);
-    color: var(--md-sys-color-secondary-fixed);
+    background: var(--scheme-color-secondary-container);
+    color: var(--scheme-color-secondary-fixed);
   }
 
   :deep(.q-slider__thumb) {
-    color: var(--md-sys-color-secondary-fixed);
+    color: var(--scheme-color-secondary-fixed);
   }
 
   &:hover {
     :deep(.q-slider__track) {
-      color: var(--md-sys-color-primary-fixed-dim);
+      color: var(--scheme-color-primary-fixed-dim);
     }
     :deep(.q-slider__thumb) {
-      color: var(--md-sys-color-primary-fixed-dim);
+      color: var(--scheme-color-primary-fixed-dim);
     }
   }
 }
@@ -773,16 +773,16 @@ onUnmounted(() => {
   min-width: 80px;
 
   &:deep(.q-field__control:before) {
-    border: 1px solid var(--md-sys-color-outline-variant);
+    border: 1px solid var(--scheme-color-outline-variant);
   }
 
   :deep(.q-field__control:hover:before) {
-    border-color: var(--md-sys-color-outline);
+    border-color: var(--scheme-color-outline);
   }
 
   :deep(.q-field__label) {
     font-size: 14px;
-    color: var(--md-sys-color-on-surface-variant);
+    color: var(--scheme-color-on-surface-variant);
   }
 }
 </style>

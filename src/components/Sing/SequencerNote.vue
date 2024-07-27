@@ -235,7 +235,7 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     position: fixed;
     left: 2px;
     bottom: 0;
-    color: var(--md-sys-color-on-secondary-fixed);
+    color: var(--scheme-color-on-secondary-fixed);
     font-size: 16px;
     font-weight: 400;
     letter-spacing: -0.1em;
@@ -250,8 +250,8 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     position: absolute;
     width: calc(100% + 1px);
     height: 100%;
-    background-color: var(--md-custom-color-sing-note-bar-container);
-    border: 1px solid var(--md-sys-color-secondary-fixed-dim);
+    background-color: var(--scheme-color-sing-note-bar-container);
+    border: 1px solid var(--scheme-color-secondary-fixed-dim);
     border-radius: 4px;
   }
 
@@ -267,7 +267,7 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
 
     &:hover {
       // FIXME: hoverだとカーソル位置によって適用されないので、プレビュー中に明示的にクラス指定する
-      background-color: var(--md-sys-color-secondary-fixed-dim);
+      background-color: var(--scheme-color-secondary-fixed-dim);
     }
   }
 
@@ -283,41 +283,42 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
 
     &:hover {
       // FIXME: hoverだとカーソル位置によって適用されないので、プレビュー中に明示的にクラス指定する
-      background-color: var(--md-sys-color-secondary-fixed-dim);
+      background-color: var(--scheme-color-secondary-fixed-dim);
     }
   }
 
   &.selected-or-preview {
     .note-bar {
-      background-color: var(--md-sys-color-primary-fixed);
-      border-color: var(--md-sys-color-primary-fixed-dim);
+      background-color: var(--scheme-color-primary-fixed);
+      border-color: var(--scheme-color-primary-fixed-dim);
     }
 
     .note-lyric {
-      color: var(--md-sys-color-on-primary-fixed);
+      color: var(--scheme-color-on-primary-fixed);
     }
 
     .note-right-edge:hover,
     .note-left-edge:hover {
-      background-color: var(--md-sys-color-primary-fixed-dim);
+      background-color: var(--scheme-color-primary-fixed-dim);
     }
   }
 
   &.preview-lyric {
     .note-bar {
-      background-color: var(--md-sys-color-primary-fixed);
-      border-color: var(--md-sys-color-primary-fixed-dim);
+      background-color: var(--scheme-color-primary-fixed);
+      border-color: var(--scheme-color-primary-fixed-dim);
     }
 
     .note-lyric {
-      border-bottom: 1px solid var(--md-sys-color-primary-fixed-dim);
+      border-bottom: 1px solid var(--scheme-color-primary-fixed-dim);
     }
   }
 
   &.preview-lyric {
     .note-bar {
-      background-color: var(--md-sys-color-primary-fixed);
-      border-color: var(--md-sys-color-primary-fixed-dim);
+      background-color: var(--scheme-color-primary-fixed);
+      border-color: var(--scheme-color-primary-fixed-dim);
+      outline: 2px solid var(--scheme-color-surface-variant);
     }
 
     .note-lyric {
@@ -328,38 +329,38 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
   &.overlapping,
   &.invalid-phrase {
     .note-bar {
-      background-color: var(--md-sys-color-surface-variant);
-      border-color: var(--md-sys-color-error);
+      background-color: var(--scheme-color-surface-variant);
+      border-color: var(--scheme-color-error);
     }
 
     .note-right-edge:hover,
     .note-left-edge:hover {
-      background-color: var(--md-sys-color-error);
+      background-color: var(--scheme-color-error);
     }
 
     .note-lyric {
-      color: var(--md-sys-color-on-surface-variant);
+      color: var(--scheme-color-on-surface-variant);
       opacity: 0.38;
       text-shadow: none;
     }
 
     &.selected-or-preview {
       .note-bar {
-        background-color: var(--md-sys-color-error-container);
-        border-color: var(--md-sys-color-error);
+        background-color: var(--scheme-color-error-container);
+        border-color: var(--scheme-color-error);
       }
     }
   }
 
   &.below-pitch {
     .note-bar {
-      background-color: var(--md-sys-color-surface-variant);
-      border-color: var(--md-sys-color-outline-variant);
+      background-color: var(--scheme-color-surface-variant);
+      border-color: var(--scheme-color-outline-variant);
       opacity: 0.38;
     }
 
     .note-lyric {
-      color: var(--md-sys-color-on-surface);
+      color: var(--scheme-color-on-surface);
       opacity: 0.72;
     }
 
@@ -371,8 +372,8 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     &.overlapping,
     &.invalid-phrase {
       .note-bar {
-        background-color: var(--md-sys-color-error-container);
-        border-color: var(--md-sys-color-error);
+        background-color: var(--scheme-color-error-container);
+        border-color: var(--scheme-color-error);
       }
     }
   }

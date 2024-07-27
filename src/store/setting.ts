@@ -4,9 +4,9 @@ import { createDotNotationUILockAction as createUILockAction } from "./ui";
 import { createDotNotationPartialStore as createPartialStore } from "./vuex";
 import { ColorScheme, ColorSchemeConfig } from "@/sing/colorScheme/types";
 import {
-  createColorScheme,
+  ColorSchemeGenerator,
   cssVariablesFromColorScheme,
-} from "@/sing/colorScheme";
+} from "@/sing/colorScheme/generator";
 import {
   HotkeySettingType,
   SavingSetting,
@@ -308,37 +308,51 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       try {
         const availableColorSchemeConfigs =
           await window.backend.getColorSchemeConfigs();
-        // デフォルト
-        const defaultSchemeConfigWorkaround = availableColorSchemeConfigs[0];
-        // カラースキーム生成部分の修正
-        const isDark = state.themeSetting.currentTheme === "Dark";
-        // カラースキーム生成
-        const currentColorScheme = createColorScheme(
-          defaultSchemeConfigWorkaround as ColorSchemeConfig,
+        logger.info(
+          "Available color scheme configs:",
+          availableColorSchemeConfigs,
         );
+
+        if (
+          !availableColorSchemeConfigs ||
+          availableColorSchemeConfigs.length === 0
+        ) {
+          throw new Error("No available color scheme configs");
+        }
+
+        const defaultSchemeConfig = availableColorSchemeConfigs[0];
+
+        const currentColorScheme =
+          ColorSchemeGenerator.fromConfig(defaultSchemeConfig);
+
         commit("INITIALIZE_COLOR_SCHEME", {
           currentColorScheme,
           availableColorSchemeConfigs,
         });
-        // CSS変数の適用
+
+        // テーマをどうするか方針を決める
+        const isDark = state.themeSetting.currentTheme === "Dark";
         const cssVars = cssVariablesFromColorScheme(currentColorScheme);
-        // ダーク/ライトモードに応じてCSS変数を適用
-        for (const [key, value] of Object.entries(cssVars)) {
+        Object.entries(cssVars).forEach(([key, value]) => {
           if (isDark) {
-            const darkCSSKey = key.replace("-dark", "");
-            console.log(darkCSSKey, value);
-            document.documentElement.style.setProperty(darkCSSKey, value);
+            document.documentElement.style.setProperty(
+              key.replace("-dark", ""),
+              value,
+            );
           } else {
-            const lightCSSKey = key.replace("-light", "");
-            document.documentElement.style.setProperty(lightCSSKey, value);
+            document.documentElement.style.setProperty(
+              key.replace("-light", ""),
+              value,
+            );
           }
-        }
+        });
       } catch (error) {
-        logger.error(`Error setting color scheme: ${error}`);
-        throw error;
+        logger.error(`Error initializing color scheme: ${error}`);
+        // TODO: ここでフォールバックしないとカラーが適用されない
       }
     }),
   },
+
   SET_COLOR_SCHEME: {
     mutation(state, { colorScheme }) {
       state.colorSchemeSetting.currentColorScheme = colorScheme;
@@ -346,24 +360,40 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     action: createUILockAction(
       async ({ commit, state }, { colorSchemeConfig }) => {
         try {
-          const isDark = state.themeSetting.currentTheme === "Dark";
-          const colorScheme = createColorScheme(colorSchemeConfig);
-          commit("SET_COLOR_SCHEME", { colorScheme });
-          // CSS変数の適用
-          const cssVars = cssVariablesFromColorScheme(colorScheme);
-          // ダーク/ライトモードに応じてCSS変数を適用
-          for (const [key, value] of Object.entries(cssVars)) {
-            if (isDark) {
-              const darkCSSKey = key.replace("-dark", "");
-              document.documentElement.style.setProperty(darkCSSKey, value);
-            } else {
-              const lightCSSKey = key.replace("-light", "");
-              document.documentElement.style.setProperty(lightCSSKey, value);
-            }
+          if (
+            !colorSchemeConfig ||
+            !colorSchemeConfig.baseColors ||
+            !colorSchemeConfig.baseColors.primary
+          ) {
+            throw new Error("Invalid color scheme config");
           }
-          logger.info("Set color scheme");
+
+          const colorScheme =
+            ColorSchemeGenerator.fromConfig(colorSchemeConfig);
+          logger.info("Create color scheme");
+
+          commit("SET_COLOR_SCHEME", { colorScheme });
+          const cssVars = cssVariablesFromColorScheme(colorScheme);
+          // テーマをどうするか方針を決める
+          const isDark = state.themeSetting.currentTheme === "Dark";
+          Object.entries(cssVars).forEach(([key, value]) => {
+            if (isDark) {
+              document.documentElement.style.setProperty(
+                key.replace("-dark", ""),
+                value,
+              );
+            } else {
+              document.documentElement.style.setProperty(
+                key.replace("-light", ""),
+                value,
+              );
+            }
+          });
+
+          logger.info("Set color scheme successfully");
         } catch (error) {
           logger.error(`Error setting color scheme: ${error}`);
+          // TODO: ここでフォールバックしないとカラーが適用されない
           throw error;
         }
       },

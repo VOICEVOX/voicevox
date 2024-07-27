@@ -52,20 +52,20 @@ defineProps<{
 
 <style scoped lang="scss">
 .edit-target-switcher {
-  background: var(--md-sys-color-surface-container-high);
+  background: var(--scheme-color-surface-container-high);
   border-radius: 28px;
   padding: 4px;
 }
 
 .segment-switch {
-  color: var(--md-sys-color-on-surface-variant);
+  color: var(--scheme-color-on-surface-variant);
   height: 40px;
   min-width: 40px;
   border-radius: 20px !important;
 
   &.active {
-    background: var(--md-sys-color-secondary-container);
-    color: var(--md-sys-color-primary);
+    background: var(--scheme-color-secondary-container);
+    color: var(--scheme-color-primary);
   }
 }
 </style>

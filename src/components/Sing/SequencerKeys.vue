@@ -180,29 +180,29 @@ onUnmounted(() => {
 
 .sequencer-keys {
   backface-visibility: hidden;
-  background: var(--md-sys-color-background);
+  background: var(--scheme-color-background);
   overflow: hidden;
 }
 
 .white-key {
-  fill: var(--md-custom-color-sing-piano-key-white);
-  stroke: var(--md-sys-color-outline-variant);
+  fill: var(--scheme-color-sing-piano-key-white);
+  stroke: var(--scheme-color-outline-variant);
 }
 
 .white-key-being-pressed {
-  fill: var(--md-sys-color-secondary-fixed);
-  stroke: var(--md-sys-color-secondary-fixed);
+  fill: var(--scheme-color-secondary-fixed);
+  stroke: var(--scheme-color-secondary-fixed);
 }
 
 .black-key {
-  fill: var(--md-custom-color-sing-piano-key-black);
+  fill: var(--scheme-color-sing-piano-key-black);
 }
 
 .black-key-being-pressed {
-  fill: var(--md-sys-color-secondary-fixed);
+  fill: var(--scheme-color-secondary-fixed);
 }
 
 .pitchname {
-  fill: var(--md-sys-color-on-surface-fixed);
+  fill: var(--scheme-color-on-surface-fixed);
 }
 </style>

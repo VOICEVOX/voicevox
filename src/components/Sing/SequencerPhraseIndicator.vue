@@ -31,28 +31,28 @@ const className = computed(() => {
 @use "@/styles/colors" as colors;
 
 .waiting-to-be-rendered {
-  background-color: var(--md-sys-color-background);
+  background-color: var(--scheme-color-background);
   background-image: linear-gradient(
     to right,
-    rgba(var(--md-sys-color-secondary-fixed-rgb), 0.8),
-    rgba(var(--md-sys-color-secondary-fixed-rgb), 0.8)
+    rgba(var(--scheme-color-secondary-fixed-rgb), 0.8),
+    rgba(var(--scheme-color-secondary-fixed-rgb), 0.8)
   );
 }
 
 .now-rendering {
-  border: 1px solid rgba(var(--md-sys-color-primary-fixed-dim-rgb), 0.7);
-  background-color: var(--md-sys-color-background);
+  border: 1px solid rgba(var(--scheme-color-primary-fixed-dim-rgb), 0.7);
+  background-color: var(--scheme-color-background);
   background-size: 28px 28px;
   background-image: linear-gradient(
     -45deg,
-    var(--md-sys-color-secondary-fixed),
-    var(--md-sys-color-secondary-fixed) 25%,
-    rgba(var(--md-sys-color-secondary-fixed-rgb), 0.36) 25%,
-    rgba(var(--md-sys-color-secondary-fixed-rgb), 0.36) 50%,
-    var(--md-sys-color-secondary-fixed) 50%,
-    var(--md-sys-color-secondary-fixed) 75%,
-    rgba(var(--md-sys-color-secondary-fixed-rgb), 0.36) 75%,
-    rgba(var(--md-sys-color-secondary-fixed-rgb), 0.36) 100%
+    var(--scheme-color-secondary-fixed),
+    var(--scheme-color-secondary-fixed) 25%,
+    rgba(var(--scheme-color-secondary-fixed-rgb), 0.36) 25%,
+    rgba(var(--scheme-color-secondary-fixed-rgb), 0.36) 50%,
+    var(--scheme-color-secondary-fixed) 50%,
+    var(--scheme-color-secondary-fixed) 75%,
+    rgba(var(--scheme-color-secondary-fixed-rgb), 0.36) 75%,
+    rgba(var(--scheme-color-secondary-fixed-rgb), 0.36) 100%
   );
   animation: stripes-animation 0.7s linear infinite;
 }

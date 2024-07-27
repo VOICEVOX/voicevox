@@ -122,8 +122,8 @@ watch(
   background-color: rgba(255, 255, 255, 0.72);
   // 入力欄が背景に邪魔されないようぼかす(あとかっこいい)
   backdrop-filter: blur(1px) grayscale(70%);
-  color: var(--md-sys-color-on-primary-fixed);
-  outline: 1px solid var(--md-sys-color-primary);
+  color: var(--scheme-color-on-primary-fixed);
+  outline: 1px solid var(--scheme-color-primary);
   border-radius: 4px;
   border: 0;
   box-shadow:

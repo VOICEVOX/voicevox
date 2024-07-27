@@ -1,16 +1,17 @@
 import { computed } from "vue";
 import Color from "colorjs.io";
 import { useStore } from "@/store";
-import { ColorSchemeConfig, ColorScheme } from "@/sing/colorScheme/types";
+import {
+  ColorSchemeConfig,
+  ColorScheme,
+  OklchColor,
+} from "@/sing/colorScheme/types";
 
 export function useColorScheme() {
   const store = useStore();
 
   const isDarkMode = computed<boolean>(
-    () =>
-      store.state.themeSetting.availableThemes.find(
-        (theme) => theme.name === store.state.themeSetting.currentTheme,
-      )?.isDark,
+    () => store.state.themeSetting.currentTheme === "Dark",
   );
 
   const currentColorScheme = computed<ColorScheme>(
@@ -25,7 +26,7 @@ export function useColorScheme() {
     partialConfig: Partial<ColorSchemeConfig>,
   ) => {
     const newConfig = { ...currentColorScheme.value.config, ...partialConfig };
-    await store.dispatch("SET_COLOR_SCHEME", { colorSchemeConfig: newConfig });
+    store.commit("SET_COLOR_SCHEME", { colorSchemeConfig: newConfig });
   };
 
   const selectColorScheme = async (selectedSchemeName: string) => {
@@ -40,52 +41,37 @@ export function useColorScheme() {
   const getColorFromRole = (
     role: string,
     format: "array" | "hex" | "oklch" | "rgb" = "array",
-  ) => {
+  ): OklchColor | string | number[] => {
     const colorSet = currentColorScheme.value.roles[role];
-    const colorString = isDarkMode.value ? colorSet.dark : colorSet.light;
-    console.log(colorString);
-    const colorObj = new Color(colorString);
-    if (format === "array") {
-      const srcColor = colorObj.to("oklch");
-      return [srcColor.l, Number(srcColor.c), Number(srcColor.h)];
-    } else if (format === "hex") {
-      return colorObj.to("hex");
-    } else if (format === "oklch") {
-      return colorObj.to("oklch");
-    } else if (format === "rgb") {
-      // [r, g, b]にしたい
-      const srgbColor = colorObj.to("srgb");
-      console.log(srgbColor);
-      return [srgbColor.r * 255, srgbColor.g * 255, srgbColor.b * 255];
+    const oklchColor: OklchColor = isDarkMode.value
+      ? colorSet.dark
+      : colorSet.light;
+
+    switch (format) {
+      case "array":
+        return oklchColor;
+      case "hex":
+        return new Color("hex", [...oklchColor]).toString();
+      case "oklch":
+        return new Color("oklch", [...oklchColor]).toString();
+      case "rgb": {
+        const color = new Color("oklch", [...oklchColor]);
+        const srgbColor = color.to("srgb");
+        return [
+          Math.round(srgbColor.r * 255),
+          Math.round(srgbColor.g * 255),
+          Math.round(srgbColor.b * 255),
+        ];
+      }
+      default:
+        throw new Error(`Unsupported color format: ${format}`);
     }
   };
-
-  /*
-  const isDarkMode = computed({
-    get: () => currentColorScheme.value.config.isDark,
-    set: (value: boolean) => updateColorScheme({ isDark: value }),
-  });
-
-  const updateColorScheme = async (
-    partialConfig: Partial<ColorSchemeConfig>,
-  ) => {
-    const newConfig = { ...currentColorScheme.value.config, ...partialConfig };
-    await store.dispatch("SET_COLOR_SCHEME", { colorSchemeConfig: newConfig });
-  };
-
-  const selectColorScheme = async (selectedSchemeName: string) => {
-    const selected = availableColorSchemeConfigs.value.find(
-      (scheme) => scheme.name === selectedSchemeName,
-    );
-    if (selected) {
-      await updateColorScheme(selected);
-    }
-  }; */
 
   return {
+    isDarkMode,
     currentColorScheme,
     availableColorSchemeConfigs,
-    isDarkMode,
     updateColorScheme,
     selectColorScheme,
     getColorFromRole,

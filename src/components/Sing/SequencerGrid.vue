@@ -144,39 +144,39 @@ const gridHeight = computed(() => {
 }
 
 .sequencer-grid-cell-white {
-  fill: var(--md-custom-color-sing-grid-cell-white);
+  fill: var(--scheme-color-sing-grid-cell-white);
 }
 
 .sequencer-grid-cell-black {
-  fill: var(--md-custom-color-sing-grid-cell-black);
+  fill: var(--scheme-color-sing-grid-cell-black);
 }
 
 .sequencer-grid-vertical-line {
-  stroke: var(--md-custom-color-sing-grid-vertical-line);
+  stroke: var(--scheme-color-sing-grid-vertical-line);
   stroke-width: 1px;
 }
 
 .sequencer-grid-horizontal-line {
   backface-visibility: hidden;
-  stroke: var(--md-custom-color-sing-grid-horizontal-line);
+  stroke: var(--scheme-color-sing-grid-horizontal-line);
   stroke-width: 1px;
 }
 
 .sequencer-grid-octave-line {
   backface-visibility: hidden;
-  stroke: var(--md-custom-color-sing-grid-octave-line);
+  stroke: var(--scheme-color-sing-grid-octave-line);
   stroke-width: 1px;
 }
 
 .sequencer-grid-measure-line {
   backface-visibility: hidden;
-  stroke: var(--md-custom-color-sing-grid-measure-line);
+  stroke: var(--scheme-color-sing-grid-measure-line);
   stroke-width: 2px;
 }
 
 .sequencer-grid-beat-line {
   backface-visibility: hidden;
-  stroke: var(--md-custom-color-sing-grid-beat-line);
+  stroke: var(--scheme-color-sing-grid-beat-line);
   stroke-width: 1px;
 }
 </style>

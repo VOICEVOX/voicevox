@@ -18,8 +18,8 @@
           <line
             v-for="n in beatsPerMeasure"
             :key="n"
-            :x1="beatWidth * (n - 1)"
-            :x2="beatWidth * (n - 1)"
+            :x1="beatWidth * (n - 1) + 0.5"
+            :x2="beatWidth * (n - 1) + 0.5"
             y1="28"
             y2="100%"
             stroke-width="1"
@@ -198,7 +198,7 @@ onUnmounted(() => {
 @use "@/styles/colors" as colors;
 
 .sequencer-ruler {
-  background: var(--md-sys-color-surface-container-high);
+  background: var(--scheme-color-surface-container-high);
   height: 40px;
   position: relative;
   overflow: hidden;
@@ -210,24 +210,24 @@ onUnmounted(() => {
   left: -1px;
   width: 2px;
   height: 100%;
-  background: var(--md-sys-color-inverse-surface);
+  background: var(--scheme-color-inverse-surface);
   pointer-events: none;
   will-change: transform;
 }
 
 .sequencer-ruler-measure-number {
-  fill: var(--md-sys-color-on-surface-variant);
+  fill: var(--scheme-color-on-surface-variant);
 }
 
 .sequencer-ruler-measure-line {
   backface-visibility: hidden;
-  stroke: var(--md-custom-color-sing-ruler-measure-line);
+  stroke: var(--scheme-color-sing-ruler-measure-line);
   stroke-width: 2px;
 }
 
 .sequencer-ruler-beat-line {
   backface-visibility: hidden;
-  stroke: var(--md-custom-color-sing-ruler-beat-line);
+  stroke: var(--scheme-color-sing-ruler-beat-line);
   stroke-width: 1px;
 }
 </style>
