@@ -258,10 +258,6 @@ const singingVoiceCache = new Map<SingingVoiceSourceHash, SingingVoice>();
 
 const initialTrackId = TrackId(crypto.randomUUID());
 
-export const singingStorePlugin: WatchStoreStatePlugin = () => {
-  // 将来使うとき用
-};
-
 /** トラックを取得する。見付からないときはフォールバックとして最初のトラックを返す。 */
 const getSelectedTrackWithFallback = (partialState: {
   tracks: Map<TrackId, Track>;
