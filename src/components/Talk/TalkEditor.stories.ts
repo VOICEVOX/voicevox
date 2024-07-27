@@ -29,12 +29,14 @@ import {
 } from "@/mock/engineMock/speakerResourceMock";
 import { setFont, themeToCss } from "@/domain/dom";
 import defaultTheme from "@/../public/themes/default.json";
+import { State } from "@/store/type";
 
 const meta: Meta<typeof TalkEditor> = {
   component: TalkEditor,
   args: {
     isEnginesReady: true,
     isProjectFileLoaded: false,
+    onCompleteInitialStartup: fn(),
   },
   decorators: [
     (story, context) => {
@@ -54,6 +56,8 @@ const meta: Meta<typeof TalkEditor> = {
         proxyStoreDI: proxyStoreCreator(createOpenAPIEngineMock()),
       });
       provide(storeKey, store);
+
+      context.parameters.vuexState = store.state;
 
       // なぜか必要、これがないとdispatch内でcommitしたときにエラーになる
       store.replaceState({
@@ -133,6 +137,15 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   name: "デフォルト",
+  play: async ({ args }) => {
+    // 準備が完了するまで待機する
+    await waitFor(
+      () => {
+        expect(args.onCompleteInitialStartup).toHaveBeenCalled();
+      },
+      { timeout: 5000 },
+    );
+  },
 };
 
 export const NowLoading: Story = {
@@ -142,17 +155,15 @@ export const NowLoading: Story = {
   },
 };
 
-export const KeyboardShortcuts: Story = {
-  name: "キーボードショートカットのテスト ",
-  play: async ({ args, canvasElement }) => {
-    await waitFor(() => {
-      expect(args.onCompleteInitialStartup).toHaveBeenCalled();
-    });
+export const TextInput: Story = {
+  name: "テキスト入力のテスト",
+  play: async ({ context, canvasElement, component }) => {
+    await Default.play(context);
 
-    // Shift+Enter でテキスト欄を追加
-    // await userEvent.keyboard("{Shift>}[Enter]{/Shift}");
-    // await userEvent.keyboard("AAAAAA{Escape}");
-    hotkeys.trigger("shift+enter", "talk");
-    たぶんショートカットは使えない！
+    const canvas = within(canvasElement);
+
+    // テキスト欄を取得
+    const textInput = await canvas.findByLabelText("1行目");
+    await userEvent.type(textInput, "こんにちは、これはテストです。{enter}");
   },
 };

@@ -1,7 +1,7 @@
 import { userEvent, within, expect, fn } from "@storybook/test";
 
 import { Meta, StoryObj } from "@storybook/vue3";
-import { createOpenAPIEngineMock, mockHost } from "@/storybook/engineMock";
+import { createOpenAPIEngineMock, mockHost } from "@/mock/engineMock";
 
 const meta: Meta = {
   render: () => {
