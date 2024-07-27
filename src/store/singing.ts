@@ -21,7 +21,6 @@ import {
   SequencerEditTarget,
   PhraseSourceHash,
   Track,
-  WatchStoreStatePlugin,
 } from "./type";
 import { DEFAULT_PROJECT_NAME, sanitizeFileName } from "./utility";
 import {
