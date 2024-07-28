@@ -655,9 +655,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   SELECT_ALL_NOTES_IN_TRACK: {
-    async action({ getters, commit }) {
-      const selectedTrack = getters.SELECTED_TRACK;
-      const noteIds = selectedTrack.notes.map((note) => note.id);
+    async action({ state, commit }, { trackId }) {
+      const track = getOrThrow(state.tracks, trackId);
+      const noteIds = track.notes.map((note) => note.id);
       commit("DESELECT_ALL_NOTES");
       commit("SELECT_NOTES", { noteIds });
     },
