@@ -948,9 +948,8 @@ export type SingingStoreTypes = {
     action(payload: { noteIds: NoteId[] }): void;
   };
 
-  SELECT_ALL_NOTES_IN_SELECTED_TRACK: {
-    mutation: undefined;
-    action(): void;
+  SELECT_ALL_NOTES_IN_TRACK: {
+    action({ trackId }: { trackId: TrackId }): void;
   };
 
   DESELECT_ALL_NOTES: {
