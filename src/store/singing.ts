@@ -1480,7 +1480,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           ]),
         );
 
-        // trackChannelStripsを同期する
+        // trackChannelStripsを同期する。
+        //
+        // ここで更新されたChannelStripに既存のAudioPlayerなどを繋げる必要がある。
+        // そのため、Phraseが変わっていなくてもPhraseの同期=AudioPlayerなどの再接続は毎回行う必要がある。
+        // trackChannelStripsを同期した後はreturnやthrowをしないこと。
+        // TODO: 良い設計を考える
+        // ref: https://github.com/VOICEVOX/voicevox/pull/2176#discussion_r1693991784
+
         const shouldPlays = shouldPlayTracks(tracks);
         for (const [trackId, track] of tracks) {
           if (!trackChannelStrips.has(trackId)) {
@@ -1508,11 +1515,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             trackChannelStrips.delete(trackId);
           }
         }
-
-        // Phraseが変わっていなくてもPhraseの同期は毎回行う必要がある。
-        // そのため、ここでreturnやthrowしてはいけない。
-        // TODO: 良い設計を考える
-        // ref: https://github.com/VOICEVOX/voicevox/pull/2176#discussion_r1693991784
 
         const singerAndFrameRates = new Map(
           [...tracks].map(([trackId, track]) => [
