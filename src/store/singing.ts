@@ -1483,8 +1483,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         // trackChannelStripsを同期する。
         //
         // ここで更新されたChannelStripに既存のAudioPlayerなどを繋げる必要がある。
-        // そのため、Phraseが変わっていなくてもPhraseの同期=AudioPlayerなどの再接続は毎回行う必要がある。
-        // trackChannelStripsを同期した後はreturnやthrowをしないこと。
+        // そのため、Phraseが変わっていなくてもPhraseの更新=AudioPlayerなどの再接続は毎回行う必要がある。
+        // trackChannelStripsを同期した後、フレーズの更新が完了するまではreturnやthrowをしないこと。
         // TODO: 良い設計を考える
         // ref: https://github.com/VOICEVOX/voicevox/pull/2176#discussion_r1693991784
 
