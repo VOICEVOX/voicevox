@@ -236,7 +236,7 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     left: 2px;
     bottom: 0;
     color: var(--scheme-color-on-secondary-fixed);
-    font-size: 16px;
+    font-size: 1rem;
     font-weight: 400;
     letter-spacing: -0.1em;
     white-space: nowrap;

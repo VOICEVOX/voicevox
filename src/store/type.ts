@@ -1593,7 +1593,7 @@ export type SettingStoreTypes = {
     mutation: {
       colorScheme: ColorScheme;
     };
-    action(payload: { colorSchemeConfig: ColorSchemeConfig }): void;
+    action(payload: { colorScheme: ColorScheme }): void;
   };
 
   SET_ACCEPT_RETRIEVE_TELEMETRY: {

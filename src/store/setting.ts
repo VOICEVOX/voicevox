@@ -4,7 +4,7 @@ import { createDotNotationUILockAction as createUILockAction } from "./ui";
 import { createDotNotationPartialStore as createPartialStore } from "./vuex";
 import { ColorScheme, ColorSchemeConfig } from "@/sing/colorScheme/types";
 import {
-  ColorSchemeGenerator,
+  generateColorSchemeFromConfig,
   cssVariablesFromColorScheme,
 } from "@/sing/colorScheme/generator";
 import {
@@ -323,7 +323,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         const defaultSchemeConfig = availableColorSchemeConfigs[0];
 
         const currentColorScheme =
-          ColorSchemeGenerator.fromConfig(defaultSchemeConfig);
+          generateColorSchemeFromConfig(defaultSchemeConfig);
 
         commit("INITIALIZE_COLOR_SCHEME", {
           currentColorScheme,
@@ -357,47 +357,34 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     mutation(state, { colorScheme }) {
       state.colorSchemeSetting.currentColorScheme = colorScheme;
     },
-    action: createUILockAction(
-      async ({ commit, state }, { colorSchemeConfig }) => {
-        try {
-          if (
-            !colorSchemeConfig ||
-            !colorSchemeConfig.baseColors ||
-            !colorSchemeConfig.baseColors.primary
-          ) {
-            throw new Error("Invalid color scheme config");
+    action: createUILockAction(async ({ commit, state }, { colorScheme }) => {
+      try {
+        logger.info("Create color scheme");
+        commit("SET_COLOR_SCHEME", { colorScheme });
+        const cssVars = cssVariablesFromColorScheme(colorScheme);
+        // テーマをどうするか方針を決める
+        const isDark = state.themeSetting.currentTheme === "Dark";
+        Object.entries(cssVars).forEach(([key, value]) => {
+          if (isDark) {
+            document.documentElement.style.setProperty(
+              key.replace("-dark", ""),
+              value,
+            );
+          } else {
+            document.documentElement.style.setProperty(
+              key.replace("-light", ""),
+              value,
+            );
           }
+        });
 
-          const colorScheme =
-            ColorSchemeGenerator.fromConfig(colorSchemeConfig);
-          logger.info("Create color scheme");
-
-          commit("SET_COLOR_SCHEME", { colorScheme });
-          const cssVars = cssVariablesFromColorScheme(colorScheme);
-          // テーマをどうするか方針を決める
-          const isDark = state.themeSetting.currentTheme === "Dark";
-          Object.entries(cssVars).forEach(([key, value]) => {
-            if (isDark) {
-              document.documentElement.style.setProperty(
-                key.replace("-dark", ""),
-                value,
-              );
-            } else {
-              document.documentElement.style.setProperty(
-                key.replace("-light", ""),
-                value,
-              );
-            }
-          });
-
-          logger.info("Set color scheme successfully");
-        } catch (error) {
-          logger.error(`Error setting color scheme: ${error}`);
-          // TODO: ここでフォールバックしないとカラーが適用されない
-          throw error;
-        }
-      },
-    ),
+        logger.info("Set color scheme successfully");
+      } catch (error) {
+        logger.error(`Error setting color scheme: ${error}`);
+        // TODO: ここでフォールバックしないとカラーが適用されない
+        throw error;
+      }
+    }),
   },
 
   SET_ACCEPT_RETRIEVE_TELEMETRY: {

@@ -464,7 +464,7 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-@use "@/styles/variables" as vars;
+@use "@/styles/v2/variables" as vars;
 @use "@/styles/colors" as colors;
 
 // フィールドデフォルト
@@ -522,23 +522,6 @@ onUnmounted(() => {
 :deep(.q-menu .q-item--active) {
   //background-color: var(--scheme-color-secondary-container);
   color: var(--scheme-color-primary);
-}
-
-:deep(.sing-time-signature-field .q-field__control) {
-  padding: 0;
-}
-
-:deep(.sing-beats .q-field__control) {
-  background: transparent;
-  padding: 0 4px;
-}
-
-:deep(.sing-time-signature.beats .q-field__control) {
-  padding: 0 4px 0 12px;
-}
-
-:deep(.sing-time-signature.beat-type .q-field__control) {
-  padding: 0 12px 0 4px;
 }
 
 .sing-toolbar {
@@ -654,6 +637,18 @@ onUnmounted(() => {
   }
 }
 
+.sing-time-signature.beats {
+  :deep(.q-field__control) {
+    padding: 0 4px 0 12px;
+  }
+}
+
+.sing-time-signature.beat-type {
+  :deep(.q-field__control) {
+    padding: 0 12px 0 4px;
+  }
+}
+
 .sing-beats {
   display: flex;
   align-items: center;
@@ -662,6 +657,11 @@ onUnmounted(() => {
 
   &:deep(.q-field__control:before) {
     border: 1px solid transparent;
+  }
+
+  &:deep(.q-field__control) {
+    background: transparent;
+    padding: 0 4px;
   }
 
   &:deep(.q-field__control:hover:before) {

@@ -111,26 +111,23 @@ watch(
 
 .lyric-input-container {
   position: absolute;
-  top: -1px;
+  top: 0;
   width: auto;
 }
 
 .lyric-input {
   font-weight: 500;
   font-size: 16px;
-  // 被さった背景ノートが見えるようにする
-  background-color: rgba(255, 255, 255, 0.72);
-  // 入力欄が背景に邪魔されないようぼかす(あとかっこいい)
-  backdrop-filter: blur(1px) grayscale(70%);
-  color: var(--scheme-color-on-primary-fixed);
-  outline: 1px solid var(--scheme-color-primary);
+  background-color: var(--scheme-color-surface-container-highest);
+  color: var(--scheme-color-on-surface);
+  outline: 1px solid var(--scheme-color-primary-fixed-dim);
   border-radius: 4px;
   border: 0;
   box-shadow:
     0 4px 6px rgba(0, 0, 0, 0.1),
     0 1px 3px rgba(0, 0, 0, 0.08);
   padding: 0 4px;
-  width: 6ch;
+  width: 7ch;
   box-sizing: border-box;
 }
 </style>

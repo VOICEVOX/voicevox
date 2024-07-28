@@ -34,25 +34,44 @@ const className = computed(() => {
   background-color: var(--scheme-color-background);
   background-image: linear-gradient(
     to right,
-    rgba(var(--scheme-color-secondary-fixed-rgb), 0.8),
-    rgba(var(--scheme-color-secondary-fixed-rgb), 0.8)
+    --scheme-color-secondary-fixed,
+    --scheme-color-secondary-fixed
   );
 }
 
 .now-rendering {
-  border: 1px solid rgba(var(--scheme-color-primary-fixed-dim-rgb), 0.7);
+  border: 1px solid --scheme-color-primary-fixed-dim;
   background-color: var(--scheme-color-background);
-  background-size: 28px 28px;
+  background-size: 32px 32px;
   background-image: linear-gradient(
     -45deg,
-    var(--scheme-color-secondary-fixed),
-    var(--scheme-color-secondary-fixed) 25%,
-    rgba(var(--scheme-color-secondary-fixed-rgb), 0.36) 25%,
-    rgba(var(--scheme-color-secondary-fixed-rgb), 0.36) 50%,
-    var(--scheme-color-secondary-fixed) 50%,
-    var(--scheme-color-secondary-fixed) 75%,
-    rgba(var(--scheme-color-secondary-fixed-rgb), 0.36) 75%,
-    rgba(var(--scheme-color-secondary-fixed-rgb), 0.36) 100%
+    var(--scheme-color-primary-fixed) 25%,
+    color-mix(
+        in oklch,
+        var(--scheme-color-primary-fixed) 36%,
+        var(--scheme-color-background)
+      )
+      25%,
+    color-mix(
+        in oklch,
+        var(--scheme-color-primary-fixed) 36%,
+        var(--scheme-color-background)
+      )
+      50%,
+    var(--scheme-color-primary-fixed) 50%,
+    var(--scheme-color-primary-fixed) 75%,
+    color-mix(
+        in oklch,
+        var(--scheme-color-primary-fixed) 36%,
+        var(--scheme-color-background)
+      )
+      75%,
+    color-mix(
+        in oklch,
+        var(--scheme-color-primary-fixed) 36%,
+        var(--scheme-color-background)
+      )
+      100%
   );
   animation: stripes-animation 0.7s linear infinite;
 }
@@ -62,12 +81,12 @@ const className = computed(() => {
     background-position-x: 0;
   }
   to {
-    background-position-x: 28px;
+    background-position-x: 32px;
   }
 }
 
 .could-not-render {
-  background-color: var(--md-ref-palette-error-60);
+  background-color: var(--scheme-color-error);
 }
 
 .playable {
