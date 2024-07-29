@@ -839,7 +839,6 @@ export type SingingStoreState = {
   sequencerSnapType: number;
   sequencerEditTarget: SequencerEditTarget;
   _selectedNoteIds: Set<NoteId>;
-  overlappingNoteIds: Map<TrackId, Set<NoteId>>;
   editingLyricNoteId?: NoteId;
   nowPlaying: boolean;
   volume: number;
@@ -923,6 +922,10 @@ export type SingingStoreTypes = {
     getter: Set<NoteId>;
   };
 
+  OVERLAPPING_NOTE_IDS: {
+    getter(trackId: TrackId): Set<NoteId>;
+  };
+
   SET_NOTES: {
     mutation: { notes: Note[]; trackId: TrackId };
     action(payload: { notes: Note[]; trackId: TrackId }): void;
@@ -945,9 +948,8 @@ export type SingingStoreTypes = {
     action(payload: { noteIds: NoteId[] }): void;
   };
 
-  SELECT_ALL_NOTES_IN_SELECTED_TRACK: {
-    mutation: undefined;
-    action(): void;
+  SELECT_ALL_NOTES_IN_TRACK: {
+    action({ trackId }: { trackId: TrackId }): void;
   };
 
   DESELECT_ALL_NOTES: {
@@ -1701,6 +1703,10 @@ export type ProjectStoreTypes = {
 
   RESET_SAVED_LAST_COMMAND_IDS: {
     mutation: void;
+  };
+
+  CLEAR_UNDO_HISTORY: {
+    action(): void;
   };
 };
 

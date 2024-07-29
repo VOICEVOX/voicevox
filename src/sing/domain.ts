@@ -231,8 +231,8 @@ export function getNumMeasures(
   maxTicks = Math.max(maxTicks, lastTsPosition);
   maxTicks = Math.max(maxTicks, lastTempoPosition);
   if (notes.length > 0) {
-    const lastNote = notes[notes.length - 1];
-    const lastNoteEndPosition = lastNote.position + lastNote.duration;
+    const noteEndPositions = notes.map((note) => note.position + note.duration);
+    const lastNoteEndPosition = Math.max(...noteEndPositions);
     maxTicks = Math.max(maxTicks, lastNoteEndPosition);
   }
   return tickToMeasureNumber(maxTicks, timeSignatures, tpqn);
@@ -573,14 +573,11 @@ export const splitLyricsByMoras = (
  * ソロのトラックが存在する場合は、ソロのトラックのみ再生する。（ミュートは無視される）
  * ソロのトラックが存在しない場合は、ミュートされていないトラックを再生する。
  */
-export const shouldPlayTracks = (
-  tracks: Map<TrackId, Track>,
-): Map<TrackId, boolean> => {
+export const shouldPlayTracks = (tracks: Map<TrackId, Track>): Set<TrackId> => {
   const soloTrackExists = [...tracks.values()].some((track) => track.solo);
-  const shouldPlayMap = new Map<TrackId, boolean>();
-  for (const [trackKey, track] of tracks) {
-    shouldPlayMap.set(trackKey, soloTrackExists ? track.solo : !track.mute);
-  }
-
-  return shouldPlayMap;
+  return new Set(
+    [...tracks.entries()]
+      .filter(([, track]) => (soloTrackExists ? track.solo : !track.mute))
+      .map(([trackId]) => trackId),
+  );
 };

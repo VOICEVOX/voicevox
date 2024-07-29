@@ -3,6 +3,7 @@
     <!-- configs for entire song -->
     <div class="sing-configs">
       <QBtn
+        v-if="multiTrackEnabled"
         class="q-mx-xs"
         :icon="isSidebarOpen ? 'menu_open' : 'menu'"
         round
@@ -167,6 +168,10 @@ const uiLocked = computed(() => store.getters.UI_LOCKED);
 const editor = "song";
 const canUndo = computed(() => store.getters.CAN_UNDO(editor));
 const canRedo = computed(() => store.getters.CAN_REDO(editor));
+
+const multiTrackEnabled = computed(
+  () => store.state.experimentalSetting.enableMultiTrack,
+);
 
 const { registerHotkeyWithCleanup } = useHotkeyManager();
 registerHotkeyWithCleanup({

@@ -78,7 +78,9 @@ export const useMenuBarData = () => {
       label: "すべて選択",
       onClick: () => {
         if (uiLocked.value) return;
-        store.dispatch("SELECT_ALL_NOTES_IN_SELECTED_TRACK");
+        store.dispatch("SELECT_ALL_NOTES_IN_TRACK", {
+          trackId: store.getters.SELECTED_TRACK_ID,
+        });
       },
       disableWhenUiLocked: true,
     },

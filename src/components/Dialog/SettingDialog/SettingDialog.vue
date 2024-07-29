@@ -230,6 +230,7 @@
                 </QBtn>
               </QCardActions>
               <BaseCell
+                v-if="experimentalSetting.enableMultiTrack"
                 title="ソング：元に戻す対象のトラックの設定"
                 description="トラックの設定のうち、「元に戻す」機能の対象にする設定を指定します。"
               >
@@ -524,6 +525,17 @@
                   )
                 "
               />
+              <ToggleCell
+                title="ソング：マルチトラック機能"
+                description="ONの場合、１つのプロジェクト内に複数のトラックを作成できるようにします。"
+                :modelValue="experimentalSetting.enableMultiTrack"
+                :disable="!canToggleMultiTrack"
+                @update:modelValue="setMultiTrack($event)"
+              >
+                <QTooltip v-if="!canToggleMultiTrack" :delay="500">
+                  現在のプロジェクトに複数のトラックが存在するため、無効化できません。
+                </QTooltip>
+              </ToggleCell>
             </QCard>
             <QCard flat class="setting-card">
               <QCardActions>
@@ -895,6 +907,23 @@ const selectedEngineId = computed({
 });
 const renderEngineNameLabel = (engineId: EngineId) => {
   return engineInfos.value[engineId].name;
+};
+
+// トラックが複数あるときはマルチトラック機能を無効化できないようにする
+const canToggleMultiTrack = computed(() => {
+  if (!experimentalSetting.value.enableMultiTrack) {
+    return true;
+  }
+
+  return store.state.tracks.size <= 1;
+});
+
+const setMultiTrack = (enableMultiTrack: boolean) => {
+  changeExperimentalSetting("enableMultiTrack", enableMultiTrack);
+  // 無効化するときはUndo/Redoをクリアする
+  if (!enableMultiTrack) {
+    store.dispatch("CLEAR_UNDO_HISTORY");
+  }
 };
 </script>
 

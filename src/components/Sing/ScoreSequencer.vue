@@ -102,10 +102,21 @@
         }"
       ></div>
       <SequencerPhraseIndicator
-        v-for="phraseInfo in phraseInfos"
+        v-for="phraseInfo in phraseInfosInOtherTracks"
         :key="phraseInfo.key"
         :phraseKey="phraseInfo.key"
-        :isInSelectedTrack="phraseInfo.trackId === selectedTrackId"
+        :isInSelectedTrack="false"
+        class="sequencer-phrase-indicator"
+        :style="{
+          width: `${phraseInfo.width}px`,
+          transform: `translateX(${phraseInfo.x - scrollX}px)`,
+        }"
+      />
+      <SequencerPhraseIndicator
+        v-for="phraseInfo in phraseInfosInSelectedTrack"
+        :key="phraseInfo.key"
+        :phraseKey="phraseInfo.key"
+        isInSelectedTrack
         class="sequencer-phrase-indicator"
         :style="{
           width: `${phraseInfo.width}px`,
@@ -204,7 +215,6 @@ import {
 import { applyGaussianFilter, linearInterpolation } from "@/sing/utility";
 import { useLyricInput } from "@/composables/useLyricInput";
 import { ExhaustiveError } from "@/type/utility";
-import { getOrThrow } from "@/helpers/mapHelper";
 
 type PreviewMode =
   | "ADD_NOTE"
@@ -236,7 +246,7 @@ const notesInOtherTracks = computed(() =>
   ),
 );
 const overlappingNoteIdsInSelectedTrack = computed(() =>
-  getOrThrow(store.state.overlappingNoteIds, selectedTrackId.value),
+  store.getters.OVERLAPPING_NOTE_IDS(selectedTrackId.value),
 );
 const selectedNotes = computed(() =>
   store.getters.SELECTED_TRACK.notes.filter((note) =>
@@ -335,6 +345,16 @@ const phraseInfos = computed(() => {
     const trackId = phrase.trackId;
     return { key, x: startX, width: endX - startX, trackId };
   });
+});
+const phraseInfosInSelectedTrack = computed(() => {
+  return phraseInfos.value.filter(
+    (info) => info.trackId === selectedTrackId.value,
+  );
+});
+const phraseInfosInOtherTracks = computed(() => {
+  return phraseInfos.value.filter(
+    (info) => info.trackId !== selectedTrackId.value,
+  );
 });
 
 const ctrlKey = useCommandOrControlKey();
@@ -1408,7 +1428,9 @@ registerHotkeyWithCleanup({
     if (nowPreviewing.value) {
       return;
     }
-    store.dispatch("SELECT_ALL_NOTES_IN_SELECTED_TRACK");
+    store.dispatch("SELECT_ALL_NOTES_IN_TRACK", {
+      trackId: selectedTrackId.value,
+    });
   },
 });
 
@@ -1451,7 +1473,9 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
       label: "すべて選択",
       onClick: async () => {
         contextMenu.value?.hide();
-        await store.dispatch("SELECT_ALL_NOTES_IN_SELECTED_TRACK");
+        await store.dispatch("SELECT_ALL_NOTES_IN_TRACK", {
+          trackId: selectedTrackId.value,
+        });
       },
       disableWhenUiLocked: true,
     },

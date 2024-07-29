@@ -573,6 +573,7 @@ export const experimentalSettingSchema = z.object({
   enableMultiSelect: z.boolean().default(false),
   shouldKeepTuningOnTextChange: z.boolean().default(false),
   enablePitchEditInSongEditor: z.boolean().default(false),
+  enableMultiTrack: z.boolean().default(false),
 });
 
 export type ExperimentalSettingType = z.infer<typeof experimentalSettingSchema>;

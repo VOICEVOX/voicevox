@@ -1,5 +1,5 @@
 import path from "path";
-import { toRaw, watchSyncEffect } from "vue";
+import { toRaw } from "vue";
 import { createPartialStore } from "./vuex";
 import { createUILockAction } from "./ui";
 import {
@@ -21,7 +21,6 @@ import {
   SequencerEditTarget,
   PhraseSourceHash,
   Track,
-  WatchStoreStatePlugin,
 } from "./type";
 import { DEFAULT_PROJECT_NAME, sanitizeFileName } from "./utility";
 import {
@@ -154,6 +153,7 @@ const offlineRenderTracks = async (
   sampleRate: number,
   renderDuration: number,
   withLimiter: boolean,
+  multiTrackEnabled: boolean,
   tracks: Map<TrackId, Track>,
   phrases: Map<PhraseSourceHash, Phrase>,
   singingGuides: Map<SingingGuideSourceHash, SingingGuide>,
@@ -172,9 +172,9 @@ const offlineRenderTracks = async (
   const shouldPlays = shouldPlayTracks(tracks);
   for (const [trackId, track] of tracks) {
     const channelStrip = new ChannelStrip(offlineAudioContext);
-    channelStrip.volume = track.gain;
-    channelStrip.pan = track.pan;
-    channelStrip.mute = !getOrThrow(shouldPlays, trackId);
+    channelStrip.volume = multiTrackEnabled ? track.gain : 1;
+    channelStrip.pan = multiTrackEnabled ? track.pan : 0;
+    channelStrip.mute = multiTrackEnabled ? !shouldPlays.has(trackId) : false;
 
     channelStrip.output.connect(mainChannelStrip.input);
     trackChannelStrips.set(trackId, channelStrip);
@@ -257,38 +257,6 @@ const singingVoiceCache = new Map<SingingVoiceSourceHash, SingingVoice>();
 
 const initialTrackId = TrackId(crypto.randomUUID());
 
-export const singingStorePlugin: WatchStoreStatePlugin = (store) => {
-  // tracksの変更とtrackChannelStripsを同期する。
-  // NOTE: immerの差分検知はChannelStripだと動かないので、tracksの変更を監視して同期する。
-  watchSyncEffect(async () => {
-    if (!audioContext || !mainChannelStrip) {
-      return;
-    }
-    const shouldPlays = shouldPlayTracks(store.state.tracks);
-    for (const [trackId, track] of store.state.tracks) {
-      if (!trackChannelStrips.has(trackId)) {
-        const channelStrip = new ChannelStrip(audioContext);
-        channelStrip.output.connect(mainChannelStrip.input);
-
-        trackChannelStrips.set(trackId, channelStrip);
-      }
-
-      const channelStrip = getOrThrow(trackChannelStrips, trackId);
-      channelStrip.volume = track.gain;
-      channelStrip.pan = track.pan;
-      channelStrip.mute = !getOrThrow(shouldPlays, trackId);
-    }
-    const channelStripTrackIds = [...trackChannelStrips.keys()];
-    for (const trackId of channelStripTrackIds) {
-      if (!store.state.tracks.has(trackId)) {
-        const channelStrip = getOrThrow(trackChannelStrips, trackId);
-        channelStrip.output.disconnect();
-        trackChannelStrips.delete(trackId);
-      }
-    }
-  });
-};
-
 /** トラックを取得する。見付からないときはフォールバックとして最初のトラックを返す。 */
 const getSelectedTrackWithFallback = (partialState: {
   tracks: Map<TrackId, Track>;
@@ -325,7 +293,6 @@ export const singingStoreState: SingingStoreState = {
   sequencerSnapType: 16,
   sequencerEditTarget: "NOTE",
   _selectedNoteIds: new Set(),
-  overlappingNoteIds: new Map([[initialTrackId, new Set()]]),
   nowPlaying: false,
   volume: 0,
   startRenderingRequested: false,
@@ -604,15 +571,19 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  OVERLAPPING_NOTE_IDS: {
+    getter: (state) => (trackId) => {
+      const notes = getOrThrow(state.tracks, trackId).notes;
+      return getOverlappingNoteIds(notes);
+    },
+  },
+
   SET_NOTES: {
     mutation(state, { notes, trackId }) {
-      state.overlappingNoteIds.clear();
       state.editingLyricNoteId = undefined;
       state._selectedNoteIds.clear();
       const selectedTrack = getOrThrow(state.tracks, trackId);
       selectedTrack.notes = notes;
-
-      state.overlappingNoteIds.set(trackId, getOverlappingNoteIds(notes));
     },
     async action({ commit, dispatch }, { notes, trackId }) {
       if (!isValidNotes(notes)) {
@@ -630,7 +601,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const newNotes = [...selectedTrack.notes, ...notes];
       newNotes.sort((a, b) => a.position - b.position);
       selectedTrack.notes = newNotes;
-      state.overlappingNoteIds.set(trackId, getOverlappingNoteIds(newNotes));
     },
   },
 
@@ -644,10 +614,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       selectedTrack.notes = selectedTrack.notes
         .map((value) => notesMap.get(value.id) ?? value)
         .sort((a, b) => a.position - b.position);
-      state.overlappingNoteIds.set(
-        trackId,
-        getOverlappingNoteIds(selectedTrack.notes),
-      );
     },
   },
 
@@ -667,11 +633,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       selectedTrack.notes = selectedTrack.notes.filter((value) => {
         return !noteIdsSet.has(value.id);
       });
-
-      state.overlappingNoteIds.set(
-        trackId,
-        getOverlappingNoteIds(selectedTrack.notes),
-      );
     },
   },
 
@@ -693,14 +654,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  SELECT_ALL_NOTES_IN_SELECTED_TRACK: {
-    mutation(state) {
-      const selectedTrack = getSelectedTrackWithFallback(state);
-      const allNoteIds = selectedTrack.notes.map((note) => note.id);
-      state._selectedNoteIds = new Set(allNoteIds);
-    },
-    async action({ commit }) {
-      commit("SELECT_ALL_NOTES_IN_SELECTED_TRACK");
+  SELECT_ALL_NOTES_IN_TRACK: {
+    async action({ state, commit }, { trackId }) {
+      const track = getOrThrow(state.tracks, trackId);
+      const noteIds = track.notes.map((note) => note.id);
+      commit("DESELECT_ALL_NOTES");
+      commit("SELECT_NOTES", { noteIds });
     },
   },
 
@@ -1089,7 +1048,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     mutation(state, { trackId, track }) {
       state.tracks.set(trackId, track);
       state.trackOrder.push(trackId);
-      state.overlappingNoteIds.set(trackId, new Set());
     },
     action({ state, commit, dispatch }, { trackId, track }) {
       if (state.tracks.has(trackId)) {
@@ -1109,7 +1067,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.tracks.delete(trackId);
       const trackIndex = state.trackOrder.indexOf(trackId);
       state.trackOrder = state.trackOrder.filter((value) => value !== trackId);
-      state.overlappingNoteIds.delete(trackId);
       if (state._selectedTrackId === trackId) {
         state._selectedTrackId =
           state.trackOrder[trackIndex === 0 ? 0 : trackIndex - 1];
@@ -1142,7 +1099,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   SET_TRACK: {
     mutation(state, { trackId, track }) {
       state.tracks.set(trackId, track);
-      state.overlappingNoteIds.set(trackId, new Set());
     },
     async action({ state, commit, dispatch }, { trackId, track }) {
       if (!isValidTrack(track)) {
@@ -1153,29 +1109,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
 
       commit("SET_TRACK", { trackId, track });
-      // 色々な処理を動かすため、二重にセットする
-      // TODO: もっとスマートな方法を考える
-      await dispatch("SET_SINGER", {
-        singer: track.singer,
-        trackId,
-      });
-      await dispatch("SET_KEY_RANGE_ADJUSTMENT", {
-        keyRangeAdjustment: track.keyRangeAdjustment,
-        trackId,
-      });
-      await dispatch("SET_VOLUME_RANGE_ADJUSTMENT", {
-        volumeRangeAdjustment: track.volumeRangeAdjustment,
-        trackId,
-      });
-      await dispatch("SET_NOTES", { notes: track.notes, trackId });
-      await dispatch("CLEAR_PITCH_EDIT_DATA", {
-        trackId,
-      }); // FIXME: SET_PITCH_EDIT_DATAがセッターになれば不要
-      await dispatch("SET_PITCH_EDIT_DATA", {
-        pitchArray: track.pitchEditData,
-        startFrame: 0,
-        trackId,
-      });
+
+      dispatch("RENDER");
     },
   },
 
@@ -1183,12 +1118,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     mutation(state, { tracks }) {
       state.tracks = tracks;
       state.trackOrder = Array.from(tracks.keys());
-      state.overlappingNoteIds = new Map(
-        [...tracks.keys()].map((trackId) => [trackId, new Set()]),
-      );
-      state.overlappingNoteInfos = new Map(
-        [...tracks.keys()].map((trackId) => [trackId, new Map()]),
-      );
       state._selectedTrackId = state.trackOrder[0];
     },
     async action({ commit, dispatch }, { tracks }) {
@@ -1197,11 +1126,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       commit("SET_TRACKS", { tracks });
 
-      for (const [trackId, track] of tracks) {
-        // 色々な処理を動かすため、二重にセットする
-        // TODO: もっとスマートな方法を考える
-        await dispatch("SET_TRACK", { trackId, track });
-      }
+      dispatch("RENDER");
     },
   },
 
@@ -1548,21 +1473,47 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const transportRef = transport;
 
         // レンダリング中に変更される可能性のあるデータをコピーする
-        const tracks = structuredClone(toRaw(state.tracks));
-        const trackChannelStripsRef = new Map(trackChannelStrips);
+        const tracks = cloneWithUnwrapProxy(state.tracks);
 
-        const trackIdsInTracks = new Set(tracks.keys());
-        const trackIdsInTrackChannelStrips = new Set(
-          trackChannelStripsRef.keys(),
+        const overlappingNoteIdsMap = new Map(
+          [...tracks.keys()].map((trackId) => [
+            trackId,
+            getters.OVERLAPPING_NOTE_IDS(trackId),
+          ]),
         );
-        // どちらかにしか存在しないtrackIdがある場合はエラーを投げる
-        if (
-          trackIdsInTracks.symmetricDifference(trackIdsInTrackChannelStrips)
-            .size > 0
-        ) {
-          throw new Error(
-            `The track ids are different: ${trackIdsInTracks} | ${trackIdsInTrackChannelStrips}`,
-          );
+
+        // trackChannelStripsを同期する。
+        // ここで更新されたChannelStripに既存のAudioPlayerなどを繋げる必要がある。
+        // そのため、Phraseが変わっていなくてもPhraseの更新=AudioPlayerなどの再接続は毎回行う必要がある。
+        // trackChannelStripsを同期した後、フレーズの更新が完了するまではreturnやthrowをしないこと。
+        // TODO: 良い設計を考える
+        // ref: https://github.com/VOICEVOX/voicevox/pull/2176#discussion_r1693991784
+
+        const shouldPlays = shouldPlayTracks(tracks);
+        for (const [trackId, track] of tracks) {
+          if (!trackChannelStrips.has(trackId)) {
+            const channelStrip = new ChannelStrip(audioContext);
+            channelStrip.output.connect(mainChannelStrip.input);
+            trackChannelStrips.set(trackId, channelStrip);
+          }
+
+          const channelStrip = getOrThrow(trackChannelStrips, trackId);
+          channelStrip.volume = state.experimentalSetting.enableMultiTrack
+            ? track.gain
+            : 1;
+          channelStrip.pan = state.experimentalSetting.enableMultiTrack
+            ? track.pan
+            : 0;
+          channelStrip.mute = state.experimentalSetting.enableMultiTrack
+            ? !shouldPlays.has(trackId)
+            : false;
+        }
+        for (const trackId of trackChannelStrips.keys()) {
+          if (!tracks.has(trackId)) {
+            const channelStrip = getOrThrow(trackChannelStrips, trackId);
+            channelStrip.output.disconnect();
+            trackChannelStrips.delete(trackId);
+          }
         }
 
         const singerAndFrameRates = new Map(
@@ -1594,10 +1545,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           }
 
           // 重なっているノートを削除する
-          const overlappingNoteIds = getOrThrow(
-            state.overlappingNoteIds,
-            trackId,
-          );
+          const overlappingNoteIds = getOrThrow(overlappingNoteIdsMap, trackId);
           const notes = track.notes.filter(
             (value) => !overlappingNoteIds.has(value.id),
           );
@@ -1762,10 +1710,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               instrument: polySynth,
               noteEvents,
             };
-            const channelStrip = getOrThrow(
-              trackChannelStripsRef,
-              phrase.trackId,
-            );
+            const channelStrip = getOrThrow(trackChannelStrips, phrase.trackId);
             polySynth.output.connect(channelStrip.input);
             transportRef.addSequence(noteSequence);
             sequences.set(phraseKey, noteSequence);
@@ -1970,10 +1915,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               audioPlayer,
               audioEvents,
             };
-            const channelStrip = getOrThrow(
-              trackChannelStripsRef,
-              phrase.trackId,
-            );
+            const channelStrip = getOrThrow(trackChannelStrips, phrase.trackId);
             audioPlayer.output.connect(channelStrip.input);
             transportRef.addSequence(audioSequence);
             sequences.set(phraseKey, audioSequence);
@@ -2140,6 +2082,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             sampleRate,
             renderDuration,
             withLimiter,
+            state.experimentalSetting.enableMultiTrack,
             state.tracks,
             state.phrases,
             state.singingGuides,
@@ -2284,6 +2227,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         notes: notesToPaste,
         trackId: getters.SELECTED_TRACK_ID,
       });
+
       dispatch("RENDER");
       // 貼り付けたノートを選択する
       commit("DESELECT_ALL_NOTES");
@@ -2310,6 +2254,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         notes: quantizedNotes,
         trackId: getters.SELECTED_TRACK_ID,
       });
+
       dispatch("RENDER");
     },
   },
@@ -2338,8 +2283,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const track = getOrThrow(state.tracks, trackId);
       track.mute = mute;
     },
-    action({ commit }, { trackId, mute }) {
+    action({ commit, dispatch }, { trackId, mute }) {
       commit("SET_TRACK_MUTE", { trackId, mute });
+
+      dispatch("RENDER");
     },
   },
 
@@ -2348,8 +2295,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const track = getOrThrow(state.tracks, trackId);
       track.solo = solo;
     },
-    action({ commit }, { trackId, solo }) {
+    action({ commit, dispatch }, { trackId, solo }) {
       commit("SET_TRACK_SOLO", { trackId, solo });
+
+      dispatch("RENDER");
     },
   },
 
@@ -2358,8 +2307,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const track = getOrThrow(state.tracks, trackId);
       track.gain = gain;
     },
-    action({ commit }, { trackId, gain }) {
+    action({ commit, dispatch }, { trackId, gain }) {
       commit("SET_TRACK_GAIN", { trackId, gain });
+
+      dispatch("RENDER");
     },
   },
 
@@ -2368,8 +2319,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const track = getOrThrow(state.tracks, trackId);
       track.pan = pan;
     },
-    action({ commit }, { trackId, pan }) {
+    action({ commit, dispatch }, { trackId, pan }) {
       commit("SET_TRACK_PAN", { trackId, pan });
+
+      dispatch("RENDER");
     },
   },
 
@@ -2688,8 +2641,10 @@ export const singingCommandStore = transformCommandStore(
       mutation(draft, { trackId }) {
         singingStore.mutations.DELETE_TRACK(draft, { trackId });
       },
-      action({ commit }, { trackId }) {
+      action({ commit, dispatch }, { trackId }) {
         commit("COMMAND_DELETE_TRACK", { trackId });
+
+        dispatch("RENDER");
       },
     },
 
@@ -2706,8 +2661,10 @@ export const singingCommandStore = transformCommandStore(
       mutation(draft, { trackId, mute }) {
         singingStore.mutations.SET_TRACK_MUTE(draft, { trackId, mute });
       },
-      action({ commit }, { trackId, mute }) {
+      action({ commit, dispatch }, { trackId, mute }) {
         commit("COMMAND_SET_TRACK_MUTE", { trackId, mute });
+
+        dispatch("RENDER");
       },
     },
 
@@ -2715,8 +2672,10 @@ export const singingCommandStore = transformCommandStore(
       mutation(draft, { trackId, solo }) {
         singingStore.mutations.SET_TRACK_SOLO(draft, { trackId, solo });
       },
-      action({ commit }, { trackId, solo }) {
+      action({ commit, dispatch }, { trackId, solo }) {
         commit("COMMAND_SET_TRACK_SOLO", { trackId, solo });
+
+        dispatch("RENDER");
       },
     },
 
@@ -2724,8 +2683,10 @@ export const singingCommandStore = transformCommandStore(
       mutation(draft, { trackId, gain }) {
         singingStore.mutations.SET_TRACK_GAIN(draft, { trackId, gain });
       },
-      action({ commit }, { trackId, gain }) {
+      action({ commit, dispatch }, { trackId, gain }) {
         commit("COMMAND_SET_TRACK_GAIN", { trackId, gain });
+
+        dispatch("RENDER");
       },
     },
 
@@ -2733,8 +2694,10 @@ export const singingCommandStore = transformCommandStore(
       mutation(draft, { trackId, pan }) {
         singingStore.mutations.SET_TRACK_PAN(draft, { trackId, pan });
       },
-      action({ commit }, { trackId, pan }) {
+      action({ commit, dispatch }, { trackId, pan }) {
         commit("COMMAND_SET_TRACK_PAN", { trackId, pan });
+
+        dispatch("RENDER");
       },
     },
 
@@ -2778,21 +2741,30 @@ export const singingCommandStore = transformCommandStore(
           trackId: TrackId;
           overwrite: boolean;
         }[] = [];
-        for (const [i, track] of tracks.entries()) {
-          if (!isValidTrack(track)) {
-            throw new Error("The track is invalid.");
+        if (state.experimentalSetting.enableMultiTrack) {
+          for (const [i, track] of tracks.entries()) {
+            if (!isValidTrack(track)) {
+              throw new Error("The track is invalid.");
+            }
+            // 空のプロジェクトならトラックを上書きする
+            if (i === 0 && isTracksEmpty([...state.tracks.values()])) {
+              payload.push({
+                track,
+                trackId: getters.SELECTED_TRACK_ID,
+                overwrite: true,
+              });
+            } else {
+              const { trackId } = await dispatch("CREATE_TRACK");
+              payload.push({ track, trackId, overwrite: false });
+            }
           }
-          // 空のプロジェクトならトラックを上書きする
-          if (i === 0 && isTracksEmpty([...state.tracks.values()])) {
-            payload.push({
-              track,
-              trackId: getters.SELECTED_TRACK_ID,
-              overwrite: true,
-            });
-          } else {
-            const { trackId } = await dispatch("CREATE_TRACK");
-            payload.push({ track, trackId, overwrite: false });
-          }
+        } else {
+          // マルチトラックが無効な場合は最初のトラックのみをインポートする
+          payload.push({
+            track: tracks[0],
+            trackId: getters.SELECTED_TRACK_ID,
+            overwrite: true,
+          });
         }
 
         commit("COMMAND_IMPORT_TRACKS", {

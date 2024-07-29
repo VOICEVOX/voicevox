@@ -54,7 +54,7 @@ const pitchEditData = computed(() => {
   return store.getters.SELECTED_TRACK.pitchEditData;
 });
 const previewPitchEdit = computed(() => props.previewPitchEdit);
-const selectedTrackId = computed(() => store.state.selectedTrackId);
+const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
 const editFrameRate = computed(() => store.state.editFrameRate);
 const singingGuidesInSelectedTrack = computed(() => {
   const singingGuides = [];

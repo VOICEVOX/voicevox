@@ -1,4 +1,4 @@
-import { InjectionKey, Plugin } from "vue";
+import { InjectionKey } from "vue";
 import { createStore, Store, useStore as baseUseStore } from "./vuex";
 
 import {
@@ -23,7 +23,6 @@ import {
   singingStore,
   singingCommandStoreState,
   singingCommandStore,
-  singingStorePlugin,
 } from "./singing";
 import { projectStoreState, projectStore } from "./project";
 import { uiStoreState, uiStore } from "./ui";
@@ -412,16 +411,6 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
   },
   strict: !isProduction,
 });
-
-// Storeをwatchするためのプラグインをまとめたもの。
-export const watchStoreStatePlugin: Plugin = {
-  install(
-    app,
-    { store }: { store: Store<State, AllGetters, AllActions, AllMutations> },
-  ) {
-    singingStorePlugin(store);
-  },
-};
 
 export const useStore = (): Store<
   State,

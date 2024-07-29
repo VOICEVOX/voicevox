@@ -134,8 +134,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         await context.dispatch("CLEAR_PITCH_EDIT_DATA", { trackId });
 
         context.commit("SET_PROJECT_FILEPATH", { filePath: undefined });
-        context.commit("RESET_SAVED_LAST_COMMAND_IDS");
-        context.commit("CLEAR_COMMANDS");
+        context.dispatch("CLEAR_UNDO_HISTORY");
       },
     ),
   },
@@ -170,7 +169,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
      */
     action: createUILockAction(
       async (
-        { dispatch, commit, getters },
+        { dispatch, commit, state, getters },
         { filePath, confirm }: { filePath?: string; confirm?: boolean },
       ) => {
         if (!filePath) {
@@ -199,6 +198,20 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             projectJson: text,
           });
 
+          if (
+            !state.experimentalSetting.enableMultiTrack &&
+            parsedProjectData.song.trackOrder.length > 1
+          ) {
+            await window.backend.showMessageDialog({
+              type: "error",
+              title: "エラー",
+              message:
+                "このプロジェクトはマルチトラック機能を使用して作成されていますが、現在の設定ではマルチトラック機能を使用できません。\n" +
+                "設定の「ソング：マルチトラック機能」を有効にしてからプロジェクトを読み込んでください。",
+            });
+            return false;
+          }
+
           if (confirm !== false && getters.IS_EDITED) {
             const result = await dispatch("SAVE_OR_DISCARD_PROJECT_FILE", {
               additionalMessage:
@@ -213,8 +226,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           await applySongProjectToStore(dispatch, parsedProjectData.song);
 
           commit("SET_PROJECT_FILEPATH", { filePath });
-          commit("RESET_SAVED_LAST_COMMAND_IDS");
-          commit("CLEAR_COMMANDS");
+          dispatch("CLEAR_UNDO_HISTORY");
           return true;
         } catch (err) {
           window.backend.logError(err);
@@ -399,6 +411,13 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
   RESET_SAVED_LAST_COMMAND_IDS: {
     mutation(state) {
       state.savedLastCommandIds = { talk: null, song: null };
+    },
+  },
+
+  CLEAR_UNDO_HISTORY: {
+    action({ commit }) {
+      commit("RESET_SAVED_LAST_COMMAND_IDS");
+      commit("CLEAR_COMMANDS");
     },
   },
 });
