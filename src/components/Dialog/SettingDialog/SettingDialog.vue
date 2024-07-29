@@ -527,7 +527,7 @@
               />
               <ToggleCell
                 title="ソング：マルチトラック機能"
-                description="ONの場合、一つのプロジェクト内に複数のトラックを作成できるようになります。"
+                description="ONの場合、１つのプロジェクト内に複数のトラックを作成できるようにします。"
                 :modelValue="experimentalSetting.enableMultiTrack"
                 :disable="!canToggleMultiTrack"
                 @update:modelValue="setMultiTrack($event)"

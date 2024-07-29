@@ -1100,7 +1100,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     mutation(state, { trackId, track }) {
       state.tracks.set(trackId, track);
     },
-    async action({ state, dispatch, commit }, { trackId, track }) {
+    async action({ state, commit, dispatch }, { trackId, track }) {
       if (!isValidTrack(track)) {
         throw new Error("The track is invalid.");
       }
@@ -1483,7 +1483,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         );
 
         // trackChannelStripsを同期する。
-        //
         // ここで更新されたChannelStripに既存のAudioPlayerなどを繋げる必要がある。
         // そのため、Phraseが変わっていなくてもPhraseの更新=AudioPlayerなどの再接続は毎回行う必要がある。
         // trackChannelStripsを同期した後、フレーズの更新が完了するまではreturnやthrowをしないこと。
@@ -1495,7 +1494,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           if (!trackChannelStrips.has(trackId)) {
             const channelStrip = new ChannelStrip(audioContext);
             channelStrip.output.connect(mainChannelStrip.input);
-
             trackChannelStrips.set(trackId, channelStrip);
           }
 
