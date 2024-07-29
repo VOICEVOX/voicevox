@@ -334,8 +334,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         selectedTrack.notes.map((note) => note.id),
       );
 
-      // toRawを1回挟まないとintersectionがエラーを返す
-      return toRaw(state._selectedNoteIds).intersection(noteIdsInSelectedTrack);
+      // そのままSet#intersectionを呼ぶとVueのバグでエラーになるため、new Set()でProxyなしのSetを作成する
+      // TODO: https://github.com/vuejs/core/issues/11398 が解決したら修正する
+      return new Set(state._selectedNoteIds).intersection(
+        noteIdsInSelectedTrack,
+      );
     },
   },
 
