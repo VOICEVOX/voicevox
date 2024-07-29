@@ -525,7 +525,7 @@ onUnmounted(() => {
 }
 
 .sing-toolbar {
-  background: var(--scheme-color-sing-toolbar-container);
+  background: var(--scheme-color-surface-container-high);
   align-items: center;
   display: flex;
   justify-content: space-between;
@@ -751,7 +751,7 @@ onUnmounted(() => {
   width: 72px;
 
   :deep(.q-slider__track) {
-    background: var(--scheme-color-secondary-container);
+    background: var(--scheme-color-surface-container);
     color: var(--scheme-color-secondary-fixed);
   }
 

@@ -1445,7 +1445,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 .sequencer-corner {
   grid-row: 1;
   grid-column: 1;
-  background: var(--scheme-color-surface-container-high);
+  background: var(--scheme-color-surface-container-low);
 }
 
 .sequencer-ruler {
@@ -1569,7 +1569,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   width: 80px;
 
   :deep(.q-slider__track) {
-    background: var(--scheme-color-surface-variant);
+    background: var(--scheme-color-surface-container);
     color: var(--scheme-color-secondary-fixed);
   }
 
@@ -1594,7 +1594,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   height: 80px;
 
   :deep(.q-slider__track) {
-    background: var(--scheme-color-surface-variant);
+    background: var(--scheme-color-surface-container);
     color: var(--scheme-color-secondary-fixed);
   }
 

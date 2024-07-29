@@ -34,42 +34,42 @@ const className = computed(() => {
   background-color: var(--scheme-color-background);
   background-image: linear-gradient(
     to right,
-    --scheme-color-secondary-container,
-    --scheme-color-secondary-container
+    --scheme-color-primary-fixed-dim,
+    --scheme-color-primary-fixed-dim
   );
 }
 
 .now-rendering {
-  border: 1px solid --scheme-color-secondary-container;
-  background-color: var(--scheme-color-surface);
+  border: 1px solid --scheme-color-primary-fixed-dim;
+  background-color: var(--scheme-color-background);
   background-size: 28px 28px;
   background-image: linear-gradient(
     -45deg,
-    var(--scheme-color-secondary-container) 25%,
+    var(--scheme-color-primary-fixed-dim) 25%,
     color-mix(
         in oklch,
-        var(--scheme-color-secondary-container) 36%,
-        var(--scheme-color-surface)
+        var(--scheme-color-primary-fixed-dim) 36%,
+        var(--scheme-color-background)
       )
       25%,
     color-mix(
         in oklch,
-        var(--scheme-color-secondary-container) 36%,
-        var(--scheme-color-surface)
+        var(--scheme-color-primary-fixed-dim) 36%,
+        var(--scheme-color-background)
       )
       50%,
-    var(--scheme-color-secondary-container) 50%,
-    var(--scheme-color-secondary-container) 75%,
+    var(--scheme-color-primary-fixed-dim) 50%,
+    var(--scheme-color-primary-fixed-dim) 75%,
     color-mix(
         in oklch,
-        var(--scheme-color-secondary-container) 36%,
-        var(--scheme-color-surface)
+        var(--scheme-color-primary-fixed-dim) 36%,
+        var(--scheme-color-background)
       )
       75%,
     color-mix(
         in oklch,
-        var(--scheme-color-secondary-container) 36%,
-        var(--scheme-color-surface)
+        var(--scheme-color-primary-fixed-dim) 36%,
+        var(--scheme-color-background)
       )
       100%
   );

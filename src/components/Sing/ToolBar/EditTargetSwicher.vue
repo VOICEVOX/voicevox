@@ -52,7 +52,7 @@ defineProps<{
 
 <style scoped lang="scss">
 .edit-target-switcher {
-  background: var(--scheme-color-surface-container-high);
+  background: var(--scheme-color-surface-container-low);
   border-radius: 28px;
   padding: 4px;
 }

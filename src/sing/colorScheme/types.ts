@@ -1,4 +1,5 @@
 // OKLCH色空間の色情報(0-1) [l, c, h]
+// 内部的に利用
 export type OklchColor = readonly [number, number, number];
 
 // CSSカラー文字列 eg. #000000, oklch(0.12 0.03 40), rgb(0, 0, 0)
@@ -12,12 +13,13 @@ export type ColorRole =
   | "neutral"
   | "neutralVariant"
   | "error"
-  | "custom";
+  | string; // カスタムロール
 
 // カラー生成アルゴリズム
 export type ColorAlgorithm = (
   config: ColorSchemeConfig,
-  targetRole: ColorRole,
+  baseColor: OklchColor,
+  targetRole: ColorRole, // カラー生成の対象ロール
   shade: number,
 ) => OklchColor;
 
@@ -44,13 +46,13 @@ export interface CustomColorConfig {
   name: string;
   displayName: string;
   color: CSSColorString;
-  role: ColorRole;
+  targetRole?: ColorRole; // カラー生成ルールの対象ロール / 未指定の場合はprimary
 }
 
 // カラーパレット
 export interface ColorPalette {
-  name: ColorRole | string;
-  shades: Record<number, string>;
+  name: ColorRole;
+  shades: Record<number, OklchColor>;
 }
 
 // 出力・保持するカラースキーム

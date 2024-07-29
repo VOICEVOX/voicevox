@@ -33,35 +33,16 @@ export const adjustLightness = (
 // カラー生成アルゴリズム
 export const defaultAlgorithm: ColorAlgorithm = (
   config: ColorSchemeConfig,
+  baseColor: OklchColor,
   targetRole: ColorRole,
   shade: number,
 ): OklchColor => {
-  const primaryColorString = config.baseColors.primary;
-  if (!primaryColorString) {
-    throw new Error(
-      "Primary color must be defined in the color scheme config.",
-    );
-  }
-
-  let baseColorString = config.baseColors[targetRole] || primaryColorString;
-  if (config.customColors) {
-    const customColor = config.customColors.find(
-      (color) => color.role === targetRole,
-    );
-    if (customColor) {
-      baseColorString = customColor.color;
-    }
-  }
-  if (!baseColorString) {
-    throw new Error(`Color for role ${targetRole} is not defined.`);
-  }
-
-  const baseH = fromCssString(baseColorString)[2];
+  const [, baseC, baseH] = baseColor;
   const targetL = shade;
   let targetC: number;
   let targetH: number;
 
-  const defaultC = 0.115;
+  const defaultC = Math.max(baseC, 0.115);
 
   switch (targetRole) {
     case "primary":
@@ -69,12 +50,12 @@ export const defaultAlgorithm: ColorAlgorithm = (
       targetH = baseH;
       break;
     case "secondary":
-      targetC = defaultC / 2.5;
+      targetC = defaultC / 3;
       targetH = baseH;
       break;
     case "tertiary":
       targetC = defaultC;
-      targetH = (baseH + 120) % 360;
+      targetH = (baseH - 60) % 360;
       break;
     case "neutral":
       targetC = 0.0;
@@ -85,15 +66,12 @@ export const defaultAlgorithm: ColorAlgorithm = (
       targetH = baseH;
       break;
     case "error":
-      targetC = defaultC * 1.5;
-      targetH = baseH % 360 || 30;
-      break;
-    case "custom":
-      targetC = 0;
-      targetH = baseH;
+      targetC = defaultC * 1.2;
+      targetH = 30;
       break;
     default:
-      throw new Error(`Invalid color role: ${targetRole}`);
+      targetC = defaultC;
+      targetH = baseH;
   }
 
   return [targetL, targetC, targetH];
@@ -102,12 +80,13 @@ export const defaultAlgorithm: ColorAlgorithm = (
 // PALETTE_SHADESから固定明度パレットを生成
 export const generatePalette = (
   config: ColorSchemeConfig,
+  baseColor: OklchColor,
   role: ColorRole,
   algorithm: ColorAlgorithm,
 ): ColorPalette => {
-  const shades: Record<number, string> = {};
+  const shades: Record<number, OklchColor> = {};
   PALETTE_SHADES.forEach((shade: number) => {
-    shades[shade] = toCssString(algorithm(config, role, shade));
+    shades[shade] = algorithm(config, baseColor, role, shade);
   });
   return { name: role, shades };
 };
@@ -115,6 +94,7 @@ export const generatePalette = (
 // ロールごとのカラーを生成
 export const generateRoles = (
   config: ColorSchemeConfig,
+  baseColor: OklchColor,
   roleConfig: {
     name: string;
     role: ColorRole;
@@ -122,12 +102,12 @@ export const generateRoles = (
     darkShade: number;
   }[],
   algorithm: ColorAlgorithm,
-): Record<ColorRole | string, { light: OklchColor; dark: OklchColor }> => {
+): Record<string, { light: OklchColor; dark: OklchColor }> => {
   return roleConfig.reduce(
     (roles, { name, role, lightShade, darkShade }) => {
       roles[name] = {
-        light: algorithm(config, role as ColorRole, lightShade),
-        dark: algorithm(config, role as ColorRole, darkShade),
+        light: algorithm(config, baseColor, role, lightShade),
+        dark: algorithm(config, baseColor, role, darkShade),
       };
       return roles;
     },
@@ -144,38 +124,50 @@ export const isValidColorSchemeConfig = (
 };
 
 // 設定からカラースキームを生成
+// カラースキーム生成
 export const generateColorSchemeFromConfig = (
   config: ColorSchemeConfig,
   algorithm: ColorAlgorithm = defaultAlgorithm,
 ): ColorScheme => {
-  if (!isValidColorSchemeConfig(config)) {
-    throw new Error("Invalid color scheme config.");
+  if (config.baseColors.primary == undefined) {
+    throw new Error("primary color is required");
   }
-
-  const definedRoles = generateRoles(config, DEFINED_COLOR_ROLES, algorithm);
+  const primaryColor = fromCssString(config.baseColors.primary);
+  const definedRoles = generateRoles(
+    config,
+    primaryColor,
+    DEFINED_COLOR_ROLES,
+    algorithm,
+  );
   const aliasRoles = config.aliasColors
-    ? generateRoles(config, config.aliasColors, algorithm)
+    ? generateRoles(config, primaryColor, config.aliasColors, algorithm)
     : {};
 
   const customPalettes: Record<string, ColorPalette> = {};
   const customRoles: Record<string, { light: OklchColor; dark: OklchColor }> =
     {};
 
-  config.customColors?.forEach(({ name, role }) => {
-    customPalettes[name] = generatePalette(config, role, algorithm);
+  config.customColors?.forEach(({ name, color }) => {
+    const customBaseColor = fromCssString(color);
+    customPalettes[name] = generatePalette(
+      config,
+      customBaseColor,
+      name,
+      algorithm,
+    );
 
     const customColorRoleConfigs = [
       { variant: "", lightShade: 0.48, darkShade: 0.8 },
-      { variant: `${name}Container`, lightShade: 0.92, darkShade: 0.4 },
-      { variant: `${name}On`, lightShade: 1, darkShade: 0.32 },
-      { variant: `${name}OnContainer`, lightShade: 0.24, darkShade: 0.92 },
+      { variant: "Container", lightShade: 0.92, darkShade: 0.4 },
+      { variant: "On", lightShade: 1, darkShade: 0.32 },
+      { variant: "OnContainer", lightShade: 0.24, darkShade: 0.92 },
     ];
 
     customColorRoleConfigs.forEach(({ variant, lightShade, darkShade }) => {
-      const roleName = variant || name;
+      const roleName = `${name}${variant}`;
       customRoles[roleName] = {
-        light: algorithm(config, role, lightShade),
-        dark: algorithm(config, role, darkShade),
+        light: algorithm(config, customBaseColor, "primary", lightShade),
+        dark: algorithm(config, customBaseColor, "primary", darkShade),
       };
     });
   });
@@ -192,6 +184,8 @@ export const generateColorSchemeFromConfig = (
 // カラースキームからCSS Variables生成
 export const cssVariablesFromColorScheme = (
   colorScheme: ColorScheme,
+  withPalette: boolean = false,
+  prefix: string = "--scheme-color-",
 ): Record<string, string> => {
   const toKebabCase = (str: string) => {
     return str.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
@@ -199,14 +193,26 @@ export const cssVariablesFromColorScheme = (
 
   return Object.entries(colorScheme.roles).reduce(
     (cssVars, [key, value]) => {
-      cssVars[`--scheme-color-${toKebabCase(key)}-light`] = toCssString(
+      cssVars[`${prefix}${toKebabCase(key)}-light`] = toCssString(
         value.light,
         "oklch",
       );
-      cssVars[`--scheme-color-${toKebabCase(key)}-dark`] = toCssString(
+      cssVars[`${prefix}${toKebabCase(key)}-dark`] = toCssString(
         value.dark,
         "oklch",
       );
+      if (withPalette) {
+        Object.entries(colorScheme.palettes).forEach(
+          ([paletteName, palette]) => {
+            Object.entries(palette.shades).forEach(([shade, color]) => {
+              const shadeName = Number(shade) * 100;
+              cssVars[
+                `${prefix}${toKebabCase(key)}-palette-${paletteName}-${shadeName}`
+              ] = toCssString(color, "oklch");
+            });
+          },
+        );
+      }
       return cssVars;
     },
     {} as Record<string, string>,

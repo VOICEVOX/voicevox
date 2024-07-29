@@ -7,18 +7,11 @@
   },
   "aliasColors": [
     {
-      "name": "singToolbarContainer",
-      "displayName": "ツールバーコンテナ",
-      "role": "neutral",
-      "lightShade": 0.99,
-      "darkShade": 0.24
-    },
-    {
       "name": "singGridCellWhite",
       "displayName": "シーケンサグリッド(白鍵)",
       "role": "neutral",
       "lightShade": 1.0,
-      "darkShade": 0.28
+      "darkShade": 0.26
     },
     {
       "name": "singGridCellBlack",
@@ -32,150 +25,124 @@
       "displayName": "シーケンサグリッド(縦線)",
       "role": "neutral",
       "lightShade": 0.92,
-      "darkShade": 0.20
+      "darkShade": 0.21
     },
     {
       "name": "singGridHorizontalLine",
       "displayName": "シーケンサグリッド(横線)",
       "role": "neutral",
       "lightShade": 0.92,
-      "darkShade": 0.20
+      "darkShade": 0.21
     },
     {
       "name": "singGridMeasureLine",
       "displayName": "シーケンサグリッド(小節線)",
       "role": "neutral",
-      "lightShade": 0.84,
-      "darkShade": 0.4
+      "lightShade": 0.85,
+      "darkShade": 0.35
     },
     {
       "name": "singGridBeatLine",
       "displayName": "シーケンサグリッド(拍線)",
       "role": "neutral",
-      "lightShade": 0.88,
-      "darkShade": 0
+      "lightShade": 0.9,
+      "darkShade": 0.16
     },
     {
       "name": "singGridOctaveLine",
       "displayName": "シーケンサグリッド(オクターブ線)",
       "role": "neutral",
-      "lightShade": 0.84,
-      "darkShade": 0.4
+      "lightShade": 0.85,
+      "darkShade": 0.35
     },
     {
       "name": "singRulerMeasureLine",
       "displayName": "ルーラー(小節線)",
       "role": "neutralVariant",
-      "lightShade": 0.64,
-      "darkShade": 0.64
+      "lightShade": 0.65,
+      "darkShade": 0.65
     },
     {
       "name": "singRulerBeatLine",
       "displayName": "ルーラー(拍線)",
       "role": "neutralVariant",
-      "lightShade": 0.72,
-      "darkShade": 0.48
+      "lightShade": 0.7,
+      "darkShade": 0.5
     },
     {
       "name": "singPianoKeyWhite",
       "displayName": "ピアノキー(白鍵)",
       "role": "neutral",
       "lightShade": 0.99,
-      "darkShade": 0.72
+      "darkShade": 0.7
     },
     {
       "name": "singPianoKeyBlack",
       "displayName": "ピアノキー(黒鍵)",
       "role": "neutral",
-      "lightShade": 0.48,
-      "darkShade": 0.32
+      "lightShade": 0.5,
+      "darkShade": 0.3
     },
     {
       "name": "singNoteBarContainer",
       "displayName": "ノートコンテナ",
       "role": "secondary",
-      "lightShade": 0.92,
+      "lightShade": 0.9,
       "darkShade": 0.8
+    },
+    {
+      "name": "singToolbarContainer",
+      "displayName": "ツールバーコンテナ",
+      "role": "neutral",
+      "lightShade": 0.99,
+      "darkShade": 0.24
     }
   ],
   "customColors": [
     {
       "name": "link",
       "displayName": "リンク",
-      "color": "#0969da",
-      "role": "custom"
+      "color": "#0969da"
     },
     {
-      "name": "Hue0",
-      "displayName": "Hue0",
-      "color": "oklch(0.66 0.13 0)",
-      "role": "custom"
+      "name": "pink",
+      "displayName": "ピンク",
+      "color": "oklch(70% 0.13 0)"
     },
     {
-      "name": "Hue30",
-      "displayName": "Hue30",
-      "color": "oklch(0.66 0.13 30)",
-      "role": "custom"
+      "name": "orange",
+      "displayName": "オレンジ",
+      "color": "oklch(70% 0.13 45)"
     },
     {
-      "name": "Hue60",
-      "displayName": "Hue60",
-      "color": "oklch(0.66 0.13 60)",
-      "role": "custom"
+      "name": "yellow",
+      "displayName": "イエロー",
+      "color": "oklch(70% 0.13 90)"
     },
     {
-      "name": "Hue90",
-      "displayName": "Hue90",
-      "color": "oklch(0.66 0.13 90)",
-      "role": "custom"
+      "name": "green",
+      "displayName": "グリーン",
+      "color": "oklch(70% 0.13 135)"
     },
     {
-      "name": "Hue120",
-      "displayName": "Hue120",
-      "color": "oklch(0.66 0.13 120)",
-      "role": "custom"
+      "name": "teal",
+      "displayName": "ティール",
+      "color": "oklch(70% 0.13 180)"
     },
     {
-      "name": "Hue150",
-      "displayName": "Hue150",
-      "color": "oklch(0.66 0.13 150)",
-      "role": "custom"
+      "name": "skyblue",
+      "displayName": "スカイブルー",
+      "color": "oklch(70% 0.13 225)"
     },
     {
-      "name": "Hue180",
-      "displayName": "Hue180",
-      "color": "oklch(0.66 0.13 180)",
-      "role": "custom"
+      "name": "indigo",
+      "displayName": "インディゴ",
+      "color": "oklch(70% 0.13 270)"
     },
     {
-      "name": "Hue210",
-      "displayName": "Hue210",
-      "color": "oklch(0.66 0.13 210)",
-      "role": "custom"
-    },
-    {
-      "name": "Hue240",
-      "displayName": "Hue240",
-      "color": "oklch(0.66 0.13 240)",
-      "role": "custom"
-    },
-    {
-      "name": "Hue270",
-      "displayName": "Hue270",
-      "color": "oklch(0.66 0.13 270)",
-      "role": "custom"
-    },
-    {
-      "name": "Hue300",
-      "displayName": "Hue300",
-      "color": "oklch(0.66 0.13 300)",
-      "role": "custom"
-    },
-    {
-      "name": "Hue330",
-      "displayName": "Hue330",
-      "color": "oklch(0.66 0.13 330)",
-      "role": "custom"
+      "name": "purple",
+      "displayName": "パープル",
+      "color": "oklch(70% 0.13 315)"
     }
   ]
 }
