@@ -10,8 +10,8 @@ export const DEFINED_COLOR_ROLES: {
   {
     name: "primary",
     role: "primary",
-    lightShade: 0.5,
-    darkShade: 0.8,
+    lightShade: 0.55,
+    darkShade: 0.85,
   },
   {
     name: "onPrimary",
@@ -58,8 +58,8 @@ export const DEFINED_COLOR_ROLES: {
   {
     name: "secondary",
     role: "secondary",
-    lightShade: 0.5,
-    darkShade: 0.8,
+    lightShade: 0.55,
+    darkShade: 0.85,
   },
   {
     name: "onSecondary",
@@ -106,8 +106,8 @@ export const DEFINED_COLOR_ROLES: {
   {
     name: "tertiary",
     role: "tertiary",
-    lightShade: 0.5,
-    darkShade: 0.8,
+    lightShade: 0.55,
+    darkShade: 0.85,
   },
   {
     name: "onTertiary",
@@ -130,14 +130,14 @@ export const DEFINED_COLOR_ROLES: {
   {
     name: "tertiaryFixed",
     role: "tertiary",
-    lightShade: 0.8,
-    darkShade: 0.8,
+    lightShade: 0.85,
+    darkShade: 0.85,
   },
   {
     name: "tertiaryFixedDim",
     role: "tertiary",
-    lightShade: 0.7,
-    darkShade: 0.7,
+    lightShade: 0.75,
+    darkShade: 0.75,
   },
   {
     name: "onTertiaryFixed",
@@ -154,8 +154,8 @@ export const DEFINED_COLOR_ROLES: {
   {
     name: "error",
     role: "error",
-    lightShade: 0.5,
-    darkShade: 0.8,
+    lightShade: 0.55,
+    darkShade: 0.85,
   },
   {
     name: "onError",
