@@ -1,5 +1,6 @@
 import { computed } from "vue";
 import { useStore } from "@/store";
+import { isVst } from "@/type/preload";
 import { MenuItemData } from "@/components/Menu/type";
 
 export const useMenuBarData = () => {
@@ -20,15 +21,19 @@ export const useMenuBarData = () => {
   };
 
   const fileSubMenuData = computed<MenuItemData[]>(() => [
-    {
-      type: "button",
-      label: "音声を出力",
-      onClick: () => {
-        exportWaveFile();
-      },
-      disableWhenUiLocked: true,
-    },
-    { type: "separator" },
+    ...((isVst
+      ? []
+      : [
+          {
+            type: "button",
+            label: "音声を出力",
+            onClick: () => {
+              exportWaveFile();
+            },
+            disableWhenUiLocked: true,
+          },
+          { type: "separator" },
+        ]) satisfies MenuItemData[]),
     {
       type: "button",
       label: "インポート",
