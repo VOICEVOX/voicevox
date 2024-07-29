@@ -1100,7 +1100,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     mutation(state, { trackId, track }) {
       state.tracks.set(trackId, track);
     },
-    async action({ state, commit }, { trackId, track }) {
+    async action({ state, dispatch, commit }, { trackId, track }) {
       if (!isValidTrack(track)) {
         throw new Error("The track is invalid.");
       }
@@ -1109,6 +1109,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
 
       commit("SET_TRACK", { trackId, track });
+
+      dispatch("RENDER");
     },
   },
 
@@ -1118,11 +1120,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.trackOrder = Array.from(tracks.keys());
       state._selectedTrackId = state.trackOrder[0];
     },
-    async action({ commit }, { tracks }) {
+    async action({ commit, dispatch }, { tracks }) {
       if (![...tracks.values()].every((track) => isValidTrack(track))) {
         throw new Error("The track is invalid.");
       }
       commit("SET_TRACKS", { tracks });
+
+      dispatch("RENDER");
     },
   },
 
