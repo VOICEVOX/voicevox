@@ -318,7 +318,8 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     .note-bar {
       background-color: var(--scheme-color-primary-fixed);
       border-color: var(--scheme-color-primary-fixed-dim);
-      outline: 2px solid var(--scheme-color-surface-variant);
+      outline: 1px solid var(--scheme-color-primary-fixed);
+      outline-offset: 1px;
     }
 
     .note-lyric {

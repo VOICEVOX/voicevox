@@ -56,44 +56,47 @@ export const defaultAlgorithm: ColorAlgorithm = (
     throw new Error(`Color for role ${targetRole} is not defined.`);
   }
 
-  const [, , baseH] = fromCssString(baseColorString);
+  const baseH = fromCssString(baseColorString)[2];
+  const targetL = shade;
   let targetC: number;
   let targetH: number;
 
+  const defaultC = 0.115;
+
   switch (targetRole) {
     case "primary":
-      targetC = 0.12;
+      targetC = defaultC;
       targetH = baseH;
       break;
     case "secondary":
-      targetC = 0.04;
+      targetC = defaultC / 2.5;
       targetH = baseH;
       break;
     case "tertiary":
-      targetC = 0.12;
-      targetH = (baseH + 60) % 360;
+      targetC = defaultC;
+      targetH = (baseH + 120) % 360;
       break;
     case "neutral":
       targetC = 0.0;
       targetH = baseH;
       break;
     case "neutralVariant":
-      targetC = 0.015;
+      targetC = 0.01;
       targetH = baseH;
       break;
     case "error":
-      targetC = 0.15;
-      targetH = baseH % 360 || 60;
+      targetC = defaultC * 1.5;
+      targetH = baseH % 360 || 30;
       break;
     case "custom":
-      targetC = 0.12;
+      targetC = 0;
       targetH = baseH;
       break;
     default:
       throw new Error(`Invalid color role: ${targetRole}`);
   }
 
-  return [shade, targetC, targetH];
+  return [targetL, targetC, targetH];
 };
 
 // PALETTE_SHADESから固定明度パレットを生成

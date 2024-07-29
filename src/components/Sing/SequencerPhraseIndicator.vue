@@ -34,42 +34,42 @@ const className = computed(() => {
   background-color: var(--scheme-color-background);
   background-image: linear-gradient(
     to right,
-    --scheme-color-secondary-fixed,
-    --scheme-color-secondary-fixed
+    --scheme-color-secondary-container,
+    --scheme-color-secondary-container
   );
 }
 
 .now-rendering {
-  border: 1px solid --scheme-color-primary-fixed-dim;
-  background-color: var(--scheme-color-background);
-  background-size: 32px 32px;
+  border: 1px solid --scheme-color-secondary-container;
+  background-color: var(--scheme-color-surface);
+  background-size: 28px 28px;
   background-image: linear-gradient(
     -45deg,
-    var(--scheme-color-primary-fixed) 25%,
+    var(--scheme-color-secondary-container) 25%,
     color-mix(
         in oklch,
-        var(--scheme-color-primary-fixed) 36%,
-        var(--scheme-color-background)
+        var(--scheme-color-secondary-container) 36%,
+        var(--scheme-color-surface)
       )
       25%,
     color-mix(
         in oklch,
-        var(--scheme-color-primary-fixed) 36%,
-        var(--scheme-color-background)
+        var(--scheme-color-secondary-container) 36%,
+        var(--scheme-color-surface)
       )
       50%,
-    var(--scheme-color-primary-fixed) 50%,
-    var(--scheme-color-primary-fixed) 75%,
+    var(--scheme-color-secondary-container) 50%,
+    var(--scheme-color-secondary-container) 75%,
     color-mix(
         in oklch,
-        var(--scheme-color-primary-fixed) 36%,
-        var(--scheme-color-background)
+        var(--scheme-color-secondary-container) 36%,
+        var(--scheme-color-surface)
       )
       75%,
     color-mix(
         in oklch,
-        var(--scheme-color-primary-fixed) 36%,
-        var(--scheme-color-background)
+        var(--scheme-color-secondary-container) 36%,
+        var(--scheme-color-surface)
       )
       100%
   );
@@ -81,7 +81,7 @@ const className = computed(() => {
     background-position-x: 0;
   }
   to {
-    background-position-x: 32px;
+    background-position-x: 28px;
   }
 }
 
