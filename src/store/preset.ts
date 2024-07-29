@@ -1,5 +1,5 @@
-import { v4 as uuidv4 } from "uuid";
-import { createPartialStore } from "./vuex";
+import { createDotNotationPartialStore as createPartialStore } from "./vuex";
+import { uuid4 } from "@/helpers/random";
 import { PresetStoreState, PresetStoreTypes, State } from "@/store/type";
 import { Preset, PresetKey, Voice, VoiceId } from "@/type/preload";
 
@@ -106,11 +106,11 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
 
   SET_DEFAULT_PRESET_MAP: {
     action(
-      { commit },
+      { mutations },
       { defaultPresetKeys }: { defaultPresetKeys: Record<VoiceId, PresetKey> },
     ) {
       window.backend.setSetting("defaultPresetKeys", defaultPresetKeys);
-      commit("SET_DEFAULT_PRESET_MAP", { defaultPresetKeys });
+      mutations.SET_DEFAULT_PRESET_MAP({ defaultPresetKeys });
     },
     mutation(
       state,
@@ -121,14 +121,14 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
   },
 
   HYDRATE_PRESET_STORE: {
-    async action({ commit }) {
+    async action({ mutations }) {
       const defaultPresetKeys = (await window.backend.getSetting(
         "defaultPresetKeys",
         // z.BRAND型のRecordはPartialになる仕様なのでasで型を変換
         // TODO: 将来的にzodのバージョンを上げてasを消す https://github.com/colinhacks/zod/pull/2097
       )) as Record<VoiceId, PresetKey>;
 
-      commit("SET_DEFAULT_PRESET_MAP", {
+      mutations.SET_DEFAULT_PRESET_MAP({
         defaultPresetKeys,
       });
 
@@ -139,20 +139,20 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
         presetConfig.keys == undefined
       )
         return;
-      commit("SET_PRESET_ITEMS", {
+      mutations.SET_PRESET_ITEMS({
         // z.BRAND型のRecordはPartialになる仕様なのでasで型を変換
         // TODO: 将来的にzodのバージョンを上げてasを消す https://github.com/colinhacks/zod/pull/2097
         presetItems: presetConfig.items as Record<PresetKey, Preset>,
       });
-      commit("SET_PRESET_KEYS", {
+      mutations.SET_PRESET_KEYS({
         presetKeys: presetConfig.keys,
       });
     },
   },
 
   SAVE_PRESET_ORDER: {
-    action({ state, dispatch }, { presetKeys }: { presetKeys: PresetKey[] }) {
-      return dispatch("SAVE_PRESET_CONFIG", {
+    action({ state, actions }, { presetKeys }: { presetKeys: PresetKey[] }) {
+      return actions.SAVE_PRESET_CONFIG({
         presetItems: state.presetItems,
         presetKeys,
       });
@@ -171,25 +171,25 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
         items: JSON.parse(JSON.stringify(presetItems)),
         keys: JSON.parse(JSON.stringify(presetKeys)),
       });
-      context.commit("SET_PRESET_ITEMS", {
+      context.mutations.SET_PRESET_ITEMS({
         // z.BRAND型のRecordはPartialになる仕様なのでasで型を変換
         // TODO: 将来的にzodのバージョンを上げてasを消す https://github.com/colinhacks/zod/pull/2097
         presetItems: result.items as Record<PresetKey, Preset>,
       });
-      context.commit("SET_PRESET_KEYS", { presetKeys: result.keys });
+      context.mutations.SET_PRESET_KEYS({ presetKeys: result.keys });
     },
   },
 
   ADD_PRESET: {
     async action(context, { presetData }: { presetData: Preset }) {
-      const newKey = PresetKey(uuidv4());
+      const newKey = PresetKey(uuid4());
       const newPresetItems = {
         ...context.state.presetItems,
         [newKey]: presetData,
       };
       const newPresetKeys = [newKey, ...context.state.presetKeys];
 
-      await context.dispatch("SAVE_PRESET_CONFIG", {
+      await context.actions.SAVE_PRESET_CONFIG({
         presetItems: newPresetItems,
         presetKeys: newPresetKeys,
       });
@@ -199,8 +199,8 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
   },
 
   CREATE_ALL_DEFAULT_PRESET: {
-    async action({ state, dispatch, getters }) {
-      const voices = getters.GET_ALL_VOICES;
+    async action({ state, actions, getters }) {
+      const voices = getters.GET_ALL_VOICES("talk");
 
       for (const voice of voices) {
         const voiceId = VoiceId(voice);
@@ -221,9 +221,9 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
           prePhonemeLength: 0.1,
           postPhonemeLength: 0.1,
         };
-        const newPresetKey = await dispatch("ADD_PRESET", { presetData });
+        const newPresetKey = await actions.ADD_PRESET({ presetData });
 
-        await dispatch("SET_DEFAULT_PRESET_MAP", {
+        await actions.SET_DEFAULT_PRESET_MAP({
           defaultPresetKeys: {
             ...state.defaultPresetKeys,
             [voiceId]: newPresetKey,
@@ -246,7 +246,7 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
         ? [...context.state.presetKeys]
         : [presetKey, ...context.state.presetKeys];
 
-      await context.dispatch("SAVE_PRESET_CONFIG", {
+      await context.actions.SAVE_PRESET_CONFIG({
         presetItems: newPresetItems,
         presetKeys: newPresetKeys,
       });
@@ -261,7 +261,7 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
       // Filter the `presetKey` properties from presetItems.
       const { [presetKey]: _, ...newPresetItems } = context.state.presetItems;
 
-      await context.dispatch("SAVE_PRESET_CONFIG", {
+      await context.actions.SAVE_PRESET_CONFIG({
         presetItems: newPresetItems,
         presetKeys: newPresetKeys,
       });

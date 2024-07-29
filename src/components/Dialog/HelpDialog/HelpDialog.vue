@@ -2,84 +2,75 @@
   <QDialog
     v-model="modelValueComputed"
     maximized
-    transition-show="jump-up"
-    transition-hide="jump-down"
+    transitionShow="jump-up"
+    transitionHide="jump-down"
     class="help-dialog transparent-backdrop"
   >
     <QLayout container view="hHh Lpr lff">
-      <QDrawer
-        bordered
-        show-if-above
-        class="bg-background"
-        :model-value="true"
-        :width="250"
-        :breakpoint="0"
-      >
-        <div class="column full-height">
-          <QList>
-            <template v-for="(page, pageIndex) of pagedata" :key="pageIndex">
-              <QItem
-                v-if="page.type === 'item'"
-                v-ripple
-                clickable
-                active-class="selected-item"
-                :active="selectedPageIndex === pageIndex"
-                @click="selectedPageIndex = pageIndex"
-              >
-                <QItemSection> {{ page.name }} </QItemSection>
-              </QItem>
-              <template v-else-if="page.type === 'separator'">
-                <QSeparator />
-                <QItemLabel header>{{ page.name }}</QItemLabel>
+      <div class="grid">
+        <div class="list-wrapper">
+          <BaseScrollArea>
+            <div class="list-inner">
+              <template v-for="(page, pageIndex) of pagedata" :key="pageIndex">
+                <BaseListItem
+                  v-if="page.type === 'item'"
+                  :selected="selectedPageIndex === pageIndex"
+                  @click="selectedPageIndex = pageIndex"
+                >
+                  {{ page.name }}
+                </BaseListItem>
+                <div v-else-if="page.type === 'separator'" class="list-label">
+                  {{ page.name }}
+                </div>
               </template>
-            </template>
-          </QList>
+            </div>
+          </BaseScrollArea>
         </div>
-      </QDrawer>
 
-      <QPageContainer>
-        <QPage>
-          <QTabPanels v-model="selectedPageIndex">
-            <QTabPanel
-              v-for="(page, pageIndex) of pagedata"
-              :key="pageIndex"
-              :name="pageIndex"
-              class="q-pa-none"
-            >
-              <div v-if="page.type === 'item'" class="root">
-                <QHeader class="q-pa-sm">
-                  <QToolbar>
-                    <QToolbarTitle class="text-display">
-                      ヘルプ / {{ page.parent ? page.parent + " / " : ""
-                      }}{{ page.name }}
-                    </QToolbarTitle>
-                    <QBtn
-                      v-if="page.component === ContactInfo"
-                      unelevated
-                      color="toolbar-button"
-                      text-color="toolbar-button-display"
-                      class="text-no-wrap text-bold q-mr-sm"
-                      @click="openLogDirectory"
-                    >
-                      ログフォルダを開く
-                    </QBtn>
-                    <!-- close button -->
-                    <QBtn
-                      round
-                      flat
-                      icon="close"
-                      color="display"
-                      aria-label="ヘルプを閉じる"
-                      @click="modelValueComputed = false"
-                    />
-                  </QToolbar>
-                </QHeader>
-                <Component :is="page.component" v-bind="page.props" />
-              </div>
-            </QTabPanel>
-          </QTabPanels>
-        </QPage>
-      </QPageContainer>
+        <QPageContainer>
+          <QPage>
+            <QTabPanels v-model="selectedPageIndex">
+              <QTabPanel
+                v-for="(page, pageIndex) of pagedata"
+                :key="pageIndex"
+                :name="pageIndex"
+                class="q-pa-none"
+              >
+                <div v-if="page.type === 'item'" class="root">
+                  <QHeader class="q-pa-sm">
+                    <QToolbar>
+                      <QToolbarTitle class="text-display">
+                        ヘルプ / {{ page.parent ? page.parent + " / " : ""
+                        }}{{ page.name }}
+                      </QToolbarTitle>
+                      <QBtn
+                        v-if="page.shouldShowOpenLogDirectoryButton"
+                        unelevated
+                        color="toolbar-button"
+                        textColor="toolbar-button-display"
+                        class="text-no-wrap text-bold q-mr-sm"
+                        @click="openLogDirectory"
+                      >
+                        ログフォルダを開く
+                      </QBtn>
+                      <!-- close button -->
+                      <QBtn
+                        round
+                        flat
+                        icon="close"
+                        color="display"
+                        aria-label="ヘルプを閉じる"
+                        @click="modelValueComputed = false"
+                      />
+                    </QToolbar>
+                  </QHeader>
+                  <Component :is="page.component" v-bind="page.props" />
+                </div>
+              </QTabPanel>
+            </QTabPanels>
+          </QPage>
+        </QPageContainer>
+      </div>
     </QLayout>
   </QDialog>
 </template>
@@ -87,14 +78,12 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import type { Component } from "vue";
-import HelpPolicy from "./HelpPolicy.vue";
-import LibraryPolicy from "./LibraryPolicy.vue";
-import HowToUse from "./HowToUse.vue";
-import OssLicense from "./OssLicense.vue";
-import UpdateInfo from "./UpdateInfo.vue";
-import OssCommunityInfo from "./OssCommunityInfo.vue";
-import QAndA from "./QAndA.vue";
-import ContactInfo from "./ContactInfo.vue";
+import MarkdownView from "./HelpMarkdownViewSection.vue";
+import OssLicense from "./HelpOssLicenseSection.vue";
+import UpdateInfo from "./HelpUpdateInfoSection.vue";
+import LibraryPolicy from "./HelpLibraryPolicySection.vue";
+import BaseListItem from "@/components/Base/BaseListItem.vue";
+import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 import { UpdateInfo as UpdateInfoObject, UrlString } from "@/type/preload";
 import { useStore } from "@/store";
 import { useFetchNewUpdateInfos } from "@/composables/useFetchNewUpdateInfos";
@@ -106,6 +95,7 @@ type PageItem = {
   parent?: string;
   component: Component;
   props?: Record<string, unknown>;
+  shouldShowOpenLogDirectoryButton?: boolean;
 };
 type PageSeparator = {
   type: "separator";
@@ -149,14 +139,28 @@ store.dispatch("GET_OSS_LICENSES").then((obj) => (licenses.value = obj));
 const policy = ref<string>();
 store.dispatch("GET_POLICY_TEXT").then((obj) => (policy.value = obj));
 
+const howToUse = ref<string>();
+store.dispatch("GET_HOW_TO_USE_TEXT").then((obj) => (howToUse.value = obj));
+
+const ossCommunityInfos = ref<string>();
+store
+  .dispatch("GET_OSS_COMMUNITY_INFOS")
+  .then((obj) => (ossCommunityInfos.value = obj));
+
+const qAndA = ref<string>();
+store.dispatch("GET_Q_AND_A_TEXT").then((obj) => (qAndA.value = obj));
+
+const contact = ref<string>();
+store.dispatch("GET_CONTACT_TEXT").then((obj) => (contact.value = obj));
+
 const pagedata = computed(() => {
   const data: PageData[] = [
     {
       type: "item",
       name: "ソフトウェアの利用規約",
-      component: HelpPolicy,
+      component: MarkdownView,
       props: {
-        policy: policy.value,
+        markdown: policy.value,
       },
     },
     {
@@ -167,12 +171,18 @@ const pagedata = computed(() => {
     {
       type: "item",
       name: "使い方",
-      component: HowToUse,
+      component: MarkdownView,
+      props: {
+        markdown: howToUse.value,
+      },
     },
     {
       type: "item",
       name: "開発コミュニティ",
-      component: OssCommunityInfo,
+      component: MarkdownView,
+      props: {
+        markdown: ossCommunityInfos.value,
+      },
     },
     {
       type: "item",
@@ -203,12 +213,19 @@ const pagedata = computed(() => {
     {
       type: "item",
       name: "よくあるご質問",
-      component: QAndA,
+      component: MarkdownView,
+      props: {
+        markdown: qAndA.value,
+      },
     },
     {
       type: "item",
       name: "お問い合わせ",
-      component: ContactInfo,
+      component: MarkdownView,
+      props: {
+        markdown: contact.value,
+      },
+      shouldShowOpenLogDirectoryButton: true,
     },
   ];
   // エンジンが一つだけの場合は従来の表示のみ
@@ -229,9 +246,9 @@ const pagedata = computed(() => {
           type: "item",
           name: "利用規約",
           parent: manifest.name,
-          component: HelpPolicy,
+          component: MarkdownView,
           props: {
-            policy: manifest.termsOfService,
+            markdown: manifest.termsOfService,
           },
         },
         {
@@ -267,7 +284,34 @@ const openLogDirectory = window.backend.openLogDirectory;
 </script>
 
 <style scoped lang="scss">
-@use "@/styles/colors" as colors;
+@use "@/styles/v2/colors" as colors;
+@use "@/styles/v2/variables" as vars;
+
+.grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  backdrop-filter: blur(32px);
+  background-color: colors.$background-drawer;
+}
+
+// TODO: MenuBar+Header分のマージン。Dialogコンポーネント置き換え後削除
+.list-wrapper {
+  margin-top: 66px;
+  height: calc(100vh - 90px);
+  width: max-content;
+}
+
+.list-inner {
+  display: flex;
+  flex-direction: column;
+  padding: vars.$padding-2;
+}
+
+.list-label {
+  padding: vars.$padding-2;
+  padding-bottom: vars.$padding-1;
+  color: colors.$display-sub;
+}
 
 .help-dialog .q-layout-container :deep(.absolute-full) {
   right: 0 !important;
@@ -279,12 +323,7 @@ const openLogDirectory = window.backend.openLogDirectory;
   }
 }
 
-.selected-item {
-  background-color: rgba(colors.$primary-rgb, 0.4);
-  color: colors.$display;
-}
-
-.q-item__label {
-  padding: 8px 16px;
+.q-tab-panels {
+  background: none;
 }
 </style>

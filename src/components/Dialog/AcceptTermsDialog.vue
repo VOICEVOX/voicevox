@@ -2,8 +2,8 @@
   <QDialog
     v-model="modelValueComputed"
     maximized
-    transition-show="jump-up"
-    transition-hide="jump-down"
+    transitionShow="jump-up"
+    transitionHide="jump-down"
     class="accept-terms-dialog transparent-backdrop"
   >
     <QLayout container view="hHh Lpr lff" class="bg-background">
@@ -22,7 +22,7 @@
               unelevated
               label="同意せずに終了"
               color="toolbar-button"
-              text-color="toolbar-button-display"
+              textColor="toolbar-button-display"
               class="text-no-wrap q-mr-md text-bold"
               @click="handler(false)"
             />
@@ -31,7 +31,7 @@
               unelevated
               label="同意して使用開始"
               color="toolbar-button"
-              text-color="toolbar-button-display"
+              textColor="toolbar-button-display"
               class="text-no-wrap text-bold"
               @click="handler(true)"
             />

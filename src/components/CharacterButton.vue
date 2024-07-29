@@ -24,10 +24,10 @@
     </div>
     <QMenu
       class="character-menu"
-      transition-show="none"
-      transition-hide="none"
+      transitionShow="none"
+      transitionHide="none"
       :max-height="maxMenuHeight"
-      @before-show="updateMenuHeight"
+      @beforeShow="updateMenuHeight"
     >
       <QList style="min-width: max-content" class="character-item-container">
         <QItem
@@ -50,7 +50,7 @@
           <QBtn
             v-close-popup
             flat
-            no-caps
+            noCaps
             class="full-width"
             :class="selectedCharacter == undefined && 'selected-background'"
             @click="$emit('update:selectedVoice', undefined)"
@@ -68,7 +68,7 @@
             <QBtn
               v-close-popup
               flat
-              no-caps
+              noCaps
               class="col-grow"
               @click="onSelectSpeaker(characterInfo.metas.speakerUuid)"
               @mouseover="reassignSubMenuOpen(-1)"
@@ -77,11 +77,12 @@
               <QAvatar rounded size="2rem" class="q-mr-md">
                 <QImg
                   v-if="characterInfo"
-                  no-spinner
-                  no-transition
+                  noSpinner
+                  noTransition
                   :ratio="1"
                   :src="
-                    getDefaultStyle(characterInfo.metas.speakerUuid).iconPath
+                    getDefaultStyleWrapper(characterInfo.metas.speakerUuid)
+                      .iconPath
                   "
                 />
                 <QAvatar
@@ -92,7 +93,7 @@
                   <img
                     :src="
                       engineIcons[
-                        getDefaultStyle(characterInfo.metas.speakerUuid)
+                        getDefaultStyleWrapper(characterInfo.metas.speakerUuid)
                           .engineId
                       ]
                     "
@@ -120,11 +121,11 @@
                 <QIcon name="keyboard_arrow_right" color="grey-6" size="sm" />
                 <QMenu
                   v-model="subMenuOpenFlags[characterIndex]"
-                  no-parent-event
+                  noParentEvent
                   anchor="top end"
                   self="top start"
-                  transition-show="none"
-                  transition-hide="none"
+                  transitionShow="none"
+                  transitionHide="none"
                   class="character-menu"
                 >
                   <QList style="min-width: max-content">
@@ -133,7 +134,7 @@
                       :key="styleIndex"
                       v-close-popup
                       clickable
-                      active-class="selected-style-item"
+                      activeClass="selected-style-item"
                       :active="
                         selectedVoice != undefined &&
                         style.styleId === selectedVoice.styleId
@@ -153,8 +154,8 @@
                     >
                       <QAvatar rounded size="2rem" class="q-mr-md">
                         <QImg
-                          no-spinner
-                          no-transition
+                          noSpinner
+                          noTransition
                           :ratio="1"
                           :src="characterInfo.metas.styles[styleIndex].iconPath"
                         />
@@ -195,10 +196,11 @@
 <script setup lang="ts">
 import { debounce, QBtn } from "quasar";
 import { computed, Ref, ref } from "vue";
-import { base64ImageToUri } from "@/helpers/imageHelper";
 import { useStore } from "@/store";
 import { CharacterInfo, SpeakerId, Voice } from "@/type/preload";
 import { formatCharacterStyleName } from "@/store/utility";
+import { getDefaultStyle } from "@/domain/talk";
+import { useEngineIcons } from "@/composables/useEngineIcons";
 
 const props = withDefaults(
   defineProps<{
@@ -273,36 +275,17 @@ const selectedStyleInfo = computed(() => {
   return style;
 });
 
-const engineIcons = computed(() =>
-  Object.fromEntries(
-    store.state.engineIds.map((engineId) => [
-      engineId,
-      base64ImageToUri(store.state.engineManifests[engineId].icon),
-    ]),
-  ),
-);
+const engineIcons = useEngineIcons(() => store.state.engineManifests);
 
-const getDefaultStyle = (speakerUuid: SpeakerId) => {
-  // FIXME: 同一キャラが複数エンジンにまたがっているとき、順番が先のエンジンが必ず選択される
-  const characterInfo = props.characterInfos.find(
-    (info) => info.metas.speakerUuid === speakerUuid,
+const getDefaultStyleWrapper = (speakerUuid: SpeakerId) =>
+  getDefaultStyle(
+    speakerUuid,
+    props.characterInfos,
+    store.state.defaultStyleIds,
   );
-  const defaultStyleId = store.state.defaultStyleIds.find(
-    (x) => x.speakerUuid === speakerUuid,
-  )?.defaultStyleId;
-
-  const defaultStyle =
-    characterInfo?.metas.styles.find(
-      (style) => style.styleId === defaultStyleId,
-    ) ?? characterInfo?.metas.styles[0]; // デフォルトのスタイルIDが見つからない場合stylesの先頭を選択する
-
-  if (defaultStyle == undefined) throw new Error("defaultStyle == undefined");
-
-  return defaultStyle;
-};
 
 const onSelectSpeaker = (speakerUuid: SpeakerId) => {
-  const style = getDefaultStyle(speakerUuid);
+  const style = getDefaultStyleWrapper(speakerUuid);
   emit("update:selectedVoice", {
     engineId: style.engineId,
     speakerId: speakerUuid,

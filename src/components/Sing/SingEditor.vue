@@ -1,9 +1,7 @@
 <template>
   <ToolBar />
   <div class="sing-main">
-    <EngineStartupOverlay
-      :is-completed-initial-startup="isCompletedInitialStartup"
-    />
+    <EngineStartupOverlay :isCompletedInitialStartup />
     <div v-if="nowAudioExporting" class="exporting-dialog">
       <div>
         <QSpinner color="primary" size="2.5rem" />
@@ -15,7 +13,7 @@
           padding="xs md"
           label="音声の書き出しをキャンセル"
           color="surface"
-          text-color="display"
+          textColor="display"
           class="q-mt-sm"
           @click="cancelExport"
         />
@@ -33,11 +31,10 @@ import EngineStartupOverlay from "@/components/EngineStartupOverlay.vue";
 import { useStore } from "@/store";
 import onetimeWatch from "@/helpers/onetimeWatch";
 import {
-  DEFAULT_BEATS,
-  DEFAULT_BEAT_TYPE,
-  DEFAULT_BPM,
   DEFAULT_TPQN,
-} from "@/sing/storeHelper";
+  createDefaultTempo,
+  createDefaultTimeSignature,
+} from "@/sing/domain";
 
 const props = defineProps<{
   isEnginesReady: boolean;
@@ -78,26 +75,12 @@ onetimeWatch(
       return "continue";
 
     if (!isProjectFileLoaded) {
-      await store.dispatch("SET_SCORE", {
-        score: {
-          tpqn: DEFAULT_TPQN,
-          tempos: [
-            {
-              position: 0,
-              bpm: DEFAULT_BPM,
-            },
-          ],
-          timeSignatures: [
-            {
-              measureNumber: 1,
-              beats: DEFAULT_BEATS,
-              beatType: DEFAULT_BEAT_TYPE,
-            },
-          ],
-          notes: [],
-        },
+      await store.dispatch("SET_TPQN", { tpqn: DEFAULT_TPQN });
+      await store.dispatch("SET_TEMPOS", { tempos: [createDefaultTempo(0)] });
+      await store.dispatch("SET_TIME_SIGNATURES", {
+        timeSignatures: [createDefaultTimeSignature(1)],
       });
-
+      await store.dispatch("SET_NOTES", { notes: [] });
       // CI上のe2eテストのNemoエンジンには歌手がいないためエラーになるのでワークアラウンド
       // FIXME: 歌手をいると見せかけるmock APIを作り、ここのtry catchを削除する
       try {

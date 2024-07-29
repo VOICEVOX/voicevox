@@ -71,10 +71,6 @@ export class RuntimeInfoManager {
    */
   public async exportFile() {
     await this.lock.acquire(this.lockKey, async () => {
-      log.info(
-        `Runtime information file has been updated. : ${this.runtimeInfoPath}`,
-      );
-
       // データ化
       const runtimeInfoFormatFor3rdParty: RuntimeInfo = {
         formatVersion: this.fileFormatVersion,
@@ -93,6 +89,9 @@ export class RuntimeInfoManager {
         await fs.promises.writeFile(
           this.runtimeInfoPath,
           JSON.stringify(runtimeInfoFormatFor3rdParty), // FIXME: zod化する
+        );
+        log.info(
+          `Runtime information file has been updated. : ${this.runtimeInfoPath}`,
         );
       } catch (e) {
         // ディスクの空き容量がない、他ツールからのファイルロック時をトラップ。

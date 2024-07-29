@@ -2,8 +2,8 @@
   <QDialog
     v-model="ToolBarCustomDialogOpenComputed"
     maximized
-    transition-show="jump-up"
-    transition-hide="jump-down"
+    transitionShow="jump-up"
+    transitionHide="jump-down"
     class="tool-bar-custom-dialog transparent-backdrop"
   >
     <QLayout container view="hHh Lpr fFf" class="bg-background">
@@ -17,7 +17,7 @@
             <QBtn
               unelevated
               color="toolbar-button"
-              text-color="toolbar-button-display"
+              textColor="toolbar-button-display"
               class="text-no-wrap text-bold q-mr-sm"
               :disable="isDefault"
               @click="applyDefaultSetting"
@@ -26,7 +26,7 @@
             <QBtn
               unelevated
               color="toolbar-button"
-              text-color="toolbar-button-display"
+              textColor="toolbar-button-display"
               class="text-no-wrap text-bold q-mr-sm"
               :disable="!isChanged"
               @click="saveCustomToolbar"
@@ -47,7 +47,7 @@
             <QToolbar class="bg-toolbar preview-toolbar">
               <Draggable
                 v-model="toolbarButtons"
-                :item-key="toolbarButtonKey"
+                :itemKey="toolbarButtonKey"
                 @start="toolbarButtonDragging = true"
                 @end="toolbarButtonDragging = false"
               >
@@ -57,7 +57,7 @@
                   <QBtn
                     unelevated
                     color="toolbar-button"
-                    text-color="toolbar-button-display"
+                    textColor="toolbar-button-display"
                     :class="
                       (button === 'EMPTY' ? ' radio-space' : ' radio') +
                       ' text-no-wrap text-bold q-mr-sm'
@@ -68,8 +68,8 @@
                       :delay="800"
                       anchor="center right"
                       self="center left"
-                      transition-show="jump-right"
-                      transition-hide="jump-left"
+                      transitionShow="jump-right"
+                      transitionHide="jump-left"
                       :style="{
                         display: toolbarButtonDragging ? 'none' : 'block',
                       }"
@@ -90,7 +90,7 @@
               <QList class="usable-button-list bg-surface">
                 <QItem
                   v-for="(desc, key) in usableButtonsDesc"
-                  :key="key"
+                  :key
                   v-ripple
                   tag="label"
                 >
@@ -228,7 +228,8 @@ const finishOrNotDialog = async () => {
   if (isChanged.value) {
     const result = await store.dispatch("SHOW_WARNING_DIALOG", {
       title: "カスタマイズを終了しますか？",
-      message: "このまま終了すると、カスタマイズは破棄されてリセットされます。",
+      message:
+        "保存せずに終了すると、カスタマイズは破棄されてリセットされます。",
       actionName: "終了",
     });
     if (result === "OK") {

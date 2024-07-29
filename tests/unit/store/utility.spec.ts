@@ -1,4 +1,3 @@
-import { v4 as uuidv4 } from "uuid";
 import { AccentPhrase, Mora } from "@/openapi";
 import {
   CharacterInfo,
@@ -19,13 +18,11 @@ import {
   isAccentPhrasesTextDifferent,
   buildAudioFileNameFromRawData,
   getToolbarButtonName,
-  createKanaRegex,
-  convertHiraToKana,
-  convertLongVowel,
   getBaseName,
   isOnCommandOrCtrlKeyDown,
   filterCharacterInfosByStyleType,
 } from "@/store/utility";
+import { uuid4 } from "@/helpers/random";
 
 function createDummyMora(text: string): Mora {
   return {
@@ -255,17 +252,18 @@ describe("isAccentPhrasesTextDifferent", () => {
 
 test("buildAudioFileNameFromRawData", () => {
   const fileNamePattern =
-    "index=$連番$ characterName=$キャラ$ text=$テキスト$ styleName=$スタイル$ date=$日付$";
+    "index=$連番$ characterName=$キャラ$ text=$テキスト$ styleName=$スタイル$ date=$日付$ projectName=$プロジェクト名$";
   const vars = {
     index: 10,
     characterName: "キャラ１",
     text: "テストテキスト",
     styleName: "スタイル１",
     date: "20210801",
+    projectName: "サンプルプロジェクト",
   };
   const result = buildAudioFileNameFromRawData(fileNamePattern, vars);
   expect(result).toBe(
-    "index=011 characterName=キャラ１ text=テストテキスト styleName=スタイル１ date=20210801",
+    "index=011 characterName=キャラ１ text=テストテキスト styleName=スタイル１ date=20210801 projectName=サンプルプロジェクト",
   );
 });
 
@@ -282,31 +280,6 @@ test("getToolbarButtonName", () => {
   expect(getToolbarButtonName("存在しないタグ" as ToolbarButtonTagType)).toBe(
     undefined,
   );
-});
-
-describe("createKanaRegex", () => {
-  it("includeSeparationがtrueの場合、読点とクエスチョンも含む", () => {
-    const regex = createKanaRegex(true);
-    expect(regex.test("あいうえお、")).toBe(true);
-    expect(regex.test("かきくけこ？")).toBe(true);
-  });
-
-  it("includeSeparationがfalseの場合、読点とクエスチョンを含まない", () => {
-    const regex = createKanaRegex(false);
-    expect(regex.test("あいうえお、")).toBe(false);
-    expect(regex.test("かきくけこ？")).toBe(false);
-  });
-});
-
-test("convertHiraToKana", () => {
-  expect(convertHiraToKana("あいうえお")).toBe("アイウエオ");
-  expect(convertHiraToKana("がぱをんー")).toBe("ガパヲンー");
-});
-
-test("convertLongVowel", () => {
-  expect(convertLongVowel("アー")).toBe("アア");
-  expect(convertLongVowel("ガー")).toBe("ガア");
-  expect(convertLongVowel("ンー")).toBe("ンン");
 });
 
 test("getBaseName", () => {
@@ -333,13 +306,13 @@ describe("filterCharacterInfosByStyleType", () => {
   const createCharacterInfo = (
     styleTypes: (undefined | "talk" | "frame_decode" | "sing")[],
   ): CharacterInfo => {
-    const engineId = EngineId(uuidv4());
+    const engineId = EngineId(uuid4());
     return {
       portraitPath: "path/to/portrait",
       metas: {
         policy: "policy",
         speakerName: "speakerName",
-        speakerUuid: SpeakerId(uuidv4()),
+        speakerUuid: SpeakerId(uuid4()),
         styles: styleTypes.map((styleType) => ({
           styleType,
           styleName: "styleName",

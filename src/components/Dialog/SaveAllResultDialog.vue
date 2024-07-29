@@ -8,7 +8,7 @@
             v-if="props.writeErrorArray.length > 0"
             :label="`${props.writeErrorArray.length}件の書き込みエラーによる失敗`"
             bordered
-            header-class="text-warning text-bold"
+            headerClass="text-warning text-bold"
             icon="warning"
           >
             <QItem v-for="(value, index) in props.writeErrorArray" :key="index">
@@ -22,7 +22,7 @@
             v-if="props.engineErrorArray.length > 0"
             :label="`${props.engineErrorArray.length}件のエンジンエラーによる失敗`"
             bordered
-            header-class="text-warning text-bold"
+            headerClass="text-warning text-bold"
             icon="warning"
           >
             <QItem
@@ -41,7 +41,7 @@
             :label="`${props.successArray.length}件の成功`"
             bordered
             icon="check"
-            header-class="text-bold"
+            headerClass="text-bold"
           >
             <QList v-if="props.successArray.length > 0" separator>
               <QItem v-for="(value, index) in props.successArray" :key="index">
@@ -61,7 +61,7 @@
             align="right"
             label="閉じる"
             color="toolbar-button"
-            text-color="toolbar-button-display"
+            textColor="toolbar-button-display"
             class="text-no-wrap text-bold q-mr-sm"
             @click="close"
           />

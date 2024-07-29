@@ -46,10 +46,10 @@
     </div>
     <CharacterButton
       v-model:selected-voice="selectedVoice"
-      :character-infos="userOrderedCharacterInfos"
+      :characterInfos="userOrderedCharacterInfos"
       :loading="isInitializingSpeaker"
-      :show-engine-info="isMultipleEngine"
-      :ui-locked="uiLocked"
+      :showEngineInfo="isMultipleEngine"
+      :uiLocked
       @focus="
         if (!isSelectedAudioCell) {
           selectAndSetActiveAudioKey();
@@ -64,14 +64,14 @@
       ref="textField"
       filled
       dense
-      hide-bottom-space
+      hideBottomSpace
       class="full-width"
       color="primary"
       :disable="uiLocked"
       :error="audioTextBuffer.length >= 80"
-      :model-value="audioTextBuffer"
+      :modelValue="audioTextBuffer"
       :aria-label="`${textLineNumberIndex}行目`"
-      @update:model-value="setAudioTextBuffer"
+      @update:modelValue="setAudioTextBuffer"
       @focus="
         clearInputSelection();
         selectAndSetActiveAudioKey();
@@ -99,11 +99,11 @@
         ref="contextMenu"
         :header="contextMenuHeader"
         :menudata="contextMenudata"
-        @before-show="
+        @beforeShow="
           startContextMenuOperation();
           readyForContextMenu();
         "
-        @before-hide="endContextMenuOperation()"
+        @beforeHide="endContextMenuOperation()"
       />
     </QInput>
   </div>
@@ -123,6 +123,7 @@ import {
   useShiftKey,
   useCommandOrControlKey,
 } from "@/composables/useModifierKey";
+import { getDefaultStyle } from "@/domain/talk";
 
 const props = defineProps<{
   audioKey: AudioKey;
@@ -154,6 +155,10 @@ defineExpose({
   },
   removeCell: () => {
     removeCell();
+  },
+  /** index番目のキャラクターを選ぶ */
+  selectCharacterAt: (index: number) => {
+    selectCharacterAt(index);
   },
 });
 
@@ -488,6 +493,30 @@ const removeCell = async () => {
       audioKeys: audioKeysToDelete,
     });
   }
+};
+
+// N番目のキャラクターを選ぶ
+const selectCharacterAt = (index: number) => {
+  if (userOrderedCharacterInfos.value.length < index + 1) {
+    return;
+  }
+  const speakerUuid = userOrderedCharacterInfos.value[index].metas.speakerUuid;
+  const style = getDefaultStyle(
+    speakerUuid,
+    userOrderedCharacterInfos.value,
+    store.state.defaultStyleIds,
+  );
+  const voice = {
+    engineId: style.engineId,
+    speakerId: speakerUuid,
+    styleId: style.styleId,
+  };
+  store.dispatch("COMMAND_MULTI_CHANGE_VOICE", {
+    audioKeys: isMultiSelectEnabled.value
+      ? store.getters.SELECTED_AUDIO_KEYS
+      : [props.audioKey],
+    voice,
+  });
 };
 
 // 削除ボタンの有効／無効判定
