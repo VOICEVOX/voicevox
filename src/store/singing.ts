@@ -1268,6 +1268,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
         // フレーズを更新する
 
+        const phrases = new Map<PhraseSourceHash, Phrase>();
+        const disappearedPhraseKeys = new Set<PhraseSourceHash>();
+
         const foundPhrases = await searchPhrases(
           notes,
           tempos,
@@ -1275,31 +1278,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           firstRestMinDurationSeconds,
         );
 
-        for (const [phraseKey, phrase] of state.phrases) {
+        for (const phraseKey of state.phrases.keys()) {
           const notesHash = phraseKey;
           if (!foundPhrases.has(notesHash)) {
-            // 歌い方と歌声を削除する
-            if (phrase.singingGuideKey != undefined) {
-              commit("DELETE_SINGING_GUIDE", {
-                singingGuideKey: phrase.singingGuideKey,
-              });
-            }
-            if (phrase.singingVoiceKey != undefined) {
-              singingVoices.delete(phrase.singingVoiceKey);
-            }
-
-            // 音源とシーケンスの接続を解除して削除する
-            const sequence = sequences.get(phraseKey);
-            if (sequence) {
-              getAudioSourceNode(sequence).disconnect();
-              transportRef.removeSequence(sequence);
-              sequences.delete(phraseKey);
-            }
+            // 無くなったフレーズの場合
+            disappearedPhraseKeys.add(phraseKey);
           }
         }
-
-        const phrases = new Map<PhraseSourceHash, Phrase>();
-
         for (const [notesHash, foundPhrase] of foundPhrases) {
           const phraseKey = notesHash;
           const existingPhrase = state.phrases.get(phraseKey);
@@ -1312,50 +1297,36 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           // すでに存在するフレーズの場合
           // 再レンダリングする必要があるかどうかをチェックする
           // シンガーが未設定の場合、とりあえず常に再レンダリングする
-          // 音声合成を行う必要がある場合、現在フレーズに設定されている歌声を削除する
-          // 歌い方の推論も行う必要がある場合、現在フレーズに設定されている歌い方を削除する
+          // 音声合成を行う必要がある場合、singingVoiceKeyをundefinedにする
+          // 歌い方の推論も行う必要がある場合、singingGuideKeyとsingingVoiceKeyをundefinedにする
           // TODO: リファクタリングする
           const phrase = { ...existingPhrase };
           if (!singerAndFrameRate || phrase.state === "COULD_NOT_RENDER") {
             if (phrase.singingGuideKey != undefined) {
-              commit("DELETE_SINGING_GUIDE", {
-                singingGuideKey: phrase.singingGuideKey,
-              });
               phrase.singingGuideKey = undefined;
             }
             if (phrase.singingVoiceKey != undefined) {
-              singingVoices.delete(phrase.singingVoiceKey);
               phrase.singingVoiceKey = undefined;
             }
-          } else {
-            if (phrase.singingGuideKey != undefined) {
-              const calculatedHash = await calculateSingingGuideSourceHash({
-                engineId: singerAndFrameRate.singer.engineId,
-                tpqn,
-                tempos,
-                firstRestDuration: phrase.firstRestDuration,
-                lastRestDurationSeconds,
-                notes: phrase.notes,
-                keyRangeAdjustment,
-                volumeRangeAdjustment,
-                frameRate: singerAndFrameRate.frameRate,
-              });
-              const hash = phrase.singingGuideKey;
-              if (hash !== calculatedHash) {
-                commit("DELETE_SINGING_GUIDE", {
-                  singingGuideKey: phrase.singingGuideKey,
-                });
-                phrase.singingGuideKey = undefined;
-                if (phrase.singingVoiceKey != undefined) {
-                  singingVoices.delete(phrase.singingVoiceKey);
-                  phrase.singingVoiceKey = undefined;
-                }
+          } else if (phrase.singingGuideKey != undefined) {
+            const calculatedHash = await calculateSingingGuideSourceHash({
+              engineId: singerAndFrameRate.singer.engineId,
+              tpqn,
+              tempos,
+              firstRestDuration: phrase.firstRestDuration,
+              lastRestDurationSeconds,
+              notes: phrase.notes,
+              keyRangeAdjustment,
+              volumeRangeAdjustment,
+              frameRate: singerAndFrameRate.frameRate,
+            });
+            const hash = phrase.singingGuideKey;
+            if (hash !== calculatedHash) {
+              phrase.singingGuideKey = undefined;
+              if (phrase.singingVoiceKey != undefined) {
+                phrase.singingVoiceKey = undefined;
               }
-            }
-            if (
-              phrase.singingGuideKey != undefined &&
-              phrase.singingVoiceKey != undefined
-            ) {
+            } else if (phrase.singingVoiceKey != undefined) {
               let singingGuide = getOrThrow(
                 state.singingGuides,
                 phrase.singingGuideKey,
@@ -1371,19 +1342,58 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               });
               const hash = phrase.singingVoiceKey;
               if (hash !== calculatedHash) {
-                singingVoices.delete(phrase.singingVoiceKey);
                 phrase.singingVoiceKey = undefined;
               }
             }
           }
+
+          phrases.set(phraseKey, phrase);
+        }
+
+        // フレーズのstateを更新する
+        for (const phrase of phrases.values()) {
           if (
             phrase.singingGuideKey == undefined ||
             phrase.singingVoiceKey == undefined
           ) {
             phrase.state = "WAITING_TO_BE_RENDERED";
           }
+        }
 
-          phrases.set(phraseKey, phrase);
+        // 無くなったフレーズの音源とシーケンスの接続を解除して削除する
+        for (const phraseKey of disappearedPhraseKeys) {
+          const sequence = sequences.get(phraseKey);
+          if (sequence) {
+            getAudioSourceNode(sequence).disconnect();
+            transportRef.removeSequence(sequence);
+            sequences.delete(phraseKey);
+          }
+        }
+
+        // 使われていない歌い方と歌声を削除する
+        const singingGuideKeysInUse = new Set(
+          [...phrases.values()]
+            .map((value) => value.singingGuideKey)
+            .filter((value) => value != undefined),
+        );
+        const singingVoiceKeysInUse = new Set(
+          [...phrases.values()]
+            .map((value) => value.singingVoiceKey)
+            .filter((value) => value != undefined),
+        );
+        const existingSingingGuideKeys = new Set(state.singingGuides.keys());
+        const existingSingingVoiceKeys = new Set(singingVoices.keys());
+        const singingGuideKeysToDelete = existingSingingGuideKeys.difference(
+          singingGuideKeysInUse,
+        );
+        const singingVoiceKeysToDelete = existingSingingVoiceKeys.difference(
+          singingVoiceKeysInUse,
+        );
+        for (const singingGuideKey of singingGuideKeysToDelete) {
+          commit("DELETE_SINGING_GUIDE", { singingGuideKey });
+        }
+        for (const singingVoiceKey of singingVoiceKeysToDelete) {
+          singingVoices.delete(singingVoiceKey);
         }
 
         commit("SET_PHRASES", { phrases });
