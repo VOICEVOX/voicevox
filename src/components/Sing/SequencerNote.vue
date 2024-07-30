@@ -90,6 +90,8 @@ const props = defineProps<{
   isSelected: boolean;
   /** このノートがプレビュー中か */
   isPreview: boolean;
+  /** ノートが重なっているか */
+  isOverlapping: boolean;
   previewLyric: string | null;
 }>();
 
@@ -127,10 +129,8 @@ const editTargetIsNote = computed(() => {
 const editTargetIsPitch = computed(() => {
   return state.sequencerEditTarget === "PITCH";
 });
-
-// ノートの重なりエラー
 const hasOverlappingError = computed(() => {
-  return state.overlappingNoteIds.has(props.note.id);
+  return props.isOverlapping && !props.isPreview;
 });
 
 // フレーズ生成エラー
@@ -233,20 +233,20 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
   &:not(.below-pitch) {
     .note-left-edge:hover {
       // FIXME: hoverだとカーソル位置によって適用されないので、プレビュー中に明示的にクラス指定する
-      background-color: lab(80, -22.953, 14.365);
+      background-color: lab(80 -22.953 14.365);
     }
 
     .note-right-edge:hover {
       // FIXME: hoverだとカーソル位置によって適用されないので、プレビュー中に明示的にクラス指定する
-      background-color: lab(80, -22.953, 14.365);
+      background-color: lab(80 -22.953 14.365);
     }
 
     &.selected-or-preview {
       // 色は仮
       .note-bar {
-        background-color: lab(95, -22.953, 14.365);
-        border-color: lab(65, -22.953, 14.365);
-        outline: solid 2px lab(70, -22.953, 14.365);
+        background-color: lab(95 -22.953 14.365);
+        border-color: lab(65 -22.953 14.365);
+        outline: solid 2px lab(70 -22.953 14.365);
       }
     }
   }

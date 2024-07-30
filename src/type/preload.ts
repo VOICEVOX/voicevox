@@ -73,6 +73,10 @@ export const commandIdSchema = z.string().brand<"CommandId">();
 export type CommandId = z.infer<typeof commandIdSchema>;
 export const CommandId = (id: string): CommandId => commandIdSchema.parse(id);
 
+export const trackIdSchema = z.string().brand<"TrackId">();
+export type TrackId = z.infer<typeof trackIdSchema>;
+export const TrackId = (id: string): TrackId => trackIdSchema.parse(id);
+
 // 共通のアクション名
 export const actionPostfixSelectNthCharacter = "番目のキャラクターを選択";
 
@@ -569,6 +573,7 @@ export const experimentalSettingSchema = z.object({
   enableMultiSelect: z.boolean().default(false),
   shouldKeepTuningOnTextChange: z.boolean().default(false),
   enablePitchEditInSongEditor: z.boolean().default(false),
+  enableMultiTrack: z.boolean().default(false),
 });
 
 export type ExperimentalSettingType = z.infer<typeof experimentalSettingSchema>;
@@ -599,6 +604,13 @@ export const rootMiscSettingSchema = z.object({
   enableMemoNotation: z.boolean().default(false), // メモ記法を有効にするか
   enableRubyNotation: z.boolean().default(false), // ルビ記法を有効にするか
   skipUpdateVersion: z.string().optional(), // アップデートをスキップしたバージョン
+  // ソングエディタでのトラック操作をUndo可能にするか
+  songUndoableTrackOptions: z
+    .object({
+      soloAndMute: z.boolean().default(true),
+      panAndGain: z.boolean().default(true),
+    })
+    .default({}),
 });
 export type RootMiscSettingType = z.infer<typeof rootMiscSettingSchema>;
 
