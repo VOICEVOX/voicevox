@@ -76,7 +76,7 @@ import {
   isValidTrack,
   SEQUENCER_MIN_NUM_MEASURES,
   getNumMeasures,
-  isTracksEmpty,
+  isTrackEmpty,
   shouldPlayTracks,
 } from "@/sing/domain";
 import {
@@ -1077,12 +1077,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   DELETE_TRACK: {
     mutation(state, { trackId }) {
       state.tracks.delete(trackId);
-      const trackIndex = state.trackOrder.indexOf(trackId);
       state.trackOrder = state.trackOrder.filter((value) => value !== trackId);
-      if (state._selectedTrackId === trackId) {
-        state._selectedTrackId =
-          state.trackOrder[trackIndex === 0 ? 0 : trackIndex - 1];
-      }
     },
     async action({ state, commit, dispatch }, { trackId }) {
       if (!state.tracks.has(trackId)) {
@@ -1130,7 +1125,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     mutation(state, { tracks }) {
       state.tracks = tracks;
       state.trackOrder = Array.from(tracks.keys());
-      state._selectedTrackId = state.trackOrder[0];
     },
     async action({ commit, dispatch }, { tracks }) {
       if (![...tracks.values()].every((track) => isValidTrack(track))) {
@@ -2641,23 +2635,28 @@ export const singingCommandStore = transformCommandStore(
       },
     },
 
-    COMMAND_ADD_TRACK: {
-      mutation(draft, { trackId, track }) {
+    COMMAND_INSERT_EMPTY_TRACK: {
+      mutation(draft, { trackId, track, prevTrackId }) {
         singingStore.mutations.INSERT_TRACK(draft, {
           trackId,
           track,
-          prevTrackId: undefined,
+          prevTrackId,
         });
       },
-      async action({ getters, dispatch, commit }) {
+      /**
+       * 空のトラックをprevTrackIdの後ろに挿入する。
+       * prevTrackIdのトラックの情報を一部引き継ぐ。
+       */
+      async action({ state, dispatch, commit }, { prevTrackId }) {
         const { trackId, track } = await dispatch("CREATE_TRACK");
-        const selectedTrack = getters.SELECTED_TRACK;
-        track.singer = selectedTrack.singer;
-        track.keyRangeAdjustment = selectedTrack.keyRangeAdjustment;
-        track.volumeRangeAdjustment = selectedTrack.volumeRangeAdjustment;
-        commit("COMMAND_ADD_TRACK", {
+        const sourceTrack = getOrThrow(state.tracks, prevTrackId);
+        track.singer = sourceTrack.singer;
+        track.keyRangeAdjustment = sourceTrack.keyRangeAdjustment;
+        track.volumeRangeAdjustment = sourceTrack.volumeRangeAdjustment;
+        commit("COMMAND_INSERT_EMPTY_TRACK", {
           trackId,
           track: cloneWithUnwrapProxy(track),
+          prevTrackId,
         });
       },
     },
@@ -2749,42 +2748,51 @@ export const singingCommandStore = transformCommandStore(
         singingStore.mutations.SET_TPQN(draft, { tpqn });
         singingStore.mutations.SET_TEMPOS(draft, { tempos });
         singingStore.mutations.SET_TIME_SIGNATURES(draft, { timeSignatures });
-        for (const { track, trackId, overwrite } of tracks) {
+        for (const { track, trackId, overwrite, prevTrackId } of tracks) {
           if (overwrite) {
             singingStore.mutations.SET_TRACK(draft, { track, trackId });
           } else {
             singingStore.mutations.INSERT_TRACK(draft, {
               track,
               trackId,
-              prevTrackId: undefined,
+              prevTrackId,
             });
           }
         }
       },
+      /**
+       * 複数のトラックを選択中のトラックの後ろに挿入し、一部の情報をインポートする。
+       * プロジェクトファイルのインポートで使う。
+       * 選択中のトラックが空の場合は最初のトラックで上書きする。
+       */
       async action(
         { state, commit, getters, dispatch },
         { tpqn, tempos, timeSignatures, tracks },
       ) {
-        const payload: {
-          track: Track;
-          trackId: TrackId;
-          overwrite: boolean;
-        }[] = [];
+        const payload: ({ track: Track; trackId: TrackId } & (
+          | { overwrite: true; prevTrackId?: undefined }
+          | { overwrite?: false; prevTrackId: TrackId }
+        ))[] = [];
         if (state.experimentalSetting.enableMultiTrack) {
+          let prevTrackId = getters.SELECTED_TRACK_ID;
           for (const [i, track] of tracks.entries()) {
             if (!isValidTrack(track)) {
               throw new Error("The track is invalid.");
             }
-            // 空のプロジェクトならトラックを上書きする
-            if (i === 0 && isTracksEmpty([...state.tracks.values()])) {
+            // 空のトラックなら上書きする
+            if (
+              i === 0 &&
+              isTrackEmpty(getOrThrow(state.tracks, prevTrackId))
+            ) {
               payload.push({
                 track,
-                trackId: getters.SELECTED_TRACK_ID,
+                trackId: prevTrackId,
                 overwrite: true,
               });
             } else {
               const { trackId } = await dispatch("CREATE_TRACK");
-              payload.push({ track, trackId, overwrite: false });
+              payload.push({ track, trackId, prevTrackId });
+              prevTrackId = trackId;
             }
           }
         } else {

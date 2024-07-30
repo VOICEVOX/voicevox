@@ -48,7 +48,6 @@ export const settingStoreState: SettingStoreState = {
     enableMorphing: false,
     enableMultiSelect: false,
     shouldKeepTuningOnTextChange: false,
-    enablePitchEditInSongEditor: false,
     enableMultiTrack: false,
   },
   splitTextWhenPaste: "PERIOD_AND_NEW_LINE",
@@ -66,7 +65,7 @@ export const settingStoreState: SettingStoreState = {
   enableMultiEngine: false,
   enableMemoNotation: false,
   enableRubyNotation: false,
-  songUndoableTrackOptions: {
+  undoableTrackOperations: {
     soloAndMute: true,
     panAndGain: true,
   },
@@ -146,7 +145,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         "enableRubyNotation",
         "enableMemoNotation",
         "skipUpdateVersion",
-        "songUndoableTrackOptions",
+        "undoableTrackOperations",
       ] as const;
 
       // rootMiscSettingKeysに値を足し忘れていたときに型エラーを出す検出用コード

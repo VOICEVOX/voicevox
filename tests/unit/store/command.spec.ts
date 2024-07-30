@@ -5,8 +5,9 @@ import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 
 const initialState = cloneWithUnwrapProxy(store.state);
 beforeEach(() => {
-  resetMockMode();
   store.replaceState(initialState);
+
+  resetMockMode();
 });
 
 test("コマンド実行で履歴が作られる", async () => {
