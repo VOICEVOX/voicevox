@@ -1565,22 +1565,20 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           }
         }
 
-        const newPhrases = new Map<PhraseSourceHash, Phrase>();
+        const phrases = new Map<PhraseSourceHash, Phrase>();
         const disappearedPhraseKeys = new Set<PhraseSourceHash>();
 
         for (const phraseKey of state.phrases.keys()) {
-          const notesHash = phraseKey;
-          if (!foundPhrases.has(notesHash)) {
+          if (!foundPhrases.has(phraseKey)) {
             // 無くなったフレーズの場合
             disappearedPhraseKeys.add(phraseKey);
           }
         }
-        for (const [notesHash, foundPhrase] of foundPhrases) {
-          const phraseKey = notesHash;
+        for (const [phraseKey, foundPhrase] of foundPhrases) {
           const existingPhrase = state.phrases.get(phraseKey);
           if (!existingPhrase) {
             // 新しいフレーズの場合
-            newPhrases.set(phraseKey, foundPhrase);
+            phrases.set(phraseKey, foundPhrase);
             continue;
           }
 
@@ -1644,11 +1642,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             }
           }
 
-          newPhrases.set(phraseKey, phrase);
+          phrases.set(phraseKey, phrase);
         }
 
         // フレーズのstateを更新する
-        for (const phrase of newPhrases.values()) {
+        for (const phrase of phrases.values()) {
           if (
             phrase.singingGuideKey == undefined ||
             phrase.singingVoiceKey == undefined
@@ -1669,12 +1667,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
         // 使われていない歌い方と歌声を削除する
         const singingGuideKeysInUse = new Set(
-          [...newPhrases.values()]
+          [...phrases.values()]
             .map((value) => value.singingGuideKey)
             .filter((value) => value != undefined),
         );
         const singingVoiceKeysInUse = new Set(
-          [...newPhrases.values()]
+          [...phrases.values()]
             .map((value) => value.singingVoiceKey)
             .filter((value) => value != undefined),
         );
@@ -1693,7 +1691,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           singingVoices.delete(singingVoiceKey);
         }
 
-        commit("SET_PHRASES", { phrases: newPhrases });
+        commit("SET_PHRASES", { phrases });
 
         logger.info("Phrases updated.");
 
