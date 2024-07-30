@@ -2641,23 +2641,28 @@ export const singingCommandStore = transformCommandStore(
       },
     },
 
-    COMMAND_ADD_TRACK: {
-      mutation(draft, { trackId, track }) {
+    COMMAND_INSERT_EMPTY_TRACK: {
+      mutation(draft, { trackId, track, prevTrackId }) {
         singingStore.mutations.INSERT_TRACK(draft, {
           trackId,
           track,
-          prevTrackId: undefined,
+          prevTrackId,
         });
       },
-      async action({ getters, dispatch, commit }) {
+      /**
+       * 空のトラックをprevTrackIdの後ろに挿入する。
+       * prevTrackIdのトラックの情報を一部引き継ぐ。
+       */
+      async action({ state, dispatch, commit }, { prevTrackId }) {
         const { trackId, track } = await dispatch("CREATE_TRACK");
-        const selectedTrack = getters.SELECTED_TRACK;
-        track.singer = selectedTrack.singer;
-        track.keyRangeAdjustment = selectedTrack.keyRangeAdjustment;
-        track.volumeRangeAdjustment = selectedTrack.volumeRangeAdjustment;
-        commit("COMMAND_ADD_TRACK", {
+        const sourceTrack = getOrThrow(state.tracks, prevTrackId);
+        track.singer = sourceTrack.singer;
+        track.keyRangeAdjustment = sourceTrack.keyRangeAdjustment;
+        track.volumeRangeAdjustment = sourceTrack.volumeRangeAdjustment;
+        commit("COMMAND_INSERT_EMPTY_TRACK", {
           trackId,
           track: cloneWithUnwrapProxy(track),
+          prevTrackId,
         });
       },
     },

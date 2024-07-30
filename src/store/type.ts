@@ -1327,9 +1327,13 @@ export type SingingCommandStoreTypes = {
     }): void;
   };
 
-  COMMAND_ADD_TRACK: {
-    mutation: { trackId: TrackId; track: Track };
-    action(): void;
+  COMMAND_INSERT_EMPTY_TRACK: {
+    mutation: {
+      trackId: TrackId;
+      track: Track;
+      prevTrackId: TrackId;
+    };
+    action(payload: { prevTrackId: TrackId }): void;
   };
 
   COMMAND_DELETE_TRACK: {

@@ -80,7 +80,14 @@ const trackOrder = computed(() => store.state.trackOrder);
 const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
 
 const addTrack = async () => {
-  store.dispatch("COMMAND_ADD_TRACK");
+  const willNextSelectedTrackIndex =
+    trackOrder.value.indexOf(selectedTrackId.value) + 1;
+  await store.dispatch("COMMAND_INSERT_EMPTY_TRACK", {
+    prevTrackId: selectedTrackId.value,
+  });
+  await store.dispatch("SELECT_TRACK", {
+    trackId: trackOrder.value[willNextSelectedTrackIndex],
+  });
 };
 const deleteTrack = () => {
   if (tracks.value.size === 1) return;
