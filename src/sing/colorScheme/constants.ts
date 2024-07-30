@@ -275,13 +275,13 @@ export const DEFINED_COLOR_ROLES: {
     name: "surfaceContainerLow",
     role: "neutral",
     lightShade: 0.93,
-    darkShade: 0.24,
+    darkShade: 0.22,
   },
   {
     name: "surfaceContainer",
     role: "neutral",
     lightShade: 0.95,
-    darkShade: 0.28,
+    darkShade: 0.25,
   },
   {
     name: "surfaceContainerHigh",

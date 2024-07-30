@@ -20,7 +20,7 @@
       </div>
     </div>
     <ScoreSequencer />
-    <ColorSchemeEditor v-if="currentColorScheme && showColorSchemeEditor" />
+    <ColorSchemeEditor v-if="showColorSchemeEditor" />
   </div>
 </template>
 
@@ -60,7 +60,7 @@ const enablePitchEditInSongEditor = computed(() => {
 
 const showColorSchemeEditor = computed(() => {
   return (
-    currentColorScheme.value != null &&
+    currentColorScheme.value &&
     store.state.experimentalSetting.enableColorSchemeEditor
   );
 });

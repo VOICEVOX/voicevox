@@ -525,7 +525,7 @@ onUnmounted(() => {
 }
 
 .sing-toolbar {
-  background: var(--scheme-color-surface-container-high);
+  background: var(--scheme-color-sing-toolbar-container);
   align-items: center;
   display: flex;
   justify-content: space-between;
