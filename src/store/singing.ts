@@ -95,6 +95,7 @@ import { noteSchema } from "@/domain/project/schema";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { ufProjectToVoicevox } from "@/sing/utaformatixProject/toVoicevox";
+import { uuid4 } from "@/helpers/random";
 import { convertToWavFileData } from "@/sing/convertToWavFileData";
 import { generateWriteErrorMessage } from "@/helpers/fileHelper";
 
@@ -2214,7 +2215,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const quantizedPastePos =
           Math.round(pasteOriginPos / snapTicks) * snapTicks;
         return {
-          id: NoteId(crypto.randomUUID()),
+          id: NoteId(uuid4()),
           position: quantizedPastePos,
           duration: Number(note.duration),
           noteNumber: Number(note.noteNumber),
@@ -2812,7 +2813,7 @@ export const singingCommandStore = transformCommandStore(
               ...toRaw(selectedTrack),
               notes: track.notes.map((note) => ({
                 ...note,
-                id: NoteId(crypto.randomUUID()),
+                id: NoteId(uuid4()),
               })),
             };
           });
@@ -2851,7 +2852,7 @@ export const singingCommandStore = transformCommandStore(
               ...toRaw(track),
               notes: track.notes.map((note) => ({
                 ...note,
-                id: NoteId(crypto.randomUUID()),
+                id: NoteId(uuid4()),
               })),
             };
           });
