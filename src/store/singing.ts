@@ -76,7 +76,7 @@ import {
   isValidTrack,
   SEQUENCER_MIN_NUM_MEASURES,
   getNumMeasures,
-  isTracksEmpty,
+  isTrackEmpty,
   shouldPlayTracks,
 } from "@/sing/domain";
 import {
@@ -2748,42 +2748,51 @@ export const singingCommandStore = transformCommandStore(
         singingStore.mutations.SET_TPQN(draft, { tpqn });
         singingStore.mutations.SET_TEMPOS(draft, { tempos });
         singingStore.mutations.SET_TIME_SIGNATURES(draft, { timeSignatures });
-        for (const { track, trackId, overwrite } of tracks) {
+        for (const { track, trackId, overwrite, prevTrackId } of tracks) {
           if (overwrite) {
             singingStore.mutations.SET_TRACK(draft, { track, trackId });
           } else {
             singingStore.mutations.INSERT_TRACK(draft, {
               track,
               trackId,
-              prevTrackId: undefined,
+              prevTrackId,
             });
           }
         }
       },
+      /**
+       * 複数のトラックを選択中のトラックの後ろに挿入し、一部の情報をインポートする。
+       * プロジェクトファイルのインポートで使う。
+       * 選択中のトラックが空の場合は最初のトラックで上書きする。
+       */
       async action(
         { state, commit, getters, dispatch },
         { tpqn, tempos, timeSignatures, tracks },
       ) {
-        const payload: {
-          track: Track;
-          trackId: TrackId;
-          overwrite: boolean;
-        }[] = [];
+        const payload: ({ track: Track; trackId: TrackId } & (
+          | { overwrite: true; prevTrackId?: undefined }
+          | { overwrite?: false; prevTrackId: TrackId }
+        ))[] = [];
         if (state.experimentalSetting.enableMultiTrack) {
+          let prevTrackId = getters.SELECTED_TRACK_ID;
           for (const [i, track] of tracks.entries()) {
             if (!isValidTrack(track)) {
               throw new Error("The track is invalid.");
             }
-            // 空のプロジェクトならトラックを上書きする
-            if (i === 0 && isTracksEmpty([...state.tracks.values()])) {
+            // 空のトラックなら上書きする
+            if (
+              i === 0 &&
+              isTrackEmpty(getOrThrow(state.tracks, prevTrackId))
+            ) {
               payload.push({
                 track,
-                trackId: getters.SELECTED_TRACK_ID,
+                trackId: prevTrackId,
                 overwrite: true,
               });
             } else {
               const { trackId } = await dispatch("CREATE_TRACK");
-              payload.push({ track, trackId, overwrite: false });
+              payload.push({ track, trackId, prevTrackId });
+              prevTrackId = trackId;
             }
           }
         } else {

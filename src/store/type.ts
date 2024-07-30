@@ -1381,7 +1381,10 @@ export type SingingCommandStoreTypes = {
       tpqn: number;
       tempos: Tempo[];
       timeSignatures: TimeSignature[];
-      tracks: { track: Track; trackId: TrackId; overwrite: boolean }[];
+      tracks: ({ track: Track; trackId: TrackId } & (
+        | { overwrite: true; prevTrackId?: undefined }
+        | { overwrite?: false; prevTrackId: TrackId }
+      ))[];
     };
     action(payload: {
       tpqn: number;
