@@ -89,10 +89,19 @@ const addTrack = async () => {
     trackId: trackOrder.value[willNextSelectedTrackIndex],
   });
 };
-const deleteTrack = () => {
+const deleteTrack = async () => {
   if (tracks.value.size === 1) return;
-  store.dispatch("COMMAND_DELETE_TRACK", {
+
+  let willNextSelectedTrackIndex =
+    trackOrder.value.indexOf(selectedTrackId.value) - 1;
+  if (willNextSelectedTrackIndex < 0) {
+    willNextSelectedTrackIndex = 0;
+  }
+  await store.dispatch("COMMAND_DELETE_TRACK", {
     trackId: selectedTrackId.value,
+  });
+  await store.dispatch("SELECT_TRACK", {
+    trackId: trackOrder.value[willNextSelectedTrackIndex],
   });
 };
 

@@ -1077,12 +1077,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   DELETE_TRACK: {
     mutation(state, { trackId }) {
       state.tracks.delete(trackId);
-      const trackIndex = state.trackOrder.indexOf(trackId);
       state.trackOrder = state.trackOrder.filter((value) => value !== trackId);
-      if (state._selectedTrackId === trackId) {
-        state._selectedTrackId =
-          state.trackOrder[trackIndex === 0 ? 0 : trackIndex - 1];
-      }
     },
     async action({ state, commit, dispatch }, { trackId }) {
       if (!state.tracks.has(trackId)) {
@@ -1130,7 +1125,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     mutation(state, { tracks }) {
       state.tracks = tracks;
       state.trackOrder = Array.from(tracks.keys());
-      state._selectedTrackId = state.trackOrder[0];
     },
     async action({ commit, dispatch }, { tracks }) {
       if (![...tracks.values()].every((track) => isValidTrack(track))) {
