@@ -4,24 +4,44 @@
       トラック一覧
       <QSpace />
       <QBtn
+        v-show="tracks.size > 1"
+        color="default"
+        icon="delete_outline"
         rounded
-        unelevated
-        size="0.75rem"
-        padding="xs sm"
+        outline
+        dense
+        size="sm"
         :disable="uiLocked"
-        @click="addTrack"
-      >
-        追加
-      </QBtn>
-      <QBtn
-        rounded
-        unelevated
-        size="0.75rem"
-        padding="xs sm"
-        :disable="uiLocked || tracks.size === 1"
+        class="track-list-button"
         @click="deleteTrack"
       >
-        削除
+        <QTooltip :delay="500">トラックを削除</QTooltip>
+      </QBtn>
+      <QBtn
+        color="default"
+        icon="add"
+        rounded
+        outline
+        dense
+        size="sm"
+        :disable="uiLocked"
+        class="track-list-button"
+        @click="addTrack"
+      >
+        <QTooltip :delay="500">トラックを追加</QTooltip>
+      </QBtn>
+      <QBtn
+        color="default"
+        icon="headset_off"
+        rounded
+        outline
+        dense
+        size="sm"
+        :disable="uiLocked || !isThereSoloTrack"
+        class="track-list-button"
+        @click="unsoloAllTracks"
+      >
+        <QTooltip :delay="500">すべてのソロを解除</QTooltip>
       </QBtn>
     </div>
     <Draggable
@@ -37,21 +57,7 @@
         <TrackItem :trackId draggableClass="track-handle" />
       </template>
     </Draggable>
-    <div class="tracks-footer">
-      <QBtn
-        color="default"
-        icon="headset_off"
-        rounded
-        outline
-        dense
-        size="sm"
-        :disable="uiLocked || !isThereSoloTrack"
-        class="track-list-button"
-        @click="unsoloAllTracks"
-      >
-        <QTooltip :delay="500">ソロを解除</QTooltip>
-      </QBtn>
-    </div>
+    <div class="tracks-footer"></div>
   </div>
 </template>
 <script setup lang="ts">
@@ -139,23 +145,17 @@ const reorderTracks = (trackOrder: TrackId[]) => {
   overflow-y: scroll;
 }
 
-.tracks-header,
-.tracks-footer {
+.tracks-header {
   display: flex;
   background: colors.$background;
   align-items: center;
-}
-.tracks-header {
+  gap: 0.25rem;
+
   border-bottom: 1px solid colors.$sequencer-sub-divider;
 
   padding: 0.5rem;
   padding-left: 1rem;
-}
-.tracks-footer {
-  border-top: 1px solid colors.$sequencer-sub-divider;
-  justify-content: end;
-
-  padding: 0.5rem 1.25rem;
+  padding-right: 1.25rem;
 }
 
 .track-list-button {
