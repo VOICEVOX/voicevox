@@ -182,7 +182,7 @@ const shouldPlayTrack = computed(() =>
 );
 
 const setTrackPan = (pan: number) => {
-  if (store.state.songUndoableTrackOptions.panAndGain) {
+  if (store.state.undoableTrackOperations.panAndGain) {
     store.dispatch("COMMAND_SET_TRACK_PAN", { trackId: props.trackId, pan });
   } else {
     store.dispatch("SET_TRACK_PAN", { trackId: props.trackId, pan });
@@ -190,7 +190,7 @@ const setTrackPan = (pan: number) => {
 };
 
 const setTrackGain = (gain: number) => {
-  if (store.state.songUndoableTrackOptions.panAndGain) {
+  if (store.state.undoableTrackOperations.panAndGain) {
     store.dispatch("COMMAND_SET_TRACK_GAIN", {
       trackId: props.trackId,
       gain,
@@ -218,7 +218,7 @@ const updateTrackName = () => {
 };
 
 const setTrackMute = (mute: boolean) => {
-  if (store.state.songUndoableTrackOptions.soloAndMute) {
+  if (store.state.undoableTrackOperations.soloAndMute) {
     store.dispatch("COMMAND_SET_TRACK_MUTE", { trackId: props.trackId, mute });
   } else {
     store.dispatch("SET_TRACK_MUTE", { trackId: props.trackId, mute });
@@ -226,7 +226,7 @@ const setTrackMute = (mute: boolean) => {
 };
 
 const setTrackSolo = (solo: boolean) => {
-  if (store.state.songUndoableTrackOptions.soloAndMute) {
+  if (store.state.undoableTrackOperations.soloAndMute) {
     store.dispatch("COMMAND_SET_TRACK_SOLO", { trackId: props.trackId, solo });
   } else {
     store.dispatch("SET_TRACK_SOLO", { trackId: props.trackId, solo });

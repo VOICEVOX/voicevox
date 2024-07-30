@@ -106,7 +106,7 @@ const deleteTrack = async () => {
 };
 
 const unsoloAllTracks = () => {
-  if (store.state.songUndoableTrackOptions.soloAndMute) {
+  if (store.state.undoableTrackOperations.soloAndMute) {
     store.dispatch("COMMAND_UNSOLO_ALL_TRACKS");
   } else {
     store.dispatch("UNSOLO_ALL_TRACKS");

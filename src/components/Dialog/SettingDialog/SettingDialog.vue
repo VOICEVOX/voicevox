@@ -229,18 +229,6 @@
                 >
                 </QBtn>
               </QCardActions>
-              <BaseCell
-                v-if="experimentalSetting.enableMultiTrack"
-                title="ソング：元に戻す対象のトラックの設定"
-                description="トラックの設定のうち、「元に戻す」機能の対象にする設定を指定します。"
-              >
-                <QOptionGroup
-                  v-model="songUndoableTrackOptions"
-                  type="checkbox"
-                  :options="songUndoableTrackOptionLabels"
-                  inline
-                />
-              </BaseCell>
             </QCard>
             <!-- Saving Card -->
             <QCard flat class="setting-card">
@@ -467,6 +455,22 @@
                 >
                 </QSelect>
               </QCardActions>
+              <QSlideTransition>
+                <!-- q-slide-transitionはheightだけをアニメーションするのでdivで囲う -->
+                <div v-show="experimentalSetting.enableMultiTrack">
+                  <BaseCell
+                    title="ソング：元に戻すトラック操作"
+                    description="「元に戻す」機能の対象とするトラック操作を指定します。"
+                  >
+                    <QOptionGroup
+                      v-model="undoableTrackOperations"
+                      type="checkbox"
+                      :options="undoableTrackOperationsLabels"
+                      inline
+                    />
+                  </BaseCell>
+                </div>
+              </QSlideTransition>
             </QCard>
 
             <!-- Experimental Card -->
@@ -631,25 +635,25 @@ const isDefaultConfirmedTips = computed(() => {
   return Object.values(confirmedTips).every((v) => !v);
 });
 
-// ソング：元に戻す対象のトラックの設定
-type SongUndoableTrackOption =
-  keyof RootMiscSettingType["songUndoableTrackOptions"];
-const songUndoableTrackOptionLabels = [
+// ソング：元に戻すトラック操作
+type UndoableTrackOperation =
+  keyof RootMiscSettingType["undoableTrackOperations"];
+const undoableTrackOperationsLabels = [
   { value: "soloAndMute", label: "ミュート・ソロ" },
   { value: "panAndGain", label: "パン・音量" },
 ];
-const songUndoableTrackOptions = computed({
+const undoableTrackOperations = computed({
   get: () =>
-    Object.keys(store.state.songUndoableTrackOptions).filter(
+    Object.keys(store.state.undoableTrackOperations).filter(
       (key) =>
-        store.state.songUndoableTrackOptions[key as SongUndoableTrackOption],
-    ) as SongUndoableTrackOption[],
-  set: (songUndoableTrackOptions: SongUndoableTrackOption[]) => {
+        store.state.undoableTrackOperations[key as UndoableTrackOperation],
+    ) as UndoableTrackOperation[],
+  set: (undoableTrackOperations: UndoableTrackOperation[]) => {
     store.dispatch("SET_ROOT_MISC_SETTING", {
-      key: "songUndoableTrackOptions",
+      key: "undoableTrackOperations",
       value: {
-        soloAndMute: songUndoableTrackOptions.includes("soloAndMute"),
-        panAndGain: songUndoableTrackOptions.includes("panAndGain"),
+        soloAndMute: undoableTrackOperations.includes("soloAndMute"),
+        panAndGain: undoableTrackOperations.includes("panAndGain"),
       },
     });
   },
