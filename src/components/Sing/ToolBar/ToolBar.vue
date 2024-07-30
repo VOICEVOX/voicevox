@@ -101,11 +101,7 @@
     </div>
     <!-- settings for edit controls -->
     <div class="sing-controls">
-      <EditTargetSwicher
-        v-if="showEditTargetSwitchButton"
-        :editTarget
-        :changeEditTarget
-      />
+      <EditTargetSwicher :editTarget :changeEditTarget />
       <QBtn
         flat
         dense
@@ -211,10 +207,6 @@ const undo = () => {
 const redo = () => {
   store.dispatch("REDO", { editor });
 };
-
-const showEditTargetSwitchButton = computed(() => {
-  return store.state.experimentalSetting.enablePitchEditInSongEditor;
-});
 
 const editTarget = computed(() => store.state.sequencerEditTarget);
 

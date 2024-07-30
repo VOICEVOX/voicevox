@@ -519,17 +519,6 @@
                 "
               />
               <ToggleCell
-                title="ソング：ピッチ編集機能"
-                description="ONの場合、ピッチ編集モードに切り替えて音の高さを変えられるようになります。"
-                :modelValue="experimentalSetting.enablePitchEditInSongEditor"
-                @update:modelValue="
-                  changeExperimentalSetting(
-                    'enablePitchEditInSongEditor',
-                    $event,
-                  )
-                "
-              />
-              <ToggleCell
                 title="ソング：マルチトラック機能"
                 description="ONの場合、１つのプロジェクト内に複数のトラックを作成できるようにします。"
                 :modelValue="experimentalSetting.enableMultiTrack"
