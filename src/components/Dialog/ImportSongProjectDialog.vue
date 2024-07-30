@@ -355,6 +355,13 @@ const handleCancel = () => {
 </script>
 
 <style scoped lang="scss">
+details {
+  summary {
+    display: list-item;
+    cursor: pointer;
+  }
+}
+
 .dialog-card {
   width: 700px;
   max-width: 80vw;
