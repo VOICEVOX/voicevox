@@ -871,6 +871,8 @@ export class PolySynth implements Instrument {
 
 export type ChannelStripOptions = {
   readonly volume?: number;
+  readonly pan?: number;
+  readonly mute?: boolean;
 };
 
 /**
@@ -878,13 +880,15 @@ export type ChannelStripOptions = {
  */
 export class ChannelStrip {
   private readonly gainNode: GainNode;
+  private readonly muteGainNode: GainNode;
+  private readonly panNode: StereoPannerNode;
 
   get input(): AudioNode {
-    return this.gainNode;
+    return this.muteGainNode;
   }
 
   get output(): AudioNode {
-    return this.gainNode;
+    return this.panNode;
   }
 
   get volume() {
@@ -894,9 +898,31 @@ export class ChannelStrip {
     this.gainNode.gain.value = value;
   }
 
+  get mute() {
+    return this.muteGainNode.gain.value === 0;
+  }
+  set mute(value: boolean) {
+    this.muteGainNode.gain.value = value ? 0 : 1;
+  }
+
+  get pan() {
+    return this.panNode.pan.value;
+  }
+  set pan(value: number) {
+    this.panNode.pan.value = value;
+  }
+
   constructor(audioContext: BaseAudioContext, options?: ChannelStripOptions) {
     this.gainNode = new GainNode(audioContext);
+    this.muteGainNode = new GainNode(audioContext);
+    this.panNode = new StereoPannerNode(audioContext);
+
+    this.muteGainNode.connect(this.gainNode);
+    this.gainNode.connect(this.panNode);
+
     this.gainNode.gain.value = options?.volume ?? 0.1;
+    this.muteGainNode.gain.value = options?.mute ? 0 : 1;
+    this.panNode.pan.value = options?.pan ?? 0;
   }
 }
 

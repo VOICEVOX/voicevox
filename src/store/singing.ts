@@ -13,7 +13,6 @@ import {
   SaveResultObject,
   Singer,
   Phrase,
-  PhraseState,
   transformCommandStore,
   SingingGuide,
   SingingVoice,
@@ -21,9 +20,16 @@ import {
   SingingVoiceSourceHash,
   SequencerEditTarget,
   PhraseSourceHash,
+  Track,
 } from "./type";
 import { DEFAULT_PROJECT_NAME, sanitizeFileName } from "./utility";
-import { EngineId, NoteId, StyleId } from "@/type/preload";
+import {
+  CharacterInfo,
+  EngineId,
+  NoteId,
+  StyleId,
+  TrackId,
+} from "@/type/preload";
 import { FrameAudioQuery, Note as NoteForRequestToEngine } from "@/openapi";
 import { ResultError, getValueOrThrow } from "@/type/result";
 import {
@@ -67,8 +73,11 @@ import {
   createDefaultTempo,
   createDefaultTimeSignature,
   isValidNotes,
+  isValidTrack,
   SEQUENCER_MIN_NUM_MEASURES,
   getNumMeasures,
+  isTracksEmpty,
+  shouldPlayTracks,
 } from "@/sing/domain";
 import {
   FrequentlyUpdatedState,
@@ -84,8 +93,11 @@ import { getWorkaroundKeyRangeAdjustment } from "@/sing/workaroundKeyRangeAdjust
 import { createLogger } from "@/domain/frontend/log";
 import { noteSchema } from "@/domain/project/schema";
 import { getOrThrow } from "@/helpers/mapHelper";
+import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { ufProjectToVoicevox } from "@/sing/utaformatixProject/toVoicevox";
 import { uuid4 } from "@/helpers/random";
+import { convertToWavFileData } from "@/sing/convertToWavFileData";
+import { generateWriteErrorMessage } from "@/helpers/fileHelper";
 
 const logger = createLogger("store/singing");
 
@@ -111,10 +123,113 @@ const generateNoteEvents = (notes: Note[], tempos: Tempo[], tpqn: number) => {
   });
 };
 
+const generateDefaultSongFileName = (
+  projectName: string | undefined,
+  selectedTrack: Track,
+  getCharacterInfo: (
+    engineId: EngineId,
+    styleId: StyleId,
+  ) => CharacterInfo | undefined,
+) => {
+  if (projectName) {
+    return projectName + ".wav";
+  }
+
+  const singer = selectedTrack.singer;
+  if (singer) {
+    const singerName = getCharacterInfo(singer.engineId, singer.styleId)?.metas
+      .speakerName;
+    if (singerName) {
+      const notes = selectedTrack.notes.slice(0, 5);
+      const beginningPartLyrics = notes.map((note) => note.lyric).join("");
+      return sanitizeFileName(`${singerName}_${beginningPartLyrics}.wav`);
+    }
+  }
+
+  return `${DEFAULT_PROJECT_NAME}.wav`;
+};
+
+const offlineRenderTracks = async (
+  numberOfChannels: number,
+  sampleRate: number,
+  renderDuration: number,
+  withLimiter: boolean,
+  multiTrackEnabled: boolean,
+  tracks: Map<TrackId, Track>,
+  phrases: Map<PhraseSourceHash, Phrase>,
+  singingGuides: Map<SingingGuideSourceHash, SingingGuide>,
+  singingVoices: Map<SingingVoiceSourceHash, SingingVoice>,
+) => {
+  const offlineAudioContext = new OfflineAudioContext(
+    numberOfChannels,
+    sampleRate * renderDuration,
+    sampleRate,
+  );
+  const offlineTransport = new OfflineTransport();
+  const mainChannelStrip = new ChannelStrip(offlineAudioContext);
+  const limiter = withLimiter ? new Limiter(offlineAudioContext) : undefined;
+  const clipper = new Clipper(offlineAudioContext);
+  const trackChannelStrips = new Map<TrackId, ChannelStrip>();
+  const shouldPlays = shouldPlayTracks(tracks);
+  for (const [trackId, track] of tracks) {
+    const channelStrip = new ChannelStrip(offlineAudioContext);
+    channelStrip.volume = multiTrackEnabled ? track.gain : 1;
+    channelStrip.pan = multiTrackEnabled ? track.pan : 0;
+    channelStrip.mute = multiTrackEnabled ? !shouldPlays.has(trackId) : false;
+
+    channelStrip.output.connect(mainChannelStrip.input);
+    trackChannelStrips.set(trackId, channelStrip);
+  }
+
+  for (const phrase of phrases.values()) {
+    if (
+      phrase.singingGuideKey == undefined ||
+      phrase.singingVoiceKey == undefined ||
+      phrase.state !== "PLAYABLE"
+    ) {
+      continue;
+    }
+    const singingGuide = getOrThrow(singingGuides, phrase.singingGuideKey);
+    const singingVoice = getOrThrow(singingVoices, phrase.singingVoiceKey);
+
+    // TODO: この辺りの処理を共通化する
+    const audioEvents = await generateAudioEvents(
+      offlineAudioContext,
+      singingGuide.startTime,
+      singingVoice.blob,
+    );
+    const audioPlayer = new AudioPlayer(offlineAudioContext);
+    const audioSequence: AudioSequence = {
+      type: "audio",
+      audioPlayer,
+      audioEvents,
+    };
+    const channelStrip = getOrThrow(trackChannelStrips, phrase.trackId);
+    audioPlayer.output.connect(channelStrip.input);
+    offlineTransport.addSequence(audioSequence);
+  }
+  mainChannelStrip.volume = 1;
+  if (limiter) {
+    mainChannelStrip.output.connect(limiter.input);
+    limiter.output.connect(clipper.input);
+  } else {
+    mainChannelStrip.output.connect(clipper.input);
+  }
+  clipper.output.connect(offlineAudioContext.destination);
+
+  // スケジューリングを行い、オフラインレンダリングを実行
+  // TODO: オフラインレンダリング後にメモリーがきちんと開放されるか確認する
+  offlineTransport.schedule(0, renderDuration);
+  const audioBuffer = await offlineAudioContext.startRendering();
+
+  return audioBuffer;
+};
+
 let audioContext: AudioContext | undefined;
 let transport: Transport | undefined;
 let previewSynth: PolySynth | undefined;
-let channelStrip: ChannelStrip | undefined;
+let mainChannelStrip: ChannelStrip | undefined;
+const trackChannelStrips = new Map<TrackId, ChannelStrip>();
 let limiter: Limiter | undefined;
 let clipper: Clipper | undefined;
 
@@ -123,32 +238,52 @@ if (window.AudioContext) {
   audioContext = new AudioContext();
   transport = new Transport(audioContext);
   previewSynth = new PolySynth(audioContext);
-  channelStrip = new ChannelStrip(audioContext);
+  mainChannelStrip = new ChannelStrip(audioContext);
   limiter = new Limiter(audioContext);
   clipper = new Clipper(audioContext);
 
-  previewSynth.output.connect(channelStrip.input);
-  channelStrip.output.connect(limiter.input);
+  previewSynth.output.connect(mainChannelStrip.input);
+  mainChannelStrip.output.connect(limiter.input);
   limiter.output.connect(clipper.input);
   clipper.output.connect(audioContext.destination);
 }
 
 const playheadPosition = new FrequentlyUpdatedState(0);
 const singingVoices = new Map<SingingVoiceSourceHash, SingingVoice>();
-const sequences = new Map<string, Sequence>(); // キーはPhraseKey
+const sequences = new Map<PhraseSourceHash, Sequence>();
 const animationTimer = new AnimationTimer();
 
 const singingGuideCache = new Map<SingingGuideSourceHash, SingingGuide>();
 const singingVoiceCache = new Map<SingingVoiceSourceHash, SingingVoice>();
 
-// TODO: マルチトラックに対応する
-const selectedTrackIndex = 0;
+const initialTrackId = TrackId(crypto.randomUUID());
+
+/** トラックを取得する。見付からないときはフォールバックとして最初のトラックを返す。 */
+const getSelectedTrackWithFallback = (partialState: {
+  tracks: Map<TrackId, Track>;
+  _selectedTrackId: TrackId;
+  trackOrder: TrackId[];
+}) => {
+  if (!partialState.tracks.has(partialState._selectedTrackId)) {
+    return getOrThrow(partialState.tracks, partialState.trackOrder[0]);
+  }
+  return getOrThrow(partialState.tracks, partialState._selectedTrackId);
+};
 
 export const singingStoreState: SingingStoreState = {
   tpqn: DEFAULT_TPQN,
   tempos: [createDefaultTempo(0)],
   timeSignatures: [createDefaultTimeSignature(1)],
-  tracks: [createDefaultTrack()],
+  tracks: new Map([[initialTrackId, createDefaultTrack()]]),
+  trackOrder: [initialTrackId],
+
+  /**
+   * 選択中のトラックID。
+   * NOTE: このトラックIDは存在しない場合がある（Undo/Redoがあるため）。
+   * 可能な限りgetters.SELECTED_TRACK_IDを使うこと。getSelectedTrackWithFallbackも参照。
+   */
+  _selectedTrackId: initialTrackId,
+
   editFrameRate: DEPRECATED_DEFAULT_EDIT_FRAME_RATE,
   phrases: new Map(),
   singingGuides: new Map(),
@@ -158,8 +293,7 @@ export const singingStoreState: SingingStoreState = {
   sequencerZoomY: 0.75,
   sequencerSnapType: 16,
   sequencerEditTarget: "NOTE",
-  selectedNoteIds: new Set(),
-  overlappingNoteIds: new Set(),
+  _selectedNoteIds: new Set(),
   nowPlaying: false,
   volume: 0,
   startRenderingRequested: false,
@@ -167,6 +301,7 @@ export const singingStoreState: SingingStoreState = {
   nowRendering: false,
   nowAudioExporting: false,
   cancellationOfAudioExportRequested: false,
+  isSongSidebarOpen: false,
 };
 
 export const singingStore = createPartialStore<SingingStoreTypes>({
@@ -178,6 +313,33 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       commit("SET_SHOW_SINGER", {
         isShowSinger,
       });
+    },
+  },
+
+  SELECTED_TRACK_ID: {
+    getter(state) {
+      // Undo/Redoで消えている場合は最初のトラックを選択していることにする
+      if (!state.tracks.has(state._selectedTrackId)) {
+        return state.trackOrder[0];
+      }
+      return state._selectedTrackId;
+    },
+  },
+
+  SELECTED_NOTE_IDS: {
+    // 選択中のトラックのノートだけを選択中のノートとして返す。
+    getter(state) {
+      const selectedTrack = getSelectedTrackWithFallback(state);
+
+      const noteIdsInSelectedTrack = new Set(
+        selectedTrack.notes.map((note) => note.id),
+      );
+
+      // そのままSet#intersectionを呼ぶとVueのバグでエラーになるため、new Set()でProxyなしのSetを作成する
+      // TODO: https://github.com/vuejs/core/issues/11398 が解決したら修正する
+      return new Set(state._selectedNoteIds).intersection(
+        noteIdsInSelectedTrack,
+      );
     },
   },
 
@@ -197,11 +359,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   SET_SINGER: {
     // 歌手をセットする。
     // withRelatedがtrueの場合、関連する情報もセットする。
-    mutation(
-      state,
-      { singer, withRelated }: { singer?: Singer; withRelated?: boolean },
-    ) {
-      state.tracks[selectedTrackIndex].singer = singer;
+    mutation(state, { singer, withRelated, trackId }) {
+      const track = getOrThrow(state.tracks, trackId);
+      track.singer = singer;
 
       if (withRelated == true && singer != undefined) {
         // 音域調整量マジックナンバーを設定するワークアラウンド
@@ -209,13 +369,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           state.characterInfos,
           singer,
         );
-        state.tracks[selectedTrackIndex].keyRangeAdjustment =
-          keyRangeAdjustment;
+        track.keyRangeAdjustment = keyRangeAdjustment;
       }
     },
     async action(
       { state, getters, dispatch, commit },
-      { singer, withRelated }: { singer?: Singer; withRelated?: boolean },
+      { singer, withRelated, trackId },
     ) {
       if (state.defaultStyleIds == undefined)
         throw new Error("state.defaultStyleIds == undefined");
@@ -231,46 +390,43 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const styleId = singer?.styleId ?? defaultStyleId;
 
       dispatch("SETUP_SINGER", { singer: { engineId, styleId } });
-      commit("SET_SINGER", { singer: { engineId, styleId }, withRelated });
+      commit("SET_SINGER", {
+        singer: { engineId, styleId },
+        withRelated,
+        trackId,
+      });
 
       dispatch("RENDER");
     },
   },
 
   SET_KEY_RANGE_ADJUSTMENT: {
-    mutation(state, { keyRangeAdjustment }: { keyRangeAdjustment: number }) {
-      state.tracks[selectedTrackIndex].keyRangeAdjustment = keyRangeAdjustment;
+    mutation(state, { keyRangeAdjustment, trackId }) {
+      const track = getOrThrow(state.tracks, trackId);
+      track.keyRangeAdjustment = keyRangeAdjustment;
     },
-    async action(
-      { dispatch, commit },
-      { keyRangeAdjustment }: { keyRangeAdjustment: number },
-    ) {
+    async action({ dispatch, commit }, { keyRangeAdjustment, trackId }) {
       if (!isValidKeyRangeAdjustment(keyRangeAdjustment)) {
         throw new Error("The keyRangeAdjustment is invalid.");
       }
-      commit("SET_KEY_RANGE_ADJUSTMENT", { keyRangeAdjustment });
+      commit("SET_KEY_RANGE_ADJUSTMENT", { keyRangeAdjustment, trackId });
 
       dispatch("RENDER");
     },
   },
 
   SET_VOLUME_RANGE_ADJUSTMENT: {
-    mutation(
-      state,
-      { volumeRangeAdjustment }: { volumeRangeAdjustment: number },
-    ) {
-      state.tracks[selectedTrackIndex].volumeRangeAdjustment =
-        volumeRangeAdjustment;
+    mutation(state, { volumeRangeAdjustment, trackId }) {
+      const track = getOrThrow(state.tracks, trackId);
+      track.volumeRangeAdjustment = volumeRangeAdjustment;
     },
-    async action(
-      { dispatch, commit },
-      { volumeRangeAdjustment }: { volumeRangeAdjustment: number },
-    ) {
+    async action({ dispatch, commit }, { volumeRangeAdjustment, trackId }) {
       if (!isValidVolumeRangeAdjustment(volumeRangeAdjustment)) {
         throw new Error("The volumeRangeAdjustment is invalid.");
       }
       commit("SET_VOLUME_RANGE_ADJUSTMENT", {
         volumeRangeAdjustment,
+        trackId,
       });
 
       dispatch("RENDER");
@@ -410,67 +566,65 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  NOTE_IDS: {
+  ALL_NOTE_IDS: {
     getter(state) {
-      const selectedTrack = state.tracks[selectedTrackIndex];
-      const noteIds = selectedTrack.notes.map((value) => value.id);
+      const noteIds = [...state.tracks.values()].flatMap((track) =>
+        track.notes.map((note) => note.id),
+      );
       return new Set(noteIds);
     },
   },
 
-  SET_NOTES: {
-    mutation(state, { notes }: { notes: Note[] }) {
-      // TODO: マルチトラック対応
-      state.overlappingNoteIds.clear();
-      state.editingLyricNoteId = undefined;
-      state.selectedNoteIds.clear();
-      state.tracks[selectedTrackIndex].notes = notes;
-      state.overlappingNoteIds = getOverlappingNoteIds(
-        state.tracks[selectedTrackIndex].notes,
-      );
+  OVERLAPPING_NOTE_IDS: {
+    getter: (state) => (trackId) => {
+      const notes = getOrThrow(state.tracks, trackId).notes;
+      return getOverlappingNoteIds(notes);
     },
-    async action({ commit, dispatch }, { notes }: { notes: Note[] }) {
+  },
+
+  SET_NOTES: {
+    mutation(state, { notes, trackId }) {
+      state.editingLyricNoteId = undefined;
+      state._selectedNoteIds.clear();
+      const selectedTrack = getOrThrow(state.tracks, trackId);
+      selectedTrack.notes = notes;
+    },
+    async action({ commit, dispatch }, { notes, trackId }) {
       if (!isValidNotes(notes)) {
         throw new Error("The notes are invalid.");
       }
-      commit("SET_NOTES", { notes });
+      commit("SET_NOTES", { notes, trackId });
 
       dispatch("RENDER");
     },
   },
 
   ADD_NOTES: {
-    mutation(state, { notes }: { notes: Note[] }) {
-      const selectedTrack = state.tracks[selectedTrackIndex];
+    mutation(state, { notes, trackId }) {
+      const selectedTrack = getOrThrow(state.tracks, trackId);
       const newNotes = [...selectedTrack.notes, ...notes];
       newNotes.sort((a, b) => a.position - b.position);
       selectedTrack.notes = newNotes;
-      state.overlappingNoteIds = getOverlappingNoteIds(
-        state.tracks[selectedTrackIndex].notes,
-      );
     },
   },
 
   UPDATE_NOTES: {
-    mutation(state, { notes }: { notes: Note[] }) {
+    mutation(state, { notes, trackId }) {
       const notesMap = new Map<NoteId, Note>();
       for (const note of notes) {
         notesMap.set(note.id, note);
       }
-      const selectedTrack = state.tracks[selectedTrackIndex];
+      const selectedTrack = getOrThrow(state.tracks, trackId);
       selectedTrack.notes = selectedTrack.notes
         .map((value) => notesMap.get(value.id) ?? value)
         .sort((a, b) => a.position - b.position);
-      state.overlappingNoteIds = getOverlappingNoteIds(
-        state.tracks[selectedTrackIndex].notes,
-      );
     },
   },
 
   REMOVE_NOTES: {
-    mutation(state, { noteIds }: { noteIds: NoteId[] }) {
+    mutation(state, { noteIds, trackId }) {
       const noteIdsSet = new Set(noteIds);
-      const selectedTrack = state.tracks[selectedTrackIndex];
+      const selectedTrack = getOrThrow(state.tracks, trackId);
       if (
         state.editingLyricNoteId != undefined &&
         noteIdsSet.has(state.editingLyricNoteId)
@@ -478,26 +632,22 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         state.editingLyricNoteId = undefined;
       }
       for (const noteId of noteIds) {
-        state.selectedNoteIds.delete(noteId);
+        state._selectedNoteIds.delete(noteId);
       }
       selectedTrack.notes = selectedTrack.notes.filter((value) => {
         return !noteIdsSet.has(value.id);
       });
-
-      state.overlappingNoteIds = getOverlappingNoteIds(
-        state.tracks[selectedTrackIndex].notes,
-      );
     },
   },
 
   SELECT_NOTES: {
     mutation(state, { noteIds }: { noteIds: NoteId[] }) {
       for (const noteId of noteIds) {
-        state.selectedNoteIds.add(noteId);
+        state._selectedNoteIds.add(noteId);
       }
     },
     async action({ getters, commit }, { noteIds }: { noteIds: NoteId[] }) {
-      const existingNoteIds = getters.NOTE_IDS;
+      const existingNoteIds = getters.ALL_NOTE_IDS;
       const isValidNoteIds = noteIds.every((value) => {
         return existingNoteIds.has(value);
       });
@@ -508,21 +658,19 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  SELECT_ALL_NOTES: {
-    mutation(state) {
-      const currentTrack = state.tracks[selectedTrackIndex];
-      const allNoteIds = currentTrack.notes.map((note) => note.id);
-      state.selectedNoteIds = new Set(allNoteIds);
-    },
-    async action({ commit }) {
-      commit("SELECT_ALL_NOTES");
+  SELECT_ALL_NOTES_IN_TRACK: {
+    async action({ state, commit }, { trackId }) {
+      const track = getOrThrow(state.tracks, trackId);
+      const noteIds = track.notes.map((note) => note.id);
+      commit("DESELECT_ALL_NOTES");
+      commit("SELECT_NOTES", { noteIds });
     },
   },
 
   DESELECT_ALL_NOTES: {
     mutation(state) {
       state.editingLyricNoteId = undefined;
-      state.selectedNoteIds = new Set();
+      state._selectedNoteIds = new Set();
     },
     async action({ commit }) {
       commit("DESELECT_ALL_NOTES");
@@ -531,14 +679,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   SET_EDITING_LYRIC_NOTE_ID: {
     mutation(state, { noteId }: { noteId?: NoteId }) {
-      if (noteId != undefined && !state.selectedNoteIds.has(noteId)) {
-        state.selectedNoteIds.clear();
-        state.selectedNoteIds.add(noteId);
+      if (noteId != undefined && !state._selectedNoteIds.has(noteId)) {
+        state._selectedNoteIds.clear();
+        state._selectedNoteIds.add(noteId);
       }
       state.editingLyricNoteId = noteId;
     },
     async action({ getters, commit }, { noteId }: { noteId?: NoteId }) {
-      if (noteId != undefined && !getters.NOTE_IDS.has(noteId)) {
+      if (noteId != undefined && !getters.ALL_NOTE_IDS.has(noteId)) {
         throw new Error("The note id is invalid.");
       }
       commit("SET_EDITING_LYRIC_NOTE_ID", { noteId });
@@ -548,77 +696,65 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   SET_PITCH_EDIT_DATA: {
     // ピッチ編集データをセットする。
     // track.pitchEditDataの長さが足りない場合は、伸長も行う。
-    mutation(
-      state,
-      { data, startFrame }: { data: number[]; startFrame: number },
-    ) {
-      const pitchEditData = state.tracks[selectedTrackIndex].pitchEditData;
+    mutation(state, { pitchArray, startFrame, trackId }) {
+      const track = getOrThrow(state.tracks, trackId);
+      const pitchEditData = track.pitchEditData;
       const tempData = [...pitchEditData];
-      const endFrame = startFrame + data.length;
+      const endFrame = startFrame + pitchArray.length;
       if (tempData.length < endFrame) {
         const valuesToPush = new Array(endFrame - tempData.length).fill(
           VALUE_INDICATING_NO_DATA,
         );
         tempData.push(...valuesToPush);
       }
-      tempData.splice(startFrame, data.length, ...data);
-      state.tracks[selectedTrackIndex].pitchEditData = tempData;
+      tempData.splice(startFrame, pitchArray.length, ...pitchArray);
+      track.pitchEditData = tempData;
     },
-    async action(
-      { dispatch, commit },
-      { data, startFrame }: { data: number[]; startFrame: number },
-    ) {
+    async action({ dispatch, commit }, { pitchArray, startFrame, trackId }) {
       if (startFrame < 0) {
         throw new Error("startFrame must be greater than or equal to 0.");
       }
-      if (!isValidPitchEditData(data)) {
+      if (!isValidPitchEditData(pitchArray)) {
         throw new Error("The pitch edit data is invalid.");
       }
-      commit("SET_PITCH_EDIT_DATA", { data, startFrame });
+      commit("SET_PITCH_EDIT_DATA", { pitchArray, startFrame, trackId });
 
       dispatch("RENDER");
     },
   },
 
   ERASE_PITCH_EDIT_DATA: {
-    mutation(
-      state,
-      { startFrame, frameLength }: { startFrame: number; frameLength: number },
-    ) {
-      const pitchEditData = state.tracks[selectedTrackIndex].pitchEditData;
+    mutation(state, { startFrame, frameLength, trackId }) {
+      const track = getOrThrow(state.tracks, trackId);
+      const pitchEditData = track.pitchEditData;
       const tempData = [...pitchEditData];
       const endFrame = Math.min(startFrame + frameLength, tempData.length);
       tempData.fill(VALUE_INDICATING_NO_DATA, startFrame, endFrame);
-      state.tracks[selectedTrackIndex].pitchEditData = tempData;
+      track.pitchEditData = tempData;
     },
   },
 
   CLEAR_PITCH_EDIT_DATA: {
     // ピッチ編集データを失くす。
-    mutation(state) {
-      state.tracks[selectedTrackIndex].pitchEditData = [];
+    mutation(state, { trackId }) {
+      const track = getOrThrow(state.tracks, trackId);
+      track.pitchEditData = [];
     },
-    async action({ dispatch, commit }) {
-      commit("CLEAR_PITCH_EDIT_DATA");
+    async action({ dispatch, commit }, { trackId }) {
+      commit("CLEAR_PITCH_EDIT_DATA", { trackId });
 
       dispatch("RENDER");
     },
   },
 
   SET_PHRASES: {
-    mutation(state, { phrases }: { phrases: Map<PhraseSourceHash, Phrase> }) {
+    mutation(state, { phrases }) {
       state.phrases = phrases;
     },
   },
 
   SET_STATE_TO_PHRASE: {
-    mutation(
-      state,
-      {
-        phraseKey,
-        phraseState,
-      }: { phraseKey: PhraseSourceHash; phraseState: PhraseState },
-    ) {
+    mutation(state, { phraseKey, phraseState }) {
       const phrase = getOrThrow(state.phrases, phraseKey);
 
       phrase.state = phraseState;
@@ -685,7 +821,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   SELECTED_TRACK: {
     getter(state) {
-      return state.tracks[selectedTrackIndex];
+      return getSelectedTrackWithFallback(state);
     },
   },
 
@@ -709,7 +845,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       return Math.max(
         SEQUENCER_MIN_NUM_MEASURES,
         getNumMeasures(
-          state.tracks[selectedTrackIndex].notes,
+          [...state.tracks.values()].flatMap((track) => track.notes),
           state.tempos,
           state.timeSignatures,
           state.tpqn,
@@ -838,12 +974,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.volume = volume;
     },
     async action({ commit }, { volume }) {
-      if (!channelStrip) {
+      if (!mainChannelStrip) {
         throw new Error("channelStrip is undefined.");
       }
       commit("SET_VOLUME", { volume });
 
-      channelStrip.volume = volume;
+      mainChannelStrip.volume = volume;
     },
   },
 
@@ -900,6 +1036,101 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   SET_NOW_RENDERING: {
     mutation(state, { nowRendering }) {
       state.nowRendering = nowRendering;
+    },
+  },
+
+  CREATE_TRACK: {
+    action() {
+      const trackId = TrackId(crypto.randomUUID());
+      const track = createDefaultTrack();
+
+      return { trackId, track };
+    },
+  },
+
+  REGISTER_TRACK: {
+    mutation(state, { trackId, track }) {
+      state.tracks.set(trackId, track);
+      state.trackOrder.push(trackId);
+    },
+    action({ state, commit, dispatch }, { trackId, track }) {
+      if (state.tracks.has(trackId)) {
+        throw new Error(`Track ${trackId} is already registered.`);
+      }
+      if (!isValidTrack(track)) {
+        throw new Error("The track is invalid.");
+      }
+      commit("REGISTER_TRACK", { trackId, track });
+
+      dispatch("RENDER");
+    },
+  },
+
+  DELETE_TRACK: {
+    mutation(state, { trackId }) {
+      state.tracks.delete(trackId);
+      const trackIndex = state.trackOrder.indexOf(trackId);
+      state.trackOrder = state.trackOrder.filter((value) => value !== trackId);
+      if (state._selectedTrackId === trackId) {
+        state._selectedTrackId =
+          state.trackOrder[trackIndex === 0 ? 0 : trackIndex - 1];
+      }
+    },
+    async action({ state, commit, dispatch }, { trackId }) {
+      if (!state.tracks.has(trackId)) {
+        throw new Error(`Track ${trackId} does not exist.`);
+      }
+      commit("DELETE_TRACK", { trackId });
+
+      dispatch("RENDER");
+    },
+  },
+
+  SELECT_TRACK: {
+    // トラックを切り替えるときに選択中のノートをクリアする。
+    mutation(state, { trackId }) {
+      state._selectedNoteIds.clear();
+      state._selectedTrackId = trackId;
+    },
+    action({ state, commit }, { trackId }) {
+      if (!state.tracks.has(trackId)) {
+        throw new Error(`Track ${trackId} does not exist.`);
+      }
+      commit("SELECT_TRACK", { trackId });
+    },
+  },
+
+  SET_TRACK: {
+    mutation(state, { trackId, track }) {
+      state.tracks.set(trackId, track);
+    },
+    async action({ state, commit, dispatch }, { trackId, track }) {
+      if (!isValidTrack(track)) {
+        throw new Error("The track is invalid.");
+      }
+      if (!state.tracks.has(trackId)) {
+        throw new Error(`Track ${trackId} does not exist.`);
+      }
+
+      commit("SET_TRACK", { trackId, track });
+
+      dispatch("RENDER");
+    },
+  },
+
+  SET_TRACKS: {
+    mutation(state, { tracks }) {
+      state.tracks = tracks;
+      state.trackOrder = Array.from(tracks.keys());
+      state._selectedTrackId = state.trackOrder[0];
+    },
+    async action({ commit, dispatch }, { tracks }) {
+      if (![...tracks.values()].every((track) => isValidTrack(track))) {
+        throw new Error("The track is invalid.");
+      }
+      commit("SET_TRACKS", { tracks });
+
+      dispatch("RENDER");
     },
   },
 
@@ -960,6 +1191,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         tempos: Tempo[],
         tpqn: number,
         phraseFirstRestMinDurationSeconds: number,
+        trackId: TrackId,
       ) => {
         const foundPhrases = new Map<PhraseSourceHash, Phrase>();
 
@@ -989,11 +1221,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             const notesHash = await calculatePhraseSourceHash({
               firstRestDuration: phraseFirstRestDuration,
               notes: phraseNotes,
+              trackId,
             });
             foundPhrases.set(notesHash, {
               firstRestDuration: phraseFirstRestDuration,
               notes: phraseNotes,
               state: "WAITING_TO_BE_RENDERED",
+              trackId,
             });
 
             if (nextNote != undefined) {
@@ -1236,44 +1470,100 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         if (!transport) {
           throw new Error("transport is undefined.");
         }
-        if (!channelStrip) {
+        if (!mainChannelStrip) {
           throw new Error("channelStrip is undefined.");
         }
         const audioContextRef = audioContext;
         const transportRef = transport;
-        const channelStripRef = channelStrip;
-        const trackRef = getters.SELECTED_TRACK;
 
         // レンダリング中に変更される可能性のあるデータをコピーする
-        // 重なっているノートの削除も行う
+        const tracks = cloneWithUnwrapProxy(state.tracks);
+
+        const overlappingNoteIdsMap = new Map(
+          [...tracks.keys()].map((trackId) => [
+            trackId,
+            getters.OVERLAPPING_NOTE_IDS(trackId),
+          ]),
+        );
+
+        // trackChannelStripsを同期する。
+        // ここで更新されたChannelStripに既存のAudioPlayerなどを繋げる必要がある。
+        // そのため、Phraseが変わっていなくてもPhraseの更新=AudioPlayerなどの再接続は毎回行う必要がある。
+        // trackChannelStripsを同期した後、フレーズの更新が完了するまではreturnやthrowをしないこと。
+        // TODO: 良い設計を考える
+        // ref: https://github.com/VOICEVOX/voicevox/pull/2176#discussion_r1693991784
+
+        const shouldPlays = shouldPlayTracks(tracks);
+        for (const [trackId, track] of tracks) {
+          if (!trackChannelStrips.has(trackId)) {
+            const channelStrip = new ChannelStrip(audioContext);
+            channelStrip.output.connect(mainChannelStrip.input);
+            trackChannelStrips.set(trackId, channelStrip);
+          }
+
+          const channelStrip = getOrThrow(trackChannelStrips, trackId);
+          channelStrip.volume = state.experimentalSetting.enableMultiTrack
+            ? track.gain
+            : 1;
+          channelStrip.pan = state.experimentalSetting.enableMultiTrack
+            ? track.pan
+            : 0;
+          channelStrip.mute = state.experimentalSetting.enableMultiTrack
+            ? !shouldPlays.has(trackId)
+            : false;
+        }
+        for (const trackId of trackChannelStrips.keys()) {
+          if (!tracks.has(trackId)) {
+            const channelStrip = getOrThrow(trackChannelStrips, trackId);
+            channelStrip.output.disconnect();
+            trackChannelStrips.delete(trackId);
+          }
+        }
+
+        const singerAndFrameRates = new Map(
+          [...tracks].map(([trackId, track]) => [
+            trackId,
+            track.singer
+              ? {
+                  singer: track.singer,
+                  frameRate:
+                    state.engineManifests[track.singer.engineId].frameRate,
+                }
+              : undefined,
+          ]),
+        );
         const tpqn = state.tpqn;
         const tempos = state.tempos.map((value) => ({ ...value }));
-        const singerAndFrameRate = trackRef.singer
-          ? {
-              singer: { ...trackRef.singer },
-              frameRate:
-                state.engineManifests[trackRef.singer.engineId].frameRate,
-            }
-          : undefined;
-        const keyRangeAdjustment = trackRef.keyRangeAdjustment;
-        const volumeRangeAdjustment = trackRef.volumeRangeAdjustment;
-        const notes = trackRef.notes
-          .map((value) => ({ ...value }))
-          .filter((value) => !state.overlappingNoteIds.has(value.id));
-        const pitchEditData = [...trackRef.pitchEditData];
         const editFrameRate = state.editFrameRate;
+
         const firstRestMinDurationSeconds = 0.12;
         const lastRestDurationSeconds = 0.5;
         const fadeOutDurationSeconds = 0.15;
 
         // フレーズを更新する
 
-        const foundPhrases = await searchPhrases(
-          notes,
-          tempos,
-          tpqn,
-          firstRestMinDurationSeconds,
-        );
+        const foundPhrases = new Map<PhraseSourceHash, Phrase>();
+        for (const [trackId, track] of tracks) {
+          if (!track.singer) {
+            continue;
+          }
+
+          // 重なっているノートを削除する
+          const overlappingNoteIds = getOrThrow(overlappingNoteIdsMap, trackId);
+          const notes = track.notes.filter(
+            (value) => !overlappingNoteIds.has(value.id),
+          );
+          const phrases = await searchPhrases(
+            notes,
+            tempos,
+            tpqn,
+            firstRestMinDurationSeconds,
+            trackId,
+          );
+          for (const [phraseHash, phrase] of phrases) {
+            foundPhrases.set(phraseHash, phrase);
+          }
+        }
 
         for (const [phraseKey, phrase] of state.phrases) {
           const notesHash = phraseKey;
@@ -1298,16 +1588,22 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           }
         }
 
-        const phrases = new Map<PhraseSourceHash, Phrase>();
+        const newPhrases = new Map<PhraseSourceHash, Phrase>();
 
-        for (const [notesHash, foundPhrase] of foundPhrases) {
-          const phraseKey = notesHash;
+        for (const [phraseKey, foundPhrase] of foundPhrases) {
           const existingPhrase = state.phrases.get(phraseKey);
           if (!existingPhrase) {
             // 新しいフレーズの場合
-            phrases.set(phraseKey, foundPhrase);
+            newPhrases.set(phraseKey, foundPhrase);
             continue;
           }
+
+          const track = getOrThrow(tracks, existingPhrase.trackId);
+
+          const singerAndFrameRate = getOrThrow(
+            singerAndFrameRates,
+            existingPhrase.trackId,
+          );
 
           // すでに存在するフレーズの場合
           // 再レンダリングする必要があるかどうかをチェックする
@@ -1336,8 +1632,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                 firstRestDuration: phrase.firstRestDuration,
                 lastRestDurationSeconds,
                 notes: phrase.notes,
-                keyRangeAdjustment,
-                volumeRangeAdjustment,
+                keyRangeAdjustment: track.keyRangeAdjustment,
+                volumeRangeAdjustment: track.volumeRangeAdjustment,
                 frameRate: singerAndFrameRate.frameRate,
               });
               const hash = phrase.singingGuideKey;
@@ -1363,7 +1659,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
               // 歌い方をコピーして、ピッチ編集を適用する
               singingGuide = structuredClone(toRaw(singingGuide));
-              applyPitchEdit(singingGuide, pitchEditData, editFrameRate);
+              applyPitchEdit(singingGuide, track.pitchEditData, editFrameRate);
 
               const calculatedHash = await calculateSingingVoiceSourceHash({
                 singer: singerAndFrameRate.singer,
@@ -1383,10 +1679,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             phrase.state = "WAITING_TO_BE_RENDERED";
           }
 
-          phrases.set(phraseKey, phrase);
+          newPhrases.set(phraseKey, phrase);
         }
 
-        commit("SET_PHRASES", { phrases });
+        commit("SET_PHRASES", { phrases: newPhrases });
 
         logger.info("Phrases updated.");
 
@@ -1418,7 +1714,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               instrument: polySynth,
               noteEvents,
             };
-            polySynth.output.connect(channelStripRef.input);
+            const channelStrip = getOrThrow(trackChannelStrips, phrase.trackId);
+            polySynth.output.connect(channelStrip.input);
             transportRef.addSequence(noteSequence);
             sequences.set(phraseKey, noteSequence);
           }
@@ -1432,6 +1729,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             playheadPosition.value,
           );
           phrasesToBeRendered.delete(phraseKey);
+
+          const track = getOrThrow(tracks, phrase.trackId);
+
+          const singerAndFrameRate = getOrThrow(
+            singerAndFrameRates,
+            phrase.trackId,
+          );
 
           // シンガーが未設定の場合は、歌い方の生成や音声合成は行わない
 
@@ -1460,7 +1764,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             );
 
             // リクエスト用のノーツのキーのシフトを行う
-            shiftKeyOfNotes(notesForRequestToEngine, -keyRangeAdjustment);
+            shiftKeyOfNotes(notesForRequestToEngine, -track.keyRangeAdjustment);
 
             // 歌い方が存在する場合、歌い方を取得する
             // 歌い方が存在しない場合、キャッシュがあれば取得し、なければ歌い方を生成する
@@ -1480,8 +1784,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                   firstRestDuration: phrase.firstRestDuration,
                   lastRestDurationSeconds,
                   notes: phrase.notes,
-                  keyRangeAdjustment,
-                  volumeRangeAdjustment,
+                  keyRangeAdjustment: track.keyRangeAdjustment,
+                  volumeRangeAdjustment: track.volumeRangeAdjustment,
                   frameRate: singerAndFrameRate.frameRate,
                 });
 
@@ -1502,7 +1806,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                 logger.info(`Fetched frame audio query. phonemes: ${phonemes}`);
 
                 // ピッチのシフトを行う
-                shiftGuidePitch(query, keyRangeAdjustment);
+                shiftGuidePitch(query, track.keyRangeAdjustment);
 
                 // フレーズの開始時刻を計算する
                 const startTime = calculateStartTime(phrase, tempos, tpqn);
@@ -1526,7 +1830,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             singingGuide = structuredClone(toRaw(singingGuide));
 
             // ピッチ編集を適用する
-            applyPitchEdit(singingGuide, pitchEditData, editFrameRate);
+            applyPitchEdit(singingGuide, track.pitchEditData, editFrameRate);
 
             // 歌声のキャッシュがあれば取得し、なければ音声合成を行う
 
@@ -1551,7 +1855,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               const queryForVolumeGeneration = structuredClone(
                 singingGuide.query,
               );
-              shiftGuidePitch(queryForVolumeGeneration, -keyRangeAdjustment);
+              shiftGuidePitch(
+                queryForVolumeGeneration,
+                -track.keyRangeAdjustment,
+              );
 
               // 音量を生成して、生成した音量を歌い方のクエリにセットする
               // 音量値はAPIを叩く毎に変わるので、calc hashしたあとに音量を取得している
@@ -1564,7 +1871,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               singingGuide.query.volume = volumes;
 
               // 音量のシフトを行う
-              shiftGuideVolume(singingGuide.query, volumeRangeAdjustment);
+              shiftGuideVolume(singingGuide.query, track.volumeRangeAdjustment);
 
               // 末尾のpauの区間の音量を0にする
               muteLastPauSection(
@@ -1606,13 +1913,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               singingGuide.startTime,
               singingVoice.blob,
             );
-            const audioPlayer = new AudioPlayer(audioContextRef);
+            const audioPlayer = new AudioPlayer(audioContext);
             const audioSequence: AudioSequence = {
               type: "audio",
               audioPlayer,
               audioEvents,
             };
-            audioPlayer.output.connect(channelStripRef.input);
+            const channelStrip = getOrThrow(trackChannelStrips, phrase.trackId);
+            audioPlayer.output.connect(channelStrip.input);
             transportRef.addSequence(audioSequence);
             sequences.set(phraseKey, audioSequence);
 
@@ -1680,85 +1988,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     }),
   },
 
-  // TODO: Undoできるようにする
-  IMPORT_UTAFORMATIX_PROJECT: {
-    action: createUILockAction(
-      async ({ state, commit, dispatch }, { project, trackIndex = 0 }) => {
-        const { tempos, timeSignatures, tracks, tpqn } =
-          ufProjectToVoicevox(project);
-
-        const notes = tracks[trackIndex].notes;
-
-        if (tempos.length > 1) {
-          logger.warn("Multiple tempos are not supported.");
-        }
-        if (timeSignatures.length > 1) {
-          logger.warn("Multiple time signatures are not supported.");
-        }
-
-        tempos.splice(1, tempos.length - 1); // TODO: 複数テンポに対応したら削除
-        timeSignatures.splice(1, timeSignatures.length - 1); // TODO: 複数拍子に対応したら削除
-
-        if (tpqn !== state.tpqn) {
-          throw new Error("TPQN does not match. Must be converted.");
-        }
-
-        // TODO: ここら辺のSET系の処理をまとめる
-        await dispatch("SET_TPQN", { tpqn });
-        await dispatch("SET_TEMPOS", { tempos });
-        await dispatch("SET_TIME_SIGNATURES", { timeSignatures });
-        await dispatch("SET_NOTES", { notes });
-
-        commit("RESET_SAVED_LAST_COMMAND_IDS");
-        commit("CLEAR_COMMANDS");
-        dispatch("RENDER");
-      },
-    ),
-  },
-
-  // TODO: Undoできるようにする
-  IMPORT_VOICEVOX_PROJECT: {
-    action: createUILockAction(
-      async ({ state, commit, dispatch }, { project, trackIndex = 0 }) => {
-        const { tempos, timeSignatures, tracks, tpqn } = project.song;
-
-        const track = tracks[trackIndex];
-        const notes = track.notes.map((note) => ({
-          ...note,
-          id: NoteId(uuid4()),
-        }));
-
-        if (tpqn !== state.tpqn) {
-          throw new Error("TPQN does not match. Must be converted.");
-        }
-
-        // TODO: ここら辺のSET系の処理をまとめる
-        await dispatch("SET_SINGER", {
-          singer: track.singer,
-        });
-        await dispatch("SET_KEY_RANGE_ADJUSTMENT", {
-          keyRangeAdjustment: track.keyRangeAdjustment,
-        });
-        await dispatch("SET_VOLUME_RANGE_ADJUSTMENT", {
-          volumeRangeAdjustment: track.volumeRangeAdjustment,
-        });
-        await dispatch("SET_TPQN", { tpqn });
-        await dispatch("SET_TEMPOS", { tempos });
-        await dispatch("SET_TIME_SIGNATURES", { timeSignatures });
-        await dispatch("SET_NOTES", { notes });
-        await dispatch("CLEAR_PITCH_EDIT_DATA"); // FIXME: SET_PITCH_EDIT_DATAがセッターになれば不要
-        await dispatch("SET_PITCH_EDIT_DATA", {
-          data: track.pitchEditData,
-          startFrame: 0,
-        });
-
-        commit("RESET_SAVED_LAST_COMMAND_IDS");
-        commit("CLEAR_COMMANDS");
-        dispatch("RENDER");
-      },
-    ),
-  },
-
   FETCH_SING_FRAME_VOLUME: {
     async action(
       { dispatch },
@@ -1803,129 +2032,18 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   EXPORT_WAVE_FILE: {
     action: createUILockAction(
-      async ({ state, getters, commit, dispatch }, { filePath }) => {
-        const convertToWavFileData = (audioBuffer: AudioBuffer) => {
-          const bytesPerSample = 4; // Float32
-          const formatCode = 3; // WAVE_FORMAT_IEEE_FLOAT
-
-          const numberOfChannels = audioBuffer.numberOfChannels;
-          const numberOfSamples = audioBuffer.length;
-          const sampleRate = audioBuffer.sampleRate;
-          const byteRate = sampleRate * numberOfChannels * bytesPerSample;
-          const blockSize = numberOfChannels * bytesPerSample;
-          const dataSize = numberOfSamples * numberOfChannels * bytesPerSample;
-
-          const buffer = new ArrayBuffer(44 + dataSize);
-          const dataView = new DataView(buffer);
-
-          let pos = 0;
-          const writeString = (value: string) => {
-            for (let i = 0; i < value.length; i++) {
-              dataView.setUint8(pos, value.charCodeAt(i));
-              pos += 1;
-            }
-          };
-          const writeUint32 = (value: number) => {
-            dataView.setUint32(pos, value, true);
-            pos += 4;
-          };
-          const writeUint16 = (value: number) => {
-            dataView.setUint16(pos, value, true);
-            pos += 2;
-          };
-          const writeSample = (offset: number, value: number) => {
-            dataView.setFloat32(pos + offset * 4, value, true);
-          };
-
-          writeString("RIFF");
-          writeUint32(36 + dataSize); // RIFFチャンクサイズ
-          writeString("WAVE");
-          writeString("fmt ");
-          writeUint32(16); // fmtチャンクサイズ
-          writeUint16(formatCode);
-          writeUint16(numberOfChannels);
-          writeUint32(sampleRate);
-          writeUint32(byteRate);
-          writeUint16(blockSize);
-          writeUint16(bytesPerSample * 8); // 1サンプルあたりのビット数
-          writeString("data");
-          writeUint32(dataSize);
-
-          for (let i = 0; i < numberOfChannels; i++) {
-            const channelData = audioBuffer.getChannelData(i);
-            for (let j = 0; j < numberOfSamples; j++) {
-              writeSample(j * numberOfChannels + i, channelData[j]);
-            }
-          }
-
-          return buffer;
-        };
-
-        const generateWriteErrorMessage = (writeFileResult: ResultError) => {
-          if (writeFileResult.code) {
-            const code = writeFileResult.code.toUpperCase();
-
-            if (code.startsWith("ENOSPC")) {
-              return "空き容量が足りません。";
-            }
-
-            if (code.startsWith("EACCES")) {
-              return "ファイルにアクセスする許可がありません。";
-            }
-
-            if (code.startsWith("EBUSY")) {
-              return "ファイルが開かれています。";
-            }
-          }
-
-          return `何らかの理由で失敗しました。${writeFileResult.message}`;
-        };
-
-        const calcRenderDuration = () => {
-          // TODO: マルチトラックに対応する
-          const notes = getters.SELECTED_TRACK.notes;
-          if (notes.length === 0) {
-            return 1;
-          }
-          const lastNote = notes[notes.length - 1];
-          const lastNoteEndPosition = lastNote.position + lastNote.duration;
-          const lastNoteEndTime = getters.TICK_TO_SECOND(lastNoteEndPosition);
-          return Math.max(1, lastNoteEndTime + 1);
-        };
-
-        const generateDefaultSongFileName = () => {
-          const projectName = getters.PROJECT_NAME;
-          if (projectName) {
-            return projectName + ".wav";
-          }
-
-          const singer = getters.SELECTED_TRACK.singer;
-          if (singer) {
-            const singerName = getters.CHARACTER_INFO(
-              singer.engineId,
-              singer.styleId,
-            )?.metas.speakerName;
-            if (singerName) {
-              const notes = getters.SELECTED_TRACK.notes.slice(0, 5);
-              const beginningPartLyrics = notes
-                .map((note) => note.lyric)
-                .join("");
-              return sanitizeFileName(
-                `${singerName}_${beginningPartLyrics}.wav`,
-              );
-            }
-          }
-
-          return `${DEFAULT_PROJECT_NAME}.wav`;
-        };
-
+      async ({ state, commit, getters, dispatch }, { filePath }) => {
         const exportWaveFile = async (): Promise<SaveResultObject> => {
-          const fileName = generateDefaultSongFileName();
+          const fileName = generateDefaultSongFileName(
+            getters.PROJECT_NAME,
+            getters.SELECTED_TRACK,
+            getters.CHARACTER_INFO,
+          );
           const numberOfChannels = 2;
           const sampleRate = 48000; // TODO: 設定できるようにする
-          const withLimiter = false; // TODO: 設定できるようにする
+          const withLimiter = true; // TODO: 設定できるようにする
 
-          const renderDuration = calcRenderDuration();
+          const renderDuration = getters.CALC_RENDER_DURATION;
 
           if (state.nowPlaying) {
             await dispatch("SING_STOP_AUDIO");
@@ -1963,63 +2081,18 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             }
           }
 
-          const offlineAudioContext = new OfflineAudioContext(
+          const audioBuffer = await offlineRenderTracks(
             numberOfChannels,
-            sampleRate * renderDuration,
             sampleRate,
+            renderDuration,
+            withLimiter,
+            state.experimentalSetting.enableMultiTrack,
+            state.tracks,
+            state.phrases,
+            state.singingGuides,
+            singingVoiceCache,
           );
-          const offlineTransport = new OfflineTransport();
-          const channelStrip = new ChannelStrip(offlineAudioContext);
-          const limiter = withLimiter
-            ? new Limiter(offlineAudioContext)
-            : undefined;
-          const clipper = new Clipper(offlineAudioContext);
 
-          for (const phrase of state.phrases.values()) {
-            if (
-              phrase.singingGuideKey == undefined ||
-              phrase.singingVoiceKey == undefined ||
-              phrase.state !== "PLAYABLE"
-            ) {
-              continue;
-            }
-            const singingGuide = getOrThrow(
-              state.singingGuides,
-              phrase.singingGuideKey,
-            );
-            const singingVoice = getOrThrow(
-              singingVoices,
-              phrase.singingVoiceKey,
-            );
-
-            // TODO: この辺りの処理を共通化する
-            const audioEvents = await generateAudioEvents(
-              offlineAudioContext,
-              singingGuide.startTime,
-              singingVoice.blob,
-            );
-            const audioPlayer = new AudioPlayer(offlineAudioContext);
-            const audioSequence: AudioSequence = {
-              type: "audio",
-              audioPlayer,
-              audioEvents,
-            };
-            audioPlayer.output.connect(channelStrip.input);
-            offlineTransport.addSequence(audioSequence);
-          }
-          channelStrip.volume = 1;
-          if (limiter) {
-            channelStrip.output.connect(limiter.input);
-            limiter.output.connect(clipper.input);
-          } else {
-            channelStrip.output.connect(clipper.input);
-          }
-          clipper.output.connect(offlineAudioContext.destination);
-
-          // スケジューリングを行い、オフラインレンダリングを実行
-          // TODO: オフラインレンダリング後にメモリーがきちんと開放されるか確認する
-          offlineTransport.schedule(0, renderDuration);
-          const audioBuffer = await offlineAudioContext.startRendering();
           const waveFileData = convertToWavFileData(audioBuffer);
 
           try {
@@ -2074,15 +2147,15 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   COPY_NOTES_TO_CLIPBOARD: {
-    async action({ state, getters }) {
-      const currentTrack = getters.SELECTED_TRACK;
-      const noteIds = state.selectedNoteIds;
+    async action({ getters }) {
+      const selectedTrack = getters.SELECTED_TRACK;
+      const noteIds = getters.SELECTED_NOTE_IDS;
       // ノートが選択されていない場合は何もしない
       if (noteIds.size === 0) {
         return;
       }
       // 選択されたノートのみをコピーする
-      const selectedNotes = currentTrack.notes
+      const selectedNotes = selectedTrack.notes
         .filter((note: Note) => noteIds.has(note.id))
         .map((note: Note) => {
           // idのみコピーしない
@@ -2154,7 +2227,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       });
       const pastedNoteIds = notesToPaste.map((note) => note.id);
       // ノートを追加してレンダリングする
-      commit("COMMAND_ADD_NOTES", { notes: notesToPaste });
+      commit("COMMAND_ADD_NOTES", {
+        notes: notesToPaste,
+        trackId: getters.SELECTED_TRACK_ID,
+      });
+
       dispatch("RENDER");
       // 貼り付けたノートを選択する
       commit("DESELECT_ALL_NOTES");
@@ -2164,9 +2241,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   COMMAND_QUANTIZE_SELECTED_NOTES: {
     action({ state, commit, getters, dispatch }) {
-      const currentTrack = getters.SELECTED_TRACK;
-      const selectedNotes = currentTrack.notes.filter((note: Note) => {
-        return state.selectedNoteIds.has(note.id);
+      const selectedTrack = getters.SELECTED_TRACK;
+      const selectedNotes = selectedTrack.notes.filter((note: Note) => {
+        return getters.SELECTED_NOTE_IDS.has(note.id);
       });
       // TODO: クオンタイズの処理を共通化する
       const snapType = state.sequencerSnapType;
@@ -2177,8 +2254,126 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           Math.round(note.position / snapTicks) * snapTicks;
         return { ...note, position: quantizedPosition };
       });
-      commit("COMMAND_UPDATE_NOTES", { notes: quantizedNotes });
+      commit("COMMAND_UPDATE_NOTES", {
+        notes: quantizedNotes,
+        trackId: getters.SELECTED_TRACK_ID,
+      });
+
       dispatch("RENDER");
+    },
+  },
+
+  SET_SONG_SIDEBAR_OPEN: {
+    mutation(state, { isSongSidebarOpen }) {
+      state.isSongSidebarOpen = isSongSidebarOpen;
+    },
+    action({ commit }, { isSongSidebarOpen }) {
+      commit("SET_SONG_SIDEBAR_OPEN", { isSongSidebarOpen });
+    },
+  },
+
+  SET_TRACK_NAME: {
+    mutation(state, { trackId, name }) {
+      const track = getOrThrow(state.tracks, trackId);
+      track.name = name;
+    },
+    action({ commit }, { trackId, name }) {
+      commit("SET_TRACK_NAME", { trackId, name });
+    },
+  },
+
+  SET_TRACK_MUTE: {
+    mutation(state, { trackId, mute }) {
+      const track = getOrThrow(state.tracks, trackId);
+      track.mute = mute;
+    },
+    action({ commit, dispatch }, { trackId, mute }) {
+      commit("SET_TRACK_MUTE", { trackId, mute });
+
+      dispatch("RENDER");
+    },
+  },
+
+  SET_TRACK_SOLO: {
+    mutation(state, { trackId, solo }) {
+      const track = getOrThrow(state.tracks, trackId);
+      track.solo = solo;
+    },
+    action({ commit, dispatch }, { trackId, solo }) {
+      commit("SET_TRACK_SOLO", { trackId, solo });
+
+      dispatch("RENDER");
+    },
+  },
+
+  SET_TRACK_GAIN: {
+    mutation(state, { trackId, gain }) {
+      const track = getOrThrow(state.tracks, trackId);
+      track.gain = gain;
+    },
+    action({ commit, dispatch }, { trackId, gain }) {
+      commit("SET_TRACK_GAIN", { trackId, gain });
+
+      dispatch("RENDER");
+    },
+  },
+
+  SET_TRACK_PAN: {
+    mutation(state, { trackId, pan }) {
+      const track = getOrThrow(state.tracks, trackId);
+      track.pan = pan;
+    },
+    action({ commit, dispatch }, { trackId, pan }) {
+      commit("SET_TRACK_PAN", { trackId, pan });
+
+      dispatch("RENDER");
+    },
+  },
+
+  SET_SELECTED_TRACK: {
+    mutation(state, { trackId }) {
+      state._selectedTrackId = trackId;
+    },
+    action({ commit }, { trackId }) {
+      commit("SET_SELECTED_TRACK", { trackId });
+    },
+  },
+
+  REORDER_TRACKS: {
+    mutation(state, { trackOrder }) {
+      state.trackOrder = trackOrder;
+    },
+    action({ commit }, { trackOrder }) {
+      commit("REORDER_TRACKS", { trackOrder });
+    },
+  },
+
+  UNSOLO_ALL_TRACKS: {
+    mutation(state) {
+      for (const track of state.tracks.values()) {
+        track.solo = false;
+      }
+    },
+    action({ commit }) {
+      commit("UNSOLO_ALL_TRACKS");
+    },
+  },
+
+  CALC_RENDER_DURATION: {
+    getter(state) {
+      const notes = [...state.tracks.values()].flatMap((track) => track.notes);
+      if (notes.length === 0) {
+        return 1;
+      }
+      notes.sort((a, b) => a.position + a.duration - (b.position + b.duration));
+      const lastNote = notes[notes.length - 1];
+      const lastNoteEndPosition = lastNote.position + lastNote.duration;
+      const lastNoteEndTime = tickToSecond(
+        lastNoteEndPosition,
+        state.tempos,
+        state.tpqn,
+      );
+      return Math.max(1, lastNoteEndTime + 1);
     },
   },
 });
@@ -2188,49 +2383,53 @@ export const singingCommandStoreState: SingingCommandStoreState = {};
 export const singingCommandStore = transformCommandStore(
   createPartialStore<SingingCommandStoreTypes>({
     COMMAND_SET_SINGER: {
-      mutation(draft, { singer, withRelated }) {
-        singingStore.mutations.SET_SINGER(draft, { singer, withRelated });
+      mutation(draft, { singer, withRelated, trackId }) {
+        singingStore.mutations.SET_SINGER(draft, {
+          singer,
+          withRelated,
+          trackId,
+        });
       },
-      async action({ dispatch, commit }, { singer, withRelated }) {
+      async action({ dispatch, commit }, { singer, withRelated, trackId }) {
         dispatch("SETUP_SINGER", { singer });
-        commit("COMMAND_SET_SINGER", { singer, withRelated });
+        commit("COMMAND_SET_SINGER", { singer, withRelated, trackId });
 
         dispatch("RENDER");
       },
     },
     COMMAND_SET_KEY_RANGE_ADJUSTMENT: {
-      mutation(draft, { keyRangeAdjustment }) {
+      mutation(draft, { keyRangeAdjustment, trackId }) {
         singingStore.mutations.SET_KEY_RANGE_ADJUSTMENT(draft, {
           keyRangeAdjustment,
+          trackId,
         });
       },
-      async action(
-        { dispatch, commit },
-        { keyRangeAdjustment }: { keyRangeAdjustment: number },
-      ) {
+      async action({ dispatch, commit }, { keyRangeAdjustment, trackId }) {
         if (!isValidKeyRangeAdjustment(keyRangeAdjustment)) {
           throw new Error("The keyRangeAdjustment is invalid.");
         }
-        commit("COMMAND_SET_KEY_RANGE_ADJUSTMENT", { keyRangeAdjustment });
+        commit("COMMAND_SET_KEY_RANGE_ADJUSTMENT", {
+          keyRangeAdjustment,
+          trackId,
+        });
 
         dispatch("RENDER");
       },
     },
     COMMAND_SET_VOLUME_RANGE_ADJUSTMENT: {
-      mutation(draft, { volumeRangeAdjustment }) {
+      mutation(draft, { volumeRangeAdjustment, trackId }) {
         singingStore.mutations.SET_VOLUME_RANGE_ADJUSTMENT(draft, {
           volumeRangeAdjustment,
+          trackId,
         });
       },
-      async action(
-        { dispatch, commit },
-        { volumeRangeAdjustment }: { volumeRangeAdjustment: number },
-      ) {
+      async action({ dispatch, commit }, { volumeRangeAdjustment, trackId }) {
         if (!isValidVolumeRangeAdjustment(volumeRangeAdjustment)) {
           throw new Error("The volumeRangeAdjustment is invalid.");
         }
         commit("COMMAND_SET_VOLUME_RANGE_ADJUSTMENT", {
           volumeRangeAdjustment,
+          trackId,
         });
 
         dispatch("RENDER");
@@ -2316,106 +2515,361 @@ export const singingCommandStore = transformCommandStore(
       },
     },
     COMMAND_ADD_NOTES: {
-      mutation(draft, { notes }) {
-        singingStore.mutations.ADD_NOTES(draft, { notes });
+      mutation(draft, { notes, trackId }) {
+        singingStore.mutations.ADD_NOTES(draft, { notes, trackId });
       },
-      action({ getters, commit, dispatch }, { notes }: { notes: Note[] }) {
-        const existingNoteIds = getters.NOTE_IDS;
+      action({ getters, commit, dispatch }, { notes, trackId }) {
+        const existingNoteIds = getters.ALL_NOTE_IDS;
         const isValidNotes = notes.every((value) => {
           return !existingNoteIds.has(value.id) && isValidNote(value);
         });
         if (!isValidNotes) {
           throw new Error("The notes are invalid.");
         }
-        commit("COMMAND_ADD_NOTES", { notes });
+        commit("COMMAND_ADD_NOTES", { notes, trackId });
 
         dispatch("RENDER");
       },
     },
     COMMAND_UPDATE_NOTES: {
-      mutation(draft, { notes }) {
-        singingStore.mutations.UPDATE_NOTES(draft, { notes });
+      mutation(draft, { notes, trackId }) {
+        singingStore.mutations.UPDATE_NOTES(draft, { notes, trackId });
       },
-      action({ getters, commit, dispatch }, { notes }: { notes: Note[] }) {
-        const existingNoteIds = getters.NOTE_IDS;
+      action({ getters, commit, dispatch }, { notes, trackId }) {
+        const existingNoteIds = getters.ALL_NOTE_IDS;
         const isValidNotes = notes.every((value) => {
           return existingNoteIds.has(value.id) && isValidNote(value);
         });
         if (!isValidNotes) {
           throw new Error("The notes are invalid.");
         }
-        commit("COMMAND_UPDATE_NOTES", { notes });
+        commit("COMMAND_UPDATE_NOTES", { notes, trackId });
 
         dispatch("RENDER");
       },
     },
     COMMAND_REMOVE_NOTES: {
-      mutation(draft, { noteIds }) {
-        singingStore.mutations.REMOVE_NOTES(draft, { noteIds });
+      mutation(draft, { noteIds, trackId }) {
+        singingStore.mutations.REMOVE_NOTES(draft, { noteIds, trackId });
       },
-      action({ getters, commit, dispatch }, { noteIds }) {
-        const existingNoteIds = getters.NOTE_IDS;
+      action({ getters, commit, dispatch }, { noteIds, trackId }) {
+        const existingNoteIds = getters.ALL_NOTE_IDS;
         const isValidNoteIds = noteIds.every((value) => {
           return existingNoteIds.has(value);
         });
         if (!isValidNoteIds) {
           throw new Error("The note ids are invalid.");
         }
-        commit("COMMAND_REMOVE_NOTES", { noteIds });
+        commit("COMMAND_REMOVE_NOTES", { noteIds, trackId });
 
         dispatch("RENDER");
       },
     },
     COMMAND_REMOVE_SELECTED_NOTES: {
-      action({ state, commit, dispatch }) {
-        commit("COMMAND_REMOVE_NOTES", { noteIds: [...state.selectedNoteIds] });
+      action({ commit, getters, dispatch }) {
+        commit("COMMAND_REMOVE_NOTES", {
+          noteIds: [...getters.SELECTED_NOTE_IDS],
+          trackId: getters.SELECTED_TRACK_ID,
+        });
 
         dispatch("RENDER");
       },
     },
     COMMAND_SET_PITCH_EDIT_DATA: {
-      mutation(draft, { data, startFrame }) {
-        singingStore.mutations.SET_PITCH_EDIT_DATA(draft, { data, startFrame });
+      mutation(draft, { pitchArray, startFrame, trackId }) {
+        singingStore.mutations.SET_PITCH_EDIT_DATA(draft, {
+          pitchArray,
+          startFrame,
+          trackId,
+        });
       },
-      action(
-        { commit, dispatch },
-        { data, startFrame }: { data: number[]; startFrame: number },
-      ) {
+      action({ commit, dispatch }, { pitchArray, startFrame, trackId }) {
         if (startFrame < 0) {
           throw new Error("startFrame must be greater than or equal to 0.");
         }
-        if (!isValidPitchEditData(data)) {
+        if (!isValidPitchEditData(pitchArray)) {
           throw new Error("The pitch edit data is invalid.");
         }
-        commit("COMMAND_SET_PITCH_EDIT_DATA", { data, startFrame });
+        commit("COMMAND_SET_PITCH_EDIT_DATA", {
+          pitchArray,
+          startFrame,
+          trackId,
+        });
 
         dispatch("RENDER");
       },
     },
     COMMAND_ERASE_PITCH_EDIT_DATA: {
-      mutation(draft, { startFrame, frameLength }) {
+      mutation(draft, { startFrame, frameLength, trackId }) {
         singingStore.mutations.ERASE_PITCH_EDIT_DATA(draft, {
           startFrame,
           frameLength,
+          trackId,
         });
       },
-      action(
-        { commit, dispatch },
-        {
-          startFrame,
-          frameLength,
-        }: { startFrame: number; frameLength: number },
-      ) {
+      action({ commit, dispatch }, { startFrame, frameLength, trackId }) {
         if (startFrame < 0) {
           throw new Error("startFrame must be greater than or equal to 0.");
         }
         if (frameLength < 1) {
           throw new Error("frameLength must be at least 1.");
         }
-        commit("COMMAND_ERASE_PITCH_EDIT_DATA", { startFrame, frameLength });
+        commit("COMMAND_ERASE_PITCH_EDIT_DATA", {
+          startFrame,
+          frameLength,
+          trackId,
+        });
 
         dispatch("RENDER");
       },
+    },
+
+    COMMAND_ADD_TRACK: {
+      mutation(draft, { trackId, track }) {
+        singingStore.mutations.REGISTER_TRACK(draft, { trackId, track });
+      },
+      async action({ getters, dispatch, commit }) {
+        const { trackId, track } = await dispatch("CREATE_TRACK");
+        const selectedTrack = getters.SELECTED_TRACK;
+        track.singer = selectedTrack.singer;
+        track.keyRangeAdjustment = selectedTrack.keyRangeAdjustment;
+        track.volumeRangeAdjustment = selectedTrack.volumeRangeAdjustment;
+        commit("COMMAND_ADD_TRACK", {
+          trackId,
+          track: cloneWithUnwrapProxy(track),
+        });
+      },
+    },
+
+    COMMAND_DELETE_TRACK: {
+      mutation(draft, { trackId }) {
+        singingStore.mutations.DELETE_TRACK(draft, { trackId });
+      },
+      action({ commit, dispatch }, { trackId }) {
+        commit("COMMAND_DELETE_TRACK", { trackId });
+
+        dispatch("RENDER");
+      },
+    },
+
+    COMMAND_SET_TRACK_NAME: {
+      mutation(draft, { trackId, name }) {
+        singingStore.mutations.SET_TRACK_NAME(draft, { trackId, name });
+      },
+      action({ commit }, { trackId, name }) {
+        commit("COMMAND_SET_TRACK_NAME", { trackId, name });
+      },
+    },
+
+    COMMAND_SET_TRACK_MUTE: {
+      mutation(draft, { trackId, mute }) {
+        singingStore.mutations.SET_TRACK_MUTE(draft, { trackId, mute });
+      },
+      action({ commit, dispatch }, { trackId, mute }) {
+        commit("COMMAND_SET_TRACK_MUTE", { trackId, mute });
+
+        dispatch("RENDER");
+      },
+    },
+
+    COMMAND_SET_TRACK_SOLO: {
+      mutation(draft, { trackId, solo }) {
+        singingStore.mutations.SET_TRACK_SOLO(draft, { trackId, solo });
+      },
+      action({ commit, dispatch }, { trackId, solo }) {
+        commit("COMMAND_SET_TRACK_SOLO", { trackId, solo });
+
+        dispatch("RENDER");
+      },
+    },
+
+    COMMAND_SET_TRACK_GAIN: {
+      mutation(draft, { trackId, gain }) {
+        singingStore.mutations.SET_TRACK_GAIN(draft, { trackId, gain });
+      },
+      action({ commit, dispatch }, { trackId, gain }) {
+        commit("COMMAND_SET_TRACK_GAIN", { trackId, gain });
+
+        dispatch("RENDER");
+      },
+    },
+
+    COMMAND_SET_TRACK_PAN: {
+      mutation(draft, { trackId, pan }) {
+        singingStore.mutations.SET_TRACK_PAN(draft, { trackId, pan });
+      },
+      action({ commit, dispatch }, { trackId, pan }) {
+        commit("COMMAND_SET_TRACK_PAN", { trackId, pan });
+
+        dispatch("RENDER");
+      },
+    },
+
+    COMMAND_REORDER_TRACKS: {
+      mutation(draft, { trackOrder }) {
+        singingStore.mutations.REORDER_TRACKS(draft, { trackOrder });
+      },
+      action({ commit }, { trackOrder }) {
+        commit("COMMAND_REORDER_TRACKS", { trackOrder });
+      },
+    },
+
+    COMMAND_UNSOLO_ALL_TRACKS: {
+      mutation(draft) {
+        singingStore.mutations.UNSOLO_ALL_TRACKS(draft, undefined);
+      },
+      action({ commit }) {
+        commit("COMMAND_UNSOLO_ALL_TRACKS");
+      },
+    },
+
+    COMMAND_IMPORT_TRACKS: {
+      mutation(draft, { tpqn, tempos, timeSignatures, tracks }) {
+        singingStore.mutations.SET_TPQN(draft, { tpqn });
+        singingStore.mutations.SET_TEMPOS(draft, { tempos });
+        singingStore.mutations.SET_TIME_SIGNATURES(draft, { timeSignatures });
+        for (const { track, trackId, overwrite } of tracks) {
+          if (overwrite) {
+            singingStore.mutations.SET_TRACK(draft, { track, trackId });
+          } else {
+            singingStore.mutations.REGISTER_TRACK(draft, { track, trackId });
+          }
+        }
+      },
+      async action(
+        { state, commit, getters, dispatch },
+        { tpqn, tempos, timeSignatures, tracks },
+      ) {
+        const payload: {
+          track: Track;
+          trackId: TrackId;
+          overwrite: boolean;
+        }[] = [];
+        if (state.experimentalSetting.enableMultiTrack) {
+          for (const [i, track] of tracks.entries()) {
+            if (!isValidTrack(track)) {
+              throw new Error("The track is invalid.");
+            }
+            // 空のプロジェクトならトラックを上書きする
+            if (i === 0 && isTracksEmpty([...state.tracks.values()])) {
+              payload.push({
+                track,
+                trackId: getters.SELECTED_TRACK_ID,
+                overwrite: true,
+              });
+            } else {
+              const { trackId } = await dispatch("CREATE_TRACK");
+              payload.push({ track, trackId, overwrite: false });
+            }
+          }
+        } else {
+          // マルチトラックが無効な場合は最初のトラックのみをインポートする
+          payload.push({
+            track: tracks[0],
+            trackId: getters.SELECTED_TRACK_ID,
+            overwrite: true,
+          });
+        }
+
+        commit("COMMAND_IMPORT_TRACKS", {
+          tpqn,
+          tempos,
+          timeSignatures,
+          tracks: payload,
+        });
+
+        dispatch("RENDER");
+      },
+    },
+
+    COMMAND_IMPORT_UTAFORMATIX_PROJECT: {
+      action: createUILockAction(
+        async ({ state, getters, dispatch }, { project, trackIndexes }) => {
+          const { tempos, timeSignatures, tracks, tpqn } =
+            ufProjectToVoicevox(project);
+
+          if (tempos.length > 1) {
+            logger.warn("Multiple tempos are not supported.");
+          }
+          if (timeSignatures.length > 1) {
+            logger.warn("Multiple time signatures are not supported.");
+          }
+
+          tempos.splice(1, tempos.length - 1); // TODO: 複数テンポに対応したら削除
+          timeSignatures.splice(1, timeSignatures.length - 1); // TODO: 複数拍子に対応したら削除
+
+          if (tpqn !== state.tpqn) {
+            throw new Error("TPQN does not match. Must be converted.");
+          }
+
+          const selectedTrack = getOrThrow(
+            state.tracks,
+            getters.SELECTED_TRACK_ID,
+          );
+
+          const filteredTracks = trackIndexes.map((trackIndex) => {
+            const track = tracks[trackIndex];
+            if (!track) {
+              throw new Error("Track not found.");
+            }
+            return {
+              ...toRaw(selectedTrack),
+              notes: track.notes.map((note) => ({
+                ...note,
+                id: NoteId(uuid4()),
+              })),
+            };
+          });
+
+          await dispatch("COMMAND_IMPORT_TRACKS", {
+            tpqn,
+            tempos,
+            timeSignatures,
+            tracks: filteredTracks,
+          });
+
+          dispatch("RENDER");
+        },
+      ),
+    },
+
+    COMMAND_IMPORT_VOICEVOX_PROJECT: {
+      action: createUILockAction(
+        async ({ state, dispatch }, { project, trackIndexes }) => {
+          const { tempos, timeSignatures, tracks, tpqn, trackOrder } =
+            project.song;
+
+          tempos.splice(1, tempos.length - 1); // TODO: 複数テンポに対応したら削除
+          timeSignatures.splice(1, timeSignatures.length - 1); // TODO: 複数拍子に対応したら削除
+
+          if (tpqn !== state.tpqn) {
+            throw new Error("TPQN does not match. Must be converted.");
+          }
+
+          const filteredTracks = trackIndexes.map((trackIndex) => {
+            const track = tracks[trackOrder[trackIndex]];
+            if (!track) {
+              throw new Error("Track not found.");
+            }
+            return {
+              ...toRaw(track),
+              notes: track.notes.map((note) => ({
+                ...note,
+                id: NoteId(uuid4()),
+              })),
+            };
+          });
+
+          await dispatch("COMMAND_IMPORT_TRACKS", {
+            tpqn,
+            tempos,
+            timeSignatures,
+            tracks: filteredTracks,
+          });
+
+          dispatch("RENDER");
+        },
+      ),
     },
   }),
   "song",
