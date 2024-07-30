@@ -6,8 +6,9 @@ import { createDefaultTrack } from "@/sing/domain";
 
 const initialState = cloneWithUnwrapProxy(store.state);
 beforeEach(() => {
-  resetMockMode();
   store.replaceState(initialState);
+
+  resetMockMode();
 });
 
 test("INSERT_TRACK", () => {
