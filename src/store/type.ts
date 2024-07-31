@@ -1163,9 +1163,17 @@ export type SingingStoreTypes = {
     action(): { trackId: TrackId; track: Track };
   };
 
-  REGISTER_TRACK: {
-    mutation: { trackId: TrackId; track: Track };
-    action(payload: { trackId: TrackId; track: Track }): void;
+  INSERT_TRACK: {
+    mutation: {
+      trackId: TrackId;
+      track: Track;
+      prevTrackId: TrackId | undefined;
+    };
+    action(payload: {
+      trackId: TrackId;
+      track: Track;
+      prevTrackId: TrackId | undefined;
+    }): void;
   };
 
   DELETE_TRACK: {

@@ -1048,19 +1048,27 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  REGISTER_TRACK: {
-    mutation(state, { trackId, track }) {
+  INSERT_TRACK: {
+    /**
+     * トラックを挿入する。
+     * prevTrackIdがundefinedの場合は最後に追加する。
+     */
+    mutation(state, { trackId, track, prevTrackId }) {
+      const index =
+        prevTrackId != undefined
+          ? state.trackOrder.indexOf(prevTrackId) + 1
+          : state.trackOrder.length;
       state.tracks.set(trackId, track);
-      state.trackOrder.push(trackId);
+      state.trackOrder.splice(index, 0, trackId);
     },
-    action({ state, commit, dispatch }, { trackId, track }) {
+    action({ state, commit, dispatch }, { trackId, track, prevTrackId }) {
       if (state.tracks.has(trackId)) {
         throw new Error(`Track ${trackId} is already registered.`);
       }
       if (!isValidTrack(track)) {
         throw new Error("The track is invalid.");
       }
-      commit("REGISTER_TRACK", { trackId, track });
+      commit("INSERT_TRACK", { trackId, track, prevTrackId });
 
       dispatch("RENDER");
     },
@@ -2635,7 +2643,11 @@ export const singingCommandStore = transformCommandStore(
 
     COMMAND_ADD_TRACK: {
       mutation(draft, { trackId, track }) {
-        singingStore.mutations.REGISTER_TRACK(draft, { trackId, track });
+        singingStore.mutations.INSERT_TRACK(draft, {
+          trackId,
+          track,
+          prevTrackId: undefined,
+        });
       },
       async action({ getters, dispatch, commit }) {
         const { trackId, track } = await dispatch("CREATE_TRACK");
@@ -2741,7 +2753,11 @@ export const singingCommandStore = transformCommandStore(
           if (overwrite) {
             singingStore.mutations.SET_TRACK(draft, { track, trackId });
           } else {
-            singingStore.mutations.REGISTER_TRACK(draft, { track, trackId });
+            singingStore.mutations.INSERT_TRACK(draft, {
+              track,
+              trackId,
+              prevTrackId: undefined,
+            });
           }
         }
       },
