@@ -76,7 +76,7 @@ import {
   isValidTrack,
   SEQUENCER_MIN_NUM_MEASURES,
   getNumMeasures,
-  isTrackEmpty,
+  isTracksEmpty,
   shouldPlayTracks,
 } from "@/sing/domain";
 import {
@@ -2762,7 +2762,7 @@ export const singingCommandStore = transformCommandStore(
       },
       /**
        * 複数のトラックを選択中のトラックの後ろに挿入し、テンポ情報などをインポートする。
-       * 選択中のトラックが空の場合は最初のトラックで上書きする。
+       * 空のプロジェクトならトラックを上書きする。
        */
       async action(
         { state, commit, getters, dispatch },
@@ -2778,11 +2778,8 @@ export const singingCommandStore = transformCommandStore(
             if (!isValidTrack(track)) {
               throw new Error("The track is invalid.");
             }
-            // 空のトラックなら上書きする
-            if (
-              i === 0 &&
-              isTrackEmpty(getOrThrow(state.tracks, prevTrackId))
-            ) {
+            // 空のプロジェクトならトラックを上書きする
+            if (i === 0 && isTracksEmpty([...state.tracks.values()])) {
               payload.push({
                 track,
                 trackId: prevTrackId,
