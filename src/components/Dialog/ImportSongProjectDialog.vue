@@ -8,17 +8,6 @@
       <QSeparator />
 
       <QCardSection class="q-py-none">
-        <details class="q-pt-md">
-          <summary>対応しているファイル形式</summary>
-          <ul>
-            <li
-              v-for="[name, extensions] in projectNameToExtensions"
-              :key="name"
-            >
-              {{ name }}：{{ extensions.map((ext) => `.${ext}`).join("、") }}
-            </li>
-          </ul>
-        </details>
         <QFile
           v-model="projectFile"
           label="インポートするファイル"
@@ -29,6 +18,17 @@
           placeholder="ファイルを選択してください"
           @input="handleFileChange"
         />
+        <div v-if="projectFile == null">
+          <span class="text-weight-bold">対応しているファイル形式</span>
+          <ul>
+            <li
+              v-for="[name, extensions] in projectNameToExtensions"
+              :key="name"
+            >
+              {{ name }}：{{ extensions.map((ext) => `.${ext}`).join("、") }}
+            </li>
+          </ul>
+        </div>
       </QCardSection>
       <QCardSection v-if="trackOptions.length > 0">
         <QList bordered class="rounded-borders scroll scrollable-area">
@@ -355,13 +355,6 @@ const handleCancel = () => {
 </script>
 
 <style scoped lang="scss">
-details {
-  summary {
-    display: list-item;
-    cursor: pointer;
-  }
-}
-
 .dialog-card {
   width: 700px;
   max-width: 80vw;
