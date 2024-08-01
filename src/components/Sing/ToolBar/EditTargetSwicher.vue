@@ -7,6 +7,7 @@
       class="segment-switch"
       :class="{ active: editTarget === 'NOTE' }"
       @click="changeEditTarget('NOTE')"
+      @keydown="handleKeyDown"
     >
       <QIcon name="piano" size="24px" />
       <QTooltip
@@ -48,6 +49,11 @@ defineProps<{
   editTarget: SequencerEditTarget;
   changeEditTarget: (editTarget: SequencerEditTarget) => void;
 }>();
+const handleKeyDown = (event: KeyboardEvent) => {
+  if (event.key === " " || event.key === "Spacebar") {
+    event.preventDefault();
+  }
+};
 </script>
 
 <style scoped lang="scss">

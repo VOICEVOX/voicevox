@@ -38,7 +38,6 @@
   },
   "dependencies": {
     "@gtm-support/vue-gtm": "1.2.3",
-    "@material/material-color-utilities": "0.3.0",
     "@quasar/extras": "1.10.10",
     "@sevenc-nanashi/utaformatix-ts": "npm:@jsr/sevenc-nanashi__utaformatix-ts@0.3.2",
     "async-lock": "1.4.0",
@@ -72,6 +71,7 @@
   },
   "devDependencies": {
     "@chromatic-com/storybook": "1.5.0",
+    "@iconify/vue": "4.1.2",
     "@openapitools/openapi-generator-cli": "2.13.4",
     "@playwright/test": "1.43.1",
     "@quasar/vite-plugin": "1.6.0",

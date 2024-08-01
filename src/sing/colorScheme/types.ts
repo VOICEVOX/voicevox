@@ -28,6 +28,7 @@ export interface ColorSchemeConfig {
   name: string;
   displayName: string;
   baseColors: Partial<Record<ColorRole, CSSColorString>>;
+  algorithm?: ColorAlgorithm;
   aliasColors?: AliasColorConfig[];
   customColors?: CustomColorConfig[];
 }
@@ -47,6 +48,7 @@ export interface CustomColorConfig {
   displayName: string;
   color: CSSColorString;
   targetRole?: ColorRole; // カラー生成ルールの対象ロール / 未指定の場合はprimary
+  asRole?: boolean;
 }
 
 // カラーパレット

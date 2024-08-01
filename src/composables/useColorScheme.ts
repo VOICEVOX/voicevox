@@ -11,7 +11,7 @@ import { generateColorSchemeFromConfig } from "@/sing/colorScheme/generator";
 export function useColorScheme() {
   const store = useStore();
 
-  // ダークモードかどうか
+  // ダークモードかどうか(互換のためthemeSettingを使用)
   const isDarkMode = computed<boolean>(
     () => store.state.themeSetting.currentTheme === "Dark",
   );
@@ -32,7 +32,7 @@ export function useColorScheme() {
   ) => {
     const newConfig = { ...currentColorScheme.value.config, ...partialConfig };
     const newColorScheme = generateColorSchemeFromConfig(newConfig);
-    store.commit("SET_COLOR_SCHEME", { colorScheme: newColorScheme });
+    store.dispatch("SET_COLOR_SCHEME", { colorScheme: newColorScheme });
   };
 
   // カラースキームを選択
@@ -83,5 +83,6 @@ export function useColorScheme() {
     updateColorScheme,
     selectColorScheme,
     getColorFromRole,
+    //setDarkMode,
   };
 }

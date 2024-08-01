@@ -3,10 +3,14 @@
 
 // 基本色
 $primitive-black: #242626;
+$primitive-black-oklch: oklch(0.2666 0.003 196.98);
 $primitive-white: #ffffff;
 $primitive-primary: #a5d4ad;
+$primitive-primary-oklch: oklch(82.62% 0.073 149.64);
 $primitive-blue: #0969da;
+$primitive-blue-oklch: oklch(53.99% 0.191 257.48);
 $primitive-red: #d04756;
+$primitive-red-oklch: oklch(59.21% 0.172 17.84);
 
 // ライトテーマの色
 :root[is-dark-theme="false"] {

@@ -1,15 +1,18 @@
 {
-  "name": "Default",
-  "displayName": "デフォルト",
+  "name": "test",
+  "displayName": "テスト",
   "baseColors": {
-    "primary": "#a5d4ad",
-    "error": "#d04756"
+    "primary": "oklch(76.413% 0.09523 80.386)",
+    "error": "#d04756",
+    "tertiary": "oklch(82.483% 0.08208 113.45)",
+    "secondary": "oklch(69.058% 0.08266 133.48)",
+    "neutralVariant": "oklch(74.254% 0.0182 128.74)"
   },
   "aliasColors": [
     {
       "name": "sing-toolbar-container",
       "displayName": "ツールバーコンテナ",
-      "role": "neutral",
+      "role": "neutralVariant",
       "lightShade": 0.99,
       "darkShade": 0.17
     },
@@ -17,7 +20,7 @@
       "name": "singGridCellWhite",
       "displayName": "シーケンサグリッド(白鍵)",
       "role": "neutral",
-      "lightShade": 1.0,
+      "lightShade": 0.99,
       "darkShade": 0.2
     },
     {
@@ -31,49 +34,49 @@
       "name": "singGridVerticalLine",
       "displayName": "シーケンサグリッド(縦線)",
       "role": "neutral",
-      "lightShade": 0.9,
+      "lightShade": 0.92,
       "darkShade": 0.04
     },
     {
       "name": "singGridHorizontalLine",
       "displayName": "シーケンサグリッド(横線)",
       "role": "neutral",
-      "lightShade": 0.9,
+      "lightShade": 0.92,
       "darkShade": 0.04
     },
     {
       "name": "singGridMeasureLine",
       "displayName": "シーケンサグリッド(小節線)",
-      "role": "neutral",
-      "lightShade": 0.8,
+      "role": "orange",
+      "lightShade": 0.9,
       "darkShade": 0.4
     },
     {
       "name": "singGridBeatLine",
       "displayName": "シーケンサグリッド(拍線)",
-      "role": "neutral",
-      "lightShade": 0.9,
+      "role": "tertiary",
+      "lightShade": 0.84,
       "darkShade": 0.04
     },
     {
       "name": "singGridOctaveLine",
       "displayName": "シーケンサグリッド(オクターブ線)",
-      "role": "neutral",
-      "lightShade": 0.85,
+      "role": "tertiary",
+      "lightShade": 0.8,
       "darkShade": 0.4
     },
     {
       "name": "singRulerMeasureLine",
       "displayName": "ルーラー(小節線)",
-      "role": "neutralVariant",
-      "lightShade": 0.65,
+      "role": "orange",
+      "lightShade": 0.75,
       "darkShade": 0.65
     },
     {
       "name": "singRulerBeatLine",
       "displayName": "ルーラー(拍線)",
-      "role": "neutralVariant",
-      "lightShade": 0.7,
+      "role": "yellow",
+      "lightShade": 0.86,
       "darkShade": 0.5
     },
     {
@@ -86,15 +89,15 @@
     {
       "name": "singPianoKeyBlack",
       "displayName": "ピアノキー(黒鍵)",
-      "role": "neutral",
-      "lightShade": 0.4,
+      "role": "neutralVariant",
+      "lightShade": 0.5,
       "darkShade": 0.25
     },
     {
       "name": "singNoteBarContainer",
       "displayName": "ノートコンテナ",
       "role": "secondary",
-      "lightShade": 0.85,
+      "lightShade": 0.9,
       "darkShade": 0.75
     }
   ],
