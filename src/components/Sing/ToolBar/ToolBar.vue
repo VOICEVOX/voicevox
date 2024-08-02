@@ -2,6 +2,14 @@
   <QToolbar class="sing-toolbar">
     <!-- configs for entire song -->
     <div class="sing-configs">
+      <QBtn
+        v-if="multiTrackEnabled"
+        class="q-mx-xs"
+        :icon="isSidebarOpen ? 'menu_open' : 'menu'"
+        round
+        flat
+        @click="toggleSidebar"
+      />
       <CharacterMenuButton />
       <div class="sing-adjustment">
         <QInput
@@ -109,11 +117,7 @@
     </div>
     <!-- settings for edit controls -->
     <div class="sing-controls">
-      <EditTargetSwicher
-        v-if="showEditTargetSwitchButton"
-        :editTarget
-        :changeEditTarget
-      />
+      <EditTargetSwicher :editTarget :changeEditTarget />
       <QBtn
         flat
         dense
@@ -178,6 +182,10 @@ const editor = "song";
 const canUndo = computed(() => store.getters.CAN_UNDO(editor));
 const canRedo = computed(() => store.getters.CAN_REDO(editor));
 
+const multiTrackEnabled = computed(
+  () => store.state.experimentalSetting.enableMultiTrack,
+);
+
 const { registerHotkeyWithCleanup } = useHotkeyManager();
 registerHotkeyWithCleanup({
   editor,
@@ -217,14 +225,17 @@ const redo = () => {
   store.dispatch("REDO", { editor });
 };
 
-const showEditTargetSwitchButton = computed(() => {
-  return store.state.experimentalSetting.enablePitchEditInSongEditor;
-});
-
 const editTarget = computed(() => store.state.sequencerEditTarget);
 
 const changeEditTarget = (editTarget: SequencerEditTarget) => {
   store.dispatch("SET_EDIT_TARGET", { editTarget });
+};
+
+const isSidebarOpen = computed(() => store.state.isSongSidebarOpen);
+const toggleSidebar = () => {
+  store.dispatch("SET_SONG_SIDEBAR_OPEN", {
+    isSongSidebarOpen: !isSidebarOpen.value,
+  });
 };
 
 const tempos = computed(() => store.state.tempos);
@@ -235,6 +246,7 @@ const keyRangeAdjustment = computed(
 const volumeRangeAdjustment = computed(
   () => store.getters.SELECTED_TRACK.volumeRangeAdjustment,
 );
+const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
 
 const beatsOptions = computed(() => {
   return Array.from({ length: 32 }, (_, i) => ({
@@ -355,13 +367,17 @@ const setTempo = () => {
 
 const setKeyRangeAdjustment = () => {
   const keyRangeAdjustment = keyRangeAdjustmentInputBuffer.value;
-  store.dispatch("COMMAND_SET_KEY_RANGE_ADJUSTMENT", { keyRangeAdjustment });
+  store.dispatch("COMMAND_SET_KEY_RANGE_ADJUSTMENT", {
+    keyRangeAdjustment,
+    trackId: selectedTrackId.value,
+  });
 };
 
 const setVolumeRangeAdjustment = () => {
   const volumeRangeAdjustment = volumeRangeAdjustmentInputBuffer.value;
   store.dispatch("COMMAND_SET_VOLUME_RANGE_ADJUSTMENT", {
     volumeRangeAdjustment,
+    trackId: selectedTrackId.value,
   });
 };
 

@@ -97,6 +97,8 @@ const props = defineProps<{
   isSelected: boolean;
   /** このノートがプレビュー中か */
   isPreview: boolean;
+  /** ノートが重なっているか */
+  isOverlapping: boolean;
   previewLyric: string | null;
 }>();
 
@@ -134,10 +136,8 @@ const editTargetIsNote = computed(() => {
 const editTargetIsPitch = computed(() => {
   return state.sequencerEditTarget === "PITCH";
 });
-
-// ノートの重なりエラー
 const hasOverlappingError = computed(() => {
-  return state.overlappingNoteIds.has(props.note.id);
+  return props.isOverlapping && !props.isPreview;
 });
 
 // フレーズ生成エラー

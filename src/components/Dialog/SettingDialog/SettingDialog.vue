@@ -455,6 +455,22 @@
                 >
                 </QSelect>
               </QCardActions>
+              <QSlideTransition>
+                <!-- q-slide-transitionはheightだけをアニメーションするのでdivで囲う -->
+                <div v-show="experimentalSetting.enableMultiTrack">
+                  <BaseCell
+                    title="ソング：元に戻すトラック操作"
+                    description="「元に戻す」機能の対象とするトラック操作を指定します。"
+                  >
+                    <QOptionGroup
+                      v-model="undoableTrackOperations"
+                      type="checkbox"
+                      :options="undoableTrackOperationsLabels"
+                      inline
+                    />
+                  </BaseCell>
+                </div>
+              </QSlideTransition>
             </QCard>
 
             <!-- Experimental Card -->
@@ -514,6 +530,17 @@
                 "
               />
               <ToggleCell
+                title="ソング：マルチトラック機能"
+                description="ONの場合、１つのプロジェクト内に複数のトラックを作成できるようにします。"
+                :modelValue="experimentalSetting.enableMultiTrack"
+                :disable="!canToggleMultiTrack"
+                @update:modelValue="setMultiTrack($event)"
+              >
+                <QTooltip v-if="!canToggleMultiTrack" :delay="500">
+                  現在のプロジェクトに複数のトラックが存在するため、無効化できません。
+                </QTooltip>
+              </ToggleCell>
+              <ToggleCell
                 title="ソング：カラー調整"
                 description="ONの場合、カラー調整モードに切り替えてカラーを変えられるようになります。"
                 :modelValue="experimentalSetting.enableColorSchemeEditor"
@@ -545,6 +572,7 @@ import { computed, ref, watchEffect } from "vue";
 import FileNamePatternDialog from "./FileNamePatternDialog.vue";
 import ToggleCell from "./ToggleCell.vue";
 import ButtonToggleCell from "./ButtonToggleCell.vue";
+import BaseCell from "./BaseCell.vue";
 import { useStore } from "@/store";
 import {
   isProduction,
@@ -613,6 +641,30 @@ const isDefaultConfirmedTips = computed(() => {
   const confirmedTips = store.state.confirmedTips;
   // すべて false (= 初期値) かどうか確認
   return Object.values(confirmedTips).every((v) => !v);
+});
+
+// ソング：元に戻すトラック操作
+type UndoableTrackOperation =
+  keyof RootMiscSettingType["undoableTrackOperations"];
+const undoableTrackOperationsLabels = [
+  { value: "soloAndMute", label: "ミュート・ソロ" },
+  { value: "panAndGain", label: "パン・音量" },
+];
+const undoableTrackOperations = computed({
+  get: () =>
+    Object.keys(store.state.undoableTrackOperations).filter(
+      (key) =>
+        store.state.undoableTrackOperations[key as UndoableTrackOperation],
+    ) as UndoableTrackOperation[],
+  set: (undoableTrackOperations: UndoableTrackOperation[]) => {
+    store.dispatch("SET_ROOT_MISC_SETTING", {
+      key: "undoableTrackOperations",
+      value: {
+        soloAndMute: undoableTrackOperations.includes("soloAndMute"),
+        panAndGain: undoableTrackOperations.includes("panAndGain"),
+      },
+    });
+  },
 });
 
 // 外観
@@ -869,6 +921,23 @@ const selectedEngineId = computed({
 });
 const renderEngineNameLabel = (engineId: EngineId) => {
   return engineInfos.value[engineId].name;
+};
+
+// トラックが複数あるときはマルチトラック機能を無効化できないようにする
+const canToggleMultiTrack = computed(() => {
+  if (!experimentalSetting.value.enableMultiTrack) {
+    return true;
+  }
+
+  return store.state.tracks.size <= 1;
+});
+
+const setMultiTrack = (enableMultiTrack: boolean) => {
+  changeExperimentalSetting("enableMultiTrack", enableMultiTrack);
+  // 無効化するときはUndo/Redoをクリアする
+  if (!enableMultiTrack) {
+    store.dispatch("CLEAR_UNDO_HISTORY");
+  }
 };
 </script>
 

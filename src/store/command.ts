@@ -4,7 +4,7 @@ import { enablePatches, enableMapSet, Immer } from "immer";
 import { Command, CommandStoreState, CommandStoreTypes, State } from "./type";
 import { applyPatches } from "@/store/immerPatchUtility";
 import {
-  createPartialStore,
+  createDotNotationPartialStore as createPartialStore,
   Mutation,
   MutationsBase,
   MutationTree,
@@ -106,12 +106,12 @@ export const commandStore = createPartialStore<CommandStoreTypes>({
         applyPatches(state, command.undoPatches);
       }
     },
-    action({ commit, dispatch }, { editor }: { editor: EditorType }) {
-      commit("UNDO", { editor });
+    action({ mutations, actions }, { editor }: { editor: EditorType }) {
+      mutations.UNDO({ editor });
       if (editor === "song") {
         // TODO: 存在しないノートのみ選択解除、あるいはSELECTED_NOTE_IDS getterを作る
-        commit("DESELECT_ALL_NOTES");
-        dispatch("RENDER");
+        mutations.DESELECT_ALL_NOTES();
+        actions.RENDER();
       }
     },
   },
@@ -124,12 +124,12 @@ export const commandStore = createPartialStore<CommandStoreTypes>({
         applyPatches(state, command.redoPatches);
       }
     },
-    action({ commit, dispatch }, { editor }: { editor: EditorType }) {
-      commit("REDO", { editor });
+    action({ mutations, actions }, { editor }: { editor: EditorType }) {
+      mutations.REDO({ editor });
       if (editor === "song") {
         // TODO: 存在しないノートのみ選択解除、あるいはSELECTED_NOTE_IDS getterを作る
-        commit("DESELECT_ALL_NOTES");
-        dispatch("RENDER");
+        mutations.DESELECT_ALL_NOTES();
+        actions.RENDER();
       }
     },
   },

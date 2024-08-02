@@ -30,6 +30,7 @@ import {
 import { ExhaustiveError } from "@/type/utility";
 import { createLogger } from "@/domain/frontend/log";
 import { getLast } from "@/sing/utility";
+import { getOrThrow } from "@/helpers/mapHelper";
 
 type PitchLine = {
   readonly color: Color;
@@ -50,12 +51,29 @@ const { warn, error } = createLogger("SequencerPitch");
 const store = useStore();
 const tpqn = computed(() => store.state.tpqn);
 const tempos = computed(() => [store.state.tempos[0]]);
-const singingGuides = computed(() => [...store.state.singingGuides.values()]);
 const pitchEditData = computed(() => {
   return store.getters.SELECTED_TRACK.pitchEditData;
 });
 const previewPitchEdit = computed(() => props.previewPitchEdit);
+const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
 const editFrameRate = computed(() => store.state.editFrameRate);
+const singingGuidesInSelectedTrack = computed(() => {
+  const singingGuides = [];
+  for (const phrase of store.state.phrases.values()) {
+    if (phrase.trackId !== selectedTrackId.value) {
+      continue;
+    }
+    if (phrase.singingGuideKey == undefined) {
+      continue;
+    }
+    const singingGuide = getOrThrow(
+      store.state.singingGuides,
+      phrase.singingGuideKey,
+    );
+    singingGuides.push(singingGuide);
+  }
+  return singingGuides;
+});
 
 const { isDarkMode, getColorFromRole } = useColorScheme();
 
@@ -271,12 +289,11 @@ const setPitchDataToPitchLine = async (
 
 const generateOriginalPitchData = () => {
   const unvoicedPhonemes = UNVOICED_PHONEMES;
-  const singingGuidesValue = singingGuides.value;
   const frameRate = editFrameRate.value; // f0（元のピッチ）は編集フレームレートで表示する
 
-  // 歌い方のf0を結合してピッチデータを生成する
-  const tempData: number[] = [];
-  for (const singingGuide of singingGuidesValue) {
+  // 選択中のトラックで使われている歌い方のf0を結合してピッチデータを生成する
+  const tempData = [];
+  for (const singingGuide of singingGuidesInSelectedTrack.value) {
     // TODO: 補間を行うようにする
     if (singingGuide.frameRate !== frameRate) {
       throw new Error(
@@ -363,7 +380,7 @@ const generatePitchEditData = () => {
 const asyncLock = new AsyncLock({ maxPending: 1 });
 
 watch(
-  [singingGuides, tempos, tpqn],
+  [singingGuidesInSelectedTrack, tempos, tpqn],
   async () => {
     asyncLock.acquire(
       "originalPitch",
@@ -493,5 +510,7 @@ onUnmountedOrDeactivated(() => {
   overflow: hidden;
   z-index: 0;
   pointer-events: none;
+
+  contain: strict; // canvasのサイズが変わるのを無視する
 }
 </style>
