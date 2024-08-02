@@ -10,3 +10,12 @@ export const getContrastRatio = (
   const color2 = new Color(color2str);
   return color1.contrast(color2, format);
 };
+
+export const getContrastLevel = (
+  contrast: number,
+  requiredContrast: number,
+): string => {
+  if (contrast >= requiredContrast) return "Pass";
+  if (contrast >= requiredContrast * 0.75) return "Warn";
+  return "Fail";
+};

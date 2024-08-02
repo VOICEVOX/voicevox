@@ -1,5 +1,9 @@
 <template>
-  <div class="color-scheme-editor">
+  <div
+    class="color-scheme-editor"
+    :class="{ 'is-closed': !isColorSchemeEditorOpen }"
+    @click="openColorSchemeEditor"
+  >
     <section class="section combo-section">
       <SelectRoot v-model="selectedScheme" @update:modelValue="onSchemeChange">
         <SelectTrigger class="select-trigger" aria-label="カラースキームを選択">
@@ -40,6 +44,13 @@
         </SwitchRoot>
       </div>
       <button @click="resetCurrentScheme">リセット</button>
+      <button
+        class="button-link"
+        style="margin-left: 0.25rem"
+        @click="closeColorSchemeEditor"
+      >
+        エディタをたたむ
+      </button>
     </section>
 
     <!-- ベースロールカラーとカスタムカラーの表示と変更 -->
@@ -189,6 +200,49 @@
         </div>
       </div>
     </section>
+    <!-- コントラストチェックセクション -->
+    <section class="section">
+      <div class="section-header">コントラストチェック</div>
+      <div class="contrast-results">
+        <div
+          v-for="result in contrastResults"
+          :key="`${result.pair[0]}-${result.pair[1]}`"
+          class="contrast-item"
+        >
+          <div class="contrast-colors">
+            <div
+              class="color-box"
+              :style="{
+                backgroundColor: oklchToCssString(
+                  currentColorScheme.roles[result.pair[0]][
+                    isDarkMode ? 'darkShade' : 'lightShade'
+                  ],
+                ),
+              }"
+            ></div>
+            <div
+              class="color-box"
+              :style="{
+                backgroundColor: oklchToCssString(
+                  currentColorScheme.roles[result.pair[1]][
+                    isDarkMode ? 'darkShade' : 'lightShade'
+                  ],
+                ),
+              }"
+            ></div>
+          </div>
+          <div class="contrast-info">
+            <span>{{ result.pair[0] }} : {{ result.pair[1] }}</span>
+            <span>{{ result.description }}</span>
+            <span :class="['contrast-level', result.level.toLowerCase()]">
+              {{ result.contrast.toFixed(2) }}/{{ result.requiredContrast }} ({{
+                result.level
+              }})
+            </span>
+          </div>
+        </div>
+      </div>
+    </section>
     <!-- ダウンロードボタン -->
     <section class="section">
       <button style="margin-right: 0.5rem" @click="downloadColorSchemeConfig">
@@ -231,8 +285,15 @@ import {
   cssStringToHex,
   oklchToCssString,
 } from "@/sing/colorScheme/util";
-import { DEFINED_ROLES } from "@/sing/colorScheme/constants";
+import {
+  DEFINED_ROLES,
+  DEFINED_CONTRAST_PAIR,
+} from "@/sing/colorScheme/constants";
 import { cssVariablesFromColorScheme } from "@/sing/colorScheme/css";
+import {
+  getContrastRatio,
+  getContrastLevel,
+} from "@/sing/colorScheme/accessibility";
 
 const {
   currentColorScheme,
@@ -248,6 +309,8 @@ const {
 const selectedScheme = ref(currentColorScheme.value.name);
 // 初期カラースキーム設定
 const initialSchemeConfig = ref<ColorSchemeConfig | null>(null);
+// 開閉状態
+const isColorSchemeEditorOpen = ref(false);
 
 // computed
 // カラースキーム一覧
@@ -295,6 +358,25 @@ const allPalettes = computed(() => {
   );
 
   return { ...basePalettes, ...customPalettes };
+});
+
+// コントラストチェック結果
+const contrastResults = computed(() => {
+  return DEFINED_CONTRAST_PAIR.map((pair) => {
+    const shadeType = isDarkMode.value ? "darkShade" : "lightShade";
+    const color1 = currentColorScheme.value.roles[pair.colors[0]][shadeType];
+    const cssColor1 = oklchToCssString(color1);
+    const color2 = currentColorScheme.value.roles[pair.colors[1]][shadeType];
+    const cssColor2 = oklchToCssString(color2);
+    const contrast = Math.abs(getContrastRatio(cssColor1, cssColor2));
+    return {
+      pair: pair.colors,
+      contrast,
+      level: getContrastLevel(contrast, pair.requiredContrast),
+      requiredContrast: pair.requiredContrast,
+      description: pair.description,
+    };
+  });
 });
 
 /*
@@ -511,6 +593,20 @@ const adjustShade = (sourceColor: OklchColor, shade: number): OklchColor => {
   return [newL, newC, newH];
 };
 
+// エディタを開く
+const openColorSchemeEditor = () => {
+  if (isColorSchemeEditorOpen.value === true) {
+    return;
+  }
+  isColorSchemeEditorOpen.value = true;
+};
+
+// エディタを閉じる
+const closeColorSchemeEditor = (event: Event) => {
+  event.stopPropagation();
+  isColorSchemeEditorOpen.value = false;
+};
+
 // マウント時に初期カラースキーム設定を保存する(オブジェクトのシャローコピーの影響があるためJSON.parse(JSON.stringify())を使用)
 onMounted(() => {
   initialSchemeConfig.value = JSON.parse(
@@ -540,6 +636,13 @@ onMounted(() => {
   grid-template-rows: 1fr auto;
   border: 0.25rem solid var(--scheme-color-outline-variant);
   border-right: none;
+  transition: transform 0.16s ease-out;
+}
+
+.color-scheme-editor.is-closed {
+  transform: translate3d(calc(100% - 48px), 0, 0);
+  opacity: 0.8;
+  cursor: pointer;
 }
 
 .section {
@@ -701,6 +804,60 @@ button {
 .add-custom-color-button {
   background: transparent;
   color: var(--scheme-color-link); /* primitive-blueのリンクカラーを試す */
+}
+
+.button-link {
+  background: transparent;
+  padding: 0;
+  color: var(--scheme-color-link);
+}
+
+.contrast-results {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.contrast-item {
+  background-color: oklch(from var(--scheme-color-surface-variant) l c h / 0.8);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.contrast-colors {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.color-box {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.25rem;
+}
+
+.contrast-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.contrast-level {
+  font-weight: bold;
+}
+
+.contrast-level.pass {
+  color: var(--scheme-color-primary);
+}
+
+.contrast-level.warn {
+  color: var(--scheme-color-error);
+}
+
+.contrast-level.fail {
+  color: var(--scheme-color-error);
 }
 
 /* radix-vueコンポーネントのスタイル調整(仮: とりあえずみられる形) */

@@ -70,3 +70,10 @@ export type ColorAlgorithm = (
   targetRole: ColorRole | string,
   shade: number,
 ) => OklchColor;
+
+// コントラストチェック用ペア
+export interface ColorContrastPair {
+  colors: [string, string];
+  requiredContrast: number;
+  description: string;
+}
