@@ -19,9 +19,6 @@
         />
       </div>
     </div>
-    <ScoreSequencer />
-    <ColorSchemeEditor v-if="showColorSchemeEditor" />
-
     <QSplitter
       :modelValue="isSidebarOpen ? sidebarWidth : 0"
       unit="px"
@@ -38,6 +35,7 @@
       <template #after>
         <!-- full-heightで高さをQSplitterの高さに揃える -->
         <ScoreSequencer class="full-height" />
+        <ColorSchemeEditor v-if="showColorSchemeEditor" />
       </template>
     </QSplitter>
   </div>
