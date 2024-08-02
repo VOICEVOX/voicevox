@@ -18,49 +18,49 @@
       "displayName": "シーケンサグリッド(白鍵)",
       "role": "neutral",
       "lightShade": 1.0,
-      "darkShade": 0.2
+      "darkShade": 0.18
     },
     {
       "name": "singGridCellBlack",
       "displayName": "シーケンサグリッド(黒鍵)",
       "role": "neutral",
       "lightShade": 0.96,
-      "darkShade": 0.14
+      "darkShade": 0.15
     },
     {
       "name": "singGridVerticalLine",
       "displayName": "シーケンサグリッド(縦線)",
       "role": "neutral",
-      "lightShade": 0.9,
-      "darkShade": 0.04
+      "lightShade": 0.95,
+      "darkShade": 0.14
     },
     {
       "name": "singGridHorizontalLine",
       "displayName": "シーケンサグリッド(横線)",
       "role": "neutral",
-      "lightShade": 0.9,
-      "darkShade": 0.04
+      "lightShade": 0.95,
+      "darkShade": 0.14
     },
     {
       "name": "singGridMeasureLine",
       "displayName": "シーケンサグリッド(小節線)",
       "role": "neutral",
       "lightShade": 0.8,
-      "darkShade": 0.4
+      "darkShade": 0.35
     },
     {
       "name": "singGridBeatLine",
       "displayName": "シーケンサグリッド(拍線)",
       "role": "neutral",
-      "lightShade": 0.9,
+      "lightShade": 0.88,
       "darkShade": 0.04
     },
     {
       "name": "singGridOctaveLine",
       "displayName": "シーケンサグリッド(オクターブ線)",
       "role": "neutral",
-      "lightShade": 0.85,
-      "darkShade": 0.4
+      "lightShade": 0.88,
+      "darkShade": 0.3
     },
     {
       "name": "singRulerMeasureLine",
@@ -81,21 +81,21 @@
       "displayName": "ピアノキー(白鍵)",
       "role": "neutral",
       "lightShade": 0.99,
-      "darkShade": 0.7
+      "darkShade": 0.6
     },
     {
       "name": "singPianoKeyBlack",
       "displayName": "ピアノキー(黒鍵)",
       "role": "neutral",
-      "lightShade": 0.4,
-      "darkShade": 0.25
+      "lightShade": 0.5,
+      "darkShade": 0.24
     },
     {
       "name": "singNoteBarContainer",
       "displayName": "ノートコンテナ",
       "role": "secondary",
-      "lightShade": 0.85,
-      "darkShade": 0.75
+      "lightShade": 0.9,
+      "darkShade": 0.7
     }
   ],
   "customColors": [

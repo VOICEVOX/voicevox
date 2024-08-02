@@ -118,9 +118,11 @@ watch(
 .lyric-input {
   font-weight: 500;
   font-size: 16px;
-  background-color: var(--scheme-color-surface-container-highest);
+  background-color: oklch(from var(--scheme-color-background) l c h / 0.92);
+  backdrop-filter: blur(2px);
   color: var(--scheme-color-on-surface);
-  outline: 1px solid var(--scheme-color-primary-fixed-dim);
+  border: 1px solid var(--scheme-color-primary);
+  outline: 2px solid oklch(from var(--scheme-color-primary) l c h / 0.92);
   border-radius: 4px;
   border: 0;
   box-shadow:

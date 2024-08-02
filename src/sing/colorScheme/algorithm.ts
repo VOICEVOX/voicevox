@@ -81,7 +81,7 @@ export const defaultAlgorithm: ColorAlgorithm = (
       break;
     case "tertiary":
       targetC = defaultC;
-      targetH = (h - 60 + 360) % 360;
+      targetH = (h - 30 + 360) % 360;
       break;
     case "neutral":
       targetC = 0.0;

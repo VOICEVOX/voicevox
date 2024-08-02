@@ -58,7 +58,7 @@ const handleKeyDown = (event: KeyboardEvent) => {
 
 <style scoped lang="scss">
 .edit-target-switcher {
-  background: var(--scheme-color-surface-container-high);
+  background: var(--scheme-color-surface-container-highest);
   border-radius: 28px;
   padding: 4px;
 }

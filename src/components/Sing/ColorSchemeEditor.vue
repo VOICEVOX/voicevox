@@ -83,7 +83,11 @@
           <span>{{ customColor.name }}</span>
         </div>
       </div>
-      <button @click="addCustomColor">カスタムカラーを追加</button>
+      <div class="add-custom-color-button-wrapper">
+        <button class="add-custom-color-button" @click="addCustomColor">
+          カスタムカラーを追加
+        </button>
+      </div>
     </section>
 
     <!-- エイリアスカラー設定 -->
@@ -609,6 +613,12 @@ onMounted(() => {
   word-break: break-word;
 }
 
+.add-custom-color-button-wrapper {
+  display: flex;
+  justify-content: end;
+  margin-top: 1rem;
+}
+
 .alias-color-section {
   display: grid;
   gap: 1.5rem;
@@ -672,20 +682,25 @@ onMounted(() => {
 }
 
 button {
-  padding: 0.5rem;
+  padding: 0.5rem 1rem;
   background-color: var(--scheme-color-secondary);
   color: var(--scheme-color-on-secondary);
   border: none;
   border-radius: 1.5rem;
   cursor: pointer;
   line-height: 1;
-  font-weight: 500;
+  font-weight: 600;
   font-size: 0.875rem;
-  transition: background-color 0.2s ease;
+  transition: all 0.1s ease-out;
 
   &:hover {
     opacity: 0.8;
   }
+}
+
+.add-custom-color-button {
+  background: transparent;
+  color: var(--scheme-color-link); /* primitive-blueのリンクカラーを試す */
 }
 
 /* radix-vueコンポーネントのスタイル調整(仮: とりあえずみられる形) */
@@ -701,7 +716,7 @@ button {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 0.5rem;
   font-size: 0.875rem;
   line-height: 1;
   background-color: var(--scheme-color-surface);
@@ -709,7 +724,8 @@ button {
   border: 1px solid var(--scheme-color-outline-variant);
   border-radius: 0.25rem;
   cursor: pointer;
-  transition: all 0.16s ease;
+  font-weight: 500;
+  transition: all 0.1s ease-out;
 }
 
 .select-trigger:hover {
@@ -735,6 +751,7 @@ button {
   background-color: var(--scheme-color-surface);
   border: 1px solid var(--scheme-color-outline-variant);
   border-radius: 0.25rem;
+  font-weight: 500;
 }
 
 .select-item {

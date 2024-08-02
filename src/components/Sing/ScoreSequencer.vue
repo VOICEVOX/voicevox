@@ -1445,7 +1445,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 .sequencer-corner {
   grid-row: 1;
   grid-column: 1;
-  background: var(--scheme-color-surface-container-high);
+  background: var(--scheme-color-surface-container-highest);
 }
 
 .sequencer-ruler {

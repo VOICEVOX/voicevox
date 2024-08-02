@@ -305,21 +305,11 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
 
   &.preview-lyric {
     .note-bar {
-      background-color: var(--scheme-color-primary-fixed);
-      border-color: var(--scheme-color-primary-fixed-dim);
-    }
-
-    .note-lyric {
-      border-bottom: 1px solid var(--scheme-color-primary-fixed-dim);
-    }
-  }
-
-  &.preview-lyric {
-    .note-bar {
-      background-color: var(--scheme-color-primary-fixed);
-      border-color: var(--scheme-color-primary-fixed-dim);
-      outline: 1px solid var(--scheme-color-primary-fixed);
-      outline-offset: 1px;
+      background-color: oklch(
+        from var(--scheme-color-primary-fixed) l c h / 0.8
+      );
+      outline: 1px solid oklch(from var(--scheme-color-outline) l c h / 0.56);
+      outline-offset: 2px;
     }
 
     .note-lyric {
