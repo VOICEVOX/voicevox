@@ -130,6 +130,7 @@
                   ref="surfaceContextMenu"
                   :header="surfaceContextMenuHeader"
                   :menudata="surfaceContextMenudata"
+                  @beforeShow="readyForSurfaceContextMenu"
                 />
               </QInput>
             </div>
@@ -152,6 +153,7 @@
                   ref="yomiContextMenu"
                   :header="yomiContextMenuHeader"
                   :menudata="yomiContextMenudata"
+                  @beforeShow="readyForYomiContextMenu"
                 />
               </QInput>
             </div>
@@ -684,12 +686,14 @@ const {
   contextMenu: surfaceContextMenu,
   contextMenuHeader: surfaceContextMenuHeader,
   contextMenudata: surfaceContextMenudata,
+  readyForContextMenu: readyForSurfaceContextMenu,
 } = useRightClickContextMenu(surfaceInput, surface, ref("surface"));
 
 const {
   contextMenu: yomiContextMenu,
   contextMenuHeader: yomiContextMenuHeader,
   contextMenudata: yomiContextMenudata,
+  readyForContextMenu: readyForYomiContextMenu,
 } = useRightClickContextMenu(yomiInput, yomi, ref("yomi"));
 </script>
 
