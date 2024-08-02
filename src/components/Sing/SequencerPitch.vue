@@ -60,23 +60,20 @@ const editFrameRate = computed(() => store.state.editFrameRate);
 const { isDarkMode, getColorFromRole } = useColorScheme();
 
 // TODO: このままだとテーマ変更で更新されないため、変更に追随する必要あり
-const pitchLineColorRGB = (getColorFromRole("outline", "rgb") as number[]) || [
-  0, 0, 0,
-];
+const pitchLineColorRGB =
+  getColorFromRole("outline", "rgb") || ([0, 0, 0] as number[]);
 const pitchLineColor = [
-  pitchLineColorRGB[0],
-  pitchLineColorRGB[1],
-  pitchLineColorRGB[2],
+  Number(pitchLineColorRGB[0]),
+  Number(pitchLineColorRGB[1]),
+  Number(pitchLineColorRGB[2]),
   isDarkMode.value ? 228 : 168,
 ];
-const pitchEditLineColorRGB = (getColorFromRole(
-  "primaryFixed",
-  "rgb",
-) as number[]) || [0, 0, 0];
+const pitchEditLineColorRGB =
+  getColorFromRole("primaryFixedDim", "rgb") || ([0, 0, 0] as number[]);
 const pitchEditLineColor = [
-  pitchEditLineColorRGB[0],
-  pitchEditLineColorRGB[1],
-  pitchEditLineColorRGB[2],
+  Number(pitchEditLineColorRGB[0]),
+  Number(pitchEditLineColorRGB[1]),
+  Number(pitchEditLineColorRGB[2]),
   255,
 ];
 const originalPitchLine: PitchLine = {

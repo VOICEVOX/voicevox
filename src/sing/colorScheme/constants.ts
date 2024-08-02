@@ -1,7 +1,17 @@
 import { ColorRole } from "./types";
 
-// 定義済み UI ロール
-export const DEFINED_COLOR_ROLES: {
+// 定義済みUIロール名
+export const DEFINED_ROLES: ColorRole[] = [
+  "primary",
+  "secondary",
+  "tertiary",
+  "neutral",
+  "neutralVariant",
+  "error",
+];
+
+// 定義済みUIロールカラー
+export const DEFINED_REF_COLOR_ROLES: {
   name: string;
   role: ColorRole;
   lightShade: number;
@@ -294,6 +304,33 @@ export const DEFINED_COLOR_ROLES: {
     role: "neutral",
     lightShade: 0.9,
     darkShade: 0.22,
+  },
+];
+
+export const CUSTOM_COLOR_ROLES = [
+  {
+    name: "${customColorName}",
+    role: "primary",
+    lightShade: 0.4,
+    darkShade: 0.8,
+  },
+  {
+    name: "on${customColorName}",
+    role: "primary",
+    lightShade: 1.0,
+    darkShade: 0.2,
+  },
+  {
+    name: "${customColorName}Container",
+    role: "primary",
+    lightShade: 0.9,
+    darkShade: 0.3,
+  },
+  {
+    name: "on${customColorName}Container",
+    role: "primary",
+    lightShade: 0.1,
+    darkShade: 0.9,
   },
 ];
 

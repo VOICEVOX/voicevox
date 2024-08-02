@@ -566,6 +566,7 @@ export type ThemeSetting = {
 export type ColorSchemeSetting = {
   currentColorScheme: ColorScheme;
   availableColorSchemeConfigs: ColorSchemeConfig[];
+  isDarkMode: boolean;
 };
 
 export const experimentalSettingSchema = z.object({

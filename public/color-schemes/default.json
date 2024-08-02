@@ -1,7 +1,7 @@
 {
   "name": "Default",
   "displayName": "デフォルト",
-  "baseColors": {
+  "roleColors": {
     "primary": "#a5d4ad",
     "error": "#d04756"
   },
@@ -102,47 +102,47 @@
     {
       "name": "link",
       "displayName": "リンク",
-      "color": "#0969da"
+      "sourceColor": "#0969da"
     },
     {
       "name": "pink",
       "displayName": "ピンク",
-      "color": "oklch(70% 0.13 0)"
+      "sourceColor": "oklch(70% 0.14 0)"
     },
     {
       "name": "orange",
       "displayName": "オレンジ",
-      "color": "oklch(70% 0.13 45)"
+      "sourceColor": "oklch(70% 0.13 45)"
     },
     {
       "name": "yellow",
       "displayName": "イエロー",
-      "color": "oklch(70% 0.13 90)"
+      "sourceColor": "oklch(70% 0.13 90)"
     },
     {
       "name": "green",
       "displayName": "グリーン",
-      "color": "oklch(70% 0.13 135)"
+      "sourceColor": "oklch(70% 0.13 135)"
     },
     {
       "name": "teal",
       "displayName": "ティール",
-      "color": "oklch(70% 0.13 180)"
+      "sourceColor": "oklch(70% 0.13 180)"
     },
     {
       "name": "skyblue",
       "displayName": "スカイブルー",
-      "color": "oklch(70% 0.13 225)"
+      "sourceColor": "oklch(70% 0.13 225)"
     },
     {
       "name": "indigo",
       "displayName": "インディゴ",
-      "color": "oklch(70% 0.13 270)"
+      "sourceColor": "oklch(70% 0.13 270)"
     },
     {
       "name": "purple",
       "displayName": "パープル",
-      "color": "oklch(70% 0.13 315)"
+      "sourceColor": "oklch(70% 0.13 315)"
     }
   ]
 }

@@ -32,8 +32,6 @@ import ColorSchemeEditor from "@/components/Sing/ColorSchemeEditor.vue";
 import EngineStartupOverlay from "@/components/EngineStartupOverlay.vue";
 import { useStore } from "@/store";
 import onetimeWatch from "@/helpers/onetimeWatch";
-import { useColorScheme } from "@/composables/useColorScheme";
-const { currentColorScheme } = useColorScheme();
 import {
   DEFAULT_TPQN,
   createDefaultTempo,
@@ -60,7 +58,7 @@ const enablePitchEditInSongEditor = computed(() => {
 
 const showColorSchemeEditor = computed(() => {
   return (
-    currentColorScheme.value &&
+    store.state.colorSchemeSetting.currentColorScheme &&
     store.state.experimentalSetting.enableColorSchemeEditor
   );
 });

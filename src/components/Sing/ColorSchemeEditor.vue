@@ -1,19 +1,15 @@
 <template>
   <div class="color-scheme-editor">
     <section class="section combo-section">
-      <SelectRoot
-        v-model="selectedScheme"
-        class="select-root"
-        @update:modelValue="onSchemeChange"
-      >
+      <SelectRoot v-model="selectedScheme" @update:modelValue="onSchemeChange">
         <SelectTrigger class="select-trigger" aria-label="カラースキームを選択">
           <SelectValue placeholder="カラースキームを選択" />
         </SelectTrigger>
-
         <SelectPortal>
           <SelectContent
             class="select-content"
             position="popper"
+            :options="schemeOptions"
             :sideoffset="5"
           >
             <SelectViewport>
@@ -52,7 +48,7 @@
         <div v-for="roleName in baseRoles" :key="roleName" class="color-item">
           <input
             type="color"
-            :value="getBaseColorHex(roleName)"
+            :value="getRoleColorHex(roleName)"
             :title="roleName"
             @input="
               (e) =>
@@ -74,17 +70,20 @@
         >
           <input
             type="color"
-            :value="
-              new Color(customColor.color)
-                .to('srgb')
-                .toString({ format: 'hex' })
-            "
+            :value="cssStringToHex(customColor.sourceColor)"
             :title="customColor.name"
-            @click.prevent
+            @input="
+              (e) =>
+                updateCustomColor(
+                  customColor.name,
+                  (e.target as HTMLInputElement).value,
+                )
+            "
           />
           <span>{{ customColor.name }}</span>
         </div>
       </div>
+      <button @click="addCustomColor">カスタムカラーを追加</button>
     </section>
 
     <!-- エイリアスカラー設定 -->
@@ -118,7 +117,7 @@
                 <SelectViewport>
                   <SelectGroup class="select-group">
                     <SelectItem
-                      v-for="role in allRolesIncludingCustom"
+                      v-for="role in allRoles"
                       :key="role"
                       :value="role"
                       class="select-item"
@@ -167,11 +166,11 @@
         <div class="palette-name">{{ paletteName }}</div>
         <div class="palette-colors">
           <div
-            v-for="shade in sortedPalettes"
+            v-for="shade in sortedPaletteShades"
             :key="shade"
             class="palette-color"
             :style="{
-              backgroundColor: getColorOklch(palette.shades[shade]),
+              backgroundColor: oklchToCssString(palette.shades[shade]),
             }"
           >
             <span
@@ -188,13 +187,15 @@
     </section>
     <!-- ダウンロードボタン -->
     <section class="section">
-      <button @click="downloadColorSchemeConfig">JSONでエクスポート</button>
+      <button style="margin-right: 0.5rem" @click="downloadColorSchemeConfig">
+        JSON
+      </button>
+      <button @click="downloadCSSVariables">CSS</button>
     </section>
   </div>
 </template>
 
 <script setup lang="ts">
-import Color from "colorjs.io";
 import { ref, computed, onMounted } from "vue";
 import {
   SelectRoot,
@@ -206,22 +207,28 @@ import {
   SelectTrigger,
   SelectValue,
   SelectViewport,
-  SwitchRoot,
-  SwitchThumb,
   SliderRoot,
   SliderTrack,
   SliderRange,
   SliderThumb,
+  SwitchRoot,
+  SwitchThumb,
 } from "radix-vue";
 import { useColorScheme } from "@/composables/useColorScheme";
 import {
   ColorRole,
   OklchColor,
   ColorSchemeConfig,
-  ColorPalette,
   CustomColorConfig,
 } from "@/sing/colorScheme/types";
-import { cssStringFromOklch } from "@/sing/colorScheme/generator";
+import {
+  cssStringToOklch,
+  hexToCssString,
+  cssStringToHex,
+  oklchToCssString,
+} from "@/sing/colorScheme/util";
+import { DEFINED_ROLES } from "@/sing/colorScheme/constants";
+import { cssVariablesFromColorScheme } from "@/sing/colorScheme/css";
 
 const {
   currentColorScheme,
@@ -229,15 +236,40 @@ const {
   isDarkMode,
   updateColorScheme,
   selectColorScheme,
-  //setDarkMode,
+  setColorSchemeFromConfig,
 } = useColorScheme();
 
+// state
+// 選択中のカラースキーム
 const selectedScheme = ref(currentColorScheme.value.name);
-
-// 現在のスキームの期設定を保持
+// 初期カラースキーム設定
 const initialSchemeConfig = ref<ColorSchemeConfig | null>(null);
 
-const sortedPalettes = computed(() => {
+// computed
+// カラースキーム一覧
+const schemeOptions = computed(() => {
+  return availableColorSchemeConfigs.value.map((config) => ({
+    label: config.displayName,
+    value: config.name,
+  }));
+});
+
+// 基本的なロール名 eg: primary, neutralVariant, error
+const baseRoles = computed<ColorRole[]>(() => [...DEFINED_ROLES]);
+
+// 追加されたロールも含めたすべてのロール名
+const allRoles = computed<string[]>(() => [
+  ...baseRoles.value,
+  ...(currentColorScheme.value.config.customColors?.map((cc) => cc.name) || []),
+]);
+
+const customColors = computed(
+  () => currentColorScheme.value.config.customColors || [],
+);
+// const aliasColors = computed(() => currentColorScheme.value.config.aliasColors || []);
+
+// パレットのシェードを明度順にソートしたもの
+const sortedPaletteShades = computed(() => {
   return Object.keys(
     currentColorScheme.value.palettes[
       Object.keys(currentColorScheme.value.palettes)[0]
@@ -247,56 +279,60 @@ const sortedPalettes = computed(() => {
     .sort((a, b) => a - b);
 });
 
-// ベースロールの一覧
-const baseRoles = [
-  "primary",
-  "secondary",
-  "tertiary",
-  "neutral",
-  "neutralVariant",
-  "error",
-];
+// すべてのパレット: デフォルトのパレット + カスタムカラーのパレット
+const allPalettes = computed(() => {
+  const basePalettes = currentColorScheme.value.palettes;
+  const customPalettes = customColors.value.reduce(
+    (acc, customColor) => {
+      acc[customColor.name] = generateCustomPalette(customColor);
+      return acc;
+    },
+    {} as Record<string, { name: string; shades: Record<number, OklchColor> }>,
+  );
 
-// すべてのロールの一覧（ベースロール + カスタムカラー）
-const allRolesIncludingCustom = computed(() => {
-  const baseRoles = [
-    "primary",
-    "secondary",
-    "tertiary",
-    "neutral",
-    "neutralVariant",
-    "error",
-  ];
-  const customRoles =
-    currentColorScheme.value.config.customColors?.map((cc) => cc.name) || [];
-  return [...baseRoles, ...customRoles];
+  return { ...basePalettes, ...customPalettes };
 });
 
-// カラースキーム変更
+/*
+const customColorHex = computed(() => (customColor: CustomColorConfig) => 
+  cssStringToHex(customColor.sourceColor)
+); */
+
+// メソッド
+
+/**
+ * カラースキームを選択する
+ * @param schemeName : string - カラースキーム名
+ */
 const onSchemeChange = async () => {
-  await selectColorScheme(selectedScheme.value);
+  selectColorScheme(selectedScheme.value);
   initialSchemeConfig.value = JSON.parse(
     JSON.stringify(currentColorScheme.value.config),
   );
 };
 
-// テーマ変更(互換性のため既存のテーマ切り替え)
-//const onModeChange = (checked: boolean) => {
-//setDarkMode(checked);
-//};
-
-// 現在のスキームをリセット
+/**
+ * 現在のカラースキームをデフォルトに戻す
+ */
 const resetCurrentScheme = async () => {
   if (initialSchemeConfig.value) {
-    await updateColorScheme(initialSchemeConfig.value);
+    // impl: 確認を表示する
+    const confirmed = true;
+    if (confirmed) {
+      setColorSchemeFromConfig(initialSchemeConfig.value);
+    }
   }
 };
 
-// ベースカラーをHEX形式で取得
-const getBaseColorHex = (role: ColorRole): string => {
-  const baseColor = currentColorScheme.value.config.baseColors[role];
-  if (baseColor) {
-    return new Color(baseColor).to("srgb").toString({ format: "hex" });
+/**
+ * ロールのカラーをUIに表示するためのHEX文字列を取得する
+ * @param role : ColorRole - ロール名
+ * @returns string - ロールのカラー
+ */
+const getRoleColorHex = (role: ColorRole): string => {
+  const roleColor = currentColorScheme.value.config.roleColors[role];
+  if (roleColor) {
+    return cssStringToHex(roleColor);
   }
   // 色が指定されていない場合、パレットから取得
   const palette = currentColorScheme.value.palettes[role];
@@ -310,57 +346,75 @@ const getBaseColorHex = (role: ColorRole): string => {
     return "#000000"; // デフォルト値
   }
 
-  return new Color("oklch", [...color]).to("srgb").toString({ format: "hex" });
+  return oklchToCssString(color, "hex");
 };
 
-// ベースロールカラー更新
-const updateRoleColor = async (role: ColorRole, hexColor: string) => {
-  const newBaseColors = {
-    ...currentColorScheme.value.config.baseColors,
-    [role]: new Color(hexColor).to("oklch").toString(),
+/**
+ * ロールのカラーを更新する
+ * @param role : ColorRole - ロール名
+ * @param hexColor : string - ロールのカラー
+ */
+const updateRoleColor = (role: ColorRole, hexColor: string) => {
+  const newRoleColors = {
+    ...currentColorScheme.value.config.roleColors,
+    [role]: hexToCssString(hexColor),
   };
-  await updateColorScheme({ baseColors: newBaseColors });
+  updateColorScheme({ roleColors: newRoleColors });
 };
 
-// HEX形式をOKLCHに変換する関数
-const hexToOklch = (hexColor: string): OklchColor => {
-  const color = new Color(hexColor);
-  return color.to("oklch").coords as OklchColor;
+/**
+ * カスタムカラーを更新する
+ * @param name : string - カスタムカラー名
+ * @param hexColor : string - カスタムカラー
+ */
+const updateCustomColor = (name: string, hexColor: string) => {
+  const updatedCustomColors =
+    currentColorScheme.value.config.customColors?.map((cc) =>
+      cc.name === name ? { ...cc, sourceColor: hexToCssString(hexColor) } : cc,
+    ) ?? [];
+  updateColorScheme({ customColors: updatedCustomColors });
 };
 
-// OKLCHカラーをCSS文字列に変換
-const getColorOklch = (color: OklchColor | string): string => {
-  if (typeof color === "string") {
-    return color;
+/**
+ * カスタムカラーを追加する
+ */
+const addCustomColor = async () => {
+  // impl: 入力可能にする
+  const newColorName = "Custom";
+  if (newColorName) {
+    const newCustomColor: CustomColorConfig = {
+      name: newColorName,
+      displayName: newColorName,
+      sourceColor: "#000000",
+      asRole: false,
+    };
+    const updatedCustomColors = [
+      ...(currentColorScheme.value.config.customColors ?? []),
+      newCustomColor,
+    ];
+    updateColorScheme({ customColors: updatedCustomColors });
   }
-  return cssStringFromOklch(color);
 };
 
-// カスタムカラー更新
-// NOTE: カスタムカラーCRUD機能追加時にカスタムカラーのパレットを更新するために使用
-/*
-const updateCustomColor = async (index: number, hexColor: string) => {
-  const updatedCustomColors = [
-    ...(currentColorScheme.value.config.customColors || []),
-  ];
-  updatedCustomColors[index] = {
-    ...updatedCustomColors[index],
-    color: new Color(hexColor).to("oklch").toString(),
-  };
-  await updateColorScheme({ customColors: updatedCustomColors });
-}; */
-
-// エイリアスカラーのロール更新
-const updateAliasColorRole = async (name: string, value: ColorRole) => {
+/**
+ * エイリアスカラーのロールを更新する
+ * @param name : string - エイリアスカラー名
+ * @param value : ColorRole - ロール名
+ */
+const updateAliasColorRole = (name: string, value: ColorRole) => {
   const aliasColors = currentColorScheme.value.config.aliasColors ?? [];
   const updatedAliasColors = aliasColors.map((ac) =>
     ac.name === name ? { ...ac, role: value } : ac,
   );
-  await updateColorScheme({ aliasColors: updatedAliasColors });
+  updateColorScheme({ aliasColors: updatedAliasColors });
 };
 
-// エイリアスカラーの明度更新
-const updateAliasColorShade = async (name: string, shade: number) => {
+/**
+ * エイリアスカラーの明度を更新する(スライダー用)
+ * @param name : string - エイリアスカラー名
+ * @param shade : number - 0-1
+ */
+const updateAliasColorShade = (name: string, shade: number) => {
   if (shade == undefined) return;
   const updatedAliasColors =
     currentColorScheme.value.config.aliasColors?.map((ac) =>
@@ -371,17 +425,49 @@ const updateAliasColorShade = async (name: string, shade: number) => {
           }
         : ac,
     ) ?? [];
-  await updateColorScheme({ aliasColors: updatedAliasColors });
+  updateColorScheme({ aliasColors: updatedAliasColors });
 };
 
-// ColorSchemeConfigをJSONに変換する関数
-const colorSchemeConfigToJSON = (config: ColorSchemeConfig): string => {
-  return JSON.stringify(config, null, 2);
+/**
+ * カラースキームの設定をJSONファイルとしてダウンロードする
+ */
+const downloadColorSchemeConfig = () => {
+  const config = currentColorScheme.value.config;
+  const jsonContent = JSON.stringify(config, null, 2);
+  downloadFile(
+    jsonContent,
+    `${config.name}_color_scheme_config.json`,
+    "application/json",
+  );
 };
 
-// JSONをファイルとしてダウンロードする関数
-const downloadJSON = (content: string, fileName: string) => {
-  const blob = new Blob([content], { type: "application/json" });
+/**
+ * カラースキームのCSS変数をCSSファイルとしてダウンロードする
+ */
+const downloadCSSVariables = () => {
+  const cssVars = cssVariablesFromColorScheme(currentColorScheme.value, true);
+  const cssContent = `:root {\n${Object.entries(cssVars.palettes)
+    .map(([key, value]) => `  ${key}: ${value};`)
+    .join("\n")}\n}`;
+  downloadFile(
+    cssContent,
+    `${currentColorScheme.value.name}_color_scheme_variables.css`,
+    "text/css",
+  );
+};
+
+/**
+ * ファイルをダウンロードする
+ * @param content : string - ファイルの内容
+ * @param fileName : string - ファイル名
+ * @param contentType : string - ファイルのMIMEタイプ
+ */
+const downloadFile = (
+  content: string,
+  fileName: string,
+  contentType: string,
+) => {
+  const blob = new Blob([content], { type: contentType });
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
   link.download = fileName;
@@ -389,39 +475,14 @@ const downloadJSON = (content: string, fileName: string) => {
   URL.revokeObjectURL(link.href);
 };
 
-// ダウンロードボタンのクリックハンドラ
-const downloadColorSchemeConfig = () => {
-  const config = currentColorScheme.value.config;
-  const jsonContent = colorSchemeConfigToJSON(config);
-  const fileName = `${config.name}_color_scheme_config.json`;
-  downloadJSON(jsonContent, fileName);
-};
-
-// コンポーネントのマウント時に初期設定を保存
-onMounted(() => {
-  initialSchemeConfig.value = JSON.parse(
-    JSON.stringify(currentColorScheme.value.config),
-  );
-});
-
-const allPalettes = computed(() => {
-  const basePalettes = currentColorScheme.value.palettes;
-  const customPalettes =
-    currentColorScheme.value.config.customColors?.reduce(
-      (acc, customColor) => {
-        acc[customColor.name] = generateCustomPalette(customColor);
-        return acc;
-      },
-      {} as Record<string, ColorPalette>,
-    ) || {};
-
-  return { ...basePalettes, ...customPalettes };
-});
-
-// カスタムカラーのパレットを生成する関数
-function generateCustomPalette(customColor: CustomColorConfig): ColorPalette {
-  const baseColor = hexToOklch(customColor.color);
-  const shades = sortedPalettes.value.reduce(
+/**
+ * カスタムカラーのパレットを生成する
+ * @param customColor : CustomColorConfig - カスタムカラー
+ * @returns { name: string, shades: Record<number, OklchColor> } - カスタムカラーのパレット
+ */
+const generateCustomPalette = (customColor: CustomColorConfig) => {
+  const baseColor = cssStringToOklch(customColor.sourceColor);
+  const shades = sortedPaletteShades.value.reduce(
     (acc, shade) => {
       acc[shade] = adjustShade(baseColor, shade);
       return acc;
@@ -430,14 +491,28 @@ function generateCustomPalette(customColor: CustomColorConfig): ColorPalette {
   );
 
   return { name: customColor.name, shades };
-}
+};
 
-// シェードを調整する関数
-function adjustShade(baseColor: OklchColor, shade: number): OklchColor {
-  const [, c, h] = baseColor;
+/**
+ * シェードを調整する
+ * @param sourceColor : OklchColor - ソースカラー
+ * @param shade : number - 0-1
+ * @returns OklchColor - 調整されたシェード
+ */
+const adjustShade = (sourceColor: OklchColor, shade: number): OklchColor => {
+  const [, c, h] = sourceColor;
   const newL = shade;
-  return [newL, c, h];
-}
+  const newC = Number(c);
+  const newH = Number(h);
+  return [newL, newC, newH];
+};
+
+// マウント時に初期カラースキーム設定を保存する(オブジェクトのシャローコピーの影響があるためJSON.parse(JSON.stringify())を使用)
+onMounted(() => {
+  initialSchemeConfig.value = JSON.parse(
+    JSON.stringify(currentColorScheme.value.config),
+  );
+});
 </script>
 
 <style scoped>

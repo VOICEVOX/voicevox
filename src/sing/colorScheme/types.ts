@@ -2,10 +2,10 @@
 // 内部的に利用
 export type OklchColor = readonly [number, number, number];
 
-// CSSカラー文字列 eg. #000000, oklch(0.12 0.03 40), rgb(0, 0, 0)
+// CSSカラー文字列 (例: #000000, oklch(0.12 0.03 40), rgb(0, 0, 0))
 export type CSSColorString = string;
 
-// カラーごとの役割(M3互換)
+// 色の役割 (Material Design 3互換 + カスタム)
 export type ColorRole =
   | "primary"
   | "secondary"
@@ -13,27 +13,21 @@ export type ColorRole =
   | "neutral"
   | "neutralVariant"
   | "error"
-  | string; // カスタムロール
+  | string; // カスタムロール用
 
-// カラー生成アルゴリズム
-export type ColorAlgorithm = (
-  config: ColorSchemeConfig,
-  baseColor: OklchColor,
-  targetRole: ColorRole, // カラー生成の対象ロール
-  shade: number,
-) => OklchColor;
-
-// カラースキーム設定
-export interface ColorSchemeConfig {
-  name: string;
-  displayName: string;
-  baseColors: Partial<Record<ColorRole, CSSColorString>>;
-  algorithm?: ColorAlgorithm;
-  aliasColors?: AliasColorConfig[];
-  customColors?: CustomColorConfig[];
+// ライトモードとダークモードの色情報
+export interface ColorShades {
+  lightShade: OklchColor;
+  darkShade: OklchColor;
 }
 
-// 特定のロールから明度を取得するカラー
+// カラーパレット（明度ごとの色情報）
+export interface ColorPalette {
+  name: ColorRole | string;
+  shades: Record<number, OklchColor>;
+}
+
+// エイリアスカラー設定(特定の役割に対応するカラーを明度で指定)
 export interface AliasColorConfig {
   name: string;
   displayName: string;
@@ -42,26 +36,37 @@ export interface AliasColorConfig {
   darkShade: number;
 }
 
-// 追加カラー
+// カスタムカラー設定
 export interface CustomColorConfig {
   name: string;
   displayName: string;
-  color: CSSColorString;
-  targetRole?: ColorRole; // カラー生成ルールの対象ロール / 未指定の場合はprimary
+  sourceColor: CSSColorString;
   asRole?: boolean;
 }
 
-// カラーパレット
-export interface ColorPalette {
-  name: ColorRole;
-  shades: Record<number, OklchColor>;
+// カラースキーム設定
+export interface ColorSchemeConfig {
+  name: string;
+  displayName: string;
+  roleColors: Partial<Record<ColorRole, CSSColorString>>;
+  customColors?: CustomColorConfig[];
+  aliasColors?: AliasColorConfig[];
+  algorithmName?: string;
 }
 
-// 出力・保持するカラースキーム
+// カラースキーム
 export interface ColorScheme {
   name: string;
   displayName: string;
+  roles: Record<ColorRole | string, ColorShades>;
   palettes: Record<ColorRole | string, ColorPalette>;
-  roles: Record<ColorRole | string, { light: OklchColor; dark: OklchColor }>;
   config: ColorSchemeConfig;
 }
+
+// カラー生成アルゴリズム
+export type ColorAlgorithm = (
+  config: ColorSchemeConfig,
+  sourceColor: OklchColor,
+  targetRole: ColorRole | string,
+  shade: number,
+) => OklchColor;

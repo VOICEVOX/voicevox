@@ -1,88 +1,132 @@
-import { computed } from "vue";
-import Color from "colorjs.io";
+import { computed, ComputedRef } from "vue";
 import { useStore } from "@/store";
 import {
-  ColorSchemeConfig,
-  ColorScheme,
   OklchColor,
+  ColorScheme,
+  ColorSchemeConfig,
+  ColorRole,
+  CustomColorConfig,
 } from "@/sing/colorScheme/types";
-import { generateColorSchemeFromConfig } from "@/sing/colorScheme/generator";
+import { generateColorSchemeFromConfig } from "@/sing/colorScheme/core";
+import { oklchToCssString } from "@/sing/colorScheme/util";
 
 export function useColorScheme() {
   const store = useStore();
 
-  // ダークモードかどうか(互換のためthemeSettingを使用)
-  const isDarkMode = computed<boolean>(
-    () => store.state.themeSetting.currentTheme === "Dark",
-  );
+  const currentColorScheme: ComputedRef<ColorScheme> = computed(() => {
+    return store.state.colorSchemeSetting.currentColorScheme;
+  });
 
-  // 現在選択されているカラースキーム
-  const currentColorScheme = computed<ColorScheme>(
-    () => store.state.colorSchemeSetting.currentColorScheme,
-  );
+  const availableColorSchemeConfigs: ComputedRef<ColorSchemeConfig[]> =
+    computed(() => {
+      return store.state.colorSchemeSetting.availableColorSchemeConfigs || [];
+    });
 
-  // 利用可能なカラースキーム一覧
-  const availableColorSchemeConfigs = computed<ColorSchemeConfig[]>(
-    () => store.state.colorSchemeSetting.availableColorSchemeConfigs,
-  );
+  const isDarkMode: ComputedRef<boolean> = computed(() => {
+    return store.state.colorSchemeSetting.isDarkMode || false;
+  });
 
-  // カラースキームを更新
-  const updateColorScheme = async (
-    partialConfig: Partial<ColorSchemeConfig>,
-  ) => {
-    const newConfig = { ...currentColorScheme.value.config, ...partialConfig };
-    const newColorScheme = generateColorSchemeFromConfig(newConfig);
-    store.dispatch("SET_COLOR_SCHEME", { colorScheme: newColorScheme });
+  const setColorScheme = async (colorScheme: ColorScheme): Promise<void> => {
+    await store.dispatch("SET_COLOR_SCHEME", {
+      colorScheme,
+      applyStyles: true,
+    });
   };
 
-  // カラースキームを選択
-  const selectColorScheme = async (selectedSchemeName: string) => {
-    const selected = availableColorSchemeConfigs.value.find(
-      (scheme) => scheme.name === selectedSchemeName,
+  const setColorSchemeFromConfig = async (
+    config: ColorSchemeConfig,
+  ): Promise<void> => {
+    const colorScheme = generateColorSchemeFromConfig(config);
+    await setColorScheme(colorScheme);
+  };
+
+  const selectColorScheme = async (schemeName: string): Promise<void> => {
+    const selectedConfig = availableColorSchemeConfigs.value.find(
+      (config) => config.name === schemeName,
     );
-    if (selected) {
-      await updateColorScheme(selected);
+    if (selectedConfig) {
+      const newColorScheme = generateColorSchemeFromConfig(selectedConfig);
+      await setColorScheme(newColorScheme);
+    } else {
+      throw new Error(`Color scheme "${schemeName}" not found`);
     }
   };
 
-  // ロール名からカラーを取得
-  const getColorFromRole = (
-    role: string,
-    format: "array" | "hex" | "oklch" | "rgb" = "array",
-  ): OklchColor | string | number[] => {
-    const colorSet = currentColorScheme.value.roles[role];
-    const oklchColor: OklchColor = isDarkMode.value
-      ? colorSet.dark
-      : colorSet.light;
-
-    switch (format) {
-      case "array":
-        return oklchColor;
-      case "hex":
-        return new Color("hex", [...oklchColor]).toString();
-      case "oklch":
-        return new Color("oklch", [...oklchColor]).toString();
-      case "rgb": {
-        const color = new Color("oklch", [...oklchColor]);
-        const srgbColor = color.to("srgb");
-        return [
-          Math.round(srgbColor.r * 255),
-          Math.round(srgbColor.g * 255),
-          Math.round(srgbColor.b * 255),
-        ];
-      }
-      default:
-        throw new Error(`Unsupported color format: ${format}`);
+  const updateColorScheme = async (
+    updates: Partial<ColorSchemeConfig>,
+  ): Promise<void> => {
+    const currentScheme = currentColorScheme.value;
+    if (!currentScheme) {
+      throw new Error("No current color scheme to update");
     }
+    const updatedConfig = { ...currentScheme.config, ...updates };
+    const updatedColorScheme = generateColorSchemeFromConfig(updatedConfig);
+    await setColorScheme(updatedColorScheme);
+  };
+
+  const addCustomColor = async (name: string, color: string): Promise<void> => {
+    const newCustomColor: CustomColorConfig = {
+      name,
+      displayName: name,
+      sourceColor: color,
+      asRole: true,
+    };
+    const currentScheme = currentColorScheme.value;
+    if (!currentScheme) {
+      throw new Error("No current color scheme");
+    }
+    const updatedCustomColors = [
+      ...(currentScheme.config.customColors || []),
+      newCustomColor,
+    ];
+    await updateColorScheme({ customColors: updatedCustomColors });
+  };
+
+  const removeCustomColor = async (name: string): Promise<void> => {
+    const currentScheme = currentColorScheme.value;
+    if (!currentScheme) {
+      throw new Error("No current color scheme to remove custom color from");
+    }
+    const updatedCustomColors =
+      currentScheme.config.customColors?.filter((c) => c.name !== name) || [];
+    await updateColorScheme({ customColors: updatedCustomColors });
+  };
+
+  const getColorFromRole = (
+    role: ColorRole,
+    format: "oklch" | "hex" | "rgb" | "p3" = "oklch",
+  ): OklchColor | string | null => {
+    const currentScheme = currentColorScheme.value;
+    if (!currentScheme) {
+      return null;
+    }
+    const colorSet = currentScheme.roles[role];
+    if (!colorSet) {
+      return null;
+    }
+    const oklchColor = isDarkMode.value
+      ? colorSet.darkShade
+      : colorSet.lightShade;
+    return format === "oklch"
+      ? oklchColor
+      : oklchToCssString(oklchColor, format);
+  };
+
+  const initializeColorScheme = async (): Promise<void> => {
+    await store.dispatch("INITIALIZE_COLOR_SCHEME");
   };
 
   return {
-    isDarkMode,
     currentColorScheme,
     availableColorSchemeConfigs,
-    updateColorScheme,
+    isDarkMode,
+    setColorScheme,
+    setColorSchemeFromConfig,
     selectColorScheme,
+    updateColorScheme,
+    addCustomColor,
+    removeCustomColor,
     getColorFromRole,
-    //setDarkMode,
+    initializeColorScheme,
   };
 }

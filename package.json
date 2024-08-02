@@ -71,7 +71,6 @@
   },
   "devDependencies": {
     "@chromatic-com/storybook": "1.5.0",
-    "@iconify/vue": "4.1.2",
     "@openapitools/openapi-generator-cli": "2.13.4",
     "@playwright/test": "1.43.1",
     "@quasar/vite-plugin": "1.6.0",

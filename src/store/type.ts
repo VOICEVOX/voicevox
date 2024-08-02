@@ -1585,6 +1585,7 @@ export type SettingStoreTypes = {
     mutation: {
       currentColorScheme: ColorScheme;
       availableColorSchemeConfigs: ColorSchemeConfig[];
+      isDarkMode: boolean;
     };
     action(): void;
   };
@@ -1593,6 +1594,10 @@ export type SettingStoreTypes = {
     mutation: {
       colorScheme: ColorScheme;
     };
+    action(payload: { colorScheme: ColorScheme; applyStyles: boolean }): void;
+  };
+
+  APPLY_COLOR_SCHEME: {
     action(payload: { colorScheme: ColorScheme }): void;
   };
 
