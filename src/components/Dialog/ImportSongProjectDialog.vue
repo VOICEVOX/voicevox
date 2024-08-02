@@ -1,14 +1,25 @@
 <template>
-  <QDialog ref="dialogRef" autoScroll @beforeShow="initializeValues">
-    <QLayout container view="hHh lpr fFf" class="q-dialog-plugin bg-background">
-      <QHeader>
-        <QToolbar>
-          <QToolbarTitle class="text-display">インポート</QToolbarTitle>
-        </QToolbar>
-      </QHeader>
-      <QPageContainer class="q-px-lg">
-        <details class="q-pt-md">
-          <summary>対応しているプロジェクトファイル</summary>
+  <QDialog ref="dialogRef" @beforeShow="initializeValues">
+    <QCard class="q-py-sm q-px-md dialog-card">
+      <QCardSection>
+        <div class="text-h5">インポート</div>
+      </QCardSection>
+
+      <QSeparator />
+
+      <QCardSection class="q-py-none">
+        <QFile
+          v-model="projectFile"
+          label="インポートするファイル"
+          class="q-my-sm"
+          :accept="acceptExtensions"
+          :errorMessage="projectFileErrorMessage"
+          :error="!!projectFileErrorMessage"
+          placeholder="ファイルを選択してください"
+          @input="handleFileChange"
+        />
+        <div v-if="projectFile == null">
+          <span class="text-weight-bold">対応しているファイル形式</span>
           <ul>
             <li
               v-for="[name, extensions] in projectNameToExtensions"
@@ -17,54 +28,69 @@
               {{ name }}：{{ extensions.map((ext) => `.${ext}`).join("、") }}
             </li>
           </ul>
-        </details>
-        <QFile
-          v-model="projectFile"
-          label="インポートするファイル"
-          class="q-my-sm"
-          :accept="acceptExtensions"
-          :errorMessage="projectFileErrorMessage"
-          :error="!!projectFileErrorMessage"
-          placeholder="外部プロジェクトファイルを選択してください"
-          @input="handleFileChange"
+        </div>
+      </QCardSection>
+      <QCardSection v-if="trackOptions.length > 0">
+        <QList bordered class="rounded-borders scroll scrollable-area">
+          <QItem
+            v-for="(track, index) in trackOptions"
+            :key="track.value"
+            tag="label"
+            :disable="track.disable"
+          >
+            <QItemSection avatar>
+              <QCheckbox
+                v-if="multiTrackEnabled"
+                v-model="selectedTrackIndexes"
+                :val="track.value"
+                :disable="track.disable"
+              />
+              <QRadio
+                v-else
+                v-model="selectedTrackIndex"
+                :val="track.value"
+                :disable="track.disable"
+              />
+            </QItemSection>
+            <QItemSection>
+              <QItemLabel>
+                {{ index + 1 }}：{{ track.name || DEFAULT_TRACK_NAME }}
+              </QItemLabel>
+              <QItemLabel caption>ノート数：{{ track.noteLength }}</QItemLabel>
+            </QItemSection>
+          </QItem>
+        </QList>
+      </QCardSection>
+
+      <QSeparator />
+
+      <QCardActions>
+        <QSpace />
+        <QBtn
+          unelevated
+          align="right"
+          label="キャンセル"
+          color="toolbar-button"
+          textColor="toolbar-button-display"
+          class="text-no-wrap text-bold q-mr-sm"
+          @click="handleCancel"
         />
-        <QSelect
-          v-if="project"
-          v-model="selectedTrack"
-          :options="trackOptions"
-          :disable="projectFileErrorMessage != undefined"
-          emitValue
-          mapOptions
-          label="インポートするトラック"
+        <QBtn
+          unelevated
+          align="right"
+          label="インポート"
+          color="toolbar-button"
+          textColor="toolbar-button-display"
+          class="text-no-wrap text-bold q-mr-sm"
+          :disabled="
+            selectedTrackIndexes == null ||
+            selectedTrackIndexes.length === 0 ||
+            projectFileErrorMessage != undefined
+          "
+          @click="handleImportTrack"
         />
-      </QPageContainer>
-      <QFooter>
-        <QToolbar>
-          <QSpace />
-          <QBtn
-            unelevated
-            align="right"
-            label="キャンセル"
-            color="toolbar-button"
-            textColor="toolbar-button-display"
-            class="text-no-wrap text-bold q-mr-sm"
-            @click="handleCancel"
-          />
-          <QBtn
-            unelevated
-            align="right"
-            label="インポート"
-            color="toolbar-button"
-            textColor="toolbar-button-display"
-            class="text-no-wrap text-bold q-mr-sm"
-            :disabled="
-              selectedTrack == null || projectFileErrorMessage != undefined
-            "
-            @click="handleImportTrack"
-          />
-        </QToolbar>
-      </QFooter>
-    </QLayout>
+      </QCardActions>
+    </QCard>
   </QDialog>
 </template>
 
@@ -84,11 +110,16 @@ import { createLogger } from "@/domain/frontend/log";
 import { ExhaustiveError } from "@/type/utility";
 import { IsEqual } from "@/type/utility";
 import { LatestProjectType } from "@/domain/project/schema";
+import { DEFAULT_TRACK_NAME } from "@/sing/domain";
 
 const { dialogRef, onDialogOK, onDialogCancel } = useDialogPluginComponent();
 
 const store = useStore();
 const log = createLogger("ImportExternalProjectDialog");
+
+const multiTrackEnabled = computed(
+  () => store.state.experimentalSetting.enableMultiTrack,
+);
 
 // 受け入れる拡張子
 const acceptExtensions = computed(
@@ -180,15 +211,19 @@ const project = ref<Project | null>(null);
 
 // トラック
 function getProjectTracks(project: Project) {
-  function _track(name: string | undefined, noteLength: number) {
+  function toTrack(name: string | undefined, noteLength: number) {
     return { name, noteLength, disable: noteLength === 0 };
   }
   return project.type === "utaformatix"
     ? project.project.tracks.map((track) =>
-        _track(track.name, track.notes.length),
+        toTrack(track.name, track.notes.length),
       )
-    : project.project.song.tracks.map((track) =>
-        _track(undefined, track.notes.length),
+    : project.project.song.trackOrder.map((trackId) =>
+        toTrack(
+          // zodが何故かundefinedを入れてくるので、null-safe operatorを使う
+          project.project.song.tracks[trackId]?.name,
+          project.project.song.tracks[trackId]?.notes.length ?? 0,
+        ),
       );
 }
 
@@ -198,24 +233,39 @@ const trackOptions = computed(() => {
     return [];
   }
   // トラックリストを生成
-  // "トラックNo: トラック名 / ノート数" の形式で表示
   const tracks = getProjectTracks(project.value);
   return tracks.map((track, index) => ({
-    label: `${index + 1}: ${track?.name || "（トラック名なし）"} / ノート数：${
-      track.noteLength
-    }`,
+    name: track?.name,
+    noteLength: track.noteLength,
     value: index,
     disable: track.disable,
   }));
 });
 // 選択中のトラック
-const selectedTrack = ref<number | null>(null);
+const selectedTrackIndexes = ref<number[] | null>(null);
+const selectedTrackIndex = computed<number | null>({
+  get: () => {
+    if (selectedTrackIndexes.value == null) {
+      return null;
+    }
+    if (selectedTrackIndexes.value.length === 0) {
+      return null;
+    }
+    return selectedTrackIndexes.value[0];
+  },
+  set: (index: number | null) => {
+    if (index == null) {
+      throw new Error("assert: index != null");
+    }
+    selectedTrackIndexes.value = [index];
+  },
+});
 
 // データ初期化
 const initializeValues = () => {
   projectFile.value = null;
   project.value = null;
-  selectedTrack.value = null;
+  selectedTrackIndexes.value = null;
 };
 
 // ファイル変更時
@@ -233,7 +283,7 @@ const handleFileChange = async (event: Event) => {
 
   // 既存のデータおよび選択中のトラックをクリア
   project.value = null;
-  selectedTrack.value = null;
+  selectedTrackIndexes.value = null;
   error.value = null;
 
   const file = input.files[0];
@@ -256,12 +306,14 @@ const handleFileChange = async (event: Event) => {
         }),
       };
     }
-    selectedTrack.value = getProjectTracks(project.value).findIndex(
+    const firstSelectableTrack = getProjectTracks(project.value).findIndex(
       (track) => !track.disable,
     );
-    if (selectedTrack.value === -1) {
-      selectedTrack.value = 0;
+    if (firstSelectableTrack === -1) {
+      error.value = "emptyProject";
+      return;
     }
+    selectedTrackIndexes.value = [firstSelectableTrack];
   } catch (e) {
     log.error(e);
     error.value = "unknown";
@@ -278,19 +330,19 @@ const handleFileChange = async (event: Event) => {
 // トラックインポート実行時
 const handleImportTrack = () => {
   // ファイルまたは選択中のトラックが未設定の場合はエラー
-  if (project.value == null || selectedTrack.value == null) {
+  if (project.value == null || selectedTrackIndexes.value == null) {
     throw new Error("project or selected track is not set");
   }
   // トラックをインポート
   if (project.value.type === "vvproj") {
-    store.dispatch("IMPORT_VOICEVOX_PROJECT", {
+    store.dispatch("COMMAND_IMPORT_VOICEVOX_PROJECT", {
       project: project.value.project,
-      trackIndex: selectedTrack.value,
+      trackIndexes: selectedTrackIndexes.value,
     });
   } else {
-    store.dispatch("IMPORT_UTAFORMATIX_PROJECT", {
+    store.dispatch("COMMAND_IMPORT_UTAFORMATIX_PROJECT", {
       project: project.value.project,
-      trackIndex: selectedTrack.value,
+      trackIndexes: selectedTrackIndexes.value,
     });
   }
   onDialogOK();
@@ -301,3 +353,15 @@ const handleCancel = () => {
   onDialogCancel();
 };
 </script>
+
+<style scoped lang="scss">
+.dialog-card {
+  width: 700px;
+  max-width: 80vw;
+}
+
+.scrollable-area {
+  overflow-y: auto;
+  max-height: calc(100vh - 100px - 295px);
+}
+</style>
