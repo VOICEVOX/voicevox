@@ -123,10 +123,7 @@
                 class="word-input"
                 dense
                 :disable="uiLocked"
-                @update:modelValue="setSurfaceText"
-                @focus="surfaceHandleFocus"
                 @blur="setSurface(surface)"
-                @paste="surfacePaste"
                 @keydown.enter="yomiFocus"
               >
                 <ContextMenu
@@ -145,10 +142,7 @@
                 dense
                 :error="!isOnlyHiraOrKana"
                 :disable="uiLocked"
-                @update:modelValue="setYomiText"
-                @focus="yomiHandleFocus"
                 @blur="setYomi(yomi)"
-                @paste="yomiPaste"
                 @keydown.enter="setYomiWhenEnter"
               >
                 <template #error>
@@ -686,25 +680,17 @@ const toDialogClosedState = () => {
   dictionaryManageDialogOpenedComputed.value = false;
 };
 
-const inputElementRef = ref("");
-
 const {
-  handleFocus: surfaceHandleFocus,
   contextMenu: surfaceContextMenu,
   contextMenuHeader: surfaceContextMenuHeader,
   contextMenudata: surfaceContextMenudata,
-  setSurfaceOrYomiText: setSurfaceText,
-  pasteOnDic: surfacePaste,
-} = useRightClickContextMenu(surfaceInput, inputElementRef);
+} = useRightClickContextMenu(surfaceInput, surface, ref("surface"));
 
 const {
-  handleFocus: yomiHandleFocus,
   contextMenu: yomiContextMenu,
   contextMenuHeader: yomiContextMenuHeader,
   contextMenudata: yomiContextMenudata,
-  setSurfaceOrYomiText: setYomiText,
-  pasteOnDic: yomiPaste,
-} = useRightClickContextMenu(yomiInput, inputElementRef);
+} = useRightClickContextMenu(yomiInput, yomi, ref("yomi"));
 </script>
 
 <style lang="scss" scoped>

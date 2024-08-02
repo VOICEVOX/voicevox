@@ -14,15 +14,10 @@ import { SelectionHelperForQInput } from "@/helpers/SelectionHelperForQInput";
  */
 export function useRightClickContextMenu(
   qInputRef: Ref<QInput | undefined>,
-  inputElement: Ref<string>,
+  inputText: Ref<string>,
+  inputField: Ref<string>,
 ) {
   const inputSelection = new SelectionHelperForQInput(qInputRef);
-
-  const handleFocus = (event: Event) => {
-    const target = event.target as HTMLInputElement;
-    inputElement.value = target.name;
-    qInputRef.value = target as unknown as QInput;
-  };
 
   const contextMenu = ref<InstanceType<typeof ContextMenu>>();
   const contextMenuHeader = ref<string | undefined>("");
@@ -60,7 +55,7 @@ export function useRightClickContextMenu(
       label: "貼り付け",
       onClick: async () => {
         contextMenu.value?.hide();
-        paste();
+        await handlePaste();
       },
       disableWhenUiLocked: false,
     },
@@ -81,42 +76,46 @@ export function useRightClickContextMenu(
 
     const text = inputSelection.getAsString();
     const start = inputSelection.selectionStart;
-    setSurfaceOrYomiText(inputSelection.getReplacedStringTo(""));
+    setSurfaceOrYomiText(
+      inputSelection.getReplacedStringTo(""),
+      inputField.value,
+    );
     await nextTick();
     navigator.clipboard.writeText(text);
     inputSelection.setCursorPosition(start);
   };
 
-  const setSurfaceOrYomiText = (text: string | number | null) => {
+  const setSurfaceOrYomiText = (
+    text: string | number | null,
+    field: string,
+  ) => {
     if (typeof text !== "string") throw new Error("typeof text !== 'string'");
-    inputElement.value = text;
+    if (field !== "surface" && field !== "yomi") {
+      throw new Error("field must be 'surface' or 'yomi'");
+    }
+    inputText.value = text;
   };
 
-  const paste = async (options?: { text?: string }) => {
+  const handlePaste = async (options?: { text?: string }) => {
     if (!inputSelection) return;
 
     const text = options ? options.text : await navigator.clipboard.readText();
     if (text == undefined) return;
-    const beforeLength = inputElement.value.length;
+    const beforeLength = inputText.value.length;
     const end = inputSelection.selectionEnd ?? 0;
-    setSurfaceOrYomiText(inputSelection.getReplacedStringTo(text));
+    setSurfaceOrYomiText(
+      inputSelection.getReplacedStringTo(text),
+      inputField.value,
+    );
     await nextTick();
     inputSelection.setCursorPosition(
-      end + inputElement.value.length - beforeLength,
+      end + inputText.value.length - beforeLength,
     );
   };
 
-  const pasteOnDic = async (event: ClipboardEvent) => {
-    event.preventDefault();
-    paste({ text: event.clipboardData?.getData("text/plain") });
-  };
-
   return {
-    handleFocus,
     contextMenu,
     contextMenuHeader,
     contextMenudata,
-    setSurfaceOrYomiText,
-    pasteOnDic,
   };
 }
