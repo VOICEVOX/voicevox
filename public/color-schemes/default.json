@@ -7,11 +7,25 @@
   },
   "aliasColors": [
     {
-      "name": "sing-toolbar-container",
+      "name": "singToolbarContainer",
       "displayName": "ツールバーコンテナ",
       "role": "neutral",
       "lightShade": 0.99,
       "darkShade": 0.17
+    },
+    {
+      "name": "singPlaybackButtonContainer",
+      "displayName": "ツールバー再生ボタン",
+      "role": "primary",
+      "lightShade": 0.82,
+      "darkShade": 0.6
+    },
+    {
+      "name": "singOnPlaybackButtonContainer",
+      "displayName": "ツールバー再生ボタンアイコン",
+      "role": "neutral",
+      "lightShade": 0.35,
+      "darkShade": 0.2
     },
     {
       "name": "singGridCellWhite",
@@ -46,7 +60,7 @@
       "displayName": "シーケンサグリッド(小節線)",
       "role": "neutral",
       "lightShade": 0.8,
-      "darkShade": 0.35
+      "darkShade": 0.3
     },
     {
       "name": "singGridBeatLine",
@@ -60,21 +74,21 @@
       "displayName": "シーケンサグリッド(オクターブ線)",
       "role": "neutral",
       "lightShade": 0.88,
-      "darkShade": 0.3
+      "darkShade": 0.04
     },
     {
       "name": "singRulerMeasureLine",
       "displayName": "ルーラー(小節線)",
       "role": "neutralVariant",
       "lightShade": 0.65,
-      "darkShade": 0.65
+      "darkShade": 0.5
     },
     {
       "name": "singRulerBeatLine",
       "displayName": "ルーラー(拍線)",
       "role": "neutralVariant",
       "lightShade": 0.7,
-      "darkShade": 0.5
+      "darkShade": 0.4
     },
     {
       "name": "singPianoKeyWhite",
@@ -94,7 +108,7 @@
       "name": "singNoteBarContainer",
       "displayName": "ノートコンテナ",
       "role": "secondary",
-      "lightShade": 0.9,
+      "lightShade": 0.88,
       "darkShade": 0.7
     }
   ],

@@ -682,8 +682,8 @@ onUnmounted(() => {
 }
 
 .sing-playback-button {
-  background: var(--scheme-color-secondary-container);
-  color: var(--scheme-color-on-secondary-container);
+  background: var(--scheme-color-sing-playback-button-container);
+  color: var(--scheme-color-sing-on-playback-button-container);
   &:before {
     box-shadow: none;
   }

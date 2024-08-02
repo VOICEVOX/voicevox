@@ -1553,7 +1553,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   pointer-events: none;
   position: absolute;
   border: 1px dashed var(--scheme-color-secondary);
-  background: oklch(var(--scheme-color-secondary-container) / 1);
+  background: oklch(from var(--scheme-color-secondary) l c h / 0.1);
 }
 
 .cursor-draw {
