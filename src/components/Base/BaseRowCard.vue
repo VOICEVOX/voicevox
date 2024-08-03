@@ -32,7 +32,8 @@ defineEmits<{
 @use "@/styles/v2/colors" as colors;
 
 .row-card {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto;
   text-align: unset;
   align-items: center;
   border: 1px solid colors.$border;
