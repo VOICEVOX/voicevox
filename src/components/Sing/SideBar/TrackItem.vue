@@ -214,11 +214,13 @@ watchEffect(() => {
 
 const updateTrackName = () => {
   if (temporaryTrackName.value === track.value.name) return;
+
+  // 空のトラック名だと空欄のようになってしまうので許容しない
   if (temporaryTrackName.value === "") {
-    // NOTE: ↑これの意味を聞く
     temporaryTrackName.value = track.value.name;
     return;
   }
+
   store.dispatch("COMMAND_SET_TRACK_NAME", {
     trackId: props.trackId,
     name: temporaryTrackName.value,
