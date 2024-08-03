@@ -2,8 +2,8 @@
   <div ref="sequencerRuler" class="sequencer-ruler" @click="onClick">
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      :width="width"
-      :height="height"
+      :width
+      :height
       shape-rendering="crispEdges"
     >
       <defs>
@@ -12,7 +12,7 @@
           patternUnits="userSpaceOnUse"
           :x="-offset % (beatWidth * beatsPerMeasure)"
           :width="beatWidth * beatsPerMeasure"
-          :height="height"
+          :height
         >
           <!-- 拍線（小節の最初を除く） -->
           <line
@@ -26,7 +26,7 @@
           />
         </pattern>
       </defs>
-      <rect :width="width" :height="height" fill="url(#sequencer-ruler-measure)" />
+      <rect :width :height fill="url(#sequencer-ruler-measure)" />
       <!-- 小節線 -->
       <line
         v-for="measureInfo in measureInfos"

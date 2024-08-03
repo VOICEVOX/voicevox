@@ -342,7 +342,6 @@ export const PALETTE_SHADES: number[] = [
 
 // 標準UIのコントラストペア
 export const DEFINED_CONTRAST_PAIR: ColorContrastPair[] = [
-  // 既存のペア
   {
     colors: ["primary", "onPrimary"],
     requiredContrast: 60,
@@ -409,6 +408,11 @@ export const DEFINED_CONTRAST_PAIR: ColorContrastPair[] = [
     description: "境界線",
   },
   {
+    colors: ["surface", "outlineVariant"],
+    requiredContrast: 15,
+    description: "境界線(低強調)",
+  },
+  {
     colors: ["inverseSurface", "inverseOnSurface"],
     requiredContrast: 60,
     description: "反転表示テキスト",
@@ -439,13 +443,18 @@ export const DEFINED_CONTRAST_PAIR: ColorContrastPair[] = [
     description: "低コンテナテキスト",
   },
   {
+    colors: ["surfaceContainerLowest", "onSurface"],
+    requiredContrast: 60,
+    description: "低コンテナテキスト",
+  },
+  {
     colors: ["surfaceContainerHigh", "onSurface"],
     requiredContrast: 60,
     description: "高コンテナテキスト",
   },
   {
-    colors: ["surface", "outlineVariant"],
-    requiredContrast: 10,
-    description: "軽量境界線",
+    colors: ["surfaceContainerHighest", "onSurface"],
+    requiredContrast: 60,
+    description: "高コンテナテキスト",
   },
 ];

@@ -13,6 +13,7 @@ export const cssVariablesFromColorScheme = (
   colorScheme: ColorScheme,
   withRoles: boolean = true,
   withPalette: boolean = false,
+  format: "oklch" | "hex" = "oklch",
   prefix: string = "--scheme-color-",
 ): Record<string, string> => {
   const toKebabCase = (str: string) => {
@@ -25,11 +26,11 @@ export const cssVariablesFromColorScheme = (
       ([roleName, value]) => {
         cssVars[`${prefix}${toKebabCase(roleName)}-light`] = oklchToCssString(
           value.lightShade,
-          "oklch",
+          format,
         );
         cssVars[`${prefix}${toKebabCase(roleName)}-dark`] = oklchToCssString(
           value.darkShade,
-          "oklch",
+          format,
         );
       },
       {} as Record<string, string>,
@@ -39,9 +40,9 @@ export const cssVariablesFromColorScheme = (
   if (withPalette) {
     Object.entries(colorScheme.palettes).forEach(([paletteName, palette]) => {
       Object.entries(palette.shades).forEach(([shade, color]) => {
-        const shadeName = Number(shade) * 100;
+        const shadeName = Math.round(Number(shade) * 100);
         cssVars[`${prefix}${toKebabCase(paletteName)}-palette-${shadeName}`] =
-          oklchToCssString(color, "oklch");
+          oklchToCssString(color, format);
       });
     });
   }

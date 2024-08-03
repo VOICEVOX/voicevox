@@ -531,10 +531,18 @@ const downloadColorSchemeConfig = () => {
  * カラースキームのCSS変数をCSSファイルとしてダウンロードする
  */
 const downloadCSSVariables = () => {
-  const cssVars = cssVariablesFromColorScheme(currentColorScheme.value, true);
-  const cssContent = `:root {\n${Object.entries(cssVars.palettes)
+  const cssVars = cssVariablesFromColorScheme(
+    currentColorScheme.value,
+    true,
+    true,
+    "hex",
+  );
+
+  // cssVars.palettes が存在する場合にのみアクセス
+  const cssContent = `:root {\n${Object.entries(cssVars)
     .map(([key, value]) => `  ${key}: ${value};`)
     .join("\n")}\n}`;
+
   downloadFile(
     cssContent,
     `${currentColorScheme.value.name}_color_scheme_variables.css`,

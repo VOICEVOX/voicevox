@@ -220,6 +220,6 @@ onUnmounted(() => {
 }
 
 .pitchname {
-  fill: var(--scheme-color-on-surface-fixed);
+  fill: var(--scheme-color-sing-piano-key-black);
 }
 </style>
