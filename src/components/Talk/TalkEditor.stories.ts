@@ -1,5 +1,4 @@
 import { userEvent, within, expect, fn, waitFor } from "@storybook/test";
-import hotkeys from "hotkeys-js";
 
 import { Meta, StoryObj } from "@storybook/vue3";
 import { provide, toRaw } from "vue";
@@ -157,7 +156,7 @@ export const NowLoading: Story = {
 export const TextInput: Story = {
   name: "テキスト入力のテスト",
   play: async ({ context, canvasElement, parameters }) => {
-    await Default.play(context);
+    await Default.play?.(context);
 
     const canvas = within(canvasElement);
 
