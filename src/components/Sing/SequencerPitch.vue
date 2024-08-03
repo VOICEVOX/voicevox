@@ -79,19 +79,20 @@ const { isDarkMode, getColorFromRole } = useColorScheme();
 
 // TODO: このままだとテーマ変更で更新されないため、変更に追随する必要あり
 const pitchLineColorRGB =
-  getColorFromRole("outline", "rgb") || ([0, 0, 0] as number[]);
+  getColorFromRole("outline", "rgbArray") || ([128, 128, 128] as number[]);
 const pitchLineColor = [
-  Number(pitchLineColorRGB[0]),
-  Number(pitchLineColorRGB[1]),
-  Number(pitchLineColorRGB[2]),
+  Math.round(Number(pitchLineColorRGB[0])),
+  Math.round(Number(pitchLineColorRGB[1])),
+  Math.round(Number(pitchLineColorRGB[2])),
   isDarkMode.value ? 228 : 168,
 ];
 const pitchEditLineColorRGB =
-  getColorFromRole("primaryFixedDim", "rgb") || ([0, 0, 0] as number[]);
+  getColorFromRole("primaryFixedDim", "rgbArray") ||
+  ([128, 128, 128] as number[]);
 const pitchEditLineColor = [
-  Number(pitchEditLineColorRGB[0]),
-  Number(pitchEditLineColorRGB[1]),
-  Number(pitchEditLineColorRGB[2]),
+  Math.round(Number(pitchEditLineColorRGB[0])),
+  Math.round(Number(pitchEditLineColorRGB[1])),
+  Math.round(Number(pitchEditLineColorRGB[2])),
   255,
 ];
 const originalPitchLine: PitchLine = {

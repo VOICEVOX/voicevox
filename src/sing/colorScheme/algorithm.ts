@@ -44,20 +44,22 @@ export const defaultAlgorithm: ColorAlgorithm = (
 
   // OKLCHのL値を相対明度Lr値に変換
   const targetL = LtoLr(shade);
+
+  // 初期設定
   const [, c, h] = sourceColor;
   let targetC: number;
   let targetH: number;
-  const maxC = 0.37; // 最大chroma
-  const minC = 0.115; // 最小chroma
+  const maxC = 0.3; // 最大chroma
+  const minPrimaryC = 0.11; // 最小プライマリchroma
 
-  // プライマリカラーの処理
+  // プライマリもしくはプライマリ互換カラー
   if (targetRole === "primary") {
-    targetC = Math.max(minC, c);
+    targetC = Math.min(minPrimaryC, c);
     targetH = h;
     return [targetL, targetC, targetH];
   }
 
-  // カスタムカラーの処理
+  // カスタムカラー
   const customColor = config.customColors?.find((cc) => cc.name === targetRole);
   if (customColor) {
     targetC = Math.min(c, maxC);
@@ -65,15 +67,14 @@ export const defaultAlgorithm: ColorAlgorithm = (
     return [targetL, targetC, targetH];
   }
 
-  // 指定されたrefColorの処理
+  // エイリアスカラー
   if (config.roleColors[targetRole as ColorRole]) {
     targetC = Math.min(c, maxC);
     return [targetL, targetC, h];
   }
 
-  // デフォルト値の処理
-  const defaultC = Math.max(c, minC);
-
+  // デフォルト(未指定ロールは自動生成)の場合
+  const defaultC = Math.max(c, minPrimaryC);
   switch (targetRole) {
     case "secondary":
       targetC = defaultC / 3;
@@ -110,8 +111,8 @@ export const customAlgorithm: ColorAlgorithm = (
   targetRole: ColorRole | string,
   shade: number,
 ): OklchColor => {
-  // customAlgorithmの実装
   // この例では単純化のためdefaultAlgorithmと同じ実装を使用
+  // eg: Monochrome / Vibrant...
   return defaultAlgorithm(config, sourceColor, targetRole, shade);
 };
 

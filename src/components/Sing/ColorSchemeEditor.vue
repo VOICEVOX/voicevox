@@ -310,7 +310,7 @@ const selectedScheme = ref(currentColorScheme.value.name);
 // 初期カラースキーム設定
 const initialSchemeConfig = ref<ColorSchemeConfig | null>(null);
 // 開閉状態
-const isColorSchemeEditorOpen = ref(false);
+const isColorSchemeEditorOpen = ref(true);
 
 // computed
 // カラースキーム一覧

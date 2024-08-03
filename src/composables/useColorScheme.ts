@@ -1,4 +1,5 @@
 import { computed, ComputedRef } from "vue";
+import Color from "colorjs.io";
 import { useStore } from "@/store";
 import {
   OklchColor,
@@ -8,7 +9,6 @@ import {
   CustomColorConfig,
 } from "@/sing/colorScheme/types";
 import { generateColorSchemeFromConfig } from "@/sing/colorScheme/core";
-import { oklchToCssString } from "@/sing/colorScheme/util";
 
 export function useColorScheme() {
   const store = useStore();
@@ -94,8 +94,8 @@ export function useColorScheme() {
 
   const getColorFromRole = (
     role: ColorRole,
-    format: "oklch" | "hex" | "rgb" | "p3" = "oklch",
-  ): OklchColor | string | null => {
+    format: "oklch" | "hex" | "rgb" | "p3" | "rgbArray" = "oklch",
+  ): OklchColor | number[] | string | null => {
     const currentScheme = currentColorScheme.value;
     if (!currentScheme) {
       return null;
@@ -104,12 +104,29 @@ export function useColorScheme() {
     if (!colorSet) {
       return null;
     }
+    // TODO: 色変換関連の処理をまとめたい
     const oklchColor = isDarkMode.value
       ? colorSet.darkShade
       : colorSet.lightShade;
-    return format === "oklch"
-      ? oklchColor
-      : oklchToCssString(oklchColor, format);
+    const color = new Color("oklch", [
+      oklchColor[0],
+      oklchColor[1],
+      oklchColor[2],
+    ]);
+    switch (format) {
+      case "oklch":
+        return oklchColor;
+      case "rgbArray":
+        return color.to("srgb").coords.map((v: number) => Math.round(v * 255));
+      case "hex":
+        return color.to("srgb").toString({ format: "hex" });
+      case "rgb":
+        return color.to("srgb").toString();
+      case "p3":
+        return color.to("p3").toString();
+      default:
+        return null;
+    }
   };
 
   const initializeColorScheme = async (): Promise<void> => {
