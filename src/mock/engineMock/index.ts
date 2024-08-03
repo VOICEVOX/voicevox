@@ -1,8 +1,8 @@
 import kuromoji, { IpadicFeatures, Tokenizer } from "kuromoji";
 import { getEngineManifestMock } from "./manifestMock";
 import {
-  replaseLengthMock,
-  replasePitchMock,
+  replaceLengthMock,
+  replacePitchMock,
   tokensToActtentPhrasesMock,
 } from "./talkModelMock";
 import { getSpeakerInfoMock, getSpeakersMock } from "./speakerResourceMock";
@@ -126,8 +126,8 @@ export function createOpenAPIEngineMock(): IEngineConnectorFactory {
           async moraDataMoraDataPost(
             payload: MoraDataMoraDataPostRequest,
           ): Promise<AccentPhrase[]> {
-            replaseLengthMock(payload.accentPhrase, payload.speaker);
-            replasePitchMock(payload.accentPhrase, payload.speaker);
+            replaceLengthMock(payload.accentPhrase, payload.speaker);
+            replacePitchMock(payload.accentPhrase, payload.speaker);
             return payload.accentPhrase;
           },
         };

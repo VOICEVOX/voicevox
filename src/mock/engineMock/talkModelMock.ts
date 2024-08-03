@@ -58,7 +58,7 @@ function textToAccentPhraseMock(text: string): AccentPhrase {
  * アクセント句内のモーラの長さを適当に代入する。
  * 最後のモーラだけ長くする。
  */
-export function replaseLengthMock(
+export function replaceLengthMock(
   accentPhrases: AccentPhrase[],
   speaker: number,
 ) {
@@ -93,7 +93,7 @@ export function replaseLengthMock(
  * アクセント句内のモーラのピッチを適当に代入する。
  * アクセント位置のモーラだけ高くする。
  */
-export function replasePitchMock(
+export function replacePitchMock(
   accentPhrases: AccentPhrase[],
   speaker: number,
 ) {
@@ -185,8 +185,8 @@ export function tokensToActtentPhrasesMock(
   }
 
   // 長さとピッチを代入
-  replaseLengthMock(accentPhrases, speaker);
-  replasePitchMock(accentPhrases, speaker);
+  replaceLengthMock(accentPhrases, speaker);
+  replacePitchMock(accentPhrases, speaker);
 
   return accentPhrases;
 }
