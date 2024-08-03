@@ -2503,7 +2503,7 @@ export const singingCommandStore = transformCommandStore(
         singingStore.mutations.SET_TIME_SIGNATURE(draft, { timeSignature });
       },
       // 拍子を設定する。既に同じ位置に拍子が存在する場合は置き換える。
-      action({ commit }, { timeSignature }) {
+      action({ commit }, { timeSignature }: { timeSignature: TimeSignature }) {
         if (!isValidTimeSignature(timeSignature)) {
           throw new Error("The time signature is invalid.");
         }
@@ -2515,7 +2515,7 @@ export const singingCommandStore = transformCommandStore(
         singingStore.mutations.REMOVE_TIME_SIGNATURE(draft, { measureNumber });
       },
       // 拍子を削除する。先頭の拍子の場合はデフォルトの拍子に置き換える。
-      action({ state, commit }, { measureNumber }) {
+      action({ state, commit }, { measureNumber }: { measureNumber: number }) {
         const exists = state.timeSignatures.some((value) => {
           return value.measureNumber === measureNumber;
         });
