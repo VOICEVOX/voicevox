@@ -53,28 +53,18 @@
               <template
                 #item="{ element: button }: { element: ToolbarButtonTagType }"
               >
-                <QBtn
-                  unelevated
-                  color="toolbar-button"
-                  textColor="toolbar-button-display"
-                  :class="
-                    (button === 'EMPTY' ? ' radio-space' : ' radio') +
-                    ' text-no-wrap text-bold q-mr-sm'
-                  "
-                >
-                  {{ getToolbarButtonName(button) }}
-                  <QTooltip
-                    :delay="800"
-                    anchor="center right"
-                    self="center left"
-                    transitionShow="jump-right"
-                    transitionHide="jump-left"
-                    :style="{
-                      display: toolbarButtonDragging ? 'none' : 'block',
-                    }"
-                    >{{ usableButtonsDesc[button] }}</QTooltip
-                  >
-                </QBtn>
+                <div :class="button === 'EMPTY' ? 'radio-space' : 'radio'">
+                  <BaseTooltip :label="usableButtonsDesc[button]">
+                    <QBtn
+                      unelevated
+                      color="toolbar-button"
+                      textColor="toolbar-button-display"
+                      class="text-no-wrap text-bold"
+                    >
+                      {{ getToolbarButtonName(button) }}
+                    </QBtn>
+                  </BaseTooltip>
+                </div>
               </template>
             </Draggable>
             <div class="preview-toolbar-drag-hint">
@@ -117,6 +107,7 @@ import Draggable from "vuedraggable";
 import BaseSwitch from "@/components/Base/BaseSwitch.vue";
 import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 import BaseRowCard from "@/components/Base/BaseRowCard.vue";
+import BaseTooltip from "@/components/Base/BaseTooltip.vue";
 import { useStore } from "@/store";
 import { ToolbarButtonTagType, ToolbarSettingType } from "@/type/preload";
 import { getToolbarButtonName } from "@/store/utility";
@@ -280,6 +271,7 @@ const finishOrNotDialog = async () => {
 .preview-toolbar > div:not(.preview-toolbar-drag-hint) {
   width: 100%;
   display: inline-flex;
+  gap: 8px;
 }
 
 .preview-toolbar-drag-hint {
@@ -288,15 +280,19 @@ const finishOrNotDialog = async () => {
 }
 
 .radio {
-  &:hover {
-    cursor: grab;
+  & > .q-btn:hover {
+    cursor: grab !important;
   }
 }
 
 .radio-space {
   @extend .radio;
   flex-grow: 1;
-  color: transparent;
+
+  & > .q-btn {
+    color: transparent;
+    width: 100%;
+  }
 }
 
 .title {
