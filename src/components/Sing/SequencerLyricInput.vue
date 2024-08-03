@@ -126,8 +126,8 @@ watch(
   border-radius: 4px;
   border: 0;
   box-shadow:
-    0 4px 6px rgba(0, 0, 0, 0.1),
-    0 1px 3px rgba(0, 0, 0, 0.08);
+    0 4px 6px oklch(from var(--scheme-color-scrim) l c h / 0.1),
+    0 1px 3px oklch(from var(--scheme-color-scrim) l c h / 0.8);
   padding: 0 4px;
   width: 7ch;
   box-sizing: border-box;

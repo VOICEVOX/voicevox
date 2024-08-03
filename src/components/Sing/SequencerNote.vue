@@ -308,8 +308,9 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
       background-color: oklch(
         from var(--scheme-color-primary-fixed) l c h / 0.8
       );
-      outline: 1px solid oklch(from var(--scheme-color-outline) l c h / 0.56);
-      outline-offset: 2px;
+      outline: 1px solid
+        oklch(from var(--scheme-color-primary-fixed-dim) l c h / 0.56);
+      outline-offset: 1px;
     }
 
     .note-lyric {

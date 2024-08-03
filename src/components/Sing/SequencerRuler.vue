@@ -2,53 +2,52 @@
   <div ref="sequencerRuler" class="sequencer-ruler" @click="onClick">
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      :width
-      :height
-      shape-rendering="geometricPrecision"
+      :width="width"
+      :height="height"
+      shape-rendering="crispEdges"
     >
       <defs>
         <pattern
           id="sequencer-ruler-measure"
           patternUnits="userSpaceOnUse"
-          :x="-offset"
+          :x="-offset % (beatWidth * beatsPerMeasure)"
           :width="beatWidth * beatsPerMeasure"
-          :height
+          :height="height"
         >
-          <!-- 拍線 -->
+          <!-- 拍線（小節の最初を除く） -->
           <line
-            v-for="n in beatsPerMeasure"
+            v-for="n in beatsPerMeasure - 1"
             :key="n"
-            :x1="beatWidth * (n - 1) + 0.5"
-            :x2="beatWidth * (n - 1) + 0.5"
+            :x1="beatWidth * n"
+            :x2="beatWidth * n"
             y1="28"
-            y2="100%"
-            stroke-width="1"
+            :y2="height"
             class="sequencer-ruler-beat-line"
           />
-          <line
-            x1="0"
-            x2="0"
-            y1="20"
-            y2="100%"
-            stroke-width="1"
-            class="sequencer-ruler-measure-line"
-          />
         </pattern>
-        <symbol id="sequencer-ruler-measure-numbers">
-          <text
-            v-for="measureInfo in measureInfos"
-            :key="measureInfo.number"
-            font-size="12"
-            :x="measureInfo.x + 6"
-            y="32"
-            class="sequencer-ruler-measure-number"
-          >
-            {{ measureInfo.number }}
-          </text>
-        </symbol>
       </defs>
-      <rect :width :height fill="url(#sequencer-ruler-measure)" />
-      <use href="#sequencer-ruler-measure-numbers" :x="-offset" />
+      <rect :width="width" :height="height" fill="url(#sequencer-ruler-measure)" />
+      <!-- 小節線 -->
+      <line
+        v-for="measureInfo in measureInfos"
+        :key="measureInfo.number"
+        :x1="measureInfo.x - offset"
+        :x2="measureInfo.x - offset"
+        y1="20"
+        :y2="height"
+        class="sequencer-ruler-measure-line"
+      />
+      <!-- 小節番号 -->
+      <text
+        v-for="measureInfo in measureInfos"
+        :key="measureInfo.number"
+        font-size="12"
+        :x="measureInfo.x - offset + 4"
+        y="34"
+        class="sequencer-ruler-measure-number"
+      >
+        {{ measureInfo.number }}
+      </text>
     </svg>
     <div class="sequencer-ruler-border-bottom"></div>
     <div
@@ -107,6 +106,7 @@ const endTicks = computed(() => {
 const width = computed(() => {
   return tickToBaseX(endTicks.value, tpqn.value) * zoomX.value;
 });
+// measureInfosの計算を調整
 const measureInfos = computed(() => {
   const measureInfos: {
     number: number;
@@ -129,7 +129,7 @@ const measureInfos = computed(() => {
       const baseX = tickToBaseX(measurePosition, tpqn.value);
       measureInfos.push({
         number: measureNumber,
-        x: Math.floor(baseX * zoomX.value),
+        x: Math.round(baseX * zoomX.value),
       });
       measureNumber++;
       measurePosition += measureDuration;
@@ -222,7 +222,7 @@ onUnmounted(() => {
 .sequencer-ruler-measure-line {
   backface-visibility: hidden;
   stroke: var(--scheme-color-sing-ruler-measure-line);
-  stroke-width: 2px;
+  stroke-width: 1px;
 }
 
 .sequencer-ruler-beat-line {

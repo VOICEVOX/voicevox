@@ -66,7 +66,7 @@ const width = computed(() => {
     width: 100%;
     height: 2px;
     transform: translateY(-50%);
-    background-color: var(--scheme-color-sing-grid-measure-line);
+    background-color: var(--scheme-color-sing-grid-octave-line);
   }
 }
 </style>

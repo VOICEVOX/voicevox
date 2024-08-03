@@ -4,7 +4,7 @@
     :width="gridWidth"
     :height="gridHeight"
     class="sequencer-grid"
-    shape-rendering="geometricPrecision"
+    shape-rendering="crispEdges"
   >
     <defs>
       <pattern
@@ -25,38 +25,27 @@
         />
         <!-- スナップグリッド線 -->
         <line
-          v-for="n in (beatWidth * beatsPerMeasure) / gridCellWidth"
-          :key="`snapline-${n}`"
-          :x1="gridCellWidth * n"
-          :x2="gridCellWidth * n"
+          v-for="x in snapLinePositions"
+          :key="`snapline-${x}`"
+          :x1="x"
+          :x2="x"
           y1="0"
           :y2="gridCellHeight * 12"
           class="sequencer-grid-vertical-line"
         />
-        <!-- 水平線 -->
-        <template v-for="(keyInfo, index) in keyInfos" :key="`octave-${index}`">
-          <!-- オクターブ線 -->
-          <line
-            v-if="keyInfo.pitch === 'C'"
-            x1="0"
-            :x2="beatWidth * beatsPerMeasure"
-            :y1="gridCellHeight * (index + 1)"
-            :y2="gridCellHeight * (index + 1)"
-            class="sequencer-grid-octave-line"
-          />
-          <!-- E/Fの中間線 -->
-          <line
-            v-if="keyInfo.pitch === 'F'"
-            x1="0"
-            :x2="beatWidth * beatsPerMeasure"
-            :y1="gridCellHeight * (index + 1)"
-            :y2="gridCellHeight * (index + 1)"
-            class="sequencer-grid-horizontal-line"
-          />
-        </template>
+        <!-- E/Fの中間線 -->
+        <line
+          v-for="index in horizontalLineIndices"
+          :key="`horizontal-${index}`"
+          x1="0"
+          :x2="beatWidth * beatsPerMeasure"
+          :y1="gridCellHeight * (index + 1)"
+          :y2="gridCellHeight * (index + 1)"
+          class="sequencer-grid-horizontal-line"
+        />
         <!-- 拍線 -->
         <line
-          v-for="n in beatsPerMeasure"
+          v-for="n in beatLineIndices"
           :key="`beatline-${n}`"
           :x1="beatWidth * n"
           :x2="beatWidth * n"
@@ -64,22 +53,35 @@
           :y2="gridCellHeight * 12"
           class="sequencer-grid-beat-line"
         />
-        <!-- 小節線 -->
-        <line
-          x1="0"
-          x2="0"
-          y1="0"
-          :y2="gridCellHeight * 12"
-          class="sequencer-grid-measure-line"
-        />
       </pattern>
     </defs>
+    <!-- グリッドパターン背景 -->
     <rect
       x="0"
       y="0"
       :width="gridWidth"
       :height="gridHeight"
       fill="url(#sequencer-grid-pattern)"
+    />
+    <!-- オクターブ線（グリッドの上に描画） -->
+    <line
+      v-for="index in octaveLineIndices"
+      :key="`octave-${index}`"
+      x1="0"
+      :x2="gridWidth"
+      :y1="gridCellHeight * (index + 1)"
+      :y2="gridCellHeight * (index + 1)"
+      class="sequencer-grid-octave-line"
+    />
+    <!-- 小節線（グリッドおよびオクターブ線の上に描画） -->
+    <line
+      v-for="n in numberOfMeasureLines"
+      :key="`measureline-${n}`"
+      :x1="beatWidth * beatsPerMeasure * n"
+      :x2="beatWidth * beatsPerMeasure * n"
+      y1="0"
+      :y2="gridHeight"
+      class="sequencer-grid-measure-line"
     />
   </svg>
 </template>
@@ -127,6 +129,44 @@ const gridWidth = computed(() => {
 const gridHeight = computed(() => {
   return gridCellHeight.value * keyInfos.length;
 });
+// 小節幅
+const measureWidth = computed(() => beatWidth.value * beatsPerMeasure.value);
+// グリッド線の計算
+// オクターブ線や小節線と重なる線は除外
+const gridLines = computed(() => {
+  return keyInfos.reduce<{
+    horizontalLines: number[];
+    octaveLines: number[];
+  }>(
+    (acc, keyInfo, index) => {
+      if (keyInfo.pitch === "F") acc.horizontalLines.push(index);
+      else if (keyInfo.pitch === "C") acc.octaveLines.push(index);
+      return acc;
+    },
+    { horizontalLines: [], octaveLines: [] },
+  );
+});
+const numberOfMeasureLines = computed(() =>
+  Math.ceil(gridWidth.value / measureWidth.value),
+);
+const horizontalLineIndices = computed(() => gridLines.value.horizontalLines);
+const octaveLineIndices = computed(() => gridLines.value.octaveLines);
+const beatLineIndices = computed(() =>
+  Array.from({ length: beatsPerMeasure.value - 1 }, (_, i) => i + 1),
+);
+const snapLinePositions = computed(() => {
+  const snapTicks = gridCellTicks.value;
+  const measureTicks =
+    (tpqn.value * 4 * beatsPerMeasure.value) / timeSignatures.value[0].beatType;
+  const snapPositions = [];
+  let currentTick = 0;
+  while (currentTick < measureTicks) {
+    const x = (currentTick / measureTicks) * measureWidth.value;
+    snapPositions.push(x);
+    currentTick += snapTicks;
+  }
+  return snapPositions;
+});
 </script>
 
 <style scoped lang="scss">
@@ -171,7 +211,7 @@ const gridHeight = computed(() => {
 .sequencer-grid-measure-line {
   backface-visibility: hidden;
   stroke: var(--scheme-color-sing-grid-measure-line);
-  stroke-width: 2px;
+  stroke-width: 1px;
 }
 
 .sequencer-grid-beat-line {
