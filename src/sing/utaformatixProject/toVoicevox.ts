@@ -4,6 +4,7 @@ import { DEFAULT_TPQN, createDefaultTrack } from "@/sing/domain";
 import { getDoremiFromNoteNumber } from "@/sing/viewHelper";
 import { NoteId } from "@/type/preload";
 import { Note, Tempo, TimeSignature, Track } from "@/store/type";
+import { uuid4 } from "@/helpers/random";
 
 /** UtaformatixのプロジェクトをVoicevoxの楽譜データに変換する */
 export const ufProjectToVoicevox = (project: UfProject): VoicevoxScore => {
@@ -72,7 +73,7 @@ export const ufProjectToVoicevox = (project: UfProject): VoicevoxScore => {
 
     const notes = trackNotes.map((value): Note => {
       return {
-        id: NoteId(crypto.randomUUID()),
+        id: NoteId(uuid4()),
         position: convertPosition(value.tickOn, projectTpqn, tpqn),
         duration: convertDuration(
           value.tickOn,
@@ -87,6 +88,7 @@ export const ufProjectToVoicevox = (project: UfProject): VoicevoxScore => {
 
     return {
       ...createDefaultTrack(),
+      name: projectTrack.name,
       notes,
     };
   });
