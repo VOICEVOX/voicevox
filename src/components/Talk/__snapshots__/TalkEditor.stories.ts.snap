@@ -1,0 +1,158 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`components/Talk/TalkEditor TextInput play-test 1`] = `
+{
+  "audioItems": {
+    "00000000-0000-4000-0000-000000000001": {
+      "presetKey": undefined,
+      "query": {
+        "accentPhrases": [
+          {
+            "accent": 5,
+            "moras": [
+              {
+                "consonant": "k",
+                "consonantLength": 0.1103125,
+                "pitch": 4.7734375,
+                "text": "コ",
+                "vowel": "o",
+                "vowelLength": 0.1140625,
+              },
+              {
+                "consonant": undefined,
+                "consonantLength": undefined,
+                "pitch": 3.609375,
+                "text": "ン",
+                "vowel": "N",
+                "vowelLength": 0.08312499999999999,
+              },
+              {
+                "consonant": "n",
+                "consonantLength": 0.11312499999999999,
+                "pitch": 4.75,
+                "text": "ニ",
+                "vowel": "i",
+                "vowelLength": 0.10843749999999999,
+              },
+              {
+                "consonant": "ch",
+                "consonantLength": 0.2003125,
+                "pitch": 4.0234375,
+                "text": "チ",
+                "vowel": "i",
+                "vowelLength": 0.10843749999999999,
+              },
+              {
+                "consonant": "h",
+                "consonantLength": 0.1575,
+                "pitch": 4.796875,
+                "text": "ハ",
+                "vowel": "a",
+                "vowelLength": 0.1509375,
+              },
+            ],
+            "pauseMora": {
+              "pitch": 0,
+              "text": "、",
+              "vowel": "",
+              "vowelLength": 0,
+            },
+          },
+          {
+            "accent": 2,
+            "moras": [
+              {
+                "consonant": "k",
+                "consonantLength": 0.12031249999999999,
+                "pitch": 4.7834375,
+                "text": "コ",
+                "vowel": "o",
+                "vowelLength": 0.12406249999999999,
+              },
+              {
+                "consonant": "r",
+                "consonantLength": 0.126875,
+                "pitch": 4.72875,
+                "text": "レ",
+                "vowel": "e",
+                "vowelLength": 0.11468749999999998,
+              },
+              {
+                "consonant": "h",
+                "consonantLength": 0.1675,
+                "pitch": 5.106875,
+                "text": "ハ",
+                "vowel": "a",
+                "vowelLength": 0.1609375,
+              },
+            ],
+          },
+          {
+            "accent": 2,
+            "moras": [
+              {
+                "consonant": "t",
+                "consonantLength": 0.13874999999999998,
+                "pitch": 4.723125,
+                "text": "テ",
+                "vowel": "e",
+                "vowelLength": 0.12468749999999999,
+              },
+              {
+                "consonant": "s",
+                "consonantLength": 0.13781249999999998,
+                "pitch": 4.7309375,
+                "text": "ス",
+                "vowel": "u",
+                "vowelLength": 0.1396875,
+              },
+              {
+                "consonant": "t",
+                "consonantLength": 0.13874999999999998,
+                "pitch": 5.023124999999999,
+                "text": "ト",
+                "vowel": "o",
+                "vowelLength": 0.1340625,
+              },
+              {
+                "consonant": "d",
+                "consonantLength": 0.12375,
+                "pitch": 4.848125,
+                "text": "デ",
+                "vowel": "e",
+                "vowelLength": 0.12468749999999999,
+              },
+              {
+                "consonant": "s",
+                "consonantLength": 0.18781249999999997,
+                "pitch": 4.7309375,
+                "text": "ス",
+                "vowel": "u",
+                "vowelLength": 0.18968749999999998,
+              },
+            ],
+            "pauseMora": undefined,
+          },
+        ],
+        "intonationScale": 1,
+        "outputSamplingRate": 24000,
+        "outputStereo": false,
+        "pitchScale": 0,
+        "postPhonemeLength": 0.1,
+        "prePhonemeLength": 0.1,
+        "speedScale": 1,
+        "volumeScale": 1,
+      },
+      "text": "こんにちは、これはテストです。",
+      "voice": {
+        "engineId": "c7b58856-bd56-4aa1-afb7-b8415f824b06",
+        "speakerId": "7ffcb7ce-00ec-4bdc-82cd-45a8889e43ff",
+        "styleId": 0,
+      },
+    },
+  },
+  "audioKeys": [
+    "00000000-0000-4000-0000-000000000001",
+  ],
+}
+`;

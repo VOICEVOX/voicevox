@@ -29,7 +29,6 @@ import {
 } from "@/mock/engineMock/speakerResourceMock";
 import { setFont, themeToCss } from "@/domain/dom";
 import defaultTheme from "@/../public/themes/default.json";
-import { State } from "@/store/type";
 
 const meta: Meta<typeof TalkEditor> = {
   component: TalkEditor,
@@ -57,12 +56,12 @@ const meta: Meta<typeof TalkEditor> = {
       });
       provide(storeKey, store);
 
-      context.parameters.vuexState = store.state;
-
       // なぜか必要、これがないとdispatch内でcommitしたときにエラーになる
       store.replaceState({
         ...structuredClone(toRaw(store.state)),
       });
+
+      context.parameters.vuexState = store.state;
 
       // エンジンの情報
       const engineManifest = getEngineManifestMock();
@@ -157,7 +156,7 @@ export const NowLoading: Story = {
 
 export const TextInput: Story = {
   name: "テキスト入力のテスト",
-  play: async ({ context, canvasElement, component }) => {
+  play: async ({ context, canvasElement, parameters }) => {
     await Default.play(context);
 
     const canvas = within(canvasElement);
@@ -165,5 +164,8 @@ export const TextInput: Story = {
     // テキスト欄を取得
     const textInput = await canvas.findByLabelText("1行目");
     await userEvent.type(textInput, "こんにちは、これはテストです。{enter}");
+
+    const { audioItems, audioKeys } = parameters.vuexState;
+    await window.storybookTestSnapshot?.({ audioItems, audioKeys });
   },
 };
