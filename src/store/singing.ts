@@ -520,15 +520,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.timeSignatures = timeSignatures;
     },
     async action(
-      { commit, dispatch },
+      { commit },
       { timeSignatures }: { timeSignatures: TimeSignature[] },
     ) {
       if (!isValidTimeSignatures(timeSignatures)) {
         throw new Error("The time signatures are invalid.");
       }
       commit("SET_TIME_SIGNATURES", { timeSignatures });
-
-      dispatch("RENDER");
     },
   },
 
@@ -2505,13 +2503,11 @@ export const singingCommandStore = transformCommandStore(
         singingStore.mutations.SET_TIME_SIGNATURE(draft, { timeSignature });
       },
       // 拍子を設定する。既に同じ位置に拍子が存在する場合は置き換える。
-      action({ commit, dispatch }, { timeSignature }) {
+      action({ commit }, { timeSignature }) {
         if (!isValidTimeSignature(timeSignature)) {
           throw new Error("The time signature is invalid.");
         }
         commit("COMMAND_SET_TIME_SIGNATURE", { timeSignature });
-
-        dispatch("RENDER");
       },
     },
     COMMAND_REMOVE_TIME_SIGNATURE: {
@@ -2519,7 +2515,7 @@ export const singingCommandStore = transformCommandStore(
         singingStore.mutations.REMOVE_TIME_SIGNATURE(draft, { measureNumber });
       },
       // 拍子を削除する。先頭の拍子の場合はデフォルトの拍子に置き換える。
-      action({ state, commit, dispatch }, { measureNumber }) {
+      action({ state, commit }, { measureNumber }) {
         const exists = state.timeSignatures.some((value) => {
           return value.measureNumber === measureNumber;
         });
@@ -2527,8 +2523,6 @@ export const singingCommandStore = transformCommandStore(
           throw new Error("The time signature does not exist.");
         }
         commit("COMMAND_REMOVE_TIME_SIGNATURE", { measureNumber });
-
-        dispatch("RENDER");
       },
     },
     COMMAND_ADD_NOTES: {
