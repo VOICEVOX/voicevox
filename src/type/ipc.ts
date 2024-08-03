@@ -4,7 +4,7 @@ import {
   EngineInfo,
   EngineDirValidationResult,
   HotkeySettingType,
-  ThemeSetting,
+  ThemeConf,
   ToolbarSettingType,
   UpdateInfo,
   NativeThemeType,
@@ -246,7 +246,7 @@ export type IpcIHData = {
 
   GET_AVAILABLE_THEMES: {
     args: [];
-    return: ThemeSetting;
+    return: ThemeConf[];
   };
 
   ON_VUEX_READY: {
