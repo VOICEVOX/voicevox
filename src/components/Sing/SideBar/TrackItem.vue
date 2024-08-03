@@ -215,12 +215,13 @@ watchEffect(() => {
 const updateTrackName = () => {
   if (temporaryTrackName.value === track.value.name) return;
   if (temporaryTrackName.value === "") {
+    // NOTE: ↑これの意味を聞く
     temporaryTrackName.value = track.value.name;
     return;
   }
   store.dispatch("COMMAND_SET_TRACK_NAME", {
     trackId: props.trackId,
-    name: track.value.name,
+    name: temporaryTrackName.value,
   });
 };
 
