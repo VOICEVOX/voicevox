@@ -520,15 +520,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.timeSignatures = timeSignatures;
     },
     async action(
-      { commit, dispatch },
+      { commit },
       { timeSignatures }: { timeSignatures: TimeSignature[] },
     ) {
       if (!isValidTimeSignatures(timeSignatures)) {
         throw new Error("The time signatures are invalid.");
       }
       commit("SET_TIME_SIGNATURES", { timeSignatures });
-
-      dispatch("RENDER");
     },
   },
 
@@ -2365,8 +2363,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         track.solo = false;
       }
     },
-    action({ commit }) {
+    action({ commit, dispatch }) {
       commit("UNSOLO_ALL_TRACKS");
+
+      dispatch("RENDER");
     },
   },
 
@@ -2738,8 +2738,10 @@ export const singingCommandStore = transformCommandStore(
       mutation(draft) {
         singingStore.mutations.UNSOLO_ALL_TRACKS(draft, undefined);
       },
-      action({ commit }) {
+      action({ commit, dispatch }) {
         commit("COMMAND_UNSOLO_ALL_TRACKS");
+
+        dispatch("RENDER");
       },
     },
 
