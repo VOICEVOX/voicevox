@@ -145,7 +145,7 @@ window.backend.getDefaultToolbarSetting().then((setting) => {
   defaultSetting.push(...setting);
 });
 
-const toggleToolbarButtons = (key) => {
+const toggleToolbarButtons = (key: ToolbarButtonTagType) => {
   if (toolbarButtons.value.includes(key)) {
     toolbarButtons.value.splice(toolbarButtons.value.indexOf(key), 1);
   } else {
