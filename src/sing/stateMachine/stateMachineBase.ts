@@ -54,10 +54,8 @@ export class StateMachine<
   Context,
 > {
   private readonly context: Context;
-  private readonly setNextState: (nextState: State) => void;
 
   private currentState: State;
-  private nextState: State | undefined;
 
   /**
    * @param initialState ステートマシンの初期ステート。
@@ -65,11 +63,7 @@ export class StateMachine<
    */
   constructor(initialState: State, context: Context) {
     this.context = context;
-    this.setNextState = (nextState: State) => {
-      this.nextState = nextState;
-    };
     this.currentState = initialState;
-    this.nextState = undefined;
 
     this.currentState.onEnter(this.context);
   }
@@ -89,19 +83,19 @@ export class StateMachine<
    * @param input 処理する入力。
    */
   process(input: Input) {
-    try {
-      this.currentState.process({
-        input,
-        context: this.context,
-        setNextState: this.setNextState,
-      });
-      if (this.nextState != undefined) {
-        this.currentState.onExit(this.context);
-        this.currentState = this.nextState;
-        this.currentState.onEnter(this.context);
-      }
-    } finally {
-      this.nextState = undefined;
+    let nextState: State | undefined = undefined;
+    const setNextState = (arg: State) => {
+      nextState = arg;
+    };
+    this.currentState.process({
+      input,
+      context: this.context,
+      setNextState,
+    });
+    if (nextState != undefined) {
+      this.currentState.onExit(this.context);
+      this.currentState = nextState;
+      this.currentState.onEnter(this.context);
     }
   }
 }
