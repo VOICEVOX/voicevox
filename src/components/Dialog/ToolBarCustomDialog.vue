@@ -82,6 +82,7 @@
                     :title="getToolbarButtonName(key)"
                     :description="desc"
                     clickable
+                    tabindex="-1"
                     @click="toggleToolbarButtons(key)"
                   >
                     <BaseSwitch
