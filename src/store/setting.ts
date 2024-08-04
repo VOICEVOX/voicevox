@@ -313,7 +313,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         isDarkMode,
       };
     },
-    action: createUILockAction(async ({ commit, state }) => {
+    action: createUILockAction(async ({ commit, dispatch, state }) => {
       try {
         const availableColorSchemeConfigs =
           await window.backend.getColorSchemeConfigs();
@@ -343,20 +343,8 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
           isDarkMode,
         });
 
-        // テーマをどうするか方針を決める
-        const cssVars = cssVariablesFromColorScheme(currentColorScheme);
-        Object.entries(cssVars).forEach(([key, value]) => {
-          if (isDarkMode) {
-            document.documentElement.style.setProperty(
-              key.replace("-dark", ""),
-              value,
-            );
-          } else {
-            document.documentElement.style.setProperty(
-              key.replace("-light", ""),
-              value,
-            );
-          }
+        await dispatch("APPLY_COLOR_SCHEME", {
+          colorScheme: currentColorScheme,
         });
       } catch (error) {
         logger.error(`Error initializing color scheme: ${error}`);
@@ -391,19 +379,16 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     action: createUILockAction(async ({ state }, { colorScheme }) => {
       const cssVars = cssVariablesFromColorScheme(colorScheme);
       const isDarkMode = state.colorSchemeSetting.isDarkMode;
-      Object.entries(cssVars).forEach(([key, value]) => {
-        if (isDarkMode) {
-          document.documentElement.style.setProperty(
-            key.replace("-dark", ""),
-            value,
-          );
-        } else {
-          document.documentElement.style.setProperty(
-            key.replace("-light", ""),
-            value,
-          );
-        }
-      });
+      if (isDarkMode) {
+        Object.entries(cssVars.dark).forEach(([key, value]) => {
+          document.documentElement.style.setProperty(key, value);
+        });
+      }
+      if (!isDarkMode) {
+        Object.entries(cssVars.light).forEach(([key, value]) => {
+          document.documentElement.style.setProperty(key, value);
+        });
+      }
     }),
   },
 

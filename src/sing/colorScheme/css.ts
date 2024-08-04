@@ -3,49 +3,64 @@ import { oklchToCssString } from "@/sing/colorScheme/util";
 
 /**
  * カラースキームからCSS変数を生成する
- * @param colorScheme: ColorScheme : カラースキーム
- * @param withRoles: boolean : ロールを出力に含めるか
- * @param withPalette: boolean : パレットを出力に含めるか
- * @param prefix: string : 接頭辞 eg: primary -> --scheme-color-primary
- * @returns Record<string, string> : CSS変数名をキーとして、CSS値を値とするオブジェクト
+ * @param colorScheme カラースキーム
+ * @param options 生成オプション
+ * @returns ライトモード/ダークモード/パレットのCSS変数
  */
 export const cssVariablesFromColorScheme = (
   colorScheme: ColorScheme,
-  withRoles: boolean = true,
-  withPalette: boolean = false,
-  format: "oklch" | "hex" = "oklch",
-  prefix: string = "--scheme-color-",
-): Record<string, string> => {
-  const toKebabCase = (str: string) => {
-    return str.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
-  };
+  options: {
+    withRoles?: boolean;
+    withPalette?: boolean;
+    format?: "oklch" | "hex";
+    prefix?: string;
+  } = {},
+): {
+  light: Record<string, string>;
+  dark: Record<string, string>;
+  palette: Record<string, string>;
+} => {
+  const {
+    withRoles = true,
+    withPalette = false,
+    format = "oklch",
+    prefix = "--scheme-color-",
+  } = options;
 
-  const cssVars = {} as Record<string, string>;
+  const toKebabCase = (str: string) =>
+    str.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
+
+  const light: Record<string, string> = {};
+  const dark: Record<string, string> = {};
+  const palette: Record<string, string> = {};
+
+  // ロールカラー
   if (withRoles) {
-    Object.entries(colorScheme.roles).forEach(
-      ([roleName, value]) => {
-        cssVars[`${prefix}${toKebabCase(roleName)}-light`] = oklchToCssString(
-          value.lightShade,
-          format,
-        );
-        cssVars[`${prefix}${toKebabCase(roleName)}-dark`] = oklchToCssString(
-          value.darkShade,
-          format,
-        );
-      },
-      {} as Record<string, string>,
-    );
-  }
-
-  if (withPalette) {
-    Object.entries(colorScheme.palettes).forEach(([paletteName, palette]) => {
-      Object.entries(palette.shades).forEach(([shade, color]) => {
-        const shadeName = Math.round(Number(shade) * 100);
-        cssVars[`${prefix}${toKebabCase(paletteName)}-palette-${shadeName}`] =
-          oklchToCssString(color, format);
-      });
+    Object.entries(colorScheme.roles).forEach(([roleName, value]) => {
+      const kebabRoleName = toKebabCase(roleName);
+      light[`${prefix}${kebabRoleName}`] = oklchToCssString(
+        value.lightShade,
+        format,
+      );
+      dark[`${prefix}${kebabRoleName}`] = oklchToCssString(
+        value.darkShade,
+        format,
+      );
     });
   }
 
-  return cssVars;
+  // パレット
+  if (withPalette) {
+    Object.entries(colorScheme.palettes).forEach(
+      ([paletteName, paletteValue]) => {
+        Object.entries(paletteValue.shades).forEach(([shade, color]) => {
+          const shadeName = Math.round(Number(shade) * 100);
+          const key = `${prefix}${toKebabCase(paletteName)}-palette-${shadeName}`;
+          palette[key] = oklchToCssString(color, format);
+        });
+      },
+    );
+  }
+
+  return { light, dark, palette };
 };

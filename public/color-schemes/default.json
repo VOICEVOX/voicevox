@@ -32,63 +32,63 @@
       "displayName": "シーケンサグリッド(白鍵)",
       "role": "neutral",
       "lightShade": 1.0,
-      "darkShade": 0.18
+      "darkShade": 0.17
     },
     {
       "name": "singGridCellBlack",
       "displayName": "シーケンサグリッド(黒鍵)",
       "role": "neutral",
       "lightShade": 0.96,
-      "darkShade": 0.15
+      "darkShade": 0.04
     },
     {
       "name": "singGridVerticalLine",
       "displayName": "シーケンサグリッド(縦線)",
       "role": "neutral",
       "lightShade": 0.95,
-      "darkShade": 0.14
+      "darkShade": 0.04
     },
     {
       "name": "singGridHorizontalLine",
       "displayName": "シーケンサグリッド(横線)",
       "role": "neutral",
       "lightShade": 0.95,
-      "darkShade": 0.14
+      "darkShade": 0.04
     },
     {
       "name": "singGridMeasureLine",
       "displayName": "シーケンサグリッド(小節線)",
       "role": "neutral",
       "lightShade": 0.8,
-      "darkShade": 0.3
+      "darkShade": 0.4
     },
     {
       "name": "singGridBeatLine",
       "displayName": "シーケンサグリッド(拍線)",
       "role": "neutral",
-      "lightShade": 0.88,
-      "darkShade": 0.04
+      "lightShade": 0.85,
+      "darkShade": 0.24
     },
     {
       "name": "singGridOctaveLine",
       "displayName": "シーケンサグリッド(オクターブ線)",
       "role": "neutral",
-      "lightShade": 0.88,
-      "darkShade": 0.04
+      "lightShade": 0.85,
+      "darkShade": 0.3
     },
     {
       "name": "singRulerMeasureLine",
       "displayName": "ルーラー(小節線)",
       "role": "neutralVariant",
       "lightShade": 0.65,
-      "darkShade": 0.5
+      "darkShade": 0.55
     },
     {
       "name": "singRulerBeatLine",
       "displayName": "ルーラー(拍線)",
       "role": "neutralVariant",
       "lightShade": 0.7,
-      "darkShade": 0.4
+      "darkShade": 0.45
     },
     {
       "name": "singPianoKeyWhite",
@@ -157,6 +157,48 @@
       "name": "purple",
       "displayName": "パープル",
       "sourceColor": "oklch(70% 0.13 315)"
+    }
+  ],
+  "contrastPairs": [
+    {
+      "colors": ["singGridCellBlack", "singGridCellWhite"],
+      "requiredContrast": 15,
+      "description": "シーケンサグリッド(黒鍵) - シーケンサグリッド(白鍵)"
+    },
+    {
+      "colors": ["singGridVerticalLine", "singGridCellBlack"],
+      "requiredContrast": 0,
+      "description": "シーケンサグリッド(縦線) - シーケンサグリッド(黒鍵)"
+    },
+    {
+      "colors": ["singGridHorizontalLine", "singGridCellBlack"],
+      "requiredContrast": 0,
+      "description": "シーケンサグリッド(横線) - シーケンサグリッド(黒鍵)"
+    },
+    {
+      "colors": ["singGridMeasureLine", "singGridCellBlack"],
+      "requiredContrast": 15,
+      "description": "シーケンサグリッド(小節線) - シーケンサグリッド(黒鍵)"
+    },
+    {
+      "colors": ["singGridBeatLine", "singGridCellBlack"],
+      "requiredContrast": 15,
+      "description": "シーケンサグリッド(拍線) - シーケンサグリッド(黒鍵)"
+    },
+    {
+      "colors": ["singGridOctaveLine", "singGridCellBlack"],
+      "requiredContrast": 15,
+      "description": "シーケンサグリッド(オクターブ線) - シーケンサグリッド(黒鍵)"
+    },
+    {
+      "colors": ["singRulerMeasureLine", "surfaceContainerHighest"],
+      "requiredContrast": 15,
+      "description": "ルーラー(小節線) - 最高コンテナ表面"
+    },
+    {
+      "colors": ["singRulerBeatLine", "surfaceContainerHighest"],
+      "requiredContrast": 15,
+      "description": "ルーラー(拍線) - 最高コンテナ表面"
     }
   ]
 }

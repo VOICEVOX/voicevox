@@ -52,6 +52,7 @@ export interface ColorSchemeConfig {
   customColors?: CustomColorConfig[];
   aliasColors?: AliasColorConfig[];
   algorithmName?: string;
+  contrastPairs?: ColorContrastPair[];
 }
 
 // カラースキーム

@@ -108,8 +108,18 @@
         v-for="(aliasColor, index) in currentColorScheme.config.aliasColors"
         :key="`alias-color-${aliasColor.name}-${index}`"
         class="alias-color"
+        :class="{
+          'has-contrast-issue': aliasColorContrastIssues[aliasColor.name],
+        }"
       >
-        <label>{{ aliasColor.displayName }}</label>
+        <label>
+          {{ aliasColor.displayName }}
+          <span
+            v-if="aliasColorContrastIssues[aliasColor.name]"
+            class="contrast-issue-indicator"
+            >⚠️</span
+          >
+        </label>
         <div class="alias-color-controls">
           <SelectRoot
             :modelValue="aliasColor.role"
@@ -168,6 +178,31 @@
             class="slider-thumb"
           />
         </SliderRoot>
+        <div
+          v-if="aliasColorContrastIssues[aliasColor.name]"
+          class="contrast-issues"
+        >
+          <div
+            v-for="(issue, issueIndex) in aliasColorContrastIssues[
+              aliasColor.name
+            ]"
+            :key="issueIndex"
+            class="contrast-issue"
+          >
+            <span
+              class="contrast-issue-level"
+              :class="issue.level.toLowerCase()"
+              >{{ issue.level }}</span
+            >
+            <span class="contrast-issue-description">{{
+              issue.description
+            }}</span>
+            <span class="contrast-ratio">
+              コントラスト比: {{ Math.abs(issue.contrast).toFixed(2) }} /
+              {{ issue.requiredContrast }}
+            </span>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -248,7 +283,7 @@
       <button style="margin-right: 0.5rem" @click="downloadColorSchemeConfig">
         JSON
       </button>
-      <button @click="downloadCSSVariables">CSS</button>
+      <button @click="handleDownloadCSSVariables">CSS</button>
     </section>
   </div>
 </template>
@@ -278,6 +313,7 @@ import {
   OklchColor,
   ColorSchemeConfig,
   CustomColorConfig,
+  ColorShades,
 } from "@/sing/colorScheme/types";
 import {
   cssStringToOklch,
@@ -362,23 +398,103 @@ const allPalettes = computed(() => {
 
 // コントラストチェック結果
 const contrastResults = computed(() => {
-  return DEFINED_CONTRAST_PAIR.map((pair) => {
-    const shadeType = isDarkMode.value ? "darkShade" : "lightShade";
-    const color1 = currentColorScheme.value.roles[pair.colors[0]][shadeType];
+  const results: {
+    pair: [string, string];
+    contrast: number;
+    level: string;
+    requiredContrast: number;
+    description: string;
+  }[] = [];
+
+  const currentScheme = currentColorScheme.value;
+  const shadeType = isDarkMode.value ? "darkShade" : "lightShade";
+
+  const getColor = (colorName: string): OklchColor | null => {
+    const aliasColor = currentScheme.config.aliasColors?.find(
+      (ac) => ac.name === colorName,
+    );
+    if (aliasColor) {
+      const roleColor = currentScheme.roles[aliasColor.name];
+      return roleColor ? roleColor[shadeType as keyof ColorShades] : null;
+    }
+    return (
+      currentScheme.roles[colorName as ColorRole]?.[
+        shadeType as keyof ColorShades
+      ] || null
+    );
+  };
+
+  const calculateContrast = (
+    color1: OklchColor,
+    color2: OklchColor,
+    pair: [string, string],
+    requiredContrast: number,
+    description: string,
+  ) => {
     const cssColor1 = oklchToCssString(color1);
-    const color2 = currentColorScheme.value.roles[pair.colors[1]][shadeType];
     const cssColor2 = oklchToCssString(color2);
-    const contrast = Math.abs(getContrastRatio(cssColor1, cssColor2));
+    const contrast = Math.abs(getContrastRatio(cssColor1, cssColor2, "APCA"));
     return {
-      pair: pair.colors,
+      pair,
       contrast,
-      level: getContrastLevel(contrast, pair.requiredContrast),
-      requiredContrast: pair.requiredContrast,
-      description: pair.description,
+      level: getContrastLevel(contrast, requiredContrast),
+      requiredContrast,
+      description,
     };
+  };
+
+  [
+    ...DEFINED_CONTRAST_PAIR,
+    ...(currentScheme.config.contrastPairs || []),
+  ].forEach((pair) => {
+    const color1 = getColor(pair.colors[0]);
+    const color2 = getColor(pair.colors[1]);
+
+    if (color1 && color2) {
+      results.push(
+        calculateContrast(
+          color1,
+          color2,
+          pair.colors,
+          pair.requiredContrast,
+          pair.description,
+        ),
+      );
+    }
   });
+
+  return results;
 });
 
+const aliasColorContrastIssues = computed(() => {
+  const issues: Record<
+    string,
+    {
+      description: string;
+      level: string;
+      contrast: number;
+      requiredContrast: number;
+    }[]
+  > = {};
+
+  contrastResults.value.forEach((result) => {
+    if (result.level !== "Pass") {
+      result.pair.forEach((colorName) => {
+        if (!issues[colorName]) {
+          issues[colorName] = [];
+        }
+        issues[colorName].push({
+          description: result.description,
+          level: result.level,
+          contrast: result.contrast,
+          requiredContrast: result.requiredContrast,
+        });
+      });
+    }
+  });
+
+  return issues;
+});
 /*
 const customColorHex = computed(() => (customColor: CustomColorConfig) => 
   cssStringToHex(customColor.sourceColor)
@@ -530,18 +646,34 @@ const downloadColorSchemeConfig = () => {
 /**
  * カラースキームのCSS変数をCSSファイルとしてダウンロードする
  */
-const downloadCSSVariables = () => {
+const downloadCSSVariables = (options: {
+  withRoles?: boolean;
+  withPalettes?: boolean;
+  format?: "oklch" | "hex";
+  prefix?: string;
+}) => {
+  const defaultOptions = {
+    withRoles: true,
+    withPalettes: false,
+    format: "oklch" as const,
+  };
+  const mergedOptions = { ...defaultOptions, ...options };
   const cssVars = cssVariablesFromColorScheme(
     currentColorScheme.value,
-    true,
-    true,
-    "hex",
+    mergedOptions,
   );
+  const generateThemeBlock = (theme: "light" | "dark") => {
+    return `:root[is-dark-theme="${theme === "dark"}"] {\n${Object.entries(
+      cssVars[theme],
+    )
+      .map(([key, value]) => `  ${key}: ${value};`)
+      .join("\n")}\n}`;
+  };
 
-  // cssVars.palettes が存在する場合にのみアクセス
-  const cssContent = `:root {\n${Object.entries(cssVars)
-    .map(([key, value]) => `  ${key}: ${value};`)
-    .join("\n")}\n}`;
+  const cssContent = [
+    generateThemeBlock("light"),
+    generateThemeBlock("dark"),
+  ].join("\n\n");
 
   downloadFile(
     cssContent,
@@ -567,6 +699,17 @@ const downloadFile = (
   link.download = fileName;
   link.click();
   URL.revokeObjectURL(link.href);
+};
+
+/**
+ * CSSダウンロードボタンのクリックハンドラー
+ */
+const handleDownloadCSSVariables = () => {
+  downloadCSSVariables({
+    withRoles: true,
+    withPalettes: false,
+    format: "oklch",
+  });
 };
 
 /**
@@ -760,6 +903,73 @@ onMounted(() => {
   color: var(--scheme-color-on-surface-variant);
   min-width: 3em;
   text-align: right;
+}
+
+.alias-color.has-contrast-issue {
+  padding: 0.5rem;
+  border: 1px solid var(--scheme-color-error);
+  border-radius: 0.5rem;
+}
+
+.contrast-issue-indicator {
+  margin-left: 0.5rem;
+  color: var(--scheme-color-error);
+}
+
+.contrast-issues {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+}
+
+.contrast-issue {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+.contrast-issue-level {
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-weight: bold;
+  margin-right: 0.5rem;
+}
+
+.contrast-issue-level.fail {
+  background-color: var(--scheme-color-error);
+  color: var(--scheme-color-on-error);
+}
+
+.contrast-issue-level.warn {
+  background-color: var(--scheme-color-tertiary);
+  color: var(--scheme-color-on-tertiary);
+}
+
+.contrast-ratio {
+  font-size: 0.75rem;
+  color: var(--scheme-color-on-surface-variant);
+  margin-left: 0.5rem;
+  font-weight: 600;
+}
+
+.contrast-issue {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.contrast-issue-level {
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-weight: bold;
+  margin-right: 0.5rem;
+  font-size: 0.75rem;
+}
+
+.contrast-issue-description {
+  flex: 1;
+  min-width: 150px;
+  font-size: 0.875rem;
 }
 
 .palette {

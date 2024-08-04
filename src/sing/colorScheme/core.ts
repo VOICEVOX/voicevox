@@ -46,7 +46,11 @@ export const generateColorSchemeFromConfig = (
     const sourceColor = cssStringToOklch(customColor.sourceColor);
     if (customColor) {
       CUSTOM_COLOR_ROLES.forEach(({ name, role, lightShade, darkShade }) => {
-        const roleName = name.replace("${customColorName}", customColor.name);
+        const roleStr = name.startsWith("${customColorName}")
+          ? customColor.name
+          : customColor.name.charAt(0).toUpperCase() +
+            customColor.name.slice(1);
+        const roleName = name.replace(/\${customColorName}/g, roleStr);
         roles[roleName] = {
           lightShade: algorithm(config, sourceColor, role, lightShade),
           darkShade: algorithm(config, sourceColor, role, darkShade),
