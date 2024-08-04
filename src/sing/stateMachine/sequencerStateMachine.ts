@@ -125,10 +125,14 @@ class AddNoteState implements IState<State, Input, Context> {
 
   private readonly cursorPosAtStart: PositionOnSequencer;
 
-  private noteToAdd?: Note;
-  private previewRequestId = 0;
-  private executePreviewProcess = false;
   private currentCursorPos: PositionOnSequencer;
+  private innerContext:
+    | {
+        noteToAdd: Note;
+        previewRequestId: number;
+        executePreviewProcess: boolean;
+      }
+    | undefined;
 
   constructor(cursorPosAtStart: PositionOnSequencer) {
     this.cursorPosAtStart = cursorPosAtStart;
@@ -136,13 +140,14 @@ class AddNoteState implements IState<State, Input, Context> {
   }
 
   private previewAdd(context: Context) {
-    if (this.noteToAdd == undefined) {
-      throw new Error("noteToAdd is undefined.");
+    if (this.innerContext == undefined) {
+      throw new Error("innerContext is undefined.");
     }
+    const noteToAdd = this.innerContext.noteToAdd;
     const snapTicks = context.snapTicks.value;
     const dragTicks = this.currentCursorPos.ticks - this.cursorPosAtStart.ticks;
     const noteDuration = Math.round(dragTicks / snapTicks) * snapTicks;
-    const noteEndPos = this.noteToAdd.position + noteDuration;
+    const noteEndPos = noteToAdd.position + noteDuration;
     const previewNotes = context.previewNotes.value;
 
     const editedNotes = new Map<NoteId, Note>();
@@ -172,19 +177,26 @@ class AddNoteState implements IState<State, Input, Context> {
       lyric: getDoremiFromNoteNumber(this.cursorPosAtStart.noteNumber),
     };
 
-    this.noteToAdd = noteToAdd;
     context.previewNotes.value = [noteToAdd];
     context.nowPreviewing.value = true;
 
-    this.executePreviewProcess = true;
     const preview = () => {
-      if (this.executePreviewProcess) {
-        this.previewAdd(context);
-        this.executePreviewProcess = false;
+      if (this.innerContext == undefined) {
+        throw new Error("innerContext is undefined.");
       }
-      this.previewRequestId = requestAnimationFrame(preview);
+      if (this.innerContext.executePreviewProcess) {
+        this.previewAdd(context);
+        this.innerContext.executePreviewProcess = false;
+      }
+      this.innerContext.previewRequestId = requestAnimationFrame(preview);
     };
-    this.previewRequestId = requestAnimationFrame(preview);
+    const previewRequestId = requestAnimationFrame(preview);
+
+    this.innerContext = {
+      noteToAdd,
+      executePreviewProcess: false,
+      previewRequestId,
+    };
   }
 
   process({
@@ -195,11 +207,14 @@ class AddNoteState implements IState<State, Input, Context> {
     context: Context;
     setNextState: (nextState: State) => void;
   }) {
+    if (this.innerContext == undefined) {
+      throw new Error("innerContext is undefined.");
+    }
     const mouseButton = getButton(input.mouseEvent);
     if (input.targetArea === "SequencerBody") {
       if (input.mouseEvent.type === "mousemove") {
         this.currentCursorPos = input.cursorPos;
-        this.executePreviewProcess = true;
+        this.innerContext.executePreviewProcess = true;
       } else if (input.mouseEvent.type === "mouseup") {
         if (mouseButton === "LEFT_BUTTON") {
           setNextState(new IdleState());
@@ -209,10 +224,13 @@ class AddNoteState implements IState<State, Input, Context> {
   }
 
   onExit(context: Context) {
+    if (this.innerContext == undefined) {
+      throw new Error("innerContext is undefined.");
+    }
     const previewNotes = context.previewNotes.value;
     const previewNoteIds = previewNotes.map((value) => value.id);
 
-    cancelAnimationFrame(this.previewRequestId);
+    cancelAnimationFrame(this.innerContext.previewRequestId);
     context.storeActions.commandAddNotes(context.previewNotes.value);
     context.storeActions.selectNotes(previewNoteIds);
     if (previewNotes.length === 1) {
