@@ -2,6 +2,7 @@
   <button
     class="row-card"
     :class="{ clickable: clickable }"
+    role="listitem"
     @click="(payload) => $emit('click', payload)"
   >
     <div class="text">
