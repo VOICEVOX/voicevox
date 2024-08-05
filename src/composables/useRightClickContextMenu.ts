@@ -19,6 +19,12 @@ export function useRightClickContextMenu(
 ) {
   const inputSelection = new SelectionHelperForQInput(qInputRef);
 
+  /**
+   * コンテキストメニューの開閉によりFocusやBlurが発生する可能性のある間は`true`
+   * no-focusを付けた場合と付けてない場合でタイミングが異なるため、両方に対応
+   */
+  const willFocusOrBlur = ref(false);
+
   const contextMenu = ref<InstanceType<typeof ContextMenu>>();
 
   const contextMenuHeader = ref<string | undefined>("");
@@ -70,17 +76,17 @@ export function useRightClickContextMenu(
       label: "切り取り",
       onClick: async () => {
         contextMenu.value?.hide();
-        handleCut();
+        await handleCut();
       },
       disableWhenUiLocked: false,
     },
     {
       type: "button",
       label: "コピー",
-      onClick: () => {
+      onClick: async () => {
         contextMenu.value?.hide();
         if (inputSelection) {
-          navigator.clipboard.writeText(inputSelection.getAsString());
+          await navigator.clipboard.writeText(inputSelection.getAsString());
         }
       },
       disableWhenUiLocked: false,
@@ -116,7 +122,7 @@ export function useRightClickContextMenu(
       inputField.value,
     );
     await nextTick();
-    navigator.clipboard.writeText(text);
+    await navigator.clipboard.writeText(text);
     inputSelection.setCursorPosition(start);
   };
 
@@ -148,10 +154,28 @@ export function useRightClickContextMenu(
     );
   };
 
+  const clearInputSelection = () => {
+    if (!willFocusOrBlur.value) {
+      inputSelection.toEmpty();
+    }
+  };
+
+  const startContextMenuOperation = () => {
+    willFocusOrBlur.value = true;
+  };
+
+  const endContextMenuOperation = async () => {
+    await nextTick();
+    willFocusOrBlur.value = false;
+  };
+
   return {
     contextMenu,
     contextMenuHeader,
     contextMenudata,
     readyForContextMenu,
+    clearInputSelection,
+    startContextMenuOperation,
+    endContextMenuOperation,
   };
 }

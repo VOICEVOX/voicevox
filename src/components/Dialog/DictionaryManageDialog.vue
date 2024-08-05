@@ -123,6 +123,7 @@
                 class="word-input"
                 dense
                 :disable="uiLocked"
+                @focus="clearSurfaceInputSelection()"
                 @blur="setSurface(surface)"
                 @keydown.enter="yomiFocus"
               >
@@ -130,7 +131,11 @@
                   ref="surfaceContextMenu"
                   :header="surfaceContextMenuHeader"
                   :menudata="surfaceContextMenudata"
-                  @beforeShow="readyForSurfaceContextMenu"
+                  @beforeShow="
+                    readyForSurfaceContextMenu();
+                    startSurfaceContextMenuOperation();
+                  "
+                  @beforeHide="endSurfaceContextMenuOperation()"
                 />
               </QInput>
             </div>
@@ -143,6 +148,7 @@
                 dense
                 :error="!isOnlyHiraOrKana"
                 :disable="uiLocked"
+                @focus="clearYomiInputSelection()"
                 @blur="setYomi(yomi)"
                 @keydown.enter="setYomiWhenEnter"
               >
@@ -153,7 +159,11 @@
                   ref="yomiContextMenu"
                   :header="yomiContextMenuHeader"
                   :menudata="yomiContextMenudata"
-                  @beforeShow="readyForYomiContextMenu"
+                  @beforeShow="
+                    readyForYomiContextMenu();
+                    startYomiContextMenuOperation();
+                  "
+                  @beforeHide="endYomiContextMenuOperation()"
                 />
               </QInput>
             </div>
@@ -687,6 +697,9 @@ const {
   contextMenuHeader: surfaceContextMenuHeader,
   contextMenudata: surfaceContextMenudata,
   readyForContextMenu: readyForSurfaceContextMenu,
+  clearInputSelection: clearSurfaceInputSelection,
+  startContextMenuOperation: startSurfaceContextMenuOperation,
+  endContextMenuOperation: endSurfaceContextMenuOperation,
 } = useRightClickContextMenu(surfaceInput, surface, ref("surface"));
 
 const {
@@ -694,6 +707,9 @@ const {
   contextMenuHeader: yomiContextMenuHeader,
   contextMenudata: yomiContextMenudata,
   readyForContextMenu: readyForYomiContextMenu,
+  clearInputSelection: clearYomiInputSelection,
+  startContextMenuOperation: startYomiContextMenuOperation,
+  endContextMenuOperation: endYomiContextMenuOperation,
 } = useRightClickContextMenu(yomiInput, yomi, ref("yomi"));
 </script>
 
