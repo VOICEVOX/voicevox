@@ -1,6 +1,6 @@
 <template>
   <ErrorBoundary>
-    <TooltipProvider>
+    <TooltipProvider disableHoverableContent>
       <MenuBar
         v-if="openedEditor != undefined"
         :fileSubMenuData="subMenuData.fileSubMenuData.value"
