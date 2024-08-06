@@ -1805,7 +1805,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           }),
         );
         for (const [phraseKey, phrase] of phrasesToBeRendered) {
-          // シーケンスが存在する場合、シーケンスの接続を解除して削除する
+          // シーケンスが存在する場合は、シーケンスを削除する
           // TODO: ピッチを編集したときは行わないようにする
 
           const phraseSequenceId = getPhraseSequenceId(phraseKey);
