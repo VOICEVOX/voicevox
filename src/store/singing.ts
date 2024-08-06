@@ -251,8 +251,7 @@ if (window.AudioContext) {
 
 const playheadPosition = new FrequentlyUpdatedState(0);
 const singingVoices = new Map<SingingVoiceSourceHash, SingingVoice>();
-const sequences = new Map<SequenceId, Sequence>();
-const sequenceTrackIds = new Map<SequenceId, TrackId>();
+const sequences = new Map<SequenceId, Sequence & { trackId: TrackId }>();
 const animationTimer = new AnimationTimer();
 
 const singingGuideCache = new Map<SingingGuideSourceHash, SingingGuide>();
@@ -278,11 +277,10 @@ const registerSequence = (
   if (transport == undefined) {
     throw new Error("transport is undefined.");
   }
-  if (sequences.has(sequenceId) || sequenceTrackIds.has(sequenceId)) {
+  if (sequences.has(sequenceId)) {
     throw new Error("Sequence already exists.");
   }
-  sequences.set(sequenceId, sequence);
-  sequenceTrackIds.set(sequenceId, trackId);
+  sequences.set(sequenceId, { ...sequence, trackId });
 
   // Transportに追加する
   transport.addSequence(sequence);
@@ -299,18 +297,16 @@ const deleteSequence = (sequenceId: SequenceId) => {
     throw new Error("transport is undefined.");
   }
   const sequence = sequences.get(sequenceId);
-  const trackId = sequenceTrackIds.get(sequenceId);
-  if (sequence == undefined || trackId == undefined) {
+  if (sequence == undefined) {
     throw new Error("Sequence does not exist.");
   }
   sequences.delete(sequenceId);
-  sequenceTrackIds.delete(sequenceId);
 
   // Transportから削除する
   transport.removeSequence(sequence);
 
   // ChannelStripがある場合は接続を解除する
-  if (trackChannelStrips.has(trackId)) {
+  if (trackChannelStrips.has(sequence.trackId)) {
     getOutputOfAudioSource(sequence).disconnect();
   }
 };
@@ -334,8 +330,8 @@ const syncTracksAndTrackChannelStrips = (
       trackChannelStrips.set(trackId, channelStrip);
 
       // シーケンスがある場合は、それらを接続する
-      for (const [sequenceId, sequenceTrackId] of sequenceTrackIds) {
-        if (trackId === sequenceTrackId) {
+      for (const [sequenceId, sequence] of sequences) {
+        if (trackId === sequence.trackId) {
           const sequence = sequences.get(sequenceId);
           if (sequence == undefined) {
             throw new Error("Sequence does not exist.");
@@ -362,8 +358,8 @@ const syncTracksAndTrackChannelStrips = (
       trackChannelStrips.delete(trackId);
 
       // シーケンスがある場合は、それらの接続を解除する
-      for (const [sequenceId, sequenceTrackId] of sequenceTrackIds) {
-        if (trackId === sequenceTrackId) {
+      for (const [sequenceId, sequence] of sequences) {
+        if (trackId === sequence.trackId) {
           const sequence = sequences.get(sequenceId);
           if (sequence == undefined) {
             throw new Error("Sequence does not exist.");
