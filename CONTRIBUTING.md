@@ -78,6 +78,7 @@ VOICEVOXには、下記のような貢献の仕方があります。
 ### 2. 開発環境の構築
 
 - 必須ツール
+
   - [Node.js](https://nodejs.org/en/download/releases/)\
     [こちら](https://github.com/VOICEVOX/voicevox/blob/main/.node-version)に記載されているバージョンのインストーラを入手し、インストールします。
 
@@ -135,7 +136,7 @@ VITE_DEFAULT_ENGINE_INFOS=`[
         "uuid": "074fc39e-678b-4c13-8916-ffca8d505d1d",
         "name": "VOICEVOX Engine",
         "executionEnabled": true,
-        "executionFilePath": "vv-engine/run.exe",
+        "executionFilePath": "C:/Users/(ユーザー名)/AppData/Local/Programs/VOICEVOX/vv-engine/run.exe",
         "executionArgs": [],
         "host": "http://127.0.0.1:50021"
     }
