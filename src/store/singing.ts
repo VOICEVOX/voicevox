@@ -41,7 +41,6 @@ import {
   Clipper,
   Limiter,
   NoteEvent,
-  NoteSequence,
   OfflineTransport,
   PolySynth,
   Sequence,
@@ -271,8 +270,7 @@ const getOutputOfAudioSource = (sequence: Sequence) => {
 
 const registerSequence = (
   sequenceId: SequenceId,
-  sequence: Sequence,
-  trackId: TrackId,
+  sequence: Sequence & { trackId: TrackId },
 ) => {
   if (transport == undefined) {
     throw new Error("transport is undefined.");
@@ -280,13 +278,13 @@ const registerSequence = (
   if (sequences.has(sequenceId)) {
     throw new Error("Sequence already exists.");
   }
-  sequences.set(sequenceId, { ...sequence, trackId });
+  sequences.set(sequenceId, sequence);
 
   // Transportに追加する
   transport.addSequence(sequence);
 
   // ChannelStripがある場合は接続する
-  const channelStrip = trackChannelStrips.get(trackId);
+  const channelStrip = trackChannelStrips.get(sequence.trackId);
   if (channelStrip != undefined) {
     getOutputOfAudioSource(sequence).connect(channelStrip.input);
   }
@@ -1818,12 +1816,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           const noteEvents = generateNoteEvents(phrase.notes, tempos, tpqn);
           const polySynth = new PolySynth(audioContextRef);
           const sequenceId = SequenceId(uuid4());
-          const noteSequence: NoteSequence = {
+          registerSequence(sequenceId, {
             type: "note",
             instrument: polySynth,
             noteEvents,
-          };
-          registerSequence(sequenceId, noteSequence, phrase.trackId);
+            trackId: phrase.trackId,
+          });
           commit("SET_SEQUENCE_ID_TO_PHRASE", { phraseKey, sequenceId });
         }
         while (phrasesToBeRendered.size > 0) {
@@ -2023,12 +2021,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             );
             const audioPlayer = new AudioPlayer(audioContext);
             const sequenceId = SequenceId(uuid4());
-            const audioSequence: AudioSequence = {
+            registerSequence(sequenceId, {
               type: "audio",
               audioPlayer,
               audioEvents,
-            };
-            registerSequence(sequenceId, audioSequence, phrase.trackId);
+              trackId: phrase.trackId,
+            });
             commit("SET_SEQUENCE_ID_TO_PHRASE", { phraseKey, sequenceId });
 
             commit("SET_STATE_TO_PHRASE", {
