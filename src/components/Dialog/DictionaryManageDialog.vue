@@ -90,7 +90,10 @@
                       dense
                       round
                       icon="edit"
-                      @click.stop="editWord"
+                      @click.stop="
+                        selectWord(key);
+                        editWord();
+                      "
                     >
                       <QTooltip :delay="500">編集</QTooltip>
                     </QBtn>
@@ -100,7 +103,10 @@
                       dense
                       round
                       icon="delete_outline"
-                      @click.stop="deleteWord"
+                      @click.stop="
+                        selectWord(key);
+                        deleteWord();
+                      "
                     >
                       <QTooltip :delay="500">削除</QTooltip>
                     </QBtn>
