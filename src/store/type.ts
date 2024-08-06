@@ -1176,9 +1176,17 @@ export type SingingStoreTypes = {
     action(): { trackId: TrackId; track: Track };
   };
 
-  REGISTER_TRACK: {
-    mutation: { trackId: TrackId; track: Track };
-    action(payload: { trackId: TrackId; track: Track }): void;
+  INSERT_TRACK: {
+    mutation: {
+      trackId: TrackId;
+      track: Track;
+      prevTrackId: TrackId | undefined;
+    };
+    action(payload: {
+      trackId: TrackId;
+      track: Track;
+      prevTrackId: TrackId | undefined;
+    }): void;
   };
 
   DELETE_TRACK: {
@@ -1336,9 +1344,13 @@ export type SingingCommandStoreTypes = {
     }): void;
   };
 
-  COMMAND_ADD_TRACK: {
-    mutation: { trackId: TrackId; track: Track };
-    action(): void;
+  COMMAND_INSERT_EMPTY_TRACK: {
+    mutation: {
+      trackId: TrackId;
+      track: Track;
+      prevTrackId: TrackId;
+    };
+    action(payload: { prevTrackId: TrackId }): void;
   };
 
   COMMAND_DELETE_TRACK: {
@@ -1386,7 +1398,10 @@ export type SingingCommandStoreTypes = {
       tpqn: number;
       tempos: Tempo[];
       timeSignatures: TimeSignature[];
-      tracks: { track: Track; trackId: TrackId; overwrite: boolean }[];
+      tracks: ({ track: Track; trackId: TrackId } & (
+        | { overwrite: true; prevTrackId?: undefined }
+        | { overwrite?: false; prevTrackId: TrackId }
+      ))[];
     };
     action(payload: {
       tpqn: number;

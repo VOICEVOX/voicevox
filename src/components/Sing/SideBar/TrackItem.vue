@@ -13,7 +13,13 @@
         :menudata="[
           {
             type: 'button',
-            label: '削除',
+            label: 'トラック追加',
+            onClick: addTrack,
+            disableWhenUiLocked: true,
+          },
+          {
+            type: 'button',
+            label: 'トラック削除',
             onClick: deleteTrack,
             disabled: tracks.size === 1,
             disableWhenUiLocked: true,
@@ -174,6 +180,7 @@ const track = computed(() => {
 });
 
 const tracks = computed(() => store.state.tracks);
+const trackOrder = computed(() => store.state.trackOrder);
 const isThereSoloTrack = computed(() =>
   [...tracks.value.values()].some((track) => track.solo),
 );
@@ -182,7 +189,7 @@ const shouldPlayTrack = computed(() =>
 );
 
 const setTrackPan = (pan: number) => {
-  if (store.state.songUndoableTrackOptions.panAndGain) {
+  if (store.state.undoableTrackOperations.panAndGain) {
     store.dispatch("COMMAND_SET_TRACK_PAN", { trackId: props.trackId, pan });
   } else {
     store.dispatch("SET_TRACK_PAN", { trackId: props.trackId, pan });
@@ -190,7 +197,7 @@ const setTrackPan = (pan: number) => {
 };
 
 const setTrackGain = (gain: number) => {
-  if (store.state.songUndoableTrackOptions.panAndGain) {
+  if (store.state.undoableTrackOperations.panAndGain) {
     store.dispatch("COMMAND_SET_TRACK_GAIN", {
       trackId: props.trackId,
       gain,
@@ -207,18 +214,21 @@ watchEffect(() => {
 
 const updateTrackName = () => {
   if (temporaryTrackName.value === track.value.name) return;
+
+  // 空のトラック名だと空欄のようになってしまうので許容しない
   if (temporaryTrackName.value === "") {
     temporaryTrackName.value = track.value.name;
     return;
   }
+
   store.dispatch("COMMAND_SET_TRACK_NAME", {
     trackId: props.trackId,
-    name: track.value.name,
+    name: temporaryTrackName.value,
   });
 };
 
 const setTrackMute = (mute: boolean) => {
-  if (store.state.songUndoableTrackOptions.soloAndMute) {
+  if (store.state.undoableTrackOperations.soloAndMute) {
     store.dispatch("COMMAND_SET_TRACK_MUTE", { trackId: props.trackId, mute });
   } else {
     store.dispatch("SET_TRACK_MUTE", { trackId: props.trackId, mute });
@@ -226,7 +236,7 @@ const setTrackMute = (mute: boolean) => {
 };
 
 const setTrackSolo = (solo: boolean) => {
-  if (store.state.songUndoableTrackOptions.soloAndMute) {
+  if (store.state.undoableTrackOperations.soloAndMute) {
     store.dispatch("COMMAND_SET_TRACK_SOLO", { trackId: props.trackId, solo });
   } else {
     store.dispatch("SET_TRACK_SOLO", { trackId: props.trackId, solo });
@@ -255,8 +265,33 @@ const selectTrack = () => {
   store.dispatch("SET_SELECTED_TRACK", { trackId: props.trackId });
 };
 
-const deleteTrack = () => {
-  store.dispatch("COMMAND_DELETE_TRACK", { trackId: props.trackId });
+const addTrack = async () => {
+  const willNextSelectedTrackIndex =
+    trackOrder.value.indexOf(props.trackId) + 1;
+  await store.dispatch("COMMAND_INSERT_EMPTY_TRACK", {
+    prevTrackId: props.trackId,
+  });
+  await store.dispatch("SELECT_TRACK", {
+    trackId: trackOrder.value[willNextSelectedTrackIndex],
+  });
+};
+
+const deleteTrack = async () => {
+  // このトラックが選択中の場合は別のトラックを選択する
+  let willNextSelectedTrackIndex: number | undefined = undefined;
+  if (selectedTrackId.value === props.trackId) {
+    willNextSelectedTrackIndex =
+      trackOrder.value.indexOf(selectedTrackId.value) - 1;
+    if (willNextSelectedTrackIndex < 0) {
+      willNextSelectedTrackIndex = 0;
+    }
+  }
+  await store.dispatch("COMMAND_DELETE_TRACK", { trackId: props.trackId });
+  if (willNextSelectedTrackIndex != undefined) {
+    await store.dispatch("SELECT_TRACK", {
+      trackId: trackOrder.value[willNextSelectedTrackIndex],
+    });
+  }
 };
 
 const singerName = computed(() => {

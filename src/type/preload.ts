@@ -572,7 +572,6 @@ export const experimentalSettingSchema = z.object({
   enableMorphing: z.boolean().default(false),
   enableMultiSelect: z.boolean().default(false),
   shouldKeepTuningOnTextChange: z.boolean().default(false),
-  enablePitchEditInSongEditor: z.boolean().default(false),
   enableMultiTrack: z.boolean().default(false),
 });
 
@@ -604,8 +603,7 @@ export const rootMiscSettingSchema = z.object({
   enableMemoNotation: z.boolean().default(false), // メモ記法を有効にするか
   enableRubyNotation: z.boolean().default(false), // ルビ記法を有効にするか
   skipUpdateVersion: z.string().optional(), // アップデートをスキップしたバージョン
-  // ソングエディタでのトラック操作をUndo可能にするか
-  songUndoableTrackOptions: z
+  undoableTrackOperations: z // ソングエディタでどのトラック操作をUndo可能にするか
     .object({
       soloAndMute: z.boolean().default(true),
       panAndGain: z.boolean().default(true),

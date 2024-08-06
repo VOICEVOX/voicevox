@@ -4,24 +4,44 @@
       トラック一覧
       <QSpace />
       <QBtn
+        v-show="tracks.size > 1"
+        color="default"
+        icon="delete_outline"
         rounded
-        unelevated
-        size="0.75rem"
-        padding="xs sm"
+        outline
+        dense
+        size="sm"
         :disable="uiLocked"
-        @click="addTrack"
-      >
-        追加
-      </QBtn>
-      <QBtn
-        rounded
-        unelevated
-        size="0.75rem"
-        padding="xs sm"
-        :disable="uiLocked || tracks.size === 1"
+        class="track-list-button"
         @click="deleteTrack"
       >
-        削除
+        <QTooltip :delay="500">トラックを削除</QTooltip>
+      </QBtn>
+      <QBtn
+        color="default"
+        icon="add"
+        rounded
+        outline
+        dense
+        size="sm"
+        :disable="uiLocked"
+        class="track-list-button"
+        @click="addTrack"
+      >
+        <QTooltip :delay="500">トラックを追加</QTooltip>
+      </QBtn>
+      <QBtn
+        color="default"
+        icon="headset_off"
+        rounded
+        outline
+        dense
+        size="sm"
+        :disable="uiLocked || !isThereSoloTrack"
+        class="track-list-button"
+        @click="unsoloAllTracks"
+      >
+        <QTooltip :delay="500">すべてのソロを解除</QTooltip>
       </QBtn>
     </div>
     <Draggable
@@ -37,21 +57,7 @@
         <TrackItem :trackId draggableClass="track-handle" />
       </template>
     </Draggable>
-    <div class="tracks-footer">
-      <QBtn
-        color="default"
-        icon="headset_off"
-        rounded
-        outline
-        dense
-        size="sm"
-        :disable="uiLocked || !isThereSoloTrack"
-        class="track-list-button"
-        @click="unsoloAllTracks"
-      >
-        <QTooltip :delay="500">ソロを解除</QTooltip>
-      </QBtn>
-    </div>
+    <div class="tracks-footer"></div>
   </div>
 </template>
 <script setup lang="ts">
@@ -80,17 +86,33 @@ const trackOrder = computed(() => store.state.trackOrder);
 const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
 
 const addTrack = async () => {
-  store.dispatch("COMMAND_ADD_TRACK");
+  const willNextSelectedTrackIndex =
+    trackOrder.value.indexOf(selectedTrackId.value) + 1;
+  await store.dispatch("COMMAND_INSERT_EMPTY_TRACK", {
+    prevTrackId: selectedTrackId.value,
+  });
+  await store.dispatch("SELECT_TRACK", {
+    trackId: trackOrder.value[willNextSelectedTrackIndex],
+  });
 };
-const deleteTrack = () => {
+const deleteTrack = async () => {
   if (tracks.value.size === 1) return;
-  store.dispatch("COMMAND_DELETE_TRACK", {
+
+  let willNextSelectedTrackIndex =
+    trackOrder.value.indexOf(selectedTrackId.value) - 1;
+  if (willNextSelectedTrackIndex < 0) {
+    willNextSelectedTrackIndex = 0;
+  }
+  await store.dispatch("COMMAND_DELETE_TRACK", {
     trackId: selectedTrackId.value,
+  });
+  await store.dispatch("SELECT_TRACK", {
+    trackId: trackOrder.value[willNextSelectedTrackIndex],
   });
 };
 
 const unsoloAllTracks = () => {
-  if (store.state.songUndoableTrackOptions.soloAndMute) {
+  if (store.state.undoableTrackOperations.soloAndMute) {
     store.dispatch("COMMAND_UNSOLO_ALL_TRACKS");
   } else {
     store.dispatch("UNSOLO_ALL_TRACKS");
@@ -123,23 +145,17 @@ const reorderTracks = (trackOrder: TrackId[]) => {
   overflow-y: scroll;
 }
 
-.tracks-header,
-.tracks-footer {
+.tracks-header {
   display: flex;
   background: colors.$background;
   align-items: center;
-}
-.tracks-header {
+  gap: 0.25rem;
+
   border-bottom: 1px solid colors.$sequencer-sub-divider;
 
   padding: 0.5rem;
   padding-left: 1rem;
-}
-.tracks-footer {
-  border-top: 1px solid colors.$sequencer-sub-divider;
-  justify-content: end;
-
-  padding: 0.5rem 1.25rem;
+  padding-right: 1.25rem;
 }
 
 .track-list-button {
