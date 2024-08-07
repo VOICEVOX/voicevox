@@ -53,8 +53,6 @@ defineProps<{
   border: 1px solid colors.$border;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   user-select: none;
-  transform-origin: var(--radix-tooltip-content-transform-origin);
-  will-change: transform, opacity;
 }
 
 .v-enter-active,
