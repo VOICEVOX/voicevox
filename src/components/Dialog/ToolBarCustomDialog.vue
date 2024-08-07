@@ -86,7 +86,6 @@
                     @click="toggleToolbarButtons(key)"
                   >
                     <BaseSwitch
-                      :id="key"
                       :checked="toolbarButtons.includes(key)"
                       onLabel="表示する"
                       offLabel="表示しない"

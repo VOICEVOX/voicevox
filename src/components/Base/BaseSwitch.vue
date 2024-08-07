@@ -11,7 +11,7 @@
 import { SwitchRoot, SwitchThumb } from "radix-vue";
 
 defineProps<{
-  id: string;
+  id?: string;
   offLabel?: string;
   onLabel?: string;
 }>();
