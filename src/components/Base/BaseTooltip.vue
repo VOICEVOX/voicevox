@@ -69,8 +69,7 @@ defineProps<{
 
 :deep(.TooltipArrow) {
   fill: colors.$background;
-  stroke: colors.$border;
-  paint-order: stroke;
-  stroke-width: 2px;
+  margin-top: -1px;
+  filter: drop-shadow(0 1px 0px colors.$border);
 }
 </style>
