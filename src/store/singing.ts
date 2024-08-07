@@ -258,6 +258,11 @@ const singingVoiceCache = new Map<SingingVoiceSourceHash, SingingVoice>();
 
 const initialTrackId = TrackId(crypto.randomUUID());
 
+/**
+ * シーケンスの音源の出力を取得する。
+ * @param sequence シーケンス
+ * @returns シーケンスの音源の出力
+ */
 const getOutputOfAudioSource = (sequence: Sequence) => {
   if (sequence.type === "note") {
     return sequence.instrument.output;
@@ -268,6 +273,12 @@ const getOutputOfAudioSource = (sequence: Sequence) => {
   }
 };
 
+/**
+ * シーケンスを登録する。
+ * ChannelStripが存在する場合は、ChannelStripにシーケンスを接続する。
+ * @param sequenceId シーケンスID
+ * @param sequence トラックIDを持つシーケンス
+ */
 const registerSequence = (
   sequenceId: SequenceId,
   sequence: Sequence & { trackId: TrackId },
@@ -290,6 +301,11 @@ const registerSequence = (
   }
 };
 
+/**
+ * シーケンスを削除する。
+ * ChannelStripが存在する場合は、ChannelStripとシーケンスの接続を解除する。
+ * @param sequenceId シーケンスID
+ */
 const deleteSequence = (sequenceId: SequenceId) => {
   if (transport == undefined) {
     throw new Error("transport is undefined.");
@@ -309,6 +325,12 @@ const deleteSequence = (sequenceId: SequenceId) => {
   }
 };
 
+/**
+ * `tracks`と`trackChannelStrips`を同期する。
+ * シーケンスが存在する場合は、ChannelStripとシーケンスの接続・接続の解除を行う。
+ * @param tracks `state`の`tracks`
+ * @param enableMultiTrack マルチトラックが有効かどうか
+ */
 const syncTracksAndTrackChannelStrips = (
   tracks: Map<TrackId, Track>,
   enableMultiTrack: boolean,
@@ -1594,6 +1616,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const startRenderingRequested = () => state.startRenderingRequested;
       const stopRenderingRequested = () => state.stopRenderingRequested;
 
+      /**
+       * フレーズが持つシーケンスのIDを取得する。
+       * @param phraseKey フレーズのキー
+       * @returns シーケンスID
+       */
       const getPhraseSequenceId = (phraseKey: PhraseSourceHash) => {
         return getOrThrow(state.phrases, phraseKey).sequenceId;
       };
