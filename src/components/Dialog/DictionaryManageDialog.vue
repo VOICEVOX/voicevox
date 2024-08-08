@@ -118,7 +118,7 @@
 
           <!-- 右側のpane -->
           <div
-            v-if="wordEditing"
+            v-show="wordEditing"
             class="col-8 no-wrap text-no-wrap word-editor"
           >
             <div class="row q-pl-md q-mt-md">
