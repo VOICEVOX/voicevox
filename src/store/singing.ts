@@ -21,6 +21,7 @@ import {
   SequencerEditTarget,
   PhraseSourceHash,
   Track,
+  SequenceId,
 } from "./type";
 import { DEFAULT_PROJECT_NAME, sanitizeFileName } from "./utility";
 import {
@@ -40,7 +41,6 @@ import {
   Clipper,
   Limiter,
   NoteEvent,
-  NoteSequence,
   OfflineTransport,
   PolySynth,
   Sequence,
@@ -250,13 +250,146 @@ if (window.AudioContext) {
 
 const playheadPosition = new FrequentlyUpdatedState(0);
 const singingVoices = new Map<SingingVoiceSourceHash, SingingVoice>();
-const sequences = new Map<PhraseSourceHash, Sequence>();
+const sequences = new Map<SequenceId, Sequence & { trackId: TrackId }>();
 const animationTimer = new AnimationTimer();
 
 const singingGuideCache = new Map<SingingGuideSourceHash, SingingGuide>();
 const singingVoiceCache = new Map<SingingVoiceSourceHash, SingingVoice>();
 
 const initialTrackId = TrackId(crypto.randomUUID());
+
+/**
+ * シーケンスの音源の出力を取得する。
+ * @param sequence シーケンス
+ * @returns シーケンスの音源の出力
+ */
+const getOutputOfAudioSource = (sequence: Sequence) => {
+  if (sequence.type === "note") {
+    return sequence.instrument.output;
+  } else if (sequence.type === "audio") {
+    return sequence.audioPlayer.output;
+  } else {
+    throw new Error("Unknown type of sequence.");
+  }
+};
+
+/**
+ * シーケンスを登録する。
+ * ChannelStripが存在する場合は、ChannelStripにシーケンスを接続する。
+ * @param sequenceId シーケンスID
+ * @param sequence トラックIDを持つシーケンス
+ */
+const registerSequence = (
+  sequenceId: SequenceId,
+  sequence: Sequence & { trackId: TrackId },
+) => {
+  if (transport == undefined) {
+    throw new Error("transport is undefined.");
+  }
+  if (sequences.has(sequenceId)) {
+    throw new Error("Sequence already exists.");
+  }
+  sequences.set(sequenceId, sequence);
+
+  // Transportに追加する
+  transport.addSequence(sequence);
+
+  // ChannelStripがある場合は接続する
+  const channelStrip = trackChannelStrips.get(sequence.trackId);
+  if (channelStrip != undefined) {
+    getOutputOfAudioSource(sequence).connect(channelStrip.input);
+  }
+};
+
+/**
+ * シーケンスを削除する。
+ * ChannelStripが存在する場合は、ChannelStripとシーケンスの接続を解除する。
+ * @param sequenceId シーケンスID
+ */
+const deleteSequence = (sequenceId: SequenceId) => {
+  if (transport == undefined) {
+    throw new Error("transport is undefined.");
+  }
+  const sequence = sequences.get(sequenceId);
+  if (sequence == undefined) {
+    throw new Error("Sequence does not exist.");
+  }
+  sequences.delete(sequenceId);
+
+  // Transportから削除する
+  transport.removeSequence(sequence);
+
+  // ChannelStripがある場合は接続を解除する
+  if (trackChannelStrips.has(sequence.trackId)) {
+    getOutputOfAudioSource(sequence).disconnect();
+  }
+};
+
+/**
+ * `tracks`と`trackChannelStrips`を同期する。
+ * シーケンスが存在する場合は、ChannelStripとシーケンスの接続・接続の解除を行う。
+ * @param tracks `state`の`tracks`
+ * @param enableMultiTrack マルチトラックが有効かどうか
+ */
+const syncTracksAndTrackChannelStrips = (
+  tracks: Map<TrackId, Track>,
+  enableMultiTrack: boolean,
+) => {
+  if (audioContext == undefined) {
+    throw new Error("audioContext is undefined.");
+  }
+  if (mainChannelStrip == undefined) {
+    throw new Error("mainChannelStrip is undefined.");
+  }
+
+  const shouldPlays = shouldPlayTracks(tracks);
+  for (const [trackId, track] of tracks) {
+    if (!trackChannelStrips.has(trackId)) {
+      const channelStrip = new ChannelStrip(audioContext);
+      channelStrip.output.connect(mainChannelStrip.input);
+      trackChannelStrips.set(trackId, channelStrip);
+
+      // シーケンスがある場合は、それらを接続する
+      for (const [sequenceId, sequence] of sequences) {
+        if (trackId === sequence.trackId) {
+          const sequence = sequences.get(sequenceId);
+          if (sequence == undefined) {
+            throw new Error("Sequence does not exist.");
+          }
+          getOutputOfAudioSource(sequence).connect(channelStrip.input);
+        }
+      }
+    }
+
+    const channelStrip = getOrThrow(trackChannelStrips, trackId);
+    if (enableMultiTrack) {
+      channelStrip.volume = track.gain;
+      channelStrip.pan = track.pan;
+      channelStrip.mute = !shouldPlays.has(trackId);
+    } else {
+      channelStrip.volume = 1;
+      channelStrip.pan = 0;
+      channelStrip.mute = false;
+    }
+  }
+  for (const [trackId, channelStrip] of trackChannelStrips) {
+    if (!tracks.has(trackId)) {
+      channelStrip.output.disconnect();
+      trackChannelStrips.delete(trackId);
+
+      // シーケンスがある場合は、それらの接続を解除する
+      for (const [sequenceId, sequence] of sequences) {
+        if (trackId === sequence.trackId) {
+          const sequence = sequences.get(sequenceId);
+          if (sequence == undefined) {
+            throw new Error("Sequence does not exist.");
+          }
+          getOutputOfAudioSource(sequence).disconnect();
+        }
+      }
+    }
+  }
+};
 
 /** トラックを取得する。見付からないときはフォールバックとして最初のトラックを返す。 */
 const getSelectedTrackWithFallback = (partialState: {
@@ -520,15 +653,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.timeSignatures = timeSignatures;
     },
     async action(
-      { commit, dispatch },
+      { commit },
       { timeSignatures }: { timeSignatures: TimeSignature[] },
     ) {
       if (!isValidTimeSignatures(timeSignatures)) {
         throw new Error("The time signatures are invalid.");
       }
       commit("SET_TIME_SIGNATURES", { timeSignatures });
-
-      dispatch("RENDER");
     },
   },
 
@@ -792,6 +923,23 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const phrase = getOrThrow(state.phrases, phraseKey);
 
       phrase.singingVoiceKey = singingVoiceKey;
+    },
+  },
+
+  SET_SEQUENCE_ID_TO_PHRASE: {
+    mutation(
+      state,
+      {
+        phraseKey,
+        sequenceId,
+      }: {
+        phraseKey: PhraseSourceHash;
+        sequenceId: SequenceId | undefined;
+      },
+    ) {
+      const phrase = getOrThrow(state.phrases, phraseKey);
+
+      phrase.sequenceId = sequenceId;
     },
   },
 
@@ -1070,6 +1218,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       commit("INSERT_TRACK", { trackId, track, prevTrackId });
 
+      dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
       dispatch("RENDER");
     },
   },
@@ -1085,6 +1234,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       commit("DELETE_TRACK", { trackId });
 
+      dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
       dispatch("RENDER");
     },
   },
@@ -1117,6 +1267,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
       commit("SET_TRACK", { trackId, track });
 
+      dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
       dispatch("RENDER");
     },
   },
@@ -1132,7 +1283,17 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       commit("SET_TRACKS", { tracks });
 
+      dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
       dispatch("RENDER");
+    },
+  },
+
+  SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS: {
+    async action({ state }) {
+      syncTracksAndTrackChannelStrips(
+        state.tracks,
+        state.experimentalSetting.enableMultiTrack,
+      );
     },
   },
 
@@ -1451,32 +1612,24 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         }
       };
 
-      const getAudioSourceNode = (sequence: Sequence) => {
-        if (sequence.type === "note") {
-          return sequence.instrument.output;
-        } else if (sequence.type === "audio") {
-          return sequence.audioPlayer.output;
-        } else {
-          throw new Error("Unknown type of sequence.");
-        }
-      };
-
       // NOTE: 型推論でawaitの前か後かが考慮されないので、関数を介して取得する（型がbooleanになるようにする）
       const startRenderingRequested = () => state.startRenderingRequested;
       const stopRenderingRequested = () => state.stopRenderingRequested;
+
+      /**
+       * フレーズが持つシーケンスのIDを取得する。
+       * @param phraseKey フレーズのキー
+       * @returns シーケンスID
+       */
+      const getPhraseSequenceId = (phraseKey: PhraseSourceHash) => {
+        return getOrThrow(state.phrases, phraseKey).sequenceId;
+      };
 
       const render = async () => {
         if (!audioContext) {
           throw new Error("audioContext is undefined.");
         }
-        if (!transport) {
-          throw new Error("transport is undefined.");
-        }
-        if (!mainChannelStrip) {
-          throw new Error("channelStrip is undefined.");
-        }
         const audioContextRef = audioContext;
-        const transportRef = transport;
 
         // レンダリング中に変更される可能性のあるデータをコピーする
         const tracks = cloneWithUnwrapProxy(state.tracks);
@@ -1487,40 +1640,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             getters.OVERLAPPING_NOTE_IDS(trackId),
           ]),
         );
-
-        // trackChannelStripsを同期する。
-        // ここで更新されたChannelStripに既存のAudioPlayerなどを繋げる必要がある。
-        // そのため、Phraseが変わっていなくてもPhraseの更新=AudioPlayerなどの再接続は毎回行う必要がある。
-        // trackChannelStripsを同期した後、フレーズの更新が完了するまではreturnやthrowをしないこと。
-        // TODO: 良い設計を考える
-        // ref: https://github.com/VOICEVOX/voicevox/pull/2176#discussion_r1693991784
-
-        const shouldPlays = shouldPlayTracks(tracks);
-        for (const [trackId, track] of tracks) {
-          if (!trackChannelStrips.has(trackId)) {
-            const channelStrip = new ChannelStrip(audioContext);
-            channelStrip.output.connect(mainChannelStrip.input);
-            trackChannelStrips.set(trackId, channelStrip);
-          }
-
-          const channelStrip = getOrThrow(trackChannelStrips, trackId);
-          channelStrip.volume = state.experimentalSetting.enableMultiTrack
-            ? track.gain
-            : 1;
-          channelStrip.pan = state.experimentalSetting.enableMultiTrack
-            ? track.pan
-            : 0;
-          channelStrip.mute = state.experimentalSetting.enableMultiTrack
-            ? !shouldPlays.has(trackId)
-            : false;
-        }
-        for (const trackId of trackChannelStrips.keys()) {
-          if (!tracks.has(trackId)) {
-            const channelStrip = getOrThrow(trackChannelStrips, trackId);
-            channelStrip.output.disconnect();
-            trackChannelStrips.delete(trackId);
-          }
-        }
 
         const singerAndFrameRates = new Map(
           [...tracks].map(([trackId, track]) => [
@@ -1657,13 +1776,15 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           }
         }
 
-        // 無くなったフレーズの音源とシーケンスの接続を解除して削除する
+        // 無くなったフレーズのシーケンスを削除する
         for (const phraseKey of disappearedPhraseKeys) {
-          const sequence = sequences.get(phraseKey);
-          if (sequence) {
-            getAudioSourceNode(sequence).disconnect();
-            transportRef.removeSequence(sequence);
-            sequences.delete(phraseKey);
+          const phraseSequenceId = getPhraseSequenceId(phraseKey);
+          if (phraseSequenceId != undefined) {
+            deleteSequence(phraseSequenceId);
+            commit("SET_SEQUENCE_ID_TO_PHRASE", {
+              phraseKey,
+              sequenceId: undefined,
+            });
           }
         }
 
@@ -1705,31 +1826,30 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           }),
         );
         for (const [phraseKey, phrase] of phrasesToBeRendered) {
-          // シーケンスが存在する場合、シーケンスの接続を解除して削除する
+          // シーケンスが存在する場合は、シーケンスを削除する
           // TODO: ピッチを編集したときは行わないようにする
 
-          const sequence = sequences.get(phraseKey);
-          if (sequence) {
-            getAudioSourceNode(sequence).disconnect();
-            transportRef.removeSequence(sequence);
-            sequences.delete(phraseKey);
+          const phraseSequenceId = getPhraseSequenceId(phraseKey);
+          if (phraseSequenceId != undefined) {
+            deleteSequence(phraseSequenceId);
+            commit("SET_SEQUENCE_ID_TO_PHRASE", {
+              phraseKey,
+              sequenceId: undefined,
+            });
           }
 
-          // シーケンスが存在しない場合、ノートシーケンスを作成してプレビュー音が鳴るようにする
+          // ノートシーケンスを作成して登録し、プレビュー音が鳴るようにする
 
-          if (!sequences.has(phraseKey)) {
-            const noteEvents = generateNoteEvents(phrase.notes, tempos, tpqn);
-            const polySynth = new PolySynth(audioContextRef);
-            const noteSequence: NoteSequence = {
-              type: "note",
-              instrument: polySynth,
-              noteEvents,
-            };
-            const channelStrip = getOrThrow(trackChannelStrips, phrase.trackId);
-            polySynth.output.connect(channelStrip.input);
-            transportRef.addSequence(noteSequence);
-            sequences.set(phraseKey, noteSequence);
-          }
+          const noteEvents = generateNoteEvents(phrase.notes, tempos, tpqn);
+          const polySynth = new PolySynth(audioContextRef);
+          const sequenceId = SequenceId(uuid4());
+          registerSequence(sequenceId, {
+            type: "note",
+            instrument: polySynth,
+            noteEvents,
+            trackId: phrase.trackId,
+          });
+          commit("SET_SEQUENCE_ID_TO_PHRASE", { phraseKey, sequenceId });
         }
         while (phrasesToBeRendered.size > 0) {
           if (startRenderingRequested() || stopRenderingRequested()) {
@@ -1908,16 +2028,18 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               singingVoiceKey,
             });
 
-            // シーケンスが存在する場合、シーケンスの接続を解除して削除する
+            // シーケンスが存在する場合、シーケンスを削除する
 
-            const sequence = sequences.get(phraseKey);
-            if (sequence) {
-              getAudioSourceNode(sequence).disconnect();
-              transportRef.removeSequence(sequence);
-              sequences.delete(phraseKey);
+            const phraseSequenceId = getPhraseSequenceId(phraseKey);
+            if (phraseSequenceId != undefined) {
+              deleteSequence(phraseSequenceId);
+              commit("SET_SEQUENCE_ID_TO_PHRASE", {
+                phraseKey,
+                sequenceId: undefined,
+              });
             }
 
-            // オーディオシーケンスを作成して接続する
+            // オーディオシーケンスを作成して登録する
 
             const audioEvents = await generateAudioEvents(
               audioContextRef,
@@ -1925,15 +2047,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               singingVoice.blob,
             );
             const audioPlayer = new AudioPlayer(audioContext);
-            const audioSequence: AudioSequence = {
+            const sequenceId = SequenceId(uuid4());
+            registerSequence(sequenceId, {
               type: "audio",
               audioPlayer,
               audioEvents,
-            };
-            const channelStrip = getOrThrow(trackChannelStrips, phrase.trackId);
-            audioPlayer.output.connect(channelStrip.input);
-            transportRef.addSequence(audioSequence);
-            sequences.set(phraseKey, audioSequence);
+              trackId: phrase.trackId,
+            });
+            commit("SET_SEQUENCE_ID_TO_PHRASE", { phraseKey, sequenceId });
 
             commit("SET_STATE_TO_PHRASE", {
               phraseKey,
@@ -2301,7 +2422,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     action({ commit, dispatch }, { trackId, mute }) {
       commit("SET_TRACK_MUTE", { trackId, mute });
 
-      dispatch("RENDER");
+      dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
     },
   },
 
@@ -2313,7 +2434,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     action({ commit, dispatch }, { trackId, solo }) {
       commit("SET_TRACK_SOLO", { trackId, solo });
 
-      dispatch("RENDER");
+      dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
     },
   },
 
@@ -2325,7 +2446,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     action({ commit, dispatch }, { trackId, gain }) {
       commit("SET_TRACK_GAIN", { trackId, gain });
 
-      dispatch("RENDER");
+      dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
     },
   },
 
@@ -2337,7 +2458,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     action({ commit, dispatch }, { trackId, pan }) {
       commit("SET_TRACK_PAN", { trackId, pan });
 
-      dispatch("RENDER");
+      dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
     },
   },
 
@@ -2365,8 +2486,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         track.solo = false;
       }
     },
-    action({ commit }) {
+    action({ commit, dispatch }) {
       commit("UNSOLO_ALL_TRACKS");
+
+      dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
+      dispatch("RENDER");
     },
   },
 
@@ -2658,6 +2782,9 @@ export const singingCommandStore = transformCommandStore(
           track: cloneWithUnwrapProxy(track),
           prevTrackId,
         });
+
+        dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
+        dispatch("RENDER");
       },
     },
 
@@ -2668,6 +2795,7 @@ export const singingCommandStore = transformCommandStore(
       action({ commit, dispatch }, { trackId }) {
         commit("COMMAND_DELETE_TRACK", { trackId });
 
+        dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
         dispatch("RENDER");
       },
     },
@@ -2688,7 +2816,7 @@ export const singingCommandStore = transformCommandStore(
       action({ commit, dispatch }, { trackId, mute }) {
         commit("COMMAND_SET_TRACK_MUTE", { trackId, mute });
 
-        dispatch("RENDER");
+        dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
       },
     },
 
@@ -2699,7 +2827,7 @@ export const singingCommandStore = transformCommandStore(
       action({ commit, dispatch }, { trackId, solo }) {
         commit("COMMAND_SET_TRACK_SOLO", { trackId, solo });
 
-        dispatch("RENDER");
+        dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
       },
     },
 
@@ -2710,7 +2838,7 @@ export const singingCommandStore = transformCommandStore(
       action({ commit, dispatch }, { trackId, gain }) {
         commit("COMMAND_SET_TRACK_GAIN", { trackId, gain });
 
-        dispatch("RENDER");
+        dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
       },
     },
 
@@ -2721,7 +2849,7 @@ export const singingCommandStore = transformCommandStore(
       action({ commit, dispatch }, { trackId, pan }) {
         commit("COMMAND_SET_TRACK_PAN", { trackId, pan });
 
-        dispatch("RENDER");
+        dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
       },
     },
 
@@ -2738,8 +2866,11 @@ export const singingCommandStore = transformCommandStore(
       mutation(draft) {
         singingStore.mutations.UNSOLO_ALL_TRACKS(draft, undefined);
       },
-      action({ commit }) {
+      action({ commit, dispatch }) {
         commit("COMMAND_UNSOLO_ALL_TRACKS");
+
+        dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
+        dispatch("RENDER");
       },
     },
 
@@ -2807,6 +2938,7 @@ export const singingCommandStore = transformCommandStore(
           tracks: payload,
         });
 
+        dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
         dispatch("RENDER");
       },
     },
@@ -2857,6 +2989,7 @@ export const singingCommandStore = transformCommandStore(
             tracks: filteredTracks,
           });
 
+          dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
           dispatch("RENDER");
         },
       ),
@@ -2896,6 +3029,7 @@ export const singingCommandStore = transformCommandStore(
             tracks: filteredTracks,
           });
 
+          dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
           dispatch("RENDER");
         },
       ),
