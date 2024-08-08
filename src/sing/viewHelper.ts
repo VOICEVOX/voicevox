@@ -149,3 +149,16 @@ export function getButton(event: MouseEvent): MouseButton {
     return "OTHER_BUTTON";
   }
 }
+
+export const getXInBorderBox = (clientX: number, element: HTMLElement) => {
+  return clientX - element.getBoundingClientRect().left;
+};
+
+export const getYInBorderBox = (clientY: number, element: HTMLElement) => {
+  return clientY - element.getBoundingClientRect().top;
+};
+
+/** 直接イベントが来ているかどうか */
+export const isSelfEventTarget = (event: UIEvent) => {
+  return event.target === event.currentTarget;
+};
