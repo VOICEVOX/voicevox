@@ -26,6 +26,13 @@ export function useColorScheme() {
     return store.state.colorSchemeSetting.isDarkMode || false;
   });
 
+  const setDarkMode = (mode: boolean = false): void => {
+    store.dispatch("SET_THEME_SETTING", {
+      currentTheme: mode ? "Default" : "Dark",
+    });
+    store.dispatch("INITIALIZE_COLOR_SCHEME");
+  };
+
   const setColorScheme = async (colorScheme: ColorScheme): Promise<void> => {
     await store.dispatch("SET_COLOR_SCHEME", {
       colorScheme,
@@ -145,5 +152,6 @@ export function useColorScheme() {
     removeCustomColor,
     getColorFromRole,
     initializeColorScheme,
+    setDarkMode,
   };
 }

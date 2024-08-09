@@ -33,8 +33,20 @@ export const generateColorSchemeFromConfig = (
   DEFINED_REF_COLOR_ROLES.forEach(({ name, role, lightShade, darkShade }) => {
     const sourceColor = getColorForRole(config, role);
     roles[name] = {
-      lightShade: algorithm(config, sourceColor, role, lightShade),
-      darkShade: algorithm(config, sourceColor, role, darkShade),
+      lightShade: algorithm(
+        config,
+        sourceColor,
+        role,
+        lightShade,
+        config.passthrough,
+      ),
+      darkShade: algorithm(
+        config,
+        sourceColor,
+        role,
+        darkShade,
+        config.passthrough,
+      ),
     };
     if (!palettes[role]) {
       palettes[role] = generatePalette(sourceColor, role, algorithm, config);
@@ -52,8 +64,20 @@ export const generateColorSchemeFromConfig = (
             customColor.name.slice(1);
         const roleName = name.replace(/\${customColorName}/g, roleStr);
         roles[roleName] = {
-          lightShade: algorithm(config, sourceColor, role, lightShade),
-          darkShade: algorithm(config, sourceColor, role, darkShade),
+          lightShade: algorithm(
+            config,
+            sourceColor,
+            role,
+            lightShade,
+            config.passthrough,
+          ),
+          darkShade: algorithm(
+            config,
+            sourceColor,
+            role,
+            darkShade,
+            config.passthrough,
+          ),
         };
       });
       palettes[customColor.name] = generatePalette(
@@ -74,12 +98,14 @@ export const generateColorSchemeFromConfig = (
         sourceColor,
         aliasColor.role,
         aliasColor.lightShade,
+        config.passthrough,
       ),
       darkShade: algorithm(
         config,
         sourceColor,
         aliasColor.role,
         aliasColor.darkShade,
+        config.passthrough,
       ),
     };
   });

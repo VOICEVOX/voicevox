@@ -53,6 +53,7 @@ export interface ColorSchemeConfig {
   aliasColors?: AliasColorConfig[];
   algorithmName?: string;
   contrastPairs?: ColorContrastPair[];
+  passthrough?: boolean;
 }
 
 // カラースキーム
@@ -70,6 +71,7 @@ export type ColorAlgorithm = (
   sourceColor: OklchColor,
   targetRole: ColorRole | string,
   shade: number,
+  passthrough?: boolean,
 ) => OklchColor;
 
 // コントラストチェック用ペア

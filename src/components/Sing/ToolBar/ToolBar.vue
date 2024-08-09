@@ -14,6 +14,7 @@
       <div class="sing-adjustment">
         <QInput
           type="number"
+          dense
           :modelValue="keyRangeAdjustmentInputBuffer"
           label="音域"
           hideBottomSpace
@@ -24,6 +25,7 @@
         />
         <QInput
           type="number"
+          dense
           :modelValue="volumeRangeAdjustmentInputBuffer"
           label="声量"
           hideBottomSpace
@@ -36,6 +38,7 @@
       <QInput
         type="number"
         :modelValue="bpmInputBuffer"
+        dense
         hideBottomSpace
         outlined
         unelevated
@@ -47,6 +50,7 @@
       />
       <QField
         hideBottomSpace
+        dense
         class="sing-time-signature-field"
         label="拍子"
         stackLabel
@@ -59,6 +63,7 @@
               :options="beatsOptions"
               hideBottomSpace
               hideDropdownIcon
+              dense
               userInputs
               unelevated
               optionsDense
@@ -73,6 +78,7 @@
               :options="beatTypeOptions"
               hideBottomSpace
               hideDropdownIcon
+              dense
               userInputs
               unelevated
               optionsDense
@@ -139,10 +145,11 @@
         <QIcon name="redo" size="24px" />
       </QBtn>
       <QIcon name="volume_up" size="xs" class="sing-volume-icon" />
-      <QSlider v-model.number="volume" class="sing-volume" />
+      <QSlider v-model.number="volume" trackSize="2px" class="sing-volume" />
       <QSelect
         v-model="snapTypeSelectModel"
         :options="snapTypeSelectOptions"
+        dense
         outlined
         hideBottomSpace
         optionsDense
@@ -487,7 +494,7 @@ onUnmounted(() => {
 :deep(.q-field__native) {
   color: var(--scheme-color-on-surface);
   text-align: center;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 500;
 }
 
@@ -496,9 +503,14 @@ onUnmounted(() => {
   border: 1px solid var(--scheme-color-outline-variant);
 }
 
+:deep(.q-field--outlined .q-field__control) {
+  padding-right: 8px;
+  padding-left: 8px;
+}
+
 // ラベルのフォントサイズを小さくする()
 :deep(.q-input .q-field__label, .q-select .q-field__label) {
-  font-size: 14px;
+  font-size: 12px;
   color: var(--scheme-color-on-surface-variant);
 }
 
@@ -546,8 +558,9 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   min-height: 64px;
-  padding: 0 4px 0 4px;
+  padding: 8px 8px 8px 0;
   width: 100%;
+  letter-spacing: 0.01em;
 }
 
 .sing-configs {
@@ -564,7 +577,7 @@ onUnmounted(() => {
 }
 
 .sing-adjustment {
-  height: 56px;
+  height: 40px;
   border: 1px solid var(--scheme-color-outline-variant);
   border-left: 0;
   border-radius: 0 4px 4px 0;
@@ -578,8 +591,7 @@ onUnmounted(() => {
   width: 40px;
 
   :deep(.q-field__control) {
-    padding: 0 2px;
-    height: 56px;
+    height: 40px;
 
     &:before {
       border: 1px solid transparent;
@@ -597,7 +609,7 @@ onUnmounted(() => {
 
   :deep(.q-field__control) {
     padding: 0 2px;
-    height: 56px;
+    height: 40px;
 
     &:before {
       border: 1px solid transparent;
@@ -613,28 +625,21 @@ onUnmounted(() => {
 .sing-tempo {
   margin-left: 16px;
   margin-right: 4px;
-  width: 72px;
-}
-
-.sing-tempo-icon {
-  padding-right: 0px;
-  position: relative;
-  top: 4px;
-  left: 0;
+  width: 60px;
 }
 
 .sing-time-signature-field {
-  height: 56px;
+  height: 40px;
 
   :deep(.q-field__control) {
-    height: 56px;
-    padding: 0 4px;
+    height: 40px;
+    padding: 0 2px;
   }
 
   :deep(.q-field__label) {
-    font-size: 10px;
-    top: 7px;
-    margin-left: 8px;
+    font-size: 9px;
+    top: 2px;
+    margin-left: 6px;
     transform: translateY(0) !important;
     color: var(--scheme-color-on-surface-variant);
     opacity: 0.9;
@@ -655,21 +660,21 @@ onUnmounted(() => {
 
 .sing-time-signature.beats {
   :deep(.q-field__control) {
-    padding: 0 4px 0 12px;
+    padding: 0 4px 0 8px;
   }
 }
 
 .sing-time-signature.beat-type {
   :deep(.q-field__control) {
-    padding: 0 12px 0 4px;
+    padding: 0 8px 0 4px;
   }
 }
 
 .sing-beats {
   display: flex;
   align-items: center;
-  height: 56px;
-  margin-top: -24px;
+  height: 40px;
+  margin-top: -14px;
 
   &:deep(.q-field__control:before) {
     border: 1px solid transparent;
@@ -689,7 +694,7 @@ onUnmounted(() => {
   font-weight: 500;
   color: var(--scheme-color-on-surface-variant);
   pointer-events: none;
-  transform: translateY(8px);
+  transform: translateY(6px);
   opacity: 0.56;
 }
 
@@ -767,28 +772,30 @@ onUnmounted(() => {
   width: 72px;
 
   :deep(.q-slider__track) {
-    background: var(--scheme-color-surface-container);
-    color: var(--scheme-color-secondary-fixed);
+    background: var(--scheme-color-outline-variant);
+    color: var(--scheme-color-secondary);
   }
 
   :deep(.q-slider__thumb) {
-    color: var(--scheme-color-secondary-fixed);
+    color: var(--scheme-color-secondary);
   }
 
   &:hover {
     :deep(.q-slider__track) {
-      color: var(--scheme-color-primary-fixed-dim);
+      color: var(--scheme-color-primary);
     }
     :deep(.q-slider__thumb) {
-      color: var(--scheme-color-primary-fixed-dim);
+      color: var(--scheme-color-primary);
     }
   }
 }
 
 .sing-snap {
-  min-width: 80px;
+  min-width: 72px;
+  height: 40px;
 
   &:deep(.q-field__control:before) {
+    height: 40px;
     border: 1px solid var(--scheme-color-outline-variant);
   }
 
@@ -797,7 +804,7 @@ onUnmounted(() => {
   }
 
   :deep(.q-field__label) {
-    font-size: 14px;
+    font-size: 12px;
     color: var(--scheme-color-on-surface-variant);
   }
 }

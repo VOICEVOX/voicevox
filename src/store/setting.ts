@@ -258,6 +258,8 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         return value.name == currentTheme;
       });
 
+      console.log(theme);
+
       if (theme == undefined) {
         throw Error("Theme not found");
       }

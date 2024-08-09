@@ -57,16 +57,23 @@ const width = computed(() => {
   position: absolute;
   top: 0;
   left: 0;
-  pointer-events: none;
+  //pointer-events: none;
+
+  &:hover {
+    .shadow-line {
+      opacity: 0.5;
+    }
+  }
 
   .shadow-line {
+    border-radius: 1px;
     position: absolute;
     top: 50%;
     left: 0;
     width: 100%;
     height: 2px;
     transform: translateY(-50%);
-    background-color: var(--scheme-color-sing-grid-octave-line);
+    background-color: var(--scheme-color-sing-shadow-note);
   }
 }
 </style>

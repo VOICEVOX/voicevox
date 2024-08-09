@@ -111,25 +111,26 @@ watch(
 
 .lyric-input-container {
   position: absolute;
-  top: 0;
-  width: auto;
+  top: -2px;
+  left: -2px;
 }
 
 .lyric-input {
+  display: inline-block;
   font-weight: 500;
   font-size: 16px;
-  background-color: oklch(from var(--scheme-color-background) l c h / 0.92);
-  backdrop-filter: blur(2px);
-  color: var(--scheme-color-on-surface);
-  border: 1px solid var(--scheme-color-primary);
-  outline: 2px solid oklch(from var(--scheme-color-primary) l c h / 0.92);
-  border-radius: 4px;
-  border: 0;
-  box-shadow:
-    0 4px 6px oklch(from var(--scheme-color-scrim) l c h / 0.1),
-    0 1px 3px oklch(from var(--scheme-color-scrim) l c h / 0.8);
-  padding: 0 4px;
-  width: 7ch;
   box-sizing: border-box;
+  background-color: oklch(from var(--scheme-color-background) l c h / 0.88);
+  backdrop-filter: blur(1px);
+  color: var(--scheme-color-on-surface);
+  outline-offset: 1px;
+  border: 1px solid var(--scheme-color-inverse-surface);
+  box-shadow:
+    oklch(from var(--scheme-color-scrim) l c h / 0.19) 0px 8px 20px,
+    oklch(from var(--scheme-color-scrim) l c h / 0.23) 0px 6px 6px;
+  outline: 0;
+  border-radius: 4px;
+  padding: 0 4px;
+  width: 10ch;
 }
 </style>

@@ -26,6 +26,7 @@ export const LtoLr = (L: number): number => {
  * @param sourceColor : OklchColor - 基準となるOKLCHカラー
  * @param targetRole : ColorRole | string - ターゲットのロール
  * @param shade : number - 明度レベル
+ * @param passthrough : boolean - 適用の可否
  * @returns OklchColor - 生成されたOKLCHカラー
  */
 export const defaultAlgorithm: ColorAlgorithm = (
@@ -33,6 +34,7 @@ export const defaultAlgorithm: ColorAlgorithm = (
   sourceColor: OklchColor,
   targetRole: ColorRole | string,
   shade: number,
+  passthrough: boolean = false,
 ): OklchColor => {
   // 入力値の検証
   if (shade < 0 || shade > 1) {
@@ -45,16 +47,21 @@ export const defaultAlgorithm: ColorAlgorithm = (
   // OKLCHのL値を相対明度Lr値に変換
   const targetL = LtoLr(shade);
 
+  // パススルー
+  if (passthrough) {
+    return [targetL, sourceColor[1], sourceColor[2]];
+  }
+
   // 初期設定
   const [, c, h] = sourceColor;
   let targetC: number;
   let targetH: number;
-  const maxC = 0.3; // 最大chroma
-  const minPrimaryC = 0.11; // 最小プライマリchroma
+  const maxC = 0.2; // 最大chroma
+  const minPrimaryC = 0.085; // 最小プライマリchroma
 
   // プライマリもしくはプライマリ互換カラー
   if (targetRole === "primary") {
-    targetC = Math.min(minPrimaryC, c);
+    targetC = Math.max(c, minPrimaryC);
     targetH = h;
     return [targetL, targetC, targetH];
   }
@@ -77,23 +84,23 @@ export const defaultAlgorithm: ColorAlgorithm = (
   const defaultC = Math.max(c, minPrimaryC);
   switch (targetRole) {
     case "secondary":
-      targetC = defaultC / 3;
+      targetC = Math.max(defaultC / 2, 0.01);
       targetH = h;
       break;
     case "tertiary":
       targetC = defaultC;
-      targetH = (h - 30 + 360) % 360;
+      targetH = (h - 60 + 360) % 360;
       break;
     case "neutral":
       targetC = 0.0;
-      targetH = h;
+      targetH = (h - 90 + 360) % 360;
       break;
     case "neutralVariant":
       targetC = 0.01;
       targetH = h;
       break;
     case "error":
-      targetC = Math.min(defaultC * 1.2, maxC);
+      targetC = Math.min(defaultC, maxC);
       targetH = 30;
       break;
     default:
@@ -110,10 +117,11 @@ export const customAlgorithm: ColorAlgorithm = (
   sourceColor: OklchColor,
   targetRole: ColorRole | string,
   shade: number,
+  passthrough: boolean = false,
 ): OklchColor => {
   // この例では単純化のためdefaultAlgorithmと同じ実装を使用
   // eg: Monochrome / Vibrant...
-  return defaultAlgorithm(config, sourceColor, targetRole, shade);
+  return defaultAlgorithm(config, sourceColor, targetRole, shade, passthrough);
 };
 
 export const algorithms: Record<string, ColorAlgorithm> = {

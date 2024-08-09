@@ -44,16 +44,16 @@ const className = computed(() => {
 }
 
 .waiting-to-be-rendered {
-  background-color: var(--scheme-color-background);
-  background-image: linear-gradient(
-    to right,
-    --scheme-color-primary-fixed-dim,
-    --scheme-color-primary-fixed-dim
+  background-color: color-mix(
+    in oklch,
+    var(--scheme-color-secondary-fixed-dim) 70%,
+    var(--scheme-color-background)
   );
+  /*
   @include tint-if-in-other-track(
     "background-color",
     color-mix(in srgb, colors.$primary 80%, colors.$background)
-  );
+  ); */
 }
 
 .now-rendering {

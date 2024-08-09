@@ -33,15 +33,23 @@
           </SelectContent>
         </SelectPortal>
       </SelectRoot>
-      <div class="switch-root" style="display: none">
-        <label class="switch-label" for="dark-mode">ダークモード</label>
-        <SwitchRoot
+      <div class="checkbox-wrapper">
+        <input
+          id="passthrough"
+          v-model="isPassthroughEnabled"
+          type="checkbox"
+          @change="togglePassthrough"
+        />
+        <label for="passthrough">パススルー</label>
+      </div>
+      <div class="checkbox-wrapper">
+        <input
           id="dark-mode"
-          v-model:checked="isDarkMode"
-          class="switch-root"
-        >
-          <SwitchThumb class="switch-thumb" />
-        </SwitchRoot>
+          v-model="isDarkMode"
+          type="checkbox"
+          @change="toggleDarkMode"
+        />
+        <label for="dark-mode">ダークモード</label>
       </div>
       <button @click="resetCurrentScheme">リセット</button>
       <button
@@ -154,30 +162,21 @@
               </SelectContent>
             </SelectPortal>
           </SelectRoot>
-          <span class="alias-color-value">
-            {{ isDarkMode ? aliasColor.darkShade : aliasColor.lightShade }}
-          </span>
-        </div>
-        <SliderRoot
-          :modelValue="[
-            isDarkMode ? aliasColor.darkShade : aliasColor.lightShade,
-          ]"
-          class="slider-root"
-          :max="1"
-          :step="0.01"
-          @update:modelValue="
-            (value) =>
-              updateAliasColorShade(aliasColor.name, value ? value[0] : 0)
-          "
-        >
-          <SliderTrack class="slider-track">
-            <SliderRange class="slider-range" />
-          </SliderTrack>
-          <SliderThumb
-            :aria-label="aliasColor.displayName"
-            class="slider-thumb"
+          <input
+            type="number"
+            :value="isDarkMode ? aliasColor.darkShade : aliasColor.lightShade"
+            min="0"
+            max="1"
+            step="0.01"
+            @input="
+              (e) =>
+                updateAliasColorShade(
+                  aliasColor.name,
+                  parseFloat((e.target as HTMLInputElement).value),
+                )
+            "
           />
-        </SliderRoot>
+        </div>
         <div
           v-if="aliasColorContrastIssues[aliasColor.name]"
           class="contrast-issues"
@@ -300,12 +299,6 @@ import {
   SelectTrigger,
   SelectValue,
   SelectViewport,
-  SliderRoot,
-  SliderTrack,
-  SliderRange,
-  SliderThumb,
-  SwitchRoot,
-  SwitchThumb,
 } from "radix-vue";
 import { useColorScheme } from "@/composables/useColorScheme";
 import {
@@ -316,11 +309,11 @@ import {
   ColorShades,
 } from "@/sing/colorScheme/types";
 import {
-  cssStringToOklch,
   hexToCssString,
   cssStringToHex,
   oklchToCssString,
 } from "@/sing/colorScheme/util";
+import { LtoLr } from "@/sing/colorScheme/algorithm";
 import {
   DEFINED_ROLES,
   DEFINED_CONTRAST_PAIR,
@@ -338,6 +331,7 @@ const {
   updateColorScheme,
   selectColorScheme,
   setColorSchemeFromConfig,
+  setDarkMode,
 } = useColorScheme();
 
 // state
@@ -347,6 +341,17 @@ const selectedScheme = ref(currentColorScheme.value.name);
 const initialSchemeConfig = ref<ColorSchemeConfig | null>(null);
 // 開閉状態
 const isColorSchemeEditorOpen = ref(true);
+const isPassthroughEnabled = ref(false);
+
+// toggleDarkMode メソッドを追加
+const toggleDarkMode = () => {
+  setDarkMode(isDarkMode.value);
+};
+
+// 新しいメソッドを追加
+const togglePassthrough = () => {
+  updateColorScheme({ passthrough: isPassthroughEnabled.value });
+};
 
 // computed
 // カラースキーム一覧
@@ -366,9 +371,6 @@ const allRoles = computed<string[]>(() => [
   ...(currentColorScheme.value.config.customColors?.map((cc) => cc.name) || []),
 ]);
 
-const customColors = computed(
-  () => currentColorScheme.value.config.customColors || [],
-);
 // const aliasColors = computed(() => currentColorScheme.value.config.aliasColors || []);
 
 // パレットのシェードを明度順にソートしたもの
@@ -383,18 +385,7 @@ const sortedPaletteShades = computed(() => {
 });
 
 // すべてのパレット: デフォルトのパレット + カスタムカラーのパレット
-const allPalettes = computed(() => {
-  const basePalettes = currentColorScheme.value.palettes;
-  const customPalettes = customColors.value.reduce(
-    (acc, customColor) => {
-      acc[customColor.name] = generateCustomPalette(customColor);
-      return acc;
-    },
-    {} as Record<string, { name: string; shades: Record<number, OklchColor> }>,
-  );
-
-  return { ...basePalettes, ...customPalettes };
-});
+const allPalettes = computed(() => currentColorScheme.value.palettes);
 
 // コントラストチェック結果
 const contrastResults = computed(() => {
@@ -670,9 +661,17 @@ const downloadCSSVariables = (options: {
       .join("\n")}\n}`;
   };
 
+  const generateLut = () => {
+    const lrs = [...Array(100).keys()].map((l) => {
+      return LtoLr(l / 100).toFixed(3);
+    });
+    return `:root {\n${lrs.map((lr: string, index: number) => `  --lr-${index}: ${lr};`).join("\n")}\n}`;
+  };
+
   const cssContent = [
     generateThemeBlock("light"),
     generateThemeBlock("dark"),
+    generateLut(),
   ].join("\n\n");
 
   downloadFile(
@@ -710,38 +709,6 @@ const handleDownloadCSSVariables = () => {
     withPalettes: false,
     format: "oklch",
   });
-};
-
-/**
- * カスタムカラーのパレットを生成する
- * @param customColor : CustomColorConfig - カスタムカラー
- * @returns { name: string, shades: Record<number, OklchColor> } - カスタムカラーのパレット
- */
-const generateCustomPalette = (customColor: CustomColorConfig) => {
-  const baseColor = cssStringToOklch(customColor.sourceColor);
-  const shades = sortedPaletteShades.value.reduce(
-    (acc, shade) => {
-      acc[shade] = adjustShade(baseColor, shade);
-      return acc;
-    },
-    {} as Record<number, OklchColor>,
-  );
-
-  return { name: customColor.name, shades };
-};
-
-/**
- * シェードを調整する
- * @param sourceColor : OklchColor - ソースカラー
- * @param shade : number - 0-1
- * @returns OklchColor - 調整されたシェード
- */
-const adjustShade = (sourceColor: OklchColor, shade: number): OklchColor => {
-  const [, c, h] = sourceColor;
-  const newL = shade;
-  const newC = Number(c);
-  const newH = Number(h);
-  return [newL, newC, newH];
 };
 
 // エディタを開く
@@ -791,7 +758,7 @@ onMounted(() => {
 }
 
 .color-scheme-editor.is-closed {
-  transform: translate3d(calc(100% - 48px), 0, 0);
+  transform: translate3d(calc(100% - 24px), 0, 0);
   opacity: 0.8;
   cursor: pointer;
 }

@@ -1,4 +1,4 @@
-import { ColorScheme } from "@/sing/colorScheme/types";
+import { ColorScheme, OklchColor } from "@/sing/colorScheme/types";
 import { oklchToCssString } from "@/sing/colorScheme/util";
 
 /**
@@ -10,10 +10,10 @@ import { oklchToCssString } from "@/sing/colorScheme/util";
 export const cssVariablesFromColorScheme = (
   colorScheme: ColorScheme,
   options: {
-    withRoles?: boolean;
-    withPalette?: boolean;
-    format?: "oklch" | "hex";
-    prefix?: string;
+    withRoles?: boolean; // ロールカラーをCSS変数に含めるか
+    withPalette?: boolean; // パレットをCSS変数に含めるか
+    withFallback?: boolean; // フォールバック値を含めるか
+    prefix?: string; // CSS変数プレフィックス
   } = {},
 ): {
   light: Record<string, string>;
@@ -23,12 +23,20 @@ export const cssVariablesFromColorScheme = (
   const {
     withRoles = true,
     withPalette = false,
-    format = "oklch",
+    withFallback = false,
     prefix = "--scheme-color-",
   } = options;
 
-  const toKebabCase = (str: string) =>
-    str.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
+  const formatColorVariable = (
+    keyName: string,
+    color: OklchColor,
+  ): [string, string] => {
+    const key = `${prefix}${keyName.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase()}`;
+    const oklchValue = oklchToCssString(color, "oklch");
+    const fallbackValue = oklchToCssString(color, "hex");
+    const value = withFallback ? `${oklchValue}, ${fallbackValue}` : oklchValue;
+    return [key, value];
+  };
 
   const light: Record<string, string> = {};
   const dark: Record<string, string> = {};
@@ -37,15 +45,16 @@ export const cssVariablesFromColorScheme = (
   // ロールカラー
   if (withRoles) {
     Object.entries(colorScheme.roles).forEach(([roleName, value]) => {
-      const kebabRoleName = toKebabCase(roleName);
-      light[`${prefix}${kebabRoleName}`] = oklchToCssString(
+      const [lightKey, lightValue] = formatColorVariable(
+        roleName,
         value.lightShade,
-        format,
       );
-      dark[`${prefix}${kebabRoleName}`] = oklchToCssString(
+      const [darkKey, darkValue] = formatColorVariable(
+        roleName,
         value.darkShade,
-        format,
       );
+      light[lightKey] = lightValue;
+      dark[darkKey] = darkValue;
     });
   }
 
@@ -55,8 +64,11 @@ export const cssVariablesFromColorScheme = (
       ([paletteName, paletteValue]) => {
         Object.entries(paletteValue.shades).forEach(([shade, color]) => {
           const shadeName = Math.round(Number(shade) * 100);
-          const key = `${prefix}${toKebabCase(paletteName)}-palette-${shadeName}`;
-          palette[key] = oklchToCssString(color, format);
+          const [key, value] = formatColorVariable(
+            `${paletteName}-palette-${shadeName}`,
+            color,
+          );
+          palette[key] = value;
         });
       },
     );

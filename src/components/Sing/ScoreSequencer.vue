@@ -28,8 +28,6 @@
       @scroll="onScroll"
       @contextmenu.prevent
     >
-      <!-- キャラクター全身 -->
-      <CharacterPortrait />
       <!-- グリッド -->
       <SequencerGrid />
       <div
@@ -40,7 +38,7 @@
           transform: `translateX(${guideLineX}px)`,
         }"
       ></div>
-
+      <CharacterPortrait />
       <!-- undefinedだと警告が出るのでnullを渡す -->
       <!-- TODO: ちゃんとしたトラックIDを渡す -->
       <SequencerShadowNote
@@ -137,6 +135,7 @@
       :max="ZOOM_X_MAX"
       :step="ZOOM_X_STEP"
       class="zoom-x-slider"
+      trackSize="3px"
       @update:modelValue="setZoomX"
     />
     <QSlider
@@ -147,6 +146,7 @@
       vertical
       reverse
       class="zoom-y-slider"
+      trackSize="3px"
       @update:modelValue="setZoomY"
     />
     <ContextMenu
@@ -154,6 +154,7 @@
       ref="contextMenu"
       :menudata="contextMenuData"
     />
+    <div class="character-selecter"></div>
   </div>
 </template>
 
@@ -1530,7 +1531,8 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 .sequencer-corner {
   grid-row: 1;
   grid-column: 1;
-  background: var(--scheme-color-surface-container-highest);
+  background: var(--scheme-color-sing-ruler-surface);
+  border-radius: 4px 0 0 0;
 }
 
 .sequencer-ruler {
@@ -1597,7 +1599,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 .sequencer-guideline {
   position: absolute;
   top: 0;
-  left: 0;
+  left: -0.5px;
   width: 1px;
   background: var(--scheme-color-secondary-container);
   pointer-events: none;
@@ -1650,50 +1652,61 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 .zoom-x-slider {
   position: fixed;
   bottom: 16px;
-  right: 32px;
+  right: 64px;
   width: 80px;
 
   :deep(.q-slider__track) {
-    background: var(--scheme-color-surface-container);
-    color: var(--scheme-color-secondary-fixed);
+    background: var(--scheme-color-outline-variant);
+    color: var(--scheme-color-secondary);
   }
 
   :deep(.q-slider__thumb) {
-    color: var(--scheme-color-secondary-fixed);
+    color: var(--scheme-color-secondary);
   }
 
   &:hover {
     :deep(.q-slider__track) {
-      color: var(--scheme-color-primary-fixed-dim);
+      color: var(--scheme-color-primary);
     }
     :deep(.q-slider__thumb) {
-      color: var(--scheme-color-primary-fixed-dim);
+      color: var(--scheme-color-primary);
     }
   }
 }
 
 .zoom-y-slider {
   position: fixed;
-  bottom: 40px;
+  bottom: 64px;
   right: 16px;
   height: 80px;
 
   :deep(.q-slider__track) {
-    background: var(--scheme-color-surface-container);
-    color: var(--scheme-color-secondary-fixed);
+    background: var(--scheme-color-outline-variant);
+    color: var(--scheme-color-secondary);
   }
 
   :deep(.q-slider__thumb) {
-    color: var(--scheme-color-secondary-fixed);
+    color: var(--scheme-color-secondary);
   }
 
   &:hover {
     :deep(.q-slider__track) {
-      color: var(--scheme-color-primary-fixed-dim);
+      color: var(--scheme-color-primary);
     }
     :deep(.q-slider__thumb) {
-      color: var(--scheme-color-primary-fixed-dim);
+      color: var(--scheme-color-primary);
     }
   }
+}
+
+.character-selecter {
+  background: var(--scheme-color-pink-container);
+  border: 1px solid var(--scheme-color-pink);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
 }
 </style>

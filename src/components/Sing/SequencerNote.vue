@@ -235,14 +235,24 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     position: fixed;
     left: 2px;
     bottom: 0;
-    color: var(--scheme-color-on-secondary-fixed);
+    color: var(--scheme-color-sing-on-note-bar-container);
     font-size: 1rem;
     font-weight: 400;
     letter-spacing: -0.1em;
     white-space: nowrap;
     pointer-events: none;
     background: transparent;
-    transition: font-size 0.2s ease;
+    text-shadow:
+      -1px -1px 0 var(--scheme-color-sing-note-bar-container),
+      1px -1px 0 var(--scheme-color-sing-note-bar-container),
+      -1px 1px 0 var(--scheme-color-sing-note-bar-container),
+      1px 1px 0 var(--scheme-color-sing-note-bar-container),
+      0 -1px 0 var(--scheme-color-sing-note-bar-container),
+      0 1px 0 var(--scheme-color-sing-note-bar-container),
+      -1px 0 0 var(--scheme-color-sing-note-bar-container),
+      1px 0 0 var(--scheme-color-sing-note-bar-container);
+    // アンチエイリアス
+    -webkit-font-smoothing: subpixel-antialiased;
   }
 
   .note-bar {
@@ -251,7 +261,7 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     width: calc(100% + 1px);
     height: 100%;
     background-color: var(--scheme-color-sing-note-bar-container);
-    border: 1px solid var(--scheme-color-secondary-fixed-dim);
+    border: 1px solid var(--scheme-color-sing-note-bar-outline);
     border-radius: 4px;
   }
 
@@ -264,11 +274,6 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     min-width: 4px;
     max-width: 8px;
     height: 100%;
-
-    &:hover {
-      // FIXME: hoverだとカーソル位置によって適用されないので、プレビュー中に明示的にクラス指定する
-      background-color: var(--scheme-color-secondary-fixed-dim);
-    }
   }
 
   .note-right-edge {
@@ -282,39 +287,58 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     height: 100%;
 
     &:hover {
-      // FIXME: hoverだとカーソル位置によって適用されないので、プレビュー中に明示的にクラス指定する
-      background-color: var(--scheme-color-secondary-fixed-dim);
+      background-color: var(--scheme-color-sing-note-bar-outline);
     }
   }
 
   &.selected-or-preview {
     .note-bar {
-      background-color: var(--scheme-color-primary-fixed);
-      border-color: var(--scheme-color-primary-fixed-dim);
+      background-color: var(--scheme-color-sing-note-bar-selected-container);
+      border-color: var(--scheme-color-sing-note-bar-selected-outline);
+      border-width: 1px;
+      outline: 1px solid
+        var(--scheme-color-sing-note-bar-selected-outline-outer);
+      outline-offset: 1px;
     }
 
     .note-lyric {
-      color: var(--scheme-color-on-primary-fixed);
+      color: var(--scheme-color-sing-on-note-bar-selected-container);
+      text-shadow:
+        -1px -1px 0 var(--scheme-color-sing-note-bar-selected-container),
+        1px -1px 0 var(--scheme-color-sing-note-bar-selected-container),
+        -1px 1px 0 var(--scheme-color-sing-note-bar-selected-container),
+        1px 1px 0 var(--scheme-color-sing-note-bar-selected-container),
+        0 -1px 0 var(--scheme-color-sing-note-bar-selected-container),
+        0 1px 0 var(--scheme-color-sing-note-bar-selected-container),
+        -1px 0 0 var(--scheme-color-sing-note-bar-selected-container),
+        1px 0 0 var(--scheme-color-sing-note-bar-selected-container);
     }
 
     .note-right-edge:hover,
     .note-left-edge:hover {
-      background-color: var(--scheme-color-primary-fixed-dim);
+      background-color: var(--scheme-color-sing-note-bar-selected-outline);
     }
   }
 
   &.preview-lyric {
     .note-bar {
-      background-color: oklch(
-        from var(--scheme-color-primary-fixed) l c h / 0.8
-      );
-      outline: 1px solid
-        oklch(from var(--scheme-color-primary-fixed-dim) l c h / 0.56);
+      background-color: var(--scheme-color-sing-note-bar-preview-container);
+      border-color: var(--scheme-color-sing-note-bar-preview-outline);
+      outline: 1px solid var(--scheme-color-sing-note-bar-preview-outline-outer);
       outline-offset: 1px;
     }
 
     .note-lyric {
       opacity: 0.38;
+      text-shadow:
+        -1px -1px 0 var(--scheme-color-sing-note-bar-preview-container),
+        1px -1px 0 var(--scheme-color-sing-note-bar-preview-container),
+        -1px 1px 0 var(--scheme-color-sing-note-bar-preview-container),
+        1px 1px 0 var(--scheme-color-sing-note-bar-preview-container),
+        0 -1px 0 var(--scheme-color-sing-note-bar-preview-container),
+        0 1px 0 var(--scheme-color-sing-note-bar-preview-container),
+        -1px 0 0 var(--scheme-color-sing-note-bar-preview-container),
+        1px 0 0 var(--scheme-color-sing-note-bar-preview-container);
     }
   }
 
@@ -323,6 +347,7 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     .note-bar {
       background-color: var(--scheme-color-surface-variant);
       border-color: var(--scheme-color-error);
+      outline-color: var(--scheme-color-error-container);
     }
 
     .note-right-edge:hover,
@@ -331,15 +356,22 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     }
 
     .note-lyric {
-      color: var(--scheme-color-on-surface-variant);
+      color: var(--scheme-color-on-error-container);
       opacity: 0.38;
       text-shadow: none;
     }
 
-    &.selected-or-preview {
+    &.selected-or-preview,
+    &:active {
       .note-bar {
         background-color: var(--scheme-color-error-container);
         border-color: var(--scheme-color-error);
+        outline-color: var(--scheme-color-error);
+      }
+
+      .note-lyric {
+        color: var(--scheme-color-on-error-container);
+        text-shadow: none;
       }
     }
   }
@@ -348,12 +380,14 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     .note-bar {
       background-color: var(--scheme-color-surface-variant);
       border-color: var(--scheme-color-outline-variant);
-      opacity: 0.38;
+      outline: none;
+      opacity: 0.8;
     }
 
     .note-lyric {
       color: var(--scheme-color-on-surface);
-      opacity: 0.72;
+      opacity: 0.8;
+      text-shadow: none;
     }
 
     .note-right-edge:hover,
@@ -364,8 +398,14 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     &.overlapping,
     &.invalid-phrase {
       .note-bar {
-        background-color: var(--scheme-color-error-container);
+        background: var(--scheme-color-surface-variant);
         border-color: var(--scheme-color-error);
+        outline: none;
+      }
+
+      .note-lyric {
+        color: var(--scheme-color-error);
+        text-shadow: none;
       }
     }
   }

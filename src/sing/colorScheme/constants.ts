@@ -278,31 +278,31 @@ export const DEFINED_REF_COLOR_ROLES: {
   {
     name: "surfaceContainerLowest",
     role: "neutral",
-    lightShade: 1.0,
+    lightShade: 0.88,
     darkShade: 0.04,
   },
   {
     name: "surfaceContainerLow",
     role: "neutral",
-    lightShade: 0.96,
+    lightShade: 0.9,
     darkShade: 0.1,
   },
   {
     name: "surfaceContainer",
     role: "neutral",
-    lightShade: 0.94,
+    lightShade: 0.95,
     darkShade: 0.12,
   },
   {
     name: "surfaceContainerHigh",
     role: "neutral",
-    lightShade: 0.92,
+    lightShade: 0.97,
     darkShade: 0.17,
   },
   {
     name: "surfaceContainerHighest",
     role: "neutral",
-    lightShade: 0.9,
+    lightShade: 1,
     darkShade: 0.22,
   },
 ];

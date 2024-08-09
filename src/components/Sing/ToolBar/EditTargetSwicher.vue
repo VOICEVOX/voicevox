@@ -58,19 +58,20 @@ const handleKeyDown = (event: KeyboardEvent) => {
 
 <style scoped lang="scss">
 .edit-target-switcher {
-  background: var(--scheme-color-surface-container-highest);
-  border-radius: 28px;
-  padding: 4px;
+  height: 40px;
+  background: var(--scheme-color-surface-container-lowest);
+  border-radius: 20px;
+  padding: 2px;
 }
 
 .segment-switch {
   color: var(--scheme-color-on-surface-variant);
-  height: 40px;
-  min-width: 40px;
-  border-radius: 20px !important;
+  height: 36px;
+  min-width: 36px;
+  border-radius: 18px !important;
 
   &.active {
-    background: var(--scheme-color-secondary-container);
+    background: var(--scheme-color-surface-container-highest);
     color: var(--scheme-color-primary);
   }
 }
