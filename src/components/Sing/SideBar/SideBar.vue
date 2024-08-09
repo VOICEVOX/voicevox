@@ -135,8 +135,8 @@ const reorderTracks = (trackOrder: TrackId[]) => {
   background-color: colors.$background;
   display: grid;
   grid-template-rows: auto 1fr auto;
-  border-top: 1px solid colors.$sequencer-sub-divider;
-  border-right: 1px solid colors.$sequencer-main-divider;
+  border-top: 1px solid var(--scheme-color-sing-grid-horizontal-line);
+  border-right: 1px solid var(--scheme-color-sing-grid-measure-line);
 }
 
 .tracks {
@@ -151,7 +151,7 @@ const reorderTracks = (trackOrder: TrackId[]) => {
   align-items: center;
   gap: 0.25rem;
 
-  border-bottom: 1px solid colors.$sequencer-sub-divider;
+  border-bottom: 1px solid var(--scheme-color-outline);
 
   padding: 0.5rem;
   padding-left: 1rem;

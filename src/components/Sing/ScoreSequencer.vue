@@ -28,8 +28,6 @@
       @scroll="onScroll"
       @contextmenu.prevent
     >
-      <!-- キャラクター全身 -->
-      <CharacterPortrait />
       <!-- グリッド -->
       <SequencerGrid />
       <div
@@ -40,7 +38,7 @@
           transform: `translateX(${guideLineX}px)`,
         }"
       ></div>
-
+      <CharacterPortrait />
       <!-- undefinedだと警告が出るのでnullを渡す -->
       <!-- TODO: ちゃんとしたトラックIDを渡す -->
       <SequencerShadowNote
@@ -137,6 +135,7 @@
       :max="ZOOM_X_MAX"
       :step="ZOOM_X_STEP"
       class="zoom-x-slider"
+      trackSize="3px"
       @update:modelValue="setZoomX"
     />
     <QSlider
@@ -147,6 +146,7 @@
       vertical
       reverse
       class="zoom-y-slider"
+      trackSize="3px"
       @update:modelValue="setZoomY"
     />
     <ContextMenu
@@ -154,6 +154,7 @@
       ref="contextMenu"
       :menudata="contextMenuData"
     />
+    <div class="character-selecter"></div>
   </div>
 </template>
 
@@ -1523,16 +1524,15 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 .score-sequencer {
   backface-visibility: hidden;
   display: grid;
-  grid-template-rows: 30px 1fr;
+  grid-template-rows: 40px 1fr;
   grid-template-columns: 48px 1fr;
 }
 
 .sequencer-corner {
   grid-row: 1;
   grid-column: 1;
-  background: colors.$background;
-  border-top: 1px solid colors.$sequencer-sub-divider;
-  border-bottom: 1px solid colors.$sequencer-sub-divider;
+  background: var(--scheme-color-sing-ruler-surface);
+  border-radius: 4px 0 0 0;
 }
 
 .sequencer-ruler {
@@ -1557,12 +1557,51 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   }
 }
 
+.sequencer-grid {
+  display: block;
+  pointer-events: none;
+}
+
+.sequencer-grid-cell {
+  display: block;
+  stroke: var(--scheme-color-surface-variant);
+  stroke-width: 1;
+}
+
+.sequencer-grid-octave-cell {
+  stroke: var(--scheme-color-outline);
+}
+
+.sequencer-grid-octave-line {
+  backface-visibility: hidden;
+  stroke: var(--scheme-color-outline);
+}
+
+.sequencer-grid-cell-white {
+  fill: var(--scheme-color-background);
+}
+
+.sequencer-grid-cell-black {
+  fill: var(--scheme-color-surface-variant);
+}
+
+.sequencer-grid-measure-line {
+  backface-visibility: hidden;
+  stroke: var(--scheme-color-outline);
+}
+
+.sequencer-grid-beat-line {
+  backface-visibility: hidden;
+  stroke: var(--scheme-color-outline);
+  opacity: 0.6;
+}
+
 .sequencer-guideline {
   position: absolute;
   top: 0;
-  left: -1px;
-  width: 2px;
-  background: hsl(130, 35%, 82%);
+  left: -0.5px;
+  width: 1px;
+  background: var(--scheme-color-secondary-container);
   pointer-events: none;
 }
 
@@ -1593,15 +1632,15 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   left: -1px;
   width: 2px;
   height: 100%;
-  background: rgba(colors.$display-rgb, 0.6);
+  background: var(--scheme-color-inverse-surface);
   will-change: transform;
 }
 
 .rect-select-preview {
   pointer-events: none;
   position: absolute;
-  border: 2px solid rgba(colors.$primary-rgb, 0.5);
-  background: rgba(colors.$primary-rgb, 0.25);
+  border: 1px dashed var(--scheme-color-secondary);
+  background: oklch(from var(--scheme-color-secondary) l c h / 0.1);
 }
 
 .cursor-draw {
@@ -1613,14 +1652,61 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 .zoom-x-slider {
   position: fixed;
   bottom: 16px;
-  right: 32px;
+  right: 64px;
   width: 80px;
+
+  :deep(.q-slider__track) {
+    background: var(--scheme-color-outline-variant);
+    color: var(--scheme-color-secondary);
+  }
+
+  :deep(.q-slider__thumb) {
+    color: var(--scheme-color-secondary);
+  }
+
+  &:hover {
+    :deep(.q-slider__track) {
+      color: var(--scheme-color-primary);
+    }
+    :deep(.q-slider__thumb) {
+      color: var(--scheme-color-primary);
+    }
+  }
 }
 
 .zoom-y-slider {
   position: fixed;
-  bottom: 40px;
+  bottom: 64px;
   right: 16px;
   height: 80px;
+
+  :deep(.q-slider__track) {
+    background: var(--scheme-color-outline-variant);
+    color: var(--scheme-color-secondary);
+  }
+
+  :deep(.q-slider__thumb) {
+    color: var(--scheme-color-secondary);
+  }
+
+  &:hover {
+    :deep(.q-slider__track) {
+      color: var(--scheme-color-primary);
+    }
+    :deep(.q-slider__thumb) {
+      color: var(--scheme-color-primary);
+    }
+  }
+}
+
+.character-selecter {
+  background: var(--scheme-color-pink-container);
+  border: 1px solid var(--scheme-color-pink);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
 }
 </style>

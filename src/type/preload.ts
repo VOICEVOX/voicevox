@@ -2,6 +2,7 @@ import { z } from "zod";
 import { IpcSOData } from "./ipc";
 import { AltPortInfos } from "@/store/type";
 import { Result } from "@/type/result";
+import { ColorScheme, ColorSchemeConfig } from "@/sing/colorScheme/types";
 
 export const isProduction = import.meta.env.MODE === "production";
 export const isElectron = import.meta.env.VITE_TARGET === "electron";
@@ -299,6 +300,7 @@ export interface Sandbox {
   uninstallVvppEngine(engineId: EngineId): Promise<boolean>;
   validateEngineDir(engineDir: string): Promise<EngineDirValidationResult>;
   reloadApp(obj: { isMultiEngineOffMode?: boolean }): Promise<void>;
+  getColorSchemeConfigs(): Promise<ColorSchemeConfig[]>;
 }
 
 export type AppInfos = {
@@ -565,6 +567,12 @@ export type ThemeSetting = {
   availableThemes: ThemeConf[];
 };
 
+export type ColorSchemeSetting = {
+  currentColorScheme: ColorScheme;
+  availableColorSchemeConfigs: ColorSchemeConfig[];
+  isDarkMode: boolean;
+};
+
 export const experimentalSettingSchema = z.object({
   enablePreset: z.boolean().default(false),
   shouldApplyDefaultPresetOnVoiceChanged: z.boolean().default(false),
@@ -572,6 +580,8 @@ export const experimentalSettingSchema = z.object({
   enableMorphing: z.boolean().default(false),
   enableMultiSelect: z.boolean().default(false),
   shouldKeepTuningOnTextChange: z.boolean().default(false),
+  enablePitchEditInSongEditor: z.boolean().default(false),
+  enableColorSchemeEditor: z.boolean().default(false),
   enableMultiTrack: z.boolean().default(false),
 });
 

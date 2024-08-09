@@ -307,7 +307,7 @@ const singerName = computed(() => {
 .track-detail-container {
   padding: 0;
 
-  border-bottom: 1px solid colors.$sequencer-sub-divider;
+  border-bottom: 1px solid var(--scheme-color-outline-variant);
 
   // draggingクラスはSideBarのDraggableにより追加/削除される。
   .dragging & {

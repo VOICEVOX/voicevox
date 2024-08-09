@@ -2,6 +2,9 @@ import { Dark, setCssVar, colors } from "quasar";
 import { SettingStoreState, SettingStoreTypes } from "./type";
 import { createDotNotationUILockAction as createUILockAction } from "./ui";
 import { createDotNotationPartialStore as createPartialStore } from "./vuex";
+import { ColorScheme, ColorSchemeConfig } from "@/sing/colorScheme/types";
+import { generateColorSchemeFromConfig } from "@/sing/colorScheme/core";
+import { cssVariablesFromColorScheme } from "@/sing/colorScheme/css";
 import {
   HotkeySettingType,
   SavingSetting,
@@ -13,7 +16,10 @@ import {
   ConfirmedTips,
   RootMiscSettingType,
 } from "@/type/preload";
+import { createLogger } from "@/domain/frontend/log";
 import { IsEqual } from "@/type/utility";
+
+const logger = createLogger("store/setting");
 
 export const settingStoreState: SettingStoreState = {
   savingSetting: {
@@ -36,6 +42,11 @@ export const settingStoreState: SettingStoreState = {
     currentTheme: "Default",
     availableThemes: [],
   },
+  colorSchemeSetting: {
+    currentColorScheme: undefined as unknown as ColorScheme,
+    availableColorSchemeConfigs: [] as ColorSchemeConfig[],
+    isDarkMode: false,
+  },
   editorFont: "default",
   showTextLineNumber: false,
   showAddAudioItemButton: true,
@@ -48,6 +59,8 @@ export const settingStoreState: SettingStoreState = {
     enableMorphing: false,
     enableMultiSelect: false,
     shouldKeepTuningOnTextChange: false,
+    enablePitchEditInSongEditor: false,
+    enableColorSchemeEditor: false,
     enableMultiTrack: false,
   },
   splitTextWhenPaste: "PERIOD_AND_NEW_LINE",
@@ -92,6 +105,9 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
           currentTheme: theme.currentTheme,
         });
       }
+
+      // TODO: Hydrate
+      actions.INITIALIZE_COLOR_SCHEME();
 
       actions.SET_ACCEPT_RETRIEVE_TELEMETRY({
         acceptRetrieveTelemetry: await window.backend.getSetting(
@@ -242,6 +258,8 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         return value.name == currentTheme;
       });
 
+      console.log(theme);
+
       if (theme == undefined) {
         throw Error("Theme not found");
       }
@@ -284,6 +302,96 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         currentTheme: currentTheme,
       });
     },
+  },
+
+  INITIALIZE_COLOR_SCHEME: {
+    mutation(
+      state,
+      { currentColorScheme, availableColorSchemeConfigs, isDarkMode },
+    ) {
+      state.colorSchemeSetting = {
+        currentColorScheme,
+        availableColorSchemeConfigs,
+        isDarkMode,
+      };
+    },
+    action: createUILockAction(async ({ commit, dispatch, state }) => {
+      try {
+        const availableColorSchemeConfigs =
+          await window.backend.getColorSchemeConfigs();
+        logger.info(
+          "Available color scheme configs:",
+          availableColorSchemeConfigs,
+        );
+
+        if (
+          !availableColorSchemeConfigs ||
+          availableColorSchemeConfigs.length === 0
+        ) {
+          throw new Error("No available color scheme configs");
+        }
+
+        const defaultSchemeConfig = availableColorSchemeConfigs[0];
+
+        const currentColorScheme =
+          generateColorSchemeFromConfig(defaultSchemeConfig);
+
+        // 互換性の維持のためThemeのDark/LightをColorSchemeのDark/Lightに変換する
+        const isDarkMode = state.themeSetting.currentTheme === "Dark";
+
+        commit("INITIALIZE_COLOR_SCHEME", {
+          currentColorScheme,
+          availableColorSchemeConfigs,
+          isDarkMode,
+        });
+
+        await dispatch("APPLY_COLOR_SCHEME", {
+          colorScheme: currentColorScheme,
+        });
+      } catch (error) {
+        logger.error(`Error initializing color scheme: ${error}`);
+        // TODO: ここでフォールバックしないとカラーが適用されない
+      }
+    }),
+  },
+
+  SET_COLOR_SCHEME: {
+    mutation(state, { colorScheme }) {
+      state.colorSchemeSetting.currentColorScheme = colorScheme;
+    },
+    action: createUILockAction(
+      async ({ commit, dispatch }, { colorScheme, applyStyles = true }) => {
+        try {
+          logger.info("Set color scheme");
+          commit("SET_COLOR_SCHEME", { colorScheme });
+          if (applyStyles) {
+            await dispatch("APPLY_COLOR_SCHEME", { colorScheme });
+          }
+          logger.info("Set color scheme successfully");
+        } catch (error) {
+          logger.error(`Error setting color scheme: ${error}`);
+          // TODO: ここでフォールバックしないとカラーが適用されない
+          throw error;
+        }
+      },
+    ),
+  },
+
+  APPLY_COLOR_SCHEME: {
+    action: createUILockAction(async ({ state }, { colorScheme }) => {
+      const cssVars = cssVariablesFromColorScheme(colorScheme);
+      const isDarkMode = state.colorSchemeSetting.isDarkMode;
+      if (isDarkMode) {
+        Object.entries(cssVars.dark).forEach(([key, value]) => {
+          document.documentElement.style.setProperty(key, value);
+        });
+      }
+      if (!isDarkMode) {
+        Object.entries(cssVars.light).forEach(([key, value]) => {
+          document.documentElement.style.setProperty(key, value);
+        });
+      }
+    }),
   },
 
   SET_ACCEPT_RETRIEVE_TELEMETRY: {
