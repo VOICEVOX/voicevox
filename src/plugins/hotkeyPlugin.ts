@@ -16,7 +16,7 @@ import {
 } from "@/type/preload";
 import { createLogger } from "@/domain/frontend/log";
 
-const hotkeyManagerKey = "hotkeyManager";
+export const hotkeyManagerKey = "hotkeyManager";
 export const useHotkeyManager = () => {
   const hotkeyManager = inject<HotkeyManager>(hotkeyManagerKey);
   if (!hotkeyManager) {

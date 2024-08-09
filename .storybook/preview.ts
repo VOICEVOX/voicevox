@@ -3,6 +3,7 @@ import { Quasar, Dialog, Loading, Notify } from "quasar";
 import iconSet from "quasar/icon-set/material-icons";
 import { addActionsWithEmits } from "./utils/argTypesEnhancers";
 import { markdownItPlugin } from "@/plugins/markdownItPlugin";
+import { resetMockMode } from "@/helpers/random";
 
 import "@quasar/extras/material-icons/material-icons.css";
 import "quasar/dist/quasar.sass";
@@ -35,6 +36,10 @@ const preview: Preview = {
     },
   },
   argTypesEnhancers: [addActionsWithEmits],
+
+  beforeEach() {
+    resetMockMode();
+  },
 };
 
 export default preview;

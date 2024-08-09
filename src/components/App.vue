@@ -32,6 +32,7 @@ import AllDialog from "@/components/Dialog/AllDialog.vue";
 import MenuBar from "@/components/Menu/MenuBar/MenuBar.vue";
 import { useMenuBarData as useTalkMenuBarData } from "@/components/Talk/menuBarData";
 import { useMenuBarData as useSingMenuBarData } from "@/components/Sing/menuBarData";
+import { setFont, themeToCss } from "@/domain/dom";
 
 const store = useStore();
 
@@ -64,7 +65,7 @@ watch(
 watch(
   () => store.state.editorFont,
   (editorFont) => {
-    document.body.setAttribute("data-editor-font", editorFont);
+    setFont(editorFont);
   },
   { immediate: true },
 );
@@ -77,6 +78,33 @@ watch(
       hotkeyManager.onEditorChange(openedEditor);
     }
   },
+);
+
+// テーマの変更を監視してCSS変数を変更する
+watch(
+  () =>
+    [
+      store.state.currentTheme,
+      store.state.availableThemes,
+      store.state.isVuexReady,
+    ] as const,
+  ([currentTheme, availableThemes, isVuexReady]) => {
+    const theme = availableThemes.find((value) => {
+      return value.name == currentTheme;
+    });
+
+    if (theme == undefined) {
+      // NOTE: Vuexが初期化されていない場合はまだテーマが読み込まれていないので無視
+      if (isVuexReady) {
+        throw Error(`Theme not found: ${currentTheme}`);
+      } else {
+        return;
+      }
+    }
+
+    themeToCss(theme);
+  },
+  { immediate: true },
 );
 
 // ソフトウェアを初期化

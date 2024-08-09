@@ -659,7 +659,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         getters.USER_ORDERED_CHARACTER_INFOS("talk");
 
       if (userOrderedCharacterInfos == undefined) {
-        throw new Error("state.characterInfos == undefined");
+        throw new Error("state.userOrderedCharacterInfos == undefined");
       }
 
       const text = payload.text ?? "";
