@@ -124,6 +124,7 @@ onetimeWatch(
 
     await store.dispatch("SET_VOLUME", { volume: 0.6 });
     await store.dispatch("SET_PLAYHEAD_POSITION", { position: 0 });
+    await store.dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
     isCompletedInitialStartup.value = true;
 
     return "unwatch";
