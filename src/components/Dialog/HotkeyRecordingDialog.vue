@@ -63,7 +63,7 @@
           textColor="display-on-primary"
           class="q-mt-sm"
           :disabled="confirmBtnEnabled"
-          @click="confirmHotkey"
+          @click="changeHotkeyAndClose"
         />
         <QBtn
           v-else
@@ -74,7 +74,7 @@
           textColor="display-on-primary"
           class="q-mt-sm"
           :disabled="confirmBtnEnabled"
-          @click="overwriteHotkey"
+          @click="overwriteHotkeyAndClose"
         />
       </QCardActions>
     </QCard>
@@ -115,15 +115,15 @@ const closeHotkeyDialog = () => {
   emit("update:modelValue", false);
 };
 
-const confirmHotkey = () => {
+const changeHotkeyAndClose = () => {
   emit("changeHotkeySettings", props.lastAction, props.lastRecord);
   closeHotkeyDialog();
 };
 
-const overwriteHotkey = () => {
-  if (props.duplicatedHotkey) {
-    emit("deleteHotkey", props.duplicatedHotkey.action);
-    confirmHotkey();
-  }
+const overwriteHotkeyAndClose = () => {
+  if (props.duplicatedHotkey == undefined)
+    throw new Error("props.duplicatedHotkey == undefined");
+  emit("deleteHotkey", props.duplicatedHotkey.action);
+  changeHotkeyAndClose();
 };
 </script>

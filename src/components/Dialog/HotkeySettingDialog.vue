@@ -118,12 +118,12 @@
     </QLayout>
   </QDialog>
 
-  <SetHotkeyDialog
+  <HotkeyRecordingDialog
     :isHotkeyDialogOpened
     :lastAction
     :lastRecord
     :duplicatedHotkey
-    @update:modelValue="closeHotkeyDialog"
+    @update:modelValue="setHotkeyDialogOpened"
     @deleteHotkey="deleteHotkey"
     @changeHotkeySettings="changeHotkeySettings"
   />
@@ -131,7 +131,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import SetHotkeyDialog from "./SetHotkeyDialog.vue";
+import HotkeyRecordingDialog from "./HotkeyRecordingDialog.vue";
 import { useStore } from "@/store";
 import {
   HotkeyActionNameType,
@@ -253,8 +253,11 @@ const openHotkeyDialog = (action: string) => {
   document.addEventListener("keydown", recordCombination);
 };
 
-const closeHotkeyDialog = (value: boolean) => {
-  isHotkeyDialogOpened.value = value;
+const setHotkeyDialogOpened = () => {
+  lastAction.value = "";
+  lastRecord.value = HotkeyCombination("");
+  isHotkeyDialogOpened.value = false;
+  document.removeEventListener("keydown", recordCombination);
 };
 
 const resetHotkey = async (action: string) => {
