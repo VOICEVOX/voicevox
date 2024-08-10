@@ -12,6 +12,7 @@ import {
   HotkeyCombination,
   VoiceId,
   PresetKey,
+  envEngineInfoSchema,
 } from "@/type/preload";
 import { errorIfNullish } from "@/helpers/errorIfNullish";
 
@@ -40,12 +41,9 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
         throw new Error("VITE_DEFAULT_ENGINE_INFOS == undefined");
       }
       const engineId = EngineId(
-        // TODO: ちゃんとした型をつける
-        (
-          JSON.parse(import.meta.env.VITE_DEFAULT_ENGINE_INFOS) as {
-            uuid: string;
-          }[]
-        )[0].uuid,
+        envEngineInfoSchema
+          .array()
+          .parse(JSON.parse(import.meta.env.VITE_DEFAULT_ENGINE_INFOS))[0].uuid,
       );
       if (engineId == undefined)
         throw new Error("VITE_DEFAULT_ENGINE_INFOS[0].uuid == undefined");

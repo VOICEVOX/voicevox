@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 
 import semver from "semver";
+import { z } from "zod";
 
 function _logInfo(message: string) {
   console.info(`configMigration014: ${message}`);
@@ -11,6 +12,14 @@ function _logInfo(message: string) {
 function _logError(message: string) {
   console.error(`configMigration014: ${message}`);
 }
+
+const configMetadataSchema = z.object({
+  __internal__: z.object({
+    migrations: z.object({
+      version: z.string(),
+    }),
+  }),
+});
 
 export default function ({
   fixedUserDataDir,
@@ -23,18 +32,9 @@ export default function ({
     // ファイルが存在していてバージョン0.14以上であれば何もしない
     const configPath = path.join(fixedUserDataDir, "config.json");
     if (fs.existsSync(configPath)) {
-      // eslint-disable-next-line  @typescript-eslint/no-unsafe-assignment
-      const config: {
-        __internal__?: {
-          migrations?: {
-            version?: string;
-          };
-        };
-      } = JSON.parse(fs.readFileSync(configPath, "utf-8"));
-
-      if (config?.__internal__?.migrations?.version == undefined) {
-        throw new Error("configMigration014: config.json is invalid");
-      }
+      const config = configMetadataSchema.parse(
+        JSON.parse(fs.readFileSync(configPath, "utf-8")),
+      );
 
       if (
         semver.satisfies(config.__internal__.migrations.version, ">=0.14", {
