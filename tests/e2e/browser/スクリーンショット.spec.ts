@@ -64,7 +64,7 @@ test.beforeEach(async ({ page }) => {
     const response = await route.fetch();
     const json: Speaker[] = await response
       .json()
-      .then((json) => json.map(SpeakerFromJSON));
+      .then((json: unknown[]) => json.map(SpeakerFromJSON));
     let i = 0;
     for (const speaker of json) {
       i++;
