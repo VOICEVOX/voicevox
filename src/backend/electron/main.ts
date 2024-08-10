@@ -1121,7 +1121,7 @@ app.once("will-finish-launching", () => {
 });
 
 app.on("ready", async () => {
-  await configManager.initialize().catch(async (e: unknown) => {
+  await configManager.initialize().catch(async (e) => {
     log.error(e);
 
     const appExit = async () => {
@@ -1204,10 +1204,8 @@ app.on("ready", async () => {
   if (isDevelopment && !isTest) {
     try {
       await installExtension(VUEJS_DEVTOOLS);
-    } catch (e: unknown) {
-      if (e instanceof Error) {
-        log.error("Vue Devtools failed to install:", e.toString());
-      }
+    } catch (e) {
+      log.error("Vue Devtools failed to install:", e);
     }
   }
 
