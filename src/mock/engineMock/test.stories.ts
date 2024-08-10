@@ -12,8 +12,7 @@ const meta: Meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const OpenOfficialSite: Story = {
-  name: "公式サイトを開くボタンを押す",
+export const AudioQuery: Story = {
   play: async ({ args }) => {
     const mockApi = createOpenAPIEngineMock();
     const api = mockApi.instance(mockHost);
@@ -22,5 +21,21 @@ export const OpenOfficialSite: Story = {
       speaker: 1,
     });
     console.log(result);
+  },
+};
+
+export const Synthesis: Story = {
+  play: async ({ args }) => {
+    const mockApi = createOpenAPIEngineMock();
+    const api = mockApi.instance(mockHost);
+    const audioQuery = await api.audioQueryAudioQueryPost({
+      text: "そうです、そのとおりだと思いますね",
+      speaker: 1,
+    });
+    const blob = await api.synthesisSynthesisPost({
+      audioQuery,
+      speaker: 1,
+    });
+    console.log(blob);
   },
 };

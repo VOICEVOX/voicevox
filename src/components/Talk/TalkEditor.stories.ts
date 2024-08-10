@@ -28,6 +28,7 @@ import {
 } from "@/mock/engineMock/speakerResourceMock";
 import { setFont, themeToCss } from "@/domain/dom";
 import defaultTheme from "@/../public/themes/default.json";
+import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 
 const meta: Meta<typeof TalkEditor> = {
   component: TalkEditor,
@@ -57,7 +58,7 @@ const meta: Meta<typeof TalkEditor> = {
 
       // なぜか必要、これがないとdispatch内でcommitしたときにエラーになる
       store.replaceState({
-        ...structuredClone(toRaw(store.state)),
+        ...cloneWithUnwrapProxy(store.state),
       });
 
       context.parameters.vuexState = store.state;
@@ -81,6 +82,13 @@ const meta: Meta<typeof TalkEditor> = {
       });
       store.commit("SET_ENGINE_MANIFESTS", {
         engineManifests: { [engineId]: engineManifest },
+      });
+      store.commit("SET_ENGINE_SETTING", {
+        engineId,
+        engineSetting: {
+          outputSamplingRate: engineManifest.defaultSamplingRate,
+          useGpu: false,
+        },
       });
       store.commit("SET_ENGINE_STATE", { engineId, engineState: "READY" });
 
@@ -153,16 +161,20 @@ export const NowLoading: Story = {
   },
 };
 
-export const TextInput: Story = {
-  name: "テキスト入力のテスト",
+export const TextInputAndPlay: Story = {
+  name: "テキスト入力と再生のテスト",
   play: async ({ context, canvasElement, parameters }) => {
     await Default.play?.(context);
 
     const canvas = within(canvasElement);
 
-    // テキスト欄を取得
+    // テキスト欄に入力
     const textInput = await canvas.findByLabelText("1行目");
     await userEvent.type(textInput, "こんにちは、これはテストです。{enter}");
+
+    // 再生
+    const playButton = await canvas.findByLabelText("再生");
+    await userEvent.click(playButton);
 
     const { audioItems, audioKeys } = parameters.vuexState;
     await window.storybookTestSnapshot?.({ audioItems, audioKeys });

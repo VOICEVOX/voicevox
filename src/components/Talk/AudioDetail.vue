@@ -24,6 +24,7 @@
         <div class="play-button-wrapper">
           <QBtn
             v-if="!nowPlaying && !nowGenerating"
+            aria-label="再生"
             fab
             color="primary"
             textColor="display-on-primary"
@@ -32,6 +33,7 @@
           ></QBtn>
           <QBtn
             v-else
+            aria-label="停止"
             fab
             color="primary"
             textColor="display-on-primary"

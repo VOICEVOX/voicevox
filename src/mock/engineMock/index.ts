@@ -1,11 +1,14 @@
 import kuromoji, { IpadicFeatures, Tokenizer } from "kuromoji";
+import { audioQueryToFrameAudioQueryMock } from "./audioQueryMock";
 import { getEngineManifestMock } from "./manifestMock";
+import { getSpeakerInfoMock, getSpeakersMock } from "./speakerResourceMock";
+import { synthesisFrameAudioQueryMock } from "./synthesisMock";
 import {
   replaceLengthMock,
   replacePitchMock,
   tokensToActtentPhrasesMock,
 } from "./talkModelMock";
-import { getSpeakerInfoMock, getSpeakersMock } from "./speakerResourceMock";
+
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import {
   AccentPhrase,
@@ -19,7 +22,9 @@ import {
   SpeakerInfo,
   SpeakerInfoSpeakerInfoGetRequest,
   SupportedDevicesInfo,
+  SynthesisSynthesisPostRequest,
 } from "@/openapi";
+import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 
 export const dicPath = "engineMock/dict";
 export const assetsPath = "engineMock/assets";
@@ -42,7 +47,10 @@ export function createOpenAPIEngineMock(): IEngineConnectorFactory {
               .builder({
                 dicPath,
               })
-              .build(function (err, tokenizer) {
+              .build(function (
+                err: Error,
+                tokenizer: Tokenizer<IpadicFeatures>,
+              ) {
                 if (err) {
                   reject(err);
                 } else {
@@ -103,7 +111,7 @@ export function createOpenAPIEngineMock(): IEngineConnectorFactory {
               volumeScale: 1.0,
               prePhonemeLength: 0.1,
               postPhonemeLength: 0.1,
-              outputSamplingRate: 24000,
+              outputSamplingRate: 8000,
               outputStereo: false,
             };
           },
@@ -126,9 +134,26 @@ export function createOpenAPIEngineMock(): IEngineConnectorFactory {
           async moraDataMoraDataPost(
             payload: MoraDataMoraDataPostRequest,
           ): Promise<AccentPhrase[]> {
-            replaceLengthMock(payload.accentPhrase, payload.speaker);
-            replacePitchMock(payload.accentPhrase, payload.speaker);
-            return payload.accentPhrase;
+            const accentPhrase = cloneWithUnwrapProxy(payload.accentPhrase);
+            replaceLengthMock(accentPhrase, payload.speaker);
+            replacePitchMock(accentPhrase, payload.speaker);
+            return accentPhrase;
+          },
+
+          async synthesisSynthesisPost(
+            payload: SynthesisSynthesisPostRequest,
+          ): Promise<Blob> {
+            const frameAudioQuery = audioQueryToFrameAudioQueryMock(
+              payload.audioQuery,
+              {
+                enableInterrogativeUpspeak:
+                  payload.enableInterrogativeUpspeak ?? false,
+              },
+            );
+            return synthesisFrameAudioQueryMock(
+              frameAudioQuery,
+              payload.speaker,
+            );
           },
         };
       }

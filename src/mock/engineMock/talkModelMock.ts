@@ -15,12 +15,12 @@ function alphabetsToNumber(text: string): number {
   return (sum % 256) / 256;
 }
 
-// 0.01~0.25になるように適当な長さを決める
+/** 0.01~0.25になるように適当な長さを決める */
 function phonemeToLengthMock(phoneme: string): number {
   return alphabetsToNumber(phoneme) * 0.24 + 0.01;
 }
 
-// 3~5になるように適当なピッチを決める
+/** 3~5になるように適当なピッチを決める */
 function phonemeToPitchMock(phoneme: string): number {
   return (1 - alphabetsToNumber(phoneme)) * 2 + 3;
 }
@@ -70,7 +70,8 @@ export function replaceLengthMock(
       const offset = i == accentPhrase.moras.length - 1 ? 0.05 : 0;
 
       if (mora.consonant != undefined)
-        mora.consonantLength = phonemeToLengthMock(mora.consonant) + offset;
+        mora.consonantLength =
+          (phonemeToLengthMock(mora.consonant) + offset) / 5;
       mora.vowelLength = phonemeToLengthMock(mora.vowel) + offset;
     }
   }
@@ -144,7 +145,7 @@ export function tokensToActtentPhrasesMock(
       const accentPhrase = textToAccentPhraseMock(textPhrase);
       accentPhrase.pauseMora = {
         text: "、",
-        vowel: "",
+        vowel: "pau",
         vowelLength: 1 - 1 / (accentPhrases.length + 1),
         pitch: 0,
       };

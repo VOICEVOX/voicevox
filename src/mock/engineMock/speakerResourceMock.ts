@@ -1,6 +1,6 @@
 /**
  * 話者情報を作るモック。
- * なんとなくENGINEのモックと揃えている。
+ * なんとなくVOICEVOX ENGINEリポジトリのモック実装と揃えている。
  */
 
 import { Speaker, SpeakerInfo } from "@/openapi";
