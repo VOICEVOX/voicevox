@@ -74,6 +74,7 @@ const validateTalkProject = (talkProject: LatestProjectType["talk"]) => {
   }
 };
 
+// TODO: マイグレーション（とファイルの最初のeslint-disable）を別ファイルに移す
 /**
  * プロジェクトファイルのマイグレーション
  */
