@@ -1,7 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Patch } from "immer";
 import { ExhaustiveError } from "@/type/utility";
 
@@ -31,6 +27,7 @@ function clone<T>(value: T): T {
   if (Array.isArray(value)) {
     if (Object.getPrototypeOf(value) !== Array.prototype)
       throw new Error("unsupported type");
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return value.map((v) => clone(v)) as T;
   }
 
@@ -59,9 +56,10 @@ function clone<T>(value: T): T {
   if (Object.getPrototypeOf(value) !== Object.prototype)
     throw new Error("unsupported type");
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
   const result: any = Object.create(Object.getPrototypeOf(value));
   for (const [k, v] of Object.entries(value)) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     result[k] = clone(v);
   }
   return result as T;
@@ -127,10 +125,13 @@ function remove(value: unknown, key: string | number, v: unknown): void {
  * @template T 対象オブジェクトの型(任意)
  */
 function applyPatch<T>(target: T, patch: Patch) {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const { path, value, op } = patch;
   for (const p of patch.path.slice(0, path.length - 1)) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     target = get(target, p);
   }
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const v = clone(value);
   switch (op) {
     case "add":

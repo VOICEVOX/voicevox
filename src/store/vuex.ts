@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // FIXME: anyを使わないようにする
 import { InjectionKey } from "vue";
@@ -449,6 +447,7 @@ export const createPartialStore = <
     (acc, cur) => {
       const option = options[cur];
 
+      /* eslint-disable @typescript-eslint/no-unsafe-member-access */
       if (option.getter) {
         acc.getters[cur] = option.getter;
       }
@@ -458,14 +457,18 @@ export const createPartialStore = <
       if (option.action) {
         acc.actions[cur] = option.action;
       }
+      /* eslint-enable @typescript-eslint/no-unsafe-member-access */
 
       return acc;
     },
+
+    /* eslint-disable @typescript-eslint/no-unsafe-assignment */
     {
       getters: Object.create(null),
       mutations: Object.create(null),
       actions: Object.create(null),
     },
+    /*  eslint-enable @typescript-eslint/no-unsafe-assignment */
   );
 
   return obj;
@@ -484,20 +487,26 @@ export const createDotNotationPartialStore = <
       const option = options[cur];
 
       if (option.getter) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         acc.getters[cur] = option.getter;
       }
       if (option.mutation) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         acc.mutations[cur] = option.mutation;
       }
       if (option.action) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         acc.actions[cur] = unwrapDotNotationAction(option.action);
       }
 
       return acc;
     },
     {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       getters: Object.create(null),
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       mutations: Object.create(null),
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       actions: Object.create(null),
     },
   );
