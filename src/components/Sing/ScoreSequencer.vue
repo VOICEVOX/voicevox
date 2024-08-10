@@ -1532,7 +1532,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   grid-row: 1;
   grid-column: 1;
   background: var(--scheme-color-sing-ruler-surface);
-  border-radius: 4px 0 0 0;
+  border-radius: 8px 0 0 0;
 }
 
 .sequencer-ruler {

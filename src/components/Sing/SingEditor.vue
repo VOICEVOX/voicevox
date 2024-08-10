@@ -22,10 +22,13 @@
     <QSplitter
       :modelValue="isSidebarOpen ? sidebarWidth : 0"
       unit="px"
-      class="full-width"
+      class="full-width sing-tracks-splitter"
       :limits="[200, 300]"
       :disable="!isSidebarOpen"
-      :separatorStyle="{ display: isSidebarOpen ? 'block' : 'none' }"
+      :separatorStyle="{
+        display: isSidebarOpen ? 'block' : 'none',
+        backgroundColor: 'transparent',
+      }"
       emitImmediately
       @update:modelValue="setSidebarWidth"
     >

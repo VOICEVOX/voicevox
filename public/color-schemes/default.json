@@ -2,12 +2,12 @@
   "name": "DefaultFix",
   "displayName": "VOICEVOXデフォルト",
   "roleColors": {
-    "primary": "oklch(80% 0.1 150)",
-    "secondary": "oklch(80% 0.035 150)",
-    "tertiary": "oklch(80% 0.1 90)",
+    "primary": "oklch(80% 0.1095 149.64)",
+    "secondary": "oklch(80% 0.0365 149.64)",
+    "tertiary": "oklch(80% 0.1095 89.64)",
     "neutral": "oklch(60% 0.00 240)",
-    "neutralVariant": "oklch(80% 0.005 150)",
-    "error": "oklch(60% 0.18 20)"
+    "neutralVariant": "oklch(80% 0.005 149.64)",
+    "error": "oklch(59.21% 0.172 17.84)"
   },
   "aliasColors": [
     {

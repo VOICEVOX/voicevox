@@ -1,14 +1,18 @@
 <template>
   <div class="sidebar">
     <div class="tracks-header">
-      トラック一覧
-      <QSpace />
+      <button
+        :disable="uiLocked || tracks.size == 1"
+        class="track-add-button"
+        @click="addTrack"
+      >
+        <QIcon name="add" />
+      </button>
       <QBtn
         v-show="tracks.size > 1"
         color="default"
         icon="delete_outline"
         rounded
-        outline
         dense
         size="sm"
         :disable="uiLocked"
@@ -17,32 +21,14 @@
       >
         <QTooltip :delay="500">トラックを削除</QTooltip>
       </QBtn>
-      <QBtn
-        color="default"
-        icon="add"
-        rounded
-        outline
-        dense
-        size="sm"
-        :disable="uiLocked"
-        class="track-list-button"
-        @click="addTrack"
-      >
-        <QTooltip :delay="500">トラックを追加</QTooltip>
-      </QBtn>
-      <QBtn
-        color="default"
-        icon="headset_off"
-        rounded
-        outline
-        dense
-        size="sm"
+      <button
+        v-if="isThereSoloTrack"
+        class="track-unsolo-all-button"
         :disable="uiLocked || !isThereSoloTrack"
-        class="track-list-button"
         @click="unsoloAllTracks"
       >
-        <QTooltip :delay="500">すべてのソロを解除</QTooltip>
-      </QBtn>
+        すべてのソロ解除
+      </button>
     </div>
     <Draggable
       tag="QList"
@@ -132,11 +118,9 @@ const reorderTracks = (trackOrder: TrackId[]) => {
 .sidebar {
   width: 100%;
   height: 100%;
-  background-color: colors.$background;
+  background-color: var(--scheme-color-sing-toolbar);
   display: grid;
   grid-template-rows: auto 1fr auto;
-  border-top: 1px solid var(--scheme-color-sing-grid-horizontal-line);
-  border-right: 1px solid var(--scheme-color-sing-grid-measure-line);
 }
 
 .tracks {
@@ -147,11 +131,10 @@ const reorderTracks = (trackOrder: TrackId[]) => {
 
 .tracks-header {
   display: flex;
-  background: colors.$background;
+  background: var(--scheme-color-surface-container-high);
   align-items: center;
+  justify-content: start;
   gap: 0.25rem;
-
-  border-bottom: 1px solid var(--scheme-color-outline);
 
   padding: 0.5rem;
   padding-left: 1rem;
@@ -159,14 +142,45 @@ const reorderTracks = (trackOrder: TrackId[]) => {
 }
 
 .track-list-button {
-  width: 1.75rem;
-  height: 1.75rem;
+  width: 2rem;
+  height: 2rem;
   padding: 0;
 
-  color: colors.$display;
+  color: var(--scheme-color-on-surface-variant);
+}
 
-  &::before {
-    border-color: rgba(colors.$display-rgb, 0.5);
+.track-add-button {
+  appearance: none;
+  background: var(--scheme-color-surface-variant);
+  border: none;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  padding: 0;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background: var(--scheme-color-secondary-container);
+  }
+}
+
+.track-unsolo-all-button {
+  appearance: none;
+  margin-left: auto;
+  border: none;
+  background: transparent;
+  color: var(--scheme-color-on-secondary-container);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1rem;
+  padding: 0.5rem 1rem;
+  border-radius: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background: var(--scheme-color-surface-variant);
   }
 }
 </style>

@@ -71,7 +71,7 @@ const handleKeyDown = (event: KeyboardEvent) => {
   border-radius: 18px !important;
 
   &.active {
-    background: var(--scheme-color-surface-container-highest);
+    background: var(--scheme-color-secondary-container);
     color: var(--scheme-color-primary);
   }
 }

@@ -87,7 +87,6 @@
             icon="volume_off"
             round
             unelevated
-            :outline="!track.mute"
             dense
             size="sm"
             class="track-button"
@@ -98,12 +97,10 @@
             <QTooltip :delay="500">ミュート</QTooltip>
           </QBtn>
           <QBtn
-            :color="track.solo ? 'primary' : 'default'"
             :textColor="track.solo ? 'display-on-primary' : 'display'"
             icon="headset"
             rounded
             unelevated
-            :outline="!track.solo"
             dense
             size="sm"
             class="track-button"
@@ -131,6 +128,7 @@
             :max="1"
             :step="0.01"
             :markers="1"
+            color="secondary"
             selectionColor="transparent"
             :disable="uiLocked"
             @change="setTrackPan($event)"
@@ -307,8 +305,6 @@ const singerName = computed(() => {
 .track-detail-container {
   padding: 0;
 
-  border-bottom: 1px solid var(--scheme-color-outline-variant);
-
   // draggingクラスはSideBarのDraggableにより追加/削除される。
   .dragging & {
     display: none;
@@ -316,6 +312,9 @@ const singerName = computed(() => {
 }
 
 .track-detail {
+  border-radius: 0.5rem;
+  background-color: var(--scheme-color-surface-container-highest);
+  margin: 0 0.25rem;
   padding: 0 0.5rem 0.25rem 0.5rem;
   width: 100%;
   display: flex;
@@ -328,18 +327,38 @@ const singerName = computed(() => {
     gap: 1rem;
     grid-template-columns: 1.5rem 1fr 1.5rem;
 
+    :deep(.q-slider) {
+      .q-slider__track-container {
+        height: 3px;
+      }
+
+      .q-slider__thumb-container {
+        top: 50%;
+        transform: translateY(-50%);
+      }
+    }
+
     .l,
     .r {
       justify-self: center;
+      color: var(--scheme-color-on-surface-variant);
+      font-size: 0.875rem;
     }
   }
 }
 
 .track-item {
-  padding-right: 0.5rem;
+  border-radius: 0.5rem;
+  margin: 0 0.25rem;
+
+  .track-button-active {
+    background-color: var(--scheme-color-surface-variant);
+    color: var(--scheme-color-on-tertiary-container);
+  }
 
   &.selected-track {
-    color: colors.$display;
+    background-color: var(--scheme-color-surface-container-highest);
+    color: var(--scheme-color-on-surface-container);
   }
 
   .track-handle-bg {
@@ -363,11 +382,6 @@ const singerName = computed(() => {
         width: 1.75rem;
         height: 1.75rem;
         padding: 0;
-
-        // 線を薄くする
-        &:not(.track-button-active)::before {
-          border-color: rgba(colors.$display-rgb, 0.5);
-        }
       }
     }
   }
@@ -391,6 +405,15 @@ const singerName = computed(() => {
 
 .track-name :deep(.q-field__control) {
   height: 1.5rem;
+}
+
+.track-name {
+  color: var(--scheme-color-on-surface);
+  font-weight: 500;
+}
+
+.singer-name {
+  color: var(--scheme-color-on-surface-variant);
 }
 
 .track-name,

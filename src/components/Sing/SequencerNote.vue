@@ -2,7 +2,8 @@
   <div
     class="note"
     :class="{
-      'selected-or-preview': isSelected || isPreview,
+      selected: isSelected,
+      preview: isPreview,
       'preview-lyric': previewLyric != undefined,
       overlapping: hasOverlappingError,
       'invalid-phrase': hasPhraseError,
@@ -274,6 +275,9 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     min-width: 4px;
     max-width: 8px;
     height: 100%;
+    &:hover {
+      background-color: var(--scheme-color-sing-note-bar-outline);
+    }
   }
 
   .note-right-edge {
@@ -291,11 +295,10 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     }
   }
 
-  &.selected-or-preview {
+  &.selected {
     .note-bar {
       background-color: var(--scheme-color-sing-note-bar-selected-container);
       border-color: var(--scheme-color-sing-note-bar-selected-outline);
-      border-width: 1px;
       outline: 1px solid
         var(--scheme-color-sing-note-bar-selected-outline-outer);
       outline-offset: 1px;
@@ -324,8 +327,7 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     .note-bar {
       background-color: var(--scheme-color-sing-note-bar-preview-container);
       border-color: var(--scheme-color-sing-note-bar-preview-outline);
-      outline: 1px solid var(--scheme-color-sing-note-bar-preview-outline-outer);
-      outline-offset: 1px;
+      outline-color: var(--scheme-color-sing-note-bar-preview-outline-outer);
     }
 
     .note-lyric {
@@ -361,7 +363,7 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
       text-shadow: none;
     }
 
-    &.selected-or-preview,
+    &.selected,
     &:active {
       .note-bar {
         background-color: var(--scheme-color-error-container);
