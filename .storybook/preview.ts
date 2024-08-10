@@ -35,7 +35,6 @@ const preview: Preview = {
       toc: true,
     },
   },
-  argTypesEnhancers: [addActionsWithEmits],
 
   beforeEach() {
     resetMockMode();
