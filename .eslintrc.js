@@ -116,7 +116,7 @@ module.exports = {
       },
     },
     {
-      files: ["./src/**/*.ts"],
+      files: ["./*/**/*.ts"],
       parser: "@typescript-eslint/parser",
       extends: ["plugin:@typescript-eslint/recommended-type-checked"],
       parserOptions: tsEslintOptions,
