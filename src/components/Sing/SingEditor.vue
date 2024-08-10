@@ -83,7 +83,7 @@ const nowAudioExporting = computed(() => {
 });
 
 const cancelExport = () => {
-  store.dispatch("CANCEL_AUDIO_EXPORT");
+  void store.dispatch("CANCEL_AUDIO_EXPORT");
 };
 
 const isCompletedInitialStartup = ref(false);

@@ -133,7 +133,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         await context.actions.CLEAR_PITCH_EDIT_DATA({ trackId });
 
         context.mutations.SET_PROJECT_FILEPATH({ filePath: undefined });
-        context.actions.CLEAR_UNDO_HISTORY();
+        void context.actions.CLEAR_UNDO_HISTORY();
       },
     ),
   },
@@ -225,7 +225,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           await applySongProjectToStore(actions, parsedProjectData.song);
 
           mutations.SET_PROJECT_FILEPATH({ filePath });
-          actions.CLEAR_UNDO_HISTORY();
+          void actions.CLEAR_UNDO_HISTORY();
           return true;
         } catch (err) {
           window.backend.logError(err);

@@ -263,7 +263,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
         anyNewCharacters: result.some((r) => r.anyNewCharacters),
       };
       if (mergedResult.anyNewCharacters) {
-        actions.SET_DIALOG_OPEN({
+        void actions.SET_DIALOG_OPEN({
           isCharacterOrderDialogOpen: true,
         });
       }

@@ -522,14 +522,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         userOrderedCharacterInfos[0].metas.styles[0].styleId;
       const styleId = singer?.styleId ?? defaultStyleId;
 
-      dispatch("SETUP_SINGER", { singer: { engineId, styleId } });
+      void dispatch("SETUP_SINGER", { singer: { engineId, styleId } });
       commit("SET_SINGER", {
         singer: { engineId, styleId },
         withRelated,
         trackId,
       });
 
-      dispatch("RENDER");
+      void dispatch("RENDER");
     },
   },
 
@@ -544,7 +544,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       commit("SET_KEY_RANGE_ADJUSTMENT", { keyRangeAdjustment, trackId });
 
-      dispatch("RENDER");
+      void dispatch("RENDER");
     },
   },
 
@@ -562,7 +562,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         trackId,
       });
 
-      dispatch("RENDER");
+      void dispatch("RENDER");
     },
   },
 
@@ -586,7 +586,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       commit("SET_TPQN", { tpqn });
       transport.time = getters.TICK_TO_SECOND(playheadPosition.value);
 
-      dispatch("RENDER");
+      void dispatch("RENDER");
     },
   },
 
@@ -610,7 +610,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       commit("SET_TEMPOS", { tempos });
       transport.time = getters.TICK_TO_SECOND(playheadPosition.value);
 
-      dispatch("RENDER");
+      void dispatch("RENDER");
     },
   },
 
@@ -726,7 +726,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       commit("SET_NOTES", { notes, trackId });
 
-      dispatch("RENDER");
+      void dispatch("RENDER");
     },
   },
 
@@ -850,7 +850,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       commit("SET_PITCH_EDIT_DATA", { pitchArray, startFrame, trackId });
 
-      dispatch("RENDER");
+      void dispatch("RENDER");
     },
   },
 
@@ -874,7 +874,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     async action({ dispatch, commit }, { trackId }) {
       commit("CLEAR_PITCH_EDIT_DATA", { trackId });
 
-      dispatch("RENDER");
+      void dispatch("RENDER");
     },
   },
 
@@ -1218,8 +1218,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       commit("INSERT_TRACK", { trackId, track, prevTrackId });
 
-      dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
-      dispatch("RENDER");
+      void dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
+      void dispatch("RENDER");
     },
   },
 
@@ -1234,8 +1234,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       commit("DELETE_TRACK", { trackId });
 
-      dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
-      dispatch("RENDER");
+      void dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
+      void dispatch("RENDER");
     },
   },
 
@@ -1267,8 +1267,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
       commit("SET_TRACK", { trackId, track });
 
-      dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
-      dispatch("RENDER");
+      void dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
+      void dispatch("RENDER");
     },
   },
 
@@ -1283,8 +1283,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       commit("SET_TRACKS", { tracks });
 
-      dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
-      dispatch("RENDER");
+      void dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
+      void dispatch("RENDER");
     },
   },
 
@@ -2364,7 +2364,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         trackId: getters.SELECTED_TRACK_ID,
       });
 
-      dispatch("RENDER");
+      void dispatch("RENDER");
       // 貼り付けたノートを選択する
       commit("DESELECT_ALL_NOTES");
       commit("SELECT_NOTES", { noteIds: pastedNoteIds });
@@ -2391,7 +2391,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         trackId: getters.SELECTED_TRACK_ID,
       });
 
-      dispatch("RENDER");
+      void dispatch("RENDER");
     },
   },
 
@@ -2422,7 +2422,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     action({ commit, dispatch }, { trackId, mute }) {
       commit("SET_TRACK_MUTE", { trackId, mute });
 
-      dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
+      void dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
     },
   },
 
@@ -2434,7 +2434,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     action({ commit, dispatch }, { trackId, solo }) {
       commit("SET_TRACK_SOLO", { trackId, solo });
 
-      dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
+      void dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
     },
   },
 
@@ -2446,7 +2446,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     action({ commit, dispatch }, { trackId, gain }) {
       commit("SET_TRACK_GAIN", { trackId, gain });
 
-      dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
+      void dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
     },
   },
 
@@ -2458,7 +2458,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     action({ commit, dispatch }, { trackId, pan }) {
       commit("SET_TRACK_PAN", { trackId, pan });
 
-      dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
+      void dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
     },
   },
 
@@ -2489,8 +2489,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     action({ commit, dispatch }) {
       commit("UNSOLO_ALL_TRACKS");
 
-      dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
-      dispatch("RENDER");
+      void dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
+      void dispatch("RENDER");
     },
   },
 
@@ -2526,10 +2526,10 @@ export const singingCommandStore = transformCommandStore(
         });
       },
       async action({ dispatch, commit }, { singer, withRelated, trackId }) {
-        dispatch("SETUP_SINGER", { singer });
+        void dispatch("SETUP_SINGER", { singer });
         commit("COMMAND_SET_SINGER", { singer, withRelated, trackId });
 
-        dispatch("RENDER");
+        void dispatch("RENDER");
       },
     },
     COMMAND_SET_KEY_RANGE_ADJUSTMENT: {
@@ -2548,7 +2548,7 @@ export const singingCommandStore = transformCommandStore(
           trackId,
         });
 
-        dispatch("RENDER");
+        void dispatch("RENDER");
       },
     },
     COMMAND_SET_VOLUME_RANGE_ADJUSTMENT: {
@@ -2567,7 +2567,7 @@ export const singingCommandStore = transformCommandStore(
           trackId,
         });
 
-        dispatch("RENDER");
+        void dispatch("RENDER");
       },
     },
     COMMAND_SET_TEMPO: {
@@ -2592,7 +2592,7 @@ export const singingCommandStore = transformCommandStore(
         commit("COMMAND_SET_TEMPO", { tempo });
         transport.time = getters.TICK_TO_SECOND(playheadPosition.value);
 
-        dispatch("RENDER");
+        void dispatch("RENDER");
       },
     },
     COMMAND_REMOVE_TEMPO: {
@@ -2619,7 +2619,7 @@ export const singingCommandStore = transformCommandStore(
         commit("COMMAND_REMOVE_TEMPO", { position });
         transport.time = getters.TICK_TO_SECOND(playheadPosition.value);
 
-        dispatch("RENDER");
+        void dispatch("RENDER");
       },
     },
     COMMAND_SET_TIME_SIGNATURE: {
@@ -2663,7 +2663,7 @@ export const singingCommandStore = transformCommandStore(
         }
         commit("COMMAND_ADD_NOTES", { notes, trackId });
 
-        dispatch("RENDER");
+        void dispatch("RENDER");
       },
     },
     COMMAND_UPDATE_NOTES: {
@@ -2680,7 +2680,7 @@ export const singingCommandStore = transformCommandStore(
         }
         commit("COMMAND_UPDATE_NOTES", { notes, trackId });
 
-        dispatch("RENDER");
+        void dispatch("RENDER");
       },
     },
     COMMAND_REMOVE_NOTES: {
@@ -2697,7 +2697,7 @@ export const singingCommandStore = transformCommandStore(
         }
         commit("COMMAND_REMOVE_NOTES", { noteIds, trackId });
 
-        dispatch("RENDER");
+        void dispatch("RENDER");
       },
     },
     COMMAND_REMOVE_SELECTED_NOTES: {
@@ -2707,7 +2707,7 @@ export const singingCommandStore = transformCommandStore(
           trackId: getters.SELECTED_TRACK_ID,
         });
 
-        dispatch("RENDER");
+        void dispatch("RENDER");
       },
     },
     COMMAND_SET_PITCH_EDIT_DATA: {
@@ -2731,7 +2731,7 @@ export const singingCommandStore = transformCommandStore(
           trackId,
         });
 
-        dispatch("RENDER");
+        void dispatch("RENDER");
       },
     },
     COMMAND_ERASE_PITCH_EDIT_DATA: {
@@ -2755,7 +2755,7 @@ export const singingCommandStore = transformCommandStore(
           trackId,
         });
 
-        dispatch("RENDER");
+        void dispatch("RENDER");
       },
     },
 
@@ -2783,8 +2783,8 @@ export const singingCommandStore = transformCommandStore(
           prevTrackId,
         });
 
-        dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
-        dispatch("RENDER");
+        void dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
+        void dispatch("RENDER");
       },
     },
 
@@ -2795,8 +2795,8 @@ export const singingCommandStore = transformCommandStore(
       action({ commit, dispatch }, { trackId }) {
         commit("COMMAND_DELETE_TRACK", { trackId });
 
-        dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
-        dispatch("RENDER");
+        void dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
+        void dispatch("RENDER");
       },
     },
 
@@ -2816,7 +2816,7 @@ export const singingCommandStore = transformCommandStore(
       action({ commit, dispatch }, { trackId, mute }) {
         commit("COMMAND_SET_TRACK_MUTE", { trackId, mute });
 
-        dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
+        void dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
       },
     },
 
@@ -2827,7 +2827,7 @@ export const singingCommandStore = transformCommandStore(
       action({ commit, dispatch }, { trackId, solo }) {
         commit("COMMAND_SET_TRACK_SOLO", { trackId, solo });
 
-        dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
+        void dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
       },
     },
 
@@ -2838,7 +2838,7 @@ export const singingCommandStore = transformCommandStore(
       action({ commit, dispatch }, { trackId, gain }) {
         commit("COMMAND_SET_TRACK_GAIN", { trackId, gain });
 
-        dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
+        void dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
       },
     },
 
@@ -2849,7 +2849,7 @@ export const singingCommandStore = transformCommandStore(
       action({ commit, dispatch }, { trackId, pan }) {
         commit("COMMAND_SET_TRACK_PAN", { trackId, pan });
 
-        dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
+        void dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
       },
     },
 
@@ -2869,8 +2869,8 @@ export const singingCommandStore = transformCommandStore(
       action({ commit, dispatch }) {
         commit("COMMAND_UNSOLO_ALL_TRACKS");
 
-        dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
-        dispatch("RENDER");
+        void dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
+        void dispatch("RENDER");
       },
     },
 
@@ -2938,8 +2938,8 @@ export const singingCommandStore = transformCommandStore(
           tracks: payload,
         });
 
-        dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
-        dispatch("RENDER");
+        void dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
+        void dispatch("RENDER");
       },
     },
 
@@ -2989,8 +2989,8 @@ export const singingCommandStore = transformCommandStore(
             tracks: filteredTracks,
           });
 
-          dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
-          dispatch("RENDER");
+          void dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
+          void dispatch("RENDER");
         },
       ),
     },
@@ -3029,8 +3029,8 @@ export const singingCommandStore = transformCommandStore(
             tracks: filteredTracks,
           });
 
-          dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
-          dispatch("RENDER");
+          void dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
+          void dispatch("RENDER");
         },
       ),
     },

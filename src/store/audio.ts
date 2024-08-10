@@ -587,7 +587,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     action({ mutations, actions }, { audioKey }: { audioKey?: AudioKey }) {
       mutations.SET_ACTIVE_AUDIO_KEY({ audioKey });
       // reset audio play start point
-      actions.SET_AUDIO_PLAY_START_POINT({ startPoint: undefined });
+      void actions.SET_AUDIO_PLAY_START_POINT({ startPoint: undefined });
     },
   },
 
@@ -1808,7 +1808,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           mutations.SET_ACTIVE_AUDIO_KEY({ audioKey: e.audioKey });
         });
         player.addEventListener("waitstart", (e) => {
-          actions.START_PROGRESS();
+          void actions.START_PROGRESS();
           mutations.SET_ACTIVE_AUDIO_KEY({ audioKey: e.audioKey });
           mutations.SET_AUDIO_NOW_GENERATING({
             audioKey: e.audioKey,
@@ -1816,7 +1816,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           });
         });
         player.addEventListener("waitend", (e) => {
-          actions.RESET_PROGRESS();
+          void actions.RESET_PROGRESS();
           mutations.SET_AUDIO_NOW_GENERATING({
             audioKey: e.audioKey,
             nowGenerating: false,

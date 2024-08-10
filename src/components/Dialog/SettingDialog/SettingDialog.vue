@@ -638,7 +638,7 @@ const undoableTrackOperations = computed({
         store.state.undoableTrackOperations[key as UndoableTrackOperation],
     ) as UndoableTrackOperation[],
   set: (undoableTrackOperations: UndoableTrackOperation[]) => {
-    store.dispatch("SET_ROOT_MISC_SETTING", {
+    void store.dispatch("SET_ROOT_MISC_SETTING", {
       key: "undoableTrackOperations",
       value: {
         soloAndMute: undoableTrackOperations.includes("soloAndMute"),
@@ -918,10 +918,10 @@ const canToggleMultiTrack = computed(() => {
 });
 
 const setMultiTrack = (enableMultiTrack: boolean) => {
-  changeExperimentalSetting("enableMultiTrack", enableMultiTrack);
+  void changeExperimentalSetting("enableMultiTrack", enableMultiTrack);
   // 無効化するときはUndo/Redoをクリアする
   if (!enableMultiTrack) {
-    store.dispatch("CLEAR_UNDO_HISTORY");
+    void store.dispatch("CLEAR_UNDO_HISTORY");
   }
 };
 </script>

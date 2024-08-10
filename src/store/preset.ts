@@ -109,7 +109,7 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
       { mutations },
       { defaultPresetKeys }: { defaultPresetKeys: Record<VoiceId, PresetKey> },
     ) {
-      window.backend.setSetting("defaultPresetKeys", defaultPresetKeys);
+      void window.backend.setSetting("defaultPresetKeys", defaultPresetKeys);
       mutations.SET_DEFAULT_PRESET_MAP({ defaultPresetKeys });
     },
     mutation(
