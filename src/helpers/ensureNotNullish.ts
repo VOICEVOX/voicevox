@@ -1,5 +1,5 @@
 /** 入力がnullかundefinedの場合エラーを投げ、それ以外の場合は入力をそのまま返す */
-export const errorIfNullish = <T>(
+export const ensureNotNullish = <T>(
   value: T | null | undefined,
   message = "Unexpected nullish value",
 ): T => {

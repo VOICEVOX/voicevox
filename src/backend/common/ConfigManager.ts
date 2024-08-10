@@ -14,7 +14,7 @@ import {
   PresetKey,
   envEngineInfoSchema,
 } from "@/type/preload";
-import { errorIfNullish } from "@/helpers/errorIfNullish";
+import { ensureNotNullish } from "@/helpers/ensureNotNullish";
 
 const lockKey = "save";
 
@@ -356,7 +356,7 @@ export abstract class BaseConfigManager {
     );
     const migratedHotkeys = hotkeysWithoutNewCombination.map((hotkey) => {
       if (hotkey.combination === COMBINATION_IS_NONE) {
-        const newHotkey = errorIfNullish(
+        const newHotkey = ensureNotNullish(
           defaultHotkeySettings.find(
             (defaultHotkey) => defaultHotkey.action === hotkey.action,
           ),

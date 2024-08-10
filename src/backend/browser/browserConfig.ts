@@ -3,7 +3,7 @@ import { defaultEngine, directoryHandleStoreKey } from "./contract";
 
 import { BaseConfigManager, Metadata } from "@/backend/common/ConfigManager";
 import { ConfigType, EngineId, engineSettingSchema } from "@/type/preload";
-import { errorIfNullish } from "@/helpers/errorIfNullish";
+import { ensureNotNullish } from "@/helpers/ensureNotNullish";
 
 const dbName = `${import.meta.env.VITE_APP_NAME}-web`;
 const settingStoreKey = "config";
@@ -37,7 +37,7 @@ const waitRequest = (request: IDBRequest) =>
       resolve();
     };
     request.onerror = () => {
-      reject(errorIfNullish(request.error));
+      reject(ensureNotNullish(request.error));
     };
   });
 
@@ -48,8 +48,7 @@ export const openDB = () =>
       resolve(request.result);
     };
     request.onerror = () => {
-      // TODO: handling
-      reject(errorIfNullish(request.error));
+      reject(ensureNotNullish(request.error));
     };
     request.onupgradeneeded = (ev) => {
       if (ev.oldVersion === 0) {
