@@ -297,7 +297,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           speaker: Speaker,
           speakerInfo: SpeakerInfo,
         ) {
-          const styles: StyleInfo[] = new Array(speaker.styles.length);
+          const styles = new Array<StyleInfo>(speaker.styles.length);
           for (const [i, style] of speaker.styles.entries()) {
             const styleInfo = speakerInfo.styleInfos.find(
               (styleInfo) => style.id === styleInfo.id,
@@ -2161,8 +2161,8 @@ export const audioCommandStore = transformCommandStore(
       ) {
         const query = state.audioItems[audioKey].query;
         if (query != undefined) {
-          const newAccentPhrases: AccentPhrase[] = JSON.parse(
-            JSON.stringify(query.accentPhrases),
+          const newAccentPhrases: AccentPhrase[] = cloneWithUnwrapProxy(
+            query.accentPhrases,
           );
           newAccentPhrases[accentPhraseIndex].accent = accent;
 
@@ -2221,8 +2221,8 @@ export const audioCommandStore = transformCommandStore(
             "`COMMAND_CHANGE_ACCENT_PHRASE_SPLIT` should not be called if the query does not exist.",
           );
         }
-        const newAccentPhrases: AccentPhrase[] = JSON.parse(
-          JSON.stringify(query.accentPhrases),
+        const newAccentPhrases: AccentPhrase[] = cloneWithUnwrapProxy(
+          query.accentPhrases,
         );
         const changeIndexes = [accentPhraseIndex];
         // toggleAccentPhrase to newAccentPhrases and record changeIndexes

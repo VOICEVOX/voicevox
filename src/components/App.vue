@@ -32,6 +32,7 @@ import AllDialog from "@/components/Dialog/AllDialog.vue";
 import MenuBar from "@/components/Menu/MenuBar/MenuBar.vue";
 import { useMenuBarData as useTalkMenuBarData } from "@/components/Talk/menuBarData";
 import { useMenuBarData as useSingMenuBarData } from "@/components/Sing/menuBarData";
+import { ExhaustiveError } from "@/type/utility";
 
 const store = useStore();
 
@@ -45,7 +46,7 @@ const subMenuData = computed(() => {
     return singMenuBarData;
   }
 
-  throw new Error(`Invalid openedEditor: ${openedEditor.value}`);
+  throw new ExhaustiveError(openedEditor.value);
 });
 
 const openedEditor = computed(() => store.state.openedEditor);
