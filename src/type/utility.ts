@@ -19,6 +19,6 @@ export function assertNonNullable<T>(
  */
 export class ExhaustiveError extends Error {
   constructor(value: never) {
-    super(`Not exhaustive. value: ${value}`);
+    super(`Not exhaustive. value: ${String(value)}`);
   }
 }

@@ -62,6 +62,7 @@ import { base64ImageToUri, base64ToUri } from "@/helpers/base64Helper";
 import { getValueOrThrow, ResultError } from "@/type/result";
 import { generateWriteErrorMessage } from "@/helpers/fileHelper";
 import { uuid4 } from "@/helpers/random";
+import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 
 function generateAudioKey() {
   return AudioKey(uuid4());
@@ -1280,8 +1281,8 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       { actions, state },
       { audioKey, ...options }: { audioKey: AudioKey; cacheOnly?: boolean },
     ) {
-      const audioItem: AudioItem = JSON.parse(
-        JSON.stringify(state.audioItems[audioKey]),
+      const audioItem: AudioItem = cloneWithUnwrapProxy(
+        state.audioItems[audioKey],
       );
       return actions.FETCH_AUDIO_FROM_AUDIO_ITEM({
         audioItem,

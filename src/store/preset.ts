@@ -1,4 +1,5 @@
 import { createDotNotationPartialStore as createPartialStore } from "./vuex";
+import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { uuid4 } from "@/helpers/random";
 import { PresetStoreState, PresetStoreTypes, State } from "@/store/type";
 import { Preset, PresetKey, Voice, VoiceId } from "@/type/preload";
@@ -168,8 +169,8 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
       }: { presetItems: Record<PresetKey, Preset>; presetKeys: PresetKey[] },
     ) {
       const result = await window.backend.setSetting("presets", {
-        items: JSON.parse(JSON.stringify(presetItems)),
-        keys: JSON.parse(JSON.stringify(presetKeys)),
+        items: cloneWithUnwrapProxy(presetItems),
+        keys: cloneWithUnwrapProxy(presetKeys),
       });
       context.mutations.SET_PRESET_ITEMS({
         // z.BRAND型のRecordはPartialになる仕様なのでasで型を変換

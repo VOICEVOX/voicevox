@@ -142,7 +142,9 @@ const policy = ref<string>();
 void store.dispatch("GET_POLICY_TEXT").then((obj) => (policy.value = obj));
 
 const howToUse = ref<string>();
-void store.dispatch("GET_HOW_TO_USE_TEXT").then((obj) => (howToUse.value = obj));
+void store
+  .dispatch("GET_HOW_TO_USE_TEXT")
+  .then((obj) => (howToUse.value = obj));
 
 const ossCommunityInfos = ref<string>();
 void store

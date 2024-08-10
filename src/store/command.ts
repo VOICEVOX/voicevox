@@ -35,6 +35,7 @@ export const createCommandMutationTree = <S, M extends MutationsBase>(
   Object.fromEntries(
     Object.entries(payloadRecipeTree).map(([key, val]) => [
       key,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       createCommandMutation(val, editor),
     ]),
   ) as MutationTree<S, M>;
@@ -64,7 +65,7 @@ const recordPatches =
   <S, P>(recipe: PayloadRecipe<S, P>) =>
   (state: S, payload: P): Command => {
     const [, doPatches, undoPatches] = immer.produceWithPatches(
-      toRaw(state) as S,
+      toRaw(state),
       (draft: S) => recipe(draft, payload),
     );
     return {

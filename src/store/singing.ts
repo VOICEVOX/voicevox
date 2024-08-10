@@ -833,7 +833,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const tempData = [...pitchEditData];
       const endFrame = startFrame + pitchArray.length;
       if (tempData.length < endFrame) {
-        const valuesToPush = new Array(endFrame - tempData.length).fill(
+        const valuesToPush = new Array<number>(endFrame - tempData.length).fill(
           VALUE_INDICATING_NO_DATA,
         );
         tempData.push(...valuesToPush);
@@ -2240,7 +2240,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               return {
                 result: "WRITE_ERROR",
                 path: filePath,
-                errorMessage: generateWriteErrorMessage(e),
+                errorMessage: generateWriteErrorMessage(
+                  e as ResultError<string>,
+                ),
               };
             }
             return {
