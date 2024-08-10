@@ -4,6 +4,7 @@ import { defaultEngine, directoryHandleStoreKey } from "./contract";
 import { BaseConfigManager, Metadata } from "@/backend/common/ConfigManager";
 import { ConfigType, EngineId, engineSettingSchema } from "@/type/preload";
 import { ensureNotNullish } from "@/helpers/ensureNotNullish";
+import { UnreachableError } from "@/type/utility";
 
 const dbName = `${import.meta.env.VITE_APP_NAME}-web`;
 const settingStoreKey = "config";
@@ -103,7 +104,7 @@ class BrowserConfigManager extends BaseConfigManager {
       throw new Error("設定ファイルが見つかりません");
     }
     if (typeof result !== "string") {
-      throw new Error("設定ファイルが壊れています");
+      throw new UnreachableError("result is not string");
     }
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return JSON.parse(result);

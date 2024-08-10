@@ -1,10 +1,15 @@
 import { Plugin, inject, InjectionKey } from "vue";
 import MarkdownIt from "markdown-it";
+import { UnreachableError } from "@/type/utility";
 
 const markdownItKey: InjectionKey<MarkdownIt> = Symbol("_markdownIt_");
 
 export const useMarkdownIt = (): MarkdownIt => {
-  return inject(markdownItKey)!;
+  const maybeMarkdownIt = inject(markdownItKey);
+  if (!maybeMarkdownIt) {
+    throw new UnreachableError("markdownItKey is not provided");
+  }
+  return maybeMarkdownIt;
 };
 
 export const markdownItPlugin: Plugin = {

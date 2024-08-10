@@ -561,7 +561,7 @@ function cleanupEngines(): Promise<void> | "alreadyCompleted" {
     killingProcessPromises,
   ).map(([engineId, promise]) => {
     return promise
-      .catch((error: unknown) => {
+      .catch((error) => {
         // TODO: 各エンジンプロセスキルの失敗をUIに通知する
         log.error(`ENGINE ${engineId}: Error during killing process: ${error}`);
         // エディタを終了するため、エラーが起きてもエンジンプロセスをキルできたとみなす

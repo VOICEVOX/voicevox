@@ -63,6 +63,7 @@ import { getValueOrThrow, ResultError } from "@/type/result";
 import { generateWriteErrorMessage } from "@/helpers/fileHelper";
 import { uuid4 } from "@/helpers/random";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
+import { UnreachableError } from "@/type/utility";
 
 function generateAudioKey() {
   return AudioKey(uuid4());
@@ -323,6 +324,12 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
               voiceSamplePaths: voiceSamples,
             };
           }
+          if ([...styles].some((style) => style == undefined)) {
+            throw new UnreachableError(
+              "assert styles.every(style => style != undefined)",
+            );
+          }
+
           return styles;
         };
         const getCharacterInfo = async (

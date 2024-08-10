@@ -22,3 +22,14 @@ export class ExhaustiveError extends Error {
     super(`Not exhaustive. value: ${String(value)}`);
   }
 }
+
+/**
+ * 到達しないであろうコードに到達したことを示すエラー。
+ * TODO: すべてのunreachableをUnreachableErrorに統一する
+ */
+export class UnreachableError extends Error {
+  constructor(message?: string) {
+    super(message || "Unreachable code was executed.");
+    this.name = "UnreachableError";
+  }
+}
