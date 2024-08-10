@@ -161,8 +161,8 @@ export const NowLoading: Story = {
   },
 };
 
-export const TextInputAndPlay: Story = {
-  name: "テキスト入力と再生のテスト",
+export const TextInput: Story = {
+  name: "テキスト入力のテスト",
   play: async ({ context, canvasElement, parameters }) => {
     await Default.play?.(context);
 
@@ -172,9 +172,22 @@ export const TextInputAndPlay: Story = {
     const textInput = await canvas.findByLabelText("1行目");
     await userEvent.type(textInput, "こんにちは、これはテストです。{enter}");
 
-    // 再生
-    const playButton = await canvas.findByLabelText("再生");
-    await userEvent.click(playButton);
+    const { audioItems, audioKeys } = parameters.vuexState;
+    await window.storybookTestSnapshot?.({ audioItems, audioKeys });
+  },
+};
+
+export const TextPaste: Story = {
+  name: "テキストペーストのテスト",
+  play: async ({ context, canvasElement, parameters }) => {
+    await Default.play?.(context);
+
+    const canvas = within(canvasElement);
+
+    // テキスト欄に入力
+    const textInput = await canvas.findByLabelText("1行目");
+    await userEvent.click(textInput);
+    await userEvent.paste("改行で改行\n読点で改行。最後の読点は改行しない。");
 
     const { audioItems, audioKeys } = parameters.vuexState;
     await window.storybookTestSnapshot?.({ audioItems, audioKeys });
