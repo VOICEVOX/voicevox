@@ -11,20 +11,17 @@ const tsEslintOptions = {
 const tsEslintRules = {
   // Template String Literalでcatchなどからのunknownを入れられなくなるので無効化
   "@typescript-eslint/restrict-template-expressions": "off",
-  // Storeでよくasyncなしの関数を使うので無効化
+  // Storeでよくasyncなしの関数を定義するので無効化
+  // TODO: いずれは有効化する
   "@typescript-eslint/require-await": "off",
-
-  "@typescript-eslint/no-floating-promises": [
-    "error",
-    {
-      ignoreIIFE: true,
-    },
-  ],
 
   "@typescript-eslint/no-misused-promises": [
     "error",
     {
       // (...) => voidに(...) => Promise<void>を渡すのは許可
+      // ただし特に強い意志でこれを許可しているわけではないので、
+      // もし問題が発生した場合は有効化する
+      // ref: https://canary.discord.com/channels/879570910208733277/893889888208977960/1267467454876225536
       checksVoidReturn: false,
     },
   ],
