@@ -350,7 +350,6 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         });
       } catch (error) {
         logger.error(`Error initializing color scheme: ${error}`);
-        // TODO: ここでフォールバックしないとカラーが適用されない
       }
     }),
   },
@@ -370,7 +369,6 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
           logger.info("Set color scheme successfully");
         } catch (error) {
           logger.error(`Error setting color scheme: ${error}`);
-          // TODO: ここでフォールバックしないとカラーが適用されない
           throw error;
         }
       },
@@ -381,6 +379,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     action: createUILockAction(async ({ state }, { colorScheme }) => {
       const cssVars = cssVariablesFromColorScheme(colorScheme);
       const isDarkMode = state.colorSchemeSetting.isDarkMode;
+      /*
       if (isDarkMode) {
         Object.entries(cssVars.dark).forEach(([key, value]) => {
           document.documentElement.style.setProperty(key, value);
@@ -391,6 +390,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
           document.documentElement.style.setProperty(key, value);
         });
       }
+      */
     }),
   },
 

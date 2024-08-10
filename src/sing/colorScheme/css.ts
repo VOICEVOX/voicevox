@@ -32,7 +32,7 @@ export const cssVariablesFromColorScheme = (
     color: OklchColor,
   ): [string, string] => {
     const key = `${prefix}${keyName.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase()}`;
-    const oklchValue = oklchToCssString(color, "oklch");
+    const oklchValue = oklchToCssString(color, "hex");
     const fallbackValue = oklchToCssString(color, "hex");
     const value = withFallback ? `${oklchValue}, ${fallbackValue}` : oklchValue;
     return [key, value];

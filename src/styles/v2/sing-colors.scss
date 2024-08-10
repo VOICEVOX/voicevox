@@ -1,0 +1,503 @@
+/*
+
+## 利用
+
+background-color: var(--scheme-color-primary);
+color: var(--scheme-color-on-primary);
+
+## カスタマイズサンプル
+
+50%明度プライマリ:
+  color: oklch(var(--lr-50) var(--primary-c) var(--primary-h));
+
+50%明度プライマリ(相対)
+  color: oklch(from var(--primary-key) l calc(var(--lr-50)));
+
+ロールカラー定義(on-primaryを相対)
+  --on-primary-dark: oklch(var(--lr-10) var(--primary-c) var(--primary-h));
+
+エイリアス
+  --sing-piano-key-white-dark: oklch(var(--lr-70) var(--neutral-c) var(--neutral-h));
+
+プライマリと色調を揃えた新カラー(色相が150度異なる紫)
+  color: oklch(from var(--primary-key) l calc(var(--lr-70)) c h calc(var(--primary-c) + 150 % 360)));
+
+*/
+
+/* 
+カラースキーム計算基準
+*/
+:root {
+  // 基準彩度
+  --primary-c: 0.108;
+  --secondary-c: calc(--var-primary-c / 3); // 0.036
+  --tertiary-c: calc(--var-primary-c * 1);
+  --error-c: 0.19;
+  --neutral-c: 0;
+  --neutral-variant-c: 0.003;
+  --link-c: 0.21;
+
+  // 基準色相
+  --primary-h: 149.64;
+  --secondary-h: --var-primary-h;
+  --tertiary-h: calc(--var-primary-h - 60 % 360);
+  --error-h: 19.64;
+  --neutral-h: --var-primary-h;
+  --neutral-variant-h: --var-primary-h;
+  --link-h: 256;
+
+  // キーカラー
+  --primary-key: oklch(var(--lr-70) var(--primary-c) var(--primary-h));
+  --secondary-key: oklch(var(--lr-70) var(--secondary-c) var(--secondary-h));
+  --tertiary-key: oklch(var(--lr-70) var(--tertiary-c) var(--tertiary-h));
+  --error-key: oklch(var(--lr-70) var(--error-c) var(--error-h));
+  --neutral-key: oklch(var(--lr-70) var(--neutral-c) var(--neutral-h));
+  --neutral-variant-key: oklch(var(--lr-70) var(--neutral-variant-c) var(--neutral-variant-h));
+  --link-key: oklch(var(--lr-70) var(--link-c) var(--link-h));
+}
+
+/* 
+明度LUT
+OKLCHのL値を相対明度に補正した値
+eg: 50%: --lr-50
+*/
+:root {
+  --lr-0: 0.00000;
+  --lr-1: 0.03257;
+  --lr-2: 0.05321;
+  --lr-3: 0.07049;
+  --lr-4: 0.08600;
+  --lr-5: 0.10036;
+  --lr-6: 0.11391;
+  --lr-7: 0.12686;
+  --lr-8: 0.13934;
+  --lr-9: 0.15143;
+  --lr-10: 0.16321;
+  --lr-11: 0.17472;
+  --lr-12: 0.18600;
+  --lr-13: 0.19708;
+  --lr-14: 0.20799;
+  --lr-15: 0.21875;
+  --lr-16: 0.22937;
+  --lr-17: 0.23988;
+  --lr-18: 0.25027;
+  --lr-19: 0.26056;
+  --lr-20: 0.27077;
+  --lr-21: 0.28089;
+  --lr-22: 0.29093;
+  --lr-23: 0.30091;
+  --lr-24: 0.31082;
+  --lr-25: 0.32068;
+  --lr-26: 0.33047;
+  --lr-27: 0.34022;
+  --lr-28: 0.34992;
+  --lr-29: 0.35957;
+  --lr-30: 0.36919;
+  --lr-31: 0.37876;
+  --lr-32: 0.38829;
+  --lr-33: 0.39779;
+  --lr-34: 0.40726;
+  --lr-35: 0.41670;
+  --lr-36: 0.42611;
+  --lr-37: 0.43548;
+  --lr-38: 0.44484;
+  --lr-39: 0.45416;
+  --lr-40: 0.46347;
+  --lr-41: 0.47275;
+  --lr-42: 0.48201;
+  --lr-43: 0.49125;
+  --lr-44: 0.50047;
+  --lr-45: 0.50967;
+  --lr-46: 0.51885;
+  --lr-47: 0.52802;
+  --lr-48: 0.53716;
+  --lr-49: 0.54630;
+  --lr-50: 0.55541;
+  --lr-51: 0.56452;
+  --lr-52: 0.57361;
+  --lr-53: 0.58268;
+  --lr-54: 0.59175;
+  --lr-55: 0.60080;
+  --lr-56: 0.60983;
+  --lr-57: 0.61886;
+  --lr-58: 0.62788;
+  --lr-59: 0.63688;
+  --lr-60: 0.64588;
+  --lr-61: 0.65486;
+  --lr-62: 0.66384;
+  --lr-63: 0.67280;
+  --lr-64: 0.68176;
+  --lr-65: 0.69071;
+  --lr-66: 0.69965;
+  --lr-67: 0.70858;
+  --lr-68: 0.71750;
+  --lr-69: 0.72642;
+  --lr-70: 0.73533;
+  --lr-71: 0.74423;
+  --lr-72: 0.75312;
+  --lr-73: 0.76201;
+  --lr-74: 0.77089;
+  --lr-75: 0.77977;
+  --lr-76: 0.78864;
+  --lr-77: 0.79750;
+  --lr-78: 0.80636;
+  --lr-79: 0.81521;
+  --lr-80: 0.82405;
+  --lr-81: 0.83289;
+  --lr-82: 0.84173;
+  --lr-83: 0.85056;
+  --lr-84: 0.85938;
+  --lr-85: 0.86820;
+  --lr-86: 0.87702;
+  --lr-87: 0.88583;
+  --lr-88: 0.89463;
+  --lr-89: 0.90344;
+  --lr-90: 0.91223;
+  --lr-91: 0.92103;
+  --lr-92: 0.92982;
+  --lr-93: 0.93860;
+  --lr-94: 0.94738;
+  --lr-95: 0.95616;
+  --lr-96: 0.96494;
+  --lr-97: 0.97371;
+  --lr-98: 0.98248;
+  --lr-99: 0.99124;
+  --lr-100: 1;
+};
+
+/* 
+OKLCHでのカラースキーム
+*/
+:root[is-dark-theme="false"] {
+  --scheme-color-primary: oklch(46.347% 0.108 149.64);
+  --scheme-color-on-primary: oklch(100% 0.108 149.64);
+  --scheme-color-primary-container: oklch(91.223% 0.108 149.64);
+  --scheme-color-on-primary-container: oklch(16.321% 0.108 149.64);
+  --scheme-color-primary-fixed: oklch(91.223% 0.108 149.64);
+  --scheme-color-primary-fixed-dim: oklch(82.405% 0.108 149.64);
+  --scheme-color-on-primary-fixed: oklch(16.321% 0.108 149.64);
+  --scheme-color-on-primary-fixed-variant: oklch(36.919% 0.108 149.64);
+  --scheme-color-secondary: oklch(46.347% 0.036 149.64);
+  --scheme-color-on-secondary: oklch(100% 0.036 149.64);
+  --scheme-color-secondary-container: oklch(91.223% 0.036 149.64);
+  --scheme-color-on-secondary-container: oklch(16.321% 0.036 149.64);
+  --scheme-color-secondary-fixed: oklch(91.223% 0.036 149.64);
+  --scheme-color-secondary-fixed-dim: oklch(82.405% 0.036 149.64);
+  --scheme-color-on-secondary-fixed: oklch(16.321% 0.036 149.64);
+  --scheme-color-on-secondary-fixed-variant: oklch(36.919% 0.036 149.64);
+  --scheme-color-tertiary: oklch(46.347% 0.108 89.64);
+  --scheme-color-on-tertiary: oklch(100% 0.108 89.64);
+  --scheme-color-tertiary-container: oklch(91.223% 0.108 89.64);
+  --scheme-color-on-tertiary-container: oklch(16.321% 0.108 89.64);
+  --scheme-color-tertiary-fixed: oklch(91.223% 0.108 89.64);
+  --scheme-color-tertiary-fixed-dim: oklch(82.405% 0.108 89.64);
+  --scheme-color-on-tertiary-fixed: oklch(16.321% 0.108 89.64);
+  --scheme-color-on-tertiary-fixed-variant: oklch(36.919% 0.108 89.64);
+  --scheme-color-error: oklch(46.347% 0.2 19.64);
+  --scheme-color-on-error: oklch(100% 0.2 19.64);
+  --scheme-color-error-container: oklch(91.223% 0.2 19.64);
+  --scheme-color-on-error-container: oklch(16.321% 0.2 19.64);
+  --scheme-color-background: oklch(99.124% 0 240);
+  --scheme-color-on-background: oklch(16.321% 0 240);
+  --scheme-color-surface: oklch(99.124% 0 240);
+  --scheme-color-on-surface: oklch(16.321% 0 240);
+  --scheme-color-surface-variant: oklch(91.223% 0.003 149.64);
+  --scheme-color-on-surface-variant: oklch(36.919% 0.003 149.64);
+  --scheme-color-outline: oklch(55.541% 0.003 149.64);
+  --scheme-color-outline-variant: oklch(82.405% 0.003 149.64);
+  --scheme-color-shadow: oklch(0% 0 240);
+  --scheme-color-scrim: oklch(0% 0 240);
+  --scheme-color-inverse-surface: oklch(27.077% 0 240);
+  --scheme-color-inverse-on-surface: oklch(95.616% 0 240);
+  --scheme-color-inverse-primary: oklch(82.405% 0.108 149.64);
+  --scheme-color-surface-dim: oklch(88.583% 0 240);
+  --scheme-color-surface-bright: oklch(98.248% 0 240);
+  --scheme-color-surface-container-lowest: oklch(89.463% 0 240);
+  --scheme-color-surface-container-low: oklch(91.223% 0 240);
+  --scheme-color-surface-container: oklch(95.616% 0 240);
+  --scheme-color-surface-container-high: oklch(97.371% 0 240);
+  --scheme-color-surface-container-highest: oklch(100% 0 240);
+  --scheme-color-link: oklch(46.347% 0.19 256);
+  --scheme-color-on-link: oklch(100% 0.19 256);
+  --scheme-color-link-container: oklch(91.223% 0.19 256);
+  --scheme-color-on-link-container: oklch(16.321% 0.19 256);
+  --scheme-color-sing-toolbar-container: oklch(99.124% 0 240);
+  --scheme-color-sing-playback-button-container: oklch(82.405% 0.108 149.64);
+  --scheme-color-sing-on-playback-button-container: oklch(16.321% 0 240);
+  --scheme-color-sing-grid-cell-white: oklch(100% 0 240);
+  --scheme-color-sing-grid-cell-black: oklch(96.494% 0 240);
+  --scheme-color-sing-grid-vertical-line: oklch(96.494% 0 240);
+  --scheme-color-sing-grid-horizontal-line: oklch(96.494% 0 240);
+  --scheme-color-sing-grid-measure-line: oklch(77.977% 0 240);
+  --scheme-color-sing-grid-beat-line: oklch(91.223% 0 240);
+  --scheme-color-sing-grid-octave-line: oklch(89.463% 0 240);
+  --scheme-color-sing-ruler-surface: oklch(91.223% 0 240);
+  --scheme-color-sing-ruler-measure-line: oklch(69.071% 0 240);
+  --scheme-color-sing-ruler-beat-line: oklch(77.977% 0 240);
+  --scheme-color-sing-piano-key-white: oklch(99.124% 0 240);
+  --scheme-color-sing-piano-key-black: oklch(50.967% 0 240);
+  --scheme-color-sing-note-bar-container: oklch(89.463% 0.036 149.64);
+  --scheme-color-sing-on-note-bar-container: oklch(16.321% 0.036 149.64);
+  --scheme-color-sing-note-bar-outline: oklch(64.588% 0.036 149.64);
+  --scheme-color-sing-note-bar-selected-container: oklch(96.494% 0.108 149.64);
+  --scheme-color-sing-on-note-bar-selected-container: oklch(16.321% 0.108 149.64);
+  --scheme-color-sing-note-bar-selected-outline: oklch(64.588% 0.108 149.64);
+  --scheme-color-sing-note-bar-selected-outline-outer: oklch(82.405% 0.108 149.64);
+  --scheme-color-sing-note-bar-preview-container: oklch(89.463% 0.108 89.64);
+  --scheme-color-sing-on-note-bar-preview-container: oklch(16.321% 0.108 89.64);
+  --scheme-color-sing-note-bar-preview-outline: oklch(64.588% 0.108 89.64);
+  --scheme-color-sing-note-bar-preview-outline-outer: oklch(82.405% 0.108 89.64);
+  --scheme-color-sing-shadow-note: oklch(89.463% 0.003 149.64);
+}
+
+:root[is-dark-theme="true"] {
+  --scheme-color-primary: oklch(82.405% 0.108 149.64);
+  --scheme-color-on-primary: oklch(27.077% 0.108 149.64);
+  --scheme-color-primary-container: oklch(36.919% 0.108 149.64);
+  --scheme-color-on-primary-container: oklch(91.223% 0.108 149.64);
+  --scheme-color-primary-fixed: oklch(91.223% 0.108 149.64);
+  --scheme-color-primary-fixed-dim: oklch(82.405% 0.108 149.64);
+  --scheme-color-on-primary-fixed: oklch(16.321% 0.108 149.64);
+  --scheme-color-on-primary-fixed-variant: oklch(36.919% 0.108 149.64);
+  --scheme-color-secondary: oklch(82.405% 0.036 149.64);
+  --scheme-color-on-secondary: oklch(27.077% 0.036 149.64);
+  --scheme-color-secondary-container: oklch(36.919% 0.036 149.64);
+  --scheme-color-on-secondary-container: oklch(91.223% 0.036 149.64);
+  --scheme-color-secondary-fixed: oklch(91.223% 0.036 149.64);
+  --scheme-color-secondary-fixed-dim: oklch(82.405% 0.036 149.64);
+  --scheme-color-on-secondary-fixed: oklch(16.321% 0.036 149.64);
+  --scheme-color-on-secondary-fixed-variant: oklch(36.919% 0.036 149.64);
+  --scheme-color-tertiary: oklch(82.405% 0.108 89.64);
+  --scheme-color-on-tertiary: oklch(27.077% 0.108 89.64);
+  --scheme-color-tertiary-container: oklch(36.919% 0.108 89.64);
+  --scheme-color-on-tertiary-container: oklch(91.223% 0.108 89.64);
+  --scheme-color-tertiary-fixed: oklch(91.223% 0.108 89.64);
+  --scheme-color-tertiary-fixed-dim: oklch(82.405% 0.108 89.64);
+  --scheme-color-on-tertiary-fixed: oklch(16.321% 0.108 89.64);
+  --scheme-color-on-tertiary-fixed-variant: oklch(36.919% 0.108 89.64);
+  --scheme-color-error: oklch(82.405% 0.2 19.64);
+  --scheme-color-on-error: oklch(27.077% 0.2 19.64);
+  --scheme-color-error-container: oklch(36.919% 0.2 19.64);
+  --scheme-color-on-error-container: oklch(91.223% 0.2 19.64);
+  --scheme-color-background: oklch(16.321% 0 240);
+  --scheme-color-on-background: oklch(91.223% 0 240);
+  --scheme-color-surface: oklch(16.321% 0 240);
+  --scheme-color-on-surface: oklch(91.223% 0 240);
+  --scheme-color-surface-variant: oklch(36.919% 0.003 149.64);
+  --scheme-color-on-surface-variant: oklch(82.405% 0.003 149.64);
+  --scheme-color-outline: oklch(64.588% 0.003 149.64);
+  --scheme-color-outline-variant: oklch(36.919% 0.003 149.64);
+  --scheme-color-shadow: oklch(0% 0 240);
+  --scheme-color-scrim: oklch(0% 0 240);
+  --scheme-color-inverse-surface: oklch(91.223% 0 240);
+  --scheme-color-inverse-on-surface: oklch(27.077% 0 240);
+  --scheme-color-inverse-primary: oklch(46.347% 0.108 149.64);
+  --scheme-color-surface-dim: oklch(11.391% 0 240);
+  --scheme-color-surface-bright: oklch(31.082% 0 240);
+  --scheme-color-surface-container-lowest: oklch(8.5997% 0 240);
+  --scheme-color-surface-container-low: oklch(16.321% 0 240);
+  --scheme-color-surface-container: oklch(18.6% 0 240);
+  --scheme-color-surface-container-high: oklch(23.988% 0 240);
+  --scheme-color-surface-container-highest: oklch(29.093% 0 240);
+  --scheme-color-link: oklch(82.405% 0.19 256);
+  --scheme-color-on-link: oklch(27.077% 0.19 256);
+  --scheme-color-link-container: oklch(36.919% 0.19 256);
+  --scheme-color-on-link-container: oklch(91.223% 0.19 256);
+  --scheme-color-sing-toolbar-container: oklch(23.988% 0 240);
+  --scheme-color-sing-playback-button-container: oklch(73.533% 0.108 149.64);
+  --scheme-color-sing-on-playback-button-container: oklch(16.321% 0 240);
+  --scheme-color-sing-grid-cell-white: oklch(27.077% 0 240);
+  --scheme-color-sing-grid-cell-black: oklch(21.875% 0 240);
+  --scheme-color-sing-grid-vertical-line: oklch(21.875% 0 240);
+  --scheme-color-sing-grid-horizontal-line: oklch(21.875% 0 240);
+  --scheme-color-sing-grid-measure-line: oklch(46.347% 0 240);
+  --scheme-color-sing-grid-beat-line: oklch(8.5997% 0 240);
+  --scheme-color-sing-grid-octave-line: oklch(36.919% 0 240);
+  --scheme-color-sing-ruler-surface: oklch(36.919% 0 240);
+  --scheme-color-sing-ruler-measure-line: oklch(64.588% 0 240);
+  --scheme-color-sing-ruler-beat-line: oklch(50.967% 0 240);
+  --scheme-color-sing-piano-key-white: oklch(73.533% 0 240);
+  --scheme-color-sing-piano-key-black: oklch(27.077% 0 240);
+  --scheme-color-sing-note-bar-container: oklch(73.533% 0.036 149.64);
+  --scheme-color-sing-on-note-bar-container: oklch(16.321% 0.036 149.64);
+  --scheme-color-sing-note-bar-outline: oklch(86.82% 0.036 149.64);
+  --scheme-color-sing-note-bar-selected-container: oklch(82.405% 0.108 149.64);
+  --scheme-color-sing-on-note-bar-selected-container: oklch(16.321% 0.108 149.64);
+  --scheme-color-sing-note-bar-selected-outline: oklch(95.616% 0.108 149.64);
+  --scheme-color-sing-note-bar-selected-outline-outer: oklch(64.588% 0.108 149.64);
+  --scheme-color-sing-note-bar-preview-container: oklch(73.533% 0.108 89.64);
+  --scheme-color-sing-on-note-bar-preview-container: oklch(16.321% 0.108 89.64);
+  --scheme-color-sing-note-bar-preview-outline: oklch(86.82% 0.108 89.64);
+  --scheme-color-sing-note-bar-preview-outline-outer: oklch(64.588% 0.108 89.64);
+  --scheme-color-sing-shadow-note: oklch(55.541% 0.003 149.64);
+}
+
+/*
+フォールバック
+*/
+
+@supports not (color: oklch(0% 0 0)) {
+  :root[is-dark-theme="false"] {
+    --scheme-color-primary: #216936;
+    --scheme-color-on-primary: #fff;
+    --scheme-color-primary-container: #aef7bc;
+    --scheme-color-on-primary-container: #001500;
+    --scheme-color-primary-fixed: #aef7bc;
+    --scheme-color-primary-fixed-dim: #92d9a0;
+    --scheme-color-on-primary-fixed: #001500;
+    --scheme-color-on-primary-fixed-variant: #004e1d;
+    --scheme-color-secondary: #4b5f4e;
+    --scheme-color-on-secondary: #effff2;
+    --scheme-color-secondary-container: #d2e9d6;
+    --scheme-color-on-secondary-container: #031206;
+    --scheme-color-secondary-fixed: #d2e9d6;
+    --scheme-color-secondary-fixed-dim: #b6ccb9;
+    --scheme-color-on-secondary-fixed: #031206;
+    --scheme-color-on-secondary-fixed-variant: #324535;
+    --scheme-color-tertiary: #715500;
+    --scheme-color-on-tertiary: #fff;
+    --scheme-color-tertiary-container: #fedf8c;
+    --scheme-color-on-tertiary-container: #170c00;
+    --scheme-color-tertiary-fixed: #fedf8c;
+    --scheme-color-tertiary-fixed-dim: #e1c270;
+    --scheme-color-on-tertiary-fixed: #170c00;
+    --scheme-color-on-tertiary-fixed-variant: #533c00;
+    --scheme-color-error: #ad0026;
+    --scheme-color-on-error: #fff;
+    --scheme-color-error-container: #ffd1d0;
+    --scheme-color-on-error-container: #280001;
+    --scheme-color-background: #fcfcfc;
+    --scheme-color-on-background: #0e0e0e;
+    --scheme-color-surface: #fcfcfc;
+    --scheme-color-on-surface: #0e0e0e;
+    --scheme-color-surface-variant: #e1e2e1;
+    --scheme-color-on-surface-variant: #3e403f;
+    --scheme-color-outline: #727472;
+    --scheme-color-outline-variant: #c4c6c4;
+    --scheme-color-shadow: #000;
+    --scheme-color-scrim: #000;
+    --scheme-color-inverse-surface: #272727;
+    --scheme-color-inverse-on-surface: #f0f0f0;
+    --scheme-color-inverse-primary: #92d9a0;
+    --scheme-color-surface-dim: #d9d9d9;
+    --scheme-color-surface-bright: #f9f9f9;
+    --scheme-color-surface-container-lowest: #dcdcdc;
+    --scheme-color-surface-container-low: #e2e2e2;
+    --scheme-color-surface-container: #f0f0f0;
+    --scheme-color-surface-container-high: #f6f6f6;
+    --scheme-color-surface-container-highest: #fff;
+    --scheme-color-link: #0052bf;
+    --scheme-color-on-link: #fff;
+    --scheme-color-link-container: #c7e5ff;
+    --scheme-color-on-link-container: #000042;
+    --scheme-color-sing-toolbar-container: #fcfcfc;
+    --scheme-color-sing-playback-button-container: #92d9a0;
+    --scheme-color-sing-on-playback-button-container: #0e0e0e;
+    --scheme-color-sing-grid-cell-white: #fff;
+    --scheme-color-sing-grid-cell-black: #f3f3f3;
+    --scheme-color-sing-grid-vertical-line: #f3f3f3;
+    --scheme-color-sing-grid-horizontal-line: #f3f3f3;
+    --scheme-color-sing-grid-measure-line: #b7b7b7;
+    --scheme-color-sing-grid-beat-line: #e2e2e2;
+    --scheme-color-sing-grid-octave-line: #dcdcdc;
+    --scheme-color-sing-ruler-surface: #e2e2e2;
+    --scheme-color-sing-ruler-measure-line: #9b9b9b;
+    --scheme-color-sing-ruler-beat-line: #b7b7b7;
+    --scheme-color-sing-piano-key-white: #fcfcfc;
+    --scheme-color-sing-piano-key-black: #666;
+    --scheme-color-sing-note-bar-container: #cce3d0;
+    --scheme-color-sing-on-note-bar-container: #031206;
+    --scheme-color-sing-note-bar-outline: #7f9482;
+    --scheme-color-sing-note-bar-selected-container: #c6ffd1;
+    --scheme-color-sing-on-note-bar-selected-container: #001500;
+    --scheme-color-sing-note-bar-selected-outline: #5aa06a;
+    --scheme-color-sing-note-bar-selected-outline-outer: #92d9a0;
+    --scheme-color-sing-note-bar-preview-container: #f8d986;
+    --scheme-color-sing-on-note-bar-preview-container: #170c00;
+    --scheme-color-sing-note-bar-preview-outline: #a88a36;
+    --scheme-color-sing-note-bar-preview-outline-outer: #e1c270;
+    --scheme-color-sing-shadow-note: #dbdddb;
+  }
+  
+  :root[is-dark-theme="true"] {
+    --scheme-color-primary: #92d9a0;
+    --scheme-color-on-primary: #003302;
+    --scheme-color-primary-container: #004e1d;
+    --scheme-color-on-primary-container: #aef7bc;
+    --scheme-color-primary-fixed: #aef7bc;
+    --scheme-color-primary-fixed-dim: #92d9a0;
+    --scheme-color-on-primary-fixed: #001500;
+    --scheme-color-on-primary-fixed-variant: #004e1d;
+    --scheme-color-secondary: #b6ccb9;
+    --scheme-color-on-secondary: #1a2c1d;
+    --scheme-color-secondary-container: #324535;
+    --scheme-color-on-secondary-container: #d2e9d6;
+    --scheme-color-secondary-fixed: #d2e9d6;
+    --scheme-color-secondary-fixed-dim: #b6ccb9;
+    --scheme-color-on-secondary-fixed: #031206;
+    --scheme-color-on-secondary-fixed-variant: #324535;
+    --scheme-color-tertiary: #e1c270;
+    --scheme-color-on-tertiary: #352400;
+    --scheme-color-tertiary-container: #533c00;
+    --scheme-color-on-tertiary-container: #fedf8c;
+    --scheme-color-tertiary-fixed: #fedf8c;
+    --scheme-color-tertiary-fixed-dim: #e1c270;
+    --scheme-color-on-tertiary-fixed: #170c00;
+    --scheme-color-on-tertiary-fixed-variant: #533c00;
+    --scheme-color-error: #ffa4a5;
+    --scheme-color-on-error: #550009;
+    --scheme-color-error-container: #810017;
+    --scheme-color-on-error-container: #ffd1d0;
+    --scheme-color-background: #0e0e0e;
+    --scheme-color-on-background: #e2e2e2;
+    --scheme-color-surface: #0e0e0e;
+    --scheme-color-on-surface: #e2e2e2;
+    --scheme-color-surface-variant: #3e403f;
+    --scheme-color-on-surface-variant: #c4c6c4;
+    --scheme-color-outline: #8d8e8d;
+    --scheme-color-outline-variant: #3e403f;
+    --scheme-color-shadow: #000;
+    --scheme-color-scrim: #000;
+    --scheme-color-inverse-surface: #e2e2e2;
+    --scheme-color-inverse-on-surface: #272727;
+    --scheme-color-inverse-primary: #216936;
+    --scheme-color-surface-dim: #050505;
+    --scheme-color-surface-bright: #303030;
+    --scheme-color-surface-container-lowest: #020202;
+    --scheme-color-surface-container-low: #0e0e0e;
+    --scheme-color-surface-container: #131313;
+    --scheme-color-surface-container-high: #1f1f1f;
+    --scheme-color-surface-container-highest: #2b2b2b;
+    --scheme-color-link: #95c8ff;
+    --scheme-color-on-link: #001d6b;
+    --scheme-color-link-container: #003699;
+    --scheme-color-on-link-container: #c7e5ff;
+    --scheme-color-sing-toolbar-container: #1f1f1f;
+    --scheme-color-sing-playback-button-container: #76bd84;
+    --scheme-color-sing-on-playback-button-container: #0e0e0e;
+    --scheme-color-sing-grid-cell-white: #272727;
+    --scheme-color-sing-grid-cell-black: #1a1a1a;
+    --scheme-color-sing-grid-vertical-line: #1a1a1a;
+    --scheme-color-sing-grid-horizontal-line: #1a1a1a;
+    --scheme-color-sing-grid-measure-line: #595959;
+    --scheme-color-sing-grid-beat-line: #020202;
+    --scheme-color-sing-grid-octave-line: #3f3f3f;
+    --scheme-color-sing-ruler-surface: #3f3f3f;
+    --scheme-color-sing-ruler-measure-line: #8e8e8e;
+    --scheme-color-sing-ruler-beat-line: #666;
+    --scheme-color-sing-piano-key-white: #a9a9a9;
+    --scheme-color-sing-piano-key-black: #272727;
+    --scheme-color-sing-note-bar-container: #9ab09d;
+    --scheme-color-sing-on-note-bar-container: #031206;
+    --scheme-color-sing-note-bar-outline: #c4dbc7;
+    --scheme-color-sing-note-bar-selected-container: #92d9a0;
+    --scheme-color-sing-on-note-bar-selected-container: #001500;
+    --scheme-color-sing-note-bar-selected-outline: #bcffca;
+    --scheme-color-sing-note-bar-selected-outline-outer: #5aa06a;
+    --scheme-color-sing-note-bar-preview-container: #c4a653;
+    --scheme-color-sing-on-note-bar-preview-container: #170c00;
+    --scheme-color-sing-note-bar-preview-outline: #f0d17e;
+    --scheme-color-sing-note-bar-preview-outline-outer: #a88a36;
+    --scheme-color-sing-shadow-note: #a8aaa8;
+  }
+}

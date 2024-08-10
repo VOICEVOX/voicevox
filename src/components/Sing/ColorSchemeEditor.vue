@@ -646,7 +646,7 @@ const downloadCSSVariables = (options: {
   const defaultOptions = {
     withRoles: true,
     withPalettes: false,
-    format: "oklch" as const,
+    format: "hex" as const,
   };
   const mergedOptions = { ...defaultOptions, ...options };
   const cssVars = cssVariablesFromColorScheme(
@@ -663,7 +663,7 @@ const downloadCSSVariables = (options: {
 
   const generateLut = () => {
     const lrs = [...Array(100).keys()].map((l) => {
-      return LtoLr(l / 100).toFixed(3);
+      return LtoLr(l / 100).toFixed(5);
     });
     return `:root {\n${lrs.map((lr: string, index: number) => `  --lr-${index}: ${lr};`).join("\n")}\n}`;
   };
