@@ -187,6 +187,7 @@ const hotkeyColumns = ref<
 const lastAction = ref("");
 const lastRecord = ref(HotkeyCombination(""));
 
+// FIXME: HotkeyRecordingDialog内に移動する
 const recordCombination = (event: KeyboardEvent) => {
   if (!isHotkeyDialogOpened.value) {
     return;
@@ -197,6 +198,7 @@ const recordCombination = (event: KeyboardEvent) => {
   }
 };
 
+// FIXME: HotkeyRecordingDialog内に移動する
 const { hotkeyManager } = useHotkeyManager();
 const changeHotkeySettings = (
   action: string,
