@@ -6,6 +6,7 @@
 import { ref, watch, computed } from "vue";
 import * as PIXI from "pixi.js";
 import AsyncLock from "async-lock";
+import { useColorScheme } from "@/composables/useColorScheme";
 import { useStore } from "@/store";
 import {
   UNVOICED_PHONEMES,
@@ -74,14 +75,44 @@ const singingGuidesInSelectedTrack = computed(() => {
   return singingGuides;
 });
 
+const { isDarkMode, getColorFromRole } = useColorScheme();
+
+// TODO: このままだとテーマ変更で更新されないため、変更に追随する必要あり
+const pitchLineColorRGB =
+  getColorFromRole("outline", "rgbArray") || ([128, 128, 128] as number[]);
+const pitchLineColor = [
+  Math.round(Number(pitchLineColorRGB[0])),
+  Math.round(Number(pitchLineColorRGB[1])),
+  Math.round(Number(pitchLineColorRGB[2])),
+  isDarkMode.value ? 228 : 168,
+];
+const pitchEditLineColorRGB =
+  getColorFromRole("primaryFixedDim", "rgbArray") ||
+  ([128, 128, 128] as number[]);
+const pitchEditLineColor = [
+  Math.round(Number(pitchEditLineColorRGB[0])),
+  Math.round(Number(pitchEditLineColorRGB[1])),
+  Math.round(Number(pitchEditLineColorRGB[2])),
+  255,
+];
 const originalPitchLine: PitchLine = {
-  color: new Color(171, 201, 176, 255),
-  width: 1.2,
+  color: new Color(
+    pitchLineColor[0],
+    pitchLineColor[1],
+    pitchLineColor[2],
+    pitchLineColor[3],
+  ),
+  width: 1.5,
   pitchDataMap: new Map(),
   lineStripMap: new Map(),
 };
 const pitchEditLine: PitchLine = {
-  color: new Color(146, 214, 154, 255),
+  color: new Color(
+    pitchEditLineColor[0],
+    pitchEditLineColor[1],
+    pitchEditLineColor[2],
+    pitchEditLineColor[3],
+  ),
   width: 2,
   pitchDataMap: new Map(),
   lineStripMap: new Map(),

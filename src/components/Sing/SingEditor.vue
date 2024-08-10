@@ -19,14 +19,16 @@
         />
       </div>
     </div>
-
     <QSplitter
       :modelValue="isSidebarOpen ? sidebarWidth : 0"
       unit="px"
-      class="full-width"
+      class="full-width sing-tracks-splitter"
       :limits="[200, 300]"
       :disable="!isSidebarOpen"
-      :separatorStyle="{ display: isSidebarOpen ? 'block' : 'none' }"
+      :separatorStyle="{
+        display: isSidebarOpen ? 'block' : 'none',
+        backgroundColor: 'transparent',
+      }"
       emitImmediately
       @update:modelValue="setSidebarWidth"
     >
@@ -36,6 +38,7 @@
       <template #after>
         <!-- full-heightで高さをQSplitterの高さに揃える -->
         <ScoreSequencer class="full-height" />
+        <ColorSchemeEditor v-if="showColorSchemeEditor" />
       </template>
     </QSplitter>
   </div>
@@ -46,6 +49,7 @@ import { computed, ref } from "vue";
 import ToolBar from "./ToolBar/ToolBar.vue";
 import ScoreSequencer from "./ScoreSequencer.vue";
 import SideBar from "./SideBar/SideBar.vue";
+import ColorSchemeEditor from "@/components/Sing/ColorSchemeEditor.vue";
 import EngineStartupOverlay from "@/components/EngineStartupOverlay.vue";
 import { useStore } from "@/store";
 import onetimeWatch from "@/helpers/onetimeWatch";
@@ -80,6 +84,13 @@ const nowRendering = computed(() => {
 });
 const nowAudioExporting = computed(() => {
   return store.state.nowAudioExporting;
+});
+
+const showColorSchemeEditor = computed(() => {
+  return (
+    store.state.colorSchemeSetting.currentColorScheme &&
+    store.state.experimentalSetting.enableColorSchemeEditor
+  );
 });
 
 const cancelExport = () => {

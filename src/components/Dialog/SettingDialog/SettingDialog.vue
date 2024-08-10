@@ -519,6 +519,17 @@
                 "
               />
               <ToggleCell
+                title="ソング：ピッチ編集機能"
+                description="ONの場合、ピッチ編集モードに切り替えて音の高さを変えられるようになります。"
+                :modelValue="experimentalSetting.enablePitchEditInSongEditor"
+                @update:modelValue="
+                  changeExperimentalSetting(
+                    'enablePitchEditInSongEditor',
+                    $event,
+                  )
+                "
+              />
+              <ToggleCell
                 title="ソング：マルチトラック機能"
                 description="ONの場合、１つのプロジェクト内に複数のトラックを作成できるようにします。"
                 :modelValue="experimentalSetting.enableMultiTrack"
@@ -529,6 +540,14 @@
                   現在のプロジェクトに複数のトラックが存在するため、無効化できません。
                 </QTooltip>
               </ToggleCell>
+              <ToggleCell
+                title="ソング：カラー調整"
+                description="ONの場合、カラー調整モードに切り替えてカラーを変えられるようになります。"
+                :modelValue="experimentalSetting.enableColorSchemeEditor"
+                @update:modelValue="
+                  changeExperimentalSetting('enableColorSchemeEditor', $event)
+                "
+              />
             </QCard>
             <QCard flat class="setting-card">
               <QCardActions>
@@ -653,6 +672,8 @@ const currentThemeNameComputed = computed({
   get: () => store.state.themeSetting.currentTheme,
   set: (currentTheme: string) => {
     store.dispatch("SET_THEME_SETTING", { currentTheme: currentTheme });
+    // テーマ変更時に色スキームを初期値にする(ライト/ダーク切り替え)
+    store.dispatch("INITIALIZE_COLOR_SCHEME");
   },
 });
 

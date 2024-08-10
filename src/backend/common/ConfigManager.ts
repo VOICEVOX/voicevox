@@ -149,7 +149,6 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
         "showPitchInSongEditor" in experimentalSetting &&
         typeof experimentalSetting.showPitchInSongEditor === "boolean"
       ) {
-        // @ts-expect-error 削除されたパラメータ。
         experimentalSetting.enablePitchEditInSongEditor =
           experimentalSetting.showPitchInSongEditor;
         delete experimentalSetting.showPitchInSongEditor;
@@ -228,6 +227,7 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
         "enablePitchEditInSongEditor" in experimentalSetting &&
         typeof experimentalSetting.enablePitchEditInSongEditor === "boolean"
       ) {
+        // @ts-expect-error 'delete'
         delete experimentalSetting.enablePitchEditInSongEditor;
       }
 

@@ -44,13 +44,52 @@ const className = computed(() => {
 }
 
 .waiting-to-be-rendered {
+  background-color: color-mix(
+    in oklch,
+    var(--scheme-color-secondary-fixed-dim) 70%,
+    var(--scheme-color-background)
+  );
+  /*
   @include tint-if-in-other-track(
     "background-color",
     color-mix(in srgb, colors.$primary 80%, colors.$background)
-  );
+  ); */
 }
 
 .now-rendering {
+  border: 1px solid --scheme-color-primary-fixed-dim;
+  background-color: var(--scheme-color-background);
+  background-size: 28px 28px;
+  background-image: linear-gradient(
+    -45deg,
+    var(--scheme-color-primary-fixed-dim) 25%,
+    color-mix(
+        in oklch,
+        var(--scheme-color-primary-fixed-dim) 36%,
+        var(--scheme-color-background)
+      )
+      25%,
+    color-mix(
+        in oklch,
+        var(--scheme-color-primary-fixed-dim) 36%,
+        var(--scheme-color-background)
+      )
+      50%,
+    var(--scheme-color-primary-fixed-dim) 50%,
+    var(--scheme-color-primary-fixed-dim) 75%,
+    color-mix(
+        in oklch,
+        var(--scheme-color-primary-fixed-dim) 36%,
+        var(--scheme-color-background)
+      )
+      75%,
+    color-mix(
+        in oklch,
+        var(--scheme-color-primary-fixed-dim) 36%,
+        var(--scheme-color-background)
+      )
+      100%
+  );
   background-color: colors.$background;
   background-size: 28px 28px;
   &.is-in-selected-track {
@@ -94,7 +133,11 @@ const className = computed(() => {
 }
 
 .could-not-render {
-  @include tint-if-in-other-track("background-color", colors.$warning);
+  background-color: var(--scheme-color-error);
+  @include tint-if-in-other-track(
+    "background-color",
+    var(--scheme-color-error)
+  );
 }
 
 .playable {

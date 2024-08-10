@@ -20,6 +20,7 @@ import {
   Sandbox,
   ThemeConf,
 } from "@/type/preload";
+import { ColorSchemeConfig } from "@/sing/colorScheme/types";
 import {
   ContactTextFileName,
   HowToUseTextFileName,
@@ -310,6 +311,32 @@ export const api: Sandbox = {
             }) as { currentTheme: string; availableThemes: ThemeConf[] },
         ),
       );
+  },
+  async getColorSchemeConfigs() {
+    // ブラウザ版では、ファイルシステムから直接読み込むのではなく、
+    // ビルド時に生成されたファイルを読み込む
+    // NOTE: 定数にする？
+    const colorSchemeFiles = ["default.json"];
+
+    // カラースキーム個別の取得
+    const fetchColorScheme = async (
+      fileName: string,
+    ): Promise<ColorSchemeConfig> => {
+      const response = await fetch(`/color-schemes/${fileName}`);
+      if (!response.ok) {
+        throw new Error(`Failed to load color scheme: ${fileName}`);
+      }
+      return response.json();
+    };
+
+    // すべてのカラースキームの取得
+    return Promise.all(colorSchemeFiles.map(fetchColorScheme))
+      .then((colorSchemes) => {
+        return colorSchemes as ColorSchemeConfig[];
+      })
+      .catch((error) => {
+        throw new Error(`Error loading color schemes: ${error}`);
+      });
   },
   vuexReady() {
     // NOTE: 何もしなくて良さそう

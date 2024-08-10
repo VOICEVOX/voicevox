@@ -48,6 +48,8 @@ import {
   EngineId,
 } from "@/type/preload";
 
+import { ColorSchemeConfig } from "@/sing/colorScheme/types";
+
 type SingleInstanceLockData = {
   filePath: string | undefined;
 };
@@ -323,6 +325,23 @@ function readThemeFiles() {
   }
   return themes;
 }
+
+// カラースキームを読み込み
+function readColorSchemeConfig(schemeFile: string): ColorSchemeConfig {
+  const filePath = path.join(__static, "color-schemes", schemeFile);
+  const fileContent = fs.readFileSync(filePath, "utf-8");
+  return JSON.parse(fileContent) as ColorSchemeConfig;
+}
+
+// 利用可能なカラースキームのリストを取得する関数
+function getAvailableColorSchemeConfigs(): string[] {
+  const schemesDir = path.join(__static, "color-schemes");
+  return fs.readdirSync(schemesDir).filter((file) => file.endsWith(".json"));
+}
+
+const colorSchemeConfigs = getAvailableColorSchemeConfigs().map((schemeFile) =>
+  readColorSchemeConfig(schemeFile),
+);
 
 // 使い方テキストの読み込み
 const howToUseText = fs.readFileSync(
@@ -931,6 +950,10 @@ ipcMainHandle("THEME", (_, { newData }) => {
     currentTheme: configManager.get("currentTheme"),
     availableThemes: themes,
   };
+});
+
+ipcMainHandle("GET_COLOR_SCHEME_CONFIGS", () => {
+  return colorSchemeConfigs;
 });
 
 ipcMainHandle("ON_VUEX_READY", () => {
