@@ -35,11 +35,10 @@ defineProps<{
 
 <style scoped lang="scss">
 @use "@/styles/v2/variables" as vars;
-@use "@/styles/v2/mixin" as mixin;
 @use "@/styles/v2/colors" as colors;
 
 [data-radix-popper-content-wrapper] {
-  z-index: 9999 !important;
+  z-index: vars.$z-index-tooltip !important;
 }
 
 :deep(.TooltipContent) {
