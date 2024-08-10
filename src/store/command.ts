@@ -4,12 +4,13 @@ import { enablePatches, enableMapSet, Immer } from "immer";
 import { Command, CommandStoreState, CommandStoreTypes, State } from "./type";
 import { applyPatches } from "@/store/immerPatchUtility";
 import {
-  createPartialStore,
+  createDotNotationPartialStore as createPartialStore,
   Mutation,
   MutationsBase,
   MutationTree,
 } from "@/store/vuex";
-import { EditorType } from "@/type/preload";
+import { CommandId, EditorType } from "@/type/preload";
+import { uuid4 } from "@/helpers/random";
 
 enablePatches();
 enableMapSet();
@@ -34,7 +35,6 @@ export const createCommandMutationTree = <S, M extends MutationsBase>(
   Object.fromEntries(
     Object.entries(payloadRecipeTree).map(([key, val]) => [
       key,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       createCommandMutation(val, editor),
     ]),
   ) as MutationTree<S, M>;
@@ -64,13 +64,11 @@ const recordPatches =
   <S, P>(recipe: PayloadRecipe<S, P>) =>
   (state: S, payload: P): Command => {
     const [, doPatches, undoPatches] = immer.produceWithPatches(
-      toRaw(state),
-      (draft: S) => {
-        recipe(draft, payload);
-      },
+      toRaw(state) as S,
+      (draft: S) => recipe(draft, payload),
     );
     return {
-      unixMillisec: new Date().getTime(),
+      id: CommandId(uuid4()),
       redoPatches: doPatches,
       undoPatches: undoPatches,
     };
@@ -108,12 +106,13 @@ export const commandStore = createPartialStore<CommandStoreTypes>({
         applyPatches(state, command.undoPatches);
       }
     },
-    action({ commit, dispatch }, { editor }: { editor: EditorType }) {
-      commit("UNDO", { editor });
+    action({ mutations, actions }, { editor }: { editor: EditorType }) {
+      mutations.UNDO({ editor });
       if (editor === "song") {
         // TODO: 存在しないノートのみ選択解除、あるいはSELECTED_NOTE_IDS getterを作る
-        commit("DESELECT_ALL_NOTES");
-        void dispatch("RENDER");
+        mutations.DESELECT_ALL_NOTES();
+        actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
+        actions.RENDER();
       }
     },
   },
@@ -126,40 +125,28 @@ export const commandStore = createPartialStore<CommandStoreTypes>({
         applyPatches(state, command.redoPatches);
       }
     },
-    action({ commit, dispatch }, { editor }: { editor: EditorType }) {
-      commit("REDO", { editor });
+    action({ mutations, actions }, { editor }: { editor: EditorType }) {
+      mutations.REDO({ editor });
       if (editor === "song") {
         // TODO: 存在しないノートのみ選択解除、あるいはSELECTED_NOTE_IDS getterを作る
-        commit("DESELECT_ALL_NOTES");
-        void dispatch("RENDER");
+        mutations.DESELECT_ALL_NOTES();
+        actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
+        actions.RENDER();
       }
     },
   },
 
-  LAST_COMMAND_UNIX_MILLISEC: {
+  LAST_COMMAND_IDS: {
     getter(state) {
-      const getLastCommandUnixMillisec = (
-        commands: Command[],
-      ): number | null => {
-        const lastCommand = commands[commands.length - 1];
-        // 型的にはundefinedにはならないが、lengthが0の場合はundefinedになる
-        return lastCommand ? lastCommand.unixMillisec : null;
+      const getLastCommandId = (commands: Command[]): CommandId | null => {
+        if (commands.length == 0) return null;
+        else return commands[commands.length - 1].id;
       };
 
-      const lastTalkCommandTime = getLastCommandUnixMillisec(
-        state.undoCommands["talk"],
-      );
-      const lastSongCommandTime = getLastCommandUnixMillisec(
-        state.undoCommands["song"],
-      );
-
-      if (lastTalkCommandTime != null && lastSongCommandTime != null) {
-        return Math.max(lastTalkCommandTime, lastSongCommandTime);
-      } else if (lastTalkCommandTime != null) {
-        return lastTalkCommandTime;
-      } else {
-        return lastSongCommandTime;
-      }
+      return {
+        talk: getLastCommandId(state.undoCommands["talk"]),
+        song: getLastCommandId(state.undoCommands["song"]),
+      };
     },
   },
 

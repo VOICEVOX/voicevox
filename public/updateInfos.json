@@ -1,9 +1,46 @@
 [
   {
-    "version": "0.19.2",
+    "version": "0.20.0",
     "descriptions": [
-      "キャラクター「後鬼」のスタイルを追加"
+      "起動を高速化",
+      "Apple Silicon macOSに対応",
+      "ヘルプダイアログのデザインを刷新",
+      "トーク：デフォルトプリセットが再登録できないバグの修正",
+      "トーク：全選択ショートカットキーを追加",
+      "トーク：キャラクター選択ショートカットキーを追加",
+      "ソング：歌声に呼吸音が被る問題を修正",
+      "ソング：様々な形式のプロジェクトファイルのインポートに対応",
+      "ソング：実験的機能としてマルチトラック機能を追加",
+      "ソング：ピッチ編集機能を通常機能に",
+      "開発環境の向上",
+      "バグ修正"
     ],
+    "contributors": [
+      "cm-ayf",
+      "Hiroshiba",
+      "honey32",
+      "jdkfx",
+      "madosuki",
+      "nix6839",
+      "nmori",
+      "RikitoNoto",
+      "romot-co",
+      "sabonerune",
+      "Segu-g",
+      "sevenc-nanashi",
+      "ShimagayaSatoka",
+      "sigprogramming",
+      "takusea",
+      "tarepan",
+      "tsym77yoshi",
+      "weweweok",
+      "White-Green",
+      "X-20A"
+    ]
+  },
+  {
+    "version": "0.19.2",
+    "descriptions": ["キャラクター「後鬼」のスタイルを追加"],
     "contributors": []
   },
   {

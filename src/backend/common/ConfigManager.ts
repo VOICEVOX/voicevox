@@ -151,13 +151,12 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
     (config) => {
       // ピッチ表示機能の設定をピッチ編集機能に引き継ぐ
       const experimentalSetting =
-        config.experimentalSetting as ExperimentalSettingType & {
-          showPitchInSongEditor?: boolean; // FIXME: TypeScript 5.4.5ならこの型の結合は不要
-        };
+        config.experimentalSetting as ExperimentalSettingType;
       if (
         "showPitchInSongEditor" in experimentalSetting &&
         typeof experimentalSetting.showPitchInSongEditor === "boolean"
       ) {
+        // @ts-expect-error 削除されたパラメータ。
         experimentalSetting.enablePitchEditInSongEditor =
           experimentalSetting.showPitchInSongEditor;
         delete experimentalSetting.showPitchInSongEditor;
@@ -228,6 +227,16 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
         );
         presets.keys = newPresetKeys;
       })();
+
+      // ピッチ編集機能を実験的機能から通常機能に
+      const experimentalSetting =
+        config.experimentalSetting as ExperimentalSettingType;
+      if (
+        "enablePitchEditInSongEditor" in experimentalSetting &&
+        typeof experimentalSetting.enablePitchEditInSongEditor === "boolean"
+      ) {
+        delete experimentalSetting.enablePitchEditInSongEditor;
+      }
 
       return config;
     },
