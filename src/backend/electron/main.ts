@@ -46,6 +46,7 @@ import {
   defaultToolbarButtonSetting,
   engineSettingSchema,
   EngineId,
+  UpdateInfo,
 } from "@/type/preload";
 
 type SingleInstanceLockData = {
@@ -197,7 +198,7 @@ function openEngineDirectory(engineId: EngineId) {
 
   // Windows環境だとスラッシュ区切りのパスが動かない。
   // path.resolveはWindowsだけバックスラッシュ区切りにしてくれるため、path.resolveを挟む。
-  shell.openPath(path.resolve(engineDirectory));
+  void shell.openPath(path.resolve(engineDirectory));
 }
 
 /**
@@ -243,7 +244,7 @@ async function installVvppEngineWithWarning({
   await installVvppEngine(vvppPath);
 
   if (reloadNeeded) {
-    dialog
+    void dialog
       .showMessageBox(win, {
         type: "info",
         title: "再読み込みが必要です",
@@ -318,7 +319,9 @@ function readThemeFiles() {
   const themes: ThemeConf[] = [];
   const dir = path.join(__static, "themes");
   for (const file of fs.readdirSync(dir)) {
-    const theme = JSON.parse(fs.readFileSync(path.join(dir, file)).toString());
+    const theme = JSON.parse(
+      fs.readFileSync(path.join(dir, file)).toString(),
+    ) as ThemeConf;
     themes.push(theme);
   }
   return themes;
@@ -347,7 +350,7 @@ const ossLicenses = JSON.parse(
   fs.readFileSync(path.join(__static, OssLicensesJsonFileName), {
     encoding: "utf-8",
   }),
-);
+) as Record<string, string>[];
 
 // 問い合わせの読み込み
 const contactText = fs.readFileSync(
@@ -366,7 +369,7 @@ const updateInfos = JSON.parse(
   fs.readFileSync(path.join(__static, UpdateInfosJsonFileName), {
     encoding: "utf-8",
   }),
-);
+) as UpdateInfo[];
 
 const privacyPolicyText = fs.readFileSync(
   path.join(__static, PrivacyPolicyTextFileName),
@@ -453,14 +456,18 @@ async function createWindow() {
 
   if (isDevelopment && !isTest) win.webContents.openDevTools();
 
-  win.on("maximize", () => win.webContents.send("DETECT_MAXIMIZED"));
-  win.on("unmaximize", () => win.webContents.send("DETECT_UNMAXIMIZED"));
-  win.on("enter-full-screen", () =>
-    win.webContents.send("DETECT_ENTER_FULLSCREEN"),
-  );
-  win.on("leave-full-screen", () =>
-    win.webContents.send("DETECT_LEAVE_FULLSCREEN"),
-  );
+  win.on("maximize", () => {
+    win.webContents.send("DETECT_MAXIMIZED");
+  });
+  win.on("unmaximize", () => {
+    win.webContents.send("DETECT_UNMAXIMIZED");
+  });
+  win.on("enter-full-screen", () => {
+    win.webContents.send("DETECT_ENTER_FULLSCREEN");
+  });
+  win.on("leave-full-screen", () => {
+    win.webContents.send("DETECT_LEAVE_FULLSCREEN");
+  });
   win.on("always-on-top-changed", () => {
     win.webContents.send(
       win.isAlwaysOnTop() ? "DETECT_PINNED" : "DETECT_UNPINNED",
@@ -875,7 +882,9 @@ ipcMainHandle("CLOSE_WINDOW", () => {
   appState.willQuit = true;
   win.destroy();
 });
-ipcMainHandle("MINIMIZE_WINDOW", () => win.minimize());
+ipcMainHandle("MINIMIZE_WINDOW", () => {
+  win.minimize();
+});
 ipcMainHandle("MAXIMIZE_WINDOW", () => {
   if (win.isMaximized()) {
     win.unmaximize();
@@ -885,7 +894,7 @@ ipcMainHandle("MAXIMIZE_WINDOW", () => {
 });
 
 ipcMainHandle("OPEN_LOG_DIRECTORY", () => {
-  shell.openPath(app.getPath("logs"));
+  void shell.openPath(app.getPath("logs"));
 });
 
 ipcMainHandle("ENGINE_INFOS", () => {
@@ -1029,7 +1038,7 @@ app.on("web-contents-created", (e, contents) => {
   contents.setWindowOpenHandler(({ url }) => {
     const { protocol } = new URL(url);
     if (protocol.match(/^https?:/)) {
-      shell.openExternal(url);
+      void shell.openExternal(url);
     } else {
       log.error(`許可されないリンクです。url: ${url}`);
     }
@@ -1188,10 +1197,8 @@ app.on("ready", async () => {
   if (isDevelopment && !isTest) {
     try {
       await installExtension(VUEJS_DEVTOOLS);
-    } catch (e: unknown) {
-      if (e instanceof Error) {
-        log.error("Vue Devtools failed to install:", e.toString());
-      }
+    } catch (e) {
+      log.error("Vue Devtools failed to install:", e);
     }
   }
 
@@ -1231,7 +1238,7 @@ app.on("ready", async () => {
     }
   }
 
-  start();
+  void start();
 });
 
 // 他のプロセスが起動したとき、`requestSingleInstanceLock`経由で`rawData`が送信される。

@@ -43,68 +43,58 @@
           </QToolbar>
         </QHeader>
         <QPage>
-          <QCard flat square class="preview-card">
-            <QToolbar class="bg-toolbar preview-toolbar">
-              <Draggable
-                v-model="toolbarButtons"
-                :itemKey="toolbarButtonKey"
-                @start="toolbarButtonDragging = true"
-                @end="toolbarButtonDragging = false"
+          <QToolbar class="bg-toolbar preview-toolbar">
+            <Draggable
+              v-model="toolbarButtons"
+              :itemKey="toolbarButtonKey"
+              @start="toolbarButtonDragging = true"
+              @end="toolbarButtonDragging = false"
+            >
+              <template
+                #item="{ element: button }: { element: ToolbarButtonTagType }"
               >
-                <template
-                  #item="{ element: button }: { element: ToolbarButtonTagType }"
-                >
-                  <QBtn
-                    unelevated
-                    color="toolbar-button"
-                    textColor="toolbar-button-display"
-                    :class="
-                      (button === 'EMPTY' ? ' radio-space' : ' radio') +
-                      ' text-no-wrap text-bold q-mr-sm'
-                    "
-                  >
-                    {{ getToolbarButtonName(button) }}
-                    <QTooltip
-                      :delay="800"
-                      anchor="center right"
-                      self="center left"
-                      transitionShow="jump-right"
-                      transitionHide="jump-left"
-                      :style="{
-                        display: toolbarButtonDragging ? 'none' : 'block',
-                      }"
-                      >{{ usableButtonsDesc[button] }}</QTooltip
+                <div :class="button === 'EMPTY' ? 'radio-space' : 'radio'">
+                  <BaseTooltip :label="usableButtonsDesc[button]">
+                    <QBtn
+                      unelevated
+                      color="toolbar-button"
+                      textColor="toolbar-button-display"
+                      class="text-no-wrap text-bold"
                     >
-                  </QBtn>
-                </template>
-              </Draggable>
-              <div class="preview-toolbar-drag-hint">
-                ドラッグでボタンの並びを変更できます。
+                      {{ getToolbarButtonName(button) }}
+                    </QBtn>
+                  </BaseTooltip>
+                </div>
+              </template>
+            </Draggable>
+            <div class="preview-toolbar-drag-hint">
+              ドラッグでボタンの並びを変更できます。
+            </div>
+          </QToolbar>
+          <div class="container">
+            <BaseScrollArea>
+              <div class="inner">
+                <h1 class="title">表示するボタン</h1>
+                <div class="list">
+                  <BaseRowCard
+                    v-for="(desc, key) in usableButtonsDesc"
+                    :key
+                    :title="getToolbarButtonName(key)"
+                    :description="desc"
+                    clickable
+                    tabindex="-1"
+                    @click="toggleToolbarButtons(key)"
+                  >
+                    <BaseSwitch
+                      :checked="toolbarButtons.includes(key)"
+                      onLabel="表示する"
+                      offLabel="表示しない"
+                    />
+                  </BaseRowCard>
+                </div>
               </div>
-            </QToolbar>
-
-            <QCardActions>
-              <div class="text-h5">表示するボタンの選択</div>
-            </QCardActions>
-            <QCardActions class="no-padding">
-              <QList class="usable-button-list bg-surface">
-                <QItem
-                  v-for="(desc, key) in usableButtonsDesc"
-                  :key
-                  v-ripple
-                  tag="label"
-                >
-                  <QItemSection>
-                    <QItemLabel>{{ getToolbarButtonName(key) }}</QItemLabel>
-                    <QItemLabel caption>{{ desc }}</QItemLabel>
-                  </QItemSection>
-                  <QItemSection avatar>
-                    <QToggle v-model="toolbarButtons" :val="key" />
-                  </QItemSection>
-                </QItem>
-              </QList>
-            </QCardActions>
-          </QCard>
+            </BaseScrollArea>
+          </div>
         </QPage>
       </QPageContainer>
     </QLayout>
@@ -114,6 +104,10 @@
 <script setup lang="ts">
 import { computed, ref, watch, Ref } from "vue";
 import Draggable from "vuedraggable";
+import BaseSwitch from "@/components/Base/BaseSwitch.vue";
+import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
+import BaseRowCard from "@/components/Base/BaseRowCard.vue";
+import BaseTooltip from "@/components/Base/BaseTooltip.vue";
 import { useStore } from "@/store";
 import { ToolbarButtonTagType, ToolbarSettingType } from "@/type/preload";
 import { getToolbarButtonName } from "@/store/utility";
@@ -147,9 +141,17 @@ watch(
 );
 
 const defaultSetting: ToolbarSettingType = [];
-window.backend.getDefaultToolbarSetting().then((setting) => {
+void window.backend.getDefaultToolbarSetting().then((setting) => {
   defaultSetting.push(...setting);
 });
+
+const toggleToolbarButtons = (key: ToolbarButtonTagType) => {
+  if (toolbarButtons.value.includes(key)) {
+    toolbarButtons.value.splice(toolbarButtons.value.indexOf(key), 1);
+  } else {
+    toolbarButtons.value.push(key);
+  }
+};
 
 const usableButtonsDesc: Record<ToolbarButtonTagType, string> = {
   PLAY_CONTINUOUSLY:
@@ -219,7 +221,7 @@ const applyDefaultSetting = async () => {
   }
 };
 const saveCustomToolbar = () => {
-  store.dispatch("SET_TOOLBAR_SETTING", {
+  void store.dispatch("SET_TOOLBAR_SETTING", {
     data: [...toolbarButtons.value],
   });
 };
@@ -246,7 +248,9 @@ const finishOrNotDialog = async () => {
 
 <style lang="scss" scoped>
 @use "@/styles/variables" as vars;
-@use "@/styles/colors" as colors;
+@use "@/styles/v2/variables" as newvars;
+@use "@/styles/v2/mixin" as mixin;
+@use "@/styles/v2/colors" as colors;
 
 .tool-bar-custom-dialog .q-layout-container :deep(.absolute-full) {
   right: 0 !important;
@@ -267,6 +271,7 @@ const finishOrNotDialog = async () => {
 .preview-toolbar > div:not(.preview-toolbar-drag-hint) {
   width: 100%;
   display: inline-flex;
+  gap: 8px;
 }
 
 .preview-toolbar-drag-hint {
@@ -274,32 +279,45 @@ const finishOrNotDialog = async () => {
   padding-bottom: 8px;
 }
 
-.preview-card {
-  width: 100%;
-  min-width: 460px;
-  background: var(--color-background);
-}
-
-.usable-button-list {
-  // menubar-height + toolbar-height * 2(main+preview) + window-border-width
-  // 52(preview part buttons) * 2 + 46(select part title) + 22(preview part hint)
-  height: calc(
-    100vh - #{vars.$menubar-height + (vars.$toolbar-height) +
-      vars.$window-border-width + 52px + 46px + 22px}
-  );
-  width: 100%;
-  overflow-y: scroll;
-}
-
 .radio {
-  &:hover {
-    cursor: grab;
+  & > .q-btn:hover {
+    cursor: grab !important;
   }
 }
 
 .radio-space {
   @extend .radio;
   flex-grow: 1;
-  color: transparent;
+
+  & > .q-btn {
+    color: transparent;
+    width: 100%;
+  }
+}
+
+.title {
+  @include mixin.headline-1;
+}
+
+.container {
+  // TODO: 親コンポーネントからheightを取得できないため一時的にcalcを使用、HelpDialogの構造を再設計後100%に変更する
+  // height: 100%;
+  height: calc(100vh - 164px);
+  background-color: colors.$background;
+}
+
+.inner {
+  margin: auto;
+  max-width: 960px;
+  padding: newvars.$padding-2;
+  display: flex;
+  flex-direction: column;
+  gap: newvars.$gap-1;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: newvars.$gap-1;
 }
 </style>

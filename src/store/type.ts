@@ -305,7 +305,7 @@ export type AudioStoreTypes = {
       engineId: EngineId;
       baseStyleId: StyleId;
       morphableTargets?: Exclude<
-        { [key: number]: MorphableTargetInfo },
+        Record<number, MorphableTargetInfo>,
         undefined
       >;
     };
@@ -795,6 +795,11 @@ export type SingingVoiceSourceHash = z.infer<
   typeof singingVoiceSourceHashSchema
 >;
 
+export const sequenceIdSchema = z.string().brand<"SequenceId">();
+export type SequenceId = z.infer<typeof sequenceIdSchema>;
+export const SequenceId = (id: string): SequenceId =>
+  sequenceIdSchema.parse(id);
+
 /**
  * フレーズ（レンダリング区間）
  */
@@ -805,6 +810,7 @@ export type Phrase = {
   state: PhraseState;
   singingGuideKey?: SingingGuideSourceHash;
   singingVoiceKey?: SingingVoiceSourceHash;
+  sequenceId?: SequenceId;
 };
 
 /**
@@ -1001,6 +1007,13 @@ export type SingingStoreTypes = {
     mutation: {
       phraseKey: PhraseSourceHash;
       singingVoiceKey: SingingVoiceSourceHash | undefined;
+    };
+  };
+
+  SET_SEQUENCE_ID_TO_PHRASE: {
+    mutation: {
+      phraseKey: PhraseSourceHash;
+      sequenceId: SequenceId | undefined;
     };
   };
 
@@ -1242,6 +1255,10 @@ export type SingingStoreTypes = {
 
   CALC_RENDER_DURATION: {
     getter: number;
+  };
+
+  SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS: {
+    action(): void;
   };
 };
 

@@ -12,7 +12,6 @@ import { IpcSOData } from "@/type/ipc";
 import {
   defaultHotkeySettings,
   defaultToolbarButtonSetting,
-  configSchema,
   EngineId,
   EngineSettingType,
   EngineSettings,
@@ -210,8 +209,12 @@ export const api: Sandbox = {
     listener: (_: unknown, ...args: IpcSOData[T]["args"]) => void,
   ) {
     window.addEventListener("message", (event) => {
-      if (event.data.channel == channel) {
-        listener(event.data.args);
+      const data = event.data as {
+        channel: keyof IpcSOData;
+        args: IpcSOData[keyof IpcSOData];
+      };
+      if (data.channel == channel) {
+        listener(data.args);
       }
     });
   },
@@ -251,13 +254,8 @@ export const api: Sandbox = {
     throw new Error(`Not supported on Browser version: openEngineDirectory`);
   },
   async hotkeySettings(newData?: HotkeySettingType) {
-    type HotkeySettingType = ReturnType<
-      (typeof configSchema)["parse"]
-    >["hotkeySettings"];
     if (newData != undefined) {
-      const hotkeySettings = (await this.getSetting(
-        "hotkeySettings",
-      )) as HotkeySettingType;
+      const hotkeySettings = await this.getSetting("hotkeySettings");
       const hotkeySetting = hotkeySettings.find(
         (hotkey) => hotkey.action == newData.action,
       );
@@ -266,7 +264,7 @@ export const api: Sandbox = {
       }
       await this.setSetting("hotkeySettings", hotkeySettings);
     }
-    return this.getSetting("hotkeySettings") as Promise<HotkeySettingType>;
+    return this.getSetting("hotkeySettings");
   },
   checkFileExists(file: string) {
     return checkFileExistsImpl(file);

@@ -73,7 +73,7 @@ test("「設定」→「読み方＆アクセント辞書」で「読み方＆�
     .locator(".word-editor .row")
     .filter({ hasText: "単語" })
     .locator(".q-field__native");
-  wordInputTag.evaluate((e: HTMLInputElement, rs: string) => {
+  await wordInputTag.evaluate((e: HTMLInputElement, rs: string) => {
     e.value = rs;
     e.dispatchEvent(new Event("input"));
   }, randomString);

@@ -22,3 +22,5 @@ $radius-1: var(--radius-basis);
 $radius-2: calc(var(--radius-basis) * 2);
 
 $transition-duration: 100ms;
+
+$z-index-tooltip: 9999;

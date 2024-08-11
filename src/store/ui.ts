@@ -42,6 +42,7 @@ export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
 ): Action<S, S, A, K, AllGetters, AllActions, AllMutations> {
   return (context, payload: Parameters<A[K]>[0]) => {
     context.commit("LOCK_UI");
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
     return action(context, payload).finally(() => {
       context.commit("UNLOCK_UI");
     });
@@ -68,6 +69,7 @@ export function createDotNotationUILockAction<
 ): DotNotationAction<S, S, A, K, AllGetters, AllActions, AllMutations> {
   return (context, payload: Parameters<A[K]>[0]) => {
     context.mutations.LOCK_UI();
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
     return action(context, payload).finally(() => {
       context.mutations.UNLOCK_UI();
     });
@@ -78,7 +80,7 @@ export function withProgress<T>(
   action: Promise<T>,
   dispatch: Dispatch<AllActions>,
 ): Promise<T> {
-  dispatch("START_PROGRESS");
+  void dispatch("START_PROGRESS");
   return action.finally(() => dispatch("RESET_PROGRESS"));
 }
 
@@ -86,7 +88,7 @@ export function withProgressDotNotation<T>(
   action: Promise<T>,
   actions: DotNotationDispatch<AllActions>,
 ): Promise<T> {
-  actions.START_PROGRESS();
+  void actions.START_PROGRESS();
   return action.finally(() => actions.RESET_PROGRESS());
 }
 
@@ -495,7 +497,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
 
   START_PROGRESS: {
     action({ actions }) {
-      actions.SET_PROGRESS({ progress: 0 });
+      void actions.SET_PROGRESS({ progress: 0 });
     },
   },
 
@@ -518,7 +520,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   RESET_PROGRESS: {
     action({ actions }) {
       // -1で非表示
-      actions.SET_PROGRESS({ progress: -1 });
+      void actions.SET_PROGRESS({ progress: -1 });
     },
   },
 
@@ -548,7 +550,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     async action({ getters, dispatch, actions, state }) {
       const activeAudioKey = getters.ACTIVE_AUDIO_KEY;
       if (activeAudioKey == undefined) {
-        actions.SHOW_ALERT_DIALOG({
+        void actions.SHOW_ALERT_DIALOG({
           title: "テキスト欄が選択されていません",
           message: "音声を書き出したいテキスト欄を選択してください。",
         });

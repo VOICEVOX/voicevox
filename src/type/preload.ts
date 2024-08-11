@@ -195,7 +195,7 @@ export const defaultHotkeySettings: HotkeySettingType[] = [
     return {
       action:
         `${index + 1}${actionPostfixSelectNthCharacter}` as HotkeyActionNameType,
-      combination: HotkeyCombination((!isMac ? "Ctrl " : "Meta ") + roleKey),
+      combination: HotkeyCombination(`${!isMac ? "Ctrl" : "Meta"} ${roleKey}`),
     };
   }),
 ];
@@ -446,15 +446,16 @@ export type PresetConfig = {
   keys: string[];
 };
 
-export type MorphableTargetInfoTable = {
-  [baseStyleId: StyleId]:
-    | undefined
-    | {
-        [targetStyleId: StyleId]: {
-          isMorphable: boolean;
-        };
-      };
-};
+export type MorphableTargetInfoTable = Record<
+  StyleId,
+  | undefined
+  | Record<
+      StyleId,
+      {
+        isMorphable: boolean;
+      }
+    >
+>;
 
 export const hotkeyActionNameSchema = z.enum([
   "音声書き出し",
@@ -734,6 +735,6 @@ export interface MessageBoxReturnValue {
   checkboxChecked: boolean;
 }
 
-export const SandboxKey = "backend" as const;
+export const SandboxKey = "backend";
 
 export type EditorType = "talk" | "song";

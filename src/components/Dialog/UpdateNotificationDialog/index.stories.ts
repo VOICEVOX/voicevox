@@ -46,7 +46,7 @@ export const Close: Story = {
     await userEvent.click(button);
 
     // ダイアログを閉じるイベントが呼ばれる
-    expect(args["onUpdate:modelValue"]).toBeCalledWith(false);
+    await expect(args["onUpdate:modelValue"]).toBeCalledWith(false);
   },
 };
 
@@ -62,9 +62,9 @@ export const SkipThisVersion: Story = {
     await userEvent.click(button);
 
     // スキップイベントが呼ばれる
-    expect(args["onSkipThisVersionClick"]).toBeCalledWith("1.0.0");
+    await expect(args["onSkipThisVersionClick"]).toBeCalledWith("1.0.0");
     // ダイアログを閉じるイベントが呼ばれる
-    expect(args["onUpdate:modelValue"]).toBeCalledWith(false);
+    await expect(args["onUpdate:modelValue"]).toBeCalledWith(false);
   },
 };
 
@@ -82,12 +82,12 @@ export const OpenOfficialSite: Story = {
     await userEvent.click(button);
 
     // 公式サイトが開かれる
-    expect(window.open).toBeCalledWith(
+    await expect(window.open).toBeCalledWith(
       "https://voicevox.hiroshiba.jp/",
       "_blank",
     );
     // ダイアログを閉じるイベントが呼ばれる
-    expect(args["onUpdate:modelValue"]).toBeCalledWith(false);
+    await expect(args["onUpdate:modelValue"]).toBeCalledWith(false);
   },
 };
 

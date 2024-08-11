@@ -69,9 +69,9 @@ export const settingStoreState: SettingStoreState = {
 export const settingStore = createPartialStore<SettingStoreTypes>({
   HYDRATE_SETTING_STORE: {
     async action({ mutations, actions }) {
-      window.backend.hotkeySettings().then((hotkeys) => {
+      void window.backend.hotkeySettings().then((hotkeys) => {
         hotkeys.forEach((hotkey) => {
-          actions.SET_HOTKEY_SETTINGS({
+          void actions.SET_HOTKEY_SETTINGS({
             data: hotkey,
           });
         });
@@ -80,17 +80,17 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       mutations.SET_AVAILABLE_THEMES({
         themes: await window.backend.getAvailableThemes(),
       });
-      actions.SET_CURRENT_THEME_SETTING({
+      void actions.SET_CURRENT_THEME_SETTING({
         currentTheme: await window.backend.getSetting("currentTheme"),
       });
 
-      actions.SET_ACCEPT_RETRIEVE_TELEMETRY({
+      void actions.SET_ACCEPT_RETRIEVE_TELEMETRY({
         acceptRetrieveTelemetry: await window.backend.getSetting(
           "acceptRetrieveTelemetry",
         ),
       });
 
-      actions.SET_ACCEPT_TERMS({
+      void actions.SET_ACCEPT_TERMS({
         acceptTerms: await window.backend.getSetting("acceptTerms"),
       });
 
@@ -163,7 +163,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     },
     action({ mutations }, { data }: { data: SavingSetting }) {
       const newData = window.backend.setSetting("savingSetting", data);
-      newData.then((savingSetting) => {
+      void newData.then((savingSetting) => {
         mutations.SET_SAVING_SETTING({ savingSetting });
       });
     },
@@ -181,7 +181,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       if (flag) state.hotkeySettings.push(newHotkey);
     },
     action({ mutations }, { data }: { data: HotkeySettingType }) {
-      window.backend.hotkeySettings(data);
+      void window.backend.hotkeySettings(data);
       mutations.SET_HOTKEY_SETTINGS({
         newHotkey: data,
       });
@@ -197,7 +197,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     },
     action({ mutations }, { data }: { data: ToolbarSettingType }) {
       const newData = window.backend.setSetting("toolbarSetting", data);
-      newData.then((toolbarSetting) => {
+      void newData.then((toolbarSetting) => {
         mutations.SET_TOOLBAR_SETTING({ toolbarSetting });
       });
     },
@@ -210,7 +210,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       state[key as never] = value;
     },
     action({ mutations }, { key, value }) {
-      window.backend.setSetting(key, value);
+      void window.backend.setSetting(key, value);
       // Vuexの型処理でUnionが解かれてしまうのを迂回している
       // FIXME: このワークアラウンドをなくす
       mutations.SET_ROOT_MISC_SETTING({ key: key as never, value });
@@ -224,7 +224,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     action({ state, mutations }, { currentTheme }: { currentTheme: string }) {
       // メモ：テーマ周りリファクタリングしたのでモック挿せるはず。
       // うまくいけば、テーマ周りのリファクタリングだけでプルリク出す。
-      window.backend.setSetting("currentTheme", currentTheme);
+      void window.backend.setSetting("currentTheme", currentTheme);
       const theme = state.availableThemes.find((value) => {
         return value.name == currentTheme;
       });
@@ -250,7 +250,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         event: "updateAcceptRetrieveTelemetry",
         acceptRetrieveTelemetry: acceptRetrieveTelemetry == "Accepted",
       });
-      window.backend.setSetting(
+      void window.backend.setSetting(
         "acceptRetrieveTelemetry",
         acceptRetrieveTelemetry,
       );
@@ -267,7 +267,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         event: "updateAcceptTerms",
         acceptTerms: acceptTerms == "Accepted",
       });
-      window.backend.setSetting("acceptTerms", acceptTerms);
+      void window.backend.setSetting("acceptTerms", acceptTerms);
       mutations.SET_ACCEPT_TERMS({ acceptTerms });
     },
   },
@@ -280,7 +280,10 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       state.experimentalSetting = experimentalSetting;
     },
     action({ mutations }, { experimentalSetting }) {
-      window.backend.setSetting("experimentalSetting", experimentalSetting);
+      void window.backend.setSetting(
+        "experimentalSetting",
+        experimentalSetting,
+      );
       mutations.SET_EXPERIMENTAL_SETTING({ experimentalSetting });
     },
   },
@@ -290,7 +293,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       state.confirmedTips = confirmedTips;
     },
     action({ mutations }, { confirmedTips }) {
-      window.backend.setSetting("confirmedTips", confirmedTips);
+      void window.backend.setSetting("confirmedTips", confirmedTips);
       mutations.SET_CONFIRMED_TIPS({ confirmedTips });
     },
   },
@@ -302,7 +305,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         ...confirmedTip,
       };
 
-      actions.SET_CONFIRMED_TIPS({
+      void actions.SET_CONFIRMED_TIPS({
         confirmedTips: confirmedTips as ConfirmedTips,
       });
     },
@@ -310,7 +313,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
 
   RESET_CONFIRMED_TIPS: {
     async action({ state, actions }) {
-      const confirmedTips: { [key: string]: boolean } = {
+      const confirmedTips: Record<string, boolean> = {
         ...state.confirmedTips,
       };
 
@@ -319,7 +322,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         confirmedTips[key] = false;
       }
 
-      actions.SET_CONFIRMED_TIPS({
+      void actions.SET_CONFIRMED_TIPS({
         confirmedTips: confirmedTips as ConfirmedTips,
       });
     },
@@ -360,7 +363,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
           }
         }
 
-        actions.SET_ENGINE_SETTING({
+        void actions.SET_ENGINE_SETTING({
           engineSetting: { ...state.engineSettings[engineId], useGpu },
           engineId,
         });

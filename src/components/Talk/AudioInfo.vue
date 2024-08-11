@@ -484,7 +484,7 @@ const handleParameterChange = (
     parameter.slider.qSliderProps.min.value,
     parameter.slider.qSliderProps.max.value,
   );
-  store.dispatch(parameter.action, {
+  void store.dispatch(parameter.action, {
     audioKeys: selectedAudioKeys.value,
     [parameter.key]: value,
   });
@@ -508,7 +508,7 @@ const morphingTargetEngines = store.getters.MORPHING_SUPPORTED_ENGINES;
 // モーフィング可能なターゲット一覧を取得
 watchEffect(() => {
   if (audioItem.value != undefined) {
-    store.dispatch("LOAD_MORPHABLE_TARGETS", {
+    void store.dispatch("LOAD_MORPHABLE_TARGETS", {
       engineId: audioItem.value.voice.engineId,
       baseStyleId: audioItem.value.voice.styleId,
     });
@@ -588,7 +588,7 @@ const morphingTargetVoice = computed({
             targetStyleId: voice.styleId,
           }
         : undefined;
-    store.dispatch("COMMAND_MULTI_SET_MORPHING_INFO", {
+    void store.dispatch("COMMAND_MULTI_SET_MORPHING_INFO", {
       audioKeys: selectedAudioKeys.value,
       morphingInfo,
     });
@@ -752,7 +752,7 @@ const presetSelectModel = computed<PresetSelectModelType>({
     };
   },
   set: (newVal) => {
-    changePreset(newVal.key);
+    void changePreset(newVal.key);
   },
 });
 
@@ -772,7 +772,7 @@ const setPresetByScroll = (event: WheelEvent) => {
 
   if (selectablePresetList.value[newIndex] == undefined) return;
 
-  changePreset(selectablePresetList.value[newIndex].key);
+  void changePreset(selectablePresetList.value[newIndex].key);
 };
 
 // プリセットの登録・再登録
@@ -830,7 +830,7 @@ const checkRewritePreset = async () => {
     showsPresetRewriteDialog.value = true;
   } else {
     const audioPresetKey = await addPreset();
-    changePreset(audioPresetKey);
+    void changePreset(audioPresetKey);
   }
 };
 

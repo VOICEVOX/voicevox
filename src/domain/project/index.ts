@@ -1,6 +1,8 @@
 /**
  * プロジェクトファイル関連のコード
  */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
 import semver from "semver";
 
@@ -72,6 +74,7 @@ const validateTalkProject = (talkProject: LatestProjectType["talk"]) => {
   }
 };
 
+// TODO: マイグレーション（とファイルの最初のeslint-disable）を別ファイルに移す
 /**
  * プロジェクトファイルのマイグレーション
  */

@@ -116,7 +116,7 @@ registerHotkeyWithCleanup({
   name: "再生/停止",
   callback: () => {
     if (!nowPlaying.value && !nowGenerating.value && !uiLocked.value) {
-      play();
+      void play();
     } else {
       stop();
     }
@@ -155,7 +155,7 @@ registerHotkeyWithCleanup({
       const audioKeys = store.state.experimentalSetting.enableMultiSelect
         ? store.getters.SELECTED_AUDIO_KEYS
         : [store.getters.ACTIVE_AUDIO_KEY];
-      store.dispatch("COMMAND_MULTI_RESET_MORA_PITCH_AND_LENGTH", {
+      void store.dispatch("COMMAND_MULTI_RESET_MORA_PITCH_AND_LENGTH", {
         audioKeys,
       });
     }
@@ -170,7 +170,7 @@ registerHotkeyWithCleanup({
       store.getters.ACTIVE_AUDIO_KEY &&
       store.getters.AUDIO_PLAY_START_POINT != undefined
     ) {
-      store.dispatch("COMMAND_RESET_SELECTED_MORA_PITCH_AND_LENGTH", {
+      void store.dispatch("COMMAND_RESET_SELECTED_MORA_PITCH_AND_LENGTH", {
         audioKey: store.getters.ACTIVE_AUDIO_KEY,
         accentPhraseIndex: store.getters.AUDIO_PLAY_START_POINT,
       });
@@ -213,7 +213,7 @@ const startPoint = computed({
     return store.getters.AUDIO_PLAY_START_POINT;
   },
   set: (startPoint) => {
-    store.dispatch("SET_AUDIO_PLAY_START_POINT", { startPoint });
+    void store.dispatch("SET_AUDIO_PLAY_START_POINT", { startPoint });
   },
 });
 // アクティブ(再生されている状態)なアクセント句
@@ -250,7 +250,7 @@ const play = async () => {
     });
   } catch (e) {
     const msg = handlePossiblyNotMorphableError(e);
-    store.dispatch("SHOW_ALERT_DIALOG", {
+    void store.dispatch("SHOW_ALERT_DIALOG", {
       title: "再生に失敗しました",
       message: msg ?? "エンジンの再起動をお試しください。",
     });
@@ -258,7 +258,7 @@ const play = async () => {
 };
 
 const stop = () => {
-  store.dispatch("STOP_AUDIO");
+  void store.dispatch("STOP_AUDIO");
 };
 
 const nowPlaying = computed(() => store.getters.NOW_PLAYING);

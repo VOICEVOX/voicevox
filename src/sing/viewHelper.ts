@@ -87,21 +87,19 @@ export function getKeyColorFromNoteNumber(noteNumber: number) {
   return mapWhiteKeys.includes(pitch) ? "white" : "black";
 }
 
-export const keyInfos = [...Array(128)]
-  .map((_, noteNumber) => {
-    const pitch = getPitchFromNoteNumber(noteNumber);
-    const octave = getOctaveFromNoteNumber(noteNumber);
-    const name = `${pitch}${octave}`;
-    const color = getKeyColorFromNoteNumber(noteNumber);
-    return {
-      noteNumber,
-      pitch,
-      octave,
-      name,
-      color,
-    };
-  })
-  .reverse();
+export const keyInfos = Array.from({ length: 128 }, (_, noteNumber) => {
+  const pitch = getPitchFromNoteNumber(noteNumber);
+  const octave = getOctaveFromNoteNumber(noteNumber);
+  const name = `${pitch}${octave}`;
+  const color = getKeyColorFromNoteNumber(noteNumber);
+  return {
+    noteNumber,
+    pitch,
+    octave,
+    name,
+    color,
+  };
+}).toReversed();
 
 export const getStyleDescription = (style: StyleInfo) => {
   const description: string[] = [];

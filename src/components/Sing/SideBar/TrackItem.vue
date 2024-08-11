@@ -190,20 +190,23 @@ const shouldPlayTrack = computed(() =>
 
 const setTrackPan = (pan: number) => {
   if (store.state.undoableTrackOperations.panAndGain) {
-    store.dispatch("COMMAND_SET_TRACK_PAN", { trackId: props.trackId, pan });
+    void store.dispatch("COMMAND_SET_TRACK_PAN", {
+      trackId: props.trackId,
+      pan,
+    });
   } else {
-    store.dispatch("SET_TRACK_PAN", { trackId: props.trackId, pan });
+    void store.dispatch("SET_TRACK_PAN", { trackId: props.trackId, pan });
   }
 };
 
 const setTrackGain = (gain: number) => {
   if (store.state.undoableTrackOperations.panAndGain) {
-    store.dispatch("COMMAND_SET_TRACK_GAIN", {
+    void store.dispatch("COMMAND_SET_TRACK_GAIN", {
       trackId: props.trackId,
       gain,
     });
   } else {
-    store.dispatch("SET_TRACK_GAIN", { trackId: props.trackId, gain });
+    void store.dispatch("SET_TRACK_GAIN", { trackId: props.trackId, gain });
   }
 };
 
@@ -214,29 +217,38 @@ watchEffect(() => {
 
 const updateTrackName = () => {
   if (temporaryTrackName.value === track.value.name) return;
+
+  // 空のトラック名だと空欄のようになってしまうので許容しない
   if (temporaryTrackName.value === "") {
     temporaryTrackName.value = track.value.name;
     return;
   }
-  store.dispatch("COMMAND_SET_TRACK_NAME", {
+
+  void store.dispatch("COMMAND_SET_TRACK_NAME", {
     trackId: props.trackId,
-    name: track.value.name,
+    name: temporaryTrackName.value,
   });
 };
 
 const setTrackMute = (mute: boolean) => {
   if (store.state.undoableTrackOperations.soloAndMute) {
-    store.dispatch("COMMAND_SET_TRACK_MUTE", { trackId: props.trackId, mute });
+    void store.dispatch("COMMAND_SET_TRACK_MUTE", {
+      trackId: props.trackId,
+      mute,
+    });
   } else {
-    store.dispatch("SET_TRACK_MUTE", { trackId: props.trackId, mute });
+    void store.dispatch("SET_TRACK_MUTE", { trackId: props.trackId, mute });
   }
 };
 
 const setTrackSolo = (solo: boolean) => {
   if (store.state.undoableTrackOperations.soloAndMute) {
-    store.dispatch("COMMAND_SET_TRACK_SOLO", { trackId: props.trackId, solo });
+    void store.dispatch("COMMAND_SET_TRACK_SOLO", {
+      trackId: props.trackId,
+      solo,
+    });
   } else {
-    store.dispatch("SET_TRACK_SOLO", { trackId: props.trackId, solo });
+    void store.dispatch("SET_TRACK_SOLO", { trackId: props.trackId, solo });
   }
 };
 
@@ -259,7 +271,7 @@ const trackCharacter = computed<
   return undefined;
 });
 const selectTrack = () => {
-  store.dispatch("SET_SELECTED_TRACK", { trackId: props.trackId });
+  void store.dispatch("SET_SELECTED_TRACK", { trackId: props.trackId });
 };
 
 const addTrack = async () => {
