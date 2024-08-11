@@ -9,6 +9,7 @@ import {
   isMac,
 } from "@/type/preload";
 import { AccentPhrase, Mora } from "@/openapi";
+import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 
 export const DEFAULT_STYLE_NAME = "ノーマル";
 export const DEFAULT_PROJECT_NAME = "Untitled";
@@ -123,7 +124,7 @@ export const replaceTagIdToTagString = {
   date: "日付",
   projectName: "プロジェクト名",
 };
-const replaceTagStringToTagId: { [tagString: string]: string } = Object.entries(
+const replaceTagStringToTagId: Record<string, string> = Object.entries(
   replaceTagIdToTagString,
 ).reduce((prev, [k, v]) => ({ ...prev, [v]: k }), {});
 
@@ -150,9 +151,9 @@ export function currentDateString(): string {
 
 function replaceTag(
   template: string,
-  replacer: { [key: string]: string },
+  replacer: Record<string, string>,
 ): string {
-  const result = template.replace(/\$(.+?)\$/g, (match, p1) => {
+  const result = template.replace(/\$(.+?)\$/g, (match, p1: string) => {
     const replaceTagId = replaceTagStringToTagId[p1];
     if (replaceTagId == undefined) {
       return match;
@@ -229,8 +230,8 @@ export class TuningTranscription {
   beforeAccent: AccentPhrase[];
   afterAccent: AccentPhrase[];
   constructor(beforeAccent: AccentPhrase[], afterAccent: AccentPhrase[]) {
-    this.beforeAccent = JSON.parse(JSON.stringify(beforeAccent));
-    this.afterAccent = JSON.parse(JSON.stringify(afterAccent));
+    this.beforeAccent = cloneWithUnwrapProxy(beforeAccent);
+    this.afterAccent = cloneWithUnwrapProxy(afterAccent);
   }
 
   /**

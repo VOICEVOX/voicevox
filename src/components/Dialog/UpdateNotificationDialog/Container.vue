@@ -67,7 +67,7 @@ const newUpdateResult = useFetchNewUpdateInfos(
 
 // 新しいバージョンのアップデートがスキップされたときの処理
 const handleSkipThisVersionClick = (version: string) => {
-  store.dispatch("SET_ROOT_MISC_SETTING", {
+  void store.dispatch("SET_ROOT_MISC_SETTING", {
     key: "skipUpdateVersion",
     value: version,
   });

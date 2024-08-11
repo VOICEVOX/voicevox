@@ -202,21 +202,21 @@ registerHotkeyWithCleanup({
 });
 
 const undo = () => {
-  store.dispatch("UNDO", { editor });
+  void store.dispatch("UNDO", { editor });
 };
 const redo = () => {
-  store.dispatch("REDO", { editor });
+  void store.dispatch("REDO", { editor });
 };
 
 const editTarget = computed(() => store.state.sequencerEditTarget);
 
 const changeEditTarget = (editTarget: SequencerEditTarget) => {
-  store.dispatch("SET_EDIT_TARGET", { editTarget });
+  void store.dispatch("SET_EDIT_TARGET", { editTarget });
 };
 
 const isSidebarOpen = computed(() => store.state.isSongSidebarOpen);
 const toggleSidebar = () => {
-  store.dispatch("SET_SONG_SIDEBAR_OPEN", {
+  void store.dispatch("SET_SONG_SIDEBAR_OPEN", {
     isSongSidebarOpen: !isSidebarOpen.value,
   });
 };
@@ -316,7 +316,7 @@ const setVolumeRangeAdjustmentInputBuffer = (
 
 const setTempo = () => {
   const bpm = bpmInputBuffer.value;
-  store.dispatch("COMMAND_SET_TEMPO", {
+  void store.dispatch("COMMAND_SET_TEMPO", {
     tempo: {
       position: 0,
       bpm,
@@ -327,7 +327,7 @@ const setTempo = () => {
 const setTimeSignature = () => {
   const beats = beatsInputBuffer.value;
   const beatType = beatTypeInputBuffer.value;
-  store.dispatch("COMMAND_SET_TIME_SIGNATURE", {
+  void store.dispatch("COMMAND_SET_TIME_SIGNATURE", {
     timeSignature: {
       measureNumber: 1,
       beats,
@@ -338,7 +338,7 @@ const setTimeSignature = () => {
 
 const setKeyRangeAdjustment = () => {
   const keyRangeAdjustment = keyRangeAdjustmentInputBuffer.value;
-  store.dispatch("COMMAND_SET_KEY_RANGE_ADJUSTMENT", {
+  void store.dispatch("COMMAND_SET_KEY_RANGE_ADJUSTMENT", {
     keyRangeAdjustment,
     trackId: selectedTrackId.value,
   });
@@ -346,7 +346,7 @@ const setKeyRangeAdjustment = () => {
 
 const setVolumeRangeAdjustment = () => {
   const volumeRangeAdjustment = volumeRangeAdjustmentInputBuffer.value;
-  store.dispatch("COMMAND_SET_VOLUME_RANGE_ADJUSTMENT", {
+  void store.dispatch("COMMAND_SET_VOLUME_RANGE_ADJUSTMENT", {
     volumeRangeAdjustment,
     trackId: selectedTrackId.value,
   });
@@ -379,15 +379,15 @@ const playHeadPositionMilliSecStr = computed(() => {
 const nowPlaying = computed(() => store.state.nowPlaying);
 
 const play = () => {
-  store.dispatch("SING_PLAY_AUDIO");
+  void store.dispatch("SING_PLAY_AUDIO");
 };
 
 const stop = () => {
-  store.dispatch("SING_STOP_AUDIO");
+  void store.dispatch("SING_STOP_AUDIO");
 };
 
 const goToZero = () => {
-  store.dispatch("SET_PLAYHEAD_POSITION", { position: 0 });
+  void store.dispatch("SET_PLAYHEAD_POSITION", { position: 0 });
 };
 
 const volume = computed({
@@ -395,7 +395,7 @@ const volume = computed({
     return store.state.volume * 100;
   },
   set(value: number) {
-    store.dispatch("SET_VOLUME", { volume: value / 100 });
+    void store.dispatch("SET_VOLUME", { volume: value / 100 });
   },
 });
 
@@ -427,7 +427,7 @@ const snapTypeSelectModel = computed({
     );
   },
   set(value) {
-    store.dispatch("SET_SNAP_TYPE", {
+    void store.dispatch("SET_SNAP_TYPE", {
       snapType: value.snapType,
     });
   },
@@ -438,13 +438,13 @@ const playheadPositionChangeListener = (position: number) => {
 };
 
 onMounted(() => {
-  store.dispatch("ADD_PLAYHEAD_POSITION_CHANGE_LISTENER", {
+  void store.dispatch("ADD_PLAYHEAD_POSITION_CHANGE_LISTENER", {
     listener: playheadPositionChangeListener,
   });
 });
 
 onUnmounted(() => {
-  store.dispatch("REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER", {
+  void store.dispatch("REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER", {
     listener: playheadPositionChangeListener,
   });
 });

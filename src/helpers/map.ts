@@ -18,10 +18,12 @@ export function mapNullablePipe<T, U1, U2, U3>(
  */
 // eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any
 export function mapNullablePipe(source: any, ...fn: Function[]) {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   return fn.reduce((prev, curr) => {
     if (prev == undefined) {
       return undefined;
     }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return curr(prev);
   }, source);
 }

@@ -32,6 +32,7 @@ import AllDialog from "@/components/Dialog/AllDialog.vue";
 import MenuBar from "@/components/Menu/MenuBar/MenuBar.vue";
 import { useMenuBarData as useTalkMenuBarData } from "@/components/Talk/menuBarData";
 import { useMenuBarData as useSingMenuBarData } from "@/components/Sing/menuBarData";
+import { ExhaustiveError } from "@/type/utility";
 
 const store = useStore();
 
@@ -45,7 +46,7 @@ const subMenuData = computed(() => {
     return singMenuBarData;
   }
 
-  throw new Error(`Invalid openedEditor: ${openedEditor.value}`);
+  throw new ExhaustiveError(openedEditor.value);
 });
 
 const openedEditor = computed(() => store.state.openedEditor);
@@ -106,7 +107,7 @@ onMounted(async () => {
 
   // URLパラメータに従ってマルチエンジンをオフにする
   const isMultiEngineOffMode = urlParams.get("isMultiEngineOffMode") === "true";
-  store.dispatch("SET_IS_MULTI_ENGINE_OFF_MODE", isMultiEngineOffMode);
+  void store.dispatch("SET_IS_MULTI_ENGINE_OFF_MODE", isMultiEngineOffMode);
 
   // マルチエンジンオフモードのときはデフォルトエンジンだけにする
   let engineIds: EngineId[];
@@ -132,7 +133,7 @@ onMounted(async () => {
   isEnginesReady.value = true;
 
   // エンジン起動後にダイアログを開く
-  store.dispatch("SET_DIALOG_OPEN", {
+  void store.dispatch("SET_DIALOG_OPEN", {
     isAcceptRetrieveTelemetryDialogOpen:
       store.state.acceptRetrieveTelemetry === "Unconfirmed",
     isAcceptTermsDialogOpen:

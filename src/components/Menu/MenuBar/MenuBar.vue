@@ -69,7 +69,7 @@ const defaultEngineAltPortTo = computed<number | undefined>(() => {
   }
 });
 
-window.backend.getAppInfos().then((obj) => {
+void window.backend.getAppInfos().then((obj) => {
   currentVersion.value = obj.version;
 });
 const isMultiEngineOffMode = computed(() => store.state.isMultiEngineOffMode);
@@ -106,28 +106,28 @@ watch(titleText, (newTitle) => {
 });
 
 const closeAllDialog = () => {
-  store.dispatch("SET_DIALOG_OPEN", {
+  void store.dispatch("SET_DIALOG_OPEN", {
     isSettingDialogOpen: false,
   });
-  store.dispatch("SET_DIALOG_OPEN", {
+  void store.dispatch("SET_DIALOG_OPEN", {
     isHelpDialogOpen: false,
   });
-  store.dispatch("SET_DIALOG_OPEN", {
+  void store.dispatch("SET_DIALOG_OPEN", {
     isHotkeySettingDialogOpen: false,
   });
-  store.dispatch("SET_DIALOG_OPEN", {
+  void store.dispatch("SET_DIALOG_OPEN", {
     isToolbarSettingDialogOpen: false,
   });
-  store.dispatch("SET_DIALOG_OPEN", {
+  void store.dispatch("SET_DIALOG_OPEN", {
     isCharacterOrderDialogOpen: false,
   });
-  store.dispatch("SET_DIALOG_OPEN", {
+  void store.dispatch("SET_DIALOG_OPEN", {
     isDefaultStyleSelectDialogOpen: false,
   });
 };
 
 const openHelpDialog = () => {
-  store.dispatch("SET_DIALOG_OPEN", {
+  void store.dispatch("SET_DIALOG_OPEN", {
     isHelpDialogOpen: true,
   });
 };
@@ -152,7 +152,7 @@ const saveProjectAs = async () => {
 
 const importProject = () => {
   if (!uiLocked.value) {
-    store.dispatch("LOAD_PROJECT_FILE", {});
+    void store.dispatch("LOAD_PROJECT_FILE", {});
   }
 };
 
@@ -179,7 +179,7 @@ const updateRecentProjects = async () => {
           type: "button",
           label: projectFilePath,
           onClick: () => {
-            store.dispatch("LOAD_PROJECT_FILE", {
+            void store.dispatch("LOAD_PROJECT_FILE", {
               filePath: projectFilePath,
             });
           },
@@ -202,7 +202,7 @@ const engineSubMenuData = computed<MenuItemData[]>(() => {
         type: "button",
         label: "再起動",
         onClick: () => {
-          store.dispatch("RESTART_ENGINES", {
+          void store.dispatch("RESTART_ENGINES", {
             engineIds: [engineInfo.uuid],
           });
         },
@@ -224,7 +224,7 @@ const engineSubMenuData = computed<MenuItemData[]>(() => {
                 type: "button",
                 label: "フォルダを開く",
                 onClick: () => {
-                  store.dispatch("OPEN_ENGINE_DIRECTORY", {
+                  void store.dispatch("OPEN_ENGINE_DIRECTORY", {
                     engineId: engineInfo.uuid,
                   });
                 },
@@ -234,7 +234,7 @@ const engineSubMenuData = computed<MenuItemData[]>(() => {
                 type: "button",
                 label: "再起動",
                 onClick: () => {
-                  store.dispatch("RESTART_ENGINES", {
+                  void store.dispatch("RESTART_ENGINES", {
                     engineIds: [engineInfo.uuid],
                   });
                 },
@@ -250,7 +250,9 @@ const engineSubMenuData = computed<MenuItemData[]>(() => {
         type: "button",
         label: "全てのエンジンを再起動",
         onClick: () => {
-          store.dispatch("RESTART_ENGINES", { engineIds: engineIds.value });
+          void store.dispatch("RESTART_ENGINES", {
+            engineIds: engineIds.value,
+          });
         },
         disableWhenUiLocked: false,
       },
@@ -261,7 +263,7 @@ const engineSubMenuData = computed<MenuItemData[]>(() => {
       type: "button",
       label: "エンジンの管理",
       onClick: () => {
-        store.dispatch("SET_DIALOG_OPEN", {
+        void store.dispatch("SET_DIALOG_OPEN", {
           isEngineManageDialogOpen: true,
         });
       },
@@ -274,7 +276,7 @@ const engineSubMenuData = computed<MenuItemData[]>(() => {
       type: "button",
       label: "マルチエンジンをオンにして再読み込み",
       onClick() {
-        store.dispatch("RELOAD_APP", {
+        void store.dispatch("RELOAD_APP", {
           isMultiEngineOffMode: false,
         });
       },
@@ -406,7 +408,7 @@ const menudata = computed<MenuItemData[]>(() => [
         type: "button",
         label: "キー割り当て",
         onClick() {
-          store.dispatch("SET_DIALOG_OPEN", {
+          void store.dispatch("SET_DIALOG_OPEN", {
             isHotkeySettingDialogOpen: true,
           });
         },
@@ -416,7 +418,7 @@ const menudata = computed<MenuItemData[]>(() => [
         type: "button",
         label: "ツールバーのカスタマイズ",
         onClick() {
-          store.dispatch("SET_DIALOG_OPEN", {
+          void store.dispatch("SET_DIALOG_OPEN", {
             isToolbarSettingDialogOpen: true,
           });
         },
@@ -426,7 +428,7 @@ const menudata = computed<MenuItemData[]>(() => [
         type: "button",
         label: "キャラクター並び替え・試聴",
         onClick() {
-          store.dispatch("SET_DIALOG_OPEN", {
+          void store.dispatch("SET_DIALOG_OPEN", {
             isCharacterOrderDialogOpen: true,
           });
         },
@@ -436,7 +438,7 @@ const menudata = computed<MenuItemData[]>(() => [
         type: "button",
         label: "デフォルトスタイル",
         onClick() {
-          store.dispatch("SET_DIALOG_OPEN", {
+          void store.dispatch("SET_DIALOG_OPEN", {
             isDefaultStyleSelectDialogOpen: true,
           });
         },
@@ -446,7 +448,7 @@ const menudata = computed<MenuItemData[]>(() => [
         type: "button",
         label: "読み方＆アクセント辞書",
         onClick() {
-          store.dispatch("SET_DIALOG_OPEN", {
+          void store.dispatch("SET_DIALOG_OPEN", {
             isDictionaryManageDialogOpen: true,
           });
         },
@@ -457,7 +459,7 @@ const menudata = computed<MenuItemData[]>(() => [
         type: "button",
         label: "オプション",
         onClick() {
-          store.dispatch("SET_DIALOG_OPEN", {
+          void store.dispatch("SET_DIALOG_OPEN", {
             isSettingDialogOpen: true,
           });
         },

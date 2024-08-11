@@ -147,7 +147,7 @@ watch(
 );
 
 const defaultSetting: ToolbarSettingType = [];
-window.backend.getDefaultToolbarSetting().then((setting) => {
+void window.backend.getDefaultToolbarSetting().then((setting) => {
   defaultSetting.push(...setting);
 });
 
@@ -219,7 +219,7 @@ const applyDefaultSetting = async () => {
   }
 };
 const saveCustomToolbar = () => {
-  store.dispatch("SET_TOOLBAR_SETTING", {
+  void store.dispatch("SET_TOOLBAR_SETTING", {
     data: [...toolbarButtons.value],
   });
 };

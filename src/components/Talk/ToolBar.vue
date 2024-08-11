@@ -80,31 +80,31 @@ registerHotkeyWithCleanup({
       if (nowPlayingContinuously.value) {
         stop();
       } else {
-        playContinuously();
+        void playContinuously();
       }
     }
   },
 });
 
 const undo = () => {
-  store.dispatch("UNDO", { editor });
+  void store.dispatch("UNDO", { editor });
 };
 const redo = () => {
-  store.dispatch("REDO", { editor });
+  void store.dispatch("REDO", { editor });
 };
 const playContinuously = async () => {
   try {
     await store.dispatch("PLAY_CONTINUOUSLY_AUDIO");
   } catch (e) {
     const msg = handlePossiblyNotMorphableError(e);
-    store.dispatch("SHOW_ALERT_DIALOG", {
+    void store.dispatch("SHOW_ALERT_DIALOG", {
       title: "再生に失敗しました",
       message: msg ?? "エンジンの再起動をお試しください。",
     });
   }
 };
 const stop = () => {
-  store.dispatch("STOP_AUDIO");
+  void store.dispatch("STOP_AUDIO");
 };
 const generateAndSaveSelectedAudio = async () => {
   if (activeAudioKey.value == undefined)
@@ -145,7 +145,7 @@ const saveProject = async () => {
   await store.dispatch("SAVE_PROJECT_FILE", { overwrite: true });
 };
 const importTextFile = () => {
-  store.dispatch("COMMAND_IMPORT_FROM_FILE", {});
+  void store.dispatch("COMMAND_IMPORT_FROM_FILE", {});
 };
 
 const usableButtons: Record<
