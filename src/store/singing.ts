@@ -1,7 +1,7 @@
 import path from "path";
 import { toRaw } from "vue";
-import { createPartialStore } from "./vuex";
-import { createUILockAction } from "./ui";
+import { createDotNotationPartialStore as createPartialStore } from "./vuex";
+import { createDotNotationUILockAction as createUILockAction } from "./ui";
 import {
   Tempo,
   TimeSignature,
@@ -477,14 +477,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   SETUP_SINGER: {
-    async action({ dispatch }, { singer }: { singer: Singer }) {
+    async action({ actions }, { singer }: { singer: Singer }) {
       // 指定されたstyleIdに対して、エンジン側の初期化を行う
-      const isInitialized = await dispatch(
-        "IS_INITIALIZED_ENGINE_SPEAKER",
-        singer,
-      );
+      const isInitialized = await actions.IS_INITIALIZED_ENGINE_SPEAKER(singer);
       if (!isInitialized) {
-        await dispatch("INITIALIZE_ENGINE_SPEAKER", singer);
+        await actions.INITIALIZE_ENGINE_SPEAKER(singer);
       }
     },
   },
@@ -506,7 +503,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
     },
     async action(
-      { state, getters, dispatch, commit },
+      { state, getters, actions, commit },
       { singer, withRelated, trackId },
     ) {
       if (state.defaultStyleIds == undefined)
@@ -522,14 +519,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         userOrderedCharacterInfos[0].metas.styles[0].styleId;
       const styleId = singer?.styleId ?? defaultStyleId;
 
-      void dispatch("SETUP_SINGER", { singer: { engineId, styleId } });
+      void actions.SETUP_SINGER({ singer: { engineId, styleId } });
       commit("SET_SINGER", {
         singer: { engineId, styleId },
         withRelated,
         trackId,
       });
 
-      void dispatch("RENDER");
+      void actions.RENDER();
     },
   },
 
@@ -538,13 +535,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const track = getOrThrow(state.tracks, trackId);
       track.keyRangeAdjustment = keyRangeAdjustment;
     },
-    async action({ dispatch, commit }, { keyRangeAdjustment, trackId }) {
+    async action({ actions, commit }, { keyRangeAdjustment, trackId }) {
       if (!isValidKeyRangeAdjustment(keyRangeAdjustment)) {
         throw new Error("The keyRangeAdjustment is invalid.");
       }
       commit("SET_KEY_RANGE_ADJUSTMENT", { keyRangeAdjustment, trackId });
 
-      void dispatch("RENDER");
+      void actions.RENDER();
     },
   },
 
@@ -553,7 +550,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const track = getOrThrow(state.tracks, trackId);
       track.volumeRangeAdjustment = volumeRangeAdjustment;
     },
-    async action({ dispatch, commit }, { volumeRangeAdjustment, trackId }) {
+    async action({ actions, commit }, { volumeRangeAdjustment, trackId }) {
       if (!isValidVolumeRangeAdjustment(volumeRangeAdjustment)) {
         throw new Error("The volumeRangeAdjustment is invalid.");
       }
@@ -562,7 +559,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         trackId,
       });
 
-      void dispatch("RENDER");
+      void actions.RENDER();
     },
   },
 
@@ -571,7 +568,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.tpqn = tpqn;
     },
     async action(
-      { state, getters, commit, dispatch },
+      { state, getters, commit, actions },
       { tpqn }: { tpqn: number },
     ) {
       if (!isValidTpqn(tpqn)) {
@@ -581,12 +578,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         throw new Error("transport is undefined.");
       }
       if (state.nowPlaying) {
-        await dispatch("SING_STOP_AUDIO");
+        await actions.SING_STOP_AUDIO();
       }
       commit("SET_TPQN", { tpqn });
       transport.time = getters.TICK_TO_SECOND(playheadPosition.value);
 
-      void dispatch("RENDER");
+      void actions.RENDER();
     },
   },
 
@@ -595,7 +592,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.tempos = tempos;
     },
     async action(
-      { state, getters, commit, dispatch },
+      { state, getters, commit, actions },
       { tempos }: { tempos: Tempo[] },
     ) {
       if (!isValidTempos(tempos)) {
@@ -605,12 +602,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         throw new Error("transport is undefined.");
       }
       if (state.nowPlaying) {
-        await dispatch("SING_STOP_AUDIO");
+        await actions.SING_STOP_AUDIO();
       }
       commit("SET_TEMPOS", { tempos });
       transport.time = getters.TICK_TO_SECOND(playheadPosition.value);
 
-      void dispatch("RENDER");
+      void actions.RENDER();
     },
   },
 
@@ -720,13 +717,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const selectedTrack = getOrThrow(state.tracks, trackId);
       selectedTrack.notes = notes;
     },
-    async action({ commit, dispatch }, { notes, trackId }) {
+    async action({ commit, actions }, { notes, trackId }) {
       if (!isValidNotes(notes)) {
         throw new Error("The notes are invalid.");
       }
       commit("SET_NOTES", { notes, trackId });
 
-      void dispatch("RENDER");
+      void actions.RENDER();
     },
   },
 
@@ -841,7 +838,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       tempData.splice(startFrame, pitchArray.length, ...pitchArray);
       track.pitchEditData = tempData;
     },
-    async action({ dispatch, commit }, { pitchArray, startFrame, trackId }) {
+    async action({ actions, commit }, { pitchArray, startFrame, trackId }) {
       if (startFrame < 0) {
         throw new Error("startFrame must be greater than or equal to 0.");
       }
@@ -850,7 +847,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       commit("SET_PITCH_EDIT_DATA", { pitchArray, startFrame, trackId });
 
-      void dispatch("RENDER");
+      void actions.RENDER();
     },
   },
 
@@ -871,10 +868,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const track = getOrThrow(state.tracks, trackId);
       track.pitchEditData = [];
     },
-    async action({ dispatch, commit }, { trackId }) {
+    async action({ actions, commit }, { trackId }) {
       commit("CLEAR_PITCH_EDIT_DATA", { trackId });
 
-      void dispatch("RENDER");
+      void actions.RENDER();
     },
   },
 
@@ -1209,7 +1206,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.tracks.set(trackId, track);
       state.trackOrder.splice(index, 0, trackId);
     },
-    action({ state, commit, dispatch }, { trackId, track, prevTrackId }) {
+    action({ state, commit, actions }, { trackId, track, prevTrackId }) {
       if (state.tracks.has(trackId)) {
         throw new Error(`Track ${trackId} is already registered.`);
       }
@@ -1218,8 +1215,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       commit("INSERT_TRACK", { trackId, track, prevTrackId });
 
-      void dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
-      void dispatch("RENDER");
+      void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
+      void actions.RENDER();
     },
   },
 
@@ -1228,14 +1225,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.tracks.delete(trackId);
       state.trackOrder = state.trackOrder.filter((value) => value !== trackId);
     },
-    async action({ state, commit, dispatch }, { trackId }) {
+    async action({ state, commit, actions }, { trackId }) {
       if (!state.tracks.has(trackId)) {
         throw new Error(`Track ${trackId} does not exist.`);
       }
       commit("DELETE_TRACK", { trackId });
 
-      void dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
-      void dispatch("RENDER");
+      void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
+      void actions.RENDER();
     },
   },
 
@@ -1257,7 +1254,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     mutation(state, { trackId, track }) {
       state.tracks.set(trackId, track);
     },
-    async action({ state, commit, dispatch }, { trackId, track }) {
+    async action({ state, commit, actions }, { trackId, track }) {
       if (!isValidTrack(track)) {
         throw new Error("The track is invalid.");
       }
@@ -1267,8 +1264,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
       commit("SET_TRACK", { trackId, track });
 
-      void dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
-      void dispatch("RENDER");
+      void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
+      void actions.RENDER();
     },
   },
 
@@ -1277,14 +1274,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.tracks = tracks;
       state.trackOrder = Array.from(tracks.keys());
     },
-    async action({ commit, dispatch }, { tracks }) {
+    async action({ commit, actions }, { tracks }) {
       if (![...tracks.values()].every((track) => isValidTrack(track))) {
         throw new Error("The track is invalid.");
       }
       commit("SET_TRACKS", { tracks });
 
-      void dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
-      void dispatch("RENDER");
+      void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
+      void actions.RENDER();
     },
   },
 
@@ -1301,7 +1298,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
    * レンダリングを行う。レンダリング中だった場合は停止して再レンダリングする。
    */
   RENDER: {
-    async action({ state, getters, commit, dispatch }) {
+    async action({ state, getters, commit, actions }) {
       const calcPhraseFirstRestDuration = (
         prevPhraseLastNote: Note | undefined,
         phraseFirstNote: Note,
@@ -1495,7 +1492,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           if (!getters.IS_ENGINE_READY(engineId)) {
             throw new Error("Engine not ready.");
           }
-          const instance = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
+          const instance = await actions.INSTANTIATE_ENGINE_CONNECTOR({
             engineId,
           });
           return await instance.invoke(
@@ -1593,7 +1590,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         }
 
         try {
-          const instance = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
+          const instance = await actions.INSTANTIATE_ENGINE_CONNECTOR({
             engineId: singer.engineId,
           });
           return await instance.invoke("frameSynthesisFrameSynthesisPost")({
@@ -1993,7 +1990,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
               // 音量を生成して、生成した音量を歌い方のクエリにセットする
               // 音量値はAPIを叩く毎に変わるので、calc hashしたあとに音量を取得している
-              const volumes = await dispatch("FETCH_SING_FRAME_VOLUME", {
+              const volumes = await actions.FETCH_SING_FRAME_VOLUME({
                 notes: notesForRequestToEngine,
                 frameAudioQuery: queryForVolumeGeneration,
                 styleId: singingTeacherStyleId,
@@ -2122,7 +2119,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   FETCH_SING_FRAME_VOLUME: {
     async action(
-      { dispatch },
+      { actions },
       {
         notes,
         frameAudioQuery,
@@ -2135,7 +2132,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         styleId: StyleId;
       },
     ) {
-      const instance = await dispatch("INSTANTIATE_ENGINE_CONNECTOR", {
+      const instance = await actions.INSTANTIATE_ENGINE_CONNECTOR({
         engineId,
       });
       return await instance.invoke("singFrameVolumeSingFrameVolumePost")({
@@ -2164,7 +2161,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   EXPORT_WAVE_FILE: {
     action: createUILockAction(
-      async ({ state, commit, getters, dispatch }, { filePath }) => {
+      async ({ state, commit, getters, actions }, { filePath }) => {
         const exportWaveFile = async (): Promise<SaveResultObject> => {
           const fileName = generateDefaultSongFileName(
             getters.PROJECT_NAME,
@@ -2178,7 +2175,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           const renderDuration = getters.CALC_RENDER_DURATION;
 
           if (state.nowPlaying) {
-            await dispatch("SING_STOP_AUDIO");
+            await actions.SING_STOP_AUDIO();
           }
 
           if (state.savingSetting.fixedExportEnabled) {
@@ -2306,14 +2303,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   COMMAND_CUT_NOTES_TO_CLIPBOARD: {
-    async action({ dispatch }) {
-      await dispatch("COPY_NOTES_TO_CLIPBOARD");
-      await dispatch("COMMAND_REMOVE_SELECTED_NOTES");
+    async action({ actions }) {
+      await actions.COPY_NOTES_TO_CLIPBOARD();
+      await actions.COMMAND_REMOVE_SELECTED_NOTES();
     },
   },
 
   COMMAND_PASTE_NOTES_FROM_CLIPBOARD: {
-    async action({ commit, state, getters, dispatch }) {
+    async action({ commit, state, getters, actions }) {
       // クリップボードからテキストを読み込む
       let clipboardText;
       try {
@@ -2366,7 +2363,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         trackId: getters.SELECTED_TRACK_ID,
       });
 
-      void dispatch("RENDER");
+      void actions.RENDER();
       // 貼り付けたノートを選択する
       commit("DESELECT_ALL_NOTES");
       commit("SELECT_NOTES", { noteIds: pastedNoteIds });
@@ -2374,7 +2371,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   COMMAND_QUANTIZE_SELECTED_NOTES: {
-    action({ state, commit, getters, dispatch }) {
+    action({ state, commit, getters, actions }) {
       const selectedTrack = getters.SELECTED_TRACK;
       const selectedNotes = selectedTrack.notes.filter((note: Note) => {
         return getters.SELECTED_NOTE_IDS.has(note.id);
@@ -2393,7 +2390,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         trackId: getters.SELECTED_TRACK_ID,
       });
 
-      void dispatch("RENDER");
+      void actions.RENDER();
     },
   },
 
@@ -2421,10 +2418,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const track = getOrThrow(state.tracks, trackId);
       track.mute = mute;
     },
-    action({ commit, dispatch }, { trackId, mute }) {
+    action({ commit, actions }, { trackId, mute }) {
       commit("SET_TRACK_MUTE", { trackId, mute });
 
-      void dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
+      void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
     },
   },
 
@@ -2433,10 +2430,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const track = getOrThrow(state.tracks, trackId);
       track.solo = solo;
     },
-    action({ commit, dispatch }, { trackId, solo }) {
+    action({ commit, actions }, { trackId, solo }) {
       commit("SET_TRACK_SOLO", { trackId, solo });
 
-      void dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
+      void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
     },
   },
 
@@ -2445,10 +2442,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const track = getOrThrow(state.tracks, trackId);
       track.gain = gain;
     },
-    action({ commit, dispatch }, { trackId, gain }) {
+    action({ commit, actions }, { trackId, gain }) {
       commit("SET_TRACK_GAIN", { trackId, gain });
 
-      void dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
+      void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
     },
   },
 
@@ -2457,10 +2454,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const track = getOrThrow(state.tracks, trackId);
       track.pan = pan;
     },
-    action({ commit, dispatch }, { trackId, pan }) {
+    action({ commit, actions }, { trackId, pan }) {
       commit("SET_TRACK_PAN", { trackId, pan });
 
-      void dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
+      void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
     },
   },
 
@@ -2488,11 +2485,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         track.solo = false;
       }
     },
-    action({ commit, dispatch }) {
+    action({ commit, actions }) {
       commit("UNSOLO_ALL_TRACKS");
 
-      void dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
-      void dispatch("RENDER");
+      void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
+      void actions.RENDER();
     },
   },
 
@@ -2527,11 +2524,11 @@ export const singingCommandStore = transformCommandStore(
           trackId,
         });
       },
-      async action({ dispatch, commit }, { singer, withRelated, trackId }) {
-        void dispatch("SETUP_SINGER", { singer });
+      async action({ actions, commit }, { singer, withRelated, trackId }) {
+        void actions.SETUP_SINGER({ singer });
         commit("COMMAND_SET_SINGER", { singer, withRelated, trackId });
 
-        void dispatch("RENDER");
+        void actions.RENDER();
       },
     },
     COMMAND_SET_KEY_RANGE_ADJUSTMENT: {
@@ -2541,7 +2538,7 @@ export const singingCommandStore = transformCommandStore(
           trackId,
         });
       },
-      async action({ dispatch, commit }, { keyRangeAdjustment, trackId }) {
+      async action({ actions, commit }, { keyRangeAdjustment, trackId }) {
         if (!isValidKeyRangeAdjustment(keyRangeAdjustment)) {
           throw new Error("The keyRangeAdjustment is invalid.");
         }
@@ -2550,7 +2547,7 @@ export const singingCommandStore = transformCommandStore(
           trackId,
         });
 
-        void dispatch("RENDER");
+        void actions.RENDER();
       },
     },
     COMMAND_SET_VOLUME_RANGE_ADJUSTMENT: {
@@ -2560,7 +2557,7 @@ export const singingCommandStore = transformCommandStore(
           trackId,
         });
       },
-      async action({ dispatch, commit }, { volumeRangeAdjustment, trackId }) {
+      async action({ actions, commit }, { volumeRangeAdjustment, trackId }) {
         if (!isValidVolumeRangeAdjustment(volumeRangeAdjustment)) {
           throw new Error("The volumeRangeAdjustment is invalid.");
         }
@@ -2569,7 +2566,7 @@ export const singingCommandStore = transformCommandStore(
           trackId,
         });
 
-        void dispatch("RENDER");
+        void actions.RENDER();
       },
     },
     COMMAND_SET_TEMPO: {
@@ -2577,10 +2574,7 @@ export const singingCommandStore = transformCommandStore(
         singingStore.mutations.SET_TEMPO(draft, { tempo });
       },
       // テンポを設定する。既に同じ位置にテンポが存在する場合は置き換える。
-      action(
-        { state, getters, commit, dispatch },
-        { tempo }: { tempo: Tempo },
-      ) {
+      action({ state, getters, commit, actions }, { tempo }: { tempo: Tempo }) {
         if (!transport) {
           throw new Error("transport is undefined.");
         }
@@ -2594,7 +2588,7 @@ export const singingCommandStore = transformCommandStore(
         commit("COMMAND_SET_TEMPO", { tempo });
         transport.time = getters.TICK_TO_SECOND(playheadPosition.value);
 
-        void dispatch("RENDER");
+        void actions.RENDER();
       },
     },
     COMMAND_REMOVE_TEMPO: {
@@ -2603,7 +2597,7 @@ export const singingCommandStore = transformCommandStore(
       },
       // テンポを削除する。先頭のテンポの場合はデフォルトのテンポに置き換える。
       action(
-        { state, getters, commit, dispatch },
+        { state, getters, commit, actions },
         { position }: { position: number },
       ) {
         const exists = state.tempos.some((value) => {
@@ -2621,7 +2615,7 @@ export const singingCommandStore = transformCommandStore(
         commit("COMMAND_REMOVE_TEMPO", { position });
         transport.time = getters.TICK_TO_SECOND(playheadPosition.value);
 
-        void dispatch("RENDER");
+        void actions.RENDER();
       },
     },
     COMMAND_SET_TIME_SIGNATURE: {
@@ -2655,7 +2649,7 @@ export const singingCommandStore = transformCommandStore(
       mutation(draft, { notes, trackId }) {
         singingStore.mutations.ADD_NOTES(draft, { notes, trackId });
       },
-      action({ getters, commit, dispatch }, { notes, trackId }) {
+      action({ getters, commit, actions }, { notes, trackId }) {
         const existingNoteIds = getters.ALL_NOTE_IDS;
         const isValidNotes = notes.every((value) => {
           return !existingNoteIds.has(value.id) && isValidNote(value);
@@ -2665,14 +2659,14 @@ export const singingCommandStore = transformCommandStore(
         }
         commit("COMMAND_ADD_NOTES", { notes, trackId });
 
-        void dispatch("RENDER");
+        void actions.RENDER();
       },
     },
     COMMAND_UPDATE_NOTES: {
       mutation(draft, { notes, trackId }) {
         singingStore.mutations.UPDATE_NOTES(draft, { notes, trackId });
       },
-      action({ getters, commit, dispatch }, { notes, trackId }) {
+      action({ getters, commit, actions }, { notes, trackId }) {
         const existingNoteIds = getters.ALL_NOTE_IDS;
         const isValidNotes = notes.every((value) => {
           return existingNoteIds.has(value.id) && isValidNote(value);
@@ -2682,14 +2676,14 @@ export const singingCommandStore = transformCommandStore(
         }
         commit("COMMAND_UPDATE_NOTES", { notes, trackId });
 
-        void dispatch("RENDER");
+        void actions.RENDER();
       },
     },
     COMMAND_REMOVE_NOTES: {
       mutation(draft, { noteIds, trackId }) {
         singingStore.mutations.REMOVE_NOTES(draft, { noteIds, trackId });
       },
-      action({ getters, commit, dispatch }, { noteIds, trackId }) {
+      action({ getters, commit, actions }, { noteIds, trackId }) {
         const existingNoteIds = getters.ALL_NOTE_IDS;
         const isValidNoteIds = noteIds.every((value) => {
           return existingNoteIds.has(value);
@@ -2699,17 +2693,17 @@ export const singingCommandStore = transformCommandStore(
         }
         commit("COMMAND_REMOVE_NOTES", { noteIds, trackId });
 
-        void dispatch("RENDER");
+        void actions.RENDER();
       },
     },
     COMMAND_REMOVE_SELECTED_NOTES: {
-      action({ commit, getters, dispatch }) {
+      action({ commit, getters, actions }) {
         commit("COMMAND_REMOVE_NOTES", {
           noteIds: [...getters.SELECTED_NOTE_IDS],
           trackId: getters.SELECTED_TRACK_ID,
         });
 
-        void dispatch("RENDER");
+        void actions.RENDER();
       },
     },
     COMMAND_SET_PITCH_EDIT_DATA: {
@@ -2720,7 +2714,7 @@ export const singingCommandStore = transformCommandStore(
           trackId,
         });
       },
-      action({ commit, dispatch }, { pitchArray, startFrame, trackId }) {
+      action({ commit, actions }, { pitchArray, startFrame, trackId }) {
         if (startFrame < 0) {
           throw new Error("startFrame must be greater than or equal to 0.");
         }
@@ -2733,7 +2727,7 @@ export const singingCommandStore = transformCommandStore(
           trackId,
         });
 
-        void dispatch("RENDER");
+        void actions.RENDER();
       },
     },
     COMMAND_ERASE_PITCH_EDIT_DATA: {
@@ -2744,7 +2738,7 @@ export const singingCommandStore = transformCommandStore(
           trackId,
         });
       },
-      action({ commit, dispatch }, { startFrame, frameLength, trackId }) {
+      action({ commit, actions }, { startFrame, frameLength, trackId }) {
         if (startFrame < 0) {
           throw new Error("startFrame must be greater than or equal to 0.");
         }
@@ -2757,7 +2751,7 @@ export const singingCommandStore = transformCommandStore(
           trackId,
         });
 
-        void dispatch("RENDER");
+        void actions.RENDER();
       },
     },
 
@@ -2773,8 +2767,8 @@ export const singingCommandStore = transformCommandStore(
        * 空のトラックをprevTrackIdの後ろに挿入する。
        * prevTrackIdのトラックの情報を一部引き継ぐ。
        */
-      async action({ state, dispatch, commit }, { prevTrackId }) {
-        const { trackId, track } = await dispatch("CREATE_TRACK");
+      async action({ state, actions, commit }, { prevTrackId }) {
+        const { trackId, track } = await actions.CREATE_TRACK();
         const sourceTrack = getOrThrow(state.tracks, prevTrackId);
         track.singer = sourceTrack.singer;
         track.keyRangeAdjustment = sourceTrack.keyRangeAdjustment;
@@ -2785,8 +2779,8 @@ export const singingCommandStore = transformCommandStore(
           prevTrackId,
         });
 
-        void dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
-        void dispatch("RENDER");
+        void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
+        void actions.RENDER();
       },
     },
 
@@ -2794,11 +2788,11 @@ export const singingCommandStore = transformCommandStore(
       mutation(draft, { trackId }) {
         singingStore.mutations.DELETE_TRACK(draft, { trackId });
       },
-      action({ commit, dispatch }, { trackId }) {
+      action({ commit, actions }, { trackId }) {
         commit("COMMAND_DELETE_TRACK", { trackId });
 
-        void dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
-        void dispatch("RENDER");
+        void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
+        void actions.RENDER();
       },
     },
 
@@ -2815,10 +2809,10 @@ export const singingCommandStore = transformCommandStore(
       mutation(draft, { trackId, mute }) {
         singingStore.mutations.SET_TRACK_MUTE(draft, { trackId, mute });
       },
-      action({ commit, dispatch }, { trackId, mute }) {
+      action({ commit, actions }, { trackId, mute }) {
         commit("COMMAND_SET_TRACK_MUTE", { trackId, mute });
 
-        void dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
+        void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
       },
     },
 
@@ -2826,10 +2820,10 @@ export const singingCommandStore = transformCommandStore(
       mutation(draft, { trackId, solo }) {
         singingStore.mutations.SET_TRACK_SOLO(draft, { trackId, solo });
       },
-      action({ commit, dispatch }, { trackId, solo }) {
+      action({ commit, actions }, { trackId, solo }) {
         commit("COMMAND_SET_TRACK_SOLO", { trackId, solo });
 
-        void dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
+        void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
       },
     },
 
@@ -2837,10 +2831,10 @@ export const singingCommandStore = transformCommandStore(
       mutation(draft, { trackId, gain }) {
         singingStore.mutations.SET_TRACK_GAIN(draft, { trackId, gain });
       },
-      action({ commit, dispatch }, { trackId, gain }) {
+      action({ commit, actions }, { trackId, gain }) {
         commit("COMMAND_SET_TRACK_GAIN", { trackId, gain });
 
-        void dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
+        void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
       },
     },
 
@@ -2848,10 +2842,10 @@ export const singingCommandStore = transformCommandStore(
       mutation(draft, { trackId, pan }) {
         singingStore.mutations.SET_TRACK_PAN(draft, { trackId, pan });
       },
-      action({ commit, dispatch }, { trackId, pan }) {
+      action({ commit, actions }, { trackId, pan }) {
         commit("COMMAND_SET_TRACK_PAN", { trackId, pan });
 
-        void dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
+        void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
       },
     },
 
@@ -2868,11 +2862,11 @@ export const singingCommandStore = transformCommandStore(
       mutation(draft) {
         singingStore.mutations.UNSOLO_ALL_TRACKS(draft, undefined);
       },
-      action({ commit, dispatch }) {
+      action({ commit, actions }) {
         commit("COMMAND_UNSOLO_ALL_TRACKS");
 
-        void dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
-        void dispatch("RENDER");
+        void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
+        void actions.RENDER();
       },
     },
 
@@ -2898,7 +2892,7 @@ export const singingCommandStore = transformCommandStore(
        * 空のプロジェクトならトラックを上書きする。
        */
       async action(
-        { state, commit, getters, dispatch },
+        { state, commit, getters, actions },
         { tpqn, tempos, timeSignatures, tracks },
       ) {
         const payload: ({ track: Track; trackId: TrackId } & (
@@ -2919,7 +2913,7 @@ export const singingCommandStore = transformCommandStore(
                 overwrite: true,
               });
             } else {
-              const { trackId } = await dispatch("CREATE_TRACK");
+              const { trackId } = await actions.CREATE_TRACK();
               payload.push({ track, trackId, prevTrackId });
               prevTrackId = trackId;
             }
@@ -2940,14 +2934,14 @@ export const singingCommandStore = transformCommandStore(
           tracks: payload,
         });
 
-        void dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
-        void dispatch("RENDER");
+        void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
+        void actions.RENDER();
       },
     },
 
     COMMAND_IMPORT_UTAFORMATIX_PROJECT: {
       action: createUILockAction(
-        async ({ state, getters, dispatch }, { project, trackIndexes }) => {
+        async ({ state, getters, actions }, { project, trackIndexes }) => {
           const { tempos, timeSignatures, tracks, tpqn } =
             ufProjectToVoicevox(project);
 
@@ -2984,22 +2978,22 @@ export const singingCommandStore = transformCommandStore(
             };
           });
 
-          await dispatch("COMMAND_IMPORT_TRACKS", {
+          await actions.COMMAND_IMPORT_TRACKS({
             tpqn,
             tempos,
             timeSignatures,
             tracks: filteredTracks,
           });
 
-          void dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
-          void dispatch("RENDER");
+          void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
+          void actions.RENDER();
         },
       ),
     },
 
     COMMAND_IMPORT_VOICEVOX_PROJECT: {
       action: createUILockAction(
-        async ({ state, dispatch }, { project, trackIndexes }) => {
+        async ({ state, actions }, { project, trackIndexes }) => {
           const { tempos, timeSignatures, tracks, tpqn, trackOrder } =
             project.song;
 
@@ -3024,15 +3018,15 @@ export const singingCommandStore = transformCommandStore(
             };
           });
 
-          await dispatch("COMMAND_IMPORT_TRACKS", {
+          await actions.COMMAND_IMPORT_TRACKS({
             tpqn,
             tempos,
             timeSignatures,
             tracks: filteredTracks,
           });
 
-          void dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
-          void dispatch("RENDER");
+          void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
+          void actions.RENDER();
         },
       ),
     },
