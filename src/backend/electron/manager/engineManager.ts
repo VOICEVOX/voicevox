@@ -338,7 +338,7 @@ export class EngineManager {
     let errorNotified = false;
 
     engineProcess.on("error", (err) => {
-      log.error(`ENGINE ${engineId} ERROR: ${err}`);
+      log.error(`ENGINE ${engineId} ERROR:`, err);
       if (!errorNotified) {
         errorNotified = true;
         this.onEngineProcessError(engineInfo, err);
