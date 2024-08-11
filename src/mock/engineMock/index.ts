@@ -1,4 +1,4 @@
-import kuromoji, { IpadicFeatures, Tokenizer } from "kuromoji";
+import { builder, IpadicFeatures, Tokenizer } from "kuromoji";
 import { audioQueryToFrameAudioQueryMock } from "./audioQueryMock";
 import { getEngineManifestMock } from "./manifestMock";
 import { getSpeakerInfoMock, getSpeakersMock } from "./speakerResourceMock";
@@ -43,20 +43,16 @@ export function createOpenAPIEngineMock(): IEngineConnectorFactory {
         // テキスト形態素解析器
         const tokenizerPromise = new Promise<Tokenizer<IpadicFeatures>>(
           (resolve, reject) => {
-            kuromoji
-              .builder({
-                dicPath,
-              })
-              .build(function (
-                err: Error,
-                tokenizer: Tokenizer<IpadicFeatures>,
-              ) {
-                if (err) {
-                  reject(err);
-                } else {
-                  resolve(tokenizer);
-                }
-              });
+            builder({ dicPath }).build(function (
+              err: Error,
+              tokenizer: Tokenizer<IpadicFeatures>,
+            ) {
+              if (err) {
+                reject(err);
+              } else {
+                resolve(tokenizer);
+              }
+            });
           },
         );
 
