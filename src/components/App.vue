@@ -1,27 +1,30 @@
 <template>
   <ErrorBoundary>
-    <MenuBar
-      v-if="openedEditor != undefined"
-      :fileSubMenuData="subMenuData.fileSubMenuData.value"
-      :editSubMenuData="subMenuData.editSubMenuData.value"
-      :editor="openedEditor"
-    />
-    <KeepAlive>
-      <Component
-        :is="openedEditor == 'talk' ? TalkEditor : SingEditor"
+    <TooltipProvider disableHoverableContent>
+      <MenuBar
         v-if="openedEditor != undefined"
-        :key="openedEditor"
-        :isEnginesReady
-        :isProjectFileLoaded
+        :fileSubMenuData="subMenuData.fileSubMenuData.value"
+        :editSubMenuData="subMenuData.editSubMenuData.value"
+        :editor="openedEditor"
       />
-    </KeepAlive>
-    <AllDialog :isEnginesReady />
+      <KeepAlive>
+        <Component
+          :is="openedEditor == 'talk' ? TalkEditor : SingEditor"
+          v-if="openedEditor != undefined"
+          :key="openedEditor"
+          :isEnginesReady
+          :isProjectFileLoaded
+        />
+      </KeepAlive>
+      <AllDialog :isEnginesReady />
+    </TooltipProvider>
   </ErrorBoundary>
 </template>
 
 <script setup lang="ts">
 import { watch, onMounted, ref, computed, toRaw } from "vue";
 import { useGtm } from "@gtm-support/vue-gtm";
+import { TooltipProvider } from "radix-vue";
 import TalkEditor from "@/components/Talk/TalkEditor.vue";
 import SingEditor from "@/components/Sing/SingEditor.vue";
 import { EngineId } from "@/type/preload";

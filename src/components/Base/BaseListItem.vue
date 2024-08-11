@@ -2,6 +2,7 @@
   <button
     class="listitem"
     :class="selected && 'selected'"
+    role="listitem"
     @click="(payload) => $emit('click', payload)"
   >
     <div class="indicator"></div>
