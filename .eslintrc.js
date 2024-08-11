@@ -10,6 +10,7 @@ const tsEslintOptions = {
 
 const tsEslintRules = {
   // Template String Literalでcatchなどからのunknownを入れられなくなるので無効化
+  // TODO: いずれは有効化する
   "@typescript-eslint/restrict-template-expressions": "off",
   // Storeでよくasyncなしの関数を定義するので無効化
   // TODO: いずれは有効化する
