@@ -101,7 +101,7 @@ export class EngineManager {
         manifest = minimumEngineManifestSchema.parse(
           JSON.parse(fs.readFileSync(manifestPath, { encoding: "utf8" })),
         );
-      } catch (e) {
+      } catch {
         return "manifestParseError";
       }
 
@@ -538,7 +538,7 @@ export class EngineManager {
     let manifestContent: MinimumEngineManifestType;
     try {
       manifestContent = minimumEngineManifestSchema.parse(JSON.parse(manifest));
-    } catch (e) {
+    } catch {
       return "invalidManifest";
     }
 

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 // @ts-check
 const path = require("path");
 const fs = require("fs");

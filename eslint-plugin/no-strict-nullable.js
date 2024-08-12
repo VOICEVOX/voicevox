@@ -1,4 +1,5 @@
 // @ts-check
+/* eslint-disable @typescript-eslint/no-require-imports */
 const { AST_NODE_TYPES } = require("@typescript-eslint/utils");
 const { createRule } = require("./create-rule");
 
@@ -33,7 +34,7 @@ module.exports = createRule({
           fix(fixer) {
             return fixer.replaceTextRange(
               [node.left.range[1], node.right.range[0]],
-              node.operator.slice(0, 2) + " "
+              node.operator.slice(0, 2) + " ",
             );
           },
         });

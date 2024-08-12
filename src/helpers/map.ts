@@ -16,7 +16,7 @@ export function mapNullablePipe<T, U1, U2, U3>(
 /**
  * 一連の関数を実行する。途中でundefinedかnullを返すとその後undefinedを返す。
  */
-// eslint-disable-next-line @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type, @typescript-eslint/no-explicit-any
 export function mapNullablePipe(source: any, ...fn: Function[]) {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   return fn.reduce((prev, curr) => {

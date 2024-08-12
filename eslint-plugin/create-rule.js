@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 const { ESLintUtils } = require("@typescript-eslint/utils");
 
 exports.createRule = ESLintUtils.RuleCreator(

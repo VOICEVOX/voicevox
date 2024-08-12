@@ -1,4 +1,5 @@
 // @ts-check
+/* eslint-disable @typescript-eslint/no-require-imports */
 /**
  * OSに合った7-Zipのバイナリとライセンスをダウンロードするスクリプト。
  */

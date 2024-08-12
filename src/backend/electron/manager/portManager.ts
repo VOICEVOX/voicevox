@@ -132,7 +132,7 @@ export async function getPidFromPort(
     stdout = execFileSync(exec.cmd, exec.args, {
       shell: true,
     }).toString();
-  } catch (e) {
+  } catch {
     portLog(hostInfo.port, "Assignable; Nobody uses this port!", isNested);
     return undefined;
   }

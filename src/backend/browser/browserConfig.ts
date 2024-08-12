@@ -88,7 +88,7 @@ class BrowserConfigManager extends BaseConfigManager {
       await waitRequest(request);
       const result: unknown = request.result;
       return result != undefined;
-    } catch (e) {
+    } catch {
       return false;
     }
   }
