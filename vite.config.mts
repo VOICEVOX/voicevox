@@ -76,7 +76,8 @@ export default defineConfig((options) => {
         checker({
           overlay: false,
           eslint: {
-            lintCommand: "eslint --ext .ts,.vue .",
+            useFlatConfig: true,
+            lintCommand: "eslint .",
           },
           vueTsc: true,
         }),
