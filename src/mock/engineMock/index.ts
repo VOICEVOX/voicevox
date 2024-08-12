@@ -17,7 +17,9 @@ import {
   AudioQueryAudioQueryPostRequest,
   DefaultApiInterface,
   EngineManifest,
+  FrameAudioQuery,
   MoraDataMoraDataPostRequest,
+  SingFrameAudioQuerySingFrameAudioQueryPostRequest,
   Speaker,
   SpeakerInfo,
   SpeakerInfoSpeakerInfoGetRequest,
@@ -151,6 +153,10 @@ export function createOpenAPIEngineMock(): IEngineConnectorFactory {
               payload.speaker,
             );
           },
+
+          async singFrameAudioQuerySingFrameAudioQueryPost(
+            payload: SingFrameAudioQuerySingFrameAudioQueryPostRequest,
+          ): Promise<FrameAudioQuery> {},
         };
       }
 
