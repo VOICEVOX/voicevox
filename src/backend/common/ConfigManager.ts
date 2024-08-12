@@ -14,7 +14,7 @@ import {
   PresetKey,
   envEngineInfoSchema,
 } from "@/type/preload";
-import { ensureNotNullish } from "@/helpers/ensureNotNullish";
+import { ensureNotNullish } from "@/helpers/errorHelper";
 
 const lockKey = "save";
 
