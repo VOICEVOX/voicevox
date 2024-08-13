@@ -29,7 +29,7 @@ color: var(--scheme-color-on-primary);
 */
 :root {
   // 基準彩度
-  --primary-c: 0.099;
+  --primary-c: 0.108;
   --secondary-c: calc(var(--primary-c) / 3); // 0.036
   --tertiary-c: var(--primary-c);
   --error-c: 0.21;
