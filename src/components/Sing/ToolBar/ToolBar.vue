@@ -558,7 +558,7 @@ onUnmounted(async () => {
   display: flex;
   justify-content: space-between;
   min-height: 64px;
-  padding: 8px 8px 8px 0;
+  padding: 8px 12px;
   width: 100%;
   letter-spacing: 0.01em;
 }

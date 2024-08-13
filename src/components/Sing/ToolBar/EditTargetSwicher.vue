@@ -9,7 +9,7 @@
       @click="changeEditTarget('NOTE')"
       @keydown="handleKeyDown"
     >
-      <QIcon name="piano" size="24px" />
+      <QIcon name="piano" size="20px" />
       <QTooltip
         :delay="500"
         anchor="bottom middle"
@@ -28,7 +28,7 @@
       :class="{ active: editTarget === 'PITCH' }"
       @click="changeEditTarget('PITCH')"
     >
-      <QIcon name="timeline" size="24px" />
+      <QIcon name="timeline" size="20px" />
       <QTooltip
         :delay="500"
         anchor="bottom middle"
@@ -58,8 +58,7 @@ const handleKeyDown = (event: KeyboardEvent) => {
 
 <style scoped lang="scss">
 .edit-target-switcher {
-  background: var(--scheme-color-surface-container-lowest);
-  //border: 1px solid var(--scheme-color-outline-variant);
+  border: 1px solid var(--scheme-color-outline-variant);
   box-sizing: border-box;
   padding: 3px;
   height: 40px;
@@ -67,13 +66,13 @@ const handleKeyDown = (event: KeyboardEvent) => {
 }
 
 .segment-switch {
-  color: var(--scheme-color-on-secondary-container);
-  height: 34px;
-  min-width: 34px;
-  border-radius: 17px !important;
+  color: var(--scheme-color-on-surface-variant);
+  height: 32px;
+  min-width: 32px;
+  border-radius: 16px !important;
 
   &.active {
-    background: var(--scheme-color-surface-container-highest);
+    background: var(--scheme-color-secondary-container);
     color: var(--scheme-color-on-secondary-container);
   }
 }
