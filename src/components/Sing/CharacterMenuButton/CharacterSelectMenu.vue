@@ -152,7 +152,7 @@ const changeStyleId = (speakerUuid: SpeakerId, styleId: StyleId) => {
       `No engineId for target character style (speakerUuid == ${speakerUuid}, styleId == ${styleId})`,
     );
 
-  void store.dispatch("COMMAND_SET_SINGER", {
+  store.dispatch("COMMAND_SET_SINGER", {
     trackId: props.trackId,
     singer: { engineId, styleId },
     withRelated: true,

@@ -1,0 +1,545 @@
+/*
+
+## 利用
+
+background-color: var(--scheme-color-primary);
+color: var(--scheme-color-on-primary);
+
+## カスタマイズサンプル
+
+50%明度プライマリ:
+  color: oklch(var(--lr-50) var(--primary-c) var(--primary-h));
+
+50%明度プライマリ(相対)
+  color: oklch(from var(--primary-key) l calc(var(--lr-50)));
+
+ロールカラー定義(on-primaryを相対)
+  --on-primary-dark: oklch(var(--lr-10) var(--primary-c) var(--primary-h));
+
+エイリアス
+  --sing-piano-key-white-dark: oklch(var(--lr-70) var(--neutral-c) var(--neutral-h));
+
+プライマリと色調を揃えた新カラー(色相が150度異なる紫)
+  color: oklch(from var(--primary-key) l calc(var(--lr-70)) c h calc(var(--primary-c) + 150 % 360)));
+
+*/
+
+/* 
+カラースキーム計算基準
+*/
+:root {
+  // 基準彩度
+  --primary-c: 0.099;
+  --secondary-c: calc(var(--primary-c) / 3); // 0.036
+  --tertiary-c: var(--primary-c);
+  --error-c: 0.21;
+  --neutral-c: 0;
+  --neutral-variant-c: 0.003;
+  --link-c: 0.21;
+
+  // 基準色相
+  --primary-h: 149.64;
+  --secondary-h: var(--primary-h);
+  --tertiary-h: calc(var(--primary-h) - 60);
+  --error-h: 19.64;
+  --neutral-h: var(--primary-h);
+  --neutral-variant-h: var(--primary-h);
+  --link-h: 256;
+
+  // キーカラー(60%明度)
+  --primary-key: oklch(var(--lr-60) var(--primary-c) var(--primary-h));
+  --secondary-key: oklch(var(--lr-60) var(--secondary-c) var(--secondary-h));
+  --tertiary-key: oklch(var(--lr-60) var(--tertiary-c) var(--tertiary-h));
+  --error-key: oklch(var(--lr-60) var(--error-c) var(--error-h));
+  --neutral-key: oklch(var(--lr-60) var(--neutral-c) var(--neutral-h));
+  --neutral-variant-key: oklch(var(--lr-60) var(--neutral-variant-c) var(--neutral-variant-h));
+  --link-key: oklch(var(--lr-60) var(--link-c) var(--link-h));
+}
+
+/* 
+明度LUT
+OKLCHのL値を相対明度に補正した値
+eg: 50%: --lr-50
+*/
+:root {
+  --lr-0: 0.00000;
+  --lr-1: 0.03257;
+  --lr-2: 0.05321;
+  --lr-3: 0.07049;
+  --lr-4: 0.08600;
+  --lr-5: 0.10036;
+  --lr-6: 0.11391;
+  --lr-7: 0.12686;
+  --lr-8: 0.13934;
+  --lr-9: 0.15143;
+  --lr-10: 0.16321;
+  --lr-11: 0.17472;
+  --lr-12: 0.18600;
+  --lr-13: 0.19708;
+  --lr-14: 0.20799;
+  --lr-15: 0.21875;
+  --lr-16: 0.22937;
+  --lr-17: 0.23988;
+  --lr-18: 0.25027;
+  --lr-19: 0.26056;
+  --lr-20: 0.27077;
+  --lr-21: 0.28089;
+  --lr-22: 0.29093;
+  --lr-23: 0.30091;
+  --lr-24: 0.31082;
+  --lr-25: 0.32068;
+  --lr-26: 0.33047;
+  --lr-27: 0.34022;
+  --lr-28: 0.34992;
+  --lr-29: 0.35957;
+  --lr-30: 0.36919;
+  --lr-31: 0.37876;
+  --lr-32: 0.38829;
+  --lr-33: 0.39779;
+  --lr-34: 0.40726;
+  --lr-35: 0.41670;
+  --lr-36: 0.42611;
+  --lr-37: 0.43548;
+  --lr-38: 0.44484;
+  --lr-39: 0.45416;
+  --lr-40: 0.46347;
+  --lr-41: 0.47275;
+  --lr-42: 0.48201;
+  --lr-43: 0.49125;
+  --lr-44: 0.50047;
+  --lr-45: 0.50967;
+  --lr-46: 0.51885;
+  --lr-47: 0.52802;
+  --lr-48: 0.53716;
+  --lr-49: 0.54630;
+  --lr-50: 0.55541;
+  --lr-51: 0.56452;
+  --lr-52: 0.57361;
+  --lr-53: 0.58268;
+  --lr-54: 0.59175;
+  --lr-55: 0.60080;
+  --lr-56: 0.60983;
+  --lr-57: 0.61886;
+  --lr-58: 0.62788;
+  --lr-59: 0.63688;
+  --lr-60: 0.64588;
+  --lr-61: 0.65486;
+  --lr-62: 0.66384;
+  --lr-63: 0.67280;
+  --lr-64: 0.68176;
+  --lr-65: 0.69071;
+  --lr-66: 0.69965;
+  --lr-67: 0.70858;
+  --lr-68: 0.71750;
+  --lr-69: 0.72642;
+  --lr-70: 0.73533;
+  --lr-71: 0.74423;
+  --lr-72: 0.75312;
+  --lr-73: 0.76201;
+  --lr-74: 0.77089;
+  --lr-75: 0.77977;
+  --lr-76: 0.78864;
+  --lr-77: 0.79750;
+  --lr-78: 0.80636;
+  --lr-79: 0.81521;
+  --lr-80: 0.82405;
+  --lr-81: 0.83289;
+  --lr-82: 0.84173;
+  --lr-83: 0.85056;
+  --lr-84: 0.85938;
+  --lr-85: 0.86820;
+  --lr-86: 0.87702;
+  --lr-87: 0.88583;
+  --lr-88: 0.89463;
+  --lr-89: 0.90344;
+  --lr-90: 0.91223;
+  --lr-91: 0.92103;
+  --lr-92: 0.92982;
+  --lr-93: 0.93860;
+  --lr-94: 0.94738;
+  --lr-95: 0.95616;
+  --lr-96: 0.96494;
+  --lr-97: 0.97371;
+  --lr-98: 0.98248;
+  --lr-99: 0.99124;
+  --lr-100: 1;
+};
+
+/* 
+OKLCHでのカラースキーム
+*/
+/*
+ライトテーマ
+*/
+:root[is-dark-theme="false"] {
+  --scheme-color-primary: oklch(var(--lr-40) var(--primary-c) var(--primary-h));
+  --scheme-color-on-primary: oklch(var(--lr-100) var(--primary-c) var(--primary-h));
+  --scheme-color-primary-container: oklch(var(--lr-90) var(--primary-c) var(--primary-h));
+  --scheme-color-on-primary-container: oklch(var(--lr-10) var(--primary-c) var(--primary-h));
+  --scheme-color-primary-fixed: oklch(var(--lr-90) var(--primary-c) var(--primary-h));
+  --scheme-color-primary-fixed-dim: oklch(var(--lr-80) var(--primary-c) var(--primary-h));
+  --scheme-color-on-primary-fixed: oklch(var(--lr-10) var(--primary-c) var(--primary-h));
+  --scheme-color-on-primary-fixed-variant: oklch(var(--lr-30) var(--primary-c) var(--primary-h));
+
+  --scheme-color-secondary: oklch(var(--lr-40) var(--secondary-c) var(--secondary-h));
+  --scheme-color-on-secondary: oklch(var(--lr-100) var(--secondary-c) var(--secondary-h));
+  --scheme-color-secondary-container: oklch(var(--lr-90) var(--secondary-c) var(--secondary-h));
+  --scheme-color-on-secondary-container: oklch(var(--lr-10) var(--secondary-c) var(--secondary-h));
+  --scheme-color-secondary-fixed: oklch(var(--lr-90) var(--secondary-c) var(--secondary-h));
+  --scheme-color-secondary-fixed-dim: oklch(var(--lr-80) var(--secondary-c) var(--secondary-h));
+  --scheme-color-on-secondary-fixed: oklch(var(--lr-10) var(--secondary-c) var(--secondary-h));
+  --scheme-color-on-secondary-fixed-variant: oklch(var(--lr-30) var(--secondary-c) var(--secondary-h));
+
+  --scheme-color-tertiary: oklch(var(--lr-40) var(--tertiary-c) var(--tertiary-h));
+  --scheme-color-on-tertiary: oklch(var(--lr-100) var(--tertiary-c) var(--tertiary-h));
+  --scheme-color-tertiary-container: oklch(var(--lr-90) var(--tertiary-c) var(--tertiary-h));
+  --scheme-color-on-tertiary-container: oklch(var(--lr-10) var(--tertiary-c) var(--tertiary-h));
+  --scheme-color-tertiary-fixed: oklch(var(--lr-90) var(--tertiary-c) var(--tertiary-h));
+  --scheme-color-tertiary-fixed-dim: oklch(var(--lr-80) var(--tertiary-c) var(--tertiary-h));
+  --scheme-color-on-tertiary-fixed: oklch(var(--lr-10) var(--tertiary-c) var(--tertiary-h));
+  --scheme-color-on-tertiary-fixed-variant: oklch(var(--lr-30) var(--tertiary-c) var(--tertiary-h));
+
+  --scheme-color-error: oklch(var(--lr-40) var(--error-c) var(--error-h));
+  --scheme-color-on-error: oklch(var(--lr-100) var(--error-c) var(--error-h));
+  --scheme-color-error-container: oklch(var(--lr-90) var(--error-c) var(--error-h));
+  --scheme-color-on-error-container: oklch(var(--lr-10) var(--error-c) var(--error-h));
+
+  --scheme-color-background: oklch(var(--lr-99) var(--neutral-c) var(--neutral-h));
+  --scheme-color-on-background: oklch(var(--lr-10) var(--neutral-c) var(--neutral-h));
+  --scheme-color-surface: oklch(var(--lr-99) var(--neutral-c) var(--neutral-h));
+  --scheme-color-on-surface: oklch(var(--lr-10) var(--neutral-c) var(--neutral-h));
+  --scheme-color-surface-variant: oklch(var(--lr-90) var(--neutral-variant-c) var(--neutral-variant-h));
+  --scheme-color-on-surface-variant: oklch(var(--lr-30) var(--neutral-variant-c) var(--neutral-variant-h));
+  --scheme-color-outline: oklch(var(--lr-50) var(--neutral-variant-c) var(--neutral-variant-h));
+  --scheme-color-outline-variant: oklch(var(--lr-80) var(--neutral-variant-c) var(--neutral-variant-h));
+
+  --scheme-color-shadow: oklch(var(--lr-0) var(--neutral-c) var(--neutral-h));
+  --scheme-color-scrim: oklch(var(--lr-0) var(--neutral-c) var(--neutral-h));
+  --scheme-color-inverse-surface: oklch(var(--lr-20) var(--neutral-c) var(--neutral-h));
+  --scheme-color-inverse-on-surface: oklch(var(--lr-95) var(--neutral-c) var(--neutral-h));
+  --scheme-color-inverse-primary: oklch(var(--lr-80) var(--primary-c) var(--primary-h));
+
+  --scheme-color-surface-dim: oklch(var(--lr-87) var(--neutral-c) var(--neutral-h));
+  --scheme-color-surface-bright: oklch(var(--lr-98) var(--neutral-c) var(--neutral-h));
+  --scheme-color-surface-container-lowest: oklch(var(--lr-90) var(--neutral-c) var(--neutral-h));
+  --scheme-color-surface-container-low: oklch(var(--lr-92) var(--neutral-c) var(--neutral-h));
+  --scheme-color-surface-container: oklch(var(--lr-94) var(--neutral-c) var(--neutral-h));
+  --scheme-color-surface-container-high: oklch(var(--lr-96) var(--neutral-c) var(--neutral-h));
+  --scheme-color-surface-container-highest: oklch(var(--lr-100) var(--neutral-c) var(--neutral-h));
+
+  /* カスタムカラー */
+  --scheme-color-link: oklch(var(--lr-40) var(--link-c) var(--link-h));
+  --scheme-color-on-link: oklch(var(--lr-100) var(--link-c) var(--link-h));
+  --scheme-color-link-container: oklch(var(--lr-90) var(--link-c) var(--link-h));
+  --scheme-color-on-link-container: oklch(var(--lr-10) var(--link-c) var(--link-h));
+
+  /* ソング用エイリアスカラー */
+  --scheme-color-sing-toolbar-container: oklch(var(--lr-99) var(--neutral-c) var(--neutral-h));
+  --scheme-color-sing-playback-button-container: oklch(var(--lr-80) var(--primary-c) var(--primary-h));
+  --scheme-color-sing-on-playback-button-container: oklch(var(--lr-10) var(--neutral-c) var(--neutral-h));
+  
+  --scheme-color-sing-grid-cell-white: oklch(var(--lr-100) var(--neutral-c) var(--neutral-h));
+  --scheme-color-sing-grid-cell-black: oklch(var(--lr-96) var(--neutral-c) var(--neutral-h));
+  
+  --scheme-color-sing-grid-measure-line: oklch(var(--lr-75) var(--neutral-c) var(--neutral-h));
+  --scheme-color-sing-grid-beat-line: oklch(var(--lr-90) var(--neutral-c) var(--neutral-h));
+  --scheme-color-sing-grid-vertical-line: oklch(var(--lr-96) var(--neutral-c) var(--neutral-h));
+
+  --scheme-color-sing-grid-octave-line: oklch(var(--lr-88) var(--neutral-c) var(--neutral-h));
+  --scheme-color-sing-grid-horizontal-line: oklch(var(--lr-96) var(--neutral-c) var(--neutral-h));
+
+  --scheme-color-sing-ruler-surface: oklch(var(--lr-90) var(--neutral-c) var(--neutral-h));
+  --scheme-color-sing-ruler-measure-line: oklch(var(--lr-65) var(--neutral-c) var(--neutral-h));
+  --scheme-color-sing-ruler-beat-line: oklch(var(--lr-75) var(--neutral-c) var(--neutral-h));
+  
+  --scheme-color-sing-piano-key-white: oklch(var(--lr-99) var(--neutral-c) var(--neutral-h));
+  --scheme-color-sing-piano-key-black: oklch(var(--lr-45) var(--neutral-c) var(--neutral-h));
+  
+  --scheme-color-sing-note-bar-container: oklch(var(--lr-88) var(--secondary-c) var(--secondary-h));
+  --scheme-color-sing-on-note-bar-container: oklch(var(--lr-10) var(--secondary-c) var(--secondary-h));
+  --scheme-color-sing-note-bar-border: oklch(var(--lr-60) var(--secondary-c) var(--secondary-h));
+  
+  --scheme-color-sing-note-bar-selected-container: oklch(var(--lr-96) var(--primary-c) var(--primary-h));
+  --scheme-color-sing-on-note-bar-selected-container: oklch(var(--lr-10) var(--primary-c) var(--primary-h));
+  --scheme-color-sing-note-bar-selected-border: oklch(var(--lr-60) var(--primary-c) var(--primary-h));
+  --scheme-color-sing-note-bar-selected-outline: oklch(var(--lr-80) var(--primary-c) var(--primary-h));
+  
+  --scheme-color-sing-note-bar-preview-container: oklch(var(--lr-88) var(--tertiary-c) var(--tertiary-h));
+  --scheme-color-sing-on-note-bar-preview-container: oklch(var(--lr-10) var(--tertiary-c) var(--tertiary-h));
+  --scheme-color-sing-note-bar-preview-border: oklch(var(--lr-60) var(--tertiary-c) var(--tertiary-h));
+  --scheme-color-sing-note-bar-preview-outline: oklch(var(--lr-80) var(--tertiary-c) var(--tertiary-h));
+  
+  --scheme-color-sing-shadow-note: oklch(var(--lr-88) var(--neutral-variant-c) var(--neutral-variant-h));
+}
+
+/* ダークテーマ */
+:root[is-dark-theme="true"] {
+  --scheme-color-primary: oklch(var(--lr-80) var(--primary-c) var(--primary-h));
+  --scheme-color-on-primary: oklch(var(--lr-20) var(--primary-c) var(--primary-h));
+  --scheme-color-primary-container: oklch(var(--lr-30) var(--primary-c) var(--primary-h));
+  --scheme-color-on-primary-container: oklch(var(--lr-90) var(--primary-c) var(--primary-h));
+  --scheme-color-primary-fixed: oklch(var(--lr-90) var(--primary-c) var(--primary-h));
+  --scheme-color-primary-fixed-dim: oklch(var(--lr-80) var(--primary-c) var(--primary-h));
+  --scheme-color-on-primary-fixed: oklch(var(--lr-10) var(--primary-c) var(--primary-h));
+  --scheme-color-on-primary-fixed-variant: oklch(var(--lr-30) var(--primary-c) var(--primary-h));
+
+  --scheme-color-secondary: oklch(var(--lr-80) var(--secondary-c) var(--secondary-h));
+  --scheme-color-on-secondary: oklch(var(--lr-20) var(--secondary-c) var(--secondary-h));
+  --scheme-color-secondary-container: oklch(var(--lr-30) var(--secondary-c) var(--secondary-h));
+  --scheme-color-on-secondary-container: oklch(var(--lr-90) var(--secondary-c) var(--secondary-h));
+  --scheme-color-secondary-fixed: oklch(var(--lr-90) var(--secondary-c) var(--secondary-h));
+  --scheme-color-secondary-fixed-dim: oklch(var(--lr-80) var(--secondary-c) var(--secondary-h));
+  --scheme-color-on-secondary-fixed: oklch(var(--lr-10) var(--secondary-c) var(--secondary-h));
+  --scheme-color-on-secondary-fixed-variant: oklch(var(--lr-30) var(--secondary-c) var(--secondary-h));
+
+  --scheme-color-tertiary: oklch(var(--lr-80) var(--tertiary-c) var(--tertiary-h));
+  --scheme-color-on-tertiary: oklch(var(--lr-20) var(--tertiary-c) var(--tertiary-h));
+  --scheme-color-tertiary-container: oklch(var(--lr-30) var(--tertiary-c) var(--tertiary-h));
+  --scheme-color-on-tertiary-container: oklch(var(--lr-90) var(--tertiary-c) var(--tertiary-h));
+  --scheme-color-tertiary-fixed: oklch(var(--lr-90) var(--tertiary-c) var(--tertiary-h));
+  --scheme-color-tertiary-fixed-dim: oklch(var(--lr-80) var(--tertiary-c) var(--tertiary-h));
+  --scheme-color-on-tertiary-fixed: oklch(var(--lr-10) var(--tertiary-c) var(--tertiary-h));
+  --scheme-color-on-tertiary-fixed-variant: oklch(var(--lr-30) var(--tertiary-c) var(--tertiary-h));
+
+  --scheme-color-error: oklch(var(--lr-80) var(--error-c) var(--error-h));
+  --scheme-color-on-error: oklch(var(--lr-20) var(--error-c) var(--error-h));
+  --scheme-color-error-container: oklch(var(--lr-30) var(--error-c) var(--error-h));
+  --scheme-color-on-error-container: oklch(var(--lr-90) var(--error-c) var(--error-h));
+
+  --scheme-color-shadow: oklch(var(--lr-0) var(--neutral-c) var(--neutral-h));
+  --scheme-color-scrim: oklch(var(--lr-0) var(--neutral-c) var(--neutral-h));
+  --scheme-color-inverse-surface: oklch(var(--lr-90) var(--neutral-c) var(--neutral-h));
+  --scheme-color-inverse-on-surface: oklch(var(--lr-20) var(--neutral-c) var(--neutral-h));
+  --scheme-color-inverse-primary: oklch(var(--lr-40) var(--primary-c) var(--primary-h));
+
+  --scheme-color-background: oklch(var(--lr-10) var(--neutral-c) var(--neutral-h));
+  --scheme-color-on-background: oklch(var(--lr-90) var(--neutral-c) var(--neutral-h));
+  --scheme-color-surface: oklch(var(--lr-10) var(--neutral-c) var(--neutral-h));
+  --scheme-color-on-surface: oklch(var(--lr-90) var(--neutral-c) var(--neutral-h));
+  --scheme-color-surface-variant: oklch(var(--lr-30) var(--neutral-variant-c) var(--neutral-variant-h));
+  --scheme-color-on-surface-variant: oklch(var(--lr-80) var(--neutral-variant-c) var(--neutral-variant-h));
+  --scheme-color-outline: oklch(var(--lr-60) var(--neutral-variant-c) var(--neutral-variant-h));
+  --scheme-color-outline-variant: oklch(var(--lr-30) var(--neutral-variant-c) var(--neutral-variant-h));
+
+  --scheme-color-surface-dim: oklch(var(--lr-6) var(--neutral-c) var(--neutral-h));
+  --scheme-color-surface-bright: oklch(var(--lr-24) var(--neutral-c) var(--neutral-h));
+  --scheme-color-surface-container-lowest: oklch(var(--lr-4) var(--neutral-c) var(--neutral-h));
+  --scheme-color-surface-container-low: oklch(var(--lr-10) var(--neutral-c) var(--neutral-h));
+  --scheme-color-surface-container: oklch(var(--lr-12) var(--neutral-c) var(--neutral-h));
+  --scheme-color-surface-container-high: oklch(var(--lr-17) var(--neutral-c) var(--neutral-h));
+  --scheme-color-surface-container-highest: oklch(var(--lr-22) var(--neutral-c) var(--neutral-h));
+
+  /* カスタムカラー */
+  --scheme-color-link: oklch(var(--lr-80) var(--link-c) var(--link-h));
+  --scheme-color-on-link: oklch(var(--lr-20) var(--link-c) var(--link-h));
+  --scheme-color-link-container: oklch(var(--lr-30) var(--link-c) var(--link-h));
+  --scheme-color-on-link-container: oklch(var(--lr-90) var(--link-c) var(--link-h));
+
+  /* ソング用エイリアスカラー */
+  --scheme-color-sing-toolbar-container: oklch(var(--lr-19) var(--neutral-c) var(--neutral-h));
+  --scheme-color-sing-playback-button-container: oklch(var(--lr-70) var(--primary-c) var(--primary-h));
+  --scheme-color-sing-on-playback-button-container: oklch(var(--lr-10) var(--neutral-c) var(--neutral-h));
+  
+  --scheme-color-sing-grid-cell-white: oklch(var(--lr-20) var(--neutral-c) var(--neutral-h));
+  --scheme-color-sing-grid-cell-black: oklch(var(--lr-15) var(--neutral-c) var(--neutral-h));
+  
+  --scheme-color-sing-grid-measure-line: oklch(var(--lr-40) var(--neutral-c) var(--neutral-h));
+  --scheme-color-sing-grid-beat-line: oklch(var(--lr-4) var(--neutral-c) var(--neutral-h));
+  --scheme-color-sing-grid-vertical-line: oklch(var(--lr-15) var(--neutral-c) var(--neutral-h));
+  
+  --scheme-color-sing-grid-octave-line: oklch(var(--lr-30) var(--neutral-c) var(--neutral-h));
+  --scheme-color-sing-grid-horizontal-line: oklch(var(--lr-15) var(--neutral-c) var(--neutral-h));
+  
+  --scheme-color-sing-ruler-surface: oklch(var(--lr-30) var(--neutral-c) var(--neutral-h));
+  --scheme-color-sing-ruler-measure-line: oklch(var(--lr-60) var(--neutral-c) var(--neutral-h));
+  --scheme-color-sing-ruler-beat-line: oklch(var(--lr-50) var(--neutral-c) var(--neutral-h));
+  
+  --scheme-color-sing-piano-key-white: oklch(var(--lr-70) var(--neutral-c) var(--neutral-h));
+  --scheme-color-sing-piano-key-black: oklch(var(--lr-20) var(--neutral-c) var(--neutral-h));
+  
+  --scheme-color-sing-note-bar-container: oklch(var(--lr-70) var(--secondary-c) var(--secondary-h));
+  --scheme-color-sing-on-note-bar-container: oklch(var(--lr-10) var(--secondary-c) var(--secondary-h));
+  --scheme-color-sing-note-bar-border: oklch(var(--lr-85) var(--secondary-c) var(--secondary-h));
+  
+  --scheme-color-sing-note-bar-selected-container: oklch(var(--lr-80) var(--primary-c) var(--primary-h));
+  --scheme-color-sing-on-note-bar-selected-container: oklch(var(--lr-10) var(--primary-c) var(--primary-h));
+  --scheme-color-sing-note-bar-selected-border: oklch(var(--lr-95) var(--primary-c) var(--primary-h));
+  --scheme-color-sing-note-bar-selected-outline: oklch(var(--lr-60) var(--primary-c) var(--primary-h));
+  
+  --scheme-color-sing-note-bar-preview-container: oklch(var(--lr-70) var(--tertiary-c) var(--tertiary-h));
+  --scheme-color-sing-on-note-bar-preview-container: oklch(var(--lr-10) var(--tertiary-c) var(--tertiary-h));
+  --scheme-color-sing-note-bar-preview-border: oklch(var(--lr-85) var(--tertiary-c) var(--tertiary-h));
+  --scheme-color-sing-note-bar-preview-outline: oklch(var(--lr-60) var(--tertiary-c) var(--tertiary-h));
+  
+  --scheme-color-sing-shadow-note: oklch(var(--lr-50) var(--neutral-variant-c) var(--neutral-variant-h));
+};
+
+/*
+フォールバック
+*/
+
+@supports not (color: oklch(0% 0 0)) {
+  :root[is-dark-theme="false"] {
+    --scheme-color-primary: #29683a;
+    --scheme-color-on-primary: #fff;
+    --scheme-color-primary-container: #b3f5bf;
+    --scheme-color-on-primary-container: #001500;
+    --scheme-color-primary-fixed: #b3f5bf;
+    --scheme-color-primary-fixed-dim: #97d8a3;
+    --scheme-color-on-primary-fixed: #001500;
+    --scheme-color-on-primary-fixed-variant: #054d20;
+    --scheme-color-secondary: #4c5e4f;
+    --scheme-color-on-secondary: #fff;
+    --scheme-color-secondary-container: #d3e9d7;
+    --scheme-color-on-secondary-container: #041206;
+    --scheme-color-secondary-fixed: #d3e9d7;
+    --scheme-color-secondary-fixed-dim: #b7ccba;
+    --scheme-color-on-secondary-fixed: #041206;
+    --scheme-color-on-secondary-fixed-variant: #334536;
+    --scheme-color-tertiary: #725400;
+    --scheme-color-on-tertiary: #fff;
+    --scheme-color-tertiary-container: #ffdc4d;
+    --scheme-color-on-tertiary-container: #170c00;
+    --scheme-color-tertiary-fixed: #ffdc4d;
+    --scheme-color-tertiary-fixed-dim: #f5bd00;
+    --scheme-color-on-tertiary-fixed: #170c00;
+    --scheme-color-on-tertiary-fixed-variant: #533c00;
+    --scheme-color-error: #ad0026;
+    --scheme-color-on-error: #fff;
+    --scheme-color-error-container: #ffd1d0;
+    --scheme-color-on-error-container: #280001;
+    --scheme-color-background: #fcfcfc;
+    --scheme-color-on-background: #0e0e0e;
+    --scheme-color-surface: #fcfcfc;
+    --scheme-color-on-surface: #0e0e0e;
+    --scheme-color-surface-variant: #e1e2e1;
+    --scheme-color-on-surface-variant: #3e403f;
+    --scheme-color-outline: #727472;
+    --scheme-color-outline-variant: #c4c6c4;
+    --scheme-color-shadow: #000;
+    --scheme-color-scrim: #000;
+    --scheme-color-inverse-surface: #272727;
+    --scheme-color-inverse-on-surface: #f0f0f0;
+    --scheme-color-inverse-primary: #97d8a3;
+    --scheme-color-surface-dim: #d9d9d9;
+    --scheme-color-surface-bright: #f9f9f9;
+    --scheme-color-surface-container-lowest: #dcdcdc;
+    --scheme-color-surface-container-low: #e2e2e2;
+    --scheme-color-surface-container: #f0f0f0;
+    --scheme-color-surface-container-high: #f6f6f6;
+    --scheme-color-surface-container-highest: #fff;
+    --scheme-color-link: #0052bf;
+    --scheme-color-on-link: #fff;
+    --scheme-color-link-container: #c7e5ff;
+    --scheme-color-on-link-container: #000042;
+    --scheme-color-sing-toolbar-container: #fcfcfc;
+    --scheme-color-sing-playback-button-container: #97d8a3;
+    --scheme-color-sing-on-playback-button-container: #0e0e0e;
+    --scheme-color-sing-grid-cell-white: #fff;
+    --scheme-color-sing-grid-cell-black: #f3f3f3;
+    --scheme-color-sing-grid-vertical-line: #f3f3f3;
+    --scheme-color-sing-grid-horizontal-line: #f3f3f3;
+    --scheme-color-sing-grid-measure-line: #b7b7b7;
+    --scheme-color-sing-grid-beat-line: #e2e2e2;
+    --scheme-color-sing-grid-octave-line: #dcdcdc;
+    --scheme-color-sing-ruler-surface: #e2e2e2;
+    --scheme-color-sing-ruler-measure-line: #9b9b9b;
+    --scheme-color-sing-ruler-beat-line: #b7b7b7;
+    --scheme-color-sing-piano-key-white: #fcfcfc;
+    --scheme-color-sing-piano-key-black: #666;
+    --scheme-color-sing-note-bar-container: #cee3d1;
+    --scheme-color-sing-on-note-bar-container: #041206;
+    --scheme-color-sing-note-bar-outline: #809483;
+    --scheme-color-sing-note-bar-selected-container: #c6ffd1;
+    --scheme-color-sing-on-note-bar-selected-container: #001500;
+    --scheme-color-sing-note-bar-selected-outline: #609f6d;
+    --scheme-color-sing-note-bar-selected-outline-outer: #97d8a3;
+    --scheme-color-sing-note-bar-preview-container: #ffd400;
+    --scheme-color-sing-on-note-bar-preview-container: #170c00;
+    --scheme-color-sing-note-bar-preview-outline: #b28700;
+    --scheme-color-sing-note-bar-preview-outline-outer: #f5bd00;
+    --scheme-color-sing-shadow-note: #dbdddb;
+  }
+  
+  :root[is-dark-theme="true"] {
+    --scheme-color-primary: #97d8a3;
+    --scheme-color-on-primary: #003306;
+    --scheme-color-primary-container: #054d20;
+    --scheme-color-on-primary-container: #b3f5bf;
+    --scheme-color-primary-fixed: #b3f5bf;
+    --scheme-color-primary-fixed-dim: #97d8a3;
+    --scheme-color-on-primary-fixed: #001500;
+    --scheme-color-on-primary-fixed-variant: #054d20;
+    --scheme-color-secondary: #b7ccba;
+    --scheme-color-on-secondary: #1b2b1e;
+    --scheme-color-secondary-container: #334536;
+    --scheme-color-on-secondary-container: #d3e9d7;
+    --scheme-color-secondary-fixed: #d3e9d7;
+    --scheme-color-secondary-fixed-dim: #b7ccba;
+    --scheme-color-on-secondary-fixed: #041206;
+    --scheme-color-on-secondary-fixed-variant: #334536;
+    --scheme-color-tertiary: #f5bd00;
+    --scheme-color-on-tertiary: #352400;
+    --scheme-color-tertiary-container: #533c00;
+    --scheme-color-on-tertiary-container: #ffdc4d;
+    --scheme-color-tertiary-fixed: #ffdc4d;
+    --scheme-color-tertiary-fixed-dim: #f5bd00;
+    --scheme-color-on-tertiary-fixed: #170c00;
+    --scheme-color-on-tertiary-fixed-variant: #533c00;
+    --scheme-color-error: #ffa4a5;
+    --scheme-color-on-error: #550009;
+    --scheme-color-error-container: #810017;
+    --scheme-color-on-error-container: #ffd1d0;
+    --scheme-color-background: #0e0e0e;
+    --scheme-color-on-background: #e2e2e2;
+    --scheme-color-surface: #0e0e0e;
+    --scheme-color-on-surface: #e2e2e2;
+    --scheme-color-surface-variant: #3e403f;
+    --scheme-color-on-surface-variant: #c4c6c4;
+    --scheme-color-outline: #8d8e8d;
+    --scheme-color-outline-variant: #3e403f;
+    --scheme-color-shadow: #000;
+    --scheme-color-scrim: #000;
+    --scheme-color-inverse-surface: #e2e2e2;
+    --scheme-color-inverse-on-surface: #272727;
+    --scheme-color-inverse-primary: #29683a;
+    --scheme-color-surface-dim: #050505;
+    --scheme-color-surface-bright: #303030;
+    --scheme-color-surface-container-lowest: #020202;
+    --scheme-color-surface-container-low: #0e0e0e;
+    --scheme-color-surface-container: #131313;
+    --scheme-color-surface-container-high: #1f1f1f;
+    --scheme-color-surface-container-highest: #2b2b2b;
+    --scheme-color-link: #95c8ff;
+    --scheme-color-on-link: #001d6b;
+    --scheme-color-link-container: #003699;
+    --scheme-color-on-link-container: #c7e5ff;
+    --scheme-color-sing-toolbar-container: #1f1f1f;
+    --scheme-color-sing-playback-button-container: #7bbb88;
+    --scheme-color-sing-on-playback-button-container: #0e0e0e;
+    --scheme-color-sing-grid-cell-white: #272727;
+    --scheme-color-sing-grid-cell-black: #1a1a1a;
+    --scheme-color-sing-grid-vertical-line: #1a1a1a;
+    --scheme-color-sing-grid-horizontal-line: #1a1a1a;
+    --scheme-color-sing-grid-measure-line: #595959;
+    --scheme-color-sing-grid-beat-line: #020202;
+    --scheme-color-sing-grid-octave-line: #3f3f3f;
+    --scheme-color-sing-ruler-surface: #3f3f3f;
+    --scheme-color-sing-ruler-measure-line: #8e8e8e;
+    --scheme-color-sing-ruler-beat-line: #666;
+    --scheme-color-sing-piano-key-white: #a9a9a9;
+    --scheme-color-sing-piano-key-black: #272727;
+    --scheme-color-sing-note-bar-container: #9bb09e;
+    --scheme-color-sing-on-note-bar-container: #041206;
+    --scheme-color-sing-note-bar-outline: #c5dac8;
+    --scheme-color-sing-note-bar-selected-container: #97d8a3;
+    --scheme-color-sing-on-note-bar-selected-container: #001500;
+    --scheme-color-sing-note-bar-selected-outline: #c1ffcd;
+    --scheme-color-sing-note-bar-selected-outline-outer: #609f6d;
+    --scheme-color-sing-note-bar-preview-container: #d3a200;
+    --scheme-color-sing-on-note-bar-preview-container: #170c00;
+    --scheme-color-sing-note-bar-preview-outline: #ffcb00;
+    --scheme-color-sing-note-bar-preview-outline-outer: #b28700;
+    --scheme-color-sing-shadow-note: #a8aaa8;
+  }
+}

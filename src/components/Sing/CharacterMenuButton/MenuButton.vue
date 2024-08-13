@@ -38,3 +38,34 @@ const selectedSinger = computed(() => {
   return store.getters.SELECTED_TRACK.singer;
 });
 </script>
+
+<style scoped lang="scss">
+@use "@/styles/variables" as vars;
+@use "@/styles/colors" as colors;
+
+.character-menu {
+  .q-menu {
+    :deep(.q-menu__container) {
+      border-radius: 1.25rem;
+    }
+  }
+  .q-item {
+    color: var(--scheme-color-on-surface);
+  }
+  .q-btn-group {
+    > .q-btn:first-child > :deep(.q-btn__content) {
+      justify-content: flex-start;
+    }
+    > div:last-child:hover {
+      background-color: rgba(var(--scheme-color-secondary-rgb), 0.1);
+    }
+  }
+  .engine-icon {
+    position: absolute;
+    width: 13px;
+    height: 13px;
+    bottom: -6px;
+    right: -6px;
+  }
+}
+</style>

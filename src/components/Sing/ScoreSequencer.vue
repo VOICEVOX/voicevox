@@ -28,8 +28,6 @@
       @scroll="onScroll"
       @contextmenu.prevent
     >
-      <!-- キャラクター全身 -->
-      <CharacterPortrait />
       <!-- グリッド -->
       <SequencerGrid />
       <div
@@ -40,7 +38,7 @@
           transform: `translateX(${guideLineX}px)`,
         }"
       ></div>
-
+      <CharacterPortrait />
       <!-- undefinedだと警告が出るのでnullを渡す -->
       <!-- TODO: ちゃんとしたトラックIDを渡す -->
       <SequencerShadowNote
@@ -137,6 +135,7 @@
       :max="ZOOM_X_MAX"
       :step="ZOOM_X_STEP"
       class="zoom-x-slider"
+      trackSize="3px"
       @update:modelValue="setZoomX"
     />
     <QSlider
@@ -147,6 +146,7 @@
       vertical
       reverse
       class="zoom-y-slider"
+      trackSize="3px"
       @update:modelValue="setZoomY"
     />
     <ContextMenu
@@ -154,6 +154,7 @@
       ref="contextMenu"
       :menudata="contextMenuData"
     />
+    <div class="character-selecter"></div>
   </div>
 </template>
 
@@ -378,7 +379,7 @@ const onLyricInput = (text: string, note: Note) => {
 
 const onLyricConfirmed = (nextNoteId: NoteId | undefined) => {
   commitPreviewLyrics();
-  void store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId: nextNoteId });
+  store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId: nextNoteId });
 };
 
 // プレビュー
@@ -733,9 +734,9 @@ const getYInBorderBox = (clientY: number, element: HTMLElement) => {
 };
 
 const selectOnlyThis = (note: Note) => {
-  void store.dispatch("DESELECT_ALL_NOTES");
-  void store.dispatch("SELECT_NOTES", { noteIds: [note.id] });
-  void store.dispatch("PLAY_PREVIEW_SOUND", {
+  store.dispatch("DESELECT_ALL_NOTES");
+  store.dispatch("SELECT_NOTES", { noteIds: [note.id] });
+  store.dispatch("PLAY_PREVIEW_SOUND", {
     noteNumber: note.noteNumber,
     duration: PREVIEW_SOUND_DURATION,
   });
@@ -781,7 +782,7 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
         noteNumber: cursorNoteNumber,
         lyric: getDoremiFromNoteNumber(cursorNoteNumber),
       };
-      void store.dispatch("DESELECT_ALL_NOTES");
+      store.dispatch("DESELECT_ALL_NOTES");
       copiedNotes.push(note);
     } else {
       if (!note) {
@@ -804,9 +805,9 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
             noteIdsToSelect.push(noteId);
           }
         }
-        void store.dispatch("SELECT_NOTES", { noteIds: noteIdsToSelect });
+        store.dispatch("SELECT_NOTES", { noteIds: noteIdsToSelect });
       } else if (isOnCommandOrCtrlKeyDown(event)) {
-        void store.dispatch("SELECT_NOTES", { noteIds: [note.id] });
+        store.dispatch("SELECT_NOTES", { noteIds: [note.id] });
       } else if (!selectedNoteIds.value.has(note.id)) {
         selectOnlyThis(note);
       }
@@ -867,21 +868,21 @@ const endPreview = () => {
 
     if (edited) {
       if (previewMode === "ADD_NOTE") {
-        void store.dispatch("COMMAND_ADD_NOTES", {
+        store.dispatch("COMMAND_ADD_NOTES", {
           notes: previewNotes.value,
           trackId: selectedTrackId.value,
         });
-        void store.dispatch("SELECT_NOTES", {
+        store.dispatch("SELECT_NOTES", {
           noteIds: previewNotes.value.map((value) => value.id),
         });
       } else {
-        void store.dispatch("COMMAND_UPDATE_NOTES", {
+        store.dispatch("COMMAND_UPDATE_NOTES", {
           notes: previewNotes.value,
           trackId: selectedTrackId.value,
         });
       }
       if (previewNotes.value.length === 1) {
-        void store.dispatch("PLAY_PREVIEW_SOUND", {
+        store.dispatch("PLAY_PREVIEW_SOUND", {
           noteNumber: previewNotes.value[0].noteNumber,
           duration: PREVIEW_SOUND_DURATION,
         });
@@ -904,14 +905,14 @@ const endPreview = () => {
         applyGaussianFilter(data, 0.7);
         data = data.map((value) => Math.exp(value));
 
-        void store.dispatch("COMMAND_SET_PITCH_EDIT_DATA", {
+        store.dispatch("COMMAND_SET_PITCH_EDIT_DATA", {
           pitchArray: data,
           startFrame: previewPitchEdit.value.startFrame,
           trackId: selectedTrackId.value,
         });
       }
     } else if (previewPitchEditType === "erase") {
-      void store.dispatch("COMMAND_ERASE_PITCH_EDIT_DATA", {
+      store.dispatch("COMMAND_ERASE_PITCH_EDIT_DATA", {
         startFrame: previewPitchEdit.value.startFrame,
         frameLength: previewPitchEdit.value.frameLength,
         trackId: selectedTrackId.value,
@@ -944,7 +945,7 @@ const onNoteBarDoubleClick = (event: MouseEvent, note: Note) => {
   }
   const mouseButton = getButton(event);
   if (mouseButton === "LEFT_BUTTON" && note.id !== state.editingLyricNoteId) {
-    void store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId: note.id });
+    store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId: note.id });
   }
 };
 
@@ -988,7 +989,7 @@ const onMouseDown = (event: MouseEvent) => {
         startPreview(event, "ADD_NOTE");
       }
     } else {
-      void store.dispatch("DESELECT_ALL_NOTES");
+      store.dispatch("DESELECT_ALL_NOTES");
     }
   } else if (editTarget.value === "PITCH") {
     if (mouseButton === "LEFT_BUTTON") {
@@ -1076,9 +1077,9 @@ const rectSelect = (additive: boolean) => {
     }
   }
   if (!additive) {
-    void store.dispatch("DESELECT_ALL_NOTES");
+    store.dispatch("DESELECT_ALL_NOTES");
   }
-  void store.dispatch("SELECT_NOTES", { noteIds: noteIdsToSelect });
+  store.dispatch("SELECT_NOTES", { noteIds: noteIdsToSelect });
 };
 
 const onMouseEnter = () => {
@@ -1099,13 +1100,13 @@ const handleNotesArrowUp = () => {
   if (editedNotes.some((note) => note.noteNumber > 127)) {
     return;
   }
-  void store.dispatch("COMMAND_UPDATE_NOTES", {
+  store.dispatch("COMMAND_UPDATE_NOTES", {
     notes: editedNotes,
     trackId: selectedTrackId.value,
   });
 
   if (editedNotes.length === 1) {
-    void store.dispatch("PLAY_PREVIEW_SOUND", {
+    store.dispatch("PLAY_PREVIEW_SOUND", {
       noteNumber: editedNotes[0].noteNumber,
       duration: PREVIEW_SOUND_DURATION,
     });
@@ -1121,13 +1122,13 @@ const handleNotesArrowDown = () => {
   if (editedNotes.some((note) => note.noteNumber < 0)) {
     return;
   }
-  void store.dispatch("COMMAND_UPDATE_NOTES", {
+  store.dispatch("COMMAND_UPDATE_NOTES", {
     notes: editedNotes,
     trackId: selectedTrackId.value,
   });
 
   if (editedNotes.length === 1) {
-    void store.dispatch("PLAY_PREVIEW_SOUND", {
+    store.dispatch("PLAY_PREVIEW_SOUND", {
       noteNumber: editedNotes[0].noteNumber,
       duration: PREVIEW_SOUND_DURATION,
     });
@@ -1144,7 +1145,7 @@ const handleNotesArrowRight = () => {
     // TODO: 例外処理は`UPDATE_NOTES`内に移す？
     return;
   }
-  void store.dispatch("COMMAND_UPDATE_NOTES", {
+  store.dispatch("COMMAND_UPDATE_NOTES", {
     notes: editedNotes,
     trackId: selectedTrackId.value,
   });
@@ -1162,7 +1163,7 @@ const handleNotesArrowLeft = () => {
   ) {
     return;
   }
-  void store.dispatch("COMMAND_UPDATE_NOTES", {
+  store.dispatch("COMMAND_UPDATE_NOTES", {
     notes: editedNotes,
     trackId: selectedTrackId.value,
   });
@@ -1173,7 +1174,7 @@ const handleNotesBackspaceOrDelete = () => {
     // TODO: 例外処理は`COMMAND_REMOVE_SELECTED_NOTES`内に移す？
     return;
   }
-  void store.dispatch("COMMAND_REMOVE_SELECTED_NOTES");
+  store.dispatch("COMMAND_REMOVE_SELECTED_NOTES");
 };
 
 const handleKeydown = (event: KeyboardEvent) => {
@@ -1201,7 +1202,7 @@ const handleKeydown = (event: KeyboardEvent) => {
       handleNotesBackspaceOrDelete();
       break;
     case "Escape":
-      void store.dispatch("DESELECT_ALL_NOTES");
+      store.dispatch("DESELECT_ALL_NOTES");
       break;
   }
 };
@@ -1222,7 +1223,7 @@ const setZoomX = (value: number | null) => {
   const scrollTop = sequencerBodyElement.scrollTop;
   const clientWidth = sequencerBodyElement.clientWidth;
 
-  void store.dispatch("SET_ZOOM_X", { zoomX: newZoomX }).then(() => {
+  store.dispatch("SET_ZOOM_X", { zoomX: newZoomX }).then(() => {
     const centerBaseX = (scrollLeft + clientWidth / 2) / oldZoomX;
     const newScrollLeft = centerBaseX * newZoomX - clientWidth / 2;
     sequencerBodyElement.scrollTo(newScrollLeft, scrollTop);
@@ -1245,7 +1246,7 @@ const setZoomY = (value: number | null) => {
   const scrollTop = sequencerBodyElement.scrollTop;
   const clientHeight = sequencerBodyElement.clientHeight;
 
-  void store.dispatch("SET_ZOOM_Y", { zoomY: newZoomY }).then(() => {
+  store.dispatch("SET_ZOOM_Y", { zoomY: newZoomY }).then(() => {
     const centerBaseY = (scrollTop + clientHeight / 2) / oldZoomY;
     const newScrollTop = centerBaseY * newZoomY - clientHeight / 2;
     sequencerBodyElement.scrollTo(scrollLeft, newScrollTop);
@@ -1272,7 +1273,7 @@ const onWheel = (event: WheelEvent) => {
     const scrollTop = sequencerBodyElement.scrollTop;
     guideLineX.value = 0; // 補助線がはみ出さないように位置を一旦0にする
 
-    void store.dispatch("SET_ZOOM_X", { zoomX: newZoomX }).then(() => {
+    store.dispatch("SET_ZOOM_X", { zoomX: newZoomX }).then(() => {
       const cursorBaseX = (scrollLeft + cursorX.value) / oldZoomX;
       const newScrollLeft = cursorBaseX * newZoomX - cursorX.value;
       sequencerBodyElement.scrollTo(newScrollLeft, scrollTop);
@@ -1356,14 +1357,14 @@ onActivated(() => {
     yToScroll = scrollY.value;
   }
   // 実際にスクロールする
-  void nextTick(() => {
+  nextTick(() => {
     sequencerBodyElement.scrollTo(xToScroll, yToScroll);
   });
 });
 
 // リスナー登録
 onActivated(() => {
-  void store.dispatch("ADD_PLAYHEAD_POSITION_CHANGE_LISTENER", {
+  store.dispatch("ADD_PLAYHEAD_POSITION_CHANGE_LISTENER", {
     listener: playheadPositionChangeListener,
   });
 
@@ -1372,7 +1373,7 @@ onActivated(() => {
 
 // リスナー解除
 onDeactivated(() => {
-  void store.dispatch("REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER", {
+  store.dispatch("REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER", {
     listener: playheadPositionChangeListener,
   });
 
@@ -1393,7 +1394,7 @@ registerHotkeyWithCleanup({
     if (selectedNoteIds.value.size === 0) {
       return;
     }
-    void store.dispatch("COPY_NOTES_TO_CLIPBOARD");
+    store.dispatch("COPY_NOTES_TO_CLIPBOARD");
   },
 });
 
@@ -1407,7 +1408,7 @@ registerHotkeyWithCleanup({
     if (selectedNoteIds.value.size === 0) {
       return;
     }
-    void store.dispatch("COMMAND_CUT_NOTES_TO_CLIPBOARD");
+    store.dispatch("COMMAND_CUT_NOTES_TO_CLIPBOARD");
   },
 });
 
@@ -1418,7 +1419,7 @@ registerHotkeyWithCleanup({
     if (nowPreviewing.value) {
       return;
     }
-    void store.dispatch("COMMAND_PASTE_NOTES_FROM_CLIPBOARD");
+    store.dispatch("COMMAND_PASTE_NOTES_FROM_CLIPBOARD");
   },
 });
 
@@ -1429,7 +1430,7 @@ registerHotkeyWithCleanup({
     if (nowPreviewing.value) {
       return;
     }
-    void store.dispatch("SELECT_ALL_NOTES_IN_TRACK", {
+    store.dispatch("SELECT_ALL_NOTES_IN_TRACK", {
       trackId: selectedTrackId.value,
     });
   },
@@ -1523,16 +1524,15 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 .score-sequencer {
   backface-visibility: hidden;
   display: grid;
-  grid-template-rows: 30px 1fr;
+  grid-template-rows: 40px 1fr;
   grid-template-columns: 48px 1fr;
 }
 
 .sequencer-corner {
   grid-row: 1;
   grid-column: 1;
-  background: colors.$background;
-  border-top: 1px solid colors.$sequencer-sub-divider;
-  border-bottom: 1px solid colors.$sequencer-sub-divider;
+  background: var(--scheme-color-sing-ruler-surface);
+  border-radius: 8px 0 0 0;
 }
 
 .sequencer-ruler {
@@ -1557,12 +1557,51 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   }
 }
 
+.sequencer-grid {
+  display: block;
+  pointer-events: none;
+}
+
+.sequencer-grid-cell {
+  display: block;
+  stroke: var(--scheme-color-surface-variant);
+  stroke-width: 1;
+}
+
+.sequencer-grid-octave-cell {
+  stroke: var(--scheme-color-outline);
+}
+
+.sequencer-grid-octave-line {
+  backface-visibility: hidden;
+  stroke: var(--scheme-color-outline);
+}
+
+.sequencer-grid-cell-white {
+  fill: var(--scheme-color-background);
+}
+
+.sequencer-grid-cell-black {
+  fill: var(--scheme-color-surface-variant);
+}
+
+.sequencer-grid-measure-line {
+  backface-visibility: hidden;
+  stroke: var(--scheme-color-outline);
+}
+
+.sequencer-grid-beat-line {
+  backface-visibility: hidden;
+  stroke: var(--scheme-color-outline);
+  opacity: 0.6;
+}
+
 .sequencer-guideline {
   position: absolute;
   top: 0;
-  left: -1px;
-  width: 2px;
-  background: hsl(130, 35%, 82%);
+  left: -0.5px;
+  width: 1px;
+  background: var(--scheme-color-secondary-container);
   pointer-events: none;
 }
 
@@ -1590,18 +1629,18 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 .sequencer-playhead {
   position: absolute;
   top: 0;
-  left: -1px;
+  left: 0px;
   width: 2px;
   height: 100%;
-  background: rgba(colors.$display-rgb, 0.6);
+  background: var(--scheme-color-inverse-surface);
   will-change: transform;
 }
 
 .rect-select-preview {
   pointer-events: none;
   position: absolute;
-  border: 2px solid rgba(colors.$primary-rgb, 0.5);
-  background: rgba(colors.$primary-rgb, 0.25);
+  border: 1px dashed var(--scheme-color-secondary);
+  background: oklch(from var(--scheme-color-secondary) l c h / 0.1);
 }
 
 .cursor-draw {
@@ -1615,6 +1654,15 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   bottom: 16px;
   right: 32px;
   width: 80px;
+
+  :deep(.q-slider__track) {
+    background: var(--scheme-color-outline-variant);
+    color: var(--scheme-color-secondary);
+  }
+
+  :deep(.q-slider__thumb) {
+    color: var(--scheme-color-secondary);
+  }
 }
 
 .zoom-y-slider {
@@ -1622,5 +1670,14 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   bottom: 40px;
   right: 16px;
   height: 80px;
+
+  :deep(.q-slider__track) {
+    background: var(--scheme-color-outline-variant);
+    color: var(--scheme-color-secondary);
+  }
+
+  :deep(.q-slider__thumb) {
+    color: var(--scheme-color-secondary);
+  }
 }
 </style>

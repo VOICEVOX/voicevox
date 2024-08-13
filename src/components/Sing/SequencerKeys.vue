@@ -1,6 +1,11 @@
 <template>
   <div ref="sequencerKeys" class="sequencer-keys">
-    <svg xmlns="http://www.w3.org/2000/svg" :width :height>
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      :width
+      :height
+      shape-rendering="crispEdges"
+    >
       <g
         v-for="(whiteKeyInfo, index) in whiteKeyInfos"
         :key="index"
@@ -8,8 +13,8 @@
         @mouseenter="onMouseEnter(whiteKeyInfo.noteNumber)"
       >
         <rect
-          :x="whiteKeyRects[index].x - 0.5"
-          :y="whiteKeyRects[index].y + 0.5 - offset"
+          :x="whiteKeyRects[index].x"
+          :y="whiteKeyRects[index].y - offset"
           :width="whiteKeyRects[index].width"
           :height="whiteKeyRects[index].height"
           :title="whiteKeyInfo.name"
@@ -18,6 +23,20 @@
               ? 'white-key-being-pressed'
               : 'white-key'
           "
+        />
+        <line
+          :x1="whiteKeyRects[index].x"
+          :y1="whiteKeyRects[index].y - offset"
+          :x2="whiteKeyRects[index].x"
+          :y2="whiteKeyRects[index].y + whiteKeyRects[index].height - offset"
+          class="key-border"
+        />
+        <line
+          :x1="whiteKeyRects[index].x"
+          :y1="whiteKeyRects[index].y + whiteKeyRects[index].height - offset"
+          :x2="whiteKeyRects[index].x + whiteKeyRects[index].width"
+          :y2="whiteKeyRects[index].y + whiteKeyRects[index].height - offset"
+          class="key-border"
         />
         <text
           v-if="whiteKeyInfo.pitch === 'C'"
@@ -32,9 +51,9 @@
       <rect
         v-for="(blackKeyInfo, index) in blackKeyInfos"
         :key="index"
-        :x="blackKeyRects[index].x - 0.5"
-        :y="blackKeyRects[index].y + 0.5 - offset"
-        :width="blackKeyRects[index].width"
+        :x="blackKeyRects[index].x - 2"
+        :y="blackKeyRects[index].y - offset"
+        :width="blackKeyRects[index].width + 2"
         :height="blackKeyRects[index].height"
         rx="2"
         ry="2"
@@ -93,21 +112,22 @@ const whiteKeyRects = computed(() => {
     const isLast = index === array.length - 1;
     const nextValue = isLast ? keyBaseHeight * 128 : array[index + 1];
     return {
-      x: -2,
-      y: Math.floor(value * zoomY.value),
-      width: width.value + 2,
+      x: 0,
+      y: Math.round(value * zoomY.value),
+      width: width.value,
       height:
-        Math.floor(nextValue * zoomY.value) - Math.floor(value * zoomY.value),
+        Math.round(nextValue * zoomY.value) - Math.round(value * zoomY.value),
     };
   });
 });
+
 const blackKeyRects = computed(() => {
   return blackKeyBasePositions.map((value) => {
     return {
-      x: -2,
-      y: Math.floor(value * zoomY.value),
-      width: props.blackKeyWidth + 2,
-      height: Math.floor(keyBaseHeight * zoomY.value),
+      x: 0,
+      y: Math.round(value * zoomY.value),
+      width: props.blackKeyWidth,
+      height: Math.round(keyBaseHeight * zoomY.value),
     };
   });
 });
@@ -118,14 +138,14 @@ let resizeObserver: ResizeObserver | undefined;
 
 const onMouseDown = (noteNumber: number) => {
   noteNumberOfKeyBeingPressed.value = noteNumber;
-  void store.dispatch("PLAY_PREVIEW_SOUND", { noteNumber });
+  store.dispatch("PLAY_PREVIEW_SOUND", { noteNumber });
 };
 
 const onMouseUp = () => {
   if (noteNumberOfKeyBeingPressed.value != undefined) {
     const noteNumber = noteNumberOfKeyBeingPressed.value;
     noteNumberOfKeyBeingPressed.value = undefined;
-    void store.dispatch("STOP_PREVIEW_SOUND", { noteNumber });
+    store.dispatch("STOP_PREVIEW_SOUND", { noteNumber });
   }
 };
 
@@ -134,11 +154,11 @@ const onMouseEnter = (noteNumber: number) => {
     noteNumberOfKeyBeingPressed.value != undefined &&
     noteNumberOfKeyBeingPressed.value !== noteNumber
   ) {
-    void store.dispatch("STOP_PREVIEW_SOUND", {
+    store.dispatch("STOP_PREVIEW_SOUND", {
       noteNumber: noteNumberOfKeyBeingPressed.value,
     });
     noteNumberOfKeyBeingPressed.value = noteNumber;
-    void store.dispatch("PLAY_PREVIEW_SOUND", { noteNumber });
+    store.dispatch("PLAY_PREVIEW_SOUND", { noteNumber });
   }
 };
 
@@ -172,32 +192,35 @@ onUnmounted(() => {
 <style scoped lang="scss">
 @use "@/styles/variables" as vars;
 @use "@/styles/colors" as colors;
-
 .sequencer-keys {
   backface-visibility: hidden;
-  background: colors.$background;
+  background: var(--scheme-color-background);
   overflow: hidden;
 }
 
 .white-key {
-  fill: colors.$sequencer-white-key;
-  stroke: colors.$sequencer-main-divider;
+  fill: var(--scheme-color-sing-piano-key-white);
 }
 
 .white-key-being-pressed {
-  fill: colors.$primary;
-  stroke: colors.$primary;
+  fill: var(--scheme-color-secondary-fixed);
 }
 
 .black-key {
-  fill: colors.$sequencer-black-key;
+  fill: var(--scheme-color-sing-piano-key-black);
 }
 
 .black-key-being-pressed {
-  fill: colors.$primary;
+  fill: var(--scheme-color-secondary-fixed);
+}
+
+.key-border {
+  stroke: var(--scheme-color-outline-variant);
+  stroke-width: 1px;
 }
 
 .pitchname {
-  fill: colors.$sequencer-black-key;
+  font-weight: 500;
+  fill: var(--scheme-color-sing-piano-key-black);
 }
 </style>
