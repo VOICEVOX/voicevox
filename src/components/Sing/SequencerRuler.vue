@@ -142,8 +142,8 @@ const playheadX = computed(() => {
   return Math.floor(baseX * zoomX.value);
 });
 
-const onClick = (event: MouseEvent) => {
-  store.dispatch("DESELECT_ALL_NOTES");
+const onClick = async (event: MouseEvent) => {
+  await store.dispatch("DESELECT_ALL_NOTES");
 
   const sequencerRulerElement = sequencerRuler.value;
   if (!sequencerRulerElement) {
@@ -151,7 +151,7 @@ const onClick = (event: MouseEvent) => {
   }
   const baseX = (props.offset + event.offsetX) / zoomX.value;
   const ticks = baseXToTick(baseX, tpqn.value);
-  store.dispatch("SET_PLAYHEAD_POSITION", { position: ticks });
+  await store.dispatch("SET_PLAYHEAD_POSITION", { position: ticks });
 };
 
 const sequencerRuler = ref<HTMLElement | null>(null);
@@ -161,7 +161,7 @@ const playheadPositionChangeListener = (position: number) => {
   playheadTicks.value = position;
 };
 
-onMounted(() => {
+onMounted(async () => {
   const sequencerRulerElement = sequencerRuler.value;
   if (!sequencerRulerElement) {
     throw new Error("sequencerRulerElement is null.");
@@ -179,15 +179,15 @@ onMounted(() => {
   });
   resizeObserver.observe(sequencerRulerElement);
 
-  store.dispatch("ADD_PLAYHEAD_POSITION_CHANGE_LISTENER", {
+  await store.dispatch("ADD_PLAYHEAD_POSITION_CHANGE_LISTENER", {
     listener: playheadPositionChangeListener,
   });
 });
 
-onUnmounted(() => {
+onUnmounted(async () => {
   resizeObserver?.disconnect();
 
-  store.dispatch("REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER", {
+  await store.dispatch("REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER", {
     listener: playheadPositionChangeListener,
   });
 });

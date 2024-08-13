@@ -136,29 +136,29 @@ const noteNumberOfKeyBeingPressed = ref<number | undefined>();
 const sequencerKeys = ref<HTMLElement | null>(null);
 let resizeObserver: ResizeObserver | undefined;
 
-const onMouseDown = (noteNumber: number) => {
+const onMouseDown = async (noteNumber: number) => {
   noteNumberOfKeyBeingPressed.value = noteNumber;
-  store.dispatch("PLAY_PREVIEW_SOUND", { noteNumber });
+  await store.dispatch("PLAY_PREVIEW_SOUND", { noteNumber });
 };
 
-const onMouseUp = () => {
+const onMouseUp = async () => {
   if (noteNumberOfKeyBeingPressed.value != undefined) {
     const noteNumber = noteNumberOfKeyBeingPressed.value;
     noteNumberOfKeyBeingPressed.value = undefined;
-    store.dispatch("STOP_PREVIEW_SOUND", { noteNumber });
+    await store.dispatch("STOP_PREVIEW_SOUND", { noteNumber });
   }
 };
 
-const onMouseEnter = (noteNumber: number) => {
+const onMouseEnter = async (noteNumber: number) => {
   if (
     noteNumberOfKeyBeingPressed.value != undefined &&
     noteNumberOfKeyBeingPressed.value !== noteNumber
   ) {
-    store.dispatch("STOP_PREVIEW_SOUND", {
+    await store.dispatch("STOP_PREVIEW_SOUND", {
       noteNumber: noteNumberOfKeyBeingPressed.value,
     });
     noteNumberOfKeyBeingPressed.value = noteNumber;
-    store.dispatch("PLAY_PREVIEW_SOUND", { noteNumber });
+    await store.dispatch("PLAY_PREVIEW_SOUND", { noteNumber });
   }
 };
 

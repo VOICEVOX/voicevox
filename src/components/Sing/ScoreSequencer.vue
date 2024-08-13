@@ -377,9 +377,9 @@ const onLyricInput = (text: string, note: Note) => {
   splitAndUpdatePreview(text, note);
 };
 
-const onLyricConfirmed = (nextNoteId: NoteId | undefined) => {
+const onLyricConfirmed = async (nextNoteId: NoteId | undefined) => {
   commitPreviewLyrics();
-  store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId: nextNoteId });
+  await store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId: nextNoteId });
 };
 
 // プレビュー
@@ -733,16 +733,20 @@ const getYInBorderBox = (clientY: number, element: HTMLElement) => {
   return clientY - element.getBoundingClientRect().top;
 };
 
-const selectOnlyThis = (note: Note) => {
-  store.dispatch("DESELECT_ALL_NOTES");
-  store.dispatch("SELECT_NOTES", { noteIds: [note.id] });
-  store.dispatch("PLAY_PREVIEW_SOUND", {
+const selectOnlyThis = async (note: Note) => {
+  await store.dispatch("DESELECT_ALL_NOTES");
+  await store.dispatch("SELECT_NOTES", { noteIds: [note.id] });
+  await store.dispatch("PLAY_PREVIEW_SOUND", {
     noteNumber: note.noteNumber,
     duration: PREVIEW_SOUND_DURATION,
   });
 };
 
-const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
+const startPreview = async (
+  event: MouseEvent,
+  mode: PreviewMode,
+  note?: Note,
+) => {
   if (nowPreviewing.value) {
     warn("startPreview was called during preview.");
     return;
@@ -782,7 +786,7 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
         noteNumber: cursorNoteNumber,
         lyric: getDoremiFromNoteNumber(cursorNoteNumber),
       };
-      store.dispatch("DESELECT_ALL_NOTES");
+      await store.dispatch("DESELECT_ALL_NOTES");
       copiedNotes.push(note);
     } else {
       if (!note) {
@@ -805,11 +809,11 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
             noteIdsToSelect.push(noteId);
           }
         }
-        store.dispatch("SELECT_NOTES", { noteIds: noteIdsToSelect });
+        await store.dispatch("SELECT_NOTES", { noteIds: noteIdsToSelect });
       } else if (isOnCommandOrCtrlKeyDown(event)) {
-        store.dispatch("SELECT_NOTES", { noteIds: [note.id] });
+        await store.dispatch("SELECT_NOTES", { noteIds: [note.id] });
       } else if (!selectedNoteIds.value.has(note.id)) {
-        selectOnlyThis(note);
+        await selectOnlyThis(note);
       }
       for (const note of selectedNotes.value) {
         copiedNotes.push({ ...note });
@@ -861,28 +865,28 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
   previewRequestId = requestAnimationFrame(preview);
 };
 
-const endPreview = () => {
+const endPreview = async () => {
   cancelAnimationFrame(previewRequestId);
   if (previewStartEditTarget === "NOTE") {
     // 編集ターゲットがノートのときにプレビューを開始した場合の処理
 
     if (edited) {
       if (previewMode === "ADD_NOTE") {
-        store.dispatch("COMMAND_ADD_NOTES", {
+        await store.dispatch("COMMAND_ADD_NOTES", {
           notes: previewNotes.value,
           trackId: selectedTrackId.value,
         });
-        store.dispatch("SELECT_NOTES", {
+        await store.dispatch("SELECT_NOTES", {
           noteIds: previewNotes.value.map((value) => value.id),
         });
       } else {
-        store.dispatch("COMMAND_UPDATE_NOTES", {
+        await store.dispatch("COMMAND_UPDATE_NOTES", {
           notes: previewNotes.value,
           trackId: selectedTrackId.value,
         });
       }
       if (previewNotes.value.length === 1) {
-        store.dispatch("PLAY_PREVIEW_SOUND", {
+        await store.dispatch("PLAY_PREVIEW_SOUND", {
           noteNumber: previewNotes.value[0].noteNumber,
           duration: PREVIEW_SOUND_DURATION,
         });
@@ -905,14 +909,14 @@ const endPreview = () => {
         applyGaussianFilter(data, 0.7);
         data = data.map((value) => Math.exp(value));
 
-        store.dispatch("COMMAND_SET_PITCH_EDIT_DATA", {
+        await store.dispatch("COMMAND_SET_PITCH_EDIT_DATA", {
           pitchArray: data,
           startFrame: previewPitchEdit.value.startFrame,
           trackId: selectedTrackId.value,
         });
       }
     } else if (previewPitchEditType === "erase") {
-      store.dispatch("COMMAND_ERASE_PITCH_EDIT_DATA", {
+      await store.dispatch("COMMAND_ERASE_PITCH_EDIT_DATA", {
         startFrame: previewPitchEdit.value.startFrame,
         frameLength: previewPitchEdit.value.frameLength,
         trackId: selectedTrackId.value,
@@ -927,53 +931,53 @@ const endPreview = () => {
   nowPreviewing.value = false;
 };
 
-const onNoteBarMouseDown = (event: MouseEvent, note: Note) => {
+const onNoteBarMouseDown = async (event: MouseEvent, note: Note) => {
   if (editTarget.value !== "NOTE" || !isSelfEventTarget(event)) {
     return;
   }
   const mouseButton = getButton(event);
   if (mouseButton === "LEFT_BUTTON") {
-    startPreview(event, "MOVE_NOTE", note);
+    await startPreview(event, "MOVE_NOTE", note);
   } else if (!selectedNoteIds.value.has(note.id)) {
-    selectOnlyThis(note);
+    await selectOnlyThis(note);
   }
 };
 
-const onNoteBarDoubleClick = (event: MouseEvent, note: Note) => {
+const onNoteBarDoubleClick = async (event: MouseEvent, note: Note) => {
   if (editTarget.value !== "NOTE") {
     return;
   }
   const mouseButton = getButton(event);
   if (mouseButton === "LEFT_BUTTON" && note.id !== state.editingLyricNoteId) {
-    store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId: note.id });
+    await store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId: note.id });
   }
 };
 
-const onNoteLeftEdgeMouseDown = (event: MouseEvent, note: Note) => {
+const onNoteLeftEdgeMouseDown = async (event: MouseEvent, note: Note) => {
   if (editTarget.value !== "NOTE" || !isSelfEventTarget(event)) {
     return;
   }
   const mouseButton = getButton(event);
   if (mouseButton === "LEFT_BUTTON") {
-    startPreview(event, "RESIZE_NOTE_LEFT", note);
+    await startPreview(event, "RESIZE_NOTE_LEFT", note);
   } else if (!selectedNoteIds.value.has(note.id)) {
-    selectOnlyThis(note);
+    await selectOnlyThis(note);
   }
 };
 
-const onNoteRightEdgeMouseDown = (event: MouseEvent, note: Note) => {
+const onNoteRightEdgeMouseDown = async (event: MouseEvent, note: Note) => {
   if (editTarget.value !== "NOTE" || !isSelfEventTarget(event)) {
     return;
   }
   const mouseButton = getButton(event);
   if (mouseButton === "LEFT_BUTTON") {
-    startPreview(event, "RESIZE_NOTE_RIGHT", note);
+    await startPreview(event, "RESIZE_NOTE_RIGHT", note);
   } else if (!selectedNoteIds.value.has(note.id)) {
-    selectOnlyThis(note);
+    await selectOnlyThis(note);
   }
 };
 
-const onMouseDown = (event: MouseEvent) => {
+const onMouseDown = async (event: MouseEvent) => {
   if (editTarget.value === "NOTE" && !isSelfEventTarget(event)) {
     return;
   }
@@ -986,17 +990,17 @@ const onMouseDown = (event: MouseEvent) => {
         rectSelectStartX.value = cursorX.value;
         rectSelectStartY.value = cursorY.value;
       } else {
-        startPreview(event, "ADD_NOTE");
+        await startPreview(event, "ADD_NOTE");
       }
     } else {
-      store.dispatch("DESELECT_ALL_NOTES");
+      await store.dispatch("DESELECT_ALL_NOTES");
     }
   } else if (editTarget.value === "PITCH") {
     if (mouseButton === "LEFT_BUTTON") {
       if (isOnCommandOrCtrlKeyDown(event)) {
-        startPreview(event, "ERASE_PITCH");
+        await startPreview(event, "ERASE_PITCH");
       } else {
-        startPreview(event, "DRAW_PITCH");
+        await startPreview(event, "DRAW_PITCH");
       }
     }
   } else {
@@ -1026,15 +1030,15 @@ const onMouseMove = (event: MouseEvent) => {
   }
 };
 
-const onMouseUp = (event: MouseEvent) => {
+const onMouseUp = async (event: MouseEvent) => {
   const mouseButton = getButton(event);
   if (mouseButton !== "LEFT_BUTTON") {
     return;
   }
   if (isRectSelecting.value) {
-    rectSelect(isOnCommandOrCtrlKeyDown(event));
+    await rectSelect(isOnCommandOrCtrlKeyDown(event));
   } else if (nowPreviewing.value) {
-    endPreview();
+    await endPreview();
   }
 };
 
@@ -1042,7 +1046,7 @@ const onMouseUp = (event: MouseEvent) => {
  * 矩形選択。
  * @param additive 追加選択とするかどうか。
  */
-const rectSelect = (additive: boolean) => {
+const rectSelect = async (additive: boolean) => {
   const rectSelectHitboxElement = rectSelectHitbox.value;
   if (!rectSelectHitboxElement) {
     throw new Error("rectSelectHitboxElement is null.");
@@ -1077,9 +1081,9 @@ const rectSelect = (additive: boolean) => {
     }
   }
   if (!additive) {
-    store.dispatch("DESELECT_ALL_NOTES");
+    await store.dispatch("DESELECT_ALL_NOTES");
   }
-  store.dispatch("SELECT_NOTES", { noteIds: noteIdsToSelect });
+  await store.dispatch("SELECT_NOTES", { noteIds: noteIdsToSelect });
 };
 
 const onMouseEnter = () => {
@@ -1091,7 +1095,7 @@ const onMouseLeave = () => {
 };
 
 // キーボードイベント
-const handleNotesArrowUp = () => {
+const handleNotesArrowUp = async () => {
   const editedNotes: Note[] = [];
   for (const note of selectedNotes.value) {
     const noteNumber = Math.min(note.noteNumber + 1, 127);
@@ -1100,20 +1104,20 @@ const handleNotesArrowUp = () => {
   if (editedNotes.some((note) => note.noteNumber > 127)) {
     return;
   }
-  store.dispatch("COMMAND_UPDATE_NOTES", {
+  await store.dispatch("COMMAND_UPDATE_NOTES", {
     notes: editedNotes,
     trackId: selectedTrackId.value,
   });
 
   if (editedNotes.length === 1) {
-    store.dispatch("PLAY_PREVIEW_SOUND", {
+    await store.dispatch("PLAY_PREVIEW_SOUND", {
       noteNumber: editedNotes[0].noteNumber,
       duration: PREVIEW_SOUND_DURATION,
     });
   }
 };
 
-const handleNotesArrowDown = () => {
+const handleNotesArrowDown = async () => {
   const editedNotes: Note[] = [];
   for (const note of selectedNotes.value) {
     const noteNumber = Math.max(note.noteNumber - 1, 0);
@@ -1122,20 +1126,20 @@ const handleNotesArrowDown = () => {
   if (editedNotes.some((note) => note.noteNumber < 0)) {
     return;
   }
-  store.dispatch("COMMAND_UPDATE_NOTES", {
+  await store.dispatch("COMMAND_UPDATE_NOTES", {
     notes: editedNotes,
     trackId: selectedTrackId.value,
   });
 
   if (editedNotes.length === 1) {
-    store.dispatch("PLAY_PREVIEW_SOUND", {
+    await store.dispatch("PLAY_PREVIEW_SOUND", {
       noteNumber: editedNotes[0].noteNumber,
       duration: PREVIEW_SOUND_DURATION,
     });
   }
 };
 
-const handleNotesArrowRight = () => {
+const handleNotesArrowRight = async () => {
   const editedNotes: Note[] = [];
   for (const note of selectedNotes.value) {
     const position = note.position + snapTicks.value;
@@ -1145,13 +1149,13 @@ const handleNotesArrowRight = () => {
     // TODO: 例外処理は`UPDATE_NOTES`内に移す？
     return;
   }
-  store.dispatch("COMMAND_UPDATE_NOTES", {
+  await store.dispatch("COMMAND_UPDATE_NOTES", {
     notes: editedNotes,
     trackId: selectedTrackId.value,
   });
 };
 
-const handleNotesArrowLeft = () => {
+const handleNotesArrowLeft = async () => {
   const editedNotes: Note[] = [];
   for (const note of selectedNotes.value) {
     const position = note.position - snapTicks.value;
@@ -1163,52 +1167,52 @@ const handleNotesArrowLeft = () => {
   ) {
     return;
   }
-  store.dispatch("COMMAND_UPDATE_NOTES", {
+  await store.dispatch("COMMAND_UPDATE_NOTES", {
     notes: editedNotes,
     trackId: selectedTrackId.value,
   });
 };
 
-const handleNotesBackspaceOrDelete = () => {
+const handleNotesBackspaceOrDelete = async () => {
   if (selectedNoteIds.value.size === 0) {
     // TODO: 例外処理は`COMMAND_REMOVE_SELECTED_NOTES`内に移す？
     return;
   }
-  store.dispatch("COMMAND_REMOVE_SELECTED_NOTES");
+  await store.dispatch("COMMAND_REMOVE_SELECTED_NOTES");
 };
 
-const handleKeydown = (event: KeyboardEvent) => {
+const handleKeydown = async (event: KeyboardEvent) => {
   // プレビュー中の操作は想定外の挙動をしそうなので防止
   if (nowPreviewing.value) {
     return;
   }
   switch (event.key) {
     case "ArrowUp":
-      handleNotesArrowUp();
+      await handleNotesArrowUp();
       break;
     case "ArrowDown":
-      handleNotesArrowDown();
+      await handleNotesArrowDown();
       break;
     case "ArrowRight":
-      handleNotesArrowRight();
+      await handleNotesArrowRight();
       break;
     case "ArrowLeft":
-      handleNotesArrowLeft();
+      await handleNotesArrowLeft();
       break;
     case "Backspace":
-      handleNotesBackspaceOrDelete();
+      await handleNotesBackspaceOrDelete();
       break;
     case "Delete":
-      handleNotesBackspaceOrDelete();
+      await handleNotesBackspaceOrDelete();
       break;
     case "Escape":
-      store.dispatch("DESELECT_ALL_NOTES");
+      await store.dispatch("DESELECT_ALL_NOTES");
       break;
   }
 };
 
 // X軸ズーム
-const setZoomX = (value: number | null) => {
+const setZoomX = async (value: number | null) => {
   if (value == null) {
     return;
   }
@@ -1223,7 +1227,7 @@ const setZoomX = (value: number | null) => {
   const scrollTop = sequencerBodyElement.scrollTop;
   const clientWidth = sequencerBodyElement.clientWidth;
 
-  store.dispatch("SET_ZOOM_X", { zoomX: newZoomX }).then(() => {
+  await store.dispatch("SET_ZOOM_X", { zoomX: newZoomX }).then(() => {
     const centerBaseX = (scrollLeft + clientWidth / 2) / oldZoomX;
     const newScrollLeft = centerBaseX * newZoomX - clientWidth / 2;
     sequencerBodyElement.scrollTo(newScrollLeft, scrollTop);
@@ -1231,7 +1235,7 @@ const setZoomX = (value: number | null) => {
 };
 
 // Y軸ズーム
-const setZoomY = (value: number | null) => {
+const setZoomY = async (value: number | null) => {
   if (value == null) {
     return;
   }
@@ -1246,14 +1250,14 @@ const setZoomY = (value: number | null) => {
   const scrollTop = sequencerBodyElement.scrollTop;
   const clientHeight = sequencerBodyElement.clientHeight;
 
-  store.dispatch("SET_ZOOM_Y", { zoomY: newZoomY }).then(() => {
+  await store.dispatch("SET_ZOOM_Y", { zoomY: newZoomY }).then(() => {
     const centerBaseY = (scrollTop + clientHeight / 2) / oldZoomY;
     const newScrollTop = centerBaseY * newZoomY - clientHeight / 2;
     sequencerBodyElement.scrollTo(scrollLeft, newScrollTop);
   });
 };
 
-const onWheel = (event: WheelEvent) => {
+const onWheel = async (event: WheelEvent) => {
   const sequencerBodyElement = sequencerBody.value;
   if (!sequencerBodyElement) {
     throw new Error("sequencerBodyElement is null.");
@@ -1273,7 +1277,7 @@ const onWheel = (event: WheelEvent) => {
     const scrollTop = sequencerBodyElement.scrollTop;
     guideLineX.value = 0; // 補助線がはみ出さないように位置を一旦0にする
 
-    store.dispatch("SET_ZOOM_X", { zoomX: newZoomX }).then(() => {
+    await store.dispatch("SET_ZOOM_X", { zoomX: newZoomX }).then(() => {
       const cursorBaseX = (scrollLeft + cursorX.value) / oldZoomX;
       const newScrollLeft = cursorBaseX * newZoomX - cursorX.value;
       sequencerBodyElement.scrollTo(newScrollLeft, scrollTop);
@@ -1334,7 +1338,7 @@ onMounted(() => {
 let firstActivation = true;
 
 // スクロール位置を設定する
-onActivated(() => {
+onActivated(async () => {
   const sequencerBodyElement = sequencerBody.value;
   if (!sequencerBodyElement) {
     throw new Error("sequencerBodyElement is null.");
@@ -1357,14 +1361,14 @@ onActivated(() => {
     yToScroll = scrollY.value;
   }
   // 実際にスクロールする
-  nextTick(() => {
+  await nextTick(() => {
     sequencerBodyElement.scrollTo(xToScroll, yToScroll);
   });
 });
 
 // リスナー登録
-onActivated(() => {
-  store.dispatch("ADD_PLAYHEAD_POSITION_CHANGE_LISTENER", {
+onActivated(async () => {
+  await store.dispatch("ADD_PLAYHEAD_POSITION_CHANGE_LISTENER", {
     listener: playheadPositionChangeListener,
   });
 
@@ -1372,8 +1376,8 @@ onActivated(() => {
 });
 
 // リスナー解除
-onDeactivated(() => {
-  store.dispatch("REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER", {
+onDeactivated(async () => {
+  await store.dispatch("REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER", {
     listener: playheadPositionChangeListener,
   });
 
@@ -1387,50 +1391,50 @@ const { registerHotkeyWithCleanup } = useHotkeyManager();
 registerHotkeyWithCleanup({
   editor: "song",
   name: "コピー",
-  callback: () => {
+  callback: async () => {
     if (nowPreviewing.value) {
       return;
     }
     if (selectedNoteIds.value.size === 0) {
       return;
     }
-    store.dispatch("COPY_NOTES_TO_CLIPBOARD");
+    await store.dispatch("COPY_NOTES_TO_CLIPBOARD");
   },
 });
 
 registerHotkeyWithCleanup({
   editor: "song",
   name: "切り取り",
-  callback: () => {
+  callback: async () => {
     if (nowPreviewing.value) {
       return;
     }
     if (selectedNoteIds.value.size === 0) {
       return;
     }
-    store.dispatch("COMMAND_CUT_NOTES_TO_CLIPBOARD");
+    await store.dispatch("COMMAND_CUT_NOTES_TO_CLIPBOARD");
   },
 });
 
 registerHotkeyWithCleanup({
   editor: "song",
   name: "貼り付け",
-  callback: () => {
+  callback: async () => {
     if (nowPreviewing.value) {
       return;
     }
-    store.dispatch("COMMAND_PASTE_NOTES_FROM_CLIPBOARD");
+    await store.dispatch("COMMAND_PASTE_NOTES_FROM_CLIPBOARD");
   },
 });
 
 registerHotkeyWithCleanup({
   editor: "song",
   name: "すべて選択",
-  callback: () => {
+  callback: async () => {
     if (nowPreviewing.value) {
       return;
     }
-    store.dispatch("SELECT_ALL_NOTES_IN_TRACK", {
+    await store.dispatch("SELECT_ALL_NOTES_IN_TRACK", {
       trackId: selectedTrackId.value,
     });
   },

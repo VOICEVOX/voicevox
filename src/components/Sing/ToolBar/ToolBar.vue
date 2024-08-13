@@ -197,18 +197,18 @@ const { registerHotkeyWithCleanup } = useHotkeyManager();
 registerHotkeyWithCleanup({
   editor,
   name: "元に戻す",
-  callback: () => {
+  callback: async () => {
     if (!uiLocked.value && canUndo.value) {
-      undo();
+      await undo();
     }
   },
 });
 registerHotkeyWithCleanup({
   editor,
   name: "やり直す",
-  callback: () => {
+  callback: async () => {
     if (!uiLocked.value && canRedo.value) {
-      redo();
+      await redo();
     }
   },
 });
@@ -216,31 +216,31 @@ registerHotkeyWithCleanup({
 registerHotkeyWithCleanup({
   editor,
   name: "再生/停止",
-  callback: () => {
+  callback: async () => {
     if (nowPlaying.value) {
-      stop();
+      await stop();
     } else {
-      play();
+      await play();
     }
   },
 });
 
-const undo = () => {
-  store.dispatch("UNDO", { editor });
+const undo = async () => {
+  await store.dispatch("UNDO", { editor });
 };
-const redo = () => {
-  store.dispatch("REDO", { editor });
+const redo = async () => {
+  await store.dispatch("REDO", { editor });
 };
 
 const editTarget = computed(() => store.state.sequencerEditTarget);
 
-const changeEditTarget = (editTarget: SequencerEditTarget) => {
-  store.dispatch("SET_EDIT_TARGET", { editTarget });
+const changeEditTarget = async (editTarget: SequencerEditTarget) => {
+  await store.dispatch("SET_EDIT_TARGET", { editTarget });
 };
 
 const isSidebarOpen = computed(() => store.state.isSongSidebarOpen);
-const toggleSidebar = () => {
-  store.dispatch("SET_SONG_SIDEBAR_OPEN", {
+const toggleSidebar = async () => {
+  await store.dispatch("SET_SONG_SIDEBAR_OPEN", {
     isSongSidebarOpen: !isSidebarOpen.value,
   });
 };
@@ -316,11 +316,11 @@ const setBpmInputBuffer = (bpmStr: string | number | null) => {
   bpmInputBuffer.value = bpmValue;
 };
 
-const setBeats = (beats: { label: string; value: number }) => {
+const setBeats = async (beats: { label: string; value: number }) => {
   if (!isValidBeats(beats.value)) {
     return;
   }
-  store.dispatch("COMMAND_SET_TIME_SIGNATURE", {
+  await store.dispatch("COMMAND_SET_TIME_SIGNATURE", {
     timeSignature: {
       measureNumber: 1,
       beats: beats.value,
@@ -329,11 +329,11 @@ const setBeats = (beats: { label: string; value: number }) => {
   });
 };
 
-const setBeatType = (beatType: { label: string; value: number }) => {
+const setBeatType = async (beatType: { label: string; value: number }) => {
   if (!isValidBeatType(beatType.value)) {
     return;
   }
-  store.dispatch("COMMAND_SET_TIME_SIGNATURE", {
+  await store.dispatch("COMMAND_SET_TIME_SIGNATURE", {
     timeSignature: {
       measureNumber: 1,
       beats: timeSignatures.value[0].beats,
@@ -362,9 +362,9 @@ const setVolumeRangeAdjustmentInputBuffer = (
   volumeRangeAdjustmentInputBuffer.value = volumeRangeAdjustmentValue;
 };
 
-const setTempo = () => {
+const setTempo = async () => {
   const bpm = bpmInputBuffer.value;
-  store.dispatch("COMMAND_SET_TEMPO", {
+  await store.dispatch("COMMAND_SET_TEMPO", {
     tempo: {
       position: 0,
       bpm,
@@ -372,17 +372,17 @@ const setTempo = () => {
   });
 };
 
-const setKeyRangeAdjustment = () => {
+const setKeyRangeAdjustment = async () => {
   const keyRangeAdjustment = keyRangeAdjustmentInputBuffer.value;
-  store.dispatch("COMMAND_SET_KEY_RANGE_ADJUSTMENT", {
+  await store.dispatch("COMMAND_SET_KEY_RANGE_ADJUSTMENT", {
     keyRangeAdjustment,
     trackId: selectedTrackId.value,
   });
 };
 
-const setVolumeRangeAdjustment = () => {
+const setVolumeRangeAdjustment = async () => {
   const volumeRangeAdjustment = volumeRangeAdjustmentInputBuffer.value;
-  store.dispatch("COMMAND_SET_VOLUME_RANGE_ADJUSTMENT", {
+  await store.dispatch("COMMAND_SET_VOLUME_RANGE_ADJUSTMENT", {
     volumeRangeAdjustment,
     trackId: selectedTrackId.value,
   });
@@ -414,24 +414,24 @@ const playHeadPositionMilliSecStr = computed(() => {
 
 const nowPlaying = computed(() => store.state.nowPlaying);
 
-const play = () => {
-  store.dispatch("SING_PLAY_AUDIO");
+const play = async () => {
+  await store.dispatch("SING_PLAY_AUDIO");
 };
 
-const stop = () => {
-  store.dispatch("SING_STOP_AUDIO");
+const stop = async () => {
+  await store.dispatch("SING_STOP_AUDIO");
 };
 
-const goToZero = () => {
-  store.dispatch("SET_PLAYHEAD_POSITION", { position: 0 });
+const goToZero = async () => {
+  await store.dispatch("SET_PLAYHEAD_POSITION", { position: 0 });
 };
 
 const volume = computed({
   get() {
     return store.state.volume * 100;
   },
-  set(value: number) {
-    store.dispatch("SET_VOLUME", { volume: value / 100 });
+  async set(value: number) {
+    await store.dispatch("SET_VOLUME", { volume: value / 100 });
   },
 });
 
@@ -462,8 +462,8 @@ const snapTypeSelectModel = computed({
       selectOptions[0]
     );
   },
-  set(value) {
-    store.dispatch("SET_SNAP_TYPE", {
+  async set(value) {
+    await store.dispatch("SET_SNAP_TYPE", {
       snapType: value.snapType,
     });
   },
@@ -473,14 +473,14 @@ const playheadPositionChangeListener = (position: number) => {
   playheadTicks.value = position;
 };
 
-onMounted(() => {
-  store.dispatch("ADD_PLAYHEAD_POSITION_CHANGE_LISTENER", {
+onMounted(async () => {
+  await store.dispatch("ADD_PLAYHEAD_POSITION_CHANGE_LISTENER", {
     listener: playheadPositionChangeListener,
   });
 });
 
-onUnmounted(() => {
-  store.dispatch("REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER", {
+onUnmounted(async () => {
+  await store.dispatch("REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER", {
     listener: playheadPositionChangeListener,
   });
 });
