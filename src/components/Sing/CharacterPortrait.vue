@@ -1,5 +1,5 @@
 <template>
-  <div class="character-portrait-wrap" :class="{ hide: !isShowSinger }">
+  <div v-if="showSinger" class="character-portrait-wrap">
     <img class="character-portrait" :src="portraitPath" />
   </div>
 </template>
@@ -9,7 +9,7 @@ import { computed } from "vue";
 import { useStore } from "@/store";
 
 const store = useStore();
-const isShowSinger = computed(() => store.state.isShowSinger);
+const showSinger = computed(() => store.state.showSinger);
 
 const portraitPath = computed(() => {
   const userOrderedCharacterInfos =

@@ -5,6 +5,7 @@
         v-if="openedEditor != undefined"
         :fileSubMenuData="subMenuData.fileSubMenuData.value"
         :editSubMenuData="subMenuData.editSubMenuData.value"
+        :viewSubMenuData="subMenuData.viewSubMenuData.value"
         :editor="openedEditor"
       />
       <KeepAlive>
