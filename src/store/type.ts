@@ -838,8 +838,6 @@ export type SingingStoreState = {
   editFrameRate: number;
   phrases: Map<PhraseSourceHash, Phrase>;
   singingGuides: Map<SingingGuideSourceHash, SingingGuide>;
-  // NOTE: UIの状態などは分割・統合した方がよさそうだが、ボイス側と混在させないためいったん局所化する
-  isShowSinger: boolean;
   sequencerZoomX: number;
   sequencerZoomY: number;
   sequencerSnapType: number;
@@ -857,15 +855,6 @@ export type SingingStoreState = {
 };
 
 export type SingingStoreTypes = {
-  SET_SHOW_SINGER: {
-    mutation: { isShowSinger: boolean };
-    action(payload: { isShowSinger: boolean }): void;
-  };
-
-  IS_SHOW_SINGER: {
-    getter: boolean;
-  };
-
   SELECTED_TRACK_ID: {
     getter: TrackId;
   };

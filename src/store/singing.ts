@@ -420,8 +420,6 @@ export const singingStoreState: SingingStoreState = {
   editFrameRate: DEPRECATED_DEFAULT_EDIT_FRAME_RATE,
   phrases: new Map(),
   singingGuides: new Map(),
-  // NOTE: UIの状態は試行のためsinging.tsに局所化する+Hydrateが必要
-  isShowSinger: true,
   sequencerZoomX: 0.5,
   sequencerZoomY: 0.75,
   sequencerSnapType: 16,
@@ -438,21 +436,6 @@ export const singingStoreState: SingingStoreState = {
 };
 
 export const singingStore = createPartialStore<SingingStoreTypes>({
-  SET_SHOW_SINGER: {
-    mutation(state, { isShowSinger }: { isShowSinger: boolean }) {
-      state.isShowSinger = isShowSinger;
-    },
-    async action({ commit }, { isShowSinger }) {
-      commit("SET_SHOW_SINGER", { isShowSinger });
-    },
-  },
-
-  IS_SHOW_SINGER: {
-    getter(state) {
-      return state.isShowSinger;
-    },
-  },
-
   SELECTED_TRACK_ID: {
     getter(state) {
       // Undo/Redoで消えている場合は最初のトラックを選択していることにする
