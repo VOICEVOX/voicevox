@@ -32,7 +32,7 @@ fi
 
 # eSignerCKAのセットアップ
 if [ ! -d "$ESIGNERCKA_INSTALL_DIR" ]; then
-    curl -LO --retry 3 --retry-delay 5 --retry-all-errors \
+    curl -LO --retry 3 --retry-delay 5 \
         "https://github.com/SSLcom/eSignerCKA/releases/download/v1.0.6/SSL.COM-eSigner-CKA_1.0.6.zip"
     unzip -o SSL.COM-eSigner-CKA_1.0.6.zip
     mv *eSigner*CKA_*.exe eSigner_CKA_Installer.exe
