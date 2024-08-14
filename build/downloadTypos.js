@@ -9,8 +9,10 @@ const { join, resolve } = require("path");
 const { mkdirSync, existsSync, unlinkSync } = require("fs");
 const fetch = require("node-fetch");
 
-// バイナリデータの保存パス
-const BINARY_BASE_DIR = resolve(__dirname, "vendored");
+// 全バイナリデータのパス
+const BINARY_BASE_PATH = resolve(__dirname, "vendored");
+// 7zのバイナリデータのパス
+const SEVEN_ZIP_BINARY_PATH = join(BINARY_BASE_PATH, "7z", "7za.exe");
 // 環境構築したいバイナリデータの配列オブジェクト
 const WANT_TO_DOWNLOAD_BINARIES = [
   {
@@ -142,7 +144,7 @@ async function getBinaryURL(repo, version = "latest") {
  * @param {Object} url - 各プラットフォームのダウンロードURLを含むオブジェクト
  */
 async function downloadBinaryForLinux(name, url) {
-  const binaryPath = join(BINARY_BASE_DIR, name);
+  const binaryPath = join(BINARY_BASE_PATH, name);
 
   if (!existsSync(binaryPath)) {
     mkdirSync(binaryPath, { recursive: true });
@@ -173,22 +175,25 @@ async function downloadBinaryForLinux(name, url) {
  * @param {Object} url - 各プラットフォームのダウンロードURLを含むオブジェクト
  */
 async function downloadBinaryForWin(name, url) {
-  const binaryPath = join(BINARY_BASE_DIR, name);
+  const binaryPath = join(BINARY_BASE_PATH, name);
 
   if (!existsSync(binaryPath)) {
     mkdirSync(binaryPath, { recursive: true });
   }
 
-  const zipPath = `${binaryPath}/${name}.zip`;
+  const zipFilePath = `${binaryPath}\\${name}.zip`;
 
   await runCommand(
-    `curl -L ${url.win32} -o ${zipPath}`,
+    `curl -L ${url.win32} -o ${zipFilePath}`,
     `${name}バイナリのダウンロード`,
   );
-  await runCommand(`tar -xf ${zipPath} -C ${binaryPath}`, "バイナリの解凍");
+  await runCommand(
+    `"${SEVEN_ZIP_BINARY_PATH}" x ${zipFilePath} -o${binaryPath}`,
+    "zipファイルを解凍中...",
+  );
 
   // 解凍後に圧縮ファイルを削除
-  unlinkSync(zipPath);
+  unlinkSync(zipFilePath);
 }
 
 /**
@@ -197,7 +202,7 @@ async function downloadBinaryForWin(name, url) {
  * @param {Object} url - 各プラットフォームのダウンロードURLを含むオブジェクト
  */
 async function downloadBinaryForMac(name, url) {
-  const binaryPath = join(BINARY_BASE_DIR, name);
+  const binaryPath = join(BINARY_BASE_PATH, name);
 
   if (!existsSync(binaryPath)) {
     mkdirSync(binaryPath, { recursive: true });
