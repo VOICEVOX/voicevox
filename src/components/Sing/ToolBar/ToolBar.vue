@@ -791,7 +791,7 @@ onUnmounted(async () => {
 }
 
 .sing-snap {
-  min-width: 72px;
+  min-width: 64px;
   height: 40px;
 
   &:deep(.q-field__control:before) {

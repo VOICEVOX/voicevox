@@ -237,7 +237,7 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     left: 2px;
     bottom: 0;
     color: var(--scheme-color-sing-on-note-bar-container);
-    font-size: 16px;
+    font-size: 1rem;
     font-weight: 400;
     letter-spacing: -0.1em;
     white-space: nowrap;
@@ -253,7 +253,7 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
       -1px 0 0 var(--scheme-color-sing-note-bar-container),
       1px 0 0 var(--scheme-color-sing-note-bar-container);
     // アンチエイリアス
-    -webkit-font-smoothing: subpixel-antialiased;
+    -webkit-font-smoothing: antialiased;
   }
 
   .note-bar {

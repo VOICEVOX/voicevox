@@ -120,7 +120,7 @@ watch(
   font-weight: 500;
   font-size: 16px;
   box-sizing: border-box;
-  background-color: oklch(from var(--scheme-color-background) l c h / 0.88);
+  background-color: oklch(from var(--scheme-color-background) l c h / 0.8);
   backdrop-filter: blur(1px);
   color: var(--scheme-color-on-surface);
   outline-offset: 1px;

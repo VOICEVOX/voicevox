@@ -29,7 +29,7 @@ color: var(--scheme-color-on-primary);
 */
 :root {
   // 基準彩度
-  --primary-c: 0.102;
+  --primary-c: 0.108;
   --secondary-c: calc(var(--primary-c) / 3); // 0.036
   --tertiary-c: var(--primary-c);
   --error-c: 0.21;
@@ -245,7 +245,7 @@ OKLCHでのカラースキーム
   --scheme-color-sing-grid-beat-line: oklch(var(--lr-90) var(--neutral-c) var(--neutral-h));
   --scheme-color-sing-grid-vertical-line: oklch(var(--lr-96) var(--neutral-c) var(--neutral-h));
 
-  --scheme-color-sing-grid-octave-line: oklch(var(--lr-88) var(--neutral-c) var(--neutral-h));
+  --scheme-color-sing-grid-octave-line: oklch(var(--lr-89) var(--neutral-c) var(--neutral-h));
   --scheme-color-sing-grid-horizontal-line: oklch(var(--lr-96) var(--neutral-c) var(--neutral-h));
 
   --scheme-color-sing-ruler-surface: oklch(var(--lr-90) var(--neutral-c) var(--neutral-h));
@@ -255,7 +255,7 @@ OKLCHでのカラースキーム
   --scheme-color-sing-piano-key-white: oklch(var(--lr-99) var(--neutral-c) var(--neutral-h));
   --scheme-color-sing-piano-key-black: oklch(var(--lr-45) var(--neutral-c) var(--neutral-h));
   
-  --scheme-color-sing-note-bar-container: oklch(var(--lr-88) var(--secondary-c) var(--secondary-h));
+  --scheme-color-sing-note-bar-container: oklch(var(--lr-89) var(--secondary-c) var(--secondary-h));
   --scheme-color-sing-on-note-bar-container: oklch(var(--lr-10) var(--secondary-c) var(--secondary-h));
   --scheme-color-sing-note-bar-border: oklch(var(--lr-60) var(--secondary-c) var(--secondary-h));
   
@@ -264,12 +264,12 @@ OKLCHでのカラースキーム
   --scheme-color-sing-note-bar-selected-border: oklch(var(--lr-60) var(--primary-c) var(--primary-h));
   --scheme-color-sing-note-bar-selected-outline: oklch(var(--lr-80) var(--primary-c) var(--primary-h));
   
-  --scheme-color-sing-note-bar-preview-container: oklch(var(--lr-88) var(--tertiary-c) var(--tertiary-h));
+  --scheme-color-sing-note-bar-preview-container: oklch(var(--lr-89) var(--tertiary-c) var(--tertiary-h));
   --scheme-color-sing-on-note-bar-preview-container: oklch(var(--lr-10) var(--tertiary-c) var(--tertiary-h));
   --scheme-color-sing-note-bar-preview-border: oklch(var(--lr-60) var(--tertiary-c) var(--tertiary-h));
   --scheme-color-sing-note-bar-preview-outline: oklch(var(--lr-80) var(--tertiary-c) var(--tertiary-h));
   
-  --scheme-color-sing-shadow-note: oklch(var(--lr-88) var(--neutral-variant-c) var(--neutral-variant-h));
+  --scheme-color-sing-shadow-note: oklch(var(--lr-89) var(--neutral-variant-c) var(--neutral-variant-h));
 }
 
 /* ダークテーマ */
@@ -340,15 +340,15 @@ OKLCHでのカラースキーム
   --scheme-color-sing-playback-button-container: oklch(var(--lr-70) var(--primary-c) var(--primary-h));
   --scheme-color-sing-on-playback-button-container: oklch(var(--lr-10) var(--neutral-c) var(--neutral-h));
   
-  --scheme-color-sing-grid-cell-white: oklch(var(--lr-20) var(--neutral-c) var(--neutral-h));
-  --scheme-color-sing-grid-cell-black: oklch(var(--lr-15) var(--neutral-c) var(--neutral-h));
+  --scheme-color-sing-grid-cell-white: oklch(var(--lr-24) var(--neutral-c) var(--neutral-h));
+  --scheme-color-sing-grid-cell-black: oklch(var(--lr-17) var(--neutral-c) var(--neutral-h));
   
-  --scheme-color-sing-grid-measure-line: oklch(var(--lr-40) var(--neutral-c) var(--neutral-h));
+  --scheme-color-sing-grid-measure-line: oklch(var(--lr-45) var(--neutral-c) var(--neutral-h));
   --scheme-color-sing-grid-beat-line: oklch(var(--lr-4) var(--neutral-c) var(--neutral-h));
-  --scheme-color-sing-grid-vertical-line: oklch(var(--lr-15) var(--neutral-c) var(--neutral-h));
+  --scheme-color-sing-grid-vertical-line: oklch(var(--lr-17) var(--neutral-c) var(--neutral-h));
   
-  --scheme-color-sing-grid-octave-line: oklch(var(--lr-30) var(--neutral-c) var(--neutral-h));
-  --scheme-color-sing-grid-horizontal-line: oklch(var(--lr-15) var(--neutral-c) var(--neutral-h));
+  --scheme-color-sing-grid-octave-line: oklch(var(--lr-35) var(--neutral-c) var(--neutral-h));
+  --scheme-color-sing-grid-horizontal-line: oklch(var(--lr-17) var(--neutral-c) var(--neutral-h));
   
   --scheme-color-sing-ruler-surface: oklch(var(--lr-30) var(--neutral-c) var(--neutral-h));
   --scheme-color-sing-ruler-measure-line: oklch(var(--lr-60) var(--neutral-c) var(--neutral-h));
