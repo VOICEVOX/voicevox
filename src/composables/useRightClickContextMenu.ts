@@ -74,6 +74,7 @@ export function useRightClickContextMenu(
       type: "button",
       label: "切り取り",
       onClick: async () => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
         contextMenu.value?.hide();
         await handleCut();
       },
@@ -83,6 +84,7 @@ export function useRightClickContextMenu(
       type: "button",
       label: "コピー",
       onClick: async () => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
         contextMenu.value?.hide();
         if (inputSelection) {
           await navigator.clipboard.writeText(inputSelection.getAsString());
@@ -94,6 +96,7 @@ export function useRightClickContextMenu(
       type: "button",
       label: "貼り付け",
       onClick: async () => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
         contextMenu.value?.hide();
         await handlePaste();
       },
@@ -104,6 +107,7 @@ export function useRightClickContextMenu(
       type: "button",
       label: "全選択",
       onClick: async () => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
         contextMenu.value?.hide();
         qInputRef.value?.select();
       },
