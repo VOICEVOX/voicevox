@@ -84,7 +84,7 @@ const modelValueComputed = computed({
 });
 
 const handler = (acceptRetrieveTelemetry: boolean) => {
-  store.dispatch("SET_ACCEPT_RETRIEVE_TELEMETRY", {
+  void store.dispatch("SET_ACCEPT_RETRIEVE_TELEMETRY", {
     acceptRetrieveTelemetry: acceptRetrieveTelemetry ? "Accepted" : "Refused",
   });
 

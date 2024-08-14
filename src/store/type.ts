@@ -306,7 +306,7 @@ export type AudioStoreTypes = {
       engineId: EngineId;
       baseStyleId: StyleId;
       morphableTargets?: Exclude<
-        { [key: number]: MorphableTargetInfo },
+        Record<number, MorphableTargetInfo>,
         undefined
       >;
     };

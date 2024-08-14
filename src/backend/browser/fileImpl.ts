@@ -5,6 +5,7 @@ import { SandboxKey } from "@/type/preload";
 import { failure, success } from "@/type/result";
 import { createLogger } from "@/domain/frontend/log";
 import { uuid4 } from "@/helpers/random";
+import { normalizeError } from "@/helpers/normalizeError";
 
 const log = createLogger("fileImpl");
 
@@ -33,7 +34,7 @@ const fetchStoredDirectoryHandle = async (maybeDirectoryHandleName: string) => {
       const store = transaction.objectStore(directoryHandleStoreKey);
       const request = store.get(maybeDirectoryHandleName);
       request.onsuccess = () => {
-        resolve(request.result);
+        resolve(request.result as FileSystemDirectoryHandle | undefined);
       };
       request.onerror = () => {
         reject(request.error);
@@ -147,7 +148,7 @@ export const writeFileImpl: (typeof window)[typeof SandboxKey]["writeFile"] =
       })
       .then(() => success(undefined))
       .catch((e) => {
-        return failure(e);
+        return failure(normalizeError(e));
       });
   };
 
@@ -207,7 +208,7 @@ export const showOpenFilePickerImpl = async (options: {
     }
     return handles.length > 0 ? paths : undefined;
   } catch (e) {
-    log.warn(`showOpenFilePicker error: ${e}`);
+    log.warn("showOpenFilePicker error:", e);
     return undefined;
   }
 };

@@ -384,7 +384,7 @@ const yomiFocus = (event?: KeyboardEvent) => {
 };
 const setYomiWhenEnter = (event?: KeyboardEvent) => {
   if (event && event.isComposing) return;
-  setYomi(yomi.value);
+  void setYomi(yomi.value);
 };
 
 const selectedId = ref("");
@@ -503,7 +503,7 @@ const play = async () => {
   } catch (e) {
     window.backend.logError(e);
     nowGenerating.value = false;
-    store.dispatch("SHOW_ALERT_DIALOG", {
+    void store.dispatch("SHOW_ALERT_DIALOG", {
       title: "生成に失敗しました",
       message: "エンジンの再起動をお試しください。",
     });
@@ -517,7 +517,7 @@ const play = async () => {
   nowPlaying.value = false;
 };
 const stop = () => {
-  store.dispatch("STOP_AUDIO");
+  void store.dispatch("STOP_AUDIO");
 };
 
 // accent phraseにあるaccentと実際に登録するアクセントには差が生まれる
@@ -576,7 +576,7 @@ const saveWord = async () => {
         priority: wordPriority.value,
       });
     } catch {
-      store.dispatch("SHOW_ALERT_DIALOG", {
+      void store.dispatch("SHOW_ALERT_DIALOG", {
         title: "単語の更新に失敗しました",
         message: "エンジンの再起動をお試しください。",
       });
@@ -593,7 +593,7 @@ const saveWord = async () => {
         }),
       );
     } catch {
-      store.dispatch("SHOW_ALERT_DIALOG", {
+      void store.dispatch("SHOW_ALERT_DIALOG", {
         title: "単語の登録に失敗しました",
         message: "エンジンの再起動をお試しください。",
       });
@@ -617,7 +617,7 @@ const deleteWord = async () => {
         }),
       );
     } catch {
-      store.dispatch("SHOW_ALERT_DIALOG", {
+      void store.dispatch("SHOW_ALERT_DIALOG", {
         title: "単語の削除に失敗しました",
         message: "エンジンの再起動をお試しください。",
       });
@@ -654,7 +654,7 @@ const discardOrNotDialog = async (okCallback: () => void) => {
 const newWord = () => {
   selectedId.value = "";
   surface.value = "";
-  setYomi("");
+  void setYomi("");
   wordPriority.value = defaultDictPriority;
   editWord();
 };
@@ -664,7 +664,7 @@ const editWord = () => {
 const selectWord = (id: string) => {
   selectedId.value = id;
   surface.value = userDict.value[id].surface;
-  setYomi(userDict.value[id].yomi, true);
+  void setYomi(userDict.value[id].yomi, true);
   wordPriority.value = userDict.value[id].priority;
   toWordSelectedState();
 };
@@ -681,7 +681,7 @@ const toInitialState = () => {
   wordEditing.value = false;
   selectedId.value = "";
   surface.value = "";
-  setYomi("");
+  void setYomi("");
   wordPriority.value = defaultDictPriority;
 };
 // 単語が選択されているだけの状態

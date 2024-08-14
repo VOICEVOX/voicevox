@@ -19,6 +19,17 @@ export function assertNonNullable<T>(
  */
 export class ExhaustiveError extends Error {
   constructor(value: never) {
-    super(`Not exhaustive. value: ${value}`);
+    super(`Not exhaustive. value: ${String(value)}`);
+  }
+}
+
+/**
+ * 到達しないであろうコードに到達したことを示すエラー。
+ * TODO: すべてのunreachableをUnreachableErrorに統一する
+ */
+export class UnreachableError extends Error {
+  constructor(message?: string) {
+    super(message || "Unreachable code was executed.");
+    this.name = "UnreachableError";
   }
 }

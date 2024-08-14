@@ -114,7 +114,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
   FETCH_AND_SET_ENGINE_MANIFESTS: {
     async action({ state, mutations, actions }) {
       mutations.SET_ENGINE_MANIFESTS({
-        engineManifests: Object.fromEntries(
+        engineManifests: Object.fromEntries<EngineManifest>(
           await Promise.all(
             state.engineIds.map(
               async (engineId) =>
@@ -122,12 +122,15 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
                   .INSTANTIATE_ENGINE_CONNECTOR({
                     engineId,
                   })
-                  .then(async (instance) => [
-                    engineId,
-                    await instance.invoke("engineManifestEngineManifestGet")(
-                      {},
-                    ),
-                  ]),
+                  .then(
+                    async (instance) =>
+                      [
+                        engineId,
+                        await instance.invoke(
+                          "engineManifestEngineManifestGet",
+                        )({}),
+                      ] as const,
+                  ),
             ),
           ),
         ),
@@ -263,7 +266,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
         anyNewCharacters: result.some((r) => r.anyNewCharacters),
       };
       if (mergedResult.anyNewCharacters) {
-        actions.SET_DIALOG_OPEN({
+        void actions.SET_DIALOG_OPEN({
           isCharacterOrderDialogOpen: true,
         });
       }

@@ -495,7 +495,7 @@ const addEngine = async () => {
         }),
       );
 
-      requireReload(
+      void requireReload(
         "エンジンを追加しました。反映には再読み込みが必要です。今すぐ再読み込みしますか？",
       );
     } else {
@@ -504,7 +504,7 @@ const addEngine = async () => {
         store.dispatch("INSTALL_VVPP_ENGINE", vvppFilePath.value),
       );
       if (success) {
-        requireReload(
+        void requireReload(
           "エンジンを追加しました。反映には再読み込みが必要です。今すぐ再読み込みしますか？",
         );
       }
@@ -531,7 +531,7 @@ const deleteEngine = async () => {
             engineDir,
           }),
         );
-        requireReload(
+        void requireReload(
           "エンジンを削除しました。反映には再読み込みが必要です。今すぐ再読み込みしますか？",
         );
         break;
@@ -542,7 +542,7 @@ const deleteEngine = async () => {
           store.dispatch("UNINSTALL_VVPP_ENGINE", selectedId.value),
         );
         if (success) {
-          requireReload(
+          void requireReload(
             "エンジンの削除には再読み込みが必要です。今すぐ再読み込みしますか？",
           );
         }
@@ -561,13 +561,13 @@ const selectEngine = (id: EngineId) => {
 const openSelectedEngineDirectory = () => {
   if (selectedId.value == undefined)
     throw new Error("assert selectedId.value != undefined");
-  store.dispatch("OPEN_ENGINE_DIRECTORY", { engineId: selectedId.value });
+  void store.dispatch("OPEN_ENGINE_DIRECTORY", { engineId: selectedId.value });
 };
 
 const restartSelectedEngine = () => {
   if (selectedId.value == undefined)
     throw new Error("assert selectedId.value != undefined");
-  store.dispatch("RESTART_ENGINES", {
+  void store.dispatch("RESTART_ENGINES", {
     engineIds: [selectedId.value],
   });
 };
@@ -581,7 +581,7 @@ const requireReload = async (message: string) => {
   });
   toInitialState();
   if (result === "OK") {
-    store.dispatch("CHECK_EDITED_AND_NOT_SAVE", {
+    void store.dispatch("CHECK_EDITED_AND_NOT_SAVE", {
       closeOrReload: "reload",
     });
   }

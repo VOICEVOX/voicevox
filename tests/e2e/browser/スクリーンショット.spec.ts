@@ -11,10 +11,12 @@ import {
   SpeakerToJSON,
 } from "@/openapi";
 
-let speakerImages: {
-  portrait: string;
-  icon: string;
-}[];
+let speakerImages:
+  | {
+      portrait: string;
+      icon: string;
+    }[]
+  | undefined = undefined;
 
 /**
  * 差し替え用の立ち絵・アイコンを取得する。
@@ -62,7 +64,7 @@ test.beforeEach(async ({ page }) => {
     const response = await route.fetch();
     const json: Speaker[] = await response
       .json()
-      .then((json) => json.map(SpeakerFromJSON));
+      .then((json: unknown[]) => json.map(SpeakerFromJSON));
     let i = 0;
     for (const speaker of json) {
       i++;

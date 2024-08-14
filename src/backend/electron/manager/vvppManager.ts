@@ -13,6 +13,7 @@ import {
   minimumEngineManifestSchema,
   MinimumEngineManifestType,
 } from "@/type/preload";
+import { errorToMessage } from "@/helpers/errorHelper";
 
 const isNotWin = process.platform !== "win32";
 
@@ -26,7 +27,7 @@ const ZIP_MAGIC_NUMBER = Buffer.from([0x50, 0x4b, 0x03, 0x04]);
 // globのPromise化
 const globAsync = (pattern: string, options?: glob.IOptions) => {
   return new Promise<string[]>((resolve, reject) => {
-    callbackGlob(pattern, options || {}, (err, matches) => {
+    callbackGlob(pattern, options ?? {}, (err, matches) => {
       if (err) {
         reject(err);
       } else {
@@ -72,7 +73,7 @@ export class VvppManager {
   vvppEngineDir: string;
 
   willDeleteEngineIds: Set<EngineId>;
-  willReplaceEngineDirs: Array<{ from: string; to: string }>;
+  willReplaceEngineDirs: { from: string; to: string }[];
 
   private lock = new AsyncLock();
 
@@ -216,11 +217,11 @@ export class VvppManager {
             stdio: ["pipe", "pipe", "pipe"],
           });
 
-          child.stdout?.on("data", (data) => {
+          child.stdout?.on("data", (data: Buffer) => {
             log.info(`7z STDOUT: ${data.toString("utf-8")}`);
           });
 
-          child.stderr?.on("data", (data) => {
+          child.stderr?.on("data", (data: Buffer) => {
             log.error(`7z STDERR: ${data.toString("utf-8")}`);
           });
 
@@ -320,10 +321,10 @@ export class VvppManager {
               log.error(e);
               dialog.showErrorBox(
                 "エンジン削除エラー",
-                `エンジンの削除に失敗しました。エンジンのフォルダを手動で削除してください。\n${deletingEngineDir}\nエラー内容: ${e}`,
+                `エンジンの削除に失敗しました。エンジンのフォルダを手動で削除してください。\n${deletingEngineDir}\nエラー内容: ${errorToMessage(e)}`,
               );
             } else {
-              log.error(`Failed to rename engine directory: ${e}, retrying`);
+              log.error("Failed to rename engine directory: ", e, ", retrying");
               await new Promise((resolve) => setTimeout(resolve, 1000));
             }
           }
@@ -344,10 +345,10 @@ export class VvppManager {
               log.error(e);
               dialog.showErrorBox(
                 "エンジン追加エラー",
-                `エンジンの追加に失敗しました。エンジンのフォルダを手動で移動してください。\n${from}\nエラー内容: ${e}`,
+                `エンジンの追加に失敗しました。エンジンのフォルダを手動で移動してください。\n${from}\nエラー内容: ${errorToMessage(e)}`,
               );
             } else {
-              log.error(`Failed to rename engine directory: ${e}, retrying`);
+              log.error("Failed to rename engine directory: ", e, ", retrying");
               await new Promise((resolve) => setTimeout(resolve, 1000));
             }
           }

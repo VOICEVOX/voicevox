@@ -2,6 +2,7 @@
   <button
     class="row-card"
     :class="{ clickable: clickable }"
+    role="listitem"
     @click="(payload) => $emit('click', payload)"
   >
     <div class="text">
@@ -32,7 +33,8 @@ defineEmits<{
 @use "@/styles/v2/colors" as colors;
 
 .row-card {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto;
   text-align: unset;
   align-items: center;
   border: 1px solid colors.$border;

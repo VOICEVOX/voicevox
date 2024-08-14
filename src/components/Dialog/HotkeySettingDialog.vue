@@ -118,94 +118,20 @@
     </QLayout>
   </QDialog>
 
-  <QDialog
-    noEscDismiss
-    noShake
-    transitionShow="none"
-    transitionHide="none"
-    :modelValue="isHotkeyDialogOpened"
-    @update:modelValue="closeHotkeyDialog"
-  >
-    <QCard class="q-py-sm q-px-md">
-      <QCardSection align="center">
-        <div class="text-h6">ショートカットキーを入力してください</div>
-      </QCardSection>
-      <QCardSection align="center">
-        <template v-for="(hotkey, index) in lastRecord.split(' ')" :key="index">
-          <span v-if="index !== 0"> + </span>
-          <!--
-          Mac の Meta キーは Cmd キーであるため、Meta の表示名を Cmd に置換する
-          Windows PC では Meta キーは Windows キーだが、使用頻度低と考えられるため暫定的に Mac 対応のみを考慮している
-          -->
-          <QChip :ripple="false" color="surface">
-            {{ hotkey === "Meta" ? "Cmd" : hotkey }}
-          </QChip>
-        </template>
-        <span v-if="lastRecord !== '' && confirmBtnEnabled"> +</span>
-        <div v-if="duplicatedHotkey != undefined" class="text-warning q-mt-lg">
-          <div class="text-warning">
-            ショートカットキーが次の操作と重複しています
-          </div>
-          <div class="q-mt-sm text-weight-bold text-warning">
-            「{{ duplicatedHotkey.action }}」
-          </div>
-        </div>
-      </QCardSection>
-      <QCardActions align="center">
-        <QBtn
-          padding="xs md"
-          label="キャンセル"
-          unelevated
-          color="surface"
-          textColor="display"
-          class="q-mt-sm"
-          @click="closeHotkeyDialog"
-        />
-        <QBtn
-          padding="xs md"
-          label="ショートカットキーを未設定にする"
-          unelevated
-          color="surface"
-          textColor="display"
-          class="q-mt-sm"
-          @click="
-            deleteHotkey(lastAction);
-            closeHotkeyDialog();
-          "
-        />
-        <QBtn
-          v-if="duplicatedHotkey == undefined"
-          padding="xs md"
-          label="OK"
-          unelevated
-          color="primary"
-          textColor="display-on-primary"
-          class="q-mt-sm"
-          :disabled="confirmBtnEnabled"
-          @click="
-            changeHotkeySettings(lastAction, lastRecord).then(() =>
-              closeHotkeyDialog(),
-            )
-          "
-        />
-        <QBtn
-          v-else
-          padding="xs md"
-          label="上書きする"
-          unelevated
-          color="primary"
-          textColor="display-on-primary"
-          class="q-mt-sm"
-          :disabled="confirmBtnEnabled"
-          @click="solveDuplicated().then(() => closeHotkeyDialog())"
-        />
-      </QCardActions>
-    </QCard>
-  </QDialog>
+  <HotkeyRecordingDialog
+    :isHotkeyDialogOpened
+    :lastAction
+    :lastRecord
+    :duplicatedHotkey
+    @update:modelValue="setHotkeyDialogOpened"
+    @deleteHotkey="deleteHotkey"
+    @changeHotkeySettings="changeHotkeySettings"
+  />
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
+import HotkeyRecordingDialog from "./HotkeyRecordingDialog.vue";
 import { useStore } from "@/store";
 import {
   HotkeyActionNameType,
@@ -261,6 +187,7 @@ const hotkeyColumns = ref<
 const lastAction = ref("");
 const lastRecord = ref(HotkeyCombination(""));
 
+// FIXME: HotkeyRecordingDialog内に移動する
 const recordCombination = (event: KeyboardEvent) => {
   if (!isHotkeyDialogOpened.value) {
     return;
@@ -271,6 +198,7 @@ const recordCombination = (event: KeyboardEvent) => {
   }
 };
 
+// FIXME: HotkeyRecordingDialog内に移動する
 const { hotkeyManager } = useHotkeyManager();
 const changeHotkeySettings = (
   action: string,
@@ -298,7 +226,7 @@ const duplicatedHotkey = computed(() => {
 
 // FIXME: actionはHotkeyAction型にすべき
 const deleteHotkey = (action: string) => {
-  changeHotkeySettings(action, HotkeyCombination(""));
+  void changeHotkeySettings(action, HotkeyCombination(""));
 };
 
 const getHotkeyText = (action: string, combo: string) => {
@@ -327,28 +255,12 @@ const openHotkeyDialog = (action: string) => {
   document.addEventListener("keydown", recordCombination);
 };
 
-const closeHotkeyDialog = () => {
+const setHotkeyDialogOpened = () => {
   lastAction.value = "";
   lastRecord.value = HotkeyCombination("");
   isHotkeyDialogOpened.value = false;
   document.removeEventListener("keydown", recordCombination);
 };
-
-const solveDuplicated = () => {
-  if (duplicatedHotkey.value == undefined)
-    throw new Error("duplicatedHotkey.value == undefined");
-  deleteHotkey(duplicatedHotkey.value.action);
-  return changeHotkeySettings(lastAction.value, lastRecord.value);
-};
-
-const confirmBtnEnabled = computed(() => {
-  return (
-    lastRecord.value == "" ||
-    ["Ctrl", "Shift", "Alt", "Meta"].includes(
-      lastRecord.value.split(" ")[lastRecord.value.split(" ").length - 1],
-    )
-  );
-});
 
 const resetHotkey = async (action: string) => {
   const result = await store.dispatch("SHOW_CONFIRM_DIALOG", {
@@ -359,7 +271,7 @@ const resetHotkey = async (action: string) => {
     cancel: "初期値に戻さない",
   });
   if (result === "OK") {
-    window.backend
+    void window.backend
       .getDefaultHotkeySettings()
       .then((defaultSettings: HotkeySettingType[]) => {
         const setting = defaultSettings.find((value) => value.action == action);
@@ -378,7 +290,7 @@ const resetHotkey = async (action: string) => {
             return;
           }
         }
-        changeHotkeySettings(action, setting.combination);
+        void changeHotkeySettings(action, setting.combination);
       });
   }
 };
