@@ -117,7 +117,7 @@ export const useMenuBarData = () => {
   const viewSubMenuData = computed<MenuItemData[]>(() => [
     {
       type: "button",
-      label: showSinger.value ? "シンガーを非表示" : "シンガーを表示",
+      label: showSinger.value ? "立ち絵を非表示" : "立ち絵を表示",
       onClick: () => {
         showSinger.value = !showSinger.value;
       },
