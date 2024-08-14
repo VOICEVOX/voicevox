@@ -8,14 +8,12 @@ import { SelectionHelperForQInput } from "@/helpers/SelectionHelperForQInput";
 // 参考実装: https://github.com/VOICEVOX/voicevox/pull/1374/files#diff-444f263f72d4db11fe82c672d5c232eb4c29d29dbc1ffd20e279d586b1b2c180R371-R379
 
 /**
- * surface と yomi のどちらを選択しているかを取得する。
- * 単語か読み、どちらの <QInput> であるかを区別し、
- * それに対する切り取りやコピー、貼り付けの処理を行う
+ * コンポーネントの中で呼ばれた <QInput> に対して
+ * 切り取りやコピー、貼り付けの処理を行う
  */
 export function useRightClickContextMenu(
   qInputRef: Ref<QInput | undefined>,
   inputText: Ref<string>,
-  inputField: Ref<string>,
 ) {
   const inputSelection = new SelectionHelperForQInput(qInputRef);
 
@@ -117,23 +115,14 @@ export function useRightClickContextMenu(
 
     const text = inputSelection.getAsString();
     const start = inputSelection.selectionStart;
-    setSurfaceOrYomiText(
-      inputSelection.getReplacedStringTo(""),
-      inputField.value,
-    );
+    setSurfaceOrYomiText(inputSelection.getReplacedStringTo(""));
     await nextTick();
     await navigator.clipboard.writeText(text);
     inputSelection.setCursorPosition(start);
   };
 
-  const setSurfaceOrYomiText = (
-    text: string | number | null,
-    field: string,
-  ) => {
+  const setSurfaceOrYomiText = (text: string | number | null) => {
     if (typeof text !== "string") throw new Error("typeof text !== 'string'");
-    if (field !== "surface" && field !== "yomi") {
-      throw new Error("field must be 'surface' or 'yomi'");
-    }
     inputText.value = text;
   };
 
@@ -144,10 +133,7 @@ export function useRightClickContextMenu(
     if (text == undefined) return;
     const beforeLength = inputText.value.length;
     const end = inputSelection.selectionEnd ?? 0;
-    setSurfaceOrYomiText(
-      inputSelection.getReplacedStringTo(text),
-      inputField.value,
-    );
+    setSurfaceOrYomiText(inputSelection.getReplacedStringTo(text));
     await nextTick();
     inputSelection.setCursorPosition(
       end + inputText.value.length - beforeLength,

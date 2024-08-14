@@ -706,7 +706,7 @@ const {
   clearInputSelection: clearSurfaceInputSelection,
   startContextMenuOperation: startSurfaceContextMenuOperation,
   endContextMenuOperation: endSurfaceContextMenuOperation,
-} = useRightClickContextMenu(surfaceInput, surface, ref("surface"));
+} = useRightClickContextMenu(surfaceInput, surface);
 
 const {
   contextMenu: yomiContextMenu,
@@ -716,7 +716,7 @@ const {
   clearInputSelection: clearYomiInputSelection,
   startContextMenuOperation: startYomiContextMenuOperation,
   endContextMenuOperation: endYomiContextMenuOperation,
-} = useRightClickContextMenu(yomiInput, yomi, ref("yomi"));
+} = useRightClickContextMenu(yomiInput, yomi);
 </script>
 
 <style lang="scss" scoped>
