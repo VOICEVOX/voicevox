@@ -442,10 +442,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     mutation(state, { isShowSinger }: { isShowSinger: boolean }) {
       state.isShowSinger = isShowSinger;
     },
-    async action({ mutations }, { isShowSinger }) {
-      mutations.SET_SHOW_SINGER({
-        isShowSinger,
-      });
+    async action({ commit }, { isShowSinger }) {
+      commit("SET_SHOW_SINGER", { isShowSinger });
+    },
+  },
+
+  IS_SHOW_SINGER: {
+    getter(state) {
+      return state.isShowSinger;
     },
   },
 

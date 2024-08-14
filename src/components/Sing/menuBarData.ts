@@ -8,6 +8,7 @@ export const useMenuBarData = () => {
   const isNotesSelected = computed(
     () => store.getters.SELECTED_NOTE_IDS.size > 0,
   );
+  const isShowSinger = computed(() => store.getters.IS_SHOW_SINGER);
 
   const importExternalSongProject = async () => {
     if (uiLocked.value) return;
@@ -105,5 +106,18 @@ export const useMenuBarData = () => {
     },
   ]);
 
-  return { fileSubMenuData, editSubMenuData };
+  const viewSubMenuData = computed<MenuItemData[]>(() => [
+    {
+      type: "button",
+      label: isShowSinger.value ? "シンガーを非表示" : "シンガーを表示",
+      onClick: () => {
+        void store.dispatch("SET_SHOW_SINGER", {
+          isShowSinger: !isShowSinger.value,
+        });
+      },
+      disableWhenUiLocked: true,
+    },
+  ]);
+
+  return { fileSubMenuData, editSubMenuData, viewSubMenuData };
 };

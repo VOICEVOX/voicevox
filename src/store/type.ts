@@ -862,6 +862,10 @@ export type SingingStoreTypes = {
     action(payload: { isShowSinger: boolean }): void;
   };
 
+  IS_SHOW_SINGER: {
+    getter: boolean;
+  };
+
   SELECTED_TRACK_ID: {
     getter: TrackId;
   };
