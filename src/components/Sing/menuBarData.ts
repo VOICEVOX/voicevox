@@ -8,6 +8,15 @@ export const useMenuBarData = () => {
   const isNotesSelected = computed(
     () => store.getters.SELECTED_NOTE_IDS.size > 0,
   );
+  const showSinger = computed({
+    get: () => store.state.showSinger,
+    set: (showSinger: boolean) => {
+      void store.dispatch("SET_ROOT_MISC_SETTING", {
+        key: "showSinger",
+        value: showSinger,
+      });
+    },
+  });
 
   const importExternalSongProject = async () => {
     if (uiLocked.value) return;
@@ -105,5 +114,16 @@ export const useMenuBarData = () => {
     },
   ]);
 
-  return { fileSubMenuData, editSubMenuData };
+  const viewSubMenuData = computed<MenuItemData[]>(() => [
+    {
+      type: "button",
+      label: showSinger.value ? "立ち絵を非表示" : "立ち絵を表示",
+      onClick: () => {
+        showSinger.value = !showSinger.value;
+      },
+      disableWhenUiLocked: true,
+    },
+  ]);
+
+  return { fileSubMenuData, editSubMenuData, viewSubMenuData };
 };

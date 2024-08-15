@@ -41,6 +41,8 @@ const props = defineProps<{
   fileSubMenuData: MenuItemData[];
   /** 「編集」メニューのサブメニュー */
   editSubMenuData: MenuItemData[];
+  /** 「表示」メニューのサブメニュー */
+  viewSubMenuData: MenuItemData[];
   /** エディタの種類 */
   editor: "talk" | "song";
 }>();
@@ -386,6 +388,15 @@ const menudata = computed<MenuItemData[]>(() => [
         : []),
       ...props.editSubMenuData,
     ],
+  },
+  {
+    type: "root",
+    label: "表示",
+    onClick: () => {
+      closeAllDialog();
+    },
+    disableWhenUiLocked: false,
+    subMenu: [...props.viewSubMenuData],
   },
   {
     type: "root",
