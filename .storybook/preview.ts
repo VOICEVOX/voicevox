@@ -1,9 +1,9 @@
 import { setup, Preview } from "@storybook/vue3";
 import { Quasar, Dialog, Loading, Notify } from "quasar";
 import iconSet from "quasar/icon-set/material-icons";
+import { withThemeByDataAttribute } from "@storybook/addon-themes";
 import { addActionsWithEmits } from "./utils/argTypesEnhancers";
 import { markdownItPlugin } from "@/plugins/markdownItPlugin";
-import { withThemeByDataAttribute } from '@storybook/addon-themes';
 
 import "@quasar/extras/material-icons/material-icons.css";
 import "quasar/dist/quasar.sass";
@@ -35,33 +35,32 @@ const preview: Preview = {
       toc: true,
     },
     backgrounds: {
-      default: 'theme',
+      default: "theme",
       values: [
         {
-          name: 'theme',
-          value: 'var(--color-v2-background)',
+          name: "theme",
+          value: "var(--color-v2-background)",
         },
         {
-          name: 'light',
-          value: '#fff',
+          name: "light",
+          value: "#fff",
         },
         {
-          name: 'dark',
-          value: '#333',
+          name: "dark",
+          value: "#333",
         },
       ],
     },
-
   },
   decorators: [
     withThemeByDataAttribute({
       themes: {
-        light: 'false',
-        dark: 'true',
+        light: "false",
+        dark: "true",
       },
-      defaultTheme: 'light',
-      attributeName: 'is-dark-theme',
-    })
+      defaultTheme: "light",
+      attributeName: "is-dark-theme",
+    }),
   ],
   argTypesEnhancers: [addActionsWithEmits],
 };
