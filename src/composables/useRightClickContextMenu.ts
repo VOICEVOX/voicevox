@@ -32,6 +32,8 @@ export function useRightClickContextMenu(
     const MAX_HEADER_LENGTH = 15;
     const SHORTED_HEADER_FRAGMENT_LENGTH = 5;
 
+    willFocusOrBlur.value = true;
+
     const getMenuItemButton = (label: string) => {
       const item = contextMenudata.value.find((item) => item.label === label);
       if (item?.type !== "button")
@@ -147,14 +149,14 @@ export function useRightClickContextMenu(
     );
   };
 
+  /**
+   * バグ修正用
+   * 参考: https://github.com/VOICEVOX/voicevox/pull/1364#issuecomment-1620594931
+   */
   const clearInputSelection = () => {
     if (!willFocusOrBlur.value) {
       inputSelection.toEmpty();
     }
-  };
-
-  const startContextMenuOperation = () => {
-    willFocusOrBlur.value = true;
   };
 
   const endContextMenuOperation = async () => {
@@ -168,7 +170,6 @@ export function useRightClickContextMenu(
     contextMenudata,
     readyForContextMenu,
     clearInputSelection,
-    startContextMenuOperation,
     endContextMenuOperation,
   };
 }

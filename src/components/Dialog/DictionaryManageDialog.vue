@@ -137,10 +137,7 @@
                   ref="surfaceContextMenu"
                   :header="surfaceContextMenuHeader"
                   :menudata="surfaceContextMenudata"
-                  @beforeShow="
-                    readyForSurfaceContextMenu();
-                    startSurfaceContextMenuOperation();
-                  "
+                  @beforeShow="readyForSurfaceContextMenu()"
                   @beforeHide="endSurfaceContextMenuOperation()"
                 />
               </QInput>
@@ -165,10 +162,7 @@
                   ref="yomiContextMenu"
                   :header="yomiContextMenuHeader"
                   :menudata="yomiContextMenudata"
-                  @beforeShow="
-                    readyForYomiContextMenu();
-                    startYomiContextMenuOperation();
-                  "
+                  @beforeShow="readyForYomiContextMenu()"
                   @beforeHide="endYomiContextMenuOperation()"
                 />
               </QInput>
@@ -704,7 +698,6 @@ const {
   contextMenudata: surfaceContextMenudata,
   readyForContextMenu: readyForSurfaceContextMenu,
   clearInputSelection: clearSurfaceInputSelection,
-  startContextMenuOperation: startSurfaceContextMenuOperation,
   endContextMenuOperation: endSurfaceContextMenuOperation,
 } = useRightClickContextMenu(surfaceInput, surface);
 
@@ -714,7 +707,6 @@ const {
   contextMenudata: yomiContextMenudata,
   readyForContextMenu: readyForYomiContextMenu,
   clearInputSelection: clearYomiInputSelection,
-  startContextMenuOperation: startYomiContextMenuOperation,
   endContextMenuOperation: endYomiContextMenuOperation,
 } = useRightClickContextMenu(yomiInput, yomi);
 </script>
