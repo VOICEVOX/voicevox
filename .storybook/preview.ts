@@ -3,6 +3,7 @@ import { Quasar, Dialog, Loading, Notify } from "quasar";
 import iconSet from "quasar/icon-set/material-icons";
 import { addActionsWithEmits } from "./utils/argTypesEnhancers";
 import { markdownItPlugin } from "@/plugins/markdownItPlugin";
+import { withThemeByDataAttribute } from '@storybook/addon-themes';
 
 import "@quasar/extras/material-icons/material-icons.css";
 import "quasar/dist/quasar.sass";
@@ -33,7 +34,35 @@ const preview: Preview = {
     docs: {
       toc: true,
     },
+    backgrounds: {
+      default: 'theme',
+      values: [
+        {
+          name: 'theme',
+          value: 'var(--color-v2-background)',
+        },
+        {
+          name: 'light',
+          value: '#fff',
+        },
+        {
+          name: 'dark',
+          value: '#333',
+        },
+      ],
+    },
+
   },
+  decorators: [
+    withThemeByDataAttribute({
+      themes: {
+        light: 'false',
+        dark: 'true',
+      },
+      defaultTheme: 'light',
+      attributeName: 'is-dark-theme',
+    })
+  ],
   argTypesEnhancers: [addActionsWithEmits],
 };
 
