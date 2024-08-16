@@ -1,11 +1,13 @@
+/**
+ * テキスト編集エリアの右クリック
+ * 参考実装: https://github.com/VOICEVOX/voicevox/pull/1374/files#diff-444f263f72d4db11fe82c672d5c232eb4c29d29dbc1ffd20e279d586b1b2c180
+ */
+
 import { QInput } from "quasar";
 import { ref, Ref, nextTick } from "vue";
 import { MenuItemButton, MenuItemSeparator } from "@/components/Menu/type";
 import ContextMenu from "@/components/Menu/ContextMenu.vue";
 import { SelectionHelperForQInput } from "@/helpers/SelectionHelperForQInput";
-
-// テキスト編集エリアの右クリック
-// 参考実装: https://github.com/VOICEVOX/voicevox/pull/1374/files#diff-444f263f72d4db11fe82c672d5c232eb4c29d29dbc1ffd20e279d586b1b2c180R371-R379
 
 /**
  * コンポーネントの中で呼ばれた <QInput> に対して
