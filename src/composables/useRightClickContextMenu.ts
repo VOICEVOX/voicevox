@@ -42,26 +42,27 @@ export function useRightClickContextMenu(
     };
 
     const text = inputSelection.getAsString();
-    if (text.length === 0) {
+
+    if (text.length > MAX_HEADER_LENGTH) {
+      contextMenuHeader.value =
+        text.length <= MAX_HEADER_LENGTH
+          ? text
+          : `${text.substring(
+              0,
+              SHORTED_HEADER_FRAGMENT_LENGTH,
+            )} ... ${text.substring(
+              text.length - SHORTED_HEADER_FRAGMENT_LENGTH,
+            )}`;
+    } else {
+      contextMenuHeader.value = text;
+    }
+
+    if (inputSelection.isEmpty) {
       getMenuItemButton("切り取り").disabled = true;
       getMenuItemButton("コピー").disabled = true;
-      contextMenuHeader.value = "";
     } else {
       getMenuItemButton("切り取り").disabled = false;
       getMenuItemButton("コピー").disabled = false;
-      if (text.length > MAX_HEADER_LENGTH) {
-        contextMenuHeader.value =
-          text.length <= MAX_HEADER_LENGTH
-            ? text
-            : `${text.substring(
-                0,
-                SHORTED_HEADER_FRAGMENT_LENGTH,
-              )} ... ${text.substring(
-                text.length - SHORTED_HEADER_FRAGMENT_LENGTH,
-              )}`;
-      } else {
-        contextMenuHeader.value = text;
-      }
     }
   };
 
