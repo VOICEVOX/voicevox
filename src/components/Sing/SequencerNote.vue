@@ -363,16 +363,17 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     }
 
     &.selected,
-    &:active {
+    &:active,
+    &:focus {
       .note-bar {
-        background-color: var(--scheme-color-error-container);
-        border-color: var(--scheme-color-error);
-        outline-color: var(--scheme-color-error);
+        background-color: var(--scheme-color-error-container) !important;
+        border-color: var(--scheme-color-error) !important;
+        outline-color: var(--scheme-color-error) !important;
       }
 
       .note-lyric {
-        color: var(--scheme-color-on-error-container);
-        text-shadow: none;
+        color: var(--scheme-color-on-error-container) !important;
+        text-shadow: none !important;
       }
     }
   }

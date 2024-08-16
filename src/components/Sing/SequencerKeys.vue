@@ -136,29 +136,29 @@ const noteNumberOfKeyBeingPressed = ref<number | undefined>();
 const sequencerKeys = ref<HTMLElement | null>(null);
 let resizeObserver: ResizeObserver | undefined;
 
-const onMouseDown = async (noteNumber: number) => {
+const onMouseDown = (noteNumber: number) => {
   noteNumberOfKeyBeingPressed.value = noteNumber;
-  await store.dispatch("PLAY_PREVIEW_SOUND", { noteNumber });
+  void store.dispatch("PLAY_PREVIEW_SOUND", { noteNumber });
 };
 
-const onMouseUp = async () => {
+const onMouseUp = () => {
   if (noteNumberOfKeyBeingPressed.value != undefined) {
     const noteNumber = noteNumberOfKeyBeingPressed.value;
     noteNumberOfKeyBeingPressed.value = undefined;
-    await store.dispatch("STOP_PREVIEW_SOUND", { noteNumber });
+    void store.dispatch("STOP_PREVIEW_SOUND", { noteNumber });
   }
 };
 
-const onMouseEnter = async (noteNumber: number) => {
+const onMouseEnter = (noteNumber: number) => {
   if (
     noteNumberOfKeyBeingPressed.value != undefined &&
     noteNumberOfKeyBeingPressed.value !== noteNumber
   ) {
-    await store.dispatch("STOP_PREVIEW_SOUND", {
+    void store.dispatch("STOP_PREVIEW_SOUND", {
       noteNumber: noteNumberOfKeyBeingPressed.value,
     });
     noteNumberOfKeyBeingPressed.value = noteNumber;
-    await store.dispatch("PLAY_PREVIEW_SOUND", { noteNumber });
+    void store.dispatch("PLAY_PREVIEW_SOUND", { noteNumber });
   }
 };
 

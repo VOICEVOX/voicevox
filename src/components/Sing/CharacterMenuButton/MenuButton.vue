@@ -57,7 +57,7 @@ const selectedSinger = computed(() => {
       justify-content: flex-start;
     }
     > div:last-child:hover {
-      background-color: rgba(var(--scheme-color-secondary-rgb), 0.1);
+      background-color: oklch(var(--scheme-color-secondary) / 0.1);
     }
   }
   .engine-icon {
