@@ -3,24 +3,6 @@
   --padding-basis: 8px;
   --gap-basis: 8px;
   --radius-basis: 8px;
-
-  --font-regular: 400;
-  --font-medium: 500;
-  --font-bold: 700;
-
-  --input-m-size: calc(var(--size-basis) * 5);
-  --input-l-size: calc(var(--size-basis) * 7);
-
-  --label-l-size: calc(var(--size-basis) * 1.75);
-  --label-m-size: calc(var(--size-basis) * 1.5);
-  --label-s-size: calc(var(--size-basis) * 1.25);
-
-  --border-width-basis: 1px;
-
-  --opacity-medium: 0.87;
-  --opacity-low: 0.6;
-  --opacity-separator: 0.5;
-  --opacity-disabled: 0.38;
 }
 
 $size-scrollbar: calc(var(--size-basis) * 1.5);

@@ -2,25 +2,35 @@
 
 ## 利用
 
+基本的にはMaterialDesign3のカラーシステムに近い考え方であり
+おおざっぱなロールごと(primary/secondaryなど)のベース彩度+色相は固定し、
+詳細なロール(on-primaryなど)に応じて明度のみ変更する形です
+
+https://m3.material.io/styles/color/roles
+
+---
+
+l: 明度 / c: 彩度 / h: 色相
+
 background-color: var(--scheme-color-primary);
 color: var(--scheme-color-on-primary);
 
 ## カスタマイズサンプル
 
-50%明度プライマリ:
+50%明度プライマリを指定:
   color: oklch(var(--lr-50) var(--primary-c) var(--primary-h));
 
-50%明度プライマリ(相対)
+50%明度プライマリを指定: CSS Variables+相対CSSの場合
   color: oklch(from var(--primary-key) l calc(var(--lr-50)));
 
-ロールカラー定義(on-primaryを相対)
+ロールカラー指定: --on-primaryのdarkテーマの値を指定したサンプル
   --on-primary-dark: oklch(var(--lr-10) var(--primary-c) var(--primary-h));
 
-エイリアス
+エイリアス指定: 特定のロール(この場合はneutral)だが明度が違う
   --sing-piano-key-white-dark: oklch(var(--lr-70) var(--neutral-c) var(--neutral-h));
 
-プライマリと色調を揃えた新カラー(色相が150度異なる紫)
-  color: oklch(from var(--primary-key) l calc(var(--lr-70)) c h calc(var(--primary-c) + 150 % 360)));
+プライマリと色調を揃えた新規カラー指定: (色相が150度異なる紫になる)
+  color: oklch(from var(--primary-key) l calc(var(--lr-60)) c h calc(var(--primary-c) + 150)));
 
 */
 
@@ -29,8 +39,8 @@ color: var(--scheme-color-on-primary);
 */
 :root {
   // 基準彩度
-  --primary-c: 0.108;
-  --secondary-c: calc(var(--primary-c) / 3); // 0.036
+  --primary-c: 0.098; // 元のprimary(light): 0.073 / primary(dark): 0.098...この値を変更すれば試せるはず / 元のに近づけるならlight/darkで彩度値を切り替えるのがよさそうかも
+  --secondary-c: 0.036;
   --tertiary-c: var(--primary-c);
   --error-c: 0.21;
   --neutral-c: 0;
@@ -58,8 +68,12 @@ color: var(--scheme-color-on-primary);
 
 /* 
 明度LUT
-OKLCHのL値を相対明度に補正した値
+OKLCHのL値を相対明度(おおむねガンマ補正2.2に近い)に補正した%単位値
+そのままのL値を使うとディスプレイにおいてはリニアな明るさにならないため補正しています
 eg: 50%: --lr-50
+
+参考: https://github.com/VOICEVOX/voicevox/issues/1810#issuecomment-2260529835
+参考: https://github.com/VOICEVOX/voicevox/issues/1810#issuecomment-2260631491
 */
 :root {
   --lr-0: 0.00000;
@@ -269,7 +283,9 @@ OKLCHでのカラースキーム
   --scheme-color-sing-note-bar-preview-border: oklch(var(--lr-60) var(--tertiary-c) var(--tertiary-h));
   --scheme-color-sing-note-bar-preview-outline: oklch(var(--lr-80) var(--tertiary-c) var(--tertiary-h));
   
-  --scheme-color-sing-shadow-note: oklch(var(--lr-89) var(--neutral-variant-c) var(--neutral-variant-h));
+  --scheme-color-sing-shadow-note: oklch(var(--lr-80) var(--neutral-variant-c) var(--neutral-variant-h));
+
+  --scheme-color-sing-slider-track-and-thumb: oklch(var(--lr-80) var(--primary-c) var(--primary-h));
 }
 
 /* ダークテーマ */
@@ -340,15 +356,15 @@ OKLCHでのカラースキーム
   --scheme-color-sing-playback-button-container: oklch(var(--lr-70) var(--primary-c) var(--primary-h));
   --scheme-color-sing-on-playback-button-container: oklch(var(--lr-10) var(--neutral-c) var(--neutral-h));
   
-  --scheme-color-sing-grid-cell-white: oklch(var(--lr-24) var(--neutral-c) var(--neutral-h));
-  --scheme-color-sing-grid-cell-black: oklch(var(--lr-17) var(--neutral-c) var(--neutral-h));
+  --scheme-color-sing-grid-cell-white: oklch(var(--lr-20) var(--neutral-c) var(--neutral-h));
+  --scheme-color-sing-grid-cell-black: oklch(var(--lr-15) var(--neutral-c) var(--neutral-h));
   
   --scheme-color-sing-grid-measure-line: oklch(var(--lr-45) var(--neutral-c) var(--neutral-h));
   --scheme-color-sing-grid-beat-line: oklch(var(--lr-4) var(--neutral-c) var(--neutral-h));
-  --scheme-color-sing-grid-vertical-line: oklch(var(--lr-17) var(--neutral-c) var(--neutral-h));
+  --scheme-color-sing-grid-vertical-line: oklch(var(--lr-15) var(--neutral-c) var(--neutral-h));
   
   --scheme-color-sing-grid-octave-line: oklch(var(--lr-35) var(--neutral-c) var(--neutral-h));
-  --scheme-color-sing-grid-horizontal-line: oklch(var(--lr-17) var(--neutral-c) var(--neutral-h));
+  --scheme-color-sing-grid-horizontal-line: oklch(var(--lr-15) var(--neutral-c) var(--neutral-h));
   
   --scheme-color-sing-ruler-surface: oklch(var(--lr-30) var(--neutral-c) var(--neutral-h));
   --scheme-color-sing-ruler-measure-line: oklch(var(--lr-60) var(--neutral-c) var(--neutral-h));
@@ -372,6 +388,8 @@ OKLCHでのカラースキーム
   --scheme-color-sing-note-bar-preview-outline: oklch(var(--lr-60) var(--tertiary-c) var(--tertiary-h));
   
   --scheme-color-sing-shadow-note: oklch(var(--lr-50) var(--neutral-variant-c) var(--neutral-variant-h));
+
+  --scheme-color-sing-slider-track-and-thumb: --scheme-color-primary;
 };
 
 /*
