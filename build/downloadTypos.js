@@ -56,11 +56,21 @@ async function runCommand(command, description) {
  */
 async function processBinaries(binaries, downloadBinaryFunction) {
   binaries.map(async (binary) => {
+    // もし各バイナリのディレクトリがあるならダウンロードされているとみなし、スキップする
+    const binaryPath = join(BINARY_BASE_PATH, binary.name);
+    const binaryFilePath = join(binaryPath, binary.name);
+
+    if (existsSync(binaryFilePath)) {
+      console.log(`${binary.name} already downloaded`);
+      return;
+    }
+
     try {
       console.log(`${binary.name} のダウンロードURLを取得中...`);
+      // 各バイナリのGithubのリポジトリのURLを探す
       const url = await getBinaryURL(binary.repo, binary.version);
 
-      // インストール処理
+      // 各バイナリのダウンロード
       await downloadBinaryFunction(binary.name, url);
     } catch (err) {
       console.error(
@@ -68,36 +78,6 @@ async function processBinaries(binaries, downloadBinaryFunction) {
       );
     }
   });
-}
-
-/**
- * OSに応じた関数を選択し、バイナリデータを処理する関数
- *
- * @param {Array<Object>} binaries - 複数のバイナリの情報を含む配列オブジェクト
- */
-async function main(binaries) {
-  const os = platform();
-  let downloadBinaryFunction;
-
-  console.log(`使用しているOS: ${os}`);
-
-  // OSに応じたインストール関数を選択
-  switch (os) {
-    case "linux":
-      downloadBinaryFunction = downloadBinaryForLinux;
-      break;
-    case "darwin":
-      downloadBinaryFunction = downloadBinaryForMac;
-      break;
-    case "win32":
-      downloadBinaryFunction = downloadBinaryForWin;
-      break;
-    default:
-      throw new Error("サポートされていないOSです");
-  }
-
-  // バイナリデータを処理
-  await processBinaries(binaries, downloadBinaryFunction);
 }
 
 /**
@@ -139,7 +119,7 @@ async function getBinaryURL(repo, version = "latest") {
 }
 
 /**
- * Linuxのための環境をセットアップし、バイナリをインストールする関数
+ * Linuxに合わせたバイナリをダウンロードするための関数
  * @param {string} name - バイナリの名前
  * @param {Object} url - 各プラットフォームのダウンロードURLを含むオブジェクト
  */
@@ -170,7 +150,7 @@ async function downloadBinaryForLinux(name, url) {
 }
 
 /**
- * Windowsのための環境をセットアップし、バイナリをインストールする関数
+ * Windowsに合わせたバイナリをダウンロードするための関数
  * @param {string} name - バイナリの名前
  * @param {Object} url - 各プラットフォームのダウンロードURLを含むオブジェクト
  */
@@ -197,7 +177,7 @@ async function downloadBinaryForWin(name, url) {
 }
 
 /**
- * macOSのための環境をセットアップし、バイナリをインストールする関数
+ * macOSに合わせたバイナリをダウンロードするための関数
  * @param {string} name - バイナリの名前
  * @param {Object} url - 各プラットフォームのダウンロードURLを含むオブジェクト
  */
@@ -225,6 +205,34 @@ async function downloadBinaryForMac(name, url) {
 
   // 解凍後に圧縮ファイルを削除
   unlinkSync(tarballPath);
+}
+
+/**
+ * OSに応じた関数を選択し、バイナリデータを処理する関数
+ *
+ * @param {Array<Object>} binaries - 複数のバイナリの情報を含む配列オブジェクト
+ */
+async function main(binaries) {
+  const os = platform();
+  let downloadBinaryFunction;
+
+  // OSに応じたインストール関数を選択
+  switch (os) {
+    case "linux":
+      downloadBinaryFunction = downloadBinaryForLinux;
+      break;
+    case "darwin":
+      downloadBinaryFunction = downloadBinaryForMac;
+      break;
+    case "win32":
+      downloadBinaryFunction = downloadBinaryForWin;
+      break;
+    default:
+      throw new Error("サポートされていないOSです");
+  }
+
+  // バイナリデータを処理
+  await processBinaries(binaries, downloadBinaryFunction);
 }
 
 // main関数実行
