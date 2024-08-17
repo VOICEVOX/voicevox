@@ -43,16 +43,6 @@
       }"
       @mousedown="onRightEdgeMouseDown"
     ></div>
-    <div
-      class="note-lyric"
-      data-testid="note-lyric"
-      :style="{
-        fontSize: `${height > 16 ? 16 : height - 2}px`,
-        lineHeight: `${height}px`,
-      }"
-    >
-      {{ lyricToDisplay }}
-    </div>
     <!-- エラー内容を表示 -->
     <QTooltip
       v-if="hasOverlappingError"
@@ -74,6 +64,25 @@
     >
       フレーズが生成できません。歌詞は日本語1文字までです。
     </QTooltip>
+  </div>
+  <div
+    class="note-lyric"
+    data-testid="note-lyric"
+    :class="{
+      selected: isSelected,
+      preview: isPreview,
+      'preview-lyric': previewLyric != undefined,
+      overlapping: hasOverlappingError,
+      'invalid-phrase': hasPhraseError,
+      'below-pitch': editTargetIsPitch,
+    }"
+    :style="{
+      fontSize: `${height > 16 ? 16 : height - 2}px`,
+      lineHeight: `${height}px`,
+      transform: `translate3d(${positionX}px,${positionY + height}px,0)`,
+    }"
+  >
+    {{ lyricToDisplay }}
   </div>
 </template>
 
@@ -231,31 +240,6 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
   top: 0;
   left: 0;
 
-  .note-lyric {
-    border-radius: 4px;
-    position: fixed;
-    left: 2px;
-    bottom: 0;
-    color: var(--scheme-color-sing-on-note-bar-container);
-    font-size: 1rem;
-    font-weight: 400;
-    letter-spacing: -0.1em;
-    white-space: nowrap;
-    pointer-events: none;
-    background: transparent;
-    text-shadow:
-      -1px -1px 0 var(--scheme-color-sing-note-bar-container),
-      1px -1px 0 var(--scheme-color-sing-note-bar-container),
-      -1px 1px 0 var(--scheme-color-sing-note-bar-container),
-      1px 1px 0 var(--scheme-color-sing-note-bar-container),
-      0 -1px 0 var(--scheme-color-sing-note-bar-container),
-      0 1px 0 var(--scheme-color-sing-note-bar-container),
-      -1px 0 0 var(--scheme-color-sing-note-bar-container),
-      1px 0 0 var(--scheme-color-sing-note-bar-container);
-    // アンチエイリアス
-    -webkit-font-smoothing: antialiased;
-  }
-
   .note-bar {
     box-sizing: border-box;
     position: absolute;
@@ -328,19 +312,6 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
       border-color: var(--scheme-color-sing-note-bar-preview-border);
       outline-color: var(--scheme-color-sing-note-bar-preview-outline);
     }
-
-    .note-lyric {
-      opacity: 0.38;
-      text-shadow:
-        -1px -1px 0 var(--scheme-color-sing-note-bar-preview-container),
-        1px -1px 0 var(--scheme-color-sing-note-bar-preview-container),
-        -1px 1px 0 var(--scheme-color-sing-note-bar-preview-container),
-        1px 1px 0 var(--scheme-color-sing-note-bar-preview-container),
-        0 -1px 0 var(--scheme-color-sing-note-bar-preview-container),
-        0 1px 0 var(--scheme-color-sing-note-bar-preview-container),
-        -1px 0 0 var(--scheme-color-sing-note-bar-preview-container),
-        1px 0 0 var(--scheme-color-sing-note-bar-preview-container);
-    }
   }
 
   &.overlapping,
@@ -356,12 +327,6 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
       background-color: var(--scheme-color-error);
     }
 
-    .note-lyric {
-      color: var(--scheme-color-on-error-container);
-      opacity: 0.38;
-      text-shadow: none;
-    }
-
     &.selected,
     &:active,
     &:focus {
@@ -369,11 +334,6 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
         background-color: var(--scheme-color-error-container) !important;
         border-color: var(--scheme-color-error) !important;
         outline-color: var(--scheme-color-error) !important;
-      }
-
-      .note-lyric {
-        color: var(--scheme-color-on-error-container) !important;
-        text-shadow: none !important;
       }
     }
   }
@@ -384,12 +344,6 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
       border-color: var(--scheme-color-outline-variant);
       outline: none;
       opacity: 0.8;
-    }
-
-    .note-lyric {
-      color: var(--scheme-color-on-surface);
-      opacity: 0.8;
-      text-shadow: none;
     }
 
     .note-right-edge:hover,
@@ -404,11 +358,6 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
         border-color: var(--scheme-color-error);
         outline: none;
       }
-
-      .note-lyric {
-        color: var(--scheme-color-error);
-        text-shadow: none;
-      }
     }
   }
 }
@@ -419,5 +368,72 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
 
 .cursor-ew-resize {
   cursor: ew-resize;
+}
+
+.note-lyric {
+  backface-visibility: hidden;
+  position: absolute;
+  left: 1px;
+  bottom: 0;
+  color: var(--scheme-color-sing-on-note-bar-container);
+  font-size: 1rem;
+  font-weight: 400;
+  letter-spacing: -0.1em;
+  white-space: nowrap;
+  pointer-events: none;
+  background: transparent;
+  text-shadow:
+    -1px -1px 0 var(--scheme-color-sing-note-bar-container),
+    1px -1px 0 var(--scheme-color-sing-note-bar-container),
+    -1px 1px 0 var(--scheme-color-sing-note-bar-container),
+    1px 1px 0 var(--scheme-color-sing-note-bar-container),
+    0 -1px 0 var(--scheme-color-sing-note-bar-container),
+    0 1px 0 var(--scheme-color-sing-note-bar-container),
+    -1px 0 0 var(--scheme-color-sing-note-bar-container),
+    1px 0 0 var(--scheme-color-sing-note-bar-container);
+  // アンチエイリアス
+  -webkit-font-smoothing: antialiased;
+  bottom: 100%;
+  z-index: 1;
+
+  &.selected {
+    color: var(--scheme-color-sing-on-note-bar-selected-container);
+    text-shadow:
+      -1px -1px 0 var(--scheme-color-sing-note-bar-selected-container),
+      1px -1px 0 var(--scheme-color-sing-note-bar-selected-container),
+      -1px 1px 0 var(--scheme-color-sing-note-bar-selected-container),
+      1px 1px 0 var(--scheme-color-sing-note-bar-selected-container),
+      0 -1px 0 var(--scheme-color-sing-note-bar-selected-container),
+      0 1px 0 var(--scheme-color-sing-note-bar-selected-container),
+      -1px 0 0 var(--scheme-color-sing-note-bar-selected-container),
+      1px 0 0 var(--scheme-color-sing-note-bar-selected-container);
+  }
+
+  &.preview-lyric {
+    color: var(--scheme-color-sing-on-note-bar-preview-container);
+    text-shadow:
+      -1px -1px 0 var(--scheme-color-sing-note-bar-preview-container),
+      1px -1px 0 var(--scheme-color-sing-note-bar-preview-container),
+      -1px 1px 0 var(--scheme-color-sing-note-bar-preview-container),
+      1px 1px 0 var(--scheme-color-sing-note-bar-preview-container),
+      0 -1px 0 var(--scheme-color-sing-note-bar-preview-container),
+      0 1px 0 var(--scheme-color-sing-note-bar-preview-container),
+      -1px 0 0 var(--scheme-color-sing-note-bar-preview-container),
+      1px 0 0 var(--scheme-color-sing-note-bar-preview-container);
+    opacity: 0.38;
+  }
+
+  &.invalid-phrase,
+  &.overlapping {
+    color: var(--scheme-color-on-error-container);
+    text-shadow: none;
+    opacity: 0.38;
+  }
+
+  &.below-pitch {
+    color: var(--scheme-color-on-surface);
+    opacity: 0.38;
+    text-shadow: none;
+  }
 }
 </style>
