@@ -772,21 +772,12 @@ onUnmounted(() => {
   width: 72px;
 
   :deep(.q-slider__track) {
-    background: var(--scheme-color-outline-variant);
-    color: var(--scheme-color-secondary);
+    background-color: var(--scheme-color-surface-variant);
+    color: var(--scheme-color-primary-fixed-dim);
   }
 
   :deep(.q-slider__thumb) {
-    color: var(--scheme-color-secondary);
-  }
-
-  &:hover {
-    :deep(.q-slider__track) {
-      color: var(--scheme-color-primary);
-    }
-    :deep(.q-slider__thumb) {
-      color: var(--scheme-color-primary);
-    }
+    color: var(--scheme-color-primary-fixed-dim);
   }
 }
 

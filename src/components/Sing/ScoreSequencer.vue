@@ -135,7 +135,7 @@
       :max="ZOOM_X_MAX"
       :step="ZOOM_X_STEP"
       class="zoom-x-slider"
-      trackSize="3px"
+      trackSize="2px"
       @update:modelValue="setZoomX"
     />
     <QSlider
@@ -146,7 +146,7 @@
       vertical
       reverse
       class="zoom-y-slider"
-      trackSize="3px"
+      trackSize="2px"
       @update:modelValue="setZoomY"
     />
     <ContextMenu
@@ -1657,11 +1657,11 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 
   :deep(.q-slider__track) {
     background: var(--scheme-color-outline-variant);
-    color: var(--scheme-color-secondary);
+    color: var(--scheme-color-primary-fixed-dim);
   }
 
   :deep(.q-slider__thumb) {
-    color: var(--scheme-color-secondary);
+    color: var(--scheme-color-primary-fixed-dim);
   }
 }
 
@@ -1673,11 +1673,11 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 
   :deep(.q-slider__track) {
     background: var(--scheme-color-outline-variant);
-    color: var(--scheme-color-secondary);
+    color: var(--scheme-color-primary-fixed-dim);
   }
 
   :deep(.q-slider__thumb) {
-    color: var(--scheme-color-secondary);
+    color: var(--scheme-color-primary-fixed-dim);
   }
 }
 </style>
