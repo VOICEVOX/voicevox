@@ -288,8 +288,6 @@ OKLCHでのカラースキーム
   --scheme-color-sing-note-bar-preview-outline: oklch(var(--lr-80) var(--tertiary-c) var(--tertiary-h));
   
   --scheme-color-sing-shadow-note: oklch(var(--lr-80) var(--neutral-variant-c) var(--neutral-variant-h));
-
-  --scheme-color-sing-slider-track-and-thumb: oklch(var(--lr-80) var(--primary-c) var(--primary-h));
 }
 
 /* ダークテーマ */
@@ -392,8 +390,6 @@ OKLCHでのカラースキーム
   --scheme-color-sing-note-bar-preview-outline: oklch(var(--lr-60) var(--tertiary-c) var(--tertiary-h));
   
   --scheme-color-sing-shadow-note: oklch(var(--lr-50) var(--neutral-variant-c) var(--neutral-variant-h));
-
-  --scheme-color-sing-slider-track-and-thumb: --scheme-color-primary;
 };
 
 /*
@@ -404,20 +400,20 @@ OKLCHでのカラースキーム
   :root[is-dark-theme="false"] {
     --scheme-color-primary: #29683a;
     --scheme-color-on-primary: #fff;
-    --scheme-color-primary-container: #b3f5bf;
+    --scheme-color-primary-container: #b4f5bf;
     --scheme-color-on-primary-container: #001500;
-    --scheme-color-primary-fixed: #b3f5bf;
+    --scheme-color-primary-fixed: #b4f5bf;
     --scheme-color-primary-fixed-dim: #97d8a3;
     --scheme-color-on-primary-fixed: #001500;
-    --scheme-color-on-primary-fixed-variant: #054d20;
-    --scheme-color-secondary: #4c5e4f;
-    --scheme-color-on-secondary: #fff;
-    --scheme-color-secondary-container: #d3e9d7;
-    --scheme-color-on-secondary-container: #041206;
-    --scheme-color-secondary-fixed: #d3e9d7;
-    --scheme-color-secondary-fixed-dim: #b7ccba;
-    --scheme-color-on-secondary-fixed: #041206;
-    --scheme-color-on-secondary-fixed-variant: #334536;
+    --scheme-color-on-primary-fixed-variant: #074d21;
+    --scheme-color-secondary: #4b5f4e;
+    --scheme-color-on-secondary: #effff2;
+    --scheme-color-secondary-container: #d2e9d6;
+    --scheme-color-on-secondary-container: #031206;
+    --scheme-color-secondary-fixed: #d2e9d6;
+    --scheme-color-secondary-fixed-dim: #b6ccb9;
+    --scheme-color-on-secondary-fixed: #031206;
+    --scheme-color-on-secondary-fixed-variant: #324535;
     --scheme-color-tertiary: #725400;
     --scheme-color-on-tertiary: #fff;
     --scheme-color-tertiary-container: #ffdc4d;
@@ -463,43 +459,43 @@ OKLCHでのカラースキーム
     --scheme-color-sing-grid-horizontal-line: #f3f3f3;
     --scheme-color-sing-grid-measure-line: #b7b7b7;
     --scheme-color-sing-grid-beat-line: #e2e2e2;
-    --scheme-color-sing-grid-octave-line: #dcdcdc;
+    --scheme-color-sing-grid-octave-line: #dfdfdf;
     --scheme-color-sing-ruler-surface: #e2e2e2;
     --scheme-color-sing-ruler-measure-line: #9b9b9b;
     --scheme-color-sing-ruler-beat-line: #b7b7b7;
     --scheme-color-sing-piano-key-white: #fcfcfc;
     --scheme-color-sing-piano-key-black: #666;
-    --scheme-color-sing-note-bar-container: #cee3d1;
-    --scheme-color-sing-on-note-bar-container: #041206;
-    --scheme-color-sing-note-bar-outline: #809483;
+    --scheme-color-sing-note-bar-container: #cfe6d3;
+    --scheme-color-sing-on-note-bar-container: #031206;
+    --scheme-color-sing-note-bar-border: #7f9482;
     --scheme-color-sing-note-bar-selected-container: #c6ffd1;
     --scheme-color-sing-on-note-bar-selected-container: #001500;
-    --scheme-color-sing-note-bar-selected-outline: #609f6d;
-    --scheme-color-sing-note-bar-selected-outline-outer: #97d8a3;
-    --scheme-color-sing-note-bar-preview-container: #ffd400;
+    --scheme-color-sing-note-bar-selected-border: #609f6d;
+    --scheme-color-sing-note-bar-selected-outline: #97d8a3;
+    --scheme-color-sing-note-bar-preview-container: #ffd833;
     --scheme-color-sing-on-note-bar-preview-container: #170c00;
-    --scheme-color-sing-note-bar-preview-outline: #b28700;
-    --scheme-color-sing-note-bar-preview-outline-outer: #f5bd00;
-    --scheme-color-sing-shadow-note: #dbdddb;
+    --scheme-color-sing-note-bar-preview-border: #b28700;
+    --scheme-color-sing-note-bar-preview-outline: #f5bd00;
+    --scheme-color-sing-shadow-note: #c4c6c4;
   }
   
   :root[is-dark-theme="true"] {
     --scheme-color-primary: #97d8a3;
-    --scheme-color-on-primary: #003306;
-    --scheme-color-primary-container: #054d20;
-    --scheme-color-on-primary-container: #b3f5bf;
-    --scheme-color-primary-fixed: #b3f5bf;
+    --scheme-color-on-primary: #003206;
+    --scheme-color-primary-container: #074d21;
+    --scheme-color-on-primary-container: #b4f5bf;
+    --scheme-color-primary-fixed: #b4f5bf;
     --scheme-color-primary-fixed-dim: #97d8a3;
     --scheme-color-on-primary-fixed: #001500;
-    --scheme-color-on-primary-fixed-variant: #054d20;
-    --scheme-color-secondary: #b7ccba;
-    --scheme-color-on-secondary: #1b2b1e;
-    --scheme-color-secondary-container: #334536;
-    --scheme-color-on-secondary-container: #d3e9d7;
-    --scheme-color-secondary-fixed: #d3e9d7;
-    --scheme-color-secondary-fixed-dim: #b7ccba;
-    --scheme-color-on-secondary-fixed: #041206;
-    --scheme-color-on-secondary-fixed-variant: #334536;
+    --scheme-color-on-primary-fixed-variant: #074d21;
+    --scheme-color-secondary: #b6ccb9;
+    --scheme-color-on-secondary: #1a2c1d;
+    --scheme-color-secondary-container: #324535;
+    --scheme-color-on-secondary-container: #d2e9d6;
+    --scheme-color-secondary-fixed: #d2e9d6;
+    --scheme-color-secondary-fixed-dim: #b6ccb9;
+    --scheme-color-on-secondary-fixed: #031206;
+    --scheme-color-on-secondary-fixed-variant: #324535;
     --scheme-color-tertiary: #f5bd00;
     --scheme-color-on-tertiary: #352400;
     --scheme-color-tertiary-container: #533c00;
@@ -537,7 +533,7 @@ OKLCHでのカラースキーム
     --scheme-color-link-container: #003699;
     --scheme-color-on-link-container: #c7e5ff;
     --scheme-color-sing-toolbar-container: #1f1f1f;
-    --scheme-color-sing-playback-button-container: #7bbb88;
+    --scheme-color-sing-playback-button-container: #7cbb88;
     --scheme-color-sing-on-playback-button-container: #0e0e0e;
     --scheme-color-sing-grid-cell-white: #272727;
     --scheme-color-sing-grid-cell-black: #1a1a1a;
@@ -551,17 +547,17 @@ OKLCHでのカラースキーム
     --scheme-color-sing-ruler-beat-line: #666;
     --scheme-color-sing-piano-key-white: #a9a9a9;
     --scheme-color-sing-piano-key-black: #272727;
-    --scheme-color-sing-note-bar-container: #9bb09e;
-    --scheme-color-sing-on-note-bar-container: #041206;
-    --scheme-color-sing-note-bar-outline: #c5dac8;
+    --scheme-color-sing-note-bar-container: #9ab09d;
+    --scheme-color-sing-on-note-bar-container: #031206;
+    --scheme-color-sing-note-bar-border: #c4dbc7;
     --scheme-color-sing-note-bar-selected-container: #97d8a3;
     --scheme-color-sing-on-note-bar-selected-container: #001500;
-    --scheme-color-sing-note-bar-selected-outline: #c1ffcd;
-    --scheme-color-sing-note-bar-selected-outline-outer: #609f6d;
+    --scheme-color-sing-note-bar-selected-border: #c2ffce;
+    --scheme-color-sing-note-bar-selected-outline: #609f6d;
     --scheme-color-sing-note-bar-preview-container: #d3a200;
     --scheme-color-sing-on-note-bar-preview-container: #170c00;
-    --scheme-color-sing-note-bar-preview-outline: #ffcb00;
-    --scheme-color-sing-note-bar-preview-outline-outer: #b28700;
+    --scheme-color-sing-note-bar-preview-border: #ffcb00;
+    --scheme-color-sing-note-bar-preview-outline: #b28700;
     --scheme-color-sing-shadow-note: #a8aaa8;
   }
 }
