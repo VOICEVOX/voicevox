@@ -3,7 +3,7 @@ import { defaultEngine, directoryHandleStoreKey } from "./contract";
 
 import { BaseConfigManager, Metadata } from "@/backend/common/ConfigManager";
 import { ConfigType, EngineId, engineSettingSchema } from "@/type/preload";
-import { ensureNotNullish } from "@/helpers/ensureNotNullish";
+import { ensureNotNullish } from "@/helpers/errorHelper";
 import { UnreachableError } from "@/type/utility";
 
 const dbName = `${import.meta.env.VITE_APP_NAME}-web`;

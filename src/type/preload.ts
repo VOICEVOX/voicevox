@@ -605,6 +605,7 @@ export const rootMiscSettingSchema = z.object({
       panAndGain: z.boolean().default(true),
     })
     .default({}),
+  showSinger: z.boolean().default(true),
 });
 export type RootMiscSettingType = z.infer<typeof rootMiscSettingSchema>;
 

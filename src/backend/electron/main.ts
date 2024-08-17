@@ -164,7 +164,7 @@ if (!fs.existsSync(vvppEngineDir)) {
 
 const onEngineProcessError = (engineInfo: EngineInfo, error: Error) => {
   const engineId = engineInfo.uuid;
-  log.error(`ENGINE ${engineId} ERROR: ${error}`);
+  log.error(`ENGINE ${engineId} ERROR:`, error);
 
   // winが作られる前にエラーが発生した場合はwinへの通知を諦める
   // FIXME: winが作られた後にエンジンを起動させる
@@ -213,7 +213,7 @@ async function installVvppEngine(vvppPath: string) {
       "インストールエラー",
       `${vvppPath} をインストールできませんでした。`,
     );
-    log.error(`Failed to install ${vvppPath}, ${e}`);
+    log.error(`Failed to install ${vvppPath},`, e);
     return false;
   }
 }
@@ -308,7 +308,7 @@ async function uninstallVvppEngine(engineId: EngineId) {
       "アンインストールエラー",
       `${engineName} をアンインストールできませんでした。`,
     );
-    log.error(`Failed to uninstall ${engineId}, ${e}`);
+    log.error(`Failed to uninstall ${engineId},`, e);
     return false;
   }
 }

@@ -96,7 +96,7 @@ export class RuntimeInfoManager {
       } catch (e) {
         // ディスクの空き容量がない、他ツールからのファイルロック時をトラップ。
         // サードパーティ向けなのでVOICEVOX側には通知せず、エラー記録して継続
-        log.error(`Failed to write file : ${e}`);
+        log.error("Failed to write file :", e);
       }
     });
   }
