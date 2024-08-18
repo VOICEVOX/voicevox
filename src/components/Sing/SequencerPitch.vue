@@ -77,29 +77,16 @@ const singingGuidesInSelectedTrack = computed(() => {
 
 // NOTE: ピッチラインの色をテーマに応じて調節する
 // 動的カラースキーマに対応後、テーマに応じた色をオブジェクトから取得できるようにする
-
-// FIXME: ダークとライトで色を変更しているが再描画しないと色が変わらないので要修正
-// 値の持ち方も要修正
-const originalPitchLineColorLightWorkaround = [198, 198, 198, 255];
-const originalPitchLineColorDarkWorkaround = [102, 102, 102, 255];
-const originalPitchLine = {
-  color: isDark.value
-    ? ref(
-        new Color(
-          originalPitchLineColorDarkWorkaround[0],
-          originalPitchLineColorDarkWorkaround[1],
-          originalPitchLineColorDarkWorkaround[2],
-          originalPitchLineColorDarkWorkaround[3],
-        ),
-      )
-    : ref(
-        new Color(
-          originalPitchLineColorLightWorkaround[0],
-          originalPitchLineColorLightWorkaround[1],
-          originalPitchLineColorLightWorkaround[2],
-          originalPitchLineColorLightWorkaround[3],
-        ),
-      ),
+const originalPitchLineColor = ref(
+  new Color(
+    isDark.value ? 102 : 198,
+    isDark.value ? 102 : 198,
+    isDark.value ? 102 : 198,
+    255,
+  ),
+);
+const originalPitchLine: PitchLine = {
+  color: originalPitchLineColor,
   width: 1.5,
   pitchDataMap: new Map(),
   lineStripMap: new Map(),
@@ -149,7 +136,15 @@ const updateLineStrips = (pitchLine: PitchLine) => {
   // ピッチデータに対応するLineStripが無かったら作成する
   for (const [key, pitchData] of pitchLine.pitchDataMap) {
     if (pitchLine.lineStripMap.has(key)) {
-      continue;
+      const currentLineStrip = pitchLine.lineStripMap.get(key)!;
+      // テーマなど色が変更された場合、LineStripを再作成する
+      if (!currentLineStrip.color.equals(pitchLine.color.value)) {
+        stage.removeChild(currentLineStrip.displayObject);
+        currentLineStrip.destroy();
+        pitchLine.lineStripMap.delete(key);
+      } else {
+        continue;
+      }
     }
     const dataLength = pitchData.data.length;
 
@@ -426,20 +421,18 @@ watch(
 // FIXME: テーマ切り替え時にカラー変更するが再描画が必要なため要修正
 // 値の持ち方も同様
 watchEffect(() => {
-  originalPitchLine.color.value = isDark.value
-    ? new Color(
-        originalPitchLineColorDarkWorkaround[0],
-        originalPitchLineColorDarkWorkaround[1],
-        originalPitchLineColorDarkWorkaround[2],
-        originalPitchLineColorDarkWorkaround[3],
-      )
-    : new Color(
-        originalPitchLineColorLightWorkaround[0],
-        originalPitchLineColorLightWorkaround[1],
-        originalPitchLineColorLightWorkaround[2],
-        originalPitchLineColorLightWorkaround[3],
-      );
-  renderInNextFrame = true;
+  const newColor = new Color(
+    isDark.value ? 102 : 198,
+    isDark.value ? 102 : 198,
+    isDark.value ? 102 : 198,
+    255,
+  );
+  if (!originalPitchLineColor.value.equals(newColor)) {
+    originalPitchLineColor.value = newColor;
+    if (renderer && stage) {
+      render();
+    }
+  }
 });
 
 watch(
