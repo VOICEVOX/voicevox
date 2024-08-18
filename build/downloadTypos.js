@@ -4,7 +4,7 @@
  */
 const { exec } = require("child_process");
 const { promisify } = require("util");
-const { platform } = require("os");
+const { platform, arch } = require("os");
 const { join, resolve } = require("path");
 const { mkdirSync, existsSync, unlinkSync } = require("fs");
 const fetch = require("node-fetch");
@@ -37,11 +37,11 @@ const execAsync = promisify(exec);
 
 /**
  * コマンドを実行し、その進行状況を出力するヘルパー関数
- *
- * @param {string} command - 実行するシェルコマンド
- * @param {string} description - コマンドの説明を表示するテキスト
+ * @param {Object} params - コマンド実行のパラメータ
+ * @param {string} params.command - 実行するシェルコマンド
+ * @param {string} params.description - コマンドの説明を表示するテキスト
  */
-async function runCommand(command, description) {
+async function runCommand({ command, description }) {
   console.log(`実行中: ${description} ...`);
   try {
     await execAsync(command);
@@ -54,10 +54,11 @@ async function runCommand(command, description) {
 /**
  * バイナリをダウンロードして解凍し、実行権限を付与する関数
  *
- * @param {Object} binaries - バイナリの情報を含むオブジェクト
- * @param {Function} downloadBinaryFunction - OSに応じたバイナリのダウンロード関数
+ * @param {Object} params - バイナリをダウンロードするための情報を含むオブジェクト
+ * @param {Array<Object>} params.binaries - バイナリの情報を含む配列オブジェクト
+ * @param {Function} params.downloadBinaryFunction - OSに応じたバイナリのダウンロード関数
  */
-async function processBinaries(binaries, downloadBinaryFunction) {
+async function processBinaries({ binaries, downloadBinaryFunction }) {
   // 各バイナリを非同期で並行してダウンロードする
   await Promise.all(
     binaries.map(async (binary) => {
@@ -87,7 +88,10 @@ async function processBinaries(binaries, downloadBinaryFunction) {
 
       try {
         console.log(`${binary.name} のダウンロードURLを取得中...`);
-        const url = await getBinaryURL(binary.repo, binary.version);
+        const url = await getBinaryURL({
+          repo: binary.repo,
+          version: binary.version,
+        });
 
         await downloadBinaryFunction({ name: binary.name, url });
       } catch (err) {
@@ -100,13 +104,13 @@ async function processBinaries(binaries, downloadBinaryFunction) {
 }
 
 /**
- * GitHub APIを使って、リポジトリのリリースから特定のOSのダウンロードURLを取得する関数
- *
- * @param {string} repo - GitHubリポジトリの名前（例: 'crate-ci/typos'）
- * @param {string} [version='latest'] - インストールしたい特定のバージョン（省略した場合は最新バージョン）
- * @returns {Promise<Object>} 特定のOSに対応するバイナリのダウンロードURL
+ * GitHub APIを使って、リポジトリのリリースから特定のOSのバイナリをダウンロードするURLを取得する関数
+ * @param {Object} params - Githubからバイナリをダウンロードするための情報を含むオブジェクト
+ * @param {string} params.repo - GitHubリポジトリの名前（例: 'crate-ci/typos'）
+ * @param {string} [params.version='latest'] - インストールしたい特定のバージョン（省略した場合は最新バージョン）
+ * @returns {Promise<Object>} 特定のOSに対応するバイナリのダウンロードするためのURLを含んだオブジェクト
  */
-async function getBinaryURL(repo, version = "latest") {
+async function getBinaryURL({ repo, version = "latest" }) {
   const apiUrl =
     version === "latest"
       ? `https://api.github.com/repos/${repo}/releases/latest`
@@ -121,16 +125,19 @@ async function getBinaryURL(repo, version = "latest") {
 
   const data = await response.json();
 
+  // Githubのリリース情報から各OSに最適化されたバイナリをダウンロードするURLを定義する
   const url = {
     linux: null,
-    darwin: null,
+    darwin_arm64: null,
+    darwin_x64: null,
     win32: null,
   };
-
   data.assets.forEach((asset) => {
     if (asset.name.includes("linux")) url.linux = asset.browser_download_url;
-    else if (asset.name.includes("apple-darwin"))
-      url.darwin = asset.browser_download_url;
+    else if (asset.name.includes("aarch64-apple-darwin"))
+      url.darwin_arm64 = asset.browser_download_url;
+    else if (asset.name.includes("x86_64-apple-darwin"))
+      url.darwin_x64 = asset.browser_download_url;
     else if (asset.name.includes("windows"))
       url.win32 = asset.browser_download_url;
   });
@@ -141,6 +148,8 @@ async function getBinaryURL(repo, version = "latest") {
 /**
  * Linuxに合わせたバイナリをダウンロードするための関数
  * @param {Object} binary - バイナリの情報を含むオブジェクト
+ * @param {string} binary.name - バイナリの名前
+ * @param {Object} binary.url - 各プラットフォームのダウンロードURLを含むオブジェクト
  */
 async function downloadBinaryForLinux({ name, url }) {
   const binaryPath = join(BINARY_BASE_PATH, name);
@@ -151,18 +160,18 @@ async function downloadBinaryForLinux({ name, url }) {
     mkdirSync(binaryPath, { recursive: true });
   }
 
-  await runCommand(
-    `curl -L ${url.linux} -o ${tarballPath}`,
-    `${name}バイナリのダウンロード`,
-  );
-  await runCommand(
-    `tar -xzvf ${tarballPath} -C ${binaryPath}`,
-    "バイナリの解凍",
-  );
-  await runCommand(
-    `chmod +x ${binaryPath}/${name}`,
-    "バイナリに実行権限を付与",
-  );
+  await runCommand({
+    command: `curl -L ${url.linux} -o ${tarballPath}`,
+    description: `${name}バイナリのダウンロード`,
+  });
+  await runCommand({
+    command: `tar -xzvf ${tarballPath} -C ${binaryPath}`,
+    description: "バイナリの解凍",
+  });
+  await runCommand({
+    command: `chmod +x ${binaryPath}/${name}`,
+    description: "バイナリに実行権限を付与",
+  });
 
   // 解凍後に圧縮ファイルを削除
   unlinkSync(tarballPath);
@@ -171,6 +180,8 @@ async function downloadBinaryForLinux({ name, url }) {
 /**
  * Windowsに合わせたバイナリをダウンロードするための関数
  * @param {Object} binary - バイナリの情報を含むオブジェクト
+ * @param {string} binary.name - バイナリの名前
+ * @param {Object} binary.url - 各プラットフォームのダウンロードURLを含むオブジェクト
  */
 async function downloadBinaryForWin({ name, url }) {
   const binaryPath = join(BINARY_BASE_PATH, name);
@@ -181,14 +192,14 @@ async function downloadBinaryForWin({ name, url }) {
     mkdirSync(binaryPath, { recursive: true });
   }
 
-  await runCommand(
-    `curl -L ${url.win32} -o ${zipFilePath}`,
-    `${name}バイナリのダウンロード`,
-  );
-  await runCommand(
-    `"${SEVEN_ZIP_BINARY_PATH}" x ${zipFilePath} -o${binaryPath}`,
-    "zipファイルを解凍中...",
-  );
+  await runCommand({
+    command: `curl -L ${url.win32} -o ${zipFilePath}`,
+    description: `${name}バイナリのダウンロード`,
+  });
+  await runCommand({
+    command: `"${SEVEN_ZIP_BINARY_PATH}" x ${zipFilePath} -o${binaryPath}`,
+    description: "zipファイルを解凍中...",
+  });
 
   // 解凍後に圧縮ファイルを削除
   unlinkSync(zipFilePath);
@@ -197,6 +208,8 @@ async function downloadBinaryForWin({ name, url }) {
 /**
  * macOSに合わせたバイナリをダウンロードするための関数
  * @param {Object} binary - バイナリの情報を含むオブジェクト
+ * @param {string} binary.name - バイナリの名前
+ * @param {Object} binary.url - 各プラットフォームのダウンロードURLを含むオブジェクト
  */
 async function downloadBinaryForMac({ name, url }) {
   const binaryPath = join(BINARY_BASE_PATH, name);
@@ -207,18 +220,29 @@ async function downloadBinaryForMac({ name, url }) {
     mkdirSync(binaryPath, { recursive: true });
   }
 
-  await runCommand(
-    `curl -L ${url.darwin} -o ${tarballPath}`,
-    `${name}バイナリのダウンロード`,
-  );
-  await runCommand(
-    `tar -xzvf ${tarballPath} -C ${binaryPath}`,
-    "バイナリの解凍",
-  );
-  await runCommand(
-    `chmod +x ${binaryPath}/${name}`,
-    "バイナリに実行権限を付与",
-  );
+  // armとx86_x64それぞれに最適なバイナリをダウンロードする
+  const archType = arch();
+  let downloadUrl;
+  if (archType === "arm64") {
+    downloadUrl = url.darwin_arm64;
+  } else if (archType === "x64") {
+    downloadUrl = url.darwin_x64;
+  } else {
+    throw new Error("サポートされていないmacOSアーキテクチャです");
+  }
+
+  await runCommand({
+    command: `curl -L ${downloadUrl} -o ${tarballPath}`,
+    description: `${name}バイナリのダウンロード`,
+  });
+  await runCommand({
+    command: `tar -xzvf ${tarballPath} -C ${binaryPath}`,
+    description: "バイナリの解凍",
+  });
+  await runCommand({
+    command: `chmod +x ${binaryPath}/${name}`,
+    description: "バイナリに実行権限を付与",
+  });
 
   // 解凍後に圧縮ファイルを削除
   unlinkSync(tarballPath);
@@ -227,9 +251,10 @@ async function downloadBinaryForMac({ name, url }) {
 /**
  * OSに応じた関数を選択し、バイナリデータを処理する関数
  *
- * @param {Array<Object>} binaries - 複数のバイナリの情報を含む配列オブジェクト
+ * @param {Object} params - メイン処理のパラメータ
+ * @param {Array<Object>} params.binaries - 複数のバイナリの情報を含む配列オブジェクト
  */
-async function main(binaries) {
+async function main({ binaries }) {
   let downloadBinaryFunction;
 
   // OSに応じたインストール関数を選択
@@ -248,10 +273,10 @@ async function main(binaries) {
   }
 
   // バイナリデータを処理
-  await processBinaries(binaries, downloadBinaryFunction);
+  await processBinaries({ binaries, downloadBinaryFunction });
 }
 
 // main関数実行
 (async () => {
-  await main(WANT_TO_DOWNLOAD_BINARIES);
+  await main({ binaries: WANT_TO_DOWNLOAD_BINARIES });
 })();
