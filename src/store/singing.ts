@@ -160,7 +160,7 @@ const offlineRenderTracks = async (
   sampleRate: number,
   renderDuration: number,
   withLimiter: boolean,
-  multiTrackEnabled: boolean,
+  applyTrackParameters: boolean,
   tracks: Map<TrackId, Track>,
   phrases: Map<PhraseSourceHash, Phrase>,
   singingGuides: Map<SingingGuideSourceHash, SingingGuide>,
@@ -179,9 +179,11 @@ const offlineRenderTracks = async (
   const shouldPlays = shouldPlayTracks(tracks);
   for (const [trackId, track] of tracks) {
     const channelStrip = new ChannelStrip(offlineAudioContext);
-    channelStrip.volume = multiTrackEnabled ? track.gain : 1;
-    channelStrip.pan = multiTrackEnabled ? track.pan : 0;
-    channelStrip.mute = multiTrackEnabled ? !shouldPlays.has(trackId) : false;
+    channelStrip.volume = applyTrackParameters ? track.gain : 1;
+    channelStrip.pan = applyTrackParameters ? track.pan : 0;
+    channelStrip.mute = applyTrackParameters
+      ? !shouldPlays.has(trackId)
+      : false;
 
     channelStrip.output.connect(mainChannelStrip.input);
     trackChannelStrips.set(trackId, channelStrip);
@@ -2208,7 +2210,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             sampleRate,
             renderDuration,
             withLimiter,
-            state.experimentalSetting.enableMultiTrack,
+            state.experimentalSetting.enableMultiTrack &&
+              state.savingSetting.songApplyTrackParameters,
             state.tracks,
             state.phrases,
             state.singingGuides,
@@ -2345,7 +2348,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               sampleRate,
               renderDuration,
               withLimiter,
-              state.experimentalSetting.enableMultiTrack,
+              state.experimentalSetting.enableMultiTrack &&
+                state.savingSetting.songApplyTrackParameters,
               new Map([[trackId, { ...track, solo: false, mute: false }]]),
               new Map(
                 [...state.phrases.entries()].filter(

@@ -337,18 +337,6 @@
                 @click="showAudioFilePatternEditDialog = true"
               />
 
-              <QSlideTransition>
-                <!-- q-slide-transitionはheightだけをアニメーションするのでdivで囲う -->
-                <div v-show="experimentalSetting.enableMultiTrack">
-                  <DialogCell
-                    title="ソング：トラックファイル名パターン"
-                    description="書き出す際のファイル名のパターンをカスタマイズできます。"
-                    :currentValue="savingSetting.songTrackFileNamePattern"
-                    @click="showSongTrackAudioFilePatternEditDialog = true"
-                  />
-                </div>
-              </QSlideTransition>
-
               <ToggleCell
                 title="上書き防止"
                 description="ONの場合、書き出す際に同名ファイルが既にあったとき、ファイル名に連番を付けて別名で保存されます。"
@@ -385,6 +373,29 @@
                   handleSavingSettingChange('exportLab', $event)
                 "
               />
+
+              <QSlideTransition>
+                <!-- q-slide-transitionはheightだけをアニメーションするのでdivで囲う -->
+                <div v-show="experimentalSetting.enableMultiTrack">
+                  <DialogCell
+                    title="ソング：トラックファイル名パターン"
+                    description="書き出す際のファイル名のパターンをカスタマイズできます。"
+                    :currentValue="savingSetting.songTrackFileNamePattern"
+                    @click="showSongTrackAudioFilePatternEditDialog = true"
+                  />
+                  <ToggleCell
+                    title="ソング：トラックのパラメータを書き出し時に適用する"
+                    description="ONの場合、トラックの音量・パンを書き出し時に適用します。"
+                    :modelValue="savingSetting.songApplyTrackParameters"
+                    @update:modelValue="
+                      handleSavingSettingChange(
+                        'songApplyTrackParameters',
+                        $event,
+                      )
+                    "
+                  />
+                </div>
+              </QSlideTransition>
             </QCard>
             <!-- Theme Card -->
             <QCard flat class="setting-card">
