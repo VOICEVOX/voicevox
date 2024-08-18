@@ -260,20 +260,9 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     left: -2px;
     border-radius: 4px 0 0 4px;
     width: 25%;
-    min-width: 4px;
+    min-width: 3px;
     max-width: 8px;
     height: 100%;
-
-    &:not(:active):hover::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      border-radius: 4px 0 0 4px;
-      left: 2px;
-      width: 100%;
-      height: 100%;
-      background-color: transparent;
-    }
 
     &:hover {
       cursor: ew-resize;
@@ -286,20 +275,9 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     right: -2px;
     border-radius: 0 4px 4px 0;
     width: 25%;
-    min-width: 4px;
+    min-width: 3px;
     max-width: 8px;
     height: 100%;
-
-    &:not(:active):hover::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      border-radius: 0 4px 4px 0;
-      right: 2px;
-      width: 100%;
-      height: 100%;
-      background-color: transparent;
-    }
 
     &:hover {
       cursor: ew-resize;
@@ -312,11 +290,6 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
       border-color: var(--scheme-color-sing-note-bar-selected-border);
       outline: 1px solid var(--scheme-color-sing-note-bar-selected-outline);
       outline-offset: 1px;
-    }
-
-    .note-right-edge:not(:active):hover::before,
-    .note-left-edge:not(:active):hover::before {
-      background-color: transparent;
     }
   }
 
@@ -336,11 +309,6 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
       outline-color: var(--scheme-color-error-container);
     }
 
-    .note-right-edge:not(:active):hover::before,
-    .note-left-edge:not(:active):hover::before {
-      background-color: transparent;
-    }
-
     &.selected,
     &:active,
     &:focus {
@@ -358,11 +326,6 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
       border-color: var(--scheme-color-outline-variant);
       outline: none;
       opacity: 0.8;
-    }
-
-    .note-right-edge:hover::before,
-    .note-left-edge:hover::before {
-      background-color: transparent;
     }
 
     &.overlapping,
