@@ -10,6 +10,7 @@ import {
 } from "@/type/preload";
 import { AccentPhrase, Mora } from "@/openapi";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
+import { DEFAULT_TRACK_NAME } from "@/sing/domain";
 
 export const DEFAULT_STYLE_NAME = "ノーマル";
 export const DEFAULT_PROJECT_NAME = "Untitled";
@@ -123,6 +124,7 @@ export const replaceTagIdToTagString = {
   text: "テキスト",
   date: "日付",
   projectName: "プロジェクト名",
+  trackName: "トラック名",
 };
 const replaceTagStringToTagId: Record<string, string> = Object.entries(
   replaceTagIdToTagString,
@@ -135,6 +137,17 @@ const DEFAULT_AUDIO_FILE_NAME_VARIABLES = {
   index: 0,
   characterName: "四国めたん",
   text: "テキストテキストテキスト",
+  styleName: DEFAULT_STYLE_NAME,
+  date: currentDateString(),
+  projectName: "VOICEVOXプロジェクト",
+};
+
+export const DEFAULT_SONG_AUDIO_FILE_BASE_NAME_TEMPLATE = "$連番$_$トラック名$";
+export const DEFAULT_SONG_AUDIO_FILE_NAME_TEMPLATE = `${DEFAULT_SONG_AUDIO_FILE_BASE_NAME_TEMPLATE}.wav`;
+const DEFAULT_SONG_AUDIO_FILE_NAME_VARIABLES = {
+  index: 0,
+  characterName: "四国めたん",
+  trackName: DEFAULT_TRACK_NAME,
   styleName: DEFAULT_STYLE_NAME,
   date: currentDateString(),
   projectName: "VOICEVOXプロジェクト",
@@ -349,6 +362,36 @@ export function buildAudioFileNameFromRawData(
   const projectName = sanitizeFileName(vars.projectName);
   return replaceTag(pattern, {
     text,
+    characterName,
+    index,
+    styleName,
+    date,
+    projectName,
+  });
+}
+
+export function buildSongAudioFileNameFromRawData(
+  fileNamePattern = DEFAULT_SONG_AUDIO_FILE_NAME_TEMPLATE,
+  vars = DEFAULT_SONG_AUDIO_FILE_NAME_VARIABLES,
+): string {
+  let pattern = fileNamePattern;
+  if (pattern === "") {
+    // ファイル名指定のオプションが初期値("")ならデフォルトテンプレートを使う
+    pattern = DEFAULT_SONG_AUDIO_FILE_NAME_TEMPLATE;
+  }
+
+  let trackName = sanitizeFileName(vars.trackName);
+  if (trackName.length > 10) {
+    trackName = trackName.substring(0, 9) + "…";
+  }
+
+  const characterName = sanitizeFileName(vars.characterName);
+  const index = (vars.index + 1).toString().padStart(3, "0");
+  const styleName = sanitizeFileName(vars.styleName);
+  const date = vars.date;
+  const projectName = sanitizeFileName(vars.projectName);
+  return replaceTag(pattern, {
+    trackName,
     characterName,
     index,
     styleName,

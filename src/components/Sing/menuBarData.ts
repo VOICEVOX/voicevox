@@ -30,25 +30,42 @@ export const useMenuBarData = () => {
     await store.dispatch("EXPORT_WAVE_FILE", {});
   };
 
-  const fileSubMenuData = computed<MenuItemData[]>(() => [
-    {
-      type: "button",
-      label: "音声を出力",
-      onClick: () => {
-        void exportWaveFile();
-      },
-      disableWhenUiLocked: true,
-    },
-    { type: "separator" },
-    {
-      type: "button",
-      label: "インポート",
-      onClick: () => {
-        void importExternalSongProject();
-      },
-      disableWhenUiLocked: true,
-    },
-  ]);
+  const exportStemWaveFile = async () => {
+    if (uiLocked.value) return;
+    await store.dispatch("EXPORT_STEM_WAVE_FILE", {});
+  };
+
+  const fileSubMenuData = computed<MenuItemData[]>(() =>
+    (
+      [
+        {
+          type: "button",
+          label: "音声を出力",
+          onClick: () => {
+            void exportWaveFile();
+          },
+          disableWhenUiLocked: true,
+        },
+        store.state.experimentalSetting.enableMultiTrack && {
+          type: "button",
+          label: "トラック毎の音声を出力",
+          onClick: () => {
+            void exportStemWaveFile();
+          },
+          disableWhenUiLocked: true,
+        },
+        { type: "separator" },
+        {
+          type: "button",
+          label: "インポート",
+          onClick: () => {
+            void importExternalSongProject();
+          },
+          disableWhenUiLocked: true,
+        },
+      ] satisfies (MenuItemData | false)[]
+    ).filter((item) => !!item),
+  );
 
   const editSubMenuData = computed<MenuItemData[]>(() => [
     { type: "separator" },
