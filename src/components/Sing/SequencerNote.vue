@@ -253,13 +253,21 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
   .note-left-edge {
     position: absolute;
     top: 0;
-    left: 0;
+    left: -2px;
     border-radius: 4px 0 0 4px;
     width: 25%;
     min-width: 4px;
     max-width: 8px;
     height: 100%;
-    &:hover {
+
+    &:hover::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      border-radius: 4px 0 0 4px;
+      left: 2px;
+      width: 100%;
+      height: 100%;
       background-color: var(--scheme-color-sing-note-bar-border);
     }
   }
@@ -267,14 +275,21 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
   .note-right-edge {
     position: absolute;
     top: 0;
-    right: 0;
+    right: -2px;
     border-radius: 0 4px 4px 0;
     width: 25%;
     min-width: 4px;
     max-width: 8px;
     height: 100%;
 
-    &:hover {
+    &:hover::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      border-radius: 0 4px 4px 0;
+      right: 2px;
+      width: 100%;
+      height: 100%;
       background-color: var(--scheme-color-sing-note-bar-border);
     }
   }
@@ -287,8 +302,8 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
       outline-offset: 1px;
     }
 
-    .note-right-edge:hover,
-    .note-left-edge:hover {
+    .note-right-edge:hover::before,
+    .note-left-edge:hover::before {
       background-color: var(--scheme-color-sing-note-bar-selected-border);
     }
   }
@@ -309,8 +324,8 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
       outline-color: var(--scheme-color-error-container);
     }
 
-    .note-right-edge:hover,
-    .note-left-edge:hover {
+    .note-right-edge:hover::before,
+    .note-left-edge:hover::before {
       background-color: var(--scheme-color-error);
     }
 
@@ -333,8 +348,8 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
       opacity: 0.8;
     }
 
-    .note-right-edge:hover,
-    .note-left-edge:hover {
+    .note-right-edge:hover::before,
+    .note-left-edge:hover::before {
       background-color: transparent;
     }
 
