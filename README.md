@@ -212,10 +212,9 @@ npm run lint
 ## タイポチェック
 
 [typos](https://github.com/crate-ci/typos) を使ってタイポのチェックを行っています。
-[typos をインストール](https://github.com/crate-ci/typos#install) した後
 
 ```bash
-typos
+npm run typos
 ```
 
 でタイポチェックを行えます。

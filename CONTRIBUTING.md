@@ -241,7 +241,7 @@ VITE_DEFAULT_ENGINE_INFOS=`[
 - 命名に使っている英語が誤っていないことを確認します。
 
   ```bash
-  typos
+  npm run typos
   ```
 
 - 個人環境でVOICEVOXを実行し、提出前に、一通り動くことを確認します。
