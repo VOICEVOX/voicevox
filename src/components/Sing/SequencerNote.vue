@@ -18,7 +18,8 @@
     <div
       class="note-bar"
       :class="{
-        'cursor-move': editTargetIsNote,
+        'cursor-move': editTargetIsNote && !isResizingNote,
+        'cursor-ew-resize': isResizingNote,
       }"
       @mousedown="onBarMouseDown"
       @dblclick="onBarDoubleClick"
@@ -110,6 +111,8 @@ const props = defineProps<{
   /** ノートが重なっているか */
   isOverlapping: boolean;
   previewLyric: string | null;
+  /** ノートがリサイズ中か */
+  isResizingNote: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -260,7 +263,7 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     max-width: 8px;
     height: 100%;
 
-    &:hover::before {
+    &:not(:active):hover::before {
       content: "";
       position: absolute;
       top: 0;
@@ -268,7 +271,11 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
       left: 2px;
       width: 100%;
       height: 100%;
-      background-color: var(--scheme-color-sing-note-bar-border);
+      background-color: transparent;
+    }
+
+    &:hover {
+      cursor: ew-resize;
     }
   }
 
@@ -282,7 +289,7 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     max-width: 8px;
     height: 100%;
 
-    &:hover::before {
+    &:not(:active):hover::before {
       content: "";
       position: absolute;
       top: 0;
@@ -290,7 +297,11 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
       right: 2px;
       width: 100%;
       height: 100%;
-      background-color: var(--scheme-color-sing-note-bar-border);
+      background-color: transparent;
+    }
+
+    &:hover {
+      cursor: ew-resize;
     }
   }
 
@@ -302,9 +313,9 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
       outline-offset: 1px;
     }
 
-    .note-right-edge:hover::before,
-    .note-left-edge:hover::before {
-      background-color: var(--scheme-color-sing-note-bar-selected-border);
+    .note-right-edge:not(:active):hover::before,
+    .note-left-edge:not(:active):hover::before {
+      background-color: transparent;
     }
   }
 
@@ -324,9 +335,9 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
       outline-color: var(--scheme-color-error-container);
     }
 
-    .note-right-edge:hover::before,
-    .note-left-edge:hover::before {
-      background-color: var(--scheme-color-error);
+    .note-right-edge:not(:active):hover::before,
+    .note-left-edge:not(:active):hover::before {
+      background-color: transparent;
     }
 
     &.selected,
@@ -361,6 +372,10 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
         outline: none;
       }
     }
+  }
+
+  &.resizing-note {
+    cursor: ew-resize;
   }
 }
 

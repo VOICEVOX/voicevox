@@ -17,6 +17,7 @@
       :class="{
         'rect-selecting': editTarget === 'NOTE' && shiftKey,
         'cursor-draw': editTarget === 'PITCH' && !ctrlKey,
+        'resizing-note': isResizingNote,
       }"
       aria-label="シーケンサ"
       @mousedown="onMouseDown"
@@ -58,6 +59,7 @@
         :isPreview="previewNoteIds.has(note.id)"
         :isOverlapping="overlappingNoteIdsInSelectedTrack.has(note.id)"
         :previewLyric="previewLyrics.get(note.id) || null"
+        :isResizingNote
         @barMousedown="onNoteBarMouseDown($event, note)"
         @barDoubleClick="onNoteBarDoubleClick($event, note)"
         @leftEdgeMousedown="onNoteLeftEdgeMouseDown($event, note)"
@@ -362,6 +364,7 @@ const phraseInfosInOtherTracks = computed(() => {
 const ctrlKey = useCommandOrControlKey();
 const editTarget = computed(() => state.sequencerEditTarget);
 const editFrameRate = computed(() => state.editFrameRate);
+const isResizingNote = ref(false);
 const scrollBarWidth = ref(12);
 const sequencerBody = ref<HTMLElement | null>(null);
 
@@ -825,6 +828,9 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
       copiedNotesForPreview.set(copiedNote.id, copiedNote);
     }
     previewNotes.value = copiedNotes;
+    if (mode === "RESIZE_NOTE_LEFT" || mode === "RESIZE_NOTE_RIGHT") {
+      isResizingNote.value = true;
+    }
   } else if (editTarget.value === "PITCH") {
     // 編集ターゲットがピッチのときの処理
 
@@ -887,6 +893,7 @@ const endPreview = () => {
           duration: PREVIEW_SOUND_DURATION,
         });
       }
+      isResizingNote.value = false;
     }
   } else if (previewStartEditTarget === "PITCH") {
     // 編集ターゲットがピッチのときにプレビューを開始した場合の処理
@@ -1554,6 +1561,10 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 
   &.rect-selecting {
     cursor: crosshair;
+  }
+
+  &.resizing-note {
+    cursor: ew-resize;
   }
 }
 
