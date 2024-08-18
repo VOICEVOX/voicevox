@@ -287,19 +287,6 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
       outline-offset: 1px;
     }
 
-    .note-lyric {
-      color: var(--scheme-color-sing-on-note-bar-selected-container);
-      text-shadow:
-        -1px -1px 0 var(--scheme-color-sing-note-bar-selected-container),
-        1px -1px 0 var(--scheme-color-sing-note-bar-selected-container),
-        -1px 1px 0 var(--scheme-color-sing-note-bar-selected-container),
-        1px 1px 0 var(--scheme-color-sing-note-bar-selected-container),
-        0 -1px 0 var(--scheme-color-sing-note-bar-selected-container),
-        0 1px 0 var(--scheme-color-sing-note-bar-selected-container),
-        -1px 0 0 var(--scheme-color-sing-note-bar-selected-container),
-        1px 0 0 var(--scheme-color-sing-note-bar-selected-container);
-    }
-
     .note-right-edge:hover,
     .note-left-edge:hover {
       background-color: var(--scheme-color-sing-note-bar-selected-border);
@@ -383,6 +370,10 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
   pointer-events: none;
   background: transparent;
   text-shadow:
+    // NOTE: 以下の目的でtext-shadowを設定
+    // - ノートバーの外側に歌詞が溢れた場合でも歌詞が見えるようにする
+    // - エッジホバーとかぶっても歌詞が見えるようにする
+    // - 今後ピッチラインや波形などその他と重なっても歌詞が見えるようにする
     -1px -1px 0 var(--scheme-color-sing-note-bar-container),
     1px -1px 0 var(--scheme-color-sing-note-bar-container),
     -1px 1px 0 var(--scheme-color-sing-note-bar-container),
@@ -394,14 +385,15 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
   // アンチエイリアス
   -webkit-font-smoothing: antialiased;
   bottom: 100%;
+  z-index: 1;
   // NOTE: 以下の目的でz-indexを使用
   // - 特にズーム倍率が高い場合に次のノートに被った場合に見えなくなるため可読性を確保
   // - ピッチラインを文字とノートバーの間に配置する
   // z-indexはあまり使用しない方がよさそうだが使用するのであれば
   // おそらくは抽象的な意味合いごとにz-indexを変数として定義するのがよさそう
   // eg: fixedアイテム: 1010, ポップオーバー: 1020, モーダル: 1050...など
-  z-index: 1;
 
+  // 選択中
   &.selected {
     color: var(--scheme-color-sing-on-note-bar-selected-container);
     text-shadow:
@@ -415,6 +407,7 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
       1px 0 0 var(--scheme-color-sing-note-bar-selected-container);
   }
 
+  // プレビュー中
   &.preview-lyric {
     color: var(--scheme-color-sing-on-note-bar-preview-container);
     text-shadow:
@@ -429,6 +422,7 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     opacity: 0.38;
   }
 
+  // エラー
   &.invalid-phrase,
   &.overlapping {
     color: var(--scheme-color-on-error-container);
@@ -436,10 +430,18 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     opacity: 0.38;
   }
 
+  // ピッチ編集モード
   &.below-pitch {
-    color: var(--scheme-color-on-surface);
-    opacity: 0.38;
-    text-shadow: none;
+    color: var(--scheme-color-outline);
+    text-shadow:
+      -1px -1px 0 var(--scheme-color-surface-variant),
+      1px -1px 0 var(--scheme-color-surface-variant),
+      -1px 1px 0 var(--scheme-color-surface-variant),
+      1px 1px 0 var(--scheme-color-surface-variant),
+      0 -1px 0 var(--scheme-color-surface-variant),
+      0 1px 0 var(--scheme-color-surface-variant),
+      -1px 0 0 var(--scheme-color-surface-variant),
+      1px 0 0 var(--scheme-color-surface-variant);
   }
 }
 </style>

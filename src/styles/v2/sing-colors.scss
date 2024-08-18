@@ -40,10 +40,10 @@ color: var(--scheme-color-on-primary);
 :root {
   // 基準彩度
   --primary-c: 0.098;
-  // 元のprimary(light) #a5d4ad: OKLCH彩度 0.073
-  // 元のprimary(dark): #86C591: OKLCH彩度 0.098
+  // 元実装のprimary(light) #a5d4ad: OKLCH彩度 0.073
+  // 元実装のprimary(dark): #86C591: OKLCH彩度 0.098
   // たとえば元のprimary(light)に揃えたいならここを0.073にする
-  // 元のテーマに近づけたいならlight/darkで彩度値を切り替えるのがよさそうかも
+  // 元実装のテーマに近づけたいならlight/darkで彩度値を切り替えるのがよさそう？
   --secondary-c: 0.036;
   --tertiary-c: var(--primary-c);
   --error-c: 0.21;
@@ -73,7 +73,7 @@ color: var(--scheme-color-on-primary);
 /* 
 明度LUT
 OKLCHのL値を相対明度(おおむねガンマ補正2.2に近い)に補正した%単位値
-そのままのL値を使うとディスプレイにおいてはリニアな明るさにならないため補正しています
+そのままのL値を使うとディスプレイにおいては知覚的にリニアな明るさにならないため補正しています
 eg: 50%: --lr-50
 
 参考: https://github.com/VOICEVOX/voicevox/issues/1810#issuecomment-2260529835

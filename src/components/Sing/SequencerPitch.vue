@@ -49,6 +49,7 @@ const props = defineProps<{
 const { warn, error } = createLogger("SequencerPitch");
 const store = useStore();
 const tpqn = computed(() => store.state.tpqn);
+const isDark = computed(() => store.state.themeSetting.currentTheme === "Dark");
 const tempos = computed(() => [store.state.tempos[0]]);
 const pitchEditData = computed(() => {
   return store.getters.SELECTED_TRACK.pitchEditData;
@@ -74,15 +75,20 @@ const singingGuidesInSelectedTrack = computed(() => {
   return singingGuides;
 });
 
+// NOTE: ピッチラインの色をテーマに応じて調節する
+// 動的カラースキーマに対応後、テーマに応じた色をオブジェクトから取得できるようにする
+const originalPitchLineColor = isDark.value
+  ? new Color(102, 102, 102, 255)
+  : new Color(198, 198, 198, 255);
 const originalPitchLine: PitchLine = {
-  color: new Color(171, 201, 176, 255),
-  width: 1.2,
+  color: originalPitchLineColor,
+  width: 1.5,
   pitchDataMap: new Map(),
   lineStripMap: new Map(),
 };
 const pitchEditLine: PitchLine = {
-  color: new Color(146, 214, 154, 255),
-  width: 2,
+  color: new Color(151, 216, 163, 255),
+  width: 1.5,
   pitchDataMap: new Map(),
   lineStripMap: new Map(),
 };
@@ -142,7 +148,13 @@ const updateLineStrips = (pitchLine: PitchLine) => {
     } else {
       lineStrip = new LineStrip(dataLength, pitchLine.color, pitchLine.width);
     }
-    stage.addChild(lineStrip.displayObject);
+    // pitchEditLineの場合は最後に追加する（originalより前面に表示）
+    if (pitchLine === pitchEditLine) {
+      stage.addChild(lineStrip.displayObject);
+    } else {
+      // originalLineは最初に追加する（EditLineの背面に表示）
+      stage.addChildAt(lineStrip.displayObject, 0);
+    }
     pitchLine.lineStripMap.set(key, lineStrip);
   }
 
@@ -480,6 +492,7 @@ onUnmountedOrDeactivated(() => {
   overflow: hidden;
   z-index: 0;
   pointer-events: none;
+  position: relative;
 
   contain: strict; // canvasのサイズが変わるのを無視する
 }
