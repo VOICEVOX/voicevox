@@ -8,7 +8,7 @@
       <QCardSection>
         <div class="text-h5">書き出しファイル名パターン</div>
         <div class="text-body2 text-grey-8">
-          「$キャラ$」のようなタグを使って書き出すファイル名をカスタマイズできます
+          「$キャラ$」のようなタグを使って書き出すファイル名をカスタマイズできます。
         </div>
       </QCardSection>
       <QCardActions class="setting-card q-px-md q-py-sm">
@@ -39,7 +39,7 @@
           </div>
         </div>
         <div class="text-body2 text-ellipsis">
-          出力例）{{ previewFileName }}
+          出力例：{{ previewFileName }}
         </div>
         <div class="row full-width q-my-md">
           <QBtn
@@ -78,16 +78,13 @@
 <script setup lang="ts">
 import { computed, ref, nextTick } from "vue";
 import { QInput } from "quasar";
-import { useStore } from "@/store";
-import {
-  buildAudioFileNameFromRawData,
-  DEFAULT_AUDIO_FILE_BASE_NAME_TEMPLATE,
-  replaceTagIdToTagString,
-  sanitizeFileName,
-} from "@/store/utility";
+import { replaceTagIdToTagString, sanitizeFileName } from "@/store/utility";
 
 const props = defineProps<{
   openDialog: boolean;
+  defaultTemplate: string;
+  availableTags: (keyof typeof replaceTagIdToTagString)[];
+  buildFileName: (pattern: string) => string;
 }>();
 
 const emit = defineEmits<{
@@ -96,15 +93,18 @@ const emit = defineEmits<{
 
 const updateOpenDialog = (isOpen: boolean) => emit("update:openDialog", isOpen);
 
-const store = useStore();
+const fileNamePattern = defineModel<string>("fileNamePattern", {
+  type: String,
+  default: "",
+});
 const patternInput = ref<QInput>();
 const maxLength = 128;
-const tagStrings = Object.values(replaceTagIdToTagString);
-
-const savingSetting = computed(() => store.state.savingSetting);
+const tagStrings = computed(() =>
+  props.availableTags.map((tag) => replaceTagIdToTagString[tag]),
+);
 
 const savedBaseNamePattern = computed(() => {
-  return savingSetting.value.fileNamePattern.replace(/\.wav$/, "");
+  return fileNamePattern.value.replace(/\.wav$/, "");
 });
 const currentBaseNamePattern = ref(savedBaseNamePattern.value);
 const currentNamePattern = computed(
@@ -140,18 +140,18 @@ const errorMessage = computed(() => {
 const hasError = computed(() => errorMessage.value !== "");
 
 const previewFileName = computed(() =>
-  buildAudioFileNameFromRawData(currentNamePattern.value),
+  props.buildFileName(currentNamePattern.value),
 );
 
 const initializeInput = () => {
   currentBaseNamePattern.value = savedBaseNamePattern.value;
 
   if (currentBaseNamePattern.value === "") {
-    currentBaseNamePattern.value = DEFAULT_AUDIO_FILE_BASE_NAME_TEMPLATE;
+    currentBaseNamePattern.value = props.defaultTemplate;
   }
 };
 const resetToDefault = () => {
-  currentBaseNamePattern.value = DEFAULT_AUDIO_FILE_BASE_NAME_TEMPLATE;
+  currentBaseNamePattern.value = props.defaultTemplate;
   patternInput.value?.focus();
 };
 
@@ -179,12 +179,11 @@ const insertTagToCurrentPosition = (tag: string) => {
 };
 
 const submit = async () => {
-  await store.dispatch("SET_SAVING_SETTING", {
-    data: {
-      ...savingSetting.value,
-      fileNamePattern: currentNamePattern.value,
-    },
-  });
+  if (hasError.value) {
+    return;
+  }
+
+  fileNamePattern.value = currentNamePattern.value;
   updateOpenDialog(false);
 };
 </script>

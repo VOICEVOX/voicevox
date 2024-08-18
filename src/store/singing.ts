@@ -24,7 +24,7 @@ import {
   SequenceId,
 } from "./type";
 import {
-  buildSongAudioFileNameFromRawData,
+  buildSongTrackAudioFileNameFromRawData,
   currentDateString,
   DEFAULT_PROJECT_NAME,
   DEFAULT_STYLE_NAME,
@@ -2319,14 +2319,17 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             const styleName = style.styleName || DEFAULT_STYLE_NAME;
             const projectName = getters.PROJECT_NAME ?? DEFAULT_PROJECT_NAME;
 
-            const trackFileName = buildSongAudioFileNameFromRawData("", {
-              characterName: characterInfo.metas.speakerName,
-              index: i,
-              styleName,
-              date: currentDateString(),
-              projectName,
-              trackName: track.name,
-            });
+            const trackFileName = buildSongTrackAudioFileNameFromRawData(
+              state.savingSetting.songTrackFileNamePattern,
+              {
+                characterName: characterInfo.metas.speakerName,
+                index: i,
+                styleName,
+                date: currentDateString(),
+                projectName,
+                trackName: track.name,
+              },
+            );
             let filePath = path.join(dirPath, trackFileName);
             if (state.savingSetting.avoidOverwrite) {
               let tail = 1;
@@ -2346,7 +2349,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               new Map([[trackId, { ...track, solo: false, mute: false }]]),
               new Map(
                 [...state.phrases.entries()].filter(
-                  ([_key, phrase]) => phrase.trackId === trackId,
+                  ([, phrase]) => phrase.trackId === trackId,
                 ),
               ),
               state.singingGuides,

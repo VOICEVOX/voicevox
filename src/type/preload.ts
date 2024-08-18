@@ -362,17 +362,7 @@ export type SplitTextWhenPasteType = "PERIOD_AND_NEW_LINE" | "NEW_LINE" | "OFF";
 
 export type EditorFontType = "default" | "os";
 
-export type SavingSetting = {
-  exportLab: boolean;
-  fileEncoding: Encoding;
-  fileNamePattern: string;
-  fixedExportEnabled: boolean;
-  fixedExportDir: string;
-  avoidOverwrite: boolean;
-  exportText: boolean;
-  outputStereo: boolean;
-  audioOutputDevice: string;
-};
+export type SavingSetting = ConfigType["savingSetting"];
 
 export type EngineSettings = Record<EngineId, EngineSettingType>;
 
@@ -631,6 +621,8 @@ export const configSchema = z
         exportText: z.boolean().default(false),
         outputStereo: z.boolean().default(false),
         audioOutputDevice: z.string().default(""),
+
+        songTrackFileNamePattern: z.string().default(""),
       })
       .default({}),
     hotkeySettings: hotkeySettingSchema.array().default(defaultHotkeySettings),

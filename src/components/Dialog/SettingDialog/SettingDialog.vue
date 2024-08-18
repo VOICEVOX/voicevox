@@ -298,39 +298,56 @@
               </QCardActions>
 
               <FileNamePatternDialog
-                v-model:open-dialog="showsFilePatternEditDialog"
+                v-model:open-dialog="showAudioFilePatternEditDialog"
+                v-model:fileNamePattern="audioFileNamePattern"
+                :defaultTemplate="DEFAULT_AUDIO_FILE_BASE_NAME_TEMPLATE"
+                :availableTags="[
+                  'index',
+                  'characterName',
+                  'styleName',
+                  'text',
+                  'date',
+                  'projectName',
+                ]"
+                :buildFileName="buildAudioFileNameFromRawData"
+                @complete="handleSavingSettingChange('fileNamePattern', $event)"
+              />
+              <FileNamePatternDialog
+                v-model:open-dialog="showSongTrackAudioFilePatternEditDialog"
+                v-model:fileNamePattern="songTrackFileNamePattern"
+                :defaultTemplate="DEFAULT_SONG_AUDIO_FILE_BASE_NAME_TEMPLATE"
+                :availableTags="[
+                  'index',
+                  'characterName',
+                  'styleName',
+                  'trackName',
+                  'date',
+                  'projectName',
+                ]"
+                :buildFileName="buildSongTrackAudioFileNameFromRawData"
+                @complete="
+                  handleSavingSettingChange('songTrackFileNamePattern', $event)
+                "
               />
 
-              <QCardActions class="q-px-md bg-surface">
-                <div>書き出しファイル名パターン</div>
-                <div
-                  aria-label="書き出す際のファイル名のパターンをカスタマイズできます。"
-                >
-                  <QIcon name="help_outline" size="sm" class="help-hover-icon">
-                    <QTooltip
-                      :delay="500"
-                      anchor="center right"
-                      self="center left"
-                      transitionShow="jump-right"
-                      transitionHide="jump-left"
-                    >
-                      書き出す際のファイル名のパターンをカスタマイズできます。
-                    </QTooltip>
-                  </QIcon>
+              <DialogCell
+                title="書き出しファイル名パターン"
+                description="書き出す際のファイル名のパターンをカスタマイズできます。"
+                :currentValue="savingSetting.fileNamePattern"
+                @click="showAudioFilePatternEditDialog = true"
+              />
+
+              <QSlideTransition>
+                <!-- q-slide-transitionはheightだけをアニメーションするのでdivで囲う -->
+                <div v-show="experimentalSetting.enableMultiTrack">
+                  <DialogCell
+                    title="ソング：トラックファイル名パターン"
+                    description="書き出す際のファイル名のパターンをカスタマイズできます。"
+                    :currentValue="savingSetting.songTrackFileNamePattern"
+                    @click="showSongTrackAudioFilePatternEditDialog = true"
+                  />
                 </div>
-                <QSpace />
-                <div class="q-px-sm text-ellipsis">
-                  {{ savingSetting.fileNamePattern }}
-                </div>
-                <QBtn
-                  label="編集する"
-                  unelevated
-                  color="background"
-                  textColor="display"
-                  class="text-no-wrap q-mr-sm"
-                  @click="showsFilePatternEditDialog = true"
-                />
-              </QCardActions>
+              </QSlideTransition>
 
               <ToggleCell
                 title="上書き防止"
@@ -554,7 +571,14 @@ import FileNamePatternDialog from "./FileNamePatternDialog.vue";
 import ToggleCell from "./ToggleCell.vue";
 import ButtonToggleCell from "./ButtonToggleCell.vue";
 import BaseCell from "./BaseCell.vue";
+import DialogCell from "./DialogCell.vue";
 import { useStore } from "@/store";
+import {
+  DEFAULT_AUDIO_FILE_BASE_NAME_TEMPLATE,
+  DEFAULT_SONG_AUDIO_FILE_BASE_NAME_TEMPLATE,
+  buildAudioFileNameFromRawData,
+  buildSongTrackAudioFileNameFromRawData,
+} from "@/store/utility";
 import {
   isProduction,
   SavingSetting,
@@ -801,6 +825,22 @@ const engineUseGpuOptions = [
   { label: "GPU", value: true },
 ];
 
+const audioFileNamePattern = computed({
+  get: () => store.state.savingSetting.fileNamePattern,
+  set: (fileNamePattern: string) => {
+    handleSavingSettingChange("fileNamePattern", fileNamePattern);
+  },
+});
+const songTrackFileNamePattern = computed({
+  get: () => store.state.savingSetting.songTrackFileNamePattern,
+  set: (songTrackFileNamePattern: string) => {
+    handleSavingSettingChange(
+      "songTrackFileNamePattern",
+      songTrackFileNamePattern,
+    );
+  },
+});
+
 const gpuSwitchEnabled = (engineId: EngineId) => {
   // CPU版でもGPUモードからCPUモードに変更できるようにする
   return store.getters.ENGINE_CAN_USE_GPU(engineId) || engineUseGpu.value;
@@ -893,7 +933,8 @@ watchEffect(async () => {
 const [splitTextWhenPaste, changeSplitTextWhenPaste] =
   useRootMiscSetting("splitTextWhenPaste");
 
-const showsFilePatternEditDialog = ref(false);
+const showAudioFilePatternEditDialog = ref(false);
+const showSongTrackAudioFilePatternEditDialog = ref(false);
 
 const selectedEngineIdRaw = ref<EngineId | undefined>(undefined);
 const selectedEngineId = computed({

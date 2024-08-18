@@ -370,7 +370,7 @@ export function buildAudioFileNameFromRawData(
   });
 }
 
-export function buildSongAudioFileNameFromRawData(
+export function buildSongTrackAudioFileNameFromRawData(
   fileNamePattern = DEFAULT_SONG_AUDIO_FILE_NAME_TEMPLATE,
   vars = DEFAULT_SONG_AUDIO_FILE_NAME_VARIABLES,
 ): string {

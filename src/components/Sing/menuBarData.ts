@@ -48,7 +48,7 @@ export const useMenuBarData = () => {
         },
         store.state.experimentalSetting.enableMultiTrack && {
           type: "button",
-          label: "トラック毎の音声を出力",
+          label: "トラックごとに音声を出力",
           onClick: () => {
             void exportStemWaveFile();
           },
