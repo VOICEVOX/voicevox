@@ -127,8 +127,8 @@ watch(
   outline-offset: 1px;
   border: 1px solid var(--scheme-color-inverse-surface);
   box-shadow:
-    oklch(from var(--scheme-color-scrim) l c h / 0.19) 0px 8px 20px,
-    oklch(from var(--scheme-color-scrim) l c h / 0.23) 0px 6px 6px;
+    oklch(from var(--scheme-color-shadow) l c h / 0.19) 0px 8px 20px,
+    oklch(from var(--scheme-color-shadow) l c h / 0.23) 0px 6px 6px;
   outline: 0;
   border-radius: 4px;
   padding: 0 4px;
