@@ -4,7 +4,7 @@
     <div class="sing-configs">
       <QBtn
         v-if="multiTrackEnabled"
-        class="q-mx-xs"
+        class="q-mr-sm"
         :icon="isSidebarOpen ? 'menu_open' : 'menu'"
         round
         flat
@@ -558,7 +558,7 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   min-height: 64px;
-  padding: 8px 12px;
+  padding: 8px 12px 8px 8px;
   width: 100%;
   letter-spacing: 0.01em;
 }

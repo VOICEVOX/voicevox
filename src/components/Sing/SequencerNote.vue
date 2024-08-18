@@ -432,7 +432,7 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
 
   // ピッチ編集モード
   &.below-pitch {
-    color: var(--scheme-color-outline);
+    color: var(--scheme-color-on-surface-variant);
     text-shadow:
       -1px -1px 0 var(--scheme-color-surface-variant),
       1px -1px 0 var(--scheme-color-surface-variant),

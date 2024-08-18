@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from "vue";
+import { ref, watch, computed, watchEffect, Ref } from "vue";
 import * as PIXI from "pixi.js";
 import AsyncLock from "async-lock";
 import { useStore } from "@/store";
@@ -32,7 +32,7 @@ import { getLast } from "@/sing/utility";
 import { getOrThrow } from "@/helpers/mapHelper";
 
 type PitchLine = {
-  readonly color: Color;
+  color: Ref<Color>;
   readonly width: number;
   readonly pitchDataMap: Map<PitchDataHash, PitchData>;
   readonly lineStripMap: Map<PitchDataHash, LineStrip>;
@@ -77,17 +77,35 @@ const singingGuidesInSelectedTrack = computed(() => {
 
 // NOTE: ピッチラインの色をテーマに応じて調節する
 // 動的カラースキーマに対応後、テーマに応じた色をオブジェクトから取得できるようにする
-const originalPitchLineColor = isDark.value
-  ? new Color(102, 102, 102, 255)
-  : new Color(198, 198, 198, 255);
-const originalPitchLine: PitchLine = {
-  color: originalPitchLineColor,
+
+// FIXME: ダークとライトで色を変更しているが再描画しないと色が変わらないので要修正
+// 値の持ち方も要修正
+const originalPitchLineColorLightWorkaround = [198, 198, 198, 255];
+const originalPitchLineColorDarkWorkaround = [102, 102, 102, 255];
+const originalPitchLine = {
+  color: isDark.value
+    ? ref(
+        new Color(
+          originalPitchLineColorDarkWorkaround[0],
+          originalPitchLineColorDarkWorkaround[1],
+          originalPitchLineColorDarkWorkaround[2],
+          originalPitchLineColorDarkWorkaround[3],
+        ),
+      )
+    : ref(
+        new Color(
+          originalPitchLineColorLightWorkaround[0],
+          originalPitchLineColorLightWorkaround[1],
+          originalPitchLineColorLightWorkaround[2],
+          originalPitchLineColorLightWorkaround[3],
+        ),
+      ),
   width: 1.5,
   pitchDataMap: new Map(),
   lineStripMap: new Map(),
 };
 const pitchEditLine: PitchLine = {
-  color: new Color(151, 216, 163, 255),
+  color: ref(new Color(151, 216, 163, 255)),
   width: 1.5,
   pitchDataMap: new Map(),
   lineStripMap: new Map(),
@@ -139,14 +157,18 @@ const updateLineStrips = (pitchLine: PitchLine) => {
     let lineStrip = removedLineStrips.pop();
     if (lineStrip != undefined) {
       if (
-        !lineStrip.color.equals(pitchLine.color) ||
+        !lineStrip.color.equals(pitchLine.color.value) ||
         lineStrip.width !== pitchLine.width
       ) {
         throw new Error("Color or width does not match.");
       }
       lineStrip.numOfPoints = dataLength;
     } else {
-      lineStrip = new LineStrip(dataLength, pitchLine.color, pitchLine.width);
+      lineStrip = new LineStrip(
+        dataLength,
+        pitchLine.color.value,
+        pitchLine.width,
+      );
     }
     // pitchEditLineの場合は最後に追加する（originalより前面に表示）
     if (pitchLine === pitchEditLine) {
@@ -400,6 +422,25 @@ watch(
   },
   { immediate: true },
 );
+
+// FIXME: テーマ切り替え時にカラー変更するが再描画が必要なため要修正
+// 値の持ち方も同様
+watchEffect(() => {
+  originalPitchLine.color.value = isDark.value
+    ? new Color(
+        originalPitchLineColorDarkWorkaround[0],
+        originalPitchLineColorDarkWorkaround[1],
+        originalPitchLineColorDarkWorkaround[2],
+        originalPitchLineColorDarkWorkaround[3],
+      )
+    : new Color(
+        originalPitchLineColorLightWorkaround[0],
+        originalPitchLineColorLightWorkaround[1],
+        originalPitchLineColorLightWorkaround[2],
+        originalPitchLineColorLightWorkaround[3],
+      );
+  renderInNextFrame = true;
+});
 
 watch(
   () => [
