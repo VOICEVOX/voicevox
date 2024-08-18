@@ -13,7 +13,7 @@ const fetch = require("node-fetch");
 const BINARY_BASE_PATH = resolve(__dirname, "vendored");
 // 7zのバイナリデータのパス
 const SEVEN_ZIP_BINARY_PATH = join(BINARY_BASE_PATH, "7z", "7za.exe");
-// 環境構築したいバイナリデータの配列オブジェクト
+// ダウンロードしたいバイナリデータの配列オブジェクト
 const WANT_TO_DOWNLOAD_BINARIES = [
   {
     name: "typos",
@@ -26,7 +26,12 @@ const WANT_TO_DOWNLOAD_BINARIES = [
   //   version: 'v1.2.3', // 指定したバージョン
   // }
 ];
-
+// OS名を定義するオブジェクト
+const OS = {
+  LINUX: "linux",
+  MACOS: "darwin",
+  WINDOWS: "win32",
+};
 // OSのコマンドを非同期関数として処理させるために必要な関数
 const execAsync = promisify(exec);
 
@@ -39,9 +44,7 @@ const execAsync = promisify(exec);
 async function runCommand(command, description) {
   console.log(`実行中: ${description} ...`);
   try {
-    const { stdout, stderr } = await execAsync(command);
-    if (stdout) console.log(stdout);
-    if (stderr) console.error(stderr);
+    await execAsync(command);
   } catch (error) {
     console.error(`エラーが発生しました: ${error.message}`);
     throw error;
@@ -55,37 +58,53 @@ async function runCommand(command, description) {
  * @param {Function} downloadBinaryFunction - OSに応じたバイナリのダウンロード関数
  */
 async function processBinaries(binaries, downloadBinaryFunction) {
-  binaries.map(async (binary) => {
-    // もし各バイナリのディレクトリがあるならダウンロードされているとみなし、スキップする
-    const binaryPath = join(BINARY_BASE_PATH, binary.name);
-    const binaryFilePath = join(binaryPath, binary.name);
+  // 各バイナリを非同期で並行してダウンロードする
+  await Promise.all(
+    binaries.map(async (binary) => {
+      // もしバイナリが既に存在する場合、ダウンロードをスキップする
+      const binaryPath = join(BINARY_BASE_PATH, binary.name);
+      let binaryFilePath;
 
-    if (existsSync(binaryFilePath)) {
-      console.log(`${binary.name} already downloaded`);
-      return;
-    }
+      // OSに応じたバイナリを確認し、存在するならダウンロードをスキップする
+      switch (platform()) {
+        case OS.LINUX:
+          binaryFilePath = `${binaryPath}/${binary.name}`;
+          break;
+        case OS.MACOS:
+          binaryFilePath = `${binaryPath}/${binary.name}`;
+          break;
+        case OS.WINDOWS:
+          binaryFilePath = `${binaryPath}\\${binary.name}.exe`;
+          break;
+        default:
+          throw new Error("サポートされていないOSです");
+      }
 
-    try {
-      console.log(`${binary.name} のダウンロードURLを取得中...`);
-      // 各バイナリのGithubのリポジトリのURLを探す
-      const url = await getBinaryURL(binary.repo, binary.version);
+      if (existsSync(binaryFilePath)) {
+        console.log(`${binary.name} already downloaded`);
+        return;
+      }
 
-      // 各バイナリのダウンロード
-      await downloadBinaryFunction(binary.name, url);
-    } catch (err) {
-      console.error(
-        `${binary.name} のインストール中にエラーが発生しました: ${err.message}`,
-      );
-    }
-  });
+      try {
+        console.log(`${binary.name} のダウンロードURLを取得中...`);
+        const url = await getBinaryURL(binary.repo, binary.version);
+
+        await downloadBinaryFunction({ name: binary.name, url });
+      } catch (err) {
+        console.error(
+          `${binary.name} のインストール中にエラーが発生しました: ${err.message}`,
+        );
+      }
+    }),
+  );
 }
 
 /**
- * GitHub APIを使って、リポジトリのリリースから各プラットフォームのダウンロードURLを取得する関数
+ * GitHub APIを使って、リポジトリのリリースから特定のOSのダウンロードURLを取得する関数
  *
  * @param {string} repo - GitHubリポジトリの名前（例: 'crate-ci/typos'）
  * @param {string} [version='latest'] - インストールしたい特定のバージョン（省略した場合は最新バージョン）
- * @returns {Promise<Object>} 各プラットフォームのダウンロードURLを含むオブジェクト
+ * @returns {Promise<Object>} 特定のOSに対応するバイナリのダウンロードURL
  */
 async function getBinaryURL(repo, version = "latest") {
   const apiUrl =
@@ -101,6 +120,7 @@ async function getBinaryURL(repo, version = "latest") {
   }
 
   const data = await response.json();
+
   const url = {
     linux: null,
     darwin: null,
@@ -120,17 +140,16 @@ async function getBinaryURL(repo, version = "latest") {
 
 /**
  * Linuxに合わせたバイナリをダウンロードするための関数
- * @param {string} name - バイナリの名前
- * @param {Object} url - 各プラットフォームのダウンロードURLを含むオブジェクト
+ * @param {Object} binary - バイナリの情報を含むオブジェクト
  */
-async function downloadBinaryForLinux(name, url) {
+async function downloadBinaryForLinux({ name, url }) {
   const binaryPath = join(BINARY_BASE_PATH, name);
+  const tarballPath = `${binaryPath}/${name}.tar.gz`;
 
+  // もし各バイナリのディレクトリがないなら新しく作成する
   if (!existsSync(binaryPath)) {
     mkdirSync(binaryPath, { recursive: true });
   }
-
-  const tarballPath = `${binaryPath}/${name}.tar.gz`;
 
   await runCommand(
     `curl -L ${url.linux} -o ${tarballPath}`,
@@ -151,17 +170,16 @@ async function downloadBinaryForLinux(name, url) {
 
 /**
  * Windowsに合わせたバイナリをダウンロードするための関数
- * @param {string} name - バイナリの名前
- * @param {Object} url - 各プラットフォームのダウンロードURLを含むオブジェクト
+ * @param {Object} binary - バイナリの情報を含むオブジェクト
  */
-async function downloadBinaryForWin(name, url) {
+async function downloadBinaryForWin({ name, url }) {
   const binaryPath = join(BINARY_BASE_PATH, name);
+  const zipFilePath = `${binaryPath}\\${name}.zip`;
 
+  // もし各バイナリのディレクトリがないなら新しく作成する
   if (!existsSync(binaryPath)) {
     mkdirSync(binaryPath, { recursive: true });
   }
-
-  const zipFilePath = `${binaryPath}\\${name}.zip`;
 
   await runCommand(
     `curl -L ${url.win32} -o ${zipFilePath}`,
@@ -178,17 +196,16 @@ async function downloadBinaryForWin(name, url) {
 
 /**
  * macOSに合わせたバイナリをダウンロードするための関数
- * @param {string} name - バイナリの名前
- * @param {Object} url - 各プラットフォームのダウンロードURLを含むオブジェクト
+ * @param {Object} binary - バイナリの情報を含むオブジェクト
  */
-async function downloadBinaryForMac(name, url) {
+async function downloadBinaryForMac({ name, url }) {
   const binaryPath = join(BINARY_BASE_PATH, name);
+  const tarballPath = `${binaryPath}/${name}.tar.gz`;
 
+  // もし各バイナリのディレクトリがないなら新しく作成する
   if (!existsSync(binaryPath)) {
     mkdirSync(binaryPath, { recursive: true });
   }
-
-  const tarballPath = `${binaryPath}/${name}.tar.gz`;
 
   await runCommand(
     `curl -L ${url.darwin} -o ${tarballPath}`,
@@ -213,18 +230,17 @@ async function downloadBinaryForMac(name, url) {
  * @param {Array<Object>} binaries - 複数のバイナリの情報を含む配列オブジェクト
  */
 async function main(binaries) {
-  const os = platform();
   let downloadBinaryFunction;
 
   // OSに応じたインストール関数を選択
-  switch (os) {
-    case "linux":
+  switch (platform()) {
+    case OS.LINUX:
       downloadBinaryFunction = downloadBinaryForLinux;
       break;
-    case "darwin":
+    case OS.MACOS:
       downloadBinaryFunction = downloadBinaryForMac;
       break;
-    case "win32":
+    case OS.WINDOWS:
       downloadBinaryFunction = downloadBinaryForWin;
       break;
     default:
