@@ -1635,7 +1635,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   background: var(--scheme-color-inverse-surface);
   will-change: transform;
   transform: translate3d(0, 0, 0);
-  z-index: 100;
+  z-index: 3;
 }
 
 .rect-select-preview {

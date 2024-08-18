@@ -113,7 +113,7 @@ watch(
   position: absolute;
   top: -2px;
   left: -2px;
-  z-index: 10;
+  z-index: 2;
 }
 
 .lyric-input {
