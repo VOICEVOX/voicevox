@@ -14,6 +14,8 @@ import { SelectionHelperForQInput } from "@/helpers/SelectionHelperForQInput";
  * 切り取りやコピー、貼り付けの処理を行う
  */
 export function useRightClickContextMenu(
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+  contextMenuRef: Ref<InstanceType<typeof ContextMenu> | undefined>,
   qInputRef: Ref<QInput | undefined>,
   inputText: Ref<string>,
 ) {
@@ -25,10 +27,8 @@ export function useRightClickContextMenu(
    */
   const willFocusOrBlur = ref(false);
 
-  const contextMenu = ref<InstanceType<typeof ContextMenu>>();
-
   const contextMenuHeader = ref<string | undefined>("");
-  const readyForContextMenu = () => {
+  const startContextMenuOperation = () => {
     const MAX_HEADER_LENGTH = 15;
     const SHORTED_HEADER_FRAGMENT_LENGTH = 5;
 
@@ -80,7 +80,7 @@ export function useRightClickContextMenu(
       label: "切り取り",
       onClick: async () => {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-        contextMenu.value?.hide();
+        contextMenuRef.value?.hide();
         await handleCut();
       },
       disableWhenUiLocked: false,
@@ -90,10 +90,8 @@ export function useRightClickContextMenu(
       label: "コピー",
       onClick: async () => {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-        contextMenu.value?.hide();
-        if (inputSelection) {
-          await navigator.clipboard.writeText(inputSelection.getAsString());
-        }
+        contextMenuRef.value?.hide();
+        await navigator.clipboard.writeText(inputSelection.getAsString());
       },
       disableWhenUiLocked: false,
     },
@@ -102,7 +100,7 @@ export function useRightClickContextMenu(
       label: "貼り付け",
       onClick: async () => {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-        contextMenu.value?.hide();
+        contextMenuRef.value?.hide();
         await handlePaste();
       },
       disableWhenUiLocked: false,
@@ -113,7 +111,7 @@ export function useRightClickContextMenu(
       label: "全選択",
       onClick: async () => {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-        contextMenu.value?.hide();
+        contextMenuRef.value?.hide();
         qInputRef.value?.select();
       },
       disableWhenUiLocked: false,
@@ -125,13 +123,13 @@ export function useRightClickContextMenu(
 
     const text = inputSelection.getAsString();
     const start = inputSelection.selectionStart;
-    setSurfaceOrYomiText(inputSelection.getReplacedStringTo(""));
+    setText(inputSelection.getReplacedStringTo(""));
     await nextTick();
-    await navigator.clipboard.writeText(text);
+    void navigator.clipboard.writeText(text);
     inputSelection.setCursorPosition(start);
   };
 
-  const setSurfaceOrYomiText = (text: string | number | null) => {
+  const setText = (text: string | number | null) => {
     if (typeof text !== "string") throw new Error("typeof text !== 'string'");
     inputText.value = text;
   };
@@ -139,11 +137,13 @@ export function useRightClickContextMenu(
   const handlePaste = async (options?: { text?: string }) => {
     if (!inputSelection) return;
 
+    // NOTE: 自動的に削除される文字があることを念の為考慮している
+    // FIXME: 考慮は要らないかも
     const text = options ? options.text : await navigator.clipboard.readText();
     if (text == undefined) return;
     const beforeLength = inputText.value.length;
     const end = inputSelection.selectionEnd ?? 0;
-    setSurfaceOrYomiText(inputSelection.getReplacedStringTo(text));
+    setText(inputSelection.getReplacedStringTo(text));
     await nextTick();
     inputSelection.setCursorPosition(
       end + inputText.value.length - beforeLength,
@@ -166,10 +166,9 @@ export function useRightClickContextMenu(
   };
 
   return {
-    contextMenu,
     contextMenuHeader,
     contextMenudata,
-    readyForContextMenu,
+    startContextMenuOperation,
     clearInputSelection,
     endContextMenuOperation,
   };

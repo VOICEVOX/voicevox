@@ -137,7 +137,7 @@
                   ref="surfaceContextMenu"
                   :header="surfaceContextMenuHeader"
                   :menudata="surfaceContextMenudata"
-                  @beforeShow="readyForSurfaceContextMenu()"
+                  @beforeShow="startSurfaceContextMenuOperation()"
                   @beforeHide="endSurfaceContextMenuOperation()"
                 />
               </QInput>
@@ -162,7 +162,7 @@
                   ref="yomiContextMenu"
                   :header="yomiContextMenuHeader"
                   :menudata="yomiContextMenudata"
-                  @beforeShow="readyForYomiContextMenu()"
+                  @beforeShow="startYomiContextMenuOperation()"
                   @beforeHide="endYomiContextMenuOperation()"
                 />
               </QInput>
@@ -692,23 +692,24 @@ const toDialogClosedState = () => {
   dictionaryManageDialogOpenedComputed.value = false;
 };
 
-const {
-  contextMenu: surfaceContextMenu,
-  contextMenuHeader: surfaceContextMenuHeader,
-  contextMenudata: surfaceContextMenudata,
-  readyForContextMenu: readyForSurfaceContextMenu,
-  clearInputSelection: clearSurfaceInputSelection,
-  endContextMenuOperation: endSurfaceContextMenuOperation,
-} = useRightClickContextMenu(surfaceInput, surface);
+const surfaceContextMenu = ref<InstanceType<typeof ContextMenu>>();
+const yomiContextMenu = ref<InstanceType<typeof ContextMenu>>();
 
 const {
-  contextMenu: yomiContextMenu,
+  contextMenuHeader: surfaceContextMenuHeader,
+  contextMenudata: surfaceContextMenudata,
+  startContextMenuOperation: startSurfaceContextMenuOperation,
+  clearInputSelection: clearSurfaceInputSelection,
+  endContextMenuOperation: endSurfaceContextMenuOperation,
+} = useRightClickContextMenu(surfaceContextMenu, surfaceInput, surface);
+
+const {
   contextMenuHeader: yomiContextMenuHeader,
   contextMenudata: yomiContextMenudata,
-  readyForContextMenu: readyForYomiContextMenu,
+  startContextMenuOperation: startYomiContextMenuOperation,
   clearInputSelection: clearYomiInputSelection,
   endContextMenuOperation: endYomiContextMenuOperation,
-} = useRightClickContextMenu(yomiInput, yomi);
+} = useRightClickContextMenu(yomiContextMenu, yomiInput, yomi);
 </script>
 
 <style lang="scss" scoped>
