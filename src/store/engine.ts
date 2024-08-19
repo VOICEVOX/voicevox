@@ -19,9 +19,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
 
       // マルチエンジンオフモード時はデフォルトエンジンだけにする。
       if (state.isMultiEngineOffMode) {
-        engineInfos = engineInfos.filter(
-          (engineInfo) => engineInfo.type === "default",
-        );
+        engineInfos = engineInfos.filter((engineInfo) => engineInfo.isDefault);
       }
       const engineIds = engineInfos.map((engineInfo) => engineInfo.uuid);
 
@@ -55,8 +53,8 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
   GET_SORTED_ENGINE_INFOS: {
     getter: (state) => {
       return Object.values(state.engineInfos).sort((a, b) => {
-        const isDefaultA = a.type === "default" ? 1 : 0;
-        const isDefaultB = b.type === "default" ? 1 : 0;
+        const isDefaultA = a.isDefault ? 1 : 0;
+        const isDefaultB = b.isDefault ? 1 : 0;
         if (isDefaultA !== isDefaultB) {
           return isDefaultB - isDefaultA;
         }
