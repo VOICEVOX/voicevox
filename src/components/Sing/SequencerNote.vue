@@ -236,8 +236,8 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
 </script>
 
 <style scoped lang="scss">
-@use "@/styles/variables" as vars;
-@use "@/styles/colors" as colors;
+@use "@/styles/v2/variables" as vars;
+@use "@/styles/v2/colors" as colors;
 
 .note {
   position: absolute;
@@ -322,7 +322,11 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
 
   &.below-pitch {
     .note-bar {
-      background-color: var(--scheme-color-background);
+      background-color: color-mix(
+        in oklch,
+        var(--scheme-color-surface),
+        transparent 62%
+      );
       border-color: var(--scheme-color-outline-variant);
       outline: none;
     }
@@ -383,7 +387,7 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
   // アンチエイリアス
   -webkit-font-smoothing: antialiased;
   bottom: 100%;
-  z-index: 1;
+  z-index: vars.$z-index-sing-note;
   // NOTE: 以下の目的でz-indexを使用
   // - 特にズーム倍率が高い場合に次のノートに被った場合に見えなくなるため可読性を確保
   // - ピッチラインを文字とノートバーの間に配置する
@@ -430,16 +434,8 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
 
   // ピッチ編集モード
   &.below-pitch {
-    color: var(--scheme-color-on-background);
-    text-shadow:
-      -1px -1px 0 var(--scheme-color-background),
-      1px -1px 0 var(--scheme-color-background),
-      -1px 1px 0 var(--scheme-color-background),
-      1px 1px 0 var(--scheme-color-background),
-      0 -1px 0 var(--scheme-color-background),
-      0 1px 0 var(--scheme-color-background),
-      -1px 0 0 var(--scheme-color-background),
-      1px 0 0 var(--scheme-color-background);
+    color: color-mix(in oklch, var(--scheme-color-on-surface), transparent 40%);
+    text-shadow: none;
   }
 }
 </style>

@@ -106,14 +106,14 @@ watch(
 </script>
 
 <style scoped lang="scss">
-@use "@/styles/variables" as vars;
+@use "@/styles/v2/variables" as vars;
 @use "@/styles/colors" as colors;
 
 .lyric-input-container {
   position: absolute;
   top: -2px;
   left: -2px;
-  z-index: 2;
+  z-index: vars.$z-index-sing-lyric-input;
 }
 
 .lyric-input {

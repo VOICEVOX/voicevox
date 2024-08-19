@@ -92,7 +92,7 @@ const originalPitchLine: PitchLine = {
   lineStripMap: new Map(),
 };
 const pitchEditLine: PitchLine = {
-  color: ref(new Color(151, 216, 163, 255)),
+  color: ref(new Color(59, 210, 107, 255)),
   width: 1.5,
   pitchDataMap: new Map(),
   lineStripMap: new Map(),
@@ -422,9 +422,9 @@ watch(
 // 値の持ち方も同様
 watchEffect(() => {
   const newColor = new Color(
-    isDark.value ? 152 : 168,
-    isDark.value ? 152 : 168,
-    isDark.value ? 152 : 168,
+    isDark.value ? 152 : 180,
+    isDark.value ? 152 : 180,
+    isDark.value ? 152 : 180,
     255,
   );
   if (!originalPitchLineColor.value.equals(newColor)) {
@@ -519,12 +519,12 @@ onUnmountedOrDeactivated(() => {
 </script>
 
 <style scoped lang="scss">
-@use "@/styles/variables" as vars;
-@use "@/styles/colors" as colors;
+@use "@/styles/v2/variables" as vars;
+@use "@/styles/v2/colors" as colors;
 
 .canvas-container {
   overflow: hidden;
-  z-index: 0;
+  z-index: vars.$z-index-sing-pitch-front;
   pointer-events: none;
   position: relative;
 

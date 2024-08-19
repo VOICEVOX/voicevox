@@ -49,11 +49,10 @@ const className = computed(() => {
     var(--scheme-color-secondary-fixed-dim) 70%,
     var(--scheme-color-background)
   );
-  /*
   @include tint-if-in-other-track(
     "background-color",
     color-mix(in srgb, colors.$primary 80%, colors.$background)
-  ); */
+  );
 }
 
 .now-rendering {

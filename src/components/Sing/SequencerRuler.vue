@@ -194,7 +194,7 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-@use "@/styles/variables" as vars;
+@use "@/styles/v2/variables" as vars;
 @use "@/styles/colors" as colors;
 
 .sequencer-ruler {
@@ -213,6 +213,7 @@ onUnmounted(() => {
   background: var(--scheme-color-inverse-surface);
   pointer-events: none;
   will-change: transform;
+  z-index: vars.$z-index-sing-playhead;
 }
 
 .sequencer-ruler-measure-number {

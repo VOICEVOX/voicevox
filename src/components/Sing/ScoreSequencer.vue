@@ -1525,7 +1525,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 </script>
 
 <style scoped lang="scss">
-@use "@/styles/variables" as vars;
+@use "@/styles/v2/variables" as vars;
 @use "@/styles/colors" as colors;
 
 .score-sequencer {
@@ -1612,7 +1612,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   top: 0;
   left: -0.5px;
   width: 1px;
-  background: var(--scheme-color-secondary-container);
+  background: var(--scheme-color-inverse-primary);
   pointer-events: none;
 }
 
@@ -1646,7 +1646,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   background: var(--scheme-color-inverse-surface);
   will-change: transform;
   transform: translate3d(0, 0, 0);
-  z-index: 3;
+  z-index: vars.$z-index-sing-playhead;
 }
 
 .rect-select-preview {
