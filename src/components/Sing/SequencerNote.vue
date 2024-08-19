@@ -322,10 +322,14 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
 
   &.below-pitch {
     .note-bar {
-      background-color: var(--scheme-color-surface-variant);
+      background-color: var(--scheme-color-background);
       border-color: var(--scheme-color-outline-variant);
       outline: none;
-      opacity: 0.8;
+    }
+
+    .note-left-edge:hover,
+    .note-right-edge:hover {
+      cursor: inherit;
     }
 
     &.overlapping,
@@ -426,16 +430,16 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
 
   // ピッチ編集モード
   &.below-pitch {
-    color: var(--scheme-color-on-surface-variant);
+    color: var(--scheme-color-on-background);
     text-shadow:
-      -1px -1px 0 var(--scheme-color-surface-variant),
-      1px -1px 0 var(--scheme-color-surface-variant),
-      -1px 1px 0 var(--scheme-color-surface-variant),
-      1px 1px 0 var(--scheme-color-surface-variant),
-      0 -1px 0 var(--scheme-color-surface-variant),
-      0 1px 0 var(--scheme-color-surface-variant),
-      -1px 0 0 var(--scheme-color-surface-variant),
-      1px 0 0 var(--scheme-color-surface-variant);
+      -1px -1px 0 var(--scheme-color-background),
+      1px -1px 0 var(--scheme-color-background),
+      -1px 1px 0 var(--scheme-color-background),
+      1px 1px 0 var(--scheme-color-background),
+      0 -1px 0 var(--scheme-color-background),
+      0 1px 0 var(--scheme-color-background),
+      -1px 0 0 var(--scheme-color-background),
+      1px 0 0 var(--scheme-color-background);
   }
 }
 </style>

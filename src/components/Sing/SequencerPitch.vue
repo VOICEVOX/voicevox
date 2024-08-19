@@ -79,9 +79,9 @@ const singingGuidesInSelectedTrack = computed(() => {
 // 動的カラースキーマに対応後、テーマに応じた色をオブジェクトから取得できるようにする
 const originalPitchLineColor = ref(
   new Color(
-    isDark.value ? 102 : 198,
-    isDark.value ? 102 : 198,
-    isDark.value ? 102 : 198,
+    isDark.value ? 152 : 168,
+    isDark.value ? 152 : 168,
+    isDark.value ? 152 : 168,
     255,
   ),
 );
@@ -422,9 +422,9 @@ watch(
 // 値の持ち方も同様
 watchEffect(() => {
   const newColor = new Color(
-    isDark.value ? 102 : 198,
-    isDark.value ? 102 : 198,
-    isDark.value ? 102 : 198,
+    isDark.value ? 152 : 168,
+    isDark.value ? 152 : 168,
+    isDark.value ? 152 : 168,
     255,
   );
   if (!originalPitchLineColor.value.equals(newColor)) {
