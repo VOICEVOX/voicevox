@@ -118,7 +118,7 @@
 
           <!-- 右側のpane -->
           <div
-            v-if="wordEditing"
+            v-show="wordEditing"
             class="col-8 no-wrap text-no-wrap word-editor"
           >
             <div class="row q-pl-md q-mt-md">
@@ -129,9 +129,18 @@
                 class="word-input"
                 dense
                 :disable="uiLocked"
+                @focus="clearSurfaceInputSelection()"
                 @blur="setSurface(surface)"
                 @keydown.enter="yomiFocus"
-              />
+              >
+                <ContextMenu
+                  ref="surfaceContextMenu"
+                  :header="surfaceContextMenuHeader"
+                  :menudata="surfaceContextMenudata"
+                  @beforeShow="startSurfaceContextMenuOperation()"
+                  @beforeHide="endSurfaceContextMenuOperation()"
+                />
+              </QInput>
             </div>
             <div class="row q-pl-md q-pt-sm">
               <div class="text-h6">読み</div>
@@ -142,12 +151,20 @@
                 dense
                 :error="!isOnlyHiraOrKana"
                 :disable="uiLocked"
+                @focus="clearYomiInputSelection()"
                 @blur="setYomi(yomi)"
                 @keydown.enter="setYomiWhenEnter"
               >
                 <template #error>
                   読みに使える文字はひらがなとカタカナのみです。
                 </template>
+                <ContextMenu
+                  ref="yomiContextMenu"
+                  :header="yomiContextMenuHeader"
+                  :menudata="yomiContextMenudata"
+                  @beforeShow="startYomiContextMenuOperation()"
+                  @beforeHide="endYomiContextMenuOperation()"
+                />
               </QInput>
             </div>
             <div class="row q-pl-md q-mt-lg text-h6">アクセント調整</div>
@@ -272,6 +289,8 @@
 import { computed, ref, watch } from "vue";
 import { QInput } from "quasar";
 import AudioAccent from "@/components/Talk/AudioAccent.vue";
+import ContextMenu from "@/components/Menu/ContextMenu.vue";
+import { useRightClickContextMenu } from "@/composables/useRightClickContextMenu";
 import { useStore } from "@/store";
 import type { FetchAudioResult } from "@/store/type";
 import { AccentPhrase, UserDictWord } from "@/openapi";
@@ -676,6 +695,25 @@ const toWordEditingState = () => {
 const toDialogClosedState = () => {
   dictionaryManageDialogOpenedComputed.value = false;
 };
+
+const surfaceContextMenu = ref<InstanceType<typeof ContextMenu>>();
+const yomiContextMenu = ref<InstanceType<typeof ContextMenu>>();
+
+const {
+  contextMenuHeader: surfaceContextMenuHeader,
+  contextMenudata: surfaceContextMenudata,
+  startContextMenuOperation: startSurfaceContextMenuOperation,
+  clearInputSelection: clearSurfaceInputSelection,
+  endContextMenuOperation: endSurfaceContextMenuOperation,
+} = useRightClickContextMenu(surfaceContextMenu, surfaceInput, surface);
+
+const {
+  contextMenuHeader: yomiContextMenuHeader,
+  contextMenudata: yomiContextMenudata,
+  startContextMenuOperation: startYomiContextMenuOperation,
+  clearInputSelection: clearYomiInputSelection,
+  endContextMenuOperation: endYomiContextMenuOperation,
+} = useRightClickContextMenu(yomiContextMenu, yomiInput, yomi);
 </script>
 
 <style lang="scss" scoped>
