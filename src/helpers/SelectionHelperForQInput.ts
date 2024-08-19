@@ -60,8 +60,7 @@ export class SelectionHelperForQInput {
   }
 
   /**
-   * 不具合修正のため、nativeElはキャッシュせず、常に新しく取得し直す
-   * 参照: https://github.com/VOICEVOX/voicevox/pull/2156#discussion_r1718659808
+   * NOTE: 最新のtextfieldを反映すべきなのでnativeElはキャッシュしない
    */
   private getNativeEl() {
     const nativeEl = this.textfield.value?.nativeEl;

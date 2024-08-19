@@ -1,5 +1,5 @@
 /**
- * テキスト編集エリアの右クリック
+ * テキスト編集エリアの右クリックメニュー用の処理
  * 参考実装: https://github.com/VOICEVOX/voicevox/pull/1374/files#diff-444f263f72d4db11fe82c672d5c232eb4c29d29dbc1ffd20e279d586b1b2c180
  */
 
@@ -10,8 +10,7 @@ import ContextMenu from "@/components/Menu/ContextMenu.vue";
 import { SelectionHelperForQInput } from "@/helpers/SelectionHelperForQInput";
 
 /**
- * コンポーネントの中で呼ばれた <QInput> に対して
- * 切り取りやコピー、貼り付けの処理を行う
+ * <QInput> に対して切り取りやコピー、貼り付けの処理を行う
  */
 export function useRightClickContextMenu(
   // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
@@ -135,8 +134,6 @@ export function useRightClickContextMenu(
   };
 
   const handlePaste = async (options?: { text?: string }) => {
-    if (!inputSelection) return;
-
     // NOTE: 自動的に削除される文字があることを念の為考慮している
     // FIXME: 考慮は要らないかも
     const text = options ? options.text : await navigator.clipboard.readText();
