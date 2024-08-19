@@ -60,7 +60,7 @@ export class SelectionHelperForQInput {
   }
 
   /**
-   * NOTE: 最新のtextfieldを反映すべきなのでnativeElはキャッシュしない
+   * NOTE: 最新の textfield を反映すべきなので nativeEl はキャッシュしない
    */
   private getNativeEl() {
     const nativeEl = this.textfield.value?.nativeEl;
