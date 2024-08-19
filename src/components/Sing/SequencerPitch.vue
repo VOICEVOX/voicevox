@@ -79,9 +79,9 @@ const singingGuidesInSelectedTrack = computed(() => {
 // 動的カラースキーマに対応後、テーマに応じた色をオブジェクトから取得できるようにする
 const originalPitchLineColor = ref(
   new Color(
-    isDark.value ? 152 : 168,
-    isDark.value ? 152 : 168,
-    isDark.value ? 152 : 168,
+    isDark.value ? 152 : 180,
+    isDark.value ? 152 : 180,
+    isDark.value ? 152 : 180,
     255,
   ),
 );
@@ -92,7 +92,7 @@ const originalPitchLine: PitchLine = {
   lineStripMap: new Map(),
 };
 const pitchEditLine: PitchLine = {
-  color: ref(new Color(59, 210, 107, 255)),
+  color: ref(new Color(103, 203, 127, 255)),
   width: 1.5,
   pitchDataMap: new Map(),
   lineStripMap: new Map(),
@@ -422,9 +422,9 @@ watch(
 // 値の持ち方も同様
 watchEffect(() => {
   const newColor = new Color(
-    isDark.value ? 152 : 180,
-    isDark.value ? 152 : 180,
-    isDark.value ? 152 : 180,
+    isDark.value ? 140 : 170,
+    isDark.value ? 140 : 170,
+    isDark.value ? 140 : 170,
     255,
   );
   if (!originalPitchLineColor.value.equals(newColor)) {

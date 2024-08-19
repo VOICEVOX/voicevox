@@ -322,12 +322,12 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
 
   &.below-pitch {
     .note-bar {
-      background-color: color-mix(
+      background-color: var(--scheme-color-sing-note-bar-below-pitch-container);
+      border-color: color-mix(
         in oklch,
-        var(--scheme-color-surface),
-        transparent 62%
+        var(--scheme-color-sing-note-bar-border),
+        transparent 80%
       );
-      border-color: var(--scheme-color-outline-variant);
       outline: none;
     }
 
@@ -339,8 +339,12 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     &.overlapping,
     &.invalid-phrase {
       .note-bar {
-        background: var(--scheme-color-surface-variant);
-        border-color: var(--scheme-color-error);
+        background-color: transparent;
+        border-color: color-mix(
+          in oklch,
+          var(--scheme-color-error),
+          transparent 62%
+        );
         outline: none;
       }
     }
@@ -411,7 +415,11 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
 
   // プレビュー中
   &.preview-lyric {
-    color: var(--scheme-color-sing-on-note-bar-preview-container);
+    color: color-mix(
+      in oklch,
+      var(--scheme-color-sing-on-note-bar-preview-container),
+      transparent 62%
+    );
     text-shadow:
       -1px -1px 0 var(--scheme-color-sing-note-bar-preview-container),
       1px -1px 0 var(--scheme-color-sing-note-bar-preview-container),
@@ -421,21 +429,56 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
       0 1px 0 var(--scheme-color-sing-note-bar-preview-container),
       -1px 0 0 var(--scheme-color-sing-note-bar-preview-container),
       1px 0 0 var(--scheme-color-sing-note-bar-preview-container);
-    opacity: 0.38;
   }
 
   // エラー
   &.invalid-phrase,
   &.overlapping {
-    color: var(--scheme-color-on-error-container);
-    text-shadow: none;
-    opacity: 0.38;
+    color: color-mix(
+      in oklch,
+      var(--scheme-color-on-error-container),
+      transparent 38%
+    );
+    text-shadow:
+      -1px -1px 0 var(--scheme-color-surface-variant),
+      1px -1px 0 var(--scheme-color-surface-variant),
+      -1px 1px 0 var(--scheme-color-surface-variant),
+      1px 1px 0 var(--scheme-color-surface-variant),
+      0 -1px 0 var(--scheme-color-surface-variant),
+      0 1px 0 var(--scheme-color-surface-variant),
+      -1px 0 0 var(--scheme-color-surface-variant),
+      1px 0 0 var(--scheme-color-surface-variant);
+
+    &.selected {
+      text-shadow:
+        -1px -1px 0 var(--scheme-color-error-container),
+        1px -1px 0 var(--scheme-color-error-container),
+        -1px 1px 0 var(--scheme-color-error-container),
+        1px 1px 0 var(--scheme-color-error-container),
+        0 -1px 0 var(--scheme-color-error-container),
+        0 1px 0 var(--scheme-color-error-container),
+        -1px 0 0 var(--scheme-color-error-container),
+        1px 0 0 var(--scheme-color-error-container);
+    }
   }
 
   // ピッチ編集モード
   &.below-pitch {
-    color: color-mix(in oklch, var(--scheme-color-on-surface), transparent 40%);
+    color: color-mix(
+      in oklch,
+      var(--scheme-color-on-background),
+      transparent 50%
+    );
     text-shadow: none;
+
+    &.invalid-phrase,
+    &.overlapping {
+      color: color-mix(
+        in oklch,
+        var(--scheme-color-on-error-container),
+        transparent 62%
+      );
+    }
   }
 }
 </style>
