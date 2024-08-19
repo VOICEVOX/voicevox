@@ -241,7 +241,7 @@
                 textColor="display"
                 class="text-no-wrap text-bold q-mr-sm"
                 :disable="uiLocked || !isWordChanged"
-                @click="resetWord"
+                @click="resetWord(selectedId)"
                 >リセット</QBtn
               >
               <QBtn
@@ -602,13 +602,17 @@ const deleteWord = async () => {
     toInitialState();
   }
 };
-const resetWord = async () => {
+const resetWord = async (id: string) => {
   const result = await store.dispatch("SHOW_WARNING_DIALOG", {
     title: "単語の変更をリセットしますか？",
     message: "単語の変更は破棄されてリセットされます。",
     actionName: "リセット",
   });
   if (result === "OK") {
+    selectedId.value = id;
+    surface.value = userDict.value[id].surface;
+    void setYomi(userDict.value[id].yomi, true);
+    wordPriority.value = userDict.value[id].priority;
     toWordEditingState();
   }
 };
