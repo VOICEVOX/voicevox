@@ -6,7 +6,7 @@ const baseEngineInfo = envEngineInfoSchema
 
 export const defaultEngine: EngineInfo = {
   ...baseEngineInfo,
-  type: "path", // FIXME: ダミーで"path"にしている。エンジンAPIのURLを設定できるようにし、type: "URL"にする
+  type: "path", // FIXME: ダミーで"path"にしているので、エンジンAPIのURLを設定できるようにし、type: "URL"にする
   isDefault: true,
 };
 export const directoryHandleStoreKey = "directoryHandle";
