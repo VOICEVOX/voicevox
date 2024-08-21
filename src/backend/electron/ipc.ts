@@ -1,44 +1,32 @@
-import { ipcMain, IpcMainInvokeEvent, BrowserWindow } from "electron";
+import { BrowserWindow, ipcMain, IpcMainInvokeEvent } from "electron";
 import log from "electron-log/main";
-import { IpcIHData, IpcSOData } from "@/type/ipc";
+import { IpcMainHandle, IpcMainSend } from "@/type/ipc";
 
-export function ipcMainHandle<T extends keyof IpcIHData>(
-  channel: T,
-  listener: (
-    event: IpcMainInvokeEvent,
-    ...args: IpcIHData[T]["args"]
-  ) => IpcIHData[T]["return"] | Promise<IpcIHData[T]["return"]>,
-): void;
-export function ipcMainHandle(
-  channel: string,
-  listener: (event: IpcMainInvokeEvent, ...args: unknown[]) => unknown,
-): void {
-  const errorHandledListener = (
-    event: IpcMainInvokeEvent,
-    ...args: unknown[]
-  ) => {
-    try {
-      validateIpcSender(event);
-      return listener(event, ...args);
-    } catch (e) {
-      log.error(e);
-    }
-  };
-  ipcMain.handle(channel, errorHandledListener);
-}
+export const ipcMainHandle = new Proxy({} as IpcMainHandle, {
+  get:
+    (_, channel: string) =>
+    (listener: (event: IpcMainInvokeEvent, ...args: unknown[]) => unknown) => {
+      const errorHandledListener = (
+        event: IpcMainInvokeEvent,
+        ...args: unknown[]
+      ) => {
+        try {
+          validateIpcSender(event);
+          return listener(event, ...args);
+        } catch (e) {
+          log.error(e);
+        }
+      };
+      ipcMain.handle(channel, errorHandledListener);
+    },
+});
 
-export function ipcMainSend<T extends keyof IpcSOData>(
-  win: BrowserWindow,
-  channel: T,
-  ...args: IpcSOData[T]["args"]
-): void;
-export function ipcMainSend(
-  win: BrowserWindow,
-  channel: string,
-  ...args: unknown[]
-): void {
-  win.webContents.send(channel, ...args);
-}
+export const ipcMainSend = new Proxy({} as IpcMainSend, {
+  get:
+    (_, channel: string) =>
+    (win: BrowserWindow, ...args: unknown[]) =>
+      win.webContents.send(channel, ...args),
+});
 
 /** IPCメッセージの送信元を確認する */
 const validateIpcSender = (event: IpcMainInvokeEvent) => {

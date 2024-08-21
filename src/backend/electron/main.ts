@@ -169,7 +169,7 @@ const onEngineProcessError = (engineInfo: EngineInfo, error: Error) => {
   // winが作られる前にエラーが発生した場合はwinへの通知を諦める
   // FIXME: winが作られた後にエンジンを起動させる
   if (win != undefined) {
-    ipcMainSend(win, "DETECTED_ENGINE_ERROR", { engineId });
+    ipcMainSend.DETECTED_ENGINE_ERROR(win, { engineId });
   } else {
     log.error(`onEngineProcessError: win is undefined`);
   }
@@ -256,7 +256,7 @@ async function installVvppEngineWithWarning({
       })
       .then((result) => {
         if (result.response === 0) {
-          ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE", {
+          ipcMainSend.CHECK_EDITED_AND_NOT_SAVE(win, {
             closeOrReload: "reload",
           });
         }
@@ -476,7 +476,7 @@ async function createWindow() {
   win.on("close", (event) => {
     if (!appState.willQuit) {
       event.preventDefault();
-      ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE", {
+      ipcMainSend.CHECK_EDITED_AND_NOT_SAVE(win, {
         closeOrReload: "close",
       });
       return;
@@ -610,7 +610,7 @@ if (isMac) {
 }
 
 // プロセス間通信
-ipcMainHandle("GET_APP_INFOS", () => {
+ipcMainHandle.GET_APP_INFOS(() => {
   const name = app.getName();
   const version = app.getVersion();
   return {
@@ -619,39 +619,39 @@ ipcMainHandle("GET_APP_INFOS", () => {
   };
 });
 
-ipcMainHandle("GET_HOW_TO_USE_TEXT", () => {
+ipcMainHandle.GET_HOW_TO_USE_TEXT(() => {
   return howToUseText;
 });
 
-ipcMainHandle("GET_POLICY_TEXT", () => {
+ipcMainHandle.GET_POLICY_TEXT(() => {
   return policyText;
 });
 
-ipcMainHandle("GET_OSS_LICENSES", () => {
+ipcMainHandle.GET_OSS_LICENSES(() => {
   return ossLicenses;
 });
 
-ipcMainHandle("GET_UPDATE_INFOS", () => {
+ipcMainHandle.GET_UPDATE_INFOS(() => {
   return updateInfos;
 });
 
-ipcMainHandle("GET_OSS_COMMUNITY_INFOS", () => {
+ipcMainHandle.GET_OSS_COMMUNITY_INFOS(() => {
   return ossCommunityInfos;
 });
 
-ipcMainHandle("GET_CONTACT_TEXT", () => {
+ipcMainHandle.GET_CONTACT_TEXT(() => {
   return contactText;
 });
 
-ipcMainHandle("GET_Q_AND_A_TEXT", () => {
+ipcMainHandle.GET_Q_AND_A_TEXT(() => {
   return qAndAText;
 });
 
-ipcMainHandle("GET_PRIVACY_POLICY_TEXT", () => {
+ipcMainHandle.GET_PRIVACY_POLICY_TEXT(() => {
   return privacyPolicyText;
 });
 
-ipcMainHandle("GET_ALT_PORT_INFOS", () => {
+ipcMainHandle.GET_ALT_PORT_INFOS(() => {
   return engineManager.altPortInfo;
 });
 
@@ -721,7 +721,7 @@ const retryShowSaveDialogWhileSafeDir = async <
   }
 };
 
-ipcMainHandle("SHOW_AUDIO_SAVE_DIALOG", async (_, { title, defaultPath }) => {
+ipcMainHandle.SHOW_AUDIO_SAVE_DIALOG(async (_, { title, defaultPath }) => {
   const result = await retryShowSaveDialogWhileSafeDir(() =>
     dialog.showSaveDialog(win, {
       title,
@@ -733,7 +733,7 @@ ipcMainHandle("SHOW_AUDIO_SAVE_DIALOG", async (_, { title, defaultPath }) => {
   return result.filePath;
 });
 
-ipcMainHandle("SHOW_TEXT_SAVE_DIALOG", async (_, { title, defaultPath }) => {
+ipcMainHandle.SHOW_TEXT_SAVE_DIALOG(async (_, { title, defaultPath }) => {
   const result = await retryShowSaveDialogWhileSafeDir(() =>
     dialog.showSaveDialog(win, {
       title,
@@ -748,7 +748,7 @@ ipcMainHandle("SHOW_TEXT_SAVE_DIALOG", async (_, { title, defaultPath }) => {
 /**
  * 保存先になるディレクトリを選ぶダイアログを表示する。
  */
-ipcMainHandle("SHOW_SAVE_DIRECTORY_DIALOG", async (_, { title }) => {
+ipcMainHandle.SHOW_SAVE_DIRECTORY_DIALOG(async (_, { title }) => {
   const result = await retryShowSaveDialogWhileSafeDir(() =>
     dialog.showOpenDialog(win, {
       title,
@@ -765,7 +765,7 @@ ipcMainHandle("SHOW_SAVE_DIRECTORY_DIALOG", async (_, { title }) => {
   return result.filePaths[0];
 });
 
-ipcMainHandle("SHOW_VVPP_OPEN_DIALOG", async (_, { title, defaultPath }) => {
+ipcMainHandle.SHOW_VVPP_OPEN_DIALOG(async (_, { title, defaultPath }) => {
   const result = await dialog.showOpenDialog(win, {
     title,
     defaultPath,
@@ -781,7 +781,7 @@ ipcMainHandle("SHOW_VVPP_OPEN_DIALOG", async (_, { title, defaultPath }) => {
  * ディレクトリ選択ダイアログを表示する。
  * 保存先として選ぶ場合は SHOW_SAVE_DIRECTORY_DIALOG を使うべき。
  */
-ipcMainHandle("SHOW_OPEN_DIRECTORY_DIALOG", async (_, { title }) => {
+ipcMainHandle.SHOW_OPEN_DIRECTORY_DIALOG(async (_, { title }) => {
   const result = await dialog.showOpenDialog(win, {
     title,
     properties: ["openDirectory", "createDirectory", "treatPackageAsDirectory"],
@@ -792,7 +792,7 @@ ipcMainHandle("SHOW_OPEN_DIRECTORY_DIALOG", async (_, { title }) => {
   return result.filePaths[0];
 });
 
-ipcMainHandle("SHOW_PROJECT_SAVE_DIALOG", async (_, { title, defaultPath }) => {
+ipcMainHandle.SHOW_PROJECT_SAVE_DIALOG(async (_, { title, defaultPath }) => {
   const result = await retryShowSaveDialogWhileSafeDir(() =>
     dialog.showSaveDialog(win, {
       title,
@@ -807,7 +807,7 @@ ipcMainHandle("SHOW_PROJECT_SAVE_DIALOG", async (_, { title, defaultPath }) => {
   return result.filePath;
 });
 
-ipcMainHandle("SHOW_PROJECT_LOAD_DIALOG", async (_, { title }) => {
+ipcMainHandle.SHOW_PROJECT_LOAD_DIALOG(async (_, { title }) => {
   const result = await dialog.showOpenDialog(win, {
     title,
     filters: [{ name: "VOICEVOX Project file", extensions: ["vvproj"] }],
@@ -819,7 +819,7 @@ ipcMainHandle("SHOW_PROJECT_LOAD_DIALOG", async (_, { title }) => {
   return result.filePaths;
 });
 
-ipcMainHandle("SHOW_MESSAGE_DIALOG", (_, { type, title, message }) => {
+ipcMainHandle.SHOW_MESSAGE_DIALOG((_, { type, title, message }) => {
   return dialog.showMessageBox(win, {
     type,
     title,
@@ -827,8 +827,7 @@ ipcMainHandle("SHOW_MESSAGE_DIALOG", (_, { type, title, message }) => {
   });
 });
 
-ipcMainHandle(
-  "SHOW_QUESTION_DIALOG",
+ipcMainHandle.SHOW_QUESTION_DIALOG(
   (_, { type, title, message, buttons, cancelId, defaultId }) => {
     return dialog
       .showMessageBox(win, {
@@ -846,7 +845,7 @@ ipcMainHandle(
   },
 );
 
-ipcMainHandle("SHOW_WARNING_DIALOG", (_, { title, message }) => {
+ipcMainHandle.SHOW_WARNING_DIALOG((_, { title, message }) => {
   return dialog.showMessageBox(win, {
     type: "warning",
     title,
@@ -854,7 +853,7 @@ ipcMainHandle("SHOW_WARNING_DIALOG", (_, { title, message }) => {
   });
 });
 
-ipcMainHandle("SHOW_ERROR_DIALOG", (_, { title, message }) => {
+ipcMainHandle.SHOW_ERROR_DIALOG((_, { title, message }) => {
   return dialog.showMessageBox(win, {
     type: "error",
     title,
@@ -862,7 +861,7 @@ ipcMainHandle("SHOW_ERROR_DIALOG", (_, { title, message }) => {
   });
 });
 
-ipcMainHandle("SHOW_IMPORT_FILE_DIALOG", (_, { title, name, extensions }) => {
+ipcMainHandle.SHOW_IMPORT_FILE_DIALOG((_, { title, name, extensions }) => {
   return dialog.showOpenDialogSync(win, {
     title,
     filters: [{ name: name ?? "Text", extensions: extensions ?? ["txt"] }],
@@ -870,22 +869,22 @@ ipcMainHandle("SHOW_IMPORT_FILE_DIALOG", (_, { title, name, extensions }) => {
   })?.[0];
 });
 
-ipcMainHandle("IS_AVAILABLE_GPU_MODE", () => {
+ipcMainHandle.IS_AVAILABLE_GPU_MODE(() => {
   return hasSupportedGpu(process.platform);
 });
 
-ipcMainHandle("IS_MAXIMIZED_WINDOW", () => {
+ipcMainHandle.IS_MAXIMIZED_WINDOW(() => {
   return win.isMaximized();
 });
 
-ipcMainHandle("CLOSE_WINDOW", () => {
+ipcMainHandle.CLOSE_WINDOW(() => {
   appState.willQuit = true;
   win.destroy();
 });
-ipcMainHandle("MINIMIZE_WINDOW", () => {
+ipcMainHandle.MINIMIZE_WINDOW(() => {
   win.minimize();
 });
-ipcMainHandle("MAXIMIZE_WINDOW", () => {
+ipcMainHandle.MAXIMIZE_WINDOW(() => {
   if (win.isMaximized()) {
     win.unmaximize();
   } else {
@@ -893,11 +892,11 @@ ipcMainHandle("MAXIMIZE_WINDOW", () => {
   }
 });
 
-ipcMainHandle("OPEN_LOG_DIRECTORY", () => {
+ipcMainHandle.OPEN_LOG_DIRECTORY(() => {
   void shell.openPath(app.getPath("logs"));
 });
 
-ipcMainHandle("ENGINE_INFOS", () => {
+ipcMainHandle.ENGINE_INFOS(() => {
   // エンジン情報を設定ファイルに保存しないためにstoreは使わない
   return engineManager.fetchEngineInfos();
 });
@@ -906,18 +905,18 @@ ipcMainHandle("ENGINE_INFOS", () => {
  * エンジンを再起動する。
  * エンジンの起動が開始したらresolve、起動が失敗したらreject。
  */
-ipcMainHandle("RESTART_ENGINE", async (_, { engineId }) => {
+ipcMainHandle.RESTART_ENGINE(async (_, { engineId }) => {
   await engineManager.restartEngine(engineId);
   // TODO: setEngineInfosからexportFileはロックしたほうがより良い
   runtimeInfoManager.setEngineInfos(engineManager.fetchEngineInfos());
   await runtimeInfoManager.exportFile();
 });
 
-ipcMainHandle("OPEN_ENGINE_DIRECTORY", async (_, { engineId }) => {
+ipcMainHandle.OPEN_ENGINE_DIRECTORY(async (_, { engineId }) => {
   openEngineDirectory(engineId);
 });
 
-ipcMainHandle("HOTKEY_SETTINGS", (_, { newData }) => {
+ipcMainHandle.HOTKEY_SETTINGS((_, { newData }) => {
   if (newData != undefined) {
     const hotkeySettings = configManager.get("hotkeySettings");
     const hotkeySetting = hotkeySettings.find(
@@ -931,7 +930,7 @@ ipcMainHandle("HOTKEY_SETTINGS", (_, { newData }) => {
   return configManager.get("hotkeySettings");
 });
 
-ipcMainHandle("THEME", (_, { newData }) => {
+ipcMainHandle.THEME((_, { newData }) => {
   if (newData != undefined) {
     configManager.set("currentTheme", newData);
     return;
@@ -942,14 +941,14 @@ ipcMainHandle("THEME", (_, { newData }) => {
   };
 });
 
-ipcMainHandle("ON_VUEX_READY", () => {
+ipcMainHandle.ON_VUEX_READY(() => {
   win.show();
 });
 
-ipcMainHandle("CHECK_FILE_EXISTS", (_, { file }) => {
+ipcMainHandle.CHECK_FILE_EXISTS((_, { file }) => {
   return fs.existsSync(file);
 });
-ipcMainHandle("CHANGE_PIN_WINDOW", () => {
+ipcMainHandle.CHANGE_PIN_WINDOW(() => {
   if (win.isAlwaysOnTop()) {
     win.setAlwaysOnTop(false);
   } else {
@@ -957,46 +956,46 @@ ipcMainHandle("CHANGE_PIN_WINDOW", () => {
   }
 });
 
-ipcMainHandle("GET_DEFAULT_HOTKEY_SETTINGS", () => {
+ipcMainHandle.GET_DEFAULT_HOTKEY_SETTINGS(() => {
   return defaultHotkeySettings;
 });
 
-ipcMainHandle("GET_DEFAULT_TOOLBAR_SETTING", () => {
+ipcMainHandle.GET_DEFAULT_TOOLBAR_SETTING(() => {
   return defaultToolbarButtonSetting;
 });
 
-ipcMainHandle("GET_SETTING", (_, key) => {
+ipcMainHandle.GET_SETTING((_, key) => {
   return configManager.get(key);
 });
 
-ipcMainHandle("SET_SETTING", (_, key, newValue) => {
+ipcMainHandle.SET_SETTING((_, key, newValue) => {
   configManager.set(key, newValue);
   return configManager.get(key);
 });
 
-ipcMainHandle("SET_ENGINE_SETTING", async (_, engineId, engineSetting) => {
+ipcMainHandle.SET_ENGINE_SETTING(async (_, engineId, engineSetting) => {
   const engineSettings = configManager.get("engineSettings");
   engineSettings[engineId] = engineSetting;
   configManager.set(`engineSettings`, engineSettings);
 });
 
-ipcMainHandle("SET_NATIVE_THEME", (_, source) => {
+ipcMainHandle.SET_NATIVE_THEME((_, source) => {
   nativeTheme.themeSource = source;
 });
 
-ipcMainHandle("INSTALL_VVPP_ENGINE", async (_, path: string) => {
+ipcMainHandle.INSTALL_VVPP_ENGINE(async (_, path: string) => {
   return await installVvppEngine(path);
 });
 
-ipcMainHandle("UNINSTALL_VVPP_ENGINE", async (_, engineId: EngineId) => {
+ipcMainHandle.UNINSTALL_VVPP_ENGINE(async (_, engineId: EngineId) => {
   return await uninstallVvppEngine(engineId);
 });
 
-ipcMainHandle("VALIDATE_ENGINE_DIR", (_, { engineDir }) => {
+ipcMainHandle.VALIDATE_ENGINE_DIR((_, { engineDir }) => {
   return engineManager.validateEngineDir(engineDir);
 });
 
-ipcMainHandle("RELOAD_APP", async (_, { isMultiEngineOffMode }) => {
+ipcMainHandle.RELOAD_APP(async (_, { isMultiEngineOffMode }) => {
   win.hide(); // FIXME: ダミーページ表示のほうが良い
 
   // 一旦適当なURLに飛ばしてページをアンロードする
@@ -1017,7 +1016,7 @@ ipcMainHandle("RELOAD_APP", async (_, { isMultiEngineOffMode }) => {
   win.show();
 });
 
-ipcMainHandle("WRITE_FILE", (_, { filePath, buffer }) => {
+ipcMainHandle.WRITE_FILE((_, { filePath, buffer }) => {
   try {
     fs.writeFileSync(filePath, new DataView(buffer));
     return success(undefined);
@@ -1028,7 +1027,7 @@ ipcMainHandle("WRITE_FILE", (_, { filePath, buffer }) => {
   }
 });
 
-ipcMainHandle("READ_FILE", async (_, { filePath }) => {
+ipcMainHandle.READ_FILE(async (_, { filePath }) => {
   try {
     const result = await fs.promises.readFile(filePath);
     return success(result);
@@ -1071,7 +1070,7 @@ app.on("window-all-closed", () => {
 app.on("before-quit", async (event) => {
   if (!appState.willQuit) {
     event.preventDefault();
-    ipcMainSend(win, "CHECK_EDITED_AND_NOT_SAVE", { closeOrReload: "close" });
+    ipcMainSend.CHECK_EDITED_AND_NOT_SAVE(win, { closeOrReload: "close" });
     return;
   }
 
@@ -1264,7 +1263,7 @@ app.on("second-instance", async (event, argv, workDir, rawData) => {
     }
   } else if (data.filePath.endsWith(".vvproj")) {
     log.info("Second instance launched with vvproj file");
-    ipcMainSend(win, "LOAD_PROJECT_FILE", {
+    ipcMainSend.LOAD_PROJECT_FILE(win, {
       filePath: data.filePath,
       confirm: true,
     });
