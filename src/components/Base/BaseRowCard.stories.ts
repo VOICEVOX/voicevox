@@ -12,6 +12,11 @@ export default meta;
 type Story = StoryObj<typeof BaseRowCard>;
 
 export const Default: Story = {
+  args: {
+    title: "Title",
+    description: "Description",
+    clickable: false,
+  },
   render: (args) => ({
     components: { BaseRowCard, BaseButton },
     setup() {
@@ -20,8 +25,13 @@ export const Default: Story = {
     template:
       '<BaseRowCard v-bind="args"><BaseButton label="RightControl" /></BaseRowCard>',
   }),
+};
+
+export const Clickable: Story = {
+  ...Default,
   args: {
     title: "Title",
     description: "Description",
+    clickable: true,
   },
 };
