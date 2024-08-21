@@ -15,7 +15,9 @@
       ref="sequencerBody"
       class="sequencer-body"
       :class="{
+        'edit-note': editTarget === 'NOTE',
         'rect-selecting': editTarget === 'NOTE' && shiftKey,
+        'edit-pitch': editTarget === 'PITCH',
         'cursor-draw': editTarget === 'PITCH' && !ctrlKey,
         'resizing-note': isResizingNote,
       }"
