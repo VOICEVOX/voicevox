@@ -18,7 +18,4 @@ export const Default: Story = {
     template:
       '<BaseScrollArea style="width: 100%; height:480px" v-bind="args"><div style="width: 100%; height:4800px;"></div></BaseScrollArea>',
   }),
-  args: {
-    //👇 The args you need here will depend on your component
-  },
 };

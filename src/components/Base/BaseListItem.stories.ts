@@ -10,6 +10,9 @@ export default meta;
 type Story = StoryObj<typeof BaseListItem>;
 
 export const Default: Story = {
+  args: {
+    selected: false,
+  },
   render: (args) => ({
     components: { BaseListItem },
     setup() {
@@ -17,25 +20,11 @@ export const Default: Story = {
     },
     template: '<BaseListItem v-bind="args">ListItem</BaseListItem>',
   }),
-  args: {
-    selected: false,
-  },
 };
 
 export const Selected: Story = {
+  ...Default,
   args: {
     selected: true,
   },
-
-  render: (args) => ({
-    components: {
-      BaseListItem,
-    },
-
-    setup() {
-      return { args };
-    },
-
-    template: '<BaseListItem v-bind="args">ListItem</BaseListItem>',
-  }),
 };

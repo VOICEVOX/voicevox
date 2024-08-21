@@ -15,16 +15,6 @@ export const Default: Story = {
     variant: "default",
     icon: "settings",
   },
-
-  render: (args) => ({
-    components: { BaseButton },
-
-    setup() {
-      return { args };
-    },
-
-    template: '<BaseButton v-bind="args" />',
-  }),
 };
 
 export const Primary: Story = {
@@ -33,18 +23,6 @@ export const Primary: Story = {
     variant: "primary",
     icon: "settings",
   },
-
-  render: (args) => ({
-    components: {
-      BaseButton,
-    },
-
-    setup() {
-      return { args };
-    },
-
-    template: '<BaseButton v-bind="args" />',
-  }),
 };
 
 export const Danger: Story = {
@@ -53,16 +31,4 @@ export const Danger: Story = {
     variant: "danger",
     icon: "settings",
   },
-
-  render: (args) => ({
-    components: {
-      BaseButton,
-    },
-
-    setup() {
-      return { args };
-    },
-
-    template: '<BaseButton v-bind="args" />',
-  }),
 };

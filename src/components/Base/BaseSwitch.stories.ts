@@ -15,16 +15,6 @@ export const Unchecked: Story = {
     checkedLabel: "On",
     checked: false,
   },
-
-  render: (args) => ({
-    components: { BaseSwitch },
-
-    setup() {
-      return { args };
-    },
-
-    template: '<BaseSwitch v-bind="args" />',
-  }),
 };
 
 export const Checked: Story = {
@@ -33,16 +23,4 @@ export const Checked: Story = {
     checkedLabel: "On",
     checked: true,
   },
-
-  render: (args) => ({
-    components: {
-      BaseSwitch,
-    },
-
-    setup() {
-      return { args };
-    },
-
-    template: '<BaseSwitch v-bind="args" />',
-  }),
 };
