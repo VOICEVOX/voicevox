@@ -324,12 +324,11 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
   &.below-pitch {
     .note-bar {
       box-sizing: content-box;
-      background-color: oklch(
-        var(--lr-55) var(--secondary-c) var(--secondary-h) / 0.38
-      );
-      height: 4px !important;
-      bottom: calc(50% - 2px);
-      border: 0;
+      background-color: var(--scheme-color-sing-note-bar-below-pitch-container);
+      height: 8px !important;
+      bottom: calc(50% - 4px);
+      border: 1px solid var(--scheme-color-sing-note-bar-outline);
+      border-radius: 2px;
       outline: 0;
     }
 
@@ -439,14 +438,14 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
       transparent 0%
     );
     text-shadow:
-      -1px -1px 0 oklch(from var(--scheme-color-error-container) l 0.02 h),
-      1px -1px 0 oklch(from var(--scheme-color-error-container) l 0.02 h),
-      -1px 1px 0 oklch(from var(--scheme-color-error-container) l 0.02 h),
-      1px 1px 0 oklch(from var(--scheme-color-error-container) l 0.02 h),
-      0 -1px 0 oklch(from var(--scheme-color-error-container) l 0.02 h),
-      0 1px 0 oklch(from var(--scheme-color-error-container) l 0.02 h),
-      -1px 0 0 oklch(from var(--scheme-color-error-container) l 0.02 h),
-      1px 0 0 oklch(from var(--scheme-color-error-container) l 0.02 h);
+      -1px -1px 0 oklch(from var(--scheme-color-error-container) l 0.018 h),
+      1px -1px 0 oklch(from var(--scheme-color-error-container) l 0.018 h),
+      -1px 1px 0 oklch(from var(--scheme-color-error-container) l 0.018 h),
+      1px 1px 0 oklch(from var(--scheme-color-error-container) l 0.018 h),
+      0 -1px 0 oklch(from var(--scheme-color-error-container) l 0.018 h),
+      0 1px 0 oklch(from var(--scheme-color-error-container) l 0.018 h),
+      -1px 0 0 oklch(from var(--scheme-color-error-container) l 0.018 h),
+      1px 0 0 oklch(from var(--scheme-color-error-container) l 0.018 h);
 
     &.selected {
       text-shadow:
@@ -463,7 +462,7 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
 
   // ピッチ編集モード
   &.below-pitch {
-    color: var(--scheme-color-on-background);
+    color: var(--scheme-color-on-secondary-container);
     text-shadow:
       -1px -1px 0 var(--scheme-color-background),
       1px -1px 0 var(--scheme-color-background),
@@ -475,7 +474,7 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
       1px 0 0 var(--scheme-color-background);
     opacity: 0.38;
     z-index: vars.$z-index-sing-note - 1;
-    bottom: calc(100% + 1.25ch);
+    bottom: calc(100% + 1.5ch);
     transform: none;
 
     &.invalid-phrase,

@@ -72,6 +72,6 @@ const width = computed(() => {
 }
 
 .edit-pitch .note .shadow-line {
-  opacity: 0;
+  opacity: 0.3;
 }
 </style>
