@@ -8,14 +8,20 @@ name: "Chromatic"
 
 on:
   push:
-    branches:
-      - main
+    # TOOD: あとで戻す
+    # branches:
+    #   - main
+
+env:
+  # Chromatic用にNodeのメモリを増やす
+  # https://github.com/chromaui/chromatic-cli/issues/550#issuecomment-1150713820
+  NODE_OPTIONS: --max-old-space-size=16384
 
 jobs:
   chromatic:
     name: Run Chromatic
     runs-on: ubuntu-latest
-    if: github.repository_owner == 'VOICEVOX'
+    # if: github.repository_owner == 'VOICEVOX'  # TODO: あとで戻す
     steps:
       - uses: actions/checkout@v4
         with:
