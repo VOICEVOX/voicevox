@@ -8,9 +8,8 @@ name: "Chromatic"
 
 on:
   push:
-    # TOOD: あとで戻す
-    # branches:
-    #   - main
+    branches:
+      - main
 
 env:
   # Chromatic用にNodeのメモリを増やす
@@ -21,7 +20,7 @@ jobs:
   chromatic:
     name: Run Chromatic
     runs-on: ubuntu-latest
-    # if: github.repository_owner == 'VOICEVOX'  # TODO: あとで戻す
+    if: github.repository_owner == 'VOICEVOX'
     steps:
       - uses: actions/checkout@v4
         with:
