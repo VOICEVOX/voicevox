@@ -129,16 +129,17 @@
             :wordPriority
             :uiLocked
             :userDict
-            @setYomi="setYomi"
-            @createUILockAction="createUILockAction"
-            @loadingDictProcess="loadingDictProcess"
-            @computeRegisteredAccent="computeRegisteredAccent"
-            @discardOrNotDialog="discardOrNotDialog"
-            @toWordEditingState="toWordEditingState"
-            @cancel="cancel"
-            @toInitialState="toInitialState"
+            :setYomi
+            :createUILockAction
+            :loadingDictProcess
+            :computeRegisteredAccent
+            :discardOrNotDialog
+            :toWordEditingState
+            :cancel
+            :toInitialState
             @updateSelectedId="updateSelectedId"
-            @updateSurface="updateSurface"
+            @updateSurface="onUpdateSurface"
+            @onUpdateYomi="onUpdateYomi"
             @updateAccentPhraseValue="updateAccentPhraseValueAccent"
             @updateAccentPhrase="updateAccentPhrase"
             @updateWordPriority="updateWordPriority"
@@ -235,8 +236,16 @@ const updateSelectedId = (newId: string) => {
   selectedId.value = newId;
 };
 
-const updateSurface = (newSurface: string) => {
-  surface.value = newSurface;
+const onUpdateSurface = (newSurface: string | number | null) => {
+  if (typeof newSurface === "string") {
+    surface.value = newSurface;
+  }
+};
+
+const onUpdateYomi = (newYomi: string | number | null) => {
+  if (typeof newYomi === "string") {
+    yomi.value = newYomi;
+  }
 };
 
 const voiceComputed = computed(() => {
@@ -497,85 +506,5 @@ const toDialogClosedState = () => {
   height: 100%;
   position: absolute;
   z-index: 10;
-}
-
-.word-editor {
-  display: flex;
-  flex-flow: column;
-  height: calc(
-    100vh - #{vars.$menubar-height + vars.$toolbar-height +
-      vars.$window-border-width}
-  ) !important;
-  overflow: auto;
-}
-
-.word-input {
-  padding-left: 10px;
-  width: calc(66vw - 80px);
-
-  :deep(.q-field__control) {
-    height: 2rem;
-  }
-
-  :deep(.q-placeholder) {
-    padding: 0;
-    font-size: 20px;
-  }
-
-  :deep(.q-field__after) {
-    height: 2rem;
-  }
-}
-
-.desc-row {
-  color: rgba(colors.$display-rgb, 0.5);
-  font-size: 12px;
-}
-
-.play-button {
-  margin: auto 0;
-  padding-right: 16px;
-}
-
-.accent-phrase-table {
-  flex-grow: 1;
-  align-self: stretch;
-
-  display: flex;
-  height: 130px;
-  overflow-x: scroll;
-  width: calc(66vw - 140px);
-
-  .mora-table {
-    display: inline-grid;
-    align-self: stretch;
-    grid-template-rows: 1fr 60px 30px;
-
-    .text-cell {
-      padding: 0;
-      min-width: 20px;
-      max-width: 20px;
-      grid-row-start: 3;
-      text-align: center;
-      white-space: nowrap;
-      color: colors.$display;
-      position: relative;
-    }
-
-    .splitter-cell {
-      min-width: 20px;
-      max-width: 20px;
-      grid-row: 3 / span 1;
-      z-index: vars.$detail-view-splitter-cell-z-index;
-    }
-  }
-}
-
-.save-delete-reset-buttons {
-  padding: 20px;
-
-  display: flex;
-  flex: 1;
-  align-items: flex-end;
 }
 </style>

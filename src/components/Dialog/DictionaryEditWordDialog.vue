@@ -4,10 +4,11 @@
       <div class="text-h6">単語</div>
       <QInput
         ref="surfaceInput"
-        v-model="$props.surface"
+        :modelValue="$props.surface"
+        :disable="$props.uiLocked"
         class="word-input"
         dense
-        :disable="$props.uiLocked"
+        @update="onUpdateSurface"
         @focus="clearSurfaceInputSelection()"
         @blur="setSurface(props.surface)"
         @keydown.enter="yomiFocus"
@@ -25,11 +26,12 @@
       <div class="text-h6">読み</div>
       <QInput
         ref="yomiInput"
-        v-model="$props.yomi"
-        class="word-input q-pb-none"
-        dense
-        :error="!$props.isOnlyHiraOrKana"
+        :modelValue="$props.yomi"
         :disable="uiLocked"
+        class="word-input q-pb-none"
+        :error="!$props.isOnlyHiraOrKana"
+        dense
+        @update="onUpdateYomi"
         @focus="clearYomiInputSelection()"
         @blur="$props.setYomi(props.yomi)"
         @keydown.enter="setYomiWhenEnter"
@@ -169,7 +171,7 @@
 </template>
 
 <script setup lang="ts">
-import { ComputedRef, ref } from "vue";
+import { ref } from "vue";
 import { QInput } from "quasar";
 import AudioAccent from "@/components/Talk/AudioAccent.vue";
 import ContextMenu from "@/components/Menu/ContextMenu.vue";
@@ -177,6 +179,7 @@ import { useRightClickContextMenu } from "@/composables/useRightClickContextMenu
 import type { FetchAudioResult } from "@/store/type";
 import { useStore } from "@/store";
 import { AccentPhrase, UserDictWord } from "@/openapi";
+import { EngineId, SpeakerId, StyleId } from "@/type/preload";
 
 const props = defineProps<{
   wordEditing: boolean;
@@ -184,11 +187,11 @@ const props = defineProps<{
   selectedId: string;
   surface: string;
   yomi: string;
-  voiceComputed: ComputedRef<{
-    engineId: string & BRAND<"EngineId">;
-    speakerId: string & BRAND<"SpeakerId">;
-    styleId: number & BRAND<"StyleId">;
-  }>;
+  voiceComputed: {
+    engineId: string & EngineId;
+    speakerId: string & SpeakerId;
+    styleId: number & StyleId;
+  };
   isOnlyHiraOrKana: boolean;
   accentPhrase: AccentPhrase | undefined;
   wordPriority: number;
@@ -207,6 +210,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: "updateSelectedId", newId: string): void;
   (e: "updateSurface", newSurface: string): void;
+  (e: "updateYomi", newYomi: string): void;
   (
     e: "updateAccentPhraseValueAccent",
     newAccentPhraseValueAccent: number,
@@ -258,7 +262,7 @@ const convertHankakuToZenkaku = (text: string) => {
 };
 
 const changeAccent = async (_: number, accent: number) => {
-  const { engineId, styleId } = props.voiceComputed.value;
+  const { engineId, styleId } = props.voiceComputed;
 
   if (props.accentPhrase) {
     emit("updateAccentPhraseValueAccent", accent);
@@ -281,7 +285,7 @@ const play = async () => {
   nowGenerating.value = true;
   const audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {
     text: props.yomi,
-    voice: props.voiceComputed.value,
+    voice: props.voiceComputed,
   });
 
   if (audioItem.query == undefined)
@@ -392,3 +396,88 @@ const {
   endContextMenuOperation: endYomiContextMenuOperation,
 } = useRightClickContextMenu(yomiContextMenu, yomiInput, yomiRef);
 </script>
+
+<style lang="scss" scoped>
+@use "@/styles/colors" as colors;
+@use "@/styles/variables" as vars;
+
+.word-editor {
+  display: flex;
+  flex-flow: column;
+  height: calc(
+    100vh - #{vars.$menubar-height + vars.$toolbar-height +
+      vars.$window-border-width}
+  ) !important;
+  overflow: auto;
+}
+
+.word-input {
+  padding-left: 10px;
+  width: calc(66vw - 80px);
+
+  :deep(.q-field__control) {
+    height: 2rem;
+  }
+
+  :deep(.q-placeholder) {
+    padding: 0;
+    font-size: 20px;
+  }
+
+  :deep(.q-field__after) {
+    height: 2rem;
+  }
+}
+
+.desc-row {
+  color: rgba(colors.$display-rgb, 0.5);
+  font-size: 12px;
+}
+
+.play-button {
+  margin: auto 0;
+  padding-right: 16px;
+}
+
+.accent-phrase-table {
+  flex-grow: 1;
+  align-self: stretch;
+
+  display: flex;
+  height: 130px;
+  overflow-x: scroll;
+  width: calc(66vw - 140px);
+
+  .mora-table {
+    display: inline-grid;
+    align-self: stretch;
+    grid-template-rows: 1fr 60px 30px;
+
+    .text-cell {
+      padding: 0;
+      min-width: 20px;
+      max-width: 20px;
+      grid-row-start: 3;
+      text-align: center;
+      white-space: nowrap;
+      color: colors.$display;
+      position: relative;
+    }
+
+    .splitter-cell {
+      min-width: 20px;
+      max-width: 20px;
+      grid-row: 3 / span 1;
+      z-index: vars.$detail-view-splitter-cell-z-index;
+    }
+  }
+}
+
+.save-delete-reset-buttons {
+  padding: 20px;
+
+  display: flex;
+  flex: 1;
+  align-items: flex-end;
+}
+</style>
