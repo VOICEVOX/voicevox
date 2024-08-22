@@ -314,10 +314,7 @@
                 outline
                 textColor="warning"
                 class="text-no-wrap text-bold q-mr-sm"
-                :disable="
-                  uiLocked ||
-                  !['path', 'vvpp'].includes(engineInfos[selectedId].type)
-                "
+                :disable="uiLocked || engineInfos[selectedId].isDefault"
                 @click="deleteEngine"
                 >削除</QBtn
               >
@@ -386,10 +383,10 @@ const categorizedEngineIds = computed(() => {
   const sortedEngineInfos = store.getters.GET_SORTED_ENGINE_INFOS;
   const result = {
     default: Object.values(sortedEngineInfos)
-      .filter((info) => info.type === "default")
+      .filter((info) => info.isDefault)
       .map((info) => info.uuid),
     plugin: Object.values(sortedEngineInfos)
-      .filter((info) => info.type === "path" || info.type === "vvpp")
+      .filter((info) => !info.isDefault)
       .map((info) => info.uuid),
   };
   return Object.fromEntries(
@@ -512,17 +509,25 @@ const addEngine = async () => {
   }
 };
 const deleteEngine = async () => {
+  const engineId = selectedId.value;
+  if (engineId == undefined) throw new Error("engine is not selected");
+
+  const engineInfo = engineInfos.value[engineId];
+
+  // 念の為デフォルトエンジンではないことを確認
+  if (engineInfo.isDefault) {
+    throw new Error("default engine cannot be deleted");
+  }
+
   const result = await store.dispatch("SHOW_CONFIRM_DIALOG", {
     title: "エンジン削除の確認",
     message: "選択中のエンジンを削除します。よろしいですか？",
     actionName: "削除",
   });
   if (result === "OK") {
-    if (selectedId.value == undefined)
-      throw new Error("engine is not selected");
-    switch (engineInfos.value[selectedId.value].type) {
+    switch (engineInfo.type) {
       case "path": {
-        const engineDir = store.state.engineInfos[selectedId.value].path;
+        const engineDir = engineInfo.path;
         if (!engineDir)
           throw new Error("assert engineInfos[selectedId.value].path");
         await lockUi(
@@ -539,7 +544,7 @@ const deleteEngine = async () => {
       case "vvpp": {
         const success = await lockUi(
           "deletingEngine",
-          store.dispatch("UNINSTALL_VVPP_ENGINE", selectedId.value),
+          store.dispatch("UNINSTALL_VVPP_ENGINE", engineId),
         );
         if (success) {
           void requireReload(
