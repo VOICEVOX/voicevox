@@ -84,14 +84,14 @@ const originalPitchLineColor = ref(
 );
 const originalPitchLine: PitchLine = {
   color: originalPitchLineColor,
-  width: 2,
+  width: 1.5,
   pitchDataMap: new Map(),
   lineStripMap: new Map(),
 };
 const pitchEditLineColor = ref(new Color(249, 178, 140, 255));
 const pitchEditLine: PitchLine = {
   color: pitchEditLineColor,
-  width: 2,
+  width: 1.5,
   pitchDataMap: new Map(),
   lineStripMap: new Map(),
 };

@@ -373,7 +373,7 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
   bottom: 0;
   color: var(--scheme-color-sing-on-note-bar-container);
   font-size: 1rem;
-  font-weight: 500;
+  font-weight: 400;
   letter-spacing: -0.1em;
   white-space: nowrap;
   pointer-events: none;
@@ -486,15 +486,7 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
       var(--scheme-color-on-background),
       var(--scheme-color-sing-grid-cell-black) 38%
     );
-    text-shadow:
-      -1px -1px 0 var(--scheme-color-background),
-      1px -1px 0 var(--scheme-color-background),
-      -1px 1px 0 var(--scheme-color-background),
-      1px 1px 0 var(--scheme-color-background),
-      0 -1px 0 var(--scheme-color-background),
-      0 1px 0 var(--scheme-color-background),
-      -1px 0 0 var(--scheme-color-background),
-      1px 0 0 var(--scheme-color-background);
+    text-shadow: none;
     z-index: vars.$z-index-sing-note - 1;
     bottom: calc(100% + 1.5ch);
     transform: none;
