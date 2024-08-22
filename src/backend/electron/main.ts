@@ -48,6 +48,7 @@ import {
   EngineId,
   UpdateInfo,
 } from "@/type/preload";
+import { IpcMainHandle } from "@/type/ipc";
 
 type SingleInstanceLockData = {
   filePath: string | undefined;
@@ -676,7 +677,7 @@ const retryShowSaveDialogWhileSafeDir = async <
 };
 
 // プロセス間通信
-registerIpcMainHandle({
+registerIpcMainHandle<IpcMainHandle>({
   GET_APP_INFOS: () => {
     const name = app.getName();
     const version = app.getVersion();
