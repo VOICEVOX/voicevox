@@ -77,17 +77,20 @@ const singingGuidesInSelectedTrack = computed(() => {
 
 // NOTE: ピッチラインの色をテーマに応じて調節する
 // 動的カラースキーマに対応後、テーマに応じた色をオブジェクトから取得できるようにする
-const lightColor = new Color(154, 156, 154, 255);
-const darkColor = new Color(139, 141, 139, 255);
-const originalPitchLineColor = ref(isDark.value ? darkColor : lightColor);
+const originalPitchLineColorLight = new Color(154, 156, 154, 255);
+const originalPitchLineColorDark = new Color(139, 141, 139, 255);
+const originalPitchLineColor = ref(
+  isDark.value ? originalPitchLineColorDark : originalPitchLineColorLight,
+);
 const originalPitchLine: PitchLine = {
   color: originalPitchLineColor,
   width: 2,
   pitchDataMap: new Map(),
   lineStripMap: new Map(),
 };
+const pitchEditLineColor = ref(new Color(249, 178, 140, 255));
 const pitchEditLine: PitchLine = {
-  color: ref(new Color(249, 178, 140, 255)),
+  color: pitchEditLineColor,
   width: 2,
   pitchDataMap: new Map(),
   lineStripMap: new Map(),
@@ -413,10 +416,12 @@ watch(
   { immediate: true },
 );
 
-// FIXME: テーマ切り替え時にカラー変更するが再描画が必要なため要修正
-// 値の持ち方も同様
+// ピッチラインカラーをテーマに合わせて変更
+// NOTE: 編集前カラーのみ・編集後カラーを変更したい場合は別途対応する
 watchEffect(() => {
-  const newColor = isDark.value ? darkColor : lightColor;
+  const newColor = isDark.value
+    ? originalPitchLineColorDark
+    : originalPitchLineColorLight;
   if (!originalPitchLineColor.value.equals(newColor)) {
     originalPitchLineColor.value = newColor;
     if (renderer && stage) {

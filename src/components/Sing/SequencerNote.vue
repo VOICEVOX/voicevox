@@ -305,7 +305,8 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
   &.invalid-phrase {
     .note-bar {
       background-color: oklch(
-        from var(--scheme-color-error-container) l 0.02 h
+        from var(--scheme-color-error-container) l calc(var(--secondary-c) / 2)
+          h
       );
       border-color: var(--scheme-color-error);
       outline-color: var(--scheme-color-error-container);
@@ -314,9 +315,9 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     &.selected,
     &:active {
       .note-bar {
-        background-color: var(--scheme-color-error-container) !important;
-        border-color: var(--scheme-color-error) !important;
-        outline-color: var(--scheme-color-error) !important;
+        background-color: var(--scheme-color-error-container);
+        border-color: var(--scheme-color-error);
+        outline-color: var(--scheme-color-error);
       }
     }
   }
@@ -325,8 +326,9 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     .note-bar {
       box-sizing: content-box;
       background-color: var(--scheme-color-sing-note-bar-below-pitch-container);
-      height: 8px !important;
-      bottom: calc(50% - 4px);
+      height: 6px;
+      max-height: 50%;
+      bottom: calc(50% - 3px);
       border: 1px solid var(--scheme-color-sing-note-bar-outline);
       border-radius: 2px;
       outline: 0;
@@ -340,10 +342,11 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     &.overlapping,
     &.invalid-phrase {
       .note-bar {
-        background-color: var(--scheme-color-error);
+        background-color: var(
+          --scheme-color-sing-note-bar-below-pitch-invalid-container
+        );
         border-color: 0;
         outline: none;
-        opacity: 0.25;
       }
     }
   }
@@ -432,20 +435,33 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
   // エラー
   &.invalid-phrase,
   &.overlapping {
-    color: color-mix(
-      in oklch,
-      var(--scheme-color-on-error-container),
-      transparent 0%
-    );
+    color: var(--scheme-color-on-error-container);
     text-shadow:
-      -1px -1px 0 oklch(from var(--scheme-color-error-container) l 0.018 h),
-      1px -1px 0 oklch(from var(--scheme-color-error-container) l 0.018 h),
-      -1px 1px 0 oklch(from var(--scheme-color-error-container) l 0.018 h),
-      1px 1px 0 oklch(from var(--scheme-color-error-container) l 0.018 h),
-      0 -1px 0 oklch(from var(--scheme-color-error-container) l 0.018 h),
-      0 1px 0 oklch(from var(--scheme-color-error-container) l 0.018 h),
-      -1px 0 0 oklch(from var(--scheme-color-error-container) l 0.018 h),
-      1px 0 0 oklch(from var(--scheme-color-error-container) l 0.018 h);
+      -1px -1px 0 oklch(from var(--scheme-color-error-container) l
+            calc(var(--secondary-c) / 2) h),
+      1px -1px 0 oklch(from var(--scheme-color-error-container) l
+            calc(var(--secondary-c) / 2) h),
+      -1px 1px 0 oklch(from var(--scheme-color-error-container) l
+            calc(var(--secondary-c) / 2) h),
+      1px 1px 0
+        oklch(
+          from var(--scheme-color-error-container) l
+            calc(var(--secondary-c) / 2) h
+        ),
+      0 -1px 0 oklch(from var(--scheme-color-error-container) l
+            calc(var(--secondary-c) / 2) h),
+      0 1px 0
+        oklch(
+          from var(--scheme-color-error-container) l
+            calc(var(--secondary-c) / 2) h
+        ),
+      -1px 0 0 oklch(from var(--scheme-color-error-container) l
+            calc(var(--secondary-c) / 2) h),
+      1px 0 0
+        oklch(
+          from var(--scheme-color-error-container) l
+            calc(var(--secondary-c) / 2) h
+        );
 
     &.selected {
       text-shadow:
@@ -462,7 +478,11 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
 
   // ピッチ編集モード
   &.below-pitch {
-    color: var(--scheme-color-on-secondary-container);
+    color: color-mix(
+      in oklch,
+      var(--scheme-color-on-background),
+      var(--scheme-color-sing-grid-cell-black) 38%
+    );
     text-shadow:
       -1px -1px 0 var(--scheme-color-background),
       1px -1px 0 var(--scheme-color-background),
@@ -472,17 +492,14 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
       0 1px 0 var(--scheme-color-background),
       -1px 0 0 var(--scheme-color-background),
       1px 0 0 var(--scheme-color-background);
-    opacity: 0.38;
     z-index: vars.$z-index-sing-note - 1;
     bottom: calc(100% + 1.5ch);
     transform: none;
 
     &.invalid-phrase,
     &.overlapping {
-      color: color-mix(
-        in oklch,
-        var(--scheme-color-on-error-container),
-        transparent 20%
+      color: oklch(
+        from var(--scheme-color-error) l calc(var(--secondary-c) / 2) h / 0.38
       );
       text-shadow: none;
     }
