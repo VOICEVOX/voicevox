@@ -326,10 +326,12 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     .note-bar {
       box-sizing: content-box;
       background-color: var(--scheme-color-sing-note-bar-below-pitch-container);
-      height: 6px;
-      max-height: 50%;
-      bottom: calc(50% - 3px);
-      border: 1px solid var(--scheme-color-sing-note-bar-outline);
+      height: 100%;
+      min-height: 6px;
+      max-height: 20%;
+      top: 50%;
+      transform: translateY(-50%);
+      border: 0;
       border-radius: 2px;
       outline: 0;
     }
@@ -478,6 +480,7 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
 
   // ピッチ編集モード
   &.below-pitch {
+    // FIXME: color-mixは使わない
     color: color-mix(
       in oklch,
       var(--scheme-color-on-background),
@@ -499,7 +502,7 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     &.invalid-phrase,
     &.overlapping {
       color: oklch(
-        from var(--scheme-color-error) l calc(var(--secondary-c) / 2) h / 0.38
+        from var(--scheme-color-error) l calc(var(--secondary-c) / 2) h / 0.5
       );
       text-shadow: none;
     }
