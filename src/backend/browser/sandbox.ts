@@ -8,7 +8,7 @@ import {
 } from "./fileImpl";
 import { getConfigManager } from "./browserConfig";
 
-import { IpcSOData } from "@/type/ipc";
+import { IpcRendererOn, IpcSOData } from "@/type/ipc";
 import {
   defaultHotkeySettings,
   defaultToolbarButtonSetting,
@@ -32,6 +32,23 @@ import {
 
 // TODO: base pathを設定できるようにするか、ビルド時埋め込みにする
 const toStaticPath = (fileName: string) => `/${fileName}`;
+
+function onReceivedIPCMsg<T extends IpcRendererOn>(listeners: T): void;
+function onReceivedIPCMsg(listeners: {
+  [key: string]: (event: unknown, ...args: unknown[]) => unknown;
+}) {
+  window.addEventListener(
+    "message",
+    ({
+      data,
+    }: MessageEvent<{
+      channel: keyof IpcSOData;
+      args: IpcSOData[keyof IpcSOData]["args"];
+    }>) => {
+      listeners[data.channel]?.({}, ...data.args);
+    },
+  );
+}
 
 /**
  * Browser版のSandBox実装
@@ -204,20 +221,7 @@ export const api: Sandbox = {
     // NOTE: UIの表示状態の制御のためだけなので固定値を返している
     return Promise.resolve(true);
   },
-  onReceivedIPCMsg<T extends keyof IpcSOData>(
-    channel: T,
-    listener: (_: unknown, ...args: IpcSOData[T]["args"]) => void,
-  ) {
-    window.addEventListener("message", (event) => {
-      const data = event.data as {
-        channel: keyof IpcSOData;
-        args: IpcSOData[keyof IpcSOData];
-      };
-      if (data.channel == channel) {
-        listener(data.args);
-      }
-    });
-  },
+  onReceivedIPCMsg,
   closeWindow() {
     throw new Error(`Not supported on Browser version: closeWindow`);
   },

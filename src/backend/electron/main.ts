@@ -24,7 +24,7 @@ import EngineManager from "./manager/engineManager";
 import VvppManager, { isVvppFile } from "./manager/vvppManager";
 import configMigration014 from "./configMigration014";
 import { RuntimeInfoManager } from "./manager/RuntimeInfoManager";
-import { ipcMainHandle, ipcMainSend } from "./ipc";
+import { registerIpcMainHandle, ipcMainSend } from "./ipc";
 import { getConfigManager } from "./electronConfig";
 import { failure, success } from "@/type/result";
 import {
@@ -609,52 +609,6 @@ if (isMac) {
   }
 }
 
-// プロセス間通信
-ipcMainHandle.GET_APP_INFOS(() => {
-  const name = app.getName();
-  const version = app.getVersion();
-  return {
-    name,
-    version,
-  };
-});
-
-ipcMainHandle.GET_HOW_TO_USE_TEXT(() => {
-  return howToUseText;
-});
-
-ipcMainHandle.GET_POLICY_TEXT(() => {
-  return policyText;
-});
-
-ipcMainHandle.GET_OSS_LICENSES(() => {
-  return ossLicenses;
-});
-
-ipcMainHandle.GET_UPDATE_INFOS(() => {
-  return updateInfos;
-});
-
-ipcMainHandle.GET_OSS_COMMUNITY_INFOS(() => {
-  return ossCommunityInfos;
-});
-
-ipcMainHandle.GET_CONTACT_TEXT(() => {
-  return contactText;
-});
-
-ipcMainHandle.GET_Q_AND_A_TEXT(() => {
-  return qAndAText;
-});
-
-ipcMainHandle.GET_PRIVACY_POLICY_TEXT(() => {
-  return privacyPolicyText;
-});
-
-ipcMainHandle.GET_ALT_PORT_INFOS(() => {
-  return engineManager.altPortInfo;
-});
-
 /**
  * 保存に適した場所を選択するかキャンセルするまでダイアログを繰り返し表示する。
  * アンインストール等で消えうる場所などを避ける。
@@ -721,114 +675,167 @@ const retryShowSaveDialogWhileSafeDir = async <
   }
 };
 
-ipcMainHandle.SHOW_AUDIO_SAVE_DIALOG(async (_, { title, defaultPath }) => {
-  const result = await retryShowSaveDialogWhileSafeDir(() =>
-    dialog.showSaveDialog(win, {
+// プロセス間通信
+registerIpcMainHandle({
+  GET_APP_INFOS: () => {
+    const name = app.getName();
+    const version = app.getVersion();
+    return {
+      name,
+      version,
+    };
+  },
+
+  GET_HOW_TO_USE_TEXT: () => {
+    return howToUseText;
+  },
+
+  GET_POLICY_TEXT: () => {
+    return policyText;
+  },
+
+  GET_OSS_LICENSES: () => {
+    return ossLicenses;
+  },
+
+  GET_UPDATE_INFOS: () => {
+    return updateInfos;
+  },
+
+  GET_OSS_COMMUNITY_INFOS: () => {
+    return ossCommunityInfos;
+  },
+
+  GET_CONTACT_TEXT: () => {
+    return contactText;
+  },
+
+  GET_Q_AND_A_TEXT: () => {
+    return qAndAText;
+  },
+
+  GET_PRIVACY_POLICY_TEXT: () => {
+    return privacyPolicyText;
+  },
+
+  GET_ALT_PORT_INFOS: () => {
+    return engineManager.altPortInfo;
+  },
+
+  SHOW_AUDIO_SAVE_DIALOG: async (_, { title, defaultPath }) => {
+    const result = await retryShowSaveDialogWhileSafeDir(() =>
+      dialog.showSaveDialog(win, {
+        title,
+        defaultPath,
+        filters: [{ name: "Wave File", extensions: ["wav"] }],
+        properties: ["createDirectory"],
+      }),
+    );
+    return result.filePath;
+  },
+
+  SHOW_TEXT_SAVE_DIALOG: async (_, { title, defaultPath }) => {
+    const result = await retryShowSaveDialogWhileSafeDir(() =>
+      dialog.showSaveDialog(win, {
+        title,
+        defaultPath,
+        filters: [{ name: "Text File", extensions: ["txt"] }],
+        properties: ["createDirectory"],
+      }),
+    );
+    return result.filePath;
+  },
+
+  /**
+   * 保存先になるディレクトリを選ぶダイアログを表示する。
+   */
+  SHOW_SAVE_DIRECTORY_DIALOG: async (_, { title }) => {
+    const result = await retryShowSaveDialogWhileSafeDir(() =>
+      dialog.showOpenDialog(win, {
+        title,
+        properties: [
+          "openDirectory",
+          "createDirectory",
+          "treatPackageAsDirectory",
+        ],
+      }),
+    );
+    if (result.canceled) {
+      return undefined;
+    }
+    return result.filePaths[0];
+  },
+
+  SHOW_VVPP_OPEN_DIALOG: async (_, { title, defaultPath }) => {
+    const result = await dialog.showOpenDialog(win, {
       title,
       defaultPath,
-      filters: [{ name: "Wave File", extensions: ["wav"] }],
-      properties: ["createDirectory"],
-    }),
-  );
-  return result.filePath;
-});
+      filters: [
+        { name: "VOICEVOX Plugin Package", extensions: ["vvpp", "vvppp"] },
+      ],
+      properties: ["openFile", "createDirectory", "treatPackageAsDirectory"],
+    });
+    return result.filePaths[0];
+  },
 
-ipcMainHandle.SHOW_TEXT_SAVE_DIALOG(async (_, { title, defaultPath }) => {
-  const result = await retryShowSaveDialogWhileSafeDir(() =>
-    dialog.showSaveDialog(win, {
-      title,
-      defaultPath,
-      filters: [{ name: "Text File", extensions: ["txt"] }],
-      properties: ["createDirectory"],
-    }),
-  );
-  return result.filePath;
-});
-
-/**
- * 保存先になるディレクトリを選ぶダイアログを表示する。
- */
-ipcMainHandle.SHOW_SAVE_DIRECTORY_DIALOG(async (_, { title }) => {
-  const result = await retryShowSaveDialogWhileSafeDir(() =>
-    dialog.showOpenDialog(win, {
+  /**
+   * ディレクトリ選択ダイアログを表示する。
+   * 保存先として選ぶ場合は SHOW_SAVE_DIRECTORY_DIALOG を使うべき。
+   */
+  SHOW_OPEN_DIRECTORY_DIALOG: async (_, { title }) => {
+    const result = await dialog.showOpenDialog(win, {
       title,
       properties: [
         "openDirectory",
         "createDirectory",
         "treatPackageAsDirectory",
       ],
-    }),
-  );
-  if (result.canceled) {
-    return undefined;
-  }
-  return result.filePaths[0];
-});
+    });
+    if (result.canceled) {
+      return undefined;
+    }
+    return result.filePaths[0];
+  },
 
-ipcMainHandle.SHOW_VVPP_OPEN_DIALOG(async (_, { title, defaultPath }) => {
-  const result = await dialog.showOpenDialog(win, {
-    title,
-    defaultPath,
-    filters: [
-      { name: "VOICEVOX Plugin Package", extensions: ["vvpp", "vvppp"] },
-    ],
-    properties: ["openFile", "createDirectory", "treatPackageAsDirectory"],
-  });
-  return result.filePaths[0];
-});
+  SHOW_PROJECT_SAVE_DIALOG: async (_, { title, defaultPath }) => {
+    const result = await retryShowSaveDialogWhileSafeDir(() =>
+      dialog.showSaveDialog(win, {
+        title,
+        defaultPath,
+        filters: [{ name: "VOICEVOX Project file", extensions: ["vvproj"] }],
+        properties: ["showOverwriteConfirmation"],
+      }),
+    );
+    if (result.canceled) {
+      return undefined;
+    }
+    return result.filePath;
+  },
 
-/**
- * ディレクトリ選択ダイアログを表示する。
- * 保存先として選ぶ場合は SHOW_SAVE_DIRECTORY_DIALOG を使うべき。
- */
-ipcMainHandle.SHOW_OPEN_DIRECTORY_DIALOG(async (_, { title }) => {
-  const result = await dialog.showOpenDialog(win, {
-    title,
-    properties: ["openDirectory", "createDirectory", "treatPackageAsDirectory"],
-  });
-  if (result.canceled) {
-    return undefined;
-  }
-  return result.filePaths[0];
-});
-
-ipcMainHandle.SHOW_PROJECT_SAVE_DIALOG(async (_, { title, defaultPath }) => {
-  const result = await retryShowSaveDialogWhileSafeDir(() =>
-    dialog.showSaveDialog(win, {
+  SHOW_PROJECT_LOAD_DIALOG: async (_, { title }) => {
+    const result = await dialog.showOpenDialog(win, {
       title,
-      defaultPath,
       filters: [{ name: "VOICEVOX Project file", extensions: ["vvproj"] }],
-      properties: ["showOverwriteConfirmation"],
-    }),
-  );
-  if (result.canceled) {
-    return undefined;
-  }
-  return result.filePath;
-});
+      properties: ["openFile", "createDirectory", "treatPackageAsDirectory"],
+    });
+    if (result.canceled) {
+      return undefined;
+    }
+    return result.filePaths;
+  },
 
-ipcMainHandle.SHOW_PROJECT_LOAD_DIALOG(async (_, { title }) => {
-  const result = await dialog.showOpenDialog(win, {
-    title,
-    filters: [{ name: "VOICEVOX Project file", extensions: ["vvproj"] }],
-    properties: ["openFile", "createDirectory", "treatPackageAsDirectory"],
-  });
-  if (result.canceled) {
-    return undefined;
-  }
-  return result.filePaths;
-});
+  SHOW_MESSAGE_DIALOG: (_, { type, title, message }) => {
+    return dialog.showMessageBox(win, {
+      type,
+      title,
+      message,
+    });
+  },
 
-ipcMainHandle.SHOW_MESSAGE_DIALOG((_, { type, title, message }) => {
-  return dialog.showMessageBox(win, {
-    type,
-    title,
-    message,
-  });
-});
-
-ipcMainHandle.SHOW_QUESTION_DIALOG(
-  (_, { type, title, message, buttons, cancelId, defaultId }) => {
+  SHOW_QUESTION_DIALOG: (
+    _,
+    { type, title, message, buttons, cancelId, defaultId },
+  ) => {
     return dialog
       .showMessageBox(win, {
         type,
@@ -843,199 +850,216 @@ ipcMainHandle.SHOW_QUESTION_DIALOG(
         return value.response;
       });
   },
-);
 
-ipcMainHandle.SHOW_WARNING_DIALOG((_, { title, message }) => {
-  return dialog.showMessageBox(win, {
-    type: "warning",
-    title,
-    message,
-  });
-});
+  SHOW_WARNING_DIALOG: (_, { title, message }) => {
+    return dialog.showMessageBox(win, {
+      type: "warning",
+      title,
+      message,
+    });
+  },
 
-ipcMainHandle.SHOW_ERROR_DIALOG((_, { title, message }) => {
-  return dialog.showMessageBox(win, {
-    type: "error",
-    title,
-    message,
-  });
-});
+  SHOW_ERROR_DIALOG: (_, { title, message }) => {
+    return dialog.showMessageBox(win, {
+      type: "error",
+      title,
+      message,
+    });
+  },
 
-ipcMainHandle.SHOW_IMPORT_FILE_DIALOG((_, { title, name, extensions }) => {
-  return dialog.showOpenDialogSync(win, {
-    title,
-    filters: [{ name: name ?? "Text", extensions: extensions ?? ["txt"] }],
-    properties: ["openFile", "createDirectory", "treatPackageAsDirectory"],
-  })?.[0];
-});
+  SHOW_IMPORT_FILE_DIALOG: (_, { title, name, extensions }) => {
+    return dialog.showOpenDialogSync(win, {
+      title,
+      filters: [{ name: name ?? "Text", extensions: extensions ?? ["txt"] }],
+      properties: ["openFile", "createDirectory", "treatPackageAsDirectory"],
+    })?.[0];
+  },
 
-ipcMainHandle.IS_AVAILABLE_GPU_MODE(() => {
-  return hasSupportedGpu(process.platform);
-});
+  IS_AVAILABLE_GPU_MODE: () => {
+    return hasSupportedGpu(process.platform);
+  },
 
-ipcMainHandle.IS_MAXIMIZED_WINDOW(() => {
-  return win.isMaximized();
-});
+  IS_MAXIMIZED_WINDOW: () => {
+    return win.isMaximized();
+  },
 
-ipcMainHandle.CLOSE_WINDOW(() => {
-  appState.willQuit = true;
-  win.destroy();
-});
-ipcMainHandle.MINIMIZE_WINDOW(() => {
-  win.minimize();
-});
-ipcMainHandle.MAXIMIZE_WINDOW(() => {
-  if (win.isMaximized()) {
-    win.unmaximize();
-  } else {
-    win.maximize();
-  }
-});
-
-ipcMainHandle.OPEN_LOG_DIRECTORY(() => {
-  void shell.openPath(app.getPath("logs"));
-});
-
-ipcMainHandle.ENGINE_INFOS(() => {
-  // エンジン情報を設定ファイルに保存しないためにstoreは使わない
-  return engineManager.fetchEngineInfos();
-});
-
-/**
- * エンジンを再起動する。
- * エンジンの起動が開始したらresolve、起動が失敗したらreject。
- */
-ipcMainHandle.RESTART_ENGINE(async (_, { engineId }) => {
-  await engineManager.restartEngine(engineId);
-  // TODO: setEngineInfosからexportFileはロックしたほうがより良い
-  runtimeInfoManager.setEngineInfos(engineManager.fetchEngineInfos());
-  await runtimeInfoManager.exportFile();
-});
-
-ipcMainHandle.OPEN_ENGINE_DIRECTORY(async (_, { engineId }) => {
-  openEngineDirectory(engineId);
-});
-
-ipcMainHandle.HOTKEY_SETTINGS((_, { newData }) => {
-  if (newData != undefined) {
-    const hotkeySettings = configManager.get("hotkeySettings");
-    const hotkeySetting = hotkeySettings.find(
-      (hotkey) => hotkey.action == newData.action,
-    );
-    if (hotkeySetting != undefined) {
-      hotkeySetting.combination = newData.combination;
+  CLOSE_WINDOW: () => {
+    appState.willQuit = true;
+    win.destroy();
+  },
+  MINIMIZE_WINDOW: () => {
+    win.minimize();
+  },
+  MAXIMIZE_WINDOW: () => {
+    if (win.isMaximized()) {
+      win.unmaximize();
+    } else {
+      win.maximize();
     }
-    configManager.set("hotkeySettings", hotkeySettings);
-  }
-  return configManager.get("hotkeySettings");
-});
+  },
 
-ipcMainHandle.THEME((_, { newData }) => {
-  if (newData != undefined) {
-    configManager.set("currentTheme", newData);
-    return;
-  }
-  return {
-    currentTheme: configManager.get("currentTheme"),
-    availableThemes: themes,
-  };
-});
+  OPEN_LOG_DIRECTORY: () => {
+    void shell.openPath(app.getPath("logs"));
+  },
 
-ipcMainHandle.ON_VUEX_READY(() => {
-  win.show();
-});
+  ENGINE_INFOS: () => {
+    // エンジン情報を設定ファイルに保存しないためにstoreは使わない
+    return engineManager.fetchEngineInfos();
+  },
 
-ipcMainHandle.CHECK_FILE_EXISTS((_, { file }) => {
-  return fs.existsSync(file);
-});
-ipcMainHandle.CHANGE_PIN_WINDOW(() => {
-  if (win.isAlwaysOnTop()) {
-    win.setAlwaysOnTop(false);
-  } else {
-    win.setAlwaysOnTop(true);
-  }
-});
+  /**
+   * エンジンを再起動する。
+   * エンジンの起動が開始したらresolve、起動が失敗したらreject。
+   */
+  RESTART_ENGINE: async (_, { engineId }) => {
+    await engineManager.restartEngine(engineId);
+    // TODO: setEngineInfosからexportFileはロックしたほうがより良い
+    runtimeInfoManager.setEngineInfos(engineManager.fetchEngineInfos());
+    await runtimeInfoManager.exportFile();
+  },
 
-ipcMainHandle.GET_DEFAULT_HOTKEY_SETTINGS(() => {
-  return defaultHotkeySettings;
-});
+  OPEN_ENGINE_DIRECTORY: async (_, { engineId }) => {
+    openEngineDirectory(engineId);
+  },
 
-ipcMainHandle.GET_DEFAULT_TOOLBAR_SETTING(() => {
-  return defaultToolbarButtonSetting;
-});
+  HOTKEY_SETTINGS: (_, { newData }) => {
+    if (newData != undefined) {
+      const hotkeySettings = configManager.get("hotkeySettings");
+      const hotkeySetting = hotkeySettings.find(
+        (hotkey) => hotkey.action == newData.action,
+      );
+      if (hotkeySetting != undefined) {
+        hotkeySetting.combination = newData.combination;
+      }
+      configManager.set("hotkeySettings", hotkeySettings);
+    }
+    return configManager.get("hotkeySettings");
+  },
 
-ipcMainHandle.GET_SETTING((_, key) => {
-  return configManager.get(key);
-});
+  THEME: (_, { newData }) => {
+    if (newData != undefined) {
+      configManager.set("currentTheme", newData);
+      return;
+    }
+    return {
+      currentTheme: configManager.get("currentTheme"),
+      availableThemes: themes,
+    };
+  },
 
-ipcMainHandle.SET_SETTING((_, key, newValue) => {
-  configManager.set(key, newValue);
-  return configManager.get(key);
-});
+  ON_VUEX_READY: () => {
+    win.show();
+  },
 
-ipcMainHandle.SET_ENGINE_SETTING(async (_, engineId, engineSetting) => {
-  const engineSettings = configManager.get("engineSettings");
-  engineSettings[engineId] = engineSetting;
-  configManager.set(`engineSettings`, engineSettings);
-});
+  CHECK_FILE_EXISTS: (_, { file }) => {
+    return fs.existsSync(file);
+  },
+  CHANGE_PIN_WINDOW: () => {
+    if (win.isAlwaysOnTop()) {
+      win.setAlwaysOnTop(false);
+    } else {
+      win.setAlwaysOnTop(true);
+    }
+  },
 
-ipcMainHandle.SET_NATIVE_THEME((_, source) => {
-  nativeTheme.themeSource = source;
-});
+  GET_DEFAULT_HOTKEY_SETTINGS: () => {
+    return defaultHotkeySettings;
+  },
 
-ipcMainHandle.INSTALL_VVPP_ENGINE(async (_, path: string) => {
-  return await installVvppEngine(path);
-});
+  GET_DEFAULT_TOOLBAR_SETTING: () => {
+    return defaultToolbarButtonSetting;
+  },
 
-ipcMainHandle.UNINSTALL_VVPP_ENGINE(async (_, engineId: EngineId) => {
-  return await uninstallVvppEngine(engineId);
-});
+  GET_SETTING: (_, key) => {
+    return configManager.get(key);
+  },
 
-ipcMainHandle.VALIDATE_ENGINE_DIR((_, { engineDir }) => {
-  return engineManager.validateEngineDir(engineDir);
-});
+  SET_SETTING: (_, key, newValue) => {
+    configManager.set(key, newValue);
+    return configManager.get(key);
+  },
 
-ipcMainHandle.RELOAD_APP(async (_, { isMultiEngineOffMode }) => {
-  win.hide(); // FIXME: ダミーページ表示のほうが良い
+  SET_ENGINE_SETTING: async (_, engineId, engineSetting) => {
+    const engineSettings = configManager.get("engineSettings");
+    engineSettings[engineId] = engineSetting;
+    configManager.set(`engineSettings`, engineSettings);
+  },
 
-  // 一旦適当なURLに飛ばしてページをアンロードする
-  await win.loadURL("about:blank");
+  SET_NATIVE_THEME: (_, source) => {
+    nativeTheme.themeSource = source;
+  },
 
-  log.info("Checking ENGINE status before reload app");
-  const engineCleanupResult = cleanupEngines();
+  INSTALL_VVPP_ENGINE: async (_, path: string) => {
+    return await installVvppEngine(path);
+  },
 
-  // エンジンの停止とエンジン終了後処理の待機
-  if (engineCleanupResult != "alreadyCompleted") {
-    await engineCleanupResult;
-  }
-  log.info("Post engine kill process done. Now reloading app");
+  UNINSTALL_VVPP_ENGINE: async (_, engineId: EngineId) => {
+    return await uninstallVvppEngine(engineId);
+  },
 
-  await launchEngines();
+  VALIDATE_ENGINE_DIR: (_, { engineDir }) => {
+    return engineManager.validateEngineDir(engineDir);
+  },
 
-  await loadUrl({ isMultiEngineOffMode: !!isMultiEngineOffMode });
-  win.show();
-});
+  RELOAD_APP: async (_, { isMultiEngineOffMode }) => {
+    win.hide(); // FIXME: ダミーページ表示のほうが良い
 
-ipcMainHandle.WRITE_FILE((_, { filePath, buffer }) => {
-  try {
-    fs.writeFileSync(filePath, new DataView(buffer));
-    return success(undefined);
-  } catch (e) {
-    // throwだと`.code`の情報が消えるのでreturn
-    const a = e as SystemError;
-    return failure(a.code, a);
-  }
-});
+    // 一旦適当なURLに飛ばしてページをアンロードする
+    await win.loadURL("about:blank");
 
-ipcMainHandle.READ_FILE(async (_, { filePath }) => {
-  try {
-    const result = await fs.promises.readFile(filePath);
-    return success(result);
-  } catch (e) {
-    // throwだと`.code`の情報が消えるのでreturn
-    const a = e as SystemError;
-    return failure(a.code, a);
-  }
+    log.info("Checking ENGINE status before reload app");
+    const engineCleanupResult = cleanupEngines();
+
+    // エンジンの停止とエンジン終了後処理の待機
+    if (engineCleanupResult != "alreadyCompleted") {
+      await engineCleanupResult;
+    }
+    log.info("Post engine kill process done. Now reloading app");
+
+    await launchEngines();
+
+    await loadUrl({ isMultiEngineOffMode: !!isMultiEngineOffMode });
+    win.show();
+  },
+
+  WRITE_FILE: (_, { filePath, buffer }) => {
+    try {
+      fs.writeFileSync(filePath, new DataView(buffer));
+      return success(undefined);
+    } catch (e) {
+      // throwだと`.code`の情報が消えるのでreturn
+      const a = e as SystemError;
+      return failure(a.code, a);
+    }
+  },
+
+  READ_FILE: async (_, { filePath }) => {
+    try {
+      const result = await fs.promises.readFile(filePath);
+      return success(result);
+    } catch (e) {
+      // throwだと`.code`の情報が消えるのでreturn
+      const a = e as SystemError;
+      return failure(a.code, a);
+    }
+  },
+
+  LOG_ERROR: () => {
+    // REVIEW: 型の定義はあるけど実装されていない…？
+    throw Error("Not Implemented");
+  },
+  LOG_WARN: () => {
+    // REVIEW: 型の定義はあるけど実装されていない…？
+    throw Error("Not Implemented");
+  },
+  LOG_INFO: () => {
+    // REVIEW: 型の定義はあるけど実装されていない…？
+    throw Error("Not Implemented");
+  },
+  RESTART_ENGINE_ALL: () => {
+    // REVIEW: 型の定義はあるけど実装されていない…？
+    throw Error("Not Implemented");
+  },
 });
 
 // app callback

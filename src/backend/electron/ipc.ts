@@ -2,24 +2,24 @@ import { BrowserWindow, ipcMain, IpcMainInvokeEvent } from "electron";
 import log from "electron-log/main";
 import { IpcMainHandle, IpcMainSend } from "@/type/ipc";
 
-export const ipcMainHandle = new Proxy({} as IpcMainHandle, {
-  get:
-    (_, channel: string) =>
-    (listener: (event: IpcMainInvokeEvent, ...args: unknown[]) => unknown) => {
-      const errorHandledListener = (
-        event: IpcMainInvokeEvent,
-        ...args: unknown[]
-      ) => {
-        try {
-          validateIpcSender(event);
-          return listener(event, ...args);
-        } catch (e) {
-          log.error(e);
-        }
-      };
-      ipcMain.handle(channel, errorHandledListener);
-    },
-});
+export function registerIpcMainHandle<T extends IpcMainHandle>(
+  listeners: T,
+): void;
+export function registerIpcMainHandle(listeners: {
+  [key: string]: (event: IpcMainInvokeEvent, ...args: unknown[]) => unknown;
+}) {
+  Object.entries(listeners).forEach(([channel, listener]) => {
+    const errorHandledListener: typeof listener = (event, ...args) => {
+      try {
+        validateIpcSender(event);
+        return listener(event, ...args);
+      } catch (e) {
+        log.error(e);
+      }
+    };
+    ipcMain.handle(channel, errorHandledListener);
+  });
+}
 
 export const ipcMainSend = new Proxy({} as IpcMainSend, {
   get:

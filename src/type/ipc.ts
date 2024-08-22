@@ -373,11 +373,9 @@ export type IpcRendererInvoke = {
 
 export type IpcMainHandle = {
   [K in keyof IpcIHData]: (
-    listener: (
-      event: import("electron").IpcMainInvokeEvent,
-      ...args: IpcIHData[K]["args"]
-    ) => Promise<IpcIHData[K]["return"]> | IpcIHData[K]["return"],
-  ) => void;
+    event: import("electron").IpcMainInvokeEvent,
+    ...args: IpcIHData[K]["args"]
+  ) => Promise<IpcIHData[K]["return"]> | IpcIHData[K]["return"];
 };
 
 export type IpcMainSend = {
@@ -389,6 +387,7 @@ export type IpcMainSend = {
 
 export type IpcRendererOn = {
   [K in keyof IpcSOData]: (
-    listener: (event: unknown, ...args: IpcSOData[K]["args"]) => unknown,
-  ) => void;
+    event: import("electron").IpcRendererEvent,
+    ...args: IpcSOData[K]["args"]
+  ) => Promise<IpcSOData[K]["return"]> | IpcSOData[K]["return"];
 };

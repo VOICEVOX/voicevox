@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { IpcSOData } from "./ipc";
+import { IpcRendererOn } from "./ipc";
 import { AltPortInfos } from "@/store/type";
 import { Result } from "@/type/result";
 
@@ -264,10 +264,7 @@ export interface Sandbox {
   readFile(obj: { filePath: string }): Promise<Result<ArrayBuffer>>;
   isAvailableGPUMode(): Promise<boolean>;
   isMaximizedWindow(): Promise<boolean>;
-  onReceivedIPCMsg<T extends keyof IpcSOData>(
-    channel: T,
-    listener: (event: unknown, ...args: IpcSOData[T]["args"]) => void,
-  ): void;
+  onReceivedIPCMsg(listeners: IpcRendererOn): void;
   closeWindow(): void;
   minimizeWindow(): void;
   maximizeWindow(): void;

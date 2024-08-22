@@ -128,8 +128,10 @@ const api: Sandbox = {
     return ipcRendererInvoke.IS_MAXIMIZED_WINDOW();
   },
 
-  onReceivedIPCMsg: (channel, callback) => {
-    return ipcRenderer.on(channel, callback);
+  onReceivedIPCMsg: (listeners) => {
+    Object.entries(listeners).forEach(([channel, listener]) => {
+      ipcRenderer.on(channel, listener);
+    });
   },
 
   closeWindow: () => {
