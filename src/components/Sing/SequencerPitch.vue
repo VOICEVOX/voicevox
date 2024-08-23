@@ -30,6 +30,7 @@ import { ExhaustiveError } from "@/type/utility";
 import { createLogger } from "@/domain/frontend/log";
 import { getLast } from "@/sing/utility";
 import { getOrThrow } from "@/helpers/mapHelper";
+import { FrameAudioQuery } from "@/openapi";
 
 type PitchLine = {
   readonly color: Color;
@@ -57,19 +58,29 @@ const previewPitchEdit = computed(() => props.previewPitchEdit);
 const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
 const editFrameRate = computed(() => store.state.editFrameRate);
 const singingGuidesInSelectedTrack = computed(() => {
-  const singingGuides = [];
+  const singingGuides: {
+    query: FrameAudioQuery;
+    frameRate: number;
+    startTime: number;
+  }[] = [];
   for (const phrase of store.state.phrases.values()) {
     if (phrase.trackId !== selectedTrackId.value) {
       continue;
     }
-    if (phrase.singingGuideKey == undefined) {
+    if (phrase.queryKey == undefined) {
       continue;
     }
-    const singingGuide = getOrThrow(
-      store.state.singingGuides,
-      phrase.singingGuideKey,
-    );
-    singingGuides.push(singingGuide);
+    const track = store.state.tracks.get(phrase.trackId);
+    if (track == undefined || track.singer == undefined) {
+      continue;
+    }
+    const phraseQuery = getOrThrow(store.state.phraseQueries, phrase.queryKey);
+    const engineManifest = store.state.engineManifests[track.singer.engineId];
+    singingGuides.push({
+      startTime: phrase.startTime,
+      query: phraseQuery,
+      frameRate: engineManifest.frameRate,
+    });
   }
   return singingGuides;
 });

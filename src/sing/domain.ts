@@ -4,17 +4,12 @@ import {
   Note,
   Phrase,
   PhraseSource,
-  SingingGuide,
-  SingingGuideSource,
-  SingingVoiceSource,
   Tempo,
   TimeSignature,
-  phraseSourceHashSchema,
+  PhraseKey,
   Track,
-  singingGuideSourceHashSchema,
-  singingVoiceSourceHashSchema,
 } from "@/store/type";
-import { FramePhoneme } from "@/openapi";
+import { FrameAudioQuery, FramePhoneme } from "@/openapi";
 import { TrackId } from "@/type/preload";
 
 const BEAT_TYPES = [2, 4, 8, 16];
@@ -379,23 +374,9 @@ export function isValidPitchEditData(pitchEditData: number[]) {
   );
 }
 
-export const calculatePhraseSourceHash = async (phraseSource: PhraseSource) => {
+export const calculatePhraseKey = async (phraseSource: PhraseSource) => {
   const hash = await calculateHash(phraseSource);
-  return phraseSourceHashSchema.parse(hash);
-};
-
-export const calculateSingingGuideSourceHash = async (
-  singingGuideSource: SingingGuideSource,
-) => {
-  const hash = await calculateHash(singingGuideSource);
-  return singingGuideSourceHashSchema.parse(hash);
-};
-
-export const calculateSingingVoiceSourceHash = async (
-  singingVoiceSource: SingingVoiceSource,
-) => {
-  const hash = await calculateHash(singingVoiceSource);
-  return singingVoiceSourceHashSchema.parse(hash);
+  return PhraseKey(hash);
 };
 
 export function getStartTicksOfPhrase(phrase: Phrase) {
@@ -469,7 +450,11 @@ export function convertToFramePhonemes(phonemes: FramePhoneme[]) {
 }
 
 export function applyPitchEdit(
-  singingGuide: SingingGuide,
+  singingGuide: {
+    query: FrameAudioQuery;
+    frameRate: number;
+    startTime: number;
+  },
   pitchEditData: number[],
   editFrameRate: number,
 ) {
