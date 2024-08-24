@@ -21,12 +21,15 @@ export function registerIpcMainHandle(listeners: {
   });
 }
 
-export const ipcMainSend = new Proxy({} as IpcMainSend, {
-  get:
-    (_, channel: string) =>
-    (win: BrowserWindow, ...args: unknown[]) =>
-      win.webContents.send(channel, ...args),
-});
+export const ipcMainSend = new Proxy(
+  {},
+  {
+    get:
+      (_, channel: string) =>
+      (win: BrowserWindow, ...args: unknown[]) =>
+        win.webContents.send(channel, ...args),
+  },
+) as IpcMainSend;
 
 /** IPCメッセージの送信元を確認する */
 const validateIpcSender = (event: IpcMainInvokeEvent) => {

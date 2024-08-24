@@ -3,12 +3,15 @@ import { contextBridge, ipcRenderer } from "electron";
 import { Sandbox, ConfigType, EngineId, SandboxKey } from "@/type/preload";
 import { IpcRendererInvoke } from "@/type/ipc";
 
-const ipcRendererInvoke = new Proxy({} as IpcRendererInvoke, {
-  get:
-    (_, channel: string) =>
-    (...args: unknown[]) =>
-      ipcRenderer.invoke(channel, ...args),
-});
+const ipcRendererInvoke = new Proxy(
+  {},
+  {
+    get:
+      (_, channel: string) =>
+      (...args: unknown[]) =>
+        ipcRenderer.invoke(channel, ...args),
+  },
+) as IpcRendererInvoke;
 
 const api: Sandbox = {
   getAppInfos: async () => {
