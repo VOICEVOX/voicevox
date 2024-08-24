@@ -208,7 +208,7 @@ export const showOpenFilePickerImpl = async (options: {
     }
     return handles.length > 0 ? paths : undefined;
   } catch (e) {
-    log.warn(`showOpenFilePicker error: ${e}`);
+    log.warn("showOpenFilePicker error:", e);
     return undefined;
   }
 };

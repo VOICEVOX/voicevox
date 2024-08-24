@@ -634,6 +634,7 @@ const readyForContextMenu = () => {
     isRangeSelected.value = false;
     getMenuItemButton("切り取り").disabled = true;
     getMenuItemButton("コピー").disabled = true;
+    contextMenuHeader.value = "";
   } else {
     isRangeSelected.value = true;
     getMenuItemButton("切り取り").disabled = false;

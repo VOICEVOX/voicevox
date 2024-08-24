@@ -87,8 +87,8 @@
                   >
                     <BaseSwitch
                       :checked="toolbarButtons.includes(key)"
-                      onLabel="表示する"
-                      offLabel="表示しない"
+                      checkedLabel="表示する"
+                      uncheckedLabel="表示しない"
                     />
                   </BaseRowCard>
                 </div>

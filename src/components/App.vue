@@ -5,6 +5,7 @@
         v-if="openedEditor != undefined"
         :fileSubMenuData="subMenuData.fileSubMenuData.value"
         :editSubMenuData="subMenuData.editSubMenuData.value"
+        :viewSubMenuData="subMenuData.viewSubMenuData.value"
         :editor="openedEditor"
       />
       <KeepAlive>
@@ -116,10 +117,10 @@ onMounted(async () => {
   let engineIds: EngineId[];
   if (isMultiEngineOffMode) {
     const main = Object.values(store.state.engineInfos).find(
-      (engine) => engine.type === "default",
+      (engine) => engine.isDefault,
     );
     if (!main) {
-      throw new Error("No main engine found");
+      throw new Error("No default engine found");
     }
     engineIds = [main.uuid];
   } else {

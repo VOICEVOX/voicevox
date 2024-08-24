@@ -41,6 +41,8 @@ const props = defineProps<{
   fileSubMenuData: MenuItemData[];
   /** 「編集」メニューのサブメニュー */
   editSubMenuData: MenuItemData[];
+  /** 「表示」メニューのサブメニュー */
+  viewSubMenuData: MenuItemData[];
   /** エディタの種類 */
   editor: "talk" | "song";
 }>();
@@ -57,7 +59,7 @@ const defaultEngineAltPortTo = computed<number | undefined>(() => {
 
   // ref: https://github.com/VOICEVOX/voicevox/blob/32940eab36f4f729dd0390dca98f18656240d60d/src/views/EditorHome.vue#L522-L528
   const defaultEngineInfo = Object.values(store.state.engineInfos).find(
-    (engine) => engine.type === "default",
+    (engine) => engine.isDefault,
   );
   if (defaultEngineInfo == undefined) return undefined;
 
@@ -386,6 +388,15 @@ const menudata = computed<MenuItemData[]>(() => [
         : []),
       ...props.editSubMenuData,
     ],
+  },
+  {
+    type: "root",
+    label: "表示",
+    onClick: () => {
+      closeAllDialog();
+    },
+    disableWhenUiLocked: false,
+    subMenu: [...props.viewSubMenuData],
   },
   {
     type: "root",

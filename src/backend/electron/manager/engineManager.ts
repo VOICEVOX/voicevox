@@ -45,13 +45,14 @@ function createDefaultEngineInfos(defaultEngineDir: string): EngineInfo[] {
   return engines.map((engineInfo) => {
     return {
       ...engineInfo,
-      type: "default",
+      isDefault: true,
+      type: "path",
       executionFilePath: path.resolve(engineInfo.executionFilePath),
       path:
         engineInfo.path == undefined
           ? undefined
           : path.resolve(defaultEngineDir, engineInfo.path),
-    };
+    } satisfies EngineInfo;
   });
 }
 
@@ -116,7 +117,8 @@ export class EngineManager {
         executionFilePath: path.join(engineDir, command),
         executionArgs: args,
         type,
-      });
+        isDefault: false,
+      } satisfies EngineInfo);
       return "ok";
     };
     for (const dirName of fs.readdirSync(this.vvppEngineDir)) {
@@ -338,7 +340,7 @@ export class EngineManager {
     let errorNotified = false;
 
     engineProcess.on("error", (err) => {
-      log.error(`ENGINE ${engineId} ERROR: ${err}`);
+      log.error(`ENGINE ${engineId} ERROR:`, err);
       if (!errorNotified) {
         errorNotified = true;
         this.onEngineProcessError(engineInfo, err);

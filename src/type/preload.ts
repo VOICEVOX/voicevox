@@ -417,10 +417,10 @@ export type EngineInfo = {
   executionFilePath: string;
   executionArgs: string[];
   // エンジンの種類。
-  // default: デフォルトエンジン
   // vvpp: vvppファイルから読み込んだエンジン
   // path: パスを指定して追加したエンジン
-  type: "default" | "vvpp" | "path";
+  type: "vvpp" | "path";
+  isDefault: boolean; // デフォルトエンジンかどうか
 };
 
 export type Preset = {
@@ -610,6 +610,7 @@ export const rootMiscSettingSchema = z.object({
       panAndGain: z.boolean().default(true),
     })
     .default({}),
+  showSinger: z.boolean().default(true),
 });
 export type RootMiscSettingType = z.infer<typeof rootMiscSettingSchema>;
 

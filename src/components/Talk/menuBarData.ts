@@ -54,8 +54,12 @@ export const useMenuBarData = () => {
   // 「編集」メニュー
   const editSubMenuData = computed<MenuItemData[]>(() => []);
 
+  // 「表示」メニュー
+  const viewSubMenuData = computed<MenuItemData[]>(() => []);
+
   return {
     fileSubMenuData,
     editSubMenuData,
+    viewSubMenuData,
   };
 };

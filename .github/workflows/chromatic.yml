@@ -11,6 +11,11 @@ on:
     branches:
       - main
 
+env:
+  # Chromatic用にNodeのメモリを増やす
+  # https://github.com/chromaui/chromatic-cli/issues/550#issuecomment-1150713820
+  NODE_OPTIONS: --max-old-space-size=16384
+
 jobs:
   chromatic:
     name: Run Chromatic
