@@ -623,7 +623,6 @@ export const configSchema = z
         audioOutputDevice: z.string().default(""),
 
         songTrackFileNamePattern: z.string().default(""),
-        songApplyTrackParameters: z.boolean().default(true),
       })
       .default({}),
     hotkeySettings: hotkeySettingSchema.array().default(defaultHotkeySettings),

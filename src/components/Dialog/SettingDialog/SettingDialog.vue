@@ -383,17 +383,6 @@
                     :currentValue="savingSetting.songTrackFileNamePattern"
                     @click="showSongTrackAudioFilePatternEditDialog = true"
                   />
-                  <ToggleCell
-                    title="ソング：トラックのパラメータを書き出し時に適用する"
-                    description="ONの場合、トラックの音量・パンを書き出し時に適用します。"
-                    :modelValue="savingSetting.songApplyTrackParameters"
-                    @update:modelValue="
-                      handleSavingSettingChange(
-                        'songApplyTrackParameters',
-                        $event,
-                      )
-                    "
-                  />
                 </div>
               </QSlideTransition>
             </QCard>

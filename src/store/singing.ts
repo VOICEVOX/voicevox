@@ -2210,8 +2210,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             sampleRate,
             renderDuration,
             withLimiter,
-            state.experimentalSetting.enableMultiTrack &&
-              state.savingSetting.songApplyTrackParameters,
+            state.experimentalSetting.enableMultiTrack,
             state.tracks,
             state.phrases,
             state.singingGuides,
@@ -2348,8 +2347,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               sampleRate,
               renderDuration,
               withLimiter,
-              state.experimentalSetting.enableMultiTrack &&
-                state.savingSetting.songApplyTrackParameters,
+              state.experimentalSetting.enableMultiTrack,
               new Map([[trackId, { ...track, solo: false, mute: false }]]),
               new Map(
                 [...state.phrases.entries()].filter(
