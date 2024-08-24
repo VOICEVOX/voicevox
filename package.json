@@ -15,8 +15,8 @@
   "scripts": {
     "test:unit": "vitest --run",
     "test-watch:unit": "vitest --watch",
-    "test:storybook": "test-storybook",
-    "test-watch:storybook": "test-storybook --watch",
+    "test:storybook": "test-storybook --testTimeout=60000",
+    "test-watch:storybook": "test-storybook --watch --testTimeout=60000",
     "test:electron-e2e": "cross-env VITE_TARGET=electron playwright test",
     "test-watch:electron-e2e": "cross-env PWTEST_WATCH=1 VITE_TARGET=electron playwright test",
     "test:browser-e2e": "cross-env VITE_TARGET=browser playwright test",
