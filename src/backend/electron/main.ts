@@ -1044,23 +1044,6 @@ registerIpcMainHandle<IpcMainHandle>({
       return failure(a.code, a);
     }
   },
-
-  LOG_ERROR: () => {
-    // REVIEW: 型の定義はあるけど実装されていない…？
-    throw Error("Not Implemented");
-  },
-  LOG_WARN: () => {
-    // REVIEW: 型の定義はあるけど実装されていない…？
-    throw Error("Not Implemented");
-  },
-  LOG_INFO: () => {
-    // REVIEW: 型の定義はあるけど実装されていない…？
-    throw Error("Not Implemented");
-  },
-  RESTART_ENGINE_ALL: () => {
-    // REVIEW: 型の定義はあるけど実装されていない…？
-    throw Error("Not Implemented");
-  },
 });
 
 // app callback

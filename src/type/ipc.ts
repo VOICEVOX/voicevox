@@ -179,21 +179,6 @@ export type IpcIHData = {
     return: void;
   };
 
-  LOG_ERROR: {
-    args: [...params: unknown[]];
-    return: void;
-  };
-
-  LOG_WARN: {
-    args: [...params: unknown[]];
-    return: void;
-  };
-
-  LOG_INFO: {
-    args: [...params: unknown[]];
-    return: void;
-  };
-
   OPEN_LOG_DIRECTORY: {
     args: [];
     return: void;
@@ -202,11 +187,6 @@ export type IpcIHData = {
   ENGINE_INFOS: {
     args: [];
     return: EngineInfo[];
-  };
-
-  RESTART_ENGINE_ALL: {
-    args: [];
-    return: void;
   };
 
   RESTART_ENGINE: {
