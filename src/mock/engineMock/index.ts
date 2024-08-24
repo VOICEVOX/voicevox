@@ -8,7 +8,13 @@ import {
   replacePitchMock,
   tokensToActtentPhrasesMock,
 } from "./talkModelMock";
+import {
+  notesAndFramePhonemesAndPitchToVolumeMock,
+  notesAndFramePhonemesToPitchMock,
+  notesToFramePhonemesMock,
+} from "./singModelMock";
 
+import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import {
   AccentPhrase,
@@ -20,13 +26,13 @@ import {
   FrameAudioQuery,
   MoraDataMoraDataPostRequest,
   SingFrameAudioQuerySingFrameAudioQueryPostRequest,
+  SingFrameVolumeSingFrameVolumePostRequest,
   Speaker,
   SpeakerInfo,
   SpeakerInfoSpeakerInfoGetRequest,
   SupportedDevicesInfo,
   SynthesisSynthesisPostRequest,
 } from "@/openapi";
-import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 
 export const dicPath = "engineMock/dict";
 export const assetsPath = "engineMock/assets";
@@ -156,7 +162,51 @@ export function createOpenAPIEngineMock(): IEngineConnectorFactory {
 
           async singFrameAudioQuerySingFrameAudioQueryPost(
             payload: SingFrameAudioQuerySingFrameAudioQueryPostRequest,
-          ): Promise<FrameAudioQuery> {},
+          ): Promise<FrameAudioQuery> {
+            const { score, speaker: styleId } = payload;
+
+            const phonemes = notesToFramePhonemesMock(score.notes, styleId);
+            const f0 = notesAndFramePhonemesToPitchMock(
+              score.notes,
+              phonemes,
+              styleId,
+            );
+            const volume = notesAndFramePhonemesAndPitchToVolumeMock(
+              score.notes,
+              phonemes,
+              f0,
+              styleId,
+            );
+
+            return {
+              f0,
+              volume,
+              phonemes,
+              volumeScale: 1.0,
+              outputSamplingRate: 44100,
+              outputStereo: false,
+            };
+          },
+
+          async singFrameVolumeSingFrameVolumePost(
+            payload: SingFrameVolumeSingFrameVolumePostRequest,
+          ): Promise<Array<number>> {
+            const {
+              speaker: stlyeId,
+              bodySingFrameVolumeSingFrameVolumePost: {
+                score,
+                frameAudioQuery,
+              },
+            } = payload;
+
+            const volume = notesAndFramePhonemesAndPitchToVolumeMock(
+              score.notes,
+              frameAudioQuery.phonemes,
+              frameAudioQuery.f0,
+              stlyeId,
+            );
+            return volume;
+          },
         };
       }
 

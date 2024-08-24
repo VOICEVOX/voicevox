@@ -60,7 +60,7 @@ function textToAccentPhraseMock(text: string): AccentPhrase {
  */
 export function replaceLengthMock(
   accentPhrases: AccentPhrase[],
-  speaker: number,
+  styleId: number,
 ) {
   for (const accentPhrase of accentPhrases) {
     for (let i = 0; i < accentPhrase.moras.length; i++) {
@@ -78,7 +78,7 @@ export function replaceLengthMock(
 
   // 別のアクセント句や話者で同じにならないように適当に値をずらす
   for (let i = 0; i < accentPhrases.length; i++) {
-    const diff = i * 0.01 + speaker * 0.03;
+    const diff = i * 0.01 + styleId * 0.03;
     const accentPhrase = accentPhrases[i];
     for (const mora of accentPhrase.moras) {
       if (mora.consonantLength != undefined) mora.consonantLength += diff;
@@ -96,7 +96,7 @@ export function replaceLengthMock(
  */
 export function replacePitchMock(
   accentPhrases: AccentPhrase[],
-  speaker: number,
+  styleId: number,
 ) {
   for (const accentPhrase of accentPhrases) {
     for (let i = 0; i < accentPhrase.moras.length; i++) {
@@ -118,7 +118,7 @@ export function replacePitchMock(
 
   // 別のアクセント句や話者で同じにならないように適当に値をずらす
   for (let i = 0; i < accentPhrases.length; i++) {
-    const diff = i * 0.01 + speaker * 0.03;
+    const diff = i * 0.01 + styleId * 0.03;
     const accentPhrase = accentPhrases[i];
     for (const mora of accentPhrase.moras) {
       if (mora.pitch > 0) mora.pitch += diff;
@@ -133,7 +133,7 @@ export function replacePitchMock(
  */
 export function tokensToActtentPhrasesMock(
   tokens: IpadicFeatures[],
-  speaker: number,
+  styleId: number,
 ) {
   const accentPhrases: AccentPhrase[] = [];
   let textPhrase = "";
@@ -186,8 +186,8 @@ export function tokensToActtentPhrasesMock(
   }
 
   // 長さとピッチを代入
-  replaceLengthMock(accentPhrases, speaker);
-  replacePitchMock(accentPhrases, speaker);
+  replaceLengthMock(accentPhrases, styleId);
+  replacePitchMock(accentPhrases, styleId);
 
   return accentPhrases;
 }
