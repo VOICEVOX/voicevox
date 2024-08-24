@@ -458,21 +458,21 @@ async function createWindow() {
   if (isDevelopment && !isTest) win.webContents.openDevTools();
 
   win.on("maximize", () => {
-    win.webContents.send("DETECT_MAXIMIZED");
+    ipcMainSend.DETECT_MAXIMIZED(win);
   });
   win.on("unmaximize", () => {
-    win.webContents.send("DETECT_UNMAXIMIZED");
+    ipcMainSend.DETECT_UNMAXIMIZED(win);
   });
   win.on("enter-full-screen", () => {
-    win.webContents.send("DETECT_ENTER_FULLSCREEN");
+    ipcMainSend.DETECT_ENTER_FULLSCREEN(win);
   });
   win.on("leave-full-screen", () => {
-    win.webContents.send("DETECT_LEAVE_FULLSCREEN");
+    ipcMainSend.DETECT_LEAVE_FULLSCREEN(win);
   });
   win.on("always-on-top-changed", () => {
-    win.webContents.send(
-      win.isAlwaysOnTop() ? "DETECT_PINNED" : "DETECT_UNPINNED",
-    );
+    win.isAlwaysOnTop()
+      ? ipcMainSend.DETECT_PINNED(win)
+      : ipcMainSend.DETECT_UNPINNED(win);
   });
   win.on("close", (event) => {
     if (!appState.willQuit) {
@@ -486,7 +486,7 @@ async function createWindow() {
 
   win.on("resize", () => {
     const windowSize = win.getSize();
-    win.webContents.send("DETECT_RESIZED", {
+    ipcMainSend.DETECT_RESIZED(win, {
       width: windowSize[0],
       height: windowSize[1],
     });
