@@ -373,7 +373,7 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
   bottom: 0;
   color: var(--scheme-color-sing-on-note-bar-container);
   font-size: 1rem;
-  font-weight: 400;
+  font-weight: 500;
   letter-spacing: -0.1em;
   white-space: nowrap;
   pointer-events: none;
