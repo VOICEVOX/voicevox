@@ -196,7 +196,7 @@ type Phrase = Readonly<{
 }>;
 
 /**
- * フレーズレンダリングで必要となるキャッシュや関数
+ * フレーズレンダリングで必要となる外部のキャッシュや関数
  */
 type ExternalDependencies = Readonly<{
   queryCache: Map<FrameAudioQueryKey, FrameAudioQuery>;
@@ -746,7 +746,7 @@ const stages: readonly Stage[] = [
 
 /**
  * フレーズレンダラーを作成する。
- * @param externalDependencies レンダリング処理で必要となるキャッシュや関数
+ * @param externalDependencies レンダリング処理で必要となる外部のキャッシュや関数
  * @returns フレーズレンダラー
  */
 export const createPhraseRenderer = (
