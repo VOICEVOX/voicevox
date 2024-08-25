@@ -22,9 +22,11 @@ import { createLogger } from "@/domain/frontend/log";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { getOrThrow } from "@/helpers/mapHelper";
 
-const logger = createLogger("store/singing");
+const logger = createLogger("sing/phraseRendering");
 
-// リクエスト用のノーツ（と休符）を作成する
+/**
+ * リクエスト用のノーツ（と休符）を作成する。
+ */
 const createNotesForRequestToEngine = (
   firstRestDuration: number,
   lastRestDurationSeconds: number,
@@ -112,8 +114,10 @@ const shiftVolume = (volume: number[], volumeShift: number) => {
   }
 };
 
-// 歌とpauの呼吸音が重ならないようにvolumeを制御する
-// fadeOutDurationSecondsが0の場合は即座にvolumeを0にする
+/**
+ * 末尾のpauの区間のvolumeを0にする。（歌とpauの呼吸音が重ならないようにする）
+ * fadeOutDurationSecondsが0の場合は即座にvolumeを0にする。
+ */
 const muteLastPauSection = (
   volume: number[],
   phonemes: FramePhoneme[],
@@ -159,6 +163,9 @@ const singingTeacherStyleId = StyleId(6000); // TODO: 設定できるように�
 const lastRestDurationSeconds = 0.5; // TODO: 設定できるようにする
 const fadeOutDurationSeconds = 0.15; // TODO: 設定できるようにする
 
+/**
+ * フレーズレンダリングに必要なデータのスナップショット
+ */
 type Snapshot = Readonly<{
   tpqn: number;
   tempos: Tempo[];
@@ -167,6 +174,9 @@ type Snapshot = Readonly<{
   editFrameRate: number;
 }>;
 
+/**
+ * フレーズ
+ */
 type Phrase = Readonly<{
   firstRestDuration: number;
   notes: Note[];
@@ -185,6 +195,9 @@ type Phrase = Readonly<{
   };
 }>;
 
+/**
+ * フレーズレンダリングで必要となるキャッシュや関数
+ */
 type ExternalDependencies = Readonly<{
   queryCache: Map<FrameAudioQueryKey, FrameAudioQuery>;
   singingVolumeCache: Map<SingingVolumeKey, SingingVolume>;
@@ -227,6 +240,9 @@ type ExternalDependencies = Readonly<{
   ) => Promise<SingingVoice>;
 }>;
 
+/**
+ * フレーズレンダリングのコンテキスト
+ */
 type Context = Readonly<{
   snapshot: Snapshot;
   trackId: TrackId;
@@ -234,8 +250,37 @@ type Context = Readonly<{
   externalDependencies: ExternalDependencies;
 }>;
 
+/**
+ * フレーズレンダリングのステージ
+ */
+type Stage = Readonly<{
+  id: "queryGeneration" | "singingVolumeGeneration" | "singingVoiceSynthesis";
+
+  /**
+   * このステージが実行されるべきかを判定する。
+   * @param context コンテキスト
+   * @returns 実行が必要かどうかのブール値
+   */
+  shouldBeExecuted: (context: Context) => Promise<boolean>;
+
+  /**
+   * 前回の処理結果を削除する。
+   * @param context コンテキスト
+   */
+  deleteExecutionResult: (context: Context) => void;
+
+  /**
+   * ステージの処理を実行する。
+   * @param context コンテキスト
+   */
+  execute: (context: Context) => Promise<void>;
+}>;
+
 // クエリ生成ステージ
 
+/**
+ * クエリの生成に必要なデータ
+ */
 type QuerySource = Readonly<{
   engineId: EngineId;
   engineFrameRate: number;
@@ -244,13 +289,6 @@ type QuerySource = Readonly<{
   firstRestDuration: number;
   notes: Note[];
   keyRangeAdjustment: number;
-}>;
-
-type QueryGenerationStage = Readonly<{
-  id: "queryGeneration";
-  shouldBeExecuted: (context: Context) => Promise<boolean>;
-  deleteExecutionResult: (context: Context) => void;
-  execute: (context: Context) => Promise<void>;
 }>;
 
 const generateQuerySource = (context: Context): QuerySource => {
@@ -305,7 +343,7 @@ const generateQuery = async (
   return query;
 };
 
-const queryGenerationStage: QueryGenerationStage = {
+const queryGenerationStage: Stage = {
   id: "queryGeneration",
   shouldBeExecuted: async (context: Context) => {
     const phrases = context.externalDependencies.phrases;
@@ -361,6 +399,9 @@ const queryGenerationStage: QueryGenerationStage = {
 
 // 歌唱ボリューム生成ステージ
 
+/**
+ * 歌唱ボリュームの生成に必要なデータ
+ */
 type SingingVolumeSource = Readonly<{
   engineId: EngineId;
   engineFrameRate: number;
@@ -371,13 +412,6 @@ type SingingVolumeSource = Readonly<{
   keyRangeAdjustment: number;
   volumeRangeAdjustment: number;
   queryForVolumeGeneration: FrameAudioQuery;
-}>;
-
-type SingingVolumeGenerationStage = Readonly<{
-  id: "singingVolumeGeneration";
-  shouldBeExecuted: (context: Context) => Promise<boolean>;
-  deleteExecutionResult: (context: Context) => void;
-  execute: (context: Context) => Promise<void>;
 }>;
 
 const generateSingingVolumeSource = (context: Context): SingingVolumeSource => {
@@ -459,8 +493,6 @@ const generateSingingVolume = async (
   );
 
   shiftVolume(singingVolume, singingVolumeSource.volumeRangeAdjustment);
-
-  // 末尾のpauの区間の音量を0にする
   muteLastPauSection(
     singingVolume,
     queryForVolumeGeneration.phonemes,
@@ -470,7 +502,7 @@ const generateSingingVolume = async (
   return singingVolume;
 };
 
-const singingVolumeGenerationStage: SingingVolumeGenerationStage = {
+const singingVolumeGenerationStage: Stage = {
   id: "singingVolumeGeneration",
   shouldBeExecuted: async (context: Context) => {
     const phrases = context.externalDependencies.phrases;
@@ -533,18 +565,14 @@ const singingVolumeGenerationStage: SingingVolumeGenerationStage = {
   },
 };
 
-// 音声合成ステージ
+// 歌唱音声合成ステージ
 
+/**
+ * 歌唱音声の合成に必要なデータ
+ */
 type SingingVoiceSource = Readonly<{
   singer: Singer;
   queryForSingingVoiceSynthesis: FrameAudioQuery;
-}>;
-
-type SingingVoiceSynthesisStage = Readonly<{
-  id: "singingVoiceSynthesis";
-  shouldBeExecuted: (context: Context) => Promise<boolean>;
-  deleteExecutionResult: (context: Context) => void;
-  execute: (context: Context) => Promise<void>;
 }>;
 
 const generateSingingVoiceSource = (context: Context): SingingVoiceSource => {
@@ -608,7 +636,7 @@ const synthesizeSingingVoice = async (
   return singingVoice;
 };
 
-const singingVoiceSynthesisStage: SingingVoiceSynthesisStage = {
+const singingVoiceSynthesisStage: Stage = {
   id: "singingVoiceSynthesis",
   shouldBeExecuted: async (context: Context) => {
     const phrases = context.externalDependencies.phrases;
@@ -671,17 +699,59 @@ const singingVoiceSynthesisStage: SingingVoiceSynthesisStage = {
 
 // フレーズレンダラー
 
-const stages = [
+export type PhraseRenderStageId = Stage["id"];
+
+export type PhraseRenderer = Readonly<{
+  /**
+   * レンダリング処理の開始点となる最初のステージのIDを返す。
+   * @returns ステージID
+   */
+  getFirstRenderStageId: () => PhraseRenderStageId;
+
+  /**
+   * レンダリングがどのステージから開始されるべきかを判断する。
+   * すべてのステージがスキップ可能な場合、undefinedが返される。
+   * @param snapshot スナップショット
+   * @param trackId トラックID
+   * @param phraseKey フレーズキー
+   * @returns ステージID または undefined
+   */
+  determineStartStage: (
+    snapshot: Snapshot,
+    trackId: TrackId,
+    phraseKey: PhraseKey,
+  ) => Promise<PhraseRenderStageId | undefined>;
+
+  /**
+   * 指定されたステージからレンダリング処理を開始する。
+   * レンダリング処理を開始する前に、前回のレンダリング処理結果の削除が行われる。
+   * @param snapshot スナップショット
+   * @param trackId トラックID
+   * @param phraseKey フレーズキー
+   * @param startStageId 開始ステージID
+   */
+  render: (
+    snapshot: Snapshot,
+    trackId: TrackId,
+    phraseKey: PhraseKey,
+    startStageId: PhraseRenderStageId,
+  ) => Promise<void>;
+}>;
+
+const stages: readonly Stage[] = [
   queryGenerationStage,
   singingVolumeGenerationStage,
   singingVoiceSynthesisStage,
-] as const;
+];
 
-export type PhraseRenderStageId = (typeof stages)[number]["id"];
-
+/**
+ * フレーズレンダラーを作成する。
+ * @param externalDependencies レンダリング処理で必要となるキャッシュや関数
+ * @returns フレーズレンダラー
+ */
 export const createPhraseRenderer = (
   externalDependencies: ExternalDependencies,
-) => {
+): PhraseRenderer => {
   return {
     getFirstRenderStageId: () => {
       return stages[0].id;
@@ -729,5 +799,5 @@ export const createPhraseRenderer = (
         await stages[i].execute(context);
       }
     },
-  } as const;
+  };
 };

@@ -1527,7 +1527,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
         const firstRestMinDurationSeconds = 0.12;
 
-        // レンダリング中に変更される可能性のあるデータをコピーする
+        // レンダリング中に変更される可能性のあるデータのコピー
         const snapshot = {
           tpqn: state.tpqn,
           tempos: cloneWithUnwrapProxy(state.tempos),
@@ -1547,7 +1547,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             ),
           ),
           editFrameRate: state.editFrameRate,
-        };
+        } as const;
 
         const phraseRenderer = createPhraseRenderer({
           queryCache,
@@ -1669,6 +1669,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             if (track.singer == undefined) {
               phrase.state = "SINGER_IS_NOT_SET";
             } else {
+              // どのステージから開始するかを決める
+              // phrase.stateがCOULD_NOT_RENDERだった場合は最初からレンダリングし直す
               const renderStartStageId =
                 phrase.state === "COULD_NOT_RENDER"
                   ? phraseRenderer.getFirstRenderStageId()
@@ -1754,6 +1756,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           });
 
           try {
+            // フレーズのレンダリングを行う
             await phraseRenderer.render(
               snapshot,
               phrase.trackId,
