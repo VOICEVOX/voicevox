@@ -1658,7 +1658,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         for (const [phraseKey, foundPhrase] of foundPhrases) {
           // 新しいフレーズまたは既存のフレーズの場合
           const existingPhrase = state.phrases.get(phraseKey);
-          const phrase = existingPhrase ?? foundPhrase;
+          const phrase =
+            existingPhrase == undefined
+              ? foundPhrase
+              : cloneWithUnwrapProxy(existingPhrase);
           const track = getOrThrow(snapshot.tracks, phrase.trackId);
           if (track.singer == undefined) {
             phrase.state = "SINGER_IS_NOT_SET";
