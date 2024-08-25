@@ -1656,36 +1656,30 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           }
         }
         for (const [phraseKey, foundPhrase] of foundPhrases) {
+          // 新しいフレーズまたは既存のフレーズの場合
           const existingPhrase = state.phrases.get(phraseKey);
-          if (existingPhrase == undefined) {
-            // 新しいフレーズの場合
-            const renderStartStageId = phraseRenderer.getFirstRenderStageId();
-            renderStartStageIds.set(phraseKey, renderStartStageId);
-            phrases.set(phraseKey, foundPhrase);
+          const phrase = existingPhrase ?? foundPhrase;
+          const track = getOrThrow(snapshot.tracks, phrase.trackId);
+          if (track.singer == undefined) {
+            phrase.state = "SINGER_IS_NOT_SET";
           } else {
-            // すでに存在するフレーズの場合
-            const phrase = { ...existingPhrase };
-            const track = getOrThrow(snapshot.tracks, phrase.trackId);
-            if (track.singer == undefined) {
-              phrase.state = "SINGER_IS_NOT_SET";
-            } else {
-              // どのステージから開始するかを決める
-              // phrase.stateがCOULD_NOT_RENDERだった場合は最初からレンダリングし直す
-              const renderStartStageId =
-                phrase.state === "COULD_NOT_RENDER"
-                  ? phraseRenderer.getFirstRenderStageId()
-                  : await phraseRenderer.determineStartStage(
-                      snapshot,
-                      foundPhrase.trackId,
-                      phraseKey,
-                    );
-              if (renderStartStageId != undefined) {
-                renderStartStageIds.set(phraseKey, renderStartStageId);
-                phrase.state = "WAITING_TO_BE_RENDERED";
-              }
+            // 新しいフレーズの場合は最初からレンダリングする
+            // phrase.stateがCOULD_NOT_RENDERだった場合は最初からレンダリングし直す
+            // 既存のフレーズの場合は適切なレンダリング開始ステージを決定する
+            const renderStartStageId =
+              existingPhrase == undefined || phrase.state === "COULD_NOT_RENDER"
+                ? phraseRenderer.getFirstRenderStageId()
+                : await phraseRenderer.determineStartStage(
+                    snapshot,
+                    foundPhrase.trackId,
+                    phraseKey,
+                  );
+            if (renderStartStageId != undefined) {
+              renderStartStageIds.set(phraseKey, renderStartStageId);
+              phrase.state = "WAITING_TO_BE_RENDERED";
             }
-            phrases.set(phraseKey, phrase);
           }
+          phrases.set(phraseKey, phrase);
         }
 
         // 無くなったフレーズのシーケンスを削除する
