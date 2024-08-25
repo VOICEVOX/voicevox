@@ -1,9 +1,9 @@
-import { toRaw } from "vue";
 import { store } from "@/store";
 import { AudioKey } from "@/type/preload";
 import { resetMockMode, uuid4 } from "@/helpers/random";
+import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 
-const initialState = structuredClone(toRaw(store.state));
+const initialState = cloneWithUnwrapProxy(store.state);
 beforeEach(() => {
   store.replaceState(initialState);
 

@@ -154,7 +154,7 @@ defineExpose({
     }
   },
   removeCell: () => {
-    removeCell();
+    void removeCell();
   },
   /** index番目のキャラクターを選ぶ */
   selectCharacterAt: (index: number) => {
@@ -181,8 +181,10 @@ const isMultiSelectEnabled = computed(
 );
 
 const selectAndSetActiveAudioKey = () => {
-  store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: props.audioKey });
-  store.dispatch("SET_SELECTED_AUDIO_KEYS", { audioKeys: [props.audioKey] });
+  void store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: props.audioKey });
+  void store.dispatch("SET_SELECTED_AUDIO_KEYS", {
+    audioKeys: [props.audioKey],
+  });
 };
 
 const onRootFocus = () => {
@@ -246,8 +248,8 @@ const onClickWithModifierKey = (event: MouseEvent) => {
       newSelectedAudioKeys = [...currentSelectedAudioKeys, props.audioKey];
     }
   }
-  store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: newActiveAudioKey });
-  store.dispatch("SET_SELECTED_AUDIO_KEYS", {
+  void store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: newActiveAudioKey });
+  void store.dispatch("SET_SELECTED_AUDIO_KEYS", {
     audioKeys: newSelectedAudioKeys,
   });
 };
@@ -271,7 +273,7 @@ const selectedVoice = computed<Voice | undefined>({
   },
   set(voice: Voice | undefined) {
     if (voice == undefined) return;
-    store.dispatch("COMMAND_MULTI_CHANGE_VOICE", {
+    void store.dispatch("COMMAND_MULTI_CHANGE_VOICE", {
       audioKeys: isMultiSelectEnabled.value
         ? store.getters.SELECTED_AUDIO_KEYS
         : [props.audioKey],
@@ -329,7 +331,7 @@ const clearInputSelection = () => {
 const textSplitType = computed(() => store.state.splitTextWhenPaste);
 const pasteOnAudioCell = async (event: ClipboardEvent) => {
   event.preventDefault();
-  paste({ text: event.clipboardData?.getData("text/plain") });
+  void paste({ text: event.clipboardData?.getData("text/plain") });
 };
 /**
  * 貼り付け。
@@ -420,7 +422,7 @@ const moveCell = (offset: number) => (e?: KeyboardEvent) => {
         audioKey: audioKeys.value[index],
         focusTarget: "root",
       });
-      store.dispatch("SET_SELECTED_AUDIO_KEYS", {
+      void store.dispatch("SET_SELECTED_AUDIO_KEYS", {
         audioKeys: [
           ...selectedAudioKeysBefore,
           props.audioKey,
@@ -489,7 +491,7 @@ const removeCell = async () => {
       });
     }
 
-    store.dispatch("COMMAND_MULTI_REMOVE_AUDIO_ITEM", {
+    void store.dispatch("COMMAND_MULTI_REMOVE_AUDIO_ITEM", {
       audioKeys: audioKeysToDelete,
     });
   }
@@ -511,7 +513,7 @@ const selectCharacterAt = (index: number) => {
     speakerId: speakerUuid,
     styleId: style.styleId,
   };
-  store.dispatch("COMMAND_MULTI_CHANGE_VOICE", {
+  void store.dispatch("COMMAND_MULTI_CHANGE_VOICE", {
     audioKeys: isMultiSelectEnabled.value
       ? store.getters.SELECTED_AUDIO_KEYS
       : [props.audioKey],
@@ -556,7 +558,7 @@ const contextMenudata = ref<
       const start = textFieldSelection.selectionStart;
       setAudioTextBuffer(textFieldSelection.getReplacedStringTo(""));
       await nextTick();
-      navigator.clipboard.writeText(text);
+      void navigator.clipboard.writeText(text);
       textFieldSelection.setCursorPosition(start);
     },
     disableWhenUiLocked: true,
@@ -568,7 +570,7 @@ const contextMenudata = ref<
       contextMenu.value?.hide();
       if (textFieldSelection.isEmpty) return;
 
-      navigator.clipboard.writeText(textFieldSelection.getAsString());
+      void navigator.clipboard.writeText(textFieldSelection.getAsString());
     },
     disableWhenUiLocked: true,
   },
@@ -577,7 +579,7 @@ const contextMenudata = ref<
     label: "貼り付け",
     onClick: async () => {
       contextMenu.value?.hide();
-      paste();
+      void paste();
     },
     disableWhenUiLocked: true,
   },
@@ -632,6 +634,7 @@ const readyForContextMenu = () => {
     isRangeSelected.value = false;
     getMenuItemButton("切り取り").disabled = true;
     getMenuItemButton("コピー").disabled = true;
+    contextMenuHeader.value = "";
   } else {
     isRangeSelected.value = true;
     getMenuItemButton("切り取り").disabled = false;

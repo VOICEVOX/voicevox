@@ -455,6 +455,22 @@
                 >
                 </QSelect>
               </QCardActions>
+              <QSlideTransition>
+                <!-- q-slide-transitionはheightだけをアニメーションするのでdivで囲う -->
+                <div v-show="experimentalSetting.enableMultiTrack">
+                  <BaseCell
+                    title="ソング：元に戻すトラック操作"
+                    description="「元に戻す」機能の対象とするトラック操作を指定します。"
+                  >
+                    <QOptionGroup
+                      v-model="undoableTrackOperations"
+                      type="checkbox"
+                      :options="undoableTrackOperationsLabels"
+                      inline
+                    />
+                  </BaseCell>
+                </div>
+              </QSlideTransition>
             </QCard>
 
             <!-- Experimental Card -->
@@ -503,16 +519,16 @@
                 "
               />
               <ToggleCell
-                title="ソング：ピッチ編集機能"
-                description="ONの場合、ピッチ編集モードに切り替えて音の高さを変えられるようになります。"
-                :modelValue="experimentalSetting.enablePitchEditInSongEditor"
-                @update:modelValue="
-                  changeExperimentalSetting(
-                    'enablePitchEditInSongEditor',
-                    $event,
-                  )
-                "
-              />
+                title="ソング：マルチトラック機能"
+                description="ONの場合、１つのプロジェクト内に複数のトラックを作成できるようにします。"
+                :modelValue="experimentalSetting.enableMultiTrack"
+                :disable="!canToggleMultiTrack"
+                @update:modelValue="setMultiTrack($event)"
+              >
+                <QTooltip v-if="!canToggleMultiTrack" :delay="500">
+                  現在のプロジェクトに複数のトラックが存在するため、無効化できません。
+                </QTooltip>
+              </ToggleCell>
             </QCard>
             <QCard flat class="setting-card">
               <QCardActions>
@@ -537,6 +553,7 @@ import { computed, ref, watchEffect } from "vue";
 import FileNamePatternDialog from "./FileNamePatternDialog.vue";
 import ToggleCell from "./ToggleCell.vue";
 import ButtonToggleCell from "./ButtonToggleCell.vue";
+import BaseCell from "./BaseCell.vue";
 import { useStore } from "@/store";
 import {
   isProduction,
@@ -558,7 +575,7 @@ const useRootMiscSetting = <T extends keyof RootMiscSettingType>(key: T) => {
   const setter = (value: RootMiscSettingType[T]) => {
     // Vuexの型処理でUnionが解かれてしまうのを迂回している
     // FIXME: このワークアラウンドをなくす
-    store.dispatch("SET_ROOT_MISC_SETTING", { key: key as never, value });
+    void store.dispatch("SET_ROOT_MISC_SETTING", { key: key as never, value });
   };
   return [state, setter] as const;
 };
@@ -583,7 +600,7 @@ const engineUseGpu = computed({
     return store.state.engineSettings[selectedEngineId.value].useGpu;
   },
   set: (mode: boolean) => {
-    changeUseGpu(mode);
+    void changeUseGpu(mode);
   },
 });
 const engineIds = computed(() => store.state.engineIds);
@@ -592,7 +609,7 @@ const inheritAudioInfoMode = computed(() => store.state.inheritAudioInfo);
 const activePointScrollMode = computed({
   get: () => store.state.activePointScrollMode,
   set: (activePointScrollMode: ActivePointScrollMode) => {
-    store.dispatch("SET_ACTIVE_POINT_SCROLL_MODE", {
+    void store.dispatch("SET_ACTIVE_POINT_SCROLL_MODE", {
       activePointScrollMode,
     });
   },
@@ -607,11 +624,35 @@ const isDefaultConfirmedTips = computed(() => {
   return Object.values(confirmedTips).every((v) => !v);
 });
 
+// ソング：元に戻すトラック操作
+type UndoableTrackOperation =
+  keyof RootMiscSettingType["undoableTrackOperations"];
+const undoableTrackOperationsLabels = [
+  { value: "soloAndMute", label: "ミュート・ソロ" },
+  { value: "panAndGain", label: "パン・音量" },
+];
+const undoableTrackOperations = computed({
+  get: () =>
+    Object.keys(store.state.undoableTrackOperations).filter(
+      (key) =>
+        store.state.undoableTrackOperations[key as UndoableTrackOperation],
+    ) as UndoableTrackOperation[],
+  set: (undoableTrackOperations: UndoableTrackOperation[]) => {
+    void store.dispatch("SET_ROOT_MISC_SETTING", {
+      key: "undoableTrackOperations",
+      value: {
+        soloAndMute: undoableTrackOperations.includes("soloAndMute"),
+        panAndGain: undoableTrackOperations.includes("panAndGain"),
+      },
+    });
+  },
+});
+
 // 外観
 const currentThemeNameComputed = computed({
   get: () => store.state.themeSetting.currentTheme,
   set: (currentTheme: string) => {
-    store.dispatch("SET_THEME_SETTING", { currentTheme: currentTheme });
+    void store.dispatch("SET_THEME_SETTING", { currentTheme: currentTheme });
   },
 });
 
@@ -684,7 +725,7 @@ if (navigator.mediaDevices) {
     "devicechange",
     updateAudioOutputDevices,
   );
-  updateAudioOutputDevices();
+  void updateAudioOutputDevices();
 } else {
   warn("navigator.mediaDevices is not available.");
 }
@@ -692,7 +733,7 @@ if (navigator.mediaDevices) {
 const acceptRetrieveTelemetryComputed = computed({
   get: () => store.state.acceptRetrieveTelemetry == "Accepted",
   set: (acceptRetrieveTelemetry: boolean) => {
-    store.dispatch("SET_ACCEPT_RETRIEVE_TELEMETRY", {
+    void store.dispatch("SET_ACCEPT_RETRIEVE_TELEMETRY", {
       acceptRetrieveTelemetry: acceptRetrieveTelemetry ? "Accepted" : "Refused",
     });
 
@@ -700,7 +741,7 @@ const acceptRetrieveTelemetryComputed = computed({
       return;
     }
 
-    store.dispatch("SHOW_ALERT_DIALOG", {
+    void store.dispatch("SHOW_ALERT_DIALOG", {
       title: "ソフトウェア利用状況のデータ収集の無効化",
       message:
         "ソフトウェア利用状況のデータ収集を完全に無効にするには、VOICEVOXを再起動する必要があります",
@@ -710,7 +751,7 @@ const acceptRetrieveTelemetryComputed = computed({
 });
 
 const changeUseGpu = async (useGpu: boolean) => {
-  store.dispatch("SHOW_LOADING_SCREEN", {
+  void store.dispatch("SHOW_LOADING_SCREEN", {
     message: "起動モードを変更中です",
   });
 
@@ -719,22 +760,28 @@ const changeUseGpu = async (useGpu: boolean) => {
     engineId: selectedEngineId.value,
   });
 
-  store.dispatch("HIDE_ALL_LOADING_SCREEN");
+  void store.dispatch("HIDE_ALL_LOADING_SCREEN");
 };
 
 const changeinheritAudioInfo = async (inheritAudioInfo: boolean) => {
   if (store.state.inheritAudioInfo === inheritAudioInfo) return;
-  store.dispatch("SET_INHERIT_AUDIOINFO", { inheritAudioInfo });
+  void store.dispatch("SET_INHERIT_AUDIOINFO", { inheritAudioInfo });
 };
 
 const changeEnablePreset = (value: boolean) => {
   if (value) {
     // プリセット機能をONにしたときは「デフォルトプリセットを自動で適用」もONにする
-    changeExperimentalSetting("enablePreset", true);
-    changeExperimentalSetting("shouldApplyDefaultPresetOnVoiceChanged", true);
+    void changeExperimentalSetting("enablePreset", true);
+    void changeExperimentalSetting(
+      "shouldApplyDefaultPresetOnVoiceChanged",
+      true,
+    );
   } else {
-    changeExperimentalSetting("enablePreset", false);
-    changeExperimentalSetting("shouldApplyDefaultPresetOnVoiceChanged", false);
+    void changeExperimentalSetting("enablePreset", false);
+    void changeExperimentalSetting(
+      "shouldApplyDefaultPresetOnVoiceChanged",
+      false,
+    );
   }
 };
 
@@ -742,7 +789,7 @@ const changeExperimentalSetting = async (
   key: keyof ExperimentalSettingType,
   data: boolean,
 ) => {
-  store.dispatch("SET_EXPERIMENTAL_SETTING", {
+  void store.dispatch("SET_EXPERIMENTAL_SETTING", {
     experimentalSetting: { ...experimentalSetting.value, [key]: data },
   });
 };
@@ -779,7 +826,7 @@ const handleSavingSettingChange = (
   key: keyof SavingSetting,
   data: string | boolean | number,
 ) => {
-  store.dispatch("SET_SAVING_SETTING", {
+  void store.dispatch("SET_SAVING_SETTING", {
     data: { ...savingSetting.value, [key]: data },
   });
 };
@@ -804,7 +851,7 @@ const outputSamplingRate = computed({
       }
     }
 
-    store.dispatch("SET_ENGINE_SETTING", {
+    void store.dispatch("SET_ENGINE_SETTING", {
       engineId: selectedEngineId.value,
       engineSetting: {
         ...store.state.engineSettings[selectedEngineId.value],
@@ -859,6 +906,23 @@ const selectedEngineId = computed({
 });
 const renderEngineNameLabel = (engineId: EngineId) => {
   return engineInfos.value[engineId].name;
+};
+
+// トラックが複数あるときはマルチトラック機能を無効化できないようにする
+const canToggleMultiTrack = computed(() => {
+  if (!experimentalSetting.value.enableMultiTrack) {
+    return true;
+  }
+
+  return store.state.tracks.size <= 1;
+});
+
+const setMultiTrack = (enableMultiTrack: boolean) => {
+  void changeExperimentalSetting("enableMultiTrack", enableMultiTrack);
+  // 無効化するときはUndo/Redoをクリアする
+  if (!enableMultiTrack) {
+    void store.dispatch("CLEAR_UNDO_HISTORY");
+  }
 };
 </script>
 

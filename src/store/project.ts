@@ -10,6 +10,7 @@ import {
   ProjectStoreState,
   ProjectStoreTypes,
 } from "@/store/type";
+import { TrackId } from "@/type/preload";
 
 import { getValueOrThrow, ResultError } from "@/type/result";
 import { LatestProjectType } from "@/domain/project/schema";
@@ -20,6 +21,7 @@ import {
 import {
   createDefaultTempo,
   createDefaultTimeSignature,
+  createDefaultTrack,
   DEFAULT_TPQN,
 } from "@/sing/domain";
 import { EditorType } from "@/type/preload";
@@ -55,25 +57,19 @@ const applySongProjectToStore = async (
   actions: DotNotationDispatch<AllActions>,
   songProject: LatestProjectType["song"],
 ) => {
-  const { tpqn, tempos, timeSignatures, tracks } = songProject;
-  // TODO: マルチトラック対応
-  await actions.SET_SINGER({
-    singer: tracks[0].singer,
-  });
-  await actions.SET_KEY_RANGE_ADJUSTMENT({
-    keyRangeAdjustment: tracks[0].keyRangeAdjustment,
-  });
-  await actions.SET_VOLUME_RANGE_ADJUSTMENT({
-    volumeRangeAdjustment: tracks[0].volumeRangeAdjustment,
-  });
+  const { tpqn, tempos, timeSignatures, tracks, trackOrder } = songProject;
+
   await actions.SET_TPQN({ tpqn });
   await actions.SET_TEMPOS({ tempos });
   await actions.SET_TIME_SIGNATURES({ timeSignatures });
-  await actions.SET_NOTES({ notes: tracks[0].notes });
-  await actions.CLEAR_PITCH_EDIT_DATA(); // FIXME: SET_PITCH_EDIT_DATAがセッターになれば不要
-  await actions.SET_PITCH_EDIT_DATA({
-    data: tracks[0].pitchEditData,
-    startFrame: 0,
+  await actions.SET_TRACKS({
+    tracks: new Map(
+      trackOrder.map((trackId) => {
+        const track = tracks[trackId];
+        if (!track) throw new Error("track == undefined");
+        return [trackId, track];
+      }),
+    ),
   });
 };
 
@@ -128,20 +124,23 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         await context.actions.SET_TIME_SIGNATURES({
           timeSignatures: [createDefaultTimeSignature(1)],
         });
-        await context.actions.SET_NOTES({ notes: [] });
-        await context.actions.SET_SINGER({ withRelated: true });
-        await context.actions.CLEAR_PITCH_EDIT_DATA();
+        const trackId = TrackId(crypto.randomUUID());
+        await context.actions.SET_TRACKS({
+          tracks: new Map([[trackId, createDefaultTrack()]]),
+        });
+        await context.actions.SET_NOTES({ notes: [], trackId });
+        await context.actions.SET_SINGER({ withRelated: true, trackId });
+        await context.actions.CLEAR_PITCH_EDIT_DATA({ trackId });
 
         context.mutations.SET_PROJECT_FILEPATH({ filePath: undefined });
-        context.mutations.RESET_SAVED_LAST_COMMAND_IDS();
-        context.mutations.CLEAR_COMMANDS();
+        void context.actions.CLEAR_UNDO_HISTORY();
       },
     ),
   },
 
   PARSE_PROJECT_FILE: {
     async action({ actions, getters }, { projectJson }) {
-      const projectData = JSON.parse(projectJson);
+      const projectData: unknown = JSON.parse(projectJson);
 
       const characterInfos = getters.USER_ORDERED_CHARACTER_INFOS("talk");
       if (characterInfos == undefined)
@@ -169,7 +168,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
      */
     action: createUILockAction(
       async (
-        { actions, mutations, getters },
+        { actions, mutations, state, getters },
         { filePath, confirm }: { filePath?: string; confirm?: boolean },
       ) => {
         if (!filePath) {
@@ -198,6 +197,20 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             projectJson: text,
           });
 
+          if (
+            !state.experimentalSetting.enableMultiTrack &&
+            parsedProjectData.song.trackOrder.length > 1
+          ) {
+            await window.backend.showMessageDialog({
+              type: "error",
+              title: "エラー",
+              message:
+                "このプロジェクトはマルチトラック機能を使用して作成されていますが、現在の設定ではマルチトラック機能を使用できません。\n" +
+                "設定の「ソング：マルチトラック機能」を有効にしてからプロジェクトを読み込んでください。",
+            });
+            return false;
+          }
+
           if (confirm !== false && getters.IS_EDITED) {
             const result = await actions.SAVE_OR_DISCARD_PROJECT_FILE({
               additionalMessage:
@@ -212,8 +225,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           await applySongProjectToStore(actions, parsedProjectData.song);
 
           mutations.SET_PROJECT_FILEPATH({ filePath });
-          mutations.RESET_SAVED_LAST_COMMAND_IDS();
-          mutations.CLEAR_COMMANDS();
+          void actions.CLEAR_UNDO_HISTORY();
           return true;
         } catch (err) {
           window.backend.logError(err);
@@ -289,6 +301,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             tempos,
             timeSignatures,
             tracks,
+            trackOrder,
           } = context.state;
           const projectData: LatestProjectType = {
             appVersion: appInfos.version,
@@ -300,7 +313,8 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               tpqn,
               tempos,
               timeSignatures,
-              tracks,
+              tracks: Object.fromEntries(tracks),
+              trackOrder,
             },
           };
 
@@ -395,6 +409,13 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
   RESET_SAVED_LAST_COMMAND_IDS: {
     mutation(state) {
       state.savedLastCommandIds = { talk: null, song: null };
+    },
+  },
+
+  CLEAR_UNDO_HISTORY: {
+    action({ commit }) {
+      commit("RESET_SAVED_LAST_COMMAND_IDS");
+      commit("CLEAR_COMMANDS");
     },
   },
 });

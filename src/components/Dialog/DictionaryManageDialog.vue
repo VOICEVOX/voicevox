@@ -90,7 +90,10 @@
                       dense
                       round
                       icon="edit"
-                      @click.stop="editWord"
+                      @click.stop="
+                        selectWord(key);
+                        editWord();
+                      "
                     >
                       <QTooltip :delay="500">編集</QTooltip>
                     </QBtn>
@@ -100,7 +103,10 @@
                       dense
                       round
                       icon="delete_outline"
-                      @click.stop="deleteWord"
+                      @click.stop="
+                        selectWord(key);
+                        deleteWord();
+                      "
                     >
                       <QTooltip :delay="500">削除</QTooltip>
                     </QBtn>
@@ -112,7 +118,7 @@
 
           <!-- 右側のpane -->
           <div
-            v-if="wordEditing"
+            v-show="wordEditing"
             class="col-8 no-wrap text-no-wrap word-editor"
           >
             <div class="row q-pl-md q-mt-md">
@@ -123,9 +129,18 @@
                 class="word-input"
                 dense
                 :disable="uiLocked"
+                @focus="clearSurfaceInputSelection()"
                 @blur="setSurface(surface)"
                 @keydown.enter="yomiFocus"
-              />
+              >
+                <ContextMenu
+                  ref="surfaceContextMenu"
+                  :header="surfaceContextMenuHeader"
+                  :menudata="surfaceContextMenudata"
+                  @beforeShow="startSurfaceContextMenuOperation()"
+                  @beforeHide="endSurfaceContextMenuOperation()"
+                />
+              </QInput>
             </div>
             <div class="row q-pl-md q-pt-sm">
               <div class="text-h6">読み</div>
@@ -136,12 +151,20 @@
                 dense
                 :error="!isOnlyHiraOrKana"
                 :disable="uiLocked"
+                @focus="clearYomiInputSelection()"
                 @blur="setYomi(yomi)"
                 @keydown.enter="setYomiWhenEnter"
               >
                 <template #error>
                   読みに使える文字はひらがなとカタカナのみです。
                 </template>
+                <ContextMenu
+                  ref="yomiContextMenu"
+                  :header="yomiContextMenuHeader"
+                  :menudata="yomiContextMenudata"
+                  @beforeShow="startYomiContextMenuOperation()"
+                  @beforeHide="endYomiContextMenuOperation()"
+                />
               </QInput>
             </div>
             <div class="row q-pl-md q-mt-lg text-h6">アクセント調整</div>
@@ -235,7 +258,7 @@
                 textColor="display"
                 class="text-no-wrap text-bold q-mr-sm"
                 :disable="uiLocked || !isWordChanged"
-                @click="resetWord"
+                @click="resetWord(selectedId)"
                 >リセット</QBtn
               >
               <QBtn
@@ -266,6 +289,8 @@
 import { computed, ref, watch } from "vue";
 import { QInput } from "quasar";
 import AudioAccent from "@/components/Talk/AudioAccent.vue";
+import ContextMenu from "@/components/Menu/ContextMenu.vue";
+import { useRightClickContextMenu } from "@/composables/useRightClickContextMenu";
 import { useStore } from "@/store";
 import type { FetchAudioResult } from "@/store/type";
 import { AccentPhrase, UserDictWord } from "@/openapi";
@@ -353,7 +378,7 @@ const yomiFocus = (event?: KeyboardEvent) => {
 };
 const setYomiWhenEnter = (event?: KeyboardEvent) => {
   if (event && event.isComposing) return;
-  setYomi(yomi.value);
+  void setYomi(yomi.value);
 };
 
 const selectedId = ref("");
@@ -472,7 +497,7 @@ const play = async () => {
   } catch (e) {
     window.backend.logError(e);
     nowGenerating.value = false;
-    store.dispatch("SHOW_ALERT_DIALOG", {
+    void store.dispatch("SHOW_ALERT_DIALOG", {
       title: "生成に失敗しました",
       message: "エンジンの再起動をお試しください。",
     });
@@ -486,7 +511,7 @@ const play = async () => {
   nowPlaying.value = false;
 };
 const stop = () => {
-  store.dispatch("STOP_AUDIO");
+  void store.dispatch("STOP_AUDIO");
 };
 
 // accent phraseにあるaccentと実際に登録するアクセントには差が生まれる
@@ -545,7 +570,7 @@ const saveWord = async () => {
         priority: wordPriority.value,
       });
     } catch {
-      store.dispatch("SHOW_ALERT_DIALOG", {
+      void store.dispatch("SHOW_ALERT_DIALOG", {
         title: "単語の更新に失敗しました",
         message: "エンジンの再起動をお試しください。",
       });
@@ -562,7 +587,7 @@ const saveWord = async () => {
         }),
       );
     } catch {
-      store.dispatch("SHOW_ALERT_DIALOG", {
+      void store.dispatch("SHOW_ALERT_DIALOG", {
         title: "単語の登録に失敗しました",
         message: "エンジンの再起動をお試しください。",
       });
@@ -586,7 +611,7 @@ const deleteWord = async () => {
         }),
       );
     } catch {
-      store.dispatch("SHOW_ALERT_DIALOG", {
+      void store.dispatch("SHOW_ALERT_DIALOG", {
         title: "単語の削除に失敗しました",
         message: "エンジンの再起動をお試しください。",
       });
@@ -596,13 +621,17 @@ const deleteWord = async () => {
     toInitialState();
   }
 };
-const resetWord = async () => {
+const resetWord = async (id: string) => {
   const result = await store.dispatch("SHOW_WARNING_DIALOG", {
     title: "単語の変更をリセットしますか？",
     message: "単語の変更は破棄されてリセットされます。",
     actionName: "リセット",
   });
   if (result === "OK") {
+    selectedId.value = id;
+    surface.value = userDict.value[id].surface;
+    void setYomi(userDict.value[id].yomi, true);
+    wordPriority.value = userDict.value[id].priority;
     toWordEditingState();
   }
 };
@@ -623,7 +652,7 @@ const discardOrNotDialog = async (okCallback: () => void) => {
 const newWord = () => {
   selectedId.value = "";
   surface.value = "";
-  setYomi("");
+  void setYomi("");
   wordPriority.value = defaultDictPriority;
   editWord();
 };
@@ -633,7 +662,7 @@ const editWord = () => {
 const selectWord = (id: string) => {
   selectedId.value = id;
   surface.value = userDict.value[id].surface;
-  setYomi(userDict.value[id].yomi, true);
+  void setYomi(userDict.value[id].yomi, true);
   wordPriority.value = userDict.value[id].priority;
   toWordSelectedState();
 };
@@ -650,7 +679,7 @@ const toInitialState = () => {
   wordEditing.value = false;
   selectedId.value = "";
   surface.value = "";
-  setYomi("");
+  void setYomi("");
   wordPriority.value = defaultDictPriority;
 };
 // 単語が選択されているだけの状態
@@ -666,6 +695,25 @@ const toWordEditingState = () => {
 const toDialogClosedState = () => {
   dictionaryManageDialogOpenedComputed.value = false;
 };
+
+const surfaceContextMenu = ref<InstanceType<typeof ContextMenu>>();
+const yomiContextMenu = ref<InstanceType<typeof ContextMenu>>();
+
+const {
+  contextMenuHeader: surfaceContextMenuHeader,
+  contextMenudata: surfaceContextMenudata,
+  startContextMenuOperation: startSurfaceContextMenuOperation,
+  clearInputSelection: clearSurfaceInputSelection,
+  endContextMenuOperation: endSurfaceContextMenuOperation,
+} = useRightClickContextMenu(surfaceContextMenu, surfaceInput, surface);
+
+const {
+  contextMenuHeader: yomiContextMenuHeader,
+  contextMenudata: yomiContextMenudata,
+  startContextMenuOperation: startYomiContextMenuOperation,
+  clearInputSelection: clearYomiInputSelection,
+  endContextMenuOperation: endYomiContextMenuOperation,
+} = useRightClickContextMenu(yomiContextMenu, yomiInput, yomi);
 </script>
 
 <style lang="scss" scoped>

@@ -45,13 +45,14 @@ function createDefaultEngineInfos(defaultEngineDir: string): EngineInfo[] {
   return engines.map((engineInfo) => {
     return {
       ...engineInfo,
-      type: "default",
+      isDefault: true,
+      type: "path",
       executionFilePath: path.resolve(engineInfo.executionFilePath),
       path:
         engineInfo.path == undefined
           ? undefined
           : path.resolve(defaultEngineDir, engineInfo.path),
-    };
+    } satisfies EngineInfo;
   });
 }
 
@@ -116,7 +117,8 @@ export class EngineManager {
         executionFilePath: path.join(engineDir, command),
         executionArgs: args,
         type,
-      });
+        isDefault: false,
+      } satisfies EngineInfo);
       return "ok";
     };
     for (const dirName of fs.readdirSync(this.vvppEngineDir)) {
@@ -325,11 +327,11 @@ export class EngineManager {
     });
     engineProcessContainer.engineProcess = engineProcess;
 
-    engineProcess.stdout?.on("data", (data) => {
+    engineProcess.stdout?.on("data", (data: Buffer) => {
       log.info(`ENGINE ${engineId} STDOUT: ${data.toString("utf-8")}`);
     });
 
-    engineProcess.stderr?.on("data", (data) => {
+    engineProcess.stderr?.on("data", (data: Buffer) => {
       log.error(`ENGINE ${engineId} STDERR: ${data.toString("utf-8")}`);
     });
 
@@ -338,7 +340,7 @@ export class EngineManager {
     let errorNotified = false;
 
     engineProcess.on("error", (err) => {
-      log.error(`ENGINE ${engineId} ERROR: ${err}`);
+      log.error(`ENGINE ${engineId} ERROR:`, err);
       if (!errorNotified) {
         errorNotified = true;
         this.onEngineProcessError(engineInfo, err);
@@ -474,7 +476,7 @@ export class EngineManager {
           `ENGINE ${engineId}: Process is not started yet or already killed. Starting process...`,
         );
 
-        this.runEngine(engineId);
+        void this.runEngine(engineId);
         resolve();
         return;
       }
@@ -487,7 +489,7 @@ export class EngineManager {
       const restartEngineOnProcessClosedCallback = () => {
         log.info(`ENGINE ${engineId}: Process killed. Restarting process...`);
 
-        this.runEngine(engineId);
+        void this.runEngine(engineId);
         resolve();
       };
 
@@ -514,7 +516,7 @@ export class EngineManager {
             restartEngineOnProcessClosedCallback,
           );
 
-          reject();
+          reject(error);
         }
       });
     });

@@ -74,6 +74,10 @@ export const commandIdSchema = z.string().brand<"CommandId">();
 export type CommandId = z.infer<typeof commandIdSchema>;
 export const CommandId = (id: string): CommandId => commandIdSchema.parse(id);
 
+export const trackIdSchema = z.string().brand<"TrackId">();
+export type TrackId = z.infer<typeof trackIdSchema>;
+export const TrackId = (id: string): TrackId => trackIdSchema.parse(id);
+
 // 共通のアクション名
 export const actionPostfixSelectNthCharacter = "番目のキャラクターを選択";
 
@@ -192,7 +196,7 @@ export const defaultHotkeySettings: HotkeySettingType[] = [
     return {
       action:
         `${index + 1}${actionPostfixSelectNthCharacter}` as HotkeyActionNameType,
-      combination: HotkeyCombination((!isMac ? "Ctrl " : "Meta ") + roleKey),
+      combination: HotkeyCombination(`${!isMac ? "Ctrl" : "Meta"} ${roleKey}`),
     };
   }),
 ];
@@ -418,10 +422,10 @@ export type EngineInfo = {
   executionFilePath: string;
   executionArgs: string[];
   // エンジンの種類。
-  // default: デフォルトエンジン
   // vvpp: vvppファイルから読み込んだエンジン
   // path: パスを指定して追加したエンジン
-  type: "default" | "vvpp" | "path";
+  type: "vvpp" | "path";
+  isDefault: boolean; // デフォルトエンジンかどうか
 };
 
 export type Preset = {
@@ -447,15 +451,16 @@ export type PresetConfig = {
   keys: string[];
 };
 
-export type MorphableTargetInfoTable = {
-  [baseStyleId: StyleId]:
-    | undefined
-    | {
-        [targetStyleId: StyleId]: {
-          isMorphable: boolean;
-        };
-      };
-};
+export type MorphableTargetInfoTable = Record<
+  StyleId,
+  | undefined
+  | Record<
+      StyleId,
+      {
+        isMorphable: boolean;
+      }
+    >
+>;
 
 export const hotkeyActionNameSchema = z.enum([
   "音声書き出し",
@@ -573,7 +578,7 @@ export const experimentalSettingSchema = z.object({
   enableMorphing: z.boolean().default(false),
   enableMultiSelect: z.boolean().default(false),
   shouldKeepTuningOnTextChange: z.boolean().default(false),
-  enablePitchEditInSongEditor: z.boolean().default(false),
+  enableMultiTrack: z.boolean().default(false),
 });
 
 export type ExperimentalSettingType = z.infer<typeof experimentalSettingSchema>;
@@ -604,6 +609,13 @@ export const rootMiscSettingSchema = z.object({
   enableMemoNotation: z.boolean().default(false), // メモ記法を有効にするか
   enableRubyNotation: z.boolean().default(false), // ルビ記法を有効にするか
   skipUpdateVersion: z.string().optional(), // アップデートをスキップしたバージョン
+  undoableTrackOperations: z // ソングエディタでどのトラック操作をUndo可能にするか
+    .object({
+      soloAndMute: z.boolean().default(true),
+      panAndGain: z.boolean().default(true),
+    })
+    .default({}),
+  showSinger: z.boolean().default(true),
 });
 export type RootMiscSettingType = z.infer<typeof rootMiscSettingSchema>;
 
@@ -734,6 +746,6 @@ export interface MessageBoxReturnValue {
   checkboxChecked: boolean;
 }
 
-export const SandboxKey = "backend" as const;
+export const SandboxKey = "backend";
 
 export type EditorType = "talk" | "song";

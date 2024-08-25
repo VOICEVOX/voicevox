@@ -2,6 +2,14 @@
   <QToolbar class="sing-toolbar">
     <!-- configs for entire song -->
     <div class="sing-configs">
+      <QBtn
+        v-if="multiTrackEnabled"
+        class="q-mx-xs"
+        :icon="isSidebarOpen ? 'menu_open' : 'menu'"
+        round
+        flat
+        @click="toggleSidebar"
+      />
       <CharacterMenuButton />
       <QInput
         type="number"
@@ -93,11 +101,7 @@
     </div>
     <!-- settings for edit controls -->
     <div class="sing-controls">
-      <EditTargetSwicher
-        v-if="showEditTargetSwitchButton"
-        :editTarget
-        :changeEditTarget
-      />
+      <EditTargetSwicher :editTarget :changeEditTarget />
       <QBtn
         flat
         dense
@@ -161,6 +165,10 @@ const editor = "song";
 const canUndo = computed(() => store.getters.CAN_UNDO(editor));
 const canRedo = computed(() => store.getters.CAN_REDO(editor));
 
+const multiTrackEnabled = computed(
+  () => store.state.experimentalSetting.enableMultiTrack,
+);
+
 const { registerHotkeyWithCleanup } = useHotkeyManager();
 registerHotkeyWithCleanup({
   editor,
@@ -194,20 +202,23 @@ registerHotkeyWithCleanup({
 });
 
 const undo = () => {
-  store.dispatch("UNDO", { editor });
+  void store.dispatch("UNDO", { editor });
 };
 const redo = () => {
-  store.dispatch("REDO", { editor });
+  void store.dispatch("REDO", { editor });
 };
-
-const showEditTargetSwitchButton = computed(() => {
-  return store.state.experimentalSetting.enablePitchEditInSongEditor;
-});
 
 const editTarget = computed(() => store.state.sequencerEditTarget);
 
 const changeEditTarget = (editTarget: SequencerEditTarget) => {
-  store.dispatch("SET_EDIT_TARGET", { editTarget });
+  void store.dispatch("SET_EDIT_TARGET", { editTarget });
+};
+
+const isSidebarOpen = computed(() => store.state.isSongSidebarOpen);
+const toggleSidebar = () => {
+  void store.dispatch("SET_SONG_SIDEBAR_OPEN", {
+    isSongSidebarOpen: !isSidebarOpen.value,
+  });
 };
 
 const tempos = computed(() => store.state.tempos);
@@ -218,6 +229,7 @@ const keyRangeAdjustment = computed(
 const volumeRangeAdjustment = computed(
   () => store.getters.SELECTED_TRACK.volumeRangeAdjustment,
 );
+const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
 
 const bpmInputBuffer = ref(120);
 const beatsInputBuffer = ref(4);
@@ -304,7 +316,7 @@ const setVolumeRangeAdjustmentInputBuffer = (
 
 const setTempo = () => {
   const bpm = bpmInputBuffer.value;
-  store.dispatch("COMMAND_SET_TEMPO", {
+  void store.dispatch("COMMAND_SET_TEMPO", {
     tempo: {
       position: 0,
       bpm,
@@ -315,7 +327,7 @@ const setTempo = () => {
 const setTimeSignature = () => {
   const beats = beatsInputBuffer.value;
   const beatType = beatTypeInputBuffer.value;
-  store.dispatch("COMMAND_SET_TIME_SIGNATURE", {
+  void store.dispatch("COMMAND_SET_TIME_SIGNATURE", {
     timeSignature: {
       measureNumber: 1,
       beats,
@@ -326,13 +338,17 @@ const setTimeSignature = () => {
 
 const setKeyRangeAdjustment = () => {
   const keyRangeAdjustment = keyRangeAdjustmentInputBuffer.value;
-  store.dispatch("COMMAND_SET_KEY_RANGE_ADJUSTMENT", { keyRangeAdjustment });
+  void store.dispatch("COMMAND_SET_KEY_RANGE_ADJUSTMENT", {
+    keyRangeAdjustment,
+    trackId: selectedTrackId.value,
+  });
 };
 
 const setVolumeRangeAdjustment = () => {
   const volumeRangeAdjustment = volumeRangeAdjustmentInputBuffer.value;
-  store.dispatch("COMMAND_SET_VOLUME_RANGE_ADJUSTMENT", {
+  void store.dispatch("COMMAND_SET_VOLUME_RANGE_ADJUSTMENT", {
     volumeRangeAdjustment,
+    trackId: selectedTrackId.value,
   });
 };
 
@@ -363,15 +379,15 @@ const playHeadPositionMilliSecStr = computed(() => {
 const nowPlaying = computed(() => store.state.nowPlaying);
 
 const play = () => {
-  store.dispatch("SING_PLAY_AUDIO");
+  void store.dispatch("SING_PLAY_AUDIO");
 };
 
 const stop = () => {
-  store.dispatch("SING_STOP_AUDIO");
+  void store.dispatch("SING_STOP_AUDIO");
 };
 
 const goToZero = () => {
-  store.dispatch("SET_PLAYHEAD_POSITION", { position: 0 });
+  void store.dispatch("SET_PLAYHEAD_POSITION", { position: 0 });
 };
 
 const volume = computed({
@@ -379,7 +395,7 @@ const volume = computed({
     return store.state.volume * 100;
   },
   set(value: number) {
-    store.dispatch("SET_VOLUME", { volume: value / 100 });
+    void store.dispatch("SET_VOLUME", { volume: value / 100 });
   },
 });
 
@@ -411,7 +427,7 @@ const snapTypeSelectModel = computed({
     );
   },
   set(value) {
-    store.dispatch("SET_SNAP_TYPE", {
+    void store.dispatch("SET_SNAP_TYPE", {
       snapType: value.snapType,
     });
   },
@@ -422,13 +438,13 @@ const playheadPositionChangeListener = (position: number) => {
 };
 
 onMounted(() => {
-  store.dispatch("ADD_PLAYHEAD_POSITION_CHANGE_LISTENER", {
+  void store.dispatch("ADD_PLAYHEAD_POSITION_CHANGE_LISTENER", {
     listener: playheadPositionChangeListener,
   });
 });
 
 onUnmounted(() => {
-  store.dispatch("REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER", {
+  void store.dispatch("REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER", {
     listener: playheadPositionChangeListener,
   });
 });

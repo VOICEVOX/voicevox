@@ -14,7 +14,9 @@ describe("migrateProjectFileObject", () => {
   test("v0.14.11", async () => {
     // ８期生のプロジェクトファイル
     const vvprojFile = path.resolve(vvprojDir, "0.14.11.vvproj");
-    const projectData = JSON.parse(fs.readFileSync(vvprojFile, "utf-8"));
+    const projectData: unknown = JSON.parse(
+      fs.readFileSync(vvprojFile, "utf-8"),
+    );
 
     await migrateProjectFileObject(projectData, {
       fetchMoraData: async () => {

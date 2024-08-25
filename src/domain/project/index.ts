@@ -1,17 +1,20 @@
 /**
  * プロジェクトファイル関連のコード
  */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
 import semver from "semver";
 
 import { LatestProjectType, projectSchema } from "./schema";
 import { AccentPhrase } from "@/openapi";
-import { EngineId, StyleId, Voice } from "@/type/preload";
+import { EngineId, StyleId, TrackId, Voice } from "@/type/preload";
 import {
   DEFAULT_BEAT_TYPE,
   DEFAULT_BEATS,
   DEFAULT_BPM,
   DEFAULT_TPQN,
+  DEFAULT_TRACK_NAME,
 } from "@/sing/domain";
 
 const DEFAULT_SAMPLING_RATE = 24000;
@@ -71,6 +74,7 @@ const validateTalkProject = (talkProject: LatestProjectType["talk"]) => {
   }
 };
 
+// TODO: マイグレーション（とファイルの最初のeslint-disable）を別ファイルに移す
 /**
  * プロジェクトファイルのマイグレーション
  */
@@ -281,6 +285,21 @@ export const migrateProjectFileObject = async (
     for (const track of projectData.song.tracks) {
       track.pitchEditData = [];
     }
+  }
+
+  if (semver.satisfies(projectAppVersion, "<0.20.0", semverSatisfiesOptions)) {
+    // tracks: Track[] -> tracks: Record<TrackId, Track> + trackOrder: TrackId[]
+    const newTracks: Record<TrackId, unknown> = {};
+    for (const track of projectData.song.tracks) {
+      track.name = DEFAULT_TRACK_NAME;
+      track.solo = false;
+      track.mute = false;
+      track.gain = 1;
+      track.pan = 0;
+      newTracks[TrackId(crypto.randomUUID())] = track;
+    }
+    projectData.song.tracks = newTracks;
+    projectData.song.trackOrder = Object.keys(newTracks);
   }
 
   // Validation check

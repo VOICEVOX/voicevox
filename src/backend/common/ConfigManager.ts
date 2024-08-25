@@ -12,7 +12,9 @@ import {
   HotkeyCombination,
   VoiceId,
   PresetKey,
+  envEngineInfoSchema,
 } from "@/type/preload";
+import { ensureNotNullish } from "@/helpers/errorHelper";
 
 const lockKey = "save";
 
@@ -39,7 +41,9 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
         throw new Error("VITE_DEFAULT_ENGINE_INFOS == undefined");
       }
       const engineId = EngineId(
-        JSON.parse(import.meta.env.VITE_DEFAULT_ENGINE_INFOS)[0].uuid,
+        envEngineInfoSchema
+          .array()
+          .parse(JSON.parse(import.meta.env.VITE_DEFAULT_ENGINE_INFOS))[0].uuid,
       );
       if (engineId == undefined)
         throw new Error("VITE_DEFAULT_ENGINE_INFOS[0].uuid == undefined");
@@ -83,6 +87,7 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
           "enableMultiEngine",
         )
       ) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const enableMultiEngine: boolean =
           // @ts-expect-error 削除されたパラメータ。
           config.experimentalSetting.enableMultiEngine;
@@ -144,13 +149,12 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
     (config) => {
       // ピッチ表示機能の設定をピッチ編集機能に引き継ぐ
       const experimentalSetting =
-        config.experimentalSetting as ExperimentalSettingType & {
-          showPitchInSongEditor?: boolean; // FIXME: TypeScript 5.4.5ならこの型の結合は不要
-        };
+        config.experimentalSetting as ExperimentalSettingType;
       if (
         "showPitchInSongEditor" in experimentalSetting &&
         typeof experimentalSetting.showPitchInSongEditor === "boolean"
       ) {
+        // @ts-expect-error 削除されたパラメータ。
         experimentalSetting.enablePitchEditInSongEditor =
           experimentalSetting.showPitchInSongEditor;
         delete experimentalSetting.showPitchInSongEditor;
@@ -222,6 +226,16 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
         presets.keys = newPresetKeys;
       })();
 
+      // ピッチ編集機能を実験的機能から通常機能に
+      const experimentalSetting =
+        config.experimentalSetting as ExperimentalSettingType;
+      if (
+        "enablePitchEditInSongEditor" in experimentalSetting &&
+        typeof experimentalSetting.enablePitchEditInSongEditor === "boolean"
+      ) {
+        delete experimentalSetting.enablePitchEditInSongEditor;
+      }
+
       return config;
     },
   ],
@@ -291,7 +305,7 @@ export abstract class BaseConfigManager {
   }
 
   private _save() {
-    this.lock.acquire(lockKey, async () => {
+    void this.lock.acquire(lockKey, async () => {
       await this.save({
         ...configSchema.parse({
           ...this.config,
@@ -337,15 +351,16 @@ export abstract class BaseConfigManager {
           action: defaultHotkey.action,
           combination: COMBINATION_IS_NONE,
         };
-        return loadedHotkey || hotkeyWithoutCombination;
+        return loadedHotkey ?? hotkeyWithoutCombination;
       },
     );
     const migratedHotkeys = hotkeysWithoutNewCombination.map((hotkey) => {
       if (hotkey.combination === COMBINATION_IS_NONE) {
-        const newHotkey =
+        const newHotkey = ensureNotNullish(
           defaultHotkeySettings.find(
             (defaultHotkey) => defaultHotkey.action === hotkey.action,
-          ) || hotkey; // ここの find が undefined を返すケースはないが、ts のエラーになるので入れた
+          ),
+        );
         const combinationExists = hotkeysWithoutNewCombination.some(
           (hotkey) => hotkey.combination === newHotkey.combination,
         );

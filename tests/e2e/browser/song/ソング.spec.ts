@@ -6,7 +6,7 @@ test.beforeEach(gotoHome);
 
 async function navigateToSong(page: Page) {
   await navigateToMain(page);
-  expect(page.getByText("ソング")).toBeVisible();
+  await expect(page.getByText("ソング")).toBeVisible();
   await page.getByText("ソング").click();
 }
 

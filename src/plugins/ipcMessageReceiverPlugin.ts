@@ -29,11 +29,11 @@ export const ipcMessageReceiver: Plugin = {
     );
 
     window.backend.onReceivedIPCMsg("DETECT_PINNED", () => {
-      options.store.dispatch("DETECT_PINNED");
+      void options.store.dispatch("DETECT_PINNED");
     });
 
     window.backend.onReceivedIPCMsg("DETECT_UNPINNED", () => {
-      options.store.dispatch("DETECT_UNPINNED");
+      void options.store.dispatch("DETECT_UNPINNED");
     });
 
     window.backend.onReceivedIPCMsg("DETECT_ENTER_FULLSCREEN", () =>
@@ -45,13 +45,13 @@ export const ipcMessageReceiver: Plugin = {
     );
 
     window.backend.onReceivedIPCMsg("CHECK_EDITED_AND_NOT_SAVE", (_, obj) => {
-      options.store.dispatch("CHECK_EDITED_AND_NOT_SAVE", obj);
+      void options.store.dispatch("CHECK_EDITED_AND_NOT_SAVE", obj);
     });
 
     window.backend.onReceivedIPCMsg(
       "DETECT_RESIZED",
       debounce(
-        (_, { width, height }) =>
+        (_, { width, height }: { width: number; height: number }) =>
           window.dataLayer?.push({ event: "windowResize", width, height }),
         300,
       ),
