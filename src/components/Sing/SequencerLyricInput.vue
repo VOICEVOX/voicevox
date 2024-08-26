@@ -118,7 +118,7 @@ watch(
 
 .lyric-input {
   display: inline-block;
-  font-weight: 500;
+  font-weight: 400;
   font-size: 16px;
   box-sizing: border-box;
   background-color: oklch(from var(--scheme-color-background) l c h / 0.8);
