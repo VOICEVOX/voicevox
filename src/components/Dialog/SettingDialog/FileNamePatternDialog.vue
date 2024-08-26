@@ -85,7 +85,7 @@ const props = defineProps<{
   openDialog: boolean;
   defaultTemplate: string;
   availableTags: (keyof typeof replaceTagIdToTagString)[];
-  buildFileName: (pattern: string) => string;
+  fileNameBuilder: (pattern: string) => string;
 }>();
 
 const emit = defineEmits<{
@@ -95,7 +95,6 @@ const emit = defineEmits<{
 const updateOpenDialog = (isOpen: boolean) => emit("update:openDialog", isOpen);
 
 const fileNamePattern = defineModel<string>("fileNamePattern", {
-  type: String,
   default: "",
 });
 const patternInput = ref<QInput>();
@@ -141,7 +140,7 @@ const errorMessage = computed(() => {
 const hasError = computed(() => errorMessage.value !== "");
 
 const previewFileName = computed(() =>
-  props.buildFileName(currentNamePattern.value),
+  props.fileNameBuilder(currentNamePattern.value),
 );
 
 const initializeInput = () => {

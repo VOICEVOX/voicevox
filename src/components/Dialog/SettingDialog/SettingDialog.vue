@@ -309,7 +309,7 @@
                   'date',
                   'projectName',
                 ]"
-                :buildFileName="buildAudioFileNameFromRawData"
+                :fileNameBuilder="buildAudioFileNameFromRawData"
                 @complete="handleSavingSettingChange('fileNamePattern', $event)"
               />
               <FileNamePatternDialog
@@ -324,7 +324,7 @@
                   'date',
                   'projectName',
                 ]"
-                :buildFileName="buildSongTrackAudioFileNameFromRawData"
+                :fileNameBuilder="buildSongTrackAudioFileNameFromRawData"
                 @complete="
                   handleSavingSettingChange('songTrackFileNamePattern', $event)
                 "
