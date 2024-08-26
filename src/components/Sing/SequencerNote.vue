@@ -9,6 +9,7 @@
       overlapping: hasOverlappingError,
       'invalid-phrase': hasPhraseError,
       'below-pitch': editTargetIsPitch,
+      resizing: isResizingNote,
     }"
     :style="{
       width: `${width}px`,
@@ -239,6 +240,18 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
 @use "@/styles/v2/variables" as vars;
 @use "@/styles/v2/colors" as colors;
 
+@mixin text-outline($color, $size: 1px) {
+  text-shadow:
+    #{-$size} #{-$size} 0 $color,
+    #{$size} #{-$size} 0 $color,
+    #{-$size} #{$size} 0 $color,
+    #{$size} #{$size} 0 $color,
+    0 #{-$size} 0 $color,
+    0 #{$size} 0 $color,
+    #{-$size} 0 0 $color,
+    #{$size} 0 0 $color;
+}
+
 .note {
   position: absolute;
   top: 0;
@@ -263,10 +276,6 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     min-width: 3px;
     max-width: 8px;
     height: 100%;
-
-    &:hover {
-      cursor: ew-resize;
-    }
   }
 
   .note-right-edge {
@@ -278,10 +287,6 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     min-width: 3px;
     max-width: 8px;
     height: 100%;
-
-    &:hover {
-      cursor: ew-resize;
-    }
   }
 
   &.selected {
@@ -290,6 +295,14 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
       border-color: var(--scheme-color-sing-note-bar-selected-border);
       outline: 1px solid var(--scheme-color-sing-note-bar-selected-outline);
       outline-offset: 1px;
+    }
+
+    .note-left-edge:hover {
+      cursor: ew-resize;
+    }
+
+    .note-right-edge:hover {
+      cursor: ew-resize;
     }
   }
 
@@ -303,11 +316,11 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
 
   &.overlapping,
   &.invalid-phrase {
+    --note-error-container: oklch(
+      from var(--scheme-color-error-container) l calc(var(--secondary-c) / 2) h
+    );
     .note-bar {
-      background-color: oklch(
-        from var(--scheme-color-error-container) l calc(var(--secondary-c) / 2)
-          h
-      );
+      background-color: var(--note-error-container);
       border-color: var(--scheme-color-error);
       outline-color: var(--scheme-color-error-container);
     }
@@ -353,7 +366,7 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     }
   }
 
-  &.resizing-note {
+  &.resizing {
     cursor: ew-resize;
   }
 }
@@ -378,19 +391,11 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
   white-space: nowrap;
   pointer-events: none;
   background: transparent;
-  text-shadow:
-    // NOTE: 以下の目的でtext-shadowを設定
-    // - ノートバーの外側に歌詞が溢れた場合でも歌詞が見えるようにする
-    // - エッジホバーとかぶっても歌詞が見えるようにする
-    // - 今後ピッチラインや波形などその他と重なっても歌詞が見えるようにする
-    -1px -1px 0 var(--scheme-color-sing-note-bar-container),
-    1px -1px 0 var(--scheme-color-sing-note-bar-container),
-    -1px 1px 0 var(--scheme-color-sing-note-bar-container),
-    1px 1px 0 var(--scheme-color-sing-note-bar-container),
-    0 -1px 0 var(--scheme-color-sing-note-bar-container),
-    0 1px 0 var(--scheme-color-sing-note-bar-container),
-    -1px 0 0 var(--scheme-color-sing-note-bar-container),
-    1px 0 0 var(--scheme-color-sing-note-bar-container);
+  // NOTE: 以下の目的でtext-shadowを設定
+  // - ノートバーの外側に歌詞が溢れた場合でも歌詞が見えるようにする
+  // - エッジホバーとかぶっても歌詞が見えるようにする
+  // - 今後ピッチラインや波形などその他と重なっても歌詞が見えるようにする
+  @include text-outline(var(--scheme-color-sing-note-bar-container));
   // アンチエイリアス
   -webkit-font-smoothing: antialiased;
   bottom: 100%;
@@ -405,15 +410,7 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
   // 選択中
   &.selected {
     color: var(--scheme-color-sing-on-note-bar-selected-container);
-    text-shadow:
-      -1px -1px 0 var(--scheme-color-sing-note-bar-selected-container),
-      1px -1px 0 var(--scheme-color-sing-note-bar-selected-container),
-      -1px 1px 0 var(--scheme-color-sing-note-bar-selected-container),
-      1px 1px 0 var(--scheme-color-sing-note-bar-selected-container),
-      0 -1px 0 var(--scheme-color-sing-note-bar-selected-container),
-      0 1px 0 var(--scheme-color-sing-note-bar-selected-container),
-      -1px 0 0 var(--scheme-color-sing-note-bar-selected-container),
-      1px 0 0 var(--scheme-color-sing-note-bar-selected-container);
+    @include text-outline(var(--scheme-color-sing-note-bar-selected-container));
   }
 
   // プレビュー中
@@ -423,58 +420,25 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
       var(--scheme-color-sing-on-note-bar-preview-container),
       transparent 62%
     );
-    text-shadow:
-      -1px -1px 0 var(--scheme-color-sing-note-bar-preview-container),
-      1px -1px 0 var(--scheme-color-sing-note-bar-preview-container),
-      -1px 1px 0 var(--scheme-color-sing-note-bar-preview-container),
-      1px 1px 0 var(--scheme-color-sing-note-bar-preview-container),
-      0 -1px 0 var(--scheme-color-sing-note-bar-preview-container),
-      0 1px 0 var(--scheme-color-sing-note-bar-preview-container),
-      -1px 0 0 var(--scheme-color-sing-note-bar-preview-container),
-      1px 0 0 var(--scheme-color-sing-note-bar-preview-container);
+    @include text-outline(var(--scheme-color-sing-note-bar-preview-container));
   }
 
   // エラー
   &.invalid-phrase,
   &.overlapping {
-    color: var(--scheme-color-on-error-container);
-    text-shadow:
-      -1px -1px 0 oklch(from var(--scheme-color-error-container) l
-            calc(var(--secondary-c) / 2) h),
-      1px -1px 0 oklch(from var(--scheme-color-error-container) l
-            calc(var(--secondary-c) / 2) h),
-      -1px 1px 0 oklch(from var(--scheme-color-error-container) l
-            calc(var(--secondary-c) / 2) h),
-      1px 1px 0
-        oklch(
-          from var(--scheme-color-error-container) l
-            calc(var(--secondary-c) / 2) h
-        ),
-      0 -1px 0 oklch(from var(--scheme-color-error-container) l
-            calc(var(--secondary-c) / 2) h),
-      0 1px 0
-        oklch(
-          from var(--scheme-color-error-container) l
-            calc(var(--secondary-c) / 2) h
-        ),
-      -1px 0 0 oklch(from var(--scheme-color-error-container) l
-            calc(var(--secondary-c) / 2) h),
-      1px 0 0
-        oklch(
-          from var(--scheme-color-error-container) l
-            calc(var(--secondary-c) / 2) h
-        );
+    --note-error-container: oklch(
+      from var(--scheme-color-error-container) l calc(var(--secondary-c) / 2) h
+    );
+    color: oklch(from var(--scheme-color-on-error-container) l c h / 0.5);
+    @include text-outline(
+      oklch(
+        from var(--scheme-color-error-container) l calc(var(--secondary-c) / 2)
+          h
+      )
+    );
 
     &.selected {
-      text-shadow:
-        -1px -1px 0 var(--scheme-color-error-container),
-        1px -1px 0 var(--scheme-color-error-container),
-        -1px 1px 0 var(--scheme-color-error-container),
-        1px 1px 0 var(--scheme-color-error-container),
-        0 -1px 0 var(--scheme-color-error-container),
-        0 1px 0 var(--scheme-color-error-container),
-        -1px 0 0 var(--scheme-color-error-container),
-        1px 0 0 var(--scheme-color-error-container);
+      @include text-outline(var(--scheme-color-error-container));
     }
   }
 
@@ -484,7 +448,7 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     color: color-mix(
       in oklch,
       var(--scheme-color-on-background),
-      var(--scheme-color-sing-grid-cell-black) 38%
+      var(--scheme-color-sing-grid-cell-black) 50%
     );
     text-shadow: none;
     z-index: vars.$z-index-sing-note - 1;

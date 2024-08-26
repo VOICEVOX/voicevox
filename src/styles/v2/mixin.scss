@@ -51,3 +51,25 @@
   line-height: 1.5;
   margin: 0;
 }
+
+// (ソング)ホバー時の色変更
+@mixin color-mode-hover($property, $color, $l-change: 0.03) {
+  :root[is-dark-theme="true"] & {
+    #{$property}: oklch(from var($color) calc(l + #{$l-change}) c h);
+  }
+
+  :root[is-dark-theme="false"] & {
+    #{$property}: oklch(from var($color) calc(l - #{$l-change}) c h);
+  }
+}
+
+// (ソング)アクティブ時の色変更
+@mixin color-mode-active($property, $color, $l-change: 0.06) {
+  :root[is-dark-theme="true"] & {
+    #{$property}: oklch(from var($color) calc(l - #{$l-change}) c h);
+  }
+
+  :root[is-dark-theme="false"] & {
+    #{$property}: oklch(from var($color) calc(l - #{$l-change}) c h);
+  }
+}
