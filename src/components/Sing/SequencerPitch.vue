@@ -88,7 +88,7 @@ const originalPitchLine: PitchLine = {
   pitchDataMap: new Map(),
   lineStripMap: new Map(),
 };
-const pitchEditLineColorLight = new Color(0, 173, 68, 255);
+const pitchEditLineColorLight = new Color(0, 142, 44, 255);
 const pitchEditLineColorDark = new Color(105, 192, 125, 255);
 const pitchEditLineColor = ref(
   isDark.value ? pitchEditLineColorDark : pitchEditLineColorLight,
