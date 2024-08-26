@@ -142,7 +142,8 @@ const DEFAULT_AUDIO_FILE_NAME_VARIABLES = {
   projectName: "VOICEVOXプロジェクト",
 };
 
-export const DEFAULT_SONG_AUDIO_FILE_BASE_NAME_TEMPLATE = "$連番$_$トラック名$";
+export const DEFAULT_SONG_AUDIO_FILE_BASE_NAME_TEMPLATE =
+  "$連番$_$キャラ$（$スタイル$）_$トラック名$";
 export const DEFAULT_SONG_AUDIO_FILE_NAME_TEMPLATE = `${DEFAULT_SONG_AUDIO_FILE_BASE_NAME_TEMPLATE}.wav`;
 const DEFAULT_SONG_AUDIO_FILE_NAME_VARIABLES = {
   index: 0,

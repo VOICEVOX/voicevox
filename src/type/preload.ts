@@ -621,7 +621,6 @@ export const configSchema = z
         exportText: z.boolean().default(false),
         outputStereo: z.boolean().default(false),
         audioOutputDevice: z.string().default(""),
-
         songTrackFileNamePattern: z.string().default(""),
       })
       .default({}),
