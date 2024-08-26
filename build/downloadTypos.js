@@ -63,7 +63,7 @@ async function runCommand({ command, description }) {
   try {
     await execAsync(command);
   } catch (error) {
-    console.error(`An error occured: ${error.message}`);
+    console.error(`An error occurred: ${error.message}`);
     throw error;
   }
 }
