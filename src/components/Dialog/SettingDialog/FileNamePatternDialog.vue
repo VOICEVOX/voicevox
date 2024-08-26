@@ -79,6 +79,7 @@
 import { computed, ref, nextTick } from "vue";
 import { QInput } from "quasar";
 import { replaceTagIdToTagString, sanitizeFileName } from "@/store/utility";
+import {UnreachableError} from "@/type/utility";
 
 const props = defineProps<{
   openDialog: boolean;
@@ -180,7 +181,7 @@ const insertTagToCurrentPosition = (tag: string) => {
 
 const submit = async () => {
   if (hasError.value) {
-    return;
+    throw new UnreachableError("assert: hasError is false");
   }
 
   fileNamePattern.value = currentNamePattern.value;
