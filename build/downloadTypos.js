@@ -29,7 +29,11 @@ const BINARY_BASE_PATH = resolve(__dirname, "vendored");
 const TYPOS_BINARY_PATH = resolve(BINARY_BASE_PATH, "typos");
 // 7zバイナリのパス linuxとmacで異なるバイナリでないとエラーが出ることに注意
 const SEVEN_ZIP_BINARY_NAME =
-  CURRENT_OS === OS.WINDOWS ? "7za.exe" : OS.MACOS ? "7zz" : "7zzs";
+  CURRENT_OS === OS.WINDOWS
+    ? "7za.exe"
+    : CURRENT_OS === OS.MACOS
+      ? "7zz"
+      : "7zzs";
 const SEVEN_ZIP_BINARY_PATH = join(
   BINARY_BASE_PATH,
   "7z",
