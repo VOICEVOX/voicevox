@@ -27,8 +27,9 @@ const CURRENT_CPU_ARCHITECTURE =
 const BINARY_BASE_PATH = resolve(__dirname, "vendored");
 // typosのバイナリのパス
 const TYPOS_BINARY_PATH = resolve(BINARY_BASE_PATH, "typos");
-// 7zバイナリのパス（.exeの有無を考慮）
-const SEVEN_ZIP_BINARY_NAME = CURRENT_OS === OS.WINDOWS ? "7za.exe" : "7zz";
+// 7zバイナリのパス linuxとmacで異なるバイナリでないとエラーが出ることに注意
+const SEVEN_ZIP_BINARY_NAME =
+  CURRENT_OS === OS.WINDOWS ? "7za.exe" : OS.MACOS ? "7zz" : "7zzs";
 const SEVEN_ZIP_BINARY_PATH = join(
   BINARY_BASE_PATH,
   "7z",
