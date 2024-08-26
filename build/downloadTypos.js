@@ -22,7 +22,7 @@ const CPU_ARCHITECTURE = {
 // 現在のOSとCPUアーキテクチャ
 const CURRENT_OS = platform();
 const CURRENT_CPU_ARCHITECTURE =
-  arch() === "arm64" ? CPU_ARCHITECTURE.arm : CPU_ARCHITECTURE.x86_64;
+  arch() === "arm64" ? CPU_ARCHITECTURE.ARM : CPU_ARCHITECTURE.X86_64;
 // 全バイナリのパス
 const BINARY_BASE_PATH = resolve(__dirname, "vendored");
 // typosのバイナリのパス
@@ -38,9 +38,9 @@ const SEVEN_ZIP_BINARY_PATH = join(
 // 各OSとアーキテクチャに対応するtyposバイナリのダウンロード先URL
 const TYPOS_URLS = {
   [OS.MACOS]: {
-    [CPU_ARCHITECTURE.arm]:
+    [CPU_ARCHITECTURE.ARM]:
       "https://github.com/crate-ci/typos/releases/download/v1.23.7/typos-v1.23.7-aarch64-apple-darwin.tar.gz",
-    [CPU_ARCHITECTURE.x86_64]:
+    [CPU_ARCHITECTURE.X86_64]:
       "https://github.com/crate-ci/typos/releases/download/v1.23.7/typos-v1.23.7-x86_64-apple-darwin.tar.gz",
   },
   [OS.LINUX]:
