@@ -79,7 +79,7 @@
 import { computed, ref, nextTick } from "vue";
 import { QInput } from "quasar";
 import { replaceTagIdToTagString, sanitizeFileName } from "@/store/utility";
-import {UnreachableError} from "@/type/utility";
+import { UnreachableError } from "@/type/utility";
 
 const props = defineProps<{
   openDialog: boolean;
