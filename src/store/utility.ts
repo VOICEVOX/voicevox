@@ -356,19 +356,7 @@ export function buildAudioFileNameFromRawData(
     text = text.substring(0, 9) + "…";
   }
 
-  const characterName = sanitizeFileName(vars.characterName);
-  const index = (vars.index + 1).toString().padStart(3, "0");
-  const styleName = sanitizeFileName(vars.styleName);
-  const date = vars.date;
-  const projectName = sanitizeFileName(vars.projectName);
-  return replaceTag(pattern, {
-    text,
-    characterName,
-    index,
-    styleName,
-    date,
-    projectName,
-  });
+  return buildCommonFileNameFromRawData(pattern, vars, { text });
 }
 
 export function buildSongTrackAudioFileNameFromRawData(
@@ -386,18 +374,34 @@ export function buildSongTrackAudioFileNameFromRawData(
     trackName = trackName.substring(0, 9) + "…";
   }
 
-  const characterName = sanitizeFileName(vars.characterName);
-  const index = (vars.index + 1).toString().padStart(3, "0");
-  const styleName = sanitizeFileName(vars.styleName);
-  const date = vars.date;
-  const projectName = sanitizeFileName(vars.projectName);
+  return buildCommonFileNameFromRawData(pattern, vars, { trackName });
+}
+
+function buildCommonFileNameFromRawData(
+  fileNamePattern: string,
+  commonVars: {
+    characterName: string;
+    index: number;
+    styleName: string;
+    date: string;
+    projectName: string;
+  },
+  extraVars: Record<string, string>,
+): string {
+  const pattern = fileNamePattern;
+
+  const characterName = sanitizeFileName(commonVars.characterName);
+  const index = (commonVars.index + 1).toString().padStart(3, "0");
+  const styleName = sanitizeFileName(commonVars.styleName);
+  const date = commonVars.date;
+  const projectName = sanitizeFileName(commonVars.projectName);
   return replaceTag(pattern, {
-    trackName,
     characterName,
     index,
     styleName,
     date,
     projectName,
+    ...extraVars,
   });
 }
 
