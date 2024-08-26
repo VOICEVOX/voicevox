@@ -160,7 +160,7 @@ const offlineRenderTracks = async (
   sampleRate: number,
   renderDuration: number,
   withLimiter: boolean,
-  applyTrackParameters: boolean,
+  shouldApplyTrackParameters: boolean,
   tracks: Map<TrackId, Track>,
   phrases: Map<PhraseSourceHash, Phrase>,
   singingGuides: Map<SingingGuideSourceHash, SingingGuide>,
@@ -179,9 +179,9 @@ const offlineRenderTracks = async (
   const shouldPlays = shouldPlayTracks(tracks);
   for (const [trackId, track] of tracks) {
     const channelStrip = new ChannelStrip(offlineAudioContext);
-    channelStrip.volume = applyTrackParameters ? track.gain : 1;
-    channelStrip.pan = applyTrackParameters ? track.pan : 0;
-    channelStrip.mute = applyTrackParameters
+    channelStrip.volume = shouldApplyTrackParameters ? track.gain : 1;
+    channelStrip.pan = shouldApplyTrackParameters ? track.pan : 0;
+    channelStrip.mute = shouldApplyTrackParameters
       ? !shouldPlays.has(trackId)
       : false;
 
