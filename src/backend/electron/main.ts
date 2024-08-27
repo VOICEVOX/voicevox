@@ -24,7 +24,7 @@ import EngineManager from "./manager/engineManager";
 import VvppManager, { isVvppFile } from "./manager/vvppManager";
 import configMigration014 from "./configMigration014";
 import { RuntimeInfoManager } from "./manager/RuntimeInfoManager";
-import { registerIpcMainHandle, ipcMainSend } from "./ipc";
+import { registerIpcMainHandle, ipcMainSendProxy, IpcMainHandle } from "./ipc";
 import { getConfigManager } from "./electronConfig";
 import { failure, success } from "@/type/result";
 import {
@@ -48,7 +48,6 @@ import {
   EngineId,
   UpdateInfo,
 } from "@/type/preload";
-import { IpcMainHandle } from "@/type/ipc";
 
 type SingleInstanceLockData = {
   filePath: string | undefined;
@@ -170,7 +169,7 @@ const onEngineProcessError = (engineInfo: EngineInfo, error: Error) => {
   // winが作られる前にエラーが発生した場合はwinへの通知を諦める
   // FIXME: winが作られた後にエンジンを起動させる
   if (win != undefined) {
-    ipcMainSend.DETECTED_ENGINE_ERROR(win, { engineId });
+    ipcMainSendProxy.DETECTED_ENGINE_ERROR(win, { engineId });
   } else {
     log.error(`onEngineProcessError: win is undefined`);
   }
@@ -257,7 +256,7 @@ async function installVvppEngineWithWarning({
       })
       .then((result) => {
         if (result.response === 0) {
-          ipcMainSend.CHECK_EDITED_AND_NOT_SAVE(win, {
+          ipcMainSendProxy.CHECK_EDITED_AND_NOT_SAVE(win, {
             closeOrReload: "reload",
           });
         }
@@ -458,26 +457,26 @@ async function createWindow() {
   if (isDevelopment && !isTest) win.webContents.openDevTools();
 
   win.on("maximize", () => {
-    ipcMainSend.DETECT_MAXIMIZED(win);
+    ipcMainSendProxy.DETECT_MAXIMIZED(win);
   });
   win.on("unmaximize", () => {
-    ipcMainSend.DETECT_UNMAXIMIZED(win);
+    ipcMainSendProxy.DETECT_UNMAXIMIZED(win);
   });
   win.on("enter-full-screen", () => {
-    ipcMainSend.DETECT_ENTER_FULLSCREEN(win);
+    ipcMainSendProxy.DETECT_ENTER_FULLSCREEN(win);
   });
   win.on("leave-full-screen", () => {
-    ipcMainSend.DETECT_LEAVE_FULLSCREEN(win);
+    ipcMainSendProxy.DETECT_LEAVE_FULLSCREEN(win);
   });
   win.on("always-on-top-changed", () => {
     win.isAlwaysOnTop()
-      ? ipcMainSend.DETECT_PINNED(win)
-      : ipcMainSend.DETECT_UNPINNED(win);
+      ? ipcMainSendProxy.DETECT_PINNED(win)
+      : ipcMainSendProxy.DETECT_UNPINNED(win);
   });
   win.on("close", (event) => {
     if (!appState.willQuit) {
       event.preventDefault();
-      ipcMainSend.CHECK_EDITED_AND_NOT_SAVE(win, {
+      ipcMainSendProxy.CHECK_EDITED_AND_NOT_SAVE(win, {
         closeOrReload: "close",
       });
       return;
@@ -486,7 +485,7 @@ async function createWindow() {
 
   win.on("resize", () => {
     const windowSize = win.getSize();
-    ipcMainSend.DETECT_RESIZED(win, {
+    ipcMainSendProxy.DETECT_RESIZED(win, {
       width: windowSize[0],
       height: windowSize[1],
     });
@@ -1078,7 +1077,7 @@ app.on("window-all-closed", () => {
 app.on("before-quit", async (event) => {
   if (!appState.willQuit) {
     event.preventDefault();
-    ipcMainSend.CHECK_EDITED_AND_NOT_SAVE(win, { closeOrReload: "close" });
+    ipcMainSendProxy.CHECK_EDITED_AND_NOT_SAVE(win, { closeOrReload: "close" });
     return;
   }
 
@@ -1271,7 +1270,7 @@ app.on("second-instance", async (event, argv, workDir, rawData) => {
     }
   } else if (data.filePath.endsWith(".vvproj")) {
     log.info("Second instance launched with vvproj file");
-    ipcMainSend.LOAD_PROJECT_FILE(win, {
+    ipcMainSendProxy.LOAD_PROJECT_FILE(win, {
       filePath: data.filePath,
       confirm: true,
     });

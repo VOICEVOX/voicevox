@@ -1,7 +1,40 @@
-import { BrowserWindow, ipcMain, IpcMainInvokeEvent } from "electron";
+import {
+  BrowserWindow,
+  ipcMain,
+  IpcMainInvokeEvent,
+  IpcRendererEvent,
+} from "electron";
 import log from "electron-log/main";
-import { IpcMainHandle, IpcMainSend } from "@/type/ipc";
+import { IpcIHData, IpcSOData } from "@/type/ipc";
 
+export type IpcRendererInvoke = {
+  [K in keyof IpcIHData]: (
+    ...args: IpcIHData[K]["args"]
+  ) => Promise<IpcIHData[K]["return"]>;
+};
+
+export type IpcMainHandle = {
+  [K in keyof IpcIHData]: (
+    event: IpcMainInvokeEvent,
+    ...args: IpcIHData[K]["args"]
+  ) => Promise<IpcIHData[K]["return"]> | IpcIHData[K]["return"];
+};
+
+export type IpcMainSend = {
+  [K in keyof IpcSOData]: (
+    win: BrowserWindow,
+    ...args: IpcSOData[K]["args"]
+  ) => void;
+};
+
+export type IpcRendererOn = {
+  [K in keyof IpcSOData]: (
+    event: IpcRendererEvent,
+    ...args: IpcSOData[K]["args"]
+  ) => Promise<IpcSOData[K]["return"]> | IpcSOData[K]["return"];
+};
+
+// FIXME: asをなるべく使わずに書いたらこうなった。もっとキレイな書き方があれば…
 export function registerIpcMainHandle<T extends IpcMainHandle>(
   listeners: T,
 ): void;
@@ -21,7 +54,7 @@ export function registerIpcMainHandle(listeners: {
   });
 }
 
-export const ipcMainSend = new Proxy(
+export const ipcMainSendProxy = new Proxy(
   {},
   {
     get:

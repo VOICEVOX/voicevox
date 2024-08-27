@@ -8,7 +8,7 @@ import {
 } from "./fileImpl";
 import { getConfigManager } from "./browserConfig";
 
-import { IpcRendererOn, IpcSOData } from "@/type/ipc";
+import { IpcSOData } from "@/type/ipc";
 import {
   defaultHotkeySettings,
   defaultToolbarButtonSetting,
@@ -33,10 +33,19 @@ import {
 // TODO: base pathを設定できるようにするか、ビルド時埋め込みにする
 const toStaticPath = (fileName: string) => `/${fileName}`;
 
-function onReceivedIPCMsg<T extends IpcRendererOn>(listeners: T): void;
+// FIXME: asをなるべく使わずに書いたらこうなった。もっとキレイな書き方があれば…
+function onReceivedIPCMsg<
+  T extends {
+    [K in keyof IpcSOData]: (
+      event: unknown,
+      ...args: IpcSOData[K]["args"]
+    ) => Promise<IpcSOData[K]["return"]> | IpcSOData[K]["return"];
+  },
+>(listeners: T): void;
 function onReceivedIPCMsg(listeners: {
   [key: string]: (event: unknown, ...args: unknown[]) => unknown;
 }) {
+  // NOTE: もしブラウザ本体からレンダラへのメッセージを実装するならこんな感じ
   window.addEventListener(
     "message",
     ({

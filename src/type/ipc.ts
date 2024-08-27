@@ -344,30 +344,3 @@ export type IpcSOData = {
     return: void;
   };
 };
-
-export type IpcRendererInvoke = {
-  [K in keyof IpcIHData]: (
-    ...args: IpcIHData[K]["args"]
-  ) => Promise<IpcIHData[K]["return"]>;
-};
-
-export type IpcMainHandle = {
-  [K in keyof IpcIHData]: (
-    event: import("electron").IpcMainInvokeEvent,
-    ...args: IpcIHData[K]["args"]
-  ) => Promise<IpcIHData[K]["return"]> | IpcIHData[K]["return"];
-};
-
-export type IpcMainSend = {
-  [K in keyof IpcSOData]: (
-    win: import("electron").BrowserWindow,
-    ...args: IpcSOData[K]["args"]
-  ) => void;
-};
-
-export type IpcRendererOn = {
-  [K in keyof IpcSOData]: (
-    event: import("electron").IpcRendererEvent,
-    ...args: IpcSOData[K]["args"]
-  ) => Promise<IpcSOData[K]["return"]> | IpcSOData[K]["return"];
-};
