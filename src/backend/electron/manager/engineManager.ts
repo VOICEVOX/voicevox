@@ -7,6 +7,7 @@ import shlex from "shlex";
 import { app, dialog } from "electron"; // FIXME: ここでelectronをimportするのは良くない
 
 import log from "electron-log/main";
+import engineInfos from "@engine-infos";
 import {
   findAltPort,
   getPidFromPort,
@@ -21,7 +22,6 @@ import {
   MinimumEngineManifestType,
   EngineId,
   minimumEngineManifestSchema,
-  envEngineInfoSchema,
 } from "@/type/preload";
 import { AltPortInfos } from "@/store/type";
 import { BaseConfigManager } from "@/backend/common/ConfigManager";
@@ -35,14 +35,7 @@ type EngineProcessContainer = {
  * デフォルトエンジンの情報を作成する
  */
 function createDefaultEngineInfos(defaultEngineDir: string): EngineInfo[] {
-  // TODO: envから直接ではなく、envに書いたengine_manifest.jsonから情報を得るようにする
-  const defaultEngineInfosEnv =
-    import.meta.env.VITE_DEFAULT_ENGINE_INFOS ?? "[]";
-
-  const envSchema = envEngineInfoSchema.array();
-  const engines = envSchema.parse(JSON.parse(defaultEngineInfosEnv));
-
-  return engines.map((engineInfo) => {
+  return engineInfos.map((engineInfo) => {
     return {
       ...engineInfo,
       isDefault: true,

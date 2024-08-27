@@ -51,7 +51,7 @@ npm ci
 
 ### エンジンの準備
 
-`.env.production`をコピーして`.env`を作成し、`VITE_DEFAULT_ENGINE_INFOS`内の`executionFilePath`に
+`engine-infos/production.ts`をコピーして`engine-infos/development.ts`を作成し、`executionFilePath`に
 [製品版 VOICEVOX](https://voicevox.hiroshiba.jp/) 内の`vv-engine/run.exe`を指定すれば動きます。
 
 Windows でインストール先を変更していない場合は`C:/Users/(ユーザー名)/AppData/Local/Programs/VOICEVOX/vv-engine/run.exe`を指定してください。  
@@ -66,7 +66,7 @@ VOICEVOX エディタの実行とは別にエンジン API のサーバを立て
 代わりに`executionEnabled`を`false`にしてください。
 これは製品版 VOICEVOX を起動している場合もあてはまります。
 
-エンジン API の宛先エンドポイントを変更する場合は`VITE_DEFAULT_ENGINE_INFOS`内の`host`を変更してください。
+エンジン API の宛先エンドポイントを変更する場合は`host`を変更してください。
 
 ### Electron の実行
 
