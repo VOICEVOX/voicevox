@@ -2,6 +2,7 @@
   <button
     class="button"
     :class="variant ? variant : 'default'"
+    :disabled
     @click="(payload) => $emit('click', payload)"
   >
     <!-- 暫定でq-iconを使用 -->
@@ -14,6 +15,7 @@
 defineProps<{
   label: string;
   icon?: string;
+  disabled?: boolean;
   variant?: "default" | "primary" | "danger";
 }>();
 
