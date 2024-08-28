@@ -125,7 +125,7 @@ const selectedStyleIconPath = computed(() => {
   .character-name {
     color: var(--scheme-color-on-surface);
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 400;
     line-height: 24px;
     padding-top: 12px;
     margin-bottom: 0;

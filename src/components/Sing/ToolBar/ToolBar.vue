@@ -495,7 +495,7 @@ onUnmounted(() => {
   color: var(--scheme-color-on-surface);
   text-align: center;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 /* QInput のアウトラインをoutline-variantにする */
@@ -691,7 +691,7 @@ onUnmounted(() => {
 }
 
 .sing-beats-separator {
-  font-weight: 500;
+  font-weight: 400;
   color: var(--scheme-color-on-surface-variant);
   pointer-events: none;
   transform: translateY(6px);
