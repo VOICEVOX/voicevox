@@ -33,6 +33,7 @@ defineEmits<{
   display: flex;
   justify-content: space-between;
   align-items: center;
+  text-wrap: nowrap;
   height: vars.$size-control;
   border-radius: vars.$radius-1;
   padding: 0 vars.$padding-2;
