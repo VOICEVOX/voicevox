@@ -33,7 +33,7 @@ import {
 // TODO: base pathを設定できるようにするか、ビルド時埋め込みにする
 const toStaticPath = (fileName: string) => `/${fileName}`;
 
-// FIXME: asをなるべく使わずに書いたらこうなった。もっとキレイな書き方があれば…
+// FIXME: asを使わないようオーバーロードにした。オーバーロードも使わない書き方にしたい。
 function onReceivedIPCMsg<
   T extends {
     [K in keyof IpcSOData]: (

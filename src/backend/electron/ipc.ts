@@ -34,7 +34,7 @@ export type IpcRendererOn = {
   ) => Promise<IpcSOData[K]["return"]> | IpcSOData[K]["return"];
 };
 
-// FIXME: asをなるべく使わずに書いたらこうなった。もっとキレイな書き方があれば…
+// FIXME: asを使わないようオーバーロードにした。オーバーロードも使わない書き方にしたい。
 export function registerIpcMainHandle<T extends IpcMainHandle>(
   listeners: T,
 ): void;
