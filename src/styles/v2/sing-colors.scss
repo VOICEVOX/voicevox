@@ -72,7 +72,7 @@ eg: 常にホバー時は+5%明度上げるのであれば
   --error-h: 19.64;
   --neutral-h: var(--primary-h);
   --neutral-variant-h: var(--primary-h);
-  --link-h: 256; // takuseaさんのv2におけるprimitive-blueの色相
+  --link-h: 256; // `styles/v2/colors.scss` におけるprimitive-blueの色相
 }
 
 /*
