@@ -217,7 +217,7 @@ onUnmounted(() => {
 }
 
 .sequencer-ruler-measure-number {
-  font-weight: 500;
+  font-weight: 700;
   fill: var(--scheme-color-on-surface-variant);
 }
 
