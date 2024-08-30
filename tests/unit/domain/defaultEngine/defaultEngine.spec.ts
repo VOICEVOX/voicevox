@@ -12,9 +12,11 @@ test("fetchDefaultEngineInfos", async () => {
   // 元ファイルは https://raw.githubusercontent.com/VOICEVOX/voicevox_blog/master/src/generateLatestDefaultEngineInfos.ts
   const p = path.resolve(currentDir, "latestDefaultEngineInfos.json");
   const json = fs.readFileSync(p, "utf-8");
-  vi.spyOn(global, "fetch").mockResolvedValue(new Response(json));
+  const spy = vi.spyOn(global, "fetch").mockResolvedValue(new Response(json));
 
   // 読み込めることを確認
   const infos = await fetchDefaultEngineInfos("https://example.com/");
   expect(infos.formatVersion).toBe(1);
+
+  spy.mockRestore();
 });
