@@ -9,21 +9,29 @@ const meta: Meta<typeof BaseTextField> = {
 export default meta;
 type Story = StoryObj<typeof BaseTextField>;
 
-export const Default: Story = {
+export const Default: Story = {};
+
+export const Placeholder: Story = {
   args: {
     placeholder: "Placeholder",
-    hasError: false,
-    readonly: false,
-    disabled: false,
+  },
+};
+
+export const Disabled: Story = {
+  args: {
+    disabled: true,
+  },
+};
+
+export const ReadOnly: Story = {
+  args: {
+    readonly: true,
   },
 };
 
 export const HasError: Story = {
   args: {
-    placeholder: "Placeholder",
     hasError: true,
-    readonly: false,
-    disabled: false,
   },
   render: (args) => ({
     components: { BaseTextField },
