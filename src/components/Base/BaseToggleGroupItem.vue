@@ -24,10 +24,10 @@ defineProps<{
   justify-content: space-between;
   align-items: center;
   height: vars.$size-control;
-  padding: 0 vars.$padding-2;
-  gap: vars.$gap-1;
   border: 1px solid;
-  transition: background-color vars.$transition-duration;
+  transition:
+    background-color vars.$transition-duration,
+    padding vars.$transition-duration;
   cursor: pointer;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 
@@ -49,6 +49,8 @@ defineProps<{
   }
 
   &[data-state="off"] {
+    padding: 0
+      calc(#{vars.$padding-1} + (#{vars.$size-icon} + #{vars.$gap-1}) / 2);
     color: colors.$display;
     border-color: colors.$border;
     background-color: colors.$control;
@@ -63,6 +65,7 @@ defineProps<{
   }
 
   &[data-state="on"] {
+    padding: 0 vars.$padding-1;
     color: colors.$display-oncolor;
     border-color: colors.$border;
     background-color: colors.$primary;
@@ -77,7 +80,20 @@ defineProps<{
   }
 }
 
+.check {
+  width: vars.$size-icon;
+  height: vars.$size-icon;
+  opacity: 1;
+  margin-right: vars.$gap-1;
+  transition:
+    width vars.$transition-duration,
+    margin-right vars.$transition-duration,
+    opacity vars.$transition-duration;
+}
+
 [data-state="off"] > .check {
-  display: none;
+  width: 0;
+  opacity: 0;
+  margin-right: 0;
 }
 </style>
