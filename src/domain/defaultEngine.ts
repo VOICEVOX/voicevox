@@ -18,6 +18,7 @@ const defaultEngineDeviceSchema = z.object({
   packages: z.array(defaultEnginePackageSchema),
 });
 
+/** デフォルトエンジンの更新情報のスキーマ */
 const defaultEngineInfosSchema = z.object({
   formatVersion: z.number(),
   windows: z.object({
