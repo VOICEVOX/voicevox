@@ -48,42 +48,40 @@
                 @click="toAddEngineState"
               />
             </div>
-            <div class="list">
-              <template
-                v-for="([type, engineIds], i) in Object.entries(
-                  categorizedEngineIds,
-                )"
-                :key="`engine-list-${i}`"
+            <template
+              v-for="([type, engineIds], i) in Object.entries(
+                categorizedEngineIds,
+              )"
+              :key="`engine-list-${i}`"
+            >
+              <div class="list-label">
+                {{ getEngineTypeName(type) }}
+              </div>
+              <BaseListItem
+                v-for="id in engineIds"
+                :key="id"
+                :selected="selectedId === id"
+                @click="selectEngine(id)"
               >
-                <div class="list-label">
-                  {{ getEngineTypeName(type) }}
+                <img
+                  v-if="engineIcons[id]"
+                  class="listitem-icon"
+                  :src="engineIcons[id]"
+                  :alt="engineInfos[id].name"
+                />
+                <div v-else class="listitem-unknown">?</div>
+                <div class="listitem-content">
+                  {{ engineInfos[id].name }}
+                  <span caption class="listitem-path">
+                    {{
+                      engineManifests[id] != undefined
+                        ? engineManifests[id].brandName
+                        : engineInfos[id].uuid
+                    }}
+                  </span>
                 </div>
-                <BaseListItem
-                  v-for="id in engineIds"
-                  :key="id"
-                  :selected="selectedId === id"
-                  @click="selectEngine(id)"
-                >
-                  <img
-                    v-if="engineIcons[id]"
-                    class="listitem-icon"
-                    :src="engineIcons[id]"
-                    :alt="engineInfos[id].name"
-                  />
-                  <div v-else class="listitem-unknown">?</div>
-                  <div class="listitem-content">
-                    {{ engineInfos[id].name }}
-                    <span caption class="listitem-path">
-                      {{
-                        engineManifests[id] != undefined
-                          ? engineManifests[id].brandName
-                          : engineInfos[id].uuid
-                      }}
-                    </span>
-                  </div>
-                </BaseListItem>
-              </template>
-            </div>
+              </BaseListItem>
+            </template>
           </template>
           <div v-if="isAddingEngine" class="detail">
             <BaseScrollArea>
@@ -93,7 +91,7 @@
                   <BaseToggleGroupItem label="VVPPファイル" value="vvpp" />
                   <BaseToggleGroupItem label="既存エンジン" value="dir" />
                 </BaseToggleGroup>
-                <div v-if="engineLoaderType === 'vvpp'">
+                <section v-if="engineLoaderType === 'vvpp'" class="section">
                   <div>VVPPファイルでエンジンをインストールします。</div>
                   <div class="flex-row">
                     <BaseTextField
@@ -104,6 +102,7 @@
                         newEngineDirValidationState != undefined &&
                         newEngineDirValidationState !== 'ok'
                       "
+                      @click="selectVvppFile"
                     >
                       <template #error>
                         {{
@@ -121,8 +120,8 @@
                       @click="selectVvppFile"
                     />
                   </div>
-                </div>
-                <div v-if="engineLoaderType === 'dir'">
+                </section>
+                <section v-if="engineLoaderType === 'dir'" class="section">
                   <div>PC内にあるエンジンを追加します。</div>
                   <div class="flex-row">
                     <BaseTextField
@@ -133,6 +132,7 @@
                         newEngineDirValidationState != undefined &&
                         newEngineDirValidationState !== 'ok'
                       "
+                      @click="selectVvppFile"
                     >
                       <template #error>
                         {{
@@ -150,7 +150,7 @@
                       @click="selectEngineDir"
                     />
                   </div>
-                </div>
+                </section>
                 <div class="footer">
                   <BaseButton label="キャンセル" @click="toInitialState" />
                   <BaseButton
@@ -178,7 +178,7 @@
                   {{ engineInfos[selectedId].name }}
                 </div>
 
-                <div>
+                <section class="section">
                   <ul>
                     <li>
                       バージョン：{{
@@ -199,8 +199,8 @@
                       <span v-else>（取得に失敗しました）</span>
                     </li>
                   </ul>
-                </div>
-                <div>
+                </section>
+                <section class="section">
                   <div class="headline">機能</div>
                   <ul
                     v-if="
@@ -222,21 +222,23 @@
                     </li>
                   </ul>
                   <span v-else>（取得に失敗しました）</span>
-                </div>
-                <div class="headline">場所</div>
-                <div class="flex-row">
-                  <BaseTextField
-                    v-model="engineDir"
-                    :disabled="uiLocked || !engineInfos[selectedId].path"
-                    readonly
-                  />
-                  <BaseButton
-                    icon="folder_open"
-                    label="フォルダを開く"
-                    :disabled="uiLocked || !engineInfos[selectedId].path"
-                    @click="openSelectedEngineDirectory"
-                  />
-                </div>
+                </section>
+                <section class="section">
+                  <div class="headline">場所</div>
+                  <div class="flex-row">
+                    <BaseTextField
+                      v-model="engineDir"
+                      :disabled="uiLocked || !engineInfos[selectedId].path"
+                      readonly
+                    />
+                    <BaseButton
+                      icon="folder_open"
+                      label="フォルダを開く"
+                      :disabled="uiLocked || !engineInfos[selectedId].path"
+                      @click="openSelectedEngineDirectory"
+                    />
+                  </div>
+                </section>
                 <div class="footer">
                   <BaseButton
                     label="削除"
@@ -688,7 +690,7 @@ const toDialogClosedState = () => {
   display: flex;
   flex-direction: column;
   padding: newvars.$padding-2;
-  gap: newvars.$gap-1;
+  gap: newvars.$gap-2;
 }
 
 .engine-title {
@@ -732,5 +734,15 @@ const toDialogClosedState = () => {
   margin-top: auto;
   display: flex;
   justify-content: flex-end;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: newvars.$gap-1;
+}
+
+:deep(ul) {
+  margin: 0;
 }
 </style>
