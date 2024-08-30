@@ -8,6 +8,7 @@
       :placeholder
       :readonly
       :disabled
+      @click="(payload) => $emit('click', payload)"
     />
     <div v-if="hasError" class="error-label">
       <slot name="error" />
@@ -21,6 +22,10 @@ defineProps<{
   hasError?: boolean;
   readonly?: boolean;
   disabled?: boolean;
+}>();
+
+defineEmits<{
+  click: [payload: MouseEvent];
 }>();
 
 const model = defineModel<string>();
