@@ -8,14 +8,44 @@
 
 https://m3.material.io/styles/color/roles
 
----
+## 各ロール
 
-l: 明度 / c: 彩度 / h: 色相
+- primary: 
+主要・強調される操作可能部のカラー・ブランドカラーです
+
+- secondary: 
+主要でない操作可能部のカラーです
+
+- tertiary: 
+現時点での利用部分想定としては一時的・未決定部などでプライマリ・セカンダリで表現しきれない場合に利用します
+eg: ノートのプレビュー / 一時的に全ソロのインジケータ / シンガー発音時インジケータ / 失敗がありうる場合の待ちなど
+
+- error:
+エラー・警告です
+
+- neutral
+背景、テキスト、境界線など、UI全体で使用される中立的なカラーです
+ユーザーの注意を引くことなく、背景やサポート的な役割を果たす要素です
+
+- neutral-variant
+背景、セクションの区切り、低コントラストなUI要素などに利用します
+操作可能なUI要素のカラーです
+
+- link
+外部リンクなどのリンクを表すカラーです
+
+## カラースキームの指定
+
+以下のようにCSS変数を指定します
 
 background-color: var(--scheme-color-primary);
 color: var(--scheme-color-on-primary);
 
 ## カスタマイズサンプル
+
+OKLab(OKLCH)で指定します
+
+l: 明度 / c: 彩度 / h: 色相
 
 50%明度プライマリを指定:
   color: oklch(var(--lr-50) var(--primary-c) var(--primary-h));
@@ -57,7 +87,6 @@ eg: 常にホバー時は+5%明度上げるのであれば
   // 元実装のprimary(light) #a5d4ad: OKLCH彩度 0.073
   // 元実装のprimary(dark): #86C591: OKLCH彩度 0.098
   // たとえば元のprimary(light)に揃えたいならここを0.073にする
-  // 元実装のテーマに近づけたいならlight/darkで彩度値を切り替えるのがよさそう？
   --secondary-c: 0.036;
   --tertiary-c: var(--primary-c);
   --error-c: 0.196;
@@ -66,7 +95,7 @@ eg: 常にホバー時は+5%明度上げるのであれば
   --link-c: 0.196;
 
   // 基準色相
-  --primary-h: 149.64; // #a5d4adの色相
+  --primary-h: 149.64; // VOICEVOXプライマリ #a5d4adの色相
   --secondary-h: var(--primary-h);
   --tertiary-h: calc(var(--primary-h) - 60); // -60度
   --error-h: 19.64;
