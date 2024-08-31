@@ -2,7 +2,6 @@ import { setup, Preview } from "@storybook/vue3";
 import { Quasar, Dialog, Loading, Notify } from "quasar";
 import iconSet from "quasar/icon-set/material-icons";
 import { withThemeByDataAttribute } from "@storybook/addon-themes";
-import { addActionsWithEmits } from "./utils/argTypesEnhancers";
 import { markdownItPlugin } from "@/plugins/markdownItPlugin";
 import { resetMockMode } from "@/helpers/random";
 
@@ -68,7 +67,6 @@ const preview: Preview = {
       attributeName: "is-dark-theme",
     }),
   ],
-  argTypesEnhancers: [addActionsWithEmits],
 };
 
 export default preview;
