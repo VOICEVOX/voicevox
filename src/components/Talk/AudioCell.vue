@@ -628,31 +628,31 @@ const readyForContextMenu = () => {
   const MAX_HEADER_LENGTH = 15;
   const SHORTED_HEADER_FRAGMENT_LENGTH = 5;
 
-  // 選択範囲を1行目に表示
+  // 選択範囲のテキスト
   const selectionText = textFieldSelection.getAsString();
-  if (selectionText.length === 0) {
+  if (selectionText.length > MAX_HEADER_LENGTH) {
+    // 長すぎる場合適度な長さで省略
+    contextMenuHeader.value =
+      selectionText.length <= MAX_HEADER_LENGTH
+        ? selectionText
+        : `${selectionText.substring(
+            0,
+            SHORTED_HEADER_FRAGMENT_LENGTH,
+          )} ... ${selectionText.substring(
+            selectionText.length - SHORTED_HEADER_FRAGMENT_LENGTH,
+          )}`;
+  } else {
+    contextMenuHeader.value = selectionText;
+  }
+
+  if (textFieldSelection.isEmpty) {
     isRangeSelected.value = false;
     getMenuItemButton("切り取り").disabled = true;
     getMenuItemButton("コピー").disabled = true;
-    contextMenuHeader.value = "";
   } else {
     isRangeSelected.value = true;
     getMenuItemButton("切り取り").disabled = false;
     getMenuItemButton("コピー").disabled = false;
-    if (selectionText.length > MAX_HEADER_LENGTH) {
-      // 長すぎる場合適度な長さで省略
-      contextMenuHeader.value =
-        selectionText.length <= MAX_HEADER_LENGTH
-          ? selectionText
-          : `${selectionText.substring(
-              0,
-              SHORTED_HEADER_FRAGMENT_LENGTH,
-            )} ... ${selectionText.substring(
-              selectionText.length - SHORTED_HEADER_FRAGMENT_LENGTH,
-            )}`;
-    } else {
-      contextMenuHeader.value = selectionText;
-    }
   }
 };
 const endContextMenuOperation = async () => {
