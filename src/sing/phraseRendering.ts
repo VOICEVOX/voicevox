@@ -254,11 +254,16 @@ type Context = Readonly<{
   externalDependencies: ExternalDependencies;
 }>;
 
+export type PhraseRenderStageId =
+  | "queryGeneration"
+  | "singingVolumeGeneration"
+  | "singingVoiceSynthesis";
+
 /**
  * フレーズレンダリングのステージ
  */
 type Stage = Readonly<{
-  id: "queryGeneration" | "singingVolumeGeneration" | "singingVoiceSynthesis";
+  id: PhraseRenderStageId;
 
   /**
    * このステージが実行されるべきかを判定する。
@@ -688,8 +693,6 @@ const singingVoiceSynthesisStage: Stage = {
 };
 
 // フレーズレンダラー
-
-export type PhraseRenderStageId = Stage["id"];
 
 export type PhraseRenderer = Readonly<{
   /**
