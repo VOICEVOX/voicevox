@@ -56,7 +56,7 @@ const pitchEditData = computed(() => {
 });
 const previewPitchEdit = computed(() => props.previewPitchEdit);
 const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
-const editFrameRate = computed(() => store.state.editFrameRate);
+const editorFrameRate = computed(() => store.state.editorFrameRate);
 const singingGuidesInSelectedTrack = computed(() => {
   const singingGuides: {
     query: EditorFrameAudioQuery;
@@ -263,7 +263,7 @@ const setPitchDataToPitchLine = async (
 
 const generateOriginalPitchData = () => {
   const unvoicedPhonemes = UNVOICED_PHONEMES;
-  const frameRate = editFrameRate.value; // f0（元のピッチ）は編集フレームレートで表示する
+  const frameRate = editorFrameRate.value; // f0（元のピッチ）はエディターのフレームレートで表示する
 
   // 選択中のトラックで使われている歌い方のf0を結合してピッチデータを生成する
   const tempData = [];
@@ -316,7 +316,7 @@ const generateOriginalPitchData = () => {
 };
 
 const generatePitchEditData = () => {
-  const frameRate = editFrameRate.value;
+  const frameRate = editorFrameRate.value;
 
   const tempData = [...pitchEditData.value];
   // プレビュー中のピッチ編集があれば、適用する

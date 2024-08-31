@@ -172,7 +172,7 @@ type Snapshot = Readonly<{
   tempos: Tempo[];
   tracks: Map<TrackId, Track>;
   engineFrameRates: Map<EngineId, number>;
-  editFrameRate: number;
+  editorFrameRate: number;
 }>;
 
 /**
@@ -437,7 +437,7 @@ const generateSingingVolumeSource = (context: Context): SingingVolumeSource => {
     clonedQuery,
     phrase.startTime,
     track.pitchEditData,
-    context.snapshot.editFrameRate,
+    context.snapshot.editorFrameRate,
   );
   return {
     engineId: track.singer.engineId,
@@ -599,7 +599,7 @@ const generateSingingVoiceSource = (context: Context): SingingVoiceSource => {
     clonedQuery,
     phrase.startTime,
     track.pitchEditData,
-    context.snapshot.editFrameRate,
+    context.snapshot.editorFrameRate,
   );
   clonedQuery.volume = clonedSingingVolume;
   return {

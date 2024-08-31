@@ -293,7 +293,7 @@ export const DEFAULT_BEAT_TYPE = 4;
 export const SEQUENCER_MIN_NUM_MEASURES = 32;
 
 // マルチエンジン対応のために将来的に廃止予定で、利用は非推奨
-export const DEPRECATED_DEFAULT_EDIT_FRAME_RATE = 93.75;
+export const DEPRECATED_DEFAULT_EDITOR_FRAME_RATE = 93.75;
 
 export const VALUE_INDICATING_NO_DATA = -1;
 
@@ -454,13 +454,13 @@ export function applyPitchEdit(
   phraseQuery: EditorFrameAudioQuery,
   phraseStartTime: number,
   pitchEditData: number[],
-  editFrameRate: number,
+  editorFrameRate: number,
 ) {
-  // フレーズのクエリのフレームレートと編集フレームレートが一致しない場合はエラー
+  // フレーズのクエリのフレームレートとエディターのフレームレートが一致しない場合はエラー
   // TODO: 補間するようにする
-  if (phraseQuery.frameRate !== editFrameRate) {
+  if (phraseQuery.frameRate !== editorFrameRate) {
     throw new Error(
-      "The frame rate between the phrase query and the edit data does not match.",
+      "The frame rate between the phrase query and the editor does not match.",
     );
   }
   const unvoicedPhonemes = UNVOICED_PHONEMES;

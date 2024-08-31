@@ -822,7 +822,7 @@ export type SingingStoreState = {
   tracks: Map<TrackId, Track>;
   trackOrder: TrackId[];
   _selectedTrackId: TrackId;
-  editFrameRate: number;
+  editorFrameRate: number;
   phrases: Map<PhraseKey, Phrase>;
   phraseQueries: Map<EditorFrameAudioQueryKey, EditorFrameAudioQuery>;
   phraseSingingVolumes: Map<SingingVolumeKey, SingingVolume>;

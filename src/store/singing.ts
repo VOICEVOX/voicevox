@@ -66,7 +66,7 @@ import {
   isValidTimeSignatures,
   isValidTpqn,
   DEFAULT_TPQN,
-  DEPRECATED_DEFAULT_EDIT_FRAME_RATE,
+  DEPRECATED_DEFAULT_EDITOR_FRAME_RATE,
   createDefaultTrack,
   createDefaultTempo,
   createDefaultTimeSignature,
@@ -413,7 +413,7 @@ export const singingStoreState: SingingStoreState = {
    */
   _selectedTrackId: initialTrackId,
 
-  editFrameRate: DEPRECATED_DEFAULT_EDIT_FRAME_RATE,
+  editorFrameRate: DEPRECATED_DEFAULT_EDITOR_FRAME_RATE,
   phrases: new Map(),
   phraseQueries: new Map(),
   phraseSingingVolumes: new Map(),
@@ -1547,7 +1547,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               ],
             ),
           ),
-          editFrameRate: state.editFrameRate,
+          editorFrameRate: state.editorFrameRate,
         } as const;
 
         const phraseRenderer = createPhraseRenderer({
