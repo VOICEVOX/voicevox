@@ -218,7 +218,7 @@ function getWaveRate(phoneme: string): { [key in WaveType]: number } {
  */
 export function synthesisFrameAudioQueryMock(
   frameAudioQuery: FrameAudioQuery,
-  speaker: number,
+  styleId: number,
 ): Blob {
   const sampleRate = frameAudioQuery.outputSamplingRate;
   const samplePerFrame = 256;
@@ -260,7 +260,7 @@ export function synthesisFrameAudioQueryMock(
     let sample = waveTypes.reduce((acc, type) => {
       return acc + waves[type][i] * waveRates[type][i];
     }, 0);
-    sample += (speaker % 977) / 977 / 20; // 977は適当な素数
+    sample += (styleId % 977) / 977 / 20; // 977は適当な素数
     wave[i] = Math.min(Math.max(sample, -1), 1) / 10;
   }
 

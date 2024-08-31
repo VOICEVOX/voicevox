@@ -24,6 +24,7 @@ import {
   DefaultApiInterface,
   EngineManifest,
   FrameAudioQuery,
+  FrameSynthesisFrameSynthesisPostRequest,
   MoraDataMoraDataPostRequest,
   SingFrameAudioQuerySingFrameAudioQueryPostRequest,
   SingFrameVolumeSingFrameVolumePostRequest,
@@ -161,7 +162,7 @@ export function createOpenAPIEngineMock(): IEngineConnectorFactory {
           async singFrameAudioQuerySingFrameAudioQueryPost(
             payload: SingFrameAudioQuerySingFrameAudioQueryPostRequest,
           ): Promise<FrameAudioQuery> {
-            const { score, speaker: styleId } = payload;
+            const { score, speaker: styleId } = cloneWithUnwrapProxy(payload);
 
             const phonemes = notesToFramePhonemesMock(score.notes, styleId);
             const f0 = notesAndFramePhonemesToPitchMock(
@@ -195,7 +196,7 @@ export function createOpenAPIEngineMock(): IEngineConnectorFactory {
                 score,
                 frameAudioQuery,
               },
-            } = payload;
+            } = cloneWithUnwrapProxy(payload);
 
             const volume = notesAndFramePhonemesAndPitchToVolumeMock(
               score.notes,
@@ -204,6 +205,14 @@ export function createOpenAPIEngineMock(): IEngineConnectorFactory {
               stlyeId,
             );
             return volume;
+          },
+
+          async frameSynthesisFrameSynthesisPost(
+            payload: FrameSynthesisFrameSynthesisPostRequest,
+          ): Promise<Blob> {
+            const { speaker: styleId, frameAudioQuery } =
+              cloneWithUnwrapProxy(payload);
+            return synthesisFrameAudioQueryMock(frameAudioQuery, styleId);
           },
         };
       }

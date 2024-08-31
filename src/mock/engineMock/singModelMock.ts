@@ -45,6 +45,18 @@ export function notesToFramePhonemesMock(
 ): FramePhoneme[] {
   const framePhonemes: FramePhoneme[] = [];
   for (const note of notes) {
+    const noteId = note.id;
+
+    // 休符の場合はノートの長さ
+    if (note.key == undefined && note.lyric == "") {
+      framePhonemes.push({
+        noteId,
+        phoneme: "pau",
+        frameLength: note.frameLength,
+      });
+      continue;
+    }
+
     const phonemes = moraToPhonemes[convertHiraToKana(note.lyric)];
     if (phonemes == undefined)
       throw new Error(`音素に変換できません: ${note.lyric}`);
@@ -64,14 +76,21 @@ export function notesToFramePhonemesMock(
         consonantLength = beforeFramePhoneme.frameLength / 2;
       }
 
-      // 子音は前のノートに食い込む。
+      // 整数値にする
+      consonantLength = Math.max(Math.round(consonantLength), 1);
+
+      // 子音は前のノートに食い込む
       beforeFramePhoneme.frameLength -= consonantLength;
-      framePhonemes.push({ phoneme: consonant, frameLength: consonantLength });
+      framePhonemes.push({
+        noteId,
+        phoneme: consonant,
+        frameLength: consonantLength,
+      });
     }
 
     // 母音はノートの長さ
     const vowelLength = note.frameLength;
-    framePhonemes.push({ phoneme: vowel, frameLength: vowelLength });
+    framePhonemes.push({ noteId, phoneme: vowel, frameLength: vowelLength });
   }
 
   return framePhonemes;
@@ -83,22 +102,38 @@ export function notesAndFramePhonemesToPitchMock(
   framePhonemes: FramePhoneme[],
   styleId: number,
 ): number[] {
+  // 製品版エンジンへの特別対応の都合でstyleId=6000が来ることがあるので特別処理
+  styleId %= 6000;
+
   return framePhonemes.flatMap((phoneme, i) => {
-    // IDが同じノートを探す
-    const note = notes
-      .filter((note) => note.id != undefined)
-      .find((note) => note.id == phoneme.noteId);
-    if (note == undefined)
-      throw new Error(`ノートが見つかりません: ${i} ${phoneme.phoneme}`);
-
     let pitch;
-    if (note.key != undefined) {
-      pitch = note.key = phonemeAndKeyToPitchMock(phoneme.phoneme, note.key);
 
-      // 別の歌手で同じにならないように適当に値をずらす
-      pitch *= 1 + styleId * 0.03;
-    } else {
+    // 休符の場合は0
+    if (phoneme.phoneme == "pau") {
       pitch = 0;
+    } else {
+      console.log("notesAndFramePhonemesToPitchMock phoneme", phoneme);
+
+      // IDが同じノートを探す
+      const note = notes
+        .filter((note) => note.id != undefined)
+        .find((note) => note.id == phoneme.noteId);
+      if (note == undefined)
+        throw new Error(`ノートが見つかりません: ${i} ${phoneme.phoneme}`);
+
+      if (note.key != undefined) {
+        pitch = phonemeAndKeyToPitchMock(phoneme.phoneme, note.key);
+
+        console.log("pitch", pitch);
+
+        // 別の歌手で同じにならないように適当に値をずらす
+        pitch *= 1 + styleId * 0.03;
+
+        console.log("styleId", styleId);
+        console.log("pitch", pitch);
+      } else {
+        pitch = 0;
+      }
     }
 
     return Array<number>(phoneme.frameLength).fill(pitch);
