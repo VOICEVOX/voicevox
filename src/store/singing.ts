@@ -19,10 +19,11 @@ import {
   PhraseKey,
   Track,
   SequenceId,
-  FrameAudioQueryKey,
   SingingVolumeKey,
   SingingVolume,
   SingingVoiceKey,
+  EditorFrameAudioQueryKey,
+  EditorFrameAudioQuery,
 } from "./type";
 import { DEFAULT_PROJECT_NAME, sanitizeFileName } from "./utility";
 import {
@@ -247,7 +248,7 @@ const phraseSingingVoices = new Map<SingingVoiceKey, SingingVoice>();
 const sequences = new Map<SequenceId, Sequence & { trackId: TrackId }>();
 const animationTimer = new AnimationTimer();
 
-const queryCache = new Map<FrameAudioQueryKey, FrameAudioQuery>();
+const queryCache = new Map<EditorFrameAudioQueryKey, EditorFrameAudioQuery>();
 const singingVolumeCache = new Map<SingingVolumeKey, SingingVolume>();
 const singingVoiceCache = new Map<SingingVoiceKey, SingingVoice>();
 
@@ -880,7 +881,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         queryKey,
       }: {
         phraseKey: PhraseKey;
-        queryKey: FrameAudioQueryKey | undefined;
+        queryKey: EditorFrameAudioQueryKey | undefined;
       },
     ) {
       const phrase = getOrThrow(state.phrases, phraseKey);
@@ -947,8 +948,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         queryKey,
         query,
       }: {
-        queryKey: FrameAudioQueryKey;
-        query: FrameAudioQuery;
+        queryKey: EditorFrameAudioQueryKey;
+        query: EditorFrameAudioQuery;
       },
     ) {
       state.phraseQueries.set(queryKey, query);
@@ -956,7 +957,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   DELETE_PHRASE_QUERY: {
-    mutation(state, { queryKey }: { queryKey: FrameAudioQueryKey }) {
+    mutation(state, { queryKey }: { queryKey: EditorFrameAudioQueryKey }) {
       state.phraseQueries.delete(queryKey);
     },
   },

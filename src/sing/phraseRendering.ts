@@ -1,5 +1,4 @@
 import {
-  FrameAudioQueryKey,
   Note,
   PhraseKey,
   Singer,
@@ -9,6 +8,8 @@ import {
   Track,
   SingingVolumeKey,
   SingingVolume,
+  EditorFrameAudioQueryKey,
+  EditorFrameAudioQuery,
 } from "@/store/type";
 import {
   FrameAudioQuery,
@@ -98,7 +99,7 @@ const shiftKeyOfNotes = (notes: NoteForRequestToEngine[], keyShift: number) => {
   }
 };
 
-const getPhonemes = (query: FrameAudioQuery) => {
+const getPhonemes = (query: EditorFrameAudioQuery) => {
   return query.phonemes.map((value) => value.phoneme).join(" ");
 };
 
@@ -182,8 +183,8 @@ type Phrase = Readonly<{
   notes: Note[];
   startTime: number;
   queryKey: {
-    get: () => FrameAudioQueryKey | undefined;
-    set: (value: FrameAudioQueryKey | undefined) => void;
+    get: () => EditorFrameAudioQueryKey | undefined;
+    set: (value: EditorFrameAudioQueryKey | undefined) => void;
   };
   singingVolumeKey: {
     get: () => SingingVolumeKey | undefined;
@@ -199,7 +200,7 @@ type Phrase = Readonly<{
  * フレーズレンダリングで必要となる外部のキャッシュや関数
  */
 type ExternalDependencies = Readonly<{
-  queryCache: Map<FrameAudioQueryKey, FrameAudioQuery>;
+  queryCache: Map<EditorFrameAudioQueryKey, EditorFrameAudioQuery>;
   singingVolumeCache: Map<SingingVolumeKey, SingingVolume>;
   singingVoiceCache: Map<SingingVoiceKey, SingingVoice>;
 
@@ -207,9 +208,12 @@ type ExternalDependencies = Readonly<{
     get: (phraseKey: PhraseKey) => Phrase;
   };
   phraseQueries: {
-    get: (queryKey: FrameAudioQueryKey) => FrameAudioQuery;
-    set: (queryKey: FrameAudioQueryKey, query: FrameAudioQuery) => void;
-    delete: (queryKey: FrameAudioQueryKey) => void;
+    get: (queryKey: EditorFrameAudioQueryKey) => EditorFrameAudioQuery;
+    set: (
+      queryKey: EditorFrameAudioQueryKey,
+      query: EditorFrameAudioQuery,
+    ) => void;
+    delete: (queryKey: EditorFrameAudioQueryKey) => void;
   };
   phraseSingingVolumes: {
     get: (singingVolumeKey: SingingVolumeKey) => SingingVolume;
@@ -316,13 +320,13 @@ const generateQuerySource = (context: Context): QuerySource => {
 
 const calculateQueryKey = async (querySource: QuerySource) => {
   const hash = await calculateHash(querySource);
-  return FrameAudioQueryKey(hash);
+  return EditorFrameAudioQueryKey(hash);
 };
 
 const generateQuery = async (
   querySource: QuerySource,
   externalDependencies: ExternalDependencies,
-) => {
+): Promise<EditorFrameAudioQuery> => {
   const notesForRequestToEngine = createNotesForRequestToEngine(
     querySource.firstRestDuration,
     lastRestDurationSeconds,
@@ -340,7 +344,7 @@ const generateQuery = async (
   );
 
   shiftPitch(query.f0, querySource.keyRangeAdjustment);
-  return query;
+  return { ...query, frameRate: querySource.engineFrameRate };
 };
 
 const queryGenerationStage: Stage = {
@@ -411,7 +415,7 @@ type SingingVolumeSource = Readonly<{
   notes: Note[];
   keyRangeAdjustment: number;
   volumeRangeAdjustment: number;
-  queryForVolumeGeneration: FrameAudioQuery;
+  queryForVolumeGeneration: EditorFrameAudioQuery;
 }>;
 
 const generateSingingVolumeSource = (context: Context): SingingVolumeSource => {
@@ -422,10 +426,6 @@ const generateSingingVolumeSource = (context: Context): SingingVolumeSource => {
   if (track.singer == undefined) {
     throw new Error("track.singer is undefined.");
   }
-  const engineFrameRate = getOrThrow(
-    context.snapshot.engineFrameRates,
-    track.singer.engineId,
-  );
   const phrase = phrases.get(context.phraseKey);
   const phraseQueryKey = phrase.queryKey.get();
   if (phraseQueryKey == undefined) {
@@ -434,17 +434,14 @@ const generateSingingVolumeSource = (context: Context): SingingVolumeSource => {
   const query = phraseQueries.get(phraseQueryKey);
   const clonedQuery = cloneWithUnwrapProxy(query);
   applyPitchEdit(
-    {
-      query: clonedQuery,
-      startTime: phrase.startTime,
-      frameRate: engineFrameRate,
-    },
+    clonedQuery,
+    phrase.startTime,
     track.pitchEditData,
     context.snapshot.editFrameRate,
   );
   return {
     engineId: track.singer.engineId,
-    engineFrameRate,
+    engineFrameRate: query.frameRate,
     tpqn: context.snapshot.tpqn,
     tempos: context.snapshot.tempos,
     firstRestDuration: phrase.firstRestDuration,
@@ -572,7 +569,7 @@ const singingVolumeGenerationStage: Stage = {
  */
 type SingingVoiceSource = Readonly<{
   singer: Singer;
-  queryForSingingVoiceSynthesis: FrameAudioQuery;
+  queryForSingingVoiceSynthesis: EditorFrameAudioQuery;
 }>;
 
 const generateSingingVoiceSource = (context: Context): SingingVoiceSource => {
@@ -585,10 +582,6 @@ const generateSingingVoiceSource = (context: Context): SingingVoiceSource => {
   if (track.singer == undefined) {
     throw new Error("track.singer is undefined.");
   }
-  const engineFrameRate = getOrThrow(
-    context.snapshot.engineFrameRates,
-    track.singer.engineId,
-  );
   const phrase = phrases.get(context.phraseKey);
   const phraseQueryKey = phrase.queryKey.get();
   const phraseSingingVolumeKey = phrase.singingVolumeKey.get();
@@ -603,11 +596,8 @@ const generateSingingVoiceSource = (context: Context): SingingVoiceSource => {
   const clonedQuery = cloneWithUnwrapProxy(query);
   const clonedSingingVolume = cloneWithUnwrapProxy(singingVolume);
   applyPitchEdit(
-    {
-      query: clonedQuery,
-      startTime: phrase.startTime,
-      frameRate: engineFrameRate,
-    },
+    clonedQuery,
+    phrase.startTime,
     track.pitchEditData,
     context.snapshot.editFrameRate,
   );

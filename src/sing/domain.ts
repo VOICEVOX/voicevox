@@ -8,8 +8,9 @@ import {
   TimeSignature,
   PhraseKey,
   Track,
+  EditorFrameAudioQuery,
 } from "@/store/type";
-import { FrameAudioQuery, FramePhoneme } from "@/openapi";
+import { FramePhoneme } from "@/openapi";
 import { TrackId } from "@/type/preload";
 
 const BEAT_TYPES = [2, 4, 8, 16];
@@ -450,24 +451,21 @@ export function convertToFramePhonemes(phonemes: FramePhoneme[]) {
 }
 
 export function applyPitchEdit(
-  singingGuide: {
-    query: FrameAudioQuery;
-    frameRate: number;
-    startTime: number;
-  },
+  phraseQuery: EditorFrameAudioQuery,
+  phraseStartTime: number,
   pitchEditData: number[],
   editFrameRate: number,
 ) {
-  // 歌い方のフレームレートと編集フレームレートが一致しない場合はエラー
+  // フレーズのクエリのフレームレートと編集フレームレートが一致しない場合はエラー
   // TODO: 補間するようにする
-  if (singingGuide.frameRate !== editFrameRate) {
+  if (phraseQuery.frameRate !== editFrameRate) {
     throw new Error(
-      "The frame rate between the singing guide and the edit data does not match.",
+      "The frame rate between the phrase query and the edit data does not match.",
     );
   }
   const unvoicedPhonemes = UNVOICED_PHONEMES;
-  const f0 = singingGuide.query.f0;
-  const phonemes = singingGuide.query.phonemes;
+  const f0 = phraseQuery.f0;
+  const phonemes = phraseQuery.phonemes;
 
   // 各フレームの音素の配列を生成する
   const framePhonemes = convertToFramePhonemes(phonemes);
@@ -475,21 +473,21 @@ export function applyPitchEdit(
     throw new Error("f0.length and framePhonemes.length do not match.");
   }
 
-  // 歌い方の開始フレームと終了フレームを計算する
-  const singingGuideFrameLength = f0.length;
-  const singingGuideStartFrame = Math.round(
-    singingGuide.startTime * singingGuide.frameRate,
+  // フレーズのクエリの開始フレームと終了フレームを計算する
+  const phraseQueryFrameLength = f0.length;
+  const phraseQueryStartFrame = Math.round(
+    phraseStartTime * phraseQuery.frameRate,
   );
-  const singingGuideEndFrame = singingGuideStartFrame + singingGuideFrameLength;
+  const phraseQueryEndFrame = phraseQueryStartFrame + phraseQueryFrameLength;
 
   // ピッチ編集をf0に適用する
-  const startFrame = Math.max(0, singingGuideStartFrame);
-  const endFrame = Math.min(pitchEditData.length, singingGuideEndFrame);
+  const startFrame = Math.max(0, phraseQueryStartFrame);
+  const endFrame = Math.min(pitchEditData.length, phraseQueryEndFrame);
   for (let i = startFrame; i < endFrame; i++) {
-    const phoneme = framePhonemes[i - singingGuideStartFrame];
+    const phoneme = framePhonemes[i - phraseQueryStartFrame];
     const voiced = !unvoicedPhonemes.includes(phoneme);
     if (voiced && pitchEditData[i] !== VALUE_INDICATING_NO_DATA) {
-      f0[i - singingGuideStartFrame] = pitchEditData[i];
+      f0[i - phraseQueryStartFrame] = pitchEditData[i];
     }
   }
 }

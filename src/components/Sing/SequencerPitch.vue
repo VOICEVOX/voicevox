@@ -30,7 +30,7 @@ import { ExhaustiveError } from "@/type/utility";
 import { createLogger } from "@/domain/frontend/log";
 import { getLast } from "@/sing/utility";
 import { getOrThrow } from "@/helpers/mapHelper";
-import { FrameAudioQuery } from "@/openapi";
+import { EditorFrameAudioQuery } from "@/store/type";
 
 type PitchLine = {
   readonly color: Color;
@@ -59,8 +59,7 @@ const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
 const editFrameRate = computed(() => store.state.editFrameRate);
 const singingGuidesInSelectedTrack = computed(() => {
   const singingGuides: {
-    query: FrameAudioQuery;
-    frameRate: number;
+    query: EditorFrameAudioQuery;
     startTime: number;
   }[] = [];
   for (const phrase of store.state.phrases.values()) {
@@ -70,16 +69,10 @@ const singingGuidesInSelectedTrack = computed(() => {
     if (phrase.queryKey == undefined) {
       continue;
     }
-    const track = store.state.tracks.get(phrase.trackId);
-    if (track == undefined || track.singer == undefined) {
-      continue;
-    }
     const phraseQuery = getOrThrow(store.state.phraseQueries, phrase.queryKey);
-    const engineManifest = store.state.engineManifests[track.singer.engineId];
     singingGuides.push({
       startTime: phrase.startTime,
       query: phraseQuery,
-      frameRate: engineManifest.frameRate,
     });
   }
   return singingGuides;
@@ -276,7 +269,7 @@ const generateOriginalPitchData = () => {
   const tempData = [];
   for (const singingGuide of singingGuidesInSelectedTrack.value) {
     // TODO: 補間を行うようにする
-    if (singingGuide.frameRate !== frameRate) {
+    if (singingGuide.query.frameRate !== frameRate) {
       throw new Error(
         "The frame rate between the singing guide and the edit does not match.",
       );

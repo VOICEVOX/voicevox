@@ -745,6 +745,11 @@ export type PhraseState =
   | "PLAYABLE";
 
 /**
+ * エディタ用のFrameAudioQuery
+ */
+export type EditorFrameAudioQuery = FrameAudioQuery & { frameRate: number };
+
+/**
  * 歌唱ボリューム
  */
 export type SingingVolume = number[];
@@ -754,10 +759,15 @@ export type SingingVolume = number[];
  */
 export type SingingVoice = Blob;
 
-const frameAudioQueryKeySchema = z.string().brand<"FrameAudioQueryKey">();
-export type FrameAudioQueryKey = z.infer<typeof frameAudioQueryKeySchema>;
-export const FrameAudioQueryKey = (id: string): FrameAudioQueryKey =>
-  frameAudioQueryKeySchema.parse(id);
+const editorFrameAudioQueryKeySchema = z
+  .string()
+  .brand<"EditorFrameAudioQueryKey">();
+export type EditorFrameAudioQueryKey = z.infer<
+  typeof editorFrameAudioQueryKeySchema
+>;
+export const EditorFrameAudioQueryKey = (
+  id: string,
+): EditorFrameAudioQueryKey => editorFrameAudioQueryKeySchema.parse(id);
 
 const singingVolumeKeySchema = z.string().brand<"SingingVolumeKey">();
 export type SingingVolumeKey = z.infer<typeof singingVolumeKeySchema>;
@@ -782,7 +792,7 @@ export type Phrase = {
   notes: Note[];
   startTime: number;
   state: PhraseState;
-  queryKey?: FrameAudioQueryKey;
+  queryKey?: EditorFrameAudioQueryKey;
   singingVolumeKey?: SingingVolumeKey;
   singingVoiceKey?: SingingVoiceKey;
   sequenceId?: SequenceId;
@@ -790,7 +800,7 @@ export type Phrase = {
 };
 
 /**
- * フレーズのソース
+ * フレーズの生成に必要なデータ
  */
 export type PhraseSource = {
   firstRestDuration: number;
@@ -814,7 +824,7 @@ export type SingingStoreState = {
   _selectedTrackId: TrackId;
   editFrameRate: number;
   phrases: Map<PhraseKey, Phrase>;
-  phraseQueries: Map<FrameAudioQueryKey, FrameAudioQuery>;
+  phraseQueries: Map<EditorFrameAudioQueryKey, EditorFrameAudioQuery>;
   phraseSingingVolumes: Map<SingingVolumeKey, SingingVolume>;
   sequencerZoomX: number;
   sequencerZoomY: number;
@@ -971,7 +981,7 @@ export type SingingStoreTypes = {
   SET_QUERY_KEY_TO_PHRASE: {
     mutation: {
       phraseKey: PhraseKey;
-      queryKey: FrameAudioQueryKey | undefined;
+      queryKey: EditorFrameAudioQueryKey | undefined;
     };
   };
 
@@ -998,13 +1008,13 @@ export type SingingStoreTypes = {
 
   SET_PHRASE_QUERY: {
     mutation: {
-      queryKey: FrameAudioQueryKey;
-      query: FrameAudioQuery;
+      queryKey: EditorFrameAudioQueryKey;
+      query: EditorFrameAudioQuery;
     };
   };
 
   DELETE_PHRASE_QUERY: {
-    mutation: { queryKey: FrameAudioQueryKey };
+    mutation: { queryKey: EditorFrameAudioQueryKey };
   };
 
   SET_PHRASE_SINGING_VOLUME: {
