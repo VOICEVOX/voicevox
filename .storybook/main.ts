@@ -1,5 +1,5 @@
 import type { StorybookConfig } from "@storybook/vue3-vite";
-import { assetsPath, dicPath } from "@/mock/engineMock";
+import { assetsPath, dicPath } from "@/mock/engineMock/constants";
 
 const config: StorybookConfig = {
   stories: ["../src/**/*.mdx", "../src/**/*.stories.@(js|jsx|mjs|ts|tsx)"],

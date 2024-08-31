@@ -33,9 +33,7 @@ import {
   SupportedDevicesInfo,
   SynthesisSynthesisPostRequest,
 } from "@/openapi";
-
-export const dicPath = "engineMock/dict";
-export const assetsPath = "engineMock/assets";
+import { assetsPath, dicPath } from "./constants";
 
 export const mockHost = "mock";
 

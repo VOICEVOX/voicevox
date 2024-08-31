@@ -5,11 +5,7 @@ import { provide, toRaw } from "vue";
 import TalkEditor from "./TalkEditor.vue";
 import { createStoreWrapper, storeKey } from "@/store";
 import { HotkeyManager, hotkeyManagerKey } from "@/plugins/hotkeyPlugin";
-import {
-  assetsPath,
-  createOpenAPIEngineMock,
-  mockHost,
-} from "@/mock/engineMock";
+import { createOpenAPIEngineMock, mockHost } from "@/mock/engineMock";
 import { proxyStoreCreator } from "@/store/proxy";
 import {
   CharacterInfo,
@@ -29,6 +25,7 @@ import {
 import { setFont, themeToCss } from "@/domain/dom";
 import defaultTheme from "@/../public/themes/default.json";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
+import { assetsPath } from "@/mock/engineMock/constants";
 
 const meta: Meta<typeof TalkEditor> = {
   component: TalkEditor,
@@ -74,7 +71,8 @@ const meta: Meta<typeof TalkEditor> = {
         executionEnabled: false,
         executionFilePath: "not_found",
         executionArgs: [],
-        type: "default",
+        isDefault: true,
+        type: "path",
       };
       store.commit("SET_ENGINE_INFOS", {
         engineIds: [engineId],
