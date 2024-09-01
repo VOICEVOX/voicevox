@@ -265,7 +265,8 @@ export type PhraseRenderStageId =
   | "singingVoiceSynthesis";
 
 /**
- * フレーズレンダリングのステージ
+ * フレーズレンダリングのステージのインターフェイス。
+ * フレーズレンダラー内で順に実行される。
  */
 type BaseStage = Readonly<{
   id: PhraseRenderStageId;
