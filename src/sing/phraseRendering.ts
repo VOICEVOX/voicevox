@@ -686,6 +686,10 @@ const singingVoiceSynthesisStage: BaseStage = {
 
 // フレーズレンダラー
 
+/**
+ * フレーズレンダラー。
+ * 各フレーズごとに、ステージを進めながらレンダリング処理を行う。
+ */
 export type PhraseRenderer = Readonly<{
   /**
    * 一番最初のステージのIDを返す。
