@@ -43,14 +43,18 @@ const SEVEN_ZIP_BINARY_PATH = join(
 const TYPOS_URLS = {
   [OS.MACOS]: {
     [CPU_ARCHITECTURE.ARM]:
-      "https://github.com/crate-ci/typos/releases/download/v1.23.7/typos-v1.23.7-aarch64-apple-darwin.tar.gz",
+      "https://github.com/crate-ci/typos/releases/download/v1.21.0/typos-v1.21.0-aarch64-apple-darwin.tar.gz",
     [CPU_ARCHITECTURE.X86_64]:
-      "https://github.com/crate-ci/typos/releases/download/v1.23.7/typos-v1.23.7-x86_64-apple-darwin.tar.gz",
+      "https://github.com/crate-ci/typos/releases/download/v1.21.0/typos-v1.21.0-x86_64-apple-darwin.tar.gz",
   },
-  [OS.LINUX]:
-    "https://github.com/crate-ci/typos/releases/download/v1.23.7/typos-v1.23.7-x86_64-unknown-linux-musl.tar.gz",
-  [OS.WINDOWS]:
-    "https://github.com/crate-ci/typos/releases/download/v1.23.7/typos-v1.23.7-x86_64-pc-windows-msvc.zip",
+  [OS.LINUX]: {
+    [CPU_ARCHITECTURE.X86_64]:
+      "https://github.com/crate-ci/typos/releases/download/v1.21.0/typos-v1.21.0-x86_64-unknown-linux-musl.tar.gz",
+  },
+  [OS.WINDOWS]: {
+    [CPU_ARCHITECTURE.X86_64]:
+      "https://github.com/crate-ci/typos/releases/download/v1.21.0/typos-v1.21.0-x86_64-pc-windows-msvc.zip",
+  },
 };
 
 // 非同期でOSコマンドを処理するための関数
@@ -77,24 +81,12 @@ async function runCommand({ command, description }) {
  * @returns {string} バイナリをダウンロードするためのURL
  */
 function getBinaryURL() {
-  let url;
+  const url = TYPOS_URLS[CURRENT_OS][CURRENT_CPU_ARCHITECTURE];
 
-  switch (CURRENT_OS) {
-    case OS.MACOS:
-      url = TYPOS_URLS[OS.MACOS][CURRENT_CPU_ARCHITECTURE];
-      break;
-    case OS.LINUX:
-      url = TYPOS_URLS[OS.LINUX];
-      break;
-    case OS.WINDOWS:
-      url = TYPOS_URLS[OS.WINDOWS];
-      break;
-    default:
-      throw new Error(`Unsupported OS: ${CURRENT_OS}`);
-  }
-
-  if (typeof url !== "string") {
-    throw new Error("Failed to determine the download URL.");
+  if (!url) {
+    throw new Error(
+      `Unsupported OS or architecture: ${CURRENT_OS}, ${CURRENT_CPU_ARCHITECTURE}`,
+    );
   }
 
   return url;
