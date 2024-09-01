@@ -301,7 +301,7 @@ type QuerySource = Readonly<{
 }>;
 
 const generateQuerySource = (context: Context): QuerySource => {
-  const phrases = context.externalDependencies.phrases;
+  const { phrases } = context.externalDependencies;
 
   const track = getOrThrow(context.snapshot.tracks, context.trackId);
   if (track.singer == undefined) {
@@ -355,7 +355,7 @@ const generateQuery = async (
 const queryGenerationStage: BaseStage = {
   id: "queryGeneration",
   shouldBeExecuted: async (context: Context) => {
-    const phrases = context.externalDependencies.phrases;
+    const { phrases } = context.externalDependencies;
 
     const track = getOrThrow(context.snapshot.tracks, context.trackId);
     if (track.singer == undefined) {
@@ -368,8 +368,7 @@ const queryGenerationStage: BaseStage = {
     return phraseQueryKey == undefined || phraseQueryKey !== queryKey;
   },
   deleteExecutionResult: (context: Context) => {
-    const phrases = context.externalDependencies.phrases;
-    const phraseQueries = context.externalDependencies.phraseQueries;
+    const { phrases, phraseQueries } = context.externalDependencies;
 
     const phrase = phrases.get(context.phraseKey);
     const phraseQueryKey = phrase.queryKey.get();
@@ -379,9 +378,7 @@ const queryGenerationStage: BaseStage = {
     }
   },
   execute: async (context: Context) => {
-    const phrases = context.externalDependencies.phrases;
-    const phraseQueries = context.externalDependencies.phraseQueries;
-    const queryCache = context.externalDependencies.queryCache;
+    const { phrases, phraseQueries, queryCache } = context.externalDependencies;
 
     const querySource = generateQuerySource(context);
     const queryKey = await calculateQueryKey(querySource);
@@ -424,8 +421,7 @@ type SingingVolumeSource = Readonly<{
 }>;
 
 const generateSingingVolumeSource = (context: Context): SingingVolumeSource => {
-  const phrases = context.externalDependencies.phrases;
-  const phraseQueries = context.externalDependencies.phraseQueries;
+  const { phrases, phraseQueries } = context.externalDependencies;
 
   const track = getOrThrow(context.snapshot.tracks, context.trackId);
   if (track.singer == undefined) {
@@ -507,7 +503,7 @@ const generateSingingVolume = async (
 const singingVolumeGenerationStage: BaseStage = {
   id: "singingVolumeGeneration",
   shouldBeExecuted: async (context: Context) => {
-    const phrases = context.externalDependencies.phrases;
+    const { phrases } = context.externalDependencies;
 
     const track = getOrThrow(context.snapshot.tracks, context.trackId);
     if (track.singer == undefined) {
@@ -524,9 +520,7 @@ const singingVolumeGenerationStage: BaseStage = {
     );
   },
   deleteExecutionResult: (context: Context) => {
-    const phrases = context.externalDependencies.phrases;
-    const phraseSingingVolumes =
-      context.externalDependencies.phraseSingingVolumes;
+    const { phrases, phraseSingingVolumes } = context.externalDependencies;
 
     const phrase = phrases.get(context.phraseKey);
     const phraseSingingVolumeKey = phrase.singingVolumeKey.get();
@@ -536,10 +530,8 @@ const singingVolumeGenerationStage: BaseStage = {
     }
   },
   execute: async (context: Context) => {
-    const phrases = context.externalDependencies.phrases;
-    const phraseSingingVolumes =
-      context.externalDependencies.phraseSingingVolumes;
-    const singingVolumeCache = context.externalDependencies.singingVolumeCache;
+    const { phrases, phraseSingingVolumes, singingVolumeCache } =
+      context.externalDependencies;
 
     const singingVolumeSource = generateSingingVolumeSource(context);
     const singingVolumeKey =
@@ -578,10 +570,8 @@ type SingingVoiceSource = Readonly<{
 }>;
 
 const generateSingingVoiceSource = (context: Context): SingingVoiceSource => {
-  const phrases = context.externalDependencies.phrases;
-  const phraseQueries = context.externalDependencies.phraseQueries;
-  const phraseSingingVolumes =
-    context.externalDependencies.phraseSingingVolumes;
+  const { phrases, phraseQueries, phraseSingingVolumes } =
+    context.externalDependencies;
 
   const track = getOrThrow(context.snapshot.tracks, context.trackId);
   if (track.singer == undefined) {
@@ -634,7 +624,7 @@ const synthesizeSingingVoice = async (
 const singingVoiceSynthesisStage: BaseStage = {
   id: "singingVoiceSynthesis",
   shouldBeExecuted: async (context: Context) => {
-    const phrases = context.externalDependencies.phrases;
+    const { phrases } = context.externalDependencies;
 
     const track = getOrThrow(context.snapshot.tracks, context.trackId);
     if (track.singer == undefined) {
@@ -650,9 +640,7 @@ const singingVoiceSynthesisStage: BaseStage = {
     );
   },
   deleteExecutionResult: (context: Context) => {
-    const phrases = context.externalDependencies.phrases;
-    const phraseSingingVoices =
-      context.externalDependencies.phraseSingingVoices;
+    const { phrases, phraseSingingVoices } = context.externalDependencies;
 
     const phrase = phrases.get(context.phraseKey);
     const phraseSingingVoiceKey = phrase.singingVoiceKey.get();
@@ -662,10 +650,8 @@ const singingVoiceSynthesisStage: BaseStage = {
     }
   },
   execute: async (context: Context) => {
-    const phrases = context.externalDependencies.phrases;
-    const phraseSingingVoices =
-      context.externalDependencies.phraseSingingVoices;
-    const singingVoiceCache = context.externalDependencies.singingVoiceCache;
+    const { phrases, phraseSingingVoices, singingVoiceCache } =
+      context.externalDependencies;
 
     const singingVoiceSource = generateSingingVoiceSource(context);
     const singingVoiceKey = await calculateSingingVoiceKey(singingVoiceSource);
