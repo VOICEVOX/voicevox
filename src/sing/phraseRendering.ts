@@ -262,7 +262,7 @@ export type PhraseRenderStageId =
 /**
  * フレーズレンダリングのステージ
  */
-type Stage = Readonly<{
+type BaseStage = Readonly<{
   id: PhraseRenderStageId;
 
   /**
@@ -352,7 +352,7 @@ const generateQuery = async (
   return { ...query, frameRate: querySource.engineFrameRate };
 };
 
-const queryGenerationStage: Stage = {
+const queryGenerationStage: BaseStage = {
   id: "queryGeneration",
   shouldBeExecuted: async (context: Context) => {
     const phrases = context.externalDependencies.phrases;
@@ -504,7 +504,7 @@ const generateSingingVolume = async (
   return singingVolume;
 };
 
-const singingVolumeGenerationStage: Stage = {
+const singingVolumeGenerationStage: BaseStage = {
   id: "singingVolumeGeneration",
   shouldBeExecuted: async (context: Context) => {
     const phrases = context.externalDependencies.phrases;
@@ -631,7 +631,7 @@ const synthesizeSingingVoice = async (
   return singingVoice;
 };
 
-const singingVoiceSynthesisStage: Stage = {
+const singingVoiceSynthesisStage: BaseStage = {
   id: "singingVoiceSynthesis",
   shouldBeExecuted: async (context: Context) => {
     const phrases = context.externalDependencies.phrases;
@@ -731,7 +731,7 @@ export type PhraseRenderer = Readonly<{
   ) => Promise<void>;
 }>;
 
-const stages: readonly Stage[] = [
+const stages: readonly BaseStage[] = [
   queryGenerationStage,
   singingVolumeGenerationStage,
   singingVoiceSynthesisStage,
