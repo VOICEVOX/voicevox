@@ -6,7 +6,8 @@ const { exec } = require("child_process");
 const { promisify } = require("util");
 const { platform, arch } = require("os");
 const { join, resolve } = require("path");
-const { mkdirSync, existsSync, unlinkSync } = require("fs");
+const { mkdirSync, existsSync, unlinkSync, createWriteStream } = require("fs");
+const fetch = require("node-fetch");
 
 // OS名を定義するオブジェクト
 const OS = {
@@ -97,7 +98,7 @@ function getBinaryURL() {
  * @param {Object} params - バイナリの情報を含むオブジェクト
  * @param {string} params.url - ダウンロード先URL
  */
-async function downloadBinary({ url }) {
+async function downloadAndUnarchive({ url }) {
   const compressedFilePath = `${TYPOS_BINARY_PATH}/typos${CURRENT_OS === OS.WINDOWS ? ".zip" : ".tar.gz"}`;
 
   // バイナリディレクトリが存在する場合ダウンロードをスキップし、存在しない場合はディレクトリを作成する
@@ -108,9 +109,17 @@ async function downloadBinary({ url }) {
     mkdirSync(TYPOS_BINARY_PATH, { recursive: true });
   }
 
-  await runCommand({
-    command: `curl -L ${url} -o ${compressedFilePath}`,
-    description: `Downloading typos binary`,
+  // node-fetchでバイナリをメモリ上にダウンロードした後、ローカルに保存する
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to download binary: ${response.statusText}`);
+  }
+
+  const fileStream = createWriteStream(compressedFilePath);
+  await new Promise((resolve, reject) => {
+    response.body.pipe(fileStream);
+    response.body.on("error", reject);
+    fileStream.on("finish", resolve);
   });
 
   if (CURRENT_OS === OS.WINDOWS) {
@@ -153,7 +162,7 @@ async function downloadBinary({ url }) {
  */
 async function main() {
   const url = getBinaryURL();
-  await downloadBinary({ url });
+  await downloadAndUnarchive({ url });
 }
 
 // main関数実行
