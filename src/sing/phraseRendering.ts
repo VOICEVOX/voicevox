@@ -1,3 +1,8 @@
+/**
+ * フレーズごとに音声合成するフレーズレンダラーと、それに必要な処理。
+ * レンダリングが必要かどうかの判定やキャッシュの作成も行う。
+ */
+
 import {
   Note,
   PhraseKey,
@@ -682,14 +687,17 @@ const singingVoiceSynthesisStage: BaseStage = {
 
 export type PhraseRenderer = Readonly<{
   /**
-   * レンダリング処理の開始点となる最初のステージのIDを返す。
+   * 一番最初のステージのIDを返す。
+   * 一度もレンダリングを行っていないフレーズは、
+   * この（一番最初の）ステージからレンダリング処理を開始する必要がある。
    * @returns ステージID
    */
   getFirstRenderStageId: () => PhraseRenderStageId;
 
   /**
-   * レンダリングがどのステージから開始されるべきかを判断する。
-   * すべてのステージがスキップ可能な場合、undefinedが返される。
+   * レンダリングが必要なフレーズかどうかを判断し、
+   * レンダリングが必要であればどのステージから開始されるべきかを判断して、そのステージのIDを返す。
+   * レンダリングが必要ない場合、undefinedが返される。
    * @param snapshot スナップショット
    * @param trackId トラックID
    * @param phraseKey フレーズキー
@@ -702,7 +710,7 @@ export type PhraseRenderer = Readonly<{
   ) => Promise<PhraseRenderStageId | undefined>;
 
   /**
-   * 指定されたステージからレンダリング処理を開始する。
+   * 指定されたフレーズのレンダリング処理を、指定されたステージから開始する。
    * レンダリング処理を開始する前に、前回のレンダリング処理結果の削除が行われる。
    * @param snapshot スナップショット
    * @param trackId トラックID
