@@ -1555,37 +1555,40 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           singingVolumeCache,
           singingVoiceCache,
           phrases: {
-            get: (phraseKey: PhraseKey) => ({
-              firstRestDuration: getOrThrow(state.phrases, phraseKey)
-                .firstRestDuration,
-              notes: getOrThrow(state.phrases, phraseKey).notes,
-              startTime: getOrThrow(state.phrases, phraseKey).startTime,
-              queryKey: {
-                get: () => getOrThrow(state.phrases, phraseKey).queryKey,
-                set: (value) =>
-                  mutations.SET_QUERY_KEY_TO_PHRASE({
-                    phraseKey,
-                    queryKey: value,
-                  }),
-              },
-              singingVolumeKey: {
-                get: () =>
-                  getOrThrow(state.phrases, phraseKey).singingVolumeKey,
-                set: (value) =>
-                  mutations.SET_SINGING_VOLUME_KEY_TO_PHRASE({
-                    phraseKey,
-                    singingVolumeKey: value,
-                  }),
-              },
-              singingVoiceKey: {
-                get: () => getOrThrow(state.phrases, phraseKey).singingVoiceKey,
-                set: (value) =>
-                  mutations.SET_SINGING_VOICE_KEY_TO_PHRASE({
-                    phraseKey,
-                    singingVoiceKey: value,
-                  }),
-              },
-            }),
+            get: (phraseKey: PhraseKey) => {
+              const phrase = getOrThrow(state.phrases, phraseKey);
+              return {
+                firstRestDuration: phrase.firstRestDuration,
+                notes: phrase.notes,
+                startTime: phrase.startTime,
+                queryKey: {
+                  get: () => getOrThrow(state.phrases, phraseKey).queryKey,
+                  set: (value) =>
+                    mutations.SET_QUERY_KEY_TO_PHRASE({
+                      phraseKey,
+                      queryKey: value,
+                    }),
+                },
+                singingVolumeKey: {
+                  get: () =>
+                    getOrThrow(state.phrases, phraseKey).singingVolumeKey,
+                  set: (value) =>
+                    mutations.SET_SINGING_VOLUME_KEY_TO_PHRASE({
+                      phraseKey,
+                      singingVolumeKey: value,
+                    }),
+                },
+                singingVoiceKey: {
+                  get: () =>
+                    getOrThrow(state.phrases, phraseKey).singingVoiceKey,
+                  set: (value) =>
+                    mutations.SET_SINGING_VOICE_KEY_TO_PHRASE({
+                      phraseKey,
+                      singingVoiceKey: value,
+                    }),
+                },
+              };
+            },
           },
           phraseQueries: {
             get: (queryKey) => getOrThrow(state.phraseQueries, queryKey),
