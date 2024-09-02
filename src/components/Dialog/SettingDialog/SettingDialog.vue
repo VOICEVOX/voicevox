@@ -299,7 +299,7 @@
 
               <FileNamePatternDialog
                 v-model:open-dialog="showAudioFilePatternEditDialog"
-                v-model:fileNamePattern="audioFileNamePattern"
+                :currentFileNamePattern="audioFileNamePattern"
                 :defaultTemplate="DEFAULT_AUDIO_FILE_BASE_NAME_TEMPLATE"
                 :availableTags="[
                   'index',
@@ -310,11 +310,13 @@
                   'projectName',
                 ]"
                 :fileNameBuilder="buildAudioFileNameFromRawData"
-                @complete="handleSavingSettingChange('fileNamePattern', $event)"
+                @update:fileNamePattern="
+                  handleSavingSettingChange('fileNamePattern', $event)
+                "
               />
               <FileNamePatternDialog
                 v-model:open-dialog="showSongTrackAudioFilePatternEditDialog"
-                v-model:fileNamePattern="songTrackFileNamePattern"
+                :currentFileNamePattern="songTrackFileNamePattern"
                 :defaultTemplate="DEFAULT_SONG_AUDIO_FILE_BASE_NAME_TEMPLATE"
                 :availableTags="[
                   'index',
@@ -325,7 +327,7 @@
                   'projectName',
                 ]"
                 :fileNameBuilder="buildSongTrackAudioFileNameFromRawData"
-                @complete="
+                @update:fileNamePattern="
                   handleSavingSettingChange('songTrackFileNamePattern', $event)
                 "
               />
@@ -825,21 +827,12 @@ const engineUseGpuOptions = [
   { label: "GPU", value: true },
 ];
 
-const audioFileNamePattern = computed({
-  get: () => store.state.savingSetting.fileNamePattern,
-  set: (fileNamePattern: string) => {
-    handleSavingSettingChange("fileNamePattern", fileNamePattern);
-  },
-});
-const songTrackFileNamePattern = computed({
-  get: () => store.state.savingSetting.songTrackFileNamePattern,
-  set: (songTrackFileNamePattern: string) => {
-    handleSavingSettingChange(
-      "songTrackFileNamePattern",
-      songTrackFileNamePattern,
-    );
-  },
-});
+const audioFileNamePattern = computed(
+  () => store.state.savingSetting.fileNamePattern,
+);
+const songTrackFileNamePattern = computed(
+  () => store.state.savingSetting.songTrackFileNamePattern,
+);
 
 const gpuSwitchEnabled = (engineId: EngineId) => {
   // CPU版でもGPUモードからCPUモードに変更できるようにする

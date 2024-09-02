@@ -85,18 +85,19 @@ const props = defineProps<{
   openDialog: boolean;
   defaultTemplate: string;
   availableTags: (keyof typeof replaceTagIdToTagString)[];
+  currentFileNamePattern: string;
   fileNameBuilder: (pattern: string) => string;
 }>();
 
 const emit = defineEmits<{
   (e: "update:openDialog", val: boolean): void;
+  (e: "update:fileNamePattern", val: string): void;
 }>();
 
 const updateOpenDialog = (isOpen: boolean) => emit("update:openDialog", isOpen);
+const updateFileNamePattern = (pattern: string) =>
+  emit("update:fileNamePattern", pattern);
 
-const fileNamePattern = defineModel<string>("fileNamePattern", {
-  default: "",
-});
 const patternInput = ref<QInput>();
 const maxLength = 128;
 const tagStrings = computed(() =>
@@ -104,7 +105,7 @@ const tagStrings = computed(() =>
 );
 
 const savedBaseNamePattern = computed(() => {
-  return fileNamePattern.value.replace(/\.wav$/, "");
+  return props.currentFileNamePattern.replace(/\.wav$/, "");
 });
 const currentBaseNamePattern = ref(savedBaseNamePattern.value);
 const currentNamePattern = computed(
@@ -183,7 +184,7 @@ const submit = async () => {
     throw new UnreachableError("assert: hasError is false");
   }
 
-  fileNamePattern.value = currentNamePattern.value;
+  updateFileNamePattern(currentNamePattern.value);
   updateOpenDialog(false);
 };
 </script>
