@@ -330,7 +330,7 @@
                 "
               />
 
-              <DialogButtonCell
+              <EditButtonCell
                 title="書き出しファイル名パターン"
                 description="書き出す際のファイル名のパターンをカスタマイズできます。"
                 :currentValue="savingSetting.fileNamePattern"
@@ -377,7 +377,7 @@
               <QSlideTransition>
                 <!-- q-slide-transitionはheightだけをアニメーションするのでdivで囲う -->
                 <div v-show="experimentalSetting.enableMultiTrack">
-                  <DialogButtonCell
+                  <EditButtonCell
                     title="ソング：トラックファイル名パターン"
                     description="書き出す際のファイル名のパターンをカスタマイズできます。"
                     :currentValue="savingSetting.songTrackFileNamePattern"
@@ -571,7 +571,7 @@ import FileNamePatternDialog from "./FileNamePatternDialog.vue";
 import ToggleCell from "./ToggleCell.vue";
 import ButtonToggleCell from "./ButtonToggleCell.vue";
 import BaseCell from "./BaseCell.vue";
-import DialogButtonCell from "./DialogButtonCell.vue";
+import EditButtonCell from "./EditButtonCell.vue";
 import { useStore } from "@/store";
 import {
   DEFAULT_AUDIO_FILE_BASE_NAME_TEMPLATE,

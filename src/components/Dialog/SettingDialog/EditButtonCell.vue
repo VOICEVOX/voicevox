@@ -1,4 +1,4 @@
-<!-- 編集ダイアログが開く設定項目 -->
+<!-- 現在の値+編集ボタンの設定項目 -->
 
 <template>
   <BaseCell :title :description>
@@ -6,7 +6,7 @@
       {{ props.currentValue }}
     </div>
     <QBtn
-      :label="props.label || '編集する'"
+      label="編集する"
       unelevated
       color="background"
       textColor="display"
@@ -22,7 +22,6 @@ import BaseCell, { Props as BaseCellProps } from "./BaseCell.vue";
 const props = defineProps<
   BaseCellProps & {
     currentValue: string;
-    label?: string;
     disable?: boolean;
   }
 >();
