@@ -132,7 +132,7 @@
                         newEngineDirValidationState != undefined &&
                         newEngineDirValidationState !== 'ok'
                       "
-                      @click="selectVvppFile"
+                      @click="selectEngineDir"
                     >
                       <template #error>
                         {{
