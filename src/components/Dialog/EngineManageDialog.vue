@@ -40,7 +40,7 @@
           <template #sidebar>
             <div v-if="isAddingEngine" class="list-disable-overlay" />
             <div class="list-header">
-              <div class="header-title">エンジン一覧</div>
+              <div class="list-title">エンジン一覧</div>
               <BaseButton
                 label="追加"
                 icon="add"
@@ -595,17 +595,6 @@ const toDialogClosedState = () => {
 @use "@/styles/v2/mixin" as mixin;
 @use "@/styles/v2/colors" as newcolors;
 
-.list-disable-overlay {
-  background-color: rgba($color: #000000, $alpha: 0.4);
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-}
-
-.header-title {
-  @include mixin.headline-2;
-}
-
 .list {
   display: flex;
   flex-direction: column;
@@ -616,6 +605,10 @@ const toDialogClosedState = () => {
   gap: newvars.$gap-1;
   align-items: center;
   justify-content: space-between;
+}
+
+.list-title {
+  @include mixin.headline-2;
 }
 
 .listitem-icon {
@@ -652,16 +645,11 @@ const toDialogClosedState = () => {
   color: newcolors.$display-sub;
 }
 
-.active-engine {
-  background: rgba(colors.$primary-rgb, 0.4);
-}
-
-.engine-list-disable-overlay {
+.list-disable-overlay {
   background-color: rgba($color: #000000, $alpha: 0.4);
-  width: 100%;
-  height: 100%;
   position: absolute;
-  z-index: 10;
+  inset: 0;
+  z-index: 1;
 }
 
 .ui-lock-popup {
