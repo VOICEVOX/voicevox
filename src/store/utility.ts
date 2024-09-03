@@ -341,32 +341,31 @@ export function isAccentPhrasesTextDifferent(
   return false;
 }
 
-function buildCommonFileNameFromRawData(
-  fileNamePattern: string,
-  commonVars: {
-    characterName: string;
-    index: number;
-    styleName: string;
-    date: string;
-    projectName: string;
-  },
-  extraVars: Record<string, string>,
-): string {
-  const pattern = fileNamePattern;
-
+function formatCommonFileNameFromRawData(commonVars: {
+  characterName: string;
+  index: number;
+  styleName: string;
+  date: string;
+  projectName: string;
+}): {
+  characterName: string;
+  index: string;
+  styleName: string;
+  date: string;
+  projectName: string;
+} {
   const characterName = sanitizeFileName(commonVars.characterName);
   const index = (commonVars.index + 1).toString().padStart(3, "0");
   const styleName = sanitizeFileName(commonVars.styleName);
   const date = commonVars.date;
   const projectName = sanitizeFileName(commonVars.projectName);
-  return replaceTag(pattern, {
+  return {
     characterName,
     index,
     styleName,
     date,
     projectName,
-    ...extraVars,
-  });
+  };
 }
 
 export function buildAudioFileNameFromRawData(
@@ -384,7 +383,12 @@ export function buildAudioFileNameFromRawData(
     text = text.substring(0, 9) + "…";
   }
 
-  return buildCommonFileNameFromRawData(pattern, vars, { text });
+  const commonVars = formatCommonFileNameFromRawData(vars);
+
+  return replaceTag(pattern, {
+    ...commonVars,
+    text,
+  });
 }
 
 export function buildSongTrackAudioFileNameFromRawData(
@@ -402,7 +406,12 @@ export function buildSongTrackAudioFileNameFromRawData(
     trackName = trackName.substring(0, 9) + "…";
   }
 
-  return buildCommonFileNameFromRawData(pattern, vars, { trackName });
+  const commonVars = formatCommonFileNameFromRawData(vars);
+
+  return replaceTag(pattern, {
+    ...commonVars,
+    trackName,
+  });
 }
 
 /**
