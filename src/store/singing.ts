@@ -33,7 +33,7 @@ import {
   StyleId,
   TrackId,
 } from "@/type/preload";
-import { FrameAudioQuery, Note as NoteForRequestToEngine } from "@/openapi";
+import { Note as NoteForRequestToEngine } from "@/openapi";
 import { ResultError, getValueOrThrow } from "@/type/result";
 import {
   AudioEvent,
@@ -1443,6 +1443,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
       const fetchQuery = async (
         engineId: EngineId,
+        engineFrameRate: number,
         notesForRequestToEngine: NoteForRequestToEngine[],
       ) => {
         try {
@@ -1452,12 +1453,17 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           const instance = await actions.INSTANTIATE_ENGINE_CONNECTOR({
             engineId,
           });
-          return await instance.invoke(
+          const query = await instance.invoke(
             "singFrameAudioQuerySingFrameAudioQueryPost",
           )({
             score: { notes: notesForRequestToEngine },
             speaker: singingTeacherStyleId,
           });
+          const editorQuery: EditorFrameAudioQuery = {
+            ...query,
+            frameRate: engineFrameRate,
+          };
+          return editorQuery;
         } catch (error) {
           const lyrics = notesForRequestToEngine
             .map((value) => value.lyric)
@@ -1472,7 +1478,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
       const synthesizeSingingVoice = async (
         singer: Singer,
-        query: FrameAudioQuery,
+        query: EditorFrameAudioQuery,
       ) => {
         if (!getters.IS_ENGINE_READY(singer.engineId)) {
           throw new Error("Engine not ready.");
@@ -1617,7 +1623,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           fetchSingFrameVolume: (notes, query, engineId, styleId) =>
             actions.FETCH_SING_FRAME_VOLUME({
               notes,
-              frameAudioQuery: query,
+              query,
               engineId,
               styleId,
             }),
@@ -1868,12 +1874,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       { actions },
       {
         notes,
-        frameAudioQuery,
+        query,
         engineId,
         styleId,
       }: {
         notes: NoteForRequestToEngine[];
-        frameAudioQuery: FrameAudioQuery;
+        query: EditorFrameAudioQuery;
         engineId: EngineId;
         styleId: StyleId;
       },
@@ -1886,7 +1892,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           score: {
             notes,
           },
-          frameAudioQuery,
+          frameAudioQuery: query,
         },
         speaker: styleId,
       });

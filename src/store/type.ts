@@ -1072,7 +1072,7 @@ export type SingingStoreTypes = {
   FETCH_SING_FRAME_VOLUME: {
     action(palyoad: {
       notes: NoteForRequestToEngine[];
-      frameAudioQuery: FrameAudioQuery;
+      query: EditorFrameAudioQuery;
       engineId: EngineId;
       styleId: StyleId;
     }): Promise<number[]>;

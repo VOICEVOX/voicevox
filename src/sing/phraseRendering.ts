@@ -16,11 +16,7 @@ import {
   EditorFrameAudioQueryKey,
   EditorFrameAudioQuery,
 } from "@/store/type";
-import {
-  FrameAudioQuery,
-  FramePhoneme,
-  Note as NoteForRequestToEngine,
-} from "@/openapi";
+import { FramePhoneme, Note as NoteForRequestToEngine } from "@/openapi";
 import { applyPitchEdit, decibelToLinear, tickToSecond } from "@/sing/domain";
 import { calculateHash, linearInterpolation } from "@/sing/utility";
 import { EngineId, StyleId, TrackId } from "@/type/preload";
@@ -235,17 +231,18 @@ type ExternalDependencies = Readonly<{
 
   fetchQuery: (
     engineId: EngineId,
+    engineFrameRate: number,
     notes: NoteForRequestToEngine[],
-  ) => Promise<FrameAudioQuery>;
+  ) => Promise<EditorFrameAudioQuery>;
   fetchSingFrameVolume: (
     notes: NoteForRequestToEngine[],
-    query: FrameAudioQuery,
+    query: EditorFrameAudioQuery,
     engineId: EngineId,
     styleId: StyleId,
   ) => Promise<SingingVolume>;
   synthesizeSingingVoice: (
     singer: Singer,
-    query: FrameAudioQuery,
+    query: EditorFrameAudioQuery,
   ) => Promise<SingingVoice>;
 }>;
 
@@ -351,11 +348,12 @@ const generateQuery = async (
 
   const query = await externalDependencies.fetchQuery(
     querySource.engineId,
+    querySource.engineFrameRate,
     notesForRequestToEngine,
   );
 
   shiftPitch(query.f0, querySource.keyRangeAdjustment);
-  return { ...query, frameRate: querySource.engineFrameRate };
+  return query;
 };
 
 const queryGenerationStage: BaseStage = {
