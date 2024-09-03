@@ -11,7 +11,7 @@
       color="background"
       textColor="display"
       class="text-no-wrap q-mr-sm"
-      @click="emit('click')"
+      @click="emit('buttonClick')"
     />
   </BaseCell>
 </template>
@@ -27,6 +27,6 @@ const props = defineProps<
 >();
 
 const emit = defineEmits<{
-  click: [];
+  buttonClick: [];
 }>();
 </script>

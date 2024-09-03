@@ -336,7 +336,7 @@
                 title="書き出しファイル名パターン"
                 description="書き出す際のファイル名のパターンをカスタマイズできます。"
                 :currentValue="savingSetting.fileNamePattern"
-                @click="showAudioFilePatternEditDialog = true"
+                @buttonClick="showAudioFilePatternEditDialog = true"
               />
 
               <ToggleCell
@@ -383,7 +383,9 @@
                     title="ソング：トラックファイル名パターン"
                     description="書き出す際のファイル名のパターンをカスタマイズできます。"
                     :currentValue="savingSetting.songTrackFileNamePattern"
-                    @click="showSongTrackAudioFilePatternEditDialog = true"
+                    @buttonClick="
+                      showSongTrackAudioFilePatternEditDialog = true
+                    "
                   />
                 </div>
               </QSlideTransition>
