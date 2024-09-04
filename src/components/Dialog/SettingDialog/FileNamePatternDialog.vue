@@ -16,7 +16,7 @@
           <div class="col">
             <QInput
               ref="patternInput"
-              v-model="currentBaseNamePattern"
+              v-model="temporaryTemplateWithoutExt"
               dense
               outlined
               bgColor="background"
@@ -85,18 +85,18 @@ const props = defineProps<{
   openDialog: boolean;
   defaultTemplate: string;
   availableTags: (keyof typeof replaceTagIdToTagString)[];
-  currentFileNamePattern: string;
+  currentTemplate: string;
   fileNameBuilder: (pattern: string) => string;
 }>();
 
 const emit = defineEmits<{
   (e: "update:openDialog", val: boolean): void;
-  (e: "update:fileNamePattern", val: string): void;
+  (e: "update:template", val: string): void;
 }>();
 
 const updateOpenDialog = (isOpen: boolean) => emit("update:openDialog", isOpen);
 const updateFileNamePattern = (pattern: string) =>
-  emit("update:fileNamePattern", pattern);
+  emit("update:template", pattern);
 
 const patternInput = ref<QInput>();
 const maxLength = 128;
@@ -104,25 +104,25 @@ const tagStrings = computed(() =>
   props.availableTags.map((tag) => replaceTagIdToTagString[tag]),
 );
 
-const savedBaseNamePattern = computed(() => {
-  return props.currentFileNamePattern.replace(/\.wav$/, "");
-});
-const currentBaseNamePattern = ref(savedBaseNamePattern.value);
-const currentNamePattern = computed(
-  () => `${currentBaseNamePattern.value}.wav`,
+const initialTemplateWithoutExt = props.currentTemplate.replace(/\.wav$/, "");
+const temporaryTemplateWithoutExt = ref(initialTemplateWithoutExt);
+const temporaryTemplate = computed(
+  () => temporaryTemplateWithoutExt.value + ".wav",
 );
 
 const hasNotIndexTagString = computed(
   () =>
-    !currentBaseNamePattern.value.includes(replaceTagIdToTagString["index"]),
+    !temporaryTemplateWithoutExt.value.includes(
+      replaceTagIdToTagString["index"],
+    ),
 );
 const invalidChar = computed(() => {
-  const current = currentBaseNamePattern.value;
+  const current = temporaryTemplateWithoutExt.value;
   const sanitized = sanitizeFileName(current);
   return Array.from(current).find((char, i) => char !== sanitized[i]);
 });
 const errorMessage = computed(() => {
-  if (currentBaseNamePattern.value === "") {
+  if (temporaryTemplateWithoutExt.value === "") {
     return "何か入力してください";
   }
 
@@ -141,18 +141,18 @@ const errorMessage = computed(() => {
 const hasError = computed(() => errorMessage.value !== "");
 
 const previewFileName = computed(() =>
-  props.fileNameBuilder(currentNamePattern.value),
+  props.fileNameBuilder(`${temporaryTemplateWithoutExt.value}.wav`),
 );
 
 const initializeInput = () => {
-  currentBaseNamePattern.value = savedBaseNamePattern.value;
+  temporaryTemplateWithoutExt.value = initialTemplateWithoutExt;
 
-  if (currentBaseNamePattern.value === "") {
-    currentBaseNamePattern.value = props.defaultTemplate;
+  if (temporaryTemplateWithoutExt.value === "") {
+    temporaryTemplateWithoutExt.value = props.defaultTemplate;
   }
 };
 const resetToDefault = () => {
-  currentBaseNamePattern.value = props.defaultTemplate;
+  temporaryTemplateWithoutExt.value = props.defaultTemplate;
   patternInput.value?.focus();
 };
 
@@ -168,7 +168,7 @@ const insertTagToCurrentPosition = (tag: string) => {
     const from = elem.selectionStart ?? 0;
     const to = elem.selectionEnd ?? 0;
     const newText = text.substring(0, from) + tag + text.substring(to);
-    currentBaseNamePattern.value = newText;
+    temporaryTemplateWithoutExt.value = newText;
 
     // キャレットの位置を挿入した後の位置にずらす
     void nextTick(() => {
@@ -184,7 +184,7 @@ const submit = async () => {
     throw new UnreachableError("assert: hasError is false");
   }
 
-  updateFileNamePattern(currentNamePattern.value);
+  updateFileNamePattern(temporaryTemplate.value);
   updateOpenDialog(false);
 };
 </script>

@@ -299,7 +299,7 @@
 
               <FileNamePatternDialog
                 v-model:open-dialog="showAudioFilePatternEditDialog"
-                :currentFileNamePattern="audioFileNamePattern"
+                :currentTemplate="audioFileNamePattern"
                 :defaultTemplate="DEFAULT_AUDIO_FILE_BASE_NAME_TEMPLATE"
                 :availableTags="[
                   'index',
@@ -310,13 +310,13 @@
                   'projectName',
                 ]"
                 :fileNameBuilder="buildAudioFileNameFromRawData"
-                @update:fileNamePattern="
+                @update:template="
                   handleSavingSettingChange('fileNamePattern', $event)
                 "
               />
               <FileNamePatternDialog
                 v-model:open-dialog="showSongTrackAudioFilePatternEditDialog"
-                :currentFileNamePattern="songTrackFileNamePattern"
+                :currentTemplate="songTrackFileNamePattern"
                 :defaultTemplate="DEFAULT_SONG_AUDIO_FILE_BASE_NAME_TEMPLATE"
                 :availableTags="[
                   'index',
@@ -327,7 +327,7 @@
                   'projectName',
                 ]"
                 :fileNameBuilder="buildSongTrackAudioFileNameFromRawData"
-                @update:fileNamePattern="
+                @update:template="
                   handleSavingSettingChange('songTrackFileNamePattern', $event)
                 "
               />
