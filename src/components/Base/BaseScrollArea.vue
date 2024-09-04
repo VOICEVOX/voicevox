@@ -39,6 +39,7 @@ import {
   flex-direction: column;
 }
 
+// 親要素のサイズいっぱいに広げさせるためプライベートなデータ属性を使用
 :deep([data-radix-scroll-area-viewport]) {
   width: 100%;
   height: 100%;
