@@ -399,13 +399,13 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
   // アンチエイリアス
   -webkit-font-smoothing: antialiased;
   bottom: 100%;
-  z-index: vars.$z-index-sing-note;
   // NOTE: 以下の目的でz-indexを使用
   // - 特にズーム倍率が高い場合に次のノートに被った場合に見えなくなるため可読性を確保
   // - ピッチラインを文字とノートバーの間に配置する
   // z-indexはあまり使用しない方がよさそうだが使用するのであれば
   // おそらくは抽象的な意味合いごとにz-indexを変数として定義するのがよさそう
   // eg: fixedアイテム: 1010, ポップオーバー: 1020, モーダル: 1050...など
+  z-index: vars.$z-index-sing-note;
 
   // 選択中
   &.selected {

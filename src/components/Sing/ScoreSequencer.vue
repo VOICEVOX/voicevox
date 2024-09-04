@@ -41,6 +41,7 @@
           transform: `translateX(${guideLineX}px)`,
         }"
       ></div>
+      <!-- キャラクター全身 -->
       <CharacterPortrait />
       <!-- undefinedだと警告が出るのでnullを渡す -->
       <!-- TODO: ちゃんとしたトラックIDを渡す -->
