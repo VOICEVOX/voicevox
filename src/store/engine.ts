@@ -15,17 +15,13 @@ const { info, error } = createLogger("store/engine");
 export const engineStore = createPartialStore<EngineStoreTypes>({
   GET_ENGINE_INFOS: {
     async action({ state, mutations }) {
-      const engineInfos = await window.backend.engineInfos();
+      let engineInfos = await window.backend.engineInfos();
 
-      // マルチエンジンオフモード時はengineIdsをデフォルトエンジンのIDだけにする。
-      let engineIds: EngineId[];
+      // マルチエンジンオフモード時はデフォルトエンジンだけにする。
       if (state.isMultiEngineOffMode) {
-        engineIds = engineInfos
-          .filter((engineInfo) => engineInfo.type === "default")
-          .map((info) => info.uuid);
-      } else {
-        engineIds = engineInfos.map((engineInfo) => engineInfo.uuid);
+        engineInfos = engineInfos.filter((engineInfo) => engineInfo.isDefault);
       }
+      const engineIds = engineInfos.map((engineInfo) => engineInfo.uuid);
 
       mutations.SET_ENGINE_INFOS({
         engineIds,
@@ -57,8 +53,8 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
   GET_SORTED_ENGINE_INFOS: {
     getter: (state) => {
       return Object.values(state.engineInfos).sort((a, b) => {
-        const isDefaultA = a.type === "default" ? 1 : 0;
-        const isDefaultB = b.type === "default" ? 1 : 0;
+        const isDefaultA = a.isDefault ? 1 : 0;
+        const isDefaultB = b.isDefault ? 1 : 0;
         if (isDefaultA !== isDefaultB) {
           return isDefaultB - isDefaultA;
         }
