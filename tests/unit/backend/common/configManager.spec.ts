@@ -37,6 +37,10 @@ class TestConfigManager extends BaseConfigManager {
   }
 }
 
+afterEach(() => {
+  vi.resetAllMocks();
+});
+
 it("新規作成できる", async () => {
   vi.spyOn(TestConfigManager.prototype, "exists").mockImplementation(
     async () => false,
