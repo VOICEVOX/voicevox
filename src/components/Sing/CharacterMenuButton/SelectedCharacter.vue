@@ -76,7 +76,6 @@ const selectedStyleIconPath = computed(() => {
 
 <style scoped lang="scss">
 @use "@/styles/variables" as vars;
-@use "@/styles/colors" as colors;
 
 .selected-character {
   border: 1px solid var(--scheme-color-outline-variant);
@@ -90,7 +89,7 @@ const selectedStyleIconPath = computed(() => {
 
   &:hover {
     border-color: var(--scheme-color-outline);
-    background: rgba(var(--scheme-color-secondary-container-rgb), 0.1);
+    background: oklch(var(--scheme-color-secondary-container-rgb) / 0.1);
   }
 
   &:focus {

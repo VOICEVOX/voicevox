@@ -107,7 +107,6 @@ watch(
 
 <style scoped lang="scss">
 @use "@/styles/v2/variables" as vars;
-@use "@/styles/colors" as colors;
 
 .lyric-input-container {
   position: absolute;

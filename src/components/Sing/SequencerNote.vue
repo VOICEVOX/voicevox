@@ -445,14 +445,9 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
   // ピッチ編集モード
   &.below-pitch {
     // FIXME: color-mixは使わない
-    color: color-mix(
-      in oklch,
-      var(--scheme-color-on-background),
-      var(--scheme-color-sing-grid-cell-black) 50%
-    );
+    color: var(--scheme-color-on-surface-variant);
     text-shadow: none;
-    z-index: vars.$z-index-sing-note - 1;
-    bottom: calc(100% + 1.5ch);
+    z-index: vars.$z-index-sing-note;
     transform: none;
 
     &.invalid-phrase,

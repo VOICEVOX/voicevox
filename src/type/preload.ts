@@ -264,10 +264,12 @@ export interface Sandbox {
   readFile(obj: { filePath: string }): Promise<Result<ArrayBuffer>>;
   isAvailableGPUMode(): Promise<boolean>;
   isMaximizedWindow(): Promise<boolean>;
-  onReceivedIPCMsg<T extends keyof IpcSOData>(
-    channel: T,
-    listener: (event: unknown, ...args: IpcSOData[T]["args"]) => void,
-  ): void;
+  onReceivedIPCMsg(listeners: {
+    [K in keyof IpcSOData]: (
+      event: unknown,
+      ...args: IpcSOData[K]["args"]
+    ) => Promise<IpcSOData[K]["return"]> | IpcSOData[K]["return"];
+  }): void;
   closeWindow(): void;
   minimizeWindow(): void;
   maximizeWindow(): void;
@@ -417,10 +419,10 @@ export type EngineInfo = {
   executionFilePath: string;
   executionArgs: string[];
   // エンジンの種類。
-  // default: デフォルトエンジン
   // vvpp: vvppファイルから読み込んだエンジン
   // path: パスを指定して追加したエンジン
-  type: "default" | "vvpp" | "path";
+  type: "vvpp" | "path";
+  isDefault: boolean; // デフォルトエンジンかどうか
 };
 
 export type Preset = {

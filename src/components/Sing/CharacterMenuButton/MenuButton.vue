@@ -40,9 +40,6 @@ const selectedSinger = computed(() => {
 </script>
 
 <style scoped lang="scss">
-@use "@/styles/variables" as vars;
-@use "@/styles/colors" as colors;
-
 .character-menu {
   .q-menu {
     :deep(.q-menu__container) {

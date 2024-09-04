@@ -59,7 +59,7 @@ const defaultEngineAltPortTo = computed<number | undefined>(() => {
 
   // ref: https://github.com/VOICEVOX/voicevox/blob/32940eab36f4f729dd0390dca98f18656240d60d/src/views/EditorHome.vue#L522-L528
   const defaultEngineInfo = Object.values(store.state.engineInfos).find(
-    (engine) => engine.type === "default",
+    (engine) => engine.isDefault,
   );
   if (defaultEngineInfo == undefined) return undefined;
 

@@ -30,6 +30,7 @@ import { ExhaustiveError } from "@/type/utility";
 import { createLogger } from "@/domain/frontend/log";
 import { getLast } from "@/sing/utility";
 import { getOrThrow } from "@/helpers/mapHelper";
+import { EditorFrameAudioQuery } from "@/store/type";
 
 type PitchLine = {
   color: Ref<Color>;
@@ -56,21 +57,24 @@ const pitchEditData = computed(() => {
 });
 const previewPitchEdit = computed(() => props.previewPitchEdit);
 const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
-const editFrameRate = computed(() => store.state.editFrameRate);
+const editorFrameRate = computed(() => store.state.editorFrameRate);
 const singingGuidesInSelectedTrack = computed(() => {
-  const singingGuides = [];
+  const singingGuides: {
+    query: EditorFrameAudioQuery;
+    startTime: number;
+  }[] = [];
   for (const phrase of store.state.phrases.values()) {
     if (phrase.trackId !== selectedTrackId.value) {
       continue;
     }
-    if (phrase.singingGuideKey == undefined) {
+    if (phrase.queryKey == undefined) {
       continue;
     }
-    const singingGuide = getOrThrow(
-      store.state.singingGuides,
-      phrase.singingGuideKey,
-    );
-    singingGuides.push(singingGuide);
+    const phraseQuery = getOrThrow(store.state.phraseQueries, phrase.queryKey);
+    singingGuides.push({
+      startTime: phrase.startTime,
+      query: phraseQuery,
+    });
   }
   return singingGuides;
 });
@@ -290,13 +294,13 @@ const setPitchDataToPitchLine = async (
 
 const generateOriginalPitchData = () => {
   const unvoicedPhonemes = UNVOICED_PHONEMES;
-  const frameRate = editFrameRate.value; // f0（元のピッチ）は編集フレームレートで表示する
+  const frameRate = editorFrameRate.value; // f0（元のピッチ）はエディターのフレームレートで表示する
 
   // 選択中のトラックで使われている歌い方のf0を結合してピッチデータを生成する
   const tempData = [];
   for (const singingGuide of singingGuidesInSelectedTrack.value) {
     // TODO: 補間を行うようにする
-    if (singingGuide.frameRate !== frameRate) {
+    if (singingGuide.query.frameRate !== frameRate) {
       throw new Error(
         "The frame rate between the singing guide and the edit does not match.",
       );
@@ -343,7 +347,7 @@ const generateOriginalPitchData = () => {
 };
 
 const generatePitchEditData = () => {
-  const frameRate = editFrameRate.value;
+  const frameRate = editorFrameRate.value;
 
   const tempData = [...pitchEditData.value];
   // プレビュー中のピッチ編集があれば、適用する
@@ -528,7 +532,6 @@ onUnmountedOrDeactivated(() => {
 
 <style scoped lang="scss">
 @use "@/styles/v2/variables" as vars;
-@use "@/styles/v2/colors" as colors;
 
 .canvas-container {
   overflow: hidden;

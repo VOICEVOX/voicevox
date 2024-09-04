@@ -6,15 +6,16 @@
 import { computed } from "vue";
 import { useStore } from "@/store";
 import { getOrThrow } from "@/helpers/mapHelper";
-import { PhraseSourceHash, PhraseState } from "@/store/type";
+import { PhraseKey, PhraseState } from "@/store/type";
 
 const props = defineProps<{
-  phraseKey: PhraseSourceHash;
+  phraseKey: PhraseKey;
   isInSelectedTrack: boolean;
 }>();
 
 const store = useStore();
 const classNames: Record<PhraseState, string> = {
+  SINGER_IS_NOT_SET: "singer-is-not-set",
   WAITING_TO_BE_RENDERED: "waiting-to-be-rendered",
   NOW_RENDERING: "now-rendering",
   COULD_NOT_RENDER: "could-not-render",
@@ -41,6 +42,10 @@ const className = computed(() => {
   &:not(.is-in-selected-track) {
     #{$property}: tint($color);
   }
+}
+
+.singer-is-not-set {
+  visibility: hidden;
 }
 
 .waiting-to-be-rendered {

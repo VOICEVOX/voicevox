@@ -1,6 +1,6 @@
 <template>
   <div class="root">
-    <div class="label">{{ checked ? onLabel : offLabel }}</div>
+    <div class="label">{{ checked ? checkedLabel : uncheckedLabel }}</div>
     <SwitchRoot :id v-model:checked="checked" class="SwitchRoot">
       <SwitchThumb class="SwitchThumb" />
     </SwitchRoot>
@@ -12,8 +12,8 @@ import { SwitchRoot, SwitchThumb } from "radix-vue";
 
 defineProps<{
   id?: string;
-  offLabel?: string;
-  onLabel?: string;
+  uncheckedLabel?: string;
+  checkedLabel?: string;
 }>();
 
 const checked = defineModel<boolean>("checked", { required: true });
