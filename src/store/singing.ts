@@ -2118,7 +2118,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                   ([, phrase]) => phrase.trackId === trackId,
                 ),
               ),
-              state.singingGuides,
               singingVoiceCache,
             );
 
