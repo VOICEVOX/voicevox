@@ -297,7 +297,7 @@
                 </QToggle>
               </QCardActions>
 
-              <FileNamePatternDialog
+              <FileNameTemplateDialog
                 v-model:open-dialog="showAudioFilePatternEditDialog"
                 :currentTemplate="audioFileNamePattern"
                 :defaultTemplate="DEFAULT_AUDIO_FILE_BASE_NAME_TEMPLATE"
@@ -314,7 +314,7 @@
                   handleSavingSettingChange('fileNamePattern', $event)
                 "
               />
-              <FileNamePatternDialog
+              <FileNameTemplateDialog
                 v-model:open-dialog="showSongTrackAudioFilePatternEditDialog"
                 :currentTemplate="songTrackFileNamePattern"
                 :defaultTemplate="DEFAULT_SONG_AUDIO_FILE_BASE_NAME_TEMPLATE"
@@ -571,7 +571,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watchEffect } from "vue";
-import FileNamePatternDialog from "./FileNamePatternDialog.vue";
+import FileNameTemplateDialog from "./FileNameTemplateDialog.vue";
 import ToggleCell from "./ToggleCell.vue";
 import ButtonToggleCell from "./ButtonToggleCell.vue";
 import BaseCell from "./BaseCell.vue";
