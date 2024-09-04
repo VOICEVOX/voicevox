@@ -590,8 +590,7 @@ const toDialogClosedState = () => {
 
 <style lang="scss" scoped>
 @use "@/styles/colors" as colors;
-@use "@/styles/variables" as vars;
-@use "@/styles/v2/variables" as newvars;
+@use "@/styles/v2/variables" as vars;
 @use "@/styles/v2/mixin" as mixin;
 @use "@/styles/v2/colors" as newcolors;
 
@@ -602,7 +601,7 @@ const toDialogClosedState = () => {
 
 .list-header {
   display: flex;
-  gap: newvars.$gap-1;
+  gap: vars.$gap-1;
   align-items: center;
   justify-content: space-between;
 }
@@ -612,14 +611,14 @@ const toDialogClosedState = () => {
 }
 
 .listitem-icon {
-  margin-right: newvars.$gap-1;
-  border-radius: newvars.$radius-1;
+  margin-right: vars.$gap-1;
+  border-radius: vars.$radius-1;
   width: 32px;
 }
 
 .listitem-unknown {
-  margin-right: newvars.$gap-1;
-  border-radius: newvars.$radius-1;
+  margin-right: vars.$gap-1;
+  border-radius: vars.$radius-1;
   background-color: colors.$primary;
   display: grid;
   place-content: center;
@@ -677,26 +676,26 @@ const toDialogClosedState = () => {
   min-height: 100%;
   display: flex;
   flex-direction: column;
-  padding: newvars.$padding-2;
-  gap: newvars.$gap-2;
+  padding: vars.$padding-2;
+  gap: vars.$gap-2;
 }
 
 .engine-title {
   display: flex;
   align-items: center;
-  gap: newvars.$gap-1;
+  gap: vars.$gap-1;
 }
 
 .engine-icon {
   width: 40px;
   height: 40px;
-  border-radius: newvars.$radius-1;
+  border-radius: vars.$radius-1;
 }
 
 .engine-unknown {
   width: 40px;
   height: 40px;
-  border-radius: newvars.$radius-1;
+  border-radius: vars.$radius-1;
   background-color: colors.$primary;
   display: grid;
   place-content: center;
@@ -714,11 +713,11 @@ const toDialogClosedState = () => {
 .flex-row {
   display: grid;
   grid-template-columns: 1fr auto;
-  gap: newvars.$gap-1;
+  gap: vars.$gap-1;
 }
 
 .footer {
-  gap: newvars.$gap-1;
+  gap: vars.$gap-1;
   margin-top: auto;
   display: flex;
   justify-content: flex-end;
@@ -727,7 +726,7 @@ const toDialogClosedState = () => {
 .section {
   display: flex;
   flex-direction: column;
-  gap: newvars.$gap-1;
+  gap: vars.$gap-1;
 }
 
 :deep(ul) {
