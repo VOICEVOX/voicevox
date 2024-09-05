@@ -4,7 +4,6 @@ import { rm } from "fs/promises";
 import { fileURLToPath } from "url";
 
 import electron from "vite-plugin-electron";
-import tsconfigPaths from "vite-tsconfig-paths";
 import vue from "@vitejs/plugin-vue";
 import checker from "vite-plugin-checker";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
@@ -25,6 +24,11 @@ export default defineConfig((options) => {
       `"package.json"の"name":"${packageName}"は"VITE_APP_NAME":"${env.VITE_APP_NAME}"から始まっている必要があります`,
     );
   }
+  const engineInfosPath = path.resolve(
+    __dirname,
+    "engine-infos",
+    `${options.mode}.ts`,
+  );
   const shouldEmitSourcemap = ["development", "test"].includes(options.mode);
   process.env.VITE_7Z_BIN_NAME =
     (options.mode === "development"
@@ -58,6 +62,7 @@ export default defineConfig((options) => {
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "src/"),
+        "@engine-infos": engineInfosPath,
       },
     },
     test: {
@@ -92,7 +97,12 @@ export default defineConfig((options) => {
               }
             },
             vite: {
-              plugins: [tsconfigPaths({ root: __dirname })],
+              resolve: {
+                alias: {
+                  "@": path.resolve(__dirname, "src/"),
+                  "@engine-infos": engineInfosPath,
+                },
+              },
               build: {
                 outDir: path.resolve(__dirname, "dist"),
                 sourcemap,
@@ -106,7 +116,12 @@ export default defineConfig((options) => {
               reload();
             },
             vite: {
-              plugins: [tsconfigPaths({ root: __dirname })],
+              resolve: {
+                alias: {
+                  "@": path.resolve(__dirname, "src/"),
+                  "@engine-infos": engineInfosPath,
+                },
+              },
               build: {
                 outDir: path.resolve(__dirname, "dist"),
                 sourcemap,

@@ -1,7 +1,7 @@
 import type { PlaywrightTestConfig, Project } from "@playwright/test";
-import { z } from "zod";
-
 import dotenv from "dotenv";
+import defaultEngineInfos from "./engine-infos/test";
+
 dotenv.config({ override: true });
 
 let project: Project;
@@ -14,20 +14,7 @@ if (isElectron) {
 } else if (isBrowser) {
   project = { name: "browser", testDir: "./tests/e2e/browser" };
 
-  // エンジンの起動が必要
-  const defaultEngineInfosEnv = process.env.VITE_DEFAULT_ENGINE_INFOS ?? "[]";
-  const envSchema = z // FIXME: electron起動時のものと共通化したい
-    .object({
-      host: z.string(),
-      executionFilePath: z.string(),
-      executionArgs: z.array(z.string()),
-      executionEnabled: z.boolean(),
-    })
-    .passthrough()
-    .array();
-  const engineInfos = envSchema.parse(JSON.parse(defaultEngineInfosEnv));
-
-  for (const info of engineInfos) {
+  for (const info of defaultEngineInfos) {
     if (!info.executionEnabled) {
       continue;
     }

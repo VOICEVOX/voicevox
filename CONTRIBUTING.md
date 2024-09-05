@@ -125,21 +125,24 @@ git clone git@github.com:(個人のGitHubアカウント名)/voicevox.git
 
 ### 6. エンジンを指定する
 
-- `.env.production`というファイルがありますので、コピーして、名前を`.env`にします。
-- ファイルをエディタでひらいて、`VITE_DEFAULT_ENGINE_INFOS`内の`executionFilePath`に手順１のフォルダ名をいれます。たとえば製品版をインストーラで導入し、インストール先を変更していない場合は、下記のように書き換えて保存します。
+- `engine-infos/production.ts`というファイルがありますので、コピーして、名前を`engine-infos/development.ts`にします。
+- ファイルをエディタでひらいて、`executionFilePath`に手順１のフォルダ名をいれます。たとえば製品版をインストーラで導入し、インストール先を変更していない場合は、下記のように書き換えて保存します。
 
-```ini
-VITE_APP_NAME=voicevox
-VITE_DEFAULT_ENGINE_INFOS=`[
-    {
-        "uuid": "074fc39e-678b-4c13-8916-ffca8d505d1d",
-        "name": "VOICEVOX Engine",
-        "executionEnabled": true,
-        "executionFilePath": "C:/Users/(ユーザー名)/AppData/Local/Programs/VOICEVOX/vv-engine/run.exe",
-        "executionArgs": [],
-        "host": "http://127.0.0.1:50021"
-    }
-]`
+```ts
+import type { DefaultEngineInfos } from "./types";
+
+export default [
+  {
+    uuid: "074fc39e-678b-4c13-8916-ffca8d505d1d",
+    name: "VOICEVOX Engine",
+    executionEnabled: true,
+    executionFilePath:
+      "/Applications/VOICEVOX.app/Contents/Resources/vv-engine/run",
+    executionArgs: [],
+    host: "http://127.0.0.1:50021",
+  },
+] satisfies DefaultEngineInfos;
+
 ```
 
 - あなたがVOICEVOX製品版のインストール先を変更している場合は個別で指定します。たとえば、`D:\VOICEVOX0.14.1`に製品版をインストールしている場合は、下記のように書き換えて保存します。

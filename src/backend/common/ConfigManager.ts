@@ -1,5 +1,6 @@
 import semver from "semver";
 import AsyncLock from "async-lock";
+import engineInfos from "@engine-infos";
 import {
   AcceptTermsStatus,
   ConfigType,
@@ -12,7 +13,6 @@ import {
   HotkeyCombination,
   VoiceId,
   PresetKey,
-  envEngineInfoSchema,
 } from "@/type/preload";
 import { ensureNotNullish } from "@/helpers/errorHelper";
 
@@ -36,17 +36,7 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
   [
     ">=0.14",
     (config) => {
-      // FIXME: できるならEngineManagerからEngineIDを取得したい
-      if (import.meta.env.VITE_DEFAULT_ENGINE_INFOS == undefined) {
-        throw new Error("VITE_DEFAULT_ENGINE_INFOS == undefined");
-      }
-      const engineId = EngineId(
-        envEngineInfoSchema
-          .array()
-          .parse(JSON.parse(import.meta.env.VITE_DEFAULT_ENGINE_INFOS))[0].uuid,
-      );
-      if (engineId == undefined)
-        throw new Error("VITE_DEFAULT_ENGINE_INFOS[0].uuid == undefined");
+      const engineId = EngineId(engineInfos[0].uuid);
       const prevDefaultStyleIds = config.defaultStyleIds as DefaultStyleId[];
       config.defaultStyleIds = prevDefaultStyleIds.map((defaultStyle) => ({
         engineId,

@@ -16,7 +16,8 @@
     "baseUrl": ".",
     "types": ["vitest/globals"],
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@engine-infos": ["engine-infos/types.d.ts"]
     },
     "lib": ["esnext", "dom", "dom.iterable"]
   },
@@ -27,7 +28,8 @@
     "src/**/*.vue",
     "tests/**/*.ts",
     "tests/**/*.tsx",
-    ".storybook/**/*.ts",
+    "engine-infos/*.ts",
+    ".storybook/**/*.ts"
   ],
   "exclude": ["node_modules"]
 }
