@@ -299,7 +299,7 @@
 
               <FileNameTemplateDialog
                 v-model:open-dialog="showAudioFilePatternEditDialog"
-                :currentTemplate="audioFileNamePattern"
+                :savedTemplate="audioFileNamePattern"
                 :defaultTemplate="DEFAULT_AUDIO_FILE_BASE_NAME_TEMPLATE"
                 :availableTags="[
                   'index',
@@ -316,7 +316,7 @@
               />
               <FileNameTemplateDialog
                 v-model:open-dialog="showSongTrackAudioFilePatternEditDialog"
-                :currentTemplate="songTrackFileNamePattern"
+                :savedTemplate="songTrackFileNamePattern"
                 :defaultTemplate="DEFAULT_SONG_AUDIO_FILE_BASE_NAME_TEMPLATE"
                 :availableTags="[
                   'index',

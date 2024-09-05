@@ -82,10 +82,15 @@ import { replaceTagIdToTagString, sanitizeFileName } from "@/store/utility";
 import { UnreachableError } from "@/type/utility";
 
 const props = defineProps<{
+  /** ダイアログが開いているかどうか */
   openDialog: boolean;
+  /** デフォルトのテンプレート */
   defaultTemplate: string;
+  /** 使用可能なタグ */
   availableTags: (keyof typeof replaceTagIdToTagString)[];
-  currentTemplate: string;
+  /** 保存されているテンプレート */
+  savedTemplate: string;
+  /** ファイル名を生成する関数 */
   fileNameBuilder: (pattern: string) => string;
 }>();
 
@@ -104,8 +109,8 @@ const tagStrings = computed(() =>
   props.availableTags.map((tag) => replaceTagIdToTagString[tag]),
 );
 
-const initialTemplateWithoutExt = props.currentTemplate.replace(/\.wav$/, "");
-const temporaryTemplateWithoutExt = ref(initialTemplateWithoutExt);
+const savedTemplateWithoutExt = props.savedTemplate.replace(/\.wav$/, "");
+const temporaryTemplateWithoutExt = ref(savedTemplateWithoutExt);
 const temporaryTemplate = computed(
   () => temporaryTemplateWithoutExt.value + ".wav",
 );
@@ -145,7 +150,7 @@ const previewFileName = computed(() =>
 );
 
 const initializeInput = () => {
-  temporaryTemplateWithoutExt.value = initialTemplateWithoutExt;
+  temporaryTemplateWithoutExt.value = savedTemplateWithoutExt;
 
   if (temporaryTemplateWithoutExt.value === "") {
     temporaryTemplateWithoutExt.value = props.defaultTemplate;
