@@ -17,29 +17,13 @@ const OS = {
 };
 // CPUアーキテクチャ名を定義するオブジェクト
 const CPU_ARCHITECTURE = {
-  x86_64: "x86_64",
-  arm: "aarch64",
+  X86_64: "x86_64",
+  ARM: "aarch64",
 };
-// 現在のOSとCPUアーキテクチャ
-const CURRENT_OS = platform();
-const CURRENT_CPU_ARCHITECTURE =
-  arch() === "arm64" ? CPU_ARCHITECTURE.ARM : CPU_ARCHITECTURE.X86_64;
 // 全バイナリのパス
 const BINARY_BASE_PATH = resolve(__dirname, "vendored");
 // typosのバイナリのパス
 const TYPOS_BINARY_PATH = resolve(BINARY_BASE_PATH, "typos");
-// 7zバイナリのパス linuxとmacで異なるバイナリでないとエラーが出ることに注意
-const SEVEN_ZIP_BINARY_NAME =
-  CURRENT_OS === OS.WINDOWS
-    ? "7za.exe"
-    : CURRENT_OS === OS.MACOS
-      ? "7zz"
-      : "7zzs";
-const SEVEN_ZIP_BINARY_PATH = join(
-  BINARY_BASE_PATH,
-  "7z",
-  SEVEN_ZIP_BINARY_NAME,
-);
 // 各OSとアーキテクチャに対応するtyposバイナリのダウンロード先URL
 const TYPOS_URLS = {
   [OS.MACOS]: {
@@ -58,6 +42,18 @@ const TYPOS_URLS = {
   },
 };
 
+// 現在のOSとCPUアーキテクチャ
+const currentOS = platform();
+const currentCpuArchitecture =
+  arch() === "arm64" ? CPU_ARCHITECTURE.ARM : CPU_ARCHITECTURE.X86_64;
+// 7zバイナリのパス linuxとmacで異なるバイナリでないとエラーが出ることに注意
+const sevenZipBinaryName =
+  currentOS === OS.WINDOWS
+    ? "7za.exe"
+    : currentOS === OS.MACOS
+      ? "7zz"
+      : "7zzs";
+const sevenZipBinaryPath = join(BINARY_BASE_PATH, "7z", sevenZipBinaryName);
 // 非同期でOSコマンドを処理するための関数
 const execAsync = promisify(exec);
 
@@ -82,11 +78,11 @@ async function runCommand({ command, description }) {
  * @returns {string} バイナリをダウンロードするためのURL
  */
 function getBinaryURL() {
-  const url = TYPOS_URLS[CURRENT_OS][CURRENT_CPU_ARCHITECTURE];
+  const url = TYPOS_URLS[currentOS][currentCpuArchitecture];
 
   if (!url) {
     throw new Error(
-      `Unsupported OS or architecture: ${CURRENT_OS}, ${CURRENT_CPU_ARCHITECTURE}`,
+      `Unsupported OS or architecture: ${currentOS}, ${currentCpuArchitecture}`,
     );
   }
 
@@ -99,7 +95,7 @@ function getBinaryURL() {
  * @param {string} params.url - ダウンロード先URL
  */
 async function downloadAndUnarchive({ url }) {
-  const compressedFilePath = `${TYPOS_BINARY_PATH}/typos${CURRENT_OS === OS.WINDOWS ? ".zip" : ".tar.gz"}`;
+  const compressedFilePath = `${TYPOS_BINARY_PATH}/typos${currentOS === OS.WINDOWS ? ".zip" : ".tar.gz"}`;
 
   // バイナリディレクトリが存在する場合ダウンロードをスキップし、存在しない場合はディレクトリを作成する
   if (existsSync(TYPOS_BINARY_PATH)) {
@@ -122,10 +118,10 @@ async function downloadAndUnarchive({ url }) {
     fileStream.on("finish", resolve);
   });
 
-  if (CURRENT_OS === OS.WINDOWS) {
+  if (currentOS === OS.WINDOWS) {
     // Windows用のZIPファイルを解凍
     await runCommand({
-      command: `"${SEVEN_ZIP_BINARY_PATH}" x ${compressedFilePath} -o${TYPOS_BINARY_PATH}`,
+      command: `"${sevenZipBinaryPath}" x ${compressedFilePath} -o${TYPOS_BINARY_PATH}`,
       description: `Extracting typos binary`,
     });
   } else {
@@ -133,13 +129,13 @@ async function downloadAndUnarchive({ url }) {
 
     // .tar.gzファイルの解凍
     await runCommand({
-      command: `"${SEVEN_ZIP_BINARY_PATH}" e ${compressedFilePath} -o${TYPOS_BINARY_PATH} -y`,
+      command: `"${sevenZipBinaryPath}" e ${compressedFilePath} -o${TYPOS_BINARY_PATH} -y`,
       description: `Extracting typos.tar.gz file`,
     });
 
     // tarファイルの解凍
     await runCommand({
-      command: `"${SEVEN_ZIP_BINARY_PATH}" x ${archiveFilePath} -o${TYPOS_BINARY_PATH} -y`,
+      command: `"${sevenZipBinaryPath}" x ${archiveFilePath} -o${TYPOS_BINARY_PATH} -y`,
       description: `Extracting typos.tar file`,
     });
 
