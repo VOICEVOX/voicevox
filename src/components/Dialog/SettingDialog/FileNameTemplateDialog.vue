@@ -109,7 +109,9 @@ const tagStrings = computed(() =>
   props.availableTags.map((tag) => replaceTagIdToTagString[tag]),
 );
 
-const savedTemplateWithoutExt = props.savedTemplate.replace(/\.wav$/, "");
+const savedTemplateWithoutExt = computed(() =>
+  props.savedTemplate.replace(/\.wav$/, ""),
+);
 const temporaryTemplateWithoutExt = ref(savedTemplateWithoutExt);
 const temporaryTemplate = computed(
   () => temporaryTemplateWithoutExt.value + ".wav",
@@ -150,7 +152,7 @@ const previewFileName = computed(() =>
 );
 
 const initializeInput = () => {
-  temporaryTemplateWithoutExt.value = savedTemplateWithoutExt;
+  temporaryTemplateWithoutExt.value = savedTemplateWithoutExt.value;
 
   if (temporaryTemplateWithoutExt.value === "") {
     temporaryTemplateWithoutExt.value = props.defaultTemplate;
@@ -162,7 +164,7 @@ const resetToDefault = () => {
 };
 
 const insertTagToCurrentPosition = (tag: string) => {
-  const elem = patternInput.value?.getNativeElement() as HTMLInputElement;
+  const elem = patternInput.value?.nativeEl as HTMLInputElement;
   if (elem) {
     const text = elem.value;
 
