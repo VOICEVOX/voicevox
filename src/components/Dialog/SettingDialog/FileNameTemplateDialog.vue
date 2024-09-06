@@ -112,7 +112,7 @@ const tagStrings = computed(() =>
 const savedTemplateWithoutExt = computed(() =>
   props.savedTemplate.replace(/\.wav$/, ""),
 );
-const temporaryTemplateWithoutExt = ref(savedTemplateWithoutExt);
+const temporaryTemplateWithoutExt = ref(savedTemplateWithoutExt.value);
 const temporaryTemplate = computed(
   () => temporaryTemplateWithoutExt.value + ".wav",
 );
