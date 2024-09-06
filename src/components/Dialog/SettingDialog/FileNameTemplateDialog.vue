@@ -117,7 +117,7 @@ const temporaryTemplate = computed(
   () => temporaryTemplateWithoutExt.value + ".wav",
 );
 
-const hasNotIndexTagString = computed(
+const missingIndexTagString = computed(
   () =>
     !temporaryTemplateWithoutExt.value.includes(
       replaceTagIdToTagString["index"],
@@ -140,7 +140,7 @@ const errorMessage = computed(() => {
   if (previewFileName.value.includes("$")) {
     result.push(`不正なタグが存在するか、$が単体で含まれています`);
   }
-  if (hasNotIndexTagString.value) {
+  if (missingIndexTagString.value) {
     result.push(`$${replaceTagIdToTagString["index"]}$は必須です`);
   }
   return result.join(", ");
