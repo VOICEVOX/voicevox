@@ -129,6 +129,7 @@ export const Save: Story = {
     const button = canvas.getByRole("button", { name: "確定" });
     await userEvent.click(button);
 
+    // 保存とダイアログを閉じるイベントが呼ばれる
     await expect(args["onUpdate:template"]).toBeCalledWith("$連番$.wav");
     await expect(args["onUpdate:openDialog"]).toBeCalledWith(false);
   },
@@ -158,7 +159,7 @@ export const Close: Story = {
     const button = canvas.getByRole("button", { name: "キャンセル" });
     await userEvent.click(button);
 
-    // ダイアログを閉じるイベントが呼ばれる
+    // ダイアログを閉じるイベントが呼ばれる、保存イベントは呼ばれない
     await expect(args["onUpdate:template"]).not.toBeCalled();
     await expect(args["onUpdate:openDialog"]).toBeCalledWith(false);
   },
