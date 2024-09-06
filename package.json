@@ -80,7 +80,7 @@
     "@storybook/addon-themes": "8.1.10",
     "@storybook/blocks": "8.1.10",
     "@storybook/test": "8.1.10",
-    "@storybook/test-runner": "0.19.0",
+    "@storybook/test-runner": "0.19.1",
     "@storybook/vue3": "8.1.10",
     "@storybook/vue3-vite": "8.1.10",
     "@types/async-lock": "1.4.0",
