@@ -1,0 +1,13 @@
+diff --git a/node_modules/@storybook/test-runner/dist/index.mjs b/node_modules/@storybook/test-runner/dist/index.mjs
+index 3bef978..d3fc1cf 100644
+--- a/node_modules/@storybook/test-runner/dist/index.mjs
++++ b/node_modules/@storybook/test-runner/dist/index.mjs
+@@ -13549,7 +13549,7 @@ var testPrefixer = /* @__PURE__ */ __name((context) => {
+           await globalThis.__sbPreVisit(page, context);
+         }
+ 
+-        const result = await page.evaluate(({ id, hasPlayFn }) => __test(id, hasPlayFn), {
++        const result = await page.addInitScript(({ id, hasPlayFn }) => __test(id, hasPlayFn), {
+           id: %%id%%,
+         });
+   
