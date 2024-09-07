@@ -1,7 +1,9 @@
 <template>
   <ScrollAreaRoot class="ScrollAreaRoot" type="auto">
-    <ScrollAreaViewport class="ScrollAreaViewport">
-      <slot />
+    <ScrollAreaViewport asChild>
+      <div class="ScrollAreaViewport">
+        <slot />
+      </div>
     </ScrollAreaViewport>
     <ScrollAreaScrollbar class="ScrollAreaScrollbar" orientation="horizontal">
       <ScrollAreaThumb class="ScrollAreaThumb">
@@ -37,8 +39,13 @@ import {
   flex-direction: column;
 }
 
-.ScrollAreaViewport {
+// 親要素のサイズいっぱいに広げさせるためプライベートなデータ属性を使用
+:deep([data-radix-scroll-area-viewport]) {
   width: 100%;
+  height: 100%;
+}
+
+:deep(.ScrollAreaViewport) {
   height: 100%;
 }
 
