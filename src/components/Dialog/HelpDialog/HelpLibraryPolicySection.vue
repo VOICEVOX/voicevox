@@ -149,6 +149,7 @@ const selectCharacterInfo = (index: DetailKey | undefined) => {
 
 .subtitle {
   @include mixin.headline-2;
+  margin-top: vars.$gap-2;
 }
 
 .list {
