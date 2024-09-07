@@ -1,0 +1,222 @@
+import path from "path";
+import fs from "fs";
+import shlex from "shlex";
+
+import { dialog } from "electron"; // FIXME: ここでelectronをimportするのは良くない
+
+import log from "electron-log/main";
+
+import {
+  EngineInfo,
+  EngineDirValidationResult,
+  MinimumEngineManifestType,
+  EngineId,
+  minimumEngineManifestSchema,
+  envEngineInfoSchema,
+} from "@/type/preload";
+import { AltPortInfos } from "@/store/type";
+import { BaseConfigManager } from "@/backend/common/ConfigManager";
+
+/**
+ * デフォルトエンジンの情報を作成する
+ */
+function createDefaultEngineInfos(defaultEngineDir: string): EngineInfo[] {
+  // TODO: envから直接ではなく、envに書いたengine_manifest.jsonから情報を得るようにする
+  const defaultEngineInfosEnv =
+    import.meta.env.VITE_DEFAULT_ENGINE_INFOS ?? "[]";
+
+  const envSchema = envEngineInfoSchema.array();
+  const engines = envSchema.parse(JSON.parse(defaultEngineInfosEnv));
+
+  return engines.map((engineInfo) => {
+    return {
+      ...engineInfo,
+      isDefault: true,
+      type: "path",
+      executionFilePath: path.resolve(engineInfo.executionFilePath),
+      path:
+        engineInfo.path == undefined
+          ? undefined
+          : path.resolve(defaultEngineDir, engineInfo.path),
+    } satisfies EngineInfo;
+  });
+}
+
+/** エンジンの情報を管理するクラス */
+export class EngineInfoManager {
+  configManager: BaseConfigManager;
+  defaultEngineDir: string;
+  vvppEngineDir: string;
+
+  defaultEngineInfos: EngineInfo[] = [];
+  additionalEngineInfos: EngineInfo[] = [];
+
+  public altPortInfo: AltPortInfos = {};
+
+  constructor(payload: {
+    configManager: BaseConfigManager;
+    defaultEngineDir: string;
+    vvppEngineDir: string;
+  }) {
+    this.configManager = payload.configManager;
+    this.defaultEngineDir = payload.defaultEngineDir;
+    this.vvppEngineDir = payload.vvppEngineDir;
+  }
+
+  /**
+   * 追加エンジンの一覧を作成する。
+   * FIXME: store.get("registeredEngineDirs")への副作用をEngineManager外に移動する
+   */
+  private createAdditionalEngineInfos(): EngineInfo[] {
+    const engines: EngineInfo[] = [];
+    const addEngine = (engineDir: string, type: "vvpp" | "path") => {
+      const manifestPath = path.join(engineDir, "engine_manifest.json");
+      if (!fs.existsSync(manifestPath)) {
+        return "manifestNotFound";
+      }
+      let manifest: MinimumEngineManifestType;
+      try {
+        manifest = minimumEngineManifestSchema.parse(
+          JSON.parse(fs.readFileSync(manifestPath, { encoding: "utf8" })),
+        );
+      } catch (e) {
+        return "manifestParseError";
+      }
+
+      const [command, ...args] = shlex.split(manifest.command);
+
+      engines.push({
+        uuid: manifest.uuid,
+        host: `http://127.0.0.1:${manifest.port}`,
+        name: manifest.name,
+        path: engineDir,
+        executionEnabled: true,
+        executionFilePath: path.join(engineDir, command),
+        executionArgs: args,
+        type,
+        isDefault: false,
+      } satisfies EngineInfo);
+      return "ok";
+    };
+    for (const dirName of fs.readdirSync(this.vvppEngineDir)) {
+      const engineDir = path.join(this.vvppEngineDir, dirName);
+      if (!fs.statSync(engineDir).isDirectory()) {
+        log.log(`${engineDir} is not directory`);
+        continue;
+      }
+      if (dirName === ".tmp") {
+        continue;
+      }
+      const result = addEngine(engineDir, "vvpp");
+      if (result !== "ok") {
+        log.log(`Failed to load engine: ${result}, ${engineDir}`);
+      }
+    }
+    // FIXME: この関数の引数でregisteredEngineDirsを受け取り、動かないエンジンをreturnして、EngineManager外でconfig.setする
+    for (const engineDir of this.configManager.get("registeredEngineDirs")) {
+      const result = addEngine(engineDir, "path");
+      if (result !== "ok") {
+        log.log(`Failed to load engine: ${result}, ${engineDir}`);
+        // 動かないエンジンは追加できないので削除
+        // FIXME: エンジン管理UIで削除可能にする
+        dialog.showErrorBox(
+          "エンジンの読み込みに失敗しました。",
+          `${engineDir}を読み込めませんでした。このエンジンは削除されます。`,
+        );
+        this.configManager.set(
+          "registeredEngineDirs",
+          this.configManager
+            .get("registeredEngineDirs")
+            .filter((p) => p !== engineDir),
+        );
+      }
+    }
+    return engines;
+  }
+
+  /**
+   * 全てのエンジンの一覧を取得する。デフォルトエンジン＋追加エンジン。
+   */
+  fetchEngineInfos(): EngineInfo[] {
+    return [...this.defaultEngineInfos, ...this.additionalEngineInfos];
+  }
+
+  /**
+   * エンジンの情報を取得する。存在しない場合はエラーを返す。
+   */
+  fetchEngineInfo(engineId: EngineId): EngineInfo {
+    const engineInfos = this.fetchEngineInfos();
+    const engineInfo = engineInfos.find(
+      (engineInfo) => engineInfo.uuid === engineId,
+    );
+    if (!engineInfo) {
+      throw new Error(`No such engineInfo registered: engineId == ${engineId}`);
+    }
+    return engineInfo;
+  }
+
+  /**
+   * エンジンのディレクトリを取得する。存在しない場合はエラーを返す。
+   */
+  fetchEngineDirectory(engineId: EngineId): string {
+    const engineInfo = this.fetchEngineInfo(engineId);
+    const engineDirectory = engineInfo.path;
+    if (engineDirectory == undefined) {
+      throw new Error(`engineDirectory is undefined: engineId == ${engineId}`);
+    }
+
+    return engineDirectory;
+  }
+
+  /**
+   * EngineInfosを初期化する。
+   */
+  initializeEngineInfos() {
+    this.defaultEngineInfos = createDefaultEngineInfos(this.defaultEngineDir);
+    this.additionalEngineInfos = this.createAdditionalEngineInfos();
+  }
+
+  /**
+   * エンジン情報のhost内のportを置き換える。
+   * エンジン起動時にポートが競合して代替ポートを使う場合に使用する。
+   */
+  changeEngineInfoPort(engineId: EngineId, port: number) {
+    const engineInfo = this.fetchEngineInfo(engineId);
+    const url = new URL(engineInfo.host);
+    url.port = port.toString();
+    engineInfo.host = url.toString();
+  }
+
+  /**
+   * ディレクトリがエンジンとして正しいかどうかを判定する
+   */
+  validateEngineDir(engineDir: string): EngineDirValidationResult {
+    if (!fs.existsSync(engineDir)) {
+      return "directoryNotFound";
+    } else if (!fs.statSync(engineDir).isDirectory()) {
+      return "notADirectory";
+    } else if (!fs.existsSync(path.join(engineDir, "engine_manifest.json"))) {
+      return "manifestNotFound";
+    }
+    const manifest = fs.readFileSync(
+      path.join(engineDir, "engine_manifest.json"),
+      "utf-8",
+    );
+    let manifestContent: MinimumEngineManifestType;
+    try {
+      manifestContent = minimumEngineManifestSchema.parse(JSON.parse(manifest));
+    } catch (e) {
+      return "invalidManifest";
+    }
+
+    const engineInfos = this.fetchEngineInfos();
+    if (
+      engineInfos.some((engineInfo) => engineInfo.uuid === manifestContent.uuid)
+    ) {
+      return "alreadyExists";
+    }
+    return "ok";
+  }
+}
+
+export default EngineInfoManager;
