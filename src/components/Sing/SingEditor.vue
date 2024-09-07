@@ -131,10 +131,8 @@ onetimeWatch(
 @use "@/styles/variables" as vars;
 @use "@/styles/colors" as colors;
 
-.layout-container {
-  min-height: calc(100vh - #{vars.$menubar-height});
-}
 .sing-main {
+  height: calc(100vh - #{vars.$toolbar-height});
   display: flex;
   overflow: hidden;
   position: relative;

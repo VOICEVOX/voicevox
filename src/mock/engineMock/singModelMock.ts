@@ -112,14 +112,14 @@ export function notesAndFramePhonemesToPitchMock(
     if (phoneme.phoneme == "pau") {
       pitch = 0;
     } else {
-      console.log("notesAndFramePhonemesToPitchMock phoneme", phoneme);
-
       // IDが同じノートを探す
       const note = notes
         .filter((note) => note.id != undefined)
         .find((note) => note.id == phoneme.noteId);
       if (note == undefined)
-        throw new Error(`ノートが見つかりません: ${i} ${phoneme.phoneme}`);
+        throw new Error(
+          `ノートが見つかりません: index=${i} phoneme=${phoneme.phoneme}`,
+        );
 
       if (note.key != undefined) {
         pitch = phonemeAndKeyToPitchMock(phoneme.phoneme, note.key);

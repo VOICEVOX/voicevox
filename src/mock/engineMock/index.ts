@@ -182,7 +182,7 @@ export function createOpenAPIEngineMock(): IEngineConnectorFactory {
               volume,
               phonemes,
               volumeScale: 1.0,
-              outputSamplingRate: 44100,
+              outputSamplingRate: 24000,
               outputStereo: false,
             };
           },

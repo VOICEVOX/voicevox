@@ -216,6 +216,10 @@ import { applyGaussianFilter, linearInterpolation } from "@/sing/utility";
 import { useLyricInput } from "@/composables/useLyricInput";
 import { ExhaustiveError } from "@/type/utility";
 import { uuid4 } from "@/helpers/random";
+import {
+  onMountedOrActivated,
+  onUnmountedOrDeactivated,
+} from "@/composables/onMountOrActivate";
 
 type PreviewMode =
   | "ADD_NOTE"
@@ -1333,7 +1337,7 @@ onMounted(() => {
 let firstActivation = true;
 
 // スクロール位置を設定する
-onActivated(() => {
+onMountedOrActivated(() => {
   const sequencerBodyElement = sequencerBody.value;
   if (!sequencerBodyElement) {
     throw new Error("sequencerBodyElement is null.");
@@ -1362,7 +1366,7 @@ onActivated(() => {
 });
 
 // リスナー登録
-onActivated(() => {
+onMountedOrActivated(() => {
   void store.dispatch("ADD_PLAYHEAD_POSITION_CHANGE_LISTENER", {
     listener: playheadPositionChangeListener,
   });
@@ -1371,7 +1375,7 @@ onActivated(() => {
 });
 
 // リスナー解除
-onDeactivated(() => {
+onUnmountedOrDeactivated(() => {
   void store.dispatch("REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER", {
     listener: playheadPositionChangeListener,
   });

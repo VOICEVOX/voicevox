@@ -27,8 +27,6 @@ import defaultTheme from "@/../public/themes/default.json";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { assetsPath } from "@/mock/engineMock/constants";
 
-TODO: SingEditorの縦幅を変わらないようにする;
-
 const meta: Meta<typeof SingEditor> = {
   component: SingEditor,
   args: {
