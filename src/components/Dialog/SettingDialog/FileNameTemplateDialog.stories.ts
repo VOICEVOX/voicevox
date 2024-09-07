@@ -1,4 +1,4 @@
-import { userEvent, within, expect, fn, waitFor } from "@storybook/test";
+import { userEvent, within, expect, waitFor } from "@storybook/test";
 
 import { Meta, StoryObj } from "@storybook/vue3";
 import FileNameTemplateDialog from "./FileNameTemplateDialog.vue";
