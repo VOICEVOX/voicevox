@@ -16,6 +16,7 @@ import {
 } from "./portManager";
 
 import {
+  AltPortInfos,
   EngineInfo,
   EngineDirValidationResult,
   MinimumEngineManifestType,
@@ -23,7 +24,6 @@ import {
   minimumEngineManifestSchema,
   envEngineInfoSchema,
 } from "@/type/preload";
-import { AltPortInfos } from "@/store/type";
 import { BaseConfigManager } from "@/backend/common/ConfigManager";
 
 type EngineProcessContainer = {

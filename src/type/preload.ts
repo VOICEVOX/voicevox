@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { IpcSOData } from "./ipc";
-import { AltPortInfos } from "@/store/type";
 import { Result } from "@/type/result";
 
 export const isProduction = import.meta.env.MODE === "production";
@@ -208,6 +207,9 @@ export const defaultToolbarButtonSetting: ToolbarSettingType = [
   "UNDO",
   "REDO",
 ];
+
+// ポートが塞がれていたときの代替ポート情報
+export type AltPortInfos = Record<EngineId, { from: number; to: number }>;
 
 export interface Sandbox {
   getAppInfos(): Promise<AppInfos>;
