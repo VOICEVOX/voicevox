@@ -60,6 +60,11 @@ const props = defineProps<{
   isProjectFileLoaded: boolean | "waiting";
 }>();
 
+const emit = defineEmits<{
+  /** ソングエディタの準備が完了するときに呼ばれる */
+  completeInitialStartup: [];
+}>();
+
 const store = useStore();
 
 const isSidebarOpen = computed(
@@ -118,6 +123,7 @@ onetimeWatch(
     await store.dispatch("SET_PLAYHEAD_POSITION", { position: 0 });
     await store.dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
     isCompletedInitialStartup.value = true;
+    emit("completeInitialStartup");
 
     return "unwatch";
   },

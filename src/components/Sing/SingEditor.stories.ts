@@ -1,4 +1,11 @@
-import { userEvent, within, expect, fn, waitFor } from "@storybook/test";
+import {
+  userEvent,
+  within,
+  expect,
+  fn,
+  waitFor,
+  fireEvent,
+} from "@storybook/test";
 
 import { Meta, StoryObj } from "@storybook/vue3";
 import { provide, toRaw } from "vue";
@@ -32,6 +39,7 @@ const meta: Meta<typeof SingEditor> = {
   args: {
     isEnginesReady: true,
     isProjectFileLoaded: false,
+    onCompleteInitialStartup: fn(),
   },
   decorators: [
     (story, context) => {
@@ -143,9 +151,7 @@ export const Default: Story = {
   play: async ({ args }) => {
     // 準備が完了するまで待機する
     await waitFor(
-      () => {
-        // expect(args.onCompleteInitialStartup).toHaveBeenCalled();
-      },
+      () => expect(args.onCompleteInitialStartup).toHaveBeenCalled(),
       { timeout: 5000 },
     );
   },
@@ -155,5 +161,19 @@ export const NowLoading: Story = {
   name: "プロジェクトファイルを読み込み中",
   args: {
     isProjectFileLoaded: "waiting",
+  },
+};
+
+export const AddNote: Story = {
+  name: "ノート追加のテスト",
+  play: async ({ context, canvasElement, parameters }) => {
+    await Default.play?.(context);
+
+    const canvas = within(canvasElement);
+
+    // たぶんドラッグができなくてテスト不可能
+
+    // const { audioItems, audioKeys } = parameters.vuexState;
+    // await window.storybookTestSnapshot?.({ audioItems, audioKeys });
   },
 };

@@ -144,9 +144,7 @@ export const Default: Story = {
   play: async ({ args }) => {
     // 準備が完了するまで待機する
     await waitFor(
-      () => {
-        expect(args.onCompleteInitialStartup).toHaveBeenCalled();
-      },
+      () => expect(args.onCompleteInitialStartup).toHaveBeenCalled(),
       { timeout: 5000 },
     );
   },
