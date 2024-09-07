@@ -51,7 +51,8 @@ export class EngineInfoManager {
   defaultEngineInfos: EngineInfo[] = [];
   additionalEngineInfos: EngineInfo[] = [];
 
-  public altPortInfo: AltPortInfos = {};
+  /** 代替ポート情報 */
+  public altPortInfos: AltPortInfos = {};
 
   constructor(payload: {
     configManager: BaseConfigManager;
@@ -169,20 +170,26 @@ export class EngineInfoManager {
   }
 
   /**
-   * EngineInfosを初期化する。
+   * EngineInfosとAltPortInfoを初期化する。
    */
-  initializeEngineInfos() {
+  initializeEngineInfosAndAltPortInfo() {
     this.defaultEngineInfos = createDefaultEngineInfos(this.defaultEngineDir);
     this.additionalEngineInfos = this.createAdditionalEngineInfos();
+    this.altPortInfos = {};
   }
 
   /**
-   * エンジン情報のhost内のportを置き換える。
+   * 代替ポート情報を更新する。
    * エンジン起動時にポートが競合して代替ポートを使う場合に使用する。
    */
-  changeEngineInfoPort(engineId: EngineId, port: number) {
+  updateAltPort(engineId: EngineId, port: number) {
     const engineInfo = this.fetchEngineInfo(engineId);
     const url = new URL(engineInfo.host);
+    this.altPortInfos[engineId] = {
+      from: Number(url.port),
+      to: port,
+    };
+
     url.port = port.toString();
     engineInfo.host = url.toString();
   }

@@ -1,6 +1,5 @@
 import { spawn, ChildProcess } from "child_process";
 import path from "path";
-import fs from "fs";
 import treeKill from "tree-kill";
 
 import { app, dialog } from "electron"; // FIXME: ここでelectronをimportするのは良くない
@@ -14,15 +13,7 @@ import {
   url2HostInfo,
 } from "../portHelper";
 
-import {
-  EngineInfo,
-  EngineDirValidationResult,
-  MinimumEngineManifestType,
-  EngineId,
-  minimumEngineManifestSchema,
-  EngineSettings,
-} from "@/type/preload";
-import { AltPortInfos } from "@/store/type";
+import { EngineInfo, EngineId, EngineSettings } from "@/type/preload";
 import { BaseConfigManager } from "@/backend/common/ConfigManager";
 
 type EngineProcessContainer = {
@@ -32,44 +23,29 @@ type EngineProcessContainer = {
 
 /** エンジンプロセスを管理するクラス */
 export class EngineProcessManager {
-  configManager: BaseConfigManager;
-  vvppEngineDir: string;
   onEngineProcessError: (engineInfo: EngineInfo, error: Error) => void;
   engineInfosFetcher: () => Readonly<EngineInfo>[];
-  engineInfoPortChanger: (engineId: EngineId, port: number) => void;
-  engineSettingsFetcher: () => Partial<EngineSettings>;
+  engineAltPortUpdater: (engineId: EngineId, port: number) => void;
+  engineSettingsGetter: () => Partial<EngineSettings>;
 
   defaultEngineInfos: EngineInfo[] = [];
   additionalEngineInfos: EngineInfo[] = [];
   engineProcessContainers: Record<EngineId, EngineProcessContainer> = {};
 
-  /** 代替ポート情報 */
-  public altPortInfos: AltPortInfos = {};
-
   constructor(payload: {
     configManager: BaseConfigManager;
-    vvppEngineDir: string;
     onEngineProcessError: (engineInfo: EngineInfo, error: Error) => void;
     /** エンジン情報を取得する関数 */
     engineInfosFetcher: () => Readonly<EngineInfo>[];
-    /** エンジン情報のhost内のportを置き換える関数 */
-    engineInfoPortChanger: (engineId: EngineId, port: number) => void;
+    /** エンジンの代替ポート情報を更新する関数 */
+    engineAltPortUpdater: (engineId: EngineId, port: number) => void;
     /** エンジン設定を取得する関数 */
-    engineSettingsFetcher: () => Partial<EngineSettings>;
+    engineSettingsGetter: () => Partial<EngineSettings>;
   }) {
-    this.configManager = payload.configManager;
-    this.vvppEngineDir = payload.vvppEngineDir;
     this.onEngineProcessError = payload.onEngineProcessError;
     this.engineInfosFetcher = payload.engineInfosFetcher;
-    this.engineInfoPortChanger = payload.engineInfoPortChanger;
-    this.engineSettingsFetcher = payload.engineSettingsFetcher;
-  }
-
-  /**
-   * 代替ポートの情報を初期化する。
-   */
-  initializeAltPortInfos() {
-    this.altPortInfos = {};
+    this.engineAltPortUpdater = payload.engineAltPortUpdater;
+    this.engineSettingsGetter = payload.engineSettingsGetter;
   }
 
   /**
@@ -151,13 +127,7 @@ export class EngineProcessManager {
       }
 
       // 代替ポート情報を更新
-      this.altPortInfos[engineId] = {
-        from: engineHostInfo.port,
-        to: altPort,
-      };
-
-      // エンジン情報に代替ポートを反映
-      this.engineInfoPortChanger(engineId, altPort);
+      this.engineAltPortUpdater(engineId, altPort);
       log.warn(
         `ENGINE ${engineId}: Applied Alternative Port: ${engineHostInfo.port} -> ${altPort}`,
       );
@@ -174,7 +144,7 @@ export class EngineProcessManager {
     const engineProcessContainer = this.engineProcessContainers[engineId];
     engineProcessContainer.willQuitEngine = false;
 
-    const engineSetting = this.configManager.get("engineSettings")[engineId];
+    const engineSetting = this.engineSettingsGetter()[engineId];
     if (engineSetting == undefined)
       throw new Error(`No such engineSetting: engineId == ${engineId}`);
 
@@ -392,37 +362,6 @@ export class EngineProcessManager {
         }
       });
     });
-  }
-
-  /**
-   * ディレクトリがエンジンとして正しいかどうかを判定する
-   */
-  validateEngineDir(engineDir: string): EngineDirValidationResult {
-    if (!fs.existsSync(engineDir)) {
-      return "directoryNotFound";
-    } else if (!fs.statSync(engineDir).isDirectory()) {
-      return "notADirectory";
-    } else if (!fs.existsSync(path.join(engineDir, "engine_manifest.json"))) {
-      return "manifestNotFound";
-    }
-    const manifest = fs.readFileSync(
-      path.join(engineDir, "engine_manifest.json"),
-      "utf-8",
-    );
-    let manifestContent: MinimumEngineManifestType;
-    try {
-      manifestContent = minimumEngineManifestSchema.parse(JSON.parse(manifest));
-    } catch (e) {
-      return "invalidManifest";
-    }
-
-    const engineInfos = this.engineInfosFetcher();
-    if (
-      engineInfos.some((engineInfo) => engineInfo.uuid === manifestContent.uuid)
-    ) {
-      return "alreadyExists";
-    }
-    return "ok";
   }
 }
 

@@ -192,13 +192,11 @@ const engineInfoManager = new EngineInfoManager({
 });
 const engineProcessManager = new EngineProcessManager({
   configManager,
-  vvppEngineDir,
   onEngineProcessError,
   engineInfosFetcher:
     engineInfoManager.fetchEngineInfos.bind(engineInfoManager),
-  engineInfoPortChanger:
-    engineInfoManager.changeEngineInfoPort.bind(engineInfoManager),
-  engineSettingsFetcher: () => configManager.get("engineSettings"),
+  engineAltPortUpdater: engineInfoManager.updateAltPort.bind(engineInfoManager),
+  engineSettingsGetter: () => configManager.get("engineSettings"),
 });
 const vvppManager = new VvppManager({ vvppEngineDir });
 
@@ -532,8 +530,7 @@ async function start() {
 // エンジンの準備と起動
 async function launchEngines() {
   // エンジンの追加と削除を反映させるためEngineInfoとAltPortInfosを再生成する。
-  engineInfoManager.initializeEngineInfos();
-  engineProcessManager.initializeAltPortInfos();
+  engineInfoManager.initializeEngineInfosAndAltPortInfo();
 
   // TODO: デフォルトエンジンの処理をConfigManagerに移してブラウザ版と共通化する
   const engineInfos = engineInfoManager.fetchEngineInfos();
@@ -730,7 +727,7 @@ registerIpcMainHandle<IpcMainHandle>({
   },
 
   GET_ALT_PORT_INFOS: () => {
-    return engineProcessManager.altPortInfos;
+    return engineInfoManager.altPortInfos;
   },
 
   SHOW_AUDIO_SAVE_DIALOG: async (_, { title, defaultPath }) => {
@@ -1011,7 +1008,7 @@ registerIpcMainHandle<IpcMainHandle>({
   },
 
   VALIDATE_ENGINE_DIR: (_, { engineDir }) => {
-    return engineProcessManager.validateEngineDir(engineDir);
+    return engineInfoManager.validateEngineDir(engineDir);
   },
 
   RELOAD_APP: async (_, { isMultiEngineOffMode }) => {
