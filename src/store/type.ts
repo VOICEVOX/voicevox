@@ -55,6 +55,7 @@ import {
   NoteId,
   CommandId,
   TrackId,
+  AltPortInfos,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import {
@@ -103,9 +104,6 @@ export type Command = {
 };
 
 export type EngineState = "STARTING" | "FAILED_STARTING" | "ERROR" | "READY";
-
-// ポートが塞がれていたときの代替ポート情報
-export type AltPortInfos = Record<EngineId, { from: number; to: number }>;
 
 export type SaveResult =
   | "SUCCESS"
