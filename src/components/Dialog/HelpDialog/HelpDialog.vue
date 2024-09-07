@@ -7,70 +7,66 @@
     class="help-dialog transparent-backdrop"
   >
     <QLayout container view="hHh Lpr lff">
-      <div class="grid">
-        <div class="list-wrapper">
-          <BaseScrollArea>
-            <div class="list-inner">
-              <template v-for="(page, pageIndex) of pagedata" :key="pageIndex">
-                <BaseListItem
-                  v-if="page.type === 'item'"
-                  :selected="selectedPageIndex === pageIndex"
-                  @click="selectedPageIndex = pageIndex"
-                >
-                  {{ page.name }}
-                </BaseListItem>
-                <div v-else-if="page.type === 'separator'" class="list-label">
-                  {{ page.name }}
-                </div>
-              </template>
-            </div>
-          </BaseScrollArea>
-        </div>
-
-        <QPageContainer>
-          <QPage>
-            <QTabPanels v-model="selectedPageIndex">
-              <QTabPanel
-                v-for="(page, pageIndex) of pagedata"
-                :key="pageIndex"
-                :name="pageIndex"
-                class="q-pa-none"
+      <QPageContainer>
+        <QHeader class="q-pa-sm">
+          <QToolbar v-if="selectedPage">
+            <QToolbarTitle class="text-display">
+              ヘルプ /
+              {{ selectedPage.parent ? selectedPage.parent + " / " : ""
+              }}{{ selectedPage.name }}
+            </QToolbarTitle>
+            <QBtn
+              v-if="selectedPage.shouldShowOpenLogDirectoryButton"
+              unelevated
+              color="toolbar-button"
+              textColor="toolbar-button-display"
+              class="text-no-wrap text-bold q-mr-sm"
+              @click="openLogDirectory"
+            >
+              ログフォルダを開く
+            </QBtn>
+            <!-- close button -->
+            <QBtn
+              round
+              flat
+              icon="close"
+              color="display"
+              aria-label="ヘルプを閉じる"
+              @click="modelValueComputed = false"
+            />
+          </QToolbar>
+        </QHeader>
+        <BaseNavigationView>
+          <template #sidebar>
+            <template v-for="(page, pageIndex) of pagedata" :key="pageIndex">
+              <BaseListItem
+                v-if="page.type === 'item'"
+                :selected="selectedPageIndex === pageIndex"
+                @click="selectedPageIndex = pageIndex"
               >
-                <div v-if="page.type === 'item'" class="root">
-                  <QHeader class="q-pa-sm">
-                    <QToolbar>
-                      <QToolbarTitle class="text-display">
-                        ヘルプ / {{ page.parent ? page.parent + " / " : ""
-                        }}{{ page.name }}
-                      </QToolbarTitle>
-                      <QBtn
-                        v-if="page.shouldShowOpenLogDirectoryButton"
-                        unelevated
-                        color="toolbar-button"
-                        textColor="toolbar-button-display"
-                        class="text-no-wrap text-bold q-mr-sm"
-                        @click="openLogDirectory"
-                      >
-                        ログフォルダを開く
-                      </QBtn>
-                      <!-- close button -->
-                      <QBtn
-                        round
-                        flat
-                        icon="close"
-                        color="display"
-                        aria-label="ヘルプを閉じる"
-                        @click="modelValueComputed = false"
-                      />
-                    </QToolbar>
-                  </QHeader>
-                  <Component :is="page.component" v-bind="page.props" />
-                </div>
-              </QTabPanel>
-            </QTabPanels>
-          </QPage>
-        </QPageContainer>
-      </div>
+                {{ page.name }}
+              </BaseListItem>
+              <div v-else-if="page.type === 'separator'" class="list-label">
+                {{ page.name }}
+              </div>
+            </template>
+          </template>
+          <QTabPanels v-model="selectedPageIndex">
+            <QTabPanel
+              v-for="(page, pageIndex) of pagedata"
+              :key="pageIndex"
+              :name="pageIndex"
+              class="q-pa-none"
+            >
+              <Component
+                :is="page.component"
+                v-if="page.type === 'item'"
+                v-bind="page.props"
+              />
+            </QTabPanel>
+          </QTabPanels>
+        </BaseNavigationView>
+      </QPageContainer>
     </QLayout>
   </QDialog>
 </template>
@@ -83,7 +79,7 @@ import OssLicense from "./HelpOssLicenseSection.vue";
 import UpdateInfo from "./HelpUpdateInfoSection.vue";
 import LibraryPolicy from "./HelpLibraryPolicySection.vue";
 import BaseListItem from "@/components/Base/BaseListItem.vue";
-import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
+import BaseNavigationView from "@/components/Base/BaseNavigationView.vue";
 import { UpdateInfo as UpdateInfoObject, UrlString } from "@/type/preload";
 import { useStore } from "@/store";
 import { useFetchNewUpdateInfos } from "@/composables/useFetchNewUpdateInfos";
@@ -284,32 +280,20 @@ const pagedata = computed(() => {
 
 const selectedPageIndex = ref(0);
 
+const selectedPage = computed(() => {
+  if (pagedata.value[selectedPageIndex.value].type == "item") {
+    return pagedata.value[selectedPageIndex.value] as PageItem;
+  } else {
+    return undefined;
+  }
+});
+
 const openLogDirectory = () => window.backend.openLogDirectory();
 </script>
 
 <style scoped lang="scss">
 @use "@/styles/v2/colors" as colors;
 @use "@/styles/v2/variables" as vars;
-
-.grid {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  backdrop-filter: blur(32px);
-  background-color: colors.$background-drawer;
-}
-
-// TODO: MenuBar+Header分のマージン。Dialogコンポーネント置き換え後削除
-.list-wrapper {
-  margin-top: 66px;
-  height: calc(100vh - 90px);
-  width: max-content;
-}
-
-.list-inner {
-  display: flex;
-  flex-direction: column;
-  padding: vars.$padding-2;
-}
 
 .list-label {
   padding: vars.$padding-2;
@@ -328,6 +312,6 @@ const openLogDirectory = () => window.backend.openLogDirectory();
 }
 
 .q-tab-panels {
-  background: none;
+  display: contents;
 }
 </style>
