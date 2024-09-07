@@ -45,11 +45,9 @@ const createInvalidInputPlay =
     if (inputValue) {
       await userEvent.type(input, inputValue);
     }
-    if (expectedMessage) {
-      await waitFor(() =>
-        expect(canvas.getByText(expectedMessage)).toBeVisible(),
-      );
-    }
+    await waitFor(() =>
+      expect(canvas.getByText(expectedMessage)).toBeVisible(),
+    );
   };
 
 export const EmptyInput: Story = {
