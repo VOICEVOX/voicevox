@@ -1,3 +1,6 @@
+メモ：
+https://github.com/storybookjs/test-runner/issues/68#issuecomment-2224900181 のワークアラウンド。
+
 diff --git a/node_modules/@storybook/test-runner/dist/index.js b/node_modules/@storybook/test-runner/dist/index.js
 index accc363..ce1e3e9 100644
 --- a/node_modules/@storybook/test-runner/dist/index.js
