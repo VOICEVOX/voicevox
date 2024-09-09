@@ -1,4 +1,4 @@
-import { userEvent, within, expect, waitFor } from "@storybook/test";
+import { userEvent, within, expect } from "@storybook/test";
 
 import { Meta, StoryObj } from "@storybook/vue3";
 import FileNameTemplateDialog from "./FileNameTemplateDialog.vue";
@@ -50,7 +50,7 @@ const createInvalidInputPlay =
 
     await clearAndInput(inputValue);
 
-    await expect(canvas.findByText(expectedMessage)).toBeVisible();
+    await expect(await canvas.findByText(expectedMessage)).toBeVisible();
   };
 
 export const EmptyInput: Story = {
