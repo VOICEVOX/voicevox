@@ -6,7 +6,13 @@ const { exec } = require("child_process");
 const { promisify } = require("util");
 const { platform, arch } = require("os");
 const { join, resolve } = require("path");
-const { mkdirSync, existsSync, unlinkSync, createWriteStream } = require("fs");
+const {
+  mkdirSync,
+  existsSync,
+  unlinkSync,
+  createWriteStream,
+  rmSync,
+} = require("fs");
 const fetch = require("node-fetch");
 
 // OS名を定義するオブジェクト
@@ -154,11 +160,34 @@ async function downloadAndUnarchive({ url }) {
 }
 
 /**
+ * /build/vendored/typos ディレクトリから不要なファイルとディレクトリを削除する関数
+ */
+function cleanupTyposDirectory() {
+  const typosDocDirPath = join(TYPOS_BINARY_PATH, "doc");
+  const typosReadmeFilePath = join(TYPOS_BINARY_PATH, "README.md");
+
+  // doc ディレクトリの削除
+  if (existsSync(typosDocDirPath)) {
+    rmSync(typosDocDirPath, { recursive: true });
+    console.log(`Deleted directory: ${typosDocDirPath}`);
+  }
+
+  // README.md ファイルの削除
+  if (existsSync(typosReadmeFilePath)) {
+    unlinkSync(typosReadmeFilePath);
+    console.log(`Deleted file: ${typosReadmeFilePath}`);
+  }
+}
+
+/**
  * OSに応じてバイナリデータを処理する関数
  */
 async function main() {
   const url = getBinaryURL();
   await downloadAndUnarchive({ url });
+
+  // 不要なファイルとディレクトリを削除
+  cleanupTyposDirectory();
 }
 
 // main関数実行
