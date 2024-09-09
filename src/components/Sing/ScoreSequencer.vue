@@ -63,6 +63,16 @@
         :isOverlapping="overlappingNoteIdsInSelectedTrack.has(note.id)"
         :previewLyric="previewLyrics.get(note.id) || null"
         :isResizingNote
+        :isResizingRight="
+          isResizingNote &&
+          previewMode === 'RESIZE_NOTE_RIGHT' &&
+          selectedNoteIds.has(note.id)
+        "
+        :isResizingLeft="
+          isResizingNote &&
+          previewMode === 'RESIZE_NOTE_LEFT' &&
+          selectedNoteIds.has(note.id)
+        "
         @barMousedown="onNoteBarMouseDown($event, note)"
         @barDoubleClick="onNoteBarDoubleClick($event, note)"
         @leftEdgeMousedown="onNoteLeftEdgeMouseDown($event, note)"
@@ -873,6 +883,7 @@ const endPreview = () => {
   cancelAnimationFrame(previewRequestId);
   if (previewStartEditTarget === "NOTE") {
     // 編集ターゲットがノートのときにプレビューを開始した場合の処理
+    isResizingNote.value = false;
 
     if (edited) {
       if (previewMode === "ADD_NOTE") {
@@ -895,7 +906,6 @@ const endPreview = () => {
           duration: PREVIEW_SOUND_DURATION,
         });
       }
-      isResizingNote.value = false;
     }
   } else if (previewStartEditTarget === "PITCH") {
     // 編集ターゲットがピッチのときにプレビューを開始した場合の処理
@@ -1573,40 +1583,6 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 .sequencer-grid {
   display: block;
   pointer-events: none;
-}
-
-.sequencer-grid-cell {
-  display: block;
-  stroke: var(--scheme-color-surface-variant);
-  stroke-width: 1;
-}
-
-.sequencer-grid-octave-cell {
-  stroke: var(--scheme-color-outline);
-}
-
-.sequencer-grid-octave-line {
-  backface-visibility: hidden;
-  stroke: var(--scheme-color-outline);
-}
-
-.sequencer-grid-cell-white {
-  fill: var(--scheme-color-background);
-}
-
-.sequencer-grid-cell-black {
-  fill: var(--scheme-color-surface-variant);
-}
-
-.sequencer-grid-measure-line {
-  backface-visibility: hidden;
-  stroke: var(--scheme-color-outline);
-}
-
-.sequencer-grid-beat-line {
-  backface-visibility: hidden;
-  stroke: var(--scheme-color-outline);
-  opacity: 0.6;
 }
 
 .sequencer-guideline {

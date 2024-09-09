@@ -89,7 +89,7 @@ const selectedStyleIconPath = computed(() => {
 
   &:hover {
     border-color: var(--scheme-color-outline);
-    background: oklch(var(--scheme-color-secondary-container-rgb) / 0.1);
+    background: oklch(from var(--scheme-color-secondary-container) l c h / 0.1);
   }
 
   &:focus {

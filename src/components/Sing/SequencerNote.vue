@@ -10,6 +10,8 @@
       'invalid-phrase': hasPhraseError,
       'below-pitch': editTargetIsPitch,
       resizing: isResizingNote,
+      'resizing-right': isResizingRight,
+      'resizing-left': isResizingLeft,
     }"
     :style="{
       width: `${width}px`,
@@ -115,6 +117,10 @@ const props = defineProps<{
   previewLyric: string | null;
   /** ノートがリサイズ中か */
   isResizingNote: boolean;
+  /** ノートが右方向にリサイズ中か */
+  isResizingRight: boolean;
+  /** ノートが左方向にリサイズ中か */
+  isResizingLeft: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -267,26 +273,74 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     border-radius: 4px;
   }
 
-  .note-left-edge {
+  .note-left-edge,
+  .note-right-edge {
     position: absolute;
     top: 0;
-    left: -2px;
-    border-radius: 4px 0 0 4px;
     width: 25%;
     min-width: 3px;
     max-width: 8px;
     height: 100%;
   }
 
+  .note-left-edge {
+    left: -2px;
+    border-radius: 4px 0 0 4px;
+  }
+
   .note-right-edge {
-    position: absolute;
-    top: 0;
     right: -2px;
     border-radius: 0 4px 4px 0;
-    width: 25%;
-    min-width: 3px;
-    max-width: 8px;
-    height: 100%;
+  }
+
+  // リサイズ中
+  &:not(.below-pitch) {
+    .note-left-edge:hover,
+    &.resizing-left .note-left-edge,
+    .note-right-edge:hover,
+    &.resizing-right .note-right-edge {
+      background-color: var(--scheme-color-sing-note-bar-border);
+    }
+
+    &.selected {
+      .note-left-edge:hover,
+      &.resizing-left .note-left-edge,
+      .note-right-edge:hover,
+      &.resizing-right .note-right-edge {
+        background-color: var(--scheme-color-sing-note-bar-selected-border);
+      }
+    }
+
+    &.preview-lyric {
+      .note-left-edge:hover,
+      &.resizing-left .note-left-edge,
+      .note-right-edge:hover,
+      &.resizing-right .note-right-edge {
+        background-color: var(--scheme-color-sing-note-bar-preview-border);
+      }
+    }
+
+    &.overlapping,
+    &.invalid-phrase {
+      .note-left-edge:hover,
+      &.resizing-left .note-left-edge,
+      .note-right-edge:hover,
+      &.resizing-right .note-right-edge {
+        background-color: var(--scheme-color-error);
+      }
+    }
+  }
+
+  &.below-pitch {
+    .note-left-edge,
+    .note-right-edge {
+      &:hover,
+      .resizing-left &,
+      .resizing-right & {
+        background-color: transparent;
+        cursor: inherit;
+      }
+    }
   }
 
   &.selected {
@@ -295,14 +349,6 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
       border-color: var(--scheme-color-sing-note-bar-selected-border);
       outline: 1px solid var(--scheme-color-sing-note-bar-selected-outline);
       outline-offset: 1px;
-    }
-
-    .note-left-edge:hover {
-      cursor: ew-resize;
-    }
-
-    .note-right-edge:hover {
-      cursor: ew-resize;
     }
   }
 
@@ -337,31 +383,36 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
 
   &.below-pitch {
     .note-bar {
-      box-sizing: content-box;
       background-color: var(--scheme-color-sing-note-bar-below-pitch-container);
-      height: 100%;
-      min-height: 6px;
-      max-height: 20%;
-      top: 50%;
-      transform: translateY(-50%);
       border: 0;
-      border-radius: 2px;
       outline: 0;
-    }
 
-    .note-left-edge:hover,
-    .note-right-edge:hover {
-      cursor: inherit;
+      // ピッチセンターライン(非表示)
+      &:after {
+        content: "";
+        border-radius: 1px;
+        display: none;
+        position: absolute;
+        left: 0;
+        min-height: 4px;
+        max-height: 20%;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 100%;
+        background-color: transparent;
+      }
     }
 
     &.overlapping,
     &.invalid-phrase {
       .note-bar {
-        background-color: var(
-          --scheme-color-sing-note-bar-below-pitch-invalid-container
-        );
         border-color: 0;
+        background: var(--note-error-container);
         outline: none;
+
+        &:after {
+          display: none;
+        }
       }
     }
   }
@@ -415,10 +466,8 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
 
   // プレビュー中
   &.preview-lyric {
-    color: color-mix(
-      in oklch,
-      var(--scheme-color-sing-on-note-bar-preview-container),
-      transparent 62%
+    color: oklch(
+      from var(--scheme-color-sing-on-note-bar-container) l c h / 0.38
     );
     @include text-outline(var(--scheme-color-sing-note-bar-preview-container));
   }
@@ -444,16 +493,14 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
 
   // ピッチ編集モード
   &.below-pitch {
-    // FIXME: color-mixは使わない
-    color: var(--scheme-color-on-surface-variant);
-    text-shadow: none;
+    color: oklch(from var(--scheme-color-on-surface-variant) l c h / 0.8);
     z-index: vars.$z-index-sing-note;
-    transform: none;
+    text-shadow: none;
 
     &.invalid-phrase,
     &.overlapping {
       color: oklch(
-        from var(--scheme-color-error) l calc(var(--secondary-c) / 2) h / 0.5
+        from var(--scheme-color-error) l calc(var(--secondary-c) / 2) h / 0.38
       );
       text-shadow: none;
     }

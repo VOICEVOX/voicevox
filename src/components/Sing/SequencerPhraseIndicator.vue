@@ -64,36 +64,6 @@ const className = computed(() => {
   border: 1px solid --scheme-color-primary-fixed-dim;
   background-color: var(--scheme-color-background);
   background-size: 28px 28px;
-  background-image: linear-gradient(
-    -45deg,
-    var(--scheme-color-primary-fixed-dim) 25%,
-    color-mix(
-        in oklch,
-        var(--scheme-color-primary-fixed-dim) 36%,
-        var(--scheme-color-background)
-      )
-      25%,
-    color-mix(
-        in oklch,
-        var(--scheme-color-primary-fixed-dim) 36%,
-        var(--scheme-color-background)
-      )
-      50%,
-    var(--scheme-color-primary-fixed-dim) 50%,
-    var(--scheme-color-primary-fixed-dim) 75%,
-    color-mix(
-        in oklch,
-        var(--scheme-color-primary-fixed-dim) 36%,
-        var(--scheme-color-background)
-      )
-      75%,
-    color-mix(
-        in oklch,
-        var(--scheme-color-primary-fixed-dim) 36%,
-        var(--scheme-color-background)
-      )
-      100%
-  );
   background-color: colors.$background;
   background-size: 28px 28px;
   &.is-in-selected-track {

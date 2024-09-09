@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed, watchEffect, Ref } from "vue";
+import { ref, watch, computed, Ref } from "vue";
 import * as PIXI from "pixi.js";
 import AsyncLock from "async-lock";
 import { useStore } from "@/store";
@@ -92,8 +92,8 @@ const originalPitchLine: PitchLine = {
   pitchDataMap: new Map(),
   lineStripMap: new Map(),
 };
-const pitchEditLineColorLight = new Color(69, 131, 83, 255);
-const pitchEditLineColorDark = new Color(124, 187, 136, 255);
+const pitchEditLineColorLight = new Color(0, 141, 43, 255);
+const pitchEditLineColorDark = new Color(95, 188, 117, 255);
 const pitchEditLineColor = ref(
   isDark.value ? pitchEditLineColorDark : pitchEditLineColorLight,
 );
@@ -425,27 +425,21 @@ watch(
 );
 
 // ピッチラインカラーをテーマに合わせて変更
-watchEffect(() => {
-  const newOriginalPitchLineColor = isDark.value
-    ? originalPitchLineColorDark
-    : originalPitchLineColorLight;
-  if (!originalPitchLineColor.value.equals(newOriginalPitchLineColor)) {
+watch(
+  [isDark],
+  () => {
+    const newOriginalPitchLineColor = isDark.value
+      ? originalPitchLineColorDark
+      : originalPitchLineColorLight;
+    const newPitchEditLineColor = isDark.value
+      ? pitchEditLineColorDark
+      : pitchEditLineColorLight;
     originalPitchLineColor.value = newOriginalPitchLineColor;
-    if (renderer && stage) {
-      render();
-    }
-  }
-
-  const newPitchEditLineColor = isDark.value
-    ? pitchEditLineColorDark
-    : pitchEditLineColorLight;
-  if (!pitchEditLineColor.value.equals(newPitchEditLineColor)) {
     pitchEditLineColor.value = newPitchEditLineColor;
-    if (renderer && stage) {
-      render();
-    }
-  }
-});
+    renderInNextFrame = true;
+  },
+  { immediate: true },
+);
 
 watch(
   () => [

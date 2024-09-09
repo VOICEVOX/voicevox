@@ -26,13 +26,6 @@
         />
         <line
           :x1="whiteKeyRects[index].x"
-          :y1="whiteKeyRects[index].y - offset"
-          :x2="whiteKeyRects[index].x"
-          :y2="whiteKeyRects[index].y + whiteKeyRects[index].height - offset"
-          class="key-border"
-        />
-        <line
-          :x1="whiteKeyRects[index].x"
           :y1="whiteKeyRects[index].y + whiteKeyRects[index].height - offset"
           :x2="whiteKeyRects[index].x + whiteKeyRects[index].width"
           :y2="whiteKeyRects[index].y + whiteKeyRects[index].height - offset"
