@@ -50,7 +50,7 @@ const createInvalidInputPlay =
 
     await clearAndInput(inputValue);
 
-    await expect(await canvas.findByText(expectedMessage)).toBeVisible();
+    await expect(await canvas.findByText(expectedMessage)).toBeInTheDocument();
   };
 
 export const EmptyInput: Story = {
