@@ -35,16 +35,21 @@ export const Opened: Story = {
   },
 };
 
+const clearAndInput = async (inputValue: string) => {
+  const canvas = within(document.body); // ダイアログなので例外的にdocument.bodyを使う
+  const input = canvas.getByLabelText<HTMLInputElement>("ファイル名パターン");
+  await userEvent.clear(input);
+  if (inputValue) {
+    await userEvent.type(input, inputValue);
+  }
+};
+
 const createInvalidInputPlay =
-  (inputValue: string, expectedMessage: RegExp | string) => async () => {
+  (inputValue: string, expectedMessage: string | RegExp) => async () => {
     const canvas = within(document.body); // ダイアログなので例外的にdocument.bodyを使う
 
-    const input = canvas.getByLabelText<HTMLInputElement>("ファイル名パターン");
+    await clearAndInput(inputValue);
 
-    await userEvent.clear(input);
-    if (inputValue) {
-      await userEvent.type(input, inputValue);
-    }
     await expect(canvas.findByText(expectedMessage)).toBeVisible();
   };
 
@@ -93,9 +98,7 @@ export const Save: Story = {
   play: async ({ args }) => {
     const canvas = within(document.body); // ダイアログなので例外的にdocument.bodyを使う
 
-    const input = canvas.getByLabelText<HTMLInputElement>("ファイル名パターン");
-    await userEvent.clear(input);
-    await userEvent.type(input, "$連番$");
+    await clearAndInput("$連番$");
 
     const button = canvas.getByRole("button", { name: "確定" });
     await userEvent.click(button);
@@ -112,9 +115,7 @@ export const Unsaveable: Story = {
   play: async () => {
     const canvas = within(document.body); // ダイアログなので例外的にdocument.bodyを使う
 
-    const input = canvas.getByLabelText<HTMLInputElement>("ファイル名パターン");
-    await userEvent.clear(input);
-    await userEvent.type(input, "無効な入力");
+    await clearAndInput("無効な入力");
 
     const button = canvas.getByRole("button", { name: "確定" });
     await expect(button).toBeDisabled();
