@@ -6,9 +6,28 @@
       :height
       shape-rendering="crispEdges"
     >
+      <!-- 白鍵の背景 -->
+      <rect
+        x="0"
+        :y="-offset"
+        :width
+        :height="height + offset"
+        class="white-key-background"
+      />
+      <!-- 白鍵と白鍵の間の線 -->
+      <line
+        v-for="(_, index) in whiteKeyInfos"
+        :key="`white-key-border-${index}`"
+        :x1="0"
+        :y1="whiteKeyRects[index].y - offset"
+        :x2="width"
+        :y2="whiteKeyRects[index].y - offset"
+        class="key-border"
+      />
+      <!-- 白鍵 -->
       <g
         v-for="(whiteKeyInfo, index) in whiteKeyInfos"
-        :key="index"
+        :key="`white-key-${index}`"
         @mousedown="onMouseDown(whiteKeyInfo.noteNumber)"
         @mouseenter="onMouseEnter(whiteKeyInfo.noteNumber)"
       >
@@ -24,13 +43,7 @@
               : 'white-key'
           "
         />
-        <line
-          :x1="whiteKeyRects[index].x"
-          :y1="whiteKeyRects[index].y + whiteKeyRects[index].height - offset"
-          :x2="whiteKeyRects[index].x + whiteKeyRects[index].width"
-          :y2="whiteKeyRects[index].y + whiteKeyRects[index].height - offset"
-          class="key-border"
-        />
+        <!-- ピッチ(Cのみ) -->
         <text
           v-if="whiteKeyInfo.pitch === 'C'"
           font-size="10"
@@ -41,9 +54,11 @@
           {{ whiteKeyInfo.name }}
         </text>
       </g>
+
+      <!-- 黒鍵 -->
       <rect
         v-for="(blackKeyInfo, index) in blackKeyInfos"
-        :key="index"
+        :key="`black-key-${index}`"
         :x="blackKeyRects[index].x - 2"
         :y="blackKeyRects[index].y - offset"
         :width="blackKeyRects[index].width + 2"
@@ -58,6 +73,14 @@
         "
         @mousedown="onMouseDown(blackKeyInfo.noteNumber)"
         @mouseenter="onMouseEnter(blackKeyInfo.noteNumber)"
+      />
+      <!-- 右端の罫線 -->
+      <line
+        :x1="width - 0.5"
+        :y1="-offset"
+        :x2="width - 0.5"
+        :y2="height"
+        class="key-border"
       />
     </svg>
   </div>
@@ -109,7 +132,9 @@ const whiteKeyRects = computed(() => {
       y: Math.round(value * zoomY.value),
       width: width.value,
       height:
-        Math.round(nextValue * zoomY.value) - Math.round(value * zoomY.value),
+        Math.round(nextValue * zoomY.value) -
+        Math.round(value * zoomY.value) +
+        1,
     };
   });
 });
@@ -183,16 +208,19 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-@use "@/styles/variables" as vars;
-@use "@/styles/colors" as colors;
 .sequencer-keys {
   backface-visibility: hidden;
   background: var(--scheme-color-background);
   overflow: hidden;
+  position: relative;
+}
+
+.white-key-background {
+  fill: var(--scheme-color-sing-piano-key-white);
 }
 
 .white-key {
-  fill: var(--scheme-color-sing-piano-key-white);
+  fill: transparent;
 }
 
 .white-key-being-pressed {

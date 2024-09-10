@@ -26,7 +26,7 @@
           />
         </pattern>
       </defs>
-      <rect :width :height fill="url(#sequencer-ruler-measure)" />
+      <rect x="0.5" y="0" :width :height fill="url(#sequencer-ruler-measure)" />
       <!-- 小節線 -->
       <line
         v-for="measureInfo in measureInfos"
@@ -42,7 +42,7 @@
         v-for="measureInfo in measureInfos"
         :key="measureInfo.number"
         font-size="12"
-        :x="measureInfo.x - offset + 4"
+        :x="measureInfo.x - offset + 4.5"
         y="34"
         class="sequencer-ruler-measure-number"
       >
