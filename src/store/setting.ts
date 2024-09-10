@@ -26,6 +26,7 @@ export const settingStoreState: SettingStoreState = {
     exportText: false,
     outputStereo: false,
     audioOutputDevice: "default",
+    songTrackFileNamePattern: "",
   },
   hotkeySettings: [],
   toolbarSetting: [],
