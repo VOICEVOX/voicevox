@@ -270,7 +270,7 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     height: 100%;
     background-color: var(--scheme-color-sing-note-bar-container);
     border: 1px solid var(--scheme-color-sing-note-bar-border);
-    border-radius: 4px;
+    border-radius: 5px;
   }
 
   .note-left-edge,
@@ -285,12 +285,12 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
 
   .note-left-edge {
     left: -2px;
-    border-radius: 4px 0 0 4px;
+    border-radius: 5px 0 0 5px;
   }
 
   .note-right-edge {
     right: -2px;
-    border-radius: 0 4px 4px 0;
+    border-radius: 0 5px 5px 0;
   }
 
   // リサイズ中
@@ -384,17 +384,18 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
   &.below-pitch {
     .note-bar {
       background-color: var(--scheme-color-sing-note-bar-below-pitch-container);
-      border: 0;
+      border-color: var(--scheme-color-sing-grid-cell-white);
       outline: 0;
+      border-radius: 6px;
 
       // ピッチセンターライン(非表示)
       &:after {
         content: "";
-        border-radius: 1px;
+        border-radius: 2px;
         display: none;
         position: absolute;
         left: 0;
-        min-height: 4px;
+        min-height: 6px;
         max-height: 20%;
         top: 50%;
         transform: translateY(-50%);
@@ -494,8 +495,8 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
   // ピッチ編集モード
   &.below-pitch {
     color: oklch(from var(--scheme-color-on-surface-variant) l c h / 0.8);
-    z-index: vars.$z-index-sing-note;
-    text-shadow: none;
+    z-index: vars.$z-index-sing-note-lyric;
+    @include text-outline(var(--scheme-color-surface-variant));
 
     &.invalid-phrase,
     &.overlapping {

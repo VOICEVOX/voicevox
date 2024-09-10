@@ -226,7 +226,7 @@ const snapLinePositions = computed(() => {
   }
 
   .sequencer-grid-horizontal-line {
-    stroke: transparent;
+    stroke: var(--scheme-color-sing-grid-horizontal-line);
   }
 
   .sequencer-grid-measure-line {
@@ -239,22 +239,6 @@ const snapLinePositions = computed(() => {
 
   .sequencer-grid-beat-line {
     stroke: transparent;
-  }
-}
-
-:root[is-dark-theme="false"] .edit-pitch {
-  .sequencer-grid-cell-black {
-    fill: oklch(from var(--scheme-color-sing-grid-cell-black) var(--lr-98) c h);
-  }
-}
-
-:root[is-dark-theme="true"] .edit-pitch {
-  .sequencer-grid-cell-black {
-    fill: oklch(from var(--scheme-color-sing-grid-cell-black) var(--lr-12) c h);
-  }
-
-  .sequencer-grid-cell-white {
-    fill: oklch(from var(--scheme-color-sing-grid-cell-white) var(--lr-15) c h);
   }
 }
 </style>
