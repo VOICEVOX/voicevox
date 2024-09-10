@@ -35,7 +35,7 @@ export const Opened: Story = {
   },
 };
 
-/** ファイル名パターンをクリアして入力する */
+/** ファイル名パターンをクリアし、文字列を入力する */
 const clearAndInput = async (inputValue: string) => {
   const canvas = within(document.body); // ダイアログなので例外的にdocument.bodyを使う
   const input = canvas.getByLabelText<HTMLInputElement>("ファイル名パターン");
@@ -45,7 +45,7 @@ const clearAndInput = async (inputValue: string) => {
   }
 };
 
-/** 無効な入力を行い、エラーメッセージが表示されることを確認する */
+/** 無効な文字列を入力し、エラーメッセージが表示されることを確認する */
 const createInvalidInputPlay =
   (inputValue: string, expectedMessage: string | RegExp) => async () => {
     const canvas = within(document.body); // ダイアログなので例外的にdocument.bodyを使う
