@@ -388,7 +388,7 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
       outline: 0;
       border-radius: 6px;
 
-      // ピッチセンターライン(非表示)
+      // NOTE: ピッチの基準ライン(現状非表示)
       &:after {
         content: "";
         border-radius: 2px;

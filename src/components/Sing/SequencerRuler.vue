@@ -36,13 +36,14 @@
         y1="20"
         :y2="height"
         class="sequencer-ruler-measure-line"
+        :class="{ 'first-measure-line': measureInfo.number === 1 }"
       />
       <!-- 小節番号 -->
       <text
         v-for="measureInfo in measureInfos"
         :key="measureInfo.number"
         font-size="12"
-        :x="measureInfo.x - offset + 4.5"
+        :x="measureInfo.x - offset + 4"
         y="34"
         class="sequencer-ruler-measure-number"
       >
@@ -225,6 +226,11 @@ onUnmounted(() => {
   backface-visibility: hidden;
   stroke: var(--scheme-color-sing-ruler-measure-line);
   stroke-width: 1px;
+
+  // NOTE: 最初の小節線を非表示: 必要に応じて再表示+位置合わせする
+  &.first-measure-line {
+    stroke: var(--scheme-color-sing-ruler-surface);
+  }
 }
 
 .sequencer-ruler-beat-line {
