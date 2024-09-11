@@ -245,7 +245,7 @@ const contextMenudata = ref<[MenuItemButton]>([
     type: "button",
     label: "削除",
     onClick: () => {
-      void store.dispatch("COMMAND_DELETE_ACCENT_PHRASE", {
+      void store.actions.COMMAND_DELETE_ACCENT_PHRASE({
         audioKey: props.audioKey,
         accentPhraseIndex: props.index,
       });
@@ -278,7 +278,7 @@ const handleChangePronounce = (newPronunciation: string) => {
       popUntilPause = true;
     }
   }
-  void store.dispatch("COMMAND_CHANGE_SINGLE_ACCENT_PHRASE", {
+  void store.actions.COMMAND_CHANGE_SINGLE_ACCENT_PHRASE({
     audioKey: props.audioKey,
     newPronunciation,
     accentPhraseIndex: props.index,
@@ -345,13 +345,13 @@ const getHoveredText = (mora: Mora, moraIndex: number) => {
 };
 
 const changeAccent = (accentPhraseIndex: number, accent: number) =>
-  store.dispatch("COMMAND_CHANGE_ACCENT", {
+  store.actions.COMMAND_CHANGE_ACCENT({
     audioKey: props.audioKey,
     accentPhraseIndex,
     accent,
   });
 const toggleAccentPhraseSplit = (isPause: boolean, moraIndex?: number) => {
-  void store.dispatch("COMMAND_CHANGE_ACCENT_PHRASE_SPLIT", {
+  void store.actions.COMMAND_CHANGE_ACCENT_PHRASE_SPLIT({
     audioKey: props.audioKey,
     accentPhraseIndex: props.index,
     ...(!isPause ? { isPause, moraIndex: moraIndex as number } : { isPause }),
@@ -376,7 +376,7 @@ const changeMoraData = (
     if (type == "pitch") {
       lastPitches.value[moraIndex] = data;
     }
-    return store.dispatch("COMMAND_SET_AUDIO_MORA_DATA", {
+    return store.actions.COMMAND_SET_AUDIO_MORA_DATA({
       audioKey: props.audioKey,
       accentPhraseIndex,
       moraIndex,
@@ -384,7 +384,7 @@ const changeMoraData = (
       type,
     });
   } else {
-    return store.dispatch("COMMAND_SET_AUDIO_MORA_DATA_ACCENT_PHRASE", {
+    return store.actions.COMMAND_SET_AUDIO_MORA_DATA_ACCENT_PHRASE({
       audioKey: props.audioKey,
       accentPhraseIndex,
       moraIndex,
