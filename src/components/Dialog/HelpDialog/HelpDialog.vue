@@ -9,7 +9,7 @@
     <QLayout container view="hHh Lpr lff">
       <QPageContainer>
         <QHeader class="q-pa-sm">
-          <QToolbar v-if="selectedPage">
+          <QToolbar>
             <QToolbarTitle class="text-display">
               ヘルプ /
               {{ selectedPage.parent ? selectedPage.parent + " / " : ""
@@ -284,7 +284,7 @@ const selectedPage = computed(() => {
   if (pagedata.value[selectedPageIndex.value].type == "item") {
     return pagedata.value[selectedPageIndex.value] as PageItem;
   } else {
-    return undefined;
+    throw new Error("selectedPageにはPageItem型の値を指定してください。");
   }
 });
 
