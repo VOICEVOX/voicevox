@@ -70,8 +70,4 @@ const width = computed(() => {
     background-color: var(--scheme-color-sing-shadow-note);
   }
 }
-
-.edit-pitch .note .shadow-line {
-  opacity: 0;
-}
 </style>

@@ -81,7 +81,7 @@ const singingGuidesInSelectedTrack = computed(() => {
 
 // NOTE: ピッチラインの色をテーマに応じて調節する
 // 動的カラースキーマに対応後、テーマに応じた色をオブジェクトから取得できるようにする
-const originalPitchLineColorLight = new Color(160, 162, 160, 255);
+const originalPitchLineColorLight = new Color(156, 158, 156, 255);
 const originalPitchLineColorDark = new Color(114, 116, 114, 255);
 const originalPitchLineColor = ref(
   isDark.value ? originalPitchLineColorDark : originalPitchLineColorLight,
@@ -93,7 +93,7 @@ const originalPitchLine: PitchLine = {
   lineStripMap: new Map(),
 };
 const pitchEditLineColorLight = new Color(0, 167, 63, 255);
-const pitchEditLineColorDark = new Color(20, 197, 91, 255);
+const pitchEditLineColorDark = new Color(95, 188, 117, 255);
 const pitchEditLineColor = ref(
   isDark.value ? pitchEditLineColorDark : pitchEditLineColorLight,
 );

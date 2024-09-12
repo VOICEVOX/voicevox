@@ -82,7 +82,8 @@
       'below-pitch': editTargetIsPitch,
     }"
     :style="{
-      fontSize: `${height > 16 ? 16 : height - 2}px`,
+      fontSize: `${lyricFontSize}px`,
+      left: `${lyricLeftPosition}px`,
       lineHeight: `${height}px`,
       transform: `translate3d(${positionX}px,${positionY + height}px,0)`,
     }"
@@ -150,6 +151,26 @@ const width = computed(() => {
   const noteStartBaseX = tickToBaseX(noteStartTicks, tpqn.value);
   const noteEndBaseX = tickToBaseX(noteEndTicks, tpqn.value);
   return (noteEndBaseX - noteStartBaseX) * zoomX.value;
+});
+// 歌詞のフォントサイズをズームにあわせて調整する
+// 最小12px, 最大16px, ノートの高さは越えない
+const lyricFontSize = computed(() => {
+  const minSize = 12;
+  const maxSize = 16;
+  // ノートの高さを見た目で越えない範囲で最大値を設定
+  const baseSize = Math.min(height.value - 6, maxSize);
+  // ズームによる拡大率を調整(計算値に特に根拠はない/見た目あわせ)
+  const zoomFactor = Math.max(0.5, Math.min(1.5, zoomX.value * 1.5));
+  return Math.max(minSize, Math.min(maxSize, baseSize * zoomFactor));
+});
+// ノート左端の幅をズームにあわせて調整する
+// 最小0px, 最大2px
+const lyricLeftPosition = computed(() => {
+  const minLeft = 0;
+  const maxLeft = 2;
+  // ズームによる拡大率を調整(計算値に特に根拠はない/見た目あわせ)
+  const paddingFactor = Math.min(1, zoomX.value / 0.5);
+  return minLeft + (maxLeft - minLeft) * paddingFactor;
 });
 const editTargetIsNote = computed(() => {
   return state.sequencerEditTarget === "NOTE";
@@ -434,7 +455,6 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
 .note-lyric {
   backface-visibility: hidden;
   position: absolute;
-  left: 1px;
   bottom: 0;
   color: var(--scheme-color-sing-on-note-bar-container);
   font-size: 1rem;
