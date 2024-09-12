@@ -160,7 +160,7 @@ const lyricFontSize = computed(() => {
   // ノートの高さを見た目で越えない範囲で最大値を設定
   const baseSize = Math.min(height.value - 6, maxSize);
   // ズームによる拡大率を調整(計算値に特に根拠はない/見た目あわせ)
-  const zoomFactor = Math.max(0.5, Math.min(1.5, zoomX.value * 1.5));
+  const zoomFactor = Math.max(0.5, Math.min(1.5, zoomX.value / 0.5));
   return Math.max(minSize, Math.min(maxSize, baseSize * zoomFactor));
 });
 // ノート左端の幅をズームにあわせて調整する
