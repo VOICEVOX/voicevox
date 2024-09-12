@@ -692,10 +692,9 @@ onUnmounted(() => {
 
 .sing-beats-separator {
   font-weight: 400;
-  color: var(--scheme-color-on-surface-variant);
+  color: var(--scheme-color-outline);
   pointer-events: none;
   transform: translateY(6px);
-  opacity: 0.56;
 }
 
 .sing-transport-button {
@@ -760,10 +759,9 @@ onUnmounted(() => {
 
 .sing-volume-icon {
   margin-right: 8px;
-  opacity: 0.6;
 
   :deep {
-    color: var(--scheme-color-on-surface-variant);
+    color: var(--scheme-color-outline);
   }
 }
 
