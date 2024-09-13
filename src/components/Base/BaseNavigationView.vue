@@ -30,6 +30,7 @@ import BaseScrollArea from "./BaseScrollArea.vue";
   grid-template-rows: 100%;
   backdrop-filter: blur(32px);
   background-color: colors.$background-drawer;
+  color: colors.$display;
 }
 
 .sidebar-inner {

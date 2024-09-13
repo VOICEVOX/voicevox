@@ -61,11 +61,7 @@ const props = defineProps<{
 @use "@/styles/v2/colors" as colors;
 
 .container {
-  // TODO: 親コンポーネントからheightを取得できないため一時的にcalcを使用、HelpDialogの構造を再設計後100%に変更する
-  // height: 100%;
-  height: calc(100vh - 90px);
-  background-color: colors.$background;
-  border-left: 1px solid colors.$border;
+  height: 100%;
 }
 
 .inner {
