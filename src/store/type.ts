@@ -306,7 +306,7 @@ export type AudioStoreTypes = {
       engineId: EngineId;
       baseStyleId: StyleId;
       morphableTargets?: Exclude<
-        { [key: number]: MorphableTargetInfo },
+        Record<number, MorphableTargetInfo>,
         undefined
       >;
     };
@@ -738,87 +738,80 @@ export type Singer = z.infer<typeof singerSchema>;
 export type Track = z.infer<typeof trackSchema>;
 
 export type PhraseState =
+  | "SINGER_IS_NOT_SET"
   | "WAITING_TO_BE_RENDERED"
   | "NOW_RENDERING"
   | "COULD_NOT_RENDER"
   | "PLAYABLE";
 
 /**
- * 歌い方
+ * エディタ用のFrameAudioQuery
  */
-export type SingingGuide = {
-  query: FrameAudioQuery;
-  frameRate: number;
-  startTime: number;
-};
+export type EditorFrameAudioQuery = FrameAudioQuery & { frameRate: number };
 
 /**
- * 歌い方のソース（歌い方を生成するために必要なデータ）
+ * 歌唱ボリューム
  */
-export type SingingGuideSource = {
-  engineId: EngineId;
-  tpqn: number;
-  tempos: Tempo[];
-  firstRestDuration: number;
-  lastRestDurationSeconds: number;
-  notes: Note[];
-  keyRangeAdjustment: number;
-  volumeRangeAdjustment: number;
-  frameRate: number;
-};
+export type SingingVolume = number[];
 
 /**
  * 歌声
  */
-export type SingingVoice = {
-  blob: Blob;
-};
+export type SingingVoice = Blob;
 
-/**
- * 歌声のソース（歌声を合成するために必要なデータ）
- */
-export type SingingVoiceSource = {
-  singer: Singer;
-  frameAudioQuery: FrameAudioQuery;
-};
-
-export const singingGuideSourceHashSchema = z
+const editorFrameAudioQueryKeySchema = z
   .string()
-  .brand<"SingingGuideSourceHash">();
-export type SingingGuideSourceHash = z.infer<
-  typeof singingGuideSourceHashSchema
+  .brand<"EditorFrameAudioQueryKey">();
+export type EditorFrameAudioQueryKey = z.infer<
+  typeof editorFrameAudioQueryKeySchema
 >;
+export const EditorFrameAudioQueryKey = (
+  id: string,
+): EditorFrameAudioQueryKey => editorFrameAudioQueryKeySchema.parse(id);
 
-export const singingVoiceSourceHashSchema = z
-  .string()
-  .brand<"SingingVoiceSourceHash">();
-export type SingingVoiceSourceHash = z.infer<
-  typeof singingVoiceSourceHashSchema
->;
+const singingVolumeKeySchema = z.string().brand<"SingingVolumeKey">();
+export type SingingVolumeKey = z.infer<typeof singingVolumeKeySchema>;
+export const SingingVolumeKey = (id: string): SingingVolumeKey =>
+  singingVolumeKeySchema.parse(id);
+
+const singingVoiceKeySchema = z.string().brand<"SingingVoiceKey">();
+export type SingingVoiceKey = z.infer<typeof singingVoiceKeySchema>;
+export const SingingVoiceKey = (id: string): SingingVoiceKey =>
+  singingVoiceKeySchema.parse(id);
+
+const sequenceIdSchema = z.string().brand<"SequenceId">();
+export type SequenceId = z.infer<typeof sequenceIdSchema>;
+export const SequenceId = (id: string): SequenceId =>
+  sequenceIdSchema.parse(id);
 
 /**
  * フレーズ（レンダリング区間）
  */
 export type Phrase = {
   firstRestDuration: number;
-  trackId: TrackId;
   notes: Note[];
+  startTime: number;
   state: PhraseState;
-  singingGuideKey?: SingingGuideSourceHash;
-  singingVoiceKey?: SingingVoiceSourceHash;
+  queryKey?: EditorFrameAudioQueryKey;
+  singingVolumeKey?: SingingVolumeKey;
+  singingVoiceKey?: SingingVoiceKey;
+  sequenceId?: SequenceId;
+  trackId: TrackId; // NOTE: state.tracksと同期していないので使用する際は注意
 };
 
 /**
- * フレーズのソース
+ * フレーズの生成に必要なデータ
  */
 export type PhraseSource = {
   firstRestDuration: number;
-  trackId: TrackId;
   notes: Note[];
+  startTime: number;
+  trackId: TrackId;
 };
 
-export const phraseSourceHashSchema = z.string().brand<"PhraseSourceHash">();
-export type PhraseSourceHash = z.infer<typeof phraseSourceHashSchema>;
+const phraseKeySchema = z.string().brand<"PhraseKey">();
+export type PhraseKey = z.infer<typeof phraseKeySchema>;
+export const PhraseKey = (id: string): PhraseKey => phraseKeySchema.parse(id);
 
 export type SequencerEditTarget = "NOTE" | "PITCH";
 
@@ -829,11 +822,10 @@ export type SingingStoreState = {
   tracks: Map<TrackId, Track>;
   trackOrder: TrackId[];
   _selectedTrackId: TrackId;
-  editFrameRate: number;
-  phrases: Map<PhraseSourceHash, Phrase>;
-  singingGuides: Map<SingingGuideSourceHash, SingingGuide>;
-  // NOTE: UIの状態などは分割・統合した方がよさそうだが、ボイス側と混在させないためいったん局所化する
-  isShowSinger: boolean;
+  editorFrameRate: number;
+  phrases: Map<PhraseKey, Phrase>;
+  phraseQueries: Map<EditorFrameAudioQueryKey, EditorFrameAudioQuery>;
+  phraseSingingVolumes: Map<SingingVolumeKey, SingingVolume>;
   sequencerZoomX: number;
   sequencerZoomY: number;
   sequencerSnapType: number;
@@ -851,11 +843,6 @@ export type SingingStoreState = {
 };
 
 export type SingingStoreTypes = {
-  SET_SHOW_SINGER: {
-    mutation: { isShowSinger: boolean };
-    action(payload: { isShowSinger: boolean }): void;
-  };
-
   SELECTED_TRACK_ID: {
     getter: TrackId;
   };
@@ -981,39 +968,64 @@ export type SingingStoreTypes = {
   };
 
   SET_PHRASES: {
-    mutation: { phrases: Map<PhraseSourceHash, Phrase> };
+    mutation: { phrases: Map<PhraseKey, Phrase> };
   };
 
   SET_STATE_TO_PHRASE: {
     mutation: {
-      phraseKey: PhraseSourceHash;
+      phraseKey: PhraseKey;
       phraseState: PhraseState;
     };
   };
 
-  SET_SINGING_GUIDE_KEY_TO_PHRASE: {
+  SET_QUERY_KEY_TO_PHRASE: {
     mutation: {
-      phraseKey: PhraseSourceHash;
-      singingGuideKey: SingingGuideSourceHash | undefined;
+      phraseKey: PhraseKey;
+      queryKey: EditorFrameAudioQueryKey | undefined;
+    };
+  };
+
+  SET_SINGING_VOLUME_KEY_TO_PHRASE: {
+    mutation: {
+      phraseKey: PhraseKey;
+      singingVolumeKey: SingingVolumeKey | undefined;
     };
   };
 
   SET_SINGING_VOICE_KEY_TO_PHRASE: {
     mutation: {
-      phraseKey: PhraseSourceHash;
-      singingVoiceKey: SingingVoiceSourceHash | undefined;
+      phraseKey: PhraseKey;
+      singingVoiceKey: SingingVoiceKey | undefined;
     };
   };
 
-  SET_SINGING_GUIDE: {
+  SET_SEQUENCE_ID_TO_PHRASE: {
     mutation: {
-      singingGuideKey: SingingGuideSourceHash;
-      singingGuide: SingingGuide;
+      phraseKey: PhraseKey;
+      sequenceId: SequenceId | undefined;
     };
   };
 
-  DELETE_SINGING_GUIDE: {
-    mutation: { singingGuideKey: SingingGuideSourceHash };
+  SET_PHRASE_QUERY: {
+    mutation: {
+      queryKey: EditorFrameAudioQueryKey;
+      query: EditorFrameAudioQuery;
+    };
+  };
+
+  DELETE_PHRASE_QUERY: {
+    mutation: { queryKey: EditorFrameAudioQueryKey };
+  };
+
+  SET_PHRASE_SINGING_VOLUME: {
+    mutation: {
+      singingVolumeKey: SingingVolumeKey;
+      singingVolume: SingingVolume;
+    };
+  };
+
+  DELETE_PHRASE_SINGING_VOLUME: {
+    mutation: { singingVolumeKey: SingingVolumeKey };
   };
 
   SELECTED_TRACK: {
@@ -1053,6 +1065,10 @@ export type SingingStoreTypes = {
     action(payload: { filePath?: string }): SaveResultObject;
   };
 
+  EXPORT_STEM_WAVE_FILE: {
+    action(payload: { dirPath?: string }): SaveResultObject;
+  };
+
   CANCEL_AUDIO_EXPORT: {
     action(): void;
   };
@@ -1060,7 +1076,7 @@ export type SingingStoreTypes = {
   FETCH_SING_FRAME_VOLUME: {
     action(palyoad: {
       notes: NoteForRequestToEngine[];
-      frameAudioQuery: FrameAudioQuery;
+      query: EditorFrameAudioQuery;
       engineId: EngineId;
       styleId: StyleId;
     }): Promise<number[]>;
@@ -1243,6 +1259,10 @@ export type SingingStoreTypes = {
 
   CALC_RENDER_DURATION: {
     getter: number;
+  };
+
+  SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS: {
+    action(): void;
   };
 };
 

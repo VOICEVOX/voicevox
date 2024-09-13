@@ -360,7 +360,7 @@ const phraseInfosInOtherTracks = computed(() => {
 
 const ctrlKey = useCommandOrControlKey();
 const editTarget = computed(() => state.sequencerEditTarget);
-const editFrameRate = computed(() => state.editFrameRate);
+const editorFrameRate = computed(() => state.editorFrameRate);
 const scrollBarWidth = ref(12);
 const sequencerBody = ref<HTMLElement | null>(null);
 
@@ -378,7 +378,7 @@ const onLyricInput = (text: string, note: Note) => {
 
 const onLyricConfirmed = (nextNoteId: NoteId | undefined) => {
   commitPreviewLyrics();
-  store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId: nextNoteId });
+  void store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId: nextNoteId });
 };
 
 // プレビュー
@@ -601,7 +601,7 @@ const previewDrawPitch = () => {
   if (previewPitchEdit.value.type !== "draw") {
     throw new Error("previewPitchEdit.value.type is not draw.");
   }
-  const frameRate = editFrameRate.value;
+  const frameRate = editorFrameRate.value;
   const cursorBaseX = (scrollX.value + cursorX.value) / zoomX.value;
   const cursorBaseY = (scrollY.value + cursorY.value) / zoomY.value;
   const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
@@ -675,7 +675,7 @@ const previewErasePitch = () => {
   if (previewPitchEdit.value.type !== "erase") {
     throw new Error("previewPitchEdit.value.type is not erase.");
   }
-  const frameRate = editFrameRate.value;
+  const frameRate = editorFrameRate.value;
   const cursorBaseX = (scrollX.value + cursorX.value) / zoomX.value;
   const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
   const cursorSeconds = tickToSecond(cursorTicks, tempos.value, tpqn.value);
@@ -733,9 +733,9 @@ const getYInBorderBox = (clientY: number, element: HTMLElement) => {
 };
 
 const selectOnlyThis = (note: Note) => {
-  store.dispatch("DESELECT_ALL_NOTES");
-  store.dispatch("SELECT_NOTES", { noteIds: [note.id] });
-  store.dispatch("PLAY_PREVIEW_SOUND", {
+  void store.dispatch("DESELECT_ALL_NOTES");
+  void store.dispatch("SELECT_NOTES", { noteIds: [note.id] });
+  void store.dispatch("PLAY_PREVIEW_SOUND", {
     noteNumber: note.noteNumber,
     duration: PREVIEW_SOUND_DURATION,
   });
@@ -781,7 +781,7 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
         noteNumber: cursorNoteNumber,
         lyric: getDoremiFromNoteNumber(cursorNoteNumber),
       };
-      store.dispatch("DESELECT_ALL_NOTES");
+      void store.dispatch("DESELECT_ALL_NOTES");
       copiedNotes.push(note);
     } else {
       if (!note) {
@@ -804,9 +804,9 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
             noteIdsToSelect.push(noteId);
           }
         }
-        store.dispatch("SELECT_NOTES", { noteIds: noteIdsToSelect });
+        void store.dispatch("SELECT_NOTES", { noteIds: noteIdsToSelect });
       } else if (isOnCommandOrCtrlKeyDown(event)) {
-        store.dispatch("SELECT_NOTES", { noteIds: [note.id] });
+        void store.dispatch("SELECT_NOTES", { noteIds: [note.id] });
       } else if (!selectedNoteIds.value.has(note.id)) {
         selectOnlyThis(note);
       }
@@ -827,7 +827,7 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
   } else if (editTarget.value === "PITCH") {
     // 編集ターゲットがピッチのときの処理
 
-    const frameRate = editFrameRate.value;
+    const frameRate = editorFrameRate.value;
     const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
     const cursorSeconds = tickToSecond(cursorTicks, tempos.value, tpqn.value);
     const cursorFrame = Math.round(cursorSeconds * frameRate);
@@ -867,21 +867,21 @@ const endPreview = () => {
 
     if (edited) {
       if (previewMode === "ADD_NOTE") {
-        store.dispatch("COMMAND_ADD_NOTES", {
+        void store.dispatch("COMMAND_ADD_NOTES", {
           notes: previewNotes.value,
           trackId: selectedTrackId.value,
         });
-        store.dispatch("SELECT_NOTES", {
+        void store.dispatch("SELECT_NOTES", {
           noteIds: previewNotes.value.map((value) => value.id),
         });
       } else {
-        store.dispatch("COMMAND_UPDATE_NOTES", {
+        void store.dispatch("COMMAND_UPDATE_NOTES", {
           notes: previewNotes.value,
           trackId: selectedTrackId.value,
         });
       }
       if (previewNotes.value.length === 1) {
-        store.dispatch("PLAY_PREVIEW_SOUND", {
+        void store.dispatch("PLAY_PREVIEW_SOUND", {
           noteNumber: previewNotes.value[0].noteNumber,
           duration: PREVIEW_SOUND_DURATION,
         });
@@ -904,14 +904,14 @@ const endPreview = () => {
         applyGaussianFilter(data, 0.7);
         data = data.map((value) => Math.exp(value));
 
-        store.dispatch("COMMAND_SET_PITCH_EDIT_DATA", {
+        void store.dispatch("COMMAND_SET_PITCH_EDIT_DATA", {
           pitchArray: data,
           startFrame: previewPitchEdit.value.startFrame,
           trackId: selectedTrackId.value,
         });
       }
     } else if (previewPitchEditType === "erase") {
-      store.dispatch("COMMAND_ERASE_PITCH_EDIT_DATA", {
+      void store.dispatch("COMMAND_ERASE_PITCH_EDIT_DATA", {
         startFrame: previewPitchEdit.value.startFrame,
         frameLength: previewPitchEdit.value.frameLength,
         trackId: selectedTrackId.value,
@@ -944,7 +944,7 @@ const onNoteBarDoubleClick = (event: MouseEvent, note: Note) => {
   }
   const mouseButton = getButton(event);
   if (mouseButton === "LEFT_BUTTON" && note.id !== state.editingLyricNoteId) {
-    store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId: note.id });
+    void store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId: note.id });
   }
 };
 
@@ -988,7 +988,7 @@ const onMouseDown = (event: MouseEvent) => {
         startPreview(event, "ADD_NOTE");
       }
     } else {
-      store.dispatch("DESELECT_ALL_NOTES");
+      void store.dispatch("DESELECT_ALL_NOTES");
     }
   } else if (editTarget.value === "PITCH") {
     if (mouseButton === "LEFT_BUTTON") {
@@ -1076,9 +1076,9 @@ const rectSelect = (additive: boolean) => {
     }
   }
   if (!additive) {
-    store.dispatch("DESELECT_ALL_NOTES");
+    void store.dispatch("DESELECT_ALL_NOTES");
   }
-  store.dispatch("SELECT_NOTES", { noteIds: noteIdsToSelect });
+  void store.dispatch("SELECT_NOTES", { noteIds: noteIdsToSelect });
 };
 
 const onMouseEnter = () => {
@@ -1099,13 +1099,13 @@ const handleNotesArrowUp = () => {
   if (editedNotes.some((note) => note.noteNumber > 127)) {
     return;
   }
-  store.dispatch("COMMAND_UPDATE_NOTES", {
+  void store.dispatch("COMMAND_UPDATE_NOTES", {
     notes: editedNotes,
     trackId: selectedTrackId.value,
   });
 
   if (editedNotes.length === 1) {
-    store.dispatch("PLAY_PREVIEW_SOUND", {
+    void store.dispatch("PLAY_PREVIEW_SOUND", {
       noteNumber: editedNotes[0].noteNumber,
       duration: PREVIEW_SOUND_DURATION,
     });
@@ -1121,13 +1121,13 @@ const handleNotesArrowDown = () => {
   if (editedNotes.some((note) => note.noteNumber < 0)) {
     return;
   }
-  store.dispatch("COMMAND_UPDATE_NOTES", {
+  void store.dispatch("COMMAND_UPDATE_NOTES", {
     notes: editedNotes,
     trackId: selectedTrackId.value,
   });
 
   if (editedNotes.length === 1) {
-    store.dispatch("PLAY_PREVIEW_SOUND", {
+    void store.dispatch("PLAY_PREVIEW_SOUND", {
       noteNumber: editedNotes[0].noteNumber,
       duration: PREVIEW_SOUND_DURATION,
     });
@@ -1144,7 +1144,7 @@ const handleNotesArrowRight = () => {
     // TODO: 例外処理は`UPDATE_NOTES`内に移す？
     return;
   }
-  store.dispatch("COMMAND_UPDATE_NOTES", {
+  void store.dispatch("COMMAND_UPDATE_NOTES", {
     notes: editedNotes,
     trackId: selectedTrackId.value,
   });
@@ -1162,7 +1162,7 @@ const handleNotesArrowLeft = () => {
   ) {
     return;
   }
-  store.dispatch("COMMAND_UPDATE_NOTES", {
+  void store.dispatch("COMMAND_UPDATE_NOTES", {
     notes: editedNotes,
     trackId: selectedTrackId.value,
   });
@@ -1173,7 +1173,7 @@ const handleNotesBackspaceOrDelete = () => {
     // TODO: 例外処理は`COMMAND_REMOVE_SELECTED_NOTES`内に移す？
     return;
   }
-  store.dispatch("COMMAND_REMOVE_SELECTED_NOTES");
+  void store.dispatch("COMMAND_REMOVE_SELECTED_NOTES");
 };
 
 const handleKeydown = (event: KeyboardEvent) => {
@@ -1201,7 +1201,7 @@ const handleKeydown = (event: KeyboardEvent) => {
       handleNotesBackspaceOrDelete();
       break;
     case "Escape":
-      store.dispatch("DESELECT_ALL_NOTES");
+      void store.dispatch("DESELECT_ALL_NOTES");
       break;
   }
 };
@@ -1222,7 +1222,7 @@ const setZoomX = (value: number | null) => {
   const scrollTop = sequencerBodyElement.scrollTop;
   const clientWidth = sequencerBodyElement.clientWidth;
 
-  store.dispatch("SET_ZOOM_X", { zoomX: newZoomX }).then(() => {
+  void store.dispatch("SET_ZOOM_X", { zoomX: newZoomX }).then(() => {
     const centerBaseX = (scrollLeft + clientWidth / 2) / oldZoomX;
     const newScrollLeft = centerBaseX * newZoomX - clientWidth / 2;
     sequencerBodyElement.scrollTo(newScrollLeft, scrollTop);
@@ -1245,7 +1245,7 @@ const setZoomY = (value: number | null) => {
   const scrollTop = sequencerBodyElement.scrollTop;
   const clientHeight = sequencerBodyElement.clientHeight;
 
-  store.dispatch("SET_ZOOM_Y", { zoomY: newZoomY }).then(() => {
+  void store.dispatch("SET_ZOOM_Y", { zoomY: newZoomY }).then(() => {
     const centerBaseY = (scrollTop + clientHeight / 2) / oldZoomY;
     const newScrollTop = centerBaseY * newZoomY - clientHeight / 2;
     sequencerBodyElement.scrollTo(scrollLeft, newScrollTop);
@@ -1272,7 +1272,7 @@ const onWheel = (event: WheelEvent) => {
     const scrollTop = sequencerBodyElement.scrollTop;
     guideLineX.value = 0; // 補助線がはみ出さないように位置を一旦0にする
 
-    store.dispatch("SET_ZOOM_X", { zoomX: newZoomX }).then(() => {
+    void store.dispatch("SET_ZOOM_X", { zoomX: newZoomX }).then(() => {
       const cursorBaseX = (scrollLeft + cursorX.value) / oldZoomX;
       const newScrollLeft = cursorBaseX * newZoomX - cursorX.value;
       sequencerBodyElement.scrollTo(newScrollLeft, scrollTop);
@@ -1356,14 +1356,14 @@ onActivated(() => {
     yToScroll = scrollY.value;
   }
   // 実際にスクロールする
-  nextTick(() => {
+  void nextTick(() => {
     sequencerBodyElement.scrollTo(xToScroll, yToScroll);
   });
 });
 
 // リスナー登録
 onActivated(() => {
-  store.dispatch("ADD_PLAYHEAD_POSITION_CHANGE_LISTENER", {
+  void store.dispatch("ADD_PLAYHEAD_POSITION_CHANGE_LISTENER", {
     listener: playheadPositionChangeListener,
   });
 
@@ -1372,7 +1372,7 @@ onActivated(() => {
 
 // リスナー解除
 onDeactivated(() => {
-  store.dispatch("REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER", {
+  void store.dispatch("REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER", {
     listener: playheadPositionChangeListener,
   });
 
@@ -1393,7 +1393,7 @@ registerHotkeyWithCleanup({
     if (selectedNoteIds.value.size === 0) {
       return;
     }
-    store.dispatch("COPY_NOTES_TO_CLIPBOARD");
+    void store.dispatch("COPY_NOTES_TO_CLIPBOARD");
   },
 });
 
@@ -1407,7 +1407,7 @@ registerHotkeyWithCleanup({
     if (selectedNoteIds.value.size === 0) {
       return;
     }
-    store.dispatch("COMMAND_CUT_NOTES_TO_CLIPBOARD");
+    void store.dispatch("COMMAND_CUT_NOTES_TO_CLIPBOARD");
   },
 });
 
@@ -1418,7 +1418,7 @@ registerHotkeyWithCleanup({
     if (nowPreviewing.value) {
       return;
     }
-    store.dispatch("COMMAND_PASTE_NOTES_FROM_CLIPBOARD");
+    void store.dispatch("COMMAND_PASTE_NOTES_FROM_CLIPBOARD");
   },
 });
 
@@ -1429,7 +1429,7 @@ registerHotkeyWithCleanup({
     if (nowPreviewing.value) {
       return;
     }
-    store.dispatch("SELECT_ALL_NOTES_IN_TRACK", {
+    void store.dispatch("SELECT_ALL_NOTES_IN_TRACK", {
       trackId: selectedTrackId.value,
     });
   },

@@ -8,6 +8,15 @@ export const useMenuBarData = () => {
   const isNotesSelected = computed(
     () => store.getters.SELECTED_NOTE_IDS.size > 0,
   );
+  const showSinger = computed({
+    get: () => store.state.showSinger,
+    set: (showSinger: boolean) => {
+      void store.dispatch("SET_ROOT_MISC_SETTING", {
+        key: "showSinger",
+        value: showSinger,
+      });
+    },
+  });
 
   const importExternalSongProject = async () => {
     if (uiLocked.value) return;
@@ -21,25 +30,42 @@ export const useMenuBarData = () => {
     await store.dispatch("EXPORT_WAVE_FILE", {});
   };
 
-  const fileSubMenuData = computed<MenuItemData[]>(() => [
-    {
-      type: "button",
-      label: "音声を出力",
-      onClick: () => {
-        exportWaveFile();
-      },
-      disableWhenUiLocked: true,
-    },
-    { type: "separator" },
-    {
-      type: "button",
-      label: "インポート",
-      onClick: () => {
-        importExternalSongProject();
-      },
-      disableWhenUiLocked: true,
-    },
-  ]);
+  const exportStemWaveFile = async () => {
+    if (uiLocked.value) return;
+    await store.dispatch("EXPORT_STEM_WAVE_FILE", {});
+  };
+
+  const fileSubMenuData = computed<MenuItemData[]>(() =>
+    (
+      [
+        {
+          type: "button",
+          label: "音声を出力",
+          onClick: () => {
+            void exportWaveFile();
+          },
+          disableWhenUiLocked: true,
+        },
+        store.state.experimentalSetting.enableMultiTrack && {
+          type: "button",
+          label: "トラックごとに音声を出力",
+          onClick: () => {
+            void exportStemWaveFile();
+          },
+          disableWhenUiLocked: true,
+        },
+        { type: "separator" },
+        {
+          type: "button",
+          label: "インポート",
+          onClick: () => {
+            void importExternalSongProject();
+          },
+          disableWhenUiLocked: true,
+        },
+      ] satisfies (MenuItemData | false)[]
+    ).filter((item) => !!item),
+  );
 
   const editSubMenuData = computed<MenuItemData[]>(() => [
     { type: "separator" },
@@ -48,7 +74,7 @@ export const useMenuBarData = () => {
       label: "コピー",
       onClick: () => {
         if (uiLocked.value) return;
-        store.dispatch("COPY_NOTES_TO_CLIPBOARD");
+        void store.dispatch("COPY_NOTES_TO_CLIPBOARD");
       },
       disableWhenUiLocked: true,
       disabled: !isNotesSelected.value,
@@ -58,7 +84,7 @@ export const useMenuBarData = () => {
       label: "切り取り",
       onClick: () => {
         if (uiLocked.value) return;
-        store.dispatch("COMMAND_CUT_NOTES_TO_CLIPBOARD");
+        void store.dispatch("COMMAND_CUT_NOTES_TO_CLIPBOARD");
       },
       disableWhenUiLocked: true,
       disabled: !isNotesSelected.value,
@@ -68,7 +94,7 @@ export const useMenuBarData = () => {
       label: "貼り付け",
       onClick: () => {
         if (uiLocked.value) return;
-        store.dispatch("COMMAND_PASTE_NOTES_FROM_CLIPBOARD");
+        void store.dispatch("COMMAND_PASTE_NOTES_FROM_CLIPBOARD");
       },
       disableWhenUiLocked: true,
     },
@@ -78,7 +104,7 @@ export const useMenuBarData = () => {
       label: "すべて選択",
       onClick: () => {
         if (uiLocked.value) return;
-        store.dispatch("SELECT_ALL_NOTES_IN_TRACK", {
+        void store.dispatch("SELECT_ALL_NOTES_IN_TRACK", {
           trackId: store.getters.SELECTED_TRACK_ID,
         });
       },
@@ -89,7 +115,7 @@ export const useMenuBarData = () => {
       label: "選択解除",
       onClick: () => {
         if (uiLocked.value) return;
-        store.dispatch("DESELECT_ALL_NOTES");
+        void store.dispatch("DESELECT_ALL_NOTES");
       },
       disableWhenUiLocked: true,
     },
@@ -99,11 +125,22 @@ export const useMenuBarData = () => {
       label: "クオンタイズ",
       onClick: () => {
         if (uiLocked.value) return;
-        store.dispatch("COMMAND_QUANTIZE_SELECTED_NOTES");
+        void store.dispatch("COMMAND_QUANTIZE_SELECTED_NOTES");
       },
       disableWhenUiLocked: true,
     },
   ]);
 
-  return { fileSubMenuData, editSubMenuData };
+  const viewSubMenuData = computed<MenuItemData[]>(() => [
+    {
+      type: "button",
+      label: showSinger.value ? "立ち絵を非表示" : "立ち絵を表示",
+      onClick: () => {
+        showSinger.value = !showSinger.value;
+      },
+      disableWhenUiLocked: true,
+    },
+  ]);
+
+  return { fileSubMenuData, editSubMenuData, viewSubMenuData };
 };

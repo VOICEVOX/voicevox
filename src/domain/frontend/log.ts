@@ -4,7 +4,7 @@ export function createLogger(scope: string) {
   const createInner =
     (method: "logInfo" | "logError" | "logWarn") =>
     (...args: unknown[]) => {
-      window.backend[method](`[${scope}] ${args[0]}`, ...args.slice(1));
+      window.backend[method](`[${scope}]`, ...args);
     };
   return {
     info: createInner("logInfo"),

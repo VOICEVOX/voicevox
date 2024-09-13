@@ -133,14 +133,14 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         await context.actions.CLEAR_PITCH_EDIT_DATA({ trackId });
 
         context.mutations.SET_PROJECT_FILEPATH({ filePath: undefined });
-        context.actions.CLEAR_UNDO_HISTORY();
+        void context.actions.CLEAR_UNDO_HISTORY();
       },
     ),
   },
 
   PARSE_PROJECT_FILE: {
     async action({ actions, getters }, { projectJson }) {
-      const projectData = JSON.parse(projectJson);
+      const projectData: unknown = JSON.parse(projectJson);
 
       const characterInfos = getters.USER_ORDERED_CHARACTER_INFOS("talk");
       if (characterInfos == undefined)
@@ -225,7 +225,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           await applySongProjectToStore(actions, parsedProjectData.song);
 
           mutations.SET_PROJECT_FILEPATH({ filePath });
-          actions.CLEAR_UNDO_HISTORY();
+          void actions.CLEAR_UNDO_HISTORY();
           return true;
         } catch (err) {
           window.backend.logError(err);

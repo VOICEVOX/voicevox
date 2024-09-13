@@ -1,27 +1,31 @@
 <template>
   <ErrorBoundary>
-    <MenuBar
-      v-if="openedEditor != undefined"
-      :fileSubMenuData="subMenuData.fileSubMenuData.value"
-      :editSubMenuData="subMenuData.editSubMenuData.value"
-      :editor="openedEditor"
-    />
-    <KeepAlive>
-      <Component
-        :is="openedEditor == 'talk' ? TalkEditor : SingEditor"
+    <TooltipProvider disableHoverableContent>
+      <MenuBar
         v-if="openedEditor != undefined"
-        :key="openedEditor"
-        :isEnginesReady
-        :isProjectFileLoaded
+        :fileSubMenuData="subMenuData.fileSubMenuData.value"
+        :editSubMenuData="subMenuData.editSubMenuData.value"
+        :viewSubMenuData="subMenuData.viewSubMenuData.value"
+        :editor="openedEditor"
       />
-    </KeepAlive>
-    <AllDialog :isEnginesReady />
+      <KeepAlive>
+        <Component
+          :is="openedEditor == 'talk' ? TalkEditor : SingEditor"
+          v-if="openedEditor != undefined"
+          :key="openedEditor"
+          :isEnginesReady
+          :isProjectFileLoaded
+        />
+      </KeepAlive>
+      <AllDialog :isEnginesReady />
+    </TooltipProvider>
   </ErrorBoundary>
 </template>
 
 <script setup lang="ts">
 import { watch, onMounted, ref, computed, toRaw } from "vue";
 import { useGtm } from "@gtm-support/vue-gtm";
+import { TooltipProvider } from "radix-vue";
 import TalkEditor from "@/components/Talk/TalkEditor.vue";
 import SingEditor from "@/components/Sing/SingEditor.vue";
 import { EngineId } from "@/type/preload";
@@ -32,6 +36,7 @@ import AllDialog from "@/components/Dialog/AllDialog.vue";
 import MenuBar from "@/components/Menu/MenuBar/MenuBar.vue";
 import { useMenuBarData as useTalkMenuBarData } from "@/components/Talk/menuBarData";
 import { useMenuBarData as useSingMenuBarData } from "@/components/Sing/menuBarData";
+import { ExhaustiveError } from "@/type/utility";
 
 const store = useStore();
 
@@ -45,7 +50,7 @@ const subMenuData = computed(() => {
     return singMenuBarData;
   }
 
-  throw new Error(`Invalid openedEditor: ${openedEditor.value}`);
+  throw new ExhaustiveError(openedEditor.value);
 });
 
 const openedEditor = computed(() => store.state.openedEditor);
@@ -87,13 +92,13 @@ onMounted(async () => {
   const queryString = window.location.search;
   const urlParams = new URLSearchParams(queryString);
 
-  await store.dispatch("INIT_VUEX");
+  await store.actions.INIT_VUEX();
 
   // プロジェクトファイルのパスを取得
   const projectFilePath = urlParams.get("projectFilePath");
 
   // どちらのエディタを開くか設定
-  await store.dispatch("SET_OPENED_EDITOR", { editor: "talk" });
+  await store.actions.SET_OPENED_EDITOR({ editor: "talk" });
 
   // ショートカットキーの設定を登録
   const hotkeySettings = store.state.hotkeySettings;
@@ -102,37 +107,37 @@ onMounted(async () => {
   // エンジンの初期化開始
 
   // エンジン情報取得
-  await store.dispatch("GET_ENGINE_INFOS");
+  await store.actions.GET_ENGINE_INFOS();
 
   // URLパラメータに従ってマルチエンジンをオフにする
   const isMultiEngineOffMode = urlParams.get("isMultiEngineOffMode") === "true";
-  store.dispatch("SET_IS_MULTI_ENGINE_OFF_MODE", isMultiEngineOffMode);
+  void store.actions.SET_IS_MULTI_ENGINE_OFF_MODE(isMultiEngineOffMode);
 
   // マルチエンジンオフモードのときはデフォルトエンジンだけにする
   let engineIds: EngineId[];
   if (isMultiEngineOffMode) {
     const main = Object.values(store.state.engineInfos).find(
-      (engine) => engine.type === "default",
+      (engine) => engine.isDefault,
     );
     if (!main) {
-      throw new Error("No main engine found");
+      throw new Error("No default engine found");
     }
     engineIds = [main.uuid];
   } else {
     engineIds = store.state.engineIds;
   }
-  await store.dispatch("LOAD_USER_CHARACTER_ORDER");
-  await store.dispatch("POST_ENGINE_START", {
+  await store.actions.LOAD_USER_CHARACTER_ORDER();
+  await store.actions.POST_ENGINE_START({
     engineIds,
   });
 
   // 辞書を同期
-  await store.dispatch("SYNC_ALL_USER_DICT");
+  await store.actions.SYNC_ALL_USER_DICT();
 
   isEnginesReady.value = true;
 
   // エンジン起動後にダイアログを開く
-  store.dispatch("SET_DIALOG_OPEN", {
+  void store.actions.SET_DIALOG_OPEN({
     isAcceptRetrieveTelemetryDialogOpen:
       store.state.acceptRetrieveTelemetry === "Unconfirmed",
     isAcceptTermsDialogOpen:
@@ -142,7 +147,7 @@ onMounted(async () => {
 
   // プロジェクトファイルが指定されていればロード
   if (typeof projectFilePath === "string" && projectFilePath !== "") {
-    isProjectFileLoaded.value = await store.dispatch("LOAD_PROJECT_FILE", {
+    isProjectFileLoaded.value = await store.actions.LOAD_PROJECT_FILE({
       filePath: projectFilePath,
     });
   } else {

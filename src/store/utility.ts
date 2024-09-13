@@ -9,6 +9,8 @@ import {
   isMac,
 } from "@/type/preload";
 import { AccentPhrase, Mora } from "@/openapi";
+import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
+import { DEFAULT_TRACK_NAME } from "@/sing/domain";
 
 export const DEFAULT_STYLE_NAME = "ノーマル";
 export const DEFAULT_PROJECT_NAME = "Untitled";
@@ -122,8 +124,9 @@ export const replaceTagIdToTagString = {
   text: "テキスト",
   date: "日付",
   projectName: "プロジェクト名",
+  trackName: "トラック名",
 };
-const replaceTagStringToTagId: { [tagString: string]: string } = Object.entries(
+const replaceTagStringToTagId: Record<string, string> = Object.entries(
   replaceTagIdToTagString,
 ).reduce((prev, [k, v]) => ({ ...prev, [v]: k }), {});
 
@@ -134,6 +137,18 @@ const DEFAULT_AUDIO_FILE_NAME_VARIABLES = {
   index: 0,
   characterName: "四国めたん",
   text: "テキストテキストテキスト",
+  styleName: DEFAULT_STYLE_NAME,
+  date: currentDateString(),
+  projectName: "VOICEVOXプロジェクト",
+};
+
+export const DEFAULT_SONG_AUDIO_FILE_BASE_NAME_TEMPLATE =
+  "$連番$_$キャラ$（$スタイル$）_$トラック名$";
+export const DEFAULT_SONG_AUDIO_FILE_NAME_TEMPLATE = `${DEFAULT_SONG_AUDIO_FILE_BASE_NAME_TEMPLATE}.wav`;
+const DEFAULT_SONG_AUDIO_FILE_NAME_VARIABLES = {
+  index: 0,
+  characterName: "四国めたん",
+  trackName: DEFAULT_TRACK_NAME,
   styleName: DEFAULT_STYLE_NAME,
   date: currentDateString(),
   projectName: "VOICEVOXプロジェクト",
@@ -150,9 +165,9 @@ export function currentDateString(): string {
 
 function replaceTag(
   template: string,
-  replacer: { [key: string]: string },
+  replacer: Record<string, string>,
 ): string {
-  const result = template.replace(/\$(.+?)\$/g, (match, p1) => {
+  const result = template.replace(/\$(.+?)\$/g, (match, p1: string) => {
     const replaceTagId = replaceTagStringToTagId[p1];
     if (replaceTagId == undefined) {
       return match;
@@ -229,8 +244,8 @@ export class TuningTranscription {
   beforeAccent: AccentPhrase[];
   afterAccent: AccentPhrase[];
   constructor(beforeAccent: AccentPhrase[], afterAccent: AccentPhrase[]) {
-    this.beforeAccent = JSON.parse(JSON.stringify(beforeAccent));
-    this.afterAccent = JSON.parse(JSON.stringify(afterAccent));
+    this.beforeAccent = cloneWithUnwrapProxy(beforeAccent);
+    this.afterAccent = cloneWithUnwrapProxy(afterAccent);
   }
 
   /**
@@ -326,6 +341,33 @@ export function isAccentPhrasesTextDifferent(
   return false;
 }
 
+function formatCommonFileNameFromRawData(commonVars: {
+  characterName: string;
+  index: number;
+  styleName: string;
+  date: string;
+  projectName: string;
+}): {
+  characterName: string;
+  index: string;
+  styleName: string;
+  date: string;
+  projectName: string;
+} {
+  const characterName = sanitizeFileName(commonVars.characterName);
+  const index = (commonVars.index + 1).toString().padStart(3, "0");
+  const styleName = sanitizeFileName(commonVars.styleName);
+  const date = commonVars.date;
+  const projectName = sanitizeFileName(commonVars.projectName);
+  return {
+    characterName,
+    index,
+    styleName,
+    date,
+    projectName,
+  };
+}
+
 export function buildAudioFileNameFromRawData(
   fileNamePattern = DEFAULT_AUDIO_FILE_NAME_TEMPLATE,
   vars = DEFAULT_AUDIO_FILE_NAME_VARIABLES,
@@ -341,18 +383,34 @@ export function buildAudioFileNameFromRawData(
     text = text.substring(0, 9) + "…";
   }
 
-  const characterName = sanitizeFileName(vars.characterName);
-  const index = (vars.index + 1).toString().padStart(3, "0");
-  const styleName = sanitizeFileName(vars.styleName);
-  const date = vars.date;
-  const projectName = sanitizeFileName(vars.projectName);
+  const commonVars = formatCommonFileNameFromRawData(vars);
+
   return replaceTag(pattern, {
+    ...commonVars,
     text,
-    characterName,
-    index,
-    styleName,
-    date,
-    projectName,
+  });
+}
+
+export function buildSongTrackAudioFileNameFromRawData(
+  fileNamePattern = DEFAULT_SONG_AUDIO_FILE_NAME_TEMPLATE,
+  vars = DEFAULT_SONG_AUDIO_FILE_NAME_VARIABLES,
+): string {
+  let pattern = fileNamePattern;
+  if (pattern === "") {
+    // ファイル名指定のオプションが初期値("")ならデフォルトテンプレートを使う
+    pattern = DEFAULT_SONG_AUDIO_FILE_NAME_TEMPLATE;
+  }
+
+  let trackName = sanitizeFileName(vars.trackName);
+  if (trackName.length > 10) {
+    trackName = trackName.substring(0, 9) + "…";
+  }
+
+  const commonVars = formatCommonFileNameFromRawData(vars);
+
+  return replaceTag(pattern, {
+    ...commonVars,
+    trackName,
   });
 }
 

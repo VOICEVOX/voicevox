@@ -12,7 +12,6 @@ import { IpcSOData } from "@/type/ipc";
 import {
   defaultHotkeySettings,
   defaultToolbarButtonSetting,
-  configSchema,
   EngineId,
   EngineSettingType,
   EngineSettings,
@@ -33,6 +32,32 @@ import {
 
 // TODO: base pathを設定できるようにするか、ビルド時埋め込みにする
 const toStaticPath = (fileName: string) => `/${fileName}`;
+
+// FIXME: asを使わないようオーバーロードにした。オーバーロードも使わない書き方にしたい。
+function onReceivedIPCMsg<
+  T extends {
+    [K in keyof IpcSOData]: (
+      event: unknown,
+      ...args: IpcSOData[K]["args"]
+    ) => Promise<IpcSOData[K]["return"]> | IpcSOData[K]["return"];
+  },
+>(listeners: T): void;
+function onReceivedIPCMsg(listeners: {
+  [key: string]: (event: unknown, ...args: unknown[]) => unknown;
+}) {
+  // NOTE: もしブラウザ本体からレンダラへのメッセージを実装するならこんな感じ
+  window.addEventListener(
+    "message",
+    ({
+      data,
+    }: MessageEvent<{
+      channel: keyof IpcSOData;
+      args: IpcSOData[keyof IpcSOData]["args"];
+    }>) => {
+      listeners[data.channel]?.({}, ...data.args);
+    },
+  );
+}
 
 /**
  * Browser版のSandBox実装
@@ -205,16 +230,7 @@ export const api: Sandbox = {
     // NOTE: UIの表示状態の制御のためだけなので固定値を返している
     return Promise.resolve(true);
   },
-  onReceivedIPCMsg<T extends keyof IpcSOData>(
-    channel: T,
-    listener: (_: unknown, ...args: IpcSOData[T]["args"]) => void,
-  ) {
-    window.addEventListener("message", (event) => {
-      if (event.data.channel == channel) {
-        listener(event.data.args);
-      }
-    });
-  },
+  onReceivedIPCMsg,
   closeWindow() {
     throw new Error(`Not supported on Browser version: closeWindow`);
   },
@@ -251,13 +267,8 @@ export const api: Sandbox = {
     throw new Error(`Not supported on Browser version: openEngineDirectory`);
   },
   async hotkeySettings(newData?: HotkeySettingType) {
-    type HotkeySettingType = ReturnType<
-      (typeof configSchema)["parse"]
-    >["hotkeySettings"];
     if (newData != undefined) {
-      const hotkeySettings = (await this.getSetting(
-        "hotkeySettings",
-      )) as HotkeySettingType;
+      const hotkeySettings = await this.getSetting("hotkeySettings");
       const hotkeySetting = hotkeySettings.find(
         (hotkey) => hotkey.action == newData.action,
       );
@@ -266,7 +277,7 @@ export const api: Sandbox = {
       }
       await this.setSetting("hotkeySettings", hotkeySettings);
     }
-    return this.getSetting("hotkeySettings") as Promise<HotkeySettingType>;
+    return this.getSetting("hotkeySettings");
   },
   checkFileExists(file: string) {
     return checkFileExistsImpl(file);

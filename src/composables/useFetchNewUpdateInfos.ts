@@ -27,7 +27,7 @@ export const useFetchNewUpdateInfos = (
     status: "updateChecking",
   });
 
-  (async () => {
+  void (async () => {
     const currentVersion = await currentVersionGetter();
 
     const updateInfos = await fetch(newUpdateInfosUrl).then(

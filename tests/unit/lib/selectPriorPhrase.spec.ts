@@ -1,11 +1,11 @@
 import { it, expect } from "vitest";
+import { Phrase, PhraseKey, PhraseState } from "@/store/type";
 import {
-  Phrase,
-  PhraseSourceHash,
-  PhraseState,
-  phraseSourceHashSchema,
-} from "@/store/type";
-import { DEFAULT_TPQN, selectPriorPhrase } from "@/sing/domain";
+  DEFAULT_BPM,
+  DEFAULT_TPQN,
+  selectPriorPhrase,
+  tickToSecond,
+} from "@/sing/domain";
 import { NoteId, TrackId } from "@/type/preload";
 import { uuid4 } from "@/helpers/random";
 
@@ -29,30 +29,20 @@ const createPhrase = (
         lyric: "ド",
       },
     ],
+    startTime: tickToSecond(
+      start * DEFAULT_TPQN - firstRestDuration * DEFAULT_TPQN,
+      [{ position: 0, bpm: DEFAULT_BPM }],
+      DEFAULT_TPQN,
+    ),
     state,
   };
 };
-const basePhrases = new Map<PhraseSourceHash, Phrase>([
-  [
-    phraseSourceHashSchema.parse("1"),
-    createPhrase(0, 0, 1, "WAITING_TO_BE_RENDERED"),
-  ],
-  [
-    phraseSourceHashSchema.parse("2"),
-    createPhrase(0, 1, 2, "WAITING_TO_BE_RENDERED"),
-  ],
-  [
-    phraseSourceHashSchema.parse("3"),
-    createPhrase(0, 2, 3, "WAITING_TO_BE_RENDERED"),
-  ],
-  [
-    phraseSourceHashSchema.parse("4"),
-    createPhrase(0, 3, 4, "WAITING_TO_BE_RENDERED"),
-  ],
-  [
-    phraseSourceHashSchema.parse("5"),
-    createPhrase(0, 4, 5, "WAITING_TO_BE_RENDERED"),
-  ],
+const basePhrases = new Map<PhraseKey, Phrase>([
+  [PhraseKey("1"), createPhrase(0, 0, 1, "WAITING_TO_BE_RENDERED")],
+  [PhraseKey("2"), createPhrase(0, 1, 2, "WAITING_TO_BE_RENDERED")],
+  [PhraseKey("3"), createPhrase(0, 2, 3, "WAITING_TO_BE_RENDERED")],
+  [PhraseKey("4"), createPhrase(0, 3, 4, "WAITING_TO_BE_RENDERED")],
+  [PhraseKey("5"), createPhrase(0, 4, 5, "WAITING_TO_BE_RENDERED")],
 ]);
 
 it("しっかり優先順位に従って探している", () => {

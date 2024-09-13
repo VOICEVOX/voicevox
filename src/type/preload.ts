@@ -195,7 +195,7 @@ export const defaultHotkeySettings: HotkeySettingType[] = [
     return {
       action:
         `${index + 1}${actionPostfixSelectNthCharacter}` as HotkeyActionNameType,
-      combination: HotkeyCombination((!isMac ? "Ctrl " : "Meta ") + roleKey),
+      combination: HotkeyCombination(`${!isMac ? "Ctrl" : "Meta"} ${roleKey}`),
     };
   }),
 ];
@@ -264,10 +264,12 @@ export interface Sandbox {
   readFile(obj: { filePath: string }): Promise<Result<ArrayBuffer>>;
   isAvailableGPUMode(): Promise<boolean>;
   isMaximizedWindow(): Promise<boolean>;
-  onReceivedIPCMsg<T extends keyof IpcSOData>(
-    channel: T,
-    listener: (event: unknown, ...args: IpcSOData[T]["args"]) => void,
-  ): void;
+  onReceivedIPCMsg(listeners: {
+    [K in keyof IpcSOData]: (
+      event: unknown,
+      ...args: IpcSOData[K]["args"]
+    ) => Promise<IpcSOData[K]["return"]> | IpcSOData[K]["return"];
+  }): void;
   closeWindow(): void;
   minimizeWindow(): void;
   maximizeWindow(): void;
@@ -362,17 +364,7 @@ export type SplitTextWhenPasteType = "PERIOD_AND_NEW_LINE" | "NEW_LINE" | "OFF";
 
 export type EditorFontType = "default" | "os";
 
-export type SavingSetting = {
-  exportLab: boolean;
-  fileEncoding: Encoding;
-  fileNamePattern: string;
-  fixedExportEnabled: boolean;
-  fixedExportDir: string;
-  avoidOverwrite: boolean;
-  exportText: boolean;
-  outputStereo: boolean;
-  audioOutputDevice: string;
-};
+export type SavingSetting = ConfigType["savingSetting"];
 
 export type EngineSettings = Record<EngineId, EngineSettingType>;
 
@@ -417,10 +409,10 @@ export type EngineInfo = {
   executionFilePath: string;
   executionArgs: string[];
   // エンジンの種類。
-  // default: デフォルトエンジン
   // vvpp: vvppファイルから読み込んだエンジン
   // path: パスを指定して追加したエンジン
-  type: "default" | "vvpp" | "path";
+  type: "vvpp" | "path";
+  isDefault: boolean; // デフォルトエンジンかどうか
 };
 
 export type Preset = {
@@ -446,15 +438,16 @@ export type PresetConfig = {
   keys: string[];
 };
 
-export type MorphableTargetInfoTable = {
-  [baseStyleId: StyleId]:
-    | undefined
-    | {
-        [targetStyleId: StyleId]: {
-          isMorphable: boolean;
-        };
-      };
-};
+export type MorphableTargetInfoTable = Record<
+  StyleId,
+  | undefined
+  | Record<
+      StyleId,
+      {
+        isMorphable: boolean;
+      }
+    >
+>;
 
 export const hotkeyActionNameSchema = z.enum([
   "音声書き出し",
@@ -609,6 +602,7 @@ export const rootMiscSettingSchema = z.object({
       panAndGain: z.boolean().default(true),
     })
     .default({}),
+  showSinger: z.boolean().default(true),
 });
 export type RootMiscSettingType = z.infer<typeof rootMiscSettingSchema>;
 
@@ -629,6 +623,7 @@ export const configSchema = z
         exportText: z.boolean().default(false),
         outputStereo: z.boolean().default(false),
         audioOutputDevice: z.string().default(""),
+        songTrackFileNamePattern: z.string().default(""),
       })
       .default({}),
     hotkeySettings: hotkeySettingSchema.array().default(defaultHotkeySettings),
@@ -739,6 +734,6 @@ export interface MessageBoxReturnValue {
   checkboxChecked: boolean;
 }
 
-export const SandboxKey = "backend" as const;
+export const SandboxKey = "backend";
 
 export type EditorType = "talk" | "song";
