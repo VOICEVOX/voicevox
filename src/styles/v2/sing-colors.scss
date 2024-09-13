@@ -308,7 +308,7 @@ SASSのmapなどで構造化+mixin一括処理などで処理可能ですが、
 
   /* ソング用エイリアスカラー */
   --scheme-color-sing-toolbar-container: oklch(
-    var(--lr-100) var(--neutral-c) var(--neutral-h)
+    var(--lr-99) var(--neutral-c) var(--neutral-h)
   );
   --scheme-color-sing-playback-button-container: oklch(
     var(--lr-80) var(--primary-c) var(--primary-h)
@@ -318,10 +318,10 @@ SASSのmapなどで構造化+mixin一括処理などで処理可能ですが、
   );
 
   --scheme-color-sing-grid-cell-white: oklch(
-    var(--lr-99) var(--neutral-c) var(--neutral-h)
+    var(--lr-100) var(--neutral-c) var(--neutral-h)
   );
   --scheme-color-sing-grid-cell-black: oklch(
-    var(--lr-95) var(--neutral-c) var(--neutral-h)
+    var(--lr-96) var(--neutral-c) var(--neutral-h)
   );
 
   --scheme-color-sing-grid-measure-line: oklch(
@@ -331,14 +331,14 @@ SASSのmapなどで構造化+mixin一括処理などで処理可能ですが、
     var(--lr-85) var(--neutral-c) var(--neutral-h)
   );
   --scheme-color-sing-grid-vertical-line: oklch(
-    var(--lr-95) var(--neutral-c) var(--neutral-h)
+    var(--lr-94) var(--neutral-c) var(--neutral-h)
   );
 
   --scheme-color-sing-grid-octave-line: oklch(
     var(--lr-80) var(--neutral-c) var(--neutral-h)
   );
   --scheme-color-sing-grid-horizontal-line: oklch(
-    var(--lr-95) var(--neutral-c) var(--neutral-h)
+    var(--lr-94) var(--neutral-c) var(--neutral-h)
   );
 
   --scheme-color-sing-ruler-surface: oklch(
@@ -569,27 +569,27 @@ SASSのmapなどで構造化+mixin一括処理などで処理可能ですが、
   );
 
   --scheme-color-sing-grid-cell-white: oklch(
-    var(--lr-19) var(--neutral-c) var(--neutral-h)
+    var(--lr-18) var(--neutral-c) var(--neutral-h)
   );
   --scheme-color-sing-grid-cell-black: oklch(
     var(--lr-14) var(--neutral-c) var(--neutral-h)
   );
 
   --scheme-color-sing-grid-measure-line: oklch(
-    var(--lr-40) var(--neutral-c) var(--neutral-h)
+    var(--lr-35) var(--neutral-c) var(--neutral-h)
   );
   --scheme-color-sing-grid-beat-line: oklch(
     var(--lr-4) var(--neutral-c) var(--neutral-h)
   );
   --scheme-color-sing-grid-vertical-line: oklch(
-    var(--lr-14) var(--neutral-c) var(--neutral-h)
+    var(--lr-12) var(--neutral-c) var(--neutral-h)
   );
 
   --scheme-color-sing-grid-octave-line: oklch(
-    var(--lr-34) var(--neutral-c) var(--neutral-h)
+    var(--lr-4) var(--neutral-c) var(--neutral-h)
   );
   --scheme-color-sing-grid-horizontal-line: oklch(
-    var(--lr-14) var(--neutral-c) var(--neutral-h)
+    var(--lr-4) var(--neutral-c) var(--neutral-h)
   );
 
   --scheme-color-sing-ruler-surface: oklch(
