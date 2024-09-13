@@ -90,7 +90,7 @@ eg: 常にホバー時は+5%明度上げるのであれば
   --secondary-c: 0.036;
   --tertiary-c: var(--primary-c);
   --error-c: 0.196;
-  --neutral-c: 0;
+  --neutral-c: 0.003;
   --neutral-variant-c: 0.006;
   --link-c: 0.196;
 
@@ -99,7 +99,7 @@ eg: 常にホバー時は+5%明度上げるのであれば
   --secondary-h: var(--primary-h);
   --tertiary-h: calc(var(--primary-h) - 60); // -60度
   --error-h: 19.64;
-  --neutral-h: var(--primary-h);
+  --neutral-h: calc(var(--primary-h) + 120);
   --neutral-variant-h: var(--primary-h);
   --link-h: 256; // `styles/v2/colors.scss` におけるprimitive-blueの色相
 }
@@ -569,20 +569,20 @@ SASSのmapなどで構造化+mixin一括処理などで処理可能ですが、
   );
 
   --scheme-color-sing-grid-cell-white: oklch(
-    var(--lr-18) var(--neutral-c) var(--neutral-h)
+    var(--lr-17) var(--neutral-c) var(--neutral-h)
   );
   --scheme-color-sing-grid-cell-black: oklch(
-    var(--lr-14) var(--neutral-c) var(--neutral-h)
+    var(--lr-12) var(--neutral-c) var(--neutral-h)
   );
 
   --scheme-color-sing-grid-measure-line: oklch(
-    var(--lr-35) var(--neutral-c) var(--neutral-h)
+    var(--lr-36) var(--neutral-c) var(--neutral-h)
   );
   --scheme-color-sing-grid-beat-line: oklch(
     var(--lr-4) var(--neutral-c) var(--neutral-h)
   );
   --scheme-color-sing-grid-vertical-line: oklch(
-    var(--lr-12) var(--neutral-c) var(--neutral-h)
+    var(--lr-10) var(--neutral-c) var(--neutral-h)
   );
 
   --scheme-color-sing-grid-octave-line: oklch(

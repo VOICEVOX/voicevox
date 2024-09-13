@@ -80,7 +80,7 @@
         :y1="-offset"
         :x2="width - 0.5"
         :y2="height"
-        class="key-border"
+        class="keys-right-border"
       />
     </svg>
   </div>
@@ -237,6 +237,11 @@ onUnmounted(() => {
 
 .key-border {
   stroke: var(--scheme-color-outline-variant);
+  stroke-width: 1px;
+}
+
+.keys-right-border {
+  stroke: var(--scheme-color-sing-piano-key-black);
   stroke-width: 1px;
 }
 
