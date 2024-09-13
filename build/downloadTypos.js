@@ -26,11 +26,11 @@ const CPU_ARCHITECTURE = {
   X86_64: "x86_64",
   ARM: "aarch64",
 };
-// 全バイナリのパス
+// ダウンロードしたバイナリを格納するディレクトリ
 const BINARY_BASE_PATH = resolve(__dirname, "vendored");
 // typosのバイナリのパス
 const TYPOS_BINARY_PATH = resolve(BINARY_BASE_PATH, "typos");
-// 各OSとアーキテクチャに対応するtyposバイナリのダウンロード先URL
+// 各OSとアーキテクチャに対応するtyposバイナリのダウンロードURL
 const TYPOS_URLS = {
   [OS.MACOS]: {
     [CPU_ARCHITECTURE.ARM]:
@@ -48,11 +48,12 @@ const TYPOS_URLS = {
   },
 };
 
-// 現在のOSとCPUアーキテクチャ
+// 動作環境でのOSとCPUアーキテクチャ
 const currentOS = platform();
 const currentCpuArchitecture =
   arch() === "arm64" ? CPU_ARCHITECTURE.ARM : CPU_ARCHITECTURE.X86_64;
-// 7zバイナリのパス linuxとmacで異なるバイナリでないとエラーが出ることに注意
+// 7zバイナリのパス
+// WARNING: linuxとmacで異なるバイナリでないとエラーが出る
 const sevenZipBinaryName =
   currentOS === OS.WINDOWS
     ? "7za.exe"
