@@ -241,7 +241,7 @@ onUnmounted(() => {
 }
 
 .keys-right-border {
-  stroke: var(--scheme-color-sing-piano-key-black);
+  stroke: var(--scheme-color-sing-piano-keys-right-border);
   stroke-width: 1px;
 }
 
