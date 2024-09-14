@@ -764,17 +764,8 @@ registerIpcMainHandle<IpcMainHandle>({
     return engineInfoManager.fetchEngineInfos();
   },
 
-  /**
-   * エンジンを再起動する。
-   * エンジンの起動が開始したらresolve、起動が失敗したらreject。
-   */
   RESTART_ENGINE: async (_, { engineId }) => {
-    await engineProcessManager.restartEngine(engineId);
-
-    // ランタイム情報の更新
-    // TODO: setからexportの処理は排他処理にしたほうがより良い
-    runtimeInfoManager.setEngineInfos(engineInfoManager.fetchEngineInfos());
-    await runtimeInfoManager.exportFile();
+    return engineProcessManager.restartEngine(engineId);
   },
 
   OPEN_ENGINE_DIRECTORY: async (_, { engineId }) => {
@@ -839,9 +830,7 @@ registerIpcMainHandle<IpcMainHandle>({
   },
 
   SET_ENGINE_SETTING: async (_, engineId, engineSetting) => {
-    const engineSettings = configManager.get("engineSettings");
-    engineSettings[engineId] = engineSetting;
-    configManager.set(`engineSettings`, engineSettings);
+    engineAndVvppController.updateEngineSetting(engineId, engineSetting);
   },
 
   SET_NATIVE_THEME: (_, source) => {

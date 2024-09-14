@@ -6,7 +6,12 @@ import EngineProcessManager from "./manager/engineProcessManager";
 import VvppManager from "./manager/vvppManager";
 import { RuntimeInfoManager } from "./manager/RuntimeInfoManager";
 import { ElectronConfigManager } from "./electronConfig";
-import { EngineId, EngineInfo, engineSettingSchema } from "@/type/preload";
+import {
+  EngineId,
+  EngineInfo,
+  engineSettingSchema,
+  EngineSettingType,
+} from "@/type/preload";
 
 /**
  * エンジンとVVPP周りの処理の流れを制御するクラス。
@@ -118,6 +123,13 @@ export class EngineAndVvppController {
     }
   }
 
+  /** エンジンの設定を更新し、保存する */
+  updateEngineSetting(engineId: EngineId, engineSetting: EngineSettingType) {
+    const engineSettings = this.configManager.get("engineSettings");
+    engineSettings[engineId] = engineSetting;
+    this.configManager.set(`engineSettings`, engineSettings);
+  }
+
   // エンジンの準備と起動
   async launchEngines() {
     // エンジンの追加と削除を反映させるためEngineInfoとAltPortInfosを再生成する。
@@ -136,6 +148,21 @@ export class EngineAndVvppController {
 
     await this.engineProcessManager.runEngineAll();
     this.runtimeInfoManager.setEngineInfos(engineInfos);
+    await this.runtimeInfoManager.exportFile();
+  }
+
+  /**
+   * エンジンを再起動する。
+   * エンジンの起動が開始したらresolve、起動が失敗したらreject。
+   */
+  async restartEngines(engineId: EngineId) {
+    await this.engineProcessManager.restartEngine(engineId);
+
+    // ランタイム情報の更新
+    // TODO: setからexportの処理は排他処理にしたほうがより良い
+    this.runtimeInfoManager.setEngineInfos(
+      this.engineInfoManager.fetchEngineInfos(),
+    );
     await this.runtimeInfoManager.exportFile();
   }
 
