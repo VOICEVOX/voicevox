@@ -1064,6 +1064,10 @@ export type SingingStoreTypes = {
     action(payload: { filePath?: string }): SaveResultObject;
   };
 
+  EXPORT_STEM_WAVE_FILE: {
+    action(payload: { dirPath?: string }): SaveResultObject;
+  };
+
   CANCEL_AUDIO_EXPORT: {
     action(): void;
   };

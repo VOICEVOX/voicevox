@@ -20,7 +20,8 @@ import log from "electron-log/main";
 import dayjs from "dayjs";
 import windowStateKeeper from "electron-window-state";
 import { hasSupportedGpu } from "./device";
-import EngineManager from "./manager/engineManager";
+import EngineInfoManager from "./manager/engineInfoManager";
+import EngineProcessManager from "./manager/engineProcessManager";
 import VvppManager, { isVvppFile } from "./manager/vvppManager";
 import configMigration014 from "./configMigration014";
 import { RuntimeInfoManager } from "./manager/RuntimeInfoManager";
@@ -184,17 +185,24 @@ const runtimeInfoManager = new RuntimeInfoManager(
 
 const configManager = getConfigManager();
 
-const engineManager = new EngineManager({
+const engineInfoManager = new EngineInfoManager({
   configManager,
   defaultEngineDir: appDirPath,
   vvppEngineDir,
+});
+const engineProcessManager = new EngineProcessManager({
+  configManager,
   onEngineProcessError,
+  engineInfosFetcher:
+    engineInfoManager.fetchEngineInfos.bind(engineInfoManager),
+  engineAltPortUpdater: engineInfoManager.updateAltPort.bind(engineInfoManager),
+  engineSettingsGetter: () => configManager.get("engineSettings"),
 });
 const vvppManager = new VvppManager({ vvppEngineDir });
 
 // エンジンのフォルダを開く
 function openEngineDirectory(engineId: EngineId) {
-  const engineDirectory = engineManager.fetchEngineDirectory(engineId);
+  const engineDirectory = engineInfoManager.fetchEngineDirectory(engineId);
 
   // Windows環境だとスラッシュ区切りのパスが動かない。
   // path.resolveはWindowsだけバックスラッシュ区切りにしてくれるため、path.resolveを挟む。
@@ -289,7 +297,7 @@ function checkMultiEngineEnabled(): boolean {
 async function uninstallVvppEngine(engineId: EngineId) {
   let engineInfo: EngineInfo | undefined = undefined;
   try {
-    engineInfo = engineManager.fetchEngineInfo(engineId);
+    engineInfo = engineInfoManager.fetchEngineInfo(engineId);
     if (!engineInfo) {
       throw new Error(`No such engineInfo registered: engineId == ${engineId}`);
     }
@@ -521,11 +529,11 @@ async function start() {
 
 // エンジンの準備と起動
 async function launchEngines() {
-  // エンジンの追加と削除を反映させるためEngineInfoとAltPortInfoを再生成する。
-  engineManager.initializeEngineInfosAndAltPortInfo();
+  // エンジンの追加と削除を反映させるためEngineInfoとAltPortInfosを再生成する。
+  engineInfoManager.initializeEngineInfosAndAltPortInfo();
 
   // TODO: デフォルトエンジンの処理をConfigManagerに移してブラウザ版と共通化する
-  const engineInfos = engineManager.fetchEngineInfos();
+  const engineInfos = engineInfoManager.fetchEngineInfos();
   const engineSettings = configManager.get("engineSettings");
   for (const engineInfo of engineInfos) {
     if (!engineSettings[engineInfo.uuid]) {
@@ -535,7 +543,7 @@ async function launchEngines() {
   }
   configManager.set("engineSettings", engineSettings);
 
-  await engineManager.runEngineAll();
+  await engineProcessManager.runEngineAll();
   runtimeInfoManager.setEngineInfos(engineInfos);
   await runtimeInfoManager.exportFile();
 }
@@ -546,7 +554,7 @@ async function launchEngines() {
  * そうでない場合は Promise を返す。
  */
 function cleanupEngines(): Promise<void> | "alreadyCompleted" {
-  const killingProcessPromises = engineManager.killEngineAll();
+  const killingProcessPromises = engineProcessManager.killEngineAll();
   const numLivingEngineProcess = Object.entries(killingProcessPromises).length;
 
   // 前処理が完了している場合
@@ -719,7 +727,7 @@ registerIpcMainHandle<IpcMainHandle>({
   },
 
   GET_ALT_PORT_INFOS: () => {
-    return engineManager.altPortInfo;
+    return engineInfoManager.altPortInfos;
   },
 
   SHOW_AUDIO_SAVE_DIALOG: async (_, { title, defaultPath }) => {
@@ -907,8 +915,8 @@ registerIpcMainHandle<IpcMainHandle>({
   },
 
   ENGINE_INFOS: () => {
-    // エンジン情報を設定ファイルに保存しないためにstoreは使わない
-    return engineManager.fetchEngineInfos();
+    // エンジン情報を設定ファイルに保存しないためにelectron-storeは使わない
+    return engineInfoManager.fetchEngineInfos();
   },
 
   /**
@@ -916,9 +924,11 @@ registerIpcMainHandle<IpcMainHandle>({
    * エンジンの起動が開始したらresolve、起動が失敗したらreject。
    */
   RESTART_ENGINE: async (_, { engineId }) => {
-    await engineManager.restartEngine(engineId);
-    // TODO: setEngineInfosからexportFileはロックしたほうがより良い
-    runtimeInfoManager.setEngineInfos(engineManager.fetchEngineInfos());
+    await engineProcessManager.restartEngine(engineId);
+
+    // ランタイム情報の更新
+    // TODO: setからexportの処理は排他処理にしたほうがより良い
+    runtimeInfoManager.setEngineInfos(engineInfoManager.fetchEngineInfos());
     await runtimeInfoManager.exportFile();
   },
 
@@ -991,7 +1001,7 @@ registerIpcMainHandle<IpcMainHandle>({
   },
 
   VALIDATE_ENGINE_DIR: (_, { engineDir }) => {
-    return engineManager.validateEngineDir(engineDir);
+    return engineInfoManager.validateEngineDir(engineDir);
   },
 
   RELOAD_APP: async (_, { isMultiEngineOffMode }) => {
