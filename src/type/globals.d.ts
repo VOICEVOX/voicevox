@@ -11,9 +11,6 @@ declare global {
 
   interface Window {
     readonly [SandboxKey]: import("./preload").Sandbox;
-
-    // Storybookのtest-runnerのみで使用できるスナップショット関数
-    storybookTestSnapshot?: (obj: unknown) => Promise<void>;
   }
 
   interface Navigator {

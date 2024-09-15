@@ -9,7 +9,7 @@ import { EngineInfo } from "@/type/preload";
 
 export const proxyStoreState: ProxyStoreState = {};
 
-export const proxyStoreCreator = (_engineFactory: IEngineConnectorFactory) => {
+const proxyStoreCreator = (_engineFactory: IEngineConnectorFactory) => {
   const proxyStore = createPartialStore<ProxyStoreTypes>({
     INSTANTIATE_ENGINE_CONNECTOR: {
       action({ state }, payload) {

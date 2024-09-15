@@ -20,8 +20,6 @@ const meta: Meta<typeof Presentation> = {
         contributors: ["これは表示されないはず"],
       },
     ],
-    "onUpdate:modelValue": fn(),
-    onSkipThisVersionClick: fn(),
   },
   tags: ["!autodocs"], // ダイアログ系はautodocsのプレビューが正しく表示されないので無効化
 };

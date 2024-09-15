@@ -124,13 +124,8 @@ export function notesAndFramePhonemesToPitchMock(
       if (note.key != undefined) {
         pitch = phonemeAndKeyToPitchMock(phoneme.phoneme, note.key);
 
-        console.log("pitch", pitch);
-
         // 別の歌手で同じにならないように適当に値をずらす
         pitch *= 1 + styleId * 0.03;
-
-        console.log("styleId", styleId);
-        console.log("pitch", pitch);
       } else {
         pitch = 0;
       }
