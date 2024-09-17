@@ -7,7 +7,6 @@
       class="segment-switch"
       :class="{ active: editTarget === 'NOTE' }"
       @click="changeEditTarget('NOTE')"
-      @keydown="handleKeyDown"
     >
       <QIcon name="piano" size="20px" />
       <QTooltip
