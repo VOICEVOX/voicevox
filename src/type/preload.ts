@@ -746,11 +746,3 @@ export interface MessageBoxReturnValue {
 export const SandboxKey = "backend";
 
 export type EditorType = "talk" | "song";
-
-export type PreviewMode =
-  | "ADD_NOTE"
-  | "MOVE_NOTE"
-  | "RESIZE_NOTE_RIGHT"
-  | "RESIZE_NOTE_LEFT"
-  | "DRAW_PITCH"
-  | "ERASE_PITCH";

@@ -58,10 +58,11 @@
         class="sequencer-note"
         :note
         :nowPreviewing
-        :previewMode
         :isSelected="selectedNoteIds.has(note.id)"
         :isPreview="previewNoteIds.has(note.id)"
         :isOverlapping="overlappingNoteIdsInSelectedTrack.has(note.id)"
+        :isResizingNote
+        :noteResizing
         :previewLyric="previewLyrics.get(note.id) || null"
         @barMousedown="onNoteBarMouseDown($event, note)"
         @barDoubleClick="onNoteBarDoubleClick($event, note)"
@@ -174,7 +175,7 @@ import {
 import ContextMenu, {
   ContextMenuItemData,
 } from "@/components/Menu/ContextMenu.vue";
-import { NoteId, PreviewMode } from "@/type/preload";
+import { NoteId } from "@/type/preload";
 import { useStore } from "@/store";
 import { Note, SequencerEditTarget } from "@/store/type";
 import {
@@ -221,6 +222,14 @@ import { applyGaussianFilter, linearInterpolation } from "@/sing/utility";
 import { useLyricInput } from "@/composables/useLyricInput";
 import { ExhaustiveError } from "@/type/utility";
 import { uuid4 } from "@/helpers/random";
+
+type PreviewMode =
+  | "ADD_NOTE"
+  | "MOVE_NOTE"
+  | "RESIZE_NOTE_RIGHT"
+  | "RESIZE_NOTE_LEFT"
+  | "DRAW_PITCH"
+  | "ERASE_PITCH";
 
 // 直接イベントが来ているかどうか
 const isSelfEventTarget = (event: UIEvent) => {
@@ -357,7 +366,6 @@ const phraseInfosInOtherTracks = computed(() => {
 
 const ctrlKey = useCommandOrControlKey();
 const editTarget = computed(() => state.sequencerEditTarget);
-const isResizingNote = ref(false);
 const editorFrameRate = computed(() => state.editorFrameRate);
 const scrollBarWidth = ref(12);
 const sequencerBody = ref<HTMLElement | null>(null);
@@ -378,6 +386,16 @@ const onLyricConfirmed = (nextNoteId: NoteId | undefined) => {
   commitPreviewLyrics();
   void store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId: nextNoteId });
 };
+
+// ノートのリサイズ
+const isResizingNote = ref(false);
+const noteResizing = computed(() => {
+  return isResizingNote.value
+    ? previewMode === "RESIZE_NOTE_RIGHT"
+      ? "right"
+      : "left"
+    : undefined;
+});
 
 // プレビュー
 // FIXME: 関連する値を１つのobjectにまとめる
