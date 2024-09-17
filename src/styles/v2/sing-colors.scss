@@ -64,12 +64,12 @@ l: 明度 / c: 彩度 / h: 色相
 
 ---
 
-ほとんどの場合、
+TODO: ほとんどの場合、
 
 - role/on-role/role-container/on-role-containerの4つ
 - 必要あればそれぞれのhover/active/focus/disabledの状態
 
-のスタイルを指定することになるため、明度ルールが安定したらmixin化してもいいかも...
+のスタイルを指定することになるため、明度ルールが安定したらmixin化するか検討する。
 
 eg: 常にホバー時は+5%明度上げるのであれば
 &:hover: oklch(from var(--primary) l calc(...lr-50をlr-55にするmixin));
