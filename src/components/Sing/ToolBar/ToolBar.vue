@@ -490,7 +490,7 @@ onUnmounted(() => {
 @use "@/styles/v2/variables" as vars;
 @use "@/styles/colors" as colors;
 
-// フィールドデフォルト
+// テキストフィールドのデフォルト
 :deep(.q-field__native) {
   color: var(--scheme-color-on-surface);
   text-align: center;
