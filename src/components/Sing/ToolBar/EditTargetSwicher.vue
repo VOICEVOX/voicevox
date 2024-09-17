@@ -49,11 +49,6 @@ defineProps<{
   editTarget: SequencerEditTarget;
   changeEditTarget: (editTarget: SequencerEditTarget) => void;
 }>();
-const handleKeyDown = (event: KeyboardEvent) => {
-  if (event.key === " " || event.key === "Spacebar") {
-    event.preventDefault();
-  }
-};
 </script>
 
 <style scoped lang="scss">
