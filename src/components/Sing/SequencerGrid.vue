@@ -158,14 +158,12 @@ const snapLinePositions = computed(() => {
   const snapTicks = gridCellTicks.value;
   const measureTicks =
     (tpqn.value * 4 * beatsPerMeasure.value) / timeSignatures.value[0].beatType;
-  const snapPositions = [];
-  let currentTick = 0;
-  while (currentTick < measureTicks) {
-    const x = (currentTick / measureTicks) * measureWidth.value;
-    snapPositions.push(x);
-    currentTick += snapTicks;
-  }
-  return snapPositions;
+  const snapCount = Math.floor(measureTicks / snapTicks);
+
+  return Array.from({ length: snapCount }, (_, index) => {
+    const currentTick = snapTicks * index;
+    return (currentTick / measureTicks) * measureWidth.value;
+  });
 });
 </script>
 

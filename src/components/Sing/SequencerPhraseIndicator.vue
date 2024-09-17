@@ -66,6 +66,7 @@ const className = computed(() => {
   background-size: 28px 28px;
   background-color: colors.$background;
   background-size: 28px 28px;
+  animation: stripes-animation 0.7s linear infinite;
   &.is-in-selected-track {
     border: 1px solid rgba(colors.$primary-rgb, 0.7);
     background-image: linear-gradient(
@@ -94,7 +95,6 @@ const className = computed(() => {
       tint(rgba(colors.$primary-rgb, 0.36)) 100%
     );
   }
-  animation: stripes-animation 0.7s linear infinite;
 }
 
 @keyframes stripes-animation {

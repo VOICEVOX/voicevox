@@ -212,7 +212,6 @@ onUnmounted(() => {
   backface-visibility: hidden;
   background: var(--scheme-color-background);
   overflow: hidden;
-  position: relative;
 }
 
 .white-key-background {

@@ -9,9 +9,9 @@
       overlapping: hasOverlappingError,
       'invalid-phrase': hasPhraseError,
       'below-pitch': editTargetIsPitch,
-      resizing: isResizingNote,
-      'resizing-right': isResizingRight,
-      'resizing-left': isResizingLeft,
+      resizing: !noteRisizing,
+      'resizing-right': noteRisizing === 'right',
+      'resizing-left': noteRisizing === 'left',
     }"
     :style="{
       width: `${width}px`,
@@ -22,8 +22,8 @@
     <div
       class="note-bar"
       :class="{
-        'cursor-move': editTargetIsNote && !isResizingNote,
-        'cursor-ew-resize': isResizingNote,
+        'cursor-move': editTargetIsNote && !noteRisizing,
+        'cursor-ew-resize': noteRisizing,
       }"
       @mousedown="onBarMouseDown"
       @dblclick="onBarDoubleClick"
@@ -116,12 +116,8 @@ const props = defineProps<{
   /** ノートが重なっているか */
   isOverlapping: boolean;
   previewLyric: string | null;
-  /** ノートがリサイズ中か */
-  isResizingNote: boolean;
-  /** ノートが右方向にリサイズ中か */
-  isResizingRight: boolean;
-  /** ノートが左方向にリサイズ中か */
-  isResizingLeft: boolean;
+  /** ノートのリサイズ状態。undefinedならリサイズ中ではない、right・leftなら右・左方向にリサイズ中 */
+  noteRisizing: undefined | "right" | "left";
 }>();
 
 const emit = defineEmits<{
@@ -159,7 +155,7 @@ const lyricFontSize = computed(() => {
   const maxSize = 16;
   // ノートの高さを見た目で越えない範囲で最大値を設定
   const baseSize = Math.min(height.value - 6, maxSize);
-  // ズームによる拡大率を調整(計算値に特に根拠はない/見た目あわせ)
+  // ズームによる拡大率を調整(計算値に特に根拠はない。見た目あわせ。)
   const zoomFactor = Math.max(0.5, Math.min(1.5, zoomX.value / 0.5));
   return Math.max(minSize, Math.min(maxSize, baseSize * zoomFactor));
 });
@@ -168,7 +164,7 @@ const lyricFontSize = computed(() => {
 const lyricLeftPosition = computed(() => {
   const minLeft = 0;
   const maxLeft = 2;
-  // ズームによる拡大率を調整(計算値に特に根拠はない/見た目あわせ)
+  // ズームによる拡大率を調整(計算値に特に根拠はない。見た目あわせ。)
   const paddingFactor = Math.min(1, zoomX.value / 0.5);
   return minLeft + (maxLeft - minLeft) * paddingFactor;
 });
