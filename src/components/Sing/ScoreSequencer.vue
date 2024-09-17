@@ -174,7 +174,7 @@ import {
 import ContextMenu, {
   ContextMenuItemData,
 } from "@/components/Menu/ContextMenu.vue";
-import { NoteId } from "@/type/preload";
+import { NoteId, PreviewMode } from "@/type/preload";
 import { useStore } from "@/store";
 import { Note, SequencerEditTarget } from "@/store/type";
 import {
@@ -221,14 +221,6 @@ import { applyGaussianFilter, linearInterpolation } from "@/sing/utility";
 import { useLyricInput } from "@/composables/useLyricInput";
 import { ExhaustiveError } from "@/type/utility";
 import { uuid4 } from "@/helpers/random";
-
-type PreviewMode =
-  | "ADD_NOTE"
-  | "MOVE_NOTE"
-  | "RESIZE_NOTE_RIGHT"
-  | "RESIZE_NOTE_LEFT"
-  | "DRAW_PITCH"
-  | "ERASE_PITCH";
 
 // 直接イベントが来ているかどうか
 const isSelfEventTarget = (event: UIEvent) => {

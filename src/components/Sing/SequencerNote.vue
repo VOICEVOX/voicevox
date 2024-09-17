@@ -44,6 +44,7 @@
 import { computed, ref } from "vue";
 import { useStore } from "@/store";
 import { Note } from "@/store/type";
+import { PreviewMode } from "@/type/preload";
 import {
   getKeyBaseHeight,
   tickToBaseX,
@@ -58,13 +59,7 @@ const props = defineProps<{
   /** どれかのノートがプレビュー中 */
   nowPreviewing: boolean;
   /** プレビューモード */
-  previewMode:
-    | "ADD_NOTE"
-    | "MOVE_NOTE"
-    | "RESIZE_NOTE_RIGHT"
-    | "RESIZE_NOTE_LEFT"
-    | "DRAW_PITCH"
-    | "ERASE_PITCH";
+  previewMode: PreviewMode;
   /** このノートが選択中か */
   isSelected: boolean;
   /** このノートがプレビュー中か */
@@ -101,12 +96,6 @@ const width = computed(() => {
   const noteStartBaseX = tickToBaseX(noteStartTicks, tpqn.value);
   const noteEndBaseX = tickToBaseX(noteEndTicks, tpqn.value);
   return (noteEndBaseX - noteStartBaseX) * zoomX.value;
-});
-const resizingRight = computed(() => {
-  return props.isPreview && props.previewMode === "RESIZE_NOTE_RIGHT";
-});
-const resizingLeft = computed(() => {
-  return props.isPreview && props.previewMode === "RESIZE_NOTE_LEFT";
 });
 // 歌詞のフォントサイズをズームにあわせて調整する
 // 最小12px, 最大16px, ノートの高さは越えない
@@ -218,6 +207,7 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
   emit("leftEdgeMousedown", event);
 };
 
+// ノートの状態に応じたCSSクラス
 const noteClasses = computed(() => ({
   edit: editTargetIsNote.value,
   "below-pitch": editTargetIsPitch.value,
@@ -227,23 +217,26 @@ const noteClasses = computed(() => ({
   error: hasOverlappingError.value || hasPhraseError.value,
   overlapping: hasOverlappingError.value,
   "invalid-phrase": hasPhraseError.value,
-  resizing: resizingRight.value || resizingLeft.value,
-  "resizing-right": resizingRight.value,
-  "resizing-left": resizingLeft.value,
-  move: props.previewMode === "MOVE_NOTE" && props.isPreview,
+  "resize-note-right":
+    props.previewMode === "RESIZE_NOTE_RIGHT" && props.isPreview,
+  "resize-note-left":
+    props.previewMode === "RESIZE_NOTE_LEFT" && props.isPreview,
+  "move-note": props.previewMode === "MOVE_NOTE" && props.isPreview,
 }));
 
+// ノートのスタイル
 const noteStyle = computed(() => ({
   width: `${width.value}px`,
   height: `${height.value}px`,
-  transform: `translate3d(${positionX.value}px,${positionY.value}px,0)`,
+  transform: `translate3d(${positionX.value}px,${positionY.value}px,0)`, // ノートの位置
 }));
 
+// ノートの歌詞のスタイル。位置およびサイズを調整
 const lyricStyle = computed(() => ({
   fontSize: `${lyricFontSize.value}px`,
   left: `${lyricLeftPosition.value}px`,
   lineHeight: `${height.value}px`,
-  transform: `translate3d(0,${height.value}px,0)`,
+  transform: `translate3d(0,${height.value}px,0)`, // ノートに対して歌詞を縦中央に配置
 }));
 </script>
 
@@ -268,6 +261,7 @@ const lyricStyle = computed(() => ({
   top: 0;
   left: 0;
 
+  // ノートバー
   .note-bar {
     box-sizing: border-box;
     position: absolute;
@@ -278,6 +272,7 @@ const lyricStyle = computed(() => ({
     border-radius: 5px;
   }
 
+  // ノートの左右の端
   .note-edge {
     position: absolute;
     top: 0;
@@ -287,15 +282,16 @@ const lyricStyle = computed(() => ({
     height: 100%;
 
     &.left {
-      left: -2px;
+      left: -2px; // FIXME: 右端のノートの当たり判定に食い込んでしまう
       border-radius: 5px 0 0 5px;
     }
     &.right {
-      right: -2px;
+      right: -2px; // FIXME: 左端のノートの当たり判定に食い込んでしまう
       border-radius: 0 5px 5px 0;
     }
   }
 
+  // ノートの歌詞
   .note-lyric {
     position: absolute;
     bottom: 100%;
@@ -311,7 +307,7 @@ const lyricStyle = computed(() => ({
   }
 }
 
-// 編集モード
+// ノート編集モード
 .note.edit {
   .note-bar {
     cursor: move;
@@ -343,7 +339,14 @@ const lyricStyle = computed(() => ({
   }
 
   // 右リサイズ中
-  &.resizing-right {
+  &.resize-note-right {
+    .note-bar {
+      cursor: ew-resize;
+    }
+    .note-edge:hover {
+      cursor: ew-resize;
+    }
+
     .note-edge.right {
       background-color: var(--scheme-color-sing-note-bar-selected-border);
     }
@@ -356,7 +359,14 @@ const lyricStyle = computed(() => ({
   }
 
   // 左リサイズ中
-  &.resizing-left {
+  &.resize-note-left {
+    .note-bar {
+      cursor: ew-resize;
+    }
+    .note-edge:hover {
+      cursor: ew-resize;
+    }
+
     .note-edge.left {
       background-color: var(--scheme-color-sing-note-bar-selected-border);
     }
@@ -419,18 +429,8 @@ const lyricStyle = computed(() => ({
     }
   }
 
-  // リサイズ中
-  &.resizing {
-    .note-bar {
-      cursor: ew-resize;
-    }
-    .note-edge:hover {
-      cursor: ew-resize;
-    }
-  }
-
   // ドラッグ移動中
-  &.move {
+  &.move-note {
     cursor: move;
   }
 }

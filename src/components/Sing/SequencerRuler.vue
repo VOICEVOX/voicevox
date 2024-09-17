@@ -107,36 +107,30 @@ const endTicks = computed(() => {
 const width = computed(() => {
   return tickToBaseX(endTicks.value, tpqn.value) * zoomX.value;
 });
-// measureInfosの計算を調整
 const measureInfos = computed(() => {
-  const measureInfos: {
-    number: number;
-    x: number;
-  }[] = [];
-  for (let i = 0; i < timeSignatures.value.length; i++) {
-    const ts = timeSignatures.value[i];
+  return timeSignatures.value.flatMap((timeSignature, i) => {
     const measureDuration = getMeasureDuration(
-      ts.beats,
-      ts.beatType,
+      timeSignature.beats,
+      timeSignature.beatType,
       tpqn.value,
     );
     const nextTsPosition =
       i !== timeSignatures.value.length - 1
         ? tsPositions.value[i + 1]
-        : undefined;
-    let measureNumber = ts.measureNumber;
-    let measurePosition = tsPositions.value[i];
-    while (measurePosition < (nextTsPosition ?? endTicks.value)) {
+        : endTicks.value;
+    const start = tsPositions.value[i];
+    const end = nextTsPosition;
+    const numMeasures = Math.floor((end - start) / measureDuration);
+    return Array.from({ length: numMeasures }, (_, index) => {
+      const measureNumber = timeSignature.measureNumber + index;
+      const measurePosition = start + index * measureDuration;
       const baseX = tickToBaseX(measurePosition, tpqn.value);
-      measureInfos.push({
+      return {
         number: measureNumber,
         x: Math.round(baseX * zoomX.value),
-      });
-      measureNumber++;
-      measurePosition += measureDuration;
-    }
-  }
-  return measureInfos;
+      };
+    });
+  });
 });
 const playheadX = computed(() => {
   const baseX = tickToBaseX(playheadTicks.value, tpqn.value);
@@ -227,7 +221,7 @@ onUnmounted(() => {
   stroke: var(--scheme-color-sing-ruler-measure-line);
   stroke-width: 1px;
 
-  // NOTE: 最初の小節線を非表示: 必要に応じて再表示+位置合わせする
+  // NOTE: 最初の小節線を非表示。必要に応じて再表示・位置合わせする
   &.first-measure-line {
     stroke: var(--scheme-color-sing-ruler-surface);
   }
