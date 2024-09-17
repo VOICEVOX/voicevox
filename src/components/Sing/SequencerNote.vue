@@ -1,30 +1,7 @@
 <template>
-  <div
-    v-bind="$attrs"
-    class="note"
-    :class="{
-      selected: isSelected,
-      preview: isPreview,
-      'preview-lyric': previewLyric != undefined,
-      overlapping: hasOverlappingError,
-      'invalid-phrase': hasPhraseError,
-      'below-pitch': editTargetIsPitch,
-      resizing: !noteRisizing,
-      'resizing-right': noteRisizing === 'right',
-      'resizing-left': noteRisizing === 'left',
-    }"
-    :style="{
-      width: `${width}px`,
-      height: `${height}px`,
-      transform: `translate3d(${positionX}px,${positionY}px,0)`,
-    }"
-  >
+  <div class="note" :class="noteClasses" :style="noteStyle">
     <div
       class="note-bar"
-      :class="{
-        'cursor-move': editTargetIsNote && !noteRisizing,
-        'cursor-ew-resize': noteRisizing,
-      }"
       @mousedown="onBarMouseDown"
       @dblclick="onBarDoubleClick"
     >
@@ -34,20 +11,8 @@
         :menudata="contextMenuData"
       />
     </div>
-    <div
-      class="note-left-edge"
-      :class="{
-        'cursor-ew-resize': editTargetIsNote,
-      }"
-      @mousedown="onLeftEdgeMouseDown"
-    ></div>
-    <div
-      class="note-right-edge"
-      :class="{
-        'cursor-ew-resize': editTargetIsNote,
-      }"
-      @mousedown="onRightEdgeMouseDown"
-    ></div>
+    <div class="note-edge left" @mousedown="onLeftEdgeMouseDown"></div>
+    <div class="note-edge right" @mousedown="onRightEdgeMouseDown"></div>
     <!-- エラー内容を表示 -->
     <QTooltip
       v-if="hasOverlappingError"
@@ -69,26 +34,9 @@
     >
       フレーズが生成できません。歌詞は日本語1文字までです。
     </QTooltip>
-  </div>
-  <div
-    class="note-lyric"
-    data-testid="note-lyric"
-    :class="{
-      selected: isSelected,
-      preview: isPreview,
-      'preview-lyric': previewLyric != undefined,
-      overlapping: hasOverlappingError,
-      'invalid-phrase': hasPhraseError,
-      'below-pitch': editTargetIsPitch,
-    }"
-    :style="{
-      fontSize: `${lyricFontSize}px`,
-      left: `${lyricLeftPosition}px`,
-      lineHeight: `${height}px`,
-      transform: `translate3d(${positionX}px,${positionY + height}px,0)`,
-    }"
-  >
-    {{ lyricToDisplay }}
+    <div class="note-lyric" data-testid="note-lyric" :style="lyricStyle">
+      {{ lyricToDisplay }}
+    </div>
   </div>
 </template>
 
@@ -109,6 +57,14 @@ const props = defineProps<{
   note: Note;
   /** どれかのノートがプレビュー中 */
   nowPreviewing: boolean;
+  /** プレビューモード */
+  previewMode:
+    | "ADD_NOTE"
+    | "MOVE_NOTE"
+    | "RESIZE_NOTE_RIGHT"
+    | "RESIZE_NOTE_LEFT"
+    | "DRAW_PITCH"
+    | "ERASE_PITCH";
   /** このノートが選択中か */
   isSelected: boolean;
   /** このノートがプレビュー中か */
@@ -116,8 +72,6 @@ const props = defineProps<{
   /** ノートが重なっているか */
   isOverlapping: boolean;
   previewLyric: string | null;
-  /** ノートのリサイズ状態。undefinedならリサイズ中ではない、right・leftなら右・左方向にリサイズ中 */
-  noteRisizing: undefined | "right" | "left";
 }>();
 
 const emit = defineEmits<{
@@ -147,6 +101,12 @@ const width = computed(() => {
   const noteStartBaseX = tickToBaseX(noteStartTicks, tpqn.value);
   const noteEndBaseX = tickToBaseX(noteEndTicks, tpqn.value);
   return (noteEndBaseX - noteStartBaseX) * zoomX.value;
+});
+const resizingRight = computed(() => {
+  return props.isPreview && props.previewMode === "RESIZE_NOTE_RIGHT";
+});
+const resizingLeft = computed(() => {
+  return props.isPreview && props.previewMode === "RESIZE_NOTE_LEFT";
 });
 // 歌詞のフォントサイズをズームにあわせて調整する
 // 最小12px, 最大16px, ノートの高さは越えない
@@ -257,6 +217,34 @@ const onRightEdgeMouseDown = (event: MouseEvent) => {
 const onLeftEdgeMouseDown = (event: MouseEvent) => {
   emit("leftEdgeMousedown", event);
 };
+
+const noteClasses = computed(() => ({
+  edit: editTargetIsNote.value,
+  "below-pitch": editTargetIsPitch.value,
+  selected: props.isSelected,
+  preview: props.isPreview,
+  "preview-lyric": props.previewLyric != null,
+  error: hasOverlappingError.value || hasPhraseError.value,
+  overlapping: hasOverlappingError.value,
+  "invalid-phrase": hasPhraseError.value,
+  resizing: resizingRight.value || resizingLeft.value,
+  "resizing-right": resizingRight.value,
+  "resizing-left": resizingLeft.value,
+  move: props.previewMode === "MOVE_NOTE" && props.isPreview,
+}));
+
+const noteStyle = computed(() => ({
+  width: `${width.value}px`,
+  height: `${height.value}px`,
+  transform: `translate3d(${positionX.value}px,${positionY.value}px,0)`,
+}));
+
+const lyricStyle = computed(() => ({
+  fontSize: `${lyricFontSize.value}px`,
+  left: `${lyricLeftPosition.value}px`,
+  lineHeight: `${height.value}px`,
+  transform: `translate3d(0,${height.value}px,0)`,
+}));
 </script>
 
 <style scoped lang="scss">
@@ -290,76 +278,52 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     border-radius: 5px;
   }
 
-  .note-left-edge,
-  .note-right-edge {
+  .note-edge {
     position: absolute;
     top: 0;
     width: 25%;
     min-width: 3px;
     max-width: 8px;
     height: 100%;
+
+    &.left {
+      left: -2px;
+      border-radius: 5px 0 0 5px;
+    }
+    &.right {
+      right: -2px;
+      border-radius: 0 5px 5px 0;
+    }
   }
 
-  .note-left-edge {
-    left: -2px;
-    border-radius: 5px 0 0 5px;
+  .note-lyric {
+    position: absolute;
+    bottom: 100%;
+    color: var(--scheme-color-sing-on-note-bar-container);
+    font-size: 1rem;
+    font-weight: 400;
+    letter-spacing: -0.1em;
+    white-space: nowrap;
+    pointer-events: none;
+    @include text-outline(var(--scheme-color-sing-note-bar-container));
+    z-index: vars.$z-index-sing-note;
+    -webkit-font-smoothing: antialiased;
   }
+}
 
-  .note-right-edge {
-    right: -2px;
-    border-radius: 0 5px 5px 0;
+// 編集モード
+.note.edit {
+  .note-bar {
+    cursor: move;
   }
-
-  // リサイズ中
-  &:not(.below-pitch) {
-    .note-left-edge:hover,
-    &.resizing-left .note-left-edge,
-    .note-right-edge:hover,
-    &.resizing-right .note-right-edge {
+  .note-edge {
+    cursor: ew-resize;
+    &:hover {
       background-color: var(--scheme-color-sing-note-bar-border);
     }
-
-    &.selected {
-      .note-left-edge:hover,
-      &.resizing-left .note-left-edge,
-      .note-right-edge:hover,
-      &.resizing-right .note-right-edge {
-        background-color: var(--scheme-color-sing-note-bar-selected-border);
-      }
-    }
-
-    &.preview-lyric {
-      .note-left-edge:hover,
-      &.resizing-left .note-left-edge,
-      .note-right-edge:hover,
-      &.resizing-right .note-right-edge {
-        background-color: var(--scheme-color-sing-note-bar-preview-border);
-      }
-    }
-
-    &.overlapping,
-    &.invalid-phrase {
-      .note-left-edge:hover,
-      &.resizing-left .note-left-edge,
-      .note-right-edge:hover,
-      &.resizing-right .note-right-edge {
-        background-color: var(--scheme-color-error);
-      }
-    }
   }
 
-  &.below-pitch {
-    .note-left-edge,
-    .note-right-edge {
-      &:hover,
-      .resizing-left &,
-      .resizing-right & {
-        background-color: transparent;
-        cursor: inherit;
-      }
-    }
-  }
-
+  // 選択中
   &.selected {
     .note-bar {
       background-color: var(--scheme-color-sing-note-bar-selected-container);
@@ -367,155 +331,136 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
       outline: 1px solid var(--scheme-color-sing-note-bar-selected-outline);
       outline-offset: 1px;
     }
+    .note-edge:hover {
+      background-color: var(--scheme-color-sing-note-bar-selected-border);
+    }
+    .note-lyric {
+      color: var(--scheme-color-sing-on-note-bar-selected-container);
+      @include text-outline(
+        var(--scheme-color-sing-note-bar-selected-container)
+      );
+    }
   }
 
+  // 右リサイズ中
+  &.resizing-right {
+    .note-edge.right {
+      background-color: var(--scheme-color-sing-note-bar-selected-border);
+    }
+
+    &.error {
+      .note-edge.right {
+        background-color: var(--scheme-color-error);
+      }
+    }
+  }
+
+  // 左リサイズ中
+  &.resizing-left {
+    .note-edge.left {
+      background-color: var(--scheme-color-sing-note-bar-selected-border);
+    }
+
+    &.error {
+      .note-edge.left {
+        background-color: var(--scheme-color-error);
+      }
+    }
+  }
+
+  // 歌詞プレビュー中
   &.preview-lyric {
     .note-bar {
       background-color: var(--scheme-color-sing-note-bar-preview-container);
       border-color: var(--scheme-color-sing-note-bar-preview-border);
-      outline-color: var(--scheme-color-sing-note-bar-preview-outline);
+    }
+    .note-edge:hover {
+      background-color: var(--scheme-color-sing-note-bar-preview-border);
+    }
+    .note-lyric {
+      color: oklch(
+        from var(--scheme-color-sing-on-note-bar-container) l c h / 0.38
+      );
+      @include text-outline(
+        var(--scheme-color-sing-note-bar-preview-container)
+      );
     }
   }
 
-  &.overlapping,
-  &.invalid-phrase {
+  // エラー
+  &.error {
     --note-error-container: oklch(
       from var(--scheme-color-error-container) l calc(var(--secondary-c) / 2) h
     );
     .note-bar {
       background-color: var(--note-error-container);
       border-color: var(--scheme-color-error);
-      outline-color: var(--scheme-color-error-container);
+    }
+    .note-edge:hover {
+      background-color: var(--scheme-color-error);
+    }
+    .note-lyric {
+      color: oklch(from var(--scheme-color-on-error-container) l c h / 0.5);
+      @include text-outline(var(--note-error-container));
     }
 
-    &.selected,
-    &:active {
+    // 選択中
+    &.selected {
       .note-bar {
         background-color: var(--scheme-color-error-container);
         border-color: var(--scheme-color-error);
-        outline-color: var(--scheme-color-error);
+        outline: 1px solid var(--scheme-color-error);
+      }
+
+      .note-lyric {
+        color: oklch(from var(--scheme-color-on-error-container) l c h / 0.5);
+        @include text-outline(var(--scheme-color-error-container));
       }
     }
   }
 
-  &.below-pitch {
-    .note-bar {
-      background-color: var(--scheme-color-sing-note-bar-below-pitch-container);
-      border-color: var(--scheme-color-sing-grid-cell-white);
-      outline: 0;
-      border-radius: 6px;
-
-      // NOTE: ピッチの基準ライン(現状非表示)
-      &:after {
-        content: "";
-        border-radius: 2px;
-        display: none;
-        position: absolute;
-        left: 0;
-        min-height: 6px;
-        max-height: 20%;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 100%;
-        background-color: transparent;
-      }
-    }
-
-    &.overlapping,
-    &.invalid-phrase {
-      .note-bar {
-        border-color: 0;
-        background: var(--note-error-container);
-        outline: none;
-
-        &:after {
-          display: none;
-        }
-      }
-    }
-  }
-
+  // リサイズ中
   &.resizing {
-    cursor: ew-resize;
+    .note-bar {
+      cursor: ew-resize;
+    }
+    .note-edge:hover {
+      cursor: ew-resize;
+    }
+  }
+
+  // ドラッグ移動中
+  &.move {
+    cursor: move;
   }
 }
 
-.cursor-move {
-  cursor: move;
-}
-
-.cursor-ew-resize {
-  cursor: ew-resize;
-}
-
-.note-lyric {
-  backface-visibility: hidden;
-  position: absolute;
-  bottom: 0;
-  color: var(--scheme-color-sing-on-note-bar-container);
-  font-size: 1rem;
-  font-weight: 400;
-  letter-spacing: -0.1em;
-  white-space: nowrap;
-  pointer-events: none;
-  background: transparent;
-  // NOTE: 以下の目的でtext-shadowを設定
-  // - ノートバーの外側に歌詞が溢れた場合でも歌詞が見えるようにする
-  // - エッジホバーとかぶっても歌詞が見えるようにする
-  // - 今後ピッチラインや波形などその他と重なっても歌詞が見えるようにする
-  @include text-outline(var(--scheme-color-sing-note-bar-container));
-  // アンチエイリアス
-  -webkit-font-smoothing: antialiased;
-  bottom: 100%;
-  // NOTE: 以下の目的でz-indexを使用
-  // - 特にズーム倍率が高い場合に次のノートに被った場合に見えなくなるため可読性を確保
-  // - ピッチラインを文字とノートバーの間に配置する
-  // z-indexはあまり使用しない方がよさそうだが使用するのであれば
-  // おそらくは抽象的な意味合いごとにz-indexを変数として定義するのがよさそう
-  // eg: fixedアイテム: 1010, ポップオーバー: 1020, モーダル: 1050...など
-  z-index: vars.$z-index-sing-note;
-
-  // 選択中
-  &.selected {
-    color: var(--scheme-color-sing-on-note-bar-selected-container);
-    @include text-outline(var(--scheme-color-sing-note-bar-selected-container));
+// ピッチ編集モード
+.note.below-pitch {
+  .note-bar {
+    background-color: var(--scheme-color-sing-note-bar-below-pitch-container);
+    border-color: var(--scheme-color-sing-grid-cell-white);
+    border-radius: 6px;
+  }
+  .note-lyric {
+    color: oklch(from var(--scheme-color-on-surface-variant) l c h / 0.8);
+    @include text-outline(var(--scheme-color-surface-variant));
+    z-index: vars.$z-index-sing-note-lyric;
   }
 
-  // プレビュー中
-  &.preview-lyric {
-    color: oklch(
-      from var(--scheme-color-sing-on-note-bar-container) l c h / 0.38
-    );
-    @include text-outline(var(--scheme-color-sing-note-bar-preview-container));
+  .note-edge:hover {
+    background-color: inherit;
   }
 
   // エラー
-  &.invalid-phrase,
-  &.overlapping {
+  &.error {
     --note-error-container: oklch(
       from var(--scheme-color-error-container) l calc(var(--secondary-c) / 2) h
     );
-    color: oklch(from var(--scheme-color-on-error-container) l c h / 0.5);
-    @include text-outline(
-      oklch(
-        from var(--scheme-color-error-container) l calc(var(--secondary-c) / 2)
-          h
-      )
-    );
-
-    &.selected {
-      @include text-outline(var(--scheme-color-error-container));
+    .note-bar {
+      background: var(--note-error-container);
     }
-  }
-
-  // ピッチ編集モード
-  &.below-pitch {
-    color: oklch(from var(--scheme-color-on-surface-variant) l c h / 0.8);
-    z-index: vars.$z-index-sing-note-lyric;
-    @include text-outline(var(--scheme-color-surface-variant));
-
-    &.invalid-phrase,
-    &.overlapping {
+    .note-lyric {
       color: oklch(
         from var(--scheme-color-error) l calc(var(--secondary-c) / 2) h / 0.38
       );

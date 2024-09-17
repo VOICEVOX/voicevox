@@ -58,21 +58,11 @@
         class="sequencer-note"
         :note
         :nowPreviewing
+        :previewMode
         :isSelected="selectedNoteIds.has(note.id)"
         :isPreview="previewNoteIds.has(note.id)"
         :isOverlapping="overlappingNoteIdsInSelectedTrack.has(note.id)"
         :previewLyric="previewLyrics.get(note.id) || null"
-        :isResizingNote
-        :isResizingRight="
-          isResizingNote &&
-          previewMode === 'RESIZE_NOTE_RIGHT' &&
-          selectedNoteIds.has(note.id)
-        "
-        :isResizingLeft="
-          isResizingNote &&
-          previewMode === 'RESIZE_NOTE_LEFT' &&
-          selectedNoteIds.has(note.id)
-        "
         @barMousedown="onNoteBarMouseDown($event, note)"
         @barDoubleClick="onNoteBarDoubleClick($event, note)"
         @leftEdgeMousedown="onNoteLeftEdgeMouseDown($event, note)"
