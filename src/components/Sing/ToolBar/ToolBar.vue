@@ -514,7 +514,7 @@ onUnmounted(() => {
   color: var(--scheme-color-on-surface-variant);
 }
 
-// type:number
+// 数字入力のテキストフィールド
 :deep(.q-field__native[type="number"]) {
   &::-webkit-inner-spin-button,
   &::-webkit-outer-spin-button {
