@@ -124,7 +124,7 @@ const lyricFontSize = computed(() => {
   const maxSize = 16;
   // ノートの高さを見た目で越えない範囲で最大値を設定
   const baseSize = Math.min(height.value - 6, maxSize);
-  // ズームによる拡大率を調整。計算値に特に根拠はない。見た目あわせ。
+  // ズームによる拡大率を調整(計算値に特に根拠はない。見た目あわせ。)
   const zoomFactor = Math.max(0.5, Math.min(1.5, zoomX.value / 0.5));
   return Math.max(minSize, Math.min(maxSize, baseSize * zoomFactor));
 });
@@ -133,7 +133,7 @@ const lyricFontSize = computed(() => {
 const lyricLeftPosition = computed(() => {
   const minLeft = 0;
   const maxLeft = 2;
-  // ズームによるleft位置を調整。計算値に特に根拠はない。見た目あわせ
+  // ズームによるleft位置を調整(計算値に特に根拠はない。見た目あわせ。)
   const paddingFactor = Math.min(1, zoomX.value / 0.5);
   return minLeft + (maxLeft - minLeft) * paddingFactor;
 });
@@ -164,22 +164,23 @@ const lyricToDisplay = computed(() => {
 });
 
 const { nowPreviewing, previewMode } = usePreviewMode();
+// 状態に応じたCSSクラス
 const classes = computed(() => {
   return {
-    "edit-note": editTargetIsNote.value,
-    "edit-pitch": editTargetIsPitch.value,
-    selected: props.isSelected,
-    preview: props.isPreview,
-    "preview-lyric": props.previewLyric != undefined,
-    overlapping: hasOverlappingError.value,
-    "invalid-phrase": hasPhraseError.value,
-    "below-pitch": editTargetIsPitch.value,
-    adding: props.isPreview && previewMode.value === "ADD_NOTE",
+    "edit-note": editTargetIsNote.value, // ノート編集モード
+    "edit-pitch": editTargetIsPitch.value, // ピッチ編集モード
+    selected: props.isSelected, // このノートが選択中
+    preview: props.isPreview, // なんらかのプレビュー中
+    "preview-lyric": props.previewLyric != undefined, // 歌詞プレビュー中
+    overlapping: hasOverlappingError.value, // ノートが重なっている
+    "invalid-phrase": hasPhraseError.value, // フレーズ生成エラー
+    "below-pitch": editTargetIsPitch.value, // ピッチ編集中
+    adding: props.isPreview && previewMode.value === "ADD_NOTE", // ノート追加中
     "resizing-right":
-      props.isPreview && previewMode.value === "RESIZE_NOTE_RIGHT",
+      props.isPreview && previewMode.value === "RESIZE_NOTE_RIGHT", // 右リサイズ中
     "resizing-left":
-      props.isPreview && previewMode.value === "RESIZE_NOTE_LEFT",
-    moving: props.isPreview && previewMode.value === "MOVE_NOTE",
+      props.isPreview && previewMode.value === "RESIZE_NOTE_LEFT", // 左リサイズ中
+    moving: props.isPreview && previewMode.value === "MOVE_NOTE", // ノート移動中
   };
 });
 
@@ -296,12 +297,12 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     cursor: ew-resize;
 
     &.left {
-      left: -2px;
+      left: -2px; // FIXME: 左隣のノートの右端の当たり判定に食い込んでしまう
       border-radius: 5px 0 0 5px;
     }
 
     &.right {
-      right: -2px;
+      right: -2px; // FIXME: 右隣のノートの左端の当たり判定に食い込んでしまう
       border-radius: 0 5px 5px 0;
     }
 
