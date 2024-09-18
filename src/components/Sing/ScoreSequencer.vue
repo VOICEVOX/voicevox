@@ -16,10 +16,15 @@
       class="sequencer-body"
       :class="{
         'edit-note': editTarget === 'NOTE',
+        'edit-pitch': editTarget === 'PITCH' && !ctrlKey,
         'rect-selecting': editTarget === 'NOTE' && shiftKey,
-        'edit-pitch': editTarget === 'PITCH',
-        'cursor-draw': editTarget === 'PITCH' && !ctrlKey,
-        'resizing-note': isResizingNote,
+        previewing: nowPreviewing,
+        'add-note': previewMode === 'ADD_NOTE',
+        'resize-note-right': previewMode === 'RESIZE_NOTE_RIGHT',
+        'resize-note-left': previewMode === 'RESIZE_NOTE_LEFT',
+        'move-note': previewMode === 'MOVE_NOTE',
+        'draw-pitch': previewMode === 'DRAW_PITCH',
+        'erase-pitch': previewMode === 'ERASE_PITCH',
       }"
       aria-label="シーケンサ"
       @mousedown="onMouseDown"
@@ -57,12 +62,9 @@
         :key="note.id"
         class="sequencer-note"
         :note
-        :nowPreviewing
         :isSelected="selectedNoteIds.has(note.id)"
         :isPreview="previewNoteIds.has(note.id)"
         :isOverlapping="overlappingNoteIdsInSelectedTrack.has(note.id)"
-        :isResizingNote
-        :noteResizing
         :previewLyric="previewLyrics.get(note.id) || null"
         @barMousedown="onNoteBarMouseDown($event, note)"
         @barDoubleClick="onNoteBarDoubleClick($event, note)"
@@ -175,7 +177,7 @@ import {
 import ContextMenu, {
   ContextMenuItemData,
 } from "@/components/Menu/ContextMenu.vue";
-import { NoteId } from "@/type/preload";
+import { NoteId, PreviewMode } from "@/type/preload";
 import { useStore } from "@/store";
 import { Note, SequencerEditTarget } from "@/store/type";
 import {
@@ -219,17 +221,10 @@ import {
   useShiftKey,
 } from "@/composables/useModifierKey";
 import { applyGaussianFilter, linearInterpolation } from "@/sing/utility";
+import { usePreviewMode } from "@/composables/usePreviewMode";
 import { useLyricInput } from "@/composables/useLyricInput";
 import { ExhaustiveError } from "@/type/utility";
 import { uuid4 } from "@/helpers/random";
-
-type PreviewMode =
-  | "ADD_NOTE"
-  | "MOVE_NOTE"
-  | "RESIZE_NOTE_RIGHT"
-  | "RESIZE_NOTE_LEFT"
-  | "DRAW_PITCH"
-  | "ERASE_PITCH";
 
 // 直接イベントが来ているかどうか
 const isSelfEventTarget = (event: UIEvent) => {
@@ -239,7 +234,13 @@ const isSelfEventTarget = (event: UIEvent) => {
 const { warn } = createLogger("ScoreSequencer");
 const store = useStore();
 const state = store.state;
-
+const {
+  previewMode,
+  setPreviewMode,
+  clearPreviewMode,
+  nowPreviewing,
+  executePreviewProcess,
+} = usePreviewMode();
 // 選択中のトラックID
 const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
 
@@ -387,23 +388,10 @@ const onLyricConfirmed = (nextNoteId: NoteId | undefined) => {
   void store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId: nextNoteId });
 };
 
-// ノートのリサイズ
-const isResizingNote = ref(false);
-const noteResizing = computed(() => {
-  return isResizingNote.value
-    ? previewMode === "RESIZE_NOTE_RIGHT"
-      ? "right"
-      : "left"
-    : undefined;
-});
-
 // プレビュー
 // FIXME: 関連する値を１つのobjectにまとめる
-const nowPreviewing = ref(false);
-let previewMode: PreviewMode = "ADD_NOTE";
 let previewRequestId = 0;
 let previewStartEditTarget: SequencerEditTarget = "NOTE";
-let executePreviewProcess = false;
 // ノート編集のプレビュー
 // プレビュー中に更新（移動やリサイズ等）されるノーツ
 const previewNotes = ref<Note[]>([]);
@@ -716,26 +704,26 @@ const previewErasePitch = () => {
 };
 
 const preview = () => {
-  if (executePreviewProcess) {
-    if (previewMode === "ADD_NOTE") {
+  if (executePreviewProcess.value) {
+    if (previewMode.value === "ADD_NOTE") {
       previewAdd();
     }
-    if (previewMode === "MOVE_NOTE") {
+    if (previewMode.value === "MOVE_NOTE") {
       previewMove();
     }
-    if (previewMode === "RESIZE_NOTE_RIGHT") {
+    if (previewMode.value === "RESIZE_NOTE_RIGHT") {
       previewResizeRight();
     }
-    if (previewMode === "RESIZE_NOTE_LEFT") {
+    if (previewMode.value === "RESIZE_NOTE_LEFT") {
       previewResizeLeft();
     }
-    if (previewMode === "DRAW_PITCH") {
+    if (previewMode.value === "DRAW_PITCH") {
       previewDrawPitch();
     }
-    if (previewMode === "ERASE_PITCH") {
+    if (previewMode.value === "ERASE_PITCH") {
       previewErasePitch();
     }
-    executePreviewProcess = false;
+    executePreviewProcess.value = false;
   }
   previewRequestId = requestAnimationFrame(preview);
 };
@@ -840,9 +828,6 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
       copiedNotesForPreview.set(copiedNote.id, copiedNote);
     }
     previewNotes.value = copiedNotes;
-    if (mode === "RESIZE_NOTE_LEFT" || mode === "RESIZE_NOTE_RIGHT") {
-      isResizingNote.value = true;
-    }
   } else if (editTarget.value === "PITCH") {
     // 編集ターゲットがピッチのときの処理
 
@@ -872,10 +857,9 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
   } else {
     throw new ExhaustiveError(editTarget.value);
   }
-  previewMode = mode;
+  setPreviewMode(mode);
   previewStartEditTarget = editTarget.value;
-  executePreviewProcess = true;
-  nowPreviewing.value = true;
+  executePreviewProcess.value = true;
   previewRequestId = requestAnimationFrame(preview);
 };
 
@@ -883,10 +867,8 @@ const endPreview = () => {
   cancelAnimationFrame(previewRequestId);
   if (previewStartEditTarget === "NOTE") {
     // 編集ターゲットがノートのときにプレビューを開始した場合の処理
-    isResizingNote.value = false;
-
     if (edited) {
-      if (previewMode === "ADD_NOTE") {
+      if (previewMode.value === "ADD_NOTE") {
         void store.dispatch("COMMAND_ADD_NOTES", {
           notes: previewNotes.value,
           trackId: selectedTrackId.value,
@@ -943,7 +925,7 @@ const endPreview = () => {
   } else {
     throw new ExhaustiveError(previewStartEditTarget);
   }
-  nowPreviewing.value = false;
+  clearPreviewMode();
 };
 
 const onNoteBarMouseDown = (event: MouseEvent, note: Note) => {
@@ -1032,7 +1014,7 @@ const onMouseMove = (event: MouseEvent) => {
   cursorY.value = getYInBorderBox(event.clientY, sequencerBodyElement);
 
   if (nowPreviewing.value) {
-    executePreviewProcess = true;
+    executePreviewProcess.value = true;
   } else {
     const scrollLeft = sequencerBodyElement.scrollLeft;
     const cursorBaseX = (scrollLeft + cursorX.value) / zoomX.value;
@@ -1634,7 +1616,28 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   background: oklch(from var(--scheme-color-secondary) l c h / 0.1);
 }
 
-.cursor-draw {
+.add-note {
+  cursor:
+    url("/draw-cursor.png") 2 30,
+    auto;
+}
+
+.resize-note-left,
+.resize-note-right {
+  cursor: ew-resize;
+}
+
+.move-note {
+  cursor: move;
+}
+
+.edit-pitch {
+  cursor:
+    url("/draw-cursor.png") 2 30,
+    auto;
+}
+
+.draw-pitch {
   cursor:
     url("/draw-cursor.png") 2 30,
     auto;
