@@ -445,6 +445,11 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     background-color: var(--scheme-color-sing-note-bar-below-pitch-container);
     border-color: var(--scheme-color-sing-grid-cell-white);
     outline: 0;
+    cursor: inherit;
+  }
+
+  .note-edge {
+    display: none;
   }
 
   // エラー状態

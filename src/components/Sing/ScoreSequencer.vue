@@ -16,15 +16,17 @@
       class="sequencer-body"
       :class="{
         'edit-note': editTarget === 'NOTE',
-        'edit-pitch': editTarget === 'PITCH' && !ctrlKey,
+        'edit-pitch': editTarget === 'PITCH',
         'rect-selecting': editTarget === 'NOTE' && shiftKey,
         previewing: nowPreviewing,
         'add-note': previewMode === 'ADD_NOTE',
         'resize-note-right': previewMode === 'RESIZE_NOTE_RIGHT',
         'resize-note-left': previewMode === 'RESIZE_NOTE_LEFT',
         'move-note': previewMode === 'MOVE_NOTE',
-        'draw-pitch': previewMode === 'DRAW_PITCH',
-        'erase-pitch': previewMode === 'ERASE_PITCH',
+        'draw-pitch':
+          (editTarget === 'PITCH' && !ctrlKey) || previewMode === 'DRAW_PITCH',
+        'erase-pitch':
+          (editTarget === 'PITCH' && ctrlKey) || previewMode === 'ERASE_PITCH',
       }"
       aria-label="シーケンサ"
       @mousedown="onMouseDown"
@@ -1631,13 +1633,13 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   cursor: move;
 }
 
-.edit-pitch {
+.draw-pitch {
   cursor:
     url("/draw-cursor.png") 2 30,
     auto;
 }
 
-.draw-pitch {
+.edit-pitch {
   cursor:
     url("/draw-cursor.png") 2 30,
     auto;
