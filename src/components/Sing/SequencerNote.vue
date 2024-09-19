@@ -266,7 +266,6 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     #{$size} 0 0 $color;
 }
 
-// 共通
 .note {
   position: absolute;
   top: 0;
