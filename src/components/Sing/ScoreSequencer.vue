@@ -1633,16 +1633,15 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   cursor: move;
 }
 
-.draw-pitch {
+.edit-pitch {
   cursor:
     url("/draw-cursor.png") 2 30,
     auto;
 }
 
-.edit-pitch {
-  cursor:
-    url("/draw-cursor.png") 2 30,
-    auto;
+// TODO: ピッチ削除中にも消しゴムアイコンを表示させるようにする（今はデフォルト）
+.erase-pitch {
+  cursor: default;
 }
 
 .zoom-x-slider {
