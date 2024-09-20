@@ -20,12 +20,14 @@ import log from "electron-log/main";
 import dayjs from "dayjs";
 import windowStateKeeper from "electron-window-state";
 import { hasSupportedGpu } from "./device";
-import EngineManager from "./manager/engineManager";
+import EngineInfoManager from "./manager/engineInfoManager";
+import EngineProcessManager from "./manager/engineProcessManager";
 import VvppManager, { isVvppFile } from "./manager/vvppManager";
 import configMigration014 from "./configMigration014";
 import { RuntimeInfoManager } from "./manager/RuntimeInfoManager";
 import { registerIpcMainHandle, ipcMainSendProxy, IpcMainHandle } from "./ipc";
 import { getConfigManager } from "./electronConfig";
+import { EngineAndVvppController } from "./engineAndVvppController";
 import { failure, success } from "@/type/result";
 import {
   ContactTextFileName,
@@ -44,7 +46,6 @@ import {
   defaultHotkeySettings,
   isMac,
   defaultToolbarButtonSetting,
-  engineSettingSchema,
   EngineId,
   UpdateInfo,
 } from "@/type/preload";
@@ -184,84 +185,36 @@ const runtimeInfoManager = new RuntimeInfoManager(
 
 const configManager = getConfigManager();
 
-const engineManager = new EngineManager({
+const engineInfoManager = new EngineInfoManager({
   configManager,
   defaultEngineDir: appDirPath,
   vvppEngineDir,
+});
+const engineProcessManager = new EngineProcessManager({
+  configManager,
   onEngineProcessError,
+  engineInfosFetcher:
+    engineInfoManager.fetchEngineInfos.bind(engineInfoManager),
+  engineAltPortUpdater: engineInfoManager.updateAltPort.bind(engineInfoManager),
+  engineSettingsGetter: () => configManager.get("engineSettings"),
 });
 const vvppManager = new VvppManager({ vvppEngineDir });
 
+const engineAndVvppController = new EngineAndVvppController(
+  runtimeInfoManager,
+  configManager,
+  engineInfoManager,
+  engineProcessManager,
+  vvppManager,
+);
+
 // エンジンのフォルダを開く
 function openEngineDirectory(engineId: EngineId) {
-  const engineDirectory = engineManager.fetchEngineDirectory(engineId);
+  const engineDirectory = engineInfoManager.fetchEngineDirectory(engineId);
 
   // Windows環境だとスラッシュ区切りのパスが動かない。
   // path.resolveはWindowsだけバックスラッシュ区切りにしてくれるため、path.resolveを挟む。
   void shell.openPath(path.resolve(engineDirectory));
-}
-
-/**
- * VVPPエンジンをインストールする。
- */
-async function installVvppEngine(vvppPath: string) {
-  try {
-    await vvppManager.install(vvppPath);
-    return true;
-  } catch (e) {
-    dialog.showErrorBox(
-      "インストールエラー",
-      `${vvppPath} をインストールできませんでした。`,
-    );
-    log.error(`Failed to install ${vvppPath},`, e);
-    return false;
-  }
-}
-
-/**
- * 危険性を案内してからVVPPエンジンをインストールする。
- * FIXME: こちらで案内せず、GUIでのインストール側に合流させる
- */
-async function installVvppEngineWithWarning({
-  vvppPath,
-  reloadNeeded,
-}: {
-  vvppPath: string;
-  reloadNeeded: boolean;
-}) {
-  const result = dialog.showMessageBoxSync(win, {
-    type: "warning",
-    title: "エンジン追加の確認",
-    message: `この操作はコンピュータに損害を与える可能性があります。エンジンの配布元が信頼できない場合は追加しないでください。`,
-    buttons: ["追加", "キャンセル"],
-    noLink: true,
-    cancelId: 1,
-  });
-  if (result == 1) {
-    return;
-  }
-
-  await installVvppEngine(vvppPath);
-
-  if (reloadNeeded) {
-    void dialog
-      .showMessageBox(win, {
-        type: "info",
-        title: "再読み込みが必要です",
-        message:
-          "VVPPファイルを読み込みました。反映には再読み込みが必要です。今すぐ再読み込みしますか？",
-        buttons: ["再読み込み", "キャンセル"],
-        noLink: true,
-        cancelId: 1,
-      })
-      .then((result) => {
-        if (result.response === 0) {
-          ipcMainSendProxy.CHECK_EDITED_AND_NOT_SAVE(win, {
-            closeOrReload: "reload",
-          });
-        }
-      });
-  }
 }
 
 /**
@@ -280,37 +233,6 @@ function checkMultiEngineEnabled(): boolean {
     });
   }
   return enabled;
-}
-
-/**
- * VVPPエンジンをアンインストールする。
- * 関数を呼んだタイミングでアンインストール処理を途中まで行い、アプリ終了時に完遂する。
- */
-async function uninstallVvppEngine(engineId: EngineId) {
-  let engineInfo: EngineInfo | undefined = undefined;
-  try {
-    engineInfo = engineManager.fetchEngineInfo(engineId);
-    if (!engineInfo) {
-      throw new Error(`No such engineInfo registered: engineId == ${engineId}`);
-    }
-
-    if (!vvppManager.canUninstall(engineInfo)) {
-      throw new Error(`Cannot uninstall: engineId == ${engineId}`);
-    }
-
-    // Windows環境だとエンジンを終了してから削除する必要がある。
-    // そのため、アプリの終了時に削除するようにする。
-    vvppManager.markWillDelete(engineId);
-    return true;
-  } catch (e) {
-    const engineName = engineInfo?.name ?? engineId;
-    dialog.showErrorBox(
-      "アンインストールエラー",
-      `${engineName} をアンインストールできませんでした。`,
-    );
-    log.error(`Failed to uninstall ${engineId},`, e);
-    return false;
-  }
 }
 
 // テーマの読み込み
@@ -515,73 +437,8 @@ async function loadUrl(obj: {
 
 // 開始。その他の準備が完了した後に呼ばれる。
 async function start() {
-  await launchEngines();
+  await engineAndVvppController.launchEngines();
   await createWindow();
-}
-
-// エンジンの準備と起動
-async function launchEngines() {
-  // エンジンの追加と削除を反映させるためEngineInfoとAltPortInfoを再生成する。
-  engineManager.initializeEngineInfosAndAltPortInfo();
-
-  // TODO: デフォルトエンジンの処理をConfigManagerに移してブラウザ版と共通化する
-  const engineInfos = engineManager.fetchEngineInfos();
-  const engineSettings = configManager.get("engineSettings");
-  for (const engineInfo of engineInfos) {
-    if (!engineSettings[engineInfo.uuid]) {
-      // 空オブジェクトをパースさせることで、デフォルト値を取得する
-      engineSettings[engineInfo.uuid] = engineSettingSchema.parse({});
-    }
-  }
-  configManager.set("engineSettings", engineSettings);
-
-  await engineManager.runEngineAll();
-  runtimeInfoManager.setEngineInfos(engineInfos);
-  await runtimeInfoManager.exportFile();
-}
-
-/**
- * エンジンの停止とエンジン終了後処理を行う。
- * 全処理が完了済みの場合 alreadyCompleted を返す。
- * そうでない場合は Promise を返す。
- */
-function cleanupEngines(): Promise<void> | "alreadyCompleted" {
-  const killingProcessPromises = engineManager.killEngineAll();
-  const numLivingEngineProcess = Object.entries(killingProcessPromises).length;
-
-  // 前処理が完了している場合
-  if (numLivingEngineProcess === 0 && !vvppManager.hasMarkedEngineDirs()) {
-    return "alreadyCompleted";
-  }
-
-  let numEngineProcessKilled = 0;
-
-  // 非同期的にすべてのエンジンプロセスをキル
-  const waitingKilledPromises: Promise<void>[] = Object.entries(
-    killingProcessPromises,
-  ).map(([engineId, promise]) => {
-    return promise
-      .catch((error) => {
-        // TODO: 各エンジンプロセスキルの失敗をUIに通知する
-        log.error(`ENGINE ${engineId}: Error during killing process: ${error}`);
-        // エディタを終了するため、エラーが起きてもエンジンプロセスをキルできたとみなす
-      })
-      .finally(() => {
-        numEngineProcessKilled++;
-        log.info(
-          `ENGINE ${engineId}: Process killed. ${numEngineProcessKilled} / ${numLivingEngineProcess} processes killed`,
-        );
-      });
-  });
-
-  // すべてのエンジンプロセスキル処理が完了するまで待機
-  return Promise.all(waitingKilledPromises).then(() => {
-    // エンジン終了後の処理を実行
-    log.info(
-      "All ENGINE process kill operations done. Running post engine kill process",
-    );
-    return vvppManager.handleMarkedEngineDirs();
-  });
 }
 
 const menuTemplateForMac: Electron.MenuItemConstructorOptions[] = [
@@ -719,7 +576,7 @@ registerIpcMainHandle<IpcMainHandle>({
   },
 
   GET_ALT_PORT_INFOS: () => {
-    return engineManager.altPortInfo;
+    return engineInfoManager.altPortInfos;
   },
 
   SHOW_AUDIO_SAVE_DIALOG: async (_, { title, defaultPath }) => {
@@ -903,19 +760,12 @@ registerIpcMainHandle<IpcMainHandle>({
   },
 
   ENGINE_INFOS: () => {
-    // エンジン情報を設定ファイルに保存しないためにstoreは使わない
-    return engineManager.fetchEngineInfos();
+    // エンジン情報を設定ファイルに保存しないためにelectron-storeは使わない
+    return engineInfoManager.fetchEngineInfos();
   },
 
-  /**
-   * エンジンを再起動する。
-   * エンジンの起動が開始したらresolve、起動が失敗したらreject。
-   */
   RESTART_ENGINE: async (_, { engineId }) => {
-    await engineManager.restartEngine(engineId);
-    // TODO: setEngineInfosからexportFileはロックしたほうがより良い
-    runtimeInfoManager.setEngineInfos(engineManager.fetchEngineInfos());
-    await runtimeInfoManager.exportFile();
+    return engineProcessManager.restartEngine(engineId);
   },
 
   OPEN_ENGINE_DIRECTORY: async (_, { engineId }) => {
@@ -980,9 +830,7 @@ registerIpcMainHandle<IpcMainHandle>({
   },
 
   SET_ENGINE_SETTING: async (_, engineId, engineSetting) => {
-    const engineSettings = configManager.get("engineSettings");
-    engineSettings[engineId] = engineSetting;
-    configManager.set(`engineSettings`, engineSettings);
+    engineAndVvppController.updateEngineSetting(engineId, engineSetting);
   },
 
   SET_NATIVE_THEME: (_, source) => {
@@ -990,15 +838,15 @@ registerIpcMainHandle<IpcMainHandle>({
   },
 
   INSTALL_VVPP_ENGINE: async (_, path: string) => {
-    return await installVvppEngine(path);
+    return await engineAndVvppController.installVvppEngine(path);
   },
 
   UNINSTALL_VVPP_ENGINE: async (_, engineId: EngineId) => {
-    return await uninstallVvppEngine(engineId);
+    return await engineAndVvppController.uninstallVvppEngine(engineId);
   },
 
   VALIDATE_ENGINE_DIR: (_, { engineDir }) => {
-    return engineManager.validateEngineDir(engineDir);
+    return engineInfoManager.validateEngineDir(engineDir);
   },
 
   RELOAD_APP: async (_, { isMultiEngineOffMode }) => {
@@ -1008,7 +856,7 @@ registerIpcMainHandle<IpcMainHandle>({
     await win.loadURL("about:blank");
 
     log.info("Checking ENGINE status before reload app");
-    const engineCleanupResult = cleanupEngines();
+    const engineCleanupResult = engineAndVvppController.cleanupEngines();
 
     // エンジンの停止とエンジン終了後処理の待機
     if (engineCleanupResult != "alreadyCompleted") {
@@ -1016,7 +864,7 @@ registerIpcMainHandle<IpcMainHandle>({
     }
     log.info("Post engine kill process done. Now reloading app");
 
-    await launchEngines();
+    await engineAndVvppController.launchEngines();
 
     await loadUrl({ isMultiEngineOffMode: !!isMultiEngineOffMode });
     win.show();
@@ -1082,8 +930,8 @@ app.on("before-quit", async (event) => {
   }
 
   log.info("Checking ENGINE status before app quit");
-  const engineCleanupResult = cleanupEngines();
-  const configSavedResult = configManager.ensureSaved();
+  const { engineCleanupResult, configSavedResult } =
+    engineAndVvppController.gracefulShutdown();
 
   // - エンジンの停止
   // - エンジン終了後処理
@@ -1244,9 +1092,10 @@ app.on("ready", async () => {
     log.info(`vvpp file install: ${filePath}`);
     // FIXME: GUI側に合流させる
     if (checkMultiEngineEnabled()) {
-      await installVvppEngineWithWarning({
+      await engineAndVvppController.installVvppEngineWithWarning({
         vvppPath: filePath,
         reloadNeeded: false,
+        win,
       });
     }
   }
@@ -1263,9 +1112,15 @@ app.on("second-instance", async (event, argv, workDir, rawData) => {
     log.info("Second instance launched with vvpp file");
     // FIXME: GUI側に合流させる
     if (checkMultiEngineEnabled()) {
-      await installVvppEngineWithWarning({
+      await engineAndVvppController.installVvppEngineWithWarning({
         vvppPath: data.filePath,
         reloadNeeded: true,
+        reloadCallback: () => {
+          ipcMainSendProxy.CHECK_EDITED_AND_NOT_SAVE(win, {
+            closeOrReload: "reload",
+          });
+        },
+        win,
       });
     }
   } else if (data.filePath.endsWith(".vvproj")) {

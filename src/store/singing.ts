@@ -25,7 +25,13 @@ import {
   EditorFrameAudioQueryKey,
   EditorFrameAudioQuery,
 } from "./type";
-import { DEFAULT_PROJECT_NAME, sanitizeFileName } from "./utility";
+import {
+  buildSongTrackAudioFileNameFromRawData,
+  currentDateString,
+  DEFAULT_PROJECT_NAME,
+  DEFAULT_STYLE_NAME,
+  sanitizeFileName,
+} from "./utility";
 import {
   CharacterInfo,
   EngineId,
@@ -155,7 +161,7 @@ const offlineRenderTracks = async (
   sampleRate: number,
   renderDuration: number,
   withLimiter: boolean,
-  multiTrackEnabled: boolean,
+  shouldApplyTrackParameters: boolean,
   tracks: Map<TrackId, Track>,
   phrases: Map<PhraseKey, Phrase>,
   singingVoices: Map<SingingVoiceKey, SingingVoice>,
@@ -173,9 +179,11 @@ const offlineRenderTracks = async (
   const shouldPlays = shouldPlayTracks(tracks);
   for (const [trackId, track] of tracks) {
     const channelStrip = new ChannelStrip(offlineAudioContext);
-    channelStrip.volume = multiTrackEnabled ? track.gain : 1;
-    channelStrip.pan = multiTrackEnabled ? track.pan : 0;
-    channelStrip.mute = multiTrackEnabled ? !shouldPlays.has(trackId) : false;
+    channelStrip.volume = shouldApplyTrackParameters ? track.gain : 1;
+    channelStrip.pan = shouldApplyTrackParameters ? track.pan : 0;
+    channelStrip.mute = shouldApplyTrackParameters
+      ? !shouldPlays.has(trackId)
+      : false;
 
     channelStrip.output.connect(mainChannelStrip.input);
     trackChannelStrips.set(trackId, channelStrip);
@@ -1983,7 +1991,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               })
               .then(getValueOrThrow);
           } catch (e) {
-            logger.error("Failed to exoprt the wav file.", e);
+            logger.error("Failed to export the wav file.", e);
             if (e instanceof ResultError) {
               return {
                 result: "WRITE_ERROR",
@@ -2003,6 +2011,150 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           }
 
           return { result: "SUCCESS", path: filePath };
+        };
+
+        mutations.SET_NOW_AUDIO_EXPORTING({ nowAudioExporting: true });
+        return exportWaveFile().finally(() => {
+          mutations.SET_CANCELLATION_OF_AUDIO_EXPORT_REQUESTED({
+            cancellationOfAudioExportRequested: false,
+          });
+          mutations.SET_NOW_AUDIO_EXPORTING({ nowAudioExporting: false });
+        });
+      },
+    ),
+  },
+
+  // TODO: EXPORT_WAVE_FILEとコードが重複しているので、共通化する
+  EXPORT_STEM_WAVE_FILE: {
+    action: createUILockAction(
+      async ({ state, mutations, getters, actions }, { dirPath }) => {
+        let firstFilePath = "";
+        const exportWaveFile = async (): Promise<SaveResultObject> => {
+          const numberOfChannels = 2;
+          const sampleRate = 48000; // TODO: 設定できるようにする
+          const withLimiter = true; // TODO: 設定できるようにする
+
+          const renderDuration = getters.CALC_RENDER_DURATION;
+
+          if (state.nowPlaying) {
+            await actions.SING_STOP_AUDIO();
+          }
+
+          if (state.savingSetting.fixedExportEnabled) {
+            dirPath = state.savingSetting.fixedExportDir;
+          } else {
+            dirPath ??= await window.backend.showSaveDirectoryDialog({
+              title: "音声を保存",
+            });
+          }
+          if (!dirPath) {
+            return { result: "CANCELED", path: "" };
+          }
+
+          if (state.nowRendering) {
+            await createPromiseThatResolvesWhen(() => {
+              return (
+                !state.nowRendering || state.cancellationOfAudioExportRequested
+              );
+            });
+            if (state.cancellationOfAudioExportRequested) {
+              return { result: "CANCELED", path: "" };
+            }
+          }
+
+          for (const [i, trackId] of state.trackOrder.entries()) {
+            const track = getOrThrow(state.tracks, trackId);
+            if (!track.singer) {
+              continue;
+            }
+
+            const characterInfo = getters.CHARACTER_INFO(
+              track.singer.engineId,
+              track.singer.styleId,
+            );
+            if (!characterInfo) {
+              continue;
+            }
+
+            const style = characterInfo.metas.styles.find(
+              (style) => style.styleId === track.singer?.styleId,
+            );
+            if (style == undefined)
+              throw new Error("assert style != undefined");
+
+            const styleName = style.styleName || DEFAULT_STYLE_NAME;
+            const projectName = getters.PROJECT_NAME ?? DEFAULT_PROJECT_NAME;
+
+            const trackFileName = buildSongTrackAudioFileNameFromRawData(
+              state.savingSetting.songTrackFileNamePattern,
+              {
+                characterName: characterInfo.metas.speakerName,
+                index: i,
+                styleName,
+                date: currentDateString(),
+                projectName,
+                trackName: track.name,
+              },
+            );
+            let filePath = path.join(dirPath, trackFileName);
+            if (state.savingSetting.avoidOverwrite) {
+              let tail = 1;
+              const name = filePath.slice(0, filePath.length - 4);
+              while (await window.backend.checkFileExists(filePath)) {
+                filePath = name + "[" + tail.toString() + "]" + ".wav";
+                tail += 1;
+              }
+            }
+
+            const audioBuffer = await offlineRenderTracks(
+              numberOfChannels,
+              sampleRate,
+              renderDuration,
+              withLimiter,
+              state.experimentalSetting.enableMultiTrack,
+              new Map([[trackId, { ...track, solo: false, mute: false }]]),
+              new Map(
+                [...state.phrases.entries()].filter(
+                  ([, phrase]) => phrase.trackId === trackId,
+                ),
+              ),
+              singingVoiceCache,
+            );
+
+            const waveFileData = convertToWavFileData(audioBuffer);
+            if (i === 0) {
+              firstFilePath = filePath;
+            }
+
+            try {
+              await window.backend
+                .writeFile({
+                  filePath,
+                  buffer: waveFileData,
+                })
+                .then(getValueOrThrow);
+            } catch (e) {
+              logger.error("Failed to export the wav file.", e);
+              if (e instanceof ResultError) {
+                return {
+                  result: "WRITE_ERROR",
+                  path: filePath,
+                  errorMessage: generateWriteErrorMessage(
+                    e as ResultError<string>,
+                  ),
+                };
+              }
+              return {
+                result: "UNKNOWN_ERROR",
+                path: filePath,
+                errorMessage:
+                  (e instanceof Error ? e.message : String(e)) ||
+                  "不明なエラーが発生しました。",
+              };
+            }
+          }
+
+          return { result: "SUCCESS", path: firstFilePath };
         };
 
         mutations.SET_NOW_AUDIO_EXPORTING({ nowAudioExporting: true });

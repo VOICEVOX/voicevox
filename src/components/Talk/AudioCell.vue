@@ -181,8 +181,8 @@ const isMultiSelectEnabled = computed(
 );
 
 const selectAndSetActiveAudioKey = () => {
-  void store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: props.audioKey });
-  void store.dispatch("SET_SELECTED_AUDIO_KEYS", {
+  void store.actions.SET_ACTIVE_AUDIO_KEY({ audioKey: props.audioKey });
+  void store.actions.SET_SELECTED_AUDIO_KEYS({
     audioKeys: [props.audioKey],
   });
 };
@@ -248,8 +248,8 @@ const onClickWithModifierKey = (event: MouseEvent) => {
       newSelectedAudioKeys = [...currentSelectedAudioKeys, props.audioKey];
     }
   }
-  void store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: newActiveAudioKey });
-  void store.dispatch("SET_SELECTED_AUDIO_KEYS", {
+  void store.actions.SET_ACTIVE_AUDIO_KEY({ audioKey: newActiveAudioKey });
+  void store.actions.SET_SELECTED_AUDIO_KEYS({
     audioKeys: newSelectedAudioKeys,
   });
 };
@@ -273,7 +273,7 @@ const selectedVoice = computed<Voice | undefined>({
   },
   set(voice: Voice | undefined) {
     if (voice == undefined) return;
-    void store.dispatch("COMMAND_MULTI_CHANGE_VOICE", {
+    void store.actions.COMMAND_MULTI_CHANGE_VOICE({
       audioKeys: isMultiSelectEnabled.value
         ? store.getters.SELECTED_AUDIO_KEYS
         : [props.audioKey],
@@ -312,7 +312,7 @@ const pushAudioTextIfNeeded = async (event?: KeyboardEvent) => {
   if (event && event.isComposing) return;
   if (!willRemove.value && isChangeFlag.value && !willFocusOrBlur.value) {
     isChangeFlag.value = false;
-    await store.dispatch("COMMAND_CHANGE_AUDIO_TEXT", {
+    await store.actions.COMMAND_CHANGE_AUDIO_TEXT({
       audioKey: props.audioKey,
       text: audioTextBuffer.value,
     });
@@ -383,7 +383,7 @@ const putMultilineText = async (texts: string[]) => {
     await pushAudioTextIfNeeded();
   }
 
-  const audioKeys = await store.dispatch("COMMAND_PUT_TEXTS", {
+  const audioKeys = await store.actions.COMMAND_PUT_TEXTS({
     texts,
     voice: audioItem.value.voice,
     prevAudioKey,
@@ -422,7 +422,7 @@ const moveCell = (offset: number) => (e?: KeyboardEvent) => {
         audioKey: audioKeys.value[index],
         focusTarget: "root",
       });
-      void store.dispatch("SET_SELECTED_AUDIO_KEYS", {
+      void store.actions.SET_SELECTED_AUDIO_KEYS({
         audioKeys: [
           ...selectedAudioKeysBefore,
           props.audioKey,
@@ -491,7 +491,7 @@ const removeCell = async () => {
       });
     }
 
-    void store.dispatch("COMMAND_MULTI_REMOVE_AUDIO_ITEM", {
+    void store.actions.COMMAND_MULTI_REMOVE_AUDIO_ITEM({
       audioKeys: audioKeysToDelete,
     });
   }
@@ -513,7 +513,7 @@ const selectCharacterAt = (index: number) => {
     speakerId: speakerUuid,
     styleId: style.styleId,
   };
-  void store.dispatch("COMMAND_MULTI_CHANGE_VOICE", {
+  void store.actions.COMMAND_MULTI_CHANGE_VOICE({
     audioKeys: isMultiSelectEnabled.value
       ? store.getters.SELECTED_AUDIO_KEYS
       : [props.audioKey],
@@ -600,7 +600,7 @@ const contextMenudata = ref<
     onClick: async () => {
       contextMenu.value?.hide();
       isChangeFlag.value = false;
-      await store.dispatch("COMMAND_CHANGE_DISPLAY_TEXT", {
+      await store.actions.COMMAND_CHANGE_DISPLAY_TEXT({
         audioKey: props.audioKey,
         text: audioTextBuffer.value,
       });

@@ -8,7 +8,7 @@
       <QCardSection>
         <div class="text-h5">書き出しファイル名パターン</div>
         <div class="text-body2 text-grey-8">
-          「$キャラ$」のようなタグを使って書き出すファイル名をカスタマイズできます
+          「$キャラ$」のようなタグを使って書き出すファイル名をカスタマイズできます。
         </div>
       </QCardSection>
       <QCardActions class="setting-card q-px-md q-py-sm">
@@ -16,7 +16,7 @@
           <div class="col">
             <QInput
               ref="patternInput"
-              v-model="currentBaseNamePattern"
+              v-model="temporaryTemplateWithoutExt"
               dense
               outlined
               bgColor="background"
@@ -39,7 +39,7 @@
           </div>
         </div>
         <div class="text-body2 text-ellipsis">
-          出力例）{{ previewFileName }}
+          出力例：{{ previewFileName }}
         </div>
         <div class="row full-width q-my-md">
           <QBtn
@@ -78,50 +78,58 @@
 <script setup lang="ts">
 import { computed, ref, nextTick } from "vue";
 import { QInput } from "quasar";
-import { useStore } from "@/store";
-import {
-  buildAudioFileNameFromRawData,
-  DEFAULT_AUDIO_FILE_BASE_NAME_TEMPLATE,
-  replaceTagIdToTagString,
-  sanitizeFileName,
-} from "@/store/utility";
+import { replaceTagIdToTagString, sanitizeFileName } from "@/store/utility";
+import { UnreachableError } from "@/type/utility";
 
 const props = defineProps<{
+  /** ダイアログが開いているかどうか */
   openDialog: boolean;
+  /** デフォルトのテンプレート */
+  defaultTemplate: string;
+  /** 使用可能なタグ */
+  availableTags: (keyof typeof replaceTagIdToTagString)[];
+  /** 保存されているテンプレート */
+  savedTemplate: string;
+  /** ファイル名を生成する関数 */
+  fileNameBuilder: (pattern: string) => string;
 }>();
 
 const emit = defineEmits<{
   (e: "update:openDialog", val: boolean): void;
+  (e: "update:template", val: string): void;
 }>();
 
 const updateOpenDialog = (isOpen: boolean) => emit("update:openDialog", isOpen);
+const updateFileNamePattern = (pattern: string) =>
+  emit("update:template", pattern);
 
-const store = useStore();
 const patternInput = ref<QInput>();
 const maxLength = 128;
-const tagStrings = Object.values(replaceTagIdToTagString);
-
-const savingSetting = computed(() => store.state.savingSetting);
-
-const savedBaseNamePattern = computed(() => {
-  return savingSetting.value.fileNamePattern.replace(/\.wav$/, "");
-});
-const currentBaseNamePattern = ref(savedBaseNamePattern.value);
-const currentNamePattern = computed(
-  () => `${currentBaseNamePattern.value}.wav`,
+const tagStrings = computed(() =>
+  props.availableTags.map((tag) => replaceTagIdToTagString[tag]),
 );
 
-const hasNotIndexTagString = computed(
+const savedTemplateWithoutExt = computed(() =>
+  props.savedTemplate.replace(/\.wav$/, ""),
+);
+const temporaryTemplateWithoutExt = ref(savedTemplateWithoutExt.value);
+const temporaryTemplate = computed(
+  () => temporaryTemplateWithoutExt.value + ".wav",
+);
+
+const missingIndexTagString = computed(
   () =>
-    !currentBaseNamePattern.value.includes(replaceTagIdToTagString["index"]),
+    !temporaryTemplateWithoutExt.value.includes(
+      replaceTagIdToTagString["index"],
+    ),
 );
 const invalidChar = computed(() => {
-  const current = currentBaseNamePattern.value;
+  const current = temporaryTemplateWithoutExt.value;
   const sanitized = sanitizeFileName(current);
   return Array.from(current).find((char, i) => char !== sanitized[i]);
 });
 const errorMessage = computed(() => {
-  if (currentBaseNamePattern.value === "") {
+  if (temporaryTemplateWithoutExt.value === "") {
     return "何か入力してください";
   }
 
@@ -132,7 +140,7 @@ const errorMessage = computed(() => {
   if (previewFileName.value.includes("$")) {
     result.push(`不正なタグが存在するか、$が単体で含まれています`);
   }
-  if (hasNotIndexTagString.value) {
+  if (missingIndexTagString.value) {
     result.push(`$${replaceTagIdToTagString["index"]}$は必須です`);
   }
   return result.join(", ");
@@ -140,23 +148,23 @@ const errorMessage = computed(() => {
 const hasError = computed(() => errorMessage.value !== "");
 
 const previewFileName = computed(() =>
-  buildAudioFileNameFromRawData(currentNamePattern.value),
+  props.fileNameBuilder(`${temporaryTemplateWithoutExt.value}.wav`),
 );
 
 const initializeInput = () => {
-  currentBaseNamePattern.value = savedBaseNamePattern.value;
+  temporaryTemplateWithoutExt.value = savedTemplateWithoutExt.value;
 
-  if (currentBaseNamePattern.value === "") {
-    currentBaseNamePattern.value = DEFAULT_AUDIO_FILE_BASE_NAME_TEMPLATE;
+  if (temporaryTemplateWithoutExt.value === "") {
+    temporaryTemplateWithoutExt.value = props.defaultTemplate;
   }
 };
 const resetToDefault = () => {
-  currentBaseNamePattern.value = DEFAULT_AUDIO_FILE_BASE_NAME_TEMPLATE;
+  temporaryTemplateWithoutExt.value = props.defaultTemplate;
   patternInput.value?.focus();
 };
 
 const insertTagToCurrentPosition = (tag: string) => {
-  const elem = patternInput.value?.getNativeElement() as HTMLInputElement;
+  const elem = patternInput.value?.nativeEl as HTMLInputElement;
   if (elem) {
     const text = elem.value;
 
@@ -167,7 +175,7 @@ const insertTagToCurrentPosition = (tag: string) => {
     const from = elem.selectionStart ?? 0;
     const to = elem.selectionEnd ?? 0;
     const newText = text.substring(0, from) + tag + text.substring(to);
-    currentBaseNamePattern.value = newText;
+    temporaryTemplateWithoutExt.value = newText;
 
     // キャレットの位置を挿入した後の位置にずらす
     void nextTick(() => {
@@ -179,12 +187,11 @@ const insertTagToCurrentPosition = (tag: string) => {
 };
 
 const submit = async () => {
-  await store.dispatch("SET_SAVING_SETTING", {
-    data: {
-      ...savingSetting.value,
-      fileNamePattern: currentNamePattern.value,
-    },
-  });
+  if (hasError.value) {
+    throw new UnreachableError("assert: hasError is false");
+  }
+
+  updateFileNamePattern(temporaryTemplate.value);
   updateOpenDialog(false);
 };
 </script>
