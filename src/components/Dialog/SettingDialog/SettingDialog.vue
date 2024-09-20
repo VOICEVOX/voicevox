@@ -96,24 +96,19 @@
               <ToggleCell
                 title="プリセット機能"
                 description="ONの場合、プリセット機能を有効にします。パラメータを登録したり適用したりできます。"
-                :modelValue="experimentalSetting.enablePreset"
+                :modelValue="enablePreset"
                 @update:modelValue="changeEnablePreset"
               />
               <QSlideTransition>
                 <!-- q-slide-transitionはheightだけをアニメーションするのでdivで囲う -->
-                <div v-show="experimentalSetting.enablePreset">
+                <div v-show="enablePreset">
                   <ToggleCell
                     title="スタイル変更時にデフォルトプリセットを適用"
                     description="ONの場合、キャラやスタイルの変更時にデフォルトプリセットが自動的に適用されます。"
                     class="in-slide-transition-workaround"
-                    :modelValue="
-                      experimentalSetting.shouldApplyDefaultPresetOnVoiceChanged
-                    "
+                    :modelValue="shouldApplyDefaultPresetOnVoiceChanged"
                     @update:modelValue="
-                      changeExperimentalSetting(
-                        'shouldApplyDefaultPresetOnVoiceChanged',
-                        $event,
-                      )
+                      changeShouldApplyDefaultPresetOnVoiceChanged($event)
                     "
                   />
                 </div>
@@ -709,6 +704,13 @@ const [enableMemoNotation, changeEnableMemoNotation] =
 const [enableRubyNotation, changeEnableRubyNotation] =
   useRootMiscSetting("enableRubyNotation");
 
+const [enablePreset, _changeEnablePreset] = useRootMiscSetting("enablePreset");
+
+const [
+  shouldApplyDefaultPresetOnVoiceChanged,
+  changeShouldApplyDefaultPresetOnVoiceChanged,
+] = useRootMiscSetting("shouldApplyDefaultPresetOnVoiceChanged");
+
 const canSetAudioOutputDevice = computed(() => {
   return !!HTMLAudioElement.prototype.setSinkId;
 });
@@ -799,17 +801,11 @@ const changeinheritAudioInfo = async (inheritAudioInfo: boolean) => {
 const changeEnablePreset = (value: boolean) => {
   if (value) {
     // プリセット機能をONにしたときは「デフォルトプリセットを自動で適用」もONにする
-    void changeExperimentalSetting("enablePreset", true);
-    void changeExperimentalSetting(
-      "shouldApplyDefaultPresetOnVoiceChanged",
-      true,
-    );
+    _changeEnablePreset(true);
+    changeShouldApplyDefaultPresetOnVoiceChanged(true);
   } else {
-    void changeExperimentalSetting("enablePreset", false);
-    void changeExperimentalSetting(
-      "shouldApplyDefaultPresetOnVoiceChanged",
-      false,
-    );
+    _changeEnablePreset(false);
+    changeShouldApplyDefaultPresetOnVoiceChanged(false);
   }
 };
 

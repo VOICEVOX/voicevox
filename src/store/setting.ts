@@ -143,6 +143,8 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         "showAddAudioItemButton",
         "splitTextWhenPaste",
         "splitterPosition",
+        "enablePreset",
+        "shouldApplyDefaultPresetOnVoiceChanged",
         "enableMultiEngine",
         "enableRubyNotation",
         "enableMemoNotation",
