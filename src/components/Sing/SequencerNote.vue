@@ -67,6 +67,7 @@
 import { computed, ref } from "vue";
 import { useStore } from "@/store";
 import { Note } from "@/store/type";
+import { PreviewMode } from "@/type/preload";
 import {
   getKeyBaseHeight,
   tickToBaseX,
@@ -75,7 +76,6 @@ import {
 import ContextMenu, {
   ContextMenuItemData,
 } from "@/components/Menu/ContextMenu.vue";
-import { usePreviewMode } from "@/composables/usePreviewMode";
 
 const props = defineProps<{
   note: Note;
@@ -87,6 +87,10 @@ const props = defineProps<{
   isOverlapping: boolean;
   /** プレビュー中の歌詞 */
   previewLyric: string | null;
+  /** プレビュー中か */
+  nowPreviewing: boolean;
+  /** プレビューモード */
+  previewMode: PreviewMode;
 }>();
 
 const emit = defineEmits<{
@@ -163,7 +167,6 @@ const lyricToDisplay = computed(() => {
   return props.previewLyric ?? props.note.lyric;
 });
 
-const { nowPreviewing, previewMode } = usePreviewMode();
 // 状態に応じたCSSクラス
 const classes = computed(() => {
   return {
@@ -175,12 +178,12 @@ const classes = computed(() => {
     overlapping: hasOverlappingError.value, // ノートが重なっている
     "invalid-phrase": hasPhraseError.value, // フレーズ生成エラー
     "below-pitch": editTargetIsPitch.value, // ピッチ編集中
-    adding: props.isPreview && previewMode.value === "ADD_NOTE", // ノート追加中
+    adding: props.isPreview && props.previewMode === "ADD_NOTE", // ノート追加中
     "resizing-right":
-      props.isPreview && previewMode.value === "RESIZE_NOTE_RIGHT", // 右リサイズ中
+      props.isPreview && props.previewMode === "RESIZE_NOTE_RIGHT", // 右リサイズ中
     "resizing-left":
-      props.isPreview && previewMode.value === "RESIZE_NOTE_LEFT", // 左リサイズ中
-    moving: props.isPreview && previewMode.value === "MOVE_NOTE", // ノート移動中
+      props.isPreview && props.previewMode === "RESIZE_NOTE_LEFT", // 左リサイズ中
+    moving: props.isPreview && props.previewMode === "MOVE_NOTE", // ノート移動中
   };
 });
 
@@ -190,7 +193,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
     {
       type: "button",
       label: "コピー",
-      disabled: nowPreviewing.value,
+      disabled: props.nowPreviewing,
       onClick: async () => {
         contextMenu.value?.hide();
         await store.dispatch("COPY_NOTES_TO_CLIPBOARD");
@@ -200,7 +203,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
     {
       type: "button",
       label: "切り取り",
-      disabled: nowPreviewing.value,
+      disabled: props.nowPreviewing,
       onClick: async () => {
         contextMenu.value?.hide();
         await store.dispatch("COMMAND_CUT_NOTES_TO_CLIPBOARD");
@@ -211,7 +214,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
     {
       type: "button",
       label: "クオンタイズ",
-      disabled: nowPreviewing.value || !props.isSelected,
+      disabled: props.nowPreviewing || !props.isSelected,
       onClick: async () => {
         contextMenu.value?.hide();
         await store.dispatch("COMMAND_QUANTIZE_SELECTED_NOTES");
@@ -222,7 +225,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
     {
       type: "button",
       label: "削除",
-      disabled: nowPreviewing.value || !props.isSelected,
+      disabled: props.nowPreviewing || !props.isSelected,
       onClick: async () => {
         contextMenu.value?.hide();
         await store.dispatch("COMMAND_REMOVE_SELECTED_NOTES");

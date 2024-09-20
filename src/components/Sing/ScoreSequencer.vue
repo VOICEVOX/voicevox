@@ -68,6 +68,8 @@
         :isPreview="previewNoteIds.has(note.id)"
         :isOverlapping="overlappingNoteIdsInSelectedTrack.has(note.id)"
         :previewLyric="previewLyrics.get(note.id) || null"
+        :nowPreviewing
+        :previewMode
         @barMousedown="onNoteBarMouseDown($event, note)"
         @barDoubleClick="onNoteBarDoubleClick($event, note)"
         @leftEdgeMousedown="onNoteLeftEdgeMouseDown($event, note)"
@@ -223,7 +225,6 @@ import {
   useShiftKey,
 } from "@/composables/useModifierKey";
 import { applyGaussianFilter, linearInterpolation } from "@/sing/utility";
-import { usePreviewMode } from "@/composables/usePreviewMode";
 import { useLyricInput } from "@/composables/useLyricInput";
 import { ExhaustiveError } from "@/type/utility";
 import { uuid4 } from "@/helpers/random";
@@ -236,13 +237,6 @@ const isSelfEventTarget = (event: UIEvent) => {
 const { warn } = createLogger("ScoreSequencer");
 const store = useStore();
 const state = store.state;
-const {
-  previewMode,
-  setPreviewMode,
-  clearPreviewMode,
-  nowPreviewing,
-  executePreviewProcess,
-} = usePreviewMode();
 // 選択中のトラックID
 const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
 
@@ -392,6 +386,9 @@ const onLyricConfirmed = (nextNoteId: NoteId | undefined) => {
 
 // プレビュー
 // FIXME: 関連する値を１つのobjectにまとめる
+const previewMode = ref<PreviewMode>("IDLE");
+const nowPreviewing = computed(() => previewMode.value !== "IDLE");
+const executePreviewProcess = ref(false);
 let previewRequestId = 0;
 let previewStartEditTarget: SequencerEditTarget = "NOTE";
 // ノート編集のプレビュー
@@ -859,7 +856,7 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
   } else {
     throw new ExhaustiveError(editTarget.value);
   }
-  setPreviewMode(mode);
+  previewMode.value = mode;
   previewStartEditTarget = editTarget.value;
   executePreviewProcess.value = true;
   previewRequestId = requestAnimationFrame(preview);
@@ -927,7 +924,7 @@ const endPreview = () => {
   } else {
     throw new ExhaustiveError(previewStartEditTarget);
   }
-  clearPreviewMode();
+  previewMode.value = "IDLE";
 };
 
 const onNoteBarMouseDown = (event: MouseEvent, note: Note) => {
