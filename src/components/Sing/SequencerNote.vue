@@ -185,7 +185,6 @@ const classes = computed(() => {
       props.isPreview && props.previewMode === "RESIZE_NOTE_RIGHT", // 右リサイズ中
     "resizing-left":
       props.isPreview && props.previewMode === "RESIZE_NOTE_LEFT", // 左リサイズ中
-    moving: props.isPreview && props.previewMode === "MOVE_NOTE", // ノート移動中
   };
 });
 
@@ -350,12 +349,9 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
       background-color: var(--scheme-color-sing-note-bar-selected-container);
       border-color: var(--scheme-color-sing-note-bar-selected-border);
       outline: 1px solid var(--scheme-color-sing-note-bar-selected-outline);
-      cursor: inherit;
     }
 
     .note-edge {
-      cursor: inherit;
-
       &:hover {
         background-color: transparent;
       }
@@ -364,10 +360,6 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
 
   // 右リサイズ中
   &.resizing-right {
-    .note-bar {
-      cursor: ew-resize;
-    }
-
     .note-edge.right {
       background-color: var(--scheme-color-sing-note-bar-selected-border);
     }
@@ -375,20 +367,8 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
 
   // 左リサイズ中
   &.resizing-left {
-    .note-bar {
-      cursor: ew-resize;
-    }
-
     .note-edge.left {
       background-color: var(--scheme-color-sing-note-bar-selected-border);
-    }
-  }
-
-  // 移動中
-  &.moving {
-    .note-bar,
-    .note-edge {
-      cursor: move;
     }
   }
 
@@ -449,7 +429,6 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     background-color: var(--scheme-color-sing-note-bar-below-pitch-container);
     border-color: var(--scheme-color-sing-grid-cell-white);
     outline: 0;
-    cursor: inherit;
   }
 
   .note-edge {
@@ -464,6 +443,52 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
       border-color: 0;
       outline: none;
     }
+  }
+}
+
+// カーソル状態にあわせてカーソルを変更する
+.cursor-crosshair {
+  .note-bar {
+    cursor: var(--cursor-crosshair);
+  }
+  .note-edge {
+    cursor: var(--cursor-crosshair);
+  }
+}
+
+.cursor-ew-resize {
+  .note-bar {
+    cursor: var(--cursor-ew-resize);
+  }
+  .note-edge {
+    cursor: var(--cursor-ew-resize);
+  }
+}
+
+.cursor-move {
+  .note-bar {
+    cursor: var(--cursor-move);
+  }
+  .note-edge {
+    cursor: var(--cursor-move);
+  }
+}
+
+.cursor-draw {
+  .note-bar {
+    cursor: var(--cursor-draw);
+  }
+  .note-edge {
+    cursor: var(--cursor-draw);
+  }
+}
+
+.cursor-erase {
+  .note-bar {
+    cursor: default;
+  }
+  .note-edge {
+    cursor: default;
   }
 }
 
