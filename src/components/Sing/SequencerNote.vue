@@ -6,7 +6,7 @@
   <div
     v-bind="$attrs"
     class="note"
-    :class="classes"
+    :class="[classes, cursorClass]"
     :style="{
       width: `${width}px`,
       height: `${height}px`,
@@ -51,7 +51,7 @@
   <div
     class="note-lyric"
     data-testid="note-lyric"
-    :class="classes"
+    :class="[classes, cursorClass]"
     :style="{
       fontSize: `${lyricFontSize}px`,
       left: `${lyricLeftPosition}px`,
@@ -91,6 +91,8 @@ const props = defineProps<{
   nowPreviewing: boolean;
   /** プレビューモード */
   previewMode: PreviewMode;
+  /** カーソルクラス */
+  cursorClass: string;
 }>();
 
 const emit = defineEmits<{

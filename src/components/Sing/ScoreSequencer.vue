@@ -17,16 +17,8 @@
       :class="{
         'edit-note': editTarget === 'NOTE',
         'edit-pitch': editTarget === 'PITCH',
-        'rect-selecting': editTarget === 'NOTE' && shiftKey,
         previewing: nowPreviewing,
-        'add-note': previewMode === 'ADD_NOTE',
-        'resize-note-right': previewMode === 'RESIZE_NOTE_RIGHT',
-        'resize-note-left': previewMode === 'RESIZE_NOTE_LEFT',
-        'move-note': previewMode === 'MOVE_NOTE',
-        'draw-pitch':
-          (editTarget === 'PITCH' && !ctrlKey) || previewMode === 'DRAW_PITCH',
-        'erase-pitch':
-          (editTarget === 'PITCH' && ctrlKey) || previewMode === 'ERASE_PITCH',
+        [cursorClass]: true,
       }"
       aria-label="シーケンサ"
       @mousedown="onMouseDown"
@@ -70,6 +62,7 @@
         :previewLyric="previewLyrics.get(note.id) || null"
         :nowPreviewing
         :previewMode
+        :cursorClass
         @barMousedown="onNoteBarMouseDown($event, note)"
         @barDoubleClick="onNoteBarDoubleClick($event, note)"
         @leftEdgeMousedown="onNoteLeftEdgeMouseDown($event, note)"
@@ -226,6 +219,7 @@ import {
 } from "@/composables/useModifierKey";
 import { applyGaussianFilter, linearInterpolation } from "@/sing/utility";
 import { useLyricInput } from "@/composables/useLyricInput";
+import { useCursorState, CursorState } from "@/composables/useCursorState";
 import { ExhaustiveError } from "@/type/utility";
 import { uuid4 } from "@/helpers/random";
 
@@ -371,6 +365,40 @@ const sequencerBody = ref<HTMLElement | null>(null);
 const cursorX = ref(0);
 const cursorY = ref(0);
 
+const { cursorState, setCursorState, resetCursorState } = useCursorState();
+// カーソルCSSクラス
+const cursorClass = computed(() => {
+  if (editTarget.value === "PITCH") {
+    if (ctrlKey.value) {
+      // ピッチ削除
+      return "cursor-erase";
+    } else {
+      // ピッチ描画
+      return "cursor-draw";
+    }
+  }
+  // 範囲選択
+  if (editTarget.value === "NOTE" && shiftKey.value) {
+    return "cursor-crosshair";
+  }
+  if (cursorState.value === CursorState.EW_RESIZE) {
+    return "cursor-ew-resize";
+  }
+  if (cursorState.value === CursorState.CROSSHAIR) {
+    return "cursor-crosshair";
+  }
+  if (cursorState.value === CursorState.MOVE) {
+    return "cursor-move";
+  }
+  if (cursorState.value === CursorState.DRAW) {
+    return "cursor-draw";
+  }
+  if (cursorState.value === CursorState.ERASE) {
+    return "cursor-erase";
+  }
+  return "";
+});
+
 // 歌詞入力
 const { previewLyrics, commitPreviewLyrics, splitAndUpdatePreview } =
   useLyricInput();
@@ -454,6 +482,7 @@ const previewAdd = () => {
 
   const guideLineBaseX = tickToBaseX(noteEndPos, tpqn.value);
   guideLineX.value = guideLineBaseX * zoomX.value;
+  setCursorState(CursorState.DRAW);
 };
 
 const previewMove = () => {
@@ -507,6 +536,7 @@ const previewMove = () => {
     tpqn.value,
   );
   guideLineX.value = guideLineBaseX * zoomX.value;
+  setCursorState(CursorState.MOVE);
 };
 
 const previewResizeRight = () => {
@@ -547,6 +577,7 @@ const previewResizeRight = () => {
 
   const guideLineBaseX = tickToBaseX(newNoteEndPos, tpqn.value);
   guideLineX.value = guideLineBaseX * zoomX.value;
+  setCursorState(CursorState.EW_RESIZE);
 };
 
 const previewResizeLeft = () => {
@@ -594,6 +625,7 @@ const previewResizeLeft = () => {
 
   const guideLineBaseX = tickToBaseX(newNotePos, tpqn.value);
   guideLineX.value = guideLineBaseX * zoomX.value;
+  setCursorState(CursorState.EW_RESIZE);
 };
 
 // ピッチを描く処理を行う
@@ -668,6 +700,7 @@ const previewDrawPitch = () => {
   previewPitchEdit.value = tempPitchEdit;
   prevCursorPos.frame = cursorFrame;
   prevCursorPos.frequency = cursorFrequency;
+  setCursorState(CursorState.DRAW);
 };
 
 // ドラッグした範囲のピッチ編集データを消去する処理を行う
@@ -700,6 +733,7 @@ const previewErasePitch = () => {
 
   previewPitchEdit.value = tempPitchEdit;
   prevCursorPos.frame = cursorFrame;
+  setCursorState(CursorState.ERASE);
 };
 
 const preview = () => {
@@ -925,6 +959,7 @@ const endPreview = () => {
     throw new ExhaustiveError(previewStartEditTarget);
   }
   previewMode.value = "IDLE";
+  resetCursorState();
 };
 
 const onNoteBarMouseDown = (event: MouseEvent, note: Note) => {
@@ -985,6 +1020,7 @@ const onMouseDown = (event: MouseEvent) => {
         isRectSelecting.value = true;
         rectSelectStartX.value = cursorX.value;
         rectSelectStartY.value = cursorY.value;
+        setCursorState(CursorState.CROSSHAIR);
       } else {
         startPreview(event, "ADD_NOTE");
       }
@@ -1033,6 +1069,7 @@ const onMouseUp = (event: MouseEvent) => {
   }
   if (isRectSelecting.value) {
     rectSelect(isOnCommandOrCtrlKeyDown(event));
+    resetCursorState();
   } else if (nowPreviewing.value) {
     endPreview();
   }
@@ -1551,14 +1588,6 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   backface-visibility: hidden;
   overflow: auto;
   position: relative;
-
-  &.rect-selecting {
-    cursor: crosshair;
-  }
-
-  &.resizing-note {
-    cursor: ew-resize;
-  }
 }
 
 .sequencer-grid {
@@ -1615,30 +1644,10 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   background: oklch(from var(--scheme-color-secondary) l c h / 0.1);
 }
 
-.add-note {
-  cursor:
-    url("/draw-cursor.png") 2 30,
-    auto;
-}
-
-.resize-note-left,
-.resize-note-right {
-  cursor: ew-resize;
-}
-
-.move-note {
-  cursor: move;
-}
-
-.edit-pitch {
-  cursor:
-    url("/draw-cursor.png") 2 30,
-    auto;
-}
-
-// TODO: ピッチ削除中にも消しゴムアイコンを表示させるようにする（今はデフォルト）
-.erase-pitch {
-  cursor: default;
+// TODO: ピッチ削除など消しゴム用のカーソル・画像がないためdefault
+// カーソルが必要であれば画像を追加する
+.cursor-erase {
+  cursor: pointer;
 }
 
 .zoom-x-slider {
