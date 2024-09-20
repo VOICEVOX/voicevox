@@ -43,8 +43,6 @@ export const settingStoreState: SettingStoreState = {
   acceptTerms: "Unconfirmed",
   acceptRetrieveTelemetry: "Unconfirmed",
   experimentalSetting: {
-    enablePreset: false,
-    shouldApplyDefaultPresetOnVoiceChanged: false,
     enableInterrogativeUpspeak: false,
     enableMorphing: false,
     enableMultiSelect: false,
@@ -63,6 +61,8 @@ export const settingStoreState: SettingStoreState = {
     notifyOnGenerate: false,
   },
   engineSettings: {},
+  enablePreset: false,
+  shouldApplyDefaultPresetOnVoiceChanged: false,
   enableMultiEngine: false,
   enableMemoNotation: false,
   enableRubyNotation: false,
