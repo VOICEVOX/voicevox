@@ -534,6 +534,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
      */
     getter: (state, getters) => (styleType: "all" | "singerLike" | "talk") => {
       const allCharacterInfos = getters.GET_ALL_CHARACTER_INFOS;
+      console.log(`allCharacterInfos`, allCharacterInfos);
       if (allCharacterInfos.size === 0) return undefined;
 
       let flattenCharacterInfos = [...allCharacterInfos.values()];
