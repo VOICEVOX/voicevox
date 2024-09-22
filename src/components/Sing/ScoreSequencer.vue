@@ -360,7 +360,7 @@ const phraseInfosInOtherTracks = computed(() => {
 
 const ctrlKey = useCommandOrControlKey();
 const editTarget = computed(() => state.sequencerEditTarget);
-const editFrameRate = computed(() => state.editFrameRate);
+const editorFrameRate = computed(() => state.editorFrameRate);
 const scrollBarWidth = ref(12);
 const sequencerBody = ref<HTMLElement | null>(null);
 
@@ -601,7 +601,7 @@ const previewDrawPitch = () => {
   if (previewPitchEdit.value.type !== "draw") {
     throw new Error("previewPitchEdit.value.type is not draw.");
   }
-  const frameRate = editFrameRate.value;
+  const frameRate = editorFrameRate.value;
   const cursorBaseX = (scrollX.value + cursorX.value) / zoomX.value;
   const cursorBaseY = (scrollY.value + cursorY.value) / zoomY.value;
   const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
@@ -675,7 +675,7 @@ const previewErasePitch = () => {
   if (previewPitchEdit.value.type !== "erase") {
     throw new Error("previewPitchEdit.value.type is not erase.");
   }
-  const frameRate = editFrameRate.value;
+  const frameRate = editorFrameRate.value;
   const cursorBaseX = (scrollX.value + cursorX.value) / zoomX.value;
   const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
   const cursorSeconds = tickToSecond(cursorTicks, tempos.value, tpqn.value);
@@ -827,7 +827,7 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
   } else if (editTarget.value === "PITCH") {
     // 編集ターゲットがピッチのときの処理
 
-    const frameRate = editFrameRate.value;
+    const frameRate = editorFrameRate.value;
     const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
     const cursorSeconds = tickToSecond(cursorTicks, tempos.value, tpqn.value);
     const cursorFrame = Math.round(cursorSeconds * frameRate);

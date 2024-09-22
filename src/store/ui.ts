@@ -282,9 +282,8 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   },
 
   SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON: {
-    // FIXME: showNotifyAndNotShowAgainButtonをDotNotationに対応させて修正
-    action({ dispatch }, payload: NotifyAndNotShowAgainButtonOption) {
-      showNotifyAndNotShowAgainButton({ dispatch }, payload);
+    action({ actions }, payload: NotifyAndNotShowAgainButtonOption) {
+      showNotifyAndNotShowAgainButton({ actions }, payload);
     },
   },
 
@@ -520,28 +519,26 @@ export const uiStore = createPartialStore<UiStoreTypes>({
 
   // TODO: この4つのアクションをVue側に移動したい
   SHOW_GENERATE_AND_SAVE_ALL_AUDIO_DIALOG: {
-    async action({ state, dispatch }) {
-      // FIXME: `multiGenerateAndSaveAudioWithDialog`をDotNotationに対応させて修正
+    async action({ state, actions }) {
       await multiGenerateAndSaveAudioWithDialog({
         audioKeys: state.audioKeys,
         disableNotifyOnGenerate: state.confirmedTips.notifyOnGenerate,
-        dispatch,
+        actions,
       });
     },
   },
 
   SHOW_GENERATE_AND_CONNECT_ALL_AUDIO_DIALOG: {
-    async action({ dispatch, state }) {
-      // FIXME: `generateAndConnectAndSaveAudioWithDialog`をDotNotationに対応させて修正
+    async action({ actions, state }) {
       await generateAndConnectAndSaveAudioWithDialog({
-        dispatch,
+        actions,
         disableNotifyOnGenerate: state.confirmedTips.notifyOnGenerate,
       });
     },
   },
 
   SHOW_GENERATE_AND_SAVE_SELECTED_AUDIO_DIALOG: {
-    async action({ getters, dispatch, actions, state }) {
+    async action({ getters, actions, state }) {
       const activeAudioKey = getters.ACTIVE_AUDIO_KEY;
       if (activeAudioKey == undefined) {
         void actions.SHOW_ALERT_DIALOG({
@@ -556,27 +553,25 @@ export const uiStore = createPartialStore<UiStoreTypes>({
         state.experimentalSetting.enableMultiSelect &&
         selectedAudioKeys.length > 1
       ) {
-        // FIXME: `multiGenerateAndSaveAudioWithDialog`をDotNotationに対応させて修正
         await multiGenerateAndSaveAudioWithDialog({
           audioKeys: selectedAudioKeys,
-          dispatch: dispatch,
+          actions: actions,
           disableNotifyOnGenerate: state.confirmedTips.notifyOnGenerate,
         });
       } else {
         await generateAndSaveOneAudioWithDialog({
           audioKey: activeAudioKey,
           disableNotifyOnGenerate: state.confirmedTips.notifyOnGenerate,
-          dispatch: dispatch,
+          actions: actions,
         });
       }
     },
   },
 
   SHOW_CONNECT_AND_EXPORT_TEXT_DIALOG: {
-    async action({ dispatch, state }) {
-      // FIXME: `connectAndExportTextWithDialog`をDotNotationに対応させて修正
+    async action({ actions, state }) {
       await connectAndExportTextWithDialog({
-        dispatch,
+        actions,
         disableNotifyOnGenerate: state.confirmedTips.notifyOnGenerate,
       });
     },
