@@ -1695,7 +1695,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                     foundPhrase.trackId,
                     phraseKey,
                   );
-            if (renderStartStageId != undefined) {
+            if (renderStartStageId == undefined) {
+              phrase.state = "PLAYABLE";
+            } else {
               renderStartStageIds.set(phraseKey, renderStartStageId);
               phrase.state = "WAITING_TO_BE_RENDERED";
             }
