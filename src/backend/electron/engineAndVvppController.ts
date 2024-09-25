@@ -132,8 +132,8 @@ export class EngineAndVvppController {
 
   // エンジンの準備と起動
   async launchEngines() {
-    // エンジンの追加と削除を反映させるためEngineInfoとAltPortInfosを再生成する。
-    this.engineInfoManager.initializeEngineInfosAndAltPortInfo();
+    // AltPortInfosを再生成する。
+    this.engineInfoManager.initializeAltPortInfo();
 
     // TODO: デフォルトエンジンの処理をConfigManagerに移してブラウザ版と共通化する
     const engineInfos = this.engineInfoManager.fetchEngineInfos();
