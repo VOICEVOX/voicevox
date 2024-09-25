@@ -140,7 +140,7 @@ export class EngineInfoManager {
       ...fetchDefaultEngineInfos(this.defaultEngineDir),
       ...this.fetchAdditionalEngineInfos(),
     ];
-    // URLを代替ポートに置き換える
+    // 代替ポートに置き換える
     engineInfos.forEach((engineInfo) => {
       const altPortInfo = this.altPortInfos[engineInfo.uuid];
       if (altPortInfo) {
