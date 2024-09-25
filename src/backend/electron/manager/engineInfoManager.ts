@@ -12,10 +12,10 @@ import {
   MinimumEngineManifestType,
   EngineId,
   minimumEngineManifestSchema,
-  envEngineInfoSchema,
 } from "@/type/preload";
 import { AltPortInfos } from "@/store/type";
 import { BaseConfigManager } from "@/backend/common/ConfigManager";
+import { envEngineInfoSchema } from "@/backend/common/envEngineInfoSchema";
 
 /**
  * デフォルトエンジンの情報を作成する

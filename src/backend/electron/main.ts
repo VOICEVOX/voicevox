@@ -1063,6 +1063,8 @@ app.on("ready", async () => {
     }
   }
 
+  // VVPPがデフォルトエンジンに指定されていたらインストールする
+
   // runEngineAllの前にVVPPを読み込む
   let filePath: string | undefined;
   if (process.platform === "darwin") {
