@@ -174,7 +174,7 @@ import {
 import ContextMenu, {
   ContextMenuItemData,
 } from "@/components/Menu/ContextMenu.vue";
-import { NoteId, PreviewMode } from "@/type/preload";
+import { NoteId } from "@/type/preload";
 import { useStore } from "@/store";
 import { Note, SequencerEditTarget } from "@/store/type";
 import {
@@ -200,6 +200,7 @@ import {
   ZOOM_Y_STEP,
   PREVIEW_SOUND_DURATION,
   getButton,
+  PreviewMode,
 } from "@/sing/viewHelper";
 import SequencerGrid from "@/components/Sing/SequencerGrid.vue";
 import SequencerRuler from "@/components/Sing/SequencerRuler.vue";

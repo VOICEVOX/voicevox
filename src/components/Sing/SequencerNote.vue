@@ -67,11 +67,11 @@
 import { computed, ref } from "vue";
 import { useStore } from "@/store";
 import { Note } from "@/store/type";
-import { PreviewMode } from "@/type/preload";
 import {
   getKeyBaseHeight,
   tickToBaseX,
   noteNumberToBaseY,
+  PreviewMode,
 } from "@/sing/viewHelper";
 import ContextMenu, {
   ContextMenuItemData,
@@ -446,52 +446,6 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
   }
 }
 
-// カーソル状態にあわせてカーソルを変更する
-.cursor-crosshair {
-  .note-bar {
-    cursor: var(--cursor-crosshair);
-  }
-  .note-edge {
-    cursor: var(--cursor-crosshair);
-  }
-}
-
-.cursor-ew-resize {
-  .note-bar {
-    cursor: var(--cursor-ew-resize);
-  }
-  .note-edge {
-    cursor: var(--cursor-ew-resize);
-  }
-}
-
-.cursor-move {
-  .note-bar {
-    cursor: var(--cursor-move);
-  }
-  .note-edge {
-    cursor: var(--cursor-move);
-  }
-}
-
-.cursor-draw {
-  .note-bar {
-    cursor: var(--cursor-draw);
-  }
-  .note-edge {
-    cursor: var(--cursor-draw);
-  }
-}
-
-.cursor-erase {
-  .note-bar {
-    cursor: default;
-  }
-  .note-edge {
-    cursor: default;
-  }
-}
-
 // 歌詞表示
 .note-lyric {
   position: absolute;
@@ -558,6 +512,21 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
       from var(--scheme-color-error) l calc(var(--secondary-c) / 2) h / 0.38
     );
     text-shadow: none;
+  }
+}
+
+// カーソルの状態
+.note {
+  &.cursor-default,
+  &.cursor-ew-resize,
+  &.cursor-crosshair,
+  &.cursor-move,
+  &.cursor-draw,
+  &.cursor-erase {
+    .note-bar,
+    .note-edge {
+      cursor: inherit;
+    }
   }
 }
 </style>
