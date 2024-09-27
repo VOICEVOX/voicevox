@@ -754,7 +754,13 @@ registerIpcMainHandle<IpcMainHandle>({
       win.maximize();
     }
   },
-
+  TOGGLE_FULLSCREENMODE: () => {
+    if (win.isFullScreen()) {
+      win.setFullScreen(false);
+    } else {
+      win.setFullScreen(true);
+    }
+  },
   OPEN_LOG_DIRECTORY: () => {
     void shell.openPath(app.getPath("logs"));
   },
