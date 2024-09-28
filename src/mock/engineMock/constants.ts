@@ -3,4 +3,4 @@
  */
 
 export const dicPath = "node_modules/kuromoji/dict";
-export const assetsPath = "engineMock/assets"; // FIXME: これじゃ動かないかも
+export const assetsPath = "tests/assets";
