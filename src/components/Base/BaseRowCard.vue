@@ -3,6 +3,7 @@
     class="row-card"
     :class="{ clickable: clickable }"
     role="listitem"
+    :tabindex="clickable ? 0 : -1"
     @click="(payload) => $emit('click', payload)"
   >
     <div class="text">
@@ -19,7 +20,7 @@
 defineProps<{
   title: string;
   description?: string;
-  clickable: boolean;
+  clickable?: boolean;
 }>();
 
 defineEmits<{
