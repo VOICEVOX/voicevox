@@ -147,11 +147,6 @@ const props = defineProps<{
   isProjectFileLoaded: boolean | "waiting";
 }>();
 
-const emit = defineEmits<{
-  /** トークエディタの準備が完了するときに呼ばれる */
-  completeInitialStartup: [];
-}>();
-
 const store = useStore();
 
 const audioKeys = computed(() => store.state.audioKeys);
@@ -513,7 +508,7 @@ watch(userOrderedCharacterInfos, (userOrderedCharacterInfos) => {
   }
 });
 
-/** トークエディタの準備が完了したフラグ */
+// エンジン初期化後の処理
 const isCompletedInitialStartup = ref(false);
 // TODO: Vueっぽくないので解体する
 onetimeWatch(
@@ -538,7 +533,6 @@ onetimeWatch(
     }
 
     isCompletedInitialStartup.value = true;
-    emit("completeInitialStartup");
 
     return "unwatch";
   },

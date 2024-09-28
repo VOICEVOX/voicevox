@@ -52,7 +52,6 @@ const preview: Preview = {
       ],
     },
   },
-
   decorators: [
     withThemeByDataAttribute({
       themes: {
