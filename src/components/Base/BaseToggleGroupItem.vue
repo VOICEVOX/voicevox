@@ -28,7 +28,6 @@ defineProps<{
   transition-duration: vars.$transition-duration;
   transition-property: background-color, color, padding, box-shadow;
   cursor: pointer;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 
   &:active:not(:disabled) {
     box-shadow: 0 0 0 transparent;
