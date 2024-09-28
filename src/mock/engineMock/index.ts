@@ -13,6 +13,7 @@ import {
   notesAndFramePhonemesToPitchMock,
   notesToFramePhonemesMock,
 } from "./singModelMock";
+import { assetsPath, dicPath } from "./constants";
 
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
@@ -34,7 +35,6 @@ import {
   SupportedDevicesInfo,
   SynthesisSynthesisPostRequest,
 } from "@/openapi";
-import { assetsPath, dicPath } from "./constants";
 
 export const mockHost = "mock";
 

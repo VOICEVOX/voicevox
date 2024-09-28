@@ -115,6 +115,7 @@
     "eslint-plugin-storybook": "0.8.0",
     "eslint-plugin-vue": "9.26.0",
     "happy-dom": "8.4.2",
+    "kuromoji": "0.1.2",
     "license-checker-rseidelsohn": "4.3.0",
     "markdownlint-cli": "0.37.0",
     "patch-package": "8.0.0",

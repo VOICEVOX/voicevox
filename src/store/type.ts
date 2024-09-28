@@ -229,7 +229,6 @@ export type AudioStoreTypes = {
     action(payload: {
       text?: string;
       voice?: Voice;
-      presetKey?: PresetKey;
       baseAudioItem?: AudioItem;
     }): Promise<AudioItem>;
   };
