@@ -25,9 +25,8 @@ defineProps<{
   align-items: center;
   height: vars.$size-control;
   border: 1px solid;
-  transition:
-    background-color vars.$transition-duration,
-    padding vars.$transition-duration;
+  transition-duration: vars.$transition-duration;
+  transition-property: background-color, color, padding, box-shadow;
   cursor: pointer;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 
@@ -54,6 +53,7 @@ defineProps<{
     color: colors.$display;
     border-color: colors.$border;
     background-color: colors.$control;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 
     &:hover:not(:disabled) {
       background-color: colors.$control-hovered;
