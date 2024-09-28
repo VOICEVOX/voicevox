@@ -34,8 +34,8 @@ defineEmits<{
 @use "@/styles/v2/colors" as colors;
 
 .row-card {
-  display: grid;
-  grid-template-columns: 1fr auto;
+  display: flex;
+  flex-wrap: wrap;
   text-align: unset;
   align-items: center;
   border: 1px solid colors.$border;
@@ -70,5 +70,14 @@ defineEmits<{
 
 .description {
   font-size: 0.75rem;
+}
+
+.control {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: right;
+  align-items: center;
+  gap: vars.$gap-1;
+  margin-left: auto;
 }
 </style>
