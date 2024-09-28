@@ -46,7 +46,7 @@ defineProps<{
     border-bottom-right-radius: vars.$radius-1;
   }
 
-  &[data-state="off"] {
+  &[aria-pressed="false"] {
     padding: 0
       calc(#{vars.$padding-1} + (#{vars.$size-icon} + #{vars.$gap-1}) / 2);
     color: colors.$display;
@@ -63,7 +63,7 @@ defineProps<{
     }
   }
 
-  &[data-state="on"] {
+  &[aria-pressed="true"] {
     padding: 0 vars.$padding-1;
     color: colors.$display-oncolor;
     border-color: colors.$border;
@@ -90,7 +90,7 @@ defineProps<{
     opacity vars.$transition-duration;
 }
 
-[data-state="off"] > .check {
+[aria-pressed="false"] > .check {
   width: 0;
   opacity: 0;
   margin-right: 0;
