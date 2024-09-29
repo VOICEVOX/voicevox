@@ -35,14 +35,9 @@ export const useCursorState = () => {
     cursorState.value = state;
   };
 
-  const resetCursorState = () => {
-    cursorState.value = CursorState.UNSET;
-  };
-
   return {
     cursorState,
     cursorClass,
     setCursorState,
-    resetCursorState,
   };
 };

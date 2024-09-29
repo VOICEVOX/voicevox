@@ -170,6 +170,7 @@ import {
   onMounted,
   onActivated,
   onDeactivated,
+  watch,
 } from "vue";
 import ContextMenu, {
   ContextMenuItemData,
@@ -366,39 +367,7 @@ const sequencerBody = ref<HTMLElement | null>(null);
 const cursorX = ref(0);
 const cursorY = ref(0);
 
-const { cursorState, setCursorState, resetCursorState } = useCursorState();
-// カーソルCSSクラス
-const cursorClass = computed(() => {
-  if (editTarget.value === "PITCH") {
-    if (ctrlKey.value) {
-      // ピッチ削除
-      return "cursor-erase";
-    } else {
-      // ピッチ描画
-      return "cursor-draw";
-    }
-  }
-  // 範囲選択
-  if (editTarget.value === "NOTE" && shiftKey.value) {
-    return "cursor-crosshair";
-  }
-  if (cursorState.value === CursorState.EW_RESIZE) {
-    return "cursor-ew-resize";
-  }
-  if (cursorState.value === CursorState.CROSSHAIR) {
-    return "cursor-crosshair";
-  }
-  if (cursorState.value === CursorState.MOVE) {
-    return "cursor-move";
-  }
-  if (cursorState.value === CursorState.DRAW) {
-    return "cursor-draw";
-  }
-  if (cursorState.value === CursorState.ERASE) {
-    return "cursor-erase";
-  }
-  return "";
-});
+const { cursorClass, setCursorState } = useCursorState();
 
 // 歌詞入力
 const { previewLyrics, commitPreviewLyrics, splitAndUpdatePreview } =
@@ -451,6 +420,31 @@ const editingLyricNote = computed(() => {
 // 入力を補助する線
 const showGuideLine = ref(true);
 const guideLineX = ref(0);
+
+// プレビュー中でないときの処理
+// TODO: ステートパターンにして、この処理をIdleStateに移す
+watch([ctrlKey, shiftKey, nowPreviewing, editTarget], () => {
+  if (nowPreviewing.value) {
+    return;
+  }
+  if (editTarget.value === "PITCH") {
+    if (ctrlKey.value) {
+      // ピッチ消去
+      setCursorState(CursorState.ERASE);
+    } else {
+      // ピッチ描画
+      setCursorState(CursorState.DRAW);
+    }
+  }
+  if (editTarget.value === "NOTE") {
+    if (shiftKey.value) {
+      // 範囲選択
+      setCursorState(CursorState.CROSSHAIR);
+    } else {
+      setCursorState(CursorState.UNSET);
+    }
+  }
+});
 
 const previewAdd = () => {
   const cursorBaseX = (scrollX.value + cursorX.value) / zoomX.value;
@@ -960,7 +954,6 @@ const endPreview = () => {
     throw new ExhaustiveError(previewStartEditTarget);
   }
   previewMode.value = "IDLE";
-  resetCursorState();
 };
 
 const onNoteBarMouseDown = (event: MouseEvent, note: Note) => {
@@ -1070,7 +1063,6 @@ const onMouseUp = (event: MouseEvent) => {
   }
   if (isRectSelecting.value) {
     rectSelect(isOnCommandOrCtrlKeyDown(event));
-    resetCursorState();
   } else if (nowPreviewing.value) {
     endPreview();
   }
@@ -1648,7 +1640,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 // TODO: ピッチ削除など消しゴム用のカーソル・画像がないためdefault
 // カーソルが必要であれば画像を追加する
 .cursor-erase {
-  cursor: pointer;
+  cursor: default;
 }
 
 .zoom-x-slider {
