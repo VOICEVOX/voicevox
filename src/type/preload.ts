@@ -216,6 +216,21 @@ export type ShowImportFileDialogOptions = {
   extensions?: string[];
 };
 
+export type ShowMessageDialogOptions = {
+  type: "none" | "info" | "error" | "question" | "warning";
+  title: string;
+  message: string;
+};
+
+export type ShowQuestionDialogOptions = {
+  type: "none" | "info" | "error" | "question" | "warning";
+  title: string;
+  message: string;
+  buttons: string[];
+  cancelId?: number;
+  defaultId?: number;
+};
+
 export interface Sandbox {
   getAppInfos(): Promise<AppInfos>;
   getHowToUseText(): Promise<string>;
@@ -246,19 +261,10 @@ export interface Sandbox {
     defaultPath?: string;
   }): Promise<string | undefined>;
   showProjectLoadDialog(obj: { title: string }): Promise<string[] | undefined>;
-  showMessageDialog(obj: {
-    type: "none" | "info" | "error" | "question" | "warning";
-    title: string;
-    message: string;
-  }): Promise<Electron.MessageBoxReturnValue>;
-  showQuestionDialog(obj: {
-    type: "none" | "info" | "error" | "question" | "warning";
-    title: string;
-    message: string;
-    buttons: string[];
-    cancelId?: number;
-    defaultId?: number;
-  }): Promise<number>;
+  showMessageDialog(
+    obj: ShowMessageDialogOptions,
+  ): Promise<Electron.MessageBoxReturnValue>;
+  showQuestionDialog(obj: ShowQuestionDialogOptions): Promise<number>;
   showImportFileDialog(
     obj: ShowImportFileDialogOptions,
   ): Promise<string | undefined>;

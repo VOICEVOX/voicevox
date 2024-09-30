@@ -1,9 +1,10 @@
-import {
-  arrayBufferToBase64,
-  base64ToArrayBuffer,
-} from "@/helpers/binaryHelper";
+import { toBytes } from "fast-base64";
 import { Metadata } from "@/backend/common/ConfigManager";
-import { ShowImportFileDialogOptions } from "@/type/preload";
+import {
+  ShowImportFileDialogOptions,
+  ShowMessageDialogOptions,
+  ShowQuestionDialogOptions,
+} from "@/type/preload";
 import { createLogger } from "@/domain/frontend/log";
 import { UnreachableError } from "@/type/utility";
 declare global {
@@ -85,6 +86,33 @@ const ipcGetProjectName = createMessageFunction<undefined, string>(
   "getProjectName",
 );
 const ipcGetVersion = createMessageFunction<undefined, string>("getVersion");
+const ipcShowImportFileDialog = createMessageFunction<
+  ShowImportFileDialogOptions,
+  string | null
+>("showImportFileDialog");
+const ipcReadFile = createMessageFunction<string, string>("readFile");
+const ipcExportProject = createMessageFunction<undefined, boolean>(
+  "exportProject",
+);
+const ipcShowMessageDialog = createMessageFunction<
+  {
+    type: "none" | "info" | "error" | "question" | "warning";
+    title: string;
+    message: string;
+  },
+  void
+>("showMessageDialog");
+const ipcShowQuestionDialog = createMessageFunction<
+  {
+    type: "none" | "info" | "error" | "question" | "warning";
+    title: string;
+    message: string;
+    buttons: string[];
+    cancelId?: number;
+    defaultId?: number;
+  },
+  number
+>("showQuestionDialog");
 
 type Config = Record<string, unknown> & Metadata;
 type VstPhrase = {
@@ -141,56 +169,18 @@ declare global {
   }
 }
 
-const fileChosenCallbacks = new Map<
-  string,
-  (path: string | undefined) => void
->();
-
-const exportProjectCallbacks = new Map<
-  string,
-  (result: "cancelled" | "error" | "success") => void
->();
-
 export async function showImportFileDialog(
   options: ShowImportFileDialogOptions,
 ): Promise<string | undefined> {
-  throw new Error("Not implemented");
-  // log.info("showImportFileDialog", options);
-  // if (!window.vstOnFileChosen) {
-  //   window.vstOnFileChosen = (nonce: string, path: string | undefined) => {
-  //     log.info("vstOnFileChosen", nonce, path);
-  //     const callback = fileChosenCallbacks.get(nonce);
-  //     if (!callback) {
-  //       log.info("callback not found", nonce);
-  //       return;
-  //     }
-  //     callback(path);
-  //   };
-  // }
-  // const nonce = await vstShowImportFileDialog(
-  //   options.title,
-  //   options.extensions,
-  // );
-  //
-  // const promise = new Promise<string | undefined>((resolve) => {
-  //   fileChosenCallbacks.set(nonce, resolve);
-  // });
-  // log.info("Callback registered", nonce);
-  //
-  // return await promise;
+  return await ipcShowImportFileDialog(options).then(
+    (result) => result || undefined,
+  );
 }
 
 export async function readFile(filePath: string): Promise<ArrayBuffer> {
-  throw new Error("Not implemented");
-  // log.info("readFile", filePath);
-  // // エンコード周りの回避としてbase64でパスをやりとりする
-  // const pathArrayBuffer = new TextEncoder().encode(filePath);
-  // const pathBase64 = arrayBufferToBase64(pathArrayBuffer);
-  // const base64 = await vstReadFile(pathBase64);
-  // if (base64 === -1) {
-  //   throw new Error("Failed to read file");
-  // }
-  // return base64ToArrayBuffer(base64);
+  const base64 = await ipcReadFile(filePath);
+  const uint8array = await toBytes(base64);
+  return uint8array.buffer;
 }
 
 export async function getProjectName(): Promise<string> {
@@ -201,29 +191,22 @@ export async function getVersion(): Promise<string> {
   return await ipcGetVersion();
 }
 
-export async function exportProject() {
-  throw new Error("Not implemented");
-  // log.info("exportProject");
-  // if (!window.vstOnExportProjectFinished) {
-  //   window.vstOnExportProjectFinished = (
-  //     nonce: string,
-  //     result: "cancelled" | "error" | "success",
-  //   ) => {
-  //     log.info("vstOnExportProjectFinished", nonce, result);
-  //     const callback = exportProjectCallbacks.get(nonce);
-  //     if (!callback) {
-  //       log.info("callback not found", nonce);
-  //       return;
-  //     }
-  //     callback(result);
-  //   };
-  // }
-  // const nonce = await vstExportProject();
-  //
-  // const promise = new Promise<"cancelled" | "error" | "success">((resolve) => {
-  //   exportProjectCallbacks.set(nonce, resolve);
-  // });
-  // log.info("Callback registered", nonce);
-  //
-  // return await promise;
+export async function exportProject(): Promise<
+  "success" | "cancelled" | "error"
+> {
+  return await ipcExportProject()
+    .then((result) => (result ? "success" : "cancelled"))
+    .catch(() => "error");
+}
+
+export async function showMessageDialog(
+  options: ShowMessageDialogOptions,
+): Promise<void> {
+  return await ipcShowMessageDialog(options);
+}
+
+export async function showQuestionDialog(
+  options: ShowQuestionDialogOptions,
+): Promise<number> {
+  return await ipcShowQuestionDialog(options);
 }

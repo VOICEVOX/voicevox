@@ -1,8 +1,8 @@
 import { Plugin, watch } from "vue";
 import AsyncLock from "async-lock";
 import { debounce } from "quasar";
-import createXxhash from "xxhash-wasm";
-import { XXHashAPI } from "xxhash-wasm";
+import createXxhash, { XXHashAPI } from "xxhash-wasm";
+import { toBase64 } from "fast-base64";
 import { clearPhrases, getPhrases, getProject, updatePhrases } from "./ipc";
 import { projectFilePath } from "./sandbox";
 import { Store } from "@/store/vuex";
@@ -14,7 +14,6 @@ import {
   tickToSecond,
 } from "@/sing/domain";
 import { singingVoices } from "@/store/singing";
-import { blobToBase64 } from "@/helpers/binaryHelper";
 import onetimeWatch from "@/helpers/onetimeWatch";
 import { createLogger } from "@/domain/frontend/log";
 
@@ -225,7 +224,7 @@ export const vstMessageReceiver: Plugin = {
                   store.state.tempos,
                   store.state.tpqn,
                 ),
-                wav: await blobToBase64(wav),
+                wav: await toBase64(new Uint8Array(await wav.arrayBuffer())),
                 hash,
               };
             }),

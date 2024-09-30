@@ -6,6 +6,8 @@ import {
   readFile,
   setProject,
   showImportFileDialog,
+  showMessageDialog,
+  showQuestionDialog,
 } from "./ipc";
 import { defaultEngine } from "@/backend/browser/contract";
 import { IpcSOData } from "@/type/ipc";
@@ -19,6 +21,8 @@ import {
   Sandbox,
   ThemeConf,
   UpdateInfo,
+  ShowMessageDialogOptions,
+  ShowQuestionDialogOptions,
 } from "@/type/preload";
 import {
   ContactTextFileName,
@@ -111,29 +115,15 @@ export const api: Sandbox = {
   showSaveDirectoryDialog() {
     throw new Error("Not implemented");
   },
-  showMessageDialog(obj: {
-    type: "none" | "info" | "error" | "question" | "warning";
-    title: string;
-    message: string;
-  }) {
-    window.alert(`${obj.title}\n${obj.message}`);
+  async showMessageDialog(options: ShowMessageDialogOptions) {
+    await showMessageDialog(options);
+
     // NOTE: どの呼び出し元も、return valueを使用していないので雑に対応している
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return Promise.resolve({} as any);
   },
-  showQuestionDialog(obj: {
-    type: "none" | "info" | "error" | "question" | "warning";
-    title: string;
-    message: string;
-    buttons: string[];
-    cancelId?: number;
-    defaultId?: number;
-  }) {
-    // FIXME
-    // TODO: 例えば動的にdialog要素をDOMに生成して、それを表示させるみたいのはあるかもしれない
-    throw new Error(
-      `Not implemented: showQuestionDialog, request: ${JSON.stringify(obj)}`,
-    );
+  async showQuestionDialog(options: ShowQuestionDialogOptions) {
+    return await showQuestionDialog(options);
   },
   showImportFileDialog(options) {
     return showImportFileDialog(options);
