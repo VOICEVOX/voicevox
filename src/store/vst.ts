@@ -19,7 +19,7 @@ export const vstStore = createPartialStore<VstStoreTypes>({
       if (result === "cancelled") {
         return;
       } else if (result === "error") {
-        dispatch("SHOW_ALERT_DIALOG", {
+        void dispatch("SHOW_ALERT_DIALOG", {
           title: "エクスポートに失敗しました",
           // TODO: ちゃんとエラーメッセージを取得する。大体EBUSYなのでそれを表示する
           message: "他のアプリケーションがファイルを使用中の可能性があります",

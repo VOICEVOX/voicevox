@@ -61,19 +61,18 @@
     "rfdc": "1.4.1",
     "semver": "7.5.4",
     "shlex": "2.1.2",
-    "spark-md5": "3.0.2",
     "systeminformation": "5.21.15",
     "tree-kill": "1.2.2",
     "vue": "3.4.26",
     "vuedraggable": "4.1.0",
     "vuex": "4.0.2",
+    "xxhash-wasm": "1.0.2",
     "zod": "3.22.4"
   },
   "optionalDependencies": {
     "dmg-license": "1.0.11"
   },
   "devDependencies": {
-    "@types/archiver": "6.0.2",
     "@chromatic-com/storybook": "1.5.0",
     "@openapitools/openapi-generator-cli": "2.13.4",
     "@playwright/test": "1.43.1",
@@ -87,6 +86,7 @@
     "@storybook/test-runner": "0.19.0",
     "@storybook/vue3": "8.1.10",
     "@storybook/vue3-vite": "8.1.10",
+    "@types/archiver": "6.0.2",
     "@types/async-lock": "1.4.0",
     "@types/encoding-japanese": "1.0.18",
     "@types/glob": "8.0.0",
@@ -105,8 +105,8 @@
     "@voicevox/eslint-plugin": "file:./eslint-plugin",
     "@vue/eslint-config-prettier": "9.0.0",
     "@vue/eslint-config-typescript": "13.0.0",
-    "archiver": "6.0.1",
     "@vue/test-utils": "2.4.5",
+    "archiver": "6.0.1",
     "chromatic": "11.5.4",
     "cross-env": "7.0.3",
     "dotenv": "16.0.0",

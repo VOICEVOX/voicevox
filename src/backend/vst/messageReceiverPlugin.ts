@@ -1,7 +1,8 @@
 import { Plugin, watch } from "vue";
 import AsyncLock from "async-lock";
 import { debounce } from "quasar";
-import SparkMD5 from "spark-md5";
+import createXxhash from "xxhash-wasm";
+import { XXHashAPI } from "xxhash-wasm";
 import { clearPhrases, getPhrases, getProject, updatePhrases } from "./ipc";
 import { projectFilePath } from "./sandbox";
 import { Store } from "@/store/vuex";
@@ -12,9 +13,10 @@ import {
   secondToTick,
   tickToSecond,
 } from "@/sing/domain";
-import { restDurationSeconds, singingVoices } from "@/store/singing";
+import { singingVoices } from "@/store/singing";
 import { blobToBase64 } from "@/helpers/binaryHelper";
 import onetimeWatch from "@/helpers/onetimeWatch";
+import { createLogger } from "@/domain/frontend/log";
 
 export type Message =
   | {
@@ -31,11 +33,17 @@ type PhraseWithAudio = {
   start: number;
   end: number;
   wav: string;
-  hash: string;
+  hash: number;
 };
 
-const log = (message: string, ...args: unknown[]) => {
-  window.backend.logInfo(`[vstMessageReceiver] ${message}`, ...args);
+const log = createLogger("vstMessageReceiver");
+
+let xxhashInstance: XXHashAPI | undefined;
+const getXxhash = async () => {
+  if (!xxhashInstance) {
+    xxhashInstance = await createXxhash();
+  }
+  return xxhashInstance;
 };
 
 export const vstMessageReceiver: Plugin = {
@@ -56,8 +64,8 @@ export const vstMessageReceiver: Plugin = {
       switch (message.type) {
         case "update:isPlaying":
           if (message.isPlaying && !uiLockPromiseResolve) {
-            store.dispatch("SING_STOP_AUDIO");
-            store.dispatch("ASYNC_UI_LOCK", {
+            void store.dispatch("SING_STOP_AUDIO");
+            void store.dispatch("ASYNC_UI_LOCK", {
               callback: () =>
                 new Promise((resolve) => {
                   uiLockPromiseResolve = resolve;
@@ -67,14 +75,14 @@ export const vstMessageReceiver: Plugin = {
             uiLockPromiseResolve();
             uiLockPromiseResolve = undefined;
           } else {
-            window.backend.logWarn(
-              `[vstOnMessage] unexpected isPlaying state: isPlaying=${message.isPlaying}, uiLockPromiseResolve=${uiLockPromiseResolve}`,
+            log.warn(
+              `[vstOnMessage] unexpected isPlaying state: isPlaying=${message.isPlaying}, uiLockPromiseResolve=${!!uiLockPromiseResolve}`,
             );
           }
 
           break;
         case "update:time":
-          store.dispatch("SET_PLAYHEAD_POSITION", {
+          void store.dispatch("SET_PLAYHEAD_POSITION", {
             position: secondToTick(
               message.time,
               store.state.tempos,
@@ -87,7 +95,7 @@ export const vstMessageReceiver: Plugin = {
 
     const phrasesLock = new AsyncLock();
 
-    clearPhrases();
+    // void clearPhrases();
 
     const songProjectState = {
       tempos: store.state.tempos,
@@ -100,16 +108,16 @@ export const vstMessageReceiver: Plugin = {
     watch(
       () => songProjectState,
       debounce(() => {
-        const isEmptyProject = songProjectState.tracks.every(
+        const isEmptyProject = [...songProjectState.tracks.values()].every(
           (track) => track.notes.length === 0,
         );
         if (isEmptyProject && !haveSentNonEmptyProject) {
           return;
         }
         haveSentNonEmptyProject = true;
-        log("Saving project file");
+        log.info("Saving project file");
         store.commit("SET_PROJECT_FILEPATH", { filePath: projectFilePath });
-        store.dispatch("SAVE_PROJECT_FILE", { overwrite: true });
+        void store.dispatch("SAVE_PROJECT_FILE", { overwrite: true });
       }, 5000),
       { deep: true },
     );
@@ -118,17 +126,17 @@ export const vstMessageReceiver: Plugin = {
       () => store.state.openedEditor,
       (openedEditor) => {
         if (openedEditor !== "song") {
-          store.dispatch("SET_OPENED_EDITOR", { editor: "song" });
+          void store.dispatch("SET_OPENED_EDITOR", { editor: "song" });
         }
       },
     );
 
-    getProject().then((project) => {
+    void getProject().then((project) => {
       if (!project) {
-        log("project not found");
+        log.info("project not found");
         return;
       }
-      log("project found");
+      log.info("project found");
       onetimeWatch(
         () => store.state.isEditorReady,
         async (isEditorReady) => {
@@ -136,7 +144,7 @@ export const vstMessageReceiver: Plugin = {
             return "continue";
           }
 
-          log("Engine is ready, loading project");
+          log.info("Engine is ready, loading project");
           await store.dispatch("LOAD_PROJECT_FILE", {
             filePath: projectFilePath,
           });
@@ -149,7 +157,7 @@ export const vstMessageReceiver: Plugin = {
     watch(
       () => store.state.phrases,
       (phrases) => {
-        phrasesLock.acquire("phrases", async () => {
+        void phrasesLock.acquire("phrases", async () => {
           const playablePhrases = [...phrases.entries()].filter(
             ([, phrase]) => phrase.state === "PLAYABLE",
           );
@@ -168,7 +176,10 @@ export const vstMessageReceiver: Plugin = {
                   throw new Error("wav is not found");
                 }
 
-                const hash = SparkMD5.ArrayBuffer.hash(await wav.arrayBuffer());
+                const xxhash = await getXxhash();
+                const hash = xxhash.h32Raw(
+                  new Uint8Array(await wav.arrayBuffer()),
+                );
                 return [id, { wav, hash }] as const;
               }),
             ),
@@ -195,7 +206,7 @@ export const vstMessageReceiver: Plugin = {
               const startTicks = getStartTicksOfPhrase(phrase);
               const startTime =
                 tickToSecond(startTicks, store.state.tempos, store.state.tpqn) -
-                restDurationSeconds;
+                phrase.firstRestDuration;
               if (
                 vstPhrase &&
                 vstPhrase.start === startTime &&
@@ -228,7 +239,7 @@ export const vstMessageReceiver: Plugin = {
           if (removedPhrases.length === 0 && newPhrasesWithAudio.length === 0) {
             return;
           }
-          updatePhrases(removedPhrases, newPhrasesWithAudio);
+          void updatePhrases(removedPhrases, newPhrasesWithAudio);
         });
       },
       { deep: true },

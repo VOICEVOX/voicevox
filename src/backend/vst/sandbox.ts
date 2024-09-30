@@ -12,13 +12,13 @@ import { IpcSOData } from "@/type/ipc";
 import {
   defaultHotkeySettings,
   defaultToolbarButtonSetting,
-  configSchema,
   EngineId,
   EngineSettingType,
   EngineSettings,
   HotkeySettingType,
   Sandbox,
   ThemeConf,
+  UpdateInfo,
 } from "@/type/preload";
 import {
   ContactTextFileName,
@@ -59,11 +59,11 @@ export const api: Sandbox = {
   },
   async getOssLicenses() {
     const v = await fetch(toStaticPath(OssLicensesJsonFileName));
-    return await v.json();
+    return (await v.json()) as Record<string, string>[];
   },
   async getUpdateInfos() {
     const v = await fetch(toStaticPath(UpdateInfosJsonFileName));
-    return await v.json();
+    return (await v.json()) as UpdateInfo[];
   },
   async getOssCommunityInfos() {
     const v = await fetch(toStaticPath(OssCommunityInfosFileName));
@@ -172,8 +172,12 @@ export const api: Sandbox = {
     listener: (_: unknown, ...args: IpcSOData[T]["args"]) => void,
   ) {
     window.addEventListener("message", (event) => {
-      if (event.data.channel == channel) {
-        listener(event.data.args);
+      const data = event.data as {
+        channel: T;
+        args: IpcSOData[T]["args"];
+      };
+      if (data.channel == channel) {
+        listener(data.args);
       }
     });
   },
@@ -213,13 +217,8 @@ export const api: Sandbox = {
     throw new Error(`Not supported on Browser version: openEngineDirectory`);
   },
   async hotkeySettings(newData?: HotkeySettingType) {
-    type HotkeySettingType = ReturnType<
-      (typeof configSchema)["parse"]
-    >["hotkeySettings"];
     if (newData != undefined) {
-      const hotkeySettings = (await this.getSetting(
-        "hotkeySettings",
-      )) as HotkeySettingType;
+      const hotkeySettings = await this.getSetting("hotkeySettings");
       const hotkeySetting = hotkeySettings.find(
         (hotkey) => hotkey.action == newData.action,
       );
@@ -228,7 +227,7 @@ export const api: Sandbox = {
       }
       await this.setSetting("hotkeySettings", hotkeySettings);
     }
-    return this.getSetting("hotkeySettings") as Promise<HotkeySettingType>;
+    return this.getSetting("hotkeySettings");
   },
   checkFileExists() {
     throw new Error("Not implemented");
