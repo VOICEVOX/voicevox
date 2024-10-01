@@ -421,6 +421,11 @@ const editingLyricNote = computed(() => {
 const showGuideLine = ref(true);
 const guideLineX = ref(0);
 
+// 新しい状態変数を追加
+const isDragging = ref(false);
+const dragStartX = ref(0);
+const dragStartY = ref(0);
+
 // プレビュー中でないときの処理
 // TODO: ステートパターンにして、この処理をIdleStateに移す
 watch([ctrlKey, shiftKey, nowPreviewing, editTarget], () => {
@@ -925,7 +930,7 @@ const endPreview = () => {
     }
     const previewPitchEditType = previewPitchEdit.value.type;
     if (previewPitchEditType === "draw") {
-      // カーソルを動かさずにマウスのボタンを離したときに1フレームのみの変更になり、
+      // カーソルを動かさずにマウスのボタンを離したときに1フレーム��みの変更になり、
       // 1フレームの変更はピッチ編集ラインとして表示されないので、無視する
       if (previewPitchEdit.value.data.length >= 2) {
         // 平滑化を行う
@@ -962,7 +967,19 @@ const onNoteBarMouseDown = (event: MouseEvent, note: Note) => {
   }
   const mouseButton = getButton(event);
   if (mouseButton === "LEFT_BUTTON") {
-    startPreview(event, "MOVE_NOTE", note);
+    if (event.shiftKey) {
+      // Shift+左クリックの処理
+      if (selectedNoteIds.value.has(note.id)) {
+        // 既に選択されている場合は選択から削除
+        void store.dispatch("DESELECT_NOTES", { noteIds: [note.id] });
+      } else {
+        // 選択されていない場合は選択に追加
+        void store.dispatch("SELECT_NOTES", { noteIds: [note.id] });
+      }
+    } else {
+      // 通常の左クリック処理（既存の動作）
+      startPreview(event, "MOVE_NOTE", note);
+    }
   } else if (!selectedNoteIds.value.has(note.id)) {
     selectOnlyThis(note);
   }
@@ -1007,16 +1024,26 @@ const onMouseDown = (event: MouseEvent) => {
     return;
   }
   const mouseButton = getButton(event);
-  // TODO: メニューが表示されている場合はメニュー非表示のみ行いたい
   if (editTarget.value === "NOTE") {
     if (mouseButton === "LEFT_BUTTON") {
       if (event.shiftKey) {
+        // 空白部分でのShift+左クリック：矩形選択を開始
         isRectSelecting.value = true;
         rectSelectStartX.value = cursorX.value;
         rectSelectStartY.value = cursorY.value;
         setCursorState(CursorState.CROSSHAIR);
       } else {
-        startPreview(event, "ADD_NOTE");
+        // 通常の左クリック処理
+        isDragging.value = true;
+        dragStartX.value = cursorX.value;
+        dragStartY.value = cursorY.value;
+        if (selectedNoteIds.value.size === 0) {
+          // ノート未選択時は新規ノート追加
+          startPreview(event, "ADD_NOTE");
+        } else {
+          // ノート選択中は選択解除
+          void store.dispatch("DESELECT_ALL_NOTES");
+        }
       }
     } else {
       void store.dispatch("DESELECT_ALL_NOTES");
@@ -1044,6 +1071,16 @@ const onMouseMove = (event: MouseEvent) => {
 
   if (nowPreviewing.value) {
     executePreviewProcess.value = true;
+  } else if (isDragging.value && editTarget.value === "NOTE") {
+    // ドラッグ距離が3px以上の場合はノート追加
+    const DRAG_THRESHOLD = 3;
+    const dragDistance = Math.sqrt(
+      Math.pow(cursorX.value - dragStartX.value, 2) +
+        Math.pow(cursorY.value - dragStartY.value, 2),
+    );
+    if (dragDistance > DRAG_THRESHOLD) {
+      startPreview(event, "ADD_NOTE");
+    }
   } else {
     const scrollLeft = sequencerBodyElement.scrollLeft;
     const cursorBaseX = (scrollLeft + cursorX.value) / zoomX.value;
@@ -1066,6 +1103,7 @@ const onMouseUp = (event: MouseEvent) => {
   } else if (nowPreviewing.value) {
     endPreview();
   }
+  isDragging.value = false;
 };
 
 /**
