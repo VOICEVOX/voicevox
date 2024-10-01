@@ -135,7 +135,7 @@
                 />
                 <ButtonToggleCell
                   title="テキスト自動分割"
-                  description="スト貼り付けの際のテキストの分割箇所を選べます。"
+                  description="テキスト貼り付けの際のテキストの分割箇所を選べます。"
                   :modelValue="splitTextWhenPaste"
                   :options="[
                     {
