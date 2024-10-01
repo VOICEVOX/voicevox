@@ -699,6 +699,7 @@ onUnmounted(() => {
 
 .sing-transport-button {
   color: var(--scheme-color-on-surface-variant);
+  margin-right: 0.25rem;
 }
 
 .sing-playback-button {
