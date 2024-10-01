@@ -2,8 +2,10 @@ import {
   noteNumberToFrequency,
   decibelToLinear,
   linearToDecibel,
+  tickToSecond,
 } from "@/sing/domain";
 import { Timer } from "@/sing/utility";
+import { Tempo } from "@/store/type";
 
 const getEarliestSchedulableContextTime = (audioContext: BaseAudioContext) => {
   const renderQuantumSize = 128;
@@ -67,6 +69,24 @@ export class Transport {
   private startContextTime = 0;
   private startTime = 0;
   private schedulers = new Map<Sequence, EventScheduler>();
+
+  // ループ設定
+  // TODO: いったん動作するようにする
+  private isLoopEnabled = false;
+  private loopStartTime = 0;
+  private loopEndTime = 0;
+
+  setLoopSettings(
+    isLoopEnabled: boolean,
+    startTick: number,
+    endTick: number,
+    tempos: Tempo[],
+    tpqn: number,
+  ) {
+    this.isLoopEnabled = isLoopEnabled;
+    this.loopStartTime = tickToSecond(startTick, tempos, tpqn);
+    this.loopEndTime = tickToSecond(endTick, tempos, tpqn);
+  }
 
   get state() {
     return this._state;
@@ -144,8 +164,29 @@ export class Transport {
   private schedule(contextTime: number) {
     // 再生位置を計算
     const elapsedTime = contextTime - this.startContextTime;
-    const time = this.startTime + elapsedTime;
+    let time = this.startTime + elapsedTime;
 
+    // ループ処理
+    // TODO: いったん動作するようにする
+    if (this.isLoopEnabled && time >= this.loopEndTime) {
+      const loopDuration = this.loopEndTime - this.loopStartTime;
+      // おそらくscheduleAheadTimeを考慮する必要ある
+      time = this.loopStartTime + ((time - this.loopStartTime) % loopDuration);
+      this.startTime = time;
+      this.startContextTime = contextTime;
+      // スケジューラーをループ後に初期化して再スケジューリングする...ダメな気がする
+      // うまく使い回すほうがよさそうだが、動作があまり理解できていない...
+      // クリアしないとループ中に行った変更が反映されないように思えるが違う？
+      this.schedulers.forEach((scheduler) => {
+        scheduler.stop(contextTime);
+      });
+      this.schedulers.clear();
+      this.sequences.forEach((sequence) => {
+        const scheduler = this.createScheduler(sequence);
+        scheduler.start(contextTime, time);
+        this.schedulers.set(sequence, scheduler);
+      });
+    }
     // シーケンスの削除を反映
     const removedSequences: Sequence[] = [];
     this.schedulers.forEach((scheduler, sequence) => {
@@ -157,7 +198,6 @@ export class Transport {
     removedSequences.forEach((sequence) => {
       this.schedulers.delete(sequence);
     });
-
     // シーケンスの追加を反映
     this.sequences.forEach((sequence) => {
       if (!this.schedulers.has(sequence)) {
@@ -166,10 +206,10 @@ export class Transport {
         this.schedulers.set(sequence, scheduler);
       }
     });
-
     this.schedulers.forEach((scheduler) => {
       scheduler.schedule(time + this.scheduleAheadTime);
     });
+    this._time = time;
   }
 
   /**

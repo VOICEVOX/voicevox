@@ -482,6 +482,9 @@ export const singingStoreState: SingingStoreState = {
   nowAudioExporting: false,
   cancellationOfAudioExportRequested: false,
   isSongSidebarOpen: false,
+  isLoopEnabled: true,
+  loopStartTick: 0,
+  loopEndTick: 0,
 };
 
 export const singingStore = createPartialStore<SingingStoreTypes>({
@@ -1161,6 +1164,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         throw new Error("transport is undefined.");
       }
       mutations.SET_PLAYBACK_STATE({ nowPlaying: true });
+
+      transport.setLoopSettings(
+        state.isLoopEnabled,
+        state.loopStartTick,
+        state.loopEndTick,
+        state.tempos,
+        state.tpqn,
+      );
 
       transport.start();
       animationTimer.start(() => {
@@ -2441,6 +2452,68 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         state.tpqn,
       );
       return Math.max(1, lastNoteEndTime + 1);
+    },
+  },
+
+  SET_LOOP_ENABLED: {
+    mutation(state, { isLoopEnabled }) {
+      state.isLoopEnabled = isLoopEnabled;
+    },
+    action({ mutations }, { isLoopEnabled }) {
+      mutations.SET_LOOP_ENABLED({ isLoopEnabled });
+    },
+  },
+
+  SET_LOOP_RANGE: {
+    mutation(state, { loopStartTick, loopEndTick }) {
+      if (loopStartTick >= loopEndTick) {
+        throw new Error("Loop start must be before loop end");
+      }
+      state.loopStartTick = loopStartTick;
+      state.loopEndTick = loopEndTick;
+    },
+    action({ mutations, state }, { loopStartTick, loopEndTick }) {
+      mutations.SET_LOOP_RANGE({ loopStartTick, loopEndTick });
+      if (transport) {
+        // TODO: いったん動作するようにする
+        transport.setLoopSettings(
+          true,
+          loopStartTick,
+          loopEndTick,
+          state.tempos,
+          state.tpqn,
+        );
+      }
+    },
+  },
+
+  SET_LOOP_START: {
+    mutation(state, { loopStartTick }) {
+      if (loopStartTick >= state.loopEndTick) {
+        throw new Error("Loop start must be before loop end");
+      }
+      state.loopStartTick = loopStartTick;
+    },
+    action({ mutations }, { loopStartTick }) {
+      mutations.SET_LOOP_START({ loopStartTick });
+    },
+  },
+
+  SET_LOOP_END: {
+    mutation(state, { loopEndTick }) {
+      if (loopEndTick <= state.loopStartTick) {
+        throw new Error("Loop end must be after loop start");
+      }
+      state.loopEndTick = loopEndTick;
+    },
+    action({ mutations }, { loopEndTick }) {
+      mutations.SET_LOOP_END({ loopEndTick });
+    },
+  },
+
+  TOGGLE_LOOP: {
+    action({ state, mutations }) {
+      mutations.SET_LOOP_ENABLED({ isLoopEnabled: !state.isLoopEnabled });
     },
   },
 });

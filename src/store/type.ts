@@ -840,6 +840,9 @@ export type SingingStoreState = {
   nowAudioExporting: boolean;
   cancellationOfAudioExportRequested: boolean;
   isSongSidebarOpen: boolean;
+  isLoopEnabled: boolean;
+  loopStartTick: number;
+  loopEndTick: number;
 };
 
 export type SingingStoreTypes = {
@@ -1262,6 +1265,30 @@ export type SingingStoreTypes = {
   };
 
   SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS: {
+    action(): void;
+  };
+
+  SET_LOOP_ENABLED: {
+    mutation: { isLoopEnabled: boolean };
+    action(payload: { isLoopEnabled: boolean }): void;
+  };
+
+  SET_LOOP_RANGE: {
+    mutation: { loopStartTick: number; loopEndTick: number };
+    action(payload: { loopStartTick: number; loopEndTick: number }): void;
+  };
+
+  SET_LOOP_START: {
+    mutation: { loopStartTick: number };
+    action(payload: { loopStartTick: number }): void;
+  };
+
+  SET_LOOP_END: {
+    mutation: { loopEndTick: number };
+    action(payload: { loopEndTick: number }): void;
+  };
+
+  TOGGLE_LOOP: {
     action(): void;
   };
 };

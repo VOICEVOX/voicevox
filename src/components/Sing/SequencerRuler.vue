@@ -1,5 +1,10 @@
 <template>
-  <div ref="sequencerRuler" class="sequencer-ruler" @click="onClick">
+  <div
+    ref="sequencerRuler"
+    class="sequencer-ruler"
+    @click="onClick"
+    @contextmenu="onContextMenu"
+  >
     <svg
       xmlns="http://www.w3.org/2000/svg"
       :width
@@ -57,14 +62,16 @@
         transform: `translateX(${playheadX - offset}px)`,
       }"
     ></div>
+    <SequencerLoopControl ref="loopControl" :width :offset />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted } from "vue";
+import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { useStore } from "@/store";
 import { getMeasureDuration, getTimeSignaturePositions } from "@/sing/domain";
 import { baseXToTick, tickToBaseX } from "@/sing/viewHelper";
+import SequencerLoopControl from "@/components/Sing/SequencerLoopControl.vue";
 
 const props = withDefaults(
   defineProps<{
@@ -76,6 +83,7 @@ const props = withDefaults(
     numMeasures: 32,
   },
 );
+
 const store = useStore();
 const state = store.state;
 const height = ref(40);
@@ -137,6 +145,9 @@ const playheadX = computed(() => {
   return Math.floor(baseX * zoomX.value);
 });
 
+const sequencerRuler = ref<HTMLElement | null>(null);
+const loopControl = ref<InstanceType<typeof SequencerLoopControl> | null>(null);
+
 const onClick = (event: MouseEvent) => {
   void store.dispatch("DESELECT_ALL_NOTES");
 
@@ -149,7 +160,11 @@ const onClick = (event: MouseEvent) => {
   void store.dispatch("SET_PLAYHEAD_POSITION", { position: ticks });
 };
 
-const sequencerRuler = ref<HTMLElement | null>(null);
+const onContextMenu = (event: MouseEvent) => {
+  event.preventDefault();
+  loopControl.value?.toggleLoop(event.offsetX);
+};
+
 let resizeObserver: ResizeObserver | undefined;
 
 const playheadPositionChangeListener = (position: number) => {
@@ -186,6 +201,21 @@ onUnmounted(() => {
     listener: playheadPositionChangeListener,
   });
 });
+
+// ズーム変更時にoffsetを調整
+watch(zoomX, (newZoom, oldZoom) => {
+  if (sequencerRuler.value) {
+    const rulerRect = sequencerRuler.value.getBoundingClientRect();
+    const centerX = rulerRect.width / 2;
+    const oldCenterTick = baseXToTick(
+      (props.offset + centerX) / oldZoom,
+      tpqn.value,
+    );
+    const newCenterX = tickToBaseX(oldCenterTick, tpqn.value) * newZoom;
+    const newOffset = newCenterX - centerX;
+    sequencerRuler.value.scrollLeft = newOffset;
+  }
+});
 </script>
 
 <style scoped lang="scss">
@@ -221,7 +251,6 @@ onUnmounted(() => {
   stroke: var(--scheme-color-sing-ruler-measure-line);
   stroke-width: 1px;
 
-  // NOTE: 最初の小節線を非表示。必要に応じて再表示・位置合わせする
   &.first-measure-line {
     stroke: var(--scheme-color-sing-ruler-surface);
   }
@@ -231,5 +260,14 @@ onUnmounted(() => {
   backface-visibility: hidden;
   stroke: var(--scheme-color-sing-ruler-beat-line);
   stroke-width: 1px;
+}
+
+.sequencer-ruler-border-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: var(--scheme-color-sing-ruler-border);
 }
 </style>
