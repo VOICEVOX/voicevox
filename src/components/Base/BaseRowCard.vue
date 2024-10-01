@@ -65,7 +65,8 @@ defineEmits<{
 }
 
 .text {
-  flex-grow: 1;
+  flex: 1;
+  min-width: 240px;
 }
 
 .description {
