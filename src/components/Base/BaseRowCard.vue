@@ -69,8 +69,14 @@ defineEmits<{
   min-width: 240px;
 }
 
+.title {
+  font-weight: 700;
+}
+
 .description {
-  font-size: 0.75rem;
+  // TODO: html要素のfont-size指定が16pxになり次第remでの指定に変更する
+  // font-size: 0.75rem;
+  font-size: 12px;
 }
 
 .control {
