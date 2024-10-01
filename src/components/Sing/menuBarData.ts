@@ -31,6 +31,11 @@ export const useMenuBarData = () => {
     await store.dispatch("EXPORT_WAVE_FILE", {});
   };
 
+  const exportStemWaveFile = async () => {
+    if (uiLocked.value) return;
+    await store.dispatch("EXPORT_STEM_WAVE_FILE", {});
+  };
+
   const fileSubMenuData = computed<MenuItemData[]>(() => [
     ...((isVst
       ? []
@@ -40,6 +45,14 @@ export const useMenuBarData = () => {
             label: "音声を出力",
             onClick: () => {
               void exportWaveFile();
+            },
+            disableWhenUiLocked: true,
+          },
+          store.state.experimentalSetting.enableMultiTrack && {
+            type: "button",
+            label: "トラックごとに音声を出力",
+            onClick: () => {
+              void exportStemWaveFile();
             },
             disableWhenUiLocked: true,
           },

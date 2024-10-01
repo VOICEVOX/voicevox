@@ -640,9 +640,7 @@ const morphingRateSlider = previewSliderHelper({
 });
 
 // プリセット
-const enablePreset = computed(
-  () => store.state.experimentalSetting.enablePreset,
-);
+const enablePreset = computed(() => store.state.enablePreset);
 
 const presetItems = computed(() => store.state.presetItems);
 const presetKeys = computed(() => store.state.presetKeys);

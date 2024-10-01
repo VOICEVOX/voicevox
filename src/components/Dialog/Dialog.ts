@@ -7,8 +7,8 @@ import {
   SaveResult,
   ErrorTypeForSaveAllResultDialog,
 } from "@/store/type";
-import { Dispatch } from "@/store/vuex";
-import { withProgress } from "@/store/ui";
+import { DotNotationDispatch } from "@/store/vuex";
+import { withProgressDotNotation as withProgress } from "@/store/ui";
 
 type MediaType = "audio" | "text";
 
@@ -143,21 +143,21 @@ const setCommonDialogCallback = (
 
 export async function generateAndSaveOneAudioWithDialog({
   audioKey,
-  dispatch,
+  actions,
   filePath,
   disableNotifyOnGenerate,
 }: {
   audioKey: AudioKey;
-  dispatch: Dispatch<AllActions>;
+  actions: DotNotationDispatch<AllActions>;
   filePath?: string;
   disableNotifyOnGenerate: boolean;
 }): Promise<void> {
   const result: SaveResultObject = await withProgress(
-    dispatch("GENERATE_AND_SAVE_AUDIO", {
+    actions.GENERATE_AND_SAVE_AUDIO({
       audioKey,
       filePath,
     }),
-    dispatch,
+    actions,
   );
 
   if (result.result === "CANCELED") return;
@@ -167,35 +167,35 @@ export async function generateAndSaveOneAudioWithDialog({
     // 書き出し成功時に通知をする
     showWriteSuccessNotify({
       mediaType: "audio",
-      dispatch,
+      actions,
     });
   } else {
-    showWriteErrorDialog({ mediaType: "audio", result, dispatch });
+    showWriteErrorDialog({ mediaType: "audio", result, actions });
   }
 }
 
 export async function multiGenerateAndSaveAudioWithDialog({
   audioKeys,
-  dispatch,
+  actions,
   dirPath,
   disableNotifyOnGenerate,
 }: {
   audioKeys: AudioKey[];
-  dispatch: Dispatch<AllActions>;
+  actions: DotNotationDispatch<AllActions>;
   dirPath?: string;
   disableNotifyOnGenerate: boolean;
 }): Promise<void> {
   const result = await withProgress(
-    dispatch("MULTI_GENERATE_AND_SAVE_AUDIO", {
+    actions.MULTI_GENERATE_AND_SAVE_AUDIO({
       audioKeys,
       dirPath,
       callback: (finishedCount) =>
-        dispatch("SET_PROGRESS_FROM_COUNT", {
+        actions.SET_PROGRESS_FROM_COUNT({
           finishedCount,
           totalCount: audioKeys.length,
         }),
     }),
-    dispatch,
+    actions,
   );
 
   if (result == undefined) return;
@@ -226,7 +226,7 @@ export async function multiGenerateAndSaveAudioWithDialog({
     // 書き出し成功時に通知をする
     showWriteSuccessNotify({
       mediaType: "audio",
-      dispatch,
+      actions,
     });
   }
 
@@ -243,21 +243,21 @@ export async function multiGenerateAndSaveAudioWithDialog({
 }
 
 export async function generateAndConnectAndSaveAudioWithDialog({
-  dispatch,
+  actions,
   filePath,
   disableNotifyOnGenerate,
 }: {
-  dispatch: Dispatch<AllActions>;
+  actions: DotNotationDispatch<AllActions>;
   filePath?: string;
   disableNotifyOnGenerate: boolean;
 }): Promise<void> {
   const result = await withProgress(
-    dispatch("GENERATE_AND_CONNECT_AND_SAVE_AUDIO", {
+    actions.GENERATE_AND_CONNECT_AND_SAVE_AUDIO({
       filePath,
       callback: (finishedCount, totalCount) =>
-        dispatch("SET_PROGRESS_FROM_COUNT", { finishedCount, totalCount }),
+        actions.SET_PROGRESS_FROM_COUNT({ finishedCount, totalCount }),
     }),
-    dispatch,
+    actions,
   );
 
   if (result == undefined || result.result === "CANCELED") return;
@@ -266,23 +266,23 @@ export async function generateAndConnectAndSaveAudioWithDialog({
     if (disableNotifyOnGenerate) return;
     showWriteSuccessNotify({
       mediaType: "audio",
-      dispatch,
+      actions,
     });
   } else {
-    showWriteErrorDialog({ mediaType: "audio", result, dispatch });
+    showWriteErrorDialog({ mediaType: "audio", result, actions });
   }
 }
 
 export async function connectAndExportTextWithDialog({
-  dispatch,
+  actions,
   filePath,
   disableNotifyOnGenerate,
 }: {
-  dispatch: Dispatch<AllActions>;
+  actions: DotNotationDispatch<AllActions>;
   filePath?: string;
   disableNotifyOnGenerate: boolean;
 }): Promise<void> {
-  const result = await dispatch("CONNECT_AND_EXPORT_TEXT", {
+  const result = await actions.CONNECT_AND_EXPORT_TEXT({
     filePath,
   });
 
@@ -292,26 +292,26 @@ export async function connectAndExportTextWithDialog({
     if (disableNotifyOnGenerate) return;
     showWriteSuccessNotify({
       mediaType: "text",
-      dispatch,
+      actions,
     });
   } else {
-    showWriteErrorDialog({ mediaType: "text", result, dispatch });
+    showWriteErrorDialog({ mediaType: "text", result, actions });
   }
 }
 
 // 書き出し成功時の通知を表示
 const showWriteSuccessNotify = ({
   mediaType,
-  dispatch,
+  actions,
 }: {
   mediaType: MediaType;
-  dispatch: Dispatch<AllActions>;
+  actions: DotNotationDispatch<AllActions>;
 }): void => {
   const mediaTypeNames: Record<MediaType, string> = {
     audio: "音声",
     text: "テキスト",
   };
-  void dispatch("SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON", {
+  void actions.SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON({
     message: `${mediaTypeNames[mediaType]}を書き出しました`,
     tipName: "notifyOnGenerate",
   });
@@ -321,15 +321,15 @@ const showWriteSuccessNotify = ({
 const showWriteErrorDialog = ({
   mediaType,
   result,
-  dispatch,
+  actions,
 }: {
   mediaType: MediaType;
   result: SaveResultObject;
-  dispatch: Dispatch<AllActions>;
+  actions: DotNotationDispatch<AllActions>;
 }) => {
   if (mediaType === "text") {
     // テキスト書き出し時のエラーを出力
-    void dispatch("SHOW_ALERT_DIALOG", {
+    void actions.SHOW_ALERT_DIALOG({
       title: "テキストの書き出しに失敗しました。",
       message:
         "書き込みエラーによって失敗しました。空き容量があることや、書き込み権限があることをご確認ください。",
@@ -345,7 +345,7 @@ const showWriteErrorDialog = ({
     };
 
     // 音声書き出し時のエラーを出力
-    void dispatch("SHOW_ALERT_DIALOG", {
+    void actions.SHOW_ALERT_DIALOG({
       title: "書き出しに失敗しました。",
       message: result.errorMessage ?? defaultErrorMessages[result.result] ?? "",
     });
@@ -356,9 +356,9 @@ export const NOTIFY_TIMEOUT = 7000;
 
 export const showNotifyAndNotShowAgainButton = (
   {
-    dispatch,
+    actions,
   }: {
-    dispatch: Dispatch<AllActions>;
+    actions: DotNotationDispatch<AllActions>;
   },
   options: NotifyAndNotShowAgainButtonOption,
 ) => {
@@ -376,7 +376,7 @@ export const showNotifyAndNotShowAgainButton = (
         label: "今後このメッセージを表示しない",
         textColor: "toast-button-display" + suffix,
         handler: () => {
-          void dispatch("SET_CONFIRMED_TIP", {
+          void actions.SET_CONFIRMED_TIP({
             confirmedTip: {
               [options.tipName]: true,
             },

@@ -1,8 +1,6 @@
 import { spawn, ChildProcess } from "child_process";
 import path from "path";
-import fs from "fs";
 import treeKill from "tree-kill";
-import shlex from "shlex";
 
 import { app, dialog } from "electron"; // FIXME: ここでelectronをimportするのは良くない
 
@@ -13,17 +11,9 @@ import {
   getProcessNameFromPid,
   isAssignablePort,
   url2HostInfo,
-} from "./portManager";
+} from "../portHelper";
 
-import {
-  EngineInfo,
-  EngineDirValidationResult,
-  MinimumEngineManifestType,
-  EngineId,
-  minimumEngineManifestSchema,
-  envEngineInfoSchema,
-} from "@/type/preload";
-import { AltPortInfos } from "@/store/type";
+import { EngineInfo, EngineId, EngineSettings } from "@/type/preload";
 import { BaseConfigManager } from "@/backend/common/ConfigManager";
 
 type EngineProcessContainer = {
@@ -31,180 +21,38 @@ type EngineProcessContainer = {
   engineProcess?: ChildProcess;
 };
 
-/**
- * デフォルトエンジンの情報を作成する
- */
-function createDefaultEngineInfos(defaultEngineDir: string): EngineInfo[] {
-  // TODO: envから直接ではなく、envに書いたengine_manifest.jsonから情報を得るようにする
-  const defaultEngineInfosEnv =
-    import.meta.env.VITE_DEFAULT_ENGINE_INFOS ?? "[]";
-
-  const envSchema = envEngineInfoSchema.array();
-  const engines = envSchema.parse(JSON.parse(defaultEngineInfosEnv));
-
-  return engines.map((engineInfo) => {
-    return {
-      ...engineInfo,
-      isDefault: true,
-      type: "path",
-      executionFilePath: path.resolve(engineInfo.executionFilePath),
-      path:
-        engineInfo.path == undefined
-          ? undefined
-          : path.resolve(defaultEngineDir, engineInfo.path),
-    } satisfies EngineInfo;
-  });
-}
-
-export class EngineManager {
-  configManager: BaseConfigManager;
-  defaultEngineDir: string;
-  vvppEngineDir: string;
+/** エンジンプロセスを管理するクラス */
+export class EngineProcessManager {
   onEngineProcessError: (engineInfo: EngineInfo, error: Error) => void;
+  engineInfosFetcher: () => Readonly<EngineInfo>[];
+  engineAltPortUpdater: (engineId: EngineId, port: number) => void;
+  engineSettingsGetter: () => Partial<EngineSettings>;
 
   defaultEngineInfos: EngineInfo[] = [];
   additionalEngineInfos: EngineInfo[] = [];
-  engineProcessContainers: Record<EngineId, EngineProcessContainer>;
+  engineProcessContainers: Record<EngineId, EngineProcessContainer> = {};
 
-  public altPortInfo: AltPortInfos = {};
-
-  constructor({
-    configManager,
-    defaultEngineDir,
-    vvppEngineDir,
-    onEngineProcessError,
-  }: {
+  constructor(payload: {
     configManager: BaseConfigManager;
-    defaultEngineDir: string;
-    vvppEngineDir: string;
     onEngineProcessError: (engineInfo: EngineInfo, error: Error) => void;
+    /** エンジン情報を取得する関数 */
+    engineInfosFetcher: () => Readonly<EngineInfo>[];
+    /** エンジンの代替ポート情報を更新する関数 */
+    engineAltPortUpdater: (engineId: EngineId, port: number) => void;
+    /** エンジン設定を取得する関数 */
+    engineSettingsGetter: () => Partial<EngineSettings>;
   }) {
-    this.configManager = configManager;
-    this.defaultEngineDir = defaultEngineDir;
-    this.vvppEngineDir = vvppEngineDir;
-    this.onEngineProcessError = onEngineProcessError;
-    this.engineProcessContainers = {};
-  }
-
-  /**
-   * 追加エンジンの一覧を作成する。
-   * FIXME: store.get("registeredEngineDirs")への副作用をEngineManager外に移動する
-   */
-  private createAdditionalEngineInfos(): EngineInfo[] {
-    const engines: EngineInfo[] = [];
-    const addEngine = (engineDir: string, type: "vvpp" | "path") => {
-      const manifestPath = path.join(engineDir, "engine_manifest.json");
-      if (!fs.existsSync(manifestPath)) {
-        return "manifestNotFound";
-      }
-      let manifest: MinimumEngineManifestType;
-      try {
-        manifest = minimumEngineManifestSchema.parse(
-          JSON.parse(fs.readFileSync(manifestPath, { encoding: "utf8" })),
-        );
-      } catch (e) {
-        return "manifestParseError";
-      }
-
-      const [command, ...args] = shlex.split(manifest.command);
-
-      engines.push({
-        uuid: manifest.uuid,
-        host: `http://127.0.0.1:${manifest.port}`,
-        name: manifest.name,
-        path: engineDir,
-        executionEnabled: true,
-        executionFilePath: path.join(engineDir, command),
-        executionArgs: args,
-        type,
-        isDefault: false,
-      } satisfies EngineInfo);
-      return "ok";
-    };
-    for (const dirName of fs.readdirSync(this.vvppEngineDir)) {
-      const engineDir = path.join(this.vvppEngineDir, dirName);
-      if (!fs.statSync(engineDir).isDirectory()) {
-        log.log(`${engineDir} is not directory`);
-        continue;
-      }
-      if (dirName === ".tmp") {
-        continue;
-      }
-      const result = addEngine(engineDir, "vvpp");
-      if (result !== "ok") {
-        log.log(`Failed to load engine: ${result}, ${engineDir}`);
-      }
-    }
-    // FIXME: この関数の引数でregisteredEngineDirsを受け取り、動かないエンジンをreturnして、EngineManager外でconfig.setする
-    for (const engineDir of this.configManager.get("registeredEngineDirs")) {
-      const result = addEngine(engineDir, "path");
-      if (result !== "ok") {
-        log.log(`Failed to load engine: ${result}, ${engineDir}`);
-        // 動かないエンジンは追加できないので削除
-        // FIXME: エンジン管理UIで削除可能にする
-        dialog.showErrorBox(
-          "エンジンの読み込みに失敗しました。",
-          `${engineDir}を読み込めませんでした。このエンジンは削除されます。`,
-        );
-        this.configManager.set(
-          "registeredEngineDirs",
-          this.configManager
-            .get("registeredEngineDirs")
-            .filter((p) => p !== engineDir),
-        );
-      }
-    }
-    return engines;
-  }
-
-  /**
-   * 全てのエンジンの一覧を取得する。デフォルトエンジン＋追加エンジン。
-   */
-  fetchEngineInfos(): EngineInfo[] {
-    return [...this.defaultEngineInfos, ...this.additionalEngineInfos];
-  }
-
-  /**
-   * エンジンの情報を取得する。存在しない場合はエラーを返す。
-   */
-  fetchEngineInfo(engineId: EngineId): EngineInfo {
-    const engineInfos = this.fetchEngineInfos();
-    const engineInfo = engineInfos.find(
-      (engineInfo) => engineInfo.uuid === engineId,
-    );
-    if (!engineInfo) {
-      throw new Error(`No such engineInfo registered: engineId == ${engineId}`);
-    }
-    return engineInfo;
-  }
-
-  /**
-   * エンジンのディレクトリを取得する。存在しない場合はエラーを返す。
-   */
-  fetchEngineDirectory(engineId: EngineId): string {
-    const engineInfo = this.fetchEngineInfo(engineId);
-    const engineDirectory = engineInfo.path;
-    if (engineDirectory == undefined) {
-      throw new Error(`engineDirectory is undefined: engineId == ${engineId}`);
-    }
-
-    return engineDirectory;
-  }
-
-  /**
-   * EngineInfosとAltPortInfoを初期化する。
-   */
-  initializeEngineInfosAndAltPortInfo() {
-    this.defaultEngineInfos = createDefaultEngineInfos(this.defaultEngineDir);
-    this.additionalEngineInfos = this.createAdditionalEngineInfos();
-    this.altPortInfo = {};
+    this.onEngineProcessError = payload.onEngineProcessError;
+    this.engineInfosFetcher = payload.engineInfosFetcher;
+    this.engineAltPortUpdater = payload.engineAltPortUpdater;
+    this.engineSettingsGetter = payload.engineSettingsGetter;
   }
 
   /**
    * 全てのエンジンを起動する。
    */
   async runEngineAll() {
-    const engineInfos = this.fetchEngineInfos();
+    const engineInfos = this.engineInfosFetcher();
     log.info(`Starting ${engineInfos.length} engine/s...`);
 
     for (const engineInfo of engineInfos) {
@@ -217,7 +65,7 @@ export class EngineManager {
    * エンジンを起動する。
    */
   async runEngine(engineId: EngineId) {
-    const engineInfos = this.fetchEngineInfos();
+    const engineInfos = this.engineInfosFetcher();
     const engineInfo = engineInfos.find(
       (engineInfo) => engineInfo.uuid === engineId,
     );
@@ -240,55 +88,46 @@ export class EngineManager {
     // { hostname (localhost), port (50021) } <- url (http://localhost:50021)
     const engineHostInfo = url2HostInfo(new URL(engineInfo.host));
 
+    // ポートが塞がっていれば代替ポートを探す
+    let port = engineHostInfo.port;
     log.info(
-      `ENGINE ${engineId}: Checking whether port ${engineHostInfo.port} is assignable...`,
+      `ENGINE ${engineId}: Checking whether port ${port} is assignable...`,
     );
 
-    if (
-      !(await isAssignablePort(engineHostInfo.port, engineHostInfo.hostname))
-    ) {
+    if (!(await isAssignablePort(port, engineHostInfo.hostname))) {
       // ポートを既に割り当てているプロセスidの取得
       const pid = await getPidFromPort(engineHostInfo);
       if (pid != undefined) {
         const processName = await getProcessNameFromPid(engineHostInfo, pid);
         log.warn(
-          `ENGINE ${engineId}: Port ${engineHostInfo.port} has already been assigned by ${processName} (pid=${pid})`,
+          `ENGINE ${engineId}: Port ${port} has already been assigned by ${processName} (pid=${pid})`,
         );
       } else {
         // ポートは使用不可能だがプロセスidは見つからなかった
-        log.warn(
-          `ENGINE ${engineId}: Port ${engineHostInfo.port} was unavailable`,
-        );
+        log.warn(`ENGINE ${engineId}: Port ${port} was unavailable`);
       }
 
       // 代替ポートの検索
-      const altPort = await findAltPort(
-        engineHostInfo.port,
-        engineHostInfo.hostname,
-      );
+      const altPort = await findAltPort(port, engineHostInfo.hostname);
 
       // 代替ポートが見つからないとき
       if (altPort == undefined) {
         log.error(`ENGINE ${engineId}: No Alternative Port Found`);
         dialog.showErrorBox(
           `${engineInfo.name} の起動に失敗しました`,
-          `${engineHostInfo.port}番ポートの代わりに利用可能なポートが見つかりませんでした。PCを再起動してください。`,
+          `${port}番ポートの代わりに利用可能なポートが見つかりませんでした。PCを再起動してください。`,
         );
         app.exit(1);
         throw new Error("No Alternative Port Found");
       }
 
-      // 代替ポートの情報
-      this.altPortInfo[engineId] = {
-        from: engineHostInfo.port,
-        to: altPort,
-      };
-
-      // 代替ポートを設定
-      engineInfo.host = `${engineHostInfo.protocol}//${engineHostInfo.hostname}:${altPort}`;
+      // 代替ポート情報を更新
+      this.engineAltPortUpdater(engineId, altPort);
       log.warn(
-        `ENGINE ${engineId}: Applied Alternative Port: ${engineHostInfo.port} -> ${altPort}`,
+        `ENGINE ${engineId}: Applied Alternative Port: ${port} -> ${altPort}`,
       );
+
+      port = altPort;
     }
 
     log.info(`ENGINE ${engineId}: Starting process`);
@@ -302,7 +141,7 @@ export class EngineManager {
     const engineProcessContainer = this.engineProcessContainers[engineId];
     engineProcessContainer.willQuitEngine = false;
 
-    const engineSetting = this.configManager.get("engineSettings")[engineId];
+    const engineSetting = this.engineSettingsGetter()[engineId];
     if (engineSetting == undefined)
       throw new Error(`No such engineSetting: engineId == ${engineId}`);
 
@@ -315,7 +154,7 @@ export class EngineManager {
       "--host",
       new URL(engineInfo.host).hostname,
       "--port",
-      new URL(engineInfo.host).port,
+      port.toString(),
     ]);
 
     log.info(`ENGINE ${engineId} path: ${enginePath}`);
@@ -521,37 +360,6 @@ export class EngineManager {
       });
     });
   }
-
-  /**
-   * ディレクトリがエンジンとして正しいかどうかを判定する
-   */
-  validateEngineDir(engineDir: string): EngineDirValidationResult {
-    if (!fs.existsSync(engineDir)) {
-      return "directoryNotFound";
-    } else if (!fs.statSync(engineDir).isDirectory()) {
-      return "notADirectory";
-    } else if (!fs.existsSync(path.join(engineDir, "engine_manifest.json"))) {
-      return "manifestNotFound";
-    }
-    const manifest = fs.readFileSync(
-      path.join(engineDir, "engine_manifest.json"),
-      "utf-8",
-    );
-    let manifestContent: MinimumEngineManifestType;
-    try {
-      manifestContent = minimumEngineManifestSchema.parse(JSON.parse(manifest));
-    } catch (e) {
-      return "invalidManifest";
-    }
-
-    const engineInfos = this.fetchEngineInfos();
-    if (
-      engineInfos.some((engineInfo) => engineInfo.uuid === manifestContent.uuid)
-    ) {
-      return "alreadyExists";
-    }
-    return "ok";
-  }
 }
 
-export default EngineManager;
+export default EngineProcessManager;

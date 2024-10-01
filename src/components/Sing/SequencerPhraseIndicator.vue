@@ -6,15 +6,16 @@
 import { computed } from "vue";
 import { useStore } from "@/store";
 import { getOrThrow } from "@/helpers/mapHelper";
-import { PhraseSourceHash, PhraseState } from "@/store/type";
+import { PhraseKey, PhraseState } from "@/store/type";
 
 const props = defineProps<{
-  phraseKey: PhraseSourceHash;
+  phraseKey: PhraseKey;
   isInSelectedTrack: boolean;
 }>();
 
 const store = useStore();
 const classNames: Record<PhraseState, string> = {
+  SINGER_IS_NOT_SET: "singer-is-not-set",
   WAITING_TO_BE_RENDERED: "waiting-to-be-rendered",
   NOW_RENDERING: "now-rendering",
   COULD_NOT_RENDER: "could-not-render",
@@ -43,7 +44,16 @@ const className = computed(() => {
   }
 }
 
+.singer-is-not-set {
+  visibility: hidden;
+}
+
 .waiting-to-be-rendered {
+  background-color: color-mix(
+    in oklch,
+    var(--scheme-color-secondary-fixed-dim) 70%,
+    var(--scheme-color-background)
+  );
   @include tint-if-in-other-track(
     "background-color",
     color-mix(in srgb, colors.$primary 80%, colors.$background)
@@ -51,8 +61,12 @@ const className = computed(() => {
 }
 
 .now-rendering {
+  border: 1px solid --scheme-color-primary-fixed-dim;
+  background-color: var(--scheme-color-background);
+  background-size: 28px 28px;
   background-color: colors.$background;
   background-size: 28px 28px;
+  animation: stripes-animation 0.7s linear infinite;
   &.is-in-selected-track {
     border: 1px solid rgba(colors.$primary-rgb, 0.7);
     background-image: linear-gradient(
@@ -81,7 +95,6 @@ const className = computed(() => {
       tint(rgba(colors.$primary-rgb, 0.36)) 100%
     );
   }
-  animation: stripes-animation 0.7s linear infinite;
 }
 
 @keyframes stripes-animation {
@@ -94,7 +107,11 @@ const className = computed(() => {
 }
 
 .could-not-render {
-  @include tint-if-in-other-track("background-color", colors.$warning);
+  background-color: var(--scheme-color-error);
+  @include tint-if-in-other-track(
+    "background-color",
+    var(--scheme-color-error)
+  );
 }
 
 .playable {

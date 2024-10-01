@@ -275,10 +275,12 @@ export interface Sandbox {
   readFile(obj: { filePath: string }): Promise<Result<ArrayBuffer>>;
   isAvailableGPUMode(): Promise<boolean>;
   isMaximizedWindow(): Promise<boolean>;
-  onReceivedIPCMsg<T extends keyof IpcSOData>(
-    channel: T,
-    listener: (event: unknown, ...args: IpcSOData[T]["args"]) => void,
-  ): void;
+  onReceivedIPCMsg(listeners: {
+    [K in keyof IpcSOData]: (
+      event: unknown,
+      ...args: IpcSOData[K]["args"]
+    ) => Promise<IpcSOData[K]["return"]> | IpcSOData[K]["return"];
+  }): void;
   closeWindow(): void;
   minimizeWindow(): void;
   maximizeWindow(): void;
@@ -373,17 +375,7 @@ export type SplitTextWhenPasteType = "PERIOD_AND_NEW_LINE" | "NEW_LINE" | "OFF";
 
 export type EditorFontType = "default" | "os";
 
-export type SavingSetting = {
-  exportLab: boolean;
-  fileEncoding: Encoding;
-  fileNamePattern: string;
-  fixedExportEnabled: boolean;
-  fixedExportDir: string;
-  avoidOverwrite: boolean;
-  exportText: boolean;
-  outputStereo: boolean;
-  audioOutputDevice: string;
-};
+export type SavingSetting = ConfigType["savingSetting"];
 
 export type EngineSettings = Record<EngineId, EngineSettingType>;
 
@@ -421,7 +413,7 @@ export type MinimumEngineManifestType = z.infer<
 
 export type EngineInfo = {
   uuid: EngineId;
-  host: string;
+  host: string; // NOTE: 実際はorigin（プロトコルとhostnameとport）が入る
   name: string;
   path?: string; // エンジンディレクトリのパス
   executionEnabled: boolean;
@@ -578,8 +570,6 @@ export type ThemeSetting = {
 };
 
 export const experimentalSettingSchema = z.object({
-  enablePreset: z.boolean().default(false),
-  shouldApplyDefaultPresetOnVoiceChanged: z.boolean().default(false),
   enableInterrogativeUpspeak: z.boolean().default(false),
   enableMorphing: z.boolean().default(false),
   enableMultiSelect: z.boolean().default(false),
@@ -611,6 +601,8 @@ export const rootMiscSettingSchema = z.object({
     .enum(["PERIOD_AND_NEW_LINE", "NEW_LINE", "OFF"])
     .default("PERIOD_AND_NEW_LINE"),
   splitterPosition: splitterPositionSchema.default({}),
+  enablePreset: z.boolean().default(false), // プリセット機能
+  shouldApplyDefaultPresetOnVoiceChanged: z.boolean().default(false), // スタイル変更時にデフォルトプリセットを適用するか
   enableMultiEngine: z.boolean().default(false),
   enableMemoNotation: z.boolean().default(false), // メモ記法を有効にするか
   enableRubyNotation: z.boolean().default(false), // ルビ記法を有効にするか
@@ -642,6 +634,7 @@ export const configSchema = z
         exportText: z.boolean().default(false),
         outputStereo: z.boolean().default(false),
         audioOutputDevice: z.string().default(""),
+        songTrackFileNamePattern: z.string().default(""),
       })
       .default({}),
     hotkeySettings: hotkeySettingSchema.array().default(defaultHotkeySettings),
