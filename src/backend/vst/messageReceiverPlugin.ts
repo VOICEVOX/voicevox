@@ -1,19 +1,19 @@
 import { Plugin, watch } from "vue";
 import AsyncLock from "async-lock";
 import { debounce } from "quasar";
-import createXxhash, { XXHashAPI } from "xxhash-wasm";
 import { toBase64 } from "fast-base64";
-import { clearPhrases, getPhrases, getProject, updatePhrases } from "./ipc";
+import { getProject, setPhrases, setVoices } from "./ipc";
 import { projectFilePath } from "./sandbox";
 import { Store } from "@/store/vuex";
-import { AllActions, AllGetters, AllMutations, State } from "@/store/type";
 import {
-  getEndTicksOfPhrase,
-  getStartTicksOfPhrase,
-  secondToTick,
-  tickToSecond,
-} from "@/sing/domain";
-import { singingVoices } from "@/store/singing";
+  AllActions,
+  AllGetters,
+  AllMutations,
+  SingingVoiceKey,
+  State,
+} from "@/store/type";
+import { secondToTick } from "@/sing/domain";
+import { phraseSingingVoices } from "@/store/singing";
 import onetimeWatch from "@/helpers/onetimeWatch";
 import { createLogger } from "@/domain/frontend/log";
 
@@ -27,23 +27,7 @@ export type Message =
       isPlaying: boolean;
     };
 
-type PhraseWithAudio = {
-  id: string;
-  start: number;
-  end: number;
-  wav: string;
-  hash: number;
-};
-
 const log = createLogger("vstMessageReceiver");
-
-let xxhashInstance: XXHashAPI | undefined;
-const getXxhash = async () => {
-  if (!xxhashInstance) {
-    xxhashInstance = await createXxhash();
-  }
-  return xxhashInstance;
-};
 
 export const vstMessageReceiver: Plugin = {
   install: (
@@ -157,88 +141,37 @@ export const vstMessageReceiver: Plugin = {
       () => store.state.phrases,
       (phrases) => {
         void phrasesLock.acquire("phrases", async () => {
-          const playablePhrases = [...phrases.entries()].filter(
-            ([, phrase]) => phrase.state === "PLAYABLE",
-          );
-          const idToWav = Object.fromEntries(
-            await Promise.all(
-              playablePhrases.map(async ([id, phrase]) => {
-                if (phrase.singingVoiceKey == undefined) {
-                  throw new Error("singingVoiceKey is not found");
-                }
-                const data = singingVoices.get(phrase.singingVoiceKey);
-                if (!data) {
-                  throw new Error("singingVoice is not found");
-                }
-                const wav = data.blob;
-                if (!wav) {
-                  throw new Error("wav is not found");
-                }
-
-                const xxhash = await getXxhash();
-                const hash = xxhash.h32Raw(
-                  new Uint8Array(await wav.arrayBuffer()),
-                );
-                return [id, { wav, hash }] as const;
-              }),
+          log.info("Sending phrases");
+          const missingVoices = await setPhrases(
+            [...phrases.values()].flatMap((phrase) =>
+              phrase.singingVoiceKey
+                ? [
+                    {
+                      start: phrase.startTime,
+                      voice: phrase.singingVoiceKey,
+                    },
+                  ]
+                : [],
             ),
           );
 
-          const removedPhrases: string[] = [];
-          const vstPhrases = await getPhrases();
-          for (const [id, vstPhrase] of vstPhrases) {
-            if (
-              !playablePhrases.some(
-                ([phraseId]) =>
-                  phraseId === id && vstPhrase.hash === idToWav[id].hash,
-              )
-            ) {
-              removedPhrases.push(id);
-            }
-          }
-
-          const newPhrasesWithAudio = await Promise.all(
-            playablePhrases.map(async ([id, phrase]) => {
-              const { wav, hash } = idToWav[id];
-
-              const vstPhrase = vstPhrases.get(id);
-              const startTicks = getStartTicksOfPhrase(phrase);
-              const startTime =
-                tickToSecond(startTicks, store.state.tempos, store.state.tpqn) -
-                phrase.firstRestDuration;
-              if (
-                vstPhrase &&
-                vstPhrase.start === startTime &&
-                vstPhrase.hash === hash
-              ) {
-                return undefined;
+          if (missingVoices.length > 0) {
+            log.info(`Missing ${missingVoices.length} voices`);
+            const voices: Record<SingingVoiceKey, string> = {};
+            for (const voice of missingVoices) {
+              const cachedVoice = phraseSingingVoices.get(voice);
+              if (cachedVoice) {
+                voices[voice] = await toBase64(
+                  new Uint8Array(await cachedVoice.arrayBuffer()),
+                );
               }
+            }
 
-              const endTicks = getEndTicksOfPhrase(phrase);
-
-              return {
-                id,
-                start: startTime,
-                end: tickToSecond(
-                  endTicks,
-                  store.state.tempos,
-                  store.state.tpqn,
-                ),
-                wav: await toBase64(new Uint8Array(await wav.arrayBuffer())),
-                hash,
-              };
-            }),
-          ).then(
-            (phrases) =>
-              phrases.filter(
-                (phrase) => phrase != undefined,
-              ) as PhraseWithAudio[],
-          );
-
-          if (removedPhrases.length === 0 && newPhrasesWithAudio.length === 0) {
-            return;
+            await setVoices(voices);
+            log.info("Voices sent");
+          } else {
+            log.info("All voices are available");
           }
-          void updatePhrases(removedPhrases, newPhrasesWithAudio);
         });
       },
       { deep: true },

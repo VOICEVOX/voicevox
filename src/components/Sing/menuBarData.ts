@@ -57,7 +57,7 @@ export const useMenuBarData = () => {
             disableWhenUiLocked: true,
           },
           { type: "separator" },
-        ]) satisfies MenuItemData[]),
+        ].filter((item) => !!item)) as MenuItemData[]),
     {
       type: "button",
       label: "インポート",

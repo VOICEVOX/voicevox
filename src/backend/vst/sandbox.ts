@@ -39,6 +39,33 @@ import { failure, success } from "@/type/result";
 // TODO: base pathを設定できるようにするか、ビルド時埋め込みにする
 const toStaticPath = (fileName: string) => `/${fileName}`;
 
+// ブラウザ版からコピペ：
+// FIXME: asを使わないようオーバーロードにした。オーバーロードも使わない書き方にしたい。
+function onReceivedIPCMsg<
+  T extends {
+    [K in keyof IpcSOData]: (
+      event: unknown,
+      ...args: IpcSOData[K]["args"]
+    ) => Promise<IpcSOData[K]["return"]> | IpcSOData[K]["return"];
+  },
+>(listeners: T): void;
+function onReceivedIPCMsg(listeners: {
+  [key: string]: (event: unknown, ...args: unknown[]) => unknown;
+}) {
+  // NOTE: もしブラウザ本体からレンダラへのメッセージを実装するならこんな感じ
+  window.addEventListener(
+    "message",
+    ({
+      data,
+    }: MessageEvent<{
+      channel: keyof IpcSOData;
+      args: IpcSOData[keyof IpcSOData]["args"];
+    }>) => {
+      listeners[data.channel]?.({}, ...data.args);
+    },
+  );
+}
+
 export const projectFilePath = "/meta/vst-project.vvproj";
 /**
  * VST版のSandBox実装
@@ -157,20 +184,7 @@ export const api: Sandbox = {
     // NOTE: UIの表示状態の制御のためだけなので固定値を返している
     return Promise.resolve(true);
   },
-  onReceivedIPCMsg<T extends keyof IpcSOData>(
-    channel: T,
-    listener: (_: unknown, ...args: IpcSOData[T]["args"]) => void,
-  ) {
-    window.addEventListener("message", (event) => {
-      const data = event.data as {
-        channel: T;
-        args: IpcSOData[T]["args"];
-      };
-      if (data.channel == channel) {
-        listener(data.args);
-      }
-    });
-  },
+  onReceivedIPCMsg,
   closeWindow() {
     throw new Error("Not implemented");
   },

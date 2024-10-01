@@ -7,6 +7,8 @@ import {
 } from "@/type/preload";
 import { createLogger } from "@/domain/frontend/log";
 import { UnreachableError } from "@/type/utility";
+import { SingingVoiceKey } from "@/store/type";
+
 declare global {
   interface Window {
     sendToPlugin: (value: unknown) => void;
@@ -31,6 +33,28 @@ const messagePromises = new Map<
     name: string;
   }
 >();
+const initializeMessageHandler = () => {
+  log.info("Initializing message handler");
+  window.onPluginMessage = (value: unknown) => {
+    const { requestId, payload } = value as {
+      requestId: number;
+      payload: { Ok: unknown } | { Err: string };
+    };
+    const { resolve, reject, name } = messagePromises.get(requestId) ?? {};
+    if (!resolve || !reject) {
+      log.warn(`No promise found for requestId: ${requestId}`);
+      return;
+    }
+    messagePromises.delete(requestId);
+    if ("Ok" in payload) {
+      log.info(`From plugin: ${name}(${requestId}), Ok`);
+      resolve(payload.Ok);
+    } else {
+      log.error(`From plugin: ${name}(${requestId}), Err: ${payload.Err}`);
+      reject(new RustError(payload.Err));
+    }
+  };
+};
 const createMessageFunction = <T, R>(name: string) => {
   return ((arg?: unknown) => {
     if (!window.sendToPlugin) {
@@ -40,26 +64,7 @@ const createMessageFunction = <T, R>(name: string) => {
     }
     if (!handlerInitialized) {
       handlerInitialized = true;
-      log.info("Initializing message handler");
-      window.onPluginMessage = (value: unknown) => {
-        const { requestId, payload } = value as {
-          requestId: number;
-          payload: { Ok: unknown } | { Err: string };
-        };
-        const { resolve, reject, name } = messagePromises.get(requestId) ?? {};
-        if (!resolve || !reject) {
-          log.warn(`No promise found for requestId: ${requestId}`);
-          return;
-        }
-        messagePromises.delete(requestId);
-        if ("Ok" in payload) {
-          log.info(`From plugin: ${name}(${requestId}), Ok`);
-          resolve(payload.Ok);
-        } else {
-          log.error(`From plugin: ${name}(${requestId}), Err: ${payload.Err}`);
-          reject(new RustError(payload.Err));
-        }
-      };
+      initializeMessageHandler();
     }
     const currentNonce = nonce++;
     log.info(`To plugin: ${name}(${currentNonce})`);
@@ -77,11 +82,16 @@ const createMessageFunction = <T, R>(name: string) => {
   }) as T extends undefined ? () => Promise<R> : (arg: T) => Promise<R>;
 };
 
+export type VstPhrase = {
+  start: number;
+  voice: string;
+};
+
 const ipcGetConfig = createMessageFunction<undefined, string | null>(
   "getConfig",
 );
 const ipcGetProject = createMessageFunction<undefined, string>("getProject");
-const ipcSetProject = createMessageFunction<string, undefined>("setProject");
+const ipcSetProject = createMessageFunction<string, void>("setProject");
 const ipcGetProjectName = createMessageFunction<undefined, string>(
   "getProjectName",
 );
@@ -114,12 +124,18 @@ const ipcShowQuestionDialog = createMessageFunction<
   number
 >("showQuestionDialog");
 
+const ipcSetPhrases = createMessageFunction<
+  VstPhrase[],
+  {
+    missingVoices: SingingVoiceKey[];
+  }
+>("setPhrases");
+const ipcSetVoices = createMessageFunction<
+  Record<SingingVoiceKey, string>,
+  void
+>("setVoices");
+
 type Config = Record<string, unknown> & Metadata;
-type VstPhrase = {
-  start: number;
-  end: number;
-  hash: number;
-};
 const log = createLogger("vst/ipc");
 
 export async function getConfig(): Promise<Config> {
@@ -140,17 +156,13 @@ export async function setProject(memory: string) {
   await ipcSetProject(memory);
 }
 
-export async function getPhrases(): Promise<Map<string, VstPhrase>> {
-  throw new Error("Not implemented");
-  // log.info("getPhrases");
-  // const rawPhrases = await vstGetPhrases();
-  // return new Map(Object.entries(rawPhrases));
+export async function setPhrases(phrases: VstPhrase[]) {
+  const { missingVoices } = await ipcSetPhrases(phrases);
+  return missingVoices;
 }
 
-export async function updatePhrases(remove: string[], add: unknown[]) {
-  throw new Error("Not implemented");
-  // log.info(`updatePhrases, remove: ${remove.length}, add: ${add.length}`);
-  // await vstUpdatePhrases(remove, add);
+export async function setVoices(voices: Record<SingingVoiceKey, string>) {
+  await ipcSetVoices(voices);
 }
 
 export async function clearPhrases() {

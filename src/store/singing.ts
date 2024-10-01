@@ -259,7 +259,7 @@ const animationTimer = new AnimationTimer();
 
 const queryCache = new Map<EditorFrameAudioQueryKey, EditorFrameAudioQuery>();
 const singingVolumeCache = new Map<SingingVolumeKey, SingingVolume>();
-const singingVoiceCache = new Map<SingingVoiceKey, SingingVoice>();
+export const singingVoiceCache = new Map<SingingVoiceKey, SingingVoice>();
 
 const initialTrackId = TrackId(crypto.randomUUID());
 
