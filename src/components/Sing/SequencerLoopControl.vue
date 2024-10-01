@@ -1,53 +1,53 @@
 <template>
-  <div class="sequencer-loop-control">
+  <div class="sequencer-loop-control" :class="cursorClass">
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      :width="props.width"
+      :width
       :height="32"
       shape-rendering="crispEdges"
     >
       <!-- ループ範囲 -->
       <rect
         v-if="isLoopEnabled"
-        :x="loopStartX - props.offset"
+        :x="loopStartX - offset"
         y="0"
         :width="loopEndX - loopStartX"
-        :height="8"
+        :height="4"
         class="loop-range"
       />
-      <!-- ループ開始 -->
-      <line
+      <!-- ループ開始ハンドル -->
+      <path
         v-if="isLoopEnabled"
-        :x1="loopStartX - props.offset"
-        :x2="loopStartX - props.offset"
-        y1="0"
-        :y2="16"
-        class="loop-marker loop-start-marker"
+        :d="`M${loopStartX - offset},0 L${loopStartX - offset},16 L${loopStartX - offset + 12},0 Z`"
+        class="loop-handle loop-start-handle"
       />
-      <!-- ループ終了 -->
-      <line
+      <!-- ループ終了ハンドル -->
+      <path
         v-if="isLoopEnabled"
-        :x1="loopEndX - props.offset"
-        :x2="loopEndX - props.offset"
-        y1="0"
-        :y2="16"
-        class="loop-marker loop-end-marker"
+        :d="`M${loopEndX - offset},0 L${loopEndX - offset},16 L${loopEndX - offset - 12},0 Z`"
+        class="loop-handle loop-end-handle"
+      />
+      <!-- ループ開始ドラッグ領域 -->
+      <rect
+        v-if="isLoopEnabled"
+        :x="loopStartX - offset - 4"
+        y="0"
+        width="8"
+        height="32"
+        class="loop-drag-area"
+        @mousedown.stop="startDragging('start', $event)"
+      />
+      <!-- ループ終了ドラッグ領域 -->
+      <rect
+        v-if="isLoopEnabled"
+        :x="loopEndX - offset - 4"
+        y="0"
+        width="8"
+        height="32"
+        class="loop-drag-area"
+        @mousedown.stop="startDragging('end', $event)"
       />
     </svg>
-    <!-- ループ開始ハンドル -->
-    <div
-      v-if="isLoopEnabled"
-      class="loop-handle loop-start-handle"
-      :style="{ left: `${loopStartX - props.offset}px` }"
-      @mousedown="startDragging('start', $event)"
-    ></div>
-    <!-- ループ終了ハンドル -->
-    <div
-      v-if="isLoopEnabled"
-      class="loop-handle loop-end-handle"
-      :style="{ left: `${loopEndX - props.offset}px` }"
-      @mousedown="startDragging('end', $event)"
-    ></div>
   </div>
 </template>
 
@@ -55,9 +55,11 @@
 import { ref, computed, onUnmounted } from "vue";
 import { useStore } from "@/store";
 import { useLoopControl } from "@/composables/useLoopControl";
+import { useCursorState, CursorState } from "@/composables/useCursorState";
 import { tickToBaseX, baseXToTick } from "@/sing/viewHelper";
+import { getNoteDuration } from "@/sing/domain";
 
-const props = defineProps<{
+defineProps<{
   width: number;
   offset: number;
 }>();
@@ -65,9 +67,11 @@ const props = defineProps<{
 const store = useStore();
 const { isLoopEnabled, loopStartTick, loopEndTick, setLoopRange } =
   useLoopControl();
+const { setCursorState, cursorClass } = useCursorState();
 
 const tpqn = computed(() => store.state.tpqn);
 const sequencerZoomX = computed(() => store.state.sequencerZoomX);
+const sequencerSnapType = computed(() => store.state.sequencerSnapType);
 
 const loopStartX = computed(
   () => tickToBaseX(loopStartTick.value, tpqn.value) * sequencerZoomX.value,
@@ -76,93 +80,119 @@ const loopEndX = computed(
   () => tickToBaseX(loopEndTick.value, tpqn.value) * sequencerZoomX.value,
 );
 
-// ドラッグ状態の管理
 const isDragging = ref(false);
 const dragTarget = ref<"start" | "end" | null>(null);
 const dragStartX = ref(0);
+const dragStartHandleX = ref(0); // ドラッグ開始時のハンドル位置
+
+const snapToGrid = (tick: number): number => {
+  const snapInterval = getNoteDuration(sequencerSnapType.value, tpqn.value);
+  return Math.round(tick / snapInterval) * snapInterval;
+};
 
 const startDragging = (target: "start" | "end", event: MouseEvent) => {
+  event.preventDefault();
   isDragging.value = true;
   dragTarget.value = target;
   dragStartX.value = event.clientX;
-  // FIXME: 仮でdocumentにaddEventListener
-  // documentに指定しないとドラッグ中に他の要素に被ってドラッグができなくなる
-  document.addEventListener("mousemove", onDrag);
-  document.addEventListener("mouseup", stopDragging);
+  dragStartHandleX.value =
+    target === "start" ? loopStartX.value : loopEndX.value;
+  setCursorState(CursorState.EW_RESIZE);
+  window.addEventListener("mousemove", onDrag);
+  window.addEventListener("mouseup", stopDragging);
 };
 
 const onDrag = (event: MouseEvent) => {
   if (!isDragging.value || !dragTarget.value) return;
 
-  const startX = event.clientX - dragStartX.value;
-  const newX =
-    (dragTarget.value === "start" ? loopStartX.value : loopEndX.value) + startX;
-  const newTick = Math.max(
+  const dx = event.clientX - dragStartX.value;
+  const newX = dragStartHandleX.value + dx;
+  let newTick = Math.max(
     0,
     baseXToTick(newX / sequencerZoomX.value, tpqn.value),
   );
 
-  if (dragTarget.value === "start") {
-    if (newTick < loopEndTick.value) {
-      setLoopRange(newTick, loopEndTick.value);
-    }
-  } else {
-    if (newTick > loopStartTick.value) {
-      setLoopRange(loopStartTick.value, newTick);
-    }
-  }
+  // スナップ処理
+  newTick = snapToGrid(newTick);
 
-  dragStartX.value = event.clientX;
+  try {
+    if (dragTarget.value === "start") {
+      if (newTick <= loopEndTick.value) {
+        setLoopRange(newTick, loopEndTick.value);
+      } else {
+        // 開始ハンドルが終了ハンドルを超えた場合、開始と終了を入れ替える
+        setLoopRange(loopEndTick.value, newTick);
+
+        // ドラッグ対象を終了ハンドルに切り替え
+        dragTarget.value = "end";
+
+        // ドラッグ開始点を現在のカーソル位置に再設定
+        dragStartX.value = event.clientX;
+
+        // 新しいドラッグ開始ハンドル位置を再計算
+        dragStartHandleX.value =
+          tickToBaseX(loopEndTick.value, tpqn.value) * sequencerZoomX.value;
+      }
+    } else {
+      if (newTick >= loopStartTick.value) {
+        setLoopRange(loopStartTick.value, newTick);
+      } else {
+        // 終了ハンドルが開始ハンドルを下回った場合、開始と終了を入れ替える
+        setLoopRange(newTick, loopStartTick.value);
+
+        // ドラッグ対象を開始ハンドルに切り替え
+        dragTarget.value = "start";
+
+        // ドラッグ開始点を現在のカーソル位置に再設定
+        dragStartX.value = event.clientX;
+
+        // 新しいドラッグ開始ハンドル位置を再計算
+        dragStartHandleX.value =
+          tickToBaseX(loopStartTick.value, tpqn.value) * sequencerZoomX.value;
+      }
+    }
+  } catch (error) {
+    console.error("Error setting loop range:", error);
+  }
 };
 
 const stopDragging = () => {
   isDragging.value = false;
   dragTarget.value = null;
-  // FIXME: 仮
-  document.removeEventListener("mousemove", onDrag);
-  document.removeEventListener("mouseup", stopDragging);
+  window.removeEventListener("mousemove", onDrag);
+  window.removeEventListener("mouseup", stopDragging);
+  setCursorState(CursorState.UNSET);
 };
 
-// FIXME: 仮でアンマウント時にremoveEventListener
 onUnmounted(() => {
-  document.removeEventListener("mousemove", onDrag);
-  document.removeEventListener("mouseup", stopDragging);
+  window.removeEventListener("mousemove", onDrag);
+  window.removeEventListener("mouseup", stopDragging);
+  setCursorState(CursorState.UNSET);
 });
 </script>
 
 <style scoped lang="scss">
-// FIXME:スタイルは別途調整
 .sequencer-loop-control {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 .loop-range {
-  fill: var(--scheme-color-secondary); // FIXME: 仮
-  opacity: 0.25;
-}
-
-.loop-marker {
-  stroke: var(--scheme-color-secondary); // FIXME: 仮
-  stroke-width: 4px;
+  fill: var(--scheme-color-primary);
 }
 
 .loop-handle {
-  position: absolute;
-  top: 0;
-  width: 8px;
-  height: 100%;
-  cursor: ew-resize;
-  background-color: var(--scheme-color-secondary-surface); // FIXME: 仮
-  pointer-events: auto;
+  fill: var(--scheme-color-primary);
+  pointer-events: none;
+}
 
-  &.loop-start-handle,
-  &.loop-end-handle {
-    transform: translateX(-50%);
-  }
+.loop-drag-area {
+  fill: transparent;
+  cursor: ew-resize;
+  pointer-events: all;
 }
 </style>

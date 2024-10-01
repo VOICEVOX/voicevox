@@ -7,7 +7,7 @@
   >
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      :width
+      :width="gridWidth"
       :height
       shape-rendering="crispEdges"
     >
@@ -31,7 +31,35 @@
           />
         </pattern>
       </defs>
-      <rect x="0.5" y="0" :width :height fill="url(#sequencer-ruler-measure)" />
+      <rect
+        x="0.5"
+        y="0"
+        :width="gridWidth"
+        :height
+        fill="url(#sequencer-ruler-measure)"
+      />
+
+      <!-- ループエリア外を暗くする -->
+      <g v-if="isLoopEnabled">
+        <!-- 左側 -->
+        <rect
+          x="0"
+          y="0"
+          :width="loopStartX"
+          :height
+          class="sequencer-ruler-loop-mask"
+          pointer-events="none"
+        />
+        <!-- 右側 -->
+        <rect
+          :x="loopEndX"
+          y="0"
+          :width="gridWidth - loopEndX"
+          :height
+          class="sequencer-ruler-loop-mask"
+          pointer-events="none"
+        />
+      </g>
       <!-- 小節線 -->
       <line
         v-for="measureInfo in measureInfos"
@@ -62,7 +90,7 @@
         transform: `translateX(${playheadX - offset}px)`,
       }"
     ></div>
-    <SequencerLoopControl ref="loopControl" :width :offset />
+    <SequencerLoopControl ref="loopControl" :width="gridWidth" :offset />
   </div>
 </template>
 
@@ -72,6 +100,7 @@ import { useStore } from "@/store";
 import { getMeasureDuration, getTimeSignaturePositions } from "@/sing/domain";
 import { baseXToTick, tickToBaseX } from "@/sing/viewHelper";
 import SequencerLoopControl from "@/components/Sing/SequencerLoopControl.vue";
+import { useLoopControl } from "@/composables/useLoopControl"; // ループコントロールのインポート
 
 const props = withDefaults(
   defineProps<{
@@ -85,6 +114,7 @@ const props = withDefaults(
 );
 
 const store = useStore();
+const { isLoopEnabled, loopStartTick, loopEndTick } = useLoopControl(); // ループ情報の取得
 const state = store.state;
 const height = ref(40);
 const playheadTicks = ref(0);
@@ -112,7 +142,7 @@ const endTicks = computed(() => {
       (props.numMeasures - lastTs.measureNumber + 1)
   );
 });
-const width = computed(() => {
+const gridWidth = computed(() => {
   return tickToBaseX(endTicks.value, tpqn.value) * zoomX.value;
 });
 const measureInfos = computed(() => {
@@ -145,6 +175,14 @@ const playheadX = computed(() => {
   return Math.floor(baseX * zoomX.value);
 });
 
+// ループのX座標を計算
+const loopStartX = computed(() => {
+  return tickToBaseX(loopStartTick.value, tpqn.value) * zoomX.value;
+});
+const loopEndX = computed(() => {
+  return tickToBaseX(loopEndTick.value, tpqn.value) * zoomX.value;
+});
+
 const sequencerRuler = ref<HTMLElement | null>(null);
 const loopControl = ref<InstanceType<typeof SequencerLoopControl> | null>(null);
 
@@ -162,7 +200,6 @@ const onClick = (event: MouseEvent) => {
 
 const onContextMenu = (event: MouseEvent) => {
   event.preventDefault();
-  loopControl.value?.toggleLoop(event.offsetX);
 };
 
 let resizeObserver: ResizeObserver | undefined;
@@ -269,5 +306,10 @@ watch(zoomX, (newZoom, oldZoom) => {
   right: 0;
   height: 1px;
   background-color: var(--scheme-color-sing-ruler-border);
+}
+
+.sequencer-ruler-loop-mask {
+  fill: var(--scheme-color-sing-surface-container);
+  opacity: 0.3;
 }
 </style>

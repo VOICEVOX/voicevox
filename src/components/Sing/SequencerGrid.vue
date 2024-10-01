@@ -83,6 +83,27 @@
       :y2="gridHeight"
       class="sequencer-grid-measure-line"
     />
+    <!-- ループエリア外を暗くする -->
+    <g v-if="isLoopEnabled">
+      <!-- 左側 -->
+      <rect
+        x="0"
+        y="0"
+        :width="loopStartX"
+        :height="gridHeight"
+        class="sequencer-grid-loop-mask"
+        pointer-events="none"
+      />
+      <!-- 右側 -->
+      <rect
+        :x="loopEndX"
+        y="0"
+        :width="gridWidth - loopEndX"
+        :height="gridHeight"
+        class="sequencer-grid-loop-mask"
+        pointer-events="none"
+      />
+    </g>
   </svg>
 </template>
 
@@ -91,8 +112,10 @@ import { computed } from "vue";
 import { useStore } from "@/store";
 import { keyInfos, getKeyBaseHeight, tickToBaseX } from "@/sing/viewHelper";
 import { getMeasureDuration, getNoteDuration } from "@/sing/domain";
+import { useLoopControl } from "@/composables/useLoopControl";
 
 const store = useStore();
+const { isLoopEnabled, loopStartTick, loopEndTick } = useLoopControl();
 const tpqn = computed(() => store.state.tpqn);
 const timeSignatures = computed(() => store.state.timeSignatures);
 const zoomX = computed(() => store.state.sequencerZoomX);
@@ -165,6 +188,13 @@ const snapLinePositions = computed(() => {
     return (currentTick / measureTicks) * measureWidth.value;
   });
 });
+// ループのX座標を計算
+const loopStartX = computed(() => {
+  return tickToBaseX(loopStartTick.value, tpqn.value) * zoomX.value;
+});
+const loopEndX = computed(() => {
+  return tickToBaseX(loopEndTick.value, tpqn.value) * zoomX.value;
+});
 </script>
 
 <style scoped lang="scss">
@@ -216,6 +246,11 @@ const snapLinePositions = computed(() => {
   backface-visibility: hidden;
   stroke: var(--scheme-color-sing-grid-beat-line);
   stroke-width: 1px;
+}
+
+.sequencer-grid-loop-mask {
+  fill: var(--scheme-color-sing-surface-container);
+  opacity: 0.3;
 }
 
 .edit-pitch {
