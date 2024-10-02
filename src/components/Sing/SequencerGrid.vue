@@ -84,7 +84,7 @@
       class="sequencer-grid-measure-line"
     />
     <!-- ループエリア外を暗くする -->
-    <g v-if="isLoopEnabled">
+    <g v-if="isLoopEnabled && loopStartTick !== loopEndTick">
       <!-- 左側 -->
       <rect
         x="0"
@@ -249,8 +249,10 @@ const loopEndX = computed(() => {
 }
 
 .sequencer-grid-loop-mask {
-  fill: var(--scheme-color-sing-surface-container);
-  opacity: 0.3;
+  position: relative;
+  fill: var(--scheme-color-scrim);
+  opacity: 0.16;
+  pointer-events: none;
 }
 
 .edit-pitch {

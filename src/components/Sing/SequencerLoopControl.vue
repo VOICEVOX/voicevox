@@ -52,7 +52,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onUnmounted } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useStore } from "@/store";
 import { useLoopControl } from "@/composables/useLoopControl";
 import { useCursorState, CursorState } from "@/composables/useCursorState";
@@ -98,8 +98,6 @@ const startDragging = (target: "start" | "end", event: MouseEvent) => {
   dragStartHandleX.value =
     target === "start" ? loopStartX.value : loopEndX.value;
   setCursorState(CursorState.EW_RESIZE);
-  window.addEventListener("mousemove", onDrag);
-  window.addEventListener("mouseup", stopDragging);
 };
 
 const onDrag = (event: MouseEvent) => {
@@ -152,17 +150,20 @@ const onDrag = (event: MouseEvent) => {
       }
     }
   } catch (error) {
-    console.error("Error setting loop range:", error);
+    throw new Error("Error setting loop range");
   }
 };
 
 const stopDragging = () => {
   isDragging.value = false;
   dragTarget.value = null;
-  window.removeEventListener("mousemove", onDrag);
-  window.removeEventListener("mouseup", stopDragging);
   setCursorState(CursorState.UNSET);
 };
+
+onMounted(() => {
+  window.addEventListener("mousemove", onDrag);
+  window.addEventListener("mouseup", stopDragging);
+});
 
 onUnmounted(() => {
   window.removeEventListener("mousemove", onDrag);

@@ -38,23 +38,22 @@
         :height
         fill="url(#sequencer-ruler-measure)"
       />
-
       <!-- ループエリア外を暗くする -->
-      <g v-if="isLoopEnabled">
+      <g v-if="isLoopEnabled && loopStartTick !== loopEndTick">
         <!-- 左側 -->
         <rect
           x="0"
           y="0"
-          :width="loopStartX"
+          :width="Math.max(0, loopStartX - offset)"
           :height
           class="sequencer-ruler-loop-mask"
           pointer-events="none"
         />
         <!-- 右側 -->
         <rect
-          :x="loopEndX"
+          :x="Math.max(0, loopEndX - offset)"
           y="0"
-          :width="gridWidth - loopEndX"
+          :width="Math.max(0, gridWidth - (loopEndX - offset))"
           :height
           class="sequencer-ruler-loop-mask"
           pointer-events="none"
@@ -95,12 +94,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from "vue";
+import { computed, ref, onMounted, onUnmounted } from "vue";
 import { useStore } from "@/store";
 import { getMeasureDuration, getTimeSignaturePositions } from "@/sing/domain";
 import { baseXToTick, tickToBaseX } from "@/sing/viewHelper";
 import SequencerLoopControl from "@/components/Sing/SequencerLoopControl.vue";
-import { useLoopControl } from "@/composables/useLoopControl"; // ループコントロールのインポート
+import { useLoopControl } from "@/composables/useLoopControl";
 
 const props = withDefaults(
   defineProps<{
@@ -114,7 +113,7 @@ const props = withDefaults(
 );
 
 const store = useStore();
-const { isLoopEnabled, loopStartTick, loopEndTick } = useLoopControl(); // ループ情報の取得
+const { isLoopEnabled, loopStartTick, loopEndTick } = useLoopControl();
 const state = store.state;
 const height = ref(40);
 const playheadTicks = ref(0);
@@ -183,9 +182,6 @@ const loopEndX = computed(() => {
   return tickToBaseX(loopEndTick.value, tpqn.value) * zoomX.value;
 });
 
-const sequencerRuler = ref<HTMLElement | null>(null);
-const loopControl = ref<InstanceType<typeof SequencerLoopControl> | null>(null);
-
 const onClick = (event: MouseEvent) => {
   void store.dispatch("DESELECT_ALL_NOTES");
 
@@ -202,6 +198,7 @@ const onContextMenu = (event: MouseEvent) => {
   event.preventDefault();
 };
 
+const sequencerRuler = ref<HTMLElement | null>(null);
 let resizeObserver: ResizeObserver | undefined;
 
 const playheadPositionChangeListener = (position: number) => {
@@ -238,21 +235,6 @@ onUnmounted(() => {
     listener: playheadPositionChangeListener,
   });
 });
-
-// ズーム変更時にoffsetを調整
-watch(zoomX, (newZoom, oldZoom) => {
-  if (sequencerRuler.value) {
-    const rulerRect = sequencerRuler.value.getBoundingClientRect();
-    const centerX = rulerRect.width / 2;
-    const oldCenterTick = baseXToTick(
-      (props.offset + centerX) / oldZoom,
-      tpqn.value,
-    );
-    const newCenterX = tickToBaseX(oldCenterTick, tpqn.value) * newZoom;
-    const newOffset = newCenterX - centerX;
-    sequencerRuler.value.scrollLeft = newOffset;
-  }
-});
 </script>
 
 <style scoped lang="scss">
@@ -288,6 +270,7 @@ watch(zoomX, (newZoom, oldZoom) => {
   stroke: var(--scheme-color-sing-ruler-measure-line);
   stroke-width: 1px;
 
+  // NOTE: 最初の小節線を非表示。必要に応じて再表示・位置合わせする
   &.first-measure-line {
     stroke: var(--scheme-color-sing-ruler-surface);
   }
@@ -309,7 +292,7 @@ watch(zoomX, (newZoom, oldZoom) => {
 }
 
 .sequencer-ruler-loop-mask {
-  fill: var(--scheme-color-sing-surface-container);
-  opacity: 0.3;
+  fill: var(--scheme-color-scrim);
+  opacity: 0.16;
 }
 </style>
