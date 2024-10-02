@@ -1165,9 +1165,16 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       mutations.SET_PLAYBACK_STATE({ nowPlaying: true });
 
-      transport.setLoopSettings(
-        state.isLoopEnabled,
+      // TODO: 以下の処理（ループの設定）は再生開始時に毎回行う必要はないので、
+      //       ソングエディタ初期化時に1回だけ行うようにする
+      // NOTE: 初期化のactionを作った方が良いかも
+      transport.loop = state.isLoopEnabled;
+      transport.loopStartTime = tickToSecond(
         state.loopStartTick,
+        state.tempos,
+        state.tpqn,
+      );
+      transport.loopEndTime = tickToSecond(
         state.loopEndTick,
         state.tempos,
         state.tpqn,
@@ -2459,8 +2466,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     mutation(state, { isLoopEnabled }) {
       state.isLoopEnabled = isLoopEnabled;
     },
-    action({ mutations }, { isLoopEnabled }) {
+    action({ mutations, state }, { isLoopEnabled }) {
+      if (!transport) {
+        throw new Error("transport is undefined.");
+      }
       mutations.SET_LOOP_ENABLED({ isLoopEnabled });
+
+      transport.loop = state.isLoopEnabled;
     },
   },
 
@@ -2470,17 +2482,21 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.loopEndTick = loopEndTick;
     },
     action({ mutations, state }, { loopStartTick, loopEndTick }) {
-      mutations.SET_LOOP_RANGE({ loopStartTick, loopEndTick });
-      if (transport) {
-        // TODO: いったん動作するようにする
-        transport.setLoopSettings(
-          true,
-          loopStartTick,
-          loopEndTick,
-          state.tempos,
-          state.tpqn,
-        );
+      if (!transport) {
+        throw new Error("transport is undefined.");
       }
+      mutations.SET_LOOP_RANGE({ loopStartTick, loopEndTick });
+
+      transport.loopStartTime = tickToSecond(
+        state.loopStartTick,
+        state.tempos,
+        state.tpqn,
+      );
+      transport.loopEndTime = tickToSecond(
+        state.loopEndTick,
+        state.tempos,
+        state.tpqn,
+      );
     },
   },
 
@@ -2491,8 +2507,17 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       state.loopStartTick = loopStartTick;
     },
-    action({ mutations }, { loopStartTick }) {
+    action({ mutations, state }, { loopStartTick }) {
+      if (!transport) {
+        throw new Error("transport is undefined.");
+      }
       mutations.SET_LOOP_START({ loopStartTick });
+
+      transport.loopStartTime = tickToSecond(
+        state.loopStartTick,
+        state.tempos,
+        state.tpqn,
+      );
     },
   },
 
@@ -2503,14 +2528,28 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       state.loopEndTick = loopEndTick;
     },
-    action({ mutations }, { loopEndTick }) {
+    action({ mutations, state }, { loopEndTick }) {
+      if (!transport) {
+        throw new Error("transport is undefined.");
+      }
       mutations.SET_LOOP_END({ loopEndTick });
+
+      transport.loopEndTime = tickToSecond(
+        state.loopEndTick,
+        state.tempos,
+        state.tpqn,
+      );
     },
   },
 
   TOGGLE_LOOP: {
     action({ state, mutations }) {
+      if (!transport) {
+        throw new Error("transport is undefined.");
+      }
       mutations.SET_LOOP_ENABLED({ isLoopEnabled: !state.isLoopEnabled });
+
+      transport.loop = state.isLoopEnabled;
     },
   },
 });
