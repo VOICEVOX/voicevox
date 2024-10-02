@@ -3,8 +3,9 @@
     <svg
       xmlns="http://www.w3.org/2000/svg"
       :width
-      :height="32"
+      :height="24"
       shape-rendering="geometricPrecision"
+      @mousedown.stop="addLoop($event)"
     >
       <!-- ループ範囲 -->
       <rect
@@ -35,7 +36,7 @@
         :x="loopStartX - offset - 4"
         y="0"
         width="16"
-        height="28"
+        height="24"
         class="loop-drag-area"
         @mousedown.stop="startDragging('start', $event)"
       />
@@ -45,7 +46,7 @@
         :x="loopEndX - offset - 4"
         y="0"
         width="16"
-        height="28"
+        height="24"
         class="loop-drag-area"
         @mousedown.stop="startDragging('end', $event)"
       />
@@ -61,7 +62,7 @@ import { useCursorState, CursorState } from "@/composables/useCursorState";
 import { tickToBaseX, baseXToTick } from "@/sing/viewHelper";
 import { getNoteDuration } from "@/sing/domain";
 
-defineProps<{
+const props = defineProps<{
   width: number;
   offset: number;
 }>();
@@ -86,6 +87,15 @@ const isDragging = ref(false);
 const dragTarget = ref<"start" | "end" | null>(null);
 const dragStartX = ref(0);
 const dragStartHandleX = ref(0); // ドラッグ開始時のハンドル位置
+
+const addLoop = (event: MouseEvent) => {
+  const target = event.currentTarget as HTMLElement;
+  const rect = target.getBoundingClientRect();
+  const x = event.clientX - rect.left + props.offset;
+  const tick = snapToGrid(baseXToTick(x / sequencerZoomX.value, tpqn.value));
+  setLoopRange(tick, tick);
+  startDragging("end", event);
+};
 
 const snapToGrid = (tick: number): number => {
   const snapInterval = getNoteDuration(sequencerSnapType.value, tpqn.value);
@@ -171,8 +181,9 @@ onUnmounted(() => {
   top: 0;
   left: 0;
   width: 100%;
-  height: 100%;
+  height: 24px;
   pointer-events: auto;
+  cursor: pointer;
 }
 
 .loop-range {
