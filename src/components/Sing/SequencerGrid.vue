@@ -251,7 +251,7 @@ const loopEndX = computed(() => {
 .sequencer-grid-loop-mask {
   position: relative;
   fill: var(--scheme-color-scrim);
-  opacity: 0.16;
+  opacity: 0.38;
   pointer-events: none;
 }
 

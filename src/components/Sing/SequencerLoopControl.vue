@@ -4,7 +4,7 @@
       xmlns="http://www.w3.org/2000/svg"
       :width
       :height="32"
-      shape-rendering="crispEdges"
+      shape-rendering="geometricPrecision"
     >
       <!-- ループ範囲 -->
       <rect
@@ -18,22 +18,24 @@
       <!-- ループ開始ハンドル -->
       <path
         v-if="isLoopEnabled"
-        :d="`M${loopStartX - offset},0 L${loopStartX - offset},16 L${loopStartX - offset + 12},0 Z`"
+        :d="`M${loopStartX - offset},0 L${loopStartX - offset},15 L${loopStartX - offset + 12},0 Z`"
         class="loop-handle loop-start-handle"
+        :class="{ 'loop-handle-disabled': loopStartTick === loopEndTick }"
       />
       <!-- ループ終了ハンドル -->
       <path
         v-if="isLoopEnabled"
-        :d="`M${loopEndX - offset},0 L${loopEndX - offset},16 L${loopEndX - offset - 12},0 Z`"
+        :d="`M${loopEndX - offset},0 L${loopEndX - offset},15 L${loopEndX - offset - 12},0 Z`"
         class="loop-handle loop-end-handle"
+        :class="{ 'loop-handle-disabled': loopStartTick === loopEndTick }"
       />
       <!-- ループ開始ドラッグ領域 -->
       <rect
         v-if="isLoopEnabled"
         :x="loopStartX - offset - 4"
         y="0"
-        width="8"
-        height="32"
+        width="16"
+        height="28"
         class="loop-drag-area"
         @mousedown.stop="startDragging('start', $event)"
       />
@@ -42,8 +44,8 @@
         v-if="isLoopEnabled"
         :x="loopEndX - offset - 4"
         y="0"
-        width="8"
-        height="32"
+        width="16"
+        height="28"
         class="loop-drag-area"
         @mousedown.stop="startDragging('end', $event)"
       />
@@ -105,13 +107,10 @@ const onDrag = (event: MouseEvent) => {
 
   const dx = event.clientX - dragStartX.value;
   const newX = dragStartHandleX.value + dx;
-  let newTick = Math.max(
-    0,
-    baseXToTick(newX / sequencerZoomX.value, tpqn.value),
-  );
+  const baseTick = baseXToTick(newX / sequencerZoomX.value, tpqn.value);
 
   // スナップ処理
-  newTick = snapToGrid(newTick);
+  const newTick = Math.max(0, snapToGrid(baseTick));
 
   try {
     if (dragTarget.value === "start") {
@@ -120,13 +119,10 @@ const onDrag = (event: MouseEvent) => {
       } else {
         // 開始ハンドルが終了ハンドルを超えた場合、開始と終了を入れ替える
         setLoopRange(loopEndTick.value, newTick);
-
         // ドラッグ対象を終了ハンドルに切り替え
         dragTarget.value = "end";
-
         // ドラッグ開始点を現在のカーソル位置に再設定
         dragStartX.value = event.clientX;
-
         // 新しいドラッグ開始ハンドル位置を再計算
         dragStartHandleX.value =
           tickToBaseX(loopEndTick.value, tpqn.value) * sequencerZoomX.value;
@@ -137,20 +133,17 @@ const onDrag = (event: MouseEvent) => {
       } else {
         // 終了ハンドルが開始ハンドルを下回った場合、開始と終了を入れ替える
         setLoopRange(newTick, loopStartTick.value);
-
         // ドラッグ対象を開始ハンドルに切り替え
         dragTarget.value = "start";
-
         // ドラッグ開始点を現在のカーソル位置に再設定
         dragStartX.value = event.clientX;
-
         // 新しいドラッグ開始ハンドル位置を再計算
         dragStartHandleX.value =
           tickToBaseX(loopStartTick.value, tpqn.value) * sequencerZoomX.value;
       }
     }
   } catch (error) {
-    throw new Error("Error setting loop range");
+    throw new Error("Could not set loop range");
   }
 };
 
@@ -189,9 +182,18 @@ onUnmounted(() => {
 .loop-handle {
   fill: var(--scheme-color-primary);
   pointer-events: none;
+  stroke: var(--scheme-color-primary);
+  stroke-width: 2;
+  stroke-linejoin: round;
+
+  &.loop-handle-disabled {
+    fill: var(--scheme-color-secondary);
+    stroke: var(--scheme-color-secondary);
+  }
 }
 
 .loop-drag-area {
+  height: 28px;
   fill: transparent;
   cursor: ew-resize;
   pointer-events: all;

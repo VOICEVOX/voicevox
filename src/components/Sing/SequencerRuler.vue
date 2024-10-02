@@ -293,6 +293,6 @@ onUnmounted(() => {
 
 .sequencer-ruler-loop-mask {
   fill: var(--scheme-color-scrim);
-  opacity: 0.16;
+  opacity: 0.38;
 }
 </style>

@@ -2466,9 +2466,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   SET_LOOP_RANGE: {
     mutation(state, { loopStartTick, loopEndTick }) {
-      if (loopStartTick >= loopEndTick) {
-        throw new Error("Loop start must be before loop end");
-      }
       state.loopStartTick = loopStartTick;
       state.loopEndTick = loopEndTick;
     },
