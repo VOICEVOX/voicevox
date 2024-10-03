@@ -893,6 +893,7 @@ const setMultiTrack = (enableMultiTrack: boolean) => {
   @include mixin.headline-2;
 }
 
+// NOTE: なぜか:globalしないと効かない
 :global(.setting-dialog) {
   z-index: vars.$z-index-fullscreen-dialog !important;
 }
