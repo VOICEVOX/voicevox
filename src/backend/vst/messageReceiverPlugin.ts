@@ -2,7 +2,7 @@ import { Plugin, watch } from "vue";
 import AsyncLock from "async-lock";
 import { debounce } from "quasar";
 import { toBase64 } from "fast-base64";
-import { getProject, setPhrases, setVoices } from "./ipc";
+import { getProject, onReceivedIPCMessage, setPhrases, setVoices } from "./ipc";
 import { projectFilePath } from "./sandbox";
 import { Store } from "@/store/vuex";
 import {
@@ -41,40 +41,29 @@ export const vstMessageReceiver: Plugin = {
     if (import.meta.env.VITE_TARGET !== "vst") {
       return;
     }
-    let uiLockPromiseResolve: (() => void) | undefined;
-    // @ts-expect-error VSTからのメッセージを受け取るためのグローバル関数
-    window.vstOnMessage = (message: Message) => {
-      switch (message.type) {
-        case "update:isPlaying":
-          if (message.isPlaying && !uiLockPromiseResolve) {
-            void store.dispatch("SING_STOP_AUDIO");
-            void store.dispatch("ASYNC_UI_LOCK", {
-              callback: () =>
-                new Promise((resolve) => {
-                  uiLockPromiseResolve = resolve;
-                }),
-            });
-          } else if (!message.isPlaying && uiLockPromiseResolve) {
-            uiLockPromiseResolve();
-            uiLockPromiseResolve = undefined;
-          } else {
-            log.warn(
-              `[vstOnMessage] unexpected isPlaying state: isPlaying=${message.isPlaying}, uiLockPromiseResolve=${!!uiLockPromiseResolve}`,
-            );
-          }
-
-          break;
-        case "update:time":
-          void store.dispatch("SET_PLAYHEAD_POSITION", {
-            position: secondToTick(
-              message.time,
-              store.state.tempos,
-              store.state.tpqn,
-            ),
-          });
-          break;
+    let resolveUiLock: (() => void) | undefined;
+    onReceivedIPCMessage("updatePlayingState", (isPlaying: boolean) => {
+      if (isPlaying && !resolveUiLock) {
+        const { promise, resolve } = Promise.withResolvers<void>();
+        resolveUiLock = resolve;
+        void store.dispatch("SING_STOP_AUDIO");
+        void store.dispatch("ASYNC_UI_LOCK", {
+          callback: () => promise,
+        });
+      } else if (!isPlaying && resolveUiLock) {
+        resolveUiLock();
+        resolveUiLock = undefined;
+      } else {
+        log.warn(
+          `unexpected isPlaying state: isPlaying=${isPlaying}, uiLockPromiseResolve=${!!resolveUiLock}`,
+        );
       }
-    };
+    });
+    onReceivedIPCMessage("updatePosition", (time: number) => {
+      void store.dispatch("SET_PLAYHEAD_POSITION", {
+        position: secondToTick(time, store.state.tempos, store.state.tpqn),
+      });
+    });
 
     const phrasesLock = new AsyncLock();
 

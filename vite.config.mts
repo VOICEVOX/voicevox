@@ -1,9 +1,7 @@
 /// <reference types="vitest" />
 /* eslint-disable no-console */
 import path from "path";
-import { createWriteStream } from "fs";
-import { rm, mkdir } from "fs/promises";
-import { pipeline } from "stream/promises";
+import { rm } from "fs/promises";
 import { fileURLToPath } from "url";
 
 import electron from "vite-plugin-electron";
@@ -13,7 +11,6 @@ import checker from "vite-plugin-checker";
 import { nodePolyfills } from "vite-plugin-node-polyfills";
 import { BuildOptions, defineConfig, loadEnv, Plugin } from "vite";
 import { quasar } from "@quasar/vite-plugin";
-import archiver from "archiver";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -125,7 +122,7 @@ export default defineConfig((options) => {
         ]),
       ],
       isBrowser && injectPreloadPlugin("browser"),
-      isVst && [injectPreloadPlugin("vst"), createHeaderPlugin()],
+      isVst && injectPreloadPlugin("vst"),
     ],
   };
 });
@@ -153,36 +150,6 @@ const injectPreloadPlugin = (name: string): Plugin => {
           `<!-- %PRELOAD% -->`,
           `<script type="module" src="./backend/${name}/preload.ts"></script>`,
         ),
-    },
-  };
-};
-
-const createHeaderPlugin = (): Plugin => {
-  return {
-    name: "create-header",
-    apply: "build",
-    enforce: "post",
-    closeBundle: async () => {
-      if (!packageName) {
-        return;
-      }
-
-      console.log("Creating zip file...");
-      const webOutput = path.join(__dirname, "dist");
-      const vstOutput = path.join(__dirname, "dist_vst");
-      await mkdir(vstOutput, { recursive: true });
-      const archive = archiver("zip", {
-        zlib: { level: 9 },
-      });
-      const zipName = `${packageName}.zip`;
-      const zipPath = path.join(vstOutput, zipName);
-      await rm(zipPath, { force: true });
-      archive.directory(webOutput, false);
-      archive.finalize();
-      const outputZip = createWriteStream(zipPath);
-      await pipeline(archive, outputZip);
-      console.log(`Zip file created: ${zipPath}`);
-      outputZip.close();
     },
   };
 };

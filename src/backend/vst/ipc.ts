@@ -11,8 +11,11 @@ import { SingingVoiceKey } from "@/store/type";
 
 declare global {
   interface Window {
-    sendToPlugin: (value: unknown) => void;
-    onPluginMessage: (value: unknown) => void;
+    ipc: {
+      postMessage: (value: string) => void;
+    };
+    onIpcResponse: (value: unknown) => void;
+    onIpcNotification: (value: unknown) => void;
   }
 }
 
@@ -23,8 +26,14 @@ class RustError extends Error {
   }
 }
 
+type Notifications = {
+  updatePlayingState: boolean;
+  updatePosition: number;
+};
+
 let nonce = 0;
 let handlerInitialized = false;
+const notificationReceivers = new Map<string, ((value: unknown) => void)[]>();
 const messagePromises = new Map<
   number,
   {
@@ -35,7 +44,7 @@ const messagePromises = new Map<
 >();
 const initializeMessageHandler = () => {
   log.info("Initializing message handler");
-  window.onPluginMessage = (value: unknown) => {
+  window.onIpcResponse = (value: unknown) => {
     const { requestId, payload } = value as {
       requestId: number;
       payload: { Ok: unknown } | { Err: string };
@@ -54,10 +63,26 @@ const initializeMessageHandler = () => {
       reject(new RustError(payload.Err));
     }
   };
+  window.onIpcNotification = (value: unknown) => {
+    const message = value as {
+      type: string;
+      payload: unknown;
+    };
+    const receivers = notificationReceivers.get(message.type);
+    if (!receivers) {
+      log.warn(`No receiver found for notification: ${message.type}`);
+      return;
+    }
+    log.info(`From plugin: ${message.type}`);
+    for (const receiver of receivers) {
+      receiver(message.payload);
+    }
+  };
 };
+
 const createMessageFunction = <T, R>(name: string) => {
   return ((arg?: unknown) => {
-    if (!window.sendToPlugin) {
+    if (!window.ipc?.postMessage) {
       throw new UnreachableError(
         "This function should not be called outside of the plugin environment",
       );
@@ -68,13 +93,15 @@ const createMessageFunction = <T, R>(name: string) => {
     }
     const currentNonce = nonce++;
     log.info(`To plugin: ${name}(${currentNonce})`);
-    window.sendToPlugin({
-      requestId: currentNonce,
-      inner: {
-        type: name,
-        payload: arg,
-      },
-    });
+    window.ipc.postMessage(
+      JSON.stringify({
+        requestId: currentNonce,
+        inner: {
+          type: name,
+          payload: arg,
+        },
+      }),
+    );
     const { promise, resolve, reject } = Promise.withResolvers();
     messagePromises.set(currentNonce, { resolve, reject, name });
 
@@ -165,12 +192,6 @@ export async function setVoices(voices: Record<SingingVoiceKey, string>) {
   await ipcSetVoices(voices);
 }
 
-export async function clearPhrases() {
-  throw new Error("Not implemented");
-  // log.info("clearPhrases");
-  // await vstClearPhrases();
-}
-
 declare global {
   interface Window {
     vstOnFileChosen?: (uuid: string, path: string) => void;
@@ -221,4 +242,14 @@ export async function showQuestionDialog(
   options: ShowQuestionDialogOptions,
 ): Promise<number> {
   return await ipcShowQuestionDialog(options);
+}
+
+export function onReceivedIPCMessage<T extends keyof Notifications>(
+  name: T,
+  callback: (value: Notifications[T]) => void,
+) {
+  if (!notificationReceivers.has(name)) {
+    notificationReceivers.set(name, []);
+  }
+  notificationReceivers.get(name)?.push(callback as (value: unknown) => void);
 }
