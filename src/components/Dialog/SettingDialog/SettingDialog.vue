@@ -398,19 +398,21 @@
                       title="ソング：元に戻すトラック操作"
                       description="「元に戻す」機能の対象とするトラック操作を指定します。"
                     >
-                      <BaseCheckbox
-                        v-for="(value, key) in undoableTrackOperations"
-                        :key
-                        :checked="value"
-                        :label="undoableTrackOperationsLabels[key]"
-                        @update:checked="
-                          (newValue) =>
-                            (undoableTrackOperations = {
-                              ...undoableTrackOperations,
-                              [key]: newValue,
-                            })
-                        "
-                      />
+                      <div class="checkbox-list">
+                        <BaseCheckbox
+                          v-for="(value, key) in undoableTrackOperations"
+                          :key
+                          :checked="value"
+                          :label="undoableTrackOperationsLabels[key]"
+                          @update:checked="
+                            (newValue) =>
+                              (undoableTrackOperations = {
+                                ...undoableTrackOperations,
+                                [key]: newValue,
+                              })
+                          "
+                        />
+                      </div>
                     </BaseRowCard>
                   </div>
                 </QSlideTransition>
@@ -940,5 +942,10 @@ const setMultiTrack = (enableMultiTrack: boolean) => {
   align-items: center;
   justify-content: space-between;
   gap: vars.$gap-1;
+}
+
+.checkbox-list {
+  display: flex;
+  gap: vars.$gap-2;
 }
 </style>
