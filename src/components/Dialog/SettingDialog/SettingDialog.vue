@@ -894,7 +894,7 @@ const setMultiTrack = (enableMultiTrack: boolean) => {
 }
 
 :global(.setting-dialog) {
-  z-index: 1000 !important;
+  z-index: vars.$z-index-fullscreen-dialog !important;
 }
 
 .help-hover-icon {
