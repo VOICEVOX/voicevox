@@ -69,7 +69,7 @@
                     :modelValue="outputSamplingRate.toString()"
                     @update:modelValue="
                       (value) =>
-                        (outputSamplingRate = value as number | 'engineDefault')
+                        (outputSamplingRate = Number(value) || 'engineDefault')
                     "
                   >
                     <BaseSelectItem
