@@ -95,10 +95,6 @@ const model = defineModel<string>();
   color: colors.$display;
 }
 
-:global([data-radix-popper-content-wrapper]) {
-  z-index: vars.$z-index-dropdown !important;
-}
-
 :global(.SelectContent) {
   overflow: hidden;
   display: flex;
@@ -111,6 +107,7 @@ const model = defineModel<string>();
   min-width: var(--radix-select-trigger-width);
   max-width: var(--radix-select-content-available-width);
   max-height: var(--radix-select-content-available-height);
+  z-index: vars.$z-index-dropdown;
 }
 
 :global(.SelectArrow) {
