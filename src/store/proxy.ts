@@ -20,7 +20,14 @@ const proxyStoreCreator = (_engineFactory: IEngineConnectorFactory) => {
             new Error(`No such engineInfo registered: engineId == ${engineId}`),
           );
 
-        const instance = _engineFactory.instance(engineInfo.host);
+        const altPort: string | undefined = state.altPortInfos[engineId];
+        const port = altPort ?? engineInfo.defaultPort;
+        const url = new URL(
+          `${engineInfo.protocol}//${engineInfo.hostname}:${port}`,
+        );
+        const instance = _engineFactory.instance(
+          `${url.origin}${engineInfo.pathname}`,
+        );
         return Promise.resolve({
           invoke: (v) => (arg) =>
             // FIXME: anyを使わないようにする
