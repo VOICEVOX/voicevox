@@ -97,7 +97,6 @@ const model = defineModel<string>();
 
 :deep(.SelectContent) {
   overflow: hidden;
-  display: flex;
   border-radius: vars.$radius-2;
   padding: vars.$padding-1;
   color: colors.$display;
