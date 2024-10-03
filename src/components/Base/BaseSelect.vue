@@ -95,7 +95,7 @@ const model = defineModel<string>();
   color: colors.$display;
 }
 
-:global(.SelectContent) {
+:deep(.SelectContent) {
   overflow: hidden;
   display: flex;
   border-radius: vars.$radius-2;
@@ -110,7 +110,7 @@ const model = defineModel<string>();
   z-index: vars.$z-index-dropdown;
 }
 
-:global(.SelectArrow) {
+:deep(.SelectArrow) {
   fill: colors.$background;
   margin-top: -1px;
   filter: drop-shadow(0 1px 0px colors.$border);
