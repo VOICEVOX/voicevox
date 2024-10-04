@@ -3,8 +3,9 @@
     class="row-card"
     :class="{ clickable: clickable }"
     role="listitem"
+    :disabled
     :tabindex="clickable ? 0 : -1"
-    @click="(payload) => $emit('click', payload)"
+    @click="(payload) => !disabled && $emit('click', payload)"
   >
     <div class="text">
       <div class="title">{{ title }}</div>
@@ -21,6 +22,7 @@ defineProps<{
   title: string;
   description?: string;
   clickable?: boolean;
+  disabled?: boolean;
 }>();
 
 defineEmits<{
@@ -61,6 +63,10 @@ defineEmits<{
 
   &:focus-visible {
     @include mixin.on-focus;
+  }
+
+  &:disabled {
+    opacity: 0.5;
   }
 }
 

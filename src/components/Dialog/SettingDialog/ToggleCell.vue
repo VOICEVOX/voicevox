@@ -5,11 +5,13 @@
     :title
     :description
     clickable
+    :disabled="disable"
     tabindex="-1"
     @click="() => $emit('update:modelValue', !modelValue)"
   >
     <BaseSwitch
       :checked="modelValue"
+      :disabled="disable"
       uncheckedLabel="無効"
       checkedLabel="有効"
     />

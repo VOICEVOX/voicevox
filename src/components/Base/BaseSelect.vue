@@ -70,15 +70,12 @@ const model = defineModel<string>();
   border-color: colors.$border;
   background-color: colors.$control;
 
-  &:hover:not(:disabled) {
+  &:hover:not([data-disabled]) {
     background-color: colors.$control-hovered;
   }
 
-  &:active:not(:disabled) {
+  &:active:not([data-disabled]) {
     background-color: colors.$control-pressed;
-  }
-
-  &:active:not(:disabled) {
     box-shadow: 0 0 0 transparent;
   }
 

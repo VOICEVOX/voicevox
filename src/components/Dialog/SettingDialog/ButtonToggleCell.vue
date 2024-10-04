@@ -1,7 +1,7 @@
 <!-- ２種類以上のボタンから１つ選ぶ設定項目 -->
 
 <template>
-  <BaseRowCard :title :description>
+  <BaseRowCard :title :description :disabled="disable">
     <BaseToggleGroup v-model="model" type="single" :disabled="disable">
       <template v-for="option in options" :key="option.label">
         <BaseTooltip

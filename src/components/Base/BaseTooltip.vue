@@ -1,5 +1,5 @@
 <template>
-  <TooltipRoot>
+  <TooltipRoot :disabled>
     <TooltipTrigger asChild>
       <slot />
     </TooltipTrigger>
@@ -30,6 +30,7 @@ import {
 
 defineProps<{
   label: string;
+  disabled?: boolean;
 }>();
 </script>
 
