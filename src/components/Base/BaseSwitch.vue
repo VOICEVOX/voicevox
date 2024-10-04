@@ -1,7 +1,7 @@
 <template>
   <div class="root">
     <div class="label">{{ checked ? checkedLabel : uncheckedLabel }}</div>
-    <SwitchRoot :id v-model:checked="checked" class="SwitchRoot">
+    <SwitchRoot :id v-model:checked="checked" :disabled class="SwitchRoot">
       <SwitchThumb class="SwitchThumb" />
     </SwitchRoot>
   </div>
@@ -14,6 +14,7 @@ defineProps<{
   id?: string;
   uncheckedLabel?: string;
   checkedLabel?: string;
+  disabled?: boolean;
 }>();
 
 const checked = defineModel<boolean>("checked", { required: true });
