@@ -44,42 +44,41 @@
                     </BaseSelect>
                   </template>
                 </div>
-                <ButtonToggleCell
-                  title="エンジンモード"
-                  description="GPU モードの利用には GPU が必要です。Linux は NVIDIA™ 製 GPU のみ対応しています。"
-                  :options="engineUseGpuOptions"
-                  :disable="!gpuSwitchEnabled(selectedEngineId)"
-                  :modelValue="engineUseGpu ? 'GPU' : 'CPU'"
-                  @update:modelValue="(mode) => (engineUseGpu = mode === 'GPU')"
+                <BaseTooltip
+                  :label="
+                    engineInfos[selectedEngineId].name +
+                    'はCPU版のためGPUモードを利用できません。'
+                  "
+                  :disabled="gpuSwitchEnabled(selectedEngineId)"
                 >
-                  <QTooltip
-                    :delay="500"
-                    :target="!gpuSwitchEnabled(selectedEngineId)"
-                  >
-                    {{
-                      engineInfos[selectedEngineId].name
-                    }}はCPU版のためGPUモードを利用できません。
-                  </QTooltip>
-                </ButtonToggleCell>
-                <BaseRowCard
+                  <ButtonToggleCell
+                    title="エンジンモード"
+                    description="GPU モードの利用には GPU が必要です。Linux は NVIDIA™ 製 GPU のみ対応しています。"
+                    :options="engineUseGpuOptions"
+                    :disable="!gpuSwitchEnabled(selectedEngineId)"
+                    :modelValue="engineUseGpu ? 'GPU' : 'CPU'"
+                    @update:modelValue="
+                      (mode) => (engineUseGpu = mode === 'GPU')
+                    "
+                  />
+                </BaseTooltip>
+                <SelectCell
                   title="音声のサンプリングレート"
                   description="再生・保存時の音声のサンプリングレートを変更できます（サンプリングレートを上げても音声の品質は上がりません）。"
-                >
-                  <BaseSelect
-                    :modelValue="outputSamplingRate.toString()"
-                    @update:modelValue="
-                      (value) =>
-                        (outputSamplingRate = Number(value) || 'engineDefault')
-                    "
-                  >
-                    <BaseSelectItem
-                      v-for="samplingRateOption in samplingRateOptions"
-                      :key="samplingRateOption"
-                      :value="samplingRateOption.toString()"
-                      :label="renderSamplingRateLabel(samplingRateOption)"
-                    />
-                  </BaseSelect>
-                </BaseRowCard>
+                  :modelValue="outputSamplingRate.toString()"
+                  :options="
+                    samplingRateOptions.map((option) => {
+                      return {
+                        value: option.toString(),
+                        label: renderSamplingRateLabel(option),
+                      };
+                    })
+                  "
+                  @update:modelValue="
+                    (value) =>
+                      (outputSamplingRate = Number(value) || 'engineDefault')
+                  "
+                />
               </div>
               <!-- Preservation Setting -->
               <div class="setting-card">
@@ -369,25 +368,25 @@
                     handleSavingSettingChange('outputStereo', $event)
                   "
                 />
-                <BaseRowCard
-                  title="再生デバイス"
-                  description="音声の再生デバイスを変更できます。"
+                <BaseTooltip
+                  label="この機能はお使いの環境でサポートされていないため、使用できません。"
+                  :disabled="canSetAudioOutputDevice"
                 >
-                  <template v-if="!canSetAudioOutputDevice">
-                    この機能はお使いの環境でサポートされていないため、使用できません。
-                  </template>
-                  <BaseSelect
+                  <SelectCell
                     v-model="currentAudioOutputDeviceComputed"
-                    :disabled="!canSetAudioOutputDevice"
+                    title="再生デバイス"
+                    description="音声の再生デバイスを変更できます。"
+                    :disable="!canSetAudioOutputDevice"
+                    :options="
+                      availableAudioOutputDevices
+                        ? availableAudioOutputDevices.map((option) => {
+                            return { value: option.key, label: option.label };
+                          })
+                        : []
+                    "
                   >
-                    <BaseSelectItem
-                      v-for="availableAudioOutputDevice in availableAudioOutputDevices"
-                      :key="availableAudioOutputDevice.key"
-                      :value="availableAudioOutputDevice.key"
-                      :label="availableAudioOutputDevice.label"
-                    />
-                  </BaseSelect>
-                </BaseRowCard>
+                  </SelectCell>
+                </BaseTooltip>
                 <QSlideTransition>
                   <!-- q-slide-transitionはheightだけをアニメーションするのでdivで囲う -->
                   <div
@@ -461,17 +460,18 @@
                     )
                   "
                 />
-                <ToggleCell
-                  title="ソング：マルチトラック機能"
-                  description="ONの場合、１つのプロジェクト内に複数のトラックを作成できるようにします。"
-                  :modelValue="experimentalSetting.enableMultiTrack"
-                  :disable="!canToggleMultiTrack"
-                  @update:modelValue="setMultiTrack($event)"
+                <BaseTooltip
+                  label="現在のプロジェクトに複数のトラックが存在するため、無効化できません。"
+                  :disabled="canToggleMultiTrack"
                 >
-                  <QTooltip v-if="!canToggleMultiTrack" :delay="500">
-                    現在のプロジェクトに複数のトラックが存在するため、無効化できません。
-                  </QTooltip>
-                </ToggleCell>
+                  <ToggleCell
+                    title="ソング：マルチトラック機能"
+                    description="ONの場合、１つのプロジェクト内に複数のトラックを作成できるようにします。"
+                    :modelValue="experimentalSetting.enableMultiTrack"
+                    :disable="!canToggleMultiTrack"
+                    @update:modelValue="setMultiTrack($event)"
+                  />
+                </BaseTooltip>
               </div>
               <div class="setting-card">
                 <h5 class="headline">データ収集</h5>
@@ -496,12 +496,14 @@ import FileNameTemplateDialog from "./FileNameTemplateDialog.vue";
 import ToggleCell from "./ToggleCell.vue";
 import ButtonToggleCell from "./ButtonToggleCell.vue";
 import EditButtonCell from "./EditButtonCell.vue";
+import SelectCell from "./SelectCell.vue";
 import BaseRowCard from "@/components/Base/BaseRowCard.vue";
 import BaseButton from "@/components/Base/BaseButton.vue";
 import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 import BaseSelect from "@/components/Base/BaseSelect.vue";
 import BaseSelectItem from "@/components/Base/BaseSelectItem.vue";
 import BaseCheckbox from "@/components/Base/BaseCheckbox.vue";
+import BaseTooltip from "@/components/Base/BaseTooltip.vue";
 import { useStore } from "@/store";
 import {
   DEFAULT_AUDIO_FILE_BASE_NAME_TEMPLATE,
