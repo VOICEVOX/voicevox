@@ -1,5 +1,5 @@
 <template>
-  <SelectRoot v-model="model" :defaultValue :disabled>
+  <SelectRoot v-model="model" v-model:open="open" :defaultValue :disabled>
     <SelectTrigger class="SelectTrigger">
       <SelectValue class="SelectValue" :placeholder />
       <SelectIcon class="SelectIcon">
@@ -46,6 +46,7 @@ defineProps<{
 }>();
 
 const model = defineModel<string>();
+const open = defineModel<boolean>("open");
 </script>
 
 <style scoped lang="scss">
