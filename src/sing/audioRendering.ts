@@ -56,16 +56,15 @@ interface EventScheduler {
  * 再生、停止、再生位置の変更などの機能を提供します。
  */
 export class Transport {
-  loop = false;
-  loopStartTime = 0;
-  loopEndTime = 0;
-
   private readonly audioContext: AudioContext;
   private readonly timer: Timer;
   private readonly scheduleAheadTime: number;
 
   private _state: "started" | "stopped" = "stopped";
   private _time = 0;
+  public loop = false;
+  public loopStartTime = 0;
+  public loopEndTime = 0;
   private sequences = new Set<Sequence>();
 
   private startContextTime = 0;
