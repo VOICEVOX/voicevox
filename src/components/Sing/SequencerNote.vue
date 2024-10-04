@@ -521,11 +521,20 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
   &.cursor-ew-resize,
   &.cursor-crosshair,
   &.cursor-move,
-  &.cursor-draw,
   &.cursor-erase {
     .note-bar,
     .note-edge {
       cursor: inherit;
+    }
+  }
+
+  &.cursor-draw {
+    .note-bar {
+      cursor: move;
+    }
+
+    .note-edge {
+      cursor: ew-resize;
     }
   }
 }

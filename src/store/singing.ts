@@ -831,6 +831,17 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  DESELECT_NOTES: {
+    mutation(state, { noteIds }: { noteIds: NoteId[] }) {
+      for (const noteId of noteIds) {
+        state._selectedNoteIds.delete(noteId);
+      }
+    },
+    async action({ mutations }, { noteIds }: { noteIds: NoteId[] }) {
+      mutations.DESELECT_NOTES({ noteIds });
+    },
+  },
+
   DESELECT_ALL_NOTES: {
     mutation(state) {
       state.editingLyricNoteId = undefined;

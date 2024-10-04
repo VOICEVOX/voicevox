@@ -901,9 +901,11 @@ const endPreview = () => {
           notes: previewNotes.value,
           trackId: selectedTrackId.value,
         });
+        /*
         void store.dispatch("SELECT_NOTES", {
           noteIds: previewNotes.value.map((value) => value.id),
         });
+        */
       } else {
         void store.dispatch("COMMAND_UPDATE_NOTES", {
           notes: previewNotes.value,
@@ -957,14 +959,25 @@ const endPreview = () => {
 };
 
 const onNoteBarMouseDown = (event: MouseEvent, note: Note) => {
-  if (editTarget.value !== "NOTE" || !isSelfEventTarget(event)) {
+  if (event.button !== 0) {
     return;
   }
-  const mouseButton = getButton(event);
-  if (mouseButton === "LEFT_BUTTON") {
+  if (editTarget.value !== "NOTE") {
+    return;
+  }
+  if (isOnCommandOrCtrlKeyDown(event)) {
+    if (selectedNoteIds.value.has(note.id)) {
+      // 選択済みのノートをCtrl+クリックした場合、選択解除する
+      void store.dispatch("DESELECT_NOTES", { noteIds: [note.id] });
+    } else {
+      // 選択されていないノートをCtrl+クリックした場合、選択に追加する
+      void store.dispatch("SELECT_NOTES", { noteIds: [note.id] });
+    }
+  } else {
+    if (!selectedNoteIds.value.has(note.id)) {
+      void selectOnlyThis(note);
+    }
     startPreview(event, "MOVE_NOTE", note);
-  } else if (!selectedNoteIds.value.has(note.id)) {
-    selectOnlyThis(note);
   }
 };
 
@@ -1015,6 +1028,9 @@ const onMouseDown = (event: MouseEvent) => {
         rectSelectStartX.value = cursorX.value;
         rectSelectStartY.value = cursorY.value;
         setCursorState(CursorState.CROSSHAIR);
+      } else if (selectedNoteIds.value.size > 0) {
+        // ノートが選択されている場合は、選択を解除する
+        void store.dispatch("DESELECT_ALL_NOTES");
       } else {
         startPreview(event, "ADD_NOTE");
       }
@@ -1053,6 +1069,14 @@ const onMouseMove = (event: MouseEvent) => {
       Math.round(cursorTicks / snapTicks.value - 0.25) * snapTicks.value;
     const guideLineBaseX = tickToBaseX(guideLineTicks, tpqn.value);
     guideLineX.value = guideLineBaseX * zoomX.value;
+  }
+  // ノート選択状態に応じてカーソルを変更
+  if (editTarget.value === "NOTE") {
+    if (selectedNoteIds.value.size > 0) {
+      setCursorState(CursorState.UNSET);
+    } else {
+      setCursorState(CursorState.DRAW);
+    }
   }
 };
 
