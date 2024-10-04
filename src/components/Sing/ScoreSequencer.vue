@@ -901,11 +901,9 @@ const endPreview = () => {
           notes: previewNotes.value,
           trackId: selectedTrackId.value,
         });
-        /*
         void store.dispatch("SELECT_NOTES", {
           noteIds: previewNotes.value.map((value) => value.id),
         });
-        */
       } else {
         void store.dispatch("COMMAND_UPDATE_NOTES", {
           notes: previewNotes.value,
