@@ -900,16 +900,6 @@ const setMultiTrack = (enableMultiTrack: boolean) => {
   z-index: vars.$z-index-fullscreen-dialog !important;
 }
 
-.help-hover-icon {
-  margin-left: 6px;
-  color: colors.$display;
-  opacity: 0.5;
-}
-
-.hotkey-table {
-  width: 100%;
-}
-
 .setting-card {
   margin: auto;
   max-width: 960px;
@@ -917,12 +907,6 @@ const setMultiTrack = (enableMultiTrack: boolean) => {
   display: flex;
   flex-direction: column;
   gap: vars.$gap-1;
-}
-
-.text-ellipsis {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .setting-dialog .q-layout-container :deep(.absolute-full) {
