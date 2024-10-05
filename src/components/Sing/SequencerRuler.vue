@@ -1,40 +1,54 @@
 <template>
   <div ref="sequencerRuler" class="sequencer-ruler" @click="onClick">
-    <svg xmlns="http://www.w3.org/2000/svg" :width :height>
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      :width
+      :height
+      shape-rendering="crispEdges"
+    >
       <defs>
         <pattern
           id="sequencer-ruler-measure"
           patternUnits="userSpaceOnUse"
-          :x="-offset"
+          :x="-offset % (beatWidth * beatsPerMeasure)"
           :width="beatWidth * beatsPerMeasure"
           :height
         >
+          <!-- 拍線（小節の最初を除く） -->
           <line
-            v-for="n in beatsPerMeasure"
+            v-for="n in beatsPerMeasure - 1"
             :key="n"
-            :x1="beatWidth * (n - 1)"
-            :x2="beatWidth * (n - 1)"
-            :y1="n === 1 ? 16 : 24"
-            y2="100%"
-            stroke-width="1"
-            :class="`sequencer-ruler-${n === 1 ? 'measure' : 'beat'}-line`"
+            :x1="beatWidth * n"
+            :x2="beatWidth * n"
+            y1="28"
+            :y2="height"
+            class="sequencer-ruler-beat-line"
           />
         </pattern>
-        <symbol id="sequencer-ruler-measure-numbers">
-          <text
-            v-for="measureInfo in measureInfos"
-            :key="measureInfo.number"
-            font-size="12"
-            :x="measureInfo.x + 4"
-            y="20"
-            class="sequencer-ruler-measure-number"
-          >
-            {{ measureInfo.number }}
-          </text>
-        </symbol>
       </defs>
-      <rect :width :height fill="url(#sequencer-ruler-measure)" />
-      <use href="#sequencer-ruler-measure-numbers" :x="-offset" />
+      <rect x="0.5" y="0" :width :height fill="url(#sequencer-ruler-measure)" />
+      <!-- 小節線 -->
+      <line
+        v-for="measureInfo in measureInfos"
+        :key="measureInfo.number"
+        :x1="measureInfo.x - offset"
+        :x2="measureInfo.x - offset"
+        y1="20"
+        :y2="height"
+        class="sequencer-ruler-measure-line"
+        :class="{ 'first-measure-line': measureInfo.number === 1 }"
+      />
+      <!-- 小節番号 -->
+      <text
+        v-for="measureInfo in measureInfos"
+        :key="measureInfo.number"
+        font-size="12"
+        :x="measureInfo.x - offset + 4"
+        y="34"
+        class="sequencer-ruler-measure-number"
+      >
+        {{ measureInfo.number }}
+      </text>
     </svg>
     <div class="sequencer-ruler-border-bottom"></div>
     <div
@@ -64,7 +78,7 @@ const props = withDefaults(
 );
 const store = useStore();
 const state = store.state;
-const height = ref(32);
+const height = ref(40);
 const playheadTicks = ref(0);
 const tpqn = computed(() => state.tpqn);
 const timeSignatures = computed(() => state.timeSignatures);
@@ -94,34 +108,29 @@ const width = computed(() => {
   return tickToBaseX(endTicks.value, tpqn.value) * zoomX.value;
 });
 const measureInfos = computed(() => {
-  const measureInfos: {
-    number: number;
-    x: number;
-  }[] = [];
-  for (let i = 0; i < timeSignatures.value.length; i++) {
-    const ts = timeSignatures.value[i];
+  return timeSignatures.value.flatMap((timeSignature, i) => {
     const measureDuration = getMeasureDuration(
-      ts.beats,
-      ts.beatType,
+      timeSignature.beats,
+      timeSignature.beatType,
       tpqn.value,
     );
     const nextTsPosition =
       i !== timeSignatures.value.length - 1
         ? tsPositions.value[i + 1]
-        : undefined;
-    let measureNumber = ts.measureNumber;
-    let measurePosition = tsPositions.value[i];
-    while (measurePosition < (nextTsPosition ?? endTicks.value)) {
+        : endTicks.value;
+    const start = tsPositions.value[i];
+    const end = nextTsPosition;
+    const numMeasures = Math.floor((end - start) / measureDuration);
+    return Array.from({ length: numMeasures }, (_, index) => {
+      const measureNumber = timeSignature.measureNumber + index;
+      const measurePosition = start + index * measureDuration;
       const baseX = tickToBaseX(measurePosition, tpqn.value);
-      measureInfos.push({
+      return {
         number: measureNumber,
-        x: Math.floor(baseX * zoomX.value),
-      });
-      measureNumber++;
-      measurePosition += measureDuration;
-    }
-  }
-  return measureInfos;
+        x: Math.round(baseX * zoomX.value),
+      };
+    });
+  });
 });
 const playheadX = computed(() => {
   const baseX = tickToBaseX(playheadTicks.value, tpqn.value);
@@ -180,47 +189,47 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-@use "@/styles/variables" as vars;
+@use "@/styles/v2/variables" as vars;
 @use "@/styles/colors" as colors;
 
 .sequencer-ruler {
-  background: colors.$background;
+  background: var(--scheme-color-sing-ruler-surface);
+  height: 40px;
   position: relative;
   overflow: hidden;
-}
-
-.sequencer-ruler-border-bottom {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  border-top: 1px solid colors.$sequencer-sub-divider;
-  border-bottom: 1px solid colors.$sequencer-sub-divider;
 }
 
 .sequencer-ruler-playhead {
   position: absolute;
   top: 0;
-  left: -1px;
+  left: 0;
   width: 2px;
   height: 100%;
-  background: rgba(colors.$display-rgb, 0.6);
+  background: var(--scheme-color-inverse-surface);
   pointer-events: none;
   will-change: transform;
+  z-index: vars.$z-index-sing-playhead;
 }
 
 .sequencer-ruler-measure-number {
-  fill: colors.$display;
+  font-weight: 700;
+  fill: var(--scheme-color-on-surface-variant);
 }
 
 .sequencer-ruler-measure-line {
   backface-visibility: hidden;
-  stroke: rgba(colors.$display-rgb, 0.5);
+  stroke: var(--scheme-color-sing-ruler-measure-line);
+  stroke-width: 1px;
+
+  // NOTE: 最初の小節線を非表示。必要に応じて再表示・位置合わせする
+  &.first-measure-line {
+    stroke: var(--scheme-color-sing-ruler-surface);
+  }
 }
 
 .sequencer-ruler-beat-line {
   backface-visibility: hidden;
-  stroke: rgba(colors.$display-rgb, 0.25);
+  stroke: var(--scheme-color-sing-ruler-beat-line);
+  stroke-width: 1px;
 }
 </style>

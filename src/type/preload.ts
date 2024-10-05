@@ -402,7 +402,7 @@ export type MinimumEngineManifestType = z.infer<
 
 export type EngineInfo = {
   uuid: EngineId;
-  host: string;
+  host: string; // NOTE: 実際はorigin（プロトコルとhostnameとport）が入る
   name: string;
   path?: string; // エンジンディレクトリのパス
   executionEnabled: boolean;
@@ -554,8 +554,6 @@ export type ThemeConf = {
 };
 
 export const experimentalSettingSchema = z.object({
-  enablePreset: z.boolean().default(false),
-  shouldApplyDefaultPresetOnVoiceChanged: z.boolean().default(false),
   enableInterrogativeUpspeak: z.boolean().default(false),
   enableMorphing: z.boolean().default(false),
   enableMultiSelect: z.boolean().default(false),
@@ -587,6 +585,8 @@ export const rootMiscSettingSchema = z.object({
     .enum(["PERIOD_AND_NEW_LINE", "NEW_LINE", "OFF"])
     .default("PERIOD_AND_NEW_LINE"),
   splitterPosition: splitterPositionSchema.default({}),
+  enablePreset: z.boolean().default(false), // プリセット機能
+  shouldApplyDefaultPresetOnVoiceChanged: z.boolean().default(false), // スタイル変更時にデフォルトプリセットを適用するか
   enableMultiEngine: z.boolean().default(false),
   enableMemoNotation: z.boolean().default(false), // メモ記法を有効にするか
   enableRubyNotation: z.boolean().default(false), // ルビ記法を有効にするか

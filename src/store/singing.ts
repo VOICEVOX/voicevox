@@ -49,6 +49,7 @@ import {
   Clipper,
   Limiter,
   NoteEvent,
+  NoteSequence,
   OfflineTransport,
   PolySynth,
   Sequence,
@@ -327,6 +328,49 @@ const deleteSequence = (sequenceId: SequenceId) => {
   if (trackChannelStrips.has(sequence.trackId)) {
     getOutputOfAudioSource(sequence).disconnect();
   }
+};
+
+/**
+ * ノートシーケンスを生成する。
+ */
+const generateNoteSequence = (
+  notes: Note[],
+  tempos: Tempo[],
+  tpqn: number,
+  trackId: TrackId,
+): NoteSequence & { trackId: TrackId } => {
+  if (!audioContext) {
+    throw new Error("audioContext is undefined.");
+  }
+  const noteEvents = generateNoteEvents(notes, tempos, tpqn);
+  const polySynth = new PolySynth(audioContext);
+  return {
+    type: "note",
+    instrument: polySynth,
+    noteEvents,
+    trackId,
+  };
+};
+
+/**
+ * オーディオシーケンスを生成する。
+ */
+const generateAudioSequence = async (
+  startTime: number,
+  blob: Blob,
+  trackId: TrackId,
+): Promise<AudioSequence & { trackId: TrackId }> => {
+  if (!audioContext) {
+    throw new Error("audioContext is undefined.");
+  }
+  const audioEvents = await generateAudioEvents(audioContext, startTime, blob);
+  const audioPlayer = new AudioPlayer(audioContext);
+  return {
+    type: "audio",
+    audioPlayer,
+    audioEvents,
+    trackId,
+  };
 };
 
 /**
@@ -1535,11 +1579,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       };
 
       const render = async () => {
-        if (!audioContext) {
-          throw new Error("audioContext is undefined.");
-        }
-        const audioContextRef = audioContext;
-
         const firstRestMinDurationSeconds = 0.12;
 
         // レンダリング中に変更される可能性のあるデータのコピー
@@ -1695,7 +1734,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                     foundPhrase.trackId,
                     phraseKey,
                   );
-            if (renderStartStageId != undefined) {
+            if (renderStartStageId == undefined) {
+              phrase.state = "PLAYABLE";
+            } else {
               renderStartStageIds.set(phraseKey, renderStartStageId);
               phrase.state = "WAITING_TO_BE_RENDERED";
             }
@@ -1733,20 +1774,15 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               });
             }
 
-            // ノートシーケンスを作成して登録し、プレビュー音が鳴るようにする
-            const noteEvents = generateNoteEvents(
+            // ノートシーケンスを生成して登録し、プレビュー音が鳴るようにする
+            const sequenceId = SequenceId(uuid4());
+            const noteSequence = generateNoteSequence(
               phrase.notes,
               snapshot.tempos,
               snapshot.tpqn,
+              phrase.trackId,
             );
-            const polySynth = new PolySynth(audioContextRef);
-            const sequenceId = SequenceId(uuid4());
-            registerSequence(sequenceId, {
-              type: "note",
-              instrument: polySynth,
-              noteEvents,
-              trackId: phrase.trackId,
-            });
+            registerSequence(sequenceId, noteSequence);
             mutations.SET_SEQUENCE_ID_TO_PHRASE({ phraseKey, sequenceId });
           }
         }
@@ -1789,7 +1825,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               });
             }
 
-            // オーディオシーケンスを作成して登録する
+            // オーディオシーケンスを生成して登録する
             const singingVoiceKey = getPhraseSingingVoiceKey(phraseKey);
             if (singingVoiceKey == undefined) {
               throw new Error("singingVoiceKey is undefined.");
@@ -1798,19 +1834,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               phraseSingingVoices,
               singingVoiceKey,
             );
-            const audioEvents = await generateAudioEvents(
-              audioContextRef,
+            const sequenceId = SequenceId(uuid4());
+            const audioSequence = await generateAudioSequence(
               phrase.startTime,
               singingVoice,
+              phrase.trackId,
             );
-            const audioPlayer = new AudioPlayer(audioContext);
-            const sequenceId = SequenceId(uuid4());
-            registerSequence(sequenceId, {
-              type: "audio",
-              audioPlayer,
-              audioEvents,
-              trackId: phrase.trackId,
-            });
+            registerSequence(sequenceId, audioSequence);
             mutations.SET_SEQUENCE_ID_TO_PHRASE({ phraseKey, sequenceId });
 
             mutations.SET_STATE_TO_PHRASE({

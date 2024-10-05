@@ -18,9 +18,9 @@ import { AltPortInfos } from "@/store/type";
 import { BaseConfigManager } from "@/backend/common/ConfigManager";
 
 /**
- * デフォルトエンジンの情報を作成する
+ * デフォルトエンジンの情報を取得する
  */
-function createDefaultEngineInfos(defaultEngineDir: string): EngineInfo[] {
+function fetchDefaultEngineInfos(defaultEngineDir: string): EngineInfo[] {
   // TODO: envから直接ではなく、envに書いたengine_manifest.jsonから情報を得るようにする
   const defaultEngineInfosEnv =
     import.meta.env.VITE_DEFAULT_ENGINE_INFOS ?? "[]";
@@ -48,9 +48,6 @@ export class EngineInfoManager {
   defaultEngineDir: string;
   vvppEngineDir: string;
 
-  defaultEngineInfos: EngineInfo[] = [];
-  additionalEngineInfos: EngineInfo[] = [];
-
   /** 代替ポート情報 */
   public altPortInfos: AltPortInfos = {};
 
@@ -65,10 +62,10 @@ export class EngineInfoManager {
   }
 
   /**
-   * 追加エンジンの一覧を作成する。
+   * 追加エンジンの一覧を取得する。
    * FIXME: store.get("registeredEngineDirs")への副作用をEngineManager外に移動する
    */
-  private createAdditionalEngineInfos(): EngineInfo[] {
+  private fetchAdditionalEngineInfos(): EngineInfo[] {
     const engines: EngineInfo[] = [];
     const addEngine = (engineDir: string, type: "vvpp" | "path") => {
       const manifestPath = path.join(engineDir, "engine_manifest.json");
@@ -139,7 +136,20 @@ export class EngineInfoManager {
    * 全てのエンジンの一覧を取得する。デフォルトエンジン＋追加エンジン。
    */
   fetchEngineInfos(): EngineInfo[] {
-    return [...this.defaultEngineInfos, ...this.additionalEngineInfos];
+    const engineInfos = [
+      ...fetchDefaultEngineInfos(this.defaultEngineDir),
+      ...this.fetchAdditionalEngineInfos(),
+    ];
+    // 代替ポートに置き換える
+    engineInfos.forEach((engineInfo) => {
+      const altPortInfo = this.altPortInfos[engineInfo.uuid];
+      if (altPortInfo) {
+        const url = new URL(engineInfo.host);
+        url.port = altPortInfo.to.toString();
+        engineInfo.host = url.origin;
+      }
+    });
+    return engineInfos;
   }
 
   /**
@@ -170,11 +180,9 @@ export class EngineInfoManager {
   }
 
   /**
-   * EngineInfosとAltPortInfoを初期化する。
+   * AltPortInfoを初期化する。
    */
-  initializeEngineInfosAndAltPortInfo() {
-    this.defaultEngineInfos = createDefaultEngineInfos(this.defaultEngineDir);
-    this.additionalEngineInfos = this.createAdditionalEngineInfos();
+  initializeAltPortInfo() {
     this.altPortInfos = {};
   }
 
@@ -189,9 +197,6 @@ export class EngineInfoManager {
       from: Number(url.port),
       to: port,
     };
-
-    url.port = port.toString();
-    engineInfo.host = url.toString();
   }
 
   /**

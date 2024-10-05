@@ -60,13 +60,14 @@ const width = computed(() => {
   pointer-events: none;
 
   .shadow-line {
+    border-radius: 1px;
     position: absolute;
     top: 50%;
     left: 0;
     width: 100%;
     height: 2px;
     transform: translateY(-50%);
-    background-color: colors.$sequencer-main-divider;
+    background-color: var(--scheme-color-sing-shadow-note);
   }
 }
 </style>
