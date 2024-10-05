@@ -755,6 +755,10 @@ registerIpcMainHandle<IpcMainHandle>({
     }
   },
 
+  GET_AVAILABLE_THEMES: () => {
+    return themes;
+  },
+
   OPEN_LOG_DIRECTORY: () => {
     void shell.openPath(app.getPath("logs"));
   },
@@ -784,17 +788,6 @@ registerIpcMainHandle<IpcMainHandle>({
       configManager.set("hotkeySettings", hotkeySettings);
     }
     return configManager.get("hotkeySettings");
-  },
-
-  THEME: (_, { newData }) => {
-    if (newData != undefined) {
-      configManager.set("currentTheme", newData);
-      return;
-    }
-    return {
-      currentTheme: configManager.get("currentTheme"),
-      availableThemes: themes,
-    };
   },
 
   ON_VUEX_READY: () => {

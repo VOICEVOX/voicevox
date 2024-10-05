@@ -230,7 +230,6 @@ export type AudioStoreTypes = {
     action(payload: {
       text?: string;
       voice?: Voice;
-      presetKey?: PresetKey;
       baseAudioItem?: AudioItem;
     }): Promise<AudioItem>;
   };
@@ -1756,7 +1755,8 @@ export type SettingStoreState = {
   engineIds: EngineId[];
   engineInfos: Record<EngineId, EngineInfo>;
   engineManifests: Record<EngineId, EngineManifest>;
-  themeSetting: ThemeSetting;
+  currentTheme: string;
+  availableThemes: ThemeConf[];
   acceptTerms: AcceptTermsStatus;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
   experimentalSetting: ExperimentalSettingType;
@@ -1797,8 +1797,8 @@ export type SettingStoreTypes = {
     action(payload: KeyValuePayload<RootMiscSettingType>): void;
   };
 
-  SET_THEME_SETTING: {
-    mutation: { currentTheme: string; themes?: ThemeConf[] };
+  SET_CURRENT_THEME_SETTING: {
+    mutation: { currentTheme: string };
     action(payload: { currentTheme: string }): void;
   };
 
@@ -2010,6 +2010,10 @@ export type UiStoreTypes = {
   SET_ACTIVE_POINT_SCROLL_MODE: {
     mutation: { activePointScrollMode: ActivePointScrollMode };
     action(payload: { activePointScrollMode: ActivePointScrollMode }): void;
+  };
+
+  SET_AVAILABLE_THEMES: {
+    mutation: { themes: ThemeConf[] };
   };
 
   DETECT_UNMAXIMIZED: {
