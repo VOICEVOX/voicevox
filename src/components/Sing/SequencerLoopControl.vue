@@ -1,5 +1,8 @@
 <template>
-  <div class="sequencer-loop-control" :class="cursorClass">
+  <div
+    class="sequencer-loop-control"
+    :class="[cursorClass, { disabled: !isLoopEnabled }]"
+  >
     <svg
       xmlns="http://www.w3.org/2000/svg"
       :width
@@ -9,7 +12,6 @@
     >
       <!-- ループ範囲 -->
       <rect
-        v-if="isLoopEnabled"
         :x="loopStartX - offset"
         y="0"
         :width="loopEndX - loopStartX"
@@ -18,21 +20,18 @@
       />
       <!-- ループ開始ハンドル -->
       <path
-        v-if="isLoopEnabled"
         :d="`M${loopStartX - offset},0 L${loopStartX - offset},15 L${loopStartX - offset + 12},0 Z`"
         class="loop-handle loop-start-handle"
         :class="{ 'loop-handle-disabled': loopStartTick === loopEndTick }"
       />
       <!-- ループ終了ハンドル -->
       <path
-        v-if="isLoopEnabled"
         :d="`M${loopEndX - offset},0 L${loopEndX - offset},15 L${loopEndX - offset - 12},0 Z`"
         class="loop-handle loop-end-handle"
         :class="{ 'loop-handle-disabled': loopStartTick === loopEndTick }"
       />
       <!-- ループ開始ドラッグ領域 -->
       <rect
-        v-if="isLoopEnabled"
         :x="loopStartX - offset - 4"
         y="0"
         width="16"
@@ -42,7 +41,6 @@
       />
       <!-- ループ終了ドラッグ領域 -->
       <rect
-        v-if="isLoopEnabled"
         :x="loopEndX - offset - 4"
         y="0"
         width="16"
@@ -89,6 +87,8 @@ const dragStartX = ref(0);
 const dragStartHandleX = ref(0); // ドラッグ開始時のハンドル位置
 
 const addLoop = (event: MouseEvent) => {
+  if (!isLoopEnabled.value) return;
+  event.preventDefault();
   const target = event.currentTarget as HTMLElement;
   const rect = target.getBoundingClientRect();
   const x = event.clientX - rect.left + props.offset;
@@ -103,7 +103,7 @@ const snapToGrid = (tick: number): number => {
 };
 
 const startDragging = (target: "start" | "end", event: MouseEvent) => {
-  event.preventDefault();
+  if (!isLoopEnabled.value) return;
   isDragging.value = true;
   dragTarget.value = target;
   dragStartX.value = event.clientX;
@@ -184,15 +184,24 @@ onUnmounted(() => {
   height: 24px;
   pointer-events: auto;
   cursor: pointer;
+
+  &.disabled {
+    opacity: 0.38;
+    pointer-events: none;
+    cursor: default;
+  }
 }
 
 .loop-range {
   fill: var(--scheme-color-primary);
 }
 
+.disabled .loop-range {
+  fill: var(--scheme-color-outline);
+}
+
 .loop-handle {
   fill: var(--scheme-color-primary);
-  pointer-events: none;
   stroke: var(--scheme-color-primary);
   stroke-width: 2;
   stroke-linejoin: round;
@@ -203,10 +212,20 @@ onUnmounted(() => {
   }
 }
 
+.disabled .loop-handle {
+  fill: var(--scheme-color-outline);
+  stroke: var(--scheme-color-outline);
+}
+
 .loop-drag-area {
   height: 28px;
   fill: transparent;
   cursor: ew-resize;
   pointer-events: all;
+}
+
+.disabled .loop-drag-area {
+  pointer-events: none;
+  cursor: default;
 }
 </style>

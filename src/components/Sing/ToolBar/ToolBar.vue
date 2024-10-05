@@ -114,6 +114,15 @@
         icon="stop"
         @click="stop"
       />
+      <QBtn
+        flat
+        round
+        dense
+        :class="['sing-playback-loop', { 'loop-enabled': isLoopEnabled }]"
+        :active="isLoopEnabled"
+        icon="repeat"
+        @click="toggleLoop"
+      />
       <div class="sing-playhead-position">
         <div>{{ playheadPositionMinSecStr }}</div>
         <div class="sing-playhead-position-millisec">
@@ -168,6 +177,7 @@
 import { computed, watch, ref, onMounted, onUnmounted } from "vue";
 import EditTargetSwicher from "./EditTargetSwicher.vue";
 import { useStore } from "@/store";
+import { useLoopControl } from "@/composables/useLoopControl";
 
 import {
   getSnapTypes,
@@ -424,6 +434,11 @@ const stop = () => {
 
 const goToZero = () => {
   void store.dispatch("SET_PLAYHEAD_POSITION", { position: 0 });
+};
+
+const { isLoopEnabled, setLoopEnabled } = useLoopControl();
+const toggleLoop = () => {
+  setLoopEnabled(!isLoopEnabled.value);
 };
 
 const volume = computed({
@@ -714,6 +729,15 @@ onUnmounted(() => {
 
   &.sing-playback-stop .q-btn__wrapper .q-icon {
     transform: translateX(-0.5px);
+  }
+}
+
+.sing-playback-loop {
+  margin-left: 4px;
+  &.q-btn--active,
+  &.loop-enabled {
+    color: var(--scheme-color-primary);
+    background: var(--scheme-color-secondary-container);
   }
 }
 
