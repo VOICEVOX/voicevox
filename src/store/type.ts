@@ -30,7 +30,6 @@ import {
   MoraDataType,
   SavingSetting,
   ThemeConf,
-  ThemeSetting,
   ExperimentalSettingType,
   ToolbarSettingType,
   UpdateInfo,
