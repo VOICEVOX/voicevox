@@ -40,14 +40,7 @@
           >
             <QItemSection avatar>
               <QCheckbox
-                v-if="multiTrackEnabled"
                 v-model="selectedTrackIndexes"
-                :val="track.value"
-                :disable="track.disable"
-              />
-              <QRadio
-                v-else
-                v-model="selectedTrackIndex"
                 :val="track.value"
                 :disable="track.disable"
               />
@@ -116,10 +109,6 @@ const { dialogRef, onDialogOK, onDialogCancel } = useDialogPluginComponent();
 
 const store = useStore();
 const log = createLogger("ImportExternalProjectDialog");
-
-const multiTrackEnabled = computed(
-  () => store.state.experimentalSetting.enableMultiTrack,
-);
 
 // 受け入れる拡張子
 const acceptExtensions = computed(
@@ -243,23 +232,6 @@ const trackOptions = computed(() => {
 });
 // 選択中のトラック
 const selectedTrackIndexes = ref<number[] | null>(null);
-const selectedTrackIndex = computed<number | null>({
-  get: () => {
-    if (selectedTrackIndexes.value == null) {
-      return null;
-    }
-    if (selectedTrackIndexes.value.length === 0) {
-      return null;
-    }
-    return selectedTrackIndexes.value[0];
-  },
-  set: (index: number | null) => {
-    if (index == null) {
-      throw new Error("assert: index != null");
-    }
-    selectedTrackIndexes.value = [index];
-  },
-});
 
 // データ初期化
 const initializeValues = () => {
