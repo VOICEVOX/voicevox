@@ -76,6 +76,7 @@ defineEmits<{
 }
 
 .title {
+  // FIXME: medium (500)にする
   font-weight: 700;
 }
 
