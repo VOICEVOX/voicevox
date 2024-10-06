@@ -1069,6 +1069,7 @@ app.on("ready", async () => {
   }
 
   // VVPPがデフォルトエンジンに指定されていたらインストールする
+  // NOTE: 工事中。ref: https://github.com/VOICEVOX/voicevox/issues/1194
   const defaultEngineInfos = loadEnvEngineInfos();
   for (const defaultEngineInfo of defaultEngineInfos) {
     if (defaultEngineInfo.type != "downloadVvpp") {
@@ -1120,7 +1121,7 @@ app.on("ready", async () => {
     log.info(`Latest default engine version: ${packageInfo.version}`);
 
     // ダウンロード
-    let downlaodedPath: string | undefined;
+    let downlodedPath: string | undefined;
     await Promise.all(
       packageInfo.packages.map(async (p, index) => {
         const { url, name, size } = p;
@@ -1133,18 +1134,18 @@ app.on("ready", async () => {
         await fs.promises.writeFile(downloadPath, Buffer.from(buffer));
         log.info(`Downloaded ${name} to ${downloadPath}`);
 
-        if (index == 0) downlaodedPath = downloadPath;
+        if (index == 0) downlodedPath = downloadPath;
 
         // TODO: ハッシュチェック
       }),
     );
-    if (downlaodedPath == undefined) {
+    if (downlodedPath == undefined) {
       log.error("No downloaded path");
       continue;
     }
 
     // インストール
-    await engineAndVvppController.installVvppEngine(downlaodedPath);
+    await engineAndVvppController.installVvppEngine(downlodedPath);
   }
 
   // runEngineAllの前にVVPPを読み込む
