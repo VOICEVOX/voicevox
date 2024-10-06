@@ -27,31 +27,31 @@ import {
 } from './SpeakerSupportedFeatures';
 
 /**
- * 話者情報
+ * キャラクター情報
  * @export
  * @interface Speaker
  */
 export interface Speaker {
     /**
-     * 
+     * 名前
      * @type {string}
      * @memberof Speaker
      */
     name: string;
     /**
-     * 
+     * キャラクターのUUID
      * @type {string}
      * @memberof Speaker
      */
     speakerUuid: string;
     /**
-     * 
+     * スタイルの一覧
      * @type {Array<SpeakerStyle>}
      * @memberof Speaker
      */
     styles: Array<SpeakerStyle>;
     /**
-     * 
+     * キャラクターのバージョン
      * @type {string}
      * @memberof Speaker
      */

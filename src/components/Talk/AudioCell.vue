@@ -679,6 +679,7 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
   position: relative;
   padding: 0.4rem 0.5rem;
   margin: 0.2rem 0.5rem;
+  gap: 0px 1rem;
   &:focus {
     // divはフォーカスするとデフォルトで青い枠が出るので消す
     outline: none;
@@ -694,8 +695,6 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
   &:last-child {
     margin-bottom: 0.6rem;
   }
-
-  gap: 0px 1rem;
 
   .active-arrow {
     left: -1rem;

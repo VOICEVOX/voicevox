@@ -134,6 +134,15 @@ export async function calculatePitchDataHash(pitchData: PitchData) {
 
 export type MouseButton = "LEFT_BUTTON" | "RIGHT_BUTTON" | "OTHER_BUTTON";
 
+export type PreviewMode =
+  | "IDLE"
+  | "ADD_NOTE"
+  | "MOVE_NOTE"
+  | "RESIZE_NOTE_RIGHT"
+  | "RESIZE_NOTE_LEFT"
+  | "DRAW_PITCH"
+  | "ERASE_PITCH";
+
 export function getButton(event: MouseEvent): MouseButton {
   // macOSの場合、Ctrl+クリックは右クリック
   if (isMac && event.button === 0 && event.ctrlKey) {

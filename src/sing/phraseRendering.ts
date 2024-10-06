@@ -65,6 +65,7 @@ const createNotesForRequestToEngine = (
     );
     const noteOffFrame = Math.round(noteOffSeconds * frameRate);
     notesForRequestToEngine.push({
+      id: note.id,
       key: note.noteNumber,
       frameLength: noteOffFrame - noteOnFrame,
       lyric: note.lyric,

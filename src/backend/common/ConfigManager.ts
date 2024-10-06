@@ -239,6 +239,25 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
       return config;
     },
   ],
+  [
+    ">=0.21",
+    (config) => {
+      // プリセット機能を実験的機能から通常機能に
+      const experimentalSetting =
+        config.experimentalSetting as ExperimentalSettingType;
+      if ("enablePreset" in experimentalSetting) {
+        config.enablePreset = experimentalSetting.enablePreset;
+        delete experimentalSetting.enablePreset;
+      }
+      if ("shouldApplyDefaultPresetOnVoiceChanged" in experimentalSetting) {
+        config.shouldApplyDefaultPresetOnVoiceChanged =
+          experimentalSetting.shouldApplyDefaultPresetOnVoiceChanged;
+        delete experimentalSetting.shouldApplyDefaultPresetOnVoiceChanged;
+      }
+
+      return config;
+    },
+  ],
 ];
 
 export type Metadata = {
