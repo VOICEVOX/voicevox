@@ -25,9 +25,11 @@ export const useMenuBarData = () => {
     });
   };
 
-  const exportWaveFile = async () => {
+  const exportAudioFile = async () => {
     if (uiLocked.value) return;
-    await store.dispatch("EXPORT_WAVE_FILE", {});
+    await store.dispatch("SET_DIALOG_OPEN", {
+      isExportSongAudioDialogOpen: true,
+    });
   };
 
   const exportStemWaveFile = async () => {
@@ -42,7 +44,7 @@ export const useMenuBarData = () => {
           type: "button",
           label: "音声を出力",
           onClick: () => {
-            void exportWaveFile();
+            void exportAudioFile();
           },
           disableWhenUiLocked: true,
         },
