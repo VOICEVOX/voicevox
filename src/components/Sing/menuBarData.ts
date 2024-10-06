@@ -35,7 +35,7 @@ export const useMenuBarData = () => {
     await store.dispatch("EXPORT_STEM_WAVE_FILE", {});
   };
 
-  const fileSubMenuData = [
+  const fileSubMenuData = computed<MenuItemData[]>(() => [
     {
       type: "button",
       label: "音声を出力",
@@ -61,7 +61,7 @@ export const useMenuBarData = () => {
       },
       disableWhenUiLocked: true,
     },
-  ];
+  ]);
 
   const editSubMenuData = computed<MenuItemData[]>(() => [
     { type: "separator" },
