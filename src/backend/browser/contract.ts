@@ -1,8 +1,7 @@
-import { EngineInfo, envEngineInfoSchema } from "@/type/preload";
+import { loadEnvEngineInfos } from "../common/envEngineInfoSchema";
+import { EngineInfo } from "@/type/preload";
 
-const baseEngineInfo = envEngineInfoSchema
-  .array()
-  .parse(JSON.parse(import.meta.env.VITE_DEFAULT_ENGINE_INFOS))[0];
+const baseEngineInfo = loadEnvEngineInfos()[0];
 
 export const defaultEngine: EngineInfo = {
   ...baseEngineInfo,

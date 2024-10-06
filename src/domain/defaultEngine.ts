@@ -19,7 +19,7 @@ const defaultEngineDeviceSchema = z.object({
 });
 
 /** デフォルトエンジンの更新情報のスキーマ */
-const defaultEngineInfosSchema = z.object({
+const defaultEngineUpdateInfoSchema = z.object({
   formatVersion: z.number(),
   windows: z.object({
     x64: z.object({
@@ -44,7 +44,33 @@ const defaultEngineInfosSchema = z.object({
 });
 
 /** デフォルトエンジンの更新情報を取得する */
-export const fetchDefaultEngineInfos = async (url: string) => {
+export const fetchDefaultEngineUpdateInfo = async (url: string) => {
   const response = await fetch(url);
-  return defaultEngineInfosSchema.parse(await response.json());
+  return defaultEngineUpdateInfoSchema.parse(await response.json());
+};
+
+/** 実行環境に合うパッケージを取得する */
+export const getSuitablePackages = (
+  updateInfo: z.infer<typeof defaultEngineUpdateInfoSchema>,
+): z.infer<typeof defaultEngineDeviceSchema> => {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  const eachOs =
+    updateInfo[
+      // @ts-expect-error 存在しないOSを指定している可能性もある
+      { win32: "windows", darwin: "macos", linux: "linux" }[process.platform]
+    ];
+  if (eachOs == undefined)
+    throw new Error(`Unsupported platform: ${process.platform}`);
+
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+  const eachArch = eachOs[process.arch];
+  if (eachArch == undefined)
+    throw new Error(`Unsupported arch: ${process.arch}`);
+
+  // GPU版があればそれを使う
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
+  const [gpuPackage, cpuPackage] = [eachArch["GPU/CPU"], eachArch.CPU];
+  if (gpuPackage != undefined)
+    return gpuPackage as z.infer<typeof defaultEngineDeviceSchema>;
+  return cpuPackage as z.infer<typeof defaultEngineDeviceSchema>;
 };

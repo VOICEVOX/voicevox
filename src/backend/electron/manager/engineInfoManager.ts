@@ -15,31 +15,35 @@ import {
 } from "@/type/preload";
 import { AltPortInfos } from "@/store/type";
 import { BaseConfigManager } from "@/backend/common/ConfigManager";
-import { envEngineInfoSchema } from "@/backend/common/envEngineInfoSchema";
+import {
+  EnvEngineInfos,
+  loadEnvEngineInfos,
+} from "@/backend/common/envEngineInfoSchema";
+import { UnreachableError } from "@/type/utility";
 
 /**
  * デフォルトエンジンの情報を取得する
  */
-function fetchDefaultEngineInfos(defaultEngineDir: string): EngineInfo[] {
+function fetchDefaultEngineInfos(
+  envEngineInfos: EnvEngineInfos,
+  defaultEngineDir: string,
+): EngineInfo[] {
   // TODO: envから直接ではなく、envに書いたengine_manifest.jsonから情報を得るようにする
-  const defaultEngineInfosEnv =
-    import.meta.env.VITE_DEFAULT_ENGINE_INFOS ?? "[]";
-
-  const envSchema = envEngineInfoSchema.array();
-  const engines = envSchema.parse(JSON.parse(defaultEngineInfosEnv));
-
-  return engines.map((engineInfo) => {
-    return {
-      ...engineInfo,
-      isDefault: true,
-      type: "path",
-      executionFilePath: path.resolve(engineInfo.executionFilePath),
-      path:
-        engineInfo.path == undefined
-          ? undefined
-          : path.resolve(defaultEngineDir, engineInfo.path),
-    } satisfies EngineInfo;
-  });
+  return envEngineInfos
+    .filter((engineInfo) => engineInfo.type != "downloadVvpp")
+    .map((engineInfo) => {
+      if (engineInfo.type == "downloadVvpp") throw new UnreachableError();
+      return {
+        ...engineInfo,
+        isDefault: true,
+        type: engineInfo.type,
+        executionFilePath: path.resolve(engineInfo.executionFilePath),
+        path:
+          engineInfo.path == undefined
+            ? undefined
+            : path.resolve(defaultEngineDir, engineInfo.path),
+      } satisfies EngineInfo;
+    });
 }
 
 /** エンジンの情報を管理するクラス */
@@ -50,6 +54,8 @@ export class EngineInfoManager {
 
   /** 代替ポート情報 */
   public altPortInfos: AltPortInfos = {};
+
+  private envEngineInfos = loadEnvEngineInfos();
 
   constructor(payload: {
     configManager: BaseConfigManager;
@@ -137,9 +143,24 @@ export class EngineInfoManager {
    */
   fetchEngineInfos(): EngineInfo[] {
     const engineInfos = [
-      ...fetchDefaultEngineInfos(this.defaultEngineDir),
+      ...fetchDefaultEngineInfos(this.envEngineInfos, this.defaultEngineDir),
       ...this.fetchAdditionalEngineInfos(),
     ];
+    // 追加エンジンがダウンロードしたデフォルトエンジンと同じなら、デフォルトエンジンとして扱う
+    const targetEngineUuids = this.envEngineInfos
+      .filter((e) => e.type == "downloadVvpp")
+      .map((e) => e.uuid);
+    for (const engineInfo of engineInfos) {
+      if (targetEngineUuids.includes(engineInfo.uuid)) {
+        if (engineInfo.type != "vvpp") {
+          log.warn(
+            `Engine ${engineInfo.uuid} is same as default engine, but type is "${engineInfo.type}"`,
+          );
+        }
+        engineInfo.isDefault = true;
+      }
+    }
+
     // 代替ポートに置き換える
     engineInfos.forEach((engineInfo) => {
       const altPortInfo = this.altPortInfos[engineInfo.uuid];
@@ -164,6 +185,14 @@ export class EngineInfoManager {
       throw new Error(`No such engineInfo registered: engineId == ${engineId}`);
     }
     return engineInfo;
+  }
+
+  /**
+   * 指定したエンジンが存在するかどうかを判定する。
+   */
+  hasEngine(engineId: EngineId): boolean {
+    const engineInfos = this.fetchEngineInfos();
+    return engineInfos.some((engineInfo) => engineInfo.uuid === engineId);
   }
 
   /**
