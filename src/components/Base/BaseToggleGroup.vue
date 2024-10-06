@@ -37,8 +37,5 @@ defineEmits<{
 
 .ToggleGroup {
   display: inline-flex;
-  background-color: var(--mauve-6);
-  border-radius: 4px;
-  box-shadow: 0 2px 10px var(--black-a7);
 }
 </style>

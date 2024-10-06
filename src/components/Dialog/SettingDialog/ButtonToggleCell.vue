@@ -1,57 +1,37 @@
 <!-- ２種類以上のボタンから１つ選ぶ設定項目 -->
 
 <template>
-  <BaseCell :title :description>
-    <QBtnToggle
-      padding="xs md"
-      unelevated
-      color="background"
-      textColor="display"
-      toggleColor="primary"
-      toggleTextColor="display-on-primary"
-      :disable
-      :modelValue
-      :options="optionsForQBtnToggle"
-      @update:modelValue="props['onUpdate:modelValue']"
-    >
-      <slot />
-
-      <!-- FIXME: ツールチップの内容をaria-labelに付ける -->
-      <template
-        v-for="option in options.filter(
-          (option) => option.description != undefined,
-        )"
-        :key="option.label"
-        #[option.label]
-      >
-        <QTooltip :delay="500">
-          {{ option.description }}
-        </QTooltip>
+  <BaseRowCard :title :description :disabled="disable">
+    <BaseToggleGroup v-model="model" type="single" :disabled="disable">
+      <template v-for="option in options" :key="option.label">
+        <BaseTooltip
+          v-if="option.description != null"
+          :label="option.description"
+        >
+          <BaseToggleGroupItem :label="option.label" :value="option.value" />
+        </BaseTooltip>
+        <BaseToggleGroupItem
+          v-else
+          :label="option.label"
+          :value="option.value"
+        />
       </template>
-    </QBtnToggle>
-  </BaseCell>
+    </BaseToggleGroup>
+  </BaseRowCard>
 </template>
 
-<script setup lang="ts" generic="T">
-import { computed } from "vue";
-import BaseCell, { Props as BaseCellProps } from "./BaseCell.vue";
+<script setup lang="ts" generic="T extends string">
+import BaseRowCard from "@/components/Base/BaseRowCard.vue";
+import BaseToggleGroup from "@/components/Base/BaseToggleGroup.vue";
+import BaseToggleGroupItem from "@/components/Base/BaseToggleGroupItem.vue";
+import BaseTooltip from "@/components/Base/BaseTooltip.vue";
 
-const props = defineProps<
-  BaseCellProps & {
-    modelValue: T;
-    // eslint-disable-next-line vue/prop-name-casing
-    "onUpdate:modelValue"?: (value: T) => void;
-    options: { label: string; value: T; description?: string }[];
-    disable?: boolean;
-  }
->();
+defineProps<{
+  title: string;
+  description: string;
+  options: { label: string; value: T; description?: string }[];
+  disable?: boolean;
+}>();
 
-/** QBtnToggle用のoptions */
-const optionsForQBtnToggle = computed(() =>
-  props.options.map((option) => ({
-    label: option.label,
-    value: option.value,
-    slot: option.label,
-  })),
-);
+const model = defineModel<string | string[]>({ required: true });
 </script>

@@ -17,8 +17,8 @@ $primitive-red: #d04756;
   --color-v2-border: #{rgba($primitive-black, 0.2)};
   --color-v2-selected: #{rgba($primitive-primary, 0.3)};
 
-  --color-v2-display: #{lighten($primitive-black, 10%)};
-  --color-v2-display-oncolor: #{lighten($primitive-black, 10%)};
+  --color-v2-display: #{$primitive-black};
+  --color-v2-display-oncolor: #{$primitive-black};
   --color-v2-display-sub: #{rgba($primitive-black, 0.5)};
   --color-v2-display-link: #{$primitive-blue};
   --color-v2-display-warning: #{$primitive-red};
