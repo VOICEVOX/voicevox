@@ -300,19 +300,19 @@ const handleFileChange = async (event: Event) => {
 };
 
 // トラックインポート実行時
-const handleImportTrack = async () => {
+const handleImportTrack = () => {
   // ファイルまたは選択中のトラックが未設定の場合はエラー
   if (project.value == null || selectedTrackIndexes.value == null) {
     throw new Error("project or selected track is not set");
   }
   // トラックをインポート
   if (project.value.type === "vvproj") {
-    await store.dispatch("COMMAND_IMPORT_VOICEVOX_PROJECT", {
+    void store.dispatch("COMMAND_IMPORT_VOICEVOX_PROJECT", {
       project: project.value.project,
       trackIndexes: selectedTrackIndexes.value,
     });
   } else {
-    await store.dispatch("COMMAND_IMPORT_UTAFORMATIX_PROJECT", {
+    void store.dispatch("COMMAND_IMPORT_UTAFORMATIX_PROJECT", {
       project: project.value.project,
       trackIndexes: selectedTrackIndexes.value,
     });
