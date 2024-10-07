@@ -14,11 +14,10 @@ export const envEngineInfoSchema = z.object({
   type: z.union([z.literal("path"), z.literal("downloadVvpp")]).default("path"),
   latestUrl: z.string().optional(), // FIXME: typeがdownloadVvppのときは必須
 });
-
-export type EnvEngineInfos = z.infer<typeof envEngineInfoSchema>[];
+export type EnvEngineInfo = z.infer<typeof envEngineInfoSchema>;
 
 /** 環境変数を経由して.envを読み込む */
-export function loadEnvEngineInfos(): EnvEngineInfos {
+export function loadEnvEngineInfos(): EnvEngineInfo[] {
   const defaultEngineInfosEnv =
     import.meta.env.VITE_DEFAULT_ENGINE_INFOS ?? "[]";
 

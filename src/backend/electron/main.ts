@@ -1069,7 +1069,7 @@ app.on("ready", async () => {
   }
 
   // VVPPがデフォルトエンジンに指定されていたらインストールする
-  // NOTE: 工事中。ref: https://github.com/VOICEVOX/voicevox/issues/1194
+  // NOTE: 工事中。参照: https://github.com/VOICEVOX/voicevox/issues/1194
   const defaultEngineInfos = loadEnvEngineInfos();
   for (const defaultEngineInfo of defaultEngineInfos) {
     if (defaultEngineInfo.type != "downloadVvpp") {

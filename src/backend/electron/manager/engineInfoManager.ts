@@ -16,7 +16,7 @@ import {
 import { AltPortInfos } from "@/store/type";
 import { BaseConfigManager } from "@/backend/common/ConfigManager";
 import {
-  EnvEngineInfos,
+  EnvEngineInfo,
   loadEnvEngineInfos,
 } from "@/backend/common/envEngineInfoSchema";
 import { UnreachableError } from "@/type/utility";
@@ -25,7 +25,7 @@ import { UnreachableError } from "@/type/utility";
  * デフォルトエンジンの情報を取得する
  */
 function fetchDefaultEngineInfos(
-  envEngineInfos: EnvEngineInfos,
+  envEngineInfos: EnvEngineInfo[],
   defaultEngineDir: string,
 ): EngineInfo[] {
   // TODO: envから直接ではなく、envに書いたengine_manifest.jsonから情報を得るようにする
@@ -146,6 +146,7 @@ export class EngineInfoManager {
       ...fetchDefaultEngineInfos(this.envEngineInfos, this.defaultEngineDir),
       ...this.fetchAdditionalEngineInfos(),
     ];
+
     // 追加エンジンがダウンロードしたデフォルトエンジンと同じなら、デフォルトエンジンとして扱う
     const targetEngineUuids = this.envEngineInfos
       .filter((e) => e.type == "downloadVvpp")

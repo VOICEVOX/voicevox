@@ -49,28 +49,31 @@ export const fetchDefaultEngineUpdateInfo = async (url: string) => {
   return defaultEngineUpdateInfoSchema.parse(await response.json());
 };
 
-/** 実行環境に合うパッケージを取得する */
+/**
+ * 実行環境に合うパッケージを取得する。GPU版があればGPU版を返す。
+ * FIXME: どのデバイス版にするかはユーザーが選べるようにするべき。
+ */
 export const getSuitablePackages = (
   updateInfo: z.infer<typeof defaultEngineUpdateInfoSchema>,
-): z.infer<typeof defaultEngineDeviceSchema> => {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-  const eachOs =
-    updateInfo[
-      // @ts-expect-error 存在しないOSを指定している可能性もある
-      { win32: "windows", darwin: "macos", linux: "linux" }[process.platform]
-    ];
-  if (eachOs == undefined)
-    throw new Error(`Unsupported platform: ${process.platform}`);
+) => {
+  const platform = process.platform;
+  const arch = process.arch;
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-  const eachArch = eachOs[process.arch];
-  if (eachArch == undefined)
-    throw new Error(`Unsupported arch: ${process.arch}`);
+  if (platform === "win32") {
+    if (arch === "x64") {
+      return updateInfo.windows.x64["GPU/CPU"];
+    }
+  } else if (platform === "darwin") {
+    if (arch === "x64") {
+      return updateInfo.macos.x64.CPU;
+    } else if (arch === "arm64") {
+      return updateInfo.macos.arm64.CPU;
+    }
+  } else if (platform === "linux") {
+    if (arch === "x64") {
+      return updateInfo.linux.x64["GPU/CPU"];
+    }
+  }
 
-  // GPU版があればそれを使う
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
-  const [gpuPackage, cpuPackage] = [eachArch["GPU/CPU"], eachArch.CPU];
-  if (gpuPackage != undefined)
-    return gpuPackage as z.infer<typeof defaultEngineDeviceSchema>;
-  return cpuPackage as z.infer<typeof defaultEngineDeviceSchema>;
+  throw new Error(`Unsupported platform: ${platform} ${arch}`);
 };
