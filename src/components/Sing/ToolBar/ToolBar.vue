@@ -733,11 +733,15 @@ onUnmounted(() => {
 }
 
 .sing-playback-loop {
-  margin-left: 4px;
+  margin-left: 6px;
   &.q-btn--active,
   &.loop-enabled {
     color: var(--scheme-color-primary);
     background: var(--scheme-color-secondary-container);
+  }
+
+  :deep(.q-icon) {
+    font-size: 20px;
   }
 }
 
