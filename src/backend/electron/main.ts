@@ -1065,7 +1065,7 @@ app.on("ready", async () => {
 
   // VVPPがデフォルトエンジンに指定されていたらインストールする
   // NOTE: 工事中。参照: https://github.com/VOICEVOX/voicevox/issues/1194
-  const infosToInstall = await engineAndVvppController.getInfosToInstall();
+  const infosToInstall = await engineAndVvppController.fetchInfosToInstall();
   for (const { envEngineInfo, packageInfo } of infosToInstall) {
     // インストールするか確認
     // FIXME: 案内文をよりユーザーフレンドリーにする

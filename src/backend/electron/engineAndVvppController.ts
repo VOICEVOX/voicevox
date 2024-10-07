@@ -137,7 +137,7 @@ export class EngineAndVvppController {
   /**
    * インストールが必要なデフォルトエンジンの情報とパッケージの情報を取得する。
    */
-  async getInfosToInstall(): Promise<
+  async fetchInfosToInstall(): Promise<
     {
       envEngineInfo: EnvEngineInfo;
       packageInfo: EnginePackage;
