@@ -73,11 +73,14 @@ const setSidebarWidth = (width: number) => {
 
 // トラック数が1から増えたら、サイドバーを開く
 watch(
-  () => store.state.tracks,
-  (tracks, oldTracks) => {
-    if (oldTracks.size === 1 && tracks.size > 1) {
+  () => store.state.tracks.size,
+  (tracksSize, oldTracksSize) => {
+    if (oldTracksSize <= 1 && tracksSize > 1) {
       void store.dispatch("SET_SONG_SIDEBAR_OPEN", { isSongSidebarOpen: true });
     }
+  },
+  {
+    deep: true,
   },
 );
 
