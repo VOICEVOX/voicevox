@@ -19,7 +19,6 @@ import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 import log from "electron-log/main";
 import dayjs from "dayjs";
 import windowStateKeeper from "electron-window-state";
-import { loadEnvEngineInfos } from "../common/envEngineInfoSchema";
 import { hasSupportedGpu } from "./device";
 import EngineInfoManager from "./manager/engineInfoManager";
 import EngineProcessManager from "./manager/engineProcessManager";
@@ -50,10 +49,6 @@ import {
   EngineId,
   UpdateInfo,
 } from "@/type/preload";
-import {
-  fetchDefaultEngineUpdateInfo,
-  getSuitablePackages,
-} from "@/domain/defaultEngine";
 
 type SingleInstanceLockData = {
   filePath: string | undefined;
@@ -1070,36 +1065,14 @@ app.on("ready", async () => {
 
   // VVPPがデフォルトエンジンに指定されていたらインストールする
   // NOTE: 工事中。参照: https://github.com/VOICEVOX/voicevox/issues/1194
-  const defaultEngineInfos = loadEnvEngineInfos();
-  for (const defaultEngineInfo of defaultEngineInfos) {
-    if (defaultEngineInfo.type != "downloadVvpp") {
-      continue;
-    }
-
-    // インストール済みだった場合はスキップ
-    // FIXME: より新しいバージョンであれば更新する
-    if (engineInfoManager.hasEngine(defaultEngineInfo.uuid)) {
-      log.info(
-        `Default engine ${defaultEngineInfo.uuid} is already installed.`,
-      );
-
-      // vvppとしてインストールされていない場合は警告を出す
-      const engineInfo = engineInfoManager.fetchEngineInfo(
-        defaultEngineInfo.uuid,
-      );
-      if (engineInfo.type != "vvpp") {
-        log.warn(
-          `Default engine ${defaultEngineInfo.uuid} is already installed as "${engineInfo.type}", not "vvpp"`,
-        );
-      }
-      continue;
-    }
-
+  const infosToInstall = await engineAndVvppController.getInfosToInstall();
+  for (const { envEngineInfo, packageInfo } of infosToInstall) {
     // インストールするか確認
+    // FIXME: 案内文をよりユーザーフレンドリーにする
     const result = dialog.showMessageBoxSync(win, {
       type: "info",
       title: "デフォルトエンジンのインストール",
-      message: `デフォルトエンジン ${defaultEngineInfo.name} をインストールしますか？`,
+      message: `デフォルトエンジン ${envEngineInfo.name} をインストールしますか？`,
       buttons: ["インストール", "キャンセル"],
       cancelId: 1,
     });
@@ -1107,45 +1080,11 @@ app.on("ready", async () => {
       return;
     }
 
-    // 更新情報を取得
-    const latestUrl = defaultEngineInfo.latestUrl;
-    if (latestUrl == undefined) throw new Error("latestUrl is undefined");
-
-    const updateInfo = await fetchDefaultEngineUpdateInfo(latestUrl);
-    if (updateInfo.formatVersion != 1) {
-      log.error(`Unsupported format version: ${updateInfo.formatVersion}`);
-      continue;
-    }
-
-    const packageInfo = getSuitablePackages(updateInfo);
-    log.info(`Latest default engine version: ${packageInfo.version}`);
-
-    // ダウンロード
-    let downlodedPath: string | undefined;
-    await Promise.all(
-      packageInfo.packages.map(async (p, index) => {
-        const { url, name, size } = p;
-
-        log.info(`Downloading ${name} from ${url}, size: ${size}`);
-        const res = await fetch(url);
-        const buffer = await res.arrayBuffer();
-
-        const downloadPath = path.join(app.getPath("downloads"), name);
-        await fs.promises.writeFile(downloadPath, Buffer.from(buffer));
-        log.info(`Downloaded ${name} to ${downloadPath}`);
-
-        if (index == 0) downlodedPath = downloadPath;
-
-        // TODO: ハッシュチェック
-      }),
+    // ダウンロード＆インストール
+    await engineAndVvppController.downlaodAndInstallVvppEngine(
+      app.getPath("downloads"),
+      packageInfo,
     );
-    if (downlodedPath == undefined) {
-      log.error("No downloaded path");
-      continue;
-    }
-
-    // インストール
-    await engineAndVvppController.installVvppEngine(downlodedPath);
   }
 
   // runEngineAllの前にVVPPを読み込む

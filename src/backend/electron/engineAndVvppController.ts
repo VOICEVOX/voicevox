@@ -1,6 +1,12 @@
+import path from "path";
+import fs from "fs";
 import log from "electron-log/main";
 import { BrowserWindow, dialog } from "electron";
 
+import {
+  EnvEngineInfo,
+  loadEnvEngineInfos,
+} from "../common/envEngineInfoSchema";
 import EngineInfoManager from "./manager/engineInfoManager";
 import EngineProcessManager from "./manager/engineProcessManager";
 import VvppManager from "./manager/vvppManager";
@@ -12,6 +18,11 @@ import {
   engineSettingSchema,
   EngineSettingType,
 } from "@/type/preload";
+import {
+  EnginePackage,
+  fetchDefaultEngineUpdateInfo,
+  getSuitablePackages,
+} from "@/domain/defaultEngine";
 
 /**
  * エンジンとVVPP周りの処理の流れを制御するクラス。
@@ -121,6 +132,101 @@ export class EngineAndVvppController {
       log.error(`Failed to uninstall ${engineId},`, e);
       return false;
     }
+  }
+
+  /**
+   * インストールが必要なデフォルトエンジンの情報とパッケージの情報を取得する。
+   */
+  async getInfosToInstall(): Promise<
+    {
+      envEngineInfo: EnvEngineInfo;
+      packageInfo: EnginePackage;
+    }[]
+  > {
+    const targetInfos: {
+      envEngineInfo: EnvEngineInfo;
+      packageInfo: EnginePackage;
+    }[] = [];
+
+    for (const envEngineInfo of loadEnvEngineInfos()) {
+      if (envEngineInfo.type != "downloadVvpp") {
+        continue;
+      }
+
+      // 更新情報を取得
+      const latestUrl = envEngineInfo.latestUrl;
+      if (latestUrl == undefined) throw new Error("latestUrl is undefined");
+
+      const updateInfo = await fetchDefaultEngineUpdateInfo(latestUrl);
+      if (updateInfo.formatVersion != 1) {
+        log.error(`Unsupported format version: ${updateInfo.formatVersion}`);
+        continue;
+      }
+
+      const packageInfo = getSuitablePackages(updateInfo);
+      log.info(`Latest default engine version: ${packageInfo.version}`);
+
+      // インストール済みだった場合はスキップ
+      // FIXME: より新しいバージョンであれば更新する
+      if (this.engineInfoManager.hasEngine(envEngineInfo.uuid)) {
+        log.info(`Default engine ${envEngineInfo.uuid} is already installed.`);
+
+        // vvppとしてインストールされていない場合は警告を出す
+        const engineInfo = this.engineInfoManager.fetchEngineInfo(
+          envEngineInfo.uuid,
+        );
+        if (engineInfo.type != "vvpp") {
+          log.warn(
+            `Default engine ${envEngineInfo.uuid} is already installed as "${engineInfo.type}", not "vvpp"`,
+          );
+        }
+        continue;
+      }
+
+      targetInfos.push({
+        envEngineInfo,
+        packageInfo,
+      });
+    }
+
+    return targetInfos;
+  }
+
+  /** VVPPパッケージをダウンロードし、インストールする */
+  async downlaodAndInstallVvppEngine(
+    downlaodDir: string,
+    packageInfo: EnginePackage,
+  ) {
+    // ダウンロード
+    const downloadedPaths = new Array<string>(packageInfo.packages.length);
+    await Promise.all(
+      packageInfo.packages.map(async (p, index) => {
+        const { url, name, size } = p;
+
+        log.info(`Download ${name} from ${url}, size: ${size}`);
+        const res = await fetch(url);
+        const buffer = await res.arrayBuffer();
+
+        const downloadPath = path.join(downlaodDir, name);
+        await fs.promises.writeFile(downloadPath, Buffer.from(buffer));
+        log.info(`Downloaded ${name} to ${downloadPath}`);
+
+        downloadedPaths[index] = downloadPath;
+
+        // TODO: ハッシュチェック
+      }),
+    );
+
+    // インストール
+    await this.installVvppEngine(downloadedPaths[0]);
+
+    // ダウンロードしたファイルを削除
+    await Promise.all(
+      downloadedPaths.map(async (path) => {
+        log.info(`Delete downloaded file: ${path}`);
+        await fs.promises.unlink(path);
+      }),
+    );
   }
 
   /** エンジンの設定を更新し、保存する */
