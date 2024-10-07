@@ -42,7 +42,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import ToolBar from "./ToolBar/ToolBar.vue";
 import ScoreSequencer from "./ScoreSequencer.vue";
 import SideBar from "./SideBar/SideBar.vue";
@@ -70,6 +70,16 @@ const setSidebarWidth = (width: number) => {
     sidebarWidth.value = width;
   }
 };
+
+// トラック数が1から増えたら、サイドバーを開く
+watch(
+  () => store.state.tracks,
+  (tracks, oldTracks) => {
+    if (oldTracks.size === 1 && tracks.size > 1) {
+      void store.dispatch("SET_SONG_SIDEBAR_OPEN", { isSongSidebarOpen: true });
+    }
+  },
+);
 
 const nowRendering = computed(() => {
   return store.state.nowRendering;

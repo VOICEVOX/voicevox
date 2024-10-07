@@ -212,7 +212,6 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
 
           mutations.SET_PROJECT_FILEPATH({ filePath });
           void actions.CLEAR_UNDO_HISTORY();
-          void actions.SET_SONG_SIDEBAR_OPEN({ isSongSidebarOpen: true });
           return true;
         } catch (err) {
           window.backend.logError(err);

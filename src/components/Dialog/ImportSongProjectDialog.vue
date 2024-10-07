@@ -317,11 +317,6 @@ const handleImportTrack = async () => {
       trackIndexes: selectedTrackIndexes.value,
     });
   }
-
-  // 自動でトラック一覧を開く
-  void store.dispatch("SET_SONG_SIDEBAR_OPEN", {
-    isSongSidebarOpen: true,
-  });
   onDialogOK();
 };
 
