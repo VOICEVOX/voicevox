@@ -194,7 +194,7 @@ export class EngineAndVvppController {
 
   /** VVPPパッケージをダウンロードし、インストールする */
   async downlaodAndInstallVvppEngine(
-    downlaodDir: string,
+    downloadDir: string,
     packageInfo: EnginePackage,
   ) {
     // ダウンロード
@@ -207,7 +207,7 @@ export class EngineAndVvppController {
         const res = await fetch(url);
         const buffer = await res.arrayBuffer();
 
-        const downloadPath = path.join(downlaodDir, name);
+        const downloadPath = path.join(downloadDir, name);
         await fs.promises.writeFile(downloadPath, Buffer.from(buffer));
         log.info(`Downloaded ${name} to ${downloadPath}`);
 
