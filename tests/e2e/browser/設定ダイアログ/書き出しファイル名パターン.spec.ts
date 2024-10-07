@@ -9,7 +9,10 @@ test.beforeEach(gotoHome);
  * 書き出しファイル名パターンダイアログまで移動
  */
 const moveToFilenameDialog = async (page: Page, settingDialog: Locator) => {
-  await settingDialog.getByRole("button", { name: "編集する" }).click();
+  const fileNamePatternCell = settingDialog.locator("div.q-card__actions", {
+    has: settingDialog.getByText("書き出しファイル名パターン"),
+  });
+  await fileNamePatternCell.getByRole("button", { name: "編集する" }).click();
   await page.waitForTimeout(500);
 
   const filenameDialog = getNewestQuasarDialog(page);
