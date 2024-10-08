@@ -71,6 +71,7 @@ import {
   timeSignatureSchema,
   trackSchema,
 } from "@/domain/project/schema";
+import { SupportedAudioFormat as SongSupportedAudioFormat } from "@/sing/encodeAudioData";
 
 /**
  * エディタ用のAudioQuery
@@ -815,7 +816,6 @@ export const PhraseKey = (id: string): PhraseKey => phraseKeySchema.parse(id);
 
 export type SequencerEditTarget = "NOTE" | "PITCH";
 
-export type SongSupportedAudioFormat = "wav" | "mp3" | "ogg";
 export type SongExportSetting = {
   isStereo: boolean;
   sampleRate: number;
@@ -1087,7 +1087,7 @@ export type SingingStoreTypes = {
   EXPORT_FILE: {
     action(payload: {
       filePath: string;
-      content: ArrayBuffer;
+      content: Uint8Array;
     }): Promise<SaveResultObject>;
   };
 

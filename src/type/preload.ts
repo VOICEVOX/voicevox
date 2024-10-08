@@ -2,6 +2,7 @@ import { z } from "zod";
 import { IpcSOData } from "./ipc";
 import { AltPortInfos } from "@/store/type";
 import { Result } from "@/type/result";
+import { SupportedAudioFormat } from "@/sing/encodeAudioData";
 
 export const isProduction = import.meta.env.MODE === "production";
 export const isElectron = import.meta.env.VITE_TARGET === "electron";
@@ -223,6 +224,7 @@ export interface Sandbox {
   showAudioSaveDialog(obj: {
     title: string;
     defaultPath?: string;
+    formats?: SupportedAudioFormat[];
   }): Promise<string | undefined>;
   showTextSaveDialog(obj: {
     title: string;
@@ -259,7 +261,7 @@ export interface Sandbox {
   }): Promise<string | undefined>;
   writeFile(obj: {
     filePath: string;
-    buffer: ArrayBuffer;
+    buffer: ArrayBuffer | Uint8Array;
   }): Promise<Result<undefined>>;
   readFile(obj: { filePath: string }): Promise<Result<ArrayBuffer>>;
   isAvailableGPUMode(): Promise<boolean>;

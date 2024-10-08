@@ -24,7 +24,6 @@
             dense
           />
         </BaseCell>
-        <!-- TODO：実装する
         <BaseCell
           title="フォーマット"
           description="書き出す音声ファイルのフォーマットを選べます。"
@@ -39,8 +38,9 @@
             toggleColor="primary"
             toggleTextColor="display-on-primary"
             dense
+            noCaps
           />
-        </BaseCell> -->
+        </BaseCell>
         <BaseCell
           title="音声をステレオ化"
           description="ONの場合、音声データがモノラルからステレオに変換されてから保存が行われます。"
@@ -106,7 +106,8 @@
 import { ref } from "vue";
 import { useDialogPluginComponent } from "quasar";
 import BaseCell from "./BaseCell.vue";
-import { SongSupportedAudioFormat, SongExportSetting } from "@/store/type";
+import { SongExportSetting } from "@/store/type";
+import { SupportedAudioFormat } from "@/sing/encodeAudioData";
 
 export type ExportTarget = "master" | "stem";
 const { dialogRef, onDialogOK, onDialogCancel } = useDialogPluginComponent();
@@ -134,21 +135,21 @@ const exportTarget = ref<ExportTarget>("master");
 const isStereo = ref<boolean>(true);
 
 // フォーマット選択
-const audioFormat = ref<SongSupportedAudioFormat>("wav");
-// const supportedFormats = [
-//   {
-//     label: "WAV",
-//     value: "wav",
-//   },
-//   {
-//     label: "mp3",
-//     value: "mp3",
-//   },
-//   {
-//     label: "ogg",
-//     value: "ogg",
-//   },
-// ];
+const audioFormat = ref<SupportedAudioFormat>("wav");
+const supportedFormats = [
+  {
+    label: "WAV",
+    value: "wav",
+  },
+  {
+    label: "mp3",
+    value: "mp3",
+  },
+  {
+    label: "ogg",
+    value: "ogg",
+  },
+] as const satisfies { label: string; value: SupportedAudioFormat }[];
 
 // サンプルレート
 const samplingRate = ref<number>(48000);

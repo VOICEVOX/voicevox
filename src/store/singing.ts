@@ -100,13 +100,12 @@ import { getOrThrow } from "@/helpers/mapHelper";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { ufProjectToVoicevox } from "@/sing/utaformatixProject/toVoicevox";
 import { uuid4 } from "@/helpers/random";
-import { convertToWavFileData } from "@/sing/encodeAudioData";
+import { convertToSupportedAudioFormat } from "@/sing/encodeAudioData";
 import { generateWriteErrorMessage } from "@/helpers/fileHelper";
 import {
   PhraseRenderStageId,
   createPhraseRenderer,
 } from "@/sing/phraseRendering";
-import { UnreachableError } from "@/type/utility";
 
 const logger = createLogger("store/singing");
 
@@ -132,7 +131,7 @@ const generateNoteEvents = (notes: Note[], tempos: Tempo[], tpqn: number) => {
   });
 };
 
-const generateDefaultSongFileName = (
+const generateDefaultSongFileBaseName = (
   projectName: string | undefined,
   selectedTrack: Track,
   getCharacterInfo: (
@@ -141,7 +140,7 @@ const generateDefaultSongFileName = (
   ) => CharacterInfo | undefined,
 ) => {
   if (projectName) {
-    return projectName + ".wav";
+    return projectName;
   }
 
   const singer = selectedTrack.singer;
@@ -151,11 +150,11 @@ const generateDefaultSongFileName = (
     if (singerName) {
       const notes = selectedTrack.notes.slice(0, 5);
       const beginningPartLyrics = notes.map((note) => note.lyric).join("");
-      return sanitizeFileName(`${singerName}_${beginningPartLyrics}.wav`);
+      return sanitizeFileName(`${singerName}_${beginningPartLyrics}`);
     }
   }
 
-  return `${DEFAULT_PROJECT_NAME}.wav`;
+  return DEFAULT_PROJECT_NAME;
 };
 
 const offlineRenderTracks = async (
@@ -1941,11 +1940,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     action: createUILockAction(
       async ({ state, mutations, getters, actions }, { filePath, setting }) => {
         const exportAudioFile = async (): Promise<SaveResultObject> => {
-          const fileName = generateDefaultSongFileName(
+          const fileBaseName = generateDefaultSongFileBaseName(
             getters.PROJECT_NAME,
             getters.SELECTED_TRACK,
             getters.CHARACTER_INFO,
           );
+          const fileName = `${fileBaseName}.${setting.audioFormat}`;
           const numberOfChannels = setting.isStereo ? 2 : 1;
           const sampleRate = setting.sampleRate;
           const withLimiter = setting.withLimiter;
@@ -1962,6 +1962,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             filePath ??= await window.backend.showAudioSaveDialog({
               title: "音声を保存",
               defaultPath: fileName,
+              formats: [setting.audioFormat],
             });
           }
           if (!filePath) {
@@ -1970,9 +1971,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
           if (state.savingSetting.avoidOverwrite) {
             let tail = 1;
-            const name = filePath.slice(0, filePath.length - 4);
+            const pathWithoutExt = filePath.slice(
+              0,
+              -1 - setting.audioFormat.length,
+            );
             while (await window.backend.checkFileExists(filePath)) {
-              filePath = name + "[" + tail.toString() + "]" + ".wav";
+              filePath = `${pathWithoutExt}[${tail}].${setting.audioFormat}`;
               tail += 1;
             }
           }
@@ -1999,14 +2003,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             phraseSingingVoices,
           );
 
-          let fileData;
-          switch (setting.audioFormat) {
-            case "wav":
-              fileData = convertToWavFileData(audioBuffer);
-              break;
-            default:
-              throw new UnreachableError("Not implemented");
-          }
+          const fileData = await convertToSupportedAudioFormat(
+            audioBuffer,
+            setting.audioFormat,
+          );
 
           const result = await actions.EXPORT_FILE({
             filePath,
@@ -2105,12 +2105,18 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                 trackName: track.name,
               },
             );
-            let filePath = path.join(dirPath, trackFileName);
+            let filePath = path.join(
+              dirPath,
+              `${trackFileName}.${setting.audioFormat}`,
+            );
             if (state.savingSetting.avoidOverwrite) {
               let tail = 1;
-              const name = filePath.slice(0, filePath.length - 4);
+              const pathWithoutExt = filePath.slice(
+                0,
+                -1 - setting.audioFormat.length,
+              );
               while (await window.backend.checkFileExists(filePath)) {
-                filePath = name + "[" + tail.toString() + "]" + ".wav";
+                filePath = `${pathWithoutExt}[${tail}].${setting.audioFormat}`;
                 tail += 1;
               }
             }
@@ -2130,14 +2136,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               singingVoiceCache,
             );
 
-            let fileData;
-            switch (setting.audioFormat) {
-              case "wav":
-                fileData = convertToWavFileData(audioBuffer);
-                break;
-              default:
-                throw new UnreachableError("Not implemented");
-            }
+            const fileData = await convertToSupportedAudioFormat(
+              audioBuffer,
+              setting.audioFormat,
+            );
 
             const result = await actions.EXPORT_FILE({
               filePath,

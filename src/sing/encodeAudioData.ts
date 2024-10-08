@@ -1,4 +1,12 @@
-export const convertToWavFileData = (audioBuffer: AudioBuffer) => {
+import {
+  createMp3Encoder,
+  createOggEncoder,
+  WasmMediaEncoder,
+} from "wasm-media-encoders";
+
+export type SupportedAudioFormat = "wav" | "mp3" | "ogg";
+
+const convertToWavFileData = (audioBuffer: AudioBuffer) => {
   const bytesPerSample = 4; // Float32
   const formatCode = 3; // WAVE_FORMAT_IEEE_FLOAT
 
@@ -52,5 +60,71 @@ export const convertToWavFileData = (audioBuffer: AudioBuffer) => {
     }
   }
 
-  return buffer;
+  return new Uint8Array(buffer);
+};
+
+export const encodeAudioData = async (
+  audioBuffer: AudioBuffer,
+  encoder: WasmMediaEncoder<"audio/ogg" | "audio/mpeg">,
+) => {
+  let outBuffer = new Uint8Array(1024 * 1024);
+  let offset = 0;
+  let moreData = true;
+  encoder.configure({
+    channels: audioBuffer.numberOfChannels as 1 | 2,
+    sampleRate: audioBuffer.sampleRate,
+  });
+
+  while (true) {
+    const mp3Data = moreData
+      ? encoder.encode(
+          audioBuffer.numberOfChannels === 1
+            ? [audioBuffer.getChannelData(0)]
+            : [audioBuffer.getChannelData(0), audioBuffer.getChannelData(1)],
+        )
+      : encoder.finalize();
+
+    if (mp3Data.length + offset > outBuffer.length) {
+      const newBuffer = new Uint8Array(mp3Data.length + offset);
+      newBuffer.set(outBuffer);
+      outBuffer = newBuffer;
+    }
+
+    outBuffer.set(mp3Data, offset);
+    offset += mp3Data.length;
+
+    if (!moreData) {
+      break;
+    }
+
+    moreData = false;
+  }
+
+  return outBuffer.slice(0, offset);
+};
+
+const convertToMp3Data = async (audioBuffer: AudioBuffer) => {
+  const encoder = await createMp3Encoder();
+  const mp3Data = await encodeAudioData(audioBuffer, encoder);
+  return mp3Data;
+};
+
+const convertToOggData = async (audioBuffer: AudioBuffer) => {
+  const encoder = await createOggEncoder();
+  const oggData = await encodeAudioData(audioBuffer, encoder);
+  return oggData;
+};
+
+export const convertToSupportedAudioFormat = async (
+  audioBuffer: AudioBuffer,
+  format: SupportedAudioFormat,
+) => {
+  switch (format) {
+    case "wav":
+      return convertToWavFileData(audioBuffer);
+    case "mp3":
+      return convertToMp3Data(audioBuffer);
+    case "ogg":
+      return convertToOggData(audioBuffer);
+  }
 };

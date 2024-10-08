@@ -579,12 +579,16 @@ registerIpcMainHandle<IpcMainHandle>({
     return engineInfoManager.altPortInfos;
   },
 
-  SHOW_AUDIO_SAVE_DIALOG: async (_, { title, defaultPath }) => {
+  SHOW_AUDIO_SAVE_DIALOG: async (_, { title, defaultPath, formats }) => {
+    formats ??= ["wav"];
     const result = await retryShowSaveDialogWhileSafeDir(() =>
       dialog.showSaveDialog(win, {
         title,
         defaultPath,
-        filters: [{ name: "Wave File", extensions: ["wav"] }],
+        filters: formats.map((format) => ({
+          name: `${format}ファイル`,
+          extensions: [format],
+        })),
         properties: ["createDirectory"],
       }),
     );
@@ -872,7 +876,10 @@ registerIpcMainHandle<IpcMainHandle>({
 
   WRITE_FILE: (_, { filePath, buffer }) => {
     try {
-      fs.writeFileSync(filePath, new DataView(buffer));
+      fs.writeFileSync(
+        filePath,
+        new DataView(buffer instanceof Uint8Array ? buffer.buffer : buffer),
+      );
       return success(undefined);
     } catch (e) {
       // throwだと`.code`の情報が消えるのでreturn

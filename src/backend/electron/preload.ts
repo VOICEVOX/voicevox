@@ -54,10 +54,11 @@ const api: Sandbox = {
     return await ipcRendererInvokeProxy.GET_ALT_PORT_INFOS();
   },
 
-  showAudioSaveDialog: ({ title, defaultPath }) => {
+  showAudioSaveDialog: ({ title, defaultPath, formats }) => {
     return ipcRendererInvokeProxy.SHOW_AUDIO_SAVE_DIALOG({
       title,
       defaultPath,
+      formats,
     });
   },
 

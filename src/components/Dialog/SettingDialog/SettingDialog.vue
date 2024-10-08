@@ -281,7 +281,7 @@
               <FileNameTemplateDialog
                 v-model:open-dialog="showAudioFilePatternEditDialog"
                 :savedTemplate="audioFileNamePattern"
-                :defaultTemplate="DEFAULT_AUDIO_FILE_BASE_NAME_TEMPLATE"
+                :defaultTemplate="DEFAULT_AUDIO_FILE_NAME_TEMPLATE"
                 :availableTags="[
                   'index',
                   'characterName',
@@ -291,6 +291,7 @@
                   'projectName',
                 ]"
                 :fileNameBuilder="buildAudioFileNameFromRawData"
+                extension=".wav"
                 @update:template="
                   handleSavingSettingChange('fileNamePattern', $event)
                 "
@@ -298,7 +299,7 @@
               <FileNameTemplateDialog
                 v-model:open-dialog="showSongTrackAudioFilePatternEditDialog"
                 :savedTemplate="songTrackFileNamePattern"
-                :defaultTemplate="DEFAULT_SONG_AUDIO_FILE_BASE_NAME_TEMPLATE"
+                :defaultTemplate="DEFAULT_SONG_AUDIO_FILE_NAME_TEMPLATE"
                 :availableTags="[
                   'index',
                   'characterName',
@@ -308,6 +309,7 @@
                   'projectName',
                 ]"
                 :fileNameBuilder="buildSongTrackAudioFileNameFromRawData"
+                extension=".wav"
                 @update:template="
                   handleSavingSettingChange('songTrackFileNamePattern', $event)
                 "
@@ -536,8 +538,8 @@ import BaseCell from "./BaseCell.vue";
 import EditButtonCell from "./EditButtonCell.vue";
 import { useStore } from "@/store";
 import {
-  DEFAULT_AUDIO_FILE_BASE_NAME_TEMPLATE,
-  DEFAULT_SONG_AUDIO_FILE_BASE_NAME_TEMPLATE,
+  DEFAULT_AUDIO_FILE_NAME_TEMPLATE,
+  DEFAULT_SONG_AUDIO_FILE_NAME_TEMPLATE,
   buildAudioFileNameFromRawData,
   buildSongTrackAudioFileNameFromRawData,
 } from "@/store/utility";

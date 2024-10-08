@@ -14,6 +14,7 @@ import {
 } from "@/type/preload";
 import { AltPortInfos } from "@/store/type";
 import { Result } from "@/type/result";
+import { SupportedAudioFormat } from "@/sing/encodeAudioData";
 
 /**
  * invoke, handle
@@ -70,7 +71,13 @@ export type IpcIHData = {
   };
 
   SHOW_AUDIO_SAVE_DIALOG: {
-    args: [obj: { title: string; defaultPath?: string }];
+    args: [
+      obj: {
+        title: string;
+        defaultPath?: string;
+        formats?: SupportedAudioFormat[];
+      },
+    ];
     return?: string;
   };
 
@@ -275,7 +282,7 @@ export type IpcIHData = {
   };
 
   WRITE_FILE: {
-    args: [obj: { filePath: string; buffer: ArrayBuffer }];
+    args: [obj: { filePath: string; buffer: ArrayBuffer | Uint8Array }];
     return: Result<undefined>;
   };
 

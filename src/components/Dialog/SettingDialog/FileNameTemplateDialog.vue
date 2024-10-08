@@ -16,12 +16,12 @@
           <div class="col">
             <QInput
               ref="patternInput"
-              v-model="temporaryTemplateWithoutExt"
+              v-model="temporaryTemplate"
               dense
               outlined
               bgColor="background"
               label="ファイル名パターン"
-              suffix=".wav"
+              :suffix="props.extension"
               :maxlength="maxLength"
               :error="hasError"
               :errorMessage
@@ -92,6 +92,8 @@ const props = defineProps<{
   savedTemplate: string;
   /** ファイル名を生成する関数 */
   fileNameBuilder: (pattern: string) => string;
+  /** ドットまで含んだ拡張子 */
+  extension: string;
 }>();
 
 const emit = defineEmits<{
@@ -109,27 +111,18 @@ const tagStrings = computed(() =>
   props.availableTags.map((tag) => replaceTagIdToTagString[tag]),
 );
 
-const savedTemplateWithoutExt = computed(() =>
-  props.savedTemplate.replace(/\.wav$/, ""),
-);
-const temporaryTemplateWithoutExt = ref(savedTemplateWithoutExt.value);
-const temporaryTemplate = computed(
-  () => temporaryTemplateWithoutExt.value + ".wav",
-);
+const temporaryTemplate = ref(props.savedTemplate);
 
 const missingIndexTagString = computed(
-  () =>
-    !temporaryTemplateWithoutExt.value.includes(
-      replaceTagIdToTagString["index"],
-    ),
+  () => !temporaryTemplate.value.includes(replaceTagIdToTagString["index"]),
 );
 const invalidChar = computed(() => {
-  const current = temporaryTemplateWithoutExt.value;
+  const current = temporaryTemplate.value;
   const sanitized = sanitizeFileName(current);
   return Array.from(current).find((char, i) => char !== sanitized[i]);
 });
 const errorMessage = computed(() => {
-  if (temporaryTemplateWithoutExt.value === "") {
+  if (temporaryTemplate.value === "") {
     return "何か入力してください";
   }
 
@@ -148,18 +141,18 @@ const errorMessage = computed(() => {
 const hasError = computed(() => errorMessage.value !== "");
 
 const previewFileName = computed(() =>
-  props.fileNameBuilder(`${temporaryTemplateWithoutExt.value}.wav`),
+  props.fileNameBuilder(`${temporaryTemplate.value}${props.extension}`),
 );
 
 const initializeInput = () => {
-  temporaryTemplateWithoutExt.value = savedTemplateWithoutExt.value;
+  temporaryTemplate.value = props.savedTemplate;
 
-  if (temporaryTemplateWithoutExt.value === "") {
-    temporaryTemplateWithoutExt.value = props.defaultTemplate;
+  if (temporaryTemplate.value === "") {
+    temporaryTemplate.value = props.defaultTemplate;
   }
 };
 const resetToDefault = () => {
-  temporaryTemplateWithoutExt.value = props.defaultTemplate;
+  temporaryTemplate.value = props.defaultTemplate;
   patternInput.value?.focus();
 };
 
@@ -175,7 +168,7 @@ const insertTagToCurrentPosition = (tag: string) => {
     const from = elem.selectionStart ?? 0;
     const to = elem.selectionEnd ?? 0;
     const newText = text.substring(0, from) + tag + text.substring(to);
-    temporaryTemplateWithoutExt.value = newText;
+    temporaryTemplate.value = newText;
 
     // キャレットの位置を挿入した後の位置にずらす
     void nextTick(() => {
