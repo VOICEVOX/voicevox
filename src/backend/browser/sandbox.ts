@@ -1,3 +1,4 @@
+import { Dialog } from "quasar";
 import { defaultEngine } from "./contract";
 import {
   checkFileExistsImpl,
@@ -7,7 +8,6 @@ import {
   writeFileImpl,
 } from "./fileImpl";
 import { getConfigManager } from "./browserConfig";
-
 import { IpcSOData } from "@/type/ipc";
 import {
   defaultHotkeySettings,
@@ -29,6 +29,8 @@ import {
   QAndATextFileName,
   UpdateInfosJsonFileName,
 } from "@/type/staticResources";
+import MessageDialog from "@/components/Dialog/Browser/MessageDialog.vue";
+import QuestionDialog from "@/components/Dialog/Browser/QuestionDialog.vue";
 
 // TODO: base pathを設定できるようにするか、ビルド時埋め込みにする
 const toStaticPath = (fileName: string) => `/${fileName}`;
@@ -167,17 +169,28 @@ export const api: Sandbox = {
       ],
     });
   },
-  showMessageDialog(obj: {
+  async showMessageDialog(obj: {
     type: "none" | "info" | "error" | "question" | "warning";
     title: string;
     message: string;
   }) {
-    window.alert(`${obj.title}\n${obj.message}`);
-    // NOTE: どの呼び出し元も、return valueを使用していないので雑に対応している
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return Promise.resolve({} as any);
+    const { promise, resolve } = Promise.withResolvers<void>();
+    Dialog.create({
+      component: MessageDialog,
+      componentProps: {
+        type: obj.type,
+        title: obj.title,
+        message: obj.message,
+      },
+    }).onOk(() => resolve());
+
+    await promise;
+
+    // 誰も使ってないので適当な値を返している。型定義をPromise<void>に変えてもいいかも
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return
+    return {} as any;
   },
-  showQuestionDialog(obj: {
+  async showQuestionDialog(obj: {
     type: "none" | "info" | "error" | "question" | "warning";
     title: string;
     message: string;
@@ -185,11 +198,21 @@ export const api: Sandbox = {
     cancelId?: number;
     defaultId?: number;
   }) {
-    // FIXME
-    // TODO: 例えば動的にdialog要素をDOMに生成して、それを表示させるみたいのはあるかもしれない
-    throw new Error(
-      `Not implemented: showQuestionDialog, request: ${JSON.stringify(obj)}`,
-    );
+    const { promise, resolve } = Promise.withResolvers<number>();
+
+    Dialog.create({
+      component: QuestionDialog,
+      componentProps: {
+        type: obj.type,
+        title: obj.title,
+        message: obj.message,
+        buttons: obj.buttons,
+        cancelId: obj.cancelId,
+        defaultId: obj.defaultId,
+      },
+    }).onOk((result: { index: number }) => resolve(result.index));
+
+    return await promise;
   },
   async showImportFileDialog(obj: {
     name?: string;
