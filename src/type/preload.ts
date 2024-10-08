@@ -402,7 +402,10 @@ export type MinimumEngineManifestType = z.infer<
 
 export type EngineInfo = {
   uuid: EngineId;
-  host: string; // NOTE: 実際はorigin（プロトコルとhostnameとport）が入る
+  protocol: string; // `http:`など
+  hostname: string; // `example.com`など
+  defaultPort: string; // `50021`など。空文字列もありえる。
+  pathname: string; // `/engine`など。空文字列もありえる。
   name: string;
   path?: string; // エンジンディレクトリのパス
   executionEnabled: boolean;

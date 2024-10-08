@@ -554,11 +554,12 @@ watch(
     // 代替ポートをトースト通知する
     for (const engineId of store.state.engineIds) {
       const engineName = store.state.engineInfos[engineId].name;
+      const defaultPort = store.state.engineInfos[engineId].defaultPort;
       const altPort = store.state.altPortInfos[engineId];
       if (!altPort) return;
 
       void store.actions.SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON({
-        message: `${altPort.from}番ポートが使用中であるため ${engineName} は、${altPort.to}番ポートで起動しました`,
+        message: `${defaultPort}番ポートが使用中であるため ${engineName} は、${altPort}番ポートで起動しました`,
         icon: "compare_arrows",
         tipName: "engineStartedOnAltPort",
       });
