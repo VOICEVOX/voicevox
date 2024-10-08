@@ -39,7 +39,7 @@
           </div>
         </div>
         <div class="text-body2 text-ellipsis">
-          出力例：{{ previewFileName + props.extension }}
+          出力例：{{ previewFileName }}
         </div>
         <div class="row full-width q-my-md">
           <QBtn
@@ -140,8 +140,8 @@ const errorMessage = computed(() => {
 });
 const hasError = computed(() => errorMessage.value !== "");
 
-const previewFileName = computed(() =>
-  props.fileNameBuilder(`${temporaryTemplate.value}${props.extension}`),
+const previewFileName = computed(
+  () => props.fileNameBuilder(temporaryTemplate.value) + props.extension,
 );
 
 const initializeInput = () => {

@@ -3,9 +3,10 @@
 </template>
 
 <script setup lang="ts">
+import { notifyResult } from "../Dialog";
 import Presentation, { ExportTarget } from "./Presentation.vue";
 import { useStore } from "@/store";
-import { SongExportSetting } from "@/store/type";
+import { SaveResultObject, SongExportSetting } from "@/store/type";
 
 defineOptions({
   name: "ExportSongAudioDialog",
@@ -14,14 +15,22 @@ defineOptions({
 const modelValue = defineModel<boolean>();
 const store = useStore();
 
-const handleExportAudio = (
+const handleExportAudio = async (
   target: ExportTarget,
   setting: SongExportSetting,
 ) => {
+  let result: SaveResultObject;
   if (target === "master") {
-    void store.dispatch("EXPORT_AUDIO_FILE", { setting });
+    result = await store.dispatch("EXPORT_AUDIO_FILE", { setting });
   } else {
-    void store.dispatch("EXPORT_STEM_AUDIO_FILE", { setting });
+    result = await store.dispatch("EXPORT_STEM_AUDIO_FILE", { setting });
   }
+
+  notifyResult(
+    result,
+    "audio",
+    store.actions,
+    store.state.confirmedTips.notifyOnGenerate,
+  );
 };
 </script>
