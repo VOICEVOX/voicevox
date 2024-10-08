@@ -71,7 +71,6 @@ import {
   timeSignatureSchema,
   trackSchema,
 } from "@/domain/project/schema";
-import { ExportTarget, SupportedAudioFormat } from "@/sing/domain";
 
 /**
  * エディタ用のAudioQuery
@@ -820,7 +819,7 @@ export type SongSupportedAudioFormat = "wav" | "mp3" | "ogg";
 export type SongExportSetting = {
   isStereo: boolean;
   sampleRate: number;
-  audioFormat: SupportedAudioFormat;
+  audioFormat: SongSupportedAudioFormat;
   withLimiter: boolean;
   withTrackParameters: boolean;
 };

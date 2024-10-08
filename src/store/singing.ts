@@ -1993,7 +1993,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             sampleRate,
             renderDuration,
             withLimiter,
-            true,
+            setting.withTrackParameters,
             state.tracks,
             state.phrases,
             phraseSingingVoices,
@@ -2064,9 +2064,16 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             }
           }
 
+          const shouldPlays = shouldPlayTracks(state.tracks);
+
           for (const [i, trackId] of state.trackOrder.entries()) {
             const track = getOrThrow(state.tracks, trackId);
             if (!track.singer) {
+              continue;
+            }
+
+            // パラメーターが有効の時はミュートやソロを反映する
+            if (setting.withTrackParameters && !shouldPlays.has(trackId)) {
               continue;
             }
 
@@ -2113,7 +2120,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               sampleRate,
               renderDuration,
               withLimiter,
-              true,
+              setting.withTrackParameters,
               new Map([[trackId, { ...track, solo: false, mute: false }]]),
               new Map(
                 [...state.phrases.entries()].filter(

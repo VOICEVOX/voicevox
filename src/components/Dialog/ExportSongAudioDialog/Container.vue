@@ -3,8 +3,8 @@
 </template>
 
 <script setup lang="ts">
-import { useStore } from "vuex";
 import Presentation, { ExportTarget } from "./Presentation.vue";
+import { useStore } from "@/store";
 import { SongExportSetting } from "@/store/type";
 
 defineOptions({

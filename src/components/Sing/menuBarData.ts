@@ -32,25 +32,12 @@ export const useMenuBarData = () => {
     });
   };
 
-  const exportStemWaveFile = async () => {
-    if (uiLocked.value) return;
-    await store.dispatch("EXPORT_STEM_WAVE_FILE", {});
-  };
-
   const fileSubMenuData = computed<MenuItemData[]>(() => [
     {
       type: "button",
       label: "音声を出力",
       onClick: () => {
-        void exportWaveFile();
-      },
-      disableWhenUiLocked: true,
-    },
-    {
-      type: "button",
-      label: "トラックごとに音声を出力",
-      onClick: () => {
-        void exportStemWaveFile();
+        void exportAudioFile();
       },
       disableWhenUiLocked: true,
     },
