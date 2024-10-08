@@ -85,9 +85,9 @@ export class RuntimeInfoManager {
           const altPort: string | undefined =
             this.altportInfos[engineInfo.uuid];
           const port = altPort ?? engineInfo.defaultPort;
-          const url = new URL(
-            `${engineInfo.protocol}//${engineInfo.hostname}:${port}`,
-          );
+          // NOTE: URLを正規化する
+          const url = new URL(`${engineInfo.protocol}//${engineInfo.hostname}`);
+          url.port = port;
           return {
             uuid: engineInfo.uuid,
             url: `${url.origin}${engineInfo.pathname}`,

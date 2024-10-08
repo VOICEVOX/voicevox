@@ -22,9 +22,9 @@ const proxyStoreCreator = (_engineFactory: IEngineConnectorFactory) => {
 
         const altPort: string | undefined = state.altPortInfos[engineId];
         const port = altPort ?? engineInfo.defaultPort;
-        const url = new URL(
-          `${engineInfo.protocol}//${engineInfo.hostname}:${port}`,
-        );
+        // NOTE: URLを正規化する
+        const url = new URL(`${engineInfo.protocol}//${engineInfo.hostname}`);
+        url.port = port;
         const instance = _engineFactory.instance(
           `${url.origin}${engineInfo.pathname}`,
         );
