@@ -1886,6 +1886,14 @@ export type UiStoreState = {
   reloadingLock: boolean;
   inheritAudioInfo: boolean;
   activePointScrollMode: ActivePointScrollMode;
+  isMaximized: boolean;
+  isPinned: boolean;
+  isFullscreen: boolean;
+  progress: number;
+  isVuexReady: boolean;
+} & DialogStates;
+
+export type DialogStates = {
   isHelpDialogOpen: boolean;
   isSettingDialogOpen: boolean;
   isCharacterOrderDialogOpen: boolean;
@@ -1899,17 +1907,6 @@ export type UiStoreState = {
   isUpdateNotificationDialogOpen: boolean;
   isExportSongAudioDialogOpen: boolean;
   isImportSongProjectDialogOpen: boolean;
-  isMaximized: boolean;
-  isPinned: boolean;
-  isFullscreen: boolean;
-  progress: number;
-  isVuexReady: boolean;
-};
-
-export type DialogStates = {
-  [K in keyof UiStoreState as K extends `is${string}DialogOpen`
-    ? K
-    : never]: boolean;
 };
 
 export type UiStoreTypes = {
