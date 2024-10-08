@@ -100,7 +100,7 @@ import { getOrThrow } from "@/helpers/mapHelper";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { ufProjectToVoicevox } from "@/sing/utaformatixProject/toVoicevox";
 import { uuid4 } from "@/helpers/random";
-import { convertToWavFileData } from "@/sing/convertToWavFileData";
+import { convertToWavFileData } from "@/sing/encodeAudioData";
 import { generateWriteErrorMessage } from "@/helpers/fileHelper";
 import {
   PhraseRenderStageId,
@@ -1937,10 +1937,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  EXPORT_WAVE_FILE: {
+  EXPORT_AUDIO_FILE: {
     action: createUILockAction(
       async ({ state, mutations, getters, actions }, { filePath, setting }) => {
-        const exportWaveFile = async (): Promise<SaveResultObject> => {
+        const exportAudioFile = async (): Promise<SaveResultObject> => {
           const fileName = generateDefaultSongFileName(
             getters.PROJECT_NAME,
             getters.SELECTED_TRACK,
@@ -2017,7 +2017,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         };
 
         mutations.SET_NOW_AUDIO_EXPORTING({ nowAudioExporting: true });
-        return exportWaveFile().finally(() => {
+        return exportAudioFile().finally(() => {
           mutations.SET_CANCELLATION_OF_AUDIO_EXPORT_REQUESTED({
             cancellationOfAudioExportRequested: false,
           });
@@ -2027,11 +2027,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     ),
   },
 
-  EXPORT_STEM_WAVE_FILE: {
+  EXPORT_STEM_AUDIO_FILE: {
     action: createUILockAction(
       async ({ state, mutations, getters, actions }, { dirPath, setting }) => {
         let firstFilePath = "";
-        const exportWaveFile = async (): Promise<SaveResultObject> => {
+        const exportAudioFile = async (): Promise<SaveResultObject> => {
           const numberOfChannels = setting.isStereo ? 2 : 1;
           const sampleRate = setting.sampleRate;
           const withLimiter = setting.withLimiter;
@@ -2156,7 +2156,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         };
 
         mutations.SET_NOW_AUDIO_EXPORTING({ nowAudioExporting: true });
-        return exportWaveFile().finally(() => {
+        return exportAudioFile().finally(() => {
           mutations.SET_CANCELLATION_OF_AUDIO_EXPORT_REQUESTED({
             cancellationOfAudioExportRequested: false,
           });

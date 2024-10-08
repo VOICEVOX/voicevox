@@ -19,9 +19,9 @@ const handleExportAudio = (
   setting: SongExportSetting,
 ) => {
   if (target === "master") {
-    void store.dispatch("EXPORT_WAVE_FILE", { setting });
+    void store.dispatch("EXPORT_AUDIO_FILE", { setting });
   } else {
-    void store.dispatch("EXPORT_STEM_WAVE_FILE", { setting });
+    void store.dispatch("EXPORT_STEM_AUDIO_FILE", { setting });
   }
 };
 </script>

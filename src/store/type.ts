@@ -1070,14 +1070,14 @@ export type SingingStoreTypes = {
     action(payload: { isDrag: boolean }): void;
   };
 
-  EXPORT_WAVE_FILE: {
+  EXPORT_AUDIO_FILE: {
     action(payload: {
       filePath?: string;
       setting: SongExportSetting;
     }): SaveResultObject;
   };
 
-  EXPORT_STEM_WAVE_FILE: {
+  EXPORT_STEM_AUDIO_FILE: {
     action(payload: {
       dirPath?: string;
       setting: SongExportSetting;
