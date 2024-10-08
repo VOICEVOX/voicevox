@@ -102,7 +102,7 @@
 </template>
 
 <script setup lang="ts">
-// メモ：前回の設定を引き継ぐため、他のダイアログでやっているようなinitializeValuesはやらない
+// NOTE: 前回の設定を引き継ぐため、他のダイアログでやっているようなinitializeValuesはやらない
 import { ref } from "vue";
 import { useDialogPluginComponent } from "quasar";
 import BaseCell from "./BaseCell.vue";
