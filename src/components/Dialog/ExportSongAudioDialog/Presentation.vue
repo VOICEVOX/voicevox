@@ -1,5 +1,5 @@
 <template>
-  <QDialog ref="dialogRef" v-model="modelValue" @beforeShow="initializeValues">
+  <QDialog ref="dialogRef" v-model="modelValue">
     <QCard class="q-py-sm q-px-md dialog-card">
       <QCardSection>
         <div class="text-h5">書き出し</div>
@@ -9,9 +9,25 @@
 
       <QCardSection>
         <BaseCell
-          v-model="audioFormat"
+          title="書き出し対象"
+          description="すべてのトラックをまとめて書き出すか、トラックごとに書き出すか選べます。"
+        >
+          <QBtnToggle
+            v-model="exportTarget"
+            :options="exportTargets"
+            padding="xs md"
+            unelevated
+            color="surface"
+            textColor="display"
+            toggleColor="primary"
+            toggleTextColor="display-on-primary"
+            dense
+          />
+        </BaseCell>
+        <!-- TODO：実装する
+        <BaseCell
           title="フォーマット"
-          description="書き出す音声ファイルのフォーマットを選択します。"
+          description="書き出す音声ファイルのフォーマットを選べます。"
         >
           <QBtnToggle
             v-model="audioFormat"
@@ -24,11 +40,10 @@
             toggleTextColor="display-on-primary"
             dense
           />
-        </BaseCell>
+        </BaseCell> -->
         <BaseCell
           title="音声のサンプリングレート"
-          description="再生と保存時の音声のサンプリングレートを変更できます（サンプリングレートを上げても音声の品質は上がりません）。"
-          transparent
+          description="音声のサンプリングレートを変更できます。"
         >
           <QSelect
             v-model="samplingRate"
@@ -40,11 +55,16 @@
           </QSelect>
         </BaseCell>
         <BaseCell
-          v-model="withLimiter"
           title="リミッターを適用する"
-          description="書き出し時の音量を制限します。"
+          description="ONの場合、音量が制限されます。"
         >
           <QToggle v-model="withLimiter" />
+        </BaseCell>
+        <BaseCell
+          title="トラックのパラメーターを適用する"
+          description="OFFの場合、VOICEVOX内のパン、ボリューム、ミュート設定が適用されません。"
+        >
+          <QToggle v-model="withTrackParameters" />
         </BaseCell>
       </QCardSection>
 
@@ -76,15 +96,19 @@
 </template>
 
 <script setup lang="ts">
+// メモ：前回の設定を引き継ぐため、他のダイアログでやっているようなinitializeValuesはやらない
 import { ref } from "vue";
 import { useDialogPluginComponent } from "quasar";
 import BaseCell from "./BaseCell.vue";
 import { SupportedAudioFormat } from "@/sing/domain";
 
+export type ExportTarget = "master" | "stem";
 export type ExportAudioSetting = {
+  target: ExportTarget;
   sampleRate: number;
   audioFormat: SupportedAudioFormat;
   withLimiter: boolean;
+  withTrackParameters: boolean;
 };
 
 const { dialogRef, onDialogOK, onDialogCancel } = useDialogPluginComponent();
@@ -95,22 +119,35 @@ const emit = defineEmits<{
   exportAudio: [setting: ExportAudioSetting];
 }>();
 
-// フォーマット選択
-const audioFormat = ref<SupportedAudioFormat>("wav");
-const supportedFormats = [
+// 書き出し対象選択
+const exportTargets = [
   {
-    label: "WAV",
-    value: "wav",
+    label: "すべてのトラック",
+    value: "master",
   },
   {
-    label: "mp3",
-    value: "mp3",
-  },
-  {
-    label: "ogg",
-    value: "ogg",
+    label: "トラックごと",
+    value: "stem",
   },
 ];
+const exportTarget = ref<ExportTarget>("master");
+
+// フォーマット選択
+const audioFormat = ref<SupportedAudioFormat>("wav");
+// const supportedFormats = [
+//   {
+//     label: "WAV",
+//     value: "wav",
+//   },
+//   {
+//     label: "mp3",
+//     value: "mp3",
+//   },
+//   {
+//     label: "ogg",
+//     value: "ogg",
+//   },
+// ];
 
 // サンプルレート
 const samplingRate = ref<number>(48000);
@@ -120,18 +157,17 @@ const renderSamplingRateLabel = (rate: number) => `${rate} Hz`;
 // リミッター
 const withLimiter = ref<boolean>(true);
 
-const initializeValues = () => {
-  audioFormat.value = "wav";
-  samplingRate.value = 48000;
-  withLimiter.value = true;
-};
+// パン・ボリューム・ミュート
+const withTrackParameters = ref<boolean>(true);
 
 const handleExportTrack = () => {
   onDialogOK();
   emit("exportAudio", {
+    target: exportTarget.value,
     sampleRate: samplingRate.value,
     audioFormat: audioFormat.value,
     withLimiter: withLimiter.value,
+    withTrackParameters: withTrackParameters.value,
   });
 };
 

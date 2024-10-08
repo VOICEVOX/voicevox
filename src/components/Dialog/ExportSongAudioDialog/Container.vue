@@ -1,5 +1,5 @@
 <template>
-  <Presentation v-model="modelValue" @exportTrack="handleExportTrack" />
+  <Presentation v-model="modelValue" @exportAudio="handleExportAudio" />
 </template>
 
 <script setup lang="ts">
@@ -11,7 +11,7 @@ defineOptions({
 
 const modelValue = defineModel<boolean>();
 
-const handleExportTrack = (setting: ExportAudioSetting) => {
+const handleExportAudio = (setting: ExportAudioSetting) => {
   console.log(setting);
 };
 </script>
