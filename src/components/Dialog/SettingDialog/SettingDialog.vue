@@ -59,24 +59,10 @@
                   }}はCPU版のためGPUモードを利用できません。
                 </QTooltip>
               </ButtonToggleCell>
-              <QCardActions class="q-px-md bg-surface">
-                <div>音声のサンプリングレート</div>
-                <div
-                  aria-label="再生と保存時の音声のサンプリングレートを変更できます（サンプリングレートを上げても音声の品質は上がりません）。"
-                >
-                  <QIcon name="help_outline" size="sm" class="help-hover-icon">
-                    <QTooltip
-                      :delay="500"
-                      anchor="center right"
-                      self="center left"
-                      transitionShow="jump-right"
-                      transitionHide="jump-left"
-                    >
-                      再生・保存時の音声のサンプリングレートを変更できます（サンプリングレートを上げても音声の品質は上がりません）。
-                    </QTooltip>
-                  </QIcon>
-                </div>
-                <QSpace />
+              <BaseCell
+                title="音声のサンプリングレート"
+                description="再生と保存時の音声のサンプリングレートを変更できます（サンプリングレートを上げても音声の品質は上がりません）。"
+              >
                 <QSelect
                   v-model="outputSamplingRate"
                   borderless
@@ -86,7 +72,7 @@
                   :optionLabel="renderSamplingRateLabel"
                 >
                 </QSelect>
-              </QCardActions>
+              </BaseCell>
             </QCard>
             <!-- Preservation Setting -->
             <QCard flat class="setting-card">
@@ -371,19 +357,12 @@
                 "
               />
 
-              <QSlideTransition>
-                <!-- q-slide-transitionはheightだけをアニメーションするのでdivで囲う -->
-                <div v-show="experimentalSetting.enableMultiTrack">
-                  <EditButtonCell
-                    title="ソング：トラックファイル名パターン"
-                    description="書き出す際のファイル名のパターンをカスタマイズできます。"
-                    :currentValue="savingSetting.songTrackFileNamePattern"
-                    @buttonClick="
-                      showSongTrackAudioFilePatternEditDialog = true
-                    "
-                  />
-                </div>
-              </QSlideTransition>
+              <EditButtonCell
+                title="ソング：トラックファイル名パターン"
+                description="書き出す際のファイル名のパターンをカスタマイズできます。"
+                :currentValue="savingSetting.songTrackFileNamePattern"
+                @buttonClick="showSongTrackAudioFilePatternEditDialog = true"
+              />
             </QCard>
             <!-- Theme Card -->
             <QCard flat class="setting-card">
@@ -471,22 +450,17 @@
                 >
                 </QSelect>
               </QCardActions>
-              <QSlideTransition>
-                <!-- q-slide-transitionはheightだけをアニメーションするのでdivで囲う -->
-                <div v-show="experimentalSetting.enableMultiTrack">
-                  <BaseCell
-                    title="ソング：元に戻すトラック操作"
-                    description="「元に戻す」機能の対象とするトラック操作を指定します。"
-                  >
-                    <QOptionGroup
-                      v-model="undoableTrackOperations"
-                      type="checkbox"
-                      :options="undoableTrackOperationsLabels"
-                      inline
-                    />
-                  </BaseCell>
-                </div>
-              </QSlideTransition>
+              <BaseCell
+                title="ソング：元に戻すトラック操作"
+                description="「元に戻す」機能の対象とするトラック操作を指定します。"
+              >
+                <QOptionGroup
+                  v-model="undoableTrackOperations"
+                  type="checkbox"
+                  :options="undoableTrackOperationsLabels"
+                  inline
+                />
+              </BaseCell>
             </QCard>
 
             <!-- Experimental Card -->
@@ -534,17 +508,6 @@
                   )
                 "
               />
-              <ToggleCell
-                title="ソング：マルチトラック機能"
-                description="ONの場合、１つのプロジェクト内に複数のトラックを作成できるようにします。"
-                :modelValue="experimentalSetting.enableMultiTrack"
-                :disable="!canToggleMultiTrack"
-                @update:modelValue="setMultiTrack($event)"
-              >
-                <QTooltip v-if="!canToggleMultiTrack" :delay="500">
-                  現在のプロジェクトに複数のトラックが存在するため、無効化できません。
-                </QTooltip>
-              </ToggleCell>
             </QCard>
             <QCard flat class="setting-card">
               <QCardActions>
@@ -938,23 +901,6 @@ const selectedEngineId = computed({
 });
 const renderEngineNameLabel = (engineId: EngineId) => {
   return engineInfos.value[engineId].name;
-};
-
-// トラックが複数あるときはマルチトラック機能を無効化できないようにする
-const canToggleMultiTrack = computed(() => {
-  if (!experimentalSetting.value.enableMultiTrack) {
-    return true;
-  }
-
-  return store.state.tracks.size <= 1;
-});
-
-const setMultiTrack = (enableMultiTrack: boolean) => {
-  void changeExperimentalSetting("enableMultiTrack", enableMultiTrack);
-  // 無効化するときはUndo/Redoをクリアする
-  if (!enableMultiTrack) {
-    void store.dispatch("CLEAR_UNDO_HISTORY");
-  }
 };
 </script>
 

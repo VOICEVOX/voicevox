@@ -20,25 +20,25 @@ import { exists, mapValues } from '../runtime';
  */
 export interface LicenseInfo {
     /**
-     * 
+     * 依存ライブラリ名
      * @type {string}
      * @memberof LicenseInfo
      */
     name: string;
     /**
-     * 
+     * 依存ライブラリのバージョン
      * @type {string}
      * @memberof LicenseInfo
      */
     version?: string;
     /**
-     * 
+     * 依存ライブラリのライセンス名
      * @type {string}
      * @memberof LicenseInfo
      */
     license?: string;
     /**
-     * 
+     * 依存ライブラリのライセンス本文
      * @type {string}
      * @memberof LicenseInfo
      */

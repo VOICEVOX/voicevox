@@ -378,12 +378,8 @@ const generateAudioSequence = async (
  * `tracks`と`trackChannelStrips`を同期する。
  * シーケンスが存在する場合は、ChannelStripとシーケンスの接続・接続の解除を行う。
  * @param tracks `state`の`tracks`
- * @param enableMultiTrack マルチトラックが有効かどうか
  */
-const syncTracksAndTrackChannelStrips = (
-  tracks: Map<TrackId, Track>,
-  enableMultiTrack: boolean,
-) => {
+const syncTracksAndTrackChannelStrips = (tracks: Map<TrackId, Track>) => {
   if (audioContext == undefined) {
     throw new Error("audioContext is undefined.");
   }
@@ -411,15 +407,9 @@ const syncTracksAndTrackChannelStrips = (
     }
 
     const channelStrip = getOrThrow(trackChannelStrips, trackId);
-    if (enableMultiTrack) {
-      channelStrip.volume = track.gain;
-      channelStrip.pan = track.pan;
-      channelStrip.mute = !shouldPlays.has(trackId);
-    } else {
-      channelStrip.volume = 1;
-      channelStrip.pan = 0;
-      channelStrip.mute = false;
-    }
+    channelStrip.volume = track.gain;
+    channelStrip.pan = track.pan;
+    channelStrip.mute = !shouldPlays.has(trackId);
   }
   for (const [trackId, channelStrip] of trackChannelStrips) {
     if (!tracks.has(trackId)) {
@@ -1359,10 +1349,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS: {
     async action({ state }) {
-      syncTracksAndTrackChannelStrips(
-        state.tracks,
-        state.experimentalSetting.enableMultiTrack,
-      );
+      syncTracksAndTrackChannelStrips(state.tracks);
     },
   },
 
@@ -2006,7 +1993,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             sampleRate,
             renderDuration,
             withLimiter,
-            state.experimentalSetting.enableMultiTrack,
+            true,
             state.tracks,
             state.phrases,
             phraseSingingVoices,
@@ -2126,7 +2113,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               sampleRate,
               renderDuration,
               withLimiter,
-              state.experimentalSetting.enableMultiTrack,
+              true,
               new Map([[trackId, { ...track, solo: false, mute: false }]]),
               new Map(
                 [...state.phrases.entries()].filter(
@@ -2846,32 +2833,23 @@ export const singingCommandStore = transformCommandStore(
           | { overwrite: true; prevTrackId?: undefined }
           | { overwrite?: false; prevTrackId: TrackId }
         ))[] = [];
-        if (state.experimentalSetting.enableMultiTrack) {
-          let prevTrackId = getters.SELECTED_TRACK_ID;
-          for (const [i, track] of tracks.entries()) {
-            if (!isValidTrack(track)) {
-              throw new Error("The track is invalid.");
-            }
-            // 空のプロジェクトならトラックを上書きする
-            if (i === 0 && isTracksEmpty([...state.tracks.values()])) {
-              payload.push({
-                track,
-                trackId: prevTrackId,
-                overwrite: true,
-              });
-            } else {
-              const { trackId } = await actions.CREATE_TRACK();
-              payload.push({ track, trackId, prevTrackId });
-              prevTrackId = trackId;
-            }
+        let prevTrackId = getters.SELECTED_TRACK_ID;
+        for (const [i, track] of tracks.entries()) {
+          if (!isValidTrack(track)) {
+            throw new Error("The track is invalid.");
           }
-        } else {
-          // マルチトラックが無効な場合は最初のトラックのみをインポートする
-          payload.push({
-            track: tracks[0],
-            trackId: getters.SELECTED_TRACK_ID,
-            overwrite: true,
-          });
+          // 空のプロジェクトならトラックを上書きする
+          if (i === 0 && isTracksEmpty([...state.tracks.values()])) {
+            payload.push({
+              track,
+              trackId: prevTrackId,
+              overwrite: true,
+            });
+          } else {
+            const { trackId } = await actions.CREATE_TRACK();
+            payload.push({ track, trackId, prevTrackId });
+            prevTrackId = trackId;
+          }
         }
 
         mutations.COMMAND_IMPORT_TRACKS({
