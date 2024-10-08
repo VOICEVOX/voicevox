@@ -64,7 +64,6 @@ const open = defineModel<boolean>("open");
   gap: vars.$gap-1;
   border: 1px solid;
   text-align: start;
-  transition: background-color vars.$transition-duration;
   cursor: pointer;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   color: colors.$display;

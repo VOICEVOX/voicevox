@@ -26,7 +26,7 @@ defineProps<{
   height: vars.$size-control;
   border: 1px solid;
   transition-duration: vars.$transition-duration;
-  transition-property: background-color, color, padding, box-shadow;
+  transition-property: padding, box-shadow;
   cursor: pointer;
 
   &:active:not(:disabled) {

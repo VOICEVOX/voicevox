@@ -31,7 +31,6 @@ defineProps<{
   border: none;
   padding: vars.$padding-1 vars.$padding-2;
   border-radius: vars.$radius-1;
-  transition: background-color vars.$transition-duration;
 
   &:not([data-state="checked"]):hover {
     background-color: colors.$clear-hovered;
