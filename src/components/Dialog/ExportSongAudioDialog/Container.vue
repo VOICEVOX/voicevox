@@ -3,27 +3,25 @@
 </template>
 
 <script setup lang="ts">
-import Presentation, { ExportAudioSetting } from "./Presentation.vue";
+import { useStore } from "vuex";
+import Presentation, { ExportTarget } from "./Presentation.vue";
+import { SongExportSetting } from "@/store/type";
 
 defineOptions({
   name: "ExportSongAudioDialog",
 });
 
 const modelValue = defineModel<boolean>();
+const store = useStore();
 
-const handleExportAudio = (setting: ExportAudioSetting) => {
-  console.log(setting);
+const handleExportAudio = (
+  target: ExportTarget,
+  setting: SongExportSetting,
+) => {
+  if (target === "master") {
+    void store.dispatch("EXPORT_WAVE_FILE", { setting });
+  } else {
+    void store.dispatch("EXPORT_STEM_WAVE_FILE", { setting });
+  }
 };
 </script>
-
-<style scoped lang="scss">
-.dialog-card {
-  width: 700px;
-  max-width: 80vw;
-}
-
-.scrollable-area {
-  overflow-y: auto;
-  max-height: calc(100vh - 100px - 295px);
-}
-</style>

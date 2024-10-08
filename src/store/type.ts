@@ -71,6 +71,7 @@ import {
   timeSignatureSchema,
   trackSchema,
 } from "@/domain/project/schema";
+import { ExportTarget, SupportedAudioFormat } from "@/sing/domain";
 
 /**
  * エディタ用のAudioQuery
@@ -815,6 +816,15 @@ export const PhraseKey = (id: string): PhraseKey => phraseKeySchema.parse(id);
 
 export type SequencerEditTarget = "NOTE" | "PITCH";
 
+export type SongSupportedAudioFormat = "wav" | "mp3" | "ogg";
+export type SongExportSetting = {
+  isStereo: boolean;
+  sampleRate: number;
+  audioFormat: SupportedAudioFormat;
+  withLimiter: boolean;
+  withTrackParameters: boolean;
+};
+
 export type SingingStoreState = {
   tpqn: number; // Ticks Per Quarter Note
   tempos: Tempo[];
@@ -1062,11 +1072,24 @@ export type SingingStoreTypes = {
   };
 
   EXPORT_WAVE_FILE: {
-    action(payload: { filePath?: string }): SaveResultObject;
+    action(payload: {
+      filePath?: string;
+      setting: SongExportSetting;
+    }): SaveResultObject;
   };
 
   EXPORT_STEM_WAVE_FILE: {
-    action(payload: { dirPath?: string }): SaveResultObject;
+    action(payload: {
+      dirPath?: string;
+      setting: SongExportSetting;
+    }): SaveResultObject;
+  };
+
+  EXPORT_FILE: {
+    action(payload: {
+      filePath: string;
+      content: ArrayBuffer;
+    }): Promise<SaveResultObject>;
   };
 
   CANCEL_AUDIO_EXPORT: {

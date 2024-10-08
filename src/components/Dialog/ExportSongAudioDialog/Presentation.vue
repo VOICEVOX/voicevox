@@ -42,6 +42,12 @@
           />
         </BaseCell> -->
         <BaseCell
+          title="音声をステレオ化"
+          description="ONの場合、音声データがモノラルからステレオに変換されてから保存が行われます。"
+        >
+          <QToggle v-model="isStereo" />
+        </BaseCell>
+        <BaseCell
           title="音声のサンプリングレート"
           description="音声のサンプリングレートを変更できます。"
         >
@@ -100,23 +106,15 @@
 import { ref } from "vue";
 import { useDialogPluginComponent } from "quasar";
 import BaseCell from "./BaseCell.vue";
-import { SupportedAudioFormat } from "@/sing/domain";
+import { SongSupportedAudioFormat, SongExportSetting } from "@/store/type";
 
 export type ExportTarget = "master" | "stem";
-export type ExportAudioSetting = {
-  target: ExportTarget;
-  sampleRate: number;
-  audioFormat: SupportedAudioFormat;
-  withLimiter: boolean;
-  withTrackParameters: boolean;
-};
-
 const { dialogRef, onDialogOK, onDialogCancel } = useDialogPluginComponent();
 
 const modelValue = defineModel<boolean>();
 const emit = defineEmits<{
   /** 音声をエクスポートするときに呼ばれる */
-  exportAudio: [setting: ExportAudioSetting];
+  exportAudio: [exportTarget: ExportTarget, setting: SongExportSetting];
 }>();
 
 // 書き出し対象選択
@@ -132,8 +130,11 @@ const exportTargets = [
 ];
 const exportTarget = ref<ExportTarget>("master");
 
+// ステレオ
+const isStereo = ref<boolean>(true);
+
 // フォーマット選択
-const audioFormat = ref<SupportedAudioFormat>("wav");
+const audioFormat = ref<SongSupportedAudioFormat>("wav");
 // const supportedFormats = [
 //   {
 //     label: "WAV",
@@ -162,8 +163,8 @@ const withTrackParameters = ref<boolean>(true);
 
 const handleExportTrack = () => {
   onDialogOK();
-  emit("exportAudio", {
-    target: exportTarget.value,
+  emit("exportAudio", exportTarget.value, {
+    isStereo: isStereo.value,
     sampleRate: samplingRate.value,
     audioFormat: audioFormat.value,
     withLimiter: withLimiter.value,

@@ -106,6 +106,7 @@ import {
   PhraseRenderStageId,
   createPhraseRenderer,
 } from "@/sing/phraseRendering";
+import { UnreachableError } from "@/type/utility";
 
 const logger = createLogger("store/singing");
 
@@ -1951,16 +1952,16 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   EXPORT_WAVE_FILE: {
     action: createUILockAction(
-      async ({ state, mutations, getters, actions }, { filePath }) => {
+      async ({ state, mutations, getters, actions }, { filePath, setting }) => {
         const exportWaveFile = async (): Promise<SaveResultObject> => {
           const fileName = generateDefaultSongFileName(
             getters.PROJECT_NAME,
             getters.SELECTED_TRACK,
             getters.CHARACTER_INFO,
           );
-          const numberOfChannels = 2;
-          const sampleRate = 48000; // TODO: 設定できるようにする
-          const withLimiter = true; // TODO: 設定できるようにする
+          const numberOfChannels = setting.isStereo ? 2 : 1;
+          const sampleRate = setting.sampleRate;
+          const withLimiter = setting.withLimiter;
 
           const renderDuration = getters.CALC_RENDER_DURATION;
 
@@ -2011,36 +2012,21 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             phraseSingingVoices,
           );
 
-          const waveFileData = convertToWavFileData(audioBuffer);
-
-          try {
-            await window.backend
-              .writeFile({
-                filePath,
-                buffer: waveFileData,
-              })
-              .then(getValueOrThrow);
-          } catch (e) {
-            logger.error("Failed to export the wav file.", e);
-            if (e instanceof ResultError) {
-              return {
-                result: "WRITE_ERROR",
-                path: filePath,
-                errorMessage: generateWriteErrorMessage(
-                  e as ResultError<string>,
-                ),
-              };
-            }
-            return {
-              result: "UNKNOWN_ERROR",
-              path: filePath,
-              errorMessage:
-                (e instanceof Error ? e.message : String(e)) ||
-                "不明なエラーが発生しました。",
-            };
+          let fileData;
+          switch (setting.audioFormat) {
+            case "wav":
+              fileData = convertToWavFileData(audioBuffer);
+              break;
+            default:
+              throw new UnreachableError("Not implemented");
           }
 
-          return { result: "SUCCESS", path: filePath };
+          const result = await actions.EXPORT_FILE({
+            filePath,
+            content: fileData,
+          });
+
+          return result;
         };
 
         mutations.SET_NOW_AUDIO_EXPORTING({ nowAudioExporting: true });
@@ -2054,15 +2040,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     ),
   },
 
-  // TODO: EXPORT_WAVE_FILEとコードが重複しているので、共通化する
   EXPORT_STEM_WAVE_FILE: {
     action: createUILockAction(
-      async ({ state, mutations, getters, actions }, { dirPath }) => {
+      async ({ state, mutations, getters, actions }, { dirPath, setting }) => {
         let firstFilePath = "";
         const exportWaveFile = async (): Promise<SaveResultObject> => {
-          const numberOfChannels = 2;
-          const sampleRate = 48000; // TODO: 設定できるようにする
-          const withLimiter = true; // TODO: 設定できるようにする
+          const numberOfChannels = setting.isStereo ? 2 : 1;
+          const sampleRate = setting.sampleRate;
+          const withLimiter = setting.withLimiter;
 
           const renderDuration = getters.CALC_RENDER_DURATION;
 
@@ -2151,36 +2136,25 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               singingVoiceCache,
             );
 
-            const waveFileData = convertToWavFileData(audioBuffer);
-            if (i === 0) {
-              firstFilePath = filePath;
+            let fileData;
+            switch (setting.audioFormat) {
+              case "wav":
+                fileData = convertToWavFileData(audioBuffer);
+                break;
+              default:
+                throw new UnreachableError("Not implemented");
             }
 
-            try {
-              await window.backend
-                .writeFile({
-                  filePath,
-                  buffer: waveFileData,
-                })
-                .then(getValueOrThrow);
-            } catch (e) {
-              logger.error("Failed to export the wav file.", e);
-              if (e instanceof ResultError) {
-                return {
-                  result: "WRITE_ERROR",
-                  path: filePath,
-                  errorMessage: generateWriteErrorMessage(
-                    e as ResultError<string>,
-                  ),
-                };
-              }
-              return {
-                result: "UNKNOWN_ERROR",
-                path: filePath,
-                errorMessage:
-                  (e instanceof Error ? e.message : String(e)) ||
-                  "不明なエラーが発生しました。",
-              };
+            const result = await actions.EXPORT_FILE({
+              filePath,
+              content: fileData,
+            });
+            if (result.result !== "SUCCESS") {
+              return result;
+            }
+
+            if (i === 0) {
+              firstFilePath = filePath;
             }
           }
 
@@ -2196,6 +2170,37 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         });
       },
     ),
+  },
+
+  EXPORT_FILE: {
+    async action(_, { filePath, content }) {
+      try {
+        await window.backend
+          .writeFile({
+            filePath,
+            buffer: content,
+          })
+          .then(getValueOrThrow);
+      } catch (e) {
+        logger.error("Failed to export file.", e);
+        if (e instanceof ResultError) {
+          return {
+            result: "WRITE_ERROR",
+            path: filePath,
+            errorMessage: generateWriteErrorMessage(e as ResultError<string>),
+          };
+        }
+        return {
+          result: "UNKNOWN_ERROR",
+          path: filePath,
+          errorMessage:
+            (e instanceof Error ? e.message : String(e)) ||
+            "不明なエラーが発生しました。",
+        };
+      }
+
+      return { result: "SUCCESS", path: filePath };
+    },
   },
 
   CANCEL_AUDIO_EXPORT: {
