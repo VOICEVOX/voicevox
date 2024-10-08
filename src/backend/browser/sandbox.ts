@@ -240,6 +240,9 @@ export const api: Sandbox = {
   maximizeWindow() {
     throw new Error(`Not supported on Browser version: maximizeWindow`);
   },
+  toggleFullScreenMode() {
+    throw new Error(`Not supported on Browser version: toggleFullScreenMode`);
+  },
   /* eslint-disable no-console */ // ログの吐き出し先は console ぐらいしかないので、ここでは特例で許可している
   logError(...params: unknown[]) {
     console.error(...params);

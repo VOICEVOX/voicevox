@@ -179,6 +179,11 @@ export type IpcIHData = {
     return: void;
   };
 
+  TOGGLE_FULLSCREENMODE: {
+    args: [];
+    return: void;
+  };
+
   OPEN_LOG_DIRECTORY: {
     args: [];
     return: void;
