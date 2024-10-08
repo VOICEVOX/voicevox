@@ -23,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-import { watch, onMounted, ref, computed, toRaw } from "vue";
+import { watch, onMounted, onUnmounted, ref, computed, toRaw } from "vue";
 import { useGtm } from "@gtm-support/vue-gtm";
 import { TooltipProvider } from "radix-vue";
 import TalkEditor from "@/components/Talk/TalkEditor.vue";
@@ -154,4 +154,21 @@ onMounted(async () => {
     isProjectFileLoaded.value = false;
   }
 });
+
+// ホットキーの監視を開始/終了
+const startKeyInputWithCleanup = () => {
+  const keyInputHandler = (e: KeyboardEvent) => {
+    hotkeyManager.keyInput(e);
+  };
+
+  onMounted(() => {
+    document.addEventListener("keydown", keyInputHandler);
+  });
+
+  onUnmounted(() => {
+    document.removeEventListener("keydown", keyInputHandler);
+  });
+};
+
+startKeyInputWithCleanup();
 </script>
