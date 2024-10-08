@@ -79,9 +79,6 @@ watch(
       void store.dispatch("SET_SONG_SIDEBAR_OPEN", { isSongSidebarOpen: true });
     }
   },
-  {
-    deep: true,
-  },
 );
 
 const nowRendering = computed(() => {
