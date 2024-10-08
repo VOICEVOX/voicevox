@@ -25,6 +25,7 @@ const proxyStoreCreator = (_engineFactory: IEngineConnectorFactory) => {
         // NOTE: URLを正規化する
         const url = new URL(`${engineInfo.protocol}//${engineInfo.hostname}`);
         url.port = port;
+        // NOTE: URLインターフェースは"pathname"が空文字でも"/"を付けるので手動で結合する。
         const instance = _engineFactory.instance(
           `${url.origin}${engineInfo.pathname}`,
         );

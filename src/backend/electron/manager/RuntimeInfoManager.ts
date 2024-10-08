@@ -90,6 +90,7 @@ export class RuntimeInfoManager {
           url.port = port;
           return {
             uuid: engineInfo.uuid,
+            // NOTE: URLインターフェースは"pathname"が空文字でも"/"を付けるので手動で結合する。
             url: `${url.origin}${engineInfo.pathname}`,
             name: engineInfo.name,
           };
