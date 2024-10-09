@@ -56,12 +56,8 @@ jobs:
       - name: Setup environment
         uses: ./.github/actions/setup-environment
 
-      - run: |
-          # NOTE: postinstallのplaywright installで入るChromiumとtest:unitで使われるChromiumのバージョンが
-          # 異なるので、一旦実行して必要なバージョンを認識させる
-          # TODO: もっと良い方法があれば変更する
-          npm run test:unit || true
-          npx playwright install
+      - name: Run test
+        run: |
           npm run test:unit
 
   # e2e テスト
