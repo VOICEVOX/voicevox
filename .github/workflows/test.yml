@@ -58,9 +58,6 @@ jobs:
 
       - run: npm run test:unit
 
-      - name: Setup playwright
-        run: npx playwright install
-
   # e2e テスト
   e2e-test:
     runs-on: ${{ matrix.os }}
@@ -102,9 +99,6 @@ jobs:
 
       - name: Setup
         run: |
-          # playwright
-          npx playwright install
-
           # run.exe
           chmod +x ${{ steps.download-engine.outputs.run_path }}
 
