@@ -50,14 +50,19 @@ jobs:
 
   # unit テスト
   unit-test:
-    # TODO: Windowsで動かすようにする
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
       - name: Setup environment
         uses: ./.github/actions/setup-environment
 
-      - run: npm run test:unit
+      - run: |
+          # NOTE: postinstallのplaywright installで入るChromiumとtest:unitで使われるChromiumのバージョンが
+          # 異なるので、一旦実行して必要なバージョンを認識させる
+          # TODO: もっと良い方法があれば変更する
+          npm run test:unit || true
+          npx playwright install
+          npm run test:unit
 
   # e2e テスト
   e2e-test:
