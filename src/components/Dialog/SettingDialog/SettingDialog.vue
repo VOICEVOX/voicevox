@@ -318,7 +318,7 @@
               <EditButtonCell
                 title="書き出しファイル名パターン"
                 description="書き出す際のファイル名のパターンをカスタマイズできます。"
-                :currentValue="savingSetting.fileNamePattern"
+                :currentValue="audioFileNamePatternWithExt"
                 @buttonClick="showAudioFilePatternEditDialog = true"
               />
 
@@ -362,7 +362,7 @@
               <EditButtonCell
                 title="ソング：トラックファイル名パターン"
                 description="書き出す際のファイル名のパターンをカスタマイズできます。"
-                :currentValue="savingSetting.songTrackFileNamePattern"
+                :currentValue="songTrackFileNamePatternWithExt"
                 @buttonClick="showSongTrackAudioFilePatternEditDialog = true"
               />
             </QCard>
@@ -795,6 +795,12 @@ const audioFileNamePattern = computed(
 );
 const songTrackFileNamePattern = computed(
   () => store.state.savingSetting.songTrackFileNamePattern,
+);
+const audioFileNamePatternWithExt = computed(() =>
+  audioFileNamePattern.value ? audioFileNamePattern.value + ".wav" : "",
+);
+const songTrackFileNamePatternWithExt = computed(() =>
+  songTrackFileNamePattern.value ? songTrackFileNamePattern.value + ".wav" : "",
 );
 
 const gpuSwitchEnabled = (engineId: EngineId) => {
