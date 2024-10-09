@@ -29,8 +29,8 @@ import {
   QAndATextFileName,
   UpdateInfosJsonFileName,
 } from "@/type/staticResources";
-import MessageDialog from "@/components/Dialog/Browser/MessageDialog.vue";
-import QuestionDialog from "@/components/Dialog/Browser/QuestionDialog.vue";
+import MessageDialog from "@/components/Dialog/TextDialog/MessageDialog.vue";
+import QuestionDialog from "@/components/Dialog/TextDialog/QuestionDialog.vue";
 
 // TODO: base pathを設定できるようにするか、ビルド時埋め込みにする
 const toStaticPath = (fileName: string) => `/${fileName}`;

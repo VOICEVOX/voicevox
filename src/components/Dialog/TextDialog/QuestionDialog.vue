@@ -1,5 +1,5 @@
 <!--
-  ブラウザ版のメッセージダイアログ。
+  ブラウザ版の質問ダイアログ。
   QuasarのDialog Pluginから呼ぶことを想定。
   参照：https://quasar.dev/quasar-plugins/dialog
 -->
@@ -16,17 +16,21 @@
         <div class="text-h5" :class="[`text-${color}`]">{{ props.title }}</div>
       </QCardSection>
 
-      <QCardSection>
+      <QCardSection class="q-py-none message">
         {{ props.message }}
       </QCardSection>
       <QCardActions align="right">
+        <QSpace />
         <QBtn
-          unelevated
-          label="OK"
+          v-for="(button, index) in props.buttons"
+          ref="buttons"
+          :key="index"
+          flat
+          :label="button"
           color="toolbar-button"
           textColor="toolbar-button-display"
-          class="text-no-wrap text-bold q-mr-sm"
-          @click="onOk"
+          class="text-no-wrap text-bold"
+          @click="onClick(index)"
         />
       </QCardActions>
     </QCard>
@@ -34,17 +38,25 @@
 </template>
 
 <script setup lang="ts">
-import { useDialogPluginComponent } from "quasar";
-import { computed } from "vue";
-import { getColor, getIcon } from "./common";
+import { QBtn, useDialogPluginComponent } from "quasar";
+import { computed, onMounted, useTemplateRef } from "vue";
+import { getIcon, getColor } from "./common";
 
 const modelValue = defineModel<boolean>({ default: false });
-const props = defineProps<{
-  type: "none" | "info" | "error" | "question" | "warning";
-  title: string;
-  message: string;
-}>();
-
+const props = withDefaults(
+  defineProps<{
+    type: "none" | "info" | "error" | "question" | "warning";
+    title: string;
+    message: string;
+    buttons: string[];
+    persistent?: boolean;
+    default?: number;
+  }>(),
+  {
+    persistent: true,
+    default: undefined,
+  },
+);
 defineEmits({
   ...useDialogPluginComponent.emitsObject,
 });
@@ -53,14 +65,25 @@ const iconName = computed(() => getIcon(props.type));
 const color = computed(() => getColor(props.type));
 const { dialogRef, onDialogHide, onDialogOK } = useDialogPluginComponent();
 
-function onOk() {
-  onDialogOK();
+const buttonsRef = useTemplateRef<QBtn[]>("buttons");
+
+onMounted(() => {
+  if (props.default != undefined) {
+    buttonsRef.value?.[props.default].$el.focus();
+  }
+});
+
+function onClick(index: number) {
+  onDialogOK({ index });
 }
 </script>
-
 <style scoped lang="scss">
 .title {
   display: flex;
   align-items: center;
+}
+
+.message {
+  white-space: pre-wrap;
 }
 </style>
