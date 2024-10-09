@@ -39,7 +39,7 @@ export const Close: Story = {
   },
 };
 export const ClickBackdropWithoutCancel: Story = {
-  name: "Cancelなしで背景を押しても反応しない",
+  name: "cancelなしで背景を押しても反応しない",
   args: { ...Opened.args },
   play: async ({ args }) => {
     const backdrop = document.body.querySelector(".q-dialog__backdrop");
@@ -51,7 +51,7 @@ export const ClickBackdropWithoutCancel: Story = {
 };
 
 export const ClickBackdropWithCancel: Story = {
-  name: "Cancelありで背景を押す",
+  name: "cancelありで背景を押すとキャンセル扱いになる",
   args: { ...Opened.args, buttons: ["A", "キャンセル"], cancel: 1 },
   play: async ({ args }) => {
     const backdrop = document.body.querySelector(".q-dialog__backdrop");
