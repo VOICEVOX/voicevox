@@ -48,7 +48,6 @@ export default defineWorkspace([
           enabled: true,
           name: "chromium",
           provider: "playwright",
-          headless: false,
         },
         isolate: false,
         setupFiles: ["./.storybook/vitest.setup.ts"],
