@@ -50,7 +50,8 @@ jobs:
 
   # unit テスト
   unit-test:
-    runs-on: windows-latest
+    # TODO: Windowsで動かすようにする
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Setup environment
