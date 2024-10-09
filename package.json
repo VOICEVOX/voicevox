@@ -15,6 +15,7 @@
   "scripts": {
     "test:unit": "vitest --run",
     "test-watch:unit": "vitest --watch",
+    "test-watch:unit:ui": "vitest --ui",
     "test:electron-e2e": "cross-env VITE_TARGET=electron playwright test",
     "test-watch:electron-e2e": "cross-env PWTEST_WATCH=1 VITE_TARGET=electron playwright test",
     "test:browser-e2e": "cross-env VITE_TARGET=browser playwright test",
