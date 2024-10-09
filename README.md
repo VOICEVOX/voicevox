@@ -120,14 +120,10 @@ npm run test-watch:unit # 監視モード
 npm run test:unit -- --update # スナップショットの更新
 ```
 
-### コンポーネントのテスト
-
-Storybook を使ってコンポーネントのテストを行います。
+また、以下のコマンドでテストのダッシュボードを表示できます：
 
 ```bash
-npm run storybook # 先に Storybook を起動
-npm run test:storybook
-npm run test-watch:storybook # 監視モード
+npm run test-watch:unit:ui
 ```
 
 ### ブラウザ End to End テスト
