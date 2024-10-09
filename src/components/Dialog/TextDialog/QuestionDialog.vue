@@ -4,7 +4,12 @@
   参照：https://quasar.dev/quasar-plugins/dialog
 -->
 <template>
-  <QDialog ref="dialogRef" v-model="modelValue" @hide="onDialogHide">
+  <QDialog
+    ref="dialogRef"
+    :modelValue
+    :persistent
+    @update:modelValue="updateModelValue"
+  >
     <QCard class="q-py-sm q-px-md dialog-card">
       <QCardSection class="title">
         <QIcon
@@ -41,6 +46,7 @@
 import { QBtn, useDialogPluginComponent } from "quasar";
 import { computed, onMounted, useTemplateRef } from "vue";
 import { getIcon, getColor } from "./common";
+import { UnreachableError } from "@/type/utility";
 
 const modelValue = defineModel<boolean>({ default: false });
 const props = withDefaults(
@@ -49,12 +55,14 @@ const props = withDefaults(
     title: string;
     message: string;
     buttons: string[];
-    persistent?: boolean;
-    default?: number;
+    persistent?: boolean | undefined;
+    default?: number | undefined;
+    cancel?: number | undefined;
   }>(),
   {
-    persistent: true,
+    persistent: undefined,
     default: undefined,
+    cancel: undefined,
   },
 );
 defineEmits({
@@ -63,19 +71,45 @@ defineEmits({
 
 const iconName = computed(() => getIcon(props.type));
 const color = computed(() => getColor(props.type));
-const { dialogRef, onDialogHide, onDialogOK } = useDialogPluginComponent();
+const { dialogRef, onDialogOK } = useDialogPluginComponent();
 
 const buttonsRef = useTemplateRef<QBtn[]>("buttons");
+const persistent = computed(
+  () => props.persistent ?? props.cancel == undefined,
+);
 
 onMounted(() => {
   if (props.default != undefined) {
     buttonsRef.value?.[props.default].$el.focus();
   }
+  buttonClicked = false;
 });
 
-function onClick(index: number) {
+let buttonClicked = false;
+
+const onClick = (index: number) => {
+  if (buttonClicked) return;
+  buttonClicked = true;
   onDialogOK({ index });
-}
+};
+
+const updateModelValue = (val: boolean) => {
+  // trueになるとき：通す
+  // falseになるとき：
+  // - onClickを呼んだ後に非表示になるなら通す
+  // - そうでないなら（背景クリックなど）cancel扱いにする、cancelが未設定ならエラー（Unreachableのはず）
+  if (val || buttonClicked) {
+    modelValue.value = val;
+  } else {
+    if (props.cancel == undefined) {
+      throw new UnreachableError(
+        "Unreachable: cancel is not set, but dialog is not closed by clicking button",
+      );
+    }
+    buttonClicked = true;
+    onDialogOK({ index: props.cancel ?? -1 });
+  }
+};
 </script>
 <style scoped lang="scss">
 .title {
