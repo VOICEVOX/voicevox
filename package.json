@@ -30,7 +30,7 @@
     "browser:serve": "cross-env VITE_TARGET=browser vite",
     "browser:build": "cross-env VITE_TARGET=browser vite build",
     "postinstall": "run-s postinstall:packages postinstall:download-scripts",
-    "postinstall:packages": "patch-package --patch-dir build/patches && electron-builder install-app-deps && playwright install",
+    "postinstall:packages": "patch-package --patch-dir build/patches && electron-builder install-app-deps && playwright install chromium",
     "postinstall:download-scripts": "node build/download7z.js && node build/downloadTypos.js",
     "postuninstall": "electron-builder install-app-deps",
     "license:generate": "node build/generateLicenses.js",
