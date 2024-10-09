@@ -37,6 +37,7 @@ export default defineWorkspace([
       ],
       resolve: {
         alias: {
+          // NOTE: Storybookで`template:`指定を使うために必要
           vue: "vue/dist/vue.esm-bundler.js",
         },
       },
