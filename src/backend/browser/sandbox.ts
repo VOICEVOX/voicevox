@@ -207,8 +207,6 @@ export const api: Sandbox = {
         title: obj.title,
         message: obj.message,
         buttons: obj.buttons,
-        cancelId: obj.cancelId,
-        defaultId: obj.defaultId,
       },
     }).onOk((result: { index: number }) => resolve(result.index));
 
