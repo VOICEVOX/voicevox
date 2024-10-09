@@ -9,6 +9,7 @@ const config: StorybookConfig = {
     "@chromatic-com/storybook",
     "@storybook/addon-interactions",
     "@storybook/addon-themes",
+    "@storybook/experimental-addon-test",
   ],
 
   framework: {
@@ -18,7 +19,7 @@ const config: StorybookConfig = {
     },
   },
 
-  docs: {}
+  docs: {},
 };
 
 export default config;

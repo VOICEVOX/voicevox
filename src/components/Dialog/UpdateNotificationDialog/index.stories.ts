@@ -36,7 +36,7 @@ export const Opened: Story = {
 
 export const Close: Story = {
   name: "閉じるボタンを押す",
-  args: { ...Opened.args },
+  args: { ...Opened.args, "onUpdate:modelValue": fn() },
   play: async ({ args }) => {
     const canvas = within(document.body); // ダイアログなので例外的にdocument.bodyを使う
 
@@ -50,7 +50,11 @@ export const Close: Story = {
 
 export const SkipThisVersion: Story = {
   name: "スキップボタンを押す",
-  args: { ...Opened.args },
+  args: {
+    ...Opened.args,
+    "onUpdate:modelValue": fn(),
+    onSkipThisVersionClick: fn(),
+  },
   play: async ({ args }) => {
     const canvas = within(document.body); // ダイアログなので例外的にdocument.bodyを使う
 
@@ -68,7 +72,7 @@ export const SkipThisVersion: Story = {
 
 export const OpenOfficialSite: Story = {
   name: "公式サイトを開くボタンを押す",
-  args: { ...Opened.args },
+  args: { ...Opened.args, "onUpdate:modelValue": fn() },
   play: async ({ args }) => {
     window.open = fn();
 

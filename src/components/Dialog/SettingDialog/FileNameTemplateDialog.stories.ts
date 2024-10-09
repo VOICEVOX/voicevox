@@ -1,4 +1,4 @@
-import { userEvent, within, expect } from "@storybook/test";
+import { userEvent, within, expect, fn } from "@storybook/test";
 
 import { Meta, StoryObj } from "@storybook/vue3";
 import FileNameTemplateDialog from "./FileNameTemplateDialog.vue";
@@ -96,7 +96,11 @@ export const MissingIndexInput: Story = {
 
 export const Save: Story = {
   name: "確定ボタンを押す",
-  args: { ...Opened.args },
+  args: {
+    ...Opened.args,
+    "onUpdate:template": fn(),
+    "onUpdate:openDialog": fn(),
+  },
   play: async ({ args }) => {
     const canvas = within(document.body); // ダイアログなので例外的にdocument.bodyを使う
 
@@ -126,7 +130,11 @@ export const Unsaveable: Story = {
 
 export const Close: Story = {
   name: "キャンセルボタンを押す",
-  args: { ...Opened.args },
+  args: {
+    ...Opened.args,
+    "onUpdate:template": fn(),
+    "onUpdate:openDialog": fn(),
+  },
   play: async ({ args }) => {
     const canvas = within(document.body); // ダイアログなので例外的にdocument.bodyを使う
 
@@ -141,4 +149,7 @@ export const Close: Story = {
 
 export const Closed: Story = {
   name: "閉じている",
+  args: {
+    openDialog: false,
+  },
 };

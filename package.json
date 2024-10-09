@@ -99,6 +99,7 @@
     "@typescript-eslint/utils": "7.15.0",
     "@vitejs/plugin-vue": "5.0.4",
     "@vitest/browser": "2.1.2",
+    "@vitest/ui": "2.1.2",
     "@voicevox/eslint-plugin": "file:./eslint-plugin",
     "@vue/eslint-config-prettier": "9.0.0",
     "@vue/eslint-config-typescript": "13.0.0",
