@@ -25,6 +25,7 @@ export default defineConfig((options) => {
       `"package.json"の"name":"${packageName}"は"VITE_APP_NAME":"${env.VITE_APP_NAME}"から始まっている必要があります`,
     );
   }
+
   const shouldEmitSourcemap = ["development", "test"].includes(options.mode);
   process.env.VITE_7Z_BIN_NAME =
     (options.mode === "development"
@@ -60,12 +61,6 @@ export default defineConfig((options) => {
         "@": path.resolve(__dirname, "src/"),
       },
     },
-    test: {
-      include: ["../tests/unit/**/*.spec.ts"],
-      environment: "happy-dom",
-      globals: true,
-    },
-
     plugins: [
       vue(),
       quasar({ autoImportComponentCase: "pascal" }),
