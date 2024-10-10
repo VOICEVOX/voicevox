@@ -4,7 +4,7 @@ import { Meta, StoryObj } from "@storybook/vue3";
 import FileNameTemplateDialog from "./FileNameTemplateDialog.vue";
 import {
   buildAudioFileNameFromRawData,
-  DEFAULT_AUDIO_FILE_BASE_NAME_TEMPLATE,
+  DEFAULT_AUDIO_FILE_NAME_TEMPLATE,
 } from "@/store/utility";
 
 const meta: Meta<typeof FileNameTemplateDialog> = {
@@ -18,7 +18,7 @@ const meta: Meta<typeof FileNameTemplateDialog> = {
       "date",
       "projectName",
     ],
-    defaultTemplate: DEFAULT_AUDIO_FILE_BASE_NAME_TEMPLATE,
+    defaultTemplate: DEFAULT_AUDIO_FILE_NAME_TEMPLATE,
     savedTemplate: "",
     fileNameBuilder: buildAudioFileNameFromRawData,
   },

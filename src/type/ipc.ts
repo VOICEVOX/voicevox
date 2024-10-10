@@ -70,7 +70,12 @@ export type IpcIHData = {
   };
 
   SHOW_AUDIO_SAVE_DIALOG: {
-    args: [obj: { title: string; defaultPath?: string }];
+    args: [
+      obj: {
+        title: string;
+        defaultPath?: string;
+      },
+    ];
     return?: string;
   };
 
@@ -275,7 +280,7 @@ export type IpcIHData = {
   };
 
   WRITE_FILE: {
-    args: [obj: { filePath: string; buffer: ArrayBuffer }];
+    args: [obj: { filePath: string; buffer: ArrayBuffer | Uint8Array }];
     return: Result<undefined>;
   };
 

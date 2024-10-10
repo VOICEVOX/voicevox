@@ -130,9 +130,8 @@ const replaceTagStringToTagId: Record<string, string> = Object.entries(
   replaceTagIdToTagString,
 ).reduce((prev, [k, v]) => ({ ...prev, [v]: k }), {});
 
-export const DEFAULT_AUDIO_FILE_BASE_NAME_TEMPLATE =
+export const DEFAULT_AUDIO_FILE_NAME_TEMPLATE =
   "$連番$_$キャラ$（$スタイル$）_$テキスト$";
-export const DEFAULT_AUDIO_FILE_NAME_TEMPLATE = `${DEFAULT_AUDIO_FILE_BASE_NAME_TEMPLATE}.wav`;
 const DEFAULT_AUDIO_FILE_NAME_VARIABLES = {
   index: 0,
   characterName: "四国めたん",
@@ -142,9 +141,8 @@ const DEFAULT_AUDIO_FILE_NAME_VARIABLES = {
   projectName: "VOICEVOXプロジェクト",
 };
 
-export const DEFAULT_SONG_AUDIO_FILE_BASE_NAME_TEMPLATE =
+export const DEFAULT_SONG_AUDIO_FILE_NAME_TEMPLATE =
   "$連番$_$キャラ$（$スタイル$）_$トラック名$";
-export const DEFAULT_SONG_AUDIO_FILE_NAME_TEMPLATE = `${DEFAULT_SONG_AUDIO_FILE_BASE_NAME_TEMPLATE}.wav`;
 const DEFAULT_SONG_AUDIO_FILE_NAME_VARIABLES = {
   index: 0,
   characterName: "四国めたん",

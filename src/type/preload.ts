@@ -259,7 +259,7 @@ export interface Sandbox {
   }): Promise<string | undefined>;
   writeFile(obj: {
     filePath: string;
-    buffer: ArrayBuffer;
+    buffer: ArrayBuffer | Uint8Array;
   }): Promise<Result<undefined>>;
   readFile(obj: { filePath: string }): Promise<Result<ArrayBuffer>>;
   isAvailableGPUMode(): Promise<boolean>;
@@ -617,6 +617,7 @@ export const configSchema = z
     savingSetting: z
       .object({
         fileEncoding: z.enum(["UTF-8", "Shift_JIS"]).default("UTF-8"),
+        // NOTE: ファイル名パターンは拡張子を含まない
         fileNamePattern: z.string().default(""),
         fixedExportEnabled: z.boolean().default(false),
         avoidOverwrite: z.boolean().default(false),

@@ -255,6 +255,13 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
         delete experimentalSetting.shouldApplyDefaultPresetOnVoiceChanged;
       }
 
+      // 書き出しテンプレートから拡張子を削除
+      const savingSetting = config.savingSetting as { fileNamePattern: string };
+      savingSetting.fileNamePattern = savingSetting.fileNamePattern.replace(
+        ".wav",
+        "",
+      );
+
       return config;
     },
   ],
