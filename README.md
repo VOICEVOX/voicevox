@@ -116,24 +116,19 @@ fork したリポジトリで Actions を ON にし、workflow_dispatch で`buil
 
 `./tests/unit/` 以下にあるテストと、Storybookのテストを実行します。
 
+```bash
+npm run test:unit
+npm run test-watch:unit # 監視モード
+npm run test-ui:unit # VitestのUIを表示
+npm run test:unit -- --update # スナップショットの更新
+```
+
 > [!NOTE]  
 > `./tests/unit` 下のテストは、ファイル名によってテストを実行する環境が変化します。
 >
 > - `.node.spec.ts`：Node.js 環境
-> - `.browser.spec.ts`：ブラウザ環境（実機）
+> - `.browser.spec.ts`：ブラウザ環境（Chromium）
 > - `.spec.ts`：ブラウザ環境（happy-domによるエミュレート）
-
-```bash
-npm run test:unit
-npm run test-watch:unit # 監視モード
-npm run test:unit -- --update # スナップショットの更新
-```
-
-また、以下のコマンドでテストのダッシュボードを表示できます：
-
-```bash
-npm run test-ui:unit
-```
 
 ### ブラウザ End to End テスト
 
