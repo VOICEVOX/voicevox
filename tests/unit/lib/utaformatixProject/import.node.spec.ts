@@ -1,5 +1,3 @@
-// @vitest-environment node
-
 import { promises as fs } from "fs";
 import { it, expect } from "vitest";
 import { Project as UfProject } from "@sevenc-nanashi/utaformatix-ts";

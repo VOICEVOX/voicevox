@@ -22,12 +22,13 @@
   },
   "include": [
     "playwright.config.ts",
+    "*.mts",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/**/*.vue",
     "tests/**/*.ts",
     "tests/**/*.tsx",
-    ".storybook/**/*.ts",
+    ".storybook/**/*.ts"
   ],
   "exclude": ["node_modules"]
 }

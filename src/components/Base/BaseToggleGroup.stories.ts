@@ -1,3 +1,4 @@
+import { ref } from "vue";
 import type { Meta, StoryObj } from "@storybook/vue3";
 
 import BaseToggleGroup from "./BaseToggleGroup.vue";
@@ -17,10 +18,11 @@ export const Single: Story = {
   render: (args) => ({
     components: { BaseToggleGroup, BaseToggleGroupItem },
     setup() {
-      return { args };
+      const modelValue = ref("a");
+      return { args, modelValue };
     },
     template: `
-      <BaseToggleGroup v-bind="args">
+      <BaseToggleGroup v-bind="args" v-model="modelValue">
         <BaseToggleGroupItem label="A" value="a" />
         <BaseToggleGroupItem label="B" value="B" />
         <BaseToggleGroupItem label="C" value="C" />
@@ -35,10 +37,11 @@ export const Multiple: Story = {
   render: (args) => ({
     components: { BaseToggleGroup, BaseToggleGroupItem },
     setup() {
-      return { args };
+      const modelValue = ref(["a"]);
+      return { args, modelValue };
     },
     template: `
-      <BaseToggleGroup v-bind="args">
+      <BaseToggleGroup v-bind="args" v-model="modelValue">
         <BaseToggleGroupItem label="A" value="a" />
         <BaseToggleGroupItem label="B" value="B" />
         <BaseToggleGroupItem label="C" value="C" />
