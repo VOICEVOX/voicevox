@@ -45,7 +45,7 @@
         </BaseCell>
         <BaseCell
           title="リミッターを適用する"
-          description="ONの場合、音量が制限されます。"
+          description="ONの場合、0dBを極力超えないように音声を調整します。"
         >
           <QToggle v-model="withLimiter" />
         </BaseCell>
