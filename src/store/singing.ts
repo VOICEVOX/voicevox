@@ -2072,7 +2072,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               continue;
             }
 
-            // ミュート/ソロをエクスポートするかどうかとして反映する
+            // ミュート/ソロにより再生されないトラックは除外
             if (
               setting.withTrackParameters.soloAndMute &&
               !shouldPlays.has(trackId)
