@@ -14,7 +14,6 @@ import {
 } from "@/type/preload";
 import { AltPortInfos } from "@/store/type";
 import { Result } from "@/type/result";
-import { SupportedAudioFormat } from "@/sing/encodeAudioData";
 
 /**
  * invoke, handle
@@ -75,7 +74,6 @@ export type IpcIHData = {
       obj: {
         title: string;
         defaultPath?: string;
-        formats?: SupportedAudioFormat[];
       },
     ];
     return?: string;

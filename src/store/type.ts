@@ -71,7 +71,6 @@ import {
   timeSignatureSchema,
   trackSchema,
 } from "@/domain/project/schema";
-import { SupportedAudioFormat as SongSupportedAudioFormat } from "@/sing/encodeAudioData";
 
 /**
  * エディタ用のAudioQuery
@@ -819,7 +818,6 @@ export type SequencerEditTarget = "NOTE" | "PITCH";
 export type SongExportSetting = {
   isStereo: boolean;
   sampleRate: number;
-  audioFormat: SongSupportedAudioFormat;
   withLimiter: boolean;
   withTrackParameters: boolean;
 };

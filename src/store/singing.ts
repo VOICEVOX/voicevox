@@ -100,7 +100,7 @@ import { getOrThrow } from "@/helpers/mapHelper";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { ufProjectToVoicevox } from "@/sing/utaformatixProject/toVoicevox";
 import { uuid4 } from "@/helpers/random";
-import { convertToSupportedAudioFormat } from "@/sing/encodeAudioData";
+import { convertToWavFileData } from "@/sing/convertToWavFileData";
 import { generateWriteErrorMessage } from "@/helpers/fileHelper";
 import {
   PhraseRenderStageId,
@@ -1945,7 +1945,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             getters.SELECTED_TRACK,
             getters.CHARACTER_INFO,
           );
-          const fileName = `${fileBaseName}.${setting.audioFormat}`;
+          const fileName = `${fileBaseName}.wav`;
           const numberOfChannels = setting.isStereo ? 2 : 1;
           const sampleRate = setting.sampleRate;
           const withLimiter = setting.withLimiter;
@@ -1962,7 +1962,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             filePath ??= await window.backend.showAudioSaveDialog({
               title: "音声を保存",
               defaultPath: fileName,
-              formats: [setting.audioFormat],
             });
           }
           if (!filePath) {
@@ -1971,12 +1970,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
           if (state.savingSetting.avoidOverwrite) {
             let tail = 1;
-            const pathWithoutExt = filePath.slice(
-              0,
-              -1 - setting.audioFormat.length,
-            );
+            const pathWithoutExt = filePath.slice(0, -4);
             while (await window.backend.checkFileExists(filePath)) {
-              filePath = `${pathWithoutExt}[${tail}].${setting.audioFormat}`;
+              filePath = `${pathWithoutExt}[${tail}].wav`;
               tail += 1;
             }
           }
@@ -2003,10 +1999,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             phraseSingingVoices,
           );
 
-          const fileData = await convertToSupportedAudioFormat(
-            audioBuffer,
-            setting.audioFormat,
-          );
+          const fileData = convertToWavFileData(audioBuffer);
 
           const result = await actions.EXPORT_FILE({
             filePath,

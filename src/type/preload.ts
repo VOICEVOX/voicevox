@@ -224,7 +224,6 @@ export interface Sandbox {
   showAudioSaveDialog(obj: {
     title: string;
     defaultPath?: string;
-    formats?: SupportedAudioFormat[];
   }): Promise<string | undefined>;
   showTextSaveDialog(obj: {
     title: string;

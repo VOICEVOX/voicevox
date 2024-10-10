@@ -25,23 +25,6 @@
           />
         </BaseCell>
         <BaseCell
-          title="フォーマット"
-          description="書き出す音声ファイルのフォーマットを選べます。"
-        >
-          <QBtnToggle
-            v-model="audioFormat"
-            :options="supportedFormats"
-            padding="xs md"
-            unelevated
-            color="surface"
-            textColor="display"
-            toggleColor="primary"
-            toggleTextColor="display-on-primary"
-            dense
-            noCaps
-          />
-        </BaseCell>
-        <BaseCell
           title="音声をステレオ化"
           description="ONの場合、音声データがモノラルからステレオに変換されてから保存が行われます。"
         >
@@ -107,7 +90,6 @@ import { ref } from "vue";
 import { useDialogPluginComponent } from "quasar";
 import BaseCell from "./BaseCell.vue";
 import { SongExportSetting } from "@/store/type";
-import { SupportedAudioFormat } from "@/sing/encodeAudioData";
 
 export type ExportTarget = "master" | "stem";
 const { dialogRef, onDialogOK, onDialogCancel } = useDialogPluginComponent();
@@ -134,23 +116,6 @@ const exportTarget = ref<ExportTarget>("master");
 // ステレオ
 const isStereo = ref<boolean>(true);
 
-// フォーマット選択
-const audioFormat = ref<SupportedAudioFormat>("wav");
-const supportedFormats = [
-  {
-    label: "WAV",
-    value: "wav",
-  },
-  {
-    label: "mp3",
-    value: "mp3",
-  },
-  {
-    label: "ogg",
-    value: "ogg",
-  },
-] as const satisfies { label: string; value: SupportedAudioFormat }[];
-
 // サンプルレート
 const samplingRate = ref<number>(48000);
 const samplingRateOptions = [24000, 44100, 48000, 88200, 96000];
@@ -167,7 +132,6 @@ const handleExportTrack = () => {
   emit("exportAudio", exportTarget.value, {
     isStereo: isStereo.value,
     sampleRate: samplingRate.value,
-    audioFormat: audioFormat.value,
     withLimiter: withLimiter.value,
     withTrackParameters: withTrackParameters.value,
   });
