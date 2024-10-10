@@ -25,10 +25,10 @@
           />
         </BaseCell>
         <BaseCell
-          title="音声をステレオ化"
-          description="ONの場合、音声データがモノラルからステレオに変換されてから保存が行われます。"
+          title="音声をモノラル化"
+          description="ONの場合、パンが無効化され、1つのチャンネルにまとめられて書き出されます。"
         >
-          <QToggle v-model="isStereo" />
+          <QToggle v-model="isMono" />
         </BaseCell>
         <BaseCell
           title="音声のサンプリングレート"
@@ -119,7 +119,7 @@ const exportTargets = [
 const exportTarget = ref<ExportTarget>("master");
 
 // ステレオ
-const isStereo = ref<boolean>(true);
+const isMono = ref<boolean>(true);
 
 // サンプルレート
 const samplingRate = ref<number>(48000);
@@ -139,7 +139,7 @@ const trackParameterOptions = computed(() => [
   {
     label: "パン",
     value: "pan",
-    disable: !isStereo.value,
+    disable: !isMono.value,
   },
   {
     label: "ボリューム",
@@ -154,11 +154,11 @@ const trackParameterOptions = computed(() => [
 const handleExportTrack = () => {
   onDialogOK();
   emit("exportAudio", exportTarget.value, {
-    isStereo: isStereo.value,
+    isStereo: !isMono.value,
     sampleRate: samplingRate.value,
     withLimiter: withLimiter.value,
     withTrackParameters: {
-      pan: withTrackParameters.value.includes("pan") && isStereo.value,
+      pan: withTrackParameters.value.includes("pan") && isMono.value,
       gain: withTrackParameters.value.includes("gain"),
       soloAndMute: withTrackParameters.value.includes("soloAndMute"),
     },
