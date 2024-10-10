@@ -586,7 +586,7 @@ registerIpcMainHandle<IpcMainHandle>({
         defaultPath,
         filters: [
           {
-            name: "wavファイル",
+            name: "WAVファイル",
             extensions: ["wav"],
           },
         ],
