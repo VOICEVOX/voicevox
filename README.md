@@ -117,7 +117,7 @@ fork したリポジトリで Actions を ON にし、workflow_dispatch で`buil
 `./tests/unit/` 以下にあるテストと、Storybookのテストを実行します。
 
 > [!NOTE]  
-> `./tests/unit` 下のテストのファイル名によって、テストの対象環境が異なります。
+> `./tests/unit` 下のテストは、ファイル名によってテストを実行する環境が変化します。
 >
 > - `.node.spec.ts`：Node.js 環境
 > - `.browser.spec.ts`：ブラウザ環境（実機）
