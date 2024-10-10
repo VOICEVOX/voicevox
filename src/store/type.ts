@@ -11,7 +11,6 @@ import {
   Store,
 } from "./vuex";
 import { createCommandMutationTree, PayloadRecipeTree } from "./command";
-import { TrackParameters } from "./singing";
 import {
   AccentPhrase,
   AudioQuery,
@@ -815,6 +814,12 @@ export type PhraseKey = z.infer<typeof phraseKeySchema>;
 export const PhraseKey = (id: string): PhraseKey => phraseKeySchema.parse(id);
 
 export type SequencerEditTarget = "NOTE" | "PITCH";
+
+export type TrackParameters = {
+  gain: boolean;
+  pan: boolean;
+  soloAndMute: boolean;
+};
 
 export type SongExportSetting = {
   isStereo: boolean;

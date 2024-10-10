@@ -24,6 +24,7 @@ import {
   SingingVoiceKey,
   EditorFrameAudioQueryKey,
   EditorFrameAudioQuery,
+  TrackParameters,
 } from "./type";
 import {
   buildSongTrackAudioFileNameFromRawData,
@@ -155,12 +156,6 @@ const generateDefaultSongFileBaseName = (
   }
 
   return DEFAULT_PROJECT_NAME;
-};
-
-export type TrackParameters = {
-  gain: boolean;
-  pan: boolean;
-  soloAndMute: boolean;
 };
 
 const offlineRenderTracks = async (
