@@ -21,6 +21,8 @@ const meta: Meta<typeof FileNameTemplateDialog> = {
     defaultTemplate: DEFAULT_AUDIO_FILE_BASE_NAME_TEMPLATE,
     savedTemplate: "",
     fileNameBuilder: buildAudioFileNameFromRawData,
+    "onUpdate:template": fn(),
+    "onUpdate:openDialog": fn(),
   },
   tags: ["!autodocs"], // ダイアログ系はautodocsのプレビューが正しく表示されないので無効化
 };
@@ -98,8 +100,6 @@ export const Save: Story = {
   name: "確定ボタンを押す",
   args: {
     ...Opened.args,
-    "onUpdate:template": fn(),
-    "onUpdate:openDialog": fn(),
   },
   play: async ({ args }) => {
     const canvas = within(document.body); // ダイアログなので例外的にdocument.bodyを使う
@@ -132,8 +132,6 @@ export const Close: Story = {
   name: "キャンセルボタンを押す",
   args: {
     ...Opened.args,
-    "onUpdate:template": fn(),
-    "onUpdate:openDialog": fn(),
   },
   play: async ({ args }) => {
     const canvas = within(document.body); // ダイアログなので例外的にdocument.bodyを使う
