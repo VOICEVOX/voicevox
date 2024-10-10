@@ -37,7 +37,7 @@
     "license:merge": "node build/mergeLicenses.js",
     "storybook": "storybook dev --port 6006",
     "storybook:build": "storybook build",
-    "storybook:vrt": "cross-env VITE_TARGET=storybook playwright test"
+    "storybook:vrt": "cross-env TARGET=storybook playwright test"
   },
   "dependencies": {
     "@gtm-support/vue-gtm": "1.2.3",

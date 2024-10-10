@@ -8,7 +8,7 @@ let project: Project;
 let webServers: PlaywrightTestConfig["webServer"];
 const isElectron = process.env.VITE_TARGET === "electron";
 const isBrowser = process.env.VITE_TARGET === "browser";
-const isStorybook = process.env.VITE_TARGET === "storybook";
+const isStorybook = process.env.TARGET === "storybook";
 
 if (isElectron) {
   project = { name: "electron", testDir: "./tests/e2e/electron" };
