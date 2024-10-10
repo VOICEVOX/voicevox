@@ -614,6 +614,7 @@ export const configSchema = z
     savingSetting: z
       .object({
         fileEncoding: z.enum(["UTF-8", "Shift_JIS"]).default("UTF-8"),
+        // NOTE: ファイル名パターンは拡張子を含まない
         fileNamePattern: z.string().default(""),
         fixedExportEnabled: z.boolean().default(false),
         avoidOverwrite: z.boolean().default(false),
