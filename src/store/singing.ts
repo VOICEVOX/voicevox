@@ -157,12 +157,18 @@ const generateDefaultSongFileBaseName = (
   return DEFAULT_PROJECT_NAME;
 };
 
+export type TrackParameters = {
+  gain: boolean;
+  pan: boolean;
+  soloAndMute: boolean;
+};
+
 const offlineRenderTracks = async (
   numberOfChannels: number,
   sampleRate: number,
   renderDuration: number,
   withLimiter: boolean,
-  shouldApplyTrackParameters: boolean,
+  shouldApplyTrackParameters: TrackParameters,
   tracks: Map<TrackId, Track>,
   phrases: Map<PhraseKey, Phrase>,
   singingVoices: Map<SingingVoiceKey, SingingVoice>,
@@ -180,9 +186,10 @@ const offlineRenderTracks = async (
   const shouldPlays = shouldPlayTracks(tracks);
   for (const [trackId, track] of tracks) {
     const channelStrip = new ChannelStrip(offlineAudioContext);
-    channelStrip.volume = shouldApplyTrackParameters ? track.gain : 1;
-    channelStrip.pan = shouldApplyTrackParameters ? track.pan : 0;
-    channelStrip.mute = shouldApplyTrackParameters
+    channelStrip.volume = shouldApplyTrackParameters.gain ? track.gain : 1;
+    channelStrip.pan =
+      shouldApplyTrackParameters.pan && numberOfChannels === 2 ? track.pan : 0;
+    channelStrip.mute = shouldApplyTrackParameters.soloAndMute
       ? !shouldPlays.has(trackId)
       : false;
 
@@ -2065,8 +2072,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               continue;
             }
 
-            // パラメーターが有効の時はミュートやソロを反映する
-            if (setting.withTrackParameters && !shouldPlays.has(trackId)) {
+            // ミュート/ソロをエクスポートするかどうかとして反映する
+            if (
+              setting.withTrackParameters.soloAndMute &&
+              !shouldPlays.has(trackId)
+            ) {
               continue;
             }
 

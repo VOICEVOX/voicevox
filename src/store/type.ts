@@ -11,6 +11,7 @@ import {
   Store,
 } from "./vuex";
 import { createCommandMutationTree, PayloadRecipeTree } from "./command";
+import { TrackParameters } from "./singing";
 import {
   AccentPhrase,
   AudioQuery,
@@ -819,7 +820,7 @@ export type SongExportSetting = {
   isStereo: boolean;
   sampleRate: number;
   withLimiter: boolean;
-  withTrackParameters: boolean;
+  withTrackParameters: TrackParameters;
 };
 
 export type SingingStoreState = {

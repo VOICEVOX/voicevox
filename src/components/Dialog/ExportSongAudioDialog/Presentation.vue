@@ -50,10 +50,15 @@
           <QToggle v-model="withLimiter" />
         </BaseCell>
         <BaseCell
-          title="トラックのパラメーターを適用する"
-          description="OFFの場合、VOICEVOX内のパン、ボリューム、ミュート設定が適用されません。"
+          title="適用するトラックのパラメーター"
+          description="パン、ボリューム、ミュートのうち、どのパラメーターを書き出し時に適用するか選べます。"
         >
-          <QToggle v-model="withTrackParameters" />
+          <QOptionGroup
+            v-model="withTrackParameters"
+            type="checkbox"
+            inline
+            :options="trackParameterOptions"
+          />
         </BaseCell>
       </QCardSection>
 
@@ -86,10 +91,11 @@
 
 <script setup lang="ts">
 // NOTE: 前回の設定を引き継ぐため、他のダイアログでやっているようなinitializeValuesはやらない
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useDialogPluginComponent } from "quasar";
 import BaseCell from "./BaseCell.vue";
 import { SongExportSetting } from "@/store/type";
+import { TrackParameters } from "@/store/singing";
 
 export type ExportTarget = "master" | "stem";
 const { dialogRef, onDialogOK, onDialogCancel } = useDialogPluginComponent();
@@ -125,7 +131,26 @@ const renderSamplingRateLabel = (rate: number) => `${rate} Hz`;
 const withLimiter = ref<boolean>(true);
 
 // パン・ボリューム・ミュート
-const withTrackParameters = ref<boolean>(true);
+const withTrackParameters = ref<(keyof TrackParameters)[]>([
+  "pan",
+  "gain",
+  "soloAndMute",
+]);
+const trackParameterOptions = computed(() => [
+  {
+    label: "パン",
+    value: "pan",
+    disable: !isStereo.value,
+  },
+  {
+    label: "ボリューム",
+    value: "gain",
+  },
+  {
+    label: "ソロ・ミュート",
+    value: "soloAndMute",
+  },
+]);
 
 const handleExportTrack = () => {
   onDialogOK();
@@ -133,7 +158,11 @@ const handleExportTrack = () => {
     isStereo: isStereo.value,
     sampleRate: samplingRate.value,
     withLimiter: withLimiter.value,
-    withTrackParameters: withTrackParameters.value,
+    withTrackParameters: {
+      pan: withTrackParameters.value.includes("pan"),
+      gain: withTrackParameters.value.includes("gain"),
+      soloAndMute: withTrackParameters.value.includes("soloAndMute"),
+    },
   });
 };
 
