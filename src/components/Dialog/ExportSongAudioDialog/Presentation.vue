@@ -118,8 +118,8 @@ const exportTargets = [
 ];
 const exportTarget = ref<ExportTarget>("master");
 
-// ステレオ
-const isMono = ref<boolean>(true);
+// モノラル
+const isMono = ref<boolean>(false);
 
 // サンプルレート
 const samplingRate = ref<number>(48000);
