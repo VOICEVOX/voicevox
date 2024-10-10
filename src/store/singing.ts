@@ -2098,18 +2098,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                 trackName: track.name,
               },
             );
-            let filePath = path.join(
-              dirPath,
-              `${trackFileName}.${setting.audioFormat}`,
-            );
+            let filePath = path.join(dirPath, `${trackFileName}.wav`);
             if (state.savingSetting.avoidOverwrite) {
               let tail = 1;
-              const pathWithoutExt = filePath.slice(
-                0,
-                -1 - setting.audioFormat.length,
-              );
+              const pathWithoutExt = filePath.slice(0, -4);
               while (await window.backend.checkFileExists(filePath)) {
-                filePath = `${pathWithoutExt}[${tail}].${setting.audioFormat}`;
+                filePath = `${pathWithoutExt}[${tail}].wav`;
                 tail += 1;
               }
             }
@@ -2129,10 +2123,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               singingVoiceCache,
             );
 
-            const fileData = await convertToSupportedAudioFormat(
-              audioBuffer,
-              setting.audioFormat,
-            );
+            const fileData = convertToWavFileData(audioBuffer);
 
             const result = await actions.EXPORT_FILE({
               filePath,

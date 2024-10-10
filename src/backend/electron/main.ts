@@ -579,16 +579,17 @@ registerIpcMainHandle<IpcMainHandle>({
     return engineInfoManager.altPortInfos;
   },
 
-  SHOW_AUDIO_SAVE_DIALOG: async (_, { title, defaultPath, formats }) => {
-    formats ??= ["wav"];
+  SHOW_AUDIO_SAVE_DIALOG: async (_, { title, defaultPath }) => {
     const result = await retryShowSaveDialogWhileSafeDir(() =>
       dialog.showSaveDialog(win, {
         title,
         defaultPath,
-        filters: formats.map((format) => ({
-          name: `${format}ファイル`,
-          extensions: [format],
-        })),
+        filters: [
+          {
+            name: "wavファイル",
+            extensions: ["wav"],
+          },
+        ],
         properties: ["createDirectory"],
       }),
     );
