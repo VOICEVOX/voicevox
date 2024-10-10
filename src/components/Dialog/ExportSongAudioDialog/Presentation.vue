@@ -78,7 +78,7 @@
         <QBtn
           unelevated
           align="right"
-          label="書き出し"
+          label="書き出す"
           color="toolbar-button"
           textColor="toolbar-button-display"
           class="text-no-wrap text-bold q-mr-sm"
