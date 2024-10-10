@@ -114,6 +114,9 @@ fork したリポジトリで Actions を ON にし、workflow_dispatch で`buil
 
 ### 単体テスト
 
+`./tests/unit/` 以下にあるテストと、Storybookのテストを実行します。
+`.node.spec.ts` は Node.js 環境で、それ以外はブラウザ環境のエミュレーター上で実行されます。
+
 ```bash
 npm run test:unit
 npm run test-watch:unit # 監視モード
@@ -123,14 +126,14 @@ npm run test:unit -- --update # スナップショットの更新
 また、以下のコマンドでテストのダッシュボードを表示できます：
 
 ```bash
-npm run test-watch:unit:ui
+npm run test-ui:unit
 ```
 
 ### ブラウザ End to End テスト
 
 Electron の機能が不要な、UI や音声合成などの End to End テストを実行します。
 
-> **Note**
+> [!NOTE]
 > 一部のエンジンの設定を書き換えるテストは、CI(Github Actions)上でのみ実行されるようになっています。
 
 ```bash
