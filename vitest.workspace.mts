@@ -1,5 +1,5 @@
 /// <reference types="vitest" />
-import { defineWorkspace, Plugin } from "vitest/config";
+import { defineWorkspace } from "vitest/config";
 import { storybookTest } from "@storybook/experimental-addon-test/vitest-plugin";
 
 const nodeTestPaths = ["../tests/unit/**/*.node.{test,spec}.ts"];
@@ -7,19 +7,6 @@ const browserTestPaths = ["../tests/unit/**/*.browser.{test,spec}.ts"];
 const normalTestPaths = ["../tests/unit/**/*.{test,spec}.ts"];
 
 const reversePaths = (paths: string[]) => paths.map((path) => `!${path}`);
-
-// Vitestはserver.portを認識しないので、プラグインでポートを変更する
-// ref: https://github.com/vitest-dev/vitest/issues/6677
-const portChangerPlugin = (port: number): Plugin => ({
-  name: "port-changer",
-  config() {
-    return {
-      server: {
-        port,
-      },
-    };
-  },
-});
 
 export default defineWorkspace([
   {
@@ -47,7 +34,6 @@ export default defineWorkspace([
   },
   {
     extends: "./vite.config.mts",
-    plugins: [portChangerPlugin(7158)],
     test: {
       include: browserTestPaths,
       globals: true,
@@ -57,6 +43,8 @@ export default defineWorkspace([
         name: "chromium",
         provider: "playwright",
         headless: true,
+        api: 7158,
+        ui: false,
       },
     },
   },
@@ -68,7 +56,6 @@ export default defineWorkspace([
         storybookScript: "storybook --ci --port 7160",
         storybookUrl: "http://localhost:7160",
       }),
-      portChangerPlugin(7159),
     ],
     resolve: {
       alias: {
@@ -85,6 +72,8 @@ export default defineWorkspace([
         name: "chromium",
         provider: "playwright",
         headless: true,
+        api: 7159,
+        ui: false,
       },
       isolate: false,
       setupFiles: ["./.storybook/vitest.setup.ts"],
