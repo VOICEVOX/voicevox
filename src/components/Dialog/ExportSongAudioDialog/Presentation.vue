@@ -159,7 +159,7 @@ const handleExportTrack = () => {
     sampleRate: samplingRate.value,
     withLimiter: withLimiter.value,
     withTrackParameters: {
-      pan: withTrackParameters.value.includes("pan"),
+      pan: withTrackParameters.value.includes("pan") && isStereo.value,
       gain: withTrackParameters.value.includes("gain"),
       soloAndMute: withTrackParameters.value.includes("soloAndMute"),
     },
