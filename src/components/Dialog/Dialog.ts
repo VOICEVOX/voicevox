@@ -323,6 +323,7 @@ const showWriteErrorDialog = ({
   }
 };
 
+/** 保存結果に応じてユーザーに通知する。キャンセルされた場合は何もしない。 */
 export const notifyResult = (
   result: SaveResultObject,
   mediaType: MediaType,
