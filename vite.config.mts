@@ -28,15 +28,19 @@ export default defineConfig((options) => {
 
   const shouldEmitSourcemap = ["development", "test"].includes(options.mode);
   // 型を曖昧にして下の[process.platform]のエラーを回避する
-  const sevenZipBinName: Record<string, string> = {
+  const sevenZipBinNames: Record<string, string> = {
     win32: "7za.exe",
     linux: "7zzs",
     darwin: "7zz",
   };
+  const sevenZipBinName = sevenZipBinNames[process.platform];
+  if (!sevenZipBinName) {
+    throw new Error(`Unsupported platform: ${process.platform}`);
+  }
   process.env.VITE_7Z_BIN_NAME =
     (options.mode === "development"
       ? path.join(__dirname, "build", "vendored", "7z") + path.sep
-      : "") + sevenZipBinName[process.platform];
+      : "") + sevenZipBinName;
   process.env.VITE_APP_VERSION = process.env.npm_package_version;
   const sourcemap: BuildOptions["sourcemap"] = shouldEmitSourcemap
     ? "inline"
