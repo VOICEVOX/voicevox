@@ -5,12 +5,20 @@ import dotenv from "dotenv";
 dotenv.config({ override: true });
 
 let project: Project;
-const additionalWebServer: PlaywrightTestConfig["webServer"] = [];
+let webServers: PlaywrightTestConfig["webServer"];
 const isElectron = process.env.VITE_TARGET === "electron";
 const isBrowser = process.env.VITE_TARGET === "browser";
+const isStorybook = process.env.VITE_TARGET === "storybook";
 
 if (isElectron) {
   project = { name: "electron", testDir: "./tests/e2e/electron" };
+  webServers = [
+    {
+      command: "vite build --mode test && vite preview --port 7357",
+      port: 7357,
+      reuseExistingServer: !process.env.CI,
+    },
+  ];
 } else if (isBrowser) {
   project = { name: "browser", testDir: "./tests/e2e/browser" };
 
@@ -32,12 +40,28 @@ if (isElectron) {
       continue;
     }
 
-    additionalWebServer.push({
-      command: `${info.executionFilePath} ${info.executionArgs.join(" ")}`,
-      url: `${info.host}/version`,
-      reuseExistingServer: !process.env.CI,
-    });
+    webServers = [
+      {
+        command: "vite build --mode test && vite preview --port 7357",
+        port: 7357,
+        reuseExistingServer: !process.env.CI,
+      },
+      {
+        command: `${info.executionFilePath} ${info.executionArgs.join(" ")}`,
+        url: `${info.host}/version`,
+        reuseExistingServer: !process.env.CI,
+      },
+    ];
   }
+} else if (isStorybook) {
+  project = { name: "storybook", testDir: "./tests/e2e/storybook" };
+  webServers = [
+    {
+      command: "storybook build && serve storybook-static -l 7357",
+      port: 7357,
+      reuseExistingServer: !process.env.CI,
+    },
+  ];
 } else {
   throw new Error(`VITE_TARGETの指定が不正です。${process.env.VITE_TARGET}`);
 }
@@ -90,14 +114,7 @@ const config: PlaywrightTestConfig = {
   /* Folder for test artifacts such as screenshots, videos, traces, etc. */
   // outputDir: 'test-results/',
 
-  webServer: [
-    {
-      command: "vite --mode test --port 7357",
-      port: 7357,
-      reuseExistingServer: !process.env.CI,
-    },
-    ...additionalWebServer,
-  ],
+  webServer: webServers,
 };
 
 export default config;
