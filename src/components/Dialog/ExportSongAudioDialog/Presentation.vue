@@ -25,7 +25,7 @@
           />
         </BaseCell>
         <BaseCell
-          title="音声をモノラル化"
+          title="モノラルで書き出し"
           description="ONの場合、パンが無効化され、1つのチャンネルにまとめられて書き出されます。"
         >
           <QToggle v-model="isMono" />
