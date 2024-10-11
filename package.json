@@ -75,7 +75,6 @@
     "@chromatic-com/storybook": "1.5.0",
     "@openapitools/openapi-generator-cli": "2.13.4",
     "@playwright/test": "1.48.0",
-    "@quasar/vite-plugin": "1.6.0",
     "@storybook/addon-essentials": "8.3.5",
     "@storybook/addon-interactions": "8.3.5",
     "@storybook/addon-links": "8.3.5",
