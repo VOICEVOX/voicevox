@@ -154,7 +154,7 @@ const trackParameterOptions = computed(() => [
 const handleExportTrack = () => {
   onDialogOK();
   emit("exportAudio", exportTarget.value, {
-    isStereo: !isMono.value,
+    isMono: isMono.value,
     sampleRate: samplingRate.value,
     withLimiter: withLimiter.value,
     withTrackParameters: {

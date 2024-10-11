@@ -822,7 +822,7 @@ export type TrackParameters = {
 };
 
 export type SongExportSetting = {
-  isStereo: boolean;
+  isMono: boolean;
   sampleRate: number;
   withLimiter: boolean;
   withTrackParameters: TrackParameters;

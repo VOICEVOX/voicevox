@@ -1948,7 +1948,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             getters.CHARACTER_INFO,
           );
           const fileName = `${fileBaseName}.wav`;
-          const numberOfChannels = setting.isStereo ? 2 : 1;
+          const numberOfChannels = setting.isMono ? 1 : 2;
           const sampleRate = setting.sampleRate;
           const withLimiter = setting.withLimiter;
 
@@ -2027,7 +2027,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       async ({ state, mutations, getters, actions }, { dirPath, setting }) => {
         let firstFilePath = "";
         const exportAudioFile = async (): Promise<SaveResultObject> => {
-          const numberOfChannels = setting.isStereo ? 2 : 1;
+          const numberOfChannels = setting.isMono ? 1 : 2;
           const sampleRate = setting.sampleRate;
           const withLimiter = setting.withLimiter;
 
