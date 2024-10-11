@@ -1,6 +1,6 @@
 /* eslint-disable */
-// generateStoryIds.mtsによる自動生成。
-// 更新するには npm run test:playwright-vrt-update を実行してください。
+// generateStoryIds.tsによる自動生成。
+// 更新するには npm run test:storybook-vrt-update を実行してください。
 // 手動で更新はしないこと。
 export const stories = [
   "components-base-basebutton--default",
