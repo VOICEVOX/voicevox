@@ -1,5 +1,4 @@
 import path from "path";
-import { Platform } from "quasar";
 import * as diff from "fast-array-diff";
 import {
   CharacterInfo,
@@ -7,6 +6,7 @@ import {
   StyleType,
   ToolbarButtonTagType,
   isMac,
+  isWindows,
 } from "@/type/preload";
 import { AccentPhrase, Mora } from "@/openapi";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
@@ -444,7 +444,7 @@ export const getToolbarButtonName = (tag: ToolbarButtonTagType): string => {
 
 // based on https://github.com/BBWeb/path-browserify/blob/win-version/index.js
 export const getBaseName = (filePath: string) => {
-  if (!Platform.is.win) return path.basename(filePath);
+  if (!isWindows) return path.basename(filePath);
 
   const splitDeviceRegex =
     /^([a-zA-Z]:|[\\/]{2}[^\\/]+[\\/]+[^\\/]+)?([\\/])?([\s\S]*?)$/;
