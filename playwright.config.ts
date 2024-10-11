@@ -14,7 +14,7 @@ if (isElectron) {
   project = { name: "electron", testDir: "./tests/e2e/electron" };
   webServers = [
     {
-      command: "vite build --mode test && vite preview --port 7357",
+      command: "vite dev --mode test",
       port: 7357,
       reuseExistingServer: !process.env.CI,
     },
@@ -42,7 +42,7 @@ if (isElectron) {
 
     webServers = [
       {
-        command: "vite build --mode test && vite preview --port 7357",
+        command: "vite dev --mode test",
         port: 7357,
         reuseExistingServer: !process.env.CI,
       },
@@ -57,7 +57,7 @@ if (isElectron) {
   project = { name: "storybook", testDir: "./tests/e2e/storybook" };
   webServers = [
     {
-      command: "storybook build && serve storybook-static -l 7357",
+      command: "storybook dev --ci --port 7357",
       port: 7357,
       reuseExistingServer: !process.env.CI,
     },

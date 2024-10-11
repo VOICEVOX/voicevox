@@ -135,6 +135,17 @@ jobs:
             npm run test:electron-e2e
           fi
 
+      - name: Run npm run test:storybook-vrt
+        run: |
+          if [ -n "${{ runner.debug }}" ]; then
+            export DEBUG="pw:browser*"
+          fi
+          ARGS=""
+          if [[ ${{ needs.config.outputs.shouldUpdateSnapshots }} == 'true' ]]; then
+            ARGS="--update-snapshots"
+          fi
+          npm run test:storybook-vrt -- $ARGS
+
       - name: Upload playwright report to artifact
         if: failure()
         uses: actions/upload-artifact@v4

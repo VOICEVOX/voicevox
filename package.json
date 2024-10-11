@@ -20,6 +20,8 @@
     "test-watch:electron-e2e": "cross-env PWTEST_WATCH=1 VITE_TARGET=electron playwright test",
     "test:browser-e2e": "cross-env VITE_TARGET=browser playwright test",
     "test-watch:browser-e2e": "cross-env PWTEST_WATCH=1 VITE_TARGET=browser playwright test",
+    "test:storybook-vrt": "cross-env TARGET=storybook playwright test",
+    "test:storybook-vrt-update": "tsx ./tests/e2e/storybook/generateStoryIds.ts",
     "lint": "eslint --ext .js,.vue,.ts *.config.* src tests build .storybook",
     "fmt": "eslint --ext .js,.vue,.ts *.config.* src tests build .storybook --fix",
     "markdownlint": "markdownlint --ignore node_modules/ --ignore dist/ --ignore dist_electron/ ./",
@@ -35,9 +37,7 @@
     "postuninstall": "electron-builder install-app-deps",
     "license:generate": "node build/generateLicenses.js",
     "license:merge": "node build/mergeLicenses.js",
-    "storybook": "storybook dev --port 6006",
-    "storybook:build": "storybook build",
-    "storybook:vrt": "cross-env TARGET=storybook playwright test"
+    "storybook": "storybook dev --port 6006"
   },
   "dependencies": {
     "@gtm-support/vue-gtm": "1.2.3",
@@ -129,6 +129,7 @@
     "serve": "14.2.3",
     "storybook": "8.3.5",
     "ts-node": "10.9.1",
+    "tsx": "4.19.1",
     "typescript": "5.5.2",
     "vite": "5.3.2",
     "vite-plugin-checker": "0.7.0",
