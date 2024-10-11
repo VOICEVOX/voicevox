@@ -14,7 +14,7 @@ if (isElectron) {
   project = { name: "electron", testDir: "./tests/e2e/electron" };
   webServers = [
     {
-      command: "vite dev --mode test",
+      command: "vite --mode test --port 7357",
       port: 7357,
       reuseExistingServer: !process.env.CI,
     },
@@ -42,7 +42,7 @@ if (isElectron) {
 
     webServers = [
       {
-        command: "vite dev --mode test",
+        command: "vite --mode test --port 7357",
         port: 7357,
         reuseExistingServer: !process.env.CI,
       },
