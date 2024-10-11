@@ -12,7 +12,6 @@
       <SelectContent
         class="SelectContent"
         position="popper"
-        :sideOffset="4"
         :collisionPadding="8"
         :arrowPadding="16"
         avoidCollisions
@@ -21,7 +20,8 @@
         <SelectViewport>
           <slot />
         </SelectViewport>
-        <SelectArrow class="SelectArrow" />
+        <!-- Radix Vue側でエラーが発生するため一時的にコメントアウト -->
+        <!-- <SelectArrow class="SelectArrow" /> -->
       </SelectContent>
     </SelectPortal>
   </SelectRoot>
@@ -33,7 +33,6 @@ import {
   SelectPortal,
   SelectRoot,
   SelectIcon,
-  SelectArrow,
   SelectTrigger,
   SelectValue,
   SelectViewport,
