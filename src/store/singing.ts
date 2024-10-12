@@ -101,7 +101,7 @@ import { getOrThrow } from "@/helpers/mapHelper";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { ufProjectToVoicevox } from "@/sing/utaformatixProject/toVoicevox";
 import { uuid4 } from "@/helpers/random";
-import { convertToWavFileData } from "@/sing/convertToWavFileData";
+import { convertToWavFileData } from "@/helpers/convertToWavFileData";
 import { generateWriteErrorMessage } from "@/helpers/fileHelper";
 import {
   PhraseRenderStageId,
