@@ -569,14 +569,14 @@ const undoableTrackOperations = computed({
 
 // 外観
 const currentThemeNameComputed = computed({
-  get: () => store.state.themeSetting.currentTheme,
+  get: () => store.state.currentTheme,
   set: (currentTheme: string) => {
-    void store.dispatch("SET_THEME_SETTING", { currentTheme: currentTheme });
+    void store.dispatch("SET_CURRENT_THEME_SETTING", { currentTheme });
   },
 });
 
 const availableThemeNameComputed = computed(() => {
-  return [...store.state.themeSetting.availableThemes]
+  return [...store.state.availableThemes]
     .sort((a, b) => a.order - b.order)
     .map((theme) => {
       return { label: theme.displayName, value: theme.name };
