@@ -130,16 +130,25 @@ const renderSamplingRateLabel = (rate: number) => `${rate} Hz`;
 const withLimiter = ref<boolean>(true);
 
 // パン・ボリューム・ミュート
-const withTrackParameters = ref<(keyof TrackParameters)[]>([
+const withTrackParametersInner = ref<(keyof TrackParameters)[]>([
   "pan",
   "gain",
   "soloAndMute",
 ]);
+const withTrackParameters = computed({
+  get: () =>
+    isMono.value
+      ? withTrackParametersInner.value.filter((v) => v !== "pan")
+      : withTrackParametersInner.value,
+  set: (value: (keyof TrackParameters)[]) => {
+    withTrackParametersInner.value = value;
+  },
+});
 const trackParameterOptions = computed(() => [
   {
     label: "パン",
     value: "pan",
-    disable: !isMono.value,
+    disable: isMono.value,
   },
   {
     label: "ボリューム",
@@ -158,7 +167,7 @@ const handleExportTrack = () => {
     sampleRate: samplingRate.value,
     withLimiter: withLimiter.value,
     withTrackParameters: {
-      pan: withTrackParameters.value.includes("pan") && !isMono.value,
+      pan: withTrackParameters.value.includes("pan"),
       gain: withTrackParameters.value.includes("gain"),
       soloAndMute: withTrackParameters.value.includes("soloAndMute"),
     },
