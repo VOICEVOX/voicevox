@@ -134,6 +134,10 @@ const openHelpDialog = () => {
   });
 };
 
+const toggleFullScreenMode = async () => {
+  window.backend.toggleFullScreenMode();
+};
+
 const createNewProject = async () => {
   if (!uiLocked.value) {
     await store.dispatch("CREATE_NEW_PROJECT", {});
@@ -396,7 +400,16 @@ const menudata = computed<MenuItemData[]>(() => [
       closeAllDialog();
     },
     disableWhenUiLocked: false,
-    subMenu: [...props.viewSubMenuData],
+    subMenu: [
+      ...props.viewSubMenuData,
+      { type: "separator" },
+      {
+        type: "button",
+        label: "全画面表示/ウィンドウ表示切り替え",
+        onClick: toggleFullScreenMode,
+        disableWhenUiLocked: false,
+      },
+    ],
   },
   {
     type: "root",
@@ -527,6 +540,10 @@ function registerHotkeyForAllEditors(action: Omit<HotkeyAction, "editor">) {
   });
 }
 
+registerHotkeyForAllEditors({
+  callback: toggleFullScreenMode,
+  name: "全画面表示/ウィンドウ表示切り替え",
+});
 registerHotkeyForAllEditors({
   callback: createNewProject,
   name: "新規プロジェクト",

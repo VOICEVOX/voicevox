@@ -152,6 +152,10 @@ const api: Sandbox = {
     void ipcRendererInvokeProxy.MAXIMIZE_WINDOW();
   },
 
+  toggleFullScreenMode: () => {
+    void ipcRendererInvokeProxy.TOGGLE_FULLSCREENMODE();
+  },
+
   logError: (...params) => {
     console.error(...params);
     // 経緯 https://github.com/VOICEVOX/voicevox/pull/1620#discussion_r1371804569
