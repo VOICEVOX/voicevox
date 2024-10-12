@@ -815,6 +815,19 @@ export const PhraseKey = (id: string): PhraseKey => phraseKeySchema.parse(id);
 
 export type SequencerEditTarget = "NOTE" | "PITCH";
 
+export type TrackParameters = {
+  gain: boolean;
+  pan: boolean;
+  soloAndMute: boolean;
+};
+
+export type SongExportSetting = {
+  isMono: boolean;
+  sampleRate: number;
+  withLimiter: boolean;
+  withTrackParameters: TrackParameters;
+};
+
 export type SingingStoreState = {
   tpqn: number; // Ticks Per Quarter Note
   tempos: Tempo[];
@@ -1061,12 +1074,25 @@ export type SingingStoreTypes = {
     action(payload: { isDrag: boolean }): void;
   };
 
-  EXPORT_WAVE_FILE: {
-    action(payload: { filePath?: string }): SaveResultObject;
+  EXPORT_AUDIO_FILE: {
+    action(payload: {
+      filePath?: string;
+      setting: SongExportSetting;
+    }): SaveResultObject;
   };
 
-  EXPORT_STEM_WAVE_FILE: {
-    action(payload: { dirPath?: string }): SaveResultObject;
+  EXPORT_STEM_AUDIO_FILE: {
+    action(payload: {
+      dirPath?: string;
+      setting: SongExportSetting;
+    }): SaveResultObject;
+  };
+
+  EXPORT_FILE: {
+    action(payload: {
+      filePath: string;
+      content: Uint8Array;
+    }): Promise<SaveResultObject>;
   };
 
   CANCEL_AUDIO_EXPORT: {
@@ -1864,6 +1890,14 @@ export type UiStoreState = {
   reloadingLock: boolean;
   inheritAudioInfo: boolean;
   activePointScrollMode: ActivePointScrollMode;
+  isMaximized: boolean;
+  isPinned: boolean;
+  isFullscreen: boolean;
+  progress: number;
+  isVuexReady: boolean;
+} & DialogStates;
+
+export type DialogStates = {
   isHelpDialogOpen: boolean;
   isSettingDialogOpen: boolean;
   isCharacterOrderDialogOpen: boolean;
@@ -1875,12 +1909,8 @@ export type UiStoreState = {
   isDictionaryManageDialogOpen: boolean;
   isEngineManageDialogOpen: boolean;
   isUpdateNotificationDialogOpen: boolean;
+  isExportSongAudioDialogOpen: boolean;
   isImportSongProjectDialogOpen: boolean;
-  isMaximized: boolean;
-  isPinned: boolean;
-  isFullscreen: boolean;
-  progress: number;
-  isVuexReady: boolean;
 };
 
 export type UiStoreTypes = {
@@ -1935,34 +1965,8 @@ export type UiStoreTypes = {
   };
 
   SET_DIALOG_OPEN: {
-    mutation: {
-      isDefaultStyleSelectDialogOpen?: boolean;
-      isAcceptRetrieveTelemetryDialogOpen?: boolean;
-      isAcceptTermsDialogOpen?: boolean;
-      isDictionaryManageDialogOpen?: boolean;
-      isHelpDialogOpen?: boolean;
-      isSettingDialogOpen?: boolean;
-      isHotkeySettingDialogOpen?: boolean;
-      isToolbarSettingDialogOpen?: boolean;
-      isCharacterOrderDialogOpen?: boolean;
-      isEngineManageDialogOpen?: boolean;
-      isUpdateNotificationDialogOpen?: boolean;
-      isImportExternalProjectDialogOpen?: boolean;
-    };
-    action(payload: {
-      isDefaultStyleSelectDialogOpen?: boolean;
-      isAcceptRetrieveTelemetryDialogOpen?: boolean;
-      isAcceptTermsDialogOpen?: boolean;
-      isDictionaryManageDialogOpen?: boolean;
-      isHelpDialogOpen?: boolean;
-      isSettingDialogOpen?: boolean;
-      isHotkeySettingDialogOpen?: boolean;
-      isToolbarSettingDialogOpen?: boolean;
-      isCharacterOrderDialogOpen?: boolean;
-      isEngineManageDialogOpen?: boolean;
-      isUpdateNotificationDialogOpen?: boolean;
-      isImportSongProjectDialogOpen?: boolean;
-    }): void;
+    mutation: Partial<DialogStates>;
+    action(payload: Partial<DialogStates>): void;
   };
 
   SHOW_ALERT_DIALOG: {

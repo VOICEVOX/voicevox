@@ -12,9 +12,8 @@
           v-if="nowRendering"
           padding="xs md"
           label="音声の書き出しをキャンセル"
-          color="surface"
-          textColor="display"
           class="q-mt-sm"
+          outline
           @click="cancelExport"
         />
       </div>
