@@ -26,7 +26,7 @@ export function getEngineManifestMock() {
       adjustVolumeScale: true,
       interrogativeUpspeak: false,
       synthesisMorphing: false,
-      sing: false,
+      sing: true,
       manageLibrary: false,
       returnResourceUrl: true,
     },

@@ -1,13 +1,14 @@
 /**
  * 音声合成するモック。
- * 音高と音量はそれっぽいが、音素は適当。
+ * 音高と音量はそれっぽい音を合成する。
+ * 音素は適当に電子音にする。
  */
 
 import { FrameAudioQuery } from "@/openapi";
 import { convertToWavFileData } from "@/helpers/convertToWavFileData";
 import { applyGaussianFilter } from "@/sing/utility";
 
-/** 0~1を返す疑似乱数 */
+/** 0~1を返す疑似乱数生成器 */
 function Random(seed: number = 0) {
   // 線形合同法
   const a = 1664525;

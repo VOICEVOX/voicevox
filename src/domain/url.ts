@@ -7,7 +7,7 @@ export type EngineUrlParams = {
 
 /**
  * URLを構成するパラメータから、VOICEVOXエディタが初期から想定しているURL文字列を組み立てる。
- * pathnameが空文字の場合は末尾にスラッシュを付与しないなどがビルトインのURLクラスと異なる。
+ * pathnameが空文字の場合は末尾にスラッシュを付与しない、などがビルトインのURLクラスと異なる。
  */
 export function convertToUrlString(params: EngineUrlParams) {
   const { protocol, hostname, port, pathname } = params;
