@@ -584,7 +584,12 @@ registerIpcMainHandle<IpcMainHandle>({
       dialog.showSaveDialog(win, {
         title,
         defaultPath,
-        filters: [{ name: "Wave File", extensions: ["wav"] }],
+        filters: [
+          {
+            name: "WAVファイル",
+            extensions: ["wav"],
+          },
+        ],
         properties: ["createDirectory"],
       }),
     );
@@ -865,7 +870,10 @@ registerIpcMainHandle<IpcMainHandle>({
 
   WRITE_FILE: (_, { filePath, buffer }) => {
     try {
-      fs.writeFileSync(filePath, new DataView(buffer));
+      fs.writeFileSync(
+        filePath,
+        new DataView(buffer instanceof Uint8Array ? buffer.buffer : buffer),
+      );
       return success(undefined);
     } catch (e) {
       // throwだと`.code`の情報が消えるのでreturn

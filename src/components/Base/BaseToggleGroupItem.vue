@@ -25,11 +25,9 @@ defineProps<{
   align-items: center;
   height: vars.$size-control;
   border: 1px solid;
-  transition:
-    background-color vars.$transition-duration,
-    padding vars.$transition-duration;
+  transition-duration: vars.$transition-duration;
+  transition-property: padding, box-shadow;
   cursor: pointer;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 
   &:active:not(:disabled) {
     box-shadow: 0 0 0 transparent;
@@ -48,12 +46,13 @@ defineProps<{
     border-bottom-right-radius: vars.$radius-1;
   }
 
-  &[data-state="off"] {
+  &[aria-pressed="false"] {
     padding: 0
       calc(#{vars.$padding-1} + (#{vars.$size-icon} + #{vars.$gap-1}) / 2);
     color: colors.$display;
     border-color: colors.$border;
     background-color: colors.$control;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 
     &:hover:not(:disabled) {
       background-color: colors.$control-hovered;
@@ -64,7 +63,7 @@ defineProps<{
     }
   }
 
-  &[data-state="on"] {
+  &[aria-pressed="true"] {
     padding: 0 vars.$padding-1;
     color: colors.$display-oncolor;
     border-color: colors.$border;
@@ -91,7 +90,7 @@ defineProps<{
     opacity vars.$transition-duration;
 }
 
-[data-state="off"] > .check {
+[aria-pressed="false"] > .check {
   width: 0;
   opacity: 0;
   margin-right: 0;

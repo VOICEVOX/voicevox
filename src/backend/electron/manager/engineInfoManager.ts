@@ -29,8 +29,13 @@ function fetchDefaultEngineInfos(defaultEngineDir: string): EngineInfo[] {
   const engines = envSchema.parse(JSON.parse(defaultEngineInfosEnv));
 
   return engines.map((engineInfo) => {
+    const { protocol, hostname, port, pathname } = new URL(engineInfo.host);
     return {
       ...engineInfo,
+      protocol,
+      hostname,
+      defaultPort: port,
+      pathname: pathname === "/" ? "" : pathname,
       isDefault: true,
       type: "path",
       executionFilePath: path.resolve(engineInfo.executionFilePath),
@@ -85,7 +90,10 @@ export class EngineInfoManager {
 
       engines.push({
         uuid: manifest.uuid,
-        host: `http://127.0.0.1:${manifest.port}`,
+        protocol: "http:",
+        hostname: "127.0.0.1",
+        defaultPort: manifest.port.toString(),
+        pathname: "",
         name: manifest.name,
         path: engineDir,
         executionEnabled: true,
@@ -140,15 +148,6 @@ export class EngineInfoManager {
       ...fetchDefaultEngineInfos(this.defaultEngineDir),
       ...this.fetchAdditionalEngineInfos(),
     ];
-    // 代替ポートに置き換える
-    engineInfos.forEach((engineInfo) => {
-      const altPortInfo = this.altPortInfos[engineInfo.uuid];
-      if (altPortInfo) {
-        const url = new URL(engineInfo.host);
-        url.port = altPortInfo.to.toString();
-        engineInfo.host = url.origin;
-      }
-    });
     return engineInfos;
   }
 
@@ -191,12 +190,7 @@ export class EngineInfoManager {
    * エンジン起動時にポートが競合して代替ポートを使う場合に使用する。
    */
   updateAltPort(engineId: EngineId, port: number) {
-    const engineInfo = this.fetchEngineInfo(engineId);
-    const url = new URL(engineInfo.host);
-    this.altPortInfos[engineId] = {
-      from: Number(url.port),
-      to: port,
-    };
+    this.altPortInfos[engineId] = port.toString();
   }
 
   /**
