@@ -18,9 +18,9 @@ import { AltPortInfos } from "@/store/type";
 import { BaseConfigManager } from "@/backend/common/ConfigManager";
 
 /**
- * デフォルトエンジンの情報を作成する
+ * デフォルトエンジンの情報を取得する
  */
-function createDefaultEngineInfos(defaultEngineDir: string): EngineInfo[] {
+function fetchDefaultEngineInfos(defaultEngineDir: string): EngineInfo[] {
   // TODO: envから直接ではなく、envに書いたengine_manifest.jsonから情報を得るようにする
   const defaultEngineInfosEnv =
     import.meta.env.VITE_DEFAULT_ENGINE_INFOS ?? "[]";
@@ -29,8 +29,13 @@ function createDefaultEngineInfos(defaultEngineDir: string): EngineInfo[] {
   const engines = envSchema.parse(JSON.parse(defaultEngineInfosEnv));
 
   return engines.map((engineInfo) => {
+    const { protocol, hostname, port, pathname } = new URL(engineInfo.host);
     return {
       ...engineInfo,
+      protocol,
+      hostname,
+      defaultPort: port,
+      pathname: pathname === "/" ? "" : pathname,
       isDefault: true,
       type: "path",
       executionFilePath: path.resolve(engineInfo.executionFilePath),
@@ -48,9 +53,6 @@ export class EngineInfoManager {
   defaultEngineDir: string;
   vvppEngineDir: string;
 
-  defaultEngineInfos: EngineInfo[] = [];
-  additionalEngineInfos: EngineInfo[] = [];
-
   /** 代替ポート情報 */
   public altPortInfos: AltPortInfos = {};
 
@@ -65,10 +67,10 @@ export class EngineInfoManager {
   }
 
   /**
-   * 追加エンジンの一覧を作成する。
+   * 追加エンジンの一覧を取得する。
    * FIXME: store.get("registeredEngineDirs")への副作用をEngineManager外に移動する
    */
-  private createAdditionalEngineInfos(): EngineInfo[] {
+  private fetchAdditionalEngineInfos(): EngineInfo[] {
     const engines: EngineInfo[] = [];
     const addEngine = (engineDir: string, type: "vvpp" | "path") => {
       const manifestPath = path.join(engineDir, "engine_manifest.json");
@@ -88,7 +90,10 @@ export class EngineInfoManager {
 
       engines.push({
         uuid: manifest.uuid,
-        host: `http://127.0.0.1:${manifest.port}`,
+        protocol: "http:",
+        hostname: "127.0.0.1",
+        defaultPort: manifest.port.toString(),
+        pathname: "",
         name: manifest.name,
         path: engineDir,
         executionEnabled: true,
@@ -139,7 +144,11 @@ export class EngineInfoManager {
    * 全てのエンジンの一覧を取得する。デフォルトエンジン＋追加エンジン。
    */
   fetchEngineInfos(): EngineInfo[] {
-    return [...this.defaultEngineInfos, ...this.additionalEngineInfos];
+    const engineInfos = [
+      ...fetchDefaultEngineInfos(this.defaultEngineDir),
+      ...this.fetchAdditionalEngineInfos(),
+    ];
+    return engineInfos;
   }
 
   /**
@@ -170,11 +179,9 @@ export class EngineInfoManager {
   }
 
   /**
-   * EngineInfosとAltPortInfoを初期化する。
+   * AltPortInfoを初期化する。
    */
-  initializeEngineInfosAndAltPortInfo() {
-    this.defaultEngineInfos = createDefaultEngineInfos(this.defaultEngineDir);
-    this.additionalEngineInfos = this.createAdditionalEngineInfos();
+  initializeAltPortInfo() {
     this.altPortInfos = {};
   }
 
@@ -183,15 +190,7 @@ export class EngineInfoManager {
    * エンジン起動時にポートが競合して代替ポートを使う場合に使用する。
    */
   updateAltPort(engineId: EngineId, port: number) {
-    const engineInfo = this.fetchEngineInfo(engineId);
-    const url = new URL(engineInfo.host);
-    this.altPortInfos[engineId] = {
-      from: Number(url.port),
-      to: port,
-    };
-
-    url.port = port.toString();
-    engineInfo.host = url.toString();
+    this.altPortInfos[engineId] = port.toString();
   }
 
   /**

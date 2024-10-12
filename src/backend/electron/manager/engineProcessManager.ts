@@ -9,8 +9,8 @@ import {
   findAltPort,
   getPidFromPort,
   getProcessNameFromPid,
+  type HostInfo,
   isAssignablePort,
-  url2HostInfo,
 } from "../portHelper";
 
 import { EngineInfo, EngineId, EngineSettings } from "@/type/preload";
@@ -86,41 +86,40 @@ export class EngineProcessManager {
     }
 
     // { hostname (localhost), port (50021) } <- url (http://localhost:50021)
-    const engineHostInfo = url2HostInfo(new URL(engineInfo.host));
+    const engineHostInfo: HostInfo = {
+      protocol: engineInfo.protocol,
+      hostname: engineInfo.hostname,
+      port: Number(engineInfo.defaultPort),
+    };
 
+    // ポートが塞がっていれば代替ポートを探す
+    let port = engineHostInfo.port;
     log.info(
-      `ENGINE ${engineId}: Checking whether port ${engineHostInfo.port} is assignable...`,
+      `ENGINE ${engineId}: Checking whether port ${port} is assignable...`,
     );
 
-    if (
-      !(await isAssignablePort(engineHostInfo.port, engineHostInfo.hostname))
-    ) {
+    if (!(await isAssignablePort(port, engineHostInfo.hostname))) {
       // ポートを既に割り当てているプロセスidの取得
       const pid = await getPidFromPort(engineHostInfo);
       if (pid != undefined) {
         const processName = await getProcessNameFromPid(engineHostInfo, pid);
         log.warn(
-          `ENGINE ${engineId}: Port ${engineHostInfo.port} has already been assigned by ${processName} (pid=${pid})`,
+          `ENGINE ${engineId}: Port ${port} has already been assigned by ${processName} (pid=${pid})`,
         );
       } else {
         // ポートは使用不可能だがプロセスidは見つからなかった
-        log.warn(
-          `ENGINE ${engineId}: Port ${engineHostInfo.port} was unavailable`,
-        );
+        log.warn(`ENGINE ${engineId}: Port ${port} was unavailable`);
       }
 
       // 代替ポートの検索
-      const altPort = await findAltPort(
-        engineHostInfo.port,
-        engineHostInfo.hostname,
-      );
+      const altPort = await findAltPort(port, engineHostInfo.hostname);
 
       // 代替ポートが見つからないとき
       if (altPort == undefined) {
         log.error(`ENGINE ${engineId}: No Alternative Port Found`);
         dialog.showErrorBox(
           `${engineInfo.name} の起動に失敗しました`,
-          `${engineHostInfo.port}番ポートの代わりに利用可能なポートが見つかりませんでした。PCを再起動してください。`,
+          `${port}番ポートの代わりに利用可能なポートが見つかりませんでした。PCを再起動してください。`,
         );
         app.exit(1);
         throw new Error("No Alternative Port Found");
@@ -129,8 +128,10 @@ export class EngineProcessManager {
       // 代替ポート情報を更新
       this.engineAltPortUpdater(engineId, altPort);
       log.warn(
-        `ENGINE ${engineId}: Applied Alternative Port: ${engineHostInfo.port} -> ${altPort}`,
+        `ENGINE ${engineId}: Applied Alternative Port: ${port} -> ${altPort}`,
       );
+
+      port = altPort;
     }
 
     log.info(`ENGINE ${engineId}: Starting process`);
@@ -155,9 +156,9 @@ export class EngineProcessManager {
     const enginePath = engineInfo.executionFilePath;
     const args = engineInfo.executionArgs.concat(useGpu ? ["--use_gpu"] : [], [
       "--host",
-      new URL(engineInfo.host).hostname,
+      engineHostInfo.hostname,
       "--port",
-      new URL(engineInfo.host).port,
+      port.toString(),
     ]);
 
     log.info(`ENGINE ${engineId} path: ${enginePath}`);

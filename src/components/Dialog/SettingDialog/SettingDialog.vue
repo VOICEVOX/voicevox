@@ -299,22 +299,12 @@
                   "
                 />
 
-                <QSlideTransition>
-                  <!-- q-slide-transitionはheightだけをアニメーションするのでdivで囲う -->
-                  <div
-                    v-show="experimentalSetting.enableMultiTrack"
-                    class="transition-container"
-                  >
-                    <EditButtonCell
-                      title="ソング：トラックファイル名パターン"
-                      description="書き出す際のファイル名のパターンをカスタマイズできます。"
-                      :currentValue="savingSetting.songTrackFileNamePattern"
-                      @buttonClick="
-                        showSongTrackAudioFilePatternEditDialog = true
-                      "
-                    />
-                  </div>
-                </QSlideTransition>
+                <EditButtonCell
+                  title="ソング：トラックファイル名パターン"
+                  description="書き出す際のファイル名のパターンをカスタマイズできます。"
+                  :currentValue="savingSetting.songTrackFileNamePattern"
+                  @buttonClick="showSongTrackAudioFilePatternEditDialog = true"
+                />
               </div>
               <!-- Theme Card -->
               <div class="setting-card">
@@ -387,34 +377,26 @@
                   >
                   </SelectCell>
                 </BaseTooltip>
-                <QSlideTransition>
-                  <!-- q-slide-transitionはheightだけをアニメーションするのでdivで囲う -->
-                  <div
-                    v-show="experimentalSetting.enableMultiTrack"
-                    class="transition-container"
-                  >
-                    <BaseRowCard
-                      title="ソング：元に戻すトラック操作"
-                      description="「元に戻す」機能の対象とするトラック操作を指定します。"
-                    >
-                      <div class="checkbox-list">
-                        <BaseCheckbox
-                          v-for="(value, key) in undoableTrackOperations"
-                          :key
-                          :checked="value"
-                          :label="undoableTrackOperationsLabels[key]"
-                          @update:checked="
-                            (newValue) =>
-                              (undoableTrackOperations = {
-                                ...undoableTrackOperations,
-                                [key]: newValue,
-                              })
-                          "
-                        />
-                      </div>
-                    </BaseRowCard>
+                <BaseRowCard
+                  title="ソング：元に戻すトラック操作"
+                  description="「元に戻す」機能の対象とするトラック操作を指定します。"
+                >
+                  <div class="checkbox-list">
+                    <BaseCheckbox
+                      v-for="(value, key) in undoableTrackOperations"
+                      :key
+                      :checked="value"
+                      :label="undoableTrackOperationsLabels[key]"
+                      @update:checked="
+                        (newValue) =>
+                          (undoableTrackOperations = {
+                            ...undoableTrackOperations,
+                            [key]: newValue,
+                          })
+                      "
+                    />
                   </div>
-                </QSlideTransition>
+                </BaseRowCard>
               </div>
 
               <!-- Experimental Card -->
@@ -460,18 +442,6 @@
                     )
                   "
                 />
-                <BaseTooltip
-                  label="現在のプロジェクトに複数のトラックが存在するため、無効化できません。"
-                  :disabled="canToggleMultiTrack"
-                >
-                  <ToggleCell
-                    title="ソング：マルチトラック機能"
-                    description="ONの場合、１つのプロジェクト内に複数のトラックを作成できるようにします。"
-                    :modelValue="experimentalSetting.enableMultiTrack"
-                    :disable="!canToggleMultiTrack"
-                    @update:modelValue="setMultiTrack($event)"
-                  />
-                </BaseTooltip>
               </div>
               <div class="setting-card">
                 <h5 class="headline">データ収集</h5>
@@ -856,23 +826,6 @@ const selectedEngineId = computed({
 });
 const renderEngineNameLabel = (engineId: EngineId) => {
   return engineInfos.value[engineId].name;
-};
-
-// トラックが複数あるときはマルチトラック機能を無効化できないようにする
-const canToggleMultiTrack = computed(() => {
-  if (!experimentalSetting.value.enableMultiTrack) {
-    return true;
-  }
-
-  return store.state.tracks.size <= 1;
-});
-
-const setMultiTrack = (enableMultiTrack: boolean) => {
-  void changeExperimentalSetting("enableMultiTrack", enableMultiTrack);
-  // 無効化するときはUndo/Redoをクリアする
-  if (!enableMultiTrack) {
-    void store.dispatch("CLEAR_UNDO_HISTORY");
-  }
 };
 </script>
 
