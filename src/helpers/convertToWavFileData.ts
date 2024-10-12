@@ -1,4 +1,3 @@
-// FIXME: mockでも使っているのでutilityに移す？
 export const convertToWavFileData = (
   audioBuffer:
     | AudioBuffer

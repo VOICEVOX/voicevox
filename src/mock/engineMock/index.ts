@@ -120,7 +120,7 @@ export function createOpenAPIEngineMock(): IEngineConnectorFactory {
               volumeScale: 1.0,
               prePhonemeLength: 0.1,
               postPhonemeLength: 0.1,
-              outputSamplingRate: 8000,
+              outputSamplingRate: getEngineManifestMock().defaultSamplingRate,
               outputStereo: false,
             };
           },
@@ -188,7 +188,7 @@ export function createOpenAPIEngineMock(): IEngineConnectorFactory {
               volume,
               phonemes,
               volumeScale: 1.0,
-              outputSamplingRate: 24000,
+              outputSamplingRate: getEngineManifestMock().defaultSamplingRate,
               outputStereo: false,
             };
           },

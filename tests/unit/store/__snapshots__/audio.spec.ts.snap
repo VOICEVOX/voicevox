@@ -53,7 +53,7 @@ exports[`GENERATE_AUDIO_ITEM > テキストを指定するとtextに値が入る
       },
     ],
     "intonationScale": 1,
-    "outputSamplingRate": 8000,
+    "outputSamplingRate": 24000,
     "outputStereo": false,
     "pitchScale": 0,
     "postPhonemeLength": 0.1,
@@ -76,7 +76,7 @@ exports[`GENERATE_AUDIO_ITEM > 何も指定しない場合は空のAudioItemを�
   "query": {
     "accentPhrases": [],
     "intonationScale": 1,
-    "outputSamplingRate": 8000,
+    "outputSamplingRate": 24000,
     "outputStereo": false,
     "pitchScale": 0,
     "postPhonemeLength": 0.1,

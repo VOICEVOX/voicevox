@@ -340,8 +340,11 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
   },
 });
 
-// TODO: 型をちゃんとする
-export function createStoreWrapper({ proxyStoreDI }: { proxyStoreDI?: any }) {
+export function createStoreWrapper({
+  proxyStoreDI,
+}: {
+  proxyStoreDI?: typeof proxyStore;
+}) {
   const _proxyStore = proxyStoreDI ?? proxyStore;
 
   return createStore<State, AllGetters, AllActions, AllMutations>({

@@ -4,7 +4,7 @@
  */
 
 import { FrameAudioQuery } from "@/openapi";
-import { convertToWavFileData } from "@/sing/convertToWavFileData";
+import { convertToWavFileData } from "@/helpers/convertToWavFileData";
 import { applyGaussianFilter } from "@/sing/utility";
 
 /** 0~1を返す疑似乱数 */
