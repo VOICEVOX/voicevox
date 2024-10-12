@@ -1,5 +1,9 @@
+<!--
+NOTE: SettingDialogのBaseCellを参考にして作成
+-->
+
 <template>
-  <QCardActions class="q-px-md bg-surface" :class="props.class">
+  <QCardActions :class="props.class">
     <div>{{ title }}</div>
     <div :aria-label="description">
       <QIcon name="help_outline" size="sm" class="help-hover-icon">

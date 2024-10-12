@@ -1234,14 +1234,16 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
       const styleName = style.styleName || DEFAULT_STYLE_NAME;
       const projectName = getters.PROJECT_NAME ?? DEFAULT_PROJECT_NAME;
-      return buildAudioFileNameFromRawData(fileNamePattern, {
-        characterName: character.metas.speakerName,
-        index,
-        styleName,
-        text: audioItem.text,
-        date: currentDateString(),
-        projectName,
-      });
+      return (
+        buildAudioFileNameFromRawData(fileNamePattern, {
+          characterName: character.metas.speakerName,
+          index,
+          styleName,
+          text: audioItem.text,
+          date: currentDateString(),
+          projectName,
+        }) + ".wav"
+      );
     },
   },
 

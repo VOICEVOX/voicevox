@@ -168,7 +168,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
      */
     action: createUILockAction(
       async (
-        { actions, mutations, state, getters },
+        { actions, mutations, getters },
         { filePath, confirm }: { filePath?: string; confirm?: boolean },
       ) => {
         if (!filePath) {
@@ -196,20 +196,6 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           const parsedProjectData = await actions.PARSE_PROJECT_FILE({
             projectJson: text,
           });
-
-          if (
-            !state.experimentalSetting.enableMultiTrack &&
-            parsedProjectData.song.trackOrder.length > 1
-          ) {
-            await window.backend.showMessageDialog({
-              type: "error",
-              title: "エラー",
-              message:
-                "このプロジェクトはマルチトラック機能を使用して作成されていますが、現在の設定ではマルチトラック機能を使用できません。\n" +
-                "設定の「ソング：マルチトラック機能」を有効にしてからプロジェクトを読み込んでください。",
-            });
-            return false;
-          }
 
           if (confirm !== false && getters.IS_EDITED) {
             const result = await actions.SAVE_OR_DISCARD_PROJECT_FILE({

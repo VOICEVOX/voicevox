@@ -1,22 +1,17 @@
 <template>
-  <button
-    class="listitem"
-    :class="selected && 'selected'"
-    role="listitem"
-    @click="(payload) => $emit('click', payload)"
-  >
-    <div class="indicator"></div>
-    <slot />
-  </button>
+  <SelectItem class="SelectItem" :value :disabled>
+    <SelectItemText>{{ label }}</SelectItemText>
+    <SelectItemIndicator class="SelectItemIndicator" />
+  </SelectItem>
 </template>
 
 <script setup lang="ts">
-defineProps<{
-  selected: boolean;
-}>();
+import { SelectItem, SelectItemText, SelectItemIndicator } from "radix-vue";
 
-defineEmits<{
-  (e: "click", payload: MouseEvent): void;
+defineProps<{
+  value: string;
+  label: string;
+  disabled?: boolean;
 }>();
 </script>
 
@@ -25,11 +20,11 @@ defineEmits<{
 @use "@/styles/v2/mixin" as mixin;
 @use "@/styles/v2/colors" as colors;
 
-.listitem {
+.SelectItem {
   color: colors.$display;
   cursor: pointer;
   position: relative;
-  min-height: vars.$size-listitem;
+  min-height: vars.$size-control;
   display: flex;
   align-items: center;
   background-color: colors.$clear;
@@ -37,20 +32,34 @@ defineEmits<{
   padding: vars.$padding-1 vars.$padding-2;
   border-radius: vars.$radius-1;
 
-  &:not(.selected):hover {
+  &:not([data-state="checked"]):hover {
     background-color: colors.$clear-hovered;
   }
 
-  &:not(.selected):active {
+  &:not([data-state="checked"]):active {
     background-color: colors.$clear-pressed;
   }
 
   &:focus-visible {
     @include mixin.on-focus;
+    outline-offset: -2px;
+  }
+
+  &[data-highlighted] {
+    background-color: colors.$clear-hovered;
+  }
+
+  &[data-state="checked"] {
+    background-color: colors.$selected;
+  }
+
+  &[data-disabled] {
+    opacity: 0.5;
+    pointer-events: none;
   }
 }
 
-.indicator {
+.SelectItemIndicator {
   position: absolute;
   left: 6px;
   height: 0;
@@ -62,12 +71,8 @@ defineEmits<{
   transition-property: height opacity;
 }
 
-.selected {
-  background-color: colors.$selected;
-
-  .indicator {
-    opacity: 1;
-    height: 16px;
-  }
+[data-state="checked"] > .SelectItemIndicator {
+  opacity: 1;
+  height: 16px;
 }
 </style>

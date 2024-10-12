@@ -72,7 +72,6 @@ import {
   background-color: colors.$scrollbar;
   border-radius: vars.$size-scrollbar;
   position: relative;
-  transition: background-color vars.$transition-duration;
 }
 
 .ScrollAreaScrollbar:hover .thumb {

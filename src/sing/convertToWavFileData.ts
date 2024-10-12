@@ -62,5 +62,5 @@ export const convertToWavFileData = (
     }
   }
 
-  return buffer;
+  return new Uint8Array(buffer);
 };
