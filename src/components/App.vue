@@ -23,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-import { watch, onMounted, ref, computed, toRaw } from "vue";
+import { watch, onMounted, ref, computed, toRaw, watchEffect } from "vue";
 import { useGtm } from "@gtm-support/vue-gtm";
 import { TooltipProvider } from "radix-vue";
 import TalkEditor from "@/components/Talk/TalkEditor.vue";
@@ -36,7 +36,7 @@ import AllDialog from "@/components/Dialog/AllDialog.vue";
 import MenuBar from "@/components/Menu/MenuBar/MenuBar.vue";
 import { useMenuBarData as useTalkMenuBarData } from "@/components/Talk/menuBarData";
 import { useMenuBarData as useSingMenuBarData } from "@/components/Sing/menuBarData";
-import { setFont, themeToCss } from "@/domain/dom";
+import { setFontToCss, setThemeToCss } from "@/domain/dom";
 import { ExhaustiveError } from "@/type/utility";
 
 const store = useStore();
@@ -67,13 +67,9 @@ watch(
 );
 
 // フォントの制御用パラメータを変更する
-watch(
-  () => store.state.editorFont,
-  (editorFont) => {
-    setFont(editorFont);
-  },
-  { immediate: true },
-);
+watchEffect(() => {
+  setFontToCss(store.state.editorFont);
+});
 
 // エディタの切り替えを監視してショートカットキーの設定を変更する
 watch(
@@ -86,31 +82,20 @@ watch(
 );
 
 // テーマの変更を監視してCSS変数を変更する
-watch(
-  () =>
-    [
-      store.state.currentTheme,
-      store.state.availableThemes,
-      store.state.isVuexReady,
-    ] as const,
-  ([currentTheme, availableThemes, isVuexReady]) => {
-    const theme = availableThemes.find((value) => {
-      return value.name == currentTheme;
-    });
-
-    if (theme == undefined) {
-      // NOTE: Vuexが初期化されていない場合はまだテーマが読み込まれていないので無視
-      if (isVuexReady) {
-        throw Error(`Theme not found: ${currentTheme}`);
-      } else {
-        return;
-      }
+watchEffect(() => {
+  const theme = store.state.availableThemes.find((value) => {
+    return value.name == store.state.currentTheme;
+  });
+  if (theme == undefined) {
+    // NOTE: Vuexが初期化されていない場合はまだテーマが読み込まれていないので無視
+    if (store.state.isVuexReady) {
+      throw Error(`Theme not found: ${store.state.currentTheme}`);
+    } else {
+      return;
     }
-
-    themeToCss(theme);
-  },
-  { immediate: true },
-);
+  }
+  setThemeToCss(theme);
+});
 
 // ソフトウェアを初期化
 const { hotkeyManager } = useHotkeyManager();

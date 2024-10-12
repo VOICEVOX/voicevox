@@ -226,8 +226,6 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       state.currentTheme = currentTheme;
     },
     action({ state, mutations }, { currentTheme }: { currentTheme: string }) {
-      // メモ：テーマ周りリファクタリングしたのでモック挿せるはず。
-      // うまくいけば、テーマ周りのリファクタリングだけでプルリク出す。
       void window.backend.setSetting("currentTheme", currentTheme);
       const theme = state.availableThemes.find((value) => {
         return value.name == currentTheme;
