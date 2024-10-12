@@ -220,7 +220,7 @@
                 <FileNameTemplateDialog
                   v-model:open-dialog="showAudioFilePatternEditDialog"
                   :savedTemplate="audioFileNamePattern"
-                  :defaultTemplate="DEFAULT_AUDIO_FILE_BASE_NAME_TEMPLATE"
+                  :defaultTemplate="DEFAULT_AUDIO_FILE_NAME_TEMPLATE"
                   :availableTags="[
                     'index',
                     'characterName',
@@ -230,6 +230,7 @@
                     'projectName',
                   ]"
                   :fileNameBuilder="buildAudioFileNameFromRawData"
+                  extension=".wav"
                   @update:template="
                     handleSavingSettingChange('fileNamePattern', $event)
                   "
@@ -237,7 +238,7 @@
                 <FileNameTemplateDialog
                   v-model:open-dialog="showSongTrackAudioFilePatternEditDialog"
                   :savedTemplate="songTrackFileNamePattern"
-                  :defaultTemplate="DEFAULT_SONG_AUDIO_FILE_BASE_NAME_TEMPLATE"
+                  :defaultTemplate="DEFAULT_SONG_AUDIO_FILE_NAME_TEMPLATE"
                   :availableTags="[
                     'index',
                     'characterName',
@@ -247,6 +248,7 @@
                     'projectName',
                   ]"
                   :fileNameBuilder="buildSongTrackAudioFileNameFromRawData"
+                  extension=".wav"
                   @update:template="
                     handleSavingSettingChange(
                       'songTrackFileNamePattern',
@@ -258,7 +260,7 @@
                 <EditButtonCell
                   title="書き出しファイル名パターン"
                   description="書き出す際のファイル名のパターンをカスタマイズできます。"
-                  :currentValue="savingSetting.fileNamePattern"
+                  :currentValue="audioFileNamePatternWithExt"
                   @buttonClick="showAudioFilePatternEditDialog = true"
                 />
 
@@ -302,7 +304,7 @@
                 <EditButtonCell
                   title="ソング：トラックファイル名パターン"
                   description="書き出す際のファイル名のパターンをカスタマイズできます。"
-                  :currentValue="savingSetting.songTrackFileNamePattern"
+                  :currentValue="songTrackFileNamePatternWithExt"
                   @buttonClick="showSongTrackAudioFilePatternEditDialog = true"
                 />
               </div>
@@ -476,8 +478,8 @@ import BaseCheckbox from "@/components/Base/BaseCheckbox.vue";
 import BaseTooltip from "@/components/Base/BaseTooltip.vue";
 import { useStore } from "@/store";
 import {
-  DEFAULT_AUDIO_FILE_BASE_NAME_TEMPLATE,
-  DEFAULT_SONG_AUDIO_FILE_BASE_NAME_TEMPLATE,
+  DEFAULT_AUDIO_FILE_NAME_TEMPLATE,
+  DEFAULT_SONG_AUDIO_FILE_NAME_TEMPLATE,
   buildAudioFileNameFromRawData,
   buildSongTrackAudioFileNameFromRawData,
 } from "@/store/utility";
@@ -718,6 +720,12 @@ const audioFileNamePattern = computed(
 );
 const songTrackFileNamePattern = computed(
   () => store.state.savingSetting.songTrackFileNamePattern,
+);
+const audioFileNamePatternWithExt = computed(() =>
+  audioFileNamePattern.value ? audioFileNamePattern.value + ".wav" : "",
+);
+const songTrackFileNamePatternWithExt = computed(() =>
+  songTrackFileNamePattern.value ? songTrackFileNamePattern.value + ".wav" : "",
 );
 
 const gpuSwitchEnabled = (engineId: EngineId) => {
