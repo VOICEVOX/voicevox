@@ -35,14 +35,20 @@ import {
   SupportedDevicesInfo,
   SynthesisSynthesisPostRequest,
 } from "@/openapi";
+import { convertToUrlString, EngineUrlParams } from "@/domain/url";
 
-export const mockHost = "mock";
+export const mockUrlParams = {
+  protocol: "http:",
+  hostname: "mock",
+  port: "",
+  pathname: "",
+} satisfies EngineUrlParams;
 
 export function createOpenAPIEngineMock(): IEngineConnectorFactory {
   let mockApi: Partial<DefaultApiInterface> | undefined = undefined;
   return {
     instance: (host: string) => {
-      if (host !== mockHost) {
+      if (host !== convertToUrlString(mockUrlParams)) {
         throw new Error(`Invalid host: ${host}`);
       }
 

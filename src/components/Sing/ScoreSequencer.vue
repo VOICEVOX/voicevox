@@ -224,10 +224,6 @@ import { useLyricInput } from "@/composables/useLyricInput";
 import { useCursorState, CursorState } from "@/composables/useCursorState";
 import { ExhaustiveError } from "@/type/utility";
 import { uuid4 } from "@/helpers/random";
-import {
-  onMountedOrActivated,
-  onUnmountedOrDeactivated,
-} from "@/composables/onMountOrActivate";
 
 // 直接イベントが来ているかどうか
 const isSelfEventTarget = (event: UIEvent) => {
@@ -1368,7 +1364,7 @@ onMounted(() => {
 let firstActivation = true;
 
 // スクロール位置を設定する
-onMountedOrActivated(() => {
+onActivated(() => {
   const sequencerBodyElement = sequencerBody.value;
   if (!sequencerBodyElement) {
     throw new Error("sequencerBodyElement is null.");
@@ -1397,7 +1393,7 @@ onMountedOrActivated(() => {
 });
 
 // リスナー登録
-onMountedOrActivated(() => {
+onActivated(() => {
   void store.dispatch("ADD_PLAYHEAD_POSITION_CHANGE_LISTENER", {
     listener: playheadPositionChangeListener,
   });
@@ -1406,7 +1402,7 @@ onMountedOrActivated(() => {
 });
 
 // リスナー解除
-onUnmountedOrDeactivated(() => {
+onDeactivated(() => {
   void store.dispatch("REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER", {
     listener: playheadPositionChangeListener,
   });

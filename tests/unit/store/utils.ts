@@ -9,7 +9,7 @@ import {
   SpeakerId,
   StyleId,
 } from "@/type/preload";
-import { mockHost } from "@/mock/engineMock";
+import { mockHost, mockUrlParams } from "@/mock/engineMock";
 import { assetsPath } from "@/mock/engineMock/constants";
 import {
   getSpeakersMock,
@@ -23,9 +23,11 @@ export function initializeStateAsSoftwareStarted(
   // エンジンの情報
   const engineManifest = getEngineManifestMock();
   const engineId = EngineId(engineManifest.uuid);
+  const { port, ...rest } = mockUrlParams;
+  const engineUrlParams = { ...rest, defaultPort: port };
   const engineInfo: EngineInfo = {
     uuid: engineId,
-    host: mockHost,
+    ...engineUrlParams,
     name: engineManifest.name,
     path: undefined,
     executionEnabled: false,
