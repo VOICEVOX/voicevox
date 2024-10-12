@@ -2,7 +2,7 @@ import { colors, Dark, setCssVar } from "quasar";
 import { EditorFontType, ThemeColorType, ThemeConf } from "@/type/preload";
 
 /** テーマの設定をCSSへ反映する */
-export function themeToCss(theme: ThemeConf) {
+export function setThemeToCss(theme: ThemeConf) {
   for (const key in theme.colors) {
     const color = theme.colors[key as ThemeColorType];
     const { r, g, b } = colors.hexToRgb(color);
@@ -37,6 +37,6 @@ export function themeToCss(theme: ThemeConf) {
 }
 
 /** フォントを設定する */
-export function setFont(font: EditorFontType) {
+export function setFontToCss(font: EditorFontType) {
   document.body.setAttribute("data-editor-font", font);
 }
