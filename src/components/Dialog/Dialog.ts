@@ -10,7 +10,7 @@ import {
 import { DotNotationDispatch } from "@/store/vuex";
 import { withProgressDotNotation as withProgress } from "@/store/ui";
 
-export type MediaType = "audio" | "text";
+type MediaType = "audio" | "text";
 
 export type CommonDialogResult = "OK" | "CANCEL";
 export type CommonDialogOptions = {

@@ -1,3 +1,7 @@
+<!--
+NOTE: SettingDialogのBaseCellを参考にして作成
+-->
+
 <template>
   <QCardActions :class="props.class">
     <div>{{ title }}</div>
