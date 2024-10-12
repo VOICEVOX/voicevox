@@ -179,6 +179,8 @@ const props = defineProps<{
   selectedId: string;
 }>();
 
+const wordEditingRef = ref(props.wordEditing);
+const selectIdRef = ref(props.selectedId);
 const store = useStore();
 const uiLocked = ref(false); // ダイアログ内でstore.getters.UI_LOCKEDは常にtrueなので独自に管理
 const nowGenerating = ref(false);
@@ -199,7 +201,7 @@ const setYomiWhenEnter = (event?: KeyboardEvent) => {
 const surface = ref("");
 const yomi = ref("");
 const isOnlyHiraOrKana = ref(true);
-const accentPhrase = ref<AccentPhrase | undefined>();
+const accentPhrase = ref<AccentPhrase>();
 const accentPhraseTable = ref<HTMLElement>();
 
 const convertHankakuToZenkaku = (text: string) => {
@@ -284,6 +286,16 @@ const wordPriorityLabels = {
   10: "最高",
 };
 
+// accent phraseにあるaccentと実際に登録するアクセントには差が生まれる
+// アクセントが自動追加される「ガ」に指定されている場合、
+// 実際に登録するaccentの値は0となるので、そうなるように処理する
+const computeRegisteredAccent = () => {
+  if (!accentPhrase.value) throw new Error();
+  let accent = accentPhrase.value.accent;
+  accent = accent === accentPhrase.value.moras.length ? 0 : accent;
+  return accent;
+};
+
 const saveWord = async () => {
   if (!accentPhrase.value) throw new Error(`accentPhrase === undefined`);
   const accent = computeRegisteredAccent();
@@ -348,18 +360,18 @@ const {
   setYomi,
   createUILockAction,
   loadingDictProcess,
-  computeRegisteredAccent,
   discardOrNotDialog,
   cancel,
   toInitialState,
   toWordEditingState,
 } = useDictionaryDialog(
-  props.wordEditing,
-  props.selectedId,
+  wordEditingRef,
+  selectIdRef,
   surface,
   uiLocked,
-  yomi.value,
-  accentPhrase.value,
+  computeRegisteredAccent,
+  yomi,
+  accentPhrase,
   surfaceInput,
 );
 

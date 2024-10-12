@@ -124,7 +124,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref, watch } from "vue";
 import DictionaryEditWordDialog from "./DictionaryEditWordDialog.vue";
 import { useDictionaryDialog } from "@/composables/useDictionaryDialog";
 import { useStore } from "@/store";
@@ -138,6 +138,25 @@ const wordEditing = ref(false);
 const selectedId = ref("");
 const surface = ref("");
 const wordPriority = ref(defaultDictPriority);
+
+const props = defineProps<{
+  modelValue: boolean;
+}>();
+const emit = defineEmits<{
+  (e: "update:modelValue", v: boolean): void;
+}>();
+
+const dictionaryManageDialogOpenedComputed = computed({
+  get: () => props.modelValue,
+  set: (val) => emit("update:modelValue", val),
+});
+
+watch(dictionaryManageDialogOpenedComputed, async (newValue) => {
+  if (newValue) {
+    await loadingDictProcess();
+    toInitialState();
+  }
+});
 
 const deleteWord = async () => {
   const result = await store.dispatch("SHOW_WARNING_DIALOG", {
@@ -185,11 +204,10 @@ const selectWord = (id: string) => {
 };
 
 const closeDialog = () => {
-  toDialogClosedState();
+  dictionaryManageDialogOpenedComputed.value = false;
 };
 
 const {
-  dictionaryManageDialogOpenedComputed,
   userDict,
   setYomi,
   createUILockAction,
@@ -199,8 +217,13 @@ const {
   toInitialState,
   toWordSelectedState,
   toWordEditingState,
-  toDialogClosedState,
-} = useDictionaryDialog(wordEditing.value, selectedId.value, surface, uiLocked);
+} = useDictionaryDialog(
+  wordEditing,
+  selectedId,
+  surface,
+  uiLocked,
+  dictionaryManageDialogOpenedComputed,
+);
 </script>
 
 <style lang="scss" scoped>

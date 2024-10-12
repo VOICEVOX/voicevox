@@ -1,4 +1,4 @@
-import { computed, Ref, ref, watch } from "vue";
+import { computed, Ref, ref } from "vue";
 import { QInput } from "quasar";
 import {
   convertHiraToKana,
@@ -10,40 +10,25 @@ import { useStore } from "@/store";
 import { UserDictWord } from "@/openapi";
 
 export function useDictionaryDialog(
-  wordEditing: boolean,
-  selectedId: string,
+  wordEditing: Ref<boolean>,
+  selectedId: Ref<string>,
   surface: Ref<string>,
   uiLocked: Ref<boolean>,
-  yomi?: string,
-  accentPhrase?: AccentPhrase | undefined,
+  computeRegisteredAccent: () => number,
+  yomi?: Ref<string>,
+  accentPhrase?: Ref<AccentPhrase | undefined>,
   surfaceInput?: Ref<QInput | undefined>,
+  dictionaryManageDialogOpenedComputed?: Ref<boolean> | undefined,
 ) {
   const kanaRegex = createKanaRegex();
   const isOnlyHiraOrKana = ref(true);
+  const accentPhraseRef = ref(accentPhrase);
   const store = useStore();
   const loadingDictState = ref<null | "loading" | "synchronizing">("loading");
   const userDict = ref<Record<string, UserDictWord>>({});
   const defaultDictPriority = 5;
   const wordPriority = ref(defaultDictPriority);
-
-  const props = defineProps<{
-    modelValue: boolean;
-  }>();
-  const emit = defineEmits<{
-    (e: "update:modelValue", v: boolean): void;
-  }>();
-
-  const dictionaryManageDialogOpenedComputed = computed({
-    get: () => props.modelValue,
-    set: (val) => emit("update:modelValue", val),
-  });
-
-  watch(dictionaryManageDialogOpenedComputed, async (newValue) => {
-    if (newValue) {
-      await loadingDictProcess();
-      toInitialState();
-    }
-  });
+  const openedComputed = ref(dictionaryManageDialogOpenedComputed);
 
   const setYomi = async (text: string, changeWord?: boolean) => {
     const { engineId, styleId } = voiceComputed.value;
@@ -55,7 +40,7 @@ export function useDictionaryDialog(
     // 「ガ」が自動挿入されるので、それを考慮してsliceしている
     if (
       text ==
-        accentPhrase?.moras
+        accentPhraseRef?.value?.moras
           .map((v) => v.text)
           .join("")
           .slice(0, -1) &&
@@ -66,7 +51,7 @@ export function useDictionaryDialog(
     if (isOnlyHiraOrKana.value && text.length) {
       text = convertHiraToKana(text);
       text = convertLongVowel(text);
-      accentPhrase = (
+      accentPhraseRef.value = (
         await createUILockAction(
           store.dispatch("FETCH_ACCENT_PHRASES", {
             text: text + "ガ'",
@@ -76,13 +61,24 @@ export function useDictionaryDialog(
           }),
         )
       )[0];
-      if (selectedId && userDict.value[selectedId].yomi === text) {
-        accentPhrase.accent = computeDisplayAccent();
+      if (selectedId && userDict.value[selectedId.value].yomi === text) {
+        accentPhraseRef.value.accent = computeDisplayAccent();
       }
     } else {
-      accentPhrase = undefined;
+      accentPhraseRef.value = undefined;
     }
-    yomi = text;
+    if (yomi) {
+      yomi.value = text;
+    }
+  };
+
+  // computeの逆
+  // 辞書から得たaccentが0の場合に、自動で追加される「ガ」の位置にアクセントを表示させるように処理する
+  const computeDisplayAccent = () => {
+    if (!accentPhraseRef.value || !selectedId.value) throw new Error();
+    let accent = userDict.value[selectedId.value].accentType;
+    accent = accent === 0 ? accentPhraseRef.value.moras.length : accent;
+    return accent;
   };
 
   const createUILockAction = function <T>(action: Promise<T>) {
@@ -120,7 +116,7 @@ export function useDictionaryDialog(
         message: "エンジンの再起動をお試しください。",
       });
       if (result === "OK") {
-        dictionaryManageDialogOpenedComputed.value = false;
+        openedComputed.value = false;
       }
     }
     loadingDictState.value = "synchronizing";
@@ -135,37 +131,18 @@ export function useDictionaryDialog(
     loadingDictState.value = null;
   };
 
-  // computeの逆
-  // 辞書から得たaccentが0の場合に、自動で追加される「ガ」の位置にアクセントを表示させるように処理する
-  const computeDisplayAccent = () => {
-    if (!accentPhrase || !selectedId) throw new Error();
-    let accent = userDict.value[selectedId].accentType;
-    accent = accent === 0 ? accentPhrase.moras.length : accent;
-    return accent;
-  };
-
-  // accent phraseにあるaccentと実際に登録するアクセントには差が生まれる
-  // アクセントが自動追加される「ガ」に指定されている場合、
-  // 実際に登録するaccentの値は0となるので、そうなるように処理する
-  const computeRegisteredAccent = () => {
-    if (!accentPhrase) throw new Error();
-    let accent = accentPhrase.accent;
-    accent = accent === accentPhrase.moras.length ? 0 : accent;
-    return accent;
-  };
-
   // 操作（ステートの移動）
   const isWordChanged = computed(() => {
-    if (selectedId === "") {
+    if (selectedId.value === "") {
       return surface.value && yomi && accentPhrase;
     }
     // 一旦代入することで、userDictそのものが更新された時もcomputedするようにする
     const dict = userDict.value;
-    const dictData = dict[selectedId];
+    const dictData = dict[selectedId.value];
     return (
       dictData &&
       (dictData.surface !== surface.value ||
-        dictData.yomi !== yomi ||
+        dictData.yomi !== yomi?.value ||
         dictData.accentType !== computeRegisteredAccent() ||
         dictData.priority !== wordPriority.value)
     );
@@ -193,8 +170,8 @@ export function useDictionaryDialog(
   // ステートの移動
   // 初期状態
   const toInitialState = () => {
-    wordEditing = false;
-    selectedId = "";
+    wordEditing.value = false;
+    selectedId.value = "";
     surface.value = "";
     void setYomi("");
     wordPriority.value = defaultDictPriority;
@@ -202,22 +179,16 @@ export function useDictionaryDialog(
 
   // 単語が選択されているだけの状態
   const toWordSelectedState = () => {
-    wordEditing = false;
+    wordEditing.value = false;
   };
 
   // 単語が編集されている状態
   const toWordEditingState = () => {
-    wordEditing = true;
+    wordEditing.value = true;
     surfaceInput?.value?.focus();
   };
 
-  // ダイアログが閉じている状態
-  const toDialogClosedState = () => {
-    dictionaryManageDialogOpenedComputed.value = false;
-  };
-
   return {
-    dictionaryManageDialogOpenedComputed,
     wordPriority,
     userDict,
     voiceComputed,
@@ -225,12 +196,10 @@ export function useDictionaryDialog(
     setYomi,
     createUILockAction,
     loadingDictProcess,
-    computeRegisteredAccent,
     discardOrNotDialog,
     cancel,
     toInitialState,
     toWordSelectedState,
     toWordEditingState,
-    toDialogClosedState,
   };
 }
