@@ -21,6 +21,7 @@ const meta: Meta<typeof FileNameTemplateDialog> = {
     defaultTemplate: DEFAULT_AUDIO_FILE_NAME_TEMPLATE,
     savedTemplate: "",
     fileNameBuilder: buildAudioFileNameFromRawData,
+    extension: ".wav",
     "onUpdate:template": fn(),
     "onUpdate:openDialog": fn(),
   },
@@ -110,7 +111,7 @@ export const Save: Story = {
     await userEvent.click(button);
 
     // 確定とダイアログを閉じるイベントが呼ばれる
-    await expect(args["onUpdate:template"]).toBeCalledWith("$連番$.wav");
+    await expect(args["onUpdate:template"]).toBeCalledWith("$連番$");
     await expect(args["onUpdate:openDialog"]).toBeCalledWith(false);
   },
 };
