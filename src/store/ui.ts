@@ -371,6 +371,12 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     },
   },
 
+  SET_AVAILABLE_THEMES: {
+    mutation(state, { themes }) {
+      state.availableThemes = themes;
+    },
+  },
+
   DETECT_UNMAXIMIZED: {
     mutation(state) {
       state.isMaximized = false;

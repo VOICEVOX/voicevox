@@ -39,7 +39,6 @@ defineEmits<{
   padding: 0 vars.$padding-2;
   gap: vars.$gap-1;
   border: 1px solid;
-  transition: background-color vars.$transition-duration;
   cursor: pointer;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 

@@ -286,7 +286,7 @@ export interface Sandbox {
   getDefaultHotkeySettings(): Promise<HotkeySettingType[]>;
   getDefaultToolbarSetting(): Promise<ToolbarSettingType>;
   setNativeTheme(source: NativeThemeType): void;
-  theme(newData?: string): Promise<ThemeSetting | void>;
+  getAvailableThemes(): Promise<ThemeConf[]>;
   vuexReady(): void;
   getSetting<Key extends keyof ConfigType>(key: Key): Promise<ConfigType[Key]>;
   setSetting<Key extends keyof ConfigType>(
@@ -554,11 +554,6 @@ export type ThemeConf = {
   colors: {
     [K in ThemeColorType]: string;
   };
-};
-
-export type ThemeSetting = {
-  currentTheme: string;
-  availableThemes: ThemeConf[];
 };
 
 export const experimentalSettingSchema = z.object({

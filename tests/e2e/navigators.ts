@@ -35,10 +35,9 @@ export async function toggleSetting(page: Page, settingName: string) {
   await page.getByText("オプション").click();
   await page.waitForTimeout(100);
   await page
-    .locator(".q-card__actions", {
+    .locator(".row-card", {
       has: page.getByText(settingName),
     })
-    .locator(".q-toggle")
     .click();
   await page.waitForTimeout(100);
   await page.getByRole("button", { name: "設定を閉じる" }).click();
