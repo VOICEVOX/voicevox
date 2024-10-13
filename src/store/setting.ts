@@ -1,4 +1,3 @@
-import { Dark, setCssVar, colors } from "quasar";
 import { SettingStoreState, SettingStoreTypes } from "./type";
 import { createDotNotationUILockAction as createUILockAction } from "./ui";
 import { createDotNotationPartialStore as createPartialStore } from "./vuex";
@@ -6,8 +5,6 @@ import {
   HotkeySettingType,
   SavingSetting,
   ExperimentalSettingType,
-  ThemeColorType,
-  ThemeConf,
   ToolbarSettingType,
   EngineId,
   ConfirmedTips,
@@ -33,10 +30,8 @@ export const settingStoreState: SettingStoreState = {
   engineIds: [],
   engineInfos: {},
   engineManifests: {},
-  themeSetting: {
-    currentTheme: "Default",
-    availableThemes: [],
-  },
+  currentTheme: "Default",
+  availableThemes: [],
   editorFont: "default",
   showTextLineNumber: false,
   showAddAudioItemButton: true,
@@ -47,7 +42,6 @@ export const settingStoreState: SettingStoreState = {
     enableMorphing: false,
     enableMultiSelect: false,
     shouldKeepTuningOnTextChange: false,
-    enableMultiTrack: false,
   },
   splitTextWhenPaste: "PERIOD_AND_NEW_LINE",
   splitterPosition: {
@@ -84,16 +78,12 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         });
       });
 
-      const theme = await window.backend.theme();
-      if (theme) {
-        mutations.SET_THEME_SETTING({
-          currentTheme: theme.currentTheme,
-          themes: theme.availableThemes,
-        });
-        void actions.SET_THEME_SETTING({
-          currentTheme: theme.currentTheme,
-        });
-      }
+      mutations.SET_AVAILABLE_THEMES({
+        themes: await window.backend.getAvailableThemes(),
+      });
+      void actions.SET_CURRENT_THEME_SETTING({
+        currentTheme: await window.backend.getSetting("currentTheme"),
+      });
 
       void actions.SET_ACCEPT_RETRIEVE_TELEMETRY({
         acceptRetrieveTelemetry: await window.backend.getSetting(
@@ -231,19 +221,13 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     },
   },
 
-  SET_THEME_SETTING: {
-    mutation(
-      state,
-      { currentTheme, themes }: { currentTheme: string; themes?: ThemeConf[] },
-    ) {
-      if (themes) {
-        state.themeSetting.availableThemes = themes;
-      }
-      state.themeSetting.currentTheme = currentTheme;
+  SET_CURRENT_THEME_SETTING: {
+    mutation(state, { currentTheme }: { currentTheme: string }) {
+      state.currentTheme = currentTheme;
     },
     action({ state, mutations }, { currentTheme }: { currentTheme: string }) {
-      void window.backend.theme(currentTheme);
-      const theme = state.themeSetting.availableThemes.find((value) => {
+      void window.backend.setSetting("currentTheme", currentTheme);
+      const theme = state.availableThemes.find((value) => {
         return value.name == currentTheme;
       });
 
@@ -251,41 +235,9 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         throw Error("Theme not found");
       }
 
-      for (const key in theme.colors) {
-        const color = theme.colors[key as ThemeColorType];
-        const { r, g, b } = colors.hexToRgb(color);
-        document.documentElement.style.setProperty(`--color-${key}`, color);
-        document.documentElement.style.setProperty(
-          `--color-${key}-rgb`,
-          `${r}, ${g}, ${b}`,
-        );
-      }
-      const mixColors: ThemeColorType[][] = [
-        ["primary", "background"],
-        ["warning", "background"],
-      ];
-      for (const [color1, color2] of mixColors) {
-        const color1Rgb = colors.hexToRgb(theme.colors[color1]);
-        const color2Rgb = colors.hexToRgb(theme.colors[color2]);
-        const r = Math.trunc((color1Rgb.r + color2Rgb.r) / 2);
-        const g = Math.trunc((color1Rgb.g + color2Rgb.g) / 2);
-        const b = Math.trunc((color1Rgb.b + color2Rgb.b) / 2);
-        const propertyName = `--color-mix-${color1}-${color2}-rgb`;
-        const cssColor = `${r}, ${g}, ${b}`;
-        document.documentElement.style.setProperty(propertyName, cssColor);
-      }
-      Dark.set(theme.isDark);
-      setCssVar("primary", theme.colors["primary"]);
-      setCssVar("warning", theme.colors["warning"]);
-
-      document.documentElement.setAttribute(
-        "is-dark-theme",
-        theme.isDark ? "true" : "false",
-      );
-
       window.backend.setNativeTheme(theme.isDark ? "dark" : "light");
 
-      mutations.SET_THEME_SETTING({
+      mutations.SET_CURRENT_THEME_SETTING({
         currentTheme: currentTheme,
       });
     },

@@ -28,6 +28,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
+import { useQuasar } from "quasar";
 import { MenuItemData, MenuItemRoot } from "../type";
 import MenuButton from "../MenuButton.vue";
 import TitleBarButtons from "./TitleBarButtons.vue";
@@ -47,6 +48,7 @@ const props = defineProps<{
   editor: "talk" | "song";
 }>();
 
+const $q = useQuasar();
 const store = useStore();
 const { registerHotkeyWithCleanup } = useHotkeyManager();
 const currentVersion = ref("");
@@ -54,7 +56,7 @@ const currentVersion = ref("");
 const audioKeys = computed(() => store.state.audioKeys);
 
 // デフォルトエンジンの代替先ポート
-const defaultEngineAltPortTo = computed<number | undefined>(() => {
+const defaultEngineAltPortTo = computed<string | undefined>(() => {
   const altPortInfos = store.state.altPortInfos;
 
   // ref: https://github.com/VOICEVOX/voicevox/blob/32940eab36f4f729dd0390dca98f18656240d60d/src/views/EditorHome.vue#L522-L528
@@ -65,7 +67,7 @@ const defaultEngineAltPortTo = computed<number | undefined>(() => {
 
   // <defaultEngineId>: { from: number, to: number } -> to (代替先ポート)
   if (defaultEngineInfo.uuid in altPortInfos) {
-    return altPortInfos[defaultEngineInfo.uuid].to;
+    return altPortInfos[defaultEngineInfo.uuid];
   } else {
     return undefined;
   }

@@ -134,18 +134,8 @@ export async function generateAndSaveOneAudioWithDialog({
     actions,
   );
 
-  if (result.result === "CANCELED") return;
-
-  if (result.result === "SUCCESS") {
-    if (disableNotifyOnGenerate) return;
-    // 書き出し成功時に通知をする
-    showWriteSuccessNotify({
-      mediaType: "audio",
-      actions,
-    });
-  } else {
-    showWriteErrorDialog({ mediaType: "audio", result, actions });
-  }
+  if (result == undefined) return;
+  notifyResult(result, "audio", actions, disableNotifyOnGenerate);
 }
 
 export async function multiGenerateAndSaveAudioWithDialog({
@@ -234,17 +224,8 @@ export async function generateAndConnectAndSaveAudioWithDialog({
     actions,
   );
 
-  if (result == undefined || result.result === "CANCELED") return;
-
-  if (result.result === "SUCCESS") {
-    if (disableNotifyOnGenerate) return;
-    showWriteSuccessNotify({
-      mediaType: "audio",
-      actions,
-    });
-  } else {
-    showWriteErrorDialog({ mediaType: "audio", result, actions });
-  }
+  if (result == undefined) return;
+  notifyResult(result, "audio", actions, disableNotifyOnGenerate);
 }
 
 export async function connectAndExportTextWithDialog({
@@ -259,18 +240,8 @@ export async function connectAndExportTextWithDialog({
   const result = await actions.CONNECT_AND_EXPORT_TEXT({
     filePath,
   });
-
-  if (result == undefined || result.result === "CANCELED") return;
-
-  if (result.result === "SUCCESS") {
-    if (disableNotifyOnGenerate) return;
-    showWriteSuccessNotify({
-      mediaType: "text",
-      actions,
-    });
-  } else {
-    showWriteErrorDialog({ mediaType: "text", result, actions });
-  }
+  if (!result) return;
+  notifyResult(result, "text", actions, disableNotifyOnGenerate);
 }
 
 // 書き出し成功時の通知を表示
@@ -323,6 +294,25 @@ const showWriteErrorDialog = ({
       title: "書き出しに失敗しました。",
       message: result.errorMessage ?? defaultErrorMessages[result.result] ?? "",
     });
+  }
+};
+
+/** 保存結果に応じてユーザーに通知する。キャンセルされた場合は何もしない。 */
+export const notifyResult = (
+  result: SaveResultObject,
+  mediaType: MediaType,
+  actions: DotNotationDispatch<AllActions>,
+  disableNotifyOnGenerate: boolean,
+) => {
+  if (result.result === "CANCELED") return;
+  if (result.result === "SUCCESS") {
+    if (disableNotifyOnGenerate) return;
+    showWriteSuccessNotify({
+      mediaType,
+      actions,
+    });
+  } else {
+    showWriteErrorDialog({ mediaType, result, actions });
   }
 };
 

@@ -27,7 +27,7 @@ import {
  */
 export interface Score {
     /**
-     * 
+     * 音符のリスト
      * @type {Array<Note>}
      * @memberof Score
      */

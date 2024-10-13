@@ -259,7 +259,7 @@ export interface Sandbox {
   }): Promise<string | undefined>;
   writeFile(obj: {
     filePath: string;
-    buffer: ArrayBuffer;
+    buffer: ArrayBuffer | Uint8Array;
   }): Promise<Result<undefined>>;
   readFile(obj: { filePath: string }): Promise<Result<ArrayBuffer>>;
   isAvailableGPUMode(): Promise<boolean>;
@@ -286,7 +286,7 @@ export interface Sandbox {
   getDefaultHotkeySettings(): Promise<HotkeySettingType[]>;
   getDefaultToolbarSetting(): Promise<ToolbarSettingType>;
   setNativeTheme(source: NativeThemeType): void;
-  theme(newData?: string): Promise<ThemeSetting | void>;
+  getAvailableThemes(): Promise<ThemeConf[]>;
   vuexReady(): void;
   getSetting<Key extends keyof ConfigType>(key: Key): Promise<ConfigType[Key]>;
   setSetting<Key extends keyof ConfigType>(
@@ -402,7 +402,10 @@ export type MinimumEngineManifestType = z.infer<
 
 export type EngineInfo = {
   uuid: EngineId;
-  host: string; // NOTE: 実際はorigin（プロトコルとhostnameとport）が入る
+  protocol: string; // `http:`など
+  hostname: string; // `example.com`など
+  defaultPort: string; // `50021`など。空文字列もありえる。
+  pathname: string; // `/engine`など。空文字列もありえる。
   name: string;
   path?: string; // エンジンディレクトリのパス
   executionEnabled: boolean;
@@ -553,17 +556,11 @@ export type ThemeConf = {
   };
 };
 
-export type ThemeSetting = {
-  currentTheme: string;
-  availableThemes: ThemeConf[];
-};
-
 export const experimentalSettingSchema = z.object({
   enableInterrogativeUpspeak: z.boolean().default(false),
   enableMorphing: z.boolean().default(false),
   enableMultiSelect: z.boolean().default(false),
   shouldKeepTuningOnTextChange: z.boolean().default(false),
-  enableMultiTrack: z.boolean().default(false),
 });
 
 export type ExperimentalSettingType = z.infer<typeof experimentalSettingSchema>;
@@ -615,7 +612,7 @@ export const configSchema = z
     savingSetting: z
       .object({
         fileEncoding: z.enum(["UTF-8", "Shift_JIS"]).default("UTF-8"),
-        fileNamePattern: z.string().default(""),
+        fileNamePattern: z.string().default(""), // NOTE: ファイル名パターンは拡張子を含まない
         fixedExportEnabled: z.boolean().default(false),
         avoidOverwrite: z.boolean().default(false),
         fixedExportDir: z.string().default(""),

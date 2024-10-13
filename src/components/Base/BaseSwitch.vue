@@ -1,8 +1,10 @@
 <template>
   <div class="root">
     <div class="label">{{ checked ? checkedLabel : uncheckedLabel }}</div>
-    <SwitchRoot :id v-model:checked="checked" class="SwitchRoot">
-      <SwitchThumb class="SwitchThumb" />
+    <SwitchRoot :id v-model:checked="checked" :disabled class="SwitchRoot">
+      <SwitchThumb class="SwitchThumb">
+        <QIcon class="check" name="check" />
+      </SwitchThumb>
     </SwitchRoot>
   </div>
 </template>
@@ -14,6 +16,7 @@ defineProps<{
   id?: string;
   uncheckedLabel?: string;
   checkedLabel?: string;
+  disabled?: boolean;
 }>();
 
 const checked = defineModel<boolean>("checked", { required: true });
@@ -51,18 +54,23 @@ const checked = defineModel<boolean>("checked", { required: true });
 }
 
 .SwitchThumb {
-  display: block;
+  display: grid;
+  place-items: center;
+  color: transparent;
   width: 20px;
   height: 20px;
   background-color: white;
   border-radius: 50%;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  transition: transform vars.$transition-duration;
+  transition:
+    transform vars.$transition-duration,
+    color vars.$transition-duration;
   will-change: transform;
 }
 
 .SwitchThumb[data-state="checked"] {
   transform: translateX(16px);
+  color: colors.$primary;
 }
 
 .label {

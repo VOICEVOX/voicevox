@@ -316,32 +316,15 @@ export const api: Sandbox = {
     // TODO: Impl
     return;
   },
-  async theme(newData?: string) {
-    if (newData != undefined) {
-      await this.setSetting("currentTheme", newData);
-      return;
-    }
+  async getAvailableThemes() {
     // NOTE: Electron版では起動時にテーマ情報が必要なので、
     //       この実装とは違って起動時に読み込んだキャッシュを返すだけになっている。
     return Promise.all(
       // FIXME: themeファイルのいい感じのパスの設定
       ["/themes/default.json", "/themes/dark.json"].map((url) =>
-        fetch(url).then((res) => res.json()),
+        fetch(url).then((res) => res.json() as Promise<ThemeConf>),
       ),
-    )
-      .then((v) => ({
-        currentTheme: "Default",
-        availableThemes: v,
-      }))
-      .then((v) =>
-        this.getSetting("currentTheme").then(
-          (currentTheme) =>
-            ({
-              ...v,
-              currentTheme,
-            }) as { currentTheme: string; availableThemes: ThemeConf[] },
-        ),
-      );
+    );
   },
   vuexReady() {
     // NOTE: 何もしなくて良さそう
