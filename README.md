@@ -167,15 +167,6 @@ Storybook のコンポーネントのスクリーンショットを比較して�
 npm run test:storybook-vrt
 ```
 
-新しくStoryを追加した場合は、以下のコマンドでスクリーンショットの対象を更新できます。
-スクリーンショット自体は更新されません。
-
-```bash
-npm run storybook # Storybookを起動。別のターミナルで実行すること。
-
-npm run test:storybook-vrt-update
-```
-
 #### スクリーンショットの更新
 
 ブラウザ End to End テストと Storybook では Visual Regression Testing を行っています。

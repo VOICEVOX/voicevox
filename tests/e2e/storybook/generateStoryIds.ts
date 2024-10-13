@@ -21,9 +21,19 @@ export const getStoriesToTest = (index: StorybookIndex) =>
   );
 
 const main = async () => {
-  const index = (await fetch("http://localhost:6006/index.json").then((res) =>
-    res.json(),
-  )) as StorybookIndex;
+  let index: StorybookIndex | undefined;
+  for (let i = 0; i < 15; i++) {
+    try {
+      index = (await fetch("http://localhost:6006/index.json").then((res) =>
+        res.json(),
+      )) as StorybookIndex;
+    } catch (e) {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+  }
+  if (!index) {
+    throw new Error("Storybookのindex.jsonを取得できませんでした。");
+  }
 
   const currentStories = getStoriesToTest(index);
 
@@ -41,7 +51,7 @@ const main = async () => {
     [
       `/* eslint-disable */`,
       `// generateStoryIds.tsによる自動生成。`,
-      `// 更新するには npm run test:storybook-vrt-update を実行してください。`,
+      `// 更新方法はREADMEを参照してください。`,
       `// 手動で更新はしないこと。`,
       `export const stories = ${JSON.stringify(storyIds, null, 2)};`,
       "",

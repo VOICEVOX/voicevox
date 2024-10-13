@@ -14,7 +14,7 @@ test("スクリーンショット：一覧確認", async () => {
 
   expect(
     newStories,
-    "新規追加されたStoryがあります。npm run test:storybook-vrt-update を実行してください。",
+    "新規追加されたStoryがあります。スナップショットを更新してください。",
   ).toEqual([]);
 });
 
