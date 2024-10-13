@@ -10,7 +10,6 @@ const ignorePaths = (paths: string[]) => paths.map((path) => `!${path}`);
 
 export default defineWorkspace([
   // Node.js環境
->>>>>>> upstream/main
   {
     extends: "./vite.config.mts",
     test: {
