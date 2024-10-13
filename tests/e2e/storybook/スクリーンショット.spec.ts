@@ -25,6 +25,6 @@ for (const story of stories) {
     await page.goto(`http://localhost:7357/iframe.html?id=${story}`);
     const body = page.locator("body.sb-show-main");
     await body.waitFor({ state: "visible" });
-    await expect(body).toHaveScreenshot(`${story}.png`);
+    await expect(page).toHaveScreenshot(`${story}.png`, { fullPage: true });
   });
 }
