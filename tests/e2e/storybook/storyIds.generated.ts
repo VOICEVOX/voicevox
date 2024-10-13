@@ -6,6 +6,8 @@ export const stories = [
   "components-base-basebutton--default",
   "components-base-basebutton--primary",
   "components-base-basebutton--danger",
+  "components-base-basecheckbox--default",
+  "components-base-basecheckbox--checked",
   "components-base-basedocumentview--default",
   "components-base-baselistitem--default",
   "components-base-baselistitem--selected",
