@@ -2,15 +2,15 @@
   <QDialog ref="dialogRef" v-model="modelValue">
     <QCard class="q-py-sm q-px-md dialog-card">
       <QCardSection>
-        <div class="text-h5">書き出し</div>
+        <div class="text-h5">音声書き出し</div>
       </QCardSection>
 
       <QSeparator />
 
       <QCardSection>
         <BaseCell
-          title="書き出し対象"
-          description="すべてのトラックをまとめて書き出すか、トラックごとに書き出すか選べます。"
+          title="書き出し方法"
+          description="すべてのトラックをまとめて１つの音声ファイルを書き出すか、トラックごとに音声ファイルを書き出すか選べます。"
         >
           <QBtnToggle
             v-model="exportTarget"
@@ -44,13 +44,13 @@
           </QSelect>
         </BaseCell>
         <BaseCell
-          title="リミッターを適用する"
-          description="ONの場合、0dBを極力超えないように音声を調整します。"
+          title="音量を制限する"
+          description="ONの場合、音量が0dBを極力超えないように音声を調整します。"
         >
           <QToggle v-model="withLimiter" />
         </BaseCell>
         <BaseCell
-          title="適用するトラックのパラメーター"
+          title="適用するトラックパラメーター"
           description="パン、ボリューム、ミュートのうち、どのパラメーターを書き出し時に適用するか選べます。"
         >
           <QOptionGroup
@@ -108,11 +108,11 @@ const emit = defineEmits<{
 // 書き出し対象選択
 const exportTargets = [
   {
-    label: "すべてのトラック",
+    label: "まとめる（ミックス）",
     value: "master",
   },
   {
-    label: "トラックごと",
+    label: "トラック別",
     value: "stem",
   },
 ];

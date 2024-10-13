@@ -258,7 +258,7 @@
                 />
 
                 <EditButtonCell
-                  title="書き出しファイル名パターン"
+                  title="トーク：書き出しファイル名パターン"
                   description="書き出す際のファイル名のパターンをカスタマイズできます。"
                   :currentValue="audioFileNamePatternWithExt"
                   @buttonClick="showAudioFilePatternEditDialog = true"
@@ -494,19 +494,9 @@ import {
   EditorFontType,
 } from "@/type/preload";
 import { createLogger } from "@/domain/frontend/log";
+import { useRootMiscSetting } from "@/composables/useRootMiscSetting";
 
 type SamplingRateOption = EngineSettingType["outputSamplingRate"];
-
-// ルート直下にある雑多な設定値を簡単に扱えるようにする
-const useRootMiscSetting = <T extends keyof RootMiscSettingType>(key: T) => {
-  const state = computed(() => store.state[key]);
-  const setter = (value: RootMiscSettingType[T]) => {
-    // Vuexの型処理でUnionが解かれてしまうのを迂回している
-    // FIXME: このワークアラウンドをなくす
-    void store.dispatch("SET_ROOT_MISC_SETTING", { key: key as never, value });
-  };
-  return [state, setter] as const;
-};
 
 const props = defineProps<{
   modelValue: boolean;
@@ -583,29 +573,40 @@ const availableThemeNameComputed = computed(() => {
     });
 });
 
-const [editorFont, changeEditorFont] = useRootMiscSetting("editorFont");
+const [editorFont, changeEditorFont] = useRootMiscSetting(store, "editorFont");
 
-const [enableMultiEngine, setEnableMultiEngine] =
-  useRootMiscSetting("enableMultiEngine");
+const [enableMultiEngine, setEnableMultiEngine] = useRootMiscSetting(
+  store,
+  "enableMultiEngine",
+);
 
-const [showTextLineNumber, changeShowTextLineNumber] =
-  useRootMiscSetting("showTextLineNumber");
+const [showTextLineNumber, changeShowTextLineNumber] = useRootMiscSetting(
+  store,
+  "showTextLineNumber",
+);
 
 const [showAddAudioItemButton, changeShowAddAudioItemButton] =
-  useRootMiscSetting("showAddAudioItemButton");
+  useRootMiscSetting(store, "showAddAudioItemButton");
 
-const [enableMemoNotation, changeEnableMemoNotation] =
-  useRootMiscSetting("enableMemoNotation");
+const [enableMemoNotation, changeEnableMemoNotation] = useRootMiscSetting(
+  store,
+  "enableMemoNotation",
+);
 
-const [enableRubyNotation, changeEnableRubyNotation] =
-  useRootMiscSetting("enableRubyNotation");
+const [enableRubyNotation, changeEnableRubyNotation] = useRootMiscSetting(
+  store,
+  "enableRubyNotation",
+);
 
-const [enablePreset, _changeEnablePreset] = useRootMiscSetting("enablePreset");
+const [enablePreset, _changeEnablePreset] = useRootMiscSetting(
+  store,
+  "enablePreset",
+);
 
 const [
   shouldApplyDefaultPresetOnVoiceChanged,
   changeShouldApplyDefaultPresetOnVoiceChanged,
-] = useRootMiscSetting("shouldApplyDefaultPresetOnVoiceChanged");
+] = useRootMiscSetting(store, "shouldApplyDefaultPresetOnVoiceChanged");
 
 const canSetAudioOutputDevice = computed(() => {
   return !!HTMLAudioElement.prototype.setSinkId;
@@ -817,8 +818,10 @@ watchEffect(async () => {
   }
 });
 
-const [splitTextWhenPaste, changeSplitTextWhenPaste] =
-  useRootMiscSetting("splitTextWhenPaste");
+const [splitTextWhenPaste, changeSplitTextWhenPaste] = useRootMiscSetting(
+  store,
+  "splitTextWhenPaste",
+);
 
 const showAudioFilePatternEditDialog = ref(false);
 const showSongTrackAudioFilePatternEditDialog = ref(false);

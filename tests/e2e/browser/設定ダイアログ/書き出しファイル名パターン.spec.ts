@@ -10,7 +10,7 @@ test.beforeEach(gotoHome);
  */
 const moveToFilenameDialog = async (page: Page, settingDialog: Locator) => {
   await settingDialog
-    .locator(".row-card", { hasText: "書き出しファイル名パターン" })
+    .locator(".row-card", { hasText: "トーク：書き出しファイル名パターン" })
     .getByRole("button", { name: "編集する" })
     .click();
   await page.waitForTimeout(500);
