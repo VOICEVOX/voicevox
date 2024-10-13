@@ -1,4 +1,4 @@
-import { userEvent, within, expect } from "@storybook/test";
+import { userEvent, within, expect, fn } from "@storybook/test";
 
 import { Meta, StoryObj } from "@storybook/vue3";
 import QuestionDialog from "./QuestionDialog.vue";
@@ -12,6 +12,8 @@ const meta: Meta<typeof QuestionDialog> = {
     title: "タイトル",
     message: "メッセージ",
     buttons: ["A", "B", "C"],
+
+    onOk: fn(),
   },
   tags: ["!autodocs"],
 };
