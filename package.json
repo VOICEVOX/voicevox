@@ -37,7 +37,8 @@
     "postuninstall": "electron-builder install-app-deps",
     "license:generate": "node build/generateLicenses.js",
     "license:merge": "node build/mergeLicenses.js",
-    "storybook": "storybook dev --port 6006"
+    "storybook": "storybook dev --port 6006",
+    "storybook:build": "storybook build"
   },
   "dependencies": {
     "@gtm-support/vue-gtm": "1.2.3",
@@ -124,7 +125,6 @@
     "playwright": "1.48.0",
     "prettier": "3.2.5",
     "sass": "1.77.8",
-    "serve": "14.2.3",
     "storybook": "8.3.5",
     "ts-node": "10.9.1",
     "tsx": "4.19.1",
