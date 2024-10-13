@@ -118,27 +118,27 @@ fork したリポジトリで Actions を ON にし、workflow_dispatch で`buil
 
 ### 単体テスト
 
+`./tests/unit/` 以下にあるテストと、Storybookのテストを実行します。
+
 ```bash
 npm run test:unit
 npm run test-watch:unit # 監視モード
+npm run test-ui:unit # VitestのUIを表示
 npm run test:unit -- --update # スナップショットの更新
 ```
 
-### コンポーネントのテスト
-
-Storybook を使ってコンポーネントのテストを行います。
-
-```bash
-npm run storybook # 先に Storybook を起動
-npm run test:storybook
-npm run test-watch:storybook # 監視モード
-```
+> [!NOTE]  
+> `./tests/unit` 下のテストは、ファイル名によってテストを実行する環境が変化します。
+>
+> - `.node.spec.ts`：Node.js 環境
+> - `.browser.spec.ts`：ブラウザ環境（Chromium）
+> - `.spec.ts`：ブラウザ環境（happy-domによるエミュレート）
 
 ### ブラウザ End to End テスト
 
 Electron の機能が不要な、UI や音声合成などの End to End テストを実行します。
 
-> **Note**
+> [!NOTE]
 > 一部のエンジンの設定を書き換えるテストは、CI(Github Actions)上でのみ実行されるようになっています。
 
 ```bash
