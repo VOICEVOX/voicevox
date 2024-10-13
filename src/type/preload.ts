@@ -599,7 +599,7 @@ export const rootMiscSettingSchema = z.object({
       panAndGain: z.boolean().default(true),
     })
     .default({}),
-  showSinger: z.boolean().default(true),
+  showSingCharacterPortrait: z.boolean().default(true), // ソングエディタで立ち絵を表示するか
 });
 export type RootMiscSettingType = z.infer<typeof rootMiscSettingSchema>;
 

@@ -262,6 +262,11 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
         "",
       );
 
+      // マルチトラック機能を実験的機能じゃなくす
+      if ("enableMultiTrack" in experimentalSetting) {
+        delete experimentalSetting.enableMultiTrack;
+      }
+
       return config;
     },
   ],
