@@ -105,7 +105,7 @@ const emit = defineEmits<{
   exportAudio: [exportTarget: ExportTarget, setting: SongExportSetting];
 }>();
 
-// 書き出し対象選択
+// 書き出し方法選択
 const exportTargets = [
   {
     label: "まとめる（ミックス）",
