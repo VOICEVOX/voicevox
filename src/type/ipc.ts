@@ -4,7 +4,7 @@ import {
   EngineInfo,
   EngineDirValidationResult,
   HotkeySettingType,
-  ThemeSetting,
+  ThemeConf,
   ToolbarSettingType,
   UpdateInfo,
   NativeThemeType,
@@ -70,7 +70,12 @@ export type IpcIHData = {
   };
 
   SHOW_AUDIO_SAVE_DIALOG: {
-    args: [obj: { title: string; defaultPath?: string }];
+    args: [
+      obj: {
+        title: string;
+        defaultPath?: string;
+      },
+    ];
     return?: string;
   };
 
@@ -224,9 +229,9 @@ export type IpcIHData = {
     return: ToolbarSettingType;
   };
 
-  THEME: {
-    args: [obj: { newData?: string }];
-    return: ThemeSetting | void;
+  GET_AVAILABLE_THEMES: {
+    args: [];
+    return: ThemeConf[];
   };
 
   ON_VUEX_READY: {
@@ -275,7 +280,7 @@ export type IpcIHData = {
   };
 
   WRITE_FILE: {
-    args: [obj: { filePath: string; buffer: ArrayBuffer }];
+    args: [obj: { filePath: string; buffer: ArrayBuffer | Uint8Array }];
     return: Result<undefined>;
   };
 

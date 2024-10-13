@@ -28,6 +28,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
+import { useQuasar } from "quasar";
 import { MenuItemData, MenuItemRoot } from "../type";
 import MenuButton from "../MenuButton.vue";
 import TitleBarButtons from "./TitleBarButtons.vue";
@@ -47,6 +48,7 @@ const props = defineProps<{
   editor: "talk" | "song";
 }>();
 
+const $q = useQuasar();
 const store = useStore();
 const { registerHotkeyWithCleanup } = useHotkeyManager();
 const currentVersion = ref("");

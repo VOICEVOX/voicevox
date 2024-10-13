@@ -25,14 +25,11 @@ export const useMenuBarData = () => {
     });
   };
 
-  const exportWaveFile = async () => {
+  const exportAudioFile = async () => {
     if (uiLocked.value) return;
-    await store.dispatch("EXPORT_WAVE_FILE", {});
-  };
-
-  const exportStemWaveFile = async () => {
-    if (uiLocked.value) return;
-    await store.dispatch("EXPORT_STEM_WAVE_FILE", {});
+    await store.dispatch("SET_DIALOG_OPEN", {
+      isExportSongAudioDialogOpen: true,
+    });
   };
 
   const fileSubMenuData = computed<MenuItemData[]>(() => [
@@ -40,15 +37,7 @@ export const useMenuBarData = () => {
       type: "button",
       label: "音声を出力",
       onClick: () => {
-        void exportWaveFile();
-      },
-      disableWhenUiLocked: true,
-    },
-    {
-      type: "button",
-      label: "トラックごとに音声を出力",
-      onClick: () => {
-        void exportStemWaveFile();
+        void exportAudioFile();
       },
       disableWhenUiLocked: true,
     },

@@ -217,8 +217,8 @@ const api: Sandbox = {
     void ipcRendererInvokeProxy.SET_NATIVE_THEME(source);
   },
 
-  theme: (newData) => {
-    return ipcRendererInvokeProxy.THEME({ newData });
+  getAvailableThemes: () => {
+    return ipcRendererInvokeProxy.GET_AVAILABLE_THEMES();
   },
 
   vuexReady: () => {

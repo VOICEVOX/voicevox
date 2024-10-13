@@ -118,6 +118,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
+import { useQuasar } from "quasar";
 import { useStore } from "@/store";
 import { DEFAULT_STYLE_NAME } from "@/store/utility";
 import {
@@ -138,6 +139,8 @@ const emit = defineEmits<{
   (e: "update:isOpen", value: boolean): void;
   (e: "update:selectedStyleIndex", value: number): void;
 }>();
+
+const $q = useQuasar();
 
 const store = useStore();
 

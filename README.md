@@ -88,6 +88,9 @@ Storybook を使ってコンポーネントを開発することができます�
 npm run storybook
 ```
 
+main ブランチの Storybook は Chromatic から確認できます。  
+<https://main--667d9c007418420dbb5b0f75.chromatic.com/>
+
 ### ブラウザ版の実行（開発中）
 
 別途音声合成エンジンを起動し、以下を実行して表示された localhost へアクセスします。
@@ -96,7 +99,8 @@ npm run storybook
 npm run browser:serve
 ```
 
-また、main ブランチのビルド結果がこちらにデプロイされています <https://voicevox-browser-dev.netlify.app/>  
+また、main ブランチのビルド結果がこちらにデプロイされています。  
+<https://voicevox-browser-dev.netlify.app/>  
 今はローカル PC 上で音声合成エンジンを起動する必要があります。
 
 ## ビルド
@@ -116,24 +120,19 @@ fork したリポジトリで Actions を ON にし、workflow_dispatch で`buil
 
 `./tests/unit/` 以下にあるテストと、Storybookのテストを実行します。
 
+```bash
+npm run test:unit
+npm run test-watch:unit # 監視モード
+npm run test-ui:unit # VitestのUIを表示
+npm run test:unit -- --update # スナップショットの更新
+```
+
 > [!NOTE]  
 > `./tests/unit` 下のテストは、ファイル名によってテストを実行する環境が変化します。
 >
 > - `.node.spec.ts`：Node.js 環境
-> - `.browser.spec.ts`：ブラウザ環境（実機）
+> - `.browser.spec.ts`：ブラウザ環境（Chromium）
 > - `.spec.ts`：ブラウザ環境（happy-domによるエミュレート）
-
-```bash
-npm run test:unit
-npm run test-watch:unit # 監視モード
-npm run test:unit -- --update # スナップショットの更新
-```
-
-また、以下のコマンドでテストのダッシュボードを表示できます：
-
-```bash
-npm run test-ui:unit
-```
 
 ### ブラウザ End to End テスト
 
