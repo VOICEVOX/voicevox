@@ -38,7 +38,7 @@ import {
   isMac,
   defaultToolbarButtonSetting,
   EngineId,
-  type AssetObjectType,
+  AssetObjectType,
 } from "@/type/preload";
 
 type SingleInstanceLockData = {

@@ -1,10 +1,10 @@
 import { contextBridge, ipcRenderer } from "electron";
 import type { IpcRendererInvoke } from "./ipc";
 import {
-  type AssetType,
-  type ConfigType,
-  type EngineId,
-  type Sandbox,
+  AssetType,
+  ConfigType,
+  EngineId,
+  Sandbox,
   SandboxKey,
 } from "@/type/preload";
 

@@ -1,4 +1,4 @@
-import type {
+import {
   AppInfos,
   AssetType,
   ConfigType,
@@ -12,8 +12,8 @@ import type {
   EngineId,
   MessageBoxReturnValue,
 } from "@/type/preload";
-import type { AltPortInfos } from "@/store/type";
-import type { Result } from "@/type/result";
+import { AltPortInfos } from "@/store/type";
+import { Result } from "@/type/result";
 
 /**
  * invoke, handle
