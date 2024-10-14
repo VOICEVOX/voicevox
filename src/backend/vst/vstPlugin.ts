@@ -29,7 +29,7 @@ export type Message =
 
 const log = createLogger("vstMessageReceiver");
 
-export const vstMessageReceiver: Plugin = {
+export const vstPlugin: Plugin = {
   install: (
     _,
     {
