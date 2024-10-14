@@ -47,25 +47,22 @@ for (const story of currentStories) {
   allStories[story.title].push(story);
 }
 
-test.describe("スクリーンショット", () => {
-  for (const [story, stories] of Object.entries(allStories)) {
-    if (!stories) continue;
-    test.describe(story, () => {
-      for (const story of stories) {
-        test(story.name, async ({ page }) => {
-          test.skip(
-            process.platform !== "win32",
-            "Windows以外のためスキップします",
-          );
+for (const [story, stories] of Object.entries(allStories)) {
+  test.describe(story, () => {
+    for (const story of stories) {
+      test(story.name, async ({ page }) => {
+        test.skip(
+          process.platform !== "win32",
+          "Windows以外のためスキップします",
+        );
 
-          await page.goto(`http://localhost:7357/iframe.html?id=${story}`);
-          const body = page.locator("body.sb-show-main");
-          await body.waitFor({ state: "visible" });
-          await expect(page).toHaveScreenshot(`${story}.png`, {
-            fullPage: true,
-          });
+        await page.goto(`http://localhost:7357/iframe.html?id=${story}`);
+        const body = page.locator("body.sb-show-main");
+        await body.waitFor({ state: "visible" });
+        await expect(page).toHaveScreenshot(`${story}.png`, {
+          fullPage: true,
         });
-      }
-    });
-  }
-});
+      });
+    }
+  });
+}
