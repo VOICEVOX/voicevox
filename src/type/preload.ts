@@ -209,24 +209,16 @@ export const defaultToolbarButtonSetting: ToolbarSettingType = [
   "REDO",
 ];
 
-type AssetStringKeys =
-  | "Contact"
-  | "HowToUse"
-  | "OssCommunityInfos"
-  | "Policy"
-  | "PrivacyPolicy"
-  | "QAndA";
-
-type AssetStringType = {
-  [key in AssetStringKeys]: string;
-};
-
-export type AssetObjectType = {
+export type TextAsset = {
+  Contact: string;
+  HowToUse: string;
+  OssCommunityInfos: string;
+  Policy: string;
+  PrivacyPolicy: string;
+  QAndA: string;
   OssLicenses: Record<string, string>[];
   UpdateInfos: UpdateInfo[];
 };
-
-export type AssetType = AssetStringType & AssetObjectType;
 
 export interface Sandbox {
   getAppInfos(): Promise<AppInfos>;
