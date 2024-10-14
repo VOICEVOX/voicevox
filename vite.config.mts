@@ -88,7 +88,7 @@ export default defineConfig((options) => {
             // ref: https://github.com/electron-vite/vite-plugin-electron/pull/122
             onstart: ({ startup }) => {
               if (options.mode !== "test") {
-                startup([".", "--no-sandbox"]);
+                void startup([".", "--no-sandbox"]);
               }
             },
             vite: {
