@@ -1,18 +1,22 @@
 // 起動中のStorybookで様々なStoryを表示し、スクリーンショットを撮って比較するVRT。
 // テスト自体はend-to-endではないが、Playwrightを使う関係でe2eディレクトリ内でテストしている。
 import { test, expect } from "@playwright/test";
+import z from "zod";
+import { errorToMessage } from "@/helpers/errorHelper";
 
-type StorybookIndex = {
-  v: 5;
-  entries: Record<string, StorybookEntry>;
-};
-type StorybookEntry = {
-  type: string;
-  id: string;
-  name: string;
-  title: string;
-  tags: string[];
-};
+const storybookIndexSchema = z.object({
+  v: z.literal(5),
+  entries: z.record(
+    z.object({
+      type: z.string(),
+      id: z.string(),
+      name: z.string(),
+      title: z.string(),
+      tags: z.array(z.string()),
+    }),
+  ),
+});
+type StorybookIndex = z.infer<typeof storybookIndexSchema>;
 
 // テスト対象のStory一覧を取得する。
 // play-fnが付いているStoryはUnit Test用Storyとみなしてスクリーンショットを撮らない
@@ -21,9 +25,17 @@ const getStoriesToTest = (index: StorybookIndex) =>
     (entry) => entry.type === "story" && !entry.tags.includes("play-fn"),
   );
 
-const index = (await fetch("http://localhost:7357/index.json").then((res) =>
-  res.json(),
-)) as StorybookIndex;
+let index: StorybookIndex;
+
+try {
+  index = storybookIndexSchema.parse(
+    await fetch("http://localhost:7357/index.json").then((res) => res.json()),
+  );
+} catch (e) {
+  throw new Error(
+    `Storybookのindex.jsonの取得に失敗しました：${errorToMessage(e)}`,
+  );
+}
 
 const currentStories = getStoriesToTest(index);
 
