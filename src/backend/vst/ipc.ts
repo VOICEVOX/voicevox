@@ -1,4 +1,5 @@
 import { toBytes } from "fast-base64";
+import { Routing } from "./type";
 import { Metadata } from "@/backend/common/ConfigManager";
 import {
   ShowImportFileDialogOptions,
@@ -8,6 +9,25 @@ import {
 import { createLogger } from "@/domain/frontend/log";
 import { UnreachableError } from "@/type/utility";
 import { SingingVoiceKey } from "@/store/type";
+
+/*
+メモ：
+- VSTプラグインとの通信を行うためのファイル。
+- 送信はpostMessage、受信はonIpcResponseとonIpcNotificationを使う。
+- 通信内容はJSONでやり取りする。
+- だいたいの流れ：
+  - requestIdを振る（連番、nonce）
+  - Promiseを作っておく
+  - postMessageでJSONを送信
+  - onIpcResponseで受信
+  - requestIdを使ってPromiseをresolveする
+
+  - リクエストなしで通知だけ（再生位置の変更など）の場合はonIpcNotificationを使う
+
+- ipcの関数はcreateMessageFunctionで作る
+  - これは直接exportするべきではない
+- 通知はonReceivedIPCMessageで受け取る
+ */
 
 declare global {
   interface Window {
@@ -161,6 +181,12 @@ const ipcSetVoices = createMessageFunction<
   Record<SingingVoiceKey, string>,
   void
 >("setVoices");
+const ipcGetRoutingInfo = createMessageFunction<undefined, Routing>(
+  "getRoutingInfo",
+);
+const ipcSetRoutingInfo = createMessageFunction<Routing, void>(
+  "setRoutingInfo",
+);
 
 type Config = Record<string, unknown> & Metadata;
 const log = createLogger("vst/ipc");
@@ -252,4 +278,12 @@ export function onReceivedIPCMessage<T extends keyof Notifications>(
     notificationReceivers.set(name, []);
   }
   notificationReceivers.get(name)?.push(callback as (value: unknown) => void);
+}
+
+export async function getRoutingInfo(): Promise<Routing> {
+  return await ipcGetRoutingInfo();
+}
+
+export async function setRoutingInfo(routing: Routing) {
+  await ipcSetRoutingInfo(routing);
 }

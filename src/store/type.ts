@@ -1912,6 +1912,7 @@ export type DialogStates = {
   isUpdateNotificationDialogOpen: boolean;
   isExportSongAudioDialogOpen: boolean;
   isImportSongProjectDialogOpen: boolean;
+  isVstRoutingDialogOpen: boolean;
 };
 
 export type UiStoreTypes = {
