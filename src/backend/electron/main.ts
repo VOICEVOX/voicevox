@@ -38,7 +38,7 @@ import {
   isMac,
   defaultToolbarButtonSetting,
   EngineId,
-  AssetObjectType,
+  TextAsset,
 } from "@/type/preload";
 
 type SingleInstanceLockData = {
@@ -487,9 +487,9 @@ registerIpcMainHandle<IpcMainHandle>({
 
   GET_ASSET_TEXT: async (_, textType) => {
     const fileName = path.join(__static, AssetTextFileNames[textType]);
-    const text = fs.promises.readFile(fileName, "utf-8");
+    const text = await fs.promises.readFile(fileName, "utf-8");
     if (textType === "OssLicenses" || textType === "UpdateInfos") {
-      return JSON.parse(await text) as AssetObjectType[typeof textType];
+      return JSON.parse(text) as TextAsset[typeof textType];
     }
     return text;
   },

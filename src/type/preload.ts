@@ -222,7 +222,7 @@ export type TextAsset = {
 
 export interface Sandbox {
   getAppInfos(): Promise<AppInfos>;
-  getAssetText<K extends keyof AssetType>(textType: K): Promise<AssetType[K]>;
+  getAssetText<K extends keyof TextAsset>(textType: K): Promise<TextAsset[K]>;
   getAltPortInfos(): Promise<AltPortInfos>;
   showAudioSaveDialog(obj: {
     title: string;

@@ -1,6 +1,6 @@
-import type { AssetType } from "./preload";
+import { TextAsset } from "./preload";
 
-export const AssetTextFileNames: Record<keyof AssetType, string> = {
+export const AssetTextFileNames: Record<keyof TextAsset, string> = {
   Contact: "contact.md",
   HowToUse: "howtouse.md",
   OssCommunityInfos: "ossCommunityInfos.md",

@@ -1,11 +1,11 @@
 import { contextBridge, ipcRenderer } from "electron";
 import type { IpcRendererInvoke } from "./ipc";
 import {
-  AssetType,
   ConfigType,
   EngineId,
   Sandbox,
   SandboxKey,
+  TextAsset,
 } from "@/type/preload";
 
 const ipcRendererInvokeProxy = new Proxy(
@@ -25,7 +25,7 @@ const api: Sandbox = {
 
   getAssetText: (textType) => {
     return ipcRendererInvokeProxy.GET_ASSET_TEXT(textType) as Promise<
-      AssetType[typeof textType]
+      TextAsset[typeof textType]
     >;
   },
 

@@ -1,16 +1,16 @@
 import {
   AppInfos,
-  AssetType,
   ConfigType,
-  EngineInfo,
   EngineDirValidationResult,
+  EngineId,
+  EngineInfo,
+  EngineSettingType,
   HotkeySettingType,
+  MessageBoxReturnValue,
+  NativeThemeType,
+  TextAsset,
   ThemeConf,
   ToolbarSettingType,
-  NativeThemeType,
-  EngineSettingType,
-  EngineId,
-  MessageBoxReturnValue,
 } from "@/type/preload";
 import { AltPortInfos } from "@/store/type";
 import { Result } from "@/type/result";
@@ -25,8 +25,8 @@ export type IpcIHData = {
   };
 
   GET_ASSET_TEXT: {
-    args: [textType: keyof AssetType];
-    return: AssetType[keyof AssetType];
+    args: [textType: keyof TextAsset];
+    return: TextAsset[keyof TextAsset];
   };
 
   GET_ALT_PORT_INFOS: {
