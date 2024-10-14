@@ -209,16 +209,28 @@ export const defaultToolbarButtonSetting: ToolbarSettingType = [
   "REDO",
 ];
 
+type AssetStringKeys =
+  | "Contact"
+  | "HowToUse"
+  | "OssCommunityInfos"
+  | "Policy"
+  | "PrivacyPolicy"
+  | "QAndA";
+
+type AssetStringType = {
+  [key in AssetStringKeys]: string;
+};
+
+export type AssetObjectType = {
+  OssLicenses: Record<string, string>[];
+  UpdateInfos: UpdateInfo[];
+};
+
+export type AssetType = AssetStringType & AssetObjectType;
+
 export interface Sandbox {
   getAppInfos(): Promise<AppInfos>;
-  getHowToUseText(): Promise<string>;
-  getPolicyText(): Promise<string>;
-  getOssLicenses(): Promise<Record<string, string>[]>;
-  getUpdateInfos(): Promise<UpdateInfo[]>;
-  getOssCommunityInfos(): Promise<string>;
-  getQAndAText(): Promise<string>;
-  getContactText(): Promise<string>;
-  getPrivacyPolicyText(): Promise<string>;
+  getAssetText<K extends keyof AssetType>(textType: K): Promise<AssetType[K]>;
   getAltPortInfos(): Promise<AltPortInfos>;
   showAudioSaveDialog(obj: {
     title: string;

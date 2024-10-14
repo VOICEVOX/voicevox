@@ -29,16 +29,7 @@ import { registerIpcMainHandle, ipcMainSendProxy, IpcMainHandle } from "./ipc";
 import { getConfigManager } from "./electronConfig";
 import { EngineAndVvppController } from "./engineAndVvppController";
 import { failure, success } from "@/type/result";
-import {
-  ContactTextFileName,
-  HowToUseTextFileName,
-  OssCommunityInfosFileName,
-  OssLicensesJsonFileName,
-  PolicyTextFileName,
-  PrivacyPolicyTextFileName,
-  QAndATextFileName,
-  UpdateInfosJsonFileName,
-} from "@/type/staticResources";
+import { AssetTextFileNames } from "@/type/staticResources";
 import {
   ThemeConf,
   EngineInfo,
@@ -47,7 +38,7 @@ import {
   isMac,
   defaultToolbarButtonSetting,
   EngineId,
-  UpdateInfo,
+  type AssetObjectType,
 } from "@/type/preload";
 
 type SingleInstanceLockData = {
@@ -248,55 +239,6 @@ function readThemeFiles() {
   }
   return themes;
 }
-
-// 使い方テキストの読み込み
-const howToUseText = fs.readFileSync(
-  path.join(__static, HowToUseTextFileName),
-  "utf-8",
-);
-
-// OSSコミュニティ情報の読み込み
-const ossCommunityInfos = fs.readFileSync(
-  path.join(__static, OssCommunityInfosFileName),
-  "utf-8",
-);
-
-// 利用規約テキストの読み込み
-const policyText = fs.readFileSync(
-  path.join(__static, PolicyTextFileName),
-  "utf-8",
-);
-
-// OSSライセンス情報の読み込み
-const ossLicenses = JSON.parse(
-  fs.readFileSync(path.join(__static, OssLicensesJsonFileName), {
-    encoding: "utf-8",
-  }),
-) as Record<string, string>[];
-
-// 問い合わせの読み込み
-const contactText = fs.readFileSync(
-  path.join(__static, ContactTextFileName),
-  "utf-8",
-);
-
-// Q&Aの読み込み
-const qAndAText = fs.readFileSync(
-  path.join(__static, QAndATextFileName),
-  "utf-8",
-);
-
-// アップデート情報の読み込み
-const updateInfos = JSON.parse(
-  fs.readFileSync(path.join(__static, UpdateInfosJsonFileName), {
-    encoding: "utf-8",
-  }),
-) as UpdateInfo[];
-
-const privacyPolicyText = fs.readFileSync(
-  path.join(__static, PrivacyPolicyTextFileName),
-  "utf-8",
-);
 
 const appState = {
   willQuit: false,
@@ -543,36 +485,13 @@ registerIpcMainHandle<IpcMainHandle>({
     };
   },
 
-  GET_HOW_TO_USE_TEXT: () => {
-    return howToUseText;
-  },
-
-  GET_POLICY_TEXT: () => {
-    return policyText;
-  },
-
-  GET_OSS_LICENSES: () => {
-    return ossLicenses;
-  },
-
-  GET_UPDATE_INFOS: () => {
-    return updateInfos;
-  },
-
-  GET_OSS_COMMUNITY_INFOS: () => {
-    return ossCommunityInfos;
-  },
-
-  GET_CONTACT_TEXT: () => {
-    return contactText;
-  },
-
-  GET_Q_AND_A_TEXT: () => {
-    return qAndAText;
-  },
-
-  GET_PRIVACY_POLICY_TEXT: () => {
-    return privacyPolicyText;
+  GET_ASSET_TEXT: async (_, textType) => {
+    const fileName = path.join(__static, AssetTextFileNames[textType]);
+    const text = fs.promises.readFile(fileName, "utf-8");
+    if (textType === "OssLicenses" || textType === "UpdateInfos") {
+      return JSON.parse(await text) as AssetObjectType[typeof textType];
+    }
+    return text;
   },
 
   GET_ALT_PORT_INFOS: () => {
