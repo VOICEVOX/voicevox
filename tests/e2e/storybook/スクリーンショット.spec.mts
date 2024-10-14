@@ -31,8 +31,9 @@ try {
     await fetch("http://localhost:7357/index.json").then((res) => res.json()),
   );
 } catch (e) {
-  // ここだとhelpersのerrorToMessageが使えないので、String(e)でエラーメッセージを取得する
-  throw new Error(`Storybookのindex.jsonの取得に失敗しました：${String(e)}`);
+  throw new Error(`Storybookのindex.jsonの取得に失敗しました`, {
+    cause: e,
+  });
 }
 
 const currentStories = getStoriesToTest(index);
