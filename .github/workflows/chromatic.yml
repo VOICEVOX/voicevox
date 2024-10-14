@@ -1,9 +1,6 @@
 # Chromaticにmainブランチをpushする
 # お試し運用中なので消滅する可能性あり
 
-# TODO: Enable TurboSnap
-# https://www.chromatic.com/docs/github-actions/#enable-turbosnap
-
 name: "Chromatic"
 
 on:
@@ -33,3 +30,4 @@ jobs:
           projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
           buildScriptName: "storybook:build"
           exitZeroOnChanges: true
+          onlyChanged: true

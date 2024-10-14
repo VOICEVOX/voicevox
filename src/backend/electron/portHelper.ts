@@ -17,14 +17,6 @@ const portWarn = (port: number, message: string, isNested = false) => {
   log.warn(`${isNested ? "| " : ""}PORT ${port}: ${message}`);
 };
 
-export function url2HostInfo(url: URL): HostInfo {
-  return {
-    protocol: url.protocol,
-    hostname: url.hostname,
-    port: Number(url.port),
-  };
-}
-
 /**
  * "netstat -ano" の stdout から, 指定したポートを LISTENING しているプロセスの id を取得します.
  *

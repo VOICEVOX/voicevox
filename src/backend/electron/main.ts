@@ -584,7 +584,12 @@ registerIpcMainHandle<IpcMainHandle>({
       dialog.showSaveDialog(win, {
         title,
         defaultPath,
-        filters: [{ name: "Wave File", extensions: ["wav"] }],
+        filters: [
+          {
+            name: "WAVファイル",
+            extensions: ["wav"],
+          },
+        ],
         properties: ["createDirectory"],
       }),
     );
@@ -755,6 +760,10 @@ registerIpcMainHandle<IpcMainHandle>({
     }
   },
 
+  GET_AVAILABLE_THEMES: () => {
+    return themes;
+  },
+
   OPEN_LOG_DIRECTORY: () => {
     void shell.openPath(app.getPath("logs"));
   },
@@ -784,17 +793,6 @@ registerIpcMainHandle<IpcMainHandle>({
       configManager.set("hotkeySettings", hotkeySettings);
     }
     return configManager.get("hotkeySettings");
-  },
-
-  THEME: (_, { newData }) => {
-    if (newData != undefined) {
-      configManager.set("currentTheme", newData);
-      return;
-    }
-    return {
-      currentTheme: configManager.get("currentTheme"),
-      availableThemes: themes,
-    };
   },
 
   ON_VUEX_READY: () => {
@@ -872,7 +870,10 @@ registerIpcMainHandle<IpcMainHandle>({
 
   WRITE_FILE: (_, { filePath, buffer }) => {
     try {
-      fs.writeFileSync(filePath, new DataView(buffer));
+      fs.writeFileSync(
+        filePath,
+        new DataView(buffer instanceof Uint8Array ? buffer.buffer : buffer),
+      );
       return success(undefined);
     } catch (e) {
       // throwだと`.code`の情報が消えるのでreturn

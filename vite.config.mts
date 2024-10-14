@@ -28,16 +28,22 @@ export default defineConfig((options) => {
       `"package.json"の"name":"${packageName}"は"VITE_APP_NAME":"${env.VITE_APP_NAME}"から始まっている必要があります`,
     );
   }
+
   const shouldEmitSourcemap = ["development", "test"].includes(options.mode);
+  // 型を曖昧にして下の[process.platform]のエラーを回避する
+  const sevenZipBinNames: Record<string, string> = {
+    win32: "7za.exe",
+    linux: "7zzs",
+    darwin: "7zz",
+  };
+  const sevenZipBinName = sevenZipBinNames[process.platform];
+  if (!sevenZipBinName) {
+    throw new Error(`Unsupported platform: ${process.platform}`);
+  }
   process.env.VITE_7Z_BIN_NAME =
     (options.mode === "development"
       ? path.join(__dirname, "build", "vendored", "7z") + path.sep
-      : "") +
-    {
-      win32: "7za.exe",
-      linux: "7zzs",
-      darwin: "7zz",
-    }[process.platform];
+      : "") + sevenZipBinName;
   process.env.VITE_APP_VERSION = process.env.npm_package_version;
   const sourcemap: BuildOptions["sourcemap"] = shouldEmitSourcemap
     ? "inline"
@@ -63,12 +69,6 @@ export default defineConfig((options) => {
         "@": path.resolve(__dirname, "src/"),
       },
     },
-    test: {
-      include: ["../tests/unit/**/*.spec.ts"],
-      environment: "happy-dom",
-      globals: true,
-    },
-
     plugins: [
       vue(),
       quasar({ autoImportComponentCase: "pascal" }),

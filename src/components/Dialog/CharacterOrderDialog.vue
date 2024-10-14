@@ -107,6 +107,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import Draggable from "vuedraggable";
+import { useQuasar } from "quasar";
 import CharacterTryListenCard from "./CharacterTryListenCard.vue";
 import { useStore } from "@/store";
 import { CharacterInfo, SpeakerId, StyleId, StyleInfo } from "@/type/preload";
@@ -119,6 +120,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   (event: "update:modelValue", value: boolean): void;
 }>();
+
+const $q = useQuasar();
 
 const store = useStore();
 

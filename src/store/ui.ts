@@ -111,6 +111,7 @@ export const uiStoreState: UiStoreState = {
   isDictionaryManageDialogOpen: false,
   isEngineManageDialogOpen: false,
   isUpdateNotificationDialogOpen: false,
+  isExportSongAudioDialogOpen: false,
   isImportSongProjectDialogOpen: false,
   isMaximized: false,
   isPinned: false,
@@ -226,23 +227,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   },
 
   SET_DIALOG_OPEN: {
-    mutation(
-      state,
-      dialogState: {
-        isDefaultStyleSelectDialogOpen?: boolean;
-        isAcceptRetrieveTelemetryDialogOpen?: boolean;
-        isAcceptTermsDialogOpen?: boolean;
-        isDictionaryManageDialogOpen?: boolean;
-        isHelpDialogOpen?: boolean;
-        isSettingDialogOpen?: boolean;
-        isHotkeySettingDialogOpen?: boolean;
-        isToolbarSettingDialogOpen?: boolean;
-        isCharacterOrderDialogOpen?: boolean;
-        isEngineManageDialogOpen?: boolean;
-        isUpdateNotificationDialogOpen?: boolean;
-        isImportExternalProjectDialogOpen?: boolean;
-      },
-    ) {
+    mutation(state, dialogState) {
       for (const [key, value] of Object.entries(dialogState)) {
         if (!(key in state)) {
           throw new Error(`Unknown dialog state: ${key}`);
@@ -393,6 +378,12 @@ export const uiStore = createPartialStore<UiStoreTypes>({
           activePointScrollMode,
         ),
       });
+    },
+  },
+
+  SET_AVAILABLE_THEMES: {
+    mutation(state, { themes }) {
+      state.availableThemes = themes;
     },
   },
 

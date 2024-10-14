@@ -22,6 +22,7 @@
   <UpdateNotificationDialogContainer
     :canOpenDialog="canOpenNotificationDialog"
   />
+  <ExportSongAudioDialog v-model="isExportSongAudioDialogOpen" />
   <ImportSongProjectDialog v-model="isImportSongProjectDialogOpenComputed" />
 </template>
 
@@ -39,6 +40,7 @@ import DictionaryManageDialog from "@/components/Dialog/DictionaryManageDialog.v
 import EngineManageDialog from "@/components/Dialog/EngineManageDialog.vue";
 import UpdateNotificationDialogContainer from "@/components/Dialog/UpdateNotificationDialog/Container.vue";
 import ImportSongProjectDialog from "@/components/Dialog/ImportSongProjectDialog.vue";
+import ExportSongAudioDialog from "@/components/Dialog/ExportSongAudioDialog/Container.vue";
 import { useStore } from "@/store";
 import { filterCharacterInfosByStyleType } from "@/store/utility";
 
@@ -157,6 +159,15 @@ const canOpenNotificationDialog = computed(() => {
     !store.state.isAcceptRetrieveTelemetryDialogOpen &&
     props.isEnginesReady
   );
+});
+
+// ソングのオーディオエクスポート時の設定ダイアログ
+const isExportSongAudioDialogOpen = computed({
+  get: () => store.state.isExportSongAudioDialogOpen,
+  set: (val) =>
+    store.dispatch("SET_DIALOG_OPEN", {
+      isExportSongAudioDialogOpen: val,
+    }),
 });
 
 // ソングのプロジェクトファイルのインポート時の設定ダイアログ
