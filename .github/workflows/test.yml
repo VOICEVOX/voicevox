@@ -142,14 +142,6 @@ jobs:
           fi
           ARGS=""
           if [[ ${{ needs.config.outputs.shouldUpdateSnapshots }} == 'true' ]]; then
-            # storyIds.generated.tsを更新
-            npm run storybook &
-            STORYBOOK_PID=$!
-
-            npm run test:storybook-vrt-update
-
-            kill $STORYBOOK_PID
-
             ARGS="--update-snapshots"
           fi
           npm run test:storybook-vrt -- $ARGS
