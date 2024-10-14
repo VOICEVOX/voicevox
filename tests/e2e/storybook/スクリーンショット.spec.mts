@@ -3,6 +3,8 @@
 import { test, expect } from "@playwright/test";
 import z from "zod";
 
+// Storybook 8.3.5時点でのindex.jsonのスキーマ。
+// もしスキーマが変わってテストが通らなくなった場合は、このスキーマを修正する。
 const storybookIndexSchema = z.object({
   v: z.literal(5),
   entries: z.record(
