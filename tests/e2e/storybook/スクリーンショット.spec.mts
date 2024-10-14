@@ -56,10 +56,10 @@ for (const [story, stories] of Object.entries(allStories)) {
           "Windows以外のためスキップします",
         );
 
-        await page.goto(`http://localhost:7357/iframe.html?id=${story}`);
+        await page.goto(`http://localhost:7357/iframe.html?id=${story.id}`);
         const body = page.locator("body.sb-show-main");
         await body.waitFor({ state: "visible" });
-        await expect(page).toHaveScreenshot(`${story}.png`, {
+        await expect(page).toHaveScreenshot(`${story.id}.png`, {
           fullPage: true,
         });
       });
