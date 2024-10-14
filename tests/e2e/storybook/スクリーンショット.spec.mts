@@ -1,3 +1,5 @@
+// 起動中のStorybookで様々なStoryを表示し、スクリーンショットを撮って比較するVRT。
+// テスト自体はend-to-endではないが、Playwrightを使う関係でe2eディレクトリ内でテストしている。
 import { test, expect } from "@playwright/test";
 
 type StorybookIndex = {
