@@ -2,7 +2,6 @@
 // テスト自体はend-to-endではないが、Playwrightを使う関係でe2eディレクトリ内でテストしている。
 import { test, expect } from "@playwright/test";
 import z from "zod";
-import { errorToMessage } from "@/helpers/errorHelper";
 
 const storybookIndexSchema = z.object({
   v: z.literal(5),
@@ -32,9 +31,8 @@ try {
     await fetch("http://localhost:7357/index.json").then((res) => res.json()),
   );
 } catch (e) {
-  throw new Error(
-    `Storybookのindex.jsonの取得に失敗しました：${errorToMessage(e)}`,
-  );
+  // ここだとhelpersのerrorToMessageが使えないので、String(e)でエラーメッセージを取得する
+  throw new Error(`Storybookのindex.jsonの取得に失敗しました：${String(e)}`);
 }
 
 const currentStories = getStoriesToTest(index);
