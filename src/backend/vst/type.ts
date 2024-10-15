@@ -1,3 +1,6 @@
 import { TrackId } from "@/type/preload";
 
-export type Routing = Record<TrackId, [boolean[], boolean[]]>;
+export type Routing = {
+  channelMode: "mono" | "stereo";
+  channelIndex: Record<TrackId, number>;
+};

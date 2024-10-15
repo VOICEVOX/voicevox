@@ -8,58 +8,54 @@
       <QSeparator />
 
       <QCardSection>
-        <p class="text-body2 text-grey-8 q-my-none">
-          ルーティング情報はプロジェクトファイルではなくプラグイン側に保存されます。<br />
-
-          Shift キーを押しながらスクロールすると横方向にスクロールできます。
+        <p class="text-body2 text-grey-8">
+          ルーティング情報はプロジェクトファイルではなくプラグイン側に保存されます。
         </p>
-      </QCardSection>
-      <QCardSection class="scroll scrollable-area">
         <div
           v-if="props.routingInfo.status === 'loading'"
           class="spinner-container"
         >
           <QSpinner />
         </div>
-        <div v-else class="table-container">
-          <div class="track-name-header">トラック名</div>
-          <div v-for="i in 16" :key="i" class="channel-name-header">
-            Ch. {{ i }}
-          </div>
-          <div v-for="i in 32" :key="i" class="channel-lr-header">
-            {{ i % 2 === 1 ? "L" : "R" }}
-          </div>
-          <template
-            v-for="trackId of props.trackOrder.filter(
-              (id) => id in props.tracks,
-            )"
-            :key="trackId"
+
+        <template v-else>
+          <BaseCell
+            title="チャンネルモード"
+            description="トラック毎に1ch割り当てるか、2ch割り当てるか選べます。"
           >
-            <template v-for="lr in 2" :key="lr">
-              <div v-if="lr === 1" class="track-name-item">
-                {{ props.tracks[trackId].name }}
-              </div>
-              <div class="lr-indicator">
-                {{ lr === 1 ? "L" : "R" }}
-              </div>
-              <div
-                v-for="i in 32"
-                :key="i"
-                class="channel-item"
-                :class="{ 'left-channel': i % 2 === 1 }"
-              >
-                <!-- TODO: QTooltipを使う（使うと横幅が壊れる）-->
-                <QCheckbox
-                  :modelValue="props.routingInfo.data[trackId][lr - 1][i - 1]"
+            <QBtnToggle
+              v-model="channelMode"
+              :options="channelModes"
+              padding="xs md"
+              unelevated
+              color="surface"
+              textColor="display"
+              toggleColor="primary"
+              toggleTextColor="display-on-primary"
+              dense
+            />
+          </BaseCell>
+          <QList bordered class="rounded-borders scroll scrollable-area">
+            <QItem v-for="trackId in trackIds" :key="trackId" tag="label">
+              <QItemSection>
+                <QItemLabel>
+                  {{ props.tracks[trackId].name }}
+                </QItemLabel>
+              </QItemSection>
+              <QItemSection>
+                <QSelect
+                  :modelValue="props.routingInfo.data.channelIndex[trackId]"
+                  :options="channelOptions"
+                  emitValue
+                  mapOptions
                   dense
-                  @update:modelValue="
-                    updateRoutingInfo(trackId, lr - 1, i - 1, $event)
-                  "
+                  optionsDense
+                  @update:modelValue="updateRoutingInfo(trackId, $event)"
                 />
-              </div>
-            </template>
-          </template>
-        </div>
+              </QItemSection>
+            </QItem>
+          </QList>
+        </template>
       </QCardSection>
 
       <QSeparator />
@@ -81,6 +77,8 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from "vue";
+import BaseCell from "../ExportSongAudioDialog/BaseCell.vue";
 import { Routing } from "@/backend/vst/type";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { Track } from "@/store/type";
@@ -88,7 +86,10 @@ import { TrackId } from "@/type/preload";
 
 export type RoutingState =
   | { status: "loading" }
-  | { status: "loaded"; data: Routing };
+  | {
+      status: "loaded";
+      data: Routing;
+    };
 
 const modelValue = defineModel<boolean>({ default: false });
 const props = defineProps<{
@@ -100,15 +101,53 @@ const emit = defineEmits<{
   updateRoutingInfo: [routing: Routing];
 }>();
 
-const updateRoutingInfo = (
-  trackId: TrackId,
-  lr: number,
-  channel: number,
-  value: boolean,
-) => {
+const trackIds = computed(() =>
+  props.trackOrder.filter((id) => id in props.tracks),
+);
+const channelMode = computed({
+  get: () =>
+    props.routingInfo.status === "loading"
+      ? ""
+      : props.routingInfo.data.channelMode,
+  set: (value: string) => {
+    if (props.routingInfo.status === "loading") return;
+    const newRouting = cloneWithUnwrapProxy(props.routingInfo.data);
+    newRouting.channelMode = value as "stereo" | "mono";
+    for (const [i, trackId] of trackIds.value.entries()) {
+      newRouting.channelIndex[trackId] = Math.min(
+        newRouting.channelIndex[trackId],
+        value === "stereo" ? i * 2 + 1 : i,
+      );
+    }
+
+    emit("updateRoutingInfo", newRouting);
+  },
+});
+const channelModes = [
+  { label: "ステレオ", value: "stereo" },
+  { label: "モノラル", value: "mono" },
+];
+
+const numChannels = 64;
+
+const channelOptions = computed(() => {
+  if (channelMode.value === "stereo") {
+    return Array.from({ length: numChannels / 2 }).map((_, i) => ({
+      label: `${i * 2 + 1} - ${i * 2 + 2}`,
+      value: i,
+    }));
+  } else {
+    return Array.from({ length: numChannels }).map((_, i) => ({
+      label: String(i + 1),
+      value: i,
+    }));
+  }
+});
+
+const updateRoutingInfo = (trackId: TrackId, index: number) => {
   if (props.routingInfo.status === "loading") return;
   const newRouting = cloneWithUnwrapProxy(props.routingInfo.data);
-  newRouting[trackId][lr][channel] = value;
+  newRouting.channelIndex[trackId] = index;
 
   emit("updateRoutingInfo", newRouting);
 };
@@ -122,56 +161,13 @@ const updateRoutingInfo = (
   max-width: 80vw;
 }
 
-.scrollable-area {
-  max-height: 50vh;
-  overflow: auto;
-
-  :deep() {
-    h3 {
-      font-size: 1.3rem;
-      font-weight: bold;
-      margin: 0;
-    }
-  }
-}
-
 .spinner-container {
   display: grid;
   place-items: center;
 }
 
-.table-container {
-  background: colors.$surface;
-  display: grid;
-  grid-template-columns: 200px auto repeat(32, max-content);
-  gap: 4px;
-
-  .track-name-header {
-    grid-column: span 2;
-    grid-row: span 2;
-    font-weight: bold;
-    align-self: center;
-  }
-  .channel-name-header {
-    grid-column: span 2;
-    text-align: center;
-    font-weight: bold;
-  }
-  .channel-lr-header {
-    text-align: center;
-  }
-  .track-name-item {
-    grid-row: span 2;
-    align-self: center;
-  }
-  .lr-indicator {
-    text-align: center;
-    padding-right: 4px;
-  }
-  .channel-item {
-    &.left-channel {
-      padding-left: 4px;
-    }
-  }
+.scrollable-area {
+  overflow-y: auto;
+  max-height: calc(100vh - 100px - 295px);
 }
 </style>

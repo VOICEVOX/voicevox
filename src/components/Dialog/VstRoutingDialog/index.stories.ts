@@ -21,23 +21,17 @@ const generateTrack = (index: number): [TrackId, Track] => [
     name: `Track ${index}`,
   },
 ];
-const tracks = Object.fromEntries([
-  generateTrack(1),
-  generateTrack(2),
-  generateTrack(3),
-]);
-const routing: Routing = Object.fromEntries(
+const tracks = Object.fromEntries(
+  Array(16)
+    .fill(null)
+    .map((_, i) => generateTrack(i + 1)),
+);
+const routingChannelIndex: Routing["channelIndex"] = Object.fromEntries(
   Object.keys(tracks).map((trackId, i) => {
-    const routingValue: Routing[TrackId] = [
-      Array<boolean>(32).fill(false),
-      Array<boolean>(32).fill(false),
-    ];
-    routingValue[0][i * 2] = true;
-    routingValue[1][i * 2 + 1] = true;
-
-    return [trackId, routingValue] as const;
+    return [trackId, i] as const;
   }),
 );
+
 const trackOrder = Object.keys(tracks).map((trackId) => TrackId(trackId));
 
 export const OpenedLoading: Story = {
@@ -52,13 +46,33 @@ export const OpenedLoading: Story = {
   },
 };
 
-export const Opened: Story = {
-  name: "開いている",
+export const OpenedStereo: Story = {
+  name: "開いている：ステレオ",
+
   args: {
     modelValue: true,
     routingInfo: {
       status: "loaded",
-      data: routing,
+      data: {
+        channelMode: "stereo",
+        channelIndex: routingChannelIndex,
+      },
+    },
+    tracks,
+    trackOrder,
+  },
+};
+export const OpenedMono: Story = {
+  name: "開いている：モノラル",
+
+  args: {
+    modelValue: true,
+    routingInfo: {
+      status: "loaded",
+      data: {
+        channelMode: "mono",
+        channelIndex: routingChannelIndex,
+      },
     },
     tracks,
     trackOrder,
