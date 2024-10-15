@@ -485,7 +485,7 @@ registerIpcMainHandle<IpcMainHandle>({
     };
   },
 
-  GET_ASSET_TEXT: async (_, textType) => {
+  GET_TEXT_ASSET: async (_, textType) => {
     const fileName = path.join(__static, AssetTextFileNames[textType]);
     const text = await fs.promises.readFile(fileName, "utf-8");
     if (textType === "OssLicenses" || textType === "UpdateInfos") {

@@ -153,49 +153,49 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
 
   GET_HOW_TO_USE_TEXT: {
     async action() {
-      return await window.backend.getAssetText("HowToUse");
+      return await window.backend.getTextAsset("HowToUse");
     },
   },
 
   GET_CONTACT_TEXT: {
     async action() {
-      return await window.backend.getAssetText("Contact");
+      return await window.backend.getTextAsset("Contact");
     },
   },
 
   GET_Q_AND_A_TEXT: {
     async action() {
-      return await window.backend.getAssetText("QAndA");
+      return await window.backend.getTextAsset("QAndA");
     },
   },
 
   GET_POLICY_TEXT: {
     async action() {
-      return await window.backend.getAssetText("PrivacyPolicy");
+      return await window.backend.getTextAsset("PrivacyPolicy");
     },
   },
 
   GET_OSS_LICENSES: {
     async action() {
-      return await window.backend.getAssetText("OssLicenses");
+      return await window.backend.getTextAsset("OssLicenses");
     },
   },
 
   GET_UPDATE_INFOS: {
     async action() {
-      return await window.backend.getAssetText("UpdateInfos");
+      return await window.backend.getTextAsset("UpdateInfos");
     },
   },
 
   GET_OSS_COMMUNITY_INFOS: {
     async action() {
-      return await window.backend.getAssetText("OssCommunityInfos");
+      return await window.backend.getTextAsset("OssCommunityInfos");
     },
   },
 
   GET_PRIVACY_POLICY_TEXT: {
     async action() {
-      return await window.backend.getAssetText("PrivacyPolicy");
+      return await window.backend.getTextAsset("PrivacyPolicy");
     },
   },
 

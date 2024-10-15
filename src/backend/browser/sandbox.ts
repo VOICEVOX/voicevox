@@ -63,7 +63,7 @@ export const api: Sandbox = {
     };
     return Promise.resolve(appInfo);
   },
-  async getAssetText(textType) {
+  async getTextAsset(textType) {
     const fileName = AssetTextFileNames[textType];
     const v = await fetch(toStaticPath(fileName));
     if (textType === "OssLicenses" || textType === "UpdateInfos") {

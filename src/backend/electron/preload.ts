@@ -23,8 +23,8 @@ const api: Sandbox = {
     return await ipcRendererInvokeProxy.GET_APP_INFOS();
   },
 
-  getAssetText: (textType) => {
-    return ipcRendererInvokeProxy.GET_ASSET_TEXT(textType) as Promise<
+  getTextAsset: (textType) => {
+    return ipcRendererInvokeProxy.GET_TEXT_ASSET(textType) as Promise<
       TextAsset[typeof textType]
     >;
   },

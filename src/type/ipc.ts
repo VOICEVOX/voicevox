@@ -24,7 +24,7 @@ export type IpcIHData = {
     return: AppInfos;
   };
 
-  GET_ASSET_TEXT: {
+  GET_TEXT_ASSET: {
     args: [textType: keyof TextAsset];
     return: TextAsset[keyof TextAsset];
   };
