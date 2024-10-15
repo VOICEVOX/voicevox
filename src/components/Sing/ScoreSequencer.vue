@@ -497,28 +497,6 @@ watch(editModeTemp, (newMode) => {
   }
 });
 
-watch([editModeTemp, selectedToolTemp], () => {
-  if (editModeTemp.value === "TOOLSELECT_A") {
-    if (selectedToolTemp.value === "SELECT_FIRST") {
-      setCursorState(CursorState.UNSET);
-    } else if (selectedToolTemp.value === "EDIT_FIRST") {
-      setCursorState(CursorState.CROSSHAIR);
-    } else {
-      setCursorState(CursorState.UNSET);
-    }
-  } else if (editModeTemp.value === "TOOLSELECT_B") {
-    if (selectedToolTemp.value === "SELECTOR") {
-      setCursorState(CursorState.CROSSHAIR);
-    } else if (selectedToolTemp.value === "PEN") {
-      setCursorState(CursorState.DRAW);
-    } else if (selectedToolTemp.value === "ERASER") {
-      setCursorState(CursorState.ERASE);
-    } else {
-      setCursorState(CursorState.UNSET);
-    }
-  }
-});
-
 // ノート追加後に選択するかどうか
 const shouldSelectNoteAfterAdding = () => {
   if (editModeTemp.value === "TOOLSELECT_A") {
@@ -650,6 +628,10 @@ const shouldDeleteNoteOnClick = () => {
     editModeTemp.value === "TOOLSELECT_B" && selectedToolTemp.value === "ERASER"
   );
 };
+
+watch([editModeTemp, selectedToolTemp], () => {
+  setDefaultCursorStateTemp();
+});
 
 // 選択中のトラックID
 const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
@@ -1394,6 +1376,40 @@ const endPreview = () => {
   setCursorState(CursorState.UNSET);
 };
 
+const setDefaultCursorStateTemp = (event?: MouseEvent) => {
+  const isCtrlOrCmdKeyDown = event ? isOnCommandOrCtrlKeyDown(event) : false;
+  switch (editModeTemp.value) {
+    case "TOOLLESS_A":
+      setCursorState(isCtrlOrCmdKeyDown ? CursorState.UNSET : CursorState.DRAW);
+      break;
+    case "TOOLLESS_B":
+    case "TOOLLESS_C":
+      setCursorState(
+        isNoteSelected.value ? CursorState.UNSET : CursorState.DRAW,
+      );
+      break;
+    case "TOOLLESS_D":
+      setCursorState(CursorState.UNSET);
+      break;
+    case "TOOLSELECT_A":
+      if (selectedToolTemp.value === "SELECT_FIRST") {
+        setCursorState(CursorState.UNSET);
+      } else if (selectedToolTemp.value === "EDIT_FIRST") {
+        setCursorState(CursorState.DRAW);
+      }
+      break;
+    case "TOOLSELECT_B":
+      if (selectedToolTemp.value === "SELECTOR") {
+        setCursorState(CursorState.UNSET);
+      } else if (selectedToolTemp.value === "PEN") {
+        setCursorState(CursorState.DRAW);
+      } else if (selectedToolTemp.value === "ERASER") {
+        setCursorState(CursorState.ERASE);
+      }
+      break;
+  }
+};
+
 const onNoteBarMouseDown = (event: MouseEvent, note: Note) => {
   if (editTarget.value !== "NOTE" || !isSelfEventTarget(event)) {
     return;
@@ -1483,12 +1499,15 @@ const onMouseDown = (event: MouseEvent) => {
       } else if (shouldDeselectAllOnCtrlOrCommandClick(event)) {
         // Ctrl or Command + グリッドをクリック時に選択解除
         void store.dispatch("DESELECT_ALL_NOTES");
-      } else if (shouldAddNoteOnClick(event)) {
-        // ノート追加
-        startPreview(event, "ADD_NOTE");
       } else if (shouldDeselectAllOnClick(event)) {
         // 選択解除
         void store.dispatch("DESELECT_ALL_NOTES");
+      } else if (
+        shouldAddNoteOnClick(event) &&
+        !shouldDeselectAllOnClick(event)
+      ) {
+        // ノート追加
+        startPreview(event, "ADD_NOTE");
       }
     } else {
       void store.dispatch("DESELECT_ALL_NOTES");
@@ -1528,6 +1547,10 @@ const onMouseUp = (event: MouseEvent) => {
   } else if (nowPreviewing.value) {
     endPreview();
   }
+
+  void nextTick(() => {
+    setDefaultCursorStateTemp(event);
+  });
 };
 
 // ダブルクリックで追加(コピペ)
