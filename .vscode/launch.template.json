@@ -10,7 +10,11 @@
             "port": 9222,
             "request": "attach",
             "type": "chrome",
-            "webRoot": "${workspaceFolder}",
+            "webRoot": "${workspaceFolder}/src",
+            "resolveSourceMapLocations": [
+              "${workspaceFolder}/**",
+              "!**/node_modules/**"
+            ],
             "timeout": 20000, // 20 * 1000 ms程度あればビルド時間は間に合うはず
         },
         {
@@ -27,6 +31,21 @@
             "type": "node"
         },
         {
+            "name": "Launch Electron without electron:serve",
+            "request": "launch",
+            "type": "node",
+            "runtimeExecutable": "npx",
+            "args": [
+                "electron",
+                ".",
+                "--no-sandbox"
+            ],
+            "preLaunchTask": "Electron Serve Only",
+            "skipFiles": [
+                "<node_internals>/**"
+            ]
+        },
+        {
             "name": "Attach by Process ID",
             // .bin viteを指定するとElectronのMain Processのデバッグが可能
             "processId": "${command:PickProcess}",
@@ -35,12 +54,23 @@
                 "<node_internals>/**"
             ],
             "type": "node"
-        },
+        }
     ],
     "compounds": [
         {
             "name": "Launch Electron Main/Renderer",
-            "configurations": ["Attach to Renderer Process", "Launch Electron Main Process via NPM"],
+            "configurations": [
+                "Attach to Renderer Process",
+                "Launch Electron Main Process via NPM"
+            ],
+            "stopAll": true
+        },
+        {
+            "name": "Launch Electron Main/Renderer without electron:serve",
+            "configurations": [
+                "Attach to Renderer Process",
+                "Launch Electron without electron:serve"
+            ],
             "stopAll": true
         }
     ]

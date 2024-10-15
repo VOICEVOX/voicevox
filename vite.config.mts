@@ -45,6 +45,8 @@ export default defineConfig((options) => {
   const sourcemap: BuildOptions["sourcemap"] = shouldEmitSourcemap
     ? "inline"
     : false;
+  const launchEditor =
+    process.env.SKIP_LAUNCH_EDITOR !== "1" && options.mode !== "test";
   return {
     root: path.resolve(__dirname, "src"),
     envDir: __dirname,
@@ -87,7 +89,8 @@ export default defineConfig((options) => {
             entry: "./src/backend/electron/main.ts",
             // ref: https://github.com/electron-vite/vite-plugin-electron/pull/122
             onstart: ({ startup }) => {
-              if (options.mode !== "test") {
+              console.log("main process build is complete.");
+              if (launchEditor) {
                 void startup([".", "--no-sandbox"]);
               }
             },
@@ -103,7 +106,9 @@ export default defineConfig((options) => {
             // ref: https://electron-vite.github.io/guide/preload-not-split.html
             entry: "./src/backend/electron/preload.ts",
             onstart({ reload }) {
-              reload();
+              if (launchEditor) {
+                reload();
+              }
             },
             vite: {
               plugins: [tsconfigPaths({ root: __dirname })],
