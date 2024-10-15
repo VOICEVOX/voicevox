@@ -1,8 +1,5 @@
 <template>
-  <div
-    class="sequencer-loop-control"
-    :class="[cursorClass, { disabled: !isLoopEnabled }]"
-  >
+  <div class="sequencer-loop-control" :class="{ disabled: !isLoopEnabled }">
     <svg
       xmlns="http://www.w3.org/2000/svg"
       :width
@@ -68,7 +65,7 @@ const props = defineProps<{
 const store = useStore();
 const { isLoopEnabled, loopStartTick, loopEndTick, setLoopRange } =
   useLoopControl();
-const { setCursorState, cursorClass } = useCursorState();
+const { setCursorState } = useCursorState();
 
 const tpqn = computed(() => store.state.tpqn);
 const sequencerZoomX = computed(() => store.state.sequencerZoomX);
@@ -87,7 +84,6 @@ const dragStartX = ref(0);
 const dragStartHandleX = ref(0); // ドラッグ開始時のハンドル位置
 
 const addLoop = (event: MouseEvent) => {
-  if (!isLoopEnabled.value) return;
   event.preventDefault();
   const target = event.currentTarget as HTMLElement;
   const rect = target.getBoundingClientRect();
@@ -103,7 +99,6 @@ const snapToGrid = (tick: number): number => {
 };
 
 const startDragging = (target: "start" | "end", event: MouseEvent) => {
-  if (!isLoopEnabled.value) return;
   isDragging.value = true;
   dragTarget.value = target;
   dragStartX.value = event.clientX;
@@ -184,12 +179,6 @@ onUnmounted(() => {
   height: 24px;
   pointer-events: auto;
   cursor: pointer;
-
-  &.disabled {
-    opacity: 0.38;
-    pointer-events: none;
-    cursor: default;
-  }
 }
 
 .loop-range {
@@ -222,10 +211,5 @@ onUnmounted(() => {
   fill: transparent;
   cursor: ew-resize;
   pointer-events: all;
-}
-
-.disabled .loop-drag-area {
-  pointer-events: none;
-  cursor: default;
 }
 </style>
