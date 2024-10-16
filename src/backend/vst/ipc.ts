@@ -1,12 +1,7 @@
 import { toBytes } from "fast-base64";
 import { Routing } from "./type";
 import { Metadata } from "@/backend/common/ConfigManager";
-import {
-  ShowImportFileDialogOptions,
-  ShowMessageDialogOptions,
-  ShowQuestionDialogOptions,
-  TrackId,
-} from "@/type/preload";
+import { ShowImportFileDialogOptions, TrackId } from "@/type/preload";
 import { createLogger } from "@/domain/frontend/log";
 import { UnreachableError } from "@/type/utility";
 import { SingingVoiceKey, Track } from "@/store/type";
@@ -152,25 +147,6 @@ const ipcReadFile = createMessageFunction<string, string>("readFile");
 const ipcExportProject = createMessageFunction<undefined, boolean>(
   "exportProject",
 );
-const ipcShowMessageDialog = createMessageFunction<
-  {
-    type: "none" | "info" | "error" | "question" | "warning";
-    title: string;
-    message: string;
-  },
-  void
->("showMessageDialog");
-const ipcShowQuestionDialog = createMessageFunction<
-  {
-    type: "none" | "info" | "error" | "question" | "warning";
-    title: string;
-    message: string;
-    buttons: string[];
-    cancelId?: number;
-    defaultId?: number;
-  },
-  number
->("showQuestionDialog");
 
 const ipcSetPhrases = createMessageFunction<
   VstPhrase[],
@@ -256,18 +232,6 @@ export async function exportProject(): Promise<
   return await ipcExportProject()
     .then((result) => (result ? "success" : "cancelled"))
     .catch(() => "error");
-}
-
-export async function showMessageDialog(
-  options: ShowMessageDialogOptions,
-): Promise<void> {
-  return await ipcShowMessageDialog(options);
-}
-
-export async function showQuestionDialog(
-  options: ShowQuestionDialogOptions,
-): Promise<number> {
-  return await ipcShowQuestionDialog(options);
 }
 
 export function onReceivedIPCMessage<T extends keyof Notifications>(
