@@ -1,12 +1,25 @@
 <template>
-  <div class="sequencer-loop-control" :class="{ disabled: !isLoopEnabled }">
+  <div
+    class="sequencer-loop-control"
+    :class="{ 'loop-disabled': !isLoopEnabled }"
+    @click.stop
+  >
     <svg
       xmlns="http://www.w3.org/2000/svg"
       :width
-      :height="24"
+      height="16"
       shape-rendering="geometricPrecision"
-      @mousedown.stop="addLoop($event)"
     >
+      <!-- 背景エリア -->
+      <rect
+        :x="0"
+        y="0"
+        :width="props.width"
+        :height="16"
+        class="loop-area"
+        @mousedown.stop="addLoop($event)"
+        @mouseup.stop
+      />
       <!-- ループ範囲 -->
       <rect
         :x="loopStartX - offset"
@@ -14,6 +27,7 @@
         :width="loopEndX - loopStartX"
         :height="4"
         class="loop-range"
+        @click.stop="toggleLoop"
       />
       <!-- ループ開始ハンドル -->
       <path
@@ -32,7 +46,7 @@
         :x="loopStartX - offset - 4"
         y="0"
         width="16"
-        height="24"
+        height="20"
         class="loop-drag-area"
         @mousedown.stop="startDragging('start', $event)"
       />
@@ -41,7 +55,7 @@
         :x="loopEndX - offset - 4"
         y="0"
         width="16"
-        height="24"
+        height="20"
         class="loop-drag-area"
         @mousedown.stop="startDragging('end', $event)"
       />
@@ -63,8 +77,13 @@ const props = defineProps<{
 }>();
 
 const store = useStore();
-const { isLoopEnabled, loopStartTick, loopEndTick, setLoopRange } =
-  useLoopControl();
+const {
+  isLoopEnabled,
+  loopStartTick,
+  loopEndTick,
+  setLoopEnabled,
+  setLoopRange,
+} = useLoopControl();
 const { setCursorState } = useCursorState();
 
 const tpqn = computed(() => store.state.tpqn);
@@ -93,6 +112,10 @@ const addLoop = (event: MouseEvent) => {
   startDragging("end", event);
 };
 
+const toggleLoop = () => {
+  setLoopEnabled(!isLoopEnabled.value);
+};
+
 const snapToGrid = (tick: number): number => {
   const snapInterval = getNoteDuration(sequencerSnapType.value, tpqn.value);
   return Math.round(tick / snapInterval) * snapInterval;
@@ -109,6 +132,7 @@ const startDragging = (target: "start" | "end", event: MouseEvent) => {
 
 const onDrag = (event: MouseEvent) => {
   if (!isDragging.value || !dragTarget.value) return;
+  event.stopPropagation();
 
   const dx = event.clientX - dragStartX.value;
   const newX = dragStartHandleX.value + dx;
@@ -152,7 +176,8 @@ const onDrag = (event: MouseEvent) => {
   }
 };
 
-const stopDragging = () => {
+const stopDragging = (event: MouseEvent) => {
+  event.stopPropagation();
   isDragging.value = false;
   dragTarget.value = null;
   setCursorState(CursorState.UNSET);
@@ -176,16 +201,20 @@ onUnmounted(() => {
   top: 0;
   left: 0;
   width: 100%;
-  height: 24px;
+  height: 16px;
   pointer-events: auto;
   cursor: pointer;
+}
+
+.loop-area {
+  fill: var(--scheme-color-surface-dim);
 }
 
 .loop-range {
   fill: var(--scheme-color-primary);
 }
 
-.disabled .loop-range {
+.loop-disabled .loop-range {
   fill: var(--scheme-color-outline);
 }
 
@@ -201,7 +230,7 @@ onUnmounted(() => {
   }
 }
 
-.disabled .loop-handle {
+.loop-disabled .loop-handle {
   fill: var(--scheme-color-outline);
   stroke: var(--scheme-color-outline);
 }
