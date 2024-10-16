@@ -21,7 +21,7 @@
         <div class="text-h5" :class="[`text-${color}`]">{{ props.title }}</div>
       </QCardSection>
 
-      <QCardSection>
+      <QCardSection class="q-py-none message">
         {{ props.message }}
       </QCardSection>
       <QCardActions align="right">
@@ -41,12 +41,12 @@
 <script setup lang="ts">
 import { useDialogPluginComponent } from "quasar";
 import { computed } from "vue";
-import { getColor, getIcon } from "./common";
+import { DialogType, getColor, getIcon } from "./common";
 
 const modelValue = defineModel<boolean>({ default: false });
 const props = withDefaults(
   defineProps<{
-    type: "none" | "info" | "error" | "question" | "warning";
+    type: DialogType;
     title: string;
     message: string;
     ok?: string;
@@ -75,5 +75,9 @@ function onOk() {
 .title {
   display: flex;
   align-items: center;
+}
+
+.message {
+  white-space: pre-wrap;
 }
 </style>

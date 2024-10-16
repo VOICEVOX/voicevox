@@ -1,4 +1,7 @@
-export const getIcon = (dialogType: string) => {
+import { ExhaustiveError } from "@/type/utility";
+
+export type DialogType = "none" | "info" | "error" | "question" | "warning";
+export const getIcon = (dialogType: DialogType) => {
   switch (dialogType) {
     case "info":
       return "info";
@@ -8,12 +11,14 @@ export const getIcon = (dialogType: string) => {
       return "help";
     case "warning":
       return "warning";
-    default:
+    case "none":
       return "";
+    default:
+      throw new ExhaustiveError(dialogType);
   }
 };
 
-export const getColor = (dialogType: string) => {
+export const getColor = (dialogType: DialogType) => {
   switch (dialogType) {
     case "error":
     case "warning":
@@ -21,7 +26,9 @@ export const getColor = (dialogType: string) => {
       return "warning";
     case "question":
     case "info":
-    default:
+    case "none":
       return "display";
+    default:
+      throw new ExhaustiveError(dialogType);
   }
 };

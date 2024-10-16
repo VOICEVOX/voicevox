@@ -45,13 +45,13 @@
 <script setup lang="ts">
 import { QBtn, useDialogPluginComponent } from "quasar";
 import { computed, onMounted, useTemplateRef } from "vue";
-import { getIcon, getColor } from "./common";
+import { getIcon, getColor, DialogType } from "./common";
 import { UnreachableError } from "@/type/utility";
 
 const modelValue = defineModel<boolean>({ default: false });
 const props = withDefaults(
   defineProps<{
-    type: "none" | "info" | "error" | "question" | "warning";
+    type: DialogType;
     title: string;
     message: string;
     buttons: string[];
@@ -107,7 +107,7 @@ const updateModelValue = (val: boolean) => {
       );
     }
     buttonClicked = true;
-    onDialogOK({ index: props.cancel ?? -1 });
+    onDialogOK({ index: props.cancel });
   }
 };
 </script>
