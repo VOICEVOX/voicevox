@@ -70,6 +70,7 @@ import { TrackId } from "@/type/preload";
 
 // DraggableのコンテナにQListを使うための設定。
 // https://github.com/SortableJS/vue.draggable.next/issues/211#issuecomment-1718863764
+// @ts-expect-error 型エラーが出るが、ちゃんと動くので無視。
 Draggable.components = { ...Draggable.components, QList };
 const itemKey = (trackId: TrackId) => trackId;
 
