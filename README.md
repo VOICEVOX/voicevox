@@ -156,9 +156,20 @@ npx playwright codegen http://localhost:5173/  --viewport-size=1024,630
 
 詳細は [Playwright ドキュメントの Test generator](https://playwright.dev/docs/codegen-intro) を参照してください。
 
+### Storybook の Visual Regression Testing
+
+Storybook のコンポーネントのスクリーンショットを比較して、変更がある場合は差分を表示します。
+
+> [!NOTE]
+> このテストは Windows でのみ実行できます。
+
+```bash
+npm run test:storybook-vrt
+```
+
 #### スクリーンショットの更新
 
-ブラウザ End to End テストでは Visual Regression Testing を行っています。
+ブラウザ End to End テストと Storybook では Visual Regression Testing を行っています。
 現在 VRT テストは Windows のみで行っています。
 以下の手順でスクリーンショットを更新できます：
 
