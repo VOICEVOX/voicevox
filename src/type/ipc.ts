@@ -1,16 +1,16 @@
 import {
   AppInfos,
   ConfigType,
-  EngineInfo,
   EngineDirValidationResult,
+  EngineId,
+  EngineInfo,
+  EngineSettingType,
   HotkeySettingType,
+  MessageBoxReturnValue,
+  NativeThemeType,
+  TextAsset,
   ThemeConf,
   ToolbarSettingType,
-  UpdateInfo,
-  NativeThemeType,
-  EngineSettingType,
-  EngineId,
-  MessageBoxReturnValue,
 } from "@/type/preload";
 import { AltPortInfos } from "@/store/type";
 import { Result } from "@/type/result";
@@ -24,44 +24,9 @@ export type IpcIHData = {
     return: AppInfos;
   };
 
-  GET_HOW_TO_USE_TEXT: {
-    args: [];
-    return: string;
-  };
-
-  GET_POLICY_TEXT: {
-    args: [];
-    return: string;
-  };
-
-  GET_OSS_LICENSES: {
-    args: [];
-    return: Record<string, string>[];
-  };
-
-  GET_UPDATE_INFOS: {
-    args: [];
-    return: UpdateInfo[];
-  };
-
-  GET_OSS_COMMUNITY_INFOS: {
-    args: [];
-    return: string;
-  };
-
-  GET_CONTACT_TEXT: {
-    args: [];
-    return: string;
-  };
-
-  GET_Q_AND_A_TEXT: {
-    args: [];
-    return: string;
-  };
-
-  GET_PRIVACY_POLICY_TEXT: {
-    args: [];
-    return: string;
+  GET_TEXT_ASSET: {
+    args: [textType: keyof TextAsset];
+    return: TextAsset[keyof TextAsset];
   };
 
   GET_ALT_PORT_INFOS: {
