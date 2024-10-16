@@ -29,7 +29,7 @@ export const useMenuBarData = () => {
   const fileSubMenuData = computed<MenuItemData[]>(() => [
     ...(isVst
       ? []
-      : [
+      : ([
           {
             type: "button",
             label: "音声を出力",
@@ -39,7 +39,7 @@ export const useMenuBarData = () => {
             disableWhenUiLocked: true,
           },
           { type: "separator" },
-        ]),
+        ] satisfies MenuItemData[])),
     {
       type: "button",
       label: "インポート",
