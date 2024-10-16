@@ -27,6 +27,7 @@ export const Opened: Story = {
     modelValue: true,
   },
 };
+
 export const OpenedMultiline: Story = {
   name: "開いている：複数行",
   args: {
