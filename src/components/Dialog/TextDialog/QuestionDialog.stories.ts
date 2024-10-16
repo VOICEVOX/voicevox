@@ -47,6 +47,7 @@ export const Close: Story = {
     await expect(args["onOk"]).toBeCalledWith({ index: 0 });
   },
 };
+
 export const ClickBackdropWithoutCancel: Story = {
   name: "cancelなしで背景を押しても反応しない",
   args: { ...Opened.args },
