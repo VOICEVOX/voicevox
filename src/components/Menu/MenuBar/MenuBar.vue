@@ -165,13 +165,15 @@ const vstExportProject = async () => {
   }
 };
 
-const vstImportProject = async () => {
+const vstOpenRoutingDialog = async () => {
   if (!uiLocked.value) {
     if (!isVst) {
-      throw new Error("VST以外でのインポートはサポートされていません");
+      throw new Error("VST以外でのルーティングの設定はサポートされていません");
     }
 
-    await store.dispatch("VST_IMPORT_PROJECT");
+    await store.dispatch("SET_DIALOG_OPEN", {
+      isVstRoutingDialogOpen: true,
+    });
   }
 };
 
@@ -347,8 +349,8 @@ const menudata = computed<MenuItemData[]>(() => [
             },
             {
               type: "button",
-              label: "プロジェクトをインポート",
-              onClick: vstImportProject,
+              label: "ルーティング",
+              onClick: vstOpenRoutingDialog,
               disableWhenUiLocked: true,
             },
           ]

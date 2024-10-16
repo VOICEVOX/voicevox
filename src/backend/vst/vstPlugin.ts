@@ -2,7 +2,13 @@ import { Plugin, watch } from "vue";
 import AsyncLock from "async-lock";
 import { debounce } from "quasar";
 import { toBase64 } from "fast-base64";
-import { getProject, onReceivedIPCMessage, setPhrases, setVoices } from "./ipc";
+import {
+  getProject,
+  onReceivedIPCMessage,
+  setPhrases,
+  setTracks,
+  setVoices,
+} from "./ipc";
 import { projectFilePath } from "./sandbox";
 import { Store } from "@/store/vuex";
 import {
@@ -16,6 +22,7 @@ import { secondToTick } from "@/sing/domain";
 import { phraseSingingVoices } from "@/store/singing";
 import onetimeWatch from "@/helpers/onetimeWatch";
 import { createLogger } from "@/domain/frontend/log";
+import { getOrThrow } from "@/helpers/mapHelper";
 
 export type Message =
   | {
@@ -65,7 +72,7 @@ export const vstPlugin: Plugin = {
       });
     });
 
-    const phrasesLock = new AsyncLock();
+    const lock = new AsyncLock();
 
     // void clearPhrases();
 
@@ -126,10 +133,11 @@ export const vstPlugin: Plugin = {
       );
     });
 
+    // フレーズ送信
     watch(
       () => store.state.phrases,
       (phrases) => {
-        void phrasesLock.acquire("phrases", async () => {
+        void lock.acquire("phrases", async () => {
           log.info("Sending phrases");
           const missingVoices = await setPhrases(
             [...phrases.values()].flatMap((phrase) =>
@@ -137,6 +145,7 @@ export const vstPlugin: Plugin = {
                 ? [
                     {
                       start: phrase.startTime,
+                      trackId: phrase.trackId,
                       voice: phrase.singingVoiceKey,
                     },
                   ]
@@ -161,6 +170,22 @@ export const vstPlugin: Plugin = {
           } else {
             log.info("All voices are available");
           }
+        });
+      },
+      { deep: true },
+    );
+
+    // トラック送信
+    watch(
+      () => [store.state.tracks, store.state.trackOrder] as const,
+      ([tracks, trackOrder]) => {
+        void lock.acquire("tracks", async () => {
+          log.info("Sending tracks");
+          const serializedTracks = Object.fromEntries(
+            trackOrder.map((trackId) => [trackId, getOrThrow(tracks, trackId)]),
+          );
+
+          await setTracks(serializedTracks);
         });
       },
       { deep: true },

@@ -17,7 +17,7 @@
 import { ref, computed, watch } from "vue";
 import Presentation from "./Presentation.vue";
 import { Routing } from "@/backend/vst/type";
-import { getRoutingInfo, setRoutingInfo } from "@/backend/vst/ipc";
+import { getRouting, setRouting } from "@/backend/vst/ipc";
 import { useStore } from "@/store";
 
 defineOptions({
@@ -37,7 +37,7 @@ const routingInfo = ref<
 });
 
 const updateRoutingInfo = (routing: Routing) => {
-  void setRoutingInfo(routing);
+  void setRouting(routing);
 
   routingInfo.value = { status: "loaded", data: routing };
 };
@@ -47,7 +47,7 @@ watch(
   async (modelValue) => {
     if (modelValue) {
       routingInfo.value = { status: "loading" };
-      routingInfo.value = { status: "loaded", data: await getRoutingInfo() };
+      routingInfo.value = { status: "loaded", data: await getRouting() };
     } else {
       routingInfo.value = { status: "loading" };
     }

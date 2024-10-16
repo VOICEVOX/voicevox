@@ -24,6 +24,7 @@
   />
   <ExportSongAudioDialog v-model="isExportSongAudioDialogOpen" />
   <ImportSongProjectDialog v-model="isImportSongProjectDialogOpenComputed" />
+  <VstRoutingDialog v-model="isVstRoutingDialogOpen" />
 </template>
 
 <script setup lang="ts">
@@ -41,6 +42,7 @@ import EngineManageDialog from "@/components/Dialog/EngineManageDialog.vue";
 import UpdateNotificationDialogContainer from "@/components/Dialog/UpdateNotificationDialog/Container.vue";
 import ImportSongProjectDialog from "@/components/Dialog/ImportSongProjectDialog.vue";
 import ExportSongAudioDialog from "@/components/Dialog/ExportSongAudioDialog/Container.vue";
+import VstRoutingDialog from "@/components/Dialog/VstRoutingDialog/Container.vue";
 import { useStore } from "@/store";
 import { filterCharacterInfosByStyleType } from "@/store/utility";
 
@@ -176,6 +178,15 @@ const isImportSongProjectDialogOpenComputed = computed({
   set: (val) =>
     store.dispatch("SET_DIALOG_OPEN", {
       isImportSongProjectDialogOpen: val,
+    }),
+});
+
+// VSTのルーティング設定ダイアログ
+const isVstRoutingDialogOpen = computed({
+  get: () => store.state.isVstRoutingDialogOpen,
+  set: (val) =>
+    store.dispatch("SET_DIALOG_OPEN", {
+      isVstRoutingDialogOpen: val,
     }),
 });
 </script>

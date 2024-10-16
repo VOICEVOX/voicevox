@@ -113,11 +113,9 @@ const channelMode = computed({
     if (props.routingInfo.status === "loading") return;
     const newRouting = cloneWithUnwrapProxy(props.routingInfo.data);
     newRouting.channelMode = value as "stereo" | "mono";
+    const maxChannels = value === "stereo" ? 64 / 2 : 64;
     for (const [i, trackId] of trackIds.value.entries()) {
-      newRouting.channelIndex[trackId] = Math.min(
-        newRouting.channelIndex[trackId],
-        value === "stereo" ? i * 2 + 1 : i,
-      );
+      newRouting.channelIndex[trackId] = i % maxChannels;
     }
 
     emit("updateRoutingInfo", newRouting);

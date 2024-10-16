@@ -41,13 +41,4 @@ export const vstStore = createPartialStore<VstStoreTypes>({
       }
     },
   },
-  VST_IMPORT_PROJECT: {
-    action: async ({ dispatch, commit }) => {
-      const loaded = await dispatch("LOAD_PROJECT_FILE", {});
-      if (!loaded) {
-        return;
-      }
-      commit("SET_PROJECT_FILEPATH", { filePath: projectFilePath });
-    },
-  },
 });

@@ -5,10 +5,11 @@ import {
   ShowImportFileDialogOptions,
   ShowMessageDialogOptions,
   ShowQuestionDialogOptions,
+  TrackId,
 } from "@/type/preload";
 import { createLogger } from "@/domain/frontend/log";
 import { UnreachableError } from "@/type/utility";
-import { SingingVoiceKey } from "@/store/type";
+import { SingingVoiceKey, Track } from "@/store/type";
 
 /*
 メモ：
@@ -25,7 +26,7 @@ import { SingingVoiceKey } from "@/store/type";
   - リクエストなしで通知だけ（再生位置の変更など）の場合はonIpcNotificationを使う
 
 - ipcの関数はcreateMessageFunctionで作る
-  - これは直接exportするべきではない
+  - これは直接exportするべきではない。必ず間に関数を挟むこと
 - 通知はonReceivedIPCMessageで受け取る
  */
 
@@ -181,12 +182,11 @@ const ipcSetVoices = createMessageFunction<
   Record<SingingVoiceKey, string>,
   void
 >("setVoices");
-const ipcGetRoutingInfo = createMessageFunction<undefined, Routing>(
-  "getRoutingInfo",
+const ipcSetTracks = createMessageFunction<Record<TrackId, Track>, void>(
+  "setTracks",
 );
-const ipcSetRoutingInfo = createMessageFunction<Routing, void>(
-  "setRoutingInfo",
-);
+const ipcGetRouting = createMessageFunction<undefined, Routing>("getRouting");
+const ipcSetRouting = createMessageFunction<Routing, void>("setRouting");
 
 type Config = Record<string, unknown> & Metadata;
 const log = createLogger("vst/ipc");
@@ -280,10 +280,14 @@ export function onReceivedIPCMessage<T extends keyof Notifications>(
   notificationReceivers.get(name)?.push(callback as (value: unknown) => void);
 }
 
-export async function getRoutingInfo(): Promise<Routing> {
-  return await ipcGetRoutingInfo();
+export async function setTracks(tracks: Record<TrackId, Track>) {
+  await ipcSetTracks(tracks);
 }
 
-export async function setRoutingInfo(routing: Routing) {
-  await ipcSetRoutingInfo(routing);
+export async function getRouting(): Promise<Routing> {
+  return await ipcGetRouting();
+}
+
+export async function setRouting(routing: Routing) {
+  await ipcSetRouting(routing);
 }
