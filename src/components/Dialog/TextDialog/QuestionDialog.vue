@@ -107,6 +107,8 @@ const updateModelValue = (val: boolean) => {
       );
     }
     buttonClicked = true;
+    // NOTE: ipc経由で出すダイアログの実装と揃えるため、onDialogOKでキャンセルを処理している
+    // TODO: ipc経由でダイアログを出さずに全てブラウザ実装のダイアログを使うようにする
     onDialogOK({ index: props.cancel });
   }
 };
