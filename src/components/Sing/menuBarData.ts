@@ -1,6 +1,7 @@
 import { computed } from "vue";
 import { useStore } from "@/store";
 import { MenuItemData } from "@/components/Menu/type";
+import { useRootMiscSetting } from "@/composables/useRootMiscSetting";
 
 export const useMenuBarData = () => {
   const store = useStore();
@@ -8,15 +9,6 @@ export const useMenuBarData = () => {
   const isNotesSelected = computed(
     () => store.getters.SELECTED_NOTE_IDS.size > 0,
   );
-  const showSinger = computed({
-    get: () => store.state.showSinger,
-    set: (showSinger: boolean) => {
-      void store.dispatch("SET_ROOT_MISC_SETTING", {
-        key: "showSinger",
-        value: showSinger,
-      });
-    },
-  });
 
   const importExternalSongProject = async () => {
     if (uiLocked.value) return;
@@ -32,6 +24,7 @@ export const useMenuBarData = () => {
     });
   };
 
+  // 「ファイル」メニュー
   const fileSubMenuData = computed<MenuItemData[]>(() => [
     {
       type: "button",
@@ -52,6 +45,7 @@ export const useMenuBarData = () => {
     },
   ]);
 
+  // 「編集」メニュー
   const editSubMenuData = computed<MenuItemData[]>(() => [
     { type: "separator" },
     {
@@ -116,12 +110,17 @@ export const useMenuBarData = () => {
     },
   ]);
 
+  // 「表示」メニュー
+  const [showSingCharacterPortrait, setShowSingCharacterPortrait] =
+    useRootMiscSetting(store, "showSingCharacterPortrait");
   const viewSubMenuData = computed<MenuItemData[]>(() => [
     {
       type: "button",
-      label: showSinger.value ? "立ち絵を非表示" : "立ち絵を表示",
+      label: showSingCharacterPortrait.value
+        ? "立ち絵を非表示"
+        : "立ち絵を表示",
       onClick: () => {
-        showSinger.value = !showSinger.value;
+        setShowSingCharacterPortrait(!showSingCharacterPortrait.value);
       },
       disableWhenUiLocked: true,
     },

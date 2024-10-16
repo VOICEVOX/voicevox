@@ -1,5 +1,9 @@
 import { InjectionKey } from "vue";
-import { createStore, Store, useStore as baseUseStore } from "./vuex";
+import {
+  createStore,
+  Store as BaseStore,
+  useStore as baseUseStore,
+} from "./vuex";
 
 import {
   AllActions,
@@ -42,9 +46,8 @@ import {
   isProduction,
 } from "@/type/preload";
 
-export const storeKey: InjectionKey<
-  Store<State, AllGetters, AllActions, AllMutations>
-> = Symbol();
+export type Store = BaseStore<State, AllGetters, AllActions, AllMutations>;
+export const storeKey: InjectionKey<Store> = Symbol();
 
 export const indexStoreState: IndexStoreState = {
   defaultStyleIds: [],
@@ -412,11 +415,6 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
   strict: !isProduction,
 });
 
-export const useStore = (): Store<
-  State,
-  AllGetters,
-  AllActions,
-  AllMutations
-> => {
+export const useStore = (): Store => {
   return baseUseStore(storeKey);
 };
