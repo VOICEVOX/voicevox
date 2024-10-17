@@ -951,6 +951,11 @@ export type SingingStoreTypes = {
     action({ trackId }: { trackId: TrackId }): void;
   };
 
+  DESELECT_NOTES: {
+    mutation: { noteIds: NoteId[] };
+    action(payload: { noteIds: NoteId[] }): void;
+  };
+
   DESELECT_ALL_NOTES: {
     mutation: undefined;
     action(): void;
