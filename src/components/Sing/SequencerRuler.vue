@@ -1,8 +1,13 @@
 <template>
-  <div ref="sequencerRuler" class="sequencer-ruler" @click="onClick">
+  <div
+    ref="sequencerRuler"
+    class="sequencer-ruler"
+    @click="onClick"
+    @contextmenu="onContextMenu"
+  >
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      :width
+      :width="gridWidth"
       :height
       shape-rendering="crispEdges"
     >
@@ -26,7 +31,13 @@
           />
         </pattern>
       </defs>
-      <rect x="0.5" y="0" :width :height fill="url(#sequencer-ruler-measure)" />
+      <rect
+        x="0.5"
+        y="0"
+        :width="gridWidth"
+        :height
+        fill="url(#sequencer-ruler-measure)"
+      />
       <!-- 小節線 -->
       <line
         v-for="measureInfo in measureInfos"
@@ -50,7 +61,39 @@
         {{ measureInfo.number }}
       </text>
     </svg>
+    <!-- ループコントロール -->
+    <SequencerLoopControl ref="loopControl" :width="gridWidth" :offset />
+    <!-- ループエリア外を暗くする -->
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      :width="gridWidth"
+      :height
+      shape-rendering="crispEdges"
+      class="sequencer-ruler-loop-mask-container"
+    >
+      <g v-if="isLoopEnabled && loopStartTick !== loopEndTick">
+        <!-- 左側 -->
+        <rect
+          x="0"
+          y="0"
+          :width="Math.max(0, loopStartX - offset)"
+          :height
+          class="sequencer-ruler-loop-mask"
+          pointer-events="none"
+        />
+        <!-- 右側 -->
+        <rect
+          :x="Math.max(0, loopEndX - offset)"
+          y="0"
+          :width="Math.max(0, gridWidth - (loopEndX - offset))"
+          :height
+          class="sequencer-ruler-loop-mask"
+          pointer-events="none"
+        />
+      </g>
+    </svg>
     <div class="sequencer-ruler-border-bottom"></div>
+    <!-- 再生ヘッド -->
     <div
       class="sequencer-ruler-playhead"
       :style="{
@@ -65,6 +108,8 @@ import { computed, ref, onMounted, onUnmounted } from "vue";
 import { useStore } from "@/store";
 import { getMeasureDuration, getTimeSignaturePositions } from "@/sing/domain";
 import { baseXToTick, tickToBaseX } from "@/sing/viewHelper";
+import SequencerLoopControl from "@/components/Sing/SequencerLoopControl.vue";
+import { useLoopControl } from "@/composables/useLoopControl";
 
 const props = withDefaults(
   defineProps<{
@@ -76,7 +121,9 @@ const props = withDefaults(
     numMeasures: 32,
   },
 );
+
 const store = useStore();
+const { isLoopEnabled, loopStartTick, loopEndTick } = useLoopControl();
 const state = store.state;
 const height = ref(40);
 const playheadTicks = ref(0);
@@ -104,7 +151,7 @@ const endTicks = computed(() => {
       (props.numMeasures - lastTs.measureNumber + 1)
   );
 });
-const width = computed(() => {
+const gridWidth = computed(() => {
   return tickToBaseX(endTicks.value, tpqn.value) * zoomX.value;
 });
 const measureInfos = computed(() => {
@@ -137,6 +184,14 @@ const playheadX = computed(() => {
   return Math.floor(baseX * zoomX.value);
 });
 
+// ループのX座標を計算
+const loopStartX = computed(() => {
+  return tickToBaseX(loopStartTick.value, tpqn.value) * zoomX.value;
+});
+const loopEndX = computed(() => {
+  return tickToBaseX(loopEndTick.value, tpqn.value) * zoomX.value;
+});
+
 const onClick = (event: MouseEvent) => {
   void store.dispatch("DESELECT_ALL_NOTES");
 
@@ -147,6 +202,10 @@ const onClick = (event: MouseEvent) => {
   const baseX = (props.offset + event.offsetX) / zoomX.value;
   const ticks = baseXToTick(baseX, tpqn.value);
   void store.dispatch("SET_PLAYHEAD_POSITION", { position: ticks });
+};
+
+const onContextMenu = (event: MouseEvent) => {
+  event.preventDefault();
 };
 
 const sequencerRuler = ref<HTMLElement | null>(null);
@@ -231,5 +290,33 @@ onUnmounted(() => {
   backface-visibility: hidden;
   stroke: var(--scheme-color-sing-ruler-beat-line);
   stroke-width: 1px;
+}
+
+.sequencer-ruler-border-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: var(--scheme-color-sing-ruler-border);
+}
+
+.sequencer-ruler-loop-mask-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.sequencer-ruler-loop-mask {
+  fill: var(--scheme-color-scrim);
+}
+
+:root[is-dark-theme="false"] .sequencer-ruler-loop-mask {
+  opacity: 0.12;
+}
+
+:root[is-dark-theme="true"] .sequencer-ruler-loop-mask {
+  opacity: 0.38;
 }
 </style>
