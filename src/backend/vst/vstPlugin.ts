@@ -18,7 +18,7 @@ import {
   SingingVoiceKey,
   State,
 } from "@/store/type";
-import { secondToTick } from "@/sing/domain";
+import { isTracksEmpty, secondToTick } from "@/sing/domain";
 import { phraseSingingVoices } from "@/store/singing";
 import onetimeWatch from "@/helpers/onetimeWatch";
 import { createLogger } from "@/domain/frontend/log";
@@ -76,28 +76,29 @@ export const vstPlugin: Plugin = {
 
     // void clearPhrases();
 
-    const songProjectState = {
-      tempos: store.state.tempos,
-      tpqn: store.state.tpqn,
-      timeSignature: store.state.timeSignature,
-      tracks: store.state.tracks,
-    };
-
     let haveSentNonEmptyProject = false;
     watch(
-      () => songProjectState,
-      debounce(() => {
-        const isEmptyProject = [...songProjectState.tracks.values()].every(
-          (track) => track.notes.length === 0,
-        );
-        if (isEmptyProject && !haveSentNonEmptyProject) {
-          return;
-        }
-        haveSentNonEmptyProject = true;
-        log.info("Saving project file");
-        store.commit("SET_PROJECT_FILEPATH", { filePath: projectFilePath });
-        void store.dispatch("SAVE_PROJECT_FILE", { overwrite: true });
-      }, 5000),
+      () => ({
+        tempos: store.state.tempos,
+        tpqn: store.state.tpqn,
+        timeSignature: store.state.timeSignature,
+        tracks: store.state.tracks,
+      }),
+      debounce(
+        (songProjectState: Pick<State, "tempos" | "tpqn" | "tracks">) => {
+          const isEmptyProject = isTracksEmpty([
+            ...songProjectState.tracks.values(),
+          ]);
+          if (isEmptyProject && !haveSentNonEmptyProject) {
+            return;
+          }
+          haveSentNonEmptyProject = true;
+          log.info("Saving project file");
+          store.commit("SET_PROJECT_FILEPATH", { filePath: projectFilePath });
+          void store.dispatch("SAVE_PROJECT_FILE", { overwrite: true });
+        },
+        5000,
+      ),
       { deep: true },
     );
 
