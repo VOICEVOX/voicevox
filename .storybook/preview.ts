@@ -70,23 +70,17 @@ const preview: Preview = {
         async mounted() {
           const root = document.documentElement;
           const themes = await browserSandbox.getAvailableThemes();
+          let lastTheme: boolean | undefined = undefined;
           observer = new MutationObserver(() => {
-            if (!observer)
-              throw new UnreachableError("assert: observer !== undefined");
-
             const isDark = root.getAttribute("is-dark-theme") === "true";
+            if (lastTheme === isDark) return;
+            lastTheme = isDark;
+
             const theme = themes.find((theme) => theme.isDark === isDark);
             if (!theme)
               throw new UnreachableError("assert: theme !== undefined");
 
-            observer.disconnect();
-
             setThemeToCss(theme);
-
-            observer.observe(root, {
-              attributes: true,
-              attributeFilter: ["is-dark-theme"],
-            });
           });
 
           observer.observe(root, {
@@ -100,7 +94,7 @@ const preview: Preview = {
           }
         },
 
-        template: `<story />`
+        template: `<story />`,
       };
     },
   ],
