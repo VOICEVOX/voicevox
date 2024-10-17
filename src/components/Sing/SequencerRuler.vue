@@ -1,5 +1,15 @@
 <template>
-  <div ref="sequencerRuler" class="sequencer-ruler" @click="onClick">
+  <div
+    ref="sequencerRuler"
+    class="sequencer-ruler"
+    @click="onClick"
+    @contextmenu="onContextMenu"
+  >
+    <ContextMenu
+      ref="contextMenu"
+      :header="contextMenuHeader"
+      :menudata="contextMenudata"
+    />
     <svg
       xmlns="http://www.w3.org/2000/svg"
       :width
@@ -65,6 +75,9 @@ import { computed, ref, onMounted, onUnmounted } from "vue";
 import { useStore } from "@/store";
 import { getMeasureDuration, getTimeSignaturePositions } from "@/sing/domain";
 import { baseXToTick, tickToBaseX } from "@/sing/viewHelper";
+import ContextMenu, {
+  ContextMenuItemData,
+} from "@/components/Menu/ContextMenu.vue";
 
 const props = withDefaults(
   defineProps<{
@@ -137,15 +150,15 @@ const playheadX = computed(() => {
   return Math.floor(baseX * zoomX.value);
 });
 
+const getTickFromMouseEvent = (event: MouseEvent) => {
+  const baseX = (props.offset + event.offsetX) / zoomX.value;
+  return baseXToTick(baseX, tpqn.value);
+};
+
 const onClick = (event: MouseEvent) => {
   void store.dispatch("DESELECT_ALL_NOTES");
 
-  const sequencerRulerElement = sequencerRuler.value;
-  if (!sequencerRulerElement) {
-    throw new Error("sequencerRulerElement is null.");
-  }
-  const baseX = (props.offset + event.offsetX) / zoomX.value;
-  const ticks = baseXToTick(baseX, tpqn.value);
+  const ticks = getTickFromMouseEvent(event);
   void store.dispatch("SET_PLAYHEAD_POSITION", { position: ticks });
 };
 
@@ -186,6 +199,45 @@ onUnmounted(() => {
     listener: playheadPositionChangeListener,
   });
 });
+
+const contextMenuTick = ref(0);
+const contextMenuHeader = computed(() => {
+  let currentMeasure = 1;
+  for (const [tsPosition, tsInfo] of timeSignatures.value.map(
+    (ts, i) => [tsPositions.value[i], ts] as const,
+  )) {
+    if (contextMenuTick.value < tsPosition) {
+      break;
+    }
+    const measureDuration = getMeasureDuration(
+      tsInfo.beats,
+      tsInfo.beatType,
+      tpqn.value,
+    );
+    currentMeasure =
+      tsInfo.measureNumber +
+      Math.floor((contextMenuTick.value - tsPosition) / measureDuration);
+  }
+
+  return `${currentMeasure}小節目`;
+});
+const onContextMenu = (event: MouseEvent) => {
+  contextMenuTick.value = getTickFromMouseEvent(event);
+};
+const contextMenudata: ContextMenuItemData[] = [
+  {
+    type: "button",
+    label: "BPM変化を挿入",
+    onClick: () => {},
+    disableWhenUiLocked: true,
+  },
+  {
+    type: "button",
+    label: "拍子変化を挿入",
+    onClick: () => {},
+    disableWhenUiLocked: true,
+  },
+];
 </script>
 
 <style scoped lang="scss">
