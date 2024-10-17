@@ -38,27 +38,6 @@
         :height
         fill="url(#sequencer-ruler-measure)"
       />
-      <!-- ループエリア外を暗くする -->
-      <g v-if="isLoopEnabled && loopStartTick !== loopEndTick">
-        <!-- 左側 -->
-        <rect
-          x="0"
-          y="0"
-          :width="Math.max(0, loopStartX - offset)"
-          :height
-          class="sequencer-ruler-loop-mask"
-          pointer-events="none"
-        />
-        <!-- 右側 -->
-        <rect
-          :x="Math.max(0, loopEndX - offset)"
-          y="0"
-          :width="Math.max(0, gridWidth - (loopEndX - offset))"
-          :height
-          class="sequencer-ruler-loop-mask"
-          pointer-events="none"
-        />
-      </g>
       <!-- 小節線 -->
       <line
         v-for="measureInfo in measureInfos"
@@ -82,14 +61,45 @@
         {{ measureInfo.number }}
       </text>
     </svg>
+    <!-- ループコントロール -->
+    <SequencerLoopControl ref="loopControl" :width="gridWidth" :offset />
+    <!-- ループエリア外を暗くする -->
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      :width="gridWidth"
+      :height
+      shape-rendering="crispEdges"
+      class="sequencer-ruler-loop-mask-container"
+    >
+      <g v-if="isLoopEnabled && loopStartTick !== loopEndTick">
+        <!-- 左側 -->
+        <rect
+          x="0"
+          y="0"
+          :width="Math.max(0, loopStartX - offset)"
+          :height
+          class="sequencer-ruler-loop-mask"
+          pointer-events="none"
+        />
+        <!-- 右側 -->
+        <rect
+          :x="Math.max(0, loopEndX - offset)"
+          y="0"
+          :width="Math.max(0, gridWidth - (loopEndX - offset))"
+          :height
+          class="sequencer-ruler-loop-mask"
+          pointer-events="none"
+        />
+      </g>
+    </svg>
     <div class="sequencer-ruler-border-bottom"></div>
+    <!-- 再生ヘッド -->
     <div
       class="sequencer-ruler-playhead"
       :style="{
         transform: `translateX(${playheadX - offset}px)`,
       }"
     ></div>
-    <SequencerLoopControl ref="loopControl" :width="gridWidth" :offset />
   </div>
 </template>
 
@@ -291,8 +301,22 @@ onUnmounted(() => {
   background-color: var(--scheme-color-sing-ruler-border);
 }
 
+.sequencer-ruler-loop-mask-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
 .sequencer-ruler-loop-mask {
   fill: var(--scheme-color-scrim);
+}
+
+:root[is-dark-theme="false"] .sequencer-ruler-loop-mask {
+  opacity: 0.12;
+}
+
+:root[is-dark-theme="true"] .sequencer-ruler-loop-mask {
   opacity: 0.38;
 }
 </style>

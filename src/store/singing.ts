@@ -2483,10 +2483,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.loopStartTick = loopStartTick;
       state.loopEndTick = loopEndTick;
     },
-    async action(
-      { mutations, state, actions },
-      { loopStartTick, loopEndTick },
-    ) {
+    async action({ mutations, state }, { loopStartTick, loopEndTick }) {
       if (!transport) {
         throw new Error("transport is undefined.");
       }
@@ -2504,7 +2501,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       );
 
       // ループの開始位置に移動する
-      await actions.SET_PLAYHEAD_POSITION({ position: loopStartTick });
+      // await actions.SET_PLAYHEAD_POSITION({ position: state.loopStartTick });
     },
   },
 
@@ -2515,7 +2512,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       state.loopStartTick = loopStartTick;
     },
-    action({ mutations, state }, { loopStartTick }) {
+    async action({ mutations, state }, { loopStartTick }) {
       if (!transport) {
         throw new Error("transport is undefined.");
       }

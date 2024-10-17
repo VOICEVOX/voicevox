@@ -1,21 +1,26 @@
 <template>
   <div
     class="sequencer-loop-control"
-    :class="{ 'loop-disabled': !isLoopEnabled }"
+    :class="{
+      'loop-disabled': !isLoopEnabled,
+      'loop-dragging': isDragging,
+      [cursorClass]: true,
+    }"
+    :style="{ height: adjustedHeight + 'px' }"
     @click.stop
   >
     <svg
       xmlns="http://www.w3.org/2000/svg"
       :width
-      height="16"
-      shape-rendering="geometricPrecision"
+      :height="16"
+      shape-rendering="crispEdges"
     >
       <!-- 背景エリア -->
       <rect
-        :x="0"
+        x="0"
         y="0"
         :width="props.width"
-        :height="16"
+        height="12"
         class="loop-area"
         @mousedown.stop="addLoop($event)"
         @mouseup.stop
@@ -25,19 +30,19 @@
         :x="loopStartX - offset"
         y="0"
         :width="loopEndX - loopStartX"
-        :height="4"
+        :height="8"
         class="loop-range"
         @click.stop="toggleLoop"
       />
       <!-- ループ開始ハンドル -->
       <path
-        :d="`M${loopStartX - offset},0 L${loopStartX - offset},15 L${loopStartX - offset + 12},0 Z`"
+        :d="`M${loopStartX - offset},0 L${loopStartX - offset},12 L${loopStartX - offset + 10},0 Z`"
         class="loop-handle loop-start-handle"
         :class="{ 'loop-handle-disabled': loopStartTick === loopEndTick }"
       />
       <!-- ループ終了ハンドル -->
       <path
-        :d="`M${loopEndX - offset},0 L${loopEndX - offset},15 L${loopEndX - offset - 12},0 Z`"
+        :d="`M${loopEndX - offset},0 L${loopEndX - offset},12 L${loopEndX - offset - 10},0 Z`"
         class="loop-handle loop-end-handle"
         :class="{ 'loop-handle-disabled': loopStartTick === loopEndTick }"
       />
@@ -46,7 +51,7 @@
         :x="loopStartX - offset - 4"
         y="0"
         width="16"
-        height="20"
+        height="16"
         class="loop-drag-area"
         @mousedown.stop="startDragging('start', $event)"
       />
@@ -55,7 +60,7 @@
         :x="loopEndX - offset - 4"
         y="0"
         width="16"
-        height="20"
+        height="16"
         class="loop-drag-area"
         @mousedown.stop="startDragging('end', $event)"
       />
@@ -84,7 +89,7 @@ const {
   setLoopEnabled,
   setLoopRange,
 } = useLoopControl();
-const { setCursorState } = useCursorState();
+const { setCursorState, cursorClass } = useCursorState();
 
 const tpqn = computed(() => store.state.tpqn);
 const sequencerZoomX = computed(() => store.state.sequencerZoomX);
@@ -101,9 +106,10 @@ const isDragging = ref(false);
 const dragTarget = ref<"start" | "end" | null>(null);
 const dragStartX = ref(0);
 const dragStartHandleX = ref(0); // ドラッグ開始時のハンドル位置
+const adjustedHeight = computed(() => (isDragging.value ? 40 : 16));
 
 const addLoop = (event: MouseEvent) => {
-  event.preventDefault();
+  event.stopPropagation();
   const target = event.currentTarget as HTMLElement;
   const rect = target.getBoundingClientRect();
   const x = event.clientX - rect.left + props.offset;
@@ -112,7 +118,8 @@ const addLoop = (event: MouseEvent) => {
   startDragging("end", event);
 };
 
-const toggleLoop = () => {
+const toggleLoop = (event: MouseEvent) => {
+  event.stopPropagation();
   setLoopEnabled(!isLoopEnabled.value);
 };
 
@@ -122,6 +129,7 @@ const snapToGrid = (tick: number): number => {
 };
 
 const startDragging = (target: "start" | "end", event: MouseEvent) => {
+  event.stopPropagation();
   isDragging.value = true;
   dragTarget.value = target;
   dragStartX.value = event.clientX;
@@ -201,17 +209,19 @@ onUnmounted(() => {
   top: 0;
   left: 0;
   width: 100%;
-  height: 16px;
   pointer-events: auto;
-  cursor: pointer;
+
+  &:not(.cursor-ew-resize) {
+    cursor: pointer;
+  }
 }
 
 .loop-area {
-  fill: var(--scheme-color-surface-dim);
+  fill: var(--scheme-color-sing-ruler-surface);
 }
 
 .loop-range {
-  fill: var(--scheme-color-primary);
+  fill: var(--scheme-color-primary-fixed-dim);
 }
 
 .loop-disabled .loop-range {
@@ -219,8 +229,8 @@ onUnmounted(() => {
 }
 
 .loop-handle {
-  fill: var(--scheme-color-primary);
-  stroke: var(--scheme-color-primary);
+  fill: var(--scheme-color-primary-fixed-dim);
+  stroke: var(--scheme-color-primary-fixed-dim);
   stroke-width: 2;
   stroke-linejoin: round;
 
@@ -236,7 +246,6 @@ onUnmounted(() => {
 }
 
 .loop-drag-area {
-  height: 28px;
   fill: transparent;
   cursor: ew-resize;
   pointer-events: all;
