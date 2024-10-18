@@ -2,12 +2,13 @@
   <div
     class="sequencer-loop-control"
     :class="{
-      'loop-disabled': !isLoopEnabled,
+      'loop-enabled': isLoopEnabled,
       'loop-dragging': isDragging,
       [cursorClass]: true,
     }"
     :style="{ height: adjustedHeight + 'px' }"
     @click.stop
+    @contextmenu.prevent="onContextMenu"
   >
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -31,7 +32,7 @@
         y="0"
         :width="loopEndX - loopStartX"
         :height="8"
-        class="loop-range"
+        class="loop-range-area"
         @click.stop="onLoopRangeClick"
       />
       <rect
@@ -39,20 +40,20 @@
         y="0"
         :width="loopEndX - loopStartX"
         :height="4"
-        class="loop-range-visible"
+        class="loop-range"
         @click.stop="onLoopRangeClick"
       />
       <!-- ループ開始ハンドル -->
       <path
         :d="`M${loopStartX - offset},0 L${loopStartX - offset},12 L${loopStartX - offset + 10},0 Z`"
         class="loop-handle loop-start-handle"
-        :class="{ 'loop-handle-disabled': loopStartTick === loopEndTick }"
+        :class="{ 'loop-handle-no-length': loopStartTick === loopEndTick }"
       />
       <!-- ループ終了ハンドル -->
       <path
         :d="`M${loopEndX - offset},0 L${loopEndX - offset},12 L${loopEndX - offset - 10},0 Z`"
         class="loop-handle loop-end-handle"
-        :class="{ 'loop-handle-disabled': loopStartTick === loopEndTick }"
+        :class="{ 'loop-handle-no-length': loopStartTick === loopEndTick }"
       />
       <!-- ループ開始ドラッグ領域 -->
       <rect
@@ -62,6 +63,7 @@
         height="16"
         class="loop-drag-area"
         @mousedown.stop="onStartHandleMouseDown"
+        @dblclick.stop="onHandleDoubleClick"
       />
       <!-- ループ終了ドラッグ領域 -->
       <rect
@@ -71,8 +73,10 @@
         height="16"
         class="loop-drag-area"
         @mousedown.stop="onEndHandleMouseDown"
+        @dblclick.stop="onHandleDoubleClick"
       />
     </svg>
+    <ContextMenu :menudata="contextMenuData" />
   </div>
 </template>
 
@@ -83,6 +87,9 @@ import { useLoopControl } from "@/composables/useLoopControl";
 import { useCursorState, CursorState } from "@/composables/useCursorState";
 import { tickToBaseX, baseXToTick } from "@/sing/viewHelper";
 import { getNoteDuration } from "@/sing/domain";
+import ContextMenu, {
+  ContextMenuItemData,
+} from "@/components/Menu/ContextMenu.vue";
 
 const props = defineProps<{
   width: number;
@@ -133,10 +140,10 @@ const adjustedHeight = computed(() =>
 );
 
 const onLoopAreaMouseDown = (event: MouseEvent) => {
+  if (event.button !== 0 || (event.ctrlKey && event.button === 0)) return;
   if (isDragging.value) {
     void stopDragging();
   }
-  if (event.button !== 0) return;
   const target = event.currentTarget as HTMLElement;
   const rect = target.getBoundingClientRect();
   const x = event.clientX - rect.left + props.offset;
@@ -163,8 +170,14 @@ const onEndHandleMouseDown = (event: MouseEvent) => {
   startDragging("end", event);
 };
 
+const onHandleDoubleClick = () => {
+  // ハンドルのダブルクリックでループを0地点に設定する
+  void setLoopRange(0, 0);
+};
+
 // ドラッグ開始処理
 const startDragging = (target: "start" | "end", event: MouseEvent) => {
+  if (event.button !== 0) return;
   isDragging.value = true;
   dragTarget.value = target;
   dragStartX.value = event.clientX;
@@ -178,6 +191,7 @@ const startDragging = (target: "start" | "end", event: MouseEvent) => {
 // ドラッグ中処理
 const onDrag = (event: MouseEvent) => {
   if (!isDragging.value || !dragTarget.value) return;
+  if (event.button !== 0) return;
 
   // ドラッグ中のX座標
   const dx = event.clientX - dragStartX.value;
@@ -241,6 +255,34 @@ const stopDragging = async () => {
   window.removeEventListener("mouseup", stopDragging);
 };
 
+const onContextMenu = (event: MouseEvent) => {
+  event.preventDefault();
+  event.stopPropagation();
+};
+const contextMenu = ref<InstanceType<typeof ContextMenu>>();
+const contextMenuData = computed<ContextMenuItemData[]>(() => {
+  return [
+    {
+      type: "button",
+      label: isLoopEnabled.value ? "ループ無効" : "ループ有効",
+      onClick: () => {
+        contextMenu.value?.hide();
+        void setLoopEnabled(!isLoopEnabled.value);
+      },
+      disableWhenUiLocked: true,
+    },
+    {
+      type: "button",
+      label: "ループを0地点にリセット",
+      onClick: () => {
+        contextMenu.value?.hide();
+        void setLoopRange(0, 0);
+      },
+      disableWhenUiLocked: true,
+    },
+  ];
+});
+
 onUnmounted(() => {
   setCursorState(CursorState.UNSET);
 });
@@ -253,52 +295,78 @@ onUnmounted(() => {
   left: 0;
   width: 100%;
   pointer-events: auto;
+  cursor: pointer;
 
-  &:not(.cursor-ew-resize) {
-    cursor: pointer;
+  &.cursor-ew-resize {
+    cursor: ew-resize;
   }
 
-  &.loop-dragging .loop-range-visible {
-    fill: var(--scheme-color-outline-variant);
+  // ホバー時のループエリア
+  &:hover .loop-area {
+    fill: var(--scheme-color-sing-loop-area);
   }
 }
 
+// ループエリア
 .loop-area {
   fill: transparent;
+  transition: fill 0.1s ease-out;
 }
 
+// ループ範囲
 .loop-range {
-  fill: transparent;
-}
+  &-area {
+    fill: transparent;
+  }
 
-.loop-range-visible {
-  fill: var(--scheme-color-primary-fixed-dim);
-}
-
-.loop-disabled .loop-range-visible {
   fill: var(--scheme-color-outline);
+  opacity: 1;
 }
 
+// ループハンドル
 .loop-handle {
-  fill: var(--scheme-color-primary-fixed-dim);
-  stroke: var(--scheme-color-primary-fixed-dim);
-  stroke-width: 2;
+  fill: var(--scheme-color-outline);
+  stroke: var(--scheme-color-outline);
+  stroke-width: 0;
   stroke-linejoin: round;
 
-  &.loop-handle-disabled {
-    fill: var(--scheme-color-secondary);
-    stroke: var(--scheme-color-secondary);
+  &-no-length {
+    opacity: 0.5;
   }
 }
 
-.loop-disabled .loop-handle {
-  fill: var(--scheme-color-outline);
-  stroke: var(--scheme-color-outline);
-}
-
+// ドラッグエリア
 .loop-drag-area {
   fill: transparent;
   cursor: ew-resize;
   pointer-events: all;
+}
+
+// ドラッグ中の状態
+.loop-dragging {
+  .loop-area {
+    fill: var(--scheme-color-sing-loop-area);
+  }
+
+  .loop-range {
+    opacity: 0.6;
+  }
+}
+
+// ループが有効な状態
+.loop-enabled {
+  .loop-range {
+    fill: var(--scheme-color-primary-fixed-dim);
+  }
+
+  .loop-handle {
+    fill: var(--scheme-color-primary-fixed-dim);
+    stroke: var(--scheme-color-primary-fixed-dim);
+
+    &-no-length {
+      fill: var(--scheme-color-outline);
+      stroke: var(--scheme-color-outline);
+    }
+  }
 }
 </style>

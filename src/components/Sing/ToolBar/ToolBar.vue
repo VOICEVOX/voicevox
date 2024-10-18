@@ -438,7 +438,7 @@ const goToZero = () => {
 
 const { isLoopEnabled, setLoopEnabled } = useLoopControl();
 const toggleLoop = () => {
-  setLoopEnabled(!isLoopEnabled.value);
+  void setLoopEnabled(!isLoopEnabled.value);
 };
 
 const volume = computed({
