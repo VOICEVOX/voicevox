@@ -155,11 +155,11 @@ const getTickFromMouseEvent = (event: MouseEvent) => {
   return baseXToTick(baseX, tpqn.value);
 };
 
-const onClick = (event: MouseEvent) => {
-  void store.dispatch("DESELECT_ALL_NOTES");
+const onClick = async (event: MouseEvent) => {
+  await store.dispatch("DESELECT_ALL_NOTES");
 
   const ticks = getTickFromMouseEvent(event);
-  void store.dispatch("SET_PLAYHEAD_POSITION", { position: ticks });
+  await store.dispatch("SET_PLAYHEAD_POSITION", { position: ticks });
 };
 
 const sequencerRuler = ref<HTMLElement | null>(null);
@@ -221,14 +221,18 @@ const contextMenuHeader = computed(() => {
 
   return `${currentMeasure}小節目`;
 });
-const onContextMenu = (event: MouseEvent) => {
+const onContextMenu = async (event: MouseEvent) => {
+  await onClick(event);
   contextMenuTick.value = getTickFromMouseEvent(event);
 };
 const contextMenudata: ContextMenuItemData[] = [
   {
     type: "button",
     label: "BPM変化を挿入",
-    onClick: () => {},
+    onClick: async () => {
+      const { promise, resolve } = Promise.withResolvers<number>();
+      
+    },
     disableWhenUiLocked: true,
   },
   {
