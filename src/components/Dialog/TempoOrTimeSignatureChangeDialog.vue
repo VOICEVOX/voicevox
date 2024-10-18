@@ -129,6 +129,11 @@ const props = defineProps<{
 }>();
 defineEmits({
   ...useDialogPluginComponent.emitsObject,
+
+  // なぜか認識されないので手動で追加。
+  // TODO: 直す
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  "update:modelValue": (value: boolean) => true,
 });
 
 const timeSignatureChangeEnabled = ref(props.timeSignatureChange != undefined);

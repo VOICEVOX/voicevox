@@ -69,7 +69,7 @@
           :x="tempoOrTimeSignatureChange.x - offset + 4"
           y="16"
           class="sequencer-ruler-tempo-or-time-signature-change"
-          @click="
+          @click.stop="
             onTempoOrTimeSignatureChangeClick(
               $event,
               tempoOrTimeSignatureChange,
@@ -260,14 +260,12 @@ type TempoOrTimeSignatureChange = {
   x: number;
 };
 
-const onTempoOrTimeSignatureChangeClick = (
+const onTempoOrTimeSignatureChangeClick = async (
   event: MouseEvent,
   tempoOrTimeSignatureChange: TempoOrTimeSignatureChange,
 ) => {
   const ticks = tempoOrTimeSignatureChange.position;
-  const snapTicks = getNoteDuration(store.state.sequencerSnapType, tpqn.value);
-  const snappedTicks = Math.round(ticks / snapTicks) * snapTicks;
-  void store.dispatch("SET_PLAYHEAD_POSITION", { position: snappedTicks });
+  await store.dispatch("SET_PLAYHEAD_POSITION", { position: ticks });
 
   contextMenu.value?.show(event);
 };
