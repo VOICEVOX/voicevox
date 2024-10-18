@@ -37,6 +37,9 @@ defineProps<{
   menudata: ContextMenuItemData[];
 }>();
 defineExpose({
+  show: (event?: MouseEvent | undefined) => {
+    contextMenu.value?.show(event);
+  },
   hide: () => {
     contextMenu.value?.hide();
   },

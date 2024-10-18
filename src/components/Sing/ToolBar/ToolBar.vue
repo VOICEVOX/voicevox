@@ -58,7 +58,7 @@
         <template #control>
           <div class="sing-beats">
             <QSelect
-              :modelValue="timeSignatures[0].beats"
+              :modelValue="lastTimeSignature.beats"
               :options="beatsOptions"
               hideBottomSpace
               hideDropdownIcon
@@ -73,7 +73,7 @@
             />
             <div class="sing-beats-separator">/</div>
             <QSelect
-              :modelValue="timeSignatures[0].beatType"
+              :modelValue="lastTimeSignature.beatType"
               :options="beatTypeOptions"
               hideBottomSpace
               hideDropdownIcon
@@ -169,7 +169,9 @@ import EditTargetSwicher from "./EditTargetSwicher.vue";
 import { useStore } from "@/store";
 
 import {
+  BEAT_TYPES,
   getSnapTypes,
+  getTimeSignaturePositions,
   isTriplet,
   isValidBeatType,
   isValidBeats,
@@ -180,6 +182,7 @@ import {
 import CharacterMenuButton from "@/components/Sing/CharacterMenuButton/MenuButton.vue";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import { SequencerEditTarget } from "@/store/type";
+import { UnreachableError } from "@/type/utility";
 
 const store = useStore();
 
@@ -249,6 +252,11 @@ const volumeRangeAdjustment = computed(
   () => store.getters.SELECTED_TRACK.volumeRangeAdjustment,
 );
 const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
+const tpqn = computed(() => store.state.tpqn);
+
+const tsPositions = computed(() => {
+  return getTimeSignaturePositions(timeSignatures.value, tpqn.value);
+});
 
 const beatsOptions = computed(() => {
   return Array.from({ length: 32 }, (_, i) => ({
@@ -257,35 +265,14 @@ const beatsOptions = computed(() => {
   }));
 });
 
-const beatTypeOptions = computed(() => {
-  return [2, 4, 8, 16, 32].map((beatType) => ({
-    label: beatType.toString(),
-    value: beatType,
-  }));
-});
+const beatTypeOptions = BEAT_TYPES.map((beatType) => ({
+  label: beatType.toString(),
+  value: beatType,
+}));
 
 const bpmInputBuffer = ref(120);
-const beatsInputBuffer = ref(4);
-const beatTypeInputBuffer = ref(4);
 const keyRangeAdjustmentInputBuffer = ref(0);
 const volumeRangeAdjustmentInputBuffer = ref(0);
-
-watch(
-  tempos,
-  () => {
-    bpmInputBuffer.value = tempos.value[0].bpm;
-  },
-  { deep: true, immediate: true },
-);
-
-watch(
-  timeSignatures,
-  () => {
-    beatsInputBuffer.value = timeSignatures.value[0].beats;
-    beatTypeInputBuffer.value = timeSignatures.value[0].beatType;
-  },
-  { deep: true, immediate: true },
-);
 
 watch(
   keyRangeAdjustment,
@@ -311,13 +298,24 @@ const setBpmInputBuffer = (bpmStr: string | number | null) => {
   bpmInputBuffer.value = bpmValue;
 };
 
+const lastTimeSignature = computed(() => {
+  const maybeTimeSignature = timeSignatures.value.findLast(
+    (_timeSignature, i) => tsPositions.value[i] <= playheadTicks.value,
+  );
+  if (!maybeTimeSignature) {
+    throw new UnreachableError("assert: at least one time signature exists");
+  }
+  return maybeTimeSignature;
+});
+
 const setBeats = (beats: { label: string; value: number }) => {
   if (!isValidBeats(beats.value)) {
     return;
   }
+
   void store.dispatch("COMMAND_SET_TIME_SIGNATURE", {
     timeSignature: {
-      measureNumber: 1,
+      measureNumber: lastTimeSignature.value.measureNumber,
       beats: beats.value,
       beatType: timeSignatures.value[0].beatType,
     },
@@ -330,7 +328,7 @@ const setBeatType = (beatType: { label: string; value: number }) => {
   }
   void store.dispatch("COMMAND_SET_TIME_SIGNATURE", {
     timeSignature: {
-      measureNumber: 1,
+      measureNumber: lastTimeSignature.value.measureNumber,
       beats: timeSignatures.value[0].beats,
       beatType: beatType.value,
     },
@@ -359,9 +357,15 @@ const setVolumeRangeAdjustmentInputBuffer = (
 
 const setTempo = () => {
   const bpm = bpmInputBuffer.value;
+  const position = tempos.value.findLast(
+    (tempo) => tempo.position <= playheadTicks.value,
+  )?.position;
+  if (position == undefined) {
+    throw new UnreachableError("assert: at least one tempo exists");
+  }
   void store.dispatch("COMMAND_SET_TEMPO", {
     tempo: {
-      position: 0,
+      position,
       bpm,
     },
   });
@@ -406,6 +410,20 @@ const playHeadPositionMilliSecStr = computed(() => {
   const milliSecStr = String(milliSec).padStart(3, "0");
   return milliSecStr;
 });
+
+watch(
+  [tempos, playheadTicks],
+  () => {
+    const lastTempo = tempos.value.findLast(
+      (tempo) => tempo.position <= playheadTicks.value,
+    );
+    if (!lastTempo) {
+      throw new UnreachableError("assert: at least one tempo exists");
+    }
+    bpmInputBuffer.value = lastTempo.bpm;
+  },
+  { deep: true, immediate: true },
+);
 
 const nowPlaying = computed(() => store.state.nowPlaying);
 
@@ -756,7 +774,7 @@ onUnmounted(() => {
 .sing-volume-icon {
   margin-right: 8px;
 
-  :deep {
+  :deep(&) {
     color: var(--scheme-color-outline);
   }
 }

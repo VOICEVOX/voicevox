@@ -1,5 +1,15 @@
 <template>
-  <div ref="sequencerRuler" class="sequencer-ruler" @click="onClick">
+  <div
+    ref="sequencerRuler"
+    class="sequencer-ruler"
+    @click="onClick"
+    @contextmenu="onContextMenu"
+  >
+    <ContextMenu
+      ref="contextMenu"
+      :header="contextMenuHeader"
+      :menudata="contextMenudata"
+    />
     <svg
       xmlns="http://www.w3.org/2000/svg"
       :width
@@ -49,6 +59,33 @@
       >
         {{ measureInfo.number }}
       </text>
+      <!-- BPM・拍子表示 -->
+      <template
+        v-for="tempoOrTimeSignatureChange in tempoOrTimeSignatureChanges"
+        :key="tempoOrTimeSignatureChange.position"
+      >
+        <text
+          font-size="12"
+          :x="tempoOrTimeSignatureChange.x - offset + 4"
+          y="16"
+          class="sequencer-ruler-tempo-or-time-signature-change"
+          @click.stop="
+            onTempoOrTimeSignatureChangeClick(
+              $event,
+              tempoOrTimeSignatureChange,
+            )
+          "
+        >
+          {{ tempoOrTimeSignatureChange.text }}
+        </text>
+        <line
+          :x1="tempoOrTimeSignatureChange.x - offset"
+          :x2="tempoOrTimeSignatureChange.x - offset"
+          y1="0"
+          :y2="height"
+          class="sequencer-ruler-tempo-or-time-signature-change-line"
+        />
+      </template>
     </svg>
     <div class="sequencer-ruler-border-bottom"></div>
     <div
@@ -61,10 +98,29 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted } from "vue";
+import {
+  computed,
+  ref,
+  useTemplateRef,
+  onMounted,
+  onUnmounted,
+  ExtractPropTypes,
+} from "vue";
+import { Dialog } from "quasar";
+import TempoOrTimeSignatureChangeDialog, {
+  TempoOrTimeSignatureChangeDialogResult,
+} from "@/components/Dialog/TempoOrTimeSignatureChangeDialog.vue";
 import { useStore } from "@/store";
-import { getMeasureDuration, getTimeSignaturePositions } from "@/sing/domain";
+import {
+  getMeasureDuration,
+  getNoteDuration,
+  getTimeSignaturePositions,
+} from "@/sing/domain";
 import { baseXToTick, tickToBaseX } from "@/sing/viewHelper";
+import ContextMenu, {
+  ContextMenuItemData,
+} from "@/components/Menu/ContextMenu.vue";
+import { UnreachableError } from "@/type/utility";
 
 const props = withDefaults(
   defineProps<{
@@ -137,16 +193,16 @@ const playheadX = computed(() => {
   return Math.floor(baseX * zoomX.value);
 });
 
-const onClick = (event: MouseEvent) => {
-  void store.dispatch("DESELECT_ALL_NOTES");
-
-  const sequencerRulerElement = sequencerRuler.value;
-  if (!sequencerRulerElement) {
-    throw new Error("sequencerRulerElement is null.");
-  }
+const getTickFromMouseEvent = (event: MouseEvent) => {
   const baseX = (props.offset + event.offsetX) / zoomX.value;
-  const ticks = baseXToTick(baseX, tpqn.value);
-  void store.dispatch("SET_PLAYHEAD_POSITION", { position: ticks });
+  return baseXToTick(baseX, tpqn.value);
+};
+
+const onClick = async (event: MouseEvent) => {
+  await store.dispatch("DESELECT_ALL_NOTES");
+
+  const ticks = getTickFromMouseEvent(event);
+  await store.dispatch("SET_PLAYHEAD_POSITION", { position: ticks });
 };
 
 const sequencerRuler = ref<HTMLElement | null>(null);
@@ -186,6 +242,229 @@ onUnmounted(() => {
     listener: playheadPositionChangeListener,
   });
 });
+
+const contextMenu =
+  useTemplateRef<InstanceType<typeof ContextMenu>>("contextMenu");
+const onContextMenu = async (event: MouseEvent) => {
+  await store.dispatch("DESELECT_ALL_NOTES");
+
+  const ticks = getTickFromMouseEvent(event);
+  const snapTicks = getNoteDuration(store.state.sequencerSnapType, tpqn.value);
+  const snappedTicks = Math.round(ticks / snapTicks) * snapTicks;
+  await store.dispatch("SET_PLAYHEAD_POSITION", { position: snappedTicks });
+};
+
+type TempoOrTimeSignatureChange = {
+  position: number;
+  text: string;
+  x: number;
+};
+
+const onTempoOrTimeSignatureChangeClick = async (
+  event: MouseEvent,
+  tempoOrTimeSignatureChange: TempoOrTimeSignatureChange,
+) => {
+  const ticks = tempoOrTimeSignatureChange.position;
+  await store.dispatch("SET_PLAYHEAD_POSITION", { position: ticks });
+
+  contextMenu.value?.show(event);
+};
+
+const currentMeasure = computed(() => {
+  let currentMeasure = 1;
+  for (const [tsPosition, tsInfo] of timeSignatures.value.map(
+    (ts, i) => [tsPositions.value[i], ts] as const,
+  )) {
+    if (playheadTicks.value < tsPosition) {
+      break;
+    }
+    const measureDuration = getMeasureDuration(
+      tsInfo.beats,
+      tsInfo.beatType,
+      tpqn.value,
+    );
+    currentMeasure =
+      tsInfo.measureNumber +
+      Math.floor((playheadTicks.value - tsPosition) / measureDuration);
+  }
+
+  return currentMeasure;
+});
+
+const tempoOrTimeSignatureChanges = computed<TempoOrTimeSignatureChange[]>(
+  () => {
+    const timeSignaturesWithTicks = tsPositions.value.map((tsPosition, i) => {
+      return {
+        position: tsPosition,
+        timeSignature: timeSignatures.value[i],
+      };
+    });
+    const tempos = store.state.tempos.map((tempo) => {
+      return {
+        position: tempo.position,
+        tempo,
+      };
+    });
+    const ticks = new Set([
+      ...timeSignaturesWithTicks.map((ts) => ts.position),
+      ...tempos.map((tempo) => tempo.position),
+    ]);
+    const sortedTicks = Array.from(ticks).sort((a, b) => a - b);
+    const result: {
+      position: number;
+      text: string;
+      x: number;
+    }[] = sortedTicks.map((tick) => {
+      const tempo = tempos.find((tempo) => tempo.position === tick);
+      const timeSignature = timeSignaturesWithTicks.find(
+        (ts) => ts.position === tick,
+      );
+
+      return {
+        position: tick,
+        text: `${tempo?.tempo.bpm ?? ""} ${timeSignature ? `${timeSignature.timeSignature.beats}/${timeSignature.timeSignature.beatType}` : ""}`,
+        x: tickToBaseX(tick, tpqn.value) * zoomX.value,
+      };
+    });
+
+    return result;
+  },
+);
+
+const lastTempo = computed(() => {
+  const maybeTempo = store.state.tempos.findLast((tempo) => {
+    return tempo.position <= playheadTicks.value;
+  });
+  if (!maybeTempo) {
+    throw new UnreachableError("assert: At least one tempo exists.");
+  }
+  return maybeTempo;
+});
+const lastTimeSignature = computed(() => {
+  const maybeTimeSignature = store.state.timeSignatures.findLast(
+    (timeSignature) => {
+      return timeSignature.measureNumber <= currentMeasure.value;
+    },
+  );
+  if (!maybeTimeSignature) {
+    throw new UnreachableError("assert: At least one time signature exists.");
+  }
+  return maybeTimeSignature;
+});
+const tempoChangeExists = computed(
+  () => lastTempo.value.position === playheadTicks.value,
+);
+const timeSignatureChangeExists = computed(
+  () => lastTimeSignature.value.measureNumber === currentMeasure.value,
+);
+
+const contextMenuHeader = computed(() => `${currentMeasure.value}小節目`);
+
+const showTempoOrTimeSignatureChangeDialog = async (
+  props: ExtractPropTypes<typeof TempoOrTimeSignatureChangeDialog>,
+) => {
+  const { promise, resolve } = Promise.withResolvers<
+    TempoOrTimeSignatureChangeDialogResult | "cancelled"
+  >();
+
+  const lastTempo = store.state.tempos.findLast((tempo) => {
+    return tempo.position <= playheadTicks.value;
+  });
+  if (!lastTempo) {
+    throw new UnreachableError("assert: At least one tempo exists.");
+  }
+
+  Dialog.create({
+    component: TempoOrTimeSignatureChangeDialog,
+    componentProps: props,
+  })
+    .onOk((result: TempoOrTimeSignatureChangeDialogResult) => {
+      resolve(result);
+    })
+    .onCancel(() => {
+      resolve("cancelled");
+    });
+
+  const result = await promise;
+  if (result === "cancelled") {
+    return;
+  }
+
+  if (result.tempoChange) {
+    await store.dispatch("COMMAND_SET_TEMPO", {
+      tempo: {
+        ...result.tempoChange,
+        position: playheadTicks.value,
+      },
+    });
+  } else if (!result.tempoChange && tempoChangeExists.value) {
+    await store.dispatch("COMMAND_REMOVE_TEMPO", {
+      position: playheadTicks.value,
+    });
+  }
+
+  if (result.timeSignatureChange) {
+    await store.dispatch("COMMAND_SET_TIME_SIGNATURE", {
+      timeSignature: {
+        ...result.timeSignatureChange,
+        measureNumber: currentMeasure.value,
+      },
+    });
+  } else if (!result.timeSignatureChange && timeSignatureChangeExists.value) {
+    await store.dispatch("COMMAND_REMOVE_TIME_SIGNATURE", {
+      measureNumber: currentMeasure.value,
+    });
+  }
+};
+
+const contextMenudata = computed<ContextMenuItemData[]>(() => {
+  const canDeleteTempo = !(
+    lastTempo.value.position === 0 && tempoChangeExists.value
+  );
+  const canDeleteTimeSignature = !(
+    lastTimeSignature.value.measureNumber === 1 &&
+    timeSignatureChangeExists.value
+  );
+  return [
+    {
+      type: "button",
+      label: tempoChangeExists.value ? `BPM変化を編集` : "BPM変化を挿入",
+      onClick: () => {
+        void showTempoOrTimeSignatureChangeDialog({
+          timeSignatureChange: timeSignatureChangeExists.value
+            ? lastTimeSignature.value
+            : undefined,
+          tempoChange: {
+            bpm: lastTempo.value.bpm,
+          },
+          mode: tempoChangeExists.value ? "edit" : "add",
+          canDeleteTempo,
+          canDeleteTimeSignature,
+        });
+      },
+      disableWhenUiLocked: true,
+    },
+    {
+      type: "button",
+      label: timeSignatureChangeExists.value
+        ? `拍子変化を編集`
+        : "拍子変化を挿入",
+      onClick: () => {
+        void showTempoOrTimeSignatureChangeDialog({
+          tempoChange: tempoChangeExists.value ? lastTempo.value : undefined,
+          timeSignatureChange: {
+            beats: lastTimeSignature.value.beats,
+            beatType: lastTimeSignature.value.beatType,
+          },
+          mode: timeSignatureChangeExists.value ? "edit" : "add",
+          canDeleteTempo,
+          canDeleteTimeSignature,
+        });
+      },
+      disableWhenUiLocked: true,
+    },
+  ];
+});
 </script>
 
 <style scoped lang="scss">
@@ -214,6 +493,20 @@ onUnmounted(() => {
 .sequencer-ruler-measure-number {
   font-weight: 700;
   fill: var(--scheme-color-on-surface-variant);
+}
+.sequencer-ruler-tempo-or-time-signature-change {
+  font-weight: 700;
+  fill: var(--scheme-color-on-surface-variant);
+
+  &:hover {
+    cursor: pointer;
+  }
+}
+
+.sequencer-ruler-tempo-or-time-signature-change-line {
+  backface-visibility: hidden;
+  stroke: var(--scheme-color-on-surface-variant);
+  stroke-width: 1px;
 }
 
 .sequencer-ruler-measure-line {
