@@ -255,11 +255,11 @@ const loopEndX = computed(() => {
 }
 
 :root[is-dark-theme="false"] .sequencer-grid-loop-mask {
-  opacity: 0.08;
+  opacity: 0.05;
 }
 
 :root[is-dark-theme="true"] .sequencer-grid-loop-mask {
-  opacity: 0.38;
+  opacity: 0.24;
 }
 
 .edit-pitch {

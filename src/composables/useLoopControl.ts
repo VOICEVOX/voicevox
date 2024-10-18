@@ -1,4 +1,3 @@
-// useLoopControl.ts
 import { computed } from "vue";
 import { useStore } from "@/store";
 import { tickToSecond } from "@/sing/domain";
@@ -6,60 +5,61 @@ import { tickToSecond } from "@/sing/domain";
 export function useLoopControl() {
   const store = useStore();
 
-  const isLoopEnabled = computed({
-    get: () => store.state.isLoopEnabled,
-    set: (value) => store.commit("SET_LOOP_ENABLED", { isLoopEnabled: value }),
+  const isLoopEnabled = computed(() => store.state.isLoopEnabled);
+  const loopStartTick = computed(() => store.state.loopStartTick);
+  const loopEndTick = computed(() => store.state.loopEndTick);
+
+  const loopStartTime = computed(() => {
+    if (loopStartTick.value == null) return null;
+    return tickToSecond(
+      loopStartTick.value,
+      store.state.tempos,
+      store.state.tpqn,
+    );
   });
 
-  const loopStartTick = computed({
-    get: () => store.state.loopStartTick,
-    set: (value) => store.commit("SET_LOOP_START", { loopStartTick: value }),
+  const loopEndTime = computed(() => {
+    if (loopEndTick.value == null) return null;
+    return tickToSecond(
+      loopEndTick.value,
+      store.state.tempos,
+      store.state.tpqn,
+    );
   });
 
-  const loopEndTick = computed({
-    get: () => store.state.loopEndTick,
-    set: (value) => store.commit("SET_LOOP_END", { loopEndTick: value }),
-  });
-
-  const setLoopEnabled = (value: boolean) => {
-    void store.dispatch("SET_LOOP_ENABLED", { isLoopEnabled: value });
+  const setLoopEnabled = async (value: boolean): Promise<void> => {
+    try {
+      await store.dispatch("SET_LOOP_ENABLED", { isLoopEnabled: value });
+    } catch (error) {
+      throw new Error("Failed to set loop enabled state");
+    }
   };
 
-  const setLoopRange = (startTick: number, endTick: number) => {
-    void store.dispatch("SET_LOOP_RANGE", {
-      loopStartTick: startTick,
-      loopEndTick: endTick,
-    });
-  };
-
-  const loopStartTime = computed(() =>
-    tickToSecond(loopStartTick.value, store.state.tempos, store.state.tpqn),
-  );
-
-  const loopEndTime = computed(() =>
-    tickToSecond(loopEndTick.value, store.state.tempos, store.state.tpqn),
-  );
-
-  const handleLoop = (currentTime: number) => {
-    if (!isLoopEnabled.value || loopEndTick.value <= 0) return currentTime;
-
-    if (currentTime >= loopEndTime.value) {
-      return (
-        loopStartTime.value +
-        ((currentTime - loopStartTime.value) %
-          (loopEndTime.value - loopStartTime.value))
-      );
+  const setLoopRange = async (
+    startTick: number,
+    endTick: number,
+  ): Promise<void> => {
+    if (startTick < 0 || endTick < startTick) {
+      throw new Error("Invalid loop range");
     }
 
-    return currentTime;
+    try {
+      await store.dispatch("SET_LOOP_RANGE", {
+        loopStartTick: startTick,
+        loopEndTick: endTick,
+      });
+    } catch (error) {
+      throw new Error("Failed to set loop range");
+    }
   };
 
   return {
     isLoopEnabled,
     loopStartTick,
     loopEndTick,
+    loopStartTime,
+    loopEndTime,
     setLoopEnabled,
     setLoopRange,
-    handleLoop,
   };
 }

@@ -62,7 +62,12 @@
       </text>
     </svg>
     <!-- ループコントロール -->
-    <SequencerLoopControl ref="loopControl" :width="gridWidth" :offset />
+    <SequencerLoopControl
+      ref="loopControl"
+      :width="gridWidth"
+      :height
+      :offset
+    />
     <!-- ループエリア外を暗くする -->
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -313,10 +318,10 @@ onUnmounted(() => {
 }
 
 :root[is-dark-theme="false"] .sequencer-ruler-loop-mask {
-  opacity: 0.12;
+  opacity: 0.08;
 }
 
 :root[is-dark-theme="true"] .sequencer-ruler-loop-mask {
-  opacity: 0.38;
+  opacity: 0.24;
 }
 </style>

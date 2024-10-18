@@ -2499,62 +2499,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         state.tempos,
         state.tpqn,
       );
-
-      // ループの開始位置に移動する
-      // await actions.SET_PLAYHEAD_POSITION({ position: state.loopStartTick });
-    },
-  },
-
-  SET_LOOP_START: {
-    mutation(state, { loopStartTick }) {
-      if (loopStartTick >= state.loopEndTick) {
-        throw new Error("Loop start must be before loop end");
-      }
-      state.loopStartTick = loopStartTick;
-    },
-    async action({ mutations, state }, { loopStartTick }) {
-      if (!transport) {
-        throw new Error("transport is undefined.");
-      }
-      mutations.SET_LOOP_START({ loopStartTick });
-
-      transport.loopStartTime = tickToSecond(
-        state.loopStartTick,
-        state.tempos,
-        state.tpqn,
-      );
-    },
-  },
-
-  SET_LOOP_END: {
-    mutation(state, { loopEndTick }) {
-      if (loopEndTick <= state.loopStartTick) {
-        throw new Error("Loop end must be after loop start");
-      }
-      state.loopEndTick = loopEndTick;
-    },
-    async action({ mutations, state }, { loopEndTick }) {
-      if (!transport) {
-        throw new Error("transport is undefined.");
-      }
-      mutations.SET_LOOP_END({ loopEndTick });
-
-      transport.loopEndTime = tickToSecond(
-        state.loopEndTick,
-        state.tempos,
-        state.tpqn,
-      );
-    },
-  },
-
-  TOGGLE_LOOP: {
-    action({ state, mutations }) {
-      if (!transport) {
-        throw new Error("transport is undefined.");
-      }
-      mutations.SET_LOOP_ENABLED({ isLoopEnabled: !state.isLoopEnabled });
-
-      transport.loop = state.isLoopEnabled;
     },
   },
 });
