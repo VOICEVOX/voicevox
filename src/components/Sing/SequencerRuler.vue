@@ -59,6 +59,17 @@
       >
         {{ measureInfo.number }}
       </text>
+      <!-- BPM・拍子表示 -->
+      <text
+        v-for="tempoOrTimeSignatureChange in tempoAndTimeSignatureChanges"
+        :key="tempoOrTimeSignatureChange.position"
+        font-size="12"
+        :x="tempoOrTimeSignatureChange.x - offset + 4"
+        y="16"
+        class="sequencer-ruler-tempo-or-time-signature-change"
+      >
+        {{ tempoOrTimeSignatureChange.text }}
+      </text>
     </svg>
     <div class="sequencer-ruler-border-bottom"></div>
     <div
@@ -239,6 +250,44 @@ const currentMeasure = computed(() => {
   return currentMeasure;
 });
 
+const tempoAndTimeSignatureChanges = computed(() => {
+  const timeSignaturesWithTicks = tsPositions.value.map((tsPosition, i) => {
+    return {
+      position: tsPosition,
+      timeSignature: timeSignatures.value[i],
+    };
+  });
+  const tempos = store.state.tempos.map((tempo) => {
+    return {
+      position: tempo.position,
+      tempo,
+    };
+  });
+  const ticks = new Set([
+    ...timeSignaturesWithTicks.map((ts) => ts.position),
+    ...tempos.map((tempo) => tempo.position),
+  ]);
+  const sortedTicks = Array.from(ticks).sort((a, b) => a - b);
+  const result: {
+    position: number;
+    text: string;
+    x: number;
+  }[] = sortedTicks.map((tick) => {
+    const tempo = tempos.find((tempo) => tempo.position === tick);
+    const timeSignature = timeSignaturesWithTicks.find(
+      (ts) => ts.position === tick,
+    );
+
+    return {
+      position: tick,
+      text: `${tempo?.tempo.bpm ?? ""} ${timeSignature ? `${timeSignature.timeSignature.beats}/${timeSignature.timeSignature.beatType}` : ""}`,
+      x: tickToBaseX(tick, tpqn.value) * zoomX.value,
+    };
+  });
+
+  return result;
+});
+
 const lastTempo = computed(() => {
   const maybeTempo = store.state.tempos.findLast((tempo) => {
     return tempo.position <= playheadTicks.value;
@@ -392,6 +441,10 @@ const contextMenudata = computed<ContextMenuItemData[]>(() => {
 }
 
 .sequencer-ruler-measure-number {
+  font-weight: 700;
+  fill: var(--scheme-color-on-surface-variant);
+}
+.sequencer-ruler-tempo-or-time-signature-change {
   font-weight: 700;
   fill: var(--scheme-color-on-surface-variant);
 }
