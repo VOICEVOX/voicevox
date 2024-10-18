@@ -3,7 +3,7 @@
     <QCard class="q-py-sm q-px-md dialog-card">
       <QCardSection>
         <div class="text-h5">
-          {{ changeExisted ? "テンポ・拍子の編集" : "テンポ・拍子の追加" }}
+          {{ props.mode === "edit" ? "BPM・拍子の編集" : "BPM・拍子の追加" }}
         </div>
       </QCardSection>
 
@@ -11,7 +11,7 @@
 
       <QCardSection>
         <QCardActions>
-          <div>テンポ</div>
+          <div>BPM</div>
           <QSpace />
           <QInput
             v-model.number="tempoChange.bpm"
@@ -20,19 +20,28 @@
             dense
             hideBottomSpace
             class="value-input"
-            aria-label="テンポ"
+            aria-label="BPM"
           />
-          <QToggle v-model="tempoChangeEnabled" aria-label="テンポ変更の有無" />
+          <QToggle
+            v-model="tempoChangeEnabled"
+            aria-label="BPM変更の有無"
+            :disable="!props.canDeleteTempo"
+          />
         </QCardActions>
         <QCardActions>
           <div>拍子</div>
           <QSpace />
-          <QInput
-            v-model.number="timeSignatureChange.beats"
-            type="number"
+          <QSelect
+            v-model="timeSignatureChange.beats"
+            :options="beatsOptions"
             :disable="!timeSignatureChangeEnabled"
+            mapOptions
+            emitValue
             dense
-            hideBottomSpace
+            userInputs
+            optionsDense
+            transitionShow="none"
+            transitionHide="none"
             class="value-input"
             aria-label="拍子の分子"
           />
@@ -59,6 +68,7 @@
           <QToggle
             v-model="timeSignatureChangeEnabled"
             aria-label="拍子変更の有無"
+            :disable="!props.canDeleteTimeSignature"
           />
         </QCardActions>
       </QCardSection>
@@ -101,13 +111,21 @@ import {
 } from "@/sing/domain";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 
-export type ExportTarget = "master" | "stem";
+export type TempoOrTimeSignatureChangeDialogResult = {
+  timeSignatureChange: Omit<TimeSignature, "measureNumber"> | undefined;
+  tempoChange: Omit<Tempo, "position"> | undefined;
+};
+
 const { dialogRef, onDialogOK, onDialogCancel } = useDialogPluginComponent();
 
 const modelValue = defineModel<boolean>();
 const props = defineProps<{
   timeSignatureChange: Omit<TimeSignature, "measureNumber"> | undefined;
   tempoChange: Omit<Tempo, "position"> | undefined;
+
+  canDeleteTimeSignature: boolean;
+  canDeleteTempo: boolean;
+  mode: "add" | "edit";
 }>();
 defineEmits({
   ...useDialogPluginComponent.emitsObject,
@@ -127,32 +145,42 @@ const tempoChange = ref(
   },
 );
 
+const beatsOptions = computed(() => {
+  return Array.from({ length: 32 }, (_, i) => ({
+    label: (i + 1).toString(),
+    value: i + 1,
+  }));
+});
+
 const beatTypeOptions = BEAT_TYPES.map((beatType) => ({
   label: beatType.toString(),
   value: beatType,
 }));
 
-const changeExisted = computed(
-  () =>
-    props.timeSignatureChange != undefined || props.tempoChange != undefined,
-);
 const willChangeExist = computed(
   () => timeSignatureChangeEnabled.value || tempoChangeEnabled.value,
 );
 const okText = computed(() => {
-  if (changeExisted.value && willChangeExist.value) {
+  if (props.mode === "edit" && willChangeExist.value) {
     return "変更する";
-  } else if (changeExisted.value && !willChangeExist.value) {
+  } else if (props.mode === "edit" && !willChangeExist.value) {
     return "削除する";
   } else {
     return "追加する";
   }
 });
 const canOk = computed(() => {
-  if (changeExisted.value) {
+  if (props.mode === "edit") {
+    if (
+      (!props.canDeleteTimeSignature && !timeSignatureChangeEnabled.value) ||
+      (!props.canDeleteTempo && !tempoChangeEnabled.value)
+    ) {
+      // 変更：削除できない場合
+      return false;
+    }
     // 変更：既存のものと異なるものが入力されているか
 
-    // 拍子・テンポの存在が切り替わる場合
+    // 拍子・BPMの存在が切り替わる場合
     if (
       (props.timeSignatureChange != undefined) !=
         timeSignatureChangeEnabled.value ||
@@ -171,7 +199,7 @@ const canOk = computed(() => {
       return true;
     }
 
-    // テンポの値が変わる場合
+    // BPMの値が変わる場合
     if (
       props.tempoChange != undefined &&
       props.tempoChange.bpm != tempoChange.value.bpm
@@ -182,7 +210,7 @@ const canOk = computed(() => {
     return false;
   } else {
     // 追加：どちらかが入力されているか
-    return changeExisted.value || willChangeExist.value;
+    return willChangeExist.value;
   }
 });
 
