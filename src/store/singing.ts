@@ -474,6 +474,9 @@ export const singingStoreState: SingingStoreState = {
   nowAudioExporting: false,
   cancellationOfAudioExportRequested: false,
   isSongSidebarOpen: false,
+  isLoopEnabled: true,
+  loopStartTick: 0,
+  loopEndTick: 0,
 };
 
 export const singingStore = createPartialStore<SingingStoreTypes>({
@@ -1153,6 +1156,21 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         throw new Error("transport is undefined.");
       }
       mutations.SET_PLAYBACK_STATE({ nowPlaying: true });
+
+      // TODO: 以下の処理（ループの設定）は再生開始時に毎回行う必要はないので、
+      //       ソングエディタ初期化時に1回だけ行うようにする
+      // NOTE: 初期化のactionを作った方が良いかも
+      transport.loop = state.isLoopEnabled;
+      transport.loopStartTime = tickToSecond(
+        state.loopStartTick,
+        state.tempos,
+        state.tpqn,
+      );
+      transport.loopEndTime = tickToSecond(
+        state.loopEndTick,
+        state.tempos,
+        state.tpqn,
+      );
 
       transport.start();
       animationTimer.start(() => {
@@ -2431,6 +2449,46 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         state.tpqn,
       );
       return Math.max(1, lastNoteEndTime + 1);
+    },
+  },
+
+  SET_LOOP_ENABLED: {
+    mutation(state, { isLoopEnabled }: { isLoopEnabled: boolean }) {
+      state.isLoopEnabled = isLoopEnabled;
+    },
+    action(
+      { mutations, state },
+      { isLoopEnabled }: { isLoopEnabled: boolean },
+    ) {
+      if (!transport) {
+        throw new Error("transport is undefined.");
+      }
+      mutations.SET_LOOP_ENABLED({ isLoopEnabled });
+      transport.loop = state.isLoopEnabled;
+    },
+  },
+
+  SET_LOOP_RANGE: {
+    mutation(state, { loopStartTick, loopEndTick }) {
+      state.loopStartTick = loopStartTick;
+      state.loopEndTick = loopEndTick;
+    },
+    async action({ mutations, state }, { loopStartTick, loopEndTick }) {
+      if (!transport) {
+        throw new Error("transport is undefined.");
+      }
+      mutations.SET_LOOP_RANGE({ loopStartTick, loopEndTick });
+
+      transport.loopStartTime = tickToSecond(
+        state.loopStartTick,
+        state.tempos,
+        state.tpqn,
+      );
+      transport.loopEndTime = tickToSecond(
+        state.loopEndTick,
+        state.tempos,
+        state.tpqn,
+      );
     },
   },
 });
