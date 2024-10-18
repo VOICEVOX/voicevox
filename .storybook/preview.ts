@@ -8,7 +8,7 @@ import { api as browserSandbox } from "@/backend/browser/sandbox";
 
 import "@quasar/extras/material-icons/material-icons.css";
 import "quasar/dist/quasar.sass";
-import "../src/styles/_index.scss";
+import "@/styles/_index.scss";
 import { UnreachableError } from "@/type/utility";
 import { setThemeToCss } from "@/domain/dom";
 
@@ -68,6 +68,8 @@ const preview: Preview = {
       let observer: MutationObserver | undefined = undefined;
       return {
         async mounted() {
+          document.body.setAttribute("data-editor-font", "default");
+
           const root = document.documentElement;
           const themes = await browserSandbox.getAvailableThemes();
           let lastTheme: boolean | undefined = undefined;
