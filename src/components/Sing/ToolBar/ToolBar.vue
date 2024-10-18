@@ -170,7 +170,6 @@ import { useStore } from "@/store";
 
 import {
   BEAT_TYPES,
-  MIN_BPM,
   getSnapTypes,
   isTriplet,
   isValidBeatType,
