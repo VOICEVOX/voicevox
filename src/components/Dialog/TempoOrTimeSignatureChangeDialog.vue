@@ -2,7 +2,9 @@
   <QDialog ref="dialogRef" v-model="modelValue">
     <QCard class="q-py-sm q-px-md dialog-card">
       <QCardSection>
-        <div class="text-h5">テンポ・拍子変更</div>
+        <div class="text-h5">
+          {{ changeExisted ? "テンポ・拍子の編集" : "テンポ・拍子の追加" }}
+        </div>
       </QCardSection>
 
       <QSeparator />
@@ -11,7 +13,53 @@
         <QCardActions>
           <div>テンポ</div>
           <QSpace />
-          （テンポ変更）
+          <QInput
+            v-model.number="tempoChange.bpm"
+            type="number"
+            :disable="!tempoChangeEnabled"
+            dense
+            hideBottomSpace
+            class="value-input"
+            aria-label="テンポ"
+          />
+          <QToggle v-model="tempoChangeEnabled" aria-label="テンポ変更の有無" />
+        </QCardActions>
+        <QCardActions>
+          <div>拍子</div>
+          <QSpace />
+          <QInput
+            v-model.number="timeSignatureChange.beats"
+            type="number"
+            :disable="!timeSignatureChangeEnabled"
+            dense
+            hideBottomSpace
+            class="value-input"
+            aria-label="拍子の分子"
+          />
+          <div
+            class="q-px-sm"
+            :class="{ disabled: !timeSignatureChangeEnabled }"
+          >
+            /
+          </div>
+          <QSelect
+            v-model="timeSignatureChange.beatType"
+            :options="beatTypeOptions"
+            :disable="!timeSignatureChangeEnabled"
+            mapOptions
+            emitValue
+            dense
+            userInputs
+            optionsDense
+            transitionShow="none"
+            transitionHide="none"
+            class="value-input"
+            aria-label="拍子の分母"
+          />
+          <QToggle
+            v-model="timeSignatureChangeEnabled"
+            aria-label="拍子変更の有無"
+          />
         </QCardActions>
       </QCardSection>
 
@@ -21,7 +69,6 @@
         <QSpace />
         <QBtn
           unelevated
-          align="right"
           label="キャンセル"
           color="toolbar-button"
           textColor="toolbar-button-display"
@@ -30,8 +77,8 @@
         />
         <QBtn
           unelevated
-          align="right"
-          label="変更する"
+          :label="okText"
+          :disable="!canOk"
           color="primary"
           textColor="display-on-primary"
           class="text-no-wrap text-bold q-mr-sm"
@@ -43,10 +90,16 @@
 </template>
 
 <script setup lang="ts">
-import { useDialogPluginComponent } from "quasar";
-import { ref } from "vue";
-import BaseCell from "./ExportSongAudioDialog/BaseCell.vue";
+import { QInput, useDialogPluginComponent } from "quasar";
+import { computed, ref } from "vue";
 import { Tempo, TimeSignature } from "@/store/type";
+import {
+  BEAT_TYPES,
+  DEFAULT_BEATS,
+  DEFAULT_BEAT_TYPE,
+  DEFAULT_BPM,
+} from "@/sing/domain";
+import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 
 export type ExportTarget = "master" | "stem";
 const { dialogRef, onDialogOK, onDialogCancel } = useDialogPluginComponent();
@@ -60,11 +113,86 @@ defineEmits({
   ...useDialogPluginComponent.emitsObject,
 });
 
-const timeSignatureChange = ref(props.timeSignatureChange);
-const tempoChange = ref(props.tempoChange);
+const timeSignatureChangeEnabled = ref(props.timeSignatureChange != undefined);
+const timeSignatureChange = ref(
+  cloneWithUnwrapProxy(props.timeSignatureChange) || {
+    beats: DEFAULT_BEATS,
+    beatType: DEFAULT_BEAT_TYPE,
+  },
+);
+const tempoChangeEnabled = ref(props.tempoChange != undefined);
+const tempoChange = ref(
+  cloneWithUnwrapProxy(props.tempoChange) || {
+    bpm: DEFAULT_BPM,
+  },
+);
+
+const beatTypeOptions = BEAT_TYPES.map((beatType) => ({
+  label: beatType.toString(),
+  value: beatType,
+}));
+
+const changeExisted = computed(
+  () =>
+    props.timeSignatureChange != undefined || props.tempoChange != undefined,
+);
+const willChangeExist = computed(
+  () => timeSignatureChangeEnabled.value || tempoChangeEnabled.value,
+);
+const okText = computed(() => {
+  if (changeExisted.value && willChangeExist.value) {
+    return "変更する";
+  } else if (changeExisted.value && !willChangeExist.value) {
+    return "削除する";
+  } else {
+    return "追加する";
+  }
+});
+const canOk = computed(() => {
+  if (changeExisted.value) {
+    // 変更：既存のものと異なるものが入力されているか
+
+    // 拍子・テンポの存在が切り替わる場合
+    if (
+      (props.timeSignatureChange != undefined) !=
+        timeSignatureChangeEnabled.value ||
+      (props.tempoChange != undefined) != tempoChangeEnabled.value
+    ) {
+      return true;
+    }
+
+    // 拍子の値が変わる場合
+    if (
+      props.timeSignatureChange != undefined &&
+      (props.timeSignatureChange.beats != timeSignatureChange.value.beats ||
+        props.timeSignatureChange.beatType !=
+          timeSignatureChange.value.beatType)
+    ) {
+      return true;
+    }
+
+    // テンポの値が変わる場合
+    if (
+      props.tempoChange != undefined &&
+      props.tempoChange.bpm != tempoChange.value.bpm
+    ) {
+      return true;
+    }
+
+    return false;
+  } else {
+    // 追加：どちらかが入力されているか
+    return changeExisted.value || willChangeExist.value;
+  }
+});
 
 const handleOk = () => {
-  onDialogOK();
+  onDialogOK({
+    timeSignatureChange: timeSignatureChangeEnabled.value
+      ? timeSignatureChange.value
+      : undefined,
+    tempoChange: tempoChangeEnabled.value ? tempoChange.value : undefined,
+  });
 };
 
 // キャンセルボタンクリック時
@@ -80,8 +208,7 @@ const handleCancel = () => {
   max-width: 80vw;
 }
 
-.scrollable-area {
-  overflow-y: auto;
-  max-height: calc(100vh - 100px - 295px);
+.value-input {
+  width: 60px;
 }
 </style>

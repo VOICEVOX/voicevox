@@ -169,6 +169,8 @@ import EditTargetSwicher from "./EditTargetSwicher.vue";
 import { useStore } from "@/store";
 
 import {
+  BEAT_TYPES,
+  MIN_BPM,
   getSnapTypes,
   isTriplet,
   isValidBeatType,
@@ -257,12 +259,10 @@ const beatsOptions = computed(() => {
   }));
 });
 
-const beatTypeOptions = computed(() => {
-  return [2, 4, 8, 16, 32].map((beatType) => ({
-    label: beatType.toString(),
-    value: beatType,
-  }));
-});
+const beatTypeOptions = BEAT_TYPES.map((beatType) => ({
+  label: beatType.toString(),
+  value: beatType,
+}));
 
 const bpmInputBuffer = ref(120);
 const beatsInputBuffer = ref(4);
