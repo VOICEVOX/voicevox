@@ -85,7 +85,7 @@ export const showConfirmDialog = async (options: TextConfirmDialogOptions) => {
       title: options.title,
       message: options.message,
       buttons: [options.cancel, options.actionName],
-      default: 0,
+      default: 1,
     },
   }).onOk(({ index }: { index: number }) => resolve(index));
 
