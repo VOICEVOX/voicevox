@@ -93,44 +93,46 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { useStore } from "@/store";
 import { keyInfos, getKeyBaseHeight, tickToBaseX } from "@/sing/viewHelper";
 import { getMeasureDuration, getNoteDuration } from "@/sing/domain";
 import { TimeSignature } from "@/store/type";
 
-const store = useStore();
-const tpqn = computed(() => store.state.tpqn);
-const timeSignatures = computed(() => store.state.timeSignatures);
-const zoomX = computed(() => store.state.sequencerZoomX);
-const zoomY = computed(() => store.state.sequencerZoomY);
+const props = defineProps<{
+  tpqn: number;
+  timeSignatures: TimeSignature[];
+  zoomX: number;
+  zoomY: number;
+  snapType: number;
+  numMeasures: number;
+}>();
+
 const gridCellTicks = computed(() => {
-  return getNoteDuration(store.state.sequencerSnapType, tpqn.value);
+  return getNoteDuration(props.snapType, props.tpqn);
 });
 const gridCellWidth = computed(() => {
-  return tickToBaseX(gridCellTicks.value, tpqn.value) * zoomX.value;
+  return tickToBaseX(gridCellTicks.value, props.tpqn) * props.zoomX;
 });
 const gridCellBaseHeight = getKeyBaseHeight();
 const gridCellHeight = computed(() => {
-  return gridCellBaseHeight * zoomY.value;
+  return gridCellBaseHeight * props.zoomY;
 });
 const beatsPerMeasure = (timeSignature: TimeSignature) => timeSignature.beats;
 const beatWidth = (timeSignature: TimeSignature) => {
   const beatType = timeSignature.beatType;
-  const wholeNoteDuration = tpqn.value * 4;
+  const wholeNoteDuration = props.tpqn * 4;
   const beatTicks = wholeNoteDuration / beatType;
-  return tickToBaseX(beatTicks, tpqn.value) * zoomX.value;
+  return tickToBaseX(beatTicks, props.tpqn) * props.zoomX;
 };
 
 const gridWidth = computed(() => {
   let numOfGridColumns = 0;
-  for (const [i, timeSignature] of timeSignatures.value.entries()) {
-    const nextTimeSignature = timeSignatures.value[i + 1];
+  for (const [i, timeSignature] of props.timeSignatures.entries()) {
+    const nextTimeSignature = props.timeSignatures[i + 1];
     const nextMeasureNumber =
-      nextTimeSignature?.measureNumber ??
-      store.getters.SEQUENCER_NUM_MEASURES + 1;
+      nextTimeSignature?.measureNumber ?? props.numMeasures + 1;
     const beats = timeSignature.beats;
     const beatType = timeSignature.beatType;
-    const measureDuration = getMeasureDuration(beats, beatType, tpqn.value);
+    const measureDuration = getMeasureDuration(beats, beatType, props.tpqn);
     numOfGridColumns +=
       Math.round(measureDuration / gridCellTicks.value) *
       (nextMeasureNumber - timeSignature.measureNumber);
@@ -143,11 +145,10 @@ const gridHeight = computed(() => {
 
 const gridPatterns = computed(() => {
   const gridPatterns: { id: string; x: number; width: number }[] = [];
-  for (const [i, timeSignature] of timeSignatures.value.entries()) {
-    const nextTimeSignature = timeSignatures.value[i + 1];
+  for (const [i, timeSignature] of props.timeSignatures.entries()) {
+    const nextTimeSignature = props.timeSignatures[i + 1];
     const nextMeasureNumber =
-      nextTimeSignature?.measureNumber ??
-      store.getters.SEQUENCER_NUM_MEASURES + 1;
+      nextTimeSignature?.measureNumber ?? props.numMeasures + 1;
     gridPatterns.push({
       id: `sequencer-grid-pattern-${i}`,
       x:
@@ -186,10 +187,10 @@ const gridLines = computed(() => {
 });
 const measureLines = computed(() => {
   const measureLines = [0];
-  for (const [i, timeSignature] of timeSignatures.value.entries()) {
-    const nextTimeSignature = timeSignatures.value[i + 1];
+  for (const [i, timeSignature] of props.timeSignatures.entries()) {
+    const nextTimeSignature = props.timeSignatures[i + 1];
     const nextMeasureNumber =
-      nextTimeSignature?.measureNumber ?? store.getters.SEQUENCER_NUM_MEASURES;
+      nextTimeSignature?.measureNumber ?? props.numMeasures + 1;
     const width = measureWidth(timeSignature);
 
     const left = measureLines[measureLines.length - 1];
@@ -212,7 +213,7 @@ const beatLineIndices = (timeSignature: TimeSignature) =>
 const snapLinePositions = (timeSignature: TimeSignature) => {
   const snapTicks = gridCellTicks.value;
   const measureTicks =
-    (tpqn.value * 4 * beatsPerMeasure(timeSignature)) / timeSignature.beatType;
+    (props.tpqn * 4 * beatsPerMeasure(timeSignature)) / timeSignature.beatType;
   const snapCount = Math.floor(measureTicks / snapTicks);
 
   return Array.from({ length: snapCount }, (_, index) => {

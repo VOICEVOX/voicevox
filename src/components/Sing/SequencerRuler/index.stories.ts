@@ -43,7 +43,51 @@ export default meta;
 type Story = StoryObj<typeof Presentation>;
 
 export const Default: Story = {
+  name: "デフォルト",
   args: {},
+};
+
+export const WithBpmChange: Story = {
+  name: "BPM変化",
+  args: {
+    tempos: [
+      {
+        bpm: 120,
+        position: 0,
+      },
+      {
+        bpm: 180,
+        position: 480,
+      },
+      {
+        bpm: 240,
+        position: 960,
+      },
+    ],
+  },
+};
+
+export const WithTimeSignatureChange: Story = {
+  name: "拍子変化",
+  args: {
+    timeSignatures: [
+      {
+        beats: 4,
+        beatType: 4,
+        measureNumber: 1,
+      },
+      {
+        beats: 3,
+        beatType: 4,
+        measureNumber: 3,
+      },
+      {
+        beats: 9,
+        beatType: 16,
+        measureNumber: 5,
+      },
+    ],
+  },
 };
 
 // pointerのcoords指定がうまくいかないので一旦コメントアウト。
