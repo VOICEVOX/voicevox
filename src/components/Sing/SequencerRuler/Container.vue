@@ -1,7 +1,7 @@
 <template>
   <Presentation
     v-bind="props"
-    :playheadTicks
+    :playheadPosition
     :tpqn
     :tempos
     :timeSignatures
@@ -43,13 +43,13 @@ const timeSignatures = computed(() => store.state.timeSignatures);
 const zoomX = computed(() => store.state.sequencerZoomX);
 const snapType = computed(() => store.state.sequencerSnapType);
 
-const playheadTicks = ref(0);
+const playheadPosition = ref(0);
 
 const playheadPositionChangeListener = (position: number) => {
-  playheadTicks.value = position;
+  playheadPosition.value = position;
 };
 const updatePlayheadTicks = (ticks: number) => {
-  playheadTicks.value = ticks;
+  playheadPosition.value = ticks;
 
   void store.dispatch("SET_PLAYHEAD_POSITION", {
     position: ticks,
