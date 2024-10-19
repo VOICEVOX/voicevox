@@ -59,29 +59,3 @@ export const WithTimeSignatureChange: Story = {
     ],
   },
 };
-
-// pointerのcoords指定がうまくいかないので一旦コメントアウト。
-// TODO: ちゃんと動くようにする
-//
-// export const MovePlayhead: Story = {
-//   name: "再生位置を動かせる",
-//   args: {
-//     "onUpdate:playheadPosition": fn(),
-//   },
-//
-//   play: async ({ canvasElement, args }) => {
-//     const ruler = canvasElement.querySelector("svg");
-//     if (!ruler) {
-//       throw new Error("Ruler not found");
-//     }
-//     await userEvent.pointer({
-//       keys: "[MouseLeft]",
-//       target: ruler,
-//       coords: {
-//         offsetX: 10,
-//         offsetY: 0,
-//       },
-//     });
-//     await expect(args["onUpdate:playheadPosition"]).toBeCalled();
-//   },
-// };
