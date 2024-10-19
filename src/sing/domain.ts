@@ -210,8 +210,12 @@ export function getMeasureDuration(
   beatType: number,
   tpqn: number,
 ) {
-  const wholeNoteDuration = tpqn * 4;
-  return (wholeNoteDuration / beatType) * beats;
+  return ((tpqn * 4) / beatType) * beats;
+}
+
+// NOTE: 戻り値の単位はtick
+export function getBeatDuration(beats: number, beatType: number, tpqn: number) {
+  return (tpqn * 4) / beatType;
 }
 
 export function getNumMeasures(
