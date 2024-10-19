@@ -113,6 +113,7 @@ export const showWarningDialog = async (options: TextWarningDialogOptions) => {
 
   return index === 1 ? "OK" : "CANCEL";
 };
+
 export const showQuestionDialog = async (
   options: TextQuestionDialogOptions,
 ) => {

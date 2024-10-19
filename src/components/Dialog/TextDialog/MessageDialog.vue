@@ -1,5 +1,5 @@
 <!--
-  ブラウザ版のメッセージダイアログ。
+  メッセージダイアログ。
   QuasarのDialog Pluginから呼ぶことを想定。
   参照：https://quasar.dev/quasar-plugins/dialog
 -->
