@@ -18,25 +18,39 @@
     >
       <defs>
         <pattern
-          id="sequencer-ruler-measure"
+          v-for="(timeSignature, tsIndex) in timeSignatures"
+          :id="`sequencer-ruler-measure-${tsIndex}`"
+          :key="`pattern-${tsIndex}`"
           patternUnits="userSpaceOnUse"
-          :x="-offset % (beatWidth * beatsPerMeasure)"
-          :width="beatWidth * beatsPerMeasure"
+          :x="
+            (-offset %
+              (beatWidth(timeSignature) * beatsPerMeasure(timeSignature))) +
+            gridPatterns[tsIndex].x
+          "
+          :width="beatWidth(timeSignature) * beatsPerMeasure(timeSignature)"
           :height
         >
           <!-- 拍線（小節の最初を除く） -->
           <line
-            v-for="n in beatsPerMeasure"
+            v-for="n in beatsPerMeasure(timeSignature)"
             :key="n"
-            :x1="beatWidth * n"
-            :x2="beatWidth * n"
+            :x1="beatWidth(timeSignature) * n"
+            :x2="beatWidth(timeSignature) * n"
             y1="28"
             :y2="height"
             class="sequencer-ruler-beat-line"
           />
         </pattern>
       </defs>
-      <rect x="0.5" y="0" :width :height fill="url(#sequencer-ruler-measure)" />
+      <rect
+        v-for="(gridPattern, index) in gridPatterns"
+        :key="`grid-${index}`"
+        :x="0.5 + gridPattern.x - offset"
+        y="0"
+        :height
+        :width="gridPattern.width"
+        :fill="`url(#sequencer-ruler-measure-${index})`"
+      />
       <!-- 小節線 -->
       <line
         v-for="measureInfo in measureInfos"
@@ -121,6 +135,7 @@ import ContextMenu, {
   ContextMenuItemData,
 } from "@/components/Menu/ContextMenu.vue";
 import { UnreachableError } from "@/type/utility";
+import { TimeSignature } from "@/store/type";
 
 const props = withDefaults(
   defineProps<{
@@ -139,15 +154,13 @@ const playheadTicks = ref(0);
 const tpqn = computed(() => state.tpqn);
 const timeSignatures = computed(() => state.timeSignatures);
 const zoomX = computed(() => state.sequencerZoomX);
-const beatsPerMeasure = computed(() => {
-  return timeSignatures.value[0].beats;
-});
-const beatWidth = computed(() => {
-  const beatType = timeSignatures.value[0].beatType;
+const beatsPerMeasure = (timeSignature: TimeSignature) => timeSignature.beats;
+const beatWidth = (timeSignature: TimeSignature) => {
+  const beatType = timeSignature.beatType;
   const wholeNoteDuration = tpqn.value * 4;
   const beatTicks = wholeNoteDuration / beatType;
   return tickToBaseX(beatTicks, tpqn.value) * zoomX.value;
-});
+};
 const tsPositions = computed(() => {
   return getTimeSignaturePositions(timeSignatures.value, tpqn.value);
 });
@@ -163,6 +176,30 @@ const endTicks = computed(() => {
 const width = computed(() => {
   return tickToBaseX(endTicks.value, tpqn.value) * zoomX.value;
 });
+const gridPatterns = computed(() => {
+  const gridPatterns: { id: string; x: number; width: number }[] = [];
+  for (const [i, timeSignature] of timeSignatures.value.entries()) {
+    const nextTimeSignature = timeSignatures.value[i + 1];
+    const nextMeasureNumber =
+      nextTimeSignature?.measureNumber ??
+      store.getters.SEQUENCER_NUM_MEASURES + 1;
+    gridPatterns.push({
+      id: `sequencer-grid-pattern-${i}`,
+      x:
+        gridPatterns.length === 0
+          ? 0
+          : gridPatterns[gridPatterns.length - 1].x +
+            gridPatterns[gridPatterns.length - 1].width,
+      width:
+        beatWidth(timeSignature) *
+        beatsPerMeasure(timeSignature) *
+        (nextMeasureNumber - timeSignature.measureNumber),
+    });
+  }
+
+  return gridPatterns;
+});
+
 const measureInfos = computed(() => {
   return timeSignatures.value.flatMap((timeSignature, i) => {
     const measureDuration = getMeasureDuration(
