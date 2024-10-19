@@ -17,9 +17,9 @@ import {
 import { createDotNotationPartialStore as createPartialStore } from "./vuex";
 import { ActivePointScrollMode } from "@/type/preload";
 import {
-  TextAlertDialogOptions,
-  TextConfirmDialogOptions,
-  TextWarningDialogOptions,
+  AlertDialogOptions,
+  ConfirmDialogOptions,
+  WarningDialogOptions,
   LoadingScreenOption,
   NotifyAndNotShowAgainButtonOption,
   connectAndExportTextWithDialog,
@@ -246,7 +246,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
 
   SHOW_ALERT_DIALOG: {
     action: createDotNotationUILockAction(
-      async (_, payload: TextAlertDialogOptions) => {
+      async (_, payload: AlertDialogOptions) => {
         return await showAlertDialog(payload);
       },
     ),
@@ -254,7 +254,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
 
   SHOW_CONFIRM_DIALOG: {
     action: createDotNotationUILockAction(
-      async (_, payload: TextConfirmDialogOptions) => {
+      async (_, payload: ConfirmDialogOptions) => {
         return await showConfirmDialog(payload);
       },
     ),
@@ -262,7 +262,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
 
   SHOW_WARNING_DIALOG: {
     action: createDotNotationUILockAction(
-      async (_, payload: TextWarningDialogOptions) => {
+      async (_, payload: WarningDialogOptions) => {
         return await showWarningDialog(payload);
       },
     ),

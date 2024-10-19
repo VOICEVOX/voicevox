@@ -60,9 +60,9 @@ import {
   TextDialogResult,
   NotifyAndNotShowAgainButtonOption,
   LoadingScreenOption,
-  TextAlertDialogOptions,
-  TextConfirmDialogOptions,
-  TextWarningDialogOptions,
+  AlertDialogOptions,
+  ConfirmDialogOptions,
+  WarningDialogOptions,
 } from "@/components/Dialog/Dialog";
 import {
   LatestProjectType,
@@ -1972,15 +1972,15 @@ export type UiStoreTypes = {
   };
 
   SHOW_ALERT_DIALOG: {
-    action(payload: TextAlertDialogOptions): TextDialogResult;
+    action(payload: AlertDialogOptions): TextDialogResult;
   };
 
   SHOW_CONFIRM_DIALOG: {
-    action(payload: TextConfirmDialogOptions): TextDialogResult;
+    action(payload: ConfirmDialogOptions): TextDialogResult;
   };
 
   SHOW_WARNING_DIALOG: {
-    action(payload: TextWarningDialogOptions): TextDialogResult;
+    action(payload: WarningDialogOptions): TextDialogResult;
   };
 
   SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON: {

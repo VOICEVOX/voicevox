@@ -16,27 +16,27 @@ import { withProgressDotNotation as withProgress } from "@/store/ui";
 type MediaType = "audio" | "text";
 
 export type TextDialogResult = "OK" | "CANCEL";
-export type TextAlertDialogOptions = {
+export type AlertDialogOptions = {
   type?: DialogType;
   title: string;
   message: string;
   ok?: string;
 };
-export type TextConfirmDialogOptions = {
+export type ConfirmDialogOptions = {
   type?: DialogType;
   title: string;
   message: string;
   actionName: string;
   cancel?: string;
 };
-export type TextWarningDialogOptions = {
+export type WarningDialogOptions = {
   type?: DialogType;
   title: string;
   message: string;
   actionName: string;
   cancel?: string;
 };
-export type TextQuestionDialogOptions = {
+export type QuestionDialogOptions = {
   type?: DialogType;
   title: string;
   message: string;
@@ -55,7 +55,7 @@ export type NotifyAndNotShowAgainButtonOption = {
 export type LoadingScreenOption = { message: string };
 
 // 汎用ダイアログを表示
-export const showAlertDialog = async (options: TextAlertDialogOptions) => {
+export const showAlertDialog = async (options: AlertDialogOptions) => {
   options.ok ??= "閉じる";
 
   const { promise, resolve } = Promise.withResolvers<void>();
@@ -74,7 +74,7 @@ export const showAlertDialog = async (options: TextAlertDialogOptions) => {
   return "OK" as const;
 };
 
-export const showConfirmDialog = async (options: TextConfirmDialogOptions) => {
+export const showConfirmDialog = async (options: ConfirmDialogOptions) => {
   options.cancel ??= "キャンセル";
 
   const { promise, resolve } = Promise.withResolvers<number>();
@@ -94,7 +94,7 @@ export const showConfirmDialog = async (options: TextConfirmDialogOptions) => {
   return index === 1 ? "OK" : "CANCEL";
 };
 
-export const showWarningDialog = async (options: TextWarningDialogOptions) => {
+export const showWarningDialog = async (options: WarningDialogOptions) => {
   options.cancel ??= "キャンセル";
 
   const { promise, resolve } = Promise.withResolvers<number>();
@@ -115,7 +115,7 @@ export const showWarningDialog = async (options: TextWarningDialogOptions) => {
 };
 
 export const showQuestionDialog = async (
-  options: TextQuestionDialogOptions,
+  options: QuestionDialogOptions,
 ) => {
   const { promise, resolve } = Promise.withResolvers<number>();
   Dialog.create({
