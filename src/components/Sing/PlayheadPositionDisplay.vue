@@ -4,11 +4,11 @@
       <div class="min-and-sec">{{ minAndSecStr }}</div>
       <div class="millisec">.{{ milliSecStr }}</div>
     </div>
-    <div v-if="displayMode === 'MBSR'" class="playhead-position">
+    <div v-if="displayMode === 'MBS'" class="playhead-position">
       <div class="measures">{{ measuresStr }}.</div>
       <div class="beats">{{ beatsStr }}.</div>
-      <div class="sixteenths">{{ sixteenthsStr }}</div>
-      <div class="remaining">.{{ remainingStr }}</div>
+      <div class="sixteenths-integer-part">{{ sixteenthsIntegerPartStr }}</div>
+      <div class="sixteenths-decimal-part">.{{ sixteenthsDecimalPartStr }}</div>
     </div>
     <ContextMenu ref="contextMenu" :menudata="contextMenuData" />
   </div>
@@ -30,7 +30,7 @@ import { TimeSignature } from "@/store/type";
 const store = useStore();
 
 const playheadTicks = ref(0);
-const displayMode: Ref<"Seconds" | "MBSR"> = ref("MBSR");
+const displayMode: Ref<"Seconds" | "MBS"> = ref("MBS");
 
 const timeSignatures = computed(() => {
   const tpqn = store.state.tpqn;
@@ -60,10 +60,10 @@ const findTimeSignatureIndex = (
   return timeSignatures.length - 1;
 };
 
-// Measures, Beats, Sixteenths, Remaining
-const mbsr = computed(() => {
-  if (displayMode.value !== "MBSR") {
-    return { measures: 1, beats: 0, sixteenths: 0, remaining: 0 };
+// Measures, Beats, Sixteenths
+const mbs = computed(() => {
+  if (displayMode.value !== "MBS") {
+    return { measures: 1, beats: 1, sixteenths: 1, remaining: 0 };
   }
   const tpqn = store.state.tpqn;
 
@@ -84,30 +84,30 @@ const mbsr = computed(() => {
   const beats = 1 + Math.floor(posInMeasure / beatDuration);
 
   const posInBeat = posInMeasure - beatDuration * (beats - 1);
-  const sixteenths = 1 + Math.floor(posInBeat / sixteenthDuration);
+  const sixteenths = 1 + posInBeat / sixteenthDuration;
 
-  const posInSixteenths = posInBeat - sixteenthDuration * (sixteenths - 1);
-  const remaining = Math.floor((posInSixteenths * 100) / sixteenthDuration);
-
-  return { measures, beats, sixteenths, remaining };
+  return { measures, beats, sixteenths };
 });
 
 const measuresStr = computed(() => {
-  return mbsr.value.measures >= 0
-    ? String(mbsr.value.measures).padStart(3, "0")
-    : String(mbsr.value.measures);
+  return mbs.value.measures >= 0
+    ? String(mbs.value.measures).padStart(3, "0")
+    : String(mbs.value.measures);
 });
 
 const beatsStr = computed(() => {
-  return String(mbsr.value.beats).padStart(2, "0");
+  return String(mbs.value.beats).padStart(2, "0");
 });
 
-const sixteenthsStr = computed(() => {
-  return String(mbsr.value.sixteenths).padStart(2, "0");
+const sixteenthsIntegerPartStr = computed(() => {
+  const integerPart = Math.floor(mbs.value.sixteenths);
+  return String(integerPart).padStart(2, "0");
 });
 
-const remainingStr = computed(() => {
-  return String(mbsr.value.remaining).padStart(2, "0");
+const sixteenthsDecimalPartStr = computed(() => {
+  const integerPart = Math.floor(mbs.value.sixteenths);
+  const decimalPart = Math.floor((mbs.value.sixteenths - integerPart) * 100);
+  return String(decimalPart).padStart(2, "0");
 });
 
 const minAndSecStr = computed(() => {
@@ -141,10 +141,10 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
     {
       type: "button",
       label: "小節",
-      disabled: displayMode.value === "MBSR",
+      disabled: displayMode.value === "MBS",
       onClick: async () => {
         contextMenu.value?.hide();
-        displayMode.value = "MBSR";
+        displayMode.value = "MBS";
       },
       disableWhenUiLocked: false,
     },
@@ -206,11 +206,11 @@ onUnmounted(() => {
   font-size: 24px;
 }
 
-.sixteenths {
+.sixteenths-integer-part {
   font-size: 24px;
 }
 
-.remaining {
+.sixteenths-decimal-part {
   font-size: 16px;
   margin: 6px 0 0 2px;
 }
