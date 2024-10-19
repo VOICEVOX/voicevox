@@ -60,6 +60,7 @@ const findTimeSignatureIndex = (
   return timeSignatures.length - 1;
 };
 
+// Measures, Beats, Sixteenths, Remaining
 const mbsr = computed(() => {
   if (displayMode.value !== "MBSR") {
     return { measures: 1, beats: 0, sixteenths: 0, remaining: 0 };
@@ -80,12 +81,12 @@ const mbsr = computed(() => {
   const measures = ts.measureNumber + measuresInTs;
 
   const posInMeasure = posInTs - measureDuration * measuresInTs;
-  const beats = Math.floor(posInMeasure / beatDuration);
+  const beats = 1 + Math.floor(posInMeasure / beatDuration);
 
-  const posInBeat = posInMeasure - beatDuration * beats;
-  const sixteenths = Math.floor(posInBeat / sixteenthDuration);
+  const posInBeat = posInMeasure - beatDuration * (beats - 1);
+  const sixteenths = 1 + Math.floor(posInBeat / sixteenthDuration);
 
-  const posInSixteenths = posInBeat - sixteenthDuration * sixteenths;
+  const posInSixteenths = posInBeat - sixteenthDuration * (sixteenths - 1);
   const remaining = Math.floor((posInSixteenths * 100) / sixteenthDuration);
 
   return { measures, beats, sixteenths, remaining };
