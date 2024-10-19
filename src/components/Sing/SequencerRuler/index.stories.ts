@@ -89,6 +89,13 @@ export const WithTimeSignatureChange: Story = {
   },
 };
 
+export const WithOffset: Story = {
+  name: "スクロール",
+  args: {
+    offset: 480 * 4,
+  },
+};
+
 // pointerのcoords指定がうまくいかないので一旦コメントアウト。
 // TODO: ちゃんと動くようにする
 //
