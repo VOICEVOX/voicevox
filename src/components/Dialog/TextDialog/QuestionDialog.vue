@@ -53,7 +53,7 @@ const props = withDefaults(
     default?: number | undefined;
   }>(),
   {
-    persistent: undefined,
+    persistent: true,
     default: undefined,
   },
 );

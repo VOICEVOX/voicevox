@@ -14,6 +14,7 @@ const meta: Meta<typeof QuestionDialog> = {
     buttons: ["A", "B", "C"],
 
     onOk: fn(),
+    onCancel: fn(),
   },
   tags: ["!autodocs"],
 };
@@ -50,7 +51,7 @@ export const Close: Story = {
 };
 
 export const ClickBackdropWithoutCancel: Story = {
-  name: "cancelなしで背景を押しても反応しない",
+  name: "persistent: trueで背景を押してもキャンセル扱いにならない",
   args: { ...Opened.args },
   play: async ({ args }) => {
     const backdrop = document.body.querySelector(".q-dialog__backdrop");
@@ -58,18 +59,19 @@ export const ClickBackdropWithoutCancel: Story = {
     await userEvent.click(backdrop);
 
     await expect(args["onOk"]).not.toBeCalled();
+    await expect(args["onCancel"]).not.toBeCalled();
   },
 };
 
 export const ClickBackdropWithCancel: Story = {
-  name: "cancelありで背景を押すとキャンセル扱いになる",
-  args: { ...Opened.args, buttons: ["A", "キャンセル"], cancel: 1 },
+  name: "persistent: falseで背景を押すとキャンセル扱いになる",
+  args: { ...Opened.args, buttons: ["A", "キャンセル"], persistent: false },
   play: async ({ args }) => {
     const backdrop = document.body.querySelector(".q-dialog__backdrop");
     if (!backdrop) throw new UnreachableError();
     await userEvent.click(backdrop);
 
-    await expect(args["onOk"]).toBeCalledWith({ index: 1 });
+    await expect(args["onCancel"]).toBeCalled();
   },
 };
 
