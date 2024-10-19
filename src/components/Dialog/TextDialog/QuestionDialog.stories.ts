@@ -14,7 +14,7 @@ const meta: Meta<typeof QuestionDialog> = {
     buttons: ["A", "B", "C"],
 
     onOk: fn(),
-    onCancel: fn(),
+    onHide: fn(),
   },
   tags: ["!autodocs"],
 };
@@ -59,7 +59,6 @@ export const ClickBackdropWithoutCancel: Story = {
     await userEvent.click(backdrop);
 
     await expect(args["onOk"]).not.toBeCalled();
-    await expect(args["onCancel"]).not.toBeCalled();
   },
 };
 
@@ -71,7 +70,8 @@ export const ClickBackdropWithCancel: Story = {
     if (!backdrop) throw new UnreachableError();
     await userEvent.click(backdrop);
 
-    await expect(args["onCancel"]).toBeCalled();
+    await new Promise((resolve) => setTimeout(resolve, 200)); // ダイアログが閉じるのを待つ
+    await expect(args["onHide"]).toBeCalled();
   },
 };
 

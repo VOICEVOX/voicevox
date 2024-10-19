@@ -4,7 +4,12 @@
   参照：https://quasar.dev/quasar-plugins/dialog
 -->
 <template>
-  <QDialog ref="dialogRef" v-model="modelValue" :persistent>
+  <QDialog
+    ref="dialogRef"
+    v-model="modelValue"
+    :persistent
+    @hide="onDialogHide"
+  >
     <QCard class="q-py-sm q-px-md dialog-card">
       <QCardSection class="title">
         <QIcon
@@ -59,11 +64,13 @@ const props = withDefaults(
 );
 defineEmits({
   ...useDialogPluginComponent.emitsObject,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  "update:modelValue": (val: boolean) => true,
 });
 
 const iconName = computed(() => getIcon(props.type));
 const color = computed(() => getColor(props.type));
-const { dialogRef, onDialogOK } = useDialogPluginComponent();
+const { dialogRef, onDialogOK, onDialogHide } = useDialogPluginComponent();
 
 const buttonsRef = useTemplateRef<QBtn[]>("buttons");
 
