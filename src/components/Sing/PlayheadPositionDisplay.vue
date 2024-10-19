@@ -8,7 +8,9 @@
       <div class="measures">{{ measuresStr }}.</div>
       <div class="beats">{{ beatsStr }}.</div>
       <div class="sixteenths-integer-part">{{ sixteenthsIntegerPartStr }}</div>
-      <div class="sixteenths-decimal-part">.{{ sixteenthsDecimalPartStr }}</div>
+      <div class="sixteenths-fractional-part">
+        .{{ sixteenthsFractionalPartStr }}
+      </div>
     </div>
     <ContextMenu ref="contextMenu" :menudata="contextMenuData" />
   </div>
@@ -61,10 +63,10 @@ const sixteenthsIntegerPartStr = computed(() => {
   return String(integerPart).padStart(2, "0");
 });
 
-const sixteenthsDecimalPartStr = computed(() => {
+const sixteenthsFractionalPartStr = computed(() => {
   const integerPart = Math.floor(mbs.value.sixteenths);
-  const decimalPart = Math.floor((mbs.value.sixteenths - integerPart) * 100);
-  return String(decimalPart).padStart(2, "0");
+  const fractionalPart = Math.floor((mbs.value.sixteenths - integerPart) * 100);
+  return String(fractionalPart).padStart(2, "0");
 });
 
 const minAndSecStr = computed(() => {
@@ -167,7 +169,7 @@ onUnmounted(() => {
   font-size: 24px;
 }
 
-.sixteenths-decimal-part {
+.sixteenths-fractional-part {
   font-size: 16px;
   margin: 6px 0 0 2px;
 }
