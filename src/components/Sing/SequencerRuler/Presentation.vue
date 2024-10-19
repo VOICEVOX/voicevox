@@ -2,6 +2,7 @@
   <div
     ref="sequencerRuler"
     class="sequencer-ruler"
+    :data-ui-locked="uiLocked"
     @click="onClick"
     @contextmenu="onContextMenu"
   >
@@ -238,6 +239,7 @@ const playheadX = computed(() => {
 
 const getTickFromMouseEvent = (event: MouseEvent) => {
   const baseX = (props.offset + event.offsetX) / props.zoomX;
+  console.log(baseX, props.offset, event.offsetX, props.zoomX);
   return baseXToTick(baseX, props.tpqn);
 };
 
@@ -519,7 +521,7 @@ const contextMenudata = computed<ContextMenuItemData[]>(() => {
   font-weight: 700;
   fill: var(--scheme-color-on-surface-variant);
 
-  &:hover {
+  :not([data-ui-locked]) &:hover {
     cursor: pointer;
 
     text-decoration: underline;
