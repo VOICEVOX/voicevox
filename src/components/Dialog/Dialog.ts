@@ -114,9 +114,7 @@ export const showWarningDialog = async (options: WarningDialogOptions) => {
   return index === 1 ? "OK" : "CANCEL";
 };
 
-export const showQuestionDialog = async (
-  options: QuestionDialogOptions,
-) => {
+export const showQuestionDialog = async (options: QuestionDialogOptions) => {
   const { promise, resolve } = Promise.withResolvers<number>();
   Dialog.create({
     component: QuestionDialog,
