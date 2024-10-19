@@ -7,7 +7,8 @@
     :timeSignatures
     :zoomX
     :snapType
-    @update:playheadTicks="updatePlayheadTicks"
+    :uiLocked
+    @update:playheadPosition="updatePlayheadTicks"
     @deselectAllNotes="deselectAllNotes"
     @setTempo="setTempo"
     @setTimeSignature="setTimeSignature"
@@ -42,6 +43,7 @@ const tempos = computed(() => store.state.tempos);
 const timeSignatures = computed(() => store.state.timeSignatures);
 const zoomX = computed(() => store.state.sequencerZoomX);
 const snapType = computed(() => store.state.sequencerSnapType);
+const uiLocked = computed(() => store.getters.UI_LOCKED);
 
 const playheadPosition = ref(0);
 

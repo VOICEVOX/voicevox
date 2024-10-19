@@ -9,6 +9,7 @@
       ref="contextMenu"
       :header="contextMenuHeader"
       :menudata="contextMenudata"
+      :uiLocked
     />
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -136,7 +137,9 @@ import ContextMenu, {
 import { UnreachableError } from "@/type/utility";
 import { Tempo, TimeSignature } from "@/store/type";
 
-const playheadPosition = defineModel<number>("playheadPosition", { required: true });
+const playheadPosition = defineModel<number>("playheadPosition", {
+  required: true,
+});
 const props = defineProps<{
   offset: number;
   numMeasures: number;
@@ -145,6 +148,8 @@ const props = defineProps<{
   timeSignatures: TimeSignature[];
   zoomX: number;
   snapType: number;
+
+  uiLocked: boolean;
 }>();
 const emit = defineEmits<{
   deselectAllNotes: [];
@@ -516,6 +521,8 @@ const contextMenudata = computed<ContextMenuItemData[]>(() => {
 
   &:hover {
     cursor: pointer;
+
+    text-decoration: underline;
   }
 }
 

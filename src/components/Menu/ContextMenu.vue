@@ -17,7 +17,9 @@
         :menudata="menu"
         :disable="
           (menu.type !== 'separator' && menu.disabled) ||
-          (uiLocked && menu.type !== 'separator' && menu.disableWhenUiLocked)
+          (uiLockedComputed &&
+            menu.type !== 'separator' &&
+            menu.disableWhenUiLocked)
         "
       >
       </MenuItem>
@@ -26,15 +28,17 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from "vue";
+import { computed, ComputedRef, onMounted, onUnmounted, ref } from "vue";
 import { QMenu } from "quasar";
 import MenuItem from "./MenuItem.vue";
 import { MenuItemButton, MenuItemSeparator } from "./type";
 import { useStore } from "@/store";
 
-defineProps<{
+const props = defineProps<{
   header?: string;
   menudata: ContextMenuItemData[];
+
+  uiLocked?: boolean;
 }>();
 defineExpose({
   show: (event?: MouseEvent | undefined) => {
@@ -44,8 +48,14 @@ defineExpose({
     contextMenu.value?.hide();
   },
 });
-const store = useStore();
-const uiLocked = computed(() => store.getters.UI_LOCKED);
+
+let uiLockedComputed: ComputedRef<boolean>;
+if (props.uiLocked != undefined) {
+  uiLockedComputed = computed(() => props.uiLocked);
+} else {
+  const store = useStore();
+  uiLockedComputed = computed(() => store.getters.UI_LOCKED);
+}
 
 const contextMenu = ref<QMenu>();
 /**
