@@ -14,11 +14,19 @@ const meta: Meta<typeof Presentation> = {
       },
     ],
     zoomX: 0.25,
-    zoomY: 1.0,
+    zoomY: 0.75,
     tpqn: 480,
     snapType: 16,
     numMeasures: 32,
   },
+
+  render: (args) => ({
+    components: { Presentation },
+    setup() {
+      return { args };
+    },
+    template: `<div style="width: 100vw; height: 400px; overflow: hidden;"><Presentation v-bind="args" /></div>`,
+  }),
 };
 
 export default meta;
