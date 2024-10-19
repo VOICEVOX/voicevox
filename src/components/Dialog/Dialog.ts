@@ -124,7 +124,7 @@ export const showQuestionDialog = async (
       title: options.title,
       message: options.message,
       buttons: options.buttons,
-      persistent: options.cancel != undefined,
+      persistent: options.cancel == undefined,
       default: options.default,
     },
   })
