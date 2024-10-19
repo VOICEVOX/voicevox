@@ -10,7 +10,7 @@ import "@quasar/extras/material-icons/material-icons.css";
 import "quasar/dist/quasar.sass";
 import "@/styles/_index.scss";
 import { UnreachableError } from "@/type/utility";
-import { setThemeToCss } from "@/domain/dom";
+import { setThemeToCss, setFontToCss } from "@/domain/dom";
 
 setup((app) => {
   app.use(Quasar, {
@@ -64,11 +64,13 @@ const preview: Preview = {
       defaultTheme: "light",
       attributeName: "is-dark-theme",
     }),
+
+    // テーマの設定をCSSへ反映する
     () => {
       let observer: MutationObserver | undefined = undefined;
       return {
         async mounted() {
-          document.body.setAttribute("data-editor-font", "default");
+          setFontToCss("default");
 
           const root = document.documentElement;
           const themes = await browserSandbox.getAvailableThemes();
