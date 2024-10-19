@@ -4,13 +4,13 @@ import iconSet from "quasar/icon-set/material-icons";
 import { withThemeByDataAttribute } from "@storybook/addon-themes";
 import { addActionsWithEmits } from "./utils/argTypesEnhancers";
 import { markdownItPlugin } from "@/plugins/markdownItPlugin";
-import { api as browserSandbox } from "@/backend/browser/sandbox";
 
 import "@quasar/extras/material-icons/material-icons.css";
 import "quasar/dist/quasar.sass";
 import "@/styles/_index.scss";
 import { UnreachableError } from "@/type/utility";
 import { setThemeToCss, setFontToCss } from "@/domain/dom";
+import { themes } from "@/domain/theme";
 
 setup((app) => {
   app.use(Quasar, {
@@ -73,12 +73,11 @@ const preview: Preview = {
           setFontToCss("default");
 
           const root = document.documentElement;
-          const themes = await browserSandbox.getAvailableThemes();
-          let lastTheme: boolean | undefined = undefined;
+          let lastIsDark: boolean | undefined = undefined;
           observer = new MutationObserver(() => {
             const isDark = root.getAttribute("is-dark-theme") === "true";
-            if (lastTheme === isDark) return;
-            lastTheme = isDark;
+            if (lastIsDark === isDark) return;
+            lastIsDark = isDark;
 
             const theme = themes.find((theme) => theme.isDark === isDark);
             if (!theme)

@@ -286,7 +286,6 @@ export interface Sandbox {
   getDefaultHotkeySettings(): Promise<HotkeySettingType[]>;
   getDefaultToolbarSetting(): Promise<ToolbarSettingType>;
   setNativeTheme(source: NativeThemeType): void;
-  getAvailableThemes(): Promise<ThemeConf[]>;
   vuexReady(): void;
   getSetting<Key extends keyof ConfigType>(key: Key): Promise<ConfigType[Key]>;
   setSetting<Key extends keyof ConfigType>(

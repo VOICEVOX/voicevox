@@ -229,11 +229,6 @@ export type IpcIHData = {
     return: ToolbarSettingType;
   };
 
-  GET_AVAILABLE_THEMES: {
-    args: [];
-    return: ThemeConf[];
-  };
-
   ON_VUEX_READY: {
     args: [];
     return: void;

@@ -1,3 +1,4 @@
+import { themes } from "@/domain/theme";
 import { SettingStoreState, SettingStoreTypes } from "./type";
 import { createDotNotationUILockAction as createUILockAction } from "./ui";
 import { createDotNotationPartialStore as createPartialStore } from "./vuex";
@@ -79,7 +80,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       });
 
       mutations.SET_AVAILABLE_THEMES({
-        themes: await window.backend.getAvailableThemes(),
+        themes,
       });
       void actions.SET_CURRENT_THEME_SETTING({
         currentTheme: await window.backend.getSetting("currentTheme"),
