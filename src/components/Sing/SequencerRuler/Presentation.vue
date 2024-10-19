@@ -124,7 +124,6 @@ import { Dialog } from "quasar";
 import TempoOrTimeSignatureChangeDialog, {
   TempoOrTimeSignatureChangeDialogResult,
 } from "@/components/Dialog/TempoOrTimeSignatureChangeDialog.vue";
-import { useStore } from "@/store";
 import {
   getMeasureDuration,
   getNoteDuration,
@@ -135,54 +134,56 @@ import ContextMenu, {
   ContextMenuItemData,
 } from "@/components/Menu/ContextMenu.vue";
 import { UnreachableError } from "@/type/utility";
-import { TimeSignature } from "@/store/type";
+import { Tempo, TimeSignature } from "@/store/type";
 
-const props = withDefaults(
-  defineProps<{
-    offset: number;
-    numMeasures: number;
-  }>(),
-  {
-    offset: 0,
-    numMeasures: 32,
-  },
-);
-const store = useStore();
-const state = store.state;
+const playheadTicks = defineModel<number>("playheadTicks", { required: true });
+const props = defineProps<{
+  offset: number;
+  numMeasures: number;
+  tpqn: number;
+  tempos: Tempo[];
+  timeSignatures: TimeSignature[];
+  zoomX: number;
+  snapType: number;
+}>();
+const emit = defineEmits<{
+  deselectAllNotes: [];
+
+  setTempo: [tempo: Tempo];
+  removeTempo: [position: number];
+  setTimeSignature: [timeSignature: TimeSignature];
+  removeTimeSignature: [measureNumber: number];
+}>();
+
 const height = ref(40);
-const playheadTicks = ref(0);
-const tpqn = computed(() => state.tpqn);
-const timeSignatures = computed(() => state.timeSignatures);
-const zoomX = computed(() => state.sequencerZoomX);
 const beatsPerMeasure = (timeSignature: TimeSignature) => timeSignature.beats;
 const beatWidth = (timeSignature: TimeSignature) => {
   const beatType = timeSignature.beatType;
-  const wholeNoteDuration = tpqn.value * 4;
+  const wholeNoteDuration = props.tpqn * 4;
   const beatTicks = wholeNoteDuration / beatType;
-  return tickToBaseX(beatTicks, tpqn.value) * zoomX.value;
+  return tickToBaseX(beatTicks, props.tpqn) * props.zoomX;
 };
 const tsPositions = computed(() => {
-  return getTimeSignaturePositions(timeSignatures.value, tpqn.value);
+  return getTimeSignaturePositions(props.timeSignatures, props.tpqn);
 });
 const endTicks = computed(() => {
-  const lastTs = timeSignatures.value[timeSignatures.value.length - 1];
+  const lastTs = props.timeSignatures[props.timeSignatures.length - 1];
   const lastTsPosition = tsPositions.value[tsPositions.value.length - 1];
   return (
     lastTsPosition +
-    getMeasureDuration(lastTs.beats, lastTs.beatType, tpqn.value) *
+    getMeasureDuration(lastTs.beats, lastTs.beatType, props.tpqn) *
       (props.numMeasures - lastTs.measureNumber + 1)
   );
 });
 const width = computed(() => {
-  return tickToBaseX(endTicks.value, tpqn.value) * zoomX.value;
+  return tickToBaseX(endTicks.value, props.tpqn) * props.zoomX;
 });
 const gridPatterns = computed(() => {
   const gridPatterns: { id: string; x: number; width: number }[] = [];
-  for (const [i, timeSignature] of timeSignatures.value.entries()) {
-    const nextTimeSignature = timeSignatures.value[i + 1];
+  for (const [i, timeSignature] of props.timeSignatures.entries()) {
+    const nextTimeSignature = props.timeSignatures[i + 1];
     const nextMeasureNumber =
-      nextTimeSignature?.measureNumber ??
-      store.getters.SEQUENCER_NUM_MEASURES + 1;
+      nextTimeSignature?.measureNumber ?? props.numMeasures + 1;
     gridPatterns.push({
       id: `sequencer-grid-pattern-${i}`,
       x:
@@ -201,14 +202,14 @@ const gridPatterns = computed(() => {
 });
 
 const measureInfos = computed(() => {
-  return timeSignatures.value.flatMap((timeSignature, i) => {
+  return props.timeSignatures.flatMap((timeSignature, i) => {
     const measureDuration = getMeasureDuration(
       timeSignature.beats,
       timeSignature.beatType,
-      tpqn.value,
+      props.tpqn,
     );
     const nextTsPosition =
-      i !== timeSignatures.value.length - 1
+      i !== props.timeSignatures.length - 1
         ? tsPositions.value[i + 1]
         : endTicks.value;
     const start = tsPositions.value[i];
@@ -217,37 +218,33 @@ const measureInfos = computed(() => {
     return Array.from({ length: numMeasures }, (_, index) => {
       const measureNumber = timeSignature.measureNumber + index;
       const measurePosition = start + index * measureDuration;
-      const baseX = tickToBaseX(measurePosition, tpqn.value);
+      const baseX = tickToBaseX(measurePosition, props.tpqn);
       return {
         number: measureNumber,
-        x: Math.round(baseX * zoomX.value),
+        x: Math.round(baseX * props.zoomX),
       };
     });
   });
 });
 const playheadX = computed(() => {
-  const baseX = tickToBaseX(playheadTicks.value, tpqn.value);
-  return Math.floor(baseX * zoomX.value);
+  const baseX = tickToBaseX(playheadTicks.value, props.tpqn);
+  return Math.floor(baseX * props.zoomX);
 });
 
 const getTickFromMouseEvent = (event: MouseEvent) => {
-  const baseX = (props.offset + event.offsetX) / zoomX.value;
-  return baseXToTick(baseX, tpqn.value);
+  const baseX = (props.offset + event.offsetX) / props.zoomX;
+  return baseXToTick(baseX, props.tpqn);
 };
 
 const onClick = async (event: MouseEvent) => {
-  await store.dispatch("DESELECT_ALL_NOTES");
+  emit("deselectAllNotes");
 
   const ticks = getTickFromMouseEvent(event);
-  await store.dispatch("SET_PLAYHEAD_POSITION", { position: ticks });
+  playheadTicks.value = ticks;
 };
 
 const sequencerRuler = ref<HTMLElement | null>(null);
 let resizeObserver: ResizeObserver | undefined;
-
-const playheadPositionChangeListener = (position: number) => {
-  playheadTicks.value = position;
-};
 
 onMounted(() => {
   const sequencerRulerElement = sequencerRuler.value;
@@ -266,29 +263,21 @@ onMounted(() => {
     }
   });
   resizeObserver.observe(sequencerRulerElement);
-
-  void store.dispatch("ADD_PLAYHEAD_POSITION_CHANGE_LISTENER", {
-    listener: playheadPositionChangeListener,
-  });
 });
 
 onUnmounted(() => {
   resizeObserver?.disconnect();
-
-  void store.dispatch("REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER", {
-    listener: playheadPositionChangeListener,
-  });
 });
 
 const contextMenu =
   useTemplateRef<InstanceType<typeof ContextMenu>>("contextMenu");
 const onContextMenu = async (event: MouseEvent) => {
-  await store.dispatch("DESELECT_ALL_NOTES");
+  emit("deselectAllNotes");
 
   const ticks = getTickFromMouseEvent(event);
-  const snapTicks = getNoteDuration(store.state.sequencerSnapType, tpqn.value);
+  const snapTicks = getNoteDuration(props.snapType, props.tpqn);
   const snappedTicks = Math.round(ticks / snapTicks) * snapTicks;
-  await store.dispatch("SET_PLAYHEAD_POSITION", { position: snappedTicks });
+  playheadTicks.value = snappedTicks;
 };
 
 type TempoOrTimeSignatureChange = {
@@ -302,14 +291,14 @@ const onTempoOrTimeSignatureChangeClick = async (
   tempoOrTimeSignatureChange: TempoOrTimeSignatureChange,
 ) => {
   const ticks = tempoOrTimeSignatureChange.position;
-  await store.dispatch("SET_PLAYHEAD_POSITION", { position: ticks });
+  playheadTicks.value = ticks;
 
   contextMenu.value?.show(event);
 };
 
 const currentMeasure = computed(() => {
   let currentMeasure = 1;
-  for (const [tsPosition, tsInfo] of timeSignatures.value.map(
+  for (const [tsPosition, tsInfo] of props.timeSignatures.map(
     (ts, i) => [tsPositions.value[i], ts] as const,
   )) {
     if (playheadTicks.value < tsPosition) {
@@ -318,7 +307,7 @@ const currentMeasure = computed(() => {
     const measureDuration = getMeasureDuration(
       tsInfo.beats,
       tsInfo.beatType,
-      tpqn.value,
+      props.tpqn,
     );
     currentMeasure =
       tsInfo.measureNumber +
@@ -333,10 +322,10 @@ const tempoOrTimeSignatureChanges = computed<TempoOrTimeSignatureChange[]>(
     const timeSignaturesWithTicks = tsPositions.value.map((tsPosition, i) => {
       return {
         position: tsPosition,
-        timeSignature: timeSignatures.value[i],
+        timeSignature: props.timeSignatures[i],
       };
     });
-    const tempos = store.state.tempos.map((tempo) => {
+    const tempos = props.tempos.map((tempo) => {
       return {
         position: tempo.position,
         tempo,
@@ -360,7 +349,7 @@ const tempoOrTimeSignatureChanges = computed<TempoOrTimeSignatureChange[]>(
       return {
         position: tick,
         text: `${tempo?.tempo.bpm ?? ""} ${timeSignature ? `${timeSignature.timeSignature.beats}/${timeSignature.timeSignature.beatType}` : ""}`,
-        x: tickToBaseX(tick, tpqn.value) * zoomX.value,
+        x: tickToBaseX(tick, props.tpqn) * props.zoomX,
       };
     });
 
@@ -369,7 +358,7 @@ const tempoOrTimeSignatureChanges = computed<TempoOrTimeSignatureChange[]>(
 );
 
 const lastTempo = computed(() => {
-  const maybeTempo = store.state.tempos.findLast((tempo) => {
+  const maybeTempo = props.tempos.findLast((tempo) => {
     return tempo.position <= playheadTicks.value;
   });
   if (!maybeTempo) {
@@ -378,11 +367,9 @@ const lastTempo = computed(() => {
   return maybeTempo;
 });
 const lastTimeSignature = computed(() => {
-  const maybeTimeSignature = store.state.timeSignatures.findLast(
-    (timeSignature) => {
-      return timeSignature.measureNumber <= currentMeasure.value;
-    },
-  );
+  const maybeTimeSignature = props.timeSignatures.findLast((timeSignature) => {
+    return timeSignature.measureNumber <= currentMeasure.value;
+  });
   if (!maybeTimeSignature) {
     throw new UnreachableError("assert: At least one time signature exists.");
   }
@@ -398,13 +385,13 @@ const timeSignatureChangeExists = computed(
 const contextMenuHeader = computed(() => `${currentMeasure.value}小節目`);
 
 const showTempoOrTimeSignatureChangeDialog = async (
-  props: ExtractPropTypes<typeof TempoOrTimeSignatureChangeDialog>,
+  componentProps: ExtractPropTypes<typeof TempoOrTimeSignatureChangeDialog>,
 ) => {
   const { promise, resolve } = Promise.withResolvers<
     TempoOrTimeSignatureChangeDialogResult | "cancelled"
   >();
 
-  const lastTempo = store.state.tempos.findLast((tempo) => {
+  const lastTempo = props.tempos.findLast((tempo) => {
     return tempo.position <= playheadTicks.value;
   });
   if (!lastTempo) {
@@ -413,7 +400,7 @@ const showTempoOrTimeSignatureChangeDialog = async (
 
   Dialog.create({
     component: TempoOrTimeSignatureChangeDialog,
-    componentProps: props,
+    componentProps,
   })
     .onOk((result: TempoOrTimeSignatureChangeDialogResult) => {
       resolve(result);
@@ -428,29 +415,21 @@ const showTempoOrTimeSignatureChangeDialog = async (
   }
 
   if (result.tempoChange) {
-    await store.dispatch("COMMAND_SET_TEMPO", {
-      tempo: {
-        ...result.tempoChange,
-        position: playheadTicks.value,
-      },
-    });
-  } else if (!result.tempoChange && tempoChangeExists.value) {
-    await store.dispatch("COMMAND_REMOVE_TEMPO", {
+    emit("setTempo", {
+      ...result.tempoChange,
       position: playheadTicks.value,
     });
+  } else if (!result.tempoChange && tempoChangeExists.value) {
+    emit("removeTempo", playheadTicks.value);
   }
 
   if (result.timeSignatureChange) {
-    await store.dispatch("COMMAND_SET_TIME_SIGNATURE", {
-      timeSignature: {
-        ...result.timeSignatureChange,
-        measureNumber: currentMeasure.value,
-      },
-    });
-  } else if (!result.timeSignatureChange && timeSignatureChangeExists.value) {
-    await store.dispatch("COMMAND_REMOVE_TIME_SIGNATURE", {
+    emit("setTimeSignature", {
+      ...result.timeSignatureChange,
       measureNumber: currentMeasure.value,
     });
+  } else if (!result.timeSignatureChange && timeSignatureChangeExists.value) {
+    emit("removeTimeSignature", currentMeasure.value);
   }
 };
 
