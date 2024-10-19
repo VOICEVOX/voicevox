@@ -1,4 +1,4 @@
-import { userEvent, within, expect, fn } from "@storybook/test";
+import { userEvent, within, expect, fn, waitFor } from "@storybook/test";
 
 import { Meta, StoryObj } from "@storybook/vue3";
 import QuestionDialog from "./QuestionDialog.vue";
@@ -70,8 +70,7 @@ export const ClickBackdropWithCancel: Story = {
     if (!backdrop) throw new UnreachableError();
     await userEvent.click(backdrop);
 
-    await new Promise((resolve) => setTimeout(resolve, 200)); // ダイアログが閉じるのを待つ
-    await expect(args["onHide"]).toBeCalled();
+    await waitFor(() => expect(args["onHide"]).toBeCalled());
   },
 };
 
