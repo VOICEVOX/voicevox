@@ -1,12 +1,5 @@
 <template>
-  <Presentation
-    :tpqn
-    :timeSignatures
-    :zoomX
-    :zoomY
-    :snapType
-    :numMeasures
-  />
+  <Presentation :tpqn :timeSignatures :zoomX :zoomY :snapType :numMeasures />
 </template>
 <script setup lang="ts">
 import { computed } from "vue";
