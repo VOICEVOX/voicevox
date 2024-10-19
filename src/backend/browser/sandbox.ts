@@ -186,7 +186,7 @@ export const api: Sandbox = {
 
     await promise;
 
-    // 誰も使ってないので適当な値を返している。型定義をPromise<void>に変えてもいいかも
+    // 誰も返り値を使ってないので適当な値を返している。型定義をPromise<void>に変えてもいいかも
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return
     return {} as any;
   },

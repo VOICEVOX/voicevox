@@ -2,6 +2,7 @@
   ブラウザ版の質問ダイアログ。
   QuasarのDialog Pluginから呼ぶことを想定。
   参照：https://quasar.dev/quasar-plugins/dialog
+  WARNING: キャンセルしてもonCancelは呼ばれないので注意。
 -->
 <template>
   <QDialog
@@ -98,6 +99,7 @@ const updateModelValue = (val: boolean) => {
   // falseになるとき：
   // - onClickを呼んだ後に非表示になるなら通す
   // - そうでないなら（背景クリックなど）cancel扱いにする、cancelが未設定ならエラー（Unreachableのはず）
+  // NOTE: ブラウザ版のバックエンドのダイアログとして利用しており、electronのDialogの仕様に合わせる必要があるので、処理がややこしくなっている
   if (val || buttonClicked) {
     modelValue.value = val;
   } else {
