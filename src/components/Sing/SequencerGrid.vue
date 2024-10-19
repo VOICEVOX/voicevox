@@ -8,9 +8,12 @@
   >
     <defs>
       <pattern
-        id="sequencer-grid-pattern"
+        v-for="(timeSignature, tsIndex) in timeSignatures"
+        :id="`sequencer-grid-pattern-${tsIndex}`"
+        :key="`pattern-${tsIndex}`"
         patternUnits="userSpaceOnUse"
-        :width="beatWidth * beatsPerMeasure"
+        :x="gridPatterns[tsIndex].x"
+        :width="beatWidth(timeSignature) * beatsPerMeasure(timeSignature)"
         :height="gridCellHeight * 12"
       >
         <!-- セルの背景 -->
@@ -19,7 +22,7 @@
           :key="`cell-${index}`"
           x="0"
           :y="gridCellHeight * index"
-          :width="beatWidth * beatsPerMeasure"
+          :width="beatWidth(timeSignature) * beatsPerMeasure(timeSignature)"
           :height="gridCellHeight"
           :class="`sequencer-grid-cell sequencer-grid-cell-${keyInfo.color}`"
         />
@@ -38,17 +41,17 @@
           v-for="index in horizontalLineIndices"
           :key="`horizontal-${index}`"
           x1="0"
-          :x2="beatWidth * beatsPerMeasure"
+          :x2="beatWidth(timeSignature) * beatsPerMeasure(timeSignature)"
           :y1="gridCellHeight * (index + 1)"
           :y2="gridCellHeight * (index + 1)"
           class="sequencer-grid-horizontal-line"
         />
         <!-- 拍線 -->
         <line
-          v-for="n in beatLineIndices"
+          v-for="n in beatLineIndices(timeSignature)"
           :key="`beatline-${n}`"
-          :x1="beatWidth * n"
-          :x2="beatWidth * n"
+          :x1="beatWidth(timeSignature) * n"
+          :x2="beatWidth(timeSignature) * n"
           y1="0"
           :y2="gridCellHeight * 12"
           class="sequencer-grid-beat-line"
@@ -57,11 +60,13 @@
     </defs>
     <!-- グリッドパターン背景 -->
     <rect
-      x="0"
+      v-for="gridPattern in gridPatterns"
+      :key="`grid-${gridPattern.id}`"
+      :x="gridPattern.x"
       y="0"
-      :width="gridWidth"
+      :width="gridPattern.width"
       :height="gridHeight"
-      fill="url(#sequencer-grid-pattern)"
+      :fill="`url(#${gridPattern.id})`"
     />
     <!-- オクターブ線（グリッドの上に描画） -->
     <line
@@ -75,10 +80,10 @@
     />
     <!-- 小節線（グリッドおよびオクターブ線の上に描画） -->
     <line
-      v-for="n in numberOfMeasureLines"
-      :key="`measureline-${n}`"
-      :x1="beatWidth * beatsPerMeasure * n"
-      :x2="beatWidth * beatsPerMeasure * n"
+      v-for="x in measureLines"
+      :key="`measureline-${x}`"
+      :x1="x"
+      :x2="x"
       y1="0"
       :y2="gridHeight"
       class="sequencer-grid-measure-line"
@@ -91,6 +96,7 @@ import { computed } from "vue";
 import { useStore } from "@/store";
 import { keyInfos, getKeyBaseHeight, tickToBaseX } from "@/sing/viewHelper";
 import { getMeasureDuration, getNoteDuration } from "@/sing/domain";
+import { TimeSignature } from "@/store/type";
 
 const store = useStore();
 const tpqn = computed(() => store.state.tpqn);
@@ -107,30 +113,62 @@ const gridCellBaseHeight = getKeyBaseHeight();
 const gridCellHeight = computed(() => {
   return gridCellBaseHeight * zoomY.value;
 });
-const beatsPerMeasure = computed(() => {
-  return timeSignatures.value[0].beats;
-});
-const beatWidth = computed(() => {
-  const beatType = timeSignatures.value[0].beatType;
+const beatsPerMeasure = (timeSignature: TimeSignature) => timeSignature.beats;
+const beatWidth = (timeSignature: TimeSignature) => {
+  const beatType = timeSignature.beatType;
   const wholeNoteDuration = tpqn.value * 4;
   const beatTicks = wholeNoteDuration / beatType;
   return tickToBaseX(beatTicks, tpqn.value) * zoomX.value;
-});
+};
+
 const gridWidth = computed(() => {
-  // TODO: 複数拍子に対応する
-  const beats = timeSignatures.value[0].beats;
-  const beatType = timeSignatures.value[0].beatType;
-  const measureDuration = getMeasureDuration(beats, beatType, tpqn.value);
-  const numMeasures = store.getters.SEQUENCER_NUM_MEASURES;
-  const numOfGridColumns =
-    Math.round(measureDuration / gridCellTicks.value) * numMeasures;
+  let numOfGridColumns = 0;
+  for (const [i, timeSignature] of timeSignatures.value.entries()) {
+    const nextTimeSignature = timeSignatures.value[i + 1];
+    const nextMeasureNumber =
+      nextTimeSignature?.measureNumber ??
+      store.getters.SEQUENCER_NUM_MEASURES + 1;
+    const beats = timeSignature.beats;
+    const beatType = timeSignature.beatType;
+    const measureDuration = getMeasureDuration(beats, beatType, tpqn.value);
+    numOfGridColumns +=
+      Math.round(measureDuration / gridCellTicks.value) *
+      (nextMeasureNumber - timeSignature.measureNumber);
+  }
   return gridCellWidth.value * numOfGridColumns;
 });
 const gridHeight = computed(() => {
   return gridCellHeight.value * keyInfos.length;
 });
+
+const gridPatterns = computed(() => {
+  const gridPatterns: { id: string; x: number; width: number }[] = [];
+  for (const [i, timeSignature] of timeSignatures.value.entries()) {
+    const nextTimeSignature = timeSignatures.value[i + 1];
+    const nextMeasureNumber =
+      nextTimeSignature?.measureNumber ??
+      store.getters.SEQUENCER_NUM_MEASURES + 1;
+    gridPatterns.push({
+      id: `sequencer-grid-pattern-${i}`,
+      x:
+        gridPatterns.length === 0
+          ? 0
+          : gridPatterns[gridPatterns.length - 1].x +
+            gridPatterns[gridPatterns.length - 1].width,
+      width:
+        beatWidth(timeSignature) *
+        beatsPerMeasure(timeSignature) *
+        (nextMeasureNumber - timeSignature.measureNumber),
+    });
+  }
+
+  return gridPatterns;
+});
+
 // 小節幅
-const measureWidth = computed(() => beatWidth.value * beatsPerMeasure.value);
+const measureWidth = (timeSignature: TimeSignature) =>
+  beatWidth(timeSignature) * beatsPerMeasure(timeSignature);
+
 // グリッド線の計算
 // オクターブ線や小節線と重なる線は除外
 const gridLines = computed(() => {
@@ -146,25 +184,44 @@ const gridLines = computed(() => {
     { horizontalLines: [], octaveLines: [] },
   );
 });
-const numberOfMeasureLines = computed(() =>
-  Math.ceil(gridWidth.value / measureWidth.value),
-);
+const measureLines = computed(() => {
+  const measureLines = [0];
+  for (const [i, timeSignature] of timeSignatures.value.entries()) {
+    const nextTimeSignature = timeSignatures.value[i + 1];
+    const nextMeasureNumber =
+      nextTimeSignature?.measureNumber ?? store.getters.SEQUENCER_NUM_MEASURES;
+    const width = measureWidth(timeSignature);
+
+    const left = measureLines[measureLines.length - 1];
+    for (
+      let measureNumber = timeSignature.measureNumber;
+      measureNumber < nextMeasureNumber;
+      measureNumber++
+    ) {
+      measureLines.push(
+        left + width * (measureNumber - timeSignature.measureNumber + 1),
+      );
+    }
+  }
+  return measureLines;
+});
 const horizontalLineIndices = computed(() => gridLines.value.horizontalLines);
 const octaveLineIndices = computed(() => gridLines.value.octaveLines);
-const beatLineIndices = computed(() =>
-  Array.from({ length: beatsPerMeasure.value - 1 }, (_, i) => i + 1),
-);
-const snapLinePositions = computed(() => {
+const beatLineIndices = (timeSignature: TimeSignature) =>
+  Array.from({ length: beatsPerMeasure(timeSignature) - 1 }, (_, i) => i + 1);
+const snapLinePositions = (timeSignature: TimeSignature) => {
   const snapTicks = gridCellTicks.value;
   const measureTicks =
-    (tpqn.value * 4 * beatsPerMeasure.value) / timeSignatures.value[0].beatType;
+    (tpqn.value * 4 * beatsPerMeasure(timeSignature)) / timeSignature.beatType;
   const snapCount = Math.floor(measureTicks / snapTicks);
 
   return Array.from({ length: snapCount }, (_, index) => {
     const currentTick = snapTicks * index;
-    return (currentTick / measureTicks) * measureWidth.value;
+    return Math.round(
+      (currentTick / measureTicks) * measureWidth(timeSignature),
+    );
   });
-});
+};
 </script>
 
 <style scoped lang="scss">

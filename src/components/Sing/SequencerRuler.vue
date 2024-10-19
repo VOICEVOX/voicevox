@@ -26,7 +26,7 @@
         >
           <!-- 拍線（小節の最初を除く） -->
           <line
-            v-for="n in beatsPerMeasure - 1"
+            v-for="n in beatsPerMeasure"
             :key="n"
             :x1="beatWidth * n"
             :x2="beatWidth * n"

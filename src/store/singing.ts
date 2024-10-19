@@ -1057,7 +1057,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           state.tempos,
           state.timeSignatures,
           state.tpqn,
-        ) + 1,
+        ) + 8,
       );
     },
   },
