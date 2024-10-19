@@ -19,6 +19,7 @@ export const Default: Story = {
     template: `
       <BaseNavigationView style="width: 100%; height:480px" v-bind="args">
         <template #sidebar>
+          <BaseListItem selected>SelectedListItem</BaseListItem>
           <BaseListItem>ListItem</BaseListItem>
         </template>
         <div>Content</div>

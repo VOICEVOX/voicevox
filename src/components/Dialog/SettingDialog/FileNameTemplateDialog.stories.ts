@@ -1,4 +1,4 @@
-import { userEvent, within, expect } from "@storybook/test";
+import { userEvent, within, expect, fn } from "@storybook/test";
 
 import { Meta, StoryObj } from "@storybook/vue3";
 import FileNameTemplateDialog from "./FileNameTemplateDialog.vue";
@@ -21,6 +21,9 @@ const meta: Meta<typeof FileNameTemplateDialog> = {
     defaultTemplate: DEFAULT_AUDIO_FILE_NAME_TEMPLATE,
     savedTemplate: "",
     fileNameBuilder: buildAudioFileNameFromRawData,
+    extension: ".wav",
+    "onUpdate:template": fn(),
+    "onUpdate:openDialog": fn(),
   },
   tags: ["!autodocs"], // ダイアログ系はautodocsのプレビューが正しく表示されないので無効化
 };
@@ -96,7 +99,9 @@ export const MissingIndexInput: Story = {
 
 export const Save: Story = {
   name: "確定ボタンを押す",
-  args: { ...Opened.args },
+  args: {
+    ...Opened.args,
+  },
   play: async ({ args }) => {
     const canvas = within(document.body); // ダイアログなので例外的にdocument.bodyを使う
 
@@ -106,7 +111,7 @@ export const Save: Story = {
     await userEvent.click(button);
 
     // 確定とダイアログを閉じるイベントが呼ばれる
-    await expect(args["onUpdate:template"]).toBeCalledWith("$連番$.wav");
+    await expect(args["onUpdate:template"]).toBeCalledWith("$連番$");
     await expect(args["onUpdate:openDialog"]).toBeCalledWith(false);
   },
 };
@@ -126,7 +131,9 @@ export const Unsaveable: Story = {
 
 export const Close: Story = {
   name: "キャンセルボタンを押す",
-  args: { ...Opened.args },
+  args: {
+    ...Opened.args,
+  },
   play: async ({ args }) => {
     const canvas = within(document.body); // ダイアログなので例外的にdocument.bodyを使う
 
@@ -141,4 +148,7 @@ export const Close: Story = {
 
 export const Closed: Story = {
   name: "閉じている",
+  args: {
+    openDialog: false,
+  },
 };

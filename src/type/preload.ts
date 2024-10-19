@@ -209,16 +209,20 @@ export const defaultToolbarButtonSetting: ToolbarSettingType = [
   "REDO",
 ];
 
+export type TextAsset = {
+  Contact: string;
+  HowToUse: string;
+  OssCommunityInfos: string;
+  Policy: string;
+  PrivacyPolicy: string;
+  QAndA: string;
+  OssLicenses: Record<string, string>[];
+  UpdateInfos: UpdateInfo[];
+};
+
 export interface Sandbox {
   getAppInfos(): Promise<AppInfos>;
-  getHowToUseText(): Promise<string>;
-  getPolicyText(): Promise<string>;
-  getOssLicenses(): Promise<Record<string, string>[]>;
-  getUpdateInfos(): Promise<UpdateInfo[]>;
-  getOssCommunityInfos(): Promise<string>;
-  getQAndAText(): Promise<string>;
-  getContactText(): Promise<string>;
-  getPrivacyPolicyText(): Promise<string>;
+  getTextAsset<K extends keyof TextAsset>(textType: K): Promise<TextAsset[K]>;
   getAltPortInfos(): Promise<AltPortInfos>;
   showAudioSaveDialog(obj: {
     title: string;
@@ -599,7 +603,7 @@ export const rootMiscSettingSchema = z.object({
       panAndGain: z.boolean().default(true),
     })
     .default({}),
-  showSinger: z.boolean().default(true),
+  showSingCharacterPortrait: z.boolean().default(true), // ソングエディタで立ち絵を表示するか
 });
 export type RootMiscSettingType = z.infer<typeof rootMiscSettingSchema>;
 
