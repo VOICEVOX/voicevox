@@ -1,19 +1,21 @@
-import { builder, IpadicFeatures, Tokenizer } from "kuromoji";
 import { audioQueryToFrameAudioQueryMock } from "./audioQueryMock";
 import { getEngineManifestMock } from "./manifestMock";
-import { getSpeakerInfoMock, getSpeakersMock } from "./speakerResourceMock";
+import {
+  getSingersMock,
+  getSpeakerInfoMock,
+  getSpeakersMock,
+} from "./characterResourceMock";
 import { synthesisFrameAudioQueryMock } from "./synthesisMock";
 import {
   replaceLengthMock,
   replacePitchMock,
-  tokensToActtentPhrasesMock,
+  textToActtentPhrasesMock,
 } from "./talkModelMock";
 import {
   notesAndFramePhonemesAndPitchToVolumeMock,
   notesAndFramePhonemesToPitchMock,
   notesToFramePhonemesMock,
 } from "./singModelMock";
-import { assetsPath, dicPath } from "./constants";
 
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
@@ -27,6 +29,7 @@ import {
   FrameAudioQuery,
   FrameSynthesisFrameSynthesisPostRequest,
   MoraDataMoraDataPostRequest,
+  SingerInfoSingerInfoGetRequest,
   SingFrameAudioQuerySingFrameAudioQueryPostRequest,
   SingFrameVolumeSingFrameVolumePostRequest,
   Speaker,
@@ -53,22 +56,6 @@ export function createOpenAPIEngineMock(): IEngineConnectorFactory {
       }
 
       if (mockApi == undefined) {
-        // テキスト形態素解析器
-        const tokenizerPromise = new Promise<Tokenizer<IpadicFeatures>>(
-          (resolve, reject) => {
-            builder({ dicPath }).build(function (
-              err: Error,
-              tokenizer: Tokenizer<IpadicFeatures>,
-            ) {
-              if (err) {
-                reject(err);
-              } else {
-                resolve(tokenizer);
-              }
-            });
-          },
-        );
-
         mockApi = {
           async versionVersionGet(): Promise<string> {
             return "mock";
@@ -99,16 +86,26 @@ export function createOpenAPIEngineMock(): IEngineConnectorFactory {
           ): Promise<SpeakerInfo> {
             if (payload.resourceFormat != "url")
               throw new Error("resourceFormatはurl以外未対応です");
-            return getSpeakerInfoMock(payload.speakerUuid, assetsPath);
+            return getSpeakerInfoMock(payload.speakerUuid);
+          },
+
+          async singersSingersGet(): Promise<Speaker[]> {
+            return getSingersMock();
+          },
+
+          async singerInfoSingerInfoGet(
+            paload: SingerInfoSingerInfoGetRequest,
+          ): Promise<SpeakerInfo> {
+            if (paload.resourceFormat != "url")
+              throw new Error("resourceFormatはurl以外未対応です");
+            return getSpeakerInfoMock(paload.speakerUuid);
           },
 
           async audioQueryAudioQueryPost(
             payload: AudioQueryAudioQueryPostRequest,
           ): Promise<AudioQuery> {
-            const tokenizer = await tokenizerPromise;
-            const tokens = tokenizer.tokenize(payload.text);
-            const accentPhrases = tokensToActtentPhrasesMock(
-              tokens,
+            const accentPhrases = await textToActtentPhrasesMock(
+              payload.text,
               payload.speaker,
             );
 
@@ -131,10 +128,8 @@ export function createOpenAPIEngineMock(): IEngineConnectorFactory {
             if (payload.isKana == true)
               throw new Error("AquesTalk風記法は未対応です");
 
-            const tokenizer = await tokenizerPromise;
-            const tokens = tokenizer.tokenize(payload.text);
-            const accentPhrases = tokensToActtentPhrasesMock(
-              tokens,
+            const accentPhrases = await textToActtentPhrasesMock(
+              payload.text,
               payload.speaker,
             );
             return accentPhrases;
@@ -159,10 +154,11 @@ export function createOpenAPIEngineMock(): IEngineConnectorFactory {
                   payload.enableInterrogativeUpspeak ?? false,
               },
             );
-            return synthesisFrameAudioQueryMock(
+            const buffer = synthesisFrameAudioQueryMock(
               frameAudioQuery,
               payload.speaker,
             );
+            return new Blob([buffer], { type: "audio/wav" });
           },
 
           async singFrameAudioQuerySingFrameAudioQueryPost(
@@ -218,7 +214,11 @@ export function createOpenAPIEngineMock(): IEngineConnectorFactory {
           ): Promise<Blob> {
             const { speaker: styleId, frameAudioQuery } =
               cloneWithUnwrapProxy(payload);
-            return synthesisFrameAudioQueryMock(frameAudioQuery, styleId);
+            const buffer = synthesisFrameAudioQueryMock(
+              frameAudioQuery,
+              styleId,
+            );
+            return new Blob([buffer], { type: "audio/wav" });
           },
         };
       }

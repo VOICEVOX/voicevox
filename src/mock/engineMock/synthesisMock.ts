@@ -185,7 +185,7 @@ function getWaveRate(phoneme: string): { [key in WaveType]: number } {
 export function synthesisFrameAudioQueryMock(
   frameAudioQuery: FrameAudioQuery,
   styleId: number,
-): Blob {
+): Uint8Array {
   const sampleRate = frameAudioQuery.outputSamplingRate;
   const samplePerFrame = 256;
   const frameRate = sampleRate / samplePerFrame;
@@ -238,5 +238,5 @@ export function synthesisFrameAudioQueryMock(
     numberOfChannels,
     getChannelData: () => wave,
   });
-  return new Blob([buffer], { type: "audio/wav" });
+  return buffer;
 }

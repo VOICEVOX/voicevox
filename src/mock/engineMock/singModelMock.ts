@@ -6,7 +6,10 @@
 import { moraToPhonemes } from "./phonemeMock";
 import { convertHiraToKana } from "@/domain/japanese";
 import { Note, FramePhoneme } from "@/openapi";
-import { noteNumberToFrequency } from "@/sing/domain";
+
+function noteNumberToFrequency(noteNumber: number) {
+  return 440 * Math.pow(2, (noteNumber - 69) / 12);
+}
 
 /** アルファベット文字列を適当な0~1の適当な数値に変換する */
 function alphabetsToNumber(text: string): number {
@@ -150,15 +153,17 @@ export function notesAndFramePhonemesAndPitchToVolumeMock(
     Array<string>(phoneme.frameLength).fill(phoneme.phoneme),
   );
 
-  return Array<number>(f0.length).map((_, i) => {
-    const phoneme = phonemePerFrame[i];
-    const pitch = f0[i];
+  return Array<number>(f0.length)
+    .fill(-1)
+    .map((_, i) => {
+      const phoneme = phonemePerFrame[i];
+      const pitch = f0[i];
 
-    let volume = phonemeAndPitchToVolumeMock(phoneme, pitch);
+      let volume = phonemeAndPitchToVolumeMock(phoneme, pitch);
 
-    // 別の歌手で同じにならないように適当に値をずらす
-    volume *= 1 - styleId * 0.03;
+      // 別の歌手で同じにならないように適当に値をずらす
+      volume *= 1 - styleId * 0.03;
 
-    return volume;
-  });
+      return volume;
+    });
 }

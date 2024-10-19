@@ -3,10 +3,33 @@
  * 値は適当だが、テストで使えるよう決定論的に決まるようにしたり、UIのバグに気づけるようある程度規則を持たせている。
  */
 
-import { IpadicFeatures } from "kuromoji";
+import { builder, IpadicFeatures, Tokenizer } from "kuromoji";
 import { moraToPhonemes } from "./phonemeMock";
+import { dicPath } from "./constants";
 import { moraPattern } from "@/domain/japanese";
 import { AccentPhrase, Mora } from "@/openapi";
+
+let _tokenizer: Tokenizer<IpadicFeatures> | undefined;
+
+/** テキストをトークン列に変換するトークナイザーを取得する */
+async function createOrGetTokenizer() {
+  if (_tokenizer != undefined) {
+    return _tokenizer;
+  }
+
+  return new Promise<Tokenizer<IpadicFeatures>>((resolve, reject) => {
+    builder({ dicPath }).build(
+      (err: Error, tokenizer: Tokenizer<IpadicFeatures>) => {
+        if (err) {
+          reject(err);
+        } else {
+          _tokenizer = tokenizer;
+          resolve(tokenizer);
+        }
+      },
+    );
+  });
+}
 
 /** アルファベット文字列を適当な0~1の適当な数値に変換する */
 function alphabetsToNumber(text: string): number {
@@ -131,11 +154,13 @@ export function replacePitchMock(
  * 助詞ごとに区切る。記号ごとに無音を入れる。
  * 無音で終わるアクセント句の最後のモーラが「す」「つ」の場合は無声化する。
  */
-export function tokensToActtentPhrasesMock(
-  tokens: IpadicFeatures[],
-  styleId: number,
-) {
+export async function textToActtentPhrasesMock(text: string, styleId: number) {
   const accentPhrases: AccentPhrase[] = [];
+
+  // トークンに分割
+  const tokenizer = await createOrGetTokenizer();
+  const tokens = tokenizer.tokenize(text);
+
   let textPhrase = "";
   for (const token of tokens) {
     // 記号の場合は無音を入れて区切る
