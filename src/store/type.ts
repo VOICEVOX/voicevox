@@ -827,6 +827,15 @@ export type SongExportSetting = {
   withTrackParameters: TrackParameters;
 };
 
+/**
+ * Measures, Beats, Sixteenths（小節、拍、16分）
+ */
+export type MBS = {
+  measures: number;
+  beats: number;
+  sixteenths: number;
+};
+
 export type SingingStoreState = {
   tpqn: number; // Ticks Per Quarter Note
   tempos: Tempo[];

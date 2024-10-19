@@ -9,6 +9,7 @@ import {
   PhraseKey,
   Track,
   EditorFrameAudioQuery,
+  MBS,
 } from "@/store/type";
 import { FramePhoneme } from "@/openapi";
 import { TrackId } from "@/type/preload";
@@ -214,9 +215,52 @@ export function getMeasureDuration(
 }
 
 // NOTE: 戻り値の単位はtick
-export function getBeatDuration(beats: number, beatType: number, tpqn: number) {
+export function getBeatDuration(beatType: number, tpqn: number) {
   return (tpqn * 4) / beatType;
 }
+
+const findTimeSignatureIndex = (
+  ticks: number,
+  timeSignatures: (TimeSignature & { position: number })[],
+) => {
+  if (ticks < 0) {
+    return 0;
+  }
+  for (let i = 0; i < timeSignatures.length - 1; i++) {
+    if (
+      timeSignatures[i].position <= ticks &&
+      timeSignatures[i + 1].position > ticks
+    ) {
+      return i;
+    }
+  }
+  return timeSignatures.length - 1;
+};
+
+export const tickToMbs = (
+  ticks: number,
+  timeSignatures: (TimeSignature & { position: number })[],
+  tpqn: number,
+): MBS => {
+  const tsIndex = findTimeSignatureIndex(ticks, timeSignatures);
+  const ts = timeSignatures[tsIndex];
+
+  const measureDuration = getMeasureDuration(ts.beats, ts.beatType, tpqn);
+  const beatDuration = getBeatDuration(ts.beatType, tpqn);
+  const sixteenthDuration = tpqn / 4;
+
+  const posInTs = ticks - ts.position;
+  const measuresInTs = Math.floor(posInTs / measureDuration);
+  const measures = ts.measureNumber + measuresInTs;
+
+  const posInMeasure = posInTs - measureDuration * measuresInTs;
+  const beats = 1 + Math.floor(posInMeasure / beatDuration);
+
+  const posInBeat = posInMeasure - beatDuration * (beats - 1);
+  const sixteenths = 1 + posInBeat / sixteenthDuration;
+
+  return { measures, beats, sixteenths };
+};
 
 export function getNumMeasures(
   notes: Note[],
