@@ -22,6 +22,8 @@
         y="0"
         :width="props.width"
         height="12"
+        rx="6"
+        ry="6"
         class="loop-area"
         @mousedown.stop="onLoopAreaMouseDown"
         @mouseup.stop
@@ -30,30 +32,34 @@
       <rect
         :x="loopStartX - offset"
         y="0"
-        :width="loopEndX - loopStartX"
-        :height="8"
+        :width="Math.max(loopEndX - loopStartX, 0)"
+        height="8"
         class="loop-range-area"
         @click.stop="onLoopRangeClick"
       />
       <rect
-        :x="loopStartX - offset"
-        y="0"
-        :width="loopEndX - loopStartX"
-        :height="4"
+        :x="loopStartX - offset + 8"
+        y="5"
+        :width="Math.max(loopEndX - loopStartX - 16, 0)"
+        height="2"
+        rx="1"
+        ry="1"
         class="loop-range"
         @click.stop="onLoopRangeClick"
       />
       <!-- ループ開始ハンドル -->
       <path
-        :d="`M${loopStartX - offset},0 L${loopStartX - offset},12 L${loopStartX - offset + 10},0 Z`"
+        :d="`M${loopStartX - offset},${2} L${loopStartX - offset},${2 + 8} L${loopStartX - offset + 6},${2 + 4} Z`"
         class="loop-handle loop-start-handle"
         :class="{ 'loop-handle-no-length': loopStartTick === loopEndTick }"
+        vector-effect="non-scaling-stroke"
       />
       <!-- ループ終了ハンドル -->
       <path
-        :d="`M${loopEndX - offset},0 L${loopEndX - offset},12 L${loopEndX - offset - 10},0 Z`"
+        :d="`M${loopEndX - offset},${2} L${loopEndX - offset},${2 + 8} L${loopEndX - offset - 6},${2 + 4} Z`"
         class="loop-handle loop-end-handle"
         :class="{ 'loop-handle-no-length': loopStartTick === loopEndTick }"
+        vector-effect="non-scaling-stroke"
       />
       <!-- ループ開始ドラッグ領域 -->
       <rect
@@ -315,23 +321,29 @@ onUnmounted(() => {
 
 // ループ範囲
 .loop-range {
+  fill: var(--scheme-color-outline);
+  opacity: 1;
+
   &-area {
     fill: transparent;
   }
-
-  fill: var(--scheme-color-outline);
-  opacity: 1;
 }
 
 // ループハンドル
 .loop-handle {
   fill: var(--scheme-color-outline);
   stroke: var(--scheme-color-outline);
-  stroke-width: 0;
+  stroke-width: 2px;
   stroke-linejoin: round;
+  stroke-linecap: round;
+
+  &:hover {
+    fill: var(--scheme-color-secondary-container);
+  }
 
   &-no-length {
-    opacity: 0.5;
+    fill: var(--scheme-color-outline);
+    stroke: var(--scheme-color-outline);
   }
 }
 
@@ -341,18 +353,6 @@ onUnmounted(() => {
   cursor: ew-resize;
   pointer-events: all;
 }
-
-// ドラッグ中の状態
-.loop-dragging {
-  .loop-area {
-    fill: var(--scheme-color-sing-loop-area);
-  }
-
-  .loop-range {
-    opacity: 0.6;
-  }
-}
-
 // ループが有効な状態
 .loop-enabled {
   .loop-range {
@@ -362,11 +362,13 @@ onUnmounted(() => {
   .loop-handle {
     fill: var(--scheme-color-primary-fixed-dim);
     stroke: var(--scheme-color-primary-fixed-dim);
+  }
+}
 
-    &-no-length {
-      fill: var(--scheme-color-outline);
-      stroke: var(--scheme-color-outline);
-    }
+// ドラッグ中の状態
+.loop-dragging {
+  .loop-area {
+    opacity: 0.6;
   }
 }
 </style>

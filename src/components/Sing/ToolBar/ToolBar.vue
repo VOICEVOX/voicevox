@@ -736,12 +736,12 @@ onUnmounted(() => {
   margin-left: 6px;
   &.q-btn--active,
   &.loop-enabled {
-    color: var(--scheme-color-primary);
+    color: var(--scheme-color-on-secondary-container);
     background: var(--scheme-color-secondary-container);
   }
 
   :deep(.q-icon) {
-    font-size: 20px;
+    font-size: 18px;
   }
 }
 
