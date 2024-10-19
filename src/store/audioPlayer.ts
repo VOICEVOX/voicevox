@@ -4,7 +4,7 @@
 import { createPartialStore } from "./vuex";
 import { AudioPlayerStoreState, AudioPlayerStoreTypes } from "./type";
 import { AudioKey } from "@/type/preload";
-import {showAlertDialog} from "@/components/Dialog/Dialog";
+import { showAlertDialog } from "@/components/Dialog/Dialog";
 
 // ユニットテストが落ちるのを回避するための遅延読み込み
 const getAudioElement = (() => {

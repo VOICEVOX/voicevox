@@ -1,4 +1,3 @@
-import { Dialog } from "quasar";
 import { defaultEngine } from "./contract";
 import {
   checkFileExistsImpl,
@@ -29,9 +28,6 @@ import {
   QAndATextFileName,
   UpdateInfosJsonFileName,
 } from "@/type/staticResources";
-import MessageDialog from "@/components/Dialog/TextDialog/MessageDialog.vue";
-import QuestionDialog from "@/components/Dialog/TextDialog/QuestionDialog.vue";
-import { UnreachableError } from "@/type/utility";
 
 // TODO: base pathを設定できるようにするか、ビルド時埋め込みにする
 const toStaticPath = (fileName: string) => `/${fileName}`;
