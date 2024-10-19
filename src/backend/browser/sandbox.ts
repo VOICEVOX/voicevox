@@ -17,7 +17,6 @@ import {
   EngineSettings,
   HotkeySettingType,
   Sandbox,
-  ThemeConf,
 } from "@/type/preload";
 import { AssetTextFileNames } from "@/type/staticResources";
 

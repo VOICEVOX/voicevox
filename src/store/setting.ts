@@ -1,7 +1,7 @@
-import { themes } from "@/domain/theme";
 import { SettingStoreState, SettingStoreTypes } from "./type";
 import { createDotNotationUILockAction as createUILockAction } from "./ui";
 import { createDotNotationPartialStore as createPartialStore } from "./vuex";
+import { themes } from "@/domain/theme";
 import {
   HotkeySettingType,
   SavingSetting,
