@@ -2,6 +2,10 @@ import { SettingStoreState, SettingStoreTypes } from "./type";
 import { createDotNotationUILockAction as createUILockAction } from "./ui";
 import { createDotNotationPartialStore as createPartialStore } from "./vuex";
 import {
+  showAlertDialog,
+  showQuestionDialog,
+} from "@/components/Dialog/Dialog";
+import {
   HotkeySettingType,
   SavingSetting,
   ExperimentalSettingType,
@@ -351,16 +355,16 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
 
         // 対応するGPUがない場合に変更を続行するか問う
         if (useGpu && !isAvailableGPUMode) {
-          const result = await window.backend.showQuestionDialog({
+          const result = await showQuestionDialog({
             type: "warning",
             title: "対応するGPUデバイスが見つかりません",
             message:
               "GPUモードの利用には対応するGPUデバイスが必要です。\n" +
               "このままGPUモードに変更するとエンジンエラーが発生する可能性があります。本当に変更しますか？",
-            buttons: ["変更する", "変更しない"],
-            cancelId: 1,
+            buttons: ["変更しない", "変更する"],
+            cancel: 0,
           });
-          if (result == 1) {
+          if (result == 0) {
             return;
           }
         }
@@ -376,7 +380,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         // GPUモードに変更できなかった場合はCPUモードに戻す
         // FIXME: useGpu設定を保存してからエンジン起動を試すのではなく、逆にしたい
         if (!result.success && useGpu) {
-          await window.backend.showMessageDialog({
+          await showAlertDialog({
             type: "error",
             title: "GPUモードに変更できませんでした",
             message:

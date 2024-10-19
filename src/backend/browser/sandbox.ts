@@ -31,6 +31,7 @@ import {
 } from "@/type/staticResources";
 import MessageDialog from "@/components/Dialog/TextDialog/MessageDialog.vue";
 import QuestionDialog from "@/components/Dialog/TextDialog/QuestionDialog.vue";
+import { UnreachableError } from "@/type/utility";
 
 // TODO: base pathを設定できるようにするか、ビルド時埋め込みにする
 const toStaticPath = (fileName: string) => `/${fileName}`;
@@ -168,49 +169,6 @@ export const api: Sandbox = {
         },
       ],
     });
-  },
-  async showMessageDialog(obj: {
-    type: "none" | "info" | "error" | "question" | "warning";
-    title: string;
-    message: string;
-  }) {
-    const { promise, resolve } = Promise.withResolvers<void>();
-    Dialog.create({
-      component: MessageDialog,
-      componentProps: {
-        type: obj.type,
-        title: obj.title,
-        message: obj.message,
-      },
-    }).onOk(() => resolve());
-
-    await promise;
-
-    // 誰も返り値を使ってないので適当な値を返している。型定義をPromise<void>に変えてもいいかも
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return
-    return {} as any;
-  },
-  async showQuestionDialog(obj: {
-    type: "none" | "info" | "error" | "question" | "warning";
-    title: string;
-    message: string;
-    buttons: string[];
-    cancelId?: number;
-    defaultId?: number;
-  }) {
-    const { promise, resolve } = Promise.withResolvers<number>();
-
-    Dialog.create({
-      component: QuestionDialog,
-      componentProps: {
-        type: obj.type,
-        title: obj.title,
-        message: obj.message,
-        buttons: obj.buttons,
-      },
-    }).onOk((result: { index: number }) => resolve(result.index));
-
-    return await promise;
   },
   async showImportFileDialog(obj: {
     name?: string;

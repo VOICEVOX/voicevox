@@ -114,31 +114,6 @@ export type IpcIHData = {
     return?: string[];
   };
 
-  SHOW_MESSAGE_DIALOG: {
-    args: [
-      obj: {
-        type: "none" | "info" | "error" | "question" | "warning";
-        title: string;
-        message: string;
-      },
-    ];
-    return: MessageBoxReturnValue;
-  };
-
-  SHOW_QUESTION_DIALOG: {
-    args: [
-      obj: {
-        type: "none" | "info" | "error" | "question" | "warning";
-        title: string;
-        message: string;
-        buttons: string[];
-        cancelId?: number;
-        defaultId?: number;
-      },
-    ];
-    return: number;
-  };
-
   SHOW_WARNING_DIALOG: {
     args: [
       obj: {

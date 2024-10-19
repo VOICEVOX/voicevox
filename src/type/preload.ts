@@ -239,19 +239,6 @@ export interface Sandbox {
     defaultPath?: string;
   }): Promise<string | undefined>;
   showProjectLoadDialog(obj: { title: string }): Promise<string[] | undefined>;
-  showMessageDialog(obj: {
-    type: "none" | "info" | "error" | "question" | "warning";
-    title: string;
-    message: string;
-  }): Promise<Electron.MessageBoxReturnValue>;
-  showQuestionDialog(obj: {
-    type: "none" | "info" | "error" | "question" | "warning";
-    title: string;
-    message: string;
-    buttons: string[];
-    cancelId?: number;
-    defaultId?: number;
-  }): Promise<number>;
   showImportFileDialog(obj: {
     title: string;
     name?: string;

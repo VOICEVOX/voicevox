@@ -2,6 +2,7 @@ import { Dialog, Notify, Loading } from "quasar";
 import SaveAllResultDialog from "./SaveAllResultDialog.vue";
 import QuestionDialog from "./TextDialog/QuestionDialog.vue";
 import MessageDialog from "./TextDialog/MessageDialog.vue";
+import { DialogType } from "./TextDialog/common";
 import { AudioKey, ConfirmedTips } from "@/type/preload";
 import {
   AllActions,
@@ -14,27 +15,35 @@ import { withProgressDotNotation as withProgress } from "@/store/ui";
 
 type MediaType = "audio" | "text";
 
-export type CommonDialogResult = "OK" | "CANCEL";
-export type CommonDialogOptions = {
-  alert: {
-    title: string;
-    message: string;
-    ok?: string;
-  };
-  confirm: {
-    title: string;
-    message: string;
-    actionName: string;
-    cancel?: string;
-  };
-  warning: {
-    title: string;
-    message: string;
-    actionName: string;
-    cancel?: string;
-  };
+export type TextDialogResult = "OK" | "CANCEL";
+export type TextAlertDialogOptions = {
+  type?: DialogType;
+  title: string;
+  message: string;
+  ok?: string;
 };
-export type CommonDialogType = keyof CommonDialogOptions;
+export type TextConfirmDialogOptions = {
+  type?: DialogType;
+  title: string;
+  message: string;
+  actionName: string;
+  cancel?: string;
+};
+export type TextWarningDialogOptions = {
+  type?: DialogType;
+  title: string;
+  message: string;
+  actionName: string;
+  cancel?: string;
+};
+export type TextQuestionDialogOptions = {
+  type?: DialogType;
+  title: string;
+  message: string;
+  buttons: string[];
+  cancel: number;
+  default?: number;
+};
 
 export type NotifyAndNotShowAgainButtonOption = {
   message: string;
@@ -46,16 +55,14 @@ export type NotifyAndNotShowAgainButtonOption = {
 export type LoadingScreenOption = { message: string };
 
 // 汎用ダイアログを表示
-export const showAlertDialog = async (
-  options: CommonDialogOptions["alert"],
-) => {
+export const showAlertDialog = async (options: TextAlertDialogOptions) => {
   options.ok ??= "閉じる";
 
   const { promise, resolve } = Promise.withResolvers<void>();
   Dialog.create({
     component: MessageDialog,
     componentProps: {
-      type: "warning",
+      type: options.type ?? "info",
       title: options.title,
       message: options.message,
       ok: options.ok,
@@ -67,52 +74,66 @@ export const showAlertDialog = async (
   return "OK" as const;
 };
 
-/**
- * htmlフラグを`true`にする場合、外部からの汚染された文字列を`title`や`message`に含めてはいけません。
- * see https://quasar.dev/quasar-plugins/dialog#using-html
- */
-export const showConfirmDialog = async (
-  options: CommonDialogOptions["confirm"],
-) => {
+export const showConfirmDialog = async (options: TextConfirmDialogOptions) => {
   options.cancel ??= "キャンセル";
 
   const { promise, resolve } = Promise.withResolvers<number>();
   Dialog.create({
     component: QuestionDialog,
     componentProps: {
-      type: "question",
+      type: options.type ?? "question",
       title: options.title,
       message: options.message,
-      buttons: [options.actionName, options.cancel],
+      buttons: [options.cancel, options.actionName],
       default: 0,
     },
   }).onOk(({ index }: { index: number }) => resolve(index));
 
   const index = await promise;
 
-  return index === 0 ? "OK" : "CANCEL";
+  return index === 1 ? "OK" : "CANCEL";
 };
 
-export const showWarningDialog = async (
-  options: CommonDialogOptions["warning"],
-) => {
+export const showWarningDialog = async (options: TextWarningDialogOptions) => {
   options.cancel ??= "キャンセル";
 
   const { promise, resolve } = Promise.withResolvers<number>();
   Dialog.create({
     component: QuestionDialog,
     componentProps: {
-      type: "warning",
+      type: options.type ?? "warning",
       title: options.title,
       message: options.message,
-      buttons: [options.actionName, options.cancel],
-      default: 1,
+      buttons: [options.cancel, options.actionName],
+      default: 0,
     },
   }).onOk(({ index }: { index: number }) => resolve(index));
 
   const index = await promise;
 
-  return index === 0 ? "OK" : "CANCEL";
+  return index === 1 ? "OK" : "CANCEL";
+};
+export const showQuestionDialog = async (
+  options: TextQuestionDialogOptions,
+) => {
+  const { promise, resolve } = Promise.withResolvers<number>();
+  Dialog.create({
+    component: QuestionDialog,
+    componentProps: {
+      type: options.type ?? "question",
+      title: options.title,
+      message: options.message,
+      buttons: options.buttons,
+      persistent: options.cancel != undefined,
+      default: options.default,
+    },
+  })
+    .onOk(({ index }: { index: number }) => resolve(index))
+    .onCancel(() => resolve(options.cancel));
+
+  const index = await promise;
+
+  return index;
 };
 
 export async function generateAndSaveOneAudioWithDialog({

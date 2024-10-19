@@ -2,15 +2,9 @@
   ブラウザ版の質問ダイアログ。
   QuasarのDialog Pluginから呼ぶことを想定。
   参照：https://quasar.dev/quasar-plugins/dialog
-  WARNING: キャンセルしてもonCancelは呼ばれないので注意。
 -->
 <template>
-  <QDialog
-    ref="dialogRef"
-    :modelValue
-    :persistent
-    @update:modelValue="updateModelValue"
-  >
+  <QDialog ref="dialogRef" v-model="modelValue" :persistent>
     <QCard class="q-py-sm q-px-md dialog-card">
       <QCardSection class="title">
         <QIcon
@@ -47,7 +41,6 @@
 import { QBtn, useDialogPluginComponent } from "quasar";
 import { computed, onMounted, useTemplateRef } from "vue";
 import { getIcon, getColor, DialogType } from "./common";
-import { UnreachableError } from "@/type/utility";
 
 const modelValue = defineModel<boolean>({ default: false });
 const props = withDefaults(
@@ -58,12 +51,10 @@ const props = withDefaults(
     buttons: string[];
     persistent?: boolean | undefined;
     default?: number | undefined;
-    cancel?: number | undefined;
   }>(),
   {
     persistent: undefined,
     default: undefined,
-    cancel: undefined,
   },
 );
 defineEmits({
@@ -75,9 +66,6 @@ const color = computed(() => getColor(props.type));
 const { dialogRef, onDialogOK } = useDialogPluginComponent();
 
 const buttonsRef = useTemplateRef<QBtn[]>("buttons");
-const persistent = computed(
-  () => props.persistent ?? props.cancel == undefined,
-);
 
 onMounted(() => {
   if (props.default != undefined) {
@@ -92,27 +80,6 @@ const onClick = (index: number) => {
   if (buttonClicked) return;
   buttonClicked = true;
   onDialogOK({ index });
-};
-
-const updateModelValue = (val: boolean) => {
-  // trueになるとき：通す
-  // falseになるとき：
-  // - onClickを呼んだ後に非表示になるなら通す
-  // - そうでないなら（背景クリックなど）cancel扱いにする、cancelが未設定ならエラー（Unreachableのはず）
-  // NOTE: ブラウザ版のバックエンドのダイアログとして利用しており、electronのDialogの仕様に合わせる必要があるので、処理がややこしくなっている
-  if (val || buttonClicked) {
-    modelValue.value = val;
-  } else {
-    if (props.cancel == undefined) {
-      throw new UnreachableError(
-        "Unreachable: cancel is not set, but dialog is not closed by clicking button",
-      );
-    }
-    buttonClicked = true;
-    // NOTE: ipc経由で出すダイアログの実装と揃えるため、onDialogOKでキャンセルを処理している
-    // TODO: ipc経由でダイアログを出さずに全てブラウザ実装のダイアログを使うようにする
-    onDialogOK({ index: props.cancel });
-  }
 };
 </script>
 <style scoped lang="scss">

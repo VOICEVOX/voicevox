@@ -57,10 +57,12 @@ import {
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import {
-  CommonDialogOptions,
-  CommonDialogResult,
+  TextDialogResult,
   NotifyAndNotShowAgainButtonOption,
   LoadingScreenOption,
+  TextAlertDialogOptions,
+  TextConfirmDialogOptions,
+  TextWarningDialogOptions,
 } from "@/components/Dialog/Dialog";
 import {
   LatestProjectType,
@@ -1970,15 +1972,15 @@ export type UiStoreTypes = {
   };
 
   SHOW_ALERT_DIALOG: {
-    action(payload: CommonDialogOptions["alert"]): CommonDialogResult;
+    action(payload: TextAlertDialogOptions): TextDialogResult;
   };
 
   SHOW_CONFIRM_DIALOG: {
-    action(payload: CommonDialogOptions["confirm"]): CommonDialogResult;
+    action(payload: TextConfirmDialogOptions): TextDialogResult;
   };
 
   SHOW_WARNING_DIALOG: {
-    action(payload: CommonDialogOptions["warning"]): CommonDialogResult;
+    action(payload: TextWarningDialogOptions): TextDialogResult;
   };
 
   SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON: {
