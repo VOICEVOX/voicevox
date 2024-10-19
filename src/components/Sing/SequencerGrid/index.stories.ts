@@ -7,12 +7,6 @@ const meta: Meta<typeof Presentation> = {
   component: Presentation,
 
   args: {
-    tempos: [
-      {
-        bpm: 120,
-        position: 0,
-      },
-    ],
     timeSignatures: [
       {
         beats: 4,
@@ -20,22 +14,12 @@ const meta: Meta<typeof Presentation> = {
         measureNumber: 1,
       },
     ],
-    offset: 0,
     zoomX: 0.25,
+    zoomY: 1.0,
     tpqn: 480,
     snapType: 16,
     numMeasures: 32,
-    uiLocked: false,
   },
-
-  render: (args) => ({
-    components: { Presentation },
-    setup() {
-      const playheadPosition = ref(480);
-      return { args, playheadPosition };
-    },
-    template: `<Presentation v-bind="args" v-model:playheadPosition="playheadPosition" />`,
-  }),
 };
 
 export default meta;
@@ -44,26 +28,6 @@ type Story = StoryObj<typeof Presentation>;
 export const Default: Story = {
   name: "デフォルト",
   args: {},
-};
-
-export const WithBpmChange: Story = {
-  name: "BPM変化",
-  args: {
-    tempos: [
-      {
-        bpm: 120,
-        position: 0,
-      },
-      {
-        bpm: 180,
-        position: 480 * 4,
-      },
-      {
-        bpm: 240,
-        position: 480 * 8,
-      },
-    ],
-  },
 };
 
 export const WithTimeSignatureChange: Story = {
