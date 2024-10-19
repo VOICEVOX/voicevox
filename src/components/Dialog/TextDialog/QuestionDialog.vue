@@ -64,8 +64,6 @@ const props = withDefaults(
 );
 defineEmits({
   ...useDialogPluginComponent.emitsObject,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  "update:modelValue": (val: boolean) => true,
 });
 
 const iconName = computed(() => getIcon(props.type));

@@ -14,7 +14,7 @@ const meta: Meta<typeof QuestionDialog> = {
     buttons: ["A", "B", "C"],
 
     onOk: fn(),
-    "onUpdate:modelValue": fn(),
+    onHide: fn(),
   },
   tags: ["!autodocs"],
 };
@@ -70,9 +70,7 @@ export const ClickBackdropWithCancel: Story = {
     if (!backdrop) throw new UnreachableError();
     await userEvent.click(backdrop);
 
-    await waitFor(() =>
-      expect(args["onUpdate:modelValue"]).toBeCalledWith(false),
-    );
+    await waitFor(() => expect(args["onHide"]).toBeCalled());
   },
 };
 
