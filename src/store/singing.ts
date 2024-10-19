@@ -482,7 +482,7 @@ export const singingStoreState: SingingStoreState = {
   nowAudioExporting: false,
   cancellationOfAudioExportRequested: false,
   isSongSidebarOpen: false,
-  isLoopEnabled: true,
+  isLoopEnabled: false,
   loopStartTick: 0,
   loopEndTick: 0,
 };
