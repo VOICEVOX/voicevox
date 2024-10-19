@@ -1,5 +1,5 @@
 <!--
-  ブラウザ版の質問ダイアログ。
+  質問ダイアログ。
   QuasarのDialog Pluginから呼ぶことを想定。
   参照：https://quasar.dev/quasar-plugins/dialog
 -->
