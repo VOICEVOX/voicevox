@@ -605,33 +605,6 @@ registerIpcMainHandle<IpcMainHandle>({
     return result.filePaths;
   },
 
-  SHOW_MESSAGE_DIALOG: (_, { type, title, message }) => {
-    return dialog.showMessageBox(win, {
-      type,
-      title,
-      message,
-    });
-  },
-
-  SHOW_QUESTION_DIALOG: (
-    _,
-    { type, title, message, buttons, cancelId, defaultId },
-  ) => {
-    return dialog
-      .showMessageBox(win, {
-        type,
-        buttons,
-        title,
-        message,
-        noLink: true,
-        cancelId,
-        defaultId,
-      })
-      .then((value) => {
-        return value.response;
-      });
-  },
-
   SHOW_WARNING_DIALOG: (_, { title, message }) => {
     return dialog.showMessageBox(win, {
       type: "warning",
