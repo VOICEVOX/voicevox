@@ -7,7 +7,6 @@ import {
   writeFileImpl,
 } from "./fileImpl";
 import { getConfigManager } from "./browserConfig";
-
 import { IpcSOData } from "@/type/ipc";
 import {
   defaultHotkeySettings,
@@ -140,30 +139,6 @@ export const api: Sandbox = {
         },
       ],
     });
-  },
-  showMessageDialog(obj: {
-    type: "none" | "info" | "error" | "question" | "warning";
-    title: string;
-    message: string;
-  }) {
-    window.alert(`${obj.title}\n${obj.message}`);
-    // NOTE: どの呼び出し元も、return valueを使用していないので雑に対応している
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return Promise.resolve({} as any);
-  },
-  showQuestionDialog(obj: {
-    type: "none" | "info" | "error" | "question" | "warning";
-    title: string;
-    message: string;
-    buttons: string[];
-    cancelId?: number;
-    defaultId?: number;
-  }) {
-    // FIXME
-    // TODO: 例えば動的にdialog要素をDOMに生成して、それを表示させるみたいのはあるかもしれない
-    throw new Error(
-      `Not implemented: showQuestionDialog, request: ${JSON.stringify(obj)}`,
-    );
   },
   async showImportFileDialog(obj: {
     name?: string;

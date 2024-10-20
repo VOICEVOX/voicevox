@@ -267,3 +267,9 @@ img {
 .text-toast-button-display-warning {
   color: colors.$toast-button-display-warning;
 }
+
+// ダイアログのサイズ
+.dialog-card {
+  width: 700px;
+  max-width: 80vw;
+}
