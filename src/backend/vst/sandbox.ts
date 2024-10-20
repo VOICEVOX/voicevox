@@ -20,8 +20,7 @@ export const projectFilePath = "/meta/vst-project.vvproj";
 
 /**
  * VST版のSandBox実装
- * src/type/preload.tsのSandboxを変更した場合は、interfaceに追従した変更が必要
- * まだ開発中のため、VST版の実装も同時に行えない場合は、メソッドを追加して throw new Error() する
+ * ブラウザ版のSandBoxを継承している
  */
 export const api: Sandbox = {
   ...browserSandbox,
