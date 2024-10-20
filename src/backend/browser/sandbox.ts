@@ -16,7 +16,6 @@ import {
   EngineSettings,
   HotkeySettingType,
   Sandbox,
-  ThemeConf,
 } from "@/type/preload";
 import { AssetTextFileNames } from "@/type/staticResources";
 
@@ -244,16 +243,6 @@ export const api: Sandbox = {
   setNativeTheme(/* source: NativeThemeType */) {
     // TODO: Impl
     return;
-  },
-  async getAvailableThemes() {
-    // NOTE: Electron版では起動時にテーマ情報が必要なので、
-    //       この実装とは違って起動時に読み込んだキャッシュを返すだけになっている。
-    return Promise.all(
-      // FIXME: themeファイルのいい感じのパスの設定
-      ["/themes/default.json", "/themes/dark.json"].map((url) =>
-        fetch(url).then((res) => res.json() as Promise<ThemeConf>),
-      ),
-    );
   },
   vuexReady() {
     // NOTE: 何もしなくて良さそう

@@ -174,10 +174,6 @@ const api: Sandbox = {
     void ipcRendererInvokeProxy.SET_NATIVE_THEME(source);
   },
 
-  getAvailableThemes: () => {
-    return ipcRendererInvokeProxy.GET_AVAILABLE_THEMES();
-  },
-
   vuexReady: () => {
     void ipcRendererInvokeProxy.ON_VUEX_READY();
   },

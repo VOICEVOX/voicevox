@@ -9,7 +9,6 @@ import {
   MessageBoxReturnValue,
   NativeThemeType,
   TextAsset,
-  ThemeConf,
   ToolbarSettingType,
 } from "@/type/preload";
 import { AltPortInfos } from "@/store/type";
@@ -167,11 +166,6 @@ export type IpcIHData = {
   GET_DEFAULT_TOOLBAR_SETTING: {
     args: [];
     return: ToolbarSettingType;
-  };
-
-  GET_AVAILABLE_THEMES: {
-    args: [];
-    return: ThemeConf[];
   };
 
   ON_VUEX_READY: {

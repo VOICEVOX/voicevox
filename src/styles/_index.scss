@@ -9,11 +9,15 @@
 // 優先度を強引に上げる
 body:not(#dummy) {
   user-select: none;
-  border-left: solid #{vars.$window-border-width} #{colors.$splitter};
-  border-right: solid #{vars.$window-border-width} #{colors.$splitter};
-  border-bottom: solid #{vars.$window-border-width} #{colors.$splitter};
   color: colors.$display;
   background: colors.$background;
+
+  // Storybookでは枠線を付けない
+  &:not(.sb-show-main) {
+    border-left: solid #{vars.$window-border-width} #{colors.$splitter};
+    border-right: solid #{vars.$window-border-width} #{colors.$splitter};
+    border-bottom: solid #{vars.$window-border-width} #{colors.$splitter};
+  }
 }
 
 body[data-editor-font="default"] {
