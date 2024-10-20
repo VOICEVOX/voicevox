@@ -239,7 +239,6 @@ const playheadX = computed(() => {
 
 const getTickFromMouseEvent = (event: MouseEvent) => {
   const baseX = (props.offset + event.offsetX) / props.zoomX;
-  console.log(baseX, props.offset, event.offsetX, props.zoomX);
   return baseXToTick(baseX, props.tpqn);
 };
 
