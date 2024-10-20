@@ -1,0 +1,94 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`GENERATE_AUDIO_ITEM > テキストを指定するとtextに値が入る 1`] = `
+{
+  "presetKey": undefined,
+  "query": {
+    "accentPhrases": [
+      {
+        "accent": 5,
+        "moras": [
+          {
+            "consonant": "k",
+            "consonantLength": 0.0220625,
+            "pitch": 4.7734375,
+            "text": "コ",
+            "vowel": "o",
+            "vowelLength": 0.1140625,
+          },
+          {
+            "consonant": undefined,
+            "consonantLength": undefined,
+            "pitch": 3.609375,
+            "text": "ン",
+            "vowel": "N",
+            "vowelLength": 0.08312499999999999,
+          },
+          {
+            "consonant": "n",
+            "consonantLength": 0.022625,
+            "pitch": 4.75,
+            "text": "ニ",
+            "vowel": "i",
+            "vowelLength": 0.10843749999999999,
+          },
+          {
+            "consonant": "ch",
+            "consonantLength": 0.0400625,
+            "pitch": 4.0234375,
+            "text": "チ",
+            "vowel": "i",
+            "vowelLength": 0.10843749999999999,
+          },
+          {
+            "consonant": "h",
+            "consonantLength": 0.0315,
+            "pitch": 4.796875,
+            "text": "ハ",
+            "vowel": "a",
+            "vowelLength": 0.1509375,
+          },
+        ],
+        "pauseMora": undefined,
+      },
+    ],
+    "intonationScale": 1,
+    "outputSamplingRate": 24000,
+    "outputStereo": false,
+    "pitchScale": 0,
+    "postPhonemeLength": 0.1,
+    "prePhonemeLength": 0.1,
+    "speedScale": 1,
+    "volumeScale": 1,
+  },
+  "text": "こんにちは",
+  "voice": {
+    "engineId": "c7b58856-bd56-4aa1-afb7-b8415f824b06",
+    "speakerId": "7ffcb7ce-00ec-4bdc-82cd-45a8889e43ff",
+    "styleId": 0,
+  },
+}
+`;
+
+exports[`GENERATE_AUDIO_ITEM > 何も指定しない場合は空のAudioItemを作る 1`] = `
+{
+  "presetKey": undefined,
+  "query": {
+    "accentPhrases": [],
+    "intonationScale": 1,
+    "outputSamplingRate": 24000,
+    "outputStereo": false,
+    "pitchScale": 0,
+    "postPhonemeLength": 0.1,
+    "prePhonemeLength": 0.1,
+    "speedScale": 1,
+    "volumeScale": 1,
+  },
+  "text": "",
+  "voice": {
+    "engineId": "c7b58856-bd56-4aa1-afb7-b8415f824b06",
+    "speakerId": "7ffcb7ce-00ec-4bdc-82cd-45a8889e43ff",
+    "styleId": 0,
+  },
+}
+`;
