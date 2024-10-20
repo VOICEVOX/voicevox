@@ -1,6 +1,6 @@
 import { userEvent, within, expect, fn } from "@storybook/test";
-
 import { Meta, StoryObj } from "@storybook/vue3";
+
 import TempoOrTimeSignatureChangeDialog from "./TempoOrTimeSignatureChangeDialog.vue";
 
 const meta: Meta<typeof TempoOrTimeSignatureChangeDialog> = {
