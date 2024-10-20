@@ -40,8 +40,11 @@ Issue 側で取り組み始めたことを伝えるか、最初に Draft プル�
 [.node-version](.node-version) に記載されているバージョンの Node.js をインストールしてください。  
 Node.js の管理ツール（[nvs](https://github.com/jasongin/nvs)や[Volta](https://volta.sh)など）を利用すると簡単にインストールでき、Node.js の自動切り替えもできます。
 
-Node.js をインストール後、[このリポジトリ](https://github.com/VOICEVOX/voicevox.git) を
-Fork して `git clone` し、次のコマンドを実行してください。
+Node.js をインストール後、[このリポジトリ](https://github.com/VOICEVOX/voicevox.git) を Fork して `git clone` してください。
+
+### 依存ライブラリをインストールする
+
+次のコマンドを実行することで依存ライブラリがインストール・アップデートされます。
 
 ```bash
 npm ci
@@ -156,9 +159,20 @@ npx playwright codegen http://localhost:5173/  --viewport-size=1024,630
 
 詳細は [Playwright ドキュメントの Test generator](https://playwright.dev/docs/codegen-intro) を参照してください。
 
+### Storybook の Visual Regression Testing
+
+Storybook のコンポーネントのスクリーンショットを比較して、変更がある場合は差分を表示します。
+
+> [!NOTE]
+> このテストは Windows でのみ実行できます。
+
+```bash
+npm run test:storybook-vrt
+```
+
 #### スクリーンショットの更新
 
-ブラウザ End to End テストでは Visual Regression Testing を行っています。
+ブラウザ End to End テストと Storybook では Visual Regression Testing を行っています。
 現在 VRT テストは Windows のみで行っています。
 以下の手順でスクリーンショットを更新できます：
 

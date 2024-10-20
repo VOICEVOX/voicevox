@@ -216,31 +216,20 @@ export type ShowImportFileDialogOptions = {
   extensions?: string[];
 };
 
-export type ShowMessageDialogOptions = {
-  type: "none" | "info" | "error" | "question" | "warning";
-  title: string;
-  message: string;
-};
-
-export type ShowQuestionDialogOptions = {
-  type: "none" | "info" | "error" | "question" | "warning";
-  title: string;
-  message: string;
-  buttons: string[];
-  cancelId?: number;
-  defaultId?: number;
+export type TextAsset = {
+  Contact: string;
+  HowToUse: string;
+  OssCommunityInfos: string;
+  Policy: string;
+  PrivacyPolicy: string;
+  QAndA: string;
+  OssLicenses: Record<string, string>[];
+  UpdateInfos: UpdateInfo[];
 };
 
 export interface Sandbox {
   getAppInfos(): Promise<AppInfos>;
-  getHowToUseText(): Promise<string>;
-  getPolicyText(): Promise<string>;
-  getOssLicenses(): Promise<Record<string, string>[]>;
-  getUpdateInfos(): Promise<UpdateInfo[]>;
-  getOssCommunityInfos(): Promise<string>;
-  getQAndAText(): Promise<string>;
-  getContactText(): Promise<string>;
-  getPrivacyPolicyText(): Promise<string>;
+  getTextAsset<K extends keyof TextAsset>(textType: K): Promise<TextAsset[K]>;
   getAltPortInfos(): Promise<AltPortInfos>;
   showAudioSaveDialog(obj: {
     title: string;
@@ -261,10 +250,6 @@ export interface Sandbox {
     defaultPath?: string;
   }): Promise<string | undefined>;
   showProjectLoadDialog(obj: { title: string }): Promise<string[] | undefined>;
-  showMessageDialog(
-    obj: ShowMessageDialogOptions,
-  ): Promise<Electron.MessageBoxReturnValue>;
-  showQuestionDialog(obj: ShowQuestionDialogOptions): Promise<number>;
   showImportFileDialog(
     obj: ShowImportFileDialogOptions,
   ): Promise<string | undefined>;
@@ -297,7 +282,6 @@ export interface Sandbox {
   getDefaultHotkeySettings(): Promise<HotkeySettingType[]>;
   getDefaultToolbarSetting(): Promise<ToolbarSettingType>;
   setNativeTheme(source: NativeThemeType): void;
-  getAvailableThemes(): Promise<ThemeConf[]>;
   vuexReady(): void;
   getSetting<Key extends keyof ConfigType>(key: Key): Promise<ConfigType[Key]>;
   setSetting<Key extends keyof ConfigType>(
