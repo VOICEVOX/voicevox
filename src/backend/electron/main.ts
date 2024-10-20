@@ -31,7 +31,6 @@ import { EngineAndVvppController } from "./engineAndVvppController";
 import { failure, success } from "@/type/result";
 import { AssetTextFileNames } from "@/type/staticResources";
 import {
-  ThemeConf,
   EngineInfo,
   SystemError,
   defaultHotkeySettings,
@@ -40,6 +39,7 @@ import {
   EngineId,
   TextAsset,
 } from "@/type/preload";
+import { themes } from "@/domain/theme";
 
 type SingleInstanceLockData = {
   filePath: string | undefined;
@@ -224,20 +224,6 @@ function checkMultiEngineEnabled(): boolean {
     });
   }
   return enabled;
-}
-
-// テーマの読み込み
-const themes = readThemeFiles();
-function readThemeFiles() {
-  const themes: ThemeConf[] = [];
-  const dir = path.join(__static, "themes");
-  for (const file of fs.readdirSync(dir)) {
-    const theme = JSON.parse(
-      fs.readFileSync(path.join(dir, file)).toString(),
-    ) as ThemeConf;
-    themes.push(theme);
-  }
-  return themes;
 }
 
 const appState = {
@@ -605,33 +591,6 @@ registerIpcMainHandle<IpcMainHandle>({
     return result.filePaths;
   },
 
-  SHOW_MESSAGE_DIALOG: (_, { type, title, message }) => {
-    return dialog.showMessageBox(win, {
-      type,
-      title,
-      message,
-    });
-  },
-
-  SHOW_QUESTION_DIALOG: (
-    _,
-    { type, title, message, buttons, cancelId, defaultId },
-  ) => {
-    return dialog
-      .showMessageBox(win, {
-        type,
-        buttons,
-        title,
-        message,
-        noLink: true,
-        cancelId,
-        defaultId,
-      })
-      .then((value) => {
-        return value.response;
-      });
-  },
-
   SHOW_WARNING_DIALOG: (_, { title, message }) => {
     return dialog.showMessageBox(win, {
       type: "warning",
@@ -677,10 +636,6 @@ registerIpcMainHandle<IpcMainHandle>({
     } else {
       win.maximize();
     }
-  },
-
-  GET_AVAILABLE_THEMES: () => {
-    return themes;
   },
 
   OPEN_LOG_DIRECTORY: () => {

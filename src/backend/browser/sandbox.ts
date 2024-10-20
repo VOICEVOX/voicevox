@@ -7,7 +7,6 @@ import {
   writeFileImpl,
 } from "./fileImpl";
 import { getConfigManager } from "./browserConfig";
-
 import { IpcSOData } from "@/type/ipc";
 import {
   defaultHotkeySettings,
@@ -17,7 +16,6 @@ import {
   EngineSettings,
   HotkeySettingType,
   Sandbox,
-  ThemeConf,
 } from "@/type/preload";
 import { AssetTextFileNames } from "@/type/staticResources";
 
@@ -142,30 +140,6 @@ export const api: Sandbox = {
       ],
     });
   },
-  showMessageDialog(obj: {
-    type: "none" | "info" | "error" | "question" | "warning";
-    title: string;
-    message: string;
-  }) {
-    window.alert(`${obj.title}\n${obj.message}`);
-    // NOTE: どの呼び出し元も、return valueを使用していないので雑に対応している
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return Promise.resolve({} as any);
-  },
-  showQuestionDialog(obj: {
-    type: "none" | "info" | "error" | "question" | "warning";
-    title: string;
-    message: string;
-    buttons: string[];
-    cancelId?: number;
-    defaultId?: number;
-  }) {
-    // FIXME
-    // TODO: 例えば動的にdialog要素をDOMに生成して、それを表示させるみたいのはあるかもしれない
-    throw new Error(
-      `Not implemented: showQuestionDialog, request: ${JSON.stringify(obj)}`,
-    );
-  },
   async showImportFileDialog(obj: {
     name?: string;
     extensions?: string[];
@@ -269,16 +243,6 @@ export const api: Sandbox = {
   setNativeTheme(/* source: NativeThemeType */) {
     // TODO: Impl
     return;
-  },
-  async getAvailableThemes() {
-    // NOTE: Electron版では起動時にテーマ情報が必要なので、
-    //       この実装とは違って起動時に読み込んだキャッシュを返すだけになっている。
-    return Promise.all(
-      // FIXME: themeファイルのいい感じのパスの設定
-      ["/themes/default.json", "/themes/dark.json"].map((url) =>
-        fetch(url).then((res) => res.json() as Promise<ThemeConf>),
-      ),
-    );
   },
   vuexReady() {
     // NOTE: 何もしなくて良さそう

@@ -17,7 +17,9 @@ import {
 import { createDotNotationPartialStore as createPartialStore } from "./vuex";
 import { ActivePointScrollMode } from "@/type/preload";
 import {
-  CommonDialogOptions,
+  AlertDialogOptions,
+  ConfirmDialogOptions,
+  WarningDialogOptions,
   LoadingScreenOption,
   NotifyAndNotShowAgainButtonOption,
   connectAndExportTextWithDialog,
@@ -244,7 +246,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
 
   SHOW_ALERT_DIALOG: {
     action: createDotNotationUILockAction(
-      async (_, payload: { title: string; message: string; ok?: string }) => {
+      async (_, payload: AlertDialogOptions) => {
         return await showAlertDialog(payload);
       },
     ),
@@ -252,7 +254,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
 
   SHOW_CONFIRM_DIALOG: {
     action: createDotNotationUILockAction(
-      async (_, payload: CommonDialogOptions["confirm"]) => {
+      async (_, payload: ConfirmDialogOptions) => {
         return await showConfirmDialog(payload);
       },
     ),
@@ -260,7 +262,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
 
   SHOW_WARNING_DIALOG: {
     action: createDotNotationUILockAction(
-      async (_, payload: CommonDialogOptions["warning"]) => {
+      async (_, payload: WarningDialogOptions) => {
         return await showWarningDialog(payload);
       },
     ),
@@ -371,6 +373,10 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     },
   },
 
+  /**
+   * 選択可能なテーマをセットする。
+   * NOTE: カスタムテーマが導入された場合を見越して残している。
+   */
   SET_AVAILABLE_THEMES: {
     mutation(state, { themes }) {
       state.availableThemes = themes;

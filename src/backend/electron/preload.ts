@@ -67,28 +67,6 @@ const api: Sandbox = {
     return ipcRendererInvokeProxy.SHOW_PROJECT_LOAD_DIALOG({ title });
   },
 
-  showMessageDialog: ({ type, title, message }) => {
-    return ipcRendererInvokeProxy.SHOW_MESSAGE_DIALOG({ type, title, message });
-  },
-
-  showQuestionDialog: ({
-    type,
-    title,
-    message,
-    buttons,
-    cancelId,
-    defaultId,
-  }) => {
-    return ipcRendererInvokeProxy.SHOW_QUESTION_DIALOG({
-      type,
-      title,
-      message,
-      buttons,
-      cancelId,
-      defaultId,
-    });
-  },
-
   showImportFileDialog: ({ title, name, extensions }) => {
     return ipcRendererInvokeProxy.SHOW_IMPORT_FILE_DIALOG({
       title,
@@ -194,10 +172,6 @@ const api: Sandbox = {
 
   setNativeTheme: (source) => {
     void ipcRendererInvokeProxy.SET_NATIVE_THEME(source);
-  },
-
-  getAvailableThemes: () => {
-    return ipcRendererInvokeProxy.GET_AVAILABLE_THEMES();
   },
 
   vuexReady: () => {
