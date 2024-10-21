@@ -408,6 +408,10 @@ SASSのmapなどで構造化+mixin一括処理などで処理可能ですが、
   --scheme-color-sing-shadow-note: oklch(
     var(--lr-84) var(--neutral-variant-c) var(--neutral-variant-h)
   );
+
+  --scheme-color-sing-loop-area: oklch(
+    var(--lr-84) var(--neutral-variant-c) var(--neutral-variant-h)
+  );
 }
 
 /* ダークテーマ */
@@ -670,5 +674,9 @@ SASSのmapなどで構造化+mixin一括処理などで処理可能ですが、
 
   --scheme-color-sing-shadow-note: oklch(
     var(--lr-40) var(--neutral-variant-c) var(--neutral-variant-h)
+  );
+
+  --scheme-color-sing-loop-area: oklch(
+    var(--lr-36) var(--neutral-variant-c) var(--neutral-variant-h)
   );
 }

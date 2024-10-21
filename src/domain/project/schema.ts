@@ -98,6 +98,12 @@ export const trackSchema = z.object({
   pan: z.number(),
 });
 
+export const loopSchema = z.object({
+  isLoopEnabled: z.boolean(),
+  startTick: z.number(), // ループ開始ティック
+  endTick: z.number(), // ループ終了ティック
+});
+
 // プロジェクトファイルのスキーマ
 export const projectSchema = z.object({
   appVersion: z.string(),
@@ -113,6 +119,7 @@ export const projectSchema = z.object({
     timeSignatures: z.array(timeSignatureSchema),
     tracks: z.record(trackIdSchema, trackSchema),
     trackOrder: z.array(trackIdSchema),
+    loop: loopSchema,
   }),
 });
 

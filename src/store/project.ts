@@ -22,6 +22,7 @@ import {
   createDefaultTempo,
   createDefaultTimeSignature,
   createDefaultTrack,
+  createDefaultLoop,
   DEFAULT_TPQN,
 } from "@/sing/domain";
 import { EditorType } from "@/type/preload";
@@ -127,6 +128,14 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         });
         await context.actions.SET_TIME_SIGNATURES({
           timeSignatures: [createDefaultTimeSignature(1)],
+        });
+        const defaultLoop = createDefaultLoop();
+        await context.actions.SET_LOOP_ENABLED({
+          isLoopEnabled: defaultLoop.isLoopEnabled,
+        });
+        await context.actions.SET_LOOP_RANGE({
+          loopStartTick: defaultLoop.startTick,
+          loopEndTick: defaultLoop.endTick,
         });
         const trackId = TrackId(crypto.randomUUID());
         await context.actions.SET_TRACKS({
@@ -292,6 +301,9 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             timeSignatures,
             tracks,
             trackOrder,
+            isLoopEnabled,
+            loopStartTick,
+            loopEndTick,
           } = context.state;
           const projectData: LatestProjectType = {
             appVersion: appInfos.version,
@@ -305,6 +317,11 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               timeSignatures,
               tracks: Object.fromEntries(tracks),
               trackOrder,
+              loop: {
+                isLoopEnabled,
+                startTick: loopStartTick,
+                endTick: loopEndTick,
+              },
             },
           };
 

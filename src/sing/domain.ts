@@ -9,6 +9,7 @@ import {
   PhraseKey,
   Track,
   EditorFrameAudioQuery,
+  Loop,
 } from "@/store/type";
 import { FramePhoneme } from "@/openapi";
 import { TrackId } from "@/type/preload";
@@ -338,6 +339,20 @@ export function createDefaultTrack(): Track {
     mute: false,
     gain: 1,
     pan: 0,
+  };
+}
+
+export function createDefaultLoop(): Loop {
+  const defaultEndTick = getMeasureDuration(
+    DEFAULT_BEATS,
+    DEFAULT_BEAT_TYPE,
+    DEFAULT_TPQN,
+  );
+  console.log("defaultEndTick", defaultEndTick);
+  return {
+    isLoopEnabled: false,
+    startTick: 0,
+    endTick: defaultEndTick,
   };
 }
 

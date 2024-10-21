@@ -71,6 +71,7 @@ import {
   tempoSchema,
   timeSignatureSchema,
   trackSchema,
+  loopSchema,
 } from "@/domain/project/schema";
 
 /**
@@ -738,6 +739,8 @@ export type Singer = z.infer<typeof singerSchema>;
 
 export type Track = z.infer<typeof trackSchema>;
 
+export type Loop = z.infer<typeof loopSchema>;
+
 export type PhraseState =
   | "SINGER_IS_NOT_SET"
   | "WAITING_TO_BE_RENDERED"
@@ -854,6 +857,9 @@ export type SingingStoreState = {
   nowAudioExporting: boolean;
   cancellationOfAudioExportRequested: boolean;
   isSongSidebarOpen: boolean;
+  isLoopEnabled: boolean;
+  loopStartTick: number;
+  loopEndTick: number;
 };
 
 export type SingingStoreTypes = {
@@ -1290,6 +1296,16 @@ export type SingingStoreTypes = {
 
   SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS: {
     action(): void;
+  };
+
+  SET_LOOP_ENABLED: {
+    mutation: { isLoopEnabled: boolean };
+    action(payload: { isLoopEnabled: boolean }): void;
+  };
+
+  SET_LOOP_RANGE: {
+    mutation: { loopStartTick: number; loopEndTick: number };
+    action(payload: { loopStartTick: number; loopEndTick: number }): void;
   };
 };
 
