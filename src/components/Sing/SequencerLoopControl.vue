@@ -4,6 +4,7 @@
     :class="{
       'loop-enabled': isLoopEnabled,
       'loop-dragging': isDragging,
+      'loop-no-length': loopStartTick === loopEndTick,
       [cursorClass]: true,
     }"
     :style="{ height: adjustedHeight + 'px' }"
@@ -53,6 +54,7 @@
         class="loop-handle loop-start-handle"
         :class="{ 'loop-handle-no-length': loopStartTick === loopEndTick }"
         vector-effect="non-scaling-stroke"
+        @mousedown.stop="onStartHandleMouseDown"
       />
       <!-- ループ終了ハンドル -->
       <path
@@ -60,6 +62,7 @@
         class="loop-handle loop-end-handle"
         :class="{ 'loop-handle-no-length': loopStartTick === loopEndTick }"
         vector-effect="non-scaling-stroke"
+        @mousedown.stop="onEndHandleMouseDown"
       />
       <!-- ループ開始ドラッグ領域 -->
       <rect
@@ -139,6 +142,8 @@ const dragTarget = ref<"start" | "end" | null>(null);
 const dragStartX = ref(0);
 // ドラッグ開始時のハンドル位置
 const dragStartHandleX = ref(0);
+// コンテキストメニューの表示位置
+const contextMenuPosition = ref<number | null>(null);
 // ドラッグエリアの高さ
 // ドラッグ中の操作を容易にするためループ高さをルーラーと同一にする
 const adjustedHeight = computed(() =>
@@ -190,8 +195,8 @@ const startDragging = (target: "start" | "end", event: MouseEvent) => {
   dragStartHandleX.value =
     target === "start" ? loopStartX.value : loopEndX.value;
   setCursorState(CursorState.EW_RESIZE);
-  window.addEventListener("mousemove", onDrag);
-  window.addEventListener("mouseup", stopDragging);
+  window.addEventListener("mousemove", onDrag, true);
+  window.addEventListener("mouseup", stopDragging, true);
 };
 
 // ドラッグ中処理
@@ -242,6 +247,7 @@ const onDrag = (event: MouseEvent) => {
 
 // ドラッグ終了処理
 const stopDragging = async () => {
+  if (!isDragging.value) return;
   // ドラッグでループ範囲を設定していた場合にplayheadをループの開始位置に移動する
   const isPlayheadToLoopStart =
     isDragging.value && loopStartTick.value !== loopEndTick.value;
@@ -257,13 +263,27 @@ const stopDragging = async () => {
   isDragging.value = false;
   dragTarget.value = null;
   setCursorState(CursorState.UNSET);
-  window.removeEventListener("mousemove", onDrag);
-  window.removeEventListener("mouseup", stopDragging);
+  window.removeEventListener("mousemove", onDrag, true);
+  window.removeEventListener("mouseup", stopDragging, true);
+};
+
+// コンテキストメニュー位置に1小節のループ範囲を作成する
+const addOneMeasureLoop = (x: number) => {
+  const timeSignature = store.state.timeSignatures[0];
+  const oneMeasureTicks =
+    getNoteDuration(timeSignature.beatType, tpqn.value) * timeSignature.beats;
+  const baseX = (props.offset + x) / sequencerZoomX.value;
+  const cursorTick = baseXToTick(baseX, tpqn.value);
+  const startTick = snapToGrid(cursorTick);
+  const endTick = snapToGrid(startTick + oneMeasureTicks);
+  void setLoopRange(startTick, endTick);
 };
 
 const onContextMenu = (event: MouseEvent) => {
   event.preventDefault();
   event.stopPropagation();
+  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+  contextMenuPosition.value = event.clientX - rect.left;
 };
 const contextMenu = ref<InstanceType<typeof ContextMenu>>();
 const contextMenuData = computed<ContextMenuItemData[]>(() => {
@@ -279,11 +299,24 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
     },
     {
       type: "button",
-      label: "ループを0地点にリセット",
+      label: "ループ範囲を作成",
+      onClick: () => {
+        contextMenu.value?.hide();
+        if (contextMenuPosition.value) {
+          addOneMeasureLoop(contextMenuPosition.value);
+        }
+      },
+      disabled: !contextMenuPosition.value,
+      disableWhenUiLocked: true,
+    },
+    {
+      type: "button",
+      label: "ループ範囲を削除",
       onClick: () => {
         contextMenu.value?.hide();
         void setLoopRange(0, 0);
       },
+      disabled: loopStartTick.value === loopEndTick.value,
       disableWhenUiLocked: true,
     },
   ];
@@ -291,6 +324,8 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 
 onUnmounted(() => {
   setCursorState(CursorState.UNSET);
+  window.removeEventListener("mousemove", onDrag, true);
+  window.removeEventListener("mouseup", stopDragging, true);
 });
 </script>
 
@@ -337,10 +372,6 @@ onUnmounted(() => {
   stroke-linejoin: round;
   stroke-linecap: round;
 
-  &:hover {
-    fill: var(--scheme-color-secondary-container);
-  }
-
   &-no-length {
     fill: var(--scheme-color-outline);
     stroke: var(--scheme-color-outline);
@@ -366,9 +397,43 @@ onUnmounted(() => {
 }
 
 // ドラッグ中の状態
+// TODO: 色や表示など仮
 .loop-dragging {
   .loop-area {
     opacity: 0.6;
+  }
+
+  .loop-range {
+    fill: var(--scheme-color-outline);
+    opacity: 0.38;
+  }
+
+  .loop-handle {
+    fill: var(--scheme-color-tertiary-fixed);
+    stroke: var(--scheme-color-tertiary-fixed);
+  }
+}
+
+// TODO: 仮: 削除の動作をシミュレート
+.loop-no-length:not(.loop-dragging) {
+  .loop-range {
+    display: none;
+  }
+
+  .loop-handle {
+    display: none;
+  }
+
+  .loop-drag-area {
+    display: none;
+  }
+}
+
+.loop-dragging.loop-no-length {
+  .loop-handle {
+    fill: var(--scheme-color-outline);
+    stroke: var(--scheme-color-outline);
+    opacity: 0.38;
   }
 }
 </style>

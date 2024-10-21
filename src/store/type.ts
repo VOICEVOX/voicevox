@@ -70,6 +70,7 @@ import {
   tempoSchema,
   timeSignatureSchema,
   trackSchema,
+  loopSchema,
 } from "@/domain/project/schema";
 
 /**
@@ -736,6 +737,8 @@ export type Note = z.infer<typeof noteSchema>;
 export type Singer = z.infer<typeof singerSchema>;
 
 export type Track = z.infer<typeof trackSchema>;
+
+export type Loop = z.infer<typeof loopSchema>;
 
 export type PhraseState =
   | "SINGER_IS_NOT_SET"
