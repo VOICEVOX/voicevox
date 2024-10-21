@@ -91,6 +91,7 @@ const enableMultiEngine = computed(() => store.state.enableMultiEngine);
 const titleText = isVst
   ? computed(
       () =>
+        (isEdited.value ? "*" : "") +
         "VVVST" +
         (currentVersion.value ? " - Ver. " + currentVersion.value : ""),
     )

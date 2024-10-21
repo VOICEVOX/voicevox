@@ -154,6 +154,10 @@ const ipcSetPhrases = createMessageFunction<
     missingVoices: SingingVoiceKey[];
   }
 >("setPhrases");
+const ipcGetVoices = createMessageFunction<
+  undefined,
+  Record<SingingVoiceKey, string>
+>("getVoices");
 const ipcSetVoices = createMessageFunction<
   Record<SingingVoiceKey, string>,
   void
@@ -188,6 +192,10 @@ export async function setProject(memory: string) {
 export async function setPhrases(phrases: VstPhrase[]) {
   const { missingVoices } = await ipcSetPhrases(phrases);
   return missingVoices;
+}
+
+export async function getVoices(): Promise<Record<SingingVoiceKey, string>> {
+  return await ipcGetVoices();
 }
 
 export async function setVoices(voices: Record<SingingVoiceKey, string>) {
