@@ -55,6 +55,7 @@ export const MovePlayhead: Story = {
       throw new UnreachableError("rect is not found");
     }
 
+    // userEvent.pointerは座標指定が上手くいかないので、MouseEventを使って手動でクリックをエミュレートする
     const rect = ruler.getBoundingClientRect();
     const width = rect.width;
     const event = new MouseEvent("click", {
