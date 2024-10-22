@@ -65,6 +65,7 @@ export const settingStoreState: SettingStoreState = {
     panAndGain: true,
   },
   showSingCharacterPortrait: true,
+  playheadPositionDisplayMode: "MeasuresBeats",
 };
 
 export const settingStore = createPartialStore<SettingStoreTypes>({
@@ -141,6 +142,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         "skipUpdateVersion",
         "undoableTrackOperations",
         "showSingCharacterPortrait",
+        "playheadPositionDisplayMode",
       ] as const;
 
       // rootMiscSettingKeysに値を足し忘れていたときに型エラーを出す検出用コード

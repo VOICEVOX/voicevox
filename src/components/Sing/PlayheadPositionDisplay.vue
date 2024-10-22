@@ -14,18 +14,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, Ref } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useStore } from "@/store";
 import ContextMenu, {
   ContextMenuItemData,
 } from "@/components/Menu/ContextMenu.vue";
 import { getTimeSignaturePositions, ticksToMeasuresBeats } from "@/sing/domain";
 import { MeasuresBeats } from "@/store/type";
+import { useRootMiscSetting } from "@/composables/useRootMiscSetting";
 
 const store = useStore();
 
 const playheadTicks = ref(0);
-const displayMode: Ref<"Seconds" | "MeasuresBeats"> = ref("MeasuresBeats");
+const [displayMode, setDisplayMode] = useRootMiscSetting(
+  store,
+  "playheadPositionDisplayMode",
+);
 
 const timeSignatures = computed(() => {
   const tpqn = store.state.tpqn;
@@ -98,7 +102,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
       disabled: displayMode.value === "MeasuresBeats",
       onClick: async () => {
         contextMenu.value?.hide();
-        displayMode.value = "MeasuresBeats";
+        setDisplayMode("MeasuresBeats");
       },
       disableWhenUiLocked: false,
     },
@@ -108,7 +112,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
       disabled: displayMode.value === "Seconds",
       onClick: async () => {
         contextMenu.value?.hide();
-        displayMode.value = "Seconds";
+        setDisplayMode("Seconds");
       },
       disableWhenUiLocked: false,
     },
