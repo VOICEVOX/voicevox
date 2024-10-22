@@ -22,7 +22,6 @@ import {
   createDefaultTempo,
   createDefaultTimeSignature,
   createDefaultTrack,
-  createDefaultLoop,
   DEFAULT_TPQN,
 } from "@/sing/domain";
 import { EditorType } from "@/type/preload";
@@ -62,7 +61,7 @@ const applySongProjectToStore = async (
   actions: DotNotationDispatch<AllActions>,
   songProject: LatestProjectType["song"],
 ) => {
-  const { tpqn, tempos, timeSignatures, tracks, trackOrder } = songProject;
+  const { tpqn, tempos, timeSignatures, tracks, trackOrder, loop } = songProject;
 
   await actions.SET_TPQN({ tpqn });
   await actions.SET_TEMPOS({ tempos });
@@ -75,6 +74,11 @@ const applySongProjectToStore = async (
         return [trackId, track];
       }),
     ),
+  });
+  await actions.SET_LOOP_ENABLED({ isLoopEnabled: loop.isLoopEnabled });
+  await actions.SET_LOOP_RANGE({
+    loopStartTick: loop.startTick,
+    loopEndTick: loop.endTick,
   });
 };
 
@@ -129,14 +133,6 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         await context.actions.SET_TIME_SIGNATURES({
           timeSignatures: [createDefaultTimeSignature(1)],
         });
-        const defaultLoop = createDefaultLoop();
-        await context.actions.SET_LOOP_ENABLED({
-          isLoopEnabled: defaultLoop.isLoopEnabled,
-        });
-        await context.actions.SET_LOOP_RANGE({
-          loopStartTick: defaultLoop.startTick,
-          loopEndTick: defaultLoop.endTick,
-        });
         const trackId = TrackId(crypto.randomUUID());
         await context.actions.SET_TRACKS({
           tracks: new Map([[trackId, createDefaultTrack()]]),
@@ -159,6 +155,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
       if (characterInfos == undefined)
         throw new Error("characterInfos == undefined");
 
+      console.log(migrateProjectFileObject);
       const parsedProjectData = await migrateProjectFileObject(projectData, {
         fetchMoraData: (payload) => actions.FETCH_MORA_DATA(payload),
         voices: characterInfos.flatMap((characterInfo) =>

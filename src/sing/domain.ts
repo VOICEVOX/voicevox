@@ -342,20 +342,6 @@ export function createDefaultTrack(): Track {
   };
 }
 
-export function createDefaultLoop(): Loop {
-  const defaultEndTick = getMeasureDuration(
-    DEFAULT_BEATS,
-    DEFAULT_BEAT_TYPE,
-    DEFAULT_TPQN,
-  );
-  console.log("defaultEndTick", defaultEndTick);
-  return {
-    isLoopEnabled: false,
-    startTick: 0,
-    endTick: defaultEndTick,
-  };
-}
-
 export function getSnapTypes(tpqn: number) {
   return getRepresentableNoteTypes(tpqn).filter((value) => {
     return value <= MAX_SNAP_TYPE;

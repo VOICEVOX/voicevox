@@ -119,7 +119,11 @@ export const projectSchema = z.object({
     timeSignatures: z.array(timeSignatureSchema),
     tracks: z.record(trackIdSchema, trackSchema),
     trackOrder: z.array(trackIdSchema),
-    loop: loopSchema,
+    loop: z.object({
+      startTick: z.number(),
+      endTick: z.number(),
+      isLoopEnabled: z.boolean(),
+    }),
   }),
 });
 

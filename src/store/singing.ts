@@ -78,7 +78,6 @@ import {
   createDefaultTrack,
   createDefaultTempo,
   createDefaultTimeSignature,
-  createDefaultLoop,
   isValidNotes,
   isValidTrack,
   SEQUENCER_MIN_NUM_MEASURES,
@@ -475,9 +474,9 @@ export const singingStoreState: SingingStoreState = {
   nowAudioExporting: false,
   cancellationOfAudioExportRequested: false,
   isSongSidebarOpen: false,
-  isLoopEnabled: createDefaultLoop().isLoopEnabled,
-  loopStartTick: createDefaultLoop().startTick,
-  loopEndTick: createDefaultLoop().endTick,
+  isLoopEnabled: false,
+  loopStartTick: 0,
+  loopEndTick: 0,
 };
 
 export const singingStore = createPartialStore<SingingStoreTypes>({
