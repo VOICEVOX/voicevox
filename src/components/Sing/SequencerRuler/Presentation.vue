@@ -80,7 +80,6 @@ const emit = defineEmits<{
 }>();
 
 const height = ref(40);
-const timeSignatures = computed(() => props.timeSignatures);
 const beatsPerMeasure = computed(() => {
   return props.timeSignatures[0].beats;
 });
@@ -94,7 +93,7 @@ const tsPositions = computed(() => {
   return getTimeSignaturePositions(props.timeSignatures, props.tpqn);
 });
 const endTicks = computed(() => {
-  const lastTs = props.timeSignatures[timeSignatures.value.length - 1];
+  const lastTs = props.timeSignatures[props.timeSignatures.length - 1];
   const lastTsPosition = tsPositions.value[tsPositions.value.length - 1];
   return (
     lastTsPosition +
