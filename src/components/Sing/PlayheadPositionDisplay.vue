@@ -94,7 +94,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   return [
     {
       type: "button",
-      label: "小節",
+      label: "小節.拍",
       disabled: displayMode.value === "MeasuresBeats",
       onClick: async () => {
         contextMenu.value?.hide();
@@ -104,7 +104,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
     },
     {
       type: "button",
-      label: "秒",
+      label: "分:秒",
       disabled: displayMode.value === "Seconds",
       onClick: async () => {
         contextMenu.value?.hide();
