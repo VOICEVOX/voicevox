@@ -88,17 +88,25 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { useStore } from "@/store";
 import { keyInfos, getKeyBaseHeight, tickToBaseX } from "@/sing/viewHelper";
 import { getMeasureDuration, getNoteDuration } from "@/sing/domain";
+import { TimeSignature } from "@/store/type";
 
-const store = useStore();
-const tpqn = computed(() => store.state.tpqn);
-const timeSignatures = computed(() => store.state.timeSignatures);
-const zoomX = computed(() => store.state.sequencerZoomX);
-const zoomY = computed(() => store.state.sequencerZoomY);
+const props = defineProps<{
+  tpqn: number;
+  timeSignatures: TimeSignature[];
+  sequencerZoomX: number;
+  sequencerZoomY: number;
+  sequencerSnapType: number;
+  numMeasures: number;
+}>();
+
+const tpqn = computed(() => props.tpqn);
+const timeSignatures = computed(() => props.timeSignatures);
+const zoomX = computed(() => props.sequencerZoomX);
+const zoomY = computed(() => props.sequencerZoomY);
 const gridCellTicks = computed(() => {
-  return getNoteDuration(store.state.sequencerSnapType, tpqn.value);
+  return getNoteDuration(props.sequencerSnapType, tpqn.value);
 });
 const gridCellWidth = computed(() => {
   return tickToBaseX(gridCellTicks.value, tpqn.value) * zoomX.value;
@@ -121,7 +129,7 @@ const gridWidth = computed(() => {
   const beats = timeSignatures.value[0].beats;
   const beatType = timeSignatures.value[0].beatType;
   const measureDuration = getMeasureDuration(beats, beatType, tpqn.value);
-  const numMeasures = store.getters.SEQUENCER_NUM_MEASURES;
+  const numMeasures = props.numMeasures;
   const numOfGridColumns =
     Math.round(measureDuration / gridCellTicks.value) * numMeasures;
   return gridCellWidth.value * numOfGridColumns;
