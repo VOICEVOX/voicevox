@@ -101,34 +101,30 @@ const props = defineProps<{
   numMeasures: number;
 }>();
 
-const tpqn = computed(() => props.tpqn);
-const timeSignatures = computed(() => props.timeSignatures);
-const zoomX = computed(() => props.sequencerZoomX);
-const zoomY = computed(() => props.sequencerZoomY);
 const gridCellTicks = computed(() => {
-  return getNoteDuration(props.sequencerSnapType, tpqn.value);
+  return getNoteDuration(props.sequencerSnapType, props.tpqn);
 });
 const gridCellWidth = computed(() => {
-  return tickToBaseX(gridCellTicks.value, tpqn.value) * zoomX.value;
+  return tickToBaseX(gridCellTicks.value, props.tpqn) * props.sequencerZoomX;
 });
 const gridCellBaseHeight = getKeyBaseHeight();
 const gridCellHeight = computed(() => {
-  return gridCellBaseHeight * zoomY.value;
+  return gridCellBaseHeight * props.sequencerZoomY;
 });
 const beatsPerMeasure = computed(() => {
-  return timeSignatures.value[0].beats;
+  return props.timeSignatures[0].beats;
 });
 const beatWidth = computed(() => {
-  const beatType = timeSignatures.value[0].beatType;
-  const wholeNoteDuration = tpqn.value * 4;
+  const beatType = props.timeSignatures[0].beatType;
+  const wholeNoteDuration = props.tpqn * 4;
   const beatTicks = wholeNoteDuration / beatType;
-  return tickToBaseX(beatTicks, tpqn.value) * zoomX.value;
+  return tickToBaseX(beatTicks, props.tpqn) * props.sequencerZoomX;
 });
 const gridWidth = computed(() => {
   // TODO: 複数拍子に対応する
-  const beats = timeSignatures.value[0].beats;
-  const beatType = timeSignatures.value[0].beatType;
-  const measureDuration = getMeasureDuration(beats, beatType, tpqn.value);
+  const beats = props.timeSignatures[0].beats;
+  const beatType = props.timeSignatures[0].beatType;
+  const measureDuration = getMeasureDuration(beats, beatType, props.tpqn);
   const numMeasures = props.numMeasures;
   const numOfGridColumns =
     Math.round(measureDuration / gridCellTicks.value) * numMeasures;
@@ -165,7 +161,7 @@ const beatLineIndices = computed(() =>
 const snapLinePositions = computed(() => {
   const snapTicks = gridCellTicks.value;
   const measureTicks =
-    (tpqn.value * 4 * beatsPerMeasure.value) / timeSignatures.value[0].beatType;
+    (props.tpqn * 4 * beatsPerMeasure.value) / props.timeSignatures[0].beatType;
   const snapCount = Math.floor(measureTicks / snapTicks);
 
   return Array.from({ length: snapCount }, (_, index) => {
