@@ -65,7 +65,7 @@ export const settingStoreState: SettingStoreState = {
     panAndGain: true,
   },
   showSingCharacterPortrait: true,
-  playheadPositionDisplayMode: "MeasuresBeats",
+  playheadPositionDisplayMode: "Seconds",
 };
 
 export const settingStore = createPartialStore<SettingStoreTypes>({
