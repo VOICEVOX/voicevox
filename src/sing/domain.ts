@@ -9,7 +9,7 @@ import {
   PhraseKey,
   Track,
   EditorFrameAudioQuery,
-  MBS,
+  MeasuresBeats,
 } from "@/store/type";
 import { FramePhoneme } from "@/openapi";
 import { TrackId } from "@/type/preload";
@@ -237,29 +237,25 @@ const findTimeSignatureIndex = (
   return timeSignatures.length - 1;
 };
 
-export const tickToMbs = (
+export const ticksToMeasuresBeats = (
   ticks: number,
   timeSignatures: (TimeSignature & { position: number })[],
   tpqn: number,
-): MBS => {
+): MeasuresBeats => {
   const tsIndex = findTimeSignatureIndex(ticks, timeSignatures);
   const ts = timeSignatures[tsIndex];
 
   const measureDuration = getMeasureDuration(ts.beats, ts.beatType, tpqn);
   const beatDuration = getBeatDuration(ts.beatType, tpqn);
-  const sixteenthDuration = tpqn / 4;
 
   const posInTs = ticks - ts.position;
   const measuresInTs = Math.floor(posInTs / measureDuration);
   const measures = ts.measureNumber + measuresInTs;
 
   const posInMeasure = posInTs - measureDuration * measuresInTs;
-  const beats = 1 + Math.floor(posInMeasure / beatDuration);
+  const beats = 1 + posInMeasure / beatDuration;
 
-  const posInBeat = posInMeasure - beatDuration * (beats - 1);
-  const sixteenths = 1 + posInBeat / sixteenthDuration;
-
-  return { measures, beats, sixteenths };
+  return { measures, beats };
 };
 
 export function getNumMeasures(
