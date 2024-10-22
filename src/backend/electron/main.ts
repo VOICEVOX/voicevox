@@ -40,6 +40,7 @@ import {
   TextAsset,
 } from "@/type/preload";
 import { themes } from "@/domain/theme";
+import { writeFileSafely } from "@/helpers/fileHelper";
 
 type SingleInstanceLockData = {
   filePath: string | undefined;
@@ -742,9 +743,9 @@ registerIpcMainHandle<IpcMainHandle>({
     win.show();
   },
 
-  WRITE_FILE: (_, { filePath, buffer }) => {
+  WRITE_FILE: async (_, { filePath, buffer }) => {
     try {
-      fs.writeFileSync(
+      await writeFileSafely(
         filePath,
         new DataView(buffer instanceof Uint8Array ? buffer.buffer : buffer),
       );
