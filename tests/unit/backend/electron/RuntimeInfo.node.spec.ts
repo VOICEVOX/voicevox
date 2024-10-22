@@ -14,18 +14,35 @@ test("想定通りのラインタイム情報が保存されている", async ()
   const runtimeInfoManager = new RuntimeInfoManager(tempFilePath, appVersion);
 
   // エンジン情報
-  runtimeInfoManager.setEngineInfos([
-    {
-      uuid: EngineId("00000000-0000-0000-0000-000000000001"),
-      host: "https://example.com/engine1",
-      name: "engine1",
-    },
-    {
-      uuid: EngineId("00000000-0000-0000-0000-000000000002"),
-      host: "https://example.com/engine2",
-      name: "engine2",
-    },
-  ]);
+  runtimeInfoManager.setEngineInfos(
+    [
+      {
+        uuid: EngineId("00000000-0000-0000-0000-000000000001"),
+        protocol: "https:",
+        hostname: "example.com",
+        defaultPort: "",
+        pathname: "/engine1",
+        name: "engine1",
+      },
+      {
+        uuid: EngineId("00000000-0000-0000-0000-000000000002"),
+        protocol: "https:",
+        hostname: "example.com",
+        defaultPort: "",
+        pathname: "/engine2",
+        name: "engine2",
+      },
+      {
+        uuid: EngineId("00000000-0000-0000-0000-000000000003"),
+        protocol: "http:",
+        hostname: "127.0.0.1",
+        defaultPort: "8080",
+        pathname: "",
+        name: "engine3",
+      },
+    ],
+    { [EngineId("00000000-0000-0000-0000-000000000003")]: "8081" },
+  );
 
   // ファイル書き出し
   await runtimeInfoManager.exportFile();
@@ -48,6 +65,11 @@ test("想定通りのラインタイム情報が保存されている", async ()
           "name": "engine2",
           "url": "https://example.com/engine2",
           "uuid": "00000000-0000-0000-0000-000000000002",
+        },
+        {
+          "name": "engine3",
+          "url": "http://127.0.0.1:8081",
+          "uuid": "00000000-0000-0000-0000-000000000003",
         },
       ],
       "formatVersion": 1,

@@ -1,5 +1,5 @@
 <template>
-  <div v-if="showSinger" class="character-portrait-wrap">
+  <div v-if="showSingCharacterPortrait" class="character-portrait-wrap">
     <img class="character-portrait" :src="portraitPath" />
   </div>
 </template>
@@ -9,7 +9,9 @@ import { computed } from "vue";
 import { useStore } from "@/store";
 
 const store = useStore();
-const showSinger = computed(() => store.state.showSinger);
+const showSingCharacterPortrait = computed(
+  () => store.state.showSingCharacterPortrait,
+);
 
 const portraitPath = computed(() => {
   const userOrderedCharacterInfos =

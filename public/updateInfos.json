@@ -1,5 +1,31 @@
 [
   {
+    "version": "0.21.0",
+    "descriptions": [
+      "ソング：立ち絵表示の有無を切り替え可能に",
+      "ソング：エディタのデザインを刷新",
+      "ソング：マルチトラックを通常機能に",
+      "ソング：書き出し時の詳細設定機能",
+      "設定ダイアログのデザインを刷新",
+      "開発環境の向上",
+      "バグ修正"
+    ],
+    "contributors": [
+      "gigi434",
+      "Hiroshiba",
+      "honey32",
+      "jdkfx",
+      "MT224244",
+      "naga-na",
+      "romot-co",
+      "sabonerune",
+      "Segu-g",
+      "sevenc-nanashi",
+      "sigprogramming",
+      "takusea"
+    ]
+  },
+  {
     "version": "0.20.0",
     "descriptions": [
       "起動を高速化",

@@ -1,5 +1,9 @@
 import { InjectionKey } from "vue";
-import { createStore, Store, useStore as baseUseStore } from "./vuex";
+import {
+  createStore,
+  Store as BaseStore,
+  useStore as baseUseStore,
+} from "./vuex";
 
 import {
   AllActions,
@@ -42,9 +46,8 @@ import {
   isProduction,
 } from "@/type/preload";
 
-export const storeKey: InjectionKey<
-  Store<State, AllGetters, AllActions, AllMutations>
-> = Symbol();
+export type Store = BaseStore<State, AllGetters, AllActions, AllMutations>;
+export const storeKey: InjectionKey<Store> = Symbol();
 
 export const indexStoreState: IndexStoreState = {
   defaultStyleIds: [],
@@ -150,49 +153,49 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
 
   GET_HOW_TO_USE_TEXT: {
     async action() {
-      return await window.backend.getHowToUseText();
+      return await window.backend.getTextAsset("HowToUse");
     },
   },
 
   GET_CONTACT_TEXT: {
     async action() {
-      return await window.backend.getContactText();
+      return await window.backend.getTextAsset("Contact");
     },
   },
 
   GET_Q_AND_A_TEXT: {
     async action() {
-      return await window.backend.getQAndAText();
+      return await window.backend.getTextAsset("QAndA");
     },
   },
 
   GET_POLICY_TEXT: {
     async action() {
-      return await window.backend.getPolicyText();
+      return await window.backend.getTextAsset("PrivacyPolicy");
     },
   },
 
   GET_OSS_LICENSES: {
     async action() {
-      return await window.backend.getOssLicenses();
+      return await window.backend.getTextAsset("OssLicenses");
     },
   },
 
   GET_UPDATE_INFOS: {
     async action() {
-      return await window.backend.getUpdateInfos();
+      return await window.backend.getTextAsset("UpdateInfos");
     },
   },
 
   GET_OSS_COMMUNITY_INFOS: {
     async action() {
-      return await window.backend.getOssCommunityInfos();
+      return await window.backend.getTextAsset("OssCommunityInfos");
     },
   },
 
   GET_PRIVACY_POLICY_TEXT: {
     async action() {
-      return await window.backend.getPrivacyPolicyText();
+      return await window.backend.getTextAsset("PrivacyPolicy");
     },
   },
 
@@ -412,11 +415,6 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
   strict: !isProduction,
 });
 
-export const useStore = (): Store<
-  State,
-  AllGetters,
-  AllActions,
-  AllMutations
-> => {
+export const useStore = (): Store => {
   return baseUseStore(storeKey);
 };

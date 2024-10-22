@@ -2,6 +2,7 @@ import { computed } from "vue";
 import { MenuItemData } from "@/components/Menu/type";
 
 import { useStore } from "@/store";
+import { useRootMiscSetting } from "@/composables/useRootMiscSetting";
 
 export const useMenuBarData = () => {
   const store = useStore();
@@ -55,7 +56,20 @@ export const useMenuBarData = () => {
   const editSubMenuData = computed<MenuItemData[]>(() => []);
 
   // 「表示」メニュー
-  const viewSubMenuData = computed<MenuItemData[]>(() => []);
+  const [showTextLineNumber, changeShowTextLineNumber] = useRootMiscSetting(
+    store,
+    "showTextLineNumber",
+  );
+  const viewSubMenuData = computed<MenuItemData[]>(() => [
+    {
+      type: "button",
+      label: showTextLineNumber.value ? "行番号を非表示" : "行番号を表示",
+      onClick: () => {
+        changeShowTextLineNumber(!showTextLineNumber.value);
+      },
+      disableWhenUiLocked: true,
+    },
+  ]);
 
   return {
     fileSubMenuData,

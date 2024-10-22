@@ -40,8 +40,11 @@ Issue 側で取り組み始めたことを伝えるか、最初に Draft プル�
 [.node-version](.node-version) に記載されているバージョンの Node.js をインストールしてください。  
 Node.js の管理ツール（[nvs](https://github.com/jasongin/nvs)や[Volta](https://volta.sh)など）を利用すると簡単にインストールでき、Node.js の自動切り替えもできます。
 
-Node.js をインストール後、[このリポジトリ](https://github.com/VOICEVOX/voicevox.git) を
-Fork して `git clone` し、次のコマンドを実行してください。
+Node.js をインストール後、[このリポジトリ](https://github.com/VOICEVOX/voicevox.git) を Fork して `git clone` してください。
+
+### 依存ライブラリをインストールする
+
+次のコマンドを実行することで依存ライブラリがインストール・アップデートされます。
 
 ```bash
 npm ci
@@ -88,6 +91,9 @@ Storybook を使ってコンポーネントを開発することができます�
 npm run storybook
 ```
 
+main ブランチの Storybook は Chromatic から確認できます。  
+<https://main--667d9c007418420dbb5b0f75.chromatic.com/>
+
 ### ブラウザ版の実行（開発中）
 
 別途音声合成エンジンを起動し、以下を実行して表示された localhost へアクセスします。
@@ -96,7 +102,8 @@ npm run storybook
 npm run browser:serve
 ```
 
-また、main ブランチのビルド結果がこちらにデプロイされています <https://voicevox-browser-dev.netlify.app/>  
+また、main ブランチのビルド結果がこちらにデプロイされています。  
+<https://voicevox-browser-dev.netlify.app/>  
 今はローカル PC 上で音声合成エンジンを起動する必要があります。
 
 ## ビルド
@@ -114,27 +121,27 @@ fork したリポジトリで Actions を ON にし、workflow_dispatch で`buil
 
 ### 単体テスト
 
+`./tests/unit/` 以下にあるテストと、Storybookのテストを実行します。
+
 ```bash
 npm run test:unit
 npm run test-watch:unit # 監視モード
+npm run test-ui:unit # VitestのUIを表示
 npm run test:unit -- --update # スナップショットの更新
 ```
 
-### コンポーネントのテスト
-
-Storybook を使ってコンポーネントのテストを行います。
-
-```bash
-npm run storybook # 先に Storybook を起動
-npm run test:storybook
-npm run test-watch:storybook # 監視モード
-```
+> [!NOTE]  
+> `./tests/unit` 下のテストは、ファイル名によってテストを実行する環境が変化します。
+>
+> - `.node.spec.ts`：Node.js 環境
+> - `.browser.spec.ts`：ブラウザ環境（Chromium）
+> - `.spec.ts`：ブラウザ環境（happy-domによるエミュレート）
 
 ### ブラウザ End to End テスト
 
 Electron の機能が不要な、UI や音声合成などの End to End テストを実行します。
 
-> **Note**
+> [!NOTE]
 > 一部のエンジンの設定を書き換えるテストは、CI(Github Actions)上でのみ実行されるようになっています。
 
 ```bash
@@ -152,9 +159,20 @@ npx playwright codegen http://localhost:5173/  --viewport-size=1024,630
 
 詳細は [Playwright ドキュメントの Test generator](https://playwright.dev/docs/codegen-intro) を参照してください。
 
+### Storybook の Visual Regression Testing
+
+Storybook のコンポーネントのスクリーンショットを比較して、変更がある場合は差分を表示します。
+
+> [!NOTE]
+> このテストは Windows でのみ実行できます。
+
+```bash
+npm run test:storybook-vrt
+```
+
 #### スクリーンショットの更新
 
-ブラウザ End to End テストでは Visual Regression Testing を行っています。
+ブラウザ End to End テストと Storybook では Visual Regression Testing を行っています。
 現在 VRT テストは Windows のみで行っています。
 以下の手順でスクリーンショットを更新できます：
 
