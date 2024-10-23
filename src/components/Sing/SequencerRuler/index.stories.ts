@@ -19,6 +19,8 @@ const meta: Meta<typeof Presentation> = {
     tpqn: 480,
     offset: 0,
     numMeasures: 32,
+    "onUpdate:playheadTicks": fn<(value: number) => void>(),
+    onDeselectAllNotes: fn(),
   },
   render: (args) => ({
     components: { Presentation },
@@ -37,10 +39,6 @@ export const Default: Story = {};
 
 export const MovePlayhead: Story = {
   name: "再生位置を移動",
-  args: {
-    "onUpdate:playheadTicks": fn<(value: number) => void>(),
-    onDeselectAllNotes: fn(),
-  },
 
   play: async ({ canvasElement, args }) => {
     const ruler =
