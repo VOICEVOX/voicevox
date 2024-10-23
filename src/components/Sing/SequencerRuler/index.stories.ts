@@ -31,6 +31,7 @@ export const MovePlayhead: Story = {
   name: "再生位置を移動",
   args: {
     "onUpdate:playheadTicks": fn<(value: number) => void>(),
+    onDeselectAllNotes: fn(),
   },
 
   play: async ({ canvasElement, args }) => {
@@ -61,5 +62,6 @@ export const MovePlayhead: Story = {
     const newTick = onUpdateCallback.mock.calls[0][0];
 
     await expect(newTick).toBeGreaterThan(0);
+    await expect(args["onDeselectAllNotes"]).toHaveBeenCalled();
   },
 };
