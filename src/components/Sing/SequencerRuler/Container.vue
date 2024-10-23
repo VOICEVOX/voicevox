@@ -39,8 +39,6 @@ const playheadTicks = ref(0);
 
 const updatePlayheadTicks = (ticks: number) => {
   void store.dispatch("SET_PLAYHEAD_POSITION", { position: ticks });
-
-  playheadTicks.value = ticks;
 };
 
 const playheadPositionChangeListener = (position: number) => {
