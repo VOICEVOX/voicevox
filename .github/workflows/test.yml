@@ -211,7 +211,7 @@ jobs:
             git config --global user.name "github-actions[bot]"
             git config --global user.email "github-actions[bot]@users.noreply.github.com"
             git add tests/
-            git commit -m "（スナップショットを更新）" --allow-empty
+            git commit -m "（スナップショットを更新）"
 
             echo "changes_exist=true" >> $GITHUB_OUTPUT
           else
