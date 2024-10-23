@@ -38,15 +38,16 @@ jobs:
             core.setOutput("shouldUpdateSnapshots", shouldUpdateSnapshots);
             console.log(`shouldUpdateSnapshots: ${shouldUpdateSnapshots}`);
 
-            const pushPatProvided = `${{ secrets.PUSH_TOKEN }}` !== "";
-            if (shouldUpdateSnapshots && !pushPatProvided) {
+            const pushTokenProvided = `${{ secrets.PUSH_TOKEN }}` !== "";
+            if (shouldUpdateSnapshots && !pushTokenProvided) {
               core.warning(
                 "PUSH_TOKENがSecretsに設定されていません。\n" +
                 "スナップショットを更新するコミットはpushされますが、" +
-                "Pull RequestのCIは手動で再実行する必要があります。"
+                "Pull RequestのCIは手動で再実行する必要があります。\n" +
+                "詳細はREADME.mdを参照してください。"
               );
             }
-            console.log(`pushPatProvided: ${pushPatProvided}`);
+            console.log(`pushTokenProvided: ${pushTokenProvided}`);
 
   # ビルドのテスト
   build-test:

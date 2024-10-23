@@ -192,9 +192,13 @@ npm run test-ui:storybook-vrt # Playwright の UI を表示
 4. Github Workflow が完了すると、更新されたスクリーンショットがコミットされます。
 
 > [!NOTE]
-> Secrets に `PUSH_TOKEN` という名前で [Fine-granted Tokens](https://github.com/settings/tokens?type=beta) を設定すると、そのトークンを使ってコミットを Push します。  
+> Secrets に `PUSH_TOKEN` という名前で [Fine-granted Tokens](https://github.com/settings/personal-access-tokens/new) を設定すると、そのトークンを使ってコミットを Push します。  
 > これが設定されていると Pull Request のテストが自動的にもう一度回るので、設定することを強く推奨します。  
 > トークンには `ユーザー名/voicevox` へのアクセス権を与え、 Repository permissions の Contents を Read and write に設定する必要があります。
+> <details>
+> <summary>トークンの設定例</summary>
+> <img src="./docs/res/Fine-granted_Tokensの作成.png" width="50%">
+> </details>
 
 ##### ローカルで更新する場合
 
