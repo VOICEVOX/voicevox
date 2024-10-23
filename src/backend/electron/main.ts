@@ -145,7 +145,7 @@ protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true, stream: true } },
 ]);
 
-const firstUrl = process.env.VITE_DEV_SERVER_URL ?? "app://./index.html";
+const firstUrl = import.meta.env.VITE_DEV_SERVER_URL ?? "app://./index.html";
 
 // engine
 const vvppEngineDir = path.join(app.getPath("userData"), "vvpp-engines");
@@ -280,7 +280,7 @@ async function createWindow() {
   }
 
   // ソフトウェア起動時はプロトコルを app にする
-  if (process.env.VITE_DEV_SERVER_URL == undefined) {
+  if (import.meta.env.VITE_DEV_SERVER_URL == undefined) {
     protocol.handle("app", (request) => {
       // 読み取り先のファイルがインストールディレクトリ内であることを確認する
       // ref: https://www.electronjs.org/ja/docs/latest/api/protocol#protocolhandlescheme-handler

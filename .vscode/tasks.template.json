@@ -1,0 +1,28 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Electron Serve Only",
+            "type": "npm",
+            "script": "electron:serve",
+            "options": {
+                "env": {
+                    "SKIP_LAUNCH_EDITOR": "1"
+                }
+            },
+            "isBackground": true,
+            "problemMatcher": {
+                "pattern": {
+                    "regexp": ""
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "building for development\\.\\.\\.",
+                    "endsPattern": "main process build is complete\\."
+                }
+            }
+        }
+    ]
+}
