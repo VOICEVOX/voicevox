@@ -148,6 +148,7 @@ export const Close: Story = {
 
 export const Closed: Story = {
   name: "閉じている",
+  tags: ["!vrt"],
   args: {
     openDialog: false,
   },
