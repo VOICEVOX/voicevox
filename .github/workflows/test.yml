@@ -20,6 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       shouldUpdateSnapshots: ${{ steps.check-whether-to-update-snapshots.outputs.shouldUpdateSnapshots }}
+      pushPatProvided: ${{ steps.check-whether-to-update-snapshots.outputs.pushPatProvided }}
     steps:
       - name: Check if commit message includes [update snapshots]
         id: check-whether-to-update-snapshots
@@ -40,7 +41,7 @@ jobs:
 
             const pushPatProvided = `${{ secrets.PUSH_PAT }}` !== "";
             if (shouldUpdateSnapshots && !pushPatProvided) {
-              core.notice(
+              core.warning(
                 "PUSH_PATがSecretsに設定されていません。\n" +
                 "スナップショットを更新するコミットはpushされますが、" +
                 "Pull RequestのCIは手動で再実行する必要があります。"
@@ -224,7 +225,7 @@ jobs:
         if: steps.commit-updated-snapshots.outputs.changes_exist == 'true'
         uses: ad-m/github-push-action@master
         with:
-          github_token: ${{ secrets.PUSH_PAT }}
+          github_token: ${{ secrets.PUSH_PAT || secrets.GITHUB_TOKEN }}
           branch: ${{ github.ref }}
 
   lint:
