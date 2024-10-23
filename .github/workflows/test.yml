@@ -185,10 +185,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # persist-credentials: false にしないと自前のトークンで push した時（=スナップショットを更新した時）に
-          # pull_request の CI が再実行されないので false にしている。
-          # https://github.com/orgs/community/discussions/25702#discussioncomment-3248819
+          # NOTE: デフォルトの設定だとgithub-push-actionが動いてくれないので設定を変える。
+          # ref: https://github.com/ad-m/github-push-action/issues/44#issuecomment-581706892
           persist-credentials: false
+          fetch-depth: 0
 
       - name: Download artifacts
         uses: actions/download-artifact@v4
