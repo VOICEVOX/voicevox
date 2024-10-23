@@ -48,6 +48,7 @@ jobs:
               );
             }
             core.setOutput("pushPatProvided", pushPatProvided);
+            console.log(`pushPatProvided: ${pushPatProvided}`);
 
   # ビルドのテスト
   build-test:
