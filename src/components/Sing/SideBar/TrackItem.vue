@@ -61,11 +61,13 @@
       <QItemSection>
         <QItemLabel class="track-name" @click.stop="uiLocked || selectTrack()">
           <QInput
+            v-if="props.trackId === selectedTrackId"
             v-model="temporaryTrackName"
             dense
             :disable="uiLocked"
             @blur="updateTrackName"
           />
+          <div v-else>{{ track.name }}</div>
         </QItemLabel>
         <QItemLabel v-if="trackCharacter" caption class="singer-name">
           <!-- ミュート中はアイコンを表示 -->
