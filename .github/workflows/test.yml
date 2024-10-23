@@ -25,7 +25,6 @@ jobs:
         id: check-whether-to-update-snapshots
         uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const commits = ${{ toJson(github.event.commits) }};
             if (!commits) {
@@ -38,6 +37,16 @@ jobs:
             );
             core.setOutput("shouldUpdateSnapshots", shouldUpdateSnapshots);
             console.log(`shouldUpdateSnapshots: ${shouldUpdateSnapshots}`);
+
+            const pushPatProvided = `${{ secrets.PUSH_PAT }}` !== "";
+            if (shouldUpdateSnapshots && !pushPatProvided) {
+              core.notice(
+                "PUSH_PATがSecretsに設定されていません。\n" +
+                "スナップショットを更新するコミットはpushされますが、" +
+                "Pull RequestのCIは手動で再実行する必要があります。"
+              );
+            }
+            core.setOutput("pushPatProvided", pushPatProvided);
 
   # ビルドのテスト
   build-test:
@@ -175,6 +184,11 @@ jobs:
     if: needs.config.outputs.shouldUpdateSnapshots == 'true'
     steps:
       - uses: actions/checkout@v4
+        with:
+          # persist-credentials: false にしないと自前のトークンで push した時（=スナップショットを更新した時）に
+          # pull_request の CI が再実行されないので、スナップショットを更新するときは false にする
+          # https://github.com/orgs/community/discussions/25702#discussioncomment-3248819
+          persist-credentials: ${{ (needs.config.outputs.updateSnapshots && needs.config.outputs.pushPatProvided) && 'false' || 'true' }}
 
       - name: Download artifacts
         uses: actions/download-artifact@v4
@@ -184,6 +198,7 @@ jobs:
           merge-multiple: true
 
       - name: Commit updated snapshots
+        id: commit-updated-snapshots
         run: |
           # パッチを適用
           for patch in patches/*.diff; do
@@ -197,10 +212,20 @@ jobs:
             git config --global user.email "github-actions[bot]@users.noreply.github.com"
             git add tests/
             git commit -m "（スナップショットを更新）"
-            git push
+
+            echo "changes_exist=true" >> $GITHUB_ENV
           else
             echo "No changes to commit"
+
+            echo "changes_exist=false" >> $GITHUB_ENV
           fi
+
+      - name: Push changes
+        if: steps.commit-updated-snapshots.outputs.changes_exist == 'true'
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.PUSH_PAT }}
+          branch: ${{ github.ref }}
 
   lint:
     runs-on: ubuntu-latest
