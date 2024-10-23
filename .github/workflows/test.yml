@@ -38,10 +38,10 @@ jobs:
             core.setOutput("shouldUpdateSnapshots", shouldUpdateSnapshots);
             console.log(`shouldUpdateSnapshots: ${shouldUpdateSnapshots}`);
 
-            const pushPatProvided = `${{ secrets.PUSH_PAT }}` !== "";
+            const pushPatProvided = `${{ secrets.PUSH_TOKEN }}` !== "";
             if (shouldUpdateSnapshots && !pushPatProvided) {
               core.warning(
-                "PUSH_PATがSecretsに設定されていません。\n" +
+                "PUSH_TOKENがSecretsに設定されていません。\n" +
                 "スナップショットを更新するコミットはpushされますが、" +
                 "Pull RequestのCIは手動で再実行する必要があります。"
               );
@@ -224,7 +224,7 @@ jobs:
         if: steps.commit-updated-snapshots.outputs.changes_exist == 'true'
         uses: ad-m/github-push-action@master
         with:
-          github_token: ${{ secrets.PUSH_PAT || secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.PUSH_TOKEN || secrets.GITHUB_TOKEN }}
           branch: ${{ github.ref }}
 
   lint:

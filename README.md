@@ -189,7 +189,7 @@ npm run test:storybook-vrt
 4. Github Workflow が完了すると、更新されたスクリーンショットがコミットされます。
 
 > [!NOTE]
-> Secrets に `PUSH_PAT` という名前で [Fine-granted Tokens](https://github.com/settings/tokens?type=beta) を設定すると、そのトークンを使ってコミットを Push します。  
+> Secrets に `PUSH_TOKEN` という名前で [Fine-granted Tokens](https://github.com/settings/tokens?type=beta) を設定すると、そのトークンを使ってコミットを Push します。  
 > これが設定されていると Pull Request のテストが自動的にもう一度回るので、設定することを強く推奨します。  
 > トークンには `ユーザー名/voicevox` へのアクセス権を与え、 Repository permissions の Contents を Read and write に設定する必要があります。
 
