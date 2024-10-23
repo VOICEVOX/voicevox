@@ -3,7 +3,6 @@ import { userEvent, within, expect, fn, waitFor } from "@storybook/test";
 import { Meta, StoryObj } from "@storybook/vue3";
 import QuestionDialog from "./QuestionDialog.vue";
 import { UnreachableError } from "@/type/utility";
-import { skipVrt } from "@/helpers/storybookHelper";
 
 const meta: Meta<typeof QuestionDialog> = {
   component: QuestionDialog,
@@ -77,7 +76,7 @@ export const ClickBackdropWithCancel: Story = {
 
 export const Closed: Story = {
   name: "閉じている",
-  tags: [skipVrt],
+  tags: ["no-vrt"],
   args: {
     modelValue: false,
   },
