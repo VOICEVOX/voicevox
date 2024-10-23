@@ -16,7 +16,7 @@ import Presentation from "./Presentation.vue";
 import { useStore } from "@/store";
 
 defineOptions({
-  name: "SequencerGrid",
+  name: "SequencerRuler",
 });
 
 withDefaults(
