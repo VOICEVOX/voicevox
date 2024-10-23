@@ -78,6 +78,10 @@ for (const [story, stories] of Object.entries(allStories)) {
               root.waitFor({ state: "visible" }).then(() => "root"),
               dialogRoot.waitFor({ state: "attached" }).then(() => "dialog"),
             ]);
+
+            // ダイアログの場合はダイアログのスクリーンショットを、そうでない場合は#storybook-rootのスクリーンショットを撮る。
+            // q-portal-dialogはそのまま撮るとvisible扱いにならずtoHaveScreenshotが失敗するので、
+            // 子要素にある実際のダイアログ（.q-dialog）を撮る。
             if (firstVisible === "dialog") {
               const dialog = dialogRoot.locator(".q-dialog");
               await expect(dialog).toHaveScreenshot(`${story.id}-${theme}.png`);
