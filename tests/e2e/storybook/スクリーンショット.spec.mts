@@ -58,10 +58,10 @@ for (const [story, stories] of Object.entries(allStories)) {
           ["dark", "ダーク"],
         ]) {
           test(`テーマ：${name}`, async ({ page }) => {
-            test.skip(
-              process.platform !== "win32",
-              "Windows以外のためスキップします",
-            );
+            // test.skip(
+            //   process.platform !== "win32",
+            //   "Windows以外のためスキップします",
+            // );
 
             const params = new URLSearchParams();
             params.append("id", story.id);
@@ -70,12 +70,14 @@ for (const [story, stories] of Object.entries(allStories)) {
               `http://localhost:7357/iframe.html?${params.toString()}`,
             );
             const root = page.locator("#storybook-root");
-            await root.waitFor({ state: "visible" });
-            const maybeDialogRoot = page.locator("div[id^=q-portal--dialog--]");
-            if (await maybeDialogRoot.isVisible()) {
-              await expect(maybeDialogRoot).toHaveScreenshot(
-                `${story.id}-${theme}.png`,
-              );
+            const dialogRoot = page.locator("div[id^=q-portal--dialog--]");
+            const firstVisible = await Promise.race([
+              root.waitFor({ state: "visible" }).then(() => "root"),
+              dialogRoot.waitFor({ state: "attached" }).then(() => "dialog"),
+            ]);
+            if (firstVisible === "dialog") {
+              const dialog = dialogRoot.locator(".q-dialog");
+              await expect(dialog).toHaveScreenshot(`${story.id}-${theme}.png`);
             } else {
               await expect(root).toHaveScreenshot(`${story.id}-${theme}.png`);
             }
