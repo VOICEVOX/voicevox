@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/vue3";
 import { fn, expect, Mock } from "@storybook/test";
+import { ref } from "vue";
 
 import Presentation from "./Presentation.vue";
 import { UnreachableError } from "@/type/utility";
@@ -18,8 +19,15 @@ const meta: Meta<typeof Presentation> = {
     tpqn: 480,
     offset: 0,
     numMeasures: 32,
-    playheadTicks: 0,
   },
+  render: (args) => ({
+    components: { Presentation },
+    setup() {
+      const playheadTicks = ref(0);
+      return { args, playheadTicks };
+    },
+    template: `<Presentation v-bind="args" v-model:playheadTicks="playheadTicks" />`,
+  }),
 };
 
 export default meta;
