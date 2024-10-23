@@ -6,6 +6,7 @@ import {
   buildAudioFileNameFromRawData,
   DEFAULT_AUDIO_FILE_NAME_TEMPLATE,
 } from "@/store/utility";
+import { skipVrt } from "@/helpers/storybookHelper";
 
 const meta: Meta<typeof FileNameTemplateDialog> = {
   component: FileNameTemplateDialog,
@@ -148,7 +149,7 @@ export const Close: Story = {
 
 export const Closed: Story = {
   name: "閉じている",
-  tags: ["no-vrt"],
+  tags: [skipVrt],
   args: {
     openDialog: false,
   },

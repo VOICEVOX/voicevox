@@ -2,6 +2,7 @@ import { userEvent, within, expect, fn } from "@storybook/test";
 
 import { Meta, StoryObj } from "@storybook/vue3";
 import Presentation from "./Presentation.vue";
+import { skipVrt } from "@/helpers/storybookHelper";
 
 const meta: Meta<typeof Presentation> = {
   component: Presentation,
@@ -95,5 +96,5 @@ export const OpenOfficialSite: Story = {
 
 export const Closed: Story = {
   name: "閉じている",
-  tags: ["no-vrt"],
+  tags: [skipVrt],
 };

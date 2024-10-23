@@ -1,5 +1,6 @@
 // 起動中のStorybookで様々なStoryを表示し、スクリーンショットを撮って比較するVRT。
 // テスト自体はend-to-endではないが、Playwrightを使う関係でe2eディレクトリ内でテストしている。
+import { skipVrt } from "@/helpers/storybookHelper";
 import { test, expect } from "@playwright/test";
 import z from "zod";
 
@@ -52,7 +53,7 @@ for (const story of currentStories) {
 for (const [story, stories] of Object.entries(allStories)) {
   test.describe(story, () => {
     for (const story of stories) {
-      if (story.tags.includes("no-vrt")) {
+      if (story.tags.includes(skipVrt)) {
         continue;
       }
       test.describe(story.name, () => {

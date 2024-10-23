@@ -2,6 +2,7 @@ import { userEvent, within, expect, fn } from "@storybook/test";
 
 import { Meta, StoryObj } from "@storybook/vue3";
 import MessageDialog from "./MessageDialog.vue";
+import {skipVrt} from "@/helpers/storybookHelper";
 
 const meta: Meta<typeof MessageDialog> = {
   component: MessageDialog,
@@ -49,7 +50,7 @@ export const Close: Story = {
 
 export const Closed: Story = {
   name: "閉じている",
-  tags: ["no-vrt"],
+  tags: [skipVrt],
   args: {
     modelValue: false,
   },
