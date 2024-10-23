@@ -61,10 +61,10 @@ for (const [story, stories] of Object.entries(allStories)) {
           ["dark", "ダーク"],
         ]) {
           test(`テーマ：${name}`, async ({ page }) => {
-            // test.skip(
-            //   process.platform !== "win32",
-            //   "Windows以外のためスキップします",
-            // );
+            test.skip(
+              process.platform !== "win32",
+              "Windows以外のためスキップします",
+            );
 
             const params = new URLSearchParams();
             params.append("id", story.id);
