@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from "@storybook/vue3";
-import { ref } from "vue";
 import { fn, expect, Mock } from "@storybook/test";
 
 import Presentation from "./Presentation.vue";
@@ -19,17 +18,8 @@ const meta: Meta<typeof Presentation> = {
     tpqn: 480,
     offset: 0,
     numMeasures: 32,
+    playheadTicks: 0,
   },
-
-  render: (args) => ({
-    components: { Presentation },
-    setup() {
-      const playheadTicks = ref(0);
-
-      return { args, playheadTicks };
-    },
-    template: `<Presentation v-bind="args" v-model:playheadTicks="playheadTicks" />`,
-  }),
 };
 
 export default meta;
@@ -50,10 +40,6 @@ export const MovePlayhead: Story = {
     if (!ruler) {
       throw new UnreachableError("ruler is not found");
     }
-    const rectElem = canvasElement.querySelector<SVGRectElement>("rect");
-    if (!rectElem) {
-      throw new UnreachableError("rect is not found");
-    }
 
     // userEvent.pointerは座標指定が上手くいかないので、MouseEventを使って手動でクリックをエミュレートする
     const rect = ruler.getBoundingClientRect();
@@ -65,7 +51,7 @@ export const MovePlayhead: Story = {
       clientY: rect.top + rect.height,
     });
 
-    rectElem.dispatchEvent(event);
+    ruler.dispatchEvent(event);
 
     await expect(args["onUpdate:playheadTicks"]).toHaveBeenCalled();
 
