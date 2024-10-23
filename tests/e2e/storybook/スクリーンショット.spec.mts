@@ -52,18 +52,35 @@ for (const story of currentStories) {
 for (const [story, stories] of Object.entries(allStories)) {
   test.describe(story, () => {
     for (const story of stories) {
-      test(story.name, async ({ page }) => {
-        test.skip(
-          process.platform !== "win32",
-          "Windows以外のためスキップします",
-        );
+      test.describe(story.name, () => {
+        for (const [theme, name] of [
+          ["light", "ライト"],
+          ["dark", "ダーク"],
+        ]) {
+          test(`テーマ：${name}`, async ({ page }) => {
+            test.skip(
+              process.platform !== "win32",
+              "Windows以外のためスキップします",
+            );
 
-        await page.goto(`http://localhost:7357/iframe.html?id=${story.id}`);
-        const body = page.locator("body.sb-show-main");
-        await body.waitFor({ state: "visible" });
-        await expect(page).toHaveScreenshot(`${story.id}.png`, {
-          fullPage: true,
-        });
+            const params = new URLSearchParams();
+            params.append("id", story.id);
+            params.append("globals", `theme:${theme}`);
+            await page.goto(
+              `http://localhost:7357/iframe.html?${params.toString()}`,
+            );
+            const root = page.locator("#storybook-root");
+            await root.waitFor({ state: "visible" });
+            const maybeDialogRoot = page.locator("div[id^=q-portal--dialog--]");
+            if (await maybeDialogRoot.isVisible()) {
+              await expect(maybeDialogRoot).toHaveScreenshot(
+                `${story.id}-${theme}.png`,
+              );
+            } else {
+              await expect(root).toHaveScreenshot(`${story.id}-${theme}.png`);
+            }
+          });
+        }
       });
     }
   });
