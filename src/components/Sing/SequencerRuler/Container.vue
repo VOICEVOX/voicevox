@@ -7,6 +7,7 @@
     :numMeasures
     :playheadTicks
     @update:playheadTicks="updatePlayheadTicks"
+    @deselectAllNotes="deselectAllNotes"
   />
 </template>
 
@@ -55,4 +56,8 @@ onUnmounted(() => {
     listener: playheadPositionChangeListener,
   });
 });
+
+const deselectAllNotes = () => {
+  void store.dispatch("DESELECT_ALL_NOTES");
+};
 </script>
