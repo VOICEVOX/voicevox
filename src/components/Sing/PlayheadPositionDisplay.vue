@@ -1,10 +1,10 @@
 <template>
   <div>
-    <div v-if="displayMode === 'Seconds'" class="playhead-position">
+    <div v-if="displayFormat === 'MinutesSeconds'" class="playhead-position">
       <div>{{ minAndSecStr }}</div>
       <div class="millisec">.{{ milliSecStr }}</div>
     </div>
-    <div v-if="displayMode === 'MeasuresBeats'" class="playhead-position">
+    <div v-if="displayFormat === 'MeasuresBeats'" class="playhead-position">
       <div>{{ measuresStr }}.</div>
       <div>{{ beatsIntegerPartStr }}</div>
       <div class="beats-fractional-part">.{{ beatsFractionalPartStr }}</div>
@@ -26,9 +26,9 @@ import { useRootMiscSetting } from "@/composables/useRootMiscSetting";
 const store = useStore();
 
 const playheadTicks = ref(0);
-const [displayMode, setDisplayMode] = useRootMiscSetting(
+const [displayFormat, setDisplayFormat] = useRootMiscSetting(
   store,
-  "playheadPositionDisplayMode",
+  "playheadPositionDisplayFormat",
 );
 
 const timeSignatures = computed(() => {
@@ -42,7 +42,7 @@ const timeSignatures = computed(() => {
 });
 
 const measuresBeats = computed((): MeasuresBeats => {
-  if (displayMode.value !== "MeasuresBeats") {
+  if (displayFormat.value !== "MeasuresBeats") {
     return { measures: 1, beats: 1 };
   }
   const tpqn = store.state.tpqn;
@@ -69,7 +69,7 @@ const beatsFractionalPartStr = computed(() => {
 });
 
 const minAndSecStr = computed(() => {
-  if (displayMode.value !== "Seconds") {
+  if (displayFormat.value !== "MinutesSeconds") {
     return "";
   }
   const ticks = playheadTicks.value;
@@ -82,7 +82,7 @@ const minAndSecStr = computed(() => {
 });
 
 const milliSecStr = computed(() => {
-  if (displayMode.value !== "Seconds") {
+  if (displayFormat.value !== "MinutesSeconds") {
     return "";
   }
   const ticks = playheadTicks.value;
@@ -99,20 +99,20 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
     {
       type: "button",
       label: "小節.拍",
-      disabled: displayMode.value === "MeasuresBeats",
+      disabled: displayFormat.value === "MeasuresBeats",
       onClick: async () => {
         contextMenu.value?.hide();
-        setDisplayMode("MeasuresBeats");
+        setDisplayFormat("MeasuresBeats");
       },
       disableWhenUiLocked: false,
     },
     {
       type: "button",
       label: "分:秒",
-      disabled: displayMode.value === "Seconds",
+      disabled: displayFormat.value === "MinutesSeconds",
       onClick: async () => {
         contextMenu.value?.hide();
-        setDisplayMode("Seconds");
+        setDisplayFormat("MinutesSeconds");
       },
       disableWhenUiLocked: false,
     },
