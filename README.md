@@ -148,6 +148,7 @@ Electron の機能が不要な、UI や音声合成などの End to End テス�
 npm run test:browser-e2e
 npm run test-watch:browser-e2e # 監視モード
 npm run test-watch:browser-e2e -- --headed # テスト中の UI を表示
+npm run test-ui:browser-e2e # Playwright の UI を表示
 ```
 
 Playwright を使用しているためテストパターンを生成することもできます。
@@ -168,6 +169,8 @@ Storybook のコンポーネントのスクリーンショットを比較して�
 
 ```bash
 npm run test:storybook-vrt
+npm run test-watch:storybook-vrt # 監視モード
+npm run test-ui:storybook-vrt # Playwright の UI を表示
 ```
 
 #### スクリーンショットの更新
