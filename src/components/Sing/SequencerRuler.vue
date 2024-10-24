@@ -65,6 +65,7 @@ import { computed, ref, onMounted, onUnmounted } from "vue";
 import { useStore } from "@/store";
 import { getMeasureDuration, getTimeSignaturePositions } from "@/sing/domain";
 import { baseXToTick, tickToBaseX } from "@/sing/viewHelper";
+import { usePlayheadPosition } from "@/composables/usePlayheadPosition";
 
 const props = withDefaults(
   defineProps<{
@@ -79,7 +80,7 @@ const props = withDefaults(
 const store = useStore();
 const state = store.state;
 const height = ref(40);
-const playheadTicks = ref(0);
+const playheadTicks = usePlayheadPosition();
 const tpqn = computed(() => state.tpqn);
 const timeSignatures = computed(() => state.timeSignatures);
 const zoomX = computed(() => state.sequencerZoomX);
@@ -146,15 +147,11 @@ const onClick = (event: MouseEvent) => {
   }
   const baseX = (props.offset + event.offsetX) / zoomX.value;
   const ticks = baseXToTick(baseX, tpqn.value);
-  void store.dispatch("SET_PLAYHEAD_POSITION", { position: ticks });
+  playheadTicks.value = ticks;
 };
 
 const sequencerRuler = ref<HTMLElement | null>(null);
 let resizeObserver: ResizeObserver | undefined;
-
-const playheadPositionChangeListener = (position: number) => {
-  playheadTicks.value = position;
-};
 
 onMounted(() => {
   const sequencerRulerElement = sequencerRuler.value;
@@ -173,18 +170,10 @@ onMounted(() => {
     }
   });
   resizeObserver.observe(sequencerRulerElement);
-
-  void store.dispatch("ADD_PLAYHEAD_POSITION_CHANGE_LISTENER", {
-    listener: playheadPositionChangeListener,
-  });
 });
 
 onUnmounted(() => {
   resizeObserver?.disconnect();
-
-  void store.dispatch("REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER", {
-    listener: playheadPositionChangeListener,
-  });
 });
 </script>
 

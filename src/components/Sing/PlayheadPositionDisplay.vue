@@ -14,7 +14,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, computed } from "vue";
 import { useStore } from "@/store";
 import ContextMenu, {
   ContextMenuItemData,
@@ -22,10 +22,11 @@ import ContextMenu, {
 import { getTimeSignaturePositions, ticksToMeasuresBeats } from "@/sing/domain";
 import { MeasuresBeats } from "@/store/type";
 import { useRootMiscSetting } from "@/composables/useRootMiscSetting";
+import { usePlayheadPosition } from "@/composables/usePlayheadPosition";
 
 const store = useStore();
 
-const playheadTicks = ref(0);
+const playheadTicks = usePlayheadPosition();
 const [displayFormat, setDisplayFormat] = useRootMiscSetting(
   store,
   "playheadPositionDisplayFormat",
@@ -117,22 +118,6 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
       disableWhenUiLocked: false,
     },
   ];
-});
-
-const playheadPositionChangeListener = (position: number) => {
-  playheadTicks.value = position;
-};
-
-onMounted(() => {
-  void store.dispatch("ADD_PLAYHEAD_POSITION_CHANGE_LISTENER", {
-    listener: playheadPositionChangeListener,
-  });
-});
-
-onUnmounted(() => {
-  void store.dispatch("REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER", {
-    listener: playheadPositionChangeListener,
-  });
 });
 </script>
 

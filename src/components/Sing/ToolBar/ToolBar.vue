@@ -176,6 +176,7 @@ import {
 import CharacterMenuButton from "@/components/Sing/CharacterMenuButton/MenuButton.vue";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import { SequencerEditTarget } from "@/store/type";
+import { usePlayheadPosition } from "@/composables/usePlayheadPosition";
 
 const store = useStore();
 
@@ -245,6 +246,7 @@ const volumeRangeAdjustment = computed(
   () => store.getters.SELECTED_TRACK.volumeRangeAdjustment,
 );
 const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
+const playheadPosition = usePlayheadPosition();
 
 const beatsOptions = computed(() => {
   return Array.from({ length: 32 }, (_, i) => ({
@@ -390,7 +392,7 @@ const stop = () => {
 };
 
 const goToZero = () => {
-  void store.dispatch("SET_PLAYHEAD_POSITION", { position: 0 });
+  playheadPosition.value = 0;
 };
 
 const volume = computed({
