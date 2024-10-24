@@ -52,7 +52,7 @@ for (const story of currentStories) {
 for (const [story, stories] of Object.entries(allStories)) {
   test.describe(story, () => {
     for (const story of stories) {
-      if (story.tags.includes("no-vrt")) {
+      if (story.tags.includes("skip-screenshot")) {
         continue;
       }
       test.describe(story.name, () => {

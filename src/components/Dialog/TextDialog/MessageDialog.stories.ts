@@ -49,7 +49,7 @@ export const Close: Story = {
 
 export const Closed: Story = {
   name: "閉じている",
-  tags: ["no-vrt"],
+  tags: ["skip-screenshot"],
   args: {
     modelValue: false,
   },
