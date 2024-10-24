@@ -2,10 +2,10 @@ import { onMounted, onUnmounted, ref, watch } from "vue";
 import { useStore } from "@/store";
 
 export const usePlayheadPosition = () => {
-  const playheadPosition = ref(0);
-  let _playheadPosition = 0;
-
   const store = useStore();
+
+  let _playheadPosition = store.getters.GET_PLAYHEAD_POSITION();
+  const playheadPosition = ref(_playheadPosition);
 
   const playheadPositionchangeListener = (position: number) => {
     _playheadPosition = position;
