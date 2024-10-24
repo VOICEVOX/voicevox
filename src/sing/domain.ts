@@ -9,7 +9,6 @@ import {
   PhraseKey,
   Track,
   EditorFrameAudioQuery,
-  Loop,
 } from "@/store/type";
 import { FramePhoneme } from "@/openapi";
 import { TrackId } from "@/type/preload";
@@ -563,5 +562,25 @@ export const shouldPlayTracks = (tracks: Map<TrackId, Track>): Set<TrackId> => {
     [...tracks.entries()]
       .filter(([, track]) => (soloTrackExists ? track.solo : !track.mute))
       .map(([trackId]) => trackId),
+  );
+};
+
+/**
+ * ループ範囲が有効かどうかを判定する
+ * @param startTick ループ開始位置(tick)
+ * @param endTick ループ終了位置(tick)
+ * @returns ループ範囲が有効な場合はtrue
+ */
+export const isValidLoopRange = (
+  startTick: number,
+  endTick: number,
+): boolean => {
+  return (
+    // 負の値は許容しない
+    startTick >= 0 &&
+    endTick >= 0 &&
+    // 整数である必要がある
+    Number.isInteger(startTick) &&
+    Number.isInteger(endTick)
   );
 };

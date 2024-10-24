@@ -1,6 +1,7 @@
 import { computed } from "vue";
 import { useStore } from "@/store";
-import { tickToSecond } from "@/sing/domain";
+import { tickToSecond, getNoteDuration } from "@/sing/domain";
+import { baseXToTick } from "@/sing/viewHelper";
 
 export function useLoopControl() {
   const store = useStore();
@@ -29,9 +30,11 @@ export function useLoopControl() {
 
   const setLoopEnabled = async (value: boolean): Promise<void> => {
     try {
-      await store.dispatch("SET_LOOP_ENABLED", { isLoopEnabled: value });
+      await store.dispatch("COMMAND_SET_LOOP_ENABLED", {
+        isLoopEnabled: value,
+      });
     } catch (error) {
-      throw new Error("Failed to set loop enabled state");
+      throw new Error("Failed to set loop enabled state", { cause: error });
     }
   };
 
@@ -39,18 +42,44 @@ export function useLoopControl() {
     startTick: number,
     endTick: number,
   ): Promise<void> => {
-    if (startTick < 0 || endTick < startTick) {
-      throw new Error("Invalid loop range");
-    }
-
     try {
-      await store.dispatch("SET_LOOP_RANGE", {
+      await store.dispatch("COMMAND_SET_LOOP_RANGE", {
         loopStartTick: startTick,
         loopEndTick: endTick,
       });
     } catch (error) {
-      throw new Error("Failed to set loop range");
+      throw new Error("Failed to set loop range", { cause: error });
     }
+  };
+
+  const clearLoopRange = async (): Promise<void> => {
+    try {
+      await store.dispatch("COMMAND_CLEAR_LOOP_RANGE");
+    } catch (error) {
+      throw new Error("Failed to clear loop range", { cause: error });
+    }
+  };
+
+  const snapToGrid = (tick: number, tpqn: number): number => {
+    const sequencerSnapType = store.state.sequencerSnapType;
+    const snapInterval = getNoteDuration(sequencerSnapType, tpqn);
+    return Math.round(tick / snapInterval) * snapInterval;
+  };
+
+  const addOneMeasureLoop = (
+    x: number,
+    offset: number,
+    tpqn: number,
+    zoomX: number,
+  ) => {
+    const timeSignature = store.state.timeSignatures[0];
+    const oneMeasureTicks =
+      getNoteDuration(timeSignature.beatType, tpqn) * timeSignature.beats;
+    const baseX = (offset + x) / zoomX;
+    const cursorTick = baseXToTick(baseX, tpqn);
+    const startTick = snapToGrid(cursorTick, tpqn);
+    const endTick = snapToGrid(startTick + oneMeasureTicks, tpqn);
+    void setLoopRange(startTick, endTick);
   };
 
   return {
@@ -61,5 +90,8 @@ export function useLoopControl() {
     loopEndTime,
     setLoopEnabled,
     setLoopRange,
+    clearLoopRange,
+    snapToGrid,
+    addOneMeasureLoop,
   };
 }

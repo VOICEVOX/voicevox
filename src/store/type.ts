@@ -1307,6 +1307,10 @@ export type SingingStoreTypes = {
     mutation: { loopStartTick: number; loopEndTick: number };
     action(payload: { loopStartTick: number; loopEndTick: number }): void;
   };
+
+  CLEAR_LOOP_RANGE: {
+    action(): void;
+  };
 };
 
 export type SingingCommandStoreState = {
@@ -1466,6 +1470,21 @@ export type SingingCommandStoreTypes = {
       project: LatestProjectType;
       trackIndexes: number[];
     }): void;
+  };
+
+  COMMAND_SET_LOOP_ENABLED: {
+    mutation: { isLoopEnabled: boolean };
+    action(payload: { isLoopEnabled: boolean }): void;
+  };
+
+  COMMAND_SET_LOOP_RANGE: {
+    mutation: { loopStartTick: number; loopEndTick: number };
+    action(payload: { loopStartTick: number; loopEndTick: number }): void;
+  };
+
+  COMMAND_CLEAR_LOOP_RANGE: {
+    mutation: undefined;
+    action(): void;
   };
 };
 

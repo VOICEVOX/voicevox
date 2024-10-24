@@ -84,6 +84,7 @@ import {
   getNumMeasures,
   isTracksEmpty,
   shouldPlayTracks,
+  isValidLoopRange,
 } from "@/sing/domain";
 import {
   FrequentlyUpdatedState,
@@ -2453,18 +2454,15 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   SET_LOOP_ENABLED: {
-    mutation(state, { isLoopEnabled }: { isLoopEnabled: boolean }) {
+    mutation(state, { isLoopEnabled }) {
       state.isLoopEnabled = isLoopEnabled;
     },
-    action(
-      { mutations, state },
-      { isLoopEnabled }: { isLoopEnabled: boolean },
-    ) {
+    async action({ mutations }, { isLoopEnabled }) {
       if (!transport) {
-        throw new Error("transport is undefined.");
+        throw new Error("transport is undefined");
       }
       mutations.SET_LOOP_ENABLED({ isLoopEnabled });
-      transport.loop = state.isLoopEnabled;
+      transport.loop = isLoopEnabled;
     },
   },
 
@@ -2473,22 +2471,33 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.loopStartTick = loopStartTick;
       state.loopEndTick = loopEndTick;
     },
-    async action({ mutations, state }, { loopStartTick, loopEndTick }) {
+    async action({ state, mutations }, { loopStartTick, loopEndTick }) {
       if (!transport) {
-        throw new Error("transport is undefined.");
+        throw new Error("transport is undefined");
       }
+
+      if (!isValidLoopRange(loopStartTick, loopEndTick)) {
+        throw new Error("The loop range is invalid.");
+      }
+
       mutations.SET_LOOP_RANGE({ loopStartTick, loopEndTick });
 
       transport.loopStartTime = tickToSecond(
-        state.loopStartTick,
+        loopStartTick,
         state.tempos,
         state.tpqn,
       );
       transport.loopEndTime = tickToSecond(
-        state.loopEndTick,
+        loopEndTick,
         state.tempos,
         state.tpqn,
       );
+    },
+  },
+
+  CLEAR_LOOP_RANGE: {
+    action({ mutations }) {
+      mutations.SET_LOOP_RANGE({ loopStartTick: 0, loopEndTick: 0 });
     },
   },
 });
@@ -3010,6 +3019,36 @@ export const singingCommandStore = transformCommandStore(
           void actions.RENDER();
         },
       ),
+    },
+    COMMAND_SET_LOOP_ENABLED: {
+      mutation(draft, { isLoopEnabled }) {
+        singingStore.mutations.SET_LOOP_ENABLED(draft, { isLoopEnabled });
+      },
+      action({ mutations }, { isLoopEnabled }) {
+        mutations.COMMAND_SET_LOOP_ENABLED({ isLoopEnabled });
+      },
+    },
+    COMMAND_SET_LOOP_RANGE: {
+      mutation(draft, { loopStartTick, loopEndTick }) {
+        singingStore.mutations.SET_LOOP_RANGE(draft, {
+          loopStartTick,
+          loopEndTick,
+        });
+      },
+      action({ mutations }, { loopStartTick, loopEndTick }) {
+        mutations.COMMAND_SET_LOOP_RANGE({ loopStartTick, loopEndTick });
+      },
+    },
+    COMMAND_CLEAR_LOOP_RANGE: {
+      mutation(draft) {
+        singingStore.mutations.SET_LOOP_RANGE(draft, {
+          loopStartTick: 0,
+          loopEndTick: 0,
+        });
+      },
+      action({ mutations }) {
+        mutations.COMMAND_CLEAR_LOOP_RANGE();
+      },
     },
   }),
   "song",

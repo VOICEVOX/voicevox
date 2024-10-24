@@ -302,8 +302,9 @@ export const migrateProjectFileObject = async (
     projectData.song.trackOrder = Object.keys(newTracks);
   }
 
-  // FIXME: 0.21.0 のマイグレーション
-  //if (semver.satisfies(projectAppVersion, "<0.21.0", semverSatisfiesOptions)) {
+  // FIXME: 0.22.0 のマイグレーション(おそらく)
+  // よく把握できていないため保留
+  //if (semver.satisfies(projectAppVersion, "<0.22.0", semverSatisfiesOptions)) {
   if (!("loop" in projectData.song)) {
     projectData.song.loop = {
       startTick: 0,

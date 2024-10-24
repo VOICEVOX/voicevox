@@ -61,7 +61,8 @@ const applySongProjectToStore = async (
   actions: DotNotationDispatch<AllActions>,
   songProject: LatestProjectType["song"],
 ) => {
-  const { tpqn, tempos, timeSignatures, tracks, trackOrder, loop } = songProject;
+  const { tpqn, tempos, timeSignatures, tracks, trackOrder, loop } =
+    songProject;
 
   await actions.SET_TPQN({ tpqn });
   await actions.SET_TEMPOS({ tempos });
