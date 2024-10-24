@@ -222,7 +222,7 @@ jobs:
 
       - name: Push changes
         if: steps.commit-updated-snapshots.outputs.changes_exist == 'true'
-        uses: ad-m/github-push-action@master
+        uses: ad-m/github-push-action@77c5b41
         with:
           github_token: ${{ secrets.PUSH_TOKEN || secrets.GITHUB_TOKEN }}
           branch: ${{ github.ref }}
