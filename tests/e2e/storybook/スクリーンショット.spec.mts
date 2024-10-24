@@ -72,18 +72,22 @@ for (const [story, stories] of Object.entries(allStories)) {
             await page.goto(
               `http://localhost:7357/iframe.html?${params.toString()}`,
             );
-            const root = page.locator("#storybook-root");
-            const dialogRoot = page.locator("div[id^=q-portal--dialog--]");
-            const firstVisible = await Promise.race([
-              root.waitFor({ state: "visible" }).then(() => "root"),
-              dialogRoot.waitFor({ state: "attached" }).then(() => "dialog"),
-            ]);
 
-            // ダイアログの場合はダイアログのスクリーンショットを、そうでない場合は#storybook-rootのスクリーンショットを撮る。
+            // Storybookのroot要素を取得。
+            // data-v-appが存在する = Vueのアプリケーションのマウントが完了しているかどうかを
+            // ロードが完了したかどうかとして扱う。
+            const root = page.locator("#storybook-root[data-v-app]");
+            const quasarDialogRoot = page.locator(
+              "div[id^=q-portal--dialog--]",
+            );
+
+            await root.waitFor({ state: "attached" });
+
+            // Quasarのダイアログが存在する場合はダイアログのスクリーンショットを、そうでない場合は#storybook-rootのスクリーンショットを撮る。
             // q-portal-dialogはそのまま撮るとvisible扱いにならずtoHaveScreenshotが失敗するので、
-            // 子要素にある実際のダイアログ（.q-dialog）を撮る。
-            if (firstVisible === "dialog") {
-              const dialog = dialogRoot.locator(".q-dialog");
+            // 子要素にある実際のダイアログ（.q-dialog__inner）を撮る。
+            if ((await quasarDialogRoot.count()) > 0) {
+              const dialog = quasarDialogRoot.locator(".q-dialog__inner");
               await expect(dialog).toHaveScreenshot(`${story.id}-${theme}.png`);
             } else {
               await expect(root).toHaveScreenshot(`${story.id}-${theme}.png`);
