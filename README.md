@@ -198,9 +198,10 @@ npm run test-ui:storybook-vrt # Playwright の UI を表示
    ```
 
 > [!NOTE]
-> Secrets に `PUSH_TOKEN` という名前で [Fine-granted Tokens](https://github.com/settings/personal-access-tokens/new) を設定すると、自動的にテストが再実行されます。
-> トークンには `ユーザー名/voicevox` へのアクセス権を与え、 Repository permissions の Contents を Read and write に設定する必要があります。
-> Secrets は `ユーザー名/voicevox` のリポジトリの Settings > Secrets and variables > Actions > New repository secret から設定できます。
+> Secrets に `PUSH_TOKEN` という名前で [Fine-granted Tokens](https://github.com/settings/personal-access-tokens/new)
+> を設定すると、自動的にテストが再実行されます。    
+> トークンには `ユーザー名/voicevox` へのアクセス権を与え、 Repository permissions の Contents を Read and write に設定する必要があります。  
+> Secrets は `ユーザー名/voicevox` のリポジトリの Settings > Secrets and variables > Actions > New repository secret から設定できます。  
 > <details>
 > <summary>トークンの設定例</summary>
 > <img src="./docs/res/Fine-granted_Tokensの作成.png" width="320">
