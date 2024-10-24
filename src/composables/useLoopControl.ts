@@ -60,9 +60,9 @@ export function useLoopControl() {
     }
   };
 
-  const snapToGrid = (tick: number, tpqn: number): number => {
+  const snapToGrid = (tick: number): number => {
     const sequencerSnapType = store.state.sequencerSnapType;
-    const snapInterval = getNoteDuration(sequencerSnapType, tpqn);
+    const snapInterval = getNoteDuration(sequencerSnapType, store.state.tpqn);
     return Math.round(tick / snapInterval) * snapInterval;
   };
 
@@ -77,8 +77,8 @@ export function useLoopControl() {
       getNoteDuration(timeSignature.beatType, tpqn) * timeSignature.beats;
     const baseX = (offset + x) / zoomX;
     const cursorTick = baseXToTick(baseX, tpqn);
-    const startTick = snapToGrid(cursorTick, tpqn);
-    const endTick = snapToGrid(startTick + oneMeasureTicks, tpqn);
+    const startTick = snapToGrid(cursorTick);
+    const endTick = snapToGrid(startTick + oneMeasureTicks);
     void setLoopRange(startTick, endTick);
   };
 

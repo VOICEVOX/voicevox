@@ -189,10 +189,8 @@ const onLoopAreaMouseDown = (event: MouseEvent) => {
   const target = event.currentTarget as HTMLElement;
   const rect = target.getBoundingClientRect();
   const x = event.clientX - rect.left + props.offset;
-  const tick = snapToGrid(
-    baseXToTick(x / sequencerZoomX.value, tpqn.value),
-    tpqn.value,
-  );
+  const tick = snapToGrid(baseXToTick(x / sequencerZoomX.value, tpqn.value));
+  void setLoopRange(tick, tick);
   previewLoopStartTick.value = tick;
   previewLoopEndTick.value = tick;
   startDragging("end", event);
@@ -211,6 +209,7 @@ const onEndHandleMouseDown = (event: MouseEvent) => {
   startDragging("end", event);
 };
 
+// ハンドルのダブルクリック(ループ範囲を削除する)
 const onHandleDoubleClick = () => {
   void clearLoopRange();
 };
@@ -230,7 +229,6 @@ const startDragging = (target: "start" | "end", event: MouseEvent) => {
 
   setCursorState(CursorState.EW_RESIZE);
   executePreviewProcess.value = true;
-  lastMouseEvent = event;
   if (previewRequestId == null) {
     previewRequestId = requestAnimationFrame(preview);
   }
@@ -258,7 +256,7 @@ const preview = () => {
     // ドラッグ中の基準tick
     const baseTick = baseXToTick(newX / sequencerZoomX.value, tpqn.value);
     // ドラッグ中の新しいtick（スナップされたtick）
-    const newTick = Math.max(0, snapToGrid(baseTick, tpqn.value));
+    const newTick = Math.max(0, snapToGrid(baseTick));
 
     try {
       // 開始ハンドルのドラッグ
