@@ -829,6 +829,11 @@ export type SongExportSetting = {
   withTrackParameters: TrackParameters;
 };
 
+export type MeasuresBeats = {
+  measures: number;
+  beats: number;
+};
+
 export type SingingStoreState = {
   tpqn: number; // Ticks Per Quarter Note
   tempos: Tempo[];

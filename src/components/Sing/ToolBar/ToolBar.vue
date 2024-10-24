@@ -113,12 +113,7 @@
         icon="stop"
         @click="stop"
       />
-      <div class="sing-playhead-position">
-        <div>{{ playheadPositionMinSecStr }}</div>
-        <div class="sing-playhead-position-millisec">
-          .{{ playHeadPositionMilliSecStr }}
-        </div>
-      </div>
+      <PlayheadPositionDisplay class="sing-playhead-position" />
     </div>
     <!-- settings for edit controls -->
     <div class="sing-controls">
@@ -164,7 +159,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch, ref, onMounted, onUnmounted } from "vue";
+import { computed, watch, ref } from "vue";
+import PlayheadPositionDisplay from "../PlayheadPositionDisplay.vue";
 import EditTargetSwicher from "./EditTargetSwicher.vue";
 import { useStore } from "@/store";
 
@@ -180,6 +176,7 @@ import {
 import CharacterMenuButton from "@/components/Sing/CharacterMenuButton/MenuButton.vue";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import { SequencerEditTarget } from "@/store/type";
+import { usePlayheadPosition } from "@/composables/usePlayheadPosition";
 
 const store = useStore();
 
@@ -249,6 +246,7 @@ const volumeRangeAdjustment = computed(
   () => store.getters.SELECTED_TRACK.volumeRangeAdjustment,
 );
 const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
+const playheadPosition = usePlayheadPosition();
 
 const beatsOptions = computed(() => {
   return Array.from({ length: 32 }, (_, i) => ({
@@ -383,30 +381,6 @@ const setVolumeRangeAdjustment = () => {
   });
 };
 
-const playheadTicks = ref(0);
-
-/// 再生時間の分と秒
-const playheadPositionMinSecStr = computed(() => {
-  const ticks = playheadTicks.value;
-  const time = store.getters.TICK_TO_SECOND(ticks);
-
-  const intTime = Math.trunc(time);
-  const min = Math.trunc(intTime / 60);
-  const minStr = String(min).padStart(2, "0");
-  const secStr = String(intTime - min * 60).padStart(2, "0");
-
-  return `${minStr}:${secStr}`;
-});
-
-const playHeadPositionMilliSecStr = computed(() => {
-  const ticks = playheadTicks.value;
-  const time = store.getters.TICK_TO_SECOND(ticks);
-  const intTime = Math.trunc(time);
-  const milliSec = Math.trunc((time - intTime) * 1000);
-  const milliSecStr = String(milliSec).padStart(3, "0");
-  return milliSecStr;
-});
-
 const nowPlaying = computed(() => store.state.nowPlaying);
 
 const play = () => {
@@ -418,7 +392,7 @@ const stop = () => {
 };
 
 const goToZero = () => {
-  void store.dispatch("SET_PLAYHEAD_POSITION", { position: 0 });
+  playheadPosition.value = 0;
 };
 
 const volume = computed({
@@ -462,22 +436,6 @@ const snapTypeSelectModel = computed({
       snapType: value.snapType,
     });
   },
-});
-
-const playheadPositionChangeListener = (position: number) => {
-  playheadTicks.value = position;
-};
-
-onMounted(() => {
-  void store.dispatch("ADD_PLAYHEAD_POSITION_CHANGE_LISTENER", {
-    listener: playheadPositionChangeListener,
-  });
-});
-
-onUnmounted(() => {
-  void store.dispatch("REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER", {
-    listener: playheadPositionChangeListener,
-  });
 });
 </script>
 
@@ -714,19 +672,7 @@ onUnmounted(() => {
 }
 
 .sing-playhead-position {
-  align-items: center;
-  display: flex;
-  font-size: 28px;
-  font-weight: 700;
   margin-left: 16px;
-  color: var(--scheme-color-on-surface);
-}
-
-.sing-playhead-position-millisec {
-  font-size: 16px;
-  font-weight: 700;
-  margin: 10px 0 0 2px;
-  color: var(--scheme-color-on-surface);
 }
 
 .sing-controls {

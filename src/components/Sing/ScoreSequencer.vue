@@ -224,6 +224,7 @@ import { useLyricInput } from "@/composables/useLyricInput";
 import { useCursorState, CursorState } from "@/composables/useCursorState";
 import { ExhaustiveError } from "@/type/utility";
 import { uuid4 } from "@/helpers/random";
+import { usePlayheadPosition } from "@/composables/usePlayheadPosition";
 
 // 直接イベントが来ているかどうか
 const isSelfEventTarget = (event: UIEvent) => {
@@ -327,7 +328,7 @@ const scrollX = ref(0);
 const scrollY = ref(0);
 
 // 再生ヘッドの位置
-const playheadTicks = ref(0);
+const playheadTicks = usePlayheadPosition();
 const playheadX = computed(() => {
   const baseX = tickToBaseX(playheadTicks.value, tpqn.value);
   return Math.floor(baseX * zoomX.value);
@@ -1318,9 +1319,7 @@ const onScroll = (event: Event) => {
   }
 };
 
-const playheadPositionChangeListener = (position: number) => {
-  playheadTicks.value = position;
-
+watch(playheadTicks, (newPlayheadPosition) => {
   // オートスクロール
   const sequencerBodyElement = sequencerBody.value;
   if (!sequencerBodyElement) {
@@ -1337,7 +1336,7 @@ const playheadPositionChangeListener = (position: number) => {
   const scrollTop = sequencerBodyElement.scrollTop;
   const scrollWidth = sequencerBodyElement.scrollWidth;
   const clientWidth = sequencerBodyElement.clientWidth;
-  const playheadX = tickToBaseX(position, tpqn.value) * zoomX.value;
+  const playheadX = tickToBaseX(newPlayheadPosition, tpqn.value) * zoomX.value;
   const tolerance = 3;
   if (playheadX < scrollLeft) {
     sequencerBodyElement.scrollTo(playheadX, scrollTop);
@@ -1347,7 +1346,7 @@ const playheadPositionChangeListener = (position: number) => {
   ) {
     sequencerBodyElement.scrollTo(playheadX, scrollTop);
   }
-};
+});
 
 // スクロールバーの幅を取得する
 onMounted(() => {
@@ -1394,19 +1393,11 @@ onActivated(() => {
 
 // リスナー登録
 onActivated(() => {
-  void store.dispatch("ADD_PLAYHEAD_POSITION_CHANGE_LISTENER", {
-    listener: playheadPositionChangeListener,
-  });
-
   document.addEventListener("keydown", handleKeydown);
 });
 
 // リスナー解除
 onDeactivated(() => {
-  void store.dispatch("REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER", {
-    listener: playheadPositionChangeListener,
-  });
-
   document.removeEventListener("keydown", handleKeydown);
 });
 
