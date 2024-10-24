@@ -222,7 +222,7 @@ jobs:
 
       - name: Push changes
         if: steps.commit-updated-snapshots.outputs.changes_exist == 'true'
-        uses: ad-m/github-push-action@77c5b41
+        uses: ad-m/github-push-action@エラー: Unable to resolve action `ad-m/github-push-action@77c5b412c50b723d2a4fbc6d71fb5723bcd439aa
         with:
           github_token: ${{ secrets.PUSH_TOKEN || secrets.GITHUB_TOKEN }}
           branch: ${{ github.ref }}
