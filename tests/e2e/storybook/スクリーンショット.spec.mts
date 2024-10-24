@@ -74,7 +74,7 @@ for (const [story, stories] of Object.entries(allStories)) {
             );
 
             // Storybookのroot要素を取得。
-            // data-v-appが存在する = Vueのアプリケーションのマウントが完了しているかどうかを
+            // data-v-appが存在する（＝Vueのアプリケーションのマウントが完了している）かどうかを
             // ロードが完了したかどうかとして扱う。
             const root = page.locator("#storybook-root[data-v-app]");
             const quasarDialogRoot = page.locator(

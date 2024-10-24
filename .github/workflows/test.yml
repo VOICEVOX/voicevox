@@ -175,7 +175,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # NOTE: デフォルトの設定だとgithub-push-actionが動いてくれないので設定を変える。
+          # NOTE: デフォルトの設定だとgithub-push-actionが動いてくれないので設定を変えている。
           # ref: https://github.com/ad-m/github-push-action/issues/44#issuecomment-581706892
           persist-credentials: false
           fetch-depth: 0
@@ -226,7 +226,7 @@ jobs:
             if (!pushTokenProvided) {
               core.warning(
                 "スクリーンショットを更新したので、空コミットをプッシュしてテストを再実行してください。\n" +
-                "PUSH_TOKENをSecretsに設定すると次からこの操作を省けます。\n" +
+                "PUSH_TOKENをSecretsに追加すると次からこの操作を省けます。\n" +
                 "Secretsの設定方法はREADME.mdを参照してください。"
               );
             }

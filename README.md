@@ -190,7 +190,7 @@ npm run test-ui:storybook-vrt # Playwright の UI を表示
    ```
 
 4. Github Workflow が完了すると、更新されたスクリーンショットがコミットされます。
-5. プルした後、空コミットをプッシュします。
+5. プルした後、空コミットをプッシュしてテストを再実行します。
 
    ```bash
    git commit --allow-empty -m "（テストを再実行）"
@@ -198,15 +198,17 @@ npm run test-ui:storybook-vrt # Playwright の UI を表示
    ```
 
 > [!NOTE]
-> Secrets に `PUSH_TOKEN` という名前で [Fine-granted Tokens](https://github.com/settings/personal-access-tokens/new)
-> を設定すると、自動的にテストが再実行されます。  
-> トークンには `ユーザー名/voicevox` へのアクセス権を与え、 Repository permissions の Contents を Read and write に設定する必要があります。  
-> Secrets は `ユーザー名/voicevox` のリポジトリの Settings > Secrets and variables > Actions > New repository secret から設定できます。
+> トークンを作成して Secrets に追加することで、自動的にテストを再実行できます。
 >
-> <details>
-> <summary>トークンの設定例</summary>
-> <img src="./docs/res/Fine-granted_Tokensの作成.png" width="320">
-> </details>
+> 1. [Fine-granted Tokens](https://github.com/settings/personal-access-tokens/new) にアクセスします。
+> 2. 適当な名前を入力し、 `ユーザー名/voicevox` へのアクセス権を与え、 Repository permissions の Contents で Read and write を選択します。
+>    <details>
+>    <summary>設定例</summary>
+>    <img src="./docs/res/Fine-granted_Tokensの作成.png" width="320">
+>    </details>
+> 3. トークンを作成して文字列をコピーします。
+> 4. `ユーザー名/voicevox` のリポジトリの Settings > Secrets and variables > Actions > New repository secret を開きます。
+> 5. 名前に `PUSH_TOKEN` と入力し、先ほどの文字列を貼り付けて Secrets を追加します。
 
 ##### ローカルで更新する場合
 
