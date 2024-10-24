@@ -62,11 +62,20 @@ export class Transport {
 
   private _state: "started" | "stopped" = "stopped";
   private _time = 0;
+  public loop = false;
+  public loopStartTime = 0;
+  public loopEndTime = 0;
   private sequences = new Set<Sequence>();
 
   private startContextTime = 0;
   private startTime = 0;
   private schedulers = new Map<Sequence, EventScheduler>();
+  private scheduledContextTime = 0;
+  private uncompletedLoopInfos: {
+    readonly contextTime: number;
+    readonly timeBeforeLoop: number;
+    readonly timeAfterLoop: number;
+  }[] = [];
 
   get state() {
     return this._state;
@@ -77,10 +86,8 @@ export class Transport {
    */
   get time() {
     if (this._state === "started") {
-      // 再生中の場合は、現在時刻から再生位置を計算する
       const contextTime = this.audioContext.currentTime;
-      const elapsedTime = contextTime - this.startContextTime;
-      this._time = this.startTime + elapsedTime;
+      this._time = this.calcTime(contextTime);
     }
     return this._time;
   }
@@ -113,11 +120,36 @@ export class Transport {
     this.audioContext = audioContext;
     this.scheduleAheadTime = scheduleAheadTime;
     this.timer = new Timer(lookahead * 1000);
+
     this.timer.start(() => {
       if (this._state === "started") {
-        this.schedule(this.audioContext.currentTime);
+        this.scheduleEvents(this.audioContext.currentTime);
       }
     });
+  }
+
+  /**
+   * 再生位置を計算します。再生中にのみ使用可能です。
+   * @param contextTime コンテキスト時刻（この時刻から再生位置を計算）
+   * @returns 計算された再生位置（秒）
+   */
+  private calcTime(contextTime: number) {
+    if (this._state !== "started") {
+      throw new Error("This method can only be used during playback.");
+    }
+    if (contextTime >= this.startContextTime) {
+      const elapsedTime = contextTime - this.startContextTime;
+      return this.startTime + elapsedTime;
+    }
+    while (this.uncompletedLoopInfos.length !== 0) {
+      const loopInfo = this.uncompletedLoopInfos[0];
+      if (contextTime < loopInfo.contextTime) {
+        const timeUntilLoop = loopInfo.contextTime - contextTime;
+        return loopInfo.timeBeforeLoop - timeUntilLoop;
+      }
+      this.uncompletedLoopInfos.shift();
+    }
+    throw new Error("Loop events are not scheduled correctly.");
   }
 
   /**
@@ -138,13 +170,15 @@ export class Transport {
   }
 
   /**
-   * スケジューリングを行います。
+   * シーケンスのイベントのスケジューリングを行います。
    * @param contextTime スケジューリングを行う時刻（コンテキスト時刻）
    */
-  private schedule(contextTime: number) {
-    // 再生位置を計算
-    const elapsedTime = contextTime - this.startContextTime;
-    const time = this.startTime + elapsedTime;
+  private scheduleSequenceEvents(contextTime: number) {
+    if (contextTime < this.startContextTime) {
+      // NOTE: ループ未完了の場合にここに来る
+      return;
+    }
+    const time = this.calcTime(contextTime);
 
     // シーケンスの削除を反映
     const removedSequences: Sequence[] = [];
@@ -167,9 +201,71 @@ export class Transport {
       }
     });
 
+    // スケジューリングを行う
     this.schedulers.forEach((scheduler) => {
       scheduler.schedule(time + this.scheduleAheadTime);
     });
+  }
+
+  /**
+   * ループイベントのスケジューリングを行います。
+   * @param contextTime スケジューリングを行う時刻（コンテキスト時刻）
+   */
+  private scheduleLoopEvents(contextTime: number) {
+    if (
+      !this.loop ||
+      this.loopEndTime <= this.loopStartTime ||
+      this.startTime >= this.loopEndTime
+    ) {
+      return;
+    }
+
+    const timeUntilLoop = this.loopEndTime - this.startTime;
+    let contextTimeToLoop = this.startContextTime + timeUntilLoop;
+    if (contextTimeToLoop < this.scheduledContextTime) {
+      return;
+    }
+    if (contextTimeToLoop < contextTime) {
+      contextTimeToLoop = contextTime;
+    }
+
+    const loopDuration = this.loopEndTime - this.loopStartTime;
+
+    while (contextTimeToLoop < contextTime + this.scheduleAheadTime) {
+      this.uncompletedLoopInfos.push({
+        contextTime: contextTimeToLoop,
+        timeBeforeLoop: this.loopEndTime,
+        timeAfterLoop: this.loopStartTime,
+      });
+
+      this.startContextTime = contextTimeToLoop;
+      this.startTime = this.loopStartTime;
+
+      this.schedulers.forEach((value) => {
+        value.stop(contextTimeToLoop);
+      });
+      this.schedulers.clear();
+
+      this.sequences.forEach((sequence) => {
+        const scheduler = this.createScheduler(sequence);
+        scheduler.start(contextTimeToLoop, this.loopStartTime);
+        scheduler.schedule(this.loopStartTime + this.scheduleAheadTime);
+        this.schedulers.set(sequence, scheduler);
+      });
+
+      contextTimeToLoop += loopDuration;
+    }
+  }
+
+  /**
+   * イベントのスケジューリングを行います。
+   * @param contextTime スケジューリングを行う時刻（コンテキスト時刻）
+   */
+  private scheduleEvents(contextTime: number) {
+    this.scheduleSequenceEvents(contextTime);
+    this.scheduleLoopEvents(contextTime);
+
+    this.scheduledContextTime = contextTime + this.scheduleAheadTime;
   }
 
   /**
@@ -205,8 +301,10 @@ export class Transport {
 
     this.startContextTime = contextTime;
     this.startTime = this._time;
+    this.scheduledContextTime = contextTime;
+    this.uncompletedLoopInfos = [];
 
-    this.schedule(contextTime);
+    this.scheduleEvents(contextTime);
   }
 
   /**
@@ -217,8 +315,7 @@ export class Transport {
     const contextTime = this.audioContext.currentTime;
 
     // 停止する前に再生位置を更新する
-    const elapsedTime = contextTime - this.startContextTime;
-    this._time = this.startTime + elapsedTime;
+    this._time = this.calcTime(contextTime);
 
     this._state = "stopped";
 

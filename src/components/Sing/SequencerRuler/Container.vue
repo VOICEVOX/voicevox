@@ -6,6 +6,9 @@
     :sequencerZoomX
     :numMeasures
     :playheadTicks
+    :isLoopEnabled
+    :loopStartTick
+    :loopEndTick
     @update:playheadTicks="updatePlayheadTicks"
     @deselectAllNotes="deselectAllNotes"
   />
@@ -15,7 +18,7 @@
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import Presentation from "./Presentation.vue";
 import { useStore } from "@/store";
-
+import { useLoopControl } from "@/composables/useLoopControl";
 defineOptions({
   name: "SequencerRuler",
 });
@@ -37,6 +40,7 @@ const timeSignatures = computed(() => store.state.timeSignatures);
 const sequencerZoomX = computed(() => store.state.sequencerZoomX);
 
 const playheadTicks = ref(0);
+const { isLoopEnabled, loopStartTick, loopEndTick } = useLoopControl();
 
 const updatePlayheadTicks = (ticks: number) => {
   void store.dispatch("SET_PLAYHEAD_POSITION", { position: ticks });

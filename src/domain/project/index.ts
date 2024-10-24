@@ -302,6 +302,18 @@ export const migrateProjectFileObject = async (
     projectData.song.trackOrder = Object.keys(newTracks);
   }
 
+  // FIXME: 0.22.0 のマイグレーション(おそらく)
+  // よく把握できていないため保留
+  //if (semver.satisfies(projectAppVersion, "<0.22.0", semverSatisfiesOptions)) {
+  if (!("loop" in projectData.song)) {
+    projectData.song.loop = {
+      startTick: 0,
+      endTick: 0,
+      isLoopEnabled: false,
+    };
+  }
+  //}
+
   // Validation check
   // トークはvalidateTalkProjectで検証する
   // ソングはSET_SCOREの中の`isValidScore`関数で検証される

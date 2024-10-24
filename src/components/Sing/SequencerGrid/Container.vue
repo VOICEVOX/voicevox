@@ -6,6 +6,9 @@
     :sequencerZoomY
     :sequencerSnapType
     :numMeasures
+    :isLoopEnabled
+    :loopStartTick
+    :loopEndTick
   />
 </template>
 
@@ -13,6 +16,7 @@
 import { computed } from "vue";
 import Presentation from "./Presentation.vue";
 import { useStore } from "@/store";
+import { useLoopControl } from "@/composables/useLoopControl";
 
 defineOptions({
   name: "SequencerGrid",
@@ -26,4 +30,5 @@ const sequencerZoomX = computed(() => store.state.sequencerZoomX);
 const sequencerZoomY = computed(() => store.state.sequencerZoomY);
 const sequencerSnapType = computed(() => store.state.sequencerSnapType);
 const numMeasures = computed(() => store.getters.SEQUENCER_NUM_MEASURES);
+const { isLoopEnabled, loopStartTick, loopEndTick } = useLoopControl();
 </script>

@@ -1,5 +1,10 @@
 <template>
-  <div ref="sequencerRuler" class="sequencer-ruler" @click="onClick">
+  <div
+    ref="sequencerRuler"
+    class="sequencer-ruler"
+    @click="onClick"
+    @contextmenu="onContextMenu"
+  >
     <svg
       xmlns="http://www.w3.org/2000/svg"
       :width
@@ -50,7 +55,39 @@
         {{ measureInfo.number }}
       </text>
     </svg>
+    <!-- ループコントロール -->
+    <SequencerLoopControl ref="loopControl" :width :height :offset />
+    <!-- ループエリア外を暗くする -->
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      :width
+      :height
+      shape-rendering="crispEdges"
+      class="sequencer-ruler-loop-mask-container"
+    >
+      <g v-if="isLoopEnabled && loopStartTick !== loopEndTick">
+        <!-- 左側 -->
+        <rect
+          x="0"
+          y="0"
+          :width="Math.max(0, loopStartX - offset)"
+          :height
+          class="sequencer-ruler-loop-mask"
+          pointer-events="none"
+        />
+        <!-- 右側 -->
+        <rect
+          :x="Math.max(0, loopEndX - offset)"
+          y="0"
+          :width="Math.max(0, width - (loopEndX - offset))"
+          :height
+          class="sequencer-ruler-loop-mask"
+          pointer-events="none"
+        />
+      </g>
+    </svg>
     <div class="sequencer-ruler-border-bottom"></div>
+    <!-- 再生ヘッド -->
     <div
       class="sequencer-ruler-playhead"
       :style="{
@@ -64,6 +101,7 @@
 import { computed, ref, onMounted, onUnmounted } from "vue";
 import { getMeasureDuration, getTimeSignaturePositions } from "@/sing/domain";
 import { baseXToTick, tickToBaseX } from "@/sing/viewHelper";
+import SequencerLoopControl from "@/components/Sing/SequencerLoopControl.vue";
 import { TimeSignature } from "@/store/type";
 
 const props = defineProps<{
@@ -73,6 +111,9 @@ const props = defineProps<{
   tpqn: number;
   timeSignatures: TimeSignature[];
   sequencerZoomX: number;
+  isLoopEnabled: boolean;
+  loopStartTick: number;
+  loopEndTick: number;
 }>();
 const playheadTicks = defineModel<number>("playheadTicks", { required: true });
 const emit = defineEmits<{
@@ -134,6 +175,14 @@ const playheadX = computed(() => {
   return Math.floor(baseX * props.sequencerZoomX);
 });
 
+// ループのX座標を計算
+const loopStartX = computed(() => {
+  return tickToBaseX(props.loopStartTick, props.tpqn) * props.sequencerZoomX;
+});
+const loopEndX = computed(() => {
+  return tickToBaseX(props.loopEndTick, props.tpqn) * props.sequencerZoomX;
+});
+
 const onClick = (event: MouseEvent) => {
   emit("deselectAllNotes");
 
@@ -144,6 +193,10 @@ const onClick = (event: MouseEvent) => {
   const baseX = (props.offset + event.offsetX) / props.sequencerZoomX;
   const ticks = baseXToTick(baseX, props.tpqn);
   playheadTicks.value = ticks;
+};
+
+const onContextMenu = (event: MouseEvent) => {
+  event.preventDefault();
 };
 
 const sequencerRuler = ref<HTMLElement | null>(null);
@@ -216,5 +269,33 @@ onUnmounted(() => {
   backface-visibility: hidden;
   stroke: var(--scheme-color-sing-ruler-beat-line);
   stroke-width: 1px;
+}
+
+.sequencer-ruler-border-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: var(--scheme-color-sing-ruler-border);
+}
+
+.sequencer-ruler-loop-mask-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.sequencer-ruler-loop-mask {
+  fill: var(--scheme-color-scrim);
+}
+
+:root[is-dark-theme="false"] .sequencer-ruler-loop-mask {
+  opacity: 0.08;
+}
+
+:root[is-dark-theme="true"] .sequencer-ruler-loop-mask {
+  opacity: 0.24;
 }
 </style>
