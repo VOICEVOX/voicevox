@@ -203,8 +203,8 @@ import {
   getButton,
   PreviewMode,
 } from "@/sing/viewHelper";
-import SequencerGrid from "@/components/Sing/SequencerGrid.vue";
-import SequencerRuler from "@/components/Sing/SequencerRuler.vue";
+import SequencerGrid from "@/components/Sing/SequencerGrid/Container.vue";
+import SequencerRuler from "@/components/Sing/SequencerRuler/Container.vue";
 import SequencerKeys from "@/components/Sing/SequencerKeys.vue";
 import SequencerNote from "@/components/Sing/SequencerNote.vue";
 import SequencerShadowNote from "@/components/Sing/SequencerShadowNote.vue";
