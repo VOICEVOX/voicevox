@@ -28,6 +28,7 @@ import { RuntimeInfoManager } from "./manager/RuntimeInfoManager";
 import { registerIpcMainHandle, ipcMainSendProxy, IpcMainHandle } from "./ipc";
 import { getConfigManager } from "./electronConfig";
 import { EngineAndVvppController } from "./engineAndVvppController";
+import { writeFileSafely } from "./fileHelper";
 import { failure, success } from "@/type/result";
 import { AssetTextFileNames } from "@/type/staticResources";
 import {
@@ -40,7 +41,6 @@ import {
   TextAsset,
 } from "@/type/preload";
 import { themes } from "@/domain/theme";
-import { writeFileSafely } from "@/helpers/fileHelper";
 
 type SingleInstanceLockData = {
   filePath: string | undefined;

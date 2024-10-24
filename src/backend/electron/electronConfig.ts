@@ -1,9 +1,9 @@
 import { join } from "path";
 import fs from "fs";
 import { app } from "electron";
+import { writeFileSafely } from "./fileHelper";
 import { BaseConfigManager, Metadata } from "@/backend/common/ConfigManager";
 import { ConfigType } from "@/type/preload";
-import { writeFileSafely } from "@/helpers/fileHelper";
 
 export class ElectronConfigManager extends BaseConfigManager {
   protected getAppVersion() {

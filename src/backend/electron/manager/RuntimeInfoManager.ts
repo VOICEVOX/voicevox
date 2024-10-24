@@ -7,7 +7,7 @@ import AsyncLock from "async-lock";
 import log from "electron-log/main";
 import type { AltPortInfos } from "@/store/type";
 import { EngineId, EngineInfo } from "@/type/preload";
-import { writeFileSafely } from "@/helpers/fileHelper";
+import { writeFileSafely } from "@/backend/electron/fileHelper";
 
 /**
  * ランタイム情報書き出しに必要なEngineInfo
