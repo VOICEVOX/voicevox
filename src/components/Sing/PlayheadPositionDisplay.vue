@@ -98,21 +98,21 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   return [
     {
       type: "button",
-      label: "小節.拍",
-      disabled: displayFormat.value === "MeasuresBeats",
-      onClick: async () => {
-        contextMenu.value?.hide();
-        setDisplayFormat("MeasuresBeats");
-      },
-      disableWhenUiLocked: false,
-    },
-    {
-      type: "button",
       label: "分:秒",
       disabled: displayFormat.value === "MinutesSeconds",
       onClick: async () => {
         contextMenu.value?.hide();
         setDisplayFormat("MinutesSeconds");
+      },
+      disableWhenUiLocked: false,
+    },
+    {
+      type: "button",
+      label: "小節.拍",
+      disabled: displayFormat.value === "MeasuresBeats",
+      onClick: async () => {
+        contextMenu.value?.hide();
+        setDisplayFormat("MeasuresBeats");
       },
       disableWhenUiLocked: false,
     },
