@@ -219,30 +219,23 @@ export function getBeatDuration(beatType: number, tpqn: number) {
   return (tpqn * 4) / beatType;
 }
 
-const findTimeSignatureIndex = (
-  ticks: number,
-  timeSignatures: (TimeSignature & { position: number })[],
-) => {
-  if (ticks < 0) {
-    return 0;
-  }
-  for (let i = 0; i < timeSignatures.length - 1; i++) {
-    if (
-      timeSignatures[i].position <= ticks &&
-      timeSignatures[i + 1].position > ticks
-    ) {
-      return i;
-    }
-  }
-  return timeSignatures.length - 1;
-};
-
 export const ticksToMeasuresBeats = (
   ticks: number,
   timeSignatures: (TimeSignature & { position: number })[],
   tpqn: number,
 ): MeasuresBeats => {
-  const tsIndex = findTimeSignatureIndex(ticks, timeSignatures);
+  let tsIndex = 0;
+  if (ticks >= 0) {
+    for (let i = 0; i < timeSignatures.length; i++) {
+      if (
+        i === timeSignatures.length - 1 ||
+        timeSignatures[i + 1].position > ticks
+      ) {
+        tsIndex = i;
+        break;
+      }
+    }
+  }
   const ts = timeSignatures[tsIndex];
 
   const measureDuration = getMeasureDuration(ts.beats, ts.beatType, tpqn);
