@@ -1,6 +1,6 @@
 // 起動中のStorybookで様々なStoryを表示し、スクリーンショットを撮って比較するVRT。
 // テスト自体はend-to-endではないが、Playwrightを使う関係でe2eディレクトリ内でテストしている。
-import { test, expect } from "@playwright/test";
+import { test, expect, Locator } from "@playwright/test";
 import z from "zod";
 
 // Storybook 8.3.5時点でのindex.jsonのスキーマ。
@@ -86,12 +86,17 @@ for (const [story, stories] of Object.entries(allStories)) {
             // Quasarのダイアログが存在する場合はダイアログのスクリーンショットを、そうでない場合は#storybook-rootのスクリーンショットを撮る。
             // q-portal-dialogはそのまま撮るとvisible扱いにならずtoHaveScreenshotが失敗するので、
             // 子要素にある実際のダイアログ（.q-dialog__inner）を撮る。
+            let elementToScreenshot: Locator;
             if ((await quasarDialogRoot.count()) > 0) {
               const dialog = quasarDialogRoot.locator(".q-dialog__inner");
-              await expect(dialog).toHaveScreenshot(`${story.id}-${theme}.png`);
+
+              elementToScreenshot = dialog;
             } else {
-              await expect(root).toHaveScreenshot(`${story.id}-${theme}.png`);
+              elementToScreenshot = root;
             }
+            await expect(elementToScreenshot).toHaveScreenshot(
+              `${story.id}-${theme}.png`,
+            );
           });
         }
       });
