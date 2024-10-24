@@ -38,16 +38,6 @@ jobs:
             core.setOutput("shouldUpdateSnapshots", shouldUpdateSnapshots);
             console.log(`shouldUpdateSnapshots: ${shouldUpdateSnapshots}`);
 
-            const pushTokenProvided = `${{ secrets.PUSH_TOKEN }}` !== "";
-            if (shouldUpdateSnapshots && !pushTokenProvided) {
-              core.warning(
-                "スクリーンショットを更新したので、空コミットをプッシュしてテストを再実行してください。\n" +
-                "PUSH_TOKENをSecretsに設定すると次からこの操作を省けます。\n" +
-                "Secretsの設定方法はREADME.mdを参照してください。"
-              );
-            }
-            console.log(`pushTokenProvided: ${pushTokenProvided}`);
-
   # ビルドのテスト
   build-test:
     runs-on: windows-latest
@@ -226,6 +216,21 @@ jobs:
         with:
           github_token: ${{ secrets.PUSH_TOKEN || secrets.GITHUB_TOKEN }}
           branch: ${{ github.ref }}
+
+      - name: Show warning if token is not set
+        if: steps.commit-updated-snapshots.outputs.changes_exist == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pushTokenProvided = `${{ secrets.PUSH_TOKEN }}` !== "";
+            if (!pushTokenProvided) {
+              core.warning(
+                "スクリーンショットを更新したので、空コミットをプッシュしてテストを再実行してください。\n" +
+                "PUSH_TOKENをSecretsに設定すると次からこの操作を省けます。\n" +
+                "Secretsの設定方法はREADME.mdを参照してください。"
+              );
+            }
+            console.log(`pushTokenProvided: ${pushTokenProvided}`);
 
   lint:
     runs-on: ubuntu-latest
