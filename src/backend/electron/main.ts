@@ -28,6 +28,7 @@ import { RuntimeInfoManager } from "./manager/RuntimeInfoManager";
 import { registerIpcMainHandle, ipcMainSendProxy, IpcMainHandle } from "./ipc";
 import { getConfigManager } from "./electronConfig";
 import { EngineAndVvppController } from "./engineAndVvppController";
+import { writeFileSafely } from "./fileHelper";
 import { failure, success } from "@/type/result";
 import { AssetTextFileNames } from "@/type/staticResources";
 import {
@@ -742,9 +743,9 @@ registerIpcMainHandle<IpcMainHandle>({
     win.show();
   },
 
-  WRITE_FILE: (_, { filePath, buffer }) => {
+  WRITE_FILE: async (_, { filePath, buffer }) => {
     try {
-      fs.writeFileSync(
+      await writeFileSafely(
         filePath,
         new DataView(buffer instanceof Uint8Array ? buffer.buffer : buffer),
       );
