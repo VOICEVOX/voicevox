@@ -41,10 +41,9 @@ jobs:
             const pushTokenProvided = `${{ secrets.PUSH_TOKEN }}` !== "";
             if (shouldUpdateSnapshots && !pushTokenProvided) {
               core.warning(
-                "PUSH_TOKENがSecretsに設定されていません。\n" +
-                "スナップショットを更新するコミットはpushされますが、" +
-                "Pull RequestのCIは手動で再実行する必要があります。\n" +
-                "詳細はREADME.mdを参照してください。"
+                "スクリーンショットを更新したので、空コミットをプッシュしてテストを再実行してください。\n" +
+                "PUSH_TOKENをSecretsに設定すると次からこの操作を省けます。\n" +
+                "Secretsの設定方法はREADME.mdを参照してください。"
               );
             }
             console.log(`pushTokenProvided: ${pushTokenProvided}`);
