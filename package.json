@@ -64,7 +64,7 @@
     "shlex": "2.1.2",
     "systeminformation": "5.21.15",
     "tree-kill": "1.2.2",
-    "vue": "3.4.26",
+    "vue": "3.5.11",
     "vuedraggable": "4.1.0",
     "vuex": "4.0.2",
     "zod": "3.22.4"
@@ -99,7 +99,7 @@
     "@typescript-eslint/parser": "7.15.0",
     "@typescript-eslint/types": "7.15.0",
     "@typescript-eslint/utils": "7.15.0",
-    "@vitejs/plugin-vue": "5.0.4",
+    "@vitejs/plugin-vue": "5.1.4",
     "@vitest/browser": "2.1.2",
     "@vitest/ui": "2.1.2",
     "@voicevox/eslint-plugin": "file:./eslint-plugin",
@@ -128,12 +128,12 @@
     "ts-node": "10.9.1",
     "typescript": "5.5.2",
     "vite": "5.3.2",
-    "vite-plugin-checker": "0.7.0",
+    "vite-plugin-checker": "0.8.0",
     "vite-plugin-electron": "0.28.4",
     "vite-plugin-node-polyfills": "0.21.0",
     "vite-tsconfig-paths": "4.2.1",
     "vitest": "2.1.2",
-    "vue-tsc": "2.0.24",
+    "vue-tsc": "2.1.6",
     "yargs": "17.2.1"
   }
 }

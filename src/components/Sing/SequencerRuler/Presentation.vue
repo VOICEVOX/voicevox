@@ -62,61 +62,57 @@
 
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted } from "vue";
-import { useStore } from "@/store";
 import { getMeasureDuration, getTimeSignaturePositions } from "@/sing/domain";
 import { baseXToTick, tickToBaseX } from "@/sing/viewHelper";
-import { usePlayheadPosition } from "@/composables/usePlayheadPosition";
+import { TimeSignature } from "@/store/type";
 
-const props = withDefaults(
-  defineProps<{
-    offset: number;
-    numMeasures: number;
-  }>(),
-  {
-    offset: 0,
-    numMeasures: 32,
-  },
-);
-const store = useStore();
-const state = store.state;
+const props = defineProps<{
+  offset: number;
+  numMeasures: number;
+
+  tpqn: number;
+  timeSignatures: TimeSignature[];
+  sequencerZoomX: number;
+}>();
+const playheadTicks = defineModel<number>("playheadTicks", { required: true });
+const emit = defineEmits<{
+  deselectAllNotes: [];
+}>();
+
 const height = ref(40);
-const playheadTicks = usePlayheadPosition();
-const tpqn = computed(() => state.tpqn);
-const timeSignatures = computed(() => state.timeSignatures);
-const zoomX = computed(() => state.sequencerZoomX);
 const beatsPerMeasure = computed(() => {
-  return timeSignatures.value[0].beats;
+  return props.timeSignatures[0].beats;
 });
 const beatWidth = computed(() => {
-  const beatType = timeSignatures.value[0].beatType;
-  const wholeNoteDuration = tpqn.value * 4;
+  const beatType = props.timeSignatures[0].beatType;
+  const wholeNoteDuration = props.tpqn * 4;
   const beatTicks = wholeNoteDuration / beatType;
-  return tickToBaseX(beatTicks, tpqn.value) * zoomX.value;
+  return tickToBaseX(beatTicks, props.tpqn) * props.sequencerZoomX;
 });
 const tsPositions = computed(() => {
-  return getTimeSignaturePositions(timeSignatures.value, tpqn.value);
+  return getTimeSignaturePositions(props.timeSignatures, props.tpqn);
 });
 const endTicks = computed(() => {
-  const lastTs = timeSignatures.value[timeSignatures.value.length - 1];
+  const lastTs = props.timeSignatures[props.timeSignatures.length - 1];
   const lastTsPosition = tsPositions.value[tsPositions.value.length - 1];
   return (
     lastTsPosition +
-    getMeasureDuration(lastTs.beats, lastTs.beatType, tpqn.value) *
+    getMeasureDuration(lastTs.beats, lastTs.beatType, props.tpqn) *
       (props.numMeasures - lastTs.measureNumber + 1)
   );
 });
 const width = computed(() => {
-  return tickToBaseX(endTicks.value, tpqn.value) * zoomX.value;
+  return tickToBaseX(endTicks.value, props.tpqn) * props.sequencerZoomX;
 });
 const measureInfos = computed(() => {
-  return timeSignatures.value.flatMap((timeSignature, i) => {
+  return props.timeSignatures.flatMap((timeSignature, i) => {
     const measureDuration = getMeasureDuration(
       timeSignature.beats,
       timeSignature.beatType,
-      tpqn.value,
+      props.tpqn,
     );
     const nextTsPosition =
-      i !== timeSignatures.value.length - 1
+      i !== props.timeSignatures.length - 1
         ? tsPositions.value[i + 1]
         : endTicks.value;
     const start = tsPositions.value[i];
@@ -125,28 +121,28 @@ const measureInfos = computed(() => {
     return Array.from({ length: numMeasures }, (_, index) => {
       const measureNumber = timeSignature.measureNumber + index;
       const measurePosition = start + index * measureDuration;
-      const baseX = tickToBaseX(measurePosition, tpqn.value);
+      const baseX = tickToBaseX(measurePosition, props.tpqn);
       return {
         number: measureNumber,
-        x: Math.round(baseX * zoomX.value),
+        x: Math.round(baseX * props.sequencerZoomX),
       };
     });
   });
 });
 const playheadX = computed(() => {
-  const baseX = tickToBaseX(playheadTicks.value, tpqn.value);
-  return Math.floor(baseX * zoomX.value);
+  const baseX = tickToBaseX(playheadTicks.value, props.tpqn);
+  return Math.floor(baseX * props.sequencerZoomX);
 });
 
 const onClick = (event: MouseEvent) => {
-  void store.dispatch("DESELECT_ALL_NOTES");
+  emit("deselectAllNotes");
 
   const sequencerRulerElement = sequencerRuler.value;
   if (!sequencerRulerElement) {
     throw new Error("sequencerRulerElement is null.");
   }
-  const baseX = (props.offset + event.offsetX) / zoomX.value;
-  const ticks = baseXToTick(baseX, tpqn.value);
+  const baseX = (props.offset + event.offsetX) / props.sequencerZoomX;
+  const ticks = baseXToTick(baseX, props.tpqn);
   playheadTicks.value = ticks;
 };
 

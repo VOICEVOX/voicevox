@@ -1,7 +1,12 @@
 import { contextBridge, ipcRenderer } from "electron";
-
-import { IpcRendererInvoke } from "./ipc";
-import { Sandbox, ConfigType, EngineId, SandboxKey } from "@/type/preload";
+import type { IpcRendererInvoke } from "./ipc";
+import {
+  ConfigType,
+  EngineId,
+  Sandbox,
+  SandboxKey,
+  TextAsset,
+} from "@/type/preload";
 
 const ipcRendererInvokeProxy = new Proxy(
   {},
@@ -18,36 +23,10 @@ const api: Sandbox = {
     return await ipcRendererInvokeProxy.GET_APP_INFOS();
   },
 
-  getHowToUseText: async () => {
-    return await ipcRendererInvokeProxy.GET_HOW_TO_USE_TEXT();
-  },
-
-  getPolicyText: async () => {
-    return await ipcRendererInvokeProxy.GET_POLICY_TEXT();
-  },
-
-  getOssLicenses: async () => {
-    return await ipcRendererInvokeProxy.GET_OSS_LICENSES();
-  },
-
-  getUpdateInfos: async () => {
-    return await ipcRendererInvokeProxy.GET_UPDATE_INFOS();
-  },
-
-  getContactText: async () => {
-    return await ipcRendererInvokeProxy.GET_CONTACT_TEXT();
-  },
-
-  getQAndAText: async () => {
-    return await ipcRendererInvokeProxy.GET_Q_AND_A_TEXT();
-  },
-
-  getOssCommunityInfos: async () => {
-    return await ipcRendererInvokeProxy.GET_OSS_COMMUNITY_INFOS();
-  },
-
-  getPrivacyPolicyText: async () => {
-    return await ipcRendererInvokeProxy.GET_PRIVACY_POLICY_TEXT();
+  getTextAsset: (textType) => {
+    return ipcRendererInvokeProxy.GET_TEXT_ASSET(textType) as Promise<
+      TextAsset[typeof textType]
+    >;
   },
 
   getAltPortInfos: async () => {
@@ -86,28 +65,6 @@ const api: Sandbox = {
 
   showProjectLoadDialog: ({ title }) => {
     return ipcRendererInvokeProxy.SHOW_PROJECT_LOAD_DIALOG({ title });
-  },
-
-  showMessageDialog: ({ type, title, message }) => {
-    return ipcRendererInvokeProxy.SHOW_MESSAGE_DIALOG({ type, title, message });
-  },
-
-  showQuestionDialog: ({
-    type,
-    title,
-    message,
-    buttons,
-    cancelId,
-    defaultId,
-  }) => {
-    return ipcRendererInvokeProxy.SHOW_QUESTION_DIALOG({
-      type,
-      title,
-      message,
-      buttons,
-      cancelId,
-      defaultId,
-    });
   },
 
   showImportFileDialog: ({ title, name, extensions }) => {
@@ -215,10 +172,6 @@ const api: Sandbox = {
 
   setNativeTheme: (source) => {
     void ipcRendererInvokeProxy.SET_NATIVE_THEME(source);
-  },
-
-  getAvailableThemes: () => {
-    return ipcRendererInvokeProxy.GET_AVAILABLE_THEMES();
   },
 
   vuexReady: () => {

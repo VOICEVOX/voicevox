@@ -7,7 +7,6 @@ import {
   writeFileImpl,
 } from "./fileImpl";
 import { getConfigManager } from "./browserConfig";
-
 import { IpcSOData } from "@/type/ipc";
 import {
   defaultHotkeySettings,
@@ -17,18 +16,8 @@ import {
   EngineSettings,
   HotkeySettingType,
   Sandbox,
-  ThemeConf,
 } from "@/type/preload";
-import {
-  ContactTextFileName,
-  HowToUseTextFileName,
-  OssCommunityInfosFileName,
-  OssLicensesJsonFileName,
-  PolicyTextFileName,
-  PrivacyPolicyTextFileName,
-  QAndATextFileName,
-  UpdateInfosJsonFileName,
-} from "@/type/staticResources";
+import { AssetTextFileNames } from "@/type/staticResources";
 
 // TODO: base pathを設定できるようにするか、ビルド時埋め込みにする
 const toStaticPath = (fileName: string) => `/${fileName}`;
@@ -72,29 +61,13 @@ export const api: Sandbox = {
     };
     return Promise.resolve(appInfo);
   },
-  getHowToUseText() {
-    return fetch(toStaticPath(HowToUseTextFileName)).then((v) => v.text());
-  },
-  getPolicyText() {
-    return fetch(toStaticPath(PolicyTextFileName)).then((v) => v.text());
-  },
-  getOssLicenses() {
-    return fetch(toStaticPath(OssLicensesJsonFileName)).then((v) => v.json());
-  },
-  getUpdateInfos() {
-    return fetch(toStaticPath(UpdateInfosJsonFileName)).then((v) => v.json());
-  },
-  getOssCommunityInfos() {
-    return fetch(toStaticPath(OssCommunityInfosFileName)).then((v) => v.text());
-  },
-  getQAndAText() {
-    return fetch(toStaticPath(QAndATextFileName)).then((v) => v.text());
-  },
-  getContactText() {
-    return fetch(toStaticPath(ContactTextFileName)).then((v) => v.text());
-  },
-  getPrivacyPolicyText() {
-    return fetch(toStaticPath(PrivacyPolicyTextFileName)).then((v) => v.text());
+  async getTextAsset(textType) {
+    const fileName = AssetTextFileNames[textType];
+    const v = await fetch(toStaticPath(fileName));
+    if (textType === "OssLicenses" || textType === "UpdateInfos") {
+      return v.json();
+    }
+    return v.text();
   },
   getAltPortInfos() {
     // NOTE: ブラウザ版ではサポートされていません
@@ -166,30 +139,6 @@ export const api: Sandbox = {
         },
       ],
     });
-  },
-  showMessageDialog(obj: {
-    type: "none" | "info" | "error" | "question" | "warning";
-    title: string;
-    message: string;
-  }) {
-    window.alert(`${obj.title}\n${obj.message}`);
-    // NOTE: どの呼び出し元も、return valueを使用していないので雑に対応している
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return Promise.resolve({} as any);
-  },
-  showQuestionDialog(obj: {
-    type: "none" | "info" | "error" | "question" | "warning";
-    title: string;
-    message: string;
-    buttons: string[];
-    cancelId?: number;
-    defaultId?: number;
-  }) {
-    // FIXME
-    // TODO: 例えば動的にdialog要素をDOMに生成して、それを表示させるみたいのはあるかもしれない
-    throw new Error(
-      `Not implemented: showQuestionDialog, request: ${JSON.stringify(obj)}`,
-    );
   },
   async showImportFileDialog(obj: {
     name?: string;
@@ -294,16 +243,6 @@ export const api: Sandbox = {
   setNativeTheme(/* source: NativeThemeType */) {
     // TODO: Impl
     return;
-  },
-  async getAvailableThemes() {
-    // NOTE: Electron版では起動時にテーマ情報が必要なので、
-    //       この実装とは違って起動時に読み込んだキャッシュを返すだけになっている。
-    return Promise.all(
-      // FIXME: themeファイルのいい感じのパスの設定
-      ["/themes/default.json", "/themes/dark.json"].map((url) =>
-        fetch(url).then((res) => res.json() as Promise<ThemeConf>),
-      ),
-    );
   },
   vuexReady() {
     // NOTE: 何もしなくて良さそう

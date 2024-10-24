@@ -210,8 +210,7 @@ watch(
 const applyDefaultSetting = async () => {
   const result = await store.dispatch("SHOW_CONFIRM_DIALOG", {
     title: "ツールバーをデフォルトに戻します",
-    message: "ツールバーをデフォルトに戻します。<br/>よろしいですか？",
-    html: true,
+    message: "ツールバーをデフォルトに戻します。\nよろしいですか？",
     actionName: "はい",
     cancel: "いいえ",
   });
