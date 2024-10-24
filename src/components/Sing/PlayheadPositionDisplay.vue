@@ -1,10 +1,10 @@
 <template>
   <div>
-    <div v-if="displayFormat === 'MinutesSeconds'" class="playhead-position">
+    <div v-if="displayFormat === 'MINUTES_SECONDS'" class="playhead-position">
       <div>{{ minAndSecStr }}</div>
       <div class="millisec">.{{ milliSecStr }}</div>
     </div>
-    <div v-if="displayFormat === 'MeasuresBeats'" class="playhead-position">
+    <div v-if="displayFormat === 'MEASURES_BEATS'" class="playhead-position">
       <div>{{ measuresStr }}.</div>
       <div>{{ beatsIntegerPartStr }}</div>
       <div class="beats-fractional-part">.{{ beatsFractionalPartStr }}</div>
@@ -43,7 +43,7 @@ const timeSignatures = computed(() => {
 });
 
 const measuresBeats = computed((): MeasuresBeats => {
-  if (displayFormat.value !== "MeasuresBeats") {
+  if (displayFormat.value !== "MEASURES_BEATS") {
     return { measures: 1, beats: 1 };
   }
   const tpqn = store.state.tpqn;
@@ -70,7 +70,7 @@ const beatsFractionalPartStr = computed(() => {
 });
 
 const minAndSecStr = computed(() => {
-  if (displayFormat.value !== "MinutesSeconds") {
+  if (displayFormat.value !== "MINUTES_SECONDS") {
     return "";
   }
   const ticks = playheadTicks.value;
@@ -83,7 +83,7 @@ const minAndSecStr = computed(() => {
 });
 
 const milliSecStr = computed(() => {
-  if (displayFormat.value !== "MinutesSeconds") {
+  if (displayFormat.value !== "MINUTES_SECONDS") {
     return "";
   }
   const ticks = playheadTicks.value;
@@ -100,20 +100,20 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
     {
       type: "button",
       label: "分:秒",
-      disabled: displayFormat.value === "MinutesSeconds",
+      disabled: displayFormat.value === "MINUTES_SECONDS",
       onClick: async () => {
         contextMenu.value?.hide();
-        setDisplayFormat("MinutesSeconds");
+        setDisplayFormat("MINUTES_SECONDS");
       },
       disableWhenUiLocked: false,
     },
     {
       type: "button",
       label: "小節.拍",
-      disabled: displayFormat.value === "MeasuresBeats",
+      disabled: displayFormat.value === "MEASURES_BEATS",
       onClick: async () => {
         contextMenu.value?.hide();
-        setDisplayFormat("MeasuresBeats");
+        setDisplayFormat("MEASURES_BEATS");
       },
       disableWhenUiLocked: false,
     },
