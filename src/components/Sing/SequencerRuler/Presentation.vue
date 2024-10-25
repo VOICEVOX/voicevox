@@ -25,7 +25,7 @@
             :key="n"
             :x1="beatWidth * n"
             :x2="beatWidth * n"
-            y1="28"
+            y1="36"
             :y2="height"
             class="sequencer-ruler-beat-line"
           />
@@ -38,7 +38,7 @@
         :key="measureInfo.number"
         :x1="measureInfo.x - offset"
         :x2="measureInfo.x - offset"
-        y1="20"
+        y1="28"
         :y2="height"
         class="sequencer-ruler-measure-line"
         :class="{ 'first-measure-line': measureInfo.number === 1 }"
@@ -49,7 +49,7 @@
         :key="measureInfo.number"
         font-size="12"
         :x="measureInfo.x - offset + 4"
-        y="34"
+        y="44"
         class="sequencer-ruler-measure-number"
       >
         {{ measureInfo.number }}
@@ -120,7 +120,7 @@ const emit = defineEmits<{
   deselectAllNotes: [];
 }>();
 
-const height = ref(40);
+const height = ref(56);
 const beatsPerMeasure = computed(() => {
   return props.timeSignatures[0].beats;
 });
@@ -232,7 +232,7 @@ onUnmounted(() => {
 
 .sequencer-ruler {
   background: var(--scheme-color-sing-ruler-surface);
-  height: 40px;
+  height: 56px;
   position: relative;
   overflow: hidden;
 }

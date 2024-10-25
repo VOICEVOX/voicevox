@@ -31,35 +31,58 @@
       />
       <!-- ループ範囲 -->
       <rect
-        :x="loopStartX - offset + 8"
+        :x="loopStartX - offset + 4"
         y="4"
-        :width="Math.max(loopEndX - loopStartX - 16, 0)"
+        :width="Math.max(loopEndX - loopStartX - 8, 0)"
         height="8"
-        rx="1"
-        ry="1"
+        rx="2"
+        ry="2"
         class="loop-range"
         @click.stop="onLoopRangeClick"
       />
       <!-- ループ開始ハンドル -->
-      <rect
-        :x="loopStartX - offset"
-        y="0"
-        width="6"
-        height="16"
-        class="loop-handle loop-handle-start"
-        :class="{ 'is-empty': isEmpty }"
-        @mousedown.stop="onStartHandleMouseDown"
-      />
+      <g class="loop-handle-group">
+        <rect
+          :x="loopStartX - offset"
+          y="0"
+          width="2"
+          height="16"
+          rx="1"
+          ry="1"
+          class="loop-handle loop-handle-start"
+          :class="{ 'is-empty': isEmpty }"
+          @mousedown.stop="onStartHandleMouseDown"
+        />
+        <rect
+          :x="loopStartX - offset - 2"
+          y="0"
+          width="8"
+          height="16"
+          class="loop-handle-drag-area"
+          @mousedown.stop="onStartHandleMouseDown"
+        />
+      </g>
       <!-- ループ終了ハンドル -->
-      <rect
-        :x="loopEndX - offset - 6"
-        y="0"
-        width="6"
-        height="16"
-        class="loop-handle loop-handle-end"
-        :class="{ 'is-empty': isEmpty }"
-        @mousedown.stop="onEndHandleMouseDown"
-      />
+      <g class="loop-handle-group">
+        <rect
+          :x="loopEndX - offset - 2"
+          y="0"
+          width="2"
+          height="16"
+          rx="1"
+          ry="1"
+          class="loop-handle loop-handle-end"
+          :class="{ 'is-empty': isEmpty }"
+        />
+        <rect
+          :x="loopEndX - offset - 6"
+          y="0"
+          width="8"
+          height="16"
+          class="loop-handle-drag-area"
+          @mousedown.stop="onEndHandleMouseDown"
+        />
+      </g>
     </svg>
     <ContextMenu :menudata="contextMenuData" />
   </div>
@@ -285,7 +308,7 @@ const preview = () => {
 };
 
 // ドラッグ終了処理
-const stopDragging = async () => {
+const stopDragging = () => {
   if (!isDragging.value) return;
   isDragging.value = false;
   dragTarget.value = null;
@@ -301,14 +324,14 @@ const stopDragging = async () => {
 
   try {
     // ループ範囲を設定
-    await setLoopRange(previewLoopStartTick.value, previewLoopEndTick.value);
+    void setLoopRange(previewLoopStartTick.value, previewLoopEndTick.value);
     // 再生ヘッドがループ開始位置にあるか
     // FIXME: usePlayheadPosition実装が完了したら移動
     const isPlayheadToLoopStart =
       previewLoopStartTick.value !== previewLoopEndTick.value;
     if (isPlayheadToLoopStart) {
       try {
-        await store.dispatch("SET_PLAYHEAD_POSITION", {
+        void store.dispatch("SET_PLAYHEAD_POSITION", {
           position: previewLoopStartTick.value,
         });
       } catch (error) {
@@ -387,7 +410,7 @@ onUnmounted(() => {
   width: 100%;
   pointer-events: auto;
   cursor: pointer;
-  z-index: 1;
+  z-index: 100;
 
   &.cursor-ew-resize {
     cursor: ew-resize;
@@ -400,7 +423,11 @@ onUnmounted(() => {
 
   &.is-enabled {
     .loop-range {
-      fill: var(--scheme-color-primary-fixed-dim);
+      fill: color-mix(
+        in oklch,
+        var(--scheme-color-primary-fixed-dim) 40%,
+        var(--scheme-color-sing-loop-area)
+      );
     }
 
     .loop-handle {
@@ -409,20 +436,29 @@ onUnmounted(() => {
     }
   }
 
-  &.is-dragging {
-    .loop-background {
-      background: var(--scheme-color-secondary-container);
+  &:not(.is-enabled):not(.is-dragging) {
+    .loop-range {
       opacity: 0.6;
     }
 
+    .loop-handle {
+      opacity: 0.6;
+    }
+  }
+
+  &.is-dragging {
+    .loop-background {
+      background: var(--scheme-color-secondary-container);
+      opacity: 0.4;
+    }
+
     .loop-range {
-      fill: var(--scheme-color-outline);
-      opacity: 0.38;
+      opacity: 0.6;
     }
 
     .loop-handle {
-      fill: var(--scheme-color-tertiary-fixed);
-      stroke: var(--scheme-color-tertiary-fixed);
+      fill: var(--scheme-color-primary-fixed);
+      stroke: var(--scheme-color-primary-fixed);
     }
   }
 
@@ -481,7 +517,13 @@ onUnmounted(() => {
   }
 }
 
-.loop-drag-area {
+.loop-handle-group:hover {
+  .loop-handle {
+    fill: var(--scheme-color-primary-fixed);
+  }
+}
+
+.loop-handle-drag-area {
   fill: transparent;
   cursor: ew-resize;
 }
