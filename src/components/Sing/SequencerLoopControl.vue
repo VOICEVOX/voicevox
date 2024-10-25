@@ -32,9 +32,9 @@
       <!-- ループ範囲 -->
       <rect
         :x="loopStartX - offset + 8"
-        y="7"
+        y="4"
         :width="Math.max(loopEndX - loopStartX - 16, 0)"
-        height="2"
+        height="8"
         rx="1"
         ry="1"
         class="loop-range"
@@ -152,19 +152,30 @@ const executePreviewProcess = ref(false);
 // RequestAnimationFrameのID
 let previewRequestId: number | null = null;
 
-// イベントハンドラ
+// ループエリアのクリック(新規ループを作成する)
 const onLoopAreaMouseDown = (event: MouseEvent) => {
+  // 左クリック以外は無視
   if (event.button !== 0 || (event.ctrlKey && event.button === 0)) return;
-  if (isDragging.value) {
-    void stopDragging();
+
+  // プレビューを停止
+  executePreviewProcess.value = false;
+  if (previewRequestId != null) {
+    cancelAnimationFrame(previewRequestId);
+    previewRequestId = null;
   }
+
+  // クリック位置の計算
   const target = event.currentTarget as HTMLElement;
   const rect = target.getBoundingClientRect();
-  const x = event.clientX - rect.left + props.offset;
+  const clickX = event.clientX - rect.left;
+  const x = clickX + props.offset;
   const tick = snapToGrid(baseXToTick(x / sequencerZoomX.value, tpqn.value));
-  void setLoopRange(tick, tick);
+  // プレビュー用のループ範囲を設定
   previewLoopStartTick.value = tick;
   previewLoopEndTick.value = tick;
+  // ループ範囲を設定
+  void setLoopRange(tick, tick);
+  // ドラッグ開始
   startDragging("end", event);
 };
 
@@ -183,18 +194,23 @@ const onEndHandleMouseDown = (event: MouseEvent) => {
 
 // ドラッグ開始処理
 const startDragging = (target: "start" | "end", event: MouseEvent) => {
+  // 左クリック以外は無視
   if (event.button !== 0) return;
+  // ドラッグ開始
   isDragging.value = true;
   dragTarget.value = target;
   dragStartX.value = event.clientX;
   dragStartHandleX.value =
     target === "start" ? loopStartX.value : loopEndX.value;
 
-  // ドラッグ開始時に現行のループ範囲をプレビュー用にコピー
+  // ドラッグ開始時に現行のループ範囲をプレビューにコピー
   previewLoopStartTick.value = loopStartTick.value;
   previewLoopEndTick.value = loopEndTick.value;
 
+  // カーソルを変更
   setCursorState(CursorState.EW_RESIZE);
+  // プレビュー開始
+  lastMouseEvent = event;
   executePreviewProcess.value = true;
   if (previewRequestId == null) {
     previewRequestId = requestAnimationFrame(preview);
@@ -257,7 +273,7 @@ const preview = () => {
         }
       }
     } catch (error) {
-      console.error("Failed to update loop range", error);
+      throw new Error("Failed to update loop range", { cause: error });
     }
   }
 
@@ -284,7 +300,10 @@ const stopDragging = async () => {
   }
 
   try {
+    // ループ範囲を設定
     await setLoopRange(previewLoopStartTick.value, previewLoopEndTick.value);
+    // 再生ヘッドがループ開始位置にあるか
+    // FIXME: usePlayheadPosition実装が完了したら移動
     const isPlayheadToLoopStart =
       previewLoopStartTick.value !== previewLoopEndTick.value;
     if (isPlayheadToLoopStart) {
@@ -293,11 +312,11 @@ const stopDragging = async () => {
           position: previewLoopStartTick.value,
         });
       } catch (error) {
-        console.error("Failed to move playhead", error);
+        throw new Error("Failed to move playhead", { cause: error });
       }
     }
   } catch (error) {
-    console.error("Failed to set loop range", error);
+    throw new Error("Failed to set loop range", { cause: error });
   }
 };
 
@@ -368,7 +387,7 @@ onUnmounted(() => {
   width: 100%;
   pointer-events: auto;
   cursor: pointer;
-  z-index: 100;
+  z-index: 1;
 
   &.cursor-ew-resize {
     cursor: ew-resize;
@@ -446,7 +465,6 @@ onUnmounted(() => {
 // ループ範囲
 .loop-range {
   fill: var(--scheme-color-outline);
-  opacity: 1;
 
   &-area {
     fill: transparent;
@@ -457,7 +475,6 @@ onUnmounted(() => {
 .loop-handle {
   fill: var(--scheme-color-outline);
   cursor: ew-resize;
-  border-radius: 1px 1px 3px 3px;
 
   &.is-empty {
     fill: var(--scheme-color-outline);
