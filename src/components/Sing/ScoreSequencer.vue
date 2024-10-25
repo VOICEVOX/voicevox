@@ -22,8 +22,6 @@
       }"
       aria-label="シーケンサ"
       @mousedown="onMouseDown"
-      @mousemove="onMouseMove"
-      @mouseup="onMouseUp"
       @mouseenter="onMouseEnter"
       @mouseleave="onMouseLeave"
       @wheel="onWheel"
@@ -1399,6 +1397,8 @@ onActivated(() => {
   });
 
   document.addEventListener("keydown", handleKeydown);
+  window.addEventListener("mousemove", onMouseMove);
+  window.addEventListener("mouseup", onMouseUp);
 });
 
 // リスナー解除
@@ -1408,6 +1408,8 @@ onDeactivated(() => {
   });
 
   document.removeEventListener("keydown", handleKeydown);
+  window.removeEventListener("mousemove", onMouseMove);
+  window.removeEventListener("mouseup", onMouseUp);
 });
 
 // コンテキストメニュー
