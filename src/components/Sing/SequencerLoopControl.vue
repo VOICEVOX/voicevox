@@ -22,7 +22,7 @@
         x="0"
         y="0"
         :width="props.width"
-        height="12"
+        height="16"
         rx="6"
         ry="6"
         class="loop-background"
@@ -31,16 +31,8 @@
       />
       <!-- ループ範囲 -->
       <rect
-        :x="loopStartX - offset"
-        y="0"
-        :width="Math.max(loopEndX - loopStartX, 0)"
-        height="8"
-        class="loop-range-area"
-        @click.stop="onLoopRangeClick"
-      />
-      <rect
         :x="loopStartX - offset + 8"
-        y="5"
+        y="7"
         :width="Math.max(loopEndX - loopStartX - 16, 0)"
         height="2"
         rx="1"
@@ -49,44 +41,24 @@
         @click.stop="onLoopRangeClick"
       />
       <!-- ループ開始ハンドル -->
-      <path
-        :d="`M${loopStartX - offset},${2} L${loopStartX - offset},${
-          2 + 8
-        } L${loopStartX - offset + 6},${2 + 4} Z`"
+      <rect
+        :x="loopStartX - offset"
+        y="0"
+        width="6"
+        height="16"
         class="loop-handle loop-handle-start"
         :class="{ 'is-empty': isEmpty }"
-        vector-effect="non-scaling-stroke"
         @mousedown.stop="onStartHandleMouseDown"
       />
       <!-- ループ終了ハンドル -->
-      <path
-        :d="`M${loopEndX - offset},${2} L${loopEndX - offset},${
-          2 + 8
-        } L${loopEndX - offset - 6},${2 + 4} Z`"
+      <rect
+        :x="loopEndX - offset - 6"
+        y="0"
+        width="6"
+        height="16"
         class="loop-handle loop-handle-end"
         :class="{ 'is-empty': isEmpty }"
-        vector-effect="non-scaling-stroke"
         @mousedown.stop="onEndHandleMouseDown"
-      />
-      <!-- ループ開始ドラッグ領域 -->
-      <rect
-        :x="loopStartX - offset - 4"
-        y="0"
-        width="16"
-        height="16"
-        class="loop-drag-area loop-drag-area-start"
-        @mousedown.stop="onStartHandleMouseDown"
-        @dblclick.stop="onHandleDoubleClick"
-      />
-      <!-- ループ終了ドラッグ領域 -->
-      <rect
-        :x="loopEndX - offset - 4"
-        y="0"
-        width="16"
-        height="16"
-        class="loop-drag-area loop-drag-area-end"
-        @mousedown.stop="onEndHandleMouseDown"
-        @dblclick.stop="onHandleDoubleClick"
       />
     </svg>
     <ContextMenu :menudata="contextMenuData" />
@@ -128,7 +100,7 @@ const DRAGGING_HEIGHT = props.height;
 const DEFAULT_HEIGHT = 16;
 
 // FIXME: 計算値をcomposableに移動し、コンポーネントから分離したい
-// 以下のような要素は広く使われると思われるためループ実装においてはcomposableに移動しない
+// 以下のような要素は広使われると思われるためループ実装においてはcomposableに移動しない
 const tpqn = computed(() => store.state.tpqn);
 const sequencerZoomX = computed(() => store.state.sequencerZoomX);
 
@@ -207,11 +179,6 @@ const onStartHandleMouseDown = (event: MouseEvent) => {
 
 const onEndHandleMouseDown = (event: MouseEvent) => {
   startDragging("end", event);
-};
-
-// ハンドルのダブルクリック(ループ範囲を削除する)
-const onHandleDoubleClick = () => {
-  void clearLoopRange();
 };
 
 // ドラッグ開始処理
@@ -334,7 +301,7 @@ const stopDragging = async () => {
   }
 };
 
-// コンテキストメニュー位置に1小節のループ範囲を作成する
+// コンキストメニュー位置に1小節のループ範囲を作成する
 const handleAddOneMeasureLoop = (x: number) => {
   addOneMeasureLoop(x, props.offset, tpqn.value, sequencerZoomX.value);
 };
@@ -401,6 +368,7 @@ onUnmounted(() => {
   width: 100%;
   pointer-events: auto;
   cursor: pointer;
+  z-index: 100;
 
   &.cursor-ew-resize {
     cursor: ew-resize;
@@ -424,6 +392,7 @@ onUnmounted(() => {
 
   &.is-dragging {
     .loop-background {
+      background: var(--scheme-color-secondary-container);
       opacity: 0.6;
     }
 
@@ -453,6 +422,19 @@ onUnmounted(() => {
       opacity: 0.38;
     }
   }
+
+  &:not(.is-dragging) {
+    .loop-handle {
+      &:hover,
+      &-start:hover,
+      &-end:hover {
+        fill: var(--scheme-color-primary-fixed);
+        outline: 2px solid
+          oklch(from var(--scheme-color-primary-fixed) l c h / 0.5);
+        outline-offset: 1px;
+      }
+    }
+  }
 }
 
 // ループエリア
@@ -474,21 +456,16 @@ onUnmounted(() => {
 // ループハンドル
 .loop-handle {
   fill: var(--scheme-color-outline);
-  stroke: var(--scheme-color-outline);
-  stroke-width: 2px;
-  stroke-linejoin: round;
-  stroke-linecap: round;
+  cursor: ew-resize;
+  border-radius: 1px 1px 3px 3px;
 
   &.is-empty {
     fill: var(--scheme-color-outline);
-    stroke: var(--scheme-color-outline);
   }
 }
 
-// ドラッグエリア
 .loop-drag-area {
   fill: transparent;
   cursor: ew-resize;
-  pointer-events: all;
 }
 </style>
