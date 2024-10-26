@@ -1,5 +1,8 @@
 <template>
-  <QBar class="bg-background q-pa-none relative-position">
+  <QBar
+    class="bg-background q-pa-none relative-position"
+    :class="[isVst || 'enable-drag']"
+  >
     <div
       v-if="!isVst && $q.platform.is.mac && !isFullscreen"
       class="mac-traffic-light-space"
@@ -619,7 +622,10 @@ registerHotkeyForAllEditors({
 
 .q-bar {
   min-height: vars.$menubar-height;
-  -webkit-app-region: drag; // Electronのドラッグ領域
+
+  &.enable-drag {
+    -webkit-app-region: drag; // Electronのドラッグ領域
+  }
   :deep(.q-btn) {
     margin-left: 0;
     -webkit-app-region: no-drag; // Electronのドラッグ領域対象から外す
