@@ -11,7 +11,7 @@ export const useRootMiscSetting = <T extends keyof RootMiscSettingType>(
   const setter = (value: RootMiscSettingType[T]) => {
     // Vuexの型処理でUnionが解かれてしまうのを迂回している
     // FIXME: このワークアラウンドをなくす
-    void store.dispatch("SET_ROOT_MISC_SETTING", {
+    void store.actions.SET_ROOT_MISC_SETTING({
       key: key as never,
       value,
     });
