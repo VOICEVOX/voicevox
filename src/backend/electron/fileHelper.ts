@@ -1,15 +1,18 @@
 import fs from "fs";
 import { moveFileSync } from "move-file";
 
+/**
+ * 書き込みに失敗したときにファイルが消えないように、
+ * tmpファイル書き込み後、保存先ファイルに上書きする
+ */
 export function writeFileSafely(
   path: string,
   data: string | NodeJS.ArrayBufferView,
 ) {
-  // ファイル書き込みに失敗したときに設定が消えないように、tempファイル書き込み後上書き移動する
-  const temp_path = `${path}.tmp`;
-  fs.writeFileSync(temp_path, data);
+  const tmpPath = `${path}.tmp`;
+  fs.writeFileSync(tmpPath, data);
 
-  moveFileSync(temp_path, path, {
+  moveFileSync(tmpPath, path, {
     overwrite: true,
   });
 }
