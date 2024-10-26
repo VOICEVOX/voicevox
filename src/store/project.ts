@@ -1,8 +1,5 @@
 import { getBaseName } from "./utility";
-import {
-  createDotNotationPartialStore as createPartialStore,
-  DotNotationDispatch,
-} from "./vuex";
+import { createPartialStore, DotNotationDispatch } from "./vuex";
 import { createDotNotationUILockAction as createUILockAction } from "@/store/ui";
 import {
   AllActions,

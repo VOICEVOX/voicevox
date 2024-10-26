@@ -13,7 +13,7 @@ import {
   UiStoreState,
   UiStoreTypes,
 } from "./type";
-import { createDotNotationPartialStore as createPartialStore } from "./vuex";
+import { createPartialStore } from "./vuex";
 import { ActivePointScrollMode } from "@/type/preload";
 import {
   AlertDialogOptions,

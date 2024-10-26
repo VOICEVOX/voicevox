@@ -28,7 +28,7 @@ import {
   filterCharacterInfosByStyleType,
   DEFAULT_PROJECT_NAME,
 } from "./utility";
-import { createDotNotationPartialStore as createPartialStore } from "./vuex";
+import { createPartialStore } from "./vuex";
 import { determineNextPresetKey } from "./preset";
 import {
   fetchAudioFromAudioItem,

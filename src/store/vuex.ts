@@ -441,45 +441,6 @@ export const createPartialStore = <
   A extends ActionsBase = StoreType<T, "action">,
   M extends MutationsBase = StoreType<T, "mutation">,
 >(
-  options: PartialStoreOptions<State, T, G, A, M>,
-): StoreOptions<State, G, A, M, AllGetters, AllActions, AllMutations> => {
-  const obj = Object.keys(options).reduce(
-    (acc, cur) => {
-      const option = options[cur];
-
-      /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-      if (option.getter) {
-        acc.getters[cur] = option.getter;
-      }
-      if (option.mutation) {
-        acc.mutations[cur] = option.mutation;
-      }
-      if (option.action) {
-        acc.actions[cur] = option.action;
-      }
-      /* eslint-enable @typescript-eslint/no-unsafe-member-access */
-
-      return acc;
-    },
-
-    /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-    {
-      getters: Object.create(null),
-      mutations: Object.create(null),
-      actions: Object.create(null),
-    },
-    /*  eslint-enable @typescript-eslint/no-unsafe-assignment */
-  );
-
-  return obj;
-};
-
-export const createDotNotationPartialStore = <
-  T extends StoreTypesBase,
-  G extends GettersBase = StoreType<T, "getter">,
-  A extends ActionsBase = StoreType<T, "action">,
-  M extends MutationsBase = StoreType<T, "mutation">,
->(
   options: DotNotationPartialStoreOptions<State, T, G, A, M>,
 ): StoreOptions<State, G, A, M, AllGetters, AllActions, AllMutations> => {
   const obj = Object.keys(options).reduce(
