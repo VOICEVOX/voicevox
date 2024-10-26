@@ -1,6 +1,4 @@
 import {
-  Action,
-  ActionContext,
   ActionsBase,
   DotNotationAction,
   DotNotationActionContext,
