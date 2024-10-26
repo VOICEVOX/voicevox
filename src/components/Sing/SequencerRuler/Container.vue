@@ -39,7 +39,7 @@ const sequencerZoomX = computed(() => store.state.sequencerZoomX);
 const playheadTicks = ref(0);
 
 const updatePlayheadTicks = (ticks: number) => {
-  void store.dispatch("SET_PLAYHEAD_POSITION", { position: ticks });
+  void store.actions.SET_PLAYHEAD_POSITION({ position: ticks });
 };
 
 const playheadPositionChangeListener = (position: number) => {
@@ -47,17 +47,17 @@ const playheadPositionChangeListener = (position: number) => {
 };
 
 onMounted(() => {
-  void store.dispatch("ADD_PLAYHEAD_POSITION_CHANGE_LISTENER", {
+  void store.actions.ADD_PLAYHEAD_POSITION_CHANGE_LISTENER({
     listener: playheadPositionChangeListener,
   });
 });
 onUnmounted(() => {
-  void store.dispatch("REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER", {
+  void store.actions.REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER({
     listener: playheadPositionChangeListener,
   });
 });
 
 const deselectAllNotes = () => {
-  void store.dispatch("DESELECT_ALL_NOTES");
+  void store.actions.DESELECT_ALL_NOTES();
 };
 </script>
