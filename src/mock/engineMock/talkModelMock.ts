@@ -3,11 +3,11 @@
  * 値は適当だが、テストで使えるよう決定論的に決まるようにしたり、UIのバグに気づけるようある程度規則を持たせている。
  */
 
-import { builder, IpadicFeatures, Tokenizer } from "kuromoji";
+import kuromoji, { IpadicFeatures, Tokenizer } from "kuromoji";
 import { moraToPhonemes } from "./phonemeMock";
-import { dicPath } from "./constants";
 import { moraPattern } from "@/domain/japanese";
 import { AccentPhrase, Mora } from "@/openapi";
+import packageJson from "@/../package.json";
 
 let _tokenizer: Tokenizer<IpadicFeatures> | undefined;
 
@@ -18,16 +18,18 @@ async function createOrGetTokenizer() {
   }
 
   return new Promise<Tokenizer<IpadicFeatures>>((resolve, reject) => {
-    builder({ dicPath }).build(
-      (err: Error, tokenizer: Tokenizer<IpadicFeatures>) => {
+    // NOTE: kuromojiはブラウザのときfetch、Nodeのときfsを使うので、このコードが正常動作するのはブラウザ環境のみ
+    const dicPath = `https://cdn.jsdelivr.net/npm/kuromoji@${packageJson.devDependencies.kuromoji}/dict`;
+    kuromoji
+      .builder({ dicPath })
+      .build((err: Error, tokenizer: Tokenizer<IpadicFeatures>) => {
         if (err) {
           reject(err);
         } else {
           _tokenizer = tokenizer;
           resolve(tokenizer);
         }
-      },
-    );
+      });
   });
 }
 
