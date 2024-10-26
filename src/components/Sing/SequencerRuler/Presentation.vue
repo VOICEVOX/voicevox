@@ -10,7 +10,6 @@
       ref="contextMenu"
       :header="contextMenuHeader"
       :menudata="contextMenudata"
-      :uiLocked
     />
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -117,41 +116,41 @@
 import {
   computed,
   ref,
-  useTemplateRef,
   onMounted,
   onUnmounted,
+  useTemplateRef,
   ExtractPropTypes,
 } from "vue";
 import { Dialog } from "quasar";
-import TempoOrTimeSignatureChangeDialog, {
-  TempoOrTimeSignatureChangeDialogResult,
-} from "@/components/Dialog/TempoOrTimeSignatureChangeDialog.vue";
 import {
   getMeasureDuration,
   getNoteDuration,
   getTimeSignaturePositions,
 } from "@/sing/domain";
 import { baseXToTick, tickToBaseX } from "@/sing/viewHelper";
+import { Tempo, TimeSignature } from "@/store/type";
 import ContextMenu, {
   ContextMenuItemData,
 } from "@/components/Menu/ContextMenu.vue";
 import { UnreachableError } from "@/type/utility";
-import { Tempo, TimeSignature } from "@/store/type";
+import TempoOrTimeSignatureChangeDialog, {
+  TempoOrTimeSignatureChangeDialogResult,
+} from "@/components/Dialog/TempoOrTimeSignatureChangeDialog.vue";
 
-const playheadPosition = defineModel<number>("playheadPosition", {
-  required: true,
-});
 const props = defineProps<{
   offset: number;
   numMeasures: number;
   tpqn: number;
   tempos: Tempo[];
   timeSignatures: TimeSignature[];
-  zoomX: number;
+  sequencerZoomX: number;
   snapType: number;
 
   uiLocked: boolean;
 }>();
+const playheadPosition = defineModel<number>("playheadPosition", {
+  required: true,
+});
 const emit = defineEmits<{
   deselectAllNotes: [];
 
@@ -167,7 +166,7 @@ const beatWidth = (timeSignature: TimeSignature) => {
   const beatType = timeSignature.beatType;
   const wholeNoteDuration = props.tpqn * 4;
   const beatTicks = wholeNoteDuration / beatType;
-  return tickToBaseX(beatTicks, props.tpqn) * props.zoomX;
+  return tickToBaseX(beatTicks, props.tpqn) * props.sequencerZoomX;
 };
 const tsPositions = computed(() => {
   return getTimeSignaturePositions(props.timeSignatures, props.tpqn);
@@ -182,7 +181,7 @@ const endTicks = computed(() => {
   );
 });
 const width = computed(() => {
-  return tickToBaseX(endTicks.value, props.tpqn) * props.zoomX;
+  return tickToBaseX(endTicks.value, props.tpqn) * props.sequencerZoomX;
 });
 const gridPatterns = computed(() => {
   const gridPatterns: { id: string; x: number; width: number }[] = [];
@@ -227,22 +226,25 @@ const measureInfos = computed(() => {
       const baseX = tickToBaseX(measurePosition, props.tpqn);
       return {
         number: measureNumber,
-        x: Math.round(baseX * props.zoomX),
+        x: Math.round(baseX * props.sequencerZoomX),
       };
     });
   });
 });
 const playheadX = computed(() => {
   const baseX = tickToBaseX(playheadPosition.value, props.tpqn);
-  return Math.floor(baseX * props.zoomX);
+  return Math.floor(baseX * props.sequencerZoomX);
 });
 
 const getTickFromMouseEvent = (event: MouseEvent) => {
-  const baseX = (props.offset + event.offsetX) / props.zoomX;
+  const baseX = (props.offset + event.offsetX) / props.sequencerZoomX;
   return baseXToTick(baseX, props.tpqn);
 };
 
 const onClick = async (event: MouseEvent) => {
+  if (props.uiLocked) {
+    return;
+  }
   emit("deselectAllNotes");
 
   const ticks = getTickFromMouseEvent(event);
@@ -355,7 +357,7 @@ const tempoOrTimeSignatureChanges = computed<TempoOrTimeSignatureChange[]>(
       return {
         position: tick,
         text: `${tempo?.tempo.bpm ?? ""} ${timeSignature ? `${timeSignature.timeSignature.beats}/${timeSignature.timeSignature.beatType}` : ""}`,
-        x: tickToBaseX(tick, props.tpqn) * props.zoomX,
+        x: tickToBaseX(tick, props.tpqn) * props.sequencerZoomX,
       };
     });
 

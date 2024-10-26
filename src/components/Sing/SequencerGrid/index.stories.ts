@@ -4,7 +4,6 @@ import Presentation from "./Presentation.vue";
 
 const meta: Meta<typeof Presentation> = {
   component: Presentation,
-
   args: {
     timeSignatures: [
       {
@@ -13,10 +12,10 @@ const meta: Meta<typeof Presentation> = {
         measureNumber: 1,
       },
     ],
-    zoomX: 0.25,
-    zoomY: 0.75,
+    sequencerZoomX: 0.25,
+    sequencerZoomY: 0.75,
     tpqn: 480,
-    snapType: 16,
+    sequencerSnapType: 16,
     numMeasures: 32,
   },
 

@@ -1,21 +1,23 @@
 <template>
   <Presentation
-    v-bind="props"
-    :playheadPosition
+    :offset
+    :numMeasures
     :tpqn
     :tempos
     :timeSignatures
-    :zoomX
+    :sequencerZoomX
     :snapType
     :uiLocked
-    @update:playheadPosition="updatePlayheadTicks"
-    @deselectAllNotes="deselectAllNotes"
-    @setTempo="setTempo"
-    @setTimeSignature="setTimeSignature"
+    :playheadPosition
+    @update:playheadPosition="updatePlayheadPosition"
     @removeTempo="removeTempo"
     @removeTimeSignature="removeTimeSignature"
+    @setTempo="setTempo"
+    @setTimeSignature="setTimeSignature"
+    @deselectAllNotes="deselectAllNotes"
   />
 </template>
+
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import Presentation from "./Presentation.vue";
@@ -26,7 +28,7 @@ defineOptions({
   name: "SequencerRuler",
 });
 
-const props = withDefaults(
+withDefaults(
   defineProps<{
     offset: number;
     numMeasures: number;
@@ -36,12 +38,13 @@ const props = withDefaults(
     numMeasures: 32,
   },
 );
+
 const store = useStore();
 
 const tpqn = computed(() => store.state.tpqn);
 const tempos = computed(() => store.state.tempos);
 const timeSignatures = computed(() => store.state.timeSignatures);
-const zoomX = computed(() => store.state.sequencerZoomX);
+const sequencerZoomX = computed(() => store.state.sequencerZoomX);
 const snapType = computed(() => store.state.sequencerSnapType);
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
@@ -50,7 +53,8 @@ const playheadPosition = ref(0);
 const playheadPositionChangeListener = (position: number) => {
   playheadPosition.value = position;
 };
-const updatePlayheadTicks = (ticks: number) => {
+
+const updatePlayheadPosition = (ticks: number) => {
   playheadPosition.value = ticks;
 
   void store.dispatch("SET_PLAYHEAD_POSITION", {

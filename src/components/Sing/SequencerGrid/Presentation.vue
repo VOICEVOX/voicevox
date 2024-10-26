@@ -100,28 +100,28 @@ import { TimeSignature } from "@/store/type";
 const props = defineProps<{
   tpqn: number;
   timeSignatures: TimeSignature[];
-  zoomX: number;
-  zoomY: number;
-  snapType: number;
+  sequencerZoomX: number;
+  sequencerZoomY: number;
+  sequencerSnapType: number;
   numMeasures: number;
 }>();
 
 const gridCellTicks = computed(() => {
-  return getNoteDuration(props.snapType, props.tpqn);
+  return getNoteDuration(props.sequencerSnapType, props.tpqn);
 });
 const gridCellWidth = computed(() => {
-  return tickToBaseX(gridCellTicks.value, props.tpqn) * props.zoomX;
+  return tickToBaseX(gridCellTicks.value, props.tpqn) * props.sequencerZoomX;
 });
 const gridCellBaseHeight = getKeyBaseHeight();
 const gridCellHeight = computed(() => {
-  return gridCellBaseHeight * props.zoomY;
+  return gridCellBaseHeight * props.sequencerZoomY;
 });
 const beatsPerMeasure = (timeSignature: TimeSignature) => timeSignature.beats;
 const beatWidth = (timeSignature: TimeSignature) => {
   const beatType = timeSignature.beatType;
   const wholeNoteDuration = props.tpqn * 4;
   const beatTicks = wholeNoteDuration / beatType;
-  return tickToBaseX(beatTicks, props.tpqn) * props.zoomX;
+  return tickToBaseX(beatTicks, props.tpqn) * props.sequencerZoomX;
 };
 
 const gridWidth = computed(() => {

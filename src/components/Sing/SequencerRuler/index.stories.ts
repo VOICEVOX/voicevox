@@ -1,11 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/vue3";
+import { fn, expect, Mock } from "@storybook/test";
 import { ref } from "vue";
 
 import Presentation from "./Presentation.vue";
+import { UnreachableError } from "@/type/utility";
 
 const meta: Meta<typeof Presentation> = {
   component: Presentation,
-
   args: {
     tempos: [
       {
@@ -20,18 +21,17 @@ const meta: Meta<typeof Presentation> = {
         measureNumber: 1,
       },
     ],
-    offset: 0,
-    zoomX: 0.25,
+    sequencerZoomX: 0.25,
     tpqn: 480,
-    snapType: 16,
+    offset: 0,
     numMeasures: 32,
-    uiLocked: false,
+    "onUpdate:playheadPosition": fn<(value: number) => void>(),
+    onDeselectAllNotes: fn(),
   },
-
   render: (args) => ({
     components: { Presentation },
     setup() {
-      const playheadPosition = ref(480);
+      const playheadPosition = ref(0);
       return { args, playheadPosition };
     },
     template: `<Presentation v-bind="args" v-model:playheadPosition="playheadPosition" />`,
@@ -96,28 +96,37 @@ export const WithOffset: Story = {
   },
 };
 
-// pointerのcoords指定がうまくいかないので一旦コメントアウト。
-// TODO: ちゃんと動くようにする
-//
-// export const MovePlayhead: Story = {
-//   name: "再生位置を動かせる",
-//   args: {
-//     "onUpdate:playheadPosition": fn(),
-//   },
-//
-//   play: async ({ canvasElement, args }) => {
-//     const ruler = canvasElement.querySelector("svg");
-//     if (!ruler) {
-//       throw new Error("Ruler not found");
-//     }
-//     await userEvent.pointer({
-//       keys: "[MouseLeft]",
-//       target: ruler,
-//       coords: {
-//         offsetX: 10,
-//         offsetY: 0,
-//       },
-//     });
-//     await expect(args["onUpdate:playheadPosition"]).toBeCalled();
-//   },
-// };
+export const MovePlayhead: Story = {
+  name: "再生位置を移動",
+
+  play: async ({ canvasElement, args }) => {
+    const ruler =
+      canvasElement.querySelector<HTMLDivElement>(".sequencer-ruler");
+
+    if (!ruler) {
+      throw new UnreachableError("ruler is not found");
+    }
+
+    // userEvent.pointerは座標指定が上手くいかないので、MouseEventを使って手動でクリックをエミュレートする
+    const rect = ruler.getBoundingClientRect();
+    const width = rect.width;
+    const event = new MouseEvent("click", {
+      bubbles: true,
+      cancelable: true,
+      clientX: rect.left + width / 2,
+      clientY: rect.top + rect.height,
+    });
+
+    ruler.dispatchEvent(event);
+
+    await expect(args["onUpdate:playheadPosition"]).toHaveBeenCalled();
+
+    const onUpdateCallback = args["onUpdate:playheadPosition"] as Mock<
+      (value: number) => void
+    >;
+    const newTick = onUpdateCallback.mock.calls[0][0];
+
+    await expect(newTick).toBeGreaterThan(0);
+    await expect(args["onDeselectAllNotes"]).toHaveBeenCalled();
+  },
+};
