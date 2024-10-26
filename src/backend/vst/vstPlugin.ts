@@ -20,7 +20,7 @@ import {
   State,
 } from "@/store/type";
 import { secondToTick } from "@/sing/domain";
-import { phraseSingingVoices } from "@/store/singing";
+import { phraseSingingVoices, singingVoiceCache } from "@/store/singing";
 import onetimeWatch from "@/helpers/onetimeWatch";
 import { createLogger } from "@/domain/frontend/log";
 import { getOrThrow } from "@/helpers/mapHelper";
@@ -127,7 +127,7 @@ export const vstPlugin: Plugin = {
           log.info("Loading cached voices");
           const encodedVoices = await getVoices();
           for (const [key, encodedVoice] of Object.entries(encodedVoices)) {
-            phraseSingingVoices.set(
+            singingVoiceCache.set(
               SingingVoiceKey(key),
               new Blob([await toBytes(encodedVoice)]),
             );
