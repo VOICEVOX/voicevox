@@ -401,30 +401,6 @@ type PartialStoreOptions<
         : never
       : GAM extends "action"
         ? K extends keyof A
-          ? Action<S, S, A, K, AllGetters, AllActions, AllMutations>
-          : never
-        : GAM extends "mutation"
-          ? K extends keyof M
-            ? Mutation<S, M, K>
-            : never
-          : never;
-  };
-};
-
-type DotNotationPartialStoreOptions<
-  S,
-  T extends StoreTypesBase,
-  G extends GettersBase,
-  A extends ActionsBase,
-  M extends MutationsBase,
-> = {
-  [K in keyof T]: {
-    [GAM in keyof T[K]]: GAM extends "getter"
-      ? K extends keyof G
-        ? Getter<S, S, G, K, AllGetters>
-        : never
-      : GAM extends "action"
-        ? K extends keyof A
           ? DotNotationAction<S, S, A, K, AllGetters, AllActions, AllMutations>
           : never
         : GAM extends "mutation"
@@ -441,7 +417,7 @@ export const createPartialStore = <
   A extends ActionsBase = StoreType<T, "action">,
   M extends MutationsBase = StoreType<T, "mutation">,
 >(
-  options: DotNotationPartialStoreOptions<State, T, G, A, M>,
+  options: PartialStoreOptions<State, T, G, A, M>,
 ): StoreOptions<State, G, A, M, AllGetters, AllActions, AllMutations> => {
   const obj = Object.keys(options).reduce(
     (acc, cur) => {
