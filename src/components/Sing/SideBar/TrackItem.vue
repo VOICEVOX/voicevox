@@ -61,11 +61,15 @@
       <QItemSection>
         <QItemLabel class="track-name" @click.stop="uiLocked || selectTrack()">
           <QInput
+            v-if="props.trackId === selectedTrackId"
             v-model="temporaryTrackName"
             dense
             :disable="uiLocked"
             @blur="updateTrackName"
           />
+          <div v-else class="walkaround-unselected-track-name">
+            {{ track.name }}
+          </div>
         </QItemLabel>
         <QItemLabel v-if="trackCharacter" caption class="singer-name">
           <!-- ミュート中はアイコンを表示 -->
@@ -407,5 +411,12 @@ const singerName = computed(() => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+// 選択されていないトラックのトラック名の表示をQInputの見た目に合わせる
+.walkaround-unselected-track-name {
+  margin-bottom: 2px;
+  margin-top: 3px;
+  letter-spacing: 0.00937em;
 }
 </style>
