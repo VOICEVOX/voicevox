@@ -344,7 +344,7 @@ jobs:
 
       - name: Upload Linux tar.gz (without nvidia) to Release Assets
         if: startsWith(matrix.artifact_name, 'linux-') && !contains(matrix.artifact_name, 'nvidia') && (github.event.release.tag_name || github.event.inputs.version) != ''
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           prerelease: ${{ github.event.inputs.prerelease }}
           tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
@@ -374,7 +374,7 @@ jobs:
 
       - name: Upload Windows & Mac zip (without nvidia) to Release Assets
         if: (startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')) && !contains(matrix.artifact_name, 'nvidia') && (github.event.release.tag_name || github.event.inputs.version) != ''
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           prerelease: ${{ github.event.inputs.prerelease }}
           tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
@@ -463,7 +463,7 @@ jobs:
 
       - name: Upload Linux AppImage split to Release Assets
         if: endsWith(matrix.installer_artifact_name, '-appimage') && (github.event.release.tag_name || github.event.inputs.version) != ''
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           prerelease: ${{ github.event.inputs.prerelease }}
           tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
@@ -481,7 +481,7 @@ jobs:
 
       - name: Upload macOS dmg to Release Assets
         if: endsWith(matrix.installer_artifact_name, '-dmg') && (github.event.release.tag_name || github.event.inputs.version) != ''
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           prerelease: ${{ github.event.inputs.prerelease }}
           tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
@@ -500,7 +500,7 @@ jobs:
 
       - name: Upload Windows NSIS Web to Release Assets
         if: endsWith(matrix.installer_artifact_name, '-nsis-web') && (github.event.release.tag_name || github.event.inputs.version) != ''
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           prerelease: ${{ github.event.inputs.prerelease }}
           tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
