@@ -27,6 +27,8 @@ const meta: Meta<typeof Presentation> = {
     numMeasures: 32,
     "onUpdate:playheadPosition": fn<(value: number) => void>(),
     onDeselectAllNotes: fn(),
+
+    // TODO: ContextMenuをDIする
   },
   render: (args) => ({
     components: { Presentation },

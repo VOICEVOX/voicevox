@@ -6,10 +6,11 @@
     @click="onClick"
     @contextmenu="onContextMenu"
   >
-    <ContextMenu
-      ref="contextMenu"
+    <slot
+      name="contextMenu"
       :header="contextMenuHeader"
       :menudata="contextMenudata"
+      :onContextMenuMounted="(el) => (contextMenu = el)"
     />
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -118,9 +119,10 @@ import {
   ref,
   onMounted,
   onUnmounted,
-  useTemplateRef,
   ExtractPropTypes,
+  ComponentPublicInstance,
 } from "vue";
+import { ComponentProps } from "vue-component-type-helpers";
 import { Dialog } from "quasar";
 import {
   getMeasureDuration,
@@ -158,6 +160,15 @@ const emit = defineEmits<{
   removeTempo: [position: number];
   setTimeSignature: [timeSignature: TimeSignature];
   removeTimeSignature: [measureNumber: number];
+}>();
+defineSlots<{
+  contextMenu(
+    props: ComponentProps<typeof ContextMenu> & {
+      onContextMenuMounted: (
+        el: ComponentPublicInstance<typeof ContextMenu>,
+      ) => void;
+    },
+  ): never;
 }>();
 
 const height = ref(40);
@@ -277,8 +288,9 @@ onUnmounted(() => {
   resizeObserver?.disconnect();
 });
 
-const contextMenu =
-  useTemplateRef<InstanceType<typeof ContextMenu>>("contextMenu");
+const contextMenu = ref<ComponentPublicInstance<typeof ContextMenu> | null>(
+  null,
+);
 const onContextMenu = async (event: MouseEvent) => {
   emit("deselectAllNotes");
 
@@ -301,6 +313,12 @@ const onTempoOrTimeSignatureChangeClick = async (
   const ticks = tempoOrTimeSignatureChange.position;
   playheadPosition.value = ticks;
 
+  console.log(
+    "onTempoOrTimeSignatureChangeClick",
+    event,
+    tempoOrTimeSignatureChange,
+    contextMenu.value,
+  );
   contextMenu.value?.show(event);
 };
 

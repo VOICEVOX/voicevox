@@ -136,6 +136,7 @@
     "vite-plugin-node-polyfills": "0.21.0",
     "vite-tsconfig-paths": "4.2.1",
     "vitest": "2.1.2",
+    "vue-component-type-helpers": "2.1.6",
     "vue-tsc": "2.1.6",
     "yargs": "17.2.1"
   }

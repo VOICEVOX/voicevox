@@ -15,14 +15,33 @@
     @setTempo="setTempo"
     @setTimeSignature="setTimeSignature"
     @deselectAllNotes="deselectAllNotes"
-  />
+  >
+    <template #contextMenu="{ onContextMenuMounted, ...props }">
+      <ContextMenu
+        v-bind="props"
+        :ref="
+          (el) =>
+            onContextMenuMounted(
+              el as ComponentPublicInstance<typeof ContextMenu>,
+            )
+        "
+      />
+    </template>
+  </Presentation>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from "vue";
+import {
+  computed,
+  onMounted,
+  onUnmounted,
+  ref,
+  ComponentPublicInstance,
+} from "vue";
 import Presentation from "./Presentation.vue";
 import { useStore } from "@/store";
 import { Tempo, TimeSignature } from "@/store/type";
+import ContextMenu from "@/components/Menu/ContextMenu.vue";
 
 defineOptions({
   name: "SequencerRuler",
