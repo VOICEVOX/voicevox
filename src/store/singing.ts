@@ -1,5 +1,5 @@
 import path from "path";
-import { toRaw } from "vue";
+import { ref, toRaw } from "vue";
 import { createDotNotationPartialStore as createPartialStore } from "./vuex";
 import { createDotNotationUILockAction as createUILockAction } from "./ui";
 import {
@@ -85,10 +85,7 @@ import {
   isTracksEmpty,
   shouldPlayTracks,
 } from "@/sing/domain";
-import {
-  FrequentlyUpdatedState,
-  getOverlappingNoteIds,
-} from "@/sing/storeHelper";
+import { getOverlappingNoteIds } from "@/sing/storeHelper";
 import {
   AnimationTimer,
   createPromiseThatResolvesWhen,
@@ -254,7 +251,7 @@ if (window.AudioContext) {
   clipper.output.connect(audioContext.destination);
 }
 
-const playheadPosition = new FrequentlyUpdatedState(0);
+const playheadPosition = ref(0); // 単位はtick
 const phraseSingingVoices = new Map<SingingVoiceKey, SingingVoice>();
 const sequences = new Map<SequenceId, Sequence & { trackId: TrackId }>();
 const animationTimer = new AnimationTimer();
@@ -1104,8 +1101,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  GET_PLAYHEAD_POSITION: {
-    getter: (state, getters) => () => {
+  PLAYHEAD_POSITION: {
+    getter(state, getters) {
       if (!transport) {
         throw new Error("transport is undefined.");
       }
@@ -1123,18 +1120,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       playheadPosition.value = position;
       transport.time = getters.TICK_TO_SECOND(position);
-    },
-  },
-
-  ADD_PLAYHEAD_POSITION_CHANGE_LISTENER: {
-    async action(_, { listener }: { listener: (position: number) => void }) {
-      playheadPosition.addValueChangeListener(listener);
-    },
-  },
-
-  REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER: {
-    async action(_, { listener }: { listener: (position: number) => void }) {
-      playheadPosition.removeValueChangeListener(listener);
     },
   },
 
@@ -1156,7 +1141,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
       transport.start();
       animationTimer.start(() => {
-        playheadPosition.value = getters.GET_PLAYHEAD_POSITION();
+        playheadPosition.value = getters.SECOND_TO_TICK(transport.time);
       });
     },
   },
@@ -1173,7 +1158,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
       transport.stop();
       animationTimer.stop();
-      playheadPosition.value = getters.GET_PLAYHEAD_POSITION();
+      playheadPosition.value = getters.SECOND_TO_TICK(transport.time);
     },
   },
 
@@ -2258,7 +2243,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
 
       // パースしたJSONのノートの位置を現在の再生位置に合わせてクオンタイズして貼り付ける
-      const currentPlayheadPosition = getters.GET_PLAYHEAD_POSITION();
+      const currentPlayheadPosition = getters.PLAYHEAD_POSITION;
       const firstNotePosition = notes[0].position;
       // TODO: クオンタイズの処理を共通化する
       const snapType = state.sequencerSnapType;

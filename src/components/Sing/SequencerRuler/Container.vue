@@ -15,7 +15,6 @@
 import { computed } from "vue";
 import Presentation from "./Presentation.vue";
 import { useStore } from "@/store";
-import { usePlayheadPosition } from "@/composables/usePlayheadPosition";
 
 defineOptions({
   name: "SequencerRuler",
@@ -37,10 +36,10 @@ const tpqn = computed(() => store.state.tpqn);
 const timeSignatures = computed(() => store.state.timeSignatures);
 const sequencerZoomX = computed(() => store.state.sequencerZoomX);
 
-const playheadTicks = usePlayheadPosition();
+const playheadTicks = computed(() => store.getters.PLAYHEAD_POSITION);
 
 const updatePlayheadTicks = (ticks: number) => {
-  playheadTicks.value = ticks;
+  void store.dispatch("SET_PLAYHEAD_POSITION", { position: ticks });
 };
 
 const deselectAllNotes = () => {

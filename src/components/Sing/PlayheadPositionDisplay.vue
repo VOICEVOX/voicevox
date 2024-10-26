@@ -22,11 +22,10 @@ import ContextMenu, {
 import { getTimeSignaturePositions, ticksToMeasuresBeats } from "@/sing/domain";
 import { MeasuresBeats } from "@/store/type";
 import { useRootMiscSetting } from "@/composables/useRootMiscSetting";
-import { usePlayheadPosition } from "@/composables/usePlayheadPosition";
 
 const store = useStore();
 
-const playheadTicks = usePlayheadPosition();
+const playheadTicks = computed(() => store.getters.PLAYHEAD_POSITION);
 const [displayFormat, setDisplayFormat] = useRootMiscSetting(
   store,
   "playheadPositionDisplayFormat",

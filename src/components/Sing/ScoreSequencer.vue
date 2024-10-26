@@ -224,7 +224,6 @@ import { useLyricInput } from "@/composables/useLyricInput";
 import { useCursorState, CursorState } from "@/composables/useCursorState";
 import { ExhaustiveError } from "@/type/utility";
 import { uuid4 } from "@/helpers/random";
-import { usePlayheadPosition } from "@/composables/usePlayheadPosition";
 
 // 直接イベントが来ているかどうか
 const isSelfEventTarget = (event: UIEvent) => {
@@ -328,7 +327,7 @@ const scrollX = ref(0);
 const scrollY = ref(0);
 
 // 再生ヘッドの位置
-const playheadTicks = usePlayheadPosition();
+const playheadTicks = computed(() => store.getters.PLAYHEAD_POSITION);
 const playheadX = computed(() => {
   const baseX = tickToBaseX(playheadTicks.value, tpqn.value);
   return Math.floor(baseX * zoomX.value);
