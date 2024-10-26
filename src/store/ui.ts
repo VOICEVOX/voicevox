@@ -2,7 +2,6 @@ import {
   Action,
   ActionContext,
   ActionsBase,
-  Dispatch,
   DotNotationAction,
   DotNotationActionContext,
   DotNotationDispatch,
@@ -79,14 +78,6 @@ export function createDotNotationUILockAction<
 }
 
 export function withProgress<T>(
-  action: Promise<T>,
-  dispatch: Dispatch<AllActions>,
-): Promise<T> {
-  void dispatch("START_PROGRESS");
-  return action.finally(() => dispatch("RESET_PROGRESS"));
-}
-
-export function withProgressDotNotation<T>(
   action: Promise<T>,
   actions: DotNotationDispatch<AllActions>,
 ): Promise<T> {

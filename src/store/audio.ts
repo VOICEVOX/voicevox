@@ -2,7 +2,7 @@ import path from "path";
 import Encoding from "encoding-japanese";
 import {
   createDotNotationUILockAction as createUILockAction,
-  withProgressDotNotation as withProgress,
+  withProgress,
 } from "./ui";
 import {
   AudioItem,
