@@ -215,7 +215,7 @@ const closeDialog = () => {
   const defaultStyleIds = JSON.parse(
     JSON.stringify(store.state.defaultStyleIds),
   ) as DefaultStyleId[];
-  void store.dispatch("SET_DEFAULT_STYLE_IDS", [
+  void store.actions.SET_DEFAULT_STYLE_IDS([
     ...defaultStyleIds.filter(
       (defaultStyleId) =>
         defaultStyleId.speakerUuid !== props.characterInfo.metas.speakerUuid,
