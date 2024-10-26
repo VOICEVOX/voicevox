@@ -84,6 +84,7 @@ const updatePlayheadPosition = (ticks: number) => {
 const deselectAllNotes = () => {
   void store.dispatch("DESELECT_ALL_NOTES");
 };
+
 const setTempo = (tempo: Tempo) => {
   void store.dispatch("COMMAND_SET_TEMPO", {
     tempo,
