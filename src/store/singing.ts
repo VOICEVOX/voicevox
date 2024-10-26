@@ -1,7 +1,7 @@
 import path from "path";
 import { toRaw } from "vue";
 import { createPartialStore } from "./vuex";
-import { createDotNotationUILockAction as createUILockAction } from "./ui";
+import { createUILockAction } from "./ui";
 import {
   Tempo,
   TimeSignature,

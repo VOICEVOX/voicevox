@@ -1,5 +1,5 @@
 import { EngineState, EngineStoreState, EngineStoreTypes } from "./type";
-import { createDotNotationUILockAction as createUILockAction } from "./ui";
+import { createUILockAction } from "./ui";
 import { createPartialStore } from "./vuex";
 import { createLogger } from "@/domain/frontend/log";
 import type { EngineManifest } from "@/openapi";

@@ -35,27 +35,6 @@ import {
 
 export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
   action: (
-    context: ActionContext<S, S, AllGetters, AllActions, AllMutations>,
-    payload: Parameters<A[K]>[0],
-  ) => ReturnType<A[K]> extends Promise<unknown>
-    ? ReturnType<A[K]>
-    : Promise<ReturnType<A[K]>>,
-): Action<S, S, A, K, AllGetters, AllActions, AllMutations> {
-  return (context, payload: Parameters<A[K]>[0]) => {
-    context.commit("LOCK_UI");
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
-    return action(context, payload).finally(() => {
-      context.commit("UNLOCK_UI");
-    });
-  };
-}
-
-export function createDotNotationUILockAction<
-  S,
-  A extends ActionsBase,
-  K extends keyof A,
->(
-  action: (
     context: DotNotationActionContext<
       S,
       S,
@@ -141,7 +120,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   },
 
   ASYNC_UI_LOCK: {
-    action: createDotNotationUILockAction(
+    action: createUILockAction(
       async (_, { callback }: { callback: () => Promise<void> }) => {
         await callback();
       },
@@ -236,27 +215,21 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   },
 
   SHOW_ALERT_DIALOG: {
-    action: createDotNotationUILockAction(
-      async (_, payload: AlertDialogOptions) => {
-        return await showAlertDialog(payload);
-      },
-    ),
+    action: createUILockAction(async (_, payload: AlertDialogOptions) => {
+      return await showAlertDialog(payload);
+    }),
   },
 
   SHOW_CONFIRM_DIALOG: {
-    action: createDotNotationUILockAction(
-      async (_, payload: ConfirmDialogOptions) => {
-        return await showConfirmDialog(payload);
-      },
-    ),
+    action: createUILockAction(async (_, payload: ConfirmDialogOptions) => {
+      return await showConfirmDialog(payload);
+    }),
   },
 
   SHOW_WARNING_DIALOG: {
-    action: createDotNotationUILockAction(
-      async (_, payload: WarningDialogOptions) => {
-        return await showWarningDialog(payload);
-      },
-    ),
+    action: createUILockAction(async (_, payload: WarningDialogOptions) => {
+      return await showWarningDialog(payload);
+    }),
   },
 
   SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON: {
@@ -463,7 +436,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   },
 
   RELOAD_APP: {
-    action: createDotNotationUILockAction(
+    action: createUILockAction(
       async (
         { actions },
         { isMultiEngineOffMode }: { isMultiEngineOffMode?: boolean },

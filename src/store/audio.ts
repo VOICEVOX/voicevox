@@ -1,9 +1,6 @@
 import path from "path";
 import Encoding from "encoding-japanese";
-import {
-  createDotNotationUILockAction as createUILockAction,
-  withProgress,
-} from "./ui";
+import { createUILockAction, withProgress } from "./ui";
 import {
   AudioItem,
   SaveResultObject,

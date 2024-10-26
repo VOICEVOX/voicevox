@@ -1,6 +1,6 @@
 import { getBaseName } from "./utility";
 import { createPartialStore, DotNotationDispatch } from "./vuex";
-import { createDotNotationUILockAction as createUILockAction } from "@/store/ui";
+import { createUILockAction } from "@/store/ui";
 import {
   AllActions,
   AudioItem,
