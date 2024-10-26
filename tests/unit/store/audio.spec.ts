@@ -4,11 +4,11 @@ import { createStoreWrapper } from "@/store";
 import { resetMockMode } from "@/helpers/random";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { proxyStoreCreator } from "@/store/proxy";
-import { createOpenAPIEngineMock } from "@/mock/engineMock";
 import { UnreachableError } from "@/type/utility";
+import { OpenAPIMockEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 
 const store = createStoreWrapper({
-  proxyStoreDI: proxyStoreCreator(createOpenAPIEngineMock()),
+  proxyStoreDI: proxyStoreCreator(OpenAPIMockEngineConnectorFactory),
 });
 const initialState = cloneWithUnwrapProxy(store.state);
 beforeEach(() => {

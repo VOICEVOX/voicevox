@@ -1,3 +1,4 @@
+/** エンジンのURLを構成するパラメータ */
 export type EngineUrlParams = {
   protocol: string; // `http:`など
   hostname: string; // `example.com`など

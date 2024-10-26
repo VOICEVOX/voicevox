@@ -9,12 +9,11 @@ import {
   SpeakerId,
   StyleId,
 } from "@/type/preload";
-import { mockHost, mockUrlParams } from "@/mock/engineMock";
-import { assetsPath } from "@/mock/engineMock/constants";
+import { mockUrlParams } from "@/infrastructures/EngineConnector";
 import {
-  getSpeakersMock,
   getSpeakerInfoMock,
-} from "@/mock/engineMock/speakerResourceMock";
+  getSpeakersMock,
+} from "@/mock/engineMock/characterResourceMock";
 
 /** ソフトウェアが正しく起動した場合のようにVuex.stateを初期化する */
 export function initializeStateAsSoftwareStarted(
@@ -55,7 +54,7 @@ export function initializeStateAsSoftwareStarted(
   // キャラクター情報
   const speakers = getSpeakersMock();
   const characterInfos: CharacterInfo[] = speakers.map((speaker) => {
-    const speakerInfo = getSpeakerInfoMock(speaker.speakerUuid, assetsPath);
+    const speakerInfo = getSpeakerInfoMock(speaker.speakerUuid);
     return {
       portraitPath: speakerInfo.portrait,
       metas: {
