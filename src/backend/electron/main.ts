@@ -743,9 +743,9 @@ registerIpcMainHandle<IpcMainHandle>({
     win.show();
   },
 
-  WRITE_FILE: async (_, { filePath, buffer }) => {
+  WRITE_FILE: (_, { filePath, buffer }) => {
     try {
-      await writeFileSafely(
+      writeFileSafely(
         filePath,
         new DataView(buffer instanceof Uint8Array ? buffer.buffer : buffer),
       );

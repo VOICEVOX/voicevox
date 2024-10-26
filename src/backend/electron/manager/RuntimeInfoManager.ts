@@ -99,7 +99,7 @@ export class RuntimeInfoManager {
 
       // ファイル書き出し
       try {
-        await writeFileSafely(
+        writeFileSafely(
           this.runtimeInfoPath,
           JSON.stringify(runtimeInfoFormatFor3rdParty), // FIXME: zod化する
         );

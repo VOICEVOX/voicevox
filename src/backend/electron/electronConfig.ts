@@ -23,10 +23,7 @@ export class ElectronConfigManager extends BaseConfigManager {
   }
 
   protected async save(config: ConfigType & Metadata) {
-    await writeFileSafely(
-      this.configPath,
-      JSON.stringify(config, undefined, 2),
-    );
+    writeFileSafely(this.configPath, JSON.stringify(config, undefined, 2));
   }
 
   private get configPath(): string {
