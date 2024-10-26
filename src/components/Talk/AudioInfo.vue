@@ -373,7 +373,7 @@ const parameterConfigs = computed<ParameterConfig[]>(() => [
       scrollMinStep: SLIDER_PARAMETERS.SPEED.scrollMinStep,
     },
     onChange: (speedScale: number) =>
-      store.dispatch("COMMAND_MULTI_SET_AUDIO_SPEED_SCALE", {
+      store.actions.COMMAND_MULTI_SET_AUDIO_SPEED_SCALE({
         audioKeys: selectedAudioKeys.value,
         speedScale,
       }),
@@ -391,7 +391,7 @@ const parameterConfigs = computed<ParameterConfig[]>(() => [
       scrollStep: SLIDER_PARAMETERS.PITCH.scrollStep,
     },
     onChange: (pitchScale: number) =>
-      store.dispatch("COMMAND_MULTI_SET_AUDIO_PITCH_SCALE", {
+      store.actions.COMMAND_MULTI_SET_AUDIO_PITCH_SCALE({
         audioKeys: selectedAudioKeys.value,
         pitchScale,
       }),
@@ -411,7 +411,7 @@ const parameterConfigs = computed<ParameterConfig[]>(() => [
       scrollMinStep: SLIDER_PARAMETERS.INTONATION.scrollMinStep,
     },
     onChange: (intonationScale: number) =>
-      store.dispatch("COMMAND_MULTI_SET_AUDIO_INTONATION_SCALE", {
+      store.actions.COMMAND_MULTI_SET_AUDIO_INTONATION_SCALE({
         audioKeys: selectedAudioKeys.value,
         intonationScale,
       }),
@@ -430,7 +430,7 @@ const parameterConfigs = computed<ParameterConfig[]>(() => [
       scrollMinStep: SLIDER_PARAMETERS.VOLUME.scrollMinStep,
     },
     onChange: (volumeScale: number) =>
-      store.dispatch("COMMAND_MULTI_SET_AUDIO_VOLUME_SCALE", {
+      store.actions.COMMAND_MULTI_SET_AUDIO_VOLUME_SCALE({
         audioKeys: selectedAudioKeys.value,
         volumeScale,
       }),
@@ -448,7 +448,7 @@ const parameterConfigs = computed<ParameterConfig[]>(() => [
       scrollMinStep: SLIDER_PARAMETERS.PRE_PHONEME_LENGTH.scrollMinStep,
     },
     onChange: (prePhonemeLength: number) =>
-      store.dispatch("COMMAND_MULTI_SET_AUDIO_PRE_PHONEME_LENGTH", {
+      store.actions.COMMAND_MULTI_SET_AUDIO_PRE_PHONEME_LENGTH({
         audioKeys: selectedAudioKeys.value,
         prePhonemeLength,
       }),
@@ -466,7 +466,7 @@ const parameterConfigs = computed<ParameterConfig[]>(() => [
       scrollMinStep: SLIDER_PARAMETERS.POST_PHONEME_LENGTH.scrollMinStep,
     },
     onChange: (postPhonemeLength: number) =>
-      store.dispatch("COMMAND_MULTI_SET_AUDIO_POST_PHONEME_LENGTH", {
+      store.actions.COMMAND_MULTI_SET_AUDIO_POST_PHONEME_LENGTH({
         audioKeys: selectedAudioKeys.value,
         postPhonemeLength,
       }),
@@ -517,7 +517,7 @@ const morphingTargetEngines = store.getters.MORPHING_SUPPORTED_ENGINES;
 // モーフィング可能なターゲット一覧を取得
 watchEffect(() => {
   if (audioItem.value != undefined) {
-    void store.dispatch("LOAD_MORPHABLE_TARGETS", {
+    void store.actions.LOAD_MORPHABLE_TARGETS({
       engineId: audioItem.value.voice.engineId,
       baseStyleId: audioItem.value.voice.styleId,
     });
@@ -597,7 +597,7 @@ const morphingTargetVoice = computed({
             targetStyleId: voice.styleId,
           }
         : undefined;
-    void store.dispatch("COMMAND_MULTI_SET_MORPHING_INFO", {
+    void store.actions.COMMAND_MULTI_SET_MORPHING_INFO({
       audioKeys: selectedAudioKeys.value,
       morphingInfo,
     });
@@ -627,7 +627,7 @@ const setMorphingRate = (rate: number) => {
   if (info == undefined) {
     throw new Error("audioItem.value.morphingInfo == undefined");
   }
-  return store.dispatch("COMMAND_MULTI_SET_MORPHING_INFO", {
+  return store.actions.COMMAND_MULTI_SET_MORPHING_INFO({
     audioKeys: selectedAudioKeys.value,
     morphingInfo: {
       rate,
@@ -704,7 +704,7 @@ type PresetSelectModelType = {
 
 // プリセットの変更
 const changePreset = (presetKey: PresetKey | undefined) =>
-  store.dispatch("COMMAND_MULTI_SET_AUDIO_PRESET", {
+  store.actions.COMMAND_MULTI_SET_AUDIO_PRESET({
     audioKeys: selectedAudioKeys.value,
     presetKey,
   });
@@ -887,7 +887,7 @@ const addPreset = () => {
 
   closeAllDialog();
 
-  return store.dispatch("ADD_PRESET", {
+  return store.actions.ADD_PRESET({
     presetData: newPreset,
   });
 };
@@ -902,13 +902,13 @@ const updatePreset = async (fullApply: boolean) => {
   const newPreset = createPresetData(title);
   if (newPreset == undefined) return;
 
-  await store.dispatch("UPDATE_PRESET", {
+  await store.actions.UPDATE_PRESET({
     presetData: newPreset,
     presetKey: key,
   });
 
   if (fullApply) {
-    await store.dispatch("COMMAND_FULLY_APPLY_AUDIO_PRESET", {
+    await store.actions.COMMAND_FULLY_APPLY_AUDIO_PRESET({
       presetKey: key,
     });
   }
