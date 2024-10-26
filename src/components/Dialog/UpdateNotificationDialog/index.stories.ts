@@ -95,4 +95,5 @@ export const OpenOfficialSite: Story = {
 
 export const Closed: Story = {
   name: "閉じている",
+  tags: ["skip-screenshot"],
 };

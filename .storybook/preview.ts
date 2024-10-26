@@ -7,7 +7,10 @@ import { markdownItPlugin } from "@/plugins/markdownItPlugin";
 
 import "@quasar/extras/material-icons/material-icons.css";
 import "quasar/dist/quasar.sass";
-import "../src/styles/_index.scss";
+import "@/styles/_index.scss";
+import { UnreachableError } from "@/type/utility";
+import { setThemeToCss, setFontToCss } from "@/domain/dom";
+import { themes } from "@/domain/theme";
 
 setup((app) => {
   app.use(Quasar, {
@@ -61,6 +64,42 @@ const preview: Preview = {
       defaultTheme: "light",
       attributeName: "is-dark-theme",
     }),
+
+    // テーマの設定をCSSへ反映する
+    () => {
+      let observer: MutationObserver | undefined = undefined;
+      return {
+        async mounted() {
+          setFontToCss("default");
+
+          const root = document.documentElement;
+          let lastIsDark: boolean | undefined = undefined;
+          observer = new MutationObserver(() => {
+            const isDark = root.getAttribute("is-dark-theme") === "true";
+            if (lastIsDark === isDark) return;
+            lastIsDark = isDark;
+
+            const theme = themes.find((theme) => theme.isDark === isDark);
+            if (!theme)
+              throw new UnreachableError("assert: theme !== undefined");
+
+            setThemeToCss(theme);
+          });
+
+          observer.observe(root, {
+            attributes: true,
+            attributeFilter: ["is-dark-theme"],
+          });
+        },
+        unmounted() {
+          if (observer) {
+            observer.disconnect();
+          }
+        },
+
+        template: `<story />`,
+      };
+    },
   ],
   argTypesEnhancers: [addActionsWithEmits],
 };

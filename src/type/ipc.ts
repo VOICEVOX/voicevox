@@ -9,7 +9,6 @@ import {
   MessageBoxReturnValue,
   NativeThemeType,
   TextAsset,
-  ThemeConf,
   ToolbarSettingType,
 } from "@/type/preload";
 import { AltPortInfos } from "@/store/type";
@@ -77,31 +76,6 @@ export type IpcIHData = {
   SHOW_PROJECT_LOAD_DIALOG: {
     args: [obj: { title: string }];
     return?: string[];
-  };
-
-  SHOW_MESSAGE_DIALOG: {
-    args: [
-      obj: {
-        type: "none" | "info" | "error" | "question" | "warning";
-        title: string;
-        message: string;
-      },
-    ];
-    return: MessageBoxReturnValue;
-  };
-
-  SHOW_QUESTION_DIALOG: {
-    args: [
-      obj: {
-        type: "none" | "info" | "error" | "question" | "warning";
-        title: string;
-        message: string;
-        buttons: string[];
-        cancelId?: number;
-        defaultId?: number;
-      },
-    ];
-    return: number;
   };
 
   SHOW_WARNING_DIALOG: {
@@ -192,11 +166,6 @@ export type IpcIHData = {
   GET_DEFAULT_TOOLBAR_SETTING: {
     args: [];
     return: ToolbarSettingType;
-  };
-
-  GET_AVAILABLE_THEMES: {
-    args: [];
-    return: ThemeConf[];
   };
 
   ON_VUEX_READY: {

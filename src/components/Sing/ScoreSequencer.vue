@@ -22,8 +22,6 @@
       }"
       aria-label="シーケンサ"
       @mousedown="onMouseDown"
-      @mousemove="onMouseMove"
-      @mouseup="onMouseUp"
       @mouseenter="onMouseEnter"
       @mouseleave="onMouseLeave"
       @wheel="onWheel"
@@ -203,8 +201,8 @@ import {
   getButton,
   PreviewMode,
 } from "@/sing/viewHelper";
-import SequencerGrid from "@/components/Sing/SequencerGrid.vue";
-import SequencerRuler from "@/components/Sing/SequencerRuler.vue";
+import SequencerGrid from "@/components/Sing/SequencerGrid/Container.vue";
+import SequencerRuler from "@/components/Sing/SequencerRuler/Container.vue";
 import SequencerKeys from "@/components/Sing/SequencerKeys.vue";
 import SequencerNote from "@/components/Sing/SequencerNote.vue";
 import SequencerShadowNote from "@/components/Sing/SequencerShadowNote.vue";
@@ -1399,6 +1397,8 @@ onActivated(() => {
   });
 
   document.addEventListener("keydown", handleKeydown);
+  window.addEventListener("mousemove", onMouseMove);
+  window.addEventListener("mouseup", onMouseUp);
 });
 
 // リスナー解除
@@ -1408,6 +1408,8 @@ onDeactivated(() => {
   });
 
   document.removeEventListener("keydown", handleKeydown);
+  window.removeEventListener("mousemove", onMouseMove);
+  window.removeEventListener("mouseup", onMouseUp);
 });
 
 // コンテキストメニュー
