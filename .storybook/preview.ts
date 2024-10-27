@@ -57,7 +57,7 @@ const preview: Preview = {
         cellSize: 8,
         cellAmount: 4,
         opacity: 0.1,
-      }
+      },
     },
   },
   decorators: [
