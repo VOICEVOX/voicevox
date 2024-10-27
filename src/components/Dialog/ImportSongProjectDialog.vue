@@ -306,15 +306,16 @@ const handleImportTrack = () => {
     throw new Error("project or selected track is not set");
   }
   // トラックをインポート
+  const trackIndexes = selectedTrackIndexes.value.toSorted();
   if (project.value.type === "vvproj") {
     void store.dispatch("COMMAND_IMPORT_VOICEVOX_PROJECT", {
       project: project.value.project,
-      trackIndexes: selectedTrackIndexes.value,
+      trackIndexes,
     });
   } else {
     void store.dispatch("COMMAND_IMPORT_UTAFORMATIX_PROJECT", {
       project: project.value.project,
-      trackIndexes: selectedTrackIndexes.value,
+      trackIndexes,
     });
   }
   onDialogOK();
