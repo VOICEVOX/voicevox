@@ -26,7 +26,6 @@ export default defineConfig((options) => {
     );
   }
 
-  const shouldEmitSourcemap = ["development", "test"].includes(options.mode);
   // 型を曖昧にして下の[process.platform]のエラーを回避する
   const sevenZipBinNames: Record<string, string> = {
     win32: "7za.exe",
@@ -42,11 +41,16 @@ export default defineConfig((options) => {
       ? path.join(__dirname, "build", "vendored", "7z") + path.sep
       : "") + sevenZipBinName;
   process.env.VITE_APP_VERSION = process.env.npm_package_version;
+
+  const shouldEmitSourcemap = ["development", "test"].includes(options.mode);
   const sourcemap: BuildOptions["sourcemap"] = shouldEmitSourcemap
     ? "inline"
     : false;
-  const launchEditor =
-    process.env.SKIP_LAUNCH_ELECTRON !== "1" && options.mode !== "test";
+
+  // ref: electronの起動をスキップしてデバッグ起動を軽くする
+  const skipLahnchElectron =
+    options.mode === "test" || process.env.SKIP_LAUNCH_ELECTRON === "1";
+
   return {
     root: path.resolve(__dirname, "src"),
     envDir: __dirname,
@@ -90,7 +94,7 @@ export default defineConfig((options) => {
             // ref: https://github.com/electron-vite/vite-plugin-electron/pull/122
             onstart: ({ startup }) => {
               console.log("main process build is complete.");
-              if (launchEditor) {
+              if (skipLahnchElectron) {
                 void startup([".", "--no-sandbox"]);
               }
             },
@@ -106,7 +110,7 @@ export default defineConfig((options) => {
             // ref: https://electron-vite.github.io/guide/preload-not-split.html
             entry: "./src/backend/electron/preload.ts",
             onstart({ reload }) {
-              if (launchEditor) {
+              if (skipLahnchElectron) {
                 reload();
               }
             },

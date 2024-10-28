@@ -1,11 +1,10 @@
 {
-    // See https://go.microsoft.com/fwlink/?LinkId=733558
-    // for the documentation about the tasks.json format
     "version": "2.0.0",
     "tasks": [
         {
             "label": "Electron Serve without Launch Electron",
             // Electronを起動せずにバックグラウンドで"electron:serve"を実行する
+            // NOTE: デバッグ起動を軽くできる
             "type": "npm",
             "script": "electron:serve",
             "options": {

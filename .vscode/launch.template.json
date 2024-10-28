@@ -6,14 +6,13 @@
     "configurations": [
         {
             "name": "Attach to Renderer Process",
-            // NOTE: background.tsで指定しているremote-debugging-port
-            "port": 9222,
+            "port": 9222, // NOTE: background.tsで指定しているremote-debugging-port
             "request": "attach",
             "type": "chrome",
             "webRoot": "${workspaceFolder}/src",
             "resolveSourceMapLocations": [
-              "${workspaceFolder}/**",
-              "!**/node_modules/**"
+                "${workspaceFolder}/**",
+                "!**/node_modules/**"
             ],
             "timeout": 20000, // 20 * 1000 ms程度あればビルド時間は間に合うはず
         },
@@ -31,8 +30,9 @@
             "type": "node"
         },
         {
+            // 直接Electronのみを起動し、バックグラウンドで"electron:serve"を実行する
+            // NOTE: ホットリロードできない代わりに、デバッグ起動が軽い
             "name": "Launch Electron Main Process without hot reload",
-            // Electronのみを起動
             "request": "launch",
             "type": "node",
             "runtimeExecutable": "npx",
@@ -41,7 +41,6 @@
                 ".",
                 "--no-sandbox"
             ],
-            // 事前にElectronを起動せずにバックグラウンドで"electron:serve"を実行する
             "preLaunchTask": "Electron Serve without Launch Electron",
             "skipFiles": [
                 "<node_internals>/**"
@@ -68,6 +67,7 @@
             "stopAll": true
         },
         {
+            // ホットリロードできない代わりにデバッグ起動が軽いモード
             "name": "Launch Electron Main/Renderer without hot reload",
             "configurations": [
                 "Attach to Renderer Process",
