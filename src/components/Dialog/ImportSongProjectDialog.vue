@@ -263,7 +263,7 @@ const handleFileChange = async (event: Event) => {
   try {
     if (file.name.endsWith(".vvproj")) {
       const vvproj = await file.text();
-      const parsedProject = await store.dispatch("PARSE_PROJECT_FILE", {
+      const parsedProject = await store.actions.PARSE_PROJECT_FILE({
         projectJson: vvproj,
       });
       project.value = {
@@ -308,12 +308,12 @@ const handleImportTrack = () => {
   // トラックをインポート
   const trackIndexes = selectedTrackIndexes.value.toSorted();
   if (project.value.type === "vvproj") {
-    void store.dispatch("COMMAND_IMPORT_VOICEVOX_PROJECT", {
+    void store.actions.COMMAND_IMPORT_VOICEVOX_PROJECT({
       project: project.value.project,
       trackIndexes,
     });
   } else {
-    void store.dispatch("COMMAND_IMPORT_UTAFORMATIX_PROJECT", {
+    void store.actions.COMMAND_IMPORT_UTAFORMATIX_PROJECT({
       project: project.value.project,
       trackIndexes,
     });

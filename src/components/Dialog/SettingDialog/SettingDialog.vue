@@ -180,7 +180,7 @@
                     :disabled="isDefaultConfirmedTips"
                     @click="
                       () => {
-                        store.dispatch('RESET_CONFIRMED_TIPS');
+                        store.actions.RESET_CONFIRMED_TIPS();
                         hasResetConfirmedTips = true;
                       }
                     "
@@ -527,7 +527,7 @@ const inheritAudioInfoMode = computed(() => store.state.inheritAudioInfo);
 const activePointScrollMode = computed({
   get: () => store.state.activePointScrollMode,
   set: (activePointScrollMode: ActivePointScrollMode) => {
-    void store.dispatch("SET_ACTIVE_POINT_SCROLL_MODE", {
+    void store.actions.SET_ACTIVE_POINT_SCROLL_MODE({
       activePointScrollMode,
     });
   },
@@ -550,7 +550,7 @@ const undoableTrackOperationsLabels = {
 const undoableTrackOperations = computed({
   get: () => store.state.undoableTrackOperations,
   set: (undoableTrackOperations) => {
-    void store.dispatch("SET_ROOT_MISC_SETTING", {
+    void store.actions.SET_ROOT_MISC_SETTING({
       key: "undoableTrackOperations",
       value: undoableTrackOperations,
     });
@@ -561,7 +561,7 @@ const undoableTrackOperations = computed({
 const currentThemeNameComputed = computed({
   get: () => store.state.currentTheme,
   set: (currentTheme: string) => {
-    void store.dispatch("SET_CURRENT_THEME_SETTING", { currentTheme });
+    void store.actions.SET_CURRENT_THEME_SETTING({ currentTheme });
   },
 });
 
@@ -654,7 +654,7 @@ if (navigator.mediaDevices) {
 const acceptRetrieveTelemetryComputed = computed({
   get: () => store.state.acceptRetrieveTelemetry == "Accepted",
   set: (acceptRetrieveTelemetry: boolean) => {
-    void store.dispatch("SET_ACCEPT_RETRIEVE_TELEMETRY", {
+    void store.actions.SET_ACCEPT_RETRIEVE_TELEMETRY({
       acceptRetrieveTelemetry: acceptRetrieveTelemetry ? "Accepted" : "Refused",
     });
 
@@ -662,7 +662,7 @@ const acceptRetrieveTelemetryComputed = computed({
       return;
     }
 
-    void store.dispatch("SHOW_ALERT_DIALOG", {
+    void store.actions.SHOW_ALERT_DIALOG({
       title: "ソフトウェア利用状況のデータ収集の無効化",
       message:
         "ソフトウェア利用状況のデータ収集を完全に無効にするには、VOICEVOXを再起動する必要があります",
@@ -672,21 +672,21 @@ const acceptRetrieveTelemetryComputed = computed({
 });
 
 const changeUseGpu = async (useGpu: boolean) => {
-  void store.dispatch("SHOW_LOADING_SCREEN", {
+  void store.actions.SHOW_LOADING_SCREEN({
     message: "起動モードを変更中です",
   });
 
-  await store.dispatch("CHANGE_USE_GPU", {
+  await store.actions.CHANGE_USE_GPU({
     useGpu,
     engineId: selectedEngineId.value,
   });
 
-  void store.dispatch("HIDE_ALL_LOADING_SCREEN");
+  void store.actions.HIDE_ALL_LOADING_SCREEN();
 };
 
 const changeinheritAudioInfo = async (inheritAudioInfo: boolean) => {
   if (store.state.inheritAudioInfo === inheritAudioInfo) return;
-  void store.dispatch("SET_INHERIT_AUDIOINFO", { inheritAudioInfo });
+  void store.actions.SET_INHERIT_AUDIOINFO({ inheritAudioInfo });
 };
 
 const changeEnablePreset = (value: boolean) => {
@@ -704,7 +704,7 @@ const changeExperimentalSetting = async (
   key: keyof ExperimentalSettingType,
   data: boolean,
 ) => {
-  void store.dispatch("SET_EXPERIMENTAL_SETTING", {
+  void store.actions.SET_EXPERIMENTAL_SETTING({
     experimentalSetting: { ...experimentalSetting.value, [key]: data },
   });
 };
@@ -754,7 +754,7 @@ const handleSavingSettingChange = (
   key: keyof SavingSetting,
   data: string | boolean | number,
 ) => {
-  void store.dispatch("SET_SAVING_SETTING", {
+  void store.actions.SET_SAVING_SETTING({
     data: { ...savingSetting.value, [key]: data },
   });
 };
@@ -766,7 +766,7 @@ const outputSamplingRate = computed({
   },
   set: async (outputSamplingRate: SamplingRateOption) => {
     if (outputSamplingRate !== "engineDefault") {
-      const result = await store.dispatch("SHOW_CONFIRM_DIALOG", {
+      const result = await store.actions.SHOW_CONFIRM_DIALOG({
         title: "出力サンプリングレートを変更します",
         message:
           "出力サンプリングレートを変更しても、音質は変化しません。また、音声の生成処理に若干時間がかかる場合があります。\n変更しますか？",
@@ -778,7 +778,7 @@ const outputSamplingRate = computed({
       }
     }
 
-    void store.dispatch("SET_ENGINE_SETTING", {
+    void store.actions.SET_ENGINE_SETTING({
       engineId: selectedEngineId.value,
       engineSetting: {
         ...store.state.engineSettings[selectedEngineId.value],
