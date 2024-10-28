@@ -1,9 +1,6 @@
 import { getBaseName } from "./utility";
-import {
-  createDotNotationPartialStore as createPartialStore,
-  DotNotationDispatch,
-} from "./vuex";
-import { createDotNotationUILockAction as createUILockAction } from "@/store/ui";
+import { createPartialStore, DotNotationDispatch } from "./vuex";
+import { createUILockAction } from "@/store/ui";
 import {
   AllActions,
   AudioItem,
@@ -402,9 +399,9 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
   },
 
   CLEAR_UNDO_HISTORY: {
-    action({ commit }) {
-      commit("RESET_SAVED_LAST_COMMAND_IDS");
-      commit("CLEAR_COMMANDS");
+    action({ mutations }) {
+      mutations.RESET_SAVED_LAST_COMMAND_IDS();
+      mutations.CLEAR_COMMANDS();
     },
   },
 });

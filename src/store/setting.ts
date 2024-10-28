@@ -1,6 +1,6 @@
 import { SettingStoreState, SettingStoreTypes } from "./type";
-import { createDotNotationUILockAction as createUILockAction } from "./ui";
-import { createDotNotationPartialStore as createPartialStore } from "./vuex";
+import { createUILockAction } from "./ui";
+import { createPartialStore } from "./vuex";
 import { themes } from "@/domain/theme";
 import {
   showAlertDialog,
@@ -70,6 +70,7 @@ export const settingStoreState: SettingStoreState = {
     panAndGain: true,
   },
   showSingCharacterPortrait: true,
+  playheadPositionDisplayFormat: "MINUTES_SECONDS",
 };
 
 export const settingStore = createPartialStore<SettingStoreTypes>({
@@ -146,6 +147,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         "skipUpdateVersion",
         "undoableTrackOperations",
         "showSingCharacterPortrait",
+        "playheadPositionDisplayFormat",
       ] as const;
 
       // rootMiscSettingKeysに値を足し忘れていたときに型エラーを出す検出用コード

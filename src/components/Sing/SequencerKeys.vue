@@ -156,14 +156,14 @@ let resizeObserver: ResizeObserver | undefined;
 
 const onMouseDown = (noteNumber: number) => {
   noteNumberOfKeyBeingPressed.value = noteNumber;
-  void store.dispatch("PLAY_PREVIEW_SOUND", { noteNumber });
+  void store.actions.PLAY_PREVIEW_SOUND({ noteNumber });
 };
 
 const onMouseUp = () => {
   if (noteNumberOfKeyBeingPressed.value != undefined) {
     const noteNumber = noteNumberOfKeyBeingPressed.value;
     noteNumberOfKeyBeingPressed.value = undefined;
-    void store.dispatch("STOP_PREVIEW_SOUND", { noteNumber });
+    void store.actions.STOP_PREVIEW_SOUND({ noteNumber });
   }
 };
 
@@ -172,11 +172,11 @@ const onMouseEnter = (noteNumber: number) => {
     noteNumberOfKeyBeingPressed.value != undefined &&
     noteNumberOfKeyBeingPressed.value !== noteNumber
   ) {
-    void store.dispatch("STOP_PREVIEW_SOUND", {
+    void store.actions.STOP_PREVIEW_SOUND({
       noteNumber: noteNumberOfKeyBeingPressed.value,
     });
     noteNumberOfKeyBeingPressed.value = noteNumber;
-    void store.dispatch("PLAY_PREVIEW_SOUND", { noteNumber });
+    void store.actions.PLAY_PREVIEW_SOUND({ noteNumber });
   }
 };
 

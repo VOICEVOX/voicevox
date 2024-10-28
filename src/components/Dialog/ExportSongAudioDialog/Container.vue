@@ -21,9 +21,9 @@ const handleExportAudio = async (
 ) => {
   let result: SaveResultObject;
   if (target === "master") {
-    result = await store.dispatch("EXPORT_AUDIO_FILE", { setting });
+    result = await store.actions.EXPORT_AUDIO_FILE({ setting });
   } else {
-    result = await store.dispatch("EXPORT_STEM_AUDIO_FILE", { setting });
+    result = await store.actions.EXPORT_STEM_AUDIO_FILE({ setting });
   }
 
   notifyResult(

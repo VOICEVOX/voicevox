@@ -194,23 +194,23 @@ const shouldPlayTrack = computed(() =>
 
 const setTrackPan = (pan: number) => {
   if (store.state.undoableTrackOperations.panAndGain) {
-    void store.dispatch("COMMAND_SET_TRACK_PAN", {
+    void store.actions.COMMAND_SET_TRACK_PAN({
       trackId: props.trackId,
       pan,
     });
   } else {
-    void store.dispatch("SET_TRACK_PAN", { trackId: props.trackId, pan });
+    void store.actions.SET_TRACK_PAN({ trackId: props.trackId, pan });
   }
 };
 
 const setTrackGain = (gain: number) => {
   if (store.state.undoableTrackOperations.panAndGain) {
-    void store.dispatch("COMMAND_SET_TRACK_GAIN", {
+    void store.actions.COMMAND_SET_TRACK_GAIN({
       trackId: props.trackId,
       gain,
     });
   } else {
-    void store.dispatch("SET_TRACK_GAIN", { trackId: props.trackId, gain });
+    void store.actions.SET_TRACK_GAIN({ trackId: props.trackId, gain });
   }
 };
 
@@ -228,7 +228,7 @@ const updateTrackName = () => {
     return;
   }
 
-  void store.dispatch("COMMAND_SET_TRACK_NAME", {
+  void store.actions.COMMAND_SET_TRACK_NAME({
     trackId: props.trackId,
     name: temporaryTrackName.value,
   });
@@ -236,23 +236,23 @@ const updateTrackName = () => {
 
 const setTrackMute = (mute: boolean) => {
   if (store.state.undoableTrackOperations.soloAndMute) {
-    void store.dispatch("COMMAND_SET_TRACK_MUTE", {
+    void store.actions.COMMAND_SET_TRACK_MUTE({
       trackId: props.trackId,
       mute,
     });
   } else {
-    void store.dispatch("SET_TRACK_MUTE", { trackId: props.trackId, mute });
+    void store.actions.SET_TRACK_MUTE({ trackId: props.trackId, mute });
   }
 };
 
 const setTrackSolo = (solo: boolean) => {
   if (store.state.undoableTrackOperations.soloAndMute) {
-    void store.dispatch("COMMAND_SET_TRACK_SOLO", {
+    void store.actions.COMMAND_SET_TRACK_SOLO({
       trackId: props.trackId,
       solo,
     });
   } else {
-    void store.dispatch("SET_TRACK_SOLO", { trackId: props.trackId, solo });
+    void store.actions.SET_TRACK_SOLO({ trackId: props.trackId, solo });
   }
 };
 
@@ -275,16 +275,16 @@ const trackCharacter = computed<
   return undefined;
 });
 const selectTrack = () => {
-  void store.dispatch("SET_SELECTED_TRACK", { trackId: props.trackId });
+  void store.actions.SET_SELECTED_TRACK({ trackId: props.trackId });
 };
 
 const addTrack = async () => {
   const willNextSelectedTrackIndex =
     trackOrder.value.indexOf(props.trackId) + 1;
-  await store.dispatch("COMMAND_INSERT_EMPTY_TRACK", {
+  await store.actions.COMMAND_INSERT_EMPTY_TRACK({
     prevTrackId: props.trackId,
   });
-  await store.dispatch("SELECT_TRACK", {
+  await store.actions.SELECT_TRACK({
     trackId: trackOrder.value[willNextSelectedTrackIndex],
   });
 };
@@ -299,9 +299,9 @@ const deleteTrack = async () => {
       willNextSelectedTrackIndex = 0;
     }
   }
-  await store.dispatch("COMMAND_DELETE_TRACK", { trackId: props.trackId });
+  await store.actions.COMMAND_DELETE_TRACK({ trackId: props.trackId });
   if (willNextSelectedTrackIndex != undefined) {
-    await store.dispatch("SELECT_TRACK", {
+    await store.actions.SELECT_TRACK({
       trackId: trackOrder.value[willNextSelectedTrackIndex],
     });
   }

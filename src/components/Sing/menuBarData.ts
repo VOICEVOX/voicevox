@@ -12,14 +12,14 @@ export const useMenuBarData = () => {
 
   const importExternalSongProject = async () => {
     if (uiLocked.value) return;
-    await store.dispatch("SET_DIALOG_OPEN", {
+    await store.actions.SET_DIALOG_OPEN({
       isImportSongProjectDialogOpen: true,
     });
   };
 
   const exportAudioFile = async () => {
     if (uiLocked.value) return;
-    await store.dispatch("SET_DIALOG_OPEN", {
+    await store.actions.SET_DIALOG_OPEN({
       isExportSongAudioDialogOpen: true,
     });
   };
@@ -53,7 +53,7 @@ export const useMenuBarData = () => {
       label: "コピー",
       onClick: () => {
         if (uiLocked.value) return;
-        void store.dispatch("COPY_NOTES_TO_CLIPBOARD");
+        void store.actions.COPY_NOTES_TO_CLIPBOARD();
       },
       disableWhenUiLocked: true,
       disabled: !isNotesSelected.value,
@@ -63,7 +63,7 @@ export const useMenuBarData = () => {
       label: "切り取り",
       onClick: () => {
         if (uiLocked.value) return;
-        void store.dispatch("COMMAND_CUT_NOTES_TO_CLIPBOARD");
+        void store.actions.COMMAND_CUT_NOTES_TO_CLIPBOARD();
       },
       disableWhenUiLocked: true,
       disabled: !isNotesSelected.value,
@@ -73,7 +73,7 @@ export const useMenuBarData = () => {
       label: "貼り付け",
       onClick: () => {
         if (uiLocked.value) return;
-        void store.dispatch("COMMAND_PASTE_NOTES_FROM_CLIPBOARD");
+        void store.actions.COMMAND_PASTE_NOTES_FROM_CLIPBOARD();
       },
       disableWhenUiLocked: true,
     },
@@ -83,7 +83,7 @@ export const useMenuBarData = () => {
       label: "すべて選択",
       onClick: () => {
         if (uiLocked.value) return;
-        void store.dispatch("SELECT_ALL_NOTES_IN_TRACK", {
+        void store.actions.SELECT_ALL_NOTES_IN_TRACK({
           trackId: store.getters.SELECTED_TRACK_ID,
         });
       },
@@ -94,7 +94,7 @@ export const useMenuBarData = () => {
       label: "選択解除",
       onClick: () => {
         if (uiLocked.value) return;
-        void store.dispatch("DESELECT_ALL_NOTES");
+        void store.actions.DESELECT_ALL_NOTES();
       },
       disableWhenUiLocked: true,
     },
@@ -104,7 +104,7 @@ export const useMenuBarData = () => {
       label: "クオンタイズ",
       onClick: () => {
         if (uiLocked.value) return;
-        void store.dispatch("COMMAND_QUANTIZE_SELECTED_NOTES");
+        void store.actions.COMMAND_QUANTIZE_SELECTED_NOTES();
       },
       disableWhenUiLocked: true,
     },
