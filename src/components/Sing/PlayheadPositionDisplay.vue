@@ -19,8 +19,11 @@ import { useStore } from "@/store";
 import ContextMenu, {
   ContextMenuItemData,
 } from "@/components/Menu/ContextMenu.vue";
-import { getTimeSignaturePositions, ticksToMeasuresBeats } from "@/sing/domain";
-import { MeasuresBeats } from "@/store/type";
+import {
+  getTimeSignaturePositions,
+  MeasuresBeats,
+  ticksToMeasuresBeats,
+} from "@/sing/domain";
 import { useRootMiscSetting } from "@/composables/useRootMiscSetting";
 
 const store = useStore();
@@ -42,9 +45,6 @@ const timeSignatures = computed(() => {
 });
 
 const measuresBeats = computed((): MeasuresBeats => {
-  if (displayFormat.value !== "MEASURES_BEATS") {
-    return { measures: 1, beats: 1 };
-  }
   const tpqn = store.state.tpqn;
   return ticksToMeasuresBeats(playheadTicks.value, timeSignatures.value, tpqn);
 });
@@ -69,9 +69,6 @@ const beatsFractionalPartStr = computed(() => {
 });
 
 const minAndSecStr = computed(() => {
-  if (displayFormat.value !== "MINUTES_SECONDS") {
-    return "";
-  }
   const ticks = playheadTicks.value;
   const time = store.getters.TICK_TO_SECOND(ticks);
   const intTime = Math.trunc(time);
@@ -82,9 +79,6 @@ const minAndSecStr = computed(() => {
 });
 
 const milliSecStr = computed(() => {
-  if (displayFormat.value !== "MINUTES_SECONDS") {
-    return "";
-  }
   const ticks = playheadTicks.value;
   const time = store.getters.TICK_TO_SECOND(ticks);
   const intTime = Math.trunc(time);
