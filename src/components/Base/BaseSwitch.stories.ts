@@ -8,7 +8,7 @@ const meta: Meta<typeof BaseSwitch> = {
   render: (args) => ({
     components: { BaseSwitch },
     setup() {
-      const checked = ref(false);
+      const checked = ref(Boolean(args.checked));
       return { args, checked };
     },
     template: `<BaseSwitch v-bind="args" v-model:checked="checked"></BaseSwitch>`,
