@@ -590,6 +590,9 @@ export const rootMiscSettingSchema = z.object({
     })
     .default({}),
   showSingCharacterPortrait: z.boolean().default(true), // ソングエディタで立ち絵を表示するか
+  playheadPositionDisplayFormat: z
+    .enum(["MINUTES_SECONDS", "MEASURES_BEATS"])
+    .default("MINUTES_SECONDS"), // 再生ヘッド位置の表示モード
 });
 export type RootMiscSettingType = z.infer<typeof rootMiscSettingSchema>;
 

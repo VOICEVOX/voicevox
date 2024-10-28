@@ -325,7 +325,7 @@ const scrollX = ref(0);
 const scrollY = ref(0);
 
 // 再生ヘッドの位置
-const playheadTicks = ref(0);
+const playheadTicks = computed(() => store.getters.PLAYHEAD_POSITION);
 const playheadX = computed(() => {
   const baseX = tickToBaseX(playheadTicks.value, tpqn.value);
   return Math.floor(baseX * zoomX.value);
@@ -1316,10 +1316,8 @@ const onScroll = (event: Event) => {
   }
 };
 
-const playheadPositionChangeListener = (position: number) => {
-  playheadTicks.value = position;
-
-  // オートスクロール
+// オートスクロール
+watch(playheadTicks, (newPlayheadPosition) => {
   const sequencerBodyElement = sequencerBody.value;
   if (!sequencerBodyElement) {
     if (import.meta.env.DEV) {
@@ -1335,7 +1333,7 @@ const playheadPositionChangeListener = (position: number) => {
   const scrollTop = sequencerBodyElement.scrollTop;
   const scrollWidth = sequencerBodyElement.scrollWidth;
   const clientWidth = sequencerBodyElement.clientWidth;
-  const playheadX = tickToBaseX(position, tpqn.value) * zoomX.value;
+  const playheadX = tickToBaseX(newPlayheadPosition, tpqn.value) * zoomX.value;
   const tolerance = 3;
   if (playheadX < scrollLeft) {
     sequencerBodyElement.scrollTo(playheadX, scrollTop);
@@ -1345,7 +1343,7 @@ const playheadPositionChangeListener = (position: number) => {
   ) {
     sequencerBodyElement.scrollTo(playheadX, scrollTop);
   }
-};
+});
 
 // スクロールバーの幅を取得する
 onMounted(() => {
@@ -1392,10 +1390,6 @@ onActivated(() => {
 
 // リスナー登録
 onActivated(() => {
-  void store.actions.ADD_PLAYHEAD_POSITION_CHANGE_LISTENER({
-    listener: playheadPositionChangeListener,
-  });
-
   document.addEventListener("keydown", handleKeydown);
   window.addEventListener("mousemove", onMouseMove);
   window.addEventListener("mouseup", onMouseUp);
@@ -1403,10 +1397,6 @@ onActivated(() => {
 
 // リスナー解除
 onDeactivated(() => {
-  void store.actions.REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER({
-    listener: playheadPositionChangeListener,
-  });
-
   document.removeEventListener("keydown", handleKeydown);
   window.removeEventListener("mousemove", onMouseMove);
   window.removeEventListener("mouseup", onMouseUp);
