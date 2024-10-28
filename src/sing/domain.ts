@@ -29,7 +29,7 @@ export const isTracksEmpty = (tracks: Track[]) =>
 export const isValidTpqn = (tpqn: number) => {
   return (
     Number.isInteger(tpqn) &&
-    BEAT_TYPES.every((value) => tpqn % value === 0) &&
+    BEAT_TYPES.every((value) => (tpqn * 4) % value === 0) &&
     tpqn % 3 === 0
   );
 };
