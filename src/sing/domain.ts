@@ -9,10 +9,15 @@ import {
   PhraseKey,
   Track,
   EditorFrameAudioQuery,
-  MeasuresBeats,
 } from "@/store/type";
 import { FramePhoneme } from "@/openapi";
 import { TrackId } from "@/type/preload";
+
+// TODO: 後でdomain/type.tsに移す
+export type MeasuresBeats = {
+  measures: number;
+  beats: number;
+};
 
 const BEAT_TYPES = [2, 4, 8, 16];
 const MIN_BPM = 40;
