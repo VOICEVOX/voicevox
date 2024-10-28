@@ -5,6 +5,14 @@ import BaseSwitch from "./BaseSwitch.vue";
 
 const meta: Meta<typeof BaseSwitch> = {
   component: BaseSwitch,
+  render: (args) => ({
+    components: { BaseSwitch },
+    setup() {
+      const checked = ref(false);
+      return { args, checked };
+    },
+    template: `<BaseSwitch v-bind="args" v-model:checked="checked"></BaseSwitch>`,
+  }),
 };
 
 export default meta;
@@ -16,14 +24,6 @@ export const Unchecked: Story = {
     checkedLabel: "On",
     checked: false,
   },
-  render: (args) => ({
-    components: { BaseSwitch },
-    setup() {
-      const checked = ref(false);
-      return { args, checked };
-    },
-    template: `<BaseSwitch v-bind="args" v-model:checked="checked"></BaseSwitch>`,
-  }),
 };
 
 export const Checked: Story = {
@@ -32,12 +32,4 @@ export const Checked: Story = {
     checkedLabel: "On",
     checked: true,
   },
-  render: (args) => ({
-    components: { BaseSwitch },
-    setup() {
-      const checked = ref(true);
-      return { args, checked };
-    },
-    template: `<BaseSwitch v-bind="args" v-model:checked="checked"></BaseSwitch>`,
-  }),
 };
