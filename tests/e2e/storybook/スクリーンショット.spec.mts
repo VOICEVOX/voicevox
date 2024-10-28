@@ -1,6 +1,6 @@
 // 起動中のStorybookで様々なStoryを表示し、スクリーンショットを撮って比較するVRT。
 // テスト自体はend-to-endではないが、Playwrightを使う関係でe2eディレクトリ内でテストしている。
-import { test, expect } from "@playwright/test";
+import { test, expect, Locator } from "@playwright/test";
 import z from "zod";
 
 // Storybook 8.3.5時点でのindex.jsonのスキーマ。
@@ -52,18 +52,53 @@ for (const story of currentStories) {
 for (const [story, stories] of Object.entries(allStories)) {
   test.describe(story, () => {
     for (const story of stories) {
-      test(story.name, async ({ page }) => {
-        test.skip(
-          process.platform !== "win32",
-          "Windows以外のためスキップします",
-        );
+      if (story.tags.includes("skip-screenshot")) {
+        continue;
+      }
+      test.describe(story.name, () => {
+        for (const [theme, name] of [
+          ["light", "ライト"],
+          ["dark", "ダーク"],
+        ]) {
+          test(`テーマ：${name}`, async ({ page }) => {
+            test.skip(
+              process.platform !== "win32",
+              "Windows以外のためスキップします",
+            );
 
-        await page.goto(`http://localhost:7357/iframe.html?id=${story.id}`);
-        const body = page.locator("body.sb-show-main");
-        await body.waitFor({ state: "visible" });
-        await expect(page).toHaveScreenshot(`${story.id}.png`, {
-          fullPage: true,
-        });
+            const params = new URLSearchParams();
+            params.append("id", story.id);
+            params.append("globals", `theme:${theme}`);
+            await page.goto(
+              `http://localhost:7357/iframe.html?${params.toString()}`,
+            );
+
+            // Storybookのroot要素を取得。
+            // data-v-appが存在する（＝Vueのアプリケーションのマウントが完了している）かどうかを
+            // ロードが完了したかどうかとして扱う。
+            const root = page.locator("#storybook-root[data-v-app]");
+            const quasarDialogRoot = page.locator(
+              "div[id^=q-portal--dialog--]",
+            );
+
+            await root.waitFor({ state: "attached" });
+
+            // Quasarのダイアログが存在する場合はダイアログのスクリーンショットを、そうでない場合は#storybook-rootのスクリーンショットを撮る。
+            // q-portal-dialogはそのまま撮るとvisible扱いにならずtoHaveScreenshotが失敗するので、
+            // 子要素にある実際のダイアログ（.q-dialog__inner）を撮る。
+            let elementToScreenshot: Locator;
+            if ((await quasarDialogRoot.count()) > 0) {
+              const dialog = quasarDialogRoot.locator(".q-dialog__inner");
+
+              elementToScreenshot = dialog;
+            } else {
+              elementToScreenshot = root;
+            }
+            await expect(elementToScreenshot).toHaveScreenshot(
+              `${story.id}-${theme}.png`,
+            );
+          });
+        }
       });
     }
   });

@@ -217,21 +217,21 @@ registerHotkeyWithCleanup({
 });
 
 const undo = () => {
-  void store.dispatch("UNDO", { editor });
+  void store.actions.UNDO({ editor });
 };
 const redo = () => {
-  void store.dispatch("REDO", { editor });
+  void store.actions.REDO({ editor });
 };
 
 const editTarget = computed(() => store.state.sequencerEditTarget);
 
 const changeEditTarget = (editTarget: SequencerEditTarget) => {
-  void store.dispatch("SET_EDIT_TARGET", { editTarget });
+  void store.actions.SET_EDIT_TARGET({ editTarget });
 };
 
 const isSidebarOpen = computed(() => store.state.isSongSidebarOpen);
 const toggleSidebar = () => {
-  void store.dispatch("SET_SONG_SIDEBAR_OPEN", {
+  void store.actions.SET_SONG_SIDEBAR_OPEN({
     isSongSidebarOpen: !isSidebarOpen.value,
   });
 };
@@ -311,7 +311,7 @@ const setBeats = (beats: { label: string; value: number }) => {
   if (!isValidBeats(beats.value)) {
     return;
   }
-  void store.dispatch("COMMAND_SET_TIME_SIGNATURE", {
+  void store.actions.COMMAND_SET_TIME_SIGNATURE({
     timeSignature: {
       measureNumber: 1,
       beats: beats.value,
@@ -324,7 +324,7 @@ const setBeatType = (beatType: { label: string; value: number }) => {
   if (!isValidBeatType(beatType.value)) {
     return;
   }
-  void store.dispatch("COMMAND_SET_TIME_SIGNATURE", {
+  void store.actions.COMMAND_SET_TIME_SIGNATURE({
     timeSignature: {
       measureNumber: 1,
       beats: timeSignatures.value[0].beats,
@@ -355,7 +355,7 @@ const setVolumeRangeAdjustmentInputBuffer = (
 
 const setTempo = () => {
   const bpm = bpmInputBuffer.value;
-  void store.dispatch("COMMAND_SET_TEMPO", {
+  void store.actions.COMMAND_SET_TEMPO({
     tempo: {
       position: 0,
       bpm,
@@ -365,7 +365,7 @@ const setTempo = () => {
 
 const setKeyRangeAdjustment = () => {
   const keyRangeAdjustment = keyRangeAdjustmentInputBuffer.value;
-  void store.dispatch("COMMAND_SET_KEY_RANGE_ADJUSTMENT", {
+  void store.actions.COMMAND_SET_KEY_RANGE_ADJUSTMENT({
     keyRangeAdjustment,
     trackId: selectedTrackId.value,
   });
@@ -373,7 +373,7 @@ const setKeyRangeAdjustment = () => {
 
 const setVolumeRangeAdjustment = () => {
   const volumeRangeAdjustment = volumeRangeAdjustmentInputBuffer.value;
-  void store.dispatch("COMMAND_SET_VOLUME_RANGE_ADJUSTMENT", {
+  void store.actions.COMMAND_SET_VOLUME_RANGE_ADJUSTMENT({
     volumeRangeAdjustment,
     trackId: selectedTrackId.value,
   });
@@ -382,15 +382,15 @@ const setVolumeRangeAdjustment = () => {
 const nowPlaying = computed(() => store.state.nowPlaying);
 
 const play = () => {
-  void store.dispatch("SING_PLAY_AUDIO");
+  void store.actions.SING_PLAY_AUDIO();
 };
 
 const stop = () => {
-  void store.dispatch("SING_STOP_AUDIO");
+  void store.actions.SING_STOP_AUDIO();
 };
 
 const goToZero = () => {
-  void store.dispatch("SET_PLAYHEAD_POSITION", { position: 0 });
+  void store.actions.SET_PLAYHEAD_POSITION({ position: 0 });
 };
 
 const volume = computed({
@@ -398,7 +398,7 @@ const volume = computed({
     return store.state.volume * 100;
   },
   set(value: number) {
-    void store.dispatch("SET_VOLUME", { volume: value / 100 });
+    void store.actions.SET_VOLUME({ volume: value / 100 });
   },
 });
 
@@ -430,7 +430,7 @@ const snapTypeSelectModel = computed({
     );
   },
   set(value) {
-    void store.dispatch("SET_SNAP_TYPE", {
+    void store.actions.SET_SNAP_TYPE({
       snapType: value.snapType,
     });
   },

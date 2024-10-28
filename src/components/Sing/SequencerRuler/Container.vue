@@ -39,10 +39,10 @@ const sequencerZoomX = computed(() => store.state.sequencerZoomX);
 const playheadTicks = computed(() => store.getters.PLAYHEAD_POSITION);
 
 const updatePlayheadTicks = (ticks: number) => {
-  void store.dispatch("SET_PLAYHEAD_POSITION", { position: ticks });
+  void store.actions.SET_PLAYHEAD_POSITION({ position: ticks });
 };
 
 const deselectAllNotes = () => {
-  void store.dispatch("DESELECT_ALL_NOTES");
+  void store.actions.DESELECT_ALL_NOTES();
 };
 </script>
