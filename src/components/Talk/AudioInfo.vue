@@ -342,23 +342,21 @@ const supportedFeatures = computed(
         .supportedFeatures) as EngineManifest["supportedFeatures"] | undefined,
 );
 
-type ParameterConfig = {
-  label: string;
-  sliderProps: Omit<PreviewSliderHelperProps, "onChange">;
-  onChange: PreviewSliderHelperProps["onChange"];
-  key: Parameter["key"];
-};
-type Parameter = {
-  label: string;
-  slider: PreviewSliderHelper;
-  onChange: PreviewSliderHelperProps["onChange"];
-  key: keyof Omit<Preset, "name" | "morphingInfo">;
-};
 const selectedAudioKeys = computed(() =>
   store.state.experimentalSetting.enableMultiSelect
     ? store.getters.SELECTED_AUDIO_KEYS
     : [props.activeAudioKey],
 );
+
+type ParameterKey = keyof Omit<Preset, "name" | "morphingInfo">; // NOTE: パラメーターの種類はPresetのキーと同じ
+
+/** パラメーターを制御するための元情報リスト */
+type ParameterConfig = {
+  label: string;
+  sliderProps: Omit<PreviewSliderHelperProps, "onChange">;
+  onChange: PreviewSliderHelperProps["onChange"]; // NOTE: onChangeだけ使い回すので分離している
+  key: ParameterKey;
+};
 const parameterConfigs = computed<ParameterConfig[]>(() => [
   {
     label: "話速",
@@ -473,6 +471,14 @@ const parameterConfigs = computed<ParameterConfig[]>(() => [
     key: "postPhonemeLength",
   },
 ]);
+
+/** パラメーター制御用 */
+type Parameter = {
+  label: string;
+  slider: PreviewSliderHelper;
+  onChange: PreviewSliderHelperProps["onChange"];
+  key: ParameterKey;
+};
 const parameters = computed<Parameter[]>(() =>
   parameterConfigs.value.map((parameterConfig) => ({
     label: parameterConfig.label,
