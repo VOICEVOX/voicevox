@@ -1102,13 +1102,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   PLAYHEAD_POSITION: {
-    getter(state, getters) {
-      if (!transport) {
-        throw new Error("transport is undefined.");
-      }
-      if (state.nowPlaying) {
-        playheadPosition.value = getters.SECOND_TO_TICK(transport.time);
-      }
+    getter() {
       return playheadPosition.value;
     },
   },
