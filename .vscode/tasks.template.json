@@ -4,12 +4,13 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Electron Serve Only",
+            "label": "Electron Serve without Launch Electron",
+            // Electronを起動せずにバックグラウンドで"electron:serve"を実行する
             "type": "npm",
             "script": "electron:serve",
             "options": {
                 "env": {
-                    "SKIP_LAUNCH_EDITOR": "1"
+                    "SKIP_LAUNCH_ELECTRON": "1"
                 }
             },
             "isBackground": true,

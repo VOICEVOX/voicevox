@@ -46,7 +46,7 @@ export default defineConfig((options) => {
     ? "inline"
     : false;
   const launchEditor =
-    process.env.SKIP_LAUNCH_EDITOR !== "1" && options.mode !== "test";
+    process.env.SKIP_LAUNCH_ELECTRON !== "1" && options.mode !== "test";
   return {
     root: path.resolve(__dirname, "src"),
     envDir: __dirname,

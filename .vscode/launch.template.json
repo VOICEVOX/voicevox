@@ -31,7 +31,8 @@
             "type": "node"
         },
         {
-            "name": "Launch Electron without electron:serve",
+            "name": "Launch Electron Main Process without hot reload",
+            // Electronのみを起動
             "request": "launch",
             "type": "node",
             "runtimeExecutable": "npx",
@@ -40,7 +41,8 @@
                 ".",
                 "--no-sandbox"
             ],
-            "preLaunchTask": "Electron Serve Only",
+            // 事前にElectronを起動せずにバックグラウンドで"electron:serve"を実行する
+            "preLaunchTask": "Electron Serve without Launch Electron",
             "skipFiles": [
                 "<node_internals>/**"
             ]
@@ -66,10 +68,10 @@
             "stopAll": true
         },
         {
-            "name": "Launch Electron Main/Renderer without electron:serve",
+            "name": "Launch Electron Main/Renderer without hot reload",
             "configurations": [
                 "Attach to Renderer Process",
-                "Launch Electron without electron:serve"
+                "Launch Electron Main Process without hot reload"
             ],
             "stopAll": true
         }
