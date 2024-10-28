@@ -8,7 +8,7 @@ const meta: Meta<typeof BaseCheckbox> = {
   render: (args) => ({
     components: { BaseCheckbox },
     setup() {
-      const checked = ref(false);
+      const checked = ref(Boolean(args.checked));
       return { args, checked };
     },
     template: `<BaseCheckbox v-bind="args" v-model:checked="checked"></BaseCheckbox>`,

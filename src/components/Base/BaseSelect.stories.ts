@@ -9,7 +9,9 @@ const meta: Meta<typeof BaseSelect> = {
   render: (args) => ({
     components: { BaseSelect, BaseSelectItem },
     setup() {
-      const modelValue = ref("a");
+      const modelValue = ref(
+        args.modelValue ? String(args.modelValue) : undefined,
+      );
       return { args, modelValue };
     },
     template: `
@@ -24,7 +26,11 @@ const meta: Meta<typeof BaseSelect> = {
 export default meta;
 type Story = StoryObj<typeof BaseSelect>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  args: {
+    modelValue: "a",
+  },
+};
 
 export const Placeholder: Story = {
   args: {
@@ -34,6 +40,7 @@ export const Placeholder: Story = {
 
 export const Disabled: Story = {
   args: {
+    modelValue: "a",
     disabled: true,
   },
 };
