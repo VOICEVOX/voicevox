@@ -1318,8 +1318,8 @@ const onScroll = (event: Event) => {
   }
 };
 
+// オートスクロール
 watch(playheadTicks, (newPlayheadPosition) => {
-  // オートスクロール
   const sequencerBodyElement = sequencerBody.value;
   if (!sequencerBodyElement) {
     if (import.meta.env.DEV) {
