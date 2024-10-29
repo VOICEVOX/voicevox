@@ -90,12 +90,14 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { mdiWindowRestore } from "@quasar/extras/mdi-v5";
+import { useQuasar } from "quasar";
 import { useStore } from "@/store";
 
+const $q = useQuasar();
 const store = useStore();
 
 const closeWindow = async () => {
-  void store.dispatch("CHECK_EDITED_AND_NOT_SAVE", { closeOrReload: "close" });
+  void store.actions.CHECK_EDITED_AND_NOT_SAVE({ closeOrReload: "close" });
 };
 const minimizeWindow = () => window.backend.minimizeWindow();
 const maximizeWindow = () => window.backend.maximizeWindow();

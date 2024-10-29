@@ -68,8 +68,8 @@ export const ipcMainSendProxy = new Proxy(
 const validateIpcSender = (event: IpcMainInvokeEvent) => {
   let isValid: boolean;
   const senderUrl = new URL(event.senderFrame.url);
-  if (process.env.VITE_DEV_SERVER_URL != undefined) {
-    const devServerUrl = new URL(process.env.VITE_DEV_SERVER_URL);
+  if (import.meta.env.VITE_DEV_SERVER_URL != undefined) {
+    const devServerUrl = new URL(import.meta.env.VITE_DEV_SERVER_URL);
     isValid = senderUrl.origin === devServerUrl.origin;
   } else {
     isValid = senderUrl.protocol === "app:";

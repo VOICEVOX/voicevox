@@ -1,4 +1,4 @@
-<!-- 
+<!--
   アップデート通知ダイアログのコンテナ。
   スキップしたバージョンより新しいバージョンがあれば、ダイアログを表示する。
 -->
@@ -30,7 +30,7 @@ const store = useStore();
 const isDialogOpenComputed = computed({
   get: () => store.state.isUpdateNotificationDialogOpen,
   set: (val) =>
-    store.dispatch("SET_DIALOG_OPEN", {
+    store.actions.SET_DIALOG_OPEN({
       isUpdateNotificationDialogOpen: val,
     }),
 });
@@ -48,7 +48,7 @@ const currentVersionGetter = async () => {
     .getAppInfos()
     .then((obj) => obj.version);
 
-  await store.dispatch("WAIT_VUEX_READY", { timeout: 15000 });
+  await store.actions.WAIT_VUEX_READY({ timeout: 15000 });
   const skipUpdateVersion = store.state.skipUpdateVersion ?? "0.0.0";
   if (semver.valid(skipUpdateVersion) == undefined) {
     throw new Error(`skipUpdateVersionが不正です: ${skipUpdateVersion}`);
@@ -67,7 +67,7 @@ const newUpdateResult = useFetchNewUpdateInfos(
 
 // 新しいバージョンのアップデートがスキップされたときの処理
 const handleSkipThisVersionClick = (version: string) => {
-  void store.dispatch("SET_ROOT_MISC_SETTING", {
+  void store.actions.SET_ROOT_MISC_SETTING({
     key: "skipUpdateVersion",
     value: version,
   });

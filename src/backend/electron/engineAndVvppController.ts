@@ -253,7 +253,10 @@ export class EngineAndVvppController {
     this.configManager.set("engineSettings", engineSettings);
 
     await this.engineProcessManager.runEngineAll();
-    this.runtimeInfoManager.setEngineInfos(engineInfos);
+    this.runtimeInfoManager.setEngineInfos(
+      engineInfos,
+      this.engineInfoManager.altPortInfos,
+    );
     await this.runtimeInfoManager.exportFile();
   }
 
@@ -268,6 +271,7 @@ export class EngineAndVvppController {
     // TODO: setからexportの処理は排他処理にしたほうがより良い
     this.runtimeInfoManager.setEngineInfos(
       this.engineInfoManager.fetchEngineInfos(),
+      this.engineInfoManager.altPortInfos,
     );
     await this.runtimeInfoManager.exportFile();
   }
