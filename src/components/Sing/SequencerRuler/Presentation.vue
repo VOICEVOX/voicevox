@@ -129,6 +129,7 @@ import {
   getMeasureDuration,
   getNoteDuration,
   getTimeSignaturePositions,
+  ticksToMeasuresBeats,
 } from "@/sing/domain";
 import { baseXToTick, tickToBaseX } from "@/sing/viewHelper";
 import { Tempo, TimeSignature } from "@/store/type";
@@ -313,13 +314,6 @@ const onTempoOrTimeSignatureChangeClick = async (
 ) => {
   const ticks = tempoOrTimeSignatureChange.position;
   playheadTicks.value = ticks;
-
-  console.log(
-    "onTempoOrTimeSignatureChangeClick",
-    event,
-    tempoOrTimeSignatureChange,
-    contextMenu.value,
-  );
   contextMenu.value?.show(event);
 };
 
@@ -409,7 +403,18 @@ const timeSignatureChangeExists = computed(
   () => lastTimeSignature.value.measureNumber === currentMeasure.value,
 );
 
-const contextMenuHeader = computed(() => `${currentMeasure.value}小節目`);
+const contextMenuHeader = computed(() => {
+  const measuresBeats = ticksToMeasuresBeats(
+    playheadTicks.value,
+    props.timeSignatures.map((ts, i) => ({
+      ...ts,
+      position: tsPositions.value[i],
+    })),
+    props.tpqn,
+  );
+
+  return `${String(measuresBeats.measures).padStart(3, "0")}.${measuresBeats.beats.toFixed(2).padStart(5, "0")}`;
+});
 
 const showTempoOrTimeSignatureChangeDialog = async (
   componentProps: ExtractPropTypes<typeof TempoOrTimeSignatureChangeDialog>,
