@@ -68,26 +68,26 @@ const updatePlayheadTicks = (ticks: number) => {
 };
 
 const deselectAllNotes = () => {
-  void store.dispatch("DESELECT_ALL_NOTES");
+  void store.actions.DESELECT_ALL_NOTES();
 };
 
 const setTempo = (tempo: Tempo) => {
-  void store.dispatch("COMMAND_SET_TEMPO", {
+  void store.actions.COMMAND_SET_TEMPO({
     tempo,
   });
 };
 const setTimeSignature = (timeSignature: TimeSignature) => {
-  void store.dispatch("COMMAND_SET_TIME_SIGNATURE", {
+  void store.actions.COMMAND_SET_TIME_SIGNATURE({
     timeSignature,
   });
 };
 const removeTempo = (position: number) => {
-  void store.dispatch("COMMAND_REMOVE_TEMPO", {
+  void store.actions.COMMAND_REMOVE_TEMPO({
     position,
   });
 };
 const removeTimeSignature = (measureNumber: number) => {
-  void store.dispatch("COMMAND_REMOVE_TIME_SIGNATURE", {
+  void store.actions.COMMAND_REMOVE_TIME_SIGNATURE({
     measureNumber,
   });
 };
