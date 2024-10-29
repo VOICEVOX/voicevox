@@ -121,6 +121,7 @@ import {
   onUnmounted,
   ExtractPropTypes,
   ComponentPublicInstance,
+  useTemplateRef,
 } from "vue";
 import { ComponentProps } from "vue-component-type-helpers";
 import { Dialog } from "quasar";
@@ -262,7 +263,7 @@ const onClick = async (event: MouseEvent) => {
   playheadTicks.value = ticks;
 };
 
-const sequencerRuler = ref<HTMLElement | null>(null);
+const sequencerRuler = useTemplateRef<HTMLDivElement>("sequencerRuler");
 let resizeObserver: ResizeObserver | undefined;
 
 onMounted(() => {
