@@ -2,7 +2,7 @@
 
 import path from "path";
 import fs from "fs";
-import { fetchDefaultEngineInfos } from "@/domain/defaultEngine/defaultEngine";
+import { fetchDefaultEngineInfos } from "@/domain/defaultEngine/latetDefaultEngine";
 
 const currentDir = "tests/unit/domain/defaultEngine";
 

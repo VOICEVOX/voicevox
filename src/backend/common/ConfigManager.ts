@@ -3,7 +3,6 @@ import AsyncLock from "async-lock";
 import {
   AcceptTermsStatus,
   ConfigType,
-  EngineId,
   configSchema,
   DefaultStyleId,
   defaultHotkeySettings,
@@ -12,7 +11,6 @@ import {
   HotkeyCombination,
   VoiceId,
   PresetKey,
-  envEngineInfoSchema,
 } from "@/type/preload";
 import { ensureNotNullish } from "@/helpers/errorHelper";
 import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
