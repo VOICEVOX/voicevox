@@ -193,7 +193,7 @@ export class EngineAndVvppController {
   }
 
   /** VVPPパッケージをダウンロードし、インストールする */
-  async downlaodAndInstallVvppEngine(
+  async downloadAndInstallVvppEngine(
     downloadDir: string,
     packageInfo: EnginePackage,
   ) {

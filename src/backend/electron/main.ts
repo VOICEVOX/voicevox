@@ -957,7 +957,7 @@ app.on("ready", async () => {
     }
 
     // ダウンロード＆インストール
-    await engineAndVvppController.downlaodAndInstallVvppEngine(
+    await engineAndVvppController.downloadAndInstallVvppEngine(
       app.getPath("downloads"),
       packageInfo,
     );
