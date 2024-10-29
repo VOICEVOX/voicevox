@@ -8,8 +8,8 @@
     :sequencerZoomX
     :snapType
     :uiLocked
-    :playheadPosition
-    @update:playheadPosition="updatePlayheadPosition"
+    :playheadTicks
+    @update:playheadTicks="updatePlayheadTicks"
     @removeTempo="removeTempo"
     @removeTimeSignature="removeTimeSignature"
     @setTempo="setTempo"
@@ -31,13 +31,7 @@
 </template>
 
 <script setup lang="ts">
-import {
-  computed,
-  onMounted,
-  onUnmounted,
-  ref,
-  ComponentPublicInstance,
-} from "vue";
+import { computed, ComponentPublicInstance } from "vue";
 import Presentation from "./Presentation.vue";
 import { useStore } from "@/store";
 import { Tempo, TimeSignature } from "@/store/type";
@@ -67,18 +61,10 @@ const sequencerZoomX = computed(() => store.state.sequencerZoomX);
 const snapType = computed(() => store.state.sequencerSnapType);
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
-const playheadPosition = ref(0);
+const playheadTicks = computed(() => store.getters.PLAYHEAD_POSITION);
 
-const playheadPositionChangeListener = (position: number) => {
-  playheadPosition.value = position;
-};
-
-const updatePlayheadPosition = (ticks: number) => {
-  playheadPosition.value = ticks;
-
-  void store.dispatch("SET_PLAYHEAD_POSITION", {
-    position: ticks,
-  });
+const updatePlayheadTicks = (ticks: number) => {
+  void store.actions.SET_PLAYHEAD_POSITION({ position: ticks });
 };
 
 const deselectAllNotes = () => {
@@ -105,15 +91,4 @@ const removeTimeSignature = (measureNumber: number) => {
     measureNumber,
   });
 };
-
-onMounted(() => {
-  void store.dispatch("ADD_PLAYHEAD_POSITION_CHANGE_LISTENER", {
-    listener: playheadPositionChangeListener,
-  });
-});
-onUnmounted(() => {
-  void store.dispatch("REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER", {
-    listener: playheadPositionChangeListener,
-  });
-});
 </script>

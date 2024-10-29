@@ -150,7 +150,7 @@ const props = defineProps<{
 
   uiLocked: boolean;
 }>();
-const playheadPosition = defineModel<number>("playheadPosition", {
+const playheadTicks = defineModel<number>("playheadTicks", {
   required: true,
 });
 const emit = defineEmits<{
@@ -243,7 +243,7 @@ const measureInfos = computed(() => {
   });
 });
 const playheadX = computed(() => {
-  const baseX = tickToBaseX(playheadPosition.value, props.tpqn);
+  const baseX = tickToBaseX(playheadTicks.value, props.tpqn);
   return Math.floor(baseX * props.sequencerZoomX);
 });
 
@@ -259,7 +259,7 @@ const onClick = async (event: MouseEvent) => {
   emit("deselectAllNotes");
 
   const ticks = getTickFromMouseEvent(event);
-  playheadPosition.value = ticks;
+  playheadTicks.value = ticks;
 };
 
 const sequencerRuler = ref<HTMLElement | null>(null);
@@ -297,7 +297,7 @@ const onContextMenu = async (event: MouseEvent) => {
   const ticks = getTickFromMouseEvent(event);
   const snapTicks = getNoteDuration(props.snapType, props.tpqn);
   const snappedTicks = Math.round(ticks / snapTicks) * snapTicks;
-  playheadPosition.value = snappedTicks;
+  playheadTicks.value = snappedTicks;
 };
 
 type TempoOrTimeSignatureChange = {
@@ -311,7 +311,7 @@ const onTempoOrTimeSignatureChangeClick = async (
   tempoOrTimeSignatureChange: TempoOrTimeSignatureChange,
 ) => {
   const ticks = tempoOrTimeSignatureChange.position;
-  playheadPosition.value = ticks;
+  playheadTicks.value = ticks;
 
   console.log(
     "onTempoOrTimeSignatureChangeClick",
@@ -327,7 +327,7 @@ const currentMeasure = computed(() => {
   for (const [tsPosition, tsInfo] of props.timeSignatures.map(
     (ts, i) => [tsPositions.value[i], ts] as const,
   )) {
-    if (playheadPosition.value < tsPosition) {
+    if (playheadTicks.value < tsPosition) {
       break;
     }
     const measureDuration = getMeasureDuration(
@@ -337,7 +337,7 @@ const currentMeasure = computed(() => {
     );
     currentMeasure =
       tsInfo.measureNumber +
-      Math.floor((playheadPosition.value - tsPosition) / measureDuration);
+      Math.floor((playheadTicks.value - tsPosition) / measureDuration);
   }
 
   return currentMeasure;
@@ -385,7 +385,7 @@ const tempoOrTimeSignatureChanges = computed<TempoOrTimeSignatureChange[]>(
 
 const lastTempo = computed(() => {
   const maybeTempo = props.tempos.findLast((tempo) => {
-    return tempo.position <= playheadPosition.value;
+    return tempo.position <= playheadTicks.value;
   });
   if (!maybeTempo) {
     throw new UnreachableError("assert: At least one tempo exists.");
@@ -402,7 +402,7 @@ const lastTimeSignature = computed(() => {
   return maybeTimeSignature;
 });
 const tempoChangeExists = computed(
-  () => lastTempo.value.position === playheadPosition.value,
+  () => lastTempo.value.position === playheadTicks.value,
 );
 const timeSignatureChangeExists = computed(
   () => lastTimeSignature.value.measureNumber === currentMeasure.value,
@@ -418,7 +418,7 @@ const showTempoOrTimeSignatureChangeDialog = async (
   >();
 
   const lastTempo = props.tempos.findLast((tempo) => {
-    return tempo.position <= playheadPosition.value;
+    return tempo.position <= playheadTicks.value;
   });
   if (!lastTempo) {
     throw new UnreachableError("assert: At least one tempo exists.");
@@ -443,10 +443,10 @@ const showTempoOrTimeSignatureChangeDialog = async (
   if (result.tempoChange) {
     emit("setTempo", {
       ...result.tempoChange,
-      position: playheadPosition.value,
+      position: playheadTicks.value,
     });
   } else if (!result.tempoChange && tempoChangeExists.value) {
-    emit("removeTempo", playheadPosition.value);
+    emit("removeTempo", playheadTicks.value);
   }
 
   if (result.timeSignatureChange) {

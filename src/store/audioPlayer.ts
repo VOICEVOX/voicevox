@@ -57,7 +57,7 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
 
   PLAY_AUDIO_PLAYER: {
     async action(
-      { state, commit },
+      { state, mutations },
       { offset, audioKey }: { offset?: number; audioKey?: AudioKey },
     ) {
       const audioElement = getAudioElement();
@@ -88,7 +88,7 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
       // 再生終了時にresolveされるPromiseを返す
       const played = async () => {
         if (audioKey) {
-          commit("SET_AUDIO_NOW_PLAYING", { audioKey, nowPlaying: true });
+          mutations.SET_AUDIO_NOW_PLAYING({ audioKey, nowPlaying: true });
         }
       };
       audioElement.addEventListener("play", played);
@@ -103,7 +103,7 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
         audioElement.removeEventListener("play", played);
         audioElement.removeEventListener("pause", paused);
         if (audioKey) {
-          commit("SET_AUDIO_NOW_PLAYING", { audioKey, nowPlaying: false });
+          mutations.SET_AUDIO_NOW_PLAYING({ audioKey, nowPlaying: false });
         }
       });
 

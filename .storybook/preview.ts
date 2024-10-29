@@ -53,6 +53,11 @@ const preview: Preview = {
           value: "#333",
         },
       ],
+      grid: {
+        cellSize: 8,
+        cellAmount: 4,
+        opacity: 0.1,
+      },
     },
   },
   decorators: [

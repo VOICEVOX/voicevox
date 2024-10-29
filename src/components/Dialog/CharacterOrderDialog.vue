@@ -164,7 +164,7 @@ watch(
   async (newValue, oldValue) => {
     if (!oldValue && newValue) {
       // 新しいキャラクター
-      newCharacters.value = await store.dispatch("GET_NEW_CHARACTERS");
+      newCharacters.value = await store.actions.GET_NEW_CHARACTERS();
 
       // サンプルの順番、新しいキャラクターは上に
       sampleCharacterOrder.value = [
@@ -256,8 +256,7 @@ const togglePlayOrStop = (
 const characterOrderDragging = ref(false);
 
 const closeDialog = () => {
-  void store.dispatch(
-    "SET_USER_CHARACTER_ORDER",
+  void store.actions.SET_USER_CHARACTER_ORDER(
     characterOrder.value.map((info) => info.metas.speakerUuid),
   );
   stop();

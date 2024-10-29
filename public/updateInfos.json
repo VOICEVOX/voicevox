@@ -1,5 +1,10 @@
 [
   {
+    "version": "0.21.1",
+    "descriptions": ["キャラクター「Voidoll」を追加"],
+    "contributors": []
+  },
+  {
     "version": "0.21.0",
     "descriptions": [
       "ソング：立ち絵表示の有無を切り替え可能に",
