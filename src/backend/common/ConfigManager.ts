@@ -1,6 +1,5 @@
 import semver from "semver";
 import AsyncLock from "async-lock";
-import { loadEnvEngineInfos } from "./envEngineInfoSchema";
 import {
   AcceptTermsStatus,
   ConfigType,

@@ -3,10 +3,6 @@ import fs from "fs";
 import log from "electron-log/main";
 import { BrowserWindow, dialog } from "electron";
 
-import {
-  EnvEngineInfo,
-  loadEnvEngineInfos,
-} from "../common/envEngineInfoSchema";
 import EngineInfoManager from "./manager/engineInfoManager";
 import EngineProcessManager from "./manager/engineProcessManager";
 import VvppManager from "./manager/vvppManager";
@@ -22,7 +18,11 @@ import {
   EnginePackage,
   fetchDefaultEngineUpdateInfo,
   getSuitablePackages,
-} from "@/domain/defaultEngine";
+} from "@/domain/defaultEngine/latetDefaultEngine";
+import {
+  EnvEngineInfoType,
+  loadEnvEngineInfos,
+} from "@/domain/defaultEngine/envEngineInfo";
 
 /**
  * エンジンとVVPP周りの処理の流れを制御するクラス。
@@ -139,12 +139,12 @@ export class EngineAndVvppController {
    */
   async fetchInfosToInstall(): Promise<
     {
-      envEngineInfo: EnvEngineInfo;
+      envEngineInfo: EnvEngineInfoType;
       packageInfo: EnginePackage;
     }[]
   > {
     const targetInfos: {
-      envEngineInfo: EnvEngineInfo;
+      envEngineInfo: EnvEngineInfoType;
       packageInfo: EnginePackage;
     }[] = [];
 
