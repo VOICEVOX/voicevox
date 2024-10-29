@@ -155,7 +155,7 @@ const gridPatterns = computed(() => {
     width: number;
   }[] = [];
   for (const [i, timeSignature] of props.timeSignatures.entries()) {
-    const nextTimeSignature = props.timeSignatures[i + 1];
+    const nextTimeSignature = props.timeSignatures.at(i + 1);
     const nextMeasureNumber =
       nextTimeSignature?.measureNumber ?? props.numMeasures + 1;
     const patternWidth =
@@ -201,7 +201,7 @@ const gridLines = computed(() => {
 const measureLines = computed(() => {
   const measureLines = [0];
   for (const [i, timeSignature] of props.timeSignatures.entries()) {
-    const nextTimeSignature = props.timeSignatures[i + 1];
+    const nextTimeSignature = props.timeSignatures.at(i + 1);
     const nextMeasureNumber =
       nextTimeSignature?.measureNumber ?? props.numMeasures + 1;
     const width = measureWidth(timeSignature);
