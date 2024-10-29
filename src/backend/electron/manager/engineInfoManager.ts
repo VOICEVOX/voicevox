@@ -15,11 +15,9 @@ import {
 } from "@/type/preload";
 import { AltPortInfos } from "@/store/type";
 import { BaseConfigManager } from "@/backend/common/ConfigManager";
-import {
-  EnvEngineInfo,
-  loadEnvEngineInfos,
-} from "@/backend/common/envEngineInfoSchema";
+import { EnvEngineInfo } from "@/backend/common/envEngineInfoSchema";
 import { UnreachableError } from "@/type/utility";
+import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
 
 /**
  * デフォルトエンジンの情報を取得する

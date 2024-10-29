@@ -14,6 +14,7 @@ import {
   PresetKey,
 } from "@/type/preload";
 import { ensureNotNullish } from "@/helpers/errorHelper";
+import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
 
 const lockKey = "save";
 

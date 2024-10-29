@@ -1,4 +1,4 @@
-import { loadEnvEngineInfos } from "../common/envEngineInfoSchema";
+import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
 import { type EngineInfo } from "@/type/preload";
 
 const baseEngineInfo = loadEnvEngineInfos()[0];
