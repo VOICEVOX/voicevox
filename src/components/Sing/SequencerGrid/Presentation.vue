@@ -28,7 +28,7 @@
         />
         <!-- スナップグリッド線 -->
         <line
-          v-for="x in snapLinePositions"
+          v-for="x in snapLinePositions(timeSignature)"
           :key="`snapline-${x}`"
           :x1="x"
           :x2="x"
