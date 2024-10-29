@@ -314,7 +314,7 @@ const setBeats = (beats: { label: string; value: number }) => {
     timeSignature: {
       measureNumber: lastTimeSignature.value.measureNumber,
       beats: beats.value,
-      beatType: timeSignatures.value[0].beatType,
+      beatType: lastTimeSignature.value.beatType,
     },
   });
 };
@@ -326,7 +326,7 @@ const setBeatType = (beatType: { label: string; value: number }) => {
   void store.actions.COMMAND_SET_TIME_SIGNATURE({
     timeSignature: {
       measureNumber: lastTimeSignature.value.measureNumber,
-      beats: timeSignatures.value[0].beats,
+      beats: lastTimeSignature.value.beats,
       beatType: beatType.value,
     },
   });

@@ -24,11 +24,7 @@
           :id="`sequencer-ruler-measure-${tsIndex}`"
           :key="`pattern-${tsIndex}`"
           patternUnits="userSpaceOnUse"
-          :x="
-            (-offset %
-              (beatWidth(timeSignature) * beatsPerMeasure(timeSignature))) +
-            gridPatterns[tsIndex].x
-          "
+          :x="-offset + gridPatterns[tsIndex].x"
           :width="beatWidth(timeSignature) * beatsPerMeasure(timeSignature)"
           :height
         >
