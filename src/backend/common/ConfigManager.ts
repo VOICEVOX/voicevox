@@ -15,6 +15,7 @@ import {
   envEngineInfoSchema,
 } from "@/type/preload";
 import { ensureNotNullish } from "@/helpers/errorHelper";
+import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
 
 const lockKey = "save";
 
@@ -40,11 +41,7 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
       if (import.meta.env.VITE_DEFAULT_ENGINE_INFOS == undefined) {
         throw new Error("VITE_DEFAULT_ENGINE_INFOS == undefined");
       }
-      const engineId = EngineId(
-        envEngineInfoSchema
-          .array()
-          .parse(JSON.parse(import.meta.env.VITE_DEFAULT_ENGINE_INFOS))[0].uuid,
-      );
+      const engineId = loadEnvEngineInfos()[0].uuid;
       if (engineId == undefined)
         throw new Error("VITE_DEFAULT_ENGINE_INFOS[0].uuid == undefined");
       const prevDefaultStyleIds = config.defaultStyleIds as DefaultStyleId[];
