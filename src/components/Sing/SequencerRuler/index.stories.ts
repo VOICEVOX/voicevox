@@ -25,7 +25,7 @@ const meta: Meta<typeof Presentation> = {
     tpqn: 480,
     offset: 0,
     numMeasures: 32,
-    "onUpdate:playheadPosition": fn<(value: number) => void>(),
+    "onUpdate:playheadTicks": fn<(value: number) => void>(),
     onDeselectAllNotes: fn(),
 
     // TODO: ContextMenuをDIする
@@ -33,10 +33,10 @@ const meta: Meta<typeof Presentation> = {
   render: (args) => ({
     components: { Presentation },
     setup() {
-      const playheadPosition = ref(0);
-      return { args, playheadPosition };
+      const playheadTicks = ref(0);
+      return { args, playheadTicks };
     },
-    template: `<Presentation v-bind="args" v-model:playheadPosition="playheadPosition" />`,
+    template: `<Presentation v-bind="args" v-model:playheadTicks="playheadPosition" />`,
   }),
 };
 
@@ -121,9 +121,9 @@ export const MovePlayhead: Story = {
 
     ruler.dispatchEvent(event);
 
-    await expect(args["onUpdate:playheadPosition"]).toHaveBeenCalled();
+    await expect(args["onUpdate:playheadTicks"]).toHaveBeenCalled();
 
-    const onUpdateCallback = args["onUpdate:playheadPosition"] as Mock<
+    const onUpdateCallback = args["onUpdate:playheadTicks"] as Mock<
       (value: number) => void
     >;
     const newTick = onUpdateCallback.mock.calls[0][0];
