@@ -130,6 +130,7 @@ import {
   getNoteDuration,
   getTimeSignaturePositions,
   ticksToMeasuresBeats,
+  tickToMeasureNumber,
 } from "@/sing/domain";
 import { baseXToTick, tickToBaseX } from "@/sing/viewHelper";
 import { Tempo, TimeSignature } from "@/store/type";
@@ -317,26 +318,9 @@ const onTempoOrTimeSignatureChangeClick = async (
   contextMenu.value?.show(event);
 };
 
-const currentMeasure = computed(() => {
-  let currentMeasure = 1;
-  for (const [tsPosition, tsInfo] of props.timeSignatures.map(
-    (ts, i) => [tsPositions.value[i], ts] as const,
-  )) {
-    if (playheadTicks.value < tsPosition) {
-      break;
-    }
-    const measureDuration = getMeasureDuration(
-      tsInfo.beats,
-      tsInfo.beatType,
-      props.tpqn,
-    );
-    currentMeasure =
-      tsInfo.measureNumber +
-      Math.floor((playheadTicks.value - tsPosition) / measureDuration);
-  }
-
-  return currentMeasure;
-});
+const currentMeasure = computed(() =>
+  tickToMeasureNumber(playheadTicks.value, props.timeSignatures, props.tpqn),
+);
 
 const tempoOrTimeSignatureChanges = computed<TempoOrTimeSignatureChange[]>(
   () => {
