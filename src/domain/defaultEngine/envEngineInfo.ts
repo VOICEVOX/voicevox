@@ -11,10 +11,12 @@ export const envEngineInfoSchema = z.object({
   uuid: engineIdSchema,
   host: z.string(),
   name: z.string(),
-  executionEnabled: z.boolean(),
-  executionFilePath: z.string(),
+  executionEnabled: z.boolean(), // FIXME: typeがurlのときのみ必要
+  executionFilePath: z.string(), // FIXME: typeがpathのときは必須
   executionArgs: z.array(z.string()),
-  path: z.string().optional(),
+  path: z.string().optional(), // FIXME: typeがpathで、アンインストール可能なときは必須
+  type: z.union([z.literal("path"), z.literal("downloadVvpp")]).default("path"),
+  latestUrl: z.string().optional(), // FIXME: typeがdownloadVvppのときは必須
 });
 export type EnvEngineInfoType = z.infer<typeof envEngineInfoSchema>;
 

@@ -15,15 +15,17 @@ import {
 } from "@/type/preload";
 import { AltPortInfos } from "@/store/type";
 import { BaseConfigManager } from "@/backend/common/ConfigManager";
-import { EnvEngineInfo } from "@/backend/common/envEngineInfoSchema";
 import { UnreachableError } from "@/type/utility";
-import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
+import {
+  EnvEngineInfoType,
+  loadEnvEngineInfos,
+} from "@/domain/defaultEngine/envEngineInfo";
 
 /**
  * デフォルトエンジンの情報を取得する
  */
 function fetchDefaultEngineInfos(
-  envEngineInfos: EnvEngineInfo[],
+  envEngineInfos: EnvEngineInfoType[],
   defaultEngineDir: string,
 ): EngineInfo[] {
   // TODO: envから直接ではなく、envに書いたengine_manifest.jsonから情報を得るようにする
