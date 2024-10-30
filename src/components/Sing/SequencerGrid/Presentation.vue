@@ -158,8 +158,7 @@ const gridPatterns = computed(() => {
     const nextTimeSignature = props.timeSignatures.at(i + 1);
     const nextMeasureNumber =
       nextTimeSignature?.measureNumber ?? props.numMeasures + 1;
-    const patternWidth =
-      beatWidth(timeSignature) * beatsPerMeasure(timeSignature);
+    const patternWidth = measureWidth(timeSignature);
     gridPatterns.push({
       id: `sequencer-grid-pattern-${i}`,
       x:
