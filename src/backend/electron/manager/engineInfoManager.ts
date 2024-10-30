@@ -12,21 +12,17 @@ import {
   MinimumEngineManifestType,
   EngineId,
   minimumEngineManifestSchema,
-  envEngineInfoSchema,
 } from "@/type/preload";
 import { AltPortInfos } from "@/store/type";
 import { BaseConfigManager } from "@/backend/common/ConfigManager";
+import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
 
 /**
  * デフォルトエンジンの情報を取得する
  */
 function fetchDefaultEngineInfos(defaultEngineDir: string): EngineInfo[] {
   // TODO: envから直接ではなく、envに書いたengine_manifest.jsonから情報を得るようにする
-  const defaultEngineInfosEnv =
-    import.meta.env.VITE_DEFAULT_ENGINE_INFOS ?? "[]";
-
-  const envSchema = envEngineInfoSchema.array();
-  const engines = envSchema.parse(JSON.parse(defaultEngineInfosEnv));
+  const engines = loadEnvEngineInfos();
 
   return engines.map((engineInfo) => {
     const { protocol, hostname, port, pathname } = new URL(engineInfo.host);
