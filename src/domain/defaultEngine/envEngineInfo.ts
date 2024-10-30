@@ -1,5 +1,5 @@
 /**
- * デフォルトエンジンの環境変数関連のモジュール
+ * デフォルトエンジンの .env 関連のモジュール
  */
 
 import { z } from "zod";
@@ -18,11 +18,13 @@ export const envEngineInfoSchema = z.object({
 });
 export type EnvEngineInfoType = z.infer<typeof envEngineInfoSchema>;
 
-/** 環境変数を経由して.envを読み込む */
+/** .envからデフォルトエンジン情報を読み込む */
 export function loadEnvEngineInfos(): EnvEngineInfoType[] {
   const defaultEngineInfosEnv =
     import.meta.env.VITE_DEFAULT_ENGINE_INFOS ?? "[]";
 
+  // FIXME: 「.envを書き換えてください」というログを出したい
+  // NOTE: domainディレクトリなのでログを出す方法がなく、Errorオプションのcauseを用いてもelectron-logがcauseのログを出してくれない
   const envSchema = envEngineInfoSchema.array();
   return envSchema.parse(JSON.parse(defaultEngineInfosEnv));
 }
