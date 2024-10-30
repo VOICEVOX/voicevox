@@ -20,20 +20,20 @@
     >
       <defs>
         <pattern
-          v-for="(timeSignature, tsIndex) in timeSignatures"
-          :id="`sequencer-ruler-measure-${tsIndex}`"
-          :key="`pattern-${tsIndex}`"
+          v-for="(gridPattern, patternIndex) in gridPatterns"
+          :id="`sequencer-ruler-measure-${patternIndex}`"
+          :key="`pattern-${patternIndex}`"
           patternUnits="userSpaceOnUse"
-          :x="-offset + gridPatterns[tsIndex].x"
-          :width="beatWidth(timeSignature) * beatsPerMeasure(timeSignature)"
+          :x="-offset + gridPattern.x"
+          :width="gridPattern.patternWidth"
           :height
         >
           <!-- 拍線（小節の最初を除く） -->
           <line
-            v-for="n in beatsPerMeasure(timeSignature)"
+            v-for="n in gridPattern.beatsPerMeasure"
             :key="n"
-            :x1="beatWidth(timeSignature) * n"
-            :x2="beatWidth(timeSignature) * n"
+            :x1="gridPattern.beatWidth * n"
+            :x2="gridPattern.beatWidth * n"
             y1="28"
             :y2="height"
             class="sequencer-ruler-beat-line"
@@ -194,11 +194,20 @@ const width = computed(() => {
   return tickToBaseX(endTicks.value, props.tpqn) * props.sequencerZoomX;
 });
 const gridPatterns = computed(() => {
-  const gridPatterns: { id: string; x: number; width: number }[] = [];
+  const gridPatterns: {
+    id: string;
+    x: number;
+    beatsPerMeasure: number;
+    beatWidth: number;
+    patternWidth: number;
+    width: number;
+  }[] = [];
   for (const [i, timeSignature] of props.timeSignatures.entries()) {
-    const nextTimeSignature = props.timeSignatures[i + 1];
+    const nextTimeSignature = props.timeSignatures.at(i + 1);
     const nextMeasureNumber =
       nextTimeSignature?.measureNumber ?? props.numMeasures + 1;
+    const patternWidth =
+      beatWidth(timeSignature) * beatsPerMeasure(timeSignature);
     gridPatterns.push({
       id: `sequencer-grid-pattern-${i}`,
       x:
@@ -206,10 +215,10 @@ const gridPatterns = computed(() => {
           ? 0
           : gridPatterns[gridPatterns.length - 1].x +
             gridPatterns[gridPatterns.length - 1].width,
-      width:
-        beatWidth(timeSignature) *
-        beatsPerMeasure(timeSignature) *
-        (nextMeasureNumber - timeSignature.measureNumber),
+      beatsPerMeasure: beatsPerMeasure(timeSignature),
+      beatWidth: beatWidth(timeSignature),
+      patternWidth,
+      width: patternWidth * (nextMeasureNumber - timeSignature.measureNumber),
     });
   }
 
@@ -241,6 +250,7 @@ const measureInfos = computed(() => {
     });
   });
 });
+
 const playheadX = computed(() => {
   const baseX = tickToBaseX(playheadTicks.value, props.tpqn);
   return Math.floor(baseX * props.sequencerZoomX);
