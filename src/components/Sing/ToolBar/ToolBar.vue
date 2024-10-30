@@ -58,7 +58,7 @@
         <template #control>
           <div class="sing-beats">
             <QSelect
-              :modelValue="lastTimeSignature.beats"
+              :modelValue="currentTimeSignature.beats"
               :options="beatsOptions"
               hideBottomSpace
               hideDropdownIcon
@@ -73,7 +73,7 @@
             />
             <div class="sing-beats-separator">/</div>
             <QSelect
-              :modelValue="lastTimeSignature.beatType"
+              :modelValue="currentTimeSignature.beatType"
               :options="beatTypeOptions"
               hideBottomSpace
               hideDropdownIcon
@@ -295,7 +295,7 @@ const setBpmInputBuffer = (bpmStr: string | number | null) => {
   bpmInputBuffer.value = bpmValue;
 };
 
-const lastTimeSignature = computed(() => {
+const currentTimeSignature = computed(() => {
   const maybeTimeSignature = timeSignatures.value.findLast(
     (_timeSignature, i) => tsPositions.value[i] <= playheadTicks.value,
   );
@@ -312,9 +312,9 @@ const setBeats = (beats: { label: string; value: number }) => {
 
   void store.actions.COMMAND_SET_TIME_SIGNATURE({
     timeSignature: {
-      measureNumber: lastTimeSignature.value.measureNumber,
+      measureNumber: currentTimeSignature.value.measureNumber,
       beats: beats.value,
-      beatType: lastTimeSignature.value.beatType,
+      beatType: currentTimeSignature.value.beatType,
     },
   });
 };
@@ -325,8 +325,8 @@ const setBeatType = (beatType: { label: string; value: number }) => {
   }
   void store.actions.COMMAND_SET_TIME_SIGNATURE({
     timeSignature: {
-      measureNumber: lastTimeSignature.value.measureNumber,
-      beats: lastTimeSignature.value.beats,
+      measureNumber: currentTimeSignature.value.measureNumber,
+      beats: currentTimeSignature.value.beats,
       beatType: beatType.value,
     },
   });
@@ -387,15 +387,15 @@ const setVolumeRangeAdjustment = () => {
 watch(
   [tempos, playheadTicks],
   () => {
-    const lastTempo = tempos.value.findLast(
+    const currentTempo = tempos.value.findLast(
       (tempo) => tempo.position <= playheadTicks.value,
     );
-    if (!lastTempo) {
+    if (!currentTempo) {
       throw new UnreachableError("assert: at least one tempo exists");
     }
-    bpmInputBuffer.value = lastTempo.bpm;
+    bpmInputBuffer.value = currentTempo.bpm;
   },
-  { deep: true, immediate: true },
+  { immediate: true },
 );
 
 const nowPlaying = computed(() => store.state.nowPlaying);
