@@ -16,7 +16,7 @@ import {
 } from "@/type/preload";
 import {
   EnginePackage,
-  fetchDefaultEngineUpdateInfo,
+  fetchDefaultEngineInfos,
   getSuitablePackages,
 } from "@/domain/defaultEngine/latetDefaultEngine";
 import {
@@ -157,7 +157,7 @@ export class EngineAndVvppController {
       const latestUrl = envEngineInfo.latestUrl;
       if (latestUrl == undefined) throw new Error("latestUrl is undefined");
 
-      const updateInfo = await fetchDefaultEngineUpdateInfo(latestUrl);
+      const updateInfo = await fetchDefaultEngineInfos(latestUrl);
       if (updateInfo.formatVersion != 1) {
         log.error(`Unsupported format version: ${updateInfo.formatVersion}`);
         continue;

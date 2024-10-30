@@ -2,7 +2,7 @@
 
 import path from "path";
 import fs from "fs";
-import { fetchDefaultEngineUpdateInfo } from "@/domain/defaultEngine/latetDefaultEngine";
+import { fetchDefaultEngineInfos } from "@/domain/defaultEngine/latetDefaultEngine";
 
 const currentDir = "tests/unit/domain/defaultEngine";
 
@@ -14,7 +14,7 @@ test("fetchDefaultEngineInfo", async () => {
   const spy = vi.spyOn(global, "fetch").mockResolvedValue(new Response(json));
 
   // 読み込めることを確認
-  const infos = await fetchDefaultEngineUpdateInfo("https://example.com/");
+  const infos = await fetchDefaultEngineInfos("https://example.com/");
   expect(infos.formatVersion).toBe(1);
 
   spy.mockRestore();

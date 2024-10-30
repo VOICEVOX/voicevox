@@ -44,7 +44,7 @@ const defaultEngineUpdateInfoSchema = z.object({
 });
 
 /** デフォルトエンジンの更新情報を取得する */
-export const fetchDefaultEngineUpdateInfo = async (url: string) => {
+export const fetchDefaultEngineInfos = async (url: string) => {
   const response = await fetch(url);
   return defaultEngineUpdateInfoSchema.parse(await response.json());
 };
