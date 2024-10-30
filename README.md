@@ -148,6 +148,7 @@ Electron の機能が不要な、UI や音声合成などの End to End テス�
 npm run test:browser-e2e
 npm run test-watch:browser-e2e # 監視モード
 npm run test-watch:browser-e2e -- --headed # テスト中の UI を表示
+npm run test-ui:browser-e2e # Playwright の UI を表示
 ```
 
 Playwright を使用しているためテストパターンを生成することもできます。
@@ -168,6 +169,8 @@ Storybook のコンポーネントのスクリーンショットを比較して�
 
 ```bash
 npm run test:storybook-vrt
+npm run test-watch:storybook-vrt # 監視モード
+npm run test-ui:storybook-vrt # Playwright の UI を表示
 ```
 
 #### スクリーンショットの更新
@@ -187,6 +190,25 @@ npm run test:storybook-vrt
    ```
 
 4. Github Workflow が完了すると、更新されたスクリーンショットがコミットされます。
+5. プルした後、空コミットをプッシュしてテストを再実行します。
+
+   ```bash
+   git commit --allow-empty -m "（テストを再実行）"
+   git push
+   ```
+
+> [!NOTE]
+> トークンを作成して Secrets に追加することで、自動的にテストを再実行できます。
+>
+> 1. [Fine-granted Tokens](https://github.com/settings/personal-access-tokens/new) にアクセスします。
+> 2. 適当な名前を入力し、 `ユーザー名/voicevox` へのアクセス権を与え、 Repository permissions の Contents で Read and write を選択します。
+>    <details>
+>    <summary>設定例</summary>
+>    <img src="./docs/res/Fine-granted_Tokensの作成.png" width="320">
+>    </details>
+> 3. トークンを作成して文字列をコピーします。
+> 4. `ユーザー名/voicevox` のリポジトリの Settings > Secrets and variables > Actions > New repository secret を開きます。
+> 5. 名前に `PUSH_TOKEN` と入力し、先ほどの文字列を貼り付けて Secrets を追加します。
 
 ##### ローカルで更新する場合
 
@@ -297,7 +319,9 @@ npx openapi-generator-cli version-manager list
 
 npm scripts の `serve` や `electron:serve` などの開発ビルド下では、ビルドに使用している vite で sourcemap を出力するため、ソースコードと出力されたコードの対応付けが行われます。
 
-`.vscode/launch.template.json` をコピーして `.vscode/launch.json` を作成することで、開発ビルドを VS Code から実行し、デバッグを可能にするタスクが有効になります。
+`.vscode/launch.template.json` をコピーして `.vscode/launch.json` を、
+`.vscode/tasks.template.json` をコピーして `.vscode/tasks.json` を作成することで、
+開発ビルドを VS Code から実行し、デバッグを可能にするタスクが有効になります。
 
 ## ライセンス
 

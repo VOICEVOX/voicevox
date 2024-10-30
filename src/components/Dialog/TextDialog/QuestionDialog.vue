@@ -32,8 +32,7 @@
           :key="index"
           flat
           :label="button"
-          color="toolbar-button"
-          textColor="toolbar-button-display"
+          color="display"
           class="text-no-wrap text-bold"
           @click="onClick(index)"
         />

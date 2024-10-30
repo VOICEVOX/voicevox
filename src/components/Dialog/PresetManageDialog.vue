@@ -95,21 +95,21 @@ const reorderPreset = (featurePresetList: (Preset & { key: PresetKey })[]) => {
   // デフォルトプリセットは表示するlistから除外しているので、末尾に追加しておかないと失われる
   const defaultPresetKeys = presetKeys.value.filter(isDefaultPresetKey);
 
-  void store
-    .dispatch("SAVE_PRESET_ORDER", {
+  void store.actions
+    .SAVE_PRESET_ORDER({
       presetKeys: [...newPresetKeys, ...defaultPresetKeys],
     })
     .finally(() => (isPreview.value = false));
 };
 
 const deletePreset = async (key: PresetKey) => {
-  const result = await store.dispatch("SHOW_CONFIRM_DIALOG", {
+  const result = await store.actions.SHOW_CONFIRM_DIALOG({
     title: "プリセット削除の確認",
     message: `プリセット "${presetItems.value[key].name}" を削除してもよろしいですか？`,
     actionName: "削除",
   });
   if (result === "OK") {
-    await store.dispatch("DELETE_PRESET", {
+    await store.actions.DELETE_PRESET({
       presetKey: key,
     });
   }

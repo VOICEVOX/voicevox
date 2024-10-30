@@ -1,0 +1,28 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Electron Serve without Launch Electron",
+            // Electronを起動せずにバックグラウンドで"electron:serve"を実行する
+            // NOTE: デバッグ起動を軽くできる
+            "type": "npm",
+            "script": "electron:serve",
+            "options": {
+                "env": {
+                    "SKIP_LAUNCH_ELECTRON": "1"
+                }
+            },
+            "isBackground": true,
+            "problemMatcher": {
+                "pattern": {
+                    "regexp": ""
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "building for development\\.\\.\\.",
+                    "endsPattern": "main process build is complete\\."
+                }
+            }
+        }
+    ]
+}

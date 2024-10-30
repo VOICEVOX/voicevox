@@ -201,7 +201,7 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
   },
 
   LOAD_DEFAULT_STYLE_IDS: {
-    async action({ commit, getters }) {
+    async action({ mutations, getters }) {
       let defaultStyleIds = await window.backend.getSetting("defaultStyleIds");
 
       const allCharacterInfos = getters.GET_ALL_CHARACTER_INFOS;
@@ -245,7 +245,7 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
         }),
       ];
 
-      commit("SET_DEFAULT_STYLE_IDS", { defaultStyleIds });
+      mutations.SET_DEFAULT_STYLE_IDS({ defaultStyleIds });
     },
   },
 
@@ -282,17 +282,17 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
         }
       }
     },
-    async action({ commit }, defaultStyleIds) {
-      commit("SET_DEFAULT_STYLE_IDS", { defaultStyleIds });
+    async action({ mutations }, defaultStyleIds) {
+      mutations.SET_DEFAULT_STYLE_IDS({ defaultStyleIds });
       await window.backend.setSetting("defaultStyleIds", defaultStyleIds);
     },
   },
 
   LOAD_USER_CHARACTER_ORDER: {
-    async action({ commit }) {
+    async action({ mutations }) {
       const userCharacterOrder =
         await window.backend.getSetting("userCharacterOrder");
-      commit("SET_USER_CHARACTER_ORDER", { userCharacterOrder });
+      mutations.SET_USER_CHARACTER_ORDER({ userCharacterOrder });
     },
   },
 
@@ -300,8 +300,8 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
     mutation(state, { userCharacterOrder }) {
       state.userCharacterOrder = userCharacterOrder;
     },
-    async action({ commit }, userCharacterOrder) {
-      commit("SET_USER_CHARACTER_ORDER", { userCharacterOrder });
+    async action({ mutations }, userCharacterOrder) {
+      mutations.SET_USER_CHARACTER_ORDER({ userCharacterOrder });
       await window.backend.setSetting("userCharacterOrder", userCharacterOrder);
     },
   },
@@ -320,16 +320,16 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
   },
 
   INIT_VUEX: {
-    async action({ dispatch }) {
+    async action({ actions }) {
       const promises = [];
 
       // 設定ファイルからstoreへ読み込む
-      promises.push(dispatch("HYDRATE_UI_STORE"));
-      promises.push(dispatch("HYDRATE_PRESET_STORE"));
-      promises.push(dispatch("HYDRATE_SETTING_STORE"));
+      promises.push(actions.HYDRATE_UI_STORE());
+      promises.push(actions.HYDRATE_PRESET_STORE());
+      promises.push(actions.HYDRATE_SETTING_STORE());
 
       await Promise.all(promises).then(() => {
-        void dispatch("ON_VUEX_READY");
+        void actions.ON_VUEX_READY();
       });
     },
   },
@@ -338,8 +338,8 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
     mutation(state, { isMultiEngineOffMode }) {
       state.isMultiEngineOffMode = isMultiEngineOffMode;
     },
-    action({ commit }, isMultiEngineOffMode) {
-      commit("SET_IS_MULTI_ENGINE_OFF_MODE", { isMultiEngineOffMode });
+    action({ mutations }, isMultiEngineOffMode) {
+      mutations.SET_IS_MULTI_ENGINE_OFF_MODE({ isMultiEngineOffMode });
     },
   },
 });

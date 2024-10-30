@@ -11,7 +11,7 @@ import {
   ErrorTypeForSaveAllResultDialog,
 } from "@/store/type";
 import { DotNotationDispatch } from "@/store/vuex";
-import { withProgressDotNotation as withProgress } from "@/store/ui";
+import { withProgress } from "@/store/ui";
 
 type MediaType = "audio" | "text";
 

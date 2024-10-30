@@ -28,6 +28,7 @@ import { RuntimeInfoManager } from "./manager/RuntimeInfoManager";
 import { registerIpcMainHandle, ipcMainSendProxy, IpcMainHandle } from "./ipc";
 import { getConfigManager } from "./electronConfig";
 import { EngineAndVvppController } from "./engineAndVvppController";
+import { writeFileSafely } from "./fileHelper";
 import { failure, success } from "@/type/result";
 import { AssetTextFileNames } from "@/type/staticResources";
 import {
@@ -145,7 +146,7 @@ protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true, stream: true } },
 ]);
 
-const firstUrl = process.env.VITE_DEV_SERVER_URL ?? "app://./index.html";
+const firstUrl = import.meta.env.VITE_DEV_SERVER_URL ?? "app://./index.html";
 
 // engine
 const vvppEngineDir = path.join(app.getPath("userData"), "vvpp-engines");
@@ -280,7 +281,7 @@ async function createWindow() {
   }
 
   // ソフトウェア起動時はプロトコルを app にする
-  if (process.env.VITE_DEV_SERVER_URL == undefined) {
+  if (import.meta.env.VITE_DEV_SERVER_URL == undefined) {
     protocol.handle("app", (request) => {
       // 読み取り先のファイルがインストールディレクトリ内であることを確認する
       // ref: https://www.electronjs.org/ja/docs/latest/api/protocol#protocolhandlescheme-handler
@@ -744,7 +745,7 @@ registerIpcMainHandle<IpcMainHandle>({
 
   WRITE_FILE: (_, { filePath, buffer }) => {
     try {
-      fs.writeFileSync(
+      writeFileSafely(
         filePath,
         new DataView(buffer instanceof Uint8Array ? buffer.buffer : buffer),
       );
