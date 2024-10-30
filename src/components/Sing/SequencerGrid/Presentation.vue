@@ -116,7 +116,6 @@ const gridCellBaseHeight = getKeyBaseHeight();
 const gridCellHeight = computed(() => {
   return gridCellBaseHeight * props.sequencerZoomY;
 });
-const beatsPerMeasure = (timeSignature: TimeSignature) => timeSignature.beats;
 const beatWidth = (timeSignature: TimeSignature) => {
   const beatType = timeSignature.beatType;
   const wholeNoteDuration = props.tpqn * 4;
@@ -167,7 +166,7 @@ const gridPatterns = computed(() => {
           : gridPatterns[gridPatterns.length - 1].x +
             gridPatterns[gridPatterns.length - 1].width,
       beatWidth: beatWidth(timeSignature),
-      beatsPerMeasure: beatsPerMeasure(timeSignature),
+      beatsPerMeasure: timeSignature.beats,
       beatLineIndices: beatLineIndices(timeSignature),
       snapLinePositions: snapLinePositions(timeSignature),
       patternWidth,
@@ -180,7 +179,7 @@ const gridPatterns = computed(() => {
 
 // 小節幅
 const measureWidth = (timeSignature: TimeSignature) =>
-  beatWidth(timeSignature) * beatsPerMeasure(timeSignature);
+  beatWidth(timeSignature) * timeSignature.beats;
 
 // グリッド線の計算
 // オクターブ線や小節線と重なる線は除外
@@ -221,11 +220,11 @@ const measureLines = computed(() => {
 const horizontalLineIndices = computed(() => gridLines.value.horizontalLines);
 const octaveLineIndices = computed(() => gridLines.value.octaveLines);
 const beatLineIndices = (timeSignature: TimeSignature) =>
-  Array.from({ length: beatsPerMeasure(timeSignature) - 1 }, (_, i) => i + 1);
+  Array.from({ length: timeSignature.beats - 1 }, (_, i) => i + 1);
 const snapLinePositions = (timeSignature: TimeSignature) => {
   const snapTicks = gridCellTicks.value;
   const measureTicks =
-    (props.tpqn * 4 * beatsPerMeasure(timeSignature)) / timeSignature.beatType;
+    (props.tpqn * 4 * timeSignature.beats) / timeSignature.beatType;
   const snapCount = Math.floor(measureTicks / snapTicks);
 
   return Array.from({ length: snapCount }, (_, index) => {
