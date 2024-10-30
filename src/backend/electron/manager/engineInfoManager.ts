@@ -20,6 +20,7 @@ import {
   EnvEngineInfoType,
   loadEnvEngineInfos,
 } from "@/domain/defaultEngine/envEngineInfo";
+import { failure, Result, success } from "@/type/result";
 
 /**
  * デフォルトエンジンの情報を取得する
@@ -51,6 +52,47 @@ function fetchDefaultEngineInfos(
     });
 }
 
+/** エンジンディレクトリからエンジン情報を読み込む */
+function loadEngineInfo(
+  engineDir: string,
+  type: "vvpp" | "path",
+): Result<EngineInfo, "manifestNotFound" | "manifestParseError"> {
+  const manifestPath = path.join(engineDir, "engine_manifest.json");
+  if (!fs.existsSync(manifestPath)) {
+    return failure("manifestNotFound", new Error("manifest not found"));
+  }
+  let manifest: MinimumEngineManifestType;
+  try {
+    manifest = minimumEngineManifestSchema.parse(
+      JSON.parse(fs.readFileSync(manifestPath, { encoding: "utf8" })),
+    );
+  } catch (e) {
+    if (e instanceof Error) {
+      return failure("manifestParseError", e);
+    } else {
+      throw new UnreachableError();
+    }
+  }
+
+  const [command, ...args] = shlex.split(manifest.command);
+
+  const engineInfo = {
+    uuid: manifest.uuid,
+    protocol: "http:",
+    hostname: "127.0.0.1",
+    defaultPort: manifest.port.toString(),
+    pathname: "",
+    name: manifest.name,
+    path: engineDir,
+    executionEnabled: true,
+    executionFilePath: path.join(engineDir, command),
+    executionArgs: args,
+    type,
+    isDefault: false,
+  } satisfies EngineInfo;
+  return success(engineInfo);
+}
+
 /** エンジンの情報を管理するクラス */
 export class EngineInfoManager {
   configManager: BaseConfigManager;
@@ -73,43 +115,10 @@ export class EngineInfoManager {
   }
 
   /**
-   * 追加エンジンの一覧を取得する。
-   * FIXME: store.get("registeredEngineDirs")への副作用をEngineManager外に移動する
+   * VVPPエンジン情報の一覧を取得する。
    */
-  private fetchAdditionalEngineInfos(): EngineInfo[] {
-    const engines: EngineInfo[] = [];
-    const addEngine = (engineDir: string, type: "vvpp" | "path") => {
-      const manifestPath = path.join(engineDir, "engine_manifest.json");
-      if (!fs.existsSync(manifestPath)) {
-        return "manifestNotFound";
-      }
-      let manifest: MinimumEngineManifestType;
-      try {
-        manifest = minimumEngineManifestSchema.parse(
-          JSON.parse(fs.readFileSync(manifestPath, { encoding: "utf8" })),
-        );
-      } catch (e) {
-        return "manifestParseError";
-      }
-
-      const [command, ...args] = shlex.split(manifest.command);
-
-      engines.push({
-        uuid: manifest.uuid,
-        protocol: "http:",
-        hostname: "127.0.0.1",
-        defaultPort: manifest.port.toString(),
-        pathname: "",
-        name: manifest.name,
-        path: engineDir,
-        executionEnabled: true,
-        executionFilePath: path.join(engineDir, command),
-        executionArgs: args,
-        type,
-        isDefault: false,
-      } satisfies EngineInfo);
-      return "ok";
-    };
+  private fetchVvppEngineInfos(): EngineInfo[] {
+    const engineInfos: EngineInfo[] = [];
     for (const dirName of fs.readdirSync(this.vvppEngineDir)) {
       const engineDir = path.join(this.vvppEngineDir, dirName);
       if (!fs.statSync(engineDir).isDirectory()) {
@@ -119,16 +128,26 @@ export class EngineInfoManager {
       if (dirName === ".tmp") {
         continue;
       }
-      const result = addEngine(engineDir, "vvpp");
-      if (result !== "ok") {
-        log.log(`Failed to load engine: ${result}, ${engineDir}`);
+      const result = loadEngineInfo(engineDir, "vvpp");
+      if (!result.ok) {
+        log.log(`Failed to load engine: ${result.code}, ${engineDir}`);
+        continue;
       }
+      engineInfos.push(result.value);
     }
-    // FIXME: この関数の引数でregisteredEngineDirsを受け取り、動かないエンジンをreturnして、EngineManager外でconfig.setする
+    return engineInfos;
+  }
+
+  /**
+   * 設定で登録したエンジン情報を取得する。
+   * FIXME: store.get("registeredEngineDirs")への副作用をEngineManager外に移動する
+   */
+  private fetchRegisteredEngineInfos(): EngineInfo[] {
+    const engineInfos: EngineInfo[] = [];
     for (const engineDir of this.configManager.get("registeredEngineDirs")) {
-      const result = addEngine(engineDir, "path");
-      if (result !== "ok") {
-        log.log(`Failed to load engine: ${result}, ${engineDir}`);
+      const result = loadEngineInfo(engineDir, "path");
+      if (!result.ok) {
+        log.log(`Failed to load engine: ${result.code}, ${engineDir}`);
         // 動かないエンジンは追加できないので削除
         // FIXME: エンジン管理UIで削除可能にする
         dialog.showErrorBox(
@@ -141,9 +160,21 @@ export class EngineInfoManager {
             .get("registeredEngineDirs")
             .filter((p) => p !== engineDir),
         );
+        continue;
       }
+      engineInfos.push(result.value);
     }
-    return engines;
+    return engineInfos;
+  }
+
+  /**
+   * 追加エンジンの一覧を取得する。
+   */
+  private fetchAdditionalEngineInfos(): EngineInfo[] {
+    return [
+      ...this.fetchVvppEngineInfos(),
+      ...this.fetchRegisteredEngineInfos(),
+    ];
   }
 
   /**
