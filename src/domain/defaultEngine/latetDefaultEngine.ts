@@ -19,7 +19,7 @@ const enginePackageSchema = z.object({
 export type EnginePackage = z.infer<typeof enginePackageSchema>;
 
 /** デフォルトエンジンの更新情報のスキーマ */
-const defaultEngineUpdateInfoSchema = z.object({
+const latestDefaultEngineInfoSchema = z.object({
   formatVersion: z.number(),
   windows: z.object({
     x64: z.object({
@@ -44,17 +44,17 @@ const defaultEngineUpdateInfoSchema = z.object({
 });
 
 /** デフォルトエンジンの更新情報を取得する */
-export const fetchDefaultEngineInfos = async (url: string) => {
+export const fetchLatestDefaultEngineInfo = async (url: string) => {
   const response = await fetch(url);
-  return defaultEngineUpdateInfoSchema.parse(await response.json());
+  return latestDefaultEngineInfoSchema.parse(await response.json());
 };
 
 /**
  * 実行環境に合うパッケージを取得する。GPU版があればGPU版を返す。
  * FIXME: どのデバイス版にするかはユーザーが選べるようにするべき。
  */
-export const getSuitablePackages = (
-  updateInfo: z.infer<typeof defaultEngineUpdateInfoSchema>,
+export const getSuitablePackage = (
+  updateInfo: z.infer<typeof latestDefaultEngineInfoSchema>,
 ): EnginePackage => {
   const platform = process.platform;
   const arch = process.arch;

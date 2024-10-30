@@ -16,8 +16,8 @@ import {
 } from "@/type/preload";
 import {
   EnginePackage,
-  fetchDefaultEngineInfos,
-  getSuitablePackages,
+  fetchLatestDefaultEngineInfo,
+  getSuitablePackage,
 } from "@/domain/defaultEngine/latetDefaultEngine";
 import {
   EnvEngineInfoType,
@@ -137,17 +137,14 @@ export class EngineAndVvppController {
   /**
    * インストールが必要なデフォルトエンジンの情報とパッケージの情報を取得する。
    */
-  async fetchInfosToInstall(): Promise<
+  async fetchEngineAndPackageInfosToInstall(): Promise<
     {
       envEngineInfo: EnvEngineInfoType;
       packageInfo: EnginePackage;
     }[]
   > {
-    const targetInfos: {
-      envEngineInfo: EnvEngineInfoType;
-      packageInfo: EnginePackage;
-    }[] = [];
-
+    // .envのデフォルトエンジン情報のうち、downloadVvppなものを集める
+    const targetInfos = [];
     for (const envEngineInfo of loadEnvEngineInfos()) {
       if (envEngineInfo.type != "downloadVvpp") {
         continue;
@@ -157,18 +154,18 @@ export class EngineAndVvppController {
       const latestUrl = envEngineInfo.latestUrl;
       if (latestUrl == undefined) throw new Error("latestUrl is undefined");
 
-      const updateInfo = await fetchDefaultEngineInfos(latestUrl);
-      if (updateInfo.formatVersion != 1) {
-        log.error(`Unsupported format version: ${updateInfo.formatVersion}`);
+      const latestInfo = await fetchLatestDefaultEngineInfo(latestUrl);
+      if (latestInfo.formatVersion != 1) {
+        log.error(`Unsupported format version: ${latestInfo.formatVersion}`);
         continue;
       }
 
-      const packageInfo = getSuitablePackages(updateInfo);
+      const packageInfo = getSuitablePackage(latestInfo);
       log.info(`Latest default engine version: ${packageInfo.version}`);
 
       // インストール済みだった場合はスキップ
       // FIXME: より新しいバージョンであれば更新する
-      if (this.engineInfoManager.hasEngine(envEngineInfo.uuid)) {
+      if (this.engineInfoManager.hasEngineInfo(envEngineInfo.uuid)) {
         log.info(`Default engine ${envEngineInfo.uuid} is already installed.`);
 
         // vvppとしてインストールされていない場合は警告を出す

@@ -150,6 +150,8 @@ export class EngineInfoManager {
    * 全てのエンジンの一覧を取得する。デフォルトエンジン＋追加エンジン。
    */
   fetchEngineInfos(): EngineInfo[] {
+    // TOOD: vvpp内にあるもの含むデフォルトエンジン一覧と、デフォルトエンジン以外の追加エンジン一覧を取得する関数に分ける
+    // ↑のためには、VVPP情報一覧関数と、追加ディレクトリエンジン一覧にわけ、デフォルトエンジン一覧側はVVPP情報一覧を使うようにし、更に別で追加エンジン一覧関数を作る
     const engineInfos = [
       ...fetchDefaultEngineInfos(this.envEngineInfos, this.defaultEngineDir),
       ...this.fetchAdditionalEngineInfos(),
@@ -188,9 +190,9 @@ export class EngineInfoManager {
   }
 
   /**
-   * 指定したエンジンが存在するかどうかを判定する。
+   * 指定したエンジンの情報が存在するかどうかを判定する。
    */
-  hasEngine(engineId: EngineId): boolean {
+  hasEngineInfo(engineId: EngineId): boolean {
     const engineInfos = this.fetchEngineInfos();
     return engineInfos.some((engineInfo) => engineInfo.uuid === engineId);
   }
