@@ -59,8 +59,6 @@ export const vstPlugin: Plugin = {
         void store.dispatch("ASYNC_UI_LOCK", {
           callback: () => promise,
         });
-
-        void updatePlayheadPosition();
       } else if (!isPlaying && resolveUiLock) {
         resolveUiLock();
         resolveUiLock = undefined;
@@ -70,8 +68,8 @@ export const vstPlugin: Plugin = {
         );
       }
     });
+
     const updatePlayheadPosition = async () => {
-      if (!resolveUiLock) return;
       const maybeCurrentPosition = await getCurrentPosition();
       if (maybeCurrentPosition != undefined) {
         void store.dispatch("SET_PLAYHEAD_POSITION", {
@@ -84,6 +82,8 @@ export const vstPlugin: Plugin = {
       }
       requestAnimationFrame(updatePlayheadPosition);
     };
+
+    requestAnimationFrame(updatePlayheadPosition);
 
     const lock = new AsyncLock();
 
