@@ -6,7 +6,7 @@ import { fetchDefaultEngineInfos } from "@/domain/defaultEngine/latetDefaultEngi
 
 const currentDir = "tests/unit/domain/defaultEngine";
 
-test("fetchDefaultEngineInfo", async () => {
+test("fetchDefaultEngineInfos", async () => {
   // テスト用のjsonファイルでfetchをモックする
   // 元ファイルは https://raw.githubusercontent.com/VOICEVOX/voicevox_blog/master/src/generateLatestDefaultEngineInfos.ts
   const p = path.resolve(currentDir, "latestDefaultEngineInfos.json");
