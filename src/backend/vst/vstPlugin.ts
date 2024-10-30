@@ -9,6 +9,7 @@ import {
   setTracks,
   getVoices,
   setVoices,
+  getCurrentPosition,
 } from "./ipc";
 import { projectFilePath } from "./sandbox";
 import { Store } from "@/store/vuex";
@@ -58,6 +59,8 @@ export const vstPlugin: Plugin = {
         void store.dispatch("ASYNC_UI_LOCK", {
           callback: () => promise,
         });
+
+        void updatePlayheadPosition();
       } else if (!isPlaying && resolveUiLock) {
         resolveUiLock();
         resolveUiLock = undefined;
@@ -67,11 +70,20 @@ export const vstPlugin: Plugin = {
         );
       }
     });
-    onReceivedIPCMessage("updatePosition", (time: number) => {
-      void store.dispatch("SET_PLAYHEAD_POSITION", {
-        position: secondToTick(time, store.state.tempos, store.state.tpqn),
-      });
-    });
+    const updatePlayheadPosition = async () => {
+      if (!resolveUiLock) return;
+      const maybeCurrentPosition = await getCurrentPosition();
+      if (maybeCurrentPosition != undefined) {
+        void store.dispatch("SET_PLAYHEAD_POSITION", {
+          position: secondToTick(
+            maybeCurrentPosition,
+            store.state.tempos,
+            store.state.tpqn,
+          ),
+        });
+      }
+      requestAnimationFrame(updatePlayheadPosition);
+    };
 
     const lock = new AsyncLock();
 

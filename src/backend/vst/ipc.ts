@@ -168,6 +168,10 @@ const ipcSetTracks = createMessageFunction<Record<TrackId, Track>, void>(
 const ipcGetRouting = createMessageFunction<undefined, Routing>("getRouting");
 const ipcSetRouting = createMessageFunction<Routing, void>("setRouting");
 
+const ipcGetCurrentPosition = createMessageFunction<undefined, number | null>(
+  "getCurrentPosition",
+);
+
 type Config = Record<string, unknown> & Metadata;
 const log = createLogger("vst/ipc");
 
@@ -262,4 +266,8 @@ export async function getRouting(): Promise<Routing> {
 
 export async function setRouting(routing: Routing) {
   await ipcSetRouting(routing);
+}
+
+export async function getCurrentPosition(): Promise<number | null> {
+  return await ipcGetCurrentPosition();
 }
