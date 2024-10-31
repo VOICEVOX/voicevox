@@ -8,7 +8,6 @@
   >
     <slot
       name="contextMenu"
-      :header="contextMenuHeader"
       :menudata="contextMenudata"
       :onContextMenuMounted="(el) => (contextMenu = el)"
     />
@@ -125,7 +124,6 @@ import {
   getMeasureDuration,
   getNoteDuration,
   getTimeSignaturePositions,
-  ticksToMeasuresBeats,
   tickToMeasureNumber,
 } from "@/sing/domain";
 import { baseXToTick, tickToBaseX } from "@/sing/viewHelper";
@@ -398,19 +396,6 @@ const tempoChangeExists = computed(
 const timeSignatureChangeExists = computed(
   () => currentTimeSignature.value.measureNumber === currentMeasure.value,
 );
-
-const contextMenuHeader = computed(() => {
-  const measuresBeats = ticksToMeasuresBeats(
-    playheadTicks.value,
-    props.timeSignatures.map((ts, i) => ({
-      ...ts,
-      position: tsPositions.value[i],
-    })),
-    props.tpqn,
-  );
-
-  return `${String(measuresBeats.measures).padStart(3, "0")}.${measuresBeats.beats.toFixed(2).padStart(5, "0")}`;
-});
 
 const showTempoOrTimeSignatureChangeDialog = async (
   componentProps: ExtractPropTypes<typeof TempoOrTimeSignatureChangeDialog>,
