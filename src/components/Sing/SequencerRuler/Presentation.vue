@@ -374,7 +374,7 @@ const tempoOrTimeSignatureChanges = computed<TempoOrTimeSignatureChange[]>(
   },
 );
 
-const lastTempo = computed(() => {
+const currentTempo = computed(() => {
   const maybeTempo = props.tempos.findLast((tempo) => {
     return tempo.position <= playheadTicks.value;
   });
@@ -383,7 +383,7 @@ const lastTempo = computed(() => {
   }
   return maybeTempo;
 });
-const lastTimeSignature = computed(() => {
+const currentTimeSignature = computed(() => {
   const maybeTimeSignature = props.timeSignatures.findLast((timeSignature) => {
     return timeSignature.measureNumber <= currentMeasure.value;
   });
@@ -393,10 +393,10 @@ const lastTimeSignature = computed(() => {
   return maybeTimeSignature;
 });
 const tempoChangeExists = computed(
-  () => lastTempo.value.position === playheadTicks.value,
+  () => currentTempo.value.position === playheadTicks.value,
 );
 const timeSignatureChangeExists = computed(
-  () => lastTimeSignature.value.measureNumber === currentMeasure.value,
+  () => currentTimeSignature.value.measureNumber === currentMeasure.value,
 );
 
 const contextMenuHeader = computed(() => {
@@ -463,10 +463,10 @@ const showTempoOrTimeSignatureChangeDialog = async (
 
 const contextMenudata = computed<ContextMenuItemData[]>(() => {
   const canDeleteTempo = !(
-    lastTempo.value.position === 0 && tempoChangeExists.value
+    currentTempo.value.position === 0 && tempoChangeExists.value
   );
   const canDeleteTimeSignature = !(
-    lastTimeSignature.value.measureNumber === 1 &&
+    currentTimeSignature.value.measureNumber === 1 &&
     timeSignatureChangeExists.value
   );
   return [
@@ -476,10 +476,10 @@ const contextMenudata = computed<ContextMenuItemData[]>(() => {
       onClick: () => {
         void showTempoOrTimeSignatureChangeDialog({
           timeSignatureChange: timeSignatureChangeExists.value
-            ? lastTimeSignature.value
+            ? currentTimeSignature.value
             : undefined,
           tempoChange: {
-            bpm: lastTempo.value.bpm,
+            bpm: currentTempo.value.bpm,
           },
           mode: tempoChangeExists.value ? "edit" : "add",
           canDeleteTempo,
@@ -495,10 +495,10 @@ const contextMenudata = computed<ContextMenuItemData[]>(() => {
         : "拍子変化を挿入",
       onClick: () => {
         void showTempoOrTimeSignatureChangeDialog({
-          tempoChange: tempoChangeExists.value ? lastTempo.value : undefined,
+          tempoChange: tempoChangeExists.value ? currentTempo.value : undefined,
           timeSignatureChange: {
-            beats: lastTimeSignature.value.beats,
-            beatType: lastTimeSignature.value.beatType,
+            beats: currentTimeSignature.value.beats,
+            beatType: currentTimeSignature.value.beatType,
           },
           mode: timeSignatureChangeExists.value ? "edit" : "add",
           canDeleteTempo,
