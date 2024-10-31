@@ -330,39 +330,45 @@ const currentMeasure = computed(() =>
 
 const tempoOrTimeSignatureChanges = computed<TempoOrTimeSignatureChange[]>(
   () => {
-    const timeSignaturesWithTicks = tsPositions.value.map((tsPosition, i) => {
-      return {
-        position: tsPosition,
-        timeSignature: props.timeSignatures[i],
-      };
-    });
+    const timeSignaturesWithTicks = tsPositions.value.map((tsPosition, i) => ({
+      position: tsPosition,
+      timeSignature: props.timeSignatures[i],
+    }));
     const tempos = props.tempos.map((tempo) => {
       return {
         position: tempo.position,
         tempo,
       };
     });
-    const ticks = new Set([
-      ...timeSignaturesWithTicks.map((ts) => ts.position),
-      ...tempos.map((tempo) => tempo.position),
-    ]);
-    const sortedTicks = Array.from(ticks).sort((a, b) => a - b);
+
     const result: {
       position: number;
       text: string;
       x: number;
-    }[] = sortedTicks.map((tick) => {
-      const tempo = tempos.find((tempo) => tempo.position === tick);
-      const timeSignature = timeSignaturesWithTicks.find(
-        (ts) => ts.position === tick,
-      );
+    }[] = [
+      ...Map.groupBy(
+        [...tempos, ...timeSignaturesWithTicks],
+        (item) => item.position,
+      ).entries(),
+    ]
+      .toSorted((a, b) => a[0] - b[0])
+      .map(([tick, items]) => {
+        const tempo = items.find((item) => "tempo" in item)?.tempo;
+        const timeSignature = items.find(
+          (item) => "timeSignature" in item,
+        )?.timeSignature;
 
-      return {
-        position: tick,
-        text: `${tempo?.tempo.bpm ?? ""} ${timeSignature ? `${timeSignature.timeSignature.beats}/${timeSignature.timeSignature.beatType}` : ""}`,
-        x: tickToBaseX(tick, props.tpqn) * props.sequencerZoomX,
-      };
-    });
+        const tempoText = tempo?.bpm ?? "";
+        const timeSignatureText = timeSignature
+          ? `${timeSignature.beats}/${timeSignature.beatType}`
+          : "";
+
+        return {
+          position: tick,
+          text: [tempoText, timeSignatureText].join(" "),
+          x: tickToBaseX(tick, props.tpqn) * props.sequencerZoomX,
+        };
+      });
 
     return result;
   },
