@@ -329,11 +329,13 @@ const currentMeasure = computed(() =>
 const tempoOrTimeSignatureChanges = computed<TempoOrTimeSignatureChange[]>(
   () => {
     const timeSignaturesWithTicks = tsPositions.value.map((tsPosition, i) => ({
+      type: "timeSignature" as const,
       position: tsPosition,
       timeSignature: props.timeSignatures[i],
     }));
     const tempos = props.tempos.map((tempo) => {
       return {
+        type: "tempo" as const,
         position: tempo.position,
         tempo,
       };
@@ -351,9 +353,9 @@ const tempoOrTimeSignatureChanges = computed<TempoOrTimeSignatureChange[]>(
     ]
       .toSorted((a, b) => a[0] - b[0])
       .map(([tick, items]) => {
-        const tempo = items.find((item) => "tempo" in item)?.tempo;
+        const tempo = items.find((item) => item.type === "tempo")?.tempo;
         const timeSignature = items.find(
-          (item) => "timeSignature" in item,
+          (item) => item.type === "timeSignature",
         )?.timeSignature;
 
         const tempoText = tempo?.bpm ?? "";
