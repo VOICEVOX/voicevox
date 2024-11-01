@@ -20,7 +20,7 @@ export function generateWriteErrorMessage(writeFileResult: ResultError<any>) {
     }
 
     if (code?.startsWith("ENOENT")) {
-      return "ファイルが見つかりません。";
+      return "指定されたファイルまたはフォルダが見つかりません。";
     }
   }
 
