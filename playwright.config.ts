@@ -1,4 +1,5 @@
 import type { PlaywrightTestConfig, Project } from "@playwright/test";
+import { z } from "zod";
 
 import dotenv from "dotenv";
 dotenv.config({ override: true });
@@ -9,6 +10,26 @@ const isElectron = process.env.VITE_TARGET === "electron";
 const isBrowser = process.env.VITE_TARGET === "browser";
 const isStorybook = process.env.TARGET === "storybook";
 
+// エンジンの起動が必要
+const defaultEngineInfosEnv = process.env.VITE_DEFAULT_ENGINE_INFOS ?? "[]";
+const envSchema = z // FIXME: electron起動時のものと共通化したい
+  .object({
+    host: z.string(),
+    executionFilePath: z.string(),
+    executionArgs: z.array(z.string()),
+    executionEnabled: z.boolean(),
+  })
+  .passthrough()
+  .array();
+const engineInfos = envSchema.parse(JSON.parse(defaultEngineInfosEnv));
+
+const engineServers = engineInfos
+  .filter((info) => info.executionEnabled)
+  .map((info) => ({
+    command: `${info.executionFilePath} ${info.executionArgs.join(" ")}`,
+    url: `${info.host}/version`,
+    reuseExistingServer: !process.env.CI,
+  }));
 const viteServer = {
   command: "vite --mode test --port 7357",
   port: 7357,
@@ -25,7 +46,7 @@ if (isElectron) {
   webServers = [viteServer];
 } else if (isBrowser) {
   project = { name: "browser", testDir: "./tests/e2e/browser" };
-  webServers = [viteServer];
+  webServers = [viteServer, ...engineServers];
 } else if (isStorybook) {
   project = { name: "storybook", testDir: "./tests/e2e/storybook" };
   webServers = [storybookServer];
