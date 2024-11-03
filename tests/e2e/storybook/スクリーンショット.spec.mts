@@ -2,6 +2,7 @@
 // テスト自体はend-to-endではないが、Playwrightを使う関係でe2eディレクトリ内でテストしている。
 import { test, expect, Locator } from "@playwright/test";
 import z from "zod";
+import fs from "node:fs/promises";
 
 // Storybook 8.3.5時点でのindex.jsonのスキーマ。
 // もしスキーマが変わってテストが通らなくなった場合は、このスキーマを修正する。
@@ -40,6 +41,17 @@ try {
 }
 
 const currentStories = getStoriesToTest(index);
+
+const screenshots = await fs.readdir(
+  `${import.meta.dirname}/スクリーンショット.spec.mts-snapshots/`,
+);
+for (const screenshot of screenshots) {
+  if (!currentStories.some((story) => screenshot.startsWith(story.id))) {
+    await fs.unlink(
+      `${import.meta.dirname}/スクリーンショット.spec.mts-snapshots/${screenshot}`,
+    );
+  }
+}
 
 const allStories: Record<string, Story[]> = {};
 for (const story of currentStories) {

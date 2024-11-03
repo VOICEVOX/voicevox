@@ -47,7 +47,7 @@ import { BEAT_TYPES, DEFAULT_BEAT_TYPE, DEFAULT_BEATS } from "@/sing/domain";
 
 const modelValue = defineModel<boolean>();
 const props = defineProps<{
-  timeSignatureChange: Omit<TimeSignature, "measureNumber">;
+  timeSignatureChange: Omit<TimeSignature, "measureNumber"> | undefined;
   mode: "add" | "edit";
 }>();
 defineEmits({

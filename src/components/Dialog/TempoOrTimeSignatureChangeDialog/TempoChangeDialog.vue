@@ -22,18 +22,13 @@
 import { QInput, useDialogPluginComponent } from "quasar";
 import { ref } from "vue";
 import CommonDialog from "./CommonDialog.vue";
-import { Tempo, TimeSignature } from "@/store/type";
+import { Tempo } from "@/store/type";
 import { DEFAULT_BPM } from "@/sing/domain";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 
-export type TempoOrTimeSignatureChangeDialogResult = {
-  timeSignatureChange: Omit<TimeSignature, "measureNumber"> | undefined;
-  tempoChange: Omit<Tempo, "position"> | undefined;
-};
-
 const modelValue = defineModel<boolean>();
 const props = defineProps<{
-  tempoChange: Omit<Tempo, "position">;
+  tempoChange: Omit<Tempo, "position"> | undefined;
   mode: "add" | "edit";
 }>();
 defineEmits({
