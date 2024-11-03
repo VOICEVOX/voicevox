@@ -1,8 +1,8 @@
 // 起動中のStorybookで様々なStoryを表示し、スクリーンショットを撮って比較するVRT。
 // テスト自体はend-to-endではないが、Playwrightを使う関係でe2eディレクトリ内でテストしている。
+import fs from "node:fs/promises";
 import { test, expect, Locator } from "@playwright/test";
 import z from "zod";
-import fs from "node:fs/promises";
 
 // Storybook 8.3.5時点でのindex.jsonのスキーマ。
 // もしスキーマが変わってテストが通らなくなった場合は、このスキーマを修正する。
