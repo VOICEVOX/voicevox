@@ -3,8 +3,11 @@
  * なんとなくVOICEVOX ENGINEリポジトリのモック実装と揃えている。
  */
 
-import { assetsPath } from "./constants";
 import { Speaker, SpeakerInfo } from "@/openapi";
+
+/** 画像ファイルなどがあるURLのベース */
+const assetsUrl =
+  "https://raw.githubusercontent.com/VOICEVOX/voicevox/e1304cce2b7bf23798023f6d61354893a8b93566/tests/e2e/browser/assets";
 
 const baseCharactersMock = [
   // トーク２つ・ハミング２つ
@@ -95,11 +98,11 @@ export function getCharacterInfoMock(speakerUuid: string): SpeakerInfo {
 
   return {
     policy: `Dummy policy for ${speakerUuid}`,
-    portrait: `${assetsPath}/portrait_${speakerIndex + 1}.png`,
+    portrait: `${assetsUrl}/portrait_${speakerIndex + 1}.png`,
     styleInfos: styleIds.map((id) => {
       return {
         id,
-        icon: `${assetsPath}/icon_${speakerIndex + 1}.png`,
+        icon: `${assetsUrl}/icon_${speakerIndex + 1}.png`,
         voiceSamples: [],
       };
     }),
