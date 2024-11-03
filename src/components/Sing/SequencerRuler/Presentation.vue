@@ -117,6 +117,8 @@ import {
   ExtractPropTypes,
   ComponentPublicInstance,
   useTemplateRef,
+  DefineComponent,
+  Component,
 } from "vue";
 import { ComponentProps } from "vue-component-type-helpers";
 import { Dialog } from "quasar";
@@ -132,9 +134,8 @@ import ContextMenu, {
   ContextMenuItemData,
 } from "@/components/Menu/ContextMenu.vue";
 import { UnreachableError } from "@/type/utility";
-import TempoOrTimeSignatureChangeDialog, {
-  TempoOrTimeSignatureChangeDialogResult,
-} from "@/components/Dialog/TempoOrTimeSignatureChangeDialog.vue";
+import TempoChangeDialog from "@/components/Dialog/TempoOrTimeSignatureChangeDialog/TempoChangeDialog.vue";
+import TimeSignatureChangeDialog from "@/components/Dialog/TempoOrTimeSignatureChangeDialog/TimeSignatureChangeDialog.vue";
 
 const props = defineProps<{
   offset: number;
@@ -399,25 +400,17 @@ const timeSignatureChangeExists = computed(
   () => currentTimeSignature.value.measureNumber === currentMeasure.value,
 );
 
-const showTempoOrTimeSignatureChangeDialog = async (
-  componentProps: ExtractPropTypes<typeof TempoOrTimeSignatureChangeDialog>,
+const showDialog = async <T extends Component, R>(
+  component: T,
+  componentProps: ExtractPropTypes<T>,
 ) => {
-  const { promise, resolve } = Promise.withResolvers<
-    TempoOrTimeSignatureChangeDialogResult | "cancelled"
-  >();
-
-  const lastTempo = props.tempos.findLast((tempo) => {
-    return tempo.position <= playheadTicks.value;
-  });
-  if (!lastTempo) {
-    throw new UnreachableError("assert: At least one tempo exists.");
-  }
+  const { promise, resolve } = Promise.withResolvers<R | "cancelled">();
 
   Dialog.create({
-    component: TempoOrTimeSignatureChangeDialog,
+    component,
     componentProps,
   })
-    .onOk((result: TempoOrTimeSignatureChangeDialogResult) => {
+    .onOk((result: R) => {
       resolve(result);
     })
     .onCancel(() => {
@@ -429,48 +422,32 @@ const showTempoOrTimeSignatureChangeDialog = async (
     return;
   }
 
-  if (result.tempoChange) {
-    emit("setTempo", {
-      ...result.tempoChange,
-      position: playheadTicks.value,
-    });
-  } else if (!result.tempoChange && tempoChangeExists.value) {
-    emit("removeTempo", playheadTicks.value);
-  }
-
-  if (result.timeSignatureChange) {
-    emit("setTimeSignature", {
-      ...result.timeSignatureChange,
-      measureNumber: currentMeasure.value,
-    });
-  } else if (!result.timeSignatureChange && timeSignatureChangeExists.value) {
-    emit("removeTimeSignature", currentMeasure.value);
-  }
+  return result;
 };
 
-const contextMenudata = computed<ContextMenuItemData[]>(() => {
-  const canDeleteTempo = !(
-    currentTempo.value.position === 0 && tempoChangeExists.value
-  );
-  const canDeleteTimeSignature = !(
-    currentTimeSignature.value.measureNumber === 1 &&
-    timeSignatureChangeExists.value
-  );
-  return [
+const contextMenudata = computed<ContextMenuItemData[]>(() =>
+  [
     {
       type: "button",
       label: tempoChangeExists.value ? `BPM変化を編集` : "BPM変化を挿入",
-      onClick: () => {
-        void showTempoOrTimeSignatureChangeDialog({
+      onClick: async () => {
+        const result = await showDialog<
+          typeof TempoChangeDialog,
+          {
+            tempoChange: Omit<Tempo, "position">;
+          }
+        >(TempoChangeDialog, {
           timeSignatureChange: timeSignatureChangeExists.value
             ? currentTimeSignature.value
             : undefined,
-          tempoChange: {
-            bpm: currentTempo.value.bpm,
-          },
           mode: tempoChangeExists.value ? "edit" : "add",
-          canDeleteTempo,
-          canDeleteTimeSignature,
+        });
+        if (!result) {
+          return;
+        }
+        emit("setTempo", {
+          ...result.tempoChange,
+          position: playheadTicks.value,
         });
       },
       disableWhenUiLocked: true,
@@ -480,22 +457,30 @@ const contextMenudata = computed<ContextMenuItemData[]>(() => {
       label: timeSignatureChangeExists.value
         ? `拍子変化を編集`
         : "拍子変化を挿入",
-      onClick: () => {
-        void showTempoOrTimeSignatureChangeDialog({
-          tempoChange: tempoChangeExists.value ? currentTempo.value : undefined,
-          timeSignatureChange: {
-            beats: currentTimeSignature.value.beats,
-            beatType: currentTimeSignature.value.beatType,
-          },
+      onClick: async () => {
+        const result = await showDialog<
+          typeof TimeSignatureChangeDialog,
+          {
+            timeSignatureChange: Omit<TimeSignature, "measureNumber">;
+          }
+        >(TimeSignatureChangeDialog, {
+          timeSignatureChange: timeSignatureChangeExists.value
+            ? currentTimeSignature.value
+            : undefined,
           mode: timeSignatureChangeExists.value ? "edit" : "add",
-          canDeleteTempo,
-          canDeleteTimeSignature,
+        });
+        if (!result) {
+          return;
+        }
+        emit("setTimeSignature", {
+          ...result.timeSignatureChange,
+          measureNumber: currentMeasure.value,
         });
       },
       disableWhenUiLocked: true,
     },
   ];
-});
+);
 </script>
 
 <style scoped lang="scss">
