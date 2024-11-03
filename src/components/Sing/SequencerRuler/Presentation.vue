@@ -96,6 +96,7 @@
             )
           "
         >
+          <!-- NOTE：何も書かないとQTooltipがくっついてくれないので、ゼロ幅空白を置く -->
           {{
             tempoOrTimeSignatureChange.displayType === "full"
               ? tempoOrTimeSignatureChange.text
