@@ -181,7 +181,7 @@ export function createOpenAPIEngineMock(): DefaultApiInterface {
       payload: SingFrameVolumeSingFrameVolumePostRequest,
     ): Promise<Array<number>> {
       const {
-        speaker: stlyeId,
+        speaker: styleId,
         bodySingFrameVolumeSingFrameVolumePost: { score, frameAudioQuery },
       } = cloneWithUnwrapProxy(payload);
 
@@ -189,7 +189,7 @@ export function createOpenAPIEngineMock(): DefaultApiInterface {
         score.notes,
         frameAudioQuery.phonemes,
         frameAudioQuery.f0,
-        stlyeId,
+        styleId,
       );
       return volume;
     },
