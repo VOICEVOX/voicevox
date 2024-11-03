@@ -35,11 +35,11 @@ const modelValueComputed = computed({
 });
 
 const handler = (acceptTerms: boolean) => {
-  void store.dispatch("SET_ACCEPT_TERMS", {
+  void store.actions.SET_ACCEPT_TERMS({
     acceptTerms: acceptTerms ? "Accepted" : "Rejected",
   });
   if (acceptTerms) {
-    void store.dispatch("CHECK_EDITED_AND_NOT_SAVE", {
+    void store.actions.CHECK_EDITED_AND_NOT_SAVE({
       closeOrReload: "close",
     });
   }
@@ -49,6 +49,6 @@ const handler = (acceptTerms: boolean) => {
 
 const terms = ref("");
 onMounted(async () => {
-  terms.value = await store.dispatch("GET_POLICY_TEXT");
+  terms.value = await store.actions.GET_POLICY_TEXT();
 });
 </script>

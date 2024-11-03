@@ -52,20 +52,20 @@ const store = useStore();
 // ライセンス表示
 const isHelpDialogOpenComputed = computed({
   get: () => store.state.isHelpDialogOpen,
-  set: (val) => store.dispatch("SET_DIALOG_OPEN", { isHelpDialogOpen: val }),
+  set: (val) => store.actions.SET_DIALOG_OPEN({ isHelpDialogOpen: val }),
 });
 
 // 設定
 const isSettingDialogOpenComputed = computed({
   get: () => store.state.isSettingDialogOpen,
-  set: (val) => store.dispatch("SET_DIALOG_OPEN", { isSettingDialogOpen: val }),
+  set: (val) => store.actions.SET_DIALOG_OPEN({ isSettingDialogOpen: val }),
 });
 
 // ショートカットキー設定
 const isHotkeySettingDialogOpenComputed = computed({
   get: () => store.state.isHotkeySettingDialogOpen,
   set: (val) =>
-    store.dispatch("SET_DIALOG_OPEN", {
+    store.actions.SET_DIALOG_OPEN({
       isHotkeySettingDialogOpen: val,
     }),
 });
@@ -74,7 +74,7 @@ const isHotkeySettingDialogOpenComputed = computed({
 const isToolbarSettingDialogOpenComputed = computed({
   get: () => store.state.isToolbarSettingDialogOpen,
   set: (val) =>
-    store.dispatch("SET_DIALOG_OPEN", {
+    store.actions.SET_DIALOG_OPEN({
       isToolbarSettingDialogOpen: val,
     }),
 });
@@ -83,7 +83,7 @@ const isToolbarSettingDialogOpenComputed = computed({
 const isAcceptTermsDialogOpenComputed = computed({
   get: () => store.state.isAcceptTermsDialogOpen,
   set: (val) =>
-    store.dispatch("SET_DIALOG_OPEN", {
+    store.actions.SET_DIALOG_OPEN({
       isAcceptTermsDialogOpen: val,
     }),
 });
@@ -97,7 +97,7 @@ const isCharacterOrderDialogOpenComputed = computed({
     !store.state.isAcceptTermsDialogOpen &&
     store.state.isCharacterOrderDialogOpen,
   set: (val) =>
-    store.dispatch("SET_DIALOG_OPEN", {
+    store.actions.SET_DIALOG_OPEN({
       isCharacterOrderDialogOpen: val,
     }),
 });
@@ -115,7 +115,7 @@ const isDefaultStyleSelectDialogOpenComputed = computed({
     !store.state.isCharacterOrderDialogOpen &&
     store.state.isDefaultStyleSelectDialogOpen,
   set: (val) =>
-    store.dispatch("SET_DIALOG_OPEN", {
+    store.actions.SET_DIALOG_OPEN({
       isDefaultStyleSelectDialogOpen: val,
     }),
 });
@@ -124,7 +124,7 @@ const isDefaultStyleSelectDialogOpenComputed = computed({
 const isEngineManageDialogOpenComputed = computed({
   get: () => store.state.isEngineManageDialogOpen,
   set: (val) =>
-    store.dispatch("SET_DIALOG_OPEN", {
+    store.actions.SET_DIALOG_OPEN({
       isEngineManageDialogOpen: val,
     }),
 });
@@ -133,7 +133,7 @@ const isEngineManageDialogOpenComputed = computed({
 const isDictionaryManageDialogOpenComputed = computed({
   get: () => store.state.isDictionaryManageDialogOpen,
   set: (val) =>
-    store.dispatch("SET_DIALOG_OPEN", {
+    store.actions.SET_DIALOG_OPEN({
       isDictionaryManageDialogOpen: val,
     }),
 });
@@ -145,7 +145,7 @@ const isAcceptRetrieveTelemetryDialogOpenComputed = computed({
     !store.state.isDefaultStyleSelectDialogOpen &&
     store.state.isAcceptRetrieveTelemetryDialogOpen,
   set: (val) =>
-    store.dispatch("SET_DIALOG_OPEN", {
+    store.actions.SET_DIALOG_OPEN({
       isAcceptRetrieveTelemetryDialogOpen: val,
     }),
 });
@@ -165,7 +165,7 @@ const canOpenNotificationDialog = computed(() => {
 const isExportSongAudioDialogOpen = computed({
   get: () => store.state.isExportSongAudioDialogOpen,
   set: (val) =>
-    store.dispatch("SET_DIALOG_OPEN", {
+    store.actions.SET_DIALOG_OPEN({
       isExportSongAudioDialogOpen: val,
     }),
 });
@@ -174,7 +174,7 @@ const isExportSongAudioDialogOpen = computed({
 const isImportSongProjectDialogOpenComputed = computed({
   get: () => store.state.isImportSongProjectDialogOpen,
   set: (val) =>
-    store.dispatch("SET_DIALOG_OPEN", {
+    store.actions.SET_DIALOG_OPEN({
       isImportSongProjectDialogOpen: val,
     }),
 });

@@ -339,10 +339,10 @@ const loadingDictProcess = async () => {
   loadingDictState.value = "loading";
   try {
     userDict.value = await createUILockAction(
-      store.dispatch("LOAD_ALL_USER_DICT"),
+      store.actions.LOAD_ALL_USER_DICT(),
     );
   } catch {
-    const result = await store.dispatch("SHOW_ALERT_DIALOG", {
+    const result = await store.actions.SHOW_ALERT_DIALOG({
       title: "辞書の取得に失敗しました",
       message: "エンジンの再起動をお試しください。",
     });
@@ -352,9 +352,9 @@ const loadingDictProcess = async () => {
   }
   loadingDictState.value = "synchronizing";
   try {
-    await createUILockAction(store.dispatch("SYNC_ALL_USER_DICT"));
+    await createUILockAction(store.actions.SYNC_ALL_USER_DICT());
   } catch {
-    await store.dispatch("SHOW_ALERT_DIALOG", {
+    await store.actions.SHOW_ALERT_DIALOG({
       title: "辞書の同期に失敗しました",
       message: "エンジンの再起動をお試しください。",
     });
@@ -441,7 +441,7 @@ const setYomi = async (text: string, changeWord?: boolean) => {
     text = convertLongVowel(text);
     accentPhrase.value = (
       await createUILockAction(
-        store.dispatch("FETCH_ACCENT_PHRASES", {
+        store.actions.FETCH_ACCENT_PHRASES({
           text: text + "ガ'",
           engineId,
           styleId,
@@ -465,7 +465,7 @@ const changeAccent = async (_: number, accent: number) => {
     accentPhrase.value.accent = accent;
     accentPhrase.value = (
       await createUILockAction(
-        store.dispatch("FETCH_MORA_DATA", {
+        store.actions.FETCH_MORA_DATA({
           accentPhrases: [accentPhrase.value],
           engineId,
           styleId,
@@ -479,7 +479,7 @@ const play = async () => {
   if (!accentPhrase.value) return;
 
   nowGenerating.value = true;
-  const audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {
+  const audioItem = await store.actions.GENERATE_AUDIO_ITEM({
     text: yomi.value,
     voice: voiceComputed.value,
   });
@@ -491,13 +491,13 @@ const play = async () => {
 
   let fetchAudioResult: FetchAudioResult;
   try {
-    fetchAudioResult = await store.dispatch("FETCH_AUDIO_FROM_AUDIO_ITEM", {
+    fetchAudioResult = await store.actions.FETCH_AUDIO_FROM_AUDIO_ITEM({
       audioItem,
     });
   } catch (e) {
     window.backend.logError(e);
     nowGenerating.value = false;
-    void store.dispatch("SHOW_ALERT_DIALOG", {
+    void store.actions.SHOW_ALERT_DIALOG({
       title: "生成に失敗しました",
       message: "エンジンの再起動をお試しください。",
     });
@@ -507,11 +507,11 @@ const play = async () => {
   const { blob } = fetchAudioResult;
   nowGenerating.value = false;
   nowPlaying.value = true;
-  await store.dispatch("PLAY_AUDIO_BLOB", { audioBlob: blob });
+  await store.actions.PLAY_AUDIO_BLOB({ audioBlob: blob });
   nowPlaying.value = false;
 };
 const stop = () => {
-  void store.dispatch("STOP_AUDIO");
+  void store.actions.STOP_AUDIO();
 };
 
 // accent phraseにあるaccentと実際に登録するアクセントには差が生まれる
@@ -562,7 +562,7 @@ const saveWord = async () => {
   const accent = computeRegisteredAccent();
   if (selectedId.value) {
     try {
-      await store.dispatch("REWRITE_WORD", {
+      await store.actions.REWRITE_WORD({
         wordUuid: selectedId.value,
         surface: surface.value,
         pronunciation: yomi.value,
@@ -570,7 +570,7 @@ const saveWord = async () => {
         priority: wordPriority.value,
       });
     } catch {
-      void store.dispatch("SHOW_ALERT_DIALOG", {
+      void store.actions.SHOW_ALERT_DIALOG({
         title: "単語の更新に失敗しました",
         message: "エンジンの再起動をお試しください。",
       });
@@ -579,7 +579,7 @@ const saveWord = async () => {
   } else {
     try {
       await createUILockAction(
-        store.dispatch("ADD_WORD", {
+        store.actions.ADD_WORD({
           surface: surface.value,
           pronunciation: yomi.value,
           accentType: accent,
@@ -587,7 +587,7 @@ const saveWord = async () => {
         }),
       );
     } catch {
-      void store.dispatch("SHOW_ALERT_DIALOG", {
+      void store.actions.SHOW_ALERT_DIALOG({
         title: "単語の登録に失敗しました",
         message: "エンジンの再起動をお試しください。",
       });
@@ -598,7 +598,7 @@ const saveWord = async () => {
   toInitialState();
 };
 const deleteWord = async () => {
-  const result = await store.dispatch("SHOW_WARNING_DIALOG", {
+  const result = await store.actions.SHOW_WARNING_DIALOG({
     title: "登録された単語を削除しますか？",
     message: "削除された単語は元に戻せません。",
     actionName: "削除",
@@ -606,12 +606,12 @@ const deleteWord = async () => {
   if (result === "OK") {
     try {
       await createUILockAction(
-        store.dispatch("DELETE_WORD", {
+        store.actions.DELETE_WORD({
           wordUuid: selectedId.value,
         }),
       );
     } catch {
-      void store.dispatch("SHOW_ALERT_DIALOG", {
+      void store.actions.SHOW_ALERT_DIALOG({
         title: "単語の削除に失敗しました",
         message: "エンジンの再起動をお試しください。",
       });
@@ -622,7 +622,7 @@ const deleteWord = async () => {
   }
 };
 const resetWord = async (id: string) => {
-  const result = await store.dispatch("SHOW_WARNING_DIALOG", {
+  const result = await store.actions.SHOW_WARNING_DIALOG({
     title: "単語の変更をリセットしますか？",
     message: "単語の変更は破棄されてリセットされます。",
     actionName: "リセット",
@@ -637,7 +637,7 @@ const resetWord = async (id: string) => {
 };
 const discardOrNotDialog = async (okCallback: () => void) => {
   if (isWordChanged.value) {
-    const result = await store.dispatch("SHOW_WARNING_DIALOG", {
+    const result = await store.actions.SHOW_WARNING_DIALOG({
       title: "単語の追加・変更を破棄しますか？",
       message: "破棄すると、単語の追加・変更はリセットされます。",
       actionName: "破棄",

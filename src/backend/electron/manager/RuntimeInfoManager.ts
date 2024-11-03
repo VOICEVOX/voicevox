@@ -3,12 +3,12 @@
  * ランタイム情報には起動しているエンジンのURLなどが含まれる。
  */
 
-import fs from "fs";
 import AsyncLock from "async-lock";
 import log from "electron-log/main";
 import type { AltPortInfos } from "@/store/type";
 import { EngineId, EngineInfo } from "@/type/preload";
 import { convertToUrlString } from "@/domain/url";
+import { writeFileSafely } from "@/backend/electron/fileHelper";
 
 /**
  * ランタイム情報書き出しに必要なEngineInfo
@@ -101,7 +101,7 @@ export class RuntimeInfoManager {
 
       // ファイル書き出し
       try {
-        await fs.promises.writeFile(
+        writeFileSafely(
           this.runtimeInfoPath,
           JSON.stringify(runtimeInfoFormatFor3rdParty), // FIXME: zod化する
         );
