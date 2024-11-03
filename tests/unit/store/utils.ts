@@ -11,8 +11,8 @@ import {
 } from "@/type/preload";
 import { mockUrlParams } from "@/infrastructures/EngineConnector";
 import {
-  getSpeakerInfoMock,
-  getSpeakersMock,
+  getCharacterInfoMock,
+  getCharactersMock,
 } from "@/mock/engineMock/characterResourceMock";
 
 /** ソフトウェアが正しく起動した場合のようにVuex.stateを初期化する */
@@ -52,9 +52,9 @@ export function initializeStateAsSoftwareStarted(
   store.commit("SET_ENGINE_STATE", { engineId, engineState: "READY" });
 
   // キャラクター情報
-  const speakers = getSpeakersMock();
-  const characterInfos: CharacterInfo[] = speakers.map((speaker) => {
-    const speakerInfo = getSpeakerInfoMock(speaker.speakerUuid);
+  const characters = getCharactersMock();
+  const characterInfos: CharacterInfo[] = characters.map((speaker) => {
+    const speakerInfo = getCharacterInfoMock(speaker.speakerUuid);
     return {
       portraitPath: speakerInfo.portrait,
       metas: {
@@ -62,7 +62,8 @@ export function initializeStateAsSoftwareStarted(
         speakerName: speaker.name,
         styles: speakerInfo.styleInfos.map((styleInfo) => {
           const style = speaker.styles.find((s) => s.id === styleInfo.id);
-          if (style == undefined) throw new Error("style not found");
+          if (style == undefined)
+            throw new Error(`style not found: id ${styleInfo.id}`);
           return {
             styleName: style.name,
             styleId: StyleId(style.id),
@@ -87,7 +88,7 @@ export function initializeStateAsSoftwareStarted(
   });
 
   // デフォルトスタイルID
-  const defaultStyleIds: DefaultStyleId[] = speakers.map((speaker) => ({
+  const defaultStyleIds: DefaultStyleId[] = characters.map((speaker) => ({
     engineId: engineId,
     speakerUuid: SpeakerId(speaker.speakerUuid),
     defaultStyleId: StyleId(speaker.styles[0].id),

@@ -50,6 +50,11 @@ const baseCharactersMock = [
   },
 ] satisfies Speaker[];
 
+/** 全てのキャラクターを返すモック */
+export function getCharactersMock(): Speaker[] {
+  return baseCharactersMock;
+}
+
 /** 喋れるキャラクターを返すモック */
 export function getSpeakersMock(): Speaker[] {
   return (
@@ -85,31 +90,34 @@ export function getSingersMock(): Speaker[] {
 /** キャラクターの追加情報を返すモック。 */
 export function getCharacterInfoMock(speakerUuid: string): SpeakerInfo {
   // NOTE: 画像のURLを得るために必要
-  const speakerIndex = baseCharactersMock.findIndex(
+  const characterIndex = baseCharactersMock.findIndex(
     (speaker) => speaker.speakerUuid === speakerUuid,
   );
-  if (speakerIndex === -1) {
-    throw new Error(`Speaker not found: ${speakerUuid}`);
+  if (characterIndex === -1) {
+    throw new Error(`Character not found: ${speakerUuid}`);
   }
 
-  const styleIds = baseCharactersMock[speakerIndex].styles.map(
+  const styleIds = baseCharactersMock[characterIndex].styles.map(
     (style) => style.id,
   );
 
   return {
     policy: `Dummy policy for ${speakerUuid}`,
-    portrait: `${assetsUrl}/portrait_${speakerIndex + 1}.png`,
+    portrait: `${assetsUrl}/portrait_${characterIndex + 1}.png`,
     styleInfos: styleIds.map((id) => {
       return {
         id,
-        icon: `${assetsUrl}/icon_${speakerIndex + 1}.png`,
+        icon: `${assetsUrl}/icon_${characterIndex + 1}.png`,
         voiceSamples: [],
       };
     }),
   };
 }
 
-/** 喋れるキャラクターの追加情報を返すモック */
+/**
+ * 喋れるキャラクターの追加情報を返すモック。
+ * 本当は喋れるスタイルのみでフィルタリングすべき。
+ */
 export function getSpeakerInfoMock(speakerUuid: string): SpeakerInfo {
   return getCharacterInfoMock(speakerUuid);
 }
