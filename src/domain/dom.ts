@@ -40,3 +40,28 @@ export function setThemeToCss(theme: ThemeConf) {
 export function setFontToCss(font: EditorFontType) {
   document.body.setAttribute("data-editor-font", font);
 }
+
+let textWidthTempCanvas: HTMLCanvasElement | undefined;
+let textWidthTempContext: CanvasRenderingContext2D | undefined;
+
+export type FontSpecification = {
+  fontSize: number;
+  fontFamily: string;
+  fontWeight: string;
+};
+/**
+ * 特定のフォントでの文字列の描画幅を取得する。
+ * @see  https://stackoverflow.com/a/21015393
+ */
+export function predictTextWidth(text: string, font: FontSpecification) {
+  if (!textWidthTempCanvas) {
+    textWidthTempCanvas = document.createElement("canvas");
+    textWidthTempContext = textWidthTempCanvas.getContext("2d") ?? undefined;
+  }
+  if (!textWidthTempContext) {
+    throw new Error("Failed to get 2d context");
+  }
+  textWidthTempContext.font = `${font.fontWeight} ${font.fontSize}px ${font.fontFamily}`;
+  const metrics = textWidthTempContext.measureText(text);
+  return metrics.width;
+}

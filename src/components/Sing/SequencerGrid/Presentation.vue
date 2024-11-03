@@ -228,7 +228,7 @@ const snapLinePositions = (timeSignature: TimeSignature) => {
   const snapCount = Math.floor(measureTicks / snapTicks);
 
   return Array.from({ length: snapCount }, (_, index) => {
-    const currentTick = snapTicks * index;
+    const currentTick = snapTicks * (index + 1);
     return Math.round(
       (currentTick / measureTicks) * measureWidth(timeSignature),
     );

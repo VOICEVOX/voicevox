@@ -5,6 +5,8 @@
     :data-ui-locked="uiLocked"
     @click="onClick"
     @contextmenu="onContextMenu"
+    @mousemove="updateHoveredTempoOrTimeSignatureChange"
+    @mouseleave="hoveredTempoOrTimeSignatureChange = null"
   >
     <slot
       name="contextMenu"
@@ -64,7 +66,7 @@
         v-for="measureInfo in measureInfos"
         :key="measureInfo.number"
         font-size="12"
-        :x="measureInfo.x - offset + 4"
+        :x="measureInfo.x - offset + textPadding"
         y="34"
         class="sequencer-ruler-measure-number"
       >
@@ -76,8 +78,9 @@
         :key="tempoOrTimeSignatureChange.position"
       >
         <text
+          :id="`tempo-or-time-signature-change-${tempoOrTimeSignatureChange.position}`"
           font-size="12"
-          :x="tempoOrTimeSignatureChange.x - offset + 4"
+          :x="tempoOrTimeSignatureChange.x - offset + textPadding"
           y="16"
           class="sequencer-ruler-tempo-or-time-signature-change"
           @click.stop="
@@ -93,7 +96,13 @@
             )
           "
         >
-          {{ tempoOrTimeSignatureChange.text }}
+          {{
+            tempoOrTimeSignatureChange.displayType === "full"
+              ? tempoOrTimeSignatureChange.text
+              : tempoOrTimeSignatureChange.displayType === "ellipsis"
+                ? `...`
+                : "\u200b"
+          }}
         </text>
         <line
           :x1="tempoOrTimeSignatureChange.x - offset"
@@ -104,6 +113,39 @@
         />
       </template>
     </svg>
+    <QTooltip
+      v-for="tempoOrTimeSignatureChange in collapsedTempoOrTimeSignatureChanges"
+      :key="tempoOrTimeSignatureChange.position"
+      :target="`#tempo-or-time-signature-change-${tempoOrTimeSignatureChange.position}`"
+      :modelValue="
+        hoveredTempoOrTimeSignatureChange ===
+        tempoOrTimeSignatureChange.position
+      "
+      @update:modelValue="
+        (value) =>
+          (hoveredTempoOrTimeSignatureChange = value
+            ? tempoOrTimeSignatureChange.position
+            : null)
+      "
+    >
+      {{
+        tempoOrTimeSignatureChange.tempoChange
+          ? `BPM：${tempoOrTimeSignatureChange.tempoChange.bpm}`
+          : ""
+      }}
+      <br
+        v-if="
+          tempoOrTimeSignatureChange.tempoChange &&
+          tempoOrTimeSignatureChange.timeSignatureChange
+        "
+      />
+      {{
+        tempoOrTimeSignatureChange.timeSignatureChange
+          ? `拍子：${tempoOrTimeSignatureChange.timeSignatureChange.beats}/${tempoOrTimeSignatureChange.timeSignatureChange.beatType}`
+          : ""
+      }}
+    </QTooltip>
+
     <div class="sequencer-ruler-border-bottom"></div>
     <div
       class="sequencer-ruler-playhead"
@@ -141,6 +183,7 @@ import ContextMenu, {
 import { UnreachableError } from "@/type/utility";
 import TempoChangeDialog from "@/components/Dialog/TempoOrTimeSignatureChangeDialog/TempoChangeDialog.vue";
 import TimeSignatureChangeDialog from "@/components/Dialog/TempoOrTimeSignatureChangeDialog/TimeSignatureChangeDialog.vue";
+import { predictTextWidth } from "@/domain/dom";
 
 const props = defineProps<{
   offset: number;
@@ -316,9 +359,24 @@ const onContextMenu = async (event: MouseEvent) => {
 type TempoOrTimeSignatureChange = {
   position: number;
   text: string;
+  tempoChange: Tempo | undefined;
+  timeSignatureChange: TimeSignature | undefined;
   x: number;
+  displayType: "full" | "ellipsis" | "hidden";
 };
 
+const hoveredTempoOrTimeSignatureChange = ref<number | null>(null);
+const updateHoveredTempoOrTimeSignatureChange = (event: MouseEvent) => {
+  const mouseX = props.offset + event.offsetX;
+  const tempoOrTimeSignatureChange = tempoOrTimeSignatureChanges.value.find(
+    (tempoOrTimeSignatureChange, i) =>
+      tempoOrTimeSignatureChange.displayType !== "full" &&
+      tempoOrTimeSignatureChange.x <= mouseX &&
+      mouseX <= (tempoOrTimeSignatureChanges.value.at(i + 1)?.x ?? Infinity),
+  );
+  hoveredTempoOrTimeSignatureChange.value =
+    tempoOrTimeSignatureChange?.position ?? null;
+};
 const onTempoOrTimeSignatureChangeClick = async (
   event: MouseEvent,
   tempoOrTimeSignatureChange: TempoOrTimeSignatureChange,
@@ -332,6 +390,7 @@ const currentMeasure = computed(() =>
   tickToMeasureNumber(playheadTicks.value, props.timeSignatures, props.tpqn),
 );
 
+const textPadding = 4;
 const tempoOrTimeSignatureChanges = computed<TempoOrTimeSignatureChange[]>(
   () => {
     const timeSignaturesWithTicks = tsPositions.value.map((tsPosition, i) => ({
@@ -347,11 +406,7 @@ const tempoOrTimeSignatureChanges = computed<TempoOrTimeSignatureChange[]>(
       };
     });
 
-    const result: {
-      position: number;
-      text: string;
-      x: number;
-    }[] = [
+    const tempoOrTimeSignatureChanges: TempoOrTimeSignatureChange[] = [
       ...Map.groupBy(
         [...tempos, ...timeSignaturesWithTicks],
         (item) => item.position,
@@ -372,12 +427,50 @@ const tempoOrTimeSignatureChanges = computed<TempoOrTimeSignatureChange[]>(
         return {
           position: tick,
           text: [tempoText, timeSignatureText].join(" "),
+          tempoChange: tempo,
+          timeSignatureChange: timeSignature,
           x: tickToBaseX(tick, props.tpqn) * props.sequencerZoomX,
+          displayType: "full" as const,
         };
       });
 
-    return result;
+    const collapsedTextWidth =
+      predictTextWidth("...", {
+        fontSize: 12,
+        fontFamily: "Unhinted Rounded M+ 1p",
+        fontWeight: "700",
+      }) +
+      textPadding * 2;
+    for (const [
+      i,
+      tempoOrTimeSignatureChange,
+    ] of tempoOrTimeSignatureChanges.entries()) {
+      const next = tempoOrTimeSignatureChanges.at(i + 1);
+      if (!next) {
+        continue;
+      }
+      const requiredWidth =
+        predictTextWidth(tempoOrTimeSignatureChange.text, {
+          fontSize: 12,
+          fontFamily: "Unhinted Rounded M+ 1p",
+          fontWeight: "700",
+        }) + textPadding;
+      const width = next.x - tempoOrTimeSignatureChange.x;
+      if (collapsedTextWidth > width) {
+        tempoOrTimeSignatureChange.displayType = "hidden";
+      } else if (requiredWidth > width) {
+        tempoOrTimeSignatureChange.displayType = "ellipsis";
+      }
+    }
+
+    return tempoOrTimeSignatureChanges;
   },
+);
+const collapsedTempoOrTimeSignatureChanges = computed(() =>
+  tempoOrTimeSignatureChanges.value.filter(
+    (tempoOrTimeSignatureChange) =>
+      tempoOrTimeSignatureChange.displayType !== "full",
+  ),
 );
 
 const currentTempo = computed(() => {
@@ -557,6 +650,10 @@ const contextMenudata = computed<ContextMenuItemData[]>(
   backface-visibility: hidden;
   stroke: var(--scheme-color-on-surface-variant);
   stroke-width: 1px;
+}
+
+.sequencer-ruler-tempo-or-time-signature-change-hitbox {
+  pointer-events: all;
 }
 
 .sequencer-ruler-measure-line {
