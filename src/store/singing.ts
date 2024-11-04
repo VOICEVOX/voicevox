@@ -25,6 +25,8 @@ import {
   EditorFrameAudioQueryKey,
   EditorFrameAudioQuery,
   TrackParameters,
+  SingingPitchKey,
+  SingingPitch,
 } from "./type";
 import {
   buildSongTrackAudioFileNameFromRawData,
@@ -129,6 +131,7 @@ type PhraseRenderContext = Readonly<{
 
 type PhraseRenderStageId =
   | "queryGeneration"
+  | "singingPitchGeneration"
   | "singingVolumeGeneration"
   | "singingVoiceSynthesis";
 
@@ -136,7 +139,7 @@ type PhraseRenderStageId =
  * フレーズレンダリングのステージのインターフェイス。
  * フレーズレンダラー内で順に実行される。
  */
-type PhraseRenderBaseStage = Readonly<{
+type PhraseRenderStage = Readonly<{
   id: PhraseRenderStageId;
 
   /**
@@ -170,6 +173,21 @@ type QuerySource = Readonly<{
   firstRestDuration: number;
   notes: Note[];
   keyRangeAdjustment: number;
+}>;
+
+/**
+ * 歌唱ピッチの生成に必要なデータ
+ */
+
+type SingingPitchSource = Readonly<{
+  engineId: EngineId;
+  engineFrameRate: number;
+  tpqn: number;
+  tempos: Tempo[];
+  firstRestDuration: number;
+  notes: Note[];
+  keyRangeAdjustment: number;
+  queryForPitchGeneration: EditorFrameAudioQuery;
 }>;
 
 /**
@@ -381,6 +399,13 @@ const calculateQueryKey = async (querySource: QuerySource) => {
   return EditorFrameAudioQueryKey(hash);
 };
 
+const calculateSingingPitchKey = async (
+  singingPitchSource: SingingPitchSource,
+) => {
+  const hash = await calculateHash(singingPitchSource);
+  return SingingPitchKey(hash);
+};
+
 const calculateSingingVolumeKey = async (
   singingVolumeSource: SingingVolumeSource,
 ) => {
@@ -545,6 +570,7 @@ const sequences = new Map<SequenceId, Sequence & { trackId: TrackId }>();
 const animationTimer = new AnimationTimer();
 
 const queryCache = new Map<EditorFrameAudioQueryKey, EditorFrameAudioQuery>();
+const singingPitchCache = new Map<SingingPitchKey, SingingPitch>();
 const singingVolumeCache = new Map<SingingVolumeKey, SingingVolume>();
 const singingVoiceCache = new Map<SingingVoiceKey, SingingVoice>();
 
@@ -745,6 +771,7 @@ export const singingStoreState: SingingStoreState = {
   editorFrameRate: DEPRECATED_DEFAULT_EDITOR_FRAME_RATE,
   phrases: new Map(),
   phraseQueries: new Map(),
+  phraseSingingPitches: new Map(),
   phraseSingingVolumes: new Map(),
   sequencerZoomX: 0.5,
   sequencerZoomY: 0.75,
@@ -1219,6 +1246,23 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  SET_SINGING_PITCH_KEY_TO_PHRASE: {
+    mutation(
+      state,
+      {
+        phraseKey,
+        singingPitchKey,
+      }: {
+        phraseKey: PhraseKey;
+        singingPitchKey: SingingPitchKey | undefined;
+      },
+    ) {
+      const phrase = getOrThrow(state.phrases, phraseKey);
+
+      phrase.singingPitchKey = singingPitchKey;
+    },
+  },
+
   SET_SINGING_VOLUME_KEY_TO_PHRASE: {
     mutation(
       state,
@@ -1288,6 +1332,24 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   DELETE_PHRASE_QUERY: {
     mutation(state, { queryKey }: { queryKey: EditorFrameAudioQueryKey }) {
       state.phraseQueries.delete(queryKey);
+    },
+  },
+
+  SET_PHRASE_SINGING_PITCH: {
+    mutation(
+      state,
+      {
+        singingPitchKey,
+        singingPitch,
+      }: { singingPitchKey: SingingPitchKey; singingPitch: SingingPitch },
+    ) {
+      state.phraseSingingPitches.set(singingPitchKey, singingPitch);
+    },
+  },
+
+  DELETE_PHRASE_SINGING_PITCH: {
+    mutation(state, { singingPitchKey }: { singingPitchKey: SingingPitchKey }) {
+      state.phraseSingingPitches.delete(singingPitchKey);
     },
   },
 
@@ -1809,9 +1871,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         }
       };
 
-      const generateQuery = async (
-        querySource: QuerySource,
-      ): Promise<EditorFrameAudioQuery> => {
+      const generateQuery = async (querySource: QuerySource) => {
         const notesForRequestToEngine = createNotesForRequestToEngine(
           querySource.firstRestDuration,
           lastRestDurationSeconds,
@@ -1836,7 +1896,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         return query;
       };
 
-      const queryGenerationStage: PhraseRenderBaseStage = {
+      const queryGenerationStage: PhraseRenderStage = {
         id: "queryGeneration",
         shouldBeExecuted: async (context: PhraseRenderContext) => {
           const track = getOrThrow(context.snapshot.tracks, context.trackId);
@@ -1887,6 +1947,99 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         },
       };
 
+      const generateSingingPitchSource = (
+        context: PhraseRenderContext,
+      ): SingingPitchSource => {
+        const track = getOrThrow(context.snapshot.tracks, context.trackId);
+        if (track.singer == undefined) {
+          throw new Error("track.singer is undefined.");
+        }
+        const phrase = getOrThrow(state.phrases, context.phraseKey);
+        const phraseQueryKey = phrase.queryKey;
+        if (phraseQueryKey == undefined) {
+          throw new Error("phraseQueryKey is undefined.");
+        }
+        const query = getOrThrow(state.phraseQueries, phraseQueryKey);
+        const clonedQuery = cloneWithUnwrapProxy(query);
+        // TODO: 音素タイミングの編集データの適用を行うようにする
+        return {
+          engineId: track.singer.engineId,
+          engineFrameRate: query.frameRate,
+          tpqn: context.snapshot.tpqn,
+          tempos: context.snapshot.tempos,
+          firstRestDuration: phrase.firstRestDuration,
+          notes: phrase.notes,
+          keyRangeAdjustment: track.keyRangeAdjustment,
+          queryForPitchGeneration: clonedQuery,
+        };
+      };
+
+      const generateSingingPitch = async (
+        singingPitchSource: SingingPitchSource,
+      ) => {
+        // TODO: ピッチ生成APIに対応する
+        return singingPitchSource.queryForPitchGeneration.f0;
+      };
+
+      const singingPitchGenerationStage: PhraseRenderStage = {
+        id: "singingPitchGeneration",
+        shouldBeExecuted: async (context: PhraseRenderContext) => {
+          const track = getOrThrow(context.snapshot.tracks, context.trackId);
+          if (track.singer == undefined) {
+            return false;
+          }
+          const phrase = getOrThrow(state.phrases, context.phraseKey);
+          const phraseSingingPitchKey = phrase.singingPitchKey;
+          const singingPitchSource = generateSingingPitchSource(context);
+          const singingPitchKey =
+            await calculateSingingPitchKey(singingPitchSource);
+          return (
+            phraseSingingPitchKey == undefined ||
+            phraseSingingPitchKey !== singingPitchKey
+          );
+        },
+        deleteExecutionResult: (context: PhraseRenderContext) => {
+          const phrase = getOrThrow(state.phrases, context.phraseKey);
+          const phraseSingingPitchKey = phrase.singingPitchKey;
+          if (phraseSingingPitchKey != undefined) {
+            mutations.DELETE_PHRASE_SINGING_PITCH({
+              singingPitchKey: phraseSingingPitchKey,
+            });
+            mutations.SET_SINGING_PITCH_KEY_TO_PHRASE({
+              phraseKey: context.phraseKey,
+              singingPitchKey: undefined,
+            });
+          }
+        },
+        execute: async (context: PhraseRenderContext) => {
+          const singingPitchSource = generateSingingPitchSource(context);
+          const singingPitchKey =
+            await calculateSingingPitchKey(singingPitchSource);
+
+          let singingPitch = singingPitchCache.get(singingPitchKey);
+          if (singingPitch != undefined) {
+            logger.info(`Loaded singing pitch from cache.`);
+          } else {
+            singingPitch = await generateSingingPitch(singingPitchSource);
+            logger.info(`Generated singing pitch.`);
+            singingPitchCache.set(singingPitchKey, singingPitch);
+          }
+
+          const phrase = getOrThrow(state.phrases, context.phraseKey);
+          const phraseSingingPitchKey = phrase.singingPitchKey;
+          if (phraseSingingPitchKey != undefined) {
+            mutations.DELETE_PHRASE_SINGING_PITCH({
+              singingPitchKey: phraseSingingPitchKey,
+            });
+          }
+          mutations.SET_PHRASE_SINGING_PITCH({ singingPitchKey, singingPitch });
+          mutations.SET_SINGING_PITCH_KEY_TO_PHRASE({
+            phraseKey: context.phraseKey,
+            singingPitchKey,
+          });
+        },
+      };
+
       const generateSingingVolumeSource = (
         context: PhraseRenderContext,
       ): SingingVolumeSource => {
@@ -1899,6 +2052,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         if (phraseQueryKey == undefined) {
           throw new Error("phraseQueryKey is undefined.");
         }
+        // TODO: ピッチ生成ステージで生成したピッチを使用するようにする
         const query = getOrThrow(state.phraseQueries, phraseQueryKey);
         const clonedQuery = cloneWithUnwrapProxy(query);
         applyPitchEdit(
@@ -1960,7 +2114,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         return singingVolume;
       };
 
-      const singingVolumeGenerationStage: PhraseRenderBaseStage = {
+      const singingVolumeGenerationStage: PhraseRenderStage = {
         id: "singingVolumeGeneration",
         shouldBeExecuted: async (context: PhraseRenderContext) => {
           const track = getOrThrow(context.snapshot.tracks, context.trackId);
@@ -2087,7 +2241,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         }
       };
 
-      const singingVoiceSynthesisStage: PhraseRenderBaseStage = {
+      const singingVoiceSynthesisStage: PhraseRenderStage = {
         id: "singingVoiceSynthesis",
         shouldBeExecuted: async (context: PhraseRenderContext) => {
           const track = getOrThrow(context.snapshot.tracks, context.trackId);
@@ -2142,8 +2296,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         },
       };
 
-      const stages: readonly PhraseRenderBaseStage[] = [
+      const stages: readonly PhraseRenderStage[] = [
         queryGenerationStage,
+        singingPitchGenerationStage,
         singingVolumeGenerationStage,
         singingVoiceSynthesisStage,
       ];
