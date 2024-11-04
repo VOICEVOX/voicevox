@@ -86,6 +86,10 @@
       :offsetX="scrollX"
       :offsetY="scrollY"
       :previewPitchEdit
+      :nowPreviewing
+      :editTarget
+      :previewMode
+      :cursorClass
     />
     <div
       class="sequencer-overlay"
@@ -160,61 +164,80 @@
       ref="contextMenu"
       :menudata="contextMenuData"
     />
-    <!-- 編集モードの選択 -->
-    <div class="edit-mode-selector">
-      <select id="edit-mode" v-model="editModeTemp">
-        <option value="TOOLLESS_A">ツール選択なしA</option>
-        <option value="TOOLLESS_B">ツール選択なしB</option>
-        <option value="TOOLLESS_C">ツール選択なしC</option>
-        <option value="TOOLLESS_D">ツール選択なしD</option>
-        <option value="TOOLSELECT_A">ツール選択ありA</option>
-        <option value="TOOLSELECT_B">ツール選択ありB</option>
-      </select>
+    <div v-if="editTarget === 'NOTE'" class="tool-palette">
+      <QBtn
+        flat
+        round
+        :color="selectedEditNoteTool === 'SELECT_FIRST' ? 'primary' : ''"
+        @click="selectedEditNoteTool = 'SELECT_FIRST'"
+      >
+        <i class="material-symbols-outlined">arrow_selector_tool</i>
+        <QTooltip
+          anchor="center right"
+          self="center left"
+          :offset="[8, 0]"
+          transitionShow="none"
+          transitionHide="none"
+          :delay="500"
+        >
+          選択ツール
+        </QTooltip>
+      </QBtn>
+      <QBtn
+        flat
+        round
+        :color="selectedEditNoteTool === 'EDIT_FIRST' ? 'primary' : ''"
+        @click="selectedEditNoteTool = 'EDIT_FIRST'"
+      >
+        <i class="material-symbols-outlined">stylus</i>
+        <QTooltip
+          anchor="center right"
+          self="center left"
+          :offset="[8, 0]"
+          transitionShow="none"
+          transitionHide="none"
+          :delay="500"
+        >
+          編集ツール
+        </QTooltip>
+      </QBtn>
     </div>
-    <!-- ツール選択A -->
-    <div v-if="editModeTemp === 'TOOLSELECT_A'" class="tool-palette">
+    <div v-if="editTarget === 'PITCH'" class="tool-palette">
       <QBtn
         flat
         round
-        :color="selectedToolTemp === 'SELECT_FIRST' ? 'primary' : ''"
-        @click="selectedToolTemp = 'SELECT_FIRST'"
+        :color="selectedEditPitchTool === 'DRAW' ? 'primary' : ''"
+        @click="selectedEditPitchTool = 'DRAW'"
       >
-        <QIcon name="crop" size="20px" />
+        <i class="material-symbols-outlined">stylus</i>
+        <QTooltip
+          anchor="center right"
+          self="center left"
+          :offset="[8, 0]"
+          transitionShow="none"
+          transitionHide="none"
+          :delay="500"
+        >
+          描画ツール
+        </QTooltip>
       </QBtn>
       <QBtn
         flat
         round
-        :color="selectedToolTemp === 'EDIT_FIRST' ? 'primary' : ''"
-        @click="selectedToolTemp = 'EDIT_FIRST'"
+        :color="selectedEditPitchTool === 'ERASE' ? 'primary' : ''"
+        @click="selectedEditPitchTool = 'ERASE'"
       >
-        <QIcon name="edit" size="20px" />
-      </QBtn>
-    </div>
-    <!-- ツール選択B -->
-    <div v-if="editModeTemp === 'TOOLSELECT_B'" class="tool-palette">
-      <QBtn
-        :color="selectedToolTemp === 'SELECTOR' ? 'primary' : ''"
-        flat
-        round
-        @click="selectedToolTemp = 'SELECTOR'"
-      >
-        <QIcon name="crop" size="20px" />
-      </QBtn>
-      <QBtn
-        :color="selectedToolTemp === 'PEN' ? 'primary' : ''"
-        flat
-        round
-        @click="selectedToolTemp = 'PEN'"
-      >
-        <QIcon name="edit" size="20px" />
-      </QBtn>
-      <QBtn
-        :color="selectedToolTemp === 'ERASER' ? 'primary' : ''"
-        flat
-        round
-        @click="selectedToolTemp = 'ERASER'"
-      >
-        <QIcon name="delete" size="20px" />
+        <i class="material-symbols-outlined">ink_eraser</i>
+        <QTooltip
+          anchor="center right"
+          self="center left"
+          :offset="[8, 0]"
+          transitionShow="none"
+          transitionHide="none"
+          :delay="500"
+        >
+          消しゴムツール
+        </QTooltip>
       </QBtn>
     </div>
   </div>
@@ -291,347 +314,43 @@ const isSelfEventTarget = (event: UIEvent) => {
 const { warn } = createLogger("ScoreSequencer");
 const store = useStore();
 const state = store.state;
-/*
 
-# 単一ツールのみで操作
-
-## TOOLLESS_A
-### マルチツール
-|元の状態と操作|結果|
-|:--|:--|
-|グリッドをクリック|ノート追加|
-|ノート追加後|該当ノートの選択|
-|ノート選択中にCtrl or Command + グリッドをクリック|すべて選択解除|
-|グリッドをダブルクリック|なし|
-|グリッドをドラッグ|ノート追加|
-|グリッドドラッグ後|該当ノートの選択|
-|Shift + グリッドをドラッグ|矩形選択|
-|Shift + グリッドドラッグ後|矩形選択中のノートの選択|
-|ノートをクリック|ノート単体選択|
-|ノート選択中にCtrl or Command + ノートをクリック|ノート複数選択|
-|ノートをダブルクリック|ノートの歌詞編集|
-|ノートをドラッグ|ノート移動|
-|ノートドラッグ後|該当ノートの選択|
-|ノートの端をドラッグ|ノートリサイズ|
-|ノートリサイズ後|該当ノートの選択|
-|Escキー|すべて選択解除|
-|ノートを選択中にDeleteキー|該当ノートの削除|
-
-## TOOLLESS_B
-### マルチツール
-|元の状態と操作|結果|
-|:--|:--|
-|グリッドをクリック|ノート追加|
-|ノート追加後|該当ノートを選択しない|
-|ノート選択中にグリッドをクリック|すべて選択解除・ノートの追加はしない|
-|グリッドをダブルクリック|なし|
-|グリッドをドラッグ|ノート追加|
-|グリッドドラッグ後|該当ノートを選択しない|
-|Shift + グリッドをドラッグ|矩形選択|
-|ノートをクリック|ノート単体選択|
-|Ctrl or Command + ノートをクリック|ノート複数選択|
-|ノートをダブルクリック|ノートの歌詞編集|
-|ノートをドラッグ|ノート移動|
-|ノートドラッグ後|該当ノートを選択しない|
-|ノートの端をドラッグ|ノートリサイズ|
-|ノートリサイズ後|該当ノートを選択しない|
-|Escキー|すべて選択解除|
-|ノートを選択中にDeleteキー|該当ノートの削除|
-
-## TOOLLESS_C
-### マルチツール
-|元の状態と操作|結果|
-|:--|:--|
-|グリッドをクリック|ノート追加|
-|ノート追加後|該当ノートを選択しない|
-|ノート選択中にグリッドをクリック|すべて選択解除|
-|グリッドをダブルクリック|なし|
-|グリッドをドラッグ|ノート追加|
-|グリッドドラッグ後|該当ノートを選択しない|
-|Shift + グリッドをドラッグ|矩形選択|
-|ノートをクリック|ノート単体選択|
-|Ctrl or Command + ノートをクリック|ノート複数選択|
-|ノートをダブルクリック|ノートの歌詞編集|
-|ノートをドラッグ|ノート移動|
-|ノートドラッグ後|該当ノートを選択する|
-|ノートの端をドラッグ|ノートリサイズ|
-|ノートリサイズ後|該当ノートを選択する|
-|Escキー|すべて選択解除|
-|ノートを選択中にDeleteキー|該当ノートの削除|
-
-## TOOLLESS_D
-### マルチツール
-|元の状態と操作|結果|
-|:--|:--|
-|グリッドをクリック|すべて選択解除|
-|ノート選択中にグリッドをクリック|すべて選択解除|
-|グリッドをダブルクリック|ノート追加|
-|ノート追加後|該当ノートを選択する|
-|グリッドをドラッグ|矩形選択|
-|グリッドドラッグ後|矩形選択中のノートの選択|
-|Shift + グリッドをドラッグ|なし|
-|ノートをクリック|ノート単体選択|
-|Ctrl or Command + ノートをクリック|ノート複数選択|
-|ノートをダブルクリック|ノートの歌詞編集|
-|ノートをドラッグ|ノート移動|
-|ノートドラッグ後|該当ノートを選択する|
-|ノートの端をドラッグ|ノートリサイズ|
-|ノートリサイズ後|該当ノートを選択する|
-|Escキー|すべて選択解除|
-|ノートを選択中にDeleteキー|該当ノートの削除|
-
-# ツールパレットからツールを選択して操作
-## TOOLSELECT_A
-### マルチツール1(選択優先)
-|元の状態と操作|結果|
-|:--|:--|
-|グリッドをクリック|すべて選択解除|
-|ノート選択中にグリッドをクリック|すべて選択解除|
-|グリッドをダブルクリック|ノート追加|
-|ノート追加後|該当ノートを選択する|
-|グリッドをドラッグ|矩形選択|
-|グリッドドラッグ後|選択中のノートの選択|
-|Shift + グリッドをドラッグ|矩形選択|
-|ノートをクリック|ノート単体選択|
-|Ctrl or Command + ノートをクリック|ノート複数選択|
-|ノートをダブルクリック|ノートの歌詞編集|
-|ノートをドラッグ|ノート移動|
-|ノートドラッグ後|該当ノートを選択する|
-|ノートの端をドラッグ|ノートリサイズ|
-|ノートリサイズ後|該当ノートを選択する|
-|Escキー|すべて選択解除|
-|ノートを選択中にDeleteキー|該当ノートの削除|
-### マルチエディットツール2(編集優先)
-|元の状態と操作|結果|
-|:--|:--|
-|グリッドをクリック|ノート追加|
-|ノート選択中にグリッドをクリック|ノート追加|
-|グリッドをダブルクリック|なし|
-|ノート追加後|該当ノートを選択しない|
-|グリッドをドラッグ|ノート追加|
-|グリッドドラッグ後|選択中のノートを選択しない|
-|Shift + グリッドをドラッグ|矩形選択|
-|ノートをクリック|ノート単体選択|
-|Ctrl or Command + ノートをクリック|ノート複数選択|
-|ノートをダブルクリック|ノートの歌詞編集|
-|ノートをドラッグ|ノート移動|
-|ノートドラッグ後|該当ノートを選択する|
-|ノートの端をドラッグ|ノートリサイズ|
-|ノートリサイズ後|該当ノートを選択しない|
-|Escキー|すべて選択解除|
-|ノートを選択中にDeleteキー|該当ノートの削除|
-
-## TOOLSELECT_B
-### 選択ツール
-|元の状態と操作|結果|
-|:--|:--|
-|グリッドをクリック|すべて選択解除|
-|ノート選択中にグリッドをクリック|すべて選択解除|
-|グリッドをダブルクリック|なし|
-|ノート追加後|該当ノートを選択する|
-|グリッドをドラッグ|矩形選択|
-|グリッドドラッグ後|選択中のノートの選択|
-|Shift + グリッドをドラッグ|矩形選択|
-|ノートをクリック|ノート単体選択|
-|Ctrl or Command + ノートをクリック|ノート複数選択|
-|ノートをダブルクリック|ノートの歌詞編集|
-|ノートをドラッグ|ノート移動|
-|ノートドラッグ後|該当ノートを選択する|
-|ノートの端をドラッグ|ノートリサイズ|
-|ノートリサイズ後|該当ノートを選択する|
-|Escキー|すべて選択解除|
-|ノートを選択中にDeleteキー|該当ノートの削除|
-### ペンツール
-|元の状態と操作|結果|
-|:--|:--|
-|グリッドをクリック|ノート追加|
-|ノート選択中にグリッドをクリック|ノート追加|
-|グリッドをダブルクリック|なし|
-|ノート追加後|該当ノートを選択しない|
-|グリッドをドラッグ|ノート追加|
-|グリッドドラッグ後|選択中のノートを選択する|
-|Shift + グリッドをドラッグ|なし|
-|ノートをクリック|ノート単体選択|
-|Ctrl or Command + ノートをクリック|ノート複数選択|
-|ノートをダブルクリック|ノートの歌詞編集|
-|ノートをドラッグ|ノート移動|
-|ノートドラッグ後|該当ノートを選択する|
-|ノートの端をドラッグ|ノートリサイズ|
-|ノートリサイズ後|該当ノートを選択しない|
-|Escキー|すべて選択解除|
-|ノートを選択中にDeleteキー|該当ノートの削除|
-### 消しゴムツール
-|元の状態と操作|結果|
-|:--|:--|
-|グリッドをクリック|なし|
-|ノート選択中にグリッドをクリック|すべて選択解除|
-|グリッドをダブルクリック|なし|
-|ノート追加後|なし|
-|グリッドをドラッグ|なし|
-|グリッドドラッグ後|なし|
-|Shift + グリッドをドラッグ|なし|
-|ノートをクリック|該当ノートを削除|
-|Ctrl or Command + ノートをクリック|なし|
-|ノートをダブルクリック|なし|
-|ノートをドラッグ|なし|
-|ノートドラッグ後|なし|
-|ノートの端をドラッグ|なし|
-|ノートリサイズ後|なし|
-|Escキー|すべて選択解除|
-|ノートを選択中にDeleteキー|該当ノートの削除|
-
-*/
-// 編集モード仮置き(試行用)
-const editModeTemp = ref("TOOLLESS_A");
-
-// ツール選択の初期値を設定
-const selectedToolTemp = ref<string | null>("SELECT_FIRST");
-
-watch(editModeTemp, (newMode) => {
-  if (newMode === "TOOLSELECT_A") {
-    selectedToolTemp.value = "SELECT_FIRST";
-  } else if (newMode === "TOOLSELECT_B") {
-    selectedToolTemp.value = "SELECTOR";
-  } else {
-    selectedToolTemp.value = null;
-  }
-});
-
-// ノート追加後に選択するかどうか
-const shouldSelectNoteAfterAdding = () => {
-  if (editModeTemp.value === "TOOLSELECT_A") {
-    return true;
-  } else if (editModeTemp.value === "TOOLSELECT_B") {
-    return true;
-  }
-  // 既存のTOOLLESSモードの処理
-  return ["TOOLLESS_A", "TOOLLESS_D"].includes(editModeTemp.value);
-};
+// ツール選択の状態を分離
+const selectedEditNoteTool = ref<"SELECT_FIRST" | "EDIT_FIRST">("EDIT_FIRST");
+const selectedEditPitchTool = ref<"DRAW" | "ERASE">("DRAW");
 
 // ノート編集後に選択するかどうか
 const shouldSelectNoteAfterEditing = () => {
-  if (editModeTemp.value === "TOOLSELECT_A") {
-    return selectedToolTemp.value === "SELECT_FIRST";
-  } else if (editModeTemp.value === "TOOLSELECT_B") {
-    return selectedToolTemp.value !== "PEN";
-  }
-  // 既存のTOOLLESSモードの処理
-  return ["TOOLLESS_A", "TOOLLESS_C", "TOOLLESS_D"].includes(
-    editModeTemp.value,
-  );
+  return selectedEditNoteTool.value === "EDIT_FIRST";
 };
 
 // クリック時にノートを追加するかどうか
 const shouldAddNoteOnClick = (event: MouseEvent) => {
-  if (editModeTemp.value === "TOOLSELECT_A") {
-    return (
-      selectedToolTemp.value === "EDIT_FIRST" &&
-      !isOnCommandOrCtrlKeyDown(event)
-    );
-  } else if (editModeTemp.value === "TOOLSELECT_B") {
-    return selectedToolTemp.value === "PEN";
-  }
-  return ["TOOLLESS_A", "TOOLLESS_B", "TOOLLESS_C"].includes(
-    editModeTemp.value,
+  return (
+    selectedEditNoteTool.value === "EDIT_FIRST" &&
+    !isOnCommandOrCtrlKeyDown(event)
   );
 };
 
 // ダブルクリック時にノートを追加するかどうか
 const shouldAddNoteOnDoubleClick = () => {
-  if (editModeTemp.value === "TOOLSELECT_A") {
-    return selectedToolTemp.value === "SELECT_FIRST";
-  }
-  return ["TOOLLESS_D"].includes(editModeTemp.value);
-};
-
-// Shiftキーが押されているときに矩形選択を開始するかどうか
-const shouldStartRectSelectIfShiftKeyDown = () => {
-  if (
-    editModeTemp.value === "TOOLSELECT_A" ||
-    editModeTemp.value === "TOOLSELECT_B"
-  ) {
-    return selectedToolTemp.value !== "ERASER";
-  }
-  return ["TOOLLESS_A", "TOOLLESS_B", "TOOLLESS_C"].includes(
-    editModeTemp.value,
-  );
+  return selectedEditNoteTool.value === "SELECT_FIRST";
 };
 
 // ノート選択中にグリッドをクリック時に選択解除するかどうか
-const shouldDeselectAllOnClick = (event: MouseEvent) => {
-  if (editModeTemp.value === "TOOLSELECT_A") {
-    return selectedToolTemp.value === "SELECT_FIRST";
-  } else if (editModeTemp.value === "TOOLSELECT_B") {
-    return selectedToolTemp.value === "SELECTOR";
-  }
-  if (
-    editModeTemp.value === "TOOLLESS_B" ||
-    editModeTemp.value === "TOOLLESS_C"
-  ) {
-    // ノート選択中にグリッドをクリックしたら選択解除
-    return isNoteSelected.value && !isOnCommandOrCtrlKeyDown(event);
-  } else if (editModeTemp.value === "TOOLLESS_D") {
-    // 常に選択解除
-    return true;
-  } else {
-    return false;
-  }
-};
-
-// ノート選択中にCtrl or Command + グリッドをクリック時に選択解除するかどうか
-const shouldDeselectAllOnCtrlOrCommandClick = (event: MouseEvent) => {
-  if (editModeTemp.value === "TOOLLESS_A") {
-    return isNoteSelected.value && isOnCommandOrCtrlKeyDown(event);
-  }
-  return false;
-};
-
-// Ctrl or Command + ノートクリック時に複数選択するかどうか
-const shouldSelectMultipleNotesOnCtrlOrCommandClick = () => {
-  if (
-    editModeTemp.value === "TOOLSELECT_A" ||
-    editModeTemp.value === "TOOLSELECT_B"
-  ) {
-    return selectedToolTemp.value !== "ERASER";
-  }
-  return ["TOOLLESS_A", "TOOLLESS_B", "TOOLLESS_C", "TOOLLESS_D"].includes(
-    editModeTemp.value,
-  );
+const shouldDeselectAllOnClick = () => {
+  return selectedEditNoteTool.value === "SELECT_FIRST";
 };
 
 // Shiftキーを押さずにグリッドドラッグで矩形選択をするかどうか
 const shouldRectSelectOnDrag = () => {
-  if (editModeTemp.value === "TOOLSELECT_A") {
-    return selectedToolTemp.value === "SELECT_FIRST";
-  } else if (editModeTemp.value === "TOOLSELECT_B") {
-    return selectedToolTemp.value === "SELECTOR";
-  }
-  return ["TOOLLESS_D"].includes(editModeTemp.value);
+  return selectedEditNoteTool.value === "SELECT_FIRST";
 };
 
-// ノートをダブルクリックで歌詞編集を行うかどうか
-const shouldEditLyricOnDoubleClickNote = () => {
-  if (
-    editModeTemp.value === "TOOLSELECT_A" ||
-    editModeTemp.value === "TOOLSELECT_B"
-  ) {
-    return selectedToolTemp.value !== "ERASER";
-  }
-  return ["TOOLLESS_A", "TOOLLESS_B", "TOOLLESS_C", "TOOLLESS_D"].includes(
-    editModeTemp.value,
-  );
+// CtrlキーまたはCommandキーを押してノートをクリックしたときに選択除するかどうか
+const shouldDeselectAllOnCtrlOrCommandClick = () => {
+  return selectedEditNoteTool.value === "SELECT_FIRST";
 };
-
-// ノートをクリックで削除するかどうか
-const shouldDeleteNoteOnClick = () => {
-  return (
-    editModeTemp.value === "TOOLSELECT_B" && selectedToolTemp.value === "ERASER"
-  );
-};
-
-watch([editModeTemp, selectedToolTemp], () => {
-  setDefaultCursorStateTemp();
-});
 
 // 選択中のトラックID
 const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
@@ -769,7 +488,7 @@ const cursorY = ref(0);
 
 const { cursorClass, setCursorState } = useCursorState();
 
-// 歌詞入力
+// 歌詞力
 const { previewLyrics, commitPreviewLyrics, splitAndUpdatePreview } =
   useLyricInput();
 
@@ -831,9 +550,11 @@ watch([ctrlKey, shiftKey, nowPreviewing, editTarget], () => {
     if (ctrlKey.value) {
       // ピッチ消去
       setCursorState(CursorState.ERASE);
+      selectedEditPitchTool.value = "ERASE";
     } else {
       // ピッチ描画
       setCursorState(CursorState.DRAW);
+      selectedEditPitchTool.value = "DRAW";
     }
   }
   if (editTarget.value === "NOTE") {
@@ -844,6 +565,10 @@ watch([ctrlKey, shiftKey, nowPreviewing, editTarget], () => {
       setCursorState(CursorState.UNSET);
     }
   }
+});
+
+watch([editTarget, selectedEditNoteTool, selectedEditPitchTool], () => {
+  setDefaultCursorState();
 });
 
 const previewAdd = () => {
@@ -1237,10 +962,7 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
           }
         }
         void store.dispatch("SELECT_NOTES", { noteIds: noteIdsToSelect });
-      } else if (
-        isOnCommandOrCtrlKeyDown(event) &&
-        shouldSelectMultipleNotesOnCtrlOrCommandClick()
-      ) {
+      } else if (isOnCommandOrCtrlKeyDown(event)) {
         // Ctrl または Command キーが押されている場合の複数選択
         void store.dispatch("SELECT_NOTES", { noteIds: [note.id] });
       } else if (!selectedNoteIds.value.has(note.id)) {
@@ -1308,7 +1030,8 @@ const endPreview = () => {
           notes: previewNotes.value,
           trackId: previewTrackId,
         });
-        if (shouldSelectNoteAfterAdding()) {
+        // EDIT_FIRSTの場合は追加したノートを選択する
+        if (shouldSelectNoteAfterEditing()) {
           const noteIds = previewNotes.value.map((note) => note.id);
           void store.dispatch("SELECT_NOTES", { noteIds });
         } else {
@@ -1319,7 +1042,7 @@ const endPreview = () => {
         previewMode.value === "RESIZE_NOTE_RIGHT" ||
         previewMode.value === "RESIZE_NOTE_LEFT"
       ) {
-        // ノートの編集処理（移動・リサイズ）
+        // ノートの編集処理（移動・リサズ）
         void store.dispatch("COMMAND_UPDATE_NOTES", {
           notes: previewNotes.value,
           trackId: previewTrackId,
@@ -1376,37 +1099,19 @@ const endPreview = () => {
   setCursorState(CursorState.UNSET);
 };
 
-const setDefaultCursorStateTemp = (event?: MouseEvent) => {
-  const isCtrlOrCmdKeyDown = event ? isOnCommandOrCtrlKeyDown(event) : false;
-  switch (editModeTemp.value) {
-    case "TOOLLESS_A":
-      setCursorState(isCtrlOrCmdKeyDown ? CursorState.UNSET : CursorState.DRAW);
-      break;
-    case "TOOLLESS_B":
-    case "TOOLLESS_C":
-      setCursorState(
-        isNoteSelected.value ? CursorState.UNSET : CursorState.DRAW,
-      );
-      break;
-    case "TOOLLESS_D":
+const setDefaultCursorState = () => {
+  if (editTarget.value === "NOTE") {
+    if (selectedEditNoteTool.value === "SELECT_FIRST") {
       setCursorState(CursorState.UNSET);
-      break;
-    case "TOOLSELECT_A":
-      if (selectedToolTemp.value === "SELECT_FIRST") {
-        setCursorState(CursorState.UNSET);
-      } else if (selectedToolTemp.value === "EDIT_FIRST") {
-        setCursorState(CursorState.DRAW);
-      }
-      break;
-    case "TOOLSELECT_B":
-      if (selectedToolTemp.value === "SELECTOR") {
-        setCursorState(CursorState.UNSET);
-      } else if (selectedToolTemp.value === "PEN") {
-        setCursorState(CursorState.DRAW);
-      } else if (selectedToolTemp.value === "ERASER") {
-        setCursorState(CursorState.ERASE);
-      }
-      break;
+    } else if (selectedEditNoteTool.value === "EDIT_FIRST") {
+      setCursorState(CursorState.DRAW);
+    }
+  } else if (editTarget.value === "PITCH") {
+    if (selectedEditPitchTool.value === "DRAW") {
+      setCursorState(CursorState.DRAW);
+    } else if (selectedEditPitchTool.value === "ERASE") {
+      setCursorState(CursorState.ERASE);
+    }
   }
 };
 
@@ -1417,18 +1122,9 @@ const onNoteBarMouseDown = (event: MouseEvent, note: Note) => {
 
   const mouseButton = getButton(event);
   if (mouseButton === "LEFT_BUTTON") {
-    if (
-      isOnCommandOrCtrlKeyDown(event) &&
-      shouldSelectMultipleNotesOnCtrlOrCommandClick()
-    ) {
+    if (isOnCommandOrCtrlKeyDown(event)) {
       // CtrlまたはCommandキーが押されている場合、ノートを追加選択
       void store.dispatch("SELECT_NOTES", { noteIds: [note.id] });
-    } else if (shouldDeleteNoteOnClick()) {
-      // ノート削除（消しゴムツール）
-      void store.dispatch("COMMAND_REMOVE_NOTES", {
-        noteIds: [note.id],
-        trackId: selectedTrackId.value,
-      });
     } else if (!selectedNoteIds.value.has(note.id)) {
       // クリックしたノートが未選択の場合、そのノートのみを選択
       void selectOnlyThis(note);
@@ -1442,11 +1138,9 @@ const onNoteBarDoubleClick = (event: MouseEvent, note: Note) => {
   if (editTarget.value !== "NOTE") {
     return;
   }
-  if (shouldEditLyricOnDoubleClickNote()) {
-    const mouseButton = getButton(event);
-    if (mouseButton === "LEFT_BUTTON" && note.id !== state.editingLyricNoteId) {
-      void store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId: note.id });
-    }
+  const mouseButton = getButton(event);
+  if (mouseButton === "LEFT_BUTTON" && note.id !== state.editingLyricNoteId) {
+    void store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId: note.id });
   }
 };
 
@@ -1484,33 +1178,38 @@ const onMouseDown = (event: MouseEvent) => {
       if (editingLyricNote.value != undefined) {
         return;
       }
-      if (shouldStartRectSelectIfShiftKeyDown() && event.shiftKey) {
+      if (event.shiftKey) {
         // Shiftキーが押されている場合の矩形選択
         isRectSelecting.value = true;
         rectSelectStartX.value = cursorX.value;
         rectSelectStartY.value = cursorY.value;
         setCursorState(CursorState.CROSSHAIR);
+      } else if (shouldAddNoteOnClick(event)) {
+        startPreview(event, "ADD_NOTE");
       } else if (shouldRectSelectOnDrag()) {
-        // シフトキーなしでの矩形選択（TOOLLESS_D）
         isRectSelecting.value = true;
         rectSelectStartX.value = cursorX.value;
         rectSelectStartY.value = cursorY.value;
         setCursorState(CursorState.CROSSHAIR);
-      } else if (shouldDeselectAllOnCtrlOrCommandClick(event)) {
+      } else if (shouldDeselectAllOnCtrlOrCommandClick()) {
         // Ctrl or Command + グリッドをクリック時に選択解除
         void store.dispatch("DESELECT_ALL_NOTES");
-      } else if (shouldDeselectAllOnClick(event)) {
+      } else if (shouldDeselectAllOnClick()) {
         // 選択解除
         void store.dispatch("DESELECT_ALL_NOTES");
-      } else if (
-        shouldAddNoteOnClick(event) &&
-        !shouldDeselectAllOnClick(event)
-      ) {
-        // ノート追加
-        startPreview(event, "ADD_NOTE");
       }
     } else {
       void store.dispatch("DESELECT_ALL_NOTES");
+    }
+  }
+
+  if (editTarget.value === "PITCH") {
+    if (mouseButton === "LEFT_BUTTON") {
+      if (selectedEditPitchTool.value === "ERASE") {
+        startPreview(event, "ERASE_PITCH");
+      } else if (selectedEditPitchTool.value === "DRAW") {
+        startPreview(event, "DRAW_PITCH");
+      }
     }
   }
 };
@@ -1549,7 +1248,7 @@ const onMouseUp = (event: MouseEvent) => {
   }
 
   void nextTick(() => {
-    setDefaultCursorStateTemp(event);
+    setDefaultCursorState();
   });
 };
 
@@ -2205,48 +1904,36 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   }
 }
 
-.edit-mode-selector {
-  background: var(--scheme-color-surface);
-  border: 1px solid var(--scheme-color-outline);
-  position: fixed;
-  top: 128px;
-  right: 24px;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  padding: 8px;
-  border-radius: 8px;
-}
-
-.edit-mode-selector label {
-  margin-right: 8px;
-  color: var(--scheme-color-on-surface);
-}
-
-.edit-mode-selector select {
-  padding: 4px;
-  background-color: var(--scheme-color-surface);
-  color: var(--scheme-color-on-surface);
-  border: 1px solid var(--scheme-color-outline-variant);
-  border-radius: 8px;
-}
-
 .tool-palette {
   display: flex;
   flex-direction: column;
   background: var(--scheme-color-surface);
-  border: 1px solid var(--scheme-color-outline);
+  outline: 1px solid var(--scheme-color-outline-variant);
   position: fixed;
-  top: 136px;
-  left: 64px;
+  top: 140px;
+  left: 60px;
   z-index: 10;
-  padding: 8px;
-  border-radius: 8px;
-  gap: 4px;
+  padding: 2px;
+  border-radius: 24px;
+  gap: 0;
+  box-shadow:
+    0px 8px 16px -4px oklch(from var(--scheme-color-scrim) l c h / 0.1),
+    0px 4px 8px -4px oklch(from var(--scheme-color-scrim) l c h / 0.06);
+
+  .material-symbols-outlined {
+    font-size: 20px;
+  }
 
   .q-btn {
-    &.q-btn--active {
-      background-color: var(--scheme-color-primary-container);
+    min-height: 40px;
+    min-width: 40px;
+    padding: 8px;
+
+    &.text-primary {
+      background-color: var(--scheme-color-secondary-container);
+      .material-symbols-outlined {
+        color: var(--scheme-color-on-primary-container);
+      }
     }
   }
 }
