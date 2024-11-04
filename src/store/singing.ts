@@ -110,7 +110,7 @@ const logger = createLogger("store/singing");
 /**
  * フレーズレンダリングに必要なデータのスナップショット
  */
-type Snapshot = Readonly<{
+type SnapshotForPhraseRender = Readonly<{
   tpqn: number;
   tempos: Tempo[];
   tracks: Map<TrackId, Track>;
@@ -119,83 +119,12 @@ type Snapshot = Readonly<{
 }>;
 
 /**
- * フレーズ
- */
-type PhraseProxy = Readonly<{
-  firstRestDuration: number;
-  notes: Note[];
-  startTime: number;
-  queryKey: {
-    get: () => EditorFrameAudioQueryKey | undefined;
-    set: (value: EditorFrameAudioQueryKey | undefined) => void;
-  };
-  singingVolumeKey: {
-    get: () => SingingVolumeKey | undefined;
-    set: (value: SingingVolumeKey | undefined) => void;
-  };
-  singingVoiceKey: {
-    get: () => SingingVoiceKey | undefined;
-    set: (value: SingingVoiceKey | undefined) => void;
-  };
-}>;
-
-/**
- * フレーズレンダリングで必要となる外部のキャッシュや関数
- */
-type ExternalDependencies = Readonly<{
-  queryCache: Map<EditorFrameAudioQueryKey, EditorFrameAudioQuery>;
-  singingVolumeCache: Map<SingingVolumeKey, SingingVolume>;
-  singingVoiceCache: Map<SingingVoiceKey, SingingVoice>;
-
-  phrases: {
-    get: (phraseKey: PhraseKey) => PhraseProxy;
-  };
-  phraseQueries: {
-    get: (queryKey: EditorFrameAudioQueryKey) => EditorFrameAudioQuery;
-    set: (
-      queryKey: EditorFrameAudioQueryKey,
-      query: EditorFrameAudioQuery,
-    ) => void;
-    delete: (queryKey: EditorFrameAudioQueryKey) => void;
-  };
-  phraseSingingVolumes: {
-    get: (singingVolumeKey: SingingVolumeKey) => SingingVolume;
-    set: (
-      singingVolumeKey: SingingVolumeKey,
-      singingVolume: SingingVolume,
-    ) => void;
-    delete: (singingVolumeKey: SingingVolumeKey) => void;
-  };
-  phraseSingingVoices: {
-    set: (singingVoiceKey: SingingVoiceKey, singingVoice: SingingVoice) => void;
-    delete: (singingVoiceKey: SingingVoiceKey) => void;
-  };
-
-  fetchQuery: (
-    engineId: EngineId,
-    engineFrameRate: number,
-    notes: NoteForRequestToEngine[],
-  ) => Promise<EditorFrameAudioQuery>;
-  fetchSingFrameVolume: (
-    notes: NoteForRequestToEngine[],
-    query: EditorFrameAudioQuery,
-    engineId: EngineId,
-    styleId: StyleId,
-  ) => Promise<SingingVolume>;
-  synthesizeSingingVoice: (
-    singer: Singer,
-    query: EditorFrameAudioQuery,
-  ) => Promise<SingingVoice>;
-}>;
-
-/**
  * フレーズレンダリングのコンテキスト
  */
-type Context = Readonly<{
-  snapshot: Snapshot;
+type PhraseRenderContext = Readonly<{
+  snapshot: SnapshotForPhraseRender;
   trackId: TrackId;
   phraseKey: PhraseKey;
-  externalDependencies: ExternalDependencies;
 }>;
 
 type PhraseRenderStageId =
@@ -207,7 +136,7 @@ type PhraseRenderStageId =
  * フレーズレンダリングのステージのインターフェイス。
  * フレーズレンダラー内で順に実行される。
  */
-type BaseStage = Readonly<{
+type PhraseRenderBaseStage = Readonly<{
   id: PhraseRenderStageId;
 
   /**
@@ -215,19 +144,19 @@ type BaseStage = Readonly<{
    * @param context コンテキスト
    * @returns 実行が必要かどうかのブール値
    */
-  shouldBeExecuted: (context: Context) => Promise<boolean>;
+  shouldBeExecuted: (context: PhraseRenderContext) => Promise<boolean>;
 
   /**
    * 前回の処理結果を削除する。
    * @param context コンテキスト
    */
-  deleteExecutionResult: (context: Context) => void;
+  deleteExecutionResult: (context: PhraseRenderContext) => void;
 
   /**
    * ステージの処理を実行する。
    * @param context コンテキスト
    */
-  execute: (context: Context) => Promise<void>;
+  execute: (context: PhraseRenderContext) => Promise<void>;
 }>;
 
 /**
@@ -270,7 +199,7 @@ type SingingVoiceSource = Readonly<{
  * フレーズレンダラー。
  * 各フレーズごとに、ステージを進めながらレンダリング処理を行う。
  */
-export type PhraseRenderer = Readonly<{
+type PhraseRenderer = Readonly<{
   /**
    * 一番最初のステージのIDを返す。
    * 一度もレンダリングを行っていないフレーズは、
@@ -289,7 +218,7 @@ export type PhraseRenderer = Readonly<{
    * @returns ステージID または undefined
    */
   determineStartStage: (
-    snapshot: Snapshot,
+    snapshot: SnapshotForPhraseRender,
     trackId: TrackId,
     phraseKey: PhraseKey,
   ) => Promise<PhraseRenderStageId | undefined>;
@@ -303,7 +232,7 @@ export type PhraseRenderer = Readonly<{
    * @param startStageId 開始ステージID
    */
   render: (
-    snapshot: Snapshot,
+    snapshot: SnapshotForPhraseRender,
     trackId: TrackId,
     phraseKey: PhraseKey,
     startStageId: PhraseRenderStageId,
@@ -1821,9 +1750,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         return foundPhrases;
       };
 
-      const generateQuerySource = (context: Context): QuerySource => {
-        const { phrases } = context.externalDependencies;
-
+      const generateQuerySource = (
+        context: PhraseRenderContext,
+      ): QuerySource => {
         const track = getOrThrow(context.snapshot.tracks, context.trackId);
         if (track.singer == undefined) {
           throw new Error("track.singer is undefined.");
@@ -1832,7 +1761,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           context.snapshot.engineFrameRates,
           track.singer.engineId,
         );
-        const phrase = phrases.get(context.phraseKey);
+        const phrase = getOrThrow(state.phrases, context.phraseKey);
         return {
           engineId: track.singer.engineId,
           engineFrameRate,
@@ -1881,7 +1810,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
       const generateQuery = async (
         querySource: QuerySource,
-        externalDependencies: ExternalDependencies,
       ): Promise<EditorFrameAudioQuery> => {
         const notesForRequestToEngine = createNotesForRequestToEngine(
           querySource.firstRestDuration,
@@ -1897,7 +1825,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           -querySource.keyRangeAdjustment,
         );
 
-        const query = await externalDependencies.fetchQuery(
+        const query = await fetchQuery(
           querySource.engineId,
           querySource.engineFrameRate,
           notesForRequestToEngine,
@@ -1907,35 +1835,31 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         return query;
       };
 
-      const queryGenerationStage: BaseStage = {
+      const queryGenerationStage: PhraseRenderBaseStage = {
         id: "queryGeneration",
-        shouldBeExecuted: async (context: Context) => {
-          const { phrases } = context.externalDependencies;
-
+        shouldBeExecuted: async (context: PhraseRenderContext) => {
           const track = getOrThrow(context.snapshot.tracks, context.trackId);
           if (track.singer == undefined) {
             return false;
           }
-          const phrase = phrases.get(context.phraseKey);
-          const phraseQueryKey = phrase.queryKey.get();
+          const phrase = getOrThrow(state.phrases, context.phraseKey);
+          const phraseQueryKey = phrase.queryKey;
           const querySource = generateQuerySource(context);
           const queryKey = await calculateQueryKey(querySource);
           return phraseQueryKey == undefined || phraseQueryKey !== queryKey;
         },
-        deleteExecutionResult: (context: Context) => {
-          const { phrases, phraseQueries } = context.externalDependencies;
-
-          const phrase = phrases.get(context.phraseKey);
-          const phraseQueryKey = phrase.queryKey.get();
+        deleteExecutionResult: (context: PhraseRenderContext) => {
+          const phrase = getOrThrow(state.phrases, context.phraseKey);
+          const phraseQueryKey = phrase.queryKey;
           if (phraseQueryKey != undefined) {
-            phraseQueries.delete(phraseQueryKey);
-            phrase.queryKey.set(undefined);
+            mutations.DELETE_PHRASE_QUERY({ queryKey: phraseQueryKey });
+            mutations.SET_QUERY_KEY_TO_PHRASE({
+              phraseKey: context.phraseKey,
+              queryKey: undefined,
+            });
           }
         },
-        execute: async (context: Context) => {
-          const { phrases, phraseQueries, queryCache } =
-            context.externalDependencies;
-
+        execute: async (context: PhraseRenderContext) => {
           const querySource = generateQuerySource(context);
           const queryKey = await calculateQueryKey(querySource);
 
@@ -1943,40 +1867,38 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           if (query != undefined) {
             logger.info(`Loaded query from cache.`);
           } else {
-            query = await generateQuery(
-              querySource,
-              context.externalDependencies,
-            );
+            query = await generateQuery(querySource);
             const phonemes = getPhonemes(query);
             logger.info(`Generated query. phonemes: ${phonemes}`);
             queryCache.set(queryKey, query);
           }
 
-          const phrase = phrases.get(context.phraseKey);
-          const phraseQueryKey = phrase.queryKey.get();
+          const phrase = getOrThrow(state.phrases, context.phraseKey);
+          const phraseQueryKey = phrase.queryKey;
           if (phraseQueryKey != undefined) {
-            phraseQueries.delete(phraseQueryKey);
+            mutations.DELETE_PHRASE_QUERY({ queryKey: phraseQueryKey });
           }
-          phraseQueries.set(queryKey, query);
-          phrase.queryKey.set(queryKey);
+          mutations.SET_PHRASE_QUERY({ queryKey, query });
+          mutations.SET_QUERY_KEY_TO_PHRASE({
+            phraseKey: context.phraseKey,
+            queryKey,
+          });
         },
       };
 
       const generateSingingVolumeSource = (
-        context: Context,
+        context: PhraseRenderContext,
       ): SingingVolumeSource => {
-        const { phrases, phraseQueries } = context.externalDependencies;
-
         const track = getOrThrow(context.snapshot.tracks, context.trackId);
         if (track.singer == undefined) {
           throw new Error("track.singer is undefined.");
         }
-        const phrase = phrases.get(context.phraseKey);
-        const phraseQueryKey = phrase.queryKey.get();
+        const phrase = getOrThrow(state.phrases, context.phraseKey);
+        const phraseQueryKey = phrase.queryKey;
         if (phraseQueryKey == undefined) {
           throw new Error("phraseQueryKey is undefined.");
         }
-        const query = phraseQueries.get(phraseQueryKey);
+        const query = getOrThrow(state.phraseQueries, phraseQueryKey);
         const clonedQuery = cloneWithUnwrapProxy(query);
         applyPitchEdit(
           clonedQuery,
@@ -1999,7 +1921,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
       const generateSingingVolume = async (
         singingVolumeSource: SingingVolumeSource,
-        externalDependencies: ExternalDependencies,
       ) => {
         const notesForRequestToEngine = createNotesForRequestToEngine(
           singingVolumeSource.firstRestDuration,
@@ -2021,12 +1942,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           -singingVolumeSource.keyRangeAdjustment,
         );
 
-        const singingVolume = await externalDependencies.fetchSingFrameVolume(
-          notesForRequestToEngine,
-          queryForVolumeGeneration,
-          singingVolumeSource.engineId,
-          singingTeacherStyleId,
-        );
+        const singingVolume = await actions.FETCH_SING_FRAME_VOLUME({
+          notes: notesForRequestToEngine,
+          query: queryForVolumeGeneration,
+          engineId: singingVolumeSource.engineId,
+          styleId: singingTeacherStyleId,
+        });
 
         shiftVolume(singingVolume, singingVolumeSource.volumeRangeAdjustment);
         muteLastPauSection(
@@ -2038,11 +1959,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         return singingVolume;
       };
 
-      const singingVolumeGenerationStage: BaseStage = {
+      const singingVolumeGenerationStage: PhraseRenderBaseStage = {
         id: "singingVolumeGeneration",
-        shouldBeExecuted: async (context: Context) => {
-          const { phrases } = context.externalDependencies;
-
+        shouldBeExecuted: async (context: PhraseRenderContext) => {
           const track = getOrThrow(context.snapshot.tracks, context.trackId);
           if (track.singer == undefined) {
             return false;
@@ -2050,28 +1969,27 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           const singingVolumeSource = generateSingingVolumeSource(context);
           const singingVolumeKey =
             await calculateSingingVolumeKey(singingVolumeSource);
-          const phrase = phrases.get(context.phraseKey);
-          const phraseSingingVolumeKey = phrase.singingVolumeKey.get();
+          const phrase = getOrThrow(state.phrases, context.phraseKey);
+          const phraseSingingVolumeKey = phrase.singingVolumeKey;
           return (
             phraseSingingVolumeKey == undefined ||
             phraseSingingVolumeKey !== singingVolumeKey
           );
         },
-        deleteExecutionResult: (context: Context) => {
-          const { phrases, phraseSingingVolumes } =
-            context.externalDependencies;
-
-          const phrase = phrases.get(context.phraseKey);
-          const phraseSingingVolumeKey = phrase.singingVolumeKey.get();
+        deleteExecutionResult: (context: PhraseRenderContext) => {
+          const phrase = getOrThrow(state.phrases, context.phraseKey);
+          const phraseSingingVolumeKey = phrase.singingVolumeKey;
           if (phraseSingingVolumeKey != undefined) {
-            phraseSingingVolumes.delete(phraseSingingVolumeKey);
-            phrase.singingVolumeKey.set(undefined);
+            mutations.DELETE_PHRASE_SINGING_VOLUME({
+              singingVolumeKey: phraseSingingVolumeKey,
+            });
+            mutations.SET_SINGING_VOLUME_KEY_TO_PHRASE({
+              phraseKey: context.phraseKey,
+              singingVolumeKey: undefined,
+            });
           }
         },
-        execute: async (context: Context) => {
-          const { phrases, phraseSingingVolumes, singingVolumeCache } =
-            context.externalDependencies;
-
+        execute: async (context: PhraseRenderContext) => {
           const singingVolumeSource = generateSingingVolumeSource(context);
           const singingVolumeKey =
             await calculateSingingVolumeKey(singingVolumeSource);
@@ -2080,45 +1998,50 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           if (singingVolume != undefined) {
             logger.info(`Loaded singing volume from cache.`);
           } else {
-            singingVolume = await generateSingingVolume(
-              singingVolumeSource,
-              context.externalDependencies,
-            );
+            singingVolume = await generateSingingVolume(singingVolumeSource);
             logger.info(`Generated singing volume.`);
             singingVolumeCache.set(singingVolumeKey, singingVolume);
           }
 
-          const phrase = phrases.get(context.phraseKey);
-          const phraseSingingVolumeKey = phrase.singingVolumeKey.get();
+          const phrase = getOrThrow(state.phrases, context.phraseKey);
+          const phraseSingingVolumeKey = phrase.singingVolumeKey;
           if (phraseSingingVolumeKey != undefined) {
-            phraseSingingVolumes.delete(phraseSingingVolumeKey);
+            mutations.DELETE_PHRASE_SINGING_VOLUME({
+              singingVolumeKey: phraseSingingVolumeKey,
+            });
           }
-          phraseSingingVolumes.set(singingVolumeKey, singingVolume);
-          phrase.singingVolumeKey.set(singingVolumeKey);
+          mutations.SET_PHRASE_SINGING_VOLUME({
+            singingVolumeKey,
+            singingVolume,
+          });
+          mutations.SET_SINGING_VOLUME_KEY_TO_PHRASE({
+            phraseKey: context.phraseKey,
+            singingVolumeKey,
+          });
         },
       };
 
       const generateSingingVoiceSource = (
-        context: Context,
+        context: PhraseRenderContext,
       ): SingingVoiceSource => {
-        const { phrases, phraseQueries, phraseSingingVolumes } =
-          context.externalDependencies;
-
         const track = getOrThrow(context.snapshot.tracks, context.trackId);
         if (track.singer == undefined) {
           throw new Error("track.singer is undefined.");
         }
-        const phrase = phrases.get(context.phraseKey);
-        const phraseQueryKey = phrase.queryKey.get();
-        const phraseSingingVolumeKey = phrase.singingVolumeKey.get();
+        const phrase = getOrThrow(state.phrases, context.phraseKey);
+        const phraseQueryKey = phrase.queryKey;
+        const phraseSingingVolumeKey = phrase.singingVolumeKey;
         if (phraseQueryKey == undefined) {
           throw new Error("phraseQueryKey is undefined.");
         }
         if (phraseSingingVolumeKey == undefined) {
           throw new Error("phraseSingingVolumeKey is undefined.");
         }
-        const query = phraseQueries.get(phraseQueryKey);
-        const singingVolume = phraseSingingVolumes.get(phraseSingingVolumeKey);
+        const query = getOrThrow(state.phraseQueries, phraseQueryKey);
+        const singingVolume = getOrThrow(
+          state.phraseSingingVolumes,
+          phraseSingingVolumeKey,
+        );
         const clonedQuery = cloneWithUnwrapProxy(query);
         const clonedSingingVolume = cloneWithUnwrapProxy(singingVolume);
         applyPitchEdit(
@@ -2134,14 +2057,15 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         };
       };
 
-      const _synthesizeSingingVoice = async (
-        singer: Singer,
-        query: EditorFrameAudioQuery,
+      const synthesizeSingingVoice = async (
+        singingVoiceSource: SingingVoiceSource,
       ) => {
+        const singer = singingVoiceSource.singer;
+        const query = singingVoiceSource.queryForSingingVoiceSynthesis;
+
         if (!getters.IS_ENGINE_READY(singer.engineId)) {
           throw new Error("Engine not ready.");
         }
-
         try {
           const instance = await actions.INSTANTIATE_ENGINE_CONNECTOR({
             engineId: singer.engineId,
@@ -2162,22 +2086,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         }
       };
 
-      const synthesizeSingingVoice = async (
-        singingVoiceSource: SingingVoiceSource,
-        externalDependencies: ExternalDependencies,
-      ) => {
-        const singingVoice = await externalDependencies.synthesizeSingingVoice(
-          singingVoiceSource.singer,
-          singingVoiceSource.queryForSingingVoiceSynthesis,
-        );
-        return singingVoice;
-      };
-
-      const singingVoiceSynthesisStage: BaseStage = {
+      const singingVoiceSynthesisStage: PhraseRenderBaseStage = {
         id: "singingVoiceSynthesis",
-        shouldBeExecuted: async (context: Context) => {
-          const { phrases } = context.externalDependencies;
-
+        shouldBeExecuted: async (context: PhraseRenderContext) => {
           const track = getOrThrow(context.snapshot.tracks, context.trackId);
           if (track.singer == undefined) {
             return false;
@@ -2185,27 +2096,25 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           const singingVoiceSource = generateSingingVoiceSource(context);
           const singingVoiceKey =
             await calculateSingingVoiceKey(singingVoiceSource);
-          const phrase = phrases.get(context.phraseKey);
-          const phraseSingingVoiceKey = phrase.singingVoiceKey.get();
+          const phrase = getOrThrow(state.phrases, context.phraseKey);
+          const phraseSingingVoiceKey = phrase.singingVoiceKey;
           return (
             phraseSingingVoiceKey == undefined ||
             phraseSingingVoiceKey !== singingVoiceKey
           );
         },
-        deleteExecutionResult: (context: Context) => {
-          const { phrases, phraseSingingVoices } = context.externalDependencies;
-
-          const phrase = phrases.get(context.phraseKey);
-          const phraseSingingVoiceKey = phrase.singingVoiceKey.get();
+        deleteExecutionResult: (context: PhraseRenderContext) => {
+          const phrase = getOrThrow(state.phrases, context.phraseKey);
+          const phraseSingingVoiceKey = phrase.singingVoiceKey;
           if (phraseSingingVoiceKey != undefined) {
             phraseSingingVoices.delete(phraseSingingVoiceKey);
-            phrase.singingVoiceKey.set(undefined);
+            mutations.SET_SINGING_VOICE_KEY_TO_PHRASE({
+              phraseKey: context.phraseKey,
+              singingVoiceKey: undefined,
+            });
           }
         },
-        execute: async (context: Context) => {
-          const { phrases, phraseSingingVoices, singingVoiceCache } =
-            context.externalDependencies;
-
+        execute: async (context: PhraseRenderContext) => {
           const singingVoiceSource = generateSingingVoiceSource(context);
           const singingVoiceKey =
             await calculateSingingVoiceKey(singingVoiceSource);
@@ -2214,86 +2123,75 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           if (singingVoice != undefined) {
             logger.info(`Loaded singing voice from cache.`);
           } else {
-            singingVoice = await synthesizeSingingVoice(
-              singingVoiceSource,
-              context.externalDependencies,
-            );
+            singingVoice = await synthesizeSingingVoice(singingVoiceSource);
             logger.info(`Generated singing voice.`);
             singingVoiceCache.set(singingVoiceKey, singingVoice);
           }
 
-          const phrase = phrases.get(context.phraseKey);
-          const phraseSingingVoiceKey = phrase.singingVoiceKey.get();
+          const phrase = getOrThrow(state.phrases, context.phraseKey);
+          const phraseSingingVoiceKey = phrase.singingVoiceKey;
           if (phraseSingingVoiceKey != undefined) {
             phraseSingingVoices.delete(phraseSingingVoiceKey);
           }
           phraseSingingVoices.set(singingVoiceKey, singingVoice);
-          phrase.singingVoiceKey.set(singingVoiceKey);
+          mutations.SET_SINGING_VOICE_KEY_TO_PHRASE({
+            phraseKey: context.phraseKey,
+            singingVoiceKey,
+          });
         },
       };
 
-      const stages: readonly BaseStage[] = [
+      const stages: readonly PhraseRenderBaseStage[] = [
         queryGenerationStage,
         singingVolumeGenerationStage,
         singingVoiceSynthesisStage,
       ];
 
-      /**
-       * フレーズレンダラーを作成する。
-       * @param externalDependencies レンダリング処理で必要となる外部のキャッシュや関数
-       * @returns フレーズレンダラー
-       */
-      const createPhraseRenderer = (
-        externalDependencies: ExternalDependencies,
-      ): PhraseRenderer => {
-        return {
-          getFirstRenderStageId: () => {
-            return stages[0].id;
-          },
-          determineStartStage: async (
-            snapshot: Snapshot,
-            trackId: TrackId,
-            phraseKey: PhraseKey,
-          ) => {
-            const context: Context = {
-              snapshot,
-              trackId,
-              phraseKey,
-              externalDependencies,
-            };
-            for (const stage of stages) {
-              if (await stage.shouldBeExecuted(context)) {
-                return stage.id;
-              }
+      const phraseRenderer: PhraseRenderer = {
+        getFirstRenderStageId: () => {
+          return stages[0].id;
+        },
+        determineStartStage: async (
+          snapshot: SnapshotForPhraseRender,
+          trackId: TrackId,
+          phraseKey: PhraseKey,
+        ) => {
+          const context: PhraseRenderContext = {
+            snapshot,
+            trackId,
+            phraseKey,
+          };
+          for (const stage of stages) {
+            if (await stage.shouldBeExecuted(context)) {
+              return stage.id;
             }
-            return undefined;
-          },
-          render: async (
-            snapshot: Snapshot,
-            trackId: TrackId,
-            phraseKey: PhraseKey,
-            startStageId: PhraseRenderStageId,
-          ) => {
-            const context: Context = {
-              snapshot,
-              trackId,
-              phraseKey,
-              externalDependencies,
-            };
-            const startStageIndex = stages.findIndex((value) => {
-              return value.id === startStageId;
-            });
-            if (startStageIndex === -1) {
-              throw new Error("Stage not found.");
-            }
-            for (let i = stages.length - 1; i >= startStageIndex; i--) {
-              stages[i].deleteExecutionResult(context);
-            }
-            for (let i = startStageIndex; i < stages.length; i++) {
-              await stages[i].execute(context);
-            }
-          },
-        };
+          }
+          return undefined;
+        },
+        render: async (
+          snapshot: SnapshotForPhraseRender,
+          trackId: TrackId,
+          phraseKey: PhraseKey,
+          startStageId: PhraseRenderStageId,
+        ) => {
+          const context: PhraseRenderContext = {
+            snapshot,
+            trackId,
+            phraseKey,
+          };
+          const startStageIndex = stages.findIndex((value) => {
+            return value.id === startStageId;
+          });
+          if (startStageIndex === -1) {
+            throw new Error("Stage not found.");
+          }
+          for (let i = stages.length - 1; i >= startStageIndex; i--) {
+            stages[i].deleteExecutionResult(context);
+          }
+          for (let i = startStageIndex; i < stages.length; i++) {
+            await stages[i].execute(context);
+          }
+        },
       };
 
       // NOTE: 型推論でawaitの前か後かが考慮されないので、関数を介して取得する（型がbooleanになるようにする）
@@ -2342,80 +2240,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           ),
           editorFrameRate: state.editorFrameRate,
         } as const;
-
-        const phraseRenderer = createPhraseRenderer({
-          queryCache,
-          singingVolumeCache,
-          singingVoiceCache,
-          phrases: {
-            get: (phraseKey: PhraseKey) => {
-              const phrase = getOrThrow(state.phrases, phraseKey);
-              return {
-                firstRestDuration: phrase.firstRestDuration,
-                notes: phrase.notes,
-                startTime: phrase.startTime,
-                queryKey: {
-                  get: () => getOrThrow(state.phrases, phraseKey).queryKey,
-                  set: (value) =>
-                    mutations.SET_QUERY_KEY_TO_PHRASE({
-                      phraseKey,
-                      queryKey: value,
-                    }),
-                },
-                singingVolumeKey: {
-                  get: () =>
-                    getOrThrow(state.phrases, phraseKey).singingVolumeKey,
-                  set: (value) =>
-                    mutations.SET_SINGING_VOLUME_KEY_TO_PHRASE({
-                      phraseKey,
-                      singingVolumeKey: value,
-                    }),
-                },
-                singingVoiceKey: {
-                  get: () =>
-                    getOrThrow(state.phrases, phraseKey).singingVoiceKey,
-                  set: (value) =>
-                    mutations.SET_SINGING_VOICE_KEY_TO_PHRASE({
-                      phraseKey,
-                      singingVoiceKey: value,
-                    }),
-                },
-              };
-            },
-          },
-          phraseQueries: {
-            get: (queryKey) => getOrThrow(state.phraseQueries, queryKey),
-            set: (queryKey, query) =>
-              mutations.SET_PHRASE_QUERY({ queryKey, query }),
-            delete: (queryKey) => mutations.DELETE_PHRASE_QUERY({ queryKey }),
-          },
-          phraseSingingVolumes: {
-            get: (singingVolumeKey) =>
-              getOrThrow(state.phraseSingingVolumes, singingVolumeKey),
-            set: (singingVolumeKey, singingVolume) =>
-              mutations.SET_PHRASE_SINGING_VOLUME({
-                singingVolumeKey,
-                singingVolume,
-              }),
-            delete: (singingVolumeKey) =>
-              mutations.DELETE_PHRASE_SINGING_VOLUME({ singingVolumeKey }),
-          },
-          phraseSingingVoices: {
-            set: (singingVoiceKey, singingVoice) =>
-              phraseSingingVoices.set(singingVoiceKey, singingVoice),
-            delete: (singingVoiceKey) =>
-              phraseSingingVoices.delete(singingVoiceKey),
-          },
-          fetchQuery,
-          fetchSingFrameVolume: (notes, query, engineId, styleId) =>
-            actions.FETCH_SING_FRAME_VOLUME({
-              notes,
-              query,
-              engineId,
-              styleId,
-            }),
-          synthesizeSingingVoice: _synthesizeSingingVoice,
-        });
 
         const renderStartStageIds = new Map<PhraseKey, PhraseRenderStageId>();
 
