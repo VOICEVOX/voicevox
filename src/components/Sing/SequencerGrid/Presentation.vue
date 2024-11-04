@@ -8,12 +8,10 @@
   >
     <defs>
       <pattern
-        v-for="(pattern, patternIndex) in gridPatterns"
-        :id="`sequencer-grid-pattern-${patternIndex}`"
-        :key="`pattern-${patternIndex}`"
+        id="sequencer-grid-pattern-bg"
         patternUnits="userSpaceOnUse"
-        :x="gridPatterns[patternIndex].x"
-        :width="gridPatterns[patternIndex].patternWidth"
+        :x="0"
+        :width="gridCellWidth"
         :height="gridCellHeight * 12"
       >
         <!-- セルの背景 -->
@@ -22,20 +20,28 @@
           :key="`cell-${index}`"
           x="0"
           :y="gridCellHeight * index"
-          :width="gridPatterns[patternIndex].patternWidth"
-          :height="gridCellHeight"
+          :width="gridCellWidth"
+          :height="gridCellHeight * 12"
           :class="`sequencer-grid-cell sequencer-grid-cell-${keyInfo.color}`"
         />
         <!-- スナップグリッド線 -->
         <line
-          v-for="x in pattern.snapLinePositions"
-          :key="`snapline-${x}`"
-          :x1="x"
-          :x2="x"
+          :x1="gridCellWidth"
+          :x2="gridCellWidth"
           y1="0"
           :y2="gridCellHeight * 12"
           class="sequencer-grid-vertical-line"
         />
+      </pattern>
+      <pattern
+        v-for="(pattern, patternIndex) in gridPatterns"
+        :id="`sequencer-grid-pattern-${patternIndex}`"
+        :key="`pattern-${patternIndex}`"
+        patternUnits="userSpaceOnUse"
+        :x="gridPatterns[patternIndex].x"
+        :width="gridPatterns[patternIndex].patternWidth"
+        :height="gridCellHeight * 12"
+      >
         <!-- E/Fの中間線 -->
         <line
           v-for="index in horizontalLineIndices"
@@ -58,7 +64,15 @@
         />
       </pattern>
     </defs>
-    <!-- グリッドパターン背景 -->
+    <!-- グリッド背景 -->
+    <rect
+      x="0"
+      y="0"
+      :width="gridWidth"
+      :height="gridHeight"
+      :fill="`url(#sequencer-grid-pattern-bg)`"
+    />
+    <!-- グリッドパターン -->
     <rect
       v-for="gridPattern in gridPatterns"
       :key="`grid-${gridPattern.id}`"
@@ -149,7 +163,6 @@ const gridPatterns = computed(() => {
     beatWidth: number;
     beatsPerMeasure: number;
     beatLineIndices: number[];
-    snapLinePositions: number[];
     patternWidth: number;
     width: number;
   }[] = [];
@@ -168,7 +181,6 @@ const gridPatterns = computed(() => {
       beatWidth: beatWidth(timeSignature),
       beatsPerMeasure: timeSignature.beats,
       beatLineIndices: beatLineIndices(timeSignature),
-      snapLinePositions: snapLinePositions(timeSignature),
       patternWidth,
       width: patternWidth * (nextMeasureNumber - timeSignature.measureNumber),
     });
@@ -221,19 +233,6 @@ const horizontalLineIndices = computed(() => gridLines.value.horizontalLines);
 const octaveLineIndices = computed(() => gridLines.value.octaveLines);
 const beatLineIndices = (timeSignature: TimeSignature) =>
   Array.from({ length: timeSignature.beats - 1 }, (_, i) => i + 1);
-const snapLinePositions = (timeSignature: TimeSignature) => {
-  const snapTicks = gridCellTicks.value;
-  const measureTicks =
-    (props.tpqn * 4 * timeSignature.beats) / timeSignature.beatType;
-  const snapCount = Math.floor(measureTicks / snapTicks);
-
-  return Array.from({ length: snapCount }, (_, index) => {
-    const currentTick = snapTicks * (index + 1);
-    return Math.round(
-      (currentTick / measureTicks) * measureWidth(timeSignature),
-    );
-  });
-};
 </script>
 
 <style scoped lang="scss">
