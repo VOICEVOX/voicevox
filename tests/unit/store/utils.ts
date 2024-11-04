@@ -14,6 +14,24 @@ import {
   getCharacterInfoMock,
   getCharactersMock,
 } from "@/mock/engineMock/characterResourceMock";
+import { SandboxKey, Sandbox } from "@/type/preload";
+
+/** バックエンド向けAPIにmockを差し込む */
+export function mockSandbox() {
+  const sandbox = {
+    logError(...params: unknown[]) {
+      console.error(...params);
+    },
+    logWarn(...params: unknown[]) {
+      console.warn(...params);
+    },
+    logInfo(...params: unknown[]) {
+      console.info(...params);
+    },
+  } satisfies Partial<Sandbox>;
+  // @ts-expect-error readonlyになっているがmockのため問題ない
+  window[SandboxKey] = sandbox;
+}
 
 /** ソフトウェアが正しく起動した場合のようにVuex.stateを初期化する */
 export function initializeStateAsSoftwareStarted(

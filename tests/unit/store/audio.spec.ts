@@ -1,4 +1,4 @@
-import { initializeStateAsSoftwareStarted } from "./utils";
+import { initializeStateAsSoftwareStarted, mockSandbox } from "./utils";
 
 import { createStoreWrapper } from "@/store";
 import { resetMockMode } from "@/helpers/random";
@@ -15,6 +15,7 @@ beforeEach(() => {
   store.replaceState(initialState);
 
   resetMockMode();
+  mockSandbox();
 });
 
 describe("GENERATE_AUDIO_ITEM", () => {
