@@ -14,6 +14,7 @@
   >
     <slot
       name="contextMenu"
+      :header="contextMenuHeader"
       :menudata="contextMenudata"
       :onContextMenuMounted="(el) => (contextMenu = el)"
     />
@@ -87,6 +88,10 @@
           :x="tempoOrTimeSignatureChange.x - offset + textPadding"
           y="16"
           class="sequencer-ruler-tempo-or-time-signature-change"
+          :data-is-hovered="
+            hoveredTempoOrTimeSignatureChange ===
+            tempoOrTimeSignatureChange.position
+          "
           @click.stop="
             onTempoOrTimeSignatureChangeClick(
               $event,
@@ -405,6 +410,7 @@ const onTempoOrTimeSignatureChangeClick = async (
   event: MouseEvent,
   tempoOrTimeSignatureChange: TempoOrTimeSignatureChange,
 ) => {
+  hoveredTempoOrTimeSignatureChange.value = null;
   const ticks = tempoOrTimeSignatureChange.position;
   playheadTicks.value = ticks;
   contextMenu.value?.show(event);
@@ -547,6 +553,18 @@ const showDialog = async <T extends Component, R>(
   return result;
 };
 
+const contextMenuHeader = computed(() => {
+  const texts = [];
+  if (tempoChangeExists.value) {
+    texts.push(`BPM：${currentTempo.value.bpm}`);
+  }
+  if (timeSignatureChangeExists.value) {
+    texts.push(
+      `拍子：${currentTimeSignature.value.beats}/${currentTimeSignature.value.beatType}`,
+    );
+  }
+  return texts.join("、");
+});
 const contextMenudata = computed<ContextMenuItemData[]>(
   () =>
     [
@@ -663,7 +681,7 @@ const contextMenudata = computed<ContextMenuItemData[]>(
   font-weight: 700;
   fill: var(--scheme-color-on-surface-variant);
 
-  :not([data-ui-locked]) &:hover {
+  :not([data-ui-locked]) :where(&:hover, &[data-is-hovered="true"]) {
     cursor: pointer;
 
     text-decoration: underline;
