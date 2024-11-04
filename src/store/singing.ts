@@ -198,6 +198,7 @@ type SingingVoiceSource = Readonly<{
 /**
  * フレーズレンダラー。
  * 各フレーズごとに、ステージを進めながらレンダリング処理を行う。
+ * レンダリングが必要かどうかの判定やキャッシュの作成も行う。
  */
 type PhraseRenderer = Readonly<{
   /**
