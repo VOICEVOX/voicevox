@@ -1,11 +1,11 @@
 import log from "electron-log/main";
 import { BrowserWindow, dialog } from "electron";
 
-import EngineInfoManager from "./manager/engineInfoManager";
-import EngineProcessManager from "./manager/engineProcessManager";
-import VvppManager from "./manager/vvppManager";
-import { RuntimeInfoManager } from "./manager/RuntimeInfoManager";
-import { ElectronConfigManager } from "./electronConfig";
+import { getConfigManager } from "./electronConfig";
+import { getEngineInfoManager } from "./manager/engineInfoManager";
+import { getEngineProcessManager } from "./manager/engineProcessManager";
+import { getRuntimeInfoManager } from "./manager/RuntimeInfoManager";
+import { getVvppManager } from "./manager/vvppManager";
 import {
   EngineId,
   EngineInfo,
@@ -17,20 +17,13 @@ import {
  * エンジンとVVPP周りの処理の流れを制御するクラス。
  */
 export class EngineAndVvppController {
-  constructor(
-    private runtimeInfoManager: RuntimeInfoManager,
-    private configManager: ElectronConfigManager,
-    private engineInfoManager: EngineInfoManager,
-    private engineProcessManager: EngineProcessManager,
-    private vvppManager: VvppManager,
-  ) {}
-
   /**
    * VVPPエンジンをインストールする。
    */
   async installVvppEngine(vvppPath: string) {
+    const vvppManager = getVvppManager();
     try {
-      await this.vvppManager.install(vvppPath);
+      await vvppManager.install(vvppPath);
       return true;
     } catch (e) {
       dialog.showErrorBox(
@@ -96,21 +89,23 @@ export class EngineAndVvppController {
    */
   async uninstallVvppEngine(engineId: EngineId) {
     let engineInfo: EngineInfo | undefined = undefined;
+    const engineInfoManager = getEngineInfoManager();
+    const vvppManager = getVvppManager();
     try {
-      engineInfo = this.engineInfoManager.fetchEngineInfo(engineId);
+      engineInfo = engineInfoManager.fetchEngineInfo(engineId);
       if (!engineInfo) {
         throw new Error(
           `No such engineInfo registered: engineId == ${engineId}`,
         );
       }
 
-      if (!this.vvppManager.canUninstall(engineInfo)) {
+      if (!vvppManager.canUninstall(engineInfo)) {
         throw new Error(`Cannot uninstall: engineId == ${engineId}`);
       }
 
       // Windows環境だとエンジンを終了してから削除する必要がある。
       // そのため、アプリの終了時に削除するようにする。
-      this.vvppManager.markWillDelete(engineId);
+      vvppManager.markWillDelete(engineId);
       return true;
     } catch (e) {
       const engineName = engineInfo?.name ?? engineId;
@@ -125,33 +120,38 @@ export class EngineAndVvppController {
 
   /** エンジンの設定を更新し、保存する */
   updateEngineSetting(engineId: EngineId, engineSetting: EngineSettingType) {
-    const engineSettings = this.configManager.get("engineSettings");
+    const configManager = getConfigManager();
+    const engineSettings = configManager.get("engineSettings");
     engineSettings[engineId] = engineSetting;
-    this.configManager.set(`engineSettings`, engineSettings);
+    configManager.set(`engineSettings`, engineSettings);
   }
 
   // エンジンの準備と起動
   async launchEngines() {
     // AltPortInfosを再生成する。
-    this.engineInfoManager.initializeAltPortInfo();
+    const engineInfoManager = getEngineInfoManager();
+    engineInfoManager.initializeAltPortInfo();
 
     // TODO: デフォルトエンジンの処理をConfigManagerに移してブラウザ版と共通化する
-    const engineInfos = this.engineInfoManager.fetchEngineInfos();
-    const engineSettings = this.configManager.get("engineSettings");
+    const engineInfos = engineInfoManager.fetchEngineInfos();
+    const configManager = getConfigManager();
+    const engineSettings = configManager.get("engineSettings");
     for (const engineInfo of engineInfos) {
       if (!engineSettings[engineInfo.uuid]) {
         // 空オブジェクトをパースさせることで、デフォルト値を取得する
         engineSettings[engineInfo.uuid] = engineSettingSchema.parse({});
       }
     }
-    this.configManager.set("engineSettings", engineSettings);
+    configManager.set("engineSettings", engineSettings);
 
-    await this.engineProcessManager.runEngineAll();
-    this.runtimeInfoManager.setEngineInfos(
+    const engineProcessManager = getEngineProcessManager();
+    await engineProcessManager.runEngineAll();
+    const runtimeInfoManager = getRuntimeInfoManager();
+    runtimeInfoManager.setEngineInfos(
       engineInfos,
-      this.engineInfoManager.altPortInfos,
+      engineInfoManager.altPortInfos,
     );
-    await this.runtimeInfoManager.exportFile();
+    await runtimeInfoManager.exportFile();
   }
 
   /**
@@ -159,15 +159,18 @@ export class EngineAndVvppController {
    * エンジンの起動が開始したらresolve、起動が失敗したらreject。
    */
   async restartEngines(engineId: EngineId) {
-    await this.engineProcessManager.restartEngine(engineId);
+    const engineProcessManager = getEngineProcessManager();
+    await engineProcessManager.restartEngine(engineId);
 
     // ランタイム情報の更新
     // TODO: setからexportの処理は排他処理にしたほうがより良い
-    this.runtimeInfoManager.setEngineInfos(
-      this.engineInfoManager.fetchEngineInfos(),
-      this.engineInfoManager.altPortInfos,
+    const runtimeInfoManager = getRuntimeInfoManager();
+    const engineInfoManager = getEngineInfoManager();
+    runtimeInfoManager.setEngineInfos(
+      engineInfoManager.fetchEngineInfos(),
+      engineInfoManager.altPortInfos,
     );
-    await this.runtimeInfoManager.exportFile();
+    await runtimeInfoManager.exportFile();
   }
 
   /**
@@ -176,16 +179,15 @@ export class EngineAndVvppController {
    * そうでない場合は Promise を返す。
    */
   cleanupEngines(): Promise<void> | "alreadyCompleted" {
-    const killingProcessPromises = this.engineProcessManager.killEngineAll();
+    const engineProcessManager = getEngineProcessManager();
+    const killingProcessPromises = engineProcessManager.killEngineAll();
     const numLivingEngineProcess = Object.entries(
       killingProcessPromises,
     ).length;
 
     // 前処理が完了している場合
-    if (
-      numLivingEngineProcess === 0 &&
-      !this.vvppManager.hasMarkedEngineDirs()
-    ) {
+    const vvppManager = getVvppManager();
+    if (numLivingEngineProcess === 0 && !vvppManager.hasMarkedEngineDirs()) {
       return "alreadyCompleted";
     }
 
@@ -217,7 +219,8 @@ export class EngineAndVvppController {
       log.info(
         "All ENGINE process kill operations done. Running post engine kill process",
       );
-      return this.vvppManager.handleMarkedEngineDirs();
+      const vvppManager = getVvppManager();
+      return vvppManager.handleMarkedEngineDirs();
     });
   }
 
@@ -228,7 +231,17 @@ export class EngineAndVvppController {
    */
   gracefulShutdown() {
     const engineCleanupResult = this.cleanupEngines();
-    const configSavedResult = this.configManager.ensureSaved();
+    const configManager = getConfigManager();
+    const configSavedResult = configManager.ensureSaved();
     return { engineCleanupResult, configSavedResult };
   }
 }
+
+let manager: EngineAndVvppController | undefined;
+
+export const getEngineAndVvppController = () => {
+  if (manager == undefined) {
+    manager = new EngineAndVvppController();
+  }
+  return manager;
+};
