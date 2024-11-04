@@ -3,6 +3,10 @@
     ref="sequencerRuler"
     class="sequencer-ruler"
     :data-ui-locked="uiLocked"
+    :style="{
+      cursor:
+        hoveredTempoOrTimeSignatureChange !== null ? 'pointer' : undefined,
+    }"
     @click="onClick"
     @contextmenu="onContextMenu"
     @mousemove="updateHoveredTempoOrTimeSignatureChange"
@@ -117,6 +121,8 @@
     <QTooltip
       v-for="tempoOrTimeSignatureChange in collapsedTempoOrTimeSignatureChanges"
       :key="tempoOrTimeSignatureChange.position"
+      transitionShow="none"
+      transitionHide="none"
       :target="`#tempo-or-time-signature-change-${tempoOrTimeSignatureChange.position}`"
       :modelValue="
         hoveredTempoOrTimeSignatureChange ===
@@ -313,6 +319,18 @@ const onClick = async (event: MouseEvent) => {
   if (props.uiLocked) {
     return;
   }
+  if (hoveredTempoOrTimeSignatureChange.value != null) {
+    const tempoOrTimeSignatureChange = tempoOrTimeSignatureChanges.value.find(
+      (tempoOrTimeSignatureChange) =>
+        tempoOrTimeSignatureChange.position ===
+        hoveredTempoOrTimeSignatureChange.value,
+    );
+    if (!tempoOrTimeSignatureChange) {
+      throw new UnreachableError("assert: tempoOrTimeSignatureChange exists.");
+    }
+    void onTempoOrTimeSignatureChangeClick(event, tempoOrTimeSignatureChange);
+    return;
+  }
   emit("deselectAllNotes");
 
   const ticks = getTickFromMouseEvent(event);
@@ -369,6 +387,11 @@ type TempoOrTimeSignatureChange = {
 const hoveredTempoOrTimeSignatureChange = ref<number | null>(null);
 const updateHoveredTempoOrTimeSignatureChange = (event: MouseEvent) => {
   const mouseX = props.offset + event.offsetX;
+  const mouseY = event.offsetY;
+  if (mouseY > height.value / 2) {
+    hoveredTempoOrTimeSignatureChange.value = null;
+    return;
+  }
   const tempoOrTimeSignatureChange = tempoOrTimeSignatureChanges.value.find(
     (tempoOrTimeSignatureChange, i) =>
       tempoOrTimeSignatureChange.displayType !== "full" &&
