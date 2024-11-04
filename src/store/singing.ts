@@ -178,7 +178,6 @@ type QuerySource = Readonly<{
 /**
  * 歌唱ピッチの生成に必要なデータ
  */
-
 type SingingPitchSource = Readonly<{
   engineId: EngineId;
   engineFrameRate: number;
