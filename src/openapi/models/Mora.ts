@@ -20,37 +20,37 @@ import { exists, mapValues } from '../runtime';
  */
 export interface Mora {
     /**
-     * 
+     * 文字
      * @type {string}
      * @memberof Mora
      */
     text: string;
     /**
-     * 
+     * 子音の音素
      * @type {string}
      * @memberof Mora
      */
     consonant?: string;
     /**
-     * 
+     * 子音の音長
      * @type {number}
      * @memberof Mora
      */
     consonantLength?: number;
     /**
-     * 
+     * 母音の音素
      * @type {string}
      * @memberof Mora
      */
     vowel: string;
     /**
-     * 
+     * 母音の音長
      * @type {number}
      * @memberof Mora
      */
     vowelLength: number;
     /**
-     * 
+     * 音高
      * @type {number}
      * @memberof Mora
      */

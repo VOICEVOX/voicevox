@@ -1,5 +1,4 @@
 // テスト用のファイルを読み込むのでNode環境で実行する
-// @vitest-environment node
 
 import path from "path";
 import fs from "fs";

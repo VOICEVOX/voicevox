@@ -9,8 +9,8 @@ import {
   findAltPort,
   getPidFromPort,
   getProcessNameFromPid,
+  type HostInfo,
   isAssignablePort,
-  url2HostInfo,
 } from "../portHelper";
 
 import { EngineInfo, EngineId, EngineSettings } from "@/type/preload";
@@ -86,7 +86,11 @@ export class EngineProcessManager {
     }
 
     // { hostname (localhost), port (50021) } <- url (http://localhost:50021)
-    const engineHostInfo = url2HostInfo(new URL(engineInfo.host));
+    const engineHostInfo: HostInfo = {
+      protocol: engineInfo.protocol,
+      hostname: engineInfo.hostname,
+      port: Number(engineInfo.defaultPort),
+    };
 
     // ポートが塞がっていれば代替ポートを探す
     let port = engineHostInfo.port;
@@ -152,7 +156,7 @@ export class EngineProcessManager {
     const enginePath = engineInfo.executionFilePath;
     const args = engineInfo.executionArgs.concat(useGpu ? ["--use_gpu"] : [], [
       "--host",
-      new URL(engineInfo.host).hostname,
+      engineHostInfo.hostname,
       "--port",
       port.toString(),
     ]);

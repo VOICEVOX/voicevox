@@ -24,6 +24,7 @@ import {
   SingingVoiceKey,
   EditorFrameAudioQueryKey,
   EditorFrameAudioQuery,
+  TrackParameters,
 } from "./type";
 import {
   buildSongTrackAudioFileNameFromRawData,
@@ -131,7 +132,7 @@ const generateNoteEvents = (notes: Note[], tempos: Tempo[], tpqn: number) => {
   });
 };
 
-const generateDefaultSongFileName = (
+const generateDefaultSongFileBaseName = (
   projectName: string | undefined,
   selectedTrack: Track,
   getCharacterInfo: (
@@ -140,7 +141,7 @@ const generateDefaultSongFileName = (
   ) => CharacterInfo | undefined,
 ) => {
   if (projectName) {
-    return projectName + ".wav";
+    return projectName;
   }
 
   const singer = selectedTrack.singer;
@@ -150,11 +151,11 @@ const generateDefaultSongFileName = (
     if (singerName) {
       const notes = selectedTrack.notes.slice(0, 5);
       const beginningPartLyrics = notes.map((note) => note.lyric).join("");
-      return sanitizeFileName(`${singerName}_${beginningPartLyrics}.wav`);
+      return sanitizeFileName(`${singerName}_${beginningPartLyrics}`);
     }
   }
 
-  return `${DEFAULT_PROJECT_NAME}.wav`;
+  return DEFAULT_PROJECT_NAME;
 };
 
 const offlineRenderTracks = async (
@@ -162,7 +163,7 @@ const offlineRenderTracks = async (
   sampleRate: number,
   renderDuration: number,
   withLimiter: boolean,
-  shouldApplyTrackParameters: boolean,
+  shouldApplyTrackParameters: TrackParameters,
   tracks: Map<TrackId, Track>,
   phrases: Map<PhraseKey, Phrase>,
   singingVoices: Map<SingingVoiceKey, SingingVoice>,
@@ -180,9 +181,10 @@ const offlineRenderTracks = async (
   const shouldPlays = shouldPlayTracks(tracks);
   for (const [trackId, track] of tracks) {
     const channelStrip = new ChannelStrip(offlineAudioContext);
-    channelStrip.volume = shouldApplyTrackParameters ? track.gain : 1;
-    channelStrip.pan = shouldApplyTrackParameters ? track.pan : 0;
-    channelStrip.mute = shouldApplyTrackParameters
+    channelStrip.volume = shouldApplyTrackParameters.gain ? track.gain : 1;
+    channelStrip.pan =
+      shouldApplyTrackParameters.pan && numberOfChannels === 2 ? track.pan : 0;
+    channelStrip.mute = shouldApplyTrackParameters.soloAndMute
       ? !shouldPlays.has(trackId)
       : false;
 
@@ -377,12 +379,8 @@ const generateAudioSequence = async (
  * `tracks`と`trackChannelStrips`を同期する。
  * シーケンスが存在する場合は、ChannelStripとシーケンスの接続・接続の解除を行う。
  * @param tracks `state`の`tracks`
- * @param enableMultiTrack マルチトラックが有効かどうか
  */
-const syncTracksAndTrackChannelStrips = (
-  tracks: Map<TrackId, Track>,
-  enableMultiTrack: boolean,
-) => {
+const syncTracksAndTrackChannelStrips = (tracks: Map<TrackId, Track>) => {
   if (audioContext == undefined) {
     throw new Error("audioContext is undefined.");
   }
@@ -410,15 +408,9 @@ const syncTracksAndTrackChannelStrips = (
     }
 
     const channelStrip = getOrThrow(trackChannelStrips, trackId);
-    if (enableMultiTrack) {
-      channelStrip.volume = track.gain;
-      channelStrip.pan = track.pan;
-      channelStrip.mute = !shouldPlays.has(trackId);
-    } else {
-      channelStrip.volume = 1;
-      channelStrip.pan = 0;
-      channelStrip.mute = false;
-    }
+    channelStrip.volume = track.gain;
+    channelStrip.pan = track.pan;
+    channelStrip.mute = !shouldPlays.has(trackId);
   }
   for (const [trackId, channelStrip] of trackChannelStrips) {
     if (!tracks.has(trackId)) {
@@ -1369,10 +1361,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS: {
     async action({ state }) {
-      syncTracksAndTrackChannelStrips(
-        state.tracks,
-        state.experimentalSetting.enableMultiTrack,
-      );
+      syncTracksAndTrackChannelStrips(state.tracks);
     },
   },
 
@@ -1960,18 +1949,19 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  EXPORT_WAVE_FILE: {
+  EXPORT_AUDIO_FILE: {
     action: createUILockAction(
-      async ({ state, mutations, getters, actions }, { filePath }) => {
-        const exportWaveFile = async (): Promise<SaveResultObject> => {
-          const fileName = generateDefaultSongFileName(
+      async ({ state, mutations, getters, actions }, { filePath, setting }) => {
+        const exportAudioFile = async (): Promise<SaveResultObject> => {
+          const fileBaseName = generateDefaultSongFileBaseName(
             getters.PROJECT_NAME,
             getters.SELECTED_TRACK,
             getters.CHARACTER_INFO,
           );
-          const numberOfChannels = 2;
-          const sampleRate = 48000; // TODO: 設定できるようにする
-          const withLimiter = true; // TODO: 設定できるようにする
+          const fileName = `${fileBaseName}.wav`;
+          const numberOfChannels = setting.isMono ? 1 : 2;
+          const sampleRate = setting.sampleRate;
+          const withLimiter = setting.withLimiter;
 
           const renderDuration = getters.CALC_RENDER_DURATION;
 
@@ -1993,9 +1983,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
           if (state.savingSetting.avoidOverwrite) {
             let tail = 1;
-            const name = filePath.slice(0, filePath.length - 4);
+            const pathWithoutExt = filePath.slice(0, -4);
             while (await window.backend.checkFileExists(filePath)) {
-              filePath = name + "[" + tail.toString() + "]" + ".wav";
+              filePath = `${pathWithoutExt}[${tail}].wav`;
               tail += 1;
             }
           }
@@ -2016,46 +2006,24 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             sampleRate,
             renderDuration,
             withLimiter,
-            state.experimentalSetting.enableMultiTrack,
+            setting.withTrackParameters,
             state.tracks,
             state.phrases,
             phraseSingingVoices,
           );
 
-          const waveFileData = convertToWavFileData(audioBuffer);
+          const fileData = convertToWavFileData(audioBuffer);
 
-          try {
-            await window.backend
-              .writeFile({
-                filePath,
-                buffer: waveFileData,
-              })
-              .then(getValueOrThrow);
-          } catch (e) {
-            logger.error("Failed to export the wav file.", e);
-            if (e instanceof ResultError) {
-              return {
-                result: "WRITE_ERROR",
-                path: filePath,
-                errorMessage: generateWriteErrorMessage(
-                  e as ResultError<string>,
-                ),
-              };
-            }
-            return {
-              result: "UNKNOWN_ERROR",
-              path: filePath,
-              errorMessage:
-                (e instanceof Error ? e.message : String(e)) ||
-                "不明なエラーが発生しました。",
-            };
-          }
+          const result = await actions.EXPORT_FILE({
+            filePath,
+            content: fileData,
+          });
 
-          return { result: "SUCCESS", path: filePath };
+          return result;
         };
 
         mutations.SET_NOW_AUDIO_EXPORTING({ nowAudioExporting: true });
-        return exportWaveFile().finally(() => {
+        return exportAudioFile().finally(() => {
           mutations.SET_CANCELLATION_OF_AUDIO_EXPORT_REQUESTED({
             cancellationOfAudioExportRequested: false,
           });
@@ -2065,15 +2033,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     ),
   },
 
-  // TODO: EXPORT_WAVE_FILEとコードが重複しているので、共通化する
-  EXPORT_STEM_WAVE_FILE: {
+  EXPORT_STEM_AUDIO_FILE: {
     action: createUILockAction(
-      async ({ state, mutations, getters, actions }, { dirPath }) => {
+      async ({ state, mutations, getters, actions }, { dirPath, setting }) => {
         let firstFilePath = "";
-        const exportWaveFile = async (): Promise<SaveResultObject> => {
-          const numberOfChannels = 2;
-          const sampleRate = 48000; // TODO: 設定できるようにする
-          const withLimiter = true; // TODO: 設定できるようにする
+        const exportAudioFile = async (): Promise<SaveResultObject> => {
+          const numberOfChannels = setting.isMono ? 1 : 2;
+          const sampleRate = setting.sampleRate;
+          const withLimiter = setting.withLimiter;
 
           const renderDuration = getters.CALC_RENDER_DURATION;
 
@@ -2103,9 +2070,19 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             }
           }
 
+          const shouldPlays = shouldPlayTracks(state.tracks);
+
           for (const [i, trackId] of state.trackOrder.entries()) {
             const track = getOrThrow(state.tracks, trackId);
             if (!track.singer) {
+              continue;
+            }
+
+            // ミュート/ソロにより再生されないトラックは除外
+            if (
+              setting.withTrackParameters.soloAndMute &&
+              !shouldPlays.has(trackId)
+            ) {
               continue;
             }
 
@@ -2137,12 +2114,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                 trackName: track.name,
               },
             );
-            let filePath = path.join(dirPath, trackFileName);
+            let filePath = path.join(dirPath, `${trackFileName}.wav`);
             if (state.savingSetting.avoidOverwrite) {
               let tail = 1;
-              const name = filePath.slice(0, filePath.length - 4);
+              const pathWithoutExt = filePath.slice(0, -4);
               while (await window.backend.checkFileExists(filePath)) {
-                filePath = name + "[" + tail.toString() + "]" + ".wav";
+                filePath = `${pathWithoutExt}[${tail}].wav`;
                 tail += 1;
               }
             }
@@ -2152,7 +2129,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               sampleRate,
               renderDuration,
               withLimiter,
-              state.experimentalSetting.enableMultiTrack,
+              setting.withTrackParameters,
               new Map([[trackId, { ...track, solo: false, mute: false }]]),
               new Map(
                 [...state.phrases.entries()].filter(
@@ -2162,36 +2139,18 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               singingVoiceCache,
             );
 
-            const waveFileData = convertToWavFileData(audioBuffer);
-            if (i === 0) {
-              firstFilePath = filePath;
+            const fileData = convertToWavFileData(audioBuffer);
+
+            const result = await actions.EXPORT_FILE({
+              filePath,
+              content: fileData,
+            });
+            if (result.result !== "SUCCESS") {
+              return result;
             }
 
-            try {
-              await window.backend
-                .writeFile({
-                  filePath,
-                  buffer: waveFileData,
-                })
-                .then(getValueOrThrow);
-            } catch (e) {
-              logger.error("Failed to export the wav file.", e);
-              if (e instanceof ResultError) {
-                return {
-                  result: "WRITE_ERROR",
-                  path: filePath,
-                  errorMessage: generateWriteErrorMessage(
-                    e as ResultError<string>,
-                  ),
-                };
-              }
-              return {
-                result: "UNKNOWN_ERROR",
-                path: filePath,
-                errorMessage:
-                  (e instanceof Error ? e.message : String(e)) ||
-                  "不明なエラーが発生しました。",
-              };
+            if (i === 0) {
+              firstFilePath = filePath;
             }
           }
 
@@ -2199,7 +2158,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         };
 
         mutations.SET_NOW_AUDIO_EXPORTING({ nowAudioExporting: true });
-        return exportWaveFile().finally(() => {
+        return exportAudioFile().finally(() => {
           mutations.SET_CANCELLATION_OF_AUDIO_EXPORT_REQUESTED({
             cancellationOfAudioExportRequested: false,
           });
@@ -2207,6 +2166,37 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         });
       },
     ),
+  },
+
+  EXPORT_FILE: {
+    async action(_, { filePath, content }) {
+      try {
+        await window.backend
+          .writeFile({
+            filePath,
+            buffer: content,
+          })
+          .then(getValueOrThrow);
+      } catch (e) {
+        logger.error("Failed to export file.", e);
+        if (e instanceof ResultError) {
+          return {
+            result: "WRITE_ERROR",
+            path: filePath,
+            errorMessage: generateWriteErrorMessage(e as ResultError<string>),
+          };
+        }
+        return {
+          result: "UNKNOWN_ERROR",
+          path: filePath,
+          errorMessage:
+            (e instanceof Error ? e.message : String(e)) ||
+            "不明なエラーが発生しました。",
+        };
+      }
+
+      return { result: "SUCCESS", path: filePath };
+    },
   },
 
   CANCEL_AUDIO_EXPORT: {
@@ -2852,32 +2842,23 @@ export const singingCommandStore = transformCommandStore(
           | { overwrite: true; prevTrackId?: undefined }
           | { overwrite?: false; prevTrackId: TrackId }
         ))[] = [];
-        if (state.experimentalSetting.enableMultiTrack) {
-          let prevTrackId = getters.SELECTED_TRACK_ID;
-          for (const [i, track] of tracks.entries()) {
-            if (!isValidTrack(track)) {
-              throw new Error("The track is invalid.");
-            }
-            // 空のプロジェクトならトラックを上書きする
-            if (i === 0 && isTracksEmpty([...state.tracks.values()])) {
-              payload.push({
-                track,
-                trackId: prevTrackId,
-                overwrite: true,
-              });
-            } else {
-              const { trackId } = await actions.CREATE_TRACK();
-              payload.push({ track, trackId, prevTrackId });
-              prevTrackId = trackId;
-            }
+        let prevTrackId = getters.SELECTED_TRACK_ID;
+        for (const [i, track] of tracks.entries()) {
+          if (!isValidTrack(track)) {
+            throw new Error("The track is invalid.");
           }
-        } else {
-          // マルチトラックが無効な場合は最初のトラックのみをインポートする
-          payload.push({
-            track: tracks[0],
-            trackId: getters.SELECTED_TRACK_ID,
-            overwrite: true,
-          });
+          // 空のプロジェクトならトラックを上書きする
+          if (i === 0 && isTracksEmpty([...state.tracks.values()])) {
+            payload.push({
+              track,
+              trackId: prevTrackId,
+              overwrite: true,
+            });
+          } else {
+            const { trackId } = await actions.CREATE_TRACK();
+            payload.push({ track, trackId, prevTrackId });
+            prevTrackId = trackId;
+          }
         }
 
         mutations.COMMAND_IMPORT_TRACKS({

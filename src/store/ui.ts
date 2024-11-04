@@ -17,7 +17,9 @@ import {
 import { createDotNotationPartialStore as createPartialStore } from "./vuex";
 import { ActivePointScrollMode } from "@/type/preload";
 import {
-  CommonDialogOptions,
+  AlertDialogOptions,
+  ConfirmDialogOptions,
+  WarningDialogOptions,
   LoadingScreenOption,
   NotifyAndNotShowAgainButtonOption,
   connectAndExportTextWithDialog,
@@ -110,6 +112,7 @@ export const uiStoreState: UiStoreState = {
   isDictionaryManageDialogOpen: false,
   isEngineManageDialogOpen: false,
   isUpdateNotificationDialogOpen: false,
+  isExportSongAudioDialogOpen: false,
   isImportSongProjectDialogOpen: false,
   isMaximized: false,
   isPinned: false,
@@ -216,23 +219,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   },
 
   SET_DIALOG_OPEN: {
-    mutation(
-      state,
-      dialogState: {
-        isDefaultStyleSelectDialogOpen?: boolean;
-        isAcceptRetrieveTelemetryDialogOpen?: boolean;
-        isAcceptTermsDialogOpen?: boolean;
-        isDictionaryManageDialogOpen?: boolean;
-        isHelpDialogOpen?: boolean;
-        isSettingDialogOpen?: boolean;
-        isHotkeySettingDialogOpen?: boolean;
-        isToolbarSettingDialogOpen?: boolean;
-        isCharacterOrderDialogOpen?: boolean;
-        isEngineManageDialogOpen?: boolean;
-        isUpdateNotificationDialogOpen?: boolean;
-        isImportExternalProjectDialogOpen?: boolean;
-      },
-    ) {
+    mutation(state, dialogState) {
       for (const [key, value] of Object.entries(dialogState)) {
         if (!(key in state)) {
           throw new Error(`Unknown dialog state: ${key}`);
@@ -259,7 +246,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
 
   SHOW_ALERT_DIALOG: {
     action: createDotNotationUILockAction(
-      async (_, payload: { title: string; message: string; ok?: string }) => {
+      async (_, payload: AlertDialogOptions) => {
         return await showAlertDialog(payload);
       },
     ),
@@ -267,7 +254,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
 
   SHOW_CONFIRM_DIALOG: {
     action: createDotNotationUILockAction(
-      async (_, payload: CommonDialogOptions["confirm"]) => {
+      async (_, payload: ConfirmDialogOptions) => {
         return await showConfirmDialog(payload);
       },
     ),
@@ -275,7 +262,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
 
   SHOW_WARNING_DIALOG: {
     action: createDotNotationUILockAction(
-      async (_, payload: CommonDialogOptions["warning"]) => {
+      async (_, payload: WarningDialogOptions) => {
         return await showWarningDialog(payload);
       },
     ),
@@ -383,6 +370,16 @@ export const uiStore = createPartialStore<UiStoreTypes>({
           activePointScrollMode,
         ),
       });
+    },
+  },
+
+  /**
+   * 選択可能なテーマをセットする。
+   * NOTE: カスタムテーマが導入された場合を見越して残している。
+   */
+  SET_AVAILABLE_THEMES: {
+    mutation(state, { themes }) {
+      state.availableThemes = themes;
     },
   },
 

@@ -125,9 +125,10 @@ test("「設定」→「読み方＆アクセント辞書」で「読み方＆�
     .click();
   await page.waitForTimeout(100);
 
-  await getNewestQuasarDialog(page)
-    .getByRole("button")
+  await page
+    .locator("header", { hasText: "読み方＆アクセント辞書" })
     .filter({ hasText: "close" })
+    .getByRole("button")
     .click();
   await page.waitForTimeout(100);
 
