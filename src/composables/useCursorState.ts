@@ -1,14 +1,5 @@
 import { ref, computed } from "vue";
-
-// カーソル状態
-export enum CursorState {
-  UNSET = "unset",
-  EW_RESIZE = "ew-resize",
-  MOVE = "move",
-  CROSSHAIR = "crosshair",
-  DRAW = "draw",
-  ERASE = "erase",
-}
+import { CursorState } from "@/type/preload";
 
 // カーソル状態を管理するカスタムコンポーザブル
 export const useCursorState = () => {

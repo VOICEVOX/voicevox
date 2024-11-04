@@ -724,3 +724,59 @@ export interface MessageBoxReturnValue {
 export const SandboxKey = "backend";
 
 export type EditorType = "talk" | "song";
+
+// カーソルの状態
+// NOTE: enumが妥当なのかは要検討
+export enum CursorState {
+  UNSET = "unset",
+  EW_RESIZE = "ew-resize",
+  MOVE = "move",
+  CROSSHAIR = "crosshair",
+  DRAW = "draw",
+  ERASE = "erase",
+}
+
+// ノート編集モードの種類
+// 以下の2つについてはできることは同様でクリック時に主要となる操作が違う
+// SELECT_FIRST: 選択優先(基本操作は選択)
+// EDIT_FIRST: 編集優先(基本操作は編集)
+export type NoteEditModeType = "SELECT_FIRST" | "EDIT_FIRST";
+
+// ピッチ編集モードの種類
+// DRAW: 変更ピッチを描画
+// ERASE: 変更ピッチを削除
+export type PitchEditModeType = "DRAW" | "ERASE";
+
+// ノート編集時の振る舞い
+export interface NoteEditBehaviors {
+  // 編集後にノートを選択するか
+  shouldSelectAfterEditing: boolean;
+  // クリック時にノートを追加するか
+  shouldAddNoteOnClick: boolean;
+  // ダブルクリック時にノートを追加するか
+  shouldAddNoteOnDoubleClick: boolean;
+  // クリック時に選択を解除するか
+  shouldDeselectAllOnClick: boolean;
+  // ドラッグ時に矩形選択を行うか
+  shouldRectSelectOnDrag: boolean;
+  // Ctrl/Cmdクリック時に選択を解除するか
+  shouldDeselectAllOnCtrlOrCommandClick: boolean;
+}
+
+// ノート編集モード
+export interface NoteEditMode {
+  type: NoteEditModeType;
+  cursor: CursorState;
+  behaviors: NoteEditBehaviors;
+}
+
+// ピッチ編集モード
+export interface PitchEditMode {
+  type: PitchEditModeType;
+  cursor: CursorState;
+}
+
+// 編集モード
+export type EditMode =
+  | { target: "NOTE"; mode: NoteEditMode }
+  | { target: "PITCH"; mode: PitchEditMode };
