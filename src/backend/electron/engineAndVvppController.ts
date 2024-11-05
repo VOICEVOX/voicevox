@@ -224,8 +224,7 @@ export class EngineAndVvppController {
       log.info(
         "All ENGINE process kill operations done. Running post engine kill process",
       );
-      const vvppManager = getVvppManager();
-      return vvppManager.handleMarkedEngineDirs();
+      return this.vvppManager.handleMarkedEngineDirs();
     });
   }
 

@@ -1,4 +1,4 @@
-import { ChildProcess, spawn } from "child_process";
+import { spawn, ChildProcess } from "child_process";
 import path from "path";
 import treeKill from "tree-kill";
 
@@ -36,12 +36,18 @@ export class EngineProcessManager {
     this.onEngineProcessError = payload.onEngineProcessError;
   }
 
+  private get configManager() {
+    return getConfigManager();
+  }
+  private get engineInfoManager() {
+    return getEngineInfoManager();
+  }
+
   /**
    * 全てのエンジンを起動する。
    */
   async runEngineAll() {
-    const engineInfoManager = getEngineInfoManager();
-    const engineInfos = engineInfoManager.fetchEngineInfos();
+    const engineInfos = this.engineInfoManager.fetchEngineInfos();
     log.info(`Starting ${engineInfos.length} engine/s...`);
 
     for (const engineInfo of engineInfos) {
@@ -54,8 +60,7 @@ export class EngineProcessManager {
    * エンジンを起動する。
    */
   async runEngine(engineId: EngineId) {
-    const engineInfoManager = getEngineInfoManager();
-    const engineInfos = engineInfoManager.fetchEngineInfos();
+    const engineInfos = this.engineInfoManager.fetchEngineInfos();
     const engineInfo = engineInfos.find(
       (engineInfo) => engineInfo.uuid === engineId,
     );
@@ -135,8 +140,7 @@ export class EngineProcessManager {
     const engineProcessContainer = this.engineProcessContainers[engineId];
     engineProcessContainer.willQuitEngine = false;
 
-    const configManager = getConfigManager();
-    const engineSetting = configManager.get("engineSettings")[engineId];
+    const engineSetting = this.configManager.get("engineSettings")[engineId];
     if (engineSetting == undefined)
       throw new Error(`No such engineSetting: engineId == ${engineId}`);
 

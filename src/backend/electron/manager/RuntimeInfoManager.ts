@@ -117,11 +117,11 @@ export class RuntimeInfoManager {
 
 let manager: RuntimeInfoManager | undefined;
 
-export function initializeRuntimeInfoManager(
-  runtimeInfoPath: string,
-  appVersion: string,
-) {
-  manager = new RuntimeInfoManager(runtimeInfoPath, appVersion);
+export function initializeRuntimeInfoManager(payload: {
+  runtimeInfoPath: string;
+  appVersion: string;
+}) {
+  manager = new RuntimeInfoManager(payload.runtimeInfoPath, payload.appVersion);
 }
 
 export function getRuntimeInfoManager() {

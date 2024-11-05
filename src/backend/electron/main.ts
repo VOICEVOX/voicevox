@@ -121,7 +121,7 @@ process.on("uncaughtException", (error) => {
   } else {
     const { message, name } = error;
     let detailedMessage = "";
-    detailedMessage += `メインプロセスで原因不明のエラーが発生しました。\n`;
+    detailedMessage += `メインプロセスで原因不明��エラーが発生しました。\n`;
     detailedMessage += `エラー名: ${name}\n`;
     detailedMessage += `メッセージ: ${message}\n`;
     if (error.stack) {
@@ -176,24 +176,20 @@ const onEngineProcessError = (engineInfo: EngineInfo, error: Error) => {
   dialog.showErrorBox("音声合成エンジンエラー", error.message);
 };
 
-initializeRuntimeInfoManager(
-  path.join(app.getPath("userData"), "runtime-info.json"),
-  app.getVersion(),
-);
-
+initializeRuntimeInfoManager({
+  runtimeInfoPath: path.join(app.getPath("userData"), "runtime-info.json"),
+  appVersion: app.getVersion(),
+});
 initializeEngineInfoManager({
   defaultEngineDir: appDirPath,
   vvppEngineDir,
 });
-
 initializeEngineProcessManager({ onEngineProcessError });
-
 initializeVvppManager({ vvppEngineDir });
 
 const configManager = getConfigManager();
-
 const engineInfoManager = getEngineInfoManager();
-
+const engineProcessManager = getEngineProcessManager();
 const engineAndVvppController = getEngineAndVvppController();
 
 // エンジンのフォルダを開く
@@ -645,8 +641,7 @@ registerIpcMainHandle<IpcMainHandle>({
   },
 
   RESTART_ENGINE: async (_, { engineId }) => {
-    const manager = getEngineProcessManager();
-    return manager.restartEngine(engineId);
+    return engineProcessManager.restartEngine(engineId);
   },
 
   OPEN_ENGINE_DIRECTORY: async (_, { engineId }) => {
