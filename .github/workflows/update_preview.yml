@@ -31,4 +31,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: preview-page
-          path: dist
+          path: dist_preview
