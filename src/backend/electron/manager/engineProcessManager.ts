@@ -121,7 +121,7 @@ export class EngineProcessManager {
       }
 
       // 代替ポート情報を更新
-      engineInfoManager.updateAltPort(engineId, altPort);
+      this.engineInfoManager.updateAltPort(engineId, altPort);
       log.warn(
         `ENGINE ${engineId}: Applied Alternative Port: ${port} -> ${altPort}`,
       );
