@@ -218,16 +218,16 @@ export class EngineInfoManager {
 
 let manager: EngineInfoManager | undefined;
 
-export const initializeEngineInfoManager = (payload: {
+export function initializeEngineInfoManager(payload: {
   defaultEngineDir: string;
   vvppEngineDir: string;
-}) => {
+}) {
   manager = new EngineInfoManager(payload);
-};
+}
 
-export const getEngineInfoManager = () => {
+export function getEngineInfoManager() {
   if (manager == undefined) {
     throw new Error("EngineInfoManager is not initialized");
   }
   return manager;
-};
+}

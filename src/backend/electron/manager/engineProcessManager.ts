@@ -359,15 +359,15 @@ export class EngineProcessManager {
 
 let manager: EngineProcessManager | undefined;
 
-export const initializeEngineProcessManager = (payload: {
+export function initializeEngineProcessManager(payload: {
   onEngineProcessError: (engineInfo: EngineInfo, error: Error) => void;
-}) => {
+}) {
   manager = new EngineProcessManager(payload);
-};
+}
 
-export const getEngineProcessManager = () => {
+export function getEngineProcessManager() {
   if (manager == undefined) {
     throw new Error("EngineProcessManager is not initialized");
   }
   return manager;
-};
+}

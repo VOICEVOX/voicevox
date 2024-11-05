@@ -386,13 +386,13 @@ export default VvppManager;
 
 let manager: VvppManager | undefined;
 
-export const initializeVvppManager = (payload: { vvppEngineDir: string }) => {
+export function initializeVvppManager(payload: { vvppEngineDir: string }) {
   manager = new VvppManager(payload);
-};
+}
 
-export const getVvppManager = () => {
+export function getVvppManager() {
   if (manager == undefined) {
     throw new Error("EngineInfoManager is not initialized");
   }
   return manager;
-};
+}

@@ -239,9 +239,9 @@ export class EngineAndVvppController {
 
 let manager: EngineAndVvppController | undefined;
 
-export const getEngineAndVvppController = () => {
+export function getEngineAndVvppController() {
   if (manager == undefined) {
     manager = new EngineAndVvppController();
   }
   return manager;
-};
+}
