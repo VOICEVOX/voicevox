@@ -18,6 +18,6 @@ jobs:
     steps:
       - name: Trigger Bot
         run: |
-          gh workflow run -R voicevox/pages-preview update_pages.yml
+          gh workflow run -R voicevox/preview-pages update_pages.yml
         env:
           GH_TOKEN: ${{ secrets.PREVIEW_UPDATE_TOKEN }}
