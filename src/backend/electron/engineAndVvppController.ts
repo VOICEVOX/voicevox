@@ -32,6 +32,7 @@ export class EngineAndVvppController {
   private get vvppManager() {
     return getVvppManager();
   }
+
   /**
    * VVPPエンジンをインストールする。
    */
