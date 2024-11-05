@@ -1,0 +1,31 @@
+name: "Build Preview"
+on:
+  push:
+  pull_request:
+
+jobs:
+  update_pages:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup environment
+        uses: ./.github/actions/setup-environment
+
+      - name: Build
+        run: |
+          npm run storybook:build -- --preview-url ./
+          npm run browser:build -- --base ./
+
+          mkdir dist_preview
+          mkdir dist_preview/editor
+          mkdir dist_preview/storybook
+          cp -r dist/* dist_preview/editor/
+          cp -r storybook-static/* dist_preview/storybook/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: preview-page
+          path: dist
