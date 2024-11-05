@@ -1,6 +1,9 @@
 name: "Build Preview"
 on:
   push:
+    branches:
+      - main
+      - project-*
   pull_request:
 
 jobs:
