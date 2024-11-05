@@ -1936,7 +1936,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           const phrase = getOrThrow(state.phrases, context.phraseKey);
           const phraseQueryKey = phrase.queryKey;
           if (phraseQueryKey != undefined) {
-            mutations.DELETE_PHRASE_QUERY({ queryKey: phraseQueryKey });
+            throw new Error("The previous query has not been removed.");
           }
           mutations.SET_PHRASE_QUERY({ queryKey, query });
           mutations.SET_QUERY_KEY_TO_PHRASE({
@@ -2027,9 +2027,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           const phrase = getOrThrow(state.phrases, context.phraseKey);
           const phraseSingingPitchKey = phrase.singingPitchKey;
           if (phraseSingingPitchKey != undefined) {
-            mutations.DELETE_PHRASE_SINGING_PITCH({
-              singingPitchKey: phraseSingingPitchKey,
-            });
+            throw new Error("The previous singing pitch has not been removed.");
           }
           mutations.SET_PHRASE_SINGING_PITCH({ singingPitchKey, singingPitch });
           mutations.SET_SINGING_PITCH_KEY_TO_PHRASE({
@@ -2160,9 +2158,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           const phrase = getOrThrow(state.phrases, context.phraseKey);
           const phraseSingingVolumeKey = phrase.singingVolumeKey;
           if (phraseSingingVolumeKey != undefined) {
-            mutations.DELETE_PHRASE_SINGING_VOLUME({
-              singingVolumeKey: phraseSingingVolumeKey,
-            });
+            throw new Error(
+              "The previous singing volume has not been removed.",
+            );
           }
           mutations.SET_PHRASE_SINGING_VOLUME({
             singingVolumeKey,
@@ -2285,7 +2283,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           const phrase = getOrThrow(state.phrases, context.phraseKey);
           const phraseSingingVoiceKey = phrase.singingVoiceKey;
           if (phraseSingingVoiceKey != undefined) {
-            phraseSingingVoices.delete(phraseSingingVoiceKey);
+            throw new Error("The previous singing voice has not been removed.");
           }
           phraseSingingVoices.set(singingVoiceKey, singingVoice);
           mutations.SET_SINGING_VOICE_KEY_TO_PHRASE({
