@@ -32,6 +32,7 @@ export class EngineAndVvppController {
   private get vvppManager() {
     return getVvppManager();
   }
+
   /**
    * VVPPエンジンをインストールする。
    */
@@ -224,8 +225,7 @@ export class EngineAndVvppController {
       log.info(
         "All ENGINE process kill operations done. Running post engine kill process",
       );
-      const vvppManager = getVvppManager();
-      return vvppManager.handleMarkedEngineDirs();
+      return this.vvppManager.handleMarkedEngineDirs();
     });
   }
 
