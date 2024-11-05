@@ -121,7 +121,7 @@ process.on("uncaughtException", (error) => {
   } else {
     const { message, name } = error;
     let detailedMessage = "";
-    detailedMessage += `メインプロセスで原因不明��エラーが発生しました。\n`;
+    detailedMessage += `メインプロセスで原因不明のエラーが発生しました。\n`;
     detailedMessage += `エラー名: ${name}\n`;
     detailedMessage += `メッセージ: ${message}\n`;
     if (error.stack) {
