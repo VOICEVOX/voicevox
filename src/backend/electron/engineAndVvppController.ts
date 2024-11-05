@@ -17,13 +17,27 @@ import {
  * エンジンとVVPP周りの処理の流れを制御するクラス。
  */
 export class EngineAndVvppController {
+  private get configManager() {
+    return getConfigManager();
+  }
+  private get engineInfoManager() {
+    return getEngineInfoManager();
+  }
+  private get engineProcessManager() {
+    return getEngineProcessManager();
+  }
+  private get runtimeInfoManager() {
+    return getRuntimeInfoManager();
+  }
+  private get vvppManager() {
+    return getVvppManager();
+  }
   /**
    * VVPPエンジンをインストールする。
    */
   async installVvppEngine(vvppPath: string) {
-    const vvppManager = getVvppManager();
     try {
-      await vvppManager.install(vvppPath);
+      await this.vvppManager.install(vvppPath);
       return true;
     } catch (e) {
       dialog.showErrorBox(
@@ -89,23 +103,21 @@ export class EngineAndVvppController {
    */
   async uninstallVvppEngine(engineId: EngineId) {
     let engineInfo: EngineInfo | undefined = undefined;
-    const engineInfoManager = getEngineInfoManager();
-    const vvppManager = getVvppManager();
     try {
-      engineInfo = engineInfoManager.fetchEngineInfo(engineId);
+      engineInfo = this.engineInfoManager.fetchEngineInfo(engineId);
       if (!engineInfo) {
         throw new Error(
           `No such engineInfo registered: engineId == ${engineId}`,
         );
       }
 
-      if (!vvppManager.canUninstall(engineInfo)) {
+      if (!this.vvppManager.canUninstall(engineInfo)) {
         throw new Error(`Cannot uninstall: engineId == ${engineId}`);
       }
 
       // Windows環境だとエンジンを終了してから削除する必要がある。
       // そのため、アプリの終了時に削除するようにする。
-      vvppManager.markWillDelete(engineId);
+      this.vvppManager.markWillDelete(engineId);
       return true;
     } catch (e) {
       const engineName = engineInfo?.name ?? engineId;
@@ -120,38 +132,33 @@ export class EngineAndVvppController {
 
   /** エンジンの設定を更新し、保存する */
   updateEngineSetting(engineId: EngineId, engineSetting: EngineSettingType) {
-    const configManager = getConfigManager();
-    const engineSettings = configManager.get("engineSettings");
+    const engineSettings = this.configManager.get("engineSettings");
     engineSettings[engineId] = engineSetting;
-    configManager.set(`engineSettings`, engineSettings);
+    this.configManager.set(`engineSettings`, engineSettings);
   }
 
   // エンジンの準備と起動
   async launchEngines() {
     // AltPortInfosを再生成する。
-    const engineInfoManager = getEngineInfoManager();
-    engineInfoManager.initializeAltPortInfo();
+    this.engineInfoManager.initializeAltPortInfo();
 
     // TODO: デフォルトエンジンの処理をConfigManagerに移してブラウザ版と共通化する
-    const engineInfos = engineInfoManager.fetchEngineInfos();
-    const configManager = getConfigManager();
-    const engineSettings = configManager.get("engineSettings");
+    const engineInfos = this.engineInfoManager.fetchEngineInfos();
+    const engineSettings = this.configManager.get("engineSettings");
     for (const engineInfo of engineInfos) {
       if (!engineSettings[engineInfo.uuid]) {
         // 空オブジェクトをパースさせることで、デフォルト値を取得する
         engineSettings[engineInfo.uuid] = engineSettingSchema.parse({});
       }
     }
-    configManager.set("engineSettings", engineSettings);
+    this.configManager.set("engineSettings", engineSettings);
 
-    const engineProcessManager = getEngineProcessManager();
-    await engineProcessManager.runEngineAll();
-    const runtimeInfoManager = getRuntimeInfoManager();
-    runtimeInfoManager.setEngineInfos(
+    await this.engineProcessManager.runEngineAll();
+    this.runtimeInfoManager.setEngineInfos(
       engineInfos,
-      engineInfoManager.altPortInfos,
+      this.engineInfoManager.altPortInfos,
     );
-    await runtimeInfoManager.exportFile();
+    await this.runtimeInfoManager.exportFile();
   }
 
   /**
@@ -159,18 +166,15 @@ export class EngineAndVvppController {
    * エンジンの起動が開始したらresolve、起動が失敗したらreject。
    */
   async restartEngines(engineId: EngineId) {
-    const engineProcessManager = getEngineProcessManager();
-    await engineProcessManager.restartEngine(engineId);
+    await this.engineProcessManager.restartEngine(engineId);
 
     // ランタイム情報の更新
     // TODO: setからexportの処理は排他処理にしたほうがより良い
-    const runtimeInfoManager = getRuntimeInfoManager();
-    const engineInfoManager = getEngineInfoManager();
-    runtimeInfoManager.setEngineInfos(
-      engineInfoManager.fetchEngineInfos(),
-      engineInfoManager.altPortInfos,
+    this.runtimeInfoManager.setEngineInfos(
+      this.engineInfoManager.fetchEngineInfos(),
+      this.engineInfoManager.altPortInfos,
     );
-    await runtimeInfoManager.exportFile();
+    await this.runtimeInfoManager.exportFile();
   }
 
   /**
@@ -179,15 +183,16 @@ export class EngineAndVvppController {
    * そうでない場合は Promise を返す。
    */
   cleanupEngines(): Promise<void> | "alreadyCompleted" {
-    const engineProcessManager = getEngineProcessManager();
-    const killingProcessPromises = engineProcessManager.killEngineAll();
+    const killingProcessPromises = this.engineProcessManager.killEngineAll();
     const numLivingEngineProcess = Object.entries(
       killingProcessPromises,
     ).length;
 
     // 前処理が完了している場合
-    const vvppManager = getVvppManager();
-    if (numLivingEngineProcess === 0 && !vvppManager.hasMarkedEngineDirs()) {
+    if (
+      numLivingEngineProcess === 0 &&
+      !this.vvppManager.hasMarkedEngineDirs()
+    ) {
       return "alreadyCompleted";
     }
 
@@ -231,8 +236,7 @@ export class EngineAndVvppController {
    */
   gracefulShutdown() {
     const engineCleanupResult = this.cleanupEngines();
-    const configManager = getConfigManager();
-    const configSavedResult = configManager.ensureSaved();
+    const configSavedResult = this.configManager.ensureSaved();
     return { engineCleanupResult, configSavedResult };
   }
 }
