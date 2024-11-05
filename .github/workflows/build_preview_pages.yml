@@ -1,4 +1,8 @@
-name: "Build Preview"
+name: "Build Preview Pages"
+
+# プレビュー用ページをビルドする。
+# 詳細： https://github.com/voicevox/preview-pages?tab=readme-ov-file#%E4%BB%95%E7%B5%84%E3%81%BF
+
 on:
   push:
     branches:
@@ -18,17 +22,11 @@ jobs:
 
       - name: Build
         run: |
-          npm run storybook:build -- --preview-url ./
-          npm run browser:build -- --base ./
-
-          mkdir dist_preview
-          mkdir dist_preview/editor
-          mkdir dist_preview/storybook
-          cp -r dist/* dist_preview/editor/
-          cp -r storybook-static/* dist_preview/storybook/
+          npm run storybook:build -- --preview-url ./ --output-dir dist_preview/storybook
+          npm run browser:build -- --base ./ --outDir dist_preview/editor
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: preview-page
+          name: preview-pages
           path: dist_preview

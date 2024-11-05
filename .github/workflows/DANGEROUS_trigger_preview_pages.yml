@@ -1,4 +1,4 @@
-name: "Trigger Preview Update"
+name: "Trigger preview-pages' workflow"
 
 on:
   pull_request_target:
@@ -16,8 +16,8 @@ jobs:
   trigger:
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger Bot
+      - name: Trigger Workflow
         run: |
           gh workflow run -R voicevox/preview-pages update_pages.yml
         env:
-          GH_TOKEN: ${{ secrets.PREVIEW_UPDATE_TOKEN }}
+          GH_TOKEN: ${{ secrets.TRIGGER_PREVIEW_PAGES_TOKEN }}
