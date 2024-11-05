@@ -1,5 +1,8 @@
 name: "Trigger preview-pages' workflow"
 
+# プレビュー用ページのワークフローを起動する。
+# 詳細： https://github.com/voicevox/preview-pages?tab=readme-ov-file#%E4%BB%95%E7%B5%84%E3%81%BF
+
 on:
   pull_request_target:
     types:
