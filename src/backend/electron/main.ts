@@ -20,14 +20,20 @@ import log from "electron-log/main";
 import dayjs from "dayjs";
 import windowStateKeeper from "electron-window-state";
 import { hasSupportedGpu } from "./device";
-import EngineInfoManager from "./manager/engineInfoManager";
-import EngineProcessManager from "./manager/engineProcessManager";
-import VvppManager, { isVvppFile } from "./manager/vvppManager";
+import {
+  getEngineInfoManager,
+  initializeEngineInfoManager,
+} from "./manager/engineInfoManager";
+import {
+  getEngineProcessManager,
+  initializeEngineProcessManager,
+} from "./manager/engineProcessManager";
+import { initializeVvppManager, isVvppFile } from "./manager/vvppManager";
 import configMigration014 from "./configMigration014";
-import { RuntimeInfoManager } from "./manager/RuntimeInfoManager";
+import { initializeRuntimeInfoManager } from "./manager/RuntimeInfoManager";
 import { registerIpcMainHandle, ipcMainSendProxy, IpcMainHandle } from "./ipc";
 import { getConfigManager } from "./electronConfig";
-import { EngineAndVvppController } from "./engineAndVvppController";
+import { getEngineAndVvppController } from "./engineAndVvppController";
 import { writeFileSafely } from "./fileHelper";
 import { failure, success } from "@/type/result";
 import { AssetTextFileNames } from "@/type/staticResources";
@@ -170,35 +176,21 @@ const onEngineProcessError = (engineInfo: EngineInfo, error: Error) => {
   dialog.showErrorBox("音声合成エンジンエラー", error.message);
 };
 
-const runtimeInfoManager = new RuntimeInfoManager(
-  path.join(app.getPath("userData"), "runtime-info.json"),
-  app.getVersion(),
-);
-
-const configManager = getConfigManager();
-
-const engineInfoManager = new EngineInfoManager({
-  configManager,
+initializeRuntimeInfoManager({
+  runtimeInfoPath: path.join(app.getPath("userData"), "runtime-info.json"),
+  appVersion: app.getVersion(),
+});
+initializeEngineInfoManager({
   defaultEngineDir: appDirPath,
   vvppEngineDir,
 });
-const engineProcessManager = new EngineProcessManager({
-  configManager,
-  onEngineProcessError,
-  engineInfosFetcher:
-    engineInfoManager.fetchEngineInfos.bind(engineInfoManager),
-  engineAltPortUpdater: engineInfoManager.updateAltPort.bind(engineInfoManager),
-  engineSettingsGetter: () => configManager.get("engineSettings"),
-});
-const vvppManager = new VvppManager({ vvppEngineDir });
+initializeEngineProcessManager({ onEngineProcessError });
+initializeVvppManager({ vvppEngineDir });
 
-const engineAndVvppController = new EngineAndVvppController(
-  runtimeInfoManager,
-  configManager,
-  engineInfoManager,
-  engineProcessManager,
-  vvppManager,
-);
+const configManager = getConfigManager();
+const engineInfoManager = getEngineInfoManager();
+const engineProcessManager = getEngineProcessManager();
+const engineAndVvppController = getEngineAndVvppController();
 
 // エンジンのフォルダを開く
 function openEngineDirectory(engineId: EngineId) {

@@ -114,3 +114,19 @@ export class RuntimeInfoManager {
     });
   }
 }
+
+let manager: RuntimeInfoManager | undefined;
+
+export function initializeRuntimeInfoManager(payload: {
+  runtimeInfoPath: string;
+  appVersion: string;
+}) {
+  manager = new RuntimeInfoManager(payload.runtimeInfoPath, payload.appVersion);
+}
+
+export function getRuntimeInfoManager() {
+  if (manager == undefined) {
+    throw new Error("RuntimeInfoManager is not initialized");
+  }
+  return manager;
+}
