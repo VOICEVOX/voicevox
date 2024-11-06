@@ -11,7 +11,8 @@ on:
   pull_request:
 
 jobs:
-  update_pages:
+  # このJobの名前を変更したときは、voicevox/preview-pages側のscripts/collect.tsも変更すること。
+  build_preview_pages:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -22,8 +23,8 @@ jobs:
 
       - name: Build
         run: |
-          npm run storybook:build -- --preview-url ./ --output-dir dist_preview/storybook
-          npm run browser:build -- --base ./ --outDir dist_preview/editor
+          npm run storybook:build -- --output-dir $(pwd)/dist_preview/storybook
+          npm run browser:build -- --base ./ --outDir $(pwd)/dist_preview/editor
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
