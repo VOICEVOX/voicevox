@@ -5,7 +5,7 @@
 import { z } from "zod";
 
 /** パッケージ情報のスキーマ */
-const EngineVariantSchema = z.object({
+const engineVariantSchema = z.object({
   version: z.string(),
   packages: z
     .object({
@@ -22,22 +22,22 @@ const latestDefaultEngineInfoSchema = z.object({
   formatVersion: z.number(),
   windows: z.object({
     x64: z.object({
-      CPU: EngineVariantSchema,
-      "GPU/CPU": EngineVariantSchema,
+      CPU: engineVariantSchema,
+      "GPU/CPU": engineVariantSchema,
     }),
   }),
   macos: z.object({
     x64: z.object({
-      CPU: EngineVariantSchema,
+      CPU: engineVariantSchema,
     }),
     arm64: z.object({
-      CPU: EngineVariantSchema,
+      CPU: engineVariantSchema,
     }),
   }),
   linux: z.object({
     x64: z.object({
-      CPU: EngineVariantSchema,
-      "GPU/CPU": EngineVariantSchema,
+      CPU: engineVariantSchema,
+      "GPU/CPU": engineVariantSchema,
     }),
   }),
 });
