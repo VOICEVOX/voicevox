@@ -3,11 +3,11 @@ import fs from "fs";
 import log from "electron-log/main";
 import { BrowserWindow, dialog } from "electron";
 
-import EngineInfoManager from "./manager/engineInfoManager";
-import EngineProcessManager from "./manager/engineProcessManager";
-import VvppManager from "./manager/vvppManager";
-import { RuntimeInfoManager } from "./manager/RuntimeInfoManager";
-import { ElectronConfigManager } from "./electronConfig";
+import { getConfigManager } from "./electronConfig";
+import { getEngineInfoManager } from "./manager/engineInfoManager";
+import { getEngineProcessManager } from "./manager/engineProcessManager";
+import { getRuntimeInfoManager } from "./manager/RuntimeInfoManager";
+import { getVvppManager } from "./manager/vvppManager";
 import {
   EngineId,
   EngineInfo,
@@ -28,13 +28,21 @@ import {
  * エンジンとVVPP周りの処理の流れを制御するクラス。
  */
 export class EngineAndVvppController {
-  constructor(
-    private runtimeInfoManager: RuntimeInfoManager,
-    private configManager: ElectronConfigManager,
-    private engineInfoManager: EngineInfoManager,
-    private engineProcessManager: EngineProcessManager,
-    private vvppManager: VvppManager,
-  ) {}
+  private get configManager() {
+    return getConfigManager();
+  }
+  private get engineInfoManager() {
+    return getEngineInfoManager();
+  }
+  private get engineProcessManager() {
+    return getEngineProcessManager();
+  }
+  private get runtimeInfoManager() {
+    return getRuntimeInfoManager();
+  }
+  private get vvppManager() {
+    return getVvppManager();
+  }
 
   /**
    * VVPPエンジンをインストールする。
@@ -334,4 +342,13 @@ export class EngineAndVvppController {
     const configSavedResult = this.configManager.ensureSaved();
     return { engineCleanupResult, configSavedResult };
   }
+}
+
+let manager: EngineAndVvppController | undefined;
+
+export function getEngineAndVvppController() {
+  if (manager == undefined) {
+    manager = new EngineAndVvppController();
+  }
+  return manager;
 }

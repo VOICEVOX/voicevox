@@ -6,6 +6,7 @@ import { dialog } from "electron"; // FIXME: ここでelectronをimportするの
 
 import log from "electron-log/main";
 
+import { getConfigManager } from "../electronConfig";
 import {
   EngineInfo,
   EngineDirValidationResult,
@@ -14,7 +15,6 @@ import {
   minimumEngineManifestSchema,
 } from "@/type/preload";
 import { AltPortInfos } from "@/store/type";
-import { BaseConfigManager } from "@/backend/common/ConfigManager";
 import { UnreachableError } from "@/type/utility";
 import {
   EnvEngineInfoType,
@@ -95,7 +95,6 @@ function loadEngineInfo(
 
 /** エンジンの情報を管理するクラス */
 export class EngineInfoManager {
-  configManager: BaseConfigManager;
   defaultEngineDir: string;
   vvppEngineDir: string;
 
@@ -104,12 +103,7 @@ export class EngineInfoManager {
 
   private envEngineInfos = loadEnvEngineInfos();
 
-  constructor(payload: {
-    configManager: BaseConfigManager;
-    defaultEngineDir: string;
-    vvppEngineDir: string;
-  }) {
-    this.configManager = payload.configManager;
+  constructor(payload: { defaultEngineDir: string; vvppEngineDir: string }) {
     this.defaultEngineDir = payload.defaultEngineDir;
     this.vvppEngineDir = payload.vvppEngineDir;
   }
@@ -143,8 +137,10 @@ export class EngineInfoManager {
    * FIXME: store.get("registeredEngineDirs")への副作用をEngineManager外に移動する
    */
   private fetchRegisteredEngineInfos(): EngineInfo[] {
+    const configManager = getConfigManager();
+
     const engineInfos: EngineInfo[] = [];
-    for (const engineDir of this.configManager.get("registeredEngineDirs")) {
+    for (const engineDir of configManager.get("registeredEngineDirs")) {
       const result = loadEngineInfo(engineDir, "path");
       if (!result.ok) {
         log.log(`Failed to load engine: ${result.code}, ${engineDir}`);
@@ -154,9 +150,9 @@ export class EngineInfoManager {
           "エンジンの読み込みに失敗しました。",
           `${engineDir}を読み込めませんでした。このエンジンは削除されます。`,
         );
-        this.configManager.set(
+        configManager.set(
           "registeredEngineDirs",
-          this.configManager
+          configManager
             .get("registeredEngineDirs")
             .filter((p) => p !== engineDir),
         );
@@ -288,4 +284,18 @@ export class EngineInfoManager {
   }
 }
 
-export default EngineInfoManager;
+let manager: EngineInfoManager | undefined;
+
+export function initializeEngineInfoManager(payload: {
+  defaultEngineDir: string;
+  vvppEngineDir: string;
+}) {
+  manager = new EngineInfoManager(payload);
+}
+
+export function getEngineInfoManager() {
+  if (manager == undefined) {
+    throw new Error("EngineInfoManager is not initialized");
+  }
+  return manager;
+}
