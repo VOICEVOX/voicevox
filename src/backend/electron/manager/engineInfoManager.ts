@@ -153,7 +153,7 @@ export class EngineInfoManager {
   }
 
   /**
-   * 全てのエンジンの一覧を取得する。
+   * 全てのエンジンの情報を取得する。
    */
   fetchEngineInfos(): EngineInfo[] {
     const engineInfos = [
