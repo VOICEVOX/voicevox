@@ -4,47 +4,47 @@
 
 import { z } from "zod";
 
-/** パッケージ（vvppやvvppp１ファイル）ごとのスキーマ */
-const defaultEnginePackageSchema = z.object({
-  url: z.string(),
-  name: z.string(),
-  size: z.number(),
-  hash: z.string().optional(),
-});
-
-/** デバイスごとのスキーマ */
-const defaultEngineDeviceSchema = z.object({
+/** パッケージ情報のスキーマ */
+const enginePackageSchema = z.object({
   version: z.string(),
-  packages: z.array(defaultEnginePackageSchema),
+  packages: z
+    .object({
+      url: z.string(),
+      name: z.string(),
+      size: z.number(),
+      hash: z.string().optional(),
+    })
+    .array(),
 });
+export type EnginePackage = z.infer<typeof enginePackageSchema>;
 
 /** デフォルトエンジンの更新情報のスキーマ */
-const defaultEngineInfosSchema = z.object({
+const latestDefaultEngineInfoSchema = z.object({
   formatVersion: z.number(),
   windows: z.object({
     x64: z.object({
-      CPU: defaultEngineDeviceSchema,
-      "GPU/CPU": defaultEngineDeviceSchema,
+      CPU: enginePackageSchema,
+      "GPU/CPU": enginePackageSchema,
     }),
   }),
   macos: z.object({
     x64: z.object({
-      CPU: defaultEngineDeviceSchema,
+      CPU: enginePackageSchema,
     }),
     arm64: z.object({
-      CPU: defaultEngineDeviceSchema,
+      CPU: enginePackageSchema,
     }),
   }),
   linux: z.object({
     x64: z.object({
-      CPU: defaultEngineDeviceSchema,
-      "GPU/CPU": defaultEngineDeviceSchema,
+      CPU: enginePackageSchema,
+      "GPU/CPU": enginePackageSchema,
     }),
   }),
 });
 
 /** デフォルトエンジンの更新情報を取得する */
-export const fetchDefaultEngineInfos = async (url: string) => {
+export const fetchLatestDefaultEngineInfo = async (url: string) => {
   const response = await fetch(url);
-  return defaultEngineInfosSchema.parse(await response.json());
+  return latestDefaultEngineInfoSchema.parse(await response.json());
 };
