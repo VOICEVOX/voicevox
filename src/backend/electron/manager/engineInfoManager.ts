@@ -126,7 +126,6 @@ export class EngineInfoManager {
 
   /**
    * 設定で登録したエンジン情報を取得する。
-   * FIXME: store.get("registeredEngineDirs")への副作用をEngineManager外に移動する
    */
   private fetchRegisteredEngineInfos(): EngineInfo[] {
     const configManager = getConfigManager();
