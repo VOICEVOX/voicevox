@@ -19,7 +19,7 @@ import { UnreachableError } from "@/type/utility";
 import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
 import { failure, Result, success } from "@/type/result";
 
-/** 利用可能なエンジンの情報を管理するクラス */
+/** エンジンの情報を管理するクラス */
 export class EngineInfoManager {
   defaultEngineDir: string;
   vvppEngineDir: string;
@@ -27,11 +27,36 @@ export class EngineInfoManager {
   /** 代替ポート情報 */
   public altPortInfos: AltPortInfos = {};
 
-  private envEngineInfos = loadEnvEngineInfos();
-
   constructor(payload: { defaultEngineDir: string; vvppEngineDir: string }) {
     this.defaultEngineDir = payload.defaultEngineDir;
     this.vvppEngineDir = payload.vvppEngineDir;
+  }
+
+  /**
+   * .envにあるエンジンの情報を取得する。
+   * ダウンロードが必要なものは除外されている。
+   */
+  private fetchEnvEngineInfos(): EngineInfo[] {
+    // TODO: envから直接ではなく、envに書いたengine_manifest.jsonから情報を得るようにする
+    const engines = loadEnvEngineInfos();
+
+    return engines.map((engineInfo) => {
+      const { protocol, hostname, port, pathname } = new URL(engineInfo.host);
+      return {
+        ...engineInfo,
+        protocol,
+        hostname,
+        defaultPort: port,
+        pathname: pathname === "/" ? "" : pathname,
+        isDefault: true,
+        type: "path",
+        executionFilePath: path.resolve(engineInfo.executionFilePath),
+        path:
+          engineInfo.path == undefined
+            ? undefined
+            : path.resolve(this.defaultEngineDir, engineInfo.path),
+      } satisfies EngineInfo;
+    });
   }
 
   /** エンジンディレクトリからエンジン情報を読み込む */
@@ -73,33 +98,6 @@ export class EngineInfoManager {
       isDefault: false,
     } satisfies EngineInfo;
     return success(engineInfo);
-  }
-
-  /**
-   * .envにあるエンジンの情報を取得する。
-   * ダウンロードが必要なものは除外されている。
-   */
-  private fetchEnvEngineInfos(): EngineInfo[] {
-    // TODO: envから直接ではなく、envに書いたengine_manifest.jsonから情報を得るようにする
-    const engines = loadEnvEngineInfos();
-
-    return engines.map((engineInfo) => {
-      const { protocol, hostname, port, pathname } = new URL(engineInfo.host);
-      return {
-        ...engineInfo,
-        protocol,
-        hostname,
-        defaultPort: port,
-        pathname: pathname === "/" ? "" : pathname,
-        isDefault: true,
-        type: "path",
-        executionFilePath: path.resolve(engineInfo.executionFilePath),
-        path:
-          engineInfo.path == undefined
-            ? undefined
-            : path.resolve(this.defaultEngineDir, engineInfo.path),
-      } satisfies EngineInfo;
-    });
   }
 
   /**
