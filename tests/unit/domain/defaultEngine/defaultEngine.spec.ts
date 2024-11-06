@@ -1,17 +1,12 @@
-// テスト用のファイルを読み込むのでNode環境で実行する
-
-import path from "path";
-import fs from "fs";
+import latestDefaultEngineInfos from "./latestDefaultEngineInfos.json";
 import { fetchLatestDefaultEngineInfo } from "@/domain/defaultEngine/latetDefaultEngine";
-
-const currentDir = "tests/unit/domain/defaultEngine";
 
 test("fetchLatestDefaultEngineInfo", async () => {
   // テスト用のjsonファイルでfetchをモックする
   // 元ファイルは https://raw.githubusercontent.com/VOICEVOX/voicevox_blog/master/src/generateLatestDefaultEngineInfos.ts
-  const p = path.resolve(currentDir, "latestDefaultEngineInfos.json");
-  const json = fs.readFileSync(p, "utf-8");
-  const spy = vi.spyOn(global, "fetch").mockResolvedValue(new Response(json));
+  const spy = vi
+    .spyOn(global, "fetch")
+    .mockResolvedValue(new Response(JSON.stringify(latestDefaultEngineInfos)));
 
   // 読み込めることを確認
   const infos = await fetchLatestDefaultEngineInfo("https://example.com/");
