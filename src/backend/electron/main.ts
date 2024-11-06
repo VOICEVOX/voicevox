@@ -937,7 +937,6 @@ app.on("ready", async () => {
     await engineAndVvppController.fetchEngineAndPackageInfosToInstall();
   for (const { envEngineInfo, packageInfo } of engineAndPackageInfosToInstall) {
     // インストールするか確認
-    // FIXME: 案内文をよりユーザーフレンドリーにする
     const result = dialog.showMessageBoxSync(win, {
       type: "info",
       title: "デフォルトエンジンのインストール",

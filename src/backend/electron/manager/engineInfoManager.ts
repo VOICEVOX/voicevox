@@ -172,22 +172,6 @@ export class EngineInfoManager {
       ...this.fetchVvppEngineInfos(),
       ...this.fetchRegisteredEngineInfos(),
     ];
-
-    // 追加エンジンがダウンロードしたデフォルトエンジンと同じなら、デフォルトエンジンとして扱う
-    const targetEngineUuids = this.envEngineInfos
-      .filter((e) => e.type == "downloadVvpp")
-      .map((e) => e.uuid);
-    for (const engineInfo of engineInfos) {
-      if (targetEngineUuids.includes(engineInfo.uuid)) {
-        if (engineInfo.type != "vvpp") {
-          log.warn(
-            `Engine ${engineInfo.uuid} is same as default engine, but type is "${engineInfo.type}"`,
-          );
-        }
-        engineInfo.isDefault = true;
-      }
-    }
-
     return engineInfos;
   }
 

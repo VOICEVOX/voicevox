@@ -175,16 +175,6 @@ export class EngineAndVvppController {
       // FIXME: より新しいバージョンであれば更新する
       if (this.engineInfoManager.hasEngineInfo(envEngineInfo.uuid)) {
         log.info(`Default engine ${envEngineInfo.uuid} is already installed.`);
-
-        // vvppとしてインストールされていない場合は警告を出す
-        const engineInfo = this.engineInfoManager.fetchEngineInfo(
-          envEngineInfo.uuid,
-        );
-        if (engineInfo.type != "vvpp") {
-          log.warn(
-            `Default engine ${envEngineInfo.uuid} is already installed as "${engineInfo.type}", not "vvpp"`,
-          );
-        }
         continue;
       }
 
