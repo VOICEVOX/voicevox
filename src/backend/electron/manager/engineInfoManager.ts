@@ -22,36 +22,6 @@ import {
 } from "@/domain/defaultEngine/envEngineInfo";
 import { failure, Result, success } from "@/type/result";
 
-/**
- * デフォルトエンジンの情報を取得する
- */
-function fetchDefaultEngineInfos(
-  envEngineInfos: EnvEngineInfoType[],
-  defaultEngineDir: string,
-): EngineInfo[] {
-  // TODO: envから直接ではなく、envに書いたengine_manifest.jsonから情報を得るようにする
-  return envEngineInfos
-    .filter((engineInfo) => engineInfo.type != "downloadVvpp")
-    .map((engineInfo) => {
-      if (engineInfo.type == "downloadVvpp") throw new UnreachableError();
-      const { protocol, hostname, port, pathname } = new URL(engineInfo.host);
-      return {
-        ...engineInfo,
-        protocol,
-        hostname,
-        defaultPort: port,
-        pathname: pathname === "/" ? "" : pathname,
-        isDefault: true,
-        type: engineInfo.type,
-        executionFilePath: path.resolve(engineInfo.executionFilePath),
-        path:
-          engineInfo.path == undefined
-            ? undefined
-            : path.resolve(defaultEngineDir, engineInfo.path),
-      } satisfies EngineInfo;
-    });
-}
-
 /** エンジンディレクトリからエンジン情報を読み込む */
 function loadEngineInfo(
   engineDir: string,
@@ -164,11 +134,41 @@ export class EngineInfoManager {
   }
 
   /**
+   * デフォルトエンジンの情報を取得する
+   */
+  private fetchDefaultEngineInfos(
+    envEngineInfos: EnvEngineInfoType[],
+    defaultEngineDir: string,
+  ): EngineInfo[] {
+    // TODO: envから直接ではなく、envに書いたengine_manifest.jsonから情報を得るようにする
+    return envEngineInfos
+      .filter((engineInfo) => engineInfo.type != "downloadVvpp")
+      .map((engineInfo) => {
+        if (engineInfo.type == "downloadVvpp") throw new UnreachableError();
+        const { protocol, hostname, port, pathname } = new URL(engineInfo.host);
+        return {
+          ...engineInfo,
+          protocol,
+          hostname,
+          defaultPort: port,
+          pathname: pathname === "/" ? "" : pathname,
+          isDefault: true,
+          type: engineInfo.type,
+          executionFilePath: path.resolve(engineInfo.executionFilePath),
+          path:
+            engineInfo.path == undefined
+              ? undefined
+              : path.resolve(defaultEngineDir, engineInfo.path),
+        } satisfies EngineInfo;
+      });
+  }
+
+  /**
    * 追加エンジンの一覧を取得する。
    */
   private fetchAdditionalEngineInfos(): EngineInfo[] {
     return [
-      ...this.fetchVvppEngineInfos(),
+      ...this.fetchVvppEngineInfos(), // FIXME: デフォルトエンジンを省く
       ...this.fetchRegisteredEngineInfos(),
     ];
   }
@@ -178,9 +178,11 @@ export class EngineInfoManager {
    */
   fetchEngineInfos(): EngineInfo[] {
     // TOOD: vvpp内にあるもの含むデフォルトエンジン一覧と、デフォルトエンジン以外の追加エンジン一覧を取得する関数に分ける
-    // ↑のためには、VVPP情報一覧関数と、追加ディレクトリエンジン一覧にわけ、デフォルトエンジン一覧側はVVPP情報一覧を使うようにし、更に別で追加エンジン一覧関数を作る
     const engineInfos = [
-      ...fetchDefaultEngineInfos(this.envEngineInfos, this.defaultEngineDir),
+      ...this.fetchDefaultEngineInfos(
+        this.envEngineInfos,
+        this.defaultEngineDir,
+      ),
       ...this.fetchAdditionalEngineInfos(),
     ];
 
