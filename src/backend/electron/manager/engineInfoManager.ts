@@ -16,10 +16,7 @@ import {
 } from "@/type/preload";
 import { AltPortInfos } from "@/store/type";
 import { UnreachableError } from "@/type/utility";
-import {
-  EnvEngineInfoType,
-  loadEnvEngineInfos,
-} from "@/domain/defaultEngine/envEngineInfo";
+import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
 import { failure, Result, success } from "@/type/result";
 
 /** エンジンの情報を管理するクラス */
@@ -136,12 +133,9 @@ export class EngineInfoManager {
   /**
    * デフォルトエンジンの情報を取得する
    */
-  private fetchDefaultEngineInfos(
-    envEngineInfos: EnvEngineInfoType[],
-    defaultEngineDir: string,
-  ): EngineInfo[] {
+  private fetchDefaultEngineInfos(): EngineInfo[] {
     // TODO: envから直接ではなく、envに書いたengine_manifest.jsonから情報を得るようにする
-    return envEngineInfos
+    return this.envEngineInfos
       .filter((engineInfo) => engineInfo.type != "downloadVvpp")
       .map((engineInfo) => {
         if (engineInfo.type == "downloadVvpp") throw new UnreachableError();
@@ -158,7 +152,7 @@ export class EngineInfoManager {
           path:
             engineInfo.path == undefined
               ? undefined
-              : path.resolve(defaultEngineDir, engineInfo.path),
+              : path.resolve(this.defaultEngineDir, engineInfo.path),
         } satisfies EngineInfo;
       });
   }
@@ -179,10 +173,7 @@ export class EngineInfoManager {
   fetchEngineInfos(): EngineInfo[] {
     // TOOD: vvpp内にあるもの含むデフォルトエンジン一覧と、デフォルトエンジン以外の追加エンジン一覧を取得する関数に分ける
     const engineInfos = [
-      ...this.fetchDefaultEngineInfos(
-        this.envEngineInfos,
-        this.defaultEngineDir,
-      ),
+      ...this.fetchDefaultEngineInfos(),
       ...this.fetchAdditionalEngineInfos(),
     ];
 
