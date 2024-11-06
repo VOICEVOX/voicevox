@@ -32,33 +32,6 @@ export class EngineInfoManager {
     this.vvppEngineDir = payload.vvppEngineDir;
   }
 
-  /**
-   * .envにあるエンジンの情報を取得する。
-   * ダウンロードが必要なものは除外されている。
-   */
-  private fetchEnvEngineInfos(): EngineInfo[] {
-    // TODO: envから直接ではなく、envに書いたengine_manifest.jsonから情報を得るようにする
-    const engines = loadEnvEngineInfos();
-
-    return engines.map((engineInfo) => {
-      const { protocol, hostname, port, pathname } = new URL(engineInfo.host);
-      return {
-        ...engineInfo,
-        protocol,
-        hostname,
-        defaultPort: port,
-        pathname: pathname === "/" ? "" : pathname,
-        isDefault: true,
-        type: "path",
-        executionFilePath: path.resolve(engineInfo.executionFilePath),
-        path:
-          engineInfo.path == undefined
-            ? undefined
-            : path.resolve(this.defaultEngineDir, engineInfo.path),
-      } satisfies EngineInfo;
-    });
-  }
-
   /** エンジンディレクトリからエンジン情報を読み込む */
   private loadEngineInfo(
     engineDir: string,
@@ -98,6 +71,33 @@ export class EngineInfoManager {
       isDefault: false,
     } satisfies EngineInfo;
     return success(engineInfo);
+  }
+
+  /**
+   * .envにあるエンジンの情報を取得する。
+   * ダウンロードが必要なものは除外されている。
+   */
+  private fetchEnvEngineInfos(): EngineInfo[] {
+    // TODO: envから直接ではなく、envに書いたengine_manifest.jsonから情報を得るようにする
+    const engines = loadEnvEngineInfos();
+
+    return engines.map((engineInfo) => {
+      const { protocol, hostname, port, pathname } = new URL(engineInfo.host);
+      return {
+        ...engineInfo,
+        protocol,
+        hostname,
+        defaultPort: port,
+        pathname: pathname === "/" ? "" : pathname,
+        isDefault: true,
+        type: "path",
+        executionFilePath: path.resolve(engineInfo.executionFilePath),
+        path:
+          engineInfo.path == undefined
+            ? undefined
+            : path.resolve(this.defaultEngineDir, engineInfo.path),
+      } satisfies EngineInfo;
+    });
   }
 
   /**
