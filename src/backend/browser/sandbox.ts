@@ -19,7 +19,6 @@ import {
 } from "@/type/preload";
 import { AssetTextFileNames } from "@/type/staticResources";
 
-// TODO: base pathを設定できるようにするか、ビルド時埋め込みにする
 const toStaticPath = (fileName: string) =>
   `${import.meta.env.BASE_URL}/${fileName}`.replaceAll(/\/\/+/, "/");
 
