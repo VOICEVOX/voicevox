@@ -22,47 +22,6 @@ import {
 } from "@/domain/defaultEngine/envEngineInfo";
 import { failure, Result, success } from "@/type/result";
 
-/** エンジンディレクトリからエンジン情報を読み込む */
-function loadEngineInfo(
-  engineDir: string,
-  type: "vvpp" | "path",
-): Result<EngineInfo, "manifestNotFound" | "manifestParseError"> {
-  const manifestPath = path.join(engineDir, "engine_manifest.json");
-  if (!fs.existsSync(manifestPath)) {
-    return failure("manifestNotFound", new Error("manifest not found"));
-  }
-  let manifest: MinimumEngineManifestType;
-  try {
-    manifest = minimumEngineManifestSchema.parse(
-      JSON.parse(fs.readFileSync(manifestPath, { encoding: "utf8" })),
-    );
-  } catch (e) {
-    if (e instanceof Error) {
-      return failure("manifestParseError", e);
-    } else {
-      throw new UnreachableError();
-    }
-  }
-
-  const [command, ...args] = shlex.split(manifest.command);
-
-  const engineInfo = {
-    uuid: manifest.uuid,
-    protocol: "http:",
-    hostname: "127.0.0.1",
-    defaultPort: manifest.port.toString(),
-    pathname: "",
-    name: manifest.name,
-    path: engineDir,
-    executionEnabled: true,
-    executionFilePath: path.join(engineDir, command),
-    executionArgs: args,
-    type,
-    isDefault: false,
-  } satisfies EngineInfo;
-  return success(engineInfo);
-}
-
 /** エンジンの情報を管理するクラス */
 export class EngineInfoManager {
   defaultEngineDir: string;
@@ -76,6 +35,47 @@ export class EngineInfoManager {
   constructor(payload: { defaultEngineDir: string; vvppEngineDir: string }) {
     this.defaultEngineDir = payload.defaultEngineDir;
     this.vvppEngineDir = payload.vvppEngineDir;
+  }
+
+  /** エンジンディレクトリからエンジン情報を読み込む */
+  private loadEngineInfo(
+    engineDir: string,
+    type: "vvpp" | "path",
+  ): Result<EngineInfo, "manifestNotFound" | "manifestParseError"> {
+    const manifestPath = path.join(engineDir, "engine_manifest.json");
+    if (!fs.existsSync(manifestPath)) {
+      return failure("manifestNotFound", new Error("manifest not found"));
+    }
+    let manifest: MinimumEngineManifestType;
+    try {
+      manifest = minimumEngineManifestSchema.parse(
+        JSON.parse(fs.readFileSync(manifestPath, { encoding: "utf8" })),
+      );
+    } catch (e) {
+      if (e instanceof Error) {
+        return failure("manifestParseError", e);
+      } else {
+        throw new UnreachableError();
+      }
+    }
+
+    const [command, ...args] = shlex.split(manifest.command);
+
+    const engineInfo = {
+      uuid: manifest.uuid,
+      protocol: "http:",
+      hostname: "127.0.0.1",
+      defaultPort: manifest.port.toString(),
+      pathname: "",
+      name: manifest.name,
+      path: engineDir,
+      executionEnabled: true,
+      executionFilePath: path.join(engineDir, command),
+      executionArgs: args,
+      type,
+      isDefault: false,
+    } satisfies EngineInfo;
+    return success(engineInfo);
   }
 
   /**
@@ -92,7 +92,7 @@ export class EngineInfoManager {
       if (dirName === ".tmp") {
         continue;
       }
-      const result = loadEngineInfo(engineDir, "vvpp");
+      const result = this.loadEngineInfo(engineDir, "vvpp");
       if (!result.ok) {
         log.log(`Failed to load engine: ${result.code}, ${engineDir}`);
         continue;
@@ -111,7 +111,7 @@ export class EngineInfoManager {
 
     const engineInfos: EngineInfo[] = [];
     for (const engineDir of configManager.get("registeredEngineDirs")) {
-      const result = loadEngineInfo(engineDir, "path");
+      const result = this.loadEngineInfo(engineDir, "path");
       if (!result.ok) {
         log.log(`Failed to load engine: ${result.code}, ${engineDir}`);
         // 動かないエンジンは追加できないので削除
