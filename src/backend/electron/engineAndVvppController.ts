@@ -15,9 +15,9 @@ import {
   EngineSettingType,
 } from "@/type/preload";
 import {
-  EnginePackage,
+  EngineVariant,
   fetchLatestDefaultEngineInfo,
-  getSuitablePackage,
+  getSuitableVariant,
 } from "@/domain/defaultEngine/latetDefaultEngine";
 import {
   EnvEngineInfoType,
@@ -148,7 +148,7 @@ export class EngineAndVvppController {
   async fetchEngineAndPackageInfosToInstall(): Promise<
     {
       envEngineInfo: EnvEngineInfoType;
-      packageInfo: EnginePackage;
+      packageInfo: EngineVariant;
     }[]
   > {
     // .envのデフォルトエンジン情報のうち、downloadVvppなものを集める
@@ -168,7 +168,7 @@ export class EngineAndVvppController {
         continue;
       }
 
-      const packageInfo = getSuitablePackage(latestInfo);
+      const packageInfo = getSuitableVariant(latestInfo);
       log.info(`Latest default engine version: ${packageInfo.version}`);
 
       // インストール済みだった場合はスキップ
@@ -190,7 +190,7 @@ export class EngineAndVvppController {
   /** VVPPパッケージをダウンロードし、インストールする */
   async downloadAndInstallVvppEngine(
     downloadDir: string,
-    packageInfo: EnginePackage,
+    packageInfo: EngineVariant,
   ) {
     // ダウンロード
     const downloadedPaths = new Array<string>(packageInfo.packages.length);
