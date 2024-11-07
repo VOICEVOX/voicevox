@@ -383,3 +383,16 @@ export class VvppManager {
 }
 
 export default VvppManager;
+
+let manager: VvppManager | undefined;
+
+export function initializeVvppManager(payload: { vvppEngineDir: string }) {
+  manager = new VvppManager(payload);
+}
+
+export function getVvppManager() {
+  if (manager == undefined) {
+    throw new Error("EngineInfoManager is not initialized");
+  }
+  return manager;
+}

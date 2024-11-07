@@ -6,27 +6,23 @@ import { dialog } from "electron"; // FIXME: ここでelectronをimportするの
 
 import log from "electron-log/main";
 
+import { getConfigManager } from "../electronConfig";
 import {
   EngineInfo,
   EngineDirValidationResult,
   MinimumEngineManifestType,
   EngineId,
   minimumEngineManifestSchema,
-  envEngineInfoSchema,
 } from "@/type/preload";
 import { AltPortInfos } from "@/store/type";
-import { BaseConfigManager } from "@/backend/common/ConfigManager";
+import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
 
 /**
  * デフォルトエンジンの情報を取得する
  */
 function fetchDefaultEngineInfos(defaultEngineDir: string): EngineInfo[] {
   // TODO: envから直接ではなく、envに書いたengine_manifest.jsonから情報を得るようにする
-  const defaultEngineInfosEnv =
-    import.meta.env.VITE_DEFAULT_ENGINE_INFOS ?? "[]";
-
-  const envSchema = envEngineInfoSchema.array();
-  const engines = envSchema.parse(JSON.parse(defaultEngineInfosEnv));
+  const engines = loadEnvEngineInfos();
 
   return engines.map((engineInfo) => {
     const { protocol, hostname, port, pathname } = new URL(engineInfo.host);
@@ -49,19 +45,13 @@ function fetchDefaultEngineInfos(defaultEngineDir: string): EngineInfo[] {
 
 /** エンジンの情報を管理するクラス */
 export class EngineInfoManager {
-  configManager: BaseConfigManager;
   defaultEngineDir: string;
   vvppEngineDir: string;
 
   /** 代替ポート情報 */
   public altPortInfos: AltPortInfos = {};
 
-  constructor(payload: {
-    configManager: BaseConfigManager;
-    defaultEngineDir: string;
-    vvppEngineDir: string;
-  }) {
-    this.configManager = payload.configManager;
+  constructor(payload: { defaultEngineDir: string; vvppEngineDir: string }) {
     this.defaultEngineDir = payload.defaultEngineDir;
     this.vvppEngineDir = payload.vvppEngineDir;
   }
@@ -118,8 +108,9 @@ export class EngineInfoManager {
         log.log(`Failed to load engine: ${result}, ${engineDir}`);
       }
     }
+    const configManager = getConfigManager();
     // FIXME: この関数の引数でregisteredEngineDirsを受け取り、動かないエンジンをreturnして、EngineManager外でconfig.setする
-    for (const engineDir of this.configManager.get("registeredEngineDirs")) {
+    for (const engineDir of configManager.get("registeredEngineDirs")) {
       const result = addEngine(engineDir, "path");
       if (result !== "ok") {
         log.log(`Failed to load engine: ${result}, ${engineDir}`);
@@ -129,9 +120,9 @@ export class EngineInfoManager {
           "エンジンの読み込みに失敗しました。",
           `${engineDir}を読み込めませんでした。このエンジンは削除されます。`,
         );
-        this.configManager.set(
+        configManager.set(
           "registeredEngineDirs",
-          this.configManager
+          configManager
             .get("registeredEngineDirs")
             .filter((p) => p !== engineDir),
         );
@@ -225,4 +216,18 @@ export class EngineInfoManager {
   }
 }
 
-export default EngineInfoManager;
+let manager: EngineInfoManager | undefined;
+
+export function initializeEngineInfoManager(payload: {
+  defaultEngineDir: string;
+  vvppEngineDir: string;
+}) {
+  manager = new EngineInfoManager(payload);
+}
+
+export function getEngineInfoManager() {
+  if (manager == undefined) {
+    throw new Error("EngineInfoManager is not initialized");
+  }
+  return manager;
+}
