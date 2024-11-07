@@ -109,7 +109,7 @@ export class EngineInfoManager {
   }
 
   /**
-   * VVPPエンジン情報の一覧を取得する。
+   * VVPPエンジンの情報を取得する。
    */
   private fetchVvppEngineInfos(): EngineInfo[] {
     const engineInfos: EngineInfo[] = [];
@@ -133,8 +133,7 @@ export class EngineInfoManager {
   }
 
   /**
-   * 設定で登録したエンジン情報を取得する。
-   * FIXME: store.get("registeredEngineDirs")への副作用をEngineManager外に移動する
+   * 設定で登録したエンジンの情報を取得する。
    */
   private fetchRegisteredEngineInfos(): EngineInfo[] {
     const configManager = getConfigManager();
@@ -164,7 +163,7 @@ export class EngineInfoManager {
   }
 
   /**
-   * 全てのエンジンの一覧を取得する。
+   * 全てのエンジンの情報を取得する。
    */
   fetchEngineInfos(): EngineInfo[] {
     const engineInfos = [
