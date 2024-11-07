@@ -54,11 +54,10 @@ export class EngineInfoManager {
         JSON.parse(fs.readFileSync(manifestPath, { encoding: "utf8" })),
       );
     } catch (e) {
-      if (e instanceof Error) {
-        return failure("manifestParseError", e);
-      } else {
-        throw new UnreachableError();
-      }
+      return failure(
+        "manifestParseError",
+        e instanceof Error ? e : new Error("manifest parse error"),
+      );
     }
 
     const [command, ...args] = shlex.split(manifest.command);
