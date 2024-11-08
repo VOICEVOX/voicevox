@@ -1,0 +1,66 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`mock > audioQueryAudioQueryPost 1`] = `
+{
+  "accentPhrases": [
+    {
+      "accent": 5,
+      "moras": [
+        {
+          "consonant": "k",
+          "consonantLength": 0.0220625,
+          "pitch": 4.7734375,
+          "text": "コ",
+          "vowel": "o",
+          "vowelLength": 0.1140625,
+        },
+        {
+          "consonant": undefined,
+          "consonantLength": undefined,
+          "pitch": 3.609375,
+          "text": "ン",
+          "vowel": "N",
+          "vowelLength": 0.08312499999999999,
+        },
+        {
+          "consonant": "n",
+          "consonantLength": 0.022625,
+          "pitch": 4.75,
+          "text": "ニ",
+          "vowel": "i",
+          "vowelLength": 0.10843749999999999,
+        },
+        {
+          "consonant": "ch",
+          "consonantLength": 0.0400625,
+          "pitch": 4.0234375,
+          "text": "チ",
+          "vowel": "i",
+          "vowelLength": 0.10843749999999999,
+        },
+        {
+          "consonant": "h",
+          "consonantLength": 0.0315,
+          "pitch": 4.796875,
+          "text": "ハ",
+          "vowel": "a",
+          "vowelLength": 0.1509375,
+        },
+      ],
+      "pauseMora": undefined,
+    },
+  ],
+  "intonationScale": 1,
+  "outputSamplingRate": 24000,
+  "outputStereo": false,
+  "pitchScale": 0,
+  "postPhonemeLength": 0.1,
+  "prePhonemeLength": 0.1,
+  "speedScale": 1,
+  "volumeScale": 1,
+}
+`;
+
+exports[`mock > synthesisSynthesisPost 1`] = `"680a0b3cb0e937d56e3f99304de0d352599439502443bae11828bf875be13bc4"`;
+
+exports[`mock > versionVersionGet 1`] = `"mock"`;

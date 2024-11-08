@@ -18,8 +18,12 @@ async function createOrGetTokenizer() {
   }
 
   return new Promise<Tokenizer<IpadicFeatures>>((resolve, reject) => {
-    // NOTE: kuromojiはブラウザのときfetch、Nodeのときfsを使うので、このコードが正常動作するのはブラウザ環境のみ
-    const dicPath = `https://cdn.jsdelivr.net/npm/kuromoji@${packageJson.devDependencies.kuromoji}/dict`;
+    // ブラウザのときはCDNから辞書を取得し、Nodeのときはローカルから取得する
+    console.log(window);
+    const isBrowser = global == undefined;
+    const dicPath = isBrowser
+      ? `https://cdn.jsdelivr.net/npm/kuromoji@${packageJson.devDependencies.kuromoji}/dict`
+      : "node_modules/kuromoji/dict";
     kuromoji
       .builder({ dicPath })
       .build((err: Error, tokenizer: Tokenizer<IpadicFeatures>) => {
