@@ -19,7 +19,6 @@ async function createOrGetTokenizer() {
 
   return new Promise<Tokenizer<IpadicFeatures>>((resolve, reject) => {
     // ブラウザのときはCDNから辞書を取得し、Nodeのときはローカルから取得する
-    console.log(window);
     const isBrowser = global == undefined;
     const dicPath = isBrowser
       ? `https://cdn.jsdelivr.net/npm/kuromoji@${packageJson.devDependencies.kuromoji}/dict`

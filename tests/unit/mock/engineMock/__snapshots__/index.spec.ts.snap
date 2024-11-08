@@ -61,6 +61,116 @@ exports[`mock > audioQueryAudioQueryPost 1`] = `
 }
 `;
 
+exports[`mock > frameSynthesisFrameSynthesisPost 1`] = `"6f4e9484167d90b681365f9bd81a4cc55ec4e77d078943b4d2381e4f0940ed61"`;
+
+exports[`mock > singFrameAudioQuerySingFrameAudioQueryPost 1`] = `
+{
+  "f0": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    46.17422889791779,
+    46.08055781881967,
+    46.08055781881967,
+    46.16797823967303,
+    46.18048040243588,
+    46.18048040243588,
+    82.27312267254713,
+    82.21745071316357,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+  ],
+  "outputSamplingRate": 24000,
+  "outputStereo": false,
+  "phonemes": [
+    {
+      "frameLength": 9,
+      "noteId": "a",
+      "phoneme": "pau",
+    },
+    {
+      "frameLength": 1,
+      "noteId": "b",
+      "phoneme": "t",
+    },
+    {
+      "frameLength": 2,
+      "noteId": "b",
+      "phoneme": "e",
+    },
+    {
+      "frameLength": 1,
+      "noteId": "c",
+      "phoneme": "s",
+    },
+    {
+      "frameLength": 2,
+      "noteId": "c",
+      "phoneme": "u",
+    },
+    {
+      "frameLength": 1,
+      "noteId": "d",
+      "phoneme": "t",
+    },
+    {
+      "frameLength": 1,
+      "noteId": "d",
+      "phoneme": "o",
+    },
+    {
+      "frameLength": 10,
+      "noteId": "e",
+      "phoneme": "pau",
+    },
+  ],
+  "volume": [
+    0.7635414345273557,
+    0.7635414345273557,
+    0.7635414345273557,
+    0.7635414345273557,
+    0.7635414345273557,
+    0.7635414345273557,
+    0.7635414345273557,
+    0.7635414345273557,
+    0.7635414345273557,
+    0.7732211475542967,
+    0.7702900494608796,
+    0.7702900494608796,
+    0.7730257409255916,
+    0.7734165541957456,
+    0.7734165541957456,
+    0.7737647610411076,
+    0.7727873601766926,
+    0.7635414345273557,
+    0.7635414345273557,
+    0.7635414345273557,
+    0.7635414345273557,
+    0.7635414345273557,
+    0.7635414345273557,
+    0.7635414345273557,
+    0.7635414345273557,
+    0.7635414345273557,
+    0.7635414345273557,
+  ],
+  "volumeScale": 1,
+}
+`;
+
 exports[`mock > synthesisSynthesisPost 1`] = `"680a0b3cb0e937d56e3f99304de0d352599439502443bae11828bf875be13bc4"`;
 
 exports[`mock > versionVersionGet 1`] = `"mock"`;
