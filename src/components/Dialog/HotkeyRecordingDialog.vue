@@ -32,7 +32,7 @@
           </div>
         </div>
       </QCardSection>
-      <QCardActions align="center">
+      <QCardActions align="right">
         <QBtn
           padding="xs md"
           label="キャンセル"
@@ -41,18 +41,6 @@
           textColor="display"
           class="q-mt-sm"
           @click="closeHotkeyDialog"
-        />
-        <QBtn
-          padding="xs md"
-          label="ショートカットキーを未設定にする"
-          unelevated
-          color="surface"
-          textColor="display"
-          class="q-mt-sm"
-          @click="
-            emit('deleteHotkey', props.lastAction);
-            closeHotkeyDialog();
-          "
         />
         <QBtn
           v-if="duplicatedHotkey == undefined"
