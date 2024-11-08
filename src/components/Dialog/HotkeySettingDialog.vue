@@ -153,11 +153,11 @@ const lastRecord = ref(HotkeyCombination(""));
 const recordCombination = (event: KeyboardEvent) => {
   if (!isHotkeyDialogOpened.value) {
     return;
-  } else {
-    const recordedCombo = eventToCombination(event);
-    lastRecord.value = recordedCombo;
-    event.preventDefault();
   }
+
+  const recordedCombo = eventToCombination(event);
+  lastRecord.value = recordedCombo;
+  event.preventDefault();
 };
 
 // FIXME: HotkeyRecordingDialog内に移動する
@@ -215,13 +215,7 @@ const getHotkeyText = (action: string, combo: string) => {
 const readonlyHotkeyKeys: string[] = [];
 
 const checkHotkeyReadonly = (action: string) => {
-  let flag = false;
-  readonlyHotkeyKeys.forEach((key) => {
-    if (key == action) {
-      flag = true;
-    }
-  });
-  return flag;
+  return readonlyHotkeyKeys.includes(action);
 };
 
 const openHotkeyDialog = (action: string) => {
