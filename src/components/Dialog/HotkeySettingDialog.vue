@@ -206,9 +206,9 @@ const deleteHotkey = (action: string) => {
 };
 
 const getHotkeyText = (action: string, combo: string) => {
-  if (checkHotkeyReadonly(action)) combo = "（読み取り専用）" + combo;
-  if (combo == "") return "未設定";
-  else return combo;
+  if (checkHotkeyReadonly(action)) return "（読み取り専用）" + combo;
+  if (combo == "") return "未割り当て";
+  return combo;
 };
 
 // for later developers, in case anyone wants to add a readonly hotkey
@@ -255,10 +255,10 @@ const isDefaultCombination = (action: string) => {
 
 const resetHotkey = async (action: string) => {
   const result = await store.actions.SHOW_CONFIRM_DIALOG({
-    title: "ショートカットキーを初期値に戻します",
-    message: `${action}のショートカットキーを初期値に戻します。\n本当に戻しますか？`,
-    actionName: "初期値に戻す",
-    cancel: "初期値に戻さない",
+    title: "ショートカットキーをデフォルトに戻します",
+    message: `${action}のショートカットキーをデフォルトに戻します。\n本当に戻しますか？`,
+    actionName: "デフォルトに戻す",
+    cancel: "デフォルトに戻さない",
   });
 
   if (result !== "OK") return;
