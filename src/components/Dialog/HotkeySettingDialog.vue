@@ -45,48 +45,23 @@
 
       <QPageContainer>
         <QPage>
-          <QTable
-            v-model:pagination="hotkeyPagination"
-            flat
-            dense
-            hideBottom
-            cardClass="bg-background text-display"
-            tableClass="text-display"
-            rowKey="hotkeyIndexes"
-            :filter="hotkeyFilter"
-            :rows="hotkeySettings"
-            :columns="hotkeyColumns"
-            class="hotkey-table"
-          >
-            <template #header="tableProps">
-              <QTr :props="tableProps">
-                <QTh
-                  v-for="col of tableProps.cols"
-                  :key="col.name"
-                  :props="tableProps"
+          <div class="container">
+            <BaseScrollArea>
+              <div class="list">
+                <BaseRowCard
+                  v-for="hotkeySetting in hotkeySettings.filter(
+                    (hotkeySetting) =>
+                      hotkeySetting.action.includes(hotkeyFilter) ||
+                      hotkeySetting.combination.includes(hotkeyFilter),
+                  )"
+                  :key="hotkeySetting.action"
+                  :title="hotkeySetting.action"
                 >
-                  {{ col.label }}
-                </QTh>
-              </QTr>
-            </template>
-
-            <template #body="tableProps">
-              <QTr :props="tableProps">
-                <QTd :key="tableProps.cols[0].name" noHover :props="tableProps">
-                  {{ tableProps.row.action }}
-                </QTd>
-                <QTd :key="tableProps.cols[1].name" noHover :props="tableProps">
-                  <QBtn
-                    dense
-                    textColor="display"
-                    padding="none sm"
-                    flat
-                    :disable="checkHotkeyReadonly(tableProps.row.action)"
-                    noCaps
+                  <BaseButton
                     :label="
                       getHotkeyText(
-                        tableProps.row.action,
-                        tableProps.row.combination,
+                        hotkeySetting.action,
+                        hotkeySetting.combination,
                       )
                         .split(' ')
                         .map((hotkeyText) => {
@@ -96,23 +71,30 @@
                         })
                         .join(' + ')
                     "
-                    @click="openHotkeyDialog(tableProps.row.action)"
+                    @click="openHotkeyDialog(hotkeySetting.action)"
                   />
-                  <QBtn
-                    rounded
-                    flat
+                  <BaseIconButton
                     icon="settings_backup_restore"
-                    padding="none sm"
-                    size="1em"
-                    :disable="checkHotkeyReadonly(tableProps.row.action)"
-                    @click="resetHotkey(tableProps.row.action)"
-                  >
-                    <QTooltip :delay="500">デフォルトに戻す</QTooltip>
-                  </QBtn>
-                </QTd>
-              </QTr>
-            </template>
-          </QTable>
+                    label="デフォルトに戻す"
+                    :disabled="
+                      checkHotkeyReadonly(hotkeySetting.action) ||
+                      isDefaultCombination(hotkeySetting.action)
+                    "
+                    @click="resetHotkey(hotkeySetting.action)"
+                  />
+                  <BaseIconButton
+                    icon="delete_outline"
+                    label="未割り当てにする"
+                    :disabled="
+                      hotkeySetting.combination === '' ||
+                      checkHotkeyReadonly(hotkeySetting.action)
+                    "
+                    @click="confirmAndDeleteHotkey(hotkeySetting.action)"
+                  />
+                </BaseRowCard>
+              </div>
+            </BaseScrollArea>
+          </div>
         </QPage>
       </QPageContainer>
     </QLayout>
@@ -132,6 +114,10 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import HotkeyRecordingDialog from "./HotkeyRecordingDialog.vue";
+import BaseButton from "@/components/Base/BaseButton.vue";
+import BaseRowCard from "@/components/Base/BaseRowCard.vue";
+import BaseIconButton from "@/components/Base/BaseIconButton.vue";
+import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 import { useStore } from "@/store";
 import {
   HotkeyActionNameType,
@@ -156,33 +142,9 @@ const hotkeySettingDialogOpenComputed = computed({
 
 const isHotkeyDialogOpened = ref(false);
 
-const hotkeyPagination = ref({ rowsPerPage: 0 });
 const hotkeyFilter = ref("");
 
 const hotkeySettings = computed(() => store.state.hotkeySettings);
-
-// FIXME: satisfiesを使うなどで型を表現したい
-const hotkeyColumns = ref<
-  {
-    name: string;
-    align: "left" | "right" | "center" | undefined;
-    label: string;
-    field: string;
-  }[]
->([
-  {
-    name: "action",
-    align: "left",
-    label: "操作",
-    field: "action",
-  },
-  {
-    name: "combination",
-    align: "left",
-    label: "ショートカットキー",
-    field: "combination",
-  },
-]);
 
 const lastAction = ref("");
 const lastRecord = ref(HotkeyCombination(""));
@@ -225,6 +187,20 @@ const duplicatedHotkey = computed(() => {
 });
 
 // FIXME: actionはHotkeyAction型にすべき
+const confirmAndDeleteHotkey = async (action: string) => {
+  const result = await store.actions.SHOW_CONFIRM_DIALOG({
+    title: "ショートカットキーを未割り当てにします",
+    message: `${action}のショートカットキーを未割り当てにします。\n本当に戻しますか？`,
+    actionName: "未割り当てにする",
+    cancel: "未割り当てにしない",
+  });
+
+  if (result !== "OK") {
+    deleteHotkey(action);
+  }
+};
+
+// FIXME: actionはHotkeyAction型にすべき
 const deleteHotkey = (action: string) => {
   void changeHotkeySettings(action, HotkeyCombination(""));
 };
@@ -262,6 +238,21 @@ const setHotkeyDialogOpened = () => {
   document.removeEventListener("keydown", recordCombination);
 };
 
+const defaultSettings = ref<HotkeySettingType[]>([]);
+void window.backend
+  .getDefaultHotkeySettings()
+  .then((settings) => (defaultSettings.value = settings));
+
+const isDefaultCombination = (action: string) => {
+  const defaultSetting = defaultSettings.value.find(
+    (value) => value.action === action,
+  );
+  const hotkeySetting = hotkeySettings.value.find(
+    (value) => value.action === action,
+  );
+  return hotkeySetting?.combination === defaultSetting?.combination;
+};
+
 const resetHotkey = async (action: string) => {
   const result = await store.actions.SHOW_CONFIRM_DIALOG({
     title: "ショートカットキーを初期値に戻します",
@@ -269,88 +260,35 @@ const resetHotkey = async (action: string) => {
     actionName: "初期値に戻す",
     cancel: "初期値に戻さない",
   });
-  if (result === "OK") {
-    void window.backend
-      .getDefaultHotkeySettings()
-      .then((defaultSettings: HotkeySettingType[]) => {
-        const setting = defaultSettings.find((value) => value.action == action);
-        if (setting == undefined) {
-          return;
-        }
-        // デフォルトが未設定でない場合は、衝突チェックを行う
-        if (setting.combination) {
-          const duplicated = hotkeySettings.value.find(
-            (item) =>
-              item.combination == setting.combination && item.action != action,
-          );
-          if (duplicated != undefined) {
-            openHotkeyDialog(action);
-            lastRecord.value = duplicated.combination;
-            return;
-          }
-        }
-        void changeHotkeySettings(action, setting.combination);
-      });
+
+  if (result !== "OK") return;
+
+  const setting = defaultSettings.value.find((value) => value.action == action);
+  if (setting == undefined) {
+    return;
   }
+  // デフォルトが未設定でない場合は、衝突チェックを行う
+  if (setting.combination) {
+    const duplicated = hotkeySettings.value.find(
+      (item) =>
+        item.combination == setting.combination && item.action != action,
+    );
+    if (duplicated != undefined) {
+      openHotkeyDialog(action);
+      lastRecord.value = duplicated.combination;
+      return;
+    }
+  }
+  void changeHotkeySettings(action, setting.combination);
 };
 </script>
 
 <style scoped lang="scss">
-@use "@/styles/variables" as vars;
+@use "@/styles/v2/variables" as vars;
 @use "@/styles/colors" as colors;
 
 .search-box {
   width: 200px;
-}
-
-.hotkey-table {
-  width: calc(100vw - #{vars.$window-border-width * 2});
-  height: calc(
-    100vh - #{vars.$menubar-height + vars.$toolbar-height +
-      vars.$window-border-width}
-  );
-
-  > :deep(.scroll) {
-    overflow-y: scroll;
-    overflow-x: hidden;
-  }
-
-  tbody tr {
-    td button:last-child {
-      float: right;
-      display: none;
-    }
-    &:hover td button:last-child {
-      display: inline-flex;
-      color: colors.$display;
-      opacity: 0.5;
-      &:hover {
-        opacity: 1;
-      }
-    }
-  }
-
-  thead tr th {
-    position: sticky;
-    top: 0;
-    font-weight: bold;
-    background-color: colors.$surface;
-    z-index: 1;
-  }
-
-  thead tr th:first-child,
-  tbody tr td:first-child {
-    width: 70%;
-    max-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  thead tr th:last-child,
-  tbody tr td:last-child {
-    max-width: 0;
-    min-width: 180px;
-  }
 }
 
 .q-layout-container > :deep(.absolute-full) {
@@ -359,5 +297,22 @@ const resetHotkey = async (action: string) => {
     width: unset !important;
     overflow: hidden;
   }
+}
+
+.container {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 100%;
+  background-color: colors.$background;
+}
+
+.list {
+  margin: auto;
+  max-width: 960px;
+  padding: vars.$padding-2;
+  display: flex;
+  flex-direction: column;
+  gap: vars.$gap-1;
 }
 </style>
