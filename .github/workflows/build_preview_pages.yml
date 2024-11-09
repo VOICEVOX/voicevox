@@ -23,8 +23,21 @@ jobs:
 
       - name: Build
         run: |
+          # 追加のバージョン情報
+          if [ -n "${{ github.event.pull_request.head.sha }}" ]; then
+            LOCATION="PR#${{ github.event.pull_request.number }}"
+            SHORT_SHA=$(cut -c 1-7 <<< "${{ github.event.pull_request.head.sha }}")
+          else
+            LOCATION="${{ github.ref_name }}"
+            SHORT_SHA=$(cut -c 1-7 <<< "${{ github.sha }}")
+          fi
+
+          # Storybookのビルド
           npm run storybook:build -- --output-dir $(pwd)/dist_preview/storybook
-          npm run browser:build -- --base ./ --outDir $(pwd)/dist_preview/editor
+
+          # ブラウザ版エディタのビルド
+          VITE_EXTRA_VERSION_INFO="${LOCATION} @ ${SHORT_SHA}" \
+            npm run browser:build -- --base ./ --outDir $(pwd)/dist_preview/editor
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
