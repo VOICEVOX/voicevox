@@ -53,6 +53,7 @@ const store = useStore();
 const { registerHotkeyWithCleanup } = useHotkeyManager();
 const currentVersion = ref("");
 
+/** 追加のバージョン情報。コミットハッシュなどを書ける。 */
 const extraVersionInfo = import.meta.env.VITE_EXTRA_VERSION_INFO;
 
 const audioKeys = computed(() => store.state.audioKeys);
