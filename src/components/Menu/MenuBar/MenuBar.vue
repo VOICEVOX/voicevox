@@ -53,6 +53,8 @@ const store = useStore();
 const { registerHotkeyWithCleanup } = useHotkeyManager();
 const currentVersion = ref("");
 
+const extraVersionInfo = import.meta.env.VITE_EXTRA_VERSION_INFO;
+
 const audioKeys = computed(() => store.state.audioKeys);
 
 // デフォルトエンジンの代替先ポート
@@ -93,6 +95,7 @@ const titleText = computed(
     (projectName.value != undefined ? projectName.value + " - " : "") +
     "VOICEVOX" +
     (currentVersion.value ? " - Ver. " + currentVersion.value : "") +
+    (extraVersionInfo ? ` (${extraVersionInfo})` : "") +
     (isMultiEngineOffMode.value ? " - マルチエンジンオフ" : "") +
     (defaultEngineAltPortTo.value != null
       ? ` - Port: ${defaultEngineAltPortTo.value}`
