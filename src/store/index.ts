@@ -1,6 +1,6 @@
 import { InjectionKey } from "vue";
 import {
-  createStore,
+  createStore as baseCreateStore,
   Store as BaseStore,
   useStore as baseUseStore,
 } from "./vuex";
@@ -343,14 +343,14 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
   },
 });
 
-export function createStoreWrapper({
+export function createStore({
   proxyStoreDI,
 }: {
   proxyStoreDI?: typeof proxyStore;
 }) {
   const _proxyStore = proxyStoreDI ?? proxyStore;
 
-  return createStore<State, AllGetters, AllActions, AllMutations>({
+  return baseCreateStore<State, AllGetters, AllActions, AllMutations>({
     state: {
       ...uiStoreState,
       ...audioStoreState,
@@ -422,7 +422,7 @@ export function createStoreWrapper({
     strict: !isProduction,
   });
 }
-export const store = createStoreWrapper({});
+export const store = createStore({});
 
 export const useStore = (): Store => {
   return baseUseStore(storeKey);
