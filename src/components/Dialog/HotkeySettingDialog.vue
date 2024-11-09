@@ -71,6 +71,7 @@
                         })
                         .join(' + ')
                     "
+                    :disabled="checkHotkeyReadonly(hotkeySetting.action)"
                     @click="openHotkeyDialog(hotkeySetting.action)"
                   />
                   <BaseIconButton
