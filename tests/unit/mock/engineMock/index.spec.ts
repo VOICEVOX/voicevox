@@ -1,7 +1,7 @@
 import { hash } from "../../utils";
 import { createOpenAPIEngineMock } from "@/mock/engineMock";
 
-describe("mock", () => {
+describe("createOpenAPIEngineMock", () => {
   const mock = createOpenAPIEngineMock();
 
   it("versionVersionGet", async () => {
