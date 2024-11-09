@@ -24,7 +24,15 @@ jobs:
       - name: Build
         run: |
           npm run storybook:build -- --output-dir $(pwd)/dist_preview/storybook
-          VITE_EXTRA_VERSION_INFO=$(git rev-parse --short HEAD) \
+          if [ -n "${{ github.event.pull_request.head.sha }}" ]; then
+            LOCATION="PR#${{ github.event.pull_request.number }}"
+            SHORT_SHA=$(cut -c 1-7 <<< "${{ github.event.pull_request.head.sha }}")
+          else
+            LOCATION="${{ github.ref_name }}"
+            SHORT_SHA=$(cut -c 1-7 <<< "${{ github.sha }}")
+          fi
+
+          VITE_EXTRA_VERSION_INFO="${LOCATION} @ ${SHORT_SHA}" \
             npm run browser:build -- --base ./ --outDir $(pwd)/dist_preview/editor
 
       - name: Upload artifact
