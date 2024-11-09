@@ -1,5 +1,6 @@
 import { ProxyStoreState, ProxyStoreTypes, EditorAudioQuery } from "./type";
 import { createPartialStore } from "./vuex";
+import { createEngineUrl } from "@/domain/url";
 import {
   IEngineConnectorFactory,
   OpenAPIEngineConnectorFactory,
@@ -22,12 +23,13 @@ const proxyStoreCreator = (_engineFactory: IEngineConnectorFactory) => {
 
         const altPort: string | undefined = state.altPortInfos[engineId];
         const port = altPort ?? engineInfo.defaultPort;
-        // NOTE: URLを正規化する
-        const url = new URL(`${engineInfo.protocol}//${engineInfo.hostname}`);
-        url.port = port;
-        // NOTE: URLインターフェースは"pathname"が空文字でも"/"を付けるので手動で結合する。
         const instance = _engineFactory.instance(
-          `${url.origin}${engineInfo.pathname}`,
+          createEngineUrl({
+            protocol: engineInfo.protocol,
+            hostname: engineInfo.hostname,
+            port,
+            pathname: engineInfo.pathname,
+          }),
         );
         return Promise.resolve({
           invoke: (v) => (arg) =>
