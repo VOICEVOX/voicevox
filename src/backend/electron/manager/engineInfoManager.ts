@@ -31,7 +31,9 @@ export class EngineInfoManager {
     this.vvppEngineDir = payload.vvppEngineDir;
   }
 
-  /** エンジンディレクトリのエンジンマニフェストからエンジンの情報を読み込む */
+  /**
+   * エンジンディレクトリのエンジンマニフェストからエンジンの情報を読み込む。
+   */
   private loadEngineInfo(
     engineDir: string,
     type: "vvpp" | "path",
