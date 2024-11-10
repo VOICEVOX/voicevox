@@ -15,7 +15,6 @@ import {
   minimumEngineManifestSchema,
 } from "@/type/preload";
 import { AltPortInfos } from "@/store/type";
-import { UnreachableError } from "@/type/utility";
 import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
 import { failure, Result, success } from "@/type/result";
 
@@ -84,7 +83,6 @@ export class EngineInfoManager {
     return this.envEngineInfos
       .filter((engineInfo) => engineInfo.type != "downloadVvpp")
       .map((engineInfo) => {
-        if (engineInfo.type == "downloadVvpp") throw new UnreachableError();
         const { protocol, hostname, port, pathname } = new URL(engineInfo.host);
         return {
           ...engineInfo,

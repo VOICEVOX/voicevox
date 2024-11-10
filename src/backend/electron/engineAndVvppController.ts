@@ -15,14 +15,12 @@ import {
   EngineSettingType,
 } from "@/type/preload";
 import {
-  EngineVariant,
+  PackageInfo,
   fetchLatestDefaultEngineInfo,
   getSuitableVariant,
 } from "@/domain/defaultEngine/latetDefaultEngine";
-import {
-  EnvEngineInfoType,
-  loadEnvEngineInfos,
-} from "@/domain/defaultEngine/envEngineInfo";
+import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
+import { UnreachableError } from "@/type/utility";
 
 /**
  * エンジンとVVPP周りの処理の流れを制御するクラス。
@@ -143,22 +141,19 @@ export class EngineAndVvppController {
   }
 
   /**
-   * インストールが必要なデフォルトエンジンの情報とパッケージの情報を取得する。
+   * インストール可能なデフォルトエンジンの情報とパッケージの情報を取得する。
    */
-  async fetchEngineAndPackageInfosToInstall(): Promise<
-    {
-      envEngineInfo: EnvEngineInfoType;
-      packageInfo: EngineVariant;
-    }[]
+  async fetchInsallablePackageInfos(): Promise<
+    { engineName: string; packageInfo: PackageInfo }[]
   > {
-    // .envのデフォルトエンジン情報のうち、downloadVvppなものを集める
+    // ダウンロード可能なVVPPのうち、未インストールのものを返す
     const targetInfos = [];
     for (const envEngineInfo of loadEnvEngineInfos()) {
       if (envEngineInfo.type != "downloadVvpp") {
         continue;
       }
 
-      // 更新情報を取得
+      // 最新情報を取得
       const latestUrl = envEngineInfo.latestUrl;
       if (latestUrl == undefined) throw new Error("latestUrl is undefined");
 
@@ -168,20 +163,18 @@ export class EngineAndVvppController {
         continue;
       }
 
+      // 実行環境に合うパッケージを取得
       const packageInfo = getSuitableVariant(latestInfo);
       log.info(`Latest default engine version: ${packageInfo.version}`);
 
       // インストール済みだった場合はスキップ
-      // FIXME: より新しいバージョンであれば更新する
+      // FIXME: より新しいバージョンがあれば更新できるようにする
       if (this.engineInfoManager.hasEngineInfo(envEngineInfo.uuid)) {
         log.info(`Default engine ${envEngineInfo.uuid} is already installed.`);
         continue;
       }
 
-      targetInfos.push({
-        envEngineInfo,
-        packageInfo,
-      });
+      targetInfos.push({ engineName: envEngineInfo.name, packageInfo });
     }
 
     return targetInfos;
@@ -190,12 +183,16 @@ export class EngineAndVvppController {
   /** VVPPパッケージをダウンロードし、インストールする */
   async downloadAndInstallVvppEngine(
     downloadDir: string,
-    packageInfo: EngineVariant,
+    packageInfo: PackageInfo,
   ) {
+    if (packageInfo.packages.length === 0) {
+      throw new UnreachableError("No packages to download");
+    }
+
     // ダウンロード
-    const downloadedPaths = new Array<string>(packageInfo.packages.length);
+    const downloadedPaths: string[] = [];
     await Promise.all(
-      packageInfo.packages.map(async (p, index) => {
+      packageInfo.packages.map(async (p) => {
         const { url, name, size } = p;
 
         log.info(`Download ${name} from ${url}, size: ${size}`);
@@ -206,7 +203,7 @@ export class EngineAndVvppController {
         await fs.promises.writeFile(downloadPath, Buffer.from(buffer));
         log.info(`Downloaded ${name} to ${downloadPath}`);
 
-        downloadedPaths[index] = downloadPath;
+        downloadedPaths.push(downloadPath);
 
         // TODO: ハッシュチェック
       }),

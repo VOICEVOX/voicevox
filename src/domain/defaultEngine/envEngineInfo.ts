@@ -7,18 +7,28 @@ import { z } from "zod";
 import { engineIdSchema } from "@/type/preload";
 
 /** .envに書くデフォルトエンジン情報のスキーマ */
-export const envEngineInfoSchema = z.object({
-  uuid: engineIdSchema,
-  host: z.string(),
-  name: z.string(),
-  executionEnabled: z.boolean(), // FIXME: typeがurlのときのみ必要
-  executionFilePath: z.string(), // FIXME: typeがpathのときは必須
-  executionArgs: z.array(z.string()),
-  path: z.string().optional(), // FIXME: typeがpathで、アンインストール可能なときは必須
-  type: z.union([z.literal("path"), z.literal("downloadVvpp")]).default("path"),
-  latestUrl: z.string().optional(), // FIXME: typeがdownloadVvppのときは必須
-});
-export type EnvEngineInfoType = z.infer<typeof envEngineInfoSchema>;
+const envEngineInfoSchema = z
+  .object({
+    uuid: engineIdSchema,
+    host: z.string(),
+    name: z.string(),
+    executionEnabled: z.boolean(),
+    executionArgs: z.array(z.string()),
+  })
+  .and(
+    z.union([
+      z.object({
+        type: z.literal("path").default("path"),
+        executionFilePath: z.string(),
+        path: z.string().optional(),
+      }),
+      z.object({
+        type: z.literal("downloadVvpp"),
+        latestUrl: z.string(),
+      }),
+    ]),
+  );
+type EnvEngineInfoType = z.infer<typeof envEngineInfoSchema>;
 
 /** .envからデフォルトエンジン情報を読み込む */
 export function loadEnvEngineInfos(): EnvEngineInfoType[] {

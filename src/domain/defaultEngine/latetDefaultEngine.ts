@@ -5,7 +5,7 @@
 import { z } from "zod";
 
 /** パッケージ情報のスキーマ */
-const engineVariantSchema = z.object({
+const packageInfoSchema = z.object({
   version: z.string(),
   packages: z
     .object({
@@ -16,29 +16,29 @@ const engineVariantSchema = z.object({
     })
     .array(),
 });
-export type EngineVariant = z.infer<typeof engineVariantSchema>;
+export type PackageInfo = z.infer<typeof packageInfoSchema>;
 
 /** デフォルトエンジンの最新情報のスキーマ */
 const latestDefaultEngineInfoSchema = z.object({
   formatVersion: z.number(),
   windows: z.object({
     x64: z.object({
-      CPU: engineVariantSchema,
-      "GPU/CPU": engineVariantSchema,
+      CPU: packageInfoSchema,
+      "GPU/CPU": packageInfoSchema,
     }),
   }),
   macos: z.object({
     x64: z.object({
-      CPU: engineVariantSchema,
+      CPU: packageInfoSchema,
     }),
     arm64: z.object({
-      CPU: engineVariantSchema,
+      CPU: packageInfoSchema,
     }),
   }),
   linux: z.object({
     x64: z.object({
-      CPU: engineVariantSchema,
-      "GPU/CPU": engineVariantSchema,
+      CPU: packageInfoSchema,
+      "GPU/CPU": packageInfoSchema,
     }),
   }),
 });
@@ -51,11 +51,11 @@ export const fetchLatestDefaultEngineInfo = async (url: string) => {
 
 /**
  * 実行環境に合うパッケージを取得する。GPU版があればGPU版を返す。
- * FIXME: どのデバイス版にするかはユーザーが選べるようにするべき。
+ * TODO: どのデバイス版にするかはユーザーが選べるようにするべき。
  */
 export const getSuitableVariant = (
   updateInfo: z.infer<typeof latestDefaultEngineInfoSchema>,
-): EngineVariant => {
+): PackageInfo => {
   const platform = process.platform;
   const arch = process.arch;
 
