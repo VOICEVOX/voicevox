@@ -31,7 +31,7 @@ export class EngineInfoManager {
     this.vvppEngineDir = payload.vvppEngineDir;
   }
 
-  /** エンジンディレクトリからエンジン情報を読み込む */
+  /** エンジンディレクトリのエンジンマニフェストからエンジンの情報を読み込む */
   private loadEngineInfo(
     engineDir: string,
     type: "vvpp" | "path",
@@ -54,7 +54,7 @@ export class EngineInfoManager {
 
     const [command, ...args] = shlex.split(manifest.command);
 
-    const engineInfo = {
+    return success({
       uuid: manifest.uuid,
       protocol: "http:",
       hostname: "127.0.0.1",
@@ -67,13 +67,11 @@ export class EngineInfoManager {
       executionArgs: args,
       type,
       isDefault: false,
-    } satisfies EngineInfo;
-    return success(engineInfo);
+    } satisfies EngineInfo);
   }
 
   /**
    * .envにあるエンジンの情報を取得する。
-   * ダウンロードが必要なものは除外されている。
    */
   private fetchEnvEngineInfos(): EngineInfo[] {
     // TODO: envから直接ではなく、envに書いたengine_manifest.jsonから情報を得るようにする
