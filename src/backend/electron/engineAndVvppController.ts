@@ -189,36 +189,44 @@ export class EngineAndVvppController {
       throw new UnreachableError("No packages to download");
     }
 
-    // ダウンロード
+    let failed = false;
     const downloadedPaths: string[] = [];
-    await Promise.all(
-      packageInfo.packages.map(async (p) => {
-        const { url, name, size } = p;
+    try {
+      // ダウンロード
+      await Promise.all(
+        packageInfo.packages.map(async (p) => {
+          const { url, name, size } = p;
 
-        log.info(`Download ${name} from ${url}, size: ${size}`);
-        const res = await fetch(url);
-        const buffer = await res.arrayBuffer();
+          log.info(`Download ${name} from ${url}, size: ${size}`);
+          const res = await fetch(url);
+          const buffer = await res.arrayBuffer();
+          if (failed) return; // 他のダウンロードが失敗していたら中断
 
-        const downloadPath = path.join(downloadDir, name);
-        await fs.promises.writeFile(downloadPath, Buffer.from(buffer));
-        log.info(`Downloaded ${name} to ${downloadPath}`);
+          const downloadPath = path.join(downloadDir, name);
+          await fs.promises.writeFile(downloadPath, Buffer.from(buffer));
+          log.info(`Downloaded ${name} to ${downloadPath}`);
 
-        downloadedPaths.push(downloadPath);
+          downloadedPaths.push(downloadPath);
 
-        // TODO: ハッシュチェック
-      }),
-    );
+          // TODO: ハッシュチェック
+        }),
+      );
 
-    // インストール
-    await this.installVvppEngine(downloadedPaths[0]);
-
-    // ダウンロードしたファイルを削除
-    await Promise.all(
-      downloadedPaths.map(async (path) => {
-        log.info(`Delete downloaded file: ${path}`);
-        await fs.promises.unlink(path);
-      }),
-    );
+      // インストール
+      await this.installVvppEngine(downloadedPaths[0]);
+    } catch (e) {
+      failed = true;
+      log.error(`Failed to download and install VVPP engine:`, e);
+      throw e;
+    } finally {
+      // ダウンロードしたファイルを削除
+      await Promise.all(
+        downloadedPaths.map(async (path) => {
+          log.info(`Delete downloaded file: ${path}`);
+          await fs.promises.unlink(path);
+        }),
+      );
+    }
   }
 
   /** エンジンの設定を更新し、保存する */
