@@ -34,12 +34,9 @@ export class EngineInfoManager {
     this.vvppEngineDir = payload.vvppEngineDir;
   }
 
-  /** デフォルトエンジンかどうかを判定する */
-  private isDefaultEngine(engineId: EngineId): boolean {
-    return this.envEngineInfos.some((e) => e.uuid === engineId);
-  }
-
-  /** エンジンディレクトリからエンジン情報を読み込む */
+  /**
+   * エンジンディレクトリのエンジンマニフェストからエンジンの情報を読み込む。
+   */
   private loadEngineInfo(
     engineDir: string,
     type: "vvpp" | "path",
@@ -62,7 +59,7 @@ export class EngineInfoManager {
 
     const [command, ...args] = shlex.split(manifest.command);
 
-    const engineInfo = {
+    return success({
       uuid: manifest.uuid,
       protocol: "http:",
       hostname: "127.0.0.1",
@@ -74,9 +71,8 @@ export class EngineInfoManager {
       executionFilePath: path.join(engineDir, command),
       executionArgs: args,
       type,
-      isDefault: this.isDefaultEngine(manifest.uuid),
-    } satisfies EngineInfo;
-    return success(engineInfo);
+      isDefault: false,
+    } satisfies EngineInfo);
   }
 
   /**
