@@ -933,9 +933,9 @@ app.on("ready", async () => {
 
   // VVPPがデフォルトエンジンに指定されていたらインストールする
   // NOTE: この機能は工事中。参照: https://github.com/VOICEVOX/voicevox/issues/1194
-  const engineAndPackageInfos =
+  const packageInfos =
     await engineAndVvppController.fetchInsallablePackageInfos();
-  for (const { engineName, packageInfo } of engineAndPackageInfos) {
+  for (const { engineName, packageInfo } of packageInfos) {
     // インストールするか確認
     const result = dialog.showMessageBoxSync(win, {
       type: "info",

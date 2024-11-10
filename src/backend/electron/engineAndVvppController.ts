@@ -17,7 +17,7 @@ import {
 import {
   PackageInfo,
   fetchLatestDefaultEngineInfo,
-  getSuitableVariant,
+  getSuitablePackageInfo,
 } from "@/domain/defaultEngine/latetDefaultEngine";
 import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
 import { UnreachableError } from "@/type/utility";
@@ -164,7 +164,7 @@ export class EngineAndVvppController {
       }
 
       // 実行環境に合うパッケージを取得
-      const packageInfo = getSuitableVariant(latestInfo);
+      const packageInfo = getSuitablePackageInfo(latestInfo);
       log.info(`Latest default engine version: ${packageInfo.version}`);
 
       // インストール済みだった場合はスキップ

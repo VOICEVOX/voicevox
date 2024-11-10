@@ -53,7 +53,7 @@ export const fetchLatestDefaultEngineInfo = async (url: string) => {
  * 実行環境に合うパッケージを取得する。GPU版があればGPU版を返す。
  * TODO: どのデバイス版にするかはユーザーが選べるようにするべき。
  */
-export const getSuitableVariant = (
+export const getSuitablePackageInfo = (
   updateInfo: z.infer<typeof latestDefaultEngineInfoSchema>,
 ): PackageInfo => {
   const platform = process.platform;
