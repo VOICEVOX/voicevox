@@ -90,7 +90,7 @@ export interface Preset {
      * @type {number}
      * @memberof Preset
      */
-    pauseLengthScale?: number;
+    pauseLengthScale: number;
 }
 
 /**
