@@ -739,6 +739,8 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           baseAudioItem.query.prePhonemeLength;
         newAudioItem.query.postPhonemeLength =
           baseAudioItem.query.postPhonemeLength;
+        newAudioItem.query.pauseLengthScale =
+          baseAudioItem.query.pauseLengthScale;
         newAudioItem.query.outputSamplingRate =
           baseAudioItem.query.outputSamplingRate;
         newAudioItem.query.outputStereo = baseAudioItem.query.outputStereo;
@@ -916,6 +918,23 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       const query = state.audioItems[audioKey].query;
       if (query == undefined) throw new Error("query == undefined");
       query.postPhonemeLength = postPhonemeLength;
+    },
+  },
+
+  SET_AUDIO_PAUSE_LENGTH_SCALE: {
+    mutation(
+      state,
+      {
+        audioKey,
+        pauseLengthScale,
+      }: {
+        audioKey: AudioKey;
+        pauseLengthScale: number;
+      },
+    ) {
+      const query = state.audioItems[audioKey].query;
+      if (query == undefined) throw new Error("query == undefined");
+      query.pauseLengthScale = pauseLengthScale;
     },
   },
 
@@ -1271,7 +1290,10 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           length += m.consonantLength != undefined ? m.consonantLength : 0;
           length += m.vowelLength;
         });
-        length += phrase.pauseMora ? phrase.pauseMora.vowelLength : 0;
+        if (phrase.pauseMora != null && query.pauseLengthScale != undefined) {
+          const pauseLength = phrase.pauseMora.vowelLength;
+          length += pauseLength * query.pauseLengthScale;
+        }
         // post phoneme lengthは最後のアクセント句の一部として扱う
         if (i === accentPhrases.length - 1) {
           length += query.postPhonemeLength;
@@ -2748,6 +2770,29 @@ export const audioCommandStore = transformCommandStore(
         payload: { audioKeys: AudioKey[]; postPhonemeLength: number },
       ) {
         mutations.COMMAND_MULTI_SET_AUDIO_POST_PHONEME_LENGTH(payload);
+      },
+    },
+
+    COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH_SCALE: {
+      mutation(
+        draft,
+        payload: {
+          audioKeys: AudioKey[];
+          pauseLengthScale: number;
+        },
+      ) {
+        for (const audioKey of payload.audioKeys) {
+          audioStore.mutations.SET_AUDIO_PAUSE_LENGTH_SCALE(draft, {
+            audioKey,
+            pauseLengthScale: payload.pauseLengthScale,
+          });
+        }
+      },
+      action(
+        { commit },
+        payload: { audioKeys: AudioKey[]; pauseLengthScale: number },
+      ) {
+        commit("COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH_SCALE", payload);
       },
     },
 

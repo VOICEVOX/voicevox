@@ -416,6 +416,7 @@ export type Preset = {
   volumeScale: number;
   prePhonemeLength: number;
   postPhonemeLength: number;
+  pauseLengthScale: number;
   morphingInfo?: MorphingInfo;
 };
 
@@ -645,6 +646,7 @@ export const configSchema = z
               volumeScale: z.number(),
               prePhonemeLength: z.number(),
               postPhonemeLength: z.number(),
+              pauseLengthScale: z.number(),
               morphingInfo: z
                 .object({
                   rate: z.number(),

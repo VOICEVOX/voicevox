@@ -298,6 +298,10 @@ export type AudioStoreTypes = {
     mutation: { audioKey: AudioKey; postPhonemeLength: number };
   };
 
+  SET_AUDIO_PAUSE_LENGTH_SCALE: {
+    mutation: { audioKey: AudioKey; pauseLengthScale: number };
+  };
+
   LOAD_MORPHABLE_TARGETS: {
     action(payload: { engineId: EngineId; baseStyleId: StyleId }): void;
   };
@@ -635,6 +639,11 @@ export type AudioCommandStoreTypes = {
   COMMAND_MULTI_SET_AUDIO_POST_PHONEME_LENGTH: {
     mutation: { audioKeys: AudioKey[]; postPhonemeLength: number };
     action(payload: { audioKeys: AudioKey[]; postPhonemeLength: number }): void;
+  };
+
+  COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH_SCALE: {
+    mutation: { audioKeys: AudioKey[]; pauseLengthScale: number };
+    action(payload: { audioKeys: AudioKey[]; pauseLengthScale: number }): void;
   };
 
   COMMAND_MULTI_SET_MORPHING_INFO: {
