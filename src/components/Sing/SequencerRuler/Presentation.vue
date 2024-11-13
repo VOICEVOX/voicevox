@@ -644,7 +644,7 @@ const contextMenudata = computed<ContextMenuItemData[]>(
         },
         disableWhenUiLocked: true,
       },
-    ].filter(Boolean) as ContextMenuItemData[],
+    ].filter((item) => item !== false) as ContextMenuItemData[],
 );
 </script>
 
