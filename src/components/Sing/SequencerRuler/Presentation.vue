@@ -578,9 +578,7 @@ const contextMenudata = computed<ContextMenuItemData[]>(
               tempoChange: Omit<Tempo, "position">;
             }
           >(TempoChangeDialog, {
-            timeSignatureChange: timeSignatureChangeExists.value
-              ? currentTimeSignature.value
-              : undefined,
+            tempoChange: tempoChangeExists.value ? currentTempo.value : undefined,
             mode: tempoChangeExists.value ? "edit" : "add",
           });
           if (!result) {
