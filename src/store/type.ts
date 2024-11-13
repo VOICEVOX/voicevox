@@ -30,7 +30,6 @@ import {
   MoraDataType,
   SavingSetting,
   ThemeConf,
-  ThemeSetting,
   ExperimentalSettingType,
   ToolbarSettingType,
   UpdateInfo,
@@ -58,10 +57,12 @@ import {
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import {
-  CommonDialogOptions,
-  CommonDialogResult,
+  TextDialogResult,
   NotifyAndNotShowAgainButtonOption,
   LoadingScreenOption,
+  AlertDialogOptions,
+  ConfirmDialogOptions,
+  WarningDialogOptions,
 } from "@/components/Dialog/Dialog";
 import {
   LatestProjectType,
@@ -105,7 +106,7 @@ export type Command = {
 export type EngineState = "STARTING" | "FAILED_STARTING" | "ERROR" | "READY";
 
 // ポートが塞がれていたときの代替ポート情報
-export type AltPortInfos = Record<EngineId, { from: number; to: number }>;
+export type AltPortInfos = Record<EngineId, string>;
 
 export type SaveResult =
   | "SUCCESS"
@@ -750,6 +751,11 @@ export type PhraseState =
 export type EditorFrameAudioQuery = FrameAudioQuery & { frameRate: number };
 
 /**
+ * 歌唱ピッチ
+ */
+export type SingingPitch = number[];
+
+/**
  * 歌唱ボリューム
  */
 export type SingingVolume = number[];
@@ -768,6 +774,11 @@ export type EditorFrameAudioQueryKey = z.infer<
 export const EditorFrameAudioQueryKey = (
   id: string,
 ): EditorFrameAudioQueryKey => editorFrameAudioQueryKeySchema.parse(id);
+
+const singingPitchKeySchema = z.string().brand<"SingingPitchKey">();
+export type SingingPitchKey = z.infer<typeof singingPitchKeySchema>;
+export const SingingPitchKey = (id: string): SingingPitchKey =>
+  singingPitchKeySchema.parse(id);
 
 const singingVolumeKeySchema = z.string().brand<"SingingVolumeKey">();
 export type SingingVolumeKey = z.infer<typeof singingVolumeKeySchema>;
@@ -793,6 +804,7 @@ export type Phrase = {
   startTime: number;
   state: PhraseState;
   queryKey?: EditorFrameAudioQueryKey;
+  singingPitchKey?: SingingPitchKey;
   singingVolumeKey?: SingingVolumeKey;
   singingVoiceKey?: SingingVoiceKey;
   sequenceId?: SequenceId;
@@ -815,6 +827,19 @@ export const PhraseKey = (id: string): PhraseKey => phraseKeySchema.parse(id);
 
 export type SequencerEditTarget = "NOTE" | "PITCH";
 
+export type TrackParameters = {
+  gain: boolean;
+  pan: boolean;
+  soloAndMute: boolean;
+};
+
+export type SongExportSetting = {
+  isMono: boolean;
+  sampleRate: number;
+  withLimiter: boolean;
+  withTrackParameters: TrackParameters;
+};
+
 export type SingingStoreState = {
   tpqn: number; // Ticks Per Quarter Note
   tempos: Tempo[];
@@ -825,6 +850,7 @@ export type SingingStoreState = {
   editorFrameRate: number;
   phrases: Map<PhraseKey, Phrase>;
   phraseQueries: Map<EditorFrameAudioQueryKey, EditorFrameAudioQuery>;
+  phraseSingingPitches: Map<SingingPitchKey, SingingPitch>;
   phraseSingingVolumes: Map<SingingVolumeKey, SingingVolume>;
   sequencerZoomX: number;
   sequencerZoomY: number;
@@ -985,6 +1011,13 @@ export type SingingStoreTypes = {
     };
   };
 
+  SET_SINGING_PITCH_KEY_TO_PHRASE: {
+    mutation: {
+      phraseKey: PhraseKey;
+      singingPitchKey: SingingPitchKey | undefined;
+    };
+  };
+
   SET_SINGING_VOLUME_KEY_TO_PHRASE: {
     mutation: {
       phraseKey: PhraseKey;
@@ -1015,6 +1048,17 @@ export type SingingStoreTypes = {
 
   DELETE_PHRASE_QUERY: {
     mutation: { queryKey: EditorFrameAudioQueryKey };
+  };
+
+  SET_PHRASE_SINGING_PITCH: {
+    mutation: {
+      singingPitchKey: SingingPitchKey;
+      singingPitch: SingingPitch;
+    };
+  };
+
+  DELETE_PHRASE_SINGING_PITCH: {
+    mutation: { singingPitchKey: SingingPitchKey };
   };
 
   SET_PHRASE_SINGING_VOLUME: {
@@ -1061,12 +1105,25 @@ export type SingingStoreTypes = {
     action(payload: { isDrag: boolean }): void;
   };
 
-  EXPORT_WAVE_FILE: {
-    action(payload: { filePath?: string }): SaveResultObject;
+  EXPORT_AUDIO_FILE: {
+    action(payload: {
+      filePath?: string;
+      setting: SongExportSetting;
+    }): SaveResultObject;
   };
 
-  EXPORT_STEM_WAVE_FILE: {
-    action(payload: { dirPath?: string }): SaveResultObject;
+  EXPORT_STEM_AUDIO_FILE: {
+    action(payload: {
+      dirPath?: string;
+      setting: SongExportSetting;
+    }): SaveResultObject;
+  };
+
+  EXPORT_FILE: {
+    action(payload: {
+      filePath: string;
+      content: Uint8Array;
+    }): Promise<SaveResultObject>;
   };
 
   CANCEL_AUDIO_EXPORT: {
@@ -1090,20 +1147,12 @@ export type SingingStoreTypes = {
     getter(time: number): number;
   };
 
-  GET_PLAYHEAD_POSITION: {
-    getter(): number;
+  PLAYHEAD_POSITION: {
+    getter: number;
   };
 
   SET_PLAYHEAD_POSITION: {
     action(payload: { position: number }): void;
-  };
-
-  ADD_PLAYHEAD_POSITION_CHANGE_LISTENER: {
-    action(payload: { listener: (position: number) => void }): void;
-  };
-
-  REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER: {
-    action(payload: { listener: (position: number) => void }): void;
   };
 
   SET_PLAYBACK_STATE: {
@@ -1756,7 +1805,8 @@ export type SettingStoreState = {
   engineIds: EngineId[];
   engineInfos: Record<EngineId, EngineInfo>;
   engineManifests: Record<EngineId, EngineManifest>;
-  themeSetting: ThemeSetting;
+  currentTheme: string;
+  availableThemes: ThemeConf[];
   acceptTerms: AcceptTermsStatus;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
   experimentalSetting: ExperimentalSettingType;
@@ -1797,8 +1847,8 @@ export type SettingStoreTypes = {
     action(payload: KeyValuePayload<RootMiscSettingType>): void;
   };
 
-  SET_THEME_SETTING: {
-    mutation: { currentTheme: string; themes?: ThemeConf[] };
+  SET_CURRENT_THEME_SETTING: {
+    mutation: { currentTheme: string };
     action(payload: { currentTheme: string }): void;
   };
 
@@ -1864,6 +1914,14 @@ export type UiStoreState = {
   reloadingLock: boolean;
   inheritAudioInfo: boolean;
   activePointScrollMode: ActivePointScrollMode;
+  isMaximized: boolean;
+  isPinned: boolean;
+  isFullscreen: boolean;
+  progress: number;
+  isVuexReady: boolean;
+} & DialogStates;
+
+export type DialogStates = {
   isHelpDialogOpen: boolean;
   isSettingDialogOpen: boolean;
   isCharacterOrderDialogOpen: boolean;
@@ -1875,12 +1933,8 @@ export type UiStoreState = {
   isDictionaryManageDialogOpen: boolean;
   isEngineManageDialogOpen: boolean;
   isUpdateNotificationDialogOpen: boolean;
+  isExportSongAudioDialogOpen: boolean;
   isImportSongProjectDialogOpen: boolean;
-  isMaximized: boolean;
-  isPinned: boolean;
-  isFullscreen: boolean;
-  progress: number;
-  isVuexReady: boolean;
 };
 
 export type UiStoreTypes = {
@@ -1935,46 +1989,20 @@ export type UiStoreTypes = {
   };
 
   SET_DIALOG_OPEN: {
-    mutation: {
-      isDefaultStyleSelectDialogOpen?: boolean;
-      isAcceptRetrieveTelemetryDialogOpen?: boolean;
-      isAcceptTermsDialogOpen?: boolean;
-      isDictionaryManageDialogOpen?: boolean;
-      isHelpDialogOpen?: boolean;
-      isSettingDialogOpen?: boolean;
-      isHotkeySettingDialogOpen?: boolean;
-      isToolbarSettingDialogOpen?: boolean;
-      isCharacterOrderDialogOpen?: boolean;
-      isEngineManageDialogOpen?: boolean;
-      isUpdateNotificationDialogOpen?: boolean;
-      isImportExternalProjectDialogOpen?: boolean;
-    };
-    action(payload: {
-      isDefaultStyleSelectDialogOpen?: boolean;
-      isAcceptRetrieveTelemetryDialogOpen?: boolean;
-      isAcceptTermsDialogOpen?: boolean;
-      isDictionaryManageDialogOpen?: boolean;
-      isHelpDialogOpen?: boolean;
-      isSettingDialogOpen?: boolean;
-      isHotkeySettingDialogOpen?: boolean;
-      isToolbarSettingDialogOpen?: boolean;
-      isCharacterOrderDialogOpen?: boolean;
-      isEngineManageDialogOpen?: boolean;
-      isUpdateNotificationDialogOpen?: boolean;
-      isImportSongProjectDialogOpen?: boolean;
-    }): void;
+    mutation: Partial<DialogStates>;
+    action(payload: Partial<DialogStates>): void;
   };
 
   SHOW_ALERT_DIALOG: {
-    action(payload: CommonDialogOptions["alert"]): CommonDialogResult;
+    action(payload: AlertDialogOptions): TextDialogResult;
   };
 
   SHOW_CONFIRM_DIALOG: {
-    action(payload: CommonDialogOptions["confirm"]): CommonDialogResult;
+    action(payload: ConfirmDialogOptions): TextDialogResult;
   };
 
   SHOW_WARNING_DIALOG: {
-    action(payload: CommonDialogOptions["warning"]): CommonDialogResult;
+    action(payload: WarningDialogOptions): TextDialogResult;
   };
 
   SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON: {
@@ -2010,6 +2038,10 @@ export type UiStoreTypes = {
   SET_ACTIVE_POINT_SCROLL_MODE: {
     mutation: { activePointScrollMode: ActivePointScrollMode };
     action(payload: { activePointScrollMode: ActivePointScrollMode }): void;
+  };
+
+  SET_AVAILABLE_THEMES: {
+    mutation: { themes: ThemeConf[] };
   };
 
   DETECT_UNMAXIMIZED: {

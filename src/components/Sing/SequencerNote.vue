@@ -197,7 +197,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
       disabled: props.nowPreviewing,
       onClick: async () => {
         contextMenu.value?.hide();
-        await store.dispatch("COPY_NOTES_TO_CLIPBOARD");
+        await store.actions.COPY_NOTES_TO_CLIPBOARD();
       },
       disableWhenUiLocked: true,
     },
@@ -207,7 +207,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
       disabled: props.nowPreviewing,
       onClick: async () => {
         contextMenu.value?.hide();
-        await store.dispatch("COMMAND_CUT_NOTES_TO_CLIPBOARD");
+        await store.actions.COMMAND_CUT_NOTES_TO_CLIPBOARD();
       },
       disableWhenUiLocked: true,
     },
@@ -218,7 +218,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
       disabled: props.nowPreviewing || !props.isSelected,
       onClick: async () => {
         contextMenu.value?.hide();
-        await store.dispatch("COMMAND_QUANTIZE_SELECTED_NOTES");
+        await store.actions.COMMAND_QUANTIZE_SELECTED_NOTES();
       },
       disableWhenUiLocked: true,
     },
@@ -229,7 +229,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
       disabled: props.nowPreviewing || !props.isSelected,
       onClick: async () => {
         contextMenu.value?.hide();
-        await store.dispatch("COMMAND_REMOVE_SELECTED_NOTES");
+        await store.actions.COMMAND_REMOVE_SELECTED_NOTES();
       },
       disableWhenUiLocked: true,
     },

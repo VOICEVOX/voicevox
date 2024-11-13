@@ -6,11 +6,14 @@
     "configurations": [
         {
             "name": "Attach to Renderer Process",
-            // NOTE: background.tsで指定しているremote-debugging-port
-            "port": 9222,
+            "port": 9222, // NOTE: background.tsで指定しているremote-debugging-port
             "request": "attach",
             "type": "chrome",
-            "webRoot": "${workspaceFolder}",
+            "webRoot": "${workspaceFolder}/src",
+            "resolveSourceMapLocations": [
+                "${workspaceFolder}/**",
+                "!**/node_modules/**"
+            ],
             "timeout": 20000, // 20 * 1000 ms程度あればビルド時間は間に合うはず
         },
         {
@@ -27,6 +30,23 @@
             "type": "node"
         },
         {
+            // 直接Electronのみを起動し、バックグラウンドで"electron:serve"を実行する
+            // NOTE: ホットリロードできない代わりに、デバッグ起動が軽い
+            "name": "Launch Electron Main Process without hot reload",
+            "request": "launch",
+            "type": "node",
+            "runtimeExecutable": "npx",
+            "args": [
+                "electron",
+                ".",
+                "--no-sandbox"
+            ],
+            "preLaunchTask": "Electron Serve without Launch Electron",
+            "skipFiles": [
+                "<node_internals>/**"
+            ]
+        },
+        {
             "name": "Attach by Process ID",
             // .bin viteを指定するとElectronのMain Processのデバッグが可能
             "processId": "${command:PickProcess}",
@@ -35,12 +55,24 @@
                 "<node_internals>/**"
             ],
             "type": "node"
-        },
+        }
     ],
     "compounds": [
         {
             "name": "Launch Electron Main/Renderer",
-            "configurations": ["Attach to Renderer Process", "Launch Electron Main Process via NPM"],
+            "configurations": [
+                "Attach to Renderer Process",
+                "Launch Electron Main Process via NPM"
+            ],
+            "stopAll": true
+        },
+        {
+            // ホットリロードできない代わりにデバッグ起動が軽いモード
+            "name": "Launch Electron Main/Renderer without hot reload",
+            "configurations": [
+                "Attach to Renderer Process",
+                "Launch Electron Main Process without hot reload"
+            ],
             "stopAll": true
         }
     ]

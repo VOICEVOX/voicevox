@@ -9,12 +9,13 @@ import {
   findAltPort,
   getPidFromPort,
   getProcessNameFromPid,
+  type HostInfo,
   isAssignablePort,
-  url2HostInfo,
 } from "../portHelper";
 
-import { EngineInfo, EngineId, EngineSettings } from "@/type/preload";
-import { BaseConfigManager } from "@/backend/common/ConfigManager";
+import { getConfigManager } from "../electronConfig";
+import { getEngineInfoManager } from "./engineInfoManager";
+import { EngineId, EngineInfo } from "@/type/preload";
 
 type EngineProcessContainer = {
   willQuitEngine: boolean;
@@ -24,35 +25,29 @@ type EngineProcessContainer = {
 /** エンジンプロセスを管理するクラス */
 export class EngineProcessManager {
   onEngineProcessError: (engineInfo: EngineInfo, error: Error) => void;
-  engineInfosFetcher: () => Readonly<EngineInfo>[];
-  engineAltPortUpdater: (engineId: EngineId, port: number) => void;
-  engineSettingsGetter: () => Partial<EngineSettings>;
 
   defaultEngineInfos: EngineInfo[] = [];
   additionalEngineInfos: EngineInfo[] = [];
   engineProcessContainers: Record<EngineId, EngineProcessContainer> = {};
 
   constructor(payload: {
-    configManager: BaseConfigManager;
     onEngineProcessError: (engineInfo: EngineInfo, error: Error) => void;
-    /** エンジン情報を取得する関数 */
-    engineInfosFetcher: () => Readonly<EngineInfo>[];
-    /** エンジンの代替ポート情報を更新する関数 */
-    engineAltPortUpdater: (engineId: EngineId, port: number) => void;
-    /** エンジン設定を取得する関数 */
-    engineSettingsGetter: () => Partial<EngineSettings>;
   }) {
     this.onEngineProcessError = payload.onEngineProcessError;
-    this.engineInfosFetcher = payload.engineInfosFetcher;
-    this.engineAltPortUpdater = payload.engineAltPortUpdater;
-    this.engineSettingsGetter = payload.engineSettingsGetter;
+  }
+
+  private get configManager() {
+    return getConfigManager();
+  }
+  private get engineInfoManager() {
+    return getEngineInfoManager();
   }
 
   /**
    * 全てのエンジンを起動する。
    */
   async runEngineAll() {
-    const engineInfos = this.engineInfosFetcher();
+    const engineInfos = this.engineInfoManager.fetchEngineInfos();
     log.info(`Starting ${engineInfos.length} engine/s...`);
 
     for (const engineInfo of engineInfos) {
@@ -65,7 +60,7 @@ export class EngineProcessManager {
    * エンジンを起動する。
    */
   async runEngine(engineId: EngineId) {
-    const engineInfos = this.engineInfosFetcher();
+    const engineInfos = this.engineInfoManager.fetchEngineInfos();
     const engineInfo = engineInfos.find(
       (engineInfo) => engineInfo.uuid === engineId,
     );
@@ -86,7 +81,11 @@ export class EngineProcessManager {
     }
 
     // { hostname (localhost), port (50021) } <- url (http://localhost:50021)
-    const engineHostInfo = url2HostInfo(new URL(engineInfo.host));
+    const engineHostInfo: HostInfo = {
+      protocol: engineInfo.protocol,
+      hostname: engineInfo.hostname,
+      port: Number(engineInfo.defaultPort),
+    };
 
     // ポートが塞がっていれば代替ポートを探す
     let port = engineHostInfo.port;
@@ -122,7 +121,7 @@ export class EngineProcessManager {
       }
 
       // 代替ポート情報を更新
-      this.engineAltPortUpdater(engineId, altPort);
+      this.engineInfoManager.updateAltPort(engineId, altPort);
       log.warn(
         `ENGINE ${engineId}: Applied Alternative Port: ${port} -> ${altPort}`,
       );
@@ -141,7 +140,7 @@ export class EngineProcessManager {
     const engineProcessContainer = this.engineProcessContainers[engineId];
     engineProcessContainer.willQuitEngine = false;
 
-    const engineSetting = this.engineSettingsGetter()[engineId];
+    const engineSetting = this.configManager.get("engineSettings")[engineId];
     if (engineSetting == undefined)
       throw new Error(`No such engineSetting: engineId == ${engineId}`);
 
@@ -152,7 +151,7 @@ export class EngineProcessManager {
     const enginePath = engineInfo.executionFilePath;
     const args = engineInfo.executionArgs.concat(useGpu ? ["--use_gpu"] : [], [
       "--host",
-      new URL(engineInfo.host).hostname,
+      engineHostInfo.hostname,
       "--port",
       port.toString(),
     ]);
@@ -362,4 +361,17 @@ export class EngineProcessManager {
   }
 }
 
-export default EngineProcessManager;
+let manager: EngineProcessManager | undefined;
+
+export function initializeEngineProcessManager(payload: {
+  onEngineProcessError: (engineInfo: EngineInfo, error: Error) => void;
+}) {
+  manager = new EngineProcessManager(payload);
+}
+
+export function getEngineProcessManager() {
+  if (manager == undefined) {
+    throw new Error("EngineProcessManager is not initialized");
+  }
+  return manager;
+}

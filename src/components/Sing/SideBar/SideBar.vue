@@ -70,6 +70,7 @@ import { TrackId } from "@/type/preload";
 
 // DraggableのコンテナにQListを使うための設定。
 // https://github.com/SortableJS/vue.draggable.next/issues/211#issuecomment-1718863764
+// @ts-expect-error 型エラーが出るが、ちゃんと動くので無視。
 Draggable.components = { ...Draggable.components, QList };
 const itemKey = (trackId: TrackId) => trackId;
 
@@ -88,10 +89,10 @@ const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
 const addTrack = async () => {
   const willNextSelectedTrackIndex =
     trackOrder.value.indexOf(selectedTrackId.value) + 1;
-  await store.dispatch("COMMAND_INSERT_EMPTY_TRACK", {
+  await store.actions.COMMAND_INSERT_EMPTY_TRACK({
     prevTrackId: selectedTrackId.value,
   });
-  await store.dispatch("SELECT_TRACK", {
+  await store.actions.SELECT_TRACK({
     trackId: trackOrder.value[willNextSelectedTrackIndex],
   });
 };
@@ -103,24 +104,24 @@ const deleteTrack = async () => {
   if (willNextSelectedTrackIndex < 0) {
     willNextSelectedTrackIndex = 0;
   }
-  await store.dispatch("COMMAND_DELETE_TRACK", {
+  await store.actions.COMMAND_DELETE_TRACK({
     trackId: selectedTrackId.value,
   });
-  await store.dispatch("SELECT_TRACK", {
+  await store.actions.SELECT_TRACK({
     trackId: trackOrder.value[willNextSelectedTrackIndex],
   });
 };
 
 const unsoloAllTracks = () => {
   if (store.state.undoableTrackOperations.soloAndMute) {
-    void store.dispatch("COMMAND_UNSOLO_ALL_TRACKS");
+    void store.actions.COMMAND_UNSOLO_ALL_TRACKS();
   } else {
-    void store.dispatch("UNSOLO_ALL_TRACKS");
+    void store.actions.UNSOLO_ALL_TRACKS();
   }
 };
 
 const reorderTracks = (trackOrder: TrackId[]) => {
-  void store.dispatch("COMMAND_REORDER_TRACKS", {
+  void store.actions.COMMAND_REORDER_TRACKS({
     trackOrder,
   });
 };

@@ -1,7 +1,7 @@
 import path from "path";
-import { toRaw } from "vue";
-import { createDotNotationPartialStore as createPartialStore } from "./vuex";
-import { createDotNotationUILockAction as createUILockAction } from "./ui";
+import { ref, toRaw } from "vue";
+import { createPartialStore } from "./vuex";
+import { createUILockAction } from "./ui";
 import {
   Tempo,
   TimeSignature,
@@ -24,6 +24,9 @@ import {
   SingingVoiceKey,
   EditorFrameAudioQueryKey,
   EditorFrameAudioQuery,
+  TrackParameters,
+  SingingPitchKey,
+  SingingPitch,
 } from "./type";
 import {
   buildSongTrackAudioFileNameFromRawData,
@@ -39,7 +42,7 @@ import {
   StyleId,
   TrackId,
 } from "@/type/preload";
-import { Note as NoteForRequestToEngine } from "@/openapi";
+import { FramePhoneme, Note as NoteForRequestToEngine } from "@/openapi";
 import { ResultError, getValueOrThrow } from "@/type/result";
 import {
   AudioEvent,
@@ -83,14 +86,15 @@ import {
   getNumMeasures,
   isTracksEmpty,
   shouldPlayTracks,
+  decibelToLinear,
+  applyPitchEdit,
 } from "@/sing/domain";
-import {
-  FrequentlyUpdatedState,
-  getOverlappingNoteIds,
-} from "@/sing/storeHelper";
+import { getOverlappingNoteIds } from "@/sing/storeHelper";
 import {
   AnimationTimer,
+  calculateHash,
   createPromiseThatResolvesWhen,
+  linearInterpolation,
   round,
 } from "@/sing/utility";
 import { getWorkaroundKeyRangeAdjustment } from "@/sing/workaroundKeyRangeAdjustment";
@@ -102,12 +106,318 @@ import { ufProjectToVoicevox } from "@/sing/utaformatixProject/toVoicevox";
 import { uuid4 } from "@/helpers/random";
 import { convertToWavFileData } from "@/sing/convertToWavFileData";
 import { generateWriteErrorMessage } from "@/helpers/fileHelper";
-import {
-  PhraseRenderStageId,
-  createPhraseRenderer,
-} from "@/sing/phraseRendering";
 
 const logger = createLogger("store/singing");
+
+/**
+ * フレーズレンダリングに必要なデータのスナップショット
+ */
+type SnapshotForPhraseRender = Readonly<{
+  tpqn: number;
+  tempos: Tempo[];
+  tracks: Map<TrackId, Track>;
+  engineFrameRates: Map<EngineId, number>;
+  editorFrameRate: number;
+}>;
+
+/**
+ * フレーズレンダリングのコンテキスト
+ */
+type PhraseRenderContext = Readonly<{
+  snapshot: SnapshotForPhraseRender;
+  trackId: TrackId;
+  phraseKey: PhraseKey;
+}>;
+
+type PhraseRenderStageId =
+  | "queryGeneration"
+  | "singingPitchGeneration"
+  | "singingVolumeGeneration"
+  | "singingVoiceSynthesis";
+
+/**
+ * フレーズレンダリングのステージのインターフェイス。
+ * フレーズレンダラー内で順に実行される。
+ */
+type PhraseRenderStage = Readonly<{
+  id: PhraseRenderStageId;
+
+  /**
+   * このステージが実行されるべきかを判定する。
+   * @param context コンテキスト
+   * @returns 実行が必要かどうかのブール値
+   */
+  shouldBeExecuted: (context: PhraseRenderContext) => Promise<boolean>;
+
+  /**
+   * 前回の処理結果を削除する。
+   * @param context コンテキスト
+   */
+  deleteExecutionResult: (context: PhraseRenderContext) => void;
+
+  /**
+   * ステージの処理を実行する。
+   * @param context コンテキスト
+   */
+  execute: (context: PhraseRenderContext) => Promise<void>;
+}>;
+
+/**
+ * クエリの生成に必要なデータ
+ */
+type QuerySource = Readonly<{
+  engineId: EngineId;
+  engineFrameRate: number;
+  tpqn: number;
+  tempos: Tempo[];
+  firstRestDuration: number;
+  notes: Note[];
+  keyRangeAdjustment: number;
+}>;
+
+/**
+ * 歌唱ピッチの生成に必要なデータ
+ */
+type SingingPitchSource = Readonly<{
+  engineId: EngineId;
+  engineFrameRate: number;
+  tpqn: number;
+  tempos: Tempo[];
+  firstRestDuration: number;
+  notes: Note[];
+  keyRangeAdjustment: number;
+  queryForPitchGeneration: EditorFrameAudioQuery;
+}>;
+
+/**
+ * 歌唱ボリュームの生成に必要なデータ
+ */
+type SingingVolumeSource = Readonly<{
+  engineId: EngineId;
+  engineFrameRate: number;
+  tpqn: number;
+  tempos: Tempo[];
+  firstRestDuration: number;
+  notes: Note[];
+  keyRangeAdjustment: number;
+  volumeRangeAdjustment: number;
+  queryForVolumeGeneration: EditorFrameAudioQuery;
+}>;
+
+/**
+ * 歌唱音声の合成に必要なデータ
+ */
+type SingingVoiceSource = Readonly<{
+  singer: Singer;
+  queryForSingingVoiceSynthesis: EditorFrameAudioQuery;
+}>;
+
+/**
+ * フレーズレンダラー。
+ * 各フレーズごとに、ステージを進めながらレンダリング処理を行う。
+ * レンダリングが必要かどうかの判定やキャッシュの作成も行う。
+ */
+type PhraseRenderer = Readonly<{
+  /**
+   * 一番最初のステージのIDを返す。
+   * 一度もレンダリングを行っていないフレーズは、
+   * この（一番最初の）ステージからレンダリング処理を開始する必要がある。
+   * @returns ステージID
+   */
+  getFirstRenderStageId: () => PhraseRenderStageId;
+
+  /**
+   * レンダリングが必要なフレーズかどうかを判断し、
+   * レンダリングが必要であればどのステージから開始されるべきかを判断して、そのステージのIDを返す。
+   * レンダリングが必要ない場合、undefinedが返される。
+   * @param snapshot スナップショット
+   * @param trackId トラックID
+   * @param phraseKey フレーズキー
+   * @returns ステージID または undefined
+   */
+  determineStartStage: (
+    snapshot: SnapshotForPhraseRender,
+    trackId: TrackId,
+    phraseKey: PhraseKey,
+  ) => Promise<PhraseRenderStageId | undefined>;
+
+  /**
+   * 指定されたフレーズのレンダリング処理を、指定されたステージから開始する。
+   * レンダリング処理を開始する前に、前回のレンダリング処理結果の削除が行われる。
+   * @param snapshot スナップショット
+   * @param trackId トラックID
+   * @param phraseKey フレーズキー
+   * @param startStageId 開始ステージID
+   */
+  render: (
+    snapshot: SnapshotForPhraseRender,
+    trackId: TrackId,
+    phraseKey: PhraseKey,
+    startStageId: PhraseRenderStageId,
+  ) => Promise<void>;
+}>;
+
+/**
+ * リクエスト用のノーツ（と休符）を作成する。
+ */
+const createNotesForRequestToEngine = (
+  firstRestDuration: number,
+  lastRestDurationSeconds: number,
+  notes: Note[],
+  tempos: Tempo[],
+  tpqn: number,
+  frameRate: number,
+) => {
+  const notesForRequestToEngine: NoteForRequestToEngine[] = [];
+
+  // 先頭の休符を変換
+  const firstRestStartSeconds = tickToSecond(
+    notes[0].position - firstRestDuration,
+    tempos,
+    tpqn,
+  );
+  const firstRestStartFrame = Math.round(firstRestStartSeconds * frameRate);
+  const firstRestEndSeconds = tickToSecond(notes[0].position, tempos, tpqn);
+  const firstRestEndFrame = Math.round(firstRestEndSeconds * frameRate);
+  notesForRequestToEngine.push({
+    key: undefined,
+    frameLength: firstRestEndFrame - firstRestStartFrame,
+    lyric: "",
+  });
+
+  // ノートを変換
+  for (const note of notes) {
+    const noteOnSeconds = tickToSecond(note.position, tempos, tpqn);
+    const noteOnFrame = Math.round(noteOnSeconds * frameRate);
+    const noteOffSeconds = tickToSecond(
+      note.position + note.duration,
+      tempos,
+      tpqn,
+    );
+    const noteOffFrame = Math.round(noteOffSeconds * frameRate);
+    notesForRequestToEngine.push({
+      id: note.id,
+      key: note.noteNumber,
+      frameLength: noteOffFrame - noteOnFrame,
+      lyric: note.lyric,
+    });
+  }
+
+  // 末尾に休符を追加
+  const lastRestFrameLength = Math.round(lastRestDurationSeconds * frameRate);
+  notesForRequestToEngine.push({
+    key: undefined,
+    frameLength: lastRestFrameLength,
+    lyric: "",
+  });
+
+  // frameLengthが1以上になるようにする
+  for (let i = 0; i < notesForRequestToEngine.length; i++) {
+    const frameLength = notesForRequestToEngine[i].frameLength;
+    const frameToShift = Math.max(0, 1 - frameLength);
+    notesForRequestToEngine[i].frameLength += frameToShift;
+    if (i < notesForRequestToEngine.length - 1) {
+      notesForRequestToEngine[i + 1].frameLength -= frameToShift;
+    }
+  }
+
+  return notesForRequestToEngine;
+};
+
+const shiftKeyOfNotes = (notes: NoteForRequestToEngine[], keyShift: number) => {
+  for (const note of notes) {
+    if (note.key != undefined) {
+      note.key += keyShift;
+    }
+  }
+};
+
+const getPhonemes = (query: EditorFrameAudioQuery) => {
+  return query.phonemes.map((value) => value.phoneme).join(" ");
+};
+
+const shiftPitch = (f0: number[], pitchShift: number) => {
+  for (let i = 0; i < f0.length; i++) {
+    f0[i] *= Math.pow(2, pitchShift / 12);
+  }
+};
+
+const shiftVolume = (volume: number[], volumeShift: number) => {
+  for (let i = 0; i < volume.length; i++) {
+    volume[i] *= decibelToLinear(volumeShift);
+  }
+};
+
+/**
+ * 末尾のpauの区間のvolumeを0にする。（歌とpauの呼吸音が重ならないようにする）
+ * fadeOutDurationSecondsが0の場合は即座にvolumeを0にする。
+ */
+const muteLastPauSection = (
+  volume: number[],
+  phonemes: FramePhoneme[],
+  frameRate: number,
+  fadeOutDurationSeconds: number,
+) => {
+  const lastPhoneme = phonemes.at(-1);
+  if (lastPhoneme == undefined || lastPhoneme.phoneme !== "pau") {
+    throw new Error("No pau exists at the end.");
+  }
+
+  let lastPauStartFrame = 0;
+  for (let i = 0; i < phonemes.length - 1; i++) {
+    lastPauStartFrame += phonemes[i].frameLength;
+  }
+
+  const lastPauFrameLength = lastPhoneme.frameLength;
+  let fadeOutFrameLength = Math.round(fadeOutDurationSeconds * frameRate);
+  fadeOutFrameLength = Math.max(0, fadeOutFrameLength);
+  fadeOutFrameLength = Math.min(lastPauFrameLength, fadeOutFrameLength);
+
+  // フェードアウト処理を行う
+  if (fadeOutFrameLength === 1) {
+    volume[lastPauStartFrame] *= 0.5;
+  } else {
+    for (let i = 0; i < fadeOutFrameLength; i++) {
+      volume[lastPauStartFrame + i] *= linearInterpolation(
+        0,
+        1,
+        fadeOutFrameLength - 1,
+        0,
+        i,
+      );
+    }
+  }
+  // 音量を0にする
+  for (let i = fadeOutFrameLength; i < lastPauFrameLength; i++) {
+    volume[lastPauStartFrame + i] = 0;
+  }
+};
+
+const calculateQueryKey = async (querySource: QuerySource) => {
+  const hash = await calculateHash(querySource);
+  return EditorFrameAudioQueryKey(hash);
+};
+
+const calculateSingingPitchKey = async (
+  singingPitchSource: SingingPitchSource,
+) => {
+  const hash = await calculateHash(singingPitchSource);
+  return SingingPitchKey(hash);
+};
+
+const calculateSingingVolumeKey = async (
+  singingVolumeSource: SingingVolumeSource,
+) => {
+  const hash = await calculateHash(singingVolumeSource);
+  return SingingVolumeKey(hash);
+};
+
+const calculateSingingVoiceKey = async (
+  singingVoiceSource: SingingVoiceSource,
+) => {
+  const hash = await calculateHash(singingVoiceSource);
+  return SingingVoiceKey(hash);
+};
 
 const generateAudioEvents = async (
   audioContext: BaseAudioContext,
@@ -131,7 +441,7 @@ const generateNoteEvents = (notes: Note[], tempos: Tempo[], tpqn: number) => {
   });
 };
 
-const generateDefaultSongFileName = (
+const generateDefaultSongFileBaseName = (
   projectName: string | undefined,
   selectedTrack: Track,
   getCharacterInfo: (
@@ -140,7 +450,7 @@ const generateDefaultSongFileName = (
   ) => CharacterInfo | undefined,
 ) => {
   if (projectName) {
-    return projectName + ".wav";
+    return projectName;
   }
 
   const singer = selectedTrack.singer;
@@ -150,11 +460,11 @@ const generateDefaultSongFileName = (
     if (singerName) {
       const notes = selectedTrack.notes.slice(0, 5);
       const beginningPartLyrics = notes.map((note) => note.lyric).join("");
-      return sanitizeFileName(`${singerName}_${beginningPartLyrics}.wav`);
+      return sanitizeFileName(`${singerName}_${beginningPartLyrics}`);
     }
   }
 
-  return `${DEFAULT_PROJECT_NAME}.wav`;
+  return DEFAULT_PROJECT_NAME;
 };
 
 const offlineRenderTracks = async (
@@ -162,7 +472,7 @@ const offlineRenderTracks = async (
   sampleRate: number,
   renderDuration: number,
   withLimiter: boolean,
-  shouldApplyTrackParameters: boolean,
+  shouldApplyTrackParameters: TrackParameters,
   tracks: Map<TrackId, Track>,
   phrases: Map<PhraseKey, Phrase>,
   singingVoices: Map<SingingVoiceKey, SingingVoice>,
@@ -180,9 +490,10 @@ const offlineRenderTracks = async (
   const shouldPlays = shouldPlayTracks(tracks);
   for (const [trackId, track] of tracks) {
     const channelStrip = new ChannelStrip(offlineAudioContext);
-    channelStrip.volume = shouldApplyTrackParameters ? track.gain : 1;
-    channelStrip.pan = shouldApplyTrackParameters ? track.pan : 0;
-    channelStrip.mute = shouldApplyTrackParameters
+    channelStrip.volume = shouldApplyTrackParameters.gain ? track.gain : 1;
+    channelStrip.pan =
+      shouldApplyTrackParameters.pan && numberOfChannels === 2 ? track.pan : 0;
+    channelStrip.mute = shouldApplyTrackParameters.soloAndMute
       ? !shouldPlays.has(trackId)
       : false;
 
@@ -252,12 +563,13 @@ if (window.AudioContext) {
   clipper.output.connect(audioContext.destination);
 }
 
-const playheadPosition = new FrequentlyUpdatedState(0);
+const playheadPosition = ref(0); // 単位はtick
 const phraseSingingVoices = new Map<SingingVoiceKey, SingingVoice>();
 const sequences = new Map<SequenceId, Sequence & { trackId: TrackId }>();
 const animationTimer = new AnimationTimer();
 
 const queryCache = new Map<EditorFrameAudioQueryKey, EditorFrameAudioQuery>();
+const singingPitchCache = new Map<SingingPitchKey, SingingPitch>();
 const singingVolumeCache = new Map<SingingVolumeKey, SingingVolume>();
 const singingVoiceCache = new Map<SingingVoiceKey, SingingVoice>();
 
@@ -377,12 +689,8 @@ const generateAudioSequence = async (
  * `tracks`と`trackChannelStrips`を同期する。
  * シーケンスが存在する場合は、ChannelStripとシーケンスの接続・接続の解除を行う。
  * @param tracks `state`の`tracks`
- * @param enableMultiTrack マルチトラックが有効かどうか
  */
-const syncTracksAndTrackChannelStrips = (
-  tracks: Map<TrackId, Track>,
-  enableMultiTrack: boolean,
-) => {
+const syncTracksAndTrackChannelStrips = (tracks: Map<TrackId, Track>) => {
   if (audioContext == undefined) {
     throw new Error("audioContext is undefined.");
   }
@@ -410,15 +718,9 @@ const syncTracksAndTrackChannelStrips = (
     }
 
     const channelStrip = getOrThrow(trackChannelStrips, trackId);
-    if (enableMultiTrack) {
-      channelStrip.volume = track.gain;
-      channelStrip.pan = track.pan;
-      channelStrip.mute = !shouldPlays.has(trackId);
-    } else {
-      channelStrip.volume = 1;
-      channelStrip.pan = 0;
-      channelStrip.mute = false;
-    }
+    channelStrip.volume = track.gain;
+    channelStrip.pan = track.pan;
+    channelStrip.mute = !shouldPlays.has(trackId);
   }
   for (const [trackId, channelStrip] of trackChannelStrips) {
     if (!tracks.has(trackId)) {
@@ -468,6 +770,7 @@ export const singingStoreState: SingingStoreState = {
   editorFrameRate: DEPRECATED_DEFAULT_EDITOR_FRAME_RATE,
   phrases: new Map(),
   phraseQueries: new Map(),
+  phraseSingingPitches: new Map(),
   phraseSingingVolumes: new Map(),
   sequencerZoomX: 0.5,
   sequencerZoomY: 0.75,
@@ -942,6 +1245,23 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  SET_SINGING_PITCH_KEY_TO_PHRASE: {
+    mutation(
+      state,
+      {
+        phraseKey,
+        singingPitchKey,
+      }: {
+        phraseKey: PhraseKey;
+        singingPitchKey: SingingPitchKey | undefined;
+      },
+    ) {
+      const phrase = getOrThrow(state.phrases, phraseKey);
+
+      phrase.singingPitchKey = singingPitchKey;
+    },
+  },
+
   SET_SINGING_VOLUME_KEY_TO_PHRASE: {
     mutation(
       state,
@@ -1011,6 +1331,24 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   DELETE_PHRASE_QUERY: {
     mutation(state, { queryKey }: { queryKey: EditorFrameAudioQueryKey }) {
       state.phraseQueries.delete(queryKey);
+    },
+  },
+
+  SET_PHRASE_SINGING_PITCH: {
+    mutation(
+      state,
+      {
+        singingPitchKey,
+        singingPitch,
+      }: { singingPitchKey: SingingPitchKey; singingPitch: SingingPitch },
+    ) {
+      state.phraseSingingPitches.set(singingPitchKey, singingPitch);
+    },
+  },
+
+  DELETE_PHRASE_SINGING_PITCH: {
+    mutation(state, { singingPitchKey }: { singingPitchKey: SingingPitchKey }) {
+      state.phraseSingingPitches.delete(singingPitchKey);
     },
   },
 
@@ -1112,14 +1450,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  GET_PLAYHEAD_POSITION: {
-    getter: (state, getters) => () => {
-      if (!transport) {
-        throw new Error("transport is undefined.");
-      }
-      if (state.nowPlaying) {
-        playheadPosition.value = getters.SECOND_TO_TICK(transport.time);
-      }
+  PLAYHEAD_POSITION: {
+    getter() {
       return playheadPosition.value;
     },
   },
@@ -1131,18 +1463,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       playheadPosition.value = position;
       transport.time = getters.TICK_TO_SECOND(position);
-    },
-  },
-
-  ADD_PLAYHEAD_POSITION_CHANGE_LISTENER: {
-    async action(_, { listener }: { listener: (position: number) => void }) {
-      playheadPosition.addValueChangeListener(listener);
-    },
-  },
-
-  REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER: {
-    async action(_, { listener }: { listener: (position: number) => void }) {
-      playheadPosition.removeValueChangeListener(listener);
     },
   },
 
@@ -1164,7 +1484,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
       transport.start();
       animationTimer.start(() => {
-        playheadPosition.value = getters.GET_PLAYHEAD_POSITION();
+        playheadPosition.value = getters.SECOND_TO_TICK(transport.time);
       });
     },
   },
@@ -1181,7 +1501,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
       transport.stop();
       animationTimer.stop();
-      playheadPosition.value = getters.GET_PLAYHEAD_POSITION();
+      playheadPosition.value = getters.SECOND_TO_TICK(transport.time);
     },
   },
 
@@ -1358,10 +1678,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS: {
     async action({ state }) {
-      syncTracksAndTrackChannelStrips(
-        state.tracks,
-        state.experimentalSetting.enableMultiTrack,
-      );
+      syncTracksAndTrackChannelStrips(state.tracks);
     },
   },
 
@@ -1370,6 +1687,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
    */
   RENDER: {
     async action({ state, getters, mutations, actions }) {
+      const singingTeacherStyleId = StyleId(6000); // TODO: 設定できるようにする
+      const lastRestDurationSeconds = 0.5; // TODO: 設定できるようにする
+      const fadeOutDurationSeconds = 0.15; // TODO: 設定できるようにする
+
       const calcPhraseFirstRestDuration = (
         prevPhraseLastNote: Note | undefined,
         phraseFirstNote: Note,
@@ -1491,7 +1812,28 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         return foundPhrases;
       };
 
-      const singingTeacherStyleId = StyleId(6000); // TODO: 設定できるようにする
+      const generateQuerySource = (
+        context: PhraseRenderContext,
+      ): QuerySource => {
+        const track = getOrThrow(context.snapshot.tracks, context.trackId);
+        if (track.singer == undefined) {
+          throw new Error("track.singer is undefined.");
+        }
+        const engineFrameRate = getOrThrow(
+          context.snapshot.engineFrameRates,
+          track.singer.engineId,
+        );
+        const phrase = getOrThrow(state.phrases, context.phraseKey);
+        return {
+          engineId: track.singer.engineId,
+          engineFrameRate,
+          tpqn: context.snapshot.tpqn,
+          tempos: context.snapshot.tempos,
+          firstRestDuration: phrase.firstRestDuration,
+          notes: phrase.notes,
+          keyRangeAdjustment: track.keyRangeAdjustment,
+        };
+      };
 
       const fetchQuery = async (
         engineId: EngineId,
@@ -1528,14 +1870,354 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         }
       };
 
-      const synthesizeSingingVoice = async (
-        singer: Singer,
-        query: EditorFrameAudioQuery,
+      const generateQuery = async (querySource: QuerySource) => {
+        const notesForRequestToEngine = createNotesForRequestToEngine(
+          querySource.firstRestDuration,
+          lastRestDurationSeconds,
+          querySource.notes,
+          querySource.tempos,
+          querySource.tpqn,
+          querySource.engineFrameRate,
+        );
+
+        shiftKeyOfNotes(
+          notesForRequestToEngine,
+          -querySource.keyRangeAdjustment,
+        );
+
+        const query = await fetchQuery(
+          querySource.engineId,
+          querySource.engineFrameRate,
+          notesForRequestToEngine,
+        );
+
+        shiftPitch(query.f0, querySource.keyRangeAdjustment);
+        return query;
+      };
+
+      const queryGenerationStage: PhraseRenderStage = {
+        id: "queryGeneration",
+        shouldBeExecuted: async (context: PhraseRenderContext) => {
+          const track = getOrThrow(context.snapshot.tracks, context.trackId);
+          if (track.singer == undefined) {
+            return false;
+          }
+          const phrase = getOrThrow(state.phrases, context.phraseKey);
+          const phraseQueryKey = phrase.queryKey;
+          const querySource = generateQuerySource(context);
+          const queryKey = await calculateQueryKey(querySource);
+          return phraseQueryKey == undefined || phraseQueryKey !== queryKey;
+        },
+        deleteExecutionResult: (context: PhraseRenderContext) => {
+          const phrase = getOrThrow(state.phrases, context.phraseKey);
+          const phraseQueryKey = phrase.queryKey;
+          if (phraseQueryKey != undefined) {
+            mutations.DELETE_PHRASE_QUERY({ queryKey: phraseQueryKey });
+            mutations.SET_QUERY_KEY_TO_PHRASE({
+              phraseKey: context.phraseKey,
+              queryKey: undefined,
+            });
+          }
+        },
+        execute: async (context: PhraseRenderContext) => {
+          const querySource = generateQuerySource(context);
+          const queryKey = await calculateQueryKey(querySource);
+
+          let query = queryCache.get(queryKey);
+          if (query != undefined) {
+            logger.info(`Loaded query from cache.`);
+          } else {
+            query = await generateQuery(querySource);
+            const phonemes = getPhonemes(query);
+            logger.info(`Generated query. phonemes: ${phonemes}`);
+            queryCache.set(queryKey, query);
+          }
+
+          const phrase = getOrThrow(state.phrases, context.phraseKey);
+          const phraseQueryKey = phrase.queryKey;
+          if (phraseQueryKey != undefined) {
+            throw new Error("The previous query has not been removed.");
+          }
+          mutations.SET_PHRASE_QUERY({ queryKey, query });
+          mutations.SET_QUERY_KEY_TO_PHRASE({
+            phraseKey: context.phraseKey,
+            queryKey,
+          });
+        },
+      };
+
+      const generateSingingPitchSource = (
+        context: PhraseRenderContext,
+      ): SingingPitchSource => {
+        const track = getOrThrow(context.snapshot.tracks, context.trackId);
+        if (track.singer == undefined) {
+          throw new Error("track.singer is undefined.");
+        }
+        const phrase = getOrThrow(state.phrases, context.phraseKey);
+        const phraseQueryKey = phrase.queryKey;
+        if (phraseQueryKey == undefined) {
+          throw new Error("phraseQueryKey is undefined.");
+        }
+        const query = getOrThrow(state.phraseQueries, phraseQueryKey);
+        const clonedQuery = cloneWithUnwrapProxy(query);
+        // TODO: 音素タイミングの編集データの適用を行うようにする
+        return {
+          engineId: track.singer.engineId,
+          engineFrameRate: query.frameRate,
+          tpqn: context.snapshot.tpqn,
+          tempos: context.snapshot.tempos,
+          firstRestDuration: phrase.firstRestDuration,
+          notes: phrase.notes,
+          keyRangeAdjustment: track.keyRangeAdjustment,
+          queryForPitchGeneration: clonedQuery,
+        };
+      };
+
+      const generateSingingPitch = async (
+        singingPitchSource: SingingPitchSource,
       ) => {
+        // TODO: ピッチ生成APIに対応する
+        return singingPitchSource.queryForPitchGeneration.f0;
+      };
+
+      const singingPitchGenerationStage: PhraseRenderStage = {
+        id: "singingPitchGeneration",
+        shouldBeExecuted: async (context: PhraseRenderContext) => {
+          const track = getOrThrow(context.snapshot.tracks, context.trackId);
+          if (track.singer == undefined) {
+            return false;
+          }
+          const phrase = getOrThrow(state.phrases, context.phraseKey);
+          const phraseSingingPitchKey = phrase.singingPitchKey;
+          const singingPitchSource = generateSingingPitchSource(context);
+          const singingPitchKey =
+            await calculateSingingPitchKey(singingPitchSource);
+          return (
+            phraseSingingPitchKey == undefined ||
+            phraseSingingPitchKey !== singingPitchKey
+          );
+        },
+        deleteExecutionResult: (context: PhraseRenderContext) => {
+          const phrase = getOrThrow(state.phrases, context.phraseKey);
+          const phraseSingingPitchKey = phrase.singingPitchKey;
+          if (phraseSingingPitchKey != undefined) {
+            mutations.DELETE_PHRASE_SINGING_PITCH({
+              singingPitchKey: phraseSingingPitchKey,
+            });
+            mutations.SET_SINGING_PITCH_KEY_TO_PHRASE({
+              phraseKey: context.phraseKey,
+              singingPitchKey: undefined,
+            });
+          }
+        },
+        execute: async (context: PhraseRenderContext) => {
+          const singingPitchSource = generateSingingPitchSource(context);
+          const singingPitchKey =
+            await calculateSingingPitchKey(singingPitchSource);
+
+          let singingPitch = singingPitchCache.get(singingPitchKey);
+          if (singingPitch != undefined) {
+            logger.info(`Loaded singing pitch from cache.`);
+          } else {
+            singingPitch = await generateSingingPitch(singingPitchSource);
+            logger.info(`Generated singing pitch.`);
+            singingPitchCache.set(singingPitchKey, singingPitch);
+          }
+
+          const phrase = getOrThrow(state.phrases, context.phraseKey);
+          const phraseSingingPitchKey = phrase.singingPitchKey;
+          if (phraseSingingPitchKey != undefined) {
+            throw new Error("The previous singing pitch has not been removed.");
+          }
+          mutations.SET_PHRASE_SINGING_PITCH({ singingPitchKey, singingPitch });
+          mutations.SET_SINGING_PITCH_KEY_TO_PHRASE({
+            phraseKey: context.phraseKey,
+            singingPitchKey,
+          });
+        },
+      };
+
+      const generateSingingVolumeSource = (
+        context: PhraseRenderContext,
+      ): SingingVolumeSource => {
+        const track = getOrThrow(context.snapshot.tracks, context.trackId);
+        if (track.singer == undefined) {
+          throw new Error("track.singer is undefined.");
+        }
+        const phrase = getOrThrow(state.phrases, context.phraseKey);
+        const phraseQueryKey = phrase.queryKey;
+        if (phraseQueryKey == undefined) {
+          throw new Error("phraseQueryKey is undefined.");
+        }
+        // TODO: ピッチ生成ステージで生成したピッチを使用するようにする
+        const query = getOrThrow(state.phraseQueries, phraseQueryKey);
+        const clonedQuery = cloneWithUnwrapProxy(query);
+        applyPitchEdit(
+          clonedQuery,
+          phrase.startTime,
+          track.pitchEditData,
+          context.snapshot.editorFrameRate,
+        );
+        return {
+          engineId: track.singer.engineId,
+          engineFrameRate: query.frameRate,
+          tpqn: context.snapshot.tpqn,
+          tempos: context.snapshot.tempos,
+          firstRestDuration: phrase.firstRestDuration,
+          notes: phrase.notes,
+          keyRangeAdjustment: track.keyRangeAdjustment,
+          volumeRangeAdjustment: track.volumeRangeAdjustment,
+          queryForVolumeGeneration: clonedQuery,
+        };
+      };
+
+      const generateSingingVolume = async (
+        singingVolumeSource: SingingVolumeSource,
+      ) => {
+        const notesForRequestToEngine = createNotesForRequestToEngine(
+          singingVolumeSource.firstRestDuration,
+          lastRestDurationSeconds,
+          singingVolumeSource.notes,
+          singingVolumeSource.tempos,
+          singingVolumeSource.tpqn,
+          singingVolumeSource.engineFrameRate,
+        );
+        const queryForVolumeGeneration =
+          singingVolumeSource.queryForVolumeGeneration;
+
+        shiftKeyOfNotes(
+          notesForRequestToEngine,
+          -singingVolumeSource.keyRangeAdjustment,
+        );
+        shiftPitch(
+          queryForVolumeGeneration.f0,
+          -singingVolumeSource.keyRangeAdjustment,
+        );
+
+        const singingVolume = await actions.FETCH_SING_FRAME_VOLUME({
+          notes: notesForRequestToEngine,
+          query: queryForVolumeGeneration,
+          engineId: singingVolumeSource.engineId,
+          styleId: singingTeacherStyleId,
+        });
+
+        shiftVolume(singingVolume, singingVolumeSource.volumeRangeAdjustment);
+        muteLastPauSection(
+          singingVolume,
+          queryForVolumeGeneration.phonemes,
+          singingVolumeSource.engineFrameRate,
+          fadeOutDurationSeconds,
+        );
+        return singingVolume;
+      };
+
+      const singingVolumeGenerationStage: PhraseRenderStage = {
+        id: "singingVolumeGeneration",
+        shouldBeExecuted: async (context: PhraseRenderContext) => {
+          const track = getOrThrow(context.snapshot.tracks, context.trackId);
+          if (track.singer == undefined) {
+            return false;
+          }
+          const singingVolumeSource = generateSingingVolumeSource(context);
+          const singingVolumeKey =
+            await calculateSingingVolumeKey(singingVolumeSource);
+          const phrase = getOrThrow(state.phrases, context.phraseKey);
+          const phraseSingingVolumeKey = phrase.singingVolumeKey;
+          return (
+            phraseSingingVolumeKey == undefined ||
+            phraseSingingVolumeKey !== singingVolumeKey
+          );
+        },
+        deleteExecutionResult: (context: PhraseRenderContext) => {
+          const phrase = getOrThrow(state.phrases, context.phraseKey);
+          const phraseSingingVolumeKey = phrase.singingVolumeKey;
+          if (phraseSingingVolumeKey != undefined) {
+            mutations.DELETE_PHRASE_SINGING_VOLUME({
+              singingVolumeKey: phraseSingingVolumeKey,
+            });
+            mutations.SET_SINGING_VOLUME_KEY_TO_PHRASE({
+              phraseKey: context.phraseKey,
+              singingVolumeKey: undefined,
+            });
+          }
+        },
+        execute: async (context: PhraseRenderContext) => {
+          const singingVolumeSource = generateSingingVolumeSource(context);
+          const singingVolumeKey =
+            await calculateSingingVolumeKey(singingVolumeSource);
+
+          let singingVolume = singingVolumeCache.get(singingVolumeKey);
+          if (singingVolume != undefined) {
+            logger.info(`Loaded singing volume from cache.`);
+          } else {
+            singingVolume = await generateSingingVolume(singingVolumeSource);
+            logger.info(`Generated singing volume.`);
+            singingVolumeCache.set(singingVolumeKey, singingVolume);
+          }
+
+          const phrase = getOrThrow(state.phrases, context.phraseKey);
+          const phraseSingingVolumeKey = phrase.singingVolumeKey;
+          if (phraseSingingVolumeKey != undefined) {
+            throw new Error(
+              "The previous singing volume has not been removed.",
+            );
+          }
+          mutations.SET_PHRASE_SINGING_VOLUME({
+            singingVolumeKey,
+            singingVolume,
+          });
+          mutations.SET_SINGING_VOLUME_KEY_TO_PHRASE({
+            phraseKey: context.phraseKey,
+            singingVolumeKey,
+          });
+        },
+      };
+
+      const generateSingingVoiceSource = (
+        context: PhraseRenderContext,
+      ): SingingVoiceSource => {
+        const track = getOrThrow(context.snapshot.tracks, context.trackId);
+        if (track.singer == undefined) {
+          throw new Error("track.singer is undefined.");
+        }
+        const phrase = getOrThrow(state.phrases, context.phraseKey);
+        const phraseQueryKey = phrase.queryKey;
+        const phraseSingingVolumeKey = phrase.singingVolumeKey;
+        if (phraseQueryKey == undefined) {
+          throw new Error("phraseQueryKey is undefined.");
+        }
+        if (phraseSingingVolumeKey == undefined) {
+          throw new Error("phraseSingingVolumeKey is undefined.");
+        }
+        const query = getOrThrow(state.phraseQueries, phraseQueryKey);
+        const singingVolume = getOrThrow(
+          state.phraseSingingVolumes,
+          phraseSingingVolumeKey,
+        );
+        const clonedQuery = cloneWithUnwrapProxy(query);
+        const clonedSingingVolume = cloneWithUnwrapProxy(singingVolume);
+        applyPitchEdit(
+          clonedQuery,
+          phrase.startTime,
+          track.pitchEditData,
+          context.snapshot.editorFrameRate,
+        );
+        clonedQuery.volume = clonedSingingVolume;
+        return {
+          singer: track.singer,
+          queryForSingingVoiceSynthesis: clonedQuery,
+        };
+      };
+
+      const synthesizeSingingVoice = async (
+        singingVoiceSource: SingingVoiceSource,
+      ) => {
+        const singer = singingVoiceSource.singer;
+        const query = singingVoiceSource.queryForSingingVoiceSynthesis;
+
         if (!getters.IS_ENGINE_READY(singer.engineId)) {
           throw new Error("Engine not ready.");
         }
-
         try {
           const instance = await actions.INSTANTIATE_ENGINE_CONNECTOR({
             engineId: singer.engineId,
@@ -1554,6 +2236,115 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           );
           throw error;
         }
+      };
+
+      const singingVoiceSynthesisStage: PhraseRenderStage = {
+        id: "singingVoiceSynthesis",
+        shouldBeExecuted: async (context: PhraseRenderContext) => {
+          const track = getOrThrow(context.snapshot.tracks, context.trackId);
+          if (track.singer == undefined) {
+            return false;
+          }
+          const singingVoiceSource = generateSingingVoiceSource(context);
+          const singingVoiceKey =
+            await calculateSingingVoiceKey(singingVoiceSource);
+          const phrase = getOrThrow(state.phrases, context.phraseKey);
+          const phraseSingingVoiceKey = phrase.singingVoiceKey;
+          return (
+            phraseSingingVoiceKey == undefined ||
+            phraseSingingVoiceKey !== singingVoiceKey
+          );
+        },
+        deleteExecutionResult: (context: PhraseRenderContext) => {
+          const phrase = getOrThrow(state.phrases, context.phraseKey);
+          const phraseSingingVoiceKey = phrase.singingVoiceKey;
+          if (phraseSingingVoiceKey != undefined) {
+            phraseSingingVoices.delete(phraseSingingVoiceKey);
+            mutations.SET_SINGING_VOICE_KEY_TO_PHRASE({
+              phraseKey: context.phraseKey,
+              singingVoiceKey: undefined,
+            });
+          }
+        },
+        execute: async (context: PhraseRenderContext) => {
+          const singingVoiceSource = generateSingingVoiceSource(context);
+          const singingVoiceKey =
+            await calculateSingingVoiceKey(singingVoiceSource);
+
+          let singingVoice = singingVoiceCache.get(singingVoiceKey);
+          if (singingVoice != undefined) {
+            logger.info(`Loaded singing voice from cache.`);
+          } else {
+            singingVoice = await synthesizeSingingVoice(singingVoiceSource);
+            logger.info(`Generated singing voice.`);
+            singingVoiceCache.set(singingVoiceKey, singingVoice);
+          }
+
+          const phrase = getOrThrow(state.phrases, context.phraseKey);
+          const phraseSingingVoiceKey = phrase.singingVoiceKey;
+          if (phraseSingingVoiceKey != undefined) {
+            throw new Error("The previous singing voice has not been removed.");
+          }
+          phraseSingingVoices.set(singingVoiceKey, singingVoice);
+          mutations.SET_SINGING_VOICE_KEY_TO_PHRASE({
+            phraseKey: context.phraseKey,
+            singingVoiceKey,
+          });
+        },
+      };
+
+      const stages: readonly PhraseRenderStage[] = [
+        queryGenerationStage,
+        singingPitchGenerationStage,
+        singingVolumeGenerationStage,
+        singingVoiceSynthesisStage,
+      ];
+
+      const phraseRenderer: PhraseRenderer = {
+        getFirstRenderStageId: () => {
+          return stages[0].id;
+        },
+        determineStartStage: async (
+          snapshot: SnapshotForPhraseRender,
+          trackId: TrackId,
+          phraseKey: PhraseKey,
+        ) => {
+          const context: PhraseRenderContext = {
+            snapshot,
+            trackId,
+            phraseKey,
+          };
+          for (const stage of stages) {
+            if (await stage.shouldBeExecuted(context)) {
+              return stage.id;
+            }
+          }
+          return undefined;
+        },
+        render: async (
+          snapshot: SnapshotForPhraseRender,
+          trackId: TrackId,
+          phraseKey: PhraseKey,
+          startStageId: PhraseRenderStageId,
+        ) => {
+          const context: PhraseRenderContext = {
+            snapshot,
+            trackId,
+            phraseKey,
+          };
+          const startStageIndex = stages.findIndex((value) => {
+            return value.id === startStageId;
+          });
+          if (startStageIndex === -1) {
+            throw new Error("Stage not found.");
+          }
+          for (let i = stages.length - 1; i >= startStageIndex; i--) {
+            stages[i].deleteExecutionResult(context);
+          }
+          for (let i = startStageIndex; i < stages.length; i++) {
+            await stages[i].execute(context);
+          }
+        },
       };
 
       // NOTE: 型推論でawaitの前か後かが考慮されないので、関数を介して取得する（型がbooleanになるようにする）
@@ -1602,80 +2393,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           ),
           editorFrameRate: state.editorFrameRate,
         } as const;
-
-        const phraseRenderer = createPhraseRenderer({
-          queryCache,
-          singingVolumeCache,
-          singingVoiceCache,
-          phrases: {
-            get: (phraseKey: PhraseKey) => {
-              const phrase = getOrThrow(state.phrases, phraseKey);
-              return {
-                firstRestDuration: phrase.firstRestDuration,
-                notes: phrase.notes,
-                startTime: phrase.startTime,
-                queryKey: {
-                  get: () => getOrThrow(state.phrases, phraseKey).queryKey,
-                  set: (value) =>
-                    mutations.SET_QUERY_KEY_TO_PHRASE({
-                      phraseKey,
-                      queryKey: value,
-                    }),
-                },
-                singingVolumeKey: {
-                  get: () =>
-                    getOrThrow(state.phrases, phraseKey).singingVolumeKey,
-                  set: (value) =>
-                    mutations.SET_SINGING_VOLUME_KEY_TO_PHRASE({
-                      phraseKey,
-                      singingVolumeKey: value,
-                    }),
-                },
-                singingVoiceKey: {
-                  get: () =>
-                    getOrThrow(state.phrases, phraseKey).singingVoiceKey,
-                  set: (value) =>
-                    mutations.SET_SINGING_VOICE_KEY_TO_PHRASE({
-                      phraseKey,
-                      singingVoiceKey: value,
-                    }),
-                },
-              };
-            },
-          },
-          phraseQueries: {
-            get: (queryKey) => getOrThrow(state.phraseQueries, queryKey),
-            set: (queryKey, query) =>
-              mutations.SET_PHRASE_QUERY({ queryKey, query }),
-            delete: (queryKey) => mutations.DELETE_PHRASE_QUERY({ queryKey }),
-          },
-          phraseSingingVolumes: {
-            get: (singingVolumeKey) =>
-              getOrThrow(state.phraseSingingVolumes, singingVolumeKey),
-            set: (singingVolumeKey, singingVolume) =>
-              mutations.SET_PHRASE_SINGING_VOLUME({
-                singingVolumeKey,
-                singingVolume,
-              }),
-            delete: (singingVolumeKey) =>
-              mutations.DELETE_PHRASE_SINGING_VOLUME({ singingVolumeKey }),
-          },
-          phraseSingingVoices: {
-            set: (singingVoiceKey, singingVoice) =>
-              phraseSingingVoices.set(singingVoiceKey, singingVoice),
-            delete: (singingVoiceKey) =>
-              phraseSingingVoices.delete(singingVoiceKey),
-          },
-          fetchQuery,
-          fetchSingFrameVolume: (notes, query, engineId, styleId) =>
-            actions.FETCH_SING_FRAME_VOLUME({
-              notes,
-              query,
-              engineId,
-              styleId,
-            }),
-          synthesizeSingingVoice,
-        });
 
         const renderStartStageIds = new Map<PhraseKey, PhraseRenderStageId>();
 
@@ -1949,18 +2666,19 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  EXPORT_WAVE_FILE: {
+  EXPORT_AUDIO_FILE: {
     action: createUILockAction(
-      async ({ state, mutations, getters, actions }, { filePath }) => {
-        const exportWaveFile = async (): Promise<SaveResultObject> => {
-          const fileName = generateDefaultSongFileName(
+      async ({ state, mutations, getters, actions }, { filePath, setting }) => {
+        const exportAudioFile = async (): Promise<SaveResultObject> => {
+          const fileBaseName = generateDefaultSongFileBaseName(
             getters.PROJECT_NAME,
             getters.SELECTED_TRACK,
             getters.CHARACTER_INFO,
           );
-          const numberOfChannels = 2;
-          const sampleRate = 48000; // TODO: 設定できるようにする
-          const withLimiter = true; // TODO: 設定できるようにする
+          const fileName = `${fileBaseName}.wav`;
+          const numberOfChannels = setting.isMono ? 1 : 2;
+          const sampleRate = setting.sampleRate;
+          const withLimiter = setting.withLimiter;
 
           const renderDuration = getters.CALC_RENDER_DURATION;
 
@@ -1982,9 +2700,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
           if (state.savingSetting.avoidOverwrite) {
             let tail = 1;
-            const name = filePath.slice(0, filePath.length - 4);
+            const pathWithoutExt = filePath.slice(0, -4);
             while (await window.backend.checkFileExists(filePath)) {
-              filePath = name + "[" + tail.toString() + "]" + ".wav";
+              filePath = `${pathWithoutExt}[${tail}].wav`;
               tail += 1;
             }
           }
@@ -2005,46 +2723,24 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             sampleRate,
             renderDuration,
             withLimiter,
-            state.experimentalSetting.enableMultiTrack,
+            setting.withTrackParameters,
             state.tracks,
             state.phrases,
             phraseSingingVoices,
           );
 
-          const waveFileData = convertToWavFileData(audioBuffer);
+          const fileData = convertToWavFileData(audioBuffer);
 
-          try {
-            await window.backend
-              .writeFile({
-                filePath,
-                buffer: waveFileData,
-              })
-              .then(getValueOrThrow);
-          } catch (e) {
-            logger.error("Failed to export the wav file.", e);
-            if (e instanceof ResultError) {
-              return {
-                result: "WRITE_ERROR",
-                path: filePath,
-                errorMessage: generateWriteErrorMessage(
-                  e as ResultError<string>,
-                ),
-              };
-            }
-            return {
-              result: "UNKNOWN_ERROR",
-              path: filePath,
-              errorMessage:
-                (e instanceof Error ? e.message : String(e)) ||
-                "不明なエラーが発生しました。",
-            };
-          }
+          const result = await actions.EXPORT_FILE({
+            filePath,
+            content: fileData,
+          });
 
-          return { result: "SUCCESS", path: filePath };
+          return result;
         };
 
         mutations.SET_NOW_AUDIO_EXPORTING({ nowAudioExporting: true });
-        return exportWaveFile().finally(() => {
+        return exportAudioFile().finally(() => {
           mutations.SET_CANCELLATION_OF_AUDIO_EXPORT_REQUESTED({
             cancellationOfAudioExportRequested: false,
           });
@@ -2054,15 +2750,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     ),
   },
 
-  // TODO: EXPORT_WAVE_FILEとコードが重複しているので、共通化する
-  EXPORT_STEM_WAVE_FILE: {
+  EXPORT_STEM_AUDIO_FILE: {
     action: createUILockAction(
-      async ({ state, mutations, getters, actions }, { dirPath }) => {
+      async ({ state, mutations, getters, actions }, { dirPath, setting }) => {
         let firstFilePath = "";
-        const exportWaveFile = async (): Promise<SaveResultObject> => {
-          const numberOfChannels = 2;
-          const sampleRate = 48000; // TODO: 設定できるようにする
-          const withLimiter = true; // TODO: 設定できるようにする
+        const exportAudioFile = async (): Promise<SaveResultObject> => {
+          const numberOfChannels = setting.isMono ? 1 : 2;
+          const sampleRate = setting.sampleRate;
+          const withLimiter = setting.withLimiter;
 
           const renderDuration = getters.CALC_RENDER_DURATION;
 
@@ -2092,9 +2787,19 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             }
           }
 
+          const shouldPlays = shouldPlayTracks(state.tracks);
+
           for (const [i, trackId] of state.trackOrder.entries()) {
             const track = getOrThrow(state.tracks, trackId);
             if (!track.singer) {
+              continue;
+            }
+
+            // ミュート/ソロにより再生されないトラックは除外
+            if (
+              setting.withTrackParameters.soloAndMute &&
+              !shouldPlays.has(trackId)
+            ) {
               continue;
             }
 
@@ -2126,12 +2831,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                 trackName: track.name,
               },
             );
-            let filePath = path.join(dirPath, trackFileName);
+            let filePath = path.join(dirPath, `${trackFileName}.wav`);
             if (state.savingSetting.avoidOverwrite) {
               let tail = 1;
-              const name = filePath.slice(0, filePath.length - 4);
+              const pathWithoutExt = filePath.slice(0, -4);
               while (await window.backend.checkFileExists(filePath)) {
-                filePath = name + "[" + tail.toString() + "]" + ".wav";
+                filePath = `${pathWithoutExt}[${tail}].wav`;
                 tail += 1;
               }
             }
@@ -2141,7 +2846,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               sampleRate,
               renderDuration,
               withLimiter,
-              state.experimentalSetting.enableMultiTrack,
+              setting.withTrackParameters,
               new Map([[trackId, { ...track, solo: false, mute: false }]]),
               new Map(
                 [...state.phrases.entries()].filter(
@@ -2151,36 +2856,18 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               singingVoiceCache,
             );
 
-            const waveFileData = convertToWavFileData(audioBuffer);
-            if (i === 0) {
-              firstFilePath = filePath;
+            const fileData = convertToWavFileData(audioBuffer);
+
+            const result = await actions.EXPORT_FILE({
+              filePath,
+              content: fileData,
+            });
+            if (result.result !== "SUCCESS") {
+              return result;
             }
 
-            try {
-              await window.backend
-                .writeFile({
-                  filePath,
-                  buffer: waveFileData,
-                })
-                .then(getValueOrThrow);
-            } catch (e) {
-              logger.error("Failed to export the wav file.", e);
-              if (e instanceof ResultError) {
-                return {
-                  result: "WRITE_ERROR",
-                  path: filePath,
-                  errorMessage: generateWriteErrorMessage(
-                    e as ResultError<string>,
-                  ),
-                };
-              }
-              return {
-                result: "UNKNOWN_ERROR",
-                path: filePath,
-                errorMessage:
-                  (e instanceof Error ? e.message : String(e)) ||
-                  "不明なエラーが発生しました。",
-              };
+            if (i === 0) {
+              firstFilePath = filePath;
             }
           }
 
@@ -2188,7 +2875,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         };
 
         mutations.SET_NOW_AUDIO_EXPORTING({ nowAudioExporting: true });
-        return exportWaveFile().finally(() => {
+        return exportAudioFile().finally(() => {
           mutations.SET_CANCELLATION_OF_AUDIO_EXPORT_REQUESTED({
             cancellationOfAudioExportRequested: false,
           });
@@ -2196,6 +2883,37 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         });
       },
     ),
+  },
+
+  EXPORT_FILE: {
+    async action(_, { filePath, content }) {
+      try {
+        await window.backend
+          .writeFile({
+            filePath,
+            buffer: content,
+          })
+          .then(getValueOrThrow);
+      } catch (e) {
+        logger.error("Failed to export file.", e);
+        if (e instanceof ResultError) {
+          return {
+            result: "WRITE_ERROR",
+            path: filePath,
+            errorMessage: generateWriteErrorMessage(e as ResultError<string>),
+          };
+        }
+        return {
+          result: "UNKNOWN_ERROR",
+          path: filePath,
+          errorMessage:
+            (e instanceof Error ? e.message : String(e)) ||
+            "不明なエラーが発生しました。",
+        };
+      }
+
+      return { result: "SUCCESS", path: filePath };
+    },
   },
 
   CANCEL_AUDIO_EXPORT: {
@@ -2268,7 +2986,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
 
       // パースしたJSONのノートの位置を現在の再生位置に合わせてクオンタイズして貼り付ける
-      const currentPlayheadPosition = getters.GET_PLAYHEAD_POSITION();
+      const currentPlayheadPosition = getters.PLAYHEAD_POSITION;
       const firstNotePosition = notes[0].position;
       // TODO: クオンタイズの処理を共通化する
       const snapType = state.sequencerSnapType;
@@ -2841,32 +3559,23 @@ export const singingCommandStore = transformCommandStore(
           | { overwrite: true; prevTrackId?: undefined }
           | { overwrite?: false; prevTrackId: TrackId }
         ))[] = [];
-        if (state.experimentalSetting.enableMultiTrack) {
-          let prevTrackId = getters.SELECTED_TRACK_ID;
-          for (const [i, track] of tracks.entries()) {
-            if (!isValidTrack(track)) {
-              throw new Error("The track is invalid.");
-            }
-            // 空のプロジェクトならトラックを上書きする
-            if (i === 0 && isTracksEmpty([...state.tracks.values()])) {
-              payload.push({
-                track,
-                trackId: prevTrackId,
-                overwrite: true,
-              });
-            } else {
-              const { trackId } = await actions.CREATE_TRACK();
-              payload.push({ track, trackId, prevTrackId });
-              prevTrackId = trackId;
-            }
+        let prevTrackId = getters.SELECTED_TRACK_ID;
+        for (const [i, track] of tracks.entries()) {
+          if (!isValidTrack(track)) {
+            throw new Error("The track is invalid.");
           }
-        } else {
-          // マルチトラックが無効な場合は最初のトラックのみをインポートする
-          payload.push({
-            track: tracks[0],
-            trackId: getters.SELECTED_TRACK_ID,
-            overwrite: true,
-          });
+          // 空のプロジェクトならトラックを上書きする
+          if (i === 0 && isTracksEmpty([...state.tracks.values()])) {
+            payload.push({
+              track,
+              trackId: prevTrackId,
+              overwrite: true,
+            });
+          } else {
+            const { trackId } = await actions.CREATE_TRACK();
+            payload.push({ track, trackId, prevTrackId });
+            prevTrackId = trackId;
+          }
         }
 
         mutations.COMMAND_IMPORT_TRACKS({

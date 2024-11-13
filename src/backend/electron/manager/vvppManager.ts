@@ -324,7 +324,7 @@ export class VvppManager {
                 `エンジンの削除に失敗しました。エンジンのフォルダを手動で削除してください。\n${deletingEngineDir}\nエラー内容: ${errorToMessage(e)}`,
               );
             } else {
-              log.error("Failed to rename engine directory: ", e, ", retrying");
+              log.error("Failed to delete engine directory: ", e, ", retrying");
               await new Promise((resolve) => setTimeout(resolve, 1000));
             }
           }
@@ -383,3 +383,16 @@ export class VvppManager {
 }
 
 export default VvppManager;
+
+let manager: VvppManager | undefined;
+
+export function initializeVvppManager(payload: { vvppEngineDir: string }) {
+  manager = new VvppManager(payload);
+}
+
+export function getVvppManager() {
+  if (manager == undefined) {
+    throw new Error("EngineInfoManager is not initialized");
+  }
+  return manager;
+}

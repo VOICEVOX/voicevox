@@ -208,7 +208,7 @@ const changeHotkeySettings = (
     action: action as HotkeyActionNameType,
     combination,
   });
-  return store.dispatch("SET_HOTKEY_SETTINGS", {
+  return store.actions.SET_HOTKEY_SETTINGS({
     data: {
       action: action as HotkeyActionNameType,
       combination,
@@ -263,10 +263,9 @@ const setHotkeyDialogOpened = () => {
 };
 
 const resetHotkey = async (action: string) => {
-  const result = await store.dispatch("SHOW_CONFIRM_DIALOG", {
+  const result = await store.actions.SHOW_CONFIRM_DIALOG({
     title: "ショートカットキーを初期値に戻します",
-    message: `${action}のショートカットキーを初期値に戻します。<br/>本当に戻しますか？`,
-    html: true,
+    message: `${action}のショートカットキーを初期値に戻します。\n本当に戻しますか？`,
     actionName: "初期値に戻す",
     cancel: "初期値に戻さない",
   });

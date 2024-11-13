@@ -12,9 +12,8 @@
           v-if="nowRendering"
           padding="xs md"
           label="音声の書き出しをキャンセル"
-          color="surface"
-          textColor="display"
           class="q-mt-sm"
+          outline
           @click="cancelExport"
         />
       </div>
@@ -42,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import ToolBar from "./ToolBar/ToolBar.vue";
 import ScoreSequencer from "./ScoreSequencer.vue";
 import SideBar from "./SideBar/SideBar.vue";
@@ -62,11 +61,7 @@ const props = defineProps<{
 
 const store = useStore();
 
-const isSidebarOpen = computed(
-  () =>
-    store.state.experimentalSetting.enableMultiTrack &&
-    store.state.isSongSidebarOpen,
-);
+const isSidebarOpen = computed(() => store.state.isSongSidebarOpen);
 const sidebarWidth = ref(300);
 
 const setSidebarWidth = (width: number) => {
@@ -74,6 +69,16 @@ const setSidebarWidth = (width: number) => {
     sidebarWidth.value = width;
   }
 };
+
+// トラック数が1から増えたら、サイドバーを開く
+watch(
+  () => store.state.tracks.size,
+  (tracksSize, oldTracksSize) => {
+    if (oldTracksSize <= 1 && tracksSize > 1) {
+      void store.actions.SET_SONG_SIDEBAR_OPEN({ isSongSidebarOpen: true });
+    }
+  },
+);
 
 const nowRendering = computed(() => {
   return store.state.nowRendering;
@@ -83,7 +88,7 @@ const nowAudioExporting = computed(() => {
 });
 
 const cancelExport = () => {
-  void store.dispatch("CANCEL_AUDIO_EXPORT");
+  void store.actions.CANCEL_AUDIO_EXPORT();
 };
 
 const isCompletedInitialStartup = ref(false);
@@ -95,17 +100,17 @@ onetimeWatch(
       return "continue";
 
     if (!isProjectFileLoaded) {
-      await store.dispatch("SET_TPQN", { tpqn: DEFAULT_TPQN });
-      await store.dispatch("SET_TEMPOS", { tempos: [createDefaultTempo(0)] });
-      await store.dispatch("SET_TIME_SIGNATURES", {
+      await store.actions.SET_TPQN({ tpqn: DEFAULT_TPQN });
+      await store.actions.SET_TEMPOS({ tempos: [createDefaultTempo(0)] });
+      await store.actions.SET_TIME_SIGNATURES({
         timeSignatures: [createDefaultTimeSignature(1)],
       });
       const trackId = store.state.trackOrder[0];
-      await store.dispatch("SET_NOTES", { notes: [], trackId });
+      await store.actions.SET_NOTES({ notes: [], trackId });
       // CI上のe2eテストのNemoエンジンには歌手がいないためエラーになるのでワークアラウンド
       // FIXME: 歌手をいると見せかけるmock APIを作り、ここのtry catchを削除する
       try {
-        await store.dispatch("SET_SINGER", {
+        await store.actions.SET_SINGER({
           trackId,
           withRelated: true,
         });
@@ -114,9 +119,9 @@ onetimeWatch(
       }
     }
 
-    await store.dispatch("SET_VOLUME", { volume: 0.6 });
-    await store.dispatch("SET_PLAYHEAD_POSITION", { position: 0 });
-    await store.dispatch("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS");
+    await store.actions.SET_VOLUME({ volume: 0.6 });
+    await store.actions.SET_PLAYHEAD_POSITION({ position: 0 });
+    await store.actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
     isCompletedInitialStartup.value = true;
 
     return "unwatch";

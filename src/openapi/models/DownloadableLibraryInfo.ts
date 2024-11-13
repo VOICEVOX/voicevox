@@ -27,37 +27,37 @@ import {
  */
 export interface DownloadableLibraryInfo {
     /**
-     * 
+     * 音声ライブラリの名前
      * @type {string}
      * @memberof DownloadableLibraryInfo
      */
     name: string;
     /**
-     * 
+     * 音声ライブラリのUUID
      * @type {string}
      * @memberof DownloadableLibraryInfo
      */
     uuid: string;
     /**
-     * 
+     * 音声ライブラリのバージョン
      * @type {string}
      * @memberof DownloadableLibraryInfo
      */
     version: string;
     /**
-     * 
+     * 音声ライブラリのダウンロードURL
      * @type {string}
      * @memberof DownloadableLibraryInfo
      */
     downloadUrl: string;
     /**
-     * 
+     * 音声ライブラリのバイト数
      * @type {number}
      * @memberof DownloadableLibraryInfo
      */
     bytes: number;
     /**
-     * 
+     * 音声ライブラリに含まれるキャラクターのリスト
      * @type {Array<LibrarySpeaker>}
      * @memberof DownloadableLibraryInfo
      */

@@ -25,20 +25,32 @@ export default defineConfig((options) => {
       `"package.json"の"name":"${packageName}"は"VITE_APP_NAME":"${env.VITE_APP_NAME}"から始まっている必要があります`,
     );
   }
-  const shouldEmitSourcemap = ["development", "test"].includes(options.mode);
+
+  // 型を曖昧にして下の[process.platform]のエラーを回避する
+  const sevenZipBinNames: Record<string, string> = {
+    win32: "7za.exe",
+    linux: "7zzs",
+    darwin: "7zz",
+  };
+  const sevenZipBinName = sevenZipBinNames[process.platform];
+  if (!sevenZipBinName) {
+    throw new Error(`Unsupported platform: ${process.platform}`);
+  }
   process.env.VITE_7Z_BIN_NAME =
     (options.mode === "development"
       ? path.join(__dirname, "build", "vendored", "7z") + path.sep
-      : "") +
-    {
-      win32: "7za.exe",
-      linux: "7zzs",
-      darwin: "7zz",
-    }[process.platform];
+      : "") + sevenZipBinName;
   process.env.VITE_APP_VERSION = process.env.npm_package_version;
+
+  const shouldEmitSourcemap = ["development", "test"].includes(options.mode);
   const sourcemap: BuildOptions["sourcemap"] = shouldEmitSourcemap
     ? "inline"
     : false;
+
+  // ref: electronの起動をスキップしてデバッグ起動を軽くする
+  const skipLahnchElectron =
+    options.mode === "test" || process.env.SKIP_LAUNCH_ELECTRON === "1";
+
   return {
     root: path.resolve(__dirname, "src"),
     envDir: __dirname,
@@ -60,12 +72,6 @@ export default defineConfig((options) => {
         "@": path.resolve(__dirname, "src/"),
       },
     },
-    test: {
-      include: ["../tests/unit/**/*.spec.ts"],
-      environment: "happy-dom",
-      globals: true,
-    },
-
     plugins: [
       vue(),
       quasar({ autoImportComponentCase: "pascal" }),
@@ -87,8 +93,9 @@ export default defineConfig((options) => {
             entry: "./src/backend/electron/main.ts",
             // ref: https://github.com/electron-vite/vite-plugin-electron/pull/122
             onstart: ({ startup }) => {
-              if (options.mode !== "test") {
-                startup([".", "--no-sandbox"]);
+              console.log("main process build is complete.");
+              if (!skipLahnchElectron) {
+                void startup([".", "--no-sandbox"]);
               }
             },
             vite: {
@@ -103,7 +110,9 @@ export default defineConfig((options) => {
             // ref: https://electron-vite.github.io/guide/preload-not-split.html
             entry: "./src/backend/electron/preload.ts",
             onstart({ reload }) {
-              reload();
+              if (!skipLahnchElectron) {
+                reload();
+              }
             },
             vite: {
               plugins: [tsconfigPaths({ root: __dirname })],

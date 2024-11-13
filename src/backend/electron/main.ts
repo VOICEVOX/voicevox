@@ -20,35 +20,33 @@ import log from "electron-log/main";
 import dayjs from "dayjs";
 import windowStateKeeper from "electron-window-state";
 import { hasSupportedGpu } from "./device";
-import EngineInfoManager from "./manager/engineInfoManager";
-import EngineProcessManager from "./manager/engineProcessManager";
-import VvppManager, { isVvppFile } from "./manager/vvppManager";
+import {
+  getEngineInfoManager,
+  initializeEngineInfoManager,
+} from "./manager/engineInfoManager";
+import {
+  getEngineProcessManager,
+  initializeEngineProcessManager,
+} from "./manager/engineProcessManager";
+import { initializeVvppManager, isVvppFile } from "./manager/vvppManager";
 import configMigration014 from "./configMigration014";
-import { RuntimeInfoManager } from "./manager/RuntimeInfoManager";
+import { initializeRuntimeInfoManager } from "./manager/RuntimeInfoManager";
 import { registerIpcMainHandle, ipcMainSendProxy, IpcMainHandle } from "./ipc";
 import { getConfigManager } from "./electronConfig";
-import { EngineAndVvppController } from "./engineAndVvppController";
+import { getEngineAndVvppController } from "./engineAndVvppController";
+import { writeFileSafely } from "./fileHelper";
 import { failure, success } from "@/type/result";
+import { AssetTextFileNames } from "@/type/staticResources";
 import {
-  ContactTextFileName,
-  HowToUseTextFileName,
-  OssCommunityInfosFileName,
-  OssLicensesJsonFileName,
-  PolicyTextFileName,
-  PrivacyPolicyTextFileName,
-  QAndATextFileName,
-  UpdateInfosJsonFileName,
-} from "@/type/staticResources";
-import {
-  ThemeConf,
   EngineInfo,
   SystemError,
   defaultHotkeySettings,
   isMac,
   defaultToolbarButtonSetting,
   EngineId,
-  UpdateInfo,
+  TextAsset,
 } from "@/type/preload";
+import { themes } from "@/domain/theme";
 
 type SingleInstanceLockData = {
   filePath: string | undefined;
@@ -154,7 +152,7 @@ protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true, stream: true } },
 ]);
 
-const firstUrl = process.env.VITE_DEV_SERVER_URL ?? "app://./index.html";
+const firstUrl = import.meta.env.VITE_DEV_SERVER_URL ?? "app://./index.html";
 
 // engine
 const vvppEngineDir = path.join(app.getPath("userData"), "vvpp-engines");
@@ -178,35 +176,21 @@ const onEngineProcessError = (engineInfo: EngineInfo, error: Error) => {
   dialog.showErrorBox("音声合成エンジンエラー", error.message);
 };
 
-const runtimeInfoManager = new RuntimeInfoManager(
-  path.join(app.getPath("userData"), "runtime-info.json"),
-  app.getVersion(),
-);
-
-const configManager = getConfigManager();
-
-const engineInfoManager = new EngineInfoManager({
-  configManager,
+initializeRuntimeInfoManager({
+  runtimeInfoPath: path.join(app.getPath("userData"), "runtime-info.json"),
+  appVersion: app.getVersion(),
+});
+initializeEngineInfoManager({
   defaultEngineDir: appDirPath,
   vvppEngineDir,
 });
-const engineProcessManager = new EngineProcessManager({
-  configManager,
-  onEngineProcessError,
-  engineInfosFetcher:
-    engineInfoManager.fetchEngineInfos.bind(engineInfoManager),
-  engineAltPortUpdater: engineInfoManager.updateAltPort.bind(engineInfoManager),
-  engineSettingsGetter: () => configManager.get("engineSettings"),
-});
-const vvppManager = new VvppManager({ vvppEngineDir });
+initializeEngineProcessManager({ onEngineProcessError });
+initializeVvppManager({ vvppEngineDir });
 
-const engineAndVvppController = new EngineAndVvppController(
-  runtimeInfoManager,
-  configManager,
-  engineInfoManager,
-  engineProcessManager,
-  vvppManager,
-);
+const configManager = getConfigManager();
+const engineInfoManager = getEngineInfoManager();
+const engineProcessManager = getEngineProcessManager();
+const engineAndVvppController = getEngineAndVvppController();
 
 // エンジンのフォルダを開く
 function openEngineDirectory(engineId: EngineId) {
@@ -234,69 +218,6 @@ function checkMultiEngineEnabled(): boolean {
   }
   return enabled;
 }
-
-// テーマの読み込み
-const themes = readThemeFiles();
-function readThemeFiles() {
-  const themes: ThemeConf[] = [];
-  const dir = path.join(__static, "themes");
-  for (const file of fs.readdirSync(dir)) {
-    const theme = JSON.parse(
-      fs.readFileSync(path.join(dir, file)).toString(),
-    ) as ThemeConf;
-    themes.push(theme);
-  }
-  return themes;
-}
-
-// 使い方テキストの読み込み
-const howToUseText = fs.readFileSync(
-  path.join(__static, HowToUseTextFileName),
-  "utf-8",
-);
-
-// OSSコミュニティ情報の読み込み
-const ossCommunityInfos = fs.readFileSync(
-  path.join(__static, OssCommunityInfosFileName),
-  "utf-8",
-);
-
-// 利用規約テキストの読み込み
-const policyText = fs.readFileSync(
-  path.join(__static, PolicyTextFileName),
-  "utf-8",
-);
-
-// OSSライセンス情報の読み込み
-const ossLicenses = JSON.parse(
-  fs.readFileSync(path.join(__static, OssLicensesJsonFileName), {
-    encoding: "utf-8",
-  }),
-) as Record<string, string>[];
-
-// 問い合わせの読み込み
-const contactText = fs.readFileSync(
-  path.join(__static, ContactTextFileName),
-  "utf-8",
-);
-
-// Q&Aの読み込み
-const qAndAText = fs.readFileSync(
-  path.join(__static, QAndATextFileName),
-  "utf-8",
-);
-
-// アップデート情報の読み込み
-const updateInfos = JSON.parse(
-  fs.readFileSync(path.join(__static, UpdateInfosJsonFileName), {
-    encoding: "utf-8",
-  }),
-) as UpdateInfo[];
-
-const privacyPolicyText = fs.readFileSync(
-  path.join(__static, PrivacyPolicyTextFileName),
-  "utf-8",
-);
 
 const appState = {
   willQuit: false,
@@ -352,7 +273,7 @@ async function createWindow() {
   }
 
   // ソフトウェア起動時はプロトコルを app にする
-  if (process.env.VITE_DEV_SERVER_URL == undefined) {
+  if (import.meta.env.VITE_DEV_SERVER_URL == undefined) {
     protocol.handle("app", (request) => {
       // 読み取り先のファイルがインストールディレクトリ内であることを確認する
       // ref: https://www.electronjs.org/ja/docs/latest/api/protocol#protocolhandlescheme-handler
@@ -543,36 +464,13 @@ registerIpcMainHandle<IpcMainHandle>({
     };
   },
 
-  GET_HOW_TO_USE_TEXT: () => {
-    return howToUseText;
-  },
-
-  GET_POLICY_TEXT: () => {
-    return policyText;
-  },
-
-  GET_OSS_LICENSES: () => {
-    return ossLicenses;
-  },
-
-  GET_UPDATE_INFOS: () => {
-    return updateInfos;
-  },
-
-  GET_OSS_COMMUNITY_INFOS: () => {
-    return ossCommunityInfos;
-  },
-
-  GET_CONTACT_TEXT: () => {
-    return contactText;
-  },
-
-  GET_Q_AND_A_TEXT: () => {
-    return qAndAText;
-  },
-
-  GET_PRIVACY_POLICY_TEXT: () => {
-    return privacyPolicyText;
+  GET_TEXT_ASSET: async (_, textType) => {
+    const fileName = path.join(__static, AssetTextFileNames[textType]);
+    const text = await fs.promises.readFile(fileName, "utf-8");
+    if (textType === "OssLicenses" || textType === "UpdateInfos") {
+      return JSON.parse(text) as TextAsset[typeof textType];
+    }
+    return text;
   },
 
   GET_ALT_PORT_INFOS: () => {
@@ -584,7 +482,12 @@ registerIpcMainHandle<IpcMainHandle>({
       dialog.showSaveDialog(win, {
         title,
         defaultPath,
-        filters: [{ name: "Wave File", extensions: ["wav"] }],
+        filters: [
+          {
+            name: "WAVファイル",
+            extensions: ["wav"],
+          },
+        ],
         properties: ["createDirectory"],
       }),
     );
@@ -681,33 +584,6 @@ registerIpcMainHandle<IpcMainHandle>({
     return result.filePaths;
   },
 
-  SHOW_MESSAGE_DIALOG: (_, { type, title, message }) => {
-    return dialog.showMessageBox(win, {
-      type,
-      title,
-      message,
-    });
-  },
-
-  SHOW_QUESTION_DIALOG: (
-    _,
-    { type, title, message, buttons, cancelId, defaultId },
-  ) => {
-    return dialog
-      .showMessageBox(win, {
-        type,
-        buttons,
-        title,
-        message,
-        noLink: true,
-        cancelId,
-        defaultId,
-      })
-      .then((value) => {
-        return value.response;
-      });
-  },
-
   SHOW_WARNING_DIALOG: (_, { title, message }) => {
     return dialog.showMessageBox(win, {
       type: "warning",
@@ -786,17 +662,6 @@ registerIpcMainHandle<IpcMainHandle>({
     return configManager.get("hotkeySettings");
   },
 
-  THEME: (_, { newData }) => {
-    if (newData != undefined) {
-      configManager.set("currentTheme", newData);
-      return;
-    }
-    return {
-      currentTheme: configManager.get("currentTheme"),
-      availableThemes: themes,
-    };
-  },
-
   ON_VUEX_READY: () => {
     win.show();
   },
@@ -872,7 +737,10 @@ registerIpcMainHandle<IpcMainHandle>({
 
   WRITE_FILE: (_, { filePath, buffer }) => {
     try {
-      fs.writeFileSync(filePath, new DataView(buffer));
+      writeFileSafely(
+        filePath,
+        new DataView(buffer instanceof Uint8Array ? buffer.buffer : buffer),
+      );
       return success(undefined);
     } catch (e) {
       // throwだと`.code`の情報が消えるのでreturn
