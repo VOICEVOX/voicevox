@@ -1,8 +1,8 @@
 <template>
   <CommonDialog
     v-model="modelValue"
-    title="BPMの変更"
-    name="BPM"
+    title="テンポの変更"
+    name="テンポ"
     :mode="props.mode"
     @ok="() => $emit('ok', { tempoChange })"
     @hide="() => $emit('hide')"
@@ -13,7 +13,7 @@
       dense
       hideBottomSpace
       class="value-input"
-      aria-label="BPM"
+      aria-label="テンポ"
     />
   </CommonDialog>
 </template>

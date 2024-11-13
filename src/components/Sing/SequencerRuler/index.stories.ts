@@ -50,7 +50,7 @@ export const Default: Story = {
 };
 
 export const WithBpmChange: Story = {
-  name: "BPM変化",
+  name: "テンポ変化",
   args: {
     tempos: [
       {

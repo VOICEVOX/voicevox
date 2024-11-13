@@ -41,7 +41,7 @@
         hideBottomSpace
         outlined
         unelevated
-        label="BPM"
+        label="テンポ"
         class="sing-tempo"
         padding="0"
         @update:modelValue="setBpmInputBuffer"

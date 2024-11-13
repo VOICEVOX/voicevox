@@ -43,7 +43,7 @@ export const ClickOk: Story = {
   play: async ({ args }) => {
     const canvas = within(document.body); // ダイアログなので例外的にdocument.bodyを使う
 
-    const input = canvas.getByLabelText("BPM");
+    const input = canvas.getByLabelText("テンポ");
     await userEvent.clear(input);
     await userEvent.type(input, "100");
 
@@ -64,7 +64,7 @@ export const ClickDelete: Story = {
   play: async ({ args }) => {
     const canvas = within(document.body); // ダイアログなので例外的にdocument.bodyを使う
 
-    const input = canvas.getByLabelText("BPM");
+    const input = canvas.getByLabelText("テンポ");
     await userEvent.clear(input);
     await userEvent.type(input, "100");
 

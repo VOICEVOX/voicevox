@@ -77,7 +77,7 @@
       >
         {{ measureInfo.number }}
       </text>
-      <!-- BPM・拍子表示 -->
+      <!-- テンポ・拍子表示 -->
       <template
         v-for="tempoOrTimeSignatureChange in tempoOrTimeSignatureChanges"
         :key="tempoOrTimeSignatureChange.position"
@@ -142,7 +142,7 @@
     >
       {{
         tempoOrTimeSignatureChange.tempoChange
-          ? `BPM：${tempoOrTimeSignatureChange.tempoChange.bpm}`
+          ? `テンポ：${tempoOrTimeSignatureChange.tempoChange.bpm}`
           : ""
       }}
       <br
@@ -556,7 +556,7 @@ const showDialog = async <T extends Component, R>(
 const contextMenuHeader = computed(() => {
   const texts = [];
   if (tempoChangeExists.value) {
-    texts.push(`BPM：${currentTempo.value.bpm}`);
+    texts.push(`テンポ：${currentTempo.value.bpm}`);
   }
   if (timeSignatureChangeExists.value) {
     texts.push(
@@ -570,7 +570,7 @@ const contextMenudata = computed<ContextMenuItemData[]>(
     [
       {
         type: "button",
-        label: tempoChangeExists.value ? `BPM変化を編集` : "BPM変化を挿入",
+        label: tempoChangeExists.value ? `テンポ変化を編集` : "テンポ変化を挿入",
         onClick: async () => {
           const result = await showDialog<
             typeof TempoChangeDialog,
@@ -597,7 +597,7 @@ const contextMenudata = computed<ContextMenuItemData[]>(
       },
       tempoChangeExists.value && {
         type: "button",
-        label: "BPM変化を削除",
+        label: "テンポ変化を削除",
         disabled: currentTempo.value.position === 0,
         onClick: () => {
           emit("removeTempo", playheadTicks.value);
