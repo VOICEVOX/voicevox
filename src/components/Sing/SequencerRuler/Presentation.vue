@@ -570,7 +570,9 @@ const contextMenudata = computed<ContextMenuItemData[]>(
     [
       {
         type: "button",
-        label: tempoChangeExists.value ? `テンポ変化を編集` : "テンポ変化を挿入",
+        label: tempoChangeExists.value
+          ? `テンポ変化を編集`
+          : "テンポ変化を挿入",
         onClick: async () => {
           const result = await showDialog<
             typeof TempoChangeDialog,
