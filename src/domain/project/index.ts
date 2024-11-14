@@ -16,6 +16,7 @@ import {
   DEFAULT_TPQN,
   DEFAULT_TRACK_NAME,
 } from "@/sing/domain";
+import { uuid4 } from "@/helpers/random";
 
 const DEFAULT_SAMPLING_RATE = 24000;
 
@@ -296,7 +297,7 @@ export const migrateProjectFileObject = async (
       track.mute = false;
       track.gain = 1;
       track.pan = 0;
-      newTracks[TrackId(crypto.randomUUID())] = track;
+      newTracks[TrackId(uuid4())] = track;
     }
     projectData.song.tracks = newTracks;
     projectData.song.trackOrder = Object.keys(newTracks);

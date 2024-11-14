@@ -2,10 +2,15 @@ import path from "path";
 import fs from "fs";
 import { migrateProjectFileObject } from "@/domain/project";
 import { EngineId, SpeakerId, StyleId } from "@/type/preload";
+import { resetMockMode } from "@/helpers/random";
 
 const engineId = EngineId("074fc39e-678b-4c13-8916-ffca8d505d1d");
 
 const vvprojDir = "tests/unit/domain/vvproj/";
+
+beforeEach(() => {
+  resetMockMode();
+});
 
 describe("migrateProjectFileObject", () => {
   test("v0.14.11", async () => {

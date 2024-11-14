@@ -19,10 +19,10 @@ exports[`migrateProjectFileObject > v0.14.11 1`] = `
     ],
     "tpqn": 480,
     "trackOrder": [
-      "d5ee646b-bacb-4ed7-adb1-a0dd60e3b868",
+      "00000000-0000-4000-0000-000000000001",
     ],
     "tracks": {
-      "d5ee646b-bacb-4ed7-adb1-a0dd60e3b868": {
+      "00000000-0000-4000-0000-000000000001": {
         "gain": 1,
         "keyRangeAdjustment": 0,
         "mute": false,
