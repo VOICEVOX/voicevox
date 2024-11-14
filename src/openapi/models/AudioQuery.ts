@@ -79,7 +79,7 @@ export interface AudioQuery {
      * @type {number}
      * @memberof AudioQuery
      */
-    pauseLengthScale: number;
+    pauseLengthScale?: number;
     /**
      * 音声データの出力サンプリングレート
      * @type {number}
@@ -112,7 +112,6 @@ export function instanceOfAudioQuery(value: object): boolean {
     isInstance = isInstance && "volumeScale" in value;
     isInstance = isInstance && "prePhonemeLength" in value;
     isInstance = isInstance && "postPhonemeLength" in value;
-    isInstance = isInstance && "pauseLengthScale" in value;
     isInstance = isInstance && "outputSamplingRate" in value;
     isInstance = isInstance && "outputStereo" in value;
 
