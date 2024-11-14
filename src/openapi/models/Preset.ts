@@ -90,7 +90,7 @@ export interface Preset {
      * @type {number}
      * @memberof Preset
      */
-    pauseLengthScale: number;
+    pauseLengthScale?: number;
 }
 
 /**
@@ -108,7 +108,6 @@ export function instanceOfPreset(value: object): boolean {
     isInstance = isInstance && "volumeScale" in value;
     isInstance = isInstance && "prePhonemeLength" in value;
     isInstance = isInstance && "postPhonemeLength" in value;
-    isInstance = isInstance && "pauseLengthScale" in value;
 
     return isInstance;
 }
