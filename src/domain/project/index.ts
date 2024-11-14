@@ -307,7 +307,6 @@ export const migrateProjectFileObject = async (
     // 文内無音倍率の追加
     for (const audioItemsKey in projectData.talk.audioItems) {
       projectData.talk.audioItems[audioItemsKey].query.pauseLengthScale = 1;
-      console.log(projectData.talk.audioItems[audioItemsKey].query);
     }
   }
 
