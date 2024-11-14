@@ -77,6 +77,12 @@
       >
         {{ measureInfo.number }}
       </text>
+      <!-- テンポ・拍子変化のテキストの幅を計算するためのダミー -->
+      <text
+        ref="dummyTempoOrTimeSignatureChangeText"
+        font-size="12"
+        class="sequencer-ruler-tempo-or-time-signature-change"
+      />
       <!-- テンポ・拍子表示 -->
       <template
         v-for="tempoOrTimeSignatureChange in tempoOrTimeSignatureChanges"
@@ -195,7 +201,8 @@ import ContextMenu, {
 import { UnreachableError } from "@/type/utility";
 import TempoChangeDialog from "@/components/Dialog/TempoOrTimeSignatureChangeDialog/TempoChangeDialog.vue";
 import TimeSignatureChangeDialog from "@/components/Dialog/TempoOrTimeSignatureChangeDialog/TimeSignatureChangeDialog.vue";
-import { predictTextWidth } from "@/domain/dom";
+import { FontSpecification, predictTextWidth } from "@/domain/dom";
+import { createLogger } from "@/domain/frontend/log";
 
 const props = defineProps<{
   offset: number;
@@ -228,6 +235,8 @@ defineSlots<{
     },
   ): never;
 }>();
+
+const log = createLogger("SequencerRuler");
 
 const height = ref(40);
 const beatsPerMeasure = (timeSignature: TimeSignature) => timeSignature.beats;
@@ -421,6 +430,9 @@ const currentMeasure = computed(() =>
 );
 
 const textPadding = 4;
+const dummyTempoOrTimeSignatureChangeText = useTemplateRef<SVGTextElement>(
+  "dummyTempoOrTimeSignatureChangeText",
+);
 const tempoOrTimeSignatureChanges = computed<TempoOrTimeSignatureChange[]>(
   () => {
     const timeSignaturesWithTicks = tsPositions.value.map((tsPosition, i) => ({
@@ -464,33 +476,49 @@ const tempoOrTimeSignatureChanges = computed<TempoOrTimeSignatureChange[]>(
         };
       });
 
-    const collapsedTextWidth =
-      predictTextWidth("...", {
-        fontSize: 12,
-        fontFamily: "Unhinted Rounded M+ 1p",
-        fontWeight: "700",
-      }) +
-      textPadding * 2;
-    for (const [
-      i,
-      tempoOrTimeSignatureChange,
-    ] of tempoOrTimeSignatureChanges.entries()) {
-      const next = tempoOrTimeSignatureChanges.at(i + 1);
-      if (!next) {
-        continue;
+    const dummyTempoOrTimeSignatureChangeTextElement =
+      dummyTempoOrTimeSignatureChangeText.value;
+    // NOTE: Mount直後はdummyTempoOrTimeSignatureChangeTextElementがnullになることがあるため、即エラーにはしない。
+    // dummyTempoOrTimeSignatureChangeTextもcomputedの監視対象に入っているため、dummyTempoOrTimeSignatureChangeTextが更新されると再計算されてくれる。
+    // ので、問題はないはず。
+    if (dummyTempoOrTimeSignatureChangeTextElement) {
+      const tempoOrTimeSignatureChangeTextStyle = window.getComputedStyle(
+        dummyTempoOrTimeSignatureChangeTextElement,
+      );
+      const textStyle: FontSpecification = {
+        fontSize: parseFloat(
+          tempoOrTimeSignatureChangeTextStyle.getPropertyValue("font-size"),
+        ),
+        fontFamily:
+          tempoOrTimeSignatureChangeTextStyle.getPropertyValue("font-family"),
+        fontWeight:
+          tempoOrTimeSignatureChangeTextStyle.getPropertyValue("font-weight"),
+      };
+
+      const collapsedTextWidth =
+        predictTextWidth("...", textStyle) + textPadding * 2;
+      for (const [
+        i,
+        tempoOrTimeSignatureChange,
+      ] of tempoOrTimeSignatureChanges.entries()) {
+        const next = tempoOrTimeSignatureChanges.at(i + 1);
+        if (!next) {
+          continue;
+        }
+        const requiredWidth =
+          predictTextWidth(tempoOrTimeSignatureChange.text, textStyle) +
+          textPadding;
+        const width = next.x - tempoOrTimeSignatureChange.x;
+        if (collapsedTextWidth > width) {
+          tempoOrTimeSignatureChange.displayType = "hidden";
+        } else if (requiredWidth > width) {
+          tempoOrTimeSignatureChange.displayType = "ellipsis";
+        }
       }
-      const requiredWidth =
-        predictTextWidth(tempoOrTimeSignatureChange.text, {
-          fontSize: 12,
-          fontFamily: "Unhinted Rounded M+ 1p",
-          fontWeight: "700",
-        }) + textPadding;
-      const width = next.x - tempoOrTimeSignatureChange.x;
-      if (collapsedTextWidth > width) {
-        tempoOrTimeSignatureChange.displayType = "hidden";
-      } else if (requiredWidth > width) {
-        tempoOrTimeSignatureChange.displayType = "ellipsis";
-      }
+    } else {
+      log.warn(
+        "dummyTempoOrTimeSignatureChangeTextElement is null. Cannot calculate text width.",
+      );
     }
 
     return tempoOrTimeSignatureChanges;
