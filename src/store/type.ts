@@ -81,7 +81,7 @@ export type EditorAudioQuery = Omit<
   "outputSamplingRate" | "pauseLengthScale"
 > & {
   outputSamplingRate: number | "engineDefault";
-  pauseLengthScale: number; // AudioQueryと違って必須
+  pauseLengthScale: number; // エンジンと違って必須
 };
 
 export type AudioItem = {
