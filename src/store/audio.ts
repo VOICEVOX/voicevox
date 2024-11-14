@@ -893,6 +893,23 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
+  SET_AUDIO_PAUSE_LENGTH_SCALE: {
+    mutation(
+      state,
+      {
+        audioKey,
+        pauseLengthScale,
+      }: {
+        audioKey: AudioKey;
+        pauseLengthScale: number;
+      },
+    ) {
+      const query = state.audioItems[audioKey].query;
+      if (query == undefined) throw new Error("query == undefined");
+      query.pauseLengthScale = pauseLengthScale;
+    },
+  },
+
   SET_AUDIO_PRE_PHONEME_LENGTH: {
     mutation(
       state,
@@ -918,23 +935,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       const query = state.audioItems[audioKey].query;
       if (query == undefined) throw new Error("query == undefined");
       query.postPhonemeLength = postPhonemeLength;
-    },
-  },
-
-  SET_AUDIO_PAUSE_LENGTH_SCALE: {
-    mutation(
-      state,
-      {
-        audioKey,
-        pauseLengthScale,
-      }: {
-        audioKey: AudioKey;
-        pauseLengthScale: number;
-      },
-    ) {
-      const query = state.audioItems[audioKey].query;
-      if (query == undefined) throw new Error("query == undefined");
-      query.pauseLengthScale = pauseLengthScale;
     },
   },
 
@@ -2733,6 +2733,29 @@ export const audioCommandStore = transformCommandStore(
       },
     },
 
+    COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH_SCALE: {
+      mutation(
+        draft,
+        payload: {
+          audioKeys: AudioKey[];
+          pauseLengthScale: number;
+        },
+      ) {
+        for (const audioKey of payload.audioKeys) {
+          audioStore.mutations.SET_AUDIO_PAUSE_LENGTH_SCALE(draft, {
+            audioKey,
+            pauseLengthScale: payload.pauseLengthScale,
+          });
+        }
+      },
+      action(
+        { mutations },
+        payload: { audioKeys: AudioKey[]; pauseLengthScale: number },
+      ) {
+        mutations.COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH_SCALE(payload);
+      },
+    },
+
     COMMAND_MULTI_SET_AUDIO_PRE_PHONEME_LENGTH: {
       mutation(
         draft,
@@ -2770,29 +2793,6 @@ export const audioCommandStore = transformCommandStore(
         payload: { audioKeys: AudioKey[]; postPhonemeLength: number },
       ) {
         mutations.COMMAND_MULTI_SET_AUDIO_POST_PHONEME_LENGTH(payload);
-      },
-    },
-
-    COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH_SCALE: {
-      mutation(
-        draft,
-        payload: {
-          audioKeys: AudioKey[];
-          pauseLengthScale: number;
-        },
-      ) {
-        for (const audioKey of payload.audioKeys) {
-          audioStore.mutations.SET_AUDIO_PAUSE_LENGTH_SCALE(draft, {
-            audioKey,
-            pauseLengthScale: payload.pauseLengthScale,
-          });
-        }
-      },
-      action(
-        { commit },
-        payload: { audioKeys: AudioKey[]; pauseLengthScale: number },
-      ) {
-        commit("COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH_SCALE", payload);
       },
     },
 

@@ -57,6 +57,12 @@ export interface AudioQuery {
      */
     volumeScale: number;
     /**
+     * 句読点などの無音時間（倍率）。デフォルト値は1
+     * @type {number}
+     * @memberof AudioQuery
+     */
+    pauseLengthScale: number;
+    /**
      * 音声の前の無音時間
      * @type {number}
      * @memberof AudioQuery
@@ -74,12 +80,6 @@ export interface AudioQuery {
      * @memberof AudioQuery
      */
     pauseLength?: number | null;
-    /**
-     * 句読点などの無音時間（倍率）。デフォルト値は1
-     * @type {number}
-     * @memberof AudioQuery
-     */
-    pauseLengthScale: number;
     /**
      * 音声データの出力サンプリングレート
      * @type {number}
@@ -134,10 +134,10 @@ export function AudioQueryFromJSONTyped(json: any, ignoreDiscriminator: boolean)
         'pitchScale': json['pitchScale'],
         'intonationScale': json['intonationScale'],
         'volumeScale': json['volumeScale'],
+        'pauseLengthScale': !exists(json, 'pauseLengthScale') ? undefined : json['pauseLengthScale'],
         'prePhonemeLength': json['prePhonemeLength'],
         'postPhonemeLength': json['postPhonemeLength'],
         'pauseLength': !exists(json, 'pauseLength') ? undefined : json['pauseLength'],
-        'pauseLengthScale': !exists(json, 'pauseLengthScale') ? undefined : json['pauseLengthScale'],
         'outputSamplingRate': json['outputSamplingRate'],
         'outputStereo': json['outputStereo'],
         'kana': !exists(json, 'kana') ? undefined : json['kana'],
@@ -158,10 +158,10 @@ export function AudioQueryToJSON(value?: AudioQuery | null): any {
         'pitchScale': value.pitchScale,
         'intonationScale': value.intonationScale,
         'volumeScale': value.volumeScale,
+        'pauseLengthScale': value.pauseLengthScale,
         'prePhonemeLength': value.prePhonemeLength,
         'postPhonemeLength': value.postPhonemeLength,
         'pauseLength': value.pauseLength,
-        'pauseLengthScale': value.pauseLengthScale,
         'outputSamplingRate': value.outputSamplingRate,
         'outputStereo': value.outputStereo,
         'kana': value.kana,
