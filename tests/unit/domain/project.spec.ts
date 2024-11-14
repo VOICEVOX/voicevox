@@ -1,5 +1,3 @@
-// テスト用のファイルを読み込むのでNode環境で実行する
-
 import path from "path";
 import fs from "fs";
 import { migrateProjectFileObject } from "@/domain/project";
@@ -17,7 +15,8 @@ describe("migrateProjectFileObject", () => {
       fs.readFileSync(vvprojFile, "utf-8"),
     );
 
-    await migrateProjectFileObject(projectData, {
+    // マイグレーションのテスト
+    const project = await migrateProjectFileObject(projectData, {
       fetchMoraData: async () => {
         throw new Error("fetchMoraData is not implemented");
       },
@@ -44,5 +43,8 @@ describe("migrateProjectFileObject", () => {
         },
       ],
     });
+
+    // スナップショットテスト
+    expect(project).toMatchSnapshot();
   });
 });
