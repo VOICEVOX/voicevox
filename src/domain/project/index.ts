@@ -303,6 +303,14 @@ export const migrateProjectFileObject = async (
     projectData.song.trackOrder = Object.keys(newTracks);
   }
 
+  if (semver.satisfies(projectAppVersion, "<0.22.0", semverSatisfiesOptions)) {
+    // 文内無音倍率の追加
+    for (const audioItemsKey in projectData.talk.audioItems) {
+      projectData.talk.audioItems[audioItemsKey].query.pauseLengthScale = 1;
+      console.log(projectData.talk.audioItems[audioItemsKey].query);
+    }
+  }
+
   // Validation check
   // トークはvalidateTalkProjectで検証する
   // ソングはSET_SCOREの中の`isValidScore`関数で検証される

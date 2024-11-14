@@ -76,8 +76,12 @@ import {
 /**
  * エディタ用のAudioQuery
  */
-export type EditorAudioQuery = Omit<AudioQuery, "outputSamplingRate"> & {
+export type EditorAudioQuery = Omit<
+  AudioQuery,
+  "outputSamplingRate" | "pauseLengthScale"
+> & {
   outputSamplingRate: number | "engineDefault";
+  pauseLengthScale: number; // エンジンと違って必須
 };
 
 export type AudioItem = {
@@ -333,8 +337,8 @@ export type AudioStoreTypes = {
   };
 
   SET_AUDIO_QUERY: {
-    mutation: { audioKey: AudioKey; audioQuery: AudioQuery };
-    action(payload: { audioKey: AudioKey; audioQuery: AudioQuery }): void;
+    mutation: { audioKey: AudioKey; audioQuery: EditorAudioQuery };
+    action(payload: { audioKey: AudioKey; audioQuery: EditorAudioQuery }): void;
   };
 
   FETCH_AUDIO_QUERY: {
@@ -342,7 +346,7 @@ export type AudioStoreTypes = {
       text: string;
       engineId: EngineId;
       styleId: StyleId;
-    }): Promise<AudioQuery>;
+    }): Promise<EditorAudioQuery>;
   };
 
   SET_AUDIO_VOICE: {
@@ -510,7 +514,7 @@ export type AudioCommandStoreTypes = {
     mutation: { audioKey: AudioKey; text: string } & (
       | { update: "Text" }
       | { update: "AccentPhrases"; accentPhrases: AccentPhrase[] }
-      | { update: "AudioQuery"; query: AudioQuery }
+      | { update: "AudioQuery"; query: EditorAudioQuery }
     );
     action(payload: { audioKey: AudioKey; text: string }): void;
   };
@@ -526,7 +530,7 @@ export type AudioCommandStoreTypes = {
           }
         | {
             update: "AudioQuery";
-            query: AudioQuery;
+            query: EditorAudioQuery;
           }
         | {
             update: "OnlyVoice";
