@@ -1,9 +1,6 @@
 import path from "path";
 import Encoding from "encoding-japanese";
-import {
-  createDotNotationUILockAction as createUILockAction,
-  withProgressDotNotation as withProgress,
-} from "./ui";
+import { createUILockAction, withProgress } from "./ui";
 import {
   AudioItem,
   SaveResultObject,
@@ -28,7 +25,7 @@ import {
   filterCharacterInfosByStyleType,
   DEFAULT_PROJECT_NAME,
 } from "./utility";
-import { createDotNotationPartialStore as createPartialStore } from "./vuex";
+import { createPartialStore } from "./vuex";
 import { determineNextPresetKey } from "./preset";
 import {
   fetchAudioFromAudioItem,

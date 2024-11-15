@@ -590,6 +590,9 @@ export const rootMiscSettingSchema = z.object({
     })
     .default({}),
   showSingCharacterPortrait: z.boolean().default(true), // ソングエディタで立ち絵を表示するか
+  playheadPositionDisplayFormat: z
+    .enum(["MINUTES_SECONDS", "MEASURES_BEATS"])
+    .default("MINUTES_SECONDS"), // 再生ヘッド位置の表示モード
 });
 export type RootMiscSettingType = z.infer<typeof rootMiscSettingSchema>;
 
@@ -677,17 +680,6 @@ export const configSchema = z
   })
   .merge(rootMiscSettingSchema);
 export type ConfigType = z.infer<typeof configSchema>;
-
-export const envEngineInfoSchema = z.object({
-  uuid: engineIdSchema,
-  host: z.string(),
-  name: z.string(),
-  executionEnabled: z.boolean(),
-  executionFilePath: z.string(),
-  executionArgs: z.array(z.string()),
-  path: z.string().optional(),
-});
-export type EnvEngineInfoType = z.infer<typeof envEngineInfoSchema>;
 
 // workaround. SystemError(https://nodejs.org/api/errors.html#class-systemerror)が2022/05/19時点ではNodeJSの型定義に記述されていないためこれを追加しています。
 export class SystemError extends Error {

@@ -1,0 +1,26 @@
+name: "Trigger preview-pages' workflow"
+
+# プレビュー用ページのワークフローを起動する。
+# 詳細： https://github.com/voicevox/preview-pages?tab=readme-ov-file#%E4%BB%95%E7%B5%84%E3%81%BF
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - synchronize
+      - closed
+      - reopened
+  push:
+    branches:
+      - main
+      - project-*
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Workflow
+        run: |
+          gh workflow run -R voicevox/preview-pages update_pages.yml
+        env:
+          GH_TOKEN: ${{ secrets.TRIGGER_PREVIEW_PAGES_TOKEN }}

@@ -68,12 +68,6 @@ export function useEditMode(props: { editTarget: "NOTE" | "PITCH" }) {
   });
 
   // ノート編集の振る舞い判定
-  const shouldSelectNoteAfterEditing = computed(
-    () =>
-      currentMode.value.target === "NOTE" &&
-      currentMode.value.mode.behaviors.shouldSelectAfterEditing,
-  );
-
   const shouldAddNoteOnClick = computed(
     () =>
       currentMode.value.target === "NOTE" &&
@@ -139,7 +133,6 @@ export function useEditMode(props: { editTarget: "NOTE" | "PITCH" }) {
     setPitchEditMode,
     setPreviewMode,
 
-    shouldSelectNoteAfterEditing,
     shouldAddNoteOnClick,
     shouldAddNoteOnDoubleClick,
     shouldDeselectAllOnClick,
