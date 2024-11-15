@@ -8,6 +8,7 @@ export function createLogger(scope: string) {
     ) =>
     (...args: unknown[]) => {
       if (window.backend == undefined) {
+        // eslint-disable-next-line no-console
         console[fallbackMethod](...args);
         return;
       }
