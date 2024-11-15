@@ -2053,6 +2053,11 @@ export type UiStoreTypes = {
     action(payload: { activePointScrollMode: ActivePointScrollMode }): void;
   };
 
+  SET_EDITOR_TYPE: {
+    mutation: { editorType: EditorType };
+    action(payload: { editorType: EditorType }): void;
+  };
+
   SET_AVAILABLE_THEMES: {
     mutation: { themes: ThemeConf[] };
   };

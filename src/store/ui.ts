@@ -12,7 +12,7 @@ import {
   UiStoreTypes,
 } from "./type";
 import { createPartialStore } from "./vuex";
-import { ActivePointScrollMode } from "@/type/preload";
+import { ActivePointScrollMode, EditorType } from "@/type/preload";
 import {
   AlertDialogOptions,
   ConfirmDialogOptions,
@@ -260,6 +260,10 @@ export const uiStore = createPartialStore<UiStoreTypes>({
         ),
       });
 
+      mutations.SET_OPENED_EDITOR({
+        editor: await window.backend.getSetting("editorType"),
+      });
+
       // electron-window-stateがvuex初期化前に働くので
       // ここで改めてelectron windowの最大化状態をVuex storeに同期
       if (await window.backend.isMaximizedWindow()) {
@@ -331,6 +335,17 @@ export const uiStore = createPartialStore<UiStoreTypes>({
           "activePointScrollMode",
           activePointScrollMode,
         ),
+      });
+    },
+  },
+
+  SET_EDITOR_TYPE: {
+    mutation(state, { editorType }: { editorType: EditorType }) {
+      state.editorType = editorType;
+    },
+    async action({ mutations }, { editorType }: { editorType: EditorType }) {
+      mutations.SET_OPENED_EDITOR({
+        editor: await window.backend.setSetting("editorType", editorType),
       });
     },
   },

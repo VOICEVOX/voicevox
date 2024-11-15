@@ -594,6 +594,7 @@ export const rootMiscSettingSchema = z.object({
   playheadPositionDisplayFormat: z
     .enum(["MINUTES_SECONDS", "MEASURES_BEATS"])
     .default("MINUTES_SECONDS"), // 再生ヘッド位置の表示モード
+  editorType: z.enum(["talk", "song"]).default("talk"),
 });
 export type RootMiscSettingType = z.infer<typeof rootMiscSettingSchema>;
 
@@ -603,6 +604,7 @@ export const configSchema = z
     activePointScrollMode: z
       .enum(["CONTINUOUSLY", "PAGE", "OFF"])
       .default("OFF"),
+    editorType: z.enum(["talk", "song"]).default("talk"),
     savingSetting: z
       .object({
         fileEncoding: z.enum(["UTF-8", "Shift_JIS"]).default("UTF-8"),

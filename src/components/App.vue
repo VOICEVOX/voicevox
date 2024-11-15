@@ -28,7 +28,7 @@ import { useGtm } from "@gtm-support/vue-gtm";
 import { TooltipProvider } from "radix-vue";
 import TalkEditor from "@/components/Talk/TalkEditor.vue";
 import SingEditor from "@/components/Sing/SingEditor.vue";
-import { EngineId } from "@/type/preload";
+import { EngineId, EditorType } from "@/type/preload";
 import ErrorBoundary from "@/components/ErrorBoundary.vue";
 import { useStore } from "@/store";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
@@ -77,6 +77,10 @@ watch(
   async (openedEditor) => {
     if (openedEditor != undefined) {
       hotkeyManager.onEditorChange(openedEditor);
+      await store.dispatch("SET_ROOT_MISC_SETTING", {
+        key: "editorType",
+        value: openedEditor,
+      });
     }
   },
 );
@@ -111,7 +115,9 @@ onMounted(async () => {
   const projectFilePath = urlParams.get("projectFilePath");
 
   // どちらのエディタを開くか設定
-  await store.actions.SET_OPENED_EDITOR({ editor: "talk" });
+  await store.actions.SET_OPENED_EDITOR({
+    editor: store.state.editorType as EditorType,
+  });
 
   // ショートカットキーの設定を登録
   const hotkeySettings = store.state.hotkeySettings;
