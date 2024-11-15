@@ -16,7 +16,7 @@ export function createLogger(scope: string) {
     };
   return {
     info: createInner("logInfo", "info"),
-    error: createInner("logError", "warn"),
-    warn: createInner("logWarn", "error"),
+    error: createInner("logError", "error"),
+    warn: createInner("logWarn", "warn"),
   };
 }
