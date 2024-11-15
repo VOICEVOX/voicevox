@@ -1297,10 +1297,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           length += m.consonantLength != undefined ? m.consonantLength : 0;
           length += m.vowelLength;
         });
-        if (phrase.pauseMora != null && query.pauseLengthScale != undefined) {
-          const pauseLength = phrase.pauseMora.vowelLength;
-          length += pauseLength * query.pauseLengthScale;
-        }
+        length += phrase.pauseMora
+          ? phrase.pauseMora.vowelLength * query.pauseLengthScale
+          : 0;
         // post phoneme lengthは最後のアクセント句の一部として扱う
         if (i === accentPhrases.length - 1) {
           length += query.postPhonemeLength;

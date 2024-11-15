@@ -68,12 +68,6 @@ export interface Preset {
      */
     volumeScale: number;
     /**
-     * 句読点などの無音時間（倍率）
-     * @type {number}
-     * @memberof Preset
-     */
-    pauseLengthScale: number;
-    /**
      * 音声の前の無音時間
      * @type {number}
      * @memberof Preset
@@ -91,6 +85,12 @@ export interface Preset {
      * @memberof Preset
      */
     pauseLength?: number;
+    /**
+     * 句読点などの無音時間（倍率）
+     * @type {number}
+     * @memberof Preset
+     */
+    pauseLengthScale?: number;
 }
 
 /**
@@ -130,10 +130,10 @@ export function PresetFromJSONTyped(json: any, ignoreDiscriminator: boolean): Pr
         'pitchScale': json['pitchScale'],
         'intonationScale': json['intonationScale'],
         'volumeScale': json['volumeScale'],
-        'pauseLengthScale': !exists(json, 'pauseLengthScale') ? undefined : json['pauseLengthScale'],
         'prePhonemeLength': json['prePhonemeLength'],
         'postPhonemeLength': json['postPhonemeLength'],
         'pauseLength': !exists(json, 'pauseLength') ? undefined : json['pauseLength'],
+        'pauseLengthScale': !exists(json, 'pauseLengthScale') ? undefined : json['pauseLengthScale'],
     };
 }
 
@@ -154,10 +154,10 @@ export function PresetToJSON(value?: Preset | null): any {
         'pitchScale': value.pitchScale,
         'intonationScale': value.intonationScale,
         'volumeScale': value.volumeScale,
-        'pauseLengthScale': value.pauseLengthScale,
         'prePhonemeLength': value.prePhonemeLength,
         'postPhonemeLength': value.postPhonemeLength,
         'pauseLength': value.pauseLength,
+        'pauseLengthScale': value.pauseLengthScale,
     };
 }
 
