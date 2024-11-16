@@ -558,14 +558,17 @@ watch([ctrlKey, shiftKey, nowPreviewing, editTarget], () => {
         setCursorState(CursorState.DRAW);
         setPitchEditMode("DRAW");
       }
+    } else {
+      setCursorState(CursorState.DRAW);
     }
   }
   if (editTarget.value === "NOTE") {
     if (shiftKey.value) {
-      // 範囲選択
       setCursorState(CursorState.CROSSHAIR);
+    } else if (selectedNoteEditMode.value === "EDIT_FIRST") {
+      setCursorState(CursorState.DRAW);
     } else {
-      setDefaultCursorState();
+      setCursorState(CursorState.UNSET);
     }
   }
 });
@@ -1026,24 +1029,26 @@ const endPreview = () => {
     // 編集ターゲットがノートのときにプレビューを開始した場合の処理
     if (edited) {
       const previewTrackId = selectedTrackId.value;
+      const noteIds = previewNotes.value.map((note) => note.id);
 
       if (previewMode.value === "ADD_NOTE") {
         void store.actions.COMMAND_ADD_NOTES({
           notes: previewNotes.value,
           trackId: previewTrackId,
         });
+        void store.actions.SELECT_NOTES({
+          noteIds,
+        });
       } else if (
         previewMode.value === "MOVE_NOTE" ||
         previewMode.value === "RESIZE_NOTE_RIGHT" ||
         previewMode.value === "RESIZE_NOTE_LEFT"
       ) {
-        // ノートの編集処理（移動・リサズ）
+        // ノートの編集処理（移動・リサイズ）
         void store.actions.COMMAND_UPDATE_NOTES({
           notes: previewNotes.value,
           trackId: previewTrackId,
         });
-
-        const noteIds = previewNotes.value.map((note) => note.id);
         void store.actions.SELECT_NOTES({ noteIds });
       }
     }
@@ -1093,15 +1098,15 @@ const endPreview = () => {
 
 const setDefaultCursorState = () => {
   if (editTarget.value === "NOTE") {
-    if (selectedNoteEditMode.value === "SELECT_FIRST") {
-      setCursorState(CursorState.UNSET);
-    } else if (selectedNoteEditMode.value === "EDIT_FIRST") {
+    if (selectedNoteEditMode.value === "EDIT_FIRST") {
       setCursorState(CursorState.DRAW);
+    } else {
+      setCursorState(CursorState.UNSET);
     }
   } else if (editTarget.value === "PITCH") {
     if (selectedPitchEditMode.value === "DRAW") {
       setCursorState(CursorState.DRAW);
-    } else if (selectedPitchEditMode.value === "ERASE") {
+    } else {
       setCursorState(CursorState.ERASE);
     }
   }
@@ -1574,6 +1579,8 @@ onMounted(() => {
   const clientWidth = sequencerBodyElement.clientWidth;
   const offsetWidth = sequencerBodyElement.offsetWidth;
   scrollBarWidth.value = offsetWidth - clientWidth;
+  // デフォルトのカーソル状態を設定
+  setDefaultCursorState();
 });
 
 // 最初のonActivatedか判断するためのフラグ
