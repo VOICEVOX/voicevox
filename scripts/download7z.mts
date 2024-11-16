@@ -1,10 +1,9 @@
-// @ts-check
 /**
  * OSに合った7-Zipのバイナリとライセンスをダウンロードするスクリプト。
  */
-const path = require("path");
-const fs = require("fs");
-const { spawnSync } = require("child_process");
+import path from "path";
+import fs from "fs";
+import { spawnSync } from "child_process";
 
 (async () => {
   const distPath = path.resolve(__dirname, "vendored", "7z");
