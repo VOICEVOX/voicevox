@@ -28,6 +28,7 @@ type WaveType = (typeof waveTypes)[number];
 /** サイン波などを生成する */
 function generateWave(
   f0: Array<number>,
+  volume: Array<number>,
   frameRate: number,
   sampleRate: number,
   type: WaveType,
@@ -36,11 +37,13 @@ function generateWave(
   const samplesPerOriginal = sampleRate / frameRate;
   const wave = new Float32Array(sampleRate * duration);
 
-  const seed = Math.round(f0.reduce((acc, freq) => acc + freq, 0)) % 2 ** 31; // そこそこ被らないシード値
+  const seed =
+    Math.round(f0.concat(volume).reduce((acc, v) => acc + v, 0)) % 2 ** 31; // そこそこ被らないシード値
   const random = Random(seed);
   let phase = 0;
   for (let frameIndex = 0; frameIndex < f0.length; frameIndex++) {
     const freq = f0[frameIndex];
+    const vol = volume[frameIndex];
     const omega = (2 * Math.PI * freq) / sampleRate;
 
     for (let i = 0; i < samplesPerOriginal; i++) {
@@ -59,6 +62,7 @@ function generateWave(
           wave[sampleIndex] = 0;
           break;
       }
+      wave[sampleIndex] *= vol;
 
       phase += omega;
       if (phase > 2 * Math.PI) {
@@ -190,14 +194,22 @@ export function synthesisFrameAudioQueryMock(
   const samplePerFrame = 256;
   const frameRate = sampleRate / samplePerFrame;
 
+  const _generateWave = (type: WaveType) =>
+    generateWave(
+      frameAudioQuery.f0,
+      frameAudioQuery.volume,
+      frameRate,
+      sampleRate,
+      type,
+    );
   const waves: { [key in WaveType]: Float32Array } = {
-    sine: generateWave(frameAudioQuery.f0, frameRate, sampleRate, "sine"),
-    square: generateWave(frameAudioQuery.f0, frameRate, sampleRate, "square"),
-    noise: generateWave(frameAudioQuery.f0, frameRate, sampleRate, "noise"),
-    silence: generateWave(frameAudioQuery.f0, frameRate, sampleRate, "silence"),
+    sine: _generateWave("sine"),
+    square: _generateWave("square"),
+    noise: _generateWave("noise"),
+    silence: _generateWave("silence"),
   };
 
-  // フレームごとの配分率
+  // フレームごとの音声波形の配分率
   const waveRatesPerFrame = frameAudioQuery.phonemes.flatMap((phoneme) => {
     const waveRate = getWaveRate(phoneme.phoneme);
     return Array<{ [key in WaveType]: number }>(phoneme.frameLength).fill(

@@ -178,7 +178,7 @@ export function audioQueryToFrameAudioQueryMock(
       mora.pitch == 0 ? 0 : Math.exp(mora.pitch),
     ),
   );
-  const volume = Array<number>(f0.length).fill(1.0);
+  const volume = Array<number>(f0.length).fill(audioQuery.volumeScale);
   const phonemes = toFlattenPhonemes(moras).map((phoneme, i) => ({
     phoneme,
     frameLength: framePerPhoneme[i],
