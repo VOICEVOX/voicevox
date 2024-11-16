@@ -265,6 +265,17 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
       return config;
     },
   ],
+  [
+    ">=0.22",
+    (config) => {
+      // プリセットに文内無音倍率を追加
+      const presets = config.presets as ConfigType["presets"];
+      for (const preset of Object.values(presets.items)) {
+        if (preset == undefined) throw new Error("preset == undefined");
+        preset.pauseLengthScale = 1;
+      }
+    },
+  ],
 ];
 
 export type Metadata = {

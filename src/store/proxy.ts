@@ -45,6 +45,7 @@ const proxyStoreCreator = (_engineFactory: IEngineConnectorFactory) => {
   return proxyStore;
 };
 
+/** AudioQueryをエンジン用に変換する */
 export const convertAudioQueryFromEditorToEngine = (
   editorAudioQuery: EditorAudioQuery,
   defaultOutputSamplingRate: number,
@@ -55,6 +56,16 @@ export const convertAudioQueryFromEditorToEngine = (
       editorAudioQuery.outputSamplingRate == "engineDefault"
         ? defaultOutputSamplingRate
         : editorAudioQuery.outputSamplingRate,
+  };
+};
+
+/** AudioQueryをエディタ用に変換する */
+export const convertAudioQueryFromEngineToEditor = (
+  engineAudioQuery: AudioQuery,
+): EditorAudioQuery => {
+  return {
+    ...engineAudioQuery,
+    pauseLengthScale: engineAudioQuery.pauseLengthScale ?? 1,
   };
 };
 
