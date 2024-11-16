@@ -5,7 +5,13 @@ import path from "path";
 import fs from "fs";
 import { spawnSync } from "child_process";
 
-const distPath = path.resolve(__dirname, "vendored", "7z");
+const distPath = path.resolve(
+  import.meta.dirname,
+  "..",
+  "build",
+  "vendored",
+  "7z",
+);
 let url;
 let filesToExtract;
 switch (process.platform) {

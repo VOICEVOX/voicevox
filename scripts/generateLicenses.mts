@@ -58,7 +58,14 @@ if (!sevenZipBinName) {
 }
 
 const sevenZipVersionMatch = execFileSync(
-  path.join(__dirname, "vendored", "7z", sevenZipBinName),
+  path.join(
+    import.meta.dirname,
+    "..",
+    "build",
+    "vendored",
+    "7z",
+    sevenZipBinName,
+  ),
 
   {
     encoding: "utf-8",
