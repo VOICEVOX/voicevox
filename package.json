@@ -35,10 +35,10 @@
     "browser:build": "cross-env VITE_TARGET=browser vite build",
     "postinstall": "npm run postinstall:packages && npm run postinstall:download-scripts",
     "postinstall:packages": "electron-builder install-app-deps && playwright install chromium",
-    "postinstall:download-scripts": "node build/download7z.js && node build/downloadTypos.js",
+    "postinstall:download-scripts": "tsx scripts/download7z.mts && tsx scripts/downloadTypos.mts",
     "postuninstall": "electron-builder install-app-deps",
-    "license:generate": "node build/generateLicenses.js",
-    "license:merge": "node build/mergeLicenses.js",
+    "license:generate": "tsx scripts/generateLicenses.mts",
+    "license:merge": "tsx scripts/mergeLicenses.mts",
     "storybook": "storybook dev --port 6006",
     "storybook:build": "storybook build"
   },
