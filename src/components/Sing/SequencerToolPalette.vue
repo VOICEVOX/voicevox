@@ -1,0 +1,128 @@
+<template>
+  <div v-if="editTarget === 'NOTE'" class="tool-palette">
+    <QBtn
+      flat
+      round
+      :color="selectedNoteTool === 'SELECT_FIRST' ? 'primary' : ''"
+      @click="onNoteToolChange('SELECT_FIRST')"
+    >
+      <i class="material-symbols-outlined">arrow_selector_tool</i>
+      <QTooltip
+        anchor="center right"
+        self="center left"
+        :offset="[8, 0]"
+        :delay="500"
+      >
+        選択優先
+      </QTooltip>
+    </QBtn>
+    <QBtn
+      flat
+      round
+      :color="selectedNoteTool === 'EDIT_FIRST' ? 'primary' : ''"
+      @click="onNoteToolChange('EDIT_FIRST')"
+    >
+      <i class="material-symbols-outlined">stylus</i>
+      <QTooltip
+        anchor="center right"
+        self="center left"
+        :offset="[8, 0]"
+        :delay="500"
+      >
+        編集優先
+      </QTooltip>
+    </QBtn>
+  </div>
+  <div v-else-if="editTarget === 'PITCH'" class="tool-palette">
+    <QBtn
+      flat
+      round
+      :color="selectedPitchTool === 'DRAW' ? 'primary' : ''"
+      @click="onPitchToolChange('DRAW')"
+    >
+      <i class="material-symbols-outlined">stylus</i>
+      <QTooltip
+        anchor="center right"
+        self="center left"
+        :offset="[8, 0]"
+        :delay="500"
+      >
+        ピッチ変更
+      </QTooltip>
+    </QBtn>
+    <QBtn
+      flat
+      round
+      :color="selectedPitchTool === 'ERASE' ? 'primary' : ''"
+      @click="onPitchToolChange('ERASE')"
+    >
+      <i class="material-symbols-outlined">ink_eraser</i>
+      <QTooltip
+        anchor="center right"
+        self="center left"
+        :offset="[8, 0]"
+        :delay="500"
+      >
+        ピッチ削除
+      </QTooltip>
+    </QBtn>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { useStore } from "@/store";
+import { SequencerEditTarget, NoteEditTool, PitchEditTool } from "@/store/type";
+
+// TODO: storeをコンポーネント内で定義するのは避ける
+const store = useStore();
+
+defineProps<{
+  editTarget: SequencerEditTarget;
+  selectedNoteTool: NoteEditTool;
+  selectedPitchTool: PitchEditTool;
+}>();
+
+const onNoteToolChange = (tool: NoteEditTool) => {
+  void store.actions.SET_SELECTED_NOTE_TOOL({ selectedNoteTool: tool });
+};
+
+const onPitchToolChange = (tool: PitchEditTool) => {
+  void store.actions.SET_SELECTED_PITCH_TOOL({ selectedPitchTool: tool });
+};
+</script>
+
+<style scoped lang="scss">
+.tool-palette {
+  display: flex;
+  flex-direction: column;
+  background: var(--scheme-color-surface);
+  outline: 1px solid var(--scheme-color-outline-variant);
+  position: fixed;
+  top: 144px;
+  left: 72px;
+  z-index: 10;
+  padding: 2px;
+  border-radius: 24px;
+  gap: 0;
+  box-shadow:
+    0px 8px 16px -4px rgba(0, 0, 0, 0.1),
+    0px 4px 8px -4px rgba(0, 0, 0, 0.06);
+
+  .material-symbols-outlined {
+    font-size: 20px;
+  }
+
+  .q-btn {
+    min-height: 40px;
+    min-width: 40px;
+    padding: 8px;
+
+    &.text-primary {
+      background-color: var(--scheme-color-secondary-container);
+      .material-symbols-outlined {
+        color: var(--scheme-color-on-primary-container);
+      }
+    }
+  }
+}
+</style>

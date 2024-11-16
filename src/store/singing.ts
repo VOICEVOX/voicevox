@@ -776,6 +776,8 @@ export const singingStoreState: SingingStoreState = {
   sequencerZoomY: 0.75,
   sequencerSnapType: 16,
   sequencerEditTarget: "NOTE",
+  selectedNoteTool: "EDIT_FIRST",
+  selectedPitchTool: "DRAW",
   _selectedNoteIds: new Set(),
   nowPlaying: false,
   volume: 0,
@@ -1446,6 +1448,24 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       { editTarget }: { editTarget: SequencerEditTarget },
     ) {
       mutations.SET_EDIT_TARGET({ editTarget });
+    },
+  },
+
+  SET_SELECTED_NOTE_TOOL: {
+    mutation(state, { selectedNoteTool }) {
+      state.selectedNoteTool = selectedNoteTool;
+    },
+    async action({ mutations }, { selectedNoteTool }) {
+      mutations.SET_SELECTED_NOTE_TOOL({ selectedNoteTool });
+    },
+  },
+
+  SET_SELECTED_PITCH_TOOL: {
+    mutation(state, { selectedPitchTool }) {
+      state.selectedPitchTool = selectedPitchTool;
+    },
+    async action({ mutations }, { selectedPitchTool }) {
+      mutations.SET_SELECTED_PITCH_TOOL({ selectedPitchTool });
     },
   },
 

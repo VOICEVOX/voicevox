@@ -1,18 +1,22 @@
-import { computed, ref } from "vue";
+import { computed, Ref } from "vue";
+import { Store } from "vuex";
+import { NoteId } from "@/type/preload";
 import {
-  CursorState,
-  EditMode,
-  NoteEditMode,
-  PitchEditMode,
-} from "@/type/preload";
+  State,
+  NoteEditTool,
+  PitchEditTool,
+  SequencerEditTarget,
+} from "@/store/type";
+import { MouseButton } from "@/sing/viewHelper";
 
+/*
 // ノート編集モードのプリセット定義
 export const NOTE_EDIT_MODES: Record<NoteEditMode["type"], NoteEditMode> = {
   SELECT_FIRST: {
     type: "SELECT_FIRST",
     cursor: CursorState.UNSET,
     behaviors: {
-      shouldSelectAfterEditing: false,
+      shouldSelectAfterEditing: true,
       shouldAddNoteOnClick: false,
       shouldAddNoteOnDoubleClick: true,
       shouldDeselectAllOnClick: true,
@@ -44,102 +48,144 @@ export const PITCH_EDIT_MODES: Record<PitchEditMode["type"], PitchEditMode> = {
     type: "ERASE",
     cursor: CursorState.ERASE,
   },
-};
+}; */
 
-export function useEditMode(props: { editTarget: "NOTE" | "PITCH" }) {
-  // 編集モードの状態
-  const selectedNoteEditMode = ref<"SELECT_FIRST" | "EDIT_FIRST">("EDIT_FIRST");
-  const selectedPitchEditMode = ref<"DRAW" | "ERASE">("DRAW");
-  const isPreviewMode = ref(false);
+// マウスダウン時の振る舞い
+export type MouseDownBehavior =
+  | "IGNORE"
+  | "DESELECT_ALL"
+  | "ADD_NOTE"
+  | "START_RECT_SELECT"
+  | "DRAW_PITCH"
+  | "ERASE_PITCH";
 
-  // 現在のモード
-  const currentMode = computed<EditMode>(() => {
-    if (props.editTarget === "NOTE") {
-      return {
-        target: "NOTE",
-        mode: NOTE_EDIT_MODES[selectedNoteEditMode.value],
-      };
-    } else {
-      return {
-        target: "PITCH",
-        mode: PITCH_EDIT_MODES[selectedPitchEditMode.value],
-      };
-    }
+// ダブルクリック時の振る舞い
+export type MouseDoubleClickBehavior = "IGNORE" | "ADD_NOTE" | "EDIT_LYRIC";
+
+/*
+// マウスエッジ時の振る舞い
+export type MouseEdgeBehavior =
+  | "IGNORE"
+  | "START_RESIZE_LEFT"
+  | "START_RESIZE_RIGHT";
+
+// マウスバー時の振る舞い
+export type MouseBarBehavior = "IGNORE" | "START_MOVE" | "EDIT_LYRIC";
+*/
+
+export interface MouseDownContext {
+  isSelfEventTarget: boolean;
+  mouseButton: MouseButton;
+  ctrlKey: boolean;
+  shiftKey: boolean;
+  editingLyricNoteId?: NoteId;
+}
+
+export interface EditModeContext {
+  ctrlKey: Ref<boolean>;
+  shiftKey: Ref<boolean>;
+  nowPreviewing: Ref<boolean>;
+}
+
+export function useEditMode(store: Store<State>, context: EditModeContext) {
+  const editTarget = computed({
+    get: () => store.state.sequencerEditTarget || "NOTE",
+    set: (value: SequencerEditTarget) => store.commit("SET_EDIT_TARGET", value),
   });
 
-  // ノート編集の振る舞い判定
-  const shouldAddNoteOnClick = computed(
-    () =>
-      currentMode.value.target === "NOTE" &&
-      currentMode.value.mode.behaviors.shouldAddNoteOnClick,
-  );
+  const selectedNoteTool = computed({
+    get: () => store.state.selectedNoteTool || "EDIT_FIRST",
+    set: (value: NoteEditTool) => store.commit("SET_SELECTED_NOTE_TOOL", value),
+  });
 
-  const shouldAddNoteOnDoubleClick = computed(
-    () =>
-      currentMode.value.target === "NOTE" &&
-      currentMode.value.mode.behaviors.shouldAddNoteOnDoubleClick,
-  );
+  const selectedPitchTool = computed({
+    get: () => store.state.selectedPitchTool || "DRAW",
+    set: (value: PitchEditTool) =>
+      store.commit("SET_SELECTED_PITCH_TOOL", value),
+  });
 
-  const shouldDeselectAllOnClick = computed(
-    () =>
-      currentMode.value.target === "NOTE" &&
-      currentMode.value.mode.behaviors.shouldDeselectAllOnClick,
-  );
+  /**
+   * マウスダウン時の振る舞いを判定する
+   * 条件の判定のみを行い、実際の処理は呼び出し側で行う
+   */
+  const resolveMouseDownBehavior = ({
+    isSelfEventTarget,
+    mouseButton,
+    ctrlKey,
+    shiftKey,
+    editingLyricNoteId,
+  }: MouseDownContext): MouseDownBehavior => {
+    if (context.nowPreviewing.value) {
+      return "IGNORE";
+    }
 
-  const shouldRectSelectOnDrag = computed(
-    () =>
-      currentMode.value.target === "NOTE" &&
-      currentMode.value.mode.behaviors.shouldRectSelectOnDrag,
-  );
+    // ノート編集モード
+    if (editTarget.value === "NOTE") {
+      // 編集対象外の場合は無視
+      if (!isSelfEventTarget) {
+        return "IGNORE";
+      }
 
-  const shouldDeselectAllOnCtrlOrCommandClick = computed(
-    () =>
-      currentMode.value.target === "NOTE" &&
-      currentMode.value.mode.behaviors.shouldDeselectAllOnCtrlOrCommandClick,
-  );
+      if (mouseButton === "LEFT_BUTTON") {
+        // 歌詞編集中は無視
+        if (editingLyricNoteId != undefined) {
+          return "IGNORE";
+        }
 
-  // ピッチ編集の操作判定
-  const shouldDrawPitch = computed(
-    () =>
-      props.editTarget === "PITCH" && currentMode.value.mode.type === "DRAW",
-  );
+        // Shiftキーが押されている場合は矩形選択
+        if (shiftKey) {
+          return "START_RECT_SELECT";
+        }
 
-  const shouldErasePitch = computed(
-    () =>
-      props.editTarget === "PITCH" && currentMode.value.mode.type === "ERASE",
-  );
+        if (selectedNoteTool.value === "SELECT_FIRST") {
+          if (ctrlKey) {
+            return "DESELECT_ALL";
+          }
+          return "START_RECT_SELECT";
+        } else {
+          return "ADD_NOTE";
+        }
+      }
+      return "DESELECT_ALL";
+    }
 
-  // 編集モードの設定
-  const setNoteEditMode = (mode: "SELECT_FIRST" | "EDIT_FIRST") => {
-    selectedNoteEditMode.value = mode;
+    if (editTarget.value === "PITCH") {
+      if (mouseButton === "LEFT_BUTTON") {
+        if (selectedPitchTool.value === "ERASE" || ctrlKey) {
+          return "ERASE_PITCH";
+        }
+        return "DRAW_PITCH";
+      }
+    }
+
+    return "IGNORE";
   };
 
-  const setPitchEditMode = (mode: "DRAW" | "ERASE") => {
-    selectedPitchEditMode.value = mode;
-  };
+  /**
+   * ダブルクリック時の振る舞いを判定する
+   */
+  const resolveDoubleClickBehavior = (): MouseDoubleClickBehavior => {
+    // プレビュー中は無視
+    if (context.nowPreviewing.value) {
+      return "IGNORE";
+    }
 
-  // プレビューモードの設定
-  const setPreviewMode = (isPreviewing: boolean) => {
-    isPreviewMode.value = isPreviewing;
+    // 選択優先の場合はノート追加
+    if (
+      editTarget.value === "NOTE" &&
+      selectedNoteTool.value === "SELECT_FIRST"
+    ) {
+      return "ADD_NOTE";
+    }
+
+    return "IGNORE";
   };
 
   return {
-    selectedNoteEditMode,
-    selectedPitchEditMode,
-    currentMode,
-    isPreviewMode,
-
-    setNoteEditMode,
-    setPitchEditMode,
-    setPreviewMode,
-
-    shouldAddNoteOnClick,
-    shouldAddNoteOnDoubleClick,
-    shouldDeselectAllOnClick,
-    shouldRectSelectOnDrag,
-    shouldDeselectAllOnCtrlOrCommandClick,
-
-    shouldDrawPitch,
-    shouldErasePitch,
+    editTarget,
+    selectedNoteTool,
+    selectedPitchTool,
+    resolveMouseDownBehavior,
+    resolveDoubleClickBehavior,
   };
 }

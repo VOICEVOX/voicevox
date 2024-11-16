@@ -839,6 +839,8 @@ export type PhraseKey = z.infer<typeof phraseKeySchema>;
 export const PhraseKey = (id: string): PhraseKey => phraseKeySchema.parse(id);
 
 export type SequencerEditTarget = "NOTE" | "PITCH";
+export type NoteEditTool = "SELECT_FIRST" | "EDIT_FIRST";
+export type PitchEditTool = "DRAW" | "ERASE";
 
 export type TrackParameters = {
   gain: boolean;
@@ -869,6 +871,8 @@ export type SingingStoreState = {
   sequencerZoomY: number;
   sequencerSnapType: number;
   sequencerEditTarget: SequencerEditTarget;
+  selectedNoteTool: NoteEditTool;
+  selectedPitchTool: PitchEditTool;
   _selectedNoteIds: Set<NoteId>;
   editingLyricNoteId?: NoteId;
   nowPlaying: boolean;
@@ -1116,6 +1120,16 @@ export type SingingStoreTypes = {
   SET_EDIT_TARGET: {
     mutation: { editTarget: SequencerEditTarget };
     action(payload: { editTarget: SequencerEditTarget }): void;
+  };
+
+  SET_SELECTED_NOTE_TOOL: {
+    mutation: { selectedNoteTool: NoteEditTool };
+    action(payload: { selectedNoteTool: NoteEditTool }): void;
+  };
+
+  SET_SELECTED_PITCH_TOOL: {
+    mutation: { selectedPitchTool: PitchEditTool };
+    action(payload: { selectedPitchTool: PitchEditTool }): void;
   };
 
   SET_IS_DRAG: {
