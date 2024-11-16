@@ -85,6 +85,7 @@ for (const [version, data] of pastConfigs) {
     const configManager = new TestConfigManager();
     await configManager.initialize();
     expect(configManager).toBeTruthy();
+    expect(configManager.getAll()).toMatchSnapshot();
   });
 }
 
