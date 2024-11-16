@@ -841,6 +841,16 @@ export const PhraseKey = (id: string): PhraseKey => phraseKeySchema.parse(id);
 export type SequencerEditTarget = "NOTE" | "PITCH";
 export type NoteEditTool = "SELECT_FIRST" | "EDIT_FIRST";
 export type PitchEditTool = "DRAW" | "ERASE";
+// カーソルの状態
+// NOTE: enumが妥当なのかは要検討
+export enum CursorState {
+  UNSET = "unset",
+  EW_RESIZE = "ew-resize",
+  MOVE = "move",
+  CROSSHAIR = "crosshair",
+  DRAW = "draw",
+  ERASE = "erase",
+}
 
 export type TrackParameters = {
   gain: boolean;

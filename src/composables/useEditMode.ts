@@ -9,47 +9,6 @@ import {
 } from "@/store/type";
 import { MouseButton } from "@/sing/viewHelper";
 
-/*
-// ノート編集モードのプリセット定義
-export const NOTE_EDIT_MODES: Record<NoteEditMode["type"], NoteEditMode> = {
-  SELECT_FIRST: {
-    type: "SELECT_FIRST",
-    cursor: CursorState.UNSET,
-    behaviors: {
-      shouldSelectAfterEditing: true,
-      shouldAddNoteOnClick: false,
-      shouldAddNoteOnDoubleClick: true,
-      shouldDeselectAllOnClick: true,
-      shouldRectSelectOnDrag: true,
-      shouldDeselectAllOnCtrlOrCommandClick: true,
-    },
-  },
-  EDIT_FIRST: {
-    type: "EDIT_FIRST",
-    cursor: CursorState.DRAW,
-    behaviors: {
-      shouldSelectAfterEditing: true,
-      shouldAddNoteOnClick: true,
-      shouldAddNoteOnDoubleClick: false,
-      shouldDeselectAllOnClick: false,
-      shouldRectSelectOnDrag: false,
-      shouldDeselectAllOnCtrlOrCommandClick: false,
-    },
-  },
-};
-
-// ピッチ編集モードのプリセット定義
-export const PITCH_EDIT_MODES: Record<PitchEditMode["type"], PitchEditMode> = {
-  DRAW: {
-    type: "DRAW",
-    cursor: CursorState.DRAW,
-  },
-  ERASE: {
-    type: "ERASE",
-    cursor: CursorState.ERASE,
-  },
-}; */
-
 // マウスダウン時の振る舞い
 export type MouseDownBehavior =
   | "IGNORE"
@@ -62,17 +21,7 @@ export type MouseDownBehavior =
 // ダブルクリック時の振る舞い
 export type MouseDoubleClickBehavior = "IGNORE" | "ADD_NOTE" | "EDIT_LYRIC";
 
-/*
-// マウスエッジ時の振る舞い
-export type MouseEdgeBehavior =
-  | "IGNORE"
-  | "START_RESIZE_LEFT"
-  | "START_RESIZE_RIGHT";
-
-// マウスバー時の振る舞い
-export type MouseBarBehavior = "IGNORE" | "START_MOVE" | "EDIT_LYRIC";
-*/
-
+// マウスダウン時のコンテキスト
 export interface MouseDownContext {
   isSelfEventTarget: boolean;
   mouseButton: MouseButton;
@@ -81,6 +30,7 @@ export interface MouseDownContext {
   editingLyricNoteId?: NoteId;
 }
 
+// 最低限必要なコンテキスト
 export interface EditModeContext {
   ctrlKey: Ref<boolean>;
   shiftKey: Ref<boolean>;

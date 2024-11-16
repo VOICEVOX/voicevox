@@ -1,5 +1,5 @@
 import { ref, computed } from "vue";
-import { CursorState } from "@/type/preload";
+import { CursorState } from "@/store/type";
 
 // カーソル状態を管理するカスタムコンポーザブル
 export const useCursorState = () => {

@@ -59,8 +59,8 @@
         :isPreview="previewNoteIds.has(note.id)"
         :isOverlapping="overlappingNoteIdsInSelectedTrack.has(note.id)"
         :previewLyric="previewLyrics.get(note.id) || null"
-        :previewMode
         :nowPreviewing
+        :previewMode
         :cursorClass
         @barMousedown="onNoteBarMouseDown($event, note)"
         @barDoubleClick="onNoteBarDoubleClick($event, note)"
@@ -187,7 +187,7 @@ import ContextMenu, {
 } from "@/components/Menu/ContextMenu.vue";
 import { NoteId } from "@/type/preload";
 import { useStore } from "@/store";
-import { Note, SequencerEditTarget } from "@/store/type";
+import { Note, SequencerEditTarget, CursorState } from "@/store/type";
 import {
   getEndTicksOfPhrase,
   getNoteDuration,
@@ -233,13 +233,9 @@ import {
 import { applyGaussianFilter, linearInterpolation } from "@/sing/utility";
 import { useLyricInput } from "@/composables/useLyricInput";
 import { useCursorState } from "@/composables/useCursorState";
-import { CursorState } from "@/type/preload";
 import { ExhaustiveError } from "@/type/utility";
 import { uuid4 } from "@/helpers/random";
 import { useEditMode } from "@/composables/useEditMode";
-
-const store = useStore();
-const state = store.state;
 
 // 直接イベントが来ているかどうか
 const isSelfEventTarget = (event: UIEvent) => {
@@ -247,6 +243,8 @@ const isSelfEventTarget = (event: UIEvent) => {
 };
 
 const { warn } = createLogger("ScoreSequencer");
+const store = useStore();
+const state = store.state;
 
 // 選択中のトラックID
 const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
@@ -382,6 +380,7 @@ const cursorX = ref(0);
 const cursorY = ref(0);
 
 // カーソル状態の更新
+// TODO: useCursorStateに委譲
 const { setCursorState, cursorState, cursorClass } = useCursorState();
 watch(
   () => cursorState.value,
@@ -406,8 +405,8 @@ const onLyricConfirmed = (nextNoteId: NoteId | undefined) => {
 
 // プレビュー
 // FIXME: 関連する値を１つのobjectにまとめる
-const nowPreviewing = computed(() => previewMode.value !== "IDLE");
 const previewMode = ref<PreviewMode>("IDLE");
+const nowPreviewing = computed(() => previewMode.value !== "IDLE");
 const executePreviewProcess = ref(false);
 let previewRequestId = 0;
 let previewStartEditTarget: SequencerEditTarget = "NOTE";
@@ -1473,7 +1472,7 @@ watch(playheadTicks, (newPlayheadPosition) => {
   if (!sequencerBodyElement) {
     if (import.meta.env.DEV) {
       // HMR時にここにたどり着くことがあるので、開発時は警告だけにする
-      // TODO: HMR時��ここにたどり着く原因を調査して修正する
+      // TODO: HMR時もここにたどり着く原因を調査して修正する
       warn("sequencerBodyElement is null.");
       return;
     }

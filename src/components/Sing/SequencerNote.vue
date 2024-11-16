@@ -523,7 +523,7 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
   &.cursor-erase {
     .note-bar,
     .note-edge {
-      cursor: inherit !important;
+      cursor: inherit;
     }
   }
 
