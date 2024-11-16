@@ -63,6 +63,7 @@ export function withProgress<T>(
 }
 
 export const uiStoreState: UiStoreState = {
+  editorType: "talk",
   openedEditor: undefined,
   uiLockCount: 0,
   dialogLockCount: 0,

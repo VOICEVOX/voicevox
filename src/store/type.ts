@@ -1921,6 +1921,7 @@ export type SettingStoreTypes = {
  */
 
 export type UiStoreState = {
+  editorType: EditorType;
   openedEditor: EditorType | undefined; // undefinedのときはどのエディタを開くか定まっていない
   uiLockCount: number;
   dialogLockCount: number;
