@@ -24,7 +24,7 @@ function getDicPath() {
   }
 
   // happy-domのときはNode
-  if (typeof navigator != "undefined" && /HappyDOM/.test(navigator.userAgent)) {
+  if (typeof (window as { happyDOM?: unknown }).happyDOM != "undefined") {
     return pathForNode;
   }
 

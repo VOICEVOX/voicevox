@@ -100,7 +100,9 @@ export function getSingersMock(): Speaker[] {
 }
 
 /** キャラクターの追加情報を返すモック。 */
-export async function getCharacterInfoMock(speakerUuid: string): SpeakerInfo {
+export async function getCharacterInfoMock(
+  speakerUuid: string,
+): Promise<SpeakerInfo> {
   // NOTE: 画像のURLを得るために必要
   const characterIndex = baseCharactersMock.findIndex(
     (speaker) => speaker.speakerUuid === speakerUuid,
@@ -130,6 +132,8 @@ export async function getCharacterInfoMock(speakerUuid: string): SpeakerInfo {
  * 喋れるキャラクターの追加情報を返すモック。
  * 本当は喋れるスタイルのみでフィルタリングすべき。
  */
-export function getSpeakerInfoMock(speakerUuid: string): SpeakerInfo {
+export async function getSpeakerInfoMock(
+  speakerUuid: string,
+): Promise<SpeakerInfo> {
   return getCharacterInfoMock(speakerUuid);
 }

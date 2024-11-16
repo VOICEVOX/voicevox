@@ -19,8 +19,8 @@ beforeEach(() => {
 });
 
 describe("GENERATE_AUDIO_ITEM", () => {
-  beforeEach(() => {
-    initializeStateAsSoftwareStarted(store);
+  beforeEach(async () => {
+    await initializeStateAsSoftwareStarted(store);
   });
 
   it("何も指定しない場合は空のAudioItemを作る", async () => {

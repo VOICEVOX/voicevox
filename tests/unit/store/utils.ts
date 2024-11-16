@@ -34,7 +34,7 @@ export function mockSandbox() {
 }
 
 /** ソフトウェアが正しく起動した場合のようにVuex.stateを初期化する */
-export function initializeStateAsSoftwareStarted(
+export async function initializeStateAsSoftwareStarted(
   store: Store<State, AllGetters, AllActions, AllMutations>,
 ) {
   // エンジンの情報
@@ -71,31 +71,33 @@ export function initializeStateAsSoftwareStarted(
 
   // キャラクター情報
   const characters = getCharactersMock();
-  const characterInfos: CharacterInfo[] = characters.map((speaker) => {
-    const speakerInfo = getCharacterInfoMock(speaker.speakerUuid);
-    return {
-      portraitPath: speakerInfo.portrait,
-      metas: {
-        speakerUuid: SpeakerId(speaker.speakerUuid),
-        speakerName: speaker.name,
-        styles: speakerInfo.styleInfos.map((styleInfo) => {
-          const style = speaker.styles.find((s) => s.id === styleInfo.id);
-          if (style == undefined)
-            throw new Error(`style not found: id ${styleInfo.id}`);
-          return {
-            styleName: style.name,
-            styleId: StyleId(style.id),
-            styleType: style.type,
-            iconPath: styleInfo.icon,
-            portraitPath: styleInfo.portrait ?? speakerInfo.portrait,
-            engineId,
-            voiceSamplePaths: styleInfo.voiceSamples,
-          };
-        }),
-        policy: speakerInfo.policy,
-      },
-    };
-  });
+  const characterInfos: CharacterInfo[] = await Promise.all(
+    characters.map(async (speaker) => {
+      const speakerInfo = await getCharacterInfoMock(speaker.speakerUuid);
+      return {
+        portraitPath: speakerInfo.portrait,
+        metas: {
+          speakerUuid: SpeakerId(speaker.speakerUuid),
+          speakerName: speaker.name,
+          styles: speakerInfo.styleInfos.map((styleInfo) => {
+            const style = speaker.styles.find((s) => s.id === styleInfo.id);
+            if (style == undefined)
+              throw new Error(`style not found: id ${styleInfo.id}`);
+            return {
+              styleName: style.name,
+              styleId: StyleId(style.id),
+              styleType: style.type,
+              iconPath: styleInfo.icon,
+              portraitPath: styleInfo.portrait ?? speakerInfo.portrait,
+              engineId,
+              voiceSamplePaths: styleInfo.voiceSamples,
+            };
+          }),
+          policy: speakerInfo.policy,
+        },
+      };
+    }),
+  );
   store.commit("SET_CHARACTER_INFOS", { engineId, characterInfos });
 
   // キャラクターの表示順
