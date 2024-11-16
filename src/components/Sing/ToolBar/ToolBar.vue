@@ -700,7 +700,7 @@ const snapTypeSelectModel = computed({
 .sing-volume-icon {
   margin-right: 8px;
 
-  :deep(&) {
+  :deep() {
     color: var(--scheme-color-outline);
   }
 }
