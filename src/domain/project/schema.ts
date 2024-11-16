@@ -33,6 +33,7 @@ const audioQuerySchema = z.object({
   pitchScale: z.number(),
   intonationScale: z.number(),
   volumeScale: z.number(),
+  pauseLengthScale: z.number(),
   prePhonemeLength: z.number(),
   postPhonemeLength: z.number(),
   outputSamplingRate: z.union([z.number(), z.literal("engineDefault")]),

@@ -11,6 +11,7 @@ import {
   AudioCommandStoreTypes,
   transformCommandStore,
   FetchAudioResult,
+  EditorAudioQuery,
 } from "./type";
 import {
   buildAudioFileNameFromRawData,
@@ -34,6 +35,7 @@ import {
   isMorphable,
 } from "./audioGenerate";
 import { ContinuousPlayer } from "./audioContinuousPlayer";
+import { convertAudioQueryFromEngineToEditor } from "./proxy";
 import {
   convertHiraToKana,
   convertLongVowel,
@@ -730,6 +732,8 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           baseAudioItem.query.prePhonemeLength;
         newAudioItem.query.postPhonemeLength =
           baseAudioItem.query.postPhonemeLength;
+        newAudioItem.query.pauseLengthScale =
+          baseAudioItem.query.pauseLengthScale;
         newAudioItem.query.outputSamplingRate =
           baseAudioItem.query.outputSamplingRate;
         newAudioItem.query.outputStereo = baseAudioItem.query.outputStereo;
@@ -882,6 +886,23 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
+  SET_AUDIO_PAUSE_LENGTH_SCALE: {
+    mutation(
+      state,
+      {
+        audioKey,
+        pauseLengthScale,
+      }: {
+        audioKey: AudioKey;
+        pauseLengthScale: number;
+      },
+    ) {
+      const query = state.audioItems[audioKey].query;
+      if (query == undefined) throw new Error("query == undefined");
+      query.pauseLengthScale = pauseLengthScale;
+    },
+  },
+
   SET_AUDIO_PRE_PHONEME_LENGTH: {
     mutation(
       state,
@@ -940,13 +961,16 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   SET_AUDIO_QUERY: {
     mutation(
       state,
-      { audioKey, audioQuery }: { audioKey: AudioKey; audioQuery: AudioQuery },
+      {
+        audioKey,
+        audioQuery,
+      }: { audioKey: AudioKey; audioQuery: EditorAudioQuery },
     ) {
       state.audioItems[audioKey].query = audioQuery;
     },
     action(
       { mutations },
-      payload: { audioKey: AudioKey; audioQuery: AudioQuery },
+      payload: { audioKey: AudioKey; audioQuery: EditorAudioQuery },
     ) {
       mutations.SET_AUDIO_QUERY(payload);
     },
@@ -965,11 +989,13 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         .INSTANTIATE_ENGINE_CONNECTOR({
           engineId,
         })
-        .then((instance) =>
-          instance.invoke("audioQueryAudioQueryPost")({
-            text,
-            speaker: styleId,
-          }),
+        .then(async (instance) =>
+          convertAudioQueryFromEngineToEditor(
+            await instance.invoke("audioQueryAudioQueryPost")({
+              text,
+              speaker: styleId,
+            }),
+          ),
         )
         .catch((error) => {
           window.backend.logError(
@@ -1262,7 +1288,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           length += m.consonantLength != undefined ? m.consonantLength : 0;
           length += m.vowelLength;
         });
-        length += phrase.pauseMora ? phrase.pauseMora.vowelLength : 0;
+        length += phrase.pauseMora
+          ? phrase.pauseMora.vowelLength * query.pauseLengthScale
+          : 0;
         // post phoneme lengthは最後のアクセント句の一部として扱う
         if (i === accentPhrases.length - 1) {
           length += query.postPhonemeLength;
@@ -1910,7 +1938,7 @@ export const audioCommandStore = transformCommandStore(
         payload: { audioKey: AudioKey; text: string } & (
           | { update: "Text" }
           | { update: "AccentPhrases"; accentPhrases: AccentPhrase[] }
-          | { update: "AudioQuery"; query: AudioQuery }
+          | { update: "AudioQuery"; query: EditorAudioQuery }
         ),
       ) {
         audioStore.mutations.SET_AUDIO_TEXT(draft, {
@@ -2016,7 +2044,7 @@ export const audioCommandStore = transformCommandStore(
               }
             | {
                 update: "AudioQuery";
-                query: AudioQuery;
+                query: EditorAudioQuery;
               }
             | {
                 update: "OnlyVoice";
@@ -2080,7 +2108,7 @@ export const audioCommandStore = transformCommandStore(
             }
           | {
               update: "AudioQuery";
-              query: AudioQuery;
+              query: EditorAudioQuery;
             }
           | {
               update: "OnlyVoice";
@@ -2091,7 +2119,7 @@ export const audioCommandStore = transformCommandStore(
           try {
             const audioItem = state.audioItems[audioKey];
             if (audioItem.query == undefined) {
-              const query: AudioQuery = await actions.FETCH_AUDIO_QUERY({
+              const query = await actions.FETCH_AUDIO_QUERY({
                 text: audioItem.text,
                 engineId: voice.engineId,
                 styleId: voice.styleId,
@@ -2699,6 +2727,29 @@ export const audioCommandStore = transformCommandStore(
         payload: { audioKeys: AudioKey[]; volumeScale: number },
       ) {
         mutations.COMMAND_MULTI_SET_AUDIO_VOLUME_SCALE(payload);
+      },
+    },
+
+    COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH_SCALE: {
+      mutation(
+        draft,
+        payload: {
+          audioKeys: AudioKey[];
+          pauseLengthScale: number;
+        },
+      ) {
+        for (const audioKey of payload.audioKeys) {
+          audioStore.mutations.SET_AUDIO_PAUSE_LENGTH_SCALE(draft, {
+            audioKey,
+            pauseLengthScale: payload.pauseLengthScale,
+          });
+        }
+      },
+      action(
+        { mutations },
+        payload: { audioKeys: AudioKey[]; pauseLengthScale: number },
+      ) {
+        mutations.COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH_SCALE(payload);
       },
     },
 

@@ -1,6 +1,6 @@
 import { ProxyStoreState, ProxyStoreTypes, EditorAudioQuery } from "./type";
 import { createPartialStore } from "./vuex";
-import { convertToUrlString } from "@/domain/url";
+import { createEngineUrl } from "@/domain/url";
 import {
   IEngineConnectorFactory,
   OpenAPIEngineAndMockConnectorFactory,
@@ -25,7 +25,7 @@ export const proxyStoreCreator = (_engineFactory: IEngineConnectorFactory) => {
         const altPort: string | undefined = state.altPortInfos[engineId];
         const port = altPort ?? engineInfo.defaultPort;
         const instance = _engineFactory.instance(
-          convertToUrlString({
+          createEngineUrl({
             protocol: engineInfo.protocol,
             hostname: engineInfo.hostname,
             port,
@@ -46,6 +46,7 @@ export const proxyStoreCreator = (_engineFactory: IEngineConnectorFactory) => {
   return proxyStore;
 };
 
+/** AudioQueryをエンジン用に変換する */
 export const convertAudioQueryFromEditorToEngine = (
   editorAudioQuery: EditorAudioQuery,
   defaultOutputSamplingRate: number,
@@ -56,6 +57,16 @@ export const convertAudioQueryFromEditorToEngine = (
       editorAudioQuery.outputSamplingRate == "engineDefault"
         ? defaultOutputSamplingRate
         : editorAudioQuery.outputSamplingRate,
+  };
+};
+
+/** AudioQueryをエディタ用に変換する */
+export const convertAudioQueryFromEngineToEditor = (
+  engineAudioQuery: AudioQuery,
+): EditorAudioQuery => {
+  return {
+    ...engineAudioQuery,
+    pauseLengthScale: engineAudioQuery.pauseLengthScale ?? 1,
   };
 };
 

@@ -7,8 +7,8 @@ import AsyncLock from "async-lock";
 import log from "electron-log/main";
 import type { AltPortInfos } from "@/store/type";
 import { EngineId, EngineInfo } from "@/type/preload";
-import { convertToUrlString } from "@/domain/url";
 import { writeFileSafely } from "@/backend/electron/fileHelper";
+import { createEngineUrl } from "@/domain/url";
 
 /**
  * ランタイム情報書き出しに必要なEngineInfo
@@ -88,7 +88,7 @@ export class RuntimeInfoManager {
           const port = altPort ?? engineInfo.defaultPort;
           return {
             uuid: engineInfo.uuid,
-            url: convertToUrlString({
+            url: createEngineUrl({
               protocol: engineInfo.protocol,
               hostname: engineInfo.hostname,
               port,
