@@ -13,7 +13,7 @@ const {
   createWriteStream,
   rmSync,
 } = require("fs");
-const fetch = require("node-fetch");
+const { Readable } = require("stream");
 
 // OS名を定義するオブジェクト
 const OS = {
@@ -119,11 +119,13 @@ async function downloadAndUnarchive({ url }) {
   }
 
   const fileStream = createWriteStream(compressedFilePath);
-  await new Promise((resolve, reject) => {
-    response.body.pipe(fileStream);
-    response.body.on("error", reject);
-    fileStream.on("finish", resolve);
-  });
+  if (!response.body) {
+    throw new Error("Response body is null");
+  }
+  const body = Readable.fromWeb(response.body as ReadableStream<Uint8Array>);
+  response.body.pipe(fileStream);
+  response.body.on("error", reject);
+  fileStream.on("finish", resolve);
 
   if (currentOS === OS.WINDOWS) {
     // Windows用のZIPファイルを解凍
