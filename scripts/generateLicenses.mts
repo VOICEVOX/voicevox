@@ -1,12 +1,10 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-
 import process from "process";
 import { execFileSync } from "child_process";
 import fs from "fs/promises";
 import path from "path";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import licenseChecker from "license-checker-rseidelsohn";
+import licenseChecker, { ModuleInfos } from "license-checker-rseidelsohn";
 
 const argv = await yargs(hideBin(process.argv))
   .option("output_path", {
@@ -19,35 +17,33 @@ const argv = await yargs(hideBin(process.argv))
 
 const disallowedLicenses = ["GPL", "GPL-2.0", "GPL-3.0", "AGPL", "NGPL"];
 
-const licenseJson: licenseChecker.ModuleInfos = await new Promise(
-  (resolve, reject) => {
-    licenseChecker.init(
-      {
-        start: process.cwd(),
-        production: true,
-        failOn: disallowedLicenses.join(";"),
-        excludePrivatePackages: true,
-        customFormat: {
-          name: "",
-          version: "",
-          description: "",
-          licenses: "",
-          copyright: "",
-          licenseFile: "none",
-          licenseText: "none",
-          licenseModified: "no",
-        },
+const licenseJson: ModuleInfos = await new Promise((resolve, reject) => {
+  licenseChecker.init(
+    {
+      start: process.cwd(),
+      production: true,
+      failOn: disallowedLicenses.join(";"),
+      excludePrivatePackages: true,
+      customFormat: {
+        name: "",
+        version: "",
+        description: "",
+        licenses: "",
+        copyright: "",
+        licenseFile: "none",
+        licenseText: "none",
+        licenseModified: "no",
       },
-      (err, json) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(json);
-        }
-      },
-    );
-  },
-);
+    },
+    (err, json) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(json);
+      }
+    },
+  );
+});
 
 const externalLicenses = [];
 // 型を曖昧にして下の[process.platform]のエラーを回避する
