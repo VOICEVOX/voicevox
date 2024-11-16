@@ -5,9 +5,21 @@
 
 import { Speaker, SpeakerInfo } from "@/openapi";
 
-/** 画像ファイルなどがあるURLのベース */
-const assetsUrl =
-  "https://raw.githubusercontent.com/VOICEVOX/voicevox/e1304cce2b7bf23798023f6d61354893a8b93566/tests/e2e/browser/assets";
+/** 立ち絵のURLを得る */
+async function getPortraitUrl(characterIndex: number) {
+  const portraits = Object.values(
+    import.meta.glob<{ default: string }>("./assets/portrait_*.png"),
+  );
+  return (await portraits[characterIndex]()).default;
+}
+
+/** アイコンのURLを得る */
+async function getIconUrl(characterIndex: number) {
+  const icons = Object.values(
+    import.meta.glob<{ default: string }>("./assets/icon_*.png"),
+  );
+  return (await icons[characterIndex]()).default;
+}
 
 const baseCharactersMock = [
   // トーク２つ・ハミング２つ
@@ -88,7 +100,7 @@ export function getSingersMock(): Speaker[] {
 }
 
 /** キャラクターの追加情報を返すモック。 */
-export function getCharacterInfoMock(speakerUuid: string): SpeakerInfo {
+export async function getCharacterInfoMock(speakerUuid: string): SpeakerInfo {
   // NOTE: 画像のURLを得るために必要
   const characterIndex = baseCharactersMock.findIndex(
     (speaker) => speaker.speakerUuid === speakerUuid,
@@ -103,14 +115,14 @@ export function getCharacterInfoMock(speakerUuid: string): SpeakerInfo {
 
   return {
     policy: `Dummy policy for ${speakerUuid}`,
-    portrait: `${assetsUrl}/portrait_${characterIndex + 1}.png`,
-    styleInfos: styleIds.map((id) => {
-      return {
+    portrait: await getPortraitUrl(characterIndex),
+    styleInfos: await Promise.all(
+      styleIds.map(async (id) => ({
         id,
-        icon: `${assetsUrl}/icon_${characterIndex + 1}.png`,
+        icon: await getIconUrl(characterIndex),
         voiceSamples: [],
-      };
-    }),
+      })),
+    ),
   };
 }
 

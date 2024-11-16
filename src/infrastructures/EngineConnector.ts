@@ -1,4 +1,4 @@
-import { convertToUrlString, EngineUrlParams } from "@/domain/url";
+import { createEngineUrl, EngineUrlParams } from "@/domain/url";
 import { createOpenAPIEngineMock } from "@/mock/engineMock";
 import { Configuration, DefaultApi, DefaultApiInterface } from "@/openapi";
 
@@ -50,7 +50,7 @@ export const mockUrlParams = {
  */
 export const OpenAPIEngineAndMockConnectorFactory: IEngineConnectorFactory = {
   instance: (host: string) => {
-    if (host === convertToUrlString(mockUrlParams)) {
+    if (host === createEngineUrl(mockUrlParams)) {
       return OpenAPIMockEngineConnectorFactory.instance(host);
     }
     return OpenAPIEngineConnectorFactory.instance(host);

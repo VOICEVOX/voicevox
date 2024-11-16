@@ -11,6 +11,27 @@ import packageJson from "@/../package.json";
 
 let _tokenizer: Tokenizer<IpadicFeatures> | undefined;
 
+/** kuromoji用の辞書のパスを取得する */
+function getDicPath() {
+  // ブラウザのときはCDNから辞書を取得し、Nodeのときはローカルから取得する
+
+  const pathForBrowser = `https://cdn.jsdelivr.net/npm/kuromoji@${packageJson.devDependencies.kuromoji}/dict`;
+  const pathForNode = "node_modules/kuromoji/dict";
+
+  // window.documentがなければNode
+  if (typeof window == "undefined" || typeof window.document == "undefined") {
+    return pathForNode;
+  }
+
+  // happy-domのときはNode
+  if (typeof navigator != "undefined" && /HappyDOM/.test(navigator.userAgent)) {
+    return pathForNode;
+  }
+
+  // それ以外はブラウザ
+  return pathForBrowser;
+}
+
 /** テキストをトークン列に変換するトークナイザーを取得する */
 async function createOrGetTokenizer() {
   if (_tokenizer != undefined) {
@@ -18,13 +39,8 @@ async function createOrGetTokenizer() {
   }
 
   return new Promise<Tokenizer<IpadicFeatures>>((resolve, reject) => {
-    // ブラウザのときはCDNから辞書を取得し、Nodeのときはローカルから取得する
-    const isBrowser = global == undefined;
-    const dicPath = isBrowser
-      ? `https://cdn.jsdelivr.net/npm/kuromoji@${packageJson.devDependencies.kuromoji}/dict`
-      : "node_modules/kuromoji/dict";
     kuromoji
-      .builder({ dicPath })
+      .builder({ dicPath: getDicPath() })
       .build((err: Error, tokenizer: Tokenizer<IpadicFeatures>) => {
         if (err) {
           reject(err);

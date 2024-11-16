@@ -72,8 +72,6 @@ export function createOpenAPIEngineMock(): DefaultApiInterface {
     async speakerInfoSpeakerInfoGet(
       payload: SpeakerInfoSpeakerInfoGetRequest,
     ): Promise<SpeakerInfo> {
-      if (payload.resourceFormat != "url")
-        throw new Error("resourceFormatはurl以外未対応です");
       return getSpeakerInfoMock(payload.speakerUuid);
     },
 
@@ -84,8 +82,6 @@ export function createOpenAPIEngineMock(): DefaultApiInterface {
     async singerInfoSingerInfoGet(
       paload: SingerInfoSingerInfoGetRequest,
     ): Promise<SpeakerInfo> {
-      if (paload.resourceFormat != "url")
-        throw new Error("resourceFormatはurl以外未対応です");
       return getSpeakerInfoMock(paload.speakerUuid);
     },
 
