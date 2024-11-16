@@ -433,6 +433,22 @@ const textPadding = 4;
 const dummyTempoOrTimeSignatureChangeText = useTemplateRef<SVGTextElement>(
   "dummyTempoOrTimeSignatureChangeText",
 );
+const tempoOrTimeSignatureChangeTextStyle = computed<FontSpecification | null>(
+  () => {
+    if (!dummyTempoOrTimeSignatureChangeText.value) {
+      return null;
+    }
+    const style = window.getComputedStyle(
+      dummyTempoOrTimeSignatureChangeText.value,
+    );
+    return {
+      fontFamily: style.fontFamily,
+      fontSize: parseFloat(style.fontSize),
+      fontWeight: style.fontWeight,
+    };
+  },
+);
+
 const tempoOrTimeSignatureChanges = computed<TempoOrTimeSignatureChange[]>(
   () => {
     const timeSignaturesWithTicks = tsPositions.value.map((tsPosition, i) => ({
@@ -476,27 +492,10 @@ const tempoOrTimeSignatureChanges = computed<TempoOrTimeSignatureChange[]>(
         };
       });
 
-    const dummyTempoOrTimeSignatureChangeTextElement =
-      dummyTempoOrTimeSignatureChangeText.value;
-    // NOTE: Mount直後はdummyTempoOrTimeSignatureChangeTextElementがnullになることがあるため、即エラーにはしない。
-    // dummyTempoOrTimeSignatureChangeTextもcomputedの監視対象に入っているため、dummyTempoOrTimeSignatureChangeTextが更新されると再計算されてくれる。
-    // ので、問題はないはず。
-    if (dummyTempoOrTimeSignatureChangeTextElement) {
-      const tempoOrTimeSignatureChangeTextStyle = window.getComputedStyle(
-        dummyTempoOrTimeSignatureChangeTextElement,
-      );
-      const textStyle: FontSpecification = {
-        fontSize: parseFloat(
-          tempoOrTimeSignatureChangeTextStyle.getPropertyValue("font-size"),
-        ),
-        fontFamily:
-          tempoOrTimeSignatureChangeTextStyle.getPropertyValue("font-family"),
-        fontWeight:
-          tempoOrTimeSignatureChangeTextStyle.getPropertyValue("font-weight"),
-      };
-
+    if (tempoOrTimeSignatureChangeTextStyle.value) {
       const collapsedTextWidth =
-        predictTextWidth("...", textStyle) + textPadding * 2;
+        predictTextWidth("...", tempoOrTimeSignatureChangeTextStyle.value) +
+        textPadding * 2;
       for (const [
         i,
         tempoOrTimeSignatureChange,
@@ -506,8 +505,10 @@ const tempoOrTimeSignatureChanges = computed<TempoOrTimeSignatureChange[]>(
           continue;
         }
         const requiredWidth =
-          predictTextWidth(tempoOrTimeSignatureChange.text, textStyle) +
-          textPadding;
+          predictTextWidth(
+            tempoOrTimeSignatureChange.text,
+            tempoOrTimeSignatureChangeTextStyle.value,
+          ) + textPadding;
         const width = next.x - tempoOrTimeSignatureChange.x;
         if (collapsedTextWidth > width) {
           tempoOrTimeSignatureChange.displayType = "hidden";

@@ -49,11 +49,20 @@ export type FontSpecification = {
   fontFamily: string;
   fontWeight: string;
 };
+const getTextWidthCacheKey = (text: string, font: FontSpecification) =>
+  `${text}-${font.fontFamily}-${font.fontWeight}-${font.fontSize}`;
+
+const textWidthCache = new Map<string, number>();
 /**
  * 特定のフォントでの文字列の描画幅を取得する。
  * @see  https://stackoverflow.com/a/21015393
  */
 export function predictTextWidth(text: string, font: FontSpecification) {
+  const key = getTextWidthCacheKey(text, font);
+  const maybeCached = textWidthCache.get(key);
+  if (maybeCached != undefined) {
+    return maybeCached;
+  }
   if (!textWidthTempCanvas) {
     textWidthTempCanvas = document.createElement("canvas");
     textWidthTempContext = textWidthTempCanvas.getContext("2d") ?? undefined;
@@ -63,5 +72,6 @@ export function predictTextWidth(text: string, font: FontSpecification) {
   }
   textWidthTempContext.font = `${font.fontWeight} ${font.fontSize}px ${font.fontFamily}`;
   const metrics = textWidthTempContext.measureText(text);
+  textWidthCache.set(key, metrics.width);
   return metrics.width;
 }
