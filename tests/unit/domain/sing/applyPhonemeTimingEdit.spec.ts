@@ -112,8 +112,8 @@ const phraseQueries = [
   ]),
 ];
 
-describe("applyPhonemeTimingEdit", () => {
-  it("音素タイミング編集データが無い時は音素タイミングは変更されない", () => {
+describe("applyPhonemeTimingEditAndAdjust", () => {
+  it("音素タイミング編集データが空のときは音素タイミングは変更されない", () => {
     const actualPhraseQueries = structuredClone(phraseQueries);
     applyPhonemeTimingEditAndAdjust(
       phraseStartTimes,
@@ -124,7 +124,7 @@ describe("applyPhonemeTimingEdit", () => {
     expect(actualPhraseQueries).toEqual(phraseQueries);
   });
 
-  it("音素タイミング編集データが適用される", () => {
+  it("音素タイミング編集が適用される", () => {
     const phonemeTimingEditData = new Map<NoteId, PhonemeTimingEdit[]>([
       [noteIds[1], [{ phonemeIndex: 0, offset: -3 / frameRate }]],
       [noteIds[4], [{ phonemeIndex: 1, offset: 6 / frameRate }]],

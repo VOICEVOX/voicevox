@@ -511,18 +511,6 @@ export type PhonemeTimingEdit = {
 
 export type PhonemeTimingEditData = Map<NoteId, PhonemeTimingEdit[]>;
 
-function createPauseTiming(
-  startFrame: number,
-  endFrame: number,
-): PhonemeTiming {
-  return {
-    noteId: undefined,
-    startFrame,
-    endFrame,
-    phoneme: "pau",
-  };
-}
-
 function phonemesToPhonemeTimings(phonemes: FramePhoneme[]) {
   const phonemeTimings: PhonemeTiming[] = [];
   let cumulativeFrame = 0;
@@ -626,14 +614,18 @@ function toPhrasePhonemeSequences(
     const phraseStartFrame = phraseStartFrames[i];
     const phraseEndFrame = phraseEndFrames[i];
 
-    const firstPauseTiming = createPauseTiming(
-      phraseStartFrame,
-      phrasePhonemeTimings[0].startFrame,
-    );
-    const lastPauseTiming = createPauseTiming(
-      getLast(phrasePhonemeTimings).endFrame,
-      phraseEndFrame,
-    );
+    const firstPauseTiming: PhonemeTiming = {
+      noteId: undefined,
+      startFrame: phraseStartFrame,
+      endFrame: phrasePhonemeTimings[0].startFrame,
+      phoneme: "pau",
+    };
+    const lastPauseTiming: PhonemeTiming = {
+      noteId: undefined,
+      startFrame: getLast(phrasePhonemeTimings).endFrame,
+      endFrame: phraseEndFrame,
+      phoneme: "pau",
+    };
 
     phrasePhonemeTimings.unshift(firstPauseTiming);
     phrasePhonemeTimings.push(lastPauseTiming);
