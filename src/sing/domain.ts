@@ -505,8 +505,8 @@ type PhonemeTiming = {
 };
 
 export type PhonemeTimingEdit = {
-  phonemeIndex: number; // ノート内での音素の順番
-  offset: number; // 単位は秒
+  phonemeIndexInNote: number;
+  offsetSeconds: number;
 };
 
 export type PhonemeTimingEditData = Map<NoteId, PhonemeTimingEdit[]>;
@@ -667,7 +667,7 @@ function applyPhonemeTimingEditToPhonemeTimings(
   phonemeTimingEditData: PhonemeTimingEditData,
   frameRate: number,
 ) {
-  let phonemeIndex = 0;
+  let phonemeIndexInNote = 0;
   for (let i = 0; i < phonemeTimings.length; i++) {
     const phonemeTiming = phonemeTimings[i];
     const prevPhonemeTiming = getPrev(phonemeTimings, i);
@@ -677,9 +677,9 @@ function applyPhonemeTimingEditToPhonemeTimings(
       prevPhonemeTiming == undefined ||
       phonemeTiming.noteId !== prevPhonemeTiming.noteId
     ) {
-      phonemeIndex = 0;
+      phonemeIndexInNote = 0;
     } else {
-      phonemeIndex++;
+      phonemeIndexInNote++;
     }
 
     if (phonemeTiming.phoneme === "pau") {
@@ -693,8 +693,11 @@ function applyPhonemeTimingEditToPhonemeTimings(
       continue;
     }
     for (const phonemeTimingEdit of phonemeTimingEdits) {
-      if (phonemeTimingEdit.phonemeIndex === phonemeIndex) {
-        const offsetFrame = secondToFrame(phonemeTimingEdit.offset, frameRate);
+      if (phonemeTimingEdit.phonemeIndexInNote === phonemeIndexInNote) {
+        const offsetFrame = secondToFrame(
+          phonemeTimingEdit.offsetSeconds,
+          frameRate,
+        );
         const roundedOffsetFrame = Math.round(offsetFrame);
 
         phonemeTiming.startFrame += roundedOffsetFrame;
@@ -702,11 +705,14 @@ function applyPhonemeTimingEditToPhonemeTimings(
           prevPhonemeTiming.endFrame = phonemeTiming.startFrame;
         }
       } else if (
-        phonemeTimingEdit.phonemeIndex === phonemeIndex + 1 &&
+        phonemeTimingEdit.phonemeIndexInNote === phonemeIndexInNote + 1 &&
         nextPhonemeTiming?.phoneme === "pau"
       ) {
         // NOTE: 休符のpauseは休符の直前のノートに含まれる音素として扱う
-        const offsetFrame = secondToFrame(phonemeTimingEdit.offset, frameRate);
+        const offsetFrame = secondToFrame(
+          phonemeTimingEdit.offsetSeconds,
+          frameRate,
+        );
         const roundedOffsetFrame = Math.round(offsetFrame);
 
         phonemeTiming.endFrame += roundedOffsetFrame;

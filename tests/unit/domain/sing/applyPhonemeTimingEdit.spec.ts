@@ -126,8 +126,8 @@ describe("applyPhonemeTimingEditAndAdjust", () => {
 
   it("音素タイミング編集が適用される", () => {
     const phonemeTimingEditData = new Map<NoteId, PhonemeTimingEdit[]>([
-      [noteIds[1], [{ phonemeIndex: 0, offset: -3 / frameRate }]],
-      [noteIds[4], [{ phonemeIndex: 1, offset: 6 / frameRate }]],
+      [noteIds[1], [{ phonemeIndexInNote: 0, offsetSeconds: -3 / frameRate }]],
+      [noteIds[4], [{ phonemeIndexInNote: 1, offsetSeconds: 6 / frameRate }]],
     ]);
     const expectedPhraseQueries = structuredClone(phraseQueries);
     expectedPhraseQueries[0].phonemes[2].frameLength -= 3;
@@ -146,8 +146,8 @@ describe("applyPhonemeTimingEditAndAdjust", () => {
 
   it("音素が重ならないように音素タイミングが調整される", () => {
     const phonemeTimingEditData = new Map<NoteId, PhonemeTimingEdit[]>([
-      [noteIds[1], [{ phonemeIndex: 1, offset: -12 / frameRate }]],
-      [noteIds[2], [{ phonemeIndex: 2, offset: 60 / frameRate }]],
+      [noteIds[1], [{ phonemeIndexInNote: 1, offsetSeconds: -12 / frameRate }]],
+      [noteIds[2], [{ phonemeIndexInNote: 2, offsetSeconds: 60 / frameRate }]],
     ]);
     const expectedPhraseQueries = structuredClone(phraseQueries);
     expectedPhraseQueries[0].phonemes[2].frameLength -= 6;
@@ -167,8 +167,8 @@ describe("applyPhonemeTimingEditAndAdjust", () => {
 
   it("pauseのフレーム長が1以上になるように音素タイミングが調整される", () => {
     const phonemeTimingEditData = new Map<NoteId, PhonemeTimingEdit[]>([
-      [noteIds[3], [{ phonemeIndex: 1, offset: -60 / frameRate }]],
-      [noteIds[5], [{ phonemeIndex: 2, offset: 60 / frameRate }]],
+      [noteIds[3], [{ phonemeIndexInNote: 1, offsetSeconds: -60 / frameRate }]],
+      [noteIds[5], [{ phonemeIndexInNote: 2, offsetSeconds: 60 / frameRate }]],
     ]);
     const expectedPhraseQueries = structuredClone(phraseQueries);
     expectedPhraseQueries[1].phonemes[0].frameLength -= 39;
