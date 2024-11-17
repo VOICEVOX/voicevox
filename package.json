@@ -123,6 +123,7 @@
     "happy-dom": "15.11.6",
     "license-checker-rseidelsohn": "4.3.0",
     "markdownlint-cli": "0.37.0",
+    "node-fetch": "3.3.2",
     "playwright": "1.48.0",
     "prettier": "3.2.5",
     "sass-embedded": "1.81.0",
