@@ -1,4 +1,3 @@
-import path from "path";
 import * as diff from "fast-array-diff";
 import {
   CharacterInfo,
@@ -11,6 +10,7 @@ import {
 import { AccentPhrase, Mora } from "@/openapi";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { DEFAULT_TRACK_NAME } from "@/sing/domain";
+import path from "@/domain/path";
 
 export const DEFAULT_STYLE_NAME = "ノーマル";
 export const DEFAULT_PROJECT_NAME = "Untitled";
