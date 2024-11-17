@@ -708,7 +708,7 @@ function applyPhonemeTimingEditToPhonemeTimings(
         phonemeTimingEdit.phonemeIndexInNote === phonemeIndexInNote + 1 &&
         nextPhonemeTiming?.phoneme === "pau"
       ) {
-        // NOTE: 休符のpauseは休符の直前のノートに含まれる音素として扱う
+        // NOTE: フレーズ末尾のpauseはフレーズ最後のノートに含まれるものとして扱う
         const offsetFrame = secondToFrame(
           phonemeTimingEdit.offsetSeconds,
           frameRate,
