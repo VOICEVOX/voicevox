@@ -451,31 +451,6 @@ export const getToolbarButtonName = (tag: ToolbarButtonTagType): string => {
   return tag2NameObj[tag];
 };
 
-// based on https://github.com/BBWeb/path-browserify/blob/win-version/index.js
-export const getBaseName = (filePath: string) => {
-  if (!isWindows) return path.basename(filePath);
-
-  const splitDeviceRegex =
-    /^([a-zA-Z]:|[\\/]{2}[^\\/]+[\\/]+[^\\/]+)?([\\/])?([\s\S]*?)$/;
-  const splitTailRegex =
-    /^([\s\S]*?)((?:\.{1,2}|[^\\/]+?|)(\.[^./\\]*|))(?:[\\/]*)$/;
-
-  const resultOfSplitDeviceRegex = splitDeviceRegex.exec(filePath);
-  if (
-    resultOfSplitDeviceRegex == undefined ||
-    resultOfSplitDeviceRegex.length < 3
-  )
-    return "";
-  const tail = resultOfSplitDeviceRegex[3] || "";
-
-  const resultOfSplitTailRegex = splitTailRegex.exec(tail);
-  if (resultOfSplitTailRegex == undefined || resultOfSplitTailRegex.length < 2)
-    return "";
-  const basename = resultOfSplitTailRegex[2] || "";
-
-  return basename;
-};
-
 /**
  * Macでの`command`キー、またはその他OSでの`Ctrl`キーが押されているなら`true`を返します。
  */

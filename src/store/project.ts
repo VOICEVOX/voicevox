@@ -1,4 +1,3 @@
-import { getBaseName } from "./utility";
 import { createPartialStore, DotNotationDispatch } from "./vuex";
 import { createUILockAction } from "@/store/ui";
 import {
@@ -8,7 +7,7 @@ import {
   ProjectStoreTypes,
 } from "@/store/type";
 import { TrackId } from "@/type/preload";
-
+import path from "@/domain/path";
 import { getValueOrThrow, ResultError } from "@/type/result";
 import { LatestProjectType } from "@/domain/project/schema";
 import {
@@ -79,7 +78,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
   PROJECT_NAME_WITH_EXT: {
     getter(state) {
       return state.projectFilePath
-        ? getBaseName(state.projectFilePath)
+        ? path.basename(state.projectFilePath)
         : undefined;
     },
   },
@@ -87,7 +86,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
   PROJECT_NAME: {
     getter(state) {
       return state.projectFilePath
-        ? getBaseName(state.projectFilePath).replace(".vvproj", "")
+        ? path.basename(state.projectFilePath, ".vvproj")
         : undefined;
     },
   },
