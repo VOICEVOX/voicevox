@@ -1,14 +1,12 @@
-// @ts-check
-/* eslint-disable @typescript-eslint/no-var-requires */
+import process from "process";
+import { execFileSync } from "child_process";
+import fs from "fs/promises";
+import path from "path";
+import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
+import licenseChecker from "license-checker-rseidelsohn";
 
-const process = require("process");
-const { execFileSync } = require("child_process");
-const fs = require("fs/promises");
-const path = require("path");
-const yargs = require("yargs");
-const { hideBin } = require("yargs/helpers");
-
-const argv = yargs(hideBin(process.argv))
+const argv = await yargs(hideBin(process.argv))
   .option("output_path", {
     alias: "o",
     demandOption: true,
@@ -17,13 +15,10 @@ const argv = yargs(hideBin(process.argv))
   .help()
   .parse();
 
-const licenseChecker = require("license-checker-rseidelsohn");
+const disallowedLicenses = ["GPL", "GPL-2.0", "GPL-3.0", "AGPL", "NGPL"];
 
-(async () => {
-  const disallowedLicenses = ["GPL", "GPL-2.0", "GPL-3.0", "AGPL", "NGPL"];
-
-  /** @type {licenseChecker.ModuleInfos} */
-  const licenseJson = await new Promise((resolve, reject) => {
+const licenseJson = await new Promise<licenseChecker.ModuleInfos>(
+  (resolve, reject) => {
     licenseChecker.init(
       {
         start: process.cwd(),
@@ -49,52 +44,59 @@ const licenseChecker = require("license-checker-rseidelsohn");
         }
       },
     );
-  });
+  },
+);
 
-  const externalLicenses = [];
+const externalLicenses = [];
 
-  const sevenZipVersionMatch = execFileSync(
-    path.join(
-      __dirname,
-      "vendored",
-      "7z",
-      {
-        win32: "7za.exe",
-        linux: "7zzs",
-        darwin: "7zz",
-      }[process.platform],
-    ),
+// 型を曖昧にして下の[process.platform]のエラーを回避する
+const sevenZipBinNames: Record<string, string> = {
+  win32: "7za.exe",
+  linux: "7zzs",
+  darwin: "7zz",
+};
+const sevenZipBinName = sevenZipBinNames[process.platform];
+if (!sevenZipBinName) {
+  throw new Error(`Unsupported platform: ${process.platform}`);
+}
 
-    {
-      encoding: "utf-8",
-    },
-  ).match(/7-Zip\s+(?:\(.\))?\s*([0-9.]+)/);
+const sevenZipRoot = path.join(
+  import.meta.dirname,
+  "..",
+  "build",
+  "vendored",
+  "7z",
+);
 
-  if (!sevenZipVersionMatch) {
-    throw new Error("Failed to find 7-Zip version");
-  }
+const sevenZipVersionMatch = execFileSync(
+  path.join(sevenZipRoot, sevenZipBinName),
 
-  externalLicenses.push({
-    name: "7-Zip",
-    version: sevenZipVersionMatch[1],
-    license: "LGPL-2.1",
-    text: await fs.readFile(
-      path.join(__dirname, "vendored", "7z", "License.txt"),
-      {
-        encoding: "utf-8",
-      },
-    ),
-  });
+  {
+    encoding: "utf-8",
+  },
+).match(/7-Zip\s+(?:\(.\))?\s*([0-9.]+)/);
 
-  const licenses = Object.entries(licenseJson)
-    .map(([, license]) => ({
-      name: license.name,
-      version: license.version,
-      license: license.licenses,
-      text: license.licenseText,
-    }))
-    .concat(externalLicenses);
+if (!sevenZipVersionMatch) {
+  throw new Error("Failed to find 7-Zip version");
+}
 
-  const outputPath = argv.output_path;
-  await fs.writeFile(outputPath, JSON.stringify(licenses));
-})();
+externalLicenses.push({
+  name: "7-Zip",
+  version: sevenZipVersionMatch[1],
+  license: "LGPL-2.1",
+  text: await fs.readFile(path.join(sevenZipRoot, "License.txt"), {
+    encoding: "utf-8",
+  }),
+});
+
+const licenses = Object.entries(licenseJson)
+  .map(([, license]) => ({
+    name: license.name,
+    version: license.version,
+    license: license.licenses,
+    text: license.licenseText,
+  }))
+  .concat(externalLicenses);
+
+const outputPath = argv.output_path;
+await fs.writeFile(outputPath, JSON.stringify(licenses));
