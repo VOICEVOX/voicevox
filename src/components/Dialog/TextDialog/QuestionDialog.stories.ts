@@ -1,6 +1,7 @@
-import { userEvent, within, expect, fn, waitFor } from "@storybook/test";
+import { userEvent, within, expect, fn } from "@storybook/test";
 
 import { Meta, StoryObj } from "@storybook/vue3";
+import { ref } from "vue";
 import QuestionDialog from "./QuestionDialog.vue";
 import { UnreachableError } from "@/type/utility";
 
@@ -17,6 +18,14 @@ const meta: Meta<typeof QuestionDialog> = {
     onOk: fn(),
     onHide: fn(),
   },
+  render: (args) => ({
+    components: { QuestionDialog },
+    setup() {
+      const modelValue = ref(Boolean(args.modelValue));
+      return { args, modelValue };
+    },
+    template: `<QuestionDialog v-bind="args" v-model="modelValue"></QuestionDialog>`,
+  }),
   tags: ["!autodocs"],
 };
 
