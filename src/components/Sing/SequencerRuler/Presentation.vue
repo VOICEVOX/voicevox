@@ -492,7 +492,7 @@ const tempoOrTimeSignatureChanges = computed<TempoOrTimeSignatureChange[]>(
         };
       });
 
-    if (tempoOrTimeSignatureChangeTextStyle.value) {
+    if (tempoOrTimeSignatureChangeTextStyle.value != undefined) {
       const collapsedTextWidth =
         predictTextWidth("...", tempoOrTimeSignatureChangeTextStyle.value) +
         textPadding * 2;
