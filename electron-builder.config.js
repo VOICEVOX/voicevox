@@ -46,7 +46,7 @@ const sevenZipFile = fs
 
 if (!sevenZipFile) {
   throw new Error(
-    "7z binary file not found. Run `node ./build/download7z.js` first.",
+    "7z binary file not found. Run `node ./tools/download7z.js` first.",
   );
 }
 
