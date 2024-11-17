@@ -438,17 +438,32 @@ const editingLyricNote = computed(() => {
   );
 });
 
+// storeの状態を渡す
+// NOTE: この形がよいのかは要考慮
+const editModeState = {
+  editTarget: computed({
+    get: () => store.state.sequencerEditTarget,
+    set: (value) => store.commit("SET_EDIT_TARGET", { editTarget: value }),
+  }),
+  selectedNoteTool: computed({
+    get: () => store.state.selectedNoteTool,
+    set: (value) =>
+      store.commit("SET_SELECTED_NOTE_TOOL", { selectedNoteTool: value }),
+  }),
+  selectedPitchTool: computed({
+    get: () => store.state.selectedPitchTool,
+    set: (value) =>
+      store.commit("SET_SELECTED_PITCH_TOOL", { selectedPitchTool: value }),
+  }),
+};
+
 const {
   editTarget,
   selectedNoteTool,
   selectedPitchTool,
   resolveMouseDownBehavior,
   resolveDoubleClickBehavior,
-} = useEditMode(store, {
-  ctrlKey,
-  shiftKey,
-  nowPreviewing,
-});
+} = useEditMode(editModeState);
 
 // 入力を補助する線
 const showGuideLine = ref(true);
@@ -461,22 +476,16 @@ watch([ctrlKey, shiftKey, nowPreviewing, editTarget], () => {
     return;
   }
   if (editTarget.value === "PITCH") {
+    // Ctrlキーが押されている場合は常に消しゴムモード
     if (ctrlKey.value) {
-      // Ctrlキーが押されたら常に消しゴムモードに
       setCursorState(CursorState.ERASE);
-      selectedPitchTool.value = "ERASE";
-    } else if (selectedPitchTool.value === "ERASE" && !ctrlKey.value) {
-      // 消しゴムモードかつCtrlキーが離された場合、
-      // ツールパレットで選択されていた前回のモードを確認
-      const shouldReturnToDrawMode =
-        selectedPitchTool.value === "ERASE" && !ctrlKey.value;
-      if (shouldReturnToDrawMode) {
-        // 一時的な消しゴムモードだった場合のみペンツールに戻す
-        setCursorState(CursorState.DRAW);
-        selectedPitchTool.value = "DRAW";
-      }
     } else {
-      setCursorState(CursorState.DRAW);
+      // 現在選択されているツールに応じたカーソル状態を設定
+      const newCursorState =
+        selectedPitchTool.value === "DRAW"
+          ? CursorState.DRAW
+          : CursorState.ERASE;
+      setCursorState(newCursorState);
     }
   }
   if (editTarget.value === "NOTE") {
@@ -489,7 +498,6 @@ watch([ctrlKey, shiftKey, nowPreviewing, editTarget], () => {
     }
   }
 });
-
 watch([editTarget, selectedNoteTool, selectedPitchTool], () => {
   setDefaultCursorState();
 });
@@ -982,7 +990,7 @@ const endPreview = () => {
     }
     const previewPitchEditType = previewPitchEdit.value.type;
     if (previewPitchEditType === "draw") {
-      // カーソルを動かさずにマウスのボタンを離したときに1フームのみの変更になり、
+      // カーソルを動かさずにマウスのボタンを離したときに1フレームのみの変更になり、
       // 1フレームの変更はピッチ編集ラインとして表示されないので、無視する
       if (previewPitchEdit.value.data.length >= 2) {
         // 平滑化を行う
@@ -1090,9 +1098,10 @@ const onMouseDown = (event: MouseEvent) => {
   const behavior = resolveMouseDownBehavior({
     isSelfEventTarget: isSelfEventTarget(event),
     mouseButton: getButton(event),
-    ctrlKey: ctrlKey.value,
-    shiftKey: shiftKey.value,
+    ctrlKey: ctrlKey,
+    shiftKey: shiftKey,
     editingLyricNoteId: state.editingLyricNoteId,
+    nowPreviewing: nowPreviewing,
   });
 
   switch (behavior) {
@@ -1163,9 +1172,16 @@ const onMouseUp = (event: MouseEvent) => {
 
 // ダブルクリックで追加
 const onDoubleClick = (event: MouseEvent) => {
-  event.preventDefault();
-  const behavior = resolveDoubleClickBehavior();
+  const behavior = resolveDoubleClickBehavior({
+    isSelfEventTarget: isSelfEventTarget(event),
+    mouseButton: getButton(event),
+    ctrlKey: ctrlKey,
+    shiftKey: shiftKey,
+    editingLyricNoteId: state.editingLyricNoteId,
+    nowPreviewing: nowPreviewing,
+  });
 
+  // 振る舞いごとの処理
   switch (behavior) {
     case "IGNORE":
       return;
@@ -1472,7 +1488,7 @@ watch(playheadTicks, (newPlayheadPosition) => {
   if (!sequencerBodyElement) {
     if (import.meta.env.DEV) {
       // HMR時にここにたどり着くことがあるので、開発時は警告だけにする
-      // TODO: HMR時もここにたどり着く原因を調査して修正する
+      // TODO: HMR時にここにたどり着く原因を調査して修正する
       warn("sequencerBodyElement is null.");
       return;
     }
@@ -1495,7 +1511,7 @@ watch(playheadTicks, (newPlayheadPosition) => {
   }
 });
 
-// スクロールバーの幅取得する
+// スクロールバーの幅を取得する
 onMounted(() => {
   const sequencerBodyElement = sequencerBody.value;
   if (!sequencerBodyElement) {
@@ -1504,7 +1520,7 @@ onMounted(() => {
   const clientWidth = sequencerBodyElement.clientWidth;
   const offsetWidth = sequencerBodyElement.offsetWidth;
   scrollBarWidth.value = offsetWidth - clientWidth;
-  // デフォルトのカーソル状態を設定
+  // デ���ォルトのカーソル状態を設定
   setDefaultCursorState();
 });
 
@@ -1816,40 +1832,6 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 
   :deep(.q-slider__thumb) {
     color: var(--scheme-color-primary-fixed-dim);
-  }
-}
-
-.tool-palette {
-  display: flex;
-  flex-direction: column;
-  background: var(--scheme-color-surface);
-  outline: 1px solid var(--scheme-color-outline-variant);
-  position: fixed;
-  top: 144px;
-  left: 72px;
-  z-index: 10;
-  padding: 2px;
-  border-radius: 24px;
-  gap: 0;
-  box-shadow:
-    0px 8px 16px -4px oklch(from var(--scheme-color-scrim) l c h / 0.1),
-    0px 4px 8px -4px oklch(from var(--scheme-color-scrim) l c h / 0.06);
-
-  .material-symbols-outlined {
-    font-size: 20px;
-  }
-
-  .q-btn {
-    min-height: 40px;
-    min-width: 40px;
-    padding: 8px;
-
-    &.text-primary {
-      background-color: var(--scheme-color-secondary-container);
-      .material-symbols-outlined {
-        color: var(--scheme-color-on-primary-container);
-      }
-    }
   }
 }
 </style>

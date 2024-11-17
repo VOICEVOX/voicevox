@@ -1,12 +1,6 @@
 import { computed, Ref } from "vue";
-import { Store } from "vuex";
 import { NoteId } from "@/type/preload";
-import {
-  State,
-  NoteEditTool,
-  PitchEditTool,
-  SequencerEditTarget,
-} from "@/store/type";
+import { NoteEditTool, PitchEditTool, SequencerEditTarget } from "@/store/type";
 import { MouseButton } from "@/sing/viewHelper";
 
 // マウスダウン時の振る舞い
@@ -19,93 +13,109 @@ export type MouseDownBehavior =
   | "ERASE_PITCH";
 
 // ダブルクリック時の振る舞い
-export type MouseDoubleClickBehavior = "IGNORE" | "ADD_NOTE" | "EDIT_LYRIC";
+export type MouseDoubleClickBehavior = "IGNORE" | "ADD_NOTE";
 
-// マウスダウン時のコンテキスト
-export interface MouseDownContext {
-  isSelfEventTarget: boolean;
-  mouseButton: MouseButton;
-  ctrlKey: boolean;
-  shiftKey: boolean;
-  editingLyricNoteId?: NoteId;
-}
-
-// 最低限必要なコンテキスト
+// 編集モードの外部コンテキスト
 export interface EditModeContext {
-  ctrlKey: Ref<boolean>;
-  shiftKey: Ref<boolean>;
-  nowPreviewing: Ref<boolean>;
+  readonly ctrlKey: Ref<boolean>;
+  readonly shiftKey: Ref<boolean>;
+  readonly nowPreviewing: Ref<boolean>;
+  // オプショナル
+  readonly isSelfEventTarget?: boolean;
+  readonly mouseButton?: MouseButton;
+  readonly editingLyricNoteId?: NoteId;
 }
 
-export function useEditMode(store: Store<State>, context: EditModeContext) {
-  const editTarget = computed({
-    get: () => store.state.sequencerEditTarget || "NOTE",
-    set: (value: SequencerEditTarget) => store.commit("SET_EDIT_TARGET", value),
-  });
+// 編集モードの状態
+export interface EditModeState {
+  readonly editTarget: Ref<SequencerEditTarget>;
+  readonly selectedNoteTool: Ref<NoteEditTool>;
+  readonly selectedPitchTool: Ref<PitchEditTool>;
+}
 
-  const selectedNoteTool = computed({
-    get: () => store.state.selectedNoteTool || "EDIT_FIRST",
-    set: (value: NoteEditTool) => store.commit("SET_SELECTED_NOTE_TOOL", value),
-  });
+export function useEditMode(state: EditModeState) {
+  const isNoteEditTarget = computed(() => state.editTarget.value === "NOTE");
+  const isPitchEditTarget = computed(() => state.editTarget.value === "PITCH");
+  const isNoteSelectFirstTool = computed(
+    () =>
+      isNoteEditTarget.value && state.selectedNoteTool.value === "SELECT_FIRST",
+  );
+  const isNoteEditFirstTool = computed(
+    () =>
+      isNoteEditTarget.value && state.selectedNoteTool.value === "EDIT_FIRST",
+  );
+  const isPitchDrawTool = computed(
+    () => isPitchEditTarget.value && state.selectedPitchTool.value === "DRAW",
+  );
+  const isPitchEraseTool = computed(
+    () => isPitchEditTarget.value && state.selectedPitchTool.value === "ERASE",
+  );
 
-  const selectedPitchTool = computed({
-    get: () => store.state.selectedPitchTool || "DRAW",
-    set: (value: PitchEditTool) =>
-      store.commit("SET_SELECTED_PITCH_TOOL", value),
-  });
+  const setEditTarget = (target: SequencerEditTarget) => {
+    state.editTarget.value = target;
+  };
+
+  const setSelectedNoteTool = (tool: NoteEditTool) => {
+    state.selectedNoteTool.value = tool;
+  };
+
+  const setSelectedPitchTool = (tool: PitchEditTool) => {
+    state.selectedPitchTool.value = tool;
+  };
 
   /**
    * マウスダウン時の振る舞いを判定する
    * 条件の判定のみを行い、実際の処理は呼び出し側で行う
    */
-  const resolveMouseDownBehavior = ({
-    isSelfEventTarget,
-    mouseButton,
-    ctrlKey,
-    shiftKey,
-    editingLyricNoteId,
-  }: MouseDownContext): MouseDownBehavior => {
-    if (context.nowPreviewing.value) {
-      return "IGNORE";
-    }
+  const resolveMouseDownBehavior = (
+    context: EditModeContext,
+  ): MouseDownBehavior => {
+    // プレビュー中は無視
+    if (context.nowPreviewing.value) return "IGNORE";
 
-    // ノート編集モード
-    if (editTarget.value === "NOTE") {
-      // 編集対象外の場合は無視
-      if (!isSelfEventTarget) {
-        return "IGNORE";
-      }
+    // ノート編集の場合
+    if (isNoteEditTarget.value) {
+      // イベントが来ていない場合は無視
+      if (!context.isSelfEventTarget) return "IGNORE";
+      // 歌詞編集中は無視
+      if (context.editingLyricNoteId != undefined) return "IGNORE";
 
-      if (mouseButton === "LEFT_BUTTON") {
-        // 歌詞編集中は無視
-        if (editingLyricNoteId != undefined) {
-          return "IGNORE";
-        }
+      // 左クリックの場合
+      if (context.mouseButton === "LEFT_BUTTON") {
+        // シフトキーが押されている場合は常に矩形選択開始
+        if (context.shiftKey.value) return "START_RECT_SELECT";
 
-        // Shiftキーが押されている場合は矩形選択
-        if (shiftKey) {
-          return "START_RECT_SELECT";
-        }
-
-        if (selectedNoteTool.value === "SELECT_FIRST") {
-          if (ctrlKey) {
+        // 編集優先ツールの場合
+        if (isNoteEditFirstTool.value) {
+          // コントロールキーが押されている場合は全選択解除
+          if (context.ctrlKey.value) {
             return "DESELECT_ALL";
           }
-          return "START_RECT_SELECT";
-        } else {
           return "ADD_NOTE";
         }
+
+        // 選択優先ツールの場合
+        if (isNoteSelectFirstTool.value) {
+          // 矩形選択開始
+          return "START_RECT_SELECT";
+        }
       }
+
       return "DESELECT_ALL";
     }
 
-    if (editTarget.value === "PITCH") {
-      if (mouseButton === "LEFT_BUTTON") {
-        if (selectedPitchTool.value === "ERASE" || ctrlKey) {
-          return "ERASE_PITCH";
-        }
-        return "DRAW_PITCH";
+    // ピッチ編集の場合
+    if (isPitchEditTarget.value) {
+      // 左クリック以外は無視
+      if (context.mouseButton !== "LEFT_BUTTON") return "IGNORE";
+
+      // ピッチ削除ツールが選択されているかコントロールキーが押されている場合はピッチ削除
+      if (isPitchEraseTool.value || context.ctrlKey.value) {
+        return "ERASE_PITCH";
       }
+
+      // それ以外はピッチ描画
+      return "DRAW_PITCH";
     }
 
     return "IGNORE";
@@ -114,17 +124,14 @@ export function useEditMode(store: Store<State>, context: EditModeContext) {
   /**
    * ダブルクリック時の振る舞いを判定する
    */
-  const resolveDoubleClickBehavior = (): MouseDoubleClickBehavior => {
+  const resolveDoubleClickBehavior = (
+    context: EditModeContext,
+  ): MouseDoubleClickBehavior => {
     // プレビュー中は無視
-    if (context.nowPreviewing.value) {
-      return "IGNORE";
-    }
+    if (context.nowPreviewing.value) return "IGNORE";
 
-    // 選択優先の場合はノート追加
-    if (
-      editTarget.value === "NOTE" &&
-      selectedNoteTool.value === "SELECT_FIRST"
-    ) {
+    // ノート編集の選択優先ツールではノート追加
+    if (isNoteEditTarget.value && isNoteSelectFirstTool.value) {
       return "ADD_NOTE";
     }
 
@@ -132,10 +139,20 @@ export function useEditMode(store: Store<State>, context: EditModeContext) {
   };
 
   return {
-    editTarget,
-    selectedNoteTool,
-    selectedPitchTool,
+    // 状態
+    editTarget: state.editTarget,
+    selectedNoteTool: state.selectedNoteTool,
+    selectedPitchTool: state.selectedPitchTool,
+    setEditTarget,
+    setSelectedNoteTool,
+    setSelectedPitchTool,
     resolveMouseDownBehavior,
     resolveDoubleClickBehavior,
+    isNoteEditTarget,
+    isPitchEditTarget,
+    isNoteSelectFirstTool,
+    isNoteEditFirstTool,
+    isPitchDrawTool,
+    isPitchEraseTool,
   };
 }
