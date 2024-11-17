@@ -57,15 +57,15 @@ if (!sevenZipBinName) {
   throw new Error(`Unsupported platform: ${process.platform}`);
 }
 
+const sevenZipPath = path.join(
+  import.meta.dirname,
+  "..",
+  "build",
+  "vendored",
+  "7z",
+);
 const sevenZipVersionMatch = execFileSync(
-  path.join(
-    import.meta.dirname,
-    "..",
-    "build",
-    "vendored",
-    "7z",
-    sevenZipBinName,
-  ),
+  path.join(sevenZipPath, sevenZipBinName),
 
   {
     encoding: "utf-8",
@@ -80,12 +80,9 @@ externalLicenses.push({
   name: "7-Zip",
   version: sevenZipVersionMatch[1],
   license: "LGPL-2.1",
-  text: await fs.readFile(
-    path.join(__dirname, "vendored", "7z", "License.txt"),
-    {
-      encoding: "utf-8",
-    },
-  ),
+  text: await fs.readFile(path.join(sevenZipPath, "License.txt"), {
+    encoding: "utf-8",
+  }),
 });
 
 const licenses = Object.entries(licenseJson)
