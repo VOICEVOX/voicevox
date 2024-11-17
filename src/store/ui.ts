@@ -12,7 +12,7 @@ import {
   UiStoreTypes,
 } from "./type";
 import { createPartialStore } from "./vuex";
-import { ActivePointScrollMode, EditorType } from "@/type/preload";
+import { ActivePointScrollMode } from "@/type/preload";
 import {
   AlertDialogOptions,
   ConfirmDialogOptions,
@@ -63,8 +63,6 @@ export function withProgress<T>(
 }
 
 export const uiStoreState: UiStoreState = {
-  editorType: "talk",
-  openedEditor: undefined,
   uiLockCount: 0,
   dialogLockCount: 0,
   reloadingLock: false,
@@ -91,15 +89,6 @@ export const uiStoreState: UiStoreState = {
 };
 
 export const uiStore = createPartialStore<UiStoreTypes>({
-  SET_OPENED_EDITOR: {
-    mutation(state, { editor }) {
-      state.openedEditor = editor;
-    },
-    action({ mutations }, { editor }) {
-      mutations.SET_OPENED_EDITOR({ editor });
-    },
-  },
-
   UI_LOCKED: {
     getter(state) {
       return state.uiLockCount > 0;
@@ -261,10 +250,6 @@ export const uiStore = createPartialStore<UiStoreTypes>({
         ),
       });
 
-      mutations.SET_OPENED_EDITOR({
-        editor: await window.backend.getSetting("editorType"),
-      });
-
       // electron-window-stateがvuex初期化前に働くので
       // ここで改めてelectron windowの最大化状態をVuex storeに同期
       if (await window.backend.isMaximizedWindow()) {
@@ -336,17 +321,6 @@ export const uiStore = createPartialStore<UiStoreTypes>({
           "activePointScrollMode",
           activePointScrollMode,
         ),
-      });
-    },
-  },
-
-  SET_EDITOR_TYPE: {
-    mutation(state, { editorType }: { editorType: EditorType }) {
-      state.editorType = editorType;
-    },
-    async action({ mutations }, { editorType }: { editorType: EditorType }) {
-      mutations.SET_OPENED_EDITOR({
-        editor: await window.backend.setSetting("editorType", editorType),
       });
     },
   },

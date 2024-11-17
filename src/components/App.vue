@@ -77,10 +77,6 @@ watch(
   async (openedEditor) => {
     if (openedEditor != undefined) {
       hotkeyManager.onEditorChange(openedEditor);
-      await store.dispatch("SET_ROOT_MISC_SETTING", {
-        key: "editorType",
-        value: openedEditor,
-      });
     }
   },
 );
@@ -113,11 +109,6 @@ onMounted(async () => {
 
   // プロジェクトファイルのパスを取得
   const projectFilePath = urlParams.get("projectFilePath");
-
-  // どちらのエディタを開くか設定
-  await store.actions.SET_OPENED_EDITOR({
-    editor: store.state.editorType,
-  });
 
   // ショートカットキーの設定を登録
   const hotkeySettings = store.state.hotkeySettings;

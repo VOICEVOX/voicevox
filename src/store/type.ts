@@ -1921,8 +1921,6 @@ export type SettingStoreTypes = {
  */
 
 export type UiStoreState = {
-  editorType: EditorType;
-  openedEditor: EditorType | undefined; // undefinedのときはどのエディタを開くか定まっていない
   uiLockCount: number;
   dialogLockCount: number;
   reloadingLock: boolean;
@@ -1952,11 +1950,6 @@ export type DialogStates = {
 };
 
 export type UiStoreTypes = {
-  SET_OPENED_EDITOR: {
-    mutation: { editor: EditorType };
-    action(palyoad: { editor: EditorType }): void;
-  };
-
   UI_LOCKED: {
     getter: boolean;
   };
@@ -2052,11 +2045,6 @@ export type UiStoreTypes = {
   SET_ACTIVE_POINT_SCROLL_MODE: {
     mutation: { activePointScrollMode: ActivePointScrollMode };
     action(payload: { activePointScrollMode: ActivePointScrollMode }): void;
-  };
-
-  SET_EDITOR_TYPE: {
-    mutation: { editorType: EditorType };
-    action(payload: { editorType: EditorType }): void;
   };
 
   SET_AVAILABLE_THEMES: {
