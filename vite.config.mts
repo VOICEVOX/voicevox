@@ -91,7 +91,7 @@ export default defineConfig((options) => {
         cleanDistPlugin(),
         electron([
           {
-            entry: "./src/backend/electron/main.ts",
+            entry: "./backend/electron/main.ts",
             // ref: https://github.com/electron-vite/vite-plugin-electron/pull/122
             onstart: ({ startup }) => {
               console.log("main process build is complete.");
@@ -109,7 +109,7 @@ export default defineConfig((options) => {
           },
           {
             // ref: https://electron-vite.github.io/guide/preload-not-split.html
-            entry: "./src/backend/electron/preload.ts",
+            entry: "./backend/electron/preload.ts",
             onstart({ reload }) {
               if (!skipLahnchElectron) {
                 reload();
