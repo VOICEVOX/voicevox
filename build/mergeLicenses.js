@@ -1,9 +1,11 @@
-import process from "process";
-import fs from "fs";
-import yargs from "yargs/yargs";
-import { hideBin } from "yargs/helpers";
+/* eslint-disable @typescript-eslint/no-var-requires */
 
-const argv = await yargs(hideBin(process.argv))
+const process = require("process");
+const fs = require("fs");
+const yargs = require("yargs/yargs");
+const { hideBin } = require("yargs/helpers");
+
+const argv = yargs(hideBin(process.argv))
   .option("output_path", {
     alias: "o",
     demandOption: true,
@@ -20,23 +22,16 @@ const argv = await yargs(hideBin(process.argv))
 const inputPathList =
   typeof argv.input_path === "string" ? [argv.input_path] : argv.input_path;
 
-type LicenseInfo = {
-  name: string;
-  version: string;
-  license: string;
-  text: string;
-};
-let mergedLicenses: LicenseInfo[] = [];
+let mergedLicenses = [];
 
 for (const inputPath of inputPathList) {
   const licenseJson = fs.readFileSync(inputPath, {
     encoding: "utf-8",
   });
 
-  const licenses = JSON.parse(licenseJson) as LicenseInfo[];
+  const licenses = JSON.parse(licenseJson);
   mergedLicenses = mergedLicenses.concat(licenses);
 }
 
 const outputPath = argv.output_path;
 fs.writeFileSync(outputPath, JSON.stringify(mergedLicenses));
-console.log(`Merged licenses written to ${outputPath}`);
