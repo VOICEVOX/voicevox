@@ -13,6 +13,7 @@ const meta: Meta<typeof QuestionDialog> = {
     message: "メッセージ",
     buttons: ["A", "B", "C"],
 
+    "onUpdate:modelValue": fn(),
     onOk: fn(),
     onHide: fn(),
   },
@@ -46,6 +47,7 @@ export const Close: Story = {
     const button = canvas.getByRole("button", { name: "A" });
     await userEvent.click(button);
 
+    await expect(args["onUpdate:modelValue"]).toBeCalledWith(false);
     await expect(args["onOk"]).toBeCalledWith({ index: 0 });
   },
 };
@@ -58,6 +60,7 @@ export const ClickBackdropWithoutCancel: Story = {
     if (!backdrop) throw new UnreachableError();
     await userEvent.click(backdrop);
 
+    await expect(args["onUpdate:modelValue"]).not.toBeCalled();
     await expect(args["onOk"]).not.toBeCalled();
   },
 };
@@ -70,7 +73,8 @@ export const ClickBackdropWithCancel: Story = {
     if (!backdrop) throw new UnreachableError();
     await userEvent.click(backdrop);
 
-    await waitFor(() => expect(args["onHide"]).toBeCalled());
+    await expect(args["onUpdate:modelValue"]).toBeCalledWith(false);
+    await expect(args["onOk"]).not.toBeCalled();
   },
 };
 
