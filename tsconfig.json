@@ -28,7 +28,6 @@
     "src/**/*.vue",
     "tests/**/*.ts",
     "tests/**/*.mts",
-    "scripts/**/*.mts",
     "tests/**/*.tsx",
     ".storybook/**/*.ts"
   ],
