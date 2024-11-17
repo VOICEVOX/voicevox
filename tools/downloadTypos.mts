@@ -28,7 +28,12 @@ const CPU_ARCHITECTURE = {
   ARM: "aarch64",
 };
 // ダウンロードしたバイナリを格納するディレクトリ
-const BINARY_BASE_PATH = resolve(__dirname, "vendored");
+const BINARY_BASE_PATH = resolve(
+  import.meta.dirname,
+  "..",
+  "build",
+  "vendored",
+);
 // typosのバイナリのパス
 const TYPOS_BINARY_PATH = resolve(BINARY_BASE_PATH, "typos");
 // 各OSとアーキテクチャに対応するtyposバイナリのダウンロードURL
