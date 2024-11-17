@@ -4,7 +4,7 @@
 @use "./v2/colors" as colors-v2;
 @use "./v2/sing-colors"; // ソング用カラー
 @use "./v2/cursor"; // カーソル
-@import "./fonts";
+@use "fonts";
 
 // 優先度を強引に上げる
 body:not(#dummy) {

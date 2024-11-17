@@ -5,7 +5,7 @@ import log from "electron-log/main";
 import { moveFile } from "move-file";
 import { app, dialog } from "electron";
 import MultiStream from "multistream";
-import glob, { glob as callbackGlob } from "glob";
+import { glob } from "glob";
 import AsyncLock from "async-lock";
 import {
   EngineId,
@@ -23,19 +23,6 @@ const SEVEN_ZIP_MAGIC_NUMBER = Buffer.from([
 ]);
 
 const ZIP_MAGIC_NUMBER = Buffer.from([0x50, 0x4b, 0x03, 0x04]);
-
-// globのPromise化
-const globAsync = (pattern: string, options?: glob.IOptions) => {
-  return new Promise<string[]>((resolve, reject) => {
-    callbackGlob(pattern, options ?? {}, (err, matches) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(matches);
-      }
-    });
-  });
-};
 
 export const isVvppFile = (filePath: string) => {
   return (
@@ -134,7 +121,7 @@ export class VvppManager {
         .replace(/\.[0-9]+\.vvppp$/, ".*.vvppp")
         .replace(/\\/g, "/"); // node-globはバックスラッシュを使えないので、スラッシュに置換する
       const filePaths: string[] = [];
-      for (const p of await globAsync(vvpppPathGlob)) {
+      for (const p of await glob(vvpppPathGlob)) {
         if (!p.match(/\.[0-9]+\.vvppp$/)) {
           continue;
         }
