@@ -511,6 +511,9 @@ export type PhonemeTimingEdit = {
 
 export type PhonemeTimingEditData = Map<NoteId, PhonemeTimingEdit[]>;
 
+/**
+ * 音素列を音素タイミング列に変換する。
+ */
 function phonemesToPhonemeTimings(phonemes: FramePhoneme[]) {
   const phonemeTimings: PhonemeTiming[] = [];
   let cumulativeFrame = 0;
@@ -526,6 +529,9 @@ function phonemesToPhonemeTimings(phonemes: FramePhoneme[]) {
   return phonemeTimings;
 }
 
+/**
+ * 音素タイミング列を音素列に変換する。
+ */
 function phonemeTimingsToPhonemes(phonemeTimings: PhonemeTiming[]) {
   return phonemeTimings.map(
     (value): FramePhoneme => ({
