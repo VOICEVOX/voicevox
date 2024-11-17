@@ -2,18 +2,20 @@
 /**
  * OSに合ったtyposのバイナリをダウンロードするスクリプト。
  */
-const { exec } = require("child_process");
-const { promisify } = require("util");
-const { platform, arch } = require("os");
-const { join, resolve } = require("path");
-const {
+import { exec } from "child_process";
+import { promisify } from "util";
+import { platform, arch } from "os";
+import { join, resolve } from "path";
+import {
   mkdirSync,
   existsSync,
   unlinkSync,
   createWriteStream,
   rmSync,
-} = require("fs");
-const fetch = require("node-fetch");
+} from "fs";
+import { Readable } from "stream";
+import { ReadableStream } from "stream/web";
+import { pipeline } from "stream/promises";
 
 // OS名を定義するオブジェクト
 const OS = {
@@ -66,23 +68,25 @@ const execAsync = promisify(exec);
 
 /**
  * コマンドを実行し、その進行状況を出力するヘルパー関数
- * @param {Object} params - コマンド実行のパラメータ
- * @param {string} params.command - 実行するシェルコマンド
- * @param {string} params.description - コマンドの説明を表示するテキスト
  */
-async function runCommand({ command, description }) {
+async function runCommand({
+  command,
+  description,
+}: {
+  command: string;
+  description: string;
+}) {
   console.log(`Running: ${description}`);
   try {
     await execAsync(command);
   } catch (error) {
-    console.error(`An error occurred: ${error.message}`);
+    console.error(`An error occurred: ${String(error)}`);
     throw error;
   }
 }
 
 /**
  * 現在のOSとアーキテクチャに基づいてバイナリのダウンロード先URLを定数のオブジェクトから取得する関数
- * @returns {string} バイナリをダウンロードするためのURL
  */
 function getBinaryURL() {
   const url = TYPOS_URLS[currentOS][currentCpuArchitecture];
@@ -98,10 +102,8 @@ function getBinaryURL() {
 
 /**
  * バイナリをダウンロードして解凍し、実行権限を付与する関数
- * @param {Object} params - バイナリの情報を含むオブジェクト
- * @param {string} params.url - ダウンロード先URL
  */
-async function downloadAndUnarchive({ url }) {
+async function downloadAndUnarchive({ url }: { url: string }) {
   const compressedFilePath = `${TYPOS_BINARY_PATH}/typos${currentOS === OS.WINDOWS ? ".zip" : ".tar.gz"}`;
 
   // バイナリディレクトリが存在する場合ダウンロードをスキップし、存在しない場合はディレクトリを作成する
@@ -112,18 +114,14 @@ async function downloadAndUnarchive({ url }) {
     mkdirSync(TYPOS_BINARY_PATH, { recursive: true });
   }
 
-  // node-fetchでバイナリをメモリ上にダウンロードした後、ローカルに保存する
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`Failed to download binary: ${response.statusText}`);
   }
 
+  const responseStream = Readable.fromWeb(response.body as ReadableStream);
   const fileStream = createWriteStream(compressedFilePath);
-  await new Promise((resolve, reject) => {
-    response.body.pipe(fileStream);
-    response.body.on("error", reject);
-    fileStream.on("finish", resolve);
-  });
+  await pipeline(responseStream, fileStream);
 
   if (currentOS === OS.WINDOWS) {
     // Windows用のZIPファイルを解凍
@@ -192,6 +190,4 @@ async function main() {
 }
 
 // main関数実行
-(async () => {
-  await main();
-})();
+await main();
