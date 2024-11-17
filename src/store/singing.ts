@@ -573,7 +573,7 @@ const singingPitchCache = new Map<SingingPitchKey, SingingPitch>();
 const singingVolumeCache = new Map<SingingVolumeKey, SingingVolume>();
 const singingVoiceCache = new Map<SingingVoiceKey, SingingVoice>();
 
-const initialTrackId = TrackId(crypto.randomUUID());
+const initialTrackId = TrackId(uuid4());
 
 /**
  * シーケンスの音源の出力を取得する。
@@ -1577,7 +1577,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   CREATE_TRACK: {
     action() {
-      const trackId = TrackId(crypto.randomUUID());
+      const trackId = TrackId(uuid4());
       const track = createDefaultTrack();
 
       return { trackId, track };

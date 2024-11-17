@@ -27,6 +27,7 @@ import {
   showAlertDialog,
   showQuestionDialog,
 } from "@/components/Dialog/Dialog";
+import { uuid4 } from "@/helpers/random";
 
 export const projectStoreState: ProjectStoreState = {
   savedLastCommandIds: { talk: null, song: null },
@@ -125,7 +126,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         await context.actions.SET_TIME_SIGNATURES({
           timeSignatures: [createDefaultTimeSignature(1)],
         });
-        const trackId = TrackId(crypto.randomUUID());
+        const trackId = TrackId(uuid4());
         await context.actions.SET_TRACKS({
           tracks: new Map([[trackId, createDefaultTrack()]]),
         });
