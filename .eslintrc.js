@@ -45,9 +45,8 @@ module.exports = {
   parser: vueEslintParser,
   parserOptions: vueEslintParserOptions,
   ignorePatterns: [
-    "dist_electron/**/*",
     "dist/**/*",
-    "dist_preview/**/*",
+    "dist_*/**/*",
     "node_modules/**/*",
   ],
   rules: {
