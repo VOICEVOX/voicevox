@@ -4,13 +4,11 @@ import {
   StyleInfo,
   StyleType,
   ToolbarButtonTagType,
-  isMac,
-  isWindows,
 } from "@/type/preload";
 import { AccentPhrase, Mora } from "@/openapi";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { DEFAULT_TRACK_NAME } from "@/sing/domain";
-import path from "@/domain/path";
+import { isMac } from "@/helpers/platform";
 
 export const DEFAULT_STYLE_NAME = "ノーマル";
 export const DEFAULT_PROJECT_NAME = "Untitled";

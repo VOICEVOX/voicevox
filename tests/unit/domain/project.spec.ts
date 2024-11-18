@@ -2,7 +2,7 @@ import fs from "fs";
 import { migrateProjectFileObject } from "@/domain/project";
 import { EngineId, SpeakerId, StyleId } from "@/type/preload";
 import { resetMockMode } from "@/helpers/random";
-import path from "@/domain/path";
+import path from "@/helpers/path";
 
 const engineId = EngineId("074fc39e-678b-4c13-8916-ffca8d505d1d");
 

@@ -105,7 +105,7 @@ import { ufProjectToVoicevox } from "@/sing/utaformatixProject/toVoicevox";
 import { uuid4 } from "@/helpers/random";
 import { convertToWavFileData } from "@/sing/convertToWavFileData";
 import { generateWriteErrorMessage } from "@/helpers/fileHelper";
-import path from "@/domain/path";
+import path from "@/helpers/path";
 
 const logger = createLogger("store/singing");
 

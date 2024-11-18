@@ -5,7 +5,7 @@ import { failure, success } from "@/type/result";
 import { createLogger } from "@/domain/frontend/log";
 import { uuid4 } from "@/helpers/random";
 import { normalizeError } from "@/helpers/normalizeError";
-import path from "@/domain/path";
+import path from "@/helpers/path";
 
 const log = createLogger("fileImpl");
 

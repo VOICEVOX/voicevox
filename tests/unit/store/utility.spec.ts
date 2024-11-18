@@ -5,7 +5,6 @@ import {
   SpeakerId,
   StyleId,
   ToolbarButtonTagType,
-  isMac,
 } from "@/type/preload";
 import {
   formatCharacterStyleName,
@@ -22,6 +21,7 @@ import {
   filterCharacterInfosByStyleType,
 } from "@/store/utility";
 import { uuid4 } from "@/helpers/random";
+import { isMac } from "@/helpers/platform";
 
 function createDummyMora(text: string): Mora {
   return {

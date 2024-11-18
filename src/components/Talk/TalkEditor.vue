@@ -140,7 +140,7 @@ import {
 } from "@/type/preload";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import onetimeWatch from "@/helpers/onetimeWatch";
-import path from "@/domain/path";
+import path from "@/helpers/path";
 
 const props = defineProps<{
   isEnginesReady: boolean;

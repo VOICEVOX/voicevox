@@ -7,7 +7,7 @@ import {
   ProjectStoreTypes,
 } from "@/store/type";
 import { TrackId } from "@/type/preload";
-import path from "@/domain/path";
+import path from "@/helpers/path";
 import { getValueOrThrow, ResultError } from "@/type/result";
 import { LatestProjectType } from "@/domain/project/schema";
 import {
