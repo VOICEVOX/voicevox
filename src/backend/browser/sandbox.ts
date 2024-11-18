@@ -9,15 +9,17 @@ import {
 import { getConfigManager } from "./browserConfig";
 import { IpcSOData } from "@/type/ipc";
 import {
-  defaultHotkeySettings,
   defaultToolbarButtonSetting,
   EngineId,
   EngineSettingType,
   EngineSettings,
-  HotkeySettingType,
   Sandbox,
 } from "@/type/preload";
 import { AssetTextFileNames } from "@/type/staticResources";
+import {
+  HotkeySettingType,
+  defaultHotkeySettings,
+} from "@/domain/hotkeyAction";
 
 const toStaticPath = (fileName: string) =>
   `${import.meta.env.BASE_URL}/${fileName}`.replaceAll(/\/\/+/g, "/");

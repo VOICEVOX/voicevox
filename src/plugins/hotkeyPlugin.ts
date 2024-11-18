@@ -9,12 +9,12 @@
  */
 import { Plugin, inject, onMounted, onUnmounted } from "vue";
 import hotkeys from "hotkeys-js";
+import { createLogger } from "@/domain/frontend/log";
 import {
   HotkeyActionNameType,
   HotkeyCombination,
   HotkeySettingType,
-} from "@/type/preload";
-import { createLogger } from "@/domain/frontend/log";
+} from "@/domain/hotkeyAction";
 
 const hotkeyManagerKey = "hotkeyManager";
 export const useHotkeyManager = () => {
