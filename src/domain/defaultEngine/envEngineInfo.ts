@@ -17,11 +17,13 @@ const envEngineInfoSchema = z
   })
   .and(
     z.union([
+      // エンジンをパス指定する場合
       z.object({
         type: z.literal("path").default("path"),
         executionFilePath: z.string(),
         path: z.string().optional(),
       }),
+      // VVPPダウンロードする場合
       z.object({
         type: z.literal("downloadVvpp"),
         latestUrl: z.string(),
