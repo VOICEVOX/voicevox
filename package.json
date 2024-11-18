@@ -28,7 +28,7 @@
     "fmt": "eslint --ext .js,.vue,.ts,.mts *.config.* src tests build .storybook --fix",
     "markdownlint": "markdownlint --ignore node_modules/ --ignore dist/ --ignore dist_electron/ ./",
     "typecheck": "vue-tsc --noEmit",
-    "typos": "cross-env ./build/vendored/typos/typos",
+    "typos": "cross-env ./vendored/typos/typos",
     "electron:build": "cross-env VITE_TARGET=electron vite build && electron-builder --config electron-builder.config.js --publish never",
     "electron:serve": "cross-env VITE_TARGET=electron vite",
     "browser:serve": "cross-env VITE_TARGET=browser vite",

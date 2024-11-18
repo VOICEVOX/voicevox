@@ -5,13 +5,8 @@ import { exec } from "child_process";
 import { promisify } from "util";
 import { platform, arch } from "os";
 import { join, resolve } from "path";
-import {
-  mkdirSync,
-  existsSync,
-  unlinkSync,
-  createWriteStream,
-  rmSync,
-} from "fs";
+import fsSync from "fs";
+import fs from "fs/promises";
 import { Readable } from "stream";
 import { ReadableStream } from "stream/web";
 import { pipeline } from "stream/promises";
@@ -28,12 +23,7 @@ const CPU_ARCHITECTURE = {
   ARM: "aarch64",
 };
 // ダウンロードしたバイナリを格納するディレクトリ
-const BINARY_BASE_PATH = resolve(
-  import.meta.dirname,
-  "..",
-  "build",
-  "vendored",
-);
+const BINARY_BASE_PATH = resolve(import.meta.dirname, "..", "vendored");
 // typosのバイナリのパス
 const TYPOS_BINARY_PATH = resolve(BINARY_BASE_PATH, "typos");
 // 各OSとアーキテクチャに対応するtyposバイナリのダウンロードURL
@@ -69,6 +59,13 @@ const sevenZipBinaryName =
 const sevenZipBinaryPath = join(BINARY_BASE_PATH, "7z", sevenZipBinaryName);
 // 非同期でOSコマンドを処理するための関数
 const execAsync = promisify(exec);
+
+async function exists(path: string) {
+  return fs
+    .access(path)
+    .then(() => true)
+    .catch(() => false);
+}
 
 /**
  * コマンドを実行し、その進行状況を出力するヘルパー関数
@@ -111,11 +108,11 @@ async function downloadAndUnarchive({ url }: { url: string }) {
   const compressedFilePath = `${TYPOS_BINARY_PATH}/typos${currentOS === OS.WINDOWS ? ".zip" : ".tar.gz"}`;
 
   // バイナリディレクトリが存在する場合ダウンロードをスキップし、存在しない場合はディレクトリを作成する
-  if (existsSync(TYPOS_BINARY_PATH)) {
+  if (await exists(TYPOS_BINARY_PATH)) {
     console.log(`typos already downloaded`);
     return;
   } else {
-    mkdirSync(TYPOS_BINARY_PATH, { recursive: true });
+    await fs.mkdir(TYPOS_BINARY_PATH, { recursive: true });
   }
 
   const response = await fetch(url);
@@ -124,7 +121,7 @@ async function downloadAndUnarchive({ url }: { url: string }) {
   }
 
   const responseStream = Readable.fromWeb(response.body as ReadableStream);
-  const fileStream = createWriteStream(compressedFilePath);
+  const fileStream = fsSync.createWriteStream(compressedFilePath);
   await pipeline(responseStream, fileStream);
 
   if (currentOS === OS.WINDOWS) {
@@ -155,29 +152,29 @@ async function downloadAndUnarchive({ url }: { url: string }) {
     });
 
     // 解凍後にアーカイブファイルを削除
-    unlinkSync(archiveFilePath);
+    await fs.rm(archiveFilePath);
   }
 
   // 解凍後に圧縮ファイルを削除
-  unlinkSync(compressedFilePath);
+  await fs.rm(compressedFilePath);
 }
 
 /**
- * /build/vendored/typos ディレクトリから不要なファイルとディレクトリを削除する関数
+ * /vendored/typos ディレクトリから不要なファイルとディレクトリを削除する関数
  */
-function cleanupTyposDirectory() {
+async function cleanupTyposDirectory() {
   const typosDocDirPath = join(TYPOS_BINARY_PATH, "doc");
   const typosReadmeFilePath = join(TYPOS_BINARY_PATH, "README.md");
 
   // doc ディレクトリの削除
-  if (existsSync(typosDocDirPath)) {
-    rmSync(typosDocDirPath, { recursive: true });
+  if (await exists(typosDocDirPath)) {
+    await fs.rm(typosDocDirPath, { recursive: true });
     console.log(`Deleted directory: ${typosDocDirPath}`);
   }
 
   // README.md ファイルの削除
-  if (existsSync(typosReadmeFilePath)) {
-    unlinkSync(typosReadmeFilePath);
+  if (await exists(typosReadmeFilePath)) {
+    await fs.rm(typosReadmeFilePath);
     console.log(`Deleted file: ${typosReadmeFilePath}`);
   }
 }
@@ -190,7 +187,7 @@ async function main() {
   await downloadAndUnarchive({ url });
 
   // 不要なファイルとディレクトリを削除
-  cleanupTyposDirectory();
+  await cleanupTyposDirectory();
 }
 
 // main関数実行

@@ -63,7 +63,6 @@ if (!sevenZipBinName) {
 const sevenZipRoot = path.join(
   import.meta.dirname,
   "..",
-  "build",
   "vendored",
   "7z",
 );

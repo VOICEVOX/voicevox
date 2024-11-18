@@ -38,7 +38,7 @@ const isArm64 = process.arch === "arm64";
 const extraFilePrefix = isMac ? "MacOS/" : "";
 
 const sevenZipFile = fs
-  .readdirSync(path.resolve(__dirname, "build", "vendored", "7z"))
+  .readdirSync(path.resolve(__dirname, "vendored", "7z"))
   .find(
     // Windows: 7za.exe, Linux: 7zzs, macOS: 7zz
     (fileName) => ["7za.exe", "7zzs", "7zz"].includes(fileName),
@@ -95,7 +95,7 @@ const builderOptions = {
       to: path.join(extraFilePrefix, "vv-engine"),
     },
     {
-      from: path.resolve(__dirname, "build", "vendored", "7z", sevenZipFile),
+      from: path.resolve(__dirname, "vendored", "7z", sevenZipFile),
       to: extraFilePrefix + sevenZipFile,
     },
   ],

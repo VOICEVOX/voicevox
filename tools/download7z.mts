@@ -5,13 +5,7 @@ import path from "path";
 import fs from "fs";
 import { spawnSync } from "child_process";
 
-const distPath = path.resolve(
-  import.meta.dirname,
-  "..",
-  "build",
-  "vendored",
-  "7z",
-);
+const distPath = path.resolve(import.meta.dirname, "..", "vendored", "7z");
 let url;
 let filesToExtract;
 switch (process.platform) {
@@ -52,6 +46,7 @@ switch (process.platform) {
   }
 }
 
+await fs.promises.mkdir(distPath, { recursive: true });
 const existingFiles = await fs.promises.readdir(distPath);
 
 const notDownloaded = filesToExtract.filter(
