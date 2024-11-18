@@ -18,6 +18,7 @@ import {
 import { IsEqual } from "@/type/utility";
 
 export const settingStoreState: SettingStoreState = {
+  openedEditor: undefined,
   savingSetting: {
     fileEncoding: "UTF-8",
     fileNamePattern: "",
@@ -71,7 +72,6 @@ export const settingStoreState: SettingStoreState = {
   },
   showSingCharacterPortrait: true,
   playheadPositionDisplayFormat: "MINUTES_SECONDS",
-  openedEditor: "talk",
 };
 
 export const settingStore = createPartialStore<SettingStoreTypes>({

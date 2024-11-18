@@ -571,6 +571,7 @@ export type ConfirmedTips = {
 
 // ルート直下にある雑多な設定値
 export const rootMiscSettingSchema = z.object({
+  openedEditor: z.enum(["talk", "song"]).default("talk"),
   editorFont: z.enum(["default", "os"]).default("default"),
   showTextLineNumber: z.boolean().default(false),
   showAddAudioItemButton: z.boolean().default(true),
@@ -594,7 +595,6 @@ export const rootMiscSettingSchema = z.object({
   playheadPositionDisplayFormat: z
     .enum(["MINUTES_SECONDS", "MEASURES_BEATS"])
     .default("MINUTES_SECONDS"), // 再生ヘッド位置の表示モード
-  openedEditor: z.enum(["talk", "song"]).default("talk"),
 });
 export type RootMiscSettingType = z.infer<typeof rootMiscSettingSchema>;
 
