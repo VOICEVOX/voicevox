@@ -69,7 +69,7 @@ exports[`0.13.0からマイグレーションできる 1`] = `
     },
     {
       "action": "テキスト欄を複製",
-      "combination": "Meta D",
+      "combination": "Ctrl D",
     },
     {
       "action": "テキスト欄を削除",
@@ -121,19 +121,19 @@ exports[`0.13.0からマイグレーションできる 1`] = `
     },
     {
       "action": "コピー",
-      "combination": "Meta C",
+      "combination": "Ctrl C",
     },
     {
       "action": "切り取り",
-      "combination": "Meta X",
+      "combination": "Ctrl X",
     },
     {
       "action": "貼り付け",
-      "combination": "Meta V",
+      "combination": "Ctrl V",
     },
     {
       "action": "すべて選択",
-      "combination": "Meta A",
+      "combination": "Ctrl A",
     },
     {
       "action": "選択解除",
@@ -141,43 +141,43 @@ exports[`0.13.0からマイグレーションできる 1`] = `
     },
     {
       "action": "1番目のキャラクターを選択",
-      "combination": "Meta 1",
+      "combination": "Ctrl 1",
     },
     {
       "action": "2番目のキャラクターを選択",
-      "combination": "Meta 2",
+      "combination": "Ctrl 2",
     },
     {
       "action": "3番目のキャラクターを選択",
-      "combination": "Meta 3",
+      "combination": "Ctrl 3",
     },
     {
       "action": "4番目のキャラクターを選択",
-      "combination": "Meta 4",
+      "combination": "Ctrl 4",
     },
     {
       "action": "5番目のキャラクターを選択",
-      "combination": "Meta 5",
+      "combination": "Ctrl 5",
     },
     {
       "action": "6番目のキャラクターを選択",
-      "combination": "Meta 6",
+      "combination": "Ctrl 6",
     },
     {
       "action": "7番目のキャラクターを選択",
-      "combination": "Meta 7",
+      "combination": "Ctrl 7",
     },
     {
       "action": "8番目のキャラクターを選択",
-      "combination": "Meta 8",
+      "combination": "Ctrl 8",
     },
     {
       "action": "9番目のキャラクターを選択",
-      "combination": "Meta 9",
+      "combination": "Ctrl 9",
     },
     {
       "action": "10番目のキャラクターを選択",
-      "combination": "Meta 0",
+      "combination": "Ctrl 0",
     },
   ],
   "inheritAudioInfo": true,
