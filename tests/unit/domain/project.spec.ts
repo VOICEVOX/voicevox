@@ -15,7 +15,7 @@ beforeEach(() => {
 describe("migrateProjectFileObject", () => {
   test("v0.14.11", async () => {
     // ８期生のプロジェクトファイル
-    const vvprojFile = path.resolve(vvprojDir, "0.14.11.vvproj");
+    const vvprojFile = path.join(vvprojDir, "0.14.11.vvproj");
     const projectData: unknown = JSON.parse(
       fs.readFileSync(vvprojFile, "utf-8"),
     );
