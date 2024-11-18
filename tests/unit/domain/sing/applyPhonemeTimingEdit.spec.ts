@@ -27,88 +27,24 @@ const noteIds = createArray(6, () => NoteId(uuid4()));
 const phraseStartTimes = [1.5, 3.5]; // NOTE: phraseStartFramesは[141, 328]になる
 const phraseQueries = [
   createQuery([
-    {
-      noteId: undefined,
-      frameLength: 40,
-      phoneme: "pau",
-    },
-    {
-      noteId: noteIds[0],
-      frameLength: 7,
-      phoneme: "d",
-    },
-    {
-      noteId: noteIds[0],
-      frameLength: 40,
-      phoneme: "o",
-    },
-    {
-      noteId: noteIds[1],
-      frameLength: 7,
-      phoneme: "r",
-    },
-    {
-      noteId: noteIds[1],
-      frameLength: 40,
-      phoneme: "e",
-    },
-    {
-      noteId: noteIds[2],
-      frameLength: 7,
-      phoneme: "m",
-    },
-    {
-      noteId: noteIds[2],
-      frameLength: 40,
-      phoneme: "i",
-    },
-    {
-      noteId: undefined,
-      frameLength: 47,
-      phoneme: "pau",
-    },
+    { noteId: undefined, frameLength: 40, phoneme: "pau" },
+    { noteId: noteIds[0], frameLength: 7, phoneme: "d" },
+    { noteId: noteIds[0], frameLength: 40, phoneme: "o" },
+    { noteId: noteIds[1], frameLength: 7, phoneme: "r" },
+    { noteId: noteIds[1], frameLength: 40, phoneme: "e" },
+    { noteId: noteIds[2], frameLength: 7, phoneme: "m" },
+    { noteId: noteIds[2], frameLength: 40, phoneme: "i" },
+    { noteId: undefined, frameLength: 47, phoneme: "pau" },
   ]),
   createQuery([
-    {
-      noteId: undefined,
-      frameLength: 40,
-      phoneme: "pau",
-    },
-    {
-      noteId: noteIds[3],
-      frameLength: 7,
-      phoneme: "f",
-    },
-    {
-      noteId: noteIds[3],
-      frameLength: 40,
-      phoneme: "a",
-    },
-    {
-      noteId: noteIds[4],
-      frameLength: 7,
-      phoneme: "s",
-    },
-    {
-      noteId: noteIds[4],
-      frameLength: 40,
-      phoneme: "o",
-    },
-    {
-      noteId: noteIds[5],
-      frameLength: 7,
-      phoneme: "r",
-    },
-    {
-      noteId: noteIds[5],
-      frameLength: 40,
-      phoneme: "a",
-    },
-    {
-      noteId: undefined,
-      frameLength: 47,
-      phoneme: "pau",
-    },
+    { noteId: undefined, frameLength: 40, phoneme: "pau" },
+    { noteId: noteIds[3], frameLength: 7, phoneme: "f" },
+    { noteId: noteIds[3], frameLength: 40, phoneme: "a" },
+    { noteId: noteIds[4], frameLength: 7, phoneme: "s" },
+    { noteId: noteIds[4], frameLength: 40, phoneme: "o" },
+    { noteId: noteIds[5], frameLength: 7, phoneme: "r" },
+    { noteId: noteIds[5], frameLength: 40, phoneme: "a" },
+    { noteId: undefined, frameLength: 47, phoneme: "pau" },
   ]),
 ];
 
