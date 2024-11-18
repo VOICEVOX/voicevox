@@ -40,13 +40,13 @@ import { AssetTextFileNames } from "@/type/staticResources";
 import {
   EngineInfo,
   SystemError,
-  defaultHotkeySettings,
   isMac,
   defaultToolbarButtonSetting,
   EngineId,
   TextAsset,
 } from "@/type/preload";
 import { themes } from "@/domain/theme";
+import { defaultHotkeySettings } from "@/domain/hotkeyAction";
 
 type SingleInstanceLockData = {
   filePath: string | undefined;

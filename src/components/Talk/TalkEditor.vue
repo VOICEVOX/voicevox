@@ -136,11 +136,13 @@ import {
   PresetKey,
   SplitterPositionType,
   Voice,
-  HotkeyActionNameType,
-  actionPostfixSelectNthCharacter,
 } from "@/type/preload";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import onetimeWatch from "@/helpers/onetimeWatch";
+import {
+  actionPostfixSelectNthCharacter,
+  HotkeyActionNameType,
+} from "@/domain/hotkeyAction";
 
 const props = defineProps<{
   isEnginesReady: boolean;

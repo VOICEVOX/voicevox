@@ -5,7 +5,6 @@ import {
   EngineId,
   EngineInfo,
   EngineSettingType,
-  HotkeySettingType,
   MessageBoxReturnValue,
   NativeThemeType,
   TextAsset,
@@ -13,6 +12,7 @@ import {
 } from "@/type/preload";
 import { AltPortInfos } from "@/store/type";
 import { Result } from "@/type/result";
+import { HotkeySettingType } from "@/domain/hotkeyAction";
 
 /**
  * invoke, handle

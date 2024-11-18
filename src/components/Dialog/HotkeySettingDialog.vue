@@ -133,12 +133,12 @@
 import { computed, ref } from "vue";
 import HotkeyRecordingDialog from "./HotkeyRecordingDialog.vue";
 import { useStore } from "@/store";
-import {
-  HotkeyActionNameType,
-  HotkeyCombination,
-  HotkeySettingType,
-} from "@/type/preload";
 import { useHotkeyManager, eventToCombination } from "@/plugins/hotkeyPlugin";
+import {
+  HotkeyCombination,
+  HotkeyActionNameType,
+  HotkeySettingType,
+} from "@/domain/hotkeyAction";
 
 const props = defineProps<{
   modelValue: boolean;

@@ -82,8 +82,8 @@
 </template>
 
 <script setup lang="ts">
+import { HotkeyCombination } from "@/domain/hotkeyAction";
 import { computed } from "vue";
-import { HotkeyCombination } from "@/type/preload";
 
 const props = defineProps<{
   isHotkeyDialogOpened: boolean;
