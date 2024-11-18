@@ -72,13 +72,11 @@ watchEffect(() => {
 });
 
 // エディタの切り替えを監視してショートカットキーの設定を変更する
-watch(
-  () => store.state.openedEditor,
-  async (openedEditor) => {
-    if (openedEditor != undefined) {
-      hotkeyManager.onEditorChange(openedEditor);
-    }
+watchEffect(
+  () => {
+    hotkeyManager.onEditorChange(openedEditor.value);
   },
+  { flush: "post" },
 );
 
 // テーマの変更を監視してCSS変数を変更する
