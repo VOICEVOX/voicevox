@@ -437,13 +437,6 @@ const retryShowSaveDialogWhileSafeDir = async <
     const filePath =
       "filePaths" in result ? result.filePaths[0] : result.filePath;
 
-    // filePathが未定義の場合、エラーを返す
-    if (filePath == undefined) {
-      throw new Error(
-        `canseld == ${result.canceled} but filePath == ${filePath}`,
-      );
-    }
-
     // 選択されたパスが安全かどうかを確認
     if (isUnsafePath(filePath)) {
       const result = await showWarningDialog();
@@ -762,7 +755,7 @@ registerIpcMainHandle<IpcMainHandle>({
 });
 
 // app callback
-app.on("web-contents-created", (e, contents) => {
+app.on("web-contents-created", (_e, contents) => {
   // リンククリック時はブラウザを開く
   contents.setWindowOpenHandler(({ url }) => {
     const { protocol } = new URL(url);
@@ -972,7 +965,7 @@ app.on("ready", async () => {
 });
 
 // 他のプロセスが起動したとき、`requestSingleInstanceLock`経由で`rawData`が送信される。
-app.on("second-instance", async (event, argv, workDir, rawData) => {
+app.on("second-instance", async (_event, _argv, _workDir, rawData) => {
   const data = rawData as SingleInstanceLockData;
   if (!data.filePath) {
     log.info("No file path sent");
