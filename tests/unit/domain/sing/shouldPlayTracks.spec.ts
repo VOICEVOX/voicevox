@@ -1,3 +1,4 @@
+import { uuid4 } from "@/helpers/random";
 import { createDefaultTrack, shouldPlayTracks } from "@/sing/domain";
 import { Track } from "@/store/type";
 import { TrackId } from "@/type/preload";
@@ -10,7 +11,7 @@ const createTrack = ({ solo, mute }: { solo: boolean; mute: boolean }) => {
 };
 const toTracksMap = (tracks: Track[]) => {
   return tracks.reduce((acc, track) => {
-    acc.set(TrackId(crypto.randomUUID()), track);
+    acc.set(TrackId(uuid4()), track);
     return acc;
   }, new Map<TrackId, Track>());
 };

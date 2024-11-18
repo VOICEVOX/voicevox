@@ -20,7 +20,7 @@ import {
 import { AssetTextFileNames } from "@/type/staticResources";
 
 const toStaticPath = (fileName: string) =>
-  `${import.meta.env.BASE_URL}/${fileName}`.replaceAll(/\/\/+/, "/");
+  `${import.meta.env.BASE_URL}/${fileName}`.replaceAll(/\/\/+/g, "/");
 
 // FIXME: asを使わないようオーバーロードにした。オーバーロードも使わない書き方にしたい。
 function onReceivedIPCMsg<
