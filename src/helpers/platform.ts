@@ -5,7 +5,9 @@ export const isBrowser = import.meta.env.VITE_TARGET === "browser";
 // electronのメイン・レンダラープロセス内、ブラウザ内どこでも使用可能なOS判定
 function checkOs(os: "windows" | "mac"): boolean {
   let isSpecifiedOs: boolean | undefined = undefined;
-  if (process?.platform) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const lenientGlobalThis = globalThis as any;
+  if (lenientGlobalThis.process?.platform) {
     // electronのメインプロセス用
     isSpecifiedOs =
       process.platform === (os === "windows" ? "win32" : "darwin");
