@@ -1825,7 +1825,9 @@ export type SettingStoreState = {
   experimentalSetting: ExperimentalSettingType;
   confirmedTips: ConfirmedTips;
   engineSettings: EngineSettings;
-} & RootMiscSettingType;
+} & Omit<RootMiscSettingType, "openedEditor"> & {
+    openedEditor: EditorType | undefined; // undefinedのときはどのエディタを開くか定まっていない
+  };
 
 // keyとvalueの型を連動するようにしたPayloadを作る
 type KeyValuePayload<R, K extends keyof R = keyof R> = K extends keyof R
