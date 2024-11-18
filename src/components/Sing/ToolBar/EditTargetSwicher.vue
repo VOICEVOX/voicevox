@@ -42,7 +42,7 @@
 
 <script setup lang="ts">
 import { SequencerEditTarget } from "@/store/type";
-import { isMac } from "@/helpers/platform"
+import { isMac } from "@/helpers/platform";
 
 defineProps<{
   editTarget: SequencerEditTarget;
