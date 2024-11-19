@@ -1555,7 +1555,7 @@ onActivated(() => {
     xToScroll = scrollX.value;
     yToScroll = scrollY.value;
   }
-  // 実際��スクロールする
+  // 実際にスクロールする
   void nextTick(() => {
     sequencerBodyElement.scrollTo(xToScroll, yToScroll);
   });

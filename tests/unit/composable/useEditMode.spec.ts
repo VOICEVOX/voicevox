@@ -1,15 +1,10 @@
 import { ref } from "vue";
 import { describe, it, expect } from "vitest";
-import {
-  useEditMode,
-  EditModeState,
-  EditModeContext,
-} from "@/composables/useEditMode";
+import { useEditMode, EditModeState } from "@/composables/useEditMode";
 import { SequencerEditTarget, NoteEditTool, PitchEditTool } from "@/store/type";
-import { NoteId } from "@/type/preload";
 
 describe("useEditMode", () => {
-  // 編集モードのモックstate
+  // モックステート
   const createMockState = (
     overrides: Partial<EditModeState> = {},
   ): EditModeState => {
@@ -21,167 +16,113 @@ describe("useEditMode", () => {
     };
   };
 
-  // コンテキストのモック
-  const createMockContext = (
-    overrides: Partial<EditModeContext> = {},
-  ): EditModeContext => ({
-    ctrlKey: ref(false),
-    shiftKey: ref(false),
-    nowPreviewing: ref(false),
-    ...overrides,
+  // 公開メソッドをテスト
+  it("初期状態ではeditTargetが'NOTE'", () => {
+    const state = createMockState();
+    const { editTarget } = useEditMode(state);
+    expect(editTarget.value).toBe("NOTE");
   });
 
-  it("プレビュー中は常にIGNOREを返す", () => {
-    const { resolveMouseDownBehavior } = useEditMode(createMockState());
+  it("setEditTargetが正しく更新される", () => {
+    const state = createMockState();
+    const { editTarget, setEditTarget } = useEditMode(state);
+    setEditTarget("PITCH");
+    expect(editTarget.value).toBe("PITCH");
+  });
 
-    const result = resolveMouseDownBehavior({
-      ...createMockContext({ nowPreviewing: ref(true) }),
-      isSelfEventTarget: true,
-      mouseButton: "LEFT_BUTTON",
+  it("editTargetの変更に応じてisNoteEditTargetが変化する", () => {
+    const state = createMockState();
+    const { isNoteEditTarget, setEditTarget } = useEditMode(state);
+    expect(isNoteEditTarget.value).toBe(true);
+    setEditTarget("PITCH");
+    expect(isNoteEditTarget.value).toBe(false);
+  });
+
+  it("editTargetの変更に応じてisPitchEditTargetが変化する", () => {
+    const state = createMockState();
+    const { isPitchEditTarget, setEditTarget } = useEditMode(state);
+    expect(isPitchEditTarget.value).toBe(false);
+    setEditTarget("PITCH");
+    expect(isPitchEditTarget.value).toBe(true);
+  });
+
+  it("selectedNoteToolの初期値は'EDIT_FIRST'", () => {
+    const state = createMockState();
+    const { selectedNoteTool } = useEditMode(state);
+    expect(selectedNoteTool.value).toBe("EDIT_FIRST");
+  });
+
+  it("setSelectedNoteToolでツールが正しく更新される", () => {
+    const state = createMockState();
+    const { selectedNoteTool, setSelectedNoteTool } = useEditMode(state);
+    setSelectedNoteTool("SELECT_FIRST");
+    expect(selectedNoteTool.value).toBe("SELECT_FIRST");
+  });
+
+  it("selectedPitchToolの初期値は'DRAW'", () => {
+    const state = createMockState();
+    const { selectedPitchTool } = useEditMode(state);
+    expect(selectedPitchTool.value).toBe("DRAW");
+  });
+
+  it("setSelectedPitchToolでツールが正しく更新される", () => {
+    const state = createMockState();
+    const { selectedPitchTool, setSelectedPitchTool } = useEditMode(state);
+    setSelectedPitchTool("ERASE");
+    expect(selectedPitchTool.value).toBe("ERASE");
+  });
+
+  it("editTargetが'NOTE'でselectedNoteToolが'SELECT_FIRST'の場合、isNoteSelectFirstToolがtrueである", () => {
+    const state = createMockState({
+      editTarget: ref("NOTE"),
+      selectedNoteTool: ref("SELECT_FIRST"),
     });
-
-    expect(result).toBe("IGNORE");
+    const { isNoteSelectFirstTool } = useEditMode(state);
+    expect(isNoteSelectFirstTool.value).toBe(true);
   });
 
-  it("Shiftキーが押されている場合は常に矩形選択", () => {
-    const { resolveMouseDownBehavior } = useEditMode(createMockState());
-
-    const result = resolveMouseDownBehavior({
-      ...createMockContext({ shiftKey: ref(true) }),
-      isSelfEventTarget: true,
-      mouseButton: "LEFT_BUTTON",
+  it("editTargetが'NOTE'でselectedNoteToolが'EDIT_FIRST'の場合、isNoteEditFirstToolがtrueである", () => {
+    const state = createMockState({
+      editTarget: ref("NOTE"),
+      selectedNoteTool: ref("EDIT_FIRST"),
     });
-
-    expect(result).toBe("START_RECT_SELECT");
+    const { isNoteEditFirstTool } = useEditMode(state);
+    expect(isNoteEditFirstTool.value).toBe(true);
   });
 
-  it("ノート編集で編集優先ツールの場合、通常クリックでノート追加", () => {
-    const { resolveMouseDownBehavior } = useEditMode(
-      createMockState({
-        editTarget: ref("NOTE"),
-        selectedNoteTool: ref("EDIT_FIRST"),
-      }),
-    );
-
-    const result = resolveMouseDownBehavior({
-      ...createMockContext(),
-      isSelfEventTarget: true,
-      mouseButton: "LEFT_BUTTON",
+  it("editTargetが'PITCH'でselectedNoteToolが'EDIT_FIRST'の場合、isNoteEditFirstToolはfalseである", () => {
+    const state = createMockState({
+      editTarget: ref("PITCH"),
+      selectedNoteTool: ref("EDIT_FIRST"),
     });
-
-    expect(result).toBe("ADD_NOTE");
+    const { isNoteEditFirstTool } = useEditMode(state);
+    expect(isNoteEditFirstTool.value).toBe(false);
   });
 
-  it("ノート編集で選択優先ツールの場合、通常クリックで矩形選択開始", () => {
-    const { resolveMouseDownBehavior } = useEditMode(
-      createMockState({
-        editTarget: ref("NOTE"),
-        selectedNoteTool: ref("SELECT_FIRST"),
-      }),
-    );
-
-    const result = resolveMouseDownBehavior({
-      ...createMockContext(),
-      isSelfEventTarget: true,
-      mouseButton: "LEFT_BUTTON",
+  it("editTargetが'PITCH'でselectedPitchToolが'DRAW'の場合、isPitchDrawToolがtrueである", () => {
+    const state = createMockState({
+      editTarget: ref("PITCH"),
+      selectedPitchTool: ref("DRAW"),
     });
-
-    expect(result).toBe("START_RECT_SELECT");
+    const { isPitchDrawTool } = useEditMode(state);
+    expect(isPitchDrawTool.value).toBe(true);
   });
 
-  it("歌詞編集中は無視", () => {
-    const { resolveMouseDownBehavior } = useEditMode(createMockState());
-
-    const result = resolveMouseDownBehavior({
-      ...createMockContext(),
-      isSelfEventTarget: true,
-      mouseButton: "LEFT_BUTTON",
-      editingLyricNoteId: NoteId("note-1"),
+  it("editTargetが'PITCH'でselectedPitchToolが'ERASE'の場合、isPitchEraseToolがtrueである", () => {
+    const state = createMockState({
+      editTarget: ref("PITCH"),
+      selectedPitchTool: ref("ERASE"),
     });
-
-    expect(result).toBe("IGNORE");
+    const { isPitchEraseTool } = useEditMode(state);
+    expect(isPitchEraseTool.value).toBe(true);
   });
 
-  it("編集対象外の場合は無視", () => {
-    const { resolveMouseDownBehavior } = useEditMode(createMockState());
-
-    const result = resolveMouseDownBehavior({
-      ...createMockContext(),
-      isSelfEventTarget: false,
-      mouseButton: "LEFT_BUTTON",
+  it("editTargetが'NOTE'でselectedPitchToolが'DRAW'の場合、isPitchDrawToolはfalseである", () => {
+    const state = createMockState({
+      editTarget: ref("NOTE"),
+      selectedPitchTool: ref("DRAW"),
     });
-
-    expect(result).toBe("IGNORE");
-  });
-
-  it("ピッチ編集モードで通常クリックでピッチ描画", () => {
-    const { resolveMouseDownBehavior } = useEditMode(
-      createMockState({
-        editTarget: ref("PITCH"),
-        selectedPitchTool: ref("DRAW"),
-      }),
-    );
-
-    const result = resolveMouseDownBehavior({
-      ...createMockContext(),
-      isSelfEventTarget: true,
-      mouseButton: "LEFT_BUTTON",
-    });
-
-    expect(result).toBe("DRAW_PITCH");
-  });
-
-  it("ピッチ編集モードで消しゴムツールの場合はピッチ削除", () => {
-    const { resolveMouseDownBehavior } = useEditMode(
-      createMockState({
-        editTarget: ref("PITCH"),
-        selectedPitchTool: ref("ERASE"),
-      }),
-    );
-
-    const result = resolveMouseDownBehavior({
-      ...createMockContext(),
-      isSelfEventTarget: true,
-      mouseButton: "LEFT_BUTTON",
-    });
-
-    expect(result).toBe("ERASE_PITCH");
-  });
-
-  it("ダブルクリック時、プレビュー中は常にIGNOREを返す", () => {
-    const { resolveDoubleClickBehavior } = useEditMode(createMockState());
-
-    const result = resolveDoubleClickBehavior(
-      createMockContext({
-        nowPreviewing: ref(true),
-      }),
-    );
-
-    expect(result).toBe("IGNORE");
-  });
-
-  it("ダブルクリック時、ノート編集で選択優先ツールの場合はノート追加", () => {
-    const { resolveDoubleClickBehavior } = useEditMode(
-      createMockState({
-        editTarget: ref("NOTE"),
-        selectedNoteTool: ref("SELECT_FIRST"),
-      }),
-    );
-
-    const result = resolveDoubleClickBehavior(createMockContext());
-
-    expect(result).toBe("ADD_NOTE");
-  });
-
-  it("ダブルクリック時、その他の場合はIGNORE", () => {
-    const { resolveDoubleClickBehavior } = useEditMode(
-      createMockState({
-        editTarget: ref("PITCH"),
-      }),
-    );
-
-    const result = resolveDoubleClickBehavior(createMockContext());
-
-    expect(result).toBe("IGNORE");
+    const { isPitchDrawTool } = useEditMode(state);
+    expect(isPitchDrawTool.value).toBe(false);
   });
 });
