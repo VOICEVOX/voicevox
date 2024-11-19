@@ -18,6 +18,7 @@ import {
 import { IsEqual } from "@/type/utility";
 
 export const settingStoreState: SettingStoreState = {
+  openedEditor: undefined,
   savingSetting: {
     fileEncoding: "UTF-8",
     fileNamePattern: "",
@@ -148,6 +149,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         "undoableTrackOperations",
         "showSingCharacterPortrait",
         "playheadPositionDisplayFormat",
+        "openedEditor",
       ] as const;
 
       // rootMiscSettingKeysに値を足し忘れていたときに型エラーを出す検出用コード
