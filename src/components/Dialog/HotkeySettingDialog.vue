@@ -196,7 +196,7 @@ const confirmAndDeleteHotkey = async (action: string) => {
     cancel: "未割り当てにしない",
   });
 
-  if (result !== "OK") {
+  if (result === "OK") {
     deleteHotkey(action);
   }
 };
