@@ -1,3 +1,7 @@
+/**
+ * コードが動いている環境を判定するためのユーティリティ。
+ * Electronのメインプロセス、レンダラープロセス、ブラウザのどこでも使用可能。
+ */
 export const isProduction = import.meta.env.MODE === "production";
 export const isElectron = import.meta.env.VITE_TARGET === "electron";
 export const isBrowser = import.meta.env.VITE_TARGET === "browser";
