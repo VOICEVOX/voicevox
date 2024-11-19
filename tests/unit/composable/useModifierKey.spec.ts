@@ -5,7 +5,7 @@ import {
   useShiftKey,
 } from "@/composables/useModifierKey";
 
-import { isMac } from "@/type/preload";
+import { isMac } from "@/helpers/platform";
 
 describe("useModifierKey", () => {
   // テスト用のコンポーネント
