@@ -162,13 +162,7 @@
       ref="contextMenu"
       :menudata="contextMenuData"
     />
-    <SequencerToolPalette
-      :editTarget
-      :selectedNoteTool
-      :selectedPitchTool
-      @update:selectedNoteTool="selectedNoteTool = $event"
-      @update:selectedPitchTool="selectedPitchTool = $event"
-    />
+    <SequencerToolPalette :editTarget :selectedNoteTool :selectedPitchTool />
   </div>
 </template>
 
@@ -379,17 +373,6 @@ const sequencerBody = ref<HTMLElement | null>(null);
 const cursorX = ref(0);
 const cursorY = ref(0);
 
-// カーソル状態の更新
-// TODO: useCursorStateに委譲
-const { setCursorState, cursorState, cursorClass } = useCursorState();
-watch(
-  () => cursorState.value,
-  (newState) => {
-    setCursorState(newState);
-  },
-  { immediate: true },
-);
-
 // 歌詞入力
 const { previewLyrics, commitPreviewLyrics, splitAndUpdatePreview } =
   useLyricInput();
@@ -438,7 +421,8 @@ const editingLyricNote = computed(() => {
   );
 });
 
-// storeの状態を渡す
+// 編集モードの管理
+// storeの状態とgetter/setterを渡す
 // NOTE: この形がよいのかは要考慮
 const editModeState = {
   editTarget: computed({
@@ -461,46 +445,87 @@ const {
   editTarget,
   selectedNoteTool,
   selectedPitchTool,
+  setSelectedPitchTool,
+  isPitchDrawTool,
+  isPitchEraseTool,
   resolveMouseDownBehavior,
   resolveDoubleClickBehavior,
 } = useEditMode(editModeState);
 
+// ピッチ編集モードにおいてCtrlキーが押されたときにピッチツールを消しゴムツールにする
+watch(
+  [ctrlKey],
+  () => {
+    if (editTarget.value !== "PITCH") {
+      return;
+    }
+
+    if (ctrlKey.value) {
+      // Ctrlキーが押されたとき
+      if (isPitchDrawTool.value) {
+        setSelectedPitchTool("ERASE");
+      }
+    } else {
+      if (isPitchEraseTool.value) {
+        setSelectedPitchTool("DRAW");
+      }
+    }
+  },
+  { immediate: true },
+);
+
+// カーソル状態の管理
+const { setCursorState, cursorState, cursorClass } = useCursorState();
+
+// TODO: カーソル状態を決定するロジックをuseCursorStateに移譲もしくはステートパターン実装
+const resolveCursorState = () => {
+  // プレビュー中は現在の状態を維持
+  if (nowPreviewing.value) {
+    return cursorState.value;
+  }
+
+  if (editTarget.value === "PITCH") {
+    // ピッチ編集モード時のカーソル状態
+    return ctrlKey.value || selectedPitchTool.value === "ERASE"
+      ? CursorState.ERASE
+      : CursorState.DRAW;
+  }
+  if (editTarget.value === "NOTE") {
+    // ノート編集モード時のカーソル状態
+    if (shiftKey.value) {
+      return CursorState.CROSSHAIR;
+    }
+    return selectedNoteTool.value === "EDIT_FIRST"
+      ? CursorState.DRAW
+      : CursorState.UNSET;
+  }
+
+  return CursorState.UNSET;
+};
+
+// カーソル状態の更新を一元管理
+const updateCursorState = () => {
+  const newState = resolveCursorState();
+  setCursorState(newState);
+};
+
+// 関連する状態が変更されたときにカーソル状態を更新
+watch(
+  [
+    ctrlKey,
+    shiftKey,
+    nowPreviewing,
+    editTarget,
+    selectedNoteTool,
+    selectedPitchTool,
+  ],
+  updateCursorState,
+  { immediate: true },
+);
+
 // 入力を補助する線
 const showGuideLine = ref(true);
 const guideLineX = ref(0);
-
-// プレビュー中でないときの処理
-// TODO: ステートパターンにして、この処理をIdleStateに移す
-watch([ctrlKey, shiftKey, nowPreviewing, editTarget], () => {
-  if (nowPreviewing.value) {
-    return;
-  }
-  if (editTarget.value === "PITCH") {
-    // Ctrlキーが押されている場合は常に消しゴムモード
-    if (ctrlKey.value) {
-      setCursorState(CursorState.ERASE);
-    } else {
-      // 現在選択されているツールに応じたカーソル状態を設定
-      const newCursorState =
-        selectedPitchTool.value === "DRAW"
-          ? CursorState.DRAW
-          : CursorState.ERASE;
-      setCursorState(newCursorState);
-    }
-  }
-  if (editTarget.value === "NOTE") {
-    if (shiftKey.value) {
-      setCursorState(CursorState.CROSSHAIR);
-    } else if (selectedNoteTool.value === "EDIT_FIRST") {
-      setCursorState(CursorState.DRAW);
-    } else {
-      setCursorState(CursorState.UNSET);
-    }
-  }
-});
-watch([editTarget, selectedNoteTool, selectedPitchTool], () => {
-  setDefaultCursorState();
-});
 
 const previewAdd = () => {
   const cursorBaseX = (scrollX.value + cursorX.value) / zoomX.value;
@@ -1022,23 +1047,6 @@ const endPreview = () => {
   previewNotes.value = [];
   copiedNotesForPreview.clear();
   edited = false;
-  setDefaultCursorState();
-};
-
-const setDefaultCursorState = () => {
-  if (editTarget.value === "NOTE") {
-    if (selectedNoteTool.value === "EDIT_FIRST") {
-      setCursorState(CursorState.DRAW);
-    } else {
-      setCursorState(CursorState.UNSET);
-    }
-  } else if (editTarget.value === "PITCH") {
-    if (selectedPitchTool.value === "DRAW") {
-      setCursorState(CursorState.DRAW);
-    } else {
-      setCursorState(CursorState.ERASE);
-    }
-  }
 };
 
 const onNoteBarMouseDown = (event: MouseEvent, note: Note) => {
@@ -1273,7 +1281,6 @@ const rectSelect = (additive: boolean) => {
     void store.actions.DESELECT_ALL_NOTES();
   }
   void store.actions.SELECT_NOTES({ noteIds: noteIdsToSelect });
-  setDefaultCursorState();
 };
 
 const onMouseEnter = () => {
@@ -1520,8 +1527,6 @@ onMounted(() => {
   const clientWidth = sequencerBodyElement.clientWidth;
   const offsetWidth = sequencerBodyElement.offsetWidth;
   scrollBarWidth.value = offsetWidth - clientWidth;
-  // デ���ォルトのカーソル状態を設定
-  setDefaultCursorState();
 });
 
 // 最初のonActivatedか判断するためのフラグ
@@ -1550,7 +1555,7 @@ onActivated(() => {
     xToScroll = scrollX.value;
     yToScroll = scrollY.value;
   }
-  // 実際にスクロールする
+  // 実際��スクロールする
   void nextTick(() => {
     sequencerBodyElement.scrollTo(xToScroll, yToScroll);
   });
