@@ -118,7 +118,6 @@
 </template>
 
 <script setup lang="ts">
-import path from "path";
 import { computed, onBeforeUpdate, ref, toRaw, VNodeRef, watch } from "vue";
 import Draggable from "vuedraggable";
 import { QResizeObserver } from "quasar";
@@ -141,6 +140,7 @@ import {
 } from "@/type/preload";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import onetimeWatch from "@/helpers/onetimeWatch";
+import path from "@/helpers/path";
 
 const props = defineProps<{
   isEnginesReady: boolean;
