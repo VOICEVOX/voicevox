@@ -74,7 +74,9 @@ watchEffect(() => {
 // エディタの切り替えを監視してショートカットキーの設定を変更する
 watchEffect(
   () => {
-    hotkeyManager.onEditorChange(openedEditor.value);
+    if (openedEditor.value) {
+      hotkeyManager.onEditorChange(openedEditor.value);
+    }
   },
   { flush: "post" },
 );
