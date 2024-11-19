@@ -8,6 +8,8 @@ import { spawnSync } from "child_process";
 const distPath = path.resolve(import.meta.dirname, "..", "vendored", "7z");
 let url;
 let filesToExtract;
+
+await fs.promises.mkdir(distPath, { recursive: true });
 switch (process.platform) {
   case "win32": {
     // 7za.exeは7z形式で圧縮されているので、7zr.exeが必要になる。
@@ -46,7 +48,6 @@ switch (process.platform) {
   }
 }
 
-await fs.promises.mkdir(distPath, { recursive: true });
 const existingFiles = await fs.promises.readdir(distPath);
 
 const notDownloaded = filesToExtract.filter(
