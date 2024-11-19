@@ -40,7 +40,6 @@ defineEmits<{
   border-radius: vars.$radius-1;
   color: colors.$display;
   background-color: colors.$clear;
-  transition: background-color vars.$transition-duration;
   cursor: pointer;
 
   &:focus-visible {
