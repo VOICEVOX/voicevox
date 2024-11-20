@@ -160,7 +160,7 @@ export const vstPlugin: Plugin = {
       () => [store.state.phrases, isReady] as const,
       ([phrases]) => {
         if (!isReady.value) return;
-        void lock.acquire("phrases", async () => {
+        void lock.acquire("phrases", debounce(async () => {
           log.info("Sending phrases");
           const missingVoices = await setPhrases(
             [...phrases.values()].flatMap((phrase) =>
@@ -194,7 +194,7 @@ export const vstPlugin: Plugin = {
             log.info("All voices are available");
           }
         });
-      },
+      }, 500),
       { deep: true },
     );
 
