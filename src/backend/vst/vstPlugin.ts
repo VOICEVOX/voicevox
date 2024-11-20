@@ -160,41 +160,44 @@ export const vstPlugin: Plugin = {
       () => [store.state.phrases, isReady] as const,
       ([phrases]) => {
         if (!isReady.value) return;
-        void lock.acquire("phrases", debounce(async () => {
-          log.info("Sending phrases");
-          const missingVoices = await setPhrases(
-            [...phrases.values()].flatMap((phrase) =>
-              phrase.singingVoiceKey
-                ? [
-                    {
-                      start: phrase.startTime,
-                      trackId: phrase.trackId,
-                      voice: phrase.singingVoiceKey,
-                    },
-                  ]
-                : [],
-            ),
-          );
+        void lock.acquire(
+          "phrases",
+          debounce(async () => {
+            log.info("Sending phrases");
+            const missingVoices = await setPhrases(
+              [...phrases.values()].flatMap((phrase) =>
+                phrase.singingVoiceKey
+                  ? [
+                      {
+                        start: phrase.startTime,
+                        trackId: phrase.trackId,
+                        voice: phrase.singingVoiceKey,
+                      },
+                    ]
+                  : [],
+              ),
+            );
 
-          if (missingVoices.length > 0) {
-            log.info(`Missing ${missingVoices.length} voices`);
-            const voices: Record<SingingVoiceKey, string> = {};
-            for (const voice of missingVoices) {
-              const cachedVoice = phraseSingingVoices.get(voice);
-              if (cachedVoice) {
-                voices[voice] = await toBase64(
-                  new Uint8Array(await cachedVoice.arrayBuffer()),
-                );
+            if (missingVoices.length > 0) {
+              log.info(`Missing ${missingVoices.length} voices`);
+              const voices: Record<SingingVoiceKey, string> = {};
+              for (const voice of missingVoices) {
+                const cachedVoice = phraseSingingVoices.get(voice);
+                if (cachedVoice) {
+                  voices[voice] = await toBase64(
+                    new Uint8Array(await cachedVoice.arrayBuffer()),
+                  );
+                }
               }
-            }
 
-            await setVoices(voices);
-            log.info("Voices sent");
-          } else {
-            log.info("All voices are available");
-          }
-        });
-      }, 500),
+              await setVoices(voices);
+              log.info("Voices sent");
+            } else {
+              log.info("All voices are available");
+            }
+          }, 500),
+        );
+      },
       { deep: true },
     );
 
