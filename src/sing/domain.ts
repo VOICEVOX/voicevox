@@ -593,8 +593,7 @@ export const shouldPlayTracks = (tracks: Map<TrackId, Track>): Set<TrackId> => {
 };
 
 /**
- * 指定されたティックをグリッドに合わせて丸める。
- * グリッドはsnapTicksの倍数になる。
+ * 指定されたティックを直近のグリッドに合わせる
  */
 export function snapTicksToGrid(ticks: number, snapTicks: number): number {
   return Math.round(ticks / snapTicks) * snapTicks;
