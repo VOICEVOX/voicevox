@@ -47,3 +47,6 @@ electron-builder.yml
 
 # Storybook
 storybook-static/
+
+# Preview Build Output
+dist_preview/

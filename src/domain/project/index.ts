@@ -16,6 +16,7 @@ import {
   DEFAULT_TPQN,
   DEFAULT_TRACK_NAME,
 } from "@/sing/domain";
+import { uuid4 } from "@/helpers/random";
 
 const DEFAULT_SAMPLING_RATE = 24000;
 
@@ -125,6 +126,7 @@ export const migrateProjectFileObject = async (
     for (const audioItemsKey in projectData.audioItems) {
       if (projectData.audioItems[audioItemsKey].query != null) {
         projectData.audioItems[audioItemsKey].query.volumeScale = 1;
+        projectData.audioItems[audioItemsKey].query.pauseLengthScale = 1;
         projectData.audioItems[audioItemsKey].query.prePhonemeLength = 0.1;
         projectData.audioItems[audioItemsKey].query.postPhonemeLength = 0.1;
         projectData.audioItems[audioItemsKey].query.outputSamplingRate =
@@ -296,10 +298,17 @@ export const migrateProjectFileObject = async (
       track.mute = false;
       track.gain = 1;
       track.pan = 0;
-      newTracks[TrackId(crypto.randomUUID())] = track;
+      newTracks[TrackId(uuid4())] = track;
     }
     projectData.song.tracks = newTracks;
     projectData.song.trackOrder = Object.keys(newTracks);
+  }
+
+  if (semver.satisfies(projectAppVersion, "<0.22.0", semverSatisfiesOptions)) {
+    // 文内無音倍率の追加
+    for (const audioItemsKey in projectData.talk.audioItems) {
+      projectData.talk.audioItems[audioItemsKey].query.pauseLengthScale = 1;
+    }
   }
 
   // Validation check

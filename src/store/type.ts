@@ -76,8 +76,12 @@ import {
 /**
  * エディタ用のAudioQuery
  */
-export type EditorAudioQuery = Omit<AudioQuery, "outputSamplingRate"> & {
+export type EditorAudioQuery = Omit<
+  AudioQuery,
+  "outputSamplingRate" | "pauseLengthScale"
+> & {
   outputSamplingRate: number | "engineDefault";
+  pauseLengthScale: number; // エンジンと違って必須
 };
 
 export type AudioItem = {
@@ -290,6 +294,10 @@ export type AudioStoreTypes = {
     mutation: { audioKey: AudioKey; volumeScale: number };
   };
 
+  SET_AUDIO_PAUSE_LENGTH_SCALE: {
+    mutation: { audioKey: AudioKey; pauseLengthScale: number };
+  };
+
   SET_AUDIO_PRE_PHONEME_LENGTH: {
     mutation: { audioKey: AudioKey; prePhonemeLength: number };
   };
@@ -329,8 +337,8 @@ export type AudioStoreTypes = {
   };
 
   SET_AUDIO_QUERY: {
-    mutation: { audioKey: AudioKey; audioQuery: AudioQuery };
-    action(payload: { audioKey: AudioKey; audioQuery: AudioQuery }): void;
+    mutation: { audioKey: AudioKey; audioQuery: EditorAudioQuery };
+    action(payload: { audioKey: AudioKey; audioQuery: EditorAudioQuery }): void;
   };
 
   FETCH_AUDIO_QUERY: {
@@ -338,7 +346,7 @@ export type AudioStoreTypes = {
       text: string;
       engineId: EngineId;
       styleId: StyleId;
-    }): Promise<AudioQuery>;
+    }): Promise<EditorAudioQuery>;
   };
 
   SET_AUDIO_VOICE: {
@@ -506,7 +514,7 @@ export type AudioCommandStoreTypes = {
     mutation: { audioKey: AudioKey; text: string } & (
       | { update: "Text" }
       | { update: "AccentPhrases"; accentPhrases: AccentPhrase[] }
-      | { update: "AudioQuery"; query: AudioQuery }
+      | { update: "AudioQuery"; query: EditorAudioQuery }
     );
     action(payload: { audioKey: AudioKey; text: string }): void;
   };
@@ -522,7 +530,7 @@ export type AudioCommandStoreTypes = {
           }
         | {
             update: "AudioQuery";
-            query: AudioQuery;
+            query: EditorAudioQuery;
           }
         | {
             update: "OnlyVoice";
@@ -625,6 +633,11 @@ export type AudioCommandStoreTypes = {
   COMMAND_MULTI_SET_AUDIO_VOLUME_SCALE: {
     mutation: { audioKeys: AudioKey[]; volumeScale: number };
     action(payload: { audioKeys: AudioKey[]; volumeScale: number }): void;
+  };
+
+  COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH_SCALE: {
+    mutation: { audioKeys: AudioKey[]; pauseLengthScale: number };
+    action(payload: { audioKeys: AudioKey[]; pauseLengthScale: number }): void;
   };
 
   COMMAND_MULTI_SET_AUDIO_PRE_PHONEME_LENGTH: {
@@ -751,6 +764,11 @@ export type PhraseState =
 export type EditorFrameAudioQuery = FrameAudioQuery & { frameRate: number };
 
 /**
+ * 歌唱ピッチ
+ */
+export type SingingPitch = number[];
+
+/**
  * 歌唱ボリューム
  */
 export type SingingVolume = number[];
@@ -769,6 +787,11 @@ export type EditorFrameAudioQueryKey = z.infer<
 export const EditorFrameAudioQueryKey = (
   id: string,
 ): EditorFrameAudioQueryKey => editorFrameAudioQueryKeySchema.parse(id);
+
+const singingPitchKeySchema = z.string().brand<"SingingPitchKey">();
+export type SingingPitchKey = z.infer<typeof singingPitchKeySchema>;
+export const SingingPitchKey = (id: string): SingingPitchKey =>
+  singingPitchKeySchema.parse(id);
 
 const singingVolumeKeySchema = z.string().brand<"SingingVolumeKey">();
 export type SingingVolumeKey = z.infer<typeof singingVolumeKeySchema>;
@@ -794,6 +817,7 @@ export type Phrase = {
   startTime: number;
   state: PhraseState;
   queryKey?: EditorFrameAudioQueryKey;
+  singingPitchKey?: SingingPitchKey;
   singingVolumeKey?: SingingVolumeKey;
   singingVoiceKey?: SingingVoiceKey;
   sequenceId?: SequenceId;
@@ -839,6 +863,7 @@ export type SingingStoreState = {
   editorFrameRate: number;
   phrases: Map<PhraseKey, Phrase>;
   phraseQueries: Map<EditorFrameAudioQueryKey, EditorFrameAudioQuery>;
+  phraseSingingPitches: Map<SingingPitchKey, SingingPitch>;
   phraseSingingVolumes: Map<SingingVolumeKey, SingingVolume>;
   sequencerZoomX: number;
   sequencerZoomY: number;
@@ -999,6 +1024,13 @@ export type SingingStoreTypes = {
     };
   };
 
+  SET_SINGING_PITCH_KEY_TO_PHRASE: {
+    mutation: {
+      phraseKey: PhraseKey;
+      singingPitchKey: SingingPitchKey | undefined;
+    };
+  };
+
   SET_SINGING_VOLUME_KEY_TO_PHRASE: {
     mutation: {
       phraseKey: PhraseKey;
@@ -1029,6 +1061,17 @@ export type SingingStoreTypes = {
 
   DELETE_PHRASE_QUERY: {
     mutation: { queryKey: EditorFrameAudioQueryKey };
+  };
+
+  SET_PHRASE_SINGING_PITCH: {
+    mutation: {
+      singingPitchKey: SingingPitchKey;
+      singingPitch: SingingPitch;
+    };
+  };
+
+  DELETE_PHRASE_SINGING_PITCH: {
+    mutation: { singingPitchKey: SingingPitchKey };
   };
 
   SET_PHRASE_SINGING_VOLUME: {
@@ -1782,7 +1825,9 @@ export type SettingStoreState = {
   experimentalSetting: ExperimentalSettingType;
   confirmedTips: ConfirmedTips;
   engineSettings: EngineSettings;
-} & RootMiscSettingType;
+} & Omit<RootMiscSettingType, "openedEditor"> & {
+    openedEditor: EditorType | undefined; // undefinedのときはどのエディタを開くか定まっていない
+  };
 
 // keyとvalueの型を連動するようにしたPayloadを作る
 type KeyValuePayload<R, K extends keyof R = keyof R> = K extends keyof R
@@ -1878,7 +1923,6 @@ export type SettingStoreTypes = {
  */
 
 export type UiStoreState = {
-  openedEditor: EditorType | undefined; // undefinedのときはどのエディタを開くか定まっていない
   isEditorReady: boolean;
   uiLockCount: number;
   dialogLockCount: number;
@@ -1910,11 +1954,6 @@ export type DialogStates = {
 };
 
 export type UiStoreTypes = {
-  SET_OPENED_EDITOR: {
-    mutation: { editor: EditorType };
-    action(palyoad: { editor: EditorType }): void;
-  };
-
   SET_EDITOR_READY: {
     mutation: { isEditorReady: boolean };
     action(palyoad: { isEditorReady: boolean }): void;

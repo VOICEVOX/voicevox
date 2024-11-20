@@ -44,8 +44,8 @@ import {
   SpeakerId,
   StyleId,
   Voice,
-  isProduction,
 } from "@/type/preload";
+import { isProduction } from "@/helpers/platform";
 
 export type Store = BaseStore<State, AllGetters, AllActions, AllMutations>;
 export const storeKey: InjectionKey<Store> = Symbol();

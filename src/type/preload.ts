@@ -2,6 +2,7 @@ import { z } from "zod";
 import { IpcSOData } from "./ipc";
 import { AltPortInfos } from "@/store/type";
 import { Result } from "@/type/result";
+<<<<<<< HEAD
 
 export const isProduction = import.meta.env.MODE === "production";
 export const isElectron = import.meta.env.VITE_TARGET === "electron";
@@ -30,6 +31,9 @@ function checkOs(os: "windows" | "mac"): boolean {
 
 export const isMac = checkOs("mac");
 export const isWindows = checkOs("windows");
+=======
+import { isMac } from "@/helpers/platform";
+>>>>>>> upstream/main
 
 const urlStringSchema = z.string().url().brand("URL");
 export type UrlString = z.infer<typeof urlStringSchema>;
@@ -419,6 +423,7 @@ export type Preset = {
   pitchScale: number;
   intonationScale: number;
   volumeScale: number;
+  pauseLengthScale: number;
   prePhonemeLength: number;
   postPhonemeLength: number;
   morphingInfo?: MorphingInfo;
@@ -575,6 +580,7 @@ export type ConfirmedTips = {
 
 // ルート直下にある雑多な設定値
 export const rootMiscSettingSchema = z.object({
+  openedEditor: z.enum(["talk", "song"]).default("talk"),
   editorFont: z.enum(["default", "os"]).default("default"),
   showTextLineNumber: z.boolean().default(false),
   showAddAudioItemButton: z.boolean().default(true),
@@ -648,6 +654,7 @@ export const configSchema = z
               pitchScale: z.number(),
               intonationScale: z.number(),
               volumeScale: z.number(),
+              pauseLengthScale: z.number(),
               prePhonemeLength: z.number(),
               postPhonemeLength: z.number(),
               morphingInfo: z
@@ -685,17 +692,6 @@ export const configSchema = z
   })
   .merge(rootMiscSettingSchema);
 export type ConfigType = z.infer<typeof configSchema>;
-
-export const envEngineInfoSchema = z.object({
-  uuid: engineIdSchema,
-  host: z.string(),
-  name: z.string(),
-  executionEnabled: z.boolean(),
-  executionFilePath: z.string(),
-  executionArgs: z.array(z.string()),
-  path: z.string().optional(),
-});
-export type EnvEngineInfoType = z.infer<typeof envEngineInfoSchema>;
 
 // workaround. SystemError(https://nodejs.org/api/errors.html#class-systemerror)が2022/05/19時点ではNodeJSの型定義に記述されていないためこれを追加しています。
 export class SystemError extends Error {
