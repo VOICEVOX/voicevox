@@ -1,6 +1,14 @@
 import type { Meta, StoryObj } from "@storybook/vue3";
 
 import Presentation from "./Presentation.vue";
+import {
+  ZOOM_X_MAX,
+  ZOOM_X_MIN,
+  ZOOM_X_STEP,
+  ZOOM_Y_MAX,
+  ZOOM_Y_MIN,
+  ZOOM_Y_STEP,
+} from "@/sing/viewHelper";
 
 const meta: Meta<typeof Presentation> = {
   component: Presentation,
@@ -17,6 +25,24 @@ const meta: Meta<typeof Presentation> = {
     tpqn: 480,
     sequencerSnapType: 16,
     numMeasures: 32,
+  },
+  argTypes: {
+    sequencerZoomX: {
+      control: {
+        type: "range",
+        min: ZOOM_X_MIN,
+        max: ZOOM_X_MAX,
+        step: ZOOM_X_STEP,
+      },
+    },
+    sequencerZoomY: {
+      control: {
+        type: "range",
+        min: ZOOM_Y_MIN,
+        max: ZOOM_Y_MAX,
+        step: ZOOM_Y_STEP,
+      },
+    },
   },
 
   render: (args) => ({

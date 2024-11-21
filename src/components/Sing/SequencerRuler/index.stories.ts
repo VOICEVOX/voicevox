@@ -4,6 +4,7 @@ import { ref } from "vue";
 
 import Presentation from "./Presentation.vue";
 import { UnreachableError } from "@/type/utility";
+import { ZOOM_X_MIN, ZOOM_X_MAX, ZOOM_X_STEP } from "@/sing/viewHelper";
 
 const meta: Meta<typeof Presentation> = {
   component: Presentation,
@@ -30,6 +31,16 @@ const meta: Meta<typeof Presentation> = {
     onDeselectAllNotes: fn(),
 
     // TODO: ContextMenuをDIする
+  },
+  argTypes: {
+    sequencerZoomX: {
+      control: {
+        type: "range",
+        min: ZOOM_X_MIN,
+        max: ZOOM_X_MAX,
+        step: ZOOM_X_STEP,
+      },
+    },
   },
   render: (args) => ({
     components: { Presentation },
