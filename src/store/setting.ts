@@ -72,6 +72,7 @@ export const settingStoreState: SettingStoreState = {
   },
   showSingCharacterPortrait: true,
   playheadPositionDisplayFormat: "MINUTES_SECONDS",
+  toolbarButtonDisplay: "TEXT_ONLY",
 };
 
 export const settingStore = createPartialStore<SettingStoreTypes>({
@@ -150,6 +151,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         "showSingCharacterPortrait",
         "playheadPositionDisplayFormat",
         "openedEditor",
+        "toolbarButtonDisplay",
       ] as const;
 
       // rootMiscSettingKeysに値を足し忘れていたときに型エラーを出す検出用コード

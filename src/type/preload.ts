@@ -569,6 +569,9 @@ export const rootMiscSettingSchema = z.object({
   playheadPositionDisplayFormat: z
     .enum(["MINUTES_SECONDS", "MEASURES_BEATS"])
     .default("MINUTES_SECONDS"), // 再生ヘッド位置の表示モード
+  toolbarButtonDisplay: z
+    .enum(["ICON_ONLY", "ICON_AND_TEXT", "TEXT_ONLY"])
+    .default("TEXT_ONLY"), // ツールバーボタンの表示モード
 });
 export type RootMiscSettingType = z.infer<typeof rootMiscSettingSchema>;
 

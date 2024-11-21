@@ -16,12 +16,12 @@
   </ToggleGroupRoot>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" generic="T extends 'single' | 'multiple'">
 import { ToggleGroupRoot } from "radix-vue";
 
 defineProps<{
-  type: "single" | "multiple";
-  modelValue: string | string[];
+  type: T;
+  modelValue: T extends "single" ? string : string[];
   disabled?: boolean;
 }>();
 

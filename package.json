@@ -40,7 +40,8 @@
     "license:generate": "node build/generateLicenses.js",
     "license:merge": "node build/mergeLicenses.js",
     "storybook": "storybook dev --port 6006",
-    "storybook:build": "storybook build"
+    "storybook:build": "storybook build",
+    "generate-icons": "matex -r ./public/matexRecipes.yml -o public"
   },
   "dependencies": {
     "@gtm-support/vue-gtm": "1.2.3",
@@ -81,6 +82,7 @@
     "@openapitools/openapi-generator-cli": "2.15.3",
     "@playwright/test": "1.48.2",
     "@quasar/vite-plugin": "1.8.1",
+    "@sevenc-nanashi/matex": "1.1.2",
     "@storybook/addon-essentials": "8.4.4",
     "@storybook/addon-links": "8.4.4",
     "@storybook/addon-themes": "8.4.4",
@@ -135,6 +137,7 @@
     "vite-plugin-electron": "0.29.0",
     "vite-tsconfig-paths": "5.1.2",
     "vitest": "2.1.2",
+    "vue-component-type-helpers": "2.1.6",
     "vue-tsc": "2.1.10",
     "yargs": "17.2.1"
   }

@@ -1,0 +1,6 @@
+toolbarIcons.svg:
+  playAll: filled:play_arrow + notes
+  exportSelected: filled:save + volume_up
+  exportConnectAll: filled:save + link
+  exportAll: filled:save + notes
+  importText: filled:upload + outlined:import_contacts
