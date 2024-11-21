@@ -70,7 +70,6 @@ const handleOk = () => {
   onDialogOK();
 };
 
-// キャンセルボタンクリック時
 const handleCancel = () => {
   onDialogCancel();
   modelValue.value = false;
