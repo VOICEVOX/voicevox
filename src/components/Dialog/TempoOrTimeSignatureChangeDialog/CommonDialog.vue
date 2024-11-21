@@ -78,8 +78,8 @@ const handleCancel = () => {
 
 <style scoped lang="scss">
 .dialog-card {
-  width: 700px;
-  max-width: 80vw;
+  width: 400px;
+  max-width: 40vw;
 }
 
 .value-input {
