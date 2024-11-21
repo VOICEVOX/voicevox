@@ -37,7 +37,7 @@
 
 <script setup lang="ts">
 import { useDialogPluginComponent } from "quasar";
-import { computed, ref } from "vue";
+import { ref } from "vue";
 import CommonDialog from "./CommonDialog.vue";
 import { TimeSignature } from "@/store/type";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
