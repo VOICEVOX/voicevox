@@ -38,8 +38,8 @@
         :id="`sequencer-grid-pattern-${patternIndex}`"
         :key="`pattern-${patternIndex}`"
         patternUnits="userSpaceOnUse"
-        :x="gridPatterns[patternIndex].x"
-        :width="gridPatterns[patternIndex].patternWidth"
+        :x="pattern.x"
+        :width="pattern.patternWidth"
         :height="gridCellHeight * 12"
       >
         <!-- E/Fの中間線 -->
@@ -54,7 +54,7 @@
         />
         <!-- 拍線 -->
         <line
-          v-for="n in pattern.beatLineIndices"
+          v-for="n in pattern.timeSignature.beats"
           :key="`beatline-${n}`"
           :x1="pattern.beatWidth * n"
           :x2="pattern.beatWidth * n"
@@ -106,10 +106,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, toRef } from "vue";
 import { keyInfos, getKeyBaseHeight, tickToBaseX } from "@/sing/viewHelper";
 import { getMeasureDuration, getNoteDuration } from "@/sing/domain";
 import { TimeSignature } from "@/store/type";
+import { useSequencerGrid } from "@/composables/useSequencerGridPattern";
 
 const props = defineProps<{
   tpqn: number;
@@ -156,37 +157,11 @@ const gridHeight = computed(() => {
   return gridCellHeight.value * keyInfos.length;
 });
 
-const gridPatterns = computed(() => {
-  const gridPatterns: {
-    id: string;
-    x: number;
-    beatWidth: number;
-    beatsPerMeasure: number;
-    beatLineIndices: number[];
-    patternWidth: number;
-    width: number;
-  }[] = [];
-  for (const [i, timeSignature] of props.timeSignatures.entries()) {
-    const nextTimeSignature = props.timeSignatures.at(i + 1);
-    const nextMeasureNumber =
-      nextTimeSignature?.measureNumber ?? props.numMeasures + 1;
-    const patternWidth = measureWidth(timeSignature);
-    gridPatterns.push({
-      id: `sequencer-grid-pattern-${i}`,
-      x:
-        gridPatterns.length === 0
-          ? 0
-          : gridPatterns[gridPatterns.length - 1].x +
-            gridPatterns[gridPatterns.length - 1].width,
-      beatWidth: beatWidth(timeSignature),
-      beatsPerMeasure: timeSignature.beats,
-      beatLineIndices: beatLineIndices(timeSignature),
-      patternWidth,
-      width: patternWidth * (nextMeasureNumber - timeSignature.measureNumber),
-    });
-  }
-
-  return gridPatterns;
+const gridPatterns = useSequencerGrid({
+  timeSignatures: toRef(() => props.timeSignatures),
+  tpqn: toRef(() => props.tpqn),
+  sequencerZoomX: toRef(() => props.sequencerZoomX),
+  numMeasures: toRef(() => props.numMeasures),
 });
 
 // 小節幅
@@ -231,8 +206,6 @@ const measureLines = computed(() => {
 });
 const horizontalLineIndices = computed(() => gridLines.value.horizontalLines);
 const octaveLineIndices = computed(() => gridLines.value.octaveLines);
-const beatLineIndices = (timeSignature: TimeSignature) =>
-  Array.from({ length: timeSignature.beats - 1 }, (_, i) => i + 1);
 </script>
 
 <style scoped lang="scss">

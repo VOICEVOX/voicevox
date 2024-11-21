@@ -184,6 +184,7 @@ import {
   ComponentPublicInstance,
   useTemplateRef,
   Component,
+  toRef,
 } from "vue";
 import { ComponentProps } from "vue-component-type-helpers";
 import { Dialog } from "quasar";
@@ -203,6 +204,7 @@ import TempoChangeDialog from "@/components/Dialog/TempoOrTimeSignatureChangeDia
 import TimeSignatureChangeDialog from "@/components/Dialog/TempoOrTimeSignatureChangeDialog/TimeSignatureChangeDialog.vue";
 import { FontSpecification, predictTextWidth } from "@/helpers/textWidth";
 import { createLogger } from "@/domain/frontend/log";
+import { useSequencerGrid } from "@/composables/useSequencerGridPattern";
 
 const props = defineProps<{
   offset: number;
@@ -237,13 +239,6 @@ defineSlots<{
 const log = createLogger("SequencerRuler");
 
 const height = ref(40);
-const beatsPerMeasure = (timeSignature: TimeSignature) => timeSignature.beats;
-const beatWidth = (timeSignature: TimeSignature) => {
-  const beatType = timeSignature.beatType;
-  const wholeNoteDuration = props.tpqn * 4;
-  const beatTicks = wholeNoteDuration / beatType;
-  return tickToBaseX(beatTicks, props.tpqn) * props.sequencerZoomX;
-};
 const tsPositions = computed(() => {
   return getTimeSignaturePositions(props.timeSignatures, props.tpqn);
 });
@@ -259,36 +254,11 @@ const endTicks = computed(() => {
 const width = computed(() => {
   return tickToBaseX(endTicks.value, props.tpqn) * props.sequencerZoomX;
 });
-const gridPatterns = computed(() => {
-  const gridPatterns: {
-    id: string;
-    x: number;
-    beatsPerMeasure: number;
-    beatWidth: number;
-    patternWidth: number;
-    width: number;
-  }[] = [];
-  for (const [i, timeSignature] of props.timeSignatures.entries()) {
-    const nextTimeSignature = props.timeSignatures.at(i + 1);
-    const nextMeasureNumber =
-      nextTimeSignature?.measureNumber ?? props.numMeasures + 1;
-    const patternWidth =
-      beatWidth(timeSignature) * beatsPerMeasure(timeSignature);
-    gridPatterns.push({
-      id: `sequencer-grid-pattern-${i}`,
-      x:
-        gridPatterns.length === 0
-          ? 0
-          : gridPatterns[gridPatterns.length - 1].x +
-            gridPatterns[gridPatterns.length - 1].width,
-      beatsPerMeasure: beatsPerMeasure(timeSignature),
-      beatWidth: beatWidth(timeSignature),
-      patternWidth,
-      width: patternWidth * (nextMeasureNumber - timeSignature.measureNumber),
-    });
-  }
-
-  return gridPatterns;
+const gridPatterns = useSequencerGrid({
+  timeSignatures: toRef(() => props.timeSignatures),
+  tpqn: toRef(() => props.tpqn),
+  sequencerZoomX: toRef(() => props.sequencerZoomX),
+  numMeasures: toRef(() => props.numMeasures),
 });
 
 const measureInfos = computed(() => {
