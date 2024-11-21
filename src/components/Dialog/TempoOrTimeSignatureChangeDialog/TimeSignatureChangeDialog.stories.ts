@@ -1,7 +1,5 @@
-import { userEvent, within, expect, fn, queries } from "@storybook/test";
+import { userEvent, within, expect, fn } from "@storybook/test";
 import { Meta, StoryObj } from "@storybook/vue3";
-// eslint-disable-next-line storybook/use-storybook-testing-library -- BoundFunctionsは@testing-library/domの型定義にしかない
-import type { BoundFunctions } from "@testing-library/dom";
 
 import TimeSignatureChangeDialog from "./TimeSignatureChangeDialog.vue";
 
