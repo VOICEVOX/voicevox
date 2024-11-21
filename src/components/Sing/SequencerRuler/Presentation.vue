@@ -201,7 +201,7 @@ import ContextMenu, {
 import { UnreachableError } from "@/type/utility";
 import TempoChangeDialog from "@/components/Dialog/TempoOrTimeSignatureChangeDialog/TempoChangeDialog.vue";
 import TimeSignatureChangeDialog from "@/components/Dialog/TempoOrTimeSignatureChangeDialog/TimeSignatureChangeDialog.vue";
-import { FontSpecification, predictTextWidth } from "@/domain/dom";
+import { FontSpecification, predictTextWidth } from "@/helpers/textWidth";
 import { createLogger } from "@/domain/frontend/log";
 
 const props = defineProps<{
@@ -212,7 +212,6 @@ const props = defineProps<{
   timeSignatures: TimeSignature[];
   sequencerZoomX: number;
   snapType: number;
-
   uiLocked: boolean;
 }>();
 const playheadTicks = defineModel<number>("playheadTicks", {
@@ -220,7 +219,6 @@ const playheadTicks = defineModel<number>("playheadTicks", {
 });
 const emit = defineEmits<{
   deselectAllNotes: [];
-
   setTempo: [tempo: Tempo];
   removeTempo: [position: number];
   setTimeSignature: [timeSignature: TimeSignature];

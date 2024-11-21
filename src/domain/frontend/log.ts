@@ -3,7 +3,7 @@
 export function createLogger(scope: string) {
   const createInner =
     (
-      method: "logInfo" | "logError" | "logWarn",
+      method: "logInfo" | "logWarn" | "logError",
       fallbackMethod: "info" | "warn" | "error",
     ) =>
     (...args: unknown[]) => {
@@ -16,7 +16,7 @@ export function createLogger(scope: string) {
     };
   return {
     info: createInner("logInfo", "info"),
-    error: createInner("logError", "error"),
     warn: createInner("logWarn", "warn"),
+    error: createInner("logError", "error"),
   };
 }
