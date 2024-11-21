@@ -75,11 +75,6 @@ const beatTypeOptions = BEAT_TYPES.map((beatType) => ({
 </script>
 
 <style scoped lang="scss">
-.dialog-card {
-  width: 700px;
-  max-width: 80vw;
-}
-
 .value-input {
   width: 60px;
 }
