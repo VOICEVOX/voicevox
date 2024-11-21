@@ -17,16 +17,6 @@ const meta: Meta<typeof TimeSignatureChangeDialog> = {
   },
   tags: ["!autodocs"], // ダイアログ系はautodocsのプレビューが正しく表示されないので無効化
 };
-const findOption = async (
-  canvas: BoundFunctions<typeof queries>,
-  text: string,
-) => {
-  const maybeElement = await canvas
-    .findAllByRole("option")
-    .then((els) => els.find((el) => el.textContent === text));
-  if (!maybeElement) throw new Error("Element not found");
-  return maybeElement;
-};
 
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -56,11 +46,9 @@ export const ClickOk: Story = {
   play: async ({ args }) => {
     const canvas = within(document.body); // ダイアログなので例外的にdocument.bodyを使う
 
-    const selectRoot = canvas.getByLabelText("拍子の分子");
-    await userEvent.click(selectRoot);
-
-    const option = await findOption(canvas, "3");
-    await userEvent.click(option);
+    const input = canvas.getByLabelText("拍子の分子");
+    await userEvent.clear(input);
+    await userEvent.type(input, "3");
 
     const button = canvas.getByRole("button", { name: /追加する/ });
     await userEvent.click(button);
@@ -80,11 +68,9 @@ export const ClickDelete: Story = {
   play: async ({ args }) => {
     const canvas = within(document.body); // ダイアログなので例外的にdocument.bodyを使う
 
-    const selectRoot = canvas.getByLabelText("拍子の分子");
-    await userEvent.click(selectRoot);
-
-    const option = await findOption(canvas, "6");
-    await userEvent.click(option);
+    const input = canvas.getByLabelText("拍子の分子");
+    await userEvent.clear(input);
+    await userEvent.type(input, "6");
 
     const button = canvas.getByRole("button", { name: /変更する/ });
     await userEvent.click(button);

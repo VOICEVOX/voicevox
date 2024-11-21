@@ -7,14 +7,12 @@
     @ok="() => $emit('ok', { timeSignatureChange })"
     @hide="() => $emit('hide')"
   >
-    <QSelect
-      v-model="timeSignatureChange.beats"
-      :options="beatsOptions"
-      mapOptions
-      emitValue
+    <QInput
+      v-model.number="timeSignatureChange.beats"
+      type="number"
+      min="1"
+      max="32"
       dense
-      userInputs
-      optionsDense
       transitionShow="none"
       transitionHide="none"
       class="value-input"
@@ -60,13 +58,6 @@ const timeSignatureChange = ref(
     beatType: DEFAULT_BEAT_TYPE,
   },
 );
-
-const beatsOptions = computed(() => {
-  return Array.from({ length: 32 }, (_, i) => ({
-    label: (i + 1).toString(),
-    value: i + 1,
-  }));
-});
 
 const beatTypeOptions = BEAT_TYPES.map((beatType) => ({
   label: beatType.toString(),
