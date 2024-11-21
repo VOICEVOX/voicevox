@@ -1,6 +1,7 @@
 import { z } from "zod";
-import { StyleInfo, isMac } from "@/type/preload";
+import { StyleInfo } from "@/type/preload";
 import { calculateHash } from "@/sing/utility";
+import { isMac } from "@/helpers/platform";
 
 const BASE_X_PER_QUARTER_NOTE = 120;
 const BASE_Y_PER_SEMITONE = 30;
