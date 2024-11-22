@@ -1,5 +1,5 @@
 import { calculateHash, getLast, getNext, getPrev, isSorted } from "./utility";
-import { convertLongVowel } from "@/domain/japanese";
+import { convertLongVowel, moraPattern } from "@/domain/japanese";
 import {
   Note,
   Phrase,
@@ -940,21 +940,6 @@ export function applyPitchEdit(
     }
   }
 }
-
-// 参考：https://github.com/VOICEVOX/voicevox_core/blob/0848630d81ae3e917c6ff2038f0b15bbd4270702/crates/voicevox_core/src/user_dict/word.rs#L83-L90
-export const moraPattern = new RegExp(
-  "(?:" +
-    "[イ][ェ]|[ヴ][ャュョ]|[トド][ゥ]|[テデ][ィャュョ]|[デ][ェ]|[クグ][ヮ]|" + // rule_others
-    "[キシチニヒミリギジビピ][ェャュョ]|" + // rule_line_i
-    "[ツフヴ][ァ]|[ウスツフヴズ][ィ]|[ウツフヴ][ェォ]|" + // rule_line_u
-    "[ァ-ヴー]|" + // rule_one_mora
-    "[い][ぇ]|[ゃゅょ]|[とど][ぅ]|[てで][ぃゃゅょ]|[で][ぇ]|[くぐ][ゎ]|" + // rule_others
-    "[きしちにひみりぎじびぴ][ぇゃゅょ]|" + // rule_line_i
-    "[つふゔ][ぁ]|[うすつふゔず][ぃ]|[うつふゔ][ぇぉ]|" + // rule_line_u
-    "[ぁ-ゔー]" + // rule_one_mora
-    ")",
-  "g",
-);
 
 /**
  * 文字列をモーラと非モーラに分割する。長音は展開される。連続する非モーラはまとめる。

@@ -8,6 +8,7 @@ import log from "electron-log/main";
 import type { AltPortInfos } from "@/store/type";
 import { EngineId, EngineInfo } from "@/type/preload";
 import { writeFileSafely } from "@/backend/electron/fileHelper";
+import { createEngineUrl } from "@/domain/url";
 
 /**
  * ランタイム情報書き出しに必要なEngineInfo
@@ -85,13 +86,14 @@ export class RuntimeInfoManager {
           const altPort: string | undefined =
             this.altportInfos[engineInfo.uuid];
           const port = altPort ?? engineInfo.defaultPort;
-          // NOTE: URLを正規化する
-          const url = new URL(`${engineInfo.protocol}//${engineInfo.hostname}`);
-          url.port = port;
           return {
             uuid: engineInfo.uuid,
-            // NOTE: URLインターフェースは"pathname"が空文字でも"/"を付けるので手動で結合する。
-            url: `${url.origin}${engineInfo.pathname}`,
+            url: createEngineUrl({
+              protocol: engineInfo.protocol,
+              hostname: engineInfo.hostname,
+              port,
+              pathname: engineInfo.pathname,
+            }),
             name: engineInfo.name,
           };
         }),
@@ -113,4 +115,20 @@ export class RuntimeInfoManager {
       }
     });
   }
+}
+
+let manager: RuntimeInfoManager | undefined;
+
+export function initializeRuntimeInfoManager(payload: {
+  runtimeInfoPath: string;
+  appVersion: string;
+}) {
+  manager = new RuntimeInfoManager(payload.runtimeInfoPath, payload.appVersion);
+}
+
+export function getRuntimeInfoManager() {
+  if (manager == undefined) {
+    throw new Error("RuntimeInfoManager is not initialized");
+  }
+  return manager;
 }
