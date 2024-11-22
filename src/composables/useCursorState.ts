@@ -16,7 +16,6 @@ export interface CursorStateContext {
 export function useCursorState(context: CursorStateContext) {
   // カーソルの状態
   const cursorState = computed(() => {
-    // カーソルの振る舞いを解決する関数を呼び出す
     return resolveCursorBehavior();
   });
 
