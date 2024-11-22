@@ -1854,7 +1854,9 @@ export type SettingStoreState = {
   experimentalSetting: ExperimentalSettingType;
   confirmedTips: ConfirmedTips;
   engineSettings: EngineSettings;
-} & RootMiscSettingType;
+} & Omit<RootMiscSettingType, "openedEditor"> & {
+    openedEditor: EditorType | undefined; // undefinedのときはどのエディタを開くか定まっていない
+  };
 
 // keyとvalueの型を連動するようにしたPayloadを作る
 type KeyValuePayload<R, K extends keyof R = keyof R> = K extends keyof R
@@ -1950,7 +1952,6 @@ export type SettingStoreTypes = {
  */
 
 export type UiStoreState = {
-  openedEditor: EditorType | undefined; // undefinedのときはどのエディタを開くか定まっていない
   uiLockCount: number;
   dialogLockCount: number;
   reloadingLock: boolean;
@@ -1980,11 +1981,6 @@ export type DialogStates = {
 };
 
 export type UiStoreTypes = {
-  SET_OPENED_EDITOR: {
-    mutation: { editor: EditorType };
-    action(palyoad: { editor: EditorType }): void;
-  };
-
   UI_LOCKED: {
     getter: boolean;
   };
