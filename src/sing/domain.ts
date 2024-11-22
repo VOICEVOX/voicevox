@@ -549,22 +549,15 @@ function toEntirePhonemeTimings(
   phrasePhonemeSequences: FramePhoneme[][],
   phraseStartFrames: number[],
 ) {
-  // 音素列を音素タイミング列に変換する
-  const phrasePhonemeTimingSequences: PhonemeTiming[][] = [];
-  for (let i = 0; i < phrasePhonemeSequences.length; i++) {
-    const phonemes = phrasePhonemeSequences[i];
-    const phonemeSequenceStartFrame = phraseStartFrames[i];
-
+  // 音素列を繋げて一つの音素タイミング列にする
+  const flattenedPhonemeTimings = phrasePhonemeSequences.flatMap((phonemes, index) => {
     const phonemeTimings = phonemesToPhonemeTimings(phonemes);
     for (const phonemeTiming of phonemeTimings) {
-      phonemeTiming.startFrame += phonemeSequenceStartFrame;
-      phonemeTiming.endFrame += phonemeSequenceStartFrame;
+      phonemeTiming.startFrame += phraseStartFrames[index];
+      phonemeTiming.endFrame += phraseStartFrames[index];
     }
-    phrasePhonemeTimingSequences.push(phonemeTimings);
-  }
-
-  // 音素タイミング列を繋げて一つの音素タイミング列にする
-  const flattenedPhonemeTimings = phrasePhonemeTimingSequences.flat();
+    return phonemeTimings;
+  });
 
   // 連続するpauseを1つにまとめる
   const entirePhonemeTimings: PhonemeTiming[] = [];
