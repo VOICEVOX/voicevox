@@ -1482,7 +1482,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       mutations.SET_PLAYBACK_STATE({ nowPlaying: true });
 
-      transport.start();
+      transport.start(state.savingSetting.audioOutputDevice);
       animationTimer.start(() => {
         playheadPosition.value = getters.SECOND_TO_TICK(transport.time);
       });
@@ -1521,7 +1521,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   PLAY_PREVIEW_SOUND: {
     async action(
-      _,
+      { state },
       { noteNumber, duration }: { noteNumber: number; duration?: number },
     ) {
       if (!audioContext) {
@@ -1530,7 +1530,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       if (!previewSynth) {
         throw new Error("previewSynth is undefined.");
       }
-      previewSynth.noteOn("immediately", noteNumber, duration);
+      previewSynth.noteOn(
+        "immediately",
+        noteNumber,
+        duration,
+        state.savingSetting.audioOutputDevice,
+      );
     },
   },
 
