@@ -206,7 +206,7 @@ onUnmounted(() => {
   background: var(--scheme-color-inverse-surface);
   pointer-events: none;
   will-change: transform;
-  z-index: 10000;
+  z-index: vars.$z-index-sing-playhead;
 }
 
 .sequencer-ruler-measure-number {
