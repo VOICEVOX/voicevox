@@ -181,7 +181,7 @@ import ContextMenu, {
 } from "@/components/Menu/ContextMenu.vue";
 import { NoteId } from "@/type/preload";
 import { useStore } from "@/store";
-import { Note, SequencerEditTarget, CursorState } from "@/store/type";
+import { Note, SequencerEditTarget } from "@/store/type";
 import {
   getEndTicksOfPhrase,
   getNoteDuration,
@@ -226,9 +226,9 @@ import {
 } from "@/composables/useModifierKey";
 import { applyGaussianFilter, linearInterpolation } from "@/sing/utility";
 import { useLyricInput } from "@/composables/useLyricInput";
-import { useCursorState } from "@/composables/useCursorState";
 import { ExhaustiveError } from "@/type/utility";
 import { uuid4 } from "@/helpers/random";
+import { useCursorState } from "@/composables/useCursorState";
 import { useEditMode } from "@/composables/useEditMode";
 
 // 直接イベントが来ているかどうか
@@ -421,111 +421,55 @@ const editingLyricNote = computed(() => {
   );
 });
 
-// 編集モードの管理
-// storeの状態とgetter/setterを渡す
-// NOTE: この形がよいのかは要考慮
-const editModeState = {
-  editTarget: computed({
-    get: () => store.state.sequencerEditTarget,
-    set: (value) => store.commit("SET_EDIT_TARGET", { editTarget: value }),
-  }),
-  selectedNoteTool: computed({
-    get: () => store.state.selectedNoteTool,
-    set: (value) =>
-      store.commit("SET_SELECTED_NOTE_TOOL", { selectedNoteTool: value }),
-  }),
-  selectedPitchTool: computed({
-    get: () => store.state.selectedPitchTool,
-    set: (value) =>
-      store.commit("SET_SELECTED_PITCH_TOOL", { selectedPitchTool: value }),
-  }),
-};
-
-const {
-  editTarget,
-  selectedNoteTool,
-  selectedPitchTool,
-  setSelectedPitchTool,
-  isPitchDrawTool,
-  isPitchEraseTool,
-  resolveMouseDownBehavior,
-  resolveDoubleClickBehavior,
-} = useEditMode(editModeState);
-
-// ピッチ編集モードにおいてCtrlキーが押されたときにピッチツールを消しゴムツールにする
-watch(
-  [ctrlKey],
-  () => {
-    if (editTarget.value !== "PITCH") {
-      return;
-    }
-
-    if (ctrlKey.value) {
-      // Ctrlキーが押されたとき
-      if (isPitchDrawTool.value) {
-        setSelectedPitchTool("ERASE");
-      }
-    } else {
-      if (isPitchEraseTool.value) {
-        setSelectedPitchTool("DRAW");
-      }
-    }
-  },
-  { immediate: true },
-);
-
-// カーソル状態の管理
-const { setCursorState, cursorState, cursorClass } = useCursorState();
-
-// TODO: カーソル状態を決定するロジックをuseCursorStateに移譲もしくはステートパターン実装
-const resolveCursorState = () => {
-  // プレビュー中は現在の状態を維持
-  if (nowPreviewing.value) {
-    return cursorState.value;
-  }
-
-  if (editTarget.value === "PITCH") {
-    // ピッチ編集モード時のカーソル状態
-    return ctrlKey.value || selectedPitchTool.value === "ERASE"
-      ? CursorState.ERASE
-      : CursorState.DRAW;
-  }
-  if (editTarget.value === "NOTE") {
-    // ノート編集モード時のカーソル状態
-    if (shiftKey.value) {
-      return CursorState.CROSSHAIR;
-    }
-    return selectedNoteTool.value === "EDIT_FIRST"
-      ? CursorState.DRAW
-      : CursorState.UNSET;
-  }
-
-  return CursorState.UNSET;
-};
-
-// カーソル状態の更新を一元管理
-const updateCursorState = () => {
-  const newState = resolveCursorState();
-  setCursorState(newState);
-};
-
-// 関連する状態が変更されたときにカーソル状態を更新
-watch(
-  [
-    ctrlKey,
-    shiftKey,
-    nowPreviewing,
-    editTarget,
-    selectedNoteTool,
-    selectedPitchTool,
-  ],
-  updateCursorState,
-  { immediate: true },
-);
-
 // 入力を補助する線
 const showGuideLine = ref(true);
 const guideLineX = ref(0);
+
+// 編集モード
+
+// 編集対象
+const editTarget = computed({
+  get: () => store.state.sequencerEditTarget,
+  set: (value) => store.commit("SET_EDIT_TARGET", { editTarget: value }),
+});
+// 選択中のノート編集ツール
+const selectedNoteTool = computed({
+  get: () => store.state.selectedNoteTool,
+  set: (value) =>
+    store.commit("SET_SELECTED_NOTE_TOOL", { selectedNoteTool: value }),
+});
+// 選択中のピッチ編集ツール
+const selectedPitchTool = computed({
+  get: () => store.state.selectedPitchTool,
+  set: (value) =>
+    store.commit("SET_SELECTED_PITCH_TOOL", { selectedPitchTool: value }),
+});
+
+// 編集モードで常に使うコンテキストを入れる
+const editModeContext = {
+  ctrlKey,
+  shiftKey,
+  nowPreviewing,
+  editTarget,
+  selectedNoteTool,
+  selectedPitchTool,
+};
+const { resolveMouseDownBehavior, resolveDoubleClickBehavior } =
+  useEditMode(editModeContext);
+
+// カーソルの状態
+// 関連するコンテキストを全部入れる
+const cursorStateContext = {
+  ctrlKey,
+  shiftKey,
+  nowPreviewing,
+  editTarget,
+  selectedNoteTool,
+  selectedPitchTool,
+  previewMode,
+};
+const { cursorClass, resolveCursorBehavior } =
+  useCursorState(cursorStateContext);
 
 const previewAdd = () => {
   const cursorBaseX = (scrollX.value + cursorX.value) / zoomX.value;
@@ -558,7 +502,6 @@ const previewAdd = () => {
 
   const guideLineBaseX = tickToBaseX(noteEndPos, tpqn.value);
   guideLineX.value = guideLineBaseX * zoomX.value;
-  setCursorState(CursorState.DRAW);
 };
 
 const previewMove = () => {
@@ -612,7 +555,6 @@ const previewMove = () => {
     tpqn.value,
   );
   guideLineX.value = guideLineBaseX * zoomX.value;
-  setCursorState(CursorState.MOVE);
 };
 
 const previewResizeRight = () => {
@@ -653,7 +595,6 @@ const previewResizeRight = () => {
 
   const guideLineBaseX = tickToBaseX(newNoteEndPos, tpqn.value);
   guideLineX.value = guideLineBaseX * zoomX.value;
-  setCursorState(CursorState.EW_RESIZE);
 };
 
 const previewResizeLeft = () => {
@@ -701,7 +642,6 @@ const previewResizeLeft = () => {
 
   const guideLineBaseX = tickToBaseX(newNotePos, tpqn.value);
   guideLineX.value = guideLineBaseX * zoomX.value;
-  setCursorState(CursorState.EW_RESIZE);
 };
 
 // ピッチを描く処理を行う
@@ -776,7 +716,6 @@ const previewDrawPitch = () => {
   previewPitchEdit.value = tempPitchEdit;
   prevCursorPos.frame = cursorFrame;
   prevCursorPos.frequency = cursorFrequency;
-  setCursorState(CursorState.DRAW);
 };
 
 // ドラッグした範囲のピッチ編集データを消去する処理を行う
@@ -809,7 +748,6 @@ const previewErasePitch = () => {
 
   previewPitchEdit.value = tempPitchEdit;
   prevCursorPos.frame = cursorFrame;
-  setCursorState(CursorState.ERASE);
 };
 
 const preview = () => {
@@ -975,7 +913,7 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
 const endPreview = () => {
   cancelAnimationFrame(previewRequestId);
   if (previewStartEditTarget === "NOTE") {
-    // 編集ターゲットがノートのときにプレビューを開始した場合の処理
+    // 編集ターゲットがノートのときにプレビュを開始した合の処理
     if (edited) {
       const previewTrackId = selectedTrackId.value;
       const noteIds = previewNotes.value.map((note) => note.id);
@@ -1060,7 +998,7 @@ const onNoteBarMouseDown = (event: MouseEvent, note: Note) => {
       // CtrlまたはCommandキーが押されている場合、ノートを追加選択
       void store.actions.SELECT_NOTES({ noteIds: [note.id] });
     } else if (!selectedNoteIds.value.has(note.id)) {
-      // クリックしたノートが未選択の場合、そのノートのみを選択
+      // クリックしたノートが選択の場合、そのノートのみを選択
       void selectOnlyThis(note);
     }
     // 選択状態の変更が完了した後でプレビューを開始
@@ -1103,14 +1041,12 @@ const onNoteRightEdgeMouseDown = (event: MouseEvent, note: Note) => {
 };
 
 const onMouseDown = (event: MouseEvent) => {
-  const behavior = resolveMouseDownBehavior({
+  const mouseDownContext = {
     isSelfEventTarget: isSelfEventTarget(event),
     mouseButton: getButton(event),
-    ctrlKey: ctrlKey,
-    shiftKey: shiftKey,
     editingLyricNoteId: state.editingLyricNoteId,
-    nowPreviewing: nowPreviewing,
-  });
+  };
+  const behavior = resolveMouseDownBehavior(mouseDownContext);
 
   switch (behavior) {
     case "IGNORE":
@@ -1120,7 +1056,6 @@ const onMouseDown = (event: MouseEvent) => {
       isRectSelecting.value = true;
       rectSelectStartX.value = cursorX.value;
       rectSelectStartY.value = cursorY.value;
-      setCursorState(CursorState.CROSSHAIR);
       break;
 
     case "ADD_NOTE":
@@ -1180,14 +1115,7 @@ const onMouseUp = (event: MouseEvent) => {
 
 // ダブルクリックで追加
 const onDoubleClick = (event: MouseEvent) => {
-  const behavior = resolveDoubleClickBehavior({
-    isSelfEventTarget: isSelfEventTarget(event),
-    mouseButton: getButton(event),
-    ctrlKey: ctrlKey,
-    shiftKey: shiftKey,
-    editingLyricNoteId: state.editingLyricNoteId,
-    nowPreviewing: nowPreviewing,
-  });
+  const behavior = resolveDoubleClickBehavior();
 
   // 振る舞いごとの処理
   switch (behavior) {
@@ -1566,6 +1494,7 @@ onActivated(() => {
   document.addEventListener("keydown", handleKeydown);
   window.addEventListener("mousemove", onMouseMove);
   window.addEventListener("mouseup", onMouseUp);
+  resolveCursorBehavior();
 });
 
 // リスナー解除

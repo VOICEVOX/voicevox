@@ -838,19 +838,22 @@ const phraseKeySchema = z.string().brand<"PhraseKey">();
 export type PhraseKey = z.infer<typeof phraseKeySchema>;
 export const PhraseKey = (id: string): PhraseKey => phraseKeySchema.parse(id);
 
+// 編集対象 ノート or ピッチ
+// ボリュームを足すのであれば"VOLUME"を追加する
 export type SequencerEditTarget = "NOTE" | "PITCH";
+// ノート編集ツール
 export type NoteEditTool = "SELECT_FIRST" | "EDIT_FIRST";
+// ピッチ編集ツール
 export type PitchEditTool = "DRAW" | "ERASE";
+
 // カーソルの状態
-// NOTE: enumが妥当なのかは要検討
-export enum CursorState {
-  UNSET = "unset",
-  EW_RESIZE = "ew-resize",
-  MOVE = "move",
-  CROSSHAIR = "crosshair",
-  DRAW = "draw",
-  ERASE = "erase",
-}
+export type CursorState =
+  | "UNSET"
+  | "DRAW"
+  | "MOVE"
+  | "EW_RESIZE"
+  | "CROSSHAIR"
+  | "ERASE";
 
 export type TrackParameters = {
   gain: boolean;

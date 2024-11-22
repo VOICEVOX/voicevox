@@ -12,6 +12,8 @@
         self="center left"
         :offset="[8, 0]"
         :delay="500"
+        transitionShow=""
+        transitionHide=""
       >
         選択優先
       </QTooltip>
@@ -28,6 +30,8 @@
         self="center left"
         :offset="[8, 0]"
         :delay="500"
+        transitionShow=""
+        transitionHide=""
       >
         編集優先
       </QTooltip>
@@ -46,8 +50,10 @@
         self="center left"
         :offset="[8, 0]"
         :delay="500"
+        transitionShow=""
+        transitionHide=""
       >
-        ピッチ変更
+        ピッチ編集
       </QTooltip>
     </QBtn>
     <QBtn
@@ -62,6 +68,8 @@
         self="center left"
         :offset="[8, 0]"
         :delay="500"
+        transitionShow=""
+        transitionHide=""
       >
         ピッチ削除
       </QTooltip>
