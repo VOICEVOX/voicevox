@@ -31,13 +31,9 @@ export function isSorted<T>(array: T[], compareFn: (a: T, b: T) => number) {
 
 export function createArray<T>(
   length: number,
-  generateElementsFn: (index: number) => T,
+  generateElementFn: (index: number) => T,
 ) {
-  const array: T[] = [];
-  for (let i = 0; i < length; i++) {
-    array.push(generateElementsFn(i));
-  }
-  return array;
+  return Array.from({ length }, (_, i) => generateElementFn(i));
 }
 
 export function linearInterpolation(
