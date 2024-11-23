@@ -1,3 +1,5 @@
+<!-- StoreのUI_LOCKEDを参照してContextMenuを表示する -->
+
 <template>
   <Presentation ref="contextMenu" :header :menudata :uiLocked />
 </template>
