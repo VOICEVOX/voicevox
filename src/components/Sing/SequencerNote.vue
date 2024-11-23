@@ -517,6 +517,7 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
 
 // カーソルの状態
 .note {
+  &.cursor-draw,
   &.cursor-ew-resize,
   &.cursor-crosshair,
   &.cursor-move,
@@ -527,7 +528,8 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     }
   }
 
-  &.cursor-draw:not(.edit-pitch):not(.adding) {
+  // ノートの編集の場合かつ追加中でない場合はノートバーをドラッグできる
+  &.cursor-draw.edit-note:not(.adding) {
     .note-bar {
       cursor: move;
     }

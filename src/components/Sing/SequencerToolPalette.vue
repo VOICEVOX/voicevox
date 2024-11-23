@@ -78,25 +78,15 @@
 </template>
 
 <script setup lang="ts">
-import { useStore } from "@/store";
 import { SequencerEditTarget, NoteEditTool, PitchEditTool } from "@/store/type";
-
-// TODO: storeをコンポーネント内で定義するのは避ける
-const store = useStore();
 
 defineProps<{
   editTarget: SequencerEditTarget;
   selectedNoteTool: NoteEditTool;
   selectedPitchTool: PitchEditTool;
+  onNoteToolChange: (tool: NoteEditTool) => void;
+  onPitchToolChange: (tool: PitchEditTool) => void;
 }>();
-
-const onNoteToolChange = (tool: NoteEditTool) => {
-  void store.actions.SET_SELECTED_NOTE_TOOL({ selectedNoteTool: tool });
-};
-
-const onPitchToolChange = (tool: PitchEditTool) => {
-  void store.actions.SET_SELECTED_PITCH_TOOL({ selectedPitchTool: tool });
-};
 </script>
 
 <style scoped lang="scss">
