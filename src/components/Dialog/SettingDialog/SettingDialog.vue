@@ -630,7 +630,7 @@ const currentAudioOutputDeviceComputed = computed<string | undefined>({
     if (device) {
       handleSavingSettingChange("audioOutputDevice", device);
       // デバイスIDをTransportとPolySynthに設定
-      void applyDeviceId(store.state.savingSetting.audioOutputDevice);
+      void applyDeviceId(device);
     }
   },
 });
