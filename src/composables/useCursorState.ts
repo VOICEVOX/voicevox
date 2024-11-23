@@ -1,6 +1,6 @@
 import { computed, watch, Ref } from "vue";
 import { SequencerEditTarget, NoteEditTool, PitchEditTool } from "@/store/type";
-import { PreviewMode } from "@/sing/viewHelper";
+import { PreviewMode, CursorState } from "@/sing/viewHelper";
 
 // カーソル状態の外部コンテキスト
 export interface CursorStateContext {
@@ -13,19 +13,27 @@ export interface CursorStateContext {
   readonly previewMode: Ref<PreviewMode>;
 }
 
-export function useCursorState(context: CursorStateContext) {
+export function useCursorState(cursorStateContext: CursorStateContext) {
+  const {
+    ctrlKey,
+    shiftKey,
+    nowPreviewing,
+    editTarget,
+    selectedNoteTool,
+    selectedPitchTool,
+    previewMode,
+  } = cursorStateContext;
+
   // カーソルの状態
-  const cursorState = computed(() => {
-    return resolveCursorBehavior();
-  });
+  const cursorState: Ref<CursorState> = computed(() => resolveCursorBehavior());
 
   /**
    * カーソルの状態を関連するコンテキストから取得する
    */
-  const resolveCursorBehavior = () => {
+  const resolveCursorBehavior = (): CursorState => {
     // プレビューの場合
-    if (context.nowPreviewing.value && context.previewMode.value !== "IDLE") {
-      switch (context.previewMode.value) {
+    if (nowPreviewing.value && previewMode.value !== "IDLE") {
+      switch (previewMode.value) {
         case "ADD_NOTE":
           return "DRAW";
         case "MOVE_NOTE":
@@ -43,13 +51,13 @@ export function useCursorState(context: CursorStateContext) {
     }
 
     // ノート編集の場合
-    if (context.editTarget.value === "NOTE") {
+    if (editTarget.value === "NOTE") {
       // シフトキーが押されていたら常に十字カーソル
-      if (context.shiftKey.value) {
+      if (shiftKey.value) {
         return "CROSSHAIR";
       }
       // ノート編集ツールが選択されていたら描画カーソル
-      if (context.selectedNoteTool.value === "EDIT_FIRST") {
+      if (selectedNoteTool.value === "EDIT_FIRST") {
         return "DRAW";
       }
       // それ以外は未設定
@@ -57,17 +65,14 @@ export function useCursorState(context: CursorStateContext) {
     }
 
     // ピッチ編集の場合
-    if (context.editTarget.value === "PITCH") {
+    if (editTarget.value === "PITCH") {
       // Ctrlキーが押されていたもしくは削除ツールが選択されていたら消しゴムカーソル
-      if (
-        context.ctrlKey.value ||
-        context.selectedPitchTool.value === "ERASE"
-      ) {
+      if (ctrlKey.value || selectedPitchTool.value === "ERASE") {
         return "ERASE";
       }
 
       // 描画ツールが選択されていたら描画カーソル
-      if (context.selectedPitchTool.value === "DRAW") {
+      if (selectedPitchTool.value === "DRAW") {
         return "DRAW";
       }
     }
@@ -95,13 +100,13 @@ export function useCursorState(context: CursorStateContext) {
   // カーソルに関連するコンテキストが更新されたらカーソルの状態を変更
   watch(
     [
-      context.ctrlKey,
-      context.shiftKey,
-      context.nowPreviewing,
-      context.editTarget,
-      context.selectedNoteTool,
-      context.selectedPitchTool,
-      context.previewMode,
+      ctrlKey,
+      shiftKey,
+      nowPreviewing,
+      editTarget,
+      selectedNoteTool,
+      selectedPitchTool,
+      previewMode,
     ],
     () => {},
     { immediate: true },

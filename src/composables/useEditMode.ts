@@ -1,19 +1,11 @@
-import { watch, Ref } from "vue";
+import { watch, ref, Ref } from "vue";
 import { NoteId } from "@/type/preload";
 import { NoteEditTool, PitchEditTool, SequencerEditTarget } from "@/store/type";
-import { MouseButton } from "@/sing/viewHelper";
-
-// マウスダウン時の振る舞い
-export type MouseDownBehavior =
-  | "IGNORE"
-  | "DESELECT_ALL"
-  | "ADD_NOTE"
-  | "START_RECT_SELECT"
-  | "DRAW_PITCH"
-  | "ERASE_PITCH";
-
-// ダブルクリック時の振る舞い
-export type MouseDoubleClickBehavior = "IGNORE" | "ADD_NOTE";
+import {
+  MouseButton,
+  MouseDownBehavior,
+  MouseDoubleClickBehavior,
+} from "@/sing/viewHelper";
 
 // 編集モードの外部コンテキスト
 export interface EditModeContext {
@@ -33,6 +25,15 @@ export interface MouseDownBehaviorContext {
 }
 
 export function useEditMode(editModeContext: EditModeContext) {
+  const {
+    ctrlKey,
+    shiftKey,
+    nowPreviewing,
+    editTarget,
+    selectedNoteTool,
+    selectedPitchTool,
+  } = editModeContext;
+
   /**
    * マウスダウン時の振る舞いを判定する
    * 条件の判定のみを行い、実際の処理は呼び出し側で行う
@@ -40,37 +41,35 @@ export function useEditMode(editModeContext: EditModeContext) {
   const resolveMouseDownBehavior = (
     mouseDownContext: MouseDownBehaviorContext,
   ): MouseDownBehavior => {
-    // マウスダウン時のコンテキストも使う
-    const context = {
-      ...editModeContext,
-      ...mouseDownContext,
-    };
+    const { isSelfEventTarget, mouseButton, editingLyricNoteId } =
+      mouseDownContext;
+
     // プレビュー中は無視
-    if (context.nowPreviewing.value) return "IGNORE";
+    if (nowPreviewing.value) return "IGNORE";
 
     // ノート編集の場合
-    if (context.editTarget.value === "NOTE") {
+    if (editTarget.value === "NOTE") {
       // イベントが来ていない場合は無視
-      if (!context.isSelfEventTarget) return "IGNORE";
+      if (!isSelfEventTarget) return "IGNORE";
       // 歌詞編集中は無視
-      if (context.editingLyricNoteId != undefined) return "IGNORE";
+      if (editingLyricNoteId != undefined) return "IGNORE";
 
       // 左クリックの場合
-      if (context.mouseButton === "LEFT_BUTTON") {
+      if (mouseButton === "LEFT_BUTTON") {
         // シフトキーが押されている場合は常に矩形選択開始
-        if (context.shiftKey.value) return "START_RECT_SELECT";
+        if (shiftKey.value) return "START_RECT_SELECT";
 
         // 編集優先ツールの場合
-        if (context.selectedNoteTool.value === "EDIT_FIRST") {
+        if (selectedNoteTool.value === "EDIT_FIRST") {
           // コントロールキーが押されている場合は全選択解除
-          if (context.ctrlKey.value) {
+          if (ctrlKey.value) {
             return "DESELECT_ALL";
           }
           return "ADD_NOTE";
         }
 
         // 選択優先ツールの場合
-        if (context.selectedNoteTool.value === "SELECT_FIRST") {
+        if (selectedNoteTool.value === "SELECT_FIRST") {
           // 矩形選択開始
           return "START_RECT_SELECT";
         }
@@ -80,19 +79,16 @@ export function useEditMode(editModeContext: EditModeContext) {
     }
 
     // ピッチ編集の場合
-    if (context.editTarget.value === "PITCH") {
+    if (editTarget.value === "PITCH") {
       // 左クリック以外は無視
-      if (context.mouseButton !== "LEFT_BUTTON") return "IGNORE";
+      if (mouseButton !== "LEFT_BUTTON") return "IGNORE";
 
       // ピッチ削除ツールが選択されているかコントロールキーが押されている場合はピッチ削除
-      if (
-        context.selectedPitchTool.value === "ERASE" ||
-        context.ctrlKey.value
-      ) {
+      if (selectedPitchTool.value === "ERASE" || ctrlKey.value) {
         return "ERASE_PITCH";
       }
 
-      // それ以外はピッチ描画
+      // それ以外はピッチ編集
       return "DRAW_PITCH";
     }
 
@@ -103,16 +99,13 @@ export function useEditMode(editModeContext: EditModeContext) {
    * ダブルクリック時の振る舞いを判定する
    */
   const resolveDoubleClickBehavior = (): MouseDoubleClickBehavior => {
-    const context = {
-      ...editModeContext,
-    };
     // プレビュー中は無視
-    if (context.nowPreviewing.value) return "IGNORE";
+    if (nowPreviewing.value) return "IGNORE";
 
     // ノート編集の選択優先ツールではノート追加
     if (
-      context.editTarget.value === "NOTE" &&
-      context.selectedNoteTool.value === "SELECT_FIRST"
+      editTarget.value === "NOTE" &&
+      selectedNoteTool.value === "SELECT_FIRST"
     ) {
       return "ADD_NOTE";
     }
@@ -120,20 +113,33 @@ export function useEditMode(editModeContext: EditModeContext) {
     return "IGNORE";
   };
 
+  // Ctrlキーが押されたときにピッチツールを変更したかどうか
+  const toolChangedByCtrl = ref(false);
+
   // ピッチ編集モードにおいてCtrlキーが押されたときにピッチツールを消しゴムツールにする
   watch(
-    [editModeContext.ctrlKey],
+    [ctrlKey],
     () => {
       // ピッチ編集モードでない場合は無視
-      if (editModeContext.editTarget.value !== "PITCH") {
+      if (editTarget.value !== "PITCH") {
         return;
       }
 
-      // Ctrlキーが押されたとき
-      if (editModeContext.ctrlKey.value) {
-        // ピッチ描画ツールの場合はピッチ削除ツールに変更
-        if (editModeContext.selectedPitchTool.value === "DRAW") {
-          editModeContext.selectedPitchTool.value = "ERASE";
+      // 現在のツールがピッチ描画ツールの場合
+      if (selectedPitchTool.value === "DRAW") {
+        // Ctrlキーが押されたときはピッチ削除ツールに変更
+        if (ctrlKey.value) {
+          selectedPitchTool.value = "ERASE";
+          toolChangedByCtrl.value = true;
+        }
+      }
+
+      // 現在のツールがピッチ削除ツールかつCtrlキーが離されたとき
+      if (selectedPitchTool.value === "ERASE" && toolChangedByCtrl.value) {
+        // ピッチ描画ツールに戻す
+        if (!ctrlKey.value) {
+          selectedPitchTool.value = "DRAW";
+          toolChangedByCtrl.value = false;
         }
       }
     },
