@@ -165,7 +165,7 @@ import { computed, watchEffect, ref } from "vue";
 import CharacterSelectMenu from "@/components/Sing/CharacterMenuButton/CharacterSelectMenu.vue";
 import SingerIcon from "@/components/Sing/SingerIcon.vue";
 import { useStore } from "@/store";
-import ContextMenu from "@/components/Menu/ContextMenu.vue";
+import ContextMenu from "@/components/Menu/ContextMenu/Container.vue";
 import { shouldPlayTracks } from "@/sing/domain";
 import { CharacterInfo, StyleInfo, TrackId } from "@/type/preload";
 

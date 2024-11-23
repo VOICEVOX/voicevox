@@ -41,12 +41,12 @@ import {
   EngineInfo,
   SystemError,
   defaultHotkeySettings,
-  isMac,
   defaultToolbarButtonSetting,
   EngineId,
   TextAsset,
 } from "@/type/preload";
 import { themes } from "@/domain/theme";
+import { isMac } from "@/helpers/platform";
 
 type SingleInstanceLockData = {
   filePath: string | undefined;
