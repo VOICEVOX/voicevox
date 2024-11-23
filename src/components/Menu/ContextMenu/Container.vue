@@ -2,6 +2,9 @@
   <Presentation ref="contextMenu" :header :menudata :uiLocked />
 </template>
 
+<script lang="ts">
+export type { ContextMenuItemData } from "./Presentation.vue";
+</script>
 <script setup lang="ts">
 import { computed, useTemplateRef } from "vue";
 import type { ComponentExposed } from "vue-component-type-helpers";
@@ -26,7 +29,4 @@ const store = useStore();
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 const contextMenu =
   useTemplateRef<ComponentExposed<typeof Presentation>>("contextMenu");
-</script>
-<script lang="ts">
-export type { ContextMenuItemData } from "./Presentation.vue";
 </script>
