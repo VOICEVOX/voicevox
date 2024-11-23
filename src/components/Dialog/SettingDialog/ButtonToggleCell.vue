@@ -33,5 +33,5 @@ defineProps<{
   disable?: boolean;
 }>();
 
-const model = defineModel<string | string[]>({ required: true });
+const model = defineModel<T>({ required: true });
 </script>

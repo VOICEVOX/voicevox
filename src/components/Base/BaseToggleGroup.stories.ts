@@ -5,6 +5,7 @@ import BaseToggleGroup from "./BaseToggleGroup.vue";
 import BaseToggleGroupItem from "./BaseToggleGroupItem.vue";
 
 const meta: Meta<typeof BaseToggleGroup> = {
+  // @ts-expect-error どうやらGenericsと相性が悪いらしい？
   component: BaseToggleGroup,
 };
 

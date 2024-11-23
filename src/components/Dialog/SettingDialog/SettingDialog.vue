@@ -341,6 +341,17 @@
                   :modelValue="showAddAudioItemButton"
                   @update:modelValue="changeShowAddAudioItemButton"
                 />
+                <ButtonToggleCell
+                  title="ツールバーの表示"
+                  description="ツールバーの表示を選べます。"
+                  :modelValue="toolbarButtonDisplay"
+                  :options="[
+                    { label: 'アイコンのみ', value: 'ICON_ONLY' },
+                    { label: 'アイコンとテキスト', value: 'ICON_AND_TEXT' },
+                    { label: 'テキストのみ', value: 'TEXT_ONLY' },
+                  ]"
+                  @update:modelValue="changeToolbarButtonDisplay"
+                />
               </div>
 
               <!-- Advanced Card -->
@@ -601,6 +612,11 @@ const [enableRubyNotation, changeEnableRubyNotation] = useRootMiscSetting(
 const [enablePreset, _changeEnablePreset] = useRootMiscSetting(
   store,
   "enablePreset",
+);
+
+const [toolbarButtonDisplay, changeToolbarButtonDisplay] = useRootMiscSetting(
+  store,
+  "toolbarButtonDisplay",
 );
 
 const [

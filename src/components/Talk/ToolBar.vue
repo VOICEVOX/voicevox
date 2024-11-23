@@ -3,15 +3,37 @@
     <QToolbar>
       <template v-for="button in buttons" :key="button.text">
         <QSpace v-if="button.text === null" />
-        <QBtn
-          v-else
-          unelevated
-          color="toolbar-button"
-          textColor="toolbar-button-display"
-          class="text-no-wrap text-bold q-mr-sm"
-          :disable="button.disable.value"
-          @click="button.click"
-          >{{ button.text }}</QBtn
+        <template v-else>
+          <QBtn
+            v-if="toolbarButtonDisplay === 'ICON_ONLY'"
+            unelevated
+            :icon="buttonIcons[button.tag]"
+            color="toolbar-button"
+            textColor="toolbar-button-display"
+            class="text-no-wrap text-bold q-mr-sm"
+            padding="sm"
+            :disable="button.disable.value"
+            @click="button.click"
+          >
+            <QTooltip>
+              {{ button.text }}
+            </QTooltip>
+          </QBtn>
+          <QBtn
+            v-else
+            unelevated
+            :icon="
+              toolbarButtonDisplay === 'ICON_AND_TEXT'
+                ? buttonIcons[button.tag]
+                : undefined
+            "
+            color="toolbar-button"
+            textColor="toolbar-button-display"
+            class="text-no-wrap text-bold q-mr-sm"
+            :disable="button.disable.value"
+            @click="button.click"
+            >{{ button.text }}</QBtn
+          ></template
         >
       </template>
     </QToolbar>
@@ -33,6 +55,7 @@ import { handlePossiblyNotMorphableError } from "@/store/audioGenerate";
 
 type ButtonContent = {
   text: string;
+  tag: ToolbarButtonTagType;
   click(): void;
   disable: ComputedRef<boolean>;
 };
@@ -51,6 +74,7 @@ const activeAudioKey = computed(() => store.getters.ACTIVE_AUDIO_KEY);
 const nowPlayingContinuously = computed(
   () => store.state.nowPlayingContinuously,
 );
+const toolbarButtonDisplay = computed(() => store.state.toolbarButtonDisplay);
 
 const { registerHotkeyWithCleanup } = useHotkeyManager();
 registerHotkeyWithCleanup({
@@ -150,7 +174,7 @@ const importTextFile = () => {
 
 const usableButtons: Record<
   ToolbarButtonTagType,
-  Omit<ButtonContent, "text"> | null
+  Omit<ButtonContent, "text" | "tag"> | null
 > = {
   PLAY_CONTINUOUSLY: {
     click: playContinuously,
@@ -197,13 +221,28 @@ const buttons = computed(() =>
     if (buttonContent) {
       return {
         ...buttonContent,
+        tag,
         text: getToolbarButtonName(tag),
       };
     } else {
       return {
+        tag,
         text: null,
       };
     }
   }),
 );
+
+const buttonIcons: Record<ToolbarButtonTagType, string> = {
+  PLAY_CONTINUOUSLY: "playlist_play",
+  STOP: "stop",
+  EXPORT_AUDIO_SELECTED: "svguse:toolbarIcons.svg#exportSelected",
+  EXPORT_AUDIO_ALL: "svguse:toolbarIcons.svg#exportAll",
+  EXPORT_AUDIO_CONNECT_ALL: "svguse:toolbarIcons.svg#exportConnectAll",
+  UNDO: "undo",
+  REDO: "redo",
+  IMPORT_TEXT: "svguse:toolbarIcons.svg#importText",
+  SAVE_PROJECT: "save",
+  EMPTY: "",
+};
 </script>
