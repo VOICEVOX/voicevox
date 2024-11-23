@@ -3,11 +3,10 @@
  * 値は適当だが、テストで使えるよう決定論的に決まるようにしたり、UIのバグに気づけるようある程度規則を持たせている。
  */
 
-import kuromoji, { IpadicFeatures, Tokenizer } from "kuromoji";
+import kuromoji, { IpadicFeatures, Tokenizer } from "@sglkc/kuromoji";
 import { moraToPhonemes } from "./phonemeMock";
 import { moraPattern } from "@/domain/japanese";
 import { AccentPhrase, Mora } from "@/openapi";
-import packageJson from "@/../package.json";
 
 let _tokenizer: Tokenizer<IpadicFeatures> | undefined;
 
@@ -15,7 +14,7 @@ let _tokenizer: Tokenizer<IpadicFeatures> | undefined;
 function getDicPath() {
   // ブラウザのときはCDNから辞書を取得し、Nodeのときはローカルから取得する
 
-  const pathForBrowser = `https://cdn.jsdelivr.net/npm/kuromoji@${packageJson.devDependencies.kuromoji}/dict`;
+  const pathForBrowser = `https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict`;
   const pathForNode = "node_modules/kuromoji/dict";
 
   // window.documentがなければNode
