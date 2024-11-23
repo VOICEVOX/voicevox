@@ -31,7 +31,6 @@ import SingEditor from "@/components/Sing/SingEditor.vue";
 import { EngineId } from "@/type/preload";
 import ErrorBoundary from "@/components/ErrorBoundary.vue";
 import { useStore } from "@/store";
-import { applyDeviceId } from "@/store/singing";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import AllDialog from "@/components/Dialog/AllDialog.vue";
 import MenuBar from "@/components/Menu/MenuBar/MenuBar.vue";
@@ -164,8 +163,5 @@ onMounted(async () => {
   } else {
     isProjectFileLoaded.value = false;
   }
-
-  // デバイスIDをTransportとPolySynthに設定
-  void applyDeviceId(store.state.savingSetting.audioOutputDevice);
 });
 </script>

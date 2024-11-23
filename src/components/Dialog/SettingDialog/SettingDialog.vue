@@ -477,7 +477,6 @@ import BaseSelectItem from "@/components/Base/BaseSelectItem.vue";
 import BaseCheckbox from "@/components/Base/BaseCheckbox.vue";
 import BaseTooltip from "@/components/Base/BaseTooltip.vue";
 import { useStore } from "@/store";
-import { applyDeviceId } from "@/store/singing";
 import {
   DEFAULT_AUDIO_FILE_NAME_TEMPLATE,
   DEFAULT_SONG_AUDIO_FILE_NAME_TEMPLATE,
@@ -629,8 +628,6 @@ const currentAudioOutputDeviceComputed = computed<string | undefined>({
   set: (device) => {
     if (device) {
       handleSavingSettingChange("audioOutputDevice", device);
-      // デバイスIDをTransportとPolySynthに設定
-      void applyDeviceId(device);
     }
   },
 });
