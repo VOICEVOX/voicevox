@@ -589,7 +589,7 @@ const snapTypeSelectModel = computed({
 
   :deep(.q-field__label) {
     font-size: 9px;
-    top: 2px;
+    top: 5.5px;
     margin-left: 6px;
     transform: translateY(0) !important;
     color: var(--scheme-color-on-surface-variant);
@@ -700,7 +700,7 @@ const snapTypeSelectModel = computed({
 .sing-volume-icon {
   margin-right: 8px;
 
-  :deep {
+  :deep() {
     color: var(--scheme-color-outline);
   }
 }

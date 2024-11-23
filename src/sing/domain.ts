@@ -591,3 +591,10 @@ export const shouldPlayTracks = (tracks: Map<TrackId, Track>): Set<TrackId> => {
       .map(([trackId]) => trackId),
   );
 };
+
+/**
+ * 指定されたティックを直近のグリッドに合わせる
+ */
+export function snapTicksToGrid(ticks: number, snapTicks: number): number {
+  return Math.round(ticks / snapTicks) * snapTicks;
+}

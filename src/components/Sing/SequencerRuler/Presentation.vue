@@ -62,7 +62,12 @@
 
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted } from "vue";
-import { getMeasureDuration, getTimeSignaturePositions } from "@/sing/domain";
+import {
+  getMeasureDuration,
+  getTimeSignaturePositions,
+  getNoteDuration,
+  snapTicksToGrid,
+} from "@/sing/domain";
 import { baseXToTick, tickToBaseX } from "@/sing/viewHelper";
 import { TimeSignature } from "@/store/type";
 
@@ -73,6 +78,7 @@ const props = defineProps<{
   tpqn: number;
   timeSignatures: TimeSignature[];
   sequencerZoomX: number;
+  sequencerSnapType: number;
 }>();
 const playheadTicks = defineModel<number>("playheadTicks", { required: true });
 const emit = defineEmits<{
@@ -134,6 +140,10 @@ const playheadX = computed(() => {
   return Math.floor(baseX * props.sequencerZoomX);
 });
 
+const snapTicks = computed(() => {
+  return getNoteDuration(props.sequencerSnapType, props.tpqn);
+});
+
 const onClick = (event: MouseEvent) => {
   emit("deselectAllNotes");
 
@@ -142,7 +152,10 @@ const onClick = (event: MouseEvent) => {
     throw new Error("sequencerRulerElement is null.");
   }
   const baseX = (props.offset + event.offsetX) / props.sequencerZoomX;
-  const ticks = baseXToTick(baseX, props.tpqn);
+  const ticks = snapTicksToGrid(
+    baseXToTick(baseX, props.tpqn),
+    snapTicks.value,
+  );
   playheadTicks.value = ticks;
 };
 
