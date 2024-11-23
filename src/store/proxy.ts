@@ -1,13 +1,14 @@
 import { ProxyStoreState, ProxyStoreTypes, EditorAudioQuery } from "./type";
 import { createPartialStore } from "./vuex";
 import { createEngineUrl } from "@/domain/url";
+import { isElectron, isProduction } from "@/helpers/platform";
 import {
   IEngineConnectorFactory,
   OpenAPIEngineAndMockConnectorFactory,
   OpenAPIEngineConnectorFactory,
 } from "@/infrastructures/EngineConnector";
 import { AudioQuery } from "@/openapi";
-import { EngineInfo, isElectron, isProduction } from "@/type/preload";
+import { EngineInfo } from "@/type/preload";
 
 export const proxyStoreState: ProxyStoreState = {};
 
