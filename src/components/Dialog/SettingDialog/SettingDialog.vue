@@ -485,7 +485,6 @@ import {
   buildSongTrackAudioFileNameFromRawData,
 } from "@/store/utility";
 import {
-  isProduction,
   SavingSetting,
   EngineSettingType,
   ExperimentalSettingType,
@@ -496,6 +495,7 @@ import {
 } from "@/type/preload";
 import { createLogger } from "@/domain/frontend/log";
 import { useRootMiscSetting } from "@/composables/useRootMiscSetting";
+import { isProduction } from "@/helpers/platform";
 
 type SamplingRateOption = EngineSettingType["outputSamplingRate"];
 

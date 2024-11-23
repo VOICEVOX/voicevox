@@ -6,6 +6,7 @@
     :sequencerZoomX
     :numMeasures
     :playheadTicks
+    :sequencerSnapType
     @update:playheadTicks="updatePlayheadTicks"
     @deselectAllNotes="deselectAllNotes"
   />
@@ -35,6 +36,7 @@ const store = useStore();
 const tpqn = computed(() => store.state.tpqn);
 const timeSignatures = computed(() => store.state.timeSignatures);
 const sequencerZoomX = computed(() => store.state.sequencerZoomX);
+const sequencerSnapType = computed(() => store.state.sequencerSnapType);
 
 const playheadTicks = computed(() => store.getters.PLAYHEAD_POSITION);
 
