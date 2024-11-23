@@ -551,6 +551,7 @@ let clipper: Clipper | undefined;
 // NOTE: テスト時はAudioContextが存在しない
 if (window.AudioContext) {
   audioContext = new AudioContext();
+  // 読込時にここでAudioContextにsetSinkIdできると簡単かつ確実だけど...
   transport = new Transport(audioContext);
   previewSynth = new PolySynth(audioContext);
   mainChannelStrip = new ChannelStrip(audioContext);
@@ -751,6 +752,13 @@ const getSelectedTrackWithFallback = (partialState: {
     return getOrThrow(partialState.tracks, partialState.trackOrder[0]);
   }
   return getOrThrow(partialState.tracks, partialState._selectedTrackId);
+};
+
+export const applyDeviceId = (device: string) => {
+  if (transport && previewSynth) {
+    transport.sinkId = device;
+    previewSynth.sinkId = device;
+  }
 };
 
 export const singingStoreState: SingingStoreState = {
@@ -1482,7 +1490,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       mutations.SET_PLAYBACK_STATE({ nowPlaying: true });
 
-      transport.start(state.savingSetting.audioOutputDevice);
+      transport.start();
       animationTimer.start(() => {
         playheadPosition.value = getters.SECOND_TO_TICK(transport.time);
       });
@@ -1521,7 +1529,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   PLAY_PREVIEW_SOUND: {
     async action(
-      { state },
+      _,
       { noteNumber, duration }: { noteNumber: number; duration?: number },
     ) {
       if (!audioContext) {
@@ -1530,12 +1538,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       if (!previewSynth) {
         throw new Error("previewSynth is undefined.");
       }
-      previewSynth.noteOn(
-        "immediately",
-        noteNumber,
-        duration,
-        state.savingSetting.audioOutputDevice,
-      );
+      previewSynth.noteOn("immediately", noteNumber, duration);
     },
   },
 

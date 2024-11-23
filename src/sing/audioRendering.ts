@@ -94,6 +94,21 @@ export class Transport {
       this._time = value;
     }
   }
+  set sinkId(device: string) {
+    device = device ? device : "";
+    if (this.audioContext.setSinkId) {
+      this.audioContext
+        .setSinkId(device === "default" ? "" : device)
+        .catch((err: unknown) => {
+          void showAlertDialog({
+            type: "error",
+            title: "エラー",
+            message: "再生デバイスが見つかりません",
+          });
+          throw err;
+        });
+    }
+  }
 
   /**
    * @param audioContext 音声コンテキスト
@@ -197,25 +212,10 @@ export class Transport {
 
   /**
    * 再生を開始します。すでに再生中の場合は何も行いません。
-   * @param device 再生させるデバイスのID、指定が無ければデフォルトで再生
    */
-  start(device?: string) {
+  start() {
     if (this._state === "started") return;
     const contextTime = this.audioContext.currentTime;
-
-    device = device ? device : "";
-    if (this.audioContext.setSinkId) {
-      this.audioContext
-        .setSinkId(device === "default" ? "" : device)
-        .catch((err: unknown) => {
-          void showAlertDialog({
-            type: "error",
-            title: "エラー",
-            message: "再生デバイスが見つかりません",
-          });
-          throw err;
-        });
-    }
 
     this._state = "started";
 
@@ -793,6 +793,21 @@ export class PolySynth implements Instrument {
   get output(): AudioNode {
     return this.gainNode;
   }
+  set sinkId(device: string) {
+    device = device ? device : "";
+    if (this.audioContext.setSinkId) {
+      this.audioContext
+        .setSinkId(device === "default" ? "" : device)
+        .catch((err: unknown) => {
+          void showAlertDialog({
+            type: "error",
+            title: "エラー",
+            message: "再生デバイスが見つかりません",
+          });
+          throw err;
+        });
+    }
+  }
 
   constructor(audioContext: AudioContext, options?: PolySynthOptions) {
     this.audioContext = audioContext;
@@ -822,27 +837,12 @@ export class PolySynth implements Instrument {
    * @param contextTime ノートオンを行う時刻（コンテキスト時刻）
    * @param noteNumber MIDIノート番号
    * @param duration ノートの長さ（秒）
-   * @param device 再生させるデバイスのID、指定が無ければデフォルトで再生
    */
   noteOn(
     contextTime: number | "immediately",
     noteNumber: number,
     duration?: number,
-    device?: string,
   ) {
-    device = device ? device : "";
-    if (this.audioContext.setSinkId) {
-      this.audioContext
-        .setSinkId(device === "default" ? "" : device)
-        .catch((err: unknown) => {
-          void showAlertDialog({
-            type: "error",
-            title: "エラー",
-            message: "再生デバイスが見つかりません",
-          });
-          throw err;
-        });
-    }
     let voice = this.voices.find((value) => {
       return value.isActive && value.noteNumber === noteNumber;
     });
