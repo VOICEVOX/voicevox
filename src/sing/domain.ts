@@ -492,9 +492,8 @@ export function convertToFramePhonemes(phonemes: FramePhoneme[]) {
   return framePhonemes;
 }
 
-function secondToFrame(seconds: number, frameRate: number, round = true) {
-  const frame = seconds * frameRate;
-  return round ? Math.round(frame) : frame;
+function secondToRoundedFrame(seconds: number, frameRate: number) {
+  return Math.round(seconds * frameRate);
 }
 
 type PhonemeTiming = {
@@ -693,7 +692,7 @@ function applyPhonemeTimingEditToPhonemeTimings(
     }
     for (const phonemeTimingEdit of phonemeTimingEdits) {
       if (phonemeTimingEdit.phonemeIndexInNote === phonemeIndexInNote) {
-        const offsetFrame = secondToFrame(
+        const offsetFrame = secondToRoundedFrame(
           phonemeTimingEdit.offsetSeconds,
           frameRate,
         );
@@ -708,7 +707,7 @@ function applyPhonemeTimingEditToPhonemeTimings(
         nextPhonemeTiming?.phoneme === "pau"
       ) {
         // NOTE: フレーズ末尾のpauseはフレーズ最後のノートに含まれるものとして扱う
-        const offsetFrame = secondToFrame(
+        const offsetFrame = secondToRoundedFrame(
           phonemeTimingEdit.offsetSeconds,
           frameRate,
         );
@@ -816,7 +815,7 @@ function adjustPhonemeTimingsAndPhraseEndFrames(
 }
 
 function calcPhraseStartFrames(phraseStartTimes: number[], frameRate: number) {
-  return phraseStartTimes.map((value) => secondToFrame(value, frameRate));
+  return phraseStartTimes.map((value) => secondToRoundedFrame(value, frameRate));
 }
 
 function calcPhraseEndFrames(
