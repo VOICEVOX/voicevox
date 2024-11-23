@@ -6,9 +6,9 @@
     :tempos
     :timeSignatures
     :sequencerZoomX
-    :snapType
     :uiLocked
     :playheadTicks
+    :sequencerSnapType
     @update:playheadTicks="updatePlayheadTicks"
     @removeTempo="removeTempo"
     @removeTimeSignature="removeTimeSignature"
@@ -58,8 +58,8 @@ const tpqn = computed(() => store.state.tpqn);
 const tempos = computed(() => store.state.tempos);
 const timeSignatures = computed(() => store.state.timeSignatures);
 const sequencerZoomX = computed(() => store.state.sequencerZoomX);
-const snapType = computed(() => store.state.sequencerSnapType);
 const uiLocked = computed(() => store.getters.UI_LOCKED);
+const sequencerSnapType = computed(() => store.state.sequencerSnapType);
 
 const playheadTicks = computed(() => store.getters.PLAYHEAD_POSITION);
 

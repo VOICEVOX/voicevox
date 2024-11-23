@@ -192,6 +192,7 @@ import {
   getMeasureDuration,
   getNoteDuration,
   getTimeSignaturePositions,
+  snapTicksToGrid,
   tickToMeasureNumber,
 } from "@/sing/domain";
 import { baseXToTick, tickToBaseX } from "@/sing/viewHelper";
@@ -213,8 +214,8 @@ const props = defineProps<{
   tempos: Tempo[];
   timeSignatures: TimeSignature[];
   sequencerZoomX: number;
-  snapType: number;
   uiLocked: boolean;
+  sequencerSnapType: number;
 }>();
 const playheadTicks = defineModel<number>("playheadTicks", {
   required: true,
@@ -297,7 +298,11 @@ const getTickFromMouseEvent = (event: MouseEvent) => {
   return baseXToTick(baseX, props.tpqn);
 };
 
-const onClick = async (event: MouseEvent) => {
+const snapTicks = computed(() => {
+  return getNoteDuration(props.sequencerSnapType, props.tpqn);
+});
+
+const onClick = (event: MouseEvent) => {
   if (props.uiLocked) {
     return;
   }
@@ -315,7 +320,15 @@ const onClick = async (event: MouseEvent) => {
   }
   emit("deselectAllNotes");
 
-  const ticks = getTickFromMouseEvent(event);
+  const sequencerRulerElement = sequencerRuler.value;
+  if (!sequencerRulerElement) {
+    throw new Error("sequencerRulerElement is null.");
+  }
+  const baseX = (props.offset + event.offsetX) / props.sequencerZoomX;
+  const ticks = snapTicksToGrid(
+    baseXToTick(baseX, props.tpqn),
+    snapTicks.value,
+  );
   playheadTicks.value = ticks;
 };
 
@@ -352,7 +365,7 @@ const onContextMenu = async (event: MouseEvent) => {
   emit("deselectAllNotes");
 
   const ticks = getTickFromMouseEvent(event);
-  const snapTicks = getNoteDuration(props.snapType, props.tpqn);
+  const snapTicks = getNoteDuration(props.sequencerSnapType, props.tpqn);
   const snappedTicks = Math.round(ticks / snapTicks) * snapTicks;
   playheadTicks.value = snappedTicks;
 };

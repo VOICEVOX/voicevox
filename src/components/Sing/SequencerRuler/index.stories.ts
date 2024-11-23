@@ -26,11 +26,9 @@ const meta: Meta<typeof Presentation> = {
     tpqn: 480,
     offset: 0,
     numMeasures: 32,
-    snapType: 16,
+    sequencerSnapType: 16,
     "onUpdate:playheadTicks": fn<(value: number) => void>(),
     onDeselectAllNotes: fn(),
-
-    // TODO: ContextMenuをDIする
   },
   argTypes: {
     sequencerZoomX: {
