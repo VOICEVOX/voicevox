@@ -12,11 +12,11 @@
     @mousemove="updateHoveredTempoOrTimeSignatureChange"
     @mouseleave="hoveredTempoOrTimeSignatureChange = null"
   >
-    <slot
-      name="contextMenu"
+    <ContextMenu
+      ref="contextMenu"
       :header="contextMenuHeader"
       :menudata="contextMenudata"
-      :onContextMenuMounted="(el) => (contextMenu = el)"
+      :uiLocked
     />
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -186,7 +186,6 @@ import {
   Component,
   toRef,
 } from "vue";
-import { ComponentProps } from "vue-component-type-helpers";
 import { Dialog } from "quasar";
 import {
   getMeasureDuration,
@@ -199,7 +198,7 @@ import { baseXToTick, tickToBaseX } from "@/sing/viewHelper";
 import { Tempo, TimeSignature } from "@/store/type";
 import ContextMenu, {
   ContextMenuItemData,
-} from "@/components/Menu/ContextMenu.vue";
+} from "@/components/Menu/ContextMenu/Presentation.vue";
 import { UnreachableError } from "@/type/utility";
 import TempoChangeDialog from "@/components/Dialog/TempoOrTimeSignatureChangeDialog/TempoChangeDialog.vue";
 import TimeSignatureChangeDialog from "@/components/Dialog/TempoOrTimeSignatureChangeDialog/TimeSignatureChangeDialog.vue";
@@ -226,15 +225,6 @@ const emit = defineEmits<{
   removeTempo: [position: number];
   setTimeSignature: [timeSignature: TimeSignature];
   removeTimeSignature: [measureNumber: number];
-}>();
-defineSlots<{
-  contextMenu(
-    props: ComponentProps<typeof ContextMenu> & {
-      onContextMenuMounted: (
-        el: ComponentPublicInstance<typeof ContextMenu>,
-      ) => void;
-    },
-  ): never;
 }>();
 
 const log = createLogger("SequencerRuler");
