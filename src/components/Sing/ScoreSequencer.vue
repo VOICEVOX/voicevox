@@ -162,7 +162,13 @@
       ref="contextMenu"
       :menudata="contextMenuData"
     />
-    <SequencerToolPalette :editTarget :selectedNoteTool :selectedPitchTool />
+    <SequencerToolPalette
+      :editTarget
+      :selectedNoteTool
+      :selectedPitchTool
+      @noteToolChange="onNoteToolChange"
+      @pitchToolChange="onPitchToolChange"
+    />
   </div>
 </template>
 
@@ -181,7 +187,12 @@ import ContextMenu, {
 } from "@/components/Menu/ContextMenu.vue";
 import { NoteId } from "@/type/preload";
 import { useStore } from "@/store";
-import { Note, SequencerEditTarget } from "@/store/type";
+import {
+  Note,
+  SequencerEditTarget,
+  NoteEditTool,
+  PitchEditTool,
+} from "@/store/type";
 import {
   getEndTicksOfPhrase,
   getNoteDuration,
@@ -206,6 +217,10 @@ import {
   PREVIEW_SOUND_DURATION,
   getButton,
   PreviewMode,
+  MouseButton,
+  MouseDownBehavior,
+  MouseDoubleClickBehavior,
+  CursorState,
 } from "@/sing/viewHelper";
 import SequencerGrid from "@/components/Sing/SequencerGrid/Container.vue";
 import SequencerRuler from "@/components/Sing/SequencerRuler/Container.vue";
@@ -228,8 +243,6 @@ import { applyGaussianFilter, linearInterpolation } from "@/sing/utility";
 import { useLyricInput } from "@/composables/useLyricInput";
 import { ExhaustiveError } from "@/type/utility";
 import { uuid4 } from "@/helpers/random";
-import { useCursorState } from "@/composables/useCursorState";
-import { useEditMode } from "@/composables/useEditMode";
 
 // 直接イベントが来ているかどうか
 const isSelfEventTarget = (event: UIEvent) => {
@@ -426,50 +439,254 @@ const showGuideLine = ref(true);
 const guideLineX = ref(0);
 
 // 編集モード
+// TODO: useEditModeとして実装していたものをコピぺ
+// ステートマシン実装後に削除する
+// 議論 https://github.com/VOICEVOX/voicevox/pull/2367#discussion_r1853262865
+
+// 編集モードの外部コンテキスト
+interface EditModeContext {
+  readonly ctrlKey: boolean;
+  readonly shiftKey: boolean;
+  readonly nowPreviewing: boolean;
+  readonly editTarget: SequencerEditTarget;
+  readonly selectedNoteTool: NoteEditTool;
+  readonly selectedPitchTool: PitchEditTool;
+  readonly isSelfEventTarget?: boolean;
+  readonly mouseButton?: MouseButton;
+  readonly editingLyricNoteId?: NoteId;
+}
 
 // 編集対象
 const editTarget = computed({
   get: () => store.state.sequencerEditTarget,
-  set: (value) => store.commit("SET_EDIT_TARGET", { editTarget: value }),
+  set: (value) => void store.actions.SET_EDIT_TARGET({ editTarget: value }),
 });
 // 選択中のノート編集ツール
 const selectedNoteTool = computed({
   get: () => store.state.selectedNoteTool,
   set: (value) =>
-    store.commit("SET_SELECTED_NOTE_TOOL", { selectedNoteTool: value }),
+    void store.actions.SET_SELECTED_NOTE_TOOL({ selectedNoteTool: value }),
 });
 // 選択中のピッチ編集ツール
 const selectedPitchTool = computed({
   get: () => store.state.selectedPitchTool,
   set: (value) =>
-    store.commit("SET_SELECTED_PITCH_TOOL", { selectedPitchTool: value }),
+    void store.actions.SET_SELECTED_PITCH_TOOL({ selectedPitchTool: value }),
 });
 
-// 編集モードで常に使うコンテキストを入れる
-const editModeContext = {
-  ctrlKey,
-  shiftKey,
-  nowPreviewing,
-  editTarget,
-  selectedNoteTool,
-  selectedPitchTool,
+const onNoteToolChange = (tool: NoteEditTool) => {
+  selectedNoteTool.value = tool;
 };
-const { resolveMouseDownBehavior, resolveDoubleClickBehavior } =
-  useEditMode(editModeContext);
+
+const onPitchToolChange = (tool: PitchEditTool) => {
+  selectedPitchTool.value = tool;
+};
+
+/**
+ * マウスダウン時の振る舞いを判定する
+ * 条件の判定のみを行い、実際の処理は呼び出し側で行う
+ */
+const resolveMouseDownBehavior = (
+  context: EditModeContext,
+): MouseDownBehavior => {
+  const { isSelfEventTarget, mouseButton, editingLyricNoteId } = context;
+
+  // プレビュー中は無視
+  if (nowPreviewing.value) return "IGNORE";
+
+  // ノート編集の場合
+  if (editTarget.value === "NOTE") {
+    // イベントが来ていない場合は無視
+    if (!isSelfEventTarget) return "IGNORE";
+    // 歌詞編集中は無視
+    if (editingLyricNoteId != undefined) return "IGNORE";
+
+    // 左クリックの場合
+    if (mouseButton === "LEFT_BUTTON") {
+      // シフトキーが押されている場合は常に矩形選択開始
+      if (shiftKey.value) return "START_RECT_SELECT";
+
+      // 編集優先ツールの場合
+      if (selectedNoteTool.value === "EDIT_FIRST") {
+        // コントロールキーが押されている場合は全選択解除
+        if (ctrlKey.value) {
+          return "DESELECT_ALL";
+        }
+        return "ADD_NOTE";
+      }
+
+      // 選択優先ツールの場合
+      if (selectedNoteTool.value === "SELECT_FIRST") {
+        // 矩形選択開始
+        return "START_RECT_SELECT";
+      }
+    }
+
+    return "DESELECT_ALL";
+  }
+
+  // ピッチ編集の場合
+  if (editTarget.value === "PITCH") {
+    // 左クリック以外は無視
+    if (mouseButton !== "LEFT_BUTTON") return "IGNORE";
+
+    // ピッチ削除ツールが選択されているかコントロールキーが押されている場合はピッチ削除
+    if (selectedPitchTool.value === "ERASE" || ctrlKey.value) {
+      return "ERASE_PITCH";
+    }
+
+    // それ以外はピッチ編集
+    return "DRAW_PITCH";
+  }
+
+  return "IGNORE";
+};
+
+/**
+ * ダブルクリック時の振る舞いを判定する
+ */
+const resolveDoubleClickBehavior = (): MouseDoubleClickBehavior => {
+  // プレビュー中は無視
+  if (nowPreviewing.value) return "IGNORE";
+
+  // ノート編集の選択優先ツールではノート追加
+  if (
+    editTarget.value === "NOTE" &&
+    selectedNoteTool.value === "SELECT_FIRST"
+  ) {
+    return "ADD_NOTE";
+  }
+
+  return "IGNORE";
+};
+
+// Ctrlキーが押されたときにピッチツールを変更したかどうか
+const toolChangedByCtrl = ref(false);
+
+// ピッチ編集モードにおいてCtrlキーが押されたときにピッチツールを消しゴムツールにする
+watch(
+  [ctrlKey],
+  () => {
+    // ピッチ編集モードでない場合は無視
+    if (editTarget.value !== "PITCH") {
+      return;
+    }
+
+    // 現在のツールがピッチ描画ツールの場合
+    if (selectedPitchTool.value === "DRAW") {
+      // Ctrlキーが押されたときはピッチ削除ツールに変更
+      if (ctrlKey.value) {
+        selectedPitchTool.value = "ERASE";
+        toolChangedByCtrl.value = true;
+      }
+    }
+
+    // 現在のツールがピッチ削除ツールかつCtrlキーが離されたとき
+    if (selectedPitchTool.value === "ERASE" && toolChangedByCtrl.value) {
+      // ピッチ描画ツールに戻す
+      if (!ctrlKey.value) {
+        selectedPitchTool.value = "DRAW";
+        toolChangedByCtrl.value = false;
+      }
+    }
+  },
+  { immediate: true },
+);
 
 // カーソルの状態
-// 関連するコンテキストを全部入れる
-const cursorStateContext = {
-  ctrlKey,
-  shiftKey,
-  nowPreviewing,
-  editTarget,
-  selectedNoteTool,
-  selectedPitchTool,
-  previewMode,
+// TODO: useCursorStateとして実装していたものをコピペ
+// ステートマシン実装後に削除する
+// 議論 https://github.com/VOICEVOX/voicevox/pull/2367#discussion_r1853262865
+
+/**
+ * カーソルの状態を関連するコンテキストから取得する
+ */
+const resolveCursorBehavior = (): CursorState => {
+  // プレビューの場合
+  if (nowPreviewing.value && previewMode.value !== "IDLE") {
+    switch (previewMode.value) {
+      case "ADD_NOTE":
+        return "DRAW";
+      case "MOVE_NOTE":
+        return "MOVE";
+      case "RESIZE_NOTE_RIGHT":
+      case "RESIZE_NOTE_LEFT":
+        return "EW_RESIZE";
+      case "DRAW_PITCH":
+        return "DRAW";
+      case "ERASE_PITCH":
+        return "ERASE";
+      default:
+        return "UNSET";
+    }
+  }
+
+  // ノート編集の場合
+  if (editTarget.value === "NOTE") {
+    // シフトキーが押されていたら常に十字カーソル
+    if (shiftKey.value) {
+      return "CROSSHAIR";
+    }
+    // ノート編集ツールが選択されていたら描画カーソル
+    if (selectedNoteTool.value === "EDIT_FIRST") {
+      return "DRAW";
+    }
+    // それ以外は未設定
+    return "UNSET";
+  }
+
+  // ピッチ編集の場合
+  if (editTarget.value === "PITCH") {
+    // Ctrlキーが押されていたもしくは削除ツールが選択されていたら消しゴムカーソル
+    if (ctrlKey.value || selectedPitchTool.value === "ERASE") {
+      return "ERASE";
+    }
+
+    // 描画ツールが選択されていたら描画カーソル
+    if (selectedPitchTool.value === "DRAW") {
+      return "DRAW";
+    }
+  }
+  return "UNSET";
 };
-const { cursorClass, resolveCursorBehavior } =
-  useCursorState(cursorStateContext);
+
+// カーソル用のCSSクラス名ヘルパー
+const cursorClass = computed(() => {
+  switch (cursorState.value) {
+    case "EW_RESIZE":
+      return "cursor-ew-resize";
+    case "CROSSHAIR":
+      return "cursor-crosshair";
+    case "MOVE":
+      return "cursor-move";
+    case "DRAW":
+      return "cursor-draw";
+    case "ERASE":
+      return "cursor-erase";
+    default:
+      return "";
+  }
+});
+
+// カーソルの状態
+const cursorState = ref<CursorState>(resolveCursorBehavior());
+
+// カーソルに関連するコンテキストが更新されたらカーソルの状態を変更
+watch(
+  [
+    ctrlKey,
+    shiftKey,
+    nowPreviewing,
+    editTarget,
+    selectedNoteTool,
+    selectedPitchTool,
+    previewMode,
+  ],
+  () => {
+    cursorState.value = resolveCursorBehavior();
+  },
+  { immediate: true },
+);
 
 const previewAdd = () => {
   const cursorBaseX = (scrollX.value + cursorX.value) / zoomX.value;
@@ -913,7 +1130,7 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
 const endPreview = () => {
   cancelAnimationFrame(previewRequestId);
   if (previewStartEditTarget === "NOTE") {
-    // 編集ターゲットがノートのときにプレビュを開始した合の処理
+    // 編集ターゲットがノートのときにプレビューを開始した場合の処理
     if (edited) {
       const previewTrackId = selectedTrackId.value;
       const noteIds = previewNotes.value.map((note) => note.id);
@@ -1042,10 +1259,17 @@ const onNoteRightEdgeMouseDown = (event: MouseEvent, note: Note) => {
 
 const onMouseDown = (event: MouseEvent) => {
   const mouseDownContext = {
+    ctrlKey: ctrlKey.value,
+    shiftKey: shiftKey.value,
+    nowPreviewing: nowPreviewing.value,
+    editTarget: editTarget.value,
+    selectedNoteTool: selectedNoteTool.value,
+    selectedPitchTool: selectedPitchTool.value,
     isSelfEventTarget: isSelfEventTarget(event),
     mouseButton: getButton(event),
     editingLyricNoteId: state.editingLyricNoteId,
   };
+  // マウスダウン時の振る舞い
   const behavior = resolveMouseDownBehavior(mouseDownContext);
 
   switch (behavior) {
