@@ -166,8 +166,8 @@
       :editTarget
       :selectedNoteTool
       :selectedPitchTool
-      @noteToolChange="onNoteToolChange"
-      @pitchToolChange="onPitchToolChange"
+      :setSelectedNoteTool
+      :setSelectedPitchTool
     />
   </div>
 </template>
@@ -457,29 +457,16 @@ interface EditModeContext {
 }
 
 // 編集対象
-const editTarget = computed({
-  get: () => store.state.sequencerEditTarget,
-  set: (value) => void store.actions.SET_EDIT_TARGET({ editTarget: value }),
-});
+const editTarget = computed(() => store.state.sequencerEditTarget);
 // 選択中のノート編集ツール
-const selectedNoteTool = computed({
-  get: () => store.state.selectedNoteTool,
-  set: (value) =>
-    void store.actions.SET_SELECTED_NOTE_TOOL({ selectedNoteTool: value }),
-});
-// 選択中のピッチ編集ツール
-const selectedPitchTool = computed({
-  get: () => store.state.selectedPitchTool,
-  set: (value) =>
-    void store.actions.SET_SELECTED_PITCH_TOOL({ selectedPitchTool: value }),
-});
-
-const onNoteToolChange = (tool: NoteEditTool) => {
-  selectedNoteTool.value = tool;
+const selectedNoteTool = computed(() => store.state.selectedNoteTool);
+const setSelectedNoteTool = (value: NoteEditTool) => {
+  void store.actions.SET_SELECTED_NOTE_TOOL({ selectedNoteTool: value });
 };
-
-const onPitchToolChange = (tool: PitchEditTool) => {
-  selectedPitchTool.value = tool;
+// 選択中のピッチ編集ツール
+const selectedPitchTool = computed(() => store.state.selectedPitchTool);
+const setSelectedPitchTool = (value: PitchEditTool) => {
+  void store.actions.SET_SELECTED_PITCH_TOOL({ selectedPitchTool: value });
 };
 
 /**
@@ -576,7 +563,7 @@ watch(
     if (selectedPitchTool.value === "DRAW") {
       // Ctrlキーが押されたときはピッチ削除ツールに変更
       if (ctrlKey.value) {
-        selectedPitchTool.value = "ERASE";
+        setSelectedPitchTool("ERASE");
         toolChangedByCtrl.value = true;
       }
     }
@@ -585,7 +572,7 @@ watch(
     if (selectedPitchTool.value === "ERASE" && toolChangedByCtrl.value) {
       // ピッチ描画ツールに戻す
       if (!ctrlKey.value) {
-        selectedPitchTool.value = "DRAW";
+        setSelectedPitchTool("DRAW");
         toolChangedByCtrl.value = false;
       }
     }
