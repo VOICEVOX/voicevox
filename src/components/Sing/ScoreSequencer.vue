@@ -166,8 +166,8 @@
       :editTarget
       :selectedNoteTool
       :selectedPitchTool
-      :setSelectedNoteTool
-      :setSelectedPitchTool
+      @update:selectedNoteTool="selectedNoteTool = $event"
+      @update:selectedPitchTool="selectedPitchTool = $event"
     />
   </div>
 </template>
@@ -459,15 +459,15 @@ interface EditModeContext {
 // 編集対象
 const editTarget = computed(() => store.state.sequencerEditTarget);
 // 選択中のノート編集ツール
-const selectedNoteTool = computed(() => store.state.selectedNoteTool);
-const setSelectedNoteTool = (value: NoteEditTool) => {
-  void store.actions.SET_SELECTED_NOTE_TOOL({ selectedNoteTool: value });
-};
+const selectedNoteTool = ref<NoteEditTool>(state.selectedNoteTool);
+watch(selectedNoteTool, (newTool) => {
+  void store.actions.SET_SELECTED_NOTE_TOOL({ selectedNoteTool: newTool });
+});
 // 選択中のピッチ編集ツール
-const selectedPitchTool = computed(() => store.state.selectedPitchTool);
-const setSelectedPitchTool = (value: PitchEditTool) => {
-  void store.actions.SET_SELECTED_PITCH_TOOL({ selectedPitchTool: value });
-};
+const selectedPitchTool = ref<PitchEditTool>(state.selectedPitchTool);
+watch(selectedPitchTool, (newTool) => {
+  void store.actions.SET_SELECTED_PITCH_TOOL({ selectedPitchTool: newTool });
+});
 
 /**
  * マウスダウン時の振る舞いを判定する
@@ -563,7 +563,7 @@ watch(
     if (selectedPitchTool.value === "DRAW") {
       // Ctrlキーが押されたときはピッチ削除ツールに変更
       if (ctrlKey.value) {
-        setSelectedPitchTool("ERASE");
+        selectedPitchTool.value = "ERASE";
         toolChangedByCtrl.value = true;
       }
     }
@@ -572,7 +572,7 @@ watch(
     if (selectedPitchTool.value === "ERASE" && toolChangedByCtrl.value) {
       // ピッチ描画ツールに戻す
       if (!ctrlKey.value) {
-        setSelectedPitchTool("DRAW");
+        selectedPitchTool.value = "DRAW";
         toolChangedByCtrl.value = false;
       }
     }

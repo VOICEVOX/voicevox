@@ -4,7 +4,7 @@
       flat
       round
       :color="selectedNoteTool === 'SELECT_FIRST' ? 'primary' : ''"
-      @click="setSelectedNoteTool('SELECT_FIRST')"
+      @click="$emit('update:selectedNoteTool', 'SELECT_FIRST')"
     >
       <i class="material-symbols-outlined">arrow_selector_tool</i>
       <QTooltip
@@ -22,7 +22,7 @@
       flat
       round
       :color="selectedNoteTool === 'EDIT_FIRST' ? 'primary' : ''"
-      @click="setSelectedNoteTool('EDIT_FIRST')"
+      @click="$emit('update:selectedNoteTool', 'EDIT_FIRST')"
     >
       <i class="material-symbols-outlined">stylus</i>
       <QTooltip
@@ -42,7 +42,7 @@
       flat
       round
       :color="selectedPitchTool === 'DRAW' ? 'primary' : ''"
-      @click="setSelectedPitchTool('DRAW')"
+      @click="$emit('update:selectedPitchTool', 'DRAW')"
     >
       <i class="material-symbols-outlined">stylus</i>
       <QTooltip
@@ -60,7 +60,7 @@
       flat
       round
       :color="selectedPitchTool === 'ERASE' ? 'primary' : ''"
-      @click="setSelectedPitchTool('ERASE')"
+      @click="$emit('update:selectedPitchTool', 'ERASE')"
     >
       <i class="material-symbols-outlined">ink_eraser</i>
       <QTooltip
@@ -84,8 +84,10 @@ defineProps<{
   editTarget: SequencerEditTarget;
   selectedNoteTool: NoteEditTool;
   selectedPitchTool: PitchEditTool;
-  setSelectedNoteTool: (tool: NoteEditTool) => void;
-  setSelectedPitchTool: (tool: PitchEditTool) => void;
+}>();
+defineEmits<{
+  (event: "update:selectedNoteTool", value: NoteEditTool): void;
+  (event: "update:selectedPitchTool", value: PitchEditTool): void;
 }>();
 </script>
 
