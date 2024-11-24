@@ -15,19 +15,7 @@
     @setTempo="setTempo"
     @setTimeSignature="setTimeSignature"
     @deselectAllNotes="deselectAllNotes"
-  >
-    <template #contextMenu="{ onContextMenuMounted, ...props }">
-      <ContextMenu
-        v-bind="props"
-        :ref="
-          (el) =>
-            onContextMenuMounted(
-              el as ComponentPublicInstance<typeof ContextMenu>,
-            )
-        "
-      />
-    </template>
-  </Presentation>
+  />
 </template>
 
 <script setup lang="ts">
