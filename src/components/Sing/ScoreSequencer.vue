@@ -540,16 +540,24 @@ const resolveMouseDownBehavior = (
 /**
  * ダブルクリック時の振る舞いを判定する
  */
-const resolveDoubleClickBehavior = (): MouseDoubleClickBehavior => {
-  // プレビュー中は無視
-  if (nowPreviewing.value) return "IGNORE";
+const resolveDoubleClickBehavior = (
+  context: EditModeContext,
+): MouseDoubleClickBehavior => {
+  const { isSelfEventTarget } = context;
 
-  // ノート編集の選択優先ツールではノート追加
-  if (
-    editTarget.value === "NOTE" &&
-    selectedNoteTool.value === "SELECT_FIRST"
-  ) {
-    return "ADD_NOTE";
+  // ノート編集の場合
+  if (editTarget.value === "NOTE") {
+    // 直接イベントが来ていない場合は無視
+    if (!isSelfEventTarget) return "IGNORE";
+
+    // プレビュー中は無視
+    if (nowPreviewing.value) return "IGNORE";
+
+    // 選択優先ツールではノート追加
+    if (selectedNoteTool.value === "SELECT_FIRST") {
+      return "ADD_NOTE";
+    }
+    return "IGNORE";
   }
 
   return "IGNORE";
@@ -1257,6 +1265,9 @@ const onNoteRightEdgeMouseDown = (event: MouseEvent, note: Note) => {
 };
 
 const onMouseDown = (event: MouseEvent) => {
+  // TODO: isSelfEventTarget、mouseButton、editingLyricNoteId以外は必要ないが、
+  // 必要な依存関係明示のため(とuseEditModeからのコピペのためcontextに入れている
+  // ステートマシン実装時に要修正
   const mouseDownContext = {
     ctrlKey: ctrlKey.value,
     shiftKey: shiftKey.value,
@@ -1338,7 +1349,20 @@ const onMouseUp = (event: MouseEvent) => {
 
 // ダブルクリックで追加
 const onDoubleClick = (event: MouseEvent) => {
-  const behavior = resolveDoubleClickBehavior();
+  // TODO: isSelfEventTarget以外は必要ないが、
+  // 必要な依存関係明示のため(とuseEditModeからのコピペのため)contextに入れている
+  // ステートマシン実装時に要修正
+  const mouseDoubleClickContext = {
+    ctrlKey: ctrlKey.value,
+    shiftKey: shiftKey.value,
+    nowPreviewing: nowPreviewing.value,
+    editTarget: editTarget.value,
+    selectedNoteTool: selectedNoteTool.value,
+    selectedPitchTool: selectedPitchTool.value,
+    isSelfEventTarget: isSelfEventTarget(event),
+  };
+
+  const behavior = resolveDoubleClickBehavior(mouseDoubleClickContext);
 
   // 振る舞いごとの処理
   switch (behavior) {
