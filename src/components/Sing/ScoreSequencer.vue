@@ -1218,15 +1218,9 @@ const onNoteBarMouseDown = (event: MouseEvent, note: Note) => {
 
   const mouseButton = getButton(event);
   if (mouseButton === "LEFT_BUTTON") {
-    if (isOnCommandOrCtrlKeyDown(event)) {
-      // CtrlまたはCommandキーが押されている場合、ノートを追加選択
-      void store.actions.SELECT_NOTES({ noteIds: [note.id] });
-    } else if (!selectedNoteIds.value.has(note.id)) {
-      // クリックしたノートが選択の場合、そのノートのみを選択
-      void selectOnlyThis(note);
-    }
-    // 選択状態の変更が完了した後でプレビューを開始
     startPreview(event, "MOVE_NOTE", note);
+  } else if (!selectedNoteIds.value.has(note.id)) {
+    selectOnlyThis(note);
   }
 };
 
