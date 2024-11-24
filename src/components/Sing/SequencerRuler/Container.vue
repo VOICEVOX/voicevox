@@ -19,11 +19,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ComponentPublicInstance } from "vue";
+import { computed } from "vue";
 import Presentation from "./Presentation.vue";
 import { useStore } from "@/store";
 import { Tempo, TimeSignature } from "@/store/type";
-import ContextMenu from "@/components/Menu/ContextMenu.vue";
 
 defineOptions({
   name: "SequencerRuler",
