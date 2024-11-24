@@ -106,6 +106,7 @@ import { uuid4 } from "@/helpers/random";
 import { convertToWavFileData } from "@/sing/convertToWavFileData";
 import { generateWriteErrorMessage } from "@/helpers/fileHelper";
 import path from "@/helpers/path";
+import { showAlertDialog } from "@/components/Dialog/Dialog";
 
 const logger = createLogger("store/singing");
 
@@ -753,10 +754,18 @@ const getSelectedTrackWithFallback = (partialState: {
   return getOrThrow(partialState.tracks, partialState._selectedTrackId);
 };
 
-const applyDeviceId = (device: string) => {
-  if (transport && previewSynth) {
-    transport.sinkId = device;
-    previewSynth.sinkId = device;
+// AudioContextに再生デバイスのIDを設定
+export const applyDeviceId = async (device: string) => {
+  if (audioContext) {
+    const sinkId = device === "default" ? "" : device;
+    audioContext.setSinkId(sinkId).catch((err: unknown) => {
+      void showAlertDialog({
+        type: "error",
+        title: "エラー",
+        message: "再生デバイスが見つかりません",
+      });
+      throw err;
+    });
   }
 };
 
@@ -1464,11 +1473,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   SET_PLAYHEAD_POSITION: {
-    async action({ state, getters }, { position }: { position: number }) {
+    async action({ getters }, { position }: { position: number }) {
       if (!transport) {
         throw new Error("transport is undefined.");
       }
-      applyDeviceId(state.savingSetting.audioOutputDevice);
       playheadPosition.value = position;
       transport.time = getters.TICK_TO_SECOND(position);
     },
@@ -1489,8 +1497,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         throw new Error("transport is undefined.");
       }
       mutations.SET_PLAYBACK_STATE({ nowPlaying: true });
-
-      applyDeviceId(state.savingSetting.audioOutputDevice);
 
       transport.start();
       animationTimer.start(() => {
@@ -1531,7 +1537,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   PLAY_PREVIEW_SOUND: {
     async action(
-      { state },
+      _,
       { noteNumber, duration }: { noteNumber: number; duration?: number },
     ) {
       if (!audioContext) {
@@ -1540,7 +1546,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       if (!previewSynth) {
         throw new Error("previewSynth is undefined.");
       }
-      applyDeviceId(state.savingSetting.audioOutputDevice);
       previewSynth.noteOn("immediately", noteNumber, duration);
     },
   },

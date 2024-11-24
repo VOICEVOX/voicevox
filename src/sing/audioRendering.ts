@@ -4,7 +4,6 @@ import {
   linearToDecibel,
 } from "@/sing/domain";
 import { Timer } from "@/sing/utility";
-import { showAlertDialog } from "@/components/Dialog/Dialog";
 
 const getEarliestSchedulableContextTime = (audioContext: BaseAudioContext) => {
   const renderQuantumSize = 128;
@@ -92,21 +91,6 @@ export class Transport {
       this.start();
     } else {
       this._time = value;
-    }
-  }
-  set sinkId(device: string) {
-    device = device ? device : "";
-    if (this.audioContext.setSinkId) {
-      this.audioContext
-        .setSinkId(device === "default" ? "" : device)
-        .catch((err: unknown) => {
-          void showAlertDialog({
-            type: "error",
-            title: "エラー",
-            message: "再生デバイスが見つかりません",
-          });
-          throw err;
-        });
     }
   }
 
@@ -782,7 +766,7 @@ export type PolySynthOptions = {
  * ポリフォニックシンセサイザーです。
  */
 export class PolySynth implements Instrument {
-  private readonly audioContext: AudioContext;
+  private readonly audioContext: BaseAudioContext;
   private readonly gainNode: GainNode;
   private readonly oscParams: SynthOscParams;
   private readonly filterParams: SynthFilterParams;
@@ -793,23 +777,8 @@ export class PolySynth implements Instrument {
   get output(): AudioNode {
     return this.gainNode;
   }
-  set sinkId(device: string) {
-    device = device ? device : "";
-    if (this.audioContext.setSinkId) {
-      this.audioContext
-        .setSinkId(device === "default" ? "" : device)
-        .catch((err: unknown) => {
-          void showAlertDialog({
-            type: "error",
-            title: "エラー",
-            message: "再生デバイスが見つかりません",
-          });
-          throw err;
-        });
-    }
-  }
 
-  constructor(audioContext: AudioContext, options?: PolySynthOptions) {
+  constructor(audioContext: BaseAudioContext, options?: PolySynthOptions) {
     this.audioContext = audioContext;
     this.oscParams = options?.osc ?? {
       type: "square",
