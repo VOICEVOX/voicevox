@@ -1,8 +1,6 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-
 import process from "process";
 import fs from "fs";
-import yargs from "yargs/yargs";
+import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
 const argv = await yargs(hideBin(process.argv))
