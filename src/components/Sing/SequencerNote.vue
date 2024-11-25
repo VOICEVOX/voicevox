@@ -75,7 +75,7 @@ import {
 } from "@/sing/viewHelper";
 import ContextMenu, {
   ContextMenuItemData,
-} from "@/components/Menu/ContextMenu.vue";
+} from "@/components/Menu/ContextMenu/Container.vue";
 
 const props = defineProps<{
   note: Note;

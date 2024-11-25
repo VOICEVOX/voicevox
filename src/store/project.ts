@@ -1,4 +1,3 @@
-import { getBaseName } from "./utility";
 import { createPartialStore, DotNotationDispatch } from "./vuex";
 import { createUILockAction } from "@/store/ui";
 import {
@@ -8,7 +7,7 @@ import {
   ProjectStoreTypes,
 } from "@/store/type";
 import { TrackId } from "@/type/preload";
-
+import path from "@/helpers/path";
 import { getValueOrThrow, ResultError } from "@/type/result";
 import { LatestProjectType } from "@/domain/project/schema";
 import {
@@ -27,6 +26,7 @@ import {
   showAlertDialog,
   showQuestionDialog,
 } from "@/components/Dialog/Dialog";
+import { uuid4 } from "@/helpers/random";
 
 export const projectStoreState: ProjectStoreState = {
   savedLastCommandIds: { talk: null, song: null },
@@ -78,7 +78,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
   PROJECT_NAME_WITH_EXT: {
     getter(state) {
       return state.projectFilePath
-        ? getBaseName(state.projectFilePath)
+        ? path.basename(state.projectFilePath)
         : undefined;
     },
   },
@@ -86,7 +86,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
   PROJECT_NAME: {
     getter(state) {
       return state.projectFilePath
-        ? getBaseName(state.projectFilePath).replace(".vvproj", "")
+        ? path.basename(state.projectFilePath, ".vvproj")
         : undefined;
     },
   },
@@ -125,7 +125,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         await context.actions.SET_TIME_SIGNATURES({
           timeSignatures: [createDefaultTimeSignature(1)],
         });
-        const trackId = TrackId(crypto.randomUUID());
+        const trackId = TrackId(uuid4());
         await context.actions.SET_TRACKS({
           tracks: new Map([[trackId, createDefaultTrack()]]),
         });

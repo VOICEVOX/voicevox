@@ -44,7 +44,11 @@ module.exports = {
   plugins: ["import"],
   parser: vueEslintParser,
   parserOptions: vueEslintParserOptions,
-  ignorePatterns: ["dist_electron/**/*", "dist/**/*", "node_modules/**/*"],
+  ignorePatterns: [
+    "dist/**/*",
+    "dist_*/**/*",
+    "node_modules/**/*",
+  ],
   rules: {
     "linebreak-style":
       process.env.NODE_ENV === "production" && process.platform !== "win32"
