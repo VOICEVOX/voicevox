@@ -1,5 +1,10 @@
+import { z } from "zod";
+
 let textWidthTempCanvas: HTMLCanvasElement | undefined;
 let textWidthTempContext: CanvasRenderingContext2D | undefined;
+
+const textWidthCacheKeySchema = z.string().brand("TextWidthCacheKey");
+type TextWidthCacheKey = z.infer<typeof textWidthCacheKeySchema>;
 
 export type FontSpecification = {
   fontSize: number;
@@ -7,9 +12,11 @@ export type FontSpecification = {
   fontWeight: string;
 };
 const getTextWidthCacheKey = (text: string, font: FontSpecification) =>
-  `${text}-${font.fontFamily}-${font.fontWeight}-${font.fontSize}`;
+  textWidthCacheKeySchema.parse(
+    `${text}-${font.fontFamily}-${font.fontWeight}-${font.fontSize}`,
+  );
 
-const textWidthCache = new Map<string, number>();
+const textWidthCache = new Map<TextWidthCacheKey, number>();
 /**
  * 特定のフォントでの文字列の描画幅を取得する。
  * @see  https://stackoverflow.com/a/21015393
