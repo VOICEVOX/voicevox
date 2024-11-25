@@ -1327,7 +1327,7 @@ export type SingingStoreTypes = {
     action(): void;
   };
 
-  APPLY_DEVICE_ID: {
+  APPLY_DEVICE_ID_TO_AUDIO_CONTEXT: {
     action(payload: { device: string }): void;
   };
 };

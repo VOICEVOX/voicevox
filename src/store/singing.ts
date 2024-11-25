@@ -754,21 +754,6 @@ const getSelectedTrackWithFallback = (partialState: {
   return getOrThrow(partialState.tracks, partialState._selectedTrackId);
 };
 
-// AudioContextに再生デバイスのIDを設定
-const applyDeviceId = async (device: string) => {
-  if (audioContext) {
-    const sinkId = device === "default" ? "" : device;
-    audioContext.setSinkId(sinkId).catch((err: unknown) => {
-      void showAlertDialog({
-        type: "error",
-        title: "エラー",
-        message: "再生デバイスが見つかりません",
-      });
-      throw err;
-    });
-  }
-};
-
 export const singingStoreState: SingingStoreState = {
   tpqn: DEFAULT_TPQN,
   tempos: [createDefaultTempo(0)],
@@ -1698,9 +1683,19 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  APPLY_DEVICE_ID: {
-    async action(_, { device }) {
-      await applyDeviceId(device);
+  APPLY_DEVICE_ID_TO_AUDIO_CONTEXT: {
+    action(_, { device }) {
+      if (audioContext) {
+        const sinkId = device === "default" ? "" : device;
+        audioContext.setSinkId(sinkId).catch((err: unknown) => {
+          void showAlertDialog({
+            type: "error",
+            title: "エラー",
+            message: "再生デバイスが見つかりません",
+          });
+          throw err;
+        });
+      }
     },
   },
 

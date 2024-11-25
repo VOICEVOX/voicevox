@@ -99,11 +99,9 @@ watchEffect(() => {
 
 // 再生デバイスの初期化と変更の監視
 watchEffect(() => {
-  store.actions
-    .APPLY_DEVICE_ID({ device: store.state.savingSetting.audioOutputDevice })
-    .catch((e) => {
-      console.error(e);
-    });
+  void store.actions.APPLY_DEVICE_ID_TO_AUDIO_CONTEXT({
+    device: store.state.savingSetting.audioOutputDevice,
+  });
 });
 
 // ソフトウェアを初期化
