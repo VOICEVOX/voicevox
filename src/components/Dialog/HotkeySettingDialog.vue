@@ -47,52 +47,57 @@
         <QPage>
           <div class="container">
             <BaseScrollArea>
-              <div class="list">
-                <BaseRowCard
+              <div class="table">
+                <div class="table-header">
+                  <div class="table-cell"></div>
+                  <div class="table-cell">操作</div>
+                  <div class="table-cell">ショートカットキー</div>
+                </div>
+                <div
                   v-for="hotkeySetting in hotkeySettings.filter(
                     (hotkeySetting) =>
                       hotkeySetting.action.includes(hotkeyFilter) ||
                       hotkeySetting.combination.includes(hotkeyFilter),
                   )"
                   :key="hotkeySetting.action"
-                  :title="hotkeySetting.action"
+                  class="table-row"
                 >
-                  <BaseButton
-                    :label="
-                      getHotkeyText(
-                        hotkeySetting.action,
-                        hotkeySetting.combination,
-                      )
-                        .split(' ')
-                        .map((hotkeyText) => {
-                          // Mac の Meta キーは Cmd キーであるため、Meta の表示名を Cmd に置換する
-                          // Windows PC では Meta キーは Windows キーだが、使用頻度低と考えられるため暫定的に Mac 対応のみを考慮している
-                          return hotkeyText === 'Meta' ? 'Cmd' : hotkeyText;
-                        })
-                        .join(' + ')
-                    "
-                    :disabled="checkHotkeyReadonly(hotkeySetting.action)"
-                    @click="openHotkeyDialog(hotkeySetting.action)"
-                  />
-                  <BaseIconButton
-                    icon="settings_backup_restore"
-                    label="デフォルトに戻す"
-                    :disabled="
-                      checkHotkeyReadonly(hotkeySetting.action) ||
-                      isDefaultCombination(hotkeySetting.action)
-                    "
-                    @click="resetHotkey(hotkeySetting.action)"
-                  />
-                  <BaseIconButton
-                    icon="delete_outline"
-                    label="未割り当てにする"
-                    :disabled="
-                      hotkeySetting.combination === '' ||
-                      checkHotkeyReadonly(hotkeySetting.action)
-                    "
-                    @click="confirmAndDeleteHotkey(hotkeySetting.action)"
-                  />
-                </BaseRowCard>
+                  <div class="table-cell"></div>
+                  <div class="table-cell hotkey-name">
+                    {{ hotkeySetting.action }}
+                  </div>
+                  <div class="table-cell key-button">
+                    <BaseButton
+                      :label="
+                        getHotkeyText(
+                          hotkeySetting.action,
+                          hotkeySetting.combination,
+                        )
+                          .split(' ')
+                          .map((hotkeyText) => {
+                            // Mac の Meta キーは Cmd キーであるため、Meta の表示名を Cmd に置換する
+                            // Windows PC では Meta キーは Windows キーだが、使用頻度低と考えられるため暫定的に Mac 対応のみを考慮している
+                            return hotkeyText === 'Meta' ? 'Cmd' : hotkeyText;
+                          })
+                          .join(' + ')
+                      "
+                      :disabled="checkHotkeyReadonly(hotkeySetting.action)"
+                      @click="openHotkeyDialog(hotkeySetting.action)"
+                    />
+                  </div>
+                  <div class="table-cell icon-buttons">
+                    <BaseIconButton
+                      icon="settings_backup_restore"
+                      label="デフォルトに戻す"
+                      :disabled="
+                        checkHotkeyReadonly(hotkeySetting.action) ||
+                        isDefaultCombination(hotkeySetting.action)
+                      "
+                      @click="resetHotkey(hotkeySetting.action)"
+                    />
+                  </div>
+                  <div class="table-cell"></div>
+                </div>
               </div>
             </BaseScrollArea>
           </div>
@@ -116,7 +121,6 @@
 import { computed, ref } from "vue";
 import HotkeyRecordingDialog from "./HotkeyRecordingDialog.vue";
 import BaseButton from "@/components/Base/BaseButton.vue";
-import BaseRowCard from "@/components/Base/BaseRowCard.vue";
 import BaseIconButton from "@/components/Base/BaseIconButton.vue";
 import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 import { useStore } from "@/store";
@@ -280,7 +284,8 @@ const resetHotkey = async (action: string) => {
 
 <style scoped lang="scss">
 @use "@/styles/v2/variables" as vars;
-@use "@/styles/colors" as colors;
+@use "@/styles/v2/colors" as colors;
+@use "@/styles/visually-hidden" as visually-hidden;
 
 .search-box {
   width: 200px;
@@ -294,6 +299,11 @@ const resetHotkey = async (action: string) => {
   }
 }
 
+.key-button {
+  display: flex;
+  flex-direction: column;
+}
+
 .container {
   position: absolute;
   left: 0;
@@ -302,12 +312,53 @@ const resetHotkey = async (action: string) => {
   background-color: colors.$background;
 }
 
-.list {
-  margin: auto;
-  max-width: 960px;
-  padding: vars.$padding-2;
+.table {
+  display: grid;
+  grid-template-columns: 1fr minmax(auto, 480px) auto auto 1fr;
+  width: 100%;
+}
+
+.table-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  border-bottom: 1px solid colors.$border;
+  font-weight: 700;
+  background-color: colors.$surface;
+}
+
+.table-header,
+.table-row {
+  display: grid;
+  grid-template-columns: subgrid;
+  grid-column: span 5;
+  align-items: center;
+}
+
+.table-row:nth-child(odd) {
+  background-color: colors.$background-alt;
+}
+
+.table-cell {
+  padding: vars.$padding-1;
+}
+
+.table-cell:first-child,
+.table-cell:last-child {
+  width: 100%;
+}
+
+.hotkey-name {
+  max-width: 480px;
+}
+
+.icon-buttons {
   display: flex;
-  flex-direction: column;
   gap: vars.$gap-1;
+  opacity: 0;
+}
+
+:where(:hover, :has(:focus-visible)) > .icon-buttons {
+  opacity: 1;
 }
 </style>

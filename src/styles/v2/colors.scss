@@ -11,6 +11,7 @@ $primitive-red: #d04756;
 // ライトテーマの色
 :root[is-dark-theme="false"] {
   --color-v2-background: #{lighten($primitive-primary, 25%)};
+  --color-v2-background-alt: #{darken($primitive-white, 5%)};
   --color-v2-background-drawer: #{rgba(lighten($primitive-primary, 20%), 0.75)};
 
   --color-v2-surface: #{$primitive-white};
@@ -47,6 +48,7 @@ $primitive-red: #d04756;
 // ダークテーマの色
 :root[is-dark-theme="true"] {
   --color-v2-background: #{$primitive-black};
+  --color-v2-background-alt: #{lighten($primitive-black, 2%)};
   --color-v2-background-drawer: #{rgba($primitive-black, 0.75)};
 
   --color-v2-surface: #{lighten($primitive-black, 3%)};
@@ -81,6 +83,7 @@ $primitive-red: #d04756;
 }
 
 $background: var(--color-v2-background);
+$background-alt: var(--color-v2-background-alt);
 $background-drawer: var(--color-v2-background-drawer);
 
 $surface: var(--color-v2-surface);
