@@ -549,14 +549,16 @@ function toEntirePhonemeTimings(
   phraseStartFrames: number[],
 ) {
   // 音素列を繋げて一つの音素タイミング列にする
-  const flattenedPhonemeTimings = phrasePhonemeSequences.flatMap((phonemes, index) => {
-    const phonemeTimings = phonemesToPhonemeTimings(phonemes);
-    for (const phonemeTiming of phonemeTimings) {
-      phonemeTiming.startFrame += phraseStartFrames[index];
-      phonemeTiming.endFrame += phraseStartFrames[index];
-    }
-    return phonemeTimings;
-  });
+  const flattenedPhonemeTimings = phrasePhonemeSequences.flatMap(
+    (phonemes, index) => {
+      const phonemeTimings = phonemesToPhonemeTimings(phonemes);
+      for (const phonemeTiming of phonemeTimings) {
+        phonemeTiming.startFrame += phraseStartFrames[index];
+        phonemeTiming.endFrame += phraseStartFrames[index];
+      }
+      return phonemeTimings;
+    },
+  );
 
   // 連続するpauseを1つにまとめる
   const entirePhonemeTimings: PhonemeTiming[] = [];
@@ -815,7 +817,9 @@ function adjustPhonemeTimingsAndPhraseEndFrames(
 }
 
 function calcPhraseStartFrames(phraseStartTimes: number[], frameRate: number) {
-  return phraseStartTimes.map((value) => secondToRoundedFrame(value, frameRate));
+  return phraseStartTimes.map((value) =>
+    secondToRoundedFrame(value, frameRate),
+  );
 }
 
 function calcPhraseEndFrames(
