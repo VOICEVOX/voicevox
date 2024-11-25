@@ -1326,6 +1326,10 @@ export type SingingStoreTypes = {
   SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS: {
     action(): void;
   };
+
+  APPLY_DEVICE_ID: {
+    action(payload: { device: string }): void;
+  };
 };
 
 export type SingingCommandStoreState = {

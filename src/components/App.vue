@@ -31,7 +31,6 @@ import SingEditor from "@/components/Sing/SingEditor.vue";
 import { EngineId } from "@/type/preload";
 import ErrorBoundary from "@/components/ErrorBoundary.vue";
 import { useStore } from "@/store";
-import { applyDeviceId } from "@/store/singing";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import AllDialog from "@/components/Dialog/AllDialog.vue";
 import MenuBar from "@/components/Menu/MenuBar/MenuBar.vue";
@@ -100,9 +99,11 @@ watchEffect(() => {
 
 // 再生デバイスの初期化と変更の監視
 watchEffect(() => {
-  applyDeviceId(store.state.savingSetting.audioOutputDevice).catch((e) => {
-    console.error(e);
-  });
+  store.actions
+    .APPLY_DEVICE_ID({ device: store.state.savingSetting.audioOutputDevice })
+    .catch((e) => {
+      console.error(e);
+    });
 });
 
 // ソフトウェアを初期化

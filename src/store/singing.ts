@@ -755,7 +755,7 @@ const getSelectedTrackWithFallback = (partialState: {
 };
 
 // AudioContextに再生デバイスのIDを設定
-export const applyDeviceId = async (device: string) => {
+const applyDeviceId = async (device: string) => {
   if (audioContext) {
     const sinkId = device === "default" ? "" : device;
     audioContext.setSinkId(sinkId).catch((err: unknown) => {
@@ -1695,6 +1695,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS: {
     async action({ state }) {
       syncTracksAndTrackChannelStrips(state.tracks);
+    },
+  },
+
+  APPLY_DEVICE_ID: {
+    async action(_, { device }) {
+      await applyDeviceId(device);
     },
   },
 
