@@ -4,13 +4,12 @@
     class="sequencer-ruler"
     :data-ui-locked="uiLocked"
     :style="{
-      cursor:
-        hoveredTempoOrTimeSignatureChange !== null ? 'pointer' : undefined,
+      cursor: hoveredValueChange !== null ? 'pointer' : undefined,
     }"
     @click="onClick"
     @contextmenu="onContextMenu"
-    @mousemove="updateHoveredTempoOrTimeSignatureChange"
-    @mouseleave="hoveredTempoOrTimeSignatureChange = null"
+    @mousemove="updateHoveredValueChange"
+    @mouseleave="hoveredValueChange = undefined"
   >
     <ContextMenu
       ref="contextMenu"
@@ -79,87 +78,64 @@
       </text>
       <!-- テンポ・拍子変化のテキストの幅を計算するためのダミー -->
       <text
-        ref="dummyTempoOrTimeSignatureChangeText"
+        ref="dummyValueChangeText"
         font-size="12"
-        class="sequencer-ruler-tempo-or-time-signature-change"
+        class="sequencer-ruler-value-change"
       />
       <!-- テンポ・拍子表示 -->
-      <template
-        v-for="tempoOrTimeSignatureChange in tempoOrTimeSignatureChanges"
-        :key="tempoOrTimeSignatureChange.position"
-      >
+      <template v-for="valueChange in valueChanges" :key="valueChange.position">
         <text
-          :id="`tempo-or-time-signature-change-${tempoOrTimeSignatureChange.position}`"
+          :id="`value-change-${valueChange.position}`"
           font-size="12"
-          :x="tempoOrTimeSignatureChange.x - offset + textPadding"
+          :x="valueChange.x - offset + textPadding"
           y="16"
-          class="sequencer-ruler-tempo-or-time-signature-change"
+          class="sequencer-ruler-value-change"
           :data-is-hovered="
-            hoveredTempoOrTimeSignatureChange ===
-            tempoOrTimeSignatureChange.position
+            hoveredValueChange &&
+            hoveredValueChange.position === valueChange.position
           "
-          @click.stop="
-            onTempoOrTimeSignatureChangeClick(
-              $event,
-              tempoOrTimeSignatureChange,
-            )
-          "
-          @contextmenu.stop="
-            onTempoOrTimeSignatureChangeClick(
-              $event,
-              tempoOrTimeSignatureChange,
-            )
-          "
+          @click.stop="onValueChangeClick($event, valueChange)"
+          @contextmenu.stop="onValueChangeClick($event, valueChange)"
         >
           <!-- NOTE：何も書かないとQTooltipがくっついてくれないので、ゼロ幅空白を置く -->
           {{
-            tempoOrTimeSignatureChange.displayType === "full"
-              ? tempoOrTimeSignatureChange.text
-              : tempoOrTimeSignatureChange.displayType === "ellipsis"
+            valueChange.displayType === "full"
+              ? valueChange.text
+              : valueChange.displayType === "ellipsis"
                 ? `...`
                 : "\u200b"
           }}
         </text>
         <line
-          :x1="tempoOrTimeSignatureChange.x - offset"
-          :x2="tempoOrTimeSignatureChange.x - offset"
+          :x1="valueChange.x - offset"
+          :x2="valueChange.x - offset"
           y1="0"
           :y2="height"
-          class="sequencer-ruler-tempo-or-time-signature-change-line"
+          class="sequencer-ruler-value-change-line"
         />
       </template>
     </svg>
     <QTooltip
-      v-for="tempoOrTimeSignatureChange in collapsedTempoOrTimeSignatureChanges"
-      :key="tempoOrTimeSignatureChange.position"
+      v-for="valueChange in collapsedValueChanges"
+      :key="valueChange.position"
       transitionShow="none"
       transitionHide="none"
-      :target="`#tempo-or-time-signature-change-${tempoOrTimeSignatureChange.position}`"
+      :target="`#value-change-${valueChange.position}`"
       :modelValue="
-        hoveredTempoOrTimeSignatureChange ===
-        tempoOrTimeSignatureChange.position
+        hoveredValueChange &&
+        hoveredValueChange.position === valueChange.position
       "
       @update:modelValue="
-        (value) =>
-          (hoveredTempoOrTimeSignatureChange = value
-            ? tempoOrTimeSignatureChange.position
-            : null)
+        (value) => (hoveredValueChange = value ? valueChange : undefined)
       "
     >
       {{
-        tempoOrTimeSignatureChange.tempoChange
-          ? `テンポ：${tempoOrTimeSignatureChange.tempoChange.bpm}`
-          : ""
+        valueChange.tempoChange ? `テンポ：${valueChange.tempoChange.bpm}` : ""
       }}
-      <br
-        v-if="
-          tempoOrTimeSignatureChange.tempoChange &&
-          tempoOrTimeSignatureChange.timeSignatureChange
-        "
-      />
+      <br v-if="valueChange.tempoChange && valueChange.timeSignatureChange" />
       {{
-        tempoOrTimeSignatureChange.timeSignatureChange
-          ? `拍子：${tempoOrTimeSignatureChange.timeSignatureChange.beats}/${tempoOrTimeSignatureChange.timeSignatureChange.beatType}`
+        valueChange.timeSignatureChange
+          ? `拍子：${valueChange.timeSignatureChange.beats}/${valueChange.timeSignatureChange.beatType}`
           : ""
       }}
     </QTooltip>
@@ -200,8 +176,8 @@ import ContextMenu, {
   ContextMenuItemData,
 } from "@/components/Menu/ContextMenu/Presentation.vue";
 import { UnreachableError } from "@/type/utility";
-import TempoChangeDialog from "@/components/Dialog/TempoOrTimeSignatureChangeDialog/TempoChangeDialog.vue";
-import TimeSignatureChangeDialog from "@/components/Dialog/TempoOrTimeSignatureChangeDialog/TimeSignatureChangeDialog.vue";
+import TempoChangeDialog from "@/components/Sing/ChangeValueDialog/TempoChangeDialog.vue";
+import TimeSignatureChangeDialog from "@/components/Sing/ChangeValueDialog/TimeSignatureChangeDialog.vue";
 import { FontSpecification, predictTextWidth } from "@/helpers/textWidth";
 import { createLogger } from "@/domain/frontend/log";
 import { useSequencerGrid } from "@/composables/useSequencerGridPattern";
@@ -296,16 +272,15 @@ const onClick = (event: MouseEvent) => {
   if (props.uiLocked) {
     return;
   }
-  if (hoveredTempoOrTimeSignatureChange.value != null) {
-    const tempoOrTimeSignatureChange = tempoOrTimeSignatureChanges.value.find(
-      (tempoOrTimeSignatureChange) =>
-        tempoOrTimeSignatureChange.position ===
-        hoveredTempoOrTimeSignatureChange.value,
+  if (hoveredValueChange.value != null) {
+    const valueChange = valueChanges.value.find(
+      (valueChange) =>
+        valueChange.position === hoveredValueChange.value?.position,
     );
-    if (!tempoOrTimeSignatureChange) {
-      throw new UnreachableError("assert: tempoOrTimeSignatureChange exists.");
+    if (!valueChange) {
+      throw new UnreachableError("assert: valueChange exists.");
     }
-    void onTempoOrTimeSignatureChangeClick(event, tempoOrTimeSignatureChange);
+    void onValueChangeClick(event, valueChange);
     return;
   }
   emit("deselectAllNotes");
@@ -360,7 +335,7 @@ const onContextMenu = async (event: MouseEvent) => {
   playheadTicks.value = snappedTicks;
 };
 
-type TempoOrTimeSignatureChange = {
+type ValueChange = {
   position: number;
   text: string;
   tempoChange: Tempo | undefined;
@@ -369,29 +344,28 @@ type TempoOrTimeSignatureChange = {
   displayType: "full" | "ellipsis" | "hidden";
 };
 
-const hoveredTempoOrTimeSignatureChange = ref<number | null>(null);
-const updateHoveredTempoOrTimeSignatureChange = (event: MouseEvent) => {
+const hoveredValueChange = ref<ValueChange | undefined>(undefined);
+const updateHoveredValueChange = (event: MouseEvent) => {
   const mouseX = props.offset + event.offsetX;
   const mouseY = event.offsetY;
   if (mouseY > height.value / 2) {
-    hoveredTempoOrTimeSignatureChange.value = null;
+    hoveredValueChange.value = undefined;
     return;
   }
-  const tempoOrTimeSignatureChange = tempoOrTimeSignatureChanges.value.find(
-    (tempoOrTimeSignatureChange, i) =>
-      tempoOrTimeSignatureChange.displayType !== "full" &&
-      tempoOrTimeSignatureChange.x <= mouseX &&
-      mouseX <= (tempoOrTimeSignatureChanges.value.at(i + 1)?.x ?? Infinity),
+  const valueChange = valueChanges.value.find(
+    (valueChange, i) =>
+      valueChange.displayType !== "full" &&
+      valueChange.x <= mouseX &&
+      mouseX <= (valueChanges.value.at(i + 1)?.x ?? Infinity),
   );
-  hoveredTempoOrTimeSignatureChange.value =
-    tempoOrTimeSignatureChange?.position ?? null;
+  hoveredValueChange.value = valueChange;
 };
-const onTempoOrTimeSignatureChangeClick = async (
+const onValueChangeClick = async (
   event: MouseEvent,
-  tempoOrTimeSignatureChange: TempoOrTimeSignatureChange,
+  valueChange: ValueChange,
 ) => {
-  hoveredTempoOrTimeSignatureChange.value = null;
-  const ticks = tempoOrTimeSignatureChange.position;
+  hoveredValueChange.value = undefined;
+  const ticks = valueChange.position;
   playheadTicks.value = ticks;
   contextMenu.value?.show(event);
 };
@@ -401,105 +375,92 @@ const currentMeasure = computed(() =>
 );
 
 const textPadding = 4;
-const dummyTempoOrTimeSignatureChangeText = useTemplateRef<SVGTextElement>(
-  "dummyTempoOrTimeSignatureChangeText",
+const dummyValueChangeText = useTemplateRef<SVGTextElement>(
+  "dummyValueChangeText",
 );
-const tempoOrTimeSignatureChangeTextStyle = computed<FontSpecification | null>(
-  () => {
-    if (!dummyTempoOrTimeSignatureChangeText.value) {
-      return null;
-    }
-    const style = window.getComputedStyle(
-      dummyTempoOrTimeSignatureChangeText.value,
-    );
-    return {
-      fontFamily: style.fontFamily,
-      fontSize: parseFloat(style.fontSize),
-      fontWeight: style.fontWeight,
-    };
-  },
-);
+const valueChangeTextStyle = computed<FontSpecification | null>(() => {
+  if (!dummyValueChangeText.value) {
+    return null;
+  }
+  const style = window.getComputedStyle(dummyValueChangeText.value);
+  return {
+    fontFamily: style.fontFamily,
+    fontSize: parseFloat(style.fontSize),
+    fontWeight: style.fontWeight,
+  };
+});
 
-const tempoOrTimeSignatureChanges = computed<TempoOrTimeSignatureChange[]>(
-  () => {
-    const timeSignaturesWithTicks = tsPositions.value.map((tsPosition, i) => ({
-      type: "timeSignature" as const,
-      position: tsPosition,
-      timeSignature: props.timeSignatures[i],
-    }));
-    const tempos = props.tempos.map((tempo) => {
+const valueChanges = computed<ValueChange[]>(() => {
+  const timeSignaturesWithTicks = tsPositions.value.map((tsPosition, i) => ({
+    type: "timeSignature" as const,
+    position: tsPosition,
+    timeSignature: props.timeSignatures[i],
+  }));
+  const tempos = props.tempos.map((tempo) => {
+    return {
+      type: "tempo" as const,
+      position: tempo.position,
+      tempo,
+    };
+  });
+
+  const valueChanges: ValueChange[] = [
+    ...Map.groupBy(
+      [...tempos, ...timeSignaturesWithTicks],
+      (item) => item.position,
+    ).entries(),
+  ]
+    .toSorted((a, b) => a[0] - b[0])
+    .map(([tick, items]) => {
+      const tempo = items.find((item) => item.type === "tempo")?.tempo;
+      const timeSignature = items.find(
+        (item) => item.type === "timeSignature",
+      )?.timeSignature;
+
+      const tempoText = tempo?.bpm ?? "";
+      const timeSignatureText = timeSignature
+        ? `${timeSignature.beats}/${timeSignature.beatType}`
+        : "";
+
       return {
-        type: "tempo" as const,
-        position: tempo.position,
-        tempo,
+        position: tick,
+        text: [tempoText, timeSignatureText].join(" "),
+        tempoChange: tempo,
+        timeSignatureChange: timeSignature,
+        x: tickToBaseX(tick, props.tpqn) * props.sequencerZoomX,
+        displayType: "full" as const,
       };
     });
 
-    const tempoOrTimeSignatureChanges: TempoOrTimeSignatureChange[] = [
-      ...Map.groupBy(
-        [...tempos, ...timeSignaturesWithTicks],
-        (item) => item.position,
-      ).entries(),
-    ]
-      .toSorted((a, b) => a[0] - b[0])
-      .map(([tick, items]) => {
-        const tempo = items.find((item) => item.type === "tempo")?.tempo;
-        const timeSignature = items.find(
-          (item) => item.type === "timeSignature",
-        )?.timeSignature;
-
-        const tempoText = tempo?.bpm ?? "";
-        const timeSignatureText = timeSignature
-          ? `${timeSignature.beats}/${timeSignature.beatType}`
-          : "";
-
-        return {
-          position: tick,
-          text: [tempoText, timeSignatureText].join(" "),
-          tempoChange: tempo,
-          timeSignatureChange: timeSignature,
-          x: tickToBaseX(tick, props.tpqn) * props.sequencerZoomX,
-          displayType: "full" as const,
-        };
-      });
-
-    if (tempoOrTimeSignatureChangeTextStyle.value != undefined) {
-      const collapsedTextWidth =
-        predictTextWidth("...", tempoOrTimeSignatureChangeTextStyle.value) +
-        textPadding * 2;
-      for (const [
-        i,
-        tempoOrTimeSignatureChange,
-      ] of tempoOrTimeSignatureChanges.entries()) {
-        const next = tempoOrTimeSignatureChanges.at(i + 1);
-        if (!next) {
-          continue;
-        }
-        const requiredWidth =
-          predictTextWidth(
-            tempoOrTimeSignatureChange.text,
-            tempoOrTimeSignatureChangeTextStyle.value,
-          ) + textPadding;
-        const width = next.x - tempoOrTimeSignatureChange.x;
-        if (collapsedTextWidth > width) {
-          tempoOrTimeSignatureChange.displayType = "hidden";
-        } else if (requiredWidth > width) {
-          tempoOrTimeSignatureChange.displayType = "ellipsis";
-        }
+  if (valueChangeTextStyle.value != undefined) {
+    const collapsedTextWidth =
+      predictTextWidth("...", valueChangeTextStyle.value) + textPadding * 2;
+    for (const [i, valueChange] of valueChanges.entries()) {
+      const next = valueChanges.at(i + 1);
+      if (!next) {
+        continue;
       }
-    } else {
-      log.warn(
-        "dummyTempoOrTimeSignatureChangeTextElement is null. Cannot calculate text width.",
-      );
+      const requiredWidth =
+        predictTextWidth(valueChange.text, valueChangeTextStyle.value) +
+        textPadding;
+      const width = next.x - valueChange.x;
+      if (collapsedTextWidth > width) {
+        valueChange.displayType = "hidden";
+      } else if (requiredWidth > width) {
+        valueChange.displayType = "ellipsis";
+      }
     }
+  } else {
+    log.warn(
+      "dummyValueChangeTextElement is null. Cannot calculate text width.",
+    );
+  }
 
-    return tempoOrTimeSignatureChanges;
-  },
-);
-const collapsedTempoOrTimeSignatureChanges = computed(() =>
-  tempoOrTimeSignatureChanges.value.filter(
-    (tempoOrTimeSignatureChange) =>
-      tempoOrTimeSignatureChange.displayType !== "full",
+  return valueChanges;
+});
+const collapsedValueChanges = computed(() =>
+  valueChanges.value.filter(
+    (valueChange) => valueChange.displayType !== "full",
   ),
 );
 
@@ -679,7 +640,7 @@ const contextMenudata = computed<ContextMenuItemData[]>(
   font-weight: 700;
   fill: var(--scheme-color-on-surface-variant);
 }
-.sequencer-ruler-tempo-or-time-signature-change {
+.sequencer-ruler-value-change {
   font-weight: 700;
   fill: var(--scheme-color-on-surface-variant);
 
@@ -690,13 +651,13 @@ const contextMenudata = computed<ContextMenuItemData[]>(
   }
 }
 
-.sequencer-ruler-tempo-or-time-signature-change-line {
+.sequencer-ruler-value-change-line {
   backface-visibility: hidden;
   stroke: var(--scheme-color-on-surface-variant);
   stroke-width: 1px;
 }
 
-.sequencer-ruler-tempo-or-time-signature-change-hitbox {
+.sequencer-ruler-value-change-hitbox {
   pointer-events: all;
 }
 
