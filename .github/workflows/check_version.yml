@@ -3,8 +3,8 @@ name: Check version
 on:
   pull_request:
     paths:
-      - "/.node-version"
-      - "/package.json"
+      - ".node-version"
+      - "package.json"
   workflow_dispatch:
 
 defaults:

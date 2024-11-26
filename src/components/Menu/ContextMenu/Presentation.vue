@@ -26,23 +26,22 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from "vue";
+import { onMounted, onUnmounted, ref } from "vue";
 import { QMenu } from "quasar";
-import MenuItem from "./MenuItem.vue";
-import { MenuItemButton, MenuItemSeparator } from "./type";
-import { useStore } from "@/store";
+import MenuItem from "../MenuItem.vue";
+import { MenuItemButton, MenuItemSeparator } from "../type";
 
 defineProps<{
   header?: string;
   menudata: ContextMenuItemData[];
+
+  uiLocked?: boolean;
 }>();
 defineExpose({
   hide: () => {
     contextMenu.value?.hide();
   },
 });
-const store = useStore();
-const uiLocked = computed(() => store.getters.UI_LOCKED);
 
 const contextMenu = ref<QMenu>();
 /**
