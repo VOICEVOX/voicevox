@@ -543,7 +543,7 @@ const resolveMouseDownBehavior = (
 const resolveDoubleClickBehavior = (
   context: EditModeContext,
 ): MouseDoubleClickBehavior => {
-  const { isSelfEventTarget } = context;
+  const { isSelfEventTarget, mouseButton } = context;
 
   // ノート編集の場合
   if (editTarget.value === "NOTE") {
@@ -554,8 +554,10 @@ const resolveDoubleClickBehavior = (
     if (nowPreviewing.value) return "IGNORE";
 
     // 選択優先ツールではノート追加
-    if (selectedNoteTool.value === "SELECT_FIRST") {
-      return "ADD_NOTE";
+    if (mouseButton === "LEFT_BUTTON") {
+      if (selectedNoteTool.value === "SELECT_FIRST") {
+        return "ADD_NOTE";
+      }
     }
     return "IGNORE";
   }
@@ -634,8 +636,8 @@ const resolveCursorBehavior = (): CursorState => {
     if (shiftKey.value) {
       return "CROSSHAIR";
     }
-    // ノート編集ツールが選択されていたら描画カーソル
-    if (selectedNoteTool.value === "EDIT_FIRST") {
+    // ノート編集ツールが選択されておりCtrlキーが押されていない場合は描画カーソル
+    if (selectedNoteTool.value === "EDIT_FIRST" && !ctrlKey.value) {
       return "DRAW";
     }
     // それ以外は未設定
@@ -1063,6 +1065,7 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
         throw new Error("note is undefined.");
       }
       if (event.shiftKey) {
+        // Shiftキーが押されている場合は選択ノートまでの範囲選択
         let minIndex = notesInSelectedTrack.value.length - 1;
         let maxIndex = 0;
         for (let i = 0; i < notesInSelectedTrack.value.length; i++) {
@@ -1081,8 +1084,16 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
         }
         void store.actions.SELECT_NOTES({ noteIds: noteIdsToSelect });
       } else if (isOnCommandOrCtrlKeyDown(event)) {
+        // CommandキーかCtrlキーが押されている場合
+        if (selectedNoteIds.value.has(note.id)) {
+          // 選択中のノートなら選択解除
+          void store.actions.DESELECT_NOTES({ noteIds: [note.id] });
+          return;
+        }
+        // 未選択のノートなら選択に追加
         void store.actions.SELECT_NOTES({ noteIds: [note.id] });
       } else if (!selectedNoteIds.value.has(note.id)) {
+        // 選択中のノートでない場合は選択状態にする
         void selectOnlyThis(note);
       }
       for (const selectedNote of selectedNotes.value) {
@@ -1354,6 +1365,7 @@ const onDoubleClick = (event: MouseEvent) => {
     selectedNoteTool: selectedNoteTool.value,
     selectedPitchTool: selectedPitchTool.value,
     isSelfEventTarget: isSelfEventTarget(event),
+    mouseButton: getButton(event),
   };
 
   const behavior = resolveDoubleClickBehavior(mouseDoubleClickContext);
@@ -1364,43 +1376,11 @@ const onDoubleClick = (event: MouseEvent) => {
       return;
 
     case "ADD_NOTE": {
-      const mouseButton = getButton(event);
-      if (mouseButton === "LEFT_BUTTON") {
-        const sequencerBodyElement = sequencerBody.value;
-        if (!sequencerBodyElement) {
-          throw new Error("sequencerBodyElement is null.");
-        }
-        cursorX.value = getXInBorderBox(event.clientX, sequencerBodyElement);
-        cursorY.value = getYInBorderBox(event.clientY, sequencerBodyElement);
-
-        const cursorBaseX = (scrollX.value + cursorX.value) / zoomX.value;
-        const cursorBaseY = (scrollY.value + cursorY.value) / zoomY.value;
-        const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
-        const cursorNoteNumber = baseYToNoteNumber(cursorBaseY, true);
-        const guideLineTicks =
-          Math.round(cursorTicks / snapTicks.value - 0.25) * snapTicks.value;
-
-        if (cursorNoteNumber < 0 || cursorNoteNumber >= keyInfos.length) {
-          return;
-        }
-        const note = {
-          id: NoteId(uuid4()),
-          position: guideLineTicks,
-          duration: snapTicks.value,
-          noteNumber: cursorNoteNumber,
-          lyric: getDoremiFromNoteNumber(cursorNoteNumber),
-        };
-        void store.actions.COMMAND_ADD_NOTES({
-          notes: [note],
-          trackId: selectedTrackId.value,
-        });
-        void store.actions.SELECT_NOTES({ noteIds: [note.id] });
-        void store.actions.PLAY_PREVIEW_SOUND({
-          noteNumber: note.noteNumber,
-          duration: PREVIEW_SOUND_DURATION,
-        });
-      }
-      break;
+      startPreview(event, "ADD_NOTE");
+      // ダブルクリックで追加した場合はプレビューを即終了しノートを追加する
+      // mouseDownとの二重状態を避けるため
+      endPreview();
+      return;
     }
 
     default:

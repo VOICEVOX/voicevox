@@ -517,6 +517,7 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
 
 // カーソルの状態
 .note {
+  &.cursor-default,
   &.cursor-draw,
   &.cursor-ew-resize,
   &.cursor-crosshair,
