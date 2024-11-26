@@ -203,7 +203,7 @@ export class EngineAndVvppController {
           if (failed) return; // 他のダウンロードが失敗していたら中断
 
           const downloadPath = path.join(downloadDir, name);
-          await fs.promises.writeFile(downloadPath, Buffer.from(buffer));
+          await fs.promises.writeFile(downloadPath, Buffer.from(buffer)); // TODO: オンメモリじゃなくする
           log.info(`Downloaded ${name} to ${downloadPath}`);
 
           downloadedPaths.push(downloadPath);
