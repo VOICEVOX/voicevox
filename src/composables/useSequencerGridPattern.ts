@@ -2,7 +2,7 @@ import { computed, Ref } from "vue";
 import { tickToBaseX } from "@/sing/viewHelper";
 import { TimeSignature } from "@/store/type";
 
-export const beatWidth = (
+const beatWidth = (
   timeSignature: TimeSignature,
   tpqn: number,
   sequencerZoomX: number,
