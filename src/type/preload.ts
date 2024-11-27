@@ -448,9 +448,6 @@ export const hotkeyActionNameSchema = z.enum([
   "テキスト欄にフォーカスを戻す",
   "元に戻す",
   "やり直す",
-  "拡大",
-  "縮小",
-  "拡大率のリセット",
   "新規プロジェクト",
   "プロジェクトを名前を付けて保存",
   "プロジェクトを上書き保存",
@@ -474,6 +471,9 @@ export const hotkeyActionNameSchema = z.enum([
   `8${actionPostfixSelectNthCharacter}`,
   `9${actionPostfixSelectNthCharacter}`,
   `10${actionPostfixSelectNthCharacter}`,
+  "拡大",
+  "縮小",
+  "拡大率のリセット",
 ]);
 
 export type HotkeyActionNameType = z.infer<typeof hotkeyActionNameSchema>;
