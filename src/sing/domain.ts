@@ -1,4 +1,4 @@
-import { calculateHash } from "./utility";
+import { calculateHash, getLast, getNext, getPrev, isSorted } from "./utility";
 import { convertLongVowel, moraPattern } from "@/domain/japanese";
 import {
   Note,
@@ -11,7 +11,7 @@ import {
   EditorFrameAudioQuery,
 } from "@/store/type";
 import { FramePhoneme } from "@/openapi";
-import { TrackId } from "@/type/preload";
+import { NoteId, TrackId } from "@/type/preload";
 
 // TODO: 後でdomain/type.tsに移す
 export type MeasuresBeats = {
@@ -490,6 +490,416 @@ export function convertToFramePhonemes(phonemes: FramePhoneme[]) {
     }
   }
   return framePhonemes;
+}
+
+function secondToRoundedFrame(seconds: number, frameRate: number) {
+  return Math.round(seconds * frameRate);
+}
+
+type PhonemeTiming = {
+  noteId: NoteId | undefined;
+  startFrame: number;
+  endFrame: number;
+  phoneme: string;
+};
+
+export type PhonemeTimingEdit = {
+  phonemeIndexInNote: number;
+  offsetSeconds: number;
+};
+
+export type PhonemeTimingEditData = Map<NoteId, PhonemeTimingEdit[]>;
+
+/**
+ * 音素列を音素タイミング列に変換する。
+ */
+function phonemesToPhonemeTimings(phonemes: FramePhoneme[]) {
+  const phonemeTimings: PhonemeTiming[] = [];
+  let cumulativeFrame = 0;
+  for (const phoneme of phonemes) {
+    phonemeTimings.push({
+      noteId: phoneme.noteId != undefined ? NoteId(phoneme.noteId) : undefined,
+      startFrame: cumulativeFrame,
+      endFrame: cumulativeFrame + phoneme.frameLength,
+      phoneme: phoneme.phoneme,
+    });
+    cumulativeFrame += phoneme.frameLength;
+  }
+  return phonemeTimings;
+}
+
+/**
+ * 音素タイミング列を音素列に変換する。
+ */
+function phonemeTimingsToPhonemes(phonemeTimings: PhonemeTiming[]) {
+  return phonemeTimings.map(
+    (value): FramePhoneme => ({
+      phoneme: value.phoneme,
+      frameLength: value.endFrame - value.startFrame,
+      noteId: value.noteId,
+    }),
+  );
+}
+
+/**
+ * フレーズごとの音素列を全体の音素タイミング列に変換する。
+ */
+function toEntirePhonemeTimings(
+  phrasePhonemeSequences: FramePhoneme[][],
+  phraseStartFrames: number[],
+) {
+  // 音素列を繋げて一つの音素タイミング列にする
+  const flattenedPhonemeTimings = phrasePhonemeSequences.flatMap(
+    (phonemes, index) => {
+      const phonemeTimings = phonemesToPhonemeTimings(phonemes);
+      for (const phonemeTiming of phonemeTimings) {
+        phonemeTiming.startFrame += phraseStartFrames[index];
+        phonemeTiming.endFrame += phraseStartFrames[index];
+      }
+      return phonemeTimings;
+    },
+  );
+
+  // 連続するpauseを1つにまとめる
+  const entirePhonemeTimings: PhonemeTiming[] = [];
+  let pauseTiming: PhonemeTiming | null = null;
+  for (const phonemeTiming of flattenedPhonemeTimings) {
+    if (phonemeTiming.phoneme === "pau") {
+      if (pauseTiming == null) {
+        pauseTiming = { ...phonemeTiming };
+      } else {
+        pauseTiming.endFrame = phonemeTiming.endFrame;
+      }
+    } else {
+      if (pauseTiming != null) {
+        entirePhonemeTimings.push(pauseTiming);
+        pauseTiming = null;
+      }
+      entirePhonemeTimings.push(phonemeTiming);
+    }
+  }
+  if (pauseTiming != null) {
+    entirePhonemeTimings.push(pauseTiming);
+  }
+
+  return entirePhonemeTimings;
+}
+
+/**
+ * 全体の音素タイミング列をフレーズごとの音素列に変換する。
+ */
+function toPhrasePhonemeSequences(
+  entirePhonemeTimings: PhonemeTiming[],
+  phraseStartFrames: number[],
+  phraseEndFrames: number[],
+) {
+  // 音素タイミング列をpauseで分割する
+  const phrasePhonemeTimingSequences: PhonemeTiming[][] = [];
+  for (let i = 0; i < entirePhonemeTimings.length; i++) {
+    const phonemeTiming = entirePhonemeTimings[i];
+    const prevPhonemeTiming = getPrev(entirePhonemeTimings, i);
+
+    if (phonemeTiming.phoneme === "pau") {
+      continue;
+    }
+    if (prevPhonemeTiming == undefined || prevPhonemeTiming.phoneme === "pau") {
+      phrasePhonemeTimingSequences.push([]);
+    }
+    getLast(phrasePhonemeTimingSequences).push(phonemeTiming);
+  }
+
+  // フレーズの音素タイミング列の前後にpauseを追加する
+  for (let i = 0; i < phrasePhonemeTimingSequences.length; i++) {
+    const phrasePhonemeTimings = phrasePhonemeTimingSequences[i];
+    const phraseStartFrame = phraseStartFrames[i];
+    const phraseEndFrame = phraseEndFrames[i];
+
+    const firstPauseTiming: PhonemeTiming = {
+      noteId: undefined,
+      startFrame: phraseStartFrame,
+      endFrame: phrasePhonemeTimings[0].startFrame,
+      phoneme: "pau",
+    };
+    const lastPauseTiming: PhonemeTiming = {
+      noteId: undefined,
+      startFrame: getLast(phrasePhonemeTimings).endFrame,
+      endFrame: phraseEndFrame,
+      phoneme: "pau",
+    };
+
+    phrasePhonemeTimings.unshift(firstPauseTiming);
+    phrasePhonemeTimings.push(lastPauseTiming);
+  }
+
+  // フレーム長が1未満の音素がないかチェックする
+  for (const phonemeTimings of phrasePhonemeTimingSequences) {
+    for (const phonemeTiming of phonemeTimings) {
+      const phonemeFrameLength =
+        phonemeTiming.endFrame - phonemeTiming.startFrame;
+      if (phonemeFrameLength < 1) {
+        throw new Error("The phoneme frame length is less than 1.");
+      }
+    }
+  }
+
+  // 音素タイミング列を音素列に変換する
+  const phrasePhonemeSequences: FramePhoneme[][] = [];
+  for (let i = 0; i < phrasePhonemeTimingSequences.length; i++) {
+    const phraseStartFrame = phraseStartFrames[i];
+    const phonemeTimings = phrasePhonemeTimingSequences[i];
+
+    for (const phonemeTiming of phonemeTimings) {
+      phonemeTiming.startFrame -= phraseStartFrame;
+      phonemeTiming.endFrame -= phraseStartFrame;
+    }
+    const phonemes = phonemeTimingsToPhonemes(phonemeTimings);
+    phrasePhonemeSequences.push(phonemes);
+  }
+
+  return phrasePhonemeSequences;
+}
+
+/**
+ * 音素タイミング列に音素タイミング編集を適用する。
+ */
+function applyPhonemeTimingEditToPhonemeTimings(
+  phonemeTimings: PhonemeTiming[],
+  phonemeTimingEditData: PhonemeTimingEditData,
+  frameRate: number,
+) {
+  let phonemeIndexInNote = 0;
+  for (let i = 0; i < phonemeTimings.length; i++) {
+    const phonemeTiming = phonemeTimings[i];
+    const prevPhonemeTiming = getPrev(phonemeTimings, i);
+    const nextPhonemeTiming = getNext(phonemeTimings, i);
+
+    if (
+      prevPhonemeTiming == undefined ||
+      phonemeTiming.noteId !== prevPhonemeTiming.noteId
+    ) {
+      phonemeIndexInNote = 0;
+    } else {
+      phonemeIndexInNote++;
+    }
+
+    if (phonemeTiming.phoneme === "pau") {
+      continue;
+    }
+    if (phonemeTiming.noteId == undefined) {
+      throw new Error("phonemeTiming.noteId is undefined.");
+    }
+    const phonemeTimingEdits = phonemeTimingEditData.get(phonemeTiming.noteId);
+    if (phonemeTimingEdits == undefined) {
+      continue;
+    }
+    for (const phonemeTimingEdit of phonemeTimingEdits) {
+      if (phonemeTimingEdit.phonemeIndexInNote === phonemeIndexInNote) {
+        const offsetFrame = secondToRoundedFrame(
+          phonemeTimingEdit.offsetSeconds,
+          frameRate,
+        );
+        const roundedOffsetFrame = Math.round(offsetFrame);
+
+        phonemeTiming.startFrame += roundedOffsetFrame;
+        if (prevPhonemeTiming != undefined) {
+          prevPhonemeTiming.endFrame = phonemeTiming.startFrame;
+        }
+      } else if (
+        phonemeTimingEdit.phonemeIndexInNote === phonemeIndexInNote + 1 &&
+        nextPhonemeTiming?.phoneme === "pau"
+      ) {
+        // NOTE: フレーズ末尾のpauseはフレーズ最後のノートに含まれるものとして扱う
+        const offsetFrame = secondToRoundedFrame(
+          phonemeTimingEdit.offsetSeconds,
+          frameRate,
+        );
+        const roundedOffsetFrame = Math.round(offsetFrame);
+
+        phonemeTiming.endFrame += roundedOffsetFrame;
+        nextPhonemeTiming.startFrame = phonemeTiming.endFrame;
+      }
+    }
+  }
+}
+
+/**
+ * 音素が重ならないように音素タイミングとフレーズの終了フレームを調整する。
+ */
+function adjustPhonemeTimingsAndPhraseEndFrames(
+  phonemeTimings: PhonemeTiming[],
+  phraseStartFrames: number[],
+  phraseEndFrames: number[],
+) {
+  // フレーズの最初の（pauseではない）音素の開始フレームがフレーズの開始フレーム+1以上になるように
+  // 開始フレームの最小値を算出する
+  const minStartFrames = new Map<number, number>();
+  let phraseIndex = 0;
+  for (let i = 0; i < phonemeTimings.length; i++) {
+    const phonemeTiming = phonemeTimings[i];
+    const prevPhonemeTiming = getPrev(phonemeTimings, i);
+
+    if (phonemeTiming.phoneme === "pau") {
+      continue;
+    }
+    if (prevPhonemeTiming == undefined || prevPhonemeTiming.phoneme === "pau") {
+      const phraseStartFrame = phraseStartFrames.at(phraseIndex);
+      if (phraseStartFrame == undefined) {
+        throw new Error("phraseStartFrame is undefined.");
+      }
+      minStartFrames.set(i, phraseStartFrame + 1);
+      phraseIndex++;
+    }
+  }
+
+  // 各音素のフレーム長が1以上になるように後方から調整する（音素タイミングを変更）
+  // 最小の開始フレームがある場合はそちらを優先する（フレーム長を1以上にしない）
+  // 最後の音素は開始フレームではなく終了フレームの方を変更する
+  for (let i = phonemeTimings.length - 1; i >= 0; i--) {
+    const phonemeTiming = phonemeTimings[i];
+    const prevPhonemeTiming = getPrev(phonemeTimings, i);
+    const minStartFrame = minStartFrames.get(i);
+
+    if (i === phonemeTimings.length - 1) {
+      // NOTE: 最後の音素は終了フレームの方を変更する
+      if (phonemeTiming.startFrame >= phonemeTiming.endFrame) {
+        phonemeTiming.endFrame = phonemeTiming.startFrame + 1;
+      }
+    } else {
+      if (phonemeTiming.startFrame >= phonemeTiming.endFrame) {
+        phonemeTiming.startFrame = phonemeTiming.endFrame - 1;
+      }
+      if (
+        minStartFrame != undefined &&
+        phonemeTiming.startFrame < minStartFrame
+      ) {
+        // NOTE: 最小開始フレームを優先する（フレーム長は下のループで1以上にする）
+        phonemeTiming.startFrame = minStartFrame;
+      }
+      if (prevPhonemeTiming != undefined) {
+        prevPhonemeTiming.endFrame = phonemeTiming.startFrame;
+      }
+    }
+  }
+
+  // 各音素のフレーム長が1以上になるように前方から調整する（音素タイミングを変更）
+  for (let i = 0; i < phonemeTimings.length; i++) {
+    const phonemeTiming = phonemeTimings[i];
+    const nextPhonemeTiming = getNext(phonemeTimings, i);
+
+    if (phonemeTiming.startFrame >= phonemeTiming.endFrame) {
+      phonemeTiming.endFrame = phonemeTiming.startFrame + 1;
+    }
+    if (nextPhonemeTiming != undefined) {
+      nextPhonemeTiming.startFrame = phonemeTiming.endFrame;
+    }
+  }
+
+  // フレーズ末尾のpauseのフレーム長が1以上になるように調整する（フレーズの終了フレームを変更）
+  phraseIndex = 0;
+  for (let i = 0; i < phonemeTimings.length; i++) {
+    const phonemeTiming = phonemeTimings[i];
+    const nextPhonemeTiming = getNext(phonemeTimings, i);
+
+    if (phonemeTiming.phoneme === "pau") {
+      continue;
+    }
+    if (nextPhonemeTiming == undefined || nextPhonemeTiming.phoneme === "pau") {
+      const phraseEndFrame = phraseEndFrames.at(phraseIndex);
+      if (phraseEndFrame == undefined) {
+        throw new Error("phraseEndFrame is undefined.");
+      }
+      if (phonemeTiming.endFrame >= phraseEndFrame) {
+        phraseEndFrames[phraseIndex] = phonemeTiming.endFrame + 1;
+      }
+      phraseIndex++;
+    }
+  }
+}
+
+function calcPhraseStartFrames(phraseStartTimes: number[], frameRate: number) {
+  return phraseStartTimes.map((value) =>
+    secondToRoundedFrame(value, frameRate),
+  );
+}
+
+function calcPhraseEndFrames(
+  phraseStartFrames: number[],
+  phraseQueries: EditorFrameAudioQuery[],
+) {
+  const phraseEndFrames: number[] = [];
+  for (let i = 0; i < phraseStartFrames.length; i++) {
+    const phraseStartFrame = phraseStartFrames[i];
+    const phraseQuery = phraseQueries[i];
+
+    let cumulativeFrame = 0;
+    for (const phoneme of phraseQuery.phonemes) {
+      cumulativeFrame += phoneme.frameLength;
+    }
+    phraseEndFrames.push(phraseStartFrame + cumulativeFrame);
+  }
+  return phraseEndFrames;
+}
+
+/**
+ * クエリに音素タイミング編集を適用する。
+ * 音素タイミングの調整も行う。
+ */
+export function applyPhonemeTimingEditAndAdjust(
+  phraseStartTimes: number[],
+  phraseQueries: EditorFrameAudioQuery[],
+  phonemeTimingEditData: PhonemeTimingEditData,
+  frameRate: number,
+) {
+  if (!isSorted(phraseStartTimes, (a, b) => a - b)) {
+    throw new Error("phraseStartTimes is not sorted.");
+  }
+  if (phraseStartTimes.length !== phraseQueries.length) {
+    throw new Error(
+      "phraseStartTimes.length and phraseQueries.length are not equal.",
+    );
+  }
+  for (const phraseQuery of phraseQueries) {
+    // フレーズのクエリのフレームレートとエディターのフレームレートが一致しない場合はエラー
+    // TODO: 補間するようにする
+    if (phraseQuery.frameRate != frameRate) {
+      throw new Error(
+        "The frame rate between the phrase query and the editor does not match.",
+      );
+    }
+  }
+
+  const phraseStartFrames = calcPhraseStartFrames(phraseStartTimes, frameRate);
+  const phraseEndFrames = calcPhraseEndFrames(phraseStartFrames, phraseQueries);
+
+  const phrasePhonemeSequences = phraseQueries.map((query) => {
+    return query.phonemes;
+  });
+  const entirePhonemeTimings = toEntirePhonemeTimings(
+    phrasePhonemeSequences,
+    phraseStartFrames,
+  );
+
+  applyPhonemeTimingEditToPhonemeTimings(
+    entirePhonemeTimings,
+    phonemeTimingEditData,
+    frameRate,
+  );
+  adjustPhonemeTimingsAndPhraseEndFrames(
+    entirePhonemeTimings,
+    phraseStartFrames,
+    phraseEndFrames,
+  );
+
+  const modifiedPhrasePhonemeSequences = toPhrasePhonemeSequences(
+    entirePhonemeTimings,
+    phraseStartFrames,
+    phraseEndFrames,
+  );
+  for (let i = 0; i < phraseQueries.length; i++) {
+    const phraseQuery = phraseQueries[i];
+    const phrasePhonemes = modifiedPhrasePhonemeSequences[i];
+    phraseQuery.phonemes = phrasePhonemes;
+  }
 }
 
 export function applyPitchEdit(
