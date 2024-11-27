@@ -63,6 +63,31 @@ export const useMenuBarData = () => {
   const viewSubMenuData = computed<MenuItemData[]>(() => [
     {
       type: "button",
+      label: "拡大",
+      onClick: () => {
+        void window.backend.zoomIn();
+      },
+      disableWhenUiLocked: false,
+    },
+    {
+      type: "button",
+      label: "縮小",
+      onClick: () => {
+        void window.backend.zoomOut();
+      },
+      disableWhenUiLocked: true,
+    },
+    {
+      type: "button",
+      label: "拡大率のリセット",
+      onClick: () => {
+        void window.backend.zoomReset();
+      },
+      disableWhenUiLocked: true,
+    },
+    { type: "separator" },
+    {
+      type: "button",
       label: showTextLineNumber.value ? "行番号を非表示" : "行番号を表示",
       onClick: () => {
         changeShowTextLineNumber(!showTextLineNumber.value);

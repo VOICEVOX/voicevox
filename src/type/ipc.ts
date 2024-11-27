@@ -123,6 +123,21 @@ export type IpcIHData = {
     return: void;
   };
 
+  ZOOM_IN: {
+    args: [];
+    return: void;
+  };
+
+  ZOOM_OUT: {
+    args: [];
+    return: void;
+  };
+
+  ZOOM_RESET: {
+    args: [];
+    return: void;
+  };
+
   OPEN_LOG_DIRECTORY: {
     args: [];
     return: void;

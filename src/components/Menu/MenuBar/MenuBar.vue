@@ -164,6 +164,21 @@ const importProject = () => {
   }
 };
 
+// UIの拡大（キーボードショートカット）
+const zoomIn = () => {
+  window.backend.zoomIn();
+};
+
+// UIの縮小（キーボードショートカット）
+const zoomOut = () => {
+  window.backend.zoomOut();
+};
+
+// UIのリセット（キーボードショートカット）
+const zoomReset = () => {
+  window.backend.zoomReset();
+};
+
 // 「最近使ったプロジェクト」のメニュー
 const recentProjectsSubMenuData = ref<MenuItemData[]>([]);
 const updateRecentProjects = async () => {
@@ -546,6 +561,18 @@ registerHotkeyForAllEditors({
 registerHotkeyForAllEditors({
   callback: importProject,
   name: "プロジェクトを読み込む",
+});
+registerHotkeyForAllEditors({
+  callback: zoomIn,
+  name: "拡大",
+});
+registerHotkeyForAllEditors({
+  callback: zoomOut,
+  name: "縮小",
+});
+registerHotkeyForAllEditors({
+  callback: zoomReset,
+  name: "拡大率のリセット",
 });
 </script>
 

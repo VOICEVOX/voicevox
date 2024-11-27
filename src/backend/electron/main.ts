@@ -623,7 +623,22 @@ registerIpcMainHandle<IpcMainHandle>({
       win.maximize();
     }
   },
-
+  // UIの拡大率拡大
+  ZOOM_IN: () => {
+    win.webContents.setZoomFactor(
+      Math.min(Math.max(win.webContents.getZoomFactor() + 0.1, 0.5), 3),
+    );
+  },
+  // UIの拡大率縮小
+  ZOOM_OUT: () => {
+    win.webContents.setZoomFactor(
+      Math.min(Math.max(win.webContents.getZoomFactor() - 0.1, 0.5), 3),
+    );
+  },
+  // UIの拡大率リセット
+  ZOOM_RESET: () => {
+    win.webContents.setZoomFactor(1);
+  },
   OPEN_LOG_DIRECTORY: () => {
     void shell.openPath(app.getPath("logs"));
   },

@@ -117,6 +117,18 @@ export const defaultHotkeySettings: HotkeySettingType[] = [
     combination: HotkeyCombination(!isMac ? "Ctrl Y" : "Shift Meta Z"),
   },
   {
+    action: "拡大",
+    combination: HotkeyCombination(!isMac ? "Ctrl +" : "Meta +"),
+  },
+  {
+    action: "縮小",
+    combination: HotkeyCombination(!isMac ? "Ctrl -" : "Meta -"),
+  },
+  {
+    action: "拡大率のリセット",
+    combination: HotkeyCombination(!isMac ? "Ctrl Alt 0" : "Meta Alt 0"),
+  },
+  {
     action: "新規プロジェクト",
     combination: HotkeyCombination(!isMac ? "Ctrl N" : "Meta N"),
   },
@@ -238,6 +250,9 @@ export interface Sandbox {
   closeWindow(): void;
   minimizeWindow(): void;
   maximizeWindow(): void;
+  zoomIn(): void;
+  zoomOut(): void;
+  zoomReset(): void;
   logError(...params: unknown[]): void;
   logWarn(...params: unknown[]): void;
   logInfo(...params: unknown[]): void;
@@ -433,6 +448,9 @@ export const hotkeyActionNameSchema = z.enum([
   "テキスト欄にフォーカスを戻す",
   "元に戻す",
   "やり直す",
+  "拡大",
+  "縮小",
+  "拡大率のリセット",
   "新規プロジェクト",
   "プロジェクトを名前を付けて保存",
   "プロジェクトを上書き保存",
