@@ -27,8 +27,8 @@
         <QBtn
           unelevated
           label="キャンセル"
-          color="toolbar-button"
-          textColor="toolbar-button-display"
+          color="surface"
+          textColor="display"
           class="text-no-wrap text-bold q-mr-sm"
           @click="handleCancel"
         />
