@@ -225,14 +225,14 @@ const playheadX = computed(() => {
   return Math.floor(baseX * props.sequencerZoomX);
 });
 
-const getTickFromMouseEvent = (event: MouseEvent) => {
-  const baseX = (props.offset + event.offsetX) / props.sequencerZoomX;
-  return baseXToTick(baseX, props.tpqn);
-};
-
 const snapTicks = computed(() => {
   return getNoteDuration(props.sequencerSnapType, props.tpqn);
 });
+
+const getSnappedTickFromOffsetX = (offsetX: number) => {
+  const baseX = (props.offset + offsetX) / props.sequencerZoomX;
+  return snapTicksToGrid(baseXToTick(baseX, props.tpqn), snapTicks.value);
+};
 
 const onClick = (event: MouseEvent) => {
   emit("deselectAllNotes");
@@ -241,11 +241,7 @@ const onClick = (event: MouseEvent) => {
   if (!sequencerRulerElement) {
     throw new Error("sequencerRulerElement is null.");
   }
-  const baseX = (props.offset + event.offsetX) / props.sequencerZoomX;
-  const ticks = snapTicksToGrid(
-    baseXToTick(baseX, props.tpqn),
-    snapTicks.value,
-  );
+  const ticks = getSnappedTickFromOffsetX(event.offsetX);
   playheadTicks.value = ticks;
 };
 
@@ -281,9 +277,7 @@ const contextMenu = ref<ComponentPublicInstance<typeof ContextMenu> | null>(
 const onContextMenu = async (event: MouseEvent) => {
   emit("deselectAllNotes");
 
-  const ticks = getTickFromMouseEvent(event);
-  const snapTicks = getNoteDuration(props.sequencerSnapType, props.tpqn);
-  const snappedTicks = Math.round(ticks / snapTicks) * snapTicks;
+  const snappedTicks = getSnappedTickFromOffsetX(event.offsetX);
   playheadTicks.value = snappedTicks;
 };
 
