@@ -1,7 +1,7 @@
 <template>
   <CommonDialog
     v-model="modelValue"
-    title="拍子の変更"
+    :title="props.mode === 'add' ? '拍子の追加' : '拍子の編集'"
     name="拍子"
     :mode="props.mode"
     @ok="() => $emit('ok', { timeSignatureChange })"

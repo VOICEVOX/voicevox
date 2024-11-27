@@ -1,7 +1,7 @@
 <template>
   <CommonDialog
     v-model="modelValue"
-    title="テンポの変更"
+    :title="props.mode === 'add' ? 'テンポの追加' : 'テンポの編集'"
     name="テンポ"
     :mode="props.mode"
     @ok="() => $emit('ok', { tempoChange })"

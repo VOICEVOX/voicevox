@@ -1,3 +1,6 @@
+<!--
+  テンポや拍子などを変更・追加するためのダイアログ
+-->
 <template>
   <QDialog ref="dialogRef" v-model="modelValue">
     <QCard class="q-py-sm q-px-md dialog-card">
