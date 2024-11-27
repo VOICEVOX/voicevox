@@ -3,13 +3,8 @@
     ref="sequencerRuler"
     class="sequencer-ruler"
     :data-ui-locked="uiLocked"
-    :style="{
-      cursor: hoveredValueChange !== null ? 'pointer' : undefined,
-    }"
     @click="onClick"
     @contextmenu="onContextMenu"
-    @mousemove="updateHoveredValueChange"
-    @mouseleave="hoveredValueChange = undefined"
   >
     <ContextMenu
       ref="contextMenu"
@@ -85,15 +80,10 @@
       <!-- テンポ・拍子表示 -->
       <template v-for="valueChange in valueChanges" :key="valueChange.position">
         <text
-          :id="`value-change-${valueChange.position}`"
           font-size="12"
           :x="valueChange.x - offset + textPadding"
           y="16"
           class="sequencer-ruler-value-change"
-          :data-is-hovered="
-            hoveredValueChange &&
-            hoveredValueChange.position === valueChange.position
-          "
           @click.stop="onValueChangeClick($event, valueChange)"
           @contextmenu.stop="onValueChangeClick($event, valueChange)"
         >
@@ -115,30 +105,6 @@
         />
       </template>
     </svg>
-    <QTooltip
-      v-for="valueChange in collapsedValueChanges"
-      :key="valueChange.position"
-      transitionShow="none"
-      transitionHide="none"
-      :target="`#value-change-${valueChange.position}`"
-      :modelValue="
-        hoveredValueChange &&
-        hoveredValueChange.position === valueChange.position
-      "
-      @update:modelValue="
-        (value) => (hoveredValueChange = value ? valueChange : undefined)
-      "
-    >
-      {{
-        valueChange.tempoChange ? `テンポ：${valueChange.tempoChange.bpm}` : ""
-      }}
-      <br v-if="valueChange.tempoChange && valueChange.timeSignatureChange" />
-      {{
-        valueChange.timeSignatureChange
-          ? `拍子：${valueChange.timeSignatureChange.beats}/${valueChange.timeSignatureChange.beatType}`
-          : ""
-      }}
-    </QTooltip>
 
     <div class="sequencer-ruler-border-bottom"></div>
     <div
@@ -269,20 +235,6 @@ const snapTicks = computed(() => {
 });
 
 const onClick = (event: MouseEvent) => {
-  if (props.uiLocked) {
-    return;
-  }
-  if (hoveredValueChange.value != null) {
-    const valueChange = valueChanges.value.find(
-      (valueChange) =>
-        valueChange.position === hoveredValueChange.value?.position,
-    );
-    if (!valueChange) {
-      throw new UnreachableError("assert: valueChange exists.");
-    }
-    void onValueChangeClick(event, valueChange);
-    return;
-  }
   emit("deselectAllNotes");
 
   const sequencerRulerElement = sequencerRuler.value;
@@ -344,27 +296,10 @@ type ValueChange = {
   displayType: "full" | "ellipsis" | "hidden";
 };
 
-const hoveredValueChange = ref<ValueChange | undefined>(undefined);
-const updateHoveredValueChange = (event: MouseEvent) => {
-  const mouseX = props.offset + event.offsetX;
-  const mouseY = event.offsetY;
-  if (mouseY > height.value / 2) {
-    hoveredValueChange.value = undefined;
-    return;
-  }
-  const valueChange = valueChanges.value.find(
-    (valueChange, i) =>
-      valueChange.displayType !== "full" &&
-      valueChange.x <= mouseX &&
-      mouseX <= (valueChanges.value.at(i + 1)?.x ?? Infinity),
-  );
-  hoveredValueChange.value = valueChange;
-};
 const onValueChangeClick = async (
   event: MouseEvent,
   valueChange: ValueChange,
 ) => {
-  hoveredValueChange.value = undefined;
   const ticks = valueChange.position;
   playheadTicks.value = ticks;
   contextMenu.value?.show(event);
@@ -458,11 +393,6 @@ const valueChanges = computed<ValueChange[]>(() => {
 
   return valueChanges;
 });
-const collapsedValueChanges = computed(() =>
-  valueChanges.value.filter(
-    (valueChange) => valueChange.displayType !== "full",
-  ),
-);
 
 const currentTempo = computed(() => {
   const maybeTempo = props.tempos.findLast((tempo) => {
