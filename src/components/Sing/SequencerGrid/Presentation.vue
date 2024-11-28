@@ -8,7 +8,7 @@
   >
     <defs>
       <pattern
-        id="sequencer-grid-pattern-bg"
+        id="sequencer-grid-pattern-background"
         patternUnits="userSpaceOnUse"
         :x="0"
         :width="gridCellWidth"
@@ -70,7 +70,7 @@
       y="0"
       :width="gridWidth"
       :height="gridHeight"
-      :fill="`url(#sequencer-grid-pattern-bg)`"
+      :fill="`url(#sequencer-grid-pattern-background)`"
     />
     <!-- グリッドパターン -->
     <rect
