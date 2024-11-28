@@ -1685,17 +1685,18 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   APPLY_DEVICE_ID_TO_AUDIO_CONTEXT: {
     action(_, { device }) {
-      if (audioContext) {
-        const sinkId = device === "default" ? "" : device;
-        audioContext.setSinkId(sinkId).catch((err: unknown) => {
-          void showAlertDialog({
-            type: "error",
-            title: "エラー",
-            message: "再生デバイスが見つかりません",
-          });
-          throw err;
-        });
+      if (!audioContext) {
+        throw new Error("audioContext is undefined.");
       }
+      const sinkId = device === "default" ? "" : device;
+      audioContext.setSinkId(sinkId).catch((err: unknown) => {
+        void showAlertDialog({
+          type: "error",
+          title: "エラー",
+          message: "再生デバイスが見つかりません",
+        });
+        throw err;
+      });
     },
   },
 
