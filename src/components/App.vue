@@ -97,7 +97,7 @@ watchEffect(() => {
   setThemeToCss(theme);
 });
 
-// 再生デバイスの初期化と変更の監視
+// ソングの再生デバイスを同期
 watchEffect(() => {
   void store.actions.APPLY_DEVICE_ID_TO_AUDIO_CONTEXT({
     device: store.state.savingSetting.audioOutputDevice,
