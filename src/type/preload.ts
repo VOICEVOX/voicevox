@@ -126,7 +126,7 @@ export const defaultHotkeySettings: HotkeySettingType[] = [
   },
   {
     action: "拡大率のリセット",
-    combination: HotkeyCombination(!isMac ? "Ctrl Alt 0" : "Meta Alt 0"),
+    combination: HotkeyCombination(""),
   },
   {
     action: "新規プロジェクト",
