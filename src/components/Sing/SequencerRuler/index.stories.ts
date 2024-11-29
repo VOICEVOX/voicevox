@@ -108,6 +108,33 @@ export const WithOffset: Story = {
   },
 };
 
+export const Dense: Story = {
+  name: "密集表示",
+  args: {
+    timeSignatures: [
+      {
+        beats: 4,
+        beatType: 4,
+        measureNumber: 1,
+      },
+    ],
+    tempos: [
+      {
+        bpm: 120,
+        position: 0,
+      },
+      {
+        bpm: 120,
+        position: 400,
+      },
+      {
+        bpm: 120,
+        position: 480,
+      },
+    ],
+  },
+};
+
 export const MovePlayhead: Story = {
   name: "再生位置を移動",
 

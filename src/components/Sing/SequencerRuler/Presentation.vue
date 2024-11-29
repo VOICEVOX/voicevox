@@ -71,15 +71,10 @@
       >
         {{ measureInfo.number }}
       </text>
-      <!-- テンポ・拍子変化のテキストの幅を計算するためのダミー -->
-      <text
-        ref="dummyValueChangeText"
-        font-size="12"
-        class="sequencer-ruler-value-change"
-      />
       <!-- テンポ・拍子表示 -->
       <template v-for="valueChange in valueChanges" :key="valueChange.position">
         <text
+          ref="valueChangeText"
           font-size="12"
           :x="valueChange.x - offset + textPadding"
           y="16"
@@ -87,14 +82,7 @@
           @click.stop="onValueChangeClick($event, valueChange)"
           @contextmenu.stop="onValueChangeClick($event, valueChange)"
         >
-          <!-- NOTE：何も書かないとQTooltipがくっついてくれないので、ゼロ幅空白を置く -->
-          {{
-            valueChange.displayType === "full"
-              ? valueChange.text
-              : valueChange.displayType === "ellipsis"
-                ? `...`
-                : "\u200b"
-          }}
+          {{ valueChange.displayText }}
         </text>
         <line
           :x1="valueChange.x - offset"
@@ -288,6 +276,7 @@ type ValueChange = {
   timeSignatureChange: TimeSignature | undefined;
   x: number;
   displayType: "full" | "ellipsis" | "hidden";
+  displayText: string;
 };
 
 const onValueChangeClick = async (
@@ -304,14 +293,15 @@ const currentMeasure = computed(() =>
 );
 
 const textPadding = 4;
-const dummyValueChangeText = useTemplateRef<SVGTextElement>(
-  "dummyValueChangeText",
-);
+
+// NOTE: フォントの変更に対応していないが、基本的にフォントが変更されることは少ないので、
+// 複雑性を下げるためにも対応しない
+const valueChangeText = useTemplateRef<SVGTextElement[]>("valueChangeText");
 const valueChangeTextStyle = computed<FontSpecification | null>(() => {
-  if (!dummyValueChangeText.value) {
+  if (!valueChangeText.value || valueChangeText.value.length === 0) {
     return null;
   }
-  const style = window.getComputedStyle(dummyValueChangeText.value);
+  const style = window.getComputedStyle(valueChangeText.value[0]);
   return {
     fontFamily: style.fontFamily,
     fontSize: parseFloat(style.fontSize),
@@ -351,13 +341,16 @@ const valueChanges = computed<ValueChange[]>(() => {
         ? `${timeSignature.beats}/${timeSignature.beatType}`
         : "";
 
+      const text = [tempoText, timeSignatureText].join(" ");
+
       return {
         position: tick,
-        text: [tempoText, timeSignatureText].join(" "),
+        text,
         tempoChange: tempo,
         timeSignatureChange: timeSignature,
         x: tickToBaseX(tick, props.tpqn) * props.sequencerZoomX,
         displayType: "full" as const,
+        displayText: text,
       };
     });
 
@@ -375,8 +368,10 @@ const valueChanges = computed<ValueChange[]>(() => {
       const width = next.x - valueChange.x;
       if (collapsedTextWidth > width) {
         valueChange.displayType = "hidden";
+        valueChange.displayText = "\u200b"; // QTooltipは空文字列のtextにひっついてくれないので、ゼロ幅スペースを入れる
       } else if (requiredWidth > width) {
         valueChange.displayType = "ellipsis";
+        valueChange.displayText = "...";
       }
     }
   } else {
