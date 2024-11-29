@@ -408,7 +408,7 @@ const timeSignatureChangeExists = computed(
   () => currentTimeSignature.value.measureNumber === currentMeasure.value,
 );
 
-const showDialog = async <T extends Component, R>(
+const showValueChangeDialog = async <T extends Component, R>(
   component: T,
   componentProps: ExtractPropTypes<T>,
 ) => {
@@ -454,7 +454,7 @@ const contextMenudata = computed<ContextMenuItemData[]>(
           ? `テンポ変化を編集`
           : "テンポ変化を挿入",
         onClick: async () => {
-          const result = await showDialog<
+          const result = await showValueChangeDialog<
             typeof TempoChangeDialog,
             {
               tempoChange: Omit<Tempo, "position">;
@@ -494,7 +494,7 @@ const contextMenudata = computed<ContextMenuItemData[]>(
           ? `拍子変化を編集`
           : "拍子変化を挿入",
         onClick: async () => {
-          const result = await showDialog<
+          const result = await showValueChangeDialog<
             typeof TimeSignatureChangeDialog,
             {
               timeSignatureChange: Omit<TimeSignature, "measureNumber">;
