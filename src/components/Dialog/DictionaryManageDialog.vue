@@ -39,28 +39,45 @@
               </div>
             </div>
           </div>
-          <div class="col-4 word-list-col">
+
+          <!-- 左側のpane -->
+          <div class="col-4">
             <div
               v-if="wordEditing"
               class="word-list-disable-overlay"
               @click="discardOrNotDialog(cancel)"
             />
-            <div class="word-list-header text-no-wrap">
-              <div class="row word-list-title">
-                <span class="text-h5 col-8">単語一覧</span>
+            <div class="word-list-header text-no-wrap col">
+              <div class="word-list-title row">
+                <span class="text-h5">単語一覧</span>
+                <QSpace />
                 <QBtn
                   outline
                   textColor="display"
-                  class="text-no-wrap text-bold col"
+                  class="text-no-wrap text-bold"
                   :disable="uiLocked"
                   @click="newWord"
                   >追加</QBtn
                 >
+                <QSelect
+                  v-model="sortType"
+                  class="text-no-wrap text-bold col"
+                  :options="sortTypes"
+                />
               </div>
+              <QInput
+                v-model="wordFilter"
+                hideBottomSpace
+                dense
+                placeholder="検索"
+                color="display"
+                :disable="uiLocked || wordEditing"
+                class="q-mr-sm search-box"
+              ></QInput>
             </div>
             <QList class="word-list">
               <QItem
-                v-for="(value, key) in userDict"
+                v-for="(value, key) in filteredUserDict"
                 :key
                 v-ripple
                 tag="label"
@@ -76,7 +93,9 @@
                   <QItemLabel lines="1" class="text-display">{{
                     value.surface
                   }}</QItemLabel>
-                  <QItemLabel lines="1" caption>{{ value.yomi }}</QItemLabel>
+                  <QItemLabel lines="1" caption
+                    >[{{ value.priority }}] {{ value.yomi }}</QItemLabel
+                  >
                 </QItemSection>
 
                 <QItemSection
@@ -325,6 +344,55 @@ const hoveredKey = ref<string | undefined>(undefined);
 const loadingDictState = ref<null | "loading" | "synchronizing">("loading");
 const userDict = ref<Record<string, UserDictWord>>({});
 
+// 検索結果でフィルタリングされたユーザ辞書
+const filteredUserDict = computed(() => {
+  return Object.fromEntries(
+    Object.entries(userDict.value)
+      .sort((a, b) => {
+        console.log(sortType.value.value);
+        switch (sortType.value.value) {
+          case "yomi":
+            console.log("YOMI: " + a[1].yomi + ", " + b[1].yomi);
+            return a[1].yomi.localeCompare(b[1].yomi);
+          case "priority":
+            console.log("YOMI: " + a[1].priority + ", " + b[1].primary);
+            return b[1].priority - a[1].priority;
+          default:
+            console.log("DEFAULT: " + a[1].priority + ", " + b[1].primary);
+
+            return 0;
+        }
+      })
+      .filter(([, value]) => {
+        // 半角から全角に変換
+        let searchWord = convertHankakuToZenkaku(wordFilter.value);
+        // ひらがなからカタカナに変換
+        searchWord = convertHiraToKana(searchWord);
+        // 長音を適切な音に変換
+        const searchWordLongVowel = convertLongVowel(searchWord);
+        return (
+          value.surface.includes(searchWord) ||
+          value.yomi.includes(searchWord) ||
+          value.surface.includes(searchWordLongVowel) ||
+          value.yomi.includes(searchWordLongVowel)
+        );
+      }),
+  );
+});
+
+// 表示順
+const sortTypes = [
+  {
+    label: "読み順",
+    value: "yomi",
+  },
+  {
+    label: "優先度順",
+    value: "priority",
+  },
+];
+const sortType = ref(sortTypes[0]);
+
 const createUILockAction = function <T>(action: Promise<T>) {
   uiLocked.value = true;
   return action.finally(() => {
@@ -367,6 +435,8 @@ watch(dictionaryManageDialogOpenedComputed, async (newValue) => {
     toInitialState();
   }
 });
+
+const wordFilter = ref("");
 
 const wordEditing = ref(false);
 
