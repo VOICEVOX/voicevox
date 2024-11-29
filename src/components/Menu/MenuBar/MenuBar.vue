@@ -164,19 +164,19 @@ const importProject = () => {
   }
 };
 
-// UIの拡大（キーボードショートカット）
-const zoomIn = () => {
-  window.backend.zoomIn();
+/** UIの拡大 */
+const zoomIn = async () => {
+  await store.actions.ZOOM_IN();
 };
 
-// UIの縮小（キーボードショートカット）
-const zoomOut = () => {
-  window.backend.zoomOut();
+/** UIの縮小 */
+const zoomOut = async () => {
+  await store.actions.ZOOM_OUT();
 };
 
-// UIのリセット（キーボードショートカット）
-const zoomReset = () => {
-  window.backend.zoomReset();
+/** UIの拡大率リセット */
+const zoomReset = async () => {
+  await store.actions.ZOOM_RESET();
 };
 
 // 「最近使ったプロジェクト」のメニュー
@@ -415,7 +415,34 @@ const menudata = computed<MenuItemData[]>(() => [
       closeAllDialog();
     },
     disableWhenUiLocked: false,
-    subMenu: [...props.viewSubMenuData],
+    subMenu: [
+      ...props.viewSubMenuData,
+      { type: "separator" },
+      {
+        type: "button",
+        label: "拡大",
+        onClick: () => {
+          void zoomIn();
+        },
+        disableWhenUiLocked: false,
+      },
+      {
+        type: "button",
+        label: "縮小",
+        onClick: () => {
+          void zoomOut();
+        },
+        disableWhenUiLocked: false,
+      },
+      {
+        type: "button",
+        label: "拡大率のリセット",
+        onClick: () => {
+          void zoomReset();
+        },
+        disableWhenUiLocked: false,
+      },
+    ],
   },
   {
     type: "root",
