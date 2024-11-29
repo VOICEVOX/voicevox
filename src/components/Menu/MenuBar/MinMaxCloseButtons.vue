@@ -57,16 +57,7 @@
     ></QBtn>
 
     <QBtn
-      v-if="!isMaximized"
-      dense
-      flat
-      icon="crop_square"
-      class="title-bar-buttons"
-      aria-label="最大化"
-      @click="maximizeWindow()"
-    ></QBtn>
-    <QBtn
-      v-else
+      v-if="isMaximized || isFullscreen"
       dense
       flat
       :icon="mdiWindowRestore"
@@ -75,6 +66,16 @@
       @click="maximizeWindow()"
     >
     </QBtn>
+
+    <QBtn
+      v-else
+      dense
+      flat
+      icon="crop_square"
+      class="title-bar-buttons"
+      aria-label="最大化"
+      @click="maximizeWindow()"
+    ></QBtn>
 
     <QBtn
       dense
@@ -103,6 +104,7 @@ const minimizeWindow = () => window.backend.minimizeWindow();
 const maximizeWindow = () => window.backend.maximizeWindow();
 
 const isMaximized = computed(() => store.state.isMaximized);
+const isFullscreen = computed(() => store.getters.IS_FULLSCREEN);
 </script>
 
 <style scoped lang="scss">

@@ -123,7 +123,7 @@ export type IpcIHData = {
     return: void;
   };
 
-  TOGGLE_FULLSCREENMODE: {
+  TOGGLE_FULLSCREEN: {
     args: [];
     return: void;
   };
