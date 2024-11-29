@@ -1,6 +1,7 @@
 import { z } from "zod";
-import { StyleInfo, isMac } from "@/type/preload";
+import { StyleInfo } from "@/type/preload";
 import { calculateHash } from "@/sing/utility";
+import { isMac } from "@/helpers/platform";
 
 const BASE_X_PER_QUARTER_NOTE = 120;
 const BASE_Y_PER_SEMITONE = 30;
@@ -133,6 +134,15 @@ export async function calculatePitchDataHash(pitchData: PitchData) {
 }
 
 export type MouseButton = "LEFT_BUTTON" | "RIGHT_BUTTON" | "OTHER_BUTTON";
+
+export type PreviewMode =
+  | "IDLE"
+  | "ADD_NOTE"
+  | "MOVE_NOTE"
+  | "RESIZE_NOTE_RIGHT"
+  | "RESIZE_NOTE_LEFT"
+  | "DRAW_PITCH"
+  | "ERASE_PITCH";
 
 export function getButton(event: MouseEvent): MouseButton {
   // macOSの場合、Ctrl+クリックは右クリック

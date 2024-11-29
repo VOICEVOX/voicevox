@@ -1,8 +1,5 @@
 import {
-  Action,
-  ActionContext,
   ActionsBase,
-  Dispatch,
   DotNotationAction,
   DotNotationActionContext,
   DotNotationDispatch,
@@ -14,10 +11,12 @@ import {
   UiStoreState,
   UiStoreTypes,
 } from "./type";
-import { createDotNotationPartialStore as createPartialStore } from "./vuex";
+import { createPartialStore } from "./vuex";
 import { ActivePointScrollMode } from "@/type/preload";
 import {
-  CommonDialogOptions,
+  AlertDialogOptions,
+  ConfirmDialogOptions,
+  WarningDialogOptions,
   LoadingScreenOption,
   NotifyAndNotShowAgainButtonOption,
   connectAndExportTextWithDialog,
@@ -33,27 +32,6 @@ import {
 } from "@/components/Dialog/Dialog";
 
 export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
-  action: (
-    context: ActionContext<S, S, AllGetters, AllActions, AllMutations>,
-    payload: Parameters<A[K]>[0],
-  ) => ReturnType<A[K]> extends Promise<unknown>
-    ? ReturnType<A[K]>
-    : Promise<ReturnType<A[K]>>,
-): Action<S, S, A, K, AllGetters, AllActions, AllMutations> {
-  return (context, payload: Parameters<A[K]>[0]) => {
-    context.commit("LOCK_UI");
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
-    return action(context, payload).finally(() => {
-      context.commit("UNLOCK_UI");
-    });
-  };
-}
-
-export function createDotNotationUILockAction<
-  S,
-  A extends ActionsBase,
-  K extends keyof A,
->(
   action: (
     context: DotNotationActionContext<
       S,
@@ -78,14 +56,6 @@ export function createDotNotationUILockAction<
 
 export function withProgress<T>(
   action: Promise<T>,
-  dispatch: Dispatch<AllActions>,
-): Promise<T> {
-  void dispatch("START_PROGRESS");
-  return action.finally(() => dispatch("RESET_PROGRESS"));
-}
-
-export function withProgressDotNotation<T>(
-  action: Promise<T>,
   actions: DotNotationDispatch<AllActions>,
 ): Promise<T> {
   void actions.START_PROGRESS();
@@ -93,7 +63,6 @@ export function withProgressDotNotation<T>(
 }
 
 export const uiStoreState: UiStoreState = {
-  openedEditor: undefined,
   uiLockCount: 0,
   dialogLockCount: 0,
   reloadingLock: false,
@@ -110,6 +79,7 @@ export const uiStoreState: UiStoreState = {
   isDictionaryManageDialogOpen: false,
   isEngineManageDialogOpen: false,
   isUpdateNotificationDialogOpen: false,
+  isExportSongAudioDialogOpen: false,
   isImportSongProjectDialogOpen: false,
   isMaximized: false,
   isPinned: false,
@@ -119,15 +89,6 @@ export const uiStoreState: UiStoreState = {
 };
 
 export const uiStore = createPartialStore<UiStoreTypes>({
-  SET_OPENED_EDITOR: {
-    mutation(state, { editor }) {
-      state.openedEditor = editor;
-    },
-    action({ mutations }, { editor }) {
-      mutations.SET_OPENED_EDITOR({ editor });
-    },
-  },
-
   UI_LOCKED: {
     getter(state) {
       return state.uiLockCount > 0;
@@ -147,7 +108,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   },
 
   ASYNC_UI_LOCK: {
-    action: createDotNotationUILockAction(
+    action: createUILockAction(
       async (_, { callback }: { callback: () => Promise<void> }) => {
         await callback();
       },
@@ -216,23 +177,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   },
 
   SET_DIALOG_OPEN: {
-    mutation(
-      state,
-      dialogState: {
-        isDefaultStyleSelectDialogOpen?: boolean;
-        isAcceptRetrieveTelemetryDialogOpen?: boolean;
-        isAcceptTermsDialogOpen?: boolean;
-        isDictionaryManageDialogOpen?: boolean;
-        isHelpDialogOpen?: boolean;
-        isSettingDialogOpen?: boolean;
-        isHotkeySettingDialogOpen?: boolean;
-        isToolbarSettingDialogOpen?: boolean;
-        isCharacterOrderDialogOpen?: boolean;
-        isEngineManageDialogOpen?: boolean;
-        isUpdateNotificationDialogOpen?: boolean;
-        isImportExternalProjectDialogOpen?: boolean;
-      },
-    ) {
+    mutation(state, dialogState) {
       for (const [key, value] of Object.entries(dialogState)) {
         if (!(key in state)) {
           throw new Error(`Unknown dialog state: ${key}`);
@@ -258,27 +203,21 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   },
 
   SHOW_ALERT_DIALOG: {
-    action: createDotNotationUILockAction(
-      async (_, payload: { title: string; message: string; ok?: string }) => {
-        return await showAlertDialog(payload);
-      },
-    ),
+    action: createUILockAction(async (_, payload: AlertDialogOptions) => {
+      return await showAlertDialog(payload);
+    }),
   },
 
   SHOW_CONFIRM_DIALOG: {
-    action: createDotNotationUILockAction(
-      async (_, payload: CommonDialogOptions["confirm"]) => {
-        return await showConfirmDialog(payload);
-      },
-    ),
+    action: createUILockAction(async (_, payload: ConfirmDialogOptions) => {
+      return await showConfirmDialog(payload);
+    }),
   },
 
   SHOW_WARNING_DIALOG: {
-    action: createDotNotationUILockAction(
-      async (_, payload: CommonDialogOptions["warning"]) => {
-        return await showWarningDialog(payload);
-      },
-    ),
+    action: createUILockAction(async (_, payload: WarningDialogOptions) => {
+      return await showWarningDialog(payload);
+    }),
   },
 
   SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON: {
@@ -386,6 +325,16 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     },
   },
 
+  /**
+   * 選択可能なテーマをセットする。
+   * NOTE: カスタムテーマが導入された場合を見越して残している。
+   */
+  SET_AVAILABLE_THEMES: {
+    mutation(state, { themes }) {
+      state.availableThemes = themes;
+    },
+  },
+
   DETECT_UNMAXIMIZED: {
     mutation(state) {
       state.isMaximized = false;
@@ -475,7 +424,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   },
 
   RELOAD_APP: {
-    action: createDotNotationUILockAction(
+    action: createUILockAction(
       async (
         { actions },
         { isMultiEngineOffMode }: { isMultiEngineOffMode?: boolean },

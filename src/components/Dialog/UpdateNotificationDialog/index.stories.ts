@@ -20,6 +20,8 @@ const meta: Meta<typeof Presentation> = {
         contributors: ["これは表示されないはず"],
       },
     ],
+    "onUpdate:modelValue": fn(),
+    onSkipThisVersionClick: fn(),
   },
   tags: ["!autodocs"], // ダイアログ系はautodocsのプレビューが正しく表示されないので無効化
 };
@@ -50,7 +52,9 @@ export const Close: Story = {
 
 export const SkipThisVersion: Story = {
   name: "スキップボタンを押す",
-  args: { ...Opened.args },
+  args: {
+    ...Opened.args,
+  },
   play: async ({ args }) => {
     const canvas = within(document.body); // ダイアログなので例外的にdocument.bodyを使う
 
@@ -91,4 +95,5 @@ export const OpenOfficialSite: Story = {
 
 export const Closed: Story = {
   name: "閉じている",
+  tags: ["skip-screenshot"],
 };

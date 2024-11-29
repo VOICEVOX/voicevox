@@ -1,11 +1,11 @@
 import log from "electron-log/main";
 import { BrowserWindow, dialog } from "electron";
 
-import EngineInfoManager from "./manager/engineInfoManager";
-import EngineProcessManager from "./manager/engineProcessManager";
-import VvppManager from "./manager/vvppManager";
-import { RuntimeInfoManager } from "./manager/RuntimeInfoManager";
-import { ElectronConfigManager } from "./electronConfig";
+import { getConfigManager } from "./electronConfig";
+import { getEngineInfoManager } from "./manager/engineInfoManager";
+import { getEngineProcessManager } from "./manager/engineProcessManager";
+import { getRuntimeInfoManager } from "./manager/RuntimeInfoManager";
+import { getVvppManager } from "./manager/vvppManager";
 import {
   EngineId,
   EngineInfo,
@@ -17,13 +17,21 @@ import {
  * エンジンとVVPP周りの処理の流れを制御するクラス。
  */
 export class EngineAndVvppController {
-  constructor(
-    private runtimeInfoManager: RuntimeInfoManager,
-    private configManager: ElectronConfigManager,
-    private engineInfoManager: EngineInfoManager,
-    private engineProcessManager: EngineProcessManager,
-    private vvppManager: VvppManager,
-  ) {}
+  private get configManager() {
+    return getConfigManager();
+  }
+  private get engineInfoManager() {
+    return getEngineInfoManager();
+  }
+  private get engineProcessManager() {
+    return getEngineProcessManager();
+  }
+  private get runtimeInfoManager() {
+    return getRuntimeInfoManager();
+  }
+  private get vvppManager() {
+    return getVvppManager();
+  }
 
   /**
    * VVPPエンジンをインストールする。
@@ -132,8 +140,8 @@ export class EngineAndVvppController {
 
   // エンジンの準備と起動
   async launchEngines() {
-    // エンジンの追加と削除を反映させるためEngineInfoとAltPortInfosを再生成する。
-    this.engineInfoManager.initializeEngineInfosAndAltPortInfo();
+    // AltPortInfosを再生成する。
+    this.engineInfoManager.initializeAltPortInfo();
 
     // TODO: デフォルトエンジンの処理をConfigManagerに移してブラウザ版と共通化する
     const engineInfos = this.engineInfoManager.fetchEngineInfos();
@@ -147,7 +155,10 @@ export class EngineAndVvppController {
     this.configManager.set("engineSettings", engineSettings);
 
     await this.engineProcessManager.runEngineAll();
-    this.runtimeInfoManager.setEngineInfos(engineInfos);
+    this.runtimeInfoManager.setEngineInfos(
+      engineInfos,
+      this.engineInfoManager.altPortInfos,
+    );
     await this.runtimeInfoManager.exportFile();
   }
 
@@ -162,6 +173,7 @@ export class EngineAndVvppController {
     // TODO: setからexportの処理は排他処理にしたほうがより良い
     this.runtimeInfoManager.setEngineInfos(
       this.engineInfoManager.fetchEngineInfos(),
+      this.engineInfoManager.altPortInfos,
     );
     await this.runtimeInfoManager.exportFile();
   }
@@ -227,4 +239,13 @@ export class EngineAndVvppController {
     const configSavedResult = this.configManager.ensureSaved();
     return { engineCleanupResult, configSavedResult };
   }
+}
+
+let manager: EngineAndVvppController | undefined;
+
+export function getEngineAndVvppController() {
+  if (manager == undefined) {
+    manager = new EngineAndVvppController();
+  }
+  return manager;
 }

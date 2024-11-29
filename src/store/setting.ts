@@ -1,13 +1,15 @@
-import { Dark, setCssVar, colors } from "quasar";
 import { SettingStoreState, SettingStoreTypes } from "./type";
-import { createDotNotationUILockAction as createUILockAction } from "./ui";
-import { createDotNotationPartialStore as createPartialStore } from "./vuex";
+import { createUILockAction } from "./ui";
+import { createPartialStore } from "./vuex";
+import { themes } from "@/domain/theme";
+import {
+  showAlertDialog,
+  showQuestionDialog,
+} from "@/components/Dialog/Dialog";
 import {
   HotkeySettingType,
   SavingSetting,
   ExperimentalSettingType,
-  ThemeColorType,
-  ThemeConf,
   ToolbarSettingType,
   EngineId,
   ConfirmedTips,
@@ -16,6 +18,7 @@ import {
 import { IsEqual } from "@/type/utility";
 
 export const settingStoreState: SettingStoreState = {
+  openedEditor: undefined,
   savingSetting: {
     fileEncoding: "UTF-8",
     fileNamePattern: "",
@@ -33,23 +36,18 @@ export const settingStoreState: SettingStoreState = {
   engineIds: [],
   engineInfos: {},
   engineManifests: {},
-  themeSetting: {
-    currentTheme: "Default",
-    availableThemes: [],
-  },
+  currentTheme: "Default",
+  availableThemes: [],
   editorFont: "default",
   showTextLineNumber: false,
   showAddAudioItemButton: true,
   acceptTerms: "Unconfirmed",
   acceptRetrieveTelemetry: "Unconfirmed",
   experimentalSetting: {
-    enablePreset: false,
-    shouldApplyDefaultPresetOnVoiceChanged: false,
     enableInterrogativeUpspeak: false,
     enableMorphing: false,
     enableMultiSelect: false,
     shouldKeepTuningOnTextChange: false,
-    enableMultiTrack: false,
   },
   splitTextWhenPaste: "PERIOD_AND_NEW_LINE",
   splitterPosition: {
@@ -63,6 +61,8 @@ export const settingStoreState: SettingStoreState = {
     notifyOnGenerate: false,
   },
   engineSettings: {},
+  enablePreset: false,
+  shouldApplyDefaultPresetOnVoiceChanged: false,
   enableMultiEngine: false,
   enableMemoNotation: false,
   enableRubyNotation: false,
@@ -70,7 +70,8 @@ export const settingStoreState: SettingStoreState = {
     soloAndMute: true,
     panAndGain: true,
   },
-  showSinger: true,
+  showSingCharacterPortrait: true,
+  playheadPositionDisplayFormat: "MINUTES_SECONDS",
 };
 
 export const settingStore = createPartialStore<SettingStoreTypes>({
@@ -84,16 +85,12 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         });
       });
 
-      const theme = await window.backend.theme();
-      if (theme) {
-        mutations.SET_THEME_SETTING({
-          currentTheme: theme.currentTheme,
-          themes: theme.availableThemes,
-        });
-        void actions.SET_THEME_SETTING({
-          currentTheme: theme.currentTheme,
-        });
-      }
+      mutations.SET_AVAILABLE_THEMES({
+        themes,
+      });
+      void actions.SET_CURRENT_THEME_SETTING({
+        currentTheme: await window.backend.getSetting("currentTheme"),
+      });
 
       void actions.SET_ACCEPT_RETRIEVE_TELEMETRY({
         acceptRetrieveTelemetry: await window.backend.getSetting(
@@ -143,12 +140,16 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         "showAddAudioItemButton",
         "splitTextWhenPaste",
         "splitterPosition",
+        "enablePreset",
+        "shouldApplyDefaultPresetOnVoiceChanged",
         "enableMultiEngine",
         "enableRubyNotation",
         "enableMemoNotation",
         "skipUpdateVersion",
         "undoableTrackOperations",
-        "showSinger",
+        "showSingCharacterPortrait",
+        "playheadPositionDisplayFormat",
+        "openedEditor",
       ] as const;
 
       // rootMiscSettingKeysに値を足し忘れていたときに型エラーを出す検出用コード
@@ -229,19 +230,13 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     },
   },
 
-  SET_THEME_SETTING: {
-    mutation(
-      state,
-      { currentTheme, themes }: { currentTheme: string; themes?: ThemeConf[] },
-    ) {
-      if (themes) {
-        state.themeSetting.availableThemes = themes;
-      }
-      state.themeSetting.currentTheme = currentTheme;
+  SET_CURRENT_THEME_SETTING: {
+    mutation(state, { currentTheme }: { currentTheme: string }) {
+      state.currentTheme = currentTheme;
     },
     action({ state, mutations }, { currentTheme }: { currentTheme: string }) {
-      void window.backend.theme(currentTheme);
-      const theme = state.themeSetting.availableThemes.find((value) => {
+      void window.backend.setSetting("currentTheme", currentTheme);
+      const theme = state.availableThemes.find((value) => {
         return value.name == currentTheme;
       });
 
@@ -249,41 +244,9 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         throw Error("Theme not found");
       }
 
-      for (const key in theme.colors) {
-        const color = theme.colors[key as ThemeColorType];
-        const { r, g, b } = colors.hexToRgb(color);
-        document.documentElement.style.setProperty(`--color-${key}`, color);
-        document.documentElement.style.setProperty(
-          `--color-${key}-rgb`,
-          `${r}, ${g}, ${b}`,
-        );
-      }
-      const mixColors: ThemeColorType[][] = [
-        ["primary", "background"],
-        ["warning", "background"],
-      ];
-      for (const [color1, color2] of mixColors) {
-        const color1Rgb = colors.hexToRgb(theme.colors[color1]);
-        const color2Rgb = colors.hexToRgb(theme.colors[color2]);
-        const r = Math.trunc((color1Rgb.r + color2Rgb.r) / 2);
-        const g = Math.trunc((color1Rgb.g + color2Rgb.g) / 2);
-        const b = Math.trunc((color1Rgb.b + color2Rgb.b) / 2);
-        const propertyName = `--color-mix-${color1}-${color2}-rgb`;
-        const cssColor = `${r}, ${g}, ${b}`;
-        document.documentElement.style.setProperty(propertyName, cssColor);
-      }
-      Dark.set(theme.isDark);
-      setCssVar("primary", theme.colors["primary"]);
-      setCssVar("warning", theme.colors["warning"]);
-
-      document.documentElement.setAttribute(
-        "is-dark-theme",
-        theme.isDark ? "true" : "false",
-      );
-
       window.backend.setNativeTheme(theme.isDark ? "dark" : "light");
 
-      mutations.SET_THEME_SETTING({
+      mutations.SET_CURRENT_THEME_SETTING({
         currentTheme: currentTheme,
       });
     },
@@ -397,16 +360,16 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
 
         // 対応するGPUがない場合に変更を続行するか問う
         if (useGpu && !isAvailableGPUMode) {
-          const result = await window.backend.showQuestionDialog({
+          const result = await showQuestionDialog({
             type: "warning",
             title: "対応するGPUデバイスが見つかりません",
             message:
               "GPUモードの利用には対応するGPUデバイスが必要です。\n" +
               "このままGPUモードに変更するとエンジンエラーが発生する可能性があります。本当に変更しますか？",
-            buttons: ["変更する", "変更しない"],
-            cancelId: 1,
+            buttons: ["変更しない", "変更する"],
+            cancel: 0,
           });
-          if (result == 1) {
+          if (result == 0) {
             return;
           }
         }
@@ -422,7 +385,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         // GPUモードに変更できなかった場合はCPUモードに戻す
         // FIXME: useGpu設定を保存してからエンジン起動を試すのではなく、逆にしたい
         if (!result.success && useGpu) {
-          await window.backend.showMessageDialog({
+          await showAlertDialog({
             type: "error",
             title: "GPUモードに変更できませんでした",
             message:

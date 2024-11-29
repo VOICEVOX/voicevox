@@ -27,13 +27,13 @@ import {
  */
 export interface AccentPhrase {
     /**
-     * 
+     * モーラのリスト
      * @type {Array<Mora>}
      * @memberof AccentPhrase
      */
     moras: Array<Mora>;
     /**
-     * 
+     * アクセント箇所
      * @type {number}
      * @memberof AccentPhrase
      */
@@ -45,7 +45,7 @@ export interface AccentPhrase {
      */
     pauseMora?: Mora;
     /**
-     * 
+     * 疑問系かどうか
      * @type {boolean}
      * @memberof AccentPhrase
      */

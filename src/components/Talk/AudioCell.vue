@@ -114,7 +114,7 @@ import { computed, watch, ref, nextTick } from "vue";
 import { QInput } from "quasar";
 import CharacterButton from "@/components/CharacterButton.vue";
 import { MenuItemButton, MenuItemSeparator } from "@/components/Menu/type";
-import ContextMenu from "@/components/Menu/ContextMenu.vue";
+import ContextMenu from "@/components/Menu/ContextMenu/Container.vue";
 import { useStore } from "@/store";
 import { AudioKey, SplitTextWhenPasteType, Voice } from "@/type/preload";
 import { SelectionHelperForQInput } from "@/helpers/SelectionHelperForQInput";
@@ -679,6 +679,7 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
   position: relative;
   padding: 0.4rem 0.5rem;
   margin: 0.2rem 0.5rem;
+  gap: 0px 1rem;
   &:focus {
     // divはフォーカスするとデフォルトで青い枠が出るので消す
     outline: none;
@@ -694,8 +695,6 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
   &:last-child {
     margin-bottom: 0.6rem;
   }
-
-  gap: 0px 1rem;
 
   .active-arrow {
     left: -1rem;

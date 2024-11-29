@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from "vue";
+import { ref, watch, computed, Ref } from "vue";
 import * as PIXI from "pixi.js";
 import AsyncLock from "async-lock";
 import { useStore } from "@/store";
@@ -33,7 +33,7 @@ import { getOrThrow } from "@/helpers/mapHelper";
 import { EditorFrameAudioQuery } from "@/store/type";
 
 type PitchLine = {
-  readonly color: Color;
+  color: Ref<Color>;
   readonly width: number;
   readonly pitchDataMap: Map<PitchDataHash, PitchData>;
   readonly lineStripMap: Map<PitchDataHash, LineStrip>;
@@ -50,6 +50,7 @@ const props = defineProps<{
 const { warn, error } = createLogger("SequencerPitch");
 const store = useStore();
 const tpqn = computed(() => store.state.tpqn);
+const isDark = computed(() => store.state.currentTheme === "Dark");
 const tempos = computed(() => [store.state.tempos[0]]);
 const pitchEditData = computed(() => {
   return store.getters.SELECTED_TRACK.pitchEditData;
@@ -78,15 +79,27 @@ const singingGuidesInSelectedTrack = computed(() => {
   return singingGuides;
 });
 
+// NOTE: ピッチラインの色をテーマに応じて調節する
+// 動的カラースキーマに対応後、テーマに応じた色をオブジェクトから取得できるようにする
+const originalPitchLineColorLight = new Color(156, 158, 156, 255);
+const originalPitchLineColorDark = new Color(114, 116, 114, 255);
+const originalPitchLineColor = ref(
+  isDark.value ? originalPitchLineColorDark : originalPitchLineColorLight,
+);
 const originalPitchLine: PitchLine = {
-  color: new Color(171, 201, 176, 255),
-  width: 1.2,
+  color: originalPitchLineColor,
+  width: 1.125,
   pitchDataMap: new Map(),
   lineStripMap: new Map(),
 };
+const pitchEditLineColorLight = new Color(0, 167, 63, 255);
+const pitchEditLineColorDark = new Color(95, 188, 117, 255);
+const pitchEditLineColor = ref(
+  isDark.value ? pitchEditLineColorDark : pitchEditLineColorLight,
+);
 const pitchEditLine: PitchLine = {
-  color: new Color(146, 214, 154, 255),
-  width: 2,
+  color: pitchEditLineColor,
+  width: 2.25,
   pitchDataMap: new Map(),
   lineStripMap: new Map(),
 };
@@ -129,7 +142,15 @@ const updateLineStrips = (pitchLine: PitchLine) => {
   // ピッチデータに対応するLineStripが無かったら作成する
   for (const [key, pitchData] of pitchLine.pitchDataMap) {
     if (pitchLine.lineStripMap.has(key)) {
-      continue;
+      const currentLineStrip = pitchLine.lineStripMap.get(key)!;
+      // テーマなど色が変更された場合、LineStripを再作成する
+      if (!currentLineStrip.color.equals(pitchLine.color.value)) {
+        stage.removeChild(currentLineStrip.displayObject);
+        currentLineStrip.destroy();
+        pitchLine.lineStripMap.delete(key);
+      } else {
+        continue;
+      }
     }
     const dataLength = pitchData.data.length;
 
@@ -137,16 +158,26 @@ const updateLineStrips = (pitchLine: PitchLine) => {
     let lineStrip = removedLineStrips.pop();
     if (lineStrip != undefined) {
       if (
-        !lineStrip.color.equals(pitchLine.color) ||
+        !lineStrip.color.equals(pitchLine.color.value) ||
         lineStrip.width !== pitchLine.width
       ) {
         throw new Error("Color or width does not match.");
       }
       lineStrip.numOfPoints = dataLength;
     } else {
-      lineStrip = new LineStrip(dataLength, pitchLine.color, pitchLine.width);
+      lineStrip = new LineStrip(
+        dataLength,
+        pitchLine.color.value,
+        pitchLine.width,
+      );
     }
-    stage.addChild(lineStrip.displayObject);
+    // pitchEditLineの場合は最後に追加する（originalより前面に表示）
+    if (pitchLine === pitchEditLine) {
+      stage.addChild(lineStrip.displayObject);
+    } else {
+      // originalLineは最初に追加する（EditLineの背面に表示）
+      stage.addChildAt(lineStrip.displayObject, 0);
+    }
     pitchLine.lineStripMap.set(key, lineStrip);
   }
 
@@ -393,6 +424,23 @@ watch(
   { immediate: true },
 );
 
+// ピッチラインカラーをテーマに合わせて変更
+watch(
+  [isDark],
+  () => {
+    const newOriginalPitchLineColor = isDark.value
+      ? originalPitchLineColorDark
+      : originalPitchLineColorLight;
+    const newPitchEditLineColor = isDark.value
+      ? pitchEditLineColorDark
+      : pitchEditLineColorLight;
+    originalPitchLineColor.value = newOriginalPitchLineColor;
+    pitchEditLineColor.value = newPitchEditLineColor;
+    renderInNextFrame = true;
+  },
+  { immediate: true },
+);
+
 watch(
   () => [
     store.state.sequencerZoomX,
@@ -477,13 +525,13 @@ onUnmountedOrDeactivated(() => {
 </script>
 
 <style scoped lang="scss">
-@use "@/styles/variables" as vars;
-@use "@/styles/colors" as colors;
+@use "@/styles/v2/variables" as vars;
 
 .canvas-container {
   overflow: hidden;
-  z-index: 0;
+  z-index: vars.$z-index-sing-pitch;
   pointer-events: none;
+  position: relative;
 
   contain: strict; // canvasのサイズが変わるのを無視する
 }

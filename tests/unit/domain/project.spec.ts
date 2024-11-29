@@ -1,24 +1,27 @@
-// テスト用のファイルを読み込むのでNode環境で実行する
-// @vitest-environment node
-
-import path from "path";
 import fs from "fs";
 import { migrateProjectFileObject } from "@/domain/project";
 import { EngineId, SpeakerId, StyleId } from "@/type/preload";
+import { resetMockMode } from "@/helpers/random";
+import path from "@/helpers/path";
 
 const engineId = EngineId("074fc39e-678b-4c13-8916-ffca8d505d1d");
 
 const vvprojDir = "tests/unit/domain/vvproj/";
 
+beforeEach(() => {
+  resetMockMode();
+});
+
 describe("migrateProjectFileObject", () => {
   test("v0.14.11", async () => {
     // ８期生のプロジェクトファイル
-    const vvprojFile = path.resolve(vvprojDir, "0.14.11.vvproj");
+    const vvprojFile = path.join(vvprojDir, "0.14.11.vvproj");
     const projectData: unknown = JSON.parse(
       fs.readFileSync(vvprojFile, "utf-8"),
     );
 
-    await migrateProjectFileObject(projectData, {
+    // マイグレーションのテスト
+    const project = await migrateProjectFileObject(projectData, {
       fetchMoraData: async () => {
         throw new Error("fetchMoraData is not implemented");
       },
@@ -45,5 +48,8 @@ describe("migrateProjectFileObject", () => {
         },
       ],
     });
+
+    // スナップショットテスト
+    expect(project).toMatchSnapshot();
   });
 });

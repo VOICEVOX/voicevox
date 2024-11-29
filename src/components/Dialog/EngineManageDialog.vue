@@ -338,8 +338,8 @@ watch(
       const id = EngineId(idStr);
       if (engineStates.value[id] !== "READY") continue;
       if (engineVersions.value[id]) continue;
-      const version = await store
-        .dispatch("INSTANTIATE_ENGINE_CONNECTOR", { engineId: id })
+      const version = await store.actions
+        .INSTANTIATE_ENGINE_CONNECTOR({ engineId: id })
         .then((instance) => instance.invoke("versionVersionGet")({}))
         .then((version) => {
           // OpenAPIのバグで"latest"のようにダブルクォーテーションで囲まれていることがあるので外す
@@ -383,6 +383,7 @@ const getFeatureName = (name: keyof SupportedFeatures) => {
       adjustPitchScale: "全体の音高の調整",
       adjustIntonationScale: "全体の抑揚の調整",
       adjustVolumeScale: "全体の音量の調整",
+      adjustPauseLength: "句読点などの無音時間の調整",
       interrogativeUpspeak: "疑問文の自動調整",
       synthesisMorphing: "2種類のスタイルでモーフィングした音声を合成",
       sing: "歌唱音声合成",
@@ -407,7 +408,7 @@ const getEngineDirValidationMessage = (result: EngineDirValidationResult) => {
 };
 
 const addEngine = async () => {
-  const result = await store.dispatch("SHOW_WARNING_DIALOG", {
+  const result = await store.actions.SHOW_WARNING_DIALOG({
     title: "エンジン追加の確認",
     message:
       "この操作はコンピュータに損害を与える可能性があります。エンジンの配布元が信頼できない場合は追加しないでください。",
@@ -417,7 +418,7 @@ const addEngine = async () => {
     if (engineLoaderType.value === "dir") {
       await lockUi(
         "addingEngine",
-        store.dispatch("ADD_ENGINE_DIR", {
+        store.actions.ADD_ENGINE_DIR({
           engineDir: newEngineDir.value,
         }),
       );
@@ -428,7 +429,7 @@ const addEngine = async () => {
     } else {
       const success = await lockUi(
         "addingEngine",
-        store.dispatch("INSTALL_VVPP_ENGINE", vvppFilePath.value),
+        store.actions.INSTALL_VVPP_ENGINE(vvppFilePath.value),
       );
       if (success) {
         void requireReload(
@@ -449,7 +450,7 @@ const deleteEngine = async () => {
     throw new Error("default engine cannot be deleted");
   }
 
-  const result = await store.dispatch("SHOW_CONFIRM_DIALOG", {
+  const result = await store.actions.SHOW_CONFIRM_DIALOG({
     title: "エンジン削除の確認",
     message: "選択中のエンジンを削除します。よろしいですか？",
     actionName: "削除",
@@ -462,7 +463,7 @@ const deleteEngine = async () => {
           throw new Error("assert engineInfos[selectedId.value].path");
         await lockUi(
           "deletingEngine",
-          store.dispatch("REMOVE_ENGINE_DIR", {
+          store.actions.REMOVE_ENGINE_DIR({
             engineDir,
           }),
         );
@@ -474,7 +475,7 @@ const deleteEngine = async () => {
       case "vvpp": {
         const success = await lockUi(
           "deletingEngine",
-          store.dispatch("UNINSTALL_VVPP_ENGINE", engineId),
+          store.actions.UNINSTALL_VVPP_ENGINE(engineId),
         );
         if (success) {
           void requireReload(
@@ -496,19 +497,19 @@ const selectEngine = (id: EngineId) => {
 const openSelectedEngineDirectory = () => {
   if (selectedId.value == undefined)
     throw new Error("assert selectedId.value != undefined");
-  void store.dispatch("OPEN_ENGINE_DIRECTORY", { engineId: selectedId.value });
+  void store.actions.OPEN_ENGINE_DIRECTORY({ engineId: selectedId.value });
 };
 
 const restartSelectedEngine = () => {
   if (selectedId.value == undefined)
     throw new Error("assert selectedId.value != undefined");
-  void store.dispatch("RESTART_ENGINES", {
+  void store.actions.RESTART_ENGINES({
     engineIds: [selectedId.value],
   });
 };
 
 const requireReload = async (message: string) => {
-  const result = await store.dispatch("SHOW_WARNING_DIALOG", {
+  const result = await store.actions.SHOW_WARNING_DIALOG({
     title: "再読み込みが必要です",
     message: message,
     actionName: "再読み込み",
@@ -516,7 +517,7 @@ const requireReload = async (message: string) => {
   });
   toInitialState();
   if (result === "OK") {
-    void store.dispatch("CHECK_EDITED_AND_NOT_SAVE", {
+    void store.actions.CHECK_EDITED_AND_NOT_SAVE({
       closeOrReload: "reload",
     });
   }
@@ -534,8 +535,7 @@ const selectEngineDir = async () => {
       newEngineDirValidationState.value = null;
       return;
     }
-    newEngineDirValidationState.value = await store.dispatch(
-      "VALIDATE_ENGINE_DIR",
+    newEngineDirValidationState.value = await store.actions.VALIDATE_ENGINE_DIR(
       {
         engineDir: path,
       },

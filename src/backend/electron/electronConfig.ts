@@ -1,7 +1,7 @@
 import { join } from "path";
 import fs from "fs";
 import { app } from "electron";
-import { moveFile } from "move-file";
+import { writeFileSafely } from "./fileHelper";
 import { BaseConfigManager, Metadata } from "@/backend/common/ConfigManager";
 import { ConfigType } from "@/type/preload";
 
@@ -23,16 +23,7 @@ export class ElectronConfigManager extends BaseConfigManager {
   }
 
   protected async save(config: ConfigType & Metadata) {
-    // ファイル書き込みに失敗したときに設定が消えないように、tempファイル書き込み後上書き移動する
-    const temp_path = `${this.configPath}.tmp`;
-    await fs.promises.writeFile(
-      temp_path,
-      JSON.stringify(config, undefined, 2),
-    );
-
-    await moveFile(temp_path, this.configPath, {
-      overwrite: true,
-    });
+    writeFileSafely(this.configPath, JSON.stringify(config, undefined, 2));
   }
 
   private get configPath(): string {
