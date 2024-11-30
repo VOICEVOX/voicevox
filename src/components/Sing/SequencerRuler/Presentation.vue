@@ -2,7 +2,6 @@
   <div
     ref="sequencerRuler"
     class="sequencer-ruler"
-    :data-ui-locked="uiLocked"
     @click="onClick"
     @contextmenu="onContextMenu"
   >
@@ -355,6 +354,11 @@ const valueChanges = computed<ValueChange[]>(() => {
     });
 
   if (valueChangeTextStyle.value != undefined) {
+    // NOTE: テキストの幅を計算して、表示できるかどうかを判定する
+    //   full: 通常表示（120 4/4）
+    //   ellipsis: fullが入りきらないときに表示する（...）
+    //   hidden: ellipsisも入りきらないときに表示する（\u200b）
+
     const collapsedTextWidth =
       predictTextWidth("...", valueChangeTextStyle.value) + textPadding * 2;
     for (const [i, valueChange] of valueChanges.entries()) {
@@ -375,9 +379,7 @@ const valueChanges = computed<ValueChange[]>(() => {
       }
     }
   } else {
-    log.warn(
-      "dummyValueChangeTextElement is null. Cannot calculate text width.",
-    );
+    log.warn("valueChangeTextElement is null. Cannot calculate text width.");
   }
 
   return valueChanges;
@@ -563,7 +565,7 @@ const contextMenudata = computed<ContextMenuItemData[]>(
   font-weight: 700;
   fill: var(--scheme-color-on-surface-variant);
 
-  :not([data-ui-locked]) :where(&:hover, &[data-is-hovered="true"]) {
+  &:hover {
     cursor: pointer;
 
     text-decoration: underline;
