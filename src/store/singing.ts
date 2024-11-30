@@ -87,11 +87,17 @@ import {
   shouldPlayTracks,
   decibelToLinear,
   applyPitchEdit,
+  calcPhraseStartFrames,
+  calcPhraseEndFrames,
+  toEntirePhonemeTimings,
+  adjustPhonemeTimingsAndPhraseEndFrames,
+  phonemeTimingsToPhonemes,
 } from "@/sing/domain";
 import { getOverlappingNoteIds } from "@/sing/storeHelper";
 import {
   AnimationTimer,
   calculateHash,
+  createArray,
   createPromiseThatResolvesWhen,
   linearInterpolation,
   round,
@@ -103,8 +109,11 @@ import { getOrThrow } from "@/helpers/mapHelper";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { ufProjectToVoicevox } from "@/sing/utaformatixProject/toVoicevox";
 import { uuid4 } from "@/helpers/random";
-import { convertToWavFileData } from "@/sing/convertToWavFileData";
 import { generateWriteErrorMessage } from "@/helpers/fileHelper";
+import {
+  generateLabelFileData,
+  generateWavFileData,
+} from "@/sing/fileDataGenerator";
 import path from "@/helpers/path";
 import { showAlertDialog } from "@/components/Dialog/Dialog";
 
@@ -784,7 +793,9 @@ export const singingStoreState: SingingStoreState = {
   stopRenderingRequested: false,
   nowRendering: false,
   nowAudioExporting: false,
+  nowLabelExporting: false,
   cancellationOfAudioExportRequested: false,
+  cancellationOfLabelExportRequested: false,
   isSongSidebarOpen: false,
 };
 
@@ -2671,9 +2682,16 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       });
     },
   },
+
   SET_NOW_AUDIO_EXPORTING: {
     mutation(state, { nowAudioExporting }) {
       state.nowAudioExporting = nowAudioExporting;
+    },
+  },
+
+  SET_NOW_LABEL_EXPORTING: {
+    mutation(state, { nowLabelExporting }) {
+      state.nowLabelExporting = nowLabelExporting;
     },
   },
 
@@ -2681,6 +2699,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     mutation(state, { cancellationOfAudioExportRequested }) {
       state.cancellationOfAudioExportRequested =
         cancellationOfAudioExportRequested;
+    },
+  },
+
+  SET_CANCELLATION_OF_LABEL_EXPORT_REQUESTED: {
+    mutation(state, { cancellationOfLabelExportRequested }) {
+      state.cancellationOfLabelExportRequested =
+        cancellationOfLabelExportRequested;
     },
   },
 
@@ -2747,7 +2772,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             phraseSingingVoices,
           );
 
-          const fileData = convertToWavFileData(audioBuffer);
+          const fileData = generateWavFileData(audioBuffer);
 
           const result = await actions.EXPORT_FILE({
             filePath,
@@ -2874,7 +2899,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               singingVoiceCache,
             );
 
-            const fileData = convertToWavFileData(audioBuffer);
+            const fileData = generateWavFileData(audioBuffer);
 
             const result = await actions.EXPORT_FILE({
               filePath,
@@ -2898,6 +2923,199 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             cancellationOfAudioExportRequested: false,
           });
           mutations.SET_NOW_AUDIO_EXPORTING({ nowAudioExporting: false });
+        });
+      },
+    ),
+  },
+
+  EXPORT_LABEL_FILES: {
+    action: createUILockAction(
+      async ({ actions, mutations, state, getters }, { dirPath }) => {
+        const exportLabelFile = async () => {
+          if (state.nowPlaying) {
+            await actions.SING_STOP_AUDIO();
+          }
+
+          if (state.savingSetting.fixedExportEnabled) {
+            dirPath = state.savingSetting.fixedExportDir;
+          } else {
+            dirPath ??= await window.backend.showSaveDirectoryDialog({
+              title: "labファイルを保存",
+            });
+          }
+          if (!dirPath) {
+            return createArray(
+              state.tracks.size,
+              (): SaveResultObject => ({ result: "CANCELED", path: "" }),
+            );
+          }
+
+          if (state.nowRendering) {
+            await createPromiseThatResolvesWhen(() => {
+              return (
+                !state.nowRendering || state.cancellationOfLabelExportRequested
+              );
+            });
+            if (state.cancellationOfLabelExportRequested) {
+              return createArray(
+                state.tracks.size,
+                (): SaveResultObject => ({ result: "CANCELED", path: "" }),
+              );
+            }
+          }
+
+          const results: SaveResultObject[] = [];
+
+          for (const [i, trackId] of state.trackOrder.entries()) {
+            const track = getOrThrow(state.tracks, trackId);
+            if (!track.singer) {
+              continue;
+            }
+
+            const characterInfo = getters.CHARACTER_INFO(
+              track.singer.engineId,
+              track.singer.styleId,
+            );
+            if (!characterInfo) {
+              continue;
+            }
+
+            const style = characterInfo.metas.styles.find(
+              (style) => style.styleId === track.singer?.styleId,
+            );
+            if (style == undefined) {
+              throw new Error("assert style != undefined");
+            }
+
+            const styleName = style.styleName || DEFAULT_STYLE_NAME;
+            const projectName = getters.PROJECT_NAME ?? DEFAULT_PROJECT_NAME;
+
+            const trackFileName = buildSongTrackAudioFileNameFromRawData(
+              state.savingSetting.songTrackFileNamePattern,
+              {
+                characterName: characterInfo.metas.speakerName,
+                index: i,
+                styleName,
+                date: currentDateString(),
+                projectName,
+                trackName: track.name,
+              },
+            );
+            let filePath = path.join(dirPath, `${trackFileName}.lab`);
+            if (state.savingSetting.avoidOverwrite) {
+              let tail = 1;
+              const pathWithoutExt = filePath.slice(0, -4);
+              while (await window.backend.checkFileExists(filePath)) {
+                filePath = `${pathWithoutExt}[${tail}].lab`;
+                tail += 1;
+              }
+            }
+
+            const frameRate = state.editorFrameRate;
+            const phrases = [...state.phrases.values()]
+              .filter((value) => value.trackId === trackId)
+              .filter((value) => value.queryKey != undefined)
+              .toSorted((a, b) => a.startTime - b.startTime);
+
+            if (phrases.length === 0) {
+              continue;
+            }
+
+            const phraseQueries = phrases.map((value) => {
+              const phraseQuery =
+                value.queryKey != undefined
+                  ? state.phraseQueries.get(value.queryKey)
+                  : undefined;
+              if (phraseQuery == undefined) {
+                throw new Error("phraseQuery is undefined.");
+              }
+              return phraseQuery;
+            });
+            const phraseStartTimes = phrases.map((value) => value.startTime);
+
+            for (const phraseQuery of phraseQueries) {
+              // フレーズのクエリのフレームレートとエディターのフレームレートが一致しない場合はエラー
+              // TODO: 補間するようにする
+              if (phraseQuery.frameRate != frameRate) {
+                throw new Error(
+                  "The frame rate between the phrase query and the editor does not match.",
+                );
+              }
+            }
+
+            const phraseStartFrames = calcPhraseStartFrames(
+              phraseStartTimes,
+              frameRate,
+            );
+            const phraseEndFrames = calcPhraseEndFrames(
+              phraseStartFrames,
+              phraseQueries,
+            );
+
+            const phrasePhonemeSequences = phraseQueries.map((query) => {
+              return query.phonemes;
+            });
+            const entirePhonemeTimings = toEntirePhonemeTimings(
+              phrasePhonemeSequences,
+              phraseStartFrames,
+            );
+
+            // TODO: 音素タイミング編集データを取得して適用するようにする
+
+            adjustPhonemeTimingsAndPhraseEndFrames(
+              entirePhonemeTimings,
+              phraseStartFrames,
+              phraseEndFrames,
+            );
+
+            const entirePhonemes =
+              phonemeTimingsToPhonemes(entirePhonemeTimings);
+            const labFileData = await generateLabelFileData(
+              entirePhonemes,
+              frameRate,
+            );
+
+            try {
+              await window.backend
+                .writeFile({
+                  filePath,
+                  buffer: labFileData,
+                })
+                .then(getValueOrThrow);
+
+              results.push({ result: "SUCCESS", path: filePath });
+            } catch (e) {
+              logger.error("Failed to export file.", e);
+
+              if (e instanceof ResultError) {
+                results.push({
+                  result: "WRITE_ERROR",
+                  path: filePath,
+                  errorMessage: generateWriteErrorMessage(
+                    e as ResultError<string>,
+                  ),
+                });
+              } else {
+                results.push({
+                  result: "UNKNOWN_ERROR",
+                  path: filePath,
+                  errorMessage:
+                    (e instanceof Error ? e.message : String(e)) ||
+                    "不明なエラーが発生しました。",
+                });
+                break; // 想定外のエラーなので書き出しを中断
+              }
+            }
+          }
+          return results;
+        };
+
+        mutations.SET_NOW_LABEL_EXPORTING({ nowLabelExporting: true });
+        return exportLabelFile().finally(() => {
+          mutations.SET_CANCELLATION_OF_LABEL_EXPORT_REQUESTED({
+            cancellationOfLabelExportRequested: false,
+          });
+          mutations.SET_NOW_LABEL_EXPORTING({ nowLabelExporting: false });
         });
       },
     ),
@@ -2942,6 +3160,18 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       mutations.SET_CANCELLATION_OF_AUDIO_EXPORT_REQUESTED({
         cancellationOfAudioExportRequested: true,
+      });
+    },
+  },
+
+  CANCEL_LABEL_EXPORT: {
+    async action({ state, mutations }) {
+      if (!state.nowLabelExporting) {
+        logger.warn("CANCEL_LAB_EXPORT on !nowLabelExporting");
+        return;
+      }
+      mutations.SET_CANCELLATION_OF_LABEL_EXPORT_REQUESTED({
+        cancellationOfLabelExportRequested: true,
       });
     },
   },

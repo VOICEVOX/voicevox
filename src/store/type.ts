@@ -877,7 +877,9 @@ export type SingingStoreState = {
   stopRenderingRequested: boolean;
   nowRendering: boolean;
   nowAudioExporting: boolean;
+  nowLabelExporting: boolean;
   cancellationOfAudioExportRequested: boolean;
+  cancellationOfLabelExportRequested: boolean;
   isSongSidebarOpen: boolean;
 };
 
@@ -1118,6 +1120,10 @@ export type SingingStoreTypes = {
     action(payload: { isDrag: boolean }): void;
   };
 
+  EXPORT_LABEL_FILES: {
+    action(payload: { dirPath?: string }): SaveResultObject[];
+  };
+
   EXPORT_AUDIO_FILE: {
     action(payload: {
       filePath?: string;
@@ -1140,6 +1146,10 @@ export type SingingStoreTypes = {
   };
 
   CANCEL_AUDIO_EXPORT: {
+    action(): void;
+  };
+
+  CANCEL_LABEL_EXPORT: {
     action(): void;
   };
 
@@ -1209,8 +1219,16 @@ export type SingingStoreTypes = {
     mutation: { nowAudioExporting: boolean };
   };
 
+  SET_NOW_LABEL_EXPORTING: {
+    mutation: { nowLabelExporting: boolean };
+  };
+
   SET_CANCELLATION_OF_AUDIO_EXPORT_REQUESTED: {
     mutation: { cancellationOfAudioExportRequested: boolean };
+  };
+
+  SET_CANCELLATION_OF_LABEL_EXPORT_REQUESTED: {
+    mutation: { cancellationOfLabelExportRequested: boolean };
   };
 
   RENDER: {

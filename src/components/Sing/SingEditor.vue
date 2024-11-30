@@ -2,22 +2,8 @@
   <ToolBar />
   <div class="sing-main" :class="{ 'sidebar-open': isSidebarOpen }">
     <EngineStartupOverlay :isCompletedInitialStartup />
-    <div v-if="nowAudioExporting" class="exporting-dialog">
-      <div>
-        <QSpinner color="primary" size="2.5rem" />
-        <div class="q-mt-xs">
-          {{ nowRendering ? "レンダリング中・・・" : "音声を書き出し中・・・" }}
-        </div>
-        <QBtn
-          v-if="nowRendering"
-          padding="xs md"
-          label="音声の書き出しをキャンセル"
-          class="q-mt-sm"
-          outline
-          @click="cancelExport"
-        />
-      </div>
-    </div>
+    <AudioExportOverlay />
+    <LabelExportOverlay />
 
     <QSplitter
       :modelValue="isSidebarOpen ? sidebarWidth : 0"
@@ -46,6 +32,8 @@ import ToolBar from "./ToolBar/ToolBar.vue";
 import ScoreSequencer from "./ScoreSequencer.vue";
 import SideBar from "./SideBar/SideBar.vue";
 import EngineStartupOverlay from "@/components/EngineStartupOverlay.vue";
+import AudioExportOverlay from "@/components/Sing/AudioExportOverlay.vue";
+import LabelExportOverlay from "@/components/Sing/LabelExportOverlay.vue";
 import { useStore } from "@/store";
 import onetimeWatch from "@/helpers/onetimeWatch";
 import {
@@ -79,17 +67,6 @@ watch(
     }
   },
 );
-
-const nowRendering = computed(() => {
-  return store.state.nowRendering;
-});
-const nowAudioExporting = computed(() => {
-  return store.state.nowAudioExporting;
-});
-
-const cancelExport = () => {
-  void store.actions.CANCEL_AUDIO_EXPORT();
-};
 
 const isCompletedInitialStartup = ref(false);
 // TODO: Vueっぽくないので解体する
