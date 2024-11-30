@@ -157,23 +157,21 @@
       trackSize="2px"
       @update:modelValue="setZoomY"
     />
-    <ContextMenu
-      v-if="editTarget === 'NOTE'"
-      ref="contextMenu"
-      :menudata="contextMenuData"
-    />
+    <ContextMenu ref="contextMenu" :menudata="contextMenuData" />
     <SequencerToolPalette
       :editTarget
-      :selectedNoteTool
-      :selectedPitchTool
-      @update:selectedNoteTool="
+      :sequencerNoteTool
+      :sequencerPitchTool
+      @update:sequencerNoteTool="
         (value) =>
-          store.dispatch('SET_SELECTED_NOTE_TOOL', { selectedNoteTool: value })
+          store.dispatch('SET_SEQUENCER_NOTE_TOOL', {
+            sequencerNoteTool: value,
+          })
       "
-      @update:selectedPitchTool="
+      @update:sequencerPitchTool="
         (value) =>
-          store.dispatch('SET_SELECTED_PITCH_TOOL', {
-            selectedPitchTool: value,
+          store.dispatch('SET_SEQUENCER_PITCH_TOOL', {
+            sequencerPitchTool: value,
           })
       "
     />
@@ -457,8 +455,8 @@ interface EditModeContext {
   readonly shiftKey: boolean;
   readonly nowPreviewing: boolean;
   readonly editTarget: SequencerEditTarget;
-  readonly selectedNoteTool: NoteEditTool;
-  readonly selectedPitchTool: PitchEditTool;
+  readonly sequencerNoteTool: NoteEditTool;
+  readonly sequencerPitchTool: PitchEditTool;
   readonly isSelfEventTarget?: boolean;
   readonly mouseButton?: MouseButton;
   readonly editingLyricNoteId?: NoteId;
@@ -467,14 +465,14 @@ interface EditModeContext {
 // 編集対象
 const editTarget = computed(() => store.state.sequencerEditTarget);
 // 選択中のノート編集ツール
-const selectedNoteTool = computed(() => state.selectedNoteTool);
-watch(selectedNoteTool, (newTool) => {
-  void store.actions.SET_SELECTED_NOTE_TOOL({ selectedNoteTool: newTool });
+const sequencerNoteTool = computed(() => state.sequencerNoteTool);
+watch(sequencerNoteTool, (newTool) => {
+  void store.actions.SET_SEQUENCER_NOTE_TOOL({ sequencerNoteTool: newTool });
 });
 // 選択中のピッチ編集ツール
-const selectedPitchTool = computed(() => state.selectedPitchTool);
-watch(selectedPitchTool, (newTool) => {
-  void store.actions.SET_SELECTED_PITCH_TOOL({ selectedPitchTool: newTool });
+const sequencerPitchTool = computed(() => state.sequencerPitchTool);
+watch(sequencerPitchTool, (newTool) => {
+  void store.actions.SET_SEQUENCER_PITCH_TOOL({ sequencerPitchTool: newTool });
 });
 
 /**
@@ -502,7 +500,7 @@ const resolveMouseDownBehavior = (
       if (shiftKey.value) return "START_RECT_SELECT";
 
       // 編集優先ツールの場合
-      if (selectedNoteTool.value === "EDIT_FIRST") {
+      if (sequencerNoteTool.value === "EDIT_FIRST") {
         // コントロールキーが押されている場合は全選択解除
         if (ctrlKey.value) {
           return "DESELECT_ALL";
@@ -511,7 +509,7 @@ const resolveMouseDownBehavior = (
       }
 
       // 選択優先ツールの場合
-      if (selectedNoteTool.value === "SELECT_FIRST") {
+      if (sequencerNoteTool.value === "SELECT_FIRST") {
         // 矩形選択開始
         return "START_RECT_SELECT";
       }
@@ -526,7 +524,7 @@ const resolveMouseDownBehavior = (
     if (mouseButton !== "LEFT_BUTTON") return "IGNORE";
 
     // ピッチ削除ツールが選択されているかコントロールキーが押されている場合はピッチ削除
-    if (selectedPitchTool.value === "ERASE" || ctrlKey.value) {
+    if (sequencerPitchTool.value === "ERASE" || ctrlKey.value) {
       return "ERASE_PITCH";
     }
 
@@ -555,7 +553,7 @@ const resolveDoubleClickBehavior = (
 
     // 選択優先ツールではノート追加
     if (mouseButton === "LEFT_BUTTON") {
-      if (selectedNoteTool.value === "SELECT_FIRST") {
+      if (sequencerNoteTool.value === "SELECT_FIRST") {
         return "ADD_NOTE";
       }
     }
@@ -578,22 +576,22 @@ watch(
     }
 
     // 現在のツールがピッチ描画ツールの場合
-    if (selectedPitchTool.value === "DRAW") {
+    if (sequencerPitchTool.value === "DRAW") {
       // Ctrlキーが押されたときはピッチ削除ツールに変更
       if (ctrlKey.value) {
-        void store.actions.SET_SELECTED_PITCH_TOOL({
-          selectedPitchTool: "ERASE",
+        void store.actions.SET_SEQUENCER_PITCH_TOOL({
+          sequencerPitchTool: "ERASE",
         });
         toolChangedByCtrl.value = true;
       }
     }
 
     // 現在のツールがピッチ削除ツールかつCtrlキーが離されたとき
-    if (selectedPitchTool.value === "ERASE" && toolChangedByCtrl.value) {
+    if (sequencerPitchTool.value === "ERASE" && toolChangedByCtrl.value) {
       // ピッチ描画ツールに戻す
       if (!ctrlKey.value) {
-        void store.actions.SET_SELECTED_PITCH_TOOL({
-          selectedPitchTool: "DRAW",
+        void store.actions.SET_SEQUENCER_PITCH_TOOL({
+          sequencerPitchTool: "DRAW",
         });
         toolChangedByCtrl.value = false;
       }
@@ -637,7 +635,7 @@ const resolveCursorBehavior = (): CursorState => {
       return "CROSSHAIR";
     }
     // ノート編集ツールが選択されておりCtrlキーが押されていない場合は描画カーソル
-    if (selectedNoteTool.value === "EDIT_FIRST" && !ctrlKey.value) {
+    if (sequencerNoteTool.value === "EDIT_FIRST" && !ctrlKey.value) {
       return "DRAW";
     }
     // それ以外は未設定
@@ -646,13 +644,13 @@ const resolveCursorBehavior = (): CursorState => {
 
   // ピッチ編集の場合
   if (editTarget.value === "PITCH") {
-    // Ctrlキーが押されていたもしくは削除ツールが選択されていたら消しゴムカーソル
-    if (ctrlKey.value || selectedPitchTool.value === "ERASE") {
+    // Ctrlキーが押されていたもしくは削除ツールが選択されていたら消しゴ��カーソル
+    if (ctrlKey.value || sequencerPitchTool.value === "ERASE") {
       return "ERASE";
     }
 
     // 描画ツールが選択されていたら描画カーソル
-    if (selectedPitchTool.value === "DRAW") {
+    if (sequencerPitchTool.value === "DRAW") {
       return "DRAW";
     }
   }
@@ -687,8 +685,8 @@ watch(
     shiftKey,
     nowPreviewing,
     editTarget,
-    selectedNoteTool,
-    selectedPitchTool,
+    sequencerNoteTool,
+    sequencerPitchTool,
     previewMode,
   ],
   () => {
@@ -1278,8 +1276,8 @@ const onMouseDown = (event: MouseEvent) => {
     shiftKey: shiftKey.value,
     nowPreviewing: nowPreviewing.value,
     editTarget: editTarget.value,
-    selectedNoteTool: selectedNoteTool.value,
-    selectedPitchTool: selectedPitchTool.value,
+    sequencerNoteTool: sequencerNoteTool.value,
+    sequencerPitchTool: sequencerPitchTool.value,
     isSelfEventTarget: isSelfEventTarget(event),
     mouseButton: getButton(event),
     editingLyricNoteId: state.editingLyricNoteId,
@@ -1362,8 +1360,8 @@ const onDoubleClick = (event: MouseEvent) => {
     shiftKey: shiftKey.value,
     nowPreviewing: nowPreviewing.value,
     editTarget: editTarget.value,
-    selectedNoteTool: selectedNoteTool.value,
-    selectedPitchTool: selectedPitchTool.value,
+    sequencerNoteTool: sequencerNoteTool.value,
+    sequencerPitchTool: sequencerPitchTool.value,
     isSelfEventTarget: isSelfEventTarget(event),
     mouseButton: getButton(event),
   };
@@ -1784,7 +1782,61 @@ registerHotkeyWithCleanup({
 const contextMenu = ref<InstanceType<typeof ContextMenu>>();
 
 const contextMenuData = computed<ContextMenuItemData[]>(() => {
-  return [
+  // NOTE: 選択中のツールにはなんらかのアクティブな表示をしたほうがよいが、
+  // activeなどの状態がContextMenuItemにはない+iconは画像なようなため状態表現はなし
+  const toolMenuItems: ContextMenuItemData[] =
+    editTarget.value === "NOTE"
+      ? [
+          {
+            type: "button",
+            label: "選択優先ツール",
+            onClick: () => {
+              contextMenu.value?.hide();
+              void store.actions.SET_SEQUENCER_NOTE_TOOL({
+                sequencerNoteTool: "SELECT_FIRST",
+              });
+            },
+            disableWhenUiLocked: true,
+          },
+          {
+            type: "button",
+            label: "編集優先ツール",
+            onClick: () => {
+              contextMenu.value?.hide();
+              void store.actions.SET_SEQUENCER_NOTE_TOOL({
+                sequencerNoteTool: "EDIT_FIRST",
+              });
+            },
+            disableWhenUiLocked: true,
+          },
+          { type: "separator" },
+        ]
+      : [
+          {
+            type: "button",
+            label: "ピッチ描画ツール",
+            onClick: () => {
+              contextMenu.value?.hide();
+              void store.actions.SET_SEQUENCER_PITCH_TOOL({
+                sequencerPitchTool: "DRAW",
+              });
+            },
+            disableWhenUiLocked: true,
+          },
+          {
+            type: "button",
+            label: "ピッチ削除ツール",
+            onClick: () => {
+              contextMenu.value?.hide();
+              void store.actions.SET_SEQUENCER_PITCH_TOOL({
+                sequencerPitchTool: "ERASE",
+              });
+            },
+            disableWhenUiLocked: true,
+          },
+        ];
+
+  const baseMenuItems: ContextMenuItemData[] = [
     {
       type: "button",
       label: "コピー",
@@ -1859,6 +1911,10 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
       disableWhenUiLocked: true,
     },
   ];
+
+  return editTarget.value === "NOTE"
+    ? [...toolMenuItems, ...baseMenuItems]
+    : toolMenuItems;
 });
 </script>
 

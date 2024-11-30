@@ -879,8 +879,8 @@ export type SingingStoreState = {
   sequencerZoomY: number;
   sequencerSnapType: number;
   sequencerEditTarget: SequencerEditTarget;
-  selectedNoteTool: NoteEditTool;
-  selectedPitchTool: PitchEditTool;
+  sequencerNoteTool: NoteEditTool;
+  sequencerPitchTool: PitchEditTool;
   _selectedNoteIds: Set<NoteId>;
   editingLyricNoteId?: NoteId;
   nowPlaying: boolean;
@@ -1130,14 +1130,14 @@ export type SingingStoreTypes = {
     action(payload: { editTarget: SequencerEditTarget }): void;
   };
 
-  SET_SELECTED_NOTE_TOOL: {
-    mutation: { selectedNoteTool: NoteEditTool };
-    action(payload: { selectedNoteTool: NoteEditTool }): void;
+  SET_SEQUENCER_NOTE_TOOL: {
+    mutation: { sequencerNoteTool: NoteEditTool };
+    action(payload: { sequencerNoteTool: NoteEditTool }): void;
   };
 
-  SET_SELECTED_PITCH_TOOL: {
-    mutation: { selectedPitchTool: PitchEditTool };
-    action(payload: { selectedPitchTool: PitchEditTool }): void;
+  SET_SEQUENCER_PITCH_TOOL: {
+    mutation: { sequencerPitchTool: PitchEditTool };
+    action(payload: { sequencerPitchTool: PitchEditTool }): void;
   };
 
   SET_IS_DRAG: {

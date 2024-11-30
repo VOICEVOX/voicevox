@@ -3,8 +3,8 @@
     <QBtn
       flat
       round
-      :color="selectedNoteTool === 'SELECT_FIRST' ? 'primary' : ''"
-      @click="$emit('update:selectedNoteTool', 'SELECT_FIRST')"
+      :color="sequencerNoteTool === 'SELECT_FIRST' ? 'primary' : ''"
+      @click="$emit('update:sequencerNoteTool', 'SELECT_FIRST')"
     >
       <i class="material-symbols-outlined">arrow_selector_tool</i>
       <QTooltip
@@ -21,8 +21,8 @@
     <QBtn
       flat
       round
-      :color="selectedNoteTool === 'EDIT_FIRST' ? 'primary' : ''"
-      @click="$emit('update:selectedNoteTool', 'EDIT_FIRST')"
+      :color="sequencerNoteTool === 'EDIT_FIRST' ? 'primary' : ''"
+      @click="$emit('update:sequencerNoteTool', 'EDIT_FIRST')"
     >
       <i class="material-symbols-outlined">stylus</i>
       <QTooltip
@@ -41,8 +41,8 @@
     <QBtn
       flat
       round
-      :color="selectedPitchTool === 'DRAW' ? 'primary' : ''"
-      @click="$emit('update:selectedPitchTool', 'DRAW')"
+      :color="sequencerPitchTool === 'DRAW' ? 'primary' : ''"
+      @click="$emit('update:sequencerPitchTool', 'DRAW')"
     >
       <i class="material-symbols-outlined">stylus</i>
       <QTooltip
@@ -59,8 +59,8 @@
     <QBtn
       flat
       round
-      :color="selectedPitchTool === 'ERASE' ? 'primary' : ''"
-      @click="$emit('update:selectedPitchTool', 'ERASE')"
+      :color="sequencerPitchTool === 'ERASE' ? 'primary' : ''"
+      @click="$emit('update:sequencerPitchTool', 'ERASE')"
     >
       <i class="material-symbols-outlined">ink_eraser</i>
       <QTooltip
@@ -82,12 +82,12 @@ import { SequencerEditTarget, NoteEditTool, PitchEditTool } from "@/store/type";
 
 defineProps<{
   editTarget: SequencerEditTarget;
-  selectedNoteTool: NoteEditTool;
-  selectedPitchTool: PitchEditTool;
+  sequencerNoteTool: NoteEditTool;
+  sequencerPitchTool: PitchEditTool;
 }>();
 defineEmits<{
-  (event: "update:selectedNoteTool", value: NoteEditTool): void;
-  (event: "update:selectedPitchTool", value: PitchEditTool): void;
+  (event: "update:sequencerNoteTool", value: NoteEditTool): void;
+  (event: "update:sequencerPitchTool", value: PitchEditTool): void;
 }>();
 </script>
 
