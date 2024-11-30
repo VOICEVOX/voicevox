@@ -226,7 +226,7 @@ jobs:
       - name: Define Code Signing Envs
         if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'
         run: |
-          bash build/codesign_setup.bash
+          bash tools/codesign_setup.bash
           THUMBPRINT="$(head -n 1 $THUMBPRINT_PATH)"
           SIGNTOOL_PATH="$(head -n 1 $SIGNTOOL_PATH_PATH)"
           echo "::add-mask::$THUMBPRINT"
@@ -256,7 +256,7 @@ jobs:
       - name: Reset Code Signing Envs
         if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'
         run: |
-          bash build/codesign_cleanup.bash
+          bash tools/codesign_cleanup.bash
           echo 'WIN_CERTIFICATE_SHA1=' >> $GITHUB_ENV
           echo 'WIN_SIGNING_HASH_ALGORITHMS=' >> $GITHUB_ENV
           echo 'SIGNTOOL_PATH=' >> $GITHUB_ENV
@@ -390,7 +390,7 @@ jobs:
       - name: Define Code Signing Envs
         if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'
         run: |
-          bash build/codesign_setup.bash
+          bash tools/codesign_setup.bash
           THUMBPRINT="$(head -n 1 $THUMBPRINT_PATH)"
           SIGNTOOL_PATH="$(head -n 1 $SIGNTOOL_PATH_PATH)"
           echo "::add-mask::$THUMBPRINT"
@@ -425,7 +425,7 @@ jobs:
       - name: Reset Code Signing Envs
         if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'
         run: |
-          bash build/codesign_cleanup.bash
+          bash tools/codesign_cleanup.bash
           echo 'WIN_CERTIFICATE_SHA1=' >> $GITHUB_ENV
           echo 'WIN_SIGNING_HASH_ALGORITHMS=' >> $GITHUB_ENV
           echo 'SIGNTOOL_PATH=' >> $GITHUB_ENV
