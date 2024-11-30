@@ -1713,7 +1713,6 @@ onActivated(() => {
   document.addEventListener("keydown", handleKeydown);
   window.addEventListener("mousemove", onMouseMove);
   window.addEventListener("mouseup", onMouseUp);
-  resolveCursorBehavior();
 });
 
 // リスナー解除
