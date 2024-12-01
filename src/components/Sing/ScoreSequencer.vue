@@ -445,7 +445,7 @@ const showGuideLine = ref(true);
 const guideLineX = ref(0);
 
 // 編集モード
-// ステートマシン実装後に削除する
+// NOTE: ステートマシン実装後に削除する
 // 議論 https://github.com/VOICEVOX/voicevox/pull/2367#discussion_r1853262865
 
 // 編集モードの外部コンテキスト
