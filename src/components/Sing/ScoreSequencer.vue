@@ -1279,7 +1279,7 @@ const onMouseDown = (event: MouseEvent) => {
     isSelfEventTarget: isSelfEventTarget(event),
     mouseButton: getButton(event),
     editingLyricNoteId: state.editingLyricNoteId,
-  };
+  } satisfies EditModeContext;
   // マウスダウン時の振る舞い
   const behavior = resolveMouseDownBehavior(mouseDownContext);
 
