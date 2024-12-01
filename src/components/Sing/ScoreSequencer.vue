@@ -642,7 +642,7 @@ const resolveCursorBehavior = (): CursorState => {
 
   // ピッチ編集の場合
   if (editTarget.value === "PITCH") {
-    // Ctrlキーが押されていたもしくは削除ツールが選択されていたら消しゴ��カーソル
+    // Ctrlキーが押されていたもしくは削除ツールが選択されていたら消しゴムカーソル
     if (ctrlKey.value || sequencerPitchTool.value === "ERASE") {
       return "ERASE";
     }
