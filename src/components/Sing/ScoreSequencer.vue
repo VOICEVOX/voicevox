@@ -600,8 +600,7 @@ watch(
 );
 
 // カーソルの状態
-// TODO: useCursorStateとして実装していたものをコピペ
-// ステートマシン実装後に削除する
+// TODO: ステートマシン実装後に削除する
 // 議論 https://github.com/VOICEVOX/voicevox/pull/2367#discussion_r1853262865
 
 /**
