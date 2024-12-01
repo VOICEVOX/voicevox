@@ -468,7 +468,7 @@ const sequencerPitchTool = computed(() => state.sequencerPitchTool);
  * マウスダウン時の振る舞いを判定する
  * 条件の判定のみを行い、実際の処理は呼び出し側で行う
  */
-const deriveMouseDownBehavior = (
+const determineMouseDownBehavior = (
   context: EditModeContext,
 ): MouseDownBehavior => {
   const { isSelfEventTarget, mouseButton, editingLyricNoteId } = context;
@@ -527,7 +527,7 @@ const deriveMouseDownBehavior = (
 /**
  * ダブルクリック時の振る舞いを判定する
  */
-const deriveDoubleClickBehavior = (
+const determineDoubleClickBehavior = (
   context: EditModeContext,
 ): MouseDoubleClickBehavior => {
   const { isSelfEventTarget, mouseButton } = context;
@@ -592,7 +592,7 @@ watch([ctrlKey], () => {
 /**
  * カーソルの状態を関連するコンテキストから取得する
  */
-const deriveCursorBehavior = (): CursorState => {
+const determineCursorBehavior = (): CursorState => {
   // プレビューの場合
   if (nowPreviewing.value && previewMode.value !== "IDLE") {
     switch (previewMode.value) {
@@ -660,7 +660,7 @@ const cursorClass = computed(() => {
 });
 
 // カーソルの状態
-const cursorState = computed(() => deriveCursorBehavior());
+const cursorState = computed(() => determineCursorBehavior());
 
 const previewAdd = () => {
   const cursorBaseX = (scrollX.value + cursorX.value) / zoomX.value;
@@ -1250,7 +1250,7 @@ const onMouseDown = (event: MouseEvent) => {
     editingLyricNoteId: state.editingLyricNoteId,
   } satisfies EditModeContext;
   // マウスダウン時の振る舞い
-  const behavior = deriveMouseDownBehavior(mouseDownContext);
+  const behavior = determineMouseDownBehavior(mouseDownContext);
 
   switch (behavior) {
     case "IGNORE":
@@ -1333,7 +1333,7 @@ const onDoubleClick = (event: MouseEvent) => {
     mouseButton: getButton(event),
   };
 
-  const behavior = deriveDoubleClickBehavior(mouseDoubleClickContext);
+  const behavior = determineDoubleClickBehavior(mouseDoubleClickContext);
 
   // 振る舞いごとの処理
   switch (behavior) {
