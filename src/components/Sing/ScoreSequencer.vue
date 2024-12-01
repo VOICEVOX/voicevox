@@ -465,14 +465,8 @@ interface EditModeContext {
 const editTarget = computed(() => store.state.sequencerEditTarget);
 // 選択中のノート編集ツール
 const sequencerNoteTool = computed(() => state.sequencerNoteTool);
-watch(sequencerNoteTool, (newTool) => {
-  void store.actions.SET_SEQUENCER_NOTE_TOOL({ sequencerNoteTool: newTool });
-});
 // 選択中のピッチ編集ツール
 const sequencerPitchTool = computed(() => state.sequencerPitchTool);
-watch(sequencerPitchTool, (newTool) => {
-  void store.actions.SET_SEQUENCER_PITCH_TOOL({ sequencerPitchTool: newTool });
-});
 
 /**
  * マウスダウン時の振る舞いを判定する
