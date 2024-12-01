@@ -84,10 +84,6 @@
       :offsetX="scrollX"
       :offsetY="scrollY"
       :previewPitchEdit
-      :nowPreviewing
-      :editTarget
-      :previewMode
-      :cursorClass
     />
     <div
       class="sequencer-overlay"
@@ -466,20 +462,14 @@ interface EditModeContext {
 const editTarget = computed(() => store.state.sequencerEditTarget);
 // 選択中のノート編集ツール
 const sequencerNoteTool = computed(() => state.sequencerNoteTool);
-watch(sequencerNoteTool, (newTool) => {
-  void store.actions.SET_SEQUENCER_NOTE_TOOL({ sequencerNoteTool: newTool });
-});
 // 選択中のピッチ編集ツール
 const sequencerPitchTool = computed(() => state.sequencerPitchTool);
-watch(sequencerPitchTool, (newTool) => {
-  void store.actions.SET_SEQUENCER_PITCH_TOOL({ sequencerPitchTool: newTool });
-});
 
 /**
  * マウスダウン時の振る舞いを判定する
  * 条件の判定のみを行い、実際の処理は呼び出し側で行う
  */
-const resolveMouseDownBehavior = (
+const deriveMouseDownBehavior = (
   context: EditModeContext,
 ): MouseDownBehavior => {
   const { isSelfEventTarget, mouseButton, editingLyricNoteId } = context;
@@ -538,7 +528,7 @@ const resolveMouseDownBehavior = (
 /**
  * ダブルクリック時の振る舞いを判定する
  */
-const resolveDoubleClickBehavior = (
+const deriveDoubleClickBehavior = (
   context: EditModeContext,
 ): MouseDoubleClickBehavior => {
   const { isSelfEventTarget, mouseButton } = context;
@@ -567,38 +557,34 @@ const resolveDoubleClickBehavior = (
 const toolChangedByCtrl = ref(false);
 
 // ピッチ編集モードにおいてCtrlキーが押されたときにピッチツールを消しゴムツールにする
-watch(
-  [ctrlKey],
-  () => {
-    // ピッチ編集モードでない場合は無視
-    if (editTarget.value !== "PITCH") {
-      return;
-    }
+watch([ctrlKey], () => {
+  // ピッチ編集モードでない場合は無視
+  if (editTarget.value !== "PITCH") {
+    return;
+  }
 
-    // 現在のツールがピッチ描画ツールの場合
-    if (sequencerPitchTool.value === "DRAW") {
-      // Ctrlキーが押されたときはピッチ削除ツールに変更
-      if (ctrlKey.value) {
-        void store.actions.SET_SEQUENCER_PITCH_TOOL({
-          sequencerPitchTool: "ERASE",
-        });
-        toolChangedByCtrl.value = true;
-      }
+  // 現在のツールがピッチ描画ツールの場合
+  if (sequencerPitchTool.value === "DRAW") {
+    // Ctrlキーが押されたときはピッチ削除ツールに変更
+    if (ctrlKey.value) {
+      void store.actions.SET_SEQUENCER_PITCH_TOOL({
+        sequencerPitchTool: "ERASE",
+      });
+      toolChangedByCtrl.value = true;
     }
+  }
 
-    // 現在のツールがピッチ削除ツールかつCtrlキーが離されたとき
-    if (sequencerPitchTool.value === "ERASE" && toolChangedByCtrl.value) {
-      // ピッチ描画ツールに戻す
-      if (!ctrlKey.value) {
-        void store.actions.SET_SEQUENCER_PITCH_TOOL({
-          sequencerPitchTool: "DRAW",
-        });
-        toolChangedByCtrl.value = false;
-      }
+  // 現在のツールがピッチ削除ツールかつCtrlキーが離されたとき
+  if (sequencerPitchTool.value === "ERASE" && toolChangedByCtrl.value) {
+    // ピッチ描画ツールに戻す
+    if (!ctrlKey.value) {
+      void store.actions.SET_SEQUENCER_PITCH_TOOL({
+        sequencerPitchTool: "DRAW",
+      });
+      toolChangedByCtrl.value = false;
     }
-  },
-  { immediate: true },
-);
+  }
+});
 
 // カーソルの状態
 // TODO: useCursorStateとして実装していたものをコピペ
@@ -608,7 +594,7 @@ watch(
 /**
  * カーソルの状態を関連するコンテキストから取得する
  */
-const resolveCursorBehavior = (): CursorState => {
+const deriveCursorBehavior = (): CursorState => {
   // プレビューの場合
   if (nowPreviewing.value && previewMode.value !== "IDLE") {
     switch (previewMode.value) {
@@ -676,24 +662,7 @@ const cursorClass = computed(() => {
 });
 
 // カーソルの状態
-const cursorState = ref<CursorState>(resolveCursorBehavior());
-
-// カーソルに関連するコンテキストが更新されたらカーソルの状態を変更
-watch(
-  [
-    ctrlKey,
-    shiftKey,
-    nowPreviewing,
-    editTarget,
-    sequencerNoteTool,
-    sequencerPitchTool,
-    previewMode,
-  ],
-  () => {
-    cursorState.value = resolveCursorBehavior();
-  },
-  { immediate: true },
-);
+const cursorState = computed(() => deriveCursorBehavior());
 
 const previewAdd = () => {
   const cursorBaseX = (scrollX.value + cursorX.value) / zoomX.value;
@@ -1283,7 +1252,7 @@ const onMouseDown = (event: MouseEvent) => {
     editingLyricNoteId: state.editingLyricNoteId,
   };
   // マウスダウン時の振る舞い
-  const behavior = resolveMouseDownBehavior(mouseDownContext);
+  const behavior = deriveMouseDownBehavior(mouseDownContext);
 
   switch (behavior) {
     case "IGNORE":
@@ -1366,7 +1335,7 @@ const onDoubleClick = (event: MouseEvent) => {
     mouseButton: getButton(event),
   };
 
-  const behavior = resolveDoubleClickBehavior(mouseDoubleClickContext);
+  const behavior = deriveDoubleClickBehavior(mouseDoubleClickContext);
 
   // 振る舞いごとの処理
   switch (behavior) {
@@ -1795,7 +1764,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
                 sequencerNoteTool: "SELECT_FIRST",
               });
             },
-            disableWhenUiLocked: true,
+            disableWhenUiLocked: false,
           },
           {
             type: "button",
@@ -1806,7 +1775,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
                 sequencerNoteTool: "EDIT_FIRST",
               });
             },
-            disableWhenUiLocked: true,
+            disableWhenUiLocked: false,
           },
           { type: "separator" },
         ]
@@ -1820,7 +1789,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
                 sequencerPitchTool: "DRAW",
               });
             },
-            disableWhenUiLocked: true,
+            disableWhenUiLocked: false,
           },
           {
             type: "button",
@@ -1831,7 +1800,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
                 sequencerPitchTool: "ERASE",
               });
             },
-            disableWhenUiLocked: true,
+            disableWhenUiLocked: false,
           },
         ];
 

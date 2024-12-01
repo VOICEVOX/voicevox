@@ -840,15 +840,12 @@ export const PhraseKey = (id: string): PhraseKey => phraseKeySchema.parse(id);
 
 // 編集対象 ノート or ピッチ
 // ボリュームを足すのであれば"VOLUME"を追加する
-export const sequencerEditTargetSchema = z.enum(["NOTE", "PITCH"]);
-export type SequencerEditTarget = z.infer<typeof sequencerEditTargetSchema>;
+export type SequencerEditTarget = "NOTE" | "PITCH";
 
 // ノート編集ツール
-export const noteEditToolSchema = z.enum(["SELECT_FIRST", "EDIT_FIRST"]);
-export type NoteEditTool = z.infer<typeof noteEditToolSchema>;
+export type NoteEditTool = "SELECT_FIRST" | "EDIT_FIRST";
 // ピッチ編集ツール
-export const pitchEditToolSchema = z.enum(["DRAW", "ERASE"]);
-export type PitchEditTool = z.infer<typeof pitchEditToolSchema>;
+export type PitchEditTool = "DRAW" | "ERASE";
 
 export type TrackParameters = {
   gain: boolean;
