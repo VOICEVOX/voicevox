@@ -441,8 +441,7 @@ const showGuideLine = ref(true);
 const guideLineX = ref(0);
 
 // 編集モード
-// TODO: useEditModeとして実装していたものをコピぺ
-// ステートマシン実装後に削除する
+// NOTE: ステートマシン実装後に削除する
 // 議論 https://github.com/VOICEVOX/voicevox/pull/2367#discussion_r1853262865
 
 // 編集モードの外部コンテキスト
@@ -587,8 +586,7 @@ watch([ctrlKey], () => {
 });
 
 // カーソルの状態
-// TODO: useCursorStateとして実装していたものをコピペ
-// ステートマシン実装後に削除する
+// TODO: ステートマシン実装後に削除する
 // 議論 https://github.com/VOICEVOX/voicevox/pull/2367#discussion_r1853262865
 
 /**
@@ -630,7 +628,7 @@ const deriveCursorBehavior = (): CursorState => {
 
   // ピッチ編集の場合
   if (editTarget.value === "PITCH") {
-    // Ctrlキーが押されていたもしくは削除ツールが選択されていたら消しゴ��カーソル
+    // Ctrlキーが押されていたもしくは削除ツールが選択されていたら消しゴムカーソル
     if (ctrlKey.value || sequencerPitchTool.value === "ERASE") {
       return "ERASE";
     }
@@ -1250,7 +1248,7 @@ const onMouseDown = (event: MouseEvent) => {
     isSelfEventTarget: isSelfEventTarget(event),
     mouseButton: getButton(event),
     editingLyricNoteId: state.editingLyricNoteId,
-  };
+  } satisfies EditModeContext;
   // マウスダウン時の振る舞い
   const behavior = deriveMouseDownBehavior(mouseDownContext);
 
