@@ -199,7 +199,11 @@ jobs:
             git apply --allow-empty $patch
             rm $patch
           done
-          cat patches/removed-*.txt | xargs git rm
+          if [ -s patches/removed-*.txt ]; then
+            cat patches/removed-*.txt | xargs git rm
+          else
+            echo "No files to remove"
+          fi
 
           # 変更があるかチェック
           if [ -n "$(git status --porcelain)" ]; then
