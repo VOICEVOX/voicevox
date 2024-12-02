@@ -616,7 +616,7 @@ registerIpcMainHandle<IpcMainHandle>({
   MINIMIZE_WINDOW: () => {
     win.minimize();
   },
-  MAXIMIZE_WINDOW: () => {
+  TOGGLE_MAXIMIZE_WINDOW: () => {
     // 全画面表示中は、全画面表示解除のみを行い、最大化解除処理は実施しない
     if (win.isFullScreen()) {
       win.setFullScreen(false);

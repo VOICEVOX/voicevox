@@ -186,8 +186,8 @@ export const api: Sandbox = {
   minimizeWindow() {
     throw new Error(`Not supported on Browser version: minimizeWindow`);
   },
-  maximizeWindow() {
-    throw new Error(`Not supported on Browser version: maximizeWindow`);
+  toggleMaximizeWindow() {
+    throw new Error(`Not supported on Browser version: toggleMaximizeWindow`);
   },
   toggleFullScreen() {
     throw new Error(`Not supported on Browser version: toggleFullScreen`);

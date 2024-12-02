@@ -105,8 +105,8 @@ const api: Sandbox = {
     void ipcRendererInvokeProxy.MINIMIZE_WINDOW();
   },
 
-  maximizeWindow: () => {
-    void ipcRendererInvokeProxy.MAXIMIZE_WINDOW();
+  toggleMaximizeWindow: () => {
+    void ipcRendererInvokeProxy.TOGGLE_MAXIMIZE_WINDOW();
   },
 
   toggleFullScreen: () => {

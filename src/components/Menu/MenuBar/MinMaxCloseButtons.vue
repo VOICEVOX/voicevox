@@ -37,7 +37,7 @@
       color="green"
       class="title-bar-buttons"
       aria-label="最大化"
-      @click="maximizeWindow()"
+      @click="toggleMaximizeWindow()"
     ></QBtn>
   </QBadge>
   <QBadge
@@ -63,7 +63,7 @@
       :icon="mdiWindowRestore"
       class="title-bar-buttons"
       aria-label="最大化"
-      @click="maximizeWindow()"
+      @click="toggleMaximizeWindow()"
     >
     </QBtn>
 
@@ -74,7 +74,7 @@
       icon="crop_square"
       class="title-bar-buttons"
       aria-label="最大化"
-      @click="maximizeWindow()"
+      @click="toggleMaximizeWindow()"
     ></QBtn>
 
     <QBtn
@@ -101,7 +101,7 @@ const closeWindow = async () => {
   void store.actions.CHECK_EDITED_AND_NOT_SAVE({ closeOrReload: "close" });
 };
 const minimizeWindow = () => window.backend.minimizeWindow();
-const maximizeWindow = () => window.backend.maximizeWindow();
+const toggleMaximizeWindow = () => window.backend.toggleMaximizeWindow();
 
 const isMaximized = computed(() => store.state.isMaximized);
 const isFullscreen = computed(() => store.getters.IS_FULLSCREEN);

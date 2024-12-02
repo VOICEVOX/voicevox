@@ -118,7 +118,7 @@ export type IpcIHData = {
     return: void;
   };
 
-  MAXIMIZE_WINDOW: {
+  TOGGLE_MAXIMIZE_WINDOW: {
     args: [];
     return: void;
   };

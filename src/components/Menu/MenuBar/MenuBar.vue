@@ -406,9 +406,10 @@ const menudata = computed<MenuItemData[]>(() => [
     disableWhenUiLocked: false,
     subMenu: [
       ...props.viewSubMenuData,
+      { type: "separator" },
       {
         type: "button",
-        label: "全画面表示の切り替え",
+        label: "全画面表示を切り替え",
         onClick: toggleFullScreen,
         disableWhenUiLocked: false,
       },
@@ -545,7 +546,7 @@ function registerHotkeyForAllEditors(action: Omit<HotkeyAction, "editor">) {
 
 registerHotkeyForAllEditors({
   callback: toggleFullScreen,
-  name: "全画面表示の切り替え",
+  name: "全画面表示を切り替え",
 });
 registerHotkeyForAllEditors({
   callback: createNewProject,
