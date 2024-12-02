@@ -185,6 +185,7 @@ const classes = computed(() => {
       props.isPreview && props.previewMode === "RESIZE_NOTE_RIGHT", // 右リサイズ中
     "resizing-left":
       props.isPreview && props.previewMode === "RESIZE_NOTE_LEFT", // 左リサイズ中
+    idle: props.previewMode === "IDLE", // プレビュー中でない
   };
 });
 
@@ -529,8 +530,8 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
     }
   }
 
-  // ノートの編集の場合かつ追加中でない場合はノートバーをドラッグできる
-  &.cursor-draw.edit-note:not(.adding) {
+  // ノートの編集の場合でプレビュー中ではない場合はノートバーをドラッグできる
+  &.idle.edit-note {
     .note-bar {
       cursor: move;
     }
