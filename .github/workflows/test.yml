@@ -156,15 +156,19 @@ jobs:
         if: needs.config.outputs.shouldUpdateSnapshots == 'true'
         run: |
           git add --intent-to-add tests/  # git diff に表示されるようにする
-          git diff tests/  # ロギング用
+          git status
           git diff --binary tests/ > patch-${{ matrix.os }}.diff
+          # quotepathを無効化しないとxargs rmでエラーになる
+          git -c "core.quotepath=false" ls-files --deleted tests/ > removed-${{ matrix.os }}.txt
 
       - name: Upload patch to artifact
         if: needs.config.outputs.shouldUpdateSnapshots == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: updated-snapshots-${{ matrix.os }}
-          path: patch-${{ matrix.os }}.diff
+          path:
+            patch-${{ matrix.os }}.diff
+            removed-${{ matrix.os }}.txt
 
   commit-snapshots:
     runs-on: ubuntu-latest
@@ -195,6 +199,7 @@ jobs:
             git apply --allow-empty $patch
             rm $patch
           done
+          cat patches/removed-*.txt | xargs git rm
 
           # 変更があるかチェック
           if [ -n "$(git status --porcelain)" ]; then
