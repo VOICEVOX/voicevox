@@ -6,7 +6,7 @@ import { test, expect, Locator } from "@playwright/test";
 import z from "zod";
 
 // Storybook 8.3.5時点でのindex.jsonのスキーマ。
-// もしスキーマが変わってテストが通らなくなった場合は、このスキーマを修正する。
+// もしスキーマが変わってテストが通らなくなった場合は、このスキーマを修正すること。
 const storybookIndexSchema = z.object({
   v: z.literal(5),
   entries: z.record(
@@ -26,7 +26,10 @@ type Story = StorybookIndex["entries"][string];
 // play-fnが付いているStoryはUnit Test用Storyとみなしてスクリーンショットを撮らない
 const getStoriesToTest = (index: StorybookIndex) =>
   Object.values(index.entries).filter(
-    (entry) => entry.type === "story" && !entry.tags.includes("play-fn"),
+    (entry) =>
+      entry.type === "story" &&
+      !entry.tags.includes("play-fn") &&
+      !story.tags.includes("skip-screenshot"),
   );
 
 let index: StorybookIndex;
@@ -54,9 +57,6 @@ for (const story of currentStories) {
 for (const [story, stories] of Object.entries(allStories)) {
   test.describe(story, () => {
     for (const story of stories) {
-      if (story.tags.includes("skip-screenshot")) {
-        continue;
-      }
       test.describe(story.name, () => {
         for (const [theme, name] of [
           ["light", "ライト"],
