@@ -64,7 +64,7 @@
         v-for="measureInfo in measureInfos"
         :key="measureInfo.number"
         font-size="12"
-        :x="measureInfo.x - offset + textPadding"
+        :x="measureInfo.x - offset + valueChangeTextPadding"
         y="34"
         class="sequencer-ruler-measure-number"
       >
@@ -75,7 +75,7 @@
         <text
           ref="valueChangeText"
           font-size="12"
-          :x="valueChange.x - offset + textPadding"
+          :x="valueChange.x - offset + valueChangeTextPadding"
           y="16"
           class="sequencer-ruler-value-change"
           @click.stop="onValueChangeClick($event, valueChange)"
@@ -291,7 +291,7 @@ const currentMeasure = computed(() =>
   tickToMeasureNumber(playheadTicks.value, props.timeSignatures, props.tpqn),
 );
 
-const textPadding = 4;
+const valueChangeTextPadding = 4;
 
 // NOTE: フォントの変更に対応していないが、基本的にフォントが変更されることは少ないので、
 // 複雑性を下げるためにも対応しない
@@ -360,7 +360,7 @@ const valueChanges = computed<ValueChange[]>(() => {
     //   hidden: ellipsisも入りきらないときに表示する（\u200b）
 
     const collapsedTextWidth =
-      predictTextWidth("...", valueChangeTextStyle.value) + textPadding * 2;
+      predictTextWidth("...", valueChangeTextStyle.value) + valueChangeTextPadding * 2;
     for (const [i, valueChange] of valueChanges.entries()) {
       const next = valueChanges.at(i + 1);
       if (!next) {
@@ -368,7 +368,7 @@ const valueChanges = computed<ValueChange[]>(() => {
       }
       const requiredWidth =
         predictTextWidth(valueChange.text, valueChangeTextStyle.value) +
-        textPadding;
+        valueChangeTextPadding;
       const width = next.x - valueChange.x;
       if (collapsedTextWidth > width) {
         valueChange.displayType = "hidden";
