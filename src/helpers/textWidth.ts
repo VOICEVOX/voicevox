@@ -1,3 +1,6 @@
+/**
+ * 文字列の描画幅を予測するための関数。
+ */
 import { z } from "zod";
 
 let textWidthTempCanvas: HTMLCanvasElement | undefined;
