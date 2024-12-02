@@ -155,11 +155,14 @@ jobs:
       - name: Collect patch for snapshots
         if: needs.config.outputs.shouldUpdateSnapshots == 'true'
         run: |
-          git add --intent-to-add tests/  # git diff に表示されるようにする
           git status
-          git diff --binary tests/ > patch-${{ matrix.os }}.diff
+
           # quotepathを無効化しないとxargs rmでエラーになる
           git -c "core.quotepath=false" ls-files --deleted tests/ > removed-${{ matrix.os }}.txt
+
+          # git diff に表示されるようにする
+          git add --intent-to-add tests/
+          git diff --binary tests/ > patch-${{ matrix.os }}.diff
 
       - name: Upload patch to artifact
         if: needs.config.outputs.shouldUpdateSnapshots == 'true'
