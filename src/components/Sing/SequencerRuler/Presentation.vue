@@ -274,7 +274,6 @@ type ValueChange = {
   tempoChange: Tempo | undefined;
   timeSignatureChange: TimeSignature | undefined;
   x: number;
-  displayType: "full" | "ellipsis" | "hidden";
   displayText: string;
 };
 
@@ -348,7 +347,6 @@ const valueChanges = computed<ValueChange[]>(() => {
         tempoChange: tempo,
         timeSignatureChange: timeSignature,
         x: tickToBaseX(tick, props.tpqn) * props.sequencerZoomX,
-        displayType: "full" as const,
         displayText: text,
       };
     });
@@ -357,10 +355,11 @@ const valueChanges = computed<ValueChange[]>(() => {
     // NOTE: テキストの幅を計算して、表示できるかどうかを判定する
     //   full: 通常表示（120 4/4）
     //   ellipsis: fullが入りきらないときに表示する（...）
-    //   hidden: ellipsisも入りきらないときに表示する（\u200b）
+    //   hidden: ellipsisも入りきらないときに表示する
 
     const collapsedTextWidth =
-      predictTextWidth("...", valueChangeTextStyle.value) + valueChangeTextPadding * 2;
+      predictTextWidth("...", valueChangeTextStyle.value) +
+      valueChangeTextPadding * 2;
     for (const [i, valueChange] of valueChanges.entries()) {
       const next = valueChanges.at(i + 1);
       if (!next) {
@@ -371,10 +370,8 @@ const valueChanges = computed<ValueChange[]>(() => {
         valueChangeTextPadding;
       const width = next.x - valueChange.x;
       if (collapsedTextWidth > width) {
-        valueChange.displayType = "hidden";
-        valueChange.displayText = "\u200b"; // QTooltipは空文字列のtextにひっついてくれないので、ゼロ幅スペースを入れる
+        valueChange.displayText = "";
       } else if (requiredWidth > width) {
-        valueChange.displayType = "ellipsis";
         valueChange.displayText = "...";
       }
     }
