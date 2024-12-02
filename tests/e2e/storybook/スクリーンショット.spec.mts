@@ -29,7 +29,7 @@ const getStoriesToTest = (index: StorybookIndex) =>
     (entry) =>
       entry.type === "story" &&
       !entry.tags.includes("play-fn") &&
-      !story.tags.includes("skip-screenshot"),
+      !entry.tags.includes("skip-screenshot"),
   );
 
 let index: StorybookIndex;
