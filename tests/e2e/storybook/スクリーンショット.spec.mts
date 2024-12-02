@@ -119,6 +119,9 @@ test("スクリーンショットの一覧に過不足が無い", async () => {
     ),
   );
 
+  screenshotPaths.sort();
+  expectedScreenshots.sort();
+
   if (test.info().config.updateSnapshots === "all") {
     // update-snapshotsが指定されていたら、余分なスクリーンショットを削除する。
     for (const screenshot of screenshotPaths) {

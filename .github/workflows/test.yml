@@ -166,7 +166,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: updated-snapshots-${{ matrix.os }}
-          path:
+          path: |
             patch-${{ matrix.os }}.diff
             removed-${{ matrix.os }}.txt
 
