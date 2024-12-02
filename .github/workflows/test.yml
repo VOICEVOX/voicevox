@@ -202,11 +202,10 @@ jobs:
             git apply --allow-empty $patch
             rm $patch
           done
-          if [ -s /tmp/patches/removed-*.txt ]; then
-            cat /tmp/patches/removed-*.txt | xargs rm
-          else
-            echo "No files to remove"
-          fi
+          for removed in /tmp/patches/removed-*.txt; do
+            xargs rm < $removed
+            rm $removed
+          done
 
           # 変更があるかチェック
           if [ -n "$(git status --porcelain)" ]; then
