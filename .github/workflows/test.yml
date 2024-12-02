@@ -203,6 +203,9 @@ jobs:
             rm $patch
           done
           for removed in /tmp/patches/removed-*.txt; do
+            if [ ! -s $removed ]; then
+              continue
+            fi
             xargs rm < $removed
             rm $removed
           done
