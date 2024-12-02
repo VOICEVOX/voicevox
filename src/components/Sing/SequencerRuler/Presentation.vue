@@ -444,8 +444,8 @@ const contextMenuHeader = computed(() => {
   }
   return texts.join("、");
 });
-const contextMenudata = computed<ContextMenuItemData[]>(
-  () =>
+const contextMenudata = computed<ContextMenuItemData[]>(() =>
+  (
     [
       {
         type: "button",
@@ -527,7 +527,8 @@ const contextMenudata = computed<ContextMenuItemData[]>(
         },
         disableWhenUiLocked: true,
       },
-    ].filter((item) => item !== false) as ContextMenuItemData[],
+    ] satisfies (ContextMenuItemData | boolean)[]
+  ).filter((item) => item !== false),
 );
 </script>
 
