@@ -188,19 +188,19 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           pattern: updated-snapshots-*
-          path: patches
+          path: /tmp/patches
           merge-multiple: true
 
       - name: Commit updated snapshots
         id: commit-updated-snapshots
         run: |
           # パッチを適用
-          for patch in patches/*.diff; do
+          for patch in /tmp/patches/*.diff; do
             git apply --allow-empty $patch
             rm $patch
           done
-          if [ -s patches/removed-*.txt ]; then
-            cat patches/removed-*.txt | xargs git rm
+          if [ -s /tmp/patches/removed-*.txt ]; then
+            cat /tmp/patches/removed-*.txt | xargs rm
           else
             echo "No files to remove"
           fi
