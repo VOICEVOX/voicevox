@@ -1,5 +1,7 @@
 // 起動中のStorybookで様々なStoryを表示し、スクリーンショットを撮って比較するVRT。
 // テスト自体はend-to-endではないが、Playwrightを使う関係でe2eディレクトリ内でテストしている。
+import fs from "fs/promises";
+import path from "path";
 import { test, expect, Locator } from "@playwright/test";
 import z from "zod";
 
@@ -103,3 +105,29 @@ for (const [story, stories] of Object.entries(allStories)) {
     }
   });
 }
+
+test("スクリーンショットの一覧に過不足が無い", async () => {
+  test.skip(process.platform !== "win32", "Windows以外のためスキップします");
+  const screenshotFiles = await fs.readdir(test.info().snapshotDir);
+  const screenshotPaths = screenshotFiles.map((file) =>
+    path.join(test.info().snapshotDir, file),
+  );
+
+  const expectedScreenshots = currentStories.flatMap((story) =>
+    ["light", "dark"].map((theme) =>
+      test.info().snapshotPath(`${story.id}-${theme}.png`),
+    ),
+  );
+
+  if (test.info().config.updateSnapshots === "all") {
+    // update-snapshotsが指定されていたら、余分なスクリーンショットを削除する。
+    for (const screenshot of screenshotPaths) {
+      if (!expectedScreenshots.includes(screenshot)) {
+        await fs.unlink(screenshot);
+      }
+    }
+  } else {
+    // update-snapshotsが指定されていなかったら、スクリーンショットの一覧が一致していることを確認する。
+    expect(screenshotPaths).toEqual(expectedScreenshots);
+  }
+});
