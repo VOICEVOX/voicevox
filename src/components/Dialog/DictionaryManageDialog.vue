@@ -152,8 +152,6 @@ const dictionaryManageDialogOpenedComputed = computed({
   set: (val) => emit("update:modelValue", val),
 });
 const uiLocked = ref(false); // ダイアログ内でstore.getters.UI_LOCKEDは常にtrueなので独自に管理
-const nowGenerating = ref(false);
-const nowPlaying = ref(false);
 
 // word-list の要素のうち、どの要素がホバーされているか
 const hoveredKey = ref<string | undefined>(undefined);
@@ -309,45 +307,6 @@ const changeAccent = async (_: number, accent: number) => {
       )
     )[0];
   }
-};
-
-const play = async () => {
-  if (!accentPhrase.value) return;
-
-  nowGenerating.value = true;
-  const audioItem = await store.actions.GENERATE_AUDIO_ITEM({
-    text: yomi.value,
-    voice: voiceComputed.value,
-  });
-
-  if (audioItem.query == undefined)
-    throw new Error(`assert audioItem.query !== undefined`);
-
-  audioItem.query.accentPhrases = [accentPhrase.value];
-
-  let fetchAudioResult: FetchAudioResult;
-  try {
-    fetchAudioResult = await store.actions.FETCH_AUDIO_FROM_AUDIO_ITEM({
-      audioItem,
-    });
-  } catch (e) {
-    window.backend.logError(e);
-    nowGenerating.value = false;
-    void store.actions.SHOW_ALERT_DIALOG({
-      title: "生成に失敗しました",
-      message: "エンジンの再起動をお試しください。",
-    });
-    return;
-  }
-
-  const { blob } = fetchAudioResult;
-  nowGenerating.value = false;
-  nowPlaying.value = true;
-  await store.actions.PLAY_AUDIO_BLOB({ audioBlob: blob });
-  nowPlaying.value = false;
-};
-const stop = () => {
-  void store.actions.STOP_AUDIO();
 };
 
 // accent phraseにあるaccentと実際に登録するアクセントには差が生まれる
