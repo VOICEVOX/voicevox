@@ -1,5 +1,10 @@
-// 起動中のStorybookで様々なStoryを表示し、スクリーンショットを撮って比較するVRT。
-// テスト自体はend-to-endではないが、Playwrightを使う関係でe2eディレクトリ内でテストしている。
+/*
+ * 起動中のStorybookで様々なStoryを表示し、スクリーンショットを撮って比較するVRT。
+ * テスト自体はend-to-endではないが、Playwrightを使う関係でe2eディレクトリ内でテストしている。
+ *
+ * --update-snapshotsをつけてPlaywrightを実行するとスクリーンショットが更新される。
+ * 同時に、Storyが消えたスクリーンショットの削除も行う。
+ */
 import fs from "fs/promises";
 import path from "path";
 import { test, expect, Locator } from "@playwright/test";
@@ -132,6 +137,7 @@ test("スクリーンショットの一覧に過不足が無い", async () => {
     for (const screenshot of screenshotPaths) {
       if (!expectedScreenshots.includes(screenshot)) {
         await fs.unlink(screenshot);
+        console.log(`Deleted: ${path.basename(screenshot)}`);
       }
     }
   } else {
