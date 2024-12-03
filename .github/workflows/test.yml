@@ -155,23 +155,19 @@ jobs:
       - name: Collect patch for snapshots
         if: needs.config.outputs.shouldUpdateSnapshots == 'true'
         run: |
+          # ログ用
           git status
 
-          # quotepathを無効化しないとxargs rmでエラーになる
-          git -c "core.quotepath=false" ls-files --deleted tests/ > removed-${{ matrix.os }}.txt
-
           # git diff に表示されるようにする
-          git add --intent-to-add tests/
-          git diff --binary tests/ > patch-${{ matrix.os }}.diff
+          git add --intent-to-add --all tests/
+          git diff --binary --cached tests/ > patch-${{ matrix.os }}.diff
 
       - name: Upload patch to artifact
         if: needs.config.outputs.shouldUpdateSnapshots == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: updated-snapshots-${{ matrix.os }}
-          path: |
-            patch-${{ matrix.os }}.diff
-            removed-${{ matrix.os }}.txt
+          path: patch-${{ matrix.os }}.diff
 
   commit-snapshots:
     runs-on: ubuntu-latest
@@ -201,13 +197,6 @@ jobs:
           for patch in /tmp/patches/*.diff; do
             git apply --allow-empty $patch
             rm $patch
-          done
-          for removed in /tmp/patches/removed-*.txt; do
-            if [ ! -s $removed ]; then
-              continue
-            fi
-            xargs rm < $removed
-            rm $removed
           done
 
           # 変更があるかチェック
