@@ -311,6 +311,7 @@ const resetHotkey = async (action: string) => {
   border-bottom: 1px solid colors.$border;
   font-weight: 700;
   background-color: colors.$surface;
+  height: 32px;
 }
 
 .table-header,
@@ -321,12 +322,16 @@ const resetHotkey = async (action: string) => {
   align-items: center;
 }
 
+.table-row {
+  height: 40px;
+}
+
 .table-row:nth-child(odd) {
   background-color: colors.$background-alt;
 }
 
 .table-cell {
-  padding: vars.$padding-1;
+  padding: 0 vars.$padding-1;
 }
 
 .table-cell:first-child,
