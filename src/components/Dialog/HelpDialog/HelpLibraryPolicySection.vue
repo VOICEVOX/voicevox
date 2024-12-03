@@ -12,13 +12,12 @@
           >
             <!-- エンジンが一つだけの場合は名前を表示しない -->
             <h2 v-if="engineInfos.size > 1" class="subtitle">
-              {{ mapNullablePipe(engineInfos.get(engineId), (v) => v.name) }}
+              {{ engineInfos.get(engineId)?.name }}
             </h2>
             <BaseRowCard
-              v-for="([, characterInfo], characterIndex) in mapNullablePipe(
-                engineInfos.get(engineId),
-                (v) => v.characterInfos,
-              )"
+              v-for="([, characterInfo], characterIndex) in engineInfos.get(
+                engineId,
+              )?.characterInfos ?? []"
               :key="characterIndex"
               :title="characterInfo.metas.speakerName"
               clickable
@@ -49,12 +48,10 @@
         </div>
         <h1 class="title">
           {{
-            mapNullablePipe(
-              engineInfos.get(selectedInfo.engine),
-              (v) => v.characterInfos,
-              (v) => mapNullablePipe(selectedInfo, (i) => v.get(i.character)),
-              (v) => v.metas.speakerName,
-            )
+            selectedInfo &&
+            engineInfos
+              .get(selectedInfo.engine)
+              ?.characterInfos.get(selectedInfo.character)?.metas.speakerName
           }}
         </h1>
         <BaseDocumentView>
@@ -75,7 +72,6 @@ import BaseDocumentView from "@/components/Base/BaseDocumentView.vue";
 import { useStore } from "@/store";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
 import { EngineId, SpeakerId } from "@/type/preload";
-import { mapNullablePipe } from "@/helpers/map";
 
 type DetailKey = { engine: EngineId; character: SpeakerId };
 
