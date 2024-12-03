@@ -113,6 +113,16 @@ const api: Sandbox = {
     void ipcRendererInvokeProxy.TOGGLE_FULLSCREEN();
   },
 
+  zoomIn: () => {
+    void ipcRendererInvokeProxy.ZOOM_IN();
+  },
+  zoomOut: () => {
+    void ipcRendererInvokeProxy.ZOOM_OUT();
+  },
+  zoomReset: () => {
+    void ipcRendererInvokeProxy.ZOOM_RESET();
+  },
+
   logError: (...params) => {
     console.error(...params);
     // 経緯 https://github.com/VOICEVOX/voicevox/pull/1620#discussion_r1371804569

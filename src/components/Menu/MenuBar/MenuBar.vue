@@ -168,6 +168,21 @@ const importProject = () => {
   }
 };
 
+/** UIの拡大 */
+const zoomIn = async () => {
+  await store.actions.ZOOM_IN();
+};
+
+/** UIの縮小 */
+const zoomOut = async () => {
+  await store.actions.ZOOM_OUT();
+};
+
+/** UIの拡大率リセット */
+const zoomReset = async () => {
+  await store.actions.ZOOM_RESET();
+};
+
 // 「最近使ったプロジェクト」のメニュー
 const recentProjectsSubMenuData = ref<MenuItemData[]>([]);
 const updateRecentProjects = async () => {
@@ -413,6 +428,30 @@ const menudata = computed<MenuItemData[]>(() => [
         onClick: toggleFullScreen,
         disableWhenUiLocked: false,
       },
+      {
+        type: "button",
+        label: "拡大",
+        onClick: () => {
+          void zoomIn();
+        },
+        disableWhenUiLocked: false,
+      },
+      {
+        type: "button",
+        label: "縮小",
+        onClick: () => {
+          void zoomOut();
+        },
+        disableWhenUiLocked: false,
+      },
+      {
+        type: "button",
+        label: "拡大率のリセット",
+        onClick: () => {
+          void zoomReset();
+        },
+        disableWhenUiLocked: false,
+      },
     ],
   },
   {
@@ -545,10 +584,6 @@ function registerHotkeyForAllEditors(action: Omit<HotkeyAction, "editor">) {
 }
 
 registerHotkeyForAllEditors({
-  callback: toggleFullScreen,
-  name: "全画面表示を切り替え",
-});
-registerHotkeyForAllEditors({
   callback: createNewProject,
   name: "新規プロジェクト",
 });
@@ -563,6 +598,22 @@ registerHotkeyForAllEditors({
 registerHotkeyForAllEditors({
   callback: importProject,
   name: "プロジェクトを読み込む",
+});
+registerHotkeyForAllEditors({
+  callback: toggleFullScreen,
+  name: "全画面表示を切り替え",
+});
+registerHotkeyForAllEditors({
+  callback: zoomIn,
+  name: "拡大",
+});
+registerHotkeyForAllEditors({
+  callback: zoomOut,
+  name: "縮小",
+});
+registerHotkeyForAllEditors({
+  callback: zoomReset,
+  name: "拡大率のリセット",
 });
 </script>
 

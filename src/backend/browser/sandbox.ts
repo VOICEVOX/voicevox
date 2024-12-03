@@ -192,6 +192,16 @@ export const api: Sandbox = {
   toggleFullScreen() {
     throw new Error(`Not supported on Browser version: toggleFullScreen`);
   },
+  zoomIn() {
+    throw new Error(`Not supported on Browser version: zoomIn`);
+  },
+  zoomOut() {
+    throw new Error(`Not supported on Browser version: zoomOut`);
+  },
+  zoomReset() {
+    throw new Error(`Not supported on Browser version: zoomReset`);
+  },
+
   /* eslint-disable no-console */ // ログの吐き出し先は console ぐらいしかないので、ここでは特例で許可している
   logError(...params: unknown[]) {
     console.error(...params);
