@@ -106,6 +106,7 @@ import { uuid4 } from "@/helpers/random";
 import { convertToWavFileData } from "@/sing/convertToWavFileData";
 import { generateWriteErrorMessage } from "@/helpers/fileHelper";
 import path from "@/helpers/path";
+import { showAlertDialog } from "@/components/Dialog/Dialog";
 
 const logger = createLogger("store/singing");
 
@@ -1679,6 +1680,23 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS: {
     async action({ state }) {
       syncTracksAndTrackChannelStrips(state.tracks);
+    },
+  },
+
+  APPLY_DEVICE_ID_TO_AUDIO_CONTEXT: {
+    action(_, { device }) {
+      if (!audioContext) {
+        throw new Error("audioContext is undefined.");
+      }
+      const sinkId = device === "default" ? "" : device;
+      audioContext.setSinkId(sinkId).catch((err: unknown) => {
+        void showAlertDialog({
+          type: "error",
+          title: "エラー",
+          message: "再生デバイスが見つかりません",
+        });
+        throw err;
+      });
     },
   },
 
