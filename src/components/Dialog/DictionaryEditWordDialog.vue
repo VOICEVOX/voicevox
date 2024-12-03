@@ -161,19 +161,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { ref } from "vue";
 import { QInput } from "quasar";
 import AudioAccent from "@/components/Talk/AudioAccent.vue";
 import ContextMenu from "@/components/Menu/ContextMenu/Container.vue";
 import { useRightClickContextMenu } from "@/composables/useRightClickContextMenu";
 import { useStore } from "@/store";
 import type { FetchAudioResult } from "@/store/type";
-import { AccentPhrase, UserDictWord } from "@/openapi";
-import {
-  convertHiraToKana,
-  convertLongVowel,
-  createKanaRegex,
-} from "@/domain/japanese";
+
+const store = useStore();
 
 // 音声再生機構
 const nowGenerating = ref(false);
@@ -217,6 +213,28 @@ const play = async () => {
 
 const stop = () => {
   void store.actions.STOP_AUDIO();
+};
+
+// メニュー系
+const surfaceInput = ref<QInput>();
+const yomiInput = ref<QInput>();
+
+// アクセント系
+const changeAccent = async (_: number, accent: number) => {
+  const { engineId, styleId } = voiceComputed.value;
+
+  if (accentPhrase.value) {
+    accentPhrase.value.accent = accent;
+    accentPhrase.value = (
+      await createUILockAction(
+        store.actions.FETCH_MORA_DATA({
+          accentPhrases: [accentPhrase.value],
+          engineId,
+          styleId,
+        }),
+      )
+    )[0];
+  }
 };
 
 const surfaceContextMenu = ref<InstanceType<typeof ContextMenu>>();

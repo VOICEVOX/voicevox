@@ -125,10 +125,8 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import { QInput } from "quasar";
 import DictionaryEditWordDialog from "./DictionaryEditWordDialog.vue";
 import { useStore } from "@/store";
-import type { FetchAudioResult } from "@/store/type";
 import { AccentPhrase, UserDictWord } from "@/openapi";
 import {
   convertHiraToKana,
@@ -204,8 +202,6 @@ watch(dictionaryManageDialogOpenedComputed, async (newValue) => {
 
 const wordEditing = ref(false);
 
-const surfaceInput = ref<QInput>();
-const yomiInput = ref<QInput>();
 const yomiFocus = (event?: KeyboardEvent) => {
   if (event && event.isComposing) return;
   yomiInput.value?.focus();
@@ -290,23 +286,6 @@ const setYomi = async (text: string, changeWord?: boolean) => {
     accentPhrase.value = undefined;
   }
   yomi.value = text;
-};
-
-const changeAccent = async (_: number, accent: number) => {
-  const { engineId, styleId } = voiceComputed.value;
-
-  if (accentPhrase.value) {
-    accentPhrase.value.accent = accent;
-    accentPhrase.value = (
-      await createUILockAction(
-        store.actions.FETCH_MORA_DATA({
-          accentPhrases: [accentPhrase.value],
-          engineId,
-          styleId,
-        }),
-      )
-    )[0];
-  }
 };
 
 // accent phraseにあるaccentと実際に登録するアクセントには差が生まれる
