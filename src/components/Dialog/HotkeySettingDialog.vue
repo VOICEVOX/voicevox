@@ -192,20 +192,6 @@ const duplicatedHotkey = computed(() => {
 });
 
 // FIXME: actionはHotkeyAction型にすべき
-const confirmAndDeleteHotkey = async (action: string) => {
-  const result = await store.actions.SHOW_CONFIRM_DIALOG({
-    title: "ショートカットキーを未割り当てにします",
-    message: `${action}のショートカットキーを未割り当てにします。\n本当に戻しますか？`,
-    actionName: "未割り当てにする",
-    cancel: "未割り当てにしない",
-  });
-
-  if (result === "OK") {
-    deleteHotkey(action);
-  }
-};
-
-// FIXME: actionはHotkeyAction型にすべき
 const deleteHotkey = (action: string) => {
   void changeHotkeySettings(action, HotkeyCombination(""));
 };
