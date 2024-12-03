@@ -21,6 +21,10 @@ const storybookIndexSchema = z.object({
 });
 type StorybookIndex = z.infer<typeof storybookIndexSchema>;
 type Story = StorybookIndex["entries"][string];
+type Theme = "light" | "dark";
+
+const toSnapshotFileName = (story: Story, theme: Theme) =>
+  `${story.id}-${theme}.png`;
 
 // テスト対象のStory一覧を取得する。
 // play-fnが付いているStoryはUnit Test用Storyとみなしてスクリーンショットを撮らない
@@ -61,7 +65,7 @@ for (const [story, stories] of Object.entries(allStories)) {
         for (const [theme, name] of [
           ["light", "ライト"],
           ["dark", "ダーク"],
-        ]) {
+        ] as const) {
           test(`テーマ：${name}`, async ({ page }) => {
             test.skip(
               process.platform !== "win32",
@@ -97,7 +101,7 @@ for (const [story, stories] of Object.entries(allStories)) {
               elementToScreenshot = root;
             }
             await expect(elementToScreenshot).toHaveScreenshot(
-              `${story.id}-${theme}.png`,
+              toSnapshotFileName(story, theme),
             );
           });
         }
@@ -114,8 +118,8 @@ test("スクリーンショットの一覧に過不足が無い", async () => {
   );
 
   const expectedScreenshots = currentStories.flatMap((story) =>
-    ["light", "dark"].map((theme) =>
-      test.info().snapshotPath(`${story.id}-${theme}.png`),
+    (["light", "dark"] as const).map((theme) =>
+      test.info().snapshotPath(toSnapshotFileName(story, theme)),
     ),
   );
 
