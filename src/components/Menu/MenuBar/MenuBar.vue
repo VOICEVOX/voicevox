@@ -140,6 +140,10 @@ const openHelpDialog = () => {
   });
 };
 
+const toggleFullScreen = async () => {
+  window.backend.toggleFullScreen();
+};
+
 const createNewProject = async () => {
   if (!uiLocked.value) {
     await store.actions.CREATE_NEW_PROJECT({});
@@ -420,6 +424,12 @@ const menudata = computed<MenuItemData[]>(() => [
       { type: "separator" },
       {
         type: "button",
+        label: "全画面表示を切り替え",
+        onClick: toggleFullScreen,
+        disableWhenUiLocked: false,
+      },
+      {
+        type: "button",
         label: "拡大",
         onClick: () => {
           void zoomIn();
@@ -588,6 +598,10 @@ registerHotkeyForAllEditors({
 registerHotkeyForAllEditors({
   callback: importProject,
   name: "プロジェクトを読み込む",
+});
+registerHotkeyForAllEditors({
+  callback: toggleFullScreen,
+  name: "全画面表示を切り替え",
 });
 registerHotkeyForAllEditors({
   callback: zoomIn,

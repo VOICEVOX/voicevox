@@ -133,6 +133,10 @@ export const defaultHotkeySettings: HotkeySettingType[] = [
     combination: HotkeyCombination(!isMac ? "Ctrl N" : "Meta N"),
   },
   {
+    action: "全画面表示を切り替え",
+    combination: HotkeyCombination(!isMac ? "F11" : "Ctrl Meta F"),
+  },
+  {
     action: "プロジェクトを名前を付けて保存",
     combination: HotkeyCombination(!isMac ? "Ctrl Shift S" : "Shift Meta S"),
   },
@@ -249,7 +253,8 @@ export interface Sandbox {
   }): void;
   closeWindow(): void;
   minimizeWindow(): void;
-  maximizeWindow(): void;
+  toggleMaximizeWindow(): void;
+  toggleFullScreen(): void;
   zoomIn(): void;
   zoomOut(): void;
   zoomReset(): void;
@@ -471,6 +476,7 @@ export const hotkeyActionNameSchema = z.enum([
   `8${actionPostfixSelectNthCharacter}`,
   `9${actionPostfixSelectNthCharacter}`,
   `10${actionPostfixSelectNthCharacter}`,
+  "全画面表示を切り替え",
   "拡大",
   "縮小",
   "拡大率のリセット",
