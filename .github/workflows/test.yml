@@ -187,14 +187,14 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           pattern: updated-snapshots-*
-          path: /tmp/patches
+          path: ${{ env.RUNNER_TEMP }}/patches
           merge-multiple: true
 
       - name: Commit updated snapshots
         id: commit-updated-snapshots
         run: |
           # パッチを適用
-          for patch in /tmp/patches/*.diff; do
+          for patch in ${{ env.RUNNER_TEMP }}/patches/*.diff; do
             git apply --allow-empty $patch
             rm $patch
           done
