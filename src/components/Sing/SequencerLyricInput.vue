@@ -94,7 +94,7 @@ const onLyricInput = (event: Event) => {
 };
 
 watch(
-  () => props.editingLyricNote.lyric,
+  () => props.editingLyricNote.id,
   () => {
     void nextTick(() => {
       lyricInput.value?.focus();

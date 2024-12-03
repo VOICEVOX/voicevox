@@ -18,7 +18,7 @@ import { ref, computed } from "vue";
 import { useStore } from "@/store";
 import ContextMenu, {
   ContextMenuItemData,
-} from "@/components/Menu/ContextMenu.vue";
+} from "@/components/Menu/ContextMenu/Container.vue";
 import {
   getTimeSignaturePositions,
   MeasuresBeats,

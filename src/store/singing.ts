@@ -1,4 +1,3 @@
-import path from "path";
 import { ref, toRaw } from "vue";
 import { createPartialStore } from "./vuex";
 import { createUILockAction } from "./ui";
@@ -106,6 +105,8 @@ import { ufProjectToVoicevox } from "@/sing/utaformatixProject/toVoicevox";
 import { uuid4 } from "@/helpers/random";
 import { convertToWavFileData } from "@/sing/convertToWavFileData";
 import { generateWriteErrorMessage } from "@/helpers/fileHelper";
+import path from "@/helpers/path";
+import { showAlertDialog } from "@/components/Dialog/Dialog";
 
 const logger = createLogger("store/singing");
 
@@ -573,7 +574,7 @@ const singingPitchCache = new Map<SingingPitchKey, SingingPitch>();
 const singingVolumeCache = new Map<SingingVolumeKey, SingingVolume>();
 const singingVoiceCache = new Map<SingingVoiceKey, SingingVoice>();
 
-const initialTrackId = TrackId(crypto.randomUUID());
+const initialTrackId = TrackId(uuid4());
 
 /**
  * シーケンスの音源の出力を取得する。
@@ -1577,7 +1578,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   CREATE_TRACK: {
     action() {
-      const trackId = TrackId(crypto.randomUUID());
+      const trackId = TrackId(uuid4());
       const track = createDefaultTrack();
 
       return { trackId, track };
@@ -1679,6 +1680,23 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS: {
     async action({ state }) {
       syncTracksAndTrackChannelStrips(state.tracks);
+    },
+  },
+
+  APPLY_DEVICE_ID_TO_AUDIO_CONTEXT: {
+    action(_, { device }) {
+      if (!audioContext) {
+        throw new Error("audioContext is undefined.");
+      }
+      const sinkId = device === "default" ? "" : device;
+      audioContext.setSinkId(sinkId).catch((err: unknown) => {
+        void showAlertDialog({
+          type: "error",
+          title: "エラー",
+          message: "再生デバイスが見つかりません",
+        });
+        throw err;
+      });
     },
   },
 

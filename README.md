@@ -91,8 +91,8 @@ Storybook を使ってコンポーネントを開発することができます�
 npm run storybook
 ```
 
-main ブランチの Storybook は Chromatic から確認できます。  
-<https://main--667d9c007418420dbb5b0f75.chromatic.com/>
+main ブランチの Storybook は[VOICEVOX/preview-pages](https://github.com/VOICEVOX/preview-pages)から確認できます。  
+<https://voicevox.github.io/preview-pages/preview/branch-main/storybook/index.html>
 
 ### ブラウザ版の実行（開発中）
 
@@ -102,8 +102,8 @@ main ブランチの Storybook は Chromatic から確認できます。
 npm run browser:serve
 ```
 
-また、main ブランチのビルド結果がこちらにデプロイされています。  
-<https://voicevox-browser-dev.netlify.app/>  
+また、main ブランチのビルド結果が[VOICEVOX/preview-pages](https://github.com/VOICEVOX/preview-pages)にデプロイされています。  
+<https://voicevox.github.io/preview-pages/preview/branch-main/editor/index.html>  
 今はローカル PC 上で音声合成エンジンを起動する必要があります。
 
 ## ビルド

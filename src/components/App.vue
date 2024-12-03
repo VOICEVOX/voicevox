@@ -72,13 +72,13 @@ watchEffect(() => {
 });
 
 // エディタの切り替えを監視してショートカットキーの設定を変更する
-watch(
-  () => store.state.openedEditor,
-  async (openedEditor) => {
-    if (openedEditor != undefined) {
-      hotkeyManager.onEditorChange(openedEditor);
+watchEffect(
+  () => {
+    if (openedEditor.value) {
+      hotkeyManager.onEditorChange(openedEditor.value);
     }
   },
+  { flush: "post" },
 );
 
 // テーマの変更を監視してCSS変数を変更する
@@ -97,6 +97,13 @@ watchEffect(() => {
   setThemeToCss(theme);
 });
 
+// ソングの再生デバイスを同期
+watchEffect(() => {
+  void store.actions.APPLY_DEVICE_ID_TO_AUDIO_CONTEXT({
+    device: store.state.savingSetting.audioOutputDevice,
+  });
+});
+
 // ソフトウェアを初期化
 const { hotkeyManager } = useHotkeyManager();
 const isEnginesReady = ref(false);
@@ -109,9 +116,6 @@ onMounted(async () => {
 
   // プロジェクトファイルのパスを取得
   const projectFilePath = urlParams.get("projectFilePath");
-
-  // どちらのエディタを開くか設定
-  await store.actions.SET_OPENED_EDITOR({ editor: "talk" });
 
   // ショートカットキーの設定を登録
   const hotkeySettings = store.state.hotkeySettings;
