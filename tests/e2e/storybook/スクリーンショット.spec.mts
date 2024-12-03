@@ -126,15 +126,15 @@ test("スクリーンショットの一覧に過不足が無い", async () => {
   screenshotPaths.sort();
   expectedScreenshots.sort();
 
+  // update-snapshotsが指定されていたら、余分なスクリーンショットを削除する。
+  // 指定されていなかったら、スクリーンショットの一覧が一致していることを確認する。
   if (test.info().config.updateSnapshots === "all") {
-    // update-snapshotsが指定されていたら、余分なスクリーンショットを削除する。
     for (const screenshot of screenshotPaths) {
       if (!expectedScreenshots.includes(screenshot)) {
         await fs.unlink(screenshot);
       }
     }
   } else {
-    // update-snapshotsが指定されていなかったら、スクリーンショットの一覧が一致していることを確認する。
     expect(screenshotPaths).toEqual(expectedScreenshots);
   }
 });
