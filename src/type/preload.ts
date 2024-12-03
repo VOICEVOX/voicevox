@@ -121,6 +121,10 @@ export const defaultHotkeySettings: HotkeySettingType[] = [
     combination: HotkeyCombination(!isMac ? "Ctrl N" : "Meta N"),
   },
   {
+    action: "全画面表示を切り替え",
+    combination: HotkeyCombination(!isMac ? "F11" : "Ctrl Meta F"),
+  },
+  {
     action: "プロジェクトを名前を付けて保存",
     combination: HotkeyCombination(!isMac ? "Ctrl Shift S" : "Shift Meta S"),
   },
@@ -237,7 +241,8 @@ export interface Sandbox {
   }): void;
   closeWindow(): void;
   minimizeWindow(): void;
-  maximizeWindow(): void;
+  toggleMaximizeWindow(): void;
+  toggleFullScreen(): void;
   logError(...params: unknown[]): void;
   logWarn(...params: unknown[]): void;
   logInfo(...params: unknown[]): void;
@@ -434,6 +439,7 @@ export const hotkeyActionNameSchema = z.enum([
   "元に戻す",
   "やり直す",
   "新規プロジェクト",
+  "全画面表示を切り替え",
   "プロジェクトを名前を付けて保存",
   "プロジェクトを上書き保存",
   "プロジェクトを読み込む",

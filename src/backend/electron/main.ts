@@ -616,14 +616,23 @@ registerIpcMainHandle<IpcMainHandle>({
   MINIMIZE_WINDOW: () => {
     win.minimize();
   },
-  MAXIMIZE_WINDOW: () => {
-    if (win.isMaximized()) {
+  TOGGLE_MAXIMIZE_WINDOW: () => {
+    // 全画面表示中は、全画面表示解除のみを行い、最大化解除処理は実施しない
+    if (win.isFullScreen()) {
+      win.setFullScreen(false);
+    } else if (win.isMaximized()) {
       win.unmaximize();
     } else {
       win.maximize();
     }
   },
-
+  TOGGLE_FULLSCREEN: () => {
+    if (win.isFullScreen()) {
+      win.setFullScreen(false);
+    } else {
+      win.setFullScreen(true);
+    }
+  },
   OPEN_LOG_DIRECTORY: () => {
     void shell.openPath(app.getPath("logs"));
   },
