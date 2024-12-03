@@ -20,7 +20,7 @@ import { exists, mapValues } from '../runtime';
  */
 export interface MorphableTargetInfo {
     /**
-     * 
+     * 指定したキャラクターに対してモーフィングの可否
      * @type {boolean}
      * @memberof MorphableTargetInfo
      */

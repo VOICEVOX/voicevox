@@ -52,5 +52,5 @@ export const convertToWavFileData = (audioBuffer: AudioBuffer) => {
     }
   }
 
-  return buffer;
+  return new Uint8Array(buffer);
 };

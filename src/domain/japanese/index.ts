@@ -40,3 +40,18 @@ export const convertLongVowel = (text: string): string => {
     .replace(/(?<=[ん]ー*)ー/g, "ん")
     .replace(/(?<=[っ]ー*)ー/g, "っ");
 };
+
+// 参考：https://github.com/VOICEVOX/voicevox_core/blob/0848630d81ae3e917c6ff2038f0b15bbd4270702/crates/voicevox_core/src/user_dict/word.rs#L83-L90
+export const moraPattern = new RegExp(
+  "(?:" +
+    "[イ][ェ]|[ヴ][ャュョ]|[ウクグトド][ゥ]|[テデ][ィェャュョ]|[クグ][ヮ]|" + // rule_others
+    "[キシチニヒミリギジヂビピ][ェャュョ]|[キニヒミリギビピ][ィ]|" + // rule_line_i
+    "[クツフヴグ][ァ]|[ウクスツフヴグズ][ィ]|[ウクツフヴグ][ェォ]|" + // rule_line_u
+    "[ァ-ヴー]|" + // rule_one_mora
+    "[い][ぇ]|[ゔ][ゃゅょ]|[うくぐとど][ぅ]|[てで][ぃぇゃゅょ]|[くぐ][わ]|" + // rule_others
+    "[きしちにひみりぎじぢびぴ][ぇゃゅょ]|[きにひみりぎびぴ][ぃ]|" + // rule_line_i
+    "[くつふゔぐ][ぁ]|[うくすつふゔぐず][ぃ]|[うくつふゔぐ][ぇぉ]|" + // rule_line_u
+    "[ぁ-ゔー]" + // rule_one_mora
+    ")",
+  "g",
+);

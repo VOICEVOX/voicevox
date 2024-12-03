@@ -191,8 +191,7 @@ watch([() => props.modelValue], async ([newValue]) => {
 const isHoverableItem = ref(true);
 
 const closeDialog = () => {
-  void store.dispatch(
-    "SET_DEFAULT_STYLE_IDS",
+  void store.actions.SET_DEFAULT_STYLE_IDS(
     Object.entries(selectedStyleIndexes.value).map(
       ([speakerUuidStr, styleIndex]) => {
         const speakerUuid = SpeakerId(speakerUuidStr);

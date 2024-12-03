@@ -3,17 +3,19 @@
  * ランタイム情報には起動しているエンジンのURLなどが含まれる。
  */
 
-import fs from "fs";
 import AsyncLock from "async-lock";
 import log from "electron-log/main";
+import type { AltPortInfos } from "@/store/type";
 import { EngineId, EngineInfo } from "@/type/preload";
+import { writeFileSafely } from "@/backend/electron/fileHelper";
+import { createEngineUrl } from "@/domain/url";
 
 /**
  * ランタイム情報書き出しに必要なEngineInfo
  */
 export type EngineInfoForRuntimeInfo = Pick<
   EngineInfo,
-  "uuid" | "host" | "name"
+  "uuid" | "protocol" | "hostname" | "defaultPort" | "pathname" | "name"
 >;
 
 /**
@@ -58,12 +60,17 @@ export class RuntimeInfoManager {
    * エンジン情報（書き出し用に記憶）
    */
   private engineInfos: EngineInfoForRuntimeInfo[] = [];
+  private altportInfos: AltPortInfos = {};
 
   /**
    * エンジン情報を登録する
    */
-  public setEngineInfos(engineInfos: EngineInfoForRuntimeInfo[]) {
+  public setEngineInfos(
+    engineInfos: EngineInfoForRuntimeInfo[],
+    altportInfos: AltPortInfos,
+  ) {
     this.engineInfos = engineInfos;
+    this.altportInfos = altportInfos;
   }
 
   /**
@@ -76,9 +83,17 @@ export class RuntimeInfoManager {
         formatVersion: this.fileFormatVersion,
         appVersion: this.appVersion,
         engineInfos: this.engineInfos.map((engineInfo) => {
+          const altPort: string | undefined =
+            this.altportInfos[engineInfo.uuid];
+          const port = altPort ?? engineInfo.defaultPort;
           return {
             uuid: engineInfo.uuid,
-            url: engineInfo.host, // NOTE: 元のEngineInfo.hostにURLが入っている
+            url: createEngineUrl({
+              protocol: engineInfo.protocol,
+              hostname: engineInfo.hostname,
+              port,
+              pathname: engineInfo.pathname,
+            }),
             name: engineInfo.name,
           };
         }),
@@ -86,7 +101,7 @@ export class RuntimeInfoManager {
 
       // ファイル書き出し
       try {
-        await fs.promises.writeFile(
+        writeFileSafely(
           this.runtimeInfoPath,
           JSON.stringify(runtimeInfoFormatFor3rdParty), // FIXME: zod化する
         );
@@ -100,4 +115,20 @@ export class RuntimeInfoManager {
       }
     });
   }
+}
+
+let manager: RuntimeInfoManager | undefined;
+
+export function initializeRuntimeInfoManager(payload: {
+  runtimeInfoPath: string;
+  appVersion: string;
+}) {
+  manager = new RuntimeInfoManager(payload.runtimeInfoPath, payload.appVersion);
+}
+
+export function getRuntimeInfoManager() {
+  if (manager == undefined) {
+    throw new Error("RuntimeInfoManager is not initialized");
+  }
+  return manager;
 }

@@ -20,19 +20,19 @@ import { exists, mapValues } from '../runtime';
  */
 export interface UpdateInfo {
     /**
-     * 
+     * エンジンのバージョン名
      * @type {string}
      * @memberof UpdateInfo
      */
     version: string;
     /**
-     * 
+     * アップデートの詳細についての説明
      * @type {Array<string>}
      * @memberof UpdateInfo
      */
     descriptions: Array<string>;
     /**
-     * 
+     * 貢献者名
      * @type {Array<string>}
      * @memberof UpdateInfo
      */

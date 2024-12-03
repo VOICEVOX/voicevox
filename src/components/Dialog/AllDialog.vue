@@ -22,6 +22,7 @@
   <UpdateNotificationDialogContainer
     :canOpenDialog="canOpenNotificationDialog"
   />
+  <ExportSongAudioDialog v-model="isExportSongAudioDialogOpen" />
   <ImportSongProjectDialog v-model="isImportSongProjectDialogOpenComputed" />
 </template>
 
@@ -33,12 +34,13 @@ import HotkeySettingDialog from "@/components/Dialog/HotkeySettingDialog.vue";
 import ToolBarCustomDialog from "@/components/Dialog/ToolBarCustomDialog.vue";
 import DefaultStyleListDialog from "@/components/Dialog/DefaultStyleListDialog.vue";
 import CharacterOrderDialog from "@/components/Dialog/CharacterOrderDialog.vue";
-import AcceptRetrieveTelemetryDialog from "@/components/Dialog/AcceptRetrieveTelemetryDialog.vue";
-import AcceptTermsDialog from "@/components/Dialog/AcceptTermsDialog.vue";
+import AcceptRetrieveTelemetryDialog from "@/components/Dialog/AcceptDialog/AcceptRetrieveTelemetryDialog.vue";
+import AcceptTermsDialog from "@/components/Dialog/AcceptDialog/AcceptTermsDialog.vue";
 import DictionaryManageDialog from "@/components/Dialog/DictionaryManageDialog.vue";
 import EngineManageDialog from "@/components/Dialog/EngineManageDialog.vue";
 import UpdateNotificationDialogContainer from "@/components/Dialog/UpdateNotificationDialog/Container.vue";
 import ImportSongProjectDialog from "@/components/Dialog/ImportSongProjectDialog.vue";
+import ExportSongAudioDialog from "@/components/Dialog/ExportSongAudioDialog/Container.vue";
 import { useStore } from "@/store";
 import { filterCharacterInfosByStyleType } from "@/store/utility";
 
@@ -50,20 +52,20 @@ const store = useStore();
 // ライセンス表示
 const isHelpDialogOpenComputed = computed({
   get: () => store.state.isHelpDialogOpen,
-  set: (val) => store.dispatch("SET_DIALOG_OPEN", { isHelpDialogOpen: val }),
+  set: (val) => store.actions.SET_DIALOG_OPEN({ isHelpDialogOpen: val }),
 });
 
 // 設定
 const isSettingDialogOpenComputed = computed({
   get: () => store.state.isSettingDialogOpen,
-  set: (val) => store.dispatch("SET_DIALOG_OPEN", { isSettingDialogOpen: val }),
+  set: (val) => store.actions.SET_DIALOG_OPEN({ isSettingDialogOpen: val }),
 });
 
 // ショートカットキー設定
 const isHotkeySettingDialogOpenComputed = computed({
   get: () => store.state.isHotkeySettingDialogOpen,
   set: (val) =>
-    store.dispatch("SET_DIALOG_OPEN", {
+    store.actions.SET_DIALOG_OPEN({
       isHotkeySettingDialogOpen: val,
     }),
 });
@@ -72,7 +74,7 @@ const isHotkeySettingDialogOpenComputed = computed({
 const isToolbarSettingDialogOpenComputed = computed({
   get: () => store.state.isToolbarSettingDialogOpen,
   set: (val) =>
-    store.dispatch("SET_DIALOG_OPEN", {
+    store.actions.SET_DIALOG_OPEN({
       isToolbarSettingDialogOpen: val,
     }),
 });
@@ -81,7 +83,7 @@ const isToolbarSettingDialogOpenComputed = computed({
 const isAcceptTermsDialogOpenComputed = computed({
   get: () => store.state.isAcceptTermsDialogOpen,
   set: (val) =>
-    store.dispatch("SET_DIALOG_OPEN", {
+    store.actions.SET_DIALOG_OPEN({
       isAcceptTermsDialogOpen: val,
     }),
 });
@@ -95,7 +97,7 @@ const isCharacterOrderDialogOpenComputed = computed({
     !store.state.isAcceptTermsDialogOpen &&
     store.state.isCharacterOrderDialogOpen,
   set: (val) =>
-    store.dispatch("SET_DIALOG_OPEN", {
+    store.actions.SET_DIALOG_OPEN({
       isCharacterOrderDialogOpen: val,
     }),
 });
@@ -113,7 +115,7 @@ const isDefaultStyleSelectDialogOpenComputed = computed({
     !store.state.isCharacterOrderDialogOpen &&
     store.state.isDefaultStyleSelectDialogOpen,
   set: (val) =>
-    store.dispatch("SET_DIALOG_OPEN", {
+    store.actions.SET_DIALOG_OPEN({
       isDefaultStyleSelectDialogOpen: val,
     }),
 });
@@ -122,7 +124,7 @@ const isDefaultStyleSelectDialogOpenComputed = computed({
 const isEngineManageDialogOpenComputed = computed({
   get: () => store.state.isEngineManageDialogOpen,
   set: (val) =>
-    store.dispatch("SET_DIALOG_OPEN", {
+    store.actions.SET_DIALOG_OPEN({
       isEngineManageDialogOpen: val,
     }),
 });
@@ -131,7 +133,7 @@ const isEngineManageDialogOpenComputed = computed({
 const isDictionaryManageDialogOpenComputed = computed({
   get: () => store.state.isDictionaryManageDialogOpen,
   set: (val) =>
-    store.dispatch("SET_DIALOG_OPEN", {
+    store.actions.SET_DIALOG_OPEN({
       isDictionaryManageDialogOpen: val,
     }),
 });
@@ -143,7 +145,7 @@ const isAcceptRetrieveTelemetryDialogOpenComputed = computed({
     !store.state.isDefaultStyleSelectDialogOpen &&
     store.state.isAcceptRetrieveTelemetryDialogOpen,
   set: (val) =>
-    store.dispatch("SET_DIALOG_OPEN", {
+    store.actions.SET_DIALOG_OPEN({
       isAcceptRetrieveTelemetryDialogOpen: val,
     }),
 });
@@ -159,11 +161,20 @@ const canOpenNotificationDialog = computed(() => {
   );
 });
 
+// ソングのオーディオエクスポート時の設定ダイアログ
+const isExportSongAudioDialogOpen = computed({
+  get: () => store.state.isExportSongAudioDialogOpen,
+  set: (val) =>
+    store.actions.SET_DIALOG_OPEN({
+      isExportSongAudioDialogOpen: val,
+    }),
+});
+
 // ソングのプロジェクトファイルのインポート時の設定ダイアログ
 const isImportSongProjectDialogOpenComputed = computed({
   get: () => store.state.isImportSongProjectDialogOpen,
   set: (val) =>
-    store.dispatch("SET_DIALOG_OPEN", {
+    store.actions.SET_DIALOG_OPEN({
       isImportSongProjectDialogOpen: val,
     }),
 });

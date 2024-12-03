@@ -100,7 +100,11 @@ export async function generateLabFromAudioQuery(
     });
     if (accentPhrase.pauseMora != undefined) {
       labString += timestamp.toFixed() + " ";
-      timestamp += (accentPhrase.pauseMora.vowelLength * 10000000) / speedScale;
+      timestamp +=
+        (accentPhrase.pauseMora.vowelLength *
+          audioQuery.pauseLengthScale *
+          10000000) /
+        speedScale;
       labString += timestamp.toFixed() + " ";
       labString += accentPhrase.pauseMora.vowel + "\n";
     }

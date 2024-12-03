@@ -1,5 +1,5 @@
 <template>
-  <TooltipRoot>
+  <TooltipRoot :disabled>
     <TooltipTrigger asChild>
       <slot />
     </TooltipTrigger>
@@ -30,16 +30,13 @@ import {
 
 defineProps<{
   label: string;
+  disabled?: boolean;
 }>();
 </script>
 
 <style scoped lang="scss">
 @use "@/styles/v2/variables" as vars;
 @use "@/styles/v2/colors" as colors;
-
-[data-radix-popper-content-wrapper] {
-  z-index: vars.$z-index-tooltip !important;
-}
 
 :deep(.TooltipContent) {
   display: flex;
@@ -52,6 +49,7 @@ defineProps<{
   border: 1px solid colors.$border;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   user-select: none;
+  z-index: vars.$z-index-tooltip;
 }
 
 .v-enter-active,

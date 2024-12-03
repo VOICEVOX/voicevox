@@ -1,4 +1,4 @@
-import { createDotNotationPartialStore as createPartialStore } from "./vuex";
+import { createPartialStore } from "./vuex";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { uuid4 } from "@/helpers/random";
 import { PresetStoreState, PresetStoreTypes, State } from "@/store/type";
@@ -222,6 +222,7 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
           pitchScale: 0.0,
           intonationScale: 1.0,
           volumeScale: 1.0,
+          pauseLengthScale: 1,
           prePhonemeLength: 0.1,
           postPhonemeLength: 0.1,
         };

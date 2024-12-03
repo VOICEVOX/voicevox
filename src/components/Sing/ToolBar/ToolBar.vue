@@ -3,7 +3,6 @@
     <!-- configs for entire song -->
     <div class="sing-configs">
       <QBtn
-        v-if="multiTrackEnabled"
         class="q-mr-sm"
         :icon="isSidebarOpen ? 'menu_open' : 'menu'"
         round
@@ -114,12 +113,7 @@
         icon="stop"
         @click="stop"
       />
-      <div class="sing-playhead-position">
-        <div>{{ playheadPositionMinSecStr }}</div>
-        <div class="sing-playhead-position-millisec">
-          .{{ playHeadPositionMilliSecStr }}
-        </div>
-      </div>
+      <PlayheadPositionDisplay class="sing-playhead-position" />
     </div>
     <!-- settings for edit controls -->
     <div class="sing-controls">
@@ -165,7 +159,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch, ref, onMounted, onUnmounted } from "vue";
+import { computed, watch, ref } from "vue";
+import PlayheadPositionDisplay from "../PlayheadPositionDisplay.vue";
 import EditTargetSwicher from "./EditTargetSwicher.vue";
 import { useStore } from "@/store";
 
@@ -188,10 +183,6 @@ const uiLocked = computed(() => store.getters.UI_LOCKED);
 const editor = "song";
 const canUndo = computed(() => store.getters.CAN_UNDO(editor));
 const canRedo = computed(() => store.getters.CAN_REDO(editor));
-
-const multiTrackEnabled = computed(
-  () => store.state.experimentalSetting.enableMultiTrack,
-);
 
 const { registerHotkeyWithCleanup } = useHotkeyManager();
 registerHotkeyWithCleanup({
@@ -226,21 +217,21 @@ registerHotkeyWithCleanup({
 });
 
 const undo = () => {
-  void store.dispatch("UNDO", { editor });
+  void store.actions.UNDO({ editor });
 };
 const redo = () => {
-  void store.dispatch("REDO", { editor });
+  void store.actions.REDO({ editor });
 };
 
 const editTarget = computed(() => store.state.sequencerEditTarget);
 
 const changeEditTarget = (editTarget: SequencerEditTarget) => {
-  void store.dispatch("SET_EDIT_TARGET", { editTarget });
+  void store.actions.SET_EDIT_TARGET({ editTarget });
 };
 
 const isSidebarOpen = computed(() => store.state.isSongSidebarOpen);
 const toggleSidebar = () => {
-  void store.dispatch("SET_SONG_SIDEBAR_OPEN", {
+  void store.actions.SET_SONG_SIDEBAR_OPEN({
     isSongSidebarOpen: !isSidebarOpen.value,
   });
 };
@@ -320,7 +311,7 @@ const setBeats = (beats: { label: string; value: number }) => {
   if (!isValidBeats(beats.value)) {
     return;
   }
-  void store.dispatch("COMMAND_SET_TIME_SIGNATURE", {
+  void store.actions.COMMAND_SET_TIME_SIGNATURE({
     timeSignature: {
       measureNumber: 1,
       beats: beats.value,
@@ -333,7 +324,7 @@ const setBeatType = (beatType: { label: string; value: number }) => {
   if (!isValidBeatType(beatType.value)) {
     return;
   }
-  void store.dispatch("COMMAND_SET_TIME_SIGNATURE", {
+  void store.actions.COMMAND_SET_TIME_SIGNATURE({
     timeSignature: {
       measureNumber: 1,
       beats: timeSignatures.value[0].beats,
@@ -364,7 +355,7 @@ const setVolumeRangeAdjustmentInputBuffer = (
 
 const setTempo = () => {
   const bpm = bpmInputBuffer.value;
-  void store.dispatch("COMMAND_SET_TEMPO", {
+  void store.actions.COMMAND_SET_TEMPO({
     tempo: {
       position: 0,
       bpm,
@@ -374,7 +365,7 @@ const setTempo = () => {
 
 const setKeyRangeAdjustment = () => {
   const keyRangeAdjustment = keyRangeAdjustmentInputBuffer.value;
-  void store.dispatch("COMMAND_SET_KEY_RANGE_ADJUSTMENT", {
+  void store.actions.COMMAND_SET_KEY_RANGE_ADJUSTMENT({
     keyRangeAdjustment,
     trackId: selectedTrackId.value,
   });
@@ -382,48 +373,24 @@ const setKeyRangeAdjustment = () => {
 
 const setVolumeRangeAdjustment = () => {
   const volumeRangeAdjustment = volumeRangeAdjustmentInputBuffer.value;
-  void store.dispatch("COMMAND_SET_VOLUME_RANGE_ADJUSTMENT", {
+  void store.actions.COMMAND_SET_VOLUME_RANGE_ADJUSTMENT({
     volumeRangeAdjustment,
     trackId: selectedTrackId.value,
   });
 };
 
-const playheadTicks = ref(0);
-
-/// 再生時間の分と秒
-const playheadPositionMinSecStr = computed(() => {
-  const ticks = playheadTicks.value;
-  const time = store.getters.TICK_TO_SECOND(ticks);
-
-  const intTime = Math.trunc(time);
-  const min = Math.trunc(intTime / 60);
-  const minStr = String(min).padStart(2, "0");
-  const secStr = String(intTime - min * 60).padStart(2, "0");
-
-  return `${minStr}:${secStr}`;
-});
-
-const playHeadPositionMilliSecStr = computed(() => {
-  const ticks = playheadTicks.value;
-  const time = store.getters.TICK_TO_SECOND(ticks);
-  const intTime = Math.trunc(time);
-  const milliSec = Math.trunc((time - intTime) * 1000);
-  const milliSecStr = String(milliSec).padStart(3, "0");
-  return milliSecStr;
-});
-
 const nowPlaying = computed(() => store.state.nowPlaying);
 
 const play = () => {
-  void store.dispatch("SING_PLAY_AUDIO");
+  void store.actions.SING_PLAY_AUDIO();
 };
 
 const stop = () => {
-  void store.dispatch("SING_STOP_AUDIO");
+  void store.actions.SING_STOP_AUDIO();
 };
 
 const goToZero = () => {
-  void store.dispatch("SET_PLAYHEAD_POSITION", { position: 0 });
+  void store.actions.SET_PLAYHEAD_POSITION({ position: 0 });
 };
 
 const volume = computed({
@@ -431,7 +398,7 @@ const volume = computed({
     return store.state.volume * 100;
   },
   set(value: number) {
-    void store.dispatch("SET_VOLUME", { volume: value / 100 });
+    void store.actions.SET_VOLUME({ volume: value / 100 });
   },
 });
 
@@ -463,26 +430,10 @@ const snapTypeSelectModel = computed({
     );
   },
   set(value) {
-    void store.dispatch("SET_SNAP_TYPE", {
+    void store.actions.SET_SNAP_TYPE({
       snapType: value.snapType,
     });
   },
-});
-
-const playheadPositionChangeListener = (position: number) => {
-  playheadTicks.value = position;
-};
-
-onMounted(() => {
-  void store.dispatch("ADD_PLAYHEAD_POSITION_CHANGE_LISTENER", {
-    listener: playheadPositionChangeListener,
-  });
-});
-
-onUnmounted(() => {
-  void store.dispatch("REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER", {
-    listener: playheadPositionChangeListener,
-  });
 });
 </script>
 
@@ -638,7 +589,7 @@ onUnmounted(() => {
 
   :deep(.q-field__label) {
     font-size: 9px;
-    top: 2px;
+    top: 5.5px;
     margin-left: 6px;
     transform: translateY(0) !important;
     color: var(--scheme-color-on-surface-variant);
@@ -699,6 +650,7 @@ onUnmounted(() => {
 
 .sing-transport-button {
   color: var(--scheme-color-on-surface-variant);
+  margin-right: 0.25rem;
 }
 
 .sing-playback-button {
@@ -718,19 +670,7 @@ onUnmounted(() => {
 }
 
 .sing-playhead-position {
-  align-items: center;
-  display: flex;
-  font-size: 28px;
-  font-weight: 700;
   margin-left: 16px;
-  color: var(--scheme-color-on-surface);
-}
-
-.sing-playhead-position-millisec {
-  font-size: 16px;
-  font-weight: 700;
-  margin: 10px 0 0 2px;
-  color: var(--scheme-color-on-surface);
 }
 
 .sing-controls {
@@ -760,7 +700,7 @@ onUnmounted(() => {
 .sing-volume-icon {
   margin-right: 8px;
 
-  :deep {
+  :deep() {
     color: var(--scheme-color-outline);
   }
 }

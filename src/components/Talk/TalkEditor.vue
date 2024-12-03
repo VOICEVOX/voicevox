@@ -118,7 +118,6 @@
 </template>
 
 <script setup lang="ts">
-import path from "path";
 import { computed, onBeforeUpdate, ref, toRaw, VNodeRef, watch } from "vue";
 import Draggable from "vuedraggable";
 import { QResizeObserver } from "quasar";
@@ -141,6 +140,7 @@ import {
 } from "@/type/preload";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import onetimeWatch from "@/helpers/onetimeWatch";
+import path from "@/helpers/path";
 
 const props = defineProps<{
   isEnginesReady: boolean;
@@ -554,11 +554,12 @@ watch(
     // 代替ポートをトースト通知する
     for (const engineId of store.state.engineIds) {
       const engineName = store.state.engineInfos[engineId].name;
+      const defaultPort = store.state.engineInfos[engineId].defaultPort;
       const altPort = store.state.altPortInfos[engineId];
       if (!altPort) return;
 
       void store.actions.SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON({
-        message: `${altPort.from}番ポートが使用中であるため ${engineName} は、${altPort.to}番ポートで起動しました`,
+        message: `${defaultPort}番ポートが使用中であるため ${engineName} は、${altPort}番ポートで起動しました`,
         icon: "compare_arrows",
         tipName: "engineStartedOnAltPort",
       });

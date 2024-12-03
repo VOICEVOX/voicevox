@@ -20,25 +20,25 @@ import { exists, mapValues } from '../runtime';
  */
 export interface StyleInfo {
     /**
-     * 
+     * スタイルID
      * @type {number}
      * @memberof StyleInfo
      */
     id: number;
     /**
-     * 
+     * このスタイルのアイコンをbase64エンコードしたもの、あるいはURL
      * @type {string}
      * @memberof StyleInfo
      */
     icon: string;
     /**
-     * 
+     * このスタイルの立ち絵画像をbase64エンコードしたもの、あるいはURL
      * @type {string}
      * @memberof StyleInfo
      */
     portrait?: string;
     /**
-     * 
+     * サンプル音声をbase64エンコードしたもの、あるいはURL
      * @type {Array<string>}
      * @memberof StyleInfo
      */

@@ -66,17 +66,19 @@ export const ipcMainSendProxy = new Proxy(
 
 /** IPCメッセージの送信元を確認する */
 const validateIpcSender = (event: IpcMainInvokeEvent) => {
-  let isValid: boolean;
-  const senderUrl = new URL(event.senderFrame.url);
-  if (process.env.VITE_DEV_SERVER_URL != undefined) {
-    const devServerUrl = new URL(process.env.VITE_DEV_SERVER_URL);
-    isValid = senderUrl.origin === devServerUrl.origin;
-  } else {
-    isValid = senderUrl.protocol === "app:";
+  let isValid: boolean = false;
+  if (event.senderFrame) {
+    const senderUrl = new URL(event.senderFrame.url);
+    if (import.meta.env.VITE_DEV_SERVER_URL != undefined) {
+      const devServerUrl = new URL(import.meta.env.VITE_DEV_SERVER_URL);
+      isValid = senderUrl.origin === devServerUrl.origin;
+    } else {
+      isValid = senderUrl.protocol === "app:";
+    }
   }
   if (!isValid) {
     throw new Error(
-      `不正なURLからのIPCメッセージを検出しました。senderUrl: ${senderUrl.toString()}`,
+      `不正なURLからのIPCメッセージを検出しました。senderUrl: ${event.senderFrame?.url}`,
     );
   }
 };
