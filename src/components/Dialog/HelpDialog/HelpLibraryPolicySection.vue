@@ -15,9 +15,10 @@
               {{ engineInfos.get(engineId)?.name }}
             </h2>
             <BaseRowCard
-              v-for="([, characterInfo], characterIndex) in engineInfos.get(
+              v-for="([, characterInfo], characterIndex) in getOrThrow(
+                engineInfos,
                 engineId,
-              )?.characterInfos ?? []"
+              ).characterInfos"
               :key="characterIndex"
               :title="characterInfo.metas.speakerName"
               clickable
@@ -72,6 +73,7 @@ import BaseDocumentView from "@/components/Base/BaseDocumentView.vue";
 import { useStore } from "@/store";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
 import { EngineId, SpeakerId } from "@/type/preload";
+import { getOrThrow } from "@/helpers/mapHelper";
 
 type DetailKey = { engine: EngineId; character: SpeakerId };
 
