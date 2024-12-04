@@ -176,10 +176,6 @@ jobs:
     needs: [config, e2e-test]
     if: needs.config.outputs.shouldUpdateSnapshots == 'true'
     steps:
-      - name: Config
-        id: config
-        run: |
-          echo "RUNNER_TEMP=$RUNNER_TEMP" >> $GITHUB_OUTPUT
       - uses: actions/checkout@v4
         with:
           # NOTE: デフォルトの設定だとgithub-push-actionが動いてくれないので設定を変えている。
@@ -191,14 +187,14 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           pattern: updated-snapshots-*
-          path: ${{ steps.config.outputs.RUNNER_TEMP }}/patches
+          path: ${{ runner.temp }}/patches
           merge-multiple: true
 
       - name: Commit updated snapshots
         id: commit-updated-snapshots
         run: |
           # パッチを適用
-          for patch in ${{ steps.config.outputs.RUNNER_TEMP }}/patches/*.diff; do
+          for patch in ${{ runner.temp }}/patches/*.diff; do
             git apply --allow-empty $patch
             rm $patch
           done
