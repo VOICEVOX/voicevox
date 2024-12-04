@@ -41,7 +41,7 @@
           </div>
 
           <!-- 左側のpane -->
-          <div class="col-4">
+          <div class="col-4 word-list-col">
             <div
               v-if="wordEditing"
               class="word-list-disable-overlay"
@@ -59,13 +59,40 @@
                   @click="newWord"
                   >追加</QBtn
                 >
-                <QSelect
-                  v-model="sortType"
-                  class="text-no-wrap text-bold col"
-                  :options="sortTypes"
+                <QBtn
+                  round
+                  flat
+                  icon="more_horiz"
+                  color="display"
+                  :disable="wordEditing"
+                >
+                  <QMenu>
+                    <QList>
+                      <QItem v-ripple>
+                        <QItemSection side>
+                          <QCheckbox v-model="isPriorityVisible"
+                            >優先度をリストに表示する</QCheckbox
+                          >
+                        </QItemSection>
+                      </QItem>
+                    </QList>
+                  </QMenu>
+                </QBtn>
+              </div>
+              <div class="row">
+                <QSelect v-model="sortType" class="col" :options="sortTypes"
+                  ><template #prepend> <QIcon name="swap_vert" /> </template
+                ></QSelect>
+                <QCheckbox
+                  v-model="isDesc"
+                  checked-icon="arrow_upward"
+                  unchecked-icon="arrow_downward"
+                  keep-color
+                  color="display"
                 />
               </div>
               <QInput
+                icon="search"
                 v-model="wordFilter"
                 hideBottomSpace
                 dense
@@ -73,6 +100,7 @@
                 color="display"
                 :disable="uiLocked || wordEditing"
                 class="q-mr-sm search-box"
+                ><template #prepend> <QIcon name="search" /> </template
               ></QInput>
             </div>
             <QList class="word-list">
@@ -94,7 +122,9 @@
                     value.surface
                   }}</QItemLabel>
                   <QItemLabel lines="1" caption
-                    >[{{ value.priority }}] {{ value.yomi }}</QItemLabel
+                    ><template v-if="isPriorityVisible">
+                      [{{ value.priority }}] </template
+                    >{{ value.yomi }}</QItemLabel
                   >
                 </QItemSection>
 
@@ -349,19 +379,20 @@ const filteredUserDict = computed(() => {
   return Object.fromEntries(
     Object.entries(userDict.value)
       .sort((a, b) => {
-        console.log(sortType.value.value);
+        let order;
         switch (sortType.value.value) {
           case "yomi":
             console.log("YOMI: " + a[1].yomi + ", " + b[1].yomi);
-            return a[1].yomi.localeCompare(b[1].yomi);
+            order = a[1].yomi.localeCompare(b[1].yomi);
+            break;
           case "priority":
-            console.log("YOMI: " + a[1].priority + ", " + b[1].primary);
-            return b[1].priority - a[1].priority;
+            order = b[1].priority - a[1].priority;
+            break;
           default:
-            console.log("DEFAULT: " + a[1].priority + ", " + b[1].primary);
-
-            return 0;
+            order = 0;
+            break;
         }
+        return order * (isDesc.value ? -1 : 1);
       })
       .filter(([, value]) => {
         // 半角から全角に変換
@@ -392,6 +423,12 @@ const sortTypes = [
   },
 ];
 const sortType = ref(sortTypes[0]);
+
+// 降順か？
+const isDesc = ref(false);
+
+// 優先度表示はするか？
+const isPriorityVisible = ref(false);
 
 const createUILockAction = function <T>(action: Promise<T>) {
   uiLocked.value = true;
