@@ -2091,6 +2091,18 @@ export type UiStoreTypes = {
     getter: boolean;
   };
 
+  ZOOM_IN: {
+    action(): void;
+  };
+
+  ZOOM_OUT: {
+    action(): void;
+  };
+
+  ZOOM_RESET: {
+    action(): void;
+  };
+
   CHECK_EDITED_AND_NOT_SAVE: {
     action(
       obj:
