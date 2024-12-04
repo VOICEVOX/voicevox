@@ -1325,7 +1325,6 @@ const onMouseUp = (event: MouseEvent) => {
   }
 };
 
-// ダブルクリック
 const onDoubleClick = (event: MouseEvent) => {
   // TODO: isSelfEventTarget以外は必要ないが、
   // 必要な依存関係明示のため(とuseEditModeからのコピペのため)contextに入れている
