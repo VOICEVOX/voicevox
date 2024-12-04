@@ -1326,6 +1326,10 @@ export type SingingStoreTypes = {
   SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS: {
     action(): void;
   };
+
+  APPLY_DEVICE_ID_TO_AUDIO_CONTEXT: {
+    action(payload: { device: string }): void;
+  };
 };
 
 export type SingingCommandStoreState = {
@@ -2085,6 +2089,18 @@ export type UiStoreTypes = {
 
   IS_FULLSCREEN: {
     getter: boolean;
+  };
+
+  ZOOM_IN: {
+    action(): void;
+  };
+
+  ZOOM_OUT: {
+    action(): void;
+  };
+
+  ZOOM_RESET: {
+    action(): void;
   };
 
   CHECK_EDITED_AND_NOT_SAVE: {
