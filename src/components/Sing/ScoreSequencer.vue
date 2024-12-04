@@ -512,8 +512,8 @@ const determineMouseDownBehavior = (
     // 左クリック以外は無視
     if (mouseButton !== "LEFT_BUTTON") return "IGNORE";
 
-    // ピッチ削除ツールが選択されているかコントロールキーが押されている場合はピッチ削除
-    if (sequencerPitchTool.value === "ERASE" || ctrlKey.value) {
+    // ピッチ削除ツールが選択されている場合はピッチ削除
+    if (sequencerPitchTool.value === "ERASE") {
       return "ERASE_PITCH";
     }
 
@@ -551,6 +551,14 @@ const determineDoubleClickBehavior = (
 
   return "IGNORE";
 };
+
+// 以下のtoolChangedByCtrlは2024/12/04時点での期待動作が以下のため必要…
+//
+// DRAW選択時 → Ctrlキー押す → → Ctrlキー離す → DRAWに戻る
+// ERASE選択時 → Ctrlキー押す → なにも起こらない(DRAWに変更されない)
+//
+// 単純にCtrlキーやPitchToolの新旧比較ではCtrlキー離されたときに常にツールがDRAWに戻ってしまうため
+// 一時的な切り替えであることを保持しておく必要がある
 
 // Ctrlキーが押されたときにピッチツールを変更したかどうか
 const toolChangedByCtrl = ref(false);
@@ -1317,7 +1325,7 @@ const onMouseUp = (event: MouseEvent) => {
   }
 };
 
-// ダブルクリックで追加
+// ダブルクリック
 const onDoubleClick = (event: MouseEvent) => {
   // TODO: isSelfEventTarget以外は必要ないが、
   // 必要な依存関係明示のため(とuseEditModeからのコピペのため)contextに入れている
