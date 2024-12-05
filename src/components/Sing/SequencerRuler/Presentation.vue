@@ -8,7 +8,7 @@
     <ContextMenu
       ref="contextMenu"
       :header="contextMenuHeader"
-      :menudata="contextMenudata"
+      :menudata="contextMenuData"
       :uiLocked
     />
     <svg
@@ -417,82 +417,84 @@ const contextMenuHeader = computed(() => {
   }
   return texts.join("、");
 });
-const contextMenudata = computed<ContextMenuItemData[]>(() =>
-  (
-    [
-      {
-        type: "button",
-        label: tempoChangeExists.value
-          ? `テンポ変化を編集`
-          : "テンポ変化を挿入",
-        onClick: async () => {
-          Dialog.create({
-            component: TempoChangeDialog,
-            componentProps: {
-              tempoChange: currentTempo.value,
-              mode: tempoChangeExists.value ? "edit" : "add",
-            },
-          }).onOk((result: { tempoChange: Omit<Tempo, "position"> }) => {
-            emit("setTempo", {
-              ...result.tempoChange,
-              position: playheadTicks.value,
-            });
+const contextMenuData = computed<ContextMenuItemData[]>(() => {
+  const menuData: ContextMenuItemData[] = [];
+  menuData.push({
+    type: "button",
+    label: tempoChangeExists.value ? `テンポ変化を編集` : "テンポ変化を挿入",
+    onClick: async () => {
+      Dialog.create({
+        component: TempoChangeDialog,
+        componentProps: {
+          tempoChange: currentTempo.value,
+          mode: tempoChangeExists.value ? "edit" : "add",
+        },
+      }).onOk((result: { tempoChange: Omit<Tempo, "position"> }) => {
+        emit("setTempo", {
+          ...result.tempoChange,
+          position: playheadTicks.value,
+        });
+      });
+      contextMenu.value?.hide();
+    },
+    disableWhenUiLocked: true,
+  });
+
+  if (tempoChangeExists.value) {
+    menuData.push({
+      type: "button",
+      label: "テンポ変化を削除",
+      disabled: currentTempo.value.position === 0,
+      onClick: () => {
+        emit("removeTempo", playheadTicks.value);
+
+        contextMenu.value?.hide();
+      },
+      disableWhenUiLocked: true,
+    });
+  }
+  menuData.push({
+    type: "separator",
+  });
+  menuData.push({
+    type: "button",
+    label: timeSignatureChangeExists.value
+      ? `拍子変化を編集`
+      : "拍子変化を挿入",
+    onClick: async () => {
+      Dialog.create({
+        component: TimeSignatureChangeDialog,
+        componentProps: {
+          timeSignatureChange: currentTimeSignature.value,
+          mode: timeSignatureChangeExists.value ? "edit" : "add",
+        },
+      }).onOk(
+        (result: { timeSignatureChange: Omit<TimeSignature, "position"> }) => {
+          emit("setTimeSignature", {
+            ...result.timeSignatureChange,
+            measureNumber: currentMeasure.value,
           });
-          contextMenu.value?.hide();
         },
-        disableWhenUiLocked: true,
-      },
-      tempoChangeExists.value && {
-        type: "button",
-        label: "テンポ変化を削除",
-        disabled: currentTempo.value.position === 0,
-        onClick: () => {
-          emit("removeTempo", playheadTicks.value);
+      );
+      contextMenu.value?.hide();
+    },
+    disableWhenUiLocked: true,
+  });
+  if (timeSignatureChangeExists.value) {
+    menuData.push({
+      type: "button",
+      label: "拍子変化を削除",
+      disabled: currentMeasure.value === 1,
+      onClick: () => {
+        emit("removeTimeSignature", currentMeasure.value);
 
-          contextMenu.value?.hide();
-        },
-        disableWhenUiLocked: true,
+        contextMenu.value?.hide();
       },
-      {
-        type: "button",
-        label: timeSignatureChangeExists.value
-          ? `拍子変化を編集`
-          : "拍子変化を挿入",
-        onClick: async () => {
-          Dialog.create({
-            component: TimeSignatureChangeDialog,
-            componentProps: {
-              timeSignatureChange: currentTimeSignature.value,
-              mode: timeSignatureChangeExists.value ? "edit" : "add",
-            },
-          }).onOk(
-            (result: {
-              timeSignatureChange: Omit<TimeSignature, "position">;
-            }) => {
-              emit("setTimeSignature", {
-                ...result.timeSignatureChange,
-                measureNumber: currentMeasure.value,
-              });
-            },
-          );
-          contextMenu.value?.hide();
-        },
-        disableWhenUiLocked: true,
-      },
-      timeSignatureChangeExists.value && {
-        type: "button",
-        label: "拍子変化を削除",
-        disabled: currentMeasure.value === 1,
-        onClick: () => {
-          emit("removeTimeSignature", currentMeasure.value);
-
-          contextMenu.value?.hide();
-        },
-        disableWhenUiLocked: true,
-      },
-    ] satisfies (ContextMenuItemData | boolean)[]
-  ).filter((item) => item !== false),
-);
+      disableWhenUiLocked: true,
+    });
+  }
+  return menuData;
+});
 </script>
 
 <style scoped lang="scss">
