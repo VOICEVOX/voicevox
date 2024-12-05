@@ -160,7 +160,7 @@ jobs:
 
           # git diff に表示されるようにする
           git add --intent-to-add --all tests/
-          git diff --binary --cached tests/ > patch-${{ matrix.os }}.diff
+          git diff --binary HEAD tests/ > patch-${{ matrix.os }}.diff
 
       - name: Upload patch to artifact
         if: needs.config.outputs.shouldUpdateSnapshots == 'true'
