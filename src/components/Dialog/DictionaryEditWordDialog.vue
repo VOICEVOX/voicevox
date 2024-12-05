@@ -161,33 +161,44 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, inject } from "vue";
 import { QInput } from "quasar";
 import AudioAccent from "@/components/Talk/AudioAccent.vue";
 import ContextMenu from "@/components/Menu/ContextMenu/Container.vue";
 import { useRightClickContextMenu } from "@/composables/useRightClickContextMenu";
 import { useStore } from "@/store";
 import type { FetchAudioResult } from "@/store/type";
+import { AccentPhrase } from "@/openapi";
+import { EngineId, SpeakerId, StyleId } from "@/type/preload";
 
 const store = useStore();
+
+const accentPhrase = inject<AccentPhrase | undefined>("accentPhrase");
+const voiceComputed = inject<{
+  engineId: string & EngineId;
+  speakerId: string & SpeakerId;
+  styleId: number & StyleId;
+}>("voiceComputed");
+const surface = inject<string>("surface");
+const yomi = inject<string>("yomi");
 
 // 音声再生機構
 const nowGenerating = ref(false);
 const nowPlaying = ref(false);
 
 const play = async () => {
-  if (!accentPhrase.value) return;
+  if (!accentPhrase) return;
 
   nowGenerating.value = true;
   const audioItem = await store.actions.GENERATE_AUDIO_ITEM({
-    text: yomi.value,
-    voice: voiceComputed.value,
+    text: yomi,
+    voice: voiceComputed,
   });
 
   if (audioItem.query == undefined)
     throw new Error(`assert audioItem.query !== undefined`);
 
-  audioItem.query.accentPhrases = [accentPhrase.value];
+  audioItem.query.accentPhrases = [accentPhrase];
 
   let fetchAudioResult: FetchAudioResult;
   try {
@@ -220,15 +231,17 @@ const surfaceInput = ref<QInput>();
 const yomiInput = ref<QInput>();
 
 // アクセント系
-const changeAccent = async (_: number, accent: number) => {
-  const { engineId, styleId } = voiceComputed.value;
+const accentPhraseTable = ref<HTMLElement>();
 
-  if (accentPhrase.value) {
-    accentPhrase.value.accent = accent;
-    accentPhrase.value = (
+const changeAccent = async (_: number, accent: number) => {
+  const { engineId, styleId } = voiceComputed;
+
+  if (accentPhrase) {
+    accentPhrase.accent = accent;
+    accentPhrase = (
       await createUILockAction(
         store.actions.FETCH_MORA_DATA({
-          accentPhrases: [accentPhrase.value],
+          accentPhrases: [accentPhrase],
           engineId,
           styleId,
         }),

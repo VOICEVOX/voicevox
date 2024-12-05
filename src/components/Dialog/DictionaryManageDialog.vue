@@ -124,7 +124,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, ref, watch, provide } from "vue";
 import DictionaryEditWordDialog from "./DictionaryEditWordDialog.vue";
 import { useStore } from "@/store";
 import { AccentPhrase, UserDictWord } from "@/openapi";
@@ -231,7 +231,6 @@ const voiceComputed = computed(() => {
 const kanaRegex = createKanaRegex();
 const isOnlyHiraOrKana = ref(true);
 const accentPhrase = ref<AccentPhrase | undefined>();
-const accentPhraseTable = ref<HTMLElement>();
 
 const convertHankakuToZenkaku = (text: string) => {
   // " "などの目に見えない文字をまとめて全角スペース(0x3000)に置き換える
@@ -469,6 +468,11 @@ const toWordEditingState = () => {
 const toDialogClosedState = () => {
   dictionaryManageDialogOpenedComputed.value = false;
 };
+
+provide("accentPhrase", accentPhrase);
+provide("voiceComputed", voiceComputed);
+provide("surface", surface);
+provide("yomi", yomi);
 </script>
 
 <style lang="scss" scoped>
