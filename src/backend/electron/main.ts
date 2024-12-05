@@ -949,6 +949,30 @@ app.on("ready", async () => {
     }
   }
 
+  // VVPPがデフォルトエンジンに指定されていたらインストールする
+  // NOTE: この機能は工事中。参照: https://github.com/VOICEVOX/voicevox/issues/1194
+  const packageInfos =
+    await engineAndVvppController.fetchInsallablePackageInfos();
+  for (const { engineName, packageInfo } of packageInfos) {
+    // インストールするか確認
+    const result = dialog.showMessageBoxSync(win, {
+      type: "info",
+      title: "デフォルトエンジンのインストール",
+      message: `${engineName} をインストールしますか？`,
+      buttons: ["インストール", "キャンセル"],
+      cancelId: 1,
+    });
+    if (result == 1) {
+      continue;
+    }
+
+    // ダウンロードしてインストールする
+    await engineAndVvppController.downloadAndInstallVvppEngine(
+      app.getPath("downloads"),
+      packageInfo,
+    );
+  }
+
   // runEngineAllの前にVVPPを読み込む
   let filePath: string | undefined;
   if (process.platform === "darwin") {
