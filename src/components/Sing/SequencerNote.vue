@@ -185,6 +185,7 @@ const classes = computed(() => {
       props.isPreview && props.previewMode === "RESIZE_NOTE_RIGHT", // 右リサイズ中
     "resizing-left":
       props.isPreview && props.previewMode === "RESIZE_NOTE_LEFT", // 左リサイズ中
+    idle: props.previewMode === "IDLE", // プレビュー中でない
   };
 });
 
@@ -518,14 +519,25 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
 // カーソルの状態
 .note {
   &.cursor-default,
+  &.cursor-draw,
   &.cursor-ew-resize,
   &.cursor-crosshair,
   &.cursor-move,
-  &.cursor-draw,
   &.cursor-erase {
     .note-bar,
     .note-edge {
       cursor: inherit;
+    }
+  }
+
+  // ノートの編集の場合でプレビュー中ではない場合はノートバーをドラッグできる
+  &.idle.edit-note {
+    .note-bar {
+      cursor: move;
+    }
+
+    .note-edge {
+      cursor: ew-resize;
     }
   }
 }

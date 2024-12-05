@@ -106,6 +106,7 @@ import { uuid4 } from "@/helpers/random";
 import { convertToWavFileData } from "@/sing/convertToWavFileData";
 import { generateWriteErrorMessage } from "@/helpers/fileHelper";
 import path from "@/helpers/path";
+import { showAlertDialog } from "@/components/Dialog/Dialog";
 
 const logger = createLogger("store/singing");
 
@@ -776,6 +777,8 @@ export const singingStoreState: SingingStoreState = {
   sequencerZoomY: 0.75,
   sequencerSnapType: 16,
   sequencerEditTarget: "NOTE",
+  sequencerNoteTool: "EDIT_FIRST",
+  sequencerPitchTool: "DRAW",
   _selectedNoteIds: new Set(),
   nowPlaying: false,
   volume: 0,
@@ -1134,6 +1137,17 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  DESELECT_NOTES: {
+    mutation(state, { noteIds }: { noteIds: NoteId[] }) {
+      for (const noteId of noteIds) {
+        state._selectedNoteIds.delete(noteId);
+      }
+    },
+    async action({ mutations }, { noteIds }: { noteIds: NoteId[] }) {
+      mutations.DESELECT_NOTES({ noteIds });
+    },
+  },
+
   DESELECT_ALL_NOTES: {
     mutation(state) {
       state.editingLyricNoteId = undefined;
@@ -1438,6 +1452,24 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  SET_SEQUENCER_NOTE_TOOL: {
+    mutation(state, { sequencerNoteTool }) {
+      state.sequencerNoteTool = sequencerNoteTool;
+    },
+    async action({ mutations }, { sequencerNoteTool }) {
+      mutations.SET_SEQUENCER_NOTE_TOOL({ sequencerNoteTool });
+    },
+  },
+
+  SET_SEQUENCER_PITCH_TOOL: {
+    mutation(state, { sequencerPitchTool }) {
+      state.sequencerPitchTool = sequencerPitchTool;
+    },
+    async action({ mutations }, { sequencerPitchTool }) {
+      mutations.SET_SEQUENCER_PITCH_TOOL({ sequencerPitchTool });
+    },
+  },
+
   TICK_TO_SECOND: {
     getter: (state) => (position) => {
       return tickToSecond(position, state.tempos, state.tpqn);
@@ -1679,6 +1711,23 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS: {
     async action({ state }) {
       syncTracksAndTrackChannelStrips(state.tracks);
+    },
+  },
+
+  APPLY_DEVICE_ID_TO_AUDIO_CONTEXT: {
+    action(_, { device }) {
+      if (!audioContext) {
+        throw new Error("audioContext is undefined.");
+      }
+      const sinkId = device === "default" ? "" : device;
+      audioContext.setSinkId(sinkId).catch((err: unknown) => {
+        void showAlertDialog({
+          type: "error",
+          title: "エラー",
+          message: "再生デバイスが見つかりません",
+        });
+        throw err;
+      });
     },
   },
 
