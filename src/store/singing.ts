@@ -777,6 +777,8 @@ export const singingStoreState: SingingStoreState = {
   sequencerZoomY: 0.75,
   sequencerSnapType: 16,
   sequencerEditTarget: "NOTE",
+  sequencerNoteTool: "EDIT_FIRST",
+  sequencerPitchTool: "DRAW",
   _selectedNoteIds: new Set(),
   nowPlaying: false,
   volume: 0,
@@ -1135,6 +1137,17 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  DESELECT_NOTES: {
+    mutation(state, { noteIds }: { noteIds: NoteId[] }) {
+      for (const noteId of noteIds) {
+        state._selectedNoteIds.delete(noteId);
+      }
+    },
+    async action({ mutations }, { noteIds }: { noteIds: NoteId[] }) {
+      mutations.DESELECT_NOTES({ noteIds });
+    },
+  },
+
   DESELECT_ALL_NOTES: {
     mutation(state) {
       state.editingLyricNoteId = undefined;
@@ -1436,6 +1449,24 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       { editTarget }: { editTarget: SequencerEditTarget },
     ) {
       mutations.SET_EDIT_TARGET({ editTarget });
+    },
+  },
+
+  SET_SEQUENCER_NOTE_TOOL: {
+    mutation(state, { sequencerNoteTool }) {
+      state.sequencerNoteTool = sequencerNoteTool;
+    },
+    async action({ mutations }, { sequencerNoteTool }) {
+      mutations.SET_SEQUENCER_NOTE_TOOL({ sequencerNoteTool });
+    },
+  },
+
+  SET_SEQUENCER_PITCH_TOOL: {
+    mutation(state, { sequencerPitchTool }) {
+      state.sequencerPitchTool = sequencerPitchTool;
+    },
+    async action({ mutations }, { sequencerPitchTool }) {
+      mutations.SET_SEQUENCER_PITCH_TOOL({ sequencerPitchTool });
     },
   },
 
