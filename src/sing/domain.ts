@@ -339,6 +339,8 @@ export const DEPRECATED_DEFAULT_EDITOR_FRAME_RATE = 93.75;
 
 export const VALUE_INDICATING_NO_DATA = -1;
 
+export const VOWELS = ["N", "a", "e", "i", "o", "u", "A", "E", "I", "O", "U"];
+
 export const UNVOICED_PHONEMES = [
   "pau",
   "cl",
@@ -352,6 +354,10 @@ export const UNVOICED_PHONEMES = [
   "t",
   "ts",
 ];
+
+export function isVowel(phoneme: string) {
+  return VOWELS.includes(phoneme);
+}
 
 export function createDefaultTempo(position: number): Tempo {
   return { position, bpm: DEFAULT_BPM };

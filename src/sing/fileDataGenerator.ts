@@ -1,4 +1,5 @@
 import Encoding from "encoding-japanese";
+import { isVowel } from "./domain";
 import { Encoding as EncodingType } from "@/type/preload";
 import { FramePhoneme } from "@/openapi";
 
@@ -101,8 +102,11 @@ export async function generateLabelFileData(
   };
 
   for (const phoneme of phonemes) {
-    // REVIEW: vowel != "N" のときに vowel.toLowerCase() する必要がある…？
-    writeLine(phoneme.frameLength / frameRate, phoneme.phoneme);
+    if (isVowel(phoneme.phoneme) && phoneme.phoneme !== "N") {
+      writeLine(phoneme.frameLength / frameRate, phoneme.phoneme.toLowerCase());
+    } else {
+      writeLine(phoneme.frameLength / frameRate, phoneme.phoneme);
+    }
   }
 
   return await generateTextFileData({ text: labString });
