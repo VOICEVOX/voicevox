@@ -1,14 +1,18 @@
 <template>
-  <div v-if="nowAudioExporting" class="exporting-dialog">
+  <div v-if="nowExporting" class="export-overlay">
     <div>
       <QSpinner color="primary" size="2.5rem" />
       <div class="q-mt-xs">
-        {{ nowRendering ? "レンダリング中・・・" : "音声を書き出し中・・・" }}
+        {{
+          nowRendering
+            ? "レンダリング中・・・"
+            : `${exportingMediaName}を書き出し中・・・`
+        }}
       </div>
       <QBtn
         v-if="nowRendering"
         padding="xs md"
-        label="音声の書き出しをキャンセル"
+        :label="`${exportingMediaName}の書き出しをキャンセル`"
         class="q-mt-sm"
         outline
         @click="cancelExport"
@@ -26,12 +30,21 @@ const store = useStore();
 const nowRendering = computed(() => {
   return store.state.nowRendering;
 });
-const nowAudioExporting = computed(() => {
-  return store.state.nowAudioExporting;
+const nowExporting = computed(() => {
+  return store.state.exportState !== "NotExporting";
+});
+const exportingMediaName = computed(() => {
+  if (store.state.exportState === "ExportingAudio") {
+    return "音声";
+  } else if (store.state.exportState === "ExportingLabel") {
+    return "labファイル";
+  } else {
+    return "";
+  }
 });
 
 const cancelExport = () => {
-  void store.actions.CANCEL_AUDIO_EXPORT();
+  void store.actions.CANCEL_EXPORT();
 };
 </script>
 
@@ -39,7 +52,7 @@ const cancelExport = () => {
 @use "@/styles/v2/variables" as vars;
 @use "@/styles/colors" as colors;
 
-.exporting-dialog {
+.export-overlay {
   background-color: rgba(colors.$display-rgb, 0.15);
   position: absolute;
   inset: 0;

@@ -853,6 +853,11 @@ export type SongExportSetting = {
   withTrackParameters: TrackParameters;
 };
 
+export type SongExportState =
+  | "ExportingAudio"
+  | "ExportingLabel"
+  | "NotExporting";
+
 export type SingingStoreState = {
   tpqn: number; // Ticks Per Quarter Note
   tempos: Tempo[];
@@ -876,10 +881,8 @@ export type SingingStoreState = {
   startRenderingRequested: boolean;
   stopRenderingRequested: boolean;
   nowRendering: boolean;
-  nowAudioExporting: boolean;
-  nowLabelExporting: boolean;
-  cancellationOfAudioExportRequested: boolean;
-  cancellationOfLabelExportRequested: boolean;
+  exportState: SongExportState;
+  cancellationOfExportRequested: boolean;
   isSongSidebarOpen: boolean;
 };
 
@@ -1145,11 +1148,7 @@ export type SingingStoreTypes = {
     }): Promise<SaveResultObject>;
   };
 
-  CANCEL_AUDIO_EXPORT: {
-    action(): void;
-  };
-
-  CANCEL_LABEL_EXPORT: {
+  CANCEL_EXPORT: {
     action(): void;
   };
 
@@ -1215,20 +1214,12 @@ export type SingingStoreTypes = {
     mutation: { nowRendering: boolean };
   };
 
-  SET_NOW_AUDIO_EXPORTING: {
-    mutation: { nowAudioExporting: boolean };
+  SET_EXPORT_STATE: {
+    mutation: { exportState: SongExportState };
   };
 
-  SET_NOW_LABEL_EXPORTING: {
-    mutation: { nowLabelExporting: boolean };
-  };
-
-  SET_CANCELLATION_OF_AUDIO_EXPORT_REQUESTED: {
-    mutation: { cancellationOfAudioExportRequested: boolean };
-  };
-
-  SET_CANCELLATION_OF_LABEL_EXPORT_REQUESTED: {
-    mutation: { cancellationOfLabelExportRequested: boolean };
+  SET_CANCELLATION_OF_EXPORT_REQUESTED: {
+    mutation: { cancellationOfExportRequested: boolean };
   };
 
   RENDER: {

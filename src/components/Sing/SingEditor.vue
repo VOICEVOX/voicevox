@@ -2,8 +2,7 @@
   <ToolBar />
   <div class="sing-main" :class="{ 'sidebar-open': isSidebarOpen }">
     <EngineStartupOverlay :isCompletedInitialStartup />
-    <AudioExportOverlay />
-    <LabelExportOverlay />
+    <ExportOverlay />
 
     <QSplitter
       :modelValue="isSidebarOpen ? sidebarWidth : 0"
@@ -32,8 +31,7 @@ import ToolBar from "./ToolBar/ToolBar.vue";
 import ScoreSequencer from "./ScoreSequencer.vue";
 import SideBar from "./SideBar/SideBar.vue";
 import EngineStartupOverlay from "@/components/EngineStartupOverlay.vue";
-import AudioExportOverlay from "@/components/Sing/AudioExportOverlay.vue";
-import LabelExportOverlay from "@/components/Sing/LabelExportOverlay.vue";
+import ExportOverlay from "@/components/Sing/ExportOverlay.vue";
 import { useStore } from "@/store";
 import onetimeWatch from "@/helpers/onetimeWatch";
 import {

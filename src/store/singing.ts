@@ -792,10 +792,8 @@ export const singingStoreState: SingingStoreState = {
   startRenderingRequested: false,
   stopRenderingRequested: false,
   nowRendering: false,
-  nowAudioExporting: false,
-  nowLabelExporting: false,
-  cancellationOfAudioExportRequested: false,
-  cancellationOfLabelExportRequested: false,
+  exportState: "NotExporting",
+  cancellationOfExportRequested: false,
   isSongSidebarOpen: false,
 };
 
@@ -2683,29 +2681,15 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  SET_NOW_AUDIO_EXPORTING: {
-    mutation(state, { nowAudioExporting }) {
-      state.nowAudioExporting = nowAudioExporting;
+  SET_EXPORT_STATE: {
+    mutation(state, { exportState }) {
+      state.exportState = exportState;
     },
   },
 
-  SET_NOW_LABEL_EXPORTING: {
-    mutation(state, { nowLabelExporting }) {
-      state.nowLabelExporting = nowLabelExporting;
-    },
-  },
-
-  SET_CANCELLATION_OF_AUDIO_EXPORT_REQUESTED: {
-    mutation(state, { cancellationOfAudioExportRequested }) {
-      state.cancellationOfAudioExportRequested =
-        cancellationOfAudioExportRequested;
-    },
-  },
-
-  SET_CANCELLATION_OF_LABEL_EXPORT_REQUESTED: {
-    mutation(state, { cancellationOfLabelExportRequested }) {
-      state.cancellationOfLabelExportRequested =
-        cancellationOfLabelExportRequested;
+  SET_CANCELLATION_OF_EXPORT_REQUESTED: {
+    mutation(state, { cancellationOfExportRequested }) {
+      state.cancellationOfExportRequested = cancellationOfExportRequested;
     },
   },
 
@@ -2752,9 +2736,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
           if (state.nowRendering) {
             await createPromiseThatResolvesWhen(() => {
-              return (
-                !state.nowRendering || state.cancellationOfAudioExportRequested
-              );
+              return !state.nowRendering || state.cancellationOfExportRequested;
             });
             if (state.cancellationOfAudioExportRequested) {
               return { result: "CANCELED", path: "" };
@@ -2782,12 +2764,16 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           return result;
         };
 
-        mutations.SET_NOW_AUDIO_EXPORTING({ nowAudioExporting: true });
+        if (state.exportState !== "NotExporting") {
+          throw new Error("Export is in progress.");
+        }
+
+        mutations.SET_EXPORT_STATE({ exportState: "ExportingAudio" });
         return exportAudioFile().finally(() => {
-          mutations.SET_CANCELLATION_OF_AUDIO_EXPORT_REQUESTED({
-            cancellationOfAudioExportRequested: false,
+          mutations.SET_CANCELLATION_OF_EXPORT_REQUESTED({
+            cancellationOfExportRequested: false,
           });
-          mutations.SET_NOW_AUDIO_EXPORTING({ nowAudioExporting: false });
+          mutations.SET_EXPORT_STATE({ exportState: "NotExporting" });
         });
       },
     ),
@@ -2821,9 +2807,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
           if (state.nowRendering) {
             await createPromiseThatResolvesWhen(() => {
-              return (
-                !state.nowRendering || state.cancellationOfAudioExportRequested
-              );
+              return !state.nowRendering || state.cancellationOfExportRequested;
             });
             if (state.cancellationOfAudioExportRequested) {
               return { result: "CANCELED", path: "" };
@@ -2917,12 +2901,16 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           return { result: "SUCCESS", path: firstFilePath };
         };
 
-        mutations.SET_NOW_AUDIO_EXPORTING({ nowAudioExporting: true });
+        if (state.exportState !== "NotExporting") {
+          throw new Error("Export is in progress.");
+        }
+
+        mutations.SET_EXPORT_STATE({ exportState: "ExportingAudio" });
         return exportAudioFile().finally(() => {
-          mutations.SET_CANCELLATION_OF_AUDIO_EXPORT_REQUESTED({
-            cancellationOfAudioExportRequested: false,
+          mutations.SET_CANCELLATION_OF_EXPORT_REQUESTED({
+            cancellationOfExportRequested: false,
           });
-          mutations.SET_NOW_AUDIO_EXPORTING({ nowAudioExporting: false });
+          mutations.SET_EXPORT_STATE({ exportState: "NotExporting" });
         });
       },
     ),
@@ -2952,9 +2940,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
           if (state.nowRendering) {
             await createPromiseThatResolvesWhen(() => {
-              return (
-                !state.nowRendering || state.cancellationOfLabelExportRequested
-              );
+              return !state.nowRendering || state.cancellationOfExportRequested;
             });
             if (state.cancellationOfLabelExportRequested) {
               return createArray(
@@ -3110,12 +3096,16 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           return results;
         };
 
-        mutations.SET_NOW_LABEL_EXPORTING({ nowLabelExporting: true });
+        if (state.exportState !== "NotExporting") {
+          throw new Error("Export is in progress.");
+        }
+
+        mutations.SET_EXPORT_STATE({ exportState: "ExportingLabel" });
         return exportLabelFile().finally(() => {
-          mutations.SET_CANCELLATION_OF_LABEL_EXPORT_REQUESTED({
-            cancellationOfLabelExportRequested: false,
+          mutations.SET_CANCELLATION_OF_EXPORT_REQUESTED({
+            cancellationOfExportRequested: false,
           });
-          mutations.SET_NOW_LABEL_EXPORTING({ nowLabelExporting: false });
+          mutations.SET_EXPORT_STATE({ exportState: "NotExporting" });
         });
       },
     ),
@@ -3152,26 +3142,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  CANCEL_AUDIO_EXPORT: {
+  CANCEL_EXPORT: {
     async action({ state, mutations }) {
-      if (!state.nowAudioExporting) {
-        logger.warn("CANCEL_AUDIO_EXPORT on !nowAudioExporting");
+      if (state.exportState === "NotExporting") {
+        logger.warn("CANCEL_EXPORT on NotExporting");
         return;
       }
-      mutations.SET_CANCELLATION_OF_AUDIO_EXPORT_REQUESTED({
-        cancellationOfAudioExportRequested: true,
-      });
-    },
-  },
-
-  CANCEL_LABEL_EXPORT: {
-    async action({ state, mutations }) {
-      if (!state.nowLabelExporting) {
-        logger.warn("CANCEL_LAB_EXPORT on !nowLabelExporting");
-        return;
-      }
-      mutations.SET_CANCELLATION_OF_LABEL_EXPORT_REQUESTED({
-        cancellationOfLabelExportRequested: true,
+      mutations.SET_CANCELLATION_OF_EXPORT_REQUESTED({
+        cancellationOfExportRequested: true,
       });
     },
   },
