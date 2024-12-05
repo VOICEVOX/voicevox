@@ -151,6 +151,10 @@ const openHelpDialog = () => {
   });
 };
 
+const toggleFullScreen = async () => {
+  window.backend.toggleFullScreen();
+};
+
 const createNewProject = async () => {
   if (!uiLocked.value) {
     await store.actions.CREATE_NEW_PROJECT({});
@@ -195,6 +199,21 @@ const importProject = () => {
   if (!uiLocked.value) {
     void store.actions.LOAD_PROJECT_FILE({});
   }
+};
+
+/** UIの拡大 */
+const zoomIn = async () => {
+  await store.actions.ZOOM_IN();
+};
+
+/** UIの縮小 */
+const zoomOut = async () => {
+  await store.actions.ZOOM_OUT();
+};
+
+/** UIの拡大率リセット */
+const zoomReset = async () => {
+  await store.actions.ZOOM_RESET();
 };
 
 // 「最近使ったプロジェクト」のメニュー
@@ -457,7 +476,40 @@ const menudata = computed<MenuItemData[]>(() => [
       closeAllDialog();
     },
     disableWhenUiLocked: false,
-    subMenu: [...props.viewSubMenuData],
+    subMenu: [
+      ...props.viewSubMenuData,
+      { type: "separator" },
+      {
+        type: "button",
+        label: "全画面表示を切り替え",
+        onClick: toggleFullScreen,
+        disableWhenUiLocked: false,
+      },
+      {
+        type: "button",
+        label: "拡大",
+        onClick: () => {
+          void zoomIn();
+        },
+        disableWhenUiLocked: false,
+      },
+      {
+        type: "button",
+        label: "縮小",
+        onClick: () => {
+          void zoomOut();
+        },
+        disableWhenUiLocked: false,
+      },
+      {
+        type: "button",
+        label: "拡大率のリセット",
+        onClick: () => {
+          void zoomReset();
+        },
+        disableWhenUiLocked: false,
+      },
+    ],
   },
   ...(isVst
     ? []
@@ -607,6 +659,22 @@ registerHotkeyForAllEditors({
 registerHotkeyForAllEditors({
   callback: importProject,
   name: "プロジェクトを読み込む",
+});
+registerHotkeyForAllEditors({
+  callback: toggleFullScreen,
+  name: "全画面表示を切り替え",
+});
+registerHotkeyForAllEditors({
+  callback: zoomIn,
+  name: "拡大",
+});
+registerHotkeyForAllEditors({
+  callback: zoomOut,
+  name: "縮小",
+});
+registerHotkeyForAllEditors({
+  callback: zoomReset,
+  name: "拡大率のリセット",
 });
 </script>
 

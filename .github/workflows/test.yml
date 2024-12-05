@@ -155,9 +155,12 @@ jobs:
       - name: Collect patch for snapshots
         if: needs.config.outputs.shouldUpdateSnapshots == 'true'
         run: |
-          git add --intent-to-add tests/  # git diff に表示されるようにする
-          git diff tests/  # ロギング用
-          git diff --binary tests/ > patch-${{ matrix.os }}.diff
+          # ログ用
+          git status
+
+          # git diff に表示されるようにする
+          git add --intent-to-add --all tests/
+          git diff --binary --cached tests/ > patch-${{ matrix.os }}.diff
 
       - name: Upload patch to artifact
         if: needs.config.outputs.shouldUpdateSnapshots == 'true'
@@ -184,14 +187,14 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           pattern: updated-snapshots-*
-          path: patches
+          path: ${{ runner.temp }}/patches
           merge-multiple: true
 
       - name: Commit updated snapshots
         id: commit-updated-snapshots
         run: |
           # パッチを適用
-          for patch in patches/*.diff; do
+          for patch in ${{ runner.temp }}/patches/*.diff; do
             git apply --allow-empty $patch
             rm $patch
           done

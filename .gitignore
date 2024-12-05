@@ -50,3 +50,6 @@ storybook-static/
 
 # Preview Build Output
 dist_preview/
+
+# Downloaded binaries
+vendored

@@ -117,8 +117,24 @@ export const defaultHotkeySettings: HotkeySettingType[] = [
     combination: HotkeyCombination(!isMac ? "Ctrl Y" : "Shift Meta Z"),
   },
   {
+    action: "拡大",
+    combination: HotkeyCombination(!isMac ? "Ctrl +" : "Meta +"),
+  },
+  {
+    action: "縮小",
+    combination: HotkeyCombination(!isMac ? "Ctrl -" : "Meta -"),
+  },
+  {
+    action: "拡大率のリセット",
+    combination: HotkeyCombination(""),
+  },
+  {
     action: "新規プロジェクト",
     combination: HotkeyCombination(!isMac ? "Ctrl N" : "Meta N"),
+  },
+  {
+    action: "全画面表示を切り替え",
+    combination: HotkeyCombination(!isMac ? "F11" : "Ctrl Meta F"),
   },
   {
     action: "プロジェクトを名前を付けて保存",
@@ -241,7 +257,11 @@ export interface Sandbox {
   }): void;
   closeWindow(): void;
   minimizeWindow(): void;
-  maximizeWindow(): void;
+  toggleMaximizeWindow(): void;
+  toggleFullScreen(): void;
+  zoomIn(): void;
+  zoomOut(): void;
+  zoomReset(): void;
   logError(...params: unknown[]): void;
   logWarn(...params: unknown[]): void;
   logInfo(...params: unknown[]): void;
@@ -460,6 +480,10 @@ export const hotkeyActionNameSchema = z.enum([
   `8${actionPostfixSelectNthCharacter}`,
   `9${actionPostfixSelectNthCharacter}`,
   `10${actionPostfixSelectNthCharacter}`,
+  "全画面表示を切り替え",
+  "拡大",
+  "縮小",
+  "拡大率のリセット",
 ]);
 
 export type HotkeyActionNameType = z.infer<typeof hotkeyActionNameSchema>;

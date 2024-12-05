@@ -24,6 +24,7 @@
       @mousedown="onMouseDown"
       @mouseenter="onMouseEnter"
       @mouseleave="onMouseLeave"
+      @dblclick.stop="onDoubleClick"
       @wheel="onWheel"
       @scroll="onScroll"
       @contextmenu.prevent
@@ -152,10 +153,23 @@
       trackSize="2px"
       @update:modelValue="setZoomY"
     />
-    <ContextMenu
-      v-if="editTarget === 'NOTE'"
-      ref="contextMenu"
-      :menudata="contextMenuData"
+    <ContextMenu ref="contextMenu" :menudata="contextMenuData" />
+    <SequencerToolPalette
+      :editTarget
+      :sequencerNoteTool
+      :sequencerPitchTool
+      @update:sequencerNoteTool="
+        (value) =>
+          store.dispatch('SET_SEQUENCER_NOTE_TOOL', {
+            sequencerNoteTool: value,
+          })
+      "
+      @update:sequencerPitchTool="
+        (value) =>
+          store.dispatch('SET_SEQUENCER_PITCH_TOOL', {
+            sequencerPitchTool: value,
+          })
+      "
     />
   </div>
 </template>
@@ -172,10 +186,15 @@ import {
 } from "vue";
 import ContextMenu, {
   ContextMenuItemData,
-} from "@/components/Menu/ContextMenu.vue";
+} from "@/components/Menu/ContextMenu/Container.vue";
 import { NoteId } from "@/type/preload";
 import { useStore } from "@/store";
-import { Note, SequencerEditTarget } from "@/store/type";
+import {
+  Note,
+  SequencerEditTarget,
+  NoteEditTool,
+  PitchEditTool,
+} from "@/store/type";
 import {
   getEndTicksOfPhrase,
   getNoteDuration,
@@ -200,6 +219,10 @@ import {
   PREVIEW_SOUND_DURATION,
   getButton,
   PreviewMode,
+  MouseButton,
+  MouseDownBehavior,
+  MouseDoubleClickBehavior,
+  CursorState,
 } from "@/sing/viewHelper";
 import SequencerGrid from "@/components/Sing/SequencerGrid/Container.vue";
 import SequencerRuler from "@/components/Sing/SequencerRuler/Container.vue";
@@ -210,6 +233,7 @@ import SequencerPhraseIndicator from "@/components/Sing/SequencerPhraseIndicator
 import CharacterPortrait from "@/components/Sing/CharacterPortrait.vue";
 import SequencerPitch from "@/components/Sing/SequencerPitch.vue";
 import SequencerLyricInput from "@/components/Sing/SequencerLyricInput.vue";
+import SequencerToolPalette from "@/components/Sing/SequencerToolPalette.vue";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import { createLogger } from "@/domain/frontend/log";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
@@ -219,7 +243,6 @@ import {
 } from "@/composables/useModifierKey";
 import { applyGaussianFilter, linearInterpolation } from "@/sing/utility";
 import { useLyricInput } from "@/composables/useLyricInput";
-import { useCursorState, CursorState } from "@/composables/useCursorState";
 import { ExhaustiveError } from "@/type/utility";
 import { uuid4 } from "@/helpers/random";
 
@@ -231,6 +254,7 @@ const isSelfEventTarget = (event: UIEvent) => {
 const { warn } = createLogger("ScoreSequencer");
 const store = useStore();
 const state = store.state;
+
 // 選択中のトラックID
 const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
 
@@ -356,7 +380,6 @@ const phraseInfosInOtherTracks = computed(() => {
 });
 
 const ctrlKey = useCommandOrControlKey();
-const editTarget = computed(() => state.sequencerEditTarget);
 const editorFrameRate = computed(() => state.editorFrameRate);
 const scrollBarWidth = ref(12);
 const sequencerBody = ref<HTMLElement | null>(null);
@@ -364,8 +387,6 @@ const sequencerBody = ref<HTMLElement | null>(null);
 // マウスカーソル位置
 const cursorX = ref(0);
 const cursorY = ref(0);
-
-const { cursorClass, setCursorState } = useCursorState();
 
 // 歌詞入力
 const { previewLyrics, commitPreviewLyrics, splitAndUpdatePreview } =
@@ -419,30 +440,234 @@ const editingLyricNote = computed(() => {
 const showGuideLine = ref(true);
 const guideLineX = ref(0);
 
-// プレビュー中でないときの処理
-// TODO: ステートパターンにして、この処理をIdleStateに移す
-watch([ctrlKey, shiftKey, nowPreviewing, editTarget], () => {
-  if (nowPreviewing.value) {
+// 編集モード
+// NOTE: ステートマシン実装後に削除する
+// 議論 https://github.com/VOICEVOX/voicevox/pull/2367#discussion_r1853262865
+
+// 編集モードの外部コンテキスト
+interface EditModeContext {
+  readonly ctrlKey: boolean;
+  readonly shiftKey: boolean;
+  readonly nowPreviewing: boolean;
+  readonly editTarget: SequencerEditTarget;
+  readonly sequencerNoteTool: NoteEditTool;
+  readonly sequencerPitchTool: PitchEditTool;
+  readonly isSelfEventTarget?: boolean;
+  readonly mouseButton?: MouseButton;
+  readonly editingLyricNoteId?: NoteId;
+}
+
+// 編集対象
+const editTarget = computed(() => store.state.sequencerEditTarget);
+// 選択中のノート編集ツール
+const sequencerNoteTool = computed(() => state.sequencerNoteTool);
+// 選択中のピッチ編集ツール
+const sequencerPitchTool = computed(() => state.sequencerPitchTool);
+
+/**
+ * マウスダウン時の振る舞いを判定する
+ * 条件の判定のみを行い、実際の処理は呼び出し側で行う
+ */
+const determineMouseDownBehavior = (
+  context: EditModeContext,
+): MouseDownBehavior => {
+  const { isSelfEventTarget, mouseButton, editingLyricNoteId } = context;
+
+  // プレビュー中は無視
+  if (nowPreviewing.value) return "IGNORE";
+
+  // ノート編集の場合
+  if (editTarget.value === "NOTE") {
+    // イベントが来ていない場合は無視
+    if (!isSelfEventTarget) return "IGNORE";
+    // 歌詞編集中は無視
+    if (editingLyricNoteId != undefined) return "IGNORE";
+
+    // 左クリックの場合
+    if (mouseButton === "LEFT_BUTTON") {
+      // シフトキーが押されている場合は常に矩形選択開始
+      if (shiftKey.value) return "START_RECT_SELECT";
+
+      // 編集優先ツールの場合
+      if (sequencerNoteTool.value === "EDIT_FIRST") {
+        // コントロールキーが押されている場合は全選択解除
+        if (ctrlKey.value) {
+          return "DESELECT_ALL";
+        }
+        return "ADD_NOTE";
+      }
+
+      // 選択優先ツールの場合
+      if (sequencerNoteTool.value === "SELECT_FIRST") {
+        // 矩形選択開始
+        return "START_RECT_SELECT";
+      }
+    }
+
+    return "DESELECT_ALL";
+  }
+
+  // ピッチ編集の場合
+  if (editTarget.value === "PITCH") {
+    // 左クリック以外は無視
+    if (mouseButton !== "LEFT_BUTTON") return "IGNORE";
+
+    // ピッチ削除ツールが選択されている場合はピッチ削除
+    if (sequencerPitchTool.value === "ERASE") {
+      return "ERASE_PITCH";
+    }
+
+    // それ以外はピッチ編集
+    return "DRAW_PITCH";
+  }
+
+  return "IGNORE";
+};
+
+/**
+ * ダブルクリック時の振る舞いを判定する
+ */
+const determineDoubleClickBehavior = (
+  context: EditModeContext,
+): MouseDoubleClickBehavior => {
+  const { isSelfEventTarget, mouseButton } = context;
+
+  // ノート編集の場合
+  if (editTarget.value === "NOTE") {
+    // 直接イベントが来ていない場合は無視
+    if (!isSelfEventTarget) return "IGNORE";
+
+    // プレビュー中は無視
+    if (nowPreviewing.value) return "IGNORE";
+
+    // 選択優先ツールではノート追加
+    if (mouseButton === "LEFT_BUTTON") {
+      if (sequencerNoteTool.value === "SELECT_FIRST") {
+        return "ADD_NOTE";
+      }
+    }
+    return "IGNORE";
+  }
+
+  return "IGNORE";
+};
+
+// 以下のtoolChangedByCtrlは2024/12/04時点での期待動作が以下のため必要…
+//
+// DRAW選択時 → Ctrlキー押す → → Ctrlキー離す → DRAWに戻る
+// ERASE選択時 → Ctrlキー押す → なにも起こらない(DRAWに変更されない)
+//
+// 単純にCtrlキーやPitchToolの新旧比較ではCtrlキー離されたときに常にツールがDRAWに戻ってしまうため
+// 一時的な切り替えであることを保持しておく必要がある
+
+// Ctrlキーが押されたときにピッチツールを変更したかどうか
+const toolChangedByCtrl = ref(false);
+
+// ピッチ編集モードにおいてCtrlキーが押されたときにピッチツールを消しゴムツールにする
+watch([ctrlKey], () => {
+  // ピッチ編集モードでない場合は無視
+  if (editTarget.value !== "PITCH") {
     return;
   }
-  if (editTarget.value === "PITCH") {
+
+  // 現在のツールがピッチ描画ツールの場合
+  if (sequencerPitchTool.value === "DRAW") {
+    // Ctrlキーが押されたときはピッチ削除ツールに変更
     if (ctrlKey.value) {
-      // ピッチ消去
-      setCursorState(CursorState.ERASE);
-    } else {
-      // ピッチ描画
-      setCursorState(CursorState.DRAW);
+      void store.actions.SET_SEQUENCER_PITCH_TOOL({
+        sequencerPitchTool: "ERASE",
+      });
+      toolChangedByCtrl.value = true;
     }
   }
-  if (editTarget.value === "NOTE") {
-    if (shiftKey.value) {
-      // 範囲選択
-      setCursorState(CursorState.CROSSHAIR);
-    } else {
-      setCursorState(CursorState.UNSET);
+
+  // 現在のツールがピッチ削除ツールかつCtrlキーが離されたとき
+  if (sequencerPitchTool.value === "ERASE" && toolChangedByCtrl.value) {
+    // ピッチ描画ツールに戻す
+    if (!ctrlKey.value) {
+      void store.actions.SET_SEQUENCER_PITCH_TOOL({
+        sequencerPitchTool: "DRAW",
+      });
+      toolChangedByCtrl.value = false;
     }
   }
 });
+
+// カーソルの状態
+// TODO: ステートマシン実装後に削除する
+// 議論 https://github.com/VOICEVOX/voicevox/pull/2367#discussion_r1853262865
+
+/**
+ * カーソルの状態を関連するコンテキストから取得する
+ */
+const determineCursorBehavior = (): CursorState => {
+  // プレビューの場合
+  if (nowPreviewing.value && previewMode.value !== "IDLE") {
+    switch (previewMode.value) {
+      case "ADD_NOTE":
+        return "DRAW";
+      case "MOVE_NOTE":
+        return "MOVE";
+      case "RESIZE_NOTE_RIGHT":
+      case "RESIZE_NOTE_LEFT":
+        return "EW_RESIZE";
+      case "DRAW_PITCH":
+        return "DRAW";
+      case "ERASE_PITCH":
+        return "ERASE";
+      default:
+        return "UNSET";
+    }
+  }
+
+  // ノート編集の場合
+  if (editTarget.value === "NOTE") {
+    // シフトキーが押されていたら常に十字カーソル
+    if (shiftKey.value) {
+      return "CROSSHAIR";
+    }
+    // ノート編集ツールが選択されておりCtrlキーが押されていない場合は描画カーソル
+    if (sequencerNoteTool.value === "EDIT_FIRST" && !ctrlKey.value) {
+      return "DRAW";
+    }
+    // それ以外は未設定
+    return "UNSET";
+  }
+
+  // ピッチ編集の場合
+  if (editTarget.value === "PITCH") {
+    // 描画ツールが選択されていたら描画カーソル
+    if (sequencerPitchTool.value === "DRAW") {
+      return "DRAW";
+    }
+    // 削除ツールが選択されていたら消しゴムカーソル
+    if (sequencerPitchTool.value === "ERASE") {
+      return "ERASE";
+    }
+  }
+  return "UNSET";
+};
+
+// カーソル用のCSSクラス名ヘルパー
+const cursorClass = computed(() => {
+  switch (cursorState.value) {
+    case "EW_RESIZE":
+      return "cursor-ew-resize";
+    case "CROSSHAIR":
+      return "cursor-crosshair";
+    case "MOVE":
+      return "cursor-move";
+    case "DRAW":
+      return "cursor-draw";
+    case "ERASE":
+      return "cursor-erase";
+    default:
+      return "";
+  }
+});
+
+// カーソルの状態
+const cursorState = computed(() => determineCursorBehavior());
 
 const previewAdd = () => {
   const cursorBaseX = (scrollX.value + cursorX.value) / zoomX.value;
@@ -475,7 +700,6 @@ const previewAdd = () => {
 
   const guideLineBaseX = tickToBaseX(noteEndPos, tpqn.value);
   guideLineX.value = guideLineBaseX * zoomX.value;
-  setCursorState(CursorState.DRAW);
 };
 
 const previewMove = () => {
@@ -529,7 +753,6 @@ const previewMove = () => {
     tpqn.value,
   );
   guideLineX.value = guideLineBaseX * zoomX.value;
-  setCursorState(CursorState.MOVE);
 };
 
 const previewResizeRight = () => {
@@ -570,7 +793,6 @@ const previewResizeRight = () => {
 
   const guideLineBaseX = tickToBaseX(newNoteEndPos, tpqn.value);
   guideLineX.value = guideLineBaseX * zoomX.value;
-  setCursorState(CursorState.EW_RESIZE);
 };
 
 const previewResizeLeft = () => {
@@ -618,7 +840,6 @@ const previewResizeLeft = () => {
 
   const guideLineBaseX = tickToBaseX(newNotePos, tpqn.value);
   guideLineX.value = guideLineBaseX * zoomX.value;
-  setCursorState(CursorState.EW_RESIZE);
 };
 
 // ピッチを描く処理を行う
@@ -693,7 +914,6 @@ const previewDrawPitch = () => {
   previewPitchEdit.value = tempPitchEdit;
   prevCursorPos.frame = cursorFrame;
   prevCursorPos.frequency = cursorFrequency;
-  setCursorState(CursorState.DRAW);
 };
 
 // ドラッグした範囲のピッチ編集データを消去する処理を行う
@@ -726,7 +946,6 @@ const previewErasePitch = () => {
 
   previewPitchEdit.value = tempPitchEdit;
   prevCursorPos.frame = cursorFrame;
-  setCursorState(CursorState.ERASE);
 };
 
 const preview = () => {
@@ -818,6 +1037,7 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
         throw new Error("note is undefined.");
       }
       if (event.shiftKey) {
+        // Shiftキーが押されている場合は選択ノートまでの範囲選択
         let minIndex = notesInSelectedTrack.value.length - 1;
         let maxIndex = 0;
         for (let i = 0; i < notesInSelectedTrack.value.length; i++) {
@@ -836,12 +1056,20 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
         }
         void store.actions.SELECT_NOTES({ noteIds: noteIdsToSelect });
       } else if (isOnCommandOrCtrlKeyDown(event)) {
+        // CommandキーかCtrlキーが押されている場合
+        if (selectedNoteIds.value.has(note.id)) {
+          // 選択中のノートなら選択解除
+          void store.actions.DESELECT_NOTES({ noteIds: [note.id] });
+          return;
+        }
+        // 未選択のノートなら選択に追加
         void store.actions.SELECT_NOTES({ noteIds: [note.id] });
       } else if (!selectedNoteIds.value.has(note.id)) {
+        // 選択中のノートでない場合は選択状態にする
         void selectOnlyThis(note);
       }
-      for (const note of selectedNotes.value) {
-        copiedNotes.push({ ...note });
+      for (const selectedNote of selectedNotes.value) {
+        copiedNotes.push({ ...selectedNote });
       }
     }
     dragStartTicks = cursorTicks;
@@ -894,19 +1122,28 @@ const endPreview = () => {
   if (previewStartEditTarget === "NOTE") {
     // 編集ターゲットがノートのときにプレビューを開始した場合の処理
     if (edited) {
+      const previewTrackId = selectedTrackId.value;
+      const noteIds = previewNotes.value.map((note) => note.id);
+
       if (previewMode.value === "ADD_NOTE") {
         void store.actions.COMMAND_ADD_NOTES({
           notes: previewNotes.value,
-          trackId: selectedTrackId.value,
+          trackId: previewTrackId,
         });
         void store.actions.SELECT_NOTES({
-          noteIds: previewNotes.value.map((value) => value.id),
+          noteIds,
         });
-      } else {
+      } else if (
+        previewMode.value === "MOVE_NOTE" ||
+        previewMode.value === "RESIZE_NOTE_RIGHT" ||
+        previewMode.value === "RESIZE_NOTE_LEFT"
+      ) {
+        // ノートの編集処理（移動・リサイズ）
         void store.actions.COMMAND_UPDATE_NOTES({
           notes: previewNotes.value,
-          trackId: selectedTrackId.value,
+          trackId: previewTrackId,
         });
+        void store.actions.SELECT_NOTES({ noteIds });
       }
       if (previewNotes.value.length === 1) {
         void store.actions.PLAY_PREVIEW_SOUND({
@@ -952,12 +1189,16 @@ const endPreview = () => {
     throw new ExhaustiveError(previewStartEditTarget);
   }
   previewMode.value = "IDLE";
+  previewNotes.value = [];
+  copiedNotesForPreview.clear();
+  edited = false;
 };
 
 const onNoteBarMouseDown = (event: MouseEvent, note: Note) => {
   if (editTarget.value !== "NOTE" || !isSelfEventTarget(event)) {
     return;
   }
+
   const mouseButton = getButton(event);
   if (mouseButton === "LEFT_BUTTON") {
     startPreview(event, "MOVE_NOTE", note);
@@ -1001,34 +1242,51 @@ const onNoteRightEdgeMouseDown = (event: MouseEvent, note: Note) => {
 };
 
 const onMouseDown = (event: MouseEvent) => {
-  if (editTarget.value === "NOTE" && !isSelfEventTarget(event)) {
-    return;
-  }
-  const mouseButton = getButton(event);
-  // TODO: メニューが表示されている場合はメニュー非表示のみ行いたい
-  if (editTarget.value === "NOTE") {
-    if (mouseButton === "LEFT_BUTTON") {
-      if (event.shiftKey) {
-        isRectSelecting.value = true;
-        rectSelectStartX.value = cursorX.value;
-        rectSelectStartY.value = cursorY.value;
-        setCursorState(CursorState.CROSSHAIR);
-      } else {
-        startPreview(event, "ADD_NOTE");
-      }
-    } else {
+  // TODO: isSelfEventTarget、mouseButton、editingLyricNoteId以外は必要ないが、
+  // 必要な依存関係明示のため(とuseEditModeからのコピペのためcontextに入れている
+  // ステートマシン実装時に要修正
+  const mouseDownContext = {
+    ctrlKey: ctrlKey.value,
+    shiftKey: shiftKey.value,
+    nowPreviewing: nowPreviewing.value,
+    editTarget: editTarget.value,
+    sequencerNoteTool: sequencerNoteTool.value,
+    sequencerPitchTool: sequencerPitchTool.value,
+    isSelfEventTarget: isSelfEventTarget(event),
+    mouseButton: getButton(event),
+    editingLyricNoteId: state.editingLyricNoteId,
+  } satisfies EditModeContext;
+  // マウスダウン時の振る舞い
+  const behavior = determineMouseDownBehavior(mouseDownContext);
+
+  switch (behavior) {
+    case "IGNORE":
+      return;
+
+    case "START_RECT_SELECT":
+      isRectSelecting.value = true;
+      rectSelectStartX.value = cursorX.value;
+      rectSelectStartY.value = cursorY.value;
+      break;
+
+    case "ADD_NOTE":
+      startPreview(event, "ADD_NOTE");
+      break;
+
+    case "DESELECT_ALL":
       void store.actions.DESELECT_ALL_NOTES();
-    }
-  } else if (editTarget.value === "PITCH") {
-    if (mouseButton === "LEFT_BUTTON") {
-      if (isOnCommandOrCtrlKeyDown(event)) {
-        startPreview(event, "ERASE_PITCH");
-      } else {
-        startPreview(event, "DRAW_PITCH");
-      }
-    }
-  } else {
-    throw new ExhaustiveError(editTarget.value);
+      break;
+
+    case "DRAW_PITCH":
+      startPreview(event, "DRAW_PITCH");
+      break;
+
+    case "ERASE_PITCH":
+      startPreview(event, "ERASE_PITCH");
+      break;
+
+    default:
+      break;
   }
 };
 
@@ -1063,6 +1321,41 @@ const onMouseUp = (event: MouseEvent) => {
     rectSelect(isOnCommandOrCtrlKeyDown(event));
   } else if (nowPreviewing.value) {
     endPreview();
+  }
+};
+
+const onDoubleClick = (event: MouseEvent) => {
+  // TODO: isSelfEventTarget以外は必要ないが、
+  // 必要な依存関係明示のため(とuseEditModeからのコピペのため)contextに入れている
+  // ステートマシン実装時に要修正
+  const mouseDoubleClickContext = {
+    ctrlKey: ctrlKey.value,
+    shiftKey: shiftKey.value,
+    nowPreviewing: nowPreviewing.value,
+    editTarget: editTarget.value,
+    sequencerNoteTool: sequencerNoteTool.value,
+    sequencerPitchTool: sequencerPitchTool.value,
+    isSelfEventTarget: isSelfEventTarget(event),
+    mouseButton: getButton(event),
+  };
+
+  const behavior = determineDoubleClickBehavior(mouseDoubleClickContext);
+
+  // 振る舞いごとの処理
+  switch (behavior) {
+    case "IGNORE":
+      return;
+
+    case "ADD_NOTE": {
+      startPreview(event, "ADD_NOTE");
+      // ダブルクリックで追加した場合はプレビューを即終了しノートを追加する
+      // mouseDownとの二重状態を避けるため
+      endPreview();
+      return;
+    }
+
+    default:
+      break;
   }
 };
 
@@ -1462,7 +1755,61 @@ registerHotkeyWithCleanup({
 const contextMenu = ref<InstanceType<typeof ContextMenu>>();
 
 const contextMenuData = computed<ContextMenuItemData[]>(() => {
-  return [
+  // NOTE: 選択中のツールにはなんらかのアクティブな表示をしたほうがよいが、
+  // activeなどの状態がContextMenuItemにはない+iconは画像なようなため状態表現はなし
+  const toolMenuItems: ContextMenuItemData[] =
+    editTarget.value === "NOTE"
+      ? [
+          {
+            type: "button",
+            label: "選択優先ツール",
+            onClick: () => {
+              contextMenu.value?.hide();
+              void store.actions.SET_SEQUENCER_NOTE_TOOL({
+                sequencerNoteTool: "SELECT_FIRST",
+              });
+            },
+            disableWhenUiLocked: false,
+          },
+          {
+            type: "button",
+            label: "編集優先ツール",
+            onClick: () => {
+              contextMenu.value?.hide();
+              void store.actions.SET_SEQUENCER_NOTE_TOOL({
+                sequencerNoteTool: "EDIT_FIRST",
+              });
+            },
+            disableWhenUiLocked: false,
+          },
+          { type: "separator" },
+        ]
+      : [
+          {
+            type: "button",
+            label: "ピッチ描画ツール",
+            onClick: () => {
+              contextMenu.value?.hide();
+              void store.actions.SET_SEQUENCER_PITCH_TOOL({
+                sequencerPitchTool: "DRAW",
+              });
+            },
+            disableWhenUiLocked: false,
+          },
+          {
+            type: "button",
+            label: "ピッチ削除ツール",
+            onClick: () => {
+              contextMenu.value?.hide();
+              void store.actions.SET_SEQUENCER_PITCH_TOOL({
+                sequencerPitchTool: "ERASE",
+              });
+            },
+            disableWhenUiLocked: false,
+          },
+        ];
+
+  const baseMenuItems: ContextMenuItemData[] = [
     {
       type: "button",
       label: "コピー",
@@ -1537,6 +1884,10 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
       disableWhenUiLocked: true,
     },
   ];
+
+  return editTarget.value === "NOTE"
+    ? [...toolMenuItems, ...baseMenuItems]
+    : toolMenuItems;
 });
 </script>
 

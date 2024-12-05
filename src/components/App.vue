@@ -97,6 +97,13 @@ watchEffect(() => {
   setThemeToCss(theme);
 });
 
+// ソングの再生デバイスを同期
+watchEffect(() => {
+  void store.actions.APPLY_DEVICE_ID_TO_AUDIO_CONTEXT({
+    device: store.state.savingSetting.audioOutputDevice,
+  });
+});
+
 // ソフトウェアを初期化
 const { hotkeyManager } = useHotkeyManager();
 const isEnginesReady = ref(false);

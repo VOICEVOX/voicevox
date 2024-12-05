@@ -406,6 +406,27 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     },
   },
 
+  /** UIの拡大 */
+  ZOOM_IN: {
+    action() {
+      window.backend.zoomIn();
+    },
+  },
+
+  /** UIの縮小 */
+  ZOOM_OUT: {
+    action() {
+      window.backend.zoomOut();
+    },
+  },
+
+  /** UIの拡大率のリセット */
+  ZOOM_RESET: {
+    action() {
+      window.backend.zoomReset();
+    },
+  },
+
   CHECK_EDITED_AND_NOT_SAVE: {
     /**
      * プロジェクトファイル未保存の場合、保存するかどうかを確認する。

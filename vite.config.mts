@@ -17,6 +17,7 @@ const isVst = process.env.VITE_TARGET === "vst";
 const packageName = process.env.npm_package_name;
 
 export default defineConfig((options) => {
+  const packageName = process.env.npm_package_name;
   const env = loadEnv(options.mode, import.meta.dirname);
   if (!packageName?.startsWith(env.VITE_APP_NAME)) {
     throw new Error(
@@ -36,7 +37,7 @@ export default defineConfig((options) => {
   }
   process.env.VITE_7Z_BIN_NAME =
     (options.mode === "development"
-      ? path.join(import.meta.dirname, "build", "vendored", "7z") + path.sep
+      ? path.join(import.meta.dirname, "vendored", "7z") + path.sep
       : "") + sevenZipBinName;
   process.env.VITE_APP_VERSION = process.env.npm_package_version;
 
