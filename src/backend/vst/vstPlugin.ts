@@ -17,6 +17,8 @@ import {
   AllActions,
   AllGetters,
   AllMutations,
+  Phrase,
+  PhraseKey,
   SingingVoiceKey,
   State,
 } from "@/store/type";
@@ -112,7 +114,10 @@ export const vstPlugin: Plugin = {
       () => store.state.openedEditor,
       (openedEditor) => {
         if (openedEditor !== "song") {
-          void store.dispatch("SET_OPENED_EDITOR", { editor: "song" });
+          void store.dispatch("SET_ROOT_MISC_SETTING", {
+            key: "openedEditor",
+            value: "song",
+          });
         }
       },
     );
@@ -156,47 +161,48 @@ export const vstPlugin: Plugin = {
     });
 
     // フレーズ送信
+    const sendPhrases = debounce(async (phrases: Map<PhraseKey, Phrase>) => {
+      void lock.acquire("phrases", async () => {
+        log.info("Sending phrases");
+        const missingVoices = await setPhrases(
+          [...phrases.values()].flatMap((phrase) =>
+            phrase.singingVoiceKey
+              ? [
+                  {
+                    start: phrase.startTime,
+                    trackId: phrase.trackId,
+                    voice: phrase.singingVoiceKey,
+                  },
+                ]
+              : [],
+          ),
+        );
+
+        if (missingVoices.length > 0) {
+          log.info(`Missing ${missingVoices.length} voices`);
+          const voices: Record<SingingVoiceKey, string> = {};
+          for (const voice of missingVoices) {
+            const cachedVoice = phraseSingingVoices.get(voice);
+            if (cachedVoice) {
+              voices[voice] = await toBase64(
+                new Uint8Array(await cachedVoice.arrayBuffer()),
+              );
+            }
+          }
+
+          await setVoices(voices);
+          log.info("Voices sent");
+        } else {
+          log.info("All voices are available");
+        }
+      });
+    }, 500);
+
     watch(
       () => [store.state.phrases, isReady] as const,
       ([phrases]) => {
         if (!isReady.value) return;
-        void lock.acquire(
-          "phrases",
-          debounce(async () => {
-            log.info("Sending phrases");
-            const missingVoices = await setPhrases(
-              [...phrases.values()].flatMap((phrase) =>
-                phrase.singingVoiceKey
-                  ? [
-                      {
-                        start: phrase.startTime,
-                        trackId: phrase.trackId,
-                        voice: phrase.singingVoiceKey,
-                      },
-                    ]
-                  : [],
-              ),
-            );
-
-            if (missingVoices.length > 0) {
-              log.info(`Missing ${missingVoices.length} voices`);
-              const voices: Record<SingingVoiceKey, string> = {};
-              for (const voice of missingVoices) {
-                const cachedVoice = phraseSingingVoices.get(voice);
-                if (cachedVoice) {
-                  voices[voice] = await toBase64(
-                    new Uint8Array(await cachedVoice.arrayBuffer()),
-                  );
-                }
-              }
-
-              await setVoices(voices);
-              log.info("Voices sent");
-            } else {
-              log.info("All voices are available");
-            }
-          }, 500),
-        );
+        sendPhrases(phrases);
       },
       { deep: true },
     );

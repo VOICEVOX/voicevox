@@ -37,7 +37,7 @@ import MenuButton from "../MenuButton.vue";
 import TitleBarButtons from "./TitleBarButtons.vue";
 import TitleBarEditorSwitcher from "./TitleBarEditorSwitcher.vue";
 import { useStore } from "@/store";
-import { isElectron, isVst } from "@/type/preload";
+import { isElectron, isVst } from "@/helpers/platform";
 import { HotkeyAction, useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import { useEngineIcons } from "@/composables/useEngineIcons";
 

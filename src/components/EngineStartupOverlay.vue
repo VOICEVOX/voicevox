@@ -47,7 +47,7 @@
 import { computed, ref, watch } from "vue";
 import { useStore } from "@/store";
 import { EngineState } from "@/store/type";
-import { isVst } from "@/type/preload";
+import { isVst } from "@/helpers/platform";
 
 const store = useStore();
 const props = defineProps<{

@@ -1,6 +1,6 @@
 import { computed } from "vue";
 import { useStore } from "@/store";
-import { isVst } from "@/type/preload";
+import { isVst } from "@/helpers/platform";
 import { MenuItemData } from "@/components/Menu/type";
 import { useRootMiscSetting } from "@/composables/useRootMiscSetting";
 
