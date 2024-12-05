@@ -23,23 +23,18 @@ import { QInput, useDialogPluginComponent } from "quasar";
 import { ref } from "vue";
 import CommonDialog from "./CommonDialog.vue";
 import { Tempo } from "@/store/type";
-import { DEFAULT_BPM } from "@/sing/domain";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 
 const modelValue = defineModel<boolean>();
 const props = defineProps<{
-  tempoChange: Omit<Tempo, "position"> | undefined;
+  tempoChange: Omit<Tempo, "position">;
   mode: "add" | "edit";
 }>();
 defineEmits({
   ...useDialogPluginComponent.emitsObject,
 });
 
-const tempoChange = ref(
-  cloneWithUnwrapProxy(props.tempoChange) || {
-    bpm: DEFAULT_BPM,
-  },
-);
+const tempoChange = ref(cloneWithUnwrapProxy(props.tempoChange));
 </script>
 
 <style scoped lang="scss">

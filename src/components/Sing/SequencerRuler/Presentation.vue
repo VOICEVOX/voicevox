@@ -109,10 +109,8 @@ import {
   ref,
   onMounted,
   onUnmounted,
-  ExtractPropTypes,
   ComponentPublicInstance,
   useTemplateRef,
-  Component,
   toRef,
 } from "vue";
 import { Dialog } from "quasar";
@@ -407,31 +405,6 @@ const timeSignatureChangeExists = computed(
   () => currentTimeSignature.value.measureNumber === currentMeasure.value,
 );
 
-const showValueChangeDialog = async <T extends Component, R>(
-  component: T,
-  componentProps: ExtractPropTypes<T>,
-) => {
-  const { promise, resolve } = Promise.withResolvers<R | "cancelled">();
-
-  Dialog.create({
-    component,
-    componentProps,
-  })
-    .onOk((result: R) => {
-      resolve(result);
-    })
-    .onCancel(() => {
-      resolve("cancelled");
-    });
-
-  const result = await promise;
-  if (result === "cancelled") {
-    return;
-  }
-
-  return result;
-};
-
 const contextMenuHeader = computed(() => {
   const texts = [];
   if (tempoChangeExists.value) {
@@ -453,25 +426,18 @@ const contextMenudata = computed<ContextMenuItemData[]>(() =>
           ? `テンポ変化を編集`
           : "テンポ変化を挿入",
         onClick: async () => {
-          const result = await showValueChangeDialog<
-            typeof TempoChangeDialog,
-            {
-              tempoChange: Omit<Tempo, "position">;
-            }
-          >(TempoChangeDialog, {
-            tempoChange: tempoChangeExists.value
-              ? currentTempo.value
-              : undefined,
-            mode: tempoChangeExists.value ? "edit" : "add",
+          Dialog.create({
+            component: TempoChangeDialog,
+            componentProps: {
+              tempoChange: currentTempo.value,
+              mode: tempoChangeExists.value ? "edit" : "add",
+            },
+          }).onOk((result: { tempoChange: Omit<Tempo, "position"> }) => {
+            emit("setTempo", {
+              ...result.tempoChange,
+              position: playheadTicks.value,
+            });
           });
-          if (!result) {
-            return;
-          }
-          emit("setTempo", {
-            ...result.tempoChange,
-            position: playheadTicks.value,
-          });
-
           contextMenu.value?.hide();
         },
         disableWhenUiLocked: true,
@@ -493,25 +459,22 @@ const contextMenudata = computed<ContextMenuItemData[]>(() =>
           ? `拍子変化を編集`
           : "拍子変化を挿入",
         onClick: async () => {
-          const result = await showValueChangeDialog<
-            typeof TimeSignatureChangeDialog,
-            {
-              timeSignatureChange: Omit<TimeSignature, "measureNumber">;
-            }
-          >(TimeSignatureChangeDialog, {
-            timeSignatureChange: timeSignatureChangeExists.value
-              ? currentTimeSignature.value
-              : undefined,
-            mode: timeSignatureChangeExists.value ? "edit" : "add",
-          });
-          if (!result) {
-            return;
-          }
-          emit("setTimeSignature", {
-            ...result.timeSignatureChange,
-            measureNumber: currentMeasure.value,
-          });
-
+          Dialog.create({
+            component: TimeSignatureChangeDialog,
+            componentProps: {
+              timeSignatureChange: currentTimeSignature.value,
+              mode: timeSignatureChangeExists.value ? "edit" : "add",
+            },
+          }).onOk(
+            (result: {
+              timeSignatureChange: Omit<TimeSignature, "position">;
+            }) => {
+              emit("setTimeSignature", {
+                ...result.timeSignatureChange,
+                measureNumber: currentMeasure.value,
+              });
+            },
+          );
           contextMenu.value?.hide();
         },
         disableWhenUiLocked: true,

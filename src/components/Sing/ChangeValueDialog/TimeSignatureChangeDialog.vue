@@ -41,11 +41,11 @@ import { ref } from "vue";
 import CommonDialog from "./CommonDialog.vue";
 import { TimeSignature } from "@/store/type";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
-import { BEAT_TYPES, DEFAULT_BEAT_TYPE, DEFAULT_BEATS } from "@/sing/domain";
+import { BEAT_TYPES } from "@/sing/domain";
 
 const modelValue = defineModel<boolean>();
 const props = defineProps<{
-  timeSignatureChange: Omit<TimeSignature, "measureNumber"> | undefined;
+  timeSignatureChange: Omit<TimeSignature, "measureNumber">;
   mode: "add" | "edit";
 }>();
 defineEmits({
@@ -53,10 +53,7 @@ defineEmits({
 });
 
 const timeSignatureChange = ref(
-  cloneWithUnwrapProxy(props.timeSignatureChange) || {
-    beats: DEFAULT_BEATS,
-    beatType: DEFAULT_BEAT_TYPE,
-  },
+  cloneWithUnwrapProxy(props.timeSignatureChange),
 );
 
 const beatTypeOptions = BEAT_TYPES.map((beatType) => ({
