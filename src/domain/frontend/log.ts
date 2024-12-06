@@ -2,13 +2,21 @@
 // TODO: window.backendをDIできるようにする
 export function createLogger(scope: string) {
   const createInner =
-    (method: "logInfo" | "logError" | "logWarn") =>
+    (
+      method: "logInfo" | "logWarn" | "logError",
+      fallbackMethod: "info" | "warn" | "error",
+    ) =>
     (...args: unknown[]) => {
+      if (window.backend == undefined) {
+        // eslint-disable-next-line no-console
+        console[fallbackMethod](...args);
+        return;
+      }
       window.backend[method](`[${scope}]`, ...args);
     };
   return {
-    info: createInner("logInfo"),
-    error: createInner("logError"),
-    warn: createInner("logWarn"),
+    info: createInner("logInfo", "info"),
+    warn: createInner("logWarn", "warn"),
+    error: createInner("logError", "error"),
   };
 }

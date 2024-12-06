@@ -51,7 +51,7 @@ const { warn, error } = createLogger("SequencerPitch");
 const store = useStore();
 const tpqn = computed(() => store.state.tpqn);
 const isDark = computed(() => store.state.currentTheme === "Dark");
-const tempos = computed(() => [store.state.tempos[0]]);
+const tempos = computed(() => store.state.tempos);
 const pitchEditData = computed(() => {
   return store.getters.SELECTED_TRACK.pitchEditData;
 });

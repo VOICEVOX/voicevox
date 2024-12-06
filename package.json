@@ -135,6 +135,7 @@
     "vite-plugin-electron": "0.29.0",
     "vite-tsconfig-paths": "5.1.2",
     "vitest": "2.1.2",
+    "vue-component-type-helpers": "2.1.6",
     "vue-tsc": "2.1.10",
     "yargs": "17.2.1"
   }
