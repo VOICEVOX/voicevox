@@ -1924,6 +1924,14 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   backface-visibility: hidden;
   overflow: auto;
   position: relative;
+
+  // スクロールバー上のカーソルが要素のものになってしまうためデフォルトカーソルにする
+  &::-webkit-scrollbar-thumb:hover,
+  &::-webkit-scrollbar-thumb:active,
+  &::-webkit-scrollbar-track:hover,
+  &::-webkit-scrollbar-track:active {
+    cursor: default;
+  }
 }
 
 .sequencer-grid {
