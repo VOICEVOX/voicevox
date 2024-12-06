@@ -97,10 +97,10 @@ defineEmits<{
   flex-direction: column;
   background: var(--scheme-color-surface);
   outline: 1px solid var(--scheme-color-outline-variant);
-  position: fixed;
-  top: 144px;
-  left: 72px;
-  z-index: 10;
+  position: absolute;
+  top: 56px;
+  left: 64px;
+  z-index: var(--z-index-sing-tool-palette);
   padding: 2px;
   border-radius: 24px;
   gap: 0;
