@@ -439,7 +439,6 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
     },
     disableWhenUiLocked: true,
   });
-
   if (tempoChangeExists.value) {
     menuData.push({
       type: "button",
