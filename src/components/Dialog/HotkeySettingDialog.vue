@@ -57,7 +57,9 @@
                   v-for="hotkeySetting in hotkeySettings.filter(
                     (hotkeySetting) =>
                       hotkeySetting.action.includes(hotkeyFilter) ||
-                      hotkeySetting.combination.includes(hotkeyFilter),
+                      hotkeySetting.combination
+                        .toLocaleLowerCase()
+                        .includes(hotkeyFilter.toLocaleLowerCase()),
                   )"
                   :key="hotkeySetting.action"
                   class="table-row"
