@@ -53,5 +53,10 @@ defineEmits<{
   &:active:not(:disabled) {
     background-color: colors.$clear-pressed;
   }
+
+  &:disabled {
+    // Quasar側のopacity: 0.6 !important;を上書きするためimportantを付与
+    opacity: 0.4 !important;
+  }
 }
 </style>
