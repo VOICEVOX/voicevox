@@ -161,26 +161,56 @@
 </template>
 
 <script setup lang="ts">
-import { ref, inject } from "vue";
+import { ref, inject, Ref, ComputedRef } from "vue";
 import { QInput } from "quasar";
 import AudioAccent from "@/components/Talk/AudioAccent.vue";
 import ContextMenu from "@/components/Menu/ContextMenu/Container.vue";
 import { useRightClickContextMenu } from "@/composables/useRightClickContextMenu";
 import { useStore } from "@/store";
 import type { FetchAudioResult } from "@/store/type";
-import { AccentPhrase } from "@/openapi";
+import { AccentPhrase, UserDictWord } from "@/openapi";
 import { EngineId, SpeakerId, StyleId } from "@/type/preload";
 
 const store = useStore();
 
-const accentPhrase = inject<AccentPhrase | undefined>("accentPhrase");
-const voiceComputed = inject<{
+/**
+ * injectで親コンポーネント(components/Dialog/DictionaryManageDialog.vue)から変数と関数を共有してもらう
+ */
+const wordEditing = inject("wordEditing") as boolean;
+const surfaceInput = inject("surfaceInput") as Ref<QInput>;
+const selectedId = inject("selectedId") as string;
+const uiLocked = inject("uiLocked") as boolean;
+const userDict = inject("userDict") as Record<string, UserDictWord>;
+const isOnlyHiraOrKana = inject("isOnlyHiraOrKana") as boolean;
+const accentPhrase = inject("accentPhrase") as AccentPhrase;
+const voiceComputed = inject("voiceComputed") as ComputedRef<{
   engineId: string & EngineId;
   speakerId: string & SpeakerId;
   styleId: number & StyleId;
-}>("voiceComputed");
-const surface = inject<string>("surface");
-const yomi = inject<string>("yomi");
+}>;
+const surface = inject("surface") as string;
+const yomi = inject("yomi") as string;
+const wordPriority = inject("wordPriority") as Ref<number>;
+const isWordChanged = inject("isWordChanged") as ComputedRef<
+  boolean | "" | AccentPhrase | undefined
+>;
+const setYomi = inject("setYomi") as (
+  text: string,
+  changeWord?: boolean,
+) => Promise<void>;
+const createUILockAction = inject("createUILockAction") as <T>(
+  action: Promise<T>,
+) => Promise<T>;
+const loadingDictProcess = inject("loadingDictProcess") as () => Promise<void>;
+const computeRegisteredAccent = inject(
+  "computeRegisteredAccent",
+) as () => number;
+const discardOrNotDialog = inject("discardOrNotDialog") as (
+  okCallback: () => void,
+) => Promise<void>;
+const toInitialState = inject("toInitialState") as () => void;
+const toWordEditingState = inject("toWordEditingState") as () => void;
+const cancel = inject("cancel") as () => void;
 
 // 音声再生機構
 const nowGenerating = ref(false);
@@ -192,7 +222,7 @@ const play = async () => {
   nowGenerating.value = true;
   const audioItem = await store.actions.GENERATE_AUDIO_ITEM({
     text: yomi,
-    voice: voiceComputed,
+    voice: voiceComputed.value,
   });
 
   if (audioItem.query == undefined)
@@ -227,14 +257,106 @@ const stop = () => {
 };
 
 // メニュー系
-const surfaceInput = ref<QInput>();
 const yomiInput = ref<QInput>();
+const surfaceRef = ref(surface);
+const yomiRef = ref(yomi);
+const wordPriorityLabels = {
+  0: "最低",
+  3: "低",
+  5: "標準",
+  7: "高",
+  10: "最高",
+};
+
+const yomiFocus = (event?: KeyboardEvent) => {
+  if (event && event.isComposing) return;
+  yomiInput.value?.focus();
+};
+
+const setYomiWhenEnter = (event?: KeyboardEvent) => {
+  if (event && event.isComposing) return;
+  void setYomi(yomi);
+};
+
+const convertHankakuToZenkaku = (text: string) => {
+  // " "などの目に見えない文字をまとめて全角スペース(0x3000)に置き換える
+  text = text.replace(/\p{Z}/gu, () => String.fromCharCode(0x3000));
+
+  // "!"から"~"までの範囲の文字(数字やアルファベット)を全角に置き換える
+  return text.replace(/[\u0021-\u007e]/g, (s) => {
+    return String.fromCharCode(s.charCodeAt(0) + 0xfee0);
+  });
+};
+
+const setSurface = (text: string) => {
+  // surfaceを全角化する
+  // 入力は半角でも問題ないが、登録時に全角に変換され、isWordChangedの判断がおかしくなることがあるので、
+  // 入力後に自動で変換するようにする
+  surfaceRef.value = convertHankakuToZenkaku(text);
+};
+
+const saveWord = async () => {
+  if (!accentPhrase) throw new Error(`accentPhrase === undefined`);
+  const accent = computeRegisteredAccent();
+  if (selectedId) {
+    try {
+      await store.actions.REWRITE_WORD({
+        wordUuid: selectedId,
+        surface: surface,
+        pronunciation: yomi,
+        accentType: accent,
+        priority: wordPriority.value,
+      });
+    } catch {
+      void store.actions.SHOW_ALERT_DIALOG({
+        title: "単語の更新に失敗しました",
+        message: "エンジンの再起動をお試しください。",
+      });
+      return;
+    }
+  } else {
+    try {
+      await createUILockAction(
+        store.actions.ADD_WORD({
+          surface: surface,
+          pronunciation: yomi,
+          accentType: accent,
+          priority: wordPriority.value,
+        }),
+      );
+    } catch {
+      void store.actions.SHOW_ALERT_DIALOG({
+        title: "単語の登録に失敗しました",
+        message: "エンジンの再起動をお試しください。",
+      });
+      return;
+    }
+  }
+  await loadingDictProcess();
+  toInitialState();
+};
+
+// TODO: リセットする際にsurfaceが読み込めないため、修正する
+const resetWord = async (id: string) => {
+  const result = await store.actions.SHOW_WARNING_DIALOG({
+    title: "単語の変更をリセットしますか？",
+    message: "単語の変更は破棄されてリセットされます。",
+    actionName: "リセット",
+  });
+  if (result === "OK") {
+    selectedId = id;
+    surface = userDict[id].surface;
+    void setYomi(userDict[id].yomi, true);
+    wordPriority.value = userDict[id].priority;
+    toWordEditingState();
+  }
+};
 
 // アクセント系
 const accentPhraseTable = ref<HTMLElement>();
 
 const changeAccent = async (_: number, accent: number) => {
-  const { engineId, styleId } = voiceComputed;
+  const { engineId, styleId } = voiceComputed.value;
 
   if (accentPhrase) {
     accentPhrase.accent = accent;
@@ -250,6 +372,7 @@ const changeAccent = async (_: number, accent: number) => {
   }
 };
 
+// コンテキストメニュー
 const surfaceContextMenu = ref<InstanceType<typeof ContextMenu>>();
 const yomiContextMenu = ref<InstanceType<typeof ContextMenu>>();
 
@@ -259,7 +382,7 @@ const {
   startContextMenuOperation: startSurfaceContextMenuOperation,
   clearInputSelection: clearSurfaceInputSelection,
   endContextMenuOperation: endSurfaceContextMenuOperation,
-} = useRightClickContextMenu(surfaceContextMenu, surfaceInput, surface);
+} = useRightClickContextMenu(surfaceContextMenu, surfaceInput, surfaceRef);
 
 const {
   contextMenuHeader: yomiContextMenuHeader,
@@ -267,7 +390,7 @@ const {
   startContextMenuOperation: startYomiContextMenuOperation,
   clearInputSelection: clearYomiInputSelection,
   endContextMenuOperation: endYomiContextMenuOperation,
-} = useRightClickContextMenu(yomiContextMenu, yomiInput, yomi);
+} = useRightClickContextMenu(yomiContextMenu, yomiInput, yomiRef);
 </script>
 
 <style lang="scss" scoped>

@@ -125,6 +125,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch, provide } from "vue";
+import { QInput } from "quasar";
 import DictionaryEditWordDialog from "./DictionaryEditWordDialog.vue";
 import { useStore } from "@/store";
 import { AccentPhrase, UserDictWord } from "@/openapi";
@@ -201,16 +202,7 @@ watch(dictionaryManageDialogOpenedComputed, async (newValue) => {
 });
 
 const wordEditing = ref(false);
-
-const yomiFocus = (event?: KeyboardEvent) => {
-  if (event && event.isComposing) return;
-  yomiInput.value?.focus();
-};
-const setYomiWhenEnter = (event?: KeyboardEvent) => {
-  if (event && event.isComposing) return;
-  void setYomi(yomi.value);
-};
-
+const surfaceInput = ref<QInput>();
 const selectedId = ref("");
 const surface = ref("");
 const yomi = ref("");
@@ -232,21 +224,6 @@ const kanaRegex = createKanaRegex();
 const isOnlyHiraOrKana = ref(true);
 const accentPhrase = ref<AccentPhrase | undefined>();
 
-const convertHankakuToZenkaku = (text: string) => {
-  // " "などの目に見えない文字をまとめて全角スペース(0x3000)に置き換える
-  text = text.replace(/\p{Z}/gu, () => String.fromCharCode(0x3000));
-
-  // "!"から"~"までの範囲の文字(数字やアルファベット)を全角に置き換える
-  return text.replace(/[\u0021-\u007e]/g, (s) => {
-    return String.fromCharCode(s.charCodeAt(0) + 0xfee0);
-  });
-};
-const setSurface = (text: string) => {
-  // surfaceを全角化する
-  // 入力は半角でも問題ないが、登録時に全角に変換され、isWordChangedの判断がおかしくなることがあるので、
-  // 入力後に自動で変換するようにする
-  surface.value = convertHankakuToZenkaku(text);
-};
 const setYomi = async (text: string, changeWord?: boolean) => {
   const { engineId, styleId } = voiceComputed.value;
 
@@ -306,13 +283,6 @@ const computeDisplayAccent = () => {
 };
 
 const wordPriority = ref(defaultDictPriority);
-const wordPriorityLabels = {
-  0: "最低",
-  3: "低",
-  5: "標準",
-  7: "高",
-  10: "最高",
-};
 
 // 操作（ステートの移動）
 const isWordChanged = computed(() => {
@@ -330,46 +300,7 @@ const isWordChanged = computed(() => {
       dictData.priority !== wordPriority.value)
   );
 });
-const saveWord = async () => {
-  if (!accentPhrase.value) throw new Error(`accentPhrase === undefined`);
-  const accent = computeRegisteredAccent();
-  if (selectedId.value) {
-    try {
-      await store.actions.REWRITE_WORD({
-        wordUuid: selectedId.value,
-        surface: surface.value,
-        pronunciation: yomi.value,
-        accentType: accent,
-        priority: wordPriority.value,
-      });
-    } catch {
-      void store.actions.SHOW_ALERT_DIALOG({
-        title: "単語の更新に失敗しました",
-        message: "エンジンの再起動をお試しください。",
-      });
-      return;
-    }
-  } else {
-    try {
-      await createUILockAction(
-        store.actions.ADD_WORD({
-          surface: surface.value,
-          pronunciation: yomi.value,
-          accentType: accent,
-          priority: wordPriority.value,
-        }),
-      );
-    } catch {
-      void store.actions.SHOW_ALERT_DIALOG({
-        title: "単語の登録に失敗しました",
-        message: "エンジンの再起動をお試しください。",
-      });
-      return;
-    }
-  }
-  await loadingDictProcess();
-  toInitialState();
-};
+
 const deleteWord = async () => {
   const result = await store.actions.SHOW_WARNING_DIALOG({
     title: "登録された単語を削除しますか？",
@@ -394,20 +325,7 @@ const deleteWord = async () => {
     toInitialState();
   }
 };
-const resetWord = async (id: string) => {
-  const result = await store.actions.SHOW_WARNING_DIALOG({
-    title: "単語の変更をリセットしますか？",
-    message: "単語の変更は破棄されてリセットされます。",
-    actionName: "リセット",
-  });
-  if (result === "OK") {
-    selectedId.value = id;
-    surface.value = userDict.value[id].surface;
-    void setYomi(userDict.value[id].yomi, true);
-    wordPriority.value = userDict.value[id].priority;
-    toWordEditingState();
-  }
-};
+
 const discardOrNotDialog = async (okCallback: () => void) => {
   if (isWordChanged.value) {
     const result = await store.actions.SHOW_WARNING_DIALOG({
@@ -469,10 +387,29 @@ const toDialogClosedState = () => {
   dictionaryManageDialogOpenedComputed.value = false;
 };
 
+/**
+ * provideで子コンポーネント(components/Dialog/DictionaryEditWordDialog.vue)に変数と関数を共有する
+ */
+provide("wordEditing", wordEditing);
+provide("surfaceInput", surfaceInput);
+provide("selectedId", selectedId);
+provide("uiLocked", uiLocked);
+provide("userDict", userDict);
+provide("isOnlyHiraOrKana", isOnlyHiraOrKana);
 provide("accentPhrase", accentPhrase);
 provide("voiceComputed", voiceComputed);
 provide("surface", surface);
 provide("yomi", yomi);
+provide("wordPriority", wordPriority);
+provide("isWordChanged", isWordChanged);
+provide("setYomi", setYomi);
+provide("createUILockAction", createUILockAction);
+provide("loadingDictProcess", loadingDictProcess);
+provide("computeRegisteredAccent", computeRegisteredAccent);
+provide("discardOrNotDialog", discardOrNotDialog);
+provide("toInitialState", toInitialState);
+provide("toWordEditingState", toWordEditingState);
+provide("cancel", cancel);
 </script>
 
 <style lang="scss" scoped>
