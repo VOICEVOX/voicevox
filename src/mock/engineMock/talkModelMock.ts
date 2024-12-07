@@ -3,7 +3,7 @@
  * 値は適当だが、テストで使えるよう決定論的に決まるようにしたり、UIのバグに気づけるようある程度規則を持たせている。
  */
 
-import kuromoji, { IpadicFeatures, Tokenizer } from "@sglkc/kuromoji";
+import kuromoji, { IpadicFeatures, Tokenizer } from "kuromoji";
 import { moraToPhonemes } from "./phonemeMock";
 import { moraPattern } from "@/domain/japanese";
 import { AccentPhrase, Mora } from "@/openapi";
