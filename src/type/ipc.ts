@@ -118,7 +118,27 @@ export type IpcIHData = {
     return: void;
   };
 
-  MAXIMIZE_WINDOW: {
+  TOGGLE_MAXIMIZE_WINDOW: {
+    args: [];
+    return: void;
+  };
+
+  TOGGLE_FULLSCREEN: {
+    args: [];
+    return: void;
+  };
+
+  ZOOM_IN: {
+    args: [];
+    return: void;
+  };
+
+  ZOOM_OUT: {
+    args: [];
+    return: void;
+  };
+
+  ZOOM_RESET: {
     args: [];
     return: void;
   };

@@ -44,11 +44,7 @@ module.exports = {
   plugins: ["import"],
   parser: vueEslintParser,
   parserOptions: vueEslintParserOptions,
-  ignorePatterns: [
-    "dist/**/*",
-    "dist_*/**/*",
-    "node_modules/**/*",
-  ],
+  ignorePatterns: ["dist/**/*", "dist_*/**/*", "node_modules/**/*"],
   rules: {
     "linebreak-style":
       process.env.NODE_ENV === "production" && process.platform !== "win32"
@@ -61,17 +57,6 @@ module.exports = {
       "error",
       {
         endOfLine: "auto",
-      },
-    ],
-    "vue/no-restricted-syntax": [
-      "error",
-      {
-        selector: "LogicalExpression[operator=??]",
-        message: `template内で"??"を使うとgithubのsyntax highlightが崩れるので\n三項演算子等を使って書き換えてください`,
-      },
-      {
-        selector: "MemberExpression[optional=true]",
-        message: `template内で"?."を使うとgithubのsyntax highlightが崩れるので\n三項演算子等を使って書き換えてください`,
       },
     ],
     "@typescript-eslint/no-unused-vars": [
