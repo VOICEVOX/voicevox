@@ -135,9 +135,9 @@ export interface DictionaryManageDialogContext {
   isOnlyHiraOrKana: Ref<boolean>;
   accentPhrase: Ref<AccentPhrase | undefined>;
   voiceComputed: ComputedRef<{
-    engineId: string;
-    speakerId: string;
-    styleId: number;
+    engineId: string & EngineId;
+    speakerId: string & SpeakerId;
+    styleId: number & StyleId;
   }>;
   surface: Ref<string>;
   yomi: Ref<string>;
@@ -165,6 +165,7 @@ import {
   convertLongVowel,
   createKanaRegex,
 } from "@/domain/japanese";
+import { EngineId, SpeakerId, StyleId } from "@/type/preload";
 
 const defaultDictPriority = 5;
 

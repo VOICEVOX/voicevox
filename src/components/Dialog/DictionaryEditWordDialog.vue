@@ -205,18 +205,18 @@ const nowGenerating = ref(false);
 const nowPlaying = ref(false);
 
 const play = async () => {
-  if (!accentPhrase) return;
+  if (!accentPhrase.value) return;
 
   nowGenerating.value = true;
   const audioItem = await store.actions.GENERATE_AUDIO_ITEM({
-    text: yomi,
+    text: yomi.value,
     voice: voiceComputed.value,
   });
 
   if (audioItem.query == undefined)
     throw new Error(`assert audioItem.query !== undefined`);
 
-  audioItem.query.accentPhrases = [accentPhrase];
+  audioItem.query.accentPhrases = [accentPhrase.value];
 
   let fetchAudioResult: FetchAudioResult;
   try {
@@ -263,7 +263,7 @@ const yomiFocus = (event?: KeyboardEvent) => {
 
 const setYomiWhenEnter = (event?: KeyboardEvent) => {
   if (event && event.isComposing) return;
-  void setYomi(yomi);
+  void setYomi(yomi.value);
 };
 
 const convertHankakuToZenkaku = (text: string) => {
@@ -286,12 +286,12 @@ const setSurface = (text: string) => {
 const saveWord = async () => {
   if (!accentPhrase) throw new Error(`accentPhrase === undefined`);
   const accent = computeRegisteredAccent();
-  if (selectedId) {
+  if (selectedId.value) {
     try {
       await store.actions.REWRITE_WORD({
-        wordUuid: selectedId,
-        surface: surface,
-        pronunciation: yomi,
+        wordUuid: selectedId.value,
+        surface: surface.value,
+        pronunciation: yomi.value,
         accentType: accent,
         priority: wordPriority.value,
       });
@@ -306,8 +306,8 @@ const saveWord = async () => {
     try {
       await createUILockAction(
         store.actions.ADD_WORD({
-          surface: surface,
-          pronunciation: yomi,
+          surface: surface.value,
+          pronunciation: yomi.value,
           accentType: accent,
           priority: wordPriority.value,
         }),
@@ -332,10 +332,10 @@ const resetWord = async (id: string) => {
     actionName: "リセット",
   });
   if (result === "OK") {
-    selectedId = id;
-    surface = userDict[id].surface;
-    void setYomi(userDict[id].yomi, true);
-    wordPriority.value = userDict[id].priority;
+    selectedId.value = id;
+    surface.value = userDict.value[id].surface;
+    void setYomi(userDict.value[id].yomi, true);
+    wordPriority.value = userDict.value[id].priority;
     toWordEditingState();
   }
 };
@@ -345,15 +345,14 @@ const accentPhraseTable = ref<HTMLElement>();
 
 const changeAccent = async (_: number, accent: number) => {
   const { engineId, styleId } = voiceComputed.value;
-
-  if (accentPhrase) {
-    accentPhrase.accent = accent;
-    accentPhrase = (
+  if (accentPhrase.value) {
+    accentPhrase.value.accent = accent;
+    accentPhrase.value = (
       await createUILockAction(
         store.actions.FETCH_MORA_DATA({
-          accentPhrases: [accentPhrase],
-          engineId,
-          styleId,
+          accentPhrases: [accentPhrase.value],
+          engineId: engineId,
+          styleId: styleId,
         }),
       )
     )[0];
