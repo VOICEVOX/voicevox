@@ -1,6 +1,6 @@
 import { InjectionKey } from "vue";
 import {
-  createStore,
+  createStore as baseCreateStore,
   Store as BaseStore,
   useStore as baseUseStore,
 } from "./vuex";
@@ -343,77 +343,86 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
   },
 });
 
-export const store = createStore<State, AllGetters, AllActions, AllMutations>({
-  state: {
-    ...uiStoreState,
-    ...audioStoreState,
-    ...audioPlayerStoreState,
-    ...singingStoreState,
-    ...commandStoreState,
-    ...engineStoreState,
-    ...projectStoreState,
-    ...settingStoreState,
-    ...audioCommandStoreState,
-    ...indexStoreState,
-    ...presetStoreState,
-    ...dictionaryStoreState,
-    ...proxyStoreState,
-    ...singingStoreState,
-    ...singingCommandStoreState,
-  },
+export function createStore({
+  proxyStoreDI,
+}: {
+  proxyStoreDI?: typeof proxyStore;
+}) {
+  const _proxyStore = proxyStoreDI ?? proxyStore;
 
-  getters: {
-    ...uiStore.getters,
-    ...audioStore.getters,
-    ...audioPlayerStore.getters,
-    ...commandStore.getters,
-    ...engineStore.getters,
-    ...projectStore.getters,
-    ...settingStore.getters,
-    ...presetStore.getters,
-    ...dictionaryStore.getters,
-    ...audioCommandStore.getters,
-    ...indexStore.getters,
-    ...proxyStore.getters,
-    ...singingStore.getters,
-    ...singingCommandStore.getters,
-  },
+  return baseCreateStore<State, AllGetters, AllActions, AllMutations>({
+    state: {
+      ...uiStoreState,
+      ...audioStoreState,
+      ...audioPlayerStoreState,
+      ...singingStoreState,
+      ...commandStoreState,
+      ...engineStoreState,
+      ...projectStoreState,
+      ...settingStoreState,
+      ...audioCommandStoreState,
+      ...indexStoreState,
+      ...presetStoreState,
+      ...dictionaryStoreState,
+      ...proxyStoreState,
+      ...singingStoreState,
+      ...singingCommandStoreState,
+    },
 
-  mutations: {
-    ...uiStore.mutations,
-    ...audioStore.mutations,
-    ...audioPlayerStore.mutations,
-    ...commandStore.mutations,
-    ...engineStore.mutations,
-    ...projectStore.mutations,
-    ...settingStore.mutations,
-    ...audioCommandStore.mutations,
-    ...presetStore.mutations,
-    ...dictionaryStore.mutations,
-    ...indexStore.mutations,
-    ...proxyStore.mutations,
-    ...singingStore.mutations,
-    ...singingCommandStore.mutations,
-  },
+    getters: {
+      ...uiStore.getters,
+      ...audioStore.getters,
+      ...audioPlayerStore.getters,
+      ...commandStore.getters,
+      ...engineStore.getters,
+      ...projectStore.getters,
+      ...settingStore.getters,
+      ...presetStore.getters,
+      ...dictionaryStore.getters,
+      ...audioCommandStore.getters,
+      ...indexStore.getters,
+      ..._proxyStore.getters,
+      ...singingStore.getters,
+      ...singingCommandStore.getters,
+    },
 
-  actions: {
-    ...uiStore.actions,
-    ...audioStore.actions,
-    ...audioPlayerStore.actions,
-    ...engineStore.actions,
-    ...commandStore.actions,
-    ...projectStore.actions,
-    ...settingStore.actions,
-    ...audioCommandStore.actions,
-    ...presetStore.actions,
-    ...dictionaryStore.actions,
-    ...indexStore.actions,
-    ...proxyStore.actions,
-    ...singingStore.actions,
-    ...singingCommandStore.actions,
-  },
-  strict: !isProduction,
-});
+    mutations: {
+      ...uiStore.mutations,
+      ...audioStore.mutations,
+      ...audioPlayerStore.mutations,
+      ...commandStore.mutations,
+      ...engineStore.mutations,
+      ...projectStore.mutations,
+      ...settingStore.mutations,
+      ...audioCommandStore.mutations,
+      ...presetStore.mutations,
+      ...dictionaryStore.mutations,
+      ...indexStore.mutations,
+      ..._proxyStore.mutations,
+      ...singingStore.mutations,
+      ...singingCommandStore.mutations,
+    },
+
+    actions: {
+      ...uiStore.actions,
+      ...audioStore.actions,
+      ...audioPlayerStore.actions,
+      ...engineStore.actions,
+      ...commandStore.actions,
+      ...projectStore.actions,
+      ...settingStore.actions,
+      ...audioCommandStore.actions,
+      ...presetStore.actions,
+      ...dictionaryStore.actions,
+      ...indexStore.actions,
+      ..._proxyStore.actions,
+      ...singingStore.actions,
+      ...singingCommandStore.actions,
+    },
+    strict: !isProduction,
+  });
+}
+export const store = createStore({});
 
 export const useStore = (): Store => {
   return baseUseStore(storeKey);

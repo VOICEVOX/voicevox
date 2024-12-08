@@ -649,14 +649,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
   },
 
   GENERATE_AUDIO_ITEM: {
-    async action(
-      { state, getters, actions },
-      payload: {
-        text?: string;
-        voice?: Voice;
-        baseAudioItem?: AudioItem;
-      },
-    ) {
+    async action({ state, getters, actions }, payload) {
       //引数にbaseAudioItemが与えられた場合、baseAudioItemから話速等のパラメータを引き継いだAudioItemを返す
       //baseAudioItem.queryのうち、accentPhrasesとkanaは基本設定パラメータではないので引き継がない
       //baseAudioItemのうち、textとstyleIdは別途与えられるので引き継がない
@@ -667,7 +660,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         getters.USER_ORDERED_CHARACTER_INFOS("talk");
 
       if (userOrderedCharacterInfos == undefined) {
-        throw new Error("state.characterInfos == undefined");
+        throw new Error("state.userOrderedCharacterInfos == undefined");
       }
 
       const text = payload.text ?? "";
@@ -697,9 +690,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       };
 
       const query = getters.IS_ENGINE_READY(voice.engineId)
-        ? await actions
-            .FETCH_AUDIO_QUERY(fetchQueryParams)
-            .catch(() => undefined)
+        ? await actions.FETCH_AUDIO_QUERY(fetchQueryParams)
         : undefined;
 
       const newAudioItem: AudioItem = { text, voice };
