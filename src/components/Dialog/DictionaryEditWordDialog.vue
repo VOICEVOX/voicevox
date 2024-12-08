@@ -161,56 +161,44 @@
 </template>
 
 <script setup lang="ts">
-import { ref, inject, Ref, ComputedRef } from "vue";
+import { inject, ref } from "vue";
 import { QInput } from "quasar";
+import { DictionaryManageDialogContext } from "./DictionaryManageDialog.vue";
 import AudioAccent from "@/components/Talk/AudioAccent.vue";
 import ContextMenu from "@/components/Menu/ContextMenu/Container.vue";
 import { useRightClickContextMenu } from "@/composables/useRightClickContextMenu";
 import { useStore } from "@/store";
 import type { FetchAudioResult } from "@/store/type";
-import { AccentPhrase, UserDictWord } from "@/openapi";
-import { EngineId, SpeakerId, StyleId } from "@/type/preload";
 
 const store = useStore();
 
-/**
- * injectで親コンポーネント(components/Dialog/DictionaryManageDialog.vue)から変数と関数を共有してもらう
- */
-const wordEditing = inject("wordEditing") as boolean;
-const surfaceInput = inject("surfaceInput") as Ref<QInput>;
-const selectedId = inject("selectedId") as string;
-const uiLocked = inject("uiLocked") as boolean;
-const userDict = inject("userDict") as Record<string, UserDictWord>;
-const isOnlyHiraOrKana = inject("isOnlyHiraOrKana") as boolean;
-const accentPhrase = inject("accentPhrase") as AccentPhrase;
-const voiceComputed = inject("voiceComputed") as ComputedRef<{
-  engineId: string & EngineId;
-  speakerId: string & SpeakerId;
-  styleId: number & StyleId;
-}>;
-const surface = inject("surface") as string;
-const yomi = inject("yomi") as string;
-const wordPriority = inject("wordPriority") as Ref<number>;
-const isWordChanged = inject("isWordChanged") as ComputedRef<
-  boolean | "" | AccentPhrase | undefined
->;
-const setYomi = inject("setYomi") as (
-  text: string,
-  changeWord?: boolean,
-) => Promise<void>;
-const createUILockAction = inject("createUILockAction") as <T>(
-  action: Promise<T>,
-) => Promise<T>;
-const loadingDictProcess = inject("loadingDictProcess") as () => Promise<void>;
-const computeRegisteredAccent = inject(
-  "computeRegisteredAccent",
-) as () => number;
-const discardOrNotDialog = inject("discardOrNotDialog") as (
-  okCallback: () => void,
-) => Promise<void>;
-const toInitialState = inject("toInitialState") as () => void;
-const toWordEditingState = inject("toWordEditingState") as () => void;
-const cancel = inject("cancel") as () => void;
+const context = inject<DictionaryManageDialogContext>(
+  "dictionaryManageDialogContext",
+);
+if (context == undefined)
+  throw new Error(`dictionaryManageDialogContext == undefined`);
+const {
+  wordEditing,
+  surfaceInput,
+  selectedId,
+  uiLocked,
+  userDict,
+  isOnlyHiraOrKana,
+  accentPhrase,
+  voiceComputed,
+  surface,
+  yomi,
+  wordPriority,
+  isWordChanged,
+  setYomi,
+  createUILockAction,
+  loadingDictProcess,
+  computeRegisteredAccent,
+  discardOrNotDialog,
+  toInitialState,
+  toWordEditingState,
+  cancel,
+} = context;
 
 // 音声再生機構
 const nowGenerating = ref(false);

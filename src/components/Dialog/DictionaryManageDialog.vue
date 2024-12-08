@@ -116,12 +116,43 @@
             </QList>
           </div>
 
-          <DictionaryEditWordDialog></DictionaryEditWordDialog>
+          <DictionaryEditWordDialog />
         </QPage>
       </QPageContainer>
     </QLayout>
   </QDialog>
 </template>
+
+<script lang="ts">
+import { Ref, ComputedRef } from "vue";
+
+export interface DictionaryManageDialogContext {
+  wordEditing: Ref<boolean>;
+  surfaceInput: Ref<QInput | undefined>;
+  selectedId: Ref<string>;
+  uiLocked: Ref<boolean>;
+  userDict: Ref<Record<string, UserDictWord>>;
+  isOnlyHiraOrKana: Ref<boolean>;
+  accentPhrase: Ref<AccentPhrase | undefined>;
+  voiceComputed: ComputedRef<{
+    engineId: string;
+    speakerId: string;
+    styleId: number;
+  }>;
+  surface: Ref<string>;
+  yomi: Ref<string>;
+  wordPriority: Ref<number>;
+  isWordChanged: ComputedRef<boolean>;
+  setYomi: (text: string, changeWord?: boolean) => Promise<void>;
+  createUILockAction: <T>(action: Promise<T>) => Promise<T>;
+  loadingDictProcess: () => Promise<void>;
+  computeRegisteredAccent: () => number;
+  discardOrNotDialog: (okCallback: () => void) => Promise<void>;
+  toInitialState: () => void;
+  toWordEditingState: () => void;
+  cancel: () => void;
+}
+</script>
 
 <script setup lang="ts">
 import { computed, ref, watch, provide } from "vue";
@@ -287,7 +318,9 @@ const wordPriority = ref(defaultDictPriority);
 // 操作（ステートの移動）
 const isWordChanged = computed(() => {
   if (selectedId.value === "") {
-    return surface.value && yomi.value && accentPhrase.value;
+    return (
+      surface.value != "" && yomi.value != "" && accentPhrase.value != undefined
+    );
   }
   // 一旦代入することで、userDictそのものが更新された時もcomputedするようにする
   const dict = userDict.value;
@@ -390,26 +423,28 @@ const toDialogClosedState = () => {
 /**
  * provideで子コンポーネント(components/Dialog/DictionaryEditWordDialog.vue)に変数と関数を共有する
  */
-provide("wordEditing", wordEditing);
-provide("surfaceInput", surfaceInput);
-provide("selectedId", selectedId);
-provide("uiLocked", uiLocked);
-provide("userDict", userDict);
-provide("isOnlyHiraOrKana", isOnlyHiraOrKana);
-provide("accentPhrase", accentPhrase);
-provide("voiceComputed", voiceComputed);
-provide("surface", surface);
-provide("yomi", yomi);
-provide("wordPriority", wordPriority);
-provide("isWordChanged", isWordChanged);
-provide("setYomi", setYomi);
-provide("createUILockAction", createUILockAction);
-provide("loadingDictProcess", loadingDictProcess);
-provide("computeRegisteredAccent", computeRegisteredAccent);
-provide("discardOrNotDialog", discardOrNotDialog);
-provide("toInitialState", toInitialState);
-provide("toWordEditingState", toWordEditingState);
-provide("cancel", cancel);
+provide<DictionaryManageDialogContext>("dictionaryManageDialogContext", {
+  wordEditing,
+  surfaceInput,
+  selectedId,
+  uiLocked,
+  userDict,
+  isOnlyHiraOrKana,
+  accentPhrase,
+  voiceComputed,
+  surface,
+  yomi,
+  wordPriority,
+  isWordChanged,
+  setYomi,
+  createUILockAction,
+  loadingDictProcess,
+  computeRegisteredAccent,
+  discardOrNotDialog,
+  toInitialState,
+  toWordEditingState,
+  cancel,
+});
 </script>
 
 <style lang="scss" scoped>
