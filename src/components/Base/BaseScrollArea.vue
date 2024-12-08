@@ -52,6 +52,7 @@ import {
 .ScrollAreaScrollbar {
   user-select: none;
   touch-action: none;
+  z-index: vars.$z-index-scrollbar;
 }
 
 .ScrollAreaScrollbar[data-orientation="vertical"] {

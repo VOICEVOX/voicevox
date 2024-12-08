@@ -19,7 +19,7 @@ export type MeasuresBeats = {
   beats: number;
 };
 
-const BEAT_TYPES = [2, 4, 8, 16];
+export const BEAT_TYPES = [2, 4, 8, 16, 32];
 const MIN_BPM = 40;
 const MAX_SNAP_TYPE = 32;
 

@@ -105,8 +105,22 @@ const api: Sandbox = {
     void ipcRendererInvokeProxy.MINIMIZE_WINDOW();
   },
 
-  maximizeWindow: () => {
-    void ipcRendererInvokeProxy.MAXIMIZE_WINDOW();
+  toggleMaximizeWindow: () => {
+    void ipcRendererInvokeProxy.TOGGLE_MAXIMIZE_WINDOW();
+  },
+
+  toggleFullScreen: () => {
+    void ipcRendererInvokeProxy.TOGGLE_FULLSCREEN();
+  },
+
+  zoomIn: () => {
+    void ipcRendererInvokeProxy.ZOOM_IN();
+  },
+  zoomOut: () => {
+    void ipcRendererInvokeProxy.ZOOM_OUT();
+  },
+  zoomReset: () => {
+    void ipcRendererInvokeProxy.ZOOM_RESET();
   },
 
   logError: (...params) => {
