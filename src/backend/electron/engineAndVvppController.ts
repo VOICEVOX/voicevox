@@ -1,3 +1,5 @@
+import path from "path";
+import fs from "fs";
 import log from "electron-log/main";
 import { BrowserWindow, dialog } from "electron";
 
@@ -12,6 +14,13 @@ import {
   engineSettingSchema,
   EngineSettingType,
 } from "@/type/preload";
+import {
+  PackageInfo,
+  fetchLatestDefaultEngineInfo,
+  getSuitablePackageInfo,
+} from "@/domain/defaultEngine/latetDefaultEngine";
+import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
+import { UnreachableError } from "@/type/utility";
 
 /**
  * エンジンとVVPP周りの処理の流れを制御するクラス。
@@ -128,6 +137,95 @@ export class EngineAndVvppController {
       );
       log.error(`Failed to uninstall ${engineId},`, e);
       return false;
+    }
+  }
+
+  /**
+   * インストール可能なデフォルトエンジンの情報とパッケージの情報を取得する。
+   */
+  async fetchInsallablePackageInfos(): Promise<
+    { engineName: string; packageInfo: PackageInfo }[]
+  > {
+    // ダウンロード可能なVVPPのうち、未インストールのものを返す
+    const targetInfos = [];
+    for (const envEngineInfo of loadEnvEngineInfos()) {
+      if (envEngineInfo.type != "downloadVvpp") {
+        continue;
+      }
+
+      // 最新情報を取得
+      const latestUrl = envEngineInfo.latestUrl;
+      if (latestUrl == undefined) throw new Error("latestUrl is undefined");
+
+      const latestInfo = await fetchLatestDefaultEngineInfo(latestUrl);
+      if (latestInfo.formatVersion != 1) {
+        log.error(`Unsupported format version: ${latestInfo.formatVersion}`);
+        continue;
+      }
+
+      // 実行環境に合うパッケージを取得
+      const packageInfo = getSuitablePackageInfo(latestInfo);
+      log.info(`Latest default engine version: ${packageInfo.version}`);
+
+      // インストール済みだった場合はスキップ
+      // FIXME: より新しいバージョンがあれば更新できるようにする
+      if (this.engineInfoManager.hasEngineInfo(envEngineInfo.uuid)) {
+        log.info(`Default engine ${envEngineInfo.uuid} is already installed.`);
+        continue;
+      }
+
+      targetInfos.push({ engineName: envEngineInfo.name, packageInfo });
+    }
+
+    return targetInfos;
+  }
+
+  /** VVPPパッケージをダウンロードし、インストールする */
+  async downloadAndInstallVvppEngine(
+    downloadDir: string,
+    packageInfo: PackageInfo,
+  ) {
+    if (packageInfo.packages.length === 0) {
+      throw new UnreachableError("No packages to download");
+    }
+
+    let failed = false;
+    const downloadedPaths: string[] = [];
+    try {
+      // ダウンロード
+      await Promise.all(
+        packageInfo.packages.map(async (p) => {
+          const { url, name, size } = p;
+
+          log.info(`Download ${name} from ${url}, size: ${size}`);
+          const res = await fetch(url);
+          const buffer = await res.arrayBuffer();
+          if (failed) return; // 他のダウンロードが失敗していたら中断
+
+          const downloadPath = path.join(downloadDir, name);
+          await fs.promises.writeFile(downloadPath, Buffer.from(buffer)); // TODO: オンメモリじゃなくする
+          log.info(`Downloaded ${name} to ${downloadPath}`);
+
+          downloadedPaths.push(downloadPath);
+
+          // TODO: ハッシュチェック
+        }),
+      );
+
+      // インストール
+      await this.installVvppEngine(downloadedPaths[0]);
+    } catch (e) {
+      failed = true;
+      log.error(`Failed to download and install VVPP engine:`, e);
+      throw e;
+    } finally {
+      // ダウンロードしたファイルを削除
+      await Promise.all(
+        downloadedPaths.map(async (path) => {
+          log.info(`Delete downloaded file: ${path}`);
+          await fs.promises.unlink(path);
+        }),
+      );
     }
   }
 

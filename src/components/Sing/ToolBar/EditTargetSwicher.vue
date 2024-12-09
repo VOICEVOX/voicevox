@@ -32,7 +32,7 @@
         :delay="500"
         anchor="bottom middle"
         transitionShow=""
-        transitionSide=""
+        transitionHide=""
       >
         ピッチ編集<br />{{ !isMac ? "Ctrl" : "Cmd" }}+クリックで消去
       </QTooltip>
