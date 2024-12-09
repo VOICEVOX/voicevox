@@ -110,6 +110,7 @@ defineEmits<{
 
   .material-symbols-outlined {
     font-size: 20px;
+    max-width: 20px;
   }
 
   .q-btn {
