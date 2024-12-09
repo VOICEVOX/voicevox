@@ -1,17 +1,23 @@
-@use './variables' as vars;
-@use './colors' as colors;
-@use './v2/variables' as vars-v2;
-@use './v2/colors' as colors-v2;
-@import "./fonts";
+@use "./variables" as vars;
+@use "./colors" as colors;
+@use "./v2/variables" as vars-v2;
+@use "./v2/colors" as colors-v2;
+@use "./v2/sing-colors"; // ソング用カラー
+@use "./v2/cursor"; // カーソル
+@use "fonts";
 
 // 優先度を強引に上げる
 body:not(#dummy) {
   user-select: none;
-  border-left: solid #{vars.$window-border-width} #{colors.$splitter};
-  border-right: solid #{vars.$window-border-width} #{colors.$splitter};
-  border-bottom: solid #{vars.$window-border-width} #{colors.$splitter};
   color: colors.$display;
   background: colors.$background;
+
+  // Storybookでは枠線を付けない
+  &:not(.sb-show-main) {
+    border-left: solid #{vars.$window-border-width} #{colors.$splitter};
+    border-right: solid #{vars.$window-border-width} #{colors.$splitter};
+    border-bottom: solid #{vars.$window-border-width} #{colors.$splitter};
+  }
 }
 
 body[data-editor-font="default"] {
@@ -260,4 +266,24 @@ img {
 }
 .text-toast-button-display-warning {
   color: colors.$toast-button-display-warning;
+}
+
+// ダイアログのサイズ
+.dialog-card {
+  width: 700px;
+  max-width: 80vw;
+}
+
+.material-symbols-outlined {
+  font-family: "Material Symbols Outlined";
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;  /* Preferred icon size */
+  display: inline-block;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
 }

@@ -1,13 +1,15 @@
-import { Dark, setCssVar, colors } from "quasar";
 import { SettingStoreState, SettingStoreTypes } from "./type";
-import { createDotNotationUILockAction as createUILockAction } from "./ui";
-import { createDotNotationPartialStore as createPartialStore } from "./vuex";
+import { createUILockAction } from "./ui";
+import { createPartialStore } from "./vuex";
+import { themes } from "@/domain/theme";
+import {
+  showAlertDialog,
+  showQuestionDialog,
+} from "@/components/Dialog/Dialog";
 import {
   HotkeySettingType,
   SavingSetting,
   ExperimentalSettingType,
-  ThemeColorType,
-  ThemeConf,
   ToolbarSettingType,
   EngineId,
   ConfirmedTips,
@@ -16,6 +18,7 @@ import {
 import { IsEqual } from "@/type/utility";
 
 export const settingStoreState: SettingStoreState = {
+  openedEditor: undefined,
   savingSetting: {
     fileEncoding: "UTF-8",
     fileNamePattern: "",
@@ -26,29 +29,25 @@ export const settingStoreState: SettingStoreState = {
     exportText: false,
     outputStereo: false,
     audioOutputDevice: "default",
+    songTrackFileNamePattern: "",
   },
   hotkeySettings: [],
   toolbarSetting: [],
   engineIds: [],
   engineInfos: {},
   engineManifests: {},
-  themeSetting: {
-    currentTheme: "Default",
-    availableThemes: [],
-  },
+  currentTheme: "Default",
+  availableThemes: [],
   editorFont: "default",
   showTextLineNumber: false,
   showAddAudioItemButton: true,
   acceptTerms: "Unconfirmed",
   acceptRetrieveTelemetry: "Unconfirmed",
   experimentalSetting: {
-    enablePreset: false,
-    shouldApplyDefaultPresetOnVoiceChanged: false,
     enableInterrogativeUpspeak: false,
     enableMorphing: false,
     enableMultiSelect: false,
     shouldKeepTuningOnTextChange: false,
-    enableMultiTrack: false,
   },
   splitTextWhenPaste: "PERIOD_AND_NEW_LINE",
   splitterPosition: {
@@ -62,6 +61,8 @@ export const settingStoreState: SettingStoreState = {
     notifyOnGenerate: false,
   },
   engineSettings: {},
+  enablePreset: false,
+  shouldApplyDefaultPresetOnVoiceChanged: false,
   enableMultiEngine: false,
   enableMemoNotation: false,
   enableRubyNotation: false,
@@ -69,37 +70,35 @@ export const settingStoreState: SettingStoreState = {
     soloAndMute: true,
     panAndGain: true,
   },
+  showSingCharacterPortrait: true,
+  playheadPositionDisplayFormat: "MINUTES_SECONDS",
 };
 
 export const settingStore = createPartialStore<SettingStoreTypes>({
   HYDRATE_SETTING_STORE: {
     async action({ mutations, actions }) {
-      window.backend.hotkeySettings().then((hotkeys) => {
+      void window.backend.hotkeySettings().then((hotkeys) => {
         hotkeys.forEach((hotkey) => {
-          actions.SET_HOTKEY_SETTINGS({
+          void actions.SET_HOTKEY_SETTINGS({
             data: hotkey,
           });
         });
       });
 
-      const theme = await window.backend.theme();
-      if (theme) {
-        mutations.SET_THEME_SETTING({
-          currentTheme: theme.currentTheme,
-          themes: theme.availableThemes,
-        });
-        actions.SET_THEME_SETTING({
-          currentTheme: theme.currentTheme,
-        });
-      }
+      mutations.SET_AVAILABLE_THEMES({
+        themes,
+      });
+      void actions.SET_CURRENT_THEME_SETTING({
+        currentTheme: await window.backend.getSetting("currentTheme"),
+      });
 
-      actions.SET_ACCEPT_RETRIEVE_TELEMETRY({
+      void actions.SET_ACCEPT_RETRIEVE_TELEMETRY({
         acceptRetrieveTelemetry: await window.backend.getSetting(
           "acceptRetrieveTelemetry",
         ),
       });
 
-      actions.SET_ACCEPT_TERMS({
+      void actions.SET_ACCEPT_TERMS({
         acceptTerms: await window.backend.getSetting("acceptTerms"),
       });
 
@@ -141,11 +140,16 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         "showAddAudioItemButton",
         "splitTextWhenPaste",
         "splitterPosition",
+        "enablePreset",
+        "shouldApplyDefaultPresetOnVoiceChanged",
         "enableMultiEngine",
         "enableRubyNotation",
         "enableMemoNotation",
         "skipUpdateVersion",
         "undoableTrackOperations",
+        "showSingCharacterPortrait",
+        "playheadPositionDisplayFormat",
+        "openedEditor",
       ] as const;
 
       // rootMiscSettingKeysに値を足し忘れていたときに型エラーを出す検出用コード
@@ -172,7 +176,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     },
     action({ mutations }, { data }: { data: SavingSetting }) {
       const newData = window.backend.setSetting("savingSetting", data);
-      newData.then((savingSetting) => {
+      void newData.then((savingSetting) => {
         mutations.SET_SAVING_SETTING({ savingSetting });
       });
     },
@@ -190,7 +194,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       if (flag) state.hotkeySettings.push(newHotkey);
     },
     action({ mutations }, { data }: { data: HotkeySettingType }) {
-      window.backend.hotkeySettings(data);
+      void window.backend.hotkeySettings(data);
       mutations.SET_HOTKEY_SETTINGS({
         newHotkey: data,
       });
@@ -206,7 +210,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     },
     action({ mutations }, { data }: { data: ToolbarSettingType }) {
       const newData = window.backend.setSetting("toolbarSetting", data);
-      newData.then((toolbarSetting) => {
+      void newData.then((toolbarSetting) => {
         mutations.SET_TOOLBAR_SETTING({ toolbarSetting });
       });
     },
@@ -219,26 +223,20 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       state[key as never] = value;
     },
     action({ mutations }, { key, value }) {
-      window.backend.setSetting(key, value);
+      void window.backend.setSetting(key, value);
       // Vuexの型処理でUnionが解かれてしまうのを迂回している
       // FIXME: このワークアラウンドをなくす
       mutations.SET_ROOT_MISC_SETTING({ key: key as never, value });
     },
   },
 
-  SET_THEME_SETTING: {
-    mutation(
-      state,
-      { currentTheme, themes }: { currentTheme: string; themes?: ThemeConf[] },
-    ) {
-      if (themes) {
-        state.themeSetting.availableThemes = themes;
-      }
-      state.themeSetting.currentTheme = currentTheme;
+  SET_CURRENT_THEME_SETTING: {
+    mutation(state, { currentTheme }: { currentTheme: string }) {
+      state.currentTheme = currentTheme;
     },
     action({ state, mutations }, { currentTheme }: { currentTheme: string }) {
-      window.backend.theme(currentTheme);
-      const theme = state.themeSetting.availableThemes.find((value) => {
+      void window.backend.setSetting("currentTheme", currentTheme);
+      const theme = state.availableThemes.find((value) => {
         return value.name == currentTheme;
       });
 
@@ -246,41 +244,9 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         throw Error("Theme not found");
       }
 
-      for (const key in theme.colors) {
-        const color = theme.colors[key as ThemeColorType];
-        const { r, g, b } = colors.hexToRgb(color);
-        document.documentElement.style.setProperty(`--color-${key}`, color);
-        document.documentElement.style.setProperty(
-          `--color-${key}-rgb`,
-          `${r}, ${g}, ${b}`,
-        );
-      }
-      const mixColors: ThemeColorType[][] = [
-        ["primary", "background"],
-        ["warning", "background"],
-      ];
-      for (const [color1, color2] of mixColors) {
-        const color1Rgb = colors.hexToRgb(theme.colors[color1]);
-        const color2Rgb = colors.hexToRgb(theme.colors[color2]);
-        const r = Math.trunc((color1Rgb.r + color2Rgb.r) / 2);
-        const g = Math.trunc((color1Rgb.g + color2Rgb.g) / 2);
-        const b = Math.trunc((color1Rgb.b + color2Rgb.b) / 2);
-        const propertyName = `--color-mix-${color1}-${color2}-rgb`;
-        const cssColor = `${r}, ${g}, ${b}`;
-        document.documentElement.style.setProperty(propertyName, cssColor);
-      }
-      Dark.set(theme.isDark);
-      setCssVar("primary", theme.colors["primary"]);
-      setCssVar("warning", theme.colors["warning"]);
-
-      document.documentElement.setAttribute(
-        "is-dark-theme",
-        theme.isDark ? "true" : "false",
-      );
-
       window.backend.setNativeTheme(theme.isDark ? "dark" : "light");
 
-      mutations.SET_THEME_SETTING({
+      mutations.SET_CURRENT_THEME_SETTING({
         currentTheme: currentTheme,
       });
     },
@@ -295,7 +261,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         event: "updateAcceptRetrieveTelemetry",
         acceptRetrieveTelemetry: acceptRetrieveTelemetry == "Accepted",
       });
-      window.backend.setSetting(
+      void window.backend.setSetting(
         "acceptRetrieveTelemetry",
         acceptRetrieveTelemetry,
       );
@@ -312,7 +278,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         event: "updateAcceptTerms",
         acceptTerms: acceptTerms == "Accepted",
       });
-      window.backend.setSetting("acceptTerms", acceptTerms);
+      void window.backend.setSetting("acceptTerms", acceptTerms);
       mutations.SET_ACCEPT_TERMS({ acceptTerms });
     },
   },
@@ -325,7 +291,10 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       state.experimentalSetting = experimentalSetting;
     },
     action({ mutations }, { experimentalSetting }) {
-      window.backend.setSetting("experimentalSetting", experimentalSetting);
+      void window.backend.setSetting(
+        "experimentalSetting",
+        experimentalSetting,
+      );
       mutations.SET_EXPERIMENTAL_SETTING({ experimentalSetting });
     },
   },
@@ -335,7 +304,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       state.confirmedTips = confirmedTips;
     },
     action({ mutations }, { confirmedTips }) {
-      window.backend.setSetting("confirmedTips", confirmedTips);
+      void window.backend.setSetting("confirmedTips", confirmedTips);
       mutations.SET_CONFIRMED_TIPS({ confirmedTips });
     },
   },
@@ -347,7 +316,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         ...confirmedTip,
       };
 
-      actions.SET_CONFIRMED_TIPS({
+      void actions.SET_CONFIRMED_TIPS({
         confirmedTips: confirmedTips as ConfirmedTips,
       });
     },
@@ -355,7 +324,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
 
   RESET_CONFIRMED_TIPS: {
     async action({ state, actions }) {
-      const confirmedTips: { [key: string]: boolean } = {
+      const confirmedTips: Record<string, boolean> = {
         ...state.confirmedTips,
       };
 
@@ -364,7 +333,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         confirmedTips[key] = false;
       }
 
-      actions.SET_CONFIRMED_TIPS({
+      void actions.SET_CONFIRMED_TIPS({
         confirmedTips: confirmedTips as ConfirmedTips,
       });
     },
@@ -391,21 +360,21 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
 
         // 対応するGPUがない場合に変更を続行するか問う
         if (useGpu && !isAvailableGPUMode) {
-          const result = await window.backend.showQuestionDialog({
+          const result = await showQuestionDialog({
             type: "warning",
             title: "対応するGPUデバイスが見つかりません",
             message:
               "GPUモードの利用には対応するGPUデバイスが必要です。\n" +
               "このままGPUモードに変更するとエンジンエラーが発生する可能性があります。本当に変更しますか？",
-            buttons: ["変更する", "変更しない"],
-            cancelId: 1,
+            buttons: ["変更しない", "変更する"],
+            cancel: 0,
           });
-          if (result == 1) {
+          if (result == 0) {
             return;
           }
         }
 
-        actions.SET_ENGINE_SETTING({
+        void actions.SET_ENGINE_SETTING({
           engineSetting: { ...state.engineSettings[engineId], useGpu },
           engineId,
         });
@@ -416,7 +385,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         // GPUモードに変更できなかった場合はCPUモードに戻す
         // FIXME: useGpu設定を保存してからエンジン起動を試すのではなく、逆にしたい
         if (!result.success && useGpu) {
-          await window.backend.showMessageDialog({
+          await showAlertDialog({
             type: "error",
             title: "GPUモードに変更できませんでした",
             message:

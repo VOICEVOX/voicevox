@@ -1,42 +1,48 @@
-<!--
-  ノートやピッチなどの編集対象を切り替えるボタン
--->
-
 <template>
-  <QBtnToggle
-    dense
-    unelevated
-    toggleColor="primary"
-    :modelValue="editTarget"
-    toggleTextColor="display-on-primary"
-    class="edit-target-switcher q-mr-sm"
-    :options="[
-      {
-        icon: 'piano',
-        value: 'NOTE',
-        slot: 'NOTE',
-      },
-      {
-        icon: 'show_chart',
-        value: 'PITCH',
-        slot: 'PITCH',
-      },
-    ]"
-    @update:modelValue="changeEditTarget"
-    ><template #NOTE
-      ><QTooltip :delay="500" anchor="bottom middle">ノート編集</QTooltip>
-    </template>
-    <template #PITCH>
-      <QTooltip :delay="500" anchor="bottom middle"
-        >ピッチ編集<br />{{ !isMac ? "Ctrl" : "Cmd" }}+クリックで消去</QTooltip
+  <QBtnGroup flat class="edit-target-switcher">
+    <!-- ノート -->
+    <QBtn
+      dense
+      unelevated
+      class="segment-switch"
+      :class="{ active: editTarget === 'NOTE' }"
+      @click="changeEditTarget('NOTE')"
+    >
+      <QIcon name="piano" size="20px" />
+      <QTooltip
+        :delay="500"
+        anchor="bottom middle"
+        transitionShow=""
+        transitionHide=""
       >
-    </template>
-  </QBtnToggle>
+        ノート編集
+      </QTooltip>
+    </QBtn>
+
+    <!-- ピッチ -->
+    <QBtn
+      dense
+      unelevated
+      class="segment-switch"
+      :class="{ active: editTarget === 'PITCH' }"
+      @click="changeEditTarget('PITCH')"
+    >
+      <QIcon name="timeline" size="20px" />
+      <QTooltip
+        :delay="500"
+        anchor="bottom middle"
+        transitionShow=""
+        transitionHide=""
+      >
+        ピッチ編集<br />{{ !isMac ? "Ctrl" : "Cmd" }}+クリックで消去
+      </QTooltip>
+    </QBtn>
+  </QBtnGroup>
 </template>
 
 <script setup lang="ts">
 import { SequencerEditTarget } from "@/store/type";
-import { isMac } from "@/type/preload";
+import { isMac } from "@/helpers/platform";
 
 defineProps<{
   editTarget: SequencerEditTarget;
@@ -44,22 +50,24 @@ defineProps<{
 }>();
 </script>
 
-<style lang="scss" scoped>
-.edit-target-switcher :deep(.q-btn-item) {
-  position: relative;
+<style scoped lang="scss">
+.edit-target-switcher {
+  border: 1px solid var(--scheme-color-outline-variant);
+  box-sizing: border-box;
+  padding: 3px;
+  height: 40px;
+  border-radius: 20px;
+}
 
-  &.bg-primary {
-    // borderがないと切り換え時に1px動くのでそれを防ぐ
-    border: 1px solid var(--color-primary);
-  }
-  &:not(.bg-primary) {
-    border: 1px solid rgba(var(--color-display-rgb), 0.3);
-    &:first-child {
-      border-right: 0;
-    }
-    &:last-child {
-      border-left: 0;
-    }
+.segment-switch {
+  color: var(--scheme-color-on-surface-variant);
+  height: 32px;
+  min-width: 32px;
+  border-radius: 16px !important;
+
+  &.active {
+    background: var(--scheme-color-secondary-container);
+    color: var(--scheme-color-on-secondary-container);
   }
 }
 </style>

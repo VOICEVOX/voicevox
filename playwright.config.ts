@@ -5,39 +5,51 @@ import dotenv from "dotenv";
 dotenv.config({ override: true });
 
 let project: Project;
-const additionalWebServer: PlaywrightTestConfig["webServer"] = [];
+let webServers: PlaywrightTestConfig["webServer"];
 const isElectron = process.env.VITE_TARGET === "electron";
 const isBrowser = process.env.VITE_TARGET === "browser";
+const isStorybook = process.env.TARGET === "storybook";
+
+// エンジンの起動が必要
+const defaultEngineInfosEnv = process.env.VITE_DEFAULT_ENGINE_INFOS ?? "[]";
+const envSchema = z // FIXME: electron起動時のものと共通化したい
+  .object({
+    host: z.string(),
+    executionFilePath: z.string(),
+    executionArgs: z.array(z.string()),
+    executionEnabled: z.boolean(),
+  })
+  .passthrough()
+  .array();
+const engineInfos = envSchema.parse(JSON.parse(defaultEngineInfosEnv));
+
+const engineServers = engineInfos
+  .filter((info) => info.executionEnabled)
+  .map((info) => ({
+    command: `${info.executionFilePath} ${info.executionArgs.join(" ")}`,
+    url: `${info.host}/version`,
+    reuseExistingServer: !process.env.CI,
+  }));
+const viteServer = {
+  command: "vite --mode test --port 7357",
+  port: 7357,
+  reuseExistingServer: !process.env.CI,
+};
+const storybookServer = {
+  command: "storybook dev --ci --port 7357",
+  port: 7357,
+  reuseExistingServer: !process.env.CI,
+};
 
 if (isElectron) {
   project = { name: "electron", testDir: "./tests/e2e/electron" };
+  webServers = [viteServer];
 } else if (isBrowser) {
   project = { name: "browser", testDir: "./tests/e2e/browser" };
-
-  // エンジンの起動が必要
-  const defaultEngineInfosEnv = process.env.VITE_DEFAULT_ENGINE_INFOS ?? "[]";
-  const envSchema = z // FIXME: electron起動時のものと共通化したい
-    .object({
-      host: z.string(),
-      executionFilePath: z.string(),
-      executionArgs: z.array(z.string()),
-      executionEnabled: z.boolean(),
-    })
-    .passthrough()
-    .array();
-  const engineInfos = envSchema.parse(JSON.parse(defaultEngineInfosEnv));
-
-  for (const info of engineInfos) {
-    if (!info.executionEnabled) {
-      continue;
-    }
-
-    additionalWebServer.push({
-      command: `${info.executionFilePath} ${info.executionArgs.join(" ")}`,
-      url: `${info.host}/version`,
-      reuseExistingServer: !process.env.CI,
-    });
-  }
+  webServers = [viteServer, ...engineServers];
+} else if (isStorybook) {
+  project = { name: "storybook", testDir: "./tests/e2e/storybook" };
+  webServers = [storybookServer];
 } else {
   throw new Error(`VITE_TARGETの指定が不正です。${process.env.VITE_TARGET}`);
 }
@@ -54,15 +66,13 @@ const config: PlaywrightTestConfig = {
   testDir: "./tests/e2e",
   /* Maximum time one test can run for. */
   timeout: 60 * 1000,
+  globalTimeout: 5 * 60 * 1000,
   expect: {
     /**
      * Maximum time expect() should wait for the condition to be met.
      * For example in `await expect(locator).toHaveText();`
      */
     timeout: 5 * 1000,
-    toHaveScreenshot: {
-      maxDiffPixelRatio: 0.001,
-    },
   },
   // ファイルシステムが関連してくるので、Electronテストでは並列化しない
   fullyParallel: !isElectron,
@@ -90,14 +100,7 @@ const config: PlaywrightTestConfig = {
   /* Folder for test artifacts such as screenshots, videos, traces, etc. */
   // outputDir: 'test-results/',
 
-  webServer: [
-    {
-      command: "vite --mode test --port 7357",
-      port: 7357,
-      reuseExistingServer: !process.env.CI,
-    },
-    ...additionalWebServer,
-  ],
+  webServer: webServers,
 };
 
 export default config;

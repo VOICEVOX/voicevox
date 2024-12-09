@@ -41,3 +41,12 @@ electron-builder.yml
 
 # generated licenses.json
 /*licenses.json
+
+# Storybook
+storybook-static/
+
+# Preview Build Output
+dist_preview/
+
+# Downloaded binaries
+vendored

@@ -1,4 +1,31 @@
-/** @type {import('@typescript-eslint/utils').TSESLint.Linter.Config} */
+const vueEslintParser = "vue-eslint-parser";
+const vueEslintParserOptions = {
+  ecmaVersion: 2020,
+  parser: "@typescript-eslint/parser",
+};
+const tsEslintOptions = {
+  project: ["./tsconfig.json"],
+  tsconfigRootDir: __dirname,
+};
+
+const tsEslintRules = {
+  // Storeでよくasyncなしの関数を定義するので無効化
+  // TODO: いずれは有効化する
+  "@typescript-eslint/require-await": "off",
+
+  "@typescript-eslint/no-misused-promises": [
+    "error",
+    {
+      // (...) => voidに(...) => Promise<void>を渡すのは許可
+      // ただし特に強い意志でこれを許可しているわけではないので、
+      // もし問題が発生した場合は有効化する
+      // ref: https://canary.discord.com/channels/879570910208733277/893889888208977960/1267467454876225536
+      checksVoidReturn: false,
+    },
+  ],
+};
+
+/** @type {import('@typescript-eslint/utils').TSESLint.Linter.ConfigType} */
 module.exports = {
   root: true,
   env: {
@@ -15,12 +42,9 @@ module.exports = {
     "plugin:storybook/recommended",
   ],
   plugins: ["import"],
-  parser: "vue-eslint-parser",
-  parserOptions: {
-    ecmaVersion: 2020,
-    parser: "@typescript-eslint/parser",
-  },
-  ignorePatterns: ["dist_electron/**/*", "dist/**/*", "node_modules/**/*"],
+  parser: vueEslintParser,
+  parserOptions: vueEslintParserOptions,
+  ignorePatterns: ["dist/**/*", "dist_*/**/*", "node_modules/**/*"],
   rules: {
     "linebreak-style":
       process.env.NODE_ENV === "production" && process.platform !== "win32"
@@ -33,17 +57,6 @@ module.exports = {
       "error",
       {
         endOfLine: "auto",
-      },
-    ],
-    "vue/no-restricted-syntax": [
-      "error",
-      {
-        selector: "LogicalExpression[operator=??]",
-        message: `template内で"??"を使うとgithubのsyntax highlightが崩れるので\n三項演算子等を使って書き換えてください`,
-      },
-      {
-        selector: "MemberExpression[optional=true]",
-        message: `template内で"?."を使うとgithubのsyntax highlightが崩れるので\n三項演算子等を使って書き換えてください`,
       },
     ],
     "@typescript-eslint/no-unused-vars": [
@@ -87,6 +100,30 @@ module.exports = {
       ],
       rules: {
         "no-console": "off",
+      },
+    },
+    {
+      files: ["*.ts", "*.mts"],
+      parser: "@typescript-eslint/parser",
+      extends: ["plugin:@typescript-eslint/recommended-type-checked"],
+      parserOptions: tsEslintOptions,
+      rules: tsEslintRules,
+    },
+    {
+      files: ["*.vue"],
+      parser: vueEslintParser,
+      parserOptions: { ...vueEslintParserOptions, ...tsEslintOptions },
+      extends: ["plugin:@typescript-eslint/recommended-type-checked"],
+      rules: {
+        ...tsEslintRules,
+
+        // typescript-eslintにVueの型がanyとして認識されるので無効化
+        "@typescript-eslint/no-unsafe-member-access": "off",
+        "@typescript-eslint/no-unsafe-call": "off",
+        "@typescript-eslint/no-unsafe-assignment": "off",
+        "@typescript-eslint/no-unsafe-argument": "off",
+        "@typescript-eslint/no-unsafe-return": "off",
+        "@typescript-eslint/no-redundant-type-constituents": "off",
       },
     },
     // Electronのメインプロセス以外でelectronのimportを禁止する

@@ -1,6 +1,6 @@
 import { EngineState, EngineStoreState, EngineStoreTypes } from "./type";
-import { createDotNotationUILockAction as createUILockAction } from "./ui";
-import { createDotNotationPartialStore as createPartialStore } from "./vuex";
+import { createUILockAction } from "./ui";
+import { createPartialStore } from "./vuex";
 import { createLogger } from "@/domain/frontend/log";
 import type { EngineManifest } from "@/openapi";
 import type { EngineId, EngineInfo } from "@/type/preload";
@@ -15,17 +15,13 @@ const { info, error } = createLogger("store/engine");
 export const engineStore = createPartialStore<EngineStoreTypes>({
   GET_ENGINE_INFOS: {
     async action({ state, mutations }) {
-      const engineInfos = await window.backend.engineInfos();
+      let engineInfos = await window.backend.engineInfos();
 
-      // マルチエンジンオフモード時はengineIdsをデフォルトエンジンのIDだけにする。
-      let engineIds: EngineId[];
+      // マルチエンジンオフモード時はデフォルトエンジンだけにする。
       if (state.isMultiEngineOffMode) {
-        engineIds = engineInfos
-          .filter((engineInfo) => engineInfo.type === "default")
-          .map((info) => info.uuid);
-      } else {
-        engineIds = engineInfos.map((engineInfo) => engineInfo.uuid);
+        engineInfos = engineInfos.filter((engineInfo) => engineInfo.isDefault);
       }
+      const engineIds = engineInfos.map((engineInfo) => engineInfo.uuid);
 
       mutations.SET_ENGINE_INFOS({
         engineIds,
@@ -57,8 +53,8 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
   GET_SORTED_ENGINE_INFOS: {
     getter: (state) => {
       return Object.values(state.engineInfos).sort((a, b) => {
-        const isDefaultA = a.type === "default" ? 1 : 0;
-        const isDefaultB = b.type === "default" ? 1 : 0;
+        const isDefaultA = a.isDefault ? 1 : 0;
+        const isDefaultB = b.isDefault ? 1 : 0;
         if (isDefaultA !== isDefaultB) {
           return isDefaultB - isDefaultA;
         }
@@ -114,7 +110,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
   FETCH_AND_SET_ENGINE_MANIFESTS: {
     async action({ state, mutations, actions }) {
       mutations.SET_ENGINE_MANIFESTS({
-        engineManifests: Object.fromEntries(
+        engineManifests: Object.fromEntries<EngineManifest>(
           await Promise.all(
             state.engineIds.map(
               async (engineId) =>
@@ -122,12 +118,15 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
                   .INSTANTIATE_ENGINE_CONNECTOR({
                     engineId,
                   })
-                  .then(async (instance) => [
-                    engineId,
-                    await instance.invoke("engineManifestEngineManifestGet")(
-                      {},
-                    ),
-                  ]),
+                  .then(
+                    async (instance) =>
+                      [
+                        engineId,
+                        await instance.invoke(
+                          "engineManifestEngineManifestGet",
+                        )({}),
+                      ] as const,
+                  ),
             ),
           ),
         ),
@@ -263,7 +262,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
         anyNewCharacters: result.some((r) => r.anyNewCharacters),
       };
       if (mergedResult.anyNewCharacters) {
-        actions.SET_DIALOG_OPEN({
+        void actions.SET_DIALOG_OPEN({
           isCharacterOrderDialogOpen: true,
         });
       }

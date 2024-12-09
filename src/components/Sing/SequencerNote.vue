@@ -1,13 +1,12 @@
 <template>
+  <!-- 
+   FIXME: z-indexの問題で複数ノート間が重なった際に歌詞が
+   かぶって見えない問題があるためノートと歌詞を別々のdivにしている
+  -->
   <div
+    v-bind="$attrs"
     class="note"
-    :class="{
-      'selected-or-preview': isSelected || isPreview,
-      'preview-lyric': previewLyric != undefined,
-      overlapping: hasOverlappingError,
-      'invalid-phrase': hasPhraseError,
-      'below-pitch': editTargetIsPitch,
-    }"
+    :class="[classes, cursorClass]"
     :style="{
       width: `${width}px`,
       height: `${height}px`,
@@ -16,35 +15,17 @@
   >
     <div
       class="note-bar"
-      :class="{
-        'cursor-move': editTargetIsNote,
-      }"
       @mousedown="onBarMouseDown"
       @dblclick="onBarDoubleClick"
     >
-      <div
-        class="note-left-edge"
-        :class="{
-          'cursor-ew-resize': editTargetIsNote,
-        }"
-        @mousedown="onLeftEdgeMouseDown"
-      ></div>
-      <div
-        class="note-right-edge"
-        :class="{
-          'cursor-ew-resize': editTargetIsNote,
-        }"
-        @mousedown="onRightEdgeMouseDown"
-      ></div>
       <ContextMenu
         v-if="editTargetIsNote"
         ref="contextMenu"
         :menudata="contextMenuData"
       />
     </div>
-    <div class="note-lyric" data-testid="note-lyric">
-      {{ lyricToDisplay }}
-    </div>
+    <div class="note-edge left" @mousedown="onLeftEdgeMouseDown"></div>
+    <div class="note-edge right" @mousedown="onRightEdgeMouseDown"></div>
     <!-- エラー内容を表示 -->
     <QTooltip
       v-if="hasOverlappingError"
@@ -67,6 +48,19 @@
       フレーズが生成できません。歌詞は日本語1文字までです。
     </QTooltip>
   </div>
+  <div
+    class="note-lyric"
+    data-testid="note-lyric"
+    :class="[classes, cursorClass]"
+    :style="{
+      fontSize: `${lyricFontSize}px`,
+      left: `${lyricLeftPosition}px`,
+      lineHeight: `${height}px`,
+      transform: `translate3d(${positionX}px,${positionY + height}px,0)`,
+    }"
+  >
+    {{ lyricToDisplay }}
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -77,22 +71,28 @@ import {
   getKeyBaseHeight,
   tickToBaseX,
   noteNumberToBaseY,
+  PreviewMode,
 } from "@/sing/viewHelper";
 import ContextMenu, {
   ContextMenuItemData,
-} from "@/components/Menu/ContextMenu.vue";
+} from "@/components/Menu/ContextMenu/Container.vue";
 
 const props = defineProps<{
   note: Note;
-  /** どれかのノートがプレビュー中 */
-  nowPreviewing: boolean;
   /** このノートが選択中か */
   isSelected: boolean;
   /** このノートがプレビュー中か */
   isPreview: boolean;
   /** ノートが重なっているか */
   isOverlapping: boolean;
+  /** プレビュー中の歌詞 */
   previewLyric: string | null;
+  /** プレビュー中か */
+  nowPreviewing: boolean;
+  /** プレビューモード */
+  previewMode: PreviewMode;
+  /** カーソルクラス */
+  cursorClass: string;
 }>();
 
 const emit = defineEmits<{
@@ -123,6 +123,26 @@ const width = computed(() => {
   const noteEndBaseX = tickToBaseX(noteEndTicks, tpqn.value);
   return (noteEndBaseX - noteStartBaseX) * zoomX.value;
 });
+// 歌詞のフォントサイズをズームにあわせて調整する
+// 最小12px, 最大16px, ノートの高さは越えない
+const lyricFontSize = computed(() => {
+  const minSize = 12;
+  const maxSize = 16;
+  // ノートの高さを見た目で越えない範囲で最大値を設定
+  const baseSize = Math.min(height.value - 6, maxSize);
+  // ズームによる拡大率を調整(計算値に特に根拠はない。見た目あわせ。)
+  const zoomFactor = Math.max(0.5, Math.min(1.5, zoomX.value / 0.5));
+  return Math.max(minSize, Math.min(maxSize, baseSize * zoomFactor));
+});
+// ノート左端から歌詞の左端までの距離をズームにあわせて調整する
+// 最小0px, 最大2px
+const lyricLeftPosition = computed(() => {
+  const minLeft = 0;
+  const maxLeft = 2;
+  // ズームによるleft位置を調整(計算値に特に根拠はない。見た目あわせ。)
+  const paddingFactor = Math.min(1, zoomX.value / 0.5);
+  return minLeft + (maxLeft - minLeft) * paddingFactor;
+});
 const editTargetIsNote = computed(() => {
   return state.sequencerEditTarget === "NOTE";
 });
@@ -149,6 +169,26 @@ const lyricToDisplay = computed(() => {
   return props.previewLyric ?? props.note.lyric;
 });
 
+// 状態に応じたCSSクラス
+const classes = computed(() => {
+  return {
+    "edit-note": editTargetIsNote.value, // ノート編集モード
+    "edit-pitch": editTargetIsPitch.value, // ピッチ編集モード
+    selected: props.isSelected, // このノートが選択中
+    preview: props.isPreview, // なんらかのプレビュー中
+    "preview-lyric": props.previewLyric != undefined, // 歌詞プレビュー中
+    overlapping: hasOverlappingError.value, // ノートが重なっている
+    "invalid-phrase": hasPhraseError.value, // フレーズ生成エラー
+    "below-pitch": editTargetIsPitch.value, // ピッチ編集中
+    adding: props.isPreview && props.previewMode === "ADD_NOTE", // ノート追加中
+    "resizing-right":
+      props.isPreview && props.previewMode === "RESIZE_NOTE_RIGHT", // 右リサイズ中
+    "resizing-left":
+      props.isPreview && props.previewMode === "RESIZE_NOTE_LEFT", // 左リサイズ中
+    idle: props.previewMode === "IDLE", // プレビュー中でない
+  };
+});
+
 const contextMenu = ref<InstanceType<typeof ContextMenu>>();
 const contextMenuData = computed<ContextMenuItemData[]>(() => {
   return [
@@ -158,7 +198,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
       disabled: props.nowPreviewing,
       onClick: async () => {
         contextMenu.value?.hide();
-        await store.dispatch("COPY_NOTES_TO_CLIPBOARD");
+        await store.actions.COPY_NOTES_TO_CLIPBOARD();
       },
       disableWhenUiLocked: true,
     },
@@ -168,7 +208,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
       disabled: props.nowPreviewing,
       onClick: async () => {
         contextMenu.value?.hide();
-        await store.dispatch("COMMAND_CUT_NOTES_TO_CLIPBOARD");
+        await store.actions.COMMAND_CUT_NOTES_TO_CLIPBOARD();
       },
       disableWhenUiLocked: true,
     },
@@ -179,7 +219,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
       disabled: props.nowPreviewing || !props.isSelected,
       onClick: async () => {
         contextMenu.value?.hide();
-        await store.dispatch("COMMAND_QUANTIZE_SELECTED_NOTES");
+        await store.actions.COMMAND_QUANTIZE_SELECTED_NOTES();
       },
       disableWhenUiLocked: true,
     },
@@ -187,10 +227,10 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
     {
       type: "button",
       label: "削除",
-      disabled: props.nowPreviewing,
+      disabled: props.nowPreviewing || !props.isSelected,
       onClick: async () => {
         contextMenu.value?.hide();
-        await store.dispatch("COMMAND_REMOVE_SELECTED_NOTES");
+        await store.actions.COMMAND_REMOVE_SELECTED_NOTES();
       },
       disableWhenUiLocked: true,
     },
@@ -215,130 +255,290 @@ const onLeftEdgeMouseDown = (event: MouseEvent) => {
 </script>
 
 <style scoped lang="scss">
-@use "@/styles/variables" as vars;
-@use "@/styles/colors" as colors;
+@use "@/styles/v2/variables" as vars;
+@use "@/styles/v2/colors" as colors;
+
+// テキストアウトライン
+@mixin text-outline($color, $size: 1px) {
+  text-shadow:
+    #{-$size} #{-$size} 0 $color,
+    #{$size} #{-$size} 0 $color,
+    #{-$size} #{$size} 0 $color,
+    #{$size} #{$size} 0 $color,
+    0 #{-$size} 0 $color,
+    0 #{$size} 0 $color,
+    #{-$size} 0 0 $color,
+    #{$size} 0 0 $color;
+}
 
 .note {
   position: absolute;
   top: 0;
   left: 0;
 
-  &.below-pitch {
-    .note-bar {
-      background-color: rgba(colors.$primary-rgb, 0.18);
-      border-color: hsl(130, 35%, 78%);
+  --note-error-container: oklch(
+    from var(--scheme-color-error-container) l calc(var(--secondary-c) / 2) h
+  );
+
+  .note-bar {
+    box-sizing: border-box;
+    position: absolute;
+    width: calc(100% + 1px);
+    height: 100%;
+    background-color: var(--scheme-color-sing-note-bar-container);
+    border: 1px solid var(--scheme-color-sing-note-bar-border);
+    border-radius: 5px;
+  }
+
+  .note-edge {
+    position: absolute;
+    top: 0;
+    width: 25%;
+    min-width: 3px;
+    max-width: 8px;
+    height: 100%;
+    background-color: transparent;
+    cursor: ew-resize;
+
+    &.left {
+      left: -2px; // FIXME: 左隣のノートの右端の当たり判定に食い込んでしまう
+      border-radius: 5px 0 0 5px;
+    }
+
+    &.right {
+      right: -2px; // FIXME: 右隣のノートの左端の当たり判定に食い込んでしまう
+      border-radius: 0 5px 5px 0;
+    }
+
+    &:hover {
+      background-color: var(--scheme-color-sing-note-bar-border);
+    }
+  }
+}
+
+// ノート編集モード
+.note.edit-note {
+  .note-bar {
+    cursor: move;
+  }
+
+  .note-edge {
+    cursor: ew-resize;
+
+    &:hover {
+      background-color: var(--scheme-color-sing-note-bar-border);
     }
   }
 
-  &:not(.below-pitch) {
-    .note-left-edge:hover {
-      // FIXME: hoverだとカーソル位置によって適用されないので、プレビュー中に明示的にクラス指定する
-      background-color: lab(80 -22.953 14.365);
+  // 選択中のスタイル
+  &.selected {
+    .note-bar {
+      background-color: var(--scheme-color-sing-note-bar-selected-container);
+      border-color: var(--scheme-color-sing-note-bar-selected-border);
+      outline: 1px solid var(--scheme-color-sing-note-bar-selected-outline);
+      outline-offset: 1px;
     }
 
-    .note-right-edge:hover {
-      // FIXME: hoverだとカーソル位置によって適用されないので、プレビュー中に明示的にクラス指定する
-      background-color: lab(80 -22.953 14.365);
+    .note-edge:hover {
+      background-color: var(--scheme-color-sing-note-bar-selected-border);
+    }
+  }
+
+  // ノート追加中
+  &.adding {
+    .note-bar {
+      background-color: var(--scheme-color-sing-note-bar-selected-container);
+      border-color: var(--scheme-color-sing-note-bar-selected-border);
+      outline: 1px solid var(--scheme-color-sing-note-bar-selected-outline);
     }
 
-    &.selected-or-preview {
-      // 色は仮
-      .note-bar {
-        background-color: lab(95 -22.953 14.365);
-        border-color: lab(65 -22.953 14.365);
-        outline: solid 2px lab(70 -22.953 14.365);
+    .note-edge {
+      &:hover {
+        background-color: transparent;
       }
     }
   }
-  // TODO：もっといい見た目を考える
+
+  // 右リサイズ中
+  &.resizing-right {
+    .note-edge.right {
+      background-color: var(--scheme-color-sing-note-bar-selected-border);
+    }
+  }
+
+  // 左リサイズ中
+  &.resizing-left {
+    .note-edge.left {
+      background-color: var(--scheme-color-sing-note-bar-selected-border);
+    }
+  }
+
+  // 歌詞プレビュー中
   &.preview-lyric {
     .note-bar {
-      background-color: lab(90, -22.953, 14.365);
-      border-color: lab(75, -22.953, 14.365);
-      outline: solid 2px lab(80, -22.953, 14.365);
-    }
-
-    .note-lyric {
-      opacity: 0.38;
-    }
-
-    &.below-pitch {
-      .note-bar {
-        background-color: rgba(hsl(130, 100%, 50%), 0.18);
-      }
+      background-color: var(--scheme-color-sing-note-bar-preview-container);
+      border-color: var(--scheme-color-sing-note-bar-preview-border);
+      outline-color: var(--scheme-color-sing-note-bar-preview-outline);
     }
   }
 
+  // エラー状態
   &.overlapping,
   &.invalid-phrase {
     .note-bar {
-      background-color: rgba(colors.$warning-rgb, 0.5);
+      background-color: var(--note-error-container);
+      border-color: var(--scheme-color-error);
+      outline-color: var(--scheme-color-error-container);
     }
 
-    .note-lyric {
-      opacity: 0.6;
+    .note-edge:hover {
+      background-color: var(--scheme-color-error);
     }
 
-    &.selected-or-preview {
+    // 選択中かつエラー状態
+    &.selected {
       .note-bar {
-        background-color: rgba(colors.$warning-rgb, 0.5);
-        border-color: colors.$warning;
-        outline: 2px solid rgba(colors.$warning-rgb, 0.3);
+        background-color: var(--scheme-color-error-container);
+        border-color: var(--scheme-color-error);
+        outline-color: var(--scheme-color-error-container);
+      }
+
+      .note-edge:hover {
+        background-color: var(--scheme-color-error);
+      }
+    }
+
+    // リサイズ中かつエラー状態
+    &.resizing-right {
+      .note-edge.right {
+        background-color: var(--scheme-color-error);
+      }
+    }
+
+    &.resizing-left {
+      .note-edge.left {
+        background-color: var(--scheme-color-error);
       }
     }
   }
 }
 
+/* ピッチ編集モード */
+.note.edit-pitch {
+  // ノートバー
+  .note-bar {
+    background-color: var(--scheme-color-sing-note-bar-below-pitch-container);
+    border-color: var(--scheme-color-sing-grid-cell-white);
+    outline: 0;
+  }
+
+  .note-edge {
+    display: none;
+  }
+
+  // エラー状態
+  &.overlapping,
+  &.invalid-phrase {
+    .note-bar {
+      background-color: var(--note-error-container);
+      border-color: 0;
+      outline: none;
+    }
+  }
+}
+
+// 歌詞表示
 .note-lyric {
   position: absolute;
-  left: 0.125rem;
-  bottom: 0;
-  min-width: 2rem;
-  padding: 0;
-  background: transparent;
-  color: #121212;
+  bottom: 100%;
+  left: 0;
+  transform: translate3d(var(--positionX), var(--positionY + height), 0);
   font-size: 1rem;
-  font-weight: 700;
-  text-shadow:
-    -1px -1px 0 #fff,
-    1px -1px 0 #fff,
-    -1px 1px 0 #fff,
-    1px 1px 0 #fff;
+  font-weight: 400;
+  letter-spacing: -0.1em;
   white-space: nowrap;
   pointer-events: none;
+  background: transparent;
+  color: var(--scheme-color-sing-on-note-bar-container);
+  @include text-outline(var(--scheme-color-sing-note-bar-container));
+  -webkit-font-smoothing: antialiased;
+  z-index: vars.$z-index-sing-note;
 }
 
-.note-bar {
-  box-sizing: border-box;
-  position: absolute;
-  width: calc(100% + 1px);
-  height: 100%;
-  background-color: colors.$primary;
-  border: 1px solid rgba(colors.$background-rgb, 0.5);
-  border-radius: 4px;
+// ノート編集モード
+.note-lyric.edit-note {
+  // 選択中
+  &.selected,
+  // 追加中
+  &.adding {
+    color: var(--scheme-color-sing-on-note-bar-selected-container);
+    @include text-outline(var(--scheme-color-sing-note-bar-selected-container));
+  }
+
+  // 歌詞プレビュー中
+  &.preview-lyric {
+    color: oklch(
+      from var(--scheme-color-sing-on-note-bar-container) l c h / 0.38
+    );
+    @include text-outline(var(--scheme-color-sing-note-bar-preview-container));
+  }
+
+  // エラー状態
+  &.invalid-phrase,
+  &.overlapping {
+    color: oklch(from var(--scheme-color-on-error-container) l c h / 0.5);
+    @include text-outline(
+      oklch(
+        from var(--scheme-color-error-container) l calc(var(--secondary-c) / 2)
+          h
+      )
+    );
+
+    &.selected {
+      @include text-outline(var(--scheme-color-error-container));
+    }
+  }
 }
 
-.note-left-edge {
-  position: absolute;
-  top: 0;
-  left: -1px;
-  width: 5px;
-  height: 100%;
+// ピッチ編集モード
+.note-lyric.edit-pitch {
+  color: oklch(from var(--scheme-color-on-surface-variant) l c h / 0.8);
+  z-index: vars.$z-index-sing-note-lyric;
+  @include text-outline(var(--scheme-color-surface-variant));
+
+  // エラー状態
+  &.invalid-phrase,
+  &.overlapping {
+    color: oklch(
+      from var(--scheme-color-error) l calc(var(--secondary-c) / 2) h / 0.38
+    );
+    text-shadow: none;
+  }
 }
 
-.note-right-edge {
-  position: absolute;
-  top: 0;
-  right: -1px;
-  width: 5px;
-  height: 100%;
-}
+// カーソルの状態
+.note {
+  &.cursor-default,
+  &.cursor-draw,
+  &.cursor-ew-resize,
+  &.cursor-crosshair,
+  &.cursor-move,
+  &.cursor-erase {
+    .note-bar,
+    .note-edge {
+      cursor: inherit;
+    }
+  }
 
-.cursor-move {
-  cursor: move;
-}
+  // ノートの編集の場合でプレビュー中ではない場合はノートバーをドラッグできる
+  &.idle.edit-note {
+    .note-bar {
+      cursor: move;
+    }
 
-.cursor-ew-resize {
-  cursor: ew-resize;
+    .note-edge {
+      cursor: ew-resize;
+    }
+  }
 }
 </style>

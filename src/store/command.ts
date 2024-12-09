@@ -4,7 +4,7 @@ import { enablePatches, enableMapSet, Immer } from "immer";
 import { Command, CommandStoreState, CommandStoreTypes, State } from "./type";
 import { applyPatches } from "@/store/immerPatchUtility";
 import {
-  createDotNotationPartialStore as createPartialStore,
+  createPartialStore,
   Mutation,
   MutationsBase,
   MutationTree,
@@ -35,6 +35,7 @@ export const createCommandMutationTree = <S, M extends MutationsBase>(
   Object.fromEntries(
     Object.entries(payloadRecipeTree).map(([key, val]) => [
       key,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       createCommandMutation(val, editor),
     ]),
   ) as MutationTree<S, M>;
@@ -64,7 +65,7 @@ const recordPatches =
   <S, P>(recipe: PayloadRecipe<S, P>) =>
   (state: S, payload: P): Command => {
     const [, doPatches, undoPatches] = immer.produceWithPatches(
-      toRaw(state) as S,
+      toRaw(state),
       (draft: S) => recipe(draft, payload),
     );
     return {
@@ -111,7 +112,8 @@ export const commandStore = createPartialStore<CommandStoreTypes>({
       if (editor === "song") {
         // TODO: 存在しないノートのみ選択解除、あるいはSELECTED_NOTE_IDS getterを作る
         mutations.DESELECT_ALL_NOTES();
-        actions.RENDER();
+        void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
+        void actions.RENDER();
       }
     },
   },
@@ -129,7 +131,8 @@ export const commandStore = createPartialStore<CommandStoreTypes>({
       if (editor === "song") {
         // TODO: 存在しないノートのみ選択解除、あるいはSELECTED_NOTE_IDS getterを作る
         mutations.DESELECT_ALL_NOTES();
-        actions.RENDER();
+        void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
+        void actions.RENDER();
       }
     },
   },

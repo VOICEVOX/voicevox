@@ -387,7 +387,7 @@ describe("Map", () => {
     enablePatches();
     enableMapSet();
 
-    const object: Map<number, number> = new Map([
+    const object = new Map<number, number>([
       [1, 2],
       [3, 4],
     ]);
@@ -424,7 +424,7 @@ describe("Map", () => {
     enablePatches();
     enableMapSet();
 
-    const object: Map<number, number> = new Map([
+    const object = new Map<number, number>([
       [1, 2],
       [3, 4],
     ]);
@@ -462,7 +462,7 @@ describe("Set", () => {
     enablePatches();
     enableMapSet();
 
-    const object: Set<number> = new Set([1, 2, 3]);
+    const object = new Set<number>([1, 2, 3]);
     const [, redoPatches, undoPatches] = immer.produceWithPatches(
       object,
       (obj) => {

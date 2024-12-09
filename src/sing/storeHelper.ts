@@ -1,43 +1,6 @@
 import { NoteId } from "@/type/preload";
 import { Note } from "@/store/type";
 
-/**
- * 頻繁に変更される値を保持します。
- * 値変更時に実行する関数を登録できます。
- */
-export class FrequentlyUpdatedState<T> {
-  private _value: T;
-  private listeners = new Set<(newValue: T) => void>();
-
-  get value() {
-    return this._value;
-  }
-
-  set value(newValue: T) {
-    this._value = newValue;
-    this.listeners.forEach((listener) => listener(newValue));
-  }
-
-  constructor(initialValue: T) {
-    this._value = initialValue;
-  }
-
-  addValueChangeListener(listener: (newValue: T) => void) {
-    if (this.listeners.has(listener)) {
-      throw new Error("The listener already exists.");
-    }
-    this.listeners.add(listener);
-    listener(this.value);
-  }
-
-  removeValueChangeListener(listener: (newValue: T) => void) {
-    if (!this.listeners.has(listener)) {
-      throw new Error("The listener does not exist.");
-    }
-    this.listeners.delete(listener);
-  }
-}
-
 export function getOverlappingNoteIds(notes: Note[]): Set<NoteId> {
   const events: {
     type: "start" | "end";
@@ -76,7 +39,7 @@ export function getOverlappingNoteIds(notes: Note[]): Set<NoteId> {
   for (const event of events) {
     if (event.type === "start") {
       if (currentNotes.size === 1) {
-        overlappingNoteIds.add(currentNotes.values().next().value);
+        overlappingNoteIds.add(currentNotes.values().next().value as NoteId);
         overlappingNoteIds.add(event.noteId);
       } else if (currentNotes.size > 1) {
         overlappingNoteIds.add(event.noteId);

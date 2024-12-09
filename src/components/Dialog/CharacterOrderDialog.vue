@@ -107,6 +107,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import Draggable from "vuedraggable";
+import { useQuasar } from "quasar";
 import CharacterTryListenCard from "./CharacterTryListenCard.vue";
 import { useStore } from "@/store";
 import { CharacterInfo, SpeakerId, StyleId, StyleInfo } from "@/type/preload";
@@ -119,6 +120,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   (event: "update:modelValue", value: boolean): void;
 }>();
+
+const $q = useQuasar();
 
 const store = useStore();
 
@@ -161,7 +164,7 @@ watch(
   async (newValue, oldValue) => {
     if (!oldValue && newValue) {
       // 新しいキャラクター
-      newCharacters.value = await store.dispatch("GET_NEW_CHARACTERS");
+      newCharacters.value = await store.actions.GET_NEW_CHARACTERS();
 
       // サンプルの順番、新しいキャラクターは上に
       sampleCharacterOrder.value = [
@@ -179,7 +182,7 @@ watch(
       // FIXME: 不明なキャラを無視しているので、不明キャラの順番が保存時にリセットされてしまう
       characterOrder.value = store.state.userCharacterOrder
         .map((speakerUuid) => characterInfosMap.value[speakerUuid])
-        .filter((info) => info != undefined) as CharacterInfo[];
+        .filter((info) => info != undefined);
 
       // 含まれていないキャラクターを足す
       const notIncludesCharacterInfos = props.characterInfos.filter(
@@ -220,7 +223,7 @@ const play = (
   if (audio.src !== "") stop();
 
   audio.src = voiceSamplePaths[index];
-  audio.play();
+  void audio.play();
   playing.value = { speakerUuid, styleId, index };
 };
 const stop = () => {
@@ -253,8 +256,7 @@ const togglePlayOrStop = (
 const characterOrderDragging = ref(false);
 
 const closeDialog = () => {
-  store.dispatch(
-    "SET_USER_CHARACTER_ORDER",
+  void store.actions.SET_USER_CHARACTER_ORDER(
     characterOrder.value.map((info) => info.metas.speakerUuid),
   );
   stop();

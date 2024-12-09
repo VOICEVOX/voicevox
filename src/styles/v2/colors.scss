@@ -1,3 +1,4 @@
+@use "sass:color";
 // 新デザインで使用する色変数の定義
 // 詳細: https://github.com/VOICEVOX/voicevox_project/issues/40
 
@@ -10,34 +11,35 @@ $primitive-red: #d04756;
 
 // ライトテーマの色
 :root[is-dark-theme="false"] {
-  --color-v2-background: #{lighten($primitive-primary, 25%)};
-  --color-v2-background-drawer: #{rgba(lighten($primitive-primary, 20%), 0.75)};
+  --color-v2-background: #{color.adjust($primitive-primary, $lightness: 25%)};
+  --color-v2-background-alt: #{color.adjust($primitive-white, $lightness: -5%)};
+  --color-v2-background-drawer: #{rgba(color.adjust($primitive-primary, $lightness: 20%), 0.75)};
 
   --color-v2-surface: #{$primitive-white};
   --color-v2-border: #{rgba($primitive-black, 0.2)};
   --color-v2-selected: #{rgba($primitive-primary, 0.3)};
 
-  --color-v2-display: #{lighten($primitive-black, 10%)};
-  --color-v2-display-oncolor: #{lighten($primitive-black, 10%)};
+  --color-v2-display: #{$primitive-black};
+  --color-v2-display-oncolor: #{$primitive-black};
   --color-v2-display-sub: #{rgba($primitive-black, 0.5)};
   --color-v2-display-link: #{$primitive-blue};
   --color-v2-display-warning: #{$primitive-red};
 
   --color-v2-control: #{$primitive-white};
-  --color-v2-control-hovered: #{darken($primitive-white, 5%)};
-  --color-v2-control-pressed: #{darken($primitive-white, 10%)};
+  --color-v2-control-hovered: #{color.adjust($primitive-white, $lightness: -5%)};
+  --color-v2-control-pressed: #{color.adjust($primitive-white, $lightness: -10%)};
 
   --color-v2-clear: #{rgba($primitive-black, 0)};
   --color-v2-clear-hovered: #{rgba($primitive-black, 0.05)};
   --color-v2-clear-pressed: #{rgba($primitive-black, 0.1)};
 
   --color-v2-primary: #{$primitive-primary};
-  --color-v2-primary-hovered: #{darken($primitive-primary, 5%)};
-  --color-v2-primary-pressed: #{darken($primitive-primary, 10%)};
+  --color-v2-primary-hovered: #{color.adjust($primitive-primary, $lightness: -5%)};
+  --color-v2-primary-pressed: #{color.adjust($primitive-primary, $lightness: -10%)};
 
   --color-v2-warning: #{$primitive-white};
-  --color-v2-warning-hovered: #{lighten($primitive-red, 40%)};
-  --color-v2-warning-pressed: #{lighten($primitive-red, 35%)};
+  --color-v2-warning-hovered: #{color.adjust($primitive-red, $lightness: 40%)};
+  --color-v2-warning-pressed: #{color.adjust($primitive-red, $lightness: 35%)};
 
   --color-v2-scrollbar: #{rgba($primitive-black, 0.3)};
   --color-v2-scrollbar-hovered: #{rgba($primitive-black, 0.4)};
@@ -47,33 +49,34 @@ $primitive-red: #d04756;
 // ダークテーマの色
 :root[is-dark-theme="true"] {
   --color-v2-background: #{$primitive-black};
+  --color-v2-background-alt: #{color.adjust($primitive-black, $lightness: 2%)};
   --color-v2-background-drawer: #{rgba($primitive-black, 0.75)};
 
-  --color-v2-surface: #{lighten($primitive-black, 3%)};
+  --color-v2-surface: #{color.adjust($primitive-black, $lightness: 3%)};
   --color-v2-border: #{rgba($primitive-white, 0.2)};
   --color-v2-selected: #{rgba($primitive-primary, 0.3)};
 
   --color-v2-display: #{$primitive-white};
   --color-v2-display-oncolor: #{$primitive-black};
   --color-v2-display-sub: #{rgba($primitive-white, 0.5)};
-  --color-v2-display-link: #{lighten($primitive-blue, 25%)};
-  --color-v2-display-warning: #{lighten($primitive-red, 25%)};
+  --color-v2-display-link: #{color.adjust($primitive-blue, $lightness: 25%)};
+  --color-v2-display-warning: #{color.adjust($primitive-red, $lightness: 25%)};
 
-  --color-v2-control: #{lighten($primitive-black, 10%)};
-  --color-v2-control-hovered: #{lighten($primitive-black, 15%)};
-  --color-v2-control-pressed: #{lighten($primitive-black, 20%)};
+  --color-v2-control: #{color.adjust($primitive-black, $lightness: 10%)};
+  --color-v2-control-hovered: #{color.adjust($primitive-black, $lightness: 15%)};
+  --color-v2-control-pressed: #{color.adjust($primitive-black, $lightness: 20%)};
 
   --color-v2-clear: #{rgba($primitive-white, 0)};
   --color-v2-clear-hovered: #{rgba($primitive-white, 0.05)};
   --color-v2-clear-pressed: #{rgba($primitive-white, 0.1)};
 
-  --color-v2-primary: #{darken($primitive-primary, 10%)};
-  --color-v2-primary-hovered: #{darken($primitive-primary, 5%)};
+  --color-v2-primary: #{color.adjust($primitive-primary, $lightness: -10%)};
+  --color-v2-primary-hovered: #{color.adjust($primitive-primary, $lightness: -5%)};
   --color-v2-primary-pressed: #{$primitive-primary};
 
-  --color-v2-warning: #{lighten($primitive-black, 10%)};
-  --color-v2-warning-hovered: #{darken($primitive-red, 35%)};
-  --color-v2-warning-pressed: #{darken($primitive-red, 30%)};
+  --color-v2-warning: #{color.adjust($primitive-black, $lightness: 10%)};
+  --color-v2-warning-hovered: #{color.adjust($primitive-red, $lightness: -35%)};
+  --color-v2-warning-pressed: #{color.adjust($primitive-red, $lightness: -30%)};
 
   --color-v2-scrollbar: #{rgba($primitive-white, 0.3)};
   --color-v2-scrollbar-hovered: #{rgba($primitive-white, 0.4)};
@@ -81,6 +84,7 @@ $primitive-red: #d04756;
 }
 
 $background: var(--color-v2-background);
+$background-alt: var(--color-v2-background-alt);
 $background-drawer: var(--color-v2-background-drawer);
 
 $surface: var(--color-v2-surface);

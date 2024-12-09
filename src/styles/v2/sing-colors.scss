@@ -1,0 +1,674 @@
+/*
+
+## 利用
+
+基本的にはMaterialDesign3のカラーシステムに近い考え方であり
+おおざっぱなロールごと(primary/secondaryなど)のベース彩度+色相は固定し、
+詳細なロール(on-primary/secondary-containerなど)に応じて明度のみ変更する形です
+
+https://m3.material.io/styles/color/roles
+
+## 各ロール
+
+- primary:
+主要・強調される操作可能部のカラー・ブランドカラーです
+
+- secondary:
+主要でない操作可能部のカラーです
+
+- tertiary:
+現時点での利用部分想定としては一時的・未決定部などでプライマリ・セカンダリで表現しきれない場合に利用します
+eg: ノートのプレビュー / 一時的に全ソロのインジケータ / シンガー発音時インジケータ / 失敗がありうる場合の待ちなど
+
+- error:
+エラー・警告です
+
+- neutral
+背景、テキスト、境界線など、UI全体で使用される中立的なカラーです
+ユーザーの注意を引くことなく、背景やサポート的な役割を果たす要素です
+
+- neutral-variant
+背景、セクションの区切り、低コントラストなUI要素などに利用します
+操作可能なUI要素のカラーです
+
+- link
+外部リンクなどのリンクを表すカラーです
+
+## カラースキームの指定
+
+以下のようにCSS変数を指定します
+
+background-color: var(--scheme-color-primary);
+color: var(--scheme-color-on-primary);
+
+## カスタマイズサンプル
+
+OKLab(OKLCH)で指定します
+
+l: 明度 / c: 彩度 / h: 色相
+
+50%明度プライマリを指定:
+  color: oklch(var(--lr-50) var(--primary-c) var(--primary-h));
+
+50%明度プライマリを指定: CSS Variables+相対CSSの場合
+  color: oklch(from var(--primary-key) l calc(var(--lr-50)));
+
+ロールカラー指定: --on-primaryのdarkテーマの値を指定したサンプル
+  --on-primary-dark: oklch(var(--lr-10) var(--primary-c) var(--primary-h));
+
+エイリアス指定: 特定のロール(この場合はneutral)だが明度が違う
+  --sing-piano-key-white-dark: oklch(var(--lr-70) var(--neutral-c) var(--neutral-h));
+
+プライマリと色調を揃えた新規カラー指定: (色相が150度異なる紫になる)
+  color: oklch(from var(--primary-key) l calc(var(--lr-60)) c h calc(var(--primary-c) + 150)));
+
+---
+
+TODO: ほとんどの場合、
+
+- role/on-role/role-container/on-role-containerの4つ
+- 必要あればそれぞれのhover/active/focus/disabledの状態
+
+のスタイルを指定することになるため、明度ルールが安定したらmixin化するか検討する。
+
+eg: 常にホバー時は+5%明度上げるのであれば
+&:hover: oklch(from var(--primary) l calc(...lr-50をlr-55にするmixin));
+
+*/
+
+@use "sass:math";
+
+/*
+カラースキーム計算基準
+*/
+:root {
+  // 基準彩度
+  --primary-c: 0.098;
+  // 元実装(v0.20.0)のprimary(light) #a5d4ad: OKLCH彩度 0.073
+  // 元実装(v0.20.0)のprimary(dark): #86C591: OKLCH彩度 0.098
+  // たとえば元のprimary(light)に揃えたいならここを0.073にする
+  --secondary-c: 0.036;
+  --tertiary-c: var(--primary-c);
+  --error-c: 0.196;
+  --neutral-c: 0.003;
+  --neutral-variant-c: 0.006;
+  --link-c: 0.196;
+
+  // 基準色相
+  --primary-h: 149.64; // VOICEVOXプライマリ #a5d4adの色相
+  --secondary-h: var(--primary-h);
+  --tertiary-h: calc(var(--primary-h) - 60); // -60度
+  --error-h: 19.64;
+  --neutral-h: calc(var(--primary-h) + 120);
+  --neutral-variant-h: var(--primary-h);
+  --link-h: 256; // `styles/v2/colors.scss` におけるprimitive-blueの色相
+}
+
+/*
+明度LUT
+OKLCHのL値を相対明度(おおむねガンマ補正2.2に近い)に補正した%単位値
+そのままのL値を使うとディスプレイにおいては知覚的にリニアな明るさにならないため補正しています
+eg: 50%: --lr-50
+
+参考: https://bottosson.github.io/posts/colorpicker/#intermission---a-new-lightness-estimate-for-oklab
+参考議論: https://github.com/VOICEVOX/voicevox/issues/1810#issuecomment-2260529835
+参考議論: https://github.com/VOICEVOX/voicevox/issues/1810#issuecomment-2260631491
+*/
+
+@function LtoLr($L) {
+  $k1: 0.206;
+  $k2: 0.03;
+  $k3: calc((1 + $k2) / (1 + $k1));
+
+  $l: calc($L / 100);
+  $Lr: calc(
+    (
+        $k3 * $l - $k2 +
+          math.sqrt(math.pow($k3 * $l - $k2, 2) + 4 * $k1 * $k3 * $l)
+      ) / 2
+  );
+  @return $Lr;
+}
+
+/*
+明度LUTをCSS変数として定義
+*/
+:root {
+  @for $i from 0 through 100 {
+    $L: $i;
+    $Lr: LtoLr($L);
+    --lr-#{$i}: #{calc(($Lr * 10000) / 10000)}; // 小数点以下4桁
+  }
+}
+
+/*
+OKLCHでのカラースキーム
+他の定義と混ざらないようにするため、prefixとして--scheme-color-をつけています
+
+eg: セカンダリコンテナ(90%明度)
+--scheme-color-secondary-container: oklch(var(--lr-90) var(--secondary-c) var(--secondary-h));
+
+FIXME:
+SASSのmapなどで構造化+mixin一括処理などで処理可能ですが、
+リファクタリング課題(元が動的生成用のTypeScriptコードのため)
+*/
+
+/*
+ライトテーマ
+*/
+:root[is-dark-theme="false"] {
+  --scheme-color-primary: oklch(var(--lr-40) var(--primary-c) var(--primary-h));
+  --scheme-color-on-primary: oklch(
+    var(--lr-100) var(--primary-c) var(--primary-h)
+  );
+  --scheme-color-primary-container: oklch(
+    var(--lr-90) var(--primary-c) var(--primary-h)
+  );
+  --scheme-color-on-primary-container: oklch(
+    var(--lr-10) var(--primary-c) var(--primary-h)
+  );
+  --scheme-color-primary-fixed: oklch(
+    var(--lr-90) var(--primary-c) var(--primary-h)
+  );
+  --scheme-color-primary-fixed-dim: oklch(
+    var(--lr-80) var(--primary-c) var(--primary-h)
+  );
+  --scheme-color-on-primary-fixed: oklch(
+    var(--lr-10) var(--primary-c) var(--primary-h)
+  );
+  --scheme-color-on-primary-fixed-variant: oklch(
+    var(--lr-30) var(--primary-c) var(--primary-h)
+  );
+
+  --scheme-color-secondary: oklch(
+    var(--lr-40) var(--secondary-c) var(--secondary-h)
+  );
+  --scheme-color-on-secondary: oklch(
+    var(--lr-100) var(--secondary-c) var(--secondary-h)
+  );
+  --scheme-color-secondary-container: oklch(
+    var(--lr-90) var(--secondary-c) var(--secondary-h)
+  );
+  --scheme-color-on-secondary-container: oklch(
+    var(--lr-10) var(--secondary-c) var(--secondary-h)
+  );
+  --scheme-color-secondary-fixed: oklch(
+    var(--lr-90) var(--secondary-c) var(--secondary-h)
+  );
+  --scheme-color-secondary-fixed-dim: oklch(
+    var(--lr-80) var(--secondary-c) var(--secondary-h)
+  );
+  --scheme-color-on-secondary-fixed: oklch(
+    var(--lr-10) var(--secondary-c) var(--secondary-h)
+  );
+  --scheme-color-on-secondary-fixed-variant: oklch(
+    var(--lr-30) var(--secondary-c) var(--secondary-h)
+  );
+
+  --scheme-color-tertiary: oklch(
+    var(--lr-40) var(--tertiary-c) var(--tertiary-h)
+  );
+  --scheme-color-on-tertiary: oklch(
+    var(--lr-100) var(--tertiary-c) var(--tertiary-h)
+  );
+  --scheme-color-tertiary-container: oklch(
+    var(--lr-90) var(--tertiary-c) var(--tertiary-h)
+  );
+  --scheme-color-on-tertiary-container: oklch(
+    var(--lr-10) var(--tertiary-c) var(--tertiary-h)
+  );
+  --scheme-color-tertiary-fixed: oklch(
+    var(--lr-90) var(--tertiary-c) var(--tertiary-h)
+  );
+  --scheme-color-tertiary-fixed-dim: oklch(
+    var(--lr-80) var(--tertiary-c) var(--tertiary-h)
+  );
+  --scheme-color-on-tertiary-fixed: oklch(
+    var(--lr-10) var(--tertiary-c) var(--tertiary-h)
+  );
+  --scheme-color-on-tertiary-fixed-variant: oklch(
+    var(--lr-30) var(--tertiary-c) var(--tertiary-h)
+  );
+
+  --scheme-color-error: oklch(var(--lr-40) var(--error-c) var(--error-h));
+  --scheme-color-on-error: oklch(var(--lr-100) var(--error-c) var(--error-h));
+  --scheme-color-error-container: oklch(
+    var(--lr-90) var(--error-c) var(--error-h)
+  );
+  --scheme-color-on-error-container: oklch(
+    var(--lr-10) var(--error-c) var(--error-h)
+  );
+
+  --scheme-color-background: oklch(
+    var(--lr-99) var(--neutral-c) var(--neutral-h)
+  );
+  --scheme-color-on-background: oklch(
+    var(--lr-10) var(--neutral-c) var(--neutral-h)
+  );
+  --scheme-color-surface: oklch(var(--lr-99) var(--neutral-c) var(--neutral-h));
+  --scheme-color-on-surface: oklch(
+    var(--lr-10) var(--neutral-c) var(--neutral-h)
+  );
+  --scheme-color-surface-variant: oklch(
+    var(--lr-90) var(--neutral-variant-c) var(--neutral-variant-h)
+  );
+  --scheme-color-on-surface-variant: oklch(
+    var(--lr-30) var(--neutral-variant-c) var(--neutral-variant-h)
+  );
+  --scheme-color-outline: oklch(
+    var(--lr-50) var(--neutral-variant-c) var(--neutral-variant-h)
+  );
+  --scheme-color-outline-variant: oklch(
+    var(--lr-80) var(--neutral-variant-c) var(--neutral-variant-h)
+  );
+
+  --scheme-color-shadow: oklch(var(--lr-0) var(--neutral-c) var(--neutral-h));
+  --scheme-color-scrim: oklch(var(--lr-0) var(--neutral-c) var(--neutral-h));
+  --scheme-color-inverse-surface: oklch(
+    var(--lr-20) var(--neutral-c) var(--neutral-h)
+  );
+  --scheme-color-inverse-on-surface: oklch(
+    var(--lr-95) var(--neutral-c) var(--neutral-h)
+  );
+  --scheme-color-inverse-primary: oklch(
+    var(--lr-80) var(--primary-c) var(--primary-h)
+  );
+
+  --scheme-color-surface-dim: oklch(
+    var(--lr-87) var(--neutral-c) var(--neutral-h)
+  );
+  --scheme-color-surface-bright: oklch(
+    var(--lr-98) var(--neutral-c) var(--neutral-h)
+  );
+  --scheme-color-surface-container-lowest: oklch(
+    var(--lr-90) var(--neutral-c) var(--neutral-h)
+  );
+  --scheme-color-surface-container-low: oklch(
+    var(--lr-92) var(--neutral-c) var(--neutral-h)
+  );
+  --scheme-color-surface-container: oklch(
+    var(--lr-94) var(--neutral-c) var(--neutral-h)
+  );
+  --scheme-color-surface-container-high: oklch(
+    var(--lr-96) var(--neutral-c) var(--neutral-h)
+  );
+  --scheme-color-surface-container-highest: oklch(
+    var(--lr-100) var(--neutral-c) var(--neutral-h)
+  );
+
+  /* カスタムカラー */
+  --scheme-color-link: oklch(var(--lr-40) var(--link-c) var(--link-h));
+  --scheme-color-on-link: oklch(var(--lr-100) var(--link-c) var(--link-h));
+  --scheme-color-link-container: oklch(
+    var(--lr-90) var(--link-c) var(--link-h)
+  );
+  --scheme-color-on-link-container: oklch(
+    var(--lr-10) var(--link-c) var(--link-h)
+  );
+
+  /* ソング用エイリアスカラー */
+  --scheme-color-sing-toolbar-container: oklch(
+    var(--lr-99) var(--neutral-c) var(--neutral-h)
+  );
+  --scheme-color-sing-playback-button-container: oklch(
+    var(--lr-80) var(--primary-c) var(--primary-h)
+  );
+  --scheme-color-sing-on-playback-button-container: oklch(
+    var(--lr-10) var(--neutral-c) var(--neutral-h)
+  );
+
+  --scheme-color-sing-grid-cell-white: oklch(
+    var(--lr-100) var(--neutral-c) var(--neutral-h)
+  );
+  --scheme-color-sing-grid-cell-black: oklch(
+    var(--lr-96) var(--neutral-c) var(--neutral-h)
+  );
+
+  --scheme-color-sing-grid-measure-line: oklch(
+    var(--lr-75) var(--neutral-c) var(--neutral-h)
+  );
+  --scheme-color-sing-grid-beat-line: oklch(
+    var(--lr-85) var(--neutral-c) var(--neutral-h)
+  );
+  --scheme-color-sing-grid-vertical-line: oklch(
+    var(--lr-94) var(--neutral-c) var(--neutral-h)
+  );
+
+  --scheme-color-sing-grid-octave-line: oklch(
+    var(--lr-80) var(--neutral-c) var(--neutral-h)
+  );
+  --scheme-color-sing-grid-horizontal-line: oklch(
+    var(--lr-94) var(--neutral-c) var(--neutral-h)
+  );
+
+  --scheme-color-sing-ruler-surface: oklch(
+    var(--lr-90) var(--neutral-c) var(--neutral-h)
+  );
+  --scheme-color-sing-ruler-measure-line: oklch(
+    var(--lr-65) var(--neutral-c) var(--neutral-h)
+  );
+  --scheme-color-sing-ruler-beat-line: oklch(
+    var(--lr-75) var(--neutral-c) var(--neutral-h)
+  );
+
+  --scheme-color-sing-piano-key-white: oklch(
+    var(--lr-99) var(--neutral-c) var(--neutral-h)
+  );
+  --scheme-color-sing-piano-key-black: oklch(
+    var(--lr-45) var(--neutral-c) var(--neutral-h)
+  );
+
+  --scheme-color-sing-piano-keys-right-border: oklch(
+    var(--lr-70) var(--neutral-c) var(--neutral-h)
+  );
+
+  --scheme-color-sing-note-bar-container: oklch(
+    var(--lr-90) var(--secondary-c) var(--secondary-h)
+  );
+  --scheme-color-sing-on-note-bar-container: oklch(
+    var(--lr-10) var(--secondary-c) var(--secondary-h)
+  );
+  --scheme-color-sing-note-bar-border: oklch(
+    var(--lr-60) var(--secondary-c) var(--secondary-h)
+  );
+
+  --scheme-color-sing-note-bar-selected-container: oklch(
+    var(--lr-96) var(--primary-c) var(--primary-h)
+  );
+  --scheme-color-sing-on-note-bar-selected-container: oklch(
+    var(--lr-10) var(--primary-c) var(--primary-h)
+  );
+  --scheme-color-sing-note-bar-selected-border: oklch(
+    var(--lr-60) var(--primary-c) var(--primary-h)
+  );
+  --scheme-color-sing-note-bar-selected-outline: oklch(
+    var(--lr-80) var(--primary-c) var(--primary-h)
+  );
+
+  --scheme-color-sing-note-bar-below-pitch-container: oklch(
+    var(--lr-90) var(--neutral-variant-c) var(--neutral-variant-h)
+  );
+  --scheme-color-sing-note-bar-below-pitch-invalid-container: oklch(
+    var(--lr-90) var(--secondary-c) var(--error-h)
+  );
+
+  --scheme-color-sing-note-bar-preview-container: oklch(
+    var(--lr-90) var(--tertiary-c) var(--tertiary-h)
+  );
+  --scheme-color-sing-on-note-bar-preview-container: oklch(
+    var(--lr-10) var(--tertiary-c) var(--tertiary-h)
+  );
+  --scheme-color-sing-note-bar-preview-border: oklch(
+    var(--lr-60) var(--tertiary-c) var(--tertiary-h)
+  );
+  --scheme-color-sing-note-bar-preview-outline: oklch(
+    var(--lr-80) var(--tertiary-c) var(--tertiary-h)
+  );
+
+  --scheme-color-sing-shadow-note: oklch(
+    var(--lr-84) var(--neutral-variant-c) var(--neutral-variant-h)
+  );
+}
+
+/* ダークテーマ */
+:root[is-dark-theme="true"] {
+  --scheme-color-primary: oklch(var(--lr-80) var(--primary-c) var(--primary-h));
+  --scheme-color-on-primary: oklch(
+    var(--lr-20) var(--primary-c) var(--primary-h)
+  );
+  --scheme-color-primary-container: oklch(
+    var(--lr-30) var(--primary-c) var(--primary-h)
+  );
+  --scheme-color-on-primary-container: oklch(
+    var(--lr-90) var(--primary-c) var(--primary-h)
+  );
+  --scheme-color-primary-fixed: oklch(
+    var(--lr-90) var(--primary-c) var(--primary-h)
+  );
+  --scheme-color-primary-fixed-dim: oklch(
+    var(--lr-80) var(--primary-c) var(--primary-h)
+  );
+  --scheme-color-on-primary-fixed: oklch(
+    var(--lr-10) var(--primary-c) var(--primary-h)
+  );
+  --scheme-color-on-primary-fixed-variant: oklch(
+    var(--lr-30) var(--primary-c) var(--primary-h)
+  );
+
+  --scheme-color-secondary: oklch(
+    var(--lr-80) var(--secondary-c) var(--secondary-h)
+  );
+  --scheme-color-on-secondary: oklch(
+    var(--lr-20) var(--secondary-c) var(--secondary-h)
+  );
+  --scheme-color-secondary-container: oklch(
+    var(--lr-30) var(--secondary-c) var(--secondary-h)
+  );
+  --scheme-color-on-secondary-container: oklch(
+    var(--lr-90) var(--secondary-c) var(--secondary-h)
+  );
+  --scheme-color-secondary-fixed: oklch(
+    var(--lr-90) var(--secondary-c) var(--secondary-h)
+  );
+  --scheme-color-secondary-fixed-dim: oklch(
+    var(--lr-80) var(--secondary-c) var(--secondary-h)
+  );
+  --scheme-color-on-secondary-fixed: oklch(
+    var(--lr-10) var(--secondary-c) var(--secondary-h)
+  );
+  --scheme-color-on-secondary-fixed-variant: oklch(
+    var(--lr-30) var(--secondary-c) var(--secondary-h)
+  );
+
+  --scheme-color-tertiary: oklch(
+    var(--lr-80) var(--tertiary-c) var(--tertiary-h)
+  );
+  --scheme-color-on-tertiary: oklch(
+    var(--lr-20) var(--tertiary-c) var(--tertiary-h)
+  );
+  --scheme-color-tertiary-container: oklch(
+    var(--lr-30) var(--tertiary-c) var(--tertiary-h)
+  );
+  --scheme-color-on-tertiary-container: oklch(
+    var(--lr-90) var(--tertiary-c) var(--tertiary-h)
+  );
+  --scheme-color-tertiary-fixed: oklch(
+    var(--lr-90) var(--tertiary-c) var(--tertiary-h)
+  );
+  --scheme-color-tertiary-fixed-dim: oklch(
+    var(--lr-80) var(--tertiary-c) var(--tertiary-h)
+  );
+  --scheme-color-on-tertiary-fixed: oklch(
+    var(--lr-10) var(--tertiary-c) var(--tertiary-h)
+  );
+  --scheme-color-on-tertiary-fixed-variant: oklch(
+    var(--lr-30) var(--tertiary-c) var(--tertiary-h)
+  );
+
+  --scheme-color-error: oklch(var(--lr-80) var(--error-c) var(--error-h));
+  --scheme-color-on-error: oklch(var(--lr-20) var(--error-c) var(--error-h));
+  --scheme-color-error-container: oklch(
+    var(--lr-30) var(--error-c) var(--error-h)
+  );
+  --scheme-color-on-error-container: oklch(
+    var(--lr-90) var(--error-c) var(--error-h)
+  );
+
+  --scheme-color-shadow: oklch(var(--lr-0) var(--neutral-c) var(--neutral-h));
+  --scheme-color-scrim: oklch(var(--lr-0) var(--neutral-c) var(--neutral-h));
+  --scheme-color-inverse-surface: oklch(
+    var(--lr-90) var(--neutral-c) var(--neutral-h)
+  );
+  --scheme-color-inverse-on-surface: oklch(
+    var(--lr-20) var(--neutral-c) var(--neutral-h)
+  );
+  --scheme-color-inverse-primary: oklch(
+    var(--lr-40) var(--primary-c) var(--primary-h)
+  );
+
+  --scheme-color-background: oklch(
+    var(--lr-10) var(--neutral-c) var(--neutral-h)
+  );
+  --scheme-color-on-background: oklch(
+    var(--lr-90) var(--neutral-c) var(--neutral-h)
+  );
+  --scheme-color-surface: oklch(var(--lr-6) var(--neutral-c) var(--neutral-h));
+  --scheme-color-on-surface: oklch(
+    var(--lr-90) var(--neutral-c) var(--neutral-h)
+  );
+  --scheme-color-surface-variant: oklch(
+    var(--lr-30) var(--neutral-variant-c) var(--neutral-variant-h)
+  );
+  --scheme-color-on-surface-variant: oklch(
+    var(--lr-80) var(--neutral-variant-c) var(--neutral-variant-h)
+  );
+  --scheme-color-outline: oklch(
+    var(--lr-60) var(--neutral-variant-c) var(--neutral-variant-h)
+  );
+  --scheme-color-outline-variant: oklch(
+    var(--lr-30) var(--neutral-variant-c) var(--neutral-variant-h)
+  );
+
+  --scheme-color-surface-dim: oklch(
+    var(--lr-6) var(--neutral-c) var(--neutral-h)
+  );
+  --scheme-color-surface-bright: oklch(
+    var(--lr-24) var(--neutral-c) var(--neutral-h)
+  );
+  --scheme-color-surface-container-lowest: oklch(
+    var(--lr-4) var(--neutral-c) var(--neutral-h)
+  );
+  --scheme-color-surface-container-low: oklch(
+    var(--lr-10) var(--neutral-c) var(--neutral-h)
+  );
+  --scheme-color-surface-container: oklch(
+    var(--lr-12) var(--neutral-c) var(--neutral-h)
+  );
+  --scheme-color-surface-container-high: oklch(
+    var(--lr-17) var(--neutral-c) var(--neutral-h)
+  );
+  --scheme-color-surface-container-highest: oklch(
+    var(--lr-24) var(--neutral-c) var(--neutral-h)
+  );
+
+  /* カスタムカラー */
+  --scheme-color-link: oklch(var(--lr-80) var(--link-c) var(--link-h));
+  --scheme-color-on-link: oklch(var(--lr-20) var(--link-c) var(--link-h));
+  --scheme-color-link-container: oklch(
+    var(--lr-30) var(--link-c) var(--link-h)
+  );
+  --scheme-color-on-link-container: oklch(
+    var(--lr-90) var(--link-c) var(--link-h)
+  );
+
+  /* ソング用エイリアスカラー */
+  --scheme-color-sing-toolbar-container: oklch(
+    var(--lr-17) var(--neutral-c) var(--neutral-h)
+  );
+  --scheme-color-sing-playback-button-container: oklch(
+    var(--lr-70) var(--primary-c) var(--primary-h)
+  );
+  --scheme-color-sing-on-playback-button-container: oklch(
+    var(--lr-10) var(--neutral-c) var(--neutral-h)
+  );
+
+  --scheme-color-sing-grid-cell-white: oklch(
+    var(--lr-20) var(--neutral-c) var(--neutral-h)
+  );
+
+  --scheme-color-sing-grid-cell-black: oklch(
+    var(--lr-16) var(--neutral-c) var(--neutral-h)
+  );
+
+  --scheme-color-sing-grid-measure-line: oklch(
+    var(--lr-40) var(--neutral-c) var(--neutral-h)
+  );
+  --scheme-color-sing-grid-beat-line: oklch(
+    var(--lr-4) var(--neutral-c) var(--neutral-h)
+  );
+  --scheme-color-sing-grid-vertical-line: oklch(
+    var(--lr-14) var(--neutral-c) var(--neutral-h)
+  );
+
+  --scheme-color-sing-grid-octave-line: oklch(
+    var(--lr-4) var(--neutral-c) var(--neutral-h)
+  );
+  --scheme-color-sing-grid-horizontal-line: oklch(
+    var(--lr-14) var(--neutral-c) var(--neutral-h)
+  );
+
+  --scheme-color-sing-ruler-surface: oklch(
+    var(--lr-30) var(--neutral-c) var(--neutral-h)
+  );
+  --scheme-color-sing-ruler-measure-line: oklch(
+    var(--lr-60) var(--neutral-c) var(--neutral-h)
+  );
+  --scheme-color-sing-ruler-beat-line: oklch(
+    var(--lr-50) var(--neutral-c) var(--neutral-h)
+  );
+
+  --scheme-color-sing-piano-key-white: oklch(
+    var(--lr-70) var(--neutral-c) var(--neutral-h)
+  );
+  --scheme-color-sing-piano-key-black: oklch(
+    var(--lr-20) var(--neutral-c) var(--neutral-h)
+  );
+
+  --scheme-color-sing-piano-keys-right-border: oklch(
+    var(--lr-35) var(--neutral-c) var(--neutral-h)
+  );
+
+  --scheme-color-sing-note-bar-container: oklch(
+    var(--lr-70) var(--secondary-c) var(--secondary-h)
+  );
+  --scheme-color-sing-on-note-bar-container: oklch(
+    var(--lr-10) var(--secondary-c) var(--secondary-h)
+  );
+  --scheme-color-sing-note-bar-border: oklch(
+    var(--lr-85) var(--secondary-c) var(--secondary-h)
+  );
+
+  --scheme-color-sing-note-bar-selected-container: oklch(
+    var(--lr-80) var(--primary-c) var(--primary-h)
+  );
+  --scheme-color-sing-on-note-bar-selected-container: oklch(
+    var(--lr-10) var(--primary-c) var(--primary-h)
+  );
+  --scheme-color-sing-note-bar-selected-border: oklch(
+    var(--lr-95) var(--primary-c) var(--primary-h)
+  );
+  --scheme-color-sing-note-bar-selected-outline: oklch(
+    var(--lr-60) var(--primary-c) var(--primary-h)
+  );
+
+  --scheme-color-sing-note-bar-error-container: oklch(
+    var(--lr-90) var(--secondary-c) var(--error-h)
+  );
+  --scheme-color-sing-on-note-bar-error-container: oklch(
+    var(--lr-10) var(--secondary-c) var(--error-h)
+  );
+
+  --scheme-color-sing-note-bar-below-pitch-container: oklch(
+    var(--lr-27) var(--neutral-variant-c) var(--neutral-variant-h)
+  );
+  --scheme-color-sing-note-bar-below-pitch-invalid-container: oklch(
+    var(--lr-27) var(--secondary-c) var(--error-h)
+  );
+
+  --scheme-color-sing-note-bar-preview-container: oklch(
+    var(--lr-70) var(--tertiary-c) var(--tertiary-h)
+  );
+  --scheme-color-sing-on-note-bar-preview-container: oklch(
+    var(--lr-10) var(--tertiary-c) var(--tertiary-h)
+  );
+  --scheme-color-sing-note-bar-preview-border: oklch(
+    var(--lr-85) var(--tertiary-c) var(--tertiary-h)
+  );
+  --scheme-color-sing-note-bar-preview-outline: oklch(
+    var(--lr-60) var(--tertiary-c) var(--tertiary-h)
+  );
+
+  --scheme-color-sing-shadow-note: oklch(
+    var(--lr-40) var(--neutral-variant-c) var(--neutral-variant-h)
+  );
+}

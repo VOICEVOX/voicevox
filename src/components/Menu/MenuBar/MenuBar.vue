@@ -28,6 +28,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
+import { useQuasar } from "quasar";
 import { MenuItemData, MenuItemRoot } from "../type";
 import MenuButton from "../MenuButton.vue";
 import TitleBarButtons from "./TitleBarButtons.vue";
@@ -41,35 +42,41 @@ const props = defineProps<{
   fileSubMenuData: MenuItemData[];
   /** 「編集」メニューのサブメニュー */
   editSubMenuData: MenuItemData[];
+  /** 「表示」メニューのサブメニュー */
+  viewSubMenuData: MenuItemData[];
   /** エディタの種類 */
   editor: "talk" | "song";
 }>();
 
+const $q = useQuasar();
 const store = useStore();
 const { registerHotkeyWithCleanup } = useHotkeyManager();
 const currentVersion = ref("");
 
+/** 追加のバージョン情報。コミットハッシュなどを書ける。 */
+const extraVersionInfo = import.meta.env.VITE_EXTRA_VERSION_INFO;
+
 const audioKeys = computed(() => store.state.audioKeys);
 
 // デフォルトエンジンの代替先ポート
-const defaultEngineAltPortTo = computed<number | undefined>(() => {
+const defaultEngineAltPortTo = computed<string | undefined>(() => {
   const altPortInfos = store.state.altPortInfos;
 
   // ref: https://github.com/VOICEVOX/voicevox/blob/32940eab36f4f729dd0390dca98f18656240d60d/src/views/EditorHome.vue#L522-L528
   const defaultEngineInfo = Object.values(store.state.engineInfos).find(
-    (engine) => engine.type === "default",
+    (engine) => engine.isDefault,
   );
   if (defaultEngineInfo == undefined) return undefined;
 
   // <defaultEngineId>: { from: number, to: number } -> to (代替先ポート)
   if (defaultEngineInfo.uuid in altPortInfos) {
-    return altPortInfos[defaultEngineInfo.uuid].to;
+    return altPortInfos[defaultEngineInfo.uuid];
   } else {
     return undefined;
   }
 });
 
-window.backend.getAppInfos().then((obj) => {
+void window.backend.getAppInfos().then((obj) => {
   currentVersion.value = obj.version;
 });
 const isMultiEngineOffMode = computed(() => store.state.isMultiEngineOffMode);
@@ -89,6 +96,7 @@ const titleText = computed(
     (projectName.value != undefined ? projectName.value + " - " : "") +
     "VOICEVOX" +
     (currentVersion.value ? " - Ver. " + currentVersion.value : "") +
+    (extraVersionInfo ? ` (${extraVersionInfo})` : "") +
     (isMultiEngineOffMode.value ? " - マルチエンジンオフ" : "") +
     (defaultEngineAltPortTo.value != null
       ? ` - Port: ${defaultEngineAltPortTo.value}`
@@ -106,62 +114,79 @@ watch(titleText, (newTitle) => {
 });
 
 const closeAllDialog = () => {
-  store.dispatch("SET_DIALOG_OPEN", {
+  void store.actions.SET_DIALOG_OPEN({
     isSettingDialogOpen: false,
   });
-  store.dispatch("SET_DIALOG_OPEN", {
+  void store.actions.SET_DIALOG_OPEN({
     isHelpDialogOpen: false,
   });
-  store.dispatch("SET_DIALOG_OPEN", {
+  void store.actions.SET_DIALOG_OPEN({
     isHotkeySettingDialogOpen: false,
   });
-  store.dispatch("SET_DIALOG_OPEN", {
+  void store.actions.SET_DIALOG_OPEN({
     isToolbarSettingDialogOpen: false,
   });
-  store.dispatch("SET_DIALOG_OPEN", {
+  void store.actions.SET_DIALOG_OPEN({
     isCharacterOrderDialogOpen: false,
   });
-  store.dispatch("SET_DIALOG_OPEN", {
+  void store.actions.SET_DIALOG_OPEN({
     isDefaultStyleSelectDialogOpen: false,
   });
 };
 
 const openHelpDialog = () => {
-  store.dispatch("SET_DIALOG_OPEN", {
+  void store.actions.SET_DIALOG_OPEN({
     isHelpDialogOpen: true,
   });
 };
 
+const toggleFullScreen = async () => {
+  window.backend.toggleFullScreen();
+};
+
 const createNewProject = async () => {
   if (!uiLocked.value) {
-    await store.dispatch("CREATE_NEW_PROJECT", {});
+    await store.actions.CREATE_NEW_PROJECT({});
   }
 };
 
 const saveProject = async () => {
   if (!uiLocked.value) {
-    await store.dispatch("SAVE_PROJECT_FILE", { overwrite: true });
+    await store.actions.SAVE_PROJECT_FILE({ overwrite: true });
   }
 };
 
 const saveProjectAs = async () => {
   if (!uiLocked.value) {
-    await store.dispatch("SAVE_PROJECT_FILE", {});
+    await store.actions.SAVE_PROJECT_FILE({});
   }
 };
 
 const importProject = () => {
   if (!uiLocked.value) {
-    store.dispatch("LOAD_PROJECT_FILE", {});
+    void store.actions.LOAD_PROJECT_FILE({});
   }
+};
+
+/** UIの拡大 */
+const zoomIn = async () => {
+  await store.actions.ZOOM_IN();
+};
+
+/** UIの縮小 */
+const zoomOut = async () => {
+  await store.actions.ZOOM_OUT();
+};
+
+/** UIの拡大率リセット */
+const zoomReset = async () => {
+  await store.actions.ZOOM_RESET();
 };
 
 // 「最近使ったプロジェクト」のメニュー
 const recentProjectsSubMenuData = ref<MenuItemData[]>([]);
 const updateRecentProjects = async () => {
-  const recentlyUsedProjects = await store.dispatch(
-    "GET_RECENTLY_USED_PROJECTS",
-  );
+  const recentlyUsedProjects = await store.actions.GET_RECENTLY_USED_PROJECTS();
   recentProjectsSubMenuData.value =
     recentlyUsedProjects.length === 0
       ? [
@@ -179,7 +204,7 @@ const updateRecentProjects = async () => {
           type: "button",
           label: projectFilePath,
           onClick: () => {
-            store.dispatch("LOAD_PROJECT_FILE", {
+            void store.actions.LOAD_PROJECT_FILE({
               filePath: projectFilePath,
             });
           },
@@ -202,7 +227,7 @@ const engineSubMenuData = computed<MenuItemData[]>(() => {
         type: "button",
         label: "再起動",
         onClick: () => {
-          store.dispatch("RESTART_ENGINES", {
+          void store.actions.RESTART_ENGINES({
             engineIds: [engineInfo.uuid],
           });
         },
@@ -224,7 +249,7 @@ const engineSubMenuData = computed<MenuItemData[]>(() => {
                 type: "button",
                 label: "フォルダを開く",
                 onClick: () => {
-                  store.dispatch("OPEN_ENGINE_DIRECTORY", {
+                  void store.actions.OPEN_ENGINE_DIRECTORY({
                     engineId: engineInfo.uuid,
                   });
                 },
@@ -234,7 +259,7 @@ const engineSubMenuData = computed<MenuItemData[]>(() => {
                 type: "button",
                 label: "再起動",
                 onClick: () => {
-                  store.dispatch("RESTART_ENGINES", {
+                  void store.actions.RESTART_ENGINES({
                     engineIds: [engineInfo.uuid],
                   });
                 },
@@ -250,7 +275,9 @@ const engineSubMenuData = computed<MenuItemData[]>(() => {
         type: "button",
         label: "全てのエンジンを再起動",
         onClick: () => {
-          store.dispatch("RESTART_ENGINES", { engineIds: engineIds.value });
+          void store.actions.RESTART_ENGINES({
+            engineIds: engineIds.value,
+          });
         },
         disableWhenUiLocked: false,
       },
@@ -261,7 +288,7 @@ const engineSubMenuData = computed<MenuItemData[]>(() => {
       type: "button",
       label: "エンジンの管理",
       onClick: () => {
-        store.dispatch("SET_DIALOG_OPEN", {
+        void store.actions.SET_DIALOG_OPEN({
           isEngineManageDialogOpen: true,
         });
       },
@@ -274,7 +301,7 @@ const engineSubMenuData = computed<MenuItemData[]>(() => {
       type: "button",
       label: "マルチエンジンをオンにして再読み込み",
       onClick() {
-        store.dispatch("RELOAD_APP", {
+        void store.actions.RELOAD_APP({
           isMultiEngineOffMode: false,
         });
       },
@@ -349,7 +376,7 @@ const menudata = computed<MenuItemData[]>(() => [
         label: "元に戻す",
         onClick: async () => {
           if (!uiLocked.value) {
-            await store.dispatch("UNDO", { editor: props.editor });
+            await store.actions.UNDO({ editor: props.editor });
           }
         },
         disabled: !canUndo.value,
@@ -360,7 +387,7 @@ const menudata = computed<MenuItemData[]>(() => [
         label: "やり直す",
         onClick: async () => {
           if (!uiLocked.value) {
-            await store.dispatch("REDO", { editor: props.editor });
+            await store.actions.REDO({ editor: props.editor });
           }
         },
         disabled: !canRedo.value,
@@ -373,7 +400,7 @@ const menudata = computed<MenuItemData[]>(() => [
               label: "すべて選択",
               onClick: async () => {
                 if (!uiLocked.value && isMultiSelectEnabled.value) {
-                  await store.dispatch("SET_SELECTED_AUDIO_KEYS", {
+                  await store.actions.SET_SELECTED_AUDIO_KEYS({
                     audioKeys: audioKeys.value,
                   });
                 }
@@ -383,6 +410,48 @@ const menudata = computed<MenuItemData[]>(() => [
           ]
         : []),
       ...props.editSubMenuData,
+    ],
+  },
+  {
+    type: "root",
+    label: "表示",
+    onClick: () => {
+      closeAllDialog();
+    },
+    disableWhenUiLocked: false,
+    subMenu: [
+      ...props.viewSubMenuData,
+      { type: "separator" },
+      {
+        type: "button",
+        label: "全画面表示を切り替え",
+        onClick: toggleFullScreen,
+        disableWhenUiLocked: false,
+      },
+      {
+        type: "button",
+        label: "拡大",
+        onClick: () => {
+          void zoomIn();
+        },
+        disableWhenUiLocked: false,
+      },
+      {
+        type: "button",
+        label: "縮小",
+        onClick: () => {
+          void zoomOut();
+        },
+        disableWhenUiLocked: false,
+      },
+      {
+        type: "button",
+        label: "拡大率のリセット",
+        onClick: () => {
+          void zoomReset();
+        },
+        disableWhenUiLocked: false,
+      },
     ],
   },
   {
@@ -406,7 +475,7 @@ const menudata = computed<MenuItemData[]>(() => [
         type: "button",
         label: "キー割り当て",
         onClick() {
-          store.dispatch("SET_DIALOG_OPEN", {
+          void store.actions.SET_DIALOG_OPEN({
             isHotkeySettingDialogOpen: true,
           });
         },
@@ -416,7 +485,7 @@ const menudata = computed<MenuItemData[]>(() => [
         type: "button",
         label: "ツールバーのカスタマイズ",
         onClick() {
-          store.dispatch("SET_DIALOG_OPEN", {
+          void store.actions.SET_DIALOG_OPEN({
             isToolbarSettingDialogOpen: true,
           });
         },
@@ -426,7 +495,7 @@ const menudata = computed<MenuItemData[]>(() => [
         type: "button",
         label: "キャラクター並び替え・試聴",
         onClick() {
-          store.dispatch("SET_DIALOG_OPEN", {
+          void store.actions.SET_DIALOG_OPEN({
             isCharacterOrderDialogOpen: true,
           });
         },
@@ -436,7 +505,7 @@ const menudata = computed<MenuItemData[]>(() => [
         type: "button",
         label: "デフォルトスタイル",
         onClick() {
-          store.dispatch("SET_DIALOG_OPEN", {
+          void store.actions.SET_DIALOG_OPEN({
             isDefaultStyleSelectDialogOpen: true,
           });
         },
@@ -446,7 +515,7 @@ const menudata = computed<MenuItemData[]>(() => [
         type: "button",
         label: "読み方＆アクセント辞書",
         onClick() {
-          store.dispatch("SET_DIALOG_OPEN", {
+          void store.actions.SET_DIALOG_OPEN({
             isDictionaryManageDialogOpen: true,
           });
         },
@@ -457,7 +526,7 @@ const menudata = computed<MenuItemData[]>(() => [
         type: "button",
         label: "オプション",
         onClick() {
-          store.dispatch("SET_DIALOG_OPEN", {
+          void store.actions.SET_DIALOG_OPEN({
             isSettingDialogOpen: true,
           });
         },
@@ -529,6 +598,22 @@ registerHotkeyForAllEditors({
 registerHotkeyForAllEditors({
   callback: importProject,
   name: "プロジェクトを読み込む",
+});
+registerHotkeyForAllEditors({
+  callback: toggleFullScreen,
+  name: "全画面表示を切り替え",
+});
+registerHotkeyForAllEditors({
+  callback: zoomIn,
+  name: "拡大",
+});
+registerHotkeyForAllEditors({
+  callback: zoomOut,
+  name: "縮小",
+});
+registerHotkeyForAllEditors({
+  callback: zoomReset,
+  name: "拡大率のリセット",
 });
 </script>
 
