@@ -70,7 +70,7 @@
                     <QList>
                       <QItem v-ripple>
                         <QItemSection side>
-                          <QCheckbox v-model="isPriorityVisible"
+                          <QCheckbox v-model="showPriorityOnDictionary"
                             >優先度をリストに表示する</QCheckbox
                           >
                         </QItemSection>
@@ -85,15 +85,15 @@
                 ></QSelect>
                 <QCheckbox
                   v-model="isDesc"
-                  checked-icon="arrow_upward"
-                  unchecked-icon="arrow_downward"
-                  keep-color
+                  checkedIcon="arrow_upward"
+                  uncheckedIcon="arrow_downward"
+                  keepColor
                   color="display"
                 />
               </div>
               <QInput
-                icon="search"
                 v-model="wordFilter"
+                icon="search"
                 hideBottomSpace
                 dense
                 placeholder="検索"
@@ -122,7 +122,7 @@
                     value.surface
                   }}</QItemLabel>
                   <QItemLabel lines="1" caption
-                    ><template v-if="isPriorityVisible">
+                    ><template v-if="showPriorityOnDictionary">
                       [{{ value.priority }}] </template
                     >{{ value.yomi }}</QItemLabel
                   >
@@ -426,9 +426,6 @@ const sortType = ref(sortTypes[0]);
 
 // 降順か？
 const isDesc = ref(false);
-
-// 優先度表示はするか？
-const isPriorityVisible = ref(false);
 
 const createUILockAction = function <T>(action: Promise<T>) {
   uiLocked.value = true;
@@ -835,21 +832,17 @@ const {
 
 .word-list-header {
   margin: 1rem;
-
   gap: 0.5rem;
   align-items: center;
   justify-content: space-between;
-  .word-list-title {
-    flex-grow: 1;
-  }
 }
 
 .word-list {
   // menubar-height + toolbar-height + window-border-width +
-  // 36(title & buttons) + 30(margin 15x2)
+  // 140(title & buttons) + 30(margin 15x2)
   height: calc(
     100vh - #{vars.$menubar-height + vars.$toolbar-height +
-      vars.$window-border-width + 36px + 30px}
+      vars.$window-border-width + 140px + 30px}
   );
   width: 100%;
   overflow-y: auto;
