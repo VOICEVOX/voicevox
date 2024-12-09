@@ -339,6 +339,8 @@ export const DEPRECATED_DEFAULT_EDITOR_FRAME_RATE = 93.75;
 
 export const VALUE_INDICATING_NO_DATA = -1;
 
+export const VOWELS = ["N", "a", "e", "i", "o", "u", "A", "E", "I", "O", "U"];
+
 export const UNVOICED_PHONEMES = [
   "pau",
   "cl",
@@ -352,6 +354,10 @@ export const UNVOICED_PHONEMES = [
   "t",
   "ts",
 ];
+
+export function isVowel(phoneme: string) {
+  return VOWELS.includes(phoneme);
+}
 
 export function createDefaultTempo(position: number): Tempo {
   return { position, bpm: DEFAULT_BPM };
@@ -513,7 +519,7 @@ export type PhonemeTimingEditData = Map<NoteId, PhonemeTimingEdit[]>;
 /**
  * 音素列を音素タイミング列に変換する。
  */
-function phonemesToPhonemeTimings(phonemes: FramePhoneme[]) {
+export function phonemesToPhonemeTimings(phonemes: FramePhoneme[]) {
   const phonemeTimings: PhonemeTiming[] = [];
   let cumulativeFrame = 0;
   for (const phoneme of phonemes) {
@@ -531,7 +537,7 @@ function phonemesToPhonemeTimings(phonemes: FramePhoneme[]) {
 /**
  * 音素タイミング列を音素列に変換する。
  */
-function phonemeTimingsToPhonemes(phonemeTimings: PhonemeTiming[]) {
+export function phonemeTimingsToPhonemes(phonemeTimings: PhonemeTiming[]) {
   return phonemeTimings.map(
     (value): FramePhoneme => ({
       phoneme: value.phoneme,
@@ -544,7 +550,7 @@ function phonemeTimingsToPhonemes(phonemeTimings: PhonemeTiming[]) {
 /**
  * フレーズごとの音素列を全体の音素タイミング列に変換する。
  */
-function toEntirePhonemeTimings(
+export function toEntirePhonemeTimings(
   phrasePhonemeSequences: FramePhoneme[][],
   phraseStartFrames: number[],
 ) {
@@ -725,7 +731,7 @@ function applyPhonemeTimingEditToPhonemeTimings(
 /**
  * 音素が重ならないように音素タイミングとフレーズの終了フレームを調整する。
  */
-function adjustPhonemeTimingsAndPhraseEndFrames(
+export function adjustPhonemeTimingsAndPhraseEndFrames(
   phonemeTimings: PhonemeTiming[],
   phraseStartFrames: number[],
   phraseEndFrames: number[],
@@ -816,13 +822,24 @@ function adjustPhonemeTimingsAndPhraseEndFrames(
   }
 }
 
-function calcPhraseStartFrames(phraseStartTimes: number[], frameRate: number) {
+/**
+ * フレーズの開始フレームを算出する。
+ * 開始フレームは整数。
+ */
+export function calcPhraseStartFrames(
+  phraseStartTimes: number[],
+  frameRate: number,
+) {
   return phraseStartTimes.map((value) =>
     secondToRoundedFrame(value, frameRate),
   );
 }
 
-function calcPhraseEndFrames(
+/**
+ * フレーズの終了フレームを算出する。
+ * 終了フレームは整数。
+ */
+export function calcPhraseEndFrames(
   phraseStartFrames: number[],
   phraseQueries: EditorFrameAudioQuery[],
 ) {
