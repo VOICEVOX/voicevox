@@ -20,6 +20,8 @@ const meta: Meta<typeof Presentation> = {
         contributors: ["これは表示されないはず"],
       },
     ],
+    "onUpdate:modelValue": fn(),
+    onSkipThisVersionClick: fn(),
   },
   tags: ["!autodocs"], // ダイアログ系はautodocsのプレビューが正しく表示されないので無効化
 };
@@ -44,13 +46,15 @@ export const Close: Story = {
     await userEvent.click(button);
 
     // ダイアログを閉じるイベントが呼ばれる
-    expect(args["onUpdate:modelValue"]).toBeCalledWith(false);
+    await expect(args["onUpdate:modelValue"]).toBeCalledWith(false);
   },
 };
 
 export const SkipThisVersion: Story = {
   name: "スキップボタンを押す",
-  args: { ...Opened.args },
+  args: {
+    ...Opened.args,
+  },
   play: async ({ args }) => {
     const canvas = within(document.body); // ダイアログなので例外的にdocument.bodyを使う
 
@@ -60,9 +64,9 @@ export const SkipThisVersion: Story = {
     await userEvent.click(button);
 
     // スキップイベントが呼ばれる
-    expect(args["onSkipThisVersionClick"]).toBeCalledWith("1.0.0");
+    await expect(args["onSkipThisVersionClick"]).toBeCalledWith("1.0.0");
     // ダイアログを閉じるイベントが呼ばれる
-    expect(args["onUpdate:modelValue"]).toBeCalledWith(false);
+    await expect(args["onUpdate:modelValue"]).toBeCalledWith(false);
   },
 };
 
@@ -80,15 +84,16 @@ export const OpenOfficialSite: Story = {
     await userEvent.click(button);
 
     // 公式サイトが開かれる
-    expect(window.open).toBeCalledWith(
+    await expect(window.open).toBeCalledWith(
       "https://voicevox.hiroshiba.jp/",
       "_blank",
     );
     // ダイアログを閉じるイベントが呼ばれる
-    expect(args["onUpdate:modelValue"]).toBeCalledWith(false);
+    await expect(args["onUpdate:modelValue"]).toBeCalledWith(false);
   },
 };
 
 export const Closed: Story = {
   name: "閉じている",
+  tags: ["skip-screenshot"],
 };

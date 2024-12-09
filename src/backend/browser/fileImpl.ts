@@ -1,10 +1,11 @@
-import { sep } from "path";
 import { directoryHandleStoreKey } from "./contract";
 import { openDB } from "./browserConfig";
 import { SandboxKey } from "@/type/preload";
 import { failure, success } from "@/type/result";
 import { createLogger } from "@/domain/frontend/log";
 import { uuid4 } from "@/helpers/random";
+import { normalizeError } from "@/helpers/normalizeError";
+import path from "@/helpers/path";
 
 const log = createLogger("fileImpl");
 
@@ -33,7 +34,7 @@ const fetchStoredDirectoryHandle = async (maybeDirectoryHandleName: string) => {
       const store = transaction.objectStore(directoryHandleStoreKey);
       const request = store.get(maybeDirectoryHandleName);
       request.onsuccess = () => {
-        resolve(request.result);
+        resolve(request.result as FileSystemDirectoryHandle | undefined);
       };
       request.onerror = () => {
         reject(request.error);
@@ -72,12 +73,13 @@ export const showOpenDirectoryDialogImpl: (typeof window)[typeof SandboxKey]["sh
   };
 
 // separator 以前の文字列はディレクトリ名として扱う
-const resolveDirectoryName = (path: string) => path.split(sep)[0];
+const resolveDirectoryName = (dirPath: string) =>
+  dirPath.split(path.SEPARATOR)[0];
 
 // FileSystemDirectoryHandle.getFileHandle では / のような separator が含まれるとエラーになるため、ファイル名のみを抽出している
 const resolveFileName = (path: string) => {
   const maybeDirectoryHandleName = resolveDirectoryName(path);
-  return path.slice(maybeDirectoryHandleName.length + sep.length);
+  return path.slice(maybeDirectoryHandleName.length + 1);
 };
 
 // FileSystemDirectoryHandle.getFileHandle では / のような separator が含まれるとエラーになるため、以下の if 文で separator を除去している
@@ -115,13 +117,13 @@ const getDirectoryHandleFromDirectoryPath = async (
 // また GENERATE_AND_SAVE_ALL_AUDIO action では fixedExportEnabled の有効の有無に関わらず、ディレクトリ名も指定された状態でfilePathが渡ってくる
 export const writeFileImpl: (typeof window)[typeof SandboxKey]["writeFile"] =
   async (obj: { filePath: string; buffer: ArrayBuffer }) => {
-    const path = obj.filePath;
+    const filePath = obj.filePath;
 
-    if (!path.includes(sep)) {
+    if (!filePath.includes(path.SEPARATOR)) {
       const aTag = document.createElement("a");
       const blob = URL.createObjectURL(new Blob([obj.buffer]));
       aTag.href = blob;
-      aTag.download = path;
+      aTag.download = filePath;
       document.body.appendChild(aTag);
       aTag.click();
       document.body.removeChild(aTag);
@@ -129,8 +131,8 @@ export const writeFileImpl: (typeof window)[typeof SandboxKey]["writeFile"] =
       return success(undefined);
     }
 
-    const fileName = resolveFileName(path);
-    const maybeDirectoryHandleName = resolveDirectoryName(path);
+    const fileName = resolveFileName(filePath);
+    const maybeDirectoryHandleName = resolveDirectoryName(filePath);
 
     const directoryHandle = await getDirectoryHandleFromDirectoryPath(
       maybeDirectoryHandleName,
@@ -147,20 +149,18 @@ export const writeFileImpl: (typeof window)[typeof SandboxKey]["writeFile"] =
       })
       .then(() => success(undefined))
       .catch((e) => {
-        return failure(e);
+        return failure(normalizeError(e));
       });
   };
 
 export const checkFileExistsImpl: (typeof window)[typeof SandboxKey]["checkFileExists"] =
-  async (file) => {
-    const path = file;
-
-    if (!path.includes(sep)) {
+  async (filePath) => {
+    if (!filePath.includes(path.SEPARATOR)) {
       return Promise.resolve(false);
     }
 
-    const fileName = resolveFileName(path);
-    const maybeDirectoryHandleName = resolveDirectoryName(path);
+    const fileName = resolveFileName(filePath);
+    const maybeDirectoryHandleName = resolveDirectoryName(filePath);
 
     const directoryHandle = await getDirectoryHandleFromDirectoryPath(
       maybeDirectoryHandleName,
@@ -207,7 +207,7 @@ export const showOpenFilePickerImpl = async (options: {
     }
     return handles.length > 0 ? paths : undefined;
   } catch (e) {
-    log.warn(`showOpenFilePicker error: ${e}`);
+    log.warn("showOpenFilePicker error:", e);
     return undefined;
   }
 };

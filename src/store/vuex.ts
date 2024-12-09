@@ -36,9 +36,7 @@ export class Store<
   constructor(options: StoreOptions<S, G, A, M>) {
     super(options as OriginalStoreOptions<S>);
     this.actions = dotNotationDispatchProxy(this.dispatch.bind(this));
-    this.mutations = dotNotationCommitProxy(
-      this.commit.bind(this) as Commit<M>,
-    );
+    this.mutations = dotNotationCommitProxy(this.commit.bind(this));
   }
 
   declare readonly getters: G;
@@ -139,7 +137,9 @@ const dotNotationCommitProxy = <M extends MutationsBase>(
     { commit },
     {
       get(target, tag: string) {
-        return (...payloads: [M[string]]) => target.commit(tag, ...payloads);
+        return (...payloads: [M[string]]) => {
+          target.commit(tag, ...payloads);
+        };
       },
     },
   ) as DotNotationCommit<M>;
@@ -314,6 +314,7 @@ const unwrapDotNotationAction = <
       actions: dotNotationDispatchProxy(injectee.dispatch),
       mutations: dotNotationCommitProxy(injectee.commit),
     };
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return wrappedHandler.call(this, dotNotationInjectee, payload);
   };
 
@@ -377,39 +378,16 @@ export type CustomMutationTree<S, M extends MutationsBase> = {
   [K in keyof M]: Mutation<S, M, K>;
 };
 
-type StoreTypesBase = {
-  [key: string]: {
+type StoreTypesBase = Record<
+  string,
+  {
     getter?: GettersBase[number];
     mutation?: MutationsBase[number];
     action?: ActionsBase[number];
-  };
-};
+  }
+>;
 
 type PartialStoreOptions<
-  S,
-  T extends StoreTypesBase,
-  G extends GettersBase,
-  A extends ActionsBase,
-  M extends MutationsBase,
-> = {
-  [K in keyof T]: {
-    [GAM in keyof T[K]]: GAM extends "getter"
-      ? K extends keyof G
-        ? Getter<S, S, G, K, AllGetters>
-        : never
-      : GAM extends "action"
-        ? K extends keyof A
-          ? Action<S, S, A, K, AllGetters, AllActions, AllMutations>
-          : never
-        : GAM extends "mutation"
-          ? K extends keyof M
-            ? Mutation<S, M, K>
-            : never
-          : never;
-  };
-};
-
-type DotNotationPartialStoreOptions<
   S,
   T extends StoreTypesBase,
   G extends GettersBase,
@@ -446,54 +424,26 @@ export const createPartialStore = <
       const option = options[cur];
 
       if (option.getter) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         acc.getters[cur] = option.getter;
       }
       if (option.mutation) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         acc.mutations[cur] = option.mutation;
       }
       if (option.action) {
-        acc.actions[cur] = option.action;
-      }
-
-      return acc;
-    },
-    {
-      getters: Object.create(null),
-      mutations: Object.create(null),
-      actions: Object.create(null),
-    },
-  );
-
-  return obj;
-};
-
-export const createDotNotationPartialStore = <
-  T extends StoreTypesBase,
-  G extends GettersBase = StoreType<T, "getter">,
-  A extends ActionsBase = StoreType<T, "action">,
-  M extends MutationsBase = StoreType<T, "mutation">,
->(
-  options: DotNotationPartialStoreOptions<State, T, G, A, M>,
-): StoreOptions<State, G, A, M, AllGetters, AllActions, AllMutations> => {
-  const obj = Object.keys(options).reduce(
-    (acc, cur) => {
-      const option = options[cur];
-
-      if (option.getter) {
-        acc.getters[cur] = option.getter;
-      }
-      if (option.mutation) {
-        acc.mutations[cur] = option.mutation;
-      }
-      if (option.action) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         acc.actions[cur] = unwrapDotNotationAction(option.action);
       }
 
       return acc;
     },
     {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       getters: Object.create(null),
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       mutations: Object.create(null),
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       actions: Object.create(null),
     },
   );

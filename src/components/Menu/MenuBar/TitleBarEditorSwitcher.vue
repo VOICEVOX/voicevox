@@ -30,7 +30,10 @@ const openedEditor = computed(() => store.state.openedEditor);
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
 const switchEditor = async (editor: EditorType) => {
-  await store.dispatch("SET_OPENED_EDITOR", { editor });
+  await store.dispatch("SET_ROOT_MISC_SETTING", {
+    key: "openedEditor",
+    value: editor,
+  });
 };
 </script>
 

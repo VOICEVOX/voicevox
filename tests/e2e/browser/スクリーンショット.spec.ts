@@ -11,10 +11,12 @@ import {
   SpeakerToJSON,
 } from "@/openapi";
 
-let speakerImages: {
-  portrait: string;
-  icon: string;
-}[];
+let speakerImages:
+  | {
+      portrait: string;
+      icon: string;
+    }[]
+  | undefined = undefined;
 
 /**
  * 差し替え用の立ち絵・アイコンを取得する。
@@ -62,7 +64,7 @@ test.beforeEach(async ({ page }) => {
     const response = await route.fetch();
     const json: Speaker[] = await response
       .json()
-      .then((json) => json.map(SpeakerFromJSON));
+      .then((json: unknown[]) => json.map(SpeakerFromJSON));
     let i = 0;
     for (const speaker of json) {
       i++;
@@ -125,9 +127,11 @@ test("メイン画面の表示", async ({ page }) => {
   test.skip(process.platform !== "win32", "Windows以外のためスキップします");
   await navigateToMain(page);
 
+  // トーク画面の表示
   while (true) {
-    await page.locator(".audio-cell:nth-child(1) .q-field").click();
+    await page.locator(".audio-cell:nth-child(1) .q-field").click(); // 一番上のテキスト欄をクリックする
     await page.waitForTimeout(100);
+    // ローディングが消えるまで待つ
     if (
       (await page
         .locator(".character-portrait-wrapper .character-name")
@@ -137,5 +141,10 @@ test("メイン画面の表示", async ({ page }) => {
       break;
     }
   }
-  await expect(page).toHaveScreenshot("メイン画面.png");
+  await expect(page).toHaveScreenshot("トーク画面.png");
+
+  // ソング画面の表示
+  await page.getByText("ソング").click();
+  await expect(page.getByText("ソング")).toBeEnabled(); // 無効化が解除されるまで待つ
+  await expect(page).toHaveScreenshot("ソング画面.png");
 });

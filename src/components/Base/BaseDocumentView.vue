@@ -10,6 +10,8 @@
 @use "@/styles/v2/colors" as colors;
 
 .document {
+  color: colors.$display;
+
   :deep(*) {
     margin: 0;
   }

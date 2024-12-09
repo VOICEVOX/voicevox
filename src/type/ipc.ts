@@ -1,16 +1,15 @@
 import {
   AppInfos,
   ConfigType,
-  EngineInfo,
   EngineDirValidationResult,
-  HotkeySettingType,
-  ThemeSetting,
-  ToolbarSettingType,
-  UpdateInfo,
-  NativeThemeType,
-  EngineSettingType,
   EngineId,
+  EngineInfo,
+  EngineSettingType,
+  HotkeySettingType,
   MessageBoxReturnValue,
+  NativeThemeType,
+  TextAsset,
+  ToolbarSettingType,
 } from "@/type/preload";
 import { AltPortInfos } from "@/store/type";
 import { Result } from "@/type/result";
@@ -24,44 +23,9 @@ export type IpcIHData = {
     return: AppInfos;
   };
 
-  GET_HOW_TO_USE_TEXT: {
-    args: [];
-    return: string;
-  };
-
-  GET_POLICY_TEXT: {
-    args: [];
-    return: string;
-  };
-
-  GET_OSS_LICENSES: {
-    args: [];
-    return: Record<string, string>[];
-  };
-
-  GET_UPDATE_INFOS: {
-    args: [];
-    return: UpdateInfo[];
-  };
-
-  GET_OSS_COMMUNITY_INFOS: {
-    args: [];
-    return: string;
-  };
-
-  GET_CONTACT_TEXT: {
-    args: [];
-    return: string;
-  };
-
-  GET_Q_AND_A_TEXT: {
-    args: [];
-    return: string;
-  };
-
-  GET_PRIVACY_POLICY_TEXT: {
-    args: [];
-    return: string;
+  GET_TEXT_ASSET: {
+    args: [textType: keyof TextAsset];
+    return: TextAsset[keyof TextAsset];
   };
 
   GET_ALT_PORT_INFOS: {
@@ -70,7 +34,12 @@ export type IpcIHData = {
   };
 
   SHOW_AUDIO_SAVE_DIALOG: {
-    args: [obj: { title: string; defaultPath?: string }];
+    args: [
+      obj: {
+        title: string;
+        defaultPath?: string;
+      },
+    ];
     return?: string;
   };
 
@@ -107,31 +76,6 @@ export type IpcIHData = {
   SHOW_PROJECT_LOAD_DIALOG: {
     args: [obj: { title: string }];
     return?: string[];
-  };
-
-  SHOW_MESSAGE_DIALOG: {
-    args: [
-      obj: {
-        type: "none" | "info" | "error" | "question" | "warning";
-        title: string;
-        message: string;
-      },
-    ];
-    return: MessageBoxReturnValue;
-  };
-
-  SHOW_QUESTION_DIALOG: {
-    args: [
-      obj: {
-        type: "none" | "info" | "error" | "question" | "warning";
-        title: string;
-        message: string;
-        buttons: string[];
-        cancelId?: number;
-        defaultId?: number;
-      },
-    ];
-    return: number;
   };
 
   SHOW_WARNING_DIALOG: {
@@ -174,23 +118,28 @@ export type IpcIHData = {
     return: void;
   };
 
-  MAXIMIZE_WINDOW: {
+  TOGGLE_MAXIMIZE_WINDOW: {
     args: [];
     return: void;
   };
 
-  LOG_ERROR: {
-    args: [...params: unknown[]];
+  TOGGLE_FULLSCREEN: {
+    args: [];
     return: void;
   };
 
-  LOG_WARN: {
-    args: [...params: unknown[]];
+  ZOOM_IN: {
+    args: [];
     return: void;
   };
 
-  LOG_INFO: {
-    args: [...params: unknown[]];
+  ZOOM_OUT: {
+    args: [];
+    return: void;
+  };
+
+  ZOOM_RESET: {
+    args: [];
     return: void;
   };
 
@@ -202,11 +151,6 @@ export type IpcIHData = {
   ENGINE_INFOS: {
     args: [];
     return: EngineInfo[];
-  };
-
-  RESTART_ENGINE_ALL: {
-    args: [];
-    return: void;
   };
 
   RESTART_ENGINE: {
@@ -242,11 +186,6 @@ export type IpcIHData = {
   GET_DEFAULT_TOOLBAR_SETTING: {
     args: [];
     return: ToolbarSettingType;
-  };
-
-  THEME: {
-    args: [obj: { newData?: string }];
-    return: ThemeSetting | void;
   };
 
   ON_VUEX_READY: {
@@ -295,7 +234,7 @@ export type IpcIHData = {
   };
 
   WRITE_FILE: {
-    args: [obj: { filePath: string; buffer: ArrayBuffer }];
+    args: [obj: { filePath: string; buffer: ArrayBuffer | Uint8Array }];
     return: Result<undefined>;
   };
 

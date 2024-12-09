@@ -135,7 +135,7 @@ VITE_DEFAULT_ENGINE_INFOS=`[
         "uuid": "074fc39e-678b-4c13-8916-ffca8d505d1d",
         "name": "VOICEVOX Engine",
         "executionEnabled": true,
-        "executionFilePath": "vv-engine/run.exe",
+        "executionFilePath": "C:/Users/(ユーザー名)/AppData/Local/Programs/VOICEVOX/vv-engine/run.exe",
         "executionArgs": [],
         "host": "http://127.0.0.1:50021"
     }
@@ -241,7 +241,7 @@ VITE_DEFAULT_ENGINE_INFOS=`[
 - 命名に使っている英語が誤っていないことを確認します。
 
   ```bash
-  typos
+  npm run typos
   ```
 
 - 個人環境でVOICEVOXを実行し、提出前に、一通り動くことを確認します。

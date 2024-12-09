@@ -2,7 +2,10 @@
   <button
     class="row-card"
     :class="{ clickable: clickable }"
-    @click="(payload) => $emit('click', payload)"
+    role="listitem"
+    :disabled
+    :tabindex="clickable ? 0 : -1"
+    @click="(payload) => !disabled && $emit('click', payload)"
   >
     <div class="text">
       <div class="title">{{ title }}</div>
@@ -18,7 +21,8 @@
 defineProps<{
   title: string;
   description?: string;
-  clickable: boolean;
+  clickable?: boolean;
+  disabled?: boolean;
 }>();
 
 defineEmits<{
@@ -33,6 +37,7 @@ defineEmits<{
 
 .row-card {
   display: flex;
+  flex-wrap: wrap;
   text-align: unset;
   align-items: center;
   border: 1px solid colors.$border;
@@ -41,7 +46,6 @@ defineEmits<{
   border-radius: vars.$radius-2;
   padding: vars.$padding-2;
   gap: vars.$gap-2;
-  transition: background-color vars.$transition-duration;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
@@ -59,13 +63,34 @@ defineEmits<{
   &:focus-visible {
     @include mixin.on-focus;
   }
+
+  &:disabled {
+    opacity: 0.5;
+  }
 }
 
 .text {
-  flex-grow: 1;
+  flex: 1;
+  min-width: 240px;
+}
+
+.title {
+  // FIXME: medium (500)にする
+  font-weight: 700;
 }
 
 .description {
-  font-size: 0.75rem;
+  // TODO: html要素のfont-size指定が16pxになり次第remでの指定に変更する
+  // font-size: 0.75rem;
+  font-size: 12px;
+}
+
+.control {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: right;
+  align-items: center;
+  gap: vars.$gap-1;
+  margin-left: auto;
 }
 </style>

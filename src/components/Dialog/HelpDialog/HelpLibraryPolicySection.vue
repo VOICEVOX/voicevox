@@ -12,13 +12,13 @@
           >
             <!-- エンジンが一つだけの場合は名前を表示しない -->
             <h2 v-if="engineInfos.size > 1" class="subtitle">
-              {{ mapNullablePipe(engineInfos.get(engineId), (v) => v.name) }}
+              {{ engineInfos.get(engineId)?.name }}
             </h2>
             <BaseRowCard
-              v-for="([, characterInfo], characterIndex) in mapNullablePipe(
-                engineInfos.get(engineId),
-                (v) => v.characterInfos,
-              )"
+              v-for="([, characterInfo], characterIndex) in getOrThrow(
+                engineInfos,
+                engineId,
+              ).characterInfos"
               :key="characterIndex"
               :title="characterInfo.metas.speakerName"
               clickable
@@ -49,12 +49,10 @@
         </div>
         <h1 class="title">
           {{
-            mapNullablePipe(
-              engineInfos.get(selectedInfo.engine),
-              (v) => v.characterInfos,
-              (v) => mapNullablePipe(selectedInfo, (i) => v.get(i.character)),
-              (v) => v.metas.speakerName,
-            )
+            selectedInfo &&
+            engineInfos
+              .get(selectedInfo.engine)
+              ?.characterInfos.get(selectedInfo.character)?.metas.speakerName
           }}
         </h1>
         <BaseDocumentView>
@@ -75,7 +73,7 @@ import BaseDocumentView from "@/components/Base/BaseDocumentView.vue";
 import { useStore } from "@/store";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
 import { EngineId, SpeakerId } from "@/type/preload";
-import { mapNullablePipe } from "@/helpers/map";
+import { getOrThrow } from "@/helpers/mapHelper";
 
 type DetailKey = { engine: EngineId; character: SpeakerId };
 
@@ -131,11 +129,7 @@ const selectCharacterInfo = (index: DetailKey | undefined) => {
 @use "@/styles/v2/colors" as colors;
 
 .container {
-  // TODO: 親コンポーネントからheightを取得できないため一時的にcalcを使用、HelpDialogの構造を再設計後100%に変更する
-  // height: 100%;
-  height: calc(100vh - 90px);
-  background-color: colors.$background;
-  border-left: 1px solid colors.$border;
+  height: 100%;
 }
 
 .inner {
@@ -153,6 +147,7 @@ const selectCharacterInfo = (index: DetailKey | undefined) => {
 
 .subtitle {
   @include mixin.headline-2;
+  margin-top: vars.$gap-2;
 }
 
 .list {

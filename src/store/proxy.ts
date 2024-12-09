@@ -1,5 +1,6 @@
 import { ProxyStoreState, ProxyStoreTypes, EditorAudioQuery } from "./type";
 import { createPartialStore } from "./vuex";
+import { createEngineUrl } from "@/domain/url";
 import {
   IEngineConnectorFactory,
   OpenAPIEngineConnectorFactory,
@@ -20,13 +21,22 @@ const proxyStoreCreator = (_engineFactory: IEngineConnectorFactory) => {
             new Error(`No such engineInfo registered: engineId == ${engineId}`),
           );
 
-        const instance = _engineFactory.instance(engineInfo.host);
+        const altPort: string | undefined = state.altPortInfos[engineId];
+        const port = altPort ?? engineInfo.defaultPort;
+        const instance = _engineFactory.instance(
+          createEngineUrl({
+            protocol: engineInfo.protocol,
+            hostname: engineInfo.hostname,
+            port,
+            pathname: engineInfo.pathname,
+          }),
+        );
         return Promise.resolve({
           invoke: (v) => (arg) =>
             // FIXME: anyを使わないようにする
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-return
             instance[v](arg) as any,
         });
       },
@@ -35,6 +45,7 @@ const proxyStoreCreator = (_engineFactory: IEngineConnectorFactory) => {
   return proxyStore;
 };
 
+/** AudioQueryをエンジン用に変換する */
 export const convertAudioQueryFromEditorToEngine = (
   editorAudioQuery: EditorAudioQuery,
   defaultOutputSamplingRate: number,
@@ -45,6 +56,16 @@ export const convertAudioQueryFromEditorToEngine = (
       editorAudioQuery.outputSamplingRate == "engineDefault"
         ? defaultOutputSamplingRate
         : editorAudioQuery.outputSamplingRate,
+  };
+};
+
+/** AudioQueryをエディタ用に変換する */
+export const convertAudioQueryFromEngineToEditor = (
+  engineAudioQuery: AudioQuery,
+): EditorAudioQuery => {
+  return {
+    ...engineAudioQuery,
+    pauseLengthScale: engineAudioQuery.pauseLengthScale ?? 1,
   };
 };
 

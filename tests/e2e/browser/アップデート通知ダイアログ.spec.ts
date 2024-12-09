@@ -21,7 +21,7 @@ test.beforeEach(async ({ page }) => {
   if (process.env.VITE_LATEST_UPDATE_INFOS_URL == undefined) {
     throw new Error("VITE_LATEST_UPDATE_INFOS_URL is not defined");
   }
-  page.route(process.env.VITE_LATEST_UPDATE_INFOS_URL, (route) => {
+  await page.route(process.env.VITE_LATEST_UPDATE_INFOS_URL, async (route) => {
     const updateInfos: UpdateInfo[] = [
       {
         version: latestVersion,
@@ -29,7 +29,7 @@ test.beforeEach(async ({ page }) => {
         contributors: [],
       },
     ];
-    route.fulfill({
+    await route.fulfill({
       status: 200,
       body: JSON.stringify(updateInfos),
     });
