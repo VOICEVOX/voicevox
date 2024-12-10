@@ -24,6 +24,7 @@
   />
   <ExportSongAudioDialog v-model="isExportSongAudioDialogOpen" />
   <ImportSongProjectDialog v-model="isImportSongProjectDialogOpenComputed" />
+  <InitialSettingsDialog v-model="isInitialSettingsDialogOpenComputed" />
 </template>
 
 <script setup lang="ts">
@@ -40,6 +41,7 @@ import DictionaryManageDialog from "@/components/Dialog/DictionaryManageDialog.v
 import EngineManageDialog from "@/components/Dialog/EngineManageDialog.vue";
 import UpdateNotificationDialogContainer from "@/components/Dialog/UpdateNotificationDialog/Container.vue";
 import ImportSongProjectDialog from "@/components/Dialog/ImportSongProjectDialog.vue";
+import InitialSettingsDialog from "@/components/Dialog/InitialSettingsDialog.vue";
 import ExportSongAudioDialog from "@/components/Dialog/ExportSongAudioDialog/Container.vue";
 import { useStore } from "@/store";
 import { filterCharacterInfosByStyleType } from "@/store/utility";
@@ -176,6 +178,15 @@ const isImportSongProjectDialogOpenComputed = computed({
   set: (val) =>
     store.actions.SET_DIALOG_OPEN({
       isImportSongProjectDialogOpen: val,
+    }),
+});
+
+// 初期設定ダイアログ
+const isInitialSettingsDialogOpenComputed = computed({
+  get: () => store.state.isInitialSettingsDialogOpen,
+  set: (val) =>
+    store.actions.SET_DIALOG_OPEN({
+      isInitialSettingsDialogOpen: val,
     }),
 });
 </script>
