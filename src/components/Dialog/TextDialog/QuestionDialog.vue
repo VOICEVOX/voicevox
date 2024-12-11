@@ -22,9 +22,14 @@
         <div class="text-h5">{{ props.title }}</div>
       </QCardSection>
 
+      <QSeparator />
+
       <QCardSection class="message">
         {{ props.message }}
       </QCardSection>
+
+      <QSeparator />
+
       <QCardActions align="right">
         <QSpace />
         <QBtn
