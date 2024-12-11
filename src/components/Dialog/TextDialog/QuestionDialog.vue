@@ -13,26 +13,28 @@
     <QCard class="q-py-sm q-px-md dialog-card">
       <QCardSection class="title">
         <QIcon
-          v-if="props.type !== 'none'"
-          :name="iconName"
-          class="text-h5 q-mr-sm"
+          v-if="props.type !== 'info'"
+          :name="`sym_o_${iconName}`"
+          size="2rem"
+          class="q-mr-sm"
           :color
         />
-        <div class="text-h5" :class="[`text-${color}`]">{{ props.title }}</div>
+        <div class="text-h5">{{ props.title }}</div>
       </QCardSection>
 
-      <QCardSection class="q-py-none message">
+      <QCardSection class="message">
         {{ props.message }}
       </QCardSection>
       <QCardActions align="right">
         <QSpace />
         <QBtn
-          v-for="(button, index) in props.buttons"
+          v-for="(buttonObject, index) in buttonObjects"
           ref="buttons"
           :key="index"
-          flat
-          :label="button"
-          color="display"
+          :outline="buttonObject.color == 'display'"
+          :unelevated="buttonObject.color != 'display'"
+          :label="buttonObject.text"
+          :color="buttonObject.color"
           class="text-no-wrap text-bold"
           @click="onClick(index)"
         />
@@ -52,7 +54,7 @@ const props = withDefaults(
     type: DialogType;
     title: string;
     message: string;
-    buttons: string[];
+    buttons: (string | { text: string; color: string })[];
     persistent?: boolean | undefined;
     default?: number | undefined;
   }>(),
@@ -67,6 +69,12 @@ defineEmits({
 
 const iconName = computed(() => getIcon(props.type));
 const color = computed(() => getColor(props.type));
+const buttonObjects = computed(() =>
+  props.buttons.map((button) =>
+    typeof button === "string" ? { text: button, color: "display" } : button,
+  ),
+);
+
 const { dialogRef, onDialogOK, onDialogHide } = useDialogPluginComponent();
 
 const buttonsRef = useTemplateRef<QBtn[]>("buttons");
@@ -86,6 +94,7 @@ const onClick = (index: number) => {
   onDialogOK({ index });
 };
 </script>
+
 <style scoped lang="scss">
 .title {
   display: flex;
@@ -94,5 +103,10 @@ const onClick = (index: number) => {
 
 .message {
   white-space: pre-wrap;
+}
+
+// primary色のボタンのテキスト色は特別扱い
+.q-btn.bg-primary {
+  color: var(--color-display-on-primary) !important;
 }
 </style>

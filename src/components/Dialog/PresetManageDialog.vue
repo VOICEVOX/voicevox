@@ -103,10 +103,11 @@ const reorderPreset = (featurePresetList: (Preset & { key: PresetKey })[]) => {
 };
 
 const deletePreset = async (key: PresetKey) => {
-  const result = await store.actions.SHOW_CONFIRM_DIALOG({
-    title: "プリセット削除の確認",
-    message: `プリセット "${presetItems.value[key].name}" を削除してもよろしいですか？`,
-    actionName: "削除",
+  const result = await store.actions.SHOW_WARNING_DIALOG({
+    title: "プリセットを削除しますか？",
+    message: `プリセット "${presetItems.value[key].name}" を削除します。`,
+    actionName: "削除する",
+    coloredButton: true,
   });
   if (result === "OK") {
     await store.actions.DELETE_PRESET({

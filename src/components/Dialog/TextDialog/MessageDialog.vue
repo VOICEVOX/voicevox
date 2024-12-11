@@ -13,20 +13,21 @@
     <QCard class="q-py-sm q-px-md dialog-card">
       <QCardSection class="title">
         <QIcon
-          v-if="props.type !== 'none'"
-          :name="iconName"
-          class="text-h5 q-mr-sm"
+          v-if="props.type !== 'info'"
+          :name="`sym_o_${iconName}`"
+          size="2rem"
+          class="q-mr-sm"
           :color
         />
-        <div class="text-h5" :class="[`text-${color}`]">{{ props.title }}</div>
+        <div class="text-h5">{{ props.title }}</div>
       </QCardSection>
 
-      <QCardSection class="q-py-none message">
+      <QCardSection class="message">
         {{ props.message }}
       </QCardSection>
       <QCardActions align="right">
         <QBtn
-          unelevated
+          outline
           :label="props.ok"
           color="toolbar-button"
           textColor="toolbar-button-display"

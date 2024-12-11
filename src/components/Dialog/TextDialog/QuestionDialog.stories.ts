@@ -30,11 +30,23 @@ export const Opened: Story = {
   },
 };
 
-export const OpenedMultiline: Story = {
-  name: "開いている：複数行",
+export const Multiline: Story = {
+  name: "複数行",
   args: {
-    modelValue: true,
+    ...Opened.args,
     message: "メッセージ\n複数行",
+  },
+};
+
+export const ButtonColor: Story = {
+  name: "ボタン色を変える",
+  args: {
+    ...Opened.args,
+    buttons: [
+      { text: "primary", color: "primary" },
+      { text: "warning", color: "warning" },
+      "default",
+    ],
   },
 };
 
