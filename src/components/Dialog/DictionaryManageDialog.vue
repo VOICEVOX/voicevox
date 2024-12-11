@@ -125,6 +125,8 @@
 
 <script lang="ts">
 import { Ref, ComputedRef } from "vue";
+// eslint-disable-next-line import/order
+import { EngineId, SpeakerId, StyleId } from "@/type/preload";
 
 export interface DictionaryManageDialogContext {
   wordEditing: Ref<boolean>;
@@ -165,7 +167,6 @@ import {
   convertLongVowel,
   createKanaRegex,
 } from "@/domain/japanese";
-import { EngineId, SpeakerId, StyleId } from "@/type/preload";
 
 const defaultDictPriority = 5;
 

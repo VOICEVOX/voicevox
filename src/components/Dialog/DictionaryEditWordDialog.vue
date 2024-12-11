@@ -246,8 +246,6 @@ const stop = () => {
 
 // メニュー系
 const yomiInput = ref<QInput>();
-const surfaceRef = ref(surface);
-const yomiRef = ref(yomi);
 const wordPriorityLabels = {
   0: "最低",
   3: "低",
@@ -280,11 +278,11 @@ const setSurface = (text: string) => {
   // surfaceを全角化する
   // 入力は半角でも問題ないが、登録時に全角に変換され、isWordChangedの判断がおかしくなることがあるので、
   // 入力後に自動で変換するようにする
-  surfaceRef.value = convertHankakuToZenkaku(text);
+  surface.value = convertHankakuToZenkaku(text);
 };
 
 const saveWord = async () => {
-  if (!accentPhrase) throw new Error(`accentPhrase === undefined`);
+  if (!accentPhrase.value) throw new Error(`accentPhrase === undefined`);
   const accent = computeRegisteredAccent();
   if (selectedId.value) {
     try {
@@ -324,7 +322,6 @@ const saveWord = async () => {
   toInitialState();
 };
 
-// TODO: リセットする際にsurfaceが読み込めないため、修正する
 const resetWord = async (id: string) => {
   const result = await store.actions.SHOW_WARNING_DIALOG({
     title: "単語の変更をリセットしますか？",
@@ -345,14 +342,15 @@ const accentPhraseTable = ref<HTMLElement>();
 
 const changeAccent = async (_: number, accent: number) => {
   const { engineId, styleId } = voiceComputed.value;
+
   if (accentPhrase.value) {
     accentPhrase.value.accent = accent;
     accentPhrase.value = (
       await createUILockAction(
         store.actions.FETCH_MORA_DATA({
           accentPhrases: [accentPhrase.value],
-          engineId: engineId,
-          styleId: styleId,
+          engineId,
+          styleId,
         }),
       )
     )[0];
@@ -369,7 +367,7 @@ const {
   startContextMenuOperation: startSurfaceContextMenuOperation,
   clearInputSelection: clearSurfaceInputSelection,
   endContextMenuOperation: endSurfaceContextMenuOperation,
-} = useRightClickContextMenu(surfaceContextMenu, surfaceInput, surfaceRef);
+} = useRightClickContextMenu(surfaceContextMenu, surfaceInput, surface);
 
 const {
   contextMenuHeader: yomiContextMenuHeader,
@@ -377,7 +375,7 @@ const {
   startContextMenuOperation: startYomiContextMenuOperation,
   clearInputSelection: clearYomiInputSelection,
   endContextMenuOperation: endYomiContextMenuOperation,
-} = useRightClickContextMenu(yomiContextMenu, yomiInput, yomiRef);
+} = useRightClickContextMenu(yomiContextMenu, yomiInput, yomi);
 </script>
 
 <style lang="scss" scoped>
