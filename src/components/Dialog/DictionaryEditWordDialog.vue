@@ -163,7 +163,10 @@
 <script setup lang="ts">
 import { inject, ref } from "vue";
 import { QInput } from "quasar";
-import { DictionaryManageDialogContext } from "./DictionaryManageDialog.vue";
+import {
+  DictionaryManageDialogContext,
+  DictionaryManageDialogContextKey,
+} from "./DictionaryManageDialog.vue";
 import AudioAccent from "@/components/Talk/AudioAccent.vue";
 import ContextMenu from "@/components/Menu/ContextMenu/Container.vue";
 import { useRightClickContextMenu } from "@/composables/useRightClickContextMenu";
@@ -173,7 +176,7 @@ import type { FetchAudioResult } from "@/store/type";
 const store = useStore();
 
 const context = inject<DictionaryManageDialogContext>(
-  "dictionaryManageDialogContext",
+  DictionaryManageDialogContextKey,
 );
 if (context == undefined)
   throw new Error(`dictionaryManageDialogContext == undefined`);

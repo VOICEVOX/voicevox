@@ -154,6 +154,8 @@ export interface DictionaryManageDialogContext {
   toWordEditingState: () => void;
   cancel: () => void;
 }
+
+export const DictionaryManageDialogContextKey = "dictionaryManageDialogContext";
 </script>
 
 <script setup lang="ts">
