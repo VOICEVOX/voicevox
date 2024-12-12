@@ -70,7 +70,9 @@
                     <QList>
                       <QItem v-ripple>
                         <QItemSection side>
-                          <QCheckbox v-model="showPriorityOnDictionary"
+                          <QCheckbox
+                            v-model="showPriorityOnDictionary"
+                            @click="OnClickShowPriorityOnDictionary"
                             >優先度をリストに表示する</QCheckbox
                           >
                         </QItemSection>
@@ -382,7 +384,6 @@ const filteredUserDict = computed(() => {
         let order;
         switch (sortType.value.value) {
           case "yomi":
-            console.log("YOMI: " + a[1].yomi + ", " + b[1].yomi);
             order = a[1].yomi.localeCompare(b[1].yomi);
             break;
           case "priority":
@@ -645,6 +646,19 @@ const wordPriorityLabels = {
   10: "最高",
 };
 
+// 優先度表示
+const showPriorityOnDictionaryKey = "ShowPriorityOnDictionary";
+const showPriorityOnDictionary = ref(
+  localStorage.getItem(showPriorityOnDictionaryKey) === "true",
+);
+// 優先度表示の変更があった時に呼ばれるイベント
+const OnClickShowPriorityOnDictionary = () => {
+  localStorage.setItem(
+    showPriorityOnDictionaryKey,
+    showPriorityOnDictionary.value,
+  );
+};
+
 // 操作（ステートの移動）
 const isWordChanged = computed(() => {
   if (selectedId.value === "") {
@@ -760,6 +774,7 @@ const newWord = () => {
   wordPriority.value = defaultDictPriority;
   editWord();
 };
+
 const editWord = () => {
   toWordEditingState();
 };
