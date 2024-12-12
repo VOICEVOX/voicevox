@@ -48,8 +48,8 @@
               @click="discardOrNotDialog(cancel)"
             />
             <div class="word-list-header text-no-wrap col">
-              <div class="word-list-title row">
-                <span class="text-h5">単語一覧</span>
+              <div class="row">
+                <span class="word-list-header-text text-h5">単語一覧</span>
                 <QSpace />
                 <QBtn
                   outline
@@ -655,7 +655,7 @@ const showPriorityOnDictionary = ref(
 const OnClickShowPriorityOnDictionary = () => {
   localStorage.setItem(
     showPriorityOnDictionaryKey,
-    showPriorityOnDictionary.value,
+    showPriorityOnDictionary.value.toString(),
   );
 };
 
@@ -845,10 +845,16 @@ const {
   overflow-x: hidden;
 }
 
+.word-list-header-text {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .word-list-header {
   margin: 1rem;
-  gap: 0.5rem;
   align-items: center;
+  vertical-align: middle;
   justify-content: space-between;
 }
 
