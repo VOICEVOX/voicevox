@@ -118,11 +118,11 @@ export const defaultHotkeySettings: HotkeySettingType[] = [
   },
   {
     action: "拡大",
-    combination: HotkeyCombination(!isMac ? "Ctrl +" : "Meta +"),
+    combination: HotkeyCombination(""),
   },
   {
     action: "縮小",
-    combination: HotkeyCombination(!isMac ? "Ctrl -" : "Meta -"),
+    combination: HotkeyCombination(""),
   },
   {
     action: "拡大率のリセット",

@@ -1,4 +1,3 @@
-import path from "path";
 import Encoding from "encoding-japanese";
 import { createUILockAction, withProgress } from "./ui";
 import {
@@ -64,6 +63,7 @@ import { uuid4 } from "@/helpers/random";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { UnreachableError } from "@/type/utility";
 import { errorToMessage } from "@/helpers/errorHelper";
+import path from "@/helpers/path";
 
 function generateAudioKey() {
   return AudioKey(uuid4());
