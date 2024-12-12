@@ -333,6 +333,7 @@ class AddNoteState implements IState<State, Input, Context> {
         PREVIEW_SOUND_DURATION,
       );
     }
+    context.previewNotes.value = [];
     context.nowPreviewing.value = false;
   }
 }
