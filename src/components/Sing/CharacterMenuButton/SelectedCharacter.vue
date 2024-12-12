@@ -1,7 +1,7 @@
 <template>
   <div v-if="props.showSkeleton" class="selected-character">
-    <QSkeleton class="character-avatar" type="QAvatar" size="40px" />
-    <div class="character-info">
+    <QSkeleton class="character-avatar skeleton" type="QAvatar" size="36px" />
+    <div class="character-info skeleton">
       <QSkeleton
         class="character-name skeleton"
         type="rect"
@@ -9,9 +9,9 @@
         height="16px"
       />
       <QSkeleton
-        class="character-style"
+        class="character-style skeleton"
         type="rect"
-        width="110px"
+        width="80px"
         height="8px"
       />
     </div>
@@ -97,7 +97,6 @@ const selectedStyleIconPath = computed(() => {
   }
 
   .character-avatar {
-    background: var(--scheme-color-background);
     width: 36px;
     height: 36px;
   }
@@ -139,10 +138,16 @@ const selectedStyleIconPath = computed(() => {
   .character-style {
     color: var(--scheme-color-on-surface-variant);
     font-size: 9px;
-    transform: translateY(-5px);
     font-weight: 400;
     line-height: 16px;
     margin-bottom: 8px;
+
+    &.skeleton {
+      transform: translateY(5px);
+    }
+    &:not(.skeleton) {
+      transform: translateY(-5px);
+    }
   }
 
   .character-menu-dropdown-icon {
