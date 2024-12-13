@@ -14,7 +14,7 @@ import {
 import { createPartialStore } from "./vuex";
 import { ActivePointScrollMode } from "@/type/preload";
 import {
-  AlertDialogOptions,
+  MessageDialogOptions,
   ConfirmDialogOptions,
   WarningDialogOptions,
   LoadingScreenOption,
@@ -204,7 +204,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   },
 
   SHOW_ALERT_DIALOG: {
-    action: createUILockAction(async (_, payload: AlertDialogOptions) => {
+    action: createUILockAction(async (_, payload: MessageDialogOptions) => {
       return await showAlertDialog(payload);
     }),
   },

@@ -409,10 +409,10 @@ const getEngineDirValidationMessage = (result: EngineDirValidationResult) => {
 
 const addEngine = async () => {
   const result = await store.actions.SHOW_WARNING_DIALOG({
-    title: "エンジン追加の確認",
+    title: "エンジンを追加しますか？",
     message:
       "この操作はコンピュータに損害を与える可能性があります。エンジンの配布元が信頼できない場合は追加しないでください。",
-    actionName: "追加",
+    actionName: "追加する",
   });
   if (result === "OK") {
     if (engineLoaderType.value === "dir") {
@@ -424,7 +424,7 @@ const addEngine = async () => {
       );
 
       void requireReload(
-        "エンジンを追加しました。反映には再読み込みが必要です。今すぐ再読み込みしますか？",
+        "エンジンを追加しました。反映には再読み込みが必要です。",
       );
     } else {
       const success = await lockUi(
@@ -433,7 +433,7 @@ const addEngine = async () => {
       );
       if (success) {
         void requireReload(
-          "エンジンを追加しました。反映には再読み込みが必要です。今すぐ再読み込みしますか？",
+          "エンジンを追加しました。反映には再読み込みが必要です。",
         );
       }
     }
@@ -450,10 +450,11 @@ const deleteEngine = async () => {
     throw new Error("default engine cannot be deleted");
   }
 
-  const result = await store.actions.SHOW_CONFIRM_DIALOG({
-    title: "エンジン削除の確認",
-    message: "選択中のエンジンを削除します。よろしいですか？",
-    actionName: "削除",
+  const result = await store.actions.SHOW_WARNING_DIALOG({
+    title: "エンジンを削除しますか？",
+    message: "選択中のエンジンを削除します。",
+    actionName: "削除する",
+    isWarningColorButton: true,
   });
   if (result === "OK") {
     switch (engineInfo.type) {
@@ -468,7 +469,7 @@ const deleteEngine = async () => {
           }),
         );
         void requireReload(
-          "エンジンを削除しました。反映には再読み込みが必要です。今すぐ再読み込みしますか？",
+          "エンジンを削除しました。反映には再読み込みが必要です。",
         );
         break;
       }
@@ -478,9 +479,7 @@ const deleteEngine = async () => {
           store.actions.UNINSTALL_VVPP_ENGINE(engineId),
         );
         if (success) {
-          void requireReload(
-            "エンジンの削除には再読み込みが必要です。今すぐ再読み込みしますか？",
-          );
+          void requireReload("エンジンの削除には再読み込みが必要です。");
         }
         break;
       }
@@ -509,11 +508,12 @@ const restartSelectedEngine = () => {
 };
 
 const requireReload = async (message: string) => {
-  const result = await store.actions.SHOW_WARNING_DIALOG({
-    title: "再読み込みが必要です",
+  const result = await store.actions.SHOW_CONFIRM_DIALOG({
+    title: "再読み込みしますか？",
     message: message,
-    actionName: "再読み込み",
+    actionName: "再読み込みする",
     cancel: "後で",
+    isPrimaryColorButton: true,
   });
   toInitialState();
   if (result === "OK") {

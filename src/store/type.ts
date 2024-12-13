@@ -60,7 +60,7 @@ import {
   TextDialogResult,
   NotifyAndNotShowAgainButtonOption,
   LoadingScreenOption,
-  AlertDialogOptions,
+  MessageDialogOptions,
   ConfirmDialogOptions,
   WarningDialogOptions,
 } from "@/components/Dialog/Dialog";
@@ -2032,7 +2032,7 @@ export type UiStoreTypes = {
   };
 
   SHOW_ALERT_DIALOG: {
-    action(payload: AlertDialogOptions): TextDialogResult;
+    action(payload: MessageDialogOptions): TextDialogResult;
   };
 
   SHOW_CONFIRM_DIALOG: {
