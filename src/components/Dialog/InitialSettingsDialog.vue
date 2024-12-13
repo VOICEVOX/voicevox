@@ -1,5 +1,5 @@
 <template>
-  <QDialog :modelValue="true">
+  <QDialog v-model="isInitialSettingsDialogOpenComputed">
     <QCard class="q-pa-md">
       <QCardSection class="dialog-text">
         <div class="text-h5">どちらに興味がありますか？</div>
@@ -14,7 +14,7 @@
             outline
             textColor="display"
             class="text-no-wrap text-bold q-mr-sm"
-            @click="selectEditor(talk)"
+            @click="selectEditor('talk')"
             @update:modelValue="selectEditor"
           />
           <QBtn
@@ -22,7 +22,7 @@
             outline
             textColor="display"
             class="text-no-wrap text-bold q-mr-sm"
-            @click="selectEditor(song)"
+            @click="selectEditor('song')"
             @update:modelValue="selectEditor"
           />
         </div>
@@ -32,20 +32,31 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed } from "vue";
 import { useStore } from "@/store";
 import { EditorType } from "@/type/preload";
 
+const props = defineProps<{
+  modelValue: boolean;
+}>();
+const emit = defineEmits<{
+  (e: "update:modelValue", value: boolean): void;
+}>();
+
+const isInitialSettingsDialogOpenComputed = computed({
+  get: () => props.modelValue,
+  set: (val) => emit("update:modelValue", val),
+});
+
 const store = useStore();
-const talk = ref("talk");
-const song = ref("song");
 
 const selectEditor = async (editorType: EditorType) => {
-  console.log(editorType);
   await store.actions.SET_ROOT_MISC_SETTING({
     key: "openedEditor",
     value: editorType,
   });
+
+  isInitialSettingsDialogOpenComputed.value = false;
 };
 </script>
 
