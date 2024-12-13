@@ -769,7 +769,7 @@ const outputSamplingRate = computed({
       const result = await store.actions.SHOW_CONFIRM_DIALOG({
         title: "出力サンプリングレートを変更しますか？",
         message:
-          "出力サンプリングレートを変更しても音質は変化しません。また、音声の生成処理に若干時間がかかる場合があります。",
+          "出力サンプリングレートを変更しても、音質は変化しません。また、音声の生成処理に若干時間がかかる場合があります。",
         actionName: "変更する",
       });
       if (result !== "OK") {

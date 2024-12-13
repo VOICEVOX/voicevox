@@ -27,7 +27,7 @@ export type ConfirmDialogOptions = {
   title: string;
   message: string;
   actionName: string; // ボタンテキスト
-  coloredButton?: boolean; // ボタンをPrimary色にするか
+  idPrimaryColorButton?: boolean; // ボタンをPrimary色にするか
   cancel?: string;
 };
 export type WarningDialogOptions = {
@@ -35,7 +35,7 @@ export type WarningDialogOptions = {
   title: string;
   message: string;
   actionName: string; // ボタンテキスト
-  coloredButton?: boolean; // ボタンをWarning色にするか
+  isWarningColorButton?: boolean; // ボタンをWarning色にするか
   cancel?: string;
 };
 export type QuestionDialogOptions = {
@@ -66,7 +66,7 @@ export const showMessageDialog = async (options: MessageDialogOptions) => {
   Dialog.create({
     component: MessageDialog,
     componentProps: {
-      type: options.type ?? "error",
+      type: options.type ?? "info",
       title: options.title,
       message: options.message,
       ok: options.ok,
@@ -101,7 +101,7 @@ export const showConfirmDialog = async (options: ConfirmDialogOptions) => {
       message: options.message,
       buttons: [
         options.cancel,
-        options.coloredButton
+        options.idPrimaryColorButton
           ? { text: options.actionName, color: "primary" }
           : options.actionName,
       ],
@@ -127,7 +127,7 @@ export const showWarningDialog = async (options: WarningDialogOptions) => {
       message: options.message,
       buttons: [
         options.cancel,
-        options.coloredButton
+        options.isWarningColorButton
           ? { text: options.actionName, color: "warning" }
           : options.actionName,
       ],
@@ -140,7 +140,7 @@ export const showWarningDialog = async (options: WarningDialogOptions) => {
   return index === 1 ? "OK" : "CANCEL";
 };
 
-/** 質問ダイアログ */
+/** キャンセル以外に複数の選択肢がある質問ダイアログ */
 export const showQuestionDialog = async (options: QuestionDialogOptions) => {
   const { promise, resolve } = Promise.withResolvers<number>();
   Dialog.create({

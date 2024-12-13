@@ -107,7 +107,7 @@ const deletePreset = async (key: PresetKey) => {
     title: "プリセットを削除しますか？",
     message: `プリセット "${presetItems.value[key].name}" を削除します。`,
     actionName: "削除する",
-    coloredButton: true,
+    isWarningColorButton: true,
   });
   if (result === "OK") {
     await store.actions.DELETE_PRESET({

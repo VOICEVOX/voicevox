@@ -454,7 +454,7 @@ const deleteEngine = async () => {
     title: "エンジンを削除しますか？",
     message: "選択中のエンジンを削除します。",
     actionName: "削除する",
-    coloredButton: true,
+    isWarningColorButton: true,
   });
   if (result === "OK") {
     switch (engineInfo.type) {
@@ -513,7 +513,7 @@ const requireReload = async (message: string) => {
     message: message,
     actionName: "再読み込みする",
     cancel: "後で",
-    coloredButton: true,
+    idPrimaryColorButton: true,
   });
   toInitialState();
   if (result === "OK") {
