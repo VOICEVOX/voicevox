@@ -340,9 +340,10 @@ const isWordChanged = computed(() => {
 
 const deleteWord = async () => {
   const result = await store.actions.SHOW_WARNING_DIALOG({
-    title: "登録された単語を削除しますか？",
+    title: "単語を削除しますか？",
     message: "削除された単語は元に戻せません。",
-    actionName: "削除",
+    actionName: "削除する",
+    isWarningColorButton: true,
   });
   if (result === "OK") {
     try {
@@ -368,7 +369,8 @@ const discardOrNotDialog = async (okCallback: () => void) => {
     const result = await store.actions.SHOW_WARNING_DIALOG({
       title: "単語の追加・変更を破棄しますか？",
       message: "破棄すると、単語の追加・変更はリセットされます。",
-      actionName: "破棄",
+      actionName: "破棄する",
+      isWarningColorButton: true,
     });
     if (result === "OK") {
       okCallback();

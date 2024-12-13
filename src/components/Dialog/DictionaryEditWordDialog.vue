@@ -329,7 +329,7 @@ const resetWord = async (id: string) => {
   const result = await store.actions.SHOW_WARNING_DIALOG({
     title: "単語の変更をリセットしますか？",
     message: "単語の変更は破棄されてリセットされます。",
-    actionName: "リセット",
+    actionName: "リセットする",
   });
   if (result === "OK") {
     selectedId.value = id;
