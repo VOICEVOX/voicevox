@@ -513,7 +513,7 @@ const requireReload = async (message: string) => {
     message: message,
     actionName: "再読み込みする",
     cancel: "後で",
-    idPrimaryColorButton: true,
+    isPrimaryColorButton: true,
   });
   toInitialState();
   if (result === "OK") {

@@ -27,7 +27,7 @@ export type ConfirmDialogOptions = {
   title: string;
   message: string;
   actionName: string; // ボタンテキスト
-  idPrimaryColorButton?: boolean; // ボタンをPrimary色にするか
+  isPrimaryColorButton?: boolean; // ボタンをPrimary色にするか
   cancel?: string;
 };
 export type WarningDialogOptions = {
@@ -101,7 +101,7 @@ export const showConfirmDialog = async (options: ConfirmDialogOptions) => {
       message: options.message,
       buttons: [
         options.cancel,
-        options.idPrimaryColorButton
+        options.isPrimaryColorButton
           ? { text: options.actionName, color: "primary" }
           : options.actionName,
       ],
