@@ -7,24 +7,38 @@
           選択したエディタを開きます。アプリケーション右上からトークとソングを切り替えることができます。
         </div>
       </QCardSection>
-      <QCardActions class="button-group q-px-md q-py-sm">
-        <div class="col q-px-md">
+      <QCardActions class="q-px-md q-py-sm">
+        <div class="button-group col q-px-md">
           <QBtn
-            label="トーク"
             outline
             textColor="display"
-            class="text-no-wrap text-bold q-mr-sm"
+            class="text-no-wrap text-h4 text-bold q-mr-sm"
             @click="selectEditor('talk')"
             @update:modelValue="selectEditor"
-          />
+          >
+            <label>トーク</label>
+            <QIcon
+              name="mic"
+              class="q-icon material-icons"
+              aria-hidden="true"
+              size="5rem"
+            />
+          </QBtn>
           <QBtn
-            label="ソング"
             outline
             textColor="display"
-            class="text-no-wrap text-bold q-mr-sm"
+            class="text-no-wrap text-h4 text-bold q-mr-sm"
             @click="selectEditor('song')"
             @update:modelValue="selectEditor"
-          />
+          >
+            <label>ソング</label>
+            <QIcon
+              name="music_note"
+              class="q-icon material-icons"
+              aria-hidden="true"
+              size="5rem"
+            />
+          </QBtn>
         </div>
       </QCardActions>
     </QCard>
@@ -33,6 +47,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
+import { QIcon } from "quasar";
 import { useStore } from "@/store";
 import { EditorType } from "@/type/preload";
 
@@ -66,7 +81,12 @@ const selectEditor = async (editorType: EditorType) => {
 .dialog-text {
   text-align: center;
 }
+
 .button-group {
-  justify-content: center;
+  display: grid;
+  grid-auto-columns: 1fr;
+  grid-auto-flow: column;
+  gap: 1rem;
+  width: fit-content;
 }
 </style>
