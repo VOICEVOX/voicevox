@@ -330,12 +330,12 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
     },
   },
 
-  INITIALIZE_ENGINE_SPEAKER: {
+  INITIALIZE_ENGINE_CHARACTER: {
     /**
-     * 指定した話者（スタイルID）に対してエンジン側の初期化を行い、即座に音声合成ができるようにする。
+     * 指定したキャラクター（スタイルID）に対してエンジン側の初期化を行い、即座に音声合成ができるようにする。
      */
     async action({ actions }, { engineId, styleId, uiLock }) {
-      const requestEngineToInitializeSpeaker = () =>
+      const requestEngineToInitializeCharacter = () =>
         actions
           .INSTANTIATE_ENGINE_CONNECTOR({
             engineId,
@@ -348,10 +348,10 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
 
       if (uiLock) {
         await actions.ASYNC_UI_LOCK({
-          callback: requestEngineToInitializeSpeaker,
+          callback: requestEngineToInitializeCharacter,
         });
       } else {
-        await requestEngineToInitializeSpeaker();
+        await requestEngineToInitializeCharacter();
       }
     },
   },

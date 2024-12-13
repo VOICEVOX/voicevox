@@ -1638,7 +1638,7 @@ export type EngineStoreTypes = {
     action(payload: { engineId: EngineId; styleId: StyleId }): Promise<boolean>;
   };
 
-  INITIALIZE_ENGINE_SPEAKER: {
+  INITIALIZE_ENGINE_CHARACTER: {
     action(payload: {
       engineId: EngineId;
       styleId: StyleId;

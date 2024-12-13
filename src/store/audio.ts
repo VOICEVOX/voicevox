@@ -570,7 +570,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         audioKeys,
       });
       await actions
-        .INITIALIZE_ENGINE_SPEAKER({
+        .INITIALIZE_ENGINE_CHARACTER({
           engineId,
           styleId,
           uiLock: true,
