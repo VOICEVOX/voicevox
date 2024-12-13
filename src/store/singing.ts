@@ -823,7 +823,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       // 指定されたstyleIdに対して、エンジン側の初期化を行う
       const isInitialized = await actions.IS_INITIALIZED_ENGINE_SPEAKER(singer);
       if (!isInitialized) {
-        await actions.INITIALIZE_ENGINE_SPEAKER(singer);
+        await actions.INITIALIZE_ENGINE_SPEAKER({
+          engineId: singer.engineId,
+          styleId: singer.styleId,
+          uiLock: false,
+        });
       }
     },
   },
