@@ -12,6 +12,7 @@ import {
 } from "@/store/type";
 import { DotNotationDispatch } from "@/store/vuex";
 import { withProgress } from "@/store/ui";
+import { UnreachableError } from "@/type/utility";
 
 type MediaType = "audio" | "text";
 
@@ -43,7 +44,7 @@ export type QuestionDialogOptions = {
   title: string;
   message: string;
   buttons: (string | { text: string; color: string })[];
-  cancel: number;
+  cancel?: number;
   default?: number;
 };
 
@@ -155,7 +156,13 @@ export const showQuestionDialog = async (options: QuestionDialogOptions) => {
     },
   })
     .onOk(({ index }: { index: number }) => resolve(index))
-    .onCancel(() => resolve(options.cancel));
+    .onCancel(() => {
+      if (options.cancel == undefined)
+        throw new UnreachableError(
+          "Unreachable: options.cancel == undefined, but onCancel is called",
+        );
+      resolve(options.cancel);
+    });
 
   const index = await promise;
 

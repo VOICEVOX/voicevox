@@ -10,6 +10,7 @@ import {
   getVoices,
   setVoices,
   getCurrentPosition,
+  exportProject,
 } from "./ipc";
 import { projectFilePath } from "./sandbox";
 import { Store } from "@/store/vuex";
@@ -27,6 +28,10 @@ import { phraseSingingVoices, singingVoiceCache } from "@/store/singing";
 import onetimeWatch from "@/helpers/onetimeWatch";
 import { createLogger } from "@/domain/frontend/log";
 import { getOrThrow } from "@/helpers/mapHelper";
+import {
+  showMessageDialog,
+  showQuestionDialog,
+} from "@/components/Dialog/Dialog";
 
 export type Message =
   | {
@@ -137,9 +142,30 @@ export const vstPlugin: Plugin = {
           }
 
           log.info("Engine is ready, loading project");
-          await store.dispatch("LOAD_PROJECT_FILE", {
+          const loaded = await store.dispatch("LOAD_PROJECT_FILE", {
             filePath: projectFilePath,
           });
+          if (!loaded) {
+            log.info("Failed to load project");
+            const questionResult = await showQuestionDialog({
+              title: "プロジェクトをエクスポートしますか？",
+              message:
+                "このまま続行すると、現在プラグインに保存されているプロジェクトは破棄されます。",
+              buttons: [
+                {
+                  text: "エクスポート",
+                  color: "primary",
+                },
+                {
+                  text: "破棄",
+                  color: "warning",
+                },
+              ],
+            });
+            if (questionResult === 0) {
+              await exportProject();
+            }
+          }
 
           log.info("Loading cached voices");
           const encodedVoices = await getVoices();
