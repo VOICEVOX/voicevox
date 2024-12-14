@@ -242,10 +242,9 @@ const isDefaultCombination = (action: string) => {
 
 const resetHotkey = async (action: string) => {
   const result = await store.actions.SHOW_CONFIRM_DIALOG({
-    title: "ショートカットキーをデフォルトに戻します",
-    message: `${action}のショートカットキーをデフォルトに戻します。\n本当に戻しますか？`,
+    title: "デフォルトに戻しますか？",
+    message: `${action}のショートカットキーをデフォルトに戻します。`,
     actionName: "デフォルトに戻す",
-    cancel: "デフォルトに戻さない",
   });
 
   if (result !== "OK") return;

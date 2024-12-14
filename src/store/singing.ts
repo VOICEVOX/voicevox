@@ -1722,7 +1722,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const sinkId = device === "default" ? "" : device;
       audioContext.setSinkId(sinkId).catch((err: unknown) => {
         void showAlertDialog({
-          type: "error",
           title: "エラー",
           message: "再生デバイスが見つかりません",
         });
