@@ -153,12 +153,12 @@ export const vstPlugin: Plugin = {
                 "このまま続行すると、現在プラグインに保存されているプロジェクトは破棄されます。",
               buttons: [
                 {
-                  text: "エクスポート",
-                  color: "primary",
-                },
-                {
                   text: "破棄",
                   color: "warning",
+                },
+                {
+                  text: "エクスポート",
+                  color: "primary",
                 },
               ],
             });
