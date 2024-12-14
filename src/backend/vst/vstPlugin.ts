@@ -159,7 +159,7 @@ export const vstPlugin: Plugin = {
                 },
               ],
             });
-            if (questionResult === 0) {
+            if (questionResult === 1) {
               await exportProject();
             }
           }
