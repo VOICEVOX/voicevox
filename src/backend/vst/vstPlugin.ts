@@ -28,10 +28,7 @@ import { phraseSingingVoices, singingVoiceCache } from "@/store/singing";
 import onetimeWatch from "@/helpers/onetimeWatch";
 import { createLogger } from "@/domain/frontend/log";
 import { getOrThrow } from "@/helpers/mapHelper";
-import {
-  showMessageDialog,
-  showQuestionDialog,
-} from "@/components/Dialog/Dialog";
+import { showQuestionDialog } from "@/components/Dialog/Dialog";
 
 export type Message =
   | {
