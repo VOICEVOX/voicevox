@@ -1638,8 +1638,12 @@ export type EngineStoreTypes = {
     action(payload: { engineId: EngineId; styleId: StyleId }): Promise<boolean>;
   };
 
-  INITIALIZE_ENGINE_SPEAKER: {
-    action(payload: { engineId: EngineId; styleId: StyleId }): void;
+  INITIALIZE_ENGINE_CHARACTER: {
+    action(payload: {
+      engineId: EngineId;
+      styleId: StyleId;
+      uiLock: boolean;
+    }): void;
   };
 
   VALIDATE_ENGINE_DIR: {
