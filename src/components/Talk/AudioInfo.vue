@@ -363,7 +363,7 @@ const parameterConfigs = computed<ParameterConfig[]>(() => [
     sliderProps: {
       modelValue: () => query.value?.speedScale ?? null,
       disable: () =>
-        uiLocked.value || supportedFeatures.value?.adjustSpeedScale === false,
+        uiLocked.value || !supportedFeatures.value?.adjustSpeedScale,
       max: SLIDER_PARAMETERS.SPEED.max,
       min: SLIDER_PARAMETERS.SPEED.min,
       step: SLIDER_PARAMETERS.SPEED.step,
@@ -382,7 +382,7 @@ const parameterConfigs = computed<ParameterConfig[]>(() => [
     sliderProps: {
       modelValue: () => query.value?.pitchScale ?? null,
       disable: () =>
-        uiLocked.value || supportedFeatures.value?.adjustPitchScale === false,
+        uiLocked.value || !supportedFeatures.value?.adjustPitchScale,
       max: SLIDER_PARAMETERS.PITCH.max,
       min: SLIDER_PARAMETERS.PITCH.min,
       step: SLIDER_PARAMETERS.PITCH.step,
@@ -400,8 +400,7 @@ const parameterConfigs = computed<ParameterConfig[]>(() => [
     sliderProps: {
       modelValue: () => query.value?.intonationScale ?? null,
       disable: () =>
-        uiLocked.value ||
-        supportedFeatures.value?.adjustIntonationScale === false,
+        uiLocked.value || !supportedFeatures.value?.adjustIntonationScale,
       max: SLIDER_PARAMETERS.INTONATION.max,
       min: SLIDER_PARAMETERS.INTONATION.min,
       step: SLIDER_PARAMETERS.INTONATION.step,
@@ -420,7 +419,7 @@ const parameterConfigs = computed<ParameterConfig[]>(() => [
     sliderProps: {
       modelValue: () => query.value?.volumeScale ?? null,
       disable: () =>
-        uiLocked.value || supportedFeatures.value?.adjustVolumeScale === false,
+        uiLocked.value || !supportedFeatures.value?.adjustVolumeScale,
       max: SLIDER_PARAMETERS.VOLUME.max,
       min: SLIDER_PARAMETERS.VOLUME.min,
       step: SLIDER_PARAMETERS.VOLUME.step,
@@ -435,10 +434,11 @@ const parameterConfigs = computed<ParameterConfig[]>(() => [
     key: "volumeScale",
   },
   {
-    label: "文内無音倍率",
+    label: "間の長さ",
     sliderProps: {
       modelValue: () => query.value?.pauseLengthScale ?? null,
-      disable: () => uiLocked.value,
+      disable: () =>
+        uiLocked.value || !supportedFeatures.value?.adjustPauseLength,
       max: SLIDER_PARAMETERS.PAUSE_LENGTH_SCALE.max,
       min: SLIDER_PARAMETERS.PAUSE_LENGTH_SCALE.min,
       step: SLIDER_PARAMETERS.PAUSE_LENGTH_SCALE.step,

@@ -1,10 +1,17 @@
-// 起動中のStorybookで様々なStoryを表示し、スクリーンショットを撮って比較するVRT。
-// テスト自体はend-to-endではないが、Playwrightを使う関係でe2eディレクトリ内でテストしている。
+/*
+ * 起動中のStorybookで様々なStoryを表示し、スクリーンショットを撮って比較するVRT。
+ * テスト自体はend-to-endではないが、Playwrightを使う関係でe2eディレクトリ内でテストしている。
+ *
+ * --update-snapshotsをつけてPlaywrightを実行するとスクリーンショットが更新される。
+ * 同時に、Storyが消えたスクリーンショットの削除も行う。
+ */
+import fs from "fs/promises";
+import path from "path";
 import { test, expect, Locator } from "@playwright/test";
 import z from "zod";
 
 // Storybook 8.3.5時点でのindex.jsonのスキーマ。
-// もしスキーマが変わってテストが通らなくなった場合は、このスキーマを修正する。
+// もしスキーマが変わってテストが通らなくなった場合は、このスキーマを修正すること。
 const storybookIndexSchema = z.object({
   v: z.literal(5),
   entries: z.record(
@@ -19,12 +26,19 @@ const storybookIndexSchema = z.object({
 });
 type StorybookIndex = z.infer<typeof storybookIndexSchema>;
 type Story = StorybookIndex["entries"][string];
+type Theme = "light" | "dark";
+
+const toSnapshotFileName = (story: Story, theme: Theme) =>
+  `${story.id}-${theme}.png`;
 
 // テスト対象のStory一覧を取得する。
 // play-fnが付いているStoryはUnit Test用Storyとみなしてスクリーンショットを撮らない
 const getStoriesToTest = (index: StorybookIndex) =>
   Object.values(index.entries).filter(
-    (entry) => entry.type === "story" && !entry.tags.includes("play-fn"),
+    (entry) =>
+      entry.type === "story" &&
+      !entry.tags.includes("play-fn") &&
+      !entry.tags.includes("skip-screenshot"),
   );
 
 let index: StorybookIndex;
@@ -52,14 +66,11 @@ for (const story of currentStories) {
 for (const [story, stories] of Object.entries(allStories)) {
   test.describe(story, () => {
     for (const story of stories) {
-      if (story.tags.includes("skip-screenshot")) {
-        continue;
-      }
       test.describe(story.name, () => {
         for (const [theme, name] of [
           ["light", "ライト"],
           ["dark", "ダーク"],
-        ]) {
+        ] as const) {
           test(`テーマ：${name}`, async ({ page }) => {
             test.skip(
               process.platform !== "win32",
@@ -95,7 +106,7 @@ for (const [story, stories] of Object.entries(allStories)) {
               elementToScreenshot = root;
             }
             await expect(elementToScreenshot).toHaveScreenshot(
-              `${story.id}-${theme}.png`,
+              toSnapshotFileName(story, theme),
             );
           });
         }
@@ -103,3 +114,33 @@ for (const [story, stories] of Object.entries(allStories)) {
     }
   });
 }
+
+test("スクリーンショットの一覧に過不足が無い", async () => {
+  test.skip(process.platform !== "win32", "Windows以外のためスキップします");
+  const screenshotFiles = await fs.readdir(test.info().snapshotDir);
+  const screenshotPaths = screenshotFiles.map((file) =>
+    path.join(test.info().snapshotDir, file),
+  );
+
+  const expectedScreenshots = currentStories.flatMap((story) =>
+    (["light", "dark"] as const).map((theme) =>
+      test.info().snapshotPath(toSnapshotFileName(story, theme)),
+    ),
+  );
+
+  screenshotPaths.sort();
+  expectedScreenshots.sort();
+
+  // update-snapshotsが指定されていたら、余分なスクリーンショットを削除する。
+  // 指定されていなかったら、スクリーンショットの一覧が一致していることを確認する。
+  if (test.info().config.updateSnapshots === "all") {
+    for (const screenshot of screenshotPaths) {
+      if (!expectedScreenshots.includes(screenshot)) {
+        await fs.unlink(screenshot);
+        console.log(`Deleted: ${path.basename(screenshot)}`);
+      }
+    }
+  } else {
+    expect(screenshotPaths).toEqual(expectedScreenshots);
+  }
+});

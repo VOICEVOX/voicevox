@@ -18,13 +18,15 @@ import { AltPortInfos } from "@/store/type";
 import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
 import { failure, Result, success } from "@/type/result";
 
-/** エンジンの情報を管理するクラス */
+/** 利用可能なエンジンの情報を管理するクラス */
 export class EngineInfoManager {
   defaultEngineDir: string;
   vvppEngineDir: string;
 
   /** 代替ポート情報 */
   public altPortInfos: AltPortInfos = {};
+
+  private envEngineInfos = loadEnvEngineInfos();
 
   constructor(payload: { defaultEngineDir: string; vvppEngineDir: string }) {
     this.defaultEngineDir = payload.defaultEngineDir;
@@ -74,28 +76,29 @@ export class EngineInfoManager {
 
   /**
    * .envにあるエンジンの情報を取得する。
+   * ダウンロードが必要なものは除外されている。
    */
   private fetchEnvEngineInfos(): EngineInfo[] {
     // TODO: envから直接ではなく、envに書いたengine_manifest.jsonから情報を得るようにする
-    const engines = loadEnvEngineInfos();
-
-    return engines.map((engineInfo) => {
-      const { protocol, hostname, port, pathname } = new URL(engineInfo.host);
-      return {
-        ...engineInfo,
-        protocol,
-        hostname,
-        defaultPort: port,
-        pathname: pathname === "/" ? "" : pathname,
-        isDefault: true,
-        type: "path",
-        executionFilePath: path.resolve(engineInfo.executionFilePath),
-        path:
-          engineInfo.path == undefined
-            ? undefined
-            : path.resolve(this.defaultEngineDir, engineInfo.path),
-      } satisfies EngineInfo;
-    });
+    return this.envEngineInfos
+      .filter((engineInfo) => engineInfo.type != "downloadVvpp")
+      .map((engineInfo) => {
+        const { protocol, hostname, port, pathname } = new URL(engineInfo.host);
+        return {
+          ...engineInfo,
+          protocol,
+          hostname,
+          defaultPort: port,
+          pathname: pathname === "/" ? "" : pathname,
+          isDefault: true,
+          type: engineInfo.type,
+          executionFilePath: path.resolve(engineInfo.executionFilePath),
+          path:
+            engineInfo.path == undefined
+              ? undefined
+              : path.resolve(this.defaultEngineDir, engineInfo.path),
+        } satisfies EngineInfo;
+      });
   }
 
   /**
@@ -176,6 +179,14 @@ export class EngineInfoManager {
       throw new Error(`No such engineInfo registered: engineId == ${engineId}`);
     }
     return engineInfo;
+  }
+
+  /**
+   * 指定したエンジンの情報が存在するかどうかを判定する。
+   */
+  hasEngineInfo(engineId: EngineId): boolean {
+    const engineInfos = this.fetchEngineInfos();
+    return engineInfos.some((engineInfo) => engineInfo.uuid === engineId);
   }
 
   /**

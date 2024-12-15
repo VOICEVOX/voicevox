@@ -1,6 +1,6 @@
 <template>
   <ErrorBoundary>
-    <TooltipProvider disableHoverableContent>
+    <TooltipProvider disableHoverableContent :delayDuration="500">
       <MenuBar
         v-if="openedEditor != undefined"
         :fileSubMenuData="subMenuData.fileSubMenuData.value"
@@ -95,6 +95,13 @@ watchEffect(() => {
     }
   }
   setThemeToCss(theme);
+});
+
+// ソングの再生デバイスを同期
+watchEffect(() => {
+  void store.actions.APPLY_DEVICE_ID_TO_AUDIO_CONTEXT({
+    device: store.state.savingSetting.audioOutputDevice,
+  });
 });
 
 // ソフトウェアを初期化

@@ -14,7 +14,7 @@ import {
 import { createPartialStore } from "./vuex";
 import { ActivePointScrollMode } from "@/type/preload";
 import {
-  AlertDialogOptions,
+  MessageDialogOptions,
   ConfirmDialogOptions,
   WarningDialogOptions,
   LoadingScreenOption,
@@ -203,7 +203,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   },
 
   SHOW_ALERT_DIALOG: {
-    action: createUILockAction(async (_, payload: AlertDialogOptions) => {
+    action: createUILockAction(async (_, payload: MessageDialogOptions) => {
       return await showAlertDialog(payload);
     }),
   },
@@ -392,6 +392,27 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   IS_FULLSCREEN: {
     getter(state) {
       return state.isFullscreen;
+    },
+  },
+
+  /** UIの拡大 */
+  ZOOM_IN: {
+    action() {
+      window.backend.zoomIn();
+    },
+  },
+
+  /** UIの縮小 */
+  ZOOM_OUT: {
+    action() {
+      window.backend.zoomOut();
+    },
+  },
+
+  /** UIの拡大率のリセット */
+  ZOOM_RESET: {
+    action() {
+      window.backend.zoomReset();
     },
   },
 

@@ -1,4 +1,3 @@
-import path from "path";
 import Encoding from "encoding-japanese";
 import { createUILockAction, withProgress } from "./ui";
 import {
@@ -64,6 +63,7 @@ import { uuid4 } from "@/helpers/random";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { UnreachableError } from "@/type/utility";
 import { errorToMessage } from "@/helpers/errorHelper";
+import path from "@/helpers/path";
 
 function generateAudioKey() {
   return AudioKey(uuid4());
@@ -570,9 +570,10 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         audioKeys,
       });
       await actions
-        .INITIALIZE_ENGINE_SPEAKER({
+        .INITIALIZE_ENGINE_CHARACTER({
           engineId,
           styleId,
+          uiLock: true,
         })
         .finally(() => {
           mutations.SET_AUDIO_KEYS_WITH_INITIALIZING_SPEAKER({
