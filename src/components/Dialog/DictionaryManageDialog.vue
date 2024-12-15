@@ -125,8 +125,8 @@
 
 <script lang="ts">
 import { Ref, ComputedRef } from "vue";
-// eslint-disable-next-line import/order
-import { EngineId, SpeakerId, StyleId } from "@/type/preload";
+
+export const dictionaryManageDialogContextKey = "dictionaryManageDialogContext";
 
 export interface DictionaryManageDialogContext {
   wordEditing: Ref<boolean>;
@@ -137,9 +137,9 @@ export interface DictionaryManageDialogContext {
   isOnlyHiraOrKana: Ref<boolean>;
   accentPhrase: Ref<AccentPhrase | undefined>;
   voiceComputed: ComputedRef<{
-    engineId: string & EngineId;
-    speakerId: string & SpeakerId;
-    styleId: number & StyleId;
+    engineId: EngineId;
+    speakerId: SpeakerId;
+    styleId: StyleId;
   }>;
   surface: Ref<string>;
   yomi: Ref<string>;
@@ -154,8 +154,6 @@ export interface DictionaryManageDialogContext {
   toWordEditingState: () => void;
   cancel: () => void;
 }
-
-export const DictionaryManageDialogContextKey = "dictionaryManageDialogContext";
 </script>
 
 <script setup lang="ts">
@@ -164,6 +162,7 @@ import { QInput } from "quasar";
 import DictionaryEditWordDialog from "./DictionaryEditWordDialog.vue";
 import { useStore } from "@/store";
 import { AccentPhrase, UserDictWord } from "@/openapi";
+import { EngineId, SpeakerId, StyleId } from "@/type/preload";
 import {
   convertHiraToKana,
   convertLongVowel,
@@ -426,10 +425,7 @@ const toDialogClosedState = () => {
   dictionaryManageDialogOpenedComputed.value = false;
 };
 
-/**
- * provideで子コンポーネント(components/Dialog/DictionaryEditWordDialog.vue)に変数と関数を共有する
- */
-provide<DictionaryManageDialogContext>("dictionaryManageDialogContext", {
+provide<DictionaryManageDialogContext>(dictionaryManageDialogContextKey, {
   wordEditing,
   surfaceInput,
   selectedId,
