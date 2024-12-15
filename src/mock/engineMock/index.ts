@@ -49,6 +49,7 @@ export function createOpenAPIEngineMock(): DefaultApiInterface {
       return "mock";
     },
 
+    // メタ情報
     async engineManifestEngineManifestGet(): Promise<EngineManifest> {
       return getEngineManifestMock();
     },
@@ -57,6 +58,7 @@ export function createOpenAPIEngineMock(): DefaultApiInterface {
       return { cpu: true, cuda: false, dml: false };
     },
 
+    // キャラクター情報
     async isInitializedSpeakerIsInitializedSpeakerGet(): Promise<boolean> {
       return true;
     },
@@ -85,6 +87,7 @@ export function createOpenAPIEngineMock(): DefaultApiInterface {
       return getSpeakerInfoMock(paload.speakerUuid);
     },
 
+    // トーク系
     async audioQueryAudioQueryPost(
       payload: AudioQueryAudioQueryPostRequest,
     ): Promise<AudioQuery> {
@@ -145,6 +148,7 @@ export function createOpenAPIEngineMock(): DefaultApiInterface {
       return new Blob([buffer], { type: "audio/wav" });
     },
 
+    // ソング系
     async singFrameAudioQuerySingFrameAudioQueryPost(
       payload: SingFrameAudioQuerySingFrameAudioQueryPostRequest,
     ): Promise<FrameAudioQuery> {
@@ -200,14 +204,13 @@ export function createOpenAPIEngineMock(): DefaultApiInterface {
     },
 
     // 辞書系
-
     async getUserDictWordsUserDictGet(): Promise<{
       [key: string]: UserDictWord;
     }> {
-      // 空の辞書を返す
+      // ダミーで空の辞書を返す
       return {};
     },
   };
 
-  return mockApi as DefaultApiInterface;
+  return mockApi satisfies Partial<DefaultApiInterface> as DefaultApiInterface;
 }

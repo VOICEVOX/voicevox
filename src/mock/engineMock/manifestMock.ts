@@ -2,6 +2,8 @@
  * エンジンマニフェストのモック。
  */
 
+import { EngineManifest } from "@/openapi";
+
 /** エンジンマニフェストを返すモック */
 export function getEngineManifestMock() {
   return {
@@ -30,5 +32,5 @@ export function getEngineManifestMock() {
       manageLibrary: false,
       returnResourceUrl: true,
     },
-  };
+  } satisfies EngineManifest;
 }

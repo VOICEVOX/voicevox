@@ -1,35 +1,29 @@
 /**
- * ソング系の構造体を作るモック。
- * 値は適当だが、テストで使えるよう決定論的に決まるようにしたり、UIのバグに気づけるようある程度規則を持たせている。
+ * トーク系の構造体を作るモック。
  */
 
-import kuromoji, { IpadicFeatures, Tokenizer } from "kuromoji";
+import { builder, IpadicFeatures, Tokenizer } from "kuromoji";
 import { moraToPhonemes } from "./phonemeMock";
 import { moraPattern } from "@/domain/japanese";
 import { AccentPhrase, Mora } from "@/openapi";
-import packageJson from "@/../package.json";
+
+/** Nodeとして動いてほしいかを判定する */
+const isNode =
+  // window.documentがなければNode
+  typeof window == "undefined" ||
+  typeof window.document == "undefined" ||
+  // happy-domのときはNode
+  typeof (window as { happyDOM?: unknown }).happyDOM != "undefined";
 
 let _tokenizer: Tokenizer<IpadicFeatures> | undefined;
 
 /** kuromoji用の辞書のパスを取得する */
 function getDicPath() {
-  // ブラウザのときはCDNから辞書を取得し、Nodeのときはローカルから取得する
-
-  const pathForBrowser = `https://cdn.jsdelivr.net/npm/kuromoji@${packageJson.devDependencies.kuromoji}/dict`;
-  const pathForNode = "node_modules/kuromoji/dict";
-
-  // window.documentがなければNode
-  if (typeof window == "undefined" || typeof window.document == "undefined") {
-    return pathForNode;
+  if (isNode) {
+    return "node_modules/kuromoji/dict";
+  } else {
+    return "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict";
   }
-
-  // happy-domのときはNode
-  if (typeof (window as { happyDOM?: unknown }).happyDOM != "undefined") {
-    return pathForNode;
-  }
-
-  // それ以外はブラウザ
-  return pathForBrowser;
 }
 
 /** テキストをトークン列に変換するトークナイザーを取得する */
@@ -39,16 +33,17 @@ async function createOrGetTokenizer() {
   }
 
   return new Promise<Tokenizer<IpadicFeatures>>((resolve, reject) => {
-    kuromoji
-      .builder({ dicPath: getDicPath() })
-      .build((err: Error, tokenizer: Tokenizer<IpadicFeatures>) => {
-        if (err) {
-          reject(err);
-        } else {
-          _tokenizer = tokenizer;
-          resolve(tokenizer);
-        }
-      });
+    builder({
+      dicPath: getDicPath(),
+      nodeOrBrowser: isNode ? "node" : "browser",
+    }).build((err: Error, tokenizer: Tokenizer<IpadicFeatures>) => {
+      if (err) {
+        reject(err);
+      } else {
+        _tokenizer = tokenizer;
+        resolve(tokenizer);
+      }
+    });
   });
 }
 
