@@ -118,11 +118,11 @@ export const defaultHotkeySettings: HotkeySettingType[] = [
   },
   {
     action: "拡大",
-    combination: HotkeyCombination(!isMac ? "Ctrl +" : "Meta +"),
+    combination: HotkeyCombination(""),
   },
   {
     action: "縮小",
-    combination: HotkeyCombination(!isMac ? "Ctrl -" : "Meta -"),
+    combination: HotkeyCombination(""),
   },
   {
     action: "拡大率のリセット",
@@ -268,7 +268,6 @@ export interface Sandbox {
   hotkeySettings(newData?: HotkeySettingType): Promise<HotkeySettingType[]>;
   checkFileExists(file: string): Promise<boolean>;
   changePinWindow(): void;
-  getDefaultHotkeySettings(): Promise<HotkeySettingType[]>;
   getDefaultToolbarSetting(): Promise<ToolbarSettingType>;
   setNativeTheme(source: NativeThemeType): void;
   vuexReady(): void;

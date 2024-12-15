@@ -44,7 +44,7 @@
         />
         <QBtn
           padding="xs md"
-          label="ショートカットキーを未設定にする"
+          label="ショートカットキーを未割り当てにする"
           unelevated
           color="surface"
           textColor="display"

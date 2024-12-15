@@ -60,7 +60,7 @@ import {
   TextDialogResult,
   NotifyAndNotShowAgainButtonOption,
   LoadingScreenOption,
-  AlertDialogOptions,
+  MessageDialogOptions,
   ConfirmDialogOptions,
   WarningDialogOptions,
 } from "@/components/Dialog/Dialog";
@@ -1638,8 +1638,12 @@ export type EngineStoreTypes = {
     action(payload: { engineId: EngineId; styleId: StyleId }): Promise<boolean>;
   };
 
-  INITIALIZE_ENGINE_SPEAKER: {
-    action(payload: { engineId: EngineId; styleId: StyleId }): void;
+  INITIALIZE_ENGINE_CHARACTER: {
+    action(payload: {
+      engineId: EngineId;
+      styleId: StyleId;
+      uiLock: boolean;
+    }): void;
   };
 
   VALIDATE_ENGINE_DIR: {
@@ -2031,7 +2035,7 @@ export type UiStoreTypes = {
   };
 
   SHOW_ALERT_DIALOG: {
-    action(payload: AlertDialogOptions): TextDialogResult;
+    action(payload: MessageDialogOptions): TextDialogResult;
   };
 
   SHOW_CONFIRM_DIALOG: {

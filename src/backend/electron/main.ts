@@ -40,7 +40,6 @@ import { AssetTextFileNames } from "@/type/staticResources";
 import {
   EngineInfo,
   SystemError,
-  defaultHotkeySettings,
   defaultToolbarButtonSetting,
   EngineId,
   TextAsset,
@@ -693,10 +692,6 @@ registerIpcMainHandle<IpcMainHandle>({
     } else {
       win.setAlwaysOnTop(true);
     }
-  },
-
-  GET_DEFAULT_HOTKEY_SETTINGS: () => {
-    return defaultHotkeySettings;
   },
 
   GET_DEFAULT_TOOLBAR_SETTING: () => {
