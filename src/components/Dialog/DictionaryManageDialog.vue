@@ -603,6 +603,7 @@ const deleteWord = async () => {
     message: "削除された単語は元に戻せません。",
     actionName: "削除する",
     isWarningColorButton: true,
+    cancel: "削除しない",
   });
   if (result === "OK") {
     try {
@@ -627,6 +628,8 @@ const resetWord = async (id: string) => {
     title: "単語の変更をリセットしますか？",
     message: "単語の変更は破棄されてリセットされます。",
     actionName: "リセットする",
+    isWarningColorButton: true,
+    cancel: "リセットしない",
   });
   if (result === "OK") {
     selectedId.value = id;
@@ -640,8 +643,9 @@ const discardOrNotDialog = async (okCallback: () => void) => {
   if (isWordChanged.value) {
     const result = await store.actions.SHOW_WARNING_DIALOG({
       title: "単語の追加・変更を破棄しますか？",
-      message: "破棄すると、単語の追加・変更はリセットされます。",
+      message: "変更を破棄すると、単語の追加・変更はリセットされます。",
       actionName: "破棄する",
+      cancel: "破棄しない",
       isWarningColorButton: true,
     });
     if (result === "OK") {
