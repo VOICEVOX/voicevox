@@ -9,7 +9,6 @@ import {
 import { getConfigManager } from "./browserConfig";
 import { IpcSOData } from "@/type/ipc";
 import {
-  defaultHotkeySettings,
   defaultToolbarButtonSetting,
   EngineId,
   EngineSettingType,
@@ -246,9 +245,6 @@ export const api: Sandbox = {
   },
   changePinWindow() {
     throw new Error(`Not supported on Browser version: changePinWindow`);
-  },
-  getDefaultHotkeySettings() {
-    return Promise.resolve(defaultHotkeySettings);
   },
   getDefaultToolbarSetting() {
     return Promise.resolve(defaultToolbarButtonSetting);
