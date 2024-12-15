@@ -121,7 +121,7 @@ test("「設定」→「読み方＆アクセント辞書」で「読み方＆�
   await page.waitForTimeout(100);
   await getNewestQuasarDialog(page)
     .getByRole("button")
-    .filter({ hasText: "削除" })
+    .filter({ hasText: "削除する" })
     .click();
   await page.waitForTimeout(100);
 
