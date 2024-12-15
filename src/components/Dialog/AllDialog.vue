@@ -182,11 +182,16 @@ const isImportSongProjectDialogOpenComputed = computed({
 });
 
 // 初期設定ダイアログ
+const isSelectedEditorType = computed(() => store.state.openedEditor);
+console.log(isSelectedEditorType.value);
 const isInitialSettingsDialogOpenComputed = computed({
   get: () => store.state.isInitialSettingsDialogOpen,
-  set: (val) =>
-    store.actions.SET_DIALOG_OPEN({
-      isInitialSettingsDialogOpen: val,
-    }),
+  set: (val) => {
+    if (isSelectedEditorType.value) {
+      void store.actions.SET_DIALOG_OPEN({
+        isInitialSettingsDialogOpen: val,
+      });
+    }
+  },
 });
 </script>
