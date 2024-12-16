@@ -1,41 +1,141 @@
 <template>
-  <QDialog :modelValue="props.openDialog" @update:modelValue="updateOpenDialog">
-    <QCard class="setting-card q-pa-md dialog-card">
-      <QCardSection>
-        <div class="text-h5">プリセット管理</div>
-      </QCardSection>
-      <QCardActions class="q-px-md q-py-sm">
-        <div class="full-width row wrap justify-between">
-          <QList bordered separator class="col-sm-grow">
-            <Draggable
-              :modelValue="previewPresetList"
-              itemKey="key"
-              @update:modelValue="reorderPreset"
-            >
-              <template #item="{ element: item }">
-                <QItem>
-                  <QItemSection>{{ item.name }}</QItemSection>
-                  <QSpace />
-                  <QItemSection avatar>
-                    <QBtn
-                      icon="delete"
-                      flat
-                      color="display"
-                      @click="deletePreset(item.key)"
-                    ></QBtn>
-                  </QItemSection>
-                </QItem>
-              </template>
-            </Draggable>
-            <QItem v-if="presetList.length === 0">
-              <QItemSection class="display">
-                プリセットがありません
-              </QItemSection>
-            </QItem>
-          </QList>
-        </div>
-      </QCardActions>
-    </QCard>
+  <QDialog
+    :modelValue="props.openDialog"
+    maximized
+    transitionShow="jump-up"
+    transitionHide="jump-down"
+    class="setting-dialog transparent-backdrop"
+    @update:modelValue="updateOpenDialog"
+  >
+    <QLayout container view="hHh Lpr lff" class="bg-background">
+      <QHeader class="q-py-sm">
+        <QToolbar>
+          <QToolbarTitle class="text-display">プリセットの管理</QToolbarTitle>
+
+          <QSpace />
+
+          <QBtn
+            round
+            flat
+            icon="close"
+            color="display"
+            @click="emit('update:openDialog', false)"
+          />
+        </QToolbar>
+      </QHeader>
+
+      <QPageContainer>
+        <QPage class="main">
+          <BaseNavigationView>
+            <template #sidebar>
+              <div class="list-title">プリセット一覧</div>
+              <Draggable
+                :modelValue="previewPresetList"
+                itemKey="key"
+                @update:modelValue="reorderPreset"
+              >
+                <template #item="{ element: item }">
+                  <BaseListItem
+                    :selected="selectedPresetKey === item.key"
+                    @click="selectedPresetKey = item.key"
+                  >
+                    <div class="listitem-content">
+                      {{ item.name }}
+                      <div class="listitem-icon">
+                        <BaseIconButton
+                          icon="delete_outline"
+                          label="削除"
+                          @click="deletePreset(item.key)"
+                        />
+                      </div>
+                    </div>
+                  </BaseListItem>
+                </template>
+              </Draggable>
+            </template>
+            <div class="detail">
+              <BaseScrollArea>
+                <div v-if="selectedPreset" class="inner">
+                  <div class="parameter-list">
+                    <h2 class="preset-name">{{ selectedPreset.name }}</h2>
+                    <template
+                      v-for="parameter in Object.entries(SLIDER_PARAMETERS)"
+                      :key="parameter[0]"
+                    >
+                      <div
+                        v-if="getParameterConfig(parameter[0])"
+                        class="parameter"
+                      >
+                        <div class="parameter-header">
+                          <span>
+                            {{ getParameterConfig(parameter[0])?.label }}
+                          </span>
+                          <span>
+                            {{ getParameterValue(parameter[0])?.toFixed(2) }}
+                          </span>
+                        </div>
+                        <BaseSlider
+                          :min="parameter[1].min()"
+                          :max="parameter[1].max()"
+                          :step="parameter[1].step()"
+                          :modelValue="getParameterValue(parameter[0]) ?? 0"
+                        />
+                      </div>
+                    </template>
+                  </div>
+                  <div
+                    v-if="selectedPreset.morphingInfo"
+                    class="parameter-list"
+                  >
+                    <h3 class="parameter-headline">モーフィング</h3>
+                    <div class="mophing-style">
+                      <CharacterButton
+                        v-if="morphingTargetCharacterInfo"
+                        :selectedVoice="{
+                          engineId: selectedPreset.morphingInfo.targetEngineId,
+                          speakerId:
+                            selectedPreset.morphingInfo.targetSpeakerId,
+                          styleId: selectedPreset.morphingInfo.targetStyleId,
+                        }"
+                        :characterInfos="[morphingTargetCharacterInfo]"
+                        :showEngineInfo="morphingTargetEngines.length >= 2"
+                        :emptiable="true"
+                        :uiLocked="false"
+                      />
+                      <span v-if="morphingTargetCharacterInfo">
+                        {{ morphingTargetCharacterInfo.metas.speakerName }}
+                      </span>
+                      <span
+                        v-if="
+                          morphingTargetCharacterInfo &&
+                          morphingTargetCharacterInfo.metas.styles.length >= 2
+                        "
+                      >
+                        （{{ morphingTargetStyleInfo?.styleName }}）
+                      </span>
+                    </div>
+                    <div class="parameter">
+                      <div class="parameter-header">
+                        <span>割合</span>
+                        <span>
+                          {{ selectedPreset.morphingInfo.rate.toFixed(2) }}
+                        </span>
+                      </div>
+                      <BaseSlider
+                        :min="0"
+                        :max="1"
+                        :step="0.01"
+                        :modelValue="selectedPreset.morphingInfo.rate"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </BaseScrollArea>
+            </div>
+          </BaseNavigationView>
+        </QPage>
+      </QPageContainer>
+    </QLayout>
   </QDialog>
 </template>
 
@@ -43,9 +143,15 @@
 import { computed, ref } from "vue";
 import Draggable from "vuedraggable";
 import { useStore } from "@/store";
-
+import BaseListItem from "@/components/Base/BaseListItem.vue";
+import BaseNavigationView from "@/components/Base/BaseNavigationView.vue";
+import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
+import BaseIconButton from "@/components/Base/BaseIconButton.vue";
+import BaseSlider from "@/components/Base/BaseSlider.vue";
+import CharacterButton from "@/components/CharacterButton.vue";
 import { useDefaultPreset } from "@/composables/useDefaultPreset";
 import { Preset, PresetKey } from "@/type/preload";
+import { SLIDER_PARAMETERS } from "@/store/utility";
 
 const props = defineProps<{
   openDialog: boolean;
@@ -87,6 +193,71 @@ const previewPresetList = computed(() =>
     : presetList.value,
 );
 
+const morphingTargetEngines = store.getters.MORPHING_SUPPORTED_ENGINES;
+
+const selectedPresetKey = ref();
+const selectedPreset = computed(() => {
+  return previewPresetList.value.find(
+    (preset) => preset.key === selectedPresetKey.value,
+  );
+});
+
+const parameterConfigs = [
+  {
+    label: "話速",
+    parameterKey: "speedScale",
+    sliderKey: "SPEED",
+  },
+  {
+    label: "音高",
+    parameterKey: "pitchScale",
+    sliderKey: "PITCH",
+  },
+  {
+    label: "抑揚",
+    parameterKey: "intonationScale",
+    sliderKey: "INTONATION",
+  },
+  {
+    label: "音量",
+    parameterKey: "volumeScale",
+    sliderKey: "VOLUME",
+  },
+  {
+    label: "開始無音",
+    parameterKey: "prePhonemeLength",
+    sliderKey: "PRE_PHONEME_LENGTH",
+  },
+  {
+    label: "終了無音",
+    parameterKey: "postPhonemeLength",
+    sliderKey: "POST_PHONEME_LENGTH",
+  },
+];
+
+const getParameterConfig = (sliderKey: string) => {
+  return parameterConfigs.find((config) => config.sliderKey === sliderKey);
+};
+
+const getParameterValue = (sliderKey: string) => {
+  if (!selectedPreset.value) {
+    return;
+  }
+
+  const parameters = Object.entries(selectedPreset.value);
+  const parameter = parameters.find(
+    (preset) => preset[0] === getParameterConfig(sliderKey)?.parameterKey,
+  );
+
+  const parameterValue = Number(parameter?.[1]);
+
+  if (Number.isNaN(parameterValue)) {
+    return;
+  }
+
+  return parameterValue;
+};
+
 const reorderPreset = (featurePresetList: (Preset & { key: PresetKey })[]) => {
   const newPresetKeys = featurePresetList.map((item) => item.key);
   previewPresetKeys.value = newPresetKeys;
@@ -115,11 +286,101 @@ const deletePreset = async (key: PresetKey) => {
     });
   }
 };
+
+const morphingTargetCharacterInfo = computed(() =>
+  store.getters
+    .USER_ORDERED_CHARACTER_INFOS("talk")
+    ?.find(
+      (character) =>
+        character.metas.speakerUuid ===
+        selectedPreset.value?.morphingInfo?.targetSpeakerId,
+    ),
+);
+
+const morphingTargetStyleInfo = computed(() => {
+  const morphingInfo = selectedPreset.value?.morphingInfo;
+
+  if (!morphingInfo) return;
+
+  return morphingTargetCharacterInfo.value?.metas.styles.find(
+    (style) =>
+      style.engineId === morphingInfo.targetEngineId &&
+      style.styleId === morphingInfo.targetStyleId,
+  );
+});
 </script>
 
 <style scoped lang="scss">
-.dialog-card {
-  width: 700px;
-  max-width: 80vw;
+@use "@/styles/v2/variables" as vars;
+@use "@/styles/v2/mixin" as mixin;
+
+.q-layout-container > :deep(.absolute-full) {
+  right: 0 !important;
+  > .scroll {
+    width: unset !important;
+    overflow: hidden;
+  }
+}
+
+.list-title {
+  @include mixin.headline-2;
+  padding-bottom: vars.$padding-1;
+}
+
+.listitem-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: vars.$gap-1;
+  width: 100%;
+}
+
+.listitem-icon {
+  visibility: hidden;
+}
+
+:focus-within > * > .listitem-icon,
+:hover > * > .listitem-icon {
+  visibility: visible;
+}
+
+.detail {
+  height: 100%;
+}
+
+.inner {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: vars.$padding-2;
+  gap: vars.$gap-2;
+}
+
+.preset-name {
+  @include mixin.headline-1;
+}
+
+.parameter-headline {
+  @include mixin.headline-2;
+}
+
+.parameter-list {
+  margin-inline: auto;
+  max-width: 480px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: vars.$gap-2;
+}
+
+.parameter-header {
+  display: flex;
+  justify-content: space-between;
+}
+
+.mophing-style {
+  display: flex;
+  align-items: center;
+  gap: vars.$gap-1;
 }
 </style>
