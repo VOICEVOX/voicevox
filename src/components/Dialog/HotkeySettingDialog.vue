@@ -127,9 +127,9 @@ import BaseIconButton from "@/components/Base/BaseIconButton.vue";
 import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 import { useStore } from "@/store";
 import {
+  defaultHotkeySettings,
   HotkeyActionNameType,
   HotkeyCombination,
-  HotkeySettingType,
 } from "@/type/preload";
 import { useHotkeyManager, eventToCombination } from "@/plugins/hotkeyPlugin";
 
@@ -225,13 +225,8 @@ const setHotkeyDialogOpened = () => {
   document.removeEventListener("keydown", recordCombination);
 };
 
-const defaultSettings = ref<HotkeySettingType[]>([]);
-void window.backend
-  .getDefaultHotkeySettings()
-  .then((settings) => (defaultSettings.value = settings));
-
 const isDefaultCombination = (action: string) => {
-  const defaultSetting = defaultSettings.value.find(
+  const defaultSetting = defaultHotkeySettings.find(
     (value) => value.action === action,
   );
   const hotkeySetting = hotkeySettings.value.find(
@@ -242,15 +237,14 @@ const isDefaultCombination = (action: string) => {
 
 const resetHotkey = async (action: string) => {
   const result = await store.actions.SHOW_CONFIRM_DIALOG({
-    title: "ショートカットキーをデフォルトに戻します",
-    message: `${action}のショートカットキーをデフォルトに戻します。\n本当に戻しますか？`,
+    title: "デフォルトに戻しますか？",
+    message: `${action}のショートカットキーをデフォルトに戻します。`,
     actionName: "デフォルトに戻す",
-    cancel: "デフォルトに戻さない",
   });
 
   if (result !== "OK") return;
 
-  const setting = defaultSettings.value.find((value) => value.action == action);
+  const setting = defaultHotkeySettings.find((value) => value.action == action);
   if (setting == undefined) {
     return;
   }

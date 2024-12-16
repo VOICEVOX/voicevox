@@ -178,11 +178,6 @@ export type IpcIHData = {
     return: HotkeySettingType[];
   };
 
-  GET_DEFAULT_HOTKEY_SETTINGS: {
-    args: [];
-    return: HotkeySettingType[];
-  };
-
   GET_DEFAULT_TOOLBAR_SETTING: {
     args: [];
     return: ToolbarSettingType;

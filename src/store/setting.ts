@@ -386,7 +386,6 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         // FIXME: useGpu設定を保存してからエンジン起動を試すのではなく、逆にしたい
         if (!result.success && useGpu) {
           await showAlertDialog({
-            type: "error",
             title: "GPUモードに変更できませんでした",
             message:
               "GPUモードでエンジンを起動できなかったためCPUモードに戻します",
