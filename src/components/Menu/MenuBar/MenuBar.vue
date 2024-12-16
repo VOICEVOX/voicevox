@@ -29,10 +29,10 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
 import { useQuasar } from "quasar";
-import { MenuItemData, MenuItemRoot } from "../type";
-import MenuButton from "../MenuButton.vue";
 import TitleBarButtons from "./TitleBarButtons.vue";
 import TitleBarEditorSwitcher from "./TitleBarEditorSwitcher.vue";
+import { MenuItemData, MenuItemRoot } from "@/components/Menu/type";
+import MenuButton from "@/components/Menu/MenuButton.vue";
 import { useStore } from "@/store";
 import { HotkeyAction, useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import { useEngineIcons } from "@/composables/useEngineIcons";

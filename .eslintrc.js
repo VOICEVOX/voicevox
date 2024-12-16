@@ -44,7 +44,7 @@ module.exports = {
     "plugin:@voicevox/all",
     "plugin:storybook/recommended",
   ],
-  plugins: ["import"],
+  plugins: ["import", "no-relative-import-paths"],
   parser: vueEslintParser,
   parserOptions: vueEslintParserOptions,
   ignorePatterns: ["dist/**/*", "dist_*/**/*", "node_modules/**/*"],
@@ -92,6 +92,15 @@ module.exports = {
       },
     ],
     "import/order": "error",
+    // "import/no-relative-packages": ["off"],
+    "no-relative-import-paths/no-relative-import-paths": [
+      "error",
+      {
+        allowSameFolder: true,
+        rootDir: "src",
+        prefix: "@",
+      },
+    ],
   },
   overrides: [
     {

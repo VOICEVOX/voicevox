@@ -6,7 +6,7 @@ import { dialog } from "electron"; // FIXME: ここでelectronをimportするの
 
 import log from "electron-log/main";
 
-import { getConfigManager } from "../electronConfig";
+import { getConfigManager } from "@/backend/electron/electronConfig";
 import {
   EngineInfo,
   EngineDirValidationResult,
