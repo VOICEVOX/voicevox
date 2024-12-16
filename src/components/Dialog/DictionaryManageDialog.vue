@@ -215,6 +215,7 @@ import { useStore } from "@/store";
 import { AccentPhrase, UserDictWord } from "@/openapi";
 import { EngineId, SpeakerId, StyleId } from "@/type/preload";
 import {
+  convertHankakuToZenkaku,
   convertHiraToKana,
   convertLongVowel,
   createKanaRegex,
