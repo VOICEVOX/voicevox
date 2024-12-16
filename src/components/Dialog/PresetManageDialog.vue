@@ -339,7 +339,7 @@ const morphingTargetStyleInfo = computed(() => {
   visibility: hidden;
 }
 
-:focus-within > * > .listitem-icon,
+.selected > * > .listitem-icon,
 :hover > * > .listitem-icon {
   visibility: visible;
 }
