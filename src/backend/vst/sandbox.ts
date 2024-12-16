@@ -9,12 +9,14 @@ import {
 } from "./ipc";
 import {
   EngineId,
+  EngineInfo,
   EngineSettingType,
   EngineSettings,
   Sandbox,
 } from "@/type/preload";
 import { api as browserSandbox } from "@/backend/browser/sandbox";
 import { failure, success } from "@/type/result";
+import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
 
 export const projectFilePath = "/meta/vst-project.vvproj";
 
@@ -30,6 +32,47 @@ export const api: Sandbox = {
       version: await getVersion(),
     };
     return appInfo;
+  },
+  async engineInfos() {
+    const state = new URLSearchParams(window.location.search);
+    const status = state.get("engineStatus");
+    const baseEngineInfo = loadEnvEngineInfos()[0];
+    if (baseEngineInfo.type != "path") {
+      throw new Error("default engine type must be path");
+    }
+    if (status === "ready") {
+      const port = state.get("port");
+      if (!port) {
+        throw new Error("port is not found");
+      }
+
+      const { protocol, hostname, pathname } = new URL(baseEngineInfo.host);
+      return [
+        {
+          ...baseEngineInfo,
+          protocol,
+          hostname,
+          defaultPort: port,
+          pathname: pathname === "/" ? "" : pathname,
+          type: "path",
+          isDefault: true,
+        } satisfies EngineInfo,
+      ];
+    } else {
+      // 「エンジン起動中...」を出すため、常に失敗するエンジン情報を返す。
+      // TODO: もっと良い方法を考える
+      return [
+        {
+          ...baseEngineInfo,
+          type: "path",
+          protocol: "http://",
+          hostname: "voicevox-always-fail.internal",
+          defaultPort: "0",
+          pathname: "/",
+          isDefault: true,
+        },
+      ];
+    }
   },
   async showProjectLoadDialog({ title }) {
     const filePath = await window.backend.showImportFileDialog({

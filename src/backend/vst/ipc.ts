@@ -44,7 +44,7 @@ class RustError extends Error {
 
 type Notifications = {
   updatePlayingState: boolean;
-  updatePosition: number;
+  engineReady: { port: number };
 };
 
 let nonce = 0;
@@ -56,6 +56,7 @@ const messagePromises = new Map<
     resolve: (value: unknown) => void;
     reject: (reason?: unknown) => void;
     name: string;
+    silent: boolean;
   }
 >();
 const initializeMessageHandler = () => {
@@ -65,14 +66,17 @@ const initializeMessageHandler = () => {
       requestId: number;
       payload: { Ok: unknown } | { Err: string };
     };
-    const { resolve, reject, name } = messagePromises.get(requestId) ?? {};
+    const { resolve, reject, name, silent } =
+      messagePromises.get(requestId) ?? {};
     if (!resolve || !reject) {
       log.warn(`No promise found for requestId: ${requestId}`);
       return;
     }
     messagePromises.delete(requestId);
     if ("Ok" in payload) {
-      log.info(`From plugin: ${name}(${requestId}), Ok`);
+      if (!silent) {
+        log.info(`From plugin: ${name}(${requestId}), Ok`);
+      }
       resolve(payload.Ok);
     } else {
       log.error(`From plugin: ${name}(${requestId}), Err: ${payload.Err}`);
@@ -96,7 +100,11 @@ const initializeMessageHandler = () => {
   };
 };
 
-const createMessageFunction = <T, R>(name: string) => {
+const createMessageFunction = <T, R>(
+  name: string,
+  options: Partial<{ silent: boolean }> = {},
+) => {
+  const silent = options?.silent ?? false;
   return ((arg?: unknown) => {
     if (!window.ipc?.postMessage) {
       throw new UnreachableError(
@@ -108,7 +116,9 @@ const createMessageFunction = <T, R>(name: string) => {
       initializeMessageHandler();
     }
     const currentNonce = nonce++;
-    log.info(`To plugin: ${name}(${currentNonce})`);
+    if (!silent) {
+      log.info(`To plugin: ${name}(${currentNonce})`);
+    }
     window.ipc.postMessage(
       JSON.stringify({
         requestId: currentNonce,
@@ -119,7 +129,7 @@ const createMessageFunction = <T, R>(name: string) => {
       }),
     );
     const { promise, resolve, reject } = Promise.withResolvers();
-    messagePromises.set(currentNonce, { resolve, reject, name });
+    messagePromises.set(currentNonce, { resolve, reject, name, silent });
 
     return promise as Promise<R>;
   }) as T extends undefined ? () => Promise<R> : (arg: T) => Promise<R>;
@@ -170,6 +180,7 @@ const ipcSetRouting = createMessageFunction<Routing, void>("setRouting");
 
 const ipcGetCurrentPosition = createMessageFunction<undefined, number | null>(
   "getCurrentPosition",
+  { silent: true },
 );
 
 type Config = Record<string, unknown> & Metadata;

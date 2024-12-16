@@ -73,6 +73,10 @@ export const vstPlugin: Plugin = {
       }
     });
 
+    onReceivedIPCMessage("engineReady", ({ port }: { port: number }) => {
+      location.search = `?engineStatus=ready&port=${port}`;
+    });
+
     const updatePlayheadPosition = async () => {
       const maybeCurrentPosition = await getCurrentPosition();
       if (maybeCurrentPosition != undefined) {
