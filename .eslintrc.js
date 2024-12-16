@@ -92,7 +92,6 @@ module.exports = {
       },
     ],
     "import/order": "error",
-    // "import/no-relative-packages": ["off"],
     "no-relative-import-paths/no-relative-import-paths": [
       "error",
       {
