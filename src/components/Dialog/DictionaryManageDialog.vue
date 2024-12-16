@@ -114,9 +114,9 @@
                 clickable
                 :active="selectedId === key"
                 activeClass="active-word"
-                @click="selectWord(key)"
+                @click="selectWord(String(key))"
                 @dblclick="editWord"
-                @mouseover="hoveredKey = key"
+                @mouseover="hoveredKey = String(key)"
                 @mouseleave="hoveredKey = undefined"
               >
                 <QItemSection>
