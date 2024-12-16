@@ -272,7 +272,6 @@ export interface Sandbox {
   hotkeySettings(newData?: HotkeySettingType): Promise<HotkeySettingType[]>;
   checkFileExists(file: string): Promise<boolean>;
   changePinWindow(): void;
-  getDefaultHotkeySettings(): Promise<HotkeySettingType[]>;
   getDefaultToolbarSetting(): Promise<ToolbarSettingType>;
   setNativeTheme(source: NativeThemeType): void;
   vuexReady(): void;
