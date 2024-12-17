@@ -3054,24 +3054,25 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               phraseEndFrames,
             );
 
-            if (entirePhonemeTimings.length === 0) {
-              throw new Error("entirePhonemeTimings.length is 0.");
+            // マイナス時間のものを除く（マイナス時間のところは書き出さない）
+            for (const phonemeTiming of entirePhonemeTimings) {
+              if (phonemeTiming.startFrame < 0) {
+                phonemeTiming.startFrame = 0;
+              }
+              if (phonemeTiming.endFrame < 0) {
+                phonemeTiming.endFrame = 0;
+              }
             }
+            const filteredEntirePhonemeTimings = entirePhonemeTimings.filter(
+              (value) => {
+                const frameLength = value.endFrame - value.startFrame;
+                return frameLength >= 1;
+              },
+            );
 
-            // 一番最初のpauseの開始タイミングを0にする
-            entirePhonemeTimings[0].startFrame = 0;
-
-            // 一番最初のpauseのフレーム長を1以上にする
-            const firstPauseFrameLength =
-              entirePhonemeTimings[0].endFrame -
-              entirePhonemeTimings[0].startFrame;
-            if (firstPauseFrameLength < 1) {
-              entirePhonemeTimings[0].startFrame =
-                entirePhonemeTimings[0].endFrame - 1;
-            }
-
-            const entirePhonemes =
-              phonemeTimingsToPhonemes(entirePhonemeTimings);
+            const entirePhonemes = phonemeTimingsToPhonemes(
+              filteredEntirePhonemeTimings,
+            );
             const labFileData = await generateLabelFileData(
               entirePhonemes,
               frameRate,
