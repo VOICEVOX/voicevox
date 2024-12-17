@@ -1,6 +1,6 @@
 <template>
   <QDialog
-    v-model="modelValueComputed"
+    ref="dialogRef"
     maximized
     transitionShow="jump-up"
     transitionHide="jump-down"
@@ -32,7 +32,7 @@
               icon="close"
               color="display"
               aria-label="ヘルプを閉じる"
-              @click="modelValueComputed = false"
+              @click="onDialogCancel"
             />
           </QToolbar>
         </QHeader>
@@ -74,6 +74,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import type { Component } from "vue";
+import { useDialogPluginComponent } from "quasar";
 import MarkdownView from "./HelpMarkdownViewSection.vue";
 import OssLicense from "./HelpOssLicenseSection.vue";
 import UpdateInfo from "./HelpUpdateInfoSection.vue";
@@ -99,16 +100,11 @@ type PageSeparator = {
 };
 type PageData = PageItem | PageSeparator;
 
-const props = defineProps<{
-  modelValue: boolean;
-}>();
-const emit = defineEmits<{
-  (e: "update:modelValue", val: boolean): void;
-}>();
+const { dialogRef, onDialogCancel } = useDialogPluginComponent();
 
-const modelValueComputed = computed({
-  get: () => props.modelValue,
-  set: (val) => emit("update:modelValue", val),
+// これがいるかどうか分からない
+defineEmits({
+  ...useDialogPluginComponent.emitsObject,
 });
 
 // エディタのアップデート確認
