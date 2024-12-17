@@ -89,6 +89,9 @@ const selectOnlyThisNote = (context: Context, note: Note) => {
   void context.storeActions.selectNotes([note.id]);
 };
 
+/**
+ * mousedown時のノート選択・選択解除の処理を実行する。
+ */
 const executeNotesSelectionProcess = (
   context: Context,
   mouseEvent: MouseEvent,
