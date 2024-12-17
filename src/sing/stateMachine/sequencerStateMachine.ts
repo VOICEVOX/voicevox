@@ -347,7 +347,7 @@ class MoveNoteState implements IState<State, Input, Context> {
 
   private readonly cursorPosAtStart: PositionOnSequencer;
   private readonly targetTrackId: TrackId;
-  private readonly clonedTargetNotes: Map<NoteId, Note>;
+  private readonly targetNotesAtStart: Map<NoteId, Note>;
   private readonly mouseDownNoteId: NoteId;
 
   private currentCursorPos: PositionOnSequencer;
@@ -372,9 +372,9 @@ class MoveNoteState implements IState<State, Input, Context> {
     }
     this.cursorPosAtStart = cursorPosAtStart;
     this.targetTrackId = targetTrackId;
-    this.clonedTargetNotes = new Map();
+    this.targetNotesAtStart = new Map();
     for (const targetNote of targetNotes) {
-      this.clonedTargetNotes.set(targetNote.id, { ...targetNote });
+      this.targetNotesAtStart.set(targetNote.id, targetNote);
     }
     this.mouseDownNoteId = mouseDownNoteId;
 
@@ -387,8 +387,8 @@ class MoveNoteState implements IState<State, Input, Context> {
     }
     const snapTicks = context.snapTicks.value;
     const previewNotes = context.previewNotes.value;
-    const clonedTargetNotes = this.clonedTargetNotes;
-    const mouseDownNote = getOrThrow(clonedTargetNotes, this.mouseDownNoteId);
+    const targetNotesAtStart = this.targetNotesAtStart;
+    const mouseDownNote = getOrThrow(targetNotesAtStart, this.mouseDownNoteId);
     const dragTicks = this.currentCursorPos.ticks - this.cursorPosAtStart.ticks;
     const notePos = mouseDownNote.position;
     const newNotePos =
@@ -399,12 +399,12 @@ class MoveNoteState implements IState<State, Input, Context> {
 
     const editedNotes = new Map<NoteId, Note>();
     for (const note of previewNotes) {
-      const clonedTargetNote = clonedTargetNotes.get(note.id);
-      if (!clonedTargetNote) {
-        throw new Error("clonedTargetNote is undefined.");
+      const targetNoteAtStart = targetNotesAtStart.get(note.id);
+      if (!targetNoteAtStart) {
+        throw new Error("targetNoteAtStart is undefined.");
       }
-      const position = clonedTargetNote.position + movingTicks;
-      const noteNumber = clonedTargetNote.noteNumber + movingSemitones;
+      const position = targetNoteAtStart.position + movingTicks;
+      const noteNumber = targetNoteAtStart.noteNumber + movingSemitones;
       if (note.position !== position || note.noteNumber !== noteNumber) {
         editedNotes.set(note.id, { ...note, noteNumber, position });
       }
@@ -435,7 +435,7 @@ class MoveNoteState implements IState<State, Input, Context> {
   onEnter(context: Context) {
     const guideLineTicks = getGuideLineTicks(this.cursorPosAtStart, context);
 
-    context.previewNotes.value = [...this.clonedTargetNotes.values()];
+    context.previewNotes.value = [...this.targetNotesAtStart.values()];
     context.nowPreviewing.value = true;
 
     const previewIfNeeded = () => {
