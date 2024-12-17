@@ -87,10 +87,6 @@ const getGuideLineTicks = (
 const selectOnlyThisNote = (context: Context, note: Note) => {
   void context.storeActions.deselectAllNotes();
   void context.storeActions.selectNotes([note.id]);
-  void context.storeActions.playPreviewSound(
-    note.noteNumber,
-    PREVIEW_SOUND_DURATION,
-  );
 };
 
 const executeNotesSelectionProcess = (
@@ -132,6 +128,10 @@ const executeNotesSelectionProcess = (
   } else if (!context.selectedNoteIds.value.has(mouseDownNote.id)) {
     // 選択中のノートでない場合は選択状態にする
     void selectOnlyThisNote(context, mouseDownNote);
+    void context.storeActions.playPreviewSound(
+      mouseDownNote.noteNumber,
+      PREVIEW_SOUND_DURATION,
+    );
   }
 };
 
