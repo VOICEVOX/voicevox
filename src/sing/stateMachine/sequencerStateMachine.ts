@@ -138,12 +138,6 @@ const executeNotesSelectionProcess = (
   }
 };
 
-const getSelectedNotes = (context: Context) => {
-  return context.notesInSelectedTrack.value.filter((value) =>
-    context.selectedNoteIds.value.has(value.id),
-  );
-};
-
 class IdleState implements IState<State, Input, Context> {
   readonly id = "idle";
 
@@ -194,11 +188,10 @@ class IdleState implements IState<State, Input, Context> {
           }
           if (mouseButton === "LEFT_BUTTON") {
             executeNotesSelectionProcess(context, input.mouseEvent, input.note);
-            const selectedNotes = getSelectedNotes(context);
             const moveNoteState = new MoveNoteState(
               input.cursorPos,
               selectedTrackId,
-              selectedNotes,
+              context.selectedNoteIds.value,
               input.note.id,
             );
             setNextState(moveNoteState);
@@ -347,13 +340,14 @@ class MoveNoteState implements IState<State, Input, Context> {
 
   private readonly cursorPosAtStart: PositionOnSequencer;
   private readonly targetTrackId: TrackId;
-  private readonly targetNotesAtStart: Map<NoteId, Note>;
+  private readonly targetNoteIds: Set<NoteId>;
   private readonly mouseDownNoteId: NoteId;
 
   private currentCursorPos: PositionOnSequencer;
 
   private innerContext:
     | {
+        targetNotesAtStart: Map<NoteId, Note>;
         previewRequestId: number;
         executePreviewProcess: boolean;
         edited: boolean;
@@ -364,18 +358,15 @@ class MoveNoteState implements IState<State, Input, Context> {
   constructor(
     cursorPosAtStart: PositionOnSequencer,
     targetTrackId: TrackId,
-    targetNotes: Note[],
+    targetNoteIds: Set<NoteId>,
     mouseDownNoteId: NoteId,
   ) {
-    if (!targetNotes.some((value) => value.id === mouseDownNoteId)) {
-      throw new Error("mouseDownNote is not included in targetNotes.");
+    if (!targetNoteIds.has(mouseDownNoteId)) {
+      throw new Error("mouseDownNoteId is not included in targetNoteIds.");
     }
     this.cursorPosAtStart = cursorPosAtStart;
     this.targetTrackId = targetTrackId;
-    this.targetNotesAtStart = new Map();
-    for (const targetNote of targetNotes) {
-      this.targetNotesAtStart.set(targetNote.id, targetNote);
-    }
+    this.targetNoteIds = targetNoteIds;
     this.mouseDownNoteId = mouseDownNoteId;
 
     this.currentCursorPos = cursorPosAtStart;
@@ -387,7 +378,7 @@ class MoveNoteState implements IState<State, Input, Context> {
     }
     const snapTicks = context.snapTicks.value;
     const previewNotes = context.previewNotes.value;
-    const targetNotesAtStart = this.targetNotesAtStart;
+    const targetNotesAtStart = this.innerContext.targetNotesAtStart;
     const mouseDownNote = getOrThrow(targetNotesAtStart, this.mouseDownNoteId);
     const dragTicks = this.currentCursorPos.ticks - this.cursorPosAtStart.ticks;
     const notePos = mouseDownNote.position;
@@ -434,8 +425,15 @@ class MoveNoteState implements IState<State, Input, Context> {
 
   onEnter(context: Context) {
     const guideLineTicks = getGuideLineTicks(this.cursorPosAtStart, context);
+    const targetNotesArray = context.notesInSelectedTrack.value.filter(
+      (value) => this.targetNoteIds.has(value.id),
+    );
+    const targetNotesMap = new Map<NoteId, Note>();
+    for (const targetNote of targetNotesArray) {
+      targetNotesMap.set(targetNote.id, targetNote);
+    }
 
-    context.previewNotes.value = [...this.targetNotesAtStart.values()];
+    context.previewNotes.value = [...targetNotesArray];
     context.nowPreviewing.value = true;
 
     const previewIfNeeded = () => {
@@ -452,6 +450,7 @@ class MoveNoteState implements IState<State, Input, Context> {
     const previewRequestId = requestAnimationFrame(previewIfNeeded);
 
     this.innerContext = {
+      targetNotesAtStart: targetNotesMap,
       executePreviewProcess: false,
       previewRequestId,
       edited: false,
