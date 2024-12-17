@@ -33,7 +33,7 @@ export const useMenuBarData = () => {
     }
     notifyResult(
       results[0], // TODO: SaveResultObject[] に対応する
-      "text",
+      "label",
       store.actions,
       store.state.confirmedTips.notifyOnGenerate,
     );
