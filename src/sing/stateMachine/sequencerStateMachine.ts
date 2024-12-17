@@ -272,7 +272,7 @@ class AddNoteState implements IState<State, Input, Context> {
     context.previewNotes.value = [noteToAdd];
     context.nowPreviewing.value = true;
 
-    const preview = () => {
+    const previewIfNeeded = () => {
       if (this.innerContext == undefined) {
         throw new Error("innerContext is undefined.");
       }
@@ -280,9 +280,10 @@ class AddNoteState implements IState<State, Input, Context> {
         this.previewAdd(context);
         this.innerContext.executePreviewProcess = false;
       }
-      this.innerContext.previewRequestId = requestAnimationFrame(preview);
+      this.innerContext.previewRequestId =
+        requestAnimationFrame(previewIfNeeded);
     };
-    const previewRequestId = requestAnimationFrame(preview);
+    const previewRequestId = requestAnimationFrame(previewIfNeeded);
 
     this.innerContext = {
       noteToAdd,
@@ -437,7 +438,7 @@ class MoveNoteState implements IState<State, Input, Context> {
     context.previewNotes.value = [...this.clonedTargetNotes.values()];
     context.nowPreviewing.value = true;
 
-    const preview = () => {
+    const previewIfNeeded = () => {
       if (this.innerContext == undefined) {
         throw new Error("innerContext is undefined.");
       }
@@ -445,9 +446,10 @@ class MoveNoteState implements IState<State, Input, Context> {
         this.previewMove(context);
         this.innerContext.executePreviewProcess = false;
       }
-      this.innerContext.previewRequestId = requestAnimationFrame(preview);
+      this.innerContext.previewRequestId =
+        requestAnimationFrame(previewIfNeeded);
     };
-    const previewRequestId = requestAnimationFrame(preview);
+    const previewRequestId = requestAnimationFrame(previewIfNeeded);
 
     this.innerContext = {
       executePreviewProcess: false,
