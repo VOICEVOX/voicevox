@@ -100,12 +100,13 @@ const initializeMessageHandler = () => {
   };
 };
 
-const createMessageFunction = <T, R>(
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const createMessageFunction = <F extends (arg?: any) => any>(
   name: string,
   options: Partial<{ silent: boolean }> = {},
 ) => {
   const silent = options?.silent ?? false;
-  return ((arg?: unknown) => {
+  return (arg?: Parameters<F>[0]) => {
     if (!window.ipc?.postMessage) {
       throw new UnreachableError(
         "This function should not be called outside of the plugin environment",
@@ -131,8 +132,8 @@ const createMessageFunction = <T, R>(
     const { promise, resolve, reject } = Promise.withResolvers();
     messagePromises.set(currentNonce, { resolve, reject, name, silent });
 
-    return promise as Promise<R>;
-  }) as T extends undefined ? () => Promise<R> : (arg: T) => Promise<R>;
+    return promise as Promise<ReturnType<F>>;
+  };
 };
 
 export type VstPhrase = {
@@ -140,60 +141,57 @@ export type VstPhrase = {
   voice: string;
 };
 
-const ipcGetConfig = createMessageFunction<undefined, string | null>(
-  "getConfig",
-);
-const ipcGetProject = createMessageFunction<undefined, string>("getProject");
-const ipcSetProject = createMessageFunction<string, void>("setProject");
-const ipcGetProjectName = createMessageFunction<undefined, string>(
-  "getProjectName",
-);
-const ipcGetVersion = createMessageFunction<undefined, string>("getVersion");
+const ipcGetConfig = createMessageFunction<() => string | null>("getConfig");
+const ipcSetConfig =
+  createMessageFunction<(config: string) => void>("setConfig");
+const ipcGetProject = createMessageFunction<() => string>("getProject");
+const ipcSetProject =
+  createMessageFunction<(project: string) => void>("setProject");
+const ipcGetProjectName = createMessageFunction<() => string>("getProjectName");
+const ipcGetVersion = createMessageFunction<() => string>("getVersion");
 const ipcShowImportFileDialog = createMessageFunction<
-  ShowImportFileDialogOptions,
-  string | null
+  (options: ShowImportFileDialogOptions) => string | null
 >("showImportFileDialog");
-const ipcReadFile = createMessageFunction<string, string>("readFile");
-const ipcExportProject = createMessageFunction<undefined, boolean>(
-  "exportProject",
-);
+const ipcReadFile = createMessageFunction<(path: string) => string>("readFile");
+const ipcExportProject = createMessageFunction<() => boolean>("exportProject");
 
 const ipcSetPhrases = createMessageFunction<
-  VstPhrase[],
-  {
+  (phrases: VstPhrase[]) => {
     missingVoices: SingingVoiceKey[];
   }
 >("setPhrases");
-const ipcGetVoices = createMessageFunction<
-  undefined,
-  Record<SingingVoiceKey, string>
->("getVoices");
-const ipcSetVoices = createMessageFunction<
-  Record<SingingVoiceKey, string>,
-  void
->("setVoices");
-const ipcSetTracks = createMessageFunction<Record<TrackId, Track>, void>(
-  "setTracks",
-);
-const ipcGetRouting = createMessageFunction<undefined, Routing>("getRouting");
-const ipcSetRouting = createMessageFunction<Routing, void>("setRouting");
+const ipcGetVoices =
+  createMessageFunction<() => Record<SingingVoiceKey, string>>("getVoices");
+const ipcSetVoices =
+  createMessageFunction<(voices: Record<SingingVoiceKey, string>) => void>(
+    "setVoices",
+  );
+const ipcSetTracks =
+  createMessageFunction<(tracks: Record<TrackId, Track>) => void>("setTracks");
+const ipcGetRouting = createMessageFunction<() => Routing>("getRouting");
+const ipcSetRouting =
+  createMessageFunction<(routing: Routing) => void>("setRouting");
 
-const ipcGetCurrentPosition = createMessageFunction<undefined, number | null>(
+const ipcGetCurrentPosition = createMessageFunction<() => number | null>(
   "getCurrentPosition",
   { silent: true },
 );
 
+const ipcRestartEngine = createMessageFunction<() => void>("restartEngine");
+
 type Config = Record<string, unknown> & Metadata;
 const log = createLogger("vst/ipc");
 
-export async function getConfig(): Promise<Config> {
+export async function getConfig(): Promise<Config | undefined> {
   const rawConfig = await ipcGetConfig();
   if (!rawConfig) {
-    // TODO: エラーメッセージを表示する
-    throw new Error("Failed to get config");
+    return undefined;
   }
-
   return JSON.parse(rawConfig) as Config;
+}
+
+export async function setConfig(config: Config) {
+  await ipcSetConfig(JSON.stringify(config));
 }
 
 export async function getProject(): Promise<string> {
@@ -281,4 +279,8 @@ export async function setRouting(routing: Routing) {
 
 export async function getCurrentPosition(): Promise<number | null> {
   return await ipcGetCurrentPosition();
+}
+
+export async function restartEngine() {
+  await ipcRestartEngine();
 }

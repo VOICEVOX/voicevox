@@ -511,90 +511,86 @@ const menudata = computed<MenuItemData[]>(() => [
       },
     ],
   },
-  ...(isVst
-    ? []
-    : ([
-        {
-          type: "root",
-          label: "エンジン",
-          onClick: () => {
-            closeAllDialog();
-          },
-          disableWhenUiLocked: false,
-          subMenu: engineSubMenuData.value,
+  {
+    type: "root",
+    label: "エンジン",
+    onClick: () => {
+      closeAllDialog();
+    },
+    disableWhenUiLocked: false,
+    subMenu: engineSubMenuData.value,
+  },
+  {
+    type: "root",
+    label: "設定",
+    onClick: () => {
+      closeAllDialog();
+    },
+    disableWhenUiLocked: false,
+    subMenu: [
+      {
+        type: "button",
+        label: "キー割り当て",
+        onClick() {
+          void store.actions.SET_DIALOG_OPEN({
+            isHotkeySettingDialogOpen: true,
+          });
         },
-        {
-          type: "root",
-          label: "設定",
-          onClick: () => {
-            closeAllDialog();
-          },
-          disableWhenUiLocked: false,
-          subMenu: [
-            {
-              type: "button",
-              label: "キー割り当て",
-              onClick() {
-                void store.actions.SET_DIALOG_OPEN({
-                  isHotkeySettingDialogOpen: true,
-                });
-              },
-              disableWhenUiLocked: false,
-            },
-            {
-              type: "button",
-              label: "ツールバーのカスタマイズ",
-              onClick() {
-                void store.actions.SET_DIALOG_OPEN({
-                  isToolbarSettingDialogOpen: true,
-                });
-              },
-              disableWhenUiLocked: false,
-            },
-            {
-              type: "button",
-              label: "キャラクター並び替え・試聴",
-              onClick() {
-                void store.actions.SET_DIALOG_OPEN({
-                  isCharacterOrderDialogOpen: true,
-                });
-              },
-              disableWhenUiLocked: true,
-            },
-            {
-              type: "button",
-              label: "デフォルトスタイル",
-              onClick() {
-                void store.actions.SET_DIALOG_OPEN({
-                  isDefaultStyleSelectDialogOpen: true,
-                });
-              },
-              disableWhenUiLocked: true,
-            },
-            {
-              type: "button",
-              label: "読み方＆アクセント辞書",
-              onClick() {
-                void store.actions.SET_DIALOG_OPEN({
-                  isDictionaryManageDialogOpen: true,
-                });
-              },
-              disableWhenUiLocked: true,
-            },
-            { type: "separator" },
-            {
-              type: "button",
-              label: "オプション",
-              onClick() {
-                void store.actions.SET_DIALOG_OPEN({
-                  isSettingDialogOpen: true,
-                });
-              },
-              disableWhenUiLocked: false,
-            },
-          ],
+        disableWhenUiLocked: false,
+      },
+      {
+        type: "button",
+        label: "ツールバーのカスタマイズ",
+        onClick() {
+          void store.actions.SET_DIALOG_OPEN({
+            isToolbarSettingDialogOpen: true,
+          });
         },
-      ] satisfies MenuItemData[])),
+        disableWhenUiLocked: false,
+      },
+      {
+        type: "button",
+        label: "キャラクター並び替え・試聴",
+        onClick() {
+          void store.actions.SET_DIALOG_OPEN({
+            isCharacterOrderDialogOpen: true,
+          });
+        },
+        disableWhenUiLocked: true,
+      },
+      {
+        type: "button",
+        label: "デフォルトスタイル",
+        onClick() {
+          void store.actions.SET_DIALOG_OPEN({
+            isDefaultStyleSelectDialogOpen: true,
+          });
+        },
+        disableWhenUiLocked: true,
+      },
+      {
+        type: "button",
+        label: "読み方＆アクセント辞書",
+        onClick() {
+          void store.actions.SET_DIALOG_OPEN({
+            isDictionaryManageDialogOpen: true,
+          });
+        },
+        disableWhenUiLocked: true,
+      },
+      { type: "separator" },
+      {
+        type: "button",
+        label: "オプション",
+        onClick() {
+          void store.actions.SET_DIALOG_OPEN({
+            isSettingDialogOpen: true,
+          });
+        },
+        disableWhenUiLocked: false,
+      },
+    ],
+  },
   {
     type: "button",
     label: "ヘルプ",

@@ -4,6 +4,7 @@ import {
   getProjectName,
   getVersion,
   readFile,
+  restartEngine,
   setProject,
   showImportFileDialog,
 } from "./ipc";
@@ -73,6 +74,17 @@ export const api: Sandbox = {
         },
       ];
     }
+  },
+  async restartEngine(engineId) {
+    const engineInfos = await this.engineInfos();
+    if (engineInfos.length === 0) {
+      throw new Error("No engine info found");
+    }
+    if (engineId !== engineInfos[0].uuid) {
+      // とりあえずマルチエンジンはサポートしない
+      throw new Error(`Invalid engineId: ${engineId}`);
+    }
+    await restartEngine();
   },
   async showProjectLoadDialog({ title }) {
     const filePath = await window.backend.showImportFileDialog({
