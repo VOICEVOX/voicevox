@@ -34,6 +34,7 @@ test("音声パラメータ引き継ぎの設定", async ({ page }) => {
   // パラメータを引き継がないことの確認
   await page.locator(".audio-cell input").first().click();
   await page.getByRole("button").filter({ hasText: "add" }).click();
+  await page.waitForTimeout(100);
   await validateValue(inputTag, "1.00");
 
   // スライダーからパラメータの変更ができるかどうかを確認

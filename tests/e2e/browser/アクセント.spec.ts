@@ -15,3 +15,21 @@ test("アクセント分割したらアクセント区間が増える", async ({
   await page.waitForTimeout(500);
   expect(await page.locator(".mora-table").count()).toBe(2);
 });
+
+test("アクセントの読み部分をクリックすると読みを変更できる", async ({
+  page,
+}) => {
+  await navigateToMain(page);
+
+  await page.getByRole("textbox", { name: "1行目" }).click();
+  await page.getByRole("textbox", { name: "1行目" }).fill("テストです");
+  await page.getByRole("textbox", { name: "1行目" }).press("Enter");
+  await page.waitForTimeout(500);
+
+  await expect(page.locator(".text-cell").first()).toBeVisible();
+  await page.locator(".text-cell").first().click();
+  const qMenu = page.locator(".q-menu > label > div > div > div");
+  expect(await qMenu.first().inputValue()).toBe("テストデス");
+  await qMenu.fill("テストテスト");
+  expect(await qMenu.first().inputValue()).toBe("テストテスト");
+});
