@@ -12,7 +12,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, ref, watch } from "vue";
 import BaseDocumentView from "@/components/Base/BaseDocumentView.vue";
 import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
@@ -28,6 +28,13 @@ const md = useMarkdownIt();
 onMounted(async () => {
   documentHtml.value = md.render(props.markdown);
 });
+
+watch(
+  () => props.markdown,
+  (newMarkdown) => {
+    documentHtml.value = md.render(newMarkdown);
+  },
+);
 </script>
 
 <style scoped lang="scss">

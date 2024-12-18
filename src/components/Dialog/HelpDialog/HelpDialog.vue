@@ -102,11 +102,6 @@ type PageData = PageItem | PageSeparator;
 
 const { dialogRef, onDialogCancel } = useDialogPluginComponent();
 
-// これがいるかどうか分からない
-defineEmits({
-  ...useDialogPluginComponent.emitsObject,
-});
-
 // エディタのアップデート確認
 const store = useStore();
 const { warn } = createLogger("HelpDialog");
@@ -128,7 +123,7 @@ const newUpdateResult = useFetchNewUpdateInfos(
 const licenses = ref<Record<string, string>[]>();
 void store.actions.GET_OSS_LICENSES().then((obj) => (licenses.value = obj));
 
-const policy = ref<string>();
+const policy = ref<string>("");
 void store.actions.GET_POLICY_TEXT().then((obj) => (policy.value = obj));
 
 const howToUse = ref<string>();
@@ -198,7 +193,7 @@ const pagedata = computed(() => {
             }
           : {
               isUpdateAvailable: false,
-              latestVersion: undefined,
+              latestVersion: "",
             }),
       },
     },
