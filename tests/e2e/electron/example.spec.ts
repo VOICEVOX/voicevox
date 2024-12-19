@@ -42,7 +42,7 @@ test.beforeEach(async () => {
 
 test("起動したら「利用規約に関するお知らせ」が表示される", async () => {
   const app = await electron.launch({
-    args: ["."],
+    args: ["--no-sandbox", "."],
     timeout: process.env.CI ? 0 : 60000,
   });
 
