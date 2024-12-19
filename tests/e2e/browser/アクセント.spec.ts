@@ -24,7 +24,7 @@ test("アクセントの読み部分をクリックすると読みを変更で�
   await page.getByRole("textbox", { name: "1行目" }).click();
   await page.getByRole("textbox", { name: "1行目" }).fill("テストです");
   await page.getByRole("textbox", { name: "1行目" }).press("Enter");
-  await page.waitForTimeout(500);
+  await page.locator(".text-cell").first().waitFor();
 
   await expect(page.locator(".text-cell").first()).toBeVisible();
   await page.locator(".text-cell").first().click();
