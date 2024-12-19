@@ -126,18 +126,18 @@ void store.actions.GET_OSS_LICENSES().then((obj) => (licenses.value = obj));
 const policy = ref<string>("");
 void store.actions.GET_POLICY_TEXT().then((obj) => (policy.value = obj));
 
-const howToUse = ref<string>();
+const howToUse = ref<string>("");
 void store.actions.GET_HOW_TO_USE_TEXT().then((obj) => (howToUse.value = obj));
 
-const ossCommunityInfos = ref<string>();
+const ossCommunityInfos = ref<string>("");
 void store.actions
   .GET_OSS_COMMUNITY_INFOS()
   .then((obj) => (ossCommunityInfos.value = obj));
 
-const qAndA = ref<string>();
+const qAndA = ref<string>("");
 void store.actions.GET_Q_AND_A_TEXT().then((obj) => (qAndA.value = obj));
 
-const contact = ref<string>();
+const contact = ref<string>("");
 void store.actions.GET_CONTACT_TEXT().then((obj) => (contact.value = obj));
 
 const pagedata = computed(() => {
