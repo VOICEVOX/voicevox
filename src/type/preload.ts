@@ -412,6 +412,9 @@ export type Preset = {
   postPhonemeLength: number;
   morphingInfo?: MorphingInfo;
 };
+export type PresetSliderKey =
+  | keyof Omit<Preset, "name" | "morphingInfo">
+  | "morphingRate";
 
 export type MorphingInfo = {
   rate: number;
