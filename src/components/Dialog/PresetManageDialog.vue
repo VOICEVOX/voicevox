@@ -75,6 +75,7 @@
                             {{ getParameterValue(parameter[0])?.toFixed(2) }}
                           </span>
                         </div>
+                        <!-- NOTE: プルリクエスト分割のため、まずは動かないスライダーが実装されている。変更機能も実装予定。 -->
                         <BaseSlider
                           :min="parameter[1].min()"
                           :max="parameter[1].max()"
@@ -122,6 +123,7 @@
                           {{ selectedPreset.morphingInfo.rate.toFixed(2) }}
                         </span>
                       </div>
+                      <!-- NOTE: プルリクエスト分割のため、まずは動かないスライダーが実装されている。変更機能も実装予定。 -->
                       <BaseSlider
                         :min="0"
                         :max="1"
