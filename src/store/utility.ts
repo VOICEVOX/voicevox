@@ -51,7 +51,7 @@ type SliderParameter = {
 
 /**
  * AudioInfoコンポーネントに表示されるパラメータ
- * TODO: src/domain/talkに切り出す
+ * TODO: src/domain/talk.ts辺りに切り出す
  */
 export const SLIDER_PARAMETERS: Record<PresetSliderKey, SliderParameter> = {
   /**
