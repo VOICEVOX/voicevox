@@ -207,37 +207,44 @@ const parameterConfigs = [
   {
     label: "話速",
     parameterKey: "speedScale",
-    sliderKey: "SPEED",
   },
   {
     label: "音高",
     parameterKey: "pitchScale",
-    sliderKey: "PITCH",
   },
   {
     label: "抑揚",
     parameterKey: "intonationScale",
-    sliderKey: "INTONATION",
   },
   {
     label: "音量",
     parameterKey: "volumeScale",
-    sliderKey: "VOLUME",
   },
   {
     label: "開始無音",
     parameterKey: "prePhonemeLength",
-    sliderKey: "PRE_PHONEME_LENGTH",
   },
   {
     label: "終了無音",
     parameterKey: "postPhonemeLength",
-    sliderKey: "POST_PHONEME_LENGTH",
   },
 ];
 
 const getParameterConfig = (sliderKey: string) => {
-  return parameterConfigs.find((config) => config.sliderKey === sliderKey);
+  switch (sliderKey) {
+    case "SPEED":
+      return parameterConfigs[0];
+    case "PITCH":
+      return parameterConfigs[1];
+    case "INTONATION":
+      return parameterConfigs[2];
+    case "VOLUME":
+      return parameterConfigs[3];
+    case "PRE_PHONEME_LENGTH":
+      return parameterConfigs[4];
+    case "POST_PHONEME_LENGTH":
+      return parameterConfigs[5];
+  }
 };
 
 const getParameterValue = (sliderKey: string) => {
