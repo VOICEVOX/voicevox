@@ -30,6 +30,7 @@
             <template #sidebar>
               <div class="list-title">プリセット一覧</div>
               <Draggable
+                class="list-draggable"
                 :modelValue="previewPresetList"
                 itemKey="key"
                 @update:modelValue="reorderPreset"
@@ -325,6 +326,10 @@ const morphingTargetStyleInfo = computed(() => {
 .list-title {
   @include mixin.headline-2;
   padding-bottom: vars.$padding-1;
+}
+
+.list-draggable {
+  display: contents;
 }
 
 .listitem-content {
