@@ -242,7 +242,7 @@ const getParameterConfig = (sliderKey: string) => {
 
 const getParameterValue = (sliderKey: string) => {
   if (!selectedPreset.value) {
-    return;
+    throw new Error("selectedPreset is undefined");
   }
 
   const parameters = Object.entries(selectedPreset.value);
