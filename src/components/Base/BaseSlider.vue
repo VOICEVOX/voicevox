@@ -6,7 +6,9 @@
     :step
     :disabled
     :modelValue="[model]"
-    @update:modelValue="(value) => $emit('update:modelValue', value[0])"
+    @update:modelValue="
+      (value) => value != undefined && $emit('update:modelValue', value[0])
+    "
   >
     <SliderTrack class="SliderTrack">
       <SliderRange class="SliderRange" />
@@ -23,6 +25,11 @@ defineProps<{
   max?: number;
   step?: number;
   disabled?: boolean;
+  modelValue: number;
+}>();
+
+defineEmits<{
+  "update:modelValue": [value: number];
 }>();
 
 const model = defineModel<number>({ required: true });
