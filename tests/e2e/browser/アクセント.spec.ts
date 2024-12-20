@@ -24,12 +24,15 @@ test("アクセントの読み部分をクリックすると読みを変更で�
   await page.getByRole("textbox", { name: "1行目" }).click();
   await page.getByRole("textbox", { name: "1行目" }).fill("テストです");
   await page.getByRole("textbox", { name: "1行目" }).press("Enter");
-  await page.locator(".text-cell").first().waitFor();
+  const accentPhrase = page.locator(".accent-phrase");
+  await expect(accentPhrase).toHaveText("テストデス");
 
   await expect(page.locator(".text-cell").first()).toBeVisible();
   await page.locator(".text-cell").first().click();
-  const qMenu = page.locator(".q-menu > label > div > div > div");
-  expect(await qMenu.first().inputValue()).toBe("テストデス");
-  await qMenu.fill("テストテスト");
-  expect(await qMenu.first().inputValue()).toBe("テストテスト");
+  const input = page.getByLabel("1番目のアクセント区間の読み");
+  await input.evaluate((node) => console.log(node.outerHTML));
+  expect(await input.inputValue()).toBe("テストデス");
+  await input.fill("テストテスト");
+  await input.press("Enter");
+  await expect(accentPhrase).toHaveText("テストテスト");
 });
