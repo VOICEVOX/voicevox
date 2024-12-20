@@ -60,27 +60,33 @@
                   <div class="parameter-list">
                     <h2 class="preset-name">{{ selectedPreset.name }}</h2>
                     <template
-                      v-for="parameter in Object.entries(SLIDER_PARAMETERS)"
-                      :key="parameter[0]"
+                      v-for="(value, sliderKey) in SLIDER_PARAMETERS"
+                      :key="sliderKey"
                     >
                       <div
-                        v-if="getParameterConfig(parameter[0])"
+                        v-if="sliderKey in parameterLabels"
                         class="parameter"
                       >
                         <div class="parameter-header">
                           <span>
-                            {{ getParameterConfig(parameter[0])?.label }}
+                            {{ parameterLabels[sliderKey as ParameterType] }}
                           </span>
                           <span>
-                            {{ getParameterValue(parameter[0])?.toFixed(2) }}
+                            {{
+                              selectedPreset[
+                                sliderKey as ParameterType
+                              ].toFixed(2)
+                            }}
                           </span>
                         </div>
                         <!-- NOTE: プルリクエスト分割のため、まずは動かないスライダーが実装されている。変更機能も実装予定。 -->
                         <BaseSlider
-                          :min="parameter[1].min()"
-                          :max="parameter[1].max()"
-                          :step="parameter[1].step()"
-                          :modelValue="getParameterValue(parameter[0]) ?? 0"
+                          :min="value.min()"
+                          :max="value.max()"
+                          :step="value.step()"
+                          :modelValue="
+                            selectedPreset[sliderKey as ParameterType]
+                          "
                         />
                       </div>
                     </template>
@@ -153,7 +159,7 @@ import BaseIconButton from "@/components/Base/BaseIconButton.vue";
 import BaseSlider from "@/components/Base/BaseSlider.vue";
 import CharacterButton from "@/components/CharacterButton.vue";
 import { useDefaultPreset } from "@/composables/useDefaultPreset";
-import { Preset, PresetKey } from "@/type/preload";
+import { Preset, PresetKey, PresetSliderKey } from "@/type/preload";
 import { SLIDER_PARAMETERS } from "@/store/utility";
 
 const props = defineProps<{
@@ -205,67 +211,15 @@ const selectedPreset = computed(() => {
   );
 });
 
-const parameterConfigs = [
-  {
-    label: "話速",
-    parameterKey: "speedScale",
-  },
-  {
-    label: "音高",
-    parameterKey: "pitchScale",
-  },
-  {
-    label: "抑揚",
-    parameterKey: "intonationScale",
-  },
-  {
-    label: "音量",
-    parameterKey: "volumeScale",
-  },
-  {
-    label: "開始無音",
-    parameterKey: "prePhonemeLength",
-  },
-  {
-    label: "終了無音",
-    parameterKey: "postPhonemeLength",
-  },
-];
-
-const getParameterConfig = (sliderKey: string) => {
-  switch (sliderKey) {
-    case "SPEED":
-      return parameterConfigs[0];
-    case "PITCH":
-      return parameterConfigs[1];
-    case "INTONATION":
-      return parameterConfigs[2];
-    case "VOLUME":
-      return parameterConfigs[3];
-    case "PRE_PHONEME_LENGTH":
-      return parameterConfigs[4];
-    case "POST_PHONEME_LENGTH":
-      return parameterConfigs[5];
-  }
-};
-
-const getParameterValue = (sliderKey: string) => {
-  if (!selectedPreset.value) {
-    throw new Error("selectedPreset is undefined");
-  }
-
-  const parameters = Object.entries(selectedPreset.value);
-  const parameter = parameters.find(
-    (preset) => preset[0] === getParameterConfig(sliderKey)?.parameterKey,
-  );
-
-  const parameterValue = Number(parameter?.[1]);
-
-  if (Number.isNaN(parameterValue)) {
-    return;
-  }
-
-  return parameterValue;
+type ParameterType = Exclude<PresetSliderKey, "morphingRate">;
+const parameterLabels: Record<ParameterType, string> = {
+  speedScale: "話速",
+  pitchScale: "音高",
+  intonationScale: "抑揚",
+  volumeScale: "音量",
+  pauseLengthScale: "間の長さ",
+  prePhonemeLength: "開始無音",
+  postPhonemeLength: "終了無音",
 };
 
 const reorderPreset = (featurePresetList: (Preset & { key: PresetKey })[]) => {
