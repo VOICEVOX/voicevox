@@ -72,7 +72,11 @@
                             {{ getParameterConfig(parameter[0])?.label }}
                           </span>
                           <span>
-                            {{ getParameterValue(parameter[0])?.toFixed(2) }}
+                            {{
+                              getParameterValue(
+                                getParameterConfig(parameter[0]).parameterKey,
+                              )?.toFixed(2)
+                            }}
                           </span>
                         </div>
                         <BaseSlider
@@ -247,15 +251,13 @@ const getParameterConfig = (sliderKey: string) => {
   }
 };
 
-const getParameterValue = (sliderKey: string) => {
+const getParameterValue = (parameterKey: string) => {
   if (!selectedPreset.value) {
     throw new Error("selectedPreset is undefined");
   }
 
   const parameters = Object.entries(selectedPreset.value);
-  const parameter = parameters.find(
-    (preset) => preset[0] === getParameterConfig(sliderKey)?.parameterKey,
-  );
+  const parameter = parameters.find((preset) => preset[0] === parameterKey);
 
   const parameterValue = Number(parameter?.[1]);
 
