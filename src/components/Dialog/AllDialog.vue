@@ -3,7 +3,6 @@
     v-model="isAcceptRetrieveTelemetryDialogOpenComputed"
   />
   <AcceptTermsDialog v-model="isAcceptTermsDialogOpenComputed" />
-  <HelpDialog v-model="isHelpDialogOpenComputed" />
   <SettingDialog v-model="isSettingDialogOpenComputed" />
   <HotkeySettingDialog v-model="isHotkeySettingDialogOpenComputed" />
   <ToolBarCustomDialog v-model="isToolbarSettingDialogOpenComputed" />
@@ -28,7 +27,6 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import HelpDialog from "@/components/Dialog/HelpDialog/HelpDialog.vue";
 import SettingDialog from "@/components/Dialog/SettingDialog/SettingDialog.vue";
 import HotkeySettingDialog from "@/components/Dialog/HotkeySettingDialog.vue";
 import ToolBarCustomDialog from "@/components/Dialog/ToolBarCustomDialog.vue";
@@ -48,12 +46,6 @@ const props = defineProps<{
   isEnginesReady: boolean;
 }>();
 const store = useStore();
-
-// ライセンス表示
-const isHelpDialogOpenComputed = computed({
-  get: () => store.state.isHelpDialogOpen,
-  set: (val) => store.actions.SET_DIALOG_OPEN({ isHelpDialogOpen: val }),
-});
 
 // 設定
 const isSettingDialogOpenComputed = computed({
