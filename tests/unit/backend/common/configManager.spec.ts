@@ -1,5 +1,6 @@
 import pastConfigs from "./pastConfigs";
 import configBugDefaultPreset1996 from "./pastConfigs/0.19.1-bug_default_preset.json";
+import { isMac } from "@/helpers/platform";
 import { BaseConfigManager } from "@/backend/common/ConfigManager";
 import { configSchema } from "@/type/preload";
 
@@ -85,6 +86,13 @@ for (const [version, data] of pastConfigs) {
     const configManager = new TestConfigManager();
     await configManager.initialize();
     expect(configManager).toBeTruthy();
+
+    // マイグレーション後のデータが正しいことをスナップショットで確認
+    // NOTE: Macはショートカットキーが異なるためパス
+    // TODO: ConfigManagerにOSを引数指定できるようにしてテストを分ける
+    if (!isMac) {
+      expect(configManager.getAll()).toMatchSnapshot();
+    }
   });
 }
 
