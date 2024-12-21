@@ -13,10 +13,10 @@ import {
   EngineId,
   EngineSettingType,
   EngineSettings,
-  HotkeySettingType,
   Sandbox,
 } from "@/type/preload";
 import { AssetTextFileNames } from "@/type/staticResources";
+import { HotkeySettingType } from "@/domain/hotkeyAction";
 
 const toStaticPath = (fileName: string) =>
   `${import.meta.env.BASE_URL}/${fileName}`.replaceAll(/\/\/+/g, "/");
