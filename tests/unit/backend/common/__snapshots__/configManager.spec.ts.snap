@@ -92,8 +92,24 @@ exports[`0.13.0からマイグレーションできる 1`] = `
       "combination": "Ctrl Y",
     },
     {
+      "action": "拡大",
+      "combination": "",
+    },
+    {
+      "action": "縮小",
+      "combination": "",
+    },
+    {
+      "action": "拡大率のリセット",
+      "combination": "",
+    },
+    {
       "action": "新規プロジェクト",
       "combination": "Ctrl N",
+    },
+    {
+      "action": "全画面表示を切り替え",
+      "combination": "F11",
     },
     {
       "action": "プロジェクトを名前を付けて保存",
@@ -181,6 +197,7 @@ exports[`0.13.0からマイグレーションできる 1`] = `
     },
   ],
   "inheritAudioInfo": true,
+  "openedEditor": "talk",
   "playheadPositionDisplayFormat": "MINUTES_SECONDS",
   "presets": {
     "items": {},
