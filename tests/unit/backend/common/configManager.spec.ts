@@ -1,11 +1,10 @@
 import pastConfigs from "./pastConfigs";
 import configBugDefaultPreset1996 from "./pastConfigs/0.19.1-bug_default_preset.json";
-import { isMac } from "@/helpers/platform";
 import { BaseConfigManager } from "@/backend/common/ConfigManager";
-import { configSchema } from "@/type/preload";
+import { getConfigSchema } from "@/type/preload";
 
 const configBase = {
-  ...configSchema.parse({}),
+  ...getConfigSchema(false).parse({}),
   __internal__: {
     migrations: {
       version: "999.999.999",
@@ -50,7 +49,7 @@ it("新規作成できる", async () => {
     async () => undefined,
   );
 
-  const configManager = new TestConfigManager();
+  const configManager = new TestConfigManager(false);
   await configManager.initialize();
   expect(configManager).toBeTruthy();
 });
@@ -63,7 +62,7 @@ it("バージョンが保存される", async () => {
     .spyOn(TestConfigManager.prototype, "save")
     .mockImplementation(async () => undefined);
 
-  const configManager = new TestConfigManager();
+  const configManager = new TestConfigManager(false);
   await configManager.initialize();
   await configManager.ensureSaved();
   expect(saveSpy).toHaveBeenCalled();
@@ -83,16 +82,12 @@ for (const [version, data] of pastConfigs) {
       async () => data,
     );
 
-    const configManager = new TestConfigManager();
+    const configManager = new TestConfigManager(false);
     await configManager.initialize();
     expect(configManager).toBeTruthy();
 
     // マイグレーション後のデータが正しいことをスナップショットで確認
-    // NOTE: Macはショートカットキーが異なるためパス
-    // TODO: ConfigManagerにOSを引数指定できるようにしてテストを分ける
-    if (!isMac) {
-      expect(configManager.getAll()).toMatchSnapshot();
-    }
+    expect(configManager.getAll()).toMatchSnapshot();
   });
 }
 
@@ -127,7 +122,7 @@ it("0.19.1からのマイグレーション時にハミング・ソングスタ�
   ).map((key) => getStyleIdFromVoiceId(key));
 
   // マイグレーション
-  const configManager = new TestConfigManager();
+  const configManager = new TestConfigManager(false);
   await configManager.initialize();
   const presets = configManager.get("presets");
   const defaultPresetKeys = configManager.get("defaultPresetKeys");
@@ -169,7 +164,7 @@ it("getできる", async () => {
     }),
   );
 
-  const configManager = new TestConfigManager();
+  const configManager = new TestConfigManager(false);
   await configManager.initialize();
   expect(configManager.get("inheritAudioInfo")).toBe(false);
 });
@@ -188,7 +183,7 @@ it("setできる", async () => {
     }),
   );
 
-  const configManager = new TestConfigManager();
+  const configManager = new TestConfigManager(false);
   await configManager.initialize();
   configManager.set("inheritAudioInfo", true);
   expect(configManager.get("inheritAudioInfo")).toBe(true);
