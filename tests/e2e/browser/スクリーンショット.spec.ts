@@ -20,6 +20,7 @@ let speakerImages:
 
 /**
  * 差し替え用の立ち絵・アイコンを取得する。
+ * TOOD: エンジンモックを使ってこのコードを削除する。
  */
 async function getSpeakerImages(): Promise<
   {
@@ -28,7 +29,10 @@ async function getSpeakerImages(): Promise<
   }[]
 > {
   if (!speakerImages) {
-    const assetsPath = path.resolve(__dirname, "assets");
+    const assetsPath = path.resolve(
+      __dirname,
+      "../../../src/mock/engineMock/assets",
+    );
     const images = await fs.readdir(assetsPath);
     const icons = images.filter((image) => image.startsWith("icon"));
     icons.sort(
