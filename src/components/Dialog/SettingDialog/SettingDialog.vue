@@ -484,7 +484,6 @@ import {
   buildSongTrackAudioFileNameFromRawData,
 } from "@/store/utility";
 import {
-  isProduction,
   SavingSetting,
   EngineSettingType,
   ExperimentalSettingType,
@@ -495,6 +494,7 @@ import {
 } from "@/type/preload";
 import { createLogger } from "@/domain/frontend/log";
 import { useRootMiscSetting } from "@/composables/useRootMiscSetting";
+import { isProduction } from "@/helpers/platform";
 
 type SamplingRateOption = EngineSettingType["outputSamplingRate"];
 
@@ -767,11 +767,10 @@ const outputSamplingRate = computed({
   set: async (outputSamplingRate: SamplingRateOption) => {
     if (outputSamplingRate !== "engineDefault") {
       const result = await store.actions.SHOW_CONFIRM_DIALOG({
-        title: "出力サンプリングレートを変更します",
+        title: "出力サンプリングレートを変更しますか？",
         message:
-          "出力サンプリングレートを変更しても、音質は変化しません。また、音声の生成処理に若干時間がかかる場合があります。\n変更しますか？",
+          "出力サンプリングレートを変更しても、音質は変化しません。また、音声の生成処理に若干時間がかかる場合があります。",
         actionName: "変更する",
-        cancel: "変更しない",
       });
       if (result !== "OK") {
         return;

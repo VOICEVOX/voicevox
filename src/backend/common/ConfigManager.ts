@@ -5,15 +5,17 @@ import {
   ConfigType,
   configSchema,
   DefaultStyleId,
-  defaultHotkeySettings,
-  HotkeySettingType,
   ExperimentalSettingType,
-  HotkeyCombination,
   VoiceId,
   PresetKey,
 } from "@/type/preload";
 import { ensureNotNullish } from "@/helpers/errorHelper";
 import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
+import {
+  HotkeyCombination,
+  defaultHotkeySettings,
+  HotkeySettingType,
+} from "@/domain/hotkeyAction";
 
 const lockKey = "save";
 

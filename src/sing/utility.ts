@@ -10,6 +10,32 @@ export function getLast<T>(array: T[]) {
   return array[array.length - 1];
 }
 
+export function getPrev<T>(array: T[], currentIndex: number) {
+  return currentIndex !== 0 ? array[currentIndex - 1] : undefined;
+}
+
+export function getNext<T>(array: T[], currentIndex: number) {
+  return currentIndex !== array.length - 1
+    ? array[currentIndex + 1]
+    : undefined;
+}
+
+export function isSorted<T>(array: T[], compareFn: (a: T, b: T) => number) {
+  for (let i = 0; i < array.length - 1; i++) {
+    if (compareFn(array[i], array[i + 1]) > 0) {
+      return false;
+    }
+  }
+  return true;
+}
+
+export function createArray<T>(
+  length: number,
+  generateElementFn: (index: number) => T,
+) {
+  return Array.from({ length }, (_, i) => generateElementFn(i));
+}
+
 export function linearInterpolation(
   x1: number,
   y1: number,

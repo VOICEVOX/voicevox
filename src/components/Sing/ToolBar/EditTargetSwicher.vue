@@ -32,7 +32,7 @@
         :delay="500"
         anchor="bottom middle"
         transitionShow=""
-        transitionSide=""
+        transitionHide=""
       >
         ピッチ編集<br />{{ !isMac ? "Ctrl" : "Cmd" }}+クリックで消去
       </QTooltip>
@@ -42,7 +42,7 @@
 
 <script setup lang="ts">
 import { SequencerEditTarget } from "@/store/type";
-import { isMac } from "@/type/preload";
+import { isMac } from "@/helpers/platform";
 
 defineProps<{
   editTarget: SequencerEditTarget;

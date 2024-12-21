@@ -1,4 +1,3 @@
-import { getBaseName } from "./utility";
 import { createPartialStore, DotNotationDispatch } from "./vuex";
 import { createUILockAction } from "@/store/ui";
 import {
@@ -8,7 +7,7 @@ import {
   ProjectStoreTypes,
 } from "@/store/type";
 import { TrackId } from "@/type/preload";
-
+import path from "@/helpers/path";
 import { getValueOrThrow, ResultError } from "@/type/result";
 import { LatestProjectType } from "@/domain/project/schema";
 import {
@@ -25,6 +24,7 @@ import { EditorType } from "@/type/preload";
 import { IsEqual } from "@/type/utility";
 import {
   showAlertDialog,
+  showMessageDialog,
   showQuestionDialog,
 } from "@/components/Dialog/Dialog";
 import { uuid4 } from "@/helpers/random";
@@ -79,7 +79,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
   PROJECT_NAME_WITH_EXT: {
     getter(state) {
       return state.projectFilePath
-        ? getBaseName(state.projectFilePath)
+        ? path.basename(state.projectFilePath)
         : undefined;
     },
   },
@@ -87,7 +87,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
   PROJECT_NAME: {
     getter(state) {
       return state.projectFilePath
-        ? getBaseName(state.projectFilePath).replace(".vvproj", "")
+        ? path.basename(state.projectFilePath, ".vvproj")
         : undefined;
     },
   },
@@ -227,7 +227,6 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             return err.message;
           })();
           await showAlertDialog({
-            type: "error",
             title: "エラー",
             message: `プロジェクトファイルの読み込みに失敗しました。\n${message}`,
           });
@@ -271,7 +270,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             context.state.projectFilePath &&
             context.state.projectFilePath != filePath
           ) {
-            await showAlertDialog({
+            await showMessageDialog({
               type: "info",
               title: "保存",
               message: `編集中のプロジェクトが ${filePath} に切り替わりました。`,
@@ -328,7 +327,6 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             return err.message;
           })();
           await showAlertDialog({
-            type: "error",
             title: "エラー",
             message: `プロジェクトファイルの保存に失敗しました。\n${message}`,
           });
@@ -349,13 +347,16 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
       if (additionalMessage) {
         message += "\n" + additionalMessage;
       }
-      message += "\n変更を保存しますか？";
 
       const result: number = await showQuestionDialog({
-        type: "info",
-        title: "警告",
+        type: "warning",
+        title: "プロジェクトを保存しますか？",
         message,
-        buttons: ["キャンセル", "破棄", "保存"],
+        buttons: [
+          "キャンセル",
+          { text: "破棄する", color: "warning" },
+          { text: "保存する", color: "primary" },
+        ],
         cancel: 0,
       });
       if (result == 2) {

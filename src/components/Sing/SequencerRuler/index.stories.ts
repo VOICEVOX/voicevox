@@ -4,10 +4,17 @@ import { ref } from "vue";
 
 import Presentation from "./Presentation.vue";
 import { UnreachableError } from "@/type/utility";
+import { ZOOM_X_MIN, ZOOM_X_MAX, ZOOM_X_STEP } from "@/sing/viewHelper";
 
 const meta: Meta<typeof Presentation> = {
   component: Presentation,
   args: {
+    tempos: [
+      {
+        bpm: 120,
+        position: 0,
+      },
+    ],
     timeSignatures: [
       {
         beats: 4,
@@ -19,8 +26,19 @@ const meta: Meta<typeof Presentation> = {
     tpqn: 480,
     offset: 0,
     numMeasures: 32,
+    sequencerSnapType: 16,
     "onUpdate:playheadTicks": fn<(value: number) => void>(),
     onDeselectAllNotes: fn(),
+  },
+  argTypes: {
+    sequencerZoomX: {
+      control: {
+        type: "range",
+        min: ZOOM_X_MIN,
+        max: ZOOM_X_MAX,
+        step: ZOOM_X_STEP,
+      },
+    },
   },
   render: (args) => ({
     components: { Presentation },
@@ -35,7 +53,87 @@ const meta: Meta<typeof Presentation> = {
 export default meta;
 type Story = StoryObj<typeof Presentation>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  name: "デフォルト",
+  args: {},
+};
+
+export const WithBpmChange: Story = {
+  name: "テンポ変化",
+  args: {
+    tempos: [
+      {
+        bpm: 120,
+        position: 0,
+      },
+      {
+        bpm: 180,
+        position: 480 * 4,
+      },
+      {
+        bpm: 240,
+        position: 480 * 8,
+      },
+    ],
+  },
+};
+
+export const WithTimeSignatureChange: Story = {
+  name: "拍子変化",
+  args: {
+    timeSignatures: [
+      {
+        beats: 4,
+        beatType: 4,
+        measureNumber: 1,
+      },
+      {
+        beats: 3,
+        beatType: 4,
+        measureNumber: 3,
+      },
+      {
+        beats: 9,
+        beatType: 16,
+        measureNumber: 5,
+      },
+    ],
+  },
+};
+
+export const WithOffset: Story = {
+  name: "スクロール",
+  args: {
+    offset: 480 * 4,
+  },
+};
+
+export const Dense: Story = {
+  name: "密集表示",
+  args: {
+    timeSignatures: [
+      {
+        beats: 4,
+        beatType: 4,
+        measureNumber: 1,
+      },
+    ],
+    tempos: [
+      {
+        bpm: 120,
+        position: 0,
+      },
+      {
+        bpm: 120,
+        position: 400,
+      },
+      {
+        bpm: 120,
+        position: 480,
+      },
+    ],
+  },
+};
 
 export const MovePlayhead: Story = {
   name: "再生位置を移動",

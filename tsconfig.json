@@ -29,6 +29,7 @@
     "tests/**/*.ts",
     "tests/**/*.mts",
     "tests/**/*.tsx",
+    "tools/**/*.mts",
     ".storybook/**/*.ts"
   ],
   "exclude": ["node_modules"]

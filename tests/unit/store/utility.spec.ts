@@ -5,7 +5,6 @@ import {
   SpeakerId,
   StyleId,
   ToolbarButtonTagType,
-  isMac,
 } from "@/type/preload";
 import {
   formatCharacterStyleName,
@@ -18,11 +17,11 @@ import {
   isAccentPhrasesTextDifferent,
   buildAudioFileNameFromRawData,
   getToolbarButtonName,
-  getBaseName,
   isOnCommandOrCtrlKeyDown,
   filterCharacterInfosByStyleType,
 } from "@/store/utility";
 import { uuid4 } from "@/helpers/random";
+import { isMac } from "@/helpers/platform";
 
 function createDummyMora(text: string): Mora {
   return {
@@ -280,13 +279,6 @@ test("getToolbarButtonName", () => {
   expect(getToolbarButtonName("存在しないタグ" as ToolbarButtonTagType)).toBe(
     undefined,
   );
-});
-
-test("getBaseName", () => {
-  expect(getBaseName("/path/to/file.txt")).toBe("file.txt");
-  expect(getBaseName("/path/to/file")).toBe("file");
-  expect(getBaseName("file.txt")).toBe("file.txt");
-  expect(getBaseName("file")).toBe("file");
 });
 
 test("isOnCommandOrCtrlKeyDown", () => {

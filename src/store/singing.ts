@@ -1,4 +1,3 @@
-import path from "path";
 import { ref, toRaw } from "vue";
 import { createPartialStore } from "./vuex";
 import { createUILockAction } from "./ui";
@@ -106,6 +105,8 @@ import { ufProjectToVoicevox } from "@/sing/utaformatixProject/toVoicevox";
 import { uuid4 } from "@/helpers/random";
 import { convertToWavFileData } from "@/sing/convertToWavFileData";
 import { generateWriteErrorMessage } from "@/helpers/fileHelper";
+import path from "@/helpers/path";
+import { showAlertDialog } from "@/components/Dialog/Dialog";
 
 const logger = createLogger("store/singing");
 
@@ -776,6 +777,8 @@ export const singingStoreState: SingingStoreState = {
   sequencerZoomY: 0.75,
   sequencerSnapType: 16,
   sequencerEditTarget: "NOTE",
+  sequencerNoteTool: "EDIT_FIRST",
+  sequencerPitchTool: "DRAW",
   _selectedNoteIds: new Set(),
   nowPlaying: false,
   volume: 0,
@@ -820,7 +823,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       // 指定されたstyleIdに対して、エンジン側の初期化を行う
       const isInitialized = await actions.IS_INITIALIZED_ENGINE_SPEAKER(singer);
       if (!isInitialized) {
-        await actions.INITIALIZE_ENGINE_SPEAKER(singer);
+        await actions.INITIALIZE_ENGINE_CHARACTER({
+          engineId: singer.engineId,
+          styleId: singer.styleId,
+          uiLock: false,
+        });
       }
     },
   },
@@ -1134,6 +1141,17 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  DESELECT_NOTES: {
+    mutation(state, { noteIds }: { noteIds: NoteId[] }) {
+      for (const noteId of noteIds) {
+        state._selectedNoteIds.delete(noteId);
+      }
+    },
+    async action({ mutations }, { noteIds }: { noteIds: NoteId[] }) {
+      mutations.DESELECT_NOTES({ noteIds });
+    },
+  },
+
   DESELECT_ALL_NOTES: {
     mutation(state) {
       state.editingLyricNoteId = undefined;
@@ -1403,7 +1421,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           state.tempos,
           state.timeSignatures,
           state.tpqn,
-        ) + 1,
+        ) + 8,
       );
     },
   },
@@ -1435,6 +1453,24 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       { editTarget }: { editTarget: SequencerEditTarget },
     ) {
       mutations.SET_EDIT_TARGET({ editTarget });
+    },
+  },
+
+  SET_SEQUENCER_NOTE_TOOL: {
+    mutation(state, { sequencerNoteTool }) {
+      state.sequencerNoteTool = sequencerNoteTool;
+    },
+    async action({ mutations }, { sequencerNoteTool }) {
+      mutations.SET_SEQUENCER_NOTE_TOOL({ sequencerNoteTool });
+    },
+  },
+
+  SET_SEQUENCER_PITCH_TOOL: {
+    mutation(state, { sequencerPitchTool }) {
+      state.sequencerPitchTool = sequencerPitchTool;
+    },
+    async action({ mutations }, { sequencerPitchTool }) {
+      mutations.SET_SEQUENCER_PITCH_TOOL({ sequencerPitchTool });
     },
   },
 
@@ -1679,6 +1715,22 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS: {
     async action({ state }) {
       syncTracksAndTrackChannelStrips(state.tracks);
+    },
+  },
+
+  APPLY_DEVICE_ID_TO_AUDIO_CONTEXT: {
+    action(_, { device }) {
+      if (!audioContext) {
+        throw new Error("audioContext is undefined.");
+      }
+      const sinkId = device === "default" ? "" : device;
+      audioContext.setSinkId(sinkId).catch((err: unknown) => {
+        void showAlertDialog({
+          title: "エラー",
+          message: "再生デバイスが見つかりません",
+        });
+        throw err;
+      });
     },
   },
 
@@ -3596,16 +3648,6 @@ export const singingCommandStore = transformCommandStore(
           const { tempos, timeSignatures, tracks, tpqn } =
             ufProjectToVoicevox(project);
 
-          if (tempos.length > 1) {
-            logger.warn("Multiple tempos are not supported.");
-          }
-          if (timeSignatures.length > 1) {
-            logger.warn("Multiple time signatures are not supported.");
-          }
-
-          tempos.splice(1, tempos.length - 1); // TODO: 複数テンポに対応したら削除
-          timeSignatures.splice(1, timeSignatures.length - 1); // TODO: 複数拍子に対応したら削除
-
           if (tpqn !== state.tpqn) {
             throw new Error("TPQN does not match. Must be converted.");
           }
@@ -3647,9 +3689,6 @@ export const singingCommandStore = transformCommandStore(
         async ({ state, actions }, { project, trackIndexes }) => {
           const { tempos, timeSignatures, tracks, tpqn, trackOrder } =
             project.song;
-
-          tempos.splice(1, tempos.length - 1); // TODO: 複数テンポに対応したら削除
-          timeSignatures.splice(1, timeSignatures.length - 1); // TODO: 複数拍子に対応したら削除
 
           if (tpqn !== state.tpqn) {
             throw new Error("TPQN does not match. Must be converted.");

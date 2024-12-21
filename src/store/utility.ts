@@ -1,16 +1,14 @@
-import path from "path";
 import * as diff from "fast-array-diff";
 import {
   CharacterInfo,
   StyleInfo,
   StyleType,
   ToolbarButtonTagType,
-  isMac,
-  isWindows,
 } from "@/type/preload";
 import { AccentPhrase, Mora } from "@/openapi";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { DEFAULT_TRACK_NAME } from "@/sing/domain";
+import { isMac } from "@/helpers/platform";
 
 export const DEFAULT_STYLE_NAME = "ノーマル";
 export const DEFAULT_PROJECT_NAME = "Untitled";
@@ -449,31 +447,6 @@ export const getToolbarButtonName = (tag: ToolbarButtonTagType): string => {
     EMPTY: "空白",
   };
   return tag2NameObj[tag];
-};
-
-// based on https://github.com/BBWeb/path-browserify/blob/win-version/index.js
-export const getBaseName = (filePath: string) => {
-  if (!isWindows) return path.basename(filePath);
-
-  const splitDeviceRegex =
-    /^([a-zA-Z]:|[\\/]{2}[^\\/]+[\\/]+[^\\/]+)?([\\/])?([\s\S]*?)$/;
-  const splitTailRegex =
-    /^([\s\S]*?)((?:\.{1,2}|[^\\/]+?|)(\.[^./\\]*|))(?:[\\/]*)$/;
-
-  const resultOfSplitDeviceRegex = splitDeviceRegex.exec(filePath);
-  if (
-    resultOfSplitDeviceRegex == undefined ||
-    resultOfSplitDeviceRegex.length < 3
-  )
-    return "";
-  const tail = resultOfSplitDeviceRegex[3] || "";
-
-  const resultOfSplitTailRegex = splitTailRegex.exec(tail);
-  if (resultOfSplitTailRegex == undefined || resultOfSplitTailRegex.length < 2)
-    return "";
-  const basename = resultOfSplitTailRegex[2] || "";
-
-  return basename;
 };
 
 /**

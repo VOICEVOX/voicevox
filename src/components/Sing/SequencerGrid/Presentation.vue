@@ -8,9 +8,10 @@
   >
     <defs>
       <pattern
-        id="sequencer-grid-pattern"
+        id="sequencer-grid-pattern-background"
         patternUnits="userSpaceOnUse"
-        :width="beatWidth * beatsPerMeasure"
+        :x="0"
+        :width="gridCellWidth"
         :height="gridCellHeight * 12"
       >
         <!-- セルの背景 -->
@@ -19,49 +20,67 @@
           :key="`cell-${index}`"
           x="0"
           :y="gridCellHeight * index"
-          :width="beatWidth * beatsPerMeasure"
-          :height="gridCellHeight"
+          :width="gridCellWidth"
+          :height="gridCellHeight * 12"
           :class="`sequencer-grid-cell sequencer-grid-cell-${keyInfo.color}`"
         />
         <!-- スナップグリッド線 -->
         <line
-          v-for="x in snapLinePositions"
-          :key="`snapline-${x}`"
-          :x1="x"
-          :x2="x"
+          :x1="gridCellWidth"
+          :x2="gridCellWidth"
           y1="0"
           :y2="gridCellHeight * 12"
           class="sequencer-grid-vertical-line"
         />
+      </pattern>
+      <pattern
+        v-for="(pattern, patternIndex) in gridPatterns"
+        :id="`sequencer-grid-pattern-${patternIndex}`"
+        :key="`pattern-${patternIndex}`"
+        patternUnits="userSpaceOnUse"
+        :x="pattern.x"
+        :width="pattern.patternWidth"
+        :height="gridCellHeight * 12"
+      >
         <!-- E/Fの中間線 -->
         <line
           v-for="index in horizontalLineIndices"
           :key="`horizontal-${index}`"
           x1="0"
-          :x2="beatWidth * beatsPerMeasure"
+          :x2="pattern.patternWidth"
           :y1="gridCellHeight * (index + 1)"
           :y2="gridCellHeight * (index + 1)"
           class="sequencer-grid-horizontal-line"
         />
         <!-- 拍線 -->
         <line
-          v-for="n in beatLineIndices"
+          v-for="n in pattern.timeSignature.beats"
           :key="`beatline-${n}`"
-          :x1="beatWidth * n"
-          :x2="beatWidth * n"
+          :x1="pattern.beatWidth * n"
+          :x2="pattern.beatWidth * n"
           y1="0"
           :y2="gridCellHeight * 12"
           class="sequencer-grid-beat-line"
         />
       </pattern>
     </defs>
-    <!-- グリッドパターン背景 -->
+    <!-- グリッド背景 -->
     <rect
       x="0"
       y="0"
       :width="gridWidth"
       :height="gridHeight"
-      fill="url(#sequencer-grid-pattern)"
+      :fill="`url(#sequencer-grid-pattern-background)`"
+    />
+    <!-- グリッドパターン -->
+    <rect
+      v-for="gridPattern in gridPatterns"
+      :key="`grid-${gridPattern.id}`"
+      :x="gridPattern.x"
+      y="0"
+      :width="gridPattern.width"
+      :height="gridHeight"
+      :fill="`url(#${gridPattern.id})`"
     />
     <!-- オクターブ線（グリッドの上に描画） -->
     <line
@@ -75,10 +94,10 @@
     />
     <!-- 小節線（グリッドおよびオクターブ線の上に描画） -->
     <line
-      v-for="n in numberOfMeasureLines"
-      :key="`measureline-${n}`"
-      :x1="beatWidth * beatsPerMeasure * n"
-      :x2="beatWidth * beatsPerMeasure * n"
+      v-for="x in measureLines"
+      :key="`measureline-${x}`"
+      :x1="x"
+      :x2="x"
       y1="0"
       :y2="gridHeight"
       class="sequencer-grid-measure-line"
@@ -87,10 +106,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, toRef } from "vue";
 import { keyInfos, getKeyBaseHeight, tickToBaseX } from "@/sing/viewHelper";
 import { getMeasureDuration, getNoteDuration } from "@/sing/domain";
 import { TimeSignature } from "@/store/type";
+import { useSequencerGrid } from "@/composables/useSequencerGridPattern";
 
 const props = defineProps<{
   tpqn: number;
@@ -111,30 +131,43 @@ const gridCellBaseHeight = getKeyBaseHeight();
 const gridCellHeight = computed(() => {
   return gridCellBaseHeight * props.sequencerZoomY;
 });
-const beatsPerMeasure = computed(() => {
-  return props.timeSignatures[0].beats;
-});
-const beatWidth = computed(() => {
-  const beatType = props.timeSignatures[0].beatType;
+const beatWidth = (timeSignature: TimeSignature) => {
+  const beatType = timeSignature.beatType;
   const wholeNoteDuration = props.tpqn * 4;
   const beatTicks = wholeNoteDuration / beatType;
   return tickToBaseX(beatTicks, props.tpqn) * props.sequencerZoomX;
-});
+};
+
 const gridWidth = computed(() => {
-  // TODO: 複数拍子に対応する
-  const beats = props.timeSignatures[0].beats;
-  const beatType = props.timeSignatures[0].beatType;
-  const measureDuration = getMeasureDuration(beats, beatType, props.tpqn);
-  const numMeasures = props.numMeasures;
-  const numOfGridColumns =
-    Math.round(measureDuration / gridCellTicks.value) * numMeasures;
+  let numOfGridColumns = 0;
+  for (const [i, timeSignature] of props.timeSignatures.entries()) {
+    const nextTimeSignature = props.timeSignatures[i + 1];
+    const nextMeasureNumber =
+      nextTimeSignature?.measureNumber ?? props.numMeasures + 1;
+    const beats = timeSignature.beats;
+    const beatType = timeSignature.beatType;
+    const measureDuration = getMeasureDuration(beats, beatType, props.tpqn);
+    numOfGridColumns +=
+      Math.round(measureDuration / gridCellTicks.value) *
+      (nextMeasureNumber - timeSignature.measureNumber);
+  }
   return gridCellWidth.value * numOfGridColumns;
 });
 const gridHeight = computed(() => {
   return gridCellHeight.value * keyInfos.length;
 });
+
+const gridPatterns = useSequencerGrid({
+  timeSignatures: toRef(() => props.timeSignatures),
+  tpqn: toRef(() => props.tpqn),
+  sequencerZoomX: toRef(() => props.sequencerZoomX),
+  numMeasures: toRef(() => props.numMeasures),
+});
+
 // 小節幅
-const measureWidth = computed(() => beatWidth.value * beatsPerMeasure.value);
+const measureWidth = (timeSignature: TimeSignature) =>
+  beatWidth(timeSignature) * timeSignature.beats;
+
 // グリッド線の計算
 // オクターブ線や小節線と重なる線は除外
 const gridLines = computed(() => {
@@ -150,25 +183,29 @@ const gridLines = computed(() => {
     { horizontalLines: [], octaveLines: [] },
   );
 });
-const numberOfMeasureLines = computed(() =>
-  Math.ceil(gridWidth.value / measureWidth.value),
-);
+const measureLines = computed(() => {
+  const measureLines = [0];
+  for (const [i, timeSignature] of props.timeSignatures.entries()) {
+    const nextTimeSignature = props.timeSignatures.at(i + 1);
+    const nextMeasureNumber =
+      nextTimeSignature?.measureNumber ?? props.numMeasures + 1;
+    const width = measureWidth(timeSignature);
+
+    const left = measureLines[measureLines.length - 1];
+    for (
+      let measureNumber = timeSignature.measureNumber;
+      measureNumber < nextMeasureNumber;
+      measureNumber++
+    ) {
+      measureLines.push(
+        left + width * (measureNumber - timeSignature.measureNumber + 1),
+      );
+    }
+  }
+  return measureLines;
+});
 const horizontalLineIndices = computed(() => gridLines.value.horizontalLines);
 const octaveLineIndices = computed(() => gridLines.value.octaveLines);
-const beatLineIndices = computed(() =>
-  Array.from({ length: beatsPerMeasure.value - 1 }, (_, i) => i + 1),
-);
-const snapLinePositions = computed(() => {
-  const snapTicks = gridCellTicks.value;
-  const measureTicks =
-    (props.tpqn * 4 * beatsPerMeasure.value) / props.timeSignatures[0].beatType;
-  const snapCount = Math.floor(measureTicks / snapTicks);
-
-  return Array.from({ length: snapCount }, (_, index) => {
-    const currentTick = snapTicks * index;
-    return (currentTick / measureTicks) * measureWidth.value;
-  });
-});
 </script>
 
 <style scoped lang="scss">

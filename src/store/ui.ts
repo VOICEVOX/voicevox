@@ -14,7 +14,7 @@ import {
 import { createPartialStore } from "./vuex";
 import { ActivePointScrollMode } from "@/type/preload";
 import {
-  AlertDialogOptions,
+  MessageDialogOptions,
   ConfirmDialogOptions,
   WarningDialogOptions,
   LoadingScreenOption,
@@ -63,7 +63,6 @@ export function withProgress<T>(
 }
 
 export const uiStoreState: UiStoreState = {
-  openedEditor: undefined,
   uiLockCount: 0,
   dialogLockCount: 0,
   reloadingLock: false,
@@ -90,15 +89,6 @@ export const uiStoreState: UiStoreState = {
 };
 
 export const uiStore = createPartialStore<UiStoreTypes>({
-  SET_OPENED_EDITOR: {
-    mutation(state, { editor }) {
-      state.openedEditor = editor;
-    },
-    action({ mutations }, { editor }) {
-      mutations.SET_OPENED_EDITOR({ editor });
-    },
-  },
-
   UI_LOCKED: {
     getter(state) {
       return state.uiLockCount > 0;
@@ -213,7 +203,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   },
 
   SHOW_ALERT_DIALOG: {
-    action: createUILockAction(async (_, payload: AlertDialogOptions) => {
+    action: createUILockAction(async (_, payload: MessageDialogOptions) => {
       return await showAlertDialog(payload);
     }),
   },
@@ -402,6 +392,27 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   IS_FULLSCREEN: {
     getter(state) {
       return state.isFullscreen;
+    },
+  },
+
+  /** UIの拡大 */
+  ZOOM_IN: {
+    action() {
+      window.backend.zoomIn();
+    },
+  },
+
+  /** UIの縮小 */
+  ZOOM_OUT: {
+    action() {
+      window.backend.zoomOut();
+    },
+  },
+
+  /** UIの拡大率のリセット */
+  ZOOM_RESET: {
+    action() {
+      window.backend.zoomReset();
     },
   },
 

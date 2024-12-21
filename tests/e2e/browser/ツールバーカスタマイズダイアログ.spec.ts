@@ -62,7 +62,7 @@ test("ツールバーのカスタマイズでボタンを追加でき、デフ�
       .count(),
   ).toBe(1);
   await page.getByText("デフォルトに戻す").click();
-  await page.locator(".q-card").getByText("はい").click();
+  await page.locator(".q-card").getByText("デフォルトに戻す").click();
   await page.getByText("保存", { exact: true }).click();
   expect(
     await page

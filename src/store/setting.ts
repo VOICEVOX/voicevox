@@ -7,7 +7,6 @@ import {
   showQuestionDialog,
 } from "@/components/Dialog/Dialog";
 import {
-  HotkeySettingType,
   SavingSetting,
   ExperimentalSettingType,
   ToolbarSettingType,
@@ -16,8 +15,10 @@ import {
   RootMiscSettingType,
 } from "@/type/preload";
 import { IsEqual } from "@/type/utility";
+import { HotkeySettingType } from "@/domain/hotkeyAction";
 
 export const settingStoreState: SettingStoreState = {
+  openedEditor: undefined,
   savingSetting: {
     fileEncoding: "UTF-8",
     fileNamePattern: "",
@@ -148,6 +149,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         "undoableTrackOperations",
         "showSingCharacterPortrait",
         "playheadPositionDisplayFormat",
+        "openedEditor",
       ] as const;
 
       // rootMiscSettingKeysに値を足し忘れていたときに型エラーを出す検出用コード
@@ -384,7 +386,6 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         // FIXME: useGpu設定を保存してからエンジン起動を試すのではなく、逆にしたい
         if (!result.success && useGpu) {
           await showAlertDialog({
-            type: "error",
             title: "GPUモードに変更できませんでした",
             message:
               "GPUモードでエンジンを起動できなかったためCPUモードに戻します",
