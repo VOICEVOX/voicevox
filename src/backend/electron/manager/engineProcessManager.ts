@@ -5,16 +5,16 @@ import treeKill from "tree-kill";
 import { app, dialog } from "electron"; // FIXME: ここでelectronをimportするのは良くない
 
 import log from "electron-log/main";
+import { getEngineInfoManager } from "./engineInfoManager";
 import {
   findAltPort,
   getPidFromPort,
   getProcessNameFromPid,
   type HostInfo,
   isAssignablePort,
-} from "../portHelper";
+} from "@/backend/electron/portHelper";
 
-import { getConfigManager } from "../electronConfig";
-import { getEngineInfoManager } from "./engineInfoManager";
+import { getConfigManager } from "@/backend/electron/electronConfig";
 import { EngineId, EngineInfo } from "@/type/preload";
 
 type EngineProcessContainer = {

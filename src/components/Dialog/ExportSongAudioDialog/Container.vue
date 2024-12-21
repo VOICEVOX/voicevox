@@ -3,8 +3,8 @@
 </template>
 
 <script setup lang="ts">
-import { notifyResult } from "../Dialog";
 import Presentation, { ExportTarget } from "./Presentation.vue";
+import { notifyResult } from "@/components/Dialog/Dialog";
 import { useStore } from "@/store";
 import { SaveResultObject, SongExportSetting } from "@/store/type";
 

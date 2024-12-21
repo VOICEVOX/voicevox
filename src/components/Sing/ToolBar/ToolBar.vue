@@ -160,8 +160,8 @@
 
 <script setup lang="ts">
 import { computed, watch, ref } from "vue";
-import PlayheadPositionDisplay from "../PlayheadPositionDisplay.vue";
 import EditTargetSwicher from "./EditTargetSwicher.vue";
+import PlayheadPositionDisplay from "@/components/Sing/PlayheadPositionDisplay.vue";
 import { useStore } from "@/store";
 
 import {

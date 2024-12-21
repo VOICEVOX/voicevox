@@ -267,8 +267,8 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import BaseToggleGroup from "../Base/BaseToggleGroup.vue";
-import BaseToggleGroupItem from "../Base/BaseToggleGroupItem.vue";
+import BaseToggleGroup from "@/components/Base/BaseToggleGroup.vue";
+import BaseToggleGroupItem from "@/components/Base/BaseToggleGroupItem.vue";
 import BaseButton from "@/components/Base/BaseButton.vue";
 import BaseListItem from "@/components/Base/BaseListItem.vue";
 import BaseNavigationView from "@/components/Base/BaseNavigationView.vue";
