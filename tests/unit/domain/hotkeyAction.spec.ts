@@ -5,8 +5,8 @@ import {
 
 test("すべてのホットキーに初期値が設定されている", async () => {
   const allActionNames = new Set(hotkeyActionNameSchema.options);
-  const actionsNames = new Set(
+  const defaultHotkeyActionsNames = new Set(
     defaultHotkeySettings.map((setting) => setting.action),
   );
-  expect(actionsNames).toEqual(allActionNames);
+  expect(allActionNames).toEqual(defaultHotkeyActionsNames);
 });
