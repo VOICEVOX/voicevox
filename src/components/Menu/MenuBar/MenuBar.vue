@@ -532,6 +532,16 @@ const menudata = computed<MenuItemData[]>(() => [
         },
         disableWhenUiLocked: false,
       },
+      {
+        type: "button",
+        label: "初期設定ダイアログデバッグ用ボタン",
+        onClick() {
+          void store.actions.SET_DIALOG_OPEN({
+            isInitialSettingsDialogOpen: true,
+          });
+        },
+        disableWhenUiLocked: true,
+      },
     ],
   },
   {
