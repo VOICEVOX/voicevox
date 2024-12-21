@@ -20,7 +20,7 @@ let speakerImages:
 
 /**
  * 差し替え用の立ち絵・アイコンを取得する。
- * TOOD: エンジンモックを使ってこのコードを削除する。
+ * TODO: エンジンモックを使ってこのコードを削除する。
  */
 async function getSpeakerImages(): Promise<
   {
