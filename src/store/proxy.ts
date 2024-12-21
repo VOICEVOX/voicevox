@@ -1,8 +1,10 @@
 import { ProxyStoreState, ProxyStoreTypes, EditorAudioQuery } from "./type";
 import { createPartialStore } from "./vuex";
 import { createEngineUrl } from "@/domain/url";
+import { isElectron, isProduction } from "@/helpers/platform";
 import {
   IEngineConnectorFactory,
+  OpenAPIEngineAndMockConnectorFactory,
   OpenAPIEngineConnectorFactory,
 } from "@/infrastructures/EngineConnector";
 import { AudioQuery } from "@/openapi";
@@ -10,7 +12,7 @@ import { EngineInfo } from "@/type/preload";
 
 export const proxyStoreState: ProxyStoreState = {};
 
-const proxyStoreCreator = (_engineFactory: IEngineConnectorFactory) => {
+export const proxyStoreCreator = (_engineFactory: IEngineConnectorFactory) => {
   const proxyStore = createPartialStore<ProxyStoreTypes>({
     INSTANTIATE_ENGINE_CONNECTOR: {
       action({ state }, payload) {
@@ -69,4 +71,9 @@ export const convertAudioQueryFromEngineToEditor = (
   };
 };
 
-export const proxyStore = proxyStoreCreator(OpenAPIEngineConnectorFactory);
+// PC版以外はモックを使えるようする
+const ConnectorFactory =
+  isElectron && isProduction
+    ? OpenAPIEngineConnectorFactory
+    : OpenAPIEngineAndMockConnectorFactory;
+export const proxyStore = proxyStoreCreator(ConnectorFactory);
