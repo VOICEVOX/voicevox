@@ -126,12 +126,12 @@ import BaseButton from "@/components/Base/BaseButton.vue";
 import BaseIconButton from "@/components/Base/BaseIconButton.vue";
 import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 import { useStore } from "@/store";
-import {
-  defaultHotkeySettings,
-  HotkeyActionNameType,
-  HotkeyCombination,
-} from "@/type/preload";
 import { useHotkeyManager, eventToCombination } from "@/plugins/hotkeyPlugin";
+import {
+  HotkeyCombination,
+  HotkeyActionNameType,
+  defaultHotkeySettings,
+} from "@/domain/hotkeyAction";
 
 const props = defineProps<{
   modelValue: boolean;

@@ -7,7 +7,6 @@ import {
   showQuestionDialog,
 } from "@/components/Dialog/Dialog";
 import {
-  HotkeySettingType,
   SavingSetting,
   ExperimentalSettingType,
   ToolbarSettingType,
@@ -16,6 +15,7 @@ import {
   RootMiscSettingType,
 } from "@/type/preload";
 import { IsEqual } from "@/type/utility";
+import { HotkeySettingType } from "@/domain/hotkeyAction";
 
 export const settingStoreState: SettingStoreState = {
   openedEditor: undefined,
