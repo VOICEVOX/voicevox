@@ -38,7 +38,6 @@ export const hotkeyActionNameSchema = z.enum([
   "貼り付け",
   "すべて選択",
   "選択解除",
-  "全セルを選択",
   `1${actionPostfixSelectNthCharacter}`,
   `2${actionPostfixSelectNthCharacter}`,
   `3${actionPostfixSelectNthCharacter}`,

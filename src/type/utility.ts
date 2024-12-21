@@ -1,4 +1,7 @@
-// XとYが同じ型かどうかを判定する
+/*
+ * XとYが同じ型かどうかを判定する。
+ * const _: IsEqual<X, Y> = true; のように使う。
+ **/
 export type IsEqual<X, Y> =
   (<T>() => T extends X ? 1 : 2) extends <T>() => T extends Y ? 1 : 2
     ? true
