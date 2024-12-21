@@ -7,7 +7,12 @@
     :disabled
     :modelValue="[model]"
     @update:modelValue="
-      (value) => value != undefined && $emit('update:modelValue', value[0])
+      (value) => {
+        if (value == undefined) {
+          throw new Error('Undefined value received');
+        }
+        $emit('update:modelValue', value[0]);
+      }
     "
   >
     <SliderTrack class="SliderTrack">
