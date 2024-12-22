@@ -1757,14 +1757,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         );
       };
 
-      const searchPhrases = async (
+      const generatePhrases = async (
         notes: Note[],
         tempos: Tempo[],
         tpqn: number,
         phraseFirstRestMinDurationSeconds: number,
         trackId: TrackId,
       ) => {
-        const foundPhrases = new Map<PhraseKey, Phrase>();
+        const generatePhrases = new Map<PhraseKey, Phrase>();
 
         let phraseNotes: Note[] = [];
         let prevPhraseLastNote: Note | undefined = undefined;
@@ -1801,7 +1801,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               startTime: phraseStartTime,
               trackId,
             });
-            foundPhrases.set(phraseKey, {
+            generatePhrases.set(phraseKey, {
               firstRestDuration: phraseFirstRestDuration,
               notes: phraseNotes,
               startTime: phraseStartTime,
@@ -1815,7 +1815,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             }
           }
         }
-        return foundPhrases;
+        return generatePhrases;
       };
 
       const generateQuerySource = (
@@ -2419,7 +2419,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
         // フレーズを更新する
 
-        const foundPhrases = new Map<PhraseKey, Phrase>();
+        const generatedPhrases = new Map<PhraseKey, Phrase>();
         for (const [trackId, track] of snapshot.tracks) {
           // 重なっているノートを削除する
           const overlappingNoteIds = getOrThrow(
@@ -2429,7 +2429,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           const notes = track.notes.filter(
             (value) => !overlappingNoteIds.has(value.id),
           );
-          const phrases = await searchPhrases(
+          const phrases = await generatePhrases(
             notes,
             snapshot.tempos,
             snapshot.tpqn,
@@ -2437,7 +2437,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             trackId,
           );
           for (const [phraseHash, phrase] of phrases) {
-            foundPhrases.set(phraseHash, phrase);
+            generatedPhrases.set(phraseHash, phrase);
           }
         }
 
@@ -2448,15 +2448,15 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         // 新しく作られたフレーズとstateにある既存のフレーズをマージする
         // 新しく作られたフレーズと無くなったフレーズのキーのリスト（Set）も作成する
         for (const phraseKey of state.phrases.keys()) {
-          if (!foundPhrases.has(phraseKey)) {
+          if (!generatedPhrases.has(phraseKey)) {
             disappearedPhraseKeys.add(phraseKey);
           }
         }
-        for (const [phraseKey, foundPhrase] of foundPhrases) {
+        for (const [phraseKey, generatedPhrase] of generatedPhrases) {
           const existingPhrase = state.phrases.get(phraseKey);
           const isNewlyCreated = existingPhrase == undefined;
           const phrase = isNewlyCreated
-            ? foundPhrase
+            ? generatedPhrase
             : cloneWithUnwrapProxy(existingPhrase);
 
           mergedPhrases.set(phraseKey, phrase);
