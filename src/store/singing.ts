@@ -213,51 +213,6 @@ type SingingVoiceSource = Readonly<{
 }>;
 
 /**
- * フレーズレンダラー。
- * 各フレーズごとに、ステージを進めながらレンダリング処理を行う。
- * レンダリングが必要かどうかの判定やキャッシュの作成も行う。
- */
-type PhraseRenderer = Readonly<{
-  /**
-   * 一番最初のステージのIDを返す。
-   * 一度もレンダリングを行っていないフレーズは、
-   * この（一番最初の）ステージからレンダリング処理を開始する必要がある。
-   * @returns ステージID
-   */
-  getFirstRenderStageId: () => PhraseRenderStageId;
-
-  /**
-   * レンダリングが必要なフレーズかどうかを判断し、
-   * レンダリングが必要であればどのステージから開始されるべきかを判断して、そのステージのIDを返す。
-   * レンダリングが必要ない場合、undefinedが返される。
-   * @param snapshot スナップショット
-   * @param trackId トラックID
-   * @param phraseKey フレーズキー
-   * @returns ステージID または undefined
-   */
-  determineStartStage: (
-    snapshot: SnapshotForPhraseRender,
-    trackId: TrackId,
-    phraseKey: PhraseKey,
-  ) => Promise<PhraseRenderStageId | undefined>;
-
-  /**
-   * 指定されたフレーズのレンダリング処理を、指定されたステージから開始する。
-   * レンダリング処理を開始する前に、前回のレンダリング処理結果の削除が行われる。
-   * @param snapshot スナップショット
-   * @param trackId トラックID
-   * @param phraseKey フレーズキー
-   * @param startStageId 開始ステージID
-   */
-  render: (
-    snapshot: SnapshotForPhraseRender,
-    trackId: TrackId,
-    phraseKey: PhraseKey,
-    startStageId: PhraseRenderStageId,
-  ) => Promise<void>;
-}>;
-
-/**
  * リクエスト用のノーツ（と休符）を作成する。
  */
 const createNotesForRequestToEngine = (
@@ -2405,49 +2360,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         },
       };
 
+      // NOTE: ステージは実行順で保持
       const stages: readonly PhraseRenderStage[] = [
         queryGenerationStage,
         singingPitchGenerationStage,
         singingVolumeGenerationStage,
         singingVoiceSynthesisStage,
       ];
-
-      const phraseRenderer: PhraseRenderer = {
-        getFirstRenderStageId: () => {
-          return stages[0].id;
-        },
-        determineStartStage: async (
-          snapshot: SnapshotForPhraseRender,
-          trackId: TrackId,
-          phraseKey: PhraseKey,
-        ) => {
-          for (const stage of stages) {
-            if (await stage.needsExecution(trackId, phraseKey, snapshot)) {
-              return stage.id;
-            }
-          }
-          return undefined;
-        },
-        render: async (
-          snapshot: SnapshotForPhraseRender,
-          trackId: TrackId,
-          phraseKey: PhraseKey,
-          startStageId: PhraseRenderStageId,
-        ) => {
-          const startStageIndex = stages.findIndex((value) => {
-            return value.id === startStageId;
-          });
-          if (startStageIndex === -1) {
-            throw new Error("Stage not found.");
-          }
-          for (let i = stages.length - 1; i >= startStageIndex; i--) {
-            stages[i].deleteExecutionResult(phraseKey);
-          }
-          for (let i = startStageIndex; i < stages.length; i++) {
-            await stages[i].execute(trackId, phraseKey, snapshot);
-          }
-        },
-      };
 
       // NOTE: 型推論でawaitの前か後かが考慮されないので、関数を介して取得する（型がbooleanになるようにする）
       const startRenderingRequested = () => state.startRenderingRequested;
@@ -2538,21 +2457,29 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             existingPhrase == undefined
               ? foundPhrase
               : cloneWithUnwrapProxy(existingPhrase);
-          const track = getOrThrow(snapshot.tracks, phrase.trackId);
+          const trackId = phrase.trackId;
+          const track = getOrThrow(snapshot.tracks, trackId);
+
           if (track.singer == undefined) {
             phrase.state = "SINGER_IS_NOT_SET";
           } else {
             // 新しいフレーズの場合は最初からレンダリングする
             // phrase.stateがCOULD_NOT_RENDERだった場合は最初からレンダリングし直す
             // 既存のフレーズの場合は適切なレンダリング開始ステージを決定する
-            const renderStartStageId =
-              existingPhrase == undefined || phrase.state === "COULD_NOT_RENDER"
-                ? phraseRenderer.getFirstRenderStageId()
-                : await phraseRenderer.determineStartStage(
-                    snapshot,
-                    foundPhrase.trackId,
-                    phraseKey,
-                  );
+            let renderStartStageId: PhraseRenderStageId | undefined = undefined;
+            if (
+              existingPhrase == undefined ||
+              phrase.state === "COULD_NOT_RENDER"
+            ) {
+              renderStartStageId = stages[0].id;
+            } else {
+              for (const stage of stages) {
+                if (await stage.needsExecution(trackId, phraseKey, snapshot)) {
+                  renderStartStageId = stage.id;
+                  break;
+                }
+              }
+            }
             if (renderStartStageId == undefined) {
               phrase.state = "PLAYABLE";
             } else {
@@ -2627,12 +2554,20 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
           try {
             // フレーズのレンダリングを行う
-            await phraseRenderer.render(
-              snapshot,
-              phrase.trackId,
-              phraseKey,
-              getOrThrow(renderStartStageIds, phraseKey),
-            );
+            const trackId = phrase.trackId;
+            const startStageId = getOrThrow(renderStartStageIds, phraseKey);
+            const startStageIndex = stages.findIndex((value) => {
+              return value.id === startStageId;
+            });
+            if (startStageIndex === -1) {
+              throw new Error("Stage not found.");
+            }
+            for (let i = stages.length - 1; i >= startStageIndex; i--) {
+              stages[i].deleteExecutionResult(phraseKey);
+            }
+            for (let i = startStageIndex; i < stages.length; i++) {
+              await stages[i].execute(trackId, phraseKey, snapshot);
+            }
 
             // シーケンスが存在する場合、シーケンスを削除する
             const phraseSequenceId = getPhraseSequenceId(phraseKey);
