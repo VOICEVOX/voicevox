@@ -2422,8 +2422,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
         const renderStartStageIds = new Map<PhraseKey, PhraseRenderStageId>();
 
-        // フレーズを更新する
-
         // 重なっているノートを削除する
         const filteredTrackNotes = new Map<TrackId, Note[]>();
         for (const [trackId, track] of snapshot.tracks) {
@@ -2522,12 +2520,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           }
         }
 
+        // state.phrasesを更新する
         mutations.SET_PHRASES({ phrases: mergedPhrases });
 
         logger.info("Phrases updated.");
 
-        // 各フレーズのレンダリングを行う
-
+        // シンガーが設定されていないフレーズとレンダリング未完了のフレーズが
+        // プレビュー音で再生されるようにする
         for (const [phraseKey, phrase] of state.phrases.entries()) {
           if (
             phrase.state === "SINGER_IS_NOT_SET" ||
@@ -2556,6 +2555,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             mutations.SET_SEQUENCE_ID_TO_PHRASE({ phraseKey, sequenceId });
           }
         }
+
+        // 各フレーズのレンダリングを行い、レンダリングされた音声が再生されるようにする
         const phrasesToBeRendered = new Map(
           [...state.phrases.entries()].filter(([, phrase]) => {
             return phrase.state === "WAITING_TO_BE_RENDERED";
