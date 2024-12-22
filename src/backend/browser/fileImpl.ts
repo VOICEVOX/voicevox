@@ -115,9 +115,17 @@ const getDirectoryHandleFromDirectoryPath = async (
 
 // NOTE: fixedExportEnabled が有効になっている GENERATE_AND_SAVE_AUDIO action では、ファイル名に加えディレクトリ名も指定された状態でfilePathが渡ってくる
 // また GENERATE_AND_SAVE_ALL_AUDIO action では fixedExportEnabled の有効の有無に関わらず、ディレクトリ名も指定された状態でfilePathが渡ってくる
+// showExportFilePicker での疑似パスが渡ってくる可能性もある。
 export const writeFileImpl: (typeof window)[typeof SandboxKey]["writeFile"] =
   async (obj: { filePath: string; buffer: ArrayBuffer }) => {
     const filePath = obj.filePath;
+
+    const fileHandle = fileHandleMap.get(filePath);
+    if (fileHandle != undefined) {
+      const writable = await fileHandle.createWritable();
+      await writable.write(obj.buffer);
+      return writable.close().then(() => success(undefined));
+    }
 
     if (!filePath.includes(path.SEPARATOR)) {
       const aTag = document.createElement("a");
@@ -222,3 +230,36 @@ export const readFileImpl = async (filePath: string) => {
   const buffer = await file.arrayBuffer();
   return success(buffer);
 };
+
+// ファイル選択ダイアログを開く
+// 返り値はファイルパスではなく、疑似パスを返す
+export const showExportFilePickerImpl: (typeof window)[typeof SandboxKey]["showExportFileDialog"] =
+  async (obj: {
+    defaultName?: string;
+    extensionName?: string;
+    extensions?: string[];
+    title: string;
+  }) => {
+    const handle = await showSaveFilePicker({
+      suggestedName: obj.defaultName,
+      types: [
+        {
+          description:
+            obj.extensionName ?? obj.extensions?.join("、") ?? "Text",
+          accept: obj.extensions
+            ? {
+                "application/octet-stream": obj.extensions.map(
+                  (ext) => `.${ext}`,
+                ),
+              }
+            : {
+                "plain/text": [".txt"],
+              },
+        },
+      ],
+    });
+    const fakePath = `<browser-dummy-${uuid4()}>-${handle.name}`;
+    fileHandleMap.set(fakePath, handle);
+
+    return fakePath;
+  };

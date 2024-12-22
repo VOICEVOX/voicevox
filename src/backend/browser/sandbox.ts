@@ -2,6 +2,7 @@ import { defaultEngine } from "./contract";
 import {
   checkFileExistsImpl,
   readFileImpl,
+  showExportFilePickerImpl,
   showOpenDirectoryDialogImpl,
   showOpenFilePickerImpl,
   writeFileImpl,
@@ -162,6 +163,15 @@ export const api: Sandbox = {
       ],
     });
     return fileHandle?.[0];
+  },
+  async showExportFileDialog(obj: {
+    defaultName?: string;
+    extensionName?: string;
+    extensions?: string[];
+    title: string;
+  }) {
+    const fileHandle = await showExportFilePickerImpl(obj);
+    return fileHandle;
   },
   writeFile(obj: { filePath: string; buffer: ArrayBuffer }) {
     return writeFileImpl(obj);

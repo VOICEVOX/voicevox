@@ -107,6 +107,8 @@ import { convertToWavFileData } from "@/helpers/convertToWavFileData";
 import { generateWriteErrorMessage } from "@/helpers/fileHelper";
 import path from "@/helpers/path";
 import { showAlertDialog } from "@/components/Dialog/Dialog";
+import { ufProjectFromVoicevox } from "@/sing/utaformatixProject/fromVoicevox";
+import { ExhaustiveError, UnreachableError } from "@/type/utility";
 
 const logger = createLogger("store/singing");
 
@@ -3212,6 +3214,171 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       );
       return Math.max(1, lastNoteEndTime + 1);
     },
+  },
+
+  EXPORT_SONG_PROJECT: {
+    action: createUILockAction(
+      async (
+        { state, getters, actions },
+        { fileType, fileTypeLabel },
+      ): Promise<SaveResultObject> => {
+        const fileBaseName = generateDefaultSongFileBaseName(
+          getters.PROJECT_NAME,
+          getters.SELECTED_TRACK,
+          getters.CHARACTER_INFO,
+        );
+        const project = ufProjectFromVoicevox(
+          {
+            tempos: state.tempos,
+            timeSignatures: state.timeSignatures,
+            tpqn: state.tpqn,
+            tracks: state.trackOrder.map((trackId) =>
+              getOrThrow(state.tracks, trackId),
+            ),
+          },
+          fileBaseName,
+        );
+
+        // 複数トラックかつ複数ファイルの形式はディレクトリを選択する
+        if (
+          state.trackOrder.length > 1 &&
+          ["ust", "xml", "musicxml"].includes(fileType)
+        ) {
+          const dirPath = await window.backend.showSaveDirectoryDialog({
+            title: "プロジェクトを書き出し",
+          });
+          if (!dirPath) {
+            return {
+              result: "CANCELED",
+              path: "",
+            };
+          }
+
+          let extension: string;
+          let tracksBytes: Uint8Array[];
+          switch (fileType) {
+            case "musicxml":
+              tracksBytes = await project.toMusicXml();
+              extension = "musicxml";
+              break;
+            case "ust":
+              tracksBytes = await project.toUst();
+              extension = "ust";
+              break;
+            default:
+              throw new UnreachableError(`Unexpected fileType: ${fileType}`);
+          }
+
+          let firstFilePath = "";
+          for (const [i, trackBytes] of tracksBytes.entries()) {
+            const track = getOrThrow(state.tracks, state.trackOrder[i]);
+            if (!track.singer) {
+              continue;
+            }
+            const characterInfo = getters.CHARACTER_INFO(
+              track.singer.engineId,
+              track.singer.styleId,
+            );
+            if (!characterInfo) {
+              continue;
+            }
+            const style = characterInfo.metas.styles.find(
+              (style) => style.styleId === track.singer?.styleId,
+            );
+            if (style == undefined) {
+              throw new Error("assert style != undefined");
+            }
+            const trackFileName = buildSongTrackAudioFileNameFromRawData(
+              state.savingSetting.songTrackFileNamePattern,
+              {
+                characterName: characterInfo.metas.speakerName,
+                index: i,
+                styleName: style.styleName || DEFAULT_STYLE_NAME,
+                date: currentDateString(),
+                projectName: getters.PROJECT_NAME ?? DEFAULT_PROJECT_NAME,
+                trackName: track.name,
+              },
+            );
+            let filePath = path.join(dirPath, `${trackFileName}.${extension}`);
+            if (state.savingSetting.avoidOverwrite) {
+              let tail = 1;
+              while (await window.backend.checkFileExists(filePath)) {
+                filePath = path.join(
+                  dirPath,
+                  `${trackFileName}[${tail}].${extension}`,
+                );
+                tail += 1;
+              }
+            }
+            if (i === 0) {
+              firstFilePath = filePath;
+            }
+
+            const result = await actions.EXPORT_FILE({
+              filePath,
+              content: trackBytes,
+            });
+            if (result.result !== "SUCCESS") {
+              return result;
+            }
+          }
+
+          return {
+            result: "SUCCESS",
+            path: firstFilePath,
+          };
+        } else {
+          let buffer: Uint8Array;
+          let extension: string;
+          switch (fileType) {
+            case "musicxml":
+              buffer = (await project.toMusicXml())[0];
+              extension = "musicxml";
+              break;
+            case "ust":
+              buffer = (await project.toUst())[0];
+              extension = "ust";
+              break;
+            case "smf":
+              buffer = await project.toStandardMid();
+              extension = "mid";
+              break;
+            case "ufdata":
+              buffer = await project.toUfData();
+              extension = "ufdata";
+              break;
+            default:
+              throw new ExhaustiveError(fileType);
+          }
+
+          let filePath = await window.backend.showExportFileDialog({
+            title: "プロジェクトを書き出し",
+            defaultName: fileBaseName,
+            extensionName: fileTypeLabel,
+            extensions: [extension],
+          });
+          if (!filePath) {
+            return {
+              result: "CANCELED",
+              path: "",
+            };
+          }
+          if (state.savingSetting.avoidOverwrite) {
+            let tail = 1;
+            const filePathWithoutExt = path.basename(filePath, `.${extension}`);
+            while (await window.backend.checkFileExists(filePath)) {
+              filePath = `${filePathWithoutExt}[${tail}].${extension}`;
+              tail += 1;
+            }
+          }
+
+          return await actions.EXPORT_FILE({
+            filePath,
+            content: buffer,
+          });
+        }
+      },
+    ),
   },
 });
 
