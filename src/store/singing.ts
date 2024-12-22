@@ -2441,24 +2441,34 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           }
         }
 
-        const phrases = new Map<PhraseKey, Phrase>();
+        const mergedPhrases = new Map<PhraseKey, Phrase>();
+        const newlyCreatedPhraseKeys = new Set<PhraseKey>();
         const disappearedPhraseKeys = new Set<PhraseKey>();
 
+        // 新しく作られたフレーズとstateにある既存のフレーズをマージする
+        // 新しく作られたフレーズと無くなったフレーズのキーのリスト（Set）も作成する
         for (const phraseKey of state.phrases.keys()) {
           if (!foundPhrases.has(phraseKey)) {
-            // 無くなったフレーズの場合
             disappearedPhraseKeys.add(phraseKey);
           }
         }
         for (const [phraseKey, foundPhrase] of foundPhrases) {
-          // 新しいフレーズまたは既存のフレーズの場合
           const existingPhrase = state.phrases.get(phraseKey);
-          const phrase =
-            existingPhrase == undefined
-              ? foundPhrase
-              : cloneWithUnwrapProxy(existingPhrase);
+          const isNewlyCreated = existingPhrase == undefined;
+          const phrase = isNewlyCreated
+            ? foundPhrase
+            : cloneWithUnwrapProxy(existingPhrase);
+
+          mergedPhrases.set(phraseKey, phrase);
+          if (isNewlyCreated) {
+            newlyCreatedPhraseKeys.add(phraseKey);
+          }
+        }
+
+        for (const [phraseKey, phrase] of mergedPhrases) {
           const trackId = phrase.trackId;
           const track = getOrThrow(snapshot.tracks, trackId);
+          const isNewlyCreated = newlyCreatedPhraseKeys.has(phraseKey);
 
           if (track.singer == undefined) {
             phrase.state = "SINGER_IS_NOT_SET";
@@ -2467,10 +2477,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             // phrase.stateがCOULD_NOT_RENDERだった場合は最初からレンダリングし直す
             // 既存のフレーズの場合は適切なレンダリング開始ステージを決定する
             let renderStartStageId: PhraseRenderStageId | undefined = undefined;
-            if (
-              existingPhrase == undefined ||
-              phrase.state === "COULD_NOT_RENDER"
-            ) {
+            if (isNewlyCreated || phrase.state === "COULD_NOT_RENDER") {
               renderStartStageId = stages[0].id;
             } else {
               for (const stage of stages) {
@@ -2487,7 +2494,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               phrase.state = "WAITING_TO_BE_RENDERED";
             }
           }
-          phrases.set(phraseKey, phrase);
         }
 
         // 無くなったフレーズのシーケンスを削除する
@@ -2498,7 +2504,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           }
         }
 
-        mutations.SET_PHRASES({ phrases });
+        mutations.SET_PHRASES({ phrases: mergedPhrases });
 
         logger.info("Phrases updated.");
 
