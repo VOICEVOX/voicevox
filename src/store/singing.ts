@@ -2465,33 +2465,39 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           }
         }
 
+        // 各フレーズのレンダリング開始ステージを決定する
+        // 新しいフレーズの場合は最初からレンダリングする
+        // phrase.stateがCOULD_NOT_RENDERだった場合は最初からレンダリングし直す
         for (const [phraseKey, phrase] of mergedPhrases) {
           const trackId = phrase.trackId;
           const track = getOrThrow(snapshot.tracks, trackId);
           const isNewlyCreated = newlyCreatedPhraseKeys.has(phraseKey);
 
           if (track.singer == undefined) {
-            phrase.state = "SINGER_IS_NOT_SET";
+            continue;
+          }
+          if (isNewlyCreated || phrase.state === "COULD_NOT_RENDER") {
+            renderStartStageIds.set(phraseKey, stages[0].id);
           } else {
-            // 新しいフレーズの場合は最初からレンダリングする
-            // phrase.stateがCOULD_NOT_RENDERだった場合は最初からレンダリングし直す
-            // 既存のフレーズの場合は適切なレンダリング開始ステージを決定する
-            let renderStartStageId: PhraseRenderStageId | undefined = undefined;
-            if (isNewlyCreated || phrase.state === "COULD_NOT_RENDER") {
-              renderStartStageId = stages[0].id;
-            } else {
-              for (const stage of stages) {
-                if (await stage.needsExecution(trackId, phraseKey, snapshot)) {
-                  renderStartStageId = stage.id;
-                  break;
-                }
+            for (const stage of stages) {
+              if (await stage.needsExecution(trackId, phraseKey, snapshot)) {
+                renderStartStageIds.set(phraseKey, stage.id);
+                break;
               }
             }
-            if (renderStartStageId == undefined) {
-              phrase.state = "PLAYABLE";
-            } else {
-              renderStartStageIds.set(phraseKey, renderStartStageId);
+          }
+        }
+
+        // phrase.stateを更新する
+        for (const [phraseKey, phrase] of mergedPhrases) {
+          const track = getOrThrow(snapshot.tracks, phrase.trackId);
+          if (track.singer == undefined) {
+            phrase.state = "SINGER_IS_NOT_SET";
+          } else {
+            if (renderStartStageIds.has(phraseKey)) {
               phrase.state = "WAITING_TO_BE_RENDERED";
+            } else {
+              phrase.state = "PLAYABLE";
             }
           }
         }
