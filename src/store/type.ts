@@ -1968,7 +1968,6 @@ export type UiStoreState = {
 } & DialogStates;
 
 export type DialogStates = {
-  isHelpDialogOpen: boolean;
   isSettingDialogOpen: boolean;
   isCharacterOrderDialogOpen: boolean;
   isDefaultStyleSelectDialogOpen: boolean;
