@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from "electron";
+import { contextBridge, ipcRenderer, webUtils } from "electron";
 import type { IpcRendererInvoke } from "./ipc";
 import {
   ConfigType,
@@ -229,6 +229,11 @@ const api: Sandbox = {
    */
   reloadApp: async ({ isMultiEngineOffMode }) => {
     await ipcRendererInvokeProxy.RELOAD_APP({ isMultiEngineOffMode });
+  },
+
+  /** webUtils.getPathForFileを呼ぶ */
+  getPathForFile: (file) => {
+    return webUtils.getPathForFile(file);
   },
 };
 
