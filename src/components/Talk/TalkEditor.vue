@@ -143,7 +143,6 @@ import {
   actionPostfixSelectNthCharacter,
   HotkeyActionNameType,
 } from "@/domain/hotkeyAction";
-import { webUtils } from "@/helpers/electronRenderer";
 import { isElectron } from "@/helpers/platform";
 
 const props = defineProps<{
