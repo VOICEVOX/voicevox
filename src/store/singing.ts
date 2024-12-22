@@ -1697,6 +1697,32 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const lastRestDurationSeconds = 0.5; // TODO: 設定できるようにする
       const fadeOutDurationSeconds = 0.15; // TODO: 設定できるようにする
 
+      /**
+       * レンダリング中に変更される可能性のあるデータのコピーを作成する。
+       */
+      const createSnapshot = () => {
+        return {
+          tpqn: state.tpqn,
+          tempos: cloneWithUnwrapProxy(state.tempos),
+          tracks: cloneWithUnwrapProxy(state.tracks),
+          trackOverlappingNoteIds: new Map(
+            [...state.tracks.keys()].map((trackId) => [
+              trackId,
+              getters.OVERLAPPING_NOTE_IDS(trackId),
+            ]),
+          ),
+          engineFrameRates: new Map(
+            Object.entries(state.engineManifests).map(
+              ([engineId, engineManifest]) => [
+                engineId as EngineId,
+                engineManifest.frameRate,
+              ],
+            ),
+          ),
+          editorFrameRate: state.editorFrameRate,
+        } as const;
+      };
+
       const calcPhraseFirstRestDuration = (
         prevPhraseLastNote: Note | undefined,
         phraseFirstNote: Note,
@@ -2392,28 +2418,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
       const render = async () => {
         const firstRestMinDurationSeconds = 0.12;
-
-        // レンダリング中に変更される可能性のあるデータのコピー
-        const snapshot = {
-          tpqn: state.tpqn,
-          tempos: cloneWithUnwrapProxy(state.tempos),
-          tracks: cloneWithUnwrapProxy(state.tracks),
-          trackOverlappingNoteIds: new Map(
-            [...state.tracks.keys()].map((trackId) => [
-              trackId,
-              getters.OVERLAPPING_NOTE_IDS(trackId),
-            ]),
-          ),
-          engineFrameRates: new Map(
-            Object.entries(state.engineManifests).map(
-              ([engineId, engineManifest]) => [
-                engineId as EngineId,
-                engineManifest.frameRate,
-              ],
-            ),
-          ),
-          editorFrameRate: state.editorFrameRate,
-        } as const;
+        const snapshot = createSnapshot();
 
         const renderStartStageIds = new Map<PhraseKey, PhraseRenderStageId>();
 
