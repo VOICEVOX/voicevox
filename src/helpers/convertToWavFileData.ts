@@ -1,4 +1,9 @@
-export const convertToWavFileData = (audioBuffer: AudioBuffer) => {
+export const convertToWavFileData = (
+  audioBuffer: Pick<
+    AudioBuffer,
+    "sampleRate" | "length" | "numberOfChannels" | "getChannelData"
+  >,
+) => {
   const bytesPerSample = 4; // Float32
   const formatCode = 3; // WAVE_FORMAT_IEEE_FLOAT
 
