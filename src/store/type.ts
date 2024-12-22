@@ -854,9 +854,9 @@ export type SongExportSetting = {
 };
 
 export type SongExportState =
-  | "ExportingAudio"
-  | "ExportingLabel"
-  | "NotExporting";
+  | "EXPORTING_AUDIO"
+  | "EXPORTING_LABEL"
+  | "NOT_EXPORTING";
 
 export type SingingStoreState = {
   tpqn: number; // Ticks Per Quarter Note

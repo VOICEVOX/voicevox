@@ -31,12 +31,12 @@ const nowRendering = computed(() => {
   return store.state.nowRendering;
 });
 const nowExporting = computed(() => {
-  return store.state.exportState !== "NotExporting";
+  return store.state.exportState !== "NOT_EXPORTING";
 });
 const exportingMediaName = computed(() => {
-  if (store.state.exportState === "ExportingAudio") {
+  if (store.state.exportState === "EXPORTING_AUDIO") {
     return "音声";
-  } else if (store.state.exportState === "ExportingLabel") {
+  } else if (store.state.exportState === "EXPORTING_LABEL") {
     return "labファイル";
   } else {
     return "";

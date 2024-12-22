@@ -792,7 +792,7 @@ export const singingStoreState: SingingStoreState = {
   startRenderingRequested: false,
   stopRenderingRequested: false,
   nowRendering: false,
-  exportState: "NotExporting",
+  exportState: "NOT_EXPORTING",
   cancellationOfExportRequested: false,
   isSongSidebarOpen: false,
 };
@@ -2764,16 +2764,16 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           return result;
         };
 
-        if (state.exportState !== "NotExporting") {
+        if (state.exportState !== "NOT_EXPORTING") {
           throw new Error("Export is in progress.");
         }
 
-        mutations.SET_EXPORT_STATE({ exportState: "ExportingAudio" });
+        mutations.SET_EXPORT_STATE({ exportState: "EXPORTING_AUDIO" });
         return exportAudioFile().finally(() => {
           mutations.SET_CANCELLATION_OF_EXPORT_REQUESTED({
             cancellationOfExportRequested: false,
           });
-          mutations.SET_EXPORT_STATE({ exportState: "NotExporting" });
+          mutations.SET_EXPORT_STATE({ exportState: "NOT_EXPORTING" });
         });
       },
     ),
@@ -2901,16 +2901,16 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           return { result: "SUCCESS", path: firstFilePath };
         };
 
-        if (state.exportState !== "NotExporting") {
+        if (state.exportState !== "NOT_EXPORTING") {
           throw new Error("Export is in progress.");
         }
 
-        mutations.SET_EXPORT_STATE({ exportState: "ExportingAudio" });
+        mutations.SET_EXPORT_STATE({ exportState: "EXPORTING_AUDIO" });
         return exportAudioFile().finally(() => {
           mutations.SET_CANCELLATION_OF_EXPORT_REQUESTED({
             cancellationOfExportRequested: false,
           });
-          mutations.SET_EXPORT_STATE({ exportState: "NotExporting" });
+          mutations.SET_EXPORT_STATE({ exportState: "NOT_EXPORTING" });
         });
       },
     ),
@@ -3113,16 +3113,16 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           return results;
         };
 
-        if (state.exportState !== "NotExporting") {
+        if (state.exportState !== "NOT_EXPORTING") {
           throw new Error("Export is in progress.");
         }
 
-        mutations.SET_EXPORT_STATE({ exportState: "ExportingLabel" });
+        mutations.SET_EXPORT_STATE({ exportState: "EXPORTING_LABEL" });
         return exportLabelFile().finally(() => {
           mutations.SET_CANCELLATION_OF_EXPORT_REQUESTED({
             cancellationOfExportRequested: false,
           });
-          mutations.SET_EXPORT_STATE({ exportState: "NotExporting" });
+          mutations.SET_EXPORT_STATE({ exportState: "NOT_EXPORTING" });
         });
       },
     ),
@@ -3161,8 +3161,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   CANCEL_EXPORT: {
     async action({ state, mutations }) {
-      if (state.exportState === "NotExporting") {
-        logger.warn("CANCEL_EXPORT on NotExporting");
+      if (state.exportState === "NOT_EXPORTING") {
+        logger.warn("CANCEL_EXPORT on NOT_EXPORTING");
         return;
       }
       mutations.SET_CANCELLATION_OF_EXPORT_REQUESTED({
