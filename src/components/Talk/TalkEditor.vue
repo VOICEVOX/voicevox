@@ -143,6 +143,8 @@ import {
   actionPostfixSelectNthCharacter,
   HotkeyActionNameType,
 } from "@/domain/hotkeyAction";
+import { webUtils } from "@/helpers/electronRenderer";
+import { isElectron } from "@/helpers/platform";
 
 const props = defineProps<{
   isEnginesReady: boolean;
@@ -574,13 +576,27 @@ const dragEventCounter = ref(0);
 const loadDraggedFile = (event: { dataTransfer: DataTransfer | null }) => {
   if (!event.dataTransfer || event.dataTransfer.files.length === 0) return;
   const file = event.dataTransfer.files[0];
+
+  // electronの場合のみファイルパスを取得できる
+  const filePath = isElectron ? window.backend.getPathForFile(file) : undefined;
+
   switch (path.extname(file.name)) {
     case ".txt":
-      void store.actions.COMMAND_IMPORT_FROM_FILE({ filePath: file.path });
+      if (filePath) {
+        void store.actions.COMMAND_IMPORT_FROM_FILE({ type: "path", filePath });
+      } else {
+        void store.actions.COMMAND_IMPORT_FROM_FILE({ type: "file", file });
+      }
       break;
+
     case ".vvproj":
-      void store.actions.LOAD_PROJECT_FILE({ filePath: file.path });
+      if (filePath) {
+        void store.actions.LOAD_PROJECT_FILE({ type: "path", filePath });
+      } else {
+        void store.actions.LOAD_PROJECT_FILE({ type: "file", file });
+      }
       break;
+
     default:
       void store.actions.SHOW_ALERT_DIALOG({
         title: "対応していないファイルです",

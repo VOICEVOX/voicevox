@@ -686,7 +686,12 @@ export type AudioCommandStoreTypes = {
     mutation: {
       audioKeyItemPairs: { audioItem: AudioItem; audioKey: AudioKey }[];
     };
-    action(payload: { filePath?: string }): void;
+    action(
+      payload:
+        | { type: "dialog" }
+        | { type: "path"; filePath: string }
+        | { type: "file"; file: File },
+    ): void;
   };
 
   COMMAND_PUT_TEXTS: {
@@ -1826,7 +1831,12 @@ export type ProjectStoreTypes = {
   };
 
   LOAD_PROJECT_FILE: {
-    action(payload: { filePath?: string }): boolean;
+    action(
+      payload:
+        | { type: "dialog" }
+        | { type: "path"; filePath: string }
+        | { type: "file"; file: File },
+    ): boolean;
   };
 
   SAVE_PROJECT_FILE: {

@@ -244,7 +244,7 @@ export type IpcIHData = {
  */
 export type IpcSOData = {
   LOAD_PROJECT_FILE: {
-    args: [obj: { filePath?: string }];
+    args: [obj: { filePath: string }];
     return: void;
   };
 
