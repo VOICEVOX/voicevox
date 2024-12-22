@@ -32,7 +32,7 @@
               icon="close"
               color="display"
               aria-label="ヘルプを閉じる"
-              @click="onDialogCancel"
+              @click="onDialogOK"
             />
           </QToolbar>
         </QHeader>
@@ -100,7 +100,7 @@ type PageSeparator = {
 };
 type PageData = PageItem | PageSeparator;
 
-const { dialogRef, onDialogCancel } = useDialogPluginComponent();
+const { dialogRef, onDialogOK } = useDialogPluginComponent();
 
 // エディタのアップデート確認
 const store = useStore();

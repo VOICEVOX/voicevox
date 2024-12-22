@@ -114,6 +114,7 @@ watch(titleText, (newTitle) => {
   window.document.title = newTitle;
 });
 
+// FIXME: この関数は不要なはず
 const closeAllDialog = () => {
   void store.actions.SET_DIALOG_OPEN({
     isSettingDialogOpen: false,
@@ -530,6 +531,7 @@ const menudata = computed<MenuItemData[]>(() => [
     type: "button",
     label: "ヘルプ",
     onClick: () => {
+      closeAllDialog();
       Dialog.create({
         component: HelpDialog,
       });
