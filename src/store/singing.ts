@@ -2446,8 +2446,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             firstRestMinDurationSeconds,
             trackId,
           );
-          for (const [phraseHash, phrase] of phrases) {
-            generatedPhrases.set(phraseHash, phrase);
+          for (const [phraseKey, phrase] of phrases) {
+            generatedPhrases.set(phraseKey, phrase);
           }
         }
 
