@@ -3054,6 +3054,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               phraseEndFrames,
             );
 
+            // 一番最初のpauseの開始フレームの値が0より大きい場合は0にする
+            if (entirePhonemeTimings.length === 0) {
+              throw new Error("entirePhonemeTimings.length is 0.");
+            }
+            if (entirePhonemeTimings[0].startFrame > 0) {
+              entirePhonemeTimings[0].startFrame = 0;
+            }
+
             // マイナス時間のものを除く（マイナス時間のところは書き出さない）
             for (const phonemeTiming of entirePhonemeTimings) {
               if (phonemeTiming.startFrame < 0) {
