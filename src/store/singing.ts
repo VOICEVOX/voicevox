@@ -1790,7 +1790,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         phraseFirstRestMinDurationSeconds: number,
         trackId: TrackId,
       ) => {
-        const generatePhrases = new Map<PhraseKey, Phrase>();
+        const generatedPhrases = new Map<PhraseKey, Phrase>();
 
         let phraseNotes: Note[] = [];
         let prevPhraseLastNote: Note | undefined = undefined;
@@ -1827,7 +1827,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               startTime: phraseStartTime,
               trackId,
             });
-            generatePhrases.set(phraseKey, {
+            generatedPhrases.set(phraseKey, {
               firstRestDuration: phraseFirstRestDuration,
               notes: phraseNotes,
               startTime: phraseStartTime,
@@ -1841,7 +1841,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             }
           }
         }
-        return generatePhrases;
+        return generatedPhrases;
       };
 
       const generateQuerySource = (
