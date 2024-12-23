@@ -157,7 +157,7 @@ const saveProjectAs = async () => {
 
 const importProject = () => {
   if (!uiLocked.value) {
-    void store.actions.LOAD_PROJECT_FILE({});
+    void store.actions.LOAD_PROJECT_FILE({ type: "dialog" });
   }
 };
 
@@ -198,6 +198,7 @@ const updateRecentProjects = async () => {
           label: projectFilePath,
           onClick: () => {
             void store.actions.LOAD_PROJECT_FILE({
+              type: "path",
               filePath: projectFilePath,
             });
           },
