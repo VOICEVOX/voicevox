@@ -171,7 +171,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
     action: createUILockAction(
       async (
         { actions, mutations, getters },
-        { filePath, confirm }: { filePath?: string; confirm?: boolean },
+        { filePath }: { filePath?: string },
       ) => {
         if (!filePath) {
           // Select and load a project File.
@@ -199,7 +199,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             projectJson: text,
           });
 
-          if (confirm !== false && getters.IS_EDITED) {
+          if (getters.IS_EDITED) {
             const result = await actions.SAVE_OR_DISCARD_PROJECT_FILE({
               additionalMessage:
                 "プロジェクトをロードすると現在のプロジェクトは破棄されます。",

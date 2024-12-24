@@ -1809,7 +1809,7 @@ export type ProjectStoreTypes = {
   };
 
   LOAD_PROJECT_FILE: {
-    action(payload: { filePath?: string; confirm?: boolean }): boolean;
+    action(payload: { filePath?: string }): boolean;
   };
 
   SAVE_PROJECT_FILE: {
