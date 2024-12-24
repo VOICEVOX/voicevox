@@ -308,6 +308,7 @@ import {
   MorphingInfo,
   Preset,
   PresetKey,
+  PresetSliderKey,
   Voice,
 } from "@/type/preload";
 import {
@@ -348,14 +349,12 @@ const selectedAudioKeys = computed(() =>
     : [props.activeAudioKey],
 );
 
-type ParameterKey = keyof Omit<Preset, "name" | "morphingInfo">; // NOTE: パラメーターの種類はPresetのキーと同じ
-
 /** パラメーターを制御するための元情報リスト */
 type ParameterConfig = {
   label: string;
   sliderProps: Omit<PreviewSliderHelperProps, "onChange">;
   onChange: PreviewSliderHelperProps["onChange"]; // NOTE: onChangeだけ使い回すので分離している
-  key: ParameterKey;
+  key: PresetSliderKey;
 };
 const parameterConfigs = computed<ParameterConfig[]>(() => [
   {
@@ -363,12 +362,12 @@ const parameterConfigs = computed<ParameterConfig[]>(() => [
     sliderProps: {
       modelValue: () => query.value?.speedScale ?? null,
       disable: () =>
-        uiLocked.value || supportedFeatures.value?.adjustSpeedScale === false,
-      max: SLIDER_PARAMETERS.SPEED.max,
-      min: SLIDER_PARAMETERS.SPEED.min,
-      step: SLIDER_PARAMETERS.SPEED.step,
-      scrollStep: SLIDER_PARAMETERS.SPEED.scrollStep,
-      scrollMinStep: SLIDER_PARAMETERS.SPEED.scrollMinStep,
+        uiLocked.value || !supportedFeatures.value?.adjustSpeedScale,
+      max: SLIDER_PARAMETERS.speedScale.max,
+      min: SLIDER_PARAMETERS.speedScale.min,
+      step: SLIDER_PARAMETERS.speedScale.step,
+      scrollStep: SLIDER_PARAMETERS.speedScale.scrollStep,
+      scrollMinStep: SLIDER_PARAMETERS.speedScale.scrollMinStep,
     },
     onChange: (speedScale: number) =>
       store.actions.COMMAND_MULTI_SET_AUDIO_SPEED_SCALE({
@@ -382,11 +381,11 @@ const parameterConfigs = computed<ParameterConfig[]>(() => [
     sliderProps: {
       modelValue: () => query.value?.pitchScale ?? null,
       disable: () =>
-        uiLocked.value || supportedFeatures.value?.adjustPitchScale === false,
-      max: SLIDER_PARAMETERS.PITCH.max,
-      min: SLIDER_PARAMETERS.PITCH.min,
-      step: SLIDER_PARAMETERS.PITCH.step,
-      scrollStep: SLIDER_PARAMETERS.PITCH.scrollStep,
+        uiLocked.value || !supportedFeatures.value?.adjustPitchScale,
+      max: SLIDER_PARAMETERS.pitchScale.max,
+      min: SLIDER_PARAMETERS.pitchScale.min,
+      step: SLIDER_PARAMETERS.pitchScale.step,
+      scrollStep: SLIDER_PARAMETERS.pitchScale.scrollStep,
     },
     onChange: (pitchScale: number) =>
       store.actions.COMMAND_MULTI_SET_AUDIO_PITCH_SCALE({
@@ -400,13 +399,12 @@ const parameterConfigs = computed<ParameterConfig[]>(() => [
     sliderProps: {
       modelValue: () => query.value?.intonationScale ?? null,
       disable: () =>
-        uiLocked.value ||
-        supportedFeatures.value?.adjustIntonationScale === false,
-      max: SLIDER_PARAMETERS.INTONATION.max,
-      min: SLIDER_PARAMETERS.INTONATION.min,
-      step: SLIDER_PARAMETERS.INTONATION.step,
-      scrollStep: SLIDER_PARAMETERS.INTONATION.scrollStep,
-      scrollMinStep: SLIDER_PARAMETERS.INTONATION.scrollMinStep,
+        uiLocked.value || !supportedFeatures.value?.adjustIntonationScale,
+      max: SLIDER_PARAMETERS.intonationScale.max,
+      min: SLIDER_PARAMETERS.intonationScale.min,
+      step: SLIDER_PARAMETERS.intonationScale.step,
+      scrollStep: SLIDER_PARAMETERS.intonationScale.scrollStep,
+      scrollMinStep: SLIDER_PARAMETERS.intonationScale.scrollMinStep,
     },
     onChange: (intonationScale: number) =>
       store.actions.COMMAND_MULTI_SET_AUDIO_INTONATION_SCALE({
@@ -420,12 +418,12 @@ const parameterConfigs = computed<ParameterConfig[]>(() => [
     sliderProps: {
       modelValue: () => query.value?.volumeScale ?? null,
       disable: () =>
-        uiLocked.value || supportedFeatures.value?.adjustVolumeScale === false,
-      max: SLIDER_PARAMETERS.VOLUME.max,
-      min: SLIDER_PARAMETERS.VOLUME.min,
-      step: SLIDER_PARAMETERS.VOLUME.step,
-      scrollStep: SLIDER_PARAMETERS.VOLUME.scrollStep,
-      scrollMinStep: SLIDER_PARAMETERS.VOLUME.scrollMinStep,
+        uiLocked.value || !supportedFeatures.value?.adjustVolumeScale,
+      max: SLIDER_PARAMETERS.volumeScale.max,
+      min: SLIDER_PARAMETERS.volumeScale.min,
+      step: SLIDER_PARAMETERS.volumeScale.step,
+      scrollStep: SLIDER_PARAMETERS.volumeScale.scrollStep,
+      scrollMinStep: SLIDER_PARAMETERS.volumeScale.scrollMinStep,
     },
     onChange: (volumeScale: number) =>
       store.actions.COMMAND_MULTI_SET_AUDIO_VOLUME_SCALE({
@@ -435,15 +433,16 @@ const parameterConfigs = computed<ParameterConfig[]>(() => [
     key: "volumeScale",
   },
   {
-    label: "文内無音倍率",
+    label: "間の長さ",
     sliderProps: {
       modelValue: () => query.value?.pauseLengthScale ?? null,
-      disable: () => uiLocked.value,
-      max: SLIDER_PARAMETERS.PAUSE_LENGTH_SCALE.max,
-      min: SLIDER_PARAMETERS.PAUSE_LENGTH_SCALE.min,
-      step: SLIDER_PARAMETERS.PAUSE_LENGTH_SCALE.step,
-      scrollStep: SLIDER_PARAMETERS.PAUSE_LENGTH_SCALE.scrollStep,
-      scrollMinStep: SLIDER_PARAMETERS.PAUSE_LENGTH_SCALE.scrollMinStep,
+      disable: () =>
+        uiLocked.value || !supportedFeatures.value?.adjustPauseLength,
+      max: SLIDER_PARAMETERS.pauseLengthScale.max,
+      min: SLIDER_PARAMETERS.pauseLengthScale.min,
+      step: SLIDER_PARAMETERS.pauseLengthScale.step,
+      scrollStep: SLIDER_PARAMETERS.pauseLengthScale.scrollStep,
+      scrollMinStep: SLIDER_PARAMETERS.pauseLengthScale.scrollMinStep,
     },
     onChange: (pauseLengthScale: number) =>
       store.actions.COMMAND_MULTI_SET_AUDIO_PAUSE_LENGTH_SCALE({
@@ -457,11 +456,11 @@ const parameterConfigs = computed<ParameterConfig[]>(() => [
     sliderProps: {
       modelValue: () => query.value?.prePhonemeLength ?? null,
       disable: () => uiLocked.value,
-      max: SLIDER_PARAMETERS.PRE_PHONEME_LENGTH.max,
-      min: SLIDER_PARAMETERS.PRE_PHONEME_LENGTH.min,
-      step: SLIDER_PARAMETERS.PRE_PHONEME_LENGTH.step,
-      scrollStep: SLIDER_PARAMETERS.PRE_PHONEME_LENGTH.scrollStep,
-      scrollMinStep: SLIDER_PARAMETERS.PRE_PHONEME_LENGTH.scrollMinStep,
+      max: SLIDER_PARAMETERS.prePhonemeLength.max,
+      min: SLIDER_PARAMETERS.prePhonemeLength.min,
+      step: SLIDER_PARAMETERS.prePhonemeLength.step,
+      scrollStep: SLIDER_PARAMETERS.prePhonemeLength.scrollStep,
+      scrollMinStep: SLIDER_PARAMETERS.prePhonemeLength.scrollMinStep,
     },
     onChange: (prePhonemeLength: number) =>
       store.actions.COMMAND_MULTI_SET_AUDIO_PRE_PHONEME_LENGTH({
@@ -475,11 +474,11 @@ const parameterConfigs = computed<ParameterConfig[]>(() => [
     sliderProps: {
       modelValue: () => query.value?.postPhonemeLength ?? null,
       disable: () => uiLocked.value,
-      max: SLIDER_PARAMETERS.POST_PHONEME_LENGTH.max,
-      min: SLIDER_PARAMETERS.POST_PHONEME_LENGTH.min,
-      step: SLIDER_PARAMETERS.POST_PHONEME_LENGTH.step,
-      scrollStep: SLIDER_PARAMETERS.POST_PHONEME_LENGTH.scrollStep,
-      scrollMinStep: SLIDER_PARAMETERS.POST_PHONEME_LENGTH.scrollMinStep,
+      max: SLIDER_PARAMETERS.postPhonemeLength.max,
+      min: SLIDER_PARAMETERS.postPhonemeLength.min,
+      step: SLIDER_PARAMETERS.postPhonemeLength.step,
+      scrollStep: SLIDER_PARAMETERS.postPhonemeLength.scrollStep,
+      scrollMinStep: SLIDER_PARAMETERS.postPhonemeLength.scrollMinStep,
     },
     onChange: (postPhonemeLength: number) =>
       store.actions.COMMAND_MULTI_SET_AUDIO_POST_PHONEME_LENGTH({
@@ -495,7 +494,7 @@ type Parameter = {
   label: string;
   slider: PreviewSliderHelper;
   onChange: PreviewSliderHelperProps["onChange"];
-  key: ParameterKey;
+  key: PresetSliderKey;
 };
 const parameters = computed<Parameter[]>(() =>
   parameterConfigs.value.map((parameterConfig) => ({
@@ -665,11 +664,11 @@ const morphingRateSlider = previewSliderHelper({
   modelValue: () => audioItem.value.morphingInfo?.rate ?? null,
   disable: () => uiLocked.value,
   onChange: setMorphingRate,
-  max: SLIDER_PARAMETERS.MORPHING_RATE.max,
-  min: SLIDER_PARAMETERS.MORPHING_RATE.min,
-  step: SLIDER_PARAMETERS.MORPHING_RATE.step,
-  scrollStep: SLIDER_PARAMETERS.MORPHING_RATE.scrollStep,
-  scrollMinStep: SLIDER_PARAMETERS.MORPHING_RATE.scrollMinStep,
+  max: SLIDER_PARAMETERS.morphingRate.max,
+  min: SLIDER_PARAMETERS.morphingRate.min,
+  step: SLIDER_PARAMETERS.morphingRate.step,
+  scrollStep: SLIDER_PARAMETERS.morphingRate.scrollStep,
+  scrollMinStep: SLIDER_PARAMETERS.morphingRate.scrollMinStep,
 });
 
 // プリセット

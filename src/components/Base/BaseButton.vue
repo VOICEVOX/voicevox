@@ -31,7 +31,7 @@ defineEmits<{
 
 .button {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   text-wrap: nowrap;
   height: vars.$size-control;

@@ -44,7 +44,7 @@
         />
         <QBtn
           padding="xs md"
-          label="ショートカットキーを未設定にする"
+          label="ショートカットキーを未割り当てにする"
           unelevated
           color="surface"
           textColor="display"
@@ -83,7 +83,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { HotkeyCombination } from "@/type/preload";
+import { HotkeyCombination } from "@/domain/hotkeyAction";
 
 const props = defineProps<{
   isHotkeyDialogOpened: boolean;

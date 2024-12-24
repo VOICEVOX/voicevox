@@ -209,10 +209,9 @@ watch(
 
 const applyDefaultSetting = async () => {
   const result = await store.actions.SHOW_CONFIRM_DIALOG({
-    title: "ツールバーをデフォルトに戻します",
-    message: "ツールバーをデフォルトに戻します。\nよろしいですか？",
-    actionName: "はい",
-    cancel: "いいえ",
+    title: "デフォルトに戻しますか？",
+    message: "ツールバーをデフォルトに戻します。",
+    actionName: "デフォルトに戻す",
   });
   if (result === "OK") {
     toolbarButtons.value = [...defaultSetting];
@@ -231,7 +230,7 @@ const finishOrNotDialog = async () => {
       title: "カスタマイズを終了しますか？",
       message:
         "保存せずに終了すると、カスタマイズは破棄されてリセットされます。",
-      actionName: "終了",
+      actionName: "終了する",
     });
     if (result === "OK") {
       toolbarButtons.value = [...store.state.toolbarSetting];

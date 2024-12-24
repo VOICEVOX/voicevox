@@ -8,7 +8,7 @@ test.beforeEach(gotoHome);
  * @param page
  */
 async function getSliderValues(page: Page) {
-  const moraTables = await page.locator(".mora-table").all();
+  const moraTables = await page.locator(".accent-phrase").all();
   return await Promise.all(
     moraTables.map(async (moraTable) => {
       const sliders = await moraTable.locator(".q-slider").all();
@@ -70,7 +70,7 @@ test("実験的機能：調整結果の保持", async ({ page }) => {
     [6.5, 6.5, 6.5, 6.5],
   ]);
   // 読点が追加されていることを確認
-  const firstAccentPhrase = page.locator(".mora-table").first();
+  const firstAccentPhrase = page.locator(".accent-phrase").first();
   expect(await firstAccentPhrase.getByText("、").isVisible()).toBeTruthy();
 
   // 句読点（pauseMora）だけの変更/削除：句読点部分以外は変わらない

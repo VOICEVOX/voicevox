@@ -23,6 +23,7 @@ $radius-2: calc(var(--radius-basis) * 2);
 
 $transition-duration: 100ms;
 
+$z-index-scrollbar: 100;
 $z-index-fullscreen-dialog: 1000;
 $z-index-dropdown: 1010;
 $z-index-fixed: 1020;
@@ -34,4 +35,5 @@ $z-index-sing-note: 10;
 $z-index-sing-note-lyric: 20;
 $z-index-sing-pitch: 30;
 $z-index-sing-playhead: 40;
-$z-index-sing-lyric-input: 50;
+$z-index-sing-tool-palette: 50;
+$z-index-sing-lyric-input: 60;

@@ -3,7 +3,12 @@ import { isVowel } from "./domain";
 import { Encoding as EncodingType } from "@/type/preload";
 import { FramePhoneme } from "@/openapi";
 
-export function generateWavFileData(audioBuffer: AudioBuffer) {
+export function generateWavFileData(
+  audioBuffer: Pick<
+    AudioBuffer,
+    "sampleRate" | "length" | "numberOfChannels" | "getChannelData"
+  >,
+) {
   const bytesPerSample = 4; // Float32
   const formatCode = 3; // WAVE_FORMAT_IEEE_FLOAT
 

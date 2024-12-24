@@ -28,7 +28,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
-import { useQuasar } from "quasar";
+import { useQuasar, Dialog } from "quasar";
 import { MenuItemData, MenuItemRoot } from "../type";
 import MenuButton from "../MenuButton.vue";
 import TitleBarButtons from "./TitleBarButtons.vue";
@@ -36,6 +36,7 @@ import TitleBarEditorSwitcher from "./TitleBarEditorSwitcher.vue";
 import { useStore } from "@/store";
 import { HotkeyAction, useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import { useEngineIcons } from "@/composables/useEngineIcons";
+import HelpDialog from "@/components/Dialog/HelpDialog/HelpDialog.vue";
 
 const props = defineProps<{
   /** 「ファイル」メニューのサブメニュー */
@@ -113,12 +114,10 @@ watch(titleText, (newTitle) => {
   window.document.title = newTitle;
 });
 
+// FIXME: この関数は不要なはず
 const closeAllDialog = () => {
   void store.actions.SET_DIALOG_OPEN({
     isSettingDialogOpen: false,
-  });
-  void store.actions.SET_DIALOG_OPEN({
-    isHelpDialogOpen: false,
   });
   void store.actions.SET_DIALOG_OPEN({
     isHotkeySettingDialogOpen: false,
@@ -134,10 +133,8 @@ const closeAllDialog = () => {
   });
 };
 
-const openHelpDialog = () => {
-  void store.actions.SET_DIALOG_OPEN({
-    isHelpDialogOpen: true,
-  });
+const toggleFullScreen = async () => {
+  window.backend.toggleFullScreen();
 };
 
 const createNewProject = async () => {
@@ -162,6 +159,21 @@ const importProject = () => {
   if (!uiLocked.value) {
     void store.actions.LOAD_PROJECT_FILE({});
   }
+};
+
+/** UIの拡大 */
+const zoomIn = async () => {
+  await store.actions.ZOOM_IN();
+};
+
+/** UIの縮小 */
+const zoomOut = async () => {
+  await store.actions.ZOOM_OUT();
+};
+
+/** UIの拡大率リセット */
+const zoomReset = async () => {
+  await store.actions.ZOOM_RESET();
 };
 
 // 「最近使ったプロジェクト」のメニュー
@@ -400,7 +412,40 @@ const menudata = computed<MenuItemData[]>(() => [
       closeAllDialog();
     },
     disableWhenUiLocked: false,
-    subMenu: [...props.viewSubMenuData],
+    subMenu: [
+      ...props.viewSubMenuData,
+      { type: "separator" },
+      {
+        type: "button",
+        label: "全画面表示を切り替え",
+        onClick: toggleFullScreen,
+        disableWhenUiLocked: false,
+      },
+      {
+        type: "button",
+        label: "拡大",
+        onClick: () => {
+          void zoomIn();
+        },
+        disableWhenUiLocked: false,
+      },
+      {
+        type: "button",
+        label: "縮小",
+        onClick: () => {
+          void zoomOut();
+        },
+        disableWhenUiLocked: false,
+      },
+      {
+        type: "button",
+        label: "拡大率のリセット",
+        onClick: () => {
+          void zoomReset();
+        },
+        disableWhenUiLocked: false,
+      },
+    ],
   },
   {
     type: "root",
@@ -486,11 +531,10 @@ const menudata = computed<MenuItemData[]>(() => [
     type: "button",
     label: "ヘルプ",
     onClick: () => {
-      if (store.state.isHelpDialogOpen) closeAllDialog();
-      else {
-        closeAllDialog();
-        openHelpDialog();
-      }
+      closeAllDialog();
+      Dialog.create({
+        component: HelpDialog,
+      });
     },
     disableWhenUiLocked: false,
   },
@@ -546,6 +590,22 @@ registerHotkeyForAllEditors({
 registerHotkeyForAllEditors({
   callback: importProject,
   name: "プロジェクトを読み込む",
+});
+registerHotkeyForAllEditors({
+  callback: toggleFullScreen,
+  name: "全画面表示を切り替え",
+});
+registerHotkeyForAllEditors({
+  callback: zoomIn,
+  name: "拡大",
+});
+registerHotkeyForAllEditors({
+  callback: zoomOut,
+  name: "縮小",
+});
+registerHotkeyForAllEditors({
+  callback: zoomReset,
+  name: "拡大率のリセット",
 });
 </script>
 
