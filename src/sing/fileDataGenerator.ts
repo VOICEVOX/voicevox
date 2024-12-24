@@ -1,9 +1,14 @@
-export const convertToWavFileData = (
+import Encoding from "encoding-japanese";
+import { isVowel } from "./domain";
+import { Encoding as EncodingType } from "@/type/preload";
+import { FramePhoneme } from "@/openapi";
+
+export function generateWavFileData(
   audioBuffer: Pick<
     AudioBuffer,
     "sampleRate" | "length" | "numberOfChannels" | "getChannelData"
   >,
-) => {
+) {
   const bytesPerSample = 4; // Float32
   const formatCode = 3; // WAVE_FORMAT_IEEE_FLOAT
 
@@ -58,4 +63,56 @@ export const convertToWavFileData = (
   }
 
   return new Uint8Array(buffer);
-};
+}
+
+export async function generateTextFileData(obj: {
+  text: string;
+  encoding?: EncodingType;
+}) {
+  obj.encoding ??= "UTF-8";
+
+  const textBlob = {
+    "UTF-8": (text: string) => {
+      const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
+      return new Blob([bom, text], {
+        type: "text/plain;charset=UTF-8",
+      });
+    },
+    Shift_JIS: (text: string) => {
+      const sjisArray = Encoding.convert(Encoding.stringToCode(text), {
+        to: "SJIS",
+        type: "arraybuffer",
+      });
+      return new Blob([new Uint8Array(sjisArray)], {
+        type: "text/plain;charset=Shift_JIS",
+      });
+    },
+  }[obj.encoding](obj.text);
+
+  return await textBlob.arrayBuffer();
+}
+
+export async function generateLabelFileData(
+  phonemes: FramePhoneme[],
+  frameRate: number,
+) {
+  let labString = "";
+  let timestamp = 0;
+
+  const writeLine = (phonemeLengthSeconds: number, phoneme: string) => {
+    labString += timestamp.toFixed() + " ";
+    timestamp += phonemeLengthSeconds * 10e7; // 100ns単位に変換
+    labString += timestamp.toFixed() + " ";
+    labString += phoneme + "\n";
+  };
+
+  for (const phoneme of phonemes) {
+    if (isVowel(phoneme.phoneme) && phoneme.phoneme !== "N") {
+      writeLine(phoneme.frameLength / frameRate, phoneme.phoneme.toLowerCase());
+    } else {
+      writeLine(phoneme.frameLength / frameRate, phoneme.phoneme);
+    }
+  }
+
+  return await generateTextFileData({ text: labString });
+}
