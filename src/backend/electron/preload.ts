@@ -75,6 +75,15 @@ const api: Sandbox = {
     });
   },
 
+  showExportFileDialog: ({ title, defaultName, extensionName, extensions }) => {
+    return ipcRendererInvokeProxy.SHOW_EXPORT_FILE_DIALOG({
+      title,
+      defaultName,
+      extensionName,
+      extensions,
+    });
+  },
+
   writeFile: async ({ filePath, buffer }) => {
     return await ipcRendererInvokeProxy.WRITE_FILE({ filePath, buffer });
   },

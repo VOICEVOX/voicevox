@@ -847,6 +847,9 @@ export type NoteEditTool = "SELECT_FIRST" | "EDIT_FIRST";
 // ピッチ編集ツール
 export type PitchEditTool = "DRAW" | "ERASE";
 
+// プロジェクトを書き出しできるファイル形式
+export type ExportSongProjectFileType = "ufdata" | "smf" | "ust" | "musicxml";
+
 export type TrackParameters = {
   gain: boolean;
   pan: boolean;
@@ -1353,6 +1356,13 @@ export type SingingStoreTypes = {
 
   APPLY_DEVICE_ID_TO_AUDIO_CONTEXT: {
     action(payload: { device: string }): void;
+  };
+
+  EXPORT_SONG_PROJECT: {
+    action(payload: {
+      fileType: ExportSongProjectFileType;
+      fileTypeLabel: string;
+    }): Promise<SaveResultObject>;
   };
 };
 

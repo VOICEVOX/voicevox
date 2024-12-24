@@ -1,7 +1,9 @@
 import { computed } from "vue";
+import { notifyResult } from "../Dialog/Dialog";
 import { useStore } from "@/store";
 import { MenuItemData } from "@/components/Menu/type";
 import { useRootMiscSetting } from "@/composables/useRootMiscSetting";
+import { ExportSongProjectFileType } from "@/store/type";
 
 export const useMenuBarData = () => {
   const store = useStore();
@@ -24,6 +26,23 @@ export const useMenuBarData = () => {
     });
   };
 
+  const exportSongProject = async (
+    fileType: ExportSongProjectFileType,
+    fileTypeLabel: string,
+  ) => {
+    if (uiLocked.value) return;
+    const result = await store.actions.EXPORT_SONG_PROJECT({
+      fileType,
+      fileTypeLabel,
+    });
+    notifyResult(
+      result,
+      "project",
+      store.actions,
+      store.state.confirmedTips.notifyOnGenerate,
+    );
+  };
+
   // 「ファイル」メニュー
   const fileSubMenuData = computed<MenuItemData[]>(() => [
     {
@@ -41,6 +60,26 @@ export const useMenuBarData = () => {
       onClick: () => {
         void importExternalSongProject();
       },
+      disableWhenUiLocked: true,
+    },
+    {
+      type: "root",
+      label: "エクスポート",
+      subMenu: (
+        [
+          ["smf", "MIDI (SMF)"],
+          ["musicxml", "MusicXML"],
+          ["ufdata", "Utaformatix"],
+          ["ust", "UTAU"],
+        ] satisfies [fileType: ExportSongProjectFileType, name: string][]
+      ).map(([fileType, label]) => ({
+        type: "button",
+        label,
+        onClick: () => {
+          void exportSongProject(fileType, label);
+        },
+        disableWhenUiLocked: true,
+      })),
       disableWhenUiLocked: true,
     },
   ]);

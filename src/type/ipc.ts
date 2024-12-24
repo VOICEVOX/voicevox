@@ -68,6 +68,18 @@ export type IpcIHData = {
     return?: string;
   };
 
+  SHOW_EXPORT_FILE_DIALOG: {
+    args: [
+      obj: {
+        title: string;
+        defaultName?: string;
+        extensionName?: string;
+        extensions?: string[];
+      },
+    ];
+    return?: string;
+  };
+
   SHOW_PROJECT_SAVE_DIALOG: {
     args: [obj: { title: string; defaultPath?: string }];
     return?: string;

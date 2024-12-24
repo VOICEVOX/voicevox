@@ -600,6 +600,20 @@ registerIpcMainHandle<IpcMainHandle>({
     })?.[0];
   },
 
+  SHOW_EXPORT_FILE_DIALOG: (
+    _,
+    { title, defaultName, extensionName, extensions },
+  ) => {
+    return dialog.showSaveDialogSync(win, {
+      title,
+      defaultPath: defaultName,
+      filters: [
+        { name: extensionName ?? "Text", extensions: extensions ?? ["txt"] },
+      ],
+      properties: ["createDirectory"],
+    });
+  },
+
   IS_AVAILABLE_GPU_MODE: () => {
     return hasSupportedGpu(process.platform);
   },

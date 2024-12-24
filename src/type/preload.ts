@@ -97,6 +97,12 @@ export interface Sandbox {
     name?: string;
     extensions?: string[];
   }): Promise<string | undefined>;
+  showExportFileDialog(obj: {
+    title: string;
+    defaultName?: string;
+    extensionName?: string;
+    extensions?: string[];
+  }): Promise<string | undefined>;
   writeFile(obj: {
     filePath: string;
     buffer: ArrayBuffer | Uint8Array;
