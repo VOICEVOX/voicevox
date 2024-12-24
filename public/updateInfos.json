@@ -1,5 +1,10 @@
 [
   {
+    "version": "0.22.1",
+    "descriptions": ["バグ修正"],
+    "contributors": ["Hiroshiba", "sevenc-nanashi"]
+  },
+  {
     "version": "0.22.0",
     "descriptions": [
       "トーク：間の長さの一括制御",
