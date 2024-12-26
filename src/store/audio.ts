@@ -1,4 +1,3 @@
-import Encoding from "encoding-japanese";
 import { createUILockAction, withProgress } from "./ui";
 import {
   AudioItem,
@@ -64,6 +63,7 @@ import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { UnreachableError } from "@/type/utility";
 import { errorToMessage } from "@/helpers/errorHelper";
 import path from "@/helpers/path";
+import { generateTextFileData } from "@/helpers/fileDataGenerator";
 
 function generateAudioKey() {
   return AudioKey(uuid4());
@@ -147,29 +147,13 @@ export async function writeTextFile(obj: {
   text: string;
   encoding?: EncodingType;
 }) {
-  obj.encoding ??= "UTF-8";
-
-  const textBlob = {
-    "UTF-8": (text: string) => {
-      const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
-      return new Blob([bom, text], {
-        type: "text/plain;charset=UTF-8",
-      });
-    },
-    Shift_JIS: (text: string) => {
-      const sjisArray = Encoding.convert(Encoding.stringToCode(text), {
-        to: "SJIS",
-        type: "arraybuffer",
-      });
-      return new Blob([new Uint8Array(sjisArray)], {
-        type: "text/plain;charset=Shift_JIS",
-      });
-    },
-  }[obj.encoding](obj.text);
-
+  const textFileData = await generateTextFileData({
+    text: obj.text,
+    encoding: obj.encoding,
+  });
   return window.backend.writeFile({
     filePath: obj.filePath,
-    buffer: await textBlob.arrayBuffer(),
+    buffer: textFileData,
   });
 }
 
