@@ -1165,6 +1165,14 @@ export type SingingStoreTypes = {
     }): SaveResultObject;
   };
 
+  GENERATE_FILE_PATH_FOR_TRACK_EXPORT: {
+    action(payload: {
+      trackId: TrackId;
+      directoryPath: string;
+      extension: string;
+    }): Promise<string>;
+  };
+
   EXPORT_FILE: {
     action(payload: {
       filePath: string;

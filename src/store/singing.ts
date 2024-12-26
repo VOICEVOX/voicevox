@@ -116,6 +116,7 @@ import {
 } from "@/sing/fileDataGenerator";
 import path from "@/helpers/path";
 import { showAlertDialog } from "@/components/Dialog/Dialog";
+import { generateUniqueFilePath } from "@/sing/fileUtils";
 
 const logger = createLogger("store/singing");
 
@@ -2862,7 +2863,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
           for (const [i, trackId] of state.trackOrder.entries()) {
             const track = getOrThrow(state.tracks, trackId);
-            if (!track.singer) {
+            if (track.singer == undefined) {
               continue;
             }
 
@@ -2874,43 +2875,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               continue;
             }
 
-            const characterInfo = getters.CHARACTER_INFO(
-              track.singer.engineId,
-              track.singer.styleId,
-            );
-            if (!characterInfo) {
-              continue;
-            }
-
-            const style = characterInfo.metas.styles.find(
-              (style) => style.styleId === track.singer?.styleId,
-            );
-            if (style == undefined)
-              throw new Error("assert style != undefined");
-
-            const styleName = style.styleName || DEFAULT_STYLE_NAME;
-            const projectName = getters.PROJECT_NAME ?? DEFAULT_PROJECT_NAME;
-
-            const trackFileName = buildSongTrackAudioFileNameFromRawData(
-              state.savingSetting.songTrackFileNamePattern,
-              {
-                characterName: characterInfo.metas.speakerName,
-                index: i,
-                styleName,
-                date: currentDateString(),
-                projectName,
-                trackName: track.name,
-              },
-            );
-            let filePath = path.join(dirPath, `${trackFileName}.wav`);
-            if (state.savingSetting.avoidOverwrite) {
-              let tail = 1;
-              const pathWithoutExt = filePath.slice(0, -4);
-              while (await window.backend.checkFileExists(filePath)) {
-                filePath = `${pathWithoutExt}[${tail}].wav`;
-                tail += 1;
-              }
-            }
+            const filePath = await actions.GENERATE_FILE_PATH_FOR_TRACK_EXPORT({
+              trackId,
+              directoryPath: dirPath,
+              extension: "wav",
+            });
 
             const audioBuffer = await offlineRenderTracks(
               numberOfChannels,
@@ -2962,7 +2931,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   EXPORT_LABEL_FILES: {
     action: createUILockAction(
-      async ({ actions, mutations, state, getters }, { dirPath }) => {
+      async ({ actions, mutations, state }, { dirPath }) => {
         const exportLabelFile = async () => {
           if (state.nowPlaying) {
             await actions.SING_STOP_AUDIO();
@@ -2996,50 +2965,17 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
           const results: SaveResultObject[] = [];
 
-          for (const [i, trackId] of state.trackOrder.entries()) {
+          for (const trackId of state.tracks.keys()) {
             const track = getOrThrow(state.tracks, trackId);
-            if (!track.singer) {
+            if (track.singer == undefined) {
               continue;
             }
 
-            const characterInfo = getters.CHARACTER_INFO(
-              track.singer.engineId,
-              track.singer.styleId,
-            );
-            if (!characterInfo) {
-              continue;
-            }
-
-            const style = characterInfo.metas.styles.find(
-              (style) => style.styleId === track.singer?.styleId,
-            );
-            if (style == undefined) {
-              throw new Error("assert style != undefined");
-            }
-
-            const styleName = style.styleName || DEFAULT_STYLE_NAME;
-            const projectName = getters.PROJECT_NAME ?? DEFAULT_PROJECT_NAME;
-
-            const trackFileName = buildSongTrackAudioFileNameFromRawData(
-              state.savingSetting.songTrackFileNamePattern,
-              {
-                characterName: characterInfo.metas.speakerName,
-                index: i,
-                styleName,
-                date: currentDateString(),
-                projectName,
-                trackName: track.name,
-              },
-            );
-            let filePath = path.join(dirPath, `${trackFileName}.lab`);
-            if (state.savingSetting.avoidOverwrite) {
-              let tail = 1;
-              const pathWithoutExt = filePath.slice(0, -4);
-              while (await window.backend.checkFileExists(filePath)) {
-                filePath = `${pathWithoutExt}[${tail}].lab`;
-                tail += 1;
-              }
-            }
+            const filePath = await actions.GENERATE_FILE_PATH_FOR_TRACK_EXPORT({
+              trackId,
+              directoryPath: dirPath,
+              extension: "lab",
+            });
 
             const frameRate = state.editorFrameRate;
             const phrases = [...state.phrases.values()]
@@ -3178,6 +3114,61 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         });
       },
     ),
+  },
+
+  GENERATE_FILE_PATH_FOR_TRACK_EXPORT: {
+    async action({ state, getters }, { trackId, directoryPath, extension }) {
+      const track = getOrThrow(state.tracks, trackId);
+
+      const trackSinger = track.singer;
+      if (trackSinger == undefined) {
+        throw new Error("trackSinger is undefined.");
+      }
+
+      const characterInfo = getters.CHARACTER_INFO(
+        trackSinger.engineId,
+        trackSinger.styleId,
+      );
+      if (characterInfo == undefined) {
+        // NOTE: characterInfoが存在しないというのは起こり得ないはずなので、存在しなかった場合はエラー
+        throw new Error(
+          "CharacterInfo corresponding to engineId and styleId does not exist.",
+        );
+      }
+
+      const style = characterInfo.metas.styles.find(
+        (style) => style.styleId === trackSinger.styleId,
+      );
+      if (style == undefined) {
+        throw new Error("assert style != undefined");
+      }
+
+      const characterName = characterInfo.metas.speakerName;
+      const styleName = style.styleName ?? DEFAULT_STYLE_NAME;
+      const projectName = getters.PROJECT_NAME ?? DEFAULT_PROJECT_NAME;
+      const trackIndex = state.trackOrder.findIndex(
+        (value) => value === trackId,
+      );
+
+      const fileName = buildSongTrackAudioFileNameFromRawData(
+        state.savingSetting.songTrackFileNamePattern,
+        {
+          characterName,
+          index: trackIndex,
+          styleName,
+          date: currentDateString(),
+          projectName,
+          trackName: track.name,
+        },
+      );
+      const filePathWithoutExt = path.join(directoryPath, fileName);
+
+      if (state.savingSetting.avoidOverwrite) {
+        return await generateUniqueFilePath(filePathWithoutExt, extension);
+      } else {
+        return `${filePathWithoutExt}.${extension}`;
+      }
+    },
   },
 
   EXPORT_FILE: {
