@@ -9,15 +9,14 @@ import {
 import { getConfigManager } from "./browserConfig";
 import { IpcSOData } from "@/type/ipc";
 import {
-  defaultHotkeySettings,
   defaultToolbarButtonSetting,
   EngineId,
   EngineSettingType,
   EngineSettings,
-  HotkeySettingType,
   Sandbox,
 } from "@/type/preload";
 import { AssetTextFileNames } from "@/type/staticResources";
+import { HotkeySettingType } from "@/domain/hotkeyAction";
 
 const toStaticPath = (fileName: string) =>
   `${import.meta.env.BASE_URL}/${fileName}`.replaceAll(/\/\/+/g, "/");
@@ -246,9 +245,6 @@ export const api: Sandbox = {
   },
   changePinWindow() {
     throw new Error(`Not supported on Browser version: changePinWindow`);
-  },
-  getDefaultHotkeySettings() {
-    return Promise.resolve(defaultHotkeySettings);
   },
   getDefaultToolbarSetting() {
     return Promise.resolve(defaultToolbarButtonSetting);

@@ -5,7 +5,6 @@ import {
   EngineId,
   EngineInfo,
   EngineSettingType,
-  HotkeySettingType,
   MessageBoxReturnValue,
   NativeThemeType,
   TextAsset,
@@ -13,6 +12,7 @@ import {
 } from "@/type/preload";
 import { AltPortInfos } from "@/store/type";
 import { Result } from "@/type/result";
+import { HotkeySettingType } from "@/domain/hotkeyAction";
 
 /**
  * invoke, handle
@@ -175,11 +175,6 @@ export type IpcIHData = {
 
   HOTKEY_SETTINGS: {
     args: [obj: { newData?: HotkeySettingType }];
-    return: HotkeySettingType[];
-  };
-
-  GET_DEFAULT_HOTKEY_SETTINGS: {
-    args: [];
     return: HotkeySettingType[];
   };
 

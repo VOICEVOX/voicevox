@@ -1,6 +1,7 @@
 import * as diff from "fast-array-diff";
 import {
   CharacterInfo,
+  PresetSliderKey,
   StyleInfo,
   StyleType,
   ToolbarButtonTagType,
@@ -40,14 +41,23 @@ export function sanitizeFileName(fileName: string): string {
   return fileName.replace(sanitizer, "");
 }
 
+type SliderParameter = {
+  max: () => number;
+  min: () => number;
+  step: () => number;
+  scrollStep: () => number;
+  scrollMinStep?: () => number;
+};
+
 /**
  * AudioInfoコンポーネントに表示されるパラメータ
+ * TODO: src/domain/talk.ts辺りに切り出す
  */
-export const SLIDER_PARAMETERS = {
+export const SLIDER_PARAMETERS: Record<PresetSliderKey, SliderParameter> = {
   /**
    * 話速パラメータの定義
    */
-  SPEED: {
+  speedScale: {
     max: () => 2,
     min: () => 0.5,
     step: () => 0.01,
@@ -57,7 +67,7 @@ export const SLIDER_PARAMETERS = {
   /**
    * 音高パラメータの定義
    */
-  PITCH: {
+  pitchScale: {
     max: () => 0.15,
     min: () => -0.15,
     step: () => 0.01,
@@ -66,7 +76,7 @@ export const SLIDER_PARAMETERS = {
   /**
    *  抑揚パラメータの定義
    */
-  INTONATION: {
+  intonationScale: {
     max: () => 2,
     min: () => 0,
     step: () => 0.01,
@@ -76,7 +86,17 @@ export const SLIDER_PARAMETERS = {
   /**
    *  音量パラメータの定義
    */
-  VOLUME: {
+  volumeScale: {
+    max: () => 2,
+    min: () => 0,
+    step: () => 0.01,
+    scrollStep: () => 0.1,
+    scrollMinStep: () => 0.01,
+  },
+  /**
+   *  文内無音(倍率)パラメータの定義
+   */
+  pauseLengthScale: {
     max: () => 2,
     min: () => 0,
     step: () => 0.01,
@@ -86,7 +106,7 @@ export const SLIDER_PARAMETERS = {
   /**
    *  開始無音パラメータの定義
    */
-  PRE_PHONEME_LENGTH: {
+  prePhonemeLength: {
     max: () => 1.5,
     min: () => 0,
     step: () => 0.01,
@@ -96,18 +116,8 @@ export const SLIDER_PARAMETERS = {
   /**
    *  終了無音パラメータの定義
    */
-  POST_PHONEME_LENGTH: {
+  postPhonemeLength: {
     max: () => 1.5,
-    min: () => 0,
-    step: () => 0.01,
-    scrollStep: () => 0.1,
-    scrollMinStep: () => 0.01,
-  },
-  /**
-   *  文内無音(倍率)パラメータの定義
-   */
-  PAUSE_LENGTH_SCALE: {
-    max: () => 2,
     min: () => 0,
     step: () => 0.01,
     scrollStep: () => 0.1,
@@ -116,7 +126,7 @@ export const SLIDER_PARAMETERS = {
   /**
    *  モーフィングレートパラメータの定義
    */
-  MORPHING_RATE: {
+  morphingRate: {
     max: () => 1,
     min: () => 0,
     step: () => 0.01,

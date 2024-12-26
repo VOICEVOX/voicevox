@@ -26,7 +26,6 @@ import {
   DefaultStyleId,
   AcceptRetrieveTelemetryStatus,
   AcceptTermsStatus,
-  HotkeySettingType,
   MoraDataType,
   SavingSetting,
   ThemeConf,
@@ -72,6 +71,7 @@ import {
   timeSignatureSchema,
   trackSchema,
 } from "@/domain/project/schema";
+import { HotkeySettingType } from "@/domain/hotkeyAction";
 
 /**
  * エディタ用のAudioQuery
@@ -1638,8 +1638,12 @@ export type EngineStoreTypes = {
     action(payload: { engineId: EngineId; styleId: StyleId }): Promise<boolean>;
   };
 
-  INITIALIZE_ENGINE_SPEAKER: {
-    action(payload: { engineId: EngineId; styleId: StyleId }): void;
+  INITIALIZE_ENGINE_CHARACTER: {
+    action(payload: {
+      engineId: EngineId;
+      styleId: StyleId;
+      uiLock: boolean;
+    }): void;
   };
 
   VALIDATE_ENGINE_DIR: {
@@ -1964,7 +1968,6 @@ export type UiStoreState = {
 } & DialogStates;
 
 export type DialogStates = {
-  isHelpDialogOpen: boolean;
   isSettingDialogOpen: boolean;
   isCharacterOrderDialogOpen: boolean;
   isDefaultStyleSelectDialogOpen: boolean;
