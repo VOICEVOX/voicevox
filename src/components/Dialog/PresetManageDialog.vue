@@ -131,9 +131,9 @@
                       </div>
                       <!-- NOTE: プルリクエスト分割のため、まずは動かないスライダーが実装されている。変更機能も実装予定。 -->
                       <BaseSlider
-                        :min="0"
-                        :max="1"
-                        :step="0.01"
+                        :min="SLIDER_PARAMETERS.morphingRate.min()"
+                        :max="SLIDER_PARAMETERS.morphingRate.max()"
+                        :step="SLIDER_PARAMETERS.morphingRate.step()"
                         :modelValue="selectedPreset.morphingInfo.rate"
                       />
                     </div>
