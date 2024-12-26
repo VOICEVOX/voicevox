@@ -1,5 +1,10 @@
 [
   {
+    "version": "0.22.2",
+    "descriptions": ["キャラクター「中部つるぎ」を追加"],
+    "contributors": []
+  },
+  {
     "version": "0.22.1",
     "descriptions": ["バグ修正"],
     "contributors": ["Hiroshiba", "sevenc-nanashi"]
