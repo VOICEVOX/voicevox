@@ -5,7 +5,7 @@
  */
 
 import { FrameAudioQuery } from "@/openapi";
-import { generateWavFileData } from "@/sing/fileDataGenerator";
+import { generateWavFileData } from "@/helpers/fileDataGenerator";
 import { applyGaussianFilter } from "@/sing/utility";
 
 /** 0~1を返す疑似乱数生成器 */

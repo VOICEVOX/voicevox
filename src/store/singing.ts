@@ -113,7 +113,7 @@ import { generateWriteErrorMessage } from "@/helpers/fileHelper";
 import {
   generateLabelFileData,
   generateWavFileData,
-} from "@/sing/fileDataGenerator";
+} from "@/helpers/fileDataGenerator";
 import path from "@/helpers/path";
 import { showAlertDialog } from "@/components/Dialog/Dialog";
 import { generateUniqueFilePath } from "@/sing/fileUtils";
