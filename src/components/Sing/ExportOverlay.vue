@@ -1,19 +1,19 @@
 <template>
-  <div v-if="nowExporting" class="export-overlay">
+  <div v-if="exportingState.now" class="export-overlay">
     <div>
       <QSpinner color="primary" size="2.5rem" />
       <div class="q-mt-xs">
         {{
           nowRendering
             ? "レンダリング中・・・"
-            : `${exportingMediaName}を書き出し中・・・`
+            : `${exportingState.name}を書き出し中・・・`
         }}
       </div>
       <!-- NOTE: 書き出しのキャンセルはレンダリング中にのみ可能 -->
       <QBtn
         v-if="nowRendering"
         padding="xs md"
-        :label="`${exportingMediaName}の書き出しをキャンセル`"
+        :label="`${exportingState.name}の書き出しをキャンセル`"
         class="q-mt-sm"
         outline
         @click="cancelExport"
@@ -23,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed } from "vue";
 import { useStore } from "@/store";
 import { ExhaustiveError } from "@/type/utility";
 
@@ -32,30 +32,22 @@ const store = useStore();
 const nowRendering = computed(() => {
   return store.state.nowRendering;
 });
-const nowExporting = computed(() => {
-  return store.state.exportState !== "NOT_EXPORTING";
+
+const exportingState = computed(() => {
+  if (store.state.exportState === "NOT_EXPORTING") {
+    return { now: false };
+  } else if (store.state.exportState === "EXPORTING_AUDIO") {
+    return { now: true, name: "音声" };
+  } else if (store.state.exportState === "EXPORTING_LABEL") {
+    return { now: true, name: "labファイル" };
+  } else {
+    throw new ExhaustiveError(store.state.exportState);
+  }
 });
 
 const cancelExport = () => {
   void store.actions.CANCEL_EXPORT();
 };
-
-const exportingMediaName = ref("");
-
-watch(
-  () => store.state.exportState,
-  () => {
-    if (store.state.exportState === "NOT_EXPORTING") {
-      return;
-    } else if (store.state.exportState === "EXPORTING_AUDIO") {
-      exportingMediaName.value = "音声";
-    } else if (store.state.exportState === "EXPORTING_LABEL") {
-      exportingMediaName.value = "labファイル";
-    } else {
-      throw new ExhaustiveError(store.state.exportState);
-    }
-  },
-);
 </script>
 
 <style scoped lang="scss">
