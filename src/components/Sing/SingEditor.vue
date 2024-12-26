@@ -119,22 +119,4 @@ onetimeWatch(
   overflow: hidden;
   position: relative;
 }
-
-.exporting-dialog {
-  background-color: rgba(colors.$display-rgb, 0.15);
-  position: absolute;
-  inset: 0;
-  z-index: 10;
-  display: flex;
-  text-align: center;
-  align-items: center;
-  justify-content: center;
-
-  > div {
-    color: colors.$display;
-    background: colors.$surface;
-    border-radius: 6px;
-    padding: 14px;
-  }
-}
 </style>
