@@ -9,6 +9,7 @@
             : `${exportingMediaName}を書き出し中・・・`
         }}
       </div>
+      <!-- NOTE: 書き出しのキャンセルはレンダリング中にのみ可能 -->
       <QBtn
         v-if="nowRendering"
         padding="xs md"
