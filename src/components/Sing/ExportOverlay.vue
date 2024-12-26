@@ -22,8 +22,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref, watch } from "vue";
 import { useStore } from "@/store";
+import { ExhaustiveError } from "@/type/utility";
 
 const store = useStore();
 
@@ -33,19 +34,27 @@ const nowRendering = computed(() => {
 const nowExporting = computed(() => {
   return store.state.exportState !== "NOT_EXPORTING";
 });
-const exportingMediaName = computed(() => {
-  if (store.state.exportState === "EXPORTING_AUDIO") {
-    return "音声";
-  } else if (store.state.exportState === "EXPORTING_LABEL") {
-    return "labファイル";
-  } else {
-    return "";
-  }
-});
 
 const cancelExport = () => {
   void store.actions.CANCEL_EXPORT();
 };
+
+const exportingMediaName = ref("");
+
+watch(
+  () => store.state.exportState,
+  () => {
+    if (store.state.exportState === "NOT_EXPORTING") {
+      return;
+    } else if (store.state.exportState === "EXPORTING_AUDIO") {
+      exportingMediaName.value = "音声";
+    } else if (store.state.exportState === "EXPORTING_LABEL") {
+      exportingMediaName.value = "labファイル";
+    } else {
+      throw new ExhaustiveError(store.state.exportState);
+    }
+  },
+);
 </script>
 
 <style scoped lang="scss">
