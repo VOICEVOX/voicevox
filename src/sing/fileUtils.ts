@@ -4,12 +4,12 @@
  */
 export async function generateUniqueFilePath(
   filePathWithoutExtension: string,
-  extention: string,
+  extension: string,
 ) {
-  let filePath = `${filePathWithoutExtension}.${extention}`;
+  let filePath = `${filePathWithoutExtension}.${extension}`;
   let tail = 1;
   while (await window.backend.checkFileExists(filePath)) {
-    filePath = `${filePathWithoutExtension}[${tail}].${extention}`;
+    filePath = `${filePathWithoutExtension}[${tail}].${extension}`;
     tail += 1;
   }
   return filePath;
