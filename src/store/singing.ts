@@ -32,6 +32,7 @@ import {
   currentDateString,
   DEFAULT_PROJECT_NAME,
   DEFAULT_STYLE_NAME,
+  generateLabelFileDataFromFramePhonemes,
   sanitizeFileName,
 } from "./utility";
 import {
@@ -111,7 +112,6 @@ import { ufProjectToVoicevox } from "@/sing/utaformatixProject/toVoicevox";
 import { uuid4 } from "@/helpers/random";
 import { generateWriteErrorMessage } from "@/helpers/fileHelper";
 import {
-  generateLabelFileData,
   generateWavFileData,
 } from "@/helpers/fileDataGenerator";
 import path from "@/helpers/path";
@@ -3064,7 +3064,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             const entirePhonemes = phonemeTimingsToPhonemes(
               filteredEntirePhonemeTimings,
             );
-            const labFileData = await generateLabelFileData(
+            const labFileData = await generateLabelFileDataFromFramePhonemes(
               entirePhonemes,
               frameRate,
             );

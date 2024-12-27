@@ -91,28 +91,3 @@ export async function generateTextFileData(obj: {
 
   return await textBlob.arrayBuffer();
 }
-
-export async function generateLabelFileData(
-  phonemes: FramePhoneme[],
-  frameRate: number,
-) {
-  let labString = "";
-  let timestamp = 0;
-
-  const writeLine = (phonemeLengthSeconds: number, phoneme: string) => {
-    labString += timestamp.toFixed() + " ";
-    timestamp += phonemeLengthSeconds * 1e7; // 100ns単位に変換
-    labString += timestamp.toFixed() + " ";
-    labString += phoneme + "\n";
-  };
-
-  for (const phoneme of phonemes) {
-    if (isVowel(phoneme.phoneme) && phoneme.phoneme !== "N") {
-      writeLine(phoneme.frameLength / frameRate, phoneme.phoneme.toLowerCase());
-    } else {
-      writeLine(phoneme.frameLength / frameRate, phoneme.phoneme);
-    }
-  }
-
-  return await generateTextFileData({ text: labString });
-}
