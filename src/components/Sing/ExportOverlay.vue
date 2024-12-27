@@ -27,13 +27,18 @@ import { computed } from "vue";
 import { useStore } from "@/store";
 import { ExhaustiveError } from "@/type/utility";
 
+type ExportingInfo =
+  | { nowExporting: false }
+  | { nowExporting: true; mediaName: "音声" }
+  | { nowExporting: true; mediaName: "labファイル" };
+
 const store = useStore();
 
 const nowRendering = computed(() => {
   return store.state.nowRendering;
 });
 
-const exportingInfo = computed(() => {
+const exportingInfo = computed((): ExportingInfo => {
   if (store.state.exportState === "NOT_EXPORTING") {
     return { nowExporting: false };
   } else if (store.state.exportState === "EXPORTING_AUDIO") {
