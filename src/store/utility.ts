@@ -6,10 +6,11 @@ import {
   StyleType,
   ToolbarButtonTagType,
 } from "@/type/preload";
-import { AccentPhrase, Mora } from "@/openapi";
+import { AccentPhrase, FramePhoneme, Mora } from "@/openapi";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
-import { DEFAULT_TRACK_NAME } from "@/sing/domain";
+import { DEFAULT_TRACK_NAME, isVowel } from "@/sing/domain";
 import { isMac } from "@/helpers/platform";
+import { generateTextFileData } from "@/helpers/fileDataGenerator";
 
 export const DEFAULT_STYLE_NAME = "ノーマル";
 export const DEFAULT_PROJECT_NAME = "Untitled";
@@ -513,3 +514,28 @@ export const filterCharacterInfosByStyleType = (
 
   return withoutEmptyStyles;
 };
+
+export async function generateLabelFileDataFromFramePhonemes(
+  phonemes: FramePhoneme[],
+  frameRate: number,
+) {
+  let labString = "";
+  let timestamp = 0;
+
+  const writeLine = (phonemeLengthSeconds: number, phoneme: string) => {
+    labString += timestamp.toFixed() + " ";
+    timestamp += phonemeLengthSeconds * 1e7; // 100ns単位に変換
+    labString += timestamp.toFixed() + " ";
+    labString += phoneme + "\n";
+  };
+
+  for (const phoneme of phonemes) {
+    if (isVowel(phoneme.phoneme) && phoneme.phoneme !== "N") {
+      writeLine(phoneme.frameLength / frameRate, phoneme.phoneme.toLowerCase());
+    } else {
+      writeLine(phoneme.frameLength / frameRate, phoneme.phoneme);
+    }
+  }
+
+  return await generateTextFileData({ text: labString });
+}

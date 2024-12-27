@@ -2,6 +2,7 @@
 @mixin on-focus {
   outline-color: #a5d4ad;
   outline-width: 2px;
+  outline-style: solid;
 }
 
 // 見出し1(h1)用のスタイル
