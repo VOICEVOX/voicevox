@@ -1137,11 +1137,6 @@ export type SingingStoreTypes = {
     action(payload: { sequencerPitchTool: PitchEditTool }): void;
   };
 
-  SET_IS_DRAG: {
-    mutation: { isDrag: boolean };
-    action(payload: { isDrag: boolean }): void;
-  };
-
   EXPORT_AUDIO_FILE: {
     action(payload: {
       filePath?: string;

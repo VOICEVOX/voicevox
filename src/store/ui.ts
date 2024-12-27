@@ -8,6 +8,7 @@ import {
   AllActions,
   AllGetters,
   AllMutations,
+  DialogStates,
   UiStoreState,
   UiStoreTypes,
 } from "./type";
@@ -30,6 +31,7 @@ import {
   showNotifyAndNotShowAgainButton,
   showWarningDialog,
 } from "@/components/Dialog/Dialog";
+import { objectEntries } from "@/helpers/typedEntries";
 
 export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
   action: (
@@ -177,15 +179,18 @@ export const uiStore = createPartialStore<UiStoreTypes>({
 
   SET_DIALOG_OPEN: {
     mutation(state, dialogState) {
-      for (const [key, value] of Object.entries(dialogState)) {
+      for (const [key, value] of objectEntries(dialogState)) {
         if (!(key in state)) {
           throw new Error(`Unknown dialog state: ${key}`);
+        }
+        if (value == undefined) {
+          throw new Error(`Invalid dialog state: ${key}`);
         }
         state[key] = value;
       }
     },
     async action({ state, mutations }, dialogState) {
-      for (const [key, value] of Object.entries(dialogState)) {
+      for (const [key, value] of objectEntries(dialogState)) {
         if (state[key] === value) continue;
 
         if (value) {
