@@ -32,6 +32,7 @@ import {
   currentDateString,
   DEFAULT_PROJECT_NAME,
   DEFAULT_STYLE_NAME,
+  generateLabelFileDataFromFramePhonemes,
   sanitizeFileName,
 } from "./utility";
 import {
@@ -87,11 +88,17 @@ import {
   shouldPlayTracks,
   decibelToLinear,
   applyPitchEdit,
+  calcPhraseStartFrames,
+  calcPhraseEndFrames,
+  toEntirePhonemeTimings,
+  adjustPhonemeTimingsAndPhraseEndFrames,
+  phonemeTimingsToPhonemes,
 } from "@/sing/domain";
 import { getOverlappingNoteIds } from "@/sing/storeHelper";
 import {
   AnimationTimer,
   calculateHash,
+  createArray,
   createPromiseThatResolvesWhen,
   linearInterpolation,
   round,
@@ -103,10 +110,11 @@ import { getOrThrow } from "@/helpers/mapHelper";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { ufProjectToVoicevox } from "@/sing/utaformatixProject/toVoicevox";
 import { uuid4 } from "@/helpers/random";
-import { convertToWavFileData } from "@/helpers/convertToWavFileData";
 import { generateWriteErrorMessage } from "@/helpers/fileHelper";
+import { generateWavFileData } from "@/helpers/fileDataGenerator";
 import path from "@/helpers/path";
 import { showAlertDialog } from "@/components/Dialog/Dialog";
+import { generateUniqueFilePath } from "@/sing/fileUtils";
 
 const logger = createLogger("store/singing");
 
@@ -739,8 +747,8 @@ export const singingStoreState: SingingStoreState = {
   startRenderingRequested: false,
   stopRenderingRequested: false,
   nowRendering: false,
-  nowAudioExporting: false,
-  cancellationOfAudioExportRequested: false,
+  exportState: "NOT_EXPORTING",
+  cancellationOfExportRequested: false,
   isSongSidebarOpen: false,
 };
 
@@ -2704,16 +2712,16 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       });
     },
   },
-  SET_NOW_AUDIO_EXPORTING: {
-    mutation(state, { nowAudioExporting }) {
-      state.nowAudioExporting = nowAudioExporting;
+
+  SET_EXPORT_STATE: {
+    mutation(state, { exportState }) {
+      state.exportState = exportState;
     },
   },
 
-  SET_CANCELLATION_OF_AUDIO_EXPORT_REQUESTED: {
-    mutation(state, { cancellationOfAudioExportRequested }) {
-      state.cancellationOfAudioExportRequested =
-        cancellationOfAudioExportRequested;
+  SET_CANCELLATION_OF_EXPORT_REQUESTED: {
+    mutation(state, { cancellationOfExportRequested }) {
+      state.cancellationOfExportRequested = cancellationOfExportRequested;
     },
   },
 
@@ -2760,11 +2768,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
           if (state.nowRendering) {
             await createPromiseThatResolvesWhen(() => {
-              return (
-                !state.nowRendering || state.cancellationOfAudioExportRequested
-              );
+              return !state.nowRendering || state.cancellationOfExportRequested;
             });
-            if (state.cancellationOfAudioExportRequested) {
+            if (state.cancellationOfExportRequested) {
               return { result: "CANCELED", path: "" };
             }
           }
@@ -2780,7 +2786,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             phraseSingingVoices,
           );
 
-          const fileData = convertToWavFileData(audioBuffer);
+          const fileData = generateWavFileData(audioBuffer);
 
           const result = await actions.EXPORT_FILE({
             filePath,
@@ -2790,12 +2796,16 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           return result;
         };
 
-        mutations.SET_NOW_AUDIO_EXPORTING({ nowAudioExporting: true });
+        if (state.exportState !== "NOT_EXPORTING") {
+          throw new Error("Export is in progress.");
+        }
+
+        mutations.SET_EXPORT_STATE({ exportState: "EXPORTING_AUDIO" });
         return exportAudioFile().finally(() => {
-          mutations.SET_CANCELLATION_OF_AUDIO_EXPORT_REQUESTED({
-            cancellationOfAudioExportRequested: false,
+          mutations.SET_CANCELLATION_OF_EXPORT_REQUESTED({
+            cancellationOfExportRequested: false,
           });
-          mutations.SET_NOW_AUDIO_EXPORTING({ nowAudioExporting: false });
+          mutations.SET_EXPORT_STATE({ exportState: "NOT_EXPORTING" });
         });
       },
     ),
@@ -2829,11 +2839,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
           if (state.nowRendering) {
             await createPromiseThatResolvesWhen(() => {
-              return (
-                !state.nowRendering || state.cancellationOfAudioExportRequested
-              );
+              return !state.nowRendering || state.cancellationOfExportRequested;
             });
-            if (state.cancellationOfAudioExportRequested) {
+            if (state.cancellationOfExportRequested) {
               return { result: "CANCELED", path: "" };
             }
           }
@@ -2842,7 +2850,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
           for (const [i, trackId] of state.trackOrder.entries()) {
             const track = getOrThrow(state.tracks, trackId);
-            if (!track.singer) {
+            if (track.singer == undefined) {
               continue;
             }
 
@@ -2854,43 +2862,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               continue;
             }
 
-            const characterInfo = getters.CHARACTER_INFO(
-              track.singer.engineId,
-              track.singer.styleId,
-            );
-            if (!characterInfo) {
-              continue;
-            }
-
-            const style = characterInfo.metas.styles.find(
-              (style) => style.styleId === track.singer?.styleId,
-            );
-            if (style == undefined)
-              throw new Error("assert style != undefined");
-
-            const styleName = style.styleName || DEFAULT_STYLE_NAME;
-            const projectName = getters.PROJECT_NAME ?? DEFAULT_PROJECT_NAME;
-
-            const trackFileName = buildSongTrackAudioFileNameFromRawData(
-              state.savingSetting.songTrackFileNamePattern,
-              {
-                characterName: characterInfo.metas.speakerName,
-                index: i,
-                styleName,
-                date: currentDateString(),
-                projectName,
-                trackName: track.name,
-              },
-            );
-            let filePath = path.join(dirPath, `${trackFileName}.wav`);
-            if (state.savingSetting.avoidOverwrite) {
-              let tail = 1;
-              const pathWithoutExt = filePath.slice(0, -4);
-              while (await window.backend.checkFileExists(filePath)) {
-                filePath = `${pathWithoutExt}[${tail}].wav`;
-                tail += 1;
-              }
-            }
+            const filePath = await actions.GENERATE_FILE_PATH_FOR_TRACK_EXPORT({
+              trackId,
+              directoryPath: dirPath,
+              extension: "wav",
+            });
 
             const audioBuffer = await offlineRenderTracks(
               numberOfChannels,
@@ -2907,7 +2883,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               singingVoiceCache,
             );
 
-            const fileData = convertToWavFileData(audioBuffer);
+            const fileData = generateWavFileData(audioBuffer);
 
             const result = await actions.EXPORT_FILE({
               filePath,
@@ -2925,15 +2901,264 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           return { result: "SUCCESS", path: firstFilePath };
         };
 
-        mutations.SET_NOW_AUDIO_EXPORTING({ nowAudioExporting: true });
+        if (state.exportState !== "NOT_EXPORTING") {
+          throw new Error("Export is in progress.");
+        }
+
+        mutations.SET_EXPORT_STATE({ exportState: "EXPORTING_AUDIO" });
         return exportAudioFile().finally(() => {
-          mutations.SET_CANCELLATION_OF_AUDIO_EXPORT_REQUESTED({
-            cancellationOfAudioExportRequested: false,
+          mutations.SET_CANCELLATION_OF_EXPORT_REQUESTED({
+            cancellationOfExportRequested: false,
           });
-          mutations.SET_NOW_AUDIO_EXPORTING({ nowAudioExporting: false });
+          mutations.SET_EXPORT_STATE({ exportState: "NOT_EXPORTING" });
         });
       },
     ),
+  },
+
+  EXPORT_LABEL_FILES: {
+    action: createUILockAction(
+      async ({ actions, mutations, state }, { dirPath }) => {
+        const exportLabelFile = async () => {
+          if (state.nowPlaying) {
+            await actions.SING_STOP_AUDIO();
+          }
+
+          if (state.savingSetting.fixedExportEnabled) {
+            dirPath = state.savingSetting.fixedExportDir;
+          } else {
+            dirPath ??= await window.backend.showSaveDirectoryDialog({
+              title: "labファイルを保存",
+            });
+          }
+          if (!dirPath) {
+            return createArray(
+              state.tracks.size,
+              (): SaveResultObject => ({ result: "CANCELED", path: "" }),
+            );
+          }
+
+          if (state.nowRendering) {
+            await createPromiseThatResolvesWhen(() => {
+              return !state.nowRendering || state.cancellationOfExportRequested;
+            });
+            if (state.cancellationOfExportRequested) {
+              return createArray(
+                state.tracks.size,
+                (): SaveResultObject => ({ result: "CANCELED", path: "" }),
+              );
+            }
+          }
+
+          const results: SaveResultObject[] = [];
+
+          for (const trackId of state.tracks.keys()) {
+            const track = getOrThrow(state.tracks, trackId);
+            if (track.singer == undefined) {
+              continue;
+            }
+
+            const filePath = await actions.GENERATE_FILE_PATH_FOR_TRACK_EXPORT({
+              trackId,
+              directoryPath: dirPath,
+              extension: "lab",
+            });
+
+            const frameRate = state.editorFrameRate;
+            const phrases = [...state.phrases.values()]
+              .filter((value) => value.trackId === trackId)
+              .filter((value) => value.queryKey != undefined)
+              .toSorted((a, b) => a.startTime - b.startTime);
+
+            if (phrases.length === 0) {
+              continue;
+            }
+
+            const phraseQueries = phrases.map((value) => {
+              const phraseQuery =
+                value.queryKey != undefined
+                  ? state.phraseQueries.get(value.queryKey)
+                  : undefined;
+              if (phraseQuery == undefined) {
+                throw new Error("phraseQuery is undefined.");
+              }
+              return phraseQuery;
+            });
+            const phraseStartTimes = phrases.map((value) => value.startTime);
+
+            for (const phraseQuery of phraseQueries) {
+              // フレーズのクエリのフレームレートとエディターのフレームレートが一致しない場合はエラー
+              // TODO: 補間するようにする
+              if (phraseQuery.frameRate != frameRate) {
+                throw new Error(
+                  "The frame rate between the phrase query and the editor does not match.",
+                );
+              }
+            }
+
+            const phraseStartFrames = calcPhraseStartFrames(
+              phraseStartTimes,
+              frameRate,
+            );
+            const phraseEndFrames = calcPhraseEndFrames(
+              phraseStartFrames,
+              phraseQueries,
+            );
+
+            const phrasePhonemeSequences = phraseQueries.map((query) => {
+              return query.phonemes;
+            });
+            const entirePhonemeTimings = toEntirePhonemeTimings(
+              phrasePhonemeSequences,
+              phraseStartFrames,
+            );
+
+            // TODO: 音素タイミング編集データを取得して適用するようにする
+
+            adjustPhonemeTimingsAndPhraseEndFrames(
+              entirePhonemeTimings,
+              phraseStartFrames,
+              phraseEndFrames,
+            );
+
+            // 一番最初のpauseの開始フレームの値が0より大きい場合は0にする
+            if (entirePhonemeTimings.length === 0) {
+              throw new Error("entirePhonemeTimings.length is 0.");
+            }
+            if (entirePhonemeTimings[0].startFrame > 0) {
+              entirePhonemeTimings[0].startFrame = 0;
+            }
+
+            // 音素の開始・終了フレームの値が0より小さい場合は0にする
+            // （マイナス時間のところを書き出さないようにするため）
+            for (const phonemeTiming of entirePhonemeTimings) {
+              if (phonemeTiming.startFrame < 0) {
+                phonemeTiming.startFrame = 0;
+              }
+              if (phonemeTiming.endFrame < 0) {
+                phonemeTiming.endFrame = 0;
+              }
+            }
+
+            // フレーム数が1未満の音素を除く
+            const filteredEntirePhonemeTimings = entirePhonemeTimings.filter(
+              (value) => {
+                const frameLength = value.endFrame - value.startFrame;
+                return frameLength >= 1;
+              },
+            );
+
+            const entirePhonemes = phonemeTimingsToPhonemes(
+              filteredEntirePhonemeTimings,
+            );
+            const labFileData = await generateLabelFileDataFromFramePhonemes(
+              entirePhonemes,
+              frameRate,
+            );
+
+            try {
+              await window.backend
+                .writeFile({
+                  filePath,
+                  buffer: labFileData,
+                })
+                .then(getValueOrThrow);
+
+              results.push({ result: "SUCCESS", path: filePath });
+            } catch (e) {
+              logger.error("Failed to export file.", e);
+
+              if (e instanceof ResultError) {
+                results.push({
+                  result: "WRITE_ERROR",
+                  path: filePath,
+                  errorMessage: generateWriteErrorMessage(
+                    e as ResultError<string>,
+                  ),
+                });
+              } else {
+                results.push({
+                  result: "UNKNOWN_ERROR",
+                  path: filePath,
+                  errorMessage:
+                    (e instanceof Error ? e.message : String(e)) ||
+                    "不明なエラーが発生しました。",
+                });
+                break; // 想定外のエラーなので書き出しを中断
+              }
+            }
+          }
+          return results;
+        };
+
+        if (state.exportState !== "NOT_EXPORTING") {
+          throw new Error("Export is in progress.");
+        }
+
+        mutations.SET_EXPORT_STATE({ exportState: "EXPORTING_LABEL" });
+        return exportLabelFile().finally(() => {
+          mutations.SET_CANCELLATION_OF_EXPORT_REQUESTED({
+            cancellationOfExportRequested: false,
+          });
+          mutations.SET_EXPORT_STATE({ exportState: "NOT_EXPORTING" });
+        });
+      },
+    ),
+  },
+
+  GENERATE_FILE_PATH_FOR_TRACK_EXPORT: {
+    async action({ state, getters }, { trackId, directoryPath, extension }) {
+      const track = getOrThrow(state.tracks, trackId);
+
+      const trackSinger = track.singer;
+      if (trackSinger == undefined) {
+        throw new Error("trackSinger is undefined.");
+      }
+
+      const characterInfo = getters.CHARACTER_INFO(
+        trackSinger.engineId,
+        trackSinger.styleId,
+      );
+      if (characterInfo == undefined) {
+        // NOTE: characterInfoが存在しないというのは起こり得ないはずなので、存在しなかった場合はエラー
+        throw new Error(
+          "CharacterInfo corresponding to engineId and styleId does not exist.",
+        );
+      }
+
+      const style = characterInfo.metas.styles.find(
+        (style) => style.styleId === trackSinger.styleId,
+      );
+      if (style == undefined) {
+        throw new Error("assert style != undefined");
+      }
+
+      const characterName = characterInfo.metas.speakerName;
+      const styleName = style.styleName ?? DEFAULT_STYLE_NAME;
+      const projectName = getters.PROJECT_NAME ?? DEFAULT_PROJECT_NAME;
+      const trackIndex = state.trackOrder.findIndex(
+        (value) => value === trackId,
+      );
+
+      const fileName = buildSongTrackAudioFileNameFromRawData(
+        state.savingSetting.songTrackFileNamePattern,
+        {
+          characterName,
+          index: trackIndex,
+          styleName,
+          date: currentDateString(),
+          projectName,
+          trackName: track.name,
+        },
+      );
+      const filePathWithoutExt = path.join(directoryPath, fileName);
+
+      if (state.savingSetting.avoidOverwrite) {
+        return await generateUniqueFilePath(filePathWithoutExt, extension);
+      } else {
+        return `${filePathWithoutExt}.${extension}`;
+      }
+    },
   },
 
   EXPORT_FILE: {
@@ -2967,14 +3192,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  CANCEL_AUDIO_EXPORT: {
+  CANCEL_EXPORT: {
     async action({ state, mutations }) {
-      if (!state.nowAudioExporting) {
-        logger.warn("CANCEL_AUDIO_EXPORT on !nowAudioExporting");
+      if (state.exportState === "NOT_EXPORTING") {
+        logger.warn("CANCEL_EXPORT on NOT_EXPORTING");
         return;
       }
-      mutations.SET_CANCELLATION_OF_AUDIO_EXPORT_REQUESTED({
-        cancellationOfAudioExportRequested: true,
+      mutations.SET_CANCELLATION_OF_EXPORT_REQUESTED({
+        cancellationOfExportRequested: true,
       });
     },
   },

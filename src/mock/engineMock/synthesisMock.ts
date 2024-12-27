@@ -5,7 +5,7 @@
  */
 
 import { FrameAudioQuery } from "@/openapi";
-import { convertToWavFileData } from "@/helpers/convertToWavFileData";
+import { generateWavFileData } from "@/helpers/fileDataGenerator";
 import { applyGaussianFilter } from "@/sing/utility";
 
 /** 0~1を返す疑似乱数生成器 */
@@ -244,7 +244,7 @@ export function synthesisFrameAudioQueryMock(
 
   // Blobに変換
   const numberOfChannels = frameAudioQuery.outputStereo ? 2 : 1;
-  const buffer = convertToWavFileData({
+  const buffer = generateWavFileData({
     sampleRate,
     length: wave.length,
     numberOfChannels,
