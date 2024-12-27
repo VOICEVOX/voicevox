@@ -101,7 +101,7 @@ export async function generateLabelFileData(
 
   const writeLine = (phonemeLengthSeconds: number, phoneme: string) => {
     labString += timestamp.toFixed() + " ";
-    timestamp += phonemeLengthSeconds * 10e7; // 100ns単位に変換
+    timestamp += phonemeLengthSeconds * 1e7; // 100ns単位に変換
     labString += timestamp.toFixed() + " ";
     labString += phoneme + "\n";
   };
