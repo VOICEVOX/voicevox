@@ -1,7 +1,5 @@
 import Encoding from "encoding-japanese";
-import { isVowel } from "@/sing/domain";
 import { Encoding as EncodingType } from "@/type/preload";
-import { FramePhoneme } from "@/openapi";
 
 export function generateWavFileData(
   audioBuffer: Pick<

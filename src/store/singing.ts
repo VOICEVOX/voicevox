@@ -111,9 +111,7 @@ import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { ufProjectToVoicevox } from "@/sing/utaformatixProject/toVoicevox";
 import { uuid4 } from "@/helpers/random";
 import { generateWriteErrorMessage } from "@/helpers/fileHelper";
-import {
-  generateWavFileData,
-} from "@/helpers/fileDataGenerator";
+import { generateWavFileData } from "@/helpers/fileDataGenerator";
 import path from "@/helpers/path";
 import { showAlertDialog } from "@/components/Dialog/Dialog";
 import { generateUniqueFilePath } from "@/sing/fileUtils";
