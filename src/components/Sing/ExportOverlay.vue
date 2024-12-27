@@ -38,7 +38,7 @@ const nowRendering = computed(() => {
   return store.state.nowRendering;
 });
 
-const exportingInfo = computed((): ExportingInfo => {
+const exportingInfo = computed<ExportingInfo>(() => {
   if (store.state.exportState === "NOT_EXPORTING") {
     return { nowExporting: false };
   } else if (store.state.exportState === "EXPORTING_AUDIO") {
