@@ -8,7 +8,6 @@ import {
   AllActions,
   AllGetters,
   AllMutations,
-  DialogStates,
   UiStoreState,
   UiStoreTypes,
 } from "./type";
