@@ -2955,7 +2955,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             await createPromiseThatResolvesWhen(() => {
               return !state.nowRendering || state.cancellationOfExportRequested;
             });
-            if (state.cancellationOfLabelExportRequested) {
+            if (state.cancellationOfExportRequested) {
               return createArray(
                 state.tracks.size,
                 (): SaveResultObject => ({ result: "CANCELED", path: "" }),
