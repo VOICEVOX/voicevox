@@ -57,7 +57,7 @@ export class DictMock {
   }
 
   /** 辞書系のOpenAPIの関数を返す */
-  createDictMock(): Pick<
+  createDictMockApi(): Pick<
     DefaultApiInterface,
     | "getUserDictWordsUserDictGet"
     | "addUserDictWordUserDictWordPost"
