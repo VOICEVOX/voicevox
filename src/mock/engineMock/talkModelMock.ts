@@ -4,9 +4,9 @@
 
 import { builder, IpadicFeatures, Tokenizer } from "kuromoji";
 import { moraToPhonemes } from "./phonemeMock";
+import { parseKana } from "./aquestalkLikeMock";
 import { moraPattern } from "@/domain/japanese";
 import { AccentPhrase, Mora } from "@/openapi";
-import { parseKana } from "./aquestalkLikeMock";
 
 /** Nodeとして動いてほしいかを判定する */
 const isNode =
