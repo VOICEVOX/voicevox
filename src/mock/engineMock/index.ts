@@ -7,6 +7,7 @@ import {
 } from "./characterResourceMock";
 import { synthesisFrameAudioQueryMock } from "./synthesisMock";
 import {
+  aquestalkLikeToAccentPhrasesMock,
   replaceLengthMock,
   replacePitchMock,
   textToActtentPhrasesMock,
@@ -17,6 +18,7 @@ import {
   notesToFramePhonemesMock,
 } from "./singModelMock";
 
+import { DictMock } from "./dictMock";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import {
   AccentPhrase,
@@ -36,7 +38,6 @@ import {
   SpeakerInfoSpeakerInfoGetRequest,
   SupportedDevicesInfo,
   SynthesisSynthesisPostRequest,
-  UserDictWord,
 } from "@/openapi";
 
 /**
@@ -44,6 +45,8 @@ import {
  * 実装されていない関数もある。
  */
 export function createOpenAPIEngineMock(): DefaultApiInterface {
+  const dictMock = new DictMock();
+
   const mockApi: Partial<DefaultApiInterface> = {
     async versionVersionGet(): Promise<string> {
       return "mock";
@@ -92,7 +95,7 @@ export function createOpenAPIEngineMock(): DefaultApiInterface {
       payload: AudioQueryAudioQueryPostRequest,
     ): Promise<AudioQuery> {
       const accentPhrases = await textToActtentPhrasesMock(
-        payload.text,
+        dictMock.applyDict(payload.text),
         payload.speaker,
       );
 
@@ -112,13 +115,18 @@ export function createOpenAPIEngineMock(): DefaultApiInterface {
     async accentPhrasesAccentPhrasesPost(
       payload: AccentPhrasesAccentPhrasesPostRequest,
     ): Promise<AccentPhrase[]> {
-      if (payload.isKana == true)
-        throw new Error("AquesTalk風記法は未対応です");
-
-      const accentPhrases = await textToActtentPhrasesMock(
-        payload.text,
-        payload.speaker,
-      );
+      let accentPhrases: AccentPhrase[];
+      if (payload.isKana) {
+        accentPhrases = await aquestalkLikeToAccentPhrasesMock(
+          payload.text,
+          payload.speaker,
+        );
+      } else {
+        accentPhrases = await textToActtentPhrasesMock(
+          dictMock.applyDict(payload.text),
+          payload.speaker,
+        );
+      }
       return accentPhrases;
     },
 
@@ -204,12 +212,7 @@ export function createOpenAPIEngineMock(): DefaultApiInterface {
     },
 
     // 辞書系
-    async getUserDictWordsUserDictGet(): Promise<{
-      [key: string]: UserDictWord;
-    }> {
-      // ダミーで空の辞書を返す
-      return {};
-    },
+    ...dictMock.createDictMock(),
   };
 
   return mockApi satisfies Partial<DefaultApiInterface> as DefaultApiInterface;

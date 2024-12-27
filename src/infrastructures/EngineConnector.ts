@@ -28,9 +28,17 @@ const OpenAPIEngineConnectorFactoryImpl = (): IEngineConnectorFactory => {
 export const OpenAPIEngineConnectorFactory =
   OpenAPIEngineConnectorFactoryImpl();
 
-const OpenAPIMockEngineConnectorFactoryImpl = (): IEngineConnectorFactory => ({
-  instance: () => createOpenAPIEngineMock(),
-});
+const OpenAPIMockEngineConnectorFactoryImpl = (): IEngineConnectorFactory => {
+  let mockInstance: DefaultApiInterface | undefined;
+  return {
+    instance: () => {
+      if (!mockInstance) {
+        mockInstance = createOpenAPIEngineMock();
+      }
+      return mockInstance;
+    },
+  };
+};
 
 /** モック用エンジン */
 export const OpenAPIMockEngineConnectorFactory =
