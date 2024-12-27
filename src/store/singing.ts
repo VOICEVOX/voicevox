@@ -1546,6 +1546,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   SET_IS_DRAG: {
     mutation(state, { isDrag }: { isDrag: boolean }) {
+      // FIXME: state.isDragが無くなっているので修正する
       state.isDrag = isDrag;
     },
     async action({ mutations }, { isDrag }) {
@@ -2781,7 +2782,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             await createPromiseThatResolvesWhen(() => {
               return !state.nowRendering || state.cancellationOfExportRequested;
             });
-            if (state.cancellationOfAudioExportRequested) {
+            if (state.cancellationOfExportRequested) {
               return { result: "CANCELED", path: "" };
             }
           }
@@ -2852,7 +2853,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             await createPromiseThatResolvesWhen(() => {
               return !state.nowRendering || state.cancellationOfExportRequested;
             });
-            if (state.cancellationOfAudioExportRequested) {
+            if (state.cancellationOfExportRequested) {
               return { result: "CANCELED", path: "" };
             }
           }
