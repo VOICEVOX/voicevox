@@ -1,5 +1,10 @@
 import { hash } from "../../utils";
+import { resetMockMode } from "@/helpers/random";
 import { createOpenAPIEngineMock } from "@/mock/engineMock";
+
+beforeEach(() => {
+  resetMockMode();
+});
 
 describe("createOpenAPIEngineMock", () => {
   const mock = createOpenAPIEngineMock();
@@ -64,5 +69,33 @@ describe("createOpenAPIEngineMock", () => {
       speaker: 0,
     });
     expect(await hash(await response.arrayBuffer())).toMatchSnapshot();
+  });
+
+  it("辞書系", async () => {
+    let response;
+
+    // 単語の追加
+    const wordUuid = await mock.addUserDictWordUserDictWordPost({
+      surface: "テスト",
+      pronunciation: "テストテスト",
+      accentType: 1,
+    });
+    response = await mock.getUserDictWordsUserDictGet();
+    expect(response).toMatchSnapshot();
+
+    // 単語の変更
+    await mock.rewriteUserDictWordUserDictWordWordUuidPut({
+      wordUuid,
+      surface: "テスト",
+      pronunciation: "テストテストテスト",
+      accentType: 1,
+    });
+    response = await mock.getUserDictWordsUserDictGet();
+    expect(response).toMatchSnapshot();
+
+    // 単語の削除
+    await mock.deleteUserDictWordUserDictWordWordUuidDelete({ wordUuid });
+    response = await mock.getUserDictWordsUserDictGet();
+    expect(response).toMatchSnapshot();
   });
 });
