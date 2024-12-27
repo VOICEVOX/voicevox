@@ -2239,7 +2239,7 @@ export type PresetStoreTypes = {
  * Dictionary Store Types
  */
 
-export type DictionaryStoreState = Record<string, unknown>;
+export type DictionaryStoreState = Record<never, unknown>;
 
 export type DictionaryStoreTypes = {
   LOAD_USER_DICT: {
@@ -2279,7 +2279,7 @@ export type DictionaryStoreTypes = {
  * Setting Store Types
  */
 
-export type ProxyStoreState = Record<string, unknown>;
+export type ProxyStoreState = Record<never, unknown>;
 
 export type IEngineConnectorFactoryActions = ReturnType<
   IEngineConnectorFactory["instance"]
