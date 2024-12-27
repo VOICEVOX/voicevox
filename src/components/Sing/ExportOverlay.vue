@@ -1,19 +1,19 @@
 <template>
-  <div v-if="exportingState.now" class="export-overlay">
+  <div v-if="exportingInfo.nowExporting" class="export-overlay">
     <div>
       <QSpinner color="primary" size="2.5rem" />
       <div class="q-mt-xs">
         {{
           nowRendering
             ? "レンダリング中・・・"
-            : `${exportingState.name}を書き出し中・・・`
+            : `${exportingInfo.mediaName}を書き出し中・・・`
         }}
       </div>
       <!-- NOTE: 書き出しのキャンセルはレンダリング中にのみ可能 -->
       <QBtn
         v-if="nowRendering"
         padding="xs md"
-        :label="`${exportingState.name}の書き出しをキャンセル`"
+        :label="`${exportingInfo.mediaName}の書き出しをキャンセル`"
         class="q-mt-sm"
         outline
         @click="cancelExport"
@@ -33,13 +33,13 @@ const nowRendering = computed(() => {
   return store.state.nowRendering;
 });
 
-const exportingState = computed(() => {
+const exportingInfo = computed(() => {
   if (store.state.exportState === "NOT_EXPORTING") {
-    return { now: false };
+    return { nowExporting: false };
   } else if (store.state.exportState === "EXPORTING_AUDIO") {
-    return { now: true, name: "音声" };
+    return { nowExporting: true, mediaName: "音声" };
   } else if (store.state.exportState === "EXPORTING_LABEL") {
-    return { now: true, name: "labファイル" };
+    return { nowExporting: true, mediaName: "labファイル" };
   } else {
     throw new ExhaustiveError(store.state.exportState);
   }
