@@ -1,3 +1,5 @@
+import { createEngineUrl, EngineUrlParams } from "@/domain/url";
+import { createOpenAPIEngineMock } from "@/mock/engineMock";
 import { Configuration, DefaultApi, DefaultApiInterface } from "@/openapi";
 
 export interface IEngineConnectorFactory {
@@ -22,5 +24,35 @@ const OpenAPIEngineConnectorFactoryImpl = (): IEngineConnectorFactory => {
   };
 };
 
+/** エンジン */
 export const OpenAPIEngineConnectorFactory =
   OpenAPIEngineConnectorFactoryImpl();
+
+const OpenAPIMockEngineConnectorFactoryImpl = (): IEngineConnectorFactory => ({
+  instance: () => createOpenAPIEngineMock(),
+});
+
+/** モック用エンジン */
+export const OpenAPIMockEngineConnectorFactory =
+  OpenAPIMockEngineConnectorFactoryImpl();
+
+/** モック用エンジンのURLは `http://mock` とする */
+export const mockUrlParams = {
+  protocol: "http:",
+  hostname: "mock",
+  port: "",
+  pathname: "",
+} satisfies EngineUrlParams;
+
+/**
+ * モック用エンジンのURLのときはモックを、そうじゃないときは通常エンジンを返す。
+ */
+export const OpenAPIEngineAndMockConnectorFactory: IEngineConnectorFactory = {
+  instance: (host: string) => {
+    if (host == createEngineUrl(mockUrlParams)) {
+      return OpenAPIMockEngineConnectorFactory.instance(host);
+    } else {
+      return OpenAPIEngineConnectorFactory.instance(host);
+    }
+  },
+};
