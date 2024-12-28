@@ -9,12 +9,12 @@ beforeEach(() => {
 describe("createOpenAPIEngineMock", () => {
   const mock = createOpenAPIEngineMock();
 
-  it("versionVersionGet", async () => {
+  test("versionVersionGet", async () => {
     const response = await mock.versionVersionGet();
     expect(response).toMatchSnapshot();
   });
 
-  it("audioQueryAudioQueryPost", async () => {
+  test("audioQueryAudioQueryPost", async () => {
     const response = await mock.audioQueryAudioQueryPost({
       text: "こんにちは",
       speaker: 0,
@@ -22,7 +22,7 @@ describe("createOpenAPIEngineMock", () => {
     expect(response).toMatchSnapshot();
   });
 
-  it("synthesisSynthesisPost", async () => {
+  test("synthesisSynthesisPost", async () => {
     const audioQuery = await mock.audioQueryAudioQueryPost({
       text: "こんにちは",
       speaker: 0,
@@ -34,7 +34,7 @@ describe("createOpenAPIEngineMock", () => {
     expect(await hash(await response.arrayBuffer())).toMatchSnapshot();
   });
 
-  it("singFrameAudioQuerySingFrameAudioQueryPost", async () => {
+  test("singFrameAudioQuerySingFrameAudioQueryPost", async () => {
     const response = await mock.singFrameAudioQuerySingFrameAudioQueryPost({
       speaker: 0,
       score: {
@@ -50,7 +50,7 @@ describe("createOpenAPIEngineMock", () => {
     expect(response).toMatchSnapshot();
   });
 
-  it("frameSynthesisFrameSynthesisPost", async () => {
+  test("frameSynthesisFrameSynthesisPost", async () => {
     const frameAudioQuery =
       await mock.singFrameAudioQuerySingFrameAudioQueryPost({
         speaker: 0,
@@ -71,7 +71,7 @@ describe("createOpenAPIEngineMock", () => {
     expect(await hash(await response.arrayBuffer())).toMatchSnapshot();
   });
 
-  it("辞書系", async () => {
+  test("辞書系", async () => {
     let response;
 
     // 単語の追加
