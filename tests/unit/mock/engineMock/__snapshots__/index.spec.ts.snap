@@ -174,3 +174,45 @@ exports[`createOpenAPIEngineMock > singFrameAudioQuerySingFrameAudioQueryPost 1`
 exports[`createOpenAPIEngineMock > synthesisSynthesisPost 1`] = `"23f4b910863418a7188648f7c5226a0f02b9d067b964be1690b69b1e9ffde7bc"`;
 
 exports[`createOpenAPIEngineMock > versionVersionGet 1`] = `"mock"`;
+
+exports[`createOpenAPIEngineMock > 辞書系 1`] = `
+{
+  "00000000-0000-4000-0000-000000000001": {
+    "accentAssociativeRule": "*",
+    "accentType": 1,
+    "inflectionalForm": "*",
+    "inflectionalType": "*",
+    "partOfSpeech": "名詞",
+    "partOfSpeechDetail1": "一般",
+    "partOfSpeechDetail2": "*",
+    "partOfSpeechDetail3": "*",
+    "priority": 5,
+    "pronunciation": "テストテスト",
+    "stem": "*",
+    "surface": "テスト",
+    "yomi": "テストテスト",
+  },
+}
+`;
+
+exports[`createOpenAPIEngineMock > 辞書系 2`] = `
+{
+  "00000000-0000-4000-0000-000000000001": {
+    "accentAssociativeRule": "*",
+    "accentType": 1,
+    "inflectionalForm": "*",
+    "inflectionalType": "*",
+    "partOfSpeech": "名詞",
+    "partOfSpeechDetail1": "一般",
+    "partOfSpeechDetail2": "*",
+    "partOfSpeechDetail3": "*",
+    "priority": 5,
+    "pronunciation": "テストテストテスト",
+    "stem": "*",
+    "surface": "テスト",
+    "yomi": "テストテストテスト",
+  },
+}
+`;
+
+exports[`createOpenAPIEngineMock > 辞書系 3`] = `{}`;
