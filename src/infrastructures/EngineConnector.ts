@@ -44,9 +44,9 @@ const OpenAPIMockEngineConnectorFactoryImpl = (): IEngineConnectorFactory => {
 export const OpenAPIMockEngineConnectorFactory =
   OpenAPIMockEngineConnectorFactoryImpl();
 
-/** モック用エンジンのURLは `http://mock` とする */
+/** モック用エンジンのURLは `mock://mock` とする */
 export const mockUrlParams = {
-  protocol: "http:",
+  protocol: "mock:",
   hostname: "mock",
   port: "",
   pathname: "",
