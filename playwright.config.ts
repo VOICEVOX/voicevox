@@ -1,6 +1,14 @@
-import type { PlaywrightTestConfig, Project } from "@playwright/test";
+/**
+ * e2eテストと .env の設計：
+ * - デフォルトで .env.test を読み込む。
+ *   モックエンジンが使われる。
+ * - Electronテストはテストファイル内で .env を読み込む。
+ *   テスト条件によって用意したい環境が異なるため。
+ */
 
+import type { PlaywrightTestConfig, Project } from "@playwright/test";
 import dotenv from "dotenv";
+
 dotenv.config({ path: ".env.test", override: true });
 
 let project: Project;
