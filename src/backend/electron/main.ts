@@ -607,9 +607,7 @@ registerIpcMainHandle<IpcMainHandle>({
     return dialog.showSaveDialogSync(win, {
       title,
       defaultPath: defaultName,
-      filters: [
-        { name: extensionName ?? "Text", extensions: extensions ?? ["txt"] },
-      ],
+      filters: [{ name: extensionName, extensions: extensions }],
       properties: ["createDirectory"],
     });
   },

@@ -236,25 +236,18 @@ export const readFileImpl = async (filePath: string) => {
 export const showExportFilePickerImpl: (typeof window)[typeof SandboxKey]["showExportFileDialog"] =
   async (obj: {
     defaultName?: string;
-    extensionName?: string;
-    extensions?: string[];
+    extensionName: string;
+    extensions: string[];
     title: string;
   }) => {
     const handle = await showSaveFilePicker({
       suggestedName: obj.defaultName,
       types: [
         {
-          description:
-            obj.extensionName ?? obj.extensions?.join("、") ?? "Text",
-          accept: obj.extensions
-            ? {
-                "application/octet-stream": obj.extensions.map(
-                  (ext) => `.${ext}`,
-                ),
-              }
-            : {
-                "plain/text": [".txt"],
-              },
+          description: obj.extensions.join("、"),
+          accept: {
+            "application/octet-stream": obj.extensions.map((ext) => `.${ext}`),
+          },
         },
       ],
     });

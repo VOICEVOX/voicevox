@@ -166,8 +166,8 @@ export const api: Sandbox = {
   },
   async showExportFileDialog(obj: {
     defaultName?: string;
-    extensionName?: string;
-    extensions?: string[];
+    extensionName: string;
+    extensions: string[];
     title: string;
   }) {
     const fileHandle = await showExportFilePickerImpl(obj);

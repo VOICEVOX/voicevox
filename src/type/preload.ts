@@ -100,8 +100,8 @@ export interface Sandbox {
   showExportFileDialog(obj: {
     title: string;
     defaultName?: string;
-    extensionName?: string;
-    extensions?: string[];
+    extensionName: string;
+    extensions: string[];
   }): Promise<string | undefined>;
   writeFile(obj: {
     filePath: string;

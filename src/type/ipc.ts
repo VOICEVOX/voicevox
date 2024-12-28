@@ -73,8 +73,8 @@ export type IpcIHData = {
       obj: {
         title: string;
         defaultName?: string;
-        extensionName?: string;
-        extensions?: string[];
+        extensionName: string;
+        extensions: string[];
       },
     ];
     return?: string;
