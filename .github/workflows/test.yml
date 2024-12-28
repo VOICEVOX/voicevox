@@ -117,6 +117,7 @@ jobs:
           # GitHub Actions 環境だとたまに50021が封じられていることがあるので、ランダムなポートを使うようにする
           PORT=$(node -r net -e "server=net.createServer();server.listen(0,()=>{console.log(server.address().port);server.close()})")
           sed -i -e 's|random_port|'$PORT'|' .env
+          cat .env # ログ用
 
           if [ -n "${{ runner.debug }}" ]; then
             export DEBUG="pw:browser*"
