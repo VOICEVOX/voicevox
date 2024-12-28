@@ -1,5 +1,6 @@
 /**
- * 辞書のモック
+ * 辞書のモック。
+ * 辞書クラス内で辞書を単語を管理し、API用の関数を払い出す。
  */
 
 import { uuid4 } from "@/helpers/random";
@@ -57,7 +58,7 @@ export class DictMock {
   }
 
   /** 辞書系のOpenAPIの関数を返す */
-  createDictMock(): Pick<
+  createDictMockApi(): Pick<
     DefaultApiInterface,
     | "getUserDictWordsUserDictGet"
     | "addUserDictWordUserDictWordPost"

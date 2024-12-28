@@ -1,15 +1,20 @@
 import { hash } from "../../utils";
+import { resetMockMode } from "@/helpers/random";
 import { createOpenAPIEngineMock } from "@/mock/engineMock";
+
+beforeEach(() => {
+  resetMockMode();
+});
 
 describe("createOpenAPIEngineMock", () => {
   const mock = createOpenAPIEngineMock();
 
-  it("versionVersionGet", async () => {
+  test("versionVersionGet", async () => {
     const response = await mock.versionVersionGet();
     expect(response).toMatchSnapshot();
   });
 
-  it("audioQueryAudioQueryPost", async () => {
+  test("audioQueryAudioQueryPost", async () => {
     const response = await mock.audioQueryAudioQueryPost({
       text: "こんにちは",
       speaker: 0,
@@ -17,7 +22,7 @@ describe("createOpenAPIEngineMock", () => {
     expect(response).toMatchSnapshot();
   });
 
-  it("synthesisSynthesisPost", async () => {
+  test("synthesisSynthesisPost", async () => {
     const audioQuery = await mock.audioQueryAudioQueryPost({
       text: "こんにちは",
       speaker: 0,
@@ -29,7 +34,7 @@ describe("createOpenAPIEngineMock", () => {
     expect(await hash(await response.arrayBuffer())).toMatchSnapshot();
   });
 
-  it("singFrameAudioQuerySingFrameAudioQueryPost", async () => {
+  test("singFrameAudioQuerySingFrameAudioQueryPost", async () => {
     const response = await mock.singFrameAudioQuerySingFrameAudioQueryPost({
       speaker: 0,
       score: {
@@ -45,7 +50,7 @@ describe("createOpenAPIEngineMock", () => {
     expect(response).toMatchSnapshot();
   });
 
-  it("frameSynthesisFrameSynthesisPost", async () => {
+  test("frameSynthesisFrameSynthesisPost", async () => {
     const frameAudioQuery =
       await mock.singFrameAudioQuerySingFrameAudioQueryPost({
         speaker: 0,
@@ -64,5 +69,33 @@ describe("createOpenAPIEngineMock", () => {
       speaker: 0,
     });
     expect(await hash(await response.arrayBuffer())).toMatchSnapshot();
+  });
+
+  test("辞書系", async () => {
+    let response;
+
+    // 単語の追加
+    const wordUuid = await mock.addUserDictWordUserDictWordPost({
+      surface: "テスト",
+      pronunciation: "テストテスト",
+      accentType: 1,
+    });
+    response = await mock.getUserDictWordsUserDictGet();
+    expect(response).toMatchSnapshot();
+
+    // 単語の変更
+    await mock.rewriteUserDictWordUserDictWordWordUuidPut({
+      wordUuid,
+      surface: "テスト",
+      pronunciation: "テストテストテスト",
+      accentType: 1,
+    });
+    response = await mock.getUserDictWordsUserDictGet();
+    expect(response).toMatchSnapshot();
+
+    // 単語の削除
+    await mock.deleteUserDictWordUserDictWordWordUuidDelete({ wordUuid });
+    response = await mock.getUserDictWordsUserDictGet();
+    expect(response).toMatchSnapshot();
   });
 });

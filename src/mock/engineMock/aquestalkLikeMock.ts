@@ -19,11 +19,11 @@ enum ParseKanaErrorCode {
 const _LOOP_LIMIT = 300;
 
 // AquesTalk 風記法特殊文字
-const _UNVOICE_SYMBOL = "_"; // 無声化
-const _ACCENT_SYMBOL = "'"; // アクセント位置
-const _NOPAUSE_DELIMITER = "/"; // ポーズ無しアクセント句境界
-const _PAUSE_DELIMITER = "、"; // ポーズ有りアクセント句境界
-const _WIDE_INTERROGATION_MARK = "？"; // 疑問形
+const UNVOICE_SYMBOL = "_"; // 無声化
+const ACCENT_SYMBOL = "'"; // アクセント位置
+const NOPAUSE_DELIMITER = "/"; // ポーズ無しアクセント句境界
+const PAUSE_DELIMITER = "、"; // ポーズ有りアクセント句境界
+const WIDE_INTERROGATION_MARK = "？"; // 疑問形
 
 // AquesTalk 風記法とモーラの対応。無声母音も含む。（音素長・音高 0 初期化）
 const _kana2mora: Record<string, Mora> = {};
@@ -43,7 +43,7 @@ Object.entries(moraToPhonemes).forEach(([kana, [consonant, vowel]]) => {
     // FIXME: バリデーションする
     const upperVowel = vowel.toUpperCase();
 
-    _kana2mora[_UNVOICE_SYMBOL + kana] = {
+    _kana2mora[UNVOICE_SYMBOL + kana] = {
       text: kana,
       consonant: consonant,
       consonantLength: consonant ? 0 : undefined,
@@ -73,7 +73,7 @@ function _textToAccentPhrase(phrase: string): AccentPhrase {
     outerLoop += 1;
 
     // 「`'` でアクセント位置」の実装
-    if (phrase[baseIndex] === _ACCENT_SYMBOL) {
+    if (phrase[baseIndex] === ACCENT_SYMBOL) {
       // 「アクセント位置はちょうど１つ」の実装
       if (moras.length === 0) {
         throw new Error(
@@ -96,7 +96,7 @@ function _textToAccentPhrase(phrase: string): AccentPhrase {
     // 例: phrase "キャ" -> "キ" 検出 -> "キャ" 検出/上書き -> Mora("キャ")
     for (let watchIndex = baseIndex; watchIndex < phrase.length; watchIndex++) {
       // アクセント位置特殊文字が来たら探索打ち切り
-      if (phrase[watchIndex] === _ACCENT_SYMBOL) {
+      if (phrase[watchIndex] === ACCENT_SYMBOL) {
         break;
       }
       stack += phrase[watchIndex];
@@ -146,8 +146,8 @@ export function parseKana(text: string): AccentPhrase[] {
     // アクセント句境界（`/`か`、`）の出現までインデックス進展
     if (
       i === text.length ||
-      text[i] === _PAUSE_DELIMITER ||
-      text[i] === _NOPAUSE_DELIMITER
+      text[i] === PAUSE_DELIMITER ||
+      text[i] === NOPAUSE_DELIMITER
     ) {
       let phrase = text.substring(phraseBase, i);
       if (phrase.length === 0) {
@@ -161,9 +161,9 @@ export function parseKana(text: string): AccentPhrase[] {
       phraseBase = i + 1;
 
       // 「`？` で疑問文」の実装
-      const isInterrogative = phrase.includes(_WIDE_INTERROGATION_MARK);
+      const isInterrogative = phrase.includes(WIDE_INTERROGATION_MARK);
       if (isInterrogative) {
-        if (phrase.indexOf(_WIDE_INTERROGATION_MARK) !== phrase.length - 1) {
+        if (phrase.indexOf(WIDE_INTERROGATION_MARK) !== phrase.length - 1) {
           throw new Error(
             ParseKanaErrorCode.INTERROGATION_MARK_NOT_AT_END.replace(
               "{text}",
@@ -172,13 +172,13 @@ export function parseKana(text: string): AccentPhrase[] {
           );
         }
         // 疑問形はモーラでなくアクセント句属性で表現
-        phrase = phrase.replace(_WIDE_INTERROGATION_MARK, "");
+        phrase = phrase.replace(WIDE_INTERROGATION_MARK, "");
       }
 
       const accentPhrase = _textToAccentPhrase(phrase);
 
       // 「`、` で無音付き区切り」の実装
-      if (i < text.length && text[i] === _PAUSE_DELIMITER) {
+      if (i < text.length && text[i] === PAUSE_DELIMITER) {
         accentPhrase.pauseMora = {
           text: "、",
           consonant: undefined,

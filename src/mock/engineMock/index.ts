@@ -212,7 +212,7 @@ export function createOpenAPIEngineMock(): DefaultApiInterface {
     },
 
     // 辞書系
-    ...dictMock.createDictMock(),
+    ...dictMock.createDictMockApi(),
   };
 
   return mockApi satisfies Partial<DefaultApiInterface> as DefaultApiInterface;
