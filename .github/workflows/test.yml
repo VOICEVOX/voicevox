@@ -98,11 +98,6 @@ jobs:
           dest: ${{ github.workspace }}/voicevox_engine
           target: ${{ matrix.voicevox_engine_asset_name }}
 
-      - name: Setup
-        run: |
-          # run.exe
-          chmod +x ${{ steps.download-engine.outputs.run_path }}
-
       - name: Run npm run test:browser-e2e
         run: |
           if [ -n "${{ runner.debug }}" ]; then
