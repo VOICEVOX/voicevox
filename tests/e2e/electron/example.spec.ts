@@ -39,8 +39,17 @@ test.beforeEach(async () => {
   });
 });
 
-[".env", ".env.test-electron-default-vvpp"].forEach((envPath) => {
-  test.describe(`env:${envPath}`, () => {
+[
+  {
+    envName: ".env環境",
+    envPath: ".env",
+  },
+  {
+    envName: "VVPPデフォルトエンジン",
+    envPath: ".env.test-electron-default-vvpp",
+  },
+].forEach(({ envName, envPath }) => {
+  test.describe(`${envName}`, () => {
     test.beforeEach(() => {
       dotenv.config({ path: envPath, override: true });
     });
