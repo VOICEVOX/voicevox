@@ -343,6 +343,12 @@ export abstract class BaseConfigManager {
     this._save();
   }
 
+  /** 全ての設定を取得する。テスト用。 */
+  public getAll(): ConfigType {
+    if (!this.config) throw new Error("Config is not initialized");
+    return this.config;
+  }
+
   private _save() {
     void this.lock.acquire(lockKey, async () => {
       await this.save({

@@ -1032,7 +1032,6 @@ app.on("second-instance", async (_event, _argv, _workDir, rawData) => {
     log.info("Second instance launched with vvproj file");
     ipcMainSendProxy.LOAD_PROJECT_FILE(win, {
       filePath: data.filePath,
-      confirm: true,
     });
   }
   if (win) {

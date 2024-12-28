@@ -1,3 +1,6 @@
+/** ブランド型を作る */
+export type Brand<K, T> = K & { __brand: T };
+
 /*
  * XとYが同じ型かどうかを判定する。
  * const _: IsEqual<X, Y> = true; のように使う。
