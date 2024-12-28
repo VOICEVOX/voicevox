@@ -93,12 +93,9 @@ test("「設定」→「読み方＆アクセント辞書」で「読み方＆�
 
   // もう一度設定を開き辞書から削除
   await openDictDialog(page);
-  await page.getByRole("listitem").filter({ hasText: targetString }).hover();
-  await page
-    .getByRole("listitem")
-    .filter({ hasText: targetString })
-    .getByText("delete")
-    .click();
+  const wordItem = page.getByRole("listitem").filter({ hasText: targetString });
+  await wordItem.hover();
+  await wordItem.getByText("delete").click();
   await page.waitForTimeout(100);
   await getNewestQuasarDialog(page)
     .getByRole("button")
