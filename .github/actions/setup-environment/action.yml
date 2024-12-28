@@ -33,13 +33,5 @@ runs:
         restore-keys: |
           ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-
 
-    - name: Cache external dependencies
-      uses: actions/cache@v4
-      with:
-        path: ./build/vendored
-        key: ${{ env.cache-version }}-${{ runner.os }}--vendored-${{ hashFiles('build/*.js') }}
-        restore-keys: |
-          ${{ env.cache-version }}-${{ runner.os }}--vendored-
-
     - shell: bash
       run: npm ci

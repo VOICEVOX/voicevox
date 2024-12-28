@@ -28,7 +28,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
-import { useQuasar } from "quasar";
+import { useQuasar, Dialog } from "quasar";
 import { MenuItemData, MenuItemRoot } from "../type";
 import MenuButton from "../MenuButton.vue";
 import TitleBarButtons from "./TitleBarButtons.vue";
@@ -36,6 +36,7 @@ import TitleBarEditorSwitcher from "./TitleBarEditorSwitcher.vue";
 import { useStore } from "@/store";
 import { HotkeyAction, useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import { useEngineIcons } from "@/composables/useEngineIcons";
+import HelpDialog from "@/components/Dialog/HelpDialog/HelpDialog.vue";
 
 const props = defineProps<{
   /** 「ファイル」メニューのサブメニュー */
@@ -113,12 +114,10 @@ watch(titleText, (newTitle) => {
   window.document.title = newTitle;
 });
 
+// FIXME: この関数は不要なはず
 const closeAllDialog = () => {
   void store.actions.SET_DIALOG_OPEN({
     isSettingDialogOpen: false,
-  });
-  void store.actions.SET_DIALOG_OPEN({
-    isHelpDialogOpen: false,
   });
   void store.actions.SET_DIALOG_OPEN({
     isHotkeySettingDialogOpen: false,
@@ -131,12 +130,6 @@ const closeAllDialog = () => {
   });
   void store.actions.SET_DIALOG_OPEN({
     isDefaultStyleSelectDialogOpen: false,
-  });
-};
-
-const openHelpDialog = () => {
-  void store.actions.SET_DIALOG_OPEN({
-    isHelpDialogOpen: true,
   });
 };
 
@@ -538,11 +531,10 @@ const menudata = computed<MenuItemData[]>(() => [
     type: "button",
     label: "ヘルプ",
     onClick: () => {
-      if (store.state.isHelpDialogOpen) closeAllDialog();
-      else {
-        closeAllDialog();
-        openHelpDialog();
-      }
+      closeAllDialog();
+      Dialog.create({
+        component: HelpDialog,
+      });
     },
     disableWhenUiLocked: false,
   },

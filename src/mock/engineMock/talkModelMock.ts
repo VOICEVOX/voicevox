@@ -4,6 +4,7 @@
 
 import { builder, IpadicFeatures, Tokenizer } from "kuromoji";
 import { moraToPhonemes } from "./phonemeMock";
+import { parseKana } from "./aquestalkLikeMock";
 import { moraPattern } from "@/domain/japanese";
 import { AccentPhrase, Mora } from "@/openapi";
 
@@ -225,6 +226,22 @@ export async function textToActtentPhrasesMock(text: string, styleId: number) {
       lastMora.pitch = 0;
     }
   }
+
+  // 長さとピッチを代入
+  replaceLengthMock(accentPhrases, styleId);
+  replacePitchMock(accentPhrases, styleId);
+
+  return accentPhrases;
+}
+
+/**
+ * AquesTalk風記法をアクセント句に変換する。
+ */
+export async function aquestalkLikeToAccentPhrasesMock(
+  text: string,
+  styleId: number,
+) {
+  const accentPhrases: AccentPhrase[] = parseKana(text);
 
   // 長さとピッチを代入
   replaceLengthMock(accentPhrases, styleId);

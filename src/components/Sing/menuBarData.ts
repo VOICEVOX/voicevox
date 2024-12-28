@@ -1,9 +1,9 @@
 import { computed } from "vue";
-import { notifyResult } from "../Dialog/Dialog";
 import { useStore } from "@/store";
 import { MenuItemData } from "@/components/Menu/type";
 import { useRootMiscSetting } from "@/composables/useRootMiscSetting";
 import { ExportSongProjectFileType } from "@/store/type";
+import { notifyResult } from "@/components/Dialog/Dialog";
 
 export const useMenuBarData = () => {
   const store = useStore();
@@ -43,13 +43,35 @@ export const useMenuBarData = () => {
     );
   };
 
+  const exportLabelFile = async () => {
+    const results = await store.actions.EXPORT_LABEL_FILES({});
+
+    if (results.length === 0) {
+      throw new Error("results.length is 0.");
+    }
+    notifyResult(
+      results[0], // TODO: SaveResultObject[] に対応する
+      "label",
+      store.actions,
+      store.state.confirmedTips.notifyOnGenerate,
+    );
+  };
+
   // 「ファイル」メニュー
   const fileSubMenuData = computed<MenuItemData[]>(() => [
     {
       type: "button",
-      label: "音声を出力",
+      label: "音声書き出し",
       onClick: () => {
         void exportAudioFile();
+      },
+      disableWhenUiLocked: true,
+    },
+    {
+      type: "button",
+      label: "labファイルを書き出し",
+      onClick: () => {
+        void exportLabelFile();
       },
       disableWhenUiLocked: true,
     },
