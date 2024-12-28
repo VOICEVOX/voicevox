@@ -3,7 +3,6 @@ import os from "os";
 import path from "path";
 import { _electron as electron, test } from "@playwright/test";
 import dotenv from "dotenv";
-import { options } from "yargs";
 import { BrowserWindow, MessageBoxSyncOptions } from "electron";
 
 test.beforeAll(async () => {
