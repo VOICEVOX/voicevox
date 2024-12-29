@@ -153,7 +153,7 @@ export async function getProcessNameFromPid(
   const exec = isWindows
     ? {
         cmd: "tasklist",
-        args: ["/FI", "\"PID eq ${pid}\"", "/NH"],
+        args: ["/FI", `"PID eq ${pid}"`, "/NH"],
       }
     : {
         cmd: "ps",
@@ -170,7 +170,9 @@ export async function getProcessNameFromPid(
    * ```
    * -> `node.exe`
    */
-  const processName = isWindows ? stdout.split("\r\n")[1].split(/ +/)[0] : stdout;
+  const processName = isWindows
+    ? stdout.split("\r\n")[1].split(/ +/)[0]
+    : stdout;
 
   portLog(hostInfo.port, `Found process name: ${processName}`);
   return processName.trim();
