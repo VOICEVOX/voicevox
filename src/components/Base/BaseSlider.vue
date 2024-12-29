@@ -5,7 +5,7 @@
     :max
     :step
     :disabled
-    :modelValue="[model]"
+    :modelValue="[modelValue]"
     @update:modelValue="
       (value) => {
         if (value == undefined) {
@@ -14,6 +14,7 @@
         $emit('update:modelValue', value[0]);
       }
     "
+    @wheel="onWheel"
   >
     <SliderTrack class="SliderTrack">
       <SliderRange class="SliderRange" />
@@ -24,20 +25,43 @@
 
 <script setup lang="ts">
 import { SliderRange, SliderRoot, SliderThumb, SliderTrack } from "radix-vue";
+import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 
-defineProps<{
-  min?: number;
-  max?: number;
-  step?: number;
-  disabled?: boolean;
-  modelValue: number;
-}>();
+const props = withDefaults(
+  defineProps<{
+    min?: number;
+    max?: number;
+    step?: number;
+    scrollStep?: number;
+    disabled?: boolean;
+    modelValue: number;
+  }>(),
+  {
+    min: 0,
+    max: 100,
+    step: 1,
+    scrollStep: undefined,
+  },
+);
 
-defineEmits<{
+const emit = defineEmits<{
   "update:modelValue": [value: number];
 }>();
 
-const model = defineModel<number>({ required: true });
+const onWheel = (event: WheelEvent) => {
+  if (props.disabled) return;
+  event.preventDefault();
+
+  const delta = event.deltaY > 0 ? -1 : 1;
+  const scrollStep =
+    props.scrollStep && !isOnCommandOrCtrlKeyDown(event)
+      ? props.scrollStep
+      : props.step;
+
+  const value = props.modelValue + scrollStep * delta;
+
+  emit("update:modelValue", Math.min(props.max, Math.max(props.min, value)));
+};
 </script>
 
 <style lang="scss">
