@@ -404,7 +404,7 @@ export const rootMiscSettingSchema = z.object({
 });
 export type RootMiscSettingType = z.infer<typeof rootMiscSettingSchema>;
 
-export function getConfigSchema(isMac: boolean) {
+export function getConfigSchema({ isMac }: { isMac: boolean }) {
   return z
     .object({
       inheritAudioInfo: z.boolean().default(true),
@@ -427,7 +427,7 @@ export function getConfigSchema(isMac: boolean) {
         .default({}),
       hotkeySettings: hotkeySettingSchema
         .array()
-        .default(getDefaultHotkeySettings(isMac)),
+        .default(getDefaultHotkeySettings({ isMac })),
       toolbarSetting: toolbarSettingSchema
         .array()
         .default(defaultToolbarButtonSetting),

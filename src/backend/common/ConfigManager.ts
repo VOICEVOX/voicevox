@@ -302,6 +302,7 @@ export abstract class BaseConfigManager {
   protected config: ConfigType | undefined;
 
   private lock = new AsyncLock();
+  protected isMac: boolean;
 
   protected abstract exists(): Promise<boolean>;
   protected abstract load(): Promise<Record<string, unknown> & Metadata>;
@@ -309,7 +310,9 @@ export abstract class BaseConfigManager {
 
   protected abstract getAppVersion(): string;
 
-  constructor(protected isMac: boolean) {}
+  constructor({ isMac }: { isMac: boolean }) {
+    this.isMac = isMac;
+  }
 
   public reset() {
     this.config = this.getDefaultConfig();
@@ -326,7 +329,7 @@ export abstract class BaseConfigManager {
         }
       }
       this.config = this.migrateHotkeySettings(
-        getConfigSchema(this.isMac).parse(data),
+        getConfigSchema({ isMac: this.isMac }).parse(data),
       );
       this._save();
     } else {
@@ -357,7 +360,7 @@ export abstract class BaseConfigManager {
   private _save() {
     void this.lock.acquire(lockKey, async () => {
       await this.save({
-        ...getConfigSchema(this.isMac).parse({
+        ...getConfigSchema({ isMac: this.isMac }).parse({
           ...this.config,
         }),
         __internal__: {
@@ -392,22 +395,22 @@ export abstract class BaseConfigManager {
   private migrateHotkeySettings(data: ConfigType): ConfigType {
     const COMBINATION_IS_NONE = HotkeyCombination("####");
     const loadedHotkeys = structuredClone(data.hotkeySettings);
-    const hotkeysWithoutNewCombination = getDefaultHotkeySettings(isMac).map(
-      (defaultHotkey) => {
-        const loadedHotkey = loadedHotkeys.find(
-          (loadedHotkey) => loadedHotkey.action === defaultHotkey.action,
-        );
-        const hotkeyWithoutCombination: HotkeySettingType = {
-          action: defaultHotkey.action,
-          combination: COMBINATION_IS_NONE,
-        };
-        return loadedHotkey ?? hotkeyWithoutCombination;
-      },
-    );
+    const hotkeysWithoutNewCombination = getDefaultHotkeySettings({
+      isMac,
+    }).map((defaultHotkey) => {
+      const loadedHotkey = loadedHotkeys.find(
+        (loadedHotkey) => loadedHotkey.action === defaultHotkey.action,
+      );
+      const hotkeyWithoutCombination: HotkeySettingType = {
+        action: defaultHotkey.action,
+        combination: COMBINATION_IS_NONE,
+      };
+      return loadedHotkey ?? hotkeyWithoutCombination;
+    });
     const migratedHotkeys = hotkeysWithoutNewCombination.map((hotkey) => {
       if (hotkey.combination === COMBINATION_IS_NONE) {
         const newHotkey = ensureNotNullish(
-          getDefaultHotkeySettings(isMac).find(
+          getDefaultHotkeySettings({ isMac }).find(
             (defaultHotkey) => defaultHotkey.action === hotkey.action,
           ),
         );
@@ -434,6 +437,6 @@ export abstract class BaseConfigManager {
   }
 
   protected getDefaultConfig(): ConfigType {
-    return getConfigSchema(this.isMac).parse({});
+    return getConfigSchema({ isMac: this.isMac }).parse({});
   }
 }

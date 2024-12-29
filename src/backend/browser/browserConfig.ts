@@ -21,7 +21,7 @@ const defaultEngineId = EngineId(defaultEngine.uuid);
 export async function getConfigManager() {
   await configManagerLock.acquire("configManager", async () => {
     if (!configManager) {
-      configManager = new BrowserConfigManager(isMac);
+      configManager = new BrowserConfigManager({ isMac });
       await configManager.initialize();
     }
   });
