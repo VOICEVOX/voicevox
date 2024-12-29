@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { directoryHandleStoreKey } from "./contract";
 import { openDB } from "./browserConfig";
 import { SandboxKey } from "@/type/preload";
@@ -120,8 +121,11 @@ export const writeFileImpl: (typeof window)[typeof SandboxKey]["writeFile"] =
   async (obj: { filePath: string; buffer: ArrayBuffer }) => {
     const filePath = obj.filePath;
 
-    const fileHandle = fileHandleMap.get(filePath);
-    if (fileHandle != undefined) {
+    if (isFakePath(filePath)) {
+      const fileHandle = fileHandleMap.get(filePath);
+      if (fileHandle == undefined) {
+        return failure(new Error(`ファイルが見つかりません: ${filePath}`));
+      }
       const writable = await fileHandle.createWritable();
       await writable.write(obj.buffer);
       return writable.close().then(() => success(undefined));
@@ -189,8 +193,17 @@ export const checkFileExistsImpl: (typeof window)[typeof SandboxKey]["checkFileE
     return Promise.resolve(fileEntries.includes(fileName));
   };
 
+const fakePathSchema = z
+  .string()
+  .regex(/^<browser-dummy-[0-9a-f]+>-.+$/)
+  .brand("FakePath");
+type FakePath = z.infer<typeof fakePathSchema>;
 // FileSystemFileHandleを保持するMap。キーは生成した疑似パス。
-const fileHandleMap: Map<string, FileSystemFileHandle> = new Map();
+const fileHandleMap: Map<FakePath, FileSystemFileHandle> = new Map();
+
+const isFakePath = (path: string): path is FakePath => {
+  return fakePathSchema.safeParse(path).success;
+};
 
 // ファイル選択ダイアログを開く
 // 返り値はファイルパスではなく、疑似パスを返す
@@ -209,7 +222,9 @@ export const showOpenFilePickerImpl = async (options: {
     });
     const paths = [];
     for (const handle of handles) {
-      const fakePath = `<browser-dummy-${uuid4()}>-${handle.name}`;
+      const fakePath = fakePathSchema.parse(
+        `<browser-dummy-${uuid4()}>-${handle.name}`,
+      );
       fileHandleMap.set(fakePath, handle);
       paths.push(fakePath);
     }
@@ -222,6 +237,9 @@ export const showOpenFilePickerImpl = async (options: {
 
 // 指定した疑似パスのファイルを読み込む
 export const readFileImpl = async (filePath: string) => {
+  if (!isFakePath(filePath)) {
+    return failure(new Error(`疑似パスではありません: ${filePath}`));
+  }
   const fileHandle = fileHandleMap.get(filePath);
   if (fileHandle == undefined) {
     return failure(new Error(`ファイルが見つかりません: ${filePath}`));
@@ -251,7 +269,9 @@ export const showExportFilePickerImpl: (typeof window)[typeof SandboxKey]["showE
         },
       ],
     });
-    const fakePath = `<browser-dummy-${uuid4()}>-${handle.name}`;
+    const fakePath = fakePathSchema.parse(
+      `<browser-dummy-${uuid4()}>-${handle.name}`,
+    );
     fileHandleMap.set(fakePath, handle);
 
     return fakePath;
