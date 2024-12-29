@@ -115,13 +115,15 @@ import { generateWavFileData } from "@/helpers/fileDataGenerator";
 import path from "@/helpers/path";
 import { showAlertDialog } from "@/components/Dialog/Dialog";
 import { ufProjectFromVoicevox } from "@/sing/utaformatixProject/fromVoicevox";
-import { ExhaustiveError, UnreachableError } from "@/type/utility";
 import { generateUniqueFilePath } from "@/sing/fileUtils";
 import {
   MultiFileProjectFormat,
   multiFileProjectFormats,
   projectFileExtensions,
+  SingleFileProjectFormat,
+  singleFileProjectFormats,
   ufProjectToMultiFile,
+  ufProjectToSingleFile,
 } from "@/sing/utaformatixProject/utils";
 
 const logger = createLogger("store/singing");
@@ -3504,38 +3506,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
           let firstFilePath = "";
           for (const [i, trackBytes] of tracksBytes.entries()) {
-            const track = getOrThrow(state.tracks, state.trackOrder[i]);
-            if (!track.singer) {
-              throw new UnreachableError(`track.singer is undefined.`);
-            }
-            const characterInfo = getters.CHARACTER_INFO(
-              track.singer.engineId,
-              track.singer.styleId,
-            );
-            if (!characterInfo) {
-              throw new UnreachableError(`characterInfo is undefined.`);
-            }
-            const style = characterInfo.metas.styles.find(
-              (style) => style.styleId === track.singer?.styleId,
-            );
-            if (style == undefined) {
-              throw new Error("assert style != undefined");
-            }
-            const trackFileName = buildSongTrackAudioFileNameFromRawData(
-              state.savingSetting.songTrackFileNamePattern,
-              {
-                characterName: characterInfo.metas.speakerName,
-                index: i,
-                styleName: style.styleName || DEFAULT_STYLE_NAME,
-                date: currentDateString(),
-                projectName: getters.PROJECT_NAME ?? DEFAULT_PROJECT_NAME,
-                trackName: track.name,
-              },
-            );
-            let filePath = path.join(dirPath, `${trackFileName}.${extension}`);
-            if (state.savingSetting.avoidOverwrite) {
-              filePath = await generateUniqueFilePath(filePath, extension);
-            }
+            const filePath = await actions.GENERATE_FILE_PATH_FOR_TRACK_EXPORT({
+              trackId: state.trackOrder[i],
+              directoryPath: dirPath,
+              extension,
+            });
             if (i === 0) {
               firstFilePath = filePath;
             }
@@ -3557,26 +3532,23 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         // それ以外の場合は単一ファイルの形式を選択する
         else {
           let buffer: Uint8Array;
-          let extension: string;
-          switch (fileType) {
-            case "musicxml":
-              buffer = (await project.toMusicXml())[0];
-              extension = "musicxml";
-              break;
-            case "ust":
-              buffer = (await project.toUst())[0];
-              extension = "ust";
-              break;
-            case "smf":
-              buffer = await project.toStandardMid();
-              extension = "mid";
-              break;
-            case "ufdata":
-              buffer = await project.toUfData();
-              extension = "ufdata";
-              break;
-            default:
-              throw new ExhaustiveError(fileType);
+          const extension = projectFileExtensions[fileType];
+          if (
+            singleFileProjectFormats.includes(
+              fileType as SingleFileProjectFormat,
+            )
+          ) {
+            buffer = await ufProjectToSingleFile(
+              project,
+              fileType as SingleFileProjectFormat,
+            );
+          } else {
+            buffer = (
+              await ufProjectToMultiFile(
+                project,
+                fileType as MultiFileProjectFormat,
+              )
+            )[0];
           }
 
           let filePath = await window.backend.showExportFileDialog({
@@ -3591,7 +3563,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               path: "",
             };
           }
-          filePath = await generateUniqueFilePath(filePath, extension);
+          filePath = await generateUniqueFilePath(
+            path.basename(filePath, `.${extension}`),
+            extension,
+          );
 
           return await actions.EXPORT_FILE({
             filePath,
