@@ -16,7 +16,6 @@ import {
   getDefaultHotkeySettings,
   HotkeySettingType,
 } from "@/domain/hotkeyAction";
-import { isMac } from "@/helpers/platform";
 
 const lockKey = "save";
 
@@ -396,7 +395,7 @@ export abstract class BaseConfigManager {
     const COMBINATION_IS_NONE = HotkeyCombination("####");
     const loadedHotkeys = structuredClone(data.hotkeySettings);
     const hotkeysWithoutNewCombination = getDefaultHotkeySettings({
-      isMac,
+      isMac: this.isMac,
     }).map((defaultHotkey) => {
       const loadedHotkey = loadedHotkeys.find(
         (loadedHotkey) => loadedHotkey.action === defaultHotkey.action,
@@ -410,7 +409,7 @@ export abstract class BaseConfigManager {
     const migratedHotkeys = hotkeysWithoutNewCombination.map((hotkey) => {
       if (hotkey.combination === COMBINATION_IS_NONE) {
         const newHotkey = ensureNotNullish(
-          getDefaultHotkeySettings({ isMac }).find(
+          getDefaultHotkeySettings({ isMac: this.isMac }).find(
             (defaultHotkey) => defaultHotkey.action === hotkey.action,
           ),
         );
