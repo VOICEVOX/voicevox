@@ -49,7 +49,7 @@ const model = defineModel<number>({ required: true });
   position: relative;
   display: flex;
   align-items: center;
-  height: vars.$size-control;
+  height: vars.$size-indicator;
   cursor: grab;
 
   &:active {
