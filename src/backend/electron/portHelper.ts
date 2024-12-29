@@ -175,7 +175,7 @@ export async function getProcessNameFromPid(
   )?.trim();
 
   if (processName == undefined) {
-    portWarn(hostInfo.port, `Not found process id: ${pid}`);
+    portWarn(hostInfo.port, `Not found process name from pid=${pid}!`);
     return undefined;
   } else {
     portLog(hostInfo.port, `Found process name: ${processName}`);
