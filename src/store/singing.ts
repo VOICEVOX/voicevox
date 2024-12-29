@@ -3481,7 +3481,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           fileBaseName,
         );
 
-        // 複数トラックかつ複数ファイルの形式はディレクトリを選択する
+        // 複数トラックかつ複数ファイルの形式はディレクトリに書き出す
         if (
           state.trackOrder.length > 1 &&
           // NOTE: as MultiFileProjectFormat しないと型エラーが発生する
@@ -3551,7 +3551,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             result: "SUCCESS",
             path: firstFilePath,
           };
-        } else {
+        }
+        // それ以外の場合は単一ファイルの形式を選択する
+        else {
           let buffer: Uint8Array;
           let extension: string;
           switch (fileType) {
