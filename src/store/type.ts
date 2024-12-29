@@ -72,6 +72,10 @@ import {
   trackSchema,
 } from "@/domain/project/schema";
 import { HotkeySettingType } from "@/domain/hotkeyAction";
+import {
+  MultiFileProjectFormat,
+  SingleFileProjectFormat,
+} from "@/sing/utaformatixProject/utils";
 
 /**
  * エディタ用のAudioQuery
@@ -847,8 +851,10 @@ export type NoteEditTool = "SELECT_FIRST" | "EDIT_FIRST";
 // ピッチ編集ツール
 export type PitchEditTool = "DRAW" | "ERASE";
 
-// プロジェクトを書き出しできるファイル形式
-export type ExportSongProjectFileType = "ufdata" | "smf" | "ust" | "musicxml";
+// プロジェクトの書き出しに使えるファイル形式
+export type ExportSongProjectFileType =
+  | SingleFileProjectFormat
+  | MultiFileProjectFormat;
 
 export type TrackParameters = {
   gain: boolean;

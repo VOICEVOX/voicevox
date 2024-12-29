@@ -117,6 +117,12 @@ import { showAlertDialog } from "@/components/Dialog/Dialog";
 import { ufProjectFromVoicevox } from "@/sing/utaformatixProject/fromVoicevox";
 import { ExhaustiveError, UnreachableError } from "@/type/utility";
 import { generateUniqueFilePath } from "@/sing/fileUtils";
+import {
+  MultiFileProjectFormat,
+  multiFileProjectFormats,
+  projectFileExtensions,
+  ufProjectToMultiFile,
+} from "@/sing/utaformatixProject/utils";
 
 const logger = createLogger("store/singing");
 
@@ -3478,45 +3484,34 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         // 複数トラックかつ複数ファイルの形式はディレクトリを選択する
         if (
           state.trackOrder.length > 1 &&
-          ["ust", "xml", "musicxml"].includes(fileType)
+          // NOTE: as MultiFileProjectFormat しないと型エラーが発生する
+          multiFileProjectFormats.includes(fileType as MultiFileProjectFormat)
         ) {
           const dirPath = await window.backend.showSaveDirectoryDialog({
             title: "プロジェクトを書き出し",
           });
           if (!dirPath) {
-            return {
-              result: "CANCELED",
-              path: "",
-            };
+            return { result: "CANCELED", path: "" };
           }
 
-          let extension: string;
-          let tracksBytes: Uint8Array[];
-          switch (fileType) {
-            case "musicxml":
-              tracksBytes = await project.toMusicXml();
-              extension = "musicxml";
-              break;
-            case "ust":
-              tracksBytes = await project.toUst();
-              extension = "ust";
-              break;
-            default:
-              throw new UnreachableError(`Unexpected fileType: ${fileType}`);
-          }
+          const extension = projectFileExtensions[fileType];
+          const tracksBytes = await ufProjectToMultiFile(
+            project,
+            fileType as MultiFileProjectFormat,
+          );
 
           let firstFilePath = "";
           for (const [i, trackBytes] of tracksBytes.entries()) {
             const track = getOrThrow(state.tracks, state.trackOrder[i]);
             if (!track.singer) {
-              continue;
+              throw new UnreachableError(`track.singer is undefined.`);
             }
             const characterInfo = getters.CHARACTER_INFO(
               track.singer.engineId,
               track.singer.styleId,
             );
             if (!characterInfo) {
-              continue;
+              throw new UnreachableError(`characterInfo is undefined.`);
             }
             const style = characterInfo.metas.styles.find(
               (style) => style.styleId === track.singer?.styleId,
@@ -3537,14 +3532,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             );
             let filePath = path.join(dirPath, `${trackFileName}.${extension}`);
             if (state.savingSetting.avoidOverwrite) {
-              let tail = 1;
-              while (await window.backend.checkFileExists(filePath)) {
-                filePath = path.join(
-                  dirPath,
-                  `${trackFileName}[${tail}].${extension}`,
-                );
-                tail += 1;
-              }
+              filePath = await generateUniqueFilePath(filePath, extension);
             }
             if (i === 0) {
               firstFilePath = filePath;
@@ -3599,14 +3587,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               path: "",
             };
           }
-          if (state.savingSetting.avoidOverwrite) {
-            let tail = 1;
-            const filePathWithoutExt = path.basename(filePath, `.${extension}`);
-            while (await window.backend.checkFileExists(filePath)) {
-              filePath = `${filePathWithoutExt}[${tail}].${extension}`;
-              tail += 1;
-            }
-          }
+          filePath = await generateUniqueFilePath(filePath, extension);
 
           return await actions.EXPORT_FILE({
             filePath,
