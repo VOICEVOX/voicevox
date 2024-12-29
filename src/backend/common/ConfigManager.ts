@@ -300,9 +300,9 @@ export type Metadata = {
  */
 export abstract class BaseConfigManager {
   protected config: ConfigType | undefined;
+  protected isMac: boolean;
 
   private lock = new AsyncLock();
-  protected isMac: boolean;
 
   protected abstract exists(): Promise<boolean>;
   protected abstract load(): Promise<Record<string, unknown> & Metadata>;
