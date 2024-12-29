@@ -153,7 +153,7 @@ export async function getProcessNameFromPid(
   const exec = isWindows
     ? {
         cmd: "tasklist",
-        args: ["/FI", `"PID eq ${pid}"`, "/NH"],
+        args: ["/FI", `PID eq ${pid}`, "/NH"],
       }
     : {
         cmd: "ps",
