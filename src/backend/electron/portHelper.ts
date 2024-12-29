@@ -148,12 +148,12 @@ export async function getPidFromPort(
 export async function getProcessNameFromPid(
   hostInfo: HostInfo,
   pid: number,
-): Promise<string> {
+): Promise<string | undefined> {
   portLog(hostInfo.port, `Getting process name from pid=${pid}...`);
   const exec = isWindows
     ? {
         cmd: "tasklist",
-        args: ["/FI", `PID eq ${pid}`, "/NH"],
+        args: ["/FI", `"PID eq ${pid}"`, "/NH"],
       }
     : {
         cmd: "ps",
@@ -165,17 +165,22 @@ export async function getProcessNameFromPid(
   /*
    * ex) stdout:
    * ```
-   * Name
-   * node.exe
+   *
+   * node.exe     25180 Console   1     86,544 K
    * ```
    * -> `node.exe`
    */
-  const processName = isWindows
-    ? stdout.split("\r\n")[1].split(/ +/)[0]
-    : stdout;
+  const processName = (
+    isWindows ? stdout.split("\r\n").at(1)?.split(/ +/)?.at(0) : stdout
+  )?.trim();
 
-  portLog(hostInfo.port, `Found process name: ${processName}`);
-  return processName.trim();
+  if (processName == undefined) {
+    portWarn(hostInfo.port, `Not found process id: ${pid}`);
+    return undefined;
+  } else {
+    portLog(hostInfo.port, `Found process name: ${processName}`);
+    return processName;
+  }
 }
 
 /**
