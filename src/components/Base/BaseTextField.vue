@@ -1,6 +1,7 @@
 <template>
   <div class="wrapper">
     <input
+      :id
       v-model="model"
       type="text"
       class="input"
@@ -22,6 +23,7 @@ defineProps<{
   hasError?: boolean;
   readonly?: boolean;
   disabled?: boolean;
+  id?: string;
 }>();
 
 defineEmits<{
