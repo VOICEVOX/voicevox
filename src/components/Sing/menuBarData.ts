@@ -78,7 +78,7 @@ export const useMenuBarData = () => {
     { type: "separator" },
     {
       type: "button",
-      label: "インポート",
+      label: "プロジェクトをインポート",
       onClick: () => {
         void importExternalSongProject();
       },
@@ -86,7 +86,7 @@ export const useMenuBarData = () => {
     },
     {
       type: "root",
-      label: "エクスポート",
+      label: "プロジェクトをエクスポート",
       subMenu: (
         [
           ["smf", "MIDI (SMF)"],
