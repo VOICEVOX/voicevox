@@ -73,34 +73,6 @@ export const api: Sandbox = {
     // NOTE: ブラウザ版ではサポートされていません
     return Promise.resolve({});
   },
-  showAudioSaveDialog(obj: { title: string; defaultPath?: string }) {
-    return new Promise((resolve, reject) => {
-      if (obj.defaultPath == undefined) {
-        reject(
-          // storeやvue componentからdefaultPathを設定していなかったらrejectされる
-          new Error(
-            "ブラウザ版ではファイルの保存機能が一部サポートされていません。",
-          ),
-        );
-      } else {
-        resolve(obj.defaultPath);
-      }
-    });
-  },
-  showTextSaveDialog(obj: { title: string; defaultPath?: string }) {
-    return new Promise((resolve, reject) => {
-      if (obj.defaultPath == undefined) {
-        reject(
-          // storeやvue componentからdefaultPathを設定していなかったらrejectされる
-          new Error(
-            "ブラウザ版ではファイルの保存機能が一部サポートされていません。",
-          ),
-        );
-      } else {
-        resolve(obj.defaultPath);
-      }
-    });
-  },
   showSaveDirectoryDialog(obj: { title: string }) {
     return showOpenDirectoryDialogImpl(obj);
   },

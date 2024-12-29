@@ -94,14 +94,17 @@ export const useMenuBarData = () => {
           ["ufdata", "Utaformatix"],
           ["ust", "UTAU"],
         ] satisfies [fileType: ExportSongProjectFileType, name: string][]
-      ).map(([fileType, label]) => ({
-        type: "button",
-        label,
-        onClick: () => {
-          void exportSongProject(fileType, label);
-        },
-        disableWhenUiLocked: true,
-      })),
+      ).map(
+        ([fileType, label]) =>
+          ({
+            type: "button",
+            label,
+            onClick: () => {
+              void exportSongProject(fileType, label);
+            },
+            disableWhenUiLocked: true,
+          }) satisfies MenuItemData,
+      ),
       disableWhenUiLocked: true,
     },
   ]);

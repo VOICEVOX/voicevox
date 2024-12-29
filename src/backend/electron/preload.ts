@@ -33,17 +33,6 @@ const api: Sandbox = {
     return await ipcRendererInvokeProxy.GET_ALT_PORT_INFOS();
   },
 
-  showAudioSaveDialog: ({ title, defaultPath }) => {
-    return ipcRendererInvokeProxy.SHOW_AUDIO_SAVE_DIALOG({
-      title,
-      defaultPath,
-    });
-  },
-
-  showTextSaveDialog: ({ title, defaultPath }) => {
-    return ipcRendererInvokeProxy.SHOW_TEXT_SAVE_DIALOG({ title, defaultPath });
-  },
-
   showSaveDirectoryDialog: ({ title }) => {
     return ipcRendererInvokeProxy.SHOW_SAVE_DIRECTORY_DIALOG({ title });
   },

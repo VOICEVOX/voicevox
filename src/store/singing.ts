@@ -2768,9 +2768,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           if (state.savingSetting.fixedExportEnabled) {
             filePath = path.join(state.savingSetting.fixedExportDir, fileName);
           } else {
-            filePath ??= await window.backend.showAudioSaveDialog({
+            filePath ??= await window.backend.showExportFileDialog({
               title: "音声を保存",
-              defaultPath: fileName,
+              defaultName: fileName,
+              extensions: ["wav"],
+              extensionName: "WAV ファイル",
             });
           }
           if (!filePath) {
