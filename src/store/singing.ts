@@ -32,6 +32,7 @@ import {
   currentDateString,
   DEFAULT_PROJECT_NAME,
   DEFAULT_STYLE_NAME,
+  generateLabelFileDataFromFramePhonemes,
   sanitizeFileName,
 } from "./utility";
 import {
@@ -87,11 +88,17 @@ import {
   shouldPlayTracks,
   decibelToLinear,
   applyPitchEdit,
+  calcPhraseStartFrames,
+  calcPhraseEndFrames,
+  toEntirePhonemeTimings,
+  adjustPhonemeTimingsAndPhraseEndFrames,
+  phonemeTimingsToPhonemes,
 } from "@/sing/domain";
 import { getOverlappingNoteIds } from "@/sing/storeHelper";
 import {
   AnimationTimer,
   calculateHash,
+  createArray,
   createPromiseThatResolvesWhen,
   linearInterpolation,
   round,
@@ -103,10 +110,11 @@ import { getOrThrow } from "@/helpers/mapHelper";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { ufProjectToVoicevox } from "@/sing/utaformatixProject/toVoicevox";
 import { uuid4 } from "@/helpers/random";
-import { convertToWavFileData } from "@/sing/convertToWavFileData";
 import { generateWriteErrorMessage } from "@/helpers/fileHelper";
+import { generateWavFileData } from "@/helpers/fileDataGenerator";
 import path from "@/helpers/path";
 import { showAlertDialog } from "@/components/Dialog/Dialog";
+import { generateUniqueFilePath } from "@/sing/fileUtils";
 
 const logger = createLogger("store/singing");
 
@@ -119,15 +127,6 @@ type SnapshotForPhraseRender = Readonly<{
   tracks: Map<TrackId, Track>;
   engineFrameRates: Map<EngineId, number>;
   editorFrameRate: number;
-}>;
-
-/**
- * フレーズレンダリングのコンテキスト
- */
-type PhraseRenderContext = Readonly<{
-  snapshot: SnapshotForPhraseRender;
-  trackId: TrackId;
-  phraseKey: PhraseKey;
 }>;
 
 type PhraseRenderStageId =
@@ -148,19 +147,27 @@ type PhraseRenderStage = Readonly<{
    * @param context コンテキスト
    * @returns 実行が必要かどうかのブール値
    */
-  shouldBeExecuted: (context: PhraseRenderContext) => Promise<boolean>;
+  needsExecution: (
+    trackId: TrackId,
+    phraseKey: PhraseKey,
+    snapshot: SnapshotForPhraseRender,
+  ) => Promise<boolean>;
 
   /**
    * 前回の処理結果を削除する。
    * @param context コンテキスト
    */
-  deleteExecutionResult: (context: PhraseRenderContext) => void;
+  deleteExecutionResult: (phraseKey: PhraseKey) => void;
 
   /**
    * ステージの処理を実行する。
    * @param context コンテキスト
    */
-  execute: (context: PhraseRenderContext) => Promise<void>;
+  execute: (
+    trackId: TrackId,
+    phraseKey: PhraseKey,
+    snapshot: SnapshotForPhraseRender,
+  ) => Promise<void>;
 }>;
 
 /**
@@ -211,51 +218,6 @@ type SingingVolumeSource = Readonly<{
 type SingingVoiceSource = Readonly<{
   singer: Singer;
   queryForSingingVoiceSynthesis: EditorFrameAudioQuery;
-}>;
-
-/**
- * フレーズレンダラー。
- * 各フレーズごとに、ステージを進めながらレンダリング処理を行う。
- * レンダリングが必要かどうかの判定やキャッシュの作成も行う。
- */
-type PhraseRenderer = Readonly<{
-  /**
-   * 一番最初のステージのIDを返す。
-   * 一度もレンダリングを行っていないフレーズは、
-   * この（一番最初の）ステージからレンダリング処理を開始する必要がある。
-   * @returns ステージID
-   */
-  getFirstRenderStageId: () => PhraseRenderStageId;
-
-  /**
-   * レンダリングが必要なフレーズかどうかを判断し、
-   * レンダリングが必要であればどのステージから開始されるべきかを判断して、そのステージのIDを返す。
-   * レンダリングが必要ない場合、undefinedが返される。
-   * @param snapshot スナップショット
-   * @param trackId トラックID
-   * @param phraseKey フレーズキー
-   * @returns ステージID または undefined
-   */
-  determineStartStage: (
-    snapshot: SnapshotForPhraseRender,
-    trackId: TrackId,
-    phraseKey: PhraseKey,
-  ) => Promise<PhraseRenderStageId | undefined>;
-
-  /**
-   * 指定されたフレーズのレンダリング処理を、指定されたステージから開始する。
-   * レンダリング処理を開始する前に、前回のレンダリング処理結果の削除が行われる。
-   * @param snapshot スナップショット
-   * @param trackId トラックID
-   * @param phraseKey フレーズキー
-   * @param startStageId 開始ステージID
-   */
-  render: (
-    snapshot: SnapshotForPhraseRender,
-    trackId: TrackId,
-    phraseKey: PhraseKey,
-    startStageId: PhraseRenderStageId,
-  ) => Promise<void>;
 }>;
 
 /**
@@ -785,8 +747,8 @@ export const singingStoreState: SingingStoreState = {
   startRenderingRequested: false,
   stopRenderingRequested: false,
   nowRendering: false,
-  nowAudioExporting: false,
-  cancellationOfAudioExportRequested: false,
+  exportState: "NOT_EXPORTING",
+  cancellationOfExportRequested: false,
   isSongSidebarOpen: false,
 };
 
@@ -1584,6 +1546,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   SET_IS_DRAG: {
     mutation(state, { isDrag }: { isDrag: boolean }) {
+      // FIXME: state.isDragが無くなっているので修正する
       state.isDrag = isDrag;
     },
     async action({ mutations }, { isDrag }) {
@@ -1743,6 +1706,32 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const lastRestDurationSeconds = 0.5; // TODO: 設定できるようにする
       const fadeOutDurationSeconds = 0.15; // TODO: 設定できるようにする
 
+      /**
+       * レンダリング中に変更される可能性のあるデータのコピーを作成する。
+       */
+      const createSnapshot = () => {
+        return {
+          tpqn: state.tpqn,
+          tempos: cloneWithUnwrapProxy(state.tempos),
+          tracks: cloneWithUnwrapProxy(state.tracks),
+          trackOverlappingNoteIds: new Map(
+            [...state.tracks.keys()].map((trackId) => [
+              trackId,
+              getters.OVERLAPPING_NOTE_IDS(trackId),
+            ]),
+          ),
+          engineFrameRates: new Map(
+            Object.entries(state.engineManifests).map(
+              ([engineId, engineManifest]) => [
+                engineId as EngineId,
+                engineManifest.frameRate,
+              ],
+            ),
+          ),
+          editorFrameRate: state.editorFrameRate,
+        } as const;
+      };
+
       const calcPhraseFirstRestDuration = (
         prevPhraseLastNote: Note | undefined,
         phraseFirstNote: Note,
@@ -1803,14 +1792,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         );
       };
 
-      const searchPhrases = async (
+      const generatePhrases = async (
         notes: Note[],
         tempos: Tempo[],
         tpqn: number,
         phraseFirstRestMinDurationSeconds: number,
         trackId: TrackId,
       ) => {
-        const foundPhrases = new Map<PhraseKey, Phrase>();
+        const generatedPhrases = new Map<PhraseKey, Phrase>();
 
         let phraseNotes: Note[] = [];
         let prevPhraseLastNote: Note | undefined = undefined;
@@ -1847,7 +1836,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               startTime: phraseStartTime,
               trackId,
             });
-            foundPhrases.set(phraseKey, {
+            generatedPhrases.set(phraseKey, {
               firstRestDuration: phraseFirstRestDuration,
               notes: phraseNotes,
               startTime: phraseStartTime,
@@ -1861,26 +1850,28 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             }
           }
         }
-        return foundPhrases;
+        return generatedPhrases;
       };
 
       const generateQuerySource = (
-        context: PhraseRenderContext,
+        trackId: TrackId,
+        phraseKey: PhraseKey,
+        snapshot: SnapshotForPhraseRender,
       ): QuerySource => {
-        const track = getOrThrow(context.snapshot.tracks, context.trackId);
+        const track = getOrThrow(snapshot.tracks, trackId);
         if (track.singer == undefined) {
           throw new Error("track.singer is undefined.");
         }
         const engineFrameRate = getOrThrow(
-          context.snapshot.engineFrameRates,
+          snapshot.engineFrameRates,
           track.singer.engineId,
         );
-        const phrase = getOrThrow(state.phrases, context.phraseKey);
+        const phrase = getOrThrow(state.phrases, phraseKey);
         return {
           engineId: track.singer.engineId,
           engineFrameRate,
-          tpqn: context.snapshot.tpqn,
-          tempos: context.snapshot.tempos,
+          tpqn: snapshot.tpqn,
+          tempos: snapshot.tempos,
           firstRestDuration: phrase.firstRestDuration,
           notes: phrase.notes,
           keyRangeAdjustment: track.keyRangeAdjustment,
@@ -1949,30 +1940,38 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
       const queryGenerationStage: PhraseRenderStage = {
         id: "queryGeneration",
-        shouldBeExecuted: async (context: PhraseRenderContext) => {
-          const track = getOrThrow(context.snapshot.tracks, context.trackId);
+        needsExecution: async (
+          trackId: TrackId,
+          phraseKey: PhraseKey,
+          snapshot: SnapshotForPhraseRender,
+        ) => {
+          const track = getOrThrow(snapshot.tracks, trackId);
           if (track.singer == undefined) {
             return false;
           }
-          const phrase = getOrThrow(state.phrases, context.phraseKey);
+          const phrase = getOrThrow(state.phrases, phraseKey);
           const phraseQueryKey = phrase.queryKey;
-          const querySource = generateQuerySource(context);
+          const querySource = generateQuerySource(trackId, phraseKey, snapshot);
           const queryKey = await calculateQueryKey(querySource);
           return phraseQueryKey == undefined || phraseQueryKey !== queryKey;
         },
-        deleteExecutionResult: (context: PhraseRenderContext) => {
-          const phrase = getOrThrow(state.phrases, context.phraseKey);
+        deleteExecutionResult: (phraseKey: PhraseKey) => {
+          const phrase = getOrThrow(state.phrases, phraseKey);
           const phraseQueryKey = phrase.queryKey;
           if (phraseQueryKey != undefined) {
             mutations.DELETE_PHRASE_QUERY({ queryKey: phraseQueryKey });
             mutations.SET_QUERY_KEY_TO_PHRASE({
-              phraseKey: context.phraseKey,
+              phraseKey,
               queryKey: undefined,
             });
           }
         },
-        execute: async (context: PhraseRenderContext) => {
-          const querySource = generateQuerySource(context);
+        execute: async (
+          trackId: TrackId,
+          phraseKey: PhraseKey,
+          snapshot: SnapshotForPhraseRender,
+        ) => {
+          const querySource = generateQuerySource(trackId, phraseKey, snapshot);
           const queryKey = await calculateQueryKey(querySource);
 
           let query = queryCache.get(queryKey);
@@ -1985,27 +1984,26 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             queryCache.set(queryKey, query);
           }
 
-          const phrase = getOrThrow(state.phrases, context.phraseKey);
+          const phrase = getOrThrow(state.phrases, phraseKey);
           const phraseQueryKey = phrase.queryKey;
           if (phraseQueryKey != undefined) {
             throw new Error("The previous query has not been removed.");
           }
           mutations.SET_PHRASE_QUERY({ queryKey, query });
-          mutations.SET_QUERY_KEY_TO_PHRASE({
-            phraseKey: context.phraseKey,
-            queryKey,
-          });
+          mutations.SET_QUERY_KEY_TO_PHRASE({ phraseKey, queryKey });
         },
       };
 
       const generateSingingPitchSource = (
-        context: PhraseRenderContext,
+        trackId: TrackId,
+        phraseKey: PhraseKey,
+        snapshot: SnapshotForPhraseRender,
       ): SingingPitchSource => {
-        const track = getOrThrow(context.snapshot.tracks, context.trackId);
+        const track = getOrThrow(snapshot.tracks, trackId);
         if (track.singer == undefined) {
           throw new Error("track.singer is undefined.");
         }
-        const phrase = getOrThrow(state.phrases, context.phraseKey);
+        const phrase = getOrThrow(state.phrases, phraseKey);
         const phraseQueryKey = phrase.queryKey;
         if (phraseQueryKey == undefined) {
           throw new Error("phraseQueryKey is undefined.");
@@ -2016,8 +2014,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         return {
           engineId: track.singer.engineId,
           engineFrameRate: query.frameRate,
-          tpqn: context.snapshot.tpqn,
-          tempos: context.snapshot.tempos,
+          tpqn: snapshot.tpqn,
+          tempos: snapshot.tempos,
           firstRestDuration: phrase.firstRestDuration,
           notes: phrase.notes,
           keyRangeAdjustment: track.keyRangeAdjustment,
@@ -2034,14 +2032,22 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
       const singingPitchGenerationStage: PhraseRenderStage = {
         id: "singingPitchGeneration",
-        shouldBeExecuted: async (context: PhraseRenderContext) => {
-          const track = getOrThrow(context.snapshot.tracks, context.trackId);
+        needsExecution: async (
+          trackId: TrackId,
+          phraseKey: PhraseKey,
+          snapshot: SnapshotForPhraseRender,
+        ) => {
+          const track = getOrThrow(snapshot.tracks, trackId);
           if (track.singer == undefined) {
             return false;
           }
-          const phrase = getOrThrow(state.phrases, context.phraseKey);
+          const phrase = getOrThrow(state.phrases, phraseKey);
           const phraseSingingPitchKey = phrase.singingPitchKey;
-          const singingPitchSource = generateSingingPitchSource(context);
+          const singingPitchSource = generateSingingPitchSource(
+            trackId,
+            phraseKey,
+            snapshot,
+          );
           const singingPitchKey =
             await calculateSingingPitchKey(singingPitchSource);
           return (
@@ -2049,21 +2055,29 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             phraseSingingPitchKey !== singingPitchKey
           );
         },
-        deleteExecutionResult: (context: PhraseRenderContext) => {
-          const phrase = getOrThrow(state.phrases, context.phraseKey);
+        deleteExecutionResult: (phraseKey: PhraseKey) => {
+          const phrase = getOrThrow(state.phrases, phraseKey);
           const phraseSingingPitchKey = phrase.singingPitchKey;
           if (phraseSingingPitchKey != undefined) {
             mutations.DELETE_PHRASE_SINGING_PITCH({
               singingPitchKey: phraseSingingPitchKey,
             });
             mutations.SET_SINGING_PITCH_KEY_TO_PHRASE({
-              phraseKey: context.phraseKey,
+              phraseKey,
               singingPitchKey: undefined,
             });
           }
         },
-        execute: async (context: PhraseRenderContext) => {
-          const singingPitchSource = generateSingingPitchSource(context);
+        execute: async (
+          trackId: TrackId,
+          phraseKey: PhraseKey,
+          snapshot: SnapshotForPhraseRender,
+        ) => {
+          const singingPitchSource = generateSingingPitchSource(
+            trackId,
+            phraseKey,
+            snapshot,
+          );
           const singingPitchKey =
             await calculateSingingPitchKey(singingPitchSource);
 
@@ -2076,27 +2090,29 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             singingPitchCache.set(singingPitchKey, singingPitch);
           }
 
-          const phrase = getOrThrow(state.phrases, context.phraseKey);
+          const phrase = getOrThrow(state.phrases, phraseKey);
           const phraseSingingPitchKey = phrase.singingPitchKey;
           if (phraseSingingPitchKey != undefined) {
             throw new Error("The previous singing pitch has not been removed.");
           }
           mutations.SET_PHRASE_SINGING_PITCH({ singingPitchKey, singingPitch });
           mutations.SET_SINGING_PITCH_KEY_TO_PHRASE({
-            phraseKey: context.phraseKey,
+            phraseKey,
             singingPitchKey,
           });
         },
       };
 
       const generateSingingVolumeSource = (
-        context: PhraseRenderContext,
+        trackId: TrackId,
+        phraseKey: PhraseKey,
+        snapshot: SnapshotForPhraseRender,
       ): SingingVolumeSource => {
-        const track = getOrThrow(context.snapshot.tracks, context.trackId);
+        const track = getOrThrow(snapshot.tracks, trackId);
         if (track.singer == undefined) {
           throw new Error("track.singer is undefined.");
         }
-        const phrase = getOrThrow(state.phrases, context.phraseKey);
+        const phrase = getOrThrow(state.phrases, phraseKey);
         const phraseQueryKey = phrase.queryKey;
         if (phraseQueryKey == undefined) {
           throw new Error("phraseQueryKey is undefined.");
@@ -2108,13 +2124,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           clonedQuery,
           phrase.startTime,
           track.pitchEditData,
-          context.snapshot.editorFrameRate,
+          snapshot.editorFrameRate,
         );
         return {
           engineId: track.singer.engineId,
           engineFrameRate: query.frameRate,
-          tpqn: context.snapshot.tpqn,
-          tempos: context.snapshot.tempos,
+          tpqn: snapshot.tpqn,
+          tempos: snapshot.tempos,
           firstRestDuration: phrase.firstRestDuration,
           notes: phrase.notes,
           keyRangeAdjustment: track.keyRangeAdjustment,
@@ -2165,36 +2181,52 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
       const singingVolumeGenerationStage: PhraseRenderStage = {
         id: "singingVolumeGeneration",
-        shouldBeExecuted: async (context: PhraseRenderContext) => {
-          const track = getOrThrow(context.snapshot.tracks, context.trackId);
+        needsExecution: async (
+          trackId: TrackId,
+          phraseKey: PhraseKey,
+          snapshot: SnapshotForPhraseRender,
+        ) => {
+          const track = getOrThrow(snapshot.tracks, trackId);
           if (track.singer == undefined) {
             return false;
           }
-          const singingVolumeSource = generateSingingVolumeSource(context);
+          const singingVolumeSource = generateSingingVolumeSource(
+            trackId,
+            phraseKey,
+            snapshot,
+          );
           const singingVolumeKey =
             await calculateSingingVolumeKey(singingVolumeSource);
-          const phrase = getOrThrow(state.phrases, context.phraseKey);
+          const phrase = getOrThrow(state.phrases, phraseKey);
           const phraseSingingVolumeKey = phrase.singingVolumeKey;
           return (
             phraseSingingVolumeKey == undefined ||
             phraseSingingVolumeKey !== singingVolumeKey
           );
         },
-        deleteExecutionResult: (context: PhraseRenderContext) => {
-          const phrase = getOrThrow(state.phrases, context.phraseKey);
+        deleteExecutionResult: (phraseKey: PhraseKey) => {
+          const phrase = getOrThrow(state.phrases, phraseKey);
           const phraseSingingVolumeKey = phrase.singingVolumeKey;
           if (phraseSingingVolumeKey != undefined) {
             mutations.DELETE_PHRASE_SINGING_VOLUME({
               singingVolumeKey: phraseSingingVolumeKey,
             });
             mutations.SET_SINGING_VOLUME_KEY_TO_PHRASE({
-              phraseKey: context.phraseKey,
+              phraseKey,
               singingVolumeKey: undefined,
             });
           }
         },
-        execute: async (context: PhraseRenderContext) => {
-          const singingVolumeSource = generateSingingVolumeSource(context);
+        execute: async (
+          trackId: TrackId,
+          phraseKey: PhraseKey,
+          snapshot: SnapshotForPhraseRender,
+        ) => {
+          const singingVolumeSource = generateSingingVolumeSource(
+            trackId,
+            phraseKey,
+            snapshot,
+          );
           const singingVolumeKey =
             await calculateSingingVolumeKey(singingVolumeSource);
 
@@ -2207,7 +2239,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             singingVolumeCache.set(singingVolumeKey, singingVolume);
           }
 
-          const phrase = getOrThrow(state.phrases, context.phraseKey);
+          const phrase = getOrThrow(state.phrases, phraseKey);
           const phraseSingingVolumeKey = phrase.singingVolumeKey;
           if (phraseSingingVolumeKey != undefined) {
             throw new Error(
@@ -2219,20 +2251,22 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             singingVolume,
           });
           mutations.SET_SINGING_VOLUME_KEY_TO_PHRASE({
-            phraseKey: context.phraseKey,
+            phraseKey,
             singingVolumeKey,
           });
         },
       };
 
       const generateSingingVoiceSource = (
-        context: PhraseRenderContext,
+        trackId: TrackId,
+        phraseKey: PhraseKey,
+        snapshot: SnapshotForPhraseRender,
       ): SingingVoiceSource => {
-        const track = getOrThrow(context.snapshot.tracks, context.trackId);
+        const track = getOrThrow(snapshot.tracks, trackId);
         if (track.singer == undefined) {
           throw new Error("track.singer is undefined.");
         }
-        const phrase = getOrThrow(state.phrases, context.phraseKey);
+        const phrase = getOrThrow(state.phrases, phraseKey);
         const phraseQueryKey = phrase.queryKey;
         const phraseSingingVolumeKey = phrase.singingVolumeKey;
         if (phraseQueryKey == undefined) {
@@ -2252,7 +2286,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           clonedQuery,
           phrase.startTime,
           track.pitchEditData,
-          context.snapshot.editorFrameRate,
+          snapshot.editorFrameRate,
         );
         clonedQuery.volume = clonedSingingVolume;
         return {
@@ -2292,34 +2326,50 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
       const singingVoiceSynthesisStage: PhraseRenderStage = {
         id: "singingVoiceSynthesis",
-        shouldBeExecuted: async (context: PhraseRenderContext) => {
-          const track = getOrThrow(context.snapshot.tracks, context.trackId);
+        needsExecution: async (
+          trackId: TrackId,
+          phraseKey: PhraseKey,
+          snapshot: SnapshotForPhraseRender,
+        ) => {
+          const track = getOrThrow(snapshot.tracks, trackId);
           if (track.singer == undefined) {
             return false;
           }
-          const singingVoiceSource = generateSingingVoiceSource(context);
+          const singingVoiceSource = generateSingingVoiceSource(
+            trackId,
+            phraseKey,
+            snapshot,
+          );
           const singingVoiceKey =
             await calculateSingingVoiceKey(singingVoiceSource);
-          const phrase = getOrThrow(state.phrases, context.phraseKey);
+          const phrase = getOrThrow(state.phrases, phraseKey);
           const phraseSingingVoiceKey = phrase.singingVoiceKey;
           return (
             phraseSingingVoiceKey == undefined ||
             phraseSingingVoiceKey !== singingVoiceKey
           );
         },
-        deleteExecutionResult: (context: PhraseRenderContext) => {
-          const phrase = getOrThrow(state.phrases, context.phraseKey);
+        deleteExecutionResult: (phraseKey: PhraseKey) => {
+          const phrase = getOrThrow(state.phrases, phraseKey);
           const phraseSingingVoiceKey = phrase.singingVoiceKey;
           if (phraseSingingVoiceKey != undefined) {
             phraseSingingVoices.delete(phraseSingingVoiceKey);
             mutations.SET_SINGING_VOICE_KEY_TO_PHRASE({
-              phraseKey: context.phraseKey,
+              phraseKey,
               singingVoiceKey: undefined,
             });
           }
         },
-        execute: async (context: PhraseRenderContext) => {
-          const singingVoiceSource = generateSingingVoiceSource(context);
+        execute: async (
+          trackId: TrackId,
+          phraseKey: PhraseKey,
+          snapshot: SnapshotForPhraseRender,
+        ) => {
+          const singingVoiceSource = generateSingingVoiceSource(
+            trackId,
+            phraseKey,
+            snapshot,
+          );
           const singingVoiceKey =
             await calculateSingingVoiceKey(singingVoiceSource);
 
@@ -2332,72 +2382,26 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             singingVoiceCache.set(singingVoiceKey, singingVoice);
           }
 
-          const phrase = getOrThrow(state.phrases, context.phraseKey);
+          const phrase = getOrThrow(state.phrases, phraseKey);
           const phraseSingingVoiceKey = phrase.singingVoiceKey;
           if (phraseSingingVoiceKey != undefined) {
             throw new Error("The previous singing voice has not been removed.");
           }
           phraseSingingVoices.set(singingVoiceKey, singingVoice);
           mutations.SET_SINGING_VOICE_KEY_TO_PHRASE({
-            phraseKey: context.phraseKey,
+            phraseKey,
             singingVoiceKey,
           });
         },
       };
 
+      // NOTE: ステージは実行順で保持
       const stages: readonly PhraseRenderStage[] = [
         queryGenerationStage,
         singingPitchGenerationStage,
         singingVolumeGenerationStage,
         singingVoiceSynthesisStage,
       ];
-
-      const phraseRenderer: PhraseRenderer = {
-        getFirstRenderStageId: () => {
-          return stages[0].id;
-        },
-        determineStartStage: async (
-          snapshot: SnapshotForPhraseRender,
-          trackId: TrackId,
-          phraseKey: PhraseKey,
-        ) => {
-          const context: PhraseRenderContext = {
-            snapshot,
-            trackId,
-            phraseKey,
-          };
-          for (const stage of stages) {
-            if (await stage.shouldBeExecuted(context)) {
-              return stage.id;
-            }
-          }
-          return undefined;
-        },
-        render: async (
-          snapshot: SnapshotForPhraseRender,
-          trackId: TrackId,
-          phraseKey: PhraseKey,
-          startStageId: PhraseRenderStageId,
-        ) => {
-          const context: PhraseRenderContext = {
-            snapshot,
-            trackId,
-            phraseKey,
-          };
-          const startStageIndex = stages.findIndex((value) => {
-            return value.id === startStageId;
-          });
-          if (startStageIndex === -1) {
-            throw new Error("Stage not found.");
-          }
-          for (let i = stages.length - 1; i >= startStageIndex; i--) {
-            stages[i].deleteExecutionResult(context);
-          }
-          for (let i = startStageIndex; i < stages.length; i++) {
-            await stages[i].execute(context);
-          }
-        },
-      };
 
       // NOTE: 型推論でawaitの前か後かが考慮されないので、関数を介して取得する（型がbooleanになるようにする）
       const startRenderingRequested = () => state.startRenderingRequested;
@@ -2423,94 +2427,98 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
       const render = async () => {
         const firstRestMinDurationSeconds = 0.12;
-
-        // レンダリング中に変更される可能性のあるデータのコピー
-        const snapshot = {
-          tpqn: state.tpqn,
-          tempos: cloneWithUnwrapProxy(state.tempos),
-          tracks: cloneWithUnwrapProxy(state.tracks),
-          trackOverlappingNoteIds: new Map(
-            [...state.tracks.keys()].map((trackId) => [
-              trackId,
-              getters.OVERLAPPING_NOTE_IDS(trackId),
-            ]),
-          ),
-          engineFrameRates: new Map(
-            Object.entries(state.engineManifests).map(
-              ([engineId, engineManifest]) => [
-                engineId as EngineId,
-                engineManifest.frameRate,
-              ],
-            ),
-          ),
-          editorFrameRate: state.editorFrameRate,
-        } as const;
+        const snapshot = createSnapshot();
 
         const renderStartStageIds = new Map<PhraseKey, PhraseRenderStageId>();
 
-        // フレーズを更新する
-
-        const foundPhrases = new Map<PhraseKey, Phrase>();
+        // 重なっているノートを削除する
+        const filteredTrackNotes = new Map<TrackId, Note[]>();
         for (const [trackId, track] of snapshot.tracks) {
-          // 重なっているノートを削除する
           const overlappingNoteIds = getOrThrow(
             snapshot.trackOverlappingNoteIds,
             trackId,
           );
-          const notes = track.notes.filter(
+          const filteredNotes = track.notes.filter(
             (value) => !overlappingNoteIds.has(value.id),
           );
-          const phrases = await searchPhrases(
-            notes,
+          filteredTrackNotes.set(trackId, filteredNotes);
+        }
+
+        // ノーツからフレーズを生成する
+        const generatedPhrases = new Map<PhraseKey, Phrase>();
+        for (const trackId of snapshot.tracks.keys()) {
+          const filteredNotes = getOrThrow(filteredTrackNotes, trackId);
+          const phrases = await generatePhrases(
+            filteredNotes,
             snapshot.tempos,
             snapshot.tpqn,
             firstRestMinDurationSeconds,
             trackId,
           );
-          for (const [phraseHash, phrase] of phrases) {
-            foundPhrases.set(phraseHash, phrase);
+          for (const [phraseKey, phrase] of phrases) {
+            generatedPhrases.set(phraseKey, phrase);
           }
         }
 
-        const phrases = new Map<PhraseKey, Phrase>();
+        const mergedPhrases = new Map<PhraseKey, Phrase>();
+        const newlyCreatedPhraseKeys = new Set<PhraseKey>();
         const disappearedPhraseKeys = new Set<PhraseKey>();
 
+        // 新しく作られたフレーズとstateにある既存のフレーズをマージする
+        // 新しく作られたフレーズと無くなったフレーズのキーのリスト（Set）も作成する
         for (const phraseKey of state.phrases.keys()) {
-          if (!foundPhrases.has(phraseKey)) {
-            // 無くなったフレーズの場合
+          if (!generatedPhrases.has(phraseKey)) {
             disappearedPhraseKeys.add(phraseKey);
           }
         }
-        for (const [phraseKey, foundPhrase] of foundPhrases) {
-          // 新しいフレーズまたは既存のフレーズの場合
+        for (const [phraseKey, generatedPhrase] of generatedPhrases) {
           const existingPhrase = state.phrases.get(phraseKey);
-          const phrase =
-            existingPhrase == undefined
-              ? foundPhrase
-              : cloneWithUnwrapProxy(existingPhrase);
+          const isNewlyCreated = existingPhrase == undefined;
+          const phrase = isNewlyCreated
+            ? generatedPhrase
+            : cloneWithUnwrapProxy(existingPhrase);
+
+          mergedPhrases.set(phraseKey, phrase);
+          if (isNewlyCreated) {
+            newlyCreatedPhraseKeys.add(phraseKey);
+          }
+        }
+
+        // 各フレーズのレンダリング開始ステージを決定する
+        // 新しいフレーズの場合は最初からレンダリングする
+        // phrase.stateがCOULD_NOT_RENDERだった場合は最初からレンダリングし直す
+        for (const [phraseKey, phrase] of mergedPhrases) {
+          const trackId = phrase.trackId;
+          const track = getOrThrow(snapshot.tracks, trackId);
+          const isNewlyCreated = newlyCreatedPhraseKeys.has(phraseKey);
+
+          if (track.singer == undefined) {
+            continue;
+          }
+          if (isNewlyCreated || phrase.state === "COULD_NOT_RENDER") {
+            renderStartStageIds.set(phraseKey, stages[0].id);
+          } else {
+            for (const stage of stages) {
+              if (await stage.needsExecution(trackId, phraseKey, snapshot)) {
+                renderStartStageIds.set(phraseKey, stage.id);
+                break;
+              }
+            }
+          }
+        }
+
+        // phrase.stateを更新する
+        for (const [phraseKey, phrase] of mergedPhrases) {
           const track = getOrThrow(snapshot.tracks, phrase.trackId);
           if (track.singer == undefined) {
             phrase.state = "SINGER_IS_NOT_SET";
           } else {
-            // 新しいフレーズの場合は最初からレンダリングする
-            // phrase.stateがCOULD_NOT_RENDERだった場合は最初からレンダリングし直す
-            // 既存のフレーズの場合は適切なレンダリング開始ステージを決定する
-            const renderStartStageId =
-              existingPhrase == undefined || phrase.state === "COULD_NOT_RENDER"
-                ? phraseRenderer.getFirstRenderStageId()
-                : await phraseRenderer.determineStartStage(
-                    snapshot,
-                    foundPhrase.trackId,
-                    phraseKey,
-                  );
-            if (renderStartStageId == undefined) {
-              phrase.state = "PLAYABLE";
-            } else {
-              renderStartStageIds.set(phraseKey, renderStartStageId);
+            if (renderStartStageIds.has(phraseKey)) {
               phrase.state = "WAITING_TO_BE_RENDERED";
+            } else {
+              phrase.state = "PLAYABLE";
             }
           }
-          phrases.set(phraseKey, phrase);
         }
 
         // 無くなったフレーズのシーケンスを削除する
@@ -2521,12 +2529,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           }
         }
 
-        mutations.SET_PHRASES({ phrases });
+        // state.phrasesを更新する
+        mutations.SET_PHRASES({ phrases: mergedPhrases });
 
         logger.info("Phrases updated.");
 
-        // 各フレーズのレンダリングを行う
-
+        // シンガーが設定されていないフレーズとレンダリング未完了のフレーズが
+        // プレビュー音で再生されるようにする
         for (const [phraseKey, phrase] of state.phrases.entries()) {
           if (
             phrase.state === "SINGER_IS_NOT_SET" ||
@@ -2555,6 +2564,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             mutations.SET_SEQUENCE_ID_TO_PHRASE({ phraseKey, sequenceId });
           }
         }
+
+        // 各フレーズのレンダリングを行い、レンダリングされた音声が再生されるようにする
         const phrasesToBeRendered = new Map(
           [...state.phrases.entries()].filter(([, phrase]) => {
             return phrase.state === "WAITING_TO_BE_RENDERED";
@@ -2577,12 +2588,20 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
           try {
             // フレーズのレンダリングを行う
-            await phraseRenderer.render(
-              snapshot,
-              phrase.trackId,
-              phraseKey,
-              getOrThrow(renderStartStageIds, phraseKey),
-            );
+            const trackId = phrase.trackId;
+            const startStageId = getOrThrow(renderStartStageIds, phraseKey);
+            const startStageIndex = stages.findIndex((value) => {
+              return value.id === startStageId;
+            });
+            if (startStageIndex === -1) {
+              throw new Error("Stage not found.");
+            }
+            for (let i = stages.length - 1; i >= startStageIndex; i--) {
+              stages[i].deleteExecutionResult(phraseKey);
+            }
+            for (let i = startStageIndex; i < stages.length; i++) {
+              await stages[i].execute(trackId, phraseKey, snapshot);
+            }
 
             // シーケンスが存在する場合、シーケンスを削除する
             const phraseSequenceId = getPhraseSequenceId(phraseKey);
@@ -2705,16 +2724,16 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       });
     },
   },
-  SET_NOW_AUDIO_EXPORTING: {
-    mutation(state, { nowAudioExporting }) {
-      state.nowAudioExporting = nowAudioExporting;
+
+  SET_EXPORT_STATE: {
+    mutation(state, { exportState }) {
+      state.exportState = exportState;
     },
   },
 
-  SET_CANCELLATION_OF_AUDIO_EXPORT_REQUESTED: {
-    mutation(state, { cancellationOfAudioExportRequested }) {
-      state.cancellationOfAudioExportRequested =
-        cancellationOfAudioExportRequested;
+  SET_CANCELLATION_OF_EXPORT_REQUESTED: {
+    mutation(state, { cancellationOfExportRequested }) {
+      state.cancellationOfExportRequested = cancellationOfExportRequested;
     },
   },
 
@@ -2761,11 +2780,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
           if (state.nowRendering) {
             await createPromiseThatResolvesWhen(() => {
-              return (
-                !state.nowRendering || state.cancellationOfAudioExportRequested
-              );
+              return !state.nowRendering || state.cancellationOfExportRequested;
             });
-            if (state.cancellationOfAudioExportRequested) {
+            if (state.cancellationOfExportRequested) {
               return { result: "CANCELED", path: "" };
             }
           }
@@ -2781,7 +2798,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             phraseSingingVoices,
           );
 
-          const fileData = convertToWavFileData(audioBuffer);
+          const fileData = generateWavFileData(audioBuffer);
 
           const result = await actions.EXPORT_FILE({
             filePath,
@@ -2791,12 +2808,16 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           return result;
         };
 
-        mutations.SET_NOW_AUDIO_EXPORTING({ nowAudioExporting: true });
+        if (state.exportState !== "NOT_EXPORTING") {
+          throw new Error("Export is in progress.");
+        }
+
+        mutations.SET_EXPORT_STATE({ exportState: "EXPORTING_AUDIO" });
         return exportAudioFile().finally(() => {
-          mutations.SET_CANCELLATION_OF_AUDIO_EXPORT_REQUESTED({
-            cancellationOfAudioExportRequested: false,
+          mutations.SET_CANCELLATION_OF_EXPORT_REQUESTED({
+            cancellationOfExportRequested: false,
           });
-          mutations.SET_NOW_AUDIO_EXPORTING({ nowAudioExporting: false });
+          mutations.SET_EXPORT_STATE({ exportState: "NOT_EXPORTING" });
         });
       },
     ),
@@ -2830,11 +2851,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
           if (state.nowRendering) {
             await createPromiseThatResolvesWhen(() => {
-              return (
-                !state.nowRendering || state.cancellationOfAudioExportRequested
-              );
+              return !state.nowRendering || state.cancellationOfExportRequested;
             });
-            if (state.cancellationOfAudioExportRequested) {
+            if (state.cancellationOfExportRequested) {
               return { result: "CANCELED", path: "" };
             }
           }
@@ -2843,7 +2862,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
           for (const [i, trackId] of state.trackOrder.entries()) {
             const track = getOrThrow(state.tracks, trackId);
-            if (!track.singer) {
+            if (track.singer == undefined) {
               continue;
             }
 
@@ -2855,43 +2874,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               continue;
             }
 
-            const characterInfo = getters.CHARACTER_INFO(
-              track.singer.engineId,
-              track.singer.styleId,
-            );
-            if (!characterInfo) {
-              continue;
-            }
-
-            const style = characterInfo.metas.styles.find(
-              (style) => style.styleId === track.singer?.styleId,
-            );
-            if (style == undefined)
-              throw new Error("assert style != undefined");
-
-            const styleName = style.styleName || DEFAULT_STYLE_NAME;
-            const projectName = getters.PROJECT_NAME ?? DEFAULT_PROJECT_NAME;
-
-            const trackFileName = buildSongTrackAudioFileNameFromRawData(
-              state.savingSetting.songTrackFileNamePattern,
-              {
-                characterName: characterInfo.metas.speakerName,
-                index: i,
-                styleName,
-                date: currentDateString(),
-                projectName,
-                trackName: track.name,
-              },
-            );
-            let filePath = path.join(dirPath, `${trackFileName}.wav`);
-            if (state.savingSetting.avoidOverwrite) {
-              let tail = 1;
-              const pathWithoutExt = filePath.slice(0, -4);
-              while (await window.backend.checkFileExists(filePath)) {
-                filePath = `${pathWithoutExt}[${tail}].wav`;
-                tail += 1;
-              }
-            }
+            const filePath = await actions.GENERATE_FILE_PATH_FOR_TRACK_EXPORT({
+              trackId,
+              directoryPath: dirPath,
+              extension: "wav",
+            });
 
             const audioBuffer = await offlineRenderTracks(
               numberOfChannels,
@@ -2908,7 +2895,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               singingVoiceCache,
             );
 
-            const fileData = convertToWavFileData(audioBuffer);
+            const fileData = generateWavFileData(audioBuffer);
 
             const result = await actions.EXPORT_FILE({
               filePath,
@@ -2926,15 +2913,264 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           return { result: "SUCCESS", path: firstFilePath };
         };
 
-        mutations.SET_NOW_AUDIO_EXPORTING({ nowAudioExporting: true });
+        if (state.exportState !== "NOT_EXPORTING") {
+          throw new Error("Export is in progress.");
+        }
+
+        mutations.SET_EXPORT_STATE({ exportState: "EXPORTING_AUDIO" });
         return exportAudioFile().finally(() => {
-          mutations.SET_CANCELLATION_OF_AUDIO_EXPORT_REQUESTED({
-            cancellationOfAudioExportRequested: false,
+          mutations.SET_CANCELLATION_OF_EXPORT_REQUESTED({
+            cancellationOfExportRequested: false,
           });
-          mutations.SET_NOW_AUDIO_EXPORTING({ nowAudioExporting: false });
+          mutations.SET_EXPORT_STATE({ exportState: "NOT_EXPORTING" });
         });
       },
     ),
+  },
+
+  EXPORT_LABEL_FILES: {
+    action: createUILockAction(
+      async ({ actions, mutations, state }, { dirPath }) => {
+        const exportLabelFile = async () => {
+          if (state.nowPlaying) {
+            await actions.SING_STOP_AUDIO();
+          }
+
+          if (state.savingSetting.fixedExportEnabled) {
+            dirPath = state.savingSetting.fixedExportDir;
+          } else {
+            dirPath ??= await window.backend.showSaveDirectoryDialog({
+              title: "labファイルを保存",
+            });
+          }
+          if (!dirPath) {
+            return createArray(
+              state.tracks.size,
+              (): SaveResultObject => ({ result: "CANCELED", path: "" }),
+            );
+          }
+
+          if (state.nowRendering) {
+            await createPromiseThatResolvesWhen(() => {
+              return !state.nowRendering || state.cancellationOfExportRequested;
+            });
+            if (state.cancellationOfExportRequested) {
+              return createArray(
+                state.tracks.size,
+                (): SaveResultObject => ({ result: "CANCELED", path: "" }),
+              );
+            }
+          }
+
+          const results: SaveResultObject[] = [];
+
+          for (const trackId of state.tracks.keys()) {
+            const track = getOrThrow(state.tracks, trackId);
+            if (track.singer == undefined) {
+              continue;
+            }
+
+            const filePath = await actions.GENERATE_FILE_PATH_FOR_TRACK_EXPORT({
+              trackId,
+              directoryPath: dirPath,
+              extension: "lab",
+            });
+
+            const frameRate = state.editorFrameRate;
+            const phrases = [...state.phrases.values()]
+              .filter((value) => value.trackId === trackId)
+              .filter((value) => value.queryKey != undefined)
+              .toSorted((a, b) => a.startTime - b.startTime);
+
+            if (phrases.length === 0) {
+              continue;
+            }
+
+            const phraseQueries = phrases.map((value) => {
+              const phraseQuery =
+                value.queryKey != undefined
+                  ? state.phraseQueries.get(value.queryKey)
+                  : undefined;
+              if (phraseQuery == undefined) {
+                throw new Error("phraseQuery is undefined.");
+              }
+              return phraseQuery;
+            });
+            const phraseStartTimes = phrases.map((value) => value.startTime);
+
+            for (const phraseQuery of phraseQueries) {
+              // フレーズのクエリのフレームレートとエディターのフレームレートが一致しない場合はエラー
+              // TODO: 補間するようにする
+              if (phraseQuery.frameRate != frameRate) {
+                throw new Error(
+                  "The frame rate between the phrase query and the editor does not match.",
+                );
+              }
+            }
+
+            const phraseStartFrames = calcPhraseStartFrames(
+              phraseStartTimes,
+              frameRate,
+            );
+            const phraseEndFrames = calcPhraseEndFrames(
+              phraseStartFrames,
+              phraseQueries,
+            );
+
+            const phrasePhonemeSequences = phraseQueries.map((query) => {
+              return query.phonemes;
+            });
+            const entirePhonemeTimings = toEntirePhonemeTimings(
+              phrasePhonemeSequences,
+              phraseStartFrames,
+            );
+
+            // TODO: 音素タイミング編集データを取得して適用するようにする
+
+            adjustPhonemeTimingsAndPhraseEndFrames(
+              entirePhonemeTimings,
+              phraseStartFrames,
+              phraseEndFrames,
+            );
+
+            // 一番最初のpauseの開始フレームの値が0より大きい場合は0にする
+            if (entirePhonemeTimings.length === 0) {
+              throw new Error("entirePhonemeTimings.length is 0.");
+            }
+            if (entirePhonemeTimings[0].startFrame > 0) {
+              entirePhonemeTimings[0].startFrame = 0;
+            }
+
+            // 音素の開始・終了フレームの値が0より小さい場合は0にする
+            // （マイナス時間のところを書き出さないようにするため）
+            for (const phonemeTiming of entirePhonemeTimings) {
+              if (phonemeTiming.startFrame < 0) {
+                phonemeTiming.startFrame = 0;
+              }
+              if (phonemeTiming.endFrame < 0) {
+                phonemeTiming.endFrame = 0;
+              }
+            }
+
+            // フレーム数が1未満の音素を除く
+            const filteredEntirePhonemeTimings = entirePhonemeTimings.filter(
+              (value) => {
+                const frameLength = value.endFrame - value.startFrame;
+                return frameLength >= 1;
+              },
+            );
+
+            const entirePhonemes = phonemeTimingsToPhonemes(
+              filteredEntirePhonemeTimings,
+            );
+            const labFileData = await generateLabelFileDataFromFramePhonemes(
+              entirePhonemes,
+              frameRate,
+            );
+
+            try {
+              await window.backend
+                .writeFile({
+                  filePath,
+                  buffer: labFileData,
+                })
+                .then(getValueOrThrow);
+
+              results.push({ result: "SUCCESS", path: filePath });
+            } catch (e) {
+              logger.error("Failed to export file.", e);
+
+              if (e instanceof ResultError) {
+                results.push({
+                  result: "WRITE_ERROR",
+                  path: filePath,
+                  errorMessage: generateWriteErrorMessage(
+                    e as ResultError<string>,
+                  ),
+                });
+              } else {
+                results.push({
+                  result: "UNKNOWN_ERROR",
+                  path: filePath,
+                  errorMessage:
+                    (e instanceof Error ? e.message : String(e)) ||
+                    "不明なエラーが発生しました。",
+                });
+                break; // 想定外のエラーなので書き出しを中断
+              }
+            }
+          }
+          return results;
+        };
+
+        if (state.exportState !== "NOT_EXPORTING") {
+          throw new Error("Export is in progress.");
+        }
+
+        mutations.SET_EXPORT_STATE({ exportState: "EXPORTING_LABEL" });
+        return exportLabelFile().finally(() => {
+          mutations.SET_CANCELLATION_OF_EXPORT_REQUESTED({
+            cancellationOfExportRequested: false,
+          });
+          mutations.SET_EXPORT_STATE({ exportState: "NOT_EXPORTING" });
+        });
+      },
+    ),
+  },
+
+  GENERATE_FILE_PATH_FOR_TRACK_EXPORT: {
+    async action({ state, getters }, { trackId, directoryPath, extension }) {
+      const track = getOrThrow(state.tracks, trackId);
+
+      const trackSinger = track.singer;
+      if (trackSinger == undefined) {
+        throw new Error("trackSinger is undefined.");
+      }
+
+      const characterInfo = getters.CHARACTER_INFO(
+        trackSinger.engineId,
+        trackSinger.styleId,
+      );
+      if (characterInfo == undefined) {
+        // NOTE: characterInfoが存在しないというのは起こり得ないはずなので、存在しなかった場合はエラー
+        throw new Error(
+          "CharacterInfo corresponding to engineId and styleId does not exist.",
+        );
+      }
+
+      const style = characterInfo.metas.styles.find(
+        (style) => style.styleId === trackSinger.styleId,
+      );
+      if (style == undefined) {
+        throw new Error("assert style != undefined");
+      }
+
+      const characterName = characterInfo.metas.speakerName;
+      const styleName = style.styleName ?? DEFAULT_STYLE_NAME;
+      const projectName = getters.PROJECT_NAME ?? DEFAULT_PROJECT_NAME;
+      const trackIndex = state.trackOrder.findIndex(
+        (value) => value === trackId,
+      );
+
+      const fileName = buildSongTrackAudioFileNameFromRawData(
+        state.savingSetting.songTrackFileNamePattern,
+        {
+          characterName,
+          index: trackIndex,
+          styleName,
+          date: currentDateString(),
+          projectName,
+          trackName: track.name,
+        },
+      );
+      const filePathWithoutExt = path.join(directoryPath, fileName);
+
+      if (state.savingSetting.avoidOverwrite) {
+        return await generateUniqueFilePath(filePathWithoutExt, extension);
+      } else {
+        return `${filePathWithoutExt}.${extension}`;
+      }
+    },
   },
 
   EXPORT_FILE: {
@@ -2968,14 +3204,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  CANCEL_AUDIO_EXPORT: {
+  CANCEL_EXPORT: {
     async action({ state, mutations }) {
-      if (!state.nowAudioExporting) {
-        logger.warn("CANCEL_AUDIO_EXPORT on !nowAudioExporting");
+      if (state.exportState === "NOT_EXPORTING") {
+        logger.warn("CANCEL_EXPORT on NOT_EXPORTING");
         return;
       }
-      mutations.SET_CANCELLATION_OF_AUDIO_EXPORT_REQUESTED({
-        cancellationOfAudioExportRequested: true,
+      mutations.SET_CANCELLATION_OF_EXPORT_REQUESTED({
+        cancellationOfExportRequested: true,
       });
     },
   },

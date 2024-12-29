@@ -5,7 +5,6 @@ import {
   EngineId,
   EngineInfo,
   EngineSettingType,
-  HotkeySettingType,
   MessageBoxReturnValue,
   NativeThemeType,
   TextAsset,
@@ -13,6 +12,7 @@ import {
 } from "@/type/preload";
 import { AltPortInfos } from "@/store/type";
 import { Result } from "@/type/result";
+import { HotkeySettingType } from "@/domain/hotkeyAction";
 
 /**
  * invoke, handle
@@ -244,7 +244,7 @@ export type IpcIHData = {
  */
 export type IpcSOData = {
   LOAD_PROJECT_FILE: {
-    args: [obj: { filePath?: string; confirm?: boolean }];
+    args: [obj: { filePath?: string }];
     return: void;
   };
 

@@ -1,8 +1,11 @@
 <template>
   <div
     ref="container"
-    class="mora-table"
-    :class="[isActive && 'mora-table-focus', uiLocked || 'mora-table-hover']"
+    class="accent-phrase"
+    :class="[
+      isActive && 'accent-phrase-focus',
+      uiLocked || 'accent-phrase-hover',
+    ]"
     @click="$emit('click', index)"
   >
     <ContextMenu :menudata="contextMenudata" />
@@ -468,7 +471,7 @@ const handleChangeVoicing = (mora: Mora, moraIndex: number) => {
   position: relative;
 }
 
-.mora-table {
+.accent-phrase {
   display: inline-grid;
   align-self: stretch;
   grid-template-rows: 1fr 60px 30px;
@@ -478,12 +481,12 @@ const handleChangeVoicing = (mora: Mora, moraIndex: number) => {
   }
 }
 
-.mora-table-hover:hover {
+.accent-phrase-hover:hover {
   cursor: pointer;
   background-color: colors.$active-point-hover;
 }
 
-.mora-table-focus {
+.accent-phrase-focus {
   // hover色に負けるので、importantが必要
   background-color: colors.$active-point-focus !important;
 }

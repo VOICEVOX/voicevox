@@ -68,7 +68,6 @@ export const uiStoreState: UiStoreState = {
   reloadingLock: false,
   inheritAudioInfo: true,
   activePointScrollMode: "OFF",
-  isHelpDialogOpen: false,
   isSettingDialogOpen: false,
   isHotkeySettingDialogOpen: false,
   isToolbarSettingDialogOpen: false,
