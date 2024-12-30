@@ -1,7 +1,6 @@
 import path from "path";
 import fs from "fs";
 import { ReadableStream } from "node:stream/web";
-import stream from "node:stream";
 import log from "electron-log/main";
 import { BrowserWindow, dialog } from "electron";
 
@@ -222,11 +221,10 @@ export class EngineAndVvppController {
           const fileStream = fs.createWriteStream(downloadPath);
 
           // ファイルに書き込む
-          for await (const chunk of stream.Readable.fromWeb(
-            res.body as ReadableStream<Uint8Array>, // NOTE: 最新のTypeScriptならasは不要
-          )) {
+          // NOTE: なぜか型が合わないのでasを使っている
+          for await (const chunk of res.body as ReadableStream<Uint8Array>) {
             fileStream.write(chunk);
-            downloadedBytes += (chunk as Uint8Array).length;
+            downloadedBytes += chunk.length;
             callbacks.onProgress({
               type: "download",
               progress: (downloadedBytes / totalBytes) * 100,
