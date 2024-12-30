@@ -962,9 +962,18 @@ app.on("ready", async () => {
     }
 
     // ダウンロードしてインストールする
+    let lastLogTime = 0; // とりあえずログを0.1秒に1回だけ出力する
     await engineAndVvppController.downloadAndInstallVvppEngine(
       app.getPath("downloads"),
       packageInfo,
+      ({ type, progress }) => {
+        if (Date.now() - lastLogTime > 100) {
+          log.info(
+            `VVPP default engine progress: ${type}: ${Math.floor(progress)}%`,
+          );
+          lastLogTime = Date.now();
+        }
+      },
     );
   }
 

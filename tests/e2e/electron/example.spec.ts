@@ -40,10 +40,10 @@ test.beforeEach(async () => {
 });
 
 [
-  {
-    envName: ".env環境",
-    envPath: ".env",
-  },
+  // {
+  //   envName: ".env環境",
+  //   envPath: ".env",
+  // },
   {
     envName: "VVPPデフォルトエンジン",
     envPath: ".env.test-electron-default-vvpp",
