@@ -223,7 +223,7 @@ export class EngineAndVvppController {
 
           // ファイルに書き込む
           for await (const chunk of stream.Readable.fromWeb(
-            res.body as ReadableStream<Uint8Array>,
+            res.body as ReadableStream<Uint8Array>, // NOTE: 最新のTypeScriptならasは不要
           )) {
             fileStream.write(chunk);
             downloadedBytes += (chunk as Uint8Array).length;
