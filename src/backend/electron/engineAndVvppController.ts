@@ -213,7 +213,7 @@ export class EngineAndVvppController {
           const { url, name } = p;
           log.info(`Download ${name} from ${url}`);
 
-          const res = await globalThis.fetch(url);
+          const res = await fetch(url);
           if (!res.ok || res.body == null)
             throw new Error(`Failed to download ${name} from ${url}`);
           const downloadPath = path.join(downloadDir, name);
