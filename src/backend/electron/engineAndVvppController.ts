@@ -1,5 +1,7 @@
 import path from "path";
 import fs from "fs";
+import { ReadableStream } from "node:stream/web";
+import stream from "node:stream";
 import log from "electron-log/main";
 import { BrowserWindow, dialog } from "electron";
 
@@ -213,19 +215,18 @@ export class EngineAndVvppController {
           const { url, name } = p;
           log.info(`Download ${name} from ${url}`);
 
-          const res = await globalThis.fetch(url);
+          const res = await fetch(url);
           if (!res.ok || res.body == null)
             throw new Error(`Failed to download ${name} from ${url}`);
           const downloadPath = path.join(downloadDir, name);
           const fileStream = fs.createWriteStream(downloadPath);
 
           // ファイルに書き込む
-          const reader = res.body.getReader();
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            fileStream.write(value);
-            downloadedBytes += value.length;
+          for await (const chunk of stream.Readable.fromWeb(
+            res.body as ReadableStream<Uint8Array>,
+          )) {
+            fileStream.write(chunk);
+            downloadedBytes += (chunk as Uint8Array).length;
             callbacks.onProgress({
               type: "download",
               progress: (downloadedBytes / totalBytes) * 100,
