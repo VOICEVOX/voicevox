@@ -110,9 +110,9 @@ export class VvppManager {
 
   private async extractVvpp(
     vvppLikeFilePath: string,
-    onProgress?: ProgressCallback,
+    callbacks?: { onProgress?: ProgressCallback },
   ): Promise<{ outputDir: string; manifest: MinimumEngineManifestType }> {
-    onProgress?.({ progress: 0 });
+    callbacks?.onProgress?.({ progress: 0 });
 
     const nonce = new Date().getTime().toString();
     const outputDir = path.join(this.vvppEngineDir, ".tmp", nonce);
@@ -221,7 +221,7 @@ export class VvppManager {
               / *(?<percent>\d+)% ?(?<fileCount>\d+)? ?(?<file>.*)/,
             );
             if (progressMatch?.groups?.percent) {
-              onProgress?.({
+              callbacks?.onProgress?.({
                 progress: parseInt(progressMatch.groups.percent),
               });
             }
@@ -233,7 +233,7 @@ export class VvppManager {
 
           child.on("exit", (code) => {
             if (code === 0) {
-              onProgress?.({ progress: 100 });
+              callbacks?.onProgress?.({ progress: 100 });
               resolve();
             } else {
               reject(new Error(`7z exited with code ${code}`));
@@ -273,14 +273,17 @@ export class VvppManager {
   /**
    * 追加
    */
-  async install(vvppPath: string, onProgress?: ProgressCallback) {
-    await this.lock.acquire(lockKey, () => this._install(vvppPath, onProgress));
+  async install(
+    vvppPath: string,
+    callbacks?: { onProgress?: ProgressCallback },
+  ) {
+    await this.lock.acquire(lockKey, () => this._install(vvppPath, callbacks));
   }
-  private async _install(vvppPath: string, onProgress?: ProgressCallback) {
-    const { outputDir, manifest } = await this.extractVvpp(
-      vvppPath,
-      onProgress,
-    );
+  private async _install(
+    vvppPath: string,
+    callbacks?: { onProgress?: ProgressCallback },
+  ) {
+    const { outputDir, manifest } = await this.extractVvpp(vvppPath, callbacks);
 
     const dirName = this.toValidDirName(manifest);
     const engineDirectory = path.join(this.vvppEngineDir, dirName);

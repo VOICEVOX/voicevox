@@ -46,9 +46,12 @@ export class EngineAndVvppController {
   /**
    * VVPPエンジンをインストールする。
    */
-  async installVvppEngine(vvppPath: string, onProgress?: ProgressCallback) {
+  async installVvppEngine(
+    vvppPath: string,
+    callbacks?: { onProgress?: ProgressCallback },
+  ) {
     try {
-      await this.vvppManager.install(vvppPath, onProgress);
+      await this.vvppManager.install(vvppPath, callbacks);
       return true;
     } catch (e) {
       log.error(`Failed to install ${vvppPath},`, e);
@@ -185,7 +188,7 @@ export class EngineAndVvppController {
   async downloadAndInstallVvppEngine(
     downloadDir: string,
     packageInfo: PackageInfo,
-    onProgress: ProgressCallback<"download" | "install">,
+    callbacks: { onProgress: ProgressCallback<"download" | "install"> },
   ) {
     if (packageInfo.packages.length === 0) {
       throw new UnreachableError("No packages to download");
@@ -195,7 +198,7 @@ export class EngineAndVvppController {
     const downloadedPaths: string[] = [];
     try {
       // ダウンロード
-      onProgress({ type: "download", progress: 0 });
+      callbacks.onProgress({ type: "download", progress: 0 });
 
       let totalBytes = 0;
       packageInfo.packages.forEach((p) => {
@@ -205,41 +208,43 @@ export class EngineAndVvppController {
       let downloadedBytes = 0;
       await Promise.all(
         packageInfo.packages.map(async (p) => {
-          const { url, name } = p;
+          if (failed) return; // 他のダウンロードが失敗していたら中断
 
+          const { url, name } = p;
           log.info(`Download ${name} from ${url}`);
+
           const res = await globalThis.fetch(url);
           if (!res.ok || res.body == null)
             throw new Error(`Failed to download ${name} from ${url}`);
-          if (failed) return; // 他のダウンロードが失敗していたら中断
-
           const downloadPath = path.join(downloadDir, name);
           const fileStream = fs.createWriteStream(downloadPath);
 
+          // ファイルに書き込む
           const reader = res.body.getReader();
           while (true) {
             const { done, value } = await reader.read();
             if (done) break;
             fileStream.write(value);
             downloadedBytes += value.length;
-            onProgress({
+            callbacks.onProgress({
               type: "download",
               progress: (downloadedBytes / totalBytes) * 100,
             });
           }
           fileStream.close();
 
-          log.info(`Downloaded ${name} to ${downloadPath}`);
-
           downloadedPaths.push(downloadPath);
+          log.info(`Downloaded ${name} to ${downloadPath}`);
 
           // TODO: ハッシュチェック
         }),
       );
 
       // インストール
-      await this.installVvppEngine(downloadedPaths[0], ({ progress }) => {
-        onProgress({ type: "install", progress });
+      await this.installVvppEngine(downloadedPaths[0], {
+        onProgress: ({ progress }) => {
+          callbacks.onProgress({ type: "install", progress });
+        },
       });
     } catch (e) {
       failed = true;
