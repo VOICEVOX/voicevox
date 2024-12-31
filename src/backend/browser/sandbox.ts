@@ -5,9 +5,11 @@ import {
   showExportFilePickerImpl,
   showOpenDirectoryDialogImpl,
   showOpenFilePickerImpl,
+  WritableFilePath,
   writeFileImpl,
 } from "./fileImpl";
 import { getConfigManager } from "./browserConfig";
+import { isFakePath } from "./fakePath";
 import { IpcSOData } from "@/type/ipc";
 import {
   defaultToolbarButtonSetting,
@@ -18,6 +20,7 @@ import {
 } from "@/type/preload";
 import { AssetTextFileNames } from "@/type/staticResources";
 import { HotkeySettingType } from "@/domain/hotkeyAction";
+import path from "@/helpers/path";
 
 const toStaticPath = (fileName: string) =>
   `${import.meta.env.BASE_URL}/${fileName}`.replaceAll(/\/\/+/g, "/");
@@ -146,7 +149,16 @@ export const api: Sandbox = {
     return fileHandle;
   },
   writeFile(obj: { filePath: string; buffer: ArrayBuffer }) {
-    return writeFileImpl(obj);
+    let filePath: WritableFilePath;
+    if (isFakePath(obj.filePath)) {
+      filePath = { type: "fake", path: obj.filePath };
+    } else if (obj.filePath.includes(path.SEPARATOR)) {
+      filePath = { type: "child", path: obj.filePath };
+    } else {
+      filePath = { type: "nameOnly", path: obj.filePath };
+    }
+
+    return writeFileImpl({ filePath, buffer: obj.buffer });
   },
   readFile(obj: { filePath: string }) {
     return readFileImpl(obj.filePath);

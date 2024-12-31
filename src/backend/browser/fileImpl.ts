@@ -1,13 +1,12 @@
-import { z } from "zod";
 import { directoryHandleStoreKey } from "./contract";
 import { openDB } from "./browserConfig";
+import { createFakePath, FakePath, isFakePath } from "./fakePath";
 import { SandboxKey } from "@/type/preload";
 import { failure, success } from "@/type/result";
 import { createLogger } from "@/domain/frontend/log";
-import { uuid4 } from "@/helpers/random";
 import { normalizeError } from "@/helpers/normalizeError";
 import path from "@/helpers/path";
-import { createFakePath, FakePath, isFakePath } from "./fakePath";
+import { ExhaustiveError } from "@/type/utility";
 
 const log = createLogger("fileImpl");
 
@@ -115,28 +114,48 @@ const getDirectoryHandleFromDirectoryPath = async (
   }
 };
 
+export type WritableFilePath =
+  | {
+      // ファイル名のみ。ダウンロードとして扱われます。
+      type: "nameOnly";
+      path: string;
+    }
+  | {
+      // ディレクトリ内への書き込み。
+      type: "child";
+      path: string;
+    }
+  | {
+      // 疑似パス。
+      type: "fake";
+      path: FakePath;
+    };
+
 // NOTE: fixedExportEnabled が有効になっている GENERATE_AND_SAVE_AUDIO action では、ファイル名に加えディレクトリ名も指定された状態でfilePathが渡ってくる
 // また GENERATE_AND_SAVE_ALL_AUDIO action では fixedExportEnabled の有効の有無に関わらず、ディレクトリ名も指定された状態でfilePathが渡ってくる
 // showExportFilePicker での疑似パスが渡ってくる可能性もある。
-export const writeFileImpl: (typeof window)[typeof SandboxKey]["writeFile"] =
-  async (obj: { filePath: string; buffer: ArrayBuffer }) => {
-    const filePath = obj.filePath;
+export const writeFileImpl = async (obj: {
+  filePath: WritableFilePath;
+  buffer: ArrayBuffer;
+}) => {
+  const filePath = obj.filePath;
 
-    if (isFakePath(filePath)) {
-      const fileHandle = fileHandleMap.get(filePath);
+  switch (filePath.type) {
+    case "fake": {
+      const fileHandle = fileHandleMap.get(filePath.path);
       if (fileHandle == undefined) {
-        return failure(new Error(`ファイルが見つかりません: ${filePath}`));
+        return failure(new Error(`ファイルが見つかりません: ${filePath.path}`));
       }
       const writable = await fileHandle.createWritable();
       await writable.write(obj.buffer);
       return writable.close().then(() => success(undefined));
     }
 
-    if (!filePath.includes(path.SEPARATOR)) {
+    case "nameOnly": {
       const aTag = document.createElement("a");
       const blob = URL.createObjectURL(new Blob([obj.buffer]));
       aTag.href = blob;
-      aTag.download = filePath;
+      aTag.download = filePath.path;
       document.body.appendChild(aTag);
       aTag.click();
       document.body.removeChild(aTag);
@@ -144,27 +163,32 @@ export const writeFileImpl: (typeof window)[typeof SandboxKey]["writeFile"] =
       return success(undefined);
     }
 
-    const fileName = resolveFileName(filePath);
-    const maybeDirectoryHandleName = resolveDirectoryName(filePath);
+    case "child": {
+      const fileName = resolveFileName(filePath.path);
+      const maybeDirectoryHandleName = resolveDirectoryName(filePath.path);
 
-    const directoryHandle = await getDirectoryHandleFromDirectoryPath(
-      maybeDirectoryHandleName,
-    );
+      const directoryHandle = await getDirectoryHandleFromDirectoryPath(
+        maybeDirectoryHandleName,
+      );
 
-    directoryHandleMap.set(maybeDirectoryHandleName, directoryHandle);
+      directoryHandleMap.set(maybeDirectoryHandleName, directoryHandle);
 
-    return directoryHandle
-      .getFileHandle(fileName, { create: true })
-      .then(async (fileHandle) => {
-        const writable = await fileHandle.createWritable();
-        await writable.write(obj.buffer);
-        return writable.close();
-      })
-      .then(() => success(undefined))
-      .catch((e) => {
-        return failure(normalizeError(e));
-      });
-  };
+      return directoryHandle
+        .getFileHandle(fileName, { create: true })
+        .then(async (fileHandle) => {
+          const writable = await fileHandle.createWritable();
+          await writable.write(obj.buffer);
+          return writable.close();
+        })
+        .then(() => success(undefined))
+        .catch((e) => {
+          return failure(normalizeError(e));
+        });
+    }
+    default:
+      throw new ExhaustiveError(filePath);
+  }
+};
 
 export const checkFileExistsImpl: (typeof window)[typeof SandboxKey]["checkFileExists"] =
   async (filePath) => {
