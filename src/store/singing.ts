@@ -3504,7 +3504,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             fileType as MultiFileProjectFormat,
           );
 
-          let firstFilePath = "";
+          let firstFilePath;
           for (const [i, trackBytes] of tracksBytes.entries()) {
             const filePath = await actions.GENERATE_FILE_PATH_FOR_TRACK_EXPORT({
               trackId: state.trackOrder[i],
@@ -3523,11 +3523,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               return result;
             }
           }
+          if (firstFilePath == undefined) {
+            throw new Error("firstFilePath is undefined.");
+          }
 
-          return {
-            result: "SUCCESS",
-            path: firstFilePath,
-          };
+          return { result: "SUCCESS", path: firstFilePath };
         }
         // それ以外の場合は単一ファイルの形式を選択する
         else {
