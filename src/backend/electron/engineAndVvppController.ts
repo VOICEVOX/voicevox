@@ -1,13 +1,14 @@
 import path from "path";
 import fs from "fs";
 import log from "electron-log/main";
-import { BrowserWindow, dialog } from "electron";
+import { dialog, MessageBoxSyncOptions } from "electron";
 
 import { getConfigManager } from "./electronConfig";
 import { getEngineInfoManager } from "./manager/engineInfoManager";
 import { getEngineProcessManager } from "./manager/engineProcessManager";
 import { getRuntimeInfoManager } from "./manager/RuntimeInfoManager";
 import { getVvppManager } from "./manager/vvppManager";
+import { getWindowManager } from "./manager/windowManager";
 import {
   EngineId,
   EngineInfo,
@@ -67,21 +68,27 @@ export class EngineAndVvppController {
     vvppPath,
     reloadNeeded,
     reloadCallback,
-    win,
   }: {
     vvppPath: string;
     reloadNeeded: boolean;
     reloadCallback?: () => void; // 再読み込みが必要な場合のコールバック
-    win: BrowserWindow; // dialog表示に必要。 FIXME: dialog表示関数をDI可能にし、winを削除する
   }) {
-    const result = dialog.showMessageBoxSync(win, {
+    // FIXME: dialog表示関数をDI可能にする。
+    const win = getWindowManager().win;
+    const option: MessageBoxSyncOptions = {
       type: "warning",
       title: "エンジン追加の確認",
       message: `この操作はコンピュータに損害を与える可能性があります。エンジンの配布元が信頼できない場合は追加しないでください。`,
       buttons: ["追加", "キャンセル"],
       noLink: true,
       cancelId: 1,
-    });
+    };
+    let result: number;
+    if (win != undefined) {
+      result = dialog.showMessageBoxSync(win, option);
+    } else {
+      result = dialog.showMessageBoxSync(option);
+    }
     if (result == 1) {
       return;
     }
@@ -89,6 +96,9 @@ export class EngineAndVvppController {
     await this.installVvppEngine(vvppPath);
 
     if (reloadNeeded) {
+      if (win == undefined) {
+        throw new Error("win == undefined");
+      }
       void dialog
         .showMessageBox(win, {
           type: "info",
