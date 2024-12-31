@@ -64,10 +64,10 @@ const api: Sandbox = {
     });
   },
 
-  showExportFileDialog: ({ title, defaultName, extensionName, extensions }) => {
+  showExportFileDialog: ({ title, defaultPath, extensionName, extensions }) => {
     return ipcRendererInvokeProxy.SHOW_EXPORT_FILE_DIALOG({
       title,
-      defaultName,
+      defaultPath,
       extensionName,
       extensions,
     });

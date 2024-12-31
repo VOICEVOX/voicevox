@@ -2770,7 +2770,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           } else {
             filePath ??= await window.backend.showExportFileDialog({
               title: "音声を保存",
-              defaultName: fileName,
+              defaultPath: fileName,
               extensions: ["wav"],
               extensionName: "WAV ファイル",
             });
@@ -3532,7 +3532,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
           let filePath = await window.backend.showExportFileDialog({
             title: "プロジェクトを書き出し",
-            defaultName: fileBaseName,
+            defaultPath: fileBaseName,
             extensionName: fileTypeLabel,
             extensions: [extension],
           });

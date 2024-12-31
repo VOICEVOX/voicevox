@@ -243,13 +243,13 @@ export const readFileImpl = async (filePath: string) => {
 // 返り値はファイルパスではなく、疑似パスを返す
 export const showExportFilePickerImpl: (typeof window)[typeof SandboxKey]["showExportFileDialog"] =
   async (obj: {
-    defaultName?: string;
+    defaultPath?: string;
     extensionName: string;
     extensions: string[];
     title: string;
   }) => {
     const handle = await showSaveFilePicker({
-      suggestedName: obj.defaultName,
+      suggestedName: obj.defaultPath,
       types: [
         {
           description: obj.extensions.join("、"),

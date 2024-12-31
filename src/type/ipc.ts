@@ -57,7 +57,7 @@ export type IpcIHData = {
     args: [
       obj: {
         title: string;
-        defaultName?: string;
+        defaultPath?: string;
         extensionName: string;
         extensions: string[];
       },

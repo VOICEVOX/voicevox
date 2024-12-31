@@ -137,7 +137,7 @@ export const api: Sandbox = {
     return fileHandle?.[0];
   },
   async showExportFileDialog(obj: {
-    defaultName?: string;
+    defaultPath?: string;
     extensionName: string;
     extensions: string[];
     title: string;

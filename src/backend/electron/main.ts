@@ -573,12 +573,12 @@ registerIpcMainHandle<IpcMainHandle>({
 
   SHOW_EXPORT_FILE_DIALOG: async (
     _,
-    { title, defaultName, extensionName, extensions },
+    { title, defaultPath, extensionName, extensions },
   ) => {
     const result = await retryShowSaveDialogWhileSafeDir(() =>
       dialog.showSaveDialog(win, {
         title,
-        defaultPath: defaultName,
+        defaultPath,
         filters: [{ name: extensionName, extensions: extensions }],
         properties: ["createDirectory"],
       }),
