@@ -42,7 +42,7 @@ class WindowManager {
    */
   public getWindow() {
     if (this._win == undefined) {
-      throw new Error("win == undefined");
+      throw new Error("_win == undefined");
     }
     return this._win;
   }
