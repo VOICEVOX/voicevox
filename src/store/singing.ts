@@ -3540,7 +3540,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             return { result: "CANCELED", path: "" };
           }
           filePath = await generateUniqueFilePath(
-            path.basename(filePath, `.${extension}`),
+            // 拡張子を除いたファイル名を取得
+            filePath.slice(0, -(extension.length + 1)),
             extension,
           );
 
