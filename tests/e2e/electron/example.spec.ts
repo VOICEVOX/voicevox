@@ -66,7 +66,7 @@ test.beforeEach(async () => {
           win: BaseWindow | MessageBoxSyncOptions,
           options?: MessageBoxSyncOptions,
         ) => {
-          const opt = win instanceof BaseWindow ? options : options;
+          const opt = win instanceof BaseWindow ? options : win;
           if (opt == undefined) {
             throw new Error("options == undefined");
           }
