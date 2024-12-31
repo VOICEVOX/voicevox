@@ -3520,6 +3520,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
           return { result: "SUCCESS", path: firstFilePath };
         }
+
         // それ以外の場合は単一ファイルの形式を選択する
         else {
           let buffer: Uint8Array;
