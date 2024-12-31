@@ -469,35 +469,6 @@ registerIpcMainHandle<IpcMainHandle>({
     return engineInfoManager.altPortInfos;
   },
 
-  SHOW_AUDIO_SAVE_DIALOG: async (_, { title, defaultPath }) => {
-    const result = await retryShowSaveDialogWhileSafeDir(() =>
-      dialog.showSaveDialog(win, {
-        title,
-        defaultPath,
-        filters: [
-          {
-            name: "WAVファイル",
-            extensions: ["wav"],
-          },
-        ],
-        properties: ["createDirectory"],
-      }),
-    );
-    return result.filePath;
-  },
-
-  SHOW_TEXT_SAVE_DIALOG: async (_, { title, defaultPath }) => {
-    const result = await retryShowSaveDialogWhileSafeDir(() =>
-      dialog.showSaveDialog(win, {
-        title,
-        defaultPath,
-        filters: [{ name: "Text File", extensions: ["txt"] }],
-        properties: ["createDirectory"],
-      }),
-    );
-    return result.filePath;
-  },
-
   /**
    * 保存先になるディレクトリを選ぶダイアログを表示する。
    */
@@ -598,6 +569,21 @@ registerIpcMainHandle<IpcMainHandle>({
       filters: [{ name: name ?? "Text", extensions: extensions ?? ["txt"] }],
       properties: ["openFile", "createDirectory", "treatPackageAsDirectory"],
     })?.[0];
+  },
+
+  SHOW_EXPORT_FILE_DIALOG: async (
+    _,
+    { title, defaultPath, extensionName, extensions },
+  ) => {
+    const result = await retryShowSaveDialogWhileSafeDir(() =>
+      dialog.showSaveDialog(win, {
+        title,
+        defaultPath,
+        filters: [{ name: extensionName, extensions: extensions }],
+        properties: ["createDirectory"],
+      }),
+    );
+    return result.filePath;
   },
 
   IS_AVAILABLE_GPU_MODE: () => {

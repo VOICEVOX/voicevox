@@ -114,7 +114,15 @@ import { generateWriteErrorMessage } from "@/helpers/fileHelper";
 import { generateWavFileData } from "@/helpers/fileDataGenerator";
 import path from "@/helpers/path";
 import { showAlertDialog } from "@/components/Dialog/Dialog";
+import { ufProjectFromVoicevox } from "@/sing/utaformatixProject/fromVoicevox";
 import { generateUniqueFilePath } from "@/sing/fileUtils";
+import {
+  isMultiFileProjectFormat,
+  isSingleFileProjectFormat,
+  projectFileExtensions,
+  ufProjectToMultiFile,
+  ufProjectToSingleFile,
+} from "@/sing/utaformatixProject/utils";
 
 const logger = createLogger("store/singing");
 
@@ -2760,9 +2768,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           if (state.savingSetting.fixedExportEnabled) {
             filePath = path.join(state.savingSetting.fixedExportDir, fileName);
           } else {
-            filePath ??= await window.backend.showAudioSaveDialog({
+            filePath ??= await window.backend.showExportFileDialog({
               title: "音声を保存",
               defaultPath: fileName,
+              extensions: ["wav"],
+              extensionName: "WAV ファイル",
             });
           }
           if (!filePath) {
@@ -3448,6 +3458,101 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       );
       return Math.max(1, lastNoteEndTime + 1);
     },
+  },
+
+  EXPORT_SONG_PROJECT: {
+    action: createUILockAction(
+      async (
+        { state, getters, actions },
+        { fileType, fileTypeLabel },
+      ): Promise<SaveResultObject> => {
+        const fileBaseName = generateDefaultSongFileBaseName(
+          getters.PROJECT_NAME,
+          getters.SELECTED_TRACK,
+          getters.CHARACTER_INFO,
+        );
+        const project = ufProjectFromVoicevox(
+          {
+            tempos: state.tempos,
+            timeSignatures: state.timeSignatures,
+            tpqn: state.tpqn,
+            tracks: state.trackOrder.map((trackId) =>
+              getOrThrow(state.tracks, trackId),
+            ),
+          },
+          fileBaseName,
+        );
+
+        // 複数トラックかつ複数ファイルの形式はディレクトリに書き出す
+        if (state.trackOrder.length > 1 && isMultiFileProjectFormat(fileType)) {
+          const dirPath = await window.backend.showSaveDirectoryDialog({
+            title: "プロジェクトを書き出し",
+          });
+          if (!dirPath) {
+            return { result: "CANCELED", path: "" };
+          }
+
+          const extension = projectFileExtensions[fileType];
+          const tracksBytes = await ufProjectToMultiFile(project, fileType);
+
+          let firstFilePath;
+          for (const [i, trackBytes] of tracksBytes.entries()) {
+            const filePath = await actions.GENERATE_FILE_PATH_FOR_TRACK_EXPORT({
+              trackId: state.trackOrder[i],
+              directoryPath: dirPath,
+              extension,
+            });
+            if (i === 0) {
+              firstFilePath = filePath;
+            }
+
+            const result = await actions.EXPORT_FILE({
+              filePath,
+              content: trackBytes,
+            });
+            if (result.result !== "SUCCESS") {
+              return result;
+            }
+          }
+          if (firstFilePath == undefined) {
+            throw new Error("firstFilePath is undefined.");
+          }
+
+          return { result: "SUCCESS", path: firstFilePath };
+        }
+
+        // それ以外の場合は単一ファイルの形式を選択する
+        else {
+          let buffer: Uint8Array;
+          const extension = projectFileExtensions[fileType];
+          if (isSingleFileProjectFormat(fileType)) {
+            buffer = await ufProjectToSingleFile(project, fileType);
+          } else {
+            buffer = (await ufProjectToMultiFile(project, fileType))[0];
+          }
+
+          let filePath = await window.backend.showExportFileDialog({
+            title: "プロジェクトを書き出し",
+            defaultPath: fileBaseName,
+            extensionName: fileTypeLabel,
+            extensions: [extension],
+          });
+          if (!filePath) {
+            return { result: "CANCELED", path: "" };
+          }
+          filePath = await generateUniqueFilePath(
+            // 拡張子を除いたファイル名を取得
+            filePath.slice(0, -(extension.length + 1)),
+            extension,
+          );
+
+          return await actions.EXPORT_FILE({
+            filePath,
+            content: buffer,
+          });
+        }
+      },
+    ),
   },
 });
 
