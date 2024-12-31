@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { uuid4 } from "@/helpers/random";
 
-export const fakePathSchema = z
+const fakePathSchema = z
   .string()
   .regex(/^<browser-dummy-[0-9a-f]+>-.+$/)
   .brand("FakePath");
