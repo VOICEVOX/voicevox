@@ -93,7 +93,7 @@ export const useMenuBarData = () => {
           ["musicxml", "MusicXML"],
           ["ufdata", "Utaformatix"],
           ["ust", "UTAU"],
-        ] satisfies [fileType: ExportSongProjectFileType, name: string][]
+        ] satisfies [fileType: ExportSongProjectFileType, label: string][]
       ).map(
         ([fileType, label]) =>
           ({
