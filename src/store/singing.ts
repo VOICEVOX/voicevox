@@ -117,11 +117,9 @@ import { showAlertDialog } from "@/components/Dialog/Dialog";
 import { ufProjectFromVoicevox } from "@/sing/utaformatixProject/fromVoicevox";
 import { generateUniqueFilePath } from "@/sing/fileUtils";
 import {
-  MultiFileProjectFormat,
-  multiFileProjectFormats,
+  isMultiFileProjectFormat,
+  isSingleFileProjectFormat,
   projectFileExtensions,
-  SingleFileProjectFormat,
-  singleFileProjectFormats,
   ufProjectToMultiFile,
   ufProjectToSingleFile,
 } from "@/sing/utaformatixProject/utils";
@@ -3486,11 +3484,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         );
 
         // 複数トラックかつ複数ファイルの形式はディレクトリに書き出す
-        if (
-          state.trackOrder.length > 1 &&
-          // NOTE: as MultiFileProjectFormat しないと型エラーが発生する
-          multiFileProjectFormats.includes(fileType as MultiFileProjectFormat)
-        ) {
+        if (state.trackOrder.length > 1 && isMultiFileProjectFormat(fileType)) {
           const dirPath = await window.backend.showSaveDirectoryDialog({
             title: "プロジェクトを書き出し",
           });
@@ -3499,10 +3493,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           }
 
           const extension = projectFileExtensions[fileType];
-          const tracksBytes = await ufProjectToMultiFile(
-            project,
-            fileType as MultiFileProjectFormat,
-          );
+          const tracksBytes = await ufProjectToMultiFile(project, fileType);
 
           let firstFilePath;
           for (const [i, trackBytes] of tracksBytes.entries()) {
@@ -3533,22 +3524,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         else {
           let buffer: Uint8Array;
           const extension = projectFileExtensions[fileType];
-          if (
-            singleFileProjectFormats.includes(
-              fileType as SingleFileProjectFormat,
-            )
-          ) {
-            buffer = await ufProjectToSingleFile(
-              project,
-              fileType as SingleFileProjectFormat,
-            );
+          if (isSingleFileProjectFormat(fileType)) {
+            buffer = await ufProjectToSingleFile(project, fileType);
           } else {
-            buffer = (
-              await ufProjectToMultiFile(
-                project,
-                fileType as MultiFileProjectFormat,
-              )
-            )[0];
+            buffer = (await ufProjectToMultiFile(project, fileType))[0];
           }
 
           let filePath = await window.backend.showExportFileDialog({

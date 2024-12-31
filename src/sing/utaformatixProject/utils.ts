@@ -1,9 +1,21 @@
 import { Project as UfProject } from "@sevenc-nanashi/utaformatix-ts";
 import { ExhaustiveError } from "@/type/utility";
+
 export const singleFileProjectFormats = ["smf", "ufdata"] as const;
 export type SingleFileProjectFormat = (typeof singleFileProjectFormats)[number];
 export const multiFileProjectFormats = ["ust", "musicxml"] as const;
 export type MultiFileProjectFormat = (typeof multiFileProjectFormats)[number];
+export type ProjectFormat = SingleFileProjectFormat | MultiFileProjectFormat;
+
+export const isSingleFileProjectFormat = (
+  format: ProjectFormat,
+): format is SingleFileProjectFormat =>
+  singleFileProjectFormats.includes(format as SingleFileProjectFormat);
+
+export const isMultiFileProjectFormat = (
+  format: ProjectFormat,
+): format is MultiFileProjectFormat =>
+  multiFileProjectFormats.includes(format as MultiFileProjectFormat);
 
 export const projectFileExtensions: Record<
   SingleFileProjectFormat | MultiFileProjectFormat,
