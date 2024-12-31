@@ -3558,10 +3558,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             extensions: [extension],
           });
           if (!filePath) {
-            return {
-              result: "CANCELED",
-              path: "",
-            };
+            return { result: "CANCELED", path: "" };
           }
           filePath = await generateUniqueFilePath(
             path.basename(filePath, `.${extension}`),
