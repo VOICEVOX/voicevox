@@ -7,6 +7,7 @@ import { createLogger } from "@/domain/frontend/log";
 import { uuid4 } from "@/helpers/random";
 import { normalizeError } from "@/helpers/normalizeError";
 import path from "@/helpers/path";
+import { createFakePath, FakePath, isFakePath } from "./fakePath";
 
 const log = createLogger("fileImpl");
 
@@ -193,17 +194,8 @@ export const checkFileExistsImpl: (typeof window)[typeof SandboxKey]["checkFileE
     return Promise.resolve(fileEntries.includes(fileName));
   };
 
-const fakePathSchema = z
-  .string()
-  .regex(/^<browser-dummy-[0-9a-f]+>-.+$/)
-  .brand("FakePath");
-type FakePath = z.infer<typeof fakePathSchema>;
 // FileSystemFileHandleを保持するMap。キーは生成した疑似パス。
 const fileHandleMap: Map<FakePath, FileSystemFileHandle> = new Map();
-
-const isFakePath = (path: string): path is FakePath => {
-  return fakePathSchema.safeParse(path).success;
-};
 
 // ファイル選択ダイアログを開く
 // 返り値はファイルパスではなく、疑似パスを返す
@@ -222,9 +214,7 @@ export const showOpenFilePickerImpl = async (options: {
     });
     const paths = [];
     for (const handle of handles) {
-      const fakePath = fakePathSchema.parse(
-        `<browser-dummy-${uuid4()}>-${handle.name}`,
-      );
+      const fakePath = createFakePath(handle.name);
       fileHandleMap.set(fakePath, handle);
       paths.push(fakePath);
     }
@@ -269,9 +259,7 @@ export const showExportFilePickerImpl: (typeof window)[typeof SandboxKey]["showE
         },
       ],
     });
-    const fakePath = fakePathSchema.parse(
-      `<browser-dummy-${uuid4()}>-${handle.name}`,
-    );
+    const fakePath = createFakePath(handle.name);
     fileHandleMap.set(fakePath, handle);
 
     return fakePath;
