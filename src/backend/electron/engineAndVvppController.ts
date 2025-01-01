@@ -1,5 +1,6 @@
 import path from "path";
 import fs from "fs";
+import { ReadableStream } from "node:stream/web";
 import log from "electron-log/main";
 import { BrowserWindow, dialog } from "electron";
 
@@ -8,6 +9,7 @@ import { getEngineInfoManager } from "./manager/engineInfoManager";
 import { getEngineProcessManager } from "./manager/engineProcessManager";
 import { getRuntimeInfoManager } from "./manager/RuntimeInfoManager";
 import { getVvppManager } from "./manager/vvppManager";
+import { ProgressCallback } from "./type";
 import {
   EngineId,
   EngineInfo,
@@ -45,9 +47,12 @@ export class EngineAndVvppController {
   /**
    * VVPPエンジンをインストールする。
    */
-  async installVvppEngine(vvppPath: string) {
+  async installVvppEngine(
+    vvppPath: string,
+    callbacks?: { onProgress?: ProgressCallback },
+  ) {
     try {
-      await this.vvppManager.install(vvppPath);
+      await this.vvppManager.install(vvppPath, callbacks);
       return true;
     } catch (e) {
       log.error(`Failed to install ${vvppPath},`, e);
@@ -184,6 +189,7 @@ export class EngineAndVvppController {
   async downloadAndInstallVvppEngine(
     downloadDir: string,
     packageInfo: PackageInfo,
+    callbacks: { onProgress: ProgressCallback<"download" | "install"> },
   ) {
     if (packageInfo.packages.length === 0) {
       throw new UnreachableError("No packages to download");
@@ -193,27 +199,52 @@ export class EngineAndVvppController {
     const downloadedPaths: string[] = [];
     try {
       // ダウンロード
+      callbacks.onProgress({ type: "download", progress: 0 });
+
+      let totalBytes = 0;
+      packageInfo.packages.forEach((p) => {
+        totalBytes += p.size;
+      });
+
+      let downloadedBytes = 0;
       await Promise.all(
         packageInfo.packages.map(async (p) => {
-          const { url, name, size } = p;
-
-          log.info(`Download ${name} from ${url}, size: ${size}`);
-          const res = await fetch(url);
-          const buffer = await res.arrayBuffer();
           if (failed) return; // 他のダウンロードが失敗していたら中断
 
+          const { url, name } = p;
+          log.info(`Download ${name} from ${url}`);
+
+          const res = await fetch(url);
+          if (!res.ok || res.body == null)
+            throw new Error(`Failed to download ${name} from ${url}`);
           const downloadPath = path.join(downloadDir, name);
-          await fs.promises.writeFile(downloadPath, Buffer.from(buffer)); // TODO: オンメモリじゃなくする
-          log.info(`Downloaded ${name} to ${downloadPath}`);
+          const fileStream = fs.createWriteStream(downloadPath);
+
+          // ファイルに書き込む
+          // NOTE: なぜか型が合わないのでasを使っている
+          for await (const chunk of res.body as ReadableStream<Uint8Array>) {
+            fileStream.write(chunk);
+            downloadedBytes += chunk.length;
+            callbacks.onProgress({
+              type: "download",
+              progress: (downloadedBytes / totalBytes) * 100,
+            });
+          }
+          fileStream.close();
 
           downloadedPaths.push(downloadPath);
+          log.info(`Downloaded ${name} to ${downloadPath}`);
 
           // TODO: ハッシュチェック
         }),
       );
 
       // インストール
-      await this.installVvppEngine(downloadedPaths[0]);
+      await this.installVvppEngine(downloadedPaths[0], {
+        onProgress: ({ progress }) => {
+          callbacks.onProgress({ type: "install", progress });
+        },
+      });
     } catch (e) {
       failed = true;
       log.error(`Failed to download and install VVPP engine:`, e);
