@@ -36,7 +36,7 @@ let configManager: ElectronConfigManager | undefined;
 
 export function getConfigManager(): ElectronConfigManager {
   if (!configManager) {
-    configManager = new ElectronConfigManager(isMac);
+    configManager = new ElectronConfigManager({ isMac });
   }
   return configManager;
 }
