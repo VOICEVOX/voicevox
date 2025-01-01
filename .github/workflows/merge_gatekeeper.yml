@@ -16,3 +16,6 @@ jobs:
           score_rules: |
             #maintainer: 2
             #reviewer: 1
+      - uses: upsidr/merge-gatekeeper@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
