@@ -3,7 +3,7 @@ import os from "os";
 import path from "path";
 import { _electron as electron, test } from "@playwright/test";
 import dotenv from "dotenv";
-import { BaseWindow, MessageBoxSyncOptions } from "electron";
+import { MessageBoxSyncOptions } from "electron";
 
 test.beforeAll(async () => {
   console.log("Waiting for main.js to be built...");
@@ -62,18 +62,14 @@ test.beforeEach(async () => {
 
       // ダイアログのモック
       await app.evaluate((electron) => {
+        // @ts-expect-error ２種のオーバーロードを無視する
         electron.dialog.showMessageBoxSync = (
-          win: BaseWindow | MessageBoxSyncOptions,
-          options?: MessageBoxSyncOptions,
+          options: MessageBoxSyncOptions,
         ) => {
-          const opt = win instanceof BaseWindow ? options : win;
-          if (opt == undefined) {
-            throw new Error("options == undefined");
-          }
           // デフォルトエンジンのインストールの確認ダイアログ
           if (
-            opt.title == "デフォルトエンジンのインストール" &&
-            opt.buttons?.[0] == "インストール"
+            options.title == "デフォルトエンジンのインストール" &&
+            options.buttons?.[0] == "インストール"
           ) {
             return 0;
           }
