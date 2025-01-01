@@ -12,7 +12,7 @@ export function writeFileSafely(
   data: string | NodeJS.ArrayBufferView,
 ) {
   const tmpPath = `${path}-${uuid4()}.tmp`;
-  fs.writeFileSync(tmpPath, data);
+  fs.writeFileSync(tmpPath, data, { flag: "wx" });
 
   try {
     moveFileSync(tmpPath, path, {
