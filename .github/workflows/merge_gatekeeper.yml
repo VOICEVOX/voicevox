@@ -1,0 +1,18 @@
+name: "Merge Gatekeeper"
+on:
+  pull_request_target:
+    types: [auto_merge_enabled]
+  merge_group:
+    types: [checks_requested]
+
+jobs:
+  merge_gatekeeper:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: voicevox/merge-gatekeeper@main
+        with:
+          token: ${{ secrets.GATEKEEPER_TOKEN }}
+          required_score: 2
+          score_rules: |
+            #maintainer: 2
+            #reviewer: 1
