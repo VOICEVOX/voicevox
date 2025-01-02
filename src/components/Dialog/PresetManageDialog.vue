@@ -41,7 +41,9 @@
                     @click="selectedPresetKey = item.key"
                   >
                     <div class="listitem-content">
-                      {{ item.name }}
+                      <span class="listitem-name">
+                        {{ item.name }}
+                      </span>
                       <div class="listitem-icon">
                         <BaseIconButton
                           icon="delete_outline"
@@ -412,7 +414,14 @@ const morphingTargetStyleInfo = computed(() => {
   justify-content: space-between;
   align-items: center;
   gap: vars.$gap-1;
-  width: 100%;
+  width: 320px;
+}
+
+.listitem-name {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  flex: 1;
 }
 
 .listitem-icon {
@@ -442,6 +451,7 @@ const morphingTargetStyleInfo = computed(() => {
 
 .preset-name {
   @include mixin.headline-1;
+  word-break: break-all;
 }
 
 .preset-field {
