@@ -56,14 +56,16 @@
             </template>
             <div class="detail">
               <BaseScrollArea>
-                <div v-if="selectedPreset && editedPreset" class="inner">
+                <div v-if="selectedPreset" class="inner">
                   <div class="parameter-list">
                     <h2 class="preset-name">{{ selectedPreset.name }}</h2>
                     <div class="preset-field">
                       <label for="preset-name">プリセット名</label>
                       <BaseTextField
                         id="preset-name"
-                        v-model="editedPreset.name"
+                        :modelValue="selectedPreset.name"
+                        :hasError="!selectedPreset.name"
+                        @change="changePresetName"
                       />
                     </div>
                     <template
@@ -72,7 +74,7 @@
                     >
                       <ParameterSlider
                         v-if="sliderKey in parameterLabels"
-                        v-model="editedPreset[sliderKey as ParameterType]"
+                        v-model="selectedPreset[sliderKey as ParameterType]"
                         :sliderKey
                         :min="value.min()"
                         :max="value.max()"
@@ -81,89 +83,81 @@
                         :label="parameterLabels[sliderKey as ParameterType]"
                       />
                     </template>
-                    <h3 class="parameter-headline">モーフィング</h3>
-                    <div class="mophing-style">
-                      <CharacterButton
-                        :selectedVoice="
-                          editedPreset.morphingInfo
-                            ? {
-                                engineId:
-                                  editedPreset.morphingInfo.targetEngineId,
-                                speakerId:
-                                  editedPreset.morphingInfo.targetSpeakerId,
-                                styleId:
-                                  editedPreset.morphingInfo.targetStyleId,
-                              }
-                            : undefined
-                        "
-                        :characterInfos="morphingTargetCharacters"
-                        :showEngineInfo="morphingTargetEngines.length >= 2"
-                        :emptiable="true"
-                        :uiLocked="false"
-                        @update:selectedVoice="
-                          if ($event == null) {
-                            editedPreset.morphingInfo = undefined;
-                          } else {
-                            editedPreset.morphingInfo = {
-                              targetEngineId: $event.engineId,
-                              targetSpeakerId: $event.speakerId,
-                              targetStyleId: $event.styleId,
-                              rate:
-                                editedPreset.morphingInfo?.rate ??
-                                selectedPreset.morphingInfo?.rate ??
-                                0.5,
-                            };
-                          }
+                    <!-- モーフィング無効時にキャラ選択解除するといきなり非表示になってしまうが、稀なケースなため無対策 -->
+                    <template
+                      v-if="shouldShowMorphing || selectedPreset.morphingInfo"
+                    >
+                      <h3 class="parameter-headline">モーフィング</h3>
+                      <div class="mophing-style">
+                        <CharacterButton
+                          :selectedVoice="
+                            selectedPreset.morphingInfo
+                              ? {
+                                  engineId:
+                                    selectedPreset.morphingInfo.targetEngineId,
+                                  speakerId:
+                                    selectedPreset.morphingInfo.targetSpeakerId,
+                                  styleId:
+                                    selectedPreset.morphingInfo.targetStyleId,
+                                }
+                              : undefined
+                          "
+                          :characterInfos="morphingTargetCharacters"
+                          :showEngineInfo="morphingTargetEngines.length >= 2"
+                          :emptiable="true"
+                          :uiLocked="false"
+                          @update:selectedVoice="
+                            if ($event == null) {
+                              selectedPreset.morphingInfo = undefined;
+                            } else {
+                              selectedPreset.morphingInfo = {
+                                targetEngineId: $event.engineId,
+                                targetSpeakerId: $event.speakerId,
+                                targetStyleId: $event.styleId,
+                                rate: selectedPreset.morphingInfo?.rate ?? 0.5,
+                              };
+                            }
+                          "
+                        />
+                        <span>
+                          {{
+                            morphingTargetCharacterInfo
+                              ? morphingTargetCharacterInfo.metas.speakerName
+                              : "未設定"
+                          }}
+                        </span>
+                        <span
+                          v-if="
+                            morphingTargetCharacterInfo &&
+                            morphingTargetCharacterInfo.metas.styles.length >= 2
+                          "
+                        >
+                          （{{ morphingTargetStyleInfo?.styleName }}）
+                        </span>
+                      </div>
+                      <ParameterSlider
+                        v-if="selectedPreset.morphingInfo"
+                        v-model="selectedPreset.morphingInfo.rate"
+                        sliderKey="morphingRate"
+                        label="割合"
+                        :min="SLIDER_PARAMETERS.morphingRate.min()"
+                        :max="SLIDER_PARAMETERS.morphingRate.max()"
+                        :step="SLIDER_PARAMETERS.morphingRate.step()"
+                        :scrollStep="
+                          SLIDER_PARAMETERS.morphingRate.scrollStep()
                         "
                       />
-                      <span>
-                        {{
-                          morphingTargetCharacterInfo
-                            ? morphingTargetCharacterInfo.metas.speakerName
-                            : "未設定"
-                        }}
-                      </span>
-                      <span
-                        v-if="
-                          morphingTargetCharacterInfo &&
-                          morphingTargetCharacterInfo.metas.styles.length >= 2
-                        "
-                      >
-                        （{{ morphingTargetStyleInfo?.styleName }}）
-                      </span>
-                    </div>
-                    <ParameterSlider
-                      v-if="editedPreset.morphingInfo"
-                      v-model="editedPreset.morphingInfo.rate"
-                      sliderKey="morphingRate"
-                      label="割合"
-                      :min="SLIDER_PARAMETERS.morphingRate.min()"
-                      :max="SLIDER_PARAMETERS.morphingRate.max()"
-                      :step="SLIDER_PARAMETERS.morphingRate.step()"
-                      :scrollStep="SLIDER_PARAMETERS.morphingRate.scrollStep()"
-                    />
+                    </template>
                   </div>
                   <div class="footer">
                     <BaseButton
                       label="変更をリセット"
-                      :disabled="isPresetChanged"
+                      :disabled="!isPresetChanged"
                       @click="
-                        if (selectedPreset == undefined) {
-                          throw new Error('selectedPreset is undefined');
+                        if (initialPreset == undefined) {
+                          throw new Error('initialPreset is undefined');
                         }
-                        resetPreset(selectedPreset);
-                      "
-                    />
-                    <BaseButton
-                      label="保存"
-                      variant="primary"
-                      icon="save"
-                      :disabled="editedPreset == undefined || isPresetChanged"
-                      @click="
-                        if (editedPreset == undefined) {
-                          throw new Error('editedPreset is undefined');
-                        }
-                        updatePreset(selectedPresetKey, editedPreset);
+                        resetPreset(initialPreset);
                       "
                     />
                   </div>
@@ -178,7 +172,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watchEffect } from "vue";
+import { computed, ref, watch } from "vue";
 import Draggable from "vuedraggable";
 import { useStore } from "@/store";
 import BaseListItem from "@/components/Base/BaseListItem.vue";
@@ -238,15 +232,6 @@ const previewPresetList = computed(() =>
     : presetList.value,
 );
 
-const morphingTargetEngines = store.getters.MORPHING_SUPPORTED_ENGINES;
-
-const selectedPresetKey = ref();
-const selectedPreset = computed(() => {
-  return previewPresetList.value.find(
-    (preset) => preset.key === selectedPresetKey.value,
-  );
-});
-
 type ParameterType = Exclude<PresetSliderKey, "morphingRate">;
 const parameterLabels: Record<ParameterType, string> = {
   speedScale: "話速",
@@ -258,25 +243,64 @@ const parameterLabels: Record<ParameterType, string> = {
   postPhonemeLength: "終了無音",
 };
 
-const editedPreset = ref<Preset | undefined>();
-watchEffect(() => {
-  editedPreset.value = selectedPreset.value
-    ? {
-        ...selectedPreset.value,
-        morphingInfo: selectedPreset.value.morphingInfo
-          ? { ...selectedPreset.value.morphingInfo }
-          : undefined,
-      }
-    : undefined;
-});
+const selectedPresetKey = ref();
+const selectedPreset = ref<Preset | undefined>();
+const initialPreset = ref<Preset | undefined>();
 
 const isPresetChanged = computed(() => {
   if (!selectedPreset.value) return false;
 
   return (
-    JSON.stringify(selectedPreset.value) === JSON.stringify(editedPreset.value)
+    JSON.stringify(selectedPreset.value) !== JSON.stringify(initialPreset.value)
   );
 });
+
+watch(selectedPresetKey, (key) => {
+  if (key == undefined) {
+    selectedPreset.value = undefined;
+    initialPreset.value = undefined;
+    return;
+  }
+
+  const preset = presetItems.value[key];
+  const clonedPreset = () => {
+    return {
+      ...preset,
+      morphingInfo: preset.morphingInfo
+        ? { ...preset.morphingInfo }
+        : undefined,
+    };
+  };
+  selectedPreset.value = clonedPreset();
+  initialPreset.value = clonedPreset();
+});
+
+watch(
+  () =>
+    Object.entries({
+      ...selectedPreset.value,
+      ...selectedPreset.value?.morphingInfo,
+    }),
+  async () => {
+    if (
+      !selectedPreset.value ||
+      !isPresetChanged.value ||
+      !selectedPreset.value.name
+    )
+      return;
+
+    await store.actions.UPDATE_PRESET({
+      presetData: selectedPreset.value,
+      presetKey: selectedPresetKey.value,
+    });
+  },
+);
+
+const changePresetName = (event: Event) => {
+  if (event.target instanceof HTMLInputElement && selectedPreset.value) {
+    selectedPreset.value.name = event.target.value;
+  }
+};
 
 const resetPreset = async (preset: Preset) => {
   const result = await store.actions.SHOW_WARNING_DIALOG({
@@ -289,14 +313,10 @@ const resetPreset = async (preset: Preset) => {
     return;
   }
 
-  editedPreset.value = { ...preset };
-};
-
-const updatePreset = async (key: PresetKey, preset: Preset) => {
-  await store.actions.UPDATE_PRESET({
-    presetData: preset,
-    presetKey: key,
-  });
+  selectedPreset.value = {
+    ...preset,
+    morphingInfo: preset.morphingInfo ? { ...preset.morphingInfo } : undefined,
+  };
 };
 
 const reorderPreset = (featurePresetList: (Preset & { key: PresetKey })[]) => {
@@ -328,6 +348,12 @@ const deletePreset = async (key: PresetKey) => {
   }
 };
 
+const shouldShowMorphing = computed(
+  () => store.state.experimentalSetting.enableMorphing,
+);
+
+const morphingTargetEngines = store.getters.MORPHING_SUPPORTED_ENGINES;
+
 const morphingTargetCharacters = computed<CharacterInfo[]>(() => {
   const allCharacterInfos = store.getters.USER_ORDERED_CHARACTER_INFOS("talk");
   if (allCharacterInfos == undefined)
@@ -342,12 +368,12 @@ const morphingTargetCharacterInfo = computed(() =>
     ?.find(
       (character) =>
         character.metas.speakerUuid ===
-        editedPreset.value?.morphingInfo?.targetSpeakerId,
+        selectedPreset.value?.morphingInfo?.targetSpeakerId,
     ),
 );
 
 const morphingTargetStyleInfo = computed(() => {
-  const morphingInfo = editedPreset.value?.morphingInfo;
+  const morphingInfo = selectedPreset.value?.morphingInfo;
 
   if (!morphingInfo) return;
 
