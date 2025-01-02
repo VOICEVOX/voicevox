@@ -492,15 +492,15 @@ registerIpcMainHandle<IpcMainHandle>({
   },
 
   IS_MAXIMIZED_WINDOW: () => {
-    return windowManager.getWindow().isMaximized();
+    return windowManager.isMaximized();
   },
 
   CLOSE_WINDOW: () => {
     appState.willQuit = true;
-    windowManager.getWindow().destroy();
+    windowManager.destroyWindow();
   },
   MINIMIZE_WINDOW: () => {
-    windowManager.getWindow().minimize();
+    windowManager.minimize();
   },
   TOGGLE_MAXIMIZE_WINDOW: () => {
     windowManager.toggleMaximizeWindow();
@@ -552,7 +552,7 @@ registerIpcMainHandle<IpcMainHandle>({
   },
 
   ON_VUEX_READY: () => {
-    windowManager.getWindow().show();
+    windowManager.show();
   },
 
   CHECK_FILE_EXISTS: (_, { file }) => {

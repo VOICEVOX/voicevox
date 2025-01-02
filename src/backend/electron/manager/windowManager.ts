@@ -245,6 +245,22 @@ class WindowManager {
     const win = this.getWindow();
     win.webContents.setZoomFactor(1);
   }
+
+  public destroyWindow() {
+    this.getWindow().destroy();
+  }
+
+  public show() {
+    this.getWindow().show();
+  }
+
+  public minimize() {
+    this.getWindow().minimize();
+  }
+
+  public isMaximized() {
+    return this.getWindow().isMaximized();
+  }
 }
 
 let windowManager: WindowManager | undefined;
