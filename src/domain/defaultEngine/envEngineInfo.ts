@@ -35,10 +35,10 @@ type EnvEngineInfoType = z.infer<typeof envEngineInfoSchema>;
 
 /** .envからデフォルトエンジン情報を読み込む */
 export function loadEnvEngineInfos(): EnvEngineInfoType[] {
-  // electronのときはプロセスの環境変数を参照する。
+  // electronのときはプロセスの環境変数を優先する。
   // NOTE: electronテスト環境を切り替えるため。テスト環境が１本化されればimport.meta.envを使う。
   const defaultEngineInfosEnv =
-    (isElectron
+    (isElectron && process?.env?.VITE_DEFAULT_ENGINE_INFOS
       ? process.env.VITE_DEFAULT_ENGINE_INFOS
       : import.meta.env.VITE_DEFAULT_ENGINE_INFOS) ?? "[]";
 
