@@ -78,7 +78,6 @@ export class EngineAndVvppController {
     reloadNeeded: boolean;
     reloadCallback?: () => void; // 再読み込みが必要な場合のコールバック
   }) {
-    // FIXME: dialog表示関数をDI可能にする。
     const windowManager = getWindowManager();
     const result = windowManager.showMessageBoxSync({
       type: "warning",

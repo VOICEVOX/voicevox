@@ -859,7 +859,7 @@ app.on("second-instance", async (_event, _argv, _workDir, rawData) => {
   const data = rawData as SingleInstanceLockData;
   const win = windowManager.win;
   if (win == undefined) {
-    // TODO: 起動中の場合Windowが作られるまで待つ
+    // TODO: 起動シーケンス中の場合はWindowが作られるまで待つ
     log.warn("A 'second-instance' event was emitted but there is no window.");
     return;
   }
