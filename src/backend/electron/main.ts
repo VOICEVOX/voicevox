@@ -172,17 +172,6 @@ if (!fs.existsSync(vvppEngineDir)) {
   fs.mkdirSync(vvppEngineDir);
 }
 
-const appState = {
-  willQuit: false,
-};
-initializeWindowManager({
-  appStateGetter: () => appState,
-  isDevelopment,
-  isTest,
-  staticDir: __static,
-});
-const windowManager = getWindowManager();
-
 const onEngineProcessError = (engineInfo: EngineInfo, error: Error) => {
   const engineId = engineInfo.uuid;
   log.error(`ENGINE ${engineId} ERROR:`, error);
@@ -199,6 +188,16 @@ const onEngineProcessError = (engineInfo: EngineInfo, error: Error) => {
   dialog.showErrorBox("音声合成エンジンエラー", error.message);
 };
 
+const appState = {
+  willQuit: false,
+};
+
+initializeWindowManager({
+  appStateGetter: () => appState,
+  isDevelopment,
+  isTest,
+  staticDir: __static,
+});
 initializeRuntimeInfoManager({
   runtimeInfoPath: path.join(app.getPath("userData"), "runtime-info.json"),
   appVersion: app.getVersion(),
@@ -211,6 +210,7 @@ initializeEngineProcessManager({ onEngineProcessError });
 initializeVvppManager({ vvppEngineDir });
 
 const configManager = getConfigManager();
+const windowManager = getWindowManager();
 const engineInfoManager = getEngineInfoManager();
 const engineProcessManager = getEngineProcessManager();
 const engineAndVvppController = getEngineAndVvppController();
