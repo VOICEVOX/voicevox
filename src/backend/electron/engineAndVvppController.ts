@@ -2,13 +2,14 @@ import path from "path";
 import fs from "fs";
 import { ReadableStream } from "node:stream/web";
 import log from "electron-log/main";
-import { BrowserWindow, dialog } from "electron";
+import { dialog } from "electron";
 
 import { getConfigManager } from "./electronConfig";
 import { getEngineInfoManager } from "./manager/engineInfoManager";
 import { getEngineProcessManager } from "./manager/engineProcessManager";
 import { getRuntimeInfoManager } from "./manager/RuntimeInfoManager";
 import { getVvppManager } from "./manager/vvppManager";
+import { getWindowManager } from "./manager/windowManager";
 import { ProgressCallback } from "./type";
 import {
   EngineId,
@@ -72,14 +73,13 @@ export class EngineAndVvppController {
     vvppPath,
     reloadNeeded,
     reloadCallback,
-    win,
   }: {
     vvppPath: string;
     reloadNeeded: boolean;
     reloadCallback?: () => void; // 再読み込みが必要な場合のコールバック
-    win: BrowserWindow; // dialog表示に必要。 FIXME: dialog表示関数をDI可能にし、winを削除する
   }) {
-    const result = dialog.showMessageBoxSync(win, {
+    const windowManager = getWindowManager();
+    const result = windowManager.showMessageBoxSync({
       type: "warning",
       title: "エンジン追加の確認",
       message: `この操作はコンピュータに損害を与える可能性があります。エンジンの配布元が信頼できない場合は追加しないでください。`,
@@ -94,8 +94,8 @@ export class EngineAndVvppController {
     await this.installVvppEngine(vvppPath);
 
     if (reloadNeeded) {
-      void dialog
-        .showMessageBox(win, {
+      void windowManager
+        .showMessageBox({
           type: "info",
           title: "再読み込みが必要です",
           message:

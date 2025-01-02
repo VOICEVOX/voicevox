@@ -3,7 +3,7 @@ import os from "os";
 import path from "path";
 import { _electron as electron, test } from "@playwright/test";
 import dotenv from "dotenv";
-import { BrowserWindow, MessageBoxSyncOptions } from "electron";
+import { MessageBoxSyncOptions } from "electron";
 
 test.beforeAll(async () => {
   console.log("Waiting for main.js to be built...");
@@ -64,7 +64,6 @@ test.beforeEach(async () => {
       await app.evaluate((electron) => {
         // @ts-expect-error ２種のオーバーロードを無視する
         electron.dialog.showMessageBoxSync = (
-          win: BrowserWindow,
           options: MessageBoxSyncOptions,
         ) => {
           // デフォルトエンジンのインストールの確認ダイアログ
