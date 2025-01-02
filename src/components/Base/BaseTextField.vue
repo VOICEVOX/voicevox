@@ -70,7 +70,8 @@ const model = defineModel<string>();
 }
 
 .error {
-  border: 2px solid colors.$display-warning;
+  @include mixin.on-focus;
+  outline-color: colors.$display-warning !important;
 }
 
 .error-label {
