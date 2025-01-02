@@ -60,7 +60,11 @@ export const hotkeySettingSchema = z.object({
 });
 export type HotkeySettingType = z.infer<typeof hotkeySettingSchema>;
 
-export function getDefaultHotkeySettings(isMac: boolean): HotkeySettingType[] {
+export function getDefaultHotkeySettings({
+  isMac,
+}: {
+  isMac: boolean;
+}): HotkeySettingType[] {
   return [
     {
       action: "音声書き出し",

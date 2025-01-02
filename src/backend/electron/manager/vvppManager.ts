@@ -7,6 +7,7 @@ import { app, dialog } from "electron";
 import MultiStream from "multistream";
 import { glob } from "glob";
 import AsyncLock from "async-lock";
+import { ProgressCallback } from "../type";
 import {
   EngineId,
   EngineInfo,
@@ -109,7 +110,10 @@ export class VvppManager {
 
   private async extractVvpp(
     vvppLikeFilePath: string,
+    callbacks?: { onProgress?: ProgressCallback },
   ): Promise<{ outputDir: string; manifest: MinimumEngineManifestType }> {
+    callbacks?.onProgress?.({ progress: 0 });
+
     const nonce = new Date().getTime().toString();
     const outputDir = path.join(this.vvppEngineDir, ".tmp", nonce);
 
@@ -182,7 +186,13 @@ export class VvppManager {
           log.log("Single file, not concatenating");
         }
 
-        const args = ["x", "-o" + outputDir, archiveFile, "-t" + format];
+        const args = [
+          "x",
+          "-o" + outputDir,
+          archiveFile,
+          "-t" + format,
+          "-bsp1", // 進捗出力
+        ];
 
         let sevenZipPath = import.meta.env.VITE_7Z_BIN_NAME;
         if (!sevenZipPath) {
@@ -194,18 +204,27 @@ export class VvppManager {
             sevenZipPath,
           );
         }
-        log.log(
-          "Spawning 7z:",
-          sevenZipPath,
-          args.map((a) => JSON.stringify(a)).join(" "),
-        );
+        log.log("Spawning 7z:", sevenZipPath, args.join(" "));
         await new Promise<void>((resolve, reject) => {
           const child = spawn(sevenZipPath, args, {
             stdio: ["pipe", "pipe", "pipe"],
           });
 
           child.stdout?.on("data", (data: Buffer) => {
-            log.info(`7z STDOUT: ${data.toString("utf-8")}`);
+            const output = data.toString("utf-8");
+            log.info(`7z STDOUT: ${output}`);
+
+            // 進捗を取得
+            // NOTE: ` 75% 106 - pyopenjtalk\open_jtalk_dic_utf_8-1.11\sys.dic` のような出力が来る
+            // TODO: 出力が変わるかもしれないのでテストが必要
+            const progressMatch = output.match(
+              / *(?<percent>\d+)% ?(?<fileCount>\d+)? ?(?<file>.*)/,
+            );
+            if (progressMatch?.groups?.percent) {
+              callbacks?.onProgress?.({
+                progress: parseInt(progressMatch.groups.percent),
+              });
+            }
           });
 
           child.stderr?.on("data", (data: Buffer) => {
@@ -214,6 +233,7 @@ export class VvppManager {
 
           child.on("exit", (code) => {
             if (code === 0) {
+              callbacks?.onProgress?.({ progress: 100 });
               resolve();
             } else {
               reject(new Error(`7z exited with code ${code}`));
@@ -253,11 +273,18 @@ export class VvppManager {
   /**
    * 追加
    */
-  async install(vvppPath: string) {
-    await this.lock.acquire(lockKey, () => this._install(vvppPath));
+  async install(
+    vvppPath: string,
+    callbacks?: { onProgress?: ProgressCallback },
+  ) {
+    await this.lock.acquire(lockKey, () => this._install(vvppPath, callbacks));
   }
-  private async _install(vvppPath: string) {
-    const { outputDir, manifest } = await this.extractVvpp(vvppPath);
+  private async _install(
+    vvppPath: string,
+    callbacks?: { onProgress?: ProgressCallback },
+  ) {
+    const { outputDir, manifest } = await this.extractVvpp(vvppPath, callbacks);
+
     const dirName = this.toValidDirName(manifest);
     const engineDirectory = path.join(this.vvppEngineDir, dirName);
     const oldEngineDirName = (

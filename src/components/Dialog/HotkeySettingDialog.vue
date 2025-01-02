@@ -227,7 +227,7 @@ const setHotkeyDialogOpened = () => {
 };
 
 const isDefaultCombination = (action: string) => {
-  const defaultSetting = getDefaultHotkeySettings(isMac).find(
+  const defaultSetting = getDefaultHotkeySettings({ isMac }).find(
     (value) => value.action === action,
   );
   const hotkeySetting = hotkeySettings.value.find(
@@ -245,7 +245,7 @@ const resetHotkey = async (action: string) => {
 
   if (result !== "OK") return;
 
-  const setting = getDefaultHotkeySettings(isMac).find(
+  const setting = getDefaultHotkeySettings({ isMac }).find(
     (value) => value.action == action,
   );
   if (setting == undefined) {
