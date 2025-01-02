@@ -1,6 +1,14 @@
 import fs from "fs";
 import path from "path";
-import { BrowserWindow } from "electron";
+import {
+  BrowserWindow,
+  dialog,
+  MessageBoxOptions,
+  MessageBoxSyncOptions,
+  OpenDialogOptions,
+  OpenDialogSyncOptions,
+  SaveDialogOptions,
+} from "electron";
 import log from "electron-log/main";
 import windowStateKeeper from "electron-window-state";
 import { getConfigManager } from "../electronConfig";
@@ -260,6 +268,36 @@ class WindowManager {
 
   public isMaximized() {
     return this.getWindow().isMaximized();
+  }
+
+  public showOpenDialogSync(options: OpenDialogSyncOptions) {
+    return this._win == undefined
+      ? dialog.showOpenDialogSync(options)
+      : dialog.showOpenDialogSync(this.getWindow(), options);
+  }
+
+  public showOpenDialog(options: OpenDialogOptions) {
+    return this._win == undefined
+      ? dialog.showOpenDialog(options)
+      : dialog.showOpenDialog(this.getWindow(), options);
+  }
+
+  public showSaveDialog(options: SaveDialogOptions) {
+    return this._win == undefined
+      ? dialog.showSaveDialog(options)
+      : dialog.showSaveDialog(this.getWindow(), options);
+  }
+
+  public showMessageBoxSync(options: MessageBoxSyncOptions) {
+    return this._win == undefined
+      ? dialog.showMessageBoxSync(options)
+      : dialog.showMessageBoxSync(this.getWindow(), options);
+  }
+
+  public showMessageBox(options: MessageBoxOptions) {
+    return this._win == undefined
+      ? dialog.showMessageBox(options)
+      : dialog.showMessageBox(this.getWindow(), options);
   }
 }
 

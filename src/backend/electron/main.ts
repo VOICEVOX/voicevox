@@ -4,16 +4,7 @@ import path from "path";
 
 import fs from "fs";
 import { pathToFileURL } from "url";
-import {
-  app,
-  dialog,
-  Menu,
-  MessageBoxSyncOptions,
-  nativeTheme,
-  net,
-  protocol,
-  shell,
-} from "electron";
+import { app, dialog, Menu, nativeTheme, net, protocol, shell } from "electron";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 
 import log from "electron-log/main";
@@ -240,19 +231,13 @@ function openEngineDirectory(engineId: EngineId) {
 function checkMultiEngineEnabled(): boolean {
   const enabled = configManager.get("enableMultiEngine");
   if (!enabled) {
-    const win = windowManager.win;
-    const option: MessageBoxSyncOptions = {
+    windowManager.showMessageBoxSync({
       type: "info",
       title: "マルチエンジン機能が無効です",
       message: `マルチエンジン機能が無効です。vvppファイルを使用するには設定からマルチエンジン機能を有効にしてください。`,
       buttons: ["OK"],
       noLink: true,
-    };
-    if (win != undefined) {
-      dialog.showMessageBoxSync(win, option);
-    } else {
-      dialog.showMessageBoxSync(option);
-    }
+    });
   }
   return enabled;
 }
@@ -314,17 +299,14 @@ const retryShowSaveDialogWhileSafeDir = async <
    */
   const showWarningDialog = async () => {
     const productName = app.getName().toUpperCase();
-    const warningResult = await dialog.showMessageBox(
-      windowManager.getWindow(),
-      {
-        message: `指定された保存先は${productName}により自動的に削除される可能性があります。\n他の場所に保存することをおすすめします。`,
-        type: "warning",
-        buttons: ["保存場所を変更", "無視して保存"],
-        defaultId: 0,
-        title: "警告",
-        cancelId: 0,
-      },
-    );
+    const warningResult = await windowManager.showMessageBox({
+      message: `指定された保存先は${productName}により自動的に削除される可能性があります。\n他の場所に保存することをおすすめします。`,
+      type: "warning",
+      buttons: ["保存場所を変更", "無視して保存"],
+      defaultId: 0,
+      title: "警告",
+      cancelId: 0,
+    });
     return warningResult.response === 0 ? "retry" : "forceSave";
   };
 
@@ -375,7 +357,7 @@ registerIpcMainHandle<IpcMainHandle>({
    */
   SHOW_SAVE_DIRECTORY_DIALOG: async (_, { title }) => {
     const result = await retryShowSaveDialogWhileSafeDir(() =>
-      dialog.showOpenDialog(windowManager.getWindow(), {
+      windowManager.showOpenDialog({
         title,
         properties: [
           "openDirectory",
@@ -391,7 +373,7 @@ registerIpcMainHandle<IpcMainHandle>({
   },
 
   SHOW_VVPP_OPEN_DIALOG: async (_, { title, defaultPath }) => {
-    const result = await dialog.showOpenDialog(windowManager.getWindow(), {
+    const result = await windowManager.showOpenDialog({
       title,
       defaultPath,
       filters: [
@@ -407,7 +389,7 @@ registerIpcMainHandle<IpcMainHandle>({
    * 保存先として選ぶ場合は SHOW_SAVE_DIRECTORY_DIALOG を使うべき。
    */
   SHOW_OPEN_DIRECTORY_DIALOG: async (_, { title }) => {
-    const result = await dialog.showOpenDialog(windowManager.getWindow(), {
+    const result = await windowManager.showOpenDialog({
       title,
       properties: [
         "openDirectory",
@@ -423,7 +405,7 @@ registerIpcMainHandle<IpcMainHandle>({
 
   SHOW_PROJECT_SAVE_DIALOG: async (_, { title, defaultPath }) => {
     const result = await retryShowSaveDialogWhileSafeDir(() =>
-      dialog.showSaveDialog(windowManager.getWindow(), {
+      windowManager.showSaveDialog({
         title,
         defaultPath,
         filters: [{ name: "VOICEVOX Project file", extensions: ["vvproj"] }],
@@ -437,7 +419,7 @@ registerIpcMainHandle<IpcMainHandle>({
   },
 
   SHOW_PROJECT_LOAD_DIALOG: async (_, { title }) => {
-    const result = await dialog.showOpenDialog(windowManager.getWindow(), {
+    const result = await windowManager.showOpenDialog({
       title,
       filters: [{ name: "VOICEVOX Project file", extensions: ["vvproj"] }],
       properties: ["openFile", "createDirectory", "treatPackageAsDirectory"],
@@ -449,7 +431,7 @@ registerIpcMainHandle<IpcMainHandle>({
   },
 
   SHOW_WARNING_DIALOG: (_, { title, message }) => {
-    return dialog.showMessageBox(windowManager.getWindow(), {
+    return windowManager.showMessageBox({
       type: "warning",
       title,
       message,
@@ -457,7 +439,7 @@ registerIpcMainHandle<IpcMainHandle>({
   },
 
   SHOW_ERROR_DIALOG: (_, { title, message }) => {
-    return dialog.showMessageBox(windowManager.getWindow(), {
+    return windowManager.showMessageBox({
       type: "error",
       title,
       message,
@@ -465,7 +447,7 @@ registerIpcMainHandle<IpcMainHandle>({
   },
 
   SHOW_IMPORT_FILE_DIALOG: (_, { title, name, extensions }) => {
-    return dialog.showOpenDialogSync(windowManager.getWindow(), {
+    return windowManager.showOpenDialogSync({
       title,
       filters: [{ name: name ?? "Text", extensions: extensions ?? ["txt"] }],
       properties: ["openFile", "createDirectory", "treatPackageAsDirectory"],
@@ -477,7 +459,7 @@ registerIpcMainHandle<IpcMainHandle>({
     { title, defaultPath, extensionName, extensions },
   ) => {
     const result = await retryShowSaveDialogWhileSafeDir(() =>
-      dialog.showSaveDialog(windowManager.getWindow(), {
+      windowManager.showSaveDialog({
         title,
         defaultPath,
         filters: [{ name: extensionName, extensions: extensions }],
