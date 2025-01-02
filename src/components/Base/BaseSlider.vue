@@ -15,6 +15,7 @@
       }
     "
     @wheel="onWheel"
+    @valueCommit="$emit('valueCommit', $event[0])"
   >
     <SliderTrack class="SliderTrack">
       <SliderRange class="SliderRange" />
@@ -46,6 +47,7 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   "update:modelValue": [value: number];
+  valueCommit: [value: number];
 }>();
 
 const onWheel = (event: WheelEvent) => {
@@ -59,8 +61,10 @@ const onWheel = (event: WheelEvent) => {
       : props.step;
 
   const value = props.modelValue + scrollStep * delta;
+  const clampedValue = Math.min(props.max, Math.max(props.min, value));
 
-  emit("update:modelValue", Math.min(props.max, Math.max(props.min, value)));
+  emit("update:modelValue", clampedValue);
+  emit("valueCommit", clampedValue);
 };
 </script>
 

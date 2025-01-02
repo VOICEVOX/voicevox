@@ -6,7 +6,7 @@
       </label>
       <input
         :id="`parameter-${sliderKey}`"
-        v-model="inputValue"
+        :value="inputValueFixed"
         class="parameter-input"
         type="text"
         @change="onUpdate"
@@ -14,18 +14,18 @@
       />
     </div>
     <BaseSlider
-      :modelValue
+      v-model="inputValue"
       :min
       :max
       :step
       :scrollStep
-      @update:modelValue="$emit('update:modelValue', $event)"
+      @valueCommit="$emit('update:modelValue', $event)"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watchEffect } from "vue";
+import { computed, ref, watchEffect } from "vue";
 import BaseSlider from "@/components/Base/BaseSlider.vue";
 
 const props = defineProps<{
@@ -38,10 +38,11 @@ const props = defineProps<{
   modelValue: number;
 }>();
 
-const inputValue = ref(props.modelValue.toFixed(2));
+const inputValue = ref(props.modelValue);
 watchEffect(() => {
-  inputValue.value = props.modelValue.toFixed(2);
+  inputValue.value = props.modelValue;
 });
+const inputValueFixed = computed(() => inputValue.value.toFixed(2));
 
 const emit = defineEmits<{
   "update:modelValue": [value: number];
@@ -57,7 +58,7 @@ const onUpdate = (event: Event) => {
     emit("update:modelValue", Math.min(Math.max(value, props.min), props.max));
   }
 
-  inputValue.value = props.modelValue.toFixed(2);
+  inputValue.value = props.modelValue;
 };
 </script>
 
