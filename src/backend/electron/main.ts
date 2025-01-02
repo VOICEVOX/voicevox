@@ -825,6 +825,7 @@ void app.whenReady().then(async () => {
   }
 
   // 多重起動防止
+  // TODO: readyを待たずにもっと早く実行すべき
   if (
     !isDevelopment &&
     !isTest &&
