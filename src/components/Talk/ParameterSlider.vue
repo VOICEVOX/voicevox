@@ -64,6 +64,7 @@ const onUpdate = (event: Event) => {
 
 <style scoped lang="scss">
 @use "@/styles/v2/variables" as vars;
+@use "@/styles/v2/colors" as colors;
 @use "@/styles/v2/mixin" as mixin;
 
 .parameter-header {
@@ -77,6 +78,7 @@ const onUpdate = (event: Event) => {
   background-color: transparent;
   text-align: right;
   border-radius: vars.$radius-1;
+  color: colors.$display;
 
   &:focus-visible {
     @include mixin.on-focus;
