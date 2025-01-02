@@ -859,7 +859,8 @@ app.on("second-instance", async (_event, _argv, _workDir, rawData) => {
   const data = rawData as SingleInstanceLockData;
   const win = windowManager.win;
   if (win == undefined) {
-    // 起動中または終了中に来た場合は諦める
+    // TODO: 起動中の場合Windowが作られるまで待つ
+    log.warn("A 'second-instance' event was emitted but there is no window.");
     return;
   }
   if (!data.filePath) {
