@@ -9,6 +9,7 @@
       :placeholder
       :readonly
       :disabled
+      @change="(payload) => $emit('change', payload)"
       @click="(payload) => $emit('click', payload)"
     />
     <div v-if="hasError" class="error-label">
@@ -27,6 +28,7 @@ defineProps<{
 }>();
 
 defineEmits<{
+  change: [payload: Event];
   click: [payload: MouseEvent];
 }>();
 
