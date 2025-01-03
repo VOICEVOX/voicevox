@@ -8,6 +8,7 @@ export interface IEngineConnectorFactory {
   instance: (host: string) => DefaultApiInterface;
 }
 
+// 通常エンジン
 const OpenAPIEngineConnectorFactoryImpl = (): IEngineConnectorFactory => {
   const instanceMapper: Record<string, DefaultApiInterface> = {};
   return {
@@ -23,11 +24,10 @@ const OpenAPIEngineConnectorFactoryImpl = (): IEngineConnectorFactory => {
     },
   };
 };
-
-/** エンジン */
 export const OpenAPIEngineConnectorFactory =
   OpenAPIEngineConnectorFactoryImpl();
 
+// モック用エンジン
 const OpenAPIMockEngineConnectorFactoryImpl = (): IEngineConnectorFactory => {
   let mockInstance: DefaultApiInterface | undefined;
   return {
@@ -39,28 +39,30 @@ const OpenAPIMockEngineConnectorFactoryImpl = (): IEngineConnectorFactory => {
     },
   };
 };
-
-/** モック用エンジン */
 export const OpenAPIMockEngineConnectorFactory =
   OpenAPIMockEngineConnectorFactoryImpl();
 
-/** モック用エンジンのURLは `mock://mock` とする */
-export const mockUrlParams = {
-  protocol: "mock:",
-  hostname: "mock",
-  port: "",
-  pathname: "",
-} satisfies EngineUrlParams;
+// 通常エンジンとモック用エンジンの両対応
+// モック用エンジンのURLのときはモックを、そうじゃないときは通常エンジンを返す。
+const OpenAPIEngineAndMockConnectorFactoryImpl =
+  (): IEngineConnectorFactory => {
+    // モック用エンジンのURLは `mock://mock` とする
+    const mockUrlParams: EngineUrlParams = {
+      protocol: "mock:",
+      hostname: "mock",
+      port: "",
+      pathname: "",
+    };
 
-/**
- * モック用エンジンのURLのときはモックを、そうじゃないときは通常エンジンを返す。
- */
-export const OpenAPIEngineAndMockConnectorFactory: IEngineConnectorFactory = {
-  instance: (host: string) => {
-    if (host == createEngineUrl(mockUrlParams)) {
-      return OpenAPIMockEngineConnectorFactory.instance(host);
-    } else {
-      return OpenAPIEngineConnectorFactory.instance(host);
-    }
-  },
-};
+    return {
+      instance: (host: string) => {
+        if (host == createEngineUrl(mockUrlParams)) {
+          return OpenAPIMockEngineConnectorFactory.instance(host);
+        } else {
+          return OpenAPIEngineConnectorFactory.instance(host);
+        }
+      },
+    };
+  };
+export const OpenAPIEngineAndMockConnectorFactory =
+  OpenAPIEngineAndMockConnectorFactoryImpl();

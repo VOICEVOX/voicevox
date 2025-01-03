@@ -71,9 +71,11 @@ export const convertAudioQueryFromEngineToEditor = (
   };
 };
 
-// 製品PC版以外はモックエンジンも使えるようする
-const ConnectorFactory =
-  isElectron && isProduction
-    ? OpenAPIEngineConnectorFactory
-    : OpenAPIEngineAndMockConnectorFactory;
-export const proxyStore = proxyStoreCreator(ConnectorFactory);
+// 製品PC版は通常エンジンのみを、それ以外はモックエンジンも使えるようする
+const getConnectorFactory = () => {
+  if (isElectron && isProduction) {
+    return OpenAPIEngineConnectorFactory;
+  }
+  return OpenAPIEngineAndMockConnectorFactory;
+};
+export const proxyStore = proxyStoreCreator(getConnectorFactory());
