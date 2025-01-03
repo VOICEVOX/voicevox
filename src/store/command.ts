@@ -11,7 +11,7 @@ import {
 } from "@/store/vuex";
 import { CommandId, EditorType } from "@/type/preload";
 import { uuid4 } from "@/helpers/random";
-import { objectEntries } from "@/helpers/typedEntries";
+import { objectEntries, objectFromEntries } from "@/helpers/typedEntries";
 
 enablePatches();
 enableMapSet();
@@ -33,14 +33,13 @@ export const createCommandMutationTree = <S, M extends MutationsBase>(
   payloadRecipeTree: PayloadRecipeTree<S, M>,
   editor: EditorType,
 ): MutationTree<S, M> =>
-  Object.fromEntries(
+  objectFromEntries(
     objectEntries(payloadRecipeTree).map(([key, val]) => [
       key,
       // @ts-expect-error とりあえず動くので無視
       createCommandMutation(val, editor),
     ]),
-    // TODO: as unknownを挟まないようにする
-  ) as unknown as MutationTree<S, M>;
+  ) as MutationTree<S, M>;
 
 /**
  * 与えられたレシピから操作を記録し実行後にStateに追加するMutationを返す。
