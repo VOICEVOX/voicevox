@@ -26,4 +26,5 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           self: merge_gatekeeper
           # https://github.com/upsidr/merge-gatekeeper/issues/71#issuecomment-1660607977
-          ref: ${{ github.event.pull_request && github.event.pull_request.head.ref || github.ref }}
+          ref: ${{ github.event.pull_request && github.event.pull_request.head.sha || github.ref }}
+          timeout: 18000 # 5 hours
