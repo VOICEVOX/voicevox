@@ -106,7 +106,7 @@ jobs:
           chmod +x ${{ steps.download-engine.outputs.run_path }}
 
           # .env
-          cp .env.test-e2e .env
+          cp tests/env/.env.test-e2e .env
           sed -i -e 's|"path/to/engine"|"${{ steps.download-engine.outputs.run_path }}"|' .env
           # GitHub Actions 環境だとたまに50021が封じられていることがあるので、ランダムなポートを使うようにする
           PORT=$(node -r net -e "server=net.createServer();server.listen(0,()=>{console.log(server.address().port);server.close()})")

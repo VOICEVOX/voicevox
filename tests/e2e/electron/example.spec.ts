@@ -46,7 +46,7 @@ test.beforeEach(async () => {
   },
   {
     envName: "VVPPデフォルトエンジン",
-    envPath: ".env.test-electron-default-vvpp",
+    envPath: "tests/env/.env.test-electron-default-vvpp",
   },
 ].forEach(({ envName, envPath }) => {
   test.describe(`${envName}`, () => {
