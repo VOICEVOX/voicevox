@@ -181,7 +181,7 @@ export async function textToActtentPhrasesMock(text: string, styleId: number) {
   let textPhrase = "";
   for (const token of tokens) {
     // 記号の場合は無音を入れて区切る
-    if (token.pos === "記号") {
+    if (token.pos == "記号") {
       const pauseMora = {
         text: "、",
         vowel: "pau",
