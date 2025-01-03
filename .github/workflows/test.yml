@@ -114,7 +114,7 @@ jobs:
       - name: Run npm run test:electron-e2e
         run: |
           # .env
-          cp .env.test-electron .env
+          cp tests/env/.env.test-electron .env
           sed -i -e 's|"path/to/engine"|"${{ steps.download-engine.outputs.run_path }}"|' .env
           # GitHub Actions 環境だとたまに50021が封じられていることがあるので、ランダムなポートを使うようにする
           PORT=$(node -r net -e "server=net.createServer();server.listen(0,()=>{console.log(server.address().port);server.close()})")
