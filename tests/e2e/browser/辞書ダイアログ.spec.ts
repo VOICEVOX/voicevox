@@ -22,7 +22,7 @@ async function getYomi(page: Page, inputText: string): Promise<string> {
   await audioCellInput.click();
   await audioCellInput.fill(inputText);
   await audioCellInput.press("Enter");
-  await expect(accentPhrase).toBeVisible();
+  await expect(accentPhrase).not.toHaveCount(0);
 
   return (await accentPhrase.allTextContents()).join("");
 }
