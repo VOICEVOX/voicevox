@@ -230,7 +230,13 @@ export class EngineAndVvppController {
               progress: (downloadedBytes / totalBytes) * 100,
             });
           }
+
+          // ファイルを確実に閉じる
+          const { promise, resolve, reject } = Promise.withResolvers();
+          fileStream.on("close", resolve);
+          fileStream.on("error", reject);
           fileStream.close();
+          await promise;
 
           downloadedPaths.push(downloadPath);
           log.info(`Downloaded ${name} to ${downloadPath}`);
