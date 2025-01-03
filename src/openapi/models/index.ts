@@ -3,6 +3,7 @@
 export * from './AccentPhrase';
 export * from './AudioQuery';
 export * from './BaseLibraryInfo';
+export * from './BodySingFrameF0SingFrameF0Post';
 export * from './BodySingFrameVolumeSingFrameVolumePost';
 export * from './CorsPolicyMode';
 export * from './DownloadableLibraryInfo';
