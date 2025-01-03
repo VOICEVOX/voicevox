@@ -4,6 +4,7 @@
  */
 
 import { computed, ComputedRef, ref, Ref } from "vue";
+import { clamp } from "../utility";
 import { IState, StateMachine } from "@/sing/stateMachine/stateMachineBase";
 import {
   getButton,
@@ -16,7 +17,6 @@ import { Note, SequencerEditTarget } from "@/store/type";
 import { NoteId, TrackId } from "@/type/preload";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
-import { clamp } from "../utility";
 
 export type PositionOnSequencer = {
   readonly ticks: number;
@@ -544,14 +544,16 @@ class ResizeNoteLeftState implements IState<State, Input, Context> {
     const mouseDownNote = getOrThrow(targetNotesAtStart, this.mouseDownNoteId);
     const dragTicks = this.currentCursorPos.ticks - this.cursorPosAtStart.ticks;
     const notePos = mouseDownNote.position;
-    const newNotePos = Math.round((notePos + dragTicks) / snapTicks) * snapTicks;
+    const newNotePos =
+      Math.round((notePos + dragTicks) / snapTicks) * snapTicks;
     const movingTicks = newNotePos - notePos;
-  
+
     const editedNotes = new Map<NoteId, Note>();
     for (const note of previewNotes) {
       const targetNoteAtStart = getOrThrow(targetNotesAtStart, note.id);
       const notePos = targetNoteAtStart.position;
-      const noteEndPos = targetNoteAtStart.position + targetNoteAtStart.duration;
+      const noteEndPos =
+        targetNoteAtStart.position + targetNoteAtStart.duration;
       const position = Math.min(noteEndPos - snapTicks, notePos + movingTicks);
       const duration = noteEndPos - position;
 
@@ -573,7 +575,7 @@ class ResizeNoteLeftState implements IState<State, Input, Context> {
     }
 
     context.guideLineTicks.value = newNotePos;
-  };
+  }
 
   onEnter(context: Context) {
     const guideLineTicks = getGuideLineTicks(this.cursorPosAtStart, context);
@@ -626,7 +628,10 @@ class ResizeNoteLeftState implements IState<State, Input, Context> {
       if (input.mouseEvent.type === "mousemove") {
         this.currentCursorPos = input.cursorPos;
         this.innerContext.executePreviewProcess = true;
-      } else if (input.mouseEvent.type === "mouseup" && mouseButton === "LEFT_BUTTON") {
+      } else if (
+        input.mouseEvent.type === "mouseup" &&
+        mouseButton === "LEFT_BUTTON"
+      ) {
         setNextState(new IdleState());
       }
     }
