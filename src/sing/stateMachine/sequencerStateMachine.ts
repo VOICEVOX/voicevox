@@ -557,7 +557,7 @@ class ResizeNoteLeftState implements IState<State, Input, Context> {
       const position = Math.min(noteEndPos - snapTicks, notePos + movingTicks);
       const duration = noteEndPos - position;
 
-      if (note.position !== position && note.duration !== duration) {
+      if (note.position !== position || note.duration !== duration) {
         editedNotes.set(note.id, { ...note, position, duration });
       }
     }
