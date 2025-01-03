@@ -16,6 +16,7 @@ import { Note, SequencerEditTarget } from "@/store/type";
 import { NoteId, TrackId } from "@/type/preload";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
+import { clamp } from "../utility";
 
 export type PositionOnSequencer = {
   readonly ticks: number;
@@ -72,7 +73,7 @@ type StoreActions = {
 
 type Context = ComputedRefs & Refs & { readonly storeActions: StoreActions };
 
-type State = IdleState | AddNoteState | MoveNoteState;
+type State = IdleState | AddNoteState | MoveNoteState | ResizeNoteLeftState;
 
 const getGuideLineTicks = (
   cursorPos: PositionOnSequencer,
@@ -166,13 +167,6 @@ class IdleState implements IState<State, Input, Context> {
             return;
           }
           if (mouseButton === "LEFT_BUTTON") {
-            if (
-              input.cursorPos.ticks < 0 ||
-              input.cursorPos.noteNumber < 0 ||
-              input.cursorPos.noteNumber > 127
-            ) {
-              return;
-            }
             context.storeActions.deselectAllNotes();
             const addNoteState = new AddNoteState(
               input.cursorPos,
@@ -256,9 +250,9 @@ class AddNoteState implements IState<State, Input, Context> {
     const guideLineTicks = getGuideLineTicks(this.cursorPosAtStart, context);
     const noteToAdd = {
       id: NoteId(crypto.randomUUID()),
-      position: guideLineTicks,
+      position: Math.max(0, guideLineTicks),
       duration: context.snapTicks.value,
-      noteNumber: this.cursorPosAtStart.noteNumber,
+      noteNumber: clamp(this.cursorPosAtStart.noteNumber, 0, 127),
       lyric: getDoremiFromNoteNumber(this.cursorPosAtStart.noteNumber),
     };
 
@@ -390,12 +384,10 @@ class MoveNoteState implements IState<State, Input, Context> {
 
     const editedNotes = new Map<NoteId, Note>();
     for (const note of previewNotes) {
-      const targetNoteAtStart = targetNotesAtStart.get(note.id);
-      if (!targetNoteAtStart) {
-        throw new Error("targetNoteAtStart is undefined.");
-      }
+      const targetNoteAtStart = getOrThrow(targetNotesAtStart, note.id);
       const position = targetNoteAtStart.position + movingTicks;
       const noteNumber = targetNoteAtStart.noteNumber + movingSemitones;
+
       if (note.position !== position || note.noteNumber !== noteNumber) {
         editedNotes.set(note.id, { ...note, noteNumber, position });
       }
@@ -478,6 +470,164 @@ class MoveNoteState implements IState<State, Input, Context> {
         if (mouseButton === "LEFT_BUTTON") {
           setNextState(new IdleState());
         }
+      }
+    }
+  }
+
+  onExit(context: Context) {
+    if (this.innerContext == undefined) {
+      throw new Error("innerContext is undefined.");
+    }
+    const previewNotes = context.previewNotes.value;
+    const previewNoteIds = previewNotes.map((value) => value.id);
+
+    cancelAnimationFrame(this.innerContext.previewRequestId);
+
+    context.storeActions.commandUpdateNotes(previewNotes, this.targetTrackId);
+    context.storeActions.selectNotes(previewNoteIds);
+
+    if (previewNotes.length === 1) {
+      context.storeActions.playPreviewSound(
+        previewNotes[0].noteNumber,
+        PREVIEW_SOUND_DURATION,
+      );
+    }
+    context.previewNotes.value = [];
+    context.nowPreviewing.value = false;
+  }
+}
+
+class ResizeNoteLeftState implements IState<State, Input, Context> {
+  readonly id = "resizeNoteLeft";
+
+  private readonly cursorPosAtStart: PositionOnSequencer;
+  private readonly targetTrackId: TrackId;
+  private readonly targetNoteIds: Set<NoteId>;
+  private readonly mouseDownNoteId: NoteId;
+
+  private currentCursorPos: PositionOnSequencer;
+
+  private innerContext:
+    | {
+        targetNotesAtStart: Map<NoteId, Note>;
+        previewRequestId: number;
+        executePreviewProcess: boolean;
+        edited: boolean;
+        guideLineTicksAtStart: number;
+      }
+    | undefined;
+
+  constructor(
+    cursorPosAtStart: PositionOnSequencer,
+    targetTrackId: TrackId,
+    targetNoteIds: Set<NoteId>,
+    mouseDownNoteId: NoteId,
+  ) {
+    if (!targetNoteIds.has(mouseDownNoteId)) {
+      throw new Error("mouseDownNoteId is not included in targetNoteIds.");
+    }
+    this.cursorPosAtStart = cursorPosAtStart;
+    this.targetTrackId = targetTrackId;
+    this.targetNoteIds = targetNoteIds;
+    this.mouseDownNoteId = mouseDownNoteId;
+
+    this.currentCursorPos = cursorPosAtStart;
+  }
+
+  private previewResizeLeft(context: Context) {
+    if (this.innerContext == undefined) {
+      throw new Error("innerContext is undefined.");
+    }
+    const snapTicks = context.snapTicks.value;
+    const previewNotes = context.previewNotes.value;
+    const targetNotesAtStart = this.innerContext.targetNotesAtStart;
+    const mouseDownNote = getOrThrow(targetNotesAtStart, this.mouseDownNoteId);
+    const dragTicks = this.currentCursorPos.ticks - this.cursorPosAtStart.ticks;
+    const notePos = mouseDownNote.position;
+    const newNotePos = Math.round((notePos + dragTicks) / snapTicks) * snapTicks;
+    const movingTicks = newNotePos - notePos;
+  
+    const editedNotes = new Map<NoteId, Note>();
+    for (const note of previewNotes) {
+      const targetNoteAtStart = getOrThrow(targetNotesAtStart, note.id);
+      const notePos = targetNoteAtStart.position;
+      const noteEndPos = targetNoteAtStart.position + targetNoteAtStart.duration;
+      const position = Math.min(noteEndPos - snapTicks, notePos + movingTicks);
+      const duration = noteEndPos - position;
+
+      if (note.position !== position && note.duration !== duration) {
+        editedNotes.set(note.id, { ...note, position, duration });
+      }
+    }
+    for (const note of editedNotes.values()) {
+      if (note.position < 0) {
+        // 左端より前はドラッグしない
+        return;
+      }
+    }
+    if (editedNotes.size !== 0) {
+      context.previewNotes.value = previewNotes.map((value) => {
+        return editedNotes.get(value.id) ?? value;
+      });
+      this.innerContext.edited = true;
+    }
+
+    context.guideLineTicks.value = newNotePos;
+  };
+
+  onEnter(context: Context) {
+    const guideLineTicks = getGuideLineTicks(this.cursorPosAtStart, context);
+    const targetNotesArray = context.notesInSelectedTrack.value.filter(
+      (value) => this.targetNoteIds.has(value.id),
+    );
+    const targetNotesMap = new Map<NoteId, Note>();
+    for (const targetNote of targetNotesArray) {
+      targetNotesMap.set(targetNote.id, targetNote);
+    }
+
+    context.previewNotes.value = [...targetNotesArray];
+    context.nowPreviewing.value = true;
+
+    const previewIfNeeded = () => {
+      if (this.innerContext == undefined) {
+        throw new Error("innerContext is undefined.");
+      }
+      if (this.innerContext.executePreviewProcess) {
+        this.previewResizeLeft(context);
+        this.innerContext.executePreviewProcess = false;
+      }
+      this.innerContext.previewRequestId =
+        requestAnimationFrame(previewIfNeeded);
+    };
+    const previewRequestId = requestAnimationFrame(previewIfNeeded);
+
+    this.innerContext = {
+      targetNotesAtStart: targetNotesMap,
+      executePreviewProcess: false,
+      previewRequestId,
+      edited: false,
+      guideLineTicksAtStart: guideLineTicks,
+    };
+  }
+
+  process({
+    input,
+    setNextState,
+  }: {
+    input: Input;
+    context: Context;
+    setNextState: (nextState: State) => void;
+  }) {
+    if (this.innerContext == undefined) {
+      throw new Error("innerContext is undefined.");
+    }
+    const mouseButton = getButton(input.mouseEvent);
+    if (input.targetArea === "SequencerBody") {
+      if (input.mouseEvent.type === "mousemove") {
+        this.currentCursorPos = input.cursorPos;
+        this.innerContext.executePreviewProcess = true;
+      } else if (input.mouseEvent.type === "mouseup" && mouseButton === "LEFT_BUTTON") {
+        setNextState(new IdleState());
       }
     }
   }

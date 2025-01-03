@@ -3,6 +3,10 @@ export function round(value: number, digits: number) {
   return Math.round(value * powerOf10) / powerOf10;
 }
 
+export function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
+
 export function getLast<T>(array: T[]) {
   if (array.length === 0) {
     throw new Error("array.length is 0.");
