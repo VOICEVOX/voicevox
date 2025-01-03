@@ -10,7 +10,6 @@ import {
   getButton,
   getDoremiFromNoteNumber,
   isSelfEventTarget,
-  keyInfos,
   PREVIEW_SOUND_DURATION,
 } from "@/sing/viewHelper";
 import { Note, SequencerEditTarget } from "@/store/type";
@@ -385,22 +384,15 @@ class MoveNoteState implements IState<State, Input, Context> {
     const editedNotes = new Map<NoteId, Note>();
     for (const note of previewNotes) {
       const targetNoteAtStart = getOrThrow(targetNotesAtStart, note.id);
-      const position = targetNoteAtStart.position + movingTicks;
-      const noteNumber = targetNoteAtStart.noteNumber + movingSemitones;
+      const position = Math.max(0, targetNoteAtStart.position + movingTicks);
+      const noteNumber = clamp(
+        targetNoteAtStart.noteNumber + movingSemitones,
+        0,
+        127,
+      );
 
       if (note.position !== position || note.noteNumber !== noteNumber) {
         editedNotes.set(note.id, { ...note, noteNumber, position });
-      }
-    }
-
-    for (const note of editedNotes.values()) {
-      if (note.noteNumber < 0 || note.noteNumber >= keyInfos.length) {
-        // MIDIキー範囲外へはドラッグしない
-        return;
-      }
-      if (note.position < 0) {
-        // 左端より前はドラッグしない
-        return;
       }
     }
 
@@ -554,17 +546,11 @@ class ResizeNoteLeftState implements IState<State, Input, Context> {
       const notePos = targetNoteAtStart.position;
       const noteEndPos =
         targetNoteAtStart.position + targetNoteAtStart.duration;
-      const position = Math.min(noteEndPos - snapTicks, notePos + movingTicks);
+      const position = clamp(notePos + movingTicks, 0, noteEndPos - snapTicks);
       const duration = noteEndPos - position;
 
       if (note.position !== position || note.duration !== duration) {
         editedNotes.set(note.id, { ...note, position, duration });
-      }
-    }
-    for (const note of editedNotes.values()) {
-      if (note.position < 0) {
-        // 左端より前はドラッグしない
-        return;
       }
     }
     if (editedNotes.size !== 0) {
