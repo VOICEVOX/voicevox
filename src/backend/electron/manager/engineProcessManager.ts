@@ -99,7 +99,7 @@ export class EngineProcessManager {
       if (pid != undefined) {
         const processName = await getProcessNameFromPid(engineHostInfo, pid);
         log.warn(
-          `ENGINE ${engineId}: Port ${port} has already been assigned by ${processName} (pid=${pid})`,
+          `ENGINE ${engineId}: Port ${port} has already been assigned by ${processName ?? "(not found)"} (pid=${pid})`,
         );
       } else {
         // ポートは使用不可能だがプロセスidは見つからなかった

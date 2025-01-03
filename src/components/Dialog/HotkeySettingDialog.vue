@@ -130,8 +130,9 @@ import { useHotkeyManager, eventToCombination } from "@/plugins/hotkeyPlugin";
 import {
   HotkeyCombination,
   HotkeyActionNameType,
-  defaultHotkeySettings,
+  getDefaultHotkeySettings,
 } from "@/domain/hotkeyAction";
+import { isMac } from "@/helpers/platform";
 
 const props = defineProps<{
   modelValue: boolean;
@@ -226,7 +227,7 @@ const setHotkeyDialogOpened = () => {
 };
 
 const isDefaultCombination = (action: string) => {
-  const defaultSetting = defaultHotkeySettings.find(
+  const defaultSetting = getDefaultHotkeySettings({ isMac }).find(
     (value) => value.action === action,
   );
   const hotkeySetting = hotkeySettings.value.find(
@@ -244,7 +245,9 @@ const resetHotkey = async (action: string) => {
 
   if (result !== "OK") return;
 
-  const setting = defaultHotkeySettings.find((value) => value.action == action);
+  const setting = getDefaultHotkeySettings({ isMac }).find(
+    (value) => value.action == action,
+  );
   if (setting == undefined) {
     return;
   }

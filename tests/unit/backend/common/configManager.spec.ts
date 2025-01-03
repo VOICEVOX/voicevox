@@ -1,11 +1,10 @@
 import pastConfigs from "./pastConfigs";
 import configBugDefaultPreset1996 from "./pastConfigs/0.19.1-bug_default_preset.json";
-import { isMac } from "@/helpers/platform";
 import { BaseConfigManager } from "@/backend/common/ConfigManager";
-import { configSchema } from "@/type/preload";
+import { getConfigSchema } from "@/type/preload";
 
 const configBase = {
-  ...configSchema.parse({}),
+  ...getConfigSchema({ isMac: false }).parse({}),
   __internal__: {
     migrations: {
       version: "999.999.999",
@@ -14,6 +13,10 @@ const configBase = {
 };
 
 class TestConfigManager extends BaseConfigManager {
+  constructor() {
+    super({ isMac: false });
+  }
+
   getAppVersion() {
     return "999.999.999";
   }
@@ -88,11 +91,7 @@ for (const [version, data] of pastConfigs) {
     expect(configManager).toBeTruthy();
 
     // マイグレーション後のデータが正しいことをスナップショットで確認
-    // NOTE: Macはショートカットキーが異なるためパス
-    // TODO: ConfigManagerにOSを引数指定できるようにしてテストを分ける
-    if (!isMac) {
-      expect(configManager.getAll()).toMatchSnapshot();
-    }
+    expect(configManager.getAll()).toMatchSnapshot();
   });
 }
 
