@@ -4,29 +4,27 @@ import { getNewestQuasarDialog } from "../locators";
 
 test.beforeEach(gotoHome);
 
-// 読み方を確認する。
-// エンジン起動直後など、たまに読みが反映されないことがあるので、
-// 一度空にする -> テキストが消えたことを確認（消えてなかったらもう一度Enter）->
-// 再度入力する -> 読み方が表示されたことを確認（表示されてなかったらもう一度Enter）
-// という流れで読み方を確認する。
+/**
+ * 最後のテキスト欄にテキストを入力し、その読みを取得する。
+ * 確実に読みを反映させるために、一度空にしてから入力する。
+ */
 async function getYomi(page: Page, inputText: string): Promise<string> {
-  const audioCellInput = page.locator(".audio-cell input").last();
+  const audioCellInput = page.getByRole("textbox", { name: "行目" }).last();
+  const accentPhrase = page.locator(".accent-phrase");
+
+  // 空にする
+  await audioCellInput.click();
   await audioCellInput.fill("");
-  let text = "";
-  do {
-    await page.waitForTimeout(100);
-    await audioCellInput.press("Enter");
-    text = (await page.locator(".text-cell").allInnerTexts()).join("");
-  } while (text.length > 0);
+  await audioCellInput.press("Enter");
+  await expect(accentPhrase).not.toBeVisible();
 
+  // 入力する
+  await audioCellInput.click();
   await audioCellInput.fill(inputText);
-  do {
-    await page.waitForTimeout(100);
-    await audioCellInput.press("Enter");
-    text = (await page.locator(".text-cell").allInnerTexts()).join("");
-  } while (text.length === 0);
+  await audioCellInput.press("Enter");
+  await expect(accentPhrase).not.toHaveCount(0);
 
-  return text;
+  return (await accentPhrase.allTextContents()).join("");
 }
 
 async function openDictDialog(page: Page): Promise<void> {
