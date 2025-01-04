@@ -5,16 +5,24 @@ import { getNewestQuasarDialog } from "../locators";
 test.beforeEach(gotoHome);
 
 /**
- * 最後のテキスト欄の読みを取得する。
+ * 最後のテキスト欄にテキストを入力し、その読みを取得する。
+ * 確実に読みを反映させるために、一度空にしてから入力する。
  */
 async function getYomi(page: Page, inputText: string): Promise<string> {
   const audioCellInput = page.getByRole("textbox", { name: "行目" }).last();
   const accentPhrase = page.locator(".accent-phrase");
 
+  // 空にする
+  await audioCellInput.click();
+  await audioCellInput.fill("");
+  await audioCellInput.press("Enter");
+  await expect(accentPhrase).not.toBeVisible();
+
+  // 入力する
   await audioCellInput.click();
   await audioCellInput.fill(inputText);
   await audioCellInput.press("Enter");
-  await expect(accentPhrase).toBeVisible();
+  await expect(accentPhrase).not.toHaveCount(0);
 
   return (await accentPhrase.allTextContents()).join("");
 }

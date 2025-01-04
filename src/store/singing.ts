@@ -1552,18 +1552,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  SET_IS_DRAG: {
-    mutation(state, { isDrag }: { isDrag: boolean }) {
-      // FIXME: state.isDragが無くなっているので修正する
-      state.isDrag = isDrag;
-    },
-    async action({ mutations }, { isDrag }) {
-      mutations.SET_IS_DRAG({
-        isDrag,
-      });
-    },
-  },
-
   SET_START_RENDERING_REQUESTED: {
     mutation(state, { startRenderingRequested }) {
       state.startRenderingRequested = startRenderingRequested;
