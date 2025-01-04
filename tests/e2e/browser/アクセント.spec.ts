@@ -30,7 +30,6 @@ test("アクセントの読み部分をクリックすると読みを変更で�
   await expect(page.locator(".text-cell").first()).toBeVisible();
   await page.locator(".text-cell").first().click();
   const input = page.getByLabel("1番目のアクセント区間の読み");
-  await input.evaluate((node) => console.log(node.outerHTML));
   expect(await input.inputValue()).toBe("テストデス");
   await input.fill("テストテスト");
   await input.press("Enter");
