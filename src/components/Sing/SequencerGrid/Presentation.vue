@@ -1,108 +1,113 @@
 <template>
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    :width="gridWidth"
-    :height="gridHeight"
-    class="sequencer-grid"
-    shape-rendering="crispEdges"
-  >
-    <defs>
-      <pattern
-        id="sequencer-grid-pattern-background"
-        patternUnits="userSpaceOnUse"
-        :x="0"
-        :width="gridCellWidth"
-        :height="gridCellHeight * 12"
-      >
-        <!-- セルの背景 -->
-        <rect
-          v-for="(keyInfo, index) in keyInfos"
-          :key="`cell-${index}`"
-          x="0"
-          :y="gridCellHeight * index"
-          :width="gridCellWidth"
-          :height="gridCellHeight * 12"
-          :class="`sequencer-grid-cell sequencer-grid-cell-${keyInfo.color}`"
-        />
-        <!-- スナップグリッド線 -->
-        <line
-          :x1="gridCellWidth"
-          :x2="gridCellWidth"
-          y1="0"
-          :y2="gridCellHeight * 12"
-          class="sequencer-grid-vertical-line"
-        />
-      </pattern>
-      <pattern
-        v-for="(pattern, patternIndex) in gridPatterns"
-        :id="`sequencer-grid-pattern-${patternIndex}`"
-        :key="`pattern-${patternIndex}`"
-        patternUnits="userSpaceOnUse"
-        :x="pattern.x"
-        :width="pattern.patternWidth"
-        :height="gridCellHeight * 12"
-      >
-        <!-- E/Fの中間線 -->
-        <line
-          v-for="index in horizontalLineIndices"
-          :key="`horizontal-${index}`"
-          x1="0"
-          :x2="pattern.patternWidth"
-          :y1="gridCellHeight * (index + 1)"
-          :y2="gridCellHeight * (index + 1)"
-          class="sequencer-grid-horizontal-line"
-        />
-        <!-- 拍線 -->
-        <line
-          v-for="n in pattern.timeSignature.beats"
-          :key="`beatline-${n}`"
-          :x1="pattern.beatWidth * n"
-          :x2="pattern.beatWidth * n"
-          y1="0"
-          :y2="gridCellHeight * 12"
-          class="sequencer-grid-beat-line"
-        />
-      </pattern>
-    </defs>
-    <!-- グリッド背景 -->
-    <rect
-      x="0"
-      y="0"
+  <div class="sequencer-grid">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
       :width="gridWidth"
       :height="gridHeight"
-      :fill="`url(#sequencer-grid-pattern-background)`"
-    />
-    <!-- グリッドパターン -->
-    <rect
-      v-for="gridPattern in gridPatterns"
-      :key="`grid-${gridPattern.id}`"
-      :x="gridPattern.x"
-      y="0"
-      :width="gridPattern.width"
-      :height="gridHeight"
-      :fill="`url(#${gridPattern.id})`"
-    />
-    <!-- オクターブ線（グリッドの上に描画） -->
-    <line
-      v-for="index in octaveLineIndices"
-      :key="`octave-${index}`"
-      x1="0"
-      :x2="gridWidth"
-      :y1="gridCellHeight * (index + 1)"
-      :y2="gridCellHeight * (index + 1)"
-      class="sequencer-grid-octave-line"
-    />
-    <!-- 小節線（グリッドおよびオクターブ線の上に描画） -->
-    <line
-      v-for="x in measureLines"
-      :key="`measureline-${x}`"
-      :x1="x"
-      :x2="x"
-      y1="0"
-      :y2="gridHeight"
-      class="sequencer-grid-measure-line"
-    />
-  </svg>
+      class="sequencer-grid-svg"
+      shape-rendering="crispEdges"
+      :style="{
+        transform: `translate3d(${-offsetX}px,${-offsetY}px,0)`,
+      }"
+    >
+      <defs>
+        <pattern
+          id="sequencer-grid-pattern-background"
+          patternUnits="userSpaceOnUse"
+          :x="0"
+          :width="gridCellWidth"
+          :height="gridCellHeight * 12"
+        >
+          <!-- セルの背景 -->
+          <rect
+            v-for="(keyInfo, index) in keyInfos"
+            :key="`cell-${index}`"
+            x="0"
+            :y="gridCellHeight * index"
+            :width="gridCellWidth"
+            :height="gridCellHeight * 12"
+            :class="`sequencer-grid-cell sequencer-grid-cell-${keyInfo.color}`"
+          />
+          <!-- スナップグリッド線 -->
+          <line
+            :x1="gridCellWidth"
+            :x2="gridCellWidth"
+            y1="0"
+            :y2="gridCellHeight * 12"
+            class="sequencer-grid-vertical-line"
+          />
+        </pattern>
+        <pattern
+          v-for="(pattern, patternIndex) in gridPatterns"
+          :id="`sequencer-grid-pattern-${patternIndex}`"
+          :key="`pattern-${patternIndex}`"
+          patternUnits="userSpaceOnUse"
+          :x="pattern.x"
+          :width="pattern.patternWidth"
+          :height="gridCellHeight * 12"
+        >
+          <!-- E/Fの中間線 -->
+          <line
+            v-for="index in horizontalLineIndices"
+            :key="`horizontal-${index}`"
+            x1="0"
+            :x2="pattern.patternWidth"
+            :y1="gridCellHeight * (index + 1)"
+            :y2="gridCellHeight * (index + 1)"
+            class="sequencer-grid-horizontal-line"
+          />
+          <!-- 拍線 -->
+          <line
+            v-for="n in pattern.timeSignature.beats"
+            :key="`beatline-${n}`"
+            :x1="pattern.beatWidth * n"
+            :x2="pattern.beatWidth * n"
+            y1="0"
+            :y2="gridCellHeight * 12"
+            class="sequencer-grid-beat-line"
+          />
+        </pattern>
+      </defs>
+      <!-- グリッド背景 -->
+      <rect
+        x="0"
+        y="0"
+        :width="gridWidth"
+        :height="gridHeight"
+        :fill="`url(#sequencer-grid-pattern-background)`"
+      />
+      <!-- グリッドパターン -->
+      <rect
+        v-for="gridPattern in gridPatterns"
+        :key="`grid-${gridPattern.id}`"
+        :x="gridPattern.x"
+        y="0"
+        :width="gridPattern.width"
+        :height="gridHeight"
+        :fill="`url(#${gridPattern.id})`"
+      />
+      <!-- オクターブ線（グリッドの上に描画） -->
+      <line
+        v-for="index in octaveLineIndices"
+        :key="`octave-${index}`"
+        x1="0"
+        :x2="gridWidth"
+        :y1="gridCellHeight * (index + 1)"
+        :y2="gridCellHeight * (index + 1)"
+        class="sequencer-grid-octave-line"
+      />
+      <!-- 小節線（グリッドおよびオクターブ線の上に描画） -->
+      <line
+        v-for="x in measureLines"
+        :key="`measureline-${x}`"
+        :x1="x"
+        :x2="x"
+        y1="0"
+        :y2="gridHeight"
+        class="sequencer-grid-measure-line"
+      />
+    </svg>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -119,6 +124,8 @@ const props = defineProps<{
   sequencerZoomY: number;
   sequencerSnapType: number;
   numMeasures: number;
+  offsetX: number;
+  offsetY: number;
 }>();
 
 const gridCellTicks = computed(() => {
@@ -213,8 +220,12 @@ const octaveLineIndices = computed(() => gridLines.value.octaveLines);
 @use "@/styles/colors" as colors;
 
 .sequencer-grid {
-  display: block;
   pointer-events: none;
+  overflow: hidden;
+}
+
+.sequencer-grid-svg {
+  display: block;
 }
 
 .sequencer-grid-cell {

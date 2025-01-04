@@ -6,6 +6,8 @@
     :sequencerZoomY
     :sequencerSnapType
     :numMeasures
+    :offsetX="props.offsetX"
+    :offsetY="props.offsetY"
   />
 </template>
 
@@ -17,6 +19,11 @@ import { useStore } from "@/store";
 defineOptions({
   name: "SequencerGrid",
 });
+
+const props = defineProps<{
+  offsetX: number;
+  offsetY: number;
+}>();
 
 const store = useStore();
 

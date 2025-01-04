@@ -1,5 +1,6 @@
 <template>
   <div v-if="showSingCharacterPortrait" class="character-portrait-wrap">
+    <div class="spacer"></div>
     <img class="character-portrait" :src="portraitPath" />
   </div>
 </template>
@@ -36,46 +37,41 @@ const portraitPath = computed(() => {
 @use "@/styles/colors" as colors;
 
 // 表示変数
-$header-margin: vars.$toolbar-height + vars.$menubar-height + 30px; // 30pxはルーラーの高さ
 $right-margin: 24px;
+$portrait-min-width: 200px;
 $portrait-max-width: 40vw;
-$portrait-max-height: 60vh;
 $portrait-min-height: 500px;
+$portrait-max-height: 60vh;
+$spacer-height: 200px;
 
 // 画面右下に固定表示
-// 幅固定、高さ可変、画像のアスペクト比を保持、wrapのwidthに合わせてheightを調整
-// bottom位置はスクロールバーの上に表示
+// 幅固定、高さ可変、画像のアスペクト比を保持、heightを調整
 .character-portrait-wrap {
-  opacity: 0.55;
-  overflow: visible;
-  contain: layout;
+  position: relative;
+  height: max(100%, $portrait-min-height);
+  margin-right: $right-margin;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-end;
   pointer-events: none;
-  position: fixed;
-  display: grid;
-  place-items: end;
-  bottom: 0;
-  right: $right-margin;
+}
+
+.spacer {
+  flex: 0 1 $spacer-height;
+  width: 1px;
 }
 
 .character-portrait {
-  width: auto;
-  height: $portrait-max-height;
-  min-height: $portrait-min-height;
+  flex: 1 0;
+  min-width: $portrait-min-width;
   max-width: $portrait-max-width;
-  overflow: visible;
+  min-height: $portrait-min-height;
+  max-height: $portrait-max-height;
+  opacity: 0.55;
   backface-visibility: hidden;
-  object-fit: cover;
-  object-position: top center;
-}
-
-// ポートレートサイズが画面サイズを超えた場合、ヘッダーを考慮してポートレートを上部基準で表示させる
-// ヘッダー高さ120px+ポートレート高さ500pxだとする
-@media (max-height: #{calc(#{$portrait-min-height} + #{$header-margin})}) {
-  .character-portrait-wrap {
-    top: $header-margin; // ヘッダーの高さより下に位置させる
-    bottom: auto;
-    height: calc(100vh - #{$header-margin});
-    place-items: start end;
-  }
+  object-fit: contain;
+  object-position: bottom center;
 }
 </style>
