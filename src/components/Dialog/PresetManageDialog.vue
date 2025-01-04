@@ -41,7 +41,9 @@
                     @click="selectedPresetKey = item.key"
                   >
                     <div class="listitem-content">
-                      {{ item.name }}
+                      <span class="listitem-name">
+                        {{ item.name }}
+                      </span>
                       <div class="listitem-icon">
                         <BaseIconButton
                           icon="delete_outline"
@@ -59,84 +61,107 @@
                 <div v-if="selectedPreset" class="inner">
                   <div class="parameter-list">
                     <h2 class="preset-name">{{ selectedPreset.name }}</h2>
+                    <div class="preset-field">
+                      <label for="preset-name">プリセット名</label>
+                      <BaseTextField
+                        id="preset-name"
+                        :modelValue="selectedPreset.name"
+                        :hasError="!selectedPreset.name"
+                        @change="changePresetName"
+                      />
+                    </div>
                     <template
                       v-for="(value, sliderKey) in SLIDER_PARAMETERS"
                       :key="sliderKey"
                     >
-                      <div
+                      <ParameterSlider
                         v-if="sliderKey in parameterLabels"
-                        class="parameter"
-                      >
-                        <div class="parameter-header">
-                          <span>
-                            {{ parameterLabels[sliderKey as ParameterType] }}
-                          </span>
-                          <span>
-                            {{
-                              selectedPreset[
-                                sliderKey as ParameterType
-                              ].toFixed(2)
-                            }}
-                          </span>
-                        </div>
-                        <!-- NOTE: プルリクエスト分割のため、まずは動かないスライダーが実装されている。変更機能も実装予定。 -->
-                        <BaseSlider
-                          :min="value.min()"
-                          :max="value.max()"
-                          :step="value.step()"
-                          :modelValue="
-                            selectedPreset[sliderKey as ParameterType]
+                        v-model="selectedPreset[sliderKey as ParameterType]"
+                        :sliderKey
+                        :min="value.min()"
+                        :max="value.max()"
+                        :step="value.step()"
+                        :scrollStep="value.scrollStep()"
+                        :label="parameterLabels[sliderKey as ParameterType]"
+                      />
+                    </template>
+                    <!-- モーフィング無効時にキャラ選択解除するといきなり非表示になってしまうが、稀なケースなため無対策 -->
+                    <template
+                      v-if="shouldShowMorphing || selectedPreset.morphingInfo"
+                    >
+                      <h3 class="parameter-headline">モーフィング</h3>
+                      <div class="mophing-style">
+                        <CharacterButton
+                          :selectedVoice="
+                            selectedPreset.morphingInfo
+                              ? {
+                                  engineId:
+                                    selectedPreset.morphingInfo.targetEngineId,
+                                  speakerId:
+                                    selectedPreset.morphingInfo.targetSpeakerId,
+                                  styleId:
+                                    selectedPreset.morphingInfo.targetStyleId,
+                                }
+                              : undefined
+                          "
+                          :characterInfos="morphingTargetCharacters"
+                          :showEngineInfo="morphingTargetEngines.length >= 2"
+                          :emptiable="true"
+                          :uiLocked="false"
+                          @update:selectedVoice="
+                            if ($event == null) {
+                              selectedPreset.morphingInfo = undefined;
+                            } else {
+                              selectedPreset.morphingInfo = {
+                                targetEngineId: $event.engineId,
+                                targetSpeakerId: $event.speakerId,
+                                targetStyleId: $event.styleId,
+                                rate: selectedPreset.morphingInfo?.rate ?? 0.5,
+                              };
+                            }
                           "
                         />
-                      </div>
-                    </template>
-                  </div>
-                  <div
-                    v-if="selectedPreset.morphingInfo"
-                    class="parameter-list"
-                  >
-                    <h3 class="parameter-headline">モーフィング</h3>
-                    <div class="mophing-style">
-                      <CharacterButton
-                        v-if="morphingTargetCharacterInfo"
-                        :selectedVoice="{
-                          engineId: selectedPreset.morphingInfo.targetEngineId,
-                          speakerId:
-                            selectedPreset.morphingInfo.targetSpeakerId,
-                          styleId: selectedPreset.morphingInfo.targetStyleId,
-                        }"
-                        :characterInfos="[morphingTargetCharacterInfo]"
-                        :showEngineInfo="morphingTargetEngines.length >= 2"
-                        :emptiable="true"
-                        :uiLocked="false"
-                      />
-                      <span v-if="morphingTargetCharacterInfo">
-                        {{ morphingTargetCharacterInfo.metas.speakerName }}
-                      </span>
-                      <span
-                        v-if="
-                          morphingTargetCharacterInfo &&
-                          morphingTargetCharacterInfo.metas.styles.length >= 2
-                        "
-                      >
-                        （{{ morphingTargetStyleInfo?.styleName }}）
-                      </span>
-                    </div>
-                    <div class="parameter">
-                      <div class="parameter-header">
-                        <span>割合</span>
                         <span>
-                          {{ selectedPreset.morphingInfo.rate.toFixed(2) }}
+                          {{
+                            morphingTargetCharacterInfo
+                              ? morphingTargetCharacterInfo.metas.speakerName
+                              : "未設定"
+                          }}
+                        </span>
+                        <span
+                          v-if="
+                            morphingTargetCharacterInfo &&
+                            morphingTargetCharacterInfo.metas.styles.length >= 2
+                          "
+                        >
+                          （{{ morphingTargetStyleInfo?.styleName }}）
                         </span>
                       </div>
-                      <!-- NOTE: プルリクエスト分割のため、まずは動かないスライダーが実装されている。変更機能も実装予定。 -->
-                      <BaseSlider
+                      <ParameterSlider
+                        v-if="selectedPreset.morphingInfo"
+                        v-model="selectedPreset.morphingInfo.rate"
+                        sliderKey="morphingRate"
+                        label="割合"
                         :min="SLIDER_PARAMETERS.morphingRate.min()"
                         :max="SLIDER_PARAMETERS.morphingRate.max()"
                         :step="SLIDER_PARAMETERS.morphingRate.step()"
-                        :modelValue="selectedPreset.morphingInfo.rate"
+                        :scrollStep="
+                          SLIDER_PARAMETERS.morphingRate.scrollStep()
+                        "
                       />
-                    </div>
+                    </template>
+                  </div>
+                  <div class="footer">
+                    <BaseButton
+                      label="変更をリセット"
+                      :disabled="!isPresetChanged"
+                      @click="
+                        if (initialPreset == undefined) {
+                          throw new Error('initialPreset is undefined');
+                        }
+                        resetPreset(initialPreset);
+                      "
+                    />
                   </div>
                 </div>
               </BaseScrollArea>
@@ -149,17 +174,24 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import Draggable from "vuedraggable";
 import { useStore } from "@/store";
 import BaseListItem from "@/components/Base/BaseListItem.vue";
 import BaseNavigationView from "@/components/Base/BaseNavigationView.vue";
 import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 import BaseIconButton from "@/components/Base/BaseIconButton.vue";
-import BaseSlider from "@/components/Base/BaseSlider.vue";
+import BaseButton from "@/components/Base/BaseButton.vue";
+import BaseTextField from "@/components/Base/BaseTextField.vue";
 import CharacterButton from "@/components/CharacterButton.vue";
+import ParameterSlider from "@/components/Talk/ParameterSlider.vue";
 import { useDefaultPreset } from "@/composables/useDefaultPreset";
-import { Preset, PresetKey, PresetSliderKey } from "@/type/preload";
+import {
+  CharacterInfo,
+  Preset,
+  PresetKey,
+  PresetSliderKey,
+} from "@/type/preload";
 import { SLIDER_PARAMETERS } from "@/store/utility";
 
 const props = defineProps<{
@@ -202,15 +234,6 @@ const previewPresetList = computed(() =>
     : presetList.value,
 );
 
-const morphingTargetEngines = store.getters.MORPHING_SUPPORTED_ENGINES;
-
-const selectedPresetKey = ref();
-const selectedPreset = computed(() => {
-  return previewPresetList.value.find(
-    (preset) => preset.key === selectedPresetKey.value,
-  );
-});
-
 type ParameterType = Exclude<PresetSliderKey, "morphingRate">;
 const parameterLabels: Record<ParameterType, string> = {
   speedScale: "話速",
@@ -220,6 +243,82 @@ const parameterLabels: Record<ParameterType, string> = {
   pauseLengthScale: "間の長さ",
   prePhonemeLength: "開始無音",
   postPhonemeLength: "終了無音",
+};
+
+const selectedPresetKey = ref();
+const selectedPreset = ref<Preset | undefined>();
+const initialPreset = ref<Preset | undefined>();
+
+const isPresetChanged = computed(() => {
+  if (!selectedPreset.value) return false;
+
+  return (
+    JSON.stringify(selectedPreset.value) !== JSON.stringify(initialPreset.value)
+  );
+});
+
+watch(selectedPresetKey, (key) => {
+  if (key == undefined) {
+    selectedPreset.value = undefined;
+    initialPreset.value = undefined;
+    return;
+  }
+
+  const preset = presetItems.value[key];
+  const clonedPreset = () => {
+    return {
+      ...preset,
+      morphingInfo: preset.morphingInfo
+        ? { ...preset.morphingInfo }
+        : undefined,
+    };
+  };
+  selectedPreset.value = clonedPreset();
+  initialPreset.value = clonedPreset();
+});
+
+watch(
+  () =>
+    Object.entries({
+      ...selectedPreset.value,
+      ...selectedPreset.value?.morphingInfo,
+    }),
+  async () => {
+    if (
+      !selectedPreset.value ||
+      !isPresetChanged.value ||
+      !selectedPreset.value.name
+    )
+      return;
+
+    await store.actions.UPDATE_PRESET({
+      presetData: selectedPreset.value,
+      presetKey: selectedPresetKey.value,
+    });
+  },
+);
+
+const changePresetName = (event: Event) => {
+  if (event.target instanceof HTMLInputElement && selectedPreset.value) {
+    selectedPreset.value.name = event.target.value;
+  }
+};
+
+const resetPreset = async (preset: Preset) => {
+  const result = await store.actions.SHOW_WARNING_DIALOG({
+    title: "プリセットの変更をリセットしますか？",
+    message: "プリセットの変更は破棄されてリセットされます。",
+    actionName: "リセットする",
+  });
+
+  if (result !== "OK") {
+    return;
+  }
+
+  selectedPreset.value = {
+    ...preset,
+    morphingInfo: preset.morphingInfo ? { ...preset.morphingInfo } : undefined,
+  };
 };
 
 const reorderPreset = (featurePresetList: (Preset & { key: PresetKey })[]) => {
@@ -251,6 +350,20 @@ const deletePreset = async (key: PresetKey) => {
   }
 };
 
+const shouldShowMorphing = computed(
+  () => store.state.experimentalSetting.enableMorphing,
+);
+
+const morphingTargetEngines = store.getters.MORPHING_SUPPORTED_ENGINES;
+
+const morphingTargetCharacters = computed<CharacterInfo[]>(() => {
+  const allCharacterInfos = store.getters.USER_ORDERED_CHARACTER_INFOS("talk");
+  if (allCharacterInfos == undefined)
+    throw new Error("USER_ORDERED_CHARACTER_INFOS == undefined");
+
+  return allCharacterInfos;
+});
+
 const morphingTargetCharacterInfo = computed(() =>
   store.getters
     .USER_ORDERED_CHARACTER_INFOS("talk")
@@ -276,6 +389,7 @@ const morphingTargetStyleInfo = computed(() => {
 
 <style scoped lang="scss">
 @use "@/styles/v2/variables" as vars;
+@use "@/styles/v2/colors" as colors;
 @use "@/styles/v2/mixin" as mixin;
 
 .q-layout-container > :deep(.absolute-full) {
@@ -300,7 +414,14 @@ const morphingTargetStyleInfo = computed(() => {
   justify-content: space-between;
   align-items: center;
   gap: vars.$gap-1;
-  width: 100%;
+  width: 320px;
+}
+
+.listitem-name {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  flex: 1;
 }
 
 .listitem-icon {
@@ -321,11 +442,21 @@ const morphingTargetStyleInfo = computed(() => {
   display: flex;
   flex-direction: column;
   padding: vars.$padding-2;
+  padding-bottom: 0;
   gap: vars.$gap-2;
+  position: relative;
+  margin-inline: auto;
+  max-width: 480px;
 }
 
 .preset-name {
   @include mixin.headline-1;
+  word-break: break-all;
+}
+
+.preset-field {
+  display: flex;
+  flex-direction: column;
 }
 
 .parameter-headline {
@@ -333,22 +464,27 @@ const morphingTargetStyleInfo = computed(() => {
 }
 
 .parameter-list {
-  margin-inline: auto;
-  max-width: 480px;
   width: 100%;
   display: flex;
   flex-direction: column;
   gap: vars.$gap-2;
 }
 
-.parameter-header {
-  display: flex;
-  justify-content: space-between;
-}
-
 .mophing-style {
   display: flex;
   align-items: center;
   gap: vars.$gap-1;
+}
+
+.footer {
+  position: sticky;
+  bottom: 0;
+  right: 0;
+  display: flex;
+  justify-content: flex-end;
+  gap: vars.$gap-1;
+  padding-block: vars.$padding-2;
+  margin-top: auto;
+  background-color: colors.$background;
 }
 </style>
