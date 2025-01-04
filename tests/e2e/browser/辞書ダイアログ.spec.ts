@@ -50,17 +50,12 @@ async function validateInputTag(
 test("「設定」→「読み方＆アクセント辞書」で「読み方＆アクセント辞書」ページが表示される", async ({
   page,
 }) => {
-  test.skip(!process.env.CI, "環境変数CIが未設定のためスキップします");
   await navigateToMain(page);
 
-  // テスト用にランダムな文字列を生成
-  const randomString = Math.random().toString(36).slice(-8);
-  const zenkakuRandomString = randomString.replace(/[\u0021-\u007e]/g, (s) => {
-    return String.fromCharCode(s.charCodeAt(0) + 0xfee0);
-  });
+  const targetString = "あいうえお";
 
   // 文字列を入力して読み方を記憶する
-  const yomi = await getYomi(page, randomString);
+  const yomi = await getYomi(page, targetString);
 
   // 読み方の設定画面を開く
   await openDictDialog(page);
@@ -74,9 +69,9 @@ test("「設定」→「読み方＆アクセント辞書」で「読み方＆�
   await wordInputTag.evaluate((e: HTMLInputElement, rs: string) => {
     e.value = rs;
     e.dispatchEvent(new Event("input"));
-  }, randomString);
+  }, targetString);
   await page.waitForTimeout(100);
-  await validateInputTag(page, wordInputTag, zenkakuRandomString);
+  await validateInputTag(page, wordInputTag, targetString);
 
   const yomiInputTag = page
     .locator(".word-editor .row")
@@ -101,21 +96,14 @@ test("「設定」→「読み方＆アクセント辞書」で「読み方＆�
   // 辞書が登録されているかどうかを確認
   await page.getByRole("button").filter({ hasText: "add" }).click();
   await page.waitForTimeout(100);
-  const yomi2 = await getYomi(page, randomString);
+  const yomi2 = await getYomi(page, targetString);
   expect(yomi2).toBe("テスト");
 
-  // もう一度設定を開き辞書からabsを削除
+  // もう一度設定を開き辞書から削除
   await openDictDialog(page);
-  await page
-    .getByRole("listitem")
-    .filter({ hasText: zenkakuRandomString })
-    .click();
-  await page.waitForTimeout(100);
-  await page
-    .getByRole("listitem")
-    .filter({ hasText: zenkakuRandomString })
-    .getByText("delete")
-    .click();
+  const wordItem = page.getByRole("listitem").filter({ hasText: targetString });
+  await wordItem.hover();
+  await wordItem.getByText("delete").click();
   await page.waitForTimeout(100);
   await getNewestQuasarDialog(page)
     .getByRole("button")
@@ -134,6 +122,6 @@ test("「設定」→「読み方＆アクセント辞書」で「読み方＆�
   // （＝最初の読み方と同じになっていることを確認）
   await page.getByRole("button").filter({ hasText: "add" }).click();
   await page.waitForTimeout(100);
-  const yomi3 = await getYomi(page, randomString);
+  const yomi3 = await getYomi(page, targetString);
   expect(yomi3).toBe(yomi);
 });
