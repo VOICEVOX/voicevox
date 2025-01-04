@@ -36,7 +36,13 @@
           }"
         />
         <!-- キャラクター全身 -->
-        <CharacterPortrait class="sequencer-character-portrait" />
+        <CharacterPortrait
+          class="sequencer-character-portrait"
+          :style="{
+            marginRight: `${scrollBarWidth}px`,
+            marginBottom: `${scrollBarWidth}px`,
+          }"
+        />
         <!-- シーケンサ -->
         <div
           ref="sequencerBody"

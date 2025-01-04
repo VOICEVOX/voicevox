@@ -1,7 +1,9 @@
 <template>
-  <div v-if="showSingCharacterPortrait" class="character-portrait-wrap">
-    <div class="spacer"></div>
-    <img class="character-portrait" :src="portraitPath" />
+  <div v-if="showSingCharacterPortrait" class="clipping-container">
+    <div class="character-portrait-wrap">
+      <div class="spacer"></div>
+      <img class="character-portrait" :src="portraitPath" />
+    </div>
   </div>
 </template>
 
@@ -43,6 +45,12 @@ $portrait-max-width: 40vw;
 $portrait-min-height: 500px;
 $portrait-max-height: 60vh;
 $spacer-height: 200px;
+
+// 画像がはみ出ないようにクリップする
+.clipping-container {
+  position: relative;
+  overflow: hidden;
+}
 
 // 画面右下に固定表示
 // 幅固定、高さ可変、画像のアスペクト比を保持、heightを調整
