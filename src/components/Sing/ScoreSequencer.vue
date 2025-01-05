@@ -1954,7 +1954,6 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   grid-template-rows: 40px 1fr;
   grid-template-columns: 48px 1fr;
   position: relative;
-  overflow: hidden;
 }
 
 .sequencer-corner {
