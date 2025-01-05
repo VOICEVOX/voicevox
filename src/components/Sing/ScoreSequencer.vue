@@ -423,7 +423,9 @@ const phraseInfosInOtherTracks = computed(() => {
 });
 
 const parameterPanelHeight = ref(300);
-const isParameterPanelOpen = ref(false);
+const isParameterPanelOpen = computed(
+  () => store.state.experimentalSetting.showParameterPanel,
+);
 
 const setParameterPanelHeight = (height: number) => {
   if (isParameterPanelOpen.value) {

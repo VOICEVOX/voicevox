@@ -444,6 +444,15 @@
                     )
                   "
                 />
+                <ToggleCell
+                  v-if="!isProduction"
+                  title="[開発時のみ機能] パラメーターパネルの表示"
+                  description="ONの場合、パラメーターパネルが表示されます。"
+                  :modelValue="experimentalSetting.showParameterPanel"
+                  @update:modelValue="
+                    changeExperimentalSetting('showParameterPanel', $event)
+                  "
+                />
               </div>
               <div class="setting-card">
                 <h5 class="headline">データ収集</h5>
