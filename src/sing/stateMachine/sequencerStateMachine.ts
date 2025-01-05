@@ -72,7 +72,12 @@ type StoreActions = {
 
 type Context = ComputedRefs & Refs & { readonly storeActions: StoreActions };
 
-type State = IdleState | AddNoteState | MoveNoteState | ResizeNoteLeftState | ResizeNoteRightState;
+type State =
+  | IdleState
+  | AddNoteState
+  | MoveNoteState
+  | ResizeNoteLeftState
+  | ResizeNoteRightState;
 
 const getGuideLineTicks = (
   cursorPos: PositionOnSequencer,
@@ -701,9 +706,10 @@ class ResizeNoteRightState implements IState<State, Input, Context> {
     for (const note of previewNotes) {
       const targetNoteAtStart = getOrThrow(targetNotesAtStart, note.id);
       const notePos = targetNoteAtStart.position;
-      const noteEndPos = targetNoteAtStart.position + targetNoteAtStart.duration;
+      const noteEndPos =
+        targetNoteAtStart.position + targetNoteAtStart.duration;
       const duration = Math.max(snapTicks, noteEndPos + movingTicks - notePos);
-      
+
       if (note.duration !== duration) {
         editedNotes.set(note.id, { ...note, duration });
       }
