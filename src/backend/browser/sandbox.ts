@@ -280,4 +280,7 @@ export const api: Sandbox = {
   reloadApp(/* obj: { isMultiEngineOffMode: boolean } */) {
     throw new Error(`Not supported on Browser version: reloadApp`);
   },
+  getPathForFile(/* file: File */) {
+    throw new Error(`Not supported on Browser version: getPathForFile`);
+  },
 };
