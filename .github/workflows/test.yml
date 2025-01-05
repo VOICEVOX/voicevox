@@ -5,7 +5,7 @@ on:
   pull_request:
     branches:
       - "**"
-      - "!gh-readonly-queue"
+      - "!gh-readonly-queue/**"
   merge_group:
     types: [checks_requested]
   workflow_dispatch:
