@@ -47,6 +47,22 @@
             marginBottom: `${scrollBarWidth}px`,
           }"
         />
+        <!-- ノート入力のための補助線 -->
+        <div
+          v-if="editTarget === 'NOTE' && showGuideLine"
+          class="sequencer-guideline-container"
+          :style="{
+            marginRight: `${scrollBarWidth}px`,
+            marginBottom: `${scrollBarWidth}px`,
+          }"
+        >
+          <div
+            class="sequencer-guideline"
+            :style="{
+              transform: `translateX(${guideLineX - scrollX}px)`,
+            }"
+          ></div>
+        </div>
         <!-- シーケンサ -->
         <div
           ref="sequencerBody"
@@ -66,16 +82,8 @@
           @scroll="onScroll"
           @contextmenu.prevent
         >
-          <!-- 実際のグリッドと同じ大きさを持つダミーのグリッド -->
+          <!-- 実際のグリッド全体と同じ大きさを持つダミーのグリッド -->
           <SequencerDummyGrid />
-          <div
-            v-if="editTarget === 'NOTE' && showGuideLine"
-            class="sequencer-guideline"
-            :style="{
-              height: `${gridHeight}px`,
-              transform: `translateX(${guideLineX}px)`,
-            }"
-          ></div>
           <!-- undefinedだと警告が出るのでnullを渡す -->
           <!-- TODO: ちゃんとしたトラックIDを渡す -->
           <SequencerShadowNote
@@ -245,7 +253,6 @@ import {
   tickToSecond,
 } from "@/sing/domain";
 import {
-  getKeyBaseHeight,
   tickToBaseX,
   baseXToTick,
   noteNumberToBaseY,
@@ -373,12 +380,6 @@ const zoomY = computed(() => state.sequencerZoomY);
 // スナップ
 const snapTicks = computed(() => {
   return getNoteDuration(state.sequencerSnapType, tpqn.value);
-});
-
-// グリッド
-const gridCellBaseHeight = getKeyBaseHeight();
-const gridHeight = computed(() => {
-  return gridCellBaseHeight * zoomY.value * keyInfos.length;
 });
 
 // 小節の数
@@ -1981,6 +1982,20 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   grid-column: 2;
 }
 
+.sequencer-guideline-container {
+  grid-row: 2;
+  grid-column: 2;
+  position: relative;
+  pointer-events: none;
+}
+
+.sequencer-guideline {
+  left: -0.5px;
+  width: 1px;
+  height: 100%;
+  background: var(--scheme-color-inverse-primary);
+}
+
 .sequencer-body {
   grid-row: 2;
   grid-column: 2;
@@ -1995,15 +2010,6 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   &::-webkit-scrollbar-track:active {
     cursor: default;
   }
-}
-
-.sequencer-guideline {
-  position: absolute;
-  top: 0;
-  left: -0.5px;
-  width: 1px;
-  background: var(--scheme-color-inverse-primary);
-  pointer-events: none;
 }
 
 .sequencer-pitch {
