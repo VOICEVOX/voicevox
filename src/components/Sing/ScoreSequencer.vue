@@ -1,13 +1,17 @@
 <template>
   <QSplitter
-    v-model="parameterPanelHeight"
+    :modelValue="isParameterPanelOpen ? parameterPanelHeight : 0"
     reverse
     unit="px"
     horizontal
+    :disable="!isParameterPanelOpen"
     :separatorStyle="{
+      display: isParameterPanelOpen ? 'block' : 'none',
       overflow: 'hidden',
       height: '4px',
     }"
+    emitImmediately
+    @update:modelValue="setParameterPanelHeight"
   >
     <template #before>
       <div class="score-sequencer full-height">
@@ -205,7 +209,7 @@
       </div>
     </template>
     <template #after>
-      <SequencerParameterPanel />
+      <SequencerParameterPanel v-if="isParameterPanelOpen" />
     </template>
   </QSplitter>
 </template>
@@ -418,6 +422,13 @@ const phraseInfosInOtherTracks = computed(() => {
 });
 
 const parameterPanelHeight = ref(300);
+const isParameterPanelOpen = ref(false);
+
+const setParameterPanelHeight = (height: number) => {
+  if (isParameterPanelOpen.value) {
+    parameterPanelHeight.value = height;
+  }
+};
 
 const ctrlKey = useCommandOrControlKey();
 const editorFrameRate = computed(() => state.editorFrameRate);
