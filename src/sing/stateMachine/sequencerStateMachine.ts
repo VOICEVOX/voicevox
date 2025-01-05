@@ -72,7 +72,12 @@ type StoreActions = {
 
 type Context = ComputedRefs & Refs & { readonly storeActions: StoreActions };
 
-type State = IdleState | AddNoteState | MoveNoteState | ResizeNoteLeftState;
+type State =
+  | IdleState
+  | AddNoteState
+  | MoveNoteState
+  | ResizeNoteLeftState
+  | ResizeNoteRightState;
 
 const getGuideLineTicks = (
   cursorPos: PositionOnSequencer,
@@ -582,6 +587,162 @@ class ResizeNoteLeftState implements IState<State, Input, Context> {
       }
       if (this.innerContext.executePreviewProcess) {
         this.previewResizeLeft(context);
+        this.innerContext.executePreviewProcess = false;
+      }
+      this.innerContext.previewRequestId =
+        requestAnimationFrame(previewIfNeeded);
+    };
+    const previewRequestId = requestAnimationFrame(previewIfNeeded);
+
+    this.innerContext = {
+      targetNotesAtStart: targetNotesMap,
+      executePreviewProcess: false,
+      previewRequestId,
+      edited: false,
+      guideLineTicksAtStart: guideLineTicks,
+    };
+  }
+
+  process({
+    input,
+    setNextState,
+  }: {
+    input: Input;
+    context: Context;
+    setNextState: (nextState: State) => void;
+  }) {
+    if (this.innerContext == undefined) {
+      throw new Error("innerContext is undefined.");
+    }
+    const mouseButton = getButton(input.mouseEvent);
+    if (input.targetArea === "SequencerBody") {
+      if (input.mouseEvent.type === "mousemove") {
+        this.currentCursorPos = input.cursorPos;
+        this.innerContext.executePreviewProcess = true;
+      } else if (
+        input.mouseEvent.type === "mouseup" &&
+        mouseButton === "LEFT_BUTTON"
+      ) {
+        setNextState(new IdleState());
+      }
+    }
+  }
+
+  onExit(context: Context) {
+    if (this.innerContext == undefined) {
+      throw new Error("innerContext is undefined.");
+    }
+    const previewNotes = context.previewNotes.value;
+    const previewNoteIds = previewNotes.map((value) => value.id);
+
+    cancelAnimationFrame(this.innerContext.previewRequestId);
+
+    context.storeActions.commandUpdateNotes(previewNotes, this.targetTrackId);
+    context.storeActions.selectNotes(previewNoteIds);
+
+    if (previewNotes.length === 1) {
+      context.storeActions.playPreviewSound(
+        previewNotes[0].noteNumber,
+        PREVIEW_SOUND_DURATION,
+      );
+    }
+    context.previewNotes.value = [];
+    context.nowPreviewing.value = false;
+  }
+}
+
+class ResizeNoteRightState implements IState<State, Input, Context> {
+  readonly id = "resizeNoteRight";
+
+  private readonly cursorPosAtStart: PositionOnSequencer;
+  private readonly targetTrackId: TrackId;
+  private readonly targetNoteIds: Set<NoteId>;
+  private readonly mouseDownNoteId: NoteId;
+
+  private currentCursorPos: PositionOnSequencer;
+
+  private innerContext:
+    | {
+        targetNotesAtStart: Map<NoteId, Note>;
+        previewRequestId: number;
+        executePreviewProcess: boolean;
+        edited: boolean;
+        guideLineTicksAtStart: number;
+      }
+    | undefined;
+
+  constructor(
+    cursorPosAtStart: PositionOnSequencer,
+    targetTrackId: TrackId,
+    targetNoteIds: Set<NoteId>,
+    mouseDownNoteId: NoteId,
+  ) {
+    if (!targetNoteIds.has(mouseDownNoteId)) {
+      throw new Error("mouseDownNoteId is not included in targetNoteIds.");
+    }
+    this.cursorPosAtStart = cursorPosAtStart;
+    this.targetTrackId = targetTrackId;
+    this.targetNoteIds = targetNoteIds;
+    this.mouseDownNoteId = mouseDownNoteId;
+
+    this.currentCursorPos = cursorPosAtStart;
+  }
+
+  private previewResizeRight(context: Context) {
+    if (this.innerContext == undefined) {
+      throw new Error("innerContext is undefined.");
+    }
+    const snapTicks = context.snapTicks.value;
+    const previewNotes = context.previewNotes.value;
+    const targetNotesAtStart = this.innerContext.targetNotesAtStart;
+    const mouseDownNote = getOrThrow(targetNotesAtStart, this.mouseDownNoteId);
+    const dragTicks = this.currentCursorPos.ticks - this.cursorPosAtStart.ticks;
+    const noteEndPos = mouseDownNote.position + mouseDownNote.duration;
+    const newNoteEndPos =
+      Math.round((noteEndPos + dragTicks) / snapTicks) * snapTicks;
+    const movingTicks = newNoteEndPos - noteEndPos;
+
+    const editedNotes = new Map<NoteId, Note>();
+    for (const note of previewNotes) {
+      const targetNoteAtStart = getOrThrow(targetNotesAtStart, note.id);
+      const notePos = targetNoteAtStart.position;
+      const noteEndPos =
+        targetNoteAtStart.position + targetNoteAtStart.duration;
+      const duration = Math.max(snapTicks, noteEndPos + movingTicks - notePos);
+
+      if (note.duration !== duration) {
+        editedNotes.set(note.id, { ...note, duration });
+      }
+    }
+    if (editedNotes.size !== 0) {
+      context.previewNotes.value = previewNotes.map((value) => {
+        return editedNotes.get(value.id) ?? value;
+      });
+      this.innerContext.edited = true;
+    }
+
+    context.guideLineTicks.value = newNoteEndPos;
+  }
+
+  onEnter(context: Context) {
+    const guideLineTicks = getGuideLineTicks(this.cursorPosAtStart, context);
+    const targetNotesArray = context.notesInSelectedTrack.value.filter(
+      (value) => this.targetNoteIds.has(value.id),
+    );
+    const targetNotesMap = new Map<NoteId, Note>();
+    for (const targetNote of targetNotesArray) {
+      targetNotesMap.set(targetNote.id, targetNote);
+    }
+
+    context.previewNotes.value = [...targetNotesArray];
+    context.nowPreviewing.value = true;
+
+    const previewIfNeeded = () => {
+      if (this.innerContext == undefined) {
+        throw new Error("innerContext is undefined.");
+      }
+      if (this.innerContext.executePreviewProcess) {
+        this.previewResizeRight(context);
         this.innerContext.executePreviewProcess = false;
       }
       this.innerContext.previewRequestId =
