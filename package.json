@@ -57,6 +57,7 @@
     "glob": "11.0.0",
     "hotkeys-js": "3.13.6",
     "immer": "9.0.21",
+    "kuromoji": "github:VOICEVOX/kuromoji.js#0.0.1",
     "markdown-it": "13.0.2",
     "move-file": "3.0.0",
     "multistream": "4.1.0",

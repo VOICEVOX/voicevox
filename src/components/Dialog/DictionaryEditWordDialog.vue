@@ -132,6 +132,14 @@
     <div class="row q-px-md save-delete-reset-buttons">
       <QSpace />
       <QBtn
+        outline
+        textColor="display"
+        class="text-no-wrap text-bold q-mr-sm"
+        :disable="uiLocked"
+        @click="discardOrNotDialog(cancel)"
+        >キャンセル</QBtn
+      >
+      <QBtn
         v-show="!!selectedId"
         outline
         textColor="display"
@@ -139,14 +147,6 @@
         :disable="uiLocked || !isWordChanged"
         @click="resetWord(selectedId)"
         >リセット</QBtn
-      >
-      <QBtn
-        outline
-        textColor="display"
-        class="text-no-wrap text-bold q-mr-sm"
-        :disable="uiLocked"
-        @click="discardOrNotDialog(cancel)"
-        >キャンセル</QBtn
       >
       <QBtn
         outline
@@ -287,12 +287,12 @@ const saveWord = async () => {
         accentType: accent,
         priority: wordPriority.value,
       });
-    } catch {
+    } catch (e) {
       void store.actions.SHOW_ALERT_DIALOG({
         title: "単語の更新に失敗しました",
         message: "エンジンの再起動をお試しください。",
       });
-      return;
+      throw e;
     }
   } else {
     try {
@@ -304,12 +304,12 @@ const saveWord = async () => {
           priority: wordPriority.value,
         }),
       );
-    } catch {
+    } catch (e) {
       void store.actions.SHOW_ALERT_DIALOG({
         title: "単語の登録に失敗しました",
         message: "エンジンの再起動をお試しください。",
       });
-      return;
+      throw e;
     }
   }
   await loadingDictProcess();
@@ -321,6 +321,8 @@ const resetWord = async (id: string) => {
     title: "単語の変更をリセットしますか？",
     message: "単語の変更は破棄されてリセットされます。",
     actionName: "リセットする",
+    isWarningColorButton: true,
+    cancel: "リセットしない",
   });
   if (result === "OK") {
     selectedId.value = id;

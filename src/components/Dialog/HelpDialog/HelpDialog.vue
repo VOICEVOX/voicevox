@@ -1,6 +1,6 @@
 <template>
   <QDialog
-    v-model="modelValueComputed"
+    ref="dialogRef"
     maximized
     transitionShow="jump-up"
     transitionHide="jump-down"
@@ -32,7 +32,7 @@
               icon="close"
               color="display"
               aria-label="ヘルプを閉じる"
-              @click="modelValueComputed = false"
+              @click="onDialogOK"
             />
           </QToolbar>
         </QHeader>
@@ -74,6 +74,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import type { Component } from "vue";
+import { useDialogPluginComponent } from "quasar";
 import MarkdownView from "./HelpMarkdownViewSection.vue";
 import OssLicense from "./HelpOssLicenseSection.vue";
 import UpdateInfo from "./HelpUpdateInfoSection.vue";
@@ -99,17 +100,7 @@ type PageSeparator = {
 };
 type PageData = PageItem | PageSeparator;
 
-const props = defineProps<{
-  modelValue: boolean;
-}>();
-const emit = defineEmits<{
-  (e: "update:modelValue", val: boolean): void;
-}>();
-
-const modelValueComputed = computed({
-  get: () => props.modelValue,
-  set: (val) => emit("update:modelValue", val),
-});
+const { dialogRef, onDialogOK } = useDialogPluginComponent();
 
 // エディタのアップデート確認
 const store = useStore();
@@ -132,21 +123,21 @@ const newUpdateResult = useFetchNewUpdateInfos(
 const licenses = ref<Record<string, string>[]>();
 void store.actions.GET_OSS_LICENSES().then((obj) => (licenses.value = obj));
 
-const policy = ref<string>();
+const policy = ref<string>("");
 void store.actions.GET_POLICY_TEXT().then((obj) => (policy.value = obj));
 
-const howToUse = ref<string>();
+const howToUse = ref<string>("");
 void store.actions.GET_HOW_TO_USE_TEXT().then((obj) => (howToUse.value = obj));
 
-const ossCommunityInfos = ref<string>();
+const ossCommunityInfos = ref<string>("");
 void store.actions
   .GET_OSS_COMMUNITY_INFOS()
   .then((obj) => (ossCommunityInfos.value = obj));
 
-const qAndA = ref<string>();
+const qAndA = ref<string>("");
 void store.actions.GET_Q_AND_A_TEXT().then((obj) => (qAndA.value = obj));
 
-const contact = ref<string>();
+const contact = ref<string>("");
 void store.actions.GET_CONTACT_TEXT().then((obj) => (contact.value = obj));
 
 const pagedata = computed(() => {
@@ -202,7 +193,7 @@ const pagedata = computed(() => {
             }
           : {
               isUpdateAvailable: false,
-              latestVersion: undefined,
+              latestVersion: "",
             }),
       },
     },

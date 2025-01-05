@@ -5,6 +5,7 @@ import { BaseConfigManager, Metadata } from "@/backend/common/ConfigManager";
 import { ConfigType, EngineId, engineSettingSchema } from "@/type/preload";
 import { ensureNotNullish } from "@/helpers/errorHelper";
 import { UnreachableError } from "@/type/utility";
+import { isMac } from "@/helpers/platform";
 
 const dbName = `${import.meta.env.VITE_APP_NAME}-web`;
 const settingStoreKey = "config";
@@ -20,7 +21,7 @@ const defaultEngineId = EngineId(defaultEngine.uuid);
 export async function getConfigManager() {
   await configManagerLock.acquire("configManager", async () => {
     if (!configManager) {
-      configManager = new BrowserConfigManager();
+      configManager = new BrowserConfigManager({ isMac });
       await configManager.initialize();
     }
   });

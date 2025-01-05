@@ -85,6 +85,13 @@ runs:
         mkdir -p $DEST
         mv $TEMPDIR/tmp-extract/$TARGET/* $DEST
 
+        # 実行ファイルのパーミッションを変更
+        if [ "${{ runner.os }}" = "Windows" ]; then
+          chmod +x $DEST/run.exe
+        else
+          chmod +x $DEST/run
+        fi
+
         echo "::group::ll $DEST"
         ls -al $DEST
         echo "::endgroup::"
