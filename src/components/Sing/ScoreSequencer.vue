@@ -1987,6 +1987,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   grid-row: 2;
   grid-column: 2;
   position: relative;
+  overflow: hidden;
   pointer-events: none;
 }
 
