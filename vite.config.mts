@@ -8,6 +8,7 @@ import vue from "@vitejs/plugin-vue";
 import checker from "vite-plugin-checker";
 import { BuildOptions, defineConfig, loadEnv, Plugin } from "vite";
 import { quasar } from "@quasar/vite-plugin";
+import VueI18nPlugin from "@intlify/unplugin-vue-i18n/vite";
 import { z } from "zod";
 
 const isElectron = process.env.VITE_TARGET === "electron";
@@ -76,6 +77,9 @@ export default defineConfig((options) => {
     plugins: [
       vue(),
       quasar({ autoImportComponentCase: "pascal" }),
+      VueI18nPlugin({
+        include: path.resolve(__dirname, "./src/locales/**")
+      }),
       mode !== "test" &&
         checker({
           overlay: false,
