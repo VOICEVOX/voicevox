@@ -7,7 +7,7 @@
     class="setting-dialog transparent-backdrop"
     @update:modelValue="updateOpenDialog"
   >
-    <QLayout container view="hHh Lpr lff" class="bg-background">
+    <QLayout container view="hHh Lpr lff">
       <QHeader class="q-py-sm">
         <QToolbar>
           <QToolbarTitle class="text-display">プリセットの管理</QToolbarTitle>
