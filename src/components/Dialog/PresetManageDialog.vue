@@ -156,10 +156,10 @@
                       label="変更をリセット"
                       :disabled="!isPresetChanged"
                       @click="
-                        if (initialPreset == undefined) {
+                        if (initialPresets == undefined) {
                           throw new Error('initialPreset is undefined');
                         }
-                        resetPreset(initialPreset);
+                        resetPreset(initialPresets[selectedPresetKey]);
                       "
                     />
                   </div>
@@ -247,34 +247,37 @@ const parameterLabels: Record<ParameterType, string> = {
 
 const selectedPresetKey = ref();
 const selectedPreset = ref<Preset | undefined>();
-const initialPreset = ref<Preset | undefined>();
+const initialPresets = ref<Record<string, Preset> | undefined>();
 
 const isPresetChanged = computed(() => {
-  if (!selectedPreset.value) return false;
+  if (!selectedPreset.value || !initialPresets.value) return false;
 
   return (
-    JSON.stringify(selectedPreset.value) !== JSON.stringify(initialPreset.value)
+    JSON.stringify(selectedPreset.value) !==
+    JSON.stringify(initialPresets.value[selectedPresetKey.value])
   );
 });
+
+watch(
+  () => props.openDialog,
+  (newValue) => {
+    if (newValue) {
+      initialPresets.value = presetItems.value;
+    }
+  },
+);
 
 watch(selectedPresetKey, (key) => {
   if (key == undefined) {
     selectedPreset.value = undefined;
-    initialPreset.value = undefined;
     return;
   }
 
   const preset = presetItems.value[key];
-  const clonedPreset = () => {
-    return {
-      ...preset,
-      morphingInfo: preset.morphingInfo
-        ? { ...preset.morphingInfo }
-        : undefined,
-    };
+  selectedPreset.value = {
+    ...preset,
+    morphingInfo: preset.morphingInfo ? { ...preset.morphingInfo } : undefined,
   };
-  selectedPreset.value = clonedPreset();
-  initialPreset.value = clonedPreset();
 });
 
 watch(
@@ -284,12 +287,7 @@ watch(
       ...selectedPreset.value?.morphingInfo,
     }),
   async () => {
-    if (
-      !selectedPreset.value ||
-      !isPresetChanged.value ||
-      !selectedPreset.value.name
-    )
-      return;
+    if (!selectedPreset.value || !selectedPreset.value.name) return;
 
     await store.actions.UPDATE_PRESET({
       presetData: selectedPreset.value,
