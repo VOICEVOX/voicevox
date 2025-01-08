@@ -1,3 +1,10 @@
+export type Rect = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
 export function round(value: number, digits: number) {
   const powerOf10 = 10 ** digits;
   return Math.round(value * powerOf10) / powerOf10;
