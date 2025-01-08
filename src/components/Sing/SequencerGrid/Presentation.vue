@@ -269,7 +269,7 @@ const octaveLineIndices = computed(() => gridLines.value.octaveLines);
   }
 
   .sequencer-grid-measure-line {
-    stroke: var(--scheme-color-sing-grid-beat-line);
+    stroke: var(--scheme-color-sing-grid-measure-line);
   }
 
   .sequencer-grid-octave-line {
@@ -277,7 +277,7 @@ const octaveLineIndices = computed(() => gridLines.value.octaveLines);
   }
 
   .sequencer-grid-beat-line {
-    stroke: transparent;
+    stroke: var(--scheme-color-sing-grid-beat-line);
   }
 }
 </style>
