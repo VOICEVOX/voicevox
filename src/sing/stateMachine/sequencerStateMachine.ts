@@ -4,7 +4,7 @@
  */
 
 import { computed, ComputedRef, ref, Ref } from "vue";
-import { clamp } from "../utility";
+import { clamp, Rect } from "@/sing/utility";
 import { IState, StateMachine } from "@/sing/stateMachine/stateMachineBase";
 import {
   getButton,
@@ -18,6 +18,8 @@ import { getOrThrow } from "@/helpers/mapHelper";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 
 export type PositionOnSequencer = {
+  readonly x: number;
+  readonly y: number;
   readonly ticks: number;
   readonly noteNumber: number;
 };
@@ -58,6 +60,7 @@ type ComputedRefs = {
 type Refs = {
   readonly nowPreviewing: Ref<boolean>;
   readonly previewNotes: Ref<Note[]>;
+  readonly previewRectForRectSelect: Ref<Rect | undefined>;
   readonly guideLineTicks: Ref<number>;
 };
 
@@ -77,7 +80,8 @@ type State =
   | AddNoteState
   | MoveNoteState
   | ResizeNoteLeftState
-  | ResizeNoteRightState;
+  | ResizeNoteRightState
+  | SelectNotesWithRectState;
 
 const getGuideLineTicks = (
   cursorPos: PositionOnSequencer,
@@ -161,16 +165,27 @@ class IdleState implements IState<State, Input, Context> {
     const selectedTrackId = context.selectedTrackId.value;
 
     if (context.editTarget.value === "NOTE") {
-      if (input.targetArea === "SequencerBody") {
+      if (
+        input.mouseEvent.type === "mousemove" &&
+        input.targetArea === "SequencerBody"
+      ) {
         context.guideLineTicks.value = getGuideLineTicks(
           input.cursorPos,
           context,
         );
-        if (input.mouseEvent.type === "mousedown") {
-          if (!isSelfEventTarget(input.mouseEvent)) {
-            return;
-          }
-          if (mouseButton === "LEFT_BUTTON") {
+      }
+      if (
+        input.mouseEvent.type === "mousedown" &&
+        mouseButton === "LEFT_BUTTON" &&
+        isSelfEventTarget(input.mouseEvent)
+      ) {
+        if (input.targetArea === "SequencerBody") {
+          if (input.mouseEvent.shiftKey) {
+            const selectNotesWithRectState = new SelectNotesWithRectState(
+              input.cursorPos,
+            );
+            setNextState(selectNotesWithRectState);
+          } else {
             context.storeActions.deselectAllNotes();
             const addNoteState = new AddNoteState(
               input.cursorPos,
@@ -178,22 +193,33 @@ class IdleState implements IState<State, Input, Context> {
             );
             setNextState(addNoteState);
           }
-        }
-      } else if (input.targetArea === "Note") {
-        if (input.mouseEvent.type === "mousedown") {
-          if (!isSelfEventTarget(input.mouseEvent)) {
-            return;
-          }
-          if (mouseButton === "LEFT_BUTTON") {
-            executeNotesSelectionProcess(context, input.mouseEvent, input.note);
-            const moveNoteState = new MoveNoteState(
-              input.cursorPos,
-              selectedTrackId,
-              context.selectedNoteIds.value,
-              input.note.id,
-            );
-            setNextState(moveNoteState);
-          }
+        } else if (input.targetArea === "Note") {
+          executeNotesSelectionProcess(context, input.mouseEvent, input.note);
+          const moveNoteState = new MoveNoteState(
+            input.cursorPos,
+            selectedTrackId,
+            context.selectedNoteIds.value,
+            input.note.id,
+          );
+          setNextState(moveNoteState);
+        } else if (input.targetArea === "NoteLeftEdge") {
+          executeNotesSelectionProcess(context, input.mouseEvent, input.note);
+          const moveNoteState = new ResizeNoteLeftState(
+            input.cursorPos,
+            selectedTrackId,
+            context.selectedNoteIds.value,
+            input.note.id,
+          );
+          setNextState(moveNoteState);
+        } else if (input.targetArea === "NoteRightEdge") {
+          executeNotesSelectionProcess(context, input.mouseEvent, input.note);
+          const moveNoteState = new ResizeNoteRightState(
+            input.cursorPos,
+            selectedTrackId,
+            context.selectedNoteIds.value,
+            input.note.id,
+          );
+          setNextState(moveNoteState);
         }
       }
     }
@@ -260,6 +286,7 @@ class AddNoteState implements IState<State, Input, Context> {
       lyric: getDoremiFromNoteNumber(this.cursorPosAtStart.noteNumber),
     };
 
+    context.guideLineTicks.value = guideLineTicks;
     context.previewNotes.value = [noteToAdd];
     context.nowPreviewing.value = true;
 
@@ -807,6 +834,101 @@ class ResizeNoteRightState implements IState<State, Input, Context> {
   }
 }
 
+class SelectNotesWithRectState implements IState<State, Input, Context> {
+  readonly id = "selectNotesWithRect";
+
+  private readonly cursorPosAtStart: PositionOnSequencer;
+
+  private currentCursorPos: PositionOnSequencer;
+  private additive: boolean;
+
+  constructor(cursorPosAtStart: PositionOnSequencer) {
+    this.cursorPosAtStart = cursorPosAtStart;
+
+    this.currentCursorPos = cursorPosAtStart;
+    this.additive = false;
+  }
+
+  private updatePreviewRect(context: Context) {
+    const startX = Math.min(this.cursorPosAtStart.x, this.currentCursorPos.x);
+    const endX = Math.max(this.cursorPosAtStart.x, this.currentCursorPos.x);
+    const startY = Math.min(this.cursorPosAtStart.y, this.currentCursorPos.y);
+    const endY = Math.max(this.cursorPosAtStart.y, this.currentCursorPos.y);
+
+    context.previewRectForRectSelect.value = {
+      x: startX,
+      y: startY,
+      width: Math.max(1, endX - startX),
+      height: Math.max(1, endY - startY),
+    };
+  }
+
+  onEnter(context: Context) {
+    this.updatePreviewRect(context);
+  }
+
+  process({
+    input,
+    context,
+    setNextState,
+  }: {
+    input: Input;
+    context: Context;
+    setNextState: (nextState: State) => void;
+  }) {
+    const mouseButton = getButton(input.mouseEvent);
+    if (input.targetArea === "SequencerBody") {
+      if (input.mouseEvent.type === "mousemove") {
+        this.currentCursorPos = input.cursorPos;
+        this.updatePreviewRect(context);
+      } else if (
+        input.mouseEvent.type === "mouseup" &&
+        mouseButton === "LEFT_BUTTON"
+      ) {
+        this.additive = isOnCommandOrCtrlKeyDown(input.mouseEvent);
+        setNextState(new IdleState());
+      }
+    }
+  }
+
+  onExit(context: Context) {
+    context.previewRectForRectSelect.value = undefined;
+
+    const startTicks = Math.min(
+      this.cursorPosAtStart.ticks,
+      this.currentCursorPos.ticks,
+    );
+    const endTicks = Math.max(
+      this.cursorPosAtStart.ticks,
+      this.currentCursorPos.ticks,
+    );
+    const startNoteNumber = Math.min(
+      this.cursorPosAtStart.noteNumber,
+      this.currentCursorPos.noteNumber,
+    );
+    const endNoteNumber = Math.max(
+      this.cursorPosAtStart.noteNumber,
+      this.currentCursorPos.noteNumber,
+    );
+
+    const noteIdsToSelect: NoteId[] = [];
+    for (const note of context.notesInSelectedTrack.value) {
+      if (
+        note.position + note.duration >= startTicks &&
+        note.position <= endTicks &&
+        note.noteNumber >= startNoteNumber &&
+        note.noteNumber <= endNoteNumber
+      ) {
+        noteIdsToSelect.push(note.id);
+      }
+    }
+    if (!this.additive) {
+      context.storeActions.deselectAllNotes();
+    }
+    context.storeActions.selectNotes(noteIdsToSelect);
+  }
+}
+
 export const useSequencerStateMachine = (
   computedRefs: ComputedRefs,
   storeActions: StoreActions,
@@ -814,6 +936,7 @@ export const useSequencerStateMachine = (
   const refs: Refs = {
     nowPreviewing: ref(false),
     previewNotes: ref<Note[]>([]),
+    previewRectForRectSelect: ref<Rect | undefined>(undefined),
     guideLineTicks: ref(0),
   };
   const stateMachine = new StateMachine<State, Input, Context>(
@@ -828,6 +951,9 @@ export const useSequencerStateMachine = (
     stateMachine,
     nowPreviewing: computed(() => refs.nowPreviewing.value),
     previewNotes: computed(() => refs.previewNotes.value),
+    previewRectForRectSelect: computed(
+      () => refs.previewRectForRectSelect.value,
+    ),
     guideLineTicks: computed(() => refs.guideLineTicks.value),
   };
 };
