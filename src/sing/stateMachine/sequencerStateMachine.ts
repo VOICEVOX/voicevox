@@ -4,7 +4,13 @@
  */
 
 import { computed, ComputedRef, ref, Ref } from "vue";
-import { clamp, Rect } from "@/sing/utility";
+import {
+  applyGaussianFilter,
+  clamp,
+  createArray,
+  linearInterpolation,
+  Rect,
+} from "@/sing/utility";
 import { IState, StateMachine } from "@/sing/stateMachine/stateMachineBase";
 import {
   getButton,
@@ -22,6 +28,8 @@ export type PositionOnSequencer = {
   readonly y: number;
   readonly ticks: number;
   readonly noteNumber: number;
+  readonly frame: number;
+  readonly frequency: number;
 };
 
 type Input =
@@ -55,12 +63,18 @@ type ComputedRefs = {
   readonly selectedTrackId: ComputedRef<TrackId>;
   readonly notesInSelectedTrack: ComputedRef<Note[]>;
   readonly selectedNoteIds: ComputedRef<Set<NoteId>>;
+  readonly editorFrameRate: ComputedRef<number>;
 };
 
 type Refs = {
   readonly nowPreviewing: Ref<boolean>;
   readonly previewNotes: Ref<Note[]>;
   readonly previewRectForRectSelect: Ref<Rect | undefined>;
+  readonly previewPitchEdit: Ref<
+    | { type: "draw"; data: number[]; startFrame: number }
+    | { type: "erase"; startFrame: number; frameLength: number }
+    | undefined
+  >;
   readonly guideLineTicks: Ref<number>;
 };
 
@@ -71,6 +85,11 @@ type StoreActions = {
   readonly commandUpdateNotes: (notes: Note[], trackId: TrackId) => void;
   readonly selectNotes: (noteIds: NoteId[]) => void;
   readonly playPreviewSound: (noteNumber: number, duration?: number) => void;
+  readonly commandSetPitchEditData: (
+    pitchArray: number[],
+    startFrame: number,
+    trackId: TrackId,
+  ) => void;
 };
 
 type Context = ComputedRefs & Refs & { readonly storeActions: StoreActions };
@@ -81,7 +100,8 @@ type State =
   | MoveNoteState
   | ResizeNoteLeftState
   | ResizeNoteRightState
-  | SelectNotesWithRectState;
+  | SelectNotesWithRectState
+  | DrawPitchState;
 
 const getGuideLineTicks = (
   cursorPos: PositionOnSequencer,
@@ -165,10 +185,7 @@ class IdleState implements IState<State, Input, Context> {
     const selectedTrackId = context.selectedTrackId.value;
 
     if (context.editTarget.value === "NOTE") {
-      if (
-        input.mouseEvent.type === "mousemove" &&
-        input.targetArea === "SequencerBody"
-      ) {
+      if (input.targetArea === "SequencerBody") {
         context.guideLineTicks.value = getGuideLineTicks(
           input.cursorPos,
           context,
@@ -221,6 +238,18 @@ class IdleState implements IState<State, Input, Context> {
           );
           setNextState(moveNoteState);
         }
+      }
+    } else if (context.editTarget.value === "PITCH") {
+      if (
+        input.mouseEvent.type === "mousedown" &&
+        mouseButton === "LEFT_BUTTON" &&
+        input.targetArea === "SequencerBody"
+      ) {
+        const drawPitchState = new DrawPitchState(
+          input.cursorPos,
+          selectedTrackId,
+        );
+        setNextState(drawPitchState);
       }
     }
   }
@@ -286,7 +315,6 @@ class AddNoteState implements IState<State, Input, Context> {
       lyric: getDoremiFromNoteNumber(this.cursorPosAtStart.noteNumber),
     };
 
-    context.guideLineTicks.value = guideLineTicks;
     context.previewNotes.value = [noteToAdd];
     context.nowPreviewing.value = true;
 
@@ -929,14 +957,195 @@ class SelectNotesWithRectState implements IState<State, Input, Context> {
   }
 }
 
+class DrawPitchState implements IState<State, Input, Context> {
+  readonly id = "drawPitch";
+
+  private readonly cursorPosAtStart: PositionOnSequencer;
+  private readonly targetTrackId: TrackId;
+
+  private currentCursorPos: PositionOnSequencer;
+
+  private innerContext:
+    | {
+        previewRequestId: number;
+        executePreviewProcess: boolean;
+        prevCursorPos: PositionOnSequencer;
+      }
+    | undefined;
+
+  constructor(cursorPosAtStart: PositionOnSequencer, targetTrackId: TrackId) {
+    this.cursorPosAtStart = cursorPosAtStart;
+    this.targetTrackId = targetTrackId;
+
+    this.currentCursorPos = cursorPosAtStart;
+  }
+
+  private previewDrawPitch(context: Context) {
+    if (this.innerContext == undefined) {
+      throw new Error("innerContext is undefined.");
+    }
+    if (context.previewPitchEdit.value == undefined) {
+      throw new Error("previewPitchEdit.value is undefined.");
+    }
+    if (context.previewPitchEdit.value.type !== "draw") {
+      throw new Error("previewPitchEdit.value.type is not draw.");
+    }
+    const cursorFrame = this.currentCursorPos.frame;
+    const cursorFrequency = this.currentCursorPos.frequency;
+    const prevCursorFrame = this.innerContext.prevCursorPos.frame;
+    const prevCursorFrequency = this.innerContext.prevCursorPos.frequency;
+    if (cursorFrame < 0) {
+      return;
+    }
+    const tempPitchEdit = {
+      ...context.previewPitchEdit.value,
+      data: [...context.previewPitchEdit.value.data],
+    };
+
+    if (cursorFrame < tempPitchEdit.startFrame) {
+      const numOfFramesToUnshift = tempPitchEdit.startFrame - cursorFrame;
+      tempPitchEdit.data = createArray(numOfFramesToUnshift, () => 0).concat(
+        tempPitchEdit.data,
+      );
+      tempPitchEdit.startFrame = cursorFrame;
+    }
+
+    const lastFrame = tempPitchEdit.startFrame + tempPitchEdit.data.length - 1;
+    if (cursorFrame > lastFrame) {
+      const numOfFramesToPush = cursorFrame - lastFrame;
+      tempPitchEdit.data = tempPitchEdit.data.concat(
+        createArray(numOfFramesToPush, () => 0),
+      );
+    }
+
+    if (cursorFrame === prevCursorFrame) {
+      const i = cursorFrame - tempPitchEdit.startFrame;
+      tempPitchEdit.data[i] = cursorFrequency;
+    } else if (cursorFrame < prevCursorFrame) {
+      for (let i = cursorFrame; i <= prevCursorFrame; i++) {
+        tempPitchEdit.data[i - tempPitchEdit.startFrame] = Math.exp(
+          linearInterpolation(
+            cursorFrame,
+            Math.log(cursorFrequency),
+            prevCursorFrame,
+            Math.log(prevCursorFrequency),
+            i,
+          ),
+        );
+      }
+    } else {
+      for (let i = prevCursorFrame; i <= cursorFrame; i++) {
+        tempPitchEdit.data[i - tempPitchEdit.startFrame] = Math.exp(
+          linearInterpolation(
+            prevCursorFrame,
+            Math.log(prevCursorFrequency),
+            cursorFrame,
+            Math.log(cursorFrequency),
+            i,
+          ),
+        );
+      }
+    }
+
+    context.previewPitchEdit.value = tempPitchEdit;
+    this.innerContext.prevCursorPos = this.currentCursorPos;
+  }
+
+  onEnter(context: Context) {
+    context.previewPitchEdit.value = {
+      type: "draw",
+      data: [this.cursorPosAtStart.frequency],
+      startFrame: this.cursorPosAtStart.frame,
+    };
+    context.nowPreviewing.value = true;
+
+    const previewIfNeeded = () => {
+      if (this.innerContext == undefined) {
+        throw new Error("innerContext is undefined.");
+      }
+      if (this.innerContext.executePreviewProcess) {
+        this.previewDrawPitch(context);
+        this.innerContext.executePreviewProcess = false;
+      }
+      this.innerContext.previewRequestId =
+        requestAnimationFrame(previewIfNeeded);
+    };
+    const previewRequestId = requestAnimationFrame(previewIfNeeded);
+
+    this.innerContext = {
+      executePreviewProcess: false,
+      previewRequestId,
+      prevCursorPos: this.cursorPosAtStart,
+    };
+  }
+
+  process({
+    input,
+    setNextState,
+  }: {
+    input: Input;
+    context: Context;
+    setNextState: (nextState: State) => void;
+  }) {
+    if (this.innerContext == undefined) {
+      throw new Error("innerContext is undefined.");
+    }
+    const mouseButton = getButton(input.mouseEvent);
+    if (input.targetArea === "SequencerBody") {
+      if (input.mouseEvent.type === "mousemove") {
+        this.currentCursorPos = input.cursorPos;
+        this.innerContext.executePreviewProcess = true;
+      } else if (input.mouseEvent.type === "mouseup") {
+        if (mouseButton === "LEFT_BUTTON") {
+          setNextState(new IdleState());
+        }
+      }
+    }
+  }
+
+  onExit(context: Context) {
+    if (this.innerContext == undefined) {
+      throw new Error("innerContext is undefined.");
+    }
+    if (context.previewPitchEdit.value == undefined) {
+      throw new Error("previewPitchEdit is undefined.");
+    }
+    if (context.previewPitchEdit.value.type !== "draw") {
+      throw new Error("previewPitchEdit.type is not draw.");
+    }
+
+    cancelAnimationFrame(this.innerContext.previewRequestId);
+
+    // カーソルを動かさずにマウスのボタンを離したときに1フレームのみの変更になり、
+    // 1フレームの変更はピッチ編集ラインとして表示されないので、無視する
+    if (context.previewPitchEdit.value.data.length >= 2) {
+      // 平滑化を行う
+      let data = context.previewPitchEdit.value.data;
+      data = data.map((value) => Math.log(value));
+      applyGaussianFilter(data, 0.7);
+      data = data.map((value) => Math.exp(value));
+
+      context.storeActions.commandSetPitchEditData(
+        data,
+        context.previewPitchEdit.value.startFrame,
+        this.targetTrackId,
+      );
+    }
+
+    context.previewPitchEdit.value = undefined;
+    context.nowPreviewing.value = false;
+  }
+}
+
 export const useSequencerStateMachine = (
   computedRefs: ComputedRefs,
   storeActions: StoreActions,
 ) => {
   const refs: Refs = {
     nowPreviewing: ref(false),
-    previewNotes: ref<Note[]>([]),
-    previewRectForRectSelect: ref<Rect | undefined>(undefined),
+    previewNotes: ref([]),
+    previewRectForRectSelect: ref(undefined),
+    previewPitchEdit: ref(undefined),
     guideLineTicks: ref(0),
   };
   const stateMachine = new StateMachine<State, Input, Context>(
