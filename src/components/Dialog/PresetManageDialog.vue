@@ -387,13 +387,10 @@ const morphingTargetStyleInfo = computed(() => {
 }
 
 .inner {
-  min-height: 100%;
   display: flex;
   flex-direction: column;
   padding: vars.$padding-2;
-  padding-bottom: 0;
   gap: vars.$gap-2;
-  position: relative;
   margin-inline: auto;
   max-width: 480px;
 }
