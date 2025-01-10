@@ -2,8 +2,8 @@
   <QDialog
     v-model="modelValueComputed"
     maximized
-    transition-show="jump-up"
-    transition-hide="jump-down"
+    transitionShow="jump-up"
+    transitionHide="jump-down"
     class="transparent-backdrop"
   >
     <QLayout container view="hHh Lpr lff" class="bg-background">
@@ -24,7 +24,7 @@
               unelevated
               label="完了"
               color="toolbar-button"
-              text-color="toolbar-button-display"
+              textColor="toolbar-button-display"
               class="text-no-wrap"
               @click="closeDialog"
             />
@@ -34,8 +34,8 @@
 
       <QDrawer
         bordered
-        show-if-above
-        :model-value="true"
+        showIfAbove
+        :modelValue="true"
         :width="$q.screen.width / 3 > 300 ? 300 : $q.screen.width / 3"
         :breakpoint="0"
       >
@@ -52,17 +52,17 @@
               <CharacterTryListenCard
                 v-for="characterInfo of characterInfos"
                 :key="characterInfo.metas.speakerUuid"
-                :character-info="characterInfo"
-                :is-selected="
+                :characterInfo
+                :isSelected="
                   selectedCharacter === characterInfo.metas.speakerUuid
                 "
-                :is-new-character="
+                :isNewCharacter="
                   newCharacters.includes(characterInfo.metas.speakerUuid)
                 "
-                :playing="playing"
-                :toggle-play-or-stop="togglePlayOrStop"
+                :playing
+                :togglePlayOrStop
                 @update:portrait="updatePortrait"
-                @update:select-character="selectCharacter"
+                @update:selectCharacter="selectCharacter"
               />
             </div>
           </div>
@@ -74,7 +74,7 @@
             <Draggable
               v-model="characterOrder"
               class="character-order q-px-sm"
-              :item-key="keyOfCharacterOrderItem"
+              :itemKey="keyOfCharacterOrderItem"
               @start="characterOrderDragging = true"
               @end="characterOrderDragging = false"
             >
@@ -107,6 +107,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import Draggable from "vuedraggable";
+import { useQuasar } from "quasar";
 import CharacterTryListenCard from "./CharacterTryListenCard.vue";
 import { useStore } from "@/store";
 import { CharacterInfo, SpeakerId, StyleId, StyleInfo } from "@/type/preload";
@@ -119,6 +120,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   (event: "update:modelValue", value: boolean): void;
 }>();
+
+const $q = useQuasar();
 
 const store = useStore();
 
@@ -161,7 +164,7 @@ watch(
   async (newValue, oldValue) => {
     if (!oldValue && newValue) {
       // 新しいキャラクター
-      newCharacters.value = await store.dispatch("GET_NEW_CHARACTERS");
+      newCharacters.value = await store.actions.GET_NEW_CHARACTERS();
 
       // サンプルの順番、新しいキャラクターは上に
       sampleCharacterOrder.value = [
@@ -179,7 +182,7 @@ watch(
       // FIXME: 不明なキャラを無視しているので、不明キャラの順番が保存時にリセットされてしまう
       characterOrder.value = store.state.userCharacterOrder
         .map((speakerUuid) => characterInfosMap.value[speakerUuid])
-        .filter((info) => info != undefined) as CharacterInfo[];
+        .filter((info) => info != undefined);
 
       // 含まれていないキャラクターを足す
       const notIncludesCharacterInfos = props.characterInfos.filter(
@@ -220,7 +223,7 @@ const play = (
   if (audio.src !== "") stop();
 
   audio.src = voiceSamplePaths[index];
-  audio.play();
+  void audio.play();
   playing.value = { speakerUuid, styleId, index };
 };
 const stop = () => {
@@ -253,8 +256,7 @@ const togglePlayOrStop = (
 const characterOrderDragging = ref(false);
 
 const closeDialog = () => {
-  store.dispatch(
-    "SET_USER_CHARACTER_ORDER",
+  void store.actions.SET_USER_CHARACTER_ORDER(
     characterOrder.value.map((info) => info.metas.speakerUuid),
   );
   stop();

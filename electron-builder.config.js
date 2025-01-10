@@ -29,6 +29,8 @@ const WIN_SIGNING_HASH_ALGORITHMS = process.env.WIN_SIGNING_HASH_ALGORITHMS
 
 const isMac = process.platform === "darwin";
 
+const isArm64 = process.arch === "arm64";
+
 // electron-builderのextraFilesは、ファイルのコピー先としてVOICEVOX.app/Contents/を使用する。
 // しかし、実行ファイルはVOICEVOX.app/Contents/MacOS/にあるため、extraFilesをVOICEVOX.app/Contents/ディレクトリにコピーするのは正しくない。
 // VOICEVOX.app/Contents/MacOS/ディレクトリにコピーされるように修正する。
@@ -36,7 +38,7 @@ const isMac = process.platform === "darwin";
 const extraFilePrefix = isMac ? "MacOS/" : "";
 
 const sevenZipFile = fs
-  .readdirSync(path.resolve(__dirname, "build", "vendored", "7z"))
+  .readdirSync(path.resolve(__dirname, "vendored", "7z"))
   .find(
     // Windows: 7za.exe, Linux: 7zzs, macOS: 7zz
     (fileName) => ["7za.exe", "7zzs", "7zz"].includes(fileName),
@@ -44,7 +46,7 @@ const sevenZipFile = fs
 
 if (!sevenZipFile) {
   throw new Error(
-    "7z binary file not found. Run `node ./build/download7z.js` first.",
+    "7z binary file not found. Run `node ./tools/download7z.js` first.",
   );
 }
 
@@ -93,7 +95,7 @@ const builderOptions = {
       to: path.join(extraFilePrefix, "vv-engine"),
     },
     {
-      from: path.resolve(__dirname, "build", "vendored", "7z", sevenZipFile),
+      from: path.resolve(__dirname, "vendored", "7z", sevenZipFile),
       to: extraFilePrefix + sevenZipFile,
     },
   ],
@@ -154,7 +156,7 @@ const builderOptions = {
     target: [
       {
         target: "dmg",
-        arch: ["x64"],
+        arch: [isArm64 ? "arm64" : "x64"],
       },
     ],
   },

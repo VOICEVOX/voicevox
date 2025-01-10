@@ -1,8 +1,8 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * VOICEVOX Engine
- * VOICEVOXの音声合成エンジンです。
+ * DUMMY Engine
+ * DUMMY の音声合成エンジンです。
  *
  * The version of the OpenAPI document: latest
  * 
@@ -27,41 +27,41 @@ import {
 } from './SpeakerSupportedFeatures';
 
 /**
- * 話者情報
+ * キャラクター情報
  * @export
  * @interface Speaker
  */
 export interface Speaker {
     /**
-     * 
-     * @type {SpeakerSupportedFeatures}
-     * @memberof Speaker
-     */
-    supportedFeatures?: SpeakerSupportedFeatures;
-    /**
-     * 
+     * 名前
      * @type {string}
      * @memberof Speaker
      */
     name: string;
     /**
-     * 
+     * キャラクターのUUID
      * @type {string}
      * @memberof Speaker
      */
     speakerUuid: string;
     /**
-     * 
+     * スタイルの一覧
      * @type {Array<SpeakerStyle>}
      * @memberof Speaker
      */
     styles: Array<SpeakerStyle>;
     /**
-     * 
+     * キャラクターのバージョン
      * @type {string}
      * @memberof Speaker
      */
-    version?: string;
+    version: string;
+    /**
+     * キャラクターの対応機能
+     * @type {SpeakerSupportedFeatures}
+     * @memberof Speaker
+     */
+    supportedFeatures?: SpeakerSupportedFeatures;
 }
 
 /**
@@ -72,6 +72,7 @@ export function instanceOfSpeaker(value: object): boolean {
     isInstance = isInstance && "name" in value;
     isInstance = isInstance && "speakerUuid" in value;
     isInstance = isInstance && "styles" in value;
+    isInstance = isInstance && "version" in value;
 
     return isInstance;
 }
@@ -86,11 +87,11 @@ export function SpeakerFromJSONTyped(json: any, ignoreDiscriminator: boolean): S
     }
     return {
         
-        'supportedFeatures': !exists(json, 'supported_features') ? undefined : SpeakerSupportedFeaturesFromJSON(json['supported_features']),
         'name': json['name'],
         'speakerUuid': json['speaker_uuid'],
         'styles': ((json['styles'] as Array<any>).map(SpeakerStyleFromJSON)),
-        'version': !exists(json, 'version') ? undefined : json['version'],
+        'version': json['version'],
+        'supportedFeatures': !exists(json, 'supported_features') ? undefined : SpeakerSupportedFeaturesFromJSON(json['supported_features']),
     };
 }
 
@@ -103,11 +104,11 @@ export function SpeakerToJSON(value?: Speaker | null): any {
     }
     return {
         
-        'supported_features': SpeakerSupportedFeaturesToJSON(value.supportedFeatures),
         'name': value.name,
         'speaker_uuid': value.speakerUuid,
         'styles': ((value.styles as Array<any>).map(SpeakerStyleToJSON)),
         'version': value.version,
+        'supported_features': SpeakerSupportedFeaturesToJSON(value.supportedFeatures),
     };
 }
 

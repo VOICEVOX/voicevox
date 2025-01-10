@@ -1,0 +1,33 @@
+# Chromaticにmainブランチをpushする
+# お試し運用中なので消滅する可能性あり
+
+name: "Chromatic"
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  # Chromatic用にNodeのメモリを増やす
+  # https://github.com/chromaui/chromatic-cli/issues/550#issuecomment-1150713820
+  NODE_OPTIONS: --max-old-space-size=16384
+
+jobs:
+  chromatic:
+    name: Run Chromatic
+    runs-on: ubuntu-latest
+    if: github.repository_owner == 'VOICEVOX'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup environment
+        uses: ./.github/actions/setup-environment
+      - name: Run Chromatic
+        uses: chromaui/action@v11
+        with:
+          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          buildScriptName: "storybook:build"
+          exitZeroOnChanges: true
+          onlyChanged: true

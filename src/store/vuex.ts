@@ -3,7 +3,6 @@
 import { InjectionKey } from "vue";
 import {
   Store as BaseStore,
-  createStore as baseCreateStore,
   useStore as baseUseStore,
   ModuleTree,
   Plugin,
@@ -34,20 +33,28 @@ export class Store<
   A extends ActionsBase,
   M extends MutationsBase,
 > extends BaseStore<S> {
-  constructor(options: OriginalStoreOptions<S>) {
-    super(options);
+  constructor(options: StoreOptions<S, G, A, M>) {
+    super(options as OriginalStoreOptions<S>);
+    this.actions = dotNotationDispatchProxy(this.dispatch.bind(this));
+    this.mutations = dotNotationCommitProxy(this.commit.bind(this));
   }
 
-  readonly getters!: G;
+  declare readonly getters: G;
 
-  // 既に型がつけられているものを上書きすることになるので、TS2564を吐く、それの回避
-
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  dispatch: Dispatch<A>;
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  commit: Commit<M>;
+  // @ts-expect-error Storeの型を非互換な型で書き換えているためエラー
+  declare dispatch: Dispatch<A>;
+  // @ts-expect-error Storeの型を非互換な型で書き換えているためエラー
+  declare commit: Commit<M>;
+  /**
+   * ドット記法用のActionを直接呼べる。エラーになる場合はdispatchを使う。
+   * 詳細 https://github.com/VOICEVOX/voicevox/issues/2088
+   */
+  actions: DotNotationDispatch<A>;
+  /**
+   * ドット記法用のMutationを直接呼べる。エラーになる場合はcommitを使う。
+   * 詳細 https://github.com/VOICEVOX/voicevox/issues/2088
+   */
+  mutations: DotNotationCommit<M>;
 }
 
 export function createStore<
@@ -56,13 +63,7 @@ export function createStore<
   A extends ActionsBase,
   M extends MutationsBase,
 >(options: StoreOptions<S, G, A, M>): Store<S, G, A, M> {
-  // optionsをOriginalStoreOptions<S>で型キャストしないとTS2589を吐く
-  return baseCreateStore<S>(options as OriginalStoreOptions<S>) as Store<
-    S,
-    G,
-    A,
-    M
-  >;
+  return new Store<S, G, A, M>(options);
 }
 
 export function useStore<
@@ -71,7 +72,8 @@ export function useStore<
   A extends ActionsBase,
   M extends MutationsBase,
 >(injectKey?: InjectionKey<Store<S, G, A, M>> | string): Store<S, G, A, M> {
-  return baseUseStore<S>(injectKey) as Store<S, G, A, M>;
+  // FIXME: dispatchとcommitの型を戻せばsuper typeになるのでunknownを消せる。
+  return baseUseStore<S>(injectKey) as unknown as Store<S, G, A, M>;
 }
 
 export interface Dispatch<A extends ActionsBase> {
@@ -102,6 +104,45 @@ export interface Commit<M extends MutationsBase> {
         {}),
   ): void;
 }
+
+export type DotNotationDispatch<A extends ActionsBase> = {
+  [T in keyof A]: (
+    ...payload: Parameters<A[T]>
+  ) => Promise<PromiseType<ReturnType<A[T]>>>;
+};
+
+const dotNotationDispatchProxy = <A extends ActionsBase>(
+  dispatch: Dispatch<A>,
+): DotNotationDispatch<A> =>
+  new Proxy(
+    { dispatch },
+    {
+      get(target, tag: string) {
+        return (...payloads: Parameters<A[string]>) =>
+          target.dispatch(tag, ...payloads);
+      },
+    },
+  ) as DotNotationDispatch<A>;
+
+export type DotNotationCommit<M extends MutationsBase> = {
+  [T in keyof M]: (
+    ...payload: M[T] extends undefined ? void[] : [M[T]]
+  ) => void;
+};
+
+const dotNotationCommitProxy = <M extends MutationsBase>(
+  commit: Commit<M>,
+): DotNotationCommit<M> =>
+  new Proxy(
+    { commit },
+    {
+      get(target, tag: string) {
+        return (...payloads: [M[string]]) => {
+          target.commit(tag, ...payloads);
+        };
+      },
+    },
+  ) as DotNotationCommit<M>;
 
 export interface StoreOptions<
   S,
@@ -161,6 +202,49 @@ export interface ActionObject<
   handler: ActionHandler<S, R, SG, SA, SM, K>;
 }
 
+export type DotNotationActionContext<
+  S,
+  R,
+  SG extends GettersBase,
+  SA extends ActionsBase,
+  SM extends MutationsBase,
+> = {
+  /**
+   * ドット記法用のActionを直接呼べる。エラーになる場合はdispatchを使う。
+   * 詳細 https://github.com/VOICEVOX/voicevox/issues/2088
+   */
+  actions: DotNotationDispatch<SA>;
+  /**
+   * ドット記法用のMutationを直接呼べる。エラーになる場合はcommitを使う。
+   * 詳細 https://github.com/VOICEVOX/voicevox/issues/2088
+   */
+  mutations: DotNotationCommit<SM>;
+} & ActionContext<S, R, SG, SA, SM>;
+
+export type DotNotationActionHandler<
+  S,
+  R,
+  SG extends GettersBase,
+  SA extends ActionsBase,
+  SM extends MutationsBase,
+  K extends keyof SA,
+> = (
+  this: Store<S, SG, SA, SM>,
+  injectee: DotNotationActionContext<S, R, SG, SA, SM>,
+  payload: Parameters<SA[K]>[0],
+) => ReturnType<SA[K]>;
+export interface DotNotationActionObject<
+  S,
+  R,
+  SG extends GettersBase,
+  SA extends ActionsBase,
+  SM extends MutationsBase,
+  K extends keyof SA,
+> {
+  root?: boolean;
+  handler: DotNotationActionHandler<S, R, SG, SA, SM, K>;
+}
+
 export type Getter<S, R, G, K extends keyof G, SG extends GettersBase> = (
   state: S,
   getters: SG,
@@ -185,6 +269,64 @@ export type Mutation<S, M extends MutationsBase, K extends keyof M> = (
   state: S,
   payload: M[K],
 ) => void;
+
+export type DotNotationAction<
+  S,
+  R,
+  A extends ActionsBase,
+  K extends keyof A,
+  SG extends GettersBase,
+  SA extends ActionsBase,
+  SM extends MutationsBase,
+> =
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  | DotNotationActionHandler<S, R, SG, SA, SM, K>
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  | DotNotationActionObject<S, R, SG, SA, SM, K>;
+
+// ドット記法のActionを通常のActionに変換する関数
+const unwrapDotNotationAction = <
+  S,
+  R,
+  A extends ActionsBase,
+  K extends keyof A,
+  SG extends GettersBase,
+  SA extends ActionsBase,
+  SM extends MutationsBase,
+>(
+  dotNotationAction: DotNotationAction<S, R, A, K, SG, SA, SM>,
+): Action<S, R, A, K, SG, SA, SM> => {
+  const wrappedHandler =
+    typeof dotNotationAction === "function"
+      ? dotNotationAction
+      : dotNotationAction.handler;
+
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  const handler: ActionHandler<S, R, SG, SA, SM, K> = function (
+    injectee,
+    payload,
+  ) {
+    const dotNotationInjectee = {
+      ...injectee,
+      actions: dotNotationDispatchProxy(injectee.dispatch),
+      mutations: dotNotationCommitProxy(injectee.commit),
+    };
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return wrappedHandler.call(this, dotNotationInjectee, payload);
+  };
+
+  if (typeof dotNotationAction === "function") {
+    return handler;
+  } else {
+    return {
+      ...dotNotationAction,
+      handler,
+    };
+  }
+};
 
 export type GetterTree<
   S,
@@ -236,13 +378,14 @@ export type CustomMutationTree<S, M extends MutationsBase> = {
   [K in keyof M]: Mutation<S, M, K>;
 };
 
-type StoreTypesBase = {
-  [key: string]: {
+type StoreTypesBase = Record<
+  string,
+  {
     getter?: GettersBase[number];
     mutation?: MutationsBase[number];
     action?: ActionsBase[number];
-  };
-};
+  }
+>;
 
 type PartialStoreOptions<
   S,
@@ -258,7 +401,7 @@ type PartialStoreOptions<
         : never
       : GAM extends "action"
         ? K extends keyof A
-          ? Action<S, S, A, K, AllGetters, AllActions, AllMutations>
+          ? DotNotationAction<S, S, A, K, AllGetters, AllActions, AllMutations>
           : never
         : GAM extends "mutation"
           ? K extends keyof M
@@ -281,20 +424,26 @@ export const createPartialStore = <
       const option = options[cur];
 
       if (option.getter) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         acc.getters[cur] = option.getter;
       }
       if (option.mutation) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         acc.mutations[cur] = option.mutation;
       }
       if (option.action) {
-        acc.actions[cur] = option.action;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+        acc.actions[cur] = unwrapDotNotationAction(option.action);
       }
 
       return acc;
     },
     {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       getters: Object.create(null),
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       mutations: Object.create(null),
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       actions: Object.create(null),
     },
   );

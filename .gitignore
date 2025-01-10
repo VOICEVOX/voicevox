@@ -16,6 +16,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+*storybook.log
 
 # Editor directories and files
 .idea
@@ -40,3 +41,12 @@ electron-builder.yml
 
 # generated licenses.json
 /*licenses.json
+
+# Storybook
+storybook-static/
+
+# Preview Build Output
+dist_preview/
+
+# Downloaded binaries
+vendored

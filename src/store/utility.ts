@@ -1,16 +1,19 @@
-import path from "path";
-import { Platform } from "quasar";
 import * as diff from "fast-array-diff";
 import {
   CharacterInfo,
+  PresetSliderKey,
   StyleInfo,
   StyleType,
   ToolbarButtonTagType,
-  isMac,
 } from "@/type/preload";
-import { AccentPhrase, Mora } from "@/openapi";
+import { AccentPhrase, FramePhoneme, Mora } from "@/openapi";
+import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
+import { DEFAULT_TRACK_NAME, isVowel } from "@/sing/domain";
+import { isMac } from "@/helpers/platform";
+import { generateTextFileData } from "@/helpers/fileDataGenerator";
 
 export const DEFAULT_STYLE_NAME = "ノーマル";
+export const DEFAULT_PROJECT_NAME = "Untitled";
 
 export const formatCharacterStyleName = (
   characterName: string,
@@ -39,14 +42,23 @@ export function sanitizeFileName(fileName: string): string {
   return fileName.replace(sanitizer, "");
 }
 
+type SliderParameter = {
+  max: () => number;
+  min: () => number;
+  step: () => number;
+  scrollStep: () => number;
+  scrollMinStep?: () => number;
+};
+
 /**
  * AudioInfoコンポーネントに表示されるパラメータ
+ * TODO: src/domain/talk.ts辺りに切り出す
  */
-export const SLIDER_PARAMETERS = {
+export const SLIDER_PARAMETERS: Record<PresetSliderKey, SliderParameter> = {
   /**
    * 話速パラメータの定義
    */
-  SPEED: {
+  speedScale: {
     max: () => 2,
     min: () => 0.5,
     step: () => 0.01,
@@ -56,7 +68,7 @@ export const SLIDER_PARAMETERS = {
   /**
    * 音高パラメータの定義
    */
-  PITCH: {
+  pitchScale: {
     max: () => 0.15,
     min: () => -0.15,
     step: () => 0.01,
@@ -65,7 +77,7 @@ export const SLIDER_PARAMETERS = {
   /**
    *  抑揚パラメータの定義
    */
-  INTONATION: {
+  intonationScale: {
     max: () => 2,
     min: () => 0,
     step: () => 0.01,
@@ -75,7 +87,17 @@ export const SLIDER_PARAMETERS = {
   /**
    *  音量パラメータの定義
    */
-  VOLUME: {
+  volumeScale: {
+    max: () => 2,
+    min: () => 0,
+    step: () => 0.01,
+    scrollStep: () => 0.1,
+    scrollMinStep: () => 0.01,
+  },
+  /**
+   *  文内無音(倍率)パラメータの定義
+   */
+  pauseLengthScale: {
     max: () => 2,
     min: () => 0,
     step: () => 0.01,
@@ -85,7 +107,7 @@ export const SLIDER_PARAMETERS = {
   /**
    *  開始無音パラメータの定義
    */
-  PRE_PHONEME_LENGTH: {
+  prePhonemeLength: {
     max: () => 1.5,
     min: () => 0,
     step: () => 0.01,
@@ -95,7 +117,7 @@ export const SLIDER_PARAMETERS = {
   /**
    *  終了無音パラメータの定義
    */
-  POST_PHONEME_LENGTH: {
+  postPhonemeLength: {
     max: () => 1.5,
     min: () => 0,
     step: () => 0.01,
@@ -105,7 +127,7 @@ export const SLIDER_PARAMETERS = {
   /**
    *  モーフィングレートパラメータの定義
    */
-  MORPHING_RATE: {
+  morphingRate: {
     max: () => 1,
     min: () => 0,
     step: () => 0.01,
@@ -120,26 +142,40 @@ export const replaceTagIdToTagString = {
   styleName: "スタイル",
   text: "テキスト",
   date: "日付",
+  projectName: "プロジェクト名",
+  trackName: "トラック名",
 };
-const replaceTagStringToTagId: { [tagString: string]: string } = Object.entries(
+const replaceTagStringToTagId: Record<string, string> = Object.entries(
   replaceTagIdToTagString,
 ).reduce((prev, [k, v]) => ({ ...prev, [v]: k }), {});
 
-export const DEFAULT_AUDIO_FILE_BASE_NAME_TEMPLATE =
+export const DEFAULT_AUDIO_FILE_NAME_TEMPLATE =
   "$連番$_$キャラ$（$スタイル$）_$テキスト$";
-export const DEFAULT_AUDIO_FILE_NAME_TEMPLATE = `${DEFAULT_AUDIO_FILE_BASE_NAME_TEMPLATE}.wav`;
 const DEFAULT_AUDIO_FILE_NAME_VARIABLES = {
   index: 0,
   characterName: "四国めたん",
   text: "テキストテキストテキスト",
   styleName: DEFAULT_STYLE_NAME,
   date: currentDateString(),
+  projectName: "VOICEVOXプロジェクト",
+};
+
+export const DEFAULT_SONG_AUDIO_FILE_NAME_TEMPLATE =
+  "$連番$_$キャラ$（$スタイル$）_$トラック名$";
+const DEFAULT_SONG_AUDIO_FILE_NAME_VARIABLES = {
+  index: 0,
+  characterName: "四国めたん",
+  trackName: DEFAULT_TRACK_NAME,
+  styleName: DEFAULT_STYLE_NAME,
+  date: currentDateString(),
+  projectName: "VOICEVOXプロジェクト",
 };
 
 export function currentDateString(): string {
   const currentDate = new Date();
   const year = currentDate.getFullYear();
-  const month = currentDate.getMonth().toString().padStart(2, "0");
+  // NOTE: getMonth()は0から始まるので1を足す
+  const month = (currentDate.getMonth() + 1).toString().padStart(2, "0");
   const date = currentDate.getDate().toString().padStart(2, "0");
 
   return `${year}${month}${date}`;
@@ -147,9 +183,9 @@ export function currentDateString(): string {
 
 function replaceTag(
   template: string,
-  replacer: { [key: string]: string },
+  replacer: Record<string, string>,
 ): string {
-  const result = template.replace(/\$(.+?)\$/g, (match, p1) => {
+  const result = template.replace(/\$(.+?)\$/g, (match, p1: string) => {
     const replaceTagId = replaceTagStringToTagId[p1];
     if (replaceTagId == undefined) {
       return match;
@@ -226,8 +262,8 @@ export class TuningTranscription {
   beforeAccent: AccentPhrase[];
   afterAccent: AccentPhrase[];
   constructor(beforeAccent: AccentPhrase[], afterAccent: AccentPhrase[]) {
-    this.beforeAccent = JSON.parse(JSON.stringify(beforeAccent));
-    this.afterAccent = JSON.parse(JSON.stringify(afterAccent));
+    this.beforeAccent = cloneWithUnwrapProxy(beforeAccent);
+    this.afterAccent = cloneWithUnwrapProxy(afterAccent);
   }
 
   /**
@@ -323,6 +359,33 @@ export function isAccentPhrasesTextDifferent(
   return false;
 }
 
+function formatCommonFileNameFromRawData(commonVars: {
+  characterName: string;
+  index: number;
+  styleName: string;
+  date: string;
+  projectName: string;
+}): {
+  characterName: string;
+  index: string;
+  styleName: string;
+  date: string;
+  projectName: string;
+} {
+  const characterName = sanitizeFileName(commonVars.characterName);
+  const index = (commonVars.index + 1).toString().padStart(3, "0");
+  const styleName = sanitizeFileName(commonVars.styleName);
+  const date = commonVars.date;
+  const projectName = sanitizeFileName(commonVars.projectName);
+  return {
+    characterName,
+    index,
+    styleName,
+    date,
+    projectName,
+  };
+}
+
 export function buildAudioFileNameFromRawData(
   fileNamePattern = DEFAULT_AUDIO_FILE_NAME_TEMPLATE,
   vars = DEFAULT_AUDIO_FILE_NAME_VARIABLES,
@@ -338,16 +401,34 @@ export function buildAudioFileNameFromRawData(
     text = text.substring(0, 9) + "…";
   }
 
-  const characterName = sanitizeFileName(vars.characterName);
-  const index = (vars.index + 1).toString().padStart(3, "0");
-  const styleName = sanitizeFileName(vars.styleName);
-  const date = vars.date;
+  const commonVars = formatCommonFileNameFromRawData(vars);
+
   return replaceTag(pattern, {
+    ...commonVars,
     text,
-    characterName,
-    index,
-    styleName,
-    date,
+  });
+}
+
+export function buildSongTrackAudioFileNameFromRawData(
+  fileNamePattern = DEFAULT_SONG_AUDIO_FILE_NAME_TEMPLATE,
+  vars = DEFAULT_SONG_AUDIO_FILE_NAME_VARIABLES,
+): string {
+  let pattern = fileNamePattern;
+  if (pattern === "") {
+    // ファイル名指定のオプションが初期値("")ならデフォルトテンプレートを使う
+    pattern = DEFAULT_SONG_AUDIO_FILE_NAME_TEMPLATE;
+  }
+
+  let trackName = sanitizeFileName(vars.trackName);
+  if (trackName.length > 10) {
+    trackName = trackName.substring(0, 9) + "…";
+  }
+
+  const commonVars = formatCommonFileNameFromRawData(vars);
+
+  return replaceTag(pattern, {
+    ...commonVars,
+    trackName,
   });
 }
 
@@ -377,67 +458,6 @@ export const getToolbarButtonName = (tag: ToolbarButtonTagType): string => {
     EMPTY: "空白",
   };
   return tag2NameObj[tag];
-};
-
-export const createKanaRegex = (includeSeparation?: boolean): RegExp => {
-  // 以下の文字のみで構成される場合、「読み仮名」としてこれを処理する
-  // includeSeparationがtrueの時は、読点(U+3001)とクエスチョン(U+FF1F)も含む
-  //  * ひらがな(U+3041~U+3094)
-  //  * カタカナ(U+30A1~U+30F4)
-  //  * 全角長音(U+30FC)
-  if (includeSeparation) {
-    return /^[\u3041-\u3094\u30A1-\u30F4\u30FC\u3001\uFF1F]+$/;
-  }
-  return /^[\u3041-\u3094\u30A1-\u30F4\u30FC]+$/;
-};
-
-export const convertHiraToKana = (text: string): string => {
-  return text.replace(/[\u3041-\u3094]/g, (s) => {
-    return String.fromCharCode(s.charCodeAt(0) + 0x60);
-  });
-};
-
-export const convertLongVowel = (text: string): string => {
-  return text
-    .replace(/(?<=[アカサタナハマヤラワャァガザダバパ]ー*)ー/g, "ア")
-    .replace(/(?<=[イキシチニヒミリィギジヂビピ]ー*)ー/g, "イ")
-    .replace(/(?<=[ウクスツヌフムユルュゥヴグズヅブプ]ー*)ー/g, "ウ")
-    .replace(/(?<=[エケセテネヘメレェゲゼデベペ]ー*)ー/g, "エ")
-    .replace(/(?<=[オコソトノホモヨロヲョォゴゾドボポ]ー*)ー/g, "オ")
-    .replace(/(?<=[ン]ー*)ー/g, "ン")
-    .replace(/(?<=[ッ]ー*)ー/g, "ッ")
-    .replace(/(?<=[あかさたなはまやらわゃぁがざだばぱ]ー*)ー/g, "あ")
-    .replace(/(?<=[いきしちにひみりぃぎじぢびぴ]ー*)ー/g, "い")
-    .replace(/(?<=[うくすつぬふむゆるゅぅぐずづぶぷ]ー*)ー/g, "う")
-    .replace(/(?<=[えけせてねへめれぇげぜでべぺ]ー*)ー/g, "え")
-    .replace(/(?<=[おこそとのほもよろをょぉごぞどぼぽ]ー*)ー/g, "お")
-    .replace(/(?<=[ん]ー*)ー/g, "ん")
-    .replace(/(?<=[っ]ー*)ー/g, "っ");
-};
-
-// based on https://github.com/BBWeb/path-browserify/blob/win-version/index.js
-export const getBaseName = (filePath: string) => {
-  if (!Platform.is.win) return path.basename(filePath);
-
-  const splitDeviceRegex =
-    /^([a-zA-Z]:|[\\/]{2}[^\\/]+[\\/]+[^\\/]+)?([\\/])?([\s\S]*?)$/;
-  const splitTailRegex =
-    /^([\s\S]*?)((?:\.{1,2}|[^\\/]+?|)(\.[^./\\]*|))(?:[\\/]*)$/;
-
-  const resultOfSplitDeviceRegex = splitDeviceRegex.exec(filePath);
-  if (
-    resultOfSplitDeviceRegex == undefined ||
-    resultOfSplitDeviceRegex.length < 3
-  )
-    return "";
-  const tail = resultOfSplitDeviceRegex[3] || "";
-
-  const resultOfSplitTailRegex = splitTailRegex.exec(tail);
-  if (resultOfSplitTailRegex == undefined || resultOfSplitTailRegex.length < 2)
-    return "";
-  const basename = resultOfSplitTailRegex[2] || "";
-
-  return basename;
 };
 
 /**
@@ -494,3 +514,28 @@ export const filterCharacterInfosByStyleType = (
 
   return withoutEmptyStyles;
 };
+
+export async function generateLabelFileDataFromFramePhonemes(
+  phonemes: FramePhoneme[],
+  frameRate: number,
+) {
+  let labString = "";
+  let timestamp = 0;
+
+  const writeLine = (phonemeLengthSeconds: number, phoneme: string) => {
+    labString += timestamp.toFixed() + " ";
+    timestamp += phonemeLengthSeconds * 1e7; // 100ns単位に変換
+    labString += timestamp.toFixed() + " ";
+    labString += phoneme + "\n";
+  };
+
+  for (const phoneme of phonemes) {
+    if (isVowel(phoneme.phoneme) && phoneme.phoneme !== "N") {
+      writeLine(phoneme.frameLength / frameRate, phoneme.phoneme.toLowerCase());
+    } else {
+      writeLine(phoneme.frameLength / frameRate, phoneme.phoneme);
+    }
+  }
+
+  return await generateTextFileData({ text: labString });
+}

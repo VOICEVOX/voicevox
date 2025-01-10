@@ -1,8 +1,8 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * VOICEVOX Engine
- * VOICEVOXの音声合成エンジンです。
+ * DUMMY Engine
+ * DUMMY の音声合成エンジンです。
  *
  * The version of the OpenAPI document: latest
  * 
@@ -27,43 +27,43 @@ import {
  */
 export interface AudioQuery {
     /**
-     * 
+     * アクセント句のリスト
      * @type {Array<AccentPhrase>}
      * @memberof AudioQuery
      */
     accentPhrases: Array<AccentPhrase>;
     /**
-     * 
+     * 全体の話速
      * @type {number}
      * @memberof AudioQuery
      */
     speedScale: number;
     /**
-     * 
+     * 全体の音高
      * @type {number}
      * @memberof AudioQuery
      */
     pitchScale: number;
     /**
-     * 
+     * 全体の抑揚
      * @type {number}
      * @memberof AudioQuery
      */
     intonationScale: number;
     /**
-     * 
+     * 全体の音量
      * @type {number}
      * @memberof AudioQuery
      */
     volumeScale: number;
     /**
-     * 
+     * 音声の前の無音時間
      * @type {number}
      * @memberof AudioQuery
      */
     prePhonemeLength: number;
     /**
-     * 
+     * 音声の後の無音時間
      * @type {number}
      * @memberof AudioQuery
      */
@@ -73,15 +73,27 @@ export interface AudioQuery {
      * @type {number}
      * @memberof AudioQuery
      */
+    pauseLength?: number | null;
+    /**
+     * 句読点などの無音時間（倍率）。デフォルト値は1
+     * @type {number}
+     * @memberof AudioQuery
+     */
+    pauseLengthScale?: number;
+    /**
+     * 音声データの出力サンプリングレート
+     * @type {number}
+     * @memberof AudioQuery
+     */
     outputSamplingRate: number;
     /**
-     * 
+     * 音声データをステレオ出力するか否か
      * @type {boolean}
      * @memberof AudioQuery
      */
     outputStereo: boolean;
     /**
-     * 
+     * [読み取り専用]AquesTalk 風記法によるテキスト。音声合成用のクエリとしては無視される
      * @type {string}
      * @memberof AudioQuery
      */
@@ -123,6 +135,8 @@ export function AudioQueryFromJSONTyped(json: any, ignoreDiscriminator: boolean)
         'volumeScale': json['volumeScale'],
         'prePhonemeLength': json['prePhonemeLength'],
         'postPhonemeLength': json['postPhonemeLength'],
+        'pauseLength': !exists(json, 'pauseLength') ? undefined : json['pauseLength'],
+        'pauseLengthScale': !exists(json, 'pauseLengthScale') ? undefined : json['pauseLengthScale'],
         'outputSamplingRate': json['outputSamplingRate'],
         'outputStereo': json['outputStereo'],
         'kana': !exists(json, 'kana') ? undefined : json['kana'],
@@ -145,6 +159,8 @@ export function AudioQueryToJSON(value?: AudioQuery | null): any {
         'volumeScale': value.volumeScale,
         'prePhonemeLength': value.prePhonemeLength,
         'postPhonemeLength': value.postPhonemeLength,
+        'pauseLength': value.pauseLength,
+        'pauseLengthScale': value.pauseLengthScale,
         'outputSamplingRate': value.outputSamplingRate,
         'outputStereo': value.outputStereo,
         'kana': value.kana,

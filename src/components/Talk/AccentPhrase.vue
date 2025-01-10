@@ -1,8 +1,11 @@
 <template>
   <div
     ref="container"
-    class="mora-table"
-    :class="[isActive && 'mora-table-focus', uiLocked || 'mora-table-hover']"
+    class="accent-phrase"
+    :class="[
+      isActive && 'accent-phrase-focus',
+      uiLocked || 'accent-phrase-hover',
+    ]"
     @click="$emit('click', index)"
   >
     <ContextMenu :menudata="contextMenudata" />
@@ -10,11 +13,11 @@
     <!-- ｱｸｾﾝﾄ項目のスライダー -->
     <template v-if="selectedDetail === 'accent'">
       <AudioAccent
-        :accent-phrase-index="index"
-        :accent-phrase="accentPhrase"
-        :ui-locked="uiLocked"
-        :shift-key-flag="shiftKeyFlag"
-        :on-change-accent="changeAccent"
+        :accentPhraseIndex="index"
+        :accentPhrase
+        :uiLocked
+        :shiftKeyFlag
+        :onChangeAccent="changeAccent"
       />
     </template>
     <!-- ｲﾝﾄﾈｰｼｮﾝ項目のスライダー -->
@@ -26,16 +29,16 @@
         :style="{ 'grid-column': `${moraIndex * 2 + 1} / span 1` }"
       >
         <AudioParameter
-          :mora-index="moraIndex"
+          :moraIndex
           :value="mora.pitch"
-          :ui-locked="uiLocked"
+          :uiLocked
           :min="minPitch"
           :max="maxPitch"
           :disable="mora.pitch == 0.0"
           :type="'pitch'"
           :clip="false"
-          :shift-key-flag="shiftKeyFlag"
-          @change-value="changeMoraData"
+          :shiftKeyFlag
+          @changeValue="changeMoraData"
         />
       </div>
       <div v-if="accentPhrase.pauseMora" />
@@ -51,31 +54,31 @@
         <!-- consonant length -->
         <AudioParameter
           v-if="mora.consonant && mora.consonantLength != undefined"
-          :mora-index="moraIndex"
+          :moraIndex
           :value="mora.consonantLength"
-          :ui-locked="uiLocked"
+          :uiLocked
           :min="minMoraLength"
           :max="maxMoraLength"
           :step="0.001"
           :type="'consonant'"
           :clip="true"
-          :shift-key-flag="shiftKeyFlag"
-          @change-value="changeMoraData"
-          @mouse-over="handleLengthHoverText"
+          :shiftKeyFlag
+          @changeValue="changeMoraData"
+          @mouseOver="handleLengthHoverText"
         />
         <!-- vowel length -->
         <AudioParameter
-          :mora-index="moraIndex"
+          :moraIndex
           :value="mora.vowelLength"
-          :ui-locked="uiLocked"
+          :uiLocked
           :min="minMoraLength"
           :max="maxMoraLength"
           :step="0.001"
           :type="'vowel'"
           :clip="mora.consonant ? true : false"
-          :shift-key-flag="shiftKeyFlag"
-          @change-value="changeMoraData"
-          @mouse-over="handleLengthHoverText"
+          :shiftKeyFlag
+          @changeValue="changeMoraData"
+          @mouseOver="handleLengthHoverText"
         />
       </div>
       <div
@@ -87,15 +90,15 @@
       >
         <!-- pause length -->
         <AudioParameter
-          :mora-index="accentPhrase.moras.length"
+          :moraIndex="accentPhrase.moras.length"
           :value="accentPhrase.pauseMora.vowelLength"
-          :ui-locked="uiLocked"
+          :uiLocked
           :min="0"
           :max="1.0"
           :step="0.01"
           :type="'pause'"
-          :shift-key-flag="shiftKeyFlag"
-          @change-value="changeMoraData"
+          :shiftKeyFlag
+          @changeValue="changeMoraData"
         />
       </div>
     </template>
@@ -120,15 +123,15 @@
             selectedDetail === 'pitch' && !unvoicableVowels.includes(mora.vowel)
           "
           :delay="500"
-          transition-show="jump-up"
-          transition-hide="jump-down"
+          transitionShow="jump-up"
+          transitionHide="jump-down"
           >イ段とウ段以外の音は無声化できません</QTooltip
         >
         <QTooltip
           v-if="selectedDetail === 'length'"
           :delay="500"
-          transition-show="jump-up"
-          transition-hide="jump-down"
+          transitionShow="jump-up"
+          transitionHide="jump-down"
           >読みの変更はアクセント項目でのみ、<br />無声化はイントネーション項目でのみ操作できます</QTooltip
         >
         <span class="text-cell-inner">
@@ -137,16 +140,16 @@
         <QPopupEdit
           v-if="selectedDetail == 'accent' && !uiLocked"
           v-slot="scope"
-          :model-value="pronunciation"
-          auto-save
-          transition-show="none"
-          transition-hide="none"
+          :modelValue="pronunciation"
+          autoSave
+          transitionShow="none"
+          transitionHide="none"
           @save="handleChangePronounce($event)"
         >
           <QInput
             v-model="scope.value"
             dense
-            :input-style="{
+            :inputStyle="{
               width: `${scope.value.length + 1}em`,
               minWidth: '50px',
             }"
@@ -179,15 +182,15 @@
         <QTooltip
           v-if="selectedDetail === 'pitch'"
           :delay="500"
-          transition-show="jump-up"
-          transition-hide="jump-down"
+          transitionShow="jump-up"
+          transitionHide="jump-down"
           >イ段とウ段以外の音は無声化できません</QTooltip
         >
         <QTooltip
           v-if="selectedDetail === 'length'"
           :delay="500"
-          transition-show="jump-up"
-          transition-hide="jump-down"
+          transitionShow="jump-up"
+          transitionHide="jump-down"
           >読みの変更はアクセント項目でのみ、<br />無声化はイントネーション項目でのみ操作できます</QTooltip
         >
         <span class="text-cell-inner">
@@ -208,7 +211,7 @@ import { computed, ref } from "vue";
 import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
 import { MenuItemButton } from "@/components/Menu/type";
-import ContextMenu from "@/components/Menu/ContextMenu.vue";
+import ContextMenu from "@/components/Menu/ContextMenu/Container.vue";
 import { useStore } from "@/store";
 import { AudioKey, MoraDataType } from "@/type/preload";
 import { Mora } from "@/openapi/models/Mora";
@@ -245,7 +248,7 @@ const contextMenudata = ref<[MenuItemButton]>([
     type: "button",
     label: "削除",
     onClick: () => {
-      store.dispatch("COMMAND_DELETE_ACCENT_PHRASE", {
+      void store.actions.COMMAND_DELETE_ACCENT_PHRASE({
         audioKey: props.audioKey,
         accentPhraseIndex: props.index,
       });
@@ -278,7 +281,7 @@ const handleChangePronounce = (newPronunciation: string) => {
       popUntilPause = true;
     }
   }
-  store.dispatch("COMMAND_CHANGE_SINGLE_ACCENT_PHRASE", {
+  void store.actions.COMMAND_CHANGE_SINGLE_ACCENT_PHRASE({
     audioKey: props.audioKey,
     newPronunciation,
     accentPhraseIndex: props.index,
@@ -345,13 +348,13 @@ const getHoveredText = (mora: Mora, moraIndex: number) => {
 };
 
 const changeAccent = (accentPhraseIndex: number, accent: number) =>
-  store.dispatch("COMMAND_CHANGE_ACCENT", {
+  store.actions.COMMAND_CHANGE_ACCENT({
     audioKey: props.audioKey,
     accentPhraseIndex,
     accent,
   });
 const toggleAccentPhraseSplit = (isPause: boolean, moraIndex?: number) => {
-  store.dispatch("COMMAND_CHANGE_ACCENT_PHRASE_SPLIT", {
+  void store.actions.COMMAND_CHANGE_ACCENT_PHRASE_SPLIT({
     audioKey: props.audioKey,
     accentPhraseIndex: props.index,
     ...(!isPause ? { isPause, moraIndex: moraIndex as number } : { isPause }),
@@ -376,7 +379,7 @@ const changeMoraData = (
     if (type == "pitch") {
       lastPitches.value[moraIndex] = data;
     }
-    return store.dispatch("COMMAND_SET_AUDIO_MORA_DATA", {
+    return store.actions.COMMAND_SET_AUDIO_MORA_DATA({
       audioKey: props.audioKey,
       accentPhraseIndex,
       moraIndex,
@@ -384,7 +387,7 @@ const changeMoraData = (
       type,
     });
   } else {
-    return store.dispatch("COMMAND_SET_AUDIO_MORA_DATA_ACCENT_PHRASE", {
+    return store.actions.COMMAND_SET_AUDIO_MORA_DATA_ACCENT_PHRASE({
       audioKey: props.audioKey,
       accentPhraseIndex,
       moraIndex,
@@ -408,7 +411,7 @@ const handleChangeVoicing = (mora: Mora, moraIndex: number) => {
         data = lastPitches.value[moraIndex];
       }
     }
-    changeMoraData(moraIndex, data, "voicing");
+    void changeMoraData(moraIndex, data, "voicing");
   }
 };
 </script>
@@ -468,7 +471,7 @@ const handleChangeVoicing = (mora: Mora, moraIndex: number) => {
   position: relative;
 }
 
-.mora-table {
+.accent-phrase {
   display: inline-grid;
   align-self: stretch;
   grid-template-rows: 1fr 60px 30px;
@@ -478,12 +481,12 @@ const handleChangeVoicing = (mora: Mora, moraIndex: number) => {
   }
 }
 
-.mora-table-hover:hover {
+.accent-phrase-hover:hover {
   cursor: pointer;
   background-color: colors.$active-point-hover;
 }
 
-.mora-table-focus {
+.accent-phrase-focus {
   // hover色に負けるので、importantが必要
   background-color: colors.$active-point-focus !important;
 }

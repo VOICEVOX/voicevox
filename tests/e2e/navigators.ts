@@ -35,10 +35,9 @@ export async function toggleSetting(page: Page, settingName: string) {
   await page.getByText("オプション").click();
   await page.waitForTimeout(100);
   await page
-    .locator(".q-card__actions", {
+    .locator(".row-card", {
       has: page.getByText(settingName),
     })
-    .locator(".q-toggle")
     .click();
   await page.waitForTimeout(100);
   await page.getByRole("button", { name: "設定を閉じる" }).click();
@@ -56,9 +55,9 @@ export async function navigateToHelpDialog(page: Page) {
 }
 
 /**
- * オプションダイアログの表示まで移動
+ * 設定ダイアログの表示まで移動
  */
-export async function navigateToOptionDialog(page: Page) {
+export async function navigateToSettingDialog(page: Page) {
   await navigateToMain(page);
   await page.waitForTimeout(100);
   await page.getByRole("button", { name: "設定" }).click();

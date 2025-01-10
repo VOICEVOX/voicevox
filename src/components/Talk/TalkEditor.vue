@@ -5,32 +5,30 @@
     <QPageContainer>
       <QPage class="main-row-panes">
         <ProgressView />
-        <EngineStartupOverlay
-          :is-completed-initial-startup="isCompletedInitialStartup"
-        />
+        <EngineStartupOverlay :isCompletedInitialStartup />
 
         <QSplitter
           horizontal
           reverse
           unit="px"
           :limits="[audioDetailPaneMinHeight, audioDetailPaneMaxHeight]"
-          separator-class="home-splitter"
-          :separator-style="{ height: shouldShowPanes ? '3px' : '0' }"
+          separatorClass="home-splitter"
+          :separatorStyle="{ height: shouldShowPanes ? '3px' : '0' }"
           class="full-width"
-          before-class="overflow-hidden"
+          beforeClass="overflow-hidden"
           :disable="!shouldShowPanes"
-          :model-value="audioDetailPaneHeight"
-          @update:model-value="updateAudioDetailPane"
+          :modelValue="audioDetailPaneHeight"
+          @update:modelValue="updateAudioDetailPane"
         >
           <template #before>
             <QSplitter
               :limits="[MIN_PORTRAIT_PANE_WIDTH, MAX_PORTRAIT_PANE_WIDTH]"
-              separator-class="home-splitter"
-              :separator-style="{ width: shouldShowPanes ? '3px' : '0' }"
-              before-class="overflow-hidden"
+              separatorClass="home-splitter"
+              :separatorStyle="{ width: shouldShowPanes ? '3px' : '0' }"
+              beforeClass="overflow-hidden"
               :disable="!shouldShowPanes"
-              :model-value="portraitPaneWidth"
-              @update:model-value="updatePortraitPane"
+              :modelValue="portraitPaneWidth"
+              @update:modelValue="updatePortraitPane"
             >
               <template #before>
                 <CharacterPortrait />
@@ -40,12 +38,12 @@
                   reverse
                   unit="px"
                   :limits="[audioInfoPaneMinWidth, audioInfoPaneMaxWidth]"
-                  separator-class="home-splitter"
-                  :separator-style="{ width: shouldShowPanes ? '3px' : '0' }"
+                  separatorClass="home-splitter"
+                  :separatorStyle="{ width: shouldShowPanes ? '3px' : '0' }"
                   class="full-width overflow-hidden"
                   :disable="!shouldShowPanes"
-                  :model-value="audioInfoPaneWidth"
-                  @update:model-value="updateAudioInfoPane"
+                  :modelValue="audioInfoPaneWidth"
+                  @update:modelValue="updateAudioInfoPane"
                 >
                   <template #before>
                     <div
@@ -63,19 +61,19 @@
                       <Draggable
                         ref="cellsRef"
                         class="audio-cells"
-                        :model-value="audioKeys"
-                        :item-key="itemKey"
-                        ghost-class="ghost"
+                        :modelValue="audioKeys"
+                        :itemKey
+                        ghostClass="ghost"
                         filter="input"
-                        :prevent-on-filter="false"
-                        @update:model-value="updateAudioKeys"
+                        :preventOnFilter="false"
+                        @update:modelValue="updateAudioKeys"
                       >
                         <template #item="{ element }">
                           <AudioCell
                             :ref="addAudioCellRef"
                             class="draggable-cursor"
-                            :audio-key="element"
-                            @focus-cell="focusCell"
+                            :audioKey="element"
+                            @focusCell="focusCell"
                           />
                         </template>
                       </Draggable>
@@ -87,7 +85,7 @@
                           fab
                           icon="add"
                           color="primary"
-                          text-color="display-on-primary"
+                          textColor="display-on-primary"
                           :disable="uiLocked"
                           aria-label="テキストを追加"
                           @click="addAudioItem"
@@ -98,7 +96,7 @@
                   <template #after>
                     <AudioInfo
                       v-if="activeAudioKey != undefined"
-                      :active-audio-key="activeAudioKey"
+                      :activeAudioKey
                     />
                   </template>
                 </QSplitter>
@@ -106,10 +104,7 @@
             </QSplitter>
           </template>
           <template #after>
-            <AudioDetail
-              v-if="activeAudioKey != undefined"
-              :active-audio-key="activeAudioKey"
-            />
+            <AudioDetail v-if="activeAudioKey != undefined" :activeAudioKey />
           </template>
         </QSplitter>
 
@@ -123,11 +118,9 @@
 </template>
 
 <script setup lang="ts">
-import path from "path";
-import { computed, onBeforeUpdate, ref, VNodeRef, watch } from "vue";
+import { computed, onBeforeUpdate, ref, toRaw, VNodeRef, watch } from "vue";
 import Draggable from "vuedraggable";
 import { QResizeObserver } from "quasar";
-import cloneDeep from "clone-deep";
 import AudioCell from "./AudioCell.vue";
 import AudioDetail from "./AudioDetail.vue";
 import AudioInfo from "./AudioInfo.vue";
@@ -142,11 +135,15 @@ import {
   PresetKey,
   SplitterPositionType,
   Voice,
-  HotkeyActionNameType,
-  actionPostfixSelectNthCharacter,
 } from "@/type/preload";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import onetimeWatch from "@/helpers/onetimeWatch";
+import path from "@/helpers/path";
+import {
+  actionPostfixSelectNthCharacter,
+  HotkeyActionNameType,
+} from "@/domain/hotkeyAction";
+import { isElectron } from "@/helpers/platform";
 
 const props = defineProps<{
   isEnginesReady: boolean;
@@ -158,6 +155,10 @@ const store = useStore();
 const audioKeys = computed(() => store.state.audioKeys);
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
+const isMultiSelectEnabled = computed(
+  () => store.state.experimentalSetting.enableMultiSelect,
+);
+
 const { registerHotkeyWithCleanup } = useHotkeyManager();
 
 registerHotkeyWithCleanup({
@@ -165,7 +166,7 @@ registerHotkeyWithCleanup({
   name: "音声書き出し",
   callback: () => {
     if (!uiLocked.value) {
-      store.dispatch("SHOW_GENERATE_AND_SAVE_ALL_AUDIO_DIALOG");
+      void store.actions.SHOW_GENERATE_AND_SAVE_ALL_AUDIO_DIALOG();
     }
   },
 });
@@ -174,7 +175,7 @@ registerHotkeyWithCleanup({
   name: "選択音声を書き出し",
   callback: () => {
     if (!uiLocked.value) {
-      store.dispatch("SHOW_GENERATE_AND_SAVE_SELECTED_AUDIO_DIALOG");
+      void store.actions.SHOW_GENERATE_AND_SAVE_SELECTED_AUDIO_DIALOG();
     }
   },
 });
@@ -183,7 +184,7 @@ registerHotkeyWithCleanup({
   name: "音声を繋げて書き出し",
   callback: () => {
     if (!uiLocked.value) {
-      store.dispatch("SHOW_GENERATE_AND_CONNECT_ALL_AUDIO_DIALOG");
+      void store.actions.SHOW_GENERATE_AND_CONNECT_ALL_AUDIO_DIALOG();
     }
   },
 });
@@ -192,7 +193,7 @@ registerHotkeyWithCleanup({
   name: "テキストを読み込む",
   callback: () => {
     if (!uiLocked.value) {
-      store.dispatch("SHOW_CONNECT_AND_EXPORT_TEXT_DIALOG");
+      void store.actions.SHOW_CONNECT_AND_EXPORT_TEXT_DIALOG();
     }
   },
 });
@@ -212,7 +213,7 @@ registerHotkeyWithCleanup({
   name: "テキスト欄を複製",
   callback: () => {
     if (activeAudioKey.value != undefined) {
-      duplicateAudioItem();
+      void duplicateAudioItem();
     }
   },
 });
@@ -222,7 +223,7 @@ registerHotkeyWithCleanup({
   name: "テキスト欄を追加",
   callback: () => {
     if (!uiLocked.value) {
-      addAudioItem();
+      void addAudioItem();
     }
   },
 });
@@ -232,7 +233,7 @@ registerHotkeyWithCleanup({
   name: "テキスト欄を削除",
   callback: () => {
     if (!uiLocked.value) {
-      removeAudioItem();
+      void removeAudioItem();
     }
   },
 });
@@ -251,10 +252,10 @@ registerHotkeyWithCleanup({
 registerHotkeyWithCleanup({
   editor: "talk",
   enableInTextbox: false,
-  name: "全セルを選択",
+  name: "すべて選択",
   callback: () => {
-    if (!uiLocked.value) {
-      store.dispatch("SET_SELECTED_AUDIO_KEYS", {
+    if (!uiLocked.value && isMultiSelectEnabled.value) {
+      void store.actions.SET_SELECTED_AUDIO_KEYS({
         audioKeys: audioKeys.value,
       });
     }
@@ -267,7 +268,7 @@ for (let i = 0; i < 10; i++) {
     name: `${i + 1}${actionPostfixSelectNthCharacter}` as HotkeyActionNameType,
     callback: () => {
       if (!uiLocked.value) {
-        onCharacterSelectHotkey(i);
+        void onCharacterSelectHotkey(i);
       }
     },
   });
@@ -328,7 +329,7 @@ const updateSplitterPosition = async (
     ...splitterPosition.value,
     [propertyName]: newValue,
   };
-  await store.dispatch("SET_ROOT_MISC_SETTING", {
+  await store.actions.SET_ROOT_MISC_SETTING({
     key: "splitterPosition",
     value: newSplitterPosition,
   });
@@ -364,7 +365,7 @@ const resizeObserverRef = ref<QResizeObserver>();
 
 // DaD
 const updateAudioKeys = (audioKeys: AudioKey[]) =>
-  store.dispatch("COMMAND_SET_AUDIO_KEYS", { audioKeys });
+  store.actions.COMMAND_SET_AUDIO_KEYS({ audioKeys });
 const itemKey = (key: string) => key;
 
 // セルを追加
@@ -383,13 +384,13 @@ const addAudioItem = async () => {
     baseAudioItem = store.state.audioItems[prevAudioKey];
   }
 
-  const audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {
+  const audioItem = await store.actions.GENERATE_AUDIO_ITEM({
     voice,
     presetKey,
     baseAudioItem,
   });
 
-  const newAudioKey = await store.dispatch("COMMAND_REGISTER_AUDIO_ITEM", {
+  const newAudioKey = await store.actions.COMMAND_REGISTER_AUDIO_ITEM({
     audioItem,
     prevAudioKey: activeAudioKey.value,
   });
@@ -401,10 +402,10 @@ const duplicateAudioItem = async () => {
   // audioItemが選択されていない状態で押されたら何もしない
   if (prevAudioKey == undefined) return;
 
-  const prevAudioItem = store.state.audioItems[prevAudioKey];
+  const prevAudioItem = toRaw(store.state.audioItems[prevAudioKey]);
 
-  const newAudioKey = await store.dispatch("COMMAND_REGISTER_AUDIO_ITEM", {
-    audioItem: cloneDeep(prevAudioItem),
+  const newAudioKey = await store.actions.COMMAND_REGISTER_AUDIO_ITEM({
+    audioItem: structuredClone(prevAudioItem),
     prevAudioKey: activeAudioKey.value,
   });
   audioCellRefs[newAudioKey].focusCell({ focusTarget: "textField" });
@@ -484,7 +485,7 @@ watch(userOrderedCharacterInfos, (userOrderedCharacterInfos) => {
   }
 
   if (audioKeys.value.length === 1) {
-    const first = audioKeys.value[0] as AudioKey;
+    const first = audioKeys.value[0];
     const audioItem = audioItems.value[first];
     if (audioItem.text.length > 0) {
       return;
@@ -503,7 +504,7 @@ watch(userOrderedCharacterInfos, (userOrderedCharacterInfos) => {
     };
 
     // FIXME: UNDOができてしまうのでできれば直したい
-    store.dispatch("COMMAND_MULTI_CHANGE_VOICE", {
+    void store.actions.COMMAND_MULTI_CHANGE_VOICE({
       audioKeys: [first],
       voice: voice,
     });
@@ -520,14 +521,14 @@ onetimeWatch(
       return "continue";
     if (!isProjectFileLoaded) {
       // 最初のAudioCellを作成
-      const audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {});
-      const newAudioKey = await store.dispatch("REGISTER_AUDIO_ITEM", {
+      const audioItem = await store.actions.GENERATE_AUDIO_ITEM({});
+      const newAudioKey = await store.actions.REGISTER_AUDIO_ITEM({
         audioItem,
       });
       focusCell({ audioKey: newAudioKey, focusTarget: "textField" });
 
       // 最初の話者を初期化
-      store.dispatch("SETUP_SPEAKER", {
+      void store.actions.SETUP_SPEAKER({
         audioKeys: [newAudioKey],
         engineId: audioItem.voice.engineId,
         styleId: audioItem.voice.styleId,
@@ -556,11 +557,12 @@ watch(
     // 代替ポートをトースト通知する
     for (const engineId of store.state.engineIds) {
       const engineName = store.state.engineInfos[engineId].name;
+      const defaultPort = store.state.engineInfos[engineId].defaultPort;
       const altPort = store.state.altPortInfos[engineId];
       if (!altPort) return;
 
-      store.dispatch("SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON", {
-        message: `${altPort.from}番ポートが使用中であるため ${engineName} は、${altPort.to}番ポートで起動しました`,
+      void store.actions.SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON({
+        message: `${defaultPort}番ポートが使用中であるため ${engineName} は、${altPort}番ポートで起動しました`,
         icon: "compare_arrows",
         tipName: "engineStartedOnAltPort",
       });
@@ -573,15 +575,29 @@ const dragEventCounter = ref(0);
 const loadDraggedFile = (event: { dataTransfer: DataTransfer | null }) => {
   if (!event.dataTransfer || event.dataTransfer.files.length === 0) return;
   const file = event.dataTransfer.files[0];
+
+  // electronの場合のみファイルパスを取得できる
+  const filePath = isElectron ? window.backend.getPathForFile(file) : undefined;
+
   switch (path.extname(file.name)) {
     case ".txt":
-      store.dispatch("COMMAND_IMPORT_FROM_FILE", { filePath: file.path });
+      if (filePath) {
+        void store.actions.COMMAND_IMPORT_FROM_FILE({ type: "path", filePath });
+      } else {
+        void store.actions.COMMAND_IMPORT_FROM_FILE({ type: "file", file });
+      }
       break;
+
     case ".vvproj":
-      store.dispatch("LOAD_PROJECT_FILE", { filePath: file.path });
+      if (filePath) {
+        void store.actions.LOAD_PROJECT_FILE({ type: "path", filePath });
+      } else {
+        void store.actions.LOAD_PROJECT_FILE({ type: "file", file });
+      }
       break;
+
     default:
-      store.dispatch("SHOW_ALERT_DIALOG", {
+      void store.actions.SHOW_ALERT_DIALOG({
         title: "対応していないファイルです",
         message:
           "テキストファイル (.txt) とVOICEVOXプロジェクトファイル (.vvproj) に対応しています。",
@@ -621,7 +637,7 @@ const onAudioCellPaneClick = () => {
     store.state.experimentalSetting.enableMultiSelect &&
     activeAudioKey.value
   ) {
-    store.dispatch("SET_SELECTED_AUDIO_KEYS", {
+    void store.actions.SET_SELECTED_AUDIO_KEYS({
       audioKeys: [activeAudioKey.value],
     });
   }

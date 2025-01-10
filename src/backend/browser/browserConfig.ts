@@ -3,6 +3,9 @@ import { defaultEngine, directoryHandleStoreKey } from "./contract";
 
 import { BaseConfigManager, Metadata } from "@/backend/common/ConfigManager";
 import { ConfigType, EngineId, engineSettingSchema } from "@/type/preload";
+import { ensureNotNullish } from "@/helpers/errorHelper";
+import { UnreachableError } from "@/type/utility";
+import { isMac } from "@/helpers/platform";
 
 const dbName = `${import.meta.env.VITE_APP_NAME}-web`;
 const settingStoreKey = "config";
@@ -18,7 +21,7 @@ const defaultEngineId = EngineId(defaultEngine.uuid);
 export async function getConfigManager() {
   await configManagerLock.acquire("configManager", async () => {
     if (!configManager) {
-      configManager = new BrowserConfigManager();
+      configManager = new BrowserConfigManager({ isMac });
       await configManager.initialize();
     }
   });
@@ -36,7 +39,7 @@ const waitRequest = (request: IDBRequest) =>
       resolve();
     };
     request.onerror = () => {
-      reject(request.error);
+      reject(ensureNotNullish(request.error));
     };
   });
 
@@ -47,8 +50,7 @@ export const openDB = () =>
       resolve(request.result);
     };
     request.onerror = () => {
-      // TODO: handling
-      reject(request.error);
+      reject(ensureNotNullish(request.error));
     };
     request.onupgradeneeded = (ev) => {
       if (ev.oldVersion === 0) {
@@ -85,7 +87,7 @@ class BrowserConfigManager extends BaseConfigManager {
       const store = transaction.objectStore(settingStoreKey);
       const request = store.get(entryKey);
       await waitRequest(request);
-      const result = request.result;
+      const result: unknown = request.result;
       return result != undefined;
     } catch (e) {
       return false;
@@ -98,10 +100,14 @@ class BrowserConfigManager extends BaseConfigManager {
     const store = transaction.objectStore(settingStoreKey);
     const request = store.get(entryKey);
     await waitRequest(request);
-    const result = request.result;
+    const result: unknown = request.result;
     if (result == undefined) {
       throw new Error("設定ファイルが見つかりません");
     }
+    if (typeof result !== "string") {
+      throw new UnreachableError("result is not string");
+    }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return JSON.parse(result);
   }
 

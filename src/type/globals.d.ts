@@ -9,6 +9,10 @@ declare global {
     setSinkId(deviceID: string): Promise<undefined>; // setSinkIdを認識してくれないため
   }
 
+  interface AudioContext {
+    setSinkId: (sinkId: string) => Promise<void>;
+  }
+
   interface Window {
     readonly [SandboxKey]: import("./preload").Sandbox;
   }

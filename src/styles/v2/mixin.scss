@@ -1,0 +1,54 @@
+// キーボードフォーカス時のOutline表示用のスタイル
+@mixin on-focus {
+  outline-color: #a5d4ad;
+  outline-width: 2px;
+  outline-style: solid;
+}
+
+// 見出し1(h1)用のスタイル
+@mixin headline-1 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  line-height: 1.5;
+  margin: 0;
+}
+
+// 見出し2(h2)用のスタイル
+@mixin headline-2 {
+  font-size: 1.25rem;
+  font-weight: bold;
+  line-height: 1.5;
+  margin: 0;
+}
+
+// 見出し3(h3)用のスタイル
+@mixin headline-3 {
+  font-size: 1.125rem;
+  font-weight: bold;
+  line-height: 1.5;
+  margin: 0;
+}
+
+// 見出し4(h4)用のスタイル
+@mixin headline-4 {
+  font-size: 1rem;
+  font-weight: bold;
+  line-height: 1.5;
+  margin: 0;
+}
+
+// 見出し5(h5)用のスタイル
+@mixin headline-5 {
+  font-size: 0.875rem;
+  font-weight: bold;
+  line-height: 1.5;
+  margin: 0;
+}
+
+// 見出し6(h6)用のスタイル
+@mixin headline-6 {
+  font-size: 0.75rem;
+  font-weight: bold;
+  line-height: 1.5;
+  margin: 0;
+}

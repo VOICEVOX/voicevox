@@ -1,19 +1,18 @@
 import {
   AppInfos,
   ConfigType,
-  EngineInfo,
   EngineDirValidationResult,
-  HotkeySettingType,
-  ThemeSetting,
-  ToolbarSettingType,
-  UpdateInfo,
-  NativeThemeType,
-  EngineSettingType,
   EngineId,
+  EngineInfo,
+  EngineSettingType,
   MessageBoxReturnValue,
+  NativeThemeType,
+  TextAsset,
+  ToolbarSettingType,
 } from "@/type/preload";
 import { AltPortInfos } from "@/store/type";
 import { Result } from "@/type/result";
+import { HotkeySettingType } from "@/domain/hotkeyAction";
 
 /**
  * invoke, handle
@@ -24,59 +23,14 @@ export type IpcIHData = {
     return: AppInfos;
   };
 
-  GET_HOW_TO_USE_TEXT: {
-    args: [];
-    return: string;
-  };
-
-  GET_POLICY_TEXT: {
-    args: [];
-    return: string;
-  };
-
-  GET_OSS_LICENSES: {
-    args: [];
-    return: Record<string, string>[];
-  };
-
-  GET_UPDATE_INFOS: {
-    args: [];
-    return: UpdateInfo[];
-  };
-
-  GET_OSS_COMMUNITY_INFOS: {
-    args: [];
-    return: string;
-  };
-
-  GET_CONTACT_TEXT: {
-    args: [];
-    return: string;
-  };
-
-  GET_Q_AND_A_TEXT: {
-    args: [];
-    return: string;
-  };
-
-  GET_PRIVACY_POLICY_TEXT: {
-    args: [];
-    return: string;
+  GET_TEXT_ASSET: {
+    args: [textType: keyof TextAsset];
+    return: TextAsset[keyof TextAsset];
   };
 
   GET_ALT_PORT_INFOS: {
     args: [];
     return: AltPortInfos;
-  };
-
-  SHOW_AUDIO_SAVE_DIALOG: {
-    args: [obj: { title: string; defaultPath?: string }];
-    return?: string;
-  };
-
-  SHOW_TEXT_SAVE_DIALOG: {
-    args: [obj: { title: string; defaultPath?: string }];
-    return?: string;
   };
 
   SHOW_SAVE_DIRECTORY_DIALOG: {
@@ -109,31 +63,6 @@ export type IpcIHData = {
     return?: string[];
   };
 
-  SHOW_MESSAGE_DIALOG: {
-    args: [
-      obj: {
-        type: "none" | "info" | "error" | "question" | "warning";
-        title: string;
-        message: string;
-      },
-    ];
-    return: MessageBoxReturnValue;
-  };
-
-  SHOW_QUESTION_DIALOG: {
-    args: [
-      obj: {
-        type: "none" | "info" | "error" | "question" | "warning";
-        title: string;
-        message: string;
-        buttons: string[];
-        cancelId?: number;
-        defaultId?: number;
-      },
-    ];
-    return: number;
-  };
-
   SHOW_WARNING_DIALOG: {
     args: [
       obj: {
@@ -152,6 +81,18 @@ export type IpcIHData = {
       },
     ];
     return: MessageBoxReturnValue;
+  };
+
+  SHOW_EXPORT_FILE_DIALOG: {
+    args: [
+      obj: {
+        title: string;
+        defaultPath?: string;
+        extensionName: string;
+        extensions: string[];
+      },
+    ];
+    return?: string;
   };
 
   IS_AVAILABLE_GPU_MODE: {
@@ -174,23 +115,28 @@ export type IpcIHData = {
     return: void;
   };
 
-  MAXIMIZE_WINDOW: {
+  TOGGLE_MAXIMIZE_WINDOW: {
     args: [];
     return: void;
   };
 
-  LOG_ERROR: {
-    args: [...params: unknown[]];
+  TOGGLE_FULLSCREEN: {
+    args: [];
     return: void;
   };
 
-  LOG_WARN: {
-    args: [...params: unknown[]];
+  ZOOM_IN: {
+    args: [];
     return: void;
   };
 
-  LOG_INFO: {
-    args: [...params: unknown[]];
+  ZOOM_OUT: {
+    args: [];
+    return: void;
+  };
+
+  ZOOM_RESET: {
+    args: [];
     return: void;
   };
 
@@ -202,11 +148,6 @@ export type IpcIHData = {
   ENGINE_INFOS: {
     args: [];
     return: EngineInfo[];
-  };
-
-  RESTART_ENGINE_ALL: {
-    args: [];
-    return: void;
   };
 
   RESTART_ENGINE: {
@@ -234,19 +175,9 @@ export type IpcIHData = {
     return: HotkeySettingType[];
   };
 
-  GET_DEFAULT_HOTKEY_SETTINGS: {
-    args: [];
-    return: HotkeySettingType[];
-  };
-
   GET_DEFAULT_TOOLBAR_SETTING: {
     args: [];
     return: ToolbarSettingType;
-  };
-
-  THEME: {
-    args: [obj: { newData?: string }];
-    return: ThemeSetting | void;
   };
 
   ON_VUEX_READY: {
@@ -295,7 +226,7 @@ export type IpcIHData = {
   };
 
   WRITE_FILE: {
-    args: [obj: { filePath: string; buffer: ArrayBuffer }];
+    args: [obj: { filePath: string; buffer: ArrayBuffer | Uint8Array }];
     return: Result<undefined>;
   };
 
@@ -310,7 +241,7 @@ export type IpcIHData = {
  */
 export type IpcSOData = {
   LOAD_PROJECT_FILE: {
-    args: [obj: { filePath?: string; confirm?: boolean }];
+    args: [obj: { filePath: string }];
     return: void;
   };
 

@@ -46,10 +46,10 @@
     </div>
     <CharacterButton
       v-model:selected-voice="selectedVoice"
-      :character-infos="userOrderedCharacterInfos"
+      :characterInfos="userOrderedCharacterInfos"
       :loading="isInitializingSpeaker"
-      :show-engine-info="isMultipleEngine"
-      :ui-locked="uiLocked"
+      :showEngineInfo="isMultipleEngine"
+      :uiLocked
       @focus="
         if (!isSelectedAudioCell) {
           selectAndSetActiveAudioKey();
@@ -64,14 +64,14 @@
       ref="textField"
       filled
       dense
-      hide-bottom-space
+      hideBottomSpace
       class="full-width"
       color="primary"
       :disable="uiLocked"
       :error="audioTextBuffer.length >= 80"
-      :model-value="audioTextBuffer"
+      :modelValue="audioTextBuffer"
       :aria-label="`${textLineNumberIndex}行目`"
-      @update:model-value="setAudioTextBuffer"
+      @update:modelValue="setAudioTextBuffer"
       @focus="
         clearInputSelection();
         selectAndSetActiveAudioKey();
@@ -99,11 +99,11 @@
         ref="contextMenu"
         :header="contextMenuHeader"
         :menudata="contextMenudata"
-        @before-show="
+        @beforeShow="
           startContextMenuOperation();
           readyForContextMenu();
         "
-        @before-hide="endContextMenuOperation()"
+        @beforeHide="endContextMenuOperation()"
       />
     </QInput>
   </div>
@@ -114,7 +114,7 @@ import { computed, watch, ref, nextTick } from "vue";
 import { QInput } from "quasar";
 import CharacterButton from "@/components/CharacterButton.vue";
 import { MenuItemButton, MenuItemSeparator } from "@/components/Menu/type";
-import ContextMenu from "@/components/Menu/ContextMenu.vue";
+import ContextMenu from "@/components/Menu/ContextMenu/Container.vue";
 import { useStore } from "@/store";
 import { AudioKey, SplitTextWhenPasteType, Voice } from "@/type/preload";
 import { SelectionHelperForQInput } from "@/helpers/SelectionHelperForQInput";
@@ -154,7 +154,7 @@ defineExpose({
     }
   },
   removeCell: () => {
-    removeCell();
+    void removeCell();
   },
   /** index番目のキャラクターを選ぶ */
   selectCharacterAt: (index: number) => {
@@ -181,8 +181,10 @@ const isMultiSelectEnabled = computed(
 );
 
 const selectAndSetActiveAudioKey = () => {
-  store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: props.audioKey });
-  store.dispatch("SET_SELECTED_AUDIO_KEYS", { audioKeys: [props.audioKey] });
+  void store.actions.SET_ACTIVE_AUDIO_KEY({ audioKey: props.audioKey });
+  void store.actions.SET_SELECTED_AUDIO_KEYS({
+    audioKeys: [props.audioKey],
+  });
 };
 
 const onRootFocus = () => {
@@ -246,8 +248,8 @@ const onClickWithModifierKey = (event: MouseEvent) => {
       newSelectedAudioKeys = [...currentSelectedAudioKeys, props.audioKey];
     }
   }
-  store.dispatch("SET_ACTIVE_AUDIO_KEY", { audioKey: newActiveAudioKey });
-  store.dispatch("SET_SELECTED_AUDIO_KEYS", {
+  void store.actions.SET_ACTIVE_AUDIO_KEY({ audioKey: newActiveAudioKey });
+  void store.actions.SET_SELECTED_AUDIO_KEYS({
     audioKeys: newSelectedAudioKeys,
   });
 };
@@ -271,7 +273,7 @@ const selectedVoice = computed<Voice | undefined>({
   },
   set(voice: Voice | undefined) {
     if (voice == undefined) return;
-    store.dispatch("COMMAND_MULTI_CHANGE_VOICE", {
+    void store.actions.COMMAND_MULTI_CHANGE_VOICE({
       audioKeys: isMultiSelectEnabled.value
         ? store.getters.SELECTED_AUDIO_KEYS
         : [props.audioKey],
@@ -310,7 +312,7 @@ const pushAudioTextIfNeeded = async (event?: KeyboardEvent) => {
   if (event && event.isComposing) return;
   if (!willRemove.value && isChangeFlag.value && !willFocusOrBlur.value) {
     isChangeFlag.value = false;
-    await store.dispatch("COMMAND_CHANGE_AUDIO_TEXT", {
+    await store.actions.COMMAND_CHANGE_AUDIO_TEXT({
       audioKey: props.audioKey,
       text: audioTextBuffer.value,
     });
@@ -329,7 +331,7 @@ const clearInputSelection = () => {
 const textSplitType = computed(() => store.state.splitTextWhenPaste);
 const pasteOnAudioCell = async (event: ClipboardEvent) => {
   event.preventDefault();
-  paste({ text: event.clipboardData?.getData("text/plain") });
+  void paste({ text: event.clipboardData?.getData("text/plain") });
 };
 /**
  * 貼り付け。
@@ -381,7 +383,7 @@ const putMultilineText = async (texts: string[]) => {
     await pushAudioTextIfNeeded();
   }
 
-  const audioKeys = await store.dispatch("COMMAND_PUT_TEXTS", {
+  const audioKeys = await store.actions.COMMAND_PUT_TEXTS({
     texts,
     voice: audioItem.value.voice,
     prevAudioKey,
@@ -420,7 +422,7 @@ const moveCell = (offset: number) => (e?: KeyboardEvent) => {
         audioKey: audioKeys.value[index],
         focusTarget: "root",
       });
-      store.dispatch("SET_SELECTED_AUDIO_KEYS", {
+      void store.actions.SET_SELECTED_AUDIO_KEYS({
         audioKeys: [
           ...selectedAudioKeysBefore,
           props.audioKey,
@@ -489,7 +491,7 @@ const removeCell = async () => {
       });
     }
 
-    store.dispatch("COMMAND_MULTI_REMOVE_AUDIO_ITEM", {
+    void store.actions.COMMAND_MULTI_REMOVE_AUDIO_ITEM({
       audioKeys: audioKeysToDelete,
     });
   }
@@ -511,7 +513,7 @@ const selectCharacterAt = (index: number) => {
     speakerId: speakerUuid,
     styleId: style.styleId,
   };
-  store.dispatch("COMMAND_MULTI_CHANGE_VOICE", {
+  void store.actions.COMMAND_MULTI_CHANGE_VOICE({
     audioKeys: isMultiSelectEnabled.value
       ? store.getters.SELECTED_AUDIO_KEYS
       : [props.audioKey],
@@ -556,7 +558,7 @@ const contextMenudata = ref<
       const start = textFieldSelection.selectionStart;
       setAudioTextBuffer(textFieldSelection.getReplacedStringTo(""));
       await nextTick();
-      navigator.clipboard.writeText(text);
+      void navigator.clipboard.writeText(text);
       textFieldSelection.setCursorPosition(start);
     },
     disableWhenUiLocked: true,
@@ -568,7 +570,7 @@ const contextMenudata = ref<
       contextMenu.value?.hide();
       if (textFieldSelection.isEmpty) return;
 
-      navigator.clipboard.writeText(textFieldSelection.getAsString());
+      void navigator.clipboard.writeText(textFieldSelection.getAsString());
     },
     disableWhenUiLocked: true,
   },
@@ -577,7 +579,7 @@ const contextMenudata = ref<
     label: "貼り付け",
     onClick: async () => {
       contextMenu.value?.hide();
-      paste();
+      void paste();
     },
     disableWhenUiLocked: true,
   },
@@ -598,7 +600,7 @@ const contextMenudata = ref<
     onClick: async () => {
       contextMenu.value?.hide();
       isChangeFlag.value = false;
-      await store.dispatch("COMMAND_CHANGE_DISPLAY_TEXT", {
+      await store.actions.COMMAND_CHANGE_DISPLAY_TEXT({
         audioKey: props.audioKey,
         text: audioTextBuffer.value,
       });
@@ -626,9 +628,24 @@ const readyForContextMenu = () => {
   const MAX_HEADER_LENGTH = 15;
   const SHORTED_HEADER_FRAGMENT_LENGTH = 5;
 
-  // 選択範囲を1行目に表示
+  // 選択範囲のテキスト
   const selectionText = textFieldSelection.getAsString();
-  if (selectionText.length === 0) {
+  if (selectionText.length > MAX_HEADER_LENGTH) {
+    // 長すぎる場合適度な長さで省略
+    contextMenuHeader.value =
+      selectionText.length <= MAX_HEADER_LENGTH
+        ? selectionText
+        : `${selectionText.substring(
+            0,
+            SHORTED_HEADER_FRAGMENT_LENGTH,
+          )} ... ${selectionText.substring(
+            selectionText.length - SHORTED_HEADER_FRAGMENT_LENGTH,
+          )}`;
+  } else {
+    contextMenuHeader.value = selectionText;
+  }
+
+  if (textFieldSelection.isEmpty) {
     isRangeSelected.value = false;
     getMenuItemButton("切り取り").disabled = true;
     getMenuItemButton("コピー").disabled = true;
@@ -636,20 +653,6 @@ const readyForContextMenu = () => {
     isRangeSelected.value = true;
     getMenuItemButton("切り取り").disabled = false;
     getMenuItemButton("コピー").disabled = false;
-    if (selectionText.length > MAX_HEADER_LENGTH) {
-      // 長すぎる場合適度な長さで省略
-      contextMenuHeader.value =
-        selectionText.length <= MAX_HEADER_LENGTH
-          ? selectionText
-          : `${selectionText.substring(
-              0,
-              SHORTED_HEADER_FRAGMENT_LENGTH,
-            )} ... ${selectionText.substring(
-              selectionText.length - SHORTED_HEADER_FRAGMENT_LENGTH,
-            )}`;
-    } else {
-      contextMenuHeader.value = selectionText;
-    }
   }
 };
 const endContextMenuOperation = async () => {
@@ -676,6 +679,7 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
   position: relative;
   padding: 0.4rem 0.5rem;
   margin: 0.2rem 0.5rem;
+  gap: 0px 1rem;
   &:focus {
     // divはフォーカスするとデフォルトで青い枠が出るので消す
     outline: none;
@@ -691,8 +695,6 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
   &:last-child {
     margin-bottom: 0.6rem;
   }
-
-  gap: 0px 1rem;
 
   .active-arrow {
     left: -1rem;

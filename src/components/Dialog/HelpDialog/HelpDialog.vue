@@ -1,44 +1,56 @@
 <template>
   <QDialog
-    v-model="modelValueComputed"
+    ref="dialogRef"
     maximized
-    transition-show="jump-up"
-    transition-hide="jump-down"
+    transitionShow="jump-up"
+    transitionHide="jump-down"
     class="help-dialog transparent-backdrop"
   >
     <QLayout container view="hHh Lpr lff">
-      <QDrawer
-        bordered
-        show-if-above
-        class="bg-background"
-        :model-value="true"
-        :width="250"
-        :breakpoint="0"
-      >
-        <div class="column full-height">
-          <QList>
+      <QPageContainer>
+        <QHeader class="q-pa-sm">
+          <QToolbar>
+            <QToolbarTitle class="text-display">
+              ヘルプ /
+              {{ selectedPage.parent ? selectedPage.parent + " / " : ""
+              }}{{ selectedPage.name }}
+            </QToolbarTitle>
+            <QBtn
+              v-if="selectedPage.shouldShowOpenLogDirectoryButton"
+              unelevated
+              color="toolbar-button"
+              textColor="toolbar-button-display"
+              class="text-no-wrap text-bold q-mr-sm"
+              @click="openLogDirectory"
+            >
+              ログフォルダを開く
+            </QBtn>
+            <!-- close button -->
+            <QBtn
+              round
+              flat
+              icon="close"
+              color="display"
+              aria-label="ヘルプを閉じる"
+              @click="onDialogOK"
+            />
+          </QToolbar>
+        </QHeader>
+        <BaseNavigationView>
+          <template #sidebar>
             <template v-for="(page, pageIndex) of pagedata" :key="pageIndex">
-              <QItem
+              <BaseListItem
                 v-if="page.type === 'item'"
-                v-ripple
-                clickable
-                active-class="selected-item"
-                :active="selectedPageIndex === pageIndex"
+                :selected="selectedPageIndex === pageIndex"
                 @click="selectedPageIndex = pageIndex"
               >
-                <QItemSection> {{ page.name }} </QItemSection>
-              </QItem>
-              <template v-else-if="page.type === 'separator'">
-                <QSeparator />
-                <QItemLabel header>{{ page.name }}</QItemLabel>
-              </template>
+                {{ page.name }}
+              </BaseListItem>
+              <div v-else-if="page.type === 'separator'" class="list-label">
+                {{ page.name }}
+              </div>
             </template>
-          </QList>
-        </div>
-      </QDrawer>
-
-      <QPageContainer>
-        <QPage>
+          </template>
           <QTabPanels v-model="selectedPageIndex">
             <QTabPanel
               v-for="(page, pageIndex) of pagedata"
@@ -46,39 +58,14 @@
               :name="pageIndex"
               class="q-pa-none"
             >
-              <div v-if="page.type === 'item'" class="root">
-                <QHeader class="q-pa-sm">
-                  <QToolbar>
-                    <QToolbarTitle class="text-display">
-                      ヘルプ / {{ page.parent ? page.parent + " / " : ""
-                      }}{{ page.name }}
-                    </QToolbarTitle>
-                    <QBtn
-                      v-if="page.component === ContactInfo"
-                      unelevated
-                      color="toolbar-button"
-                      text-color="toolbar-button-display"
-                      class="text-no-wrap text-bold q-mr-sm"
-                      @click="openLogDirectory"
-                    >
-                      ログフォルダを開く
-                    </QBtn>
-                    <!-- close button -->
-                    <QBtn
-                      round
-                      flat
-                      icon="close"
-                      color="display"
-                      aria-label="ヘルプを閉じる"
-                      @click="modelValueComputed = false"
-                    />
-                  </QToolbar>
-                </QHeader>
-                <Component :is="page.component" v-bind="page.props" />
-              </div>
+              <Component
+                :is="page.component"
+                v-if="page.type === 'item'"
+                v-bind="page.props"
+              />
             </QTabPanel>
           </QTabPanels>
-        </QPage>
+        </BaseNavigationView>
       </QPageContainer>
     </QLayout>
   </QDialog>
@@ -87,14 +74,13 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import type { Component } from "vue";
-import HelpPolicy from "./HelpPolicy.vue";
-import LibraryPolicy from "./LibraryPolicy.vue";
-import HowToUse from "./HowToUse.vue";
-import OssLicense from "./OssLicense.vue";
-import UpdateInfo from "./UpdateInfo.vue";
-import OssCommunityInfo from "./OssCommunityInfo.vue";
-import QAndA from "./QAndA.vue";
-import ContactInfo from "./ContactInfo.vue";
+import { useDialogPluginComponent } from "quasar";
+import MarkdownView from "./HelpMarkdownViewSection.vue";
+import OssLicense from "./HelpOssLicenseSection.vue";
+import UpdateInfo from "./HelpUpdateInfoSection.vue";
+import LibraryPolicy from "./HelpLibraryPolicySection.vue";
+import BaseListItem from "@/components/Base/BaseListItem.vue";
+import BaseNavigationView from "@/components/Base/BaseNavigationView.vue";
 import { UpdateInfo as UpdateInfoObject, UrlString } from "@/type/preload";
 import { useStore } from "@/store";
 import { useFetchNewUpdateInfos } from "@/composables/useFetchNewUpdateInfos";
@@ -106,6 +92,7 @@ type PageItem = {
   parent?: string;
   component: Component;
   props?: Record<string, unknown>;
+  shouldShowOpenLogDirectoryButton?: boolean;
 };
 type PageSeparator = {
   type: "separator";
@@ -113,24 +100,14 @@ type PageSeparator = {
 };
 type PageData = PageItem | PageSeparator;
 
-const props = defineProps<{
-  modelValue: boolean;
-}>();
-const emit = defineEmits<{
-  (e: "update:modelValue", val: boolean): void;
-}>();
-
-const modelValueComputed = computed({
-  get: () => props.modelValue,
-  set: (val) => emit("update:modelValue", val),
-});
+const { dialogRef, onDialogOK } = useDialogPluginComponent();
 
 // エディタのアップデート確認
 const store = useStore();
 const { warn } = createLogger("HelpDialog");
 
 const updateInfos = ref<UpdateInfoObject[]>();
-store.dispatch("GET_UPDATE_INFOS").then((obj) => (updateInfos.value = obj));
+void store.actions.GET_UPDATE_INFOS().then((obj) => (updateInfos.value = obj));
 
 if (!import.meta.env.VITE_LATEST_UPDATE_INFOS_URL) {
   throw new Error(
@@ -144,19 +121,33 @@ const newUpdateResult = useFetchNewUpdateInfos(
 
 // エディタのOSSライセンス取得
 const licenses = ref<Record<string, string>[]>();
-store.dispatch("GET_OSS_LICENSES").then((obj) => (licenses.value = obj));
+void store.actions.GET_OSS_LICENSES().then((obj) => (licenses.value = obj));
 
-const policy = ref<string>();
-store.dispatch("GET_POLICY_TEXT").then((obj) => (policy.value = obj));
+const policy = ref<string>("");
+void store.actions.GET_POLICY_TEXT().then((obj) => (policy.value = obj));
+
+const howToUse = ref<string>("");
+void store.actions.GET_HOW_TO_USE_TEXT().then((obj) => (howToUse.value = obj));
+
+const ossCommunityInfos = ref<string>("");
+void store.actions
+  .GET_OSS_COMMUNITY_INFOS()
+  .then((obj) => (ossCommunityInfos.value = obj));
+
+const qAndA = ref<string>("");
+void store.actions.GET_Q_AND_A_TEXT().then((obj) => (qAndA.value = obj));
+
+const contact = ref<string>("");
+void store.actions.GET_CONTACT_TEXT().then((obj) => (contact.value = obj));
 
 const pagedata = computed(() => {
   const data: PageData[] = [
     {
       type: "item",
       name: "ソフトウェアの利用規約",
-      component: HelpPolicy,
+      component: MarkdownView,
       props: {
-        policy: policy.value,
+        markdown: policy.value,
       },
     },
     {
@@ -167,12 +158,18 @@ const pagedata = computed(() => {
     {
       type: "item",
       name: "使い方",
-      component: HowToUse,
+      component: MarkdownView,
+      props: {
+        markdown: howToUse.value,
+      },
     },
     {
       type: "item",
       name: "開発コミュニティ",
-      component: OssCommunityInfo,
+      component: MarkdownView,
+      props: {
+        markdown: ossCommunityInfos.value,
+      },
     },
     {
       type: "item",
@@ -196,19 +193,26 @@ const pagedata = computed(() => {
             }
           : {
               isUpdateAvailable: false,
-              latestVersion: undefined,
+              latestVersion: "",
             }),
       },
     },
     {
       type: "item",
       name: "よくあるご質問",
-      component: QAndA,
+      component: MarkdownView,
+      props: {
+        markdown: qAndA.value,
+      },
     },
     {
       type: "item",
       name: "お問い合わせ",
-      component: ContactInfo,
+      component: MarkdownView,
+      props: {
+        markdown: contact.value,
+      },
+      shouldShowOpenLogDirectoryButton: true,
     },
   ];
   // エンジンが一つだけの場合は従来の表示のみ
@@ -229,9 +233,9 @@ const pagedata = computed(() => {
           type: "item",
           name: "利用規約",
           parent: manifest.name,
-          component: HelpPolicy,
+          component: MarkdownView,
           props: {
-            policy: manifest.termsOfService,
+            markdown: manifest.termsOfService,
           },
         },
         {
@@ -263,11 +267,26 @@ const pagedata = computed(() => {
 
 const selectedPageIndex = ref(0);
 
-const openLogDirectory = window.backend.openLogDirectory;
+const selectedPage = computed(() => {
+  if (pagedata.value[selectedPageIndex.value].type == "item") {
+    return pagedata.value[selectedPageIndex.value] as PageItem;
+  } else {
+    throw new Error("selectedPageにはPageItem型の値を指定してください。");
+  }
+});
+
+const openLogDirectory = () => window.backend.openLogDirectory();
 </script>
 
 <style scoped lang="scss">
-@use "@/styles/colors" as colors;
+@use "@/styles/v2/colors" as colors;
+@use "@/styles/v2/variables" as vars;
+
+.list-label {
+  padding: vars.$padding-2;
+  padding-bottom: vars.$padding-1;
+  color: colors.$display-sub;
+}
 
 .help-dialog .q-layout-container :deep(.absolute-full) {
   right: 0 !important;
@@ -279,12 +298,7 @@ const openLogDirectory = window.backend.openLogDirectory;
   }
 }
 
-.selected-item {
-  background-color: rgba(colors.$primary-rgb, 0.4);
-  color: colors.$display;
-}
-
-.q-item__label {
-  padding: 8px 16px;
+.q-tab-panels {
+  display: contents;
 }
 </style>

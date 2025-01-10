@@ -2,9 +2,9 @@
   <QDialog
     v-model="isOpenComputed"
     maximized
-    transition-show="none"
-    transition-hide="none"
-    transition-duration="100"
+    transitionShow="none"
+    transitionHide="none"
+    transitionDuration="100"
     class="default-style-select-dialog transparent-backdrop"
   >
     <QLayout container view="hHh Lpr lff" class="bg-background">
@@ -24,7 +24,7 @@
               unelevated
               :label="isModified ? '保存' : '戻る'"
               color="toolbar-button"
-              text-color="toolbar-button-display"
+              textColor="toolbar-button-display"
               class="text-no-wrap"
               @click="closeDialog"
             />
@@ -34,8 +34,8 @@
 
       <QDrawer
         bordered
-        show-if-above
-        :model-value="true"
+        showIfAbove
+        :modelValue="true"
         :width="$q.screen.width / 3"
         :breakpoint="0"
       >
@@ -101,9 +101,9 @@
                     />
                     <QRadio
                       class="absolute-top-right no-pointer-events text-primary"
-                      :model-value="selectedStyleIndexComputed"
+                      :modelValue="selectedStyleIndexComputed"
                       :val="styleIndex"
-                      @update:model-value="selectStyleIndex(styleIndex)"
+                      @update:modelValue="selectStyleIndex(styleIndex)"
                     />
                   </div>
                 </div>
@@ -118,6 +118,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
+import { useQuasar } from "quasar";
 import { useStore } from "@/store";
 import { DEFAULT_STYLE_NAME } from "@/store/utility";
 import {
@@ -138,6 +139,8 @@ const emit = defineEmits<{
   (e: "update:isOpen", value: boolean): void;
   (e: "update:selectedStyleIndex", value: number): void;
 }>();
+
+const $q = useQuasar();
 
 const store = useStore();
 
@@ -196,7 +199,7 @@ const play = (
   if (audio.src !== "") stop();
 
   audio.src = voiceSamplePaths[index];
-  audio.play();
+  void audio.play();
   playing.value = { speakerUuid, styleId, index };
 };
 const stop = () => {
@@ -212,7 +215,7 @@ const closeDialog = () => {
   const defaultStyleIds = JSON.parse(
     JSON.stringify(store.state.defaultStyleIds),
   ) as DefaultStyleId[];
-  store.dispatch("SET_DEFAULT_STYLE_IDS", [
+  void store.actions.SET_DEFAULT_STYLE_IDS([
     ...defaultStyleIds.filter(
       (defaultStyleId) =>
         defaultStyleId.speakerUuid !== props.characterInfo.metas.speakerUuid,
@@ -298,7 +301,7 @@ const closeDialog = () => {
           width: 100%;
           height: 100%;
           .style-icon {
-            $icon-size: $style-item-size / 2;
+            $icon-size: calc($style-item-size / 2);
             width: $icon-size;
             height: $icon-size;
             border-radius: 5px;

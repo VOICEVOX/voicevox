@@ -3,107 +3,34 @@
     <!-- 左上の角 -->
     <div class="sequencer-corner"></div>
     <!-- ルーラー -->
-    <SequencerRuler
-      class="sequencer-ruler"
-      :offset="scrollX"
-      :num-of-measures="numOfMeasures"
-    />
+    <SequencerRuler class="sequencer-ruler" :offset="scrollX" :numMeasures />
     <!-- 鍵盤 -->
     <SequencerKeys
       class="sequencer-keys"
       :offset="scrollY"
-      :black-key-width="28"
+      :blackKeyWidth="28"
     />
     <!-- シーケンサ -->
     <div
       ref="sequencerBody"
       class="sequencer-body"
       :class="{
-        'rect-selecting': editTarget === 'NOTE' && shiftKey,
-        'cursor-draw': editTarget === 'PITCH' && !ctrlKey,
+        'edit-note': editTarget === 'NOTE',
+        'edit-pitch': editTarget === 'PITCH',
+        previewing: nowPreviewing,
+        [cursorClass]: true,
       }"
       aria-label="シーケンサ"
       @mousedown="onMouseDown"
-      @mousemove="onMouseMove"
-      @mouseup="onMouseUp"
-      @dblclick="onDoubleClick"
       @mouseenter="onMouseEnter"
       @mouseleave="onMouseLeave"
+      @dblclick.stop="onDoubleClick"
       @wheel="onWheel"
       @scroll="onScroll"
       @contextmenu.prevent
     >
-      <!-- キャラクター全身 -->
-      <CharacterPortrait />
       <!-- グリッド -->
-      <!-- NOTE: 現状オクターブごとの罫線なし -->
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        :width="gridWidth"
-        :height="gridHeight"
-        class="sequencer-grid"
-      >
-        <defs>
-          <pattern
-            id="sequencer-grid-octave-cells"
-            patternUnits="userSpaceOnUse"
-            :width="gridCellWidth"
-            :height="gridCellHeight * 12"
-          >
-            <rect
-              v-for="(keyInfo, index) in keyInfos"
-              :key="index"
-              x="0"
-              :y="gridCellHeight * index"
-              :width="gridCellWidth"
-              :height="gridCellHeight"
-              :class="`sequencer-grid-cell sequencer-grid-cell-${keyInfo.color}`"
-            />
-            <template v-for="(keyInfo, index) in keyInfos" :key="index">
-              <line
-                v-if="keyInfo.pitch === 'C'"
-                x1="0"
-                :x2="gridCellWidth"
-                :y1="gridCellHeight * (index + 1)"
-                :y2="gridCellHeight * (index + 1)"
-                stroke-width="1"
-                class="sequencer-grid-octave-line"
-              />
-            </template>
-          </pattern>
-          <pattern
-            id="sequencer-grid-measure"
-            patternUnits="userSpaceOnUse"
-            :width="beatWidth * beatsPerMeasure"
-            :height="gridHeight"
-          >
-            <line
-              v-for="n in beatsPerMeasure"
-              :key="n"
-              :x1="beatWidth * (n - 1)"
-              :x2="beatWidth * (n - 1)"
-              y1="0"
-              y2="100%"
-              stroke-width="1"
-              :class="`sequencer-grid-${n === 1 ? 'measure' : 'beat'}-line`"
-            />
-          </pattern>
-        </defs>
-        <rect
-          x="0"
-          y="0"
-          width="100%"
-          height="100%"
-          fill="url(#sequencer-grid-octave-cells)"
-        />
-        <rect
-          x="0"
-          y="0"
-          width="100%"
-          height="100%"
-          fill="url(#sequencer-grid-measure)"
-        />
-      </svg>
+      <SequencerGrid />
       <div
         v-if="editTarget === 'NOTE' && showGuideLine"
         class="sequencer-guideline"
@@ -112,35 +39,39 @@
           transform: `translateX(${guideLineX}px)`,
         }"
       ></div>
-      <!-- TODO: 1つのv-forで全てのノートを描画できるようにする -->
+      <!-- キャラクター全身 -->
+      <CharacterPortrait />
       <!-- undefinedだと警告が出るのでnullを渡す -->
-      <SequencerNote
-        v-for="note in unselectedNotes"
+      <!-- TODO: ちゃんとしたトラックIDを渡す -->
+      <SequencerShadowNote
+        v-for="note in notesInOtherTracks"
         :key="note.id"
-        :note="note"
-        :preview-lyric="previewLyrics.get(note.id) || null"
-        :is-selected="false"
-        @bar-mousedown="onNoteBarMouseDown($event, note)"
-        @left-edge-mousedown="onNoteLeftEdgeMouseDown($event, note)"
-        @right-edge-mousedown="onNoteRightEdgeMouseDown($event, note)"
-        @lyric-mouse-down="onNoteLyricMouseDown($event, note)"
-        @lyric-input="onNoteLyricInput($event, note)"
-        @lyric-blur="onNoteLyricBlur()"
+        :note
       />
       <SequencerNote
-        v-for="note in editTarget === 'NOTE' && nowPreviewing
-          ? previewNotes
-          : selectedNotes"
+        v-for="note in editTarget === 'NOTE'
+          ? notesInSelectedTrackWithPreview
+          : notesInSelectedTrack"
         :key="note.id"
-        :note="note"
-        :preview-lyric="previewLyrics.get(note.id) || null"
-        :is-selected="true"
-        @bar-mousedown="onNoteBarMouseDown($event, note)"
-        @left-edge-mousedown="onNoteLeftEdgeMouseDown($event, note)"
-        @right-edge-mousedown="onNoteRightEdgeMouseDown($event, note)"
-        @lyric-mouse-down="onNoteLyricMouseDown($event, note)"
-        @lyric-input="onNoteLyricInput($event, note)"
-        @lyric-blur="onNoteLyricBlur()"
+        class="sequencer-note"
+        :note
+        :isSelected="selectedNoteIds.has(note.id)"
+        :isPreview="previewNoteIds.has(note.id)"
+        :isOverlapping="overlappingNoteIdsInSelectedTrack.has(note.id)"
+        :previewLyric="previewLyrics.get(note.id) || null"
+        :nowPreviewing
+        :previewMode
+        :cursorClass
+        @barMousedown="onNoteBarMouseDown($event, note)"
+        @barDoubleClick="onNoteBarDoubleClick($event, note)"
+        @leftEdgeMousedown="onNoteLeftEdgeMouseDown($event, note)"
+        @rightEdgeMousedown="onNoteRightEdgeMouseDown($event, note)"
+      />
+      <SequencerLyricInput
+        v-if="editingLyricNote != undefined"
+        :editingLyricNote
+        @lyricInput="onLyricInput"
+        @lyricConfirmed="onLyricConfirmed"
       />
     </div>
     <SequencerPitch
@@ -150,9 +81,9 @@
         marginRight: `${scrollBarWidth}px`,
         marginBottom: `${scrollBarWidth}px`,
       }"
-      :offset-x="scrollX"
-      :offset-y="scrollY"
-      :preview-pitch-edit="previewPitchEdit"
+      :offsetX="scrollX"
+      :offsetY="scrollY"
+      :previewPitchEdit
     />
     <div
       class="sequencer-overlay"
@@ -171,11 +102,23 @@
           width: `${Math.abs(cursorX - rectSelectStartX)}px`,
           height: `${Math.abs(cursorY - rectSelectStartY)}px`,
         }"
+      ></div>
+      <SequencerPhraseIndicator
+        v-for="phraseInfo in phraseInfosInOtherTracks"
+        :key="phraseInfo.key"
+        :phraseKey="phraseInfo.key"
+        :isInSelectedTrack="false"
+        class="sequencer-phrase-indicator"
+        :style="{
+          width: `${phraseInfo.width}px`,
+          transform: `translateX(${phraseInfo.x - scrollX}px)`,
+        }"
       />
       <SequencerPhraseIndicator
-        v-for="phraseInfo in phraseInfos"
+        v-for="phraseInfo in phraseInfosInSelectedTrack"
         :key="phraseInfo.key"
-        :phrase-key="phraseInfo.key"
+        :phraseKey="phraseInfo.key"
+        isInSelectedTrack
         class="sequencer-phrase-indicator"
         :style="{
           width: `${phraseInfo.width}px`,
@@ -191,27 +134,42 @@
       ></div>
     </div>
     <QSlider
-      :model-value="zoomX"
+      :modelValue="zoomX"
       :min="ZOOM_X_MIN"
       :max="ZOOM_X_MAX"
       :step="ZOOM_X_STEP"
       class="zoom-x-slider"
-      @update:model-value="setZoomX"
+      trackSize="2px"
+      @update:modelValue="setZoomX"
     />
     <QSlider
-      :model-value="zoomY"
+      :modelValue="zoomY"
       :min="ZOOM_Y_MIN"
       :max="ZOOM_Y_MAX"
       :step="ZOOM_Y_STEP"
       vertical
       reverse
       class="zoom-y-slider"
-      @update:model-value="setZoomY"
+      trackSize="2px"
+      @update:modelValue="setZoomY"
     />
-    <ContextMenu
-      v-if="editTarget === 'NOTE'"
-      ref="contextMenu"
-      :menudata="contextMenuData"
+    <ContextMenu ref="contextMenu" :menudata="contextMenuData" />
+    <SequencerToolPalette
+      :editTarget
+      :sequencerNoteTool
+      :sequencerPitchTool
+      @update:sequencerNoteTool="
+        (value) =>
+          store.dispatch('SET_SEQUENCER_NOTE_TOOL', {
+            sequencerNoteTool: value,
+          })
+      "
+      @update:sequencerPitchTool="
+        (value) =>
+          store.dispatch('SET_SEQUENCER_PITCH_TOOL', {
+            sequencerPitchTool: value,
+          })
+      "
     />
   </div>
 </template>
@@ -224,20 +182,23 @@ import {
   onMounted,
   onActivated,
   onDeactivated,
+  watch,
 } from "vue";
-import { v4 as uuidv4 } from "uuid";
 import ContextMenu, {
   ContextMenuItemData,
-} from "@/components/Menu/ContextMenu.vue";
+} from "@/components/Menu/ContextMenu/Container.vue";
 import { NoteId } from "@/type/preload";
 import { useStore } from "@/store";
-import { Note, SequencerEditTarget } from "@/store/type";
+import {
+  Note,
+  SequencerEditTarget,
+  NoteEditTool,
+  PitchEditTool,
+} from "@/store/type";
 import {
   PREVIEW_SOUND_DURATION_SECONDS,
   getEndTicksOfPhrase,
-  getMeasureDuration,
   getNoteDuration,
-  getNumOfMeasures,
   getStartTicksOfPhrase,
   noteNumberToFrequency,
   tickToSecond,
@@ -256,17 +217,23 @@ import {
   ZOOM_Y_MIN,
   ZOOM_Y_MAX,
   ZOOM_Y_STEP,
-  DoubleClickDetector,
-  NoteAreaInfo,
-  GridAreaInfo,
   getButton,
+  PreviewMode,
+  MouseButton,
+  MouseDownBehavior,
+  MouseDoubleClickBehavior,
+  CursorState,
 } from "@/sing/viewHelper";
-import SequencerRuler from "@/components/Sing/SequencerRuler.vue";
+import SequencerGrid from "@/components/Sing/SequencerGrid/Container.vue";
+import SequencerRuler from "@/components/Sing/SequencerRuler/Container.vue";
 import SequencerKeys from "@/components/Sing/SequencerKeys.vue";
 import SequencerNote from "@/components/Sing/SequencerNote.vue";
+import SequencerShadowNote from "@/components/Sing/SequencerShadowNote.vue";
 import SequencerPhraseIndicator from "@/components/Sing/SequencerPhraseIndicator.vue";
 import CharacterPortrait from "@/components/Sing/CharacterPortrait.vue";
 import SequencerPitch from "@/components/Sing/SequencerPitch.vue";
+import SequencerLyricInput from "@/components/Sing/SequencerLyricInput.vue";
+import SequencerToolPalette from "@/components/Sing/SequencerToolPalette.vue";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import { createLogger } from "@/domain/frontend/log";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
@@ -277,45 +244,77 @@ import {
 import { applyGaussianFilter, linearInterpolation } from "@/sing/utility";
 import { useLyricInput } from "@/composables/useLyricInput";
 import { ExhaustiveError } from "@/type/utility";
-
-type PreviewMode =
-  | "ADD"
-  | "MOVE"
-  | "RESIZE_RIGHT"
-  | "RESIZE_LEFT"
-  | "DRAW_PITCH"
-  | "ERASE_PITCH";
+import { uuid4 } from "@/helpers/random";
 
 // 直接イベントが来ているかどうか
 const isSelfEventTarget = (event: UIEvent) => {
   return event.target === event.currentTarget;
 };
 
-const store = useStore();
 const { warn } = createLogger("ScoreSequencer");
+const store = useStore();
 const state = store.state;
 
-// 分解能（Ticks Per Quarter Note）
+// 選択中のトラックID
+const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
+
+// TPQN、テンポ、ノーツ
 const tpqn = computed(() => state.tpqn);
-
-// テンポ
 const tempos = computed(() => state.tempos);
-
-// 拍子
-const timeSignatures = computed(() => state.timeSignatures);
-
-// ノート
-const notes = computed(() => store.getters.SELECTED_TRACK.notes);
+const notesInSelectedTrack = computed(() => store.getters.SELECTED_TRACK.notes);
+const notesInOtherTracks = computed(() =>
+  [...store.state.tracks.entries()].flatMap(([trackId, track]) =>
+    trackId === selectedTrackId.value ? [] : track.notes,
+  ),
+);
+const overlappingNoteIdsInSelectedTrack = computed(() =>
+  store.getters.OVERLAPPING_NOTE_IDS(selectedTrackId.value),
+);
+const selectedNotes = computed(() =>
+  store.getters.SELECTED_TRACK.notes.filter((note) =>
+    selectedNoteIds.value.has(note.id),
+  ),
+);
+const selectedNoteIds = computed(
+  () => new Set(store.getters.SELECTED_NOTE_IDS),
+);
 const isNoteSelected = computed(() => {
-  return state.selectedNoteIds.size > 0;
+  return selectedNoteIds.value.size > 0;
 });
-const unselectedNotes = computed(() => {
-  const selectedNoteIds = state.selectedNoteIds;
-  return notes.value.filter((value) => !selectedNoteIds.has(value.id));
-});
-const selectedNotes = computed(() => {
-  const selectedNoteIds = state.selectedNoteIds;
-  return notes.value.filter((value) => selectedNoteIds.has(value.id));
+const notesInSelectedTrackWithPreview = computed(() => {
+  if (nowPreviewing.value) {
+    const previewNoteIds = new Set(previewNotes.value.map((value) => value.id));
+    return previewNotes.value
+      .concat(
+        notesInSelectedTrack.value.filter(
+          (note) => !previewNoteIds.has(note.id),
+        ),
+      )
+      .toSorted((a, b) => {
+        const aIsSelectedOrPreview =
+          selectedNoteIds.value.has(a.id) || previewNoteIds.has(a.id);
+        const bIsSelectedOrPreview =
+          selectedNoteIds.value.has(b.id) || previewNoteIds.has(b.id);
+        if (aIsSelectedOrPreview === bIsSelectedOrPreview) {
+          return a.position - b.position;
+        } else {
+          // 「プレビュー中か選択中のノート」が「選択されていないノート」より
+          // 手前に表示されるようにする
+          return aIsSelectedOrPreview ? 1 : -1;
+        }
+      });
+  } else {
+    return notesInSelectedTrack.value.toSorted((a, b) => {
+      const aIsSelected = selectedNoteIds.value.has(a.id);
+      const bIsSelected = selectedNoteIds.value.has(b.id);
+      if (aIsSelected === bIsSelected) {
+        return a.position - b.position;
+      } else {
+        // 「選択中のノート」が「選択されていないノート」より手前に表示されるようにする
+        return aIsSelected ? 1 : -1;
+      }
+    });
+  }
 });
 
 // 矩形選択
@@ -334,49 +333,15 @@ const snapTicks = computed(() => {
   return getNoteDuration(state.sequencerSnapType, tpqn.value);
 });
 
-// シーケンサグリッド
-const gridCellTicks = snapTicks; // ひとまずスナップ幅＝グリッドセル幅
-const gridCellWidth = computed(() => {
-  return tickToBaseX(gridCellTicks.value, tpqn.value) * zoomX.value;
-});
+// グリッド
 const gridCellBaseHeight = getKeyBaseHeight();
-const gridCellHeight = computed(() => {
-  return gridCellBaseHeight * zoomY.value;
-});
-const numOfMeasures = computed(() => {
-  // NOTE: 最低長: 仮32小節...スコア長(曲長さ)が決まっていないため、無限スクロール化する or 最後尾に足した場合は伸びるようにするなど？
-  const minNumOfMeasures = 32;
-  // NOTE: いったん最後尾に足した場合は伸びるようにする
-  return Math.max(
-    minNumOfMeasures,
-    getNumOfMeasures(
-      notes.value,
-      tempos.value,
-      timeSignatures.value,
-      tpqn.value,
-    ) + 1,
-  );
-});
-const beatsPerMeasure = computed(() => {
-  return timeSignatures.value[0].beats;
-});
-const beatWidth = computed(() => {
-  const beatType = timeSignatures.value[0].beatType;
-  const wholeNoteDuration = tpqn.value * 4;
-  const beatTicks = wholeNoteDuration / beatType;
-  return tickToBaseX(beatTicks, tpqn.value) * zoomX.value;
-});
-const gridWidth = computed(() => {
-  // TODO: 複数拍子に対応する
-  const beats = timeSignatures.value[0].beats;
-  const beatType = timeSignatures.value[0].beatType;
-  const measureDuration = getMeasureDuration(beats, beatType, tpqn.value);
-  const numOfGridColumns =
-    Math.round(measureDuration / gridCellTicks.value) * numOfMeasures.value;
-  return gridCellWidth.value * numOfGridColumns;
-});
 const gridHeight = computed(() => {
-  return gridCellHeight.value * keyInfos.length;
+  return gridCellBaseHeight * zoomY.value * keyInfos.length;
+});
+
+// 小節の数
+const numMeasures = computed(() => {
+  return store.getters.SEQUENCER_NUM_MEASURES;
 });
 
 // スクロール位置
@@ -384,7 +349,7 @@ const scrollX = ref(0);
 const scrollY = ref(0);
 
 // 再生ヘッドの位置
-const playheadTicks = ref(0);
+const playheadTicks = computed(() => store.getters.PLAYHEAD_POSITION);
 const playheadX = computed(() => {
   const baseX = tickToBaseX(playheadTicks.value, tpqn.value);
   return Math.floor(baseX * zoomX.value);
@@ -399,13 +364,23 @@ const phraseInfos = computed(() => {
     const endBaseX = tickToBaseX(endTicks, tpqn.value);
     const startX = startBaseX * zoomX.value;
     const endX = endBaseX * zoomX.value;
-    return { key, x: startX, width: endX - startX };
+    const trackId = phrase.trackId;
+    return { key, x: startX, width: endX - startX, trackId };
   });
+});
+const phraseInfosInSelectedTrack = computed(() => {
+  return phraseInfos.value.filter(
+    (info) => info.trackId === selectedTrackId.value,
+  );
+});
+const phraseInfosInOtherTracks = computed(() => {
+  return phraseInfos.value.filter(
+    (info) => info.trackId !== selectedTrackId.value,
+  );
 });
 
 const ctrlKey = useCommandOrControlKey();
-const editTarget = computed(() => state.sequencerEditTarget);
-const editFrameRate = computed(() => state.editFrameRate);
+const editorFrameRate = computed(() => state.editorFrameRate);
 const scrollBarWidth = ref(12);
 const sequencerBody = ref<HTMLElement | null>(null);
 
@@ -417,24 +392,30 @@ const cursorY = ref(0);
 const { previewLyrics, commitPreviewLyrics, splitAndUpdatePreview } =
   useLyricInput();
 
-const onNoteLyricInput = (text: string, note: Note) => {
+const onLyricInput = (text: string, note: Note) => {
   splitAndUpdatePreview(text, note);
 };
 
-const onNoteLyricBlur = () => {
+const onLyricConfirmed = (nextNoteId: NoteId | undefined) => {
   commitPreviewLyrics();
+  void store.actions.SET_EDITING_LYRIC_NOTE_ID({ noteId: nextNoteId });
 };
 
 // プレビュー
 // FIXME: 関連する値を１つのobjectにまとめる
-const nowPreviewing = ref(false);
-let previewMode: PreviewMode = "ADD";
+const previewMode = ref<PreviewMode>("IDLE");
+const nowPreviewing = computed(() => previewMode.value !== "IDLE");
+const executePreviewProcess = ref(false);
 let previewRequestId = 0;
 let previewStartEditTarget: SequencerEditTarget = "NOTE";
-let executePreviewProcess = false;
 // ノート編集のプレビュー
+// プレビュー中に更新（移動やリサイズ等）されるノーツ
 const previewNotes = ref<Note[]>([]);
+// プレビュー中に変更されない（プレビュー前の状態を保持する）ノーツ
 const copiedNotesForPreview = new Map<NoteId, Note>();
+const previewNoteIds = computed(() => {
+  return new Set(nowPreviewing.value ? copiedNotesForPreview.keys() : []);
+});
 let dragStartTicks = 0;
 let dragStartNoteNumber = 0;
 let dragStartGuideLineTicks = 0;
@@ -448,16 +429,245 @@ const previewPitchEdit = ref<
 >(undefined);
 const prevCursorPos = { frame: 0, frequency: 0 }; // 前のカーソル位置
 
-// ダブルクリック
-let mouseDownAreaInfo: NoteAreaInfo | GridAreaInfo | undefined;
-const doubleClickDetector = new DoubleClickDetector<
-  NoteAreaInfo | GridAreaInfo
->();
-let ignoreDoubleClick = false;
+// 歌詞を編集中のノート
+const editingLyricNote = computed(() => {
+  return notesInSelectedTrack.value.find(
+    (note) => note.id === state.editingLyricNoteId,
+  );
+});
 
 // 入力を補助する線
 const showGuideLine = ref(true);
 const guideLineX = ref(0);
+
+// 編集モード
+// NOTE: ステートマシン実装後に削除する
+// 議論 https://github.com/VOICEVOX/voicevox/pull/2367#discussion_r1853262865
+
+// 編集モードの外部コンテキスト
+interface EditModeContext {
+  readonly ctrlKey: boolean;
+  readonly shiftKey: boolean;
+  readonly nowPreviewing: boolean;
+  readonly editTarget: SequencerEditTarget;
+  readonly sequencerNoteTool: NoteEditTool;
+  readonly sequencerPitchTool: PitchEditTool;
+  readonly isSelfEventTarget?: boolean;
+  readonly mouseButton?: MouseButton;
+  readonly editingLyricNoteId?: NoteId;
+}
+
+// 編集対象
+const editTarget = computed(() => store.state.sequencerEditTarget);
+// 選択中のノート編集ツール
+const sequencerNoteTool = computed(() => state.sequencerNoteTool);
+// 選択中のピッチ編集ツール
+const sequencerPitchTool = computed(() => state.sequencerPitchTool);
+
+/**
+ * マウスダウン時の振る舞いを判定する
+ * 条件の判定のみを行い、実際の処理は呼び出し側で行う
+ */
+const determineMouseDownBehavior = (
+  context: EditModeContext,
+): MouseDownBehavior => {
+  const { isSelfEventTarget, mouseButton, editingLyricNoteId } = context;
+
+  // プレビュー中は無視
+  if (nowPreviewing.value) return "IGNORE";
+
+  // ノート編集の場合
+  if (editTarget.value === "NOTE") {
+    // イベントが来ていない場合は無視
+    if (!isSelfEventTarget) return "IGNORE";
+    // 歌詞編集中は無視
+    if (editingLyricNoteId != undefined) return "IGNORE";
+
+    // 左クリックの場合
+    if (mouseButton === "LEFT_BUTTON") {
+      // シフトキーが押されている場合は常に矩形選択開始
+      if (shiftKey.value) return "START_RECT_SELECT";
+
+      // 編集優先ツールの場合
+      if (sequencerNoteTool.value === "EDIT_FIRST") {
+        // コントロールキーが押されている場合は全選択解除
+        if (ctrlKey.value) {
+          return "DESELECT_ALL";
+        }
+        return "ADD_NOTE";
+      }
+
+      // 選択優先ツールの場合
+      if (sequencerNoteTool.value === "SELECT_FIRST") {
+        // 矩形選択開始
+        return "START_RECT_SELECT";
+      }
+    }
+
+    return "DESELECT_ALL";
+  }
+
+  // ピッチ編集の場合
+  if (editTarget.value === "PITCH") {
+    // 左クリック以外は無視
+    if (mouseButton !== "LEFT_BUTTON") return "IGNORE";
+
+    // ピッチ削除ツールが選択されている場合はピッチ削除
+    if (sequencerPitchTool.value === "ERASE") {
+      return "ERASE_PITCH";
+    }
+
+    // それ以外はピッチ編集
+    return "DRAW_PITCH";
+  }
+
+  return "IGNORE";
+};
+
+/**
+ * ダブルクリック時の振る舞いを判定する
+ */
+const determineDoubleClickBehavior = (
+  context: EditModeContext,
+): MouseDoubleClickBehavior => {
+  const { isSelfEventTarget, mouseButton } = context;
+
+  // ノート編集の場合
+  if (editTarget.value === "NOTE") {
+    // 直接イベントが来ていない場合は無視
+    if (!isSelfEventTarget) return "IGNORE";
+
+    // プレビュー中は無視
+    if (nowPreviewing.value) return "IGNORE";
+
+    // 選択優先ツールではノート追加
+    if (mouseButton === "LEFT_BUTTON") {
+      if (sequencerNoteTool.value === "SELECT_FIRST") {
+        return "ADD_NOTE";
+      }
+    }
+    return "IGNORE";
+  }
+
+  return "IGNORE";
+};
+
+// 以下のtoolChangedByCtrlは2024/12/04時点での期待動作が以下のため必要…
+//
+// DRAW選択時 → Ctrlキー押す → → Ctrlキー離す → DRAWに戻る
+// ERASE選択時 → Ctrlキー押す → なにも起こらない(DRAWに変更されない)
+//
+// 単純にCtrlキーやPitchToolの新旧比較ではCtrlキー離されたときに常にツールがDRAWに戻ってしまうため
+// 一時的な切り替えであることを保持しておく必要がある
+
+// Ctrlキーが押されたときにピッチツールを変更したかどうか
+const toolChangedByCtrl = ref(false);
+
+// ピッチ編集モードにおいてCtrlキーが押されたときにピッチツールを消しゴムツールにする
+watch([ctrlKey], () => {
+  // ピッチ編集モードでない場合は無視
+  if (editTarget.value !== "PITCH") {
+    return;
+  }
+
+  // 現在のツールがピッチ描画ツールの場合
+  if (sequencerPitchTool.value === "DRAW") {
+    // Ctrlキーが押されたときはピッチ削除ツールに変更
+    if (ctrlKey.value) {
+      void store.actions.SET_SEQUENCER_PITCH_TOOL({
+        sequencerPitchTool: "ERASE",
+      });
+      toolChangedByCtrl.value = true;
+    }
+  }
+
+  // 現在のツールがピッチ削除ツールかつCtrlキーが離されたとき
+  if (sequencerPitchTool.value === "ERASE" && toolChangedByCtrl.value) {
+    // ピッチ描画ツールに戻す
+    if (!ctrlKey.value) {
+      void store.actions.SET_SEQUENCER_PITCH_TOOL({
+        sequencerPitchTool: "DRAW",
+      });
+      toolChangedByCtrl.value = false;
+    }
+  }
+});
+
+// カーソルの状態
+// TODO: ステートマシン実装後に削除する
+// 議論 https://github.com/VOICEVOX/voicevox/pull/2367#discussion_r1853262865
+
+/**
+ * カーソルの状態を関連するコンテキストから取得する
+ */
+const determineCursorBehavior = (): CursorState => {
+  // プレビューの場合
+  if (nowPreviewing.value && previewMode.value !== "IDLE") {
+    switch (previewMode.value) {
+      case "ADD_NOTE":
+        return "DRAW";
+      case "MOVE_NOTE":
+        return "MOVE";
+      case "RESIZE_NOTE_RIGHT":
+      case "RESIZE_NOTE_LEFT":
+        return "EW_RESIZE";
+      case "DRAW_PITCH":
+        return "DRAW";
+      case "ERASE_PITCH":
+        return "ERASE";
+      default:
+        return "UNSET";
+    }
+  }
+
+  // ノート編集の場合
+  if (editTarget.value === "NOTE") {
+    // シフトキーが押されていたら常に十字カーソル
+    if (shiftKey.value) {
+      return "CROSSHAIR";
+    }
+    // ノート編集ツールが選択されておりCtrlキーが押されていない場合は描画カーソル
+    if (sequencerNoteTool.value === "EDIT_FIRST" && !ctrlKey.value) {
+      return "DRAW";
+    }
+    // それ以外は未設定
+    return "UNSET";
+  }
+
+  // ピッチ編集の場合
+  if (editTarget.value === "PITCH") {
+    // 描画ツールが選択されていたら描画カーソル
+    if (sequencerPitchTool.value === "DRAW") {
+      return "DRAW";
+    }
+    // 削除ツールが選択されていたら消しゴムカーソル
+    if (sequencerPitchTool.value === "ERASE") {
+      return "ERASE";
+    }
+  }
+  return "UNSET";
+};
+
+// カーソル用のCSSクラス名ヘルパー
+const cursorClass = computed(() => {
+  switch (cursorState.value) {
+    case "EW_RESIZE":
+      return "cursor-ew-resize";
+    case "CROSSHAIR":
+      return "cursor-crosshair";
+    case "MOVE":
+      return "cursor-move";
+    case "DRAW":
+      return "cursor-draw";
+    case "ERASE":
+      return "cursor-erase";
+    default:
+      return "";
+  }
+});
+
+// カーソルの状態
+const cursorState = computed(() => determineCursorBehavior());
 
 const previewAdd = () => {
   const cursorBaseX = (scrollX.value + cursorX.value) / zoomX.value;
@@ -640,7 +850,7 @@ const previewDrawPitch = () => {
   if (previewPitchEdit.value.type !== "draw") {
     throw new Error("previewPitchEdit.value.type is not draw.");
   }
-  const frameRate = editFrameRate.value;
+  const frameRate = editorFrameRate.value;
   const cursorBaseX = (scrollX.value + cursorX.value) / zoomX.value;
   const cursorBaseY = (scrollY.value + cursorY.value) / zoomY.value;
   const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
@@ -714,7 +924,7 @@ const previewErasePitch = () => {
   if (previewPitchEdit.value.type !== "erase") {
     throw new Error("previewPitchEdit.value.type is not erase.");
   }
-  const frameRate = editFrameRate.value;
+  const frameRate = editorFrameRate.value;
   const cursorBaseX = (scrollX.value + cursorX.value) / zoomX.value;
   const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
   const cursorSeconds = tickToSecond(cursorTicks, tempos.value, tpqn.value);
@@ -739,26 +949,26 @@ const previewErasePitch = () => {
 };
 
 const preview = () => {
-  if (executePreviewProcess) {
-    if (previewMode === "ADD") {
+  if (executePreviewProcess.value) {
+    if (previewMode.value === "ADD_NOTE") {
       previewAdd();
     }
-    if (previewMode === "MOVE") {
+    if (previewMode.value === "MOVE_NOTE") {
       previewMove();
     }
-    if (previewMode === "RESIZE_RIGHT") {
+    if (previewMode.value === "RESIZE_NOTE_RIGHT") {
       previewResizeRight();
     }
-    if (previewMode === "RESIZE_LEFT") {
+    if (previewMode.value === "RESIZE_NOTE_LEFT") {
       previewResizeLeft();
     }
-    if (previewMode === "DRAW_PITCH") {
+    if (previewMode.value === "DRAW_PITCH") {
       previewDrawPitch();
     }
-    if (previewMode === "ERASE_PITCH") {
+    if (previewMode.value === "ERASE_PITCH") {
       previewErasePitch();
     }
-    executePreviewProcess = false;
+    executePreviewProcess.value = false;
   }
   previewRequestId = requestAnimationFrame(preview);
 };
@@ -772,9 +982,9 @@ const getYInBorderBox = (clientY: number, element: HTMLElement) => {
 };
 
 const selectOnlyThis = (note: Note) => {
-  store.dispatch("DESELECT_ALL_NOTES");
-  store.dispatch("SELECT_NOTES", { noteIds: [note.id] });
-  store.dispatch("PLAY_PREVIEW_SOUND", {
+  void store.actions.DESELECT_ALL_NOTES();
+  void store.actions.SELECT_NOTES({ noteIds: [note.id] });
+  void store.actions.PLAY_PREVIEW_SOUND({
     noteNumber: note.noteNumber,
     duration: PREVIEW_SOUND_DURATION_SECONDS,
   });
@@ -809,55 +1019,64 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
     const guideLineTicks =
       Math.round(cursorTicks / snapTicks.value - 0.25) * snapTicks.value;
     const copiedNotes: Note[] = [];
-    if (mode === "ADD") {
+    if (mode === "ADD_NOTE") {
       if (cursorNoteNumber < 0) {
         return;
       }
       note = {
-        id: NoteId(uuidv4()),
+        id: NoteId(uuid4()),
         position: guideLineTicks,
         duration: snapTicks.value,
         noteNumber: cursorNoteNumber,
         lyric: getDoremiFromNoteNumber(cursorNoteNumber),
       };
-      store.dispatch("DESELECT_ALL_NOTES");
+      void store.actions.DESELECT_ALL_NOTES();
       copiedNotes.push(note);
     } else {
       if (!note) {
         throw new Error("note is undefined.");
       }
       if (event.shiftKey) {
-        let minIndex = notes.value.length - 1;
+        // Shiftキーが押されている場合は選択ノートまでの範囲選択
+        let minIndex = notesInSelectedTrack.value.length - 1;
         let maxIndex = 0;
-        for (let i = 0; i < notes.value.length; i++) {
-          const noteId = notes.value[i].id;
-          if (state.selectedNoteIds.has(noteId) || noteId === note.id) {
+        for (let i = 0; i < notesInSelectedTrack.value.length; i++) {
+          const noteId = notesInSelectedTrack.value[i].id;
+          if (selectedNoteIds.value.has(noteId) || noteId === note.id) {
             minIndex = Math.min(minIndex, i);
             maxIndex = Math.max(maxIndex, i);
           }
         }
         const noteIdsToSelect: NoteId[] = [];
         for (let i = minIndex; i <= maxIndex; i++) {
-          const noteId = notes.value[i].id;
-          if (!state.selectedNoteIds.has(noteId)) {
+          const noteId = notesInSelectedTrack.value[i].id;
+          if (!selectedNoteIds.value.has(noteId)) {
             noteIdsToSelect.push(noteId);
           }
         }
-        store.dispatch("SELECT_NOTES", { noteIds: noteIdsToSelect });
+        void store.actions.SELECT_NOTES({ noteIds: noteIdsToSelect });
       } else if (isOnCommandOrCtrlKeyDown(event)) {
-        store.dispatch("SELECT_NOTES", { noteIds: [note.id] });
-      } else if (!state.selectedNoteIds.has(note.id)) {
-        selectOnlyThis(note);
+        // CommandキーかCtrlキーが押されている場合
+        if (selectedNoteIds.value.has(note.id)) {
+          // 選択中のノートなら選択解除
+          void store.actions.DESELECT_NOTES({ noteIds: [note.id] });
+          return;
+        }
+        // 未選択のノートなら選択に追加
+        void store.actions.SELECT_NOTES({ noteIds: [note.id] });
+      } else if (!selectedNoteIds.value.has(note.id)) {
+        // 選択中のノートでない場合は選択状態にする
+        void selectOnlyThis(note);
       }
-      for (const note of selectedNotes.value) {
-        copiedNotes.push({ ...note });
+      for (const selectedNote of selectedNotes.value) {
+        copiedNotes.push({ ...selectedNote });
       }
     }
     dragStartTicks = cursorTicks;
     dragStartNoteNumber = cursorNoteNumber;
     dragStartGuideLineTicks = guideLineTicks;
     draggingNoteId = note.id;
-    edited = mode === "ADD";
+    edited = mode === "ADD_NOTE";
     copiedNotesForPreview.clear();
     for (const copiedNote of copiedNotes) {
       copiedNotesForPreview.set(copiedNote.id, copiedNote);
@@ -866,7 +1085,7 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
   } else if (editTarget.value === "PITCH") {
     // 編集ターゲットがピッチのときの処理
 
-    const frameRate = editFrameRate.value;
+    const frameRate = editorFrameRate.value;
     const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
     const cursorSeconds = tickToSecond(cursorTicks, tempos.value, tpqn.value);
     const cursorFrame = Math.round(cursorSeconds * frameRate);
@@ -892,10 +1111,9 @@ const startPreview = (event: MouseEvent, mode: PreviewMode, note?: Note) => {
   } else {
     throw new ExhaustiveError(editTarget.value);
   }
-  previewMode = mode;
+  previewMode.value = mode;
   previewStartEditTarget = editTarget.value;
-  executePreviewProcess = true;
-  nowPreviewing.value = true;
+  executePreviewProcess.value = true;
   previewRequestId = requestAnimationFrame(preview);
 };
 
@@ -903,18 +1121,32 @@ const endPreview = () => {
   cancelAnimationFrame(previewRequestId);
   if (previewStartEditTarget === "NOTE") {
     // 編集ターゲットがノートのときにプレビューを開始した場合の処理
-
     if (edited) {
-      if (previewMode === "ADD") {
-        store.dispatch("COMMAND_ADD_NOTES", { notes: previewNotes.value });
-        store.dispatch("SELECT_NOTES", {
-          noteIds: previewNotes.value.map((value) => value.id),
+      const previewTrackId = selectedTrackId.value;
+      const noteIds = previewNotes.value.map((note) => note.id);
+
+      if (previewMode.value === "ADD_NOTE") {
+        void store.actions.COMMAND_ADD_NOTES({
+          notes: previewNotes.value,
+          trackId: previewTrackId,
         });
-      } else {
-        store.dispatch("COMMAND_UPDATE_NOTES", { notes: previewNotes.value });
+        void store.actions.SELECT_NOTES({
+          noteIds,
+        });
+      } else if (
+        previewMode.value === "MOVE_NOTE" ||
+        previewMode.value === "RESIZE_NOTE_RIGHT" ||
+        previewMode.value === "RESIZE_NOTE_LEFT"
+      ) {
+        // ノートの編集処理（移動・リサイズ）
+        void store.actions.COMMAND_UPDATE_NOTES({
+          notes: previewNotes.value,
+          trackId: previewTrackId,
+        });
+        void store.actions.SELECT_NOTES({ noteIds });
       }
       if (previewNotes.value.length === 1) {
-        store.dispatch("PLAY_PREVIEW_SOUND", {
+        void store.actions.PLAY_PREVIEW_SOUND({
           noteNumber: previewNotes.value[0].noteNumber,
           duration: PREVIEW_SOUND_DURATION_SECONDS,
         });
@@ -937,15 +1169,17 @@ const endPreview = () => {
         applyGaussianFilter(data, 0.7);
         data = data.map((value) => Math.exp(value));
 
-        store.dispatch("COMMAND_SET_PITCH_EDIT_DATA", {
-          data,
+        void store.actions.COMMAND_SET_PITCH_EDIT_DATA({
+          pitchArray: data,
           startFrame: previewPitchEdit.value.startFrame,
+          trackId: selectedTrackId.value,
         });
       }
     } else if (previewPitchEditType === "erase") {
-      store.dispatch("COMMAND_ERASE_PITCH_EDIT_DATA", {
+      void store.actions.COMMAND_ERASE_PITCH_EDIT_DATA({
         startFrame: previewPitchEdit.value.startFrame,
         frameLength: previewPitchEdit.value.frameLength,
+        trackId: selectedTrackId.value,
       });
     } else {
       throw new ExhaustiveError(previewPitchEditType);
@@ -954,23 +1188,32 @@ const endPreview = () => {
   } else {
     throw new ExhaustiveError(previewStartEditTarget);
   }
-  nowPreviewing.value = false;
+  previewMode.value = "IDLE";
+  previewNotes.value = [];
+  copiedNotesForPreview.clear();
+  edited = false;
 };
 
 const onNoteBarMouseDown = (event: MouseEvent, note: Note) => {
   if (editTarget.value !== "NOTE" || !isSelfEventTarget(event)) {
     return;
   }
-  const mouseButton = getButton(event);
-  // ダブルクリック用の処理を行う
-  if (mouseButton === "LEFT_BUTTON") {
-    mouseDownAreaInfo = new NoteAreaInfo(note.id);
-  }
 
+  const mouseButton = getButton(event);
   if (mouseButton === "LEFT_BUTTON") {
-    startPreview(event, "MOVE", note);
-  } else if (!state.selectedNoteIds.has(note.id)) {
+    startPreview(event, "MOVE_NOTE", note);
+  } else if (!selectedNoteIds.value.has(note.id)) {
     selectOnlyThis(note);
+  }
+};
+
+const onNoteBarDoubleClick = (event: MouseEvent, note: Note) => {
+  if (editTarget.value !== "NOTE") {
+    return;
+  }
+  const mouseButton = getButton(event);
+  if (mouseButton === "LEFT_BUTTON" && note.id !== state.editingLyricNoteId) {
+    void store.actions.SET_EDITING_LYRIC_NOTE_ID({ noteId: note.id });
   }
 };
 
@@ -979,14 +1222,9 @@ const onNoteLeftEdgeMouseDown = (event: MouseEvent, note: Note) => {
     return;
   }
   const mouseButton = getButton(event);
-  // ダブルクリック用の処理を行う
   if (mouseButton === "LEFT_BUTTON") {
-    mouseDownAreaInfo = new NoteAreaInfo(note.id);
-  }
-
-  if (mouseButton === "LEFT_BUTTON") {
-    startPreview(event, "RESIZE_LEFT", note);
-  } else if (!state.selectedNoteIds.has(note.id)) {
+    startPreview(event, "RESIZE_NOTE_LEFT", note);
+  } else if (!selectedNoteIds.value.has(note.id)) {
     selectOnlyThis(note);
   }
 };
@@ -996,66 +1234,59 @@ const onNoteRightEdgeMouseDown = (event: MouseEvent, note: Note) => {
     return;
   }
   const mouseButton = getButton(event);
-  // ダブルクリック用の処理を行う
   if (mouseButton === "LEFT_BUTTON") {
-    mouseDownAreaInfo = new NoteAreaInfo(note.id);
-  }
-
-  if (mouseButton === "LEFT_BUTTON") {
-    startPreview(event, "RESIZE_RIGHT", note);
-  } else if (!state.selectedNoteIds.has(note.id)) {
-    selectOnlyThis(note);
-  }
-};
-
-const onNoteLyricMouseDown = (event: MouseEvent, note: Note) => {
-  if (editTarget.value !== "NOTE" || !isSelfEventTarget(event)) {
-    return;
-  }
-  const mouseButton = getButton(event);
-  // ダブルクリック用の処理を行う
-  if (mouseButton === "LEFT_BUTTON") {
-    mouseDownAreaInfo = new NoteAreaInfo(note.id);
-  }
-
-  if (!state.selectedNoteIds.has(note.id)) {
+    startPreview(event, "RESIZE_NOTE_RIGHT", note);
+  } else if (!selectedNoteIds.value.has(note.id)) {
     selectOnlyThis(note);
   }
 };
 
 const onMouseDown = (event: MouseEvent) => {
-  if (editTarget.value === "NOTE" && !isSelfEventTarget(event)) {
-    return;
-  }
-  const mouseButton = getButton(event);
-  // ダブルクリック用の処理を行う
-  if (mouseButton === "LEFT_BUTTON") {
-    mouseDownAreaInfo = new GridAreaInfo();
-  }
+  // TODO: isSelfEventTarget、mouseButton、editingLyricNoteId以外は必要ないが、
+  // 必要な依存関係明示のため(とuseEditModeからのコピペのためcontextに入れている
+  // ステートマシン実装時に要修正
+  const mouseDownContext = {
+    ctrlKey: ctrlKey.value,
+    shiftKey: shiftKey.value,
+    nowPreviewing: nowPreviewing.value,
+    editTarget: editTarget.value,
+    sequencerNoteTool: sequencerNoteTool.value,
+    sequencerPitchTool: sequencerPitchTool.value,
+    isSelfEventTarget: isSelfEventTarget(event),
+    mouseButton: getButton(event),
+    editingLyricNoteId: state.editingLyricNoteId,
+  } satisfies EditModeContext;
+  // マウスダウン時の振る舞い
+  const behavior = determineMouseDownBehavior(mouseDownContext);
 
-  // TODO: メニューが表示されている場合はメニュー非表示のみ行いたい
-  if (editTarget.value === "NOTE") {
-    if (mouseButton === "LEFT_BUTTON") {
-      if (event.shiftKey) {
-        isRectSelecting.value = true;
-        rectSelectStartX.value = cursorX.value;
-        rectSelectStartY.value = cursorY.value;
-      } else {
-        startPreview(event, "ADD");
-      }
-    } else {
-      store.dispatch("DESELECT_ALL_NOTES");
-    }
-  } else if (editTarget.value === "PITCH") {
-    if (mouseButton === "LEFT_BUTTON") {
-      if (isOnCommandOrCtrlKeyDown(event)) {
-        startPreview(event, "ERASE_PITCH");
-      } else {
-        startPreview(event, "DRAW_PITCH");
-      }
-    }
-  } else {
-    throw new ExhaustiveError(editTarget.value);
+  switch (behavior) {
+    case "IGNORE":
+      return;
+
+    case "START_RECT_SELECT":
+      isRectSelecting.value = true;
+      rectSelectStartX.value = cursorX.value;
+      rectSelectStartY.value = cursorY.value;
+      break;
+
+    case "ADD_NOTE":
+      startPreview(event, "ADD_NOTE");
+      break;
+
+    case "DESELECT_ALL":
+      void store.actions.DESELECT_ALL_NOTES();
+      break;
+
+    case "DRAW_PITCH":
+      startPreview(event, "DRAW_PITCH");
+      break;
+
+    case "ERASE_PITCH":
+      startPreview(event, "ERASE_PITCH");
+      break;
+
+    default:
+      break;
   }
 };
 
@@ -1068,7 +1299,7 @@ const onMouseMove = (event: MouseEvent) => {
   cursorY.value = getYInBorderBox(event.clientY, sequencerBodyElement);
 
   if (nowPreviewing.value) {
-    executePreviewProcess = true;
+    executePreviewProcess.value = true;
   } else {
     const scrollLeft = sequencerBodyElement.scrollLeft;
     const cursorBaseX = (scrollLeft + cursorX.value) / zoomX.value;
@@ -1086,17 +1317,45 @@ const onMouseUp = (event: MouseEvent) => {
   if (mouseButton !== "LEFT_BUTTON") {
     return;
   }
-  // ダブルクリック用の処理を行う
-  if (mouseDownAreaInfo) {
-    doubleClickDetector.recordClick(event.detail, mouseDownAreaInfo);
-  }
-  ignoreDoubleClick =
-    editTarget.value !== "NOTE" || (nowPreviewing.value && edited);
-
   if (isRectSelecting.value) {
     rectSelect(isOnCommandOrCtrlKeyDown(event));
   } else if (nowPreviewing.value) {
     endPreview();
+  }
+};
+
+const onDoubleClick = (event: MouseEvent) => {
+  // TODO: isSelfEventTarget以外は必要ないが、
+  // 必要な依存関係明示のため(とuseEditModeからのコピペのため)contextに入れている
+  // ステートマシン実装時に要修正
+  const mouseDoubleClickContext = {
+    ctrlKey: ctrlKey.value,
+    shiftKey: shiftKey.value,
+    nowPreviewing: nowPreviewing.value,
+    editTarget: editTarget.value,
+    sequencerNoteTool: sequencerNoteTool.value,
+    sequencerPitchTool: sequencerPitchTool.value,
+    isSelfEventTarget: isSelfEventTarget(event),
+    mouseButton: getButton(event),
+  };
+
+  const behavior = determineDoubleClickBehavior(mouseDoubleClickContext);
+
+  // 振る舞いごとの処理
+  switch (behavior) {
+    case "IGNORE":
+      return;
+
+    case "ADD_NOTE": {
+      startPreview(event, "ADD_NOTE");
+      // ダブルクリックで追加した場合はプレビューを即終了しノートを追加する
+      // mouseDownとの二重状態を避けるため
+      endPreview();
+      return;
+    }
+
+    default:
+      break;
   }
 };
 
@@ -1128,7 +1387,7 @@ const rectSelect = (additive: boolean) => {
   );
 
   const noteIdsToSelect: NoteId[] = [];
-  for (const note of notes.value) {
+  for (const note of notesInSelectedTrack.value) {
     if (
       note.position + note.duration >= startTicks &&
       note.position <= endTicks &&
@@ -1139,25 +1398,9 @@ const rectSelect = (additive: boolean) => {
     }
   }
   if (!additive) {
-    store.dispatch("DESELECT_ALL_NOTES");
+    void store.actions.DESELECT_ALL_NOTES();
   }
-  store.dispatch("SELECT_NOTES", { noteIds: noteIdsToSelect });
-};
-
-const onDoubleClick = () => {
-  if (ignoreDoubleClick) {
-    return;
-  }
-  const doubleClickInfo = doubleClickDetector.detect();
-  if (doubleClickInfo) {
-    const areaInfo = doubleClickInfo.clickInfos[0].areaInfo;
-    if (
-      areaInfo.type === "note" &&
-      areaInfo.noteId !== state.editingLyricNoteId
-    ) {
-      store.dispatch("SET_EDITING_LYRIC_NOTE_ID", { noteId: areaInfo.noteId });
-    }
-  }
+  void store.actions.SELECT_NOTES({ noteIds: noteIdsToSelect });
 };
 
 const onMouseEnter = () => {
@@ -1178,10 +1421,13 @@ const handleNotesArrowUp = () => {
   if (editedNotes.some((note) => note.noteNumber > 127)) {
     return;
   }
-  store.dispatch("COMMAND_UPDATE_NOTES", { notes: editedNotes });
+  void store.actions.COMMAND_UPDATE_NOTES({
+    notes: editedNotes,
+    trackId: selectedTrackId.value,
+  });
 
   if (editedNotes.length === 1) {
-    store.dispatch("PLAY_PREVIEW_SOUND", {
+    void store.actions.PLAY_PREVIEW_SOUND({
       noteNumber: editedNotes[0].noteNumber,
       duration: PREVIEW_SOUND_DURATION_SECONDS,
     });
@@ -1197,10 +1443,13 @@ const handleNotesArrowDown = () => {
   if (editedNotes.some((note) => note.noteNumber < 0)) {
     return;
   }
-  store.dispatch("COMMAND_UPDATE_NOTES", { notes: editedNotes });
+  void store.actions.COMMAND_UPDATE_NOTES({
+    notes: editedNotes,
+    trackId: selectedTrackId.value,
+  });
 
   if (editedNotes.length === 1) {
-    store.dispatch("PLAY_PREVIEW_SOUND", {
+    void store.actions.PLAY_PREVIEW_SOUND({
       noteNumber: editedNotes[0].noteNumber,
       duration: PREVIEW_SOUND_DURATION_SECONDS,
     });
@@ -1217,7 +1466,10 @@ const handleNotesArrowRight = () => {
     // TODO: 例外処理は`UPDATE_NOTES`内に移す？
     return;
   }
-  store.dispatch("COMMAND_UPDATE_NOTES", { notes: editedNotes });
+  void store.actions.COMMAND_UPDATE_NOTES({
+    notes: editedNotes,
+    trackId: selectedTrackId.value,
+  });
 };
 
 const handleNotesArrowLeft = () => {
@@ -1232,15 +1484,18 @@ const handleNotesArrowLeft = () => {
   ) {
     return;
   }
-  store.dispatch("COMMAND_UPDATE_NOTES", { notes: editedNotes });
+  void store.actions.COMMAND_UPDATE_NOTES({
+    notes: editedNotes,
+    trackId: selectedTrackId.value,
+  });
 };
 
 const handleNotesBackspaceOrDelete = () => {
-  if (state.selectedNoteIds.size === 0) {
+  if (selectedNoteIds.value.size === 0) {
     // TODO: 例外処理は`COMMAND_REMOVE_SELECTED_NOTES`内に移す？
     return;
   }
-  store.dispatch("COMMAND_REMOVE_SELECTED_NOTES");
+  void store.actions.COMMAND_REMOVE_SELECTED_NOTES();
 };
 
 const handleKeydown = (event: KeyboardEvent) => {
@@ -1268,7 +1523,7 @@ const handleKeydown = (event: KeyboardEvent) => {
       handleNotesBackspaceOrDelete();
       break;
     case "Escape":
-      store.dispatch("DESELECT_ALL_NOTES");
+      void store.actions.DESELECT_ALL_NOTES();
       break;
   }
 };
@@ -1289,7 +1544,7 @@ const setZoomX = (value: number | null) => {
   const scrollTop = sequencerBodyElement.scrollTop;
   const clientWidth = sequencerBodyElement.clientWidth;
 
-  store.dispatch("SET_ZOOM_X", { zoomX: newZoomX }).then(() => {
+  void store.actions.SET_ZOOM_X({ zoomX: newZoomX }).then(() => {
     const centerBaseX = (scrollLeft + clientWidth / 2) / oldZoomX;
     const newScrollLeft = centerBaseX * newZoomX - clientWidth / 2;
     sequencerBodyElement.scrollTo(newScrollLeft, scrollTop);
@@ -1312,7 +1567,7 @@ const setZoomY = (value: number | null) => {
   const scrollTop = sequencerBodyElement.scrollTop;
   const clientHeight = sequencerBodyElement.clientHeight;
 
-  store.dispatch("SET_ZOOM_Y", { zoomY: newZoomY }).then(() => {
+  void store.actions.SET_ZOOM_Y({ zoomY: newZoomY }).then(() => {
     const centerBaseY = (scrollTop + clientHeight / 2) / oldZoomY;
     const newScrollTop = centerBaseY * newZoomY - clientHeight / 2;
     sequencerBodyElement.scrollTo(scrollLeft, newScrollTop);
@@ -1337,8 +1592,9 @@ const onWheel = (event: WheelEvent) => {
     newZoomX = Math.max(ZOOM_X_MIN, newZoomX);
     const scrollLeft = sequencerBodyElement.scrollLeft;
     const scrollTop = sequencerBodyElement.scrollTop;
+    guideLineX.value = 0; // 補助線がはみ出さないように位置を一旦0にする
 
-    store.dispatch("SET_ZOOM_X", { zoomX: newZoomX }).then(() => {
+    void store.actions.SET_ZOOM_X({ zoomX: newZoomX }).then(() => {
       const cursorBaseX = (scrollLeft + cursorX.value) / oldZoomX;
       const newScrollLeft = cursorBaseX * newZoomX - cursorX.value;
       sequencerBodyElement.scrollTo(newScrollLeft, scrollTop);
@@ -1353,19 +1609,24 @@ const onScroll = (event: Event) => {
   }
 };
 
-const playheadPositionChangeListener = (position: number) => {
-  playheadTicks.value = position;
-
-  // オートスクロール
+// オートスクロール
+watch(playheadTicks, (newPlayheadPosition) => {
   const sequencerBodyElement = sequencerBody.value;
   if (!sequencerBodyElement) {
+    if (import.meta.env.DEV) {
+      // HMR時にここにたどり着くことがあるので、開発時は警告だけにする
+      // TODO: HMR時にここにたどり着く原因を調査して修正する
+      warn("sequencerBodyElement is null.");
+      return;
+    }
+
     throw new Error("sequencerBodyElement is null.");
   }
   const scrollLeft = sequencerBodyElement.scrollLeft;
   const scrollTop = sequencerBodyElement.scrollTop;
   const scrollWidth = sequencerBodyElement.scrollWidth;
   const clientWidth = sequencerBodyElement.clientWidth;
-  const playheadX = tickToBaseX(position, tpqn.value) * zoomX.value;
+  const playheadX = tickToBaseX(newPlayheadPosition, tpqn.value) * zoomX.value;
   const tolerance = 3;
   if (playheadX < scrollLeft) {
     sequencerBodyElement.scrollTo(playheadX, scrollTop);
@@ -1375,7 +1636,7 @@ const playheadPositionChangeListener = (position: number) => {
   ) {
     sequencerBodyElement.scrollTo(playheadX, scrollTop);
   }
-};
+});
 
 // スクロールバーの幅を取得する
 onMounted(() => {
@@ -1415,27 +1676,23 @@ onActivated(() => {
     yToScroll = scrollY.value;
   }
   // 実際にスクロールする
-  nextTick().then(() => {
+  void nextTick(() => {
     sequencerBodyElement.scrollTo(xToScroll, yToScroll);
   });
 });
 
 // リスナー登録
 onActivated(() => {
-  store.dispatch("ADD_PLAYHEAD_POSITION_CHANGE_LISTENER", {
-    listener: playheadPositionChangeListener,
-  });
-
   document.addEventListener("keydown", handleKeydown);
+  window.addEventListener("mousemove", onMouseMove);
+  window.addEventListener("mouseup", onMouseUp);
 });
 
 // リスナー解除
 onDeactivated(() => {
-  store.dispatch("REMOVE_PLAYHEAD_POSITION_CHANGE_LISTENER", {
-    listener: playheadPositionChangeListener,
-  });
-
   document.removeEventListener("keydown", handleKeydown);
+  window.removeEventListener("mousemove", onMouseMove);
+  window.removeEventListener("mouseup", onMouseUp);
 });
 
 // コンテキストメニュー
@@ -1449,10 +1706,10 @@ registerHotkeyWithCleanup({
     if (nowPreviewing.value) {
       return;
     }
-    if (state.selectedNoteIds.size === 0) {
+    if (selectedNoteIds.value.size === 0) {
       return;
     }
-    store.dispatch("COPY_NOTES_TO_CLIPBOARD");
+    void store.actions.COPY_NOTES_TO_CLIPBOARD();
   },
 });
 
@@ -1463,10 +1720,10 @@ registerHotkeyWithCleanup({
     if (nowPreviewing.value) {
       return;
     }
-    if (state.selectedNoteIds.size === 0) {
+    if (selectedNoteIds.value.size === 0) {
       return;
     }
-    store.dispatch("COMMAND_CUT_NOTES_TO_CLIPBOARD");
+    void store.actions.COMMAND_CUT_NOTES_TO_CLIPBOARD();
   },
 });
 
@@ -1477,7 +1734,7 @@ registerHotkeyWithCleanup({
     if (nowPreviewing.value) {
       return;
     }
-    store.dispatch("COMMAND_PASTE_NOTES_FROM_CLIPBOARD");
+    void store.actions.COMMAND_PASTE_NOTES_FROM_CLIPBOARD();
   },
 });
 
@@ -1488,104 +1745,168 @@ registerHotkeyWithCleanup({
     if (nowPreviewing.value) {
       return;
     }
-    store.dispatch("SELECT_ALL_NOTES");
+    void store.actions.SELECT_ALL_NOTES_IN_TRACK({
+      trackId: selectedTrackId.value,
+    });
   },
 });
 
 const contextMenu = ref<InstanceType<typeof ContextMenu>>();
 
-const contextMenuData = ref<ContextMenuItemData[]>([
-  {
-    type: "button",
-    label: "コピー",
-    onClick: async () => {
-      contextMenu.value?.hide();
-      await store.dispatch("COPY_NOTES_TO_CLIPBOARD");
+const contextMenuData = computed<ContextMenuItemData[]>(() => {
+  // NOTE: 選択中のツールにはなんらかのアクティブな表示をしたほうがよいが、
+  // activeなどの状態がContextMenuItemにはない+iconは画像なようなため状態表現はなし
+  const toolMenuItems: ContextMenuItemData[] =
+    editTarget.value === "NOTE"
+      ? [
+          {
+            type: "button",
+            label: "選択優先ツール",
+            onClick: () => {
+              contextMenu.value?.hide();
+              void store.actions.SET_SEQUENCER_NOTE_TOOL({
+                sequencerNoteTool: "SELECT_FIRST",
+              });
+            },
+            disableWhenUiLocked: false,
+          },
+          {
+            type: "button",
+            label: "編集優先ツール",
+            onClick: () => {
+              contextMenu.value?.hide();
+              void store.actions.SET_SEQUENCER_NOTE_TOOL({
+                sequencerNoteTool: "EDIT_FIRST",
+              });
+            },
+            disableWhenUiLocked: false,
+          },
+          { type: "separator" },
+        ]
+      : [
+          {
+            type: "button",
+            label: "ピッチ描画ツール",
+            onClick: () => {
+              contextMenu.value?.hide();
+              void store.actions.SET_SEQUENCER_PITCH_TOOL({
+                sequencerPitchTool: "DRAW",
+              });
+            },
+            disableWhenUiLocked: false,
+          },
+          {
+            type: "button",
+            label: "ピッチ削除ツール",
+            onClick: () => {
+              contextMenu.value?.hide();
+              void store.actions.SET_SEQUENCER_PITCH_TOOL({
+                sequencerPitchTool: "ERASE",
+              });
+            },
+            disableWhenUiLocked: false,
+          },
+        ];
+
+  const baseMenuItems: ContextMenuItemData[] = [
+    {
+      type: "button",
+      label: "コピー",
+      onClick: () => {
+        contextMenu.value?.hide();
+        void store.actions.COPY_NOTES_TO_CLIPBOARD();
+      },
+      disabled: !isNoteSelected.value,
+      disableWhenUiLocked: true,
     },
-    disabled: !isNoteSelected.value,
-    disableWhenUiLocked: true,
-  },
-  {
-    type: "button",
-    label: "切り取り",
-    onClick: async () => {
-      contextMenu.value?.hide();
-      await store.dispatch("COMMAND_CUT_NOTES_TO_CLIPBOARD");
+    {
+      type: "button",
+      label: "切り取り",
+      onClick: () => {
+        contextMenu.value?.hide();
+        void store.actions.COMMAND_CUT_NOTES_TO_CLIPBOARD();
+      },
+      disabled: !isNoteSelected.value,
+      disableWhenUiLocked: true,
     },
-    disabled: !isNoteSelected.value,
-    disableWhenUiLocked: true,
-  },
-  {
-    type: "button",
-    label: "貼り付け",
-    onClick: async () => {
-      contextMenu.value?.hide();
-      await store.dispatch("COMMAND_PASTE_NOTES_FROM_CLIPBOARD");
+    {
+      type: "button",
+      label: "貼り付け",
+      onClick: () => {
+        contextMenu.value?.hide();
+        void store.actions.COMMAND_PASTE_NOTES_FROM_CLIPBOARD();
+      },
+      disableWhenUiLocked: true,
     },
-    disableWhenUiLocked: true,
-  },
-  { type: "separator" },
-  {
-    type: "button",
-    label: "すべて選択",
-    onClick: async () => {
-      contextMenu.value?.hide();
-      await store.dispatch("SELECT_ALL_NOTES");
+    { type: "separator" },
+    {
+      type: "button",
+      label: "すべて選択",
+      onClick: () => {
+        contextMenu.value?.hide();
+        void store.actions.SELECT_ALL_NOTES_IN_TRACK({
+          trackId: selectedTrackId.value,
+        });
+      },
+      disableWhenUiLocked: true,
     },
-    disableWhenUiLocked: true,
-  },
-  {
-    type: "button",
-    label: "選択解除",
-    onClick: async () => {
-      contextMenu.value?.hide();
-      await store.dispatch("DESELECT_ALL_NOTES");
+    {
+      type: "button",
+      label: "選択解除",
+      onClick: () => {
+        contextMenu.value?.hide();
+        void store.actions.DESELECT_ALL_NOTES();
+      },
+      disabled: !isNoteSelected.value,
+      disableWhenUiLocked: true,
     },
-    disabled: !isNoteSelected.value,
-    disableWhenUiLocked: true,
-  },
-  { type: "separator" },
-  {
-    type: "button",
-    label: "クオンタイズ",
-    onClick: async () => {
-      contextMenu.value?.hide();
-      await store.dispatch("COMMAND_QUANTIZE_SELECTED_NOTES");
+    { type: "separator" },
+    {
+      type: "button",
+      label: "クオンタイズ",
+      onClick: () => {
+        contextMenu.value?.hide();
+        void store.actions.COMMAND_QUANTIZE_SELECTED_NOTES();
+      },
+      disabled: !isNoteSelected.value,
+      disableWhenUiLocked: true,
     },
-    disabled: !isNoteSelected.value,
-    disableWhenUiLocked: true,
-  },
-  { type: "separator" },
-  {
-    type: "button",
-    label: "削除",
-    onClick: async () => {
-      contextMenu.value?.hide();
-      await store.dispatch("COMMAND_REMOVE_SELECTED_NOTES");
+    { type: "separator" },
+    {
+      type: "button",
+      label: "削除",
+      onClick: () => {
+        contextMenu.value?.hide();
+        void store.actions.COMMAND_REMOVE_SELECTED_NOTES();
+      },
+      disabled: !isNoteSelected.value,
+      disableWhenUiLocked: true,
     },
-    disabled: !isNoteSelected.value,
-    disableWhenUiLocked: true,
-  },
-]);
+  ];
+
+  return editTarget.value === "NOTE"
+    ? [...toolMenuItems, ...baseMenuItems]
+    : toolMenuItems;
+});
 </script>
 
 <style scoped lang="scss">
-@use "@/styles/variables" as vars;
+@use "@/styles/v2/variables" as vars;
 @use "@/styles/colors" as colors;
 
 .score-sequencer {
   backface-visibility: hidden;
   display: grid;
-  grid-template-rows: 30px 1fr;
+  grid-template-rows: 40px 1fr;
   grid-template-columns: 48px 1fr;
+  position: relative;
 }
 
 .sequencer-corner {
   grid-row: 1;
   grid-column: 1;
-  background: colors.$background;
-  border-top: 1px solid colors.$sequencer-sub-divider;
-  border-bottom: 1px solid colors.$sequencer-sub-divider;
+  background: var(--scheme-color-sing-ruler-surface);
+  border-radius: 8px 0 0 0;
 }
 
 .sequencer-ruler {
@@ -1605,8 +1926,12 @@ const contextMenuData = ref<ContextMenuItemData[]>([
   overflow: auto;
   position: relative;
 
-  &.rect-selecting {
-    cursor: crosshair;
+  // スクロールバー上のカーソルが要素のものになってしまうためデフォルトカーソルにする
+  &::-webkit-scrollbar-thumb:hover,
+  &::-webkit-scrollbar-thumb:active,
+  &::-webkit-scrollbar-track:hover,
+  &::-webkit-scrollbar-track:active {
+    cursor: default;
   }
 }
 
@@ -1615,45 +1940,12 @@ const contextMenuData = ref<ContextMenuItemData[]>([
   pointer-events: none;
 }
 
-.sequencer-grid-cell {
-  display: block;
-  stroke: rgba(colors.$sequencer-sub-divider-rgb, 0.3);
-  stroke-width: 1;
-}
-
-.sequencer-grid-octave-cell {
-  stroke: colors.$sequencer-main-divider;
-}
-
-.sequencer-grid-octave-line {
-  backface-visibility: hidden;
-  stroke: colors.$sequencer-main-divider;
-}
-
-.sequencer-grid-cell-white {
-  fill: colors.$sequencer-whitekey-cell;
-}
-
-.sequencer-grid-cell-black {
-  fill: colors.$sequencer-blackkey-cell;
-}
-
-.sequencer-grid-measure-line {
-  backface-visibility: hidden;
-  stroke: colors.$sequencer-main-divider;
-}
-
-.sequencer-grid-beat-line {
-  backface-visibility: hidden;
-  stroke: colors.$sequencer-sub-divider;
-}
-
 .sequencer-guideline {
   position: absolute;
   top: 0;
-  left: -1px;
-  width: 2px;
-  background: hsl(130, 35%, 82%);
+  left: -0.5px;
+  width: 1px;
+  background: var(--scheme-color-inverse-primary);
   pointer-events: none;
 }
 
@@ -1681,24 +1973,26 @@ const contextMenuData = ref<ContextMenuItemData[]>([
 .sequencer-playhead {
   position: absolute;
   top: 0;
-  left: -1px;
+  left: 0px;
   width: 2px;
   height: 100%;
-  background: rgba(colors.$display-rgb, 0.6);
+  background: var(--scheme-color-inverse-surface);
   will-change: transform;
+  transform: translate3d(0, 0, 0);
+  z-index: vars.$z-index-sing-playhead;
 }
 
 .rect-select-preview {
   pointer-events: none;
   position: absolute;
-  border: 2px solid rgba(colors.$primary-rgb, 0.5);
-  background: rgba(colors.$primary-rgb, 0.25);
+  border: 1px dashed var(--scheme-color-secondary);
+  background: oklch(from var(--scheme-color-secondary) l c h / 0.1);
 }
 
-.cursor-draw {
-  cursor:
-    url("/draw-cursor.png") 2 30,
-    auto;
+// TODO: ピッチ削除など消しゴム用のカーソル・画像がないためdefault
+// カーソルが必要であれば画像を追加する
+.cursor-erase {
+  cursor: default;
 }
 
 .zoom-x-slider {
@@ -1706,6 +2000,15 @@ const contextMenuData = ref<ContextMenuItemData[]>([
   bottom: 16px;
   right: 32px;
   width: 80px;
+
+  :deep(.q-slider__track) {
+    background: var(--scheme-color-outline-variant);
+    color: var(--scheme-color-primary-fixed-dim);
+  }
+
+  :deep(.q-slider__thumb) {
+    color: var(--scheme-color-primary-fixed-dim);
+  }
 }
 
 .zoom-y-slider {
@@ -1713,5 +2016,14 @@ const contextMenuData = ref<ContextMenuItemData[]>([
   bottom: 40px;
   right: 16px;
   height: 80px;
+
+  :deep(.q-slider__track) {
+    background: var(--scheme-color-outline-variant);
+    color: var(--scheme-color-primary-fixed-dim);
+  }
+
+  :deep(.q-slider__thumb) {
+    color: var(--scheme-color-primary-fixed-dim);
+  }
 }
 </style>

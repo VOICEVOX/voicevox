@@ -1,8 +1,10 @@
 import { join } from "path";
 import fs from "fs";
 import { app } from "electron";
+import { writeFileSafely } from "./fileHelper";
 import { BaseConfigManager, Metadata } from "@/backend/common/ConfigManager";
 import { ConfigType } from "@/type/preload";
+import { isMac } from "@/helpers/platform";
 
 export class ElectronConfigManager extends BaseConfigManager {
   protected getAppVersion() {
@@ -17,14 +19,12 @@ export class ElectronConfigManager extends BaseConfigManager {
   }
 
   protected async load(): Promise<Record<string, unknown> & Metadata> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return JSON.parse(await fs.promises.readFile(this.configPath, "utf-8"));
   }
 
   protected async save(config: ConfigType & Metadata) {
-    await fs.promises.writeFile(
-      this.configPath,
-      JSON.stringify(config, undefined, 2),
-    );
+    writeFileSafely(this.configPath, JSON.stringify(config, undefined, 2));
   }
 
   private get configPath(): string {
@@ -36,7 +36,7 @@ let configManager: ElectronConfigManager | undefined;
 
 export function getConfigManager(): ElectronConfigManager {
   if (!configManager) {
-    configManager = new ElectronConfigManager();
+    configManager = new ElectronConfigManager({ isMac });
   }
   return configManager;
 }

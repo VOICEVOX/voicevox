@@ -1,36 +1,55 @@
 import { defaultEngine } from "./contract";
 import {
   checkFileExistsImpl,
+  readFileImpl,
+  showExportFilePickerImpl,
   showOpenDirectoryDialogImpl,
+  showOpenFilePickerImpl,
+  WritableFilePath,
   writeFileImpl,
 } from "./fileImpl";
 import { getConfigManager } from "./browserConfig";
-
+import { isFakePath } from "./fakePath";
 import { IpcSOData } from "@/type/ipc";
 import {
-  defaultHotkeySettings,
   defaultToolbarButtonSetting,
-  configSchema,
   EngineId,
   EngineSettingType,
   EngineSettings,
-  HotkeySettingType,
   Sandbox,
-  ThemeConf,
 } from "@/type/preload";
-import {
-  ContactTextFileName,
-  HowToUseTextFileName,
-  OssCommunityInfosFileName,
-  OssLicensesJsonFileName,
-  PolicyTextFileName,
-  PrivacyPolicyTextFileName,
-  QAndATextFileName,
-  UpdateInfosJsonFileName,
-} from "@/type/staticResources";
+import { AssetTextFileNames } from "@/type/staticResources";
+import { HotkeySettingType } from "@/domain/hotkeyAction";
+import path from "@/helpers/path";
 
-// TODO: base pathを設定できるようにするか、ビルド時埋め込みにする
-const toStaticPath = (fileName: string) => `/${fileName}`;
+const toStaticPath = (fileName: string) =>
+  `${import.meta.env.BASE_URL}/${fileName}`.replaceAll(/\/\/+/g, "/");
+
+// FIXME: asを使わないようオーバーロードにした。オーバーロードも使わない書き方にしたい。
+function onReceivedIPCMsg<
+  T extends {
+    [K in keyof IpcSOData]: (
+      event: unknown,
+      ...args: IpcSOData[K]["args"]
+    ) => Promise<IpcSOData[K]["return"]> | IpcSOData[K]["return"];
+  },
+>(listeners: T): void;
+function onReceivedIPCMsg(listeners: {
+  [key: string]: (event: unknown, ...args: unknown[]) => unknown;
+}) {
+  // NOTE: もしブラウザ本体からレンダラへのメッセージを実装するならこんな感じ
+  window.addEventListener(
+    "message",
+    ({
+      data,
+    }: MessageEvent<{
+      channel: keyof IpcSOData;
+      args: IpcSOData[keyof IpcSOData]["args"];
+    }>) => {
+      listeners[data.channel]?.({}, ...data.args);
+    },
+  );
+}
 
 /**
  * Browser版のSandBox実装
@@ -45,61 +64,17 @@ export const api: Sandbox = {
     };
     return Promise.resolve(appInfo);
   },
-  getHowToUseText() {
-    return fetch(toStaticPath(HowToUseTextFileName)).then((v) => v.text());
-  },
-  getPolicyText() {
-    return fetch(toStaticPath(PolicyTextFileName)).then((v) => v.text());
-  },
-  getOssLicenses() {
-    return fetch(toStaticPath(OssLicensesJsonFileName)).then((v) => v.json());
-  },
-  getUpdateInfos() {
-    return fetch(toStaticPath(UpdateInfosJsonFileName)).then((v) => v.json());
-  },
-  getOssCommunityInfos() {
-    return fetch(toStaticPath(OssCommunityInfosFileName)).then((v) => v.text());
-  },
-  getQAndAText() {
-    return fetch(toStaticPath(QAndATextFileName)).then((v) => v.text());
-  },
-  getContactText() {
-    return fetch(toStaticPath(ContactTextFileName)).then((v) => v.text());
-  },
-  getPrivacyPolicyText() {
-    return fetch(toStaticPath(PrivacyPolicyTextFileName)).then((v) => v.text());
+  async getTextAsset(textType) {
+    const fileName = AssetTextFileNames[textType];
+    const v = await fetch(toStaticPath(fileName));
+    if (textType === "OssLicenses" || textType === "UpdateInfos") {
+      return v.json();
+    }
+    return v.text();
   },
   getAltPortInfos() {
     // NOTE: ブラウザ版ではサポートされていません
     return Promise.resolve({});
-  },
-  showAudioSaveDialog(obj: { title: string; defaultPath?: string }) {
-    return new Promise((resolve, reject) => {
-      if (obj.defaultPath == undefined) {
-        reject(
-          // storeやvue componentからdefaultPathを設定していなかったらrejectされる
-          new Error(
-            "ブラウザ版ではファイルの保存機能が一部サポートされていません。",
-          ),
-        );
-      } else {
-        resolve(obj.defaultPath);
-      }
-    });
-  },
-  showTextSaveDialog(obj: { title: string; defaultPath?: string }) {
-    return new Promise((resolve, reject) => {
-      if (obj.defaultPath == undefined) {
-        reject(
-          // storeやvue componentからdefaultPathを設定していなかったらrejectされる
-          new Error(
-            "ブラウザ版ではファイルの保存機能が一部サポートされていません。",
-          ),
-        );
-      } else {
-        resolve(obj.defaultPath);
-      }
-    });
   },
   showSaveDirectoryDialog(obj: { title: string }) {
     return showOpenDirectoryDialogImpl(obj);
@@ -127,47 +102,66 @@ export const api: Sandbox = {
       }
     });
   },
-  showProjectLoadDialog(/* obj: { title: string } */) {
-    throw new Error(
-      "ブラウザ版では現在ファイルの読み込みをサポートしていません",
-    );
+  async showProjectLoadDialog() {
+    return showOpenFilePickerImpl({
+      multiple: false,
+      fileTypes: [
+        {
+          description: "Voicevox Project File",
+          accept: {
+            "application/json": [".vvproj"],
+          },
+        },
+      ],
+    });
   },
-  showMessageDialog(obj: {
-    type: "none" | "info" | "error" | "question" | "warning";
+  async showImportFileDialog(obj: {
+    name?: string;
+    extensions?: string[];
     title: string;
-    message: string;
   }) {
-    window.alert(`${obj.title}\n${obj.message}`);
-    // NOTE: どの呼び出し元も、return valueを使用していないので雑に対応している
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return Promise.resolve({} as any);
+    const fileHandle = await showOpenFilePickerImpl({
+      multiple: false,
+      fileTypes: [
+        {
+          description: obj.name ?? "Text",
+          accept: obj.extensions
+            ? {
+                "application/octet-stream": obj.extensions.map(
+                  (ext) => `.${ext}`,
+                ),
+              }
+            : {
+                "plain/text": [".txt"],
+              },
+        },
+      ],
+    });
+    return fileHandle?.[0];
   },
-  showQuestionDialog(obj: {
-    type: "none" | "info" | "error" | "question" | "warning";
+  async showExportFileDialog(obj: {
+    defaultPath?: string;
+    extensionName: string;
+    extensions: string[];
     title: string;
-    message: string;
-    buttons: string[];
-    cancelId?: number;
-    defaultId?: number;
   }) {
-    // FIXME
-    // TODO: 例えば動的にdialog要素をDOMに生成して、それを表示させるみたいのはあるかもしれない
-    throw new Error(
-      `Not implemented: showQuestionDialog, request: ${JSON.stringify(obj)}`,
-    );
-  },
-  showImportFileDialog(/* obj: { title: string } */) {
-    throw new Error(
-      "ブラウザ版では現在ファイルの読み込みをサポートしていません",
-    );
+    const fileHandle = await showExportFilePickerImpl(obj);
+    return fileHandle;
   },
   writeFile(obj: { filePath: string; buffer: ArrayBuffer }) {
-    return writeFileImpl(obj);
+    let filePath: WritableFilePath;
+    if (isFakePath(obj.filePath)) {
+      filePath = { type: "fake", path: obj.filePath };
+    } else if (obj.filePath.includes(path.SEPARATOR)) {
+      filePath = { type: "child", path: obj.filePath };
+    } else {
+      filePath = { type: "nameOnly", path: obj.filePath };
+    }
+
+    return writeFileImpl({ filePath, buffer: obj.buffer });
   },
-  readFile(/* obj: { filePath: string } */) {
-    throw new Error(
-      "ブラウザ版では現在ファイルの読み込みをサポートしていません",
-    );
+  readFile(obj: { filePath: string }) {
+    return readFileImpl(obj.filePath);
   },
   isAvailableGPUMode() {
     // TODO: WebAssembly版をサポートする時に実装する
@@ -178,25 +172,29 @@ export const api: Sandbox = {
     // NOTE: UIの表示状態の制御のためだけなので固定値を返している
     return Promise.resolve(true);
   },
-  onReceivedIPCMsg<T extends keyof IpcSOData>(
-    channel: T,
-    listener: (_: unknown, ...args: IpcSOData[T]["args"]) => void,
-  ) {
-    window.addEventListener("message", (event) => {
-      if (event.data.channel == channel) {
-        listener(event.data.args);
-      }
-    });
-  },
+  onReceivedIPCMsg,
   closeWindow() {
     throw new Error(`Not supported on Browser version: closeWindow`);
   },
   minimizeWindow() {
     throw new Error(`Not supported on Browser version: minimizeWindow`);
   },
-  maximizeWindow() {
-    throw new Error(`Not supported on Browser version: maximizeWindow`);
+  toggleMaximizeWindow() {
+    throw new Error(`Not supported on Browser version: toggleMaximizeWindow`);
   },
+  toggleFullScreen() {
+    throw new Error(`Not supported on Browser version: toggleFullScreen`);
+  },
+  zoomIn() {
+    throw new Error(`Not supported on Browser version: zoomIn`);
+  },
+  zoomOut() {
+    throw new Error(`Not supported on Browser version: zoomOut`);
+  },
+  zoomReset() {
+    throw new Error(`Not supported on Browser version: zoomReset`);
+  },
+
   /* eslint-disable no-console */ // ログの吐き出し先は console ぐらいしかないので、ここでは特例で許可している
   logError(...params: unknown[]) {
     console.error(...params);
@@ -224,13 +222,8 @@ export const api: Sandbox = {
     throw new Error(`Not supported on Browser version: openEngineDirectory`);
   },
   async hotkeySettings(newData?: HotkeySettingType) {
-    type HotkeySettingType = ReturnType<
-      (typeof configSchema)["parse"]
-    >["hotkeySettings"];
     if (newData != undefined) {
-      const hotkeySettings = (await this.getSetting(
-        "hotkeySettings",
-      )) as HotkeySettingType;
+      const hotkeySettings = await this.getSetting("hotkeySettings");
       const hotkeySetting = hotkeySettings.find(
         (hotkey) => hotkey.action == newData.action,
       );
@@ -239,7 +232,7 @@ export const api: Sandbox = {
       }
       await this.setSetting("hotkeySettings", hotkeySettings);
     }
-    return this.getSetting("hotkeySettings") as Promise<HotkeySettingType>;
+    return this.getSetting("hotkeySettings");
   },
   checkFileExists(file: string) {
     return checkFileExistsImpl(file);
@@ -247,42 +240,12 @@ export const api: Sandbox = {
   changePinWindow() {
     throw new Error(`Not supported on Browser version: changePinWindow`);
   },
-  getDefaultHotkeySettings() {
-    return Promise.resolve(defaultHotkeySettings);
-  },
   getDefaultToolbarSetting() {
     return Promise.resolve(defaultToolbarButtonSetting);
   },
   setNativeTheme(/* source: NativeThemeType */) {
     // TODO: Impl
     return;
-  },
-  async theme(newData?: string) {
-    if (newData != undefined) {
-      await this.setSetting("currentTheme", newData);
-      return;
-    }
-    // NOTE: Electron版では起動時にテーマ情報が必要なので、
-    //       この実装とは違って起動時に読み込んだキャッシュを返すだけになっている。
-    return Promise.all(
-      // FIXME: themeファイルのいい感じのパスの設定
-      ["/themes/default.json", "/themes/dark.json"].map((url) =>
-        fetch(url).then((res) => res.json()),
-      ),
-    )
-      .then((v) => ({
-        currentTheme: "Default",
-        availableThemes: v,
-      }))
-      .then((v) =>
-        this.getSetting("currentTheme").then(
-          (currentTheme) =>
-            ({
-              ...v,
-              currentTheme,
-            }) as { currentTheme: string; availableThemes: ThemeConf[] },
-        ),
-      );
   },
   vuexReady() {
     // NOTE: 何もしなくて良さそう
@@ -316,5 +279,8 @@ export const api: Sandbox = {
   },
   reloadApp(/* obj: { isMultiEngineOffMode: boolean } */) {
     throw new Error(`Not supported on Browser version: reloadApp`);
+  },
+  getPathForFile(/* file: File */) {
+    throw new Error(`Not supported on Browser version: getPathForFile`);
   },
 };

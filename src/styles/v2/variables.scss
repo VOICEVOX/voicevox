@@ -1,0 +1,39 @@
+:root {
+  --size-basis: 8px;
+  --padding-basis: 8px;
+  --gap-basis: 8px;
+  --radius-basis: 8px;
+}
+
+$size-scrollbar: calc(var(--size-basis) * 1.5);
+$size-icon: calc(var(--size-basis) * 2);
+$size-indicator: calc(var(--size-basis) * 3);
+$size-control: calc(var(--size-basis) * 4);
+$size-listitem: calc(var(--size-basis) * 5);
+$size-fab: calc(var(--size-basis) * 6);
+
+$padding-1: var(--padding-basis);
+$padding-2: calc(var(--padding-basis) * 2);
+
+$gap-1: var(--gap-basis);
+$gap-2: calc(var(--gap-basis) * 2);
+
+$radius-1: var(--radius-basis);
+$radius-2: calc(var(--radius-basis) * 2);
+
+$transition-duration: 100ms;
+
+$z-index-scrollbar: 100;
+$z-index-fullscreen-dialog: 1000;
+$z-index-dropdown: 1010;
+$z-index-fixed: 1020;
+$z-index-dialog: 1050;
+$z-index-tooltip: 9999;
+
+$z-index-sing-background: 0;
+$z-index-sing-note: 10;
+$z-index-sing-note-lyric: 20;
+$z-index-sing-pitch: 30;
+$z-index-sing-playhead: 40;
+$z-index-sing-tool-palette: 50;
+$z-index-sing-lyric-input: 60;

@@ -26,7 +26,7 @@
             v-if="!nowPlaying && !nowGenerating"
             fab
             color="primary"
-            text-color="display-on-primary"
+            textColor="display-on-primary"
             icon="play_arrow"
             @click="play"
           ></QBtn>
@@ -34,7 +34,7 @@
             v-else
             fab
             color="primary"
-            text-color="display-on-primary"
+            textColor="display-on-primary"
             icon="stop"
             :disable="nowGenerating"
             @click="stop"
@@ -45,7 +45,7 @@
       <div ref="audioDetail" class="overflow-hidden-y accent-phrase-table">
         <ToolTip
           v-if="selectedDetail === 'pitch'"
-          tip-key="tweakableSliderByScroll"
+          tipKey="tweakableSliderByScroll"
           class="tip-tweakable-slider-by-scroll"
         >
           <p>
@@ -62,17 +62,17 @@
           v-for="(accentPhrase, accentPhraseIndex) in accentPhrases"
           :key="accentPhraseIndex"
           ref="accentPhraseComponents"
-          :audio-key="activeAudioKey"
-          :accent-phrase="accentPhrase"
+          :audioKey="activeAudioKey"
+          :accentPhrase
           :index="accentPhraseIndex"
-          :is-last="
+          :isLast="
             accentPhrases !== undefined &&
             accentPhrases.length - 1 === accentPhraseIndex
           "
-          :is-active="accentPhraseIndex === activePoint"
-          :selected-detail="selectedDetail"
-          :shift-key-flag="isShiftKeyDown"
-          :alt-key-flag="isAltKeyDown"
+          :isActive="accentPhraseIndex === activePoint"
+          :selectedDetail
+          :shiftKeyFlag="isShiftKeyDown"
+          :altKeyFlag="isAltKeyDown"
           @click="setPlayAndStartPoint"
         />
       </div>
@@ -85,7 +85,8 @@ import { computed, nextTick, ref, watch } from "vue";
 import AccentPhrase from "./AccentPhrase.vue";
 import ToolTip from "@/components/ToolTip.vue";
 import { useStore } from "@/store";
-import { AudioKey, isMac } from "@/type/preload";
+import { AudioKey } from "@/type/preload";
+import { isMac } from "@/helpers/platform";
 import { EngineManifest } from "@/openapi/models";
 import { useShiftKey, useAltKey } from "@/composables/useModifierKey";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
@@ -114,7 +115,7 @@ registerHotkeyWithCleanup({
   name: "再生/停止",
   callback: () => {
     if (!nowPlaying.value && !nowGenerating.value && !uiLocked.value) {
-      play();
+      void play();
     } else {
       stop();
     }
@@ -153,7 +154,7 @@ registerHotkeyWithCleanup({
       const audioKeys = store.state.experimentalSetting.enableMultiSelect
         ? store.getters.SELECTED_AUDIO_KEYS
         : [store.getters.ACTIVE_AUDIO_KEY];
-      store.dispatch("COMMAND_MULTI_RESET_MORA_PITCH_AND_LENGTH", {
+      void store.actions.COMMAND_MULTI_RESET_MORA_PITCH_AND_LENGTH({
         audioKeys,
       });
     }
@@ -168,7 +169,7 @@ registerHotkeyWithCleanup({
       store.getters.ACTIVE_AUDIO_KEY &&
       store.getters.AUDIO_PLAY_START_POINT != undefined
     ) {
-      store.dispatch("COMMAND_RESET_SELECTED_MORA_PITCH_AND_LENGTH", {
+      void store.actions.COMMAND_RESET_SELECTED_MORA_PITCH_AND_LENGTH({
         audioKey: store.getters.ACTIVE_AUDIO_KEY,
         accentPhraseIndex: store.getters.AUDIO_PLAY_START_POINT,
       });
@@ -211,7 +212,7 @@ const startPoint = computed({
     return store.getters.AUDIO_PLAY_START_POINT;
   },
   set: (startPoint) => {
-    store.dispatch("SET_AUDIO_PLAY_START_POINT", { startPoint });
+    void store.actions.SET_AUDIO_PLAY_START_POINT({ startPoint });
   },
 });
 // アクティブ(再生されている状態)なアクセント句
@@ -243,12 +244,12 @@ watch(accentPhrases, async () => {
 // audio play
 const play = async () => {
   try {
-    await store.dispatch("PLAY_AUDIO", {
+    await store.actions.PLAY_AUDIO({
       audioKey: props.activeAudioKey,
     });
   } catch (e) {
     const msg = handlePossiblyNotMorphableError(e);
-    store.dispatch("SHOW_ALERT_DIALOG", {
+    void store.actions.SHOW_ALERT_DIALOG({
       title: "再生に失敗しました",
       message: msg ?? "エンジンの再起動をお試しください。",
     });
@@ -256,7 +257,7 @@ const play = async () => {
 };
 
 const stop = () => {
-  store.dispatch("STOP_AUDIO");
+  void store.actions.STOP_AUDIO();
 };
 
 const nowPlaying = computed(() => store.getters.NOW_PLAYING);
@@ -310,7 +311,7 @@ const scrollToActivePoint = () => {
 let requestId: number | undefined;
 watch(nowPlaying, async (newState) => {
   if (newState) {
-    const accentPhraseOffsets = await store.dispatch("GET_AUDIO_PLAY_OFFSETS", {
+    const accentPhraseOffsets = await store.actions.GET_AUDIO_PLAY_OFFSETS({
       audioKey: props.activeAudioKey,
     });
     // 現在再生されているaudio elementの再生時刻を描画毎に取得(監視)し、

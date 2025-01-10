@@ -9,13 +9,13 @@
     v-model:selectedStyleIndex="
       selectedStyleIndexes[selectedCharacterInfo.metas.speakerUuid]
     "
-    :character-info="selectedCharacterInfo"
+    :characterInfo="selectedCharacterInfo"
   />
   <QDialog
     v-model="modelValueComputed"
     maximized
-    transition-show="jump-up"
-    transition-hide="jump-down"
+    transitionShow="jump-up"
+    transitionHide="jump-down"
     class="transparent-backdrop"
   >
     <QLayout container view="hHh Lpr lff" class="bg-background">
@@ -34,7 +34,7 @@
               unelevated
               label="完了"
               color="toolbar-button"
-              text-color="toolbar-button-display"
+              textColor="toolbar-button-display"
               class="text-no-wrap"
               @click="closeDialog"
             />
@@ -162,9 +162,7 @@ watch([() => props.modelValue], async ([newValue]) => {
     speakerWithMultipleStyles.value = store.state.userCharacterOrder
       .map((speakerUuid) => characterInfosMap.value[speakerUuid])
       .filter((characterInfo) => characterInfo != undefined)
-      .filter(
-        (characterInfo) => characterInfo.metas.styles.length > 1,
-      ) as CharacterInfo[];
+      .filter((characterInfo) => characterInfo.metas.styles.length > 1);
     // FIXME: エンジン未起動状態でデフォルトスタイル選択ダイアログを開くと
     // 未起動エンジンのキャラのデフォルトスタイルが消えてしまう
     selectedStyleIndexes.value = Object.fromEntries(
@@ -193,8 +191,7 @@ watch([() => props.modelValue], async ([newValue]) => {
 const isHoverableItem = ref(true);
 
 const closeDialog = () => {
-  store.dispatch(
-    "SET_DEFAULT_STYLE_IDS",
+  void store.actions.SET_DEFAULT_STYLE_IDS(
     Object.entries(selectedStyleIndexes.value).map(
       ([speakerUuidStr, styleIndex]) => {
         const speakerUuid = SpeakerId(speakerUuidStr);
@@ -278,7 +275,7 @@ const openStyleSelectDialog = (characterInfo: CharacterInfo) => {
         width: 100%;
         height: 100%;
         .style-icon {
-          $icon-size: $character-item-size / 2;
+          $icon-size: calc(vars.$character-item-size / 2);
           width: $icon-size;
           height: $icon-size;
           border-radius: 5px;

@@ -1,0 +1,118 @@
+@use "sass:color";
+// 新デザインで使用する色変数の定義
+// 詳細: https://github.com/VOICEVOX/voicevox_project/issues/40
+
+// 基本色
+$primitive-black: #242626;
+$primitive-white: #ffffff;
+$primitive-primary: #a5d4ad;
+$primitive-blue: #0969da;
+$primitive-red: #d04756;
+
+// ライトテーマの色
+:root[is-dark-theme="false"] {
+  --color-v2-background: #{color.adjust($primitive-primary, $lightness: 25%)};
+  --color-v2-background-alt: #{color.adjust($primitive-white, $lightness: -5%)};
+  --color-v2-background-drawer: #{rgba(color.adjust($primitive-primary, $lightness: 20%), 0.75)};
+
+  --color-v2-surface: #{$primitive-white};
+  --color-v2-border: #{rgba($primitive-black, 0.2)};
+  --color-v2-selected: #{rgba($primitive-primary, 0.3)};
+
+  --color-v2-display: #{$primitive-black};
+  --color-v2-display-oncolor: #{$primitive-black};
+  --color-v2-display-sub: #{rgba($primitive-black, 0.5)};
+  --color-v2-display-link: #{$primitive-blue};
+  --color-v2-display-warning: #{$primitive-red};
+
+  --color-v2-control: #{$primitive-white};
+  --color-v2-control-hovered: #{color.adjust($primitive-white, $lightness: -5%)};
+  --color-v2-control-pressed: #{color.adjust($primitive-white, $lightness: -10%)};
+
+  --color-v2-clear: #{rgba($primitive-black, 0)};
+  --color-v2-clear-hovered: #{rgba($primitive-black, 0.05)};
+  --color-v2-clear-pressed: #{rgba($primitive-black, 0.1)};
+
+  --color-v2-primary: #{$primitive-primary};
+  --color-v2-primary-hovered: #{color.adjust($primitive-primary, $lightness: -5%)};
+  --color-v2-primary-pressed: #{color.adjust($primitive-primary, $lightness: -10%)};
+
+  --color-v2-warning: #{$primitive-white};
+  --color-v2-warning-hovered: #{color.adjust($primitive-red, $lightness: 40%)};
+  --color-v2-warning-pressed: #{color.adjust($primitive-red, $lightness: 35%)};
+
+  --color-v2-scrollbar: #{rgba($primitive-black, 0.3)};
+  --color-v2-scrollbar-hovered: #{rgba($primitive-black, 0.4)};
+  --color-v2-scrollbar-pressed: #{rgba($primitive-black, 0.5)};
+}
+
+// ダークテーマの色
+:root[is-dark-theme="true"] {
+  --color-v2-background: #{$primitive-black};
+  --color-v2-background-alt: #{color.adjust($primitive-black, $lightness: 2%)};
+  --color-v2-background-drawer: #{rgba($primitive-black, 0.75)};
+
+  --color-v2-surface: #{color.adjust($primitive-black, $lightness: 3%)};
+  --color-v2-border: #{rgba($primitive-white, 0.2)};
+  --color-v2-selected: #{rgba($primitive-primary, 0.3)};
+
+  --color-v2-display: #{$primitive-white};
+  --color-v2-display-oncolor: #{$primitive-black};
+  --color-v2-display-sub: #{rgba($primitive-white, 0.5)};
+  --color-v2-display-link: #{color.adjust($primitive-blue, $lightness: 25%)};
+  --color-v2-display-warning: #{color.adjust($primitive-red, $lightness: 25%)};
+
+  --color-v2-control: #{color.adjust($primitive-black, $lightness: 10%)};
+  --color-v2-control-hovered: #{color.adjust($primitive-black, $lightness: 15%)};
+  --color-v2-control-pressed: #{color.adjust($primitive-black, $lightness: 20%)};
+
+  --color-v2-clear: #{rgba($primitive-white, 0)};
+  --color-v2-clear-hovered: #{rgba($primitive-white, 0.05)};
+  --color-v2-clear-pressed: #{rgba($primitive-white, 0.1)};
+
+  --color-v2-primary: #{color.adjust($primitive-primary, $lightness: -10%)};
+  --color-v2-primary-hovered: #{color.adjust($primitive-primary, $lightness: -5%)};
+  --color-v2-primary-pressed: #{$primitive-primary};
+
+  --color-v2-warning: #{color.adjust($primitive-black, $lightness: 10%)};
+  --color-v2-warning-hovered: #{color.adjust($primitive-red, $lightness: -35%)};
+  --color-v2-warning-pressed: #{color.adjust($primitive-red, $lightness: -30%)};
+
+  --color-v2-scrollbar: #{rgba($primitive-white, 0.3)};
+  --color-v2-scrollbar-hovered: #{rgba($primitive-white, 0.4)};
+  --color-v2-scrollbar-pressed: #{rgba($primitive-white, 0.5)};
+}
+
+$background: var(--color-v2-background);
+$background-alt: var(--color-v2-background-alt);
+$background-drawer: var(--color-v2-background-drawer);
+
+$surface: var(--color-v2-surface);
+$border: var(--color-v2-border);
+$selected: var(--color-v2-selected);
+
+$display: var(--color-v2-display);
+$display-oncolor: var(--color-v2-display-oncolor);
+$display-sub: var(--color-v2-display-sub);
+$display-link: var(--color-v2-display-link);
+$display-warning: var(--color-v2-display-warning);
+
+$control: var(--color-v2-control);
+$control-hovered: var(--color-v2-control-hovered);
+$control-pressed: var(--color-v2-control-pressed);
+
+$clear: var(--color-v2-clear);
+$clear-hovered: var(--color-v2-clear-hovered);
+$clear-pressed: var(--color-v2-clear-pressed);
+
+$primary: var(--color-v2-primary);
+$primary-hovered: var(--color-v2-primary-hovered);
+$primary-pressed: var(--color-v2-primary-pressed);
+
+$warning: var(--color-v2-warning);
+$warning-hovered: var(--color-v2-warning-hovered);
+$warning-pressed: var(--color-v2-warning-pressed);
+
+$scrollbar: var(--color-v2-scrollbar);
+$scrollbar-hovered: var(--color-v2-scrollbar-hovered);
+$scrollbar-pressed: var(--color-v2-scrollbar-pressed);
