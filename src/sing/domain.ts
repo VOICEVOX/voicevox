@@ -1010,6 +1010,12 @@ export const PREVIEW_SOUND_DURATION_SECONDS = 0.6;
 export function createSynthForPreview(audioContext: BaseAudioContext) {
   const maxHarmonics = 36;
   const oddHarmonicsAmount = 0.89; // 1のとき矩形波、0.5のとき三角波
+  if (maxHarmonics <= 0 || oddHarmonicsAmount <= 0) {
+    throw new Error(
+      "maxHarmonics and oddHarmonicsAmount must be greater than 0.",
+    );
+  }
+
   const real = new Float32Array(maxHarmonics);
   const imag = new Float32Array(maxHarmonics);
   for (let i = 0; i <= maxHarmonics; i++) {
@@ -1021,7 +1027,8 @@ export function createSynthForPreview(audioContext: BaseAudioContext) {
     }
   }
   const periodicWave = audioContext.createPeriodicWave(real, imag);
-  const synth = new Synth(audioContext, {
+
+  return new Synth(audioContext, {
     osc: {
       type: "custom",
       periodicWave,
@@ -1041,7 +1048,6 @@ export function createSynthForPreview(audioContext: BaseAudioContext) {
     lowCutFrequency: 130,
     volume: 0.1,
   });
-  return synth;
 }
 
 /**
