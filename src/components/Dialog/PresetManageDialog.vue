@@ -151,18 +151,6 @@
                       />
                     </template>
                   </div>
-                  <div class="footer">
-                    <BaseButton
-                      label="変更をリセット"
-                      :disabled="!isPresetChanged"
-                      @click="
-                        if (initialPresets == undefined) {
-                          throw new Error('initialPreset is undefined');
-                        }
-                        resetPreset(initialPresets[selectedPresetKey]);
-                      "
-                    />
-                  </div>
                 </div>
               </BaseScrollArea>
             </div>
@@ -181,7 +169,6 @@ import BaseListItem from "@/components/Base/BaseListItem.vue";
 import BaseNavigationView from "@/components/Base/BaseNavigationView.vue";
 import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 import BaseIconButton from "@/components/Base/BaseIconButton.vue";
-import BaseButton from "@/components/Base/BaseButton.vue";
 import BaseTextField from "@/components/Base/BaseTextField.vue";
 import CharacterButton from "@/components/CharacterButton.vue";
 import ParameterSlider from "@/components/Talk/ParameterSlider.vue";
@@ -247,25 +234,6 @@ const parameterLabels: Record<ParameterType, string> = {
 
 const selectedPresetKey = ref();
 const selectedPreset = ref<Preset | undefined>();
-const initialPresets = ref<Record<string, Preset> | undefined>();
-
-const isPresetChanged = computed(() => {
-  if (!selectedPreset.value || !initialPresets.value) return false;
-
-  return (
-    JSON.stringify(selectedPreset.value) !==
-    JSON.stringify(initialPresets.value[selectedPresetKey.value])
-  );
-});
-
-watch(
-  () => props.openDialog,
-  (newValue) => {
-    if (newValue) {
-      initialPresets.value = presetItems.value;
-    }
-  },
-);
 
 watch(selectedPresetKey, (key) => {
   if (key == undefined) {
@@ -300,23 +268,6 @@ const changePresetName = (event: Event) => {
   if (event.target instanceof HTMLInputElement && selectedPreset.value) {
     selectedPreset.value.name = event.target.value;
   }
-};
-
-const resetPreset = async (preset: Preset) => {
-  const result = await store.actions.SHOW_WARNING_DIALOG({
-    title: "プリセットの変更をリセットしますか？",
-    message: "プリセットの変更は破棄されてリセットされます。",
-    actionName: "リセットする",
-  });
-
-  if (result !== "OK") {
-    return;
-  }
-
-  selectedPreset.value = {
-    ...preset,
-    morphingInfo: preset.morphingInfo ? { ...preset.morphingInfo } : undefined,
-  };
 };
 
 const reorderPreset = (featurePresetList: (Preset & { key: PresetKey })[]) => {
@@ -472,17 +423,5 @@ const morphingTargetStyleInfo = computed(() => {
   display: flex;
   align-items: center;
   gap: vars.$gap-1;
-}
-
-.footer {
-  position: sticky;
-  bottom: 0;
-  right: 0;
-  display: flex;
-  justify-content: flex-end;
-  gap: vars.$gap-1;
-  padding-block: vars.$padding-2;
-  margin-top: auto;
-  background-color: colors.$background;
 }
 </style>
