@@ -90,6 +90,11 @@ type StoreActions = {
     startFrame: number,
     trackId: TrackId,
   ) => void;
+  readonly commandErasePitchEditData: (
+    startFrame: number,
+    frameLength: number,
+    trackId: TrackId,
+  ) => void;
 };
 
 type Context = ComputedRefs & Refs & { readonly storeActions: StoreActions };
@@ -101,7 +106,8 @@ type State =
   | ResizeNoteLeftState
   | ResizeNoteRightState
   | SelectNotesWithRectState
-  | DrawPitchState;
+  | DrawPitchState
+  | ErasePitchState;
 
 const getGuideLineTicks = (
   cursorPos: PositionOnSequencer,
@@ -245,11 +251,19 @@ class IdleState implements IState<State, Input, Context> {
         mouseButton === "LEFT_BUTTON" &&
         input.targetArea === "SequencerBody"
       ) {
-        const drawPitchState = new DrawPitchState(
-          input.cursorPos,
-          selectedTrackId,
-        );
-        setNextState(drawPitchState);
+        if (isOnCommandOrCtrlKeyDown(input.mouseEvent)) {
+          const erasePitchState = new ErasePitchState(
+            input.cursorPos,
+            selectedTrackId,
+          );
+          setNextState(erasePitchState);
+        } else {
+          const drawPitchState = new DrawPitchState(
+            input.cursorPos,
+            selectedTrackId,
+          );
+          setNextState(drawPitchState);
+        }
       }
     }
   }
@@ -1131,6 +1145,132 @@ class DrawPitchState implements IState<State, Input, Context> {
         this.targetTrackId,
       );
     }
+
+    context.previewPitchEdit.value = undefined;
+    context.nowPreviewing.value = false;
+  }
+}
+
+class ErasePitchState implements IState<State, Input, Context> {
+  readonly id = "erasePitch";
+
+  private readonly cursorPosAtStart: PositionOnSequencer;
+  private readonly targetTrackId: TrackId;
+
+  private currentCursorPos: PositionOnSequencer;
+
+  private innerContext:
+    | {
+        previewRequestId: number;
+        executePreviewProcess: boolean;
+      }
+    | undefined;
+
+  constructor(cursorPosAtStart: PositionOnSequencer, targetTrackId: TrackId) {
+    this.cursorPosAtStart = cursorPosAtStart;
+    this.targetTrackId = targetTrackId;
+
+    this.currentCursorPos = cursorPosAtStart;
+  }
+
+  private previewErasePitch(context: Context) {
+    if (this.innerContext == undefined) {
+      throw new Error("innerContext is undefined.");
+    }
+    if (context.previewPitchEdit.value == undefined) {
+      throw new Error("previewPitchEdit.value is undefined.");
+    }
+    if (context.previewPitchEdit.value.type !== "erase") {
+      throw new Error("previewPitchEdit.value.type is not erase.");
+    }
+    const cursorFrame = this.currentCursorPos.frame;
+    if (cursorFrame < 0) {
+      return;
+    }
+    const tempPitchEdit = { ...context.previewPitchEdit.value };
+
+    if (tempPitchEdit.startFrame > cursorFrame) {
+      tempPitchEdit.frameLength += tempPitchEdit.startFrame - cursorFrame;
+      tempPitchEdit.startFrame = cursorFrame;
+    }
+
+    const lastFrame = tempPitchEdit.startFrame + tempPitchEdit.frameLength - 1;
+    if (lastFrame < cursorFrame) {
+      tempPitchEdit.frameLength += cursorFrame - lastFrame;
+    }
+
+    context.previewPitchEdit.value = tempPitchEdit;
+  }
+
+  onEnter(context: Context) {
+    context.previewPitchEdit.value = {
+      type: "erase",
+      startFrame: this.cursorPosAtStart.frame,
+      frameLength: 1,
+    };
+    context.nowPreviewing.value = true;
+
+    const previewIfNeeded = () => {
+      if (this.innerContext == undefined) {
+        throw new Error("innerContext is undefined.");
+      }
+      if (this.innerContext.executePreviewProcess) {
+        this.previewErasePitch(context);
+        this.innerContext.executePreviewProcess = false;
+      }
+      this.innerContext.previewRequestId =
+        requestAnimationFrame(previewIfNeeded);
+    };
+    const previewRequestId = requestAnimationFrame(previewIfNeeded);
+
+    this.innerContext = {
+      executePreviewProcess: false,
+      previewRequestId,
+    };
+  }
+
+  process({
+    input,
+    setNextState,
+  }: {
+    input: Input;
+    context: Context;
+    setNextState: (nextState: State) => void;
+  }) {
+    if (this.innerContext == undefined) {
+      throw new Error("innerContext is undefined.");
+    }
+    const mouseButton = getButton(input.mouseEvent);
+    if (input.targetArea === "SequencerBody") {
+      if (input.mouseEvent.type === "mousemove") {
+        this.currentCursorPos = input.cursorPos;
+        this.innerContext.executePreviewProcess = true;
+      } else if (input.mouseEvent.type === "mouseup") {
+        if (mouseButton === "LEFT_BUTTON") {
+          setNextState(new IdleState());
+        }
+      }
+    }
+  }
+
+  onExit(context: Context) {
+    if (this.innerContext == undefined) {
+      throw new Error("innerContext is undefined.");
+    }
+    if (context.previewPitchEdit.value == undefined) {
+      throw new Error("previewPitchEdit is undefined.");
+    }
+    if (context.previewPitchEdit.value.type !== "erase") {
+      throw new Error("previewPitchEdit.type is not erase.");
+    }
+
+    cancelAnimationFrame(this.innerContext.previewRequestId);
+
+    context.storeActions.commandErasePitchEditData(
+      context.previewPitchEdit.value.startFrame,
+      context.previewPitchEdit.value.frameLength,
+      this.targetTrackId,
+    );
 
     context.previewPitchEdit.value = undefined;
     context.nowPreviewing.value = false;
