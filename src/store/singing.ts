@@ -627,7 +627,7 @@ const generateNoteSequence = (
     throw new Error("audioContext is undefined.");
   }
   const noteEvents = generateNoteEvents(notes, tempos, tpqn);
-  const polySynth = new PolySynth(audioContext);
+  const polySynth = new Synth(audioContext);
   return {
     type: "note",
     instrument: polySynth,
@@ -2568,32 +2568,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             return phrase.state === "WAITING_TO_BE_RENDERED";
           }),
         );
-        for (const [phraseKey, phrase] of phrasesToBeRendered) {
-          // シーケンスが存在する場合、シーケンスの接続を解除して削除する
-          // TODO: ピッチを編集したときは行わないようにする
-
-          const sequence = sequences.get(phraseKey);
-          if (sequence) {
-            getAudioSourceNode(sequence).disconnect();
-            transportRef.removeSequence(sequence);
-            sequences.delete(phraseKey);
-          }
-
-          // シーケンスが存在しない場合、ノートシーケンスを作成してプレビュー音が鳴るようにする
-
-          if (!sequences.has(phraseKey)) {
-            const noteEvents = generateNoteEvents(phrase.notes, tempos, tpqn);
-            const synth = createSynthForPreview(audioContextRef);
-            const noteSequence: NoteSequence = {
-              type: "note",
-              instrument: synth,
-              noteEvents,
-            };
-            synth.output.connect(channelStripRef.input);
-            transportRef.addSequence(noteSequence);
-            sequences.set(phraseKey, noteSequence);
-          }
-        }
         while (phrasesToBeRendered.size > 0) {
           if (startRenderingRequested() || stopRenderingRequested()) {
             return;
