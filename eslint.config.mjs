@@ -8,11 +8,11 @@ import globals from "globals";
 // @ts-ignore 型の定義が無い
 import importPlugin from "eslint-plugin-import";
 import prettierConfigRecommended from "eslint-plugin-prettier/recommended";
-import storybook from "eslint-plugin-storybook";
-import vueConfigPrettier from "@vue/eslint-config-prettier";
-import vueConfigRecommended from "eslint-plugin-vue/lib/configs/flat/vue3-recommended.js";
-import vueConfigTypeScript from "@vue/eslint-config-typescript";
+import storybookPlugin from "eslint-plugin-storybook";
 import vueParser from "vue-eslint-parser";
+import vuePlugin from "eslint-plugin-vue";
+import vuePrettierConfig from "@vue/eslint-config-prettier";
+import vueTypeScriptConfig from "@vue/eslint-config-typescript";
 import {
   config as defineConfig,
   configs,
@@ -141,13 +141,13 @@ export default defineConfig(
     ignores: ["dist/**/*", "dist_*/**/*", "node_modules/**/*"],
   },
 
-  ...pluginConfig(vueConfigRecommended),
+  ...pluginConfig(vuePlugin.configs["flat/recommended"]),
   ...pluginConfig("eslint:recommended", js.configs.recommended),
-  ...pluginConfig("@vue/prettier", vueConfigPrettier),
-  ...pluginConfig(vueConfigTypeScript()),
+  ...pluginConfig("@vue/prettier", vuePrettierConfig),
+  ...pluginConfig(vueTypeScriptConfig()),
   ...pluginConfig("prettier:recommended", prettierConfigRecommended),
   ...compatExtend("plugin:@voicevox/all"),
-  ...pluginConfig(storybook.configs["flat/recommended"]),
+  ...pluginConfig(storybookPlugin.configs["flat/recommended"]),
 
   {
     name: "voicevox/type-checked/typescript",
@@ -209,7 +209,8 @@ export default defineConfig(
           ignoreRestSiblings: true,
         },
       ],
-      "import/order": "error",
+      // FIXME: これを有効にするとeslint何故かセグフォで落ちる
+      // "import/order": "error",
       "no-console": process.env.NODE_ENV === "production" ? "warn" : "off",
       "no-constant-condition": ["error", { checkLoops: false }], // while(true) などを許可
       "no-debugger": process.env.NODE_ENV === "production" ? "warn" : "off",
