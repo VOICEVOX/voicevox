@@ -54,7 +54,7 @@ import {
   NoteEvent,
   NoteSequence,
   OfflineTransport,
-  Synth,
+  PolySynth,
   Sequence,
   Transport,
 } from "@/sing/audioRendering";
@@ -514,7 +514,7 @@ const offlineRenderTracks = async (
 
 let audioContext: AudioContext | undefined;
 let transport: Transport | undefined;
-let synthForPreview: Synth | undefined;
+let synthForPreview: PolySynth | undefined;
 let mainChannelStrip: ChannelStrip | undefined;
 const trackChannelStrips = new Map<TrackId, ChannelStrip>();
 let limiter: Limiter | undefined;
@@ -627,7 +627,7 @@ const generateNoteSequence = (
     throw new Error("audioContext is undefined.");
   }
   const noteEvents = generateNoteEvents(notes, tempos, tpqn);
-  const polySynth = new Synth(audioContext);
+  const polySynth = new PolySynth(audioContext);
   return {
     type: "note",
     instrument: polySynth,

@@ -654,15 +654,16 @@ class SynthVoice {
   private readonly gainNode: GainNode;
   private readonly filterNode: BiquadFilterNode;
 
+  private _isActive = false;
   private _isStopped = false;
-  private noteOffContextTime?: number;
+  private stopContextTime?: number;
 
   get output(): AudioNode {
     return this.gainNode;
   }
 
   get isActive() {
-    return this.noteOffContextTime == undefined;
+    return this._isActive;
   }
 
   get isStopped() {
@@ -704,13 +705,6 @@ class SynthVoice {
     return linearToDecibel(Math.SQRT1_2) + resonance;
   }
 
-  isActiveAt(contextTime: number) {
-    return (
-      this.noteOffContextTime == undefined ||
-      contextTime < this.noteOffContextTime
-    );
-  }
-
   /**
    * ノートオンをスケジュールします。
    * @param contextTime ノートオンを行う時刻（コンテキスト時刻）
@@ -732,6 +726,8 @@ class SynthVoice {
 
     this.oscNode.frequency.value = freq;
     this.oscNode.start(t0);
+
+    this._isActive = true;
   }
 
   /**
@@ -746,21 +742,25 @@ class SynthVoice {
       getEarliestSchedulableContextTime(this.audioContext),
       contextTime,
     );
+    const stopContextTime = t0 + rel * 4;
 
-    if (this.noteOffContextTime == undefined || t0 < this.noteOffContextTime) {
+    if (
+      this.stopContextTime == undefined ||
+      stopContextTime < this.stopContextTime
+    ) {
       // リリースのスケジュールを行う
       this.gainNode.gain.cancelAndHoldAtTime?.(t0); // Fiefoxで未対応
       this.gainNode.gain.setTargetAtTime(0, t0, rel);
 
-      this.oscNode.stop(t0 + rel * 4);
+      this.oscNode.stop(stopContextTime);
 
-      this.noteOffContextTime = t0;
+      this._isActive = false;
+      this.stopContextTime = stopContextTime;
     }
   }
 }
 
-export type SynthOptions = {
-  readonly maxNumOfVoices?: number;
+export type PolySynthOptions = {
   readonly osc?: SynthOscParams;
   readonly filter?: SynthFilterParams;
   readonly amp?: SynthAmpParams;
@@ -769,13 +769,12 @@ export type SynthOptions = {
 };
 
 /**
- * シンセサイザーです。
+ * ポリフォニックシンセサイザーです。
  */
-export class Synth implements Instrument {
+export class PolySynth implements Instrument {
   private readonly audioContext: BaseAudioContext;
   private readonly highPassFilterNode: BiquadFilterNode;
   private readonly gainNode: GainNode;
-  private readonly maxNumOfActiveVoices: number;
   private readonly oscParams: SynthOscParams;
   private readonly filterParams: SynthFilterParams;
   private readonly ampParams: SynthAmpParams;
@@ -786,9 +785,8 @@ export class Synth implements Instrument {
     return this.gainNode;
   }
 
-  constructor(audioContext: BaseAudioContext, options?: SynthOptions) {
+  constructor(audioContext: BaseAudioContext, options?: PolySynthOptions) {
     this.audioContext = audioContext;
-    this.maxNumOfActiveVoices = options?.maxNumOfVoices ?? 16;
     this.oscParams = options?.osc ?? {
       type: "triangle",
     };
@@ -816,13 +814,10 @@ export class Synth implements Instrument {
     this.highPassFilterNode.connect(this.gainNode);
   }
 
-  private getActiveVoicesAt(contextTime: number) {
-    return this.voices.filter((value) => value.isActiveAt(contextTime));
-  }
-
   /**
    * ノートオンをスケジュールします。
    * ノートの長さが指定された場合は、ノートオフもスケジュールします。
+   * すでに指定されたノート番号でノートオンがスケジュールされている場合は何も行いません。
    * @param contextTime ノートオンを行う時刻（コンテキスト時刻）
    * @param noteNumber MIDIノート番号
    * @param duration ノートの長さ（秒）
@@ -832,34 +827,29 @@ export class Synth implements Instrument {
     noteNumber: number,
     duration?: number,
   ) {
-    this.voices = this.voices.filter((value) => !value.isStopped);
+    let voice = this.voices.find((value) => {
+      return value.isActive && value.noteNumber === noteNumber;
+    });
     if (contextTime === "immediately") {
       contextTime = getEarliestSchedulableContextTime(this.audioContext);
     }
-    const activeVoices = this.getActiveVoicesAt(contextTime);
+    if (!voice) {
+      voice = new SynthVoice(this.audioContext, {
+        noteNumber,
+        osc: this.oscParams,
+        filter: this.filterParams,
+        amp: this.ampParams,
+      });
+      voice.output.connect(this.highPassFilterNode);
+      voice.noteOn(contextTime);
 
-    const newVoice = new SynthVoice(this.audioContext, {
-      noteNumber,
-      osc: this.oscParams,
-      filter: this.filterParams,
-      amp: this.ampParams,
-    });
-    newVoice.output.connect(this.highPassFilterNode);
-    newVoice.noteOn(contextTime);
-
-    activeVoices.push(newVoice);
-    for (let i = 0; activeVoices.length - i > this.maxNumOfActiveVoices; i++) {
-      activeVoices[i].noteOff(contextTime);
+      this.voices = this.voices.filter((value) => {
+        return !value.isStopped;
+      });
+      this.voices.push(voice);
     }
-
-    this.voices.push(newVoice);
-
     if (duration != undefined) {
-      for (const voice of this.voices) {
-        if (voice.isActive && voice.noteNumber === noteNumber) {
-          voice.noteOff(contextTime + duration);
-        }
-      }
+      voice.noteOff(contextTime + duration);
     }
   }
 
@@ -870,14 +860,14 @@ export class Synth implements Instrument {
    * @param noteNumber MIDIノート番号
    */
   noteOff(contextTime: number | "immediately", noteNumber: number) {
+    const voice = this.voices.find((value) => {
+      return value.isActive && value.noteNumber === noteNumber;
+    });
     if (contextTime === "immediately") {
       contextTime = getEarliestSchedulableContextTime(this.audioContext);
     }
-
-    for (const voice of this.voices) {
-      if (voice.isActive && voice.noteNumber === noteNumber) {
-        voice.noteOff(contextTime);
-      }
+    if (voice) {
+      voice.noteOff(contextTime);
     }
   }
 

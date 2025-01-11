@@ -1,5 +1,5 @@
 import { calculateHash, getLast, getNext, getPrev, isSorted } from "./utility";
-import { Synth } from "./audioRendering";
+import { PolySynth } from "./audioRendering";
 import { convertLongVowel, moraPattern } from "@/domain/japanese";
 import {
   Note,
@@ -1005,7 +1005,7 @@ export const splitLyricsByMoras = (
   return moraAndNonMoras;
 };
 
-export const PREVIEW_SOUND_DURATION_SECONDS = 0.6;
+export const PREVIEW_SOUND_DURATION_SECONDS = 0.15;
 
 export function createSynthForPreview(audioContext: BaseAudioContext) {
   const maxHarmonics = 36;
@@ -1028,7 +1028,7 @@ export function createSynthForPreview(audioContext: BaseAudioContext) {
   }
   const periodicWave = audioContext.createPeriodicWave(real, imag);
 
-  return new Synth(audioContext, {
+  return new PolySynth(audioContext, {
     osc: {
       type: "custom",
       periodicWave,
@@ -1044,8 +1044,7 @@ export function createSynthForPreview(audioContext: BaseAudioContext) {
       sustain: 0,
       release: 0.02,
     },
-    maxNumOfVoices: 1,
-    lowCutFrequency: 130,
+    lowCutFrequency: 125,
     volume: 0.1,
   });
 }
