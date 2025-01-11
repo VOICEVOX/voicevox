@@ -8,7 +8,10 @@ import globals from "globals";
 // @ts-ignore 型の定義が無い
 import importPlugin from "eslint-plugin-import";
 import prettierConfigRecommended from "eslint-plugin-prettier/recommended";
+import storybook from "eslint-plugin-storybook";
+import vueConfigPrettier from "@vue/eslint-config-prettier";
 import vueConfigRecommended from "eslint-plugin-vue/lib/configs/flat/vue3-recommended.js";
+import vueConfigTypeScript from "@vue/eslint-config-typescript";
 import vueParser from "vue-eslint-parser";
 import {
   config as defineConfig,
@@ -23,26 +26,26 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 /**
  * @overload
  * @param {string} name
- * @param {import("eslint").Linter.Config} config
- * @returns {import("@typescript-eslint/utils/ts-eslint").FlatConfig.Config[]}
+ * @param {import("@typescript-eslint/utils/ts-eslint").FlatConfig.Config} config
+ * @returns {import("@typescript-eslint/utils/ts-eslint").FlatConfig.ConfigArray}
  */
 /**
  * @overload
- * @param {import("eslint").Linter.Config[]} configs
- * @returns {import("@typescript-eslint/utils/ts-eslint").FlatConfig.Config[]}
+ * @param {import("@typescript-eslint/utils/ts-eslint").FlatConfig.ConfigArray} configs
+ * @returns {import("@typescript-eslint/utils/ts-eslint").FlatConfig.ConfigArray}
  */
 /**
- * @param {string | import("eslint").Linter.Config[]} nameOrConfigs
+ * @param {string | import("@typescript-eslint/utils/ts-eslint").FlatConfig.ConfigArray} nameOrConfigs
  * @param {import("eslint").Linter.Config} config
- * @returns {import("@typescript-eslint/utils/ts-eslint").FlatConfig.Config[]}
+ * @returns {import("@typescript-eslint/utils/ts-eslint").FlatConfig.ConfigArray}
  */
 const pluginConfig = (nameOrConfigs, config) => {
   if (typeof nameOrConfigs === "string") {
-    return /** @type {import("@typescript-eslint/utils/ts-eslint").FlatConfig.Config[]} */ ([
+    return /** @type {import("@typescript-eslint/utils/ts-eslint").FlatConfig.ConfigArray} */ ([
       { name: nameOrConfigs, ...config },
     ]);
   } else {
-    return /** @type {import("@typescript-eslint/utils/ts-eslint").FlatConfig.Config[]} */ (
+    return /** @type {import("@typescript-eslint/utils/ts-eslint").FlatConfig.ConfigArray} */ (
       nameOrConfigs
     );
   }
@@ -137,11 +140,11 @@ export default defineConfig(
 
   ...pluginConfig(vueConfigRecommended),
   ...pluginConfig("eslint:recommended", js.configs.recommended),
-  ...compatExtend("@vue/prettier"),
-  ...compatExtend("@vue/typescript/recommended"),
+  ...pluginConfig("@vue/prettier", vueConfigPrettier),
+  ...pluginConfig(vueConfigTypeScript()),
   ...pluginConfig("prettier:recommended", prettierConfigRecommended),
   ...compatExtend("plugin:@voicevox/all"),
-  // ...compatExtends("plugin:storybook/recommended"),
+  ...pluginConfig(storybook.configs["flat/recommended"]),
 
   {
     name: "voicevox/type-checked/typescript",
