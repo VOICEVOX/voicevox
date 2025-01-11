@@ -1,8 +1,8 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * VOICEVOX Engine
- * VOICEVOX の音声合成エンジンです。
+ * DUMMY Engine
+ * DUMMY の音声合成エンジンです。
  *
  * The version of the OpenAPI document: latest
  * 
@@ -17,6 +17,7 @@ import * as runtime from '../runtime';
 import type {
   AccentPhrase,
   AudioQuery,
+  BodySingFrameF0SingFrameF0Post,
   BodySingFrameVolumeSingFrameVolumePost,
   CorsPolicyMode,
   DownloadableLibraryInfo,
@@ -39,6 +40,8 @@ import {
     AccentPhraseToJSON,
     AudioQueryFromJSON,
     AudioQueryToJSON,
+    BodySingFrameF0SingFrameF0PostFromJSON,
+    BodySingFrameF0SingFrameF0PostToJSON,
     BodySingFrameVolumeSingFrameVolumePostFromJSON,
     BodySingFrameVolumeSingFrameVolumePostToJSON,
     CorsPolicyModeFromJSON,
@@ -194,6 +197,12 @@ export interface SettingPostSettingPostRequest {
 export interface SingFrameAudioQuerySingFrameAudioQueryPostRequest {
     speaker: number;
     score: Score;
+    coreVersion?: string;
+}
+
+export interface SingFrameF0SingFrameF0PostRequest {
+    speaker: number;
+    bodySingFrameF0SingFrameF0Post: BodySingFrameF0SingFrameF0Post;
     coreVersion?: string;
 }
 
@@ -766,7 +775,24 @@ export interface DefaultApiInterface {
 
     /**
      * 
-     * @summary スコア・歌唱音声合成用のクエリからフレームごとの音量を得る
+     * @summary 楽譜・歌唱音声合成用のクエリからフレームごとの基本周波数を得る
+     * @param {number} speaker 
+     * @param {BodySingFrameF0SingFrameF0Post} bodySingFrameF0SingFrameF0Post 
+     * @param {string} [coreVersion] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApiInterface
+     */
+    singFrameF0SingFrameF0PostRaw(requestParameters: SingFrameF0SingFrameF0PostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<number>>>;
+
+    /**
+     * 楽譜・歌唱音声合成用のクエリからフレームごとの基本周波数を得る
+     */
+    singFrameF0SingFrameF0Post(requestParameters: SingFrameF0SingFrameF0PostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<number>>;
+
+    /**
+     * 
+     * @summary 楽譜・歌唱音声合成用のクエリからフレームごとの音量を得る
      * @param {number} speaker 
      * @param {BodySingFrameVolumeSingFrameVolumePost} bodySingFrameVolumeSingFrameVolumePost 
      * @param {string} [coreVersion] 
@@ -777,7 +803,7 @@ export interface DefaultApiInterface {
     singFrameVolumeSingFrameVolumePostRaw(requestParameters: SingFrameVolumeSingFrameVolumePostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<number>>>;
 
     /**
-     * スコア・歌唱音声合成用のクエリからフレームごとの音量を得る
+     * 楽譜・歌唱音声合成用のクエリからフレームごとの音量を得る
      */
     singFrameVolumeSingFrameVolumePost(requestParameters: SingFrameVolumeSingFrameVolumePostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<number>>;
 
@@ -2188,7 +2214,52 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
     /**
-     * スコア・歌唱音声合成用のクエリからフレームごとの音量を得る
+     * 楽譜・歌唱音声合成用のクエリからフレームごとの基本周波数を得る
+     */
+    async singFrameF0SingFrameF0PostRaw(requestParameters: SingFrameF0SingFrameF0PostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<number>>> {
+        if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
+            throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling singFrameF0SingFrameF0Post.');
+        }
+
+        if (requestParameters.bodySingFrameF0SingFrameF0Post === null || requestParameters.bodySingFrameF0SingFrameF0Post === undefined) {
+            throw new runtime.RequiredError('bodySingFrameF0SingFrameF0Post','Required parameter requestParameters.bodySingFrameF0SingFrameF0Post was null or undefined when calling singFrameF0SingFrameF0Post.');
+        }
+
+        const queryParameters: any = {};
+
+        if (requestParameters.speaker !== undefined) {
+            queryParameters['speaker'] = requestParameters.speaker;
+        }
+
+        if (requestParameters.coreVersion !== undefined) {
+            queryParameters['core_version'] = requestParameters.coreVersion;
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        const response = await this.request({
+            path: `/sing_frame_f0`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: BodySingFrameF0SingFrameF0PostToJSON(requestParameters.bodySingFrameF0SingFrameF0Post),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse<any>(response);
+    }
+
+    /**
+     * 楽譜・歌唱音声合成用のクエリからフレームごとの基本周波数を得る
+     */
+    async singFrameF0SingFrameF0Post(requestParameters: SingFrameF0SingFrameF0PostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<number>> {
+        const response = await this.singFrameF0SingFrameF0PostRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * 楽譜・歌唱音声合成用のクエリからフレームごとの音量を得る
      */
     async singFrameVolumeSingFrameVolumePostRaw(requestParameters: SingFrameVolumeSingFrameVolumePostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<number>>> {
         if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
@@ -2225,7 +2296,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
     /**
-     * スコア・歌唱音声合成用のクエリからフレームごとの音量を得る
+     * 楽譜・歌唱音声合成用のクエリからフレームごとの音量を得る
      */
     async singFrameVolumeSingFrameVolumePost(requestParameters: SingFrameVolumeSingFrameVolumePostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<number>> {
         const response = await this.singFrameVolumeSingFrameVolumePostRaw(requestParameters, initOverrides);

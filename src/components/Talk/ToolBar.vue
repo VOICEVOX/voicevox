@@ -145,7 +145,7 @@ const saveProject = async () => {
   await store.actions.SAVE_PROJECT_FILE({ overwrite: true });
 };
 const importTextFile = () => {
-  void store.actions.COMMAND_IMPORT_FROM_FILE({});
+  void store.actions.COMMAND_IMPORT_FROM_FILE({ type: "dialog" });
 };
 
 const usableButtons: Record<

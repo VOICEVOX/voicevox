@@ -33,21 +33,6 @@ export type IpcIHData = {
     return: AltPortInfos;
   };
 
-  SHOW_AUDIO_SAVE_DIALOG: {
-    args: [
-      obj: {
-        title: string;
-        defaultPath?: string;
-      },
-    ];
-    return?: string;
-  };
-
-  SHOW_TEXT_SAVE_DIALOG: {
-    args: [obj: { title: string; defaultPath?: string }];
-    return?: string;
-  };
-
   SHOW_SAVE_DIRECTORY_DIALOG: {
     args: [obj: { title: string }];
     return?: string;
@@ -96,6 +81,18 @@ export type IpcIHData = {
       },
     ];
     return: MessageBoxReturnValue;
+  };
+
+  SHOW_EXPORT_FILE_DIALOG: {
+    args: [
+      obj: {
+        title: string;
+        defaultPath?: string;
+        extensionName: string;
+        extensions: string[];
+      },
+    ];
+    return?: string;
   };
 
   IS_AVAILABLE_GPU_MODE: {
@@ -244,7 +241,7 @@ export type IpcIHData = {
  */
 export type IpcSOData = {
   LOAD_PROJECT_FILE: {
-    args: [obj: { filePath?: string }];
+    args: [obj: { filePath: string }];
     return: void;
   };
 

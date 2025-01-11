@@ -29,27 +29,27 @@ import {
 /**
  * 
  * @export
- * @interface BodySingFrameVolumeSingFrameVolumePost
+ * @interface BodySingFrameF0SingFrameF0Post
  */
-export interface BodySingFrameVolumeSingFrameVolumePost {
+export interface BodySingFrameF0SingFrameF0Post {
     /**
      * 
      * @type {Score}
-     * @memberof BodySingFrameVolumeSingFrameVolumePost
+     * @memberof BodySingFrameF0SingFrameF0Post
      */
     score: Score;
     /**
      * 
      * @type {FrameAudioQuery}
-     * @memberof BodySingFrameVolumeSingFrameVolumePost
+     * @memberof BodySingFrameF0SingFrameF0Post
      */
     frameAudioQuery: FrameAudioQuery;
 }
 
 /**
- * Check if a given object implements the BodySingFrameVolumeSingFrameVolumePost interface.
+ * Check if a given object implements the BodySingFrameF0SingFrameF0Post interface.
  */
-export function instanceOfBodySingFrameVolumeSingFrameVolumePost(value: object): boolean {
+export function instanceOfBodySingFrameF0SingFrameF0Post(value: object): boolean {
     let isInstance = true;
     isInstance = isInstance && "score" in value;
     isInstance = isInstance && "frameAudioQuery" in value;
@@ -57,11 +57,11 @@ export function instanceOfBodySingFrameVolumeSingFrameVolumePost(value: object):
     return isInstance;
 }
 
-export function BodySingFrameVolumeSingFrameVolumePostFromJSON(json: any): BodySingFrameVolumeSingFrameVolumePost {
-    return BodySingFrameVolumeSingFrameVolumePostFromJSONTyped(json, false);
+export function BodySingFrameF0SingFrameF0PostFromJSON(json: any): BodySingFrameF0SingFrameF0Post {
+    return BodySingFrameF0SingFrameF0PostFromJSONTyped(json, false);
 }
 
-export function BodySingFrameVolumeSingFrameVolumePostFromJSONTyped(json: any, ignoreDiscriminator: boolean): BodySingFrameVolumeSingFrameVolumePost {
+export function BodySingFrameF0SingFrameF0PostFromJSONTyped(json: any, ignoreDiscriminator: boolean): BodySingFrameF0SingFrameF0Post {
     if ((json === undefined) || (json === null)) {
         return json;
     }
@@ -72,7 +72,7 @@ export function BodySingFrameVolumeSingFrameVolumePostFromJSONTyped(json: any, i
     };
 }
 
-export function BodySingFrameVolumeSingFrameVolumePostToJSON(value?: BodySingFrameVolumeSingFrameVolumePost | null): any {
+export function BodySingFrameF0SingFrameF0PostToJSON(value?: BodySingFrameF0SingFrameF0Post | null): any {
     if (value === undefined) {
         return undefined;
     }
