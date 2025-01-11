@@ -1,8 +1,8 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * VOICEVOX Engine
- * VOICEVOX の音声合成エンジンです。
+ * DUMMY Engine
+ * DUMMY の音声合成エンジンです。
  *
  * The version of the OpenAPI document: latest
  * 
@@ -17,6 +17,7 @@ import * as runtime from '../runtime';
 import type {
   AccentPhrase,
   AudioQuery,
+  BodySingFrameF0SingFrameF0Post,
   BodySingFrameVolumeSingFrameVolumePost,
   CorsPolicyMode,
   DownloadableLibraryInfo,
@@ -39,6 +40,8 @@ import {
     AccentPhraseToJSON,
     AudioQueryFromJSON,
     AudioQueryToJSON,
+    BodySingFrameF0SingFrameF0PostFromJSON,
+    BodySingFrameF0SingFrameF0PostToJSON,
     BodySingFrameVolumeSingFrameVolumePostFromJSON,
     BodySingFrameVolumeSingFrameVolumePostToJSON,
     CorsPolicyModeFromJSON,
@@ -194,6 +197,12 @@ export interface SettingPostSettingPostRequest {
 export interface SingFrameAudioQuerySingFrameAudioQueryPostRequest {
     speaker: number;
     score: Score;
+    coreVersion?: string;
+}
+
+export interface SingFrameF0SingFrameF0PostRequest {
+    speaker: number;
+    bodySingFrameF0SingFrameF0Post: BodySingFrameF0SingFrameF0Post;
     coreVersion?: string;
 }
 
@@ -660,8 +669,8 @@ export interface DefaultApiInterface {
     moraPitchMoraPitchPost(requestParameters: MoraPitchMoraPitchPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<AccentPhrase>>;
 
     /**
-     * 指定されたベーススタイルに対してエンジン内の各話者がモーフィング機能を利用可能か返します。 モーフィングの許可/禁止は`/speakers`の`speaker.supported_features.synthesis_morphing`に記載されています。 プロパティが存在しない場合は、モーフィングが許可されているとみなします。 返り値のスタイルIDはstring型なので注意。
-     * @summary 指定したスタイルに対してエンジン内の話者がモーフィングが可能か判定する
+     * 指定されたベーススタイルに対してエンジン内の各キャラクターがモーフィング機能を利用可能か返します。 モーフィングの許可/禁止は`/speakers`の`speaker.supported_features.synthesis_morphing`に記載されています。 プロパティが存在しない場合は、モーフィングが許可されているとみなします。 返り値のスタイルIDはstring型なので注意。
+     * @summary 指定したスタイルに対してエンジン内のキャラクターがモーフィングが可能か判定する
      * @param {Array<number>} requestBody 
      * @param {string} [coreVersion] 
      * @param {*} [options] Override http request option.
@@ -671,8 +680,8 @@ export interface DefaultApiInterface {
     morphableTargetsMorphableTargetsPostRaw(requestParameters: MorphableTargetsMorphableTargetsPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<{ [key: string]: MorphableTargetInfo; }>>>;
 
     /**
-     * 指定されたベーススタイルに対してエンジン内の各話者がモーフィング機能を利用可能か返します。 モーフィングの許可/禁止は`/speakers`の`speaker.supported_features.synthesis_morphing`に記載されています。 プロパティが存在しない場合は、モーフィングが許可されているとみなします。 返り値のスタイルIDはstring型なので注意。
-     * 指定したスタイルに対してエンジン内の話者がモーフィングが可能か判定する
+     * 指定されたベーススタイルに対してエンジン内の各キャラクターがモーフィング機能を利用可能か返します。 モーフィングの許可/禁止は`/speakers`の`speaker.supported_features.synthesis_morphing`に記載されています。 プロパティが存在しない場合は、モーフィングが許可されているとみなします。 返り値のスタイルIDはstring型なので注意。
+     * 指定したスタイルに対してエンジン内のキャラクターがモーフィングが可能か判定する
      */
     morphableTargetsMorphableTargetsPost(requestParameters: MorphableTargetsMorphableTargetsPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<{ [key: string]: MorphableTargetInfo; }>>;
 
@@ -766,7 +775,24 @@ export interface DefaultApiInterface {
 
     /**
      * 
-     * @summary スコア・歌唱音声合成用のクエリからフレームごとの音量を得る
+     * @summary 楽譜・歌唱音声合成用のクエリからフレームごとの基本周波数を得る
+     * @param {number} speaker 
+     * @param {BodySingFrameF0SingFrameF0Post} bodySingFrameF0SingFrameF0Post 
+     * @param {string} [coreVersion] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApiInterface
+     */
+    singFrameF0SingFrameF0PostRaw(requestParameters: SingFrameF0SingFrameF0PostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<number>>>;
+
+    /**
+     * 楽譜・歌唱音声合成用のクエリからフレームごとの基本周波数を得る
+     */
+    singFrameF0SingFrameF0Post(requestParameters: SingFrameF0SingFrameF0PostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<number>>;
+
+    /**
+     * 
+     * @summary 楽譜・歌唱音声合成用のクエリからフレームごとの音量を得る
      * @param {number} speaker 
      * @param {BodySingFrameVolumeSingFrameVolumePost} bodySingFrameVolumeSingFrameVolumePost 
      * @param {string} [coreVersion] 
@@ -777,12 +803,12 @@ export interface DefaultApiInterface {
     singFrameVolumeSingFrameVolumePostRaw(requestParameters: SingFrameVolumeSingFrameVolumePostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<number>>>;
 
     /**
-     * スコア・歌唱音声合成用のクエリからフレームごとの音量を得る
+     * 楽譜・歌唱音声合成用のクエリからフレームごとの音量を得る
      */
     singFrameVolumeSingFrameVolumePost(requestParameters: SingFrameVolumeSingFrameVolumePostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<number>>;
 
     /**
-     * 指定されたspeaker_uuidの歌手に関する情報をjson形式で返します。 画像や音声はresource_formatで指定した形式で返されます。
+     * UUID で指定された歌えるキャラクターの情報を返します。 画像や音声はresource_formatで指定した形式で返されます。
      * @summary Singer Info
      * @param {string} speakerUuid 
      * @param {'base64' | 'url'} [resourceFormat] 
@@ -794,13 +820,13 @@ export interface DefaultApiInterface {
     singerInfoSingerInfoGetRaw(requestParameters: SingerInfoSingerInfoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SpeakerInfo>>;
 
     /**
-     * 指定されたspeaker_uuidの歌手に関する情報をjson形式で返します。 画像や音声はresource_formatで指定した形式で返されます。
+     * UUID で指定された歌えるキャラクターの情報を返します。 画像や音声はresource_formatで指定した形式で返されます。
      * Singer Info
      */
     singerInfoSingerInfoGet(requestParameters: SingerInfoSingerInfoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SpeakerInfo>;
 
     /**
-     * 歌手情報の一覧を取得します
+     * 歌えるキャラクターの情報の一覧を返します。
      * @summary Singers
      * @param {string} [coreVersion] 
      * @param {*} [options] Override http request option.
@@ -810,13 +836,13 @@ export interface DefaultApiInterface {
     singersSingersGetRaw(requestParameters: SingersSingersGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Speaker>>>;
 
     /**
-     * 歌手情報の一覧を取得します
+     * 歌えるキャラクターの情報の一覧を返します。
      * Singers
      */
     singersSingersGet(requestParameters: SingersSingersGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Speaker>>;
 
     /**
-     * 指定されたspeaker_uuidの話者に関する情報をjson形式で返します。 画像や音声はresource_formatで指定した形式で返されます。
+     * UUID で指定された喋れるキャラクターの情報を返します。 画像や音声はresource_formatで指定した形式で返されます。
      * @summary Speaker Info
      * @param {string} speakerUuid 
      * @param {'base64' | 'url'} [resourceFormat] 
@@ -828,13 +854,13 @@ export interface DefaultApiInterface {
     speakerInfoSpeakerInfoGetRaw(requestParameters: SpeakerInfoSpeakerInfoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SpeakerInfo>>;
 
     /**
-     * 指定されたspeaker_uuidの話者に関する情報をjson形式で返します。 画像や音声はresource_formatで指定した形式で返されます。
+     * UUID で指定された喋れるキャラクターの情報を返します。 画像や音声はresource_formatで指定した形式で返されます。
      * Speaker Info
      */
     speakerInfoSpeakerInfoGet(requestParameters: SpeakerInfoSpeakerInfoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SpeakerInfo>;
 
     /**
-     * 話者情報の一覧を取得します。
+     * 喋れるキャラクターの情報の一覧を返します。
      * @summary Speakers
      * @param {string} [coreVersion] 
      * @param {*} [options] Override http request option.
@@ -844,7 +870,7 @@ export interface DefaultApiInterface {
     speakersSpeakersGetRaw(requestParameters: SpeakersSpeakersGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Speaker>>>;
 
     /**
-     * 話者情報の一覧を取得します。
+     * 喋れるキャラクターの情報の一覧を返します。
      * Speakers
      */
     speakersSpeakersGet(requestParameters: SpeakersSpeakersGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Speaker>>;
@@ -1913,8 +1939,8 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
     /**
-     * 指定されたベーススタイルに対してエンジン内の各話者がモーフィング機能を利用可能か返します。 モーフィングの許可/禁止は`/speakers`の`speaker.supported_features.synthesis_morphing`に記載されています。 プロパティが存在しない場合は、モーフィングが許可されているとみなします。 返り値のスタイルIDはstring型なので注意。
-     * 指定したスタイルに対してエンジン内の話者がモーフィングが可能か判定する
+     * 指定されたベーススタイルに対してエンジン内の各キャラクターがモーフィング機能を利用可能か返します。 モーフィングの許可/禁止は`/speakers`の`speaker.supported_features.synthesis_morphing`に記載されています。 プロパティが存在しない場合は、モーフィングが許可されているとみなします。 返り値のスタイルIDはstring型なので注意。
+     * 指定したスタイルに対してエンジン内のキャラクターがモーフィングが可能か判定する
      */
     async morphableTargetsMorphableTargetsPostRaw(requestParameters: MorphableTargetsMorphableTargetsPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<{ [key: string]: MorphableTargetInfo; }>>> {
         if (requestParameters.requestBody === null || requestParameters.requestBody === undefined) {
@@ -1943,8 +1969,8 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
     /**
-     * 指定されたベーススタイルに対してエンジン内の各話者がモーフィング機能を利用可能か返します。 モーフィングの許可/禁止は`/speakers`の`speaker.supported_features.synthesis_morphing`に記載されています。 プロパティが存在しない場合は、モーフィングが許可されているとみなします。 返り値のスタイルIDはstring型なので注意。
-     * 指定したスタイルに対してエンジン内の話者がモーフィングが可能か判定する
+     * 指定されたベーススタイルに対してエンジン内の各キャラクターがモーフィング機能を利用可能か返します。 モーフィングの許可/禁止は`/speakers`の`speaker.supported_features.synthesis_morphing`に記載されています。 プロパティが存在しない場合は、モーフィングが許可されているとみなします。 返り値のスタイルIDはstring型なので注意。
+     * 指定したスタイルに対してエンジン内のキャラクターがモーフィングが可能か判定する
      */
     async morphableTargetsMorphableTargetsPost(requestParameters: MorphableTargetsMorphableTargetsPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<{ [key: string]: MorphableTargetInfo; }>> {
         const response = await this.morphableTargetsMorphableTargetsPostRaw(requestParameters, initOverrides);
@@ -2188,7 +2214,52 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
     /**
-     * スコア・歌唱音声合成用のクエリからフレームごとの音量を得る
+     * 楽譜・歌唱音声合成用のクエリからフレームごとの基本周波数を得る
+     */
+    async singFrameF0SingFrameF0PostRaw(requestParameters: SingFrameF0SingFrameF0PostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<number>>> {
+        if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
+            throw new runtime.RequiredError('speaker','Required parameter requestParameters.speaker was null or undefined when calling singFrameF0SingFrameF0Post.');
+        }
+
+        if (requestParameters.bodySingFrameF0SingFrameF0Post === null || requestParameters.bodySingFrameF0SingFrameF0Post === undefined) {
+            throw new runtime.RequiredError('bodySingFrameF0SingFrameF0Post','Required parameter requestParameters.bodySingFrameF0SingFrameF0Post was null or undefined when calling singFrameF0SingFrameF0Post.');
+        }
+
+        const queryParameters: any = {};
+
+        if (requestParameters.speaker !== undefined) {
+            queryParameters['speaker'] = requestParameters.speaker;
+        }
+
+        if (requestParameters.coreVersion !== undefined) {
+            queryParameters['core_version'] = requestParameters.coreVersion;
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        const response = await this.request({
+            path: `/sing_frame_f0`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: BodySingFrameF0SingFrameF0PostToJSON(requestParameters.bodySingFrameF0SingFrameF0Post),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse<any>(response);
+    }
+
+    /**
+     * 楽譜・歌唱音声合成用のクエリからフレームごとの基本周波数を得る
+     */
+    async singFrameF0SingFrameF0Post(requestParameters: SingFrameF0SingFrameF0PostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<number>> {
+        const response = await this.singFrameF0SingFrameF0PostRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * 楽譜・歌唱音声合成用のクエリからフレームごとの音量を得る
      */
     async singFrameVolumeSingFrameVolumePostRaw(requestParameters: SingFrameVolumeSingFrameVolumePostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<number>>> {
         if (requestParameters.speaker === null || requestParameters.speaker === undefined) {
@@ -2225,7 +2296,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
     /**
-     * スコア・歌唱音声合成用のクエリからフレームごとの音量を得る
+     * 楽譜・歌唱音声合成用のクエリからフレームごとの音量を得る
      */
     async singFrameVolumeSingFrameVolumePost(requestParameters: SingFrameVolumeSingFrameVolumePostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<number>> {
         const response = await this.singFrameVolumeSingFrameVolumePostRaw(requestParameters, initOverrides);
@@ -2233,7 +2304,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
     /**
-     * 指定されたspeaker_uuidの歌手に関する情報をjson形式で返します。 画像や音声はresource_formatで指定した形式で返されます。
+     * UUID で指定された歌えるキャラクターの情報を返します。 画像や音声はresource_formatで指定した形式で返されます。
      * Singer Info
      */
     async singerInfoSingerInfoGetRaw(requestParameters: SingerInfoSingerInfoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SpeakerInfo>> {
@@ -2268,7 +2339,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
     /**
-     * 指定されたspeaker_uuidの歌手に関する情報をjson形式で返します。 画像や音声はresource_formatで指定した形式で返されます。
+     * UUID で指定された歌えるキャラクターの情報を返します。 画像や音声はresource_formatで指定した形式で返されます。
      * Singer Info
      */
     async singerInfoSingerInfoGet(requestParameters: SingerInfoSingerInfoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SpeakerInfo> {
@@ -2277,7 +2348,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
     /**
-     * 歌手情報の一覧を取得します
+     * 歌えるキャラクターの情報の一覧を返します。
      * Singers
      */
     async singersSingersGetRaw(requestParameters: SingersSingersGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Speaker>>> {
@@ -2300,7 +2371,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
     /**
-     * 歌手情報の一覧を取得します
+     * 歌えるキャラクターの情報の一覧を返します。
      * Singers
      */
     async singersSingersGet(requestParameters: SingersSingersGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Speaker>> {
@@ -2309,7 +2380,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
     /**
-     * 指定されたspeaker_uuidの話者に関する情報をjson形式で返します。 画像や音声はresource_formatで指定した形式で返されます。
+     * UUID で指定された喋れるキャラクターの情報を返します。 画像や音声はresource_formatで指定した形式で返されます。
      * Speaker Info
      */
     async speakerInfoSpeakerInfoGetRaw(requestParameters: SpeakerInfoSpeakerInfoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SpeakerInfo>> {
@@ -2344,7 +2415,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
     /**
-     * 指定されたspeaker_uuidの話者に関する情報をjson形式で返します。 画像や音声はresource_formatで指定した形式で返されます。
+     * UUID で指定された喋れるキャラクターの情報を返します。 画像や音声はresource_formatで指定した形式で返されます。
      * Speaker Info
      */
     async speakerInfoSpeakerInfoGet(requestParameters: SpeakerInfoSpeakerInfoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SpeakerInfo> {
@@ -2353,7 +2424,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
     /**
-     * 話者情報の一覧を取得します。
+     * 喋れるキャラクターの情報の一覧を返します。
      * Speakers
      */
     async speakersSpeakersGetRaw(requestParameters: SpeakersSpeakersGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Speaker>>> {
@@ -2376,7 +2447,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
     /**
-     * 話者情報の一覧を取得します。
+     * 喋れるキャラクターの情報の一覧を返します。
      * Speakers
      */
     async speakersSpeakersGet(requestParameters: SpeakersSpeakersGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<Speaker>> {

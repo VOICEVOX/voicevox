@@ -1,12 +1,13 @@
 import { z } from "zod";
-import { StyleInfo, isMac } from "@/type/preload";
+import { StyleInfo } from "@/type/preload";
 import { calculateHash } from "@/sing/utility";
+import { isMac } from "@/helpers/platform";
 
 const BASE_X_PER_QUARTER_NOTE = 120;
 const BASE_Y_PER_SEMITONE = 30;
 
-export const ZOOM_X_MIN = 0.2;
-export const ZOOM_X_MAX = 1;
+export const ZOOM_X_MIN = 0.15;
+export const ZOOM_X_MAX = 2;
 export const ZOOM_X_STEP = 0.05;
 export const ZOOM_Y_MIN = 0.5;
 export const ZOOM_Y_MAX = 1.5;
@@ -134,6 +135,32 @@ export async function calculatePitchDataHash(pitchData: PitchData) {
 
 export type MouseButton = "LEFT_BUTTON" | "RIGHT_BUTTON" | "OTHER_BUTTON";
 
+export type PreviewMode =
+  | "IDLE"
+  | "ADD_NOTE"
+  | "MOVE_NOTE"
+  | "RESIZE_NOTE_RIGHT"
+  | "RESIZE_NOTE_LEFT"
+  | "DRAW_PITCH"
+  | "ERASE_PITCH";
+
+// マウスダウン時の振る舞い
+export const mouseDownBehaviorSchema = z.enum([
+  "IGNORE",
+  "DESELECT_ALL",
+  "ADD_NOTE",
+  "START_RECT_SELECT",
+  "DRAW_PITCH",
+  "ERASE_PITCH",
+]);
+export type MouseDownBehavior = z.infer<typeof mouseDownBehaviorSchema>;
+
+// ダブルクリック時の振る舞い
+export const mouseDoubleClickBehaviorSchema = z.enum(["IGNORE", "ADD_NOTE"]);
+export type MouseDoubleClickBehavior = z.infer<
+  typeof mouseDoubleClickBehaviorSchema
+>;
+
 export function getButton(event: MouseEvent): MouseButton {
   // macOSの場合、Ctrl+クリックは右クリック
   if (isMac && event.button === 0 && event.ctrlKey) {
@@ -147,3 +174,14 @@ export function getButton(event: MouseEvent): MouseButton {
     return "OTHER_BUTTON";
   }
 }
+
+// カーソルの状態
+export const cursorStateSchema = z.enum([
+  "UNSET",
+  "DRAW",
+  "MOVE",
+  "EW_RESIZE",
+  "CROSSHAIR",
+  "ERASE",
+]);
+export type CursorState = z.infer<typeof cursorStateSchema>;

@@ -1,8 +1,8 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * VOICEVOX Engine
- * VOICEVOX の音声合成エンジンです。
+ * DUMMY Engine
+ * DUMMY の音声合成エンジンです。
  *
  * The version of the OpenAPI document: latest
  * 
@@ -27,43 +27,43 @@ import {
  */
 export interface InstalledLibraryInfo {
     /**
-     * 
+     * 音声ライブラリの名前
      * @type {string}
      * @memberof InstalledLibraryInfo
      */
     name: string;
     /**
-     * 
+     * 音声ライブラリのUUID
      * @type {string}
      * @memberof InstalledLibraryInfo
      */
     uuid: string;
     /**
-     * 
+     * 音声ライブラリのバージョン
      * @type {string}
      * @memberof InstalledLibraryInfo
      */
     version: string;
     /**
-     * 
+     * 音声ライブラリのダウンロードURL
      * @type {string}
      * @memberof InstalledLibraryInfo
      */
     downloadUrl: string;
     /**
-     * 
+     * 音声ライブラリのバイト数
      * @type {number}
      * @memberof InstalledLibraryInfo
      */
     bytes: number;
     /**
-     * 
+     * 音声ライブラリに含まれるキャラクターのリスト
      * @type {Array<LibrarySpeaker>}
      * @memberof InstalledLibraryInfo
      */
     speakers: Array<LibrarySpeaker>;
     /**
-     * 
+     * アンインストール可能かどうか
      * @type {boolean}
      * @memberof InstalledLibraryInfo
      */

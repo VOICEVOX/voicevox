@@ -6,7 +6,7 @@
     transitionHide="jump-down"
     class="setting-dialog transparent-backdrop"
   >
-    <QLayout container view="hHh Lpr fFf" class="bg-background">
+    <QLayout>
       <QPageContainer>
         <QHeader class="q-pa-sm">
           <QToolbar>
@@ -23,323 +23,243 @@
             />
           </QToolbar>
         </QHeader>
-        <QPage class="row">
-          <div v-if="uiLockedState" class="ui-lock-popup">
-            <div class="q-pa-md">
-              <QSpinner color="primary" size="2.5rem" />
-              <div class="q-mt-xs">
-                <template v-if="uiLockedState === 'addingEngine'"
-                  >追加中・・・</template
-                >
-                <template v-if="uiLockedState === 'deletingEngine'"
-                  >削除中・・・</template
-                >
-              </div>
+        <div v-if="uiLockedState" class="ui-lock-popup">
+          <div class="q-pa-md">
+            <QSpinner color="primary" size="2.5rem" />
+            <div class="q-mt-xs">
+              <template v-if="uiLockedState === 'addingEngine'"
+                >追加中・・・</template
+              >
+              <template v-if="uiLockedState === 'deletingEngine'"
+                >削除中・・・</template
+              >
             </div>
           </div>
-          <div class="col-4 engine-list-col">
-            <div v-if="isAddingEngine" class="engine-list-disable-overlay" />
-            <div class="engine-list-header text-no-wrap">
-              <div class="row engine-list-title text-h5">エンジン一覧</div>
-              <div class="row no-wrap">
-                <QBtn
-                  outline
-                  textColor="display"
-                  class="text-no-wrap text-bold col-sm q-ma-sm"
-                  :disable="uiLocked"
-                  @click="toAddEngineState"
-                  >追加</QBtn
-                >
-              </div>
+        </div>
+        <BaseNavigationView>
+          <template #sidebar>
+            <div v-if="isAddingEngine" class="list-disable-overlay" />
+            <div class="list-header">
+              <div class="list-title">エンジン一覧</div>
+              <BaseButton
+                label="追加"
+                icon="add"
+                :disable="uiLocked"
+                @click="toAddEngineState"
+              />
             </div>
-            <QList class="engine-list">
-              <template
-                v-for="([type, engineIds], i) in Object.entries(
-                  categorizedEngineIds,
-                )"
-                :key="`engine-list-${i}`"
+            <template
+              v-for="([type, engineIds], i) in Object.entries(
+                categorizedEngineIds,
+              )"
+              :key="`engine-list-${i}`"
+            >
+              <div class="list-label">
+                {{ getEngineTypeName(type) }}
+              </div>
+              <BaseListItem
+                v-for="id in engineIds"
+                :key="id"
+                :selected="selectedId === id"
+                @click="selectEngine(id)"
               >
-                <QSeparator v-if="i > 0" spaced />
-                <QItemLabel header> {{ getEngineTypeName(type) }}</QItemLabel>
-                <QItem
-                  v-for="id in engineIds"
-                  :key="id"
-                  v-ripple
-                  tag="label"
-                  clickable
-                  :active="selectedId === id"
-                  activeClass="active-engine"
-                  @click="selectEngine(id)"
-                >
-                  <QItemSection avatar>
-                    <QAvatar rounded color="primary">
-                      <img
-                        v-if="engineIcons[id]"
-                        :src="engineIcons[id]"
-                        :alt="engineInfos[id].name"
-                      />
-                      <span v-else class="text-display-on-primary"> ? </span>
-                    </QAvatar>
-                  </QItemSection>
-                  <QItemSection>
-                    <QItemLabel class="text-display">{{
-                      engineInfos[id].name
-                    }}</QItemLabel>
-                    <QItemLabel caption class="engine-path">{{
+                <img
+                  v-if="engineIcons[id]"
+                  class="listitem-icon"
+                  :src="engineIcons[id]"
+                  :alt="engineInfos[id].name"
+                />
+                <div v-else class="listitem-unknown">?</div>
+                <div class="listitem-content">
+                  {{ engineInfos[id].name }}
+                  <span caption class="listitem-path">
+                    {{
                       engineManifests[id] != undefined
                         ? engineManifests[id].brandName
                         : engineInfos[id].uuid
-                    }}</QItemLabel>
-                  </QItemSection>
-                </QItem>
-              </template>
-            </QList>
-          </div>
-
-          <!-- 右側のpane -->
-          <div
-            v-if="isAddingEngine"
-            class="col-8 no-wrap text-no-wrap engine-detail"
-          >
-            <div class="q-pl-md q-mt-md">
-              <div class="text-h5 q-ma-sm">エンジンの追加</div>
-
-              <div class="q-ma-sm">
-                <QBtnToggle
-                  v-model="engineLoaderType"
-                  :options="[
-                    { value: 'vvpp', label: 'VVPPファイル' },
-                    { value: 'dir', label: '既存エンジン' },
-                  ]"
-                  color="surface"
-                  unelevated
-                  textColor="display"
-                  toggleColor="primary"
-                  toggleTextColor="display-on-primary"
-                />
-              </div>
-            </div>
-
-            <div v-if="engineLoaderType === 'vvpp'" class="no-wrap q-pl-md">
-              <div class="q-ma-sm">
-                VVPPファイルでエンジンをインストールします。
-              </div>
-              <div class="q-ma-sm">
-                <QInput
-                  ref="vvppFilePathInput"
-                  v-model="vvppFilePath"
-                  dense
-                  readonly
-                  placeholder="VVPPファイルの場所"
-                  @click="selectVvppFile"
-                >
-                  <template #append>
-                    <QBtn
-                      square
-                      dense
-                      flat
-                      color="primary"
-                      icon="folder_open"
+                    }}
+                  </span>
+                </div>
+              </BaseListItem>
+            </template>
+          </template>
+          <div v-if="isAddingEngine" class="detail">
+            <BaseScrollArea>
+              <div class="inner">
+                <div class="title">エンジンの追加</div>
+                <BaseToggleGroup v-model="engineLoaderType" type="single">
+                  <BaseToggleGroupItem label="VVPPファイル" value="vvpp" />
+                  <BaseToggleGroupItem label="既存エンジン" value="dir" />
+                </BaseToggleGroup>
+                <section v-if="engineLoaderType === 'vvpp'" class="section">
+                  <div>VVPPファイルでエンジンをインストールします。</div>
+                  <div class="flex-row">
+                    <BaseTextField
+                      v-model="vvppFilePath"
+                      placeholder="VVPPファイルの場所"
+                      readonly
+                      :hasError="
+                        newEngineDirValidationState != undefined &&
+                        newEngineDirValidationState !== 'ok'
+                      "
                       @click="selectVvppFile"
                     >
-                      <QTooltip :delay="500" anchor="bottom left">
-                        ファイル選択
-                      </QTooltip>
-                    </QBtn>
-                  </template>
-                  <template #error>
-                    {{
-                      newEngineDirValidationState
-                        ? getEngineDirValidationMessage(
-                            newEngineDirValidationState,
-                          )
-                        : undefined
-                    }}
-                  </template>
-                </QInput>
-              </div>
-            </div>
-            <div v-if="engineLoaderType === 'dir'" class="no-wrap q-pl-md">
-              <div class="q-ma-sm">PC内にあるエンジンを追加します。</div>
-              <div class="q-ma-sm">
-                <QInput
-                  ref="newEngineDirInput"
-                  v-model="newEngineDir"
-                  dense
-                  readonly
-                  :error="
-                    newEngineDirValidationState != undefined &&
-                    newEngineDirValidationState !== 'ok'
-                  "
-                  placeholder="エンジンフォルダの場所"
-                  @click="selectEngineDir"
-                >
-                  <template #append>
-                    <QBtn
-                      square
-                      dense
-                      flat
-                      color="primary"
+                      <template #error>
+                        {{
+                          newEngineDirValidationState
+                            ? getEngineDirValidationMessage(
+                                newEngineDirValidationState,
+                              )
+                            : undefined
+                        }}
+                      </template>
+                    </BaseTextField>
+                    <BaseButton
+                      label="ファイル選択"
                       icon="folder_open"
+                      @click="selectVvppFile"
+                    />
+                  </div>
+                </section>
+                <section v-if="engineLoaderType === 'dir'" class="section">
+                  <div>PC内にあるエンジンを追加します。</div>
+                  <div class="flex-row">
+                    <BaseTextField
+                      v-model="newEngineDir"
+                      placeholder="エンジンフォルダの場所"
+                      readonly
+                      :hasError="
+                        newEngineDirValidationState != undefined &&
+                        newEngineDirValidationState !== 'ok'
+                      "
                       @click="selectEngineDir"
                     >
-                      <QTooltip :delay="500" anchor="bottom left">
-                        フォルダ選択
-                      </QTooltip>
-                    </QBtn>
-                  </template>
-                  <template #error>
-                    {{
-                      newEngineDirValidationState
-                        ? getEngineDirValidationMessage(
-                            newEngineDirValidationState,
-                          )
-                        : undefined
-                    }}
-                  </template>
-                </QInput>
+                      <template #error>
+                        {{
+                          newEngineDirValidationState
+                            ? getEngineDirValidationMessage(
+                                newEngineDirValidationState,
+                              )
+                            : undefined
+                        }}
+                      </template>
+                    </BaseTextField>
+                    <BaseButton
+                      label="フォルダ選択"
+                      icon="folder_open"
+                      @click="selectEngineDir"
+                    />
+                  </div>
+                </section>
+                <div class="footer">
+                  <BaseButton label="キャンセル" @click="toInitialState" />
+                  <BaseButton
+                    label="追加"
+                    icon="add"
+                    variant="primary"
+                    :disabled="!canAddEngine"
+                    @click="addEngine"
+                  />
+                </div>
               </div>
-            </div>
-            <div class="row q-px-md right-pane-buttons">
-              <QSpace />
-
-              <QBtn
-                outline
-                textColor="display"
-                class="text-no-wrap text-bold q-mr-sm"
-                @click="toInitialState"
-                >キャンセル</QBtn
-              >
-              <QBtn
-                outline
-                textColor="display"
-                class="text-no-wrap text-bold q-mr-sm"
-                :disabled="!canAddEngine"
-                @click="addEngine"
-                >追加</QBtn
-              >
-            </div>
+            </BaseScrollArea>
           </div>
-          <div
-            v-else-if="selectedId"
-            class="col-8 no-wrap text-no-wrap engine-detail"
-          >
-            <div class="q-pl-md q-mt-md flex">
-              <img
-                v-if="selectedId in engineIcons"
-                :src="engineIcons[selectedId]"
-                :alt="engineInfos[selectedId].name"
-                class="engine-icon"
-              />
-              <div v-else class="q-mt-sm inline-block">
-                <QAvatar rounded color="primary" size="2rem">
-                  <span class="text-display-on-primary"> ? </span>
-                </QAvatar>
-              </div>
-              <div class="text-h5 q-ma-sm">
-                {{ engineInfos[selectedId].name }}
-              </div>
-            </div>
+          <div v-else-if="selectedId" class="detail">
+            <BaseScrollArea>
+              <div class="inner">
+                <div class="engine-title title">
+                  <img
+                    v-if="selectedId in engineIcons"
+                    :src="engineIcons[selectedId]"
+                    :alt="engineInfos[selectedId].name"
+                    class="engine-icon"
+                  />
+                  <div v-else class="engine-unknown">?</div>
+                  {{ engineInfos[selectedId].name }}
+                </div>
 
-            <div class="no-wrap q-pl-md">
-              <ul>
-                <li>
-                  バージョン：{{
-                    engineVersions[selectedId]
-                      ? engineVersions[selectedId]
-                      : "（取得に失敗しました）"
-                  }}
-                </li>
-                <li>
-                  URL：
-                  <a
-                    v-if="engineManifests[selectedId]"
-                    :href="engineManifests[selectedId].url"
-                    class="text-display-hyperlink"
-                    target="_blank"
-                    >{{ engineManifests[selectedId].url }}</a
+                <section class="section">
+                  <ul>
+                    <li>
+                      バージョン：{{
+                        engineVersions[selectedId]
+                          ? engineVersions[selectedId]
+                          : "（取得に失敗しました）"
+                      }}
+                    </li>
+                    <li>
+                      URL：
+                      <a
+                        v-if="engineManifests[selectedId]"
+                        :href="engineManifests[selectedId].url"
+                        class="text-display-hyperlink"
+                        target="_blank"
+                        >{{ engineManifests[selectedId].url }}</a
+                      >
+                      <span v-else>（取得に失敗しました）</span>
+                    </li>
+                  </ul>
+                </section>
+                <section class="section">
+                  <div class="headline">機能</div>
+                  <ul
+                    v-if="
+                      engineManifests[selectedId] &&
+                      engineManifests[selectedId].supportedFeatures
+                    "
                   >
+                    <li
+                      v-for="(value, feature) in engineManifests[selectedId]
+                        .supportedFeatures != null
+                        ? engineManifests[selectedId].supportedFeatures
+                        : null"
+                      :key="feature"
+                      :class="value ? '' : 'text-warning'"
+                    >
+                      {{ getFeatureName(feature) }}：{{
+                        value ? "対応" : "非対応"
+                      }}
+                    </li>
+                  </ul>
                   <span v-else>（取得に失敗しました）</span>
-                </li>
-              </ul>
-            </div>
-            <div class="no-wrap q-pl-md">
-              <div class="text-h6 q-ma-sm">機能</div>
-              <ul
-                v-if="
-                  engineManifests[selectedId] &&
-                  engineManifests[selectedId].supportedFeatures
-                "
-              >
-                <template
-                  v-for="(value, feature) in engineManifests[selectedId]
-                    .supportedFeatures != null
-                    ? engineManifests[selectedId].supportedFeatures
-                    : null"
-                  :key="feature"
-                >
-                  <!-- TODO: vvlib機能がリリースされたらmanageLibraryも表示するようにする -->
-                  <li
-                    v-if="feature != 'manageLibrary'"
-                    :class="value ? '' : 'text-warning'"
-                  >
-                    {{ getFeatureName(feature) }}：{{
-                      value ? "対応" : "非対応"
-                    }}
-                  </li>
-                </template>
-              </ul>
-              <span v-else>（取得に失敗しました）</span>
-            </div>
-            <div class="no-wrap q-pl-md">
-              <div class="text-h6 q-ma-sm">場所</div>
-              <div
-                :class="
-                  'q-ma-sm' + (engineInfos[selectedId].path ? '' : ' disabled')
-                "
-              >
-                <QInput
-                  ref="pathInput"
-                  v-model="engineDir"
-                  disabled
-                  dense
-                  readonly
-                />
+                </section>
+                <section class="section">
+                  <div class="headline">場所</div>
+                  <div class="flex-row">
+                    <BaseTextField
+                      v-model="engineDir"
+                      :disabled="uiLocked || !engineInfos[selectedId].path"
+                      readonly
+                    />
+                    <BaseButton
+                      icon="folder_open"
+                      label="フォルダを開く"
+                      :disabled="uiLocked || !engineInfos[selectedId].path"
+                      @click="openSelectedEngineDirectory"
+                    />
+                  </div>
+                </section>
+                <div class="footer">
+                  <BaseButton
+                    label="削除"
+                    icon="delete_outline"
+                    :disabled="uiLocked || engineInfos[selectedId].isDefault"
+                    variant="danger"
+                    @click="deleteEngine"
+                  />
+                  <BaseButton
+                    label="再起動"
+                    icon="refresh"
+                    :disabled="
+                      uiLocked || engineStates[selectedId] === 'STARTING'
+                    "
+                    @click="restartSelectedEngine"
+                  />
+                </div>
               </div>
-            </div>
-            <div class="row q-px-md right-pane-buttons">
-              <QSpace />
-
-              <QBtn
-                outline
-                textColor="warning"
-                class="text-no-wrap text-bold q-mr-sm"
-                :disable="
-                  uiLocked ||
-                  !['path', 'vvpp'].includes(engineInfos[selectedId].type)
-                "
-                @click="deleteEngine"
-                >削除</QBtn
-              >
-              <QBtn
-                outline
-                textColor="display"
-                class="text-no-wrap text-bold q-mr-sm"
-                :disable="uiLocked || !engineInfos[selectedId].path"
-                @click="openSelectedEngineDirectory"
-                >フォルダを開く</QBtn
-              >
-              <QBtn
-                outline
-                textColor="display"
-                class="text-no-wrap text-bold q-mr-sm"
-                :disable="uiLocked || engineStates[selectedId] === 'STARTING'"
-                @click="restartSelectedEngine"
-                >再起動</QBtn
-              >
-            </div>
+            </BaseScrollArea>
           </div>
-        </QPage>
+        </BaseNavigationView>
       </QPageContainer>
     </QLayout>
   </QDialog>
@@ -347,6 +267,13 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
+import BaseToggleGroup from "../Base/BaseToggleGroup.vue";
+import BaseToggleGroupItem from "../Base/BaseToggleGroupItem.vue";
+import BaseButton from "@/components/Base/BaseButton.vue";
+import BaseListItem from "@/components/Base/BaseListItem.vue";
+import BaseNavigationView from "@/components/Base/BaseNavigationView.vue";
+import BaseTextField from "@/components/Base/BaseTextField.vue";
+import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 import { useStore } from "@/store";
 import { EngineDirValidationResult, EngineId } from "@/type/preload";
 import type { SupportedFeatures } from "@/openapi/models/SupportedFeatures";
@@ -386,10 +313,10 @@ const categorizedEngineIds = computed(() => {
   const sortedEngineInfos = store.getters.GET_SORTED_ENGINE_INFOS;
   const result = {
     default: Object.values(sortedEngineInfos)
-      .filter((info) => info.type === "default")
+      .filter((info) => info.isDefault)
       .map((info) => info.uuid),
     plugin: Object.values(sortedEngineInfos)
-      .filter((info) => info.type === "path" || info.type === "vvpp")
+      .filter((info) => !info.isDefault)
       .map((info) => info.uuid),
   };
   return Object.fromEntries(
@@ -411,8 +338,8 @@ watch(
       const id = EngineId(idStr);
       if (engineStates.value[id] !== "READY") continue;
       if (engineVersions.value[id]) continue;
-      const version = await store
-        .dispatch("INSTANTIATE_ENGINE_CONNECTOR", { engineId: id })
+      const version = await store.actions
+        .INSTANTIATE_ENGINE_CONNECTOR({ engineId: id })
         .then((instance) => instance.invoke("versionVersionGet")({}))
         .then((version) => {
           // OpenAPIのバグで"latest"のようにダブルクォーテーションで囲まれていることがあるので外す
@@ -456,6 +383,7 @@ const getFeatureName = (name: keyof SupportedFeatures) => {
       adjustPitchScale: "全体の音高の調整",
       adjustIntonationScale: "全体の抑揚の調整",
       adjustVolumeScale: "全体の音量の調整",
+      adjustPauseLength: "句読点などの無音時間の調整",
       interrogativeUpspeak: "疑問文の自動調整",
       synthesisMorphing: "2種類のスタイルでモーフィングした音声を合成",
       sing: "歌唱音声合成",
@@ -480,71 +408,78 @@ const getEngineDirValidationMessage = (result: EngineDirValidationResult) => {
 };
 
 const addEngine = async () => {
-  const result = await store.dispatch("SHOW_WARNING_DIALOG", {
-    title: "エンジン追加の確認",
+  const result = await store.actions.SHOW_WARNING_DIALOG({
+    title: "エンジンを追加しますか？",
     message:
       "この操作はコンピュータに損害を与える可能性があります。エンジンの配布元が信頼できない場合は追加しないでください。",
-    actionName: "追加",
+    actionName: "追加する",
   });
   if (result === "OK") {
     if (engineLoaderType.value === "dir") {
       await lockUi(
         "addingEngine",
-        store.dispatch("ADD_ENGINE_DIR", {
+        store.actions.ADD_ENGINE_DIR({
           engineDir: newEngineDir.value,
         }),
       );
 
       void requireReload(
-        "エンジンを追加しました。反映には再読み込みが必要です。今すぐ再読み込みしますか？",
+        "エンジンを追加しました。反映には再読み込みが必要です。",
       );
     } else {
       const success = await lockUi(
         "addingEngine",
-        store.dispatch("INSTALL_VVPP_ENGINE", vvppFilePath.value),
+        store.actions.INSTALL_VVPP_ENGINE(vvppFilePath.value),
       );
       if (success) {
         void requireReload(
-          "エンジンを追加しました。反映には再読み込みが必要です。今すぐ再読み込みしますか？",
+          "エンジンを追加しました。反映には再読み込みが必要です。",
         );
       }
     }
   }
 };
 const deleteEngine = async () => {
-  const result = await store.dispatch("SHOW_CONFIRM_DIALOG", {
-    title: "エンジン削除の確認",
-    message: "選択中のエンジンを削除します。よろしいですか？",
-    actionName: "削除",
+  const engineId = selectedId.value;
+  if (engineId == undefined) throw new Error("engine is not selected");
+
+  const engineInfo = engineInfos.value[engineId];
+
+  // 念の為デフォルトエンジンではないことを確認
+  if (engineInfo.isDefault) {
+    throw new Error("default engine cannot be deleted");
+  }
+
+  const result = await store.actions.SHOW_WARNING_DIALOG({
+    title: "エンジンを削除しますか？",
+    message: "選択中のエンジンを削除します。",
+    actionName: "削除する",
+    isWarningColorButton: true,
   });
   if (result === "OK") {
-    if (selectedId.value == undefined)
-      throw new Error("engine is not selected");
-    switch (engineInfos.value[selectedId.value].type) {
+    switch (engineInfo.type) {
       case "path": {
-        const engineDir = store.state.engineInfos[selectedId.value].path;
+        const engineDir = engineInfo.path;
         if (!engineDir)
           throw new Error("assert engineInfos[selectedId.value].path");
         await lockUi(
           "deletingEngine",
-          store.dispatch("REMOVE_ENGINE_DIR", {
+          store.actions.REMOVE_ENGINE_DIR({
             engineDir,
           }),
         );
         void requireReload(
-          "エンジンを削除しました。反映には再読み込みが必要です。今すぐ再読み込みしますか？",
+          "エンジンを削除しました。反映には再読み込みが必要です。",
         );
         break;
       }
       case "vvpp": {
         const success = await lockUi(
           "deletingEngine",
-          store.dispatch("UNINSTALL_VVPP_ENGINE", selectedId.value),
+          store.actions.UNINSTALL_VVPP_ENGINE(engineId),
         );
         if (success) {
-          void requireReload(
-            "エンジンの削除には再読み込みが必要です。今すぐ再読み込みしますか？",
-          );
+          void requireReload("エンジンの削除には再読み込みが必要です。");
         }
         break;
       }
@@ -561,27 +496,28 @@ const selectEngine = (id: EngineId) => {
 const openSelectedEngineDirectory = () => {
   if (selectedId.value == undefined)
     throw new Error("assert selectedId.value != undefined");
-  void store.dispatch("OPEN_ENGINE_DIRECTORY", { engineId: selectedId.value });
+  void store.actions.OPEN_ENGINE_DIRECTORY({ engineId: selectedId.value });
 };
 
 const restartSelectedEngine = () => {
   if (selectedId.value == undefined)
     throw new Error("assert selectedId.value != undefined");
-  void store.dispatch("RESTART_ENGINES", {
+  void store.actions.RESTART_ENGINES({
     engineIds: [selectedId.value],
   });
 };
 
 const requireReload = async (message: string) => {
-  const result = await store.dispatch("SHOW_WARNING_DIALOG", {
-    title: "再読み込みが必要です",
+  const result = await store.actions.SHOW_CONFIRM_DIALOG({
+    title: "再読み込みしますか？",
     message: message,
-    actionName: "再読み込み",
+    actionName: "再読み込みする",
     cancel: "後で",
+    isPrimaryColorButton: true,
   });
   toInitialState();
   if (result === "OK") {
-    void store.dispatch("CHECK_EDITED_AND_NOT_SAVE", {
+    void store.actions.CHECK_EDITED_AND_NOT_SAVE({
       closeOrReload: "reload",
     });
   }
@@ -599,8 +535,7 @@ const selectEngineDir = async () => {
       newEngineDirValidationState.value = null;
       return;
     }
-    newEngineDirValidationState.value = await store.dispatch(
-      "VALIDATE_ENGINE_DIR",
+    newEngineDirValidationState.value = await store.actions.VALIDATE_ENGINE_DIR(
       {
         engineDir: path,
       },
@@ -655,75 +590,65 @@ const toDialogClosedState = () => {
 
 <style lang="scss" scoped>
 @use "@/styles/colors" as colors;
-@use "@/styles/variables" as vars;
+@use "@/styles/v2/variables" as vars;
+@use "@/styles/v2/mixin" as mixin;
+@use "@/styles/v2/colors" as newcolors;
 
-.engine-list-col {
-  border-right: solid 1px colors.$surface;
-  position: relative; // オーバーレイのため
-  overflow-x: hidden;
+.list {
+  display: flex;
+  flex-direction: column;
 }
 
-.engine-list-header {
-  margin: 1rem;
-
-  gap: 0.5rem;
+.list-header {
+  display: flex;
+  gap: vars.$gap-1;
   align-items: center;
   justify-content: space-between;
-  .engine-list-title {
-    flex-grow: 1;
-  }
 }
 
-.engine-list {
-  // menubar-height + toolbar-height + window-border-width +
-  // 82(title & buttons) + 30(margin 15x2)
-  height: calc(
-    100vh - #{vars.$menubar-height + vars.$toolbar-height +
-      vars.$window-border-width + 82px + 30px}
-  );
-  width: 100%;
-  overflow-y: auto;
+.list-title {
+  @include mixin.headline-2;
 }
 
-.engine-path {
+.listitem-icon {
+  margin-right: vars.$gap-1;
+  border-radius: vars.$radius-1;
+  width: 32px;
+}
+
+.listitem-unknown {
+  margin-right: vars.$gap-1;
+  border-radius: vars.$radius-1;
+  background-color: colors.$primary;
+  display: grid;
+  place-content: center;
+  font-weight: 700;
+  width: 32px;
+  height: 32px;
+}
+
+.listitem-content {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+}
+
+.listitem-path {
+  font-size: 0.75rem;
   overflow-wrap: break-word;
 }
 
-.active-engine {
-  background: rgba(colors.$primary-rgb, 0.4);
+.list-label {
+  padding: 8px 16px;
+  padding-top: 16px;
+  color: newcolors.$display-sub;
 }
 
-.engine-list-disable-overlay {
+.list-disable-overlay {
   background-color: rgba($color: #000000, $alpha: 0.4);
-  width: 100%;
-  height: 100%;
   position: absolute;
-  z-index: 10;
-}
-
-.engine-detail {
-  display: flex;
-  flex-flow: column;
-  height: calc(
-    100vh - #{vars.$menubar-height + vars.$toolbar-height +
-      vars.$window-border-width}
-  ) !important;
-  overflow: auto;
-}
-
-.right-pane-buttons {
-  padding: 20px;
-
-  display: flex;
-  flex: 1;
-  align-items: flex-end;
-}
-
-.engine-icon {
-  height: 2rem;
-  margin-top: 0.5rem;
-  margin-bottom: 0.5rem;
-  border-radius: 5px;
+  inset: 0;
+  z-index: 1;
 }
 
 .ui-lock-popup {
@@ -741,5 +666,70 @@ const toDialogClosedState = () => {
     background: colors.$background;
     border-radius: 6px;
   }
+}
+
+.detail {
+  height: 100%;
+}
+
+.inner {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: vars.$padding-2;
+  gap: vars.$gap-2;
+}
+
+.engine-title {
+  display: flex;
+  align-items: center;
+  gap: vars.$gap-1;
+}
+
+.engine-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: vars.$radius-1;
+}
+
+.engine-unknown {
+  width: 40px;
+  height: 40px;
+  border-radius: vars.$radius-1;
+  background-color: colors.$primary;
+  display: grid;
+  place-content: center;
+  font-weight: 700;
+}
+
+.title {
+  @include mixin.headline-1;
+}
+
+.headline {
+  @include mixin.headline-2;
+}
+
+.flex-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: vars.$gap-1;
+}
+
+.footer {
+  gap: vars.$gap-1;
+  margin-top: auto;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: vars.$gap-1;
+}
+
+:deep(ul) {
+  margin: 0;
 }
 </style>

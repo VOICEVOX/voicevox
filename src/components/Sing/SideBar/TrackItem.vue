@@ -61,11 +61,15 @@
       <QItemSection>
         <QItemLabel class="track-name" @click.stop="uiLocked || selectTrack()">
           <QInput
+            v-if="props.trackId === selectedTrackId"
             v-model="temporaryTrackName"
             dense
             :disable="uiLocked"
             @blur="updateTrackName"
           />
+          <div v-else class="walkaround-unselected-track-name">
+            {{ track.name }}
+          </div>
         </QItemLabel>
         <QItemLabel v-if="trackCharacter" caption class="singer-name">
           <!-- ミュート中はアイコンを表示 -->
@@ -161,7 +165,7 @@ import { computed, watchEffect, ref } from "vue";
 import CharacterSelectMenu from "@/components/Sing/CharacterMenuButton/CharacterSelectMenu.vue";
 import SingerIcon from "@/components/Sing/SingerIcon.vue";
 import { useStore } from "@/store";
-import ContextMenu from "@/components/Menu/ContextMenu.vue";
+import ContextMenu from "@/components/Menu/ContextMenu/Container.vue";
 import { shouldPlayTracks } from "@/sing/domain";
 import { CharacterInfo, StyleInfo, TrackId } from "@/type/preload";
 
@@ -190,23 +194,23 @@ const shouldPlayTrack = computed(() =>
 
 const setTrackPan = (pan: number) => {
   if (store.state.undoableTrackOperations.panAndGain) {
-    void store.dispatch("COMMAND_SET_TRACK_PAN", {
+    void store.actions.COMMAND_SET_TRACK_PAN({
       trackId: props.trackId,
       pan,
     });
   } else {
-    void store.dispatch("SET_TRACK_PAN", { trackId: props.trackId, pan });
+    void store.actions.SET_TRACK_PAN({ trackId: props.trackId, pan });
   }
 };
 
 const setTrackGain = (gain: number) => {
   if (store.state.undoableTrackOperations.panAndGain) {
-    void store.dispatch("COMMAND_SET_TRACK_GAIN", {
+    void store.actions.COMMAND_SET_TRACK_GAIN({
       trackId: props.trackId,
       gain,
     });
   } else {
-    void store.dispatch("SET_TRACK_GAIN", { trackId: props.trackId, gain });
+    void store.actions.SET_TRACK_GAIN({ trackId: props.trackId, gain });
   }
 };
 
@@ -224,7 +228,7 @@ const updateTrackName = () => {
     return;
   }
 
-  void store.dispatch("COMMAND_SET_TRACK_NAME", {
+  void store.actions.COMMAND_SET_TRACK_NAME({
     trackId: props.trackId,
     name: temporaryTrackName.value,
   });
@@ -232,23 +236,23 @@ const updateTrackName = () => {
 
 const setTrackMute = (mute: boolean) => {
   if (store.state.undoableTrackOperations.soloAndMute) {
-    void store.dispatch("COMMAND_SET_TRACK_MUTE", {
+    void store.actions.COMMAND_SET_TRACK_MUTE({
       trackId: props.trackId,
       mute,
     });
   } else {
-    void store.dispatch("SET_TRACK_MUTE", { trackId: props.trackId, mute });
+    void store.actions.SET_TRACK_MUTE({ trackId: props.trackId, mute });
   }
 };
 
 const setTrackSolo = (solo: boolean) => {
   if (store.state.undoableTrackOperations.soloAndMute) {
-    void store.dispatch("COMMAND_SET_TRACK_SOLO", {
+    void store.actions.COMMAND_SET_TRACK_SOLO({
       trackId: props.trackId,
       solo,
     });
   } else {
-    void store.dispatch("SET_TRACK_SOLO", { trackId: props.trackId, solo });
+    void store.actions.SET_TRACK_SOLO({ trackId: props.trackId, solo });
   }
 };
 
@@ -271,16 +275,16 @@ const trackCharacter = computed<
   return undefined;
 });
 const selectTrack = () => {
-  void store.dispatch("SET_SELECTED_TRACK", { trackId: props.trackId });
+  void store.actions.SET_SELECTED_TRACK({ trackId: props.trackId });
 };
 
 const addTrack = async () => {
   const willNextSelectedTrackIndex =
     trackOrder.value.indexOf(props.trackId) + 1;
-  await store.dispatch("COMMAND_INSERT_EMPTY_TRACK", {
+  await store.actions.COMMAND_INSERT_EMPTY_TRACK({
     prevTrackId: props.trackId,
   });
-  await store.dispatch("SELECT_TRACK", {
+  await store.actions.SELECT_TRACK({
     trackId: trackOrder.value[willNextSelectedTrackIndex],
   });
 };
@@ -295,9 +299,9 @@ const deleteTrack = async () => {
       willNextSelectedTrackIndex = 0;
     }
   }
-  await store.dispatch("COMMAND_DELETE_TRACK", { trackId: props.trackId });
+  await store.actions.COMMAND_DELETE_TRACK({ trackId: props.trackId });
   if (willNextSelectedTrackIndex != undefined) {
-    await store.dispatch("SELECT_TRACK", {
+    await store.actions.SELECT_TRACK({
       trackId: trackOrder.value[willNextSelectedTrackIndex],
     });
   }
@@ -407,5 +411,12 @@ const singerName = computed(() => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+// 選択されていないトラックのトラック名の表示をQInputの見た目に合わせる
+.walkaround-unselected-track-name {
+  margin-bottom: 2px;
+  margin-top: 3px;
+  letter-spacing: 0.00937em;
 }
 </style>

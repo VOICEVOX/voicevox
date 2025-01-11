@@ -1,8 +1,8 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * VOICEVOX Engine
- * VOICEVOX の音声合成エンジンです。
+ * DUMMY Engine
+ * DUMMY の音声合成エンジンです。
  *
  * The version of the OpenAPI document: latest
  * 
@@ -20,73 +20,73 @@ import { exists, mapValues } from '../runtime';
  */
 export interface Preset {
     /**
-     * 
+     * プリセットID
      * @type {number}
      * @memberof Preset
      */
     id: number;
     /**
-     * 
+     * プリセット名
      * @type {string}
      * @memberof Preset
      */
     name: string;
     /**
-     * 
+     * キャラクターのUUID
      * @type {string}
      * @memberof Preset
      */
     speakerUuid: string;
     /**
-     * 
+     * スタイルID
      * @type {number}
      * @memberof Preset
      */
     styleId: number;
     /**
-     * 
+     * 全体の話速
      * @type {number}
      * @memberof Preset
      */
     speedScale: number;
     /**
-     * 
+     * 全体の音高
      * @type {number}
      * @memberof Preset
      */
     pitchScale: number;
     /**
-     * 
+     * 全体の抑揚
      * @type {number}
      * @memberof Preset
      */
     intonationScale: number;
     /**
-     * 
+     * 全体の音量
      * @type {number}
      * @memberof Preset
      */
     volumeScale: number;
     /**
-     * 
+     * 音声の前の無音時間
      * @type {number}
      * @memberof Preset
      */
     prePhonemeLength: number;
     /**
-     * 
+     * 音声の後の無音時間
      * @type {number}
      * @memberof Preset
      */
     postPhonemeLength: number;
     /**
-     * 
+     * 句読点などの無音時間
      * @type {number}
      * @memberof Preset
      */
     pauseLength?: number;
     /**
-     * 
+     * 句読点などの無音時間（倍率）
      * @type {number}
      * @memberof Preset
      */

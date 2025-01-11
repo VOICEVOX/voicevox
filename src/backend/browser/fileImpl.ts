@@ -1,11 +1,12 @@
-import { sep } from "path";
 import { directoryHandleStoreKey } from "./contract";
 import { openDB } from "./browserConfig";
+import { createFakePath, FakePath, isFakePath } from "./fakePath";
 import { SandboxKey } from "@/type/preload";
 import { failure, success } from "@/type/result";
 import { createLogger } from "@/domain/frontend/log";
-import { uuid4 } from "@/helpers/random";
 import { normalizeError } from "@/helpers/normalizeError";
+import path from "@/helpers/path";
+import { ExhaustiveError } from "@/type/utility";
 
 const log = createLogger("fileImpl");
 
@@ -73,12 +74,13 @@ export const showOpenDirectoryDialogImpl: (typeof window)[typeof SandboxKey]["sh
   };
 
 // separator 以前の文字列はディレクトリ名として扱う
-const resolveDirectoryName = (path: string) => path.split(sep)[0];
+const resolveDirectoryName = (dirPath: string) =>
+  dirPath.split(path.SEPARATOR)[0];
 
 // FileSystemDirectoryHandle.getFileHandle では / のような separator が含まれるとエラーになるため、ファイル名のみを抽出している
 const resolveFileName = (path: string) => {
   const maybeDirectoryHandleName = resolveDirectoryName(path);
-  return path.slice(maybeDirectoryHandleName.length + sep.length);
+  return path.slice(maybeDirectoryHandleName.length + 1);
 };
 
 // FileSystemDirectoryHandle.getFileHandle では / のような separator が含まれるとエラーになるため、以下の if 文で separator を除去している
@@ -112,17 +114,48 @@ const getDirectoryHandleFromDirectoryPath = async (
   }
 };
 
+export type WritableFilePath =
+  | {
+      // ファイル名のみ。ダウンロードとして扱われます。
+      type: "nameOnly";
+      path: string;
+    }
+  | {
+      // ディレクトリ内への書き込み。
+      type: "child";
+      path: string;
+    }
+  | {
+      // 疑似パス。
+      type: "fake";
+      path: FakePath;
+    };
+
 // NOTE: fixedExportEnabled が有効になっている GENERATE_AND_SAVE_AUDIO action では、ファイル名に加えディレクトリ名も指定された状態でfilePathが渡ってくる
 // また GENERATE_AND_SAVE_ALL_AUDIO action では fixedExportEnabled の有効の有無に関わらず、ディレクトリ名も指定された状態でfilePathが渡ってくる
-export const writeFileImpl: (typeof window)[typeof SandboxKey]["writeFile"] =
-  async (obj: { filePath: string; buffer: ArrayBuffer }) => {
-    const path = obj.filePath;
+// showExportFilePicker での疑似パスが渡ってくる可能性もある。
+export const writeFileImpl = async (obj: {
+  filePath: WritableFilePath;
+  buffer: ArrayBuffer;
+}) => {
+  const filePath = obj.filePath;
 
-    if (!path.includes(sep)) {
+  switch (filePath.type) {
+    case "fake": {
+      const fileHandle = fileHandleMap.get(filePath.path);
+      if (fileHandle == undefined) {
+        return failure(new Error(`ファイルが見つかりません: ${filePath.path}`));
+      }
+      const writable = await fileHandle.createWritable();
+      await writable.write(obj.buffer);
+      return writable.close().then(() => success(undefined));
+    }
+
+    case "nameOnly": {
       const aTag = document.createElement("a");
       const blob = URL.createObjectURL(new Blob([obj.buffer]));
       aTag.href = blob;
-      aTag.download = path;
+      aTag.download = filePath.path;
       document.body.appendChild(aTag);
       aTag.click();
       document.body.removeChild(aTag);
@@ -130,38 +163,41 @@ export const writeFileImpl: (typeof window)[typeof SandboxKey]["writeFile"] =
       return success(undefined);
     }
 
-    const fileName = resolveFileName(path);
-    const maybeDirectoryHandleName = resolveDirectoryName(path);
+    case "child": {
+      const fileName = resolveFileName(filePath.path);
+      const maybeDirectoryHandleName = resolveDirectoryName(filePath.path);
 
-    const directoryHandle = await getDirectoryHandleFromDirectoryPath(
-      maybeDirectoryHandleName,
-    );
+      const directoryHandle = await getDirectoryHandleFromDirectoryPath(
+        maybeDirectoryHandleName,
+      );
 
-    directoryHandleMap.set(maybeDirectoryHandleName, directoryHandle);
+      directoryHandleMap.set(maybeDirectoryHandleName, directoryHandle);
 
-    return directoryHandle
-      .getFileHandle(fileName, { create: true })
-      .then(async (fileHandle) => {
-        const writable = await fileHandle.createWritable();
-        await writable.write(obj.buffer);
-        return writable.close();
-      })
-      .then(() => success(undefined))
-      .catch((e) => {
-        return failure(normalizeError(e));
-      });
-  };
+      return directoryHandle
+        .getFileHandle(fileName, { create: true })
+        .then(async (fileHandle) => {
+          const writable = await fileHandle.createWritable();
+          await writable.write(obj.buffer);
+          return writable.close();
+        })
+        .then(() => success(undefined))
+        .catch((e) => {
+          return failure(normalizeError(e));
+        });
+    }
+    default:
+      throw new ExhaustiveError(filePath);
+  }
+};
 
 export const checkFileExistsImpl: (typeof window)[typeof SandboxKey]["checkFileExists"] =
-  async (file) => {
-    const path = file;
-
-    if (!path.includes(sep)) {
+  async (filePath) => {
+    if (!filePath.includes(path.SEPARATOR)) {
       return Promise.resolve(false);
     }
 
-    const fileName = resolveFileName(path);
-    const maybeDirectoryHandleName = resolveDirectoryName(path);
+    const fileName = resolveFileName(filePath);
+    const maybeDirectoryHandleName = resolveDirectoryName(filePath);
 
     const directoryHandle = await getDirectoryHandleFromDirectoryPath(
       maybeDirectoryHandleName,
@@ -183,7 +219,7 @@ export const checkFileExistsImpl: (typeof window)[typeof SandboxKey]["checkFileE
   };
 
 // FileSystemFileHandleを保持するMap。キーは生成した疑似パス。
-const fileHandleMap: Map<string, FileSystemFileHandle> = new Map();
+const fileHandleMap: Map<FakePath, FileSystemFileHandle> = new Map();
 
 // ファイル選択ダイアログを開く
 // 返り値はファイルパスではなく、疑似パスを返す
@@ -202,7 +238,7 @@ export const showOpenFilePickerImpl = async (options: {
     });
     const paths = [];
     for (const handle of handles) {
-      const fakePath = `<browser-dummy-${uuid4()}>-${handle.name}`;
+      const fakePath = createFakePath(handle.name);
       fileHandleMap.set(fakePath, handle);
       paths.push(fakePath);
     }
@@ -215,6 +251,9 @@ export const showOpenFilePickerImpl = async (options: {
 
 // 指定した疑似パスのファイルを読み込む
 export const readFileImpl = async (filePath: string) => {
+  if (!isFakePath(filePath)) {
+    return failure(new Error(`疑似パスではありません: ${filePath}`));
+  }
   const fileHandle = fileHandleMap.get(filePath);
   if (fileHandle == undefined) {
     return failure(new Error(`ファイルが見つかりません: ${filePath}`));
@@ -223,3 +262,29 @@ export const readFileImpl = async (filePath: string) => {
   const buffer = await file.arrayBuffer();
   return success(buffer);
 };
+
+// ファイル選択ダイアログを開く
+// 返り値はファイルパスではなく、疑似パスを返す
+export const showExportFilePickerImpl: (typeof window)[typeof SandboxKey]["showExportFileDialog"] =
+  async (obj: {
+    defaultPath?: string;
+    extensionName: string;
+    extensions: string[];
+    title: string;
+  }) => {
+    const handle = await showSaveFilePicker({
+      suggestedName: obj.defaultPath,
+      types: [
+        {
+          description: obj.extensions.join("、"),
+          accept: {
+            "application/octet-stream": obj.extensions.map((ext) => `.${ext}`),
+          },
+        },
+      ],
+    });
+    const fakePath = createFakePath(handle.name);
+    fileHandleMap.set(fakePath, handle);
+
+    return fakePath;
+  };

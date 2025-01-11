@@ -1,164 +1,124 @@
+import { contextBridge, ipcRenderer, webUtils } from "electron";
+import type { IpcRendererInvoke } from "./ipc";
 import {
-  contextBridge,
-  ipcRenderer,
-  IpcRenderer,
-  IpcRendererEvent,
-} from "electron";
+  ConfigType,
+  EngineId,
+  Sandbox,
+  SandboxKey,
+  TextAsset,
+} from "@/type/preload";
 
-import { Sandbox, ConfigType, EngineId, SandboxKey } from "@/type/preload";
-import { IpcIHData, IpcSOData } from "@/type/ipc";
-
-function ipcRendererInvoke<T extends keyof IpcIHData>(
-  channel: T,
-  ...args: IpcIHData[T]["args"]
-): Promise<IpcIHData[T]["return"]>;
-function ipcRendererInvoke(channel: string, ...args: unknown[]): unknown {
-  return ipcRenderer.invoke(channel, ...args) as unknown;
-}
-
-function ipcRendererOn<T extends keyof IpcSOData>(
-  channel: T,
-  listener: (event: IpcRendererEvent, ...args: IpcSOData[T]["args"]) => void,
-): IpcRenderer;
-function ipcRendererOn(
-  channel: string,
-  listener: (event: IpcRendererEvent, ...args: unknown[]) => void,
-) {
-  return ipcRenderer.on(channel, listener);
-}
+const ipcRendererInvokeProxy = new Proxy(
+  {},
+  {
+    get:
+      (_, channel: string) =>
+      (...args: unknown[]) =>
+        ipcRenderer.invoke(channel, ...args),
+  },
+) as IpcRendererInvoke;
 
 const api: Sandbox = {
   getAppInfos: async () => {
-    return await ipcRendererInvoke("GET_APP_INFOS");
+    return await ipcRendererInvokeProxy.GET_APP_INFOS();
   },
 
-  getHowToUseText: async () => {
-    return await ipcRendererInvoke("GET_HOW_TO_USE_TEXT");
-  },
-
-  getPolicyText: async () => {
-    return await ipcRendererInvoke("GET_POLICY_TEXT");
-  },
-
-  getOssLicenses: async () => {
-    return await ipcRendererInvoke("GET_OSS_LICENSES");
-  },
-
-  getUpdateInfos: async () => {
-    return await ipcRendererInvoke("GET_UPDATE_INFOS");
-  },
-
-  getContactText: async () => {
-    return await ipcRendererInvoke("GET_CONTACT_TEXT");
-  },
-
-  getQAndAText: async () => {
-    return await ipcRendererInvoke("GET_Q_AND_A_TEXT");
-  },
-
-  getOssCommunityInfos: async () => {
-    return await ipcRendererInvoke("GET_OSS_COMMUNITY_INFOS");
-  },
-
-  getPrivacyPolicyText: async () => {
-    return await ipcRendererInvoke("GET_PRIVACY_POLICY_TEXT");
+  getTextAsset: (textType) => {
+    return ipcRendererInvokeProxy.GET_TEXT_ASSET(textType) as Promise<
+      TextAsset[typeof textType]
+    >;
   },
 
   getAltPortInfos: async () => {
-    return await ipcRendererInvoke("GET_ALT_PORT_INFOS");
-  },
-
-  showAudioSaveDialog: ({ title, defaultPath }) => {
-    return ipcRendererInvoke("SHOW_AUDIO_SAVE_DIALOG", { title, defaultPath });
-  },
-
-  showTextSaveDialog: ({ title, defaultPath }) => {
-    return ipcRendererInvoke("SHOW_TEXT_SAVE_DIALOG", { title, defaultPath });
+    return await ipcRendererInvokeProxy.GET_ALT_PORT_INFOS();
   },
 
   showSaveDirectoryDialog: ({ title }) => {
-    return ipcRendererInvoke("SHOW_SAVE_DIRECTORY_DIALOG", { title });
+    return ipcRendererInvokeProxy.SHOW_SAVE_DIRECTORY_DIALOG({ title });
   },
 
   showVvppOpenDialog: ({ title, defaultPath }) => {
-    return ipcRendererInvoke("SHOW_VVPP_OPEN_DIALOG", { title, defaultPath });
+    return ipcRendererInvokeProxy.SHOW_VVPP_OPEN_DIALOG({ title, defaultPath });
   },
 
   showOpenDirectoryDialog: ({ title }) => {
-    return ipcRendererInvoke("SHOW_OPEN_DIRECTORY_DIALOG", { title });
+    return ipcRendererInvokeProxy.SHOW_OPEN_DIRECTORY_DIALOG({ title });
   },
 
   showProjectSaveDialog: ({ title, defaultPath }) => {
-    return ipcRendererInvoke("SHOW_PROJECT_SAVE_DIALOG", {
+    return ipcRendererInvokeProxy.SHOW_PROJECT_SAVE_DIALOG({
       title,
       defaultPath,
     });
   },
 
   showProjectLoadDialog: ({ title }) => {
-    return ipcRendererInvoke("SHOW_PROJECT_LOAD_DIALOG", { title });
-  },
-
-  showMessageDialog: ({ type, title, message }) => {
-    return ipcRendererInvoke("SHOW_MESSAGE_DIALOG", { type, title, message });
-  },
-
-  showQuestionDialog: ({
-    type,
-    title,
-    message,
-    buttons,
-    cancelId,
-    defaultId,
-  }) => {
-    return ipcRendererInvoke("SHOW_QUESTION_DIALOG", {
-      type,
-      title,
-      message,
-      buttons,
-      cancelId,
-      defaultId,
-    });
+    return ipcRendererInvokeProxy.SHOW_PROJECT_LOAD_DIALOG({ title });
   },
 
   showImportFileDialog: ({ title, name, extensions }) => {
-    return ipcRendererInvoke("SHOW_IMPORT_FILE_DIALOG", {
+    return ipcRendererInvokeProxy.SHOW_IMPORT_FILE_DIALOG({
       title,
       name,
       extensions,
     });
   },
 
+  showExportFileDialog: ({ title, defaultPath, extensionName, extensions }) => {
+    return ipcRendererInvokeProxy.SHOW_EXPORT_FILE_DIALOG({
+      title,
+      defaultPath,
+      extensionName,
+      extensions,
+    });
+  },
+
   writeFile: async ({ filePath, buffer }) => {
-    return await ipcRendererInvoke("WRITE_FILE", { filePath, buffer });
+    return await ipcRendererInvokeProxy.WRITE_FILE({ filePath, buffer });
   },
 
   readFile: async ({ filePath }) => {
-    return await ipcRendererInvoke("READ_FILE", { filePath });
+    return await ipcRendererInvokeProxy.READ_FILE({ filePath });
   },
 
   isAvailableGPUMode: () => {
-    return ipcRendererInvoke("IS_AVAILABLE_GPU_MODE");
+    return ipcRendererInvokeProxy.IS_AVAILABLE_GPU_MODE();
   },
 
   isMaximizedWindow: () => {
-    return ipcRendererInvoke("IS_MAXIMIZED_WINDOW");
+    return ipcRendererInvokeProxy.IS_MAXIMIZED_WINDOW();
   },
 
-  onReceivedIPCMsg: (channel, callback) => {
-    return ipcRendererOn(channel, callback);
+  onReceivedIPCMsg: (listeners) => {
+    Object.entries(listeners).forEach(([channel, listener]) => {
+      ipcRenderer.on(channel, listener);
+    });
   },
 
   closeWindow: () => {
-    void ipcRenderer.invoke("CLOSE_WINDOW");
+    void ipcRendererInvokeProxy.CLOSE_WINDOW();
   },
 
   minimizeWindow: () => {
-    void ipcRenderer.invoke("MINIMIZE_WINDOW");
+    void ipcRendererInvokeProxy.MINIMIZE_WINDOW();
   },
 
-  maximizeWindow: () => {
-    void ipcRenderer.invoke("MAXIMIZE_WINDOW");
+  toggleMaximizeWindow: () => {
+    void ipcRendererInvokeProxy.TOGGLE_MAXIMIZE_WINDOW();
+  },
+
+  toggleFullScreen: () => {
+    void ipcRendererInvokeProxy.TOGGLE_FULLSCREEN();
+  },
+
+  zoomIn: () => {
+    void ipcRendererInvokeProxy.ZOOM_IN();
+  },
+  zoomOut: () => {
+    void ipcRendererInvokeProxy.ZOOM_OUT();
+  },
+  zoomReset: () => {
+    void ipcRendererInvokeProxy.ZOOM_RESET();
   },
 
   logError: (...params) => {
@@ -187,59 +147,50 @@ const api: Sandbox = {
   },
 
   openLogDirectory: () => {
-    void ipcRenderer.invoke("OPEN_LOG_DIRECTORY");
+    void ipcRendererInvokeProxy.OPEN_LOG_DIRECTORY();
   },
 
   engineInfos: () => {
-    return ipcRendererInvoke("ENGINE_INFOS");
+    return ipcRendererInvokeProxy.ENGINE_INFOS();
   },
 
   restartEngine: (engineId: EngineId) => {
-    return ipcRendererInvoke("RESTART_ENGINE", { engineId });
+    return ipcRendererInvokeProxy.RESTART_ENGINE({ engineId });
   },
 
   openEngineDirectory: (engineId: EngineId) => {
-    return ipcRendererInvoke("OPEN_ENGINE_DIRECTORY", { engineId });
+    return ipcRendererInvokeProxy.OPEN_ENGINE_DIRECTORY({ engineId });
   },
 
   checkFileExists: (file) => {
-    return ipcRenderer.invoke("CHECK_FILE_EXISTS", { file });
+    return ipcRendererInvokeProxy.CHECK_FILE_EXISTS({ file });
   },
 
   changePinWindow: () => {
-    void ipcRenderer.invoke("CHANGE_PIN_WINDOW");
+    void ipcRendererInvokeProxy.CHANGE_PIN_WINDOW();
   },
 
   hotkeySettings: (newData) => {
-    return ipcRenderer.invoke("HOTKEY_SETTINGS", { newData });
-  },
-
-  getDefaultHotkeySettings: async () => {
-    return await ipcRendererInvoke("GET_DEFAULT_HOTKEY_SETTINGS");
+    return ipcRendererInvokeProxy.HOTKEY_SETTINGS({ newData });
   },
 
   getDefaultToolbarSetting: async () => {
-    return await ipcRendererInvoke("GET_DEFAULT_TOOLBAR_SETTING");
+    return await ipcRendererInvokeProxy.GET_DEFAULT_TOOLBAR_SETTING();
   },
 
   setNativeTheme: (source) => {
-    void ipcRenderer.invoke("SET_NATIVE_THEME", source);
-  },
-
-  theme: (newData) => {
-    return ipcRenderer.invoke("THEME", { newData });
+    void ipcRendererInvokeProxy.SET_NATIVE_THEME(source);
   },
 
   vuexReady: () => {
-    void ipcRenderer.invoke("ON_VUEX_READY");
+    void ipcRendererInvokeProxy.ON_VUEX_READY();
   },
 
   /**
    * 設定情報を取得する
    */
   getSetting: async (key) => {
-    return (await ipcRendererInvoke(
-      "GET_SETTING",
+    return (await ipcRendererInvokeProxy.GET_SETTING(
       key,
     )) as ConfigType[typeof key];
   },
@@ -248,27 +199,26 @@ const api: Sandbox = {
    * 設定情報を保存する
    */
   setSetting: async (key, newValue) => {
-    return (await ipcRendererInvoke(
-      "SET_SETTING",
+    return (await ipcRendererInvokeProxy.SET_SETTING(
       key,
       newValue,
     )) as typeof newValue;
   },
 
   setEngineSetting: async (engineId, engineSetting) => {
-    await ipcRendererInvoke("SET_ENGINE_SETTING", engineId, engineSetting);
+    await ipcRendererInvokeProxy.SET_ENGINE_SETTING(engineId, engineSetting);
   },
 
   installVvppEngine: async (filePath) => {
-    return await ipcRendererInvoke("INSTALL_VVPP_ENGINE", filePath);
+    return await ipcRendererInvokeProxy.INSTALL_VVPP_ENGINE(filePath);
   },
 
   uninstallVvppEngine: async (engineId) => {
-    return await ipcRendererInvoke("UNINSTALL_VVPP_ENGINE", engineId);
+    return await ipcRendererInvokeProxy.UNINSTALL_VVPP_ENGINE(engineId);
   },
 
   validateEngineDir: async (engineDir) => {
-    return await ipcRendererInvoke("VALIDATE_ENGINE_DIR", { engineDir });
+    return await ipcRendererInvokeProxy.VALIDATE_ENGINE_DIR({ engineDir });
   },
 
   /**
@@ -276,7 +226,12 @@ const api: Sandbox = {
    * 画面以外の情報を刷新する。
    */
   reloadApp: async ({ isMultiEngineOffMode }) => {
-    await ipcRendererInvoke("RELOAD_APP", { isMultiEngineOffMode });
+    await ipcRendererInvokeProxy.RELOAD_APP({ isMultiEngineOffMode });
+  },
+
+  /** webUtils.getPathForFileを呼ぶ */
+  getPathForFile: (file) => {
+    return webUtils.getPathForFile(file);
   },
 };
 

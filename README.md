@@ -40,8 +40,11 @@ Issue 側で取り組み始めたことを伝えるか、最初に Draft プル�
 [.node-version](.node-version) に記載されているバージョンの Node.js をインストールしてください。  
 Node.js の管理ツール（[nvs](https://github.com/jasongin/nvs)や[Volta](https://volta.sh)など）を利用すると簡単にインストールでき、Node.js の自動切り替えもできます。
 
-Node.js をインストール後、[このリポジトリ](https://github.com/VOICEVOX/voicevox.git) を
-Fork して `git clone` し、次のコマンドを実行してください。
+Node.js をインストール後、[このリポジトリ](https://github.com/VOICEVOX/voicevox.git) を Fork して `git clone` してください。
+
+### 依存ライブラリをインストールする
+
+次のコマンドを実行することで依存ライブラリがインストール・アップデートされます。
 
 ```bash
 npm ci
@@ -88,6 +91,9 @@ Storybook を使ってコンポーネントを開発することができます�
 npm run storybook
 ```
 
+main ブランチの Storybook は[VOICEVOX/preview-pages](https://github.com/VOICEVOX/preview-pages)から確認できます。  
+<https://voicevox.github.io/preview-pages/preview/branch-main/storybook/index.html>
+
 ### ブラウザ版の実行（開発中）
 
 別途音声合成エンジンを起動し、以下を実行して表示された localhost へアクセスします。
@@ -96,7 +102,8 @@ npm run storybook
 npm run browser:serve
 ```
 
-また、main ブランチのビルド結果がこちらにデプロイされています <https://voicevox-browser-dev.netlify.app/>  
+また、main ブランチのビルド結果が[VOICEVOX/preview-pages](https://github.com/VOICEVOX/preview-pages)にデプロイされています。  
+<https://voicevox.github.io/preview-pages/preview/branch-main/editor/index.html>  
 今はローカル PC 上で音声合成エンジンを起動する必要があります。
 
 ## ビルド
@@ -114,33 +121,34 @@ fork したリポジトリで Actions を ON にし、workflow_dispatch で`buil
 
 ### 単体テスト
 
+`./tests/unit/` 以下にあるテストと、Storybookのテストを実行します。
+
 ```bash
 npm run test:unit
 npm run test-watch:unit # 監視モード
+npm run test-ui:unit # VitestのUIを表示
 npm run test:unit -- --update # スナップショットの更新
 ```
 
-### コンポーネントのテスト
-
-Storybook を使ってコンポーネントのテストを行います。
-
-```bash
-npm run storybook # 先に Storybook を起動
-npm run test:storybook
-npm run test-watch:storybook # 監視モード
-```
+> [!NOTE]  
+> `./tests/unit` 下のテストは、ファイル名によってテストを実行する環境が変化します。
+>
+> - `.node.spec.ts`：Node.js 環境
+> - `.browser.spec.ts`：ブラウザ環境（Chromium）
+> - `.spec.ts`：ブラウザ環境（happy-domによるエミュレート）
 
 ### ブラウザ End to End テスト
 
 Electron の機能が不要な、UI や音声合成などの End to End テストを実行します。
 
-> **Note**
+> [!NOTE]
 > 一部のエンジンの設定を書き換えるテストは、CI(Github Actions)上でのみ実行されるようになっています。
 
 ```bash
 npm run test:browser-e2e
 npm run test-watch:browser-e2e # 監視モード
 npm run test-watch:browser-e2e -- --headed # テスト中の UI を表示
+npm run test-ui:browser-e2e # Playwright の UI を表示
 ```
 
 Playwright を使用しているためテストパターンを生成することもできます。
@@ -152,9 +160,22 @@ npx playwright codegen http://localhost:5173/  --viewport-size=1024,630
 
 詳細は [Playwright ドキュメントの Test generator](https://playwright.dev/docs/codegen-intro) を参照してください。
 
+### Storybook の Visual Regression Testing
+
+Storybook のコンポーネントのスクリーンショットを比較して、変更がある場合は差分を表示します。
+
+> [!NOTE]
+> このテストは Windows でのみ実行できます。
+
+```bash
+npm run test:storybook-vrt
+npm run test-watch:storybook-vrt # 監視モード
+npm run test-ui:storybook-vrt # Playwright の UI を表示
+```
+
 #### スクリーンショットの更新
 
-ブラウザ End to End テストでは Visual Regression Testing を行っています。
+ブラウザ End to End テストと Storybook では Visual Regression Testing を行っています。
 現在 VRT テストは Windows のみで行っています。
 以下の手順でスクリーンショットを更新できます：
 
@@ -169,6 +190,25 @@ npx playwright codegen http://localhost:5173/  --viewport-size=1024,630
    ```
 
 4. Github Workflow が完了すると、更新されたスクリーンショットがコミットされます。
+5. プルした後、空コミットをプッシュしてテストを再実行します。
+
+   ```bash
+   git commit --allow-empty -m "（テストを再実行）"
+   git push
+   ```
+
+> [!NOTE]
+> トークンを作成して Secrets に追加することで、自動的にテストを再実行できます。
+>
+> 1. [Fine-granted Tokens](https://github.com/settings/personal-access-tokens/new) にアクセスします。
+> 2. 適当な名前を入力し、 `ユーザー名/voicevox` へのアクセス権を与え、 Repository permissions の Contents で Read and write を選択します。
+>    <details>
+>    <summary>設定例</summary>
+>    <img src="./docs/res/Fine-granted_Tokensの作成.png" width="320">
+>    </details>
+> 3. トークンを作成して文字列をコピーします。
+> 4. `ユーザー名/voicevox` のリポジトリの Settings > Secrets and variables > Actions > New repository secret を開きます。
+> 5. 名前に `PUSH_TOKEN` と入力し、先ほどの文字列を貼り付けて Secrets を追加します。
 
 ##### ローカルで更新する場合
 
@@ -217,10 +257,9 @@ npm run lint
 ## タイポチェック
 
 [typos](https://github.com/crate-ci/typos) を使ってタイポのチェックを行っています。
-[typos をインストール](https://github.com/crate-ci/typos#install) した後
 
 ```bash
-typos
+npm run typos
 ```
 
 でタイポチェックを行えます。
@@ -280,7 +319,9 @@ npx openapi-generator-cli version-manager list
 
 npm scripts の `serve` や `electron:serve` などの開発ビルド下では、ビルドに使用している vite で sourcemap を出力するため、ソースコードと出力されたコードの対応付けが行われます。
 
-`.vscode/launch.template.json` をコピーして `.vscode/launch.json` を作成することで、開発ビルドを VS Code から実行し、デバッグを可能にするタスクが有効になります。
+`.vscode/launch.template.json` をコピーして `.vscode/launch.json` を、
+`.vscode/tasks.template.json` をコピーして `.vscode/tasks.json` を作成することで、
+開発ビルドを VS Code から実行し、デバッグを可能にするタスクが有効になります。
 
 ## ライセンス
 

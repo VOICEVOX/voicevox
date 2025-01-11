@@ -93,6 +93,9 @@ const typeCheckedRules = {
   // TODO: いずれは有効化する
   "@typescript-eslint/require-await": "off",
 
+  // 比較関数無しでのsortは文字列での比較になり、ミスが起こりやすいため有効化
+  "@typescript-eslint/require-array-sort-compare": "error",
+
   "@typescript-eslint/no-misused-promises": [
     "error",
     {
@@ -135,7 +138,7 @@ export default defineConfig(
 
   {
     name: "voicevox/defaults/ignores",
-    ignores: ["dist_electron/**/*", "dist/**/*", "node_modules/**/*"],
+    ignores: ["dist/**/*", "dist_*/**/*", "node_modules/**/*"],
   },
 
   ...pluginConfig(vueConfigRecommended),
@@ -148,7 +151,7 @@ export default defineConfig(
 
   {
     name: "voicevox/type-checked/typescript",
-    files: ["*/**/*.ts"],
+    files: ["*.ts", "*.mts"],
     extends: [...configs.recommendedTypeChecked],
     languageOptions: {
       parser: typescriptParser,
@@ -235,17 +238,6 @@ export default defineConfig(
         "error",
         {
           ignores: ["Container", "Presentation"],
-        },
-      ],
-      "vue/no-restricted-syntax": [
-        "error",
-        {
-          selector: "LogicalExpression[operator=??]",
-          message: `template内で"??"を使うとgithubのsyntax highlightが崩れるので\n三項演算子等を使って書き換えてください`,
-        },
-        {
-          selector: "MemberExpression[optional=true]",
-          message: `template内で"?."を使うとgithubのsyntax highlightが崩れるので\n三項演算子等を使って書き換えてください`,
         },
       ],
       "vue/v-bind-style": [

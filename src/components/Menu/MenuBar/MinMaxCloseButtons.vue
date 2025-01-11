@@ -37,7 +37,7 @@
       color="green"
       class="title-bar-buttons"
       aria-label="最大化"
-      @click="maximizeWindow()"
+      @click="toggleMaximizeWindow()"
     ></QBtn>
   </QBadge>
   <QBadge
@@ -57,24 +57,25 @@
     ></QBtn>
 
     <QBtn
-      v-if="!isMaximized"
-      dense
-      flat
-      icon="crop_square"
-      class="title-bar-buttons"
-      aria-label="最大化"
-      @click="maximizeWindow()"
-    ></QBtn>
-    <QBtn
-      v-else
+      v-if="isMaximized || isFullscreen"
       dense
       flat
       :icon="mdiWindowRestore"
       class="title-bar-buttons"
       aria-label="最大化"
-      @click="maximizeWindow()"
+      @click="toggleMaximizeWindow()"
     >
     </QBtn>
+
+    <QBtn
+      v-else
+      dense
+      flat
+      icon="crop_square"
+      class="title-bar-buttons"
+      aria-label="最大化"
+      @click="toggleMaximizeWindow()"
+    ></QBtn>
 
     <QBtn
       dense
@@ -90,17 +91,20 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { mdiWindowRestore } from "@quasar/extras/mdi-v5";
+import { useQuasar } from "quasar";
 import { useStore } from "@/store";
 
+const $q = useQuasar();
 const store = useStore();
 
 const closeWindow = async () => {
-  void store.dispatch("CHECK_EDITED_AND_NOT_SAVE", { closeOrReload: "close" });
+  void store.actions.CHECK_EDITED_AND_NOT_SAVE({ closeOrReload: "close" });
 };
 const minimizeWindow = () => window.backend.minimizeWindow();
-const maximizeWindow = () => window.backend.maximizeWindow();
+const toggleMaximizeWindow = () => window.backend.toggleMaximizeWindow();
 
 const isMaximized = computed(() => store.state.isMaximized);
+const isFullscreen = computed(() => store.getters.IS_FULLSCREEN);
 </script>
 
 <style scoped lang="scss">

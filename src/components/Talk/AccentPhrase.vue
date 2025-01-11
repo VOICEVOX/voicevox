@@ -1,8 +1,11 @@
 <template>
   <div
     ref="container"
-    class="mora-table"
-    :class="[isActive && 'mora-table-focus', uiLocked || 'mora-table-hover']"
+    class="accent-phrase"
+    :class="[
+      isActive && 'accent-phrase-focus',
+      uiLocked || 'accent-phrase-hover',
+    ]"
     @click="$emit('click', index)"
   >
     <ContextMenu :menudata="contextMenudata" />
@@ -208,7 +211,7 @@ import { computed, ref } from "vue";
 import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
 import { MenuItemButton } from "@/components/Menu/type";
-import ContextMenu from "@/components/Menu/ContextMenu.vue";
+import ContextMenu from "@/components/Menu/ContextMenu/Container.vue";
 import { useStore } from "@/store";
 import { AudioKey, MoraDataType } from "@/type/preload";
 import { Mora } from "@/openapi/models/Mora";
@@ -245,7 +248,7 @@ const contextMenudata = ref<[MenuItemButton]>([
     type: "button",
     label: "削除",
     onClick: () => {
-      void store.dispatch("COMMAND_DELETE_ACCENT_PHRASE", {
+      void store.actions.COMMAND_DELETE_ACCENT_PHRASE({
         audioKey: props.audioKey,
         accentPhraseIndex: props.index,
       });
@@ -278,7 +281,7 @@ const handleChangePronounce = (newPronunciation: string) => {
       popUntilPause = true;
     }
   }
-  void store.dispatch("COMMAND_CHANGE_SINGLE_ACCENT_PHRASE", {
+  void store.actions.COMMAND_CHANGE_SINGLE_ACCENT_PHRASE({
     audioKey: props.audioKey,
     newPronunciation,
     accentPhraseIndex: props.index,
@@ -345,13 +348,13 @@ const getHoveredText = (mora: Mora, moraIndex: number) => {
 };
 
 const changeAccent = (accentPhraseIndex: number, accent: number) =>
-  store.dispatch("COMMAND_CHANGE_ACCENT", {
+  store.actions.COMMAND_CHANGE_ACCENT({
     audioKey: props.audioKey,
     accentPhraseIndex,
     accent,
   });
 const toggleAccentPhraseSplit = (isPause: boolean, moraIndex?: number) => {
-  void store.dispatch("COMMAND_CHANGE_ACCENT_PHRASE_SPLIT", {
+  void store.actions.COMMAND_CHANGE_ACCENT_PHRASE_SPLIT({
     audioKey: props.audioKey,
     accentPhraseIndex: props.index,
     ...(!isPause ? { isPause, moraIndex: moraIndex as number } : { isPause }),
@@ -376,7 +379,7 @@ const changeMoraData = (
     if (type == "pitch") {
       lastPitches.value[moraIndex] = data;
     }
-    return store.dispatch("COMMAND_SET_AUDIO_MORA_DATA", {
+    return store.actions.COMMAND_SET_AUDIO_MORA_DATA({
       audioKey: props.audioKey,
       accentPhraseIndex,
       moraIndex,
@@ -384,7 +387,7 @@ const changeMoraData = (
       type,
     });
   } else {
-    return store.dispatch("COMMAND_SET_AUDIO_MORA_DATA_ACCENT_PHRASE", {
+    return store.actions.COMMAND_SET_AUDIO_MORA_DATA_ACCENT_PHRASE({
       audioKey: props.audioKey,
       accentPhraseIndex,
       moraIndex,
@@ -468,7 +471,7 @@ const handleChangeVoicing = (mora: Mora, moraIndex: number) => {
   position: relative;
 }
 
-.mora-table {
+.accent-phrase {
   display: inline-grid;
   align-self: stretch;
   grid-template-rows: 1fr 60px 30px;
@@ -478,12 +481,12 @@ const handleChangeVoicing = (mora: Mora, moraIndex: number) => {
   }
 }
 
-.mora-table-hover:hover {
+.accent-phrase-hover:hover {
   cursor: pointer;
   background-color: colors.$active-point-hover;
 }
 
-.mora-table-focus {
+.accent-phrase-focus {
   // hover色に負けるので、importantが必要
   background-color: colors.$active-point-focus !important;
 }

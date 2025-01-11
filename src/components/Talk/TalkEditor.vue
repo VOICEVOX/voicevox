@@ -118,7 +118,6 @@
 </template>
 
 <script setup lang="ts">
-import path from "path";
 import { computed, onBeforeUpdate, ref, toRaw, VNodeRef, watch } from "vue";
 import Draggable from "vuedraggable";
 import { QResizeObserver } from "quasar";
@@ -136,11 +135,15 @@ import {
   PresetKey,
   SplitterPositionType,
   Voice,
-  HotkeyActionNameType,
-  actionPostfixSelectNthCharacter,
 } from "@/type/preload";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import onetimeWatch from "@/helpers/onetimeWatch";
+import path from "@/helpers/path";
+import {
+  actionPostfixSelectNthCharacter,
+  HotkeyActionNameType,
+} from "@/domain/hotkeyAction";
+import { isElectron } from "@/helpers/platform";
 
 const props = defineProps<{
   isEnginesReady: boolean;
@@ -163,7 +166,7 @@ registerHotkeyWithCleanup({
   name: "音声書き出し",
   callback: () => {
     if (!uiLocked.value) {
-      void store.dispatch("SHOW_GENERATE_AND_SAVE_ALL_AUDIO_DIALOG");
+      void store.actions.SHOW_GENERATE_AND_SAVE_ALL_AUDIO_DIALOG();
     }
   },
 });
@@ -172,7 +175,7 @@ registerHotkeyWithCleanup({
   name: "選択音声を書き出し",
   callback: () => {
     if (!uiLocked.value) {
-      void store.dispatch("SHOW_GENERATE_AND_SAVE_SELECTED_AUDIO_DIALOG");
+      void store.actions.SHOW_GENERATE_AND_SAVE_SELECTED_AUDIO_DIALOG();
     }
   },
 });
@@ -181,7 +184,7 @@ registerHotkeyWithCleanup({
   name: "音声を繋げて書き出し",
   callback: () => {
     if (!uiLocked.value) {
-      void store.dispatch("SHOW_GENERATE_AND_CONNECT_ALL_AUDIO_DIALOG");
+      void store.actions.SHOW_GENERATE_AND_CONNECT_ALL_AUDIO_DIALOG();
     }
   },
 });
@@ -190,7 +193,7 @@ registerHotkeyWithCleanup({
   name: "テキストを読み込む",
   callback: () => {
     if (!uiLocked.value) {
-      void store.dispatch("SHOW_CONNECT_AND_EXPORT_TEXT_DIALOG");
+      void store.actions.SHOW_CONNECT_AND_EXPORT_TEXT_DIALOG();
     }
   },
 });
@@ -252,7 +255,7 @@ registerHotkeyWithCleanup({
   name: "すべて選択",
   callback: () => {
     if (!uiLocked.value && isMultiSelectEnabled.value) {
-      void store.dispatch("SET_SELECTED_AUDIO_KEYS", {
+      void store.actions.SET_SELECTED_AUDIO_KEYS({
         audioKeys: audioKeys.value,
       });
     }
@@ -326,7 +329,7 @@ const updateSplitterPosition = async (
     ...splitterPosition.value,
     [propertyName]: newValue,
   };
-  await store.dispatch("SET_ROOT_MISC_SETTING", {
+  await store.actions.SET_ROOT_MISC_SETTING({
     key: "splitterPosition",
     value: newSplitterPosition,
   });
@@ -362,7 +365,7 @@ const resizeObserverRef = ref<QResizeObserver>();
 
 // DaD
 const updateAudioKeys = (audioKeys: AudioKey[]) =>
-  store.dispatch("COMMAND_SET_AUDIO_KEYS", { audioKeys });
+  store.actions.COMMAND_SET_AUDIO_KEYS({ audioKeys });
 const itemKey = (key: string) => key;
 
 // セルを追加
@@ -381,13 +384,13 @@ const addAudioItem = async () => {
     baseAudioItem = store.state.audioItems[prevAudioKey];
   }
 
-  const audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {
+  const audioItem = await store.actions.GENERATE_AUDIO_ITEM({
     voice,
     presetKey,
     baseAudioItem,
   });
 
-  const newAudioKey = await store.dispatch("COMMAND_REGISTER_AUDIO_ITEM", {
+  const newAudioKey = await store.actions.COMMAND_REGISTER_AUDIO_ITEM({
     audioItem,
     prevAudioKey: activeAudioKey.value,
   });
@@ -401,7 +404,7 @@ const duplicateAudioItem = async () => {
 
   const prevAudioItem = toRaw(store.state.audioItems[prevAudioKey]);
 
-  const newAudioKey = await store.dispatch("COMMAND_REGISTER_AUDIO_ITEM", {
+  const newAudioKey = await store.actions.COMMAND_REGISTER_AUDIO_ITEM({
     audioItem: structuredClone(prevAudioItem),
     prevAudioKey: activeAudioKey.value,
   });
@@ -501,7 +504,7 @@ watch(userOrderedCharacterInfos, (userOrderedCharacterInfos) => {
     };
 
     // FIXME: UNDOができてしまうのでできれば直したい
-    void store.dispatch("COMMAND_MULTI_CHANGE_VOICE", {
+    void store.actions.COMMAND_MULTI_CHANGE_VOICE({
       audioKeys: [first],
       voice: voice,
     });
@@ -518,14 +521,14 @@ onetimeWatch(
       return "continue";
     if (!isProjectFileLoaded) {
       // 最初のAudioCellを作成
-      const audioItem = await store.dispatch("GENERATE_AUDIO_ITEM", {});
-      const newAudioKey = await store.dispatch("REGISTER_AUDIO_ITEM", {
+      const audioItem = await store.actions.GENERATE_AUDIO_ITEM({});
+      const newAudioKey = await store.actions.REGISTER_AUDIO_ITEM({
         audioItem,
       });
       focusCell({ audioKey: newAudioKey, focusTarget: "textField" });
 
       // 最初の話者を初期化
-      void store.dispatch("SETUP_SPEAKER", {
+      void store.actions.SETUP_SPEAKER({
         audioKeys: [newAudioKey],
         engineId: audioItem.voice.engineId,
         styleId: audioItem.voice.styleId,
@@ -554,11 +557,12 @@ watch(
     // 代替ポートをトースト通知する
     for (const engineId of store.state.engineIds) {
       const engineName = store.state.engineInfos[engineId].name;
+      const defaultPort = store.state.engineInfos[engineId].defaultPort;
       const altPort = store.state.altPortInfos[engineId];
       if (!altPort) return;
 
-      void store.dispatch("SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON", {
-        message: `${altPort.from}番ポートが使用中であるため ${engineName} は、${altPort.to}番ポートで起動しました`,
+      void store.actions.SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON({
+        message: `${defaultPort}番ポートが使用中であるため ${engineName} は、${altPort}番ポートで起動しました`,
         icon: "compare_arrows",
         tipName: "engineStartedOnAltPort",
       });
@@ -571,15 +575,29 @@ const dragEventCounter = ref(0);
 const loadDraggedFile = (event: { dataTransfer: DataTransfer | null }) => {
   if (!event.dataTransfer || event.dataTransfer.files.length === 0) return;
   const file = event.dataTransfer.files[0];
+
+  // electronの場合のみファイルパスを取得できる
+  const filePath = isElectron ? window.backend.getPathForFile(file) : undefined;
+
   switch (path.extname(file.name)) {
     case ".txt":
-      void store.dispatch("COMMAND_IMPORT_FROM_FILE", { filePath: file.path });
+      if (filePath) {
+        void store.actions.COMMAND_IMPORT_FROM_FILE({ type: "path", filePath });
+      } else {
+        void store.actions.COMMAND_IMPORT_FROM_FILE({ type: "file", file });
+      }
       break;
+
     case ".vvproj":
-      void store.dispatch("LOAD_PROJECT_FILE", { filePath: file.path });
+      if (filePath) {
+        void store.actions.LOAD_PROJECT_FILE({ type: "path", filePath });
+      } else {
+        void store.actions.LOAD_PROJECT_FILE({ type: "file", file });
+      }
       break;
+
     default:
-      void store.dispatch("SHOW_ALERT_DIALOG", {
+      void store.actions.SHOW_ALERT_DIALOG({
         title: "対応していないファイルです",
         message:
           "テキストファイル (.txt) とVOICEVOXプロジェクトファイル (.vvproj) に対応しています。",
@@ -619,7 +637,7 @@ const onAudioCellPaneClick = () => {
     store.state.experimentalSetting.enableMultiSelect &&
     activeAudioKey.value
   ) {
-    void store.dispatch("SET_SELECTED_AUDIO_KEYS", {
+    void store.actions.SET_SELECTED_AUDIO_KEYS({
       audioKeys: [activeAudioKey.value],
     });
   }

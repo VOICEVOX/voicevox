@@ -3,18 +3,19 @@ import AsyncLock from "async-lock";
 import {
   AcceptTermsStatus,
   ConfigType,
-  EngineId,
-  configSchema,
+  getConfigSchema,
   DefaultStyleId,
-  defaultHotkeySettings,
-  HotkeySettingType,
   ExperimentalSettingType,
-  HotkeyCombination,
   VoiceId,
   PresetKey,
-  envEngineInfoSchema,
 } from "@/type/preload";
 import { ensureNotNullish } from "@/helpers/errorHelper";
+import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
+import {
+  HotkeyCombination,
+  getDefaultHotkeySettings,
+  HotkeySettingType,
+} from "@/domain/hotkeyAction";
 
 const lockKey = "save";
 
@@ -40,11 +41,7 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
       if (import.meta.env.VITE_DEFAULT_ENGINE_INFOS == undefined) {
         throw new Error("VITE_DEFAULT_ENGINE_INFOS == undefined");
       }
-      const engineId = EngineId(
-        envEngineInfoSchema
-          .array()
-          .parse(JSON.parse(import.meta.env.VITE_DEFAULT_ENGINE_INFOS))[0].uuid,
-      );
+      const engineId = loadEnvEngineInfos()[0].uuid;
       if (engineId == undefined)
         throw new Error("VITE_DEFAULT_ENGINE_INFOS[0].uuid == undefined");
       const prevDefaultStyleIds = config.defaultStyleIds as DefaultStyleId[];
@@ -239,6 +236,48 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
       return config;
     },
   ],
+  [
+    ">=0.21",
+    (config) => {
+      // プリセット機能を実験的機能から通常機能に
+      const experimentalSetting =
+        config.experimentalSetting as ExperimentalSettingType;
+      if ("enablePreset" in experimentalSetting) {
+        config.enablePreset = experimentalSetting.enablePreset;
+        delete experimentalSetting.enablePreset;
+      }
+      if ("shouldApplyDefaultPresetOnVoiceChanged" in experimentalSetting) {
+        config.shouldApplyDefaultPresetOnVoiceChanged =
+          experimentalSetting.shouldApplyDefaultPresetOnVoiceChanged;
+        delete experimentalSetting.shouldApplyDefaultPresetOnVoiceChanged;
+      }
+
+      // 書き出しテンプレートから拡張子を削除
+      const savingSetting = config.savingSetting as { fileNamePattern: string };
+      savingSetting.fileNamePattern = savingSetting.fileNamePattern.replace(
+        ".wav",
+        "",
+      );
+
+      // マルチトラック機能を実験的機能じゃなくす
+      if ("enableMultiTrack" in experimentalSetting) {
+        delete experimentalSetting.enableMultiTrack;
+      }
+
+      return config;
+    },
+  ],
+  [
+    ">=0.22",
+    (config) => {
+      // プリセットに文内無音倍率を追加
+      const presets = config.presets as ConfigType["presets"];
+      for (const preset of Object.values(presets.items)) {
+        if (preset == undefined) throw new Error("preset == undefined");
+        preset.pauseLengthScale = 1;
+      }
+    },
+  ],
 ];
 
 export type Metadata = {
@@ -260,6 +299,7 @@ export type Metadata = {
  */
 export abstract class BaseConfigManager {
   protected config: ConfigType | undefined;
+  protected isMac: boolean;
 
   private lock = new AsyncLock();
 
@@ -268,6 +308,10 @@ export abstract class BaseConfigManager {
   protected abstract save(config: ConfigType & Metadata): Promise<void>;
 
   protected abstract getAppVersion(): string;
+
+  constructor({ isMac }: { isMac: boolean }) {
+    this.isMac = isMac;
+  }
 
   public reset() {
     this.config = this.getDefaultConfig();
@@ -283,7 +327,9 @@ export abstract class BaseConfigManager {
           migration(data);
         }
       }
-      this.config = this.migrateHotkeySettings(configSchema.parse(data));
+      this.config = this.migrateHotkeySettings(
+        getConfigSchema({ isMac: this.isMac }).parse(data),
+      );
       this._save();
     } else {
       this.reset();
@@ -304,10 +350,16 @@ export abstract class BaseConfigManager {
     this._save();
   }
 
+  /** 全ての設定を取得する。テスト用。 */
+  public getAll(): ConfigType {
+    if (!this.config) throw new Error("Config is not initialized");
+    return this.config;
+  }
+
   private _save() {
     void this.lock.acquire(lockKey, async () => {
       await this.save({
-        ...configSchema.parse({
+        ...getConfigSchema({ isMac: this.isMac }).parse({
           ...this.config,
         }),
         __internal__: {
@@ -342,22 +394,22 @@ export abstract class BaseConfigManager {
   private migrateHotkeySettings(data: ConfigType): ConfigType {
     const COMBINATION_IS_NONE = HotkeyCombination("####");
     const loadedHotkeys = structuredClone(data.hotkeySettings);
-    const hotkeysWithoutNewCombination = defaultHotkeySettings.map(
-      (defaultHotkey) => {
-        const loadedHotkey = loadedHotkeys.find(
-          (loadedHotkey) => loadedHotkey.action === defaultHotkey.action,
-        );
-        const hotkeyWithoutCombination: HotkeySettingType = {
-          action: defaultHotkey.action,
-          combination: COMBINATION_IS_NONE,
-        };
-        return loadedHotkey ?? hotkeyWithoutCombination;
-      },
-    );
+    const hotkeysWithoutNewCombination = getDefaultHotkeySettings({
+      isMac: this.isMac,
+    }).map((defaultHotkey) => {
+      const loadedHotkey = loadedHotkeys.find(
+        (loadedHotkey) => loadedHotkey.action === defaultHotkey.action,
+      );
+      const hotkeyWithoutCombination: HotkeySettingType = {
+        action: defaultHotkey.action,
+        combination: COMBINATION_IS_NONE,
+      };
+      return loadedHotkey ?? hotkeyWithoutCombination;
+    });
     const migratedHotkeys = hotkeysWithoutNewCombination.map((hotkey) => {
       if (hotkey.combination === COMBINATION_IS_NONE) {
         const newHotkey = ensureNotNullish(
-          defaultHotkeySettings.find(
+          getDefaultHotkeySettings({ isMac: this.isMac }).find(
             (defaultHotkey) => defaultHotkey.action === hotkey.action,
           ),
         );
@@ -384,6 +436,6 @@ export abstract class BaseConfigManager {
   }
 
   protected getDefaultConfig(): ConfigType {
-    return configSchema.parse({});
+    return getConfigSchema({ isMac: this.isMac }).parse({});
   }
 }

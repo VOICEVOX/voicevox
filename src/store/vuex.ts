@@ -399,30 +399,6 @@ type PartialStoreOptions<
         : never
       : GAM extends "action"
         ? K extends keyof A
-          ? Action<S, S, A, K, AllGetters, AllActions, AllMutations>
-          : never
-        : GAM extends "mutation"
-          ? K extends keyof M
-            ? Mutation<S, M, K>
-            : never
-          : never;
-  };
-};
-
-type DotNotationPartialStoreOptions<
-  S,
-  T extends StoreTypesBase,
-  G extends GettersBase,
-  A extends ActionsBase,
-  M extends MutationsBase,
-> = {
-  [K in keyof T]: {
-    [GAM in keyof T[K]]: GAM extends "getter"
-      ? K extends keyof G
-        ? Getter<S, S, G, K, AllGetters>
-        : never
-      : GAM extends "action"
-        ? K extends keyof A
           ? DotNotationAction<S, S, A, K, AllGetters, AllActions, AllMutations>
           : never
         : GAM extends "mutation"
@@ -440,45 +416,6 @@ export const createPartialStore = <
   M extends MutationsBase = StoreType<T, "mutation">,
 >(
   options: PartialStoreOptions<State, T, G, A, M>,
-): StoreOptions<State, G, A, M, AllGetters, AllActions, AllMutations> => {
-  const obj = Object.keys(options).reduce(
-    (acc, cur) => {
-      const option = options[cur];
-
-      /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-      if (option.getter) {
-        acc.getters[cur] = option.getter;
-      }
-      if (option.mutation) {
-        acc.mutations[cur] = option.mutation;
-      }
-      if (option.action) {
-        acc.actions[cur] = option.action;
-      }
-      /* eslint-enable @typescript-eslint/no-unsafe-member-access */
-
-      return acc;
-    },
-
-    /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-    {
-      getters: Object.create(null),
-      mutations: Object.create(null),
-      actions: Object.create(null),
-    },
-    /*  eslint-enable @typescript-eslint/no-unsafe-assignment */
-  );
-
-  return obj;
-};
-
-export const createDotNotationPartialStore = <
-  T extends StoreTypesBase,
-  G extends GettersBase = StoreType<T, "getter">,
-  A extends ActionsBase = StoreType<T, "action">,
-  M extends MutationsBase = StoreType<T, "mutation">,
->(
-  options: DotNotationPartialStoreOptions<State, T, G, A, M>,
 ): StoreOptions<State, G, A, M, AllGetters, AllActions, AllMutations> => {
   const obj = Object.keys(options).reduce(
     (acc, cur) => {

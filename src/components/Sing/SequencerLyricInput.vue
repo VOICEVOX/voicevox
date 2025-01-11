@@ -1,18 +1,21 @@
 <template>
-  <!-- TODO: ピッチの上に歌詞入力のinputが表示されるようにする -->
-  <input
-    ref="lyricInput"
-    :value="editingLyricNote.lyric"
-    class="lyric-input"
+  <div
+    class="lyric-input-container"
     :style="{
       transform: `translate3d(${positionX}px,${positionY}px,0)`,
     }"
-    @input="onLyricInput"
-    @mousedown.stop
-    @dblclick.stop
-    @keydown.stop="onLyricInputKeyDown"
-    @blur="onLyricInputBlur"
-  />
+  >
+    <input
+      ref="lyricInput"
+      :value="editingLyricNote.lyric"
+      class="lyric-input"
+      @input="onLyricInput"
+      @mousedown.stop
+      @dblclick.stop
+      @keydown.stop="onLyricInputKeyDown"
+      @blur="onLyricInputBlur"
+    />
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -86,11 +89,12 @@ const onLyricInput = (event: Event) => {
   if (!(event.target instanceof HTMLInputElement)) {
     throw new Error("Invalid event target");
   }
-  emit("lyricInput", event.target.value, props.editingLyricNote);
+  const newValue = event.target.value;
+  emit("lyricInput", newValue, props.editingLyricNote);
 };
 
 watch(
-  () => props.editingLyricNote,
+  () => props.editingLyricNote.id,
   () => {
     void nextTick(() => {
       lyricInput.value?.focus();
@@ -102,18 +106,31 @@ watch(
 </script>
 
 <style scoped lang="scss">
-@use "@/styles/variables" as vars;
-@use "@/styles/colors" as colors;
+@use "@/styles/v2/variables" as vars;
+
+.lyric-input-container {
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  z-index: vars.$z-index-sing-lyric-input;
+}
 
 .lyric-input {
-  position: absolute;
-  top: 0;
-  left: 0;
-  font-weight: 700;
-  min-width: 3rem;
-  max-width: 6rem;
-  border: 0;
-  outline: 2px solid lab(80, -22.953, 14.365);
+  display: inline-block;
+  font-weight: 400;
+  font-size: 16px;
+  box-sizing: border-box;
+  background-color: oklch(from var(--scheme-color-background) l c h / 0.8);
+  backdrop-filter: blur(1px);
+  color: var(--scheme-color-on-surface);
+  outline-offset: 1px;
+  border: 1px solid var(--scheme-color-inverse-surface);
+  box-shadow:
+    oklch(from var(--scheme-color-shadow) l c h / 0.19) 0px 8px 20px,
+    oklch(from var(--scheme-color-shadow) l c h / 0.23) 0px 6px 6px;
+  outline: 0;
   border-radius: 4px;
+  padding: 0 4px;
+  width: 10ch;
 }
 </style>

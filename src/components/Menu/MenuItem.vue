@@ -74,7 +74,7 @@
 import { ref, computed, watch } from "vue";
 import { MenuItemData } from "./type";
 import { useStore } from "@/store";
-import { hotkeyActionNameSchema } from "@/type/preload";
+import { hotkeyActionNameSchema } from "@/domain/hotkeyAction";
 const props = withDefaults(
   defineProps<{
     selected?: boolean;

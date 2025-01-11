@@ -1,58 +1,84 @@
-import { ipcMain, IpcMainInvokeEvent, BrowserWindow } from "electron";
+import {
+  BrowserWindow,
+  ipcMain,
+  IpcMainInvokeEvent,
+  IpcRendererEvent,
+} from "electron";
 import log from "electron-log/main";
 import { IpcIHData, IpcSOData } from "@/type/ipc";
 
-export function ipcMainHandle<T extends keyof IpcIHData>(
-  channel: T,
-  listener: (
+export type IpcRendererInvoke = {
+  [K in keyof IpcIHData]: (
+    ...args: IpcIHData[K]["args"]
+  ) => Promise<IpcIHData[K]["return"]>;
+};
+
+export type IpcMainHandle = {
+  [K in keyof IpcIHData]: (
     event: IpcMainInvokeEvent,
-    ...args: IpcIHData[T]["args"]
-  ) => IpcIHData[T]["return"] | Promise<IpcIHData[T]["return"]>,
+    ...args: IpcIHData[K]["args"]
+  ) => Promise<IpcIHData[K]["return"]> | IpcIHData[K]["return"];
+};
+
+export type IpcMainSend = {
+  [K in keyof IpcSOData]: (
+    win: BrowserWindow,
+    ...args: IpcSOData[K]["args"]
+  ) => void;
+};
+
+export type IpcRendererOn = {
+  [K in keyof IpcSOData]: (
+    event: IpcRendererEvent,
+    ...args: IpcSOData[K]["args"]
+  ) => Promise<IpcSOData[K]["return"]> | IpcSOData[K]["return"];
+};
+
+// FIXME: asを使わないようオーバーロードにした。オーバーロードも使わない書き方にしたい。
+export function registerIpcMainHandle<T extends IpcMainHandle>(
+  listeners: T,
 ): void;
-export function ipcMainHandle(
-  channel: string,
-  listener: (event: IpcMainInvokeEvent, ...args: unknown[]) => unknown,
-): void {
-  const errorHandledListener = (
-    event: IpcMainInvokeEvent,
-    ...args: unknown[]
-  ) => {
-    try {
-      validateIpcSender(event);
-      return listener(event, ...args);
-    } catch (e) {
-      log.error(e);
-    }
-  };
-  ipcMain.handle(channel, errorHandledListener);
+export function registerIpcMainHandle(listeners: {
+  [key: string]: (event: IpcMainInvokeEvent, ...args: unknown[]) => unknown;
+}) {
+  Object.entries(listeners).forEach(([channel, listener]) => {
+    const errorHandledListener: typeof listener = (event, ...args) => {
+      try {
+        validateIpcSender(event);
+        return listener(event, ...args);
+      } catch (e) {
+        log.error(e);
+      }
+    };
+    ipcMain.handle(channel, errorHandledListener);
+  });
 }
 
-export function ipcMainSend<T extends keyof IpcSOData>(
-  win: BrowserWindow,
-  channel: T,
-  ...args: IpcSOData[T]["args"]
-): void;
-export function ipcMainSend(
-  win: BrowserWindow,
-  channel: string,
-  ...args: unknown[]
-): void {
-  win.webContents.send(channel, ...args);
-}
+export const ipcMainSendProxy = new Proxy(
+  {},
+  {
+    get:
+      (_, channel: string) =>
+      (win: BrowserWindow, ...args: unknown[]) =>
+        win.webContents.send(channel, ...args),
+  },
+) as IpcMainSend;
 
 /** IPCメッセージの送信元を確認する */
 const validateIpcSender = (event: IpcMainInvokeEvent) => {
-  let isValid: boolean;
-  const senderUrl = new URL(event.senderFrame.url);
-  if (process.env.VITE_DEV_SERVER_URL != undefined) {
-    const devServerUrl = new URL(process.env.VITE_DEV_SERVER_URL);
-    isValid = senderUrl.origin === devServerUrl.origin;
-  } else {
-    isValid = senderUrl.protocol === "app:";
+  let isValid: boolean = false;
+  if (event.senderFrame) {
+    const senderUrl = new URL(event.senderFrame.url);
+    if (import.meta.env.VITE_DEV_SERVER_URL != undefined) {
+      const devServerUrl = new URL(import.meta.env.VITE_DEV_SERVER_URL);
+      isValid = senderUrl.origin === devServerUrl.origin;
+    } else {
+      isValid = senderUrl.protocol === "app:";
+    }
   }
   if (!isValid) {
     throw new Error(
-      `不正なURLからのIPCメッセージを検出しました。senderUrl: ${senderUrl.toString()}`,
+      `不正なURLからのIPCメッセージを検出しました。senderUrl: ${event.senderFrame?.url}`,
     );
   }
 };

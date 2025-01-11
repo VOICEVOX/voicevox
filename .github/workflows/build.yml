@@ -26,9 +26,8 @@ on:
         default: false
 
 env:
-  VOICEVOX_ENGINE_REPO_URL: "https://github.com/VOICEVOX/voicevox_engine"
-  VOICEVOX_ENGINE_VERSION: 0.20.0
-  VOICEVOX_RESOURCE_VERSION: 0.20.0
+  VOICEVOX_ENGINE_VERSION: 0.22.2
+  VOICEVOX_RESOURCE_VERSION: 0.22.2
   VOICEVOX_EDITOR_VERSION:
     |- # releaseタグ名か、workflow_dispatchでのバージョン名か、999.999.999-developが入る
     ${{ github.event.release.tag_name || github.event.inputs.version || '999.999.999-develop' }}
@@ -121,7 +120,7 @@ jobs:
             app_asar_dir: prepackage/VOICEVOX.app/Contents/Resources
             installer_artifact_name: macos-x64-cpu-dmg
             macos_artifact_name: "VOICEVOX.${version}-x64.${ext}"
-            os: macos-12
+            os: macos-13
           # macOS CPU (arm64)
           - artifact_name: macos-arm64-cpu-prepackage
             artifact_path: dist_electron/mac-arm64
@@ -227,7 +226,7 @@ jobs:
       - name: Define Code Signing Envs
         if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'
         run: |
-          bash build/codesign_setup.bash
+          bash tools/codesign_setup.bash
           THUMBPRINT="$(head -n 1 $THUMBPRINT_PATH)"
           SIGNTOOL_PATH="$(head -n 1 $SIGNTOOL_PATH_PATH)"
           echo "::add-mask::$THUMBPRINT"
@@ -257,7 +256,7 @@ jobs:
       - name: Reset Code Signing Envs
         if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'
         run: |
-          bash build/codesign_cleanup.bash
+          bash tools/codesign_cleanup.bash
           echo 'WIN_CERTIFICATE_SHA1=' >> $GITHUB_ENV
           echo 'WIN_SIGNING_HASH_ALGORITHMS=' >> $GITHUB_ENV
           echo 'SIGNTOOL_PATH=' >> $GITHUB_ENV
@@ -391,7 +390,7 @@ jobs:
       - name: Define Code Signing Envs
         if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'
         run: |
-          bash build/codesign_setup.bash
+          bash tools/codesign_setup.bash
           THUMBPRINT="$(head -n 1 $THUMBPRINT_PATH)"
           SIGNTOOL_PATH="$(head -n 1 $SIGNTOOL_PATH_PATH)"
           echo "::add-mask::$THUMBPRINT"
@@ -426,7 +425,7 @@ jobs:
       - name: Reset Code Signing Envs
         if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'
         run: |
-          bash build/codesign_cleanup.bash
+          bash tools/codesign_cleanup.bash
           echo 'WIN_CERTIFICATE_SHA1=' >> $GITHUB_ENV
           echo 'WIN_SIGNING_HASH_ALGORITHMS=' >> $GITHUB_ENV
           echo 'SIGNTOOL_PATH=' >> $GITHUB_ENV

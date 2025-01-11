@@ -1,8 +1,8 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * VOICEVOX Engine
- * VOICEVOX の音声合成エンジンです。
+ * DUMMY Engine
+ * DUMMY の音声合成エンジンです。
  *
  * The version of the OpenAPI document: latest
  * 
@@ -20,12 +20,14 @@ import { exists, mapValues } from '../runtime';
  */
 export interface ParseKanaBadRequest {
     /**
-     * 
+     * エラーメッセージ
      * @type {string}
      * @memberof ParseKanaBadRequest
      */
     text: string;
     /**
+     * エラー名
+     * 
      * |name|description|
      * |---|---|
      * | UNKNOWN_TEXT | 判別できない読み仮名があります: {text} |
@@ -40,7 +42,7 @@ export interface ParseKanaBadRequest {
      */
     errorName: string;
     /**
-     * 
+     * エラーを起こした箇所
      * @type {{ [key: string]: string; }}
      * @memberof ParseKanaBadRequest
      */

@@ -2,6 +2,7 @@
   <QDialog
     v-model="settingDialogOpenedComputed"
     maximized
+    allowFocusOutside
     transitionShow="jump-up"
     transitionHide="jump-down"
     class="setting-dialog transparent-backdrop"
@@ -25,522 +26,435 @@
             />
           </QToolbar>
         </QHeader>
-        <QPage ref="scroller" class="scroller">
-          <div class="q-pa-md row items-start q-gutter-md">
-            <!-- Engine Mode Card -->
-            <QCard flat class="setting-card">
-              <QCardActions>
-                <h5 class="text-h5">エンジン</h5>
-                <template v-if="engineIds.length > 1">
-                  <QSpace />
-                  <QSelect
-                    v-model="selectedEngineId"
-                    borderless
-                    dense
-                    name="engine"
-                    :options="engineIds"
-                    :optionLabel="renderEngineNameLabel"
-                  />
-                </template>
-              </QCardActions>
-              <ButtonToggleCell
-                v-model="engineUseGpu"
-                title="エンジンモード"
-                description="GPU モードの利用には GPU が必要です。Linux は NVIDIA™ 製 GPU のみ対応しています。"
-                :options="engineUseGpuOptions"
-                :disable="!gpuSwitchEnabled(selectedEngineId)"
-              >
-                <QTooltip
-                  :delay="500"
-                  :target="!gpuSwitchEnabled(selectedEngineId)"
-                >
-                  {{
-                    engineInfos[selectedEngineId].name
-                  }}はCPU版のためGPUモードを利用できません。
-                </QTooltip>
-              </ButtonToggleCell>
-              <QCardActions class="q-px-md bg-surface">
-                <div>音声のサンプリングレート</div>
-                <div
-                  aria-label="再生と保存時の音声のサンプリングレートを変更できます（サンプリングレートを上げても音声の品質は上がりません）。"
-                >
-                  <QIcon name="help_outline" size="sm" class="help-hover-icon">
-                    <QTooltip
-                      :delay="500"
-                      anchor="center right"
-                      self="center left"
-                      transitionShow="jump-right"
-                      transitionHide="jump-left"
-                    >
-                      再生・保存時の音声のサンプリングレートを変更できます（サンプリングレートを上げても音声の品質は上がりません）。
-                    </QTooltip>
-                  </QIcon>
-                </div>
-                <QSpace />
-                <QSelect
-                  v-model="outputSamplingRate"
-                  borderless
-                  dense
-                  name="samplingRate"
-                  :options="samplingRateOptions"
-                  :optionLabel="renderSamplingRateLabel"
-                >
-                </QSelect>
-              </QCardActions>
-            </QCard>
-            <!-- Preservation Setting -->
-            <QCard flat class="setting-card">
-              <QCardActions>
-                <h5 class="text-h5">操作</h5>
-              </QCardActions>
-              <ToggleCell
-                title="プリセット機能"
-                description="ONの場合、プリセット機能を有効にします。パラメータを登録したり適用したりできます。"
-                :modelValue="experimentalSetting.enablePreset"
-                @update:modelValue="changeEnablePreset"
-              />
-              <QSlideTransition>
-                <!-- q-slide-transitionはheightだけをアニメーションするのでdivで囲う -->
-                <div v-show="experimentalSetting.enablePreset">
-                  <ToggleCell
-                    title="スタイル変更時にデフォルトプリセットを適用"
-                    description="ONの場合、キャラやスタイルの変更時にデフォルトプリセットが自動的に適用されます。"
-                    class="in-slide-transition-workaround"
-                    :modelValue="
-                      experimentalSetting.shouldApplyDefaultPresetOnVoiceChanged
-                    "
-                    @update:modelValue="
-                      changeExperimentalSetting(
-                        'shouldApplyDefaultPresetOnVoiceChanged',
-                        $event,
-                      )
-                    "
-                  />
-                </div>
-              </QSlideTransition>
-              <ToggleCell
-                title="パラメータの引き継ぎ"
-                description="ONの場合、テキスト欄追加の際に、現在の話速等のパラメータが引き継がれます。"
-                :modelValue="inheritAudioInfoMode"
-                @update:modelValue="changeinheritAudioInfo"
-              />
-              <ButtonToggleCell
-                v-model="activePointScrollMode"
-                title="再生位置を追従"
-                description="音声再生中の、詳細調整欄の自動スクロールのモードを選べます。"
-                :options="[
-                  {
-                    label: '連続',
-                    value: 'CONTINUOUSLY',
-                    description: '現在の再生位置を真ん中に表示します。',
-                  },
-                  {
-                    label: 'ページめくり',
-                    value: 'PAGE',
-                    description:
-                      '現在の再生位置が表示範囲外にある場合にスクロールします。',
-                  },
-                  {
-                    label: 'オフ',
-                    value: 'OFF',
-                    description: '自動でスクロールしません。',
-                  },
-                ]"
-              />
-              <ButtonToggleCell
-                title="テキスト自動分割"
-                description="スト貼り付けの際のテキストの分割箇所を選べます。"
-                :modelValue="splitTextWhenPaste"
-                :options="[
-                  {
-                    label: '句点と改行',
-                    value: 'PERIOD_AND_NEW_LINE',
-                    description: '句点と改行を基にテキストを分割します。',
-                  },
-                  {
-                    label: '改行',
-                    value: 'NEW_LINE',
-                    description: '改行のみを基にテキストを分割します。',
-                  },
-                  {
-                    label: 'オフ',
-                    value: 'OFF',
-                    description: '分割を行いません。',
-                  },
-                ]"
-                @update:modelValue="
-                  changeSplitTextWhenPaste(
-                    $event as RootMiscSettingType['splitTextWhenPaste'],
-                  )
-                "
-              />
-              <ToggleCell
-                title="メモ機能"
-                description="ONの場合、テキストを [] で囲むことで、テキスト中にメモを書けます。"
-                :modelValue="enableMemoNotation"
-                @update:modelValue="changeEnableMemoNotation"
-              />
-              <ToggleCell
-                title="ルビ機能"
-                description="ONの場合、テキストに {ルビ対象|よみかた} と書くことで、テキストの読み方を変えられます。"
-                :modelValue="enableRubyNotation"
-                @update:modelValue="changeEnableRubyNotation"
-              />
-              <QCardActions class="q-px-md bg-surface">
-                <div>非表示にしたヒントを全て再表示</div>
-                <div
-                  aria-label="過去に非表示にしたヒントを全て再表示できます。"
-                >
-                  <QIcon name="help_outline" size="sm" class="help-hover-icon">
-                    <QTooltip
-                      :delay="500"
-                      anchor="center right"
-                      self="center left"
-                      transitionShow="jump-right"
-                      transitionHide="jump-left"
-                    >
-                      過去に非表示にしたヒントを全て再表示できます。
-                    </QTooltip>
-                  </QIcon>
-                </div>
-                <QSpace />
-                <!-- ボタンクリックのフィードバックのためのチェックマーク -->
-                <QIcon
-                  v-if="isDefaultConfirmedTips && hasResetConfirmedTips"
-                  name="check"
-                  size="sm"
-                  color="primary"
-                  style="margin-right: 8px"
-                >
-                </QIcon>
-                <QBtn
-                  label="再表示する"
-                  unelevated
-                  color="background"
-                  textColor="display"
-                  class="text-no-wrap q-mr-sm"
-                  :disable="isDefaultConfirmedTips"
-                  @click="
-                    () => {
-                      store.dispatch('RESET_CONFIRMED_TIPS');
-                      hasResetConfirmedTips = true;
-                    }
-                  "
-                >
-                </QBtn>
-              </QCardActions>
-            </QCard>
-            <!-- Saving Card -->
-            <QCard flat class="setting-card">
-              <QCardActions>
-                <h5 class="text-h5">保存</h5>
-              </QCardActions>
-              <QCardActions class="q-px-md bg-surface">
-                <div>書き出し先を固定</div>
-                <div
-                  aria-label="ONの場合、書き出す際のフォルダをあらかじめ指定できます。"
-                >
-                  <QIcon name="help_outline" size="sm" class="help-hover-icon">
-                    <QTooltip
-                      :delay="500"
-                      anchor="center right"
-                      self="center left"
-                      transitionShow="jump-right"
-                      transitionHide="jump-left"
-                    >
-                      ONの場合、書き出す際のフォルダをあらかじめ指定できます。
-                    </QTooltip>
-                  </QIcon>
-                </div>
-                <QSpace />
-                <QInput
-                  v-if="savingSetting.fixedExportEnabled"
-                  dense
-                  maxheight="10px"
-                  label="書き出し先のフォルダ"
-                  hideBottomSpace
-                  readonly
-                  :modelValue="savingSetting.fixedExportDir"
-                  :inputStyle="{
-                    width: `${savingSetting.fixedExportDir.length / 2 + 1}em`,
-                    minWidth: '150px',
-                    maxWidth: '450px',
-                  }"
-                  @update:modelValue="
-                    (event) => {
-                      if (event == null) throw 'event is null';
-                      handleSavingSettingChange('fixedExportDir', event);
-                    }
-                  "
-                >
-                  <template #append>
-                    <QBtn
-                      square
-                      dense
-                      flat
-                      color="primary"
-                      icon="folder_open"
-                      @click="selectFixedExportDir()"
-                    >
-                      <QTooltip :delay="500" anchor="bottom left">
-                        フォルダ選択
-                      </QTooltip>
-                    </QBtn>
+        <QPage>
+          <div class="container">
+            <BaseScrollArea>
+              <!-- Engine Mode Card -->
+              <div class="setting-card">
+                <div class="title-row">
+                  <h5 class="headline">エンジン</h5>
+                  <template v-if="engineIds.length > 1">
+                    <BaseSelect v-model="selectedEngineId">
+                      <BaseSelectItem
+                        v-for="engineId in engineIds"
+                        :key="engineId"
+                        :value="engineId"
+                        :label="renderEngineNameLabel(engineId)"
+                      />
+                    </BaseSelect>
                   </template>
-                </QInput>
-                <QToggle
+                </div>
+                <BaseTooltip
+                  :label="
+                    engineInfos[selectedEngineId].name +
+                    'はCPU版のためGPUモードを利用できません。'
+                  "
+                  :disabled="gpuSwitchEnabled(selectedEngineId)"
+                >
+                  <ButtonToggleCell
+                    title="エンジンモード"
+                    description="GPU モードの利用には GPU が必要です。Linux は NVIDIA™ 製 GPU のみ対応しています。"
+                    :options="engineUseGpuOptions"
+                    :disable="!gpuSwitchEnabled(selectedEngineId)"
+                    :modelValue="engineUseGpu ? 'GPU' : 'CPU'"
+                    @update:modelValue="
+                      (mode) => (engineUseGpu = mode === 'GPU')
+                    "
+                  />
+                </BaseTooltip>
+                <SelectCell
+                  title="音声のサンプリングレート"
+                  description="再生・保存時の音声のサンプリングレートを変更できます（サンプリングレートを上げても音声の品質は上がりません）。"
+                  :modelValue="outputSamplingRate.toString()"
+                  :options="
+                    samplingRateOptions.map((option) => {
+                      return {
+                        value: option.toString(),
+                        label: renderSamplingRateLabel(option),
+                      };
+                    })
+                  "
+                  @update:modelValue="
+                    (value) =>
+                      (outputSamplingRate = Number(value) || 'engineDefault')
+                  "
+                />
+              </div>
+              <!-- Preservation Setting -->
+              <div class="setting-card">
+                <h5 class="headline">操作</h5>
+                <ToggleCell
+                  title="プリセット機能"
+                  description="ONの場合、プリセット機能を有効にします。パラメータを登録したり適用したりできます。"
+                  :modelValue="enablePreset"
+                  @update:modelValue="changeEnablePreset"
+                />
+                <QSlideTransition>
+                  <!-- q-slide-transitionはheightだけをアニメーションするのでdivで囲う -->
+                  <div v-show="enablePreset" class="transition-container">
+                    <ToggleCell
+                      title="スタイル変更時にデフォルトプリセットを適用"
+                      description="ONの場合、キャラやスタイルの変更時にデフォルトプリセットが自動的に適用されます。"
+                      class="in-slide-transition-workaround"
+                      :modelValue="shouldApplyDefaultPresetOnVoiceChanged"
+                      @update:modelValue="
+                        changeShouldApplyDefaultPresetOnVoiceChanged($event)
+                      "
+                    />
+                  </div>
+                </QSlideTransition>
+                <ToggleCell
+                  title="パラメータの引き継ぎ"
+                  description="ONの場合、テキスト欄追加の際に、現在の話速等のパラメータが引き継がれます。"
+                  :modelValue="inheritAudioInfoMode"
+                  @update:modelValue="changeinheritAudioInfo"
+                />
+                <ButtonToggleCell
+                  v-model="activePointScrollMode"
+                  title="再生位置を追従"
+                  description="音声再生中の、詳細調整欄の自動スクロールのモードを選べます。"
+                  :options="[
+                    {
+                      label: '連続',
+                      value: 'CONTINUOUSLY',
+                      description: '現在の再生位置を真ん中に表示します。',
+                    },
+                    {
+                      label: 'ページめくり',
+                      value: 'PAGE',
+                      description:
+                        '現在の再生位置が表示範囲外にある場合にスクロールします。',
+                    },
+                    {
+                      label: 'オフ',
+                      value: 'OFF',
+                      description: '自動でスクロールしません。',
+                    },
+                  ]"
+                />
+                <ButtonToggleCell
+                  title="テキスト自動分割"
+                  description="テキスト貼り付けの際のテキストの分割箇所を選べます。"
+                  :modelValue="splitTextWhenPaste"
+                  :options="[
+                    {
+                      label: '句点と改行',
+                      value: 'PERIOD_AND_NEW_LINE',
+                      description: '句点と改行を基にテキストを分割します。',
+                    },
+                    {
+                      label: '改行',
+                      value: 'NEW_LINE',
+                      description: '改行のみを基にテキストを分割します。',
+                    },
+                    {
+                      label: 'オフ',
+                      value: 'OFF',
+                      description: '分割を行いません。',
+                    },
+                  ]"
+                  @update:modelValue="
+                    changeSplitTextWhenPaste(
+                      $event as RootMiscSettingType['splitTextWhenPaste'],
+                    )
+                  "
+                />
+                <ToggleCell
+                  title="メモ機能"
+                  description="ONの場合、テキストを [] で囲むことで、テキスト中にメモを書けます。"
+                  :modelValue="enableMemoNotation"
+                  @update:modelValue="changeEnableMemoNotation"
+                />
+                <ToggleCell
+                  title="ルビ機能"
+                  description="ONの場合、テキストに {ルビ対象|よみかた} と書くことで、テキストの読み方を変えられます。"
+                  :modelValue="enableRubyNotation"
+                  @update:modelValue="changeEnableRubyNotation"
+                />
+                <BaseRowCard
+                  title="非表示にしたヒントを全て再表示"
+                  description="過去に非表示にしたヒントを全て再表示できます。"
+                >
+                  <BaseButton
+                    label="再表示する"
+                    :disabled="isDefaultConfirmedTips"
+                    @click="
+                      () => {
+                        store.actions.RESET_CONFIRMED_TIPS();
+                        hasResetConfirmedTips = true;
+                      }
+                    "
+                  />
+                </BaseRowCard>
+              </div>
+              <!-- Saving Card -->
+              <div class="setting-card">
+                <h5 class="headline">保存</h5>
+                <ToggleCell
+                  title="書き出し先を固定"
+                  description="ONの場合、書き出す際のフォルダをあらかじめ指定できます。"
                   :modelValue="savingSetting.fixedExportEnabled"
                   @update:modelValue="
                     handleSavingSettingChange('fixedExportEnabled', $event)
                   "
                 >
-                </QToggle>
-              </QCardActions>
-
-              <FileNamePatternDialog
-                v-model:open-dialog="showsFilePatternEditDialog"
-              />
-
-              <QCardActions class="q-px-md bg-surface">
-                <div>書き出しファイル名パターン</div>
-                <div
-                  aria-label="書き出す際のファイル名のパターンをカスタマイズできます。"
-                >
-                  <QIcon name="help_outline" size="sm" class="help-hover-icon">
-                    <QTooltip
-                      :delay="500"
-                      anchor="center right"
-                      self="center left"
-                      transitionShow="jump-right"
-                      transitionHide="jump-left"
-                    >
-                      書き出す際のファイル名のパターンをカスタマイズできます。
-                    </QTooltip>
-                  </QIcon>
-                </div>
-                <QSpace />
-                <div class="q-px-sm text-ellipsis">
-                  {{ savingSetting.fileNamePattern }}
-                </div>
-                <QBtn
-                  label="編集する"
-                  unelevated
-                  color="background"
-                  textColor="display"
-                  class="text-no-wrap q-mr-sm"
-                  @click="showsFilePatternEditDialog = true"
-                />
-              </QCardActions>
-
-              <ToggleCell
-                title="上書き防止"
-                description="ONの場合、書き出す際に同名ファイルが既にあったとき、ファイル名に連番を付けて別名で保存されます。"
-                :modelValue="savingSetting.avoidOverwrite"
-                @update:modelValue="
-                  handleSavingSettingChange('avoidOverwrite', $event)
-                "
-              />
-              <ButtonToggleCell
-                title="文字コード"
-                description="テキストファイルを書き出す際の文字コードを選べます。"
-                :modelValue="savingSetting.fileEncoding"
-                :options="[
-                  { label: 'UTF-8', value: 'UTF-8' },
-                  { label: 'Shift_JIS', value: 'Shift_JIS' },
-                ]"
-                @update:modelValue="
-                  handleSavingSettingChange('fileEncoding', $event)
-                "
-              />
-              <ToggleCell
-                title="txtファイルを書き出し"
-                description="ONの場合、音声書き出しの際にテキストがtxtファイルとして書き出されます。"
-                :modelValue="savingSetting.exportText"
-                @update:modelValue="
-                  handleSavingSettingChange('exportText', $event)
-                "
-              />
-              <ToggleCell
-                title="labファイルを書き出し"
-                description="ONの場合、音声書き出しの際にリップシンク用のlabファイルが書き出されます。"
-                :modelValue="savingSetting.exportLab"
-                @update:modelValue="
-                  handleSavingSettingChange('exportLab', $event)
-                "
-              />
-            </QCard>
-            <!-- Theme Card -->
-            <QCard flat class="setting-card">
-              <QCardActions>
-                <h5 class="text-h5">外観</h5>
-              </QCardActions>
-              <ButtonToggleCell
-                v-model="currentThemeNameComputed"
-                title="テーマ"
-                description="エディタの色を選べます。"
-                :options="availableThemeNameComputed"
-              />
-              <ButtonToggleCell
-                title="フォント"
-                description="エディタのフォントを選べます。"
-                :modelValue="editorFont"
-                :options="[
-                  { label: 'デフォルト', value: 'default' },
-                  { label: 'OS標準', value: 'os' },
-                ]"
-                @update:modelValue="changeEditorFont($event as EditorFontType)"
-              />
-              <ToggleCell
-                title="行番号の表示"
-                description="ONの場合、テキスト欄の左側に行番号が表示されます。"
-                :modelValue="showTextLineNumber"
-                @update:modelValue="changeShowTextLineNumber"
-              />
-              <ToggleCell
-                title="テキスト追加ボタンの表示"
-                description="OFFの場合、右下にテキスト追加ボタンが表示されません。（テキスト欄は Shift + Enter で追加できます）"
-                :modelValue="showAddAudioItemButton"
-                @update:modelValue="changeShowAddAudioItemButton"
-              />
-            </QCard>
-
-            <!-- Advanced Card -->
-            <QCard flat class="setting-card">
-              <QCardActions>
-                <h5 class="text-h5">高度な設定</h5>
-              </QCardActions>
-              <ToggleCell
-                title="マルチエンジン機能"
-                description="ONの場合、複数のVOICEVOX準拠エンジンを利用可能にします。"
-                :modelValue="enableMultiEngine"
-                @update:modelValue="setEnableMultiEngine"
-              />
-              <ToggleCell
-                title="音声をステレオ化"
-                description="ONの場合、音声データがモノラルからステレオに変換されてから再生・保存が行われます。"
-                :modelValue="savingSetting.outputStereo"
-                @update:modelValue="
-                  handleSavingSettingChange('outputStereo', $event)
-                "
-              />
-              <QCardActions
-                class="q-px-md bg-surface"
-                :class="{ disabled: !canSetAudioOutputDevice }"
-              >
-                <div>再生デバイス</div>
-                <div aria-label="音声の再生デバイスを変更できます。">
-                  <QIcon name="help_outline" size="sm" class="help-hover-icon">
-                    <QTooltip
-                      :delay="500"
-                      anchor="center right"
-                      self="center left"
-                      transitionShow="jump-right"
-                      transitionHide="jump-left"
-                    >
-                      音声の再生デバイスを変更できます。
-                      <template v-if="!canSetAudioOutputDevice">
-                        この機能はお使いの環境でサポートされていないため、使用できません。
-                      </template>
-                    </QTooltip>
-                  </QIcon>
-                </div>
-                <QSpace />
-                <QSelect
-                  v-model="currentAudioOutputDeviceComputed"
-                  :disable="!canSetAudioOutputDevice"
-                  dense
-                  name="audioOutputDevice"
-                  :options="availableAudioOutputDevices"
-                  class="col-7"
-                >
-                </QSelect>
-              </QCardActions>
-              <QSlideTransition>
-                <!-- q-slide-transitionはheightだけをアニメーションするのでdivで囲う -->
-                <div v-show="experimentalSetting.enableMultiTrack">
-                  <BaseCell
-                    title="ソング：元に戻すトラック操作"
-                    description="「元に戻す」機能の対象とするトラック操作を指定します。"
+                </ToggleCell>
+                <QSlideTransition>
+                  <!-- q-slide-transitionはheightだけをアニメーションするのでdivで囲う -->
+                  <div
+                    v-show="savingSetting.fixedExportEnabled"
+                    class="transition-container"
                   >
-                    <QOptionGroup
-                      v-model="undoableTrackOperations"
-                      type="checkbox"
-                      :options="undoableTrackOperationsLabels"
-                      inline
-                    />
-                  </BaseCell>
-                </div>
-              </QSlideTransition>
-            </QCard>
+                    <BaseRowCard title="書き出し先のフォルダ">
+                      {{ savingSetting.fixedExportDir }}
+                      <BaseButton
+                        icon="folder_open"
+                        label="フォルダ選択"
+                        @click="selectFixedExportDir()"
+                      >
+                      </BaseButton>
+                    </BaseRowCard>
+                  </div>
+                </QSlideTransition>
 
-            <!-- Experimental Card -->
-            <QCard flat class="setting-card">
-              <QCardActions>
-                <div class="text-h5">実験的機能</div>
-              </QCardActions>
-              <!-- 今後実験的機能を追加する場合はここに追加 -->
-              <ToggleCell
-                title="疑問文を自動調整"
-                description="ONの場合、疑問文の語尾の音高が自動的に上げられます。"
-                :modelValue="experimentalSetting.enableInterrogativeUpspeak"
-                @update:modelValue="
-                  changeExperimentalSetting(
-                    'enableInterrogativeUpspeak',
-                    $event,
-                  )
-                "
-              />
-              <ToggleCell
-                title="モーフィング機能"
-                description="ONの場合、モーフィング機能を有効にします。2つの音声混ぜられるようになります。"
-                :modelValue="experimentalSetting.enableMorphing"
-                @update:modelValue="
-                  changeExperimentalSetting('enableMorphing', $event)
-                "
-              />
-              <ToggleCell
-                title="複数選択"
-                description="ONの場合、複数のテキスト欄を選択できるようにします。"
-                :modelValue="experimentalSetting.enableMultiSelect"
-                @update:modelValue="
-                  changeExperimentalSetting('enableMultiSelect', $event)
-                "
-              />
-              <ToggleCell
-                v-if="!isProduction"
-                title="[開発時のみ機能] 調整結果の保持"
-                description="ONの場合、テキスト変更時、同じ読みのアクセント区間内の調整結果を保持します。"
-                :modelValue="experimentalSetting.shouldKeepTuningOnTextChange"
-                @update:modelValue="
-                  changeExperimentalSetting(
-                    'shouldKeepTuningOnTextChange',
-                    $event,
-                  )
-                "
-              />
-              <ToggleCell
-                title="ソング：マルチトラック機能"
-                description="ONの場合、１つのプロジェクト内に複数のトラックを作成できるようにします。"
-                :modelValue="experimentalSetting.enableMultiTrack"
-                :disable="!canToggleMultiTrack"
-                @update:modelValue="setMultiTrack($event)"
-              >
-                <QTooltip v-if="!canToggleMultiTrack" :delay="500">
-                  現在のプロジェクトに複数のトラックが存在するため、無効化できません。
-                </QTooltip>
-              </ToggleCell>
-            </QCard>
-            <QCard flat class="setting-card">
-              <QCardActions>
-                <h5 class="text-h5">データ収集</h5>
-              </QCardActions>
-              <ToggleCell
-                title="ソフトウェア利用状況のデータ収集を許可"
-                description="ONの場合、各UIの利用率などのデータが送信され、VOICEVOXの改善に役立てられます。テキストデータや音声データは送信されません。"
-                :modelValue="acceptRetrieveTelemetryComputed"
-                @update:modelValue="acceptRetrieveTelemetryComputed = $event"
-              />
-            </QCard>
+                <FileNameTemplateDialog
+                  v-model:open-dialog="showAudioFilePatternEditDialog"
+                  :savedTemplate="audioFileNamePattern"
+                  :defaultTemplate="DEFAULT_AUDIO_FILE_NAME_TEMPLATE"
+                  :availableTags="[
+                    'index',
+                    'characterName',
+                    'styleName',
+                    'text',
+                    'date',
+                    'projectName',
+                  ]"
+                  :fileNameBuilder="buildAudioFileNameFromRawData"
+                  extension=".wav"
+                  @update:template="
+                    handleSavingSettingChange('fileNamePattern', $event)
+                  "
+                />
+                <FileNameTemplateDialog
+                  v-model:open-dialog="showSongTrackAudioFilePatternEditDialog"
+                  :savedTemplate="songTrackFileNamePattern"
+                  :defaultTemplate="DEFAULT_SONG_AUDIO_FILE_NAME_TEMPLATE"
+                  :availableTags="[
+                    'index',
+                    'characterName',
+                    'styleName',
+                    'trackName',
+                    'date',
+                    'projectName',
+                  ]"
+                  :fileNameBuilder="buildSongTrackAudioFileNameFromRawData"
+                  extension=".wav"
+                  @update:template="
+                    handleSavingSettingChange(
+                      'songTrackFileNamePattern',
+                      $event,
+                    )
+                  "
+                />
+
+                <EditButtonCell
+                  title="トーク：書き出しファイル名パターン"
+                  description="書き出す際のファイル名のパターンをカスタマイズできます。"
+                  :currentValue="audioFileNamePatternWithExt"
+                  @buttonClick="showAudioFilePatternEditDialog = true"
+                />
+
+                <ToggleCell
+                  title="上書き防止"
+                  description="ONの場合、書き出す際に同名ファイルが既にあったとき、ファイル名に連番を付けて別名で保存されます。"
+                  :modelValue="savingSetting.avoidOverwrite"
+                  @update:modelValue="
+                    handleSavingSettingChange('avoidOverwrite', $event)
+                  "
+                />
+                <ButtonToggleCell
+                  title="文字コード"
+                  description="テキストファイルを書き出す際の文字コードを選べます。"
+                  :modelValue="savingSetting.fileEncoding"
+                  :options="[
+                    { label: 'UTF-8', value: 'UTF-8' },
+                    { label: 'Shift_JIS', value: 'Shift_JIS' },
+                  ]"
+                  @update:modelValue="
+                    handleSavingSettingChange('fileEncoding', $event as string)
+                  "
+                />
+                <ToggleCell
+                  title="txtファイルを書き出し"
+                  description="ONの場合、音声書き出しの際にテキストがtxtファイルとして書き出されます。"
+                  :modelValue="savingSetting.exportText"
+                  @update:modelValue="
+                    handleSavingSettingChange('exportText', $event)
+                  "
+                />
+                <ToggleCell
+                  title="labファイルを書き出し"
+                  description="ONの場合、音声書き出しの際にリップシンク用のlabファイルが書き出されます。"
+                  :modelValue="savingSetting.exportLab"
+                  @update:modelValue="
+                    handleSavingSettingChange('exportLab', $event)
+                  "
+                />
+
+                <EditButtonCell
+                  title="ソング：トラックファイル名パターン"
+                  description="書き出す際のファイル名のパターンをカスタマイズできます。"
+                  :currentValue="songTrackFileNamePatternWithExt"
+                  @buttonClick="showSongTrackAudioFilePatternEditDialog = true"
+                />
+              </div>
+              <!-- Theme Card -->
+              <div class="setting-card">
+                <h5 class="headline">外観</h5>
+                <ButtonToggleCell
+                  v-model="currentThemeNameComputed"
+                  title="テーマ"
+                  description="エディタの色を選べます。"
+                  :options="availableThemeNameComputed"
+                />
+                <ButtonToggleCell
+                  title="フォント"
+                  description="エディタのフォントを選べます。"
+                  :modelValue="editorFont"
+                  :options="[
+                    { label: 'デフォルト', value: 'default' },
+                    { label: 'OS標準', value: 'os' },
+                  ]"
+                  @update:modelValue="
+                    changeEditorFont($event as EditorFontType)
+                  "
+                />
+                <ToggleCell
+                  title="行番号の表示"
+                  description="ONの場合、テキスト欄の左側に行番号が表示されます。"
+                  :modelValue="showTextLineNumber"
+                  @update:modelValue="changeShowTextLineNumber"
+                />
+                <ToggleCell
+                  title="テキスト追加ボタンの表示"
+                  description="OFFの場合、右下にテキスト追加ボタンが表示されません。（テキスト欄は Shift + Enter で追加できます）"
+                  :modelValue="showAddAudioItemButton"
+                  @update:modelValue="changeShowAddAudioItemButton"
+                />
+              </div>
+
+              <!-- Advanced Card -->
+              <div class="setting-card">
+                <h5 class="headline">高度な設定</h5>
+                <ToggleCell
+                  title="マルチエンジン機能"
+                  description="ONの場合、複数のVOICEVOX準拠エンジンを利用可能にします。"
+                  :modelValue="enableMultiEngine"
+                  @update:modelValue="setEnableMultiEngine"
+                />
+                <ToggleCell
+                  title="音声をステレオ化"
+                  description="ONの場合、音声データがモノラルからステレオに変換されてから再生・保存が行われます。"
+                  :modelValue="savingSetting.outputStereo"
+                  @update:modelValue="
+                    handleSavingSettingChange('outputStereo', $event)
+                  "
+                />
+                <BaseTooltip
+                  label="この機能はお使いの環境でサポートされていないため、使用できません。"
+                  :disabled="canSetAudioOutputDevice"
+                >
+                  <SelectCell
+                    v-model="currentAudioOutputDeviceComputed"
+                    title="再生デバイス"
+                    description="音声の再生デバイスを変更できます。"
+                    :disable="!canSetAudioOutputDevice"
+                    :options="
+                      availableAudioOutputDevices
+                        ? availableAudioOutputDevices.map((option) => {
+                            return { value: option.key, label: option.label };
+                          })
+                        : []
+                    "
+                  >
+                  </SelectCell>
+                </BaseTooltip>
+                <BaseRowCard
+                  title="ソング：元に戻すトラック操作"
+                  description="「元に戻す」機能の対象とするトラック操作を指定します。"
+                >
+                  <div class="checkbox-list">
+                    <BaseCheckbox
+                      v-for="(value, key) in undoableTrackOperations"
+                      :key
+                      :checked="value"
+                      :label="undoableTrackOperationsLabels[key]"
+                      @update:checked="
+                        (newValue) =>
+                          (undoableTrackOperations = {
+                            ...undoableTrackOperations,
+                            [key]: newValue,
+                          })
+                      "
+                    />
+                  </div>
+                </BaseRowCard>
+              </div>
+
+              <!-- Experimental Card -->
+              <div class="setting-card">
+                <h5 class="headline">実験的機能</h5>
+                <!-- 今後実験的機能を追加する場合はここに追加 -->
+                <ToggleCell
+                  title="疑問文を自動調整"
+                  description="ONの場合、疑問文の語尾の音高が自動的に上げられます。"
+                  :modelValue="experimentalSetting.enableInterrogativeUpspeak"
+                  @update:modelValue="
+                    changeExperimentalSetting(
+                      'enableInterrogativeUpspeak',
+                      $event,
+                    )
+                  "
+                />
+                <ToggleCell
+                  title="モーフィング機能"
+                  description="ONの場合、モーフィング機能を有効にします。2つの音声混ぜられるようになります。"
+                  :modelValue="experimentalSetting.enableMorphing"
+                  @update:modelValue="
+                    changeExperimentalSetting('enableMorphing', $event)
+                  "
+                />
+                <ToggleCell
+                  title="複数選択"
+                  description="ONの場合、複数のテキスト欄を選択できるようにします。"
+                  :modelValue="experimentalSetting.enableMultiSelect"
+                  @update:modelValue="
+                    changeExperimentalSetting('enableMultiSelect', $event)
+                  "
+                />
+                <ToggleCell
+                  v-if="!isProduction"
+                  title="[開発時のみ機能] 調整結果の保持"
+                  description="ONの場合、テキスト変更時、同じ読みのアクセント区間内の調整結果を保持します。"
+                  :modelValue="experimentalSetting.shouldKeepTuningOnTextChange"
+                  @update:modelValue="
+                    changeExperimentalSetting(
+                      'shouldKeepTuningOnTextChange',
+                      $event,
+                    )
+                  "
+                />
+              </div>
+              <div class="setting-card">
+                <h5 class="headline">データ収集</h5>
+                <ToggleCell
+                  title="ソフトウェア利用状況のデータ収集を許可"
+                  description="ONの場合、各UIの利用率などのデータが送信され、VOICEVOXの改善に役立てられます。テキストデータや音声データは送信されません。"
+                  :modelValue="acceptRetrieveTelemetryComputed"
+                  @update:modelValue="acceptRetrieveTelemetryComputed = $event"
+                />
+              </div>
+            </BaseScrollArea>
           </div>
         </QPage>
       </QPageContainer>
@@ -550,13 +464,26 @@
 
 <script setup lang="ts">
 import { computed, ref, watchEffect } from "vue";
-import FileNamePatternDialog from "./FileNamePatternDialog.vue";
+import FileNameTemplateDialog from "./FileNameTemplateDialog.vue";
 import ToggleCell from "./ToggleCell.vue";
 import ButtonToggleCell from "./ButtonToggleCell.vue";
-import BaseCell from "./BaseCell.vue";
+import EditButtonCell from "./EditButtonCell.vue";
+import SelectCell from "./SelectCell.vue";
+import BaseRowCard from "@/components/Base/BaseRowCard.vue";
+import BaseButton from "@/components/Base/BaseButton.vue";
+import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
+import BaseSelect from "@/components/Base/BaseSelect.vue";
+import BaseSelectItem from "@/components/Base/BaseSelectItem.vue";
+import BaseCheckbox from "@/components/Base/BaseCheckbox.vue";
+import BaseTooltip from "@/components/Base/BaseTooltip.vue";
 import { useStore } from "@/store";
 import {
-  isProduction,
+  DEFAULT_AUDIO_FILE_NAME_TEMPLATE,
+  DEFAULT_SONG_AUDIO_FILE_NAME_TEMPLATE,
+  buildAudioFileNameFromRawData,
+  buildSongTrackAudioFileNameFromRawData,
+} from "@/store/utility";
+import {
   SavingSetting,
   EngineSettingType,
   ExperimentalSettingType,
@@ -566,19 +493,10 @@ import {
   EditorFontType,
 } from "@/type/preload";
 import { createLogger } from "@/domain/frontend/log";
+import { useRootMiscSetting } from "@/composables/useRootMiscSetting";
+import { isProduction } from "@/helpers/platform";
 
 type SamplingRateOption = EngineSettingType["outputSamplingRate"];
-
-// ルート直下にある雑多な設定値を簡単に扱えるようにする
-const useRootMiscSetting = <T extends keyof RootMiscSettingType>(key: T) => {
-  const state = computed(() => store.state[key]);
-  const setter = (value: RootMiscSettingType[T]) => {
-    // Vuexの型処理でUnionが解かれてしまうのを迂回している
-    // FIXME: このワークアラウンドをなくす
-    void store.dispatch("SET_ROOT_MISC_SETTING", { key: key as never, value });
-  };
-  return [state, setter] as const;
-};
 
 const props = defineProps<{
   modelValue: boolean;
@@ -609,7 +527,7 @@ const inheritAudioInfoMode = computed(() => store.state.inheritAudioInfo);
 const activePointScrollMode = computed({
   get: () => store.state.activePointScrollMode,
   set: (activePointScrollMode: ActivePointScrollMode) => {
-    void store.dispatch("SET_ACTIVE_POINT_SCROLL_MODE", {
+    void store.actions.SET_ACTIVE_POINT_SCROLL_MODE({
       activePointScrollMode,
     });
   },
@@ -625,72 +543,75 @@ const isDefaultConfirmedTips = computed(() => {
 });
 
 // ソング：元に戻すトラック操作
-type UndoableTrackOperation =
-  keyof RootMiscSettingType["undoableTrackOperations"];
-const undoableTrackOperationsLabels = [
-  { value: "soloAndMute", label: "ミュート・ソロ" },
-  { value: "panAndGain", label: "パン・音量" },
-];
+const undoableTrackOperationsLabels = {
+  soloAndMute: "ミュート・ソロ",
+  panAndGain: "パン・音量",
+};
 const undoableTrackOperations = computed({
-  get: () =>
-    Object.keys(store.state.undoableTrackOperations).filter(
-      (key) =>
-        store.state.undoableTrackOperations[key as UndoableTrackOperation],
-    ) as UndoableTrackOperation[],
-  set: (undoableTrackOperations: UndoableTrackOperation[]) => {
-    void store.dispatch("SET_ROOT_MISC_SETTING", {
+  get: () => store.state.undoableTrackOperations,
+  set: (undoableTrackOperations) => {
+    void store.actions.SET_ROOT_MISC_SETTING({
       key: "undoableTrackOperations",
-      value: {
-        soloAndMute: undoableTrackOperations.includes("soloAndMute"),
-        panAndGain: undoableTrackOperations.includes("panAndGain"),
-      },
+      value: undoableTrackOperations,
     });
   },
 });
 
 // 外観
 const currentThemeNameComputed = computed({
-  get: () => store.state.themeSetting.currentTheme,
+  get: () => store.state.currentTheme,
   set: (currentTheme: string) => {
-    void store.dispatch("SET_THEME_SETTING", { currentTheme: currentTheme });
+    void store.actions.SET_CURRENT_THEME_SETTING({ currentTheme });
   },
 });
 
 const availableThemeNameComputed = computed(() => {
-  return [...store.state.themeSetting.availableThemes]
+  return [...store.state.availableThemes]
     .sort((a, b) => a.order - b.order)
     .map((theme) => {
       return { label: theme.displayName, value: theme.name };
     });
 });
 
-const [editorFont, changeEditorFont] = useRootMiscSetting("editorFont");
+const [editorFont, changeEditorFont] = useRootMiscSetting(store, "editorFont");
 
-const [enableMultiEngine, setEnableMultiEngine] =
-  useRootMiscSetting("enableMultiEngine");
+const [enableMultiEngine, setEnableMultiEngine] = useRootMiscSetting(
+  store,
+  "enableMultiEngine",
+);
 
-const [showTextLineNumber, changeShowTextLineNumber] =
-  useRootMiscSetting("showTextLineNumber");
+const [showTextLineNumber, changeShowTextLineNumber] = useRootMiscSetting(
+  store,
+  "showTextLineNumber",
+);
 
 const [showAddAudioItemButton, changeShowAddAudioItemButton] =
-  useRootMiscSetting("showAddAudioItemButton");
+  useRootMiscSetting(store, "showAddAudioItemButton");
 
-const [enableMemoNotation, changeEnableMemoNotation] =
-  useRootMiscSetting("enableMemoNotation");
+const [enableMemoNotation, changeEnableMemoNotation] = useRootMiscSetting(
+  store,
+  "enableMemoNotation",
+);
 
-const [enableRubyNotation, changeEnableRubyNotation] =
-  useRootMiscSetting("enableRubyNotation");
+const [enableRubyNotation, changeEnableRubyNotation] = useRootMiscSetting(
+  store,
+  "enableRubyNotation",
+);
+
+const [enablePreset, _changeEnablePreset] = useRootMiscSetting(
+  store,
+  "enablePreset",
+);
+
+const [
+  shouldApplyDefaultPresetOnVoiceChanged,
+  changeShouldApplyDefaultPresetOnVoiceChanged,
+] = useRootMiscSetting(store, "shouldApplyDefaultPresetOnVoiceChanged");
 
 const canSetAudioOutputDevice = computed(() => {
   return !!HTMLAudioElement.prototype.setSinkId;
 });
-const currentAudioOutputDeviceComputed = computed<
-  | {
-      key: string;
-      label: string;
-    }
-  | undefined
->({
+const currentAudioOutputDeviceComputed = computed<string | undefined>({
   get: () => {
     // 再生デバイスが見つからなかったらデフォルト値に戻す
     // FIXME: watchなどにしてgetter内で操作しないようにする
@@ -698,7 +619,7 @@ const currentAudioOutputDeviceComputed = computed<
       (device) => device.key === store.state.savingSetting.audioOutputDevice,
     );
     if (device) {
-      return device;
+      return device.key;
     } else if (store.state.savingSetting.audioOutputDevice !== "default") {
       handleSavingSettingChange("audioOutputDevice", "default");
     }
@@ -706,7 +627,7 @@ const currentAudioOutputDeviceComputed = computed<
   },
   set: (device) => {
     if (device) {
-      handleSavingSettingChange("audioOutputDevice", device.key);
+      handleSavingSettingChange("audioOutputDevice", device);
     }
   },
 });
@@ -733,7 +654,7 @@ if (navigator.mediaDevices) {
 const acceptRetrieveTelemetryComputed = computed({
   get: () => store.state.acceptRetrieveTelemetry == "Accepted",
   set: (acceptRetrieveTelemetry: boolean) => {
-    void store.dispatch("SET_ACCEPT_RETRIEVE_TELEMETRY", {
+    void store.actions.SET_ACCEPT_RETRIEVE_TELEMETRY({
       acceptRetrieveTelemetry: acceptRetrieveTelemetry ? "Accepted" : "Refused",
     });
 
@@ -741,7 +662,7 @@ const acceptRetrieveTelemetryComputed = computed({
       return;
     }
 
-    void store.dispatch("SHOW_ALERT_DIALOG", {
+    void store.actions.SHOW_ALERT_DIALOG({
       title: "ソフトウェア利用状況のデータ収集の無効化",
       message:
         "ソフトウェア利用状況のデータ収集を完全に無効にするには、VOICEVOXを再起動する必要があります",
@@ -751,37 +672,31 @@ const acceptRetrieveTelemetryComputed = computed({
 });
 
 const changeUseGpu = async (useGpu: boolean) => {
-  void store.dispatch("SHOW_LOADING_SCREEN", {
+  void store.actions.SHOW_LOADING_SCREEN({
     message: "起動モードを変更中です",
   });
 
-  await store.dispatch("CHANGE_USE_GPU", {
+  await store.actions.CHANGE_USE_GPU({
     useGpu,
     engineId: selectedEngineId.value,
   });
 
-  void store.dispatch("HIDE_ALL_LOADING_SCREEN");
+  void store.actions.HIDE_ALL_LOADING_SCREEN();
 };
 
 const changeinheritAudioInfo = async (inheritAudioInfo: boolean) => {
   if (store.state.inheritAudioInfo === inheritAudioInfo) return;
-  void store.dispatch("SET_INHERIT_AUDIOINFO", { inheritAudioInfo });
+  void store.actions.SET_INHERIT_AUDIOINFO({ inheritAudioInfo });
 };
 
 const changeEnablePreset = (value: boolean) => {
   if (value) {
     // プリセット機能をONにしたときは「デフォルトプリセットを自動で適用」もONにする
-    void changeExperimentalSetting("enablePreset", true);
-    void changeExperimentalSetting(
-      "shouldApplyDefaultPresetOnVoiceChanged",
-      true,
-    );
+    _changeEnablePreset(true);
+    changeShouldApplyDefaultPresetOnVoiceChanged(true);
   } else {
-    void changeExperimentalSetting("enablePreset", false);
-    void changeExperimentalSetting(
-      "shouldApplyDefaultPresetOnVoiceChanged",
-      false,
-    );
+    _changeEnablePreset(false);
+    changeShouldApplyDefaultPresetOnVoiceChanged(false);
   }
 };
 
@@ -789,7 +704,7 @@ const changeExperimentalSetting = async (
   key: keyof ExperimentalSettingType,
   data: boolean,
 ) => {
-  void store.dispatch("SET_EXPERIMENTAL_SETTING", {
+  void store.actions.SET_EXPERIMENTAL_SETTING({
     experimentalSetting: { ...experimentalSetting.value, [key]: data },
   });
 };
@@ -797,9 +712,22 @@ const changeExperimentalSetting = async (
 const savingSetting = computed(() => store.state.savingSetting);
 
 const engineUseGpuOptions = [
-  { label: "CPU", value: false },
-  { label: "GPU", value: true },
+  { label: "CPU", value: "CPU" },
+  { label: "GPU", value: "GPU" },
 ];
+
+const audioFileNamePattern = computed(
+  () => store.state.savingSetting.fileNamePattern,
+);
+const songTrackFileNamePattern = computed(
+  () => store.state.savingSetting.songTrackFileNamePattern,
+);
+const audioFileNamePatternWithExt = computed(() =>
+  audioFileNamePattern.value ? audioFileNamePattern.value + ".wav" : "",
+);
+const songTrackFileNamePatternWithExt = computed(() =>
+  songTrackFileNamePattern.value ? songTrackFileNamePattern.value + ".wav" : "",
+);
 
 const gpuSwitchEnabled = (engineId: EngineId) => {
   // CPU版でもGPUモードからCPUモードに変更できるようにする
@@ -826,7 +754,7 @@ const handleSavingSettingChange = (
   key: keyof SavingSetting,
   data: string | boolean | number,
 ) => {
-  void store.dispatch("SET_SAVING_SETTING", {
+  void store.actions.SET_SAVING_SETTING({
     data: { ...savingSetting.value, [key]: data },
   });
 };
@@ -838,20 +766,18 @@ const outputSamplingRate = computed({
   },
   set: async (outputSamplingRate: SamplingRateOption) => {
     if (outputSamplingRate !== "engineDefault") {
-      const result = await store.dispatch("SHOW_CONFIRM_DIALOG", {
-        title: "出力サンプリングレートを変更します",
+      const result = await store.actions.SHOW_CONFIRM_DIALOG({
+        title: "出力サンプリングレートを変更しますか？",
         message:
-          "出力サンプリングレートを変更しても、音質は変化しません。また、音声の生成処理に若干時間がかかる場合があります。<br />変更しますか？",
-        html: true,
+          "出力サンプリングレートを変更しても、音質は変化しません。また、音声の生成処理に若干時間がかかる場合があります。",
         actionName: "変更する",
-        cancel: "変更しない",
       });
       if (result !== "OK") {
         return;
       }
     }
 
-    void store.dispatch("SET_ENGINE_SETTING", {
+    void store.actions.SET_ENGINE_SETTING({
       engineId: selectedEngineId.value,
       engineSetting: {
         ...store.state.engineSettings[selectedEngineId.value],
@@ -890,10 +816,13 @@ watchEffect(async () => {
   }
 });
 
-const [splitTextWhenPaste, changeSplitTextWhenPaste] =
-  useRootMiscSetting("splitTextWhenPaste");
+const [splitTextWhenPaste, changeSplitTextWhenPaste] = useRootMiscSetting(
+  store,
+  "splitTextWhenPaste",
+);
 
-const showsFilePatternEditDialog = ref(false);
+const showAudioFilePatternEditDialog = ref(false);
+const showSongTrackAudioFilePatternEditDialog = ref(false);
 
 const selectedEngineIdRaw = ref<EngineId | undefined>(undefined);
 const selectedEngineId = computed({
@@ -907,59 +836,39 @@ const selectedEngineId = computed({
 const renderEngineNameLabel = (engineId: EngineId) => {
   return engineInfos.value[engineId].name;
 };
-
-// トラックが複数あるときはマルチトラック機能を無効化できないようにする
-const canToggleMultiTrack = computed(() => {
-  if (!experimentalSetting.value.enableMultiTrack) {
-    return true;
-  }
-
-  return store.state.tracks.size <= 1;
-});
-
-const setMultiTrack = (enableMultiTrack: boolean) => {
-  void changeExperimentalSetting("enableMultiTrack", enableMultiTrack);
-  // 無効化するときはUndo/Redoをクリアする
-  if (!enableMultiTrack) {
-    void store.dispatch("CLEAR_UNDO_HISTORY");
-  }
-};
 </script>
 
 <style scoped lang="scss">
 @use "@/styles/visually-hidden" as visually-hidden;
 @use "@/styles/colors" as colors;
+@use "@/styles/v2/colors" as colors-v2;
+@use "@/styles/v2/variables" as vars;
+@use "@/styles/v2/mixin" as mixin;
 
-.text-h5 {
-  margin: 0;
+.container {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 100%;
+  background-color: colors-v2.$background;
 }
 
-.setting-dialog {
-  .q-field__control {
-    color: colors.$primary;
-  }
+.headline {
+  @include mixin.headline-2;
 }
 
-.help-hover-icon {
-  margin-left: 6px;
-  color: colors.$display;
-  opacity: 0.5;
-}
-
-.hotkey-table {
-  width: 100%;
+// NOTE: なぜか:globalしないと効かない
+:global(.setting-dialog) {
+  z-index: vars.$z-index-fullscreen-dialog !important;
 }
 
 .setting-card {
-  @extend .hotkey-table;
-  min-width: 475px;
-  background: colors.$background;
-}
-
-.text-ellipsis {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  margin: auto;
+  max-width: 960px;
+  padding: vars.$padding-2;
+  display: flex;
+  flex-direction: column;
+  gap: vars.$gap-1;
 }
 
 .setting-dialog .q-layout-container :deep(.absolute-full) {
@@ -972,14 +881,20 @@ const setMultiTrack = (enableMultiTrack: boolean) => {
   }
 }
 
-.root {
-  .scroller {
-    overflow-y: scroll;
-    > div {
-      position: absolute;
-      left: 0;
-      right: 0;
-    }
-  }
+.transition-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: vars.$gap-1;
+}
+
+.checkbox-list {
+  display: flex;
+  gap: vars.$gap-2;
 }
 </style>

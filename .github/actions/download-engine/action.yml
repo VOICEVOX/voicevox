@@ -66,7 +66,7 @@ runs:
         cat $TEMPDIR/target.json | jq -er '[.assets[] | select(.name | contains("'$TARGET'") and endswith(".7z.txt"))][0]' > $TEMPDIR/assets_txt.json
         LIST_URL=$(cat $TEMPDIR/assets_txt.json | jq -er '.browser_download_url')
         echo "7z.txt url: $LIST_URL"
-        echo $LIST_URL | xargs curl -sSL > $TEMPDIR/download_name.txt
+        echo $LIST_URL | xargs curl -sSL --retry 3 --retry-delay 5 > $TEMPDIR/download_name.txt
         echo "Files to download:"
         cat $TEMPDIR/download_name.txt | sed -e 's|^|- |'
 
@@ -74,7 +74,7 @@ runs:
         for i in $(cat $TEMPDIR/download_name.txt); do
           URL=$(cat $TEMPDIR/target.json | jq -er "[.assets[] | select(.name == \"$i\")][0].browser_download_url")
           echo "Download url: $URL, dest: $TEMPDIR/$i"
-          curl -sSL $URL -o $TEMPDIR/$i &
+          curl -sSL $URL --retry 3 --retry-delay 5 -o $TEMPDIR/$i &
         done
         for job in `jobs -p`; do
           wait $job
@@ -84,6 +84,13 @@ runs:
         7z x -y -o$TEMPDIR/tmp-extract $TEMPDIR/$(head -1 $TEMPDIR/download_name.txt)
         mkdir -p $DEST
         mv $TEMPDIR/tmp-extract/$TARGET/* $DEST
+
+        # 実行ファイルのパーミッションを変更
+        if [ "${{ runner.os }}" = "Windows" ]; then
+          chmod +x $DEST/run.exe
+        else
+          chmod +x $DEST/run
+        fi
 
         echo "::group::ll $DEST"
         ls -al $DEST

@@ -1,8 +1,8 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * VOICEVOX Engine
- * VOICEVOX の音声合成エンジンです。
+ * DUMMY Engine
+ * DUMMY の音声合成エンジンです。
  *
  * The version of the OpenAPI document: latest
  * 
@@ -27,37 +27,37 @@ import {
  */
 export interface FrameAudioQuery {
     /**
-     * 
+     * フレームごとの基本周波数
      * @type {Array<number>}
      * @memberof FrameAudioQuery
      */
     f0: Array<number>;
     /**
-     * 
+     * フレームごとの音量
      * @type {Array<number>}
      * @memberof FrameAudioQuery
      */
     volume: Array<number>;
     /**
-     * 
+     * 音素のリスト
      * @type {Array<FramePhoneme>}
      * @memberof FrameAudioQuery
      */
     phonemes: Array<FramePhoneme>;
     /**
-     * 
+     * 全体の音量
      * @type {number}
      * @memberof FrameAudioQuery
      */
     volumeScale: number;
     /**
-     * 
+     * 音声データの出力サンプリングレート
      * @type {number}
      * @memberof FrameAudioQuery
      */
     outputSamplingRate: number;
     /**
-     * 
+     * 音声データをステレオ出力するか否か
      * @type {boolean}
      * @memberof FrameAudioQuery
      */

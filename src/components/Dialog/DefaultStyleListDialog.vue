@@ -191,8 +191,7 @@ watch([() => props.modelValue], async ([newValue]) => {
 const isHoverableItem = ref(true);
 
 const closeDialog = () => {
-  void store.dispatch(
-    "SET_DEFAULT_STYLE_IDS",
+  void store.actions.SET_DEFAULT_STYLE_IDS(
     Object.entries(selectedStyleIndexes.value).map(
       ([speakerUuidStr, styleIndex]) => {
         const speakerUuid = SpeakerId(speakerUuidStr);
@@ -276,7 +275,7 @@ const openStyleSelectDialog = (characterInfo: CharacterInfo) => {
         width: 100%;
         height: 100%;
         .style-icon {
-          $icon-size: $character-item-size / 2;
+          $icon-size: calc(vars.$character-item-size / 2);
           width: $icon-size;
           height: $icon-size;
           border-radius: 5px;

@@ -1,78 +1,82 @@
 /// <reference types="vitest" />
 import path from "path";
 import { rm } from "fs/promises";
-import { fileURLToPath } from "url";
 
 import electron from "vite-plugin-electron";
 import tsconfigPaths from "vite-tsconfig-paths";
 import vue from "@vitejs/plugin-vue";
 import checker from "vite-plugin-checker";
-import { nodePolyfills } from "vite-plugin-node-polyfills";
 import { BuildOptions, defineConfig, loadEnv, Plugin } from "vite";
 import { quasar } from "@quasar/vite-plugin";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { z } from "zod";
 
 const isElectron = process.env.VITE_TARGET === "electron";
 const isBrowser = process.env.VITE_TARGET === "browser";
 
 export default defineConfig((options) => {
+  const mode = z
+    .enum(["development", "test", "production"])
+    .parse(options.mode);
+
   const packageName = process.env.npm_package_name;
-  const env = loadEnv(options.mode, __dirname);
+  const env = loadEnv(mode, import.meta.dirname);
   if (!packageName?.startsWith(env.VITE_APP_NAME)) {
     throw new Error(
       `"package.json"の"name":"${packageName}"は"VITE_APP_NAME":"${env.VITE_APP_NAME}"から始まっている必要があります`,
     );
   }
-  const shouldEmitSourcemap = ["development", "test"].includes(options.mode);
+
+  // 型を曖昧にして下の[process.platform]のエラーを回避する
+  const sevenZipBinNames: Record<string, string> = {
+    win32: "7za.exe",
+    linux: "7zzs",
+    darwin: "7zz",
+  };
+  const sevenZipBinName = sevenZipBinNames[process.platform];
+  if (!sevenZipBinName) {
+    throw new Error(`Unsupported platform: ${process.platform}`);
+  }
   process.env.VITE_7Z_BIN_NAME =
-    (options.mode === "development"
-      ? path.join(__dirname, "build", "vendored", "7z") + path.sep
-      : "") +
-    {
-      win32: "7za.exe",
-      linux: "7zzs",
-      darwin: "7zz",
-    }[process.platform];
+    (mode !== "production"
+      ? path.join(import.meta.dirname, "vendored", "7z") + path.sep
+      : "") + sevenZipBinName;
   process.env.VITE_APP_VERSION = process.env.npm_package_version;
+
+  const shouldEmitSourcemap = ["development", "test"].includes(mode);
   const sourcemap: BuildOptions["sourcemap"] = shouldEmitSourcemap
     ? "inline"
     : false;
+
+  // ref: electronの起動をスキップしてデバッグ起動を軽くする
+  const skipLahnchElectron =
+    mode === "test" || process.env.SKIP_LAUNCH_ELECTRON === "1";
+
   return {
-    root: path.resolve(__dirname, "src"),
-    envDir: __dirname,
+    root: path.resolve(import.meta.dirname, "src"),
+    envDir: import.meta.dirname,
     build: {
-      outDir: path.resolve(__dirname, "dist"),
+      outDir: path.resolve(import.meta.dirname, "dist"),
       chunkSizeWarningLimit: 10000,
       sourcemap,
     },
-    publicDir: path.resolve(__dirname, "public"),
+    publicDir: path.resolve(import.meta.dirname, "public"),
     css: {
       preprocessorOptions: {
         scss: {
-          includePaths: [path.resolve(__dirname, "node_modules")],
+          api: "modern",
+          includePaths: [path.resolve(import.meta.dirname, "node_modules")],
         },
       },
     },
     resolve: {
       alias: {
-        "@": path.resolve(__dirname, "src/"),
+        "@": path.resolve(import.meta.dirname, "src/"),
       },
     },
-    test: {
-      include: ["../tests/unit/**/*.spec.ts"],
-      environment: "happy-dom",
-      globals: true,
-    },
-
     plugins: [
       vue(),
       quasar({ autoImportComponentCase: "pascal" }),
-      nodePolyfills({
-        include: ["path"],
-      }),
-      options.mode !== "test" &&
+      mode !== "test" &&
         checker({
           overlay: false,
           eslint: {
@@ -85,31 +89,34 @@ export default defineConfig((options) => {
         cleanDistPlugin(),
         electron([
           {
-            entry: "./src/backend/electron/main.ts",
+            entry: "./backend/electron/main.ts",
             // ref: https://github.com/electron-vite/vite-plugin-electron/pull/122
             onstart: ({ startup }) => {
-              if (options.mode !== "test") {
-                startup([".", "--no-sandbox"]);
+              console.log("main process build is complete.");
+              if (!skipLahnchElectron) {
+                void startup([".", "--no-sandbox"]);
               }
             },
             vite: {
-              plugins: [tsconfigPaths({ root: __dirname })],
+              plugins: [tsconfigPaths({ root: import.meta.dirname })],
               build: {
-                outDir: path.resolve(__dirname, "dist"),
+                outDir: path.resolve(import.meta.dirname, "dist"),
                 sourcemap,
               },
             },
           },
           {
             // ref: https://electron-vite.github.io/guide/preload-not-split.html
-            entry: "./src/backend/electron/preload.ts",
+            entry: "./backend/electron/preload.ts",
             onstart({ reload }) {
-              reload();
+              if (!skipLahnchElectron) {
+                reload();
+              }
             },
             vite: {
-              plugins: [tsconfigPaths({ root: __dirname })],
+              plugins: [tsconfigPaths({ root: import.meta.dirname })],
               build: {
-                outDir: path.resolve(__dirname, "dist"),
+                outDir: path.resolve(import.meta.dirname, "dist"),
                 sourcemap,
                 rollupOptions: {
                   output: { inlineDynamicImports: true },
@@ -129,7 +136,7 @@ const cleanDistPlugin = (): Plugin => {
     apply: "build",
     enforce: "pre",
     async buildStart() {
-      await rm(path.resolve(__dirname, "dist"), {
+      await rm(path.resolve(import.meta.dirname, "dist"), {
         recursive: true,
         force: true,
       });

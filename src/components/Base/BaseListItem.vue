@@ -12,7 +12,7 @@
 
 <script setup lang="ts">
 defineProps<{
-  selected: boolean;
+  selected?: boolean;
 }>();
 
 defineEmits<{
@@ -29,14 +29,13 @@ defineEmits<{
   color: colors.$display;
   cursor: pointer;
   position: relative;
-  height: vars.$size-listitem;
+  min-height: vars.$size-listitem;
   display: flex;
   align-items: center;
   background-color: colors.$clear;
   border: none;
-  padding: 0 vars.$padding-2;
+  padding: vars.$padding-1 vars.$padding-2;
   border-radius: vars.$radius-1;
-  transition: background-color vars.$transition-duration;
 
   &:not(.selected):hover {
     background-color: colors.$clear-hovered;

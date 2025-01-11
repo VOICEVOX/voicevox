@@ -8,53 +8,43 @@ export const ipcMessageReceiver: Plugin = {
     _,
     options: { store: Store<State, AllGetters, AllActions, AllMutations> },
   ) => {
-    window.backend.onReceivedIPCMsg(
-      "LOAD_PROJECT_FILE",
-      (_, { filePath, confirm } = {}) =>
-        options.store.dispatch("LOAD_PROJECT_FILE", { filePath, confirm }),
-    );
+    window.backend.onReceivedIPCMsg({
+      LOAD_PROJECT_FILE: (_, { filePath }) =>
+        void options.store.actions.LOAD_PROJECT_FILE({
+          type: "path",
+          filePath,
+        }),
 
-    window.backend.onReceivedIPCMsg("DETECT_MAXIMIZED", () =>
-      options.store.dispatch("DETECT_MAXIMIZED"),
-    );
+      DETECT_MAXIMIZED: () => options.store.actions.DETECT_MAXIMIZED(),
 
-    window.backend.onReceivedIPCMsg("DETECT_UNMAXIMIZED", () =>
-      options.store.dispatch("DETECT_UNMAXIMIZED"),
-    );
+      DETECT_UNMAXIMIZED: () => options.store.actions.DETECT_UNMAXIMIZED(),
 
-    window.backend.onReceivedIPCMsg(
-      "DETECTED_ENGINE_ERROR",
-      (_, { engineId }) =>
-        options.store.dispatch("DETECTED_ENGINE_ERROR", { engineId }),
-    );
+      DETECTED_ENGINE_ERROR: (_, { engineId }) =>
+        options.store.actions.DETECTED_ENGINE_ERROR({ engineId }),
 
-    window.backend.onReceivedIPCMsg("DETECT_PINNED", () => {
-      void options.store.dispatch("DETECT_PINNED");
-    });
+      DETECT_PINNED: () => {
+        void options.store.actions.DETECT_PINNED();
+      },
 
-    window.backend.onReceivedIPCMsg("DETECT_UNPINNED", () => {
-      void options.store.dispatch("DETECT_UNPINNED");
-    });
+      DETECT_UNPINNED: () => {
+        void options.store.actions.DETECT_UNPINNED();
+      },
 
-    window.backend.onReceivedIPCMsg("DETECT_ENTER_FULLSCREEN", () =>
-      options.store.dispatch("DETECT_ENTER_FULLSCREEN"),
-    );
+      DETECT_ENTER_FULLSCREEN: () =>
+        options.store.actions.DETECT_ENTER_FULLSCREEN(),
 
-    window.backend.onReceivedIPCMsg("DETECT_LEAVE_FULLSCREEN", () =>
-      options.store.dispatch("DETECT_LEAVE_FULLSCREEN"),
-    );
+      DETECT_LEAVE_FULLSCREEN: () =>
+        options.store.actions.DETECT_LEAVE_FULLSCREEN(),
 
-    window.backend.onReceivedIPCMsg("CHECK_EDITED_AND_NOT_SAVE", (_, obj) => {
-      void options.store.dispatch("CHECK_EDITED_AND_NOT_SAVE", obj);
-    });
+      CHECK_EDITED_AND_NOT_SAVE: (_, obj) => {
+        void options.store.actions.CHECK_EDITED_AND_NOT_SAVE(obj);
+      },
 
-    window.backend.onReceivedIPCMsg(
-      "DETECT_RESIZED",
-      debounce(
+      DETECT_RESIZED: debounce(
         (_, { width, height }: { width: number; height: number }) =>
           window.dataLayer?.push({ event: "windowResize", width, height }),
         300,
       ),
-    );
+    });
   },
 };

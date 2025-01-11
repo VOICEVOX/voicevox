@@ -1,8 +1,5 @@
 import {
-  Action,
-  ActionContext,
   ActionsBase,
-  Dispatch,
   DotNotationAction,
   DotNotationActionContext,
   DotNotationDispatch,
@@ -14,10 +11,12 @@ import {
   UiStoreState,
   UiStoreTypes,
 } from "./type";
-import { createDotNotationPartialStore as createPartialStore } from "./vuex";
+import { createPartialStore } from "./vuex";
 import { ActivePointScrollMode } from "@/type/preload";
 import {
-  CommonDialogOptions,
+  MessageDialogOptions,
+  ConfirmDialogOptions,
+  WarningDialogOptions,
   LoadingScreenOption,
   NotifyAndNotShowAgainButtonOption,
   connectAndExportTextWithDialog,
@@ -31,29 +30,9 @@ import {
   showNotifyAndNotShowAgainButton,
   showWarningDialog,
 } from "@/components/Dialog/Dialog";
+import { objectEntries } from "@/helpers/typedEntries";
 
 export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
-  action: (
-    context: ActionContext<S, S, AllGetters, AllActions, AllMutations>,
-    payload: Parameters<A[K]>[0],
-  ) => ReturnType<A[K]> extends Promise<unknown>
-    ? ReturnType<A[K]>
-    : Promise<ReturnType<A[K]>>,
-): Action<S, S, A, K, AllGetters, AllActions, AllMutations> {
-  return (context, payload: Parameters<A[K]>[0]) => {
-    context.commit("LOCK_UI");
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call
-    return action(context, payload).finally(() => {
-      context.commit("UNLOCK_UI");
-    });
-  };
-}
-
-export function createDotNotationUILockAction<
-  S,
-  A extends ActionsBase,
-  K extends keyof A,
->(
   action: (
     context: DotNotationActionContext<
       S,
@@ -78,14 +57,6 @@ export function createDotNotationUILockAction<
 
 export function withProgress<T>(
   action: Promise<T>,
-  dispatch: Dispatch<AllActions>,
-): Promise<T> {
-  void dispatch("START_PROGRESS");
-  return action.finally(() => dispatch("RESET_PROGRESS"));
-}
-
-export function withProgressDotNotation<T>(
-  action: Promise<T>,
   actions: DotNotationDispatch<AllActions>,
 ): Promise<T> {
   void actions.START_PROGRESS();
@@ -93,13 +64,11 @@ export function withProgressDotNotation<T>(
 }
 
 export const uiStoreState: UiStoreState = {
-  openedEditor: undefined,
   uiLockCount: 0,
   dialogLockCount: 0,
   reloadingLock: false,
   inheritAudioInfo: true,
   activePointScrollMode: "OFF",
-  isHelpDialogOpen: false,
   isSettingDialogOpen: false,
   isHotkeySettingDialogOpen: false,
   isToolbarSettingDialogOpen: false,
@@ -110,6 +79,7 @@ export const uiStoreState: UiStoreState = {
   isDictionaryManageDialogOpen: false,
   isEngineManageDialogOpen: false,
   isUpdateNotificationDialogOpen: false,
+  isExportSongAudioDialogOpen: false,
   isImportSongProjectDialogOpen: false,
   isMaximized: false,
   isPinned: false,
@@ -119,15 +89,6 @@ export const uiStoreState: UiStoreState = {
 };
 
 export const uiStore = createPartialStore<UiStoreTypes>({
-  SET_OPENED_EDITOR: {
-    mutation(state, { editor }) {
-      state.openedEditor = editor;
-    },
-    action({ mutations }, { editor }) {
-      mutations.SET_OPENED_EDITOR({ editor });
-    },
-  },
-
   UI_LOCKED: {
     getter(state) {
       return state.uiLockCount > 0;
@@ -147,7 +108,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   },
 
   ASYNC_UI_LOCK: {
-    action: createDotNotationUILockAction(
+    action: createUILockAction(
       async (_, { callback }: { callback: () => Promise<void> }) => {
         await callback();
       },
@@ -216,32 +177,19 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   },
 
   SET_DIALOG_OPEN: {
-    mutation(
-      state,
-      dialogState: {
-        isDefaultStyleSelectDialogOpen?: boolean;
-        isAcceptRetrieveTelemetryDialogOpen?: boolean;
-        isAcceptTermsDialogOpen?: boolean;
-        isDictionaryManageDialogOpen?: boolean;
-        isHelpDialogOpen?: boolean;
-        isSettingDialogOpen?: boolean;
-        isHotkeySettingDialogOpen?: boolean;
-        isToolbarSettingDialogOpen?: boolean;
-        isCharacterOrderDialogOpen?: boolean;
-        isEngineManageDialogOpen?: boolean;
-        isUpdateNotificationDialogOpen?: boolean;
-        isImportExternalProjectDialogOpen?: boolean;
-      },
-    ) {
-      for (const [key, value] of Object.entries(dialogState)) {
+    mutation(state, dialogState) {
+      for (const [key, value] of objectEntries(dialogState)) {
         if (!(key in state)) {
           throw new Error(`Unknown dialog state: ${key}`);
+        }
+        if (value == undefined) {
+          throw new Error(`Invalid dialog state: ${key}`);
         }
         state[key] = value;
       }
     },
     async action({ state, mutations }, dialogState) {
-      for (const [key, value] of Object.entries(dialogState)) {
+      for (const [key, value] of objectEntries(dialogState)) {
         if (state[key] === value) continue;
 
         if (value) {
@@ -258,33 +206,26 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   },
 
   SHOW_ALERT_DIALOG: {
-    action: createDotNotationUILockAction(
-      async (_, payload: { title: string; message: string; ok?: string }) => {
-        return await showAlertDialog(payload);
-      },
-    ),
+    action: createUILockAction(async (_, payload: MessageDialogOptions) => {
+      return await showAlertDialog(payload);
+    }),
   },
 
   SHOW_CONFIRM_DIALOG: {
-    action: createDotNotationUILockAction(
-      async (_, payload: CommonDialogOptions["confirm"]) => {
-        return await showConfirmDialog(payload);
-      },
-    ),
+    action: createUILockAction(async (_, payload: ConfirmDialogOptions) => {
+      return await showConfirmDialog(payload);
+    }),
   },
 
   SHOW_WARNING_DIALOG: {
-    action: createDotNotationUILockAction(
-      async (_, payload: CommonDialogOptions["warning"]) => {
-        return await showWarningDialog(payload);
-      },
-    ),
+    action: createUILockAction(async (_, payload: WarningDialogOptions) => {
+      return await showWarningDialog(payload);
+    }),
   },
 
   SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON: {
-    // FIXME: showNotifyAndNotShowAgainButtonをDotNotationに対応させて修正
-    action({ dispatch }, payload: NotifyAndNotShowAgainButtonOption) {
-      showNotifyAndNotShowAgainButton({ dispatch }, payload);
+    action({ actions }, payload: NotifyAndNotShowAgainButtonOption) {
+      showNotifyAndNotShowAgainButton({ actions }, payload);
     },
   },
 
@@ -387,6 +328,16 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     },
   },
 
+  /**
+   * 選択可能なテーマをセットする。
+   * NOTE: カスタムテーマが導入された場合を見越して残している。
+   */
+  SET_AVAILABLE_THEMES: {
+    mutation(state, { themes }) {
+      state.availableThemes = themes;
+    },
+  },
+
   DETECT_UNMAXIMIZED: {
     mutation(state) {
       state.isMaximized = false;
@@ -447,6 +398,27 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     },
   },
 
+  /** UIの拡大 */
+  ZOOM_IN: {
+    action() {
+      window.backend.zoomIn();
+    },
+  },
+
+  /** UIの縮小 */
+  ZOOM_OUT: {
+    action() {
+      window.backend.zoomOut();
+    },
+  },
+
+  /** UIの拡大率のリセット */
+  ZOOM_RESET: {
+    action() {
+      window.backend.zoomReset();
+    },
+  },
+
   CHECK_EDITED_AND_NOT_SAVE: {
     /**
      * プロジェクトファイル未保存の場合、保存するかどうかを確認する。
@@ -476,7 +448,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   },
 
   RELOAD_APP: {
-    action: createDotNotationUILockAction(
+    action: createUILockAction(
       async (
         { actions },
         { isMultiEngineOffMode }: { isMultiEngineOffMode?: boolean },
@@ -520,28 +492,26 @@ export const uiStore = createPartialStore<UiStoreTypes>({
 
   // TODO: この4つのアクションをVue側に移動したい
   SHOW_GENERATE_AND_SAVE_ALL_AUDIO_DIALOG: {
-    async action({ state, dispatch }) {
-      // FIXME: `multiGenerateAndSaveAudioWithDialog`をDotNotationに対応させて修正
+    async action({ state, actions }) {
       await multiGenerateAndSaveAudioWithDialog({
         audioKeys: state.audioKeys,
         disableNotifyOnGenerate: state.confirmedTips.notifyOnGenerate,
-        dispatch,
+        actions,
       });
     },
   },
 
   SHOW_GENERATE_AND_CONNECT_ALL_AUDIO_DIALOG: {
-    async action({ dispatch, state }) {
-      // FIXME: `generateAndConnectAndSaveAudioWithDialog`をDotNotationに対応させて修正
+    async action({ actions, state }) {
       await generateAndConnectAndSaveAudioWithDialog({
-        dispatch,
+        actions,
         disableNotifyOnGenerate: state.confirmedTips.notifyOnGenerate,
       });
     },
   },
 
   SHOW_GENERATE_AND_SAVE_SELECTED_AUDIO_DIALOG: {
-    async action({ getters, dispatch, actions, state }) {
+    async action({ getters, actions, state }) {
       const activeAudioKey = getters.ACTIVE_AUDIO_KEY;
       if (activeAudioKey == undefined) {
         void actions.SHOW_ALERT_DIALOG({
@@ -556,27 +526,25 @@ export const uiStore = createPartialStore<UiStoreTypes>({
         state.experimentalSetting.enableMultiSelect &&
         selectedAudioKeys.length > 1
       ) {
-        // FIXME: `multiGenerateAndSaveAudioWithDialog`をDotNotationに対応させて修正
         await multiGenerateAndSaveAudioWithDialog({
           audioKeys: selectedAudioKeys,
-          dispatch: dispatch,
+          actions: actions,
           disableNotifyOnGenerate: state.confirmedTips.notifyOnGenerate,
         });
       } else {
         await generateAndSaveOneAudioWithDialog({
           audioKey: activeAudioKey,
           disableNotifyOnGenerate: state.confirmedTips.notifyOnGenerate,
-          dispatch: dispatch,
+          actions: actions,
         });
       }
     },
   },
 
   SHOW_CONNECT_AND_EXPORT_TEXT_DIALOG: {
-    async action({ dispatch, state }) {
-      // FIXME: `connectAndExportTextWithDialog`をDotNotationに対応させて修正
+    async action({ actions, state }) {
       await connectAndExportTextWithDialog({
-        dispatch,
+        actions,
         disableNotifyOnGenerate: state.confirmedTips.notifyOnGenerate,
       });
     },

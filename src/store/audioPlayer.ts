@@ -4,6 +4,7 @@
 import { createPartialStore } from "./vuex";
 import { AudioPlayerStoreState, AudioPlayerStoreTypes } from "./type";
 import { AudioKey } from "@/type/preload";
+import { showAlertDialog } from "@/components/Dialog/Dialog";
 
 // ユニットテストが落ちるのを回避するための遅延読み込み
 const getAudioElement = (() => {
@@ -56,7 +57,7 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
 
   PLAY_AUDIO_PLAYER: {
     async action(
-      { state, commit },
+      { state, mutations },
       { offset, audioKey }: { offset?: number; audioKey?: AudioKey },
     ) {
       const audioElement = getAudioElement();
@@ -75,8 +76,7 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
               audioElement.removeEventListener("canplay", stop);
             };
             audioElement.addEventListener("canplay", stop);
-            void window.backend.showMessageDialog({
-              type: "error",
+            void showAlertDialog({
               title: "エラー",
               message: "再生デバイスが見つかりません",
             });
@@ -87,7 +87,7 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
       // 再生終了時にresolveされるPromiseを返す
       const played = async () => {
         if (audioKey) {
-          commit("SET_AUDIO_NOW_PLAYING", { audioKey, nowPlaying: true });
+          mutations.SET_AUDIO_NOW_PLAYING({ audioKey, nowPlaying: true });
         }
       };
       audioElement.addEventListener("play", played);
@@ -102,7 +102,7 @@ export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
         audioElement.removeEventListener("play", played);
         audioElement.removeEventListener("pause", paused);
         if (audioKey) {
-          commit("SET_AUDIO_NOW_PLAYING", { audioKey, nowPlaying: false });
+          mutations.SET_AUDIO_NOW_PLAYING({ audioKey, nowPlaying: false });
         }
       });
 

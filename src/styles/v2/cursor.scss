@@ -1,0 +1,25 @@
+.cursor-default {
+  cursor: default;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.cursor-crosshair {
+  cursor: crosshair;
+}
+
+.cursor-ew-resize {
+  cursor: ew-resize;
+}
+
+.cursor-move {
+  cursor: move;
+}
+
+.cursor-draw {
+  cursor:
+    url("/draw-cursor.png") 2 2,
+    auto;
+}

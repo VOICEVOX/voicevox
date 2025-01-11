@@ -1,4 +1,4 @@
-import { createDotNotationPartialStore as createPartialStore } from "./vuex";
+import { createPartialStore } from "./vuex";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { uuid4 } from "@/helpers/random";
 import { PresetStoreState, PresetStoreTypes, State } from "@/store/type";
@@ -14,7 +14,10 @@ import { Preset, PresetKey, Voice, VoiceId } from "@/type/preload";
 export function determineNextPresetKey(
   state: Pick<
     State,
-    "defaultPresetKeys" | "experimentalSetting" | "inheritAudioInfo"
+    | "defaultPresetKeys"
+    | "enablePreset"
+    | "shouldApplyDefaultPresetOnVoiceChanged"
+    | "inheritAudioInfo"
   >,
   voice: Voice,
   presetKeyCandidate: PresetKey | undefined,
@@ -31,7 +34,7 @@ export function determineNextPresetKey(
       // 初回作成時
       return {
         nextPresetKey: defaultPresetKeyForCurrentVoice,
-        shouldApplyPreset: state.experimentalSetting.enablePreset,
+        shouldApplyPreset: state.enablePreset,
       };
     }
     case "copy": {
@@ -47,12 +50,12 @@ export function determineNextPresetKey(
       // それ以外はデフォルトプリセットを割り当て、適用するかはプリセットのON/OFFに依存
       return {
         nextPresetKey: defaultPresetKeyForCurrentVoice,
-        shouldApplyPreset: state.experimentalSetting.enablePreset,
+        shouldApplyPreset: state.enablePreset,
       };
     }
     case "changeVoice": {
       // ボイス切り替え時
-      if (state.experimentalSetting.shouldApplyDefaultPresetOnVoiceChanged) {
+      if (state.shouldApplyDefaultPresetOnVoiceChanged) {
         // デフォルトプリセットを適用する
         return {
           nextPresetKey: defaultPresetKeyForCurrentVoice,
@@ -219,6 +222,7 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
           pitchScale: 0.0,
           intonationScale: 1.0,
           volumeScale: 1.0,
+          pauseLengthScale: 1,
           prePhonemeLength: 0.1,
           postPhonemeLength: 0.1,
         };

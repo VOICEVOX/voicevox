@@ -1,8 +1,8 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * VOICEVOX Engine
- * VOICEVOX の音声合成エンジンです。
+ * DUMMY Engine
+ * DUMMY の音声合成エンジンです。
  *
  * The version of the OpenAPI document: latest
  * 
@@ -20,91 +20,91 @@ import { exists, mapValues } from '../runtime';
  */
 export interface UserDictWord {
     /**
-     * 
+     * 表層形
      * @type {string}
      * @memberof UserDictWord
      */
     surface: string;
     /**
-     * 
+     * 優先度
      * @type {number}
      * @memberof UserDictWord
      */
     priority: number;
     /**
-     * 
+     * 文脈ID
      * @type {number}
      * @memberof UserDictWord
      */
     contextId?: number;
     /**
-     * 
+     * 品詞
      * @type {string}
      * @memberof UserDictWord
      */
     partOfSpeech: string;
     /**
-     * 
+     * 品詞細分類1
      * @type {string}
      * @memberof UserDictWord
      */
     partOfSpeechDetail1: string;
     /**
-     * 
+     * 品詞細分類2
      * @type {string}
      * @memberof UserDictWord
      */
     partOfSpeechDetail2: string;
     /**
-     * 
+     * 品詞細分類3
      * @type {string}
      * @memberof UserDictWord
      */
     partOfSpeechDetail3: string;
     /**
-     * 
+     * 活用型
      * @type {string}
      * @memberof UserDictWord
      */
     inflectionalType: string;
     /**
-     * 
+     * 活用形
      * @type {string}
      * @memberof UserDictWord
      */
     inflectionalForm: string;
     /**
-     * 
+     * 原形
      * @type {string}
      * @memberof UserDictWord
      */
     stem: string;
     /**
-     * 
+     * 読み
      * @type {string}
      * @memberof UserDictWord
      */
     yomi: string;
     /**
-     * 
+     * 発音
      * @type {string}
      * @memberof UserDictWord
      */
     pronunciation: string;
     /**
-     * 
+     * アクセント型
      * @type {number}
      * @memberof UserDictWord
      */
     accentType: number;
     /**
-     * 
+     * モーラ数
      * @type {number}
      * @memberof UserDictWord
      */
     moraCount?: number;
     /**
-     * 
+     * アクセント結合規則
      * @type {string}
      * @memberof UserDictWord
      */

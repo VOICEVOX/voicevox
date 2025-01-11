@@ -5,15 +5,14 @@ import { Ref } from "vue";
  * QInput の選択範囲への操作を簡単にできるようにするクラス
  */
 export class SelectionHelperForQInput {
-  private _nativeEl: HTMLInputElement | undefined = undefined;
-
   constructor(private textfield: Ref<QInput | undefined>) {}
 
   // this.start が number | null なので null も受け付ける
   setCursorPosition(index: number | null) {
     if (index == undefined) return;
 
-    this.nativeEl.selectionStart = this.nativeEl.selectionEnd = index;
+    const nativeEl = this.getNativeEl();
+    nativeEl.selectionStart = nativeEl.selectionEnd = index;
   }
 
   getReplacedStringTo(str: string) {
@@ -21,48 +20,53 @@ export class SelectionHelperForQInput {
   }
 
   getAsString() {
-    return this.nativeEl.value.substring(
-      this.nativeEl.selectionStart ?? 0,
-      this.nativeEl.selectionEnd ?? 0,
+    const nativeEl = this.getNativeEl();
+    return nativeEl.value.substring(
+      nativeEl.selectionStart ?? 0,
+      nativeEl.selectionEnd ?? 0,
     );
   }
 
   toEmpty() {
-    this.nativeEl.selectionEnd = this.nativeEl.selectionStart;
+    const nativeEl = this.getNativeEl();
+    nativeEl.selectionEnd = nativeEl.selectionStart;
   }
 
   get selectionStart() {
-    return this.nativeEl.selectionStart;
+    const nativeEl = this.getNativeEl();
+    return nativeEl.selectionStart;
   }
 
   get selectionEnd() {
-    return this.nativeEl.selectionEnd;
+    const nativeEl = this.getNativeEl();
+    return nativeEl.selectionEnd;
   }
 
   get substringBefore() {
-    return this.nativeEl.value.substring(0, this.nativeEl.selectionStart ?? 0);
+    const nativeEl = this.getNativeEl();
+    return nativeEl.value.substring(0, nativeEl.selectionStart ?? 0);
   }
 
   get substringAfter() {
-    return this.nativeEl.value.substring(this.nativeEl.selectionEnd ?? 0);
+    const nativeEl = this.getNativeEl();
+    return nativeEl.value.substring(nativeEl.selectionEnd ?? 0);
   }
 
   get isEmpty() {
-    const start = this.nativeEl.selectionStart;
-    const end = this.nativeEl.selectionEnd;
+    const nativeEl = this.getNativeEl();
+    const start = nativeEl.selectionStart;
+    const end = nativeEl.selectionEnd;
     return start == undefined || end == undefined || start === end;
   }
 
-  private get nativeEl() {
-    return this._nativeEl ?? this.getNativeEl();
-  }
-
+  /**
+   * NOTE: 最新の textfield を反映すべきなので nativeEl はキャッシュしない
+   */
   private getNativeEl() {
     const nativeEl = this.textfield.value?.nativeEl;
     if (!(nativeEl instanceof HTMLInputElement)) {
       throw new Error("nativeElの取得に失敗しました。");
     }
-    this._nativeEl = nativeEl;
     return nativeEl;
   }
 }

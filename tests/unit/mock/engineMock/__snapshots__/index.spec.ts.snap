@@ -1,0 +1,218 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`createOpenAPIEngineMock > audioQueryAudioQueryPost 1`] = `
+{
+  "accentPhrases": [
+    {
+      "accent": 5,
+      "moras": [
+        {
+          "consonant": "k",
+          "consonantLength": 0.0220625,
+          "pitch": 4.7734375,
+          "text": "コ",
+          "vowel": "o",
+          "vowelLength": 0.1140625,
+        },
+        {
+          "consonant": undefined,
+          "consonantLength": undefined,
+          "pitch": 3.609375,
+          "text": "ン",
+          "vowel": "N",
+          "vowelLength": 0.08312499999999999,
+        },
+        {
+          "consonant": "n",
+          "consonantLength": 0.022625,
+          "pitch": 4.75,
+          "text": "ニ",
+          "vowel": "i",
+          "vowelLength": 0.10843749999999999,
+        },
+        {
+          "consonant": "ch",
+          "consonantLength": 0.0400625,
+          "pitch": 4.0234375,
+          "text": "チ",
+          "vowel": "i",
+          "vowelLength": 0.10843749999999999,
+        },
+        {
+          "consonant": "h",
+          "consonantLength": 0.0315,
+          "pitch": 4.796875,
+          "text": "ハ",
+          "vowel": "a",
+          "vowelLength": 0.1509375,
+        },
+      ],
+      "pauseMora": undefined,
+    },
+  ],
+  "intonationScale": 1,
+  "outputSamplingRate": 24000,
+  "outputStereo": false,
+  "pitchScale": 0,
+  "postPhonemeLength": 0.1,
+  "prePhonemeLength": 0.1,
+  "speedScale": 1,
+  "volumeScale": 1,
+}
+`;
+
+exports[`createOpenAPIEngineMock > frameSynthesisFrameSynthesisPost 1`] = `"394cfbc01397e0b6fcc3433d9537aa850e6131f7d89048da6889e7375fe03a24"`;
+
+exports[`createOpenAPIEngineMock > singFrameAudioQuerySingFrameAudioQueryPost 1`] = `
+{
+  "f0": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    46.17422889791779,
+    46.08055781881967,
+    46.08055781881967,
+    46.16797823967303,
+    46.18048040243588,
+    46.18048040243588,
+    82.27312267254713,
+    82.21745071316357,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+  ],
+  "outputSamplingRate": 24000,
+  "outputStereo": false,
+  "phonemes": [
+    {
+      "frameLength": 9,
+      "noteId": "a",
+      "phoneme": "pau",
+    },
+    {
+      "frameLength": 1,
+      "noteId": "b",
+      "phoneme": "t",
+    },
+    {
+      "frameLength": 2,
+      "noteId": "b",
+      "phoneme": "e",
+    },
+    {
+      "frameLength": 1,
+      "noteId": "c",
+      "phoneme": "s",
+    },
+    {
+      "frameLength": 2,
+      "noteId": "c",
+      "phoneme": "u",
+    },
+    {
+      "frameLength": 1,
+      "noteId": "d",
+      "phoneme": "t",
+    },
+    {
+      "frameLength": 1,
+      "noteId": "d",
+      "phoneme": "o",
+    },
+    {
+      "frameLength": 10,
+      "noteId": "e",
+      "phoneme": "pau",
+    },
+  ],
+  "volume": [
+    0.7635414345273557,
+    0.7635414345273557,
+    0.7635414345273557,
+    0.7635414345273557,
+    0.7635414345273557,
+    0.7635414345273557,
+    0.7635414345273557,
+    0.7635414345273557,
+    0.7635414345273557,
+    0.7732211475542967,
+    0.7702900494608796,
+    0.7702900494608796,
+    0.7730257409255916,
+    0.7734165541957456,
+    0.7734165541957456,
+    0.7737647610411076,
+    0.7727873601766926,
+    0.7635414345273557,
+    0.7635414345273557,
+    0.7635414345273557,
+    0.7635414345273557,
+    0.7635414345273557,
+    0.7635414345273557,
+    0.7635414345273557,
+    0.7635414345273557,
+    0.7635414345273557,
+    0.7635414345273557,
+  ],
+  "volumeScale": 1,
+}
+`;
+
+exports[`createOpenAPIEngineMock > synthesisSynthesisPost 1`] = `"23f4b910863418a7188648f7c5226a0f02b9d067b964be1690b69b1e9ffde7bc"`;
+
+exports[`createOpenAPIEngineMock > versionVersionGet 1`] = `"mock"`;
+
+exports[`createOpenAPIEngineMock > 辞書系 1`] = `
+{
+  "00000000-0000-4000-0000-000000000001": {
+    "accentAssociativeRule": "*",
+    "accentType": 1,
+    "inflectionalForm": "*",
+    "inflectionalType": "*",
+    "partOfSpeech": "名詞",
+    "partOfSpeechDetail1": "一般",
+    "partOfSpeechDetail2": "*",
+    "partOfSpeechDetail3": "*",
+    "priority": 5,
+    "pronunciation": "テストテスト",
+    "stem": "*",
+    "surface": "テスト",
+    "yomi": "テストテスト",
+  },
+}
+`;
+
+exports[`createOpenAPIEngineMock > 辞書系 2`] = `
+{
+  "00000000-0000-4000-0000-000000000001": {
+    "accentAssociativeRule": "*",
+    "accentType": 1,
+    "inflectionalForm": "*",
+    "inflectionalType": "*",
+    "partOfSpeech": "名詞",
+    "partOfSpeechDetail1": "一般",
+    "partOfSpeechDetail2": "*",
+    "partOfSpeechDetail3": "*",
+    "priority": 5,
+    "pronunciation": "テストテストテスト",
+    "stem": "*",
+    "surface": "テスト",
+    "yomi": "テストテストテスト",
+  },
+}
+`;
+
+exports[`createOpenAPIEngineMock > 辞書系 3`] = `{}`;

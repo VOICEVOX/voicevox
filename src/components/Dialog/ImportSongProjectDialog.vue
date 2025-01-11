@@ -40,14 +40,7 @@
           >
             <QItemSection avatar>
               <QCheckbox
-                v-if="multiTrackEnabled"
                 v-model="selectedTrackIndexes"
-                :val="track.value"
-                :disable="track.disable"
-              />
-              <QRadio
-                v-else
-                v-model="selectedTrackIndex"
                 :val="track.value"
                 :disable="track.disable"
               />
@@ -116,10 +109,6 @@ const { dialogRef, onDialogOK, onDialogCancel } = useDialogPluginComponent();
 
 const store = useStore();
 const log = createLogger("ImportExternalProjectDialog");
-
-const multiTrackEnabled = computed(
-  () => store.state.experimentalSetting.enableMultiTrack,
-);
 
 // 受け入れる拡張子
 const acceptExtensions = computed(
@@ -243,23 +232,6 @@ const trackOptions = computed(() => {
 });
 // 選択中のトラック
 const selectedTrackIndexes = ref<number[] | null>(null);
-const selectedTrackIndex = computed<number | null>({
-  get: () => {
-    if (selectedTrackIndexes.value == null) {
-      return null;
-    }
-    if (selectedTrackIndexes.value.length === 0) {
-      return null;
-    }
-    return selectedTrackIndexes.value[0];
-  },
-  set: (index: number | null) => {
-    if (index == null) {
-      throw new Error("assert: index != null");
-    }
-    selectedTrackIndexes.value = [index];
-  },
-});
 
 // データ初期化
 const initializeValues = () => {
@@ -291,7 +263,7 @@ const handleFileChange = async (event: Event) => {
   try {
     if (file.name.endsWith(".vvproj")) {
       const vvproj = await file.text();
-      const parsedProject = await store.dispatch("PARSE_PROJECT_FILE", {
+      const parsedProject = await store.actions.PARSE_PROJECT_FILE({
         projectJson: vvproj,
       });
       project.value = {
@@ -334,15 +306,16 @@ const handleImportTrack = () => {
     throw new Error("project or selected track is not set");
   }
   // トラックをインポート
+  const trackIndexes = selectedTrackIndexes.value.toSorted((a, b) => a - b);
   if (project.value.type === "vvproj") {
-    void store.dispatch("COMMAND_IMPORT_VOICEVOX_PROJECT", {
+    void store.actions.COMMAND_IMPORT_VOICEVOX_PROJECT({
       project: project.value.project,
-      trackIndexes: selectedTrackIndexes.value,
+      trackIndexes,
     });
   } else {
-    void store.dispatch("COMMAND_IMPORT_UTAFORMATIX_PROJECT", {
+    void store.actions.COMMAND_IMPORT_UTAFORMATIX_PROJECT({
       project: project.value.project,
-      trackIndexes: selectedTrackIndexes.value,
+      trackIndexes,
     });
   }
   onDialogOK();
@@ -355,11 +328,6 @@ const handleCancel = () => {
 </script>
 
 <style scoped lang="scss">
-.dialog-card {
-  width: 700px;
-  max-width: 80vw;
-}
-
 .scrollable-area {
   overflow-y: auto;
   max-height: calc(100vh - 100px - 295px);
