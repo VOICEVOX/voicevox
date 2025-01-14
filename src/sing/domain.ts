@@ -1,5 +1,10 @@
-import { calculateHash, getLast, getNext, getPrev, isSorted } from "./utility";
-import { PolySynth } from "./audioRendering";
+import {
+  calculateHash,
+  getLast,
+  getNext,
+  getPrev,
+  isSorted,
+} from "@/sing/utility";
 import { convertLongVowel, moraPattern } from "@/domain/japanese";
 import {
   Note,
@@ -10,9 +15,11 @@ import {
   PhraseKey,
   Track,
   EditorFrameAudioQuery,
+  PreviewSynthParams,
 } from "@/store/type";
 import { FramePhoneme } from "@/openapi";
 import { NoteId, TrackId } from "@/type/preload";
+import { ExhaustiveError } from "@/type/utility";
 
 // TODO: 後でdomain/type.tsに移す
 export type MeasuresBeats = {
@@ -325,6 +332,22 @@ export function decibelToLinear(decibelValue: number) {
     return 0;
   }
   return Math.pow(10, decibelValue / 20);
+}
+
+export function getHarmonicsAmount(
+  oscType: "sawtooth" | "square" | "triangle" | "sine",
+) {
+  if (oscType === "sawtooth") {
+    return { odd: 1, even: 1 };
+  } else if (oscType === "square") {
+    return { odd: 0, even: 1 };
+  } else if (oscType === "triangle") {
+    return { odd: 0, even: 0.5 };
+  } else if (oscType === "sine") {
+    return { odd: 0, even: 0 };
+  } else {
+    throw new ExhaustiveError(oscType);
+  }
 }
 
 export const DEFAULT_TRACK_NAME = "無名トラック";
@@ -1007,38 +1030,19 @@ export const splitLyricsByMoras = (
 
 export const PREVIEW_SOUND_DURATION_SECONDS = 0.15;
 
-export function createSynthForPreview(audioContext: BaseAudioContext) {
-  const maxHarmonics = 36;
-  const oddHarmonicsAmount = 0.89; // 1のとき矩形波、0.5のとき三角波
-  if (maxHarmonics <= 0 || oddHarmonicsAmount <= 0) {
-    throw new Error(
-      "maxHarmonics and oddHarmonicsAmount must be greater than 0.",
-    );
-  }
-
-  const real = new Float32Array(maxHarmonics);
-  const imag = new Float32Array(maxHarmonics);
-  for (let i = 0; i <= maxHarmonics; i++) {
-    real[i] = 0;
-    if (i === 0 || (i & 1) === 0) {
-      imag[i] = 0;
-    } else {
-      imag[i] = 1 / Math.pow(i, 1 / oddHarmonicsAmount);
-    }
-  }
-  const periodicWave = audioContext.createPeriodicWave(real, imag);
-
-  return new PolySynth(audioContext, {
-    osc: {
+export function createPreviewSynthParams(): PreviewSynthParams {
+  return {
+    oscParams: {
       type: "custom",
-      periodicWave,
+      oddHarmonicsAmount: 0.89,
+      evenHarmonicsAmount: 0,
     },
-    filter: {
+    filterParams: {
       cutoff: 1930,
       resonance: 0,
       keyTrack: 0,
     },
-    amp: {
+    ampParams: {
       attack: 0.002,
       decay: 0.16,
       sustain: 0,
@@ -1046,7 +1050,7 @@ export function createSynthForPreview(audioContext: BaseAudioContext) {
     },
     lowCutFrequency: 125,
     volume: 0.1,
-  });
+  };
 }
 
 /**

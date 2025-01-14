@@ -3,6 +3,10 @@
   <div class="sing-main" :class="{ 'sidebar-open': isSidebarOpen }">
     <EngineStartupOverlay :isCompletedInitialStartup />
     <ExportOverlay />
+    <PreviewSoundEditor
+      v-if="showPreviewSoundEditor"
+      class="preview-sound-editor"
+    />
 
     <QSplitter
       :modelValue="isSidebarOpen ? sidebarWidth : 0"
@@ -39,6 +43,7 @@ import {
   createDefaultTempo,
   createDefaultTimeSignature,
 } from "@/sing/domain";
+import PreviewSoundEditor from "@/components/Sing/PreviewSoundEditor.vue";
 
 const props = defineProps<{
   isEnginesReady: boolean;
@@ -46,6 +51,10 @@ const props = defineProps<{
 }>();
 
 const store = useStore();
+
+const showPreviewSoundEditor = computed(() => {
+  return store.state.experimentalSetting.showPreviewSoundEditor;
+});
 
 const isSidebarOpen = computed(() => store.state.isSongSidebarOpen);
 const sidebarWidth = ref(300);
@@ -118,5 +127,12 @@ onetimeWatch(
   display: flex;
   overflow: hidden;
   position: relative;
+}
+
+.preview-sound-editor {
+  position: fixed;
+  bottom: 48px;
+  right: 48px;
+  z-index: 40;
 }
 </style>

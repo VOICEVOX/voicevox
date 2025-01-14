@@ -71,7 +71,6 @@ import {
   tickToSecond,
   VALUE_INDICATING_NO_DATA,
   isValidPitchEditData,
-  createSynthForPreview,
   calculatePhraseKey,
   isValidTempos,
   isValidTimeSignatures,
@@ -94,6 +93,7 @@ import {
   toEntirePhonemeTimings,
   adjustPhonemeTimingsAndPhraseEndFrames,
   phonemeTimingsToPhonemes,
+  createPreviewSynthParams,
 } from "@/sing/domain";
 import { getOverlappingNoteIds } from "@/sing/storeHelper";
 import {
@@ -522,9 +522,11 @@ let clipper: Clipper | undefined;
 
 // NOTE: テスト時はAudioContextが存在しない
 if (window.AudioContext) {
+  const previewSynthInitialParams = createPreviewSynthParams();
+
   audioContext = new AudioContext();
   transport = new Transport(audioContext);
-  synthForPreview = createSynthForPreview(audioContext);
+  synthForPreview = new PolySynth(audioContext, previewSynthInitialParams);
   mainChannelStrip = new ChannelStrip(audioContext);
   limiter = new Limiter(audioContext);
   clipper = new Clipper(audioContext);
@@ -759,6 +761,7 @@ export const singingStoreState: SingingStoreState = {
   exportState: "NOT_EXPORTING",
   cancellationOfExportRequested: false,
   isSongSidebarOpen: false,
+  previewSynthParams: createPreviewSynthParams(),
 };
 
 export const singingStore = createPartialStore<SingingStoreTypes>({
@@ -1550,6 +1553,81 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         throw new Error("synthForPreview is undefined.");
       }
       synthForPreview.noteOff("immediately", noteNumber);
+    },
+  },
+
+  SET_PREVIEW_SYNTH_OSC_PARAMS: {
+    mutation(state, { oscParams }) {
+      state.previewSynthParams.oscParams = oscParams;
+    },
+    async action({ mutations }, { oscParams }) {
+      if (synthForPreview == undefined) {
+        throw new Error("synthForPreview is undefined.");
+      }
+      mutations.SET_PREVIEW_SYNTH_OSC_PARAMS({ oscParams });
+
+      synthForPreview.oscParams = oscParams;
+    },
+  },
+
+  SET_PREVIEW_SYNTH_FILTER_PARAMS: {
+    mutation(state, { filterParams }) {
+      state.previewSynthParams.filterParams = filterParams;
+    },
+    async action({ mutations }, { filterParams }) {
+      if (synthForPreview == undefined) {
+        throw new Error("synthForPreview is undefined.");
+      }
+      mutations.SET_PREVIEW_SYNTH_FILTER_PARAMS({ filterParams });
+
+      synthForPreview.filterParams = filterParams;
+    },
+  },
+
+  SET_PREVIEW_SYNTH_AMP_PARAMS: {
+    mutation(state, { ampParams }) {
+      state.previewSynthParams.ampParams = ampParams;
+    },
+    async action({ mutations }, { ampParams }) {
+      if (synthForPreview == undefined) {
+        throw new Error("synthForPreview is undefined.");
+      }
+      mutations.SET_PREVIEW_SYNTH_AMP_PARAMS({ ampParams });
+
+      synthForPreview.ampParams = ampParams;
+    },
+  },
+  SET_PREVIEW_SYNTH_LOW_CUT_FREQUENCY: {
+    mutation(state, { lowCutFrequency }) {
+      state.previewSynthParams.lowCutFrequency = lowCutFrequency;
+    },
+    async action({ mutations }, { lowCutFrequency }) {
+      if (synthForPreview == undefined) {
+        throw new Error("synthForPreview is undefined.");
+      }
+      mutations.SET_PREVIEW_SYNTH_LOW_CUT_FREQUENCY({ lowCutFrequency });
+
+      synthForPreview.lowCutFrequency = lowCutFrequency;
+    },
+  },
+
+  SET_PREVIEW_SYNTH_VOLUME: {
+    mutation(state, { volume }) {
+      state.previewSynthParams.volume = volume;
+    },
+    async action({ mutations }, { volume }) {
+      if (synthForPreview == undefined) {
+        throw new Error("synthForPreview is undefined.");
+      }
+      mutations.SET_PREVIEW_SYNTH_VOLUME({ volume });
+
+      synthForPreview.volume = volume;
+    },
+  },
+
+  DEFAULT_PREVIEW_SYNTH_PARAMS: {
+    getter() {
+      return createPreviewSynthParams();
     },
   },
 

@@ -444,6 +444,15 @@
                     )
                   "
                 />
+                <ToggleCell
+                  v-if="!isProduction"
+                  title="[開発時のみ機能] プレビュー音のエディット画面を表示"
+                  description="ONの場合、プレビュー音のエディット画面を表示します。"
+                  :modelValue="experimentalSetting.showPreviewSoundEditor"
+                  @update:modelValue="
+                    changeExperimentalSetting('showPreviewSoundEditor', $event)
+                  "
+                />
               </div>
               <div class="setting-card">
                 <h5 class="headline">データ収集</h5>

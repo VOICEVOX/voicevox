@@ -1,3 +1,12 @@
+export function clamp(value: number, min: number, max: number) {
+  if (min > max) {
+    throw new Error(
+      `Invalid range: min (${min}) cannot be greater than max (${max}).`,
+    );
+  }
+  return Math.min(max, Math.max(min, value));
+}
+
 export function round(value: number, digits: number) {
   const powerOf10 = 10 ** digits;
   return Math.round(value * powerOf10) / powerOf10;
