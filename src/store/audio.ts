@@ -1226,6 +1226,12 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
   DEFAULT_PROJECT_FILE_BASE_NAME: {
     getter: (state) => {
+      // NOTE: 起動時にソングエディタが開かれた場合、トークの初期化が行われずAudioCellが作成されない
+      // TODO: ソングエディタが開かれてい場合はこの関数を呼ばないようにし、warningを出す
+      if (state.audioKeys.length === 0) {
+        return DEFAULT_PROJECT_NAME;
+      }
+
       const headItemText = state.audioItems[state.audioKeys[0]].text;
 
       const tailItemText =
