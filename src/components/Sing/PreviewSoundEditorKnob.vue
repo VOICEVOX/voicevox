@@ -56,10 +56,7 @@ const lastMousePosX = ref(0);
 const lastMousePosY = ref(0);
 
 const limitedMin = computed(() => {
-  if (props.logScale && props.min < LOG_SCALE_MIN) {
-    return props.min;
-  }
-  return props.min;
+  return props.logScale ? Math.max(LOG_SCALE_MIN, props.min) : props.min;
 });
 
 const limitedValue = computed(() => {
@@ -67,10 +64,10 @@ const limitedValue = computed(() => {
 });
 
 const percentage = computed(() => {
-  const range = props.max - limitedMin.value;
   if (props.logScale) {
     return linearToLog(limitedValue.value, limitedMin.value, props.max);
   }
+  const range = props.max - limitedMin.value;
   return (limitedValue.value - limitedMin.value) / range;
 });
 
