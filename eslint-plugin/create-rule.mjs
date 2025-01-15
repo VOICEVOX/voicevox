@@ -1,7 +1,7 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
-const { ESLintUtils } = require("@typescript-eslint/utils");
+// @ts-check
+import { ESLintUtils } from "@typescript-eslint/utils";
 
-exports.createRule = ESLintUtils.RuleCreator(
+export const createRule = ESLintUtils.RuleCreator(
   (name) =>
     `https://github.com/VOICEVOX/voicevox/blob/main/eslint-plugin/${name}.md`,
 );
