@@ -1,7 +1,6 @@
 // @ts-check
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { FlatCompat } from "@eslint/eslintrc";
 import js from "@eslint/js";
 import globals from "globals";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -18,76 +17,56 @@ import {
   configs,
   parser as typescriptParser,
 } from "typescript-eslint";
-
-const compat = new FlatCompat();
+import voicevoxPlugin from "./eslint-plugin/index.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
+ * @typedef {import("@typescript-eslint/utils/ts-eslint").FlatConfig.Config} Config
+ * @typedef {import("@typescript-eslint/utils/ts-eslint").FlatConfig.ConfigArray} ConfigArray
+ * @typedef {import("@typescript-eslint/utils/ts-eslint").FlatConfig.ParserOptions} ParserOptions
+ * @typedef {import("@typescript-eslint/utils/ts-eslint").FlatConfig.Rules} Rules
+ */
+
+/**
  * @overload
  * @param {string} name
- * @param {import("@typescript-eslint/utils/ts-eslint").FlatConfig.Config} config
- * @returns {import("@typescript-eslint/utils/ts-eslint").FlatConfig.ConfigArray}
+ * @param {Config} config
+ * @returns {ConfigArray}
  */
 /**
  * @overload
- * @param {import("@typescript-eslint/utils/ts-eslint").FlatConfig.ConfigArray} configs
- * @returns {import("@typescript-eslint/utils/ts-eslint").FlatConfig.ConfigArray}
+ * @param {Config | ConfigArray} configs
+ * @returns {ConfigArray}
  */
 /**
- * @param {string | import("@typescript-eslint/utils/ts-eslint").FlatConfig.ConfigArray} nameOrConfigs
- * @param {import("eslint").Linter.Config} config
- * @returns {import("@typescript-eslint/utils/ts-eslint").FlatConfig.ConfigArray}
+ * @param {string | Config | ConfigArray} nameOrConfigs
+ * @param {Config} config
+ * @returns {ConfigArray}
  */
 const pluginConfig = (nameOrConfigs, config) => {
   if (typeof nameOrConfigs === "string") {
-    return /** @type {import("@typescript-eslint/utils/ts-eslint").FlatConfig.ConfigArray} */ ([
-      { name: nameOrConfigs, ...config },
-    ]);
+    return /** @type {ConfigArray} */ ([{ name: nameOrConfigs, ...config }]);
+  } else if (Array.isArray(nameOrConfigs)) {
+    return /** @type {ConfigArray} */ (nameOrConfigs);
   } else {
-    return /** @type {import("@typescript-eslint/utils/ts-eslint").FlatConfig.ConfigArray} */ (
-      nameOrConfigs
-    );
+    return /** @type {ConfigArray} */ ([nameOrConfigs]);
   }
 };
 
-/**
- * FlatCompatのextends()\
- * ESLint Config Inspector用
- * @param {string} configToExtend
- * @returns {import("@typescript-eslint/utils/ts-eslint").FlatConfig.Config[]}
- */
-const compatExtend = (configToExtend) => {
-  const flatConfigs = compat.extends(configToExtend);
-
-  if (process.env.ESLINT_INSPECTOR) {
-    flatConfigs.forEach((config, i) => {
-      // filesがあるとESLint Config Inspectorがエラーを吐くので削除
-      delete config.files;
-
-      // ESLint Config Inspectorで見やすいように名前を付ける
-      config.name = `FlatCompat/${configToExtend}[${i}]`;
-    });
-  }
-
-  return /** @type {import("@typescript-eslint/utils/ts-eslint").FlatConfig.Config[]} */ (
-    flatConfigs
-  );
-};
-
-/** @type {import("@typescript-eslint/utils/ts-eslint").FlatConfig.ParserOptions} */
+/** @type {ParserOptions} */
 const vueParserOptions = {
   ecmaVersion: 2020,
   parser: typescriptParser,
 };
 
-/** @type {import("@typescript-eslint/utils/ts-eslint").FlatConfig.ParserOptions} */
+/** @type {ParserOptions} */
 const typeCheckedParserOptions = {
   project: ["./tsconfig.json"],
   tsconfigRootDir: __dirname,
 };
 
-/** @type {import("@typescript-eslint/utils/ts-eslint").FlatConfig.Rules} */
+/** @type {Rules} */
 const typeCheckedRules = {
   // Storeでよくasyncなしの関数を定義するので無効化
   // TODO: いずれは有効化する
@@ -146,7 +125,7 @@ export default defineConfig(
   ...pluginConfig("@vue/prettier", vuePrettierConfig),
   ...pluginConfig(vueTypeScriptConfig()),
   ...pluginConfig("prettier:recommended", prettierConfigRecommended),
-  ...compatExtend("plugin:@voicevox/all"),
+  ...pluginConfig(voicevoxPlugin.configs.all),
   ...pluginConfig(storybookPlugin.configs["flat/recommended"]),
 
   {
