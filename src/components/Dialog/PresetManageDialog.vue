@@ -180,6 +180,9 @@ import {
   PresetSliderKey,
 } from "@/type/preload";
 import { SLIDER_PARAMETERS } from "@/store/utility";
+import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
+import { debounce } from "@/helpers/timer";
+import { UnreachableError } from "@/type/utility";
 
 const props = defineProps<{
   openDialog: boolean;
@@ -241,27 +244,25 @@ watch(selectedPresetKey, (key) => {
     return;
   }
 
-  const preset = presetItems.value[key];
-  selectedPreset.value = {
-    ...preset,
-    morphingInfo: preset.morphingInfo ? { ...preset.morphingInfo } : undefined,
-  };
+  selectedPreset.value = cloneWithUnwrapProxy(presetItems.value[key]);
 });
 
+const debouncedUpdatePreset = debounce(store.actions.UPDATE_PRESET, 300);
 watch(
-  () =>
-    Object.entries({
-      ...selectedPreset.value,
-      ...selectedPreset.value?.morphingInfo,
-    }),
-  async () => {
-    if (!selectedPreset.value || !selectedPreset.value.name) return;
+  () => selectedPreset.value,
+  (value) => {
+    if (value == undefined) {
+      throw new UnreachableError(value);
+    }
+    if (value.name == "") return;
 
-    await store.actions.UPDATE_PRESET({
-      presetData: selectedPreset.value,
+    // NOTE: debounce中にkeyが変わった場合に対応するため、watchのコールバックに直接debounceを使っていない
+    void debouncedUpdatePreset({
+      presetData: value,
       presetKey: selectedPresetKey.value,
     });
   },
+  { deep: true },
 );
 
 const changePresetName = (event: Event) => {

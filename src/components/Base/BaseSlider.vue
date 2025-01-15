@@ -27,6 +27,7 @@
 <script setup lang="ts">
 import { SliderRange, SliderRoot, SliderThumb, SliderTrack } from "radix-vue";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
+import { debounce } from "@/helpers/timer";
 
 const props = withDefaults(
   defineProps<{
@@ -50,6 +51,11 @@ const emit = defineEmits<{
   valueCommit: [value: number];
 }>();
 
+const debounceEmitValueCommit = debounce(
+  (value: number) => emit("valueCommit", value),
+  300,
+);
+
 const onWheel = (event: WheelEvent) => {
   if (props.disabled) return;
   event.preventDefault();
@@ -64,7 +70,7 @@ const onWheel = (event: WheelEvent) => {
   const clampedValue = Math.min(props.max, Math.max(props.min, value));
 
   emit("update:modelValue", clampedValue);
-  emit("valueCommit", clampedValue);
+  debounceEmitValueCommit(clampedValue);
 };
 </script>
 
