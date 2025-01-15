@@ -1,8 +1,8 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * VOICEVOX Engine
- * VOICEVOX の音声合成エンジンです。
+ * DUMMY Engine
+ * DUMMY の音声合成エンジンです。
  *
  * The version of the OpenAPI document: latest
  * 
@@ -57,7 +57,7 @@ export interface Speaker {
      */
     version: string;
     /**
-     * 
+     * キャラクターの対応機能
      * @type {SpeakerSupportedFeatures}
      * @memberof Speaker
      */

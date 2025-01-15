@@ -165,6 +165,7 @@ onMounted(async () => {
   // プロジェクトファイルが指定されていればロード
   if (typeof projectFilePath === "string" && projectFilePath !== "") {
     isProjectFileLoaded.value = await store.actions.LOAD_PROJECT_FILE({
+      type: "path",
       filePath: projectFilePath,
     });
   } else {

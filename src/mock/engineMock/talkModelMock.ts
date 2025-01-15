@@ -182,16 +182,23 @@ export async function textToActtentPhrasesMock(text: string, styleId: number) {
   for (const token of tokens) {
     // 記号の場合は無音を入れて区切る
     if (token.pos == "記号") {
-      if (textPhrase.length == 0) continue;
-
-      const accentPhrase = textToAccentPhraseMock(textPhrase);
-      accentPhrase.pauseMora = {
+      const pauseMora = {
         text: "、",
         vowel: "pau",
         vowelLength: 1 - 1 / (accentPhrases.length + 1),
         pitch: 0,
       };
-      accentPhrases.push(accentPhrase);
+
+      // テキストが空の場合は前のアクセント句に無音を追加、空でない場合は新しいアクセント句を追加
+      let accentPhrase: AccentPhrase;
+      if (textPhrase.length === 0) {
+        accentPhrase = accentPhrases[accentPhrases.length - 1];
+      } else {
+        accentPhrase = textToAccentPhraseMock(textPhrase);
+        accentPhrases.push(accentPhrase);
+      }
+      accentPhrase.pauseMora = pauseMora;
+
       textPhrase = "";
       continue;
     }

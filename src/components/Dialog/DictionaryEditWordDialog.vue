@@ -296,12 +296,12 @@ const saveWord = async () => {
         accentType: accent,
         priority: wordPriority.value,
       });
-    } catch {
+    } catch (e) {
       void store.actions.SHOW_ALERT_DIALOG({
         title: "単語の更新に失敗しました",
         message: "エンジンの再起動をお試しください。",
       });
-      return;
+      throw e;
     }
   } else {
     try {
@@ -313,12 +313,12 @@ const saveWord = async () => {
           priority: wordPriority.value,
         }),
       );
-    } catch {
+    } catch (e) {
       void store.actions.SHOW_ALERT_DIALOG({
         title: "単語の登録に失敗しました",
         message: "エンジンの再起動をお試しください。",
       });
-      return;
+      throw e;
     }
   }
   await loadingDictProcess();
