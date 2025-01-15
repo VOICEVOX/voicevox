@@ -868,7 +868,6 @@ export class PolySynth implements Instrument {
       return;
     }
     const MAX_NUMBER = 1e10;
-    const MIN_NUMBER = 1e-10;
 
     const NUM_HARMONICS = 36;
     const MIN_HARMONICS_AMOUNT = 0;
@@ -890,10 +889,10 @@ export class PolySynth implements Instrument {
         MAX_HARMONICS_AMOUNT,
       );
       const maxHarmonics = Math.pow(MAX_NUMBER, clampedHarmonicsAmount);
-      if (i > maxHarmonics || clampedHarmonicsAmount < MIN_NUMBER) {
-        imag[i] = 0;
-      } else {
+      if (i <= maxHarmonics) {
         imag[i] = 1 / Math.pow(i, 1 / clampedHarmonicsAmount);
+      } else {
+        imag[i] = 0;
       }
     }
     this.oscPeriodicWave = this.audioContext.createPeriodicWave(real, imag);
