@@ -1045,7 +1045,7 @@ export function createPreviewSynthParams(): PreviewSynthParams {
     ampParams: {
       attack: 0.002,
       decay: 0.16,
-      sustain: 0,
+      sustain: 0.33,
       release: 0.02,
     },
     lowCutFrequency: 125,
