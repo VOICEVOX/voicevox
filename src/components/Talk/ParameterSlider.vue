@@ -6,15 +6,14 @@
       </label>
       <input
         :id="`parameter-${sliderKey}`"
-        :value="inputValueFixed"
+        :value="innerValueFixed"
         class="parameter-input"
         type="text"
-        @change="onUpdate"
-        @blur="onUpdate"
+        @change="handleInputUpdate"
       />
     </div>
     <BaseSlider
-      v-model="inputValue"
+      v-model="innerValue"
       :min
       :max
       :step
@@ -38,18 +37,18 @@ const props = defineProps<{
   modelValue: number;
 }>();
 
-const inputValue = ref(props.modelValue);
+const innerValue = ref(props.modelValue);
 watchEffect(() => {
-  inputValue.value = props.modelValue;
+  innerValue.value = props.modelValue;
 });
-const inputValueFixed = computed(() => inputValue.value.toFixed(2));
+const innerValueFixed = computed(() => innerValue.value.toFixed(2));
 
 const emit = defineEmits<{
   /** 値が確定したタイミングで実行される */
   "update:modelValue": [value: number];
 }>();
 
-const onUpdate = (event: Event) => {
+const handleInputUpdate = (event: Event) => {
   if (!(event.target instanceof HTMLInputElement)) {
     throw new Error("Event target is not an HTMLInputElement");
   }
@@ -59,7 +58,7 @@ const onUpdate = (event: Event) => {
     emit("update:modelValue", Math.min(Math.max(value, props.min), props.max));
   }
 
-  inputValue.value = props.modelValue;
+  innerValue.value = props.modelValue;
 };
 </script>
 
