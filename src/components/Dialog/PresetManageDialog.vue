@@ -108,18 +108,7 @@
                           :showEngineInfo="morphingTargetEngines.length >= 2"
                           :emptiable="true"
                           :uiLocked="false"
-                          @update:selectedVoice="
-                            if ($event == null) {
-                              selectedPreset.morphingInfo = undefined;
-                            } else {
-                              selectedPreset.morphingInfo = {
-                                targetEngineId: $event.engineId,
-                                targetSpeakerId: $event.speakerId,
-                                targetStyleId: $event.styleId,
-                                rate: selectedPreset.morphingInfo?.rate ?? 0.5,
-                              };
-                            }
-                          "
+                          @update:selectedVoice="handleSelectedVoiceUpdate"
                         />
                         <span>
                           {{
@@ -178,6 +167,7 @@ import {
   Preset,
   PresetKey,
   PresetSliderKey,
+  Voice,
 } from "@/type/preload";
 import { SLIDER_PARAMETERS } from "@/store/utility";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
@@ -192,6 +182,24 @@ const emit = defineEmits<{
 }>();
 
 const updateOpenDialog = (isOpen: boolean) => emit("update:openDialog", isOpen);
+
+const handleSelectedVoiceUpdate = (event: Voice | undefined) => {
+  if (selectedPreset.value == undefined) {
+    throw new Error("selectedPreset is undefined");
+  }
+
+  if (event == undefined) {
+    selectedPreset.value.morphingInfo = undefined;
+    return;
+  }
+
+  selectedPreset.value.morphingInfo = {
+    targetEngineId: event.engineId,
+    targetSpeakerId: event.speakerId,
+    targetStyleId: event.styleId,
+    rate: selectedPreset.value.morphingInfo?.rate ?? 0.5,
+  };
+};
 
 const store = useStore();
 const { isDefaultPresetKey } = useDefaultPreset();
