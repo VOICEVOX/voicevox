@@ -93,7 +93,6 @@ async function unarchive(
     outputDir: string;
     format: "zip" | "7z";
   },
-
   callbacks?: { onProgress?: ProgressCallback },
 ) {
   const { archiveFile, outputDir, format } = payload;
