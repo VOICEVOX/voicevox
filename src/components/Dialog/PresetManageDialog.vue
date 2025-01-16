@@ -85,7 +85,7 @@
                         :label="parameterLabels[sliderKey as ParameterType]"
                       />
                     </template>
-                    <!-- モーフィング無効時にキャラ選択解除するといきなり非表示になってしまうが、稀なケースなため無対策 -->
+                    <!-- NOTE: モーフィング無効時にキャラ選択解除するといきなり非表示になってしまうが、稀なケースなため無対策 -->
                     <template
                       v-if="shouldShowMorphing || selectedPreset.morphingInfo"
                     >
