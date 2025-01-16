@@ -45,6 +45,7 @@ watchEffect(() => {
 const inputValueFixed = computed(() => inputValue.value.toFixed(2));
 
 const emit = defineEmits<{
+  /** 値が確定したタイミングで実行される */
   "update:modelValue": [value: number];
 }>();
 
