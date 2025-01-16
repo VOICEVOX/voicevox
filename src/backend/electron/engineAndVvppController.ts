@@ -10,7 +10,6 @@ import { getEngineProcessManager } from "./manager/engineProcessManager";
 import { getRuntimeInfoManager } from "./manager/RuntimeInfoManager";
 import { getVvppManager } from "./manager/vvppManager";
 import { getWindowManager } from "./manager/windowManager";
-import { ProgressCallback } from "./type";
 import {
   EngineId,
   EngineInfo,
@@ -24,6 +23,7 @@ import {
 } from "@/domain/defaultEngine/latetDefaultEngine";
 import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
 import { UnreachableError } from "@/type/utility";
+import { ProgressCallback } from "@/helpers/progressHelper";
 
 /**
  * エンジンとVVPP周りの処理の流れを制御するクラス。
