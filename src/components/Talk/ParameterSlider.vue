@@ -51,7 +51,7 @@ const emit = defineEmits<{
 
 const onUpdate = (event: Event) => {
   if (!(event.target instanceof HTMLInputElement)) {
-    return;
+    throw new Error("Event target is not an HTMLInputElement");
   }
 
   const value = Number(event.target.value);
