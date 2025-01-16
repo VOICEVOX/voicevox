@@ -251,6 +251,8 @@ class IdleState implements IState<State, Input, Context> {
         mouseButton === "LEFT_BUTTON" &&
         input.targetArea === "SequencerBody"
       ) {
+        // TODO: Ctrlが押されているときではなく、
+        //       ピッチ削除ツールのときにErasePitchStateに遷移するようにする
         if (isOnCommandOrCtrlKeyDown(input.mouseEvent)) {
           const erasePitchState = new ErasePitchState(
             input.cursorPos,
@@ -1183,10 +1185,7 @@ class ErasePitchState implements IState<State, Input, Context> {
     if (context.previewPitchEdit.value.type !== "erase") {
       throw new Error("previewPitchEdit.value.type is not erase.");
     }
-    const cursorFrame = this.currentCursorPos.frame;
-    if (cursorFrame < 0) {
-      return;
-    }
+    const cursorFrame = Math.max(0, this.currentCursorPos.frame);
     const tempPitchEdit = { ...context.previewPitchEdit.value };
 
     if (tempPitchEdit.startFrame > cursorFrame) {
