@@ -53,12 +53,14 @@ const handleInputUpdate = (event: Event) => {
     throw new Error("Event target is not an HTMLInputElement");
   }
 
-  const value = Number(event.target.value);
-  if (!Number.isNaN(value)) {
-    emit("update:modelValue", Math.min(Math.max(value, props.min), props.max));
+  const rawValue = Number(event.target.value);
+  if (Number.isNaN(rawValue)) {
+    event.target.value = innerValueFixed.value;
+    return;
   }
 
-  innerValue.value = props.modelValue;
+  const value = Math.min(Math.max(rawValue, props.min), props.max);
+  emit("update:modelValue", value);
 };
 </script>
 
