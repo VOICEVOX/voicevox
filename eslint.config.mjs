@@ -130,7 +130,7 @@ export default defineConfig(
 
   {
     name: "voicevox/type-checked/typescript",
-    files: ["*.ts", "*.mts"],
+    files: ["**/*.ts", "**/*.mts"],
     extends: [...configs.recommendedTypeChecked],
     languageOptions: {
       parser: typescriptParser,
