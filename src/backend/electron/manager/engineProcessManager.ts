@@ -4,7 +4,6 @@ import treeKill from "tree-kill";
 
 import { app, dialog } from "electron"; // FIXME: ここでelectronをimportするのは良くない
 
-import log from "electron-log/main";
 import {
   findAltPort,
   getPidFromPort,
@@ -16,6 +15,9 @@ import {
 import { getConfigManager } from "../electronConfig";
 import { getEngineInfoManager } from "./engineInfoManager";
 import { EngineId, EngineInfo } from "@/type/preload";
+import { createLogger } from "@/helpers/log";
+
+const logger = createLogger("EngineProcessManager");
 
 type EngineProcessContainer = {
   willQuitEngine: boolean;
@@ -48,10 +50,10 @@ export class EngineProcessManager {
    */
   async runEngineAll() {
     const engineInfos = this.engineInfoManager.fetchEngineInfos();
-    log.info(`Starting ${engineInfos.length} engine/s...`);
+    logger.info(`Starting ${engineInfos.length} engine/s...`);
 
     for (const engineInfo of engineInfos) {
-      log.info(`ENGINE ${engineInfo.uuid}: Start launching`);
+      logger.info(`ENGINE ${engineInfo.uuid}: Start launching`);
       await this.runEngine(engineInfo.uuid);
     }
   }
@@ -69,12 +71,12 @@ export class EngineProcessManager {
       throw new Error(`No such engineInfo registered: engineId == ${engineId}`);
 
     if (!engineInfo.executionEnabled) {
-      log.info(`ENGINE ${engineId}: Skipped engineInfo execution: disabled`);
+      logger.info(`ENGINE ${engineId}: Skipped engineInfo execution: disabled`);
       return;
     }
 
     if (!engineInfo.executionFilePath) {
-      log.info(
+      logger.info(
         `ENGINE ${engineId}: Skipped engineInfo execution: empty executionFilePath`,
       );
       return;
@@ -89,7 +91,7 @@ export class EngineProcessManager {
 
     // ポートが塞がっていれば代替ポートを探す
     let port = engineHostInfo.port;
-    log.info(
+    logger.info(
       `ENGINE ${engineId}: Checking whether port ${port} is assignable...`,
     );
 
@@ -98,12 +100,12 @@ export class EngineProcessManager {
       const pid = await getPidFromPort(engineHostInfo);
       if (pid != undefined) {
         const processName = await getProcessNameFromPid(engineHostInfo, pid);
-        log.warn(
+        logger.warn(
           `ENGINE ${engineId}: Port ${port} has already been assigned by ${processName ?? "(not found)"} (pid=${pid})`,
         );
       } else {
         // ポートは使用不可能だがプロセスidは見つからなかった
-        log.warn(`ENGINE ${engineId}: Port ${port} was unavailable`);
+        logger.warn(`ENGINE ${engineId}: Port ${port} was unavailable`);
       }
 
       // 代替ポートの検索
@@ -111,7 +113,7 @@ export class EngineProcessManager {
 
       // 代替ポートが見つからないとき
       if (altPort == undefined) {
-        log.error(`ENGINE ${engineId}: No Alternative Port Found`);
+        logger.error(`ENGINE ${engineId}: No Alternative Port Found`);
         dialog.showErrorBox(
           `${engineInfo.name} の起動に失敗しました`,
           `${port}番ポートの代わりに利用可能なポートが見つかりませんでした。PCを再起動してください。`,
@@ -122,14 +124,14 @@ export class EngineProcessManager {
 
       // 代替ポート情報を更新
       this.engineInfoManager.updateAltPort(engineId, altPort);
-      log.warn(
+      logger.warn(
         `ENGINE ${engineId}: Applied Alternative Port: ${port} -> ${altPort}`,
       );
 
       port = altPort;
     }
 
-    log.info(`ENGINE ${engineId}: Starting process`);
+    logger.info(`ENGINE ${engineId}: Starting process`);
 
     if (!(engineId in this.engineProcessContainers)) {
       this.engineProcessContainers[engineId] = {
@@ -145,7 +147,7 @@ export class EngineProcessManager {
       throw new Error(`No such engineSetting: engineId == ${engineId}`);
 
     const useGpu = engineSetting.useGpu;
-    log.info(`ENGINE ${engineId} mode: ${useGpu ? "GPU" : "CPU"}`);
+    logger.info(`ENGINE ${engineId} mode: ${useGpu ? "GPU" : "CPU"}`);
 
     // エンジンプロセスの起動
     const enginePath = engineInfo.executionFilePath;
@@ -156,8 +158,8 @@ export class EngineProcessManager {
       port.toString(),
     ]);
 
-    log.info(`ENGINE ${engineId} path: ${enginePath}`);
-    log.info(`ENGINE ${engineId} args: ${JSON.stringify(args)}`);
+    logger.info(`ENGINE ${engineId} path: ${enginePath}`);
+    logger.info(`ENGINE ${engineId} args: ${JSON.stringify(args)}`);
 
     const engineProcess = spawn(enginePath, args, {
       cwd: path.dirname(enginePath),
@@ -166,11 +168,11 @@ export class EngineProcessManager {
     engineProcessContainer.engineProcess = engineProcess;
 
     engineProcess.stdout?.on("data", (data: Buffer) => {
-      log.info(`ENGINE ${engineId} STDOUT: ${data.toString("utf-8")}`);
+      logger.info(`ENGINE ${engineId} STDOUT: ${data.toString("utf-8")}`);
     });
 
     engineProcess.stderr?.on("data", (data: Buffer) => {
-      log.error(`ENGINE ${engineId} STDERR: ${data.toString("utf-8")}`);
+      logger.error(`ENGINE ${engineId} STDERR: ${data.toString("utf-8")}`);
     });
 
     // onEngineProcessErrorを一度だけ呼ぶためのフラグ。"error"と"close"がどちらも呼ばれることがある。
@@ -178,7 +180,7 @@ export class EngineProcessManager {
     let errorNotified = false;
 
     engineProcess.on("error", (err) => {
-      log.error(`ENGINE ${engineId} ERROR:`, err);
+      logger.error(`ENGINE ${engineId} ERROR:`, err);
       if (!errorNotified) {
         errorNotified = true;
         this.onEngineProcessError(engineInfo, err);
@@ -186,10 +188,10 @@ export class EngineProcessManager {
     });
 
     engineProcess.on("close", (code, signal) => {
-      log.info(
+      logger.info(
         `ENGINE ${engineId}: Process terminated due to receipt of signal ${signal}`,
       );
-      log.info(`ENGINE ${engineId}: Process exited with code ${code}`);
+      logger.info(`ENGINE ${engineId}: Process exited with code ${code}`);
 
       if (!engineProcessContainer.willQuitEngine) {
         const errorMessage =
@@ -233,7 +235,7 @@ export class EngineProcessManager {
   killEngine(engineId: EngineId): Promise<void> | undefined {
     const engineProcessContainer = this.engineProcessContainers[engineId];
     if (!engineProcessContainer) {
-      log.error(`No such engineProcessContainer: engineId == ${engineId}`);
+      logger.error(`No such engineProcessContainer: engineId == ${engineId}`);
 
       return undefined;
     }
@@ -241,7 +243,7 @@ export class EngineProcessManager {
     const engineProcess = engineProcessContainer.engineProcess;
     if (engineProcess == undefined) {
       // nop if no process started (already killed or not started yet)
-      log.info(`ENGINE ${engineId}: Process not started`);
+      logger.info(`ENGINE ${engineId}: Process not started`);
 
       return undefined;
     }
@@ -249,13 +251,13 @@ export class EngineProcessManager {
     const engineNotExited = engineProcess.exitCode == undefined;
     const engineNotKilled = engineProcess.signalCode == undefined;
 
-    log.info(
+    logger.info(
       `ENGINE ${engineId}: last exit code: ${engineProcess.exitCode}, signal: ${engineProcess.signalCode}`,
     );
 
     const isAlive = engineNotExited && engineNotKilled;
     if (!isAlive) {
-      log.info(`ENGINE ${engineId}: Process already closed`);
+      logger.info(`ENGINE ${engineId}: Process already closed`);
 
       return undefined;
     }
@@ -264,26 +266,26 @@ export class EngineProcessManager {
     if (enginePid == undefined) {
       // エンジン起動済みの場合来ないはず
       // 万が一の場合はエンジン停止済みとみなす
-      log.error(
+      logger.error(
         `ENGINE ${engineId}: Process PID is undefined, assuming closed`,
       );
       return undefined;
     }
     return new Promise<void>((resolve, reject) => {
-      log.info(`ENGINE ${engineId}: Killing process (PID=${enginePid})`);
+      logger.info(`ENGINE ${engineId}: Killing process (PID=${enginePid})`);
 
       // エラーダイアログを抑制
       engineProcessContainer.willQuitEngine = true;
 
       // プロセス終了時のイベントハンドラ
       engineProcess.once("close", () => {
-        log.info(`ENGINE ${engineId}: Process closed`);
+        logger.info(`ENGINE ${engineId}: Process closed`);
         resolve();
       });
 
       treeKill(enginePid, (error) => {
         if (error != undefined) {
-          log.error(`ENGINE ${engineId}: Error during killing process`);
+          logger.error(`ENGINE ${engineId}: Error during killing process`);
           reject(error);
         }
       });
@@ -300,7 +302,7 @@ export class EngineProcessManager {
         this.engineProcessContainers[engineId];
       const engineProcess = engineProcessContainer?.engineProcess;
 
-      log.info(
+      logger.info(
         `ENGINE ${engineId}: Restarting process (last exit code: ${engineProcess?.exitCode}, signal: ${engineProcess?.signalCode})`,
       );
 
@@ -310,7 +312,7 @@ export class EngineProcessManager {
 
       // engineProcess == undefinedの場合true
       if (engineExited || engineKilled) {
-        log.info(
+        logger.info(
           `ENGINE ${engineId}: Process is not started yet or already killed. Starting process...`,
         );
 
@@ -325,7 +327,9 @@ export class EngineProcessManager {
       // 「killに使用するコマンドが終了するタイミング」と「OSがプロセスをkillするタイミング」が違うので単純にtreeKillのコールバック関数でrunEngine()を実行すると失敗します。
       // closeイベントはexitイベントよりも後に発火します。
       const restartEngineOnProcessClosedCallback = () => {
-        log.info(`ENGINE ${engineId}: Process killed. Restarting process...`);
+        logger.info(
+          `ENGINE ${engineId}: Process killed. Restarting process...`,
+        );
 
         void this.runEngine(engineId);
         resolve();
@@ -338,14 +342,14 @@ export class EngineProcessManager {
       engineProcess.once("close", restartEngineOnProcessClosedCallback);
 
       // treeKillのコールバック関数はコマンドが終了した時に呼ばれます。
-      log.info(
+      logger.info(
         `ENGINE ${engineId}: Killing current process (PID=${engineProcess.pid})...`,
       );
       treeKill(engineProcess.pid, (error) => {
         // error変数の値がundefined以外であればkillコマンドが失敗したことを意味します。
         if (error != undefined) {
-          log.error(`ENGINE ${engineId}: Failed to kill process`);
-          log.error(error);
+          logger.error(`ENGINE ${engineId}: Failed to kill process`);
+          logger.error(error);
 
           // killに失敗したとき、closeイベントが発生せず、once listenerが消費されない
           // listenerを削除してENGINEの意図しない再起動を防止

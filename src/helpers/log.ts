@@ -22,7 +22,7 @@ export function createLogger(scope: string): Record<LogLevel, LogFunction> {
       const scopeAndArgs = [`[${scope}]`, ...args];
 
       // フロントエンドの場合
-      if (window?.backend != undefined) {
+      if (typeof window != "undefined" && window.backend != undefined) {
         const method = (
           { info: "logInfo", warn: "logWarn", error: "logError" } as const
         )[logType];

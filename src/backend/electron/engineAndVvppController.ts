@@ -1,7 +1,6 @@
 import path from "path";
 import fs from "fs";
 import { ReadableStream } from "node:stream/web";
-import log from "electron-log/main";
 import { dialog } from "electron";
 
 import { getConfigManager } from "./electronConfig";
@@ -24,6 +23,9 @@ import {
 } from "@/domain/defaultEngine/latetDefaultEngine";
 import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
 import { UnreachableError } from "@/type/utility";
+import { createLogger } from "@/helpers/log";
+
+const logger = createLogger("EngineAndVvppController");
 
 /**
  * エンジンとVVPP周りの処理の流れを制御するクラス。
@@ -56,7 +58,7 @@ export class EngineAndVvppController {
       await this.vvppManager.install(vvppPath, callbacks);
       return true;
     } catch (e) {
-      log.error(`Failed to install ${vvppPath},`, e);
+      logger.error(`Failed to install ${vvppPath},`, e);
       dialog.showErrorBox(
         "インストールエラー",
         `${vvppPath} をインストールできませんでした。`,
@@ -140,7 +142,7 @@ export class EngineAndVvppController {
         "アンインストールエラー",
         `${engineName} をアンインストールできませんでした。`,
       );
-      log.error(`Failed to uninstall ${engineId},`, e);
+      logger.error(`Failed to uninstall ${engineId},`, e);
       return false;
     }
   }
@@ -164,18 +166,20 @@ export class EngineAndVvppController {
 
       const latestInfo = await fetchLatestDefaultEngineInfo(latestUrl);
       if (latestInfo.formatVersion != 1) {
-        log.error(`Unsupported format version: ${latestInfo.formatVersion}`);
+        logger.error(`Unsupported format version: ${latestInfo.formatVersion}`);
         continue;
       }
 
       // 実行環境に合うパッケージを取得
       const packageInfo = getSuitablePackageInfo(latestInfo);
-      log.info(`Latest default engine version: ${packageInfo.version}`);
+      logger.info(`Latest default engine version: ${packageInfo.version}`);
 
       // インストール済みだった場合はスキップ
       // FIXME: より新しいバージョンがあれば更新できるようにする
       if (this.engineInfoManager.hasEngineInfo(envEngineInfo.uuid)) {
-        log.info(`Default engine ${envEngineInfo.uuid} is already installed.`);
+        logger.info(
+          `Default engine ${envEngineInfo.uuid} is already installed.`,
+        );
         continue;
       }
 
@@ -212,7 +216,7 @@ export class EngineAndVvppController {
           if (failed) return; // 他のダウンロードが失敗していたら中断
 
           const { url, name } = p;
-          log.info(`Download ${name} from ${url}`);
+          logger.info(`Download ${name} from ${url}`);
 
           const res = await fetch(url);
           if (!res.ok || res.body == null)
@@ -239,7 +243,7 @@ export class EngineAndVvppController {
           await promise;
 
           downloadedPaths.push(downloadPath);
-          log.info(`Downloaded ${name} to ${downloadPath}`);
+          logger.info(`Downloaded ${name} to ${downloadPath}`);
 
           // TODO: ハッシュチェック
         }),
@@ -253,13 +257,13 @@ export class EngineAndVvppController {
       });
     } catch (e) {
       failed = true;
-      log.error(`Failed to download and install VVPP engine:`, e);
+      logger.error(`Failed to download and install VVPP engine:`, e);
       throw e;
     } finally {
       // ダウンロードしたファイルを削除
       await Promise.all(
         downloadedPaths.map(async (path) => {
-          log.info(`Delete downloaded file: ${path}`);
+          logger.info(`Delete downloaded file: ${path}`);
           await fs.promises.unlink(path);
         }),
       );
@@ -341,14 +345,14 @@ export class EngineAndVvppController {
       return promise
         .catch((error) => {
           // TODO: 各エンジンプロセスキルの失敗をUIに通知する
-          log.error(
+          logger.error(
             `ENGINE ${engineId}: Error during killing process: ${error}`,
           );
           // エディタを終了するため、エラーが起きてもエンジンプロセスをキルできたとみなす
         })
         .finally(() => {
           numEngineProcessKilled++;
-          log.info(
+          logger.info(
             `ENGINE ${engineId}: Process killed. ${numEngineProcessKilled} / ${numLivingEngineProcess} processes killed`,
           );
         });
@@ -357,7 +361,7 @@ export class EngineAndVvppController {
     // すべてのエンジンプロセスキル処理が完了するまで待機
     return Promise.all(waitingKilledPromises).then(() => {
       // エンジン終了後の処理を実行
-      log.info(
+      logger.info(
         "All ENGINE process kill operations done. Running post engine kill process",
       );
       return this.vvppManager.handleMarkedEngineDirs();

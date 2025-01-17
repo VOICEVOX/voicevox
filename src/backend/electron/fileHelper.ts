@@ -1,7 +1,9 @@
 import fs from "fs";
-import log from "electron-log/main";
 import { moveFileSync } from "move-file";
 import { uuid4 } from "@/helpers/random";
+import { createLogger } from "@/helpers/log";
+
+const logger = createLogger("fileHelper");
 
 /**
  * 書き込みに失敗したときにファイルが消えないように、
@@ -21,7 +23,7 @@ export function writeFileSafely(
   } catch (error) {
     if (fs.existsSync(tmpPath)) {
       fs.promises.unlink(tmpPath).catch((reason) => {
-        log.warn("Failed to remove %s\n  %o", tmpPath, reason);
+        logger.warn("Failed to remove %s\n  %o", tmpPath, reason);
       });
     }
     throw error;

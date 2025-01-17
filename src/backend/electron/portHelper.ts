@@ -1,6 +1,8 @@
 import { execFileSync } from "child_process";
 import { createServer } from "net";
-import log from "electron-log/main";
+import { createLogger } from "@/helpers/log";
+
+const logger = createLogger("portHelper");
 
 const isWindows = process.platform === "win32";
 
@@ -11,10 +13,10 @@ export type HostInfo = {
 };
 
 const portLog = (port: number, message: string, isNested = false) => {
-  log.info(`${isNested ? "| " : ""}PORT ${port}: ${message}`);
+  logger.info(`${isNested ? "| " : ""}PORT ${port}: ${message}`);
 };
 const portWarn = (port: number, message: string, isNested = false) => {
-  log.warn(`${isNested ? "| " : ""}PORT ${port}: ${message}`);
+  logger.warn(`${isNested ? "| " : ""}PORT ${port}: ${message}`);
 };
 
 /**

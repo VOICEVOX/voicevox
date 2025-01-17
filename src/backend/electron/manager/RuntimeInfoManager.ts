@@ -4,11 +4,13 @@
  */
 
 import AsyncLock from "async-lock";
-import log from "electron-log/main";
 import type { AltPortInfos } from "@/store/type";
 import { EngineId, EngineInfo } from "@/type/preload";
 import { writeFileSafely } from "@/backend/electron/fileHelper";
 import { createEngineUrl } from "@/domain/url";
+import { createLogger } from "@/helpers/log";
+
+const logger = createLogger("RuntimeInfoManager");
 
 /**
  * ランタイム情報書き出しに必要なEngineInfo
@@ -105,13 +107,13 @@ export class RuntimeInfoManager {
           this.runtimeInfoPath,
           JSON.stringify(runtimeInfoFormatFor3rdParty), // FIXME: zod化する
         );
-        log.info(
+        logger.info(
           `Runtime information file has been updated. : ${this.runtimeInfoPath}`,
         );
       } catch (e) {
         // ディスクの空き容量がない、他ツールからのファイルロック時をトラップ。
         // サードパーティ向けなのでVOICEVOX側には通知せず、エラー記録して継続
-        log.error("Failed to write file :", e);
+        logger.error("Failed to write file :", e);
       }
     });
   }

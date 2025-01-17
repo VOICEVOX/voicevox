@@ -4,8 +4,10 @@ import {
   IpcMainInvokeEvent,
   IpcRendererEvent,
 } from "electron";
-import log from "electron-log/main";
 import { IpcIHData, IpcSOData } from "@/type/ipc";
+import { createLogger } from "@/helpers/log";
+
+const logger = createLogger("ipc");
 
 export type IpcRendererInvoke = {
   [K in keyof IpcIHData]: (
@@ -47,7 +49,7 @@ export function registerIpcMainHandle(listeners: {
         validateIpcSender(event);
         return listener(event, ...args);
       } catch (e) {
-        log.error(e);
+        logger.error(e);
       }
     };
     ipcMain.handle(channel, errorHandledListener);

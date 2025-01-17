@@ -9,7 +9,6 @@ import {
   OpenDialogSyncOptions,
   SaveDialogOptions,
 } from "electron";
-import log from "electron-log/main";
 import windowStateKeeper from "electron-window-state";
 import { getConfigManager } from "../electronConfig";
 import { getEngineAndVvppController } from "../engineAndVvppController";
@@ -18,7 +17,7 @@ import { isMac } from "@/helpers/platform";
 import { themes } from "@/domain/theme";
 import { createLogger } from "@/helpers/log";
 
-const logger = createLogger("store/singing");
+const logger = createLogger("WindowManager");
 
 type WindowManagerOption = {
   appStateGetter: () => { willQuit: boolean };
@@ -184,7 +183,7 @@ class WindowManager {
     // 一旦適当なURLに飛ばしてページをアンロードする
     await win.loadURL("about:blank");
 
-    log.info("Checking ENGINE status before reload app");
+    logger.info("Checking ENGINE status before reload app");
     const engineAndVvppController = getEngineAndVvppController();
     const engineCleanupResult = engineAndVvppController.cleanupEngines();
 
@@ -192,7 +191,7 @@ class WindowManager {
     if (engineCleanupResult != "alreadyCompleted") {
       await engineCleanupResult;
     }
-    log.info("Post engine kill process done. Now reloading app");
+    logger.info("Post engine kill process done. Now reloading app");
 
     await engineAndVvppController.launchEngines();
 
