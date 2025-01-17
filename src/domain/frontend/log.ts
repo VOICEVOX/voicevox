@@ -1,13 +1,16 @@
+type LogLevel = "info" | "warn" | "error";
+type LogFunction = (...args: unknown[]) => void;
+
 /** ログ出力用の関数を生成する。ブラウザ専用。 */
 // TODO: window.backendをDIできるようにする
-export function createLogger(scope: string) {
+export function createLogger(scope: string): Record<LogLevel, LogFunction> {
   return {
     info: createLogFunction("info"),
     warn: createLogFunction("warn"),
     error: createLogFunction("error"),
   };
 
-  function createLogFunction(logType: "info" | "warn" | "error") {
+  function createLogFunction(logType: LogLevel): LogFunction {
     return (...args: unknown[]) => {
       if (window.backend != undefined) {
         const method = (
