@@ -7,7 +7,7 @@ import { pathToFileURL } from "url";
 import { app, dialog, Menu, nativeTheme, net, protocol, shell } from "electron";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 
-import log from "electron-log/main";
+import electronLog from "electron-log/main";
 import dayjs from "dayjs";
 import { hasSupportedGpu } from "./device";
 import {
@@ -89,16 +89,16 @@ if (!isDevelopment) {
   configMigration014({ fixedUserDataDir, beforeUserDataDir }); // 以前のファイルがあれば持ってくる
 }
 
-log.initialize({ preload: false });
+electronLog.initialize({ preload: false });
 // silly以上のログをコンソールに出力
-log.transports.console.format = "[{h}:{i}:{s}.{ms}] [{level}] {text}";
-log.transports.console.level = "silly";
+electronLog.transports.console.format = "[{h}:{i}:{s}.{ms}] [{level}] {text}";
+electronLog.transports.console.level = "silly";
 
 // warn以上のログをファイルに出力
 const prefix = dayjs().format("YYYYMMDD_HHmmss");
-log.transports.file.format = "[{h}:{i}:{s}.{ms}] [{level}] {text}";
-log.transports.file.level = "warn";
-log.transports.file.fileName = `${prefix}_error.log`;
+electronLog.transports.file.format = "[{h}:{i}:{s}.{ms}] [{level}] {text}";
+electronLog.transports.file.level = "warn";
+electronLog.transports.file.fileName = `${prefix}_error.log`;
 
 const log = createLogger("main");
 
