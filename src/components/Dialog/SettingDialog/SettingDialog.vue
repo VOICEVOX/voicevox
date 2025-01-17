@@ -492,7 +492,7 @@ import {
   EngineId,
   EditorFontType,
 } from "@/type/preload";
-import { createLogger } from "@/domain/frontend/log";
+import { createLogger } from "@/helpers/log";
 import { useRootMiscSetting } from "@/composables/useRootMiscSetting";
 import { isProduction } from "@/helpers/platform";
 

@@ -16,6 +16,9 @@ import { getEngineAndVvppController } from "../engineAndVvppController";
 import { ipcMainSendProxy } from "../ipc";
 import { isMac } from "@/helpers/platform";
 import { themes } from "@/domain/theme";
+import { createLogger } from "@/helpers/log";
+
+const logger = createLogger("store/singing");
 
 type WindowManagerOption = {
   appStateGetter: () => { willQuit: boolean };
