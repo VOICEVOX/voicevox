@@ -17,7 +17,7 @@ import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
 import { failure, Result, success } from "@/type/result";
 import { createLogger } from "@/helpers/log";
 
-const logger = createLogger("EngineInfoManager");
+const log = createLogger("EngineInfoManager");
 
 /** 利用可能なエンジンの情報を管理するクラス */
 export class EngineInfoManager {
@@ -110,7 +110,7 @@ export class EngineInfoManager {
     for (const dirName of fs.readdirSync(this.vvppEngineDir)) {
       const engineDir = path.join(this.vvppEngineDir, dirName);
       if (!fs.statSync(engineDir).isDirectory()) {
-        logger.info(`${engineDir} is not directory`);
+        log.info(`${engineDir} is not directory`);
         continue;
       }
       if (dirName === ".tmp") {
@@ -118,7 +118,7 @@ export class EngineInfoManager {
       }
       const result = this.loadEngineInfo(engineDir, "vvpp");
       if (!result.ok) {
-        logger.info(`Failed to load engine: ${result.code}, ${engineDir}`);
+        log.info(`Failed to load engine: ${result.code}, ${engineDir}`);
         continue;
       }
       engineInfos.push(result.value);
@@ -136,7 +136,7 @@ export class EngineInfoManager {
     for (const engineDir of configManager.get("registeredEngineDirs")) {
       const result = this.loadEngineInfo(engineDir, "path");
       if (!result.ok) {
-        logger.error(`Failed to load engine: ${result.code}, ${engineDir}`);
+        log.error(`Failed to load engine: ${result.code}, ${engineDir}`);
         // 動かないエンジンは追加できないので削除
         // FIXME: エンジン管理UIで削除可能にする
         dialog.showErrorBox(

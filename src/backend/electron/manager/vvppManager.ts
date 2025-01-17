@@ -16,7 +16,7 @@ import {
 import { errorToMessage } from "@/helpers/errorHelper";
 import { createLogger } from "@/helpers/log";
 
-const logger = createLogger("VvppManager");
+const log = createLogger("VvppManager");
 
 const isNotWin = process.platform !== "win32";
 
@@ -42,7 +42,7 @@ async function getArchiveFileParts(
   let archiveFileParts: string[];
   // 名前.数値.vvpppの場合は分割されているとみなして連結する
   if (vvppLikeFilePath.match(/\.[0-9]+\.vvppp$/)) {
-    logger.info("vvpp is split, finding other parts...");
+    log.info("vvpp is split, finding other parts...");
     const vvpppPathGlob = vvppLikeFilePath
       .replace(/\.[0-9]+\.vvppp$/, ".*.vvppp")
       .replace(/\\/g, "/"); // node-globはバックスラッシュを使えないので、スラッシュに置換する
@@ -51,7 +51,7 @@ async function getArchiveFileParts(
       if (!p.match(/\.[0-9]+\.vvppp$/)) {
         continue;
       }
-      logger.info(`found ${p}`);
+      log.info(`found ${p}`);
       filePaths.push(p);
     }
     filePaths.sort((a, b) => {
@@ -64,7 +64,7 @@ async function getArchiveFileParts(
     });
     archiveFileParts = filePaths;
   } else {
-    logger.info("Not a split file");
+    log.info("Not a split file");
     archiveFileParts = [vvppLikeFilePath];
   }
   return archiveFileParts;
@@ -77,12 +77,12 @@ async function concatenateVvppFiles(
 ) {
   // -siオプションでの7z解凍はサポートされていないため、
   // ファイルを連結した一次ファイルを作成し、それを7zで解凍する。
-  logger.info(`Concatenating ${archiveFileParts.length} files...`);
+  log.info(`Concatenating ${archiveFileParts.length} files...`);
   const tmpConcatenatedFile = path.join(
     app.getPath("temp"),
     `vvpp-${new Date().getTime()}.${format}`,
   );
-  logger.info("Temporary file:", tmpConcatenatedFile);
+  log.info("Temporary file:", tmpConcatenatedFile);
   await new Promise<void>((resolve, reject) => {
     if (!tmpConcatenatedFile) throw new Error("tmpFile is undefined");
     const inputStreams = archiveFileParts.map((f) => fs.createReadStream(f));
@@ -95,7 +95,7 @@ async function concatenateVvppFiles(
       })
       .on("error", reject);
   });
-  logger.info("Concatenated");
+  log.info("Concatenated");
   return tmpConcatenatedFile;
 }
 
@@ -125,7 +125,7 @@ async function unarchive(
   if (import.meta.env.PROD) {
     sevenZipPath = path.join(path.dirname(app.getPath("exe")), sevenZipPath);
   }
-  logger.info("Spawning 7z:", sevenZipPath, args.join(" "));
+  log.info("Spawning 7z:", sevenZipPath, args.join(" "));
   await new Promise<void>((resolve, reject) => {
     const child = spawn(sevenZipPath, args, {
       stdio: ["pipe", "pipe", "pipe"],
@@ -133,7 +133,7 @@ async function unarchive(
 
     child.stdout?.on("data", (data: Buffer) => {
       const output = data.toString("utf-8");
-      logger.info(`7z STDOUT: ${output}`);
+      log.info(`7z STDOUT: ${output}`);
 
       // 進捗を取得
       // NOTE: ` 75% 106 - pyopenjtalk\open_jtalk_dic_utf_8-1.11\sys.dic` のような出力が来る
@@ -149,7 +149,7 @@ async function unarchive(
     });
 
     child.stderr?.on("data", (data: Buffer) => {
-      logger.error(`7z STDERR: ${data.toString("utf-8")}`);
+      log.error(`7z STDERR: ${data.toString("utf-8")}`);
     });
 
     child.on("exit", (code) => {
@@ -227,13 +227,13 @@ export class VvppManager {
     const engineId = engineInfo.uuid;
 
     if (engineInfo.type !== "vvpp") {
-      logger.error(`engineInfo.type is not vvpp: engineId == ${engineId}`);
+      log.error(`engineInfo.type is not vvpp: engineId == ${engineId}`);
       return false;
     }
 
     const engineDirectory = engineInfo.path;
     if (engineDirectory == null) {
-      logger.error(`engineDirectory is null: engineId == ${engineId}`);
+      log.error(`engineDirectory is null: engineId == ${engineId}`);
       return false;
     }
 
@@ -255,8 +255,8 @@ export class VvppManager {
     if (!format) {
       throw new Error(`Unknown file format: ${archiveFileParts[0]}`);
     }
-    logger.info("Format:", format);
-    logger.info("Extracting vvpp to", outputDir);
+    log.info("Format:", format);
+    log.info("Extracting vvpp to", outputDir);
     try {
       let tmpConcatenatedFile: string | undefined;
       let archiveFile: string;
@@ -269,13 +269,13 @@ export class VvppManager {
           archiveFile = tmpConcatenatedFile;
         } else {
           archiveFile = archiveFileParts[0];
-          logger.info("Single file, not concatenating");
+          log.info("Single file, not concatenating");
         }
 
         await unarchive({ archiveFile, outputDir, format }, callbacks);
       } finally {
         if (tmpConcatenatedFile) {
-          logger.info("Removing temporary file", tmpConcatenatedFile);
+          log.info("Removing temporary file", tmpConcatenatedFile);
           await fs.promises.rm(tmpConcatenatedFile);
         }
       }
@@ -294,7 +294,7 @@ export class VvppManager {
       };
     } catch (e) {
       if (fs.existsSync(outputDir)) {
-        logger.info("Failed to extract vvpp, removing", outputDir);
+        log.info("Failed to extract vvpp, removing", outputDir);
         await fs.promises.rm(outputDir, { recursive: true });
       }
       throw e;
@@ -359,21 +359,17 @@ export class VvppManager {
               recursive: true,
               force: true,
             });
-            logger.info(`Engine ${engineId} deleted successfully.`);
+            log.info(`Engine ${engineId} deleted successfully.`);
             break;
           } catch (e) {
             if (i === 4) {
-              logger.error(e);
+              log.error(e);
               dialog.showErrorBox(
                 "エンジン削除エラー",
                 `エンジンの削除に失敗しました。エンジンのフォルダを手動で削除してください。\n${deletingEngineDir}\nエラー内容: ${errorToMessage(e)}`,
               );
             } else {
-              logger.error(
-                "Failed to delete engine directory: ",
-                e,
-                ", retrying",
-              );
+              log.error("Failed to delete engine directory: ", e, ", retrying");
               await new Promise((resolve) => setTimeout(resolve, 1000));
             }
           }
@@ -387,21 +383,17 @@ export class VvppManager {
           try {
             await fs.promises.rm(to, { recursive: true });
             await moveFile(from, to);
-            logger.info(`Renamed ${from} to ${to}`);
+            log.info(`Renamed ${from} to ${to}`);
             break;
           } catch (e) {
             if (i === 4) {
-              logger.error(e);
+              log.error(e);
               dialog.showErrorBox(
                 "エンジン追加エラー",
                 `エンジンの追加に失敗しました。エンジンのフォルダを手動で移動してください。\n${from}\nエラー内容: ${errorToMessage(e)}`,
               );
             } else {
-              logger.error(
-                "Failed to rename engine directory: ",
-                e,
-                ", retrying",
-              );
+              log.error("Failed to rename engine directory: ", e, ", retrying");
               await new Promise((resolve) => setTimeout(resolve, 1000));
             }
           }

@@ -25,7 +25,7 @@ import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
 import { UnreachableError } from "@/type/utility";
 import { createLogger } from "@/helpers/log";
 
-const logger = createLogger("EngineAndVvppController");
+const log = createLogger("EngineAndVvppController");
 
 /**
  * エンジンとVVPP周りの処理の流れを制御するクラス。
@@ -58,7 +58,7 @@ export class EngineAndVvppController {
       await this.vvppManager.install(vvppPath, callbacks);
       return true;
     } catch (e) {
-      logger.error(`Failed to install ${vvppPath},`, e);
+      log.error(`Failed to install ${vvppPath},`, e);
       dialog.showErrorBox(
         "インストールエラー",
         `${vvppPath} をインストールできませんでした。`,
@@ -142,7 +142,7 @@ export class EngineAndVvppController {
         "アンインストールエラー",
         `${engineName} をアンインストールできませんでした。`,
       );
-      logger.error(`Failed to uninstall ${engineId},`, e);
+      log.error(`Failed to uninstall ${engineId},`, e);
       return false;
     }
   }
@@ -166,20 +166,18 @@ export class EngineAndVvppController {
 
       const latestInfo = await fetchLatestDefaultEngineInfo(latestUrl);
       if (latestInfo.formatVersion != 1) {
-        logger.error(`Unsupported format version: ${latestInfo.formatVersion}`);
+        log.error(`Unsupported format version: ${latestInfo.formatVersion}`);
         continue;
       }
 
       // 実行環境に合うパッケージを取得
       const packageInfo = getSuitablePackageInfo(latestInfo);
-      logger.info(`Latest default engine version: ${packageInfo.version}`);
+      log.info(`Latest default engine version: ${packageInfo.version}`);
 
       // インストール済みだった場合はスキップ
       // FIXME: より新しいバージョンがあれば更新できるようにする
       if (this.engineInfoManager.hasEngineInfo(envEngineInfo.uuid)) {
-        logger.info(
-          `Default engine ${envEngineInfo.uuid} is already installed.`,
-        );
+        log.info(`Default engine ${envEngineInfo.uuid} is already installed.`);
         continue;
       }
 
@@ -216,7 +214,7 @@ export class EngineAndVvppController {
           if (failed) return; // 他のダウンロードが失敗していたら中断
 
           const { url, name } = p;
-          logger.info(`Download ${name} from ${url}`);
+          log.info(`Download ${name} from ${url}`);
 
           const res = await fetch(url);
           if (!res.ok || res.body == null)
@@ -243,7 +241,7 @@ export class EngineAndVvppController {
           await promise;
 
           downloadedPaths.push(downloadPath);
-          logger.info(`Downloaded ${name} to ${downloadPath}`);
+          log.info(`Downloaded ${name} to ${downloadPath}`);
 
           // TODO: ハッシュチェック
         }),
@@ -257,13 +255,13 @@ export class EngineAndVvppController {
       });
     } catch (e) {
       failed = true;
-      logger.error(`Failed to download and install VVPP engine:`, e);
+      log.error(`Failed to download and install VVPP engine:`, e);
       throw e;
     } finally {
       // ダウンロードしたファイルを削除
       await Promise.all(
         downloadedPaths.map(async (path) => {
-          logger.info(`Delete downloaded file: ${path}`);
+          log.info(`Delete downloaded file: ${path}`);
           await fs.promises.unlink(path);
         }),
       );
@@ -345,14 +343,14 @@ export class EngineAndVvppController {
       return promise
         .catch((error) => {
           // TODO: 各エンジンプロセスキルの失敗をUIに通知する
-          logger.error(
+          log.error(
             `ENGINE ${engineId}: Error during killing process: ${error}`,
           );
           // エディタを終了するため、エラーが起きてもエンジンプロセスをキルできたとみなす
         })
         .finally(() => {
           numEngineProcessKilled++;
-          logger.info(
+          log.info(
             `ENGINE ${engineId}: Process killed. ${numEngineProcessKilled} / ${numLivingEngineProcess} processes killed`,
           );
         });
@@ -361,7 +359,7 @@ export class EngineAndVvppController {
     // すべてのエンジンプロセスキル処理が完了するまで待機
     return Promise.all(waitingKilledPromises).then(() => {
       // エンジン終了後の処理を実行
-      logger.info(
+      log.info(
         "All ENGINE process kill operations done. Running post engine kill process",
       );
       return this.vvppManager.handleMarkedEngineDirs();

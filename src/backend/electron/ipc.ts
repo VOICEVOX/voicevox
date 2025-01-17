@@ -7,7 +7,7 @@ import {
 import { IpcIHData, IpcSOData } from "@/type/ipc";
 import { createLogger } from "@/helpers/log";
 
-const logger = createLogger("ipc");
+const log = createLogger("ipc");
 
 export type IpcRendererInvoke = {
   [K in keyof IpcIHData]: (
@@ -49,7 +49,7 @@ export function registerIpcMainHandle(listeners: {
         validateIpcSender(event);
         return listener(event, ...args);
       } catch (e) {
-        logger.error(e);
+        log.error(e);
       }
     };
     ipcMain.handle(channel, errorHandledListener);

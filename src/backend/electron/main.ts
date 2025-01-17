@@ -100,14 +100,14 @@ log.transports.file.format = "[{h}:{i}:{s}.{ms}] [{level}] {text}";
 log.transports.file.level = "warn";
 log.transports.file.fileName = `${prefix}_error.log`;
 
-const logger = createLogger("main");
+const log = createLogger("main");
 
 if (errorForRemoveBeforeUserDataDir != undefined) {
-  logger.error(errorForRemoveBeforeUserDataDir);
+  log.error(errorForRemoveBeforeUserDataDir);
 }
 
 process.on("uncaughtException", (error) => {
-  logger.error(error);
+  log.error(error);
 
   if (isDevelopment) {
     app.exit(1);
@@ -125,7 +125,7 @@ process.on("uncaughtException", (error) => {
   }
 });
 process.on("unhandledRejection", (reason) => {
-  logger.error(reason);
+  log.error(reason);
 });
 
 let appDirPath: string;
@@ -158,7 +158,7 @@ void app.whenReady().then(() => {
       relativePath.startsWith("..") ||
       relativePath === "";
     if (isUnsafe) {
-      logger.error(`Bad Request URL: ${request.url}`);
+      log.error(`Bad Request URL: ${request.url}`);
       return new Response("bad", {
         status: 400,
         headers: { "content-type": "text/html" },
@@ -177,7 +177,7 @@ if (!fs.existsSync(vvppEngineDir)) {
 
 const onEngineProcessError = (engineInfo: EngineInfo, error: Error) => {
   const engineId = engineInfo.uuid;
-  logger.error(`ENGINE ${engineId} ERROR:`, error);
+  log.error(`ENGINE ${engineId} ERROR:`, error);
 
   // winが作られる前にエラーが発生した場合はwinへの通知を諦める
   // FIXME: winが作られた後にエンジンを起動させる
@@ -185,7 +185,7 @@ const onEngineProcessError = (engineInfo: EngineInfo, error: Error) => {
   if (win != undefined) {
     ipcMainSendProxy.DETECTED_ENGINE_ERROR(win, { engineId });
   } else {
-    logger.error(`onEngineProcessError: win is undefined`);
+    log.error(`onEngineProcessError: win is undefined`);
   }
 
   dialog.showErrorBox("音声合成エンジンエラー", error.message);
@@ -618,7 +618,7 @@ app.on("web-contents-created", (_e, contents) => {
     if (protocol.match(/^https?:/)) {
       void shell.openExternal(url);
     } else {
-      logger.error(`許可されないリンクです。url: ${url}`);
+      log.error(`許可されないリンクです。url: ${url}`);
     }
     return { action: "deny" };
   });
@@ -627,14 +627,14 @@ app.on("web-contents-created", (_e, contents) => {
   contents.on("will-navigate", (event) => {
     // preloadスクリプト変更時のホットリロードを許容する
     if (contents.getURL() !== event.url) {
-      logger.error(`ナビゲーションは無効化されています。url: ${event.url}`);
+      log.error(`ナビゲーションは無効化されています。url: ${event.url}`);
       event.preventDefault();
     }
   });
 });
 
 app.on("window-all-closed", () => {
-  logger.info("All windows closed. Quitting app");
+  log.info("All windows closed. Quitting app");
   app.quit();
 });
 
@@ -648,7 +648,7 @@ app.on("before-quit", async (event) => {
     return;
   }
 
-  logger.info("Checking ENGINE status before app quit");
+  log.info("Checking ENGINE status before app quit");
   const { engineCleanupResult, configSavedResult } =
     engineAndVvppController.gracefulShutdown();
 
@@ -660,27 +660,27 @@ app.on("before-quit", async (event) => {
     engineCleanupResult === "alreadyCompleted" &&
     configSavedResult === "alreadySaved"
   ) {
-    logger.info("Post engine kill process and config save done. Quitting app");
+    log.info("Post engine kill process and config save done. Quitting app");
     return;
   }
 
   // すべてのエンジンプロセスのキルを開始
 
   // 同期的にbefore-quitイベントをキャンセル
-  logger.info("Interrupt app quit");
+  log.info("Interrupt app quit");
   event.preventDefault();
 
   if (engineCleanupResult !== "alreadyCompleted") {
-    logger.info("Waiting for post engine kill process");
+    log.info("Waiting for post engine kill process");
     await engineCleanupResult;
   }
   if (configSavedResult !== "alreadySaved") {
-    logger.info("Waiting for config save");
+    log.info("Waiting for config save");
     await configSavedResult;
   }
 
   // アプリケーションの終了を再試行する
-  logger.info("Attempting to quit app again");
+  log.info("Attempting to quit app again");
   app.quit();
   return;
 });
@@ -695,7 +695,7 @@ app.once("will-finish-launching", () => {
 
 void app.whenReady().then(async () => {
   await configManager.initialize().catch(async (e) => {
-    logger.error(e);
+    log.error(e);
 
     const appExit = async () => {
       await configManager?.ensureSaved();
@@ -778,7 +778,7 @@ void app.whenReady().then(async () => {
     try {
       await installExtension(VUEJS_DEVTOOLS);
     } catch (e) {
-      logger.error("Vue Devtools failed to install:", e);
+      log.error("Vue Devtools failed to install:", e);
     }
   }
 
@@ -807,7 +807,7 @@ void app.whenReady().then(async () => {
       {
         onProgress: ({ type, progress }) => {
           if (Date.now() - lastLogTime > 100) {
-            logger.info(
+            log.info(
               `VVPP default engine progress: ${type}: ${Math.floor(progress)}%`,
             );
             lastLogTime = Date.now();
@@ -836,15 +836,15 @@ void app.whenReady().then(async () => {
       filePath,
     } as SingleInstanceLockData)
   ) {
-    logger.info("VOICEVOX already running. Cancelling launch.");
-    logger.info(`File path sent: ${filePath}`);
+    log.info("VOICEVOX already running. Cancelling launch.");
+    log.info(`File path sent: ${filePath}`);
     appState.willQuit = true;
     app.quit();
     return;
   }
 
   if (filePath && isVvppFile(filePath)) {
-    logger.info(`vvpp file install: ${filePath}`);
+    log.info(`vvpp file install: ${filePath}`);
     // FIXME: GUI側に合流させる
     if (checkMultiEngineEnabled()) {
       await engineAndVvppController.installVvppEngineWithWarning({
@@ -864,15 +864,13 @@ app.on("second-instance", async (_event, _argv, _workDir, rawData) => {
   const win = windowManager.win;
   if (win == undefined) {
     // TODO: 起動シーケンス中の場合はWindowが作られるまで待つ
-    logger.warn(
-      "A 'second-instance' event was emitted but there is no window.",
-    );
+    log.warn("A 'second-instance' event was emitted but there is no window.");
     return;
   }
   if (!data.filePath) {
-    logger.info("No file path sent");
+    log.info("No file path sent");
   } else if (isVvppFile(data.filePath)) {
-    logger.info("Second instance launched with vvpp file");
+    log.info("Second instance launched with vvpp file");
     // FIXME: GUI側に合流させる
     if (checkMultiEngineEnabled()) {
       await engineAndVvppController.installVvppEngineWithWarning({
@@ -886,7 +884,7 @@ app.on("second-instance", async (_event, _argv, _workDir, rawData) => {
       });
     }
   } else if (data.filePath.endsWith(".vvproj")) {
-    logger.info("Second instance launched with vvproj file");
+    log.info("Second instance launched with vvproj file");
     ipcMainSendProxy.LOAD_PROJECT_FILE(win, {
       filePath: data.filePath,
     });
@@ -898,7 +896,7 @@ if (isDevelopment) {
   if (process.platform === "win32") {
     process.on("message", (data) => {
       if (data === "graceful-exit") {
-        logger.info("Received graceful-exit");
+        log.info("Received graceful-exit");
         app.quit();
       }
     });

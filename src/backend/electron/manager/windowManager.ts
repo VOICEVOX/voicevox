@@ -17,7 +17,7 @@ import { isMac } from "@/helpers/platform";
 import { themes } from "@/domain/theme";
 import { createLogger } from "@/helpers/log";
 
-const logger = createLogger("WindowManager");
+const log = createLogger("WindowManager");
 
 type WindowManagerOption = {
   appStateGetter: () => { willQuit: boolean };
@@ -183,7 +183,7 @@ class WindowManager {
     // 一旦適当なURLに飛ばしてページをアンロードする
     await win.loadURL("about:blank");
 
-    logger.info("Checking ENGINE status before reload app");
+    log.info("Checking ENGINE status before reload app");
     const engineAndVvppController = getEngineAndVvppController();
     const engineCleanupResult = engineAndVvppController.cleanupEngines();
 
@@ -191,7 +191,7 @@ class WindowManager {
     if (engineCleanupResult != "alreadyCompleted") {
       await engineCleanupResult;
     }
-    logger.info("Post engine kill process done. Now reloading app");
+    log.info("Post engine kill process done. Now reloading app");
 
     await engineAndVvppController.launchEngines();
 

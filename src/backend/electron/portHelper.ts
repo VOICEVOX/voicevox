@@ -2,7 +2,7 @@ import { execFileSync } from "child_process";
 import { createServer } from "net";
 import { createLogger } from "@/helpers/log";
 
-const logger = createLogger("portHelper");
+const log = createLogger("portHelper");
 
 const isWindows = process.platform === "win32";
 
@@ -13,10 +13,10 @@ export type HostInfo = {
 };
 
 const portLog = (port: number, message: string, isNested = false) => {
-  logger.info(`${isNested ? "| " : ""}PORT ${port}: ${message}`);
+  log.info(`${isNested ? "| " : ""}PORT ${port}: ${message}`);
 };
 const portWarn = (port: number, message: string, isNested = false) => {
-  logger.warn(`${isNested ? "| " : ""}PORT ${port}: ${message}`);
+  log.warn(`${isNested ? "| " : ""}PORT ${port}: ${message}`);
 };
 
 /**
