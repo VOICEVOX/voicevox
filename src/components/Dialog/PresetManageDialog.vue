@@ -37,8 +37,8 @@
               >
                 <template #item="{ element: item }">
                   <BaseListItem
-                    :selected="selectedPresetKey === item.key"
-                    @click="selectedPresetKey = item.key"
+                    :selected="selected?.key === item.key"
+                    @click="selectPreset(item.key)"
                   >
                     <div class="listitem-content">
                       <span class="listitem-name">
@@ -58,15 +58,17 @@
             </template>
             <div class="detail">
               <BaseScrollArea>
-                <div v-if="selectedPreset" class="inner">
+                <div v-if="selected" class="inner">
                   <div class="parameter-list">
-                    <h2 class="preset-name">{{ selectedPreset.name }}</h2>
+                    <h2 class="preset-name">
+                      {{ selected.preset.name }}
+                    </h2>
                     <div class="preset-field">
                       <label for="preset-name">プリセット名</label>
                       <BaseTextField
                         id="preset-name"
-                        :modelValue="selectedPreset.name"
-                        :hasError="!selectedPreset.name"
+                        :modelValue="selected.preset.name"
+                        :hasError="!selected.preset.name"
                         @change="changePresetName"
                       />
                     </div>
@@ -76,7 +78,7 @@
                     >
                       <ParameterSlider
                         v-if="sliderKey in parameterLabels"
-                        v-model="selectedPreset[sliderKey as ParameterType]"
+                        v-model="selected.preset[sliderKey as ParameterType]"
                         :sliderKey
                         :min="value.min()"
                         :max="value.max()"
@@ -87,20 +89,21 @@
                     </template>
                     <!-- NOTE: モーフィング無効時にキャラ選択解除するといきなり非表示になってしまうが、稀なケースなため無対策 -->
                     <template
-                      v-if="shouldShowMorphing || selectedPreset.morphingInfo"
+                      v-if="shouldShowMorphing || selected.preset.morphingInfo"
                     >
                       <h3 class="parameter-headline">モーフィング</h3>
                       <div class="mophing-style">
                         <CharacterButton
                           :selectedVoice="
-                            selectedPreset.morphingInfo
+                            selected.preset.morphingInfo
                               ? {
                                   engineId:
-                                    selectedPreset.morphingInfo.targetEngineId,
+                                    selected.preset.morphingInfo.targetEngineId,
                                   speakerId:
-                                    selectedPreset.morphingInfo.targetSpeakerId,
+                                    selected.preset.morphingInfo
+                                      .targetSpeakerId,
                                   styleId:
-                                    selectedPreset.morphingInfo.targetStyleId,
+                                    selected.preset.morphingInfo.targetStyleId,
                                 }
                               : undefined
                           "
@@ -127,8 +130,8 @@
                         </span>
                       </div>
                       <ParameterSlider
-                        v-if="selectedPreset.morphingInfo"
-                        v-model="selectedPreset.morphingInfo.rate"
+                        v-if="selected.preset.morphingInfo"
+                        v-model="selected.preset.morphingInfo.rate"
                         sliderKey="morphingRate"
                         label="割合"
                         :min="SLIDER_PARAMETERS.morphingRate.min()"
@@ -184,20 +187,20 @@ const emit = defineEmits<{
 const updateOpenDialog = (isOpen: boolean) => emit("update:openDialog", isOpen);
 
 const handleSelectedVoiceUpdate = (event: Voice | undefined) => {
-  if (selectedPreset.value == undefined) {
+  if (selected.value == undefined) {
     throw new Error("selectedPreset is undefined");
   }
 
   if (event == undefined) {
-    selectedPreset.value.morphingInfo = undefined;
+    selected.value.preset.morphingInfo = undefined;
     return;
   }
 
-  selectedPreset.value.morphingInfo = {
+  selected.value.preset.morphingInfo = {
     targetEngineId: event.engineId,
     targetSpeakerId: event.speakerId,
     targetStyleId: event.styleId,
-    rate: selectedPreset.value.morphingInfo?.rate ?? 0.5,
+    rate: selected.value.preset.morphingInfo?.rate ?? 0.5,
   };
 };
 
@@ -243,39 +246,38 @@ const parameterLabels: Record<ParameterType, string> = {
   postPhonemeLength: "終了無音",
 };
 
-const selectedPresetKey = ref();
-const selectedPreset = ref<Preset | undefined>();
+const selected = ref<undefined | { key: PresetKey; preset: Preset }>();
 
-watch(selectedPresetKey, (key) => {
+const selectPreset = (key: PresetKey | undefined) => {
   if (key == undefined) {
-    selectedPreset.value = undefined;
+    selected.value = undefined;
     return;
   }
+  selected.value = {
+    key,
+    preset: cloneWithUnwrapProxy(presetItems.value[key]),
+  };
+};
 
-  selectedPreset.value = cloneWithUnwrapProxy(presetItems.value[key]);
-});
-
-const debouncedUpdatePreset = debounce(store.actions.UPDATE_PRESET, 300);
 watch(
-  () => selectedPreset.value,
-  (value) => {
+  () => selected.value,
+  debounce((value) => {
     if (value == undefined) {
-      throw new UnreachableError(value);
+      throw new UnreachableError();
     }
-    if (value.name == "") return;
+    if (value.preset.name == "") return;
 
-    // NOTE: debounce中にkeyが変わった場合に対応するため、watchのコールバックに直接debounceを使っていない
-    void debouncedUpdatePreset({
-      presetData: value,
-      presetKey: selectedPresetKey.value,
+    void store.actions.UPDATE_PRESET({
+      presetData: value.preset,
+      presetKey: value.key,
     });
-  },
+  }, 300),
   { deep: true },
 );
 
 const changePresetName = (event: Event) => {
-  if (event.target instanceof HTMLInputElement && selectedPreset.value) {
-    selectedPreset.value.name = event.target.value;
+  if (event.target instanceof HTMLInputElement && selected.value) {
+    selected.value.preset.name = event.target.value;
   }
 };
 
@@ -328,13 +330,12 @@ const morphingTargetCharacterInfo = computed(() =>
     ?.find(
       (character) =>
         character.metas.speakerUuid ===
-        selectedPreset.value?.morphingInfo?.targetSpeakerId,
+        selected.value?.preset.morphingInfo?.targetSpeakerId,
     ),
 );
 
 const morphingTargetStyleInfo = computed(() => {
-  const morphingInfo = selectedPreset.value?.morphingInfo;
-
+  const morphingInfo = selected.value?.preset.morphingInfo;
   if (!morphingInfo) return;
 
   return morphingTargetCharacterInfo.value?.metas.styles.find(
