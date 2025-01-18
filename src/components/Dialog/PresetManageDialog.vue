@@ -186,24 +186,6 @@ const emit = defineEmits<{
 
 const updateOpenDialog = (isOpen: boolean) => emit("update:openDialog", isOpen);
 
-const handleSelectedVoiceUpdate = (event: Voice | undefined) => {
-  if (selected.value == undefined) {
-    throw new Error("selectedPreset is undefined");
-  }
-
-  if (event == undefined) {
-    selected.value.preset.morphingInfo = undefined;
-    return;
-  }
-
-  selected.value.preset.morphingInfo = {
-    targetEngineId: event.engineId,
-    targetSpeakerId: event.speakerId,
-    targetStyleId: event.styleId,
-    rate: selected.value.preset.morphingInfo?.rate ?? 0.5,
-  };
-};
-
 const store = useStore();
 const { isDefaultPresetKey } = useDefaultPreset();
 
@@ -344,6 +326,24 @@ const morphingTargetStyleInfo = computed(() => {
       style.styleId === morphingInfo.targetStyleId,
   );
 });
+
+const handleSelectedVoiceUpdate = (event: Voice | undefined) => {
+  if (selected.value == undefined) {
+    throw new Error("selectedPreset is undefined");
+  }
+
+  if (event == undefined) {
+    selected.value.preset.morphingInfo = undefined;
+    return;
+  }
+
+  selected.value.preset.morphingInfo = {
+    targetEngineId: event.engineId,
+    targetSpeakerId: event.speakerId,
+    targetStyleId: event.styleId,
+    rate: selected.value.preset.morphingInfo?.rate ?? 0.5,
+  };
+};
 </script>
 
 <style scoped lang="scss">
