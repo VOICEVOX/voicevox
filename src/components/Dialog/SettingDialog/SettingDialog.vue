@@ -446,8 +446,8 @@
                 />
                 <ToggleCell
                   v-if="!isProduction"
-                  title="[開発時のみ機能] パラメーターパネルの表示"
-                  description="ONの場合、パラメーターパネルが表示されます。"
+                  title="[開発時のみ機能] ソング：パラメーターパネルの表示"
+                  description="ONの場合、ソングエディタでパラメーターパネルが表示されます。"
                   :modelValue="experimentalSetting.showParameterPanel"
                   @update:modelValue="
                     changeExperimentalSetting('showParameterPanel', $event)
