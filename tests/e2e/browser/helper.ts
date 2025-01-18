@@ -33,8 +33,8 @@ export async function spyWriteFile(
         return ids[count++];
       };
       testStorageWindow.backend.writeFile = async ({ filePath, buffer }) => {
-        buffer = new Uint8Array(buffer);
-        testStorageWindow._testStorage[filePath as TestFileId] = buffer;
+        const array = new Uint8Array(buffer);
+        testStorageWindow._testStorage[filePath as TestFileId] = array;
         return sucecssResult;
       };
     },
