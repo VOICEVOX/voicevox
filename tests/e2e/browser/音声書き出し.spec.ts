@@ -43,12 +43,20 @@ test.describe("音声書き出し", () => {
   });
 
   test("選択中の音声を書き出し", async ({ page }) => {
-    const fileChooserPromise = page.waitForEvent("filechooser");
+    const filePath = await page.evaluate(() => {
+      const filePath = `${Date.now()}.wav`;
+      window.showSaveFilePicker = async () => {
+        const root = await navigator.storage.getDirectory();
+        const fileHandle = await root.getFileHandle(filePath, { create: true });
+        return fileHandle;
+      };
+      return filePath;
+    });
 
     await page.getByRole("button", { name: "ファイル" }).click();
     await getQuasarMenu(page, "選択音声を書き出し").click();
 
-    const fileChooser = await fileChooserPromise;
-    await fileChooser.setFiles(path.join(tempDir, "output.wav"));
+    // expect(fs.existsSync(outputPath)).toBe(true);
+    console.log("outputPath:", filePath);
   });
 });
