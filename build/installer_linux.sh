@@ -96,11 +96,11 @@ elif command -v 7za &> /dev/null; then
     # CentOS/Fedora
     COMMAND_7Z=7za
 elif command -v 7zz &> /dev/null; then
-    # Upstream
+    # Official 7zip
     COMMAND_7Z=7zz
 else
     cat << 'EOS' && exit 1
-[!] Command '7z', '7zr' or '7za', '7zz' not found
+[!] Command '7z', '7zr', '7za' or '7zz' not found
 
 Required to extract compressed files
 
