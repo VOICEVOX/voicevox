@@ -96,7 +96,7 @@ elif command -v 7za &> /dev/null; then
     # CentOS/Fedora
     COMMAND_7Z=7za
 elif command -v 7zz &> /dev/null; then
-    # Gentoo
+    # Upstream
     COMMAND_7Z=7zz
 else
     cat << 'EOS' && exit 1
