@@ -283,9 +283,7 @@ export const showExportFilePickerImpl: (typeof window)[typeof SandboxKey]["showE
         },
       ],
     });
-    console.log("handle.name", handle.name);
     const fakePath = createFakePath(handle.name);
-    console.log("fakePath", fakePath);
     fileHandleMap.set(fakePath, handle);
 
     return fakePath;
