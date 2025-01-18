@@ -7,6 +7,7 @@
     :disable="!isParameterPanelOpen"
     :separatorStyle="{
       display: isParameterPanelOpen ? 'block' : 'none',
+      // NOTE: 当たり判定を小さくする
       overflow: 'hidden',
       height: '4px',
     }"
