@@ -7,7 +7,7 @@
     class="setting-dialog transparent-backdrop"
     @update:modelValue="updateOpenDialog"
   >
-    <QLayout container view="hHh Lpr lff" class="bg-background">
+    <QLayout container view="hHh Lpr lff">
       <QHeader class="q-py-sm">
         <QToolbar>
           <QToolbarTitle class="text-display">プリセットの管理</QToolbarTitle>
@@ -37,11 +37,13 @@
               >
                 <template #item="{ element: item }">
                   <BaseListItem
-                    :selected="selectedPresetKey === item.key"
-                    @click="selectedPresetKey = item.key"
+                    :selected="selected?.key === item.key"
+                    @click="selectPreset(item.key)"
                   >
                     <div class="listitem-content">
-                      {{ item.name }}
+                      <span class="listitem-name">
+                        {{ item.name }}
+                      </span>
                       <div class="listitem-icon">
                         <BaseIconButton
                           icon="delete_outline"
@@ -56,87 +58,90 @@
             </template>
             <div class="detail">
               <BaseScrollArea>
-                <div v-if="selectedPreset" class="inner">
+                <div v-if="selected" class="inner">
                   <div class="parameter-list">
-                    <h2 class="preset-name">{{ selectedPreset.name }}</h2>
+                    <h2 class="preset-name">
+                      {{ selected.preset.name }}
+                    </h2>
+                    <div class="preset-field">
+                      <label for="preset-name">プリセット名</label>
+                      <BaseTextField
+                        id="preset-name"
+                        :modelValue="selected.preset.name"
+                        :hasError="!selected.preset.name"
+                        @change="changePresetName"
+                      />
+                    </div>
                     <template
                       v-for="(value, sliderKey) in SLIDER_PARAMETERS"
                       :key="sliderKey"
                     >
-                      <div
+                      <ParameterSlider
                         v-if="sliderKey in parameterLabels"
-                        class="parameter"
-                      >
-                        <div class="parameter-header">
-                          <span>
-                            {{ parameterLabels[sliderKey as ParameterType] }}
-                          </span>
-                          <span>
-                            {{
-                              selectedPreset[
-                                sliderKey as ParameterType
-                              ].toFixed(2)
-                            }}
-                          </span>
-                        </div>
-                        <!-- NOTE: プルリクエスト分割のため、まずは動かないスライダーが実装されている。変更機能も実装予定。 -->
-                        <BaseSlider
-                          :min="value.min()"
-                          :max="value.max()"
-                          :step="value.step()"
-                          :modelValue="
-                            selectedPreset[sliderKey as ParameterType]
-                          "
-                        />
-                      </div>
-                    </template>
-                  </div>
-                  <div
-                    v-if="selectedPreset.morphingInfo"
-                    class="parameter-list"
-                  >
-                    <h3 class="parameter-headline">モーフィング</h3>
-                    <div class="mophing-style">
-                      <CharacterButton
-                        v-if="morphingTargetCharacterInfo"
-                        :selectedVoice="{
-                          engineId: selectedPreset.morphingInfo.targetEngineId,
-                          speakerId:
-                            selectedPreset.morphingInfo.targetSpeakerId,
-                          styleId: selectedPreset.morphingInfo.targetStyleId,
-                        }"
-                        :characterInfos="[morphingTargetCharacterInfo]"
-                        :showEngineInfo="morphingTargetEngines.length >= 2"
-                        :emptiable="true"
-                        :uiLocked="false"
+                        v-model="selected.preset[sliderKey as ParameterType]"
+                        :sliderKey
+                        :min="value.min()"
+                        :max="value.max()"
+                        :step="value.step()"
+                        :scrollStep="value.scrollStep()"
+                        :label="parameterLabels[sliderKey as ParameterType]"
                       />
-                      <span v-if="morphingTargetCharacterInfo">
-                        {{ morphingTargetCharacterInfo.metas.speakerName }}
-                      </span>
-                      <span
-                        v-if="
-                          morphingTargetCharacterInfo &&
-                          morphingTargetCharacterInfo.metas.styles.length >= 2
-                        "
-                      >
-                        （{{ morphingTargetStyleInfo?.styleName }}）
-                      </span>
-                    </div>
-                    <div class="parameter">
-                      <div class="parameter-header">
-                        <span>割合</span>
+                    </template>
+                    <!-- NOTE: モーフィング無効時にキャラ選択解除するといきなり非表示になってしまうが、稀なケースなため無対策 -->
+                    <template
+                      v-if="shouldShowMorphing || selected.preset.morphingInfo"
+                    >
+                      <h3 class="parameter-headline">モーフィング</h3>
+                      <div class="mophing-style">
+                        <CharacterButton
+                          :selectedVoice="
+                            selected.preset.morphingInfo
+                              ? {
+                                  engineId:
+                                    selected.preset.morphingInfo.targetEngineId,
+                                  speakerId:
+                                    selected.preset.morphingInfo
+                                      .targetSpeakerId,
+                                  styleId:
+                                    selected.preset.morphingInfo.targetStyleId,
+                                }
+                              : undefined
+                          "
+                          :characterInfos="morphingTargetCharacters"
+                          :showEngineInfo="morphingTargetEngines.length >= 2"
+                          :emptiable="true"
+                          :uiLocked="false"
+                          @update:selectedVoice="handleSelectedVoiceUpdate"
+                        />
                         <span>
-                          {{ selectedPreset.morphingInfo.rate.toFixed(2) }}
+                          {{
+                            morphingTargetCharacterInfo
+                              ? morphingTargetCharacterInfo.metas.speakerName
+                              : "未設定"
+                          }}
+                        </span>
+                        <span
+                          v-if="
+                            morphingTargetCharacterInfo &&
+                            morphingTargetCharacterInfo.metas.styles.length >= 2
+                          "
+                        >
+                          （{{ morphingTargetStyleInfo?.styleName }}）
                         </span>
                       </div>
-                      <!-- NOTE: プルリクエスト分割のため、まずは動かないスライダーが実装されている。変更機能も実装予定。 -->
-                      <BaseSlider
+                      <ParameterSlider
+                        v-if="selected.preset.morphingInfo"
+                        v-model="selected.preset.morphingInfo.rate"
+                        sliderKey="morphingRate"
+                        label="割合"
                         :min="SLIDER_PARAMETERS.morphingRate.min()"
                         :max="SLIDER_PARAMETERS.morphingRate.max()"
                         :step="SLIDER_PARAMETERS.morphingRate.step()"
-                        :modelValue="selectedPreset.morphingInfo.rate"
+                        :scrollStep="
+                          SLIDER_PARAMETERS.morphingRate.scrollStep()
+                        "
                       />
-                    </div>
+                    </template>
                   </div>
                 </div>
               </BaseScrollArea>
@@ -149,18 +154,28 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import Draggable from "vuedraggable";
 import { useStore } from "@/store";
 import BaseListItem from "@/components/Base/BaseListItem.vue";
 import BaseNavigationView from "@/components/Base/BaseNavigationView.vue";
 import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 import BaseIconButton from "@/components/Base/BaseIconButton.vue";
-import BaseSlider from "@/components/Base/BaseSlider.vue";
+import BaseTextField from "@/components/Base/BaseTextField.vue";
 import CharacterButton from "@/components/CharacterButton.vue";
+import ParameterSlider from "@/components/Talk/v2/ParameterSlider.vue";
 import { useDefaultPreset } from "@/composables/useDefaultPreset";
-import { Preset, PresetKey, PresetSliderKey } from "@/type/preload";
+import {
+  CharacterInfo,
+  Preset,
+  PresetKey,
+  PresetSliderKey,
+  Voice,
+} from "@/type/preload";
 import { SLIDER_PARAMETERS } from "@/store/utility";
+import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
+import { debounce } from "@/helpers/timer";
+import { UnreachableError } from "@/type/utility";
 
 const props = defineProps<{
   openDialog: boolean;
@@ -202,15 +217,6 @@ const previewPresetList = computed(() =>
     : presetList.value,
 );
 
-const morphingTargetEngines = store.getters.MORPHING_SUPPORTED_ENGINES;
-
-const selectedPresetKey = ref();
-const selectedPreset = computed(() => {
-  return previewPresetList.value.find(
-    (preset) => preset.key === selectedPresetKey.value,
-  );
-});
-
 type ParameterType = Exclude<PresetSliderKey, "morphingRate">;
 const parameterLabels: Record<ParameterType, string> = {
   speedScale: "話速",
@@ -220,6 +226,41 @@ const parameterLabels: Record<ParameterType, string> = {
   pauseLengthScale: "間の長さ",
   prePhonemeLength: "開始無音",
   postPhonemeLength: "終了無音",
+};
+
+const selected = ref<undefined | { key: PresetKey; preset: Preset }>();
+
+const selectPreset = (key: PresetKey | undefined) => {
+  if (key == undefined) {
+    selected.value = undefined;
+    return;
+  }
+  selected.value = {
+    key,
+    preset: cloneWithUnwrapProxy(presetItems.value[key]),
+  };
+};
+
+watch(
+  () => selected.value,
+  debounce((value) => {
+    if (value == undefined) {
+      throw new UnreachableError();
+    }
+    if (value.preset.name == "") return;
+
+    void store.actions.UPDATE_PRESET({
+      presetData: value.preset,
+      presetKey: value.key,
+    });
+  }, 300),
+  { deep: true },
+);
+
+const changePresetName = (event: Event) => {
+  if (event.target instanceof HTMLInputElement && selected.value) {
+    selected.value.preset.name = event.target.value;
+  }
 };
 
 const reorderPreset = (featurePresetList: (Preset & { key: PresetKey })[]) => {
@@ -251,19 +292,32 @@ const deletePreset = async (key: PresetKey) => {
   }
 };
 
+const shouldShowMorphing = computed(
+  () => store.state.experimentalSetting.enableMorphing,
+);
+
+const morphingTargetEngines = store.getters.MORPHING_SUPPORTED_ENGINES;
+
+const morphingTargetCharacters = computed<CharacterInfo[]>(() => {
+  const allCharacterInfos = store.getters.USER_ORDERED_CHARACTER_INFOS("talk");
+  if (allCharacterInfos == undefined)
+    throw new Error("USER_ORDERED_CHARACTER_INFOS == undefined");
+
+  return allCharacterInfos;
+});
+
 const morphingTargetCharacterInfo = computed(() =>
   store.getters
     .USER_ORDERED_CHARACTER_INFOS("talk")
     ?.find(
       (character) =>
         character.metas.speakerUuid ===
-        selectedPreset.value?.morphingInfo?.targetSpeakerId,
+        selected.value?.preset.morphingInfo?.targetSpeakerId,
     ),
 );
 
 const morphingTargetStyleInfo = computed(() => {
-  const morphingInfo = selectedPreset.value?.morphingInfo;
-
+  const morphingInfo = selected.value?.preset.morphingInfo;
   if (!morphingInfo) return;
 
   return morphingTargetCharacterInfo.value?.metas.styles.find(
@@ -272,10 +326,29 @@ const morphingTargetStyleInfo = computed(() => {
       style.styleId === morphingInfo.targetStyleId,
   );
 });
+
+const handleSelectedVoiceUpdate = (event: Voice | undefined) => {
+  if (selected.value == undefined) {
+    throw new Error("selectedPreset is undefined");
+  }
+
+  if (event == undefined) {
+    selected.value.preset.morphingInfo = undefined;
+    return;
+  }
+
+  selected.value.preset.morphingInfo = {
+    targetEngineId: event.engineId,
+    targetSpeakerId: event.speakerId,
+    targetStyleId: event.styleId,
+    rate: selected.value.preset.morphingInfo?.rate ?? 0.5,
+  };
+};
 </script>
 
 <style scoped lang="scss">
 @use "@/styles/v2/variables" as vars;
+@use "@/styles/v2/colors" as colors;
 @use "@/styles/v2/mixin" as mixin;
 
 .q-layout-container > :deep(.absolute-full) {
@@ -300,7 +373,14 @@ const morphingTargetStyleInfo = computed(() => {
   justify-content: space-between;
   align-items: center;
   gap: vars.$gap-1;
-  width: 100%;
+  width: 320px;
+}
+
+.listitem-name {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  flex: 1;
 }
 
 .listitem-icon {
@@ -317,15 +397,22 @@ const morphingTargetStyleInfo = computed(() => {
 }
 
 .inner {
-  min-height: 100%;
   display: flex;
   flex-direction: column;
   padding: vars.$padding-2;
   gap: vars.$gap-2;
+  margin-inline: auto;
+  max-width: 480px;
 }
 
 .preset-name {
   @include mixin.headline-1;
+  word-break: break-all;
+}
+
+.preset-field {
+  display: flex;
+  flex-direction: column;
 }
 
 .parameter-headline {
@@ -333,17 +420,10 @@ const morphingTargetStyleInfo = computed(() => {
 }
 
 .parameter-list {
-  margin-inline: auto;
-  max-width: 480px;
   width: 100%;
   display: flex;
   flex-direction: column;
   gap: vars.$gap-2;
-}
-
-.parameter-header {
-  display: flex;
-  justify-content: space-between;
 }
 
 .mophing-style {
