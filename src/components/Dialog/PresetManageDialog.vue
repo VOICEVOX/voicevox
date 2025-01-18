@@ -163,7 +163,7 @@ import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 import BaseIconButton from "@/components/Base/BaseIconButton.vue";
 import BaseTextField from "@/components/Base/BaseTextField.vue";
 import CharacterButton from "@/components/CharacterButton.vue";
-import ParameterSlider from "@/components/Talk/ParameterSlider.vue";
+import ParameterSlider from "@/components/Talk/v2/ParameterSlider.vue";
 import { useDefaultPreset } from "@/composables/useDefaultPreset";
 import {
   CharacterInfo,
