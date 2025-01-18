@@ -6,6 +6,7 @@ import { spyWriteFile } from "./helper";
 test.beforeEach(gotoHome);
 
 test.describe("音声書き出し", () => {
+  test.skip(process.platform !== "win32", "Windows以外のためスキップします");
   test.beforeEach(async ({ page }) => {
     await navigateToMain(page);
 
