@@ -9,7 +9,7 @@
         :value="innerValueFixed"
         class="parameter-input"
         type="text"
-        @change="handleInputUpdate"
+        @change="handleInputChange"
       />
     </div>
     <BaseSlider
@@ -48,7 +48,7 @@ const emit = defineEmits<{
   "update:modelValue": [value: number];
 }>();
 
-const handleInputUpdate = (event: Event) => {
+const handleInputChange = (event: Event) => {
   if (!(event.target instanceof HTMLInputElement)) {
     throw new Error("Event target is not an HTMLInputElement");
   }
