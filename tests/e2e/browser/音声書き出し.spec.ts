@@ -1,62 +1,30 @@
-import os from "node:os";
-import fs from "node:fs";
-import path from "node:path";
 import { test, expect } from "@playwright/test";
-
 import { gotoHome, navigateToMain } from "../navigators";
 import { getQuasarMenu } from "../locators";
-
-// 書き出し先用のディレクトリを作る
-let tempDir: string;
-test.beforeAll(async () => {
-  tempDir = fs.mkdtempSync(os.tmpdir() + "/");
-});
-test.afterAll(async () => {
-  fs.rmSync(tempDir, { recursive: true });
-});
+import { spyWriteFile } from "./helper";
 
 test.beforeEach(gotoHome);
 
 test.describe("音声書き出し", () => {
   test.beforeEach(async ({ page }) => {
-    // テキスト欄を適当に３行ほど埋める
     await navigateToMain(page);
 
+    const audioCell = page.getByRole("textbox", { name: "1行目" });
     const accentPhrase = page.locator(".accent-phrase");
 
-    await page.getByRole("textbox", { name: "1行目" }).click();
-    await page.getByRole("textbox", { name: "1行目" }).fill("１行目");
-    await page.getByRole("textbox", { name: "1行目" }).press("Enter");
-    await expect(accentPhrase).not.toHaveCount(0);
-
-    await page.getByRole("button").filter({ hasText: "add" }).click();
-    await page.getByRole("textbox", { name: "2行目" }).click();
-    await page.getByRole("textbox", { name: "2行目" }).fill("２行目");
-    await page.getByRole("textbox", { name: "2行目" }).press("Enter");
-    await expect(accentPhrase).not.toHaveCount(0);
-
-    await page.getByRole("button").filter({ hasText: "add" }).click();
-    await page.getByRole("textbox", { name: "3行目" }).click();
-    await page.getByRole("textbox", { name: "3行目" }).fill("３行目");
-    await page.getByRole("textbox", { name: "3行目" }).press("Enter");
+    await audioCell.click();
+    await audioCell.fill("こんにちは、これはテスト音声です");
+    await audioCell.press("Enter");
     await expect(accentPhrase).not.toHaveCount(0);
   });
 
-  test("選択中の音声を書き出し", async ({ page }) => {
-    const filePath = await page.evaluate(() => {
-      const filePath = `${Date.now()}.wav`;
-      window.showSaveFilePicker = async () => {
-        const root = await navigator.storage.getDirectory();
-        const fileHandle = await root.getFileHandle(filePath, { create: true });
-        return fileHandle;
-      };
-      return filePath;
-    });
+  test("デフォルト", async ({ page }, { title }) => {
+    const { buffer } = await spyWriteFile(page, { num: 1 });
 
     await page.getByRole("button", { name: "ファイル" }).click();
     await getQuasarMenu(page, "選択音声を書き出し").click();
+    await expect(page.getByText("音声を書き出しました")).toBeVisible();
 
-    // expect(fs.existsSync(outputPath)).toBe(true);
-    console.log("outputPath:", filePath);
+    expect(await buffer(0)).toMatchSnapshot(`${title}.wav`);
   });
 });
