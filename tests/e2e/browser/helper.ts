@@ -9,6 +9,8 @@ type TestStorageWindow = Window & {
 };
 
 /** ファイル書き出しのスパイを設定する */
+// TODO: showExportFileDialogを呼ばない場合のことを考える
+// TODO: 元に戻せるようにしておく
 export async function spyWriteFile(
   page: Page,
   payload: { num: number },
