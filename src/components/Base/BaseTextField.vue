@@ -1,6 +1,7 @@
 <template>
   <div class="wrapper">
     <input
+      :id
       v-model="model"
       type="text"
       class="input"
@@ -8,6 +9,7 @@
       :placeholder
       :readonly
       :disabled
+      @change="(payload) => $emit('change', payload)"
       @click="(payload) => $emit('click', payload)"
     />
     <div v-if="hasError" class="error-label">
@@ -22,9 +24,11 @@ defineProps<{
   hasError?: boolean;
   readonly?: boolean;
   disabled?: boolean;
+  id?: string;
 }>();
 
 defineEmits<{
+  change: [payload: Event];
   click: [payload: MouseEvent];
 }>();
 
@@ -66,7 +70,8 @@ const model = defineModel<string>();
 }
 
 .error {
-  border: 2px solid colors.$display-warning;
+  @include mixin.on-focus;
+  outline-color: colors.$display-warning !important;
 }
 
 .error-label {
