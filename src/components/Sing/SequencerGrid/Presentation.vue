@@ -111,11 +111,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, toRef } from "vue";
-import { keyInfos, getKeyBaseHeight, tickToBaseX } from "@/sing/viewHelper";
-import { getMeasureDuration, getNoteDuration } from "@/sing/domain";
+import { computed, toRef, inject } from "vue";
+import { keyInfos, tickToBaseX } from "@/sing/viewHelper";
 import { TimeSignature } from "@/store/type";
 import { useSequencerGrid } from "@/composables/useSequencerGridPattern";
+import { gridInfoInjectionKey } from "@/components/Sing/sequencerInjectionKeys";
 
 const props = defineProps<{
   tpqn: number;
@@ -128,41 +128,22 @@ const props = defineProps<{
   offsetY: number;
 }>();
 
-const gridCellTicks = computed(() => {
-  return getNoteDuration(props.sequencerSnapType, props.tpqn);
-});
-const gridCellWidth = computed(() => {
-  return tickToBaseX(gridCellTicks.value, props.tpqn) * props.sequencerZoomX;
-});
-const gridCellBaseHeight = getKeyBaseHeight();
-const gridCellHeight = computed(() => {
-  return gridCellBaseHeight * props.sequencerZoomY;
-});
+const injectedValue = inject(gridInfoInjectionKey);
+if (injectedValue == undefined) {
+  throw new Error("injectedValue is undefined.");
+}
+
+const gridCellWidth = injectedValue.gridCellWidth;
+const gridCellHeight = injectedValue.gridCellHeight;
+const gridWidth = injectedValue.gridWidth;
+const gridHeight = injectedValue.gridHeight;
+
 const beatWidth = (timeSignature: TimeSignature) => {
   const beatType = timeSignature.beatType;
   const wholeNoteDuration = props.tpqn * 4;
   const beatTicks = wholeNoteDuration / beatType;
   return tickToBaseX(beatTicks, props.tpqn) * props.sequencerZoomX;
 };
-
-const gridWidth = computed(() => {
-  let numOfGridColumns = 0;
-  for (const [i, timeSignature] of props.timeSignatures.entries()) {
-    const nextTimeSignature = props.timeSignatures[i + 1];
-    const nextMeasureNumber =
-      nextTimeSignature?.measureNumber ?? props.numMeasures + 1;
-    const beats = timeSignature.beats;
-    const beatType = timeSignature.beatType;
-    const measureDuration = getMeasureDuration(beats, beatType, props.tpqn);
-    numOfGridColumns +=
-      Math.round(measureDuration / gridCellTicks.value) *
-      (nextMeasureNumber - timeSignature.measureNumber);
-  }
-  return gridCellWidth.value * numOfGridColumns;
-});
-const gridHeight = computed(() => {
-  return gridCellHeight.value * keyInfos.length;
-});
 
 const gridPatterns = useSequencerGrid({
   timeSignatures: toRef(() => props.timeSignatures),

@@ -231,6 +231,7 @@ import {
   onActivated,
   onDeactivated,
   watch,
+  provide,
 } from "vue";
 import SequencerParameterPanel from "./SequencerParameterPanel.vue";
 import SequencerDummyGrid from "./SequencerDummyGrid.vue";
@@ -247,6 +248,7 @@ import {
 } from "@/store/type";
 import {
   getEndTicksOfPhrase,
+  getMeasureDuration,
   getNoteDuration,
   getStartTicksOfPhrase,
   noteNumberToFrequency,
@@ -272,6 +274,7 @@ import {
   MouseDownBehavior,
   MouseDoubleClickBehavior,
   CursorState,
+  getKeyBaseHeight,
 } from "@/sing/viewHelper";
 import SequencerGrid from "@/components/Sing/SequencerGrid/Container.vue";
 import SequencerRuler from "@/components/Sing/SequencerRuler/Container.vue";
@@ -294,6 +297,7 @@ import { applyGaussianFilter, linearInterpolation } from "@/sing/utility";
 import { useLyricInput } from "@/composables/useLyricInput";
 import { ExhaustiveError } from "@/type/utility";
 import { uuid4 } from "@/helpers/random";
+import { gridInfoInjectionKey } from "@/components/Sing/sequencerInjectionKeys";
 
 // 直接イベントが来ているかどうか
 const isSelfEventTarget = (event: UIEvent) => {
@@ -385,6 +389,41 @@ const snapTicks = computed(() => {
 // 小節の数
 const numMeasures = computed(() => {
   return store.getters.SEQUENCER_NUM_MEASURES;
+});
+
+// グリッド関係の値
+const gridCellWidth = computed(() => {
+  return tickToBaseX(snapTicks.value, tpqn.value) * zoomX.value;
+});
+const gridCellHeight = computed(() => {
+  return getKeyBaseHeight() * zoomY.value;
+});
+const gridWidth = computed(() => {
+  const timeSignatures = store.state.timeSignatures;
+
+  let numOfGridColumns = 0;
+  for (const [i, timeSignature] of timeSignatures.entries()) {
+    const nextTimeSignature = timeSignatures[i + 1];
+    const nextMeasureNumber =
+      nextTimeSignature?.measureNumber ?? numMeasures.value + 1;
+    const beats = timeSignature.beats;
+    const beatType = timeSignature.beatType;
+    const measureDuration = getMeasureDuration(beats, beatType, tpqn.value);
+    numOfGridColumns +=
+      Math.round(measureDuration / snapTicks.value) *
+      (nextMeasureNumber - timeSignature.measureNumber);
+  }
+  return gridCellWidth.value * numOfGridColumns;
+});
+const gridHeight = computed(() => {
+  return gridCellHeight.value * keyInfos.length;
+});
+
+provide(gridInfoInjectionKey, {
+  gridCellWidth,
+  gridCellHeight,
+  gridWidth,
+  gridHeight,
 });
 
 // スクロール位置
