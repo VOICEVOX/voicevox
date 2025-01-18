@@ -10,7 +10,6 @@
       overflow: 'hidden',
       height: '4px',
     }"
-    emitImmediately
     @update:modelValue="setParameterPanelHeight"
   >
     <template #before>
