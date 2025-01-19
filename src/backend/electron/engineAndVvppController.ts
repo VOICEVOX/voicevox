@@ -1,7 +1,6 @@
 import path from "path";
 import fs from "fs";
 import { ReadableStream } from "node:stream/web";
-import log from "electron-log/main";
 import { dialog } from "electron";
 
 import { getConfigManager } from "./electronConfig";
@@ -24,6 +23,9 @@ import {
 } from "@/domain/defaultEngine/latetDefaultEngine";
 import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
 import { UnreachableError } from "@/type/utility";
+import { createLogger } from "@/helpers/log";
+
+const log = createLogger("EngineAndVvppController");
 
 /**
  * エンジンとVVPP周りの処理の流れを制御するクラス。
