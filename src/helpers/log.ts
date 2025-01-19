@@ -39,6 +39,7 @@ export function createLogger(scope: string): Record<LogLevel, LogFunction> {
         void electronLogPromise.then((log) => {
           log[logType](...scopeAndArgs);
         });
+        return;
       }
 
       // eslint-disable-next-line no-console
