@@ -112,10 +112,10 @@
 
 <script setup lang="ts">
 import { computed, toRef, inject } from "vue";
+import { gridInfoInjectionKey } from "../ScoreSequencer.vue";
 import { keyInfos, tickToBaseX } from "@/sing/viewHelper";
 import { TimeSignature } from "@/store/type";
 import { useSequencerGrid } from "@/composables/useSequencerGridPattern";
-import { gridInfoInjectionKey } from "@/components/Sing/sequencerInjectionKeys";
 
 const props = defineProps<{
   tpqn: number;

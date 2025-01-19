@@ -4,7 +4,7 @@
 
 <script setup lang="ts">
 import { inject } from "vue";
-import { gridInfoInjectionKey } from "@/components/Sing/sequencerInjectionKeys";
+import { gridInfoInjectionKey } from "./ScoreSequencer.vue";
 
 const injectedValue = inject(gridInfoInjectionKey);
 if (injectedValue == undefined) {

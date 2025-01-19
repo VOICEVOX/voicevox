@@ -222,6 +222,18 @@
   </QSplitter>
 </template>
 
+<script lang="ts">
+import { ComputedRef } from "vue";
+import type { InjectionKey } from "vue";
+
+export const gridInfoInjectionKey: InjectionKey<{
+  gridCellWidth: ComputedRef<number>;
+  gridCellHeight: ComputedRef<number>;
+  gridWidth: ComputedRef<number>;
+  gridHeight: ComputedRef<number>;
+}> = Symbol();
+</script>
+
 <script setup lang="ts">
 import {
   computed,
@@ -297,7 +309,6 @@ import { applyGaussianFilter, linearInterpolation } from "@/sing/utility";
 import { useLyricInput } from "@/composables/useLyricInput";
 import { ExhaustiveError } from "@/type/utility";
 import { uuid4 } from "@/helpers/random";
-import { gridInfoInjectionKey } from "@/components/Sing/sequencerInjectionKeys";
 
 // 直接イベントが来ているかどうか
 const isSelfEventTarget = (event: UIEvent) => {
