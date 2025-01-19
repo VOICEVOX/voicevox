@@ -22,6 +22,8 @@ import { Note, SequencerEditTarget } from "@/store/type";
 import { NoteId, TrackId } from "@/type/preload";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
+import { Store } from "@/store";
+import { getNoteDuration } from "@/sing/domain";
 
 export type PositionOnSequencer = {
   readonly x: number;
@@ -78,26 +80,7 @@ type Refs = {
   readonly guideLineTicks: Ref<number>;
 };
 
-type StoreActions = {
-  readonly deselectAllNotes: () => void;
-  readonly deselectNotes: (noteIds: NoteId[]) => void;
-  readonly commandAddNotes: (notes: Note[], trackId: TrackId) => void;
-  readonly commandUpdateNotes: (notes: Note[], trackId: TrackId) => void;
-  readonly selectNotes: (noteIds: NoteId[]) => void;
-  readonly playPreviewSound: (noteNumber: number, duration?: number) => void;
-  readonly commandSetPitchEditData: (
-    pitchArray: number[],
-    startFrame: number,
-    trackId: TrackId,
-  ) => void;
-  readonly commandErasePitchEditData: (
-    startFrame: number,
-    frameLength: number,
-    trackId: TrackId,
-  ) => void;
-};
-
-type Context = ComputedRefs & Refs & { readonly storeActions: StoreActions };
+type Context = ComputedRefs & Refs & { readonly store: Store };
 
 type State =
   | IdleState
@@ -120,8 +103,8 @@ const getGuideLineTicks = (
 };
 
 const selectOnlyThisNote = (context: Context, note: Note) => {
-  void context.storeActions.deselectAllNotes();
-  void context.storeActions.selectNotes([note.id]);
+  void context.store.actions.DESELECT_ALL_NOTES();
+  void context.store.actions.SELECT_NOTES({ noteIds: [note.id] });
 };
 
 /**
@@ -153,23 +136,25 @@ const executeNotesSelectionProcess = (
         noteIdsToSelect.push(noteId);
       }
     }
-    void context.storeActions.selectNotes(noteIdsToSelect);
+    void context.store.actions.SELECT_NOTES({ noteIds: noteIdsToSelect });
   } else if (isOnCommandOrCtrlKeyDown(mouseEvent)) {
     // CommandキーかCtrlキーが押されている場合
     if (context.selectedNoteIds.value.has(mouseDownNote.id)) {
       // 選択中のノートなら選択解除
-      void context.storeActions.deselectNotes([mouseDownNote.id]);
+      void context.store.actions.DESELECT_NOTES({
+        noteIds: [mouseDownNote.id],
+      });
       return;
     }
     // 未選択のノートなら選択に追加
-    void context.storeActions.selectNotes([mouseDownNote.id]);
+    void context.store.actions.SELECT_NOTES({ noteIds: [mouseDownNote.id] });
   } else if (!context.selectedNoteIds.value.has(mouseDownNote.id)) {
     // 選択中のノートでない場合は選択状態にする
     void selectOnlyThisNote(context, mouseDownNote);
-    void context.storeActions.playPreviewSound(
-      mouseDownNote.noteNumber,
-      PREVIEW_SOUND_DURATION,
-    );
+    void context.store.actions.PLAY_PREVIEW_SOUND({
+      noteNumber: mouseDownNote.noteNumber,
+      duration: PREVIEW_SOUND_DURATION,
+    });
   }
 };
 
@@ -209,7 +194,7 @@ class IdleState implements IState<State, Input, Context> {
             );
             setNextState(selectNotesWithRectState);
           } else {
-            context.storeActions.deselectAllNotes();
+            void context.store.actions.DESELECT_ALL_NOTES();
             const addNoteState = new AddNoteState(
               input.cursorPos,
               selectedTrackId,
@@ -387,17 +372,17 @@ class AddNoteState implements IState<State, Input, Context> {
 
     cancelAnimationFrame(this.innerContext.previewRequestId);
 
-    context.storeActions.commandAddNotes(
-      context.previewNotes.value,
-      this.targetTrackId,
-    );
-    context.storeActions.selectNotes(previewNoteIds);
+    void context.store.actions.COMMAND_ADD_NOTES({
+      notes: context.previewNotes.value,
+      trackId: this.targetTrackId,
+    });
+    void context.store.actions.SELECT_NOTES({ noteIds: previewNoteIds });
 
     if (previewNotes.length === 1) {
-      context.storeActions.playPreviewSound(
-        previewNotes[0].noteNumber,
-        PREVIEW_SOUND_DURATION,
-      );
+      void context.store.actions.PLAY_PREVIEW_SOUND({
+        noteNumber: previewNotes[0].noteNumber,
+        duration: PREVIEW_SOUND_DURATION,
+      });
     }
     context.previewNotes.value = [];
     context.nowPreviewing.value = false;
@@ -551,14 +536,19 @@ class MoveNoteState implements IState<State, Input, Context> {
 
     cancelAnimationFrame(this.innerContext.previewRequestId);
 
-    context.storeActions.commandUpdateNotes(previewNotes, this.targetTrackId);
-    context.storeActions.selectNotes(previewNoteIds);
+    void context.store.actions.COMMAND_UPDATE_NOTES({
+      notes: previewNotes,
+      trackId: this.targetTrackId,
+    });
+    void context.store.actions.SELECT_NOTES({
+      noteIds: previewNoteIds,
+    });
 
     if (previewNotes.length === 1) {
-      context.storeActions.playPreviewSound(
-        previewNotes[0].noteNumber,
-        PREVIEW_SOUND_DURATION,
-      );
+      void context.store.actions.PLAY_PREVIEW_SOUND({
+        noteNumber: previewNotes[0].noteNumber,
+        duration: PREVIEW_SOUND_DURATION,
+      });
     }
     context.previewNotes.value = [];
     context.nowPreviewing.value = false;
@@ -708,14 +698,17 @@ class ResizeNoteLeftState implements IState<State, Input, Context> {
 
     cancelAnimationFrame(this.innerContext.previewRequestId);
 
-    context.storeActions.commandUpdateNotes(previewNotes, this.targetTrackId);
-    context.storeActions.selectNotes(previewNoteIds);
+    void context.store.actions.COMMAND_UPDATE_NOTES({
+      notes: previewNotes,
+      trackId: this.targetTrackId,
+    });
+    void context.store.actions.SELECT_NOTES({ noteIds: previewNoteIds });
 
     if (previewNotes.length === 1) {
-      context.storeActions.playPreviewSound(
-        previewNotes[0].noteNumber,
-        PREVIEW_SOUND_DURATION,
-      );
+      void context.store.actions.PLAY_PREVIEW_SOUND({
+        noteNumber: previewNotes[0].noteNumber,
+        duration: PREVIEW_SOUND_DURATION,
+      });
     }
     context.previewNotes.value = [];
     context.nowPreviewing.value = false;
@@ -864,14 +857,19 @@ class ResizeNoteRightState implements IState<State, Input, Context> {
 
     cancelAnimationFrame(this.innerContext.previewRequestId);
 
-    context.storeActions.commandUpdateNotes(previewNotes, this.targetTrackId);
-    context.storeActions.selectNotes(previewNoteIds);
+    void context.store.actions.COMMAND_UPDATE_NOTES({
+      notes: previewNotes,
+      trackId: this.targetTrackId,
+    });
+    void context.store.actions.SELECT_NOTES({
+      noteIds: previewNoteIds,
+    });
 
     if (previewNotes.length === 1) {
-      context.storeActions.playPreviewSound(
-        previewNotes[0].noteNumber,
-        PREVIEW_SOUND_DURATION,
-      );
+      void context.store.actions.PLAY_PREVIEW_SOUND({
+        noteNumber: previewNotes[0].noteNumber,
+        duration: PREVIEW_SOUND_DURATION,
+      });
     }
     context.previewNotes.value = [];
     context.nowPreviewing.value = false;
@@ -967,9 +965,9 @@ class SelectNotesWithRectState implements IState<State, Input, Context> {
       }
     }
     if (!this.additive) {
-      context.storeActions.deselectAllNotes();
+      void context.store.actions.DESELECT_ALL_NOTES();
     }
-    context.storeActions.selectNotes(noteIdsToSelect);
+    void context.store.actions.SELECT_NOTES({ noteIds: noteIdsToSelect });
   }
 }
 
@@ -1141,11 +1139,11 @@ class DrawPitchState implements IState<State, Input, Context> {
       applyGaussianFilter(data, 0.7);
       data = data.map((value) => Math.exp(value));
 
-      context.storeActions.commandSetPitchEditData(
-        data,
-        context.previewPitchEdit.value.startFrame,
-        this.targetTrackId,
-      );
+      void context.store.actions.COMMAND_SET_PITCH_EDIT_DATA({
+        pitchArray: data,
+        startFrame: context.previewPitchEdit.value.startFrame,
+        trackId: this.targetTrackId,
+      });
     }
 
     context.previewPitchEdit.value = undefined;
@@ -1265,21 +1263,28 @@ class ErasePitchState implements IState<State, Input, Context> {
 
     cancelAnimationFrame(this.innerContext.previewRequestId);
 
-    context.storeActions.commandErasePitchEditData(
-      context.previewPitchEdit.value.startFrame,
-      context.previewPitchEdit.value.frameLength,
-      this.targetTrackId,
-    );
+    void context.store.actions.COMMAND_ERASE_PITCH_EDIT_DATA({
+      startFrame: context.previewPitchEdit.value.startFrame,
+      frameLength: context.previewPitchEdit.value.frameLength,
+      trackId: this.targetTrackId,
+    });
 
     context.previewPitchEdit.value = undefined;
     context.nowPreviewing.value = false;
   }
 }
 
-export const useSequencerStateMachine = (
-  computedRefs: ComputedRefs,
-  storeActions: StoreActions,
-) => {
+export const useSequencerStateMachine = (store: Store) => {
+  const computedRefs: ComputedRefs = {
+    snapTicks: computed(() =>
+      getNoteDuration(store.state.sequencerSnapType, store.state.tpqn),
+    ),
+    editTarget: computed(() => store.state.sequencerEditTarget),
+    selectedTrackId: computed(() => store.getters.SELECTED_TRACK_ID),
+    notesInSelectedTrack: computed(() => store.getters.SELECTED_TRACK.notes),
+    selectedNoteIds: computed(() => store.getters.SELECTED_NOTE_IDS),
+    editorFrameRate: computed(() => store.state.editorFrameRate),
+  };
   const refs: Refs = {
     nowPreviewing: ref(false),
     previewNotes: ref([]),
@@ -1292,7 +1297,7 @@ export const useSequencerStateMachine = (
     {
       ...computedRefs,
       ...refs,
-      storeActions,
+      store,
     },
   );
   return {
