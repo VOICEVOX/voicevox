@@ -21,7 +21,7 @@
         x="0"
         y="0"
         :width
-        height="24"
+        height="16"
         rx="6"
         ry="6"
         class="loop-background"
@@ -32,9 +32,9 @@
       <rect
         v-if="!isEmpty"
         :x="loopStartX - offset + 4"
-        y="4"
+        y="0"
         :width="Math.max(loopEndX - loopStartX - 8, 0)"
-        height="8"
+        height="6"
         rx="2"
         ry="2"
         class="loop-range"
@@ -46,7 +46,7 @@
           :x="loopStartX - offset"
           y="0"
           width="2"
-          height="24"
+          height="16"
           rx="1"
           ry="1"
           class="loop-handle loop-handle-start"
@@ -68,7 +68,7 @@
           :x="loopEndX - offset - 2"
           y="0"
           width="2"
-          height="24"
+          height="16"
           rx="1"
           ry="1"
           class="loop-handle loop-handle-end"
@@ -391,34 +391,29 @@ onUnmounted(() => {
 
 .loop-lane {
   height: 24px;
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 0;
   overflow: hidden;
   pointer-events: auto;
   cursor: pointer;
   width: 100%;
-  top: -24px;
-  isolation: isolate;
+  z-index: 0;
 
   &.cursor-ew-resize {
     cursor: ew-resize;
   }
 
-  &:hover .loop-background {
-    fill: var(--scheme-color-secondary-container);
-  }
-
   &.is-enabled {
     .loop-range {
-      fill: color-mix(
-        in oklch,
-        var(--scheme-color-primary-fixed-dim) 40%,
-        var(--scheme-color-secondary-container)
-      );
+      fill: var(--scheme-color-outline);
+      opacity: 0.8;
     }
 
     .loop-handle {
-      fill: var(--scheme-color-primary-fixed-dim);
-      stroke: var(--scheme-color-primary-fixed-dim);
+      fill: var(--scheme-color-secondary);
+      stroke: var(--scheme-color-secondary);
+      z-index: 1;
     }
   }
 
@@ -434,7 +429,7 @@ onUnmounted(() => {
 
   &.is-dragging {
     .loop-background {
-      background: var(--scheme-color-secondary-container);
+      background: var(--scheme-color-tertiary-container);
       opacity: 0.4;
     }
 
@@ -443,8 +438,8 @@ onUnmounted(() => {
     }
 
     .loop-handle {
-      fill: var(--scheme-color-primary-fixed);
-      stroke: var(--scheme-color-primary-fixed);
+      fill: var(--scheme-color-tertiary-fixed);
+      stroke: var(--scheme-color-tertiary-fixed);
     }
   }
 
@@ -469,11 +464,10 @@ onUnmounted(() => {
       &:hover,
       &-start:hover,
       &-end:hover {
-        fill: var(--scheme-color-primary-fixed);
-        outline: 2px solid
-          oklch(from var(--scheme-color-primary-fixed) l c h / 0.5);
-        outline-offset: 1px;
+        fill: var(--scheme-color-primary);
+        stroke: var(--scheme-color-primary);
       }
+      opacity: 1;
     }
   }
 }
@@ -497,12 +491,6 @@ onUnmounted(() => {
 
   &.is-empty {
     fill: var(--scheme-color-outline);
-  }
-}
-
-.loop-handle-group:hover {
-  .loop-handle {
-    fill: var(--scheme-color-primary-fixed);
   }
 }
 

@@ -113,6 +113,15 @@
         icon="stop"
         @click="stop"
       />
+      <QBtn
+        flat
+        round
+        size="sm"
+        class="sing-playback-button sing-playback-loop"
+        :class="{ 'sing-playback-loop-enabled': isLoopEnabled }"
+        icon="loop"
+        @click="toggleLoop"
+      />
       <PlayheadPositionDisplay class="sing-playhead-position" />
     </div>
     <!-- settings for edit controls -->
@@ -412,6 +421,12 @@ const goToZero = () => {
   void store.actions.SET_PLAYHEAD_POSITION({ position: 0 });
 };
 
+const isLoopEnabled = computed(() => store.state.isLoopEnabled);
+
+const toggleLoop = () => {
+  void store.actions.SET_LOOP_ENABLED({ isLoopEnabled: !isLoopEnabled.value });
+};
+
 const volume = computed({
   get() {
     return store.state.volume * 100;
@@ -685,6 +700,17 @@ const snapTypeSelectModel = computed({
 
   &.sing-playback-stop .q-btn__wrapper .q-icon {
     transform: translateX(-0.5px);
+  }
+}
+
+.sing-playback-loop {
+  margin-left: 4px;
+  color: var(--scheme-color-on-surface-variant);
+  background: transparent;
+
+  &-enabled {
+    color: var(--scheme-color-primary);
+    background: var(--scheme-color-secondary-container);
   }
 }
 

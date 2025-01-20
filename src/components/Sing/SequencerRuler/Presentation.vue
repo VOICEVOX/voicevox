@@ -11,6 +11,25 @@
       :menudata="contextMenuData"
       :uiLocked
     />
+    <!-- ループエリア -->
+    <LoopLane
+      :width
+      :offset
+      :tpqn
+      :sequencerZoomX
+      :isLoopEnabled
+      :loopStartTick
+      :loopEndTick
+      @setLoopEnabled="(value: boolean) => emit('setLoopEnabled', value)"
+      @setLoopRange="
+        (start: number, end: number) => emit('setLoopRange', start, end)
+      "
+      @clearLoopRange="() => emit('clearLoopRange')"
+      @addOneMeasureLoop="
+        (x: number, offset: number, tpqn: number, sequencerZoomX: number) =>
+          emit('addOneMeasureLoop', x, offset, tpqn, sequencerZoomX)
+      "
+    />
     <svg
       xmlns="http://www.w3.org/2000/svg"
       :width
@@ -33,7 +52,7 @@
             :key="n"
             :x1="gridPattern.beatWidth * n"
             :x2="gridPattern.beatWidth * n"
-            y1="28"
+            y1="16"
             :y2="height"
             class="sequencer-ruler-beat-line"
           />
@@ -54,7 +73,7 @@
         :key="measureInfo.number"
         :x1="measureInfo.x - offset"
         :x2="measureInfo.x - offset"
-        y1="20"
+        y1="0"
         :y2="height"
         class="sequencer-ruler-measure-line"
         :class="{ 'first-measure-line': measureInfo.number === 1 }"
@@ -65,7 +84,7 @@
         :key="measureInfo.number"
         font-size="12"
         :x="measureInfo.x - offset + valueChangeTextPadding"
-        y="34"
+        y="16"
         class="sequencer-ruler-measure-number"
       >
         {{ measureInfo.number }}
@@ -76,7 +95,7 @@
           ref="valueChangeText"
           font-size="12"
           :x="valueChange.x - offset + valueChangeTextPadding"
-          y="16"
+          y="32"
           class="sequencer-ruler-value-change"
           @click.stop="onValueChangeClick($event, valueChange)"
           @contextmenu.stop="onValueChangeClick($event, valueChange)"
@@ -92,25 +111,6 @@
         />
       </template>
     </svg>
-    <LoopLane
-      :width
-      :offset
-      :tpqn
-      :sequencerZoomX
-      :isLoopEnabled
-      :loopStartTick
-      :loopEndTick
-      @setLoopEnabled="(value: boolean) => emit('setLoopEnabled', value)"
-      @setLoopRange="
-        (start: number, end: number) => emit('setLoopRange', start, end)
-      "
-      @clearLoopRange="() => emit('clearLoopRange')"
-      @addOneMeasureLoop="
-        (x: number, offset: number, tpqn: number, sequencerZoomX: number) =>
-          emit('addOneMeasureLoop', x, offset, tpqn, sequencerZoomX)
-      "
-    />
-    <div class="sequencer-ruler-border-bottom"></div>
     <div
       class="sequencer-ruler-playhead"
       :style="{
@@ -535,6 +535,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   height: 40px;
   position: relative;
   overflow: hidden;
+  isolation: isolate;
 }
 
 .sequencer-ruler-playhead {
@@ -553,6 +554,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   font-weight: 700;
   fill: var(--scheme-color-on-surface-variant);
 }
+
 .sequencer-ruler-value-change {
   font-weight: 700;
   fill: var(--scheme-color-on-surface-variant);
