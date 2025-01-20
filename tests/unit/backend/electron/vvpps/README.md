@@ -1,7 +1,7 @@
 # vvpps
 
 テスト用のVVPPファイルを作るためのディレクトリ。
-各ディレクトリ内にファイルがあり、zip化して拡張子を.vvppに変えればテスト用ファイルになる。
+各ディレクトリをzip化して拡張子を.vvppに変えればテスト用ファイルになる。
 
 - perfect.vvpp：完璧なVVPP
 - invalid_manifest.vvpp：不正なエンジンマニフェストがあるVVPP
