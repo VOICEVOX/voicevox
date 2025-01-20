@@ -156,7 +156,7 @@ async function unarchive(
 
 export async function extractVvpp(
   vvppLikeFilePath: string,
-  vvppEngineDir: string,
+  vvppEngineDir: string, // TODO: payload objectに変える
   callbacks?: { onProgress?: ProgressCallback },
 ): Promise<{ outputDir: string; manifest: MinimumEngineManifestType }> {
   callbacks?.onProgress?.({ progress: 0 });
