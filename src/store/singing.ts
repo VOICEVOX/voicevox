@@ -93,6 +93,7 @@ import {
   toEntirePhonemeTimings,
   adjustPhonemeTimingsAndPhraseEndFrames,
   phonemeTimingsToPhonemes,
+  isValidLoopRange,
 } from "@/sing/domain";
 import { getOverlappingNoteIds } from "@/sing/storeHelper";
 import {
@@ -104,7 +105,7 @@ import {
   round,
 } from "@/sing/utility";
 import { getWorkaroundKeyRangeAdjustment } from "@/sing/workaroundKeyRangeAdjustment";
-import { createLogger } from "@/helpers/log";
+import { createLogger } from "@/domain/frontend/log";
 import { noteSchema } from "@/domain/project/schema";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
@@ -758,6 +759,9 @@ export const singingStoreState: SingingStoreState = {
   exportState: "NOT_EXPORTING",
   cancellationOfExportRequested: false,
   isSongSidebarOpen: false,
+  isLoopEnabled: false,
+  loopStartTick: 0,
+  loopEndTick: 0,
 };
 
 export const singingStore = createPartialStore<SingingStoreTypes>({
@@ -1487,6 +1491,21 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         throw new Error("transport is undefined.");
       }
       mutations.SET_PLAYBACK_STATE({ nowPlaying: true });
+
+      // TODO: 以下の処理（ループの設定）は再生開始時に毎回行う必要はないので、
+      //       ソングエディタ初期化時に1回だけ行うようにする
+      // NOTE: 初期化のactionを作った方が良いかも
+      transport.loop = state.isLoopEnabled;
+      transport.loopStartTime = tickToSecond(
+        state.loopStartTick,
+        state.tempos,
+        state.tpqn,
+      );
+      transport.loopEndTime = tickToSecond(
+        state.loopEndTick,
+        state.tempos,
+        state.tpqn,
+      );
 
       transport.start();
       animationTimer.start(() => {
@@ -3448,6 +3467,54 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  SET_LOOP_ENABLED: {
+    mutation(state, { isLoopEnabled }) {
+      state.isLoopEnabled = isLoopEnabled;
+    },
+    async action({ mutations }, { isLoopEnabled }) {
+      if (!transport) {
+        throw new Error("transport is undefined");
+      }
+      mutations.SET_LOOP_ENABLED({ isLoopEnabled });
+      transport.loop = isLoopEnabled;
+    },
+  },
+
+  SET_LOOP_RANGE: {
+    mutation(state, { loopStartTick, loopEndTick }) {
+      state.loopStartTick = loopStartTick;
+      state.loopEndTick = loopEndTick;
+    },
+    async action({ state, mutations }, { loopStartTick, loopEndTick }) {
+      if (!transport) {
+        throw new Error("transport is undefined");
+      }
+
+      if (!isValidLoopRange(loopStartTick, loopEndTick)) {
+        throw new Error("The loop range is invalid.");
+      }
+
+      mutations.SET_LOOP_RANGE({ loopStartTick, loopEndTick });
+
+      transport.loopStartTime = tickToSecond(
+        loopStartTick,
+        state.tempos,
+        state.tpqn,
+      );
+      transport.loopEndTime = tickToSecond(
+        loopEndTick,
+        state.tempos,
+        state.tpqn,
+      );
+    },
+  },
+
+  CLEAR_LOOP_RANGE: {
+    action({ mutations }) {
+      mutations.SET_LOOP_RANGE({ loopStartTick: 0, loopEndTick: 0 });
+    },
+  },
+
   EXPORT_SONG_PROJECT: {
     action: createUILockAction(
       async (
@@ -4048,6 +4115,36 @@ export const singingCommandStore = transformCommandStore(
           void actions.RENDER();
         },
       ),
+    },
+    COMMAND_SET_LOOP_ENABLED: {
+      mutation(draft, { isLoopEnabled }) {
+        singingStore.mutations.SET_LOOP_ENABLED(draft, { isLoopEnabled });
+      },
+      action({ mutations }, { isLoopEnabled }) {
+        mutations.COMMAND_SET_LOOP_ENABLED({ isLoopEnabled });
+      },
+    },
+    COMMAND_SET_LOOP_RANGE: {
+      mutation(draft, { loopStartTick, loopEndTick }) {
+        singingStore.mutations.SET_LOOP_RANGE(draft, {
+          loopStartTick,
+          loopEndTick,
+        });
+      },
+      action({ mutations }, { loopStartTick, loopEndTick }) {
+        mutations.COMMAND_SET_LOOP_RANGE({ loopStartTick, loopEndTick });
+      },
+    },
+    COMMAND_CLEAR_LOOP_RANGE: {
+      mutation(draft) {
+        singingStore.mutations.SET_LOOP_RANGE(draft, {
+          loopStartTick: 0,
+          loopEndTick: 0,
+        });
+      },
+      action({ mutations }) {
+        mutations.COMMAND_CLEAR_LOOP_RANGE();
+      },
     },
   }),
   "song",
