@@ -1,6 +1,5 @@
 import fs from "node:fs";
 import path from "node:path";
-import log from "electron-log/main";
 import { moveFile } from "move-file";
 import { dialog } from "electron";
 import AsyncLock from "async-lock";
@@ -12,6 +11,9 @@ import {
 import { errorToMessage } from "@/helpers/errorHelper";
 import { extractVvpp } from "@/backend/electron/vvppFile";
 import { ProgressCallback } from "@/helpers/progressHelper";
+import { createLogger } from "@/helpers/log";
+
+const log = createLogger("VvppManager");
 
 const isNotWin = process.platform !== "win32";
 

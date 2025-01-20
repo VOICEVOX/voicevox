@@ -4,11 +4,13 @@
  */
 
 import AsyncLock from "async-lock";
-import log from "electron-log/main";
 import type { AltPortInfos } from "@/store/type";
 import { EngineId, EngineInfo } from "@/type/preload";
 import { writeFileSafely } from "@/backend/electron/fileHelper";
 import { createEngineUrl } from "@/domain/url";
+import { createLogger } from "@/helpers/log";
+
+const log = createLogger("RuntimeInfoManager");
 
 /**
  * ランタイム情報書き出しに必要なEngineInfo

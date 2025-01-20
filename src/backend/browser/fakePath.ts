@@ -3,7 +3,7 @@ import { uuid4 } from "@/helpers/random";
 
 const fakePathSchema = z
   .string()
-  .regex(/^<browser-dummy-[0-9a-f]+>-.+$/)
+  .regex(/^<browser-dummy-[-0-9a-f]+>-.+$/)
   .brand("FakePath");
 export type FakePath = z.infer<typeof fakePathSchema>;
 

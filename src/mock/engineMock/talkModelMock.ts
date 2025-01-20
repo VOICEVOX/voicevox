@@ -7,14 +7,7 @@ import { moraToPhonemes } from "./phonemeMock";
 import { parseKana } from "./aquestalkLikeMock";
 import { moraPattern } from "@/domain/japanese";
 import { AccentPhrase, Mora } from "@/openapi";
-
-/** Nodeとして動いてほしいかを判定する */
-const isNode =
-  // window.documentがなければNode
-  typeof window == "undefined" ||
-  typeof window.document == "undefined" ||
-  // happy-domのときはNode
-  typeof (window as { happyDOM?: unknown }).happyDOM != "undefined";
+import { isNode } from "@/helpers/platform";
 
 let _tokenizer: Tokenizer<IpadicFeatures> | undefined;
 
