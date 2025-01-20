@@ -1,6 +1,8 @@
 import { execFileSync } from "child_process";
 import { createServer } from "net";
-import log from "electron-log/main";
+import { createLogger } from "@/helpers/log";
+
+const log = createLogger("portHelper");
 
 const isWindows = process.platform === "win32";
 

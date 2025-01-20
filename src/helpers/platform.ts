@@ -28,3 +28,11 @@ function checkOs(os: "windows" | "mac"): boolean {
 
 export const isMac = checkOs("mac");
 export const isWindows = checkOs("windows");
+
+/** Nodeとして動いてほしいか */
+export const isNode =
+  // window.documentがなければNode
+  typeof window == "undefined" ||
+  typeof window.document == "undefined" ||
+  // happy-domのときはNode
+  typeof (window as { happyDOM?: unknown }).happyDOM != "undefined";

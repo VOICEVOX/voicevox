@@ -1,7 +1,6 @@
 import fs from "fs";
 import path from "path";
 import { spawn } from "child_process";
-import log from "electron-log/main";
 import { moveFile } from "move-file";
 import { app, dialog } from "electron";
 import MultiStream from "multistream";
@@ -15,6 +14,9 @@ import {
   MinimumEngineManifestType,
 } from "@/type/preload";
 import { errorToMessage } from "@/helpers/errorHelper";
+import { createLogger } from "@/helpers/log";
+
+const log = createLogger("VvppManager");
 
 const isNotWin = process.platform !== "win32";
 
@@ -40,7 +42,7 @@ async function getArchiveFileParts(
   let archiveFileParts: string[];
   // 名前.数値.vvpppの場合は分割されているとみなして連結する
   if (vvppLikeFilePath.match(/\.[0-9]+\.vvppp$/)) {
-    log.log("vvpp is split, finding other parts...");
+    log.info("vvpp is split, finding other parts...");
     const vvpppPathGlob = vvppLikeFilePath
       .replace(/\.[0-9]+\.vvppp$/, ".*.vvppp")
       .replace(/\\/g, "/"); // node-globはバックスラッシュを使えないので、スラッシュに置換する
@@ -49,7 +51,7 @@ async function getArchiveFileParts(
       if (!p.match(/\.[0-9]+\.vvppp$/)) {
         continue;
       }
-      log.log(`found ${p}`);
+      log.info(`found ${p}`);
       filePaths.push(p);
     }
     filePaths.sort((a, b) => {
@@ -62,7 +64,7 @@ async function getArchiveFileParts(
     });
     archiveFileParts = filePaths;
   } else {
-    log.log("Not a split file");
+    log.info("Not a split file");
     archiveFileParts = [vvppLikeFilePath];
   }
   return archiveFileParts;
@@ -75,12 +77,12 @@ async function concatenateVvppFiles(
 ) {
   // -siオプションでの7z解凍はサポートされていないため、
   // ファイルを連結した一次ファイルを作成し、それを7zで解凍する。
-  log.log(`Concatenating ${archiveFileParts.length} files...`);
+  log.info(`Concatenating ${archiveFileParts.length} files...`);
   const tmpConcatenatedFile = path.join(
     app.getPath("temp"),
     `vvpp-${new Date().getTime()}.${format}`,
   );
-  log.log("Temporary file:", tmpConcatenatedFile);
+  log.info("Temporary file:", tmpConcatenatedFile);
   await new Promise<void>((resolve, reject) => {
     if (!tmpConcatenatedFile) throw new Error("tmpFile is undefined");
     const inputStreams = archiveFileParts.map((f) => fs.createReadStream(f));
@@ -93,7 +95,7 @@ async function concatenateVvppFiles(
       })
       .on("error", reject);
   });
-  log.log("Concatenated");
+  log.info("Concatenated");
   return tmpConcatenatedFile;
 }
 
@@ -123,7 +125,7 @@ async function unarchive(
   if (import.meta.env.PROD) {
     sevenZipPath = path.join(path.dirname(app.getPath("exe")), sevenZipPath);
   }
-  log.log("Spawning 7z:", sevenZipPath, args.join(" "));
+  log.info("Spawning 7z:", sevenZipPath, args.join(" "));
   await new Promise<void>((resolve, reject) => {
     const child = spawn(sevenZipPath, args, {
       stdio: ["pipe", "pipe", "pipe"],
@@ -253,8 +255,8 @@ export class VvppManager {
     if (!format) {
       throw new Error(`Unknown file format: ${archiveFileParts[0]}`);
     }
-    log.log("Format:", format);
-    log.log("Extracting vvpp to", outputDir);
+    log.info("Format:", format);
+    log.info("Extracting vvpp to", outputDir);
     try {
       let tmpConcatenatedFile: string | undefined;
       let archiveFile: string;
@@ -267,13 +269,13 @@ export class VvppManager {
           archiveFile = tmpConcatenatedFile;
         } else {
           archiveFile = archiveFileParts[0];
-          log.log("Single file, not concatenating");
+          log.info("Single file, not concatenating");
         }
 
         await unarchive({ archiveFile, outputDir, format }, callbacks);
       } finally {
         if (tmpConcatenatedFile) {
-          log.log("Removing temporary file", tmpConcatenatedFile);
+          log.info("Removing temporary file", tmpConcatenatedFile);
           await fs.promises.rm(tmpConcatenatedFile);
         }
       }
@@ -292,7 +294,7 @@ export class VvppManager {
       };
     } catch (e) {
       if (fs.existsSync(outputDir)) {
-        log.log("Failed to extract vvpp, removing", outputDir);
+        log.info("Failed to extract vvpp, removing", outputDir);
         await fs.promises.rm(outputDir, { recursive: true });
       }
       throw e;
