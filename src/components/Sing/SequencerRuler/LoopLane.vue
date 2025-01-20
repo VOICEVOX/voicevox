@@ -1,6 +1,6 @@
 <template>
   <div
-    class="sequencer-ruler-loop-lane"
+    class="loop-lane"
     :class="{
       'is-enabled': isLoopEnabled,
       'is-dragging': isDragging,
@@ -91,8 +91,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onUnmounted } from "vue";
-import { useStore } from "@/store";
-import { useLoopControl } from "@/composables/useLoopControl";
+import { snapTicksToGrid } from "@/sing/domain";
 import { tickToBaseX, baseXToTick } from "@/sing/viewHelper";
 import ContextMenu, {
   ContextMenuItemData,
@@ -114,46 +113,46 @@ const cursorClass = computed(() => {
 const props = defineProps<{
   width: number;
   offset: number;
+  tpqn: number;
+  sequencerZoomX: number;
+  loopStartTick: number;
+  loopEndTick: number;
+  isLoopEnabled: boolean;
+}>();
+const emit = defineEmits<{
+  setLoopEnabled: [isLoopEnabled: boolean];
+  setLoopRange: [startTick: number, endTick: number];
+  clearLoopRange: [];
+  setPlayheadPosition: [position: number];
+  addOneMeasureLoop: [
+    x: number,
+    offset: number,
+    tpqn: number,
+    sequencerZoomX: number,
+  ];
 }>();
 
-// TODO: Containerに責務を移動
-const store = useStore();
-const {
-  isLoopEnabled,
-  loopStartTick,
-  loopEndTick,
-  setLoopEnabled,
-  setLoopRange,
-  clearLoopRange,
-  snapToGrid,
-  addOneMeasureLoop,
-} = useLoopControl();
-
-// 基本パラメータ
-const tpqn = computed(() => store.state.tpqn);
-const sequencerZoomX = computed(() => store.state.sequencerZoomX);
-
 // ドラッグ中のループ範囲を保持
-const previewLoopStartTick = ref(loopStartTick.value);
-const previewLoopEndTick = ref(loopEndTick.value);
+const previewLoopStartTick = ref(props.loopStartTick);
+const previewLoopEndTick = ref(props.loopEndTick);
 
 // 現在のループ範囲
 const currentLoopStartTick = computed(() =>
-  isDragging.value ? previewLoopStartTick.value : loopStartTick.value,
+  isDragging.value ? previewLoopStartTick.value : props.loopStartTick,
 );
 const currentLoopEndTick = computed(() =>
-  isDragging.value ? previewLoopEndTick.value : loopEndTick.value,
+  isDragging.value ? previewLoopEndTick.value : props.loopEndTick,
 );
 
 // ループのX座標を計算
 const loopStartX = computed(() =>
   Math.round(
-    tickToBaseX(currentLoopStartTick.value, tpqn.value) * sequencerZoomX.value,
+    tickToBaseX(currentLoopStartTick.value, props.tpqn) * props.sequencerZoomX,
   ),
 );
 const loopEndX = computed(() =>
   Math.round(
-    tickToBaseX(currentLoopEndTick.value, tpqn.value) * sequencerZoomX.value,
+    tickToBaseX(currentLoopEndTick.value, props.tpqn) * props.sequencerZoomX,
   ),
 );
 
@@ -187,16 +186,19 @@ const handleLoopAreaMouseDown = (event: MouseEvent) => {
   const rect = target.getBoundingClientRect();
   const clickX = event.clientX - rect.left;
   const x = clickX + props.offset;
-  const tick = snapToGrid(baseXToTick(x / sequencerZoomX.value, tpqn.value));
+  const tick = snapTicksToGrid(
+    baseXToTick(x / props.sequencerZoomX, props.tpqn),
+    props.tpqn,
+  );
 
   previewLoopStartTick.value = tick;
   previewLoopEndTick.value = tick;
-  void setLoopRange(tick, tick);
+  emit("setLoopRange", tick, tick);
   startDragging("end", event);
 };
 
 const handleLoopRangeClick = async () => {
-  await setLoopEnabled(!isLoopEnabled.value);
+  emit("setLoopEnabled", !props.isLoopEnabled);
 };
 
 // ドラッグ開始処理
@@ -209,8 +211,8 @@ const startDragging = (target: "start" | "end", event: MouseEvent) => {
   dragStartHandleX.value =
     target === "start" ? loopStartX.value : loopEndX.value;
 
-  previewLoopStartTick.value = loopStartTick.value;
-  previewLoopEndTick.value = loopEndTick.value;
+  previewLoopStartTick.value = props.loopStartTick;
+  previewLoopEndTick.value = props.loopEndTick;
 
   cursorState.value = "ew-resize";
   lastMouseEvent = event;
@@ -240,9 +242,9 @@ const preview = () => {
     // ドラッグ中のハンドル位置
     const newX = dragStartHandleX.value + dx;
     // ドラッグ中の基準tick
-    const baseTick = baseXToTick(newX / sequencerZoomX.value, tpqn.value);
+    const baseTick = baseXToTick(newX / props.sequencerZoomX, props.tpqn);
     // ドラッグ中の新しいtick（スナップされたtick）
-    const newTick = Math.max(0, snapToGrid(baseTick));
+    const newTick = Math.max(0, snapTicksToGrid(baseTick, props.tpqn));
 
     try {
       // 開始ハンドルのドラッグ
@@ -301,19 +303,13 @@ const stopDragging = () => {
 
   try {
     // ループ範囲を設定
-    void setLoopRange(previewLoopStartTick.value, previewLoopEndTick.value);
+    emit("setLoopRange", previewLoopStartTick.value, previewLoopEndTick.value);
     // 再生ヘッドがループ開始位置にあるか
     // FIXME: usePlayheadPosition実装が完了したら移動
     const isPlayheadToLoopStart =
       previewLoopStartTick.value !== previewLoopEndTick.value;
     if (isPlayheadToLoopStart) {
-      try {
-        void store.dispatch("SET_PLAYHEAD_POSITION", {
-          position: previewLoopStartTick.value,
-        });
-      } catch (error) {
-        throw new Error("Failed to move playhead", { cause: error });
-      }
+      emit("setPlayheadPosition", previewLoopStartTick.value);
     }
   } catch (error) {
     throw new UnreachableError("Failed to set loop range");
@@ -329,7 +325,7 @@ const handleEndHandleMouseDown = (event: MouseEvent) => {
 };
 
 const handleAddOneMeasureLoop = (x: number) => {
-  addOneMeasureLoop(x, props.offset, tpqn.value, sequencerZoomX.value);
+  emit("addOneMeasureLoop", x, props.offset, props.tpqn, props.sequencerZoomX);
 };
 
 const handleContextMenu = (event: MouseEvent) => {
@@ -347,10 +343,10 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   return [
     {
       type: "button",
-      label: isLoopEnabled.value ? "ループ無効" : "ループ有効",
+      label: props.isLoopEnabled ? "ループ無効" : "ループ有効",
       onClick: () => {
         contextMenu.value?.hide();
-        void setLoopEnabled(!isLoopEnabled.value);
+        emit("setLoopEnabled", !props.isLoopEnabled);
       },
       disabled: contextMenuPosition.value == null,
       disableWhenUiLocked: true,
@@ -372,7 +368,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
       label: "ループ範囲を削除",
       onClick: () => {
         contextMenu.value?.hide();
-        void clearLoopRange();
+        emit("clearLoopRange");
       },
       disabled: isEmpty.value,
       disableWhenUiLocked: true,
@@ -393,7 +389,7 @@ onUnmounted(() => {
 <style scoped lang="scss">
 @use "@/styles/v2/variables" as vars;
 
-.sequencer-ruler-loop-lane {
+.loop-lane {
   height: 24px;
   position: relative;
   overflow: hidden;
@@ -408,7 +404,7 @@ onUnmounted(() => {
   }
 
   &:hover .loop-background {
-    fill: var(--scheme-color-sing-loop-area);
+    fill: var(--scheme-color-secondary-container);
   }
 
   &.is-enabled {
@@ -416,7 +412,7 @@ onUnmounted(() => {
       fill: color-mix(
         in oklch,
         var(--scheme-color-primary-fixed-dim) 40%,
-        var(--scheme-color-sing-loop-area)
+        var(--scheme-color-secondary-container)
       );
     }
 

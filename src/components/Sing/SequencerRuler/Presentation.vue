@@ -92,7 +92,24 @@
         />
       </template>
     </svg>
-
+    <LoopLane
+      :width
+      :offset
+      :tpqn
+      :sequencerZoomX
+      :isLoopEnabled
+      :loopStartTick
+      :loopEndTick
+      @setLoopEnabled="(value: boolean) => emit('setLoopEnabled', value)"
+      @setLoopRange="
+        (start: number, end: number) => emit('setLoopRange', start, end)
+      "
+      @clearLoopRange="() => emit('clearLoopRange')"
+      @addOneMeasureLoop="
+        (x: number, offset: number, tpqn: number, sequencerZoomX: number) =>
+          emit('addOneMeasureLoop', x, offset, tpqn, sequencerZoomX)
+      "
+    />
     <div class="sequencer-ruler-border-bottom"></div>
     <div
       class="sequencer-ruler-playhead"
@@ -114,6 +131,7 @@ import {
   toRef,
 } from "vue";
 import { Dialog } from "quasar";
+import LoopLane from "./LoopLane.vue";
 import {
   getMeasureDuration,
   getNoteDuration,
@@ -142,6 +160,9 @@ const props = defineProps<{
   sequencerZoomX: number;
   uiLocked: boolean;
   sequencerSnapType: number;
+  isLoopEnabled: boolean;
+  loopStartTick: number;
+  loopEndTick: number;
 }>();
 const playheadTicks = defineModel<number>("playheadTicks", {
   required: true,
@@ -152,6 +173,15 @@ const emit = defineEmits<{
   removeTempo: [position: number];
   setTimeSignature: [timeSignature: TimeSignature];
   removeTimeSignature: [measureNumber: number];
+  setLoopEnabled: [isLoopEnabled: boolean];
+  setLoopRange: [startTick: number, endTick: number];
+  clearLoopRange: [];
+  addOneMeasureLoop: [
+    x: number,
+    offset: number,
+    tpqn: number,
+    sequencerZoomX: number,
+  ];
 }>();
 
 const log = createLogger("SequencerRuler");
