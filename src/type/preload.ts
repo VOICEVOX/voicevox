@@ -376,7 +376,7 @@ export type ConfirmedTips = {
 
 // ルート直下にある雑多な設定値
 export const rootMiscSettingSchema = z.object({
-  openedEditor: z.enum(["talk", "song"]).default("talk"),
+  openedEditor: z.enum(["talk", "song"]).optional(),
   editorFont: z.enum(["default", "os"]).default("default"),
   showTextLineNumber: z.boolean().default(false),
   showAddAudioItemButton: z.boolean().default(true),

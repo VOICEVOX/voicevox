@@ -144,6 +144,21 @@ const isAcceptRetrieveTelemetryDialogOpenComputed = computed({
     }),
 });
 
+// 初期設定ダイアログ
+const isInitialSettingsDialogOpenComputed = computed({
+  get: () =>
+    !store.state.isAcceptTermsDialogOpen &&
+    !store.state.isCharacterOrderDialogOpen &&
+    !store.state.isDefaultStyleSelectDialogOpen &&
+    !store.state.isAcceptRetrieveTelemetryDialogOpen &&
+    store.state.isInitialSettingsDialogOpen,
+  set: (val) => {
+    void store.actions.SET_DIALOG_OPEN({
+      isInitialSettingsDialogOpen: val,
+    });
+  },
+});
+
 // エディタのアップデート確認ダイアログ
 const canOpenNotificationDialog = computed(() => {
   return (
@@ -171,19 +186,5 @@ const isImportSongProjectDialogOpenComputed = computed({
     store.actions.SET_DIALOG_OPEN({
       isImportSongProjectDialogOpen: val,
     }),
-});
-
-// 初期設定ダイアログ
-const isSelectedEditorType = computed(() => store.state.openedEditor);
-console.log(isSelectedEditorType.value);
-const isInitialSettingsDialogOpenComputed = computed({
-  get: () => store.state.isInitialSettingsDialogOpen,
-  set: (val) => {
-    if (isSelectedEditorType.value) {
-      void store.actions.SET_DIALOG_OPEN({
-        isInitialSettingsDialogOpen: val,
-      });
-    }
-  },
 });
 </script>
