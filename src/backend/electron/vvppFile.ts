@@ -91,38 +91,47 @@ async function unarchive(
   },
   callbacks?: { onProgress?: ProgressCallback },
 ) {
-  const { archiveFile, outputDir, format } = payload;
-
-  const args = [
-    "x",
-    "-o" + outputDir,
-    archiveFile,
-    "-t" + format,
-    "-bsp1", // 進捗出力
-  ];
-
+  const args = createSevenZipArgs();
   const sevenZipPath = getSevenZipPath();
+
   log.info("Spawning 7z:", sevenZipPath, args.join(" "));
-  await new Promise<void>((resolve, reject) => {
+  await spawnSevenZip(sevenZipPath, args, callbacks);
+
+  function createSevenZipArgs(): string[] {
+    const { archiveFile, outputDir, format } = payload;
+    return [
+      "x",
+      "-o" + outputDir,
+      archiveFile,
+      "-t" + format,
+      "-bsp1", // 進捗出力
+    ];
+  }
+
+  function getSevenZipPath(): string {
+    let sevenZipPath = import.meta.env.VITE_7Z_BIN_NAME;
+    if (!sevenZipPath) {
+      throw new Error("7z path is not defined");
+    }
+    if (import.meta.env.PROD) {
+      sevenZipPath = path.join(path.dirname(app.getPath("exe")), sevenZipPath);
+    }
+    return sevenZipPath;
+  }
+
+  async function spawnSevenZip(
+    sevenZipPath: string,
+    args: string[],
+    callbacks?: { onProgress?: ProgressCallback },
+  ) {
+    const { promise, resolve, reject } = Promise.withResolvers<void>();
+
     const child = spawn(sevenZipPath, args, {
       stdio: ["pipe", "pipe", "pipe"],
     });
 
     child.stdout?.on("data", (data: Buffer) => {
-      const output = data.toString("utf-8");
-      log.info(`7z STDOUT: ${output}`);
-
-      // 進捗を取得
-      // NOTE: ` 75% 106 - pyopenjtalk\open_jtalk_dic_utf_8-1.11\sys.dic` のような出力が来る
-      // TODO: 出力が変わるかもしれないのでテストが必要
-      const progressMatch = output.match(
-        / *(?<percent>\d+)% ?(?<fileCount>\d+)? ?(?<file>.*)/,
-      );
-      if (progressMatch?.groups?.percent) {
-        callbacks?.onProgress?.({
-          progress: parseInt(progressMatch.groups.percent),
-        });
-      }
+      handleStdout(data, callbacks);
     });
 
     child.stderr?.on("data", (data: Buffer) => {
@@ -137,19 +146,31 @@ async function unarchive(
         reject(new Error(`7z exited with code ${code}`));
       }
     });
+
     // FIXME: rejectが2回呼ばれることがある
     child.on("error", reject);
-  });
 
-  function getSevenZipPath() {
-    let sevenZipPath = import.meta.env.VITE_7Z_BIN_NAME;
-    if (!sevenZipPath) {
-      throw new Error("7z path is not defined");
+    await promise;
+  }
+
+  function handleStdout(
+    data: Buffer,
+    callbacks?: { onProgress?: ProgressCallback },
+  ) {
+    const output = data.toString("utf-8");
+    log.info(`7z STDOUT: ${output}`);
+
+    // 進捗を取得
+    // NOTE: ` 75% 106 - pyopenjtalk\open_jtalk_dic_utf_8-1.11\sys.dic` のような出力が来る
+    // TODO: 出力が変わるかもしれないのでテストが必要
+    const progressMatch = output.match(
+      / *(?<percent>\d+)% ?(?<fileCount>\d+)? ?(?<file>.*)/,
+    );
+    if (progressMatch?.groups?.percent) {
+      callbacks?.onProgress?.({
+        progress: parseInt(progressMatch.groups.percent),
+      });
     }
-    if (import.meta.env.PROD) {
-      sevenZipPath = path.join(path.dirname(app.getPath("exe")), sevenZipPath);
-    }
-    return sevenZipPath;
   }
 }
 
