@@ -128,12 +128,26 @@ const channelModes = [
 const numChannels = 64;
 
 const channelOptions = computed(() => {
+  if (channelMode.value === "stereo") {
+    return Array.from({
+      length: numChannels / 2,
+    }).map((_, i) => ({
+      label: String(i + 1),
+      value: i,
+    }));
+  }
   return Array.from({
-    length: channelMode.value === "stereo" ? numChannels / 2 : numChannels,
-  }).map((_, i) => ({
-    label: String(i + 1),
-    value: i,
-  }));
+    length: numChannels / 2,
+  }).flatMap((_, i) => [
+    {
+      label: `${i + 1}L`,
+      value: i * 2,
+    },
+    {
+      label: `${i + 1}R`,
+      value: i * 2 + 1,
+    },
+  ]);
 });
 
 const updateRoutingInfo = (trackId: TrackId, index: number) => {

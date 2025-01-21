@@ -5,6 +5,7 @@ import { getConfig, setConfig } from "./ipc";
 import { BaseConfigManager, Metadata } from "@/backend/common/ConfigManager";
 import { ConfigType, EngineId, engineSettingSchema } from "@/type/preload";
 import { UnreachableError } from "@/type/utility";
+import { isMac } from "@/helpers/platform";
 
 let configManager: VstConfigManager | undefined;
 const configManagerLock = new AsyncLock();
@@ -13,7 +14,9 @@ const defaultEngineId = EngineId(defaultEngine.uuid);
 export async function getConfigManager() {
   await configManagerLock.acquire("configManager", async () => {
     if (!configManager) {
-      configManager = new VstConfigManager();
+      configManager = new VstConfigManager({
+        isMac,
+      });
       await configManager.initialize();
     }
   });

@@ -4,7 +4,7 @@ import {
   getProjectName,
   getVersion,
   readFile,
-  restartEngine,
+  startEngine,
   setProject,
   showImportFileDialog,
 } from "./ipc";
@@ -18,6 +18,7 @@ import {
 import { api as browserSandbox } from "@/backend/browser/sandbox";
 import { failure, success } from "@/type/result";
 import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
+import { UnreachableError } from "@/type/utility";
 
 export const projectFilePath = "/meta/vst-project.vvproj";
 
@@ -84,7 +85,12 @@ export const api: Sandbox = {
       // とりあえずマルチエンジンはサポートしない
       throw new Error(`Invalid engineId: ${engineId}`);
     }
-    await restartEngine();
+    const engineSettings = await this.getSetting("engineSettings");
+    const engineSetting = engineSettings[engineId];
+    if (!engineSetting) {
+      throw new UnreachableError(`unreachable: engineSetting is not found`);
+    }
+    await startEngine({ useGpu: engineSetting.useGpu, forceRestart: true });
   },
   async showProjectLoadDialog({ title }) {
     const filePath = await window.backend.showImportFileDialog({

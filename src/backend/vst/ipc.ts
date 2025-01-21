@@ -2,7 +2,7 @@ import { toBytes } from "fast-base64";
 import { Routing } from "./type";
 import { Metadata } from "@/backend/common/ConfigManager";
 import { ShowImportFileDialogOptions, TrackId } from "@/type/preload";
-import { createLogger } from "@/domain/frontend/log";
+import { createLogger } from "@/helpers/log";
 import { UnreachableError } from "@/type/utility";
 import { SingingVoiceKey, Track } from "@/store/type";
 
@@ -177,7 +177,10 @@ const ipcGetCurrentPosition = createMessageFunction<() => number | null>(
   { silent: true },
 );
 
-const ipcRestartEngine = createMessageFunction<() => void>("restartEngine");
+const ipcStartEngine =
+  createMessageFunction<
+    (args: { useGpu: boolean; forceRestart: boolean }) => void
+  >("startEngine");
 
 type Config = Record<string, unknown> & Metadata;
 const log = createLogger("vst/ipc");
@@ -281,6 +284,9 @@ export async function getCurrentPosition(): Promise<number | null> {
   return await ipcGetCurrentPosition();
 }
 
-export async function restartEngine() {
-  await ipcRestartEngine();
+export async function startEngine(args: {
+  useGpu: boolean;
+  forceRestart: boolean;
+}) {
+  await ipcStartEngine(args);
 }
