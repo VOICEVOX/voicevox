@@ -169,7 +169,7 @@ export async function extractVvpp(
       if (archiveFileParts.length > 1) {
         // -siオプションでの7z解凍はサポートされていないため、
         // ファイルを連結した一次ファイルを作成し、それを7zで解凍する。
-        tmpConcatenatedFile = createTempConcatenatedFilePath();
+        tmpConcatenatedFile = createTmpConcatenatedFilePath();
         log.info("Temporary file:", tmpConcatenatedFile);
 
         await concatenateVvppFiles(archiveFileParts, tmpConcatenatedFile);
@@ -207,7 +207,7 @@ export async function extractVvpp(
     throw e;
   }
 
-  function createTempConcatenatedFilePath(): string {
+  function createTmpConcatenatedFilePath(): string {
     return path.join(tmpDir, `vvpp-${new Date().getTime()}.${format}`);
   }
 }
