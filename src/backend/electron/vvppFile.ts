@@ -21,11 +21,21 @@ const log = createLogger("vvppFile");
 async function getArchiveFileParts(
   vvppLikeFilePath: string,
 ): Promise<string[]> {
-  let archiveFileParts: string[];
-  // 名前.数値.vvpppの場合は分割されているとみなして連結する
-  if (vvppLikeFilePath.match(/\.[0-9]+\.vvppp$/)) {
+  if (isSplitFile(vvppLikeFilePath)) {
     log.info("vvpp is split, finding other parts...");
-    const vvpppPathGlob = vvppLikeFilePath
+    const filePaths = await findSplitFileParts(vvppLikeFilePath);
+    return sortFileParts(filePaths);
+  } else {
+    log.info("Not a split file");
+    return [vvppLikeFilePath];
+  }
+
+  function isSplitFile(filePath: string): boolean {
+    return filePath.match(/\.[0-9]+\.vvppp$/) != null;
+  }
+
+  async function findSplitFileParts(filePath: string): Promise<string[]> {
+    const vvpppPathGlob = filePath
       .replace(/\.[0-9]+\.vvppp$/, ".*.vvppp")
       .replace(/\\/g, "/"); // node-globはバックスラッシュを使えないので、スラッシュに置換する
     const filePaths: string[] = [];
@@ -36,7 +46,11 @@ async function getArchiveFileParts(
       log.info(`found ${p}`);
       filePaths.push(p);
     }
-    filePaths.sort((a, b) => {
+    return filePaths;
+  }
+
+  function sortFileParts(filePaths: string[]): string[] {
+    return filePaths.sort((a, b) => {
       const aMatch = a.match(/\.([0-9]+)\.vvppp$/);
       const bMatch = b.match(/\.([0-9]+)\.vvppp$/);
       if (aMatch == null || bMatch == null) {
@@ -44,12 +58,7 @@ async function getArchiveFileParts(
       }
       return parseInt(aMatch[1]) - parseInt(bMatch[1]);
     });
-    archiveFileParts = filePaths;
-  } else {
-    log.info("Not a split file");
-    archiveFileParts = [vvppLikeFilePath];
   }
-  return archiveFileParts;
 }
 
 /** 分割されているVVPPファイルを連結して返す */
