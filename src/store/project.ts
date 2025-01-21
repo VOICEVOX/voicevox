@@ -21,7 +21,7 @@ import {
   DEFAULT_TPQN,
 } from "@/sing/domain";
 import { EditorType } from "@/type/preload";
-import { IsEqual } from "@/type/utility";
+import { IsEqual, UnreachableError } from "@/type/utility";
 import {
   showAlertDialog,
   showMessageDialog,
@@ -166,15 +166,13 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
   LOAD_PROJECT_FILE: {
     /**
      * プロジェクトファイルを読み込む。読み込めたかの成否が返る。
+     * ファイル選択ダイアログを表示するか、ファイルパス指定するか、Fileインスタンスを渡すか選べる。
      * エラー発生時はダイアログが表示される。
      */
     action: createUILockAction(
-      async (
-        { actions, mutations, getters },
-        { filePath, confirm }: { filePath?: string; confirm?: boolean },
-      ) => {
-        if (!filePath) {
-          // Select and load a project File.
+      async ({ actions, mutations, getters }, payload) => {
+        let filePath: undefined | string;
+        if (payload.type == "dialog") {
           const ret = await window.backend.showProjectLoadDialog({
             title: "プロジェクトファイルの選択",
           });
@@ -182,24 +180,32 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             return false;
           }
           filePath = ret[0];
+        } else if (payload.type == "path") {
+          filePath = payload.filePath;
         }
 
-        let buf: ArrayBuffer;
         try {
-          buf = await window.backend
-            .readFile({ filePath })
-            .then(getValueOrThrow);
+          let buf: ArrayBuffer;
+          if (filePath != undefined) {
+            buf = await window.backend
+              .readFile({ filePath })
+              .then(getValueOrThrow);
 
-          await actions.APPEND_RECENTLY_USED_PROJECT({
-            filePath,
-          });
+            await actions.APPEND_RECENTLY_USED_PROJECT({
+              filePath,
+            });
+          } else {
+            if (payload.type != "file")
+              throw new UnreachableError("payload.type != 'file'");
+            buf = await payload.file.arrayBuffer();
+          }
 
           const text = new TextDecoder("utf-8").decode(buf).trim();
           const parsedProjectData = await actions.PARSE_PROJECT_FILE({
             projectJson: text,
           });
 
-          if (confirm !== false && getters.IS_EDITED) {
+          if (getters.IS_EDITED) {
             const result = await actions.SAVE_OR_DISCARD_PROJECT_FILE({
               additionalMessage:
                 "プロジェクトをロードすると現在のプロジェクトは破棄されます。",

@@ -36,6 +36,7 @@ defineEmits<{
   border: none;
   padding: vars.$padding-1 vars.$padding-2;
   border-radius: vars.$radius-1;
+  text-align: left;
 
   &:not(.selected):hover {
     background-color: colors.$clear-hovered;

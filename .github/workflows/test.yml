@@ -98,20 +98,6 @@ jobs:
           dest: ${{ github.workspace }}/voicevox_engine
           target: ${{ matrix.voicevox_engine_asset_name }}
 
-      - name: Setup
-        run: |
-          # run.exe
-          chmod +x ${{ steps.download-engine.outputs.run_path }}
-
-          # .env
-          sed -i -e 's|"074fc39e-678b-4c13-8916-ffca8d505d1d"|"208cf94d-43d2-4cf5-abc0-9783cac36d29"|' .env.test
-          sed -i -e 's|"../voicevox_engine/run.exe"|"${{ steps.download-engine.outputs.run_path }}"|' .env.test
-          # GitHub Actions 環境だとたまに50021が封じられていることがあるので、ランダムなポートを使うようにする
-          PORT=$(node -r net -e "server=net.createServer();server.listen(0,()=>{console.log(server.address().port);server.close()})")
-          sed -i -e 's|"host": "http://127.0.0.1:50021"|"host": "http://127.0.0.1:'$PORT'"|' .env.test
-          sed -i -e 's|"executionArgs": \[\],|"executionArgs": ["--port='$PORT'"],|' .env.test
-          cp .env.test .env
-
       - name: Run npm run test:browser-e2e
         run: |
           if [ -n "${{ runner.debug }}" ]; then
@@ -125,6 +111,14 @@ jobs:
 
       - name: Run npm run test:electron-e2e
         run: |
+          # .env
+          cp tests/env/.env.test-electron .env
+          sed -i -e 's|"path/to/engine"|"${{ steps.download-engine.outputs.run_path }}"|' .env
+          # GitHub Actions 環境だとたまに50021が封じられていることがあるので、ランダムなポートを使うようにする
+          PORT=$(node -r net -e "server=net.createServer();server.listen(0,()=>{console.log(server.address().port);server.close()})")
+          sed -i -e 's|random_port|'$PORT'|' .env
+          cat .env # ログ用
+
           if [ -n "${{ runner.debug }}" ]; then
             export DEBUG="pw:browser*"
           fi
@@ -133,6 +127,8 @@ jobs:
           else
             npm run test:electron-e2e
           fi
+
+          rm .env
 
       - name: Run npm run test:storybook-vrt
         run: |

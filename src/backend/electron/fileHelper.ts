@@ -1,5 +1,9 @@
 import fs from "fs";
 import { moveFileSync } from "move-file";
+import { uuid4 } from "@/helpers/random";
+import { createLogger } from "@/helpers/log";
+
+const log = createLogger("fileHelper");
 
 /**
  * 書き込みに失敗したときにファイルが消えないように、
@@ -9,10 +13,19 @@ export function writeFileSafely(
   path: string,
   data: string | NodeJS.ArrayBufferView,
 ) {
-  const tmpPath = `${path}.tmp`;
-  fs.writeFileSync(tmpPath, data);
+  const tmpPath = `${path}-${uuid4()}.tmp`;
+  fs.writeFileSync(tmpPath, data, { flag: "wx" });
 
-  moveFileSync(tmpPath, path, {
-    overwrite: true,
-  });
+  try {
+    moveFileSync(tmpPath, path, {
+      overwrite: true,
+    });
+  } catch (error) {
+    if (fs.existsSync(tmpPath)) {
+      fs.promises.unlink(tmpPath).catch((reason) => {
+        log.warn("Failed to remove %s\n  %o", tmpPath, reason);
+      });
+    }
+    throw error;
+  }
 }

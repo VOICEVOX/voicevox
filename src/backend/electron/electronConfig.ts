@@ -4,6 +4,7 @@ import { app } from "electron";
 import { writeFileSafely } from "./fileHelper";
 import { BaseConfigManager, Metadata } from "@/backend/common/ConfigManager";
 import { ConfigType } from "@/type/preload";
+import { isMac } from "@/helpers/platform";
 
 export class ElectronConfigManager extends BaseConfigManager {
   protected getAppVersion() {
@@ -35,7 +36,7 @@ let configManager: ElectronConfigManager | undefined;
 
 export function getConfigManager(): ElectronConfigManager {
   if (!configManager) {
-    configManager = new ElectronConfigManager();
+    configManager = new ElectronConfigManager({ isMac });
   }
   return configManager;
 }

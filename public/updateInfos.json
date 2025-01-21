@@ -1,5 +1,27 @@
 [
   {
+    "version": "0.22.4",
+    "descriptions": [
+      "ソング：トークエディタを開かないと保存できない問題を修正"
+    ],
+    "contributors": ["sigprogramming"]
+  },
+  {
+    "version": "0.22.3",
+    "descriptions": ["キャラクター「ぞん子」を追加"],
+    "contributors": []
+  },
+  {
+    "version": "0.22.2",
+    "descriptions": ["キャラクター「中部つるぎ」を追加"],
+    "contributors": []
+  },
+  {
+    "version": "0.22.1",
+    "descriptions": ["バグ修正"],
+    "contributors": ["Hiroshiba", "sevenc-nanashi"]
+  },
+  {
     "version": "0.22.0",
     "descriptions": [
       "トーク：間の長さの一括制御",

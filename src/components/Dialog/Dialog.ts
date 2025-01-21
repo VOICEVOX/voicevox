@@ -14,7 +14,7 @@ import { DotNotationDispatch } from "@/store/vuex";
 import { withProgress } from "@/store/ui";
 import { UnreachableError } from "@/type/utility";
 
-type MediaType = "audio" | "text";
+type MediaType = "audio" | "text" | "project" | "label";
 
 export type TextDialogResult = "OK" | "CANCEL";
 export type MessageDialogOptions = {
@@ -309,6 +309,8 @@ const showWriteSuccessNotify = ({
   const mediaTypeNames: Record<MediaType, string> = {
     audio: "音声",
     text: "テキスト",
+    project: "プロジェクト",
+    label: "labファイル",
   };
   void actions.SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON({
     message: `${mediaTypeNames[mediaType]}を書き出しました`,

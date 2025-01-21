@@ -2,22 +2,26 @@ import { defaultEngine } from "./contract";
 import {
   checkFileExistsImpl,
   readFileImpl,
+  showExportFilePickerImpl,
   showOpenDirectoryDialogImpl,
   showOpenFilePickerImpl,
+  WritableFilePath,
   writeFileImpl,
 } from "./fileImpl";
 import { getConfigManager } from "./browserConfig";
+import { isFakePath } from "./fakePath";
 import { IpcSOData } from "@/type/ipc";
 import {
   defaultToolbarButtonSetting,
   EngineId,
   EngineSettingType,
   EngineSettings,
-  HotkeySettingType,
   ShowImportFileDialogOptions,
   Sandbox,
 } from "@/type/preload";
 import { AssetTextFileNames } from "@/type/staticResources";
+import { HotkeySettingType } from "@/domain/hotkeyAction";
+import path from "@/helpers/path";
 
 const toStaticPath = (fileName: string) =>
   `${import.meta.env.BASE_URL}/${fileName}`.replaceAll(/\/\/+/g, "/");
@@ -72,34 +76,6 @@ export const api: Sandbox = {
   getAltPortInfos() {
     // NOTE: ブラウザ版ではサポートされていません
     return Promise.resolve({});
-  },
-  showAudioSaveDialog(obj: { title: string; defaultPath?: string }) {
-    return new Promise((resolve, reject) => {
-      if (obj.defaultPath == undefined) {
-        reject(
-          // storeやvue componentからdefaultPathを設定していなかったらrejectされる
-          new Error(
-            "ブラウザ版ではファイルの保存機能が一部サポートされていません。",
-          ),
-        );
-      } else {
-        resolve(obj.defaultPath);
-      }
-    });
-  },
-  showTextSaveDialog(obj: { title: string; defaultPath?: string }) {
-    return new Promise((resolve, reject) => {
-      if (obj.defaultPath == undefined) {
-        reject(
-          // storeやvue componentからdefaultPathを設定していなかったらrejectされる
-          new Error(
-            "ブラウザ版ではファイルの保存機能が一部サポートされていません。",
-          ),
-        );
-      } else {
-        resolve(obj.defaultPath);
-      }
-    });
   },
   showSaveDirectoryDialog(obj: { title: string }) {
     return showOpenDirectoryDialogImpl(obj);
@@ -160,8 +136,26 @@ export const api: Sandbox = {
     });
     return fileHandle?.[0];
   },
+  async showExportFileDialog(obj: {
+    defaultPath?: string;
+    extensionName: string;
+    extensions: string[];
+    title: string;
+  }) {
+    const fileHandle = await showExportFilePickerImpl(obj);
+    return fileHandle;
+  },
   writeFile(obj: { filePath: string; buffer: ArrayBuffer }) {
-    return writeFileImpl(obj);
+    let filePath: WritableFilePath;
+    if (isFakePath(obj.filePath)) {
+      filePath = { type: "fake", path: obj.filePath };
+    } else if (obj.filePath.includes(path.SEPARATOR)) {
+      filePath = { type: "child", path: obj.filePath };
+    } else {
+      filePath = { type: "nameOnly", path: obj.filePath };
+    }
+
+    return writeFileImpl({ filePath, buffer: obj.buffer });
   },
   readFile(obj: { filePath: string }) {
     return readFileImpl(obj.filePath);
@@ -282,5 +276,8 @@ export const api: Sandbox = {
   },
   reloadApp(/* obj: { isMultiEngineOffMode: boolean } */) {
     throw new Error(`Not supported on Browser version: reloadApp`);
+  },
+  getPathForFile(/* file: File */) {
+    throw new Error(`Not supported on Browser version: getPathForFile`);
   },
 };
