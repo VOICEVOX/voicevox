@@ -55,13 +55,13 @@ async function getArchiveFileParts(
 /** 分割されているVVPPファイルを連結して返す */
 async function concatenateVvppFiles(
   archiveFileParts: string[],
-  outputFile: string,
+  outputFilePath: string,
 ) {
   log.info(`Concatenating ${archiveFileParts.length} files...`);
 
   await new Promise<void>((resolve, reject) => {
     const inputStreams = archiveFileParts.map((f) => fs.createReadStream(f));
-    const outputStream = fs.createWriteStream(outputFile);
+    const outputStream = fs.createWriteStream(outputFilePath);
     new MultiStream(inputStreams)
       .pipe(outputStream)
       .on("close", () => {
