@@ -145,10 +145,10 @@ async function unarchive(
 }
 
 export async function extractVvpp(
-  payload: { vvppLikeFilePath: string; vvppEngineDir: string },
+  payload: { vvppLikeFilePath: string; vvppEngineDir: string; tmpDir: string },
   callbacks?: { onProgress?: ProgressCallback },
 ): Promise<{ outputDir: string; manifest: MinimumEngineManifestType }> {
-  const { vvppLikeFilePath, vvppEngineDir } = payload;
+  const { vvppLikeFilePath, vvppEngineDir, tmpDir } = payload;
   callbacks?.onProgress?.({ progress: 0 });
 
   const nonce = new Date().getTime().toString();
@@ -208,10 +208,7 @@ export async function extractVvpp(
   }
 
   function createTempConcatenatedFilePath(): string {
-    return path.join(
-      path.dirname(vvppLikeFilePath),
-      `.tmp-vvpp-${new Date().getTime()}.${format}`,
-    );
+    return path.join(tmpDir, `.tmp-vvpp-${new Date().getTime()}.${format}`);
   }
 }
 

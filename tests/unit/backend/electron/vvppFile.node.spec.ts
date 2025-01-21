@@ -23,6 +23,7 @@ test("正しいVVPPファイルからエンジンを切り出せる", async () =
   await extractVvpp({
     vvppLikeFilePath: outputFilePath,
     vvppEngineDir: tmpDir,
+    tmpDir,
   });
 });
 
@@ -38,6 +39,7 @@ test("分割されたVVPPファイルからエンジンを切り出せる", asyn
   await extractVvpp({
     vvppLikeFilePath: outputFilePath1,
     vvppEngineDir: tmpDir,
+    tmpDir,
   });
 });
 
@@ -55,6 +57,7 @@ test.each([
       extractVvpp({
         vvppLikeFilePath: outputFilePath,
         vvppEngineDir: tmpDir,
+        tmpDir,
       }),
     ).rejects.toThrow(expectedError);
   },
