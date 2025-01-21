@@ -174,6 +174,7 @@ async function unarchive(
   }
 }
 
+/** VVPPファイルを .tmp ディレクトリに展開する */
 export async function extractVvpp(
   payload: { vvppLikeFilePath: string; vvppEngineDir: string; tmpDir: string },
   callbacks?: { onProgress?: ProgressCallback },
@@ -193,28 +194,24 @@ export async function extractVvpp(
   log.info("Format:", format);
   log.info("Extracting vvpp to", outputDir);
   try {
-    let tmpConcatenatedFile: string | undefined;
-    let archiveFile: string;
-    try {
-      if (archiveFileParts.length > 1) {
-        // -siオプションでの7z解凍はサポートされていないため、
-        // ファイルを連結した一次ファイルを作成し、それを7zで解凍する。
-        tmpConcatenatedFile = createTmpConcatenatedFilePath();
-        log.info("Temporary file:", tmpConcatenatedFile);
+    if (archiveFileParts.length > 1) {
+      // -siオプションでの7z解凍はサポートされていないため、
+      // ファイルを連結した一次ファイルを作成し、それを7zで解凍する。
+      const archiveFile = getTmpConcatenatedFilePath();
+      log.info("Temporary file:", archiveFile);
 
-        await concatenateVvppFiles(archiveFileParts, tmpConcatenatedFile);
-        archiveFile = tmpConcatenatedFile;
-      } else {
-        archiveFile = archiveFileParts[0];
-        log.info("Single file, not concatenating");
+      try {
+        await concatenateVvppFiles(archiveFileParts, archiveFile);
+        await unarchive({ archiveFile, outputDir, format }, callbacks);
+      } finally {
+        log.info("Removing temporary file", archiveFile);
+        await fs.promises.rm(archiveFile);
       }
+    } else {
+      const archiveFile = archiveFileParts[0];
+      log.info("Single file, not concatenating");
 
       await unarchive({ archiveFile, outputDir, format }, callbacks);
-    } finally {
-      if (tmpConcatenatedFile) {
-        log.info("Removing temporary file", tmpConcatenatedFile);
-        await fs.promises.rm(tmpConcatenatedFile);
-      }
     }
     const manifest: MinimumEngineManifestType =
       minimumEngineManifestSchema.parse(
@@ -237,7 +234,7 @@ export async function extractVvpp(
     throw e;
   }
 
-  function createTmpConcatenatedFilePath(): string {
+  function getTmpConcatenatedFilePath(): string {
     return path.join(tmpDir, `vvpp-${new Date().getTime()}.${format}`);
   }
 }
