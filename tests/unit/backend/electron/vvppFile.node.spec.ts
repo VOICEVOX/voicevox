@@ -65,8 +65,8 @@ test.each([
 
 /** 7zを使って指定したフォルダからzipファイルを作成する */
 async function createZipFile(sourceDir: string, outputFilePath: string) {
-  const zipBin = import.meta.env.VITE_7Z_BIN_NAME;
-  const command = `"${zipBin}" a -tzip "${outputFilePath}" "${path.join(sourceDir, "*")}"`;
+  const sevenZipBin = import.meta.env.VITE_7Z_BIN_NAME;
+  const command = `"${sevenZipBin}" a -tzip "${outputFilePath}" "${path.join(sourceDir, "*")}"`;
   await promisify(exec)(command);
 }
 
