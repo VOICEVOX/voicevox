@@ -41,6 +41,7 @@ import { isElectron, isVst } from "@/helpers/platform";
 import { HotkeyAction, useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import { useEngineIcons } from "@/composables/useEngineIcons";
 import HelpDialog from "@/components/Dialog/HelpDialog/HelpDialog.vue";
+import { changeEnginePath } from "@/backend/vst/ipc";
 
 const props = defineProps<{
   /** 「ファイル」メニューのサブメニュー */
@@ -310,7 +311,16 @@ const engineSubMenuData = computed<MenuItemData[]>(() => {
       },
     ];
   }
-  if (enableMultiEngine.value) {
+  if (isVst) {
+    subMenu.push({
+      type: "button",
+      label: "エンジンの場所を変更",
+      onClick: () => {
+        void changeEnginePath();
+      },
+      disableWhenUiLocked: false,
+    });
+  } else if (enableMultiEngine.value) {
     subMenu.push({
       type: "button",
       label: "エンジンの管理",

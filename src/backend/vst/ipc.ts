@@ -181,6 +181,8 @@ const ipcStartEngine =
   createMessageFunction<
     (args: { useGpu: boolean; forceRestart: boolean }) => void
   >("startEngine");
+const ipcChangeEnginePath =
+  createMessageFunction<() => void>("changeEnginePath");
 
 type Config = Record<string, unknown> & Metadata;
 const log = createLogger("vst/ipc");
@@ -289,4 +291,8 @@ export async function startEngine(args: {
   forceRestart: boolean;
 }) {
   await ipcStartEngine(args);
+}
+
+export async function changeEnginePath() {
+  await ipcChangeEnginePath();
 }
