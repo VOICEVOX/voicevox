@@ -18,11 +18,10 @@ import {
   isSelfEventTarget,
   PREVIEW_SOUND_DURATION,
 } from "@/sing/viewHelper";
-import { Note, SequencerEditTarget } from "@/store/type";
+import { Note, SequencerEditTarget, Track } from "@/store/type";
 import { NoteId, TrackId } from "@/type/preload";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
-import { Store } from "@/store";
 import { getNoteDuration } from "@/sing/domain";
 
 export type PositionOnSequencer = {
@@ -80,7 +79,48 @@ type Refs = {
   readonly guideLineTicks: Ref<number>;
 };
 
-type Context = ComputedRefs & Refs & { readonly store: Store };
+type PartialStore = {
+  state: {
+    tpqn: number;
+    sequencerSnapType: number;
+    sequencerEditTarget: SequencerEditTarget;
+    editorFrameRate: number;
+  };
+  getters: {
+    SELECTED_TRACK_ID: TrackId;
+    SELECTED_TRACK: Track;
+    SELECTED_NOTE_IDS: Set<NoteId>;
+  };
+  actions: {
+    SELECT_NOTES: (payload: { noteIds: NoteId[] }) => Promise<void>;
+    DESELECT_NOTES: (payload: { noteIds: NoteId[] }) => Promise<void>;
+    DESELECT_ALL_NOTES: () => Promise<void>;
+    PLAY_PREVIEW_SOUND: (payload: {
+      noteNumber: number;
+      duration?: number;
+    }) => Promise<void>;
+    COMMAND_ADD_NOTES: (payload: {
+      notes: Note[];
+      trackId: TrackId;
+    }) => Promise<void>;
+    COMMAND_UPDATE_NOTES: (payload: {
+      notes: Note[];
+      trackId: TrackId;
+    }) => Promise<void>;
+    COMMAND_SET_PITCH_EDIT_DATA: (payload: {
+      pitchArray: number[];
+      startFrame: number;
+      trackId: TrackId;
+    }) => Promise<void>;
+    COMMAND_ERASE_PITCH_EDIT_DATA: (payload: {
+      startFrame: number;
+      frameLength: number;
+      trackId: TrackId;
+    }) => Promise<void>;
+  };
+};
+
+type Context = ComputedRefs & Refs & { readonly store: PartialStore };
 
 type State =
   | IdleState
@@ -1274,7 +1314,7 @@ class ErasePitchState implements IState<State, Input, Context> {
   }
 }
 
-export const useSequencerStateMachine = (store: Store) => {
+export const useSequencerStateMachine = (store: PartialStore) => {
   const computedRefs: ComputedRefs = {
     snapTicks: computed(() =>
       getNoteDuration(store.state.sequencerSnapType, store.state.tpqn),
