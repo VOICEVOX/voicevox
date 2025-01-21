@@ -93,6 +93,7 @@
 import { ref, computed, onUnmounted } from "vue";
 import { snapTicksToGrid } from "@/sing/domain";
 import { tickToBaseX, baseXToTick } from "@/sing/viewHelper";
+import { TimeSignature } from "@/store/type";
 import ContextMenu, {
   ContextMenuItemData,
 } from "@/components/Menu/ContextMenu/Presentation.vue";
@@ -118,6 +119,7 @@ const props = defineProps<{
   loopStartTick: number;
   loopEndTick: number;
   isLoopEnabled: boolean;
+  timeSignatures: TimeSignature[];
 }>();
 const emit = defineEmits<{
   setLoopEnabled: [isLoopEnabled: boolean];
@@ -188,6 +190,7 @@ const handleLoopAreaMouseDown = (event: MouseEvent) => {
   const x = clickX + props.offset;
   const tick = snapTicksToGrid(
     baseXToTick(x / props.sequencerZoomX, props.tpqn),
+    props.timeSignatures,
     props.tpqn,
   );
 
@@ -243,8 +246,11 @@ const preview = () => {
     const newX = dragStartHandleX.value + dx;
     // ドラッグ中の基準tick
     const baseTick = baseXToTick(newX / props.sequencerZoomX, props.tpqn);
-    // ドラッグ中の新しいtick（スナップされたtick）
-    const newTick = Math.max(0, snapTicksToGrid(baseTick, props.tpqn));
+    // ドラッグ中の新しいtick
+    const newTick = Math.max(
+      0,
+      snapTicksToGrid(baseTick, props.timeSignatures, props.tpqn),
+    );
 
     try {
       // 開始ハンドルのドラッグ

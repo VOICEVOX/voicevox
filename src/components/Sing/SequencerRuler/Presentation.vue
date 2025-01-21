@@ -20,6 +20,7 @@
       :isLoopEnabled
       :loopStartTick
       :loopEndTick
+      :timeSignatures
       @setLoopEnabled="(value: boolean) => emit('setLoopEnabled', value)"
       @setLoopRange="
         (start: number, end: number) => emit('setLoopRange', start, end)
@@ -52,7 +53,7 @@
             :key="n"
             :x1="gridPattern.beatWidth * n"
             :x2="gridPattern.beatWidth * n"
-            y1="16"
+            y1="28"
             :y2="height"
             class="sequencer-ruler-beat-line"
           />
@@ -134,7 +135,6 @@ import { Dialog } from "quasar";
 import LoopLane from "./LoopLane.vue";
 import {
   getMeasureDuration,
-  getNoteDuration,
   getTimeSignaturePositions,
   snapTicksToGrid,
   tickToMeasureNumber,
@@ -240,13 +240,13 @@ const playheadX = computed(() => {
   return Math.floor(baseX * props.sequencerZoomX);
 });
 
-const snapTicks = computed(() => {
-  return getNoteDuration(props.sequencerSnapType, props.tpqn);
-});
-
 const getSnappedTickFromOffsetX = (offsetX: number) => {
   const baseX = (props.offset + offsetX) / props.sequencerZoomX;
-  return snapTicksToGrid(baseXToTick(baseX, props.tpqn), snapTicks.value);
+  return snapTicksToGrid(
+    baseXToTick(baseX, props.tpqn),
+    props.timeSignatures,
+    props.tpqn,
+  );
 };
 
 const onClick = (event: MouseEvent) => {

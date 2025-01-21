@@ -30,7 +30,11 @@ import { computed } from "vue";
 import Presentation from "./Presentation.vue";
 import { useStore } from "@/store";
 import { Tempo, TimeSignature } from "@/store/type";
-import { snapTicksToGrid, getNoteDuration } from "@/sing/domain";
+import {
+  snapTicksToGrid,
+  getTimeSignaturePositions,
+  getMeasureDuration,
+} from "@/sing/domain";
 import { baseXToTick } from "@/sing/viewHelper";
 
 defineOptions({
@@ -108,13 +112,39 @@ const clearLoopRange = () => {
 };
 
 const addOneMeasureLoop = (clickX: number) => {
-  const timeSignature = store.state.timeSignatures[0];
-  const oneMeasureTicks =
-    getNoteDuration(timeSignature.beatType, tpqn.value) * timeSignature.beats;
   const baseX = (props.offset + clickX) / sequencerZoomX.value;
   const cursorTick = baseXToTick(baseX, tpqn.value);
-  const startTick = snapTicksToGrid(cursorTick, oneMeasureTicks);
-  const endTick = snapTicksToGrid(startTick + oneMeasureTicks, oneMeasureTicks);
+  const tsPositions = getTimeSignaturePositions(
+    timeSignatures.value,
+    tpqn.value,
+  );
+  const currentTs = timeSignatures.value.findLast((_, index) => {
+    return tsPositions[index] <= cursorTick;
+  });
+
+  if (!currentTs) {
+    throw new Error("assert: At least one time signature exists.");
+  }
+
+  // 1小節分のtick数を計算
+  const oneMeasureTicks = getMeasureDuration(
+    currentTs.beats,
+    currentTs.beatType,
+    tpqn.value,
+  );
+
+  // 拍子情報を考慮してスナップ
+  const startTick = snapTicksToGrid(
+    cursorTick,
+    timeSignatures.value,
+    tpqn.value,
+  );
+  const endTick = snapTicksToGrid(
+    startTick + oneMeasureTicks,
+    timeSignatures.value,
+    tpqn.value,
+  );
+
   void store.actions.COMMAND_SET_LOOP_RANGE({
     loopStartTick: startTick,
     loopEndTick: endTick,
