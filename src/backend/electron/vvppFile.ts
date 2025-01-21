@@ -7,7 +7,7 @@ import path from "node:path";
 import { spawn } from "node:child_process";
 import MultiStream from "multistream";
 import { glob } from "glob";
-import { getElectronSevenZipPath } from "./helper";
+import { app } from "electron";
 import {
   minimumEngineManifestSchema,
   MinimumEngineManifestType,
@@ -16,13 +16,6 @@ import { ProgressCallback } from "@/helpers/progressHelper";
 import { createLogger } from "@/helpers/log";
 
 const log = createLogger("vvppFile");
-
-// https://www.garykessler.net/library/file_sigs.html#:~:text=7-zip%20compressed%20file
-const SEVEN_ZIP_MAGIC_NUMBER = Buffer.from([
-  0x37, 0x7a, 0xbc, 0xaf, 0x27, 0x1c,
-]);
-
-const ZIP_MAGIC_NUMBER = Buffer.from([0x50, 0x4b, 0x03, 0x04]);
 
 /** VVPPファイルが分割されている場合、それらのファイルを取得する */
 async function getArchiveFileParts(
@@ -99,13 +92,7 @@ async function unarchive(
     "-bsp1", // 進捗出力
   ];
 
-  let sevenZipPath = import.meta.env.VITE_7Z_BIN_NAME;
-  if (!sevenZipPath) {
-    throw new Error("7z path is not defined");
-  }
-  if (import.meta.env.PROD) {
-    sevenZipPath = getElectronSevenZipPath(sevenZipPath);
-  }
+  const sevenZipPath = getSevenZipPath();
   log.info("Spawning 7z:", sevenZipPath, args.join(" "));
   await new Promise<void>((resolve, reject) => {
     const child = spawn(sevenZipPath, args, {
@@ -144,6 +131,17 @@ async function unarchive(
     // FIXME: rejectが2回呼ばれることがある
     child.on("error", reject);
   });
+
+  function getSevenZipPath() {
+    let sevenZipPath = import.meta.env.VITE_7Z_BIN_NAME;
+    if (!sevenZipPath) {
+      throw new Error("7z path is not defined");
+    }
+    if (import.meta.env.PROD) {
+      sevenZipPath = path.join(path.dirname(app.getPath("exe")), sevenZipPath);
+    }
+    return sevenZipPath;
+  }
 }
 
 export async function extractVvpp(
@@ -222,6 +220,13 @@ async function detectFileFormat(
   const buffer = Buffer.alloc(8);
   await file.read(buffer, 0, 8, 0);
   await file.close();
+
+  // https://www.garykessler.net/library/file_sigs.html#:~:text=7-zip%20compressed%20file
+  const SEVEN_ZIP_MAGIC_NUMBER = Buffer.from([
+    0x37, 0x7a, 0xbc, 0xaf, 0x27, 0x1c,
+  ]);
+
+  const ZIP_MAGIC_NUMBER = Buffer.from([0x50, 0x4b, 0x03, 0x04]);
 
   if (buffer.compare(SEVEN_ZIP_MAGIC_NUMBER, 0, 6, 0, 6) === 0) {
     return "7z";
