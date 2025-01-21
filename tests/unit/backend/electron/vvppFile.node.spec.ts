@@ -20,7 +20,10 @@ test("正しいVVPPファイルからエンジンを切り出せる", async () =
   const sourceDir = path.join(__dirname, "vvpps", targetName);
   const outputFilePath = path.join(tmpDir, uuid4() + targetName);
   await createZipFile(sourceDir, outputFilePath);
-  await extractVvpp(outputFilePath, tmpDir);
+  await extractVvpp({
+    vvppLikeFilePath: outputFilePath,
+    vvppEngineDir: tmpDir,
+  });
 });
 
 test.fails("分割されたVVPPファイルからエンジンを切り出せる", async () => {
@@ -33,7 +36,10 @@ test.fails("分割されたVVPPファイルからエンジンを切り出せる"
   const outputFilePath1 = outputFilePath + ".1.vvppp";
   const outputFilePath2 = outputFilePath + ".2.vvppp";
   splitFile(outputFilePath, outputFilePath1, outputFilePath2);
-  await extractVvpp(outputFilePath1, tmpDir);
+  await extractVvpp({
+    vvppLikeFilePath: outputFilePath1,
+    vvppEngineDir: tmpDir,
+  });
 });
 
 test.each([
@@ -46,16 +52,19 @@ test.each([
     const sourceDir = path.join(__dirname, "vvpps", targetName);
     const outputFilePath = path.join(tmpDir, uuid4() + targetName);
     await createZipFile(sourceDir, outputFilePath);
-    await expect(extractVvpp(outputFilePath, tmpDir)).rejects.toThrow(
-      expectedError,
-    );
+    await expect(
+      extractVvpp({
+        vvppLikeFilePath: outputFilePath,
+        vvppEngineDir: tmpDir,
+      }),
+    ).rejects.toThrow(expectedError);
   },
 );
 
 /** 7zを使って指定したフォルダからzipファイルを作成する */
 async function createZipFile(sourceDir: string, outputFilePath: string) {
   const zipBin = import.meta.env.VITE_7Z_BIN_NAME;
-  const command = `"${zipBin}" a -tzip "${outputFilePath}" "${sourceDir}\\*"`;
+  const command = `"${zipBin}" a -tzip "${outputFilePath}" "${path.join(sourceDir, "*")}"`;
   await promisify(exec)(command);
 }
 

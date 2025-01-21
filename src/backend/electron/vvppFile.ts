@@ -7,7 +7,7 @@ import path from "node:path";
 import { spawn } from "node:child_process";
 import MultiStream from "multistream";
 import { glob } from "glob";
-import { app } from "electron";
+import { getElectronSevenZipPath } from "./helper";
 import {
   minimumEngineManifestSchema,
   MinimumEngineManifestType,
@@ -61,21 +61,14 @@ async function getArchiveFileParts(
 
 /** 分割されているVVPPファイルを連結して返す */
 async function concatenateVvppFiles(
-  format: "zip" | "7z",
   archiveFileParts: string[],
+  outputFile: string,
 ) {
-  // -siオプションでの7z解凍はサポートされていないため、
-  // ファイルを連結した一次ファイルを作成し、それを7zで解凍する。
   log.info(`Concatenating ${archiveFileParts.length} files...`);
-  const tmpConcatenatedFile = path.join(
-    app.getPath("temp"), // TODO: archiveFilePartsと同じディレクトリにしてappの依存をなくす
-    `vvpp-${new Date().getTime()}.${format}`,
-  );
-  log.info("Temporary file:", tmpConcatenatedFile);
+
   await new Promise<void>((resolve, reject) => {
-    if (!tmpConcatenatedFile) throw new Error("tmpFile is undefined");
     const inputStreams = archiveFileParts.map((f) => fs.createReadStream(f));
-    const outputStream = fs.createWriteStream(tmpConcatenatedFile);
+    const outputStream = fs.createWriteStream(outputFile);
     new MultiStream(inputStreams)
       .pipe(outputStream)
       .on("close", () => {
@@ -85,7 +78,6 @@ async function concatenateVvppFiles(
       .on("error", reject);
   });
   log.info("Concatenated");
-  return tmpConcatenatedFile;
 }
 
 /** 7zでファイルを解凍する */
@@ -112,7 +104,7 @@ async function unarchive(
     throw new Error("7z path is not defined");
   }
   if (import.meta.env.PROD) {
-    sevenZipPath = path.join(path.dirname(app.getPath("exe")), sevenZipPath); // TODO: helperに移動してappの依存をなくす
+    sevenZipPath = getElectronSevenZipPath(sevenZipPath);
   }
   log.info("Spawning 7z:", sevenZipPath, args.join(" "));
   await new Promise<void>((resolve, reject) => {
@@ -155,10 +147,10 @@ async function unarchive(
 }
 
 export async function extractVvpp(
-  vvppLikeFilePath: string,
-  vvppEngineDir: string, // TODO: payload objectに変える
+  payload: { vvppLikeFilePath: string; vvppEngineDir: string },
   callbacks?: { onProgress?: ProgressCallback },
 ): Promise<{ outputDir: string; manifest: MinimumEngineManifestType }> {
+  const { vvppLikeFilePath, vvppEngineDir } = payload;
   callbacks?.onProgress?.({ progress: 0 });
 
   const nonce = new Date().getTime().toString();
@@ -177,10 +169,12 @@ export async function extractVvpp(
     let archiveFile: string;
     try {
       if (archiveFileParts.length > 1) {
-        tmpConcatenatedFile = await concatenateVvppFiles(
-          format,
-          archiveFileParts,
-        );
+        // -siオプションでの7z解凍はサポートされていないため、
+        // ファイルを連結した一次ファイルを作成し、それを7zで解凍する。
+        tmpConcatenatedFile = createTempConcatenatedFilePath();
+        log.info("Temporary file:", tmpConcatenatedFile);
+
+        await concatenateVvppFiles(archiveFileParts, tmpConcatenatedFile);
         archiveFile = tmpConcatenatedFile;
       } else {
         archiveFile = archiveFileParts[0];
@@ -213,6 +207,10 @@ export async function extractVvpp(
       await fs.promises.rm(outputDir, { recursive: true });
     }
     throw e;
+  }
+
+  function createTempConcatenatedFilePath(): string {
+    return path.join(outputDir, `.tmp-vvpp-${new Date().getTime()}.${format}`);
   }
 }
 

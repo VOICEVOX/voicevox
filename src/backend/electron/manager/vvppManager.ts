@@ -114,8 +114,7 @@ export class VvppManager {
     callbacks?: { onProgress?: ProgressCallback },
   ) {
     const { outputDir, manifest } = await extractVvpp(
-      vvppPath,
-      this.vvppEngineDir,
+      { vvppLikeFilePath: vvppPath, vvppEngineDir: this.vvppEngineDir },
       callbacks,
     );
 
