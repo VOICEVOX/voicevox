@@ -26,8 +26,7 @@ test("正しいVVPPファイルからエンジンを切り出せる", async () =
   });
 });
 
-test.fails("分割されたVVPPファイルからエンジンを切り出せる", async () => {
-  // TODO: electronのappに依存しているのでテストが通らない。依存がなくなり次第.failsを失くす
+test("分割されたVVPPファイルからエンジンを切り出せる", async () => {
   const targetName = "perfect.vvpp";
   const sourceDir = path.join(__dirname, "vvpps", targetName);
   const outputFilePath = path.join(tmpDir, uuid4() + targetName);

@@ -208,7 +208,10 @@ export async function extractVvpp(
   }
 
   function createTempConcatenatedFilePath(): string {
-    return path.join(outputDir, `.tmp-vvpp-${new Date().getTime()}.${format}`);
+    return path.join(
+      path.dirname(vvppLikeFilePath),
+      `.tmp-vvpp-${new Date().getTime()}.${format}`,
+    );
   }
 }
 
