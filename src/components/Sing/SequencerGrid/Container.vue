@@ -6,6 +6,10 @@
     :sequencerZoomY
     :sequencerSnapType
     :numMeasures
+    :gridCellWidth
+    :gridCellHeight
+    :gridWidth
+    :gridHeight
     :offsetX="props.offsetX"
     :offsetY="props.offsetY"
   />
@@ -13,6 +17,8 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
+import { inject } from "vue";
+import { gridInfoInjectionKey } from "../ScoreSequencer.vue";
 import Presentation from "./Presentation.vue";
 import { useStore } from "@/store";
 
@@ -24,6 +30,16 @@ const props = defineProps<{
   offsetX: number;
   offsetY: number;
 }>();
+
+const injectedValue = inject(gridInfoInjectionKey);
+if (injectedValue == undefined) {
+  throw new Error("injectedValue is undefined.");
+}
+
+const gridCellWidth = injectedValue.gridCellWidth;
+const gridCellHeight = injectedValue.gridCellHeight;
+const gridWidth = injectedValue.gridWidth;
+const gridHeight = injectedValue.gridHeight;
 
 const store = useStore();
 
