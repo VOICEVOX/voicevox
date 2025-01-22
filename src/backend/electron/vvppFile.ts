@@ -242,23 +242,34 @@ export async function extractVvpp(
 async function detectFileFormat(
   filePath: string,
 ): Promise<"zip" | "7z" | undefined> {
-  const file = await fs.promises.open(filePath, "r");
+  const buffer = await readFileHeader(filePath);
 
-  const buffer = Buffer.alloc(8);
-  await file.read(buffer, 0, 8, 0);
-  await file.close();
-
-  // https://www.garykessler.net/library/file_sigs.html#:~:text=7-zip%20compressed%20file
   const SEVEN_ZIP_MAGIC_NUMBER = Buffer.from([
     0x37, 0x7a, 0xbc, 0xaf, 0x27, 0x1c,
   ]);
 
   const ZIP_MAGIC_NUMBER = Buffer.from([0x50, 0x4b, 0x03, 0x04]);
 
-  if (buffer.compare(SEVEN_ZIP_MAGIC_NUMBER, 0, 6, 0, 6) === 0) {
+  if (isBufferEqual(buffer, SEVEN_ZIP_MAGIC_NUMBER, 6)) {
     return "7z";
-  } else if (buffer.compare(ZIP_MAGIC_NUMBER, 0, 4, 0, 4) === 0) {
+  } else if (isBufferEqual(buffer, ZIP_MAGIC_NUMBER, 4)) {
     return "zip";
   }
   return undefined;
+
+  async function readFileHeader(filePath: string) {
+    const file = await fs.promises.open(filePath, "r");
+    const buffer = Buffer.alloc(8);
+    await file.read(buffer, 0, 8, 0);
+    await file.close();
+    return buffer;
+  }
+
+  function isBufferEqual(
+    buffer1: Buffer,
+    buffer2: Buffer,
+    length: number,
+  ): boolean {
+    return buffer1.compare(buffer2, 0, length, 0, length) === 0;
+  }
 }
