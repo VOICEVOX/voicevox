@@ -241,13 +241,15 @@ export async function extractVvpp(
     throw e;
   }
 
-  function createOutputDirPath() {
+  function createOutputDirPath(): string {
     const nonce = new Date().getTime().toString();
     const outputDir = path.join(vvppEngineDir, ".tmp", nonce);
     return outputDir;
   }
 
-  async function readManifest(outputDir: string) {
+  async function readManifest(
+    outputDir: string,
+  ): Promise<MinimumEngineManifestType> {
     return minimumEngineManifestSchema.parse(
       JSON.parse(
         await fs.promises.readFile(
@@ -284,7 +286,7 @@ async function detectFileFormat(
   }
   return undefined;
 
-  async function readFileHeader(filePath: string) {
+  async function readFileHeader(filePath: string): Promise<Buffer> {
     const file = await fs.promises.open(filePath, "r");
     const buffer = Buffer.alloc(8);
     await file.read(buffer, 0, 8, 0);
