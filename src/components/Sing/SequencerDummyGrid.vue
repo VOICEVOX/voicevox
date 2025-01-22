@@ -11,8 +11,7 @@ if (injectedValue == undefined) {
   throw new Error("injectedValue is undefined.");
 }
 
-const gridWidth = injectedValue.gridWidth;
-const gridHeight = injectedValue.gridHeight;
+const { gridWidth, gridHeight } = injectedValue;
 </script>
 
 <style scoped lang="scss">
