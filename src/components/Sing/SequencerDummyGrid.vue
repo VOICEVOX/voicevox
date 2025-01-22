@@ -1,5 +1,5 @@
 <template>
-  <div class="sequencer-grid"></div>
+  <div class="sequencer-dummy-grid"></div>
 </template>
 
 <script setup lang="ts">
@@ -11,15 +11,14 @@ if (injectedValue == undefined) {
   throw new Error("injectedValue is undefined.");
 }
 
-const gridWidth = injectedValue.gridWidth;
-const gridHeight = injectedValue.gridHeight;
+const { gridWidth, gridHeight } = injectedValue;
 </script>
 
 <style scoped lang="scss">
 @use "@/styles/variables" as vars;
 @use "@/styles/colors" as colors;
 
-.sequencer-grid {
+.sequencer-dummy-grid {
   display: block;
   width: v-bind("`${gridWidth}px`");
   height: v-bind("`${gridHeight}px`");
