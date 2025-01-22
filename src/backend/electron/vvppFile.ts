@@ -174,6 +174,41 @@ async function unarchive(
   }
 }
 
+async function unarchiveVvppFiles(
+  payload: {
+    archiveFileParts: string[];
+    outputDir: string;
+    tmpDir: string;
+    format: "zip" | "7z";
+  },
+  callbacks?: { onProgress?: ProgressCallback },
+) {
+  const { archiveFileParts, outputDir, tmpDir, format } = payload;
+  if (archiveFileParts.length > 1) {
+    // -siオプションでの7z解凍はサポートされていないため、
+    // ファイルを連結した一次ファイルを作成し、それを7zで解凍する。
+    const archiveFile = createTmpConcatenatedFilePath();
+    log.info("Temporary file:", archiveFile);
+
+    try {
+      await concatenateVvppFiles(archiveFileParts, archiveFile);
+      await unarchive({ archiveFile, outputDir, format }, callbacks);
+    } finally {
+      log.info("Removing temporary file", archiveFile);
+      await fs.promises.rm(archiveFile);
+    }
+  } else {
+    const archiveFile = archiveFileParts[0];
+    log.info("Single file, not concatenating");
+
+    await unarchive({ archiveFile, outputDir, format }, callbacks);
+  }
+
+  function createTmpConcatenatedFilePath(): string {
+    return path.join(tmpDir, `vvpp-${new Date().getTime()}.${format}`);
+  }
+}
+
 /** VVPPファイルを .tmp ディレクトリに展開する */
 export async function extractVvpp(
   payload: { vvppLikeFilePath: string; vvppEngineDir: string; tmpDir: string },
@@ -182,9 +217,7 @@ export async function extractVvpp(
   const { vvppLikeFilePath, vvppEngineDir, tmpDir } = payload;
   callbacks?.onProgress?.({ progress: 0 });
 
-  const nonce = new Date().getTime().toString();
-  const outputDir = path.join(vvppEngineDir, ".tmp", nonce);
-
+  const outputDir = createOutputDirPath();
   const archiveFileParts = await getArchiveFileParts(vvppLikeFilePath);
 
   const format = await detectFileFormat(archiveFileParts[0]);
@@ -192,50 +225,43 @@ export async function extractVvpp(
     throw new Error(`Unknown file format: ${archiveFileParts[0]}`);
   }
   log.info("Format:", format);
-  log.info("Extracting vvpp to", outputDir);
+
   try {
-    if (archiveFileParts.length > 1) {
-      // -siオプションでの7z解凍はサポートされていないため、
-      // ファイルを連結した一次ファイルを作成し、それを7zで解凍する。
-      const archiveFile = createTmpConcatenatedFilePath();
-      log.info("Temporary file:", archiveFile);
-
-      try {
-        await concatenateVvppFiles(archiveFileParts, archiveFile);
-        await unarchive({ archiveFile, outputDir, format }, callbacks);
-      } finally {
-        log.info("Removing temporary file", archiveFile);
-        await fs.promises.rm(archiveFile);
-      }
-    } else {
-      const archiveFile = archiveFileParts[0];
-      log.info("Single file, not concatenating");
-
-      await unarchive({ archiveFile, outputDir, format }, callbacks);
-    }
-    const manifest: MinimumEngineManifestType =
-      minimumEngineManifestSchema.parse(
-        JSON.parse(
-          await fs.promises.readFile(
-            path.join(outputDir, "engine_manifest.json"),
-            "utf-8",
-          ),
-        ),
-      );
-    return {
+    await unarchiveVvppFiles({
+      archiveFileParts,
       outputDir,
-      manifest,
-    };
+      tmpDir,
+      format,
+    });
+    const manifest = await readManifest(outputDir);
+    return { outputDir, manifest };
   } catch (e) {
+    await cleanupOutputDir(outputDir);
+    throw e;
+  }
+
+  function createOutputDirPath() {
+    const nonce = new Date().getTime().toString();
+    const outputDir = path.join(vvppEngineDir, ".tmp", nonce);
+    return outputDir;
+  }
+
+  async function readManifest(outputDir: string) {
+    return minimumEngineManifestSchema.parse(
+      JSON.parse(
+        await fs.promises.readFile(
+          path.join(outputDir, "engine_manifest.json"),
+          "utf-8",
+        ),
+      ),
+    );
+  }
+
+  async function cleanupOutputDir(outputDir: string) {
     if (fs.existsSync(outputDir)) {
       log.info("Failed to extract vvpp, removing", outputDir);
       await fs.promises.rm(outputDir, { recursive: true });
     }
-    throw e;
-  }
-
-  function createTmpConcatenatedFilePath(): string {
-    return path.join(tmpDir, `vvpp-${new Date().getTime()}.${format}`);
   }
 }
 
