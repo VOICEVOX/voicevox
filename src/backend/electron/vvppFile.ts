@@ -209,7 +209,7 @@ async function unarchiveVvppFiles(
   }
 }
 
-/** VVPPファイルを .tmp ディレクトリに展開する */
+/** VVPPファイルを vvppEngineDir で指定したディレクトリ以下の .tmp ディレクトリに展開する */
 export async function extractVvpp(
   payload: { vvppLikeFilePath: string; vvppEngineDir: string; tmpDir: string },
   callbacks?: { onProgress?: ProgressCallback },
