@@ -176,15 +176,14 @@ async function unarchive(
 }
 
 async function unarchiveVvppFiles(
-  payload: {
-    archiveFileParts: string[];
-    outputDir: string;
-    tmpDir: string;
-    format: "zip" | "7z";
-  },
+  payload: { archiveFileParts: string[]; outputDir: string; tmpDir: string },
   callbacks?: { onProgress?: ProgressCallback },
 ) {
-  const { archiveFileParts, outputDir, tmpDir, format } = payload;
+  const { archiveFileParts, outputDir, tmpDir } = payload;
+
+  const format = await detectFileFormat(archiveFileParts[0]);
+  log.info("Format:", format);
+
   if (archiveFileParts.length > 1) {
     // -siオプションでの7z解凍はサポートされていないため、
     // ファイルを連結した一次ファイルを作成し、それを7zで解凍する。
@@ -205,6 +204,40 @@ async function unarchiveVvppFiles(
     await unarchive({ archiveFile, outputDir, format }, callbacks);
   }
 
+  async function detectFileFormat(filePath: string): Promise<"zip" | "7z"> {
+    const buffer = await readFileHeader(filePath);
+
+    // https://www.garykessler.net/library/file_sigs.html#:~:text=7-zip%20compressed%20file
+    const SEVEN_ZIP_MAGIC_NUMBER = Buffer.from([
+      0x37, 0x7a, 0xbc, 0xaf, 0x27, 0x1c,
+    ]);
+    const ZIP_MAGIC_NUMBER = Buffer.from([0x50, 0x4b, 0x03, 0x04]);
+
+    if (isBufferEqual(buffer, SEVEN_ZIP_MAGIC_NUMBER, 6)) {
+      return "7z";
+    } else if (isBufferEqual(buffer, ZIP_MAGIC_NUMBER, 4)) {
+      return "zip";
+    }
+
+    throw new Error(`Unknown file format: ${archiveFileParts[0]}`);
+
+    async function readFileHeader(filePath: string): Promise<Buffer> {
+      const file = await fs.promises.open(filePath, "r");
+      const buffer = Buffer.alloc(8);
+      await file.read(buffer, 0, 8, 0);
+      await file.close();
+      return buffer;
+    }
+
+    function isBufferEqual(
+      buffer1: Buffer,
+      buffer2: Buffer,
+      length: number,
+    ): boolean {
+      return buffer1.compare(buffer2, 0, length, 0, length) === 0;
+    }
+  }
+
   function createTmpConcatenatedFilePath(): string {
     return path.join(tmpDir, `vvpp-${new Date().getTime()}.${format}`);
   }
@@ -221,19 +254,8 @@ export async function extractVvpp(
   const outputDir = createOutputDirPath();
   const archiveFileParts = await getArchiveFileParts(vvppLikeFilePath);
 
-  const format = await detectFileFormat(archiveFileParts[0]);
-  if (!format) {
-    throw new Error(`Unknown file format: ${archiveFileParts[0]}`);
-  }
-  log.info("Format:", format);
-
   try {
-    await unarchiveVvppFiles({
-      archiveFileParts,
-      outputDir,
-      tmpDir,
-      format,
-    });
+    await unarchiveVvppFiles({ archiveFileParts, outputDir, tmpDir });
     const manifest = await readManifest(outputDir);
     return { outputDir, manifest };
   } catch (e) {
@@ -265,40 +287,5 @@ export async function extractVvpp(
       log.info("Failed to extract vvpp, removing", outputDir);
       await fs.promises.rm(outputDir, { recursive: true });
     }
-  }
-}
-
-async function detectFileFormat(
-  filePath: string,
-): Promise<"zip" | "7z" | undefined> {
-  const buffer = await readFileHeader(filePath);
-
-  // https://www.garykessler.net/library/file_sigs.html#:~:text=7-zip%20compressed%20file
-  const SEVEN_ZIP_MAGIC_NUMBER = Buffer.from([
-    0x37, 0x7a, 0xbc, 0xaf, 0x27, 0x1c,
-  ]);
-  const ZIP_MAGIC_NUMBER = Buffer.from([0x50, 0x4b, 0x03, 0x04]);
-
-  if (isBufferEqual(buffer, SEVEN_ZIP_MAGIC_NUMBER, 6)) {
-    return "7z";
-  } else if (isBufferEqual(buffer, ZIP_MAGIC_NUMBER, 4)) {
-    return "zip";
-  }
-  return undefined;
-
-  async function readFileHeader(filePath: string): Promise<Buffer> {
-    const file = await fs.promises.open(filePath, "r");
-    const buffer = Buffer.alloc(8);
-    await file.read(buffer, 0, 8, 0);
-    await file.close();
-    return buffer;
-  }
-
-  function isBufferEqual(
-    buffer1: Buffer,
-    buffer2: Buffer,
-    length: number,
-  ): boolean {
-    return buffer1.compare(buffer2, 0, length, 0, length) === 0;
   }
 }
