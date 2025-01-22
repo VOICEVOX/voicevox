@@ -20,11 +20,17 @@ test("正しいVVPPファイルからエンジンを切り出せる", async () =
   const sourceDir = path.join(__dirname, "vvpps", targetName);
   const outputFilePath = path.join(tmpDir, uuid4() + targetName);
   await createZipFile(sourceDir, outputFilePath);
-  await extractVvpp(outputFilePath, tmpDir);
+
+  const vvppEngineDir = createVvppEngineDir();
+  await extractVvpp({
+    vvppLikeFilePath: outputFilePath,
+    vvppEngineDir,
+    tmpDir,
+  });
+  expectManifestExists(vvppEngineDir);
 });
 
-test.fails("分割されたVVPPファイルからエンジンを切り出せる", async () => {
-  // TODO: electronのappに依存しているのでテストが通らない。依存がなくなり次第.failsを失くす
+test("分割されたVVPPファイルからエンジンを切り出せる", async () => {
   const targetName = "perfect.vvpp";
   const sourceDir = path.join(__dirname, "vvpps", targetName);
   const outputFilePath = path.join(tmpDir, uuid4() + targetName);
@@ -33,7 +39,14 @@ test.fails("分割されたVVPPファイルからエンジンを切り出せる"
   const outputFilePath1 = outputFilePath + ".1.vvppp";
   const outputFilePath2 = outputFilePath + ".2.vvppp";
   splitFile(outputFilePath, outputFilePath1, outputFilePath2);
-  await extractVvpp(outputFilePath1, tmpDir);
+
+  const vvppEngineDir = createVvppEngineDir();
+  await extractVvpp({
+    vvppLikeFilePath: outputFilePath1,
+    vvppEngineDir,
+    tmpDir,
+  });
+  expectManifestExists(vvppEngineDir);
 });
 
 test.each([
@@ -46,17 +59,36 @@ test.each([
     const sourceDir = path.join(__dirname, "vvpps", targetName);
     const outputFilePath = path.join(tmpDir, uuid4() + targetName);
     await createZipFile(sourceDir, outputFilePath);
-    await expect(extractVvpp(outputFilePath, tmpDir)).rejects.toThrow(
-      expectedError,
-    );
+    await expect(
+      extractVvpp({
+        vvppLikeFilePath: outputFilePath,
+        vvppEngineDir: tmpDir,
+        tmpDir,
+      }),
+    ).rejects.toThrow(expectedError);
   },
 );
 
 /** 7zを使って指定したフォルダからzipファイルを作成する */
 async function createZipFile(sourceDir: string, outputFilePath: string) {
-  const zipBin = import.meta.env.VITE_7Z_BIN_NAME;
-  const command = `"${zipBin}" a -tzip "${outputFilePath}" "${sourceDir}\\*"`;
+  const sevenZipBin = import.meta.env.VITE_7Z_BIN_NAME;
+  const command = `"${sevenZipBin}" a -tzip "${outputFilePath}" "${path.join(sourceDir, "*")}"`;
   await promisify(exec)(command);
+}
+
+function createVvppEngineDir() {
+  const dir = path.join(tmpDir, uuid4());
+  fs.mkdirSync(dir);
+  return dir;
+}
+
+function expectManifestExists(vvppEngineDir: string) {
+  const files = fs.readdirSync(vvppEngineDir, { recursive: true });
+  const manifestExists = files.some(
+    (file) =>
+      typeof file === "string" && path.basename(file) == "engine_manifest.json",
+  );
+  expect(manifestExists).toBe(true);
 }
 
 /** ファイルを2つに分割する */

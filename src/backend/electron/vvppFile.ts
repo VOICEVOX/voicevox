@@ -17,13 +17,6 @@ import { createLogger } from "@/helpers/log";
 
 const log = createLogger("vvppFile");
 
-// https://www.garykessler.net/library/file_sigs.html#:~:text=7-zip%20compressed%20file
-const SEVEN_ZIP_MAGIC_NUMBER = Buffer.from([
-  0x37, 0x7a, 0xbc, 0xaf, 0x27, 0x1c,
-]);
-
-const ZIP_MAGIC_NUMBER = Buffer.from([0x50, 0x4b, 0x03, 0x04]);
-
 /** VVPPファイルが分割されている場合、それらのファイルを取得する */
 async function getArchiveFileParts(
   vvppLikeFilePath: string,
@@ -61,21 +54,14 @@ async function getArchiveFileParts(
 
 /** 分割されているVVPPファイルを連結して返す */
 async function concatenateVvppFiles(
-  format: "zip" | "7z",
   archiveFileParts: string[],
+  outputFilePath: string,
 ) {
-  // -siオプションでの7z解凍はサポートされていないため、
-  // ファイルを連結した一次ファイルを作成し、それを7zで解凍する。
   log.info(`Concatenating ${archiveFileParts.length} files...`);
-  const tmpConcatenatedFile = path.join(
-    app.getPath("temp"), // TODO: archiveFilePartsと同じディレクトリにしてappの依存をなくす
-    `vvpp-${new Date().getTime()}.${format}`,
-  );
-  log.info("Temporary file:", tmpConcatenatedFile);
+
   await new Promise<void>((resolve, reject) => {
-    if (!tmpConcatenatedFile) throw new Error("tmpFile is undefined");
     const inputStreams = archiveFileParts.map((f) => fs.createReadStream(f));
-    const outputStream = fs.createWriteStream(tmpConcatenatedFile);
+    const outputStream = fs.createWriteStream(outputFilePath);
     new MultiStream(inputStreams)
       .pipe(outputStream)
       .on("close", () => {
@@ -85,7 +71,6 @@ async function concatenateVvppFiles(
       .on("error", reject);
   });
   log.info("Concatenated");
-  return tmpConcatenatedFile;
 }
 
 /** 7zでファイルを解凍する */
@@ -107,13 +92,7 @@ async function unarchive(
     "-bsp1", // 進捗出力
   ];
 
-  let sevenZipPath = import.meta.env.VITE_7Z_BIN_NAME;
-  if (!sevenZipPath) {
-    throw new Error("7z path is not defined");
-  }
-  if (import.meta.env.PROD) {
-    sevenZipPath = path.join(path.dirname(app.getPath("exe")), sevenZipPath); // TODO: helperに移動してappの依存をなくす
-  }
+  const sevenZipPath = getSevenZipPath();
   log.info("Spawning 7z:", sevenZipPath, args.join(" "));
   await new Promise<void>((resolve, reject) => {
     const child = spawn(sevenZipPath, args, {
@@ -152,13 +131,24 @@ async function unarchive(
     // FIXME: rejectが2回呼ばれることがある
     child.on("error", reject);
   });
+
+  function getSevenZipPath() {
+    let sevenZipPath = import.meta.env.VITE_7Z_BIN_NAME;
+    if (!sevenZipPath) {
+      throw new Error("7z path is not defined");
+    }
+    if (import.meta.env.PROD) {
+      sevenZipPath = path.join(path.dirname(app.getPath("exe")), sevenZipPath);
+    }
+    return sevenZipPath;
+  }
 }
 
 export async function extractVvpp(
-  vvppLikeFilePath: string,
-  vvppEngineDir: string, // TODO: payload objectに変える
+  payload: { vvppLikeFilePath: string; vvppEngineDir: string; tmpDir: string },
   callbacks?: { onProgress?: ProgressCallback },
 ): Promise<{ outputDir: string; manifest: MinimumEngineManifestType }> {
+  const { vvppLikeFilePath, vvppEngineDir, tmpDir } = payload;
   callbacks?.onProgress?.({ progress: 0 });
 
   const nonce = new Date().getTime().toString();
@@ -177,10 +167,12 @@ export async function extractVvpp(
     let archiveFile: string;
     try {
       if (archiveFileParts.length > 1) {
-        tmpConcatenatedFile = await concatenateVvppFiles(
-          format,
-          archiveFileParts,
-        );
+        // -siオプションでの7z解凍はサポートされていないため、
+        // ファイルを連結した一次ファイルを作成し、それを7zで解凍する。
+        tmpConcatenatedFile = createTmpConcatenatedFilePath();
+        log.info("Temporary file:", tmpConcatenatedFile);
+
+        await concatenateVvppFiles(archiveFileParts, tmpConcatenatedFile);
         archiveFile = tmpConcatenatedFile;
       } else {
         archiveFile = archiveFileParts[0];
@@ -214,6 +206,10 @@ export async function extractVvpp(
     }
     throw e;
   }
+
+  function createTmpConcatenatedFilePath(): string {
+    return path.join(tmpDir, `vvpp-${new Date().getTime()}.${format}`);
+  }
 }
 
 async function detectFileFormat(
@@ -224,6 +220,13 @@ async function detectFileFormat(
   const buffer = Buffer.alloc(8);
   await file.read(buffer, 0, 8, 0);
   await file.close();
+
+  // https://www.garykessler.net/library/file_sigs.html#:~:text=7-zip%20compressed%20file
+  const SEVEN_ZIP_MAGIC_NUMBER = Buffer.from([
+    0x37, 0x7a, 0xbc, 0xaf, 0x27, 0x1c,
+  ]);
+
+  const ZIP_MAGIC_NUMBER = Buffer.from([0x50, 0x4b, 0x03, 0x04]);
 
   if (buffer.compare(SEVEN_ZIP_MAGIC_NUMBER, 0, 6, 0, 6) === 0) {
     return "7z";
