@@ -133,10 +133,7 @@ if (injectedValue == undefined) {
   throw new Error("injectedValue is undefined.");
 }
 
-const gridCellWidth = injectedValue.gridCellWidth;
-const gridCellHeight = injectedValue.gridCellHeight;
-const gridWidth = injectedValue.gridWidth;
-const gridHeight = injectedValue.gridHeight;
+const { gridCellWidth, gridCellHeight, gridWidth, gridHeight } = injectedValue;
 
 const beatWidth = (timeSignature: TimeSignature) => {
   const beatType = timeSignature.beatType;
