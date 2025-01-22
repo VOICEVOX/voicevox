@@ -25,8 +25,6 @@ const meta: Meta<typeof Presentation> = {
     tpqn: 480,
     sequencerSnapType: 16,
     numMeasures: 32,
-    gridCellWidth: 7.5,
-    gridCellHeight: 22.5,
     gridWidth: 3840,
     gridHeight: 2880,
     offsetX: 0,

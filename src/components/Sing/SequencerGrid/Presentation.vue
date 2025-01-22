@@ -112,9 +112,10 @@
 
 <script setup lang="ts">
 import { computed, toRef } from "vue";
-import { keyInfos, tickToBaseX } from "@/sing/viewHelper";
+import { getKeyBaseHeight, keyInfos, tickToBaseX } from "@/sing/viewHelper";
 import { TimeSignature } from "@/store/type";
 import { useSequencerGrid } from "@/composables/useSequencerGridPattern";
+import { getNoteDuration } from "@/sing/domain";
 
 const props = defineProps<{
   tpqn: number;
@@ -123,13 +124,20 @@ const props = defineProps<{
   sequencerZoomY: number;
   sequencerSnapType: number;
   numMeasures: number;
-  gridCellWidth: number;
-  gridCellHeight: number;
   gridWidth: number;
   gridHeight: number;
   offsetX: number;
   offsetY: number;
 }>();
+
+const gridCellWidth = computed(() => {
+  const snapTicks = getNoteDuration(props.sequencerSnapType, props.tpqn);
+  return tickToBaseX(snapTicks, props.tpqn) * props.sequencerZoomX;
+});
+
+const gridCellHeight = computed(() => {
+  return getKeyBaseHeight() * props.sequencerZoomY;
+});
 
 const beatWidth = (timeSignature: TimeSignature) => {
   const beatType = timeSignature.beatType;

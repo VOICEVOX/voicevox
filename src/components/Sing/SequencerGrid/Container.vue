@@ -6,8 +6,6 @@
     :sequencerZoomY
     :sequencerSnapType
     :numMeasures
-    :gridCellWidth
-    :gridCellHeight
     :gridWidth
     :gridHeight
     :offsetX="props.offsetX"
@@ -36,10 +34,7 @@ if (injectedValue == undefined) {
   throw new Error("injectedValue is undefined.");
 }
 
-const gridCellWidth = injectedValue.gridCellWidth;
-const gridCellHeight = injectedValue.gridCellHeight;
-const gridWidth = injectedValue.gridWidth;
-const gridHeight = injectedValue.gridHeight;
+const { gridWidth, gridHeight } = injectedValue;
 
 const store = useStore();
 

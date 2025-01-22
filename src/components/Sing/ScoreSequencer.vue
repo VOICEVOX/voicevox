@@ -227,8 +227,6 @@ import { ComputedRef } from "vue";
 import type { InjectionKey } from "vue";
 
 export const gridInfoInjectionKey: InjectionKey<{
-  gridCellWidth: ComputedRef<number>;
-  gridCellHeight: ComputedRef<number>;
   gridWidth: ComputedRef<number>;
   gridHeight: ComputedRef<number>;
 }> = Symbol();
@@ -403,14 +401,9 @@ const numMeasures = computed(() => {
 });
 
 // グリッド関係の値
-const gridCellWidth = computed(() => {
-  return tickToBaseX(snapTicks.value, tpqn.value) * zoomX.value;
-});
-const gridCellHeight = computed(() => {
-  return getKeyBaseHeight() * zoomY.value;
-});
 const gridWidth = computed(() => {
   const timeSignatures = store.state.timeSignatures;
+  const gridCellWidth = tickToBaseX(snapTicks.value, tpqn.value) * zoomX.value;
 
   let numOfGridColumns = 0;
   for (const [i, timeSignature] of timeSignatures.entries()) {
@@ -424,18 +417,14 @@ const gridWidth = computed(() => {
       Math.round(measureDuration / snapTicks.value) *
       (nextMeasureNumber - timeSignature.measureNumber);
   }
-  return gridCellWidth.value * numOfGridColumns;
+  return gridCellWidth * numOfGridColumns;
 });
 const gridHeight = computed(() => {
-  return gridCellHeight.value * keyInfos.length;
+  const gridCellHeight = getKeyBaseHeight() * zoomY.value;
+  return gridCellHeight * keyInfos.length;
 });
 
-provide(gridInfoInjectionKey, {
-  gridCellWidth,
-  gridCellHeight,
-  gridWidth,
-  gridHeight,
-});
+provide(gridInfoInjectionKey, { gridWidth, gridHeight });
 
 // スクロール位置
 const scrollX = ref(0);
