@@ -111,8 +111,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, toRef, inject } from "vue";
-import { gridInfoInjectionKey } from "../ScoreSequencer.vue";
+import { computed, toRef } from "vue";
 import { keyInfos, tickToBaseX } from "@/sing/viewHelper";
 import { TimeSignature } from "@/store/type";
 import { useSequencerGrid } from "@/composables/useSequencerGridPattern";
@@ -124,16 +123,13 @@ const props = defineProps<{
   sequencerZoomY: number;
   sequencerSnapType: number;
   numMeasures: number;
+  gridCellWidth: number;
+  gridCellHeight: number;
+  gridWidth: number;
+  gridHeight: number;
   offsetX: number;
   offsetY: number;
 }>();
-
-const injectedValue = inject(gridInfoInjectionKey);
-if (injectedValue == undefined) {
-  throw new Error("injectedValue is undefined.");
-}
-
-const { gridCellWidth, gridCellHeight, gridWidth, gridHeight } = injectedValue;
 
 const beatWidth = (timeSignature: TimeSignature) => {
   const beatType = timeSignature.beatType;
