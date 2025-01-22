@@ -4,6 +4,39 @@
  */
 
 /**
+ * 指定されたIDを持つ型を抽出するユーティリティ型。
+ */
+type ExtractById<T, U> = T extends { id: U } ? T : never;
+
+/**
+ * ステートの定義を表す型。
+ */
+type StateDefinition = { id: string; factoryFuncArgs: object | undefined };
+
+/**
+ * ステートのIDを表す型。
+ */
+type StateId<T extends StateDefinition[]> = T[number]["id"];
+
+/**
+ * ファクトリ関数の引数を表す型。
+ */
+type FactoryFuncArgs<
+  T extends StateDefinition[],
+  U extends StateId<T>,
+> = ExtractById<T[number], U>["factoryFuncArgs"];
+
+/**
+ * 次のステートを設定する関数の型。
+ */
+export type SetNextStateFunc<T extends StateDefinition[]> = <
+  U extends StateId<T>,
+>(
+  id: U,
+  factoryFuncArgs: FactoryFuncArgs<T, U>,
+) => void;
+
+/**
  * ステートマシンのステートを表すインターフェース。
  *
  * @template State このインターフェースを実装するステートの型。
@@ -11,10 +44,12 @@
  * @template Context ステート間で共有されるコンテキストの型。
  */
 export interface IState<
-  State extends IState<State, Input, Context>,
+  StateDefinitions extends StateDefinition[],
   Input,
   Context,
 > {
+  readonly id: StateId<StateDefinitions>;
+
   /**
    * 入力を処理し、必要に応じて次のステートを設定する。
    *
@@ -23,7 +58,7 @@ export interface IState<
   process(payload: {
     input: Input;
     context: Context;
-    setNextState: (nextState: State) => void;
+    setNextState: SetNextStateFunc<StateDefinitions>;
   }): void;
 
   /**
@@ -42,6 +77,20 @@ export interface IState<
 }
 
 /**
+ * ステートのファクトリ関数を表す型。
+ */
+type StateFactories<
+  T extends StateDefinition[],
+  U extends StateId<T>,
+  Input,
+  Context,
+> = {
+  [P in U]: (
+    args: FactoryFuncArgs<T, P>,
+  ) => IState<T, Input, Context> & { readonly id: P };
+};
+
+/**
  * ステートマシンを表すクラス。
  *
  * @template State ステートマシンのステートの型。
@@ -49,32 +98,47 @@ export interface IState<
  * @template Context ステート間で共有されるコンテキストの型。
  */
 export class StateMachine<
-  State extends IState<State, Input, Context>,
+  StateDefinitions extends StateDefinition[],
   Input,
   Context,
 > {
+  private readonly stateFactories: StateFactories<
+    StateDefinitions,
+    StateId<StateDefinitions>,
+    Input,
+    Context
+  >;
   private readonly context: Context;
 
-  private currentState: State;
+  private currentState: IState<StateDefinitions, Input, Context>;
+
+  /**
+   * ステートマシンの現在のステートのID。
+   */
+  get currentStateId() {
+    return this.currentState.id;
+  }
 
   /**
    * @param initialState ステートマシンの初期ステート。
    * @param context ステート間で共有されるコンテキスト。
    */
-  constructor(initialState: State, context: Context) {
+  constructor(
+    stateFactories: StateFactories<
+      StateDefinitions,
+      StateId<StateDefinitions>,
+      Input,
+      Context
+    >,
+    initialState: IState<StateDefinitions, Input, Context>,
+    context: Context,
+  ) {
+    this.stateFactories = stateFactories;
     this.context = context;
+
     this.currentState = initialState;
 
     this.currentState.onEnter(this.context);
-  }
-
-  /**
-   * ステートマシンの現在のステートを返す。
-   *
-   * @returns 現在のステート。
-   */
-  getCurrentState() {
-    return this.currentState;
   }
 
   /**
@@ -83,14 +147,14 @@ export class StateMachine<
    * @param input 処理する入力。
    */
   process(input: Input) {
-    let nextState: State | undefined = undefined;
-    const setNextState = (arg: State) => {
-      nextState = arg;
-    };
+    let nextState: IState<StateDefinitions, Input, Context> | undefined =
+      undefined;
     this.currentState.process({
       input,
       context: this.context,
-      setNextState,
+      setNextState: (id, factoryFuncArgs) => {
+        nextState = this.stateFactories[id](factoryFuncArgs);
+      },
     });
     if (nextState != undefined) {
       this.currentState.onExit(this.context);
