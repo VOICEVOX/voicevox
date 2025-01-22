@@ -1,6 +1,8 @@
 <template>
-  <div v-if="showSingCharacterPortrait" class="character-portrait-wrap">
-    <img class="character-portrait" :src="portraitPath" />
+  <div class="clipping-container">
+    <div v-if="showSingCharacterPortrait" class="character-portrait-wrap">
+      <img class="character-portrait" :src="portraitPath" />
+    </div>
   </div>
 </template>
 
@@ -38,10 +40,17 @@ const portraitPath = computed(() => {
 // 表示変数
 $portrait-min-height: 500px;
 
+// 画像がはみ出ないようにクリップする
+.clipping-container {
+  position: relative;
+  display: grid;
+  overflow: hidden;
+  pointer-events: none;
+}
+
 // 画面右下に固定表示
 // 幅固定、高さ可変、画像のアスペクト比を保持、heightを調整
 .character-portrait-wrap {
-  height: 100%;
   display: flex;
   flex-direction: column;
   margin-left: auto;
