@@ -1,5 +1,5 @@
 <template>
-  <div class="sequencer-grid"></div>
+  <div class="sequencer-dummy-grid"></div>
 </template>
 
 <script setup lang="ts">
@@ -19,7 +19,7 @@ const gridHeight = injectedValue.gridHeight;
 @use "@/styles/variables" as vars;
 @use "@/styles/colors" as colors;
 
-.sequencer-grid {
+.sequencer-dummy-grid {
   display: block;
   width: v-bind("`${gridWidth}px`");
   height: v-bind("`${gridHeight}px`");
