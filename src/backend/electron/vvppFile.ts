@@ -21,6 +21,7 @@ const log = createLogger("vvppFile");
 async function getArchiveFileParts(
   vvppLikeFilePath: string,
 ): Promise<string[]> {
+  // 名前.数値.vvpppの場合は分割されているとみなして連結する
   if (isSplitFile(vvppLikeFilePath)) {
     log.info("vvpp is split, finding other parts...");
     const filePaths = await findSplitFileParts(vvppLikeFilePath);
@@ -270,10 +271,10 @@ async function detectFileFormat(
 ): Promise<"zip" | "7z" | undefined> {
   const buffer = await readFileHeader(filePath);
 
+  // https://www.garykessler.net/library/file_sigs.html#:~:text=7-zip%20compressed%20file
   const SEVEN_ZIP_MAGIC_NUMBER = Buffer.from([
     0x37, 0x7a, 0xbc, 0xaf, 0x27, 0x1c,
   ]);
-
   const ZIP_MAGIC_NUMBER = Buffer.from([0x50, 0x4b, 0x03, 0x04]);
 
   if (isBufferEqual(buffer, SEVEN_ZIP_MAGIC_NUMBER, 6)) {
