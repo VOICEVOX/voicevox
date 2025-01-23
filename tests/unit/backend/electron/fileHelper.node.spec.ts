@@ -32,8 +32,8 @@ describe("writeFileSafely", () => {
   });
 
   test("存在しないディレクトリに書き込もうとするとエラー", async () => {
-    const nonExistentDir = path.join(tmpDir, uuid4(), "subdir");
+    const nonExistentDir = path.join(tmpDir, uuid4(), "not-exist");
     const filePath = path.join(nonExistentDir, "test.txt");
-    await expect(writeFileSafely(filePath, "data")).rejects.toThrow();
+    expect(() => writeFileSafely(filePath, "data")).toThrow();
   });
 });
