@@ -13,7 +13,7 @@ type ExtractById<T, U> = T extends { id: U } ? T : never;
  */
 type StateDefinition = {
   id: string;
-  factoryFuncArgs: Record<string, unknown> | undefined;
+  factoryArgs: Record<string, unknown> | undefined;
 };
 
 /**
@@ -24,19 +24,17 @@ type StateId<T extends StateDefinition[]> = T[number]["id"];
 /**
  * ファクトリ関数の引数を表す型。
  */
-type FactoryFuncArgs<
+type FactoryArgs<
   T extends StateDefinition[],
   U extends StateId<T>,
-> = ExtractById<T[number], U>["factoryFuncArgs"];
+> = ExtractById<T[number], U>["factoryArgs"];
 
 /**
  * 次のステートを設定する関数の型。
  */
-export type SetNextStateFunc<T extends StateDefinition[]> = <
-  U extends StateId<T>,
->(
+export type SetNextState<T extends StateDefinition[]> = <U extends StateId<T>>(
   id: U,
-  factoryFuncArgs: FactoryFuncArgs<T, U>,
+  factoryArgs: FactoryArgs<T, U>,
 ) => void;
 
 /**
@@ -61,7 +59,7 @@ export interface State<
   process(payload: {
     input: Input;
     context: Context;
-    setNextState: SetNextStateFunc<StateDefinitions>;
+    setNextState: SetNextState<StateDefinitions>;
   }): void;
 
   /**
@@ -89,7 +87,7 @@ type StateFactories<
   Context,
 > = {
   [P in U]: (
-    args: FactoryFuncArgs<T, P>,
+    args: FactoryArgs<T, P>,
   ) => State<T, Input, Context> & { readonly id: P };
 };
 
@@ -155,8 +153,8 @@ export class StateMachine<
     this.currentState.process({
       input,
       context: this.context,
-      setNextState: (id, factoryFuncArgs) => {
-        nextState = this.stateFactories[id](factoryFuncArgs);
+      setNextState: (id, factoryArgs) => {
+        nextState = this.stateFactories[id](factoryArgs);
       },
     });
     if (nextState != undefined) {

@@ -13,7 +13,7 @@ import {
 } from "@/sing/utility";
 import {
   State,
-  SetNextStateFunc,
+  SetNextState,
   StateMachine,
 } from "@/sing/stateMachine/stateMachineBase";
 import {
@@ -111,18 +111,18 @@ type Context = ComputedRefs & Refs & { readonly store: PartialStore };
 type StateDefinitions = [
   {
     id: "idle";
-    factoryFuncArgs: undefined;
+    factoryArgs: undefined;
   },
   {
     id: "addNote";
-    factoryFuncArgs: {
+    factoryArgs: {
       cursorPosAtStart: PositionOnSequencer;
       targetTrackId: TrackId;
     };
   },
   {
     id: "moveNote";
-    factoryFuncArgs: {
+    factoryArgs: {
       cursorPosAtStart: PositionOnSequencer;
       targetTrackId: TrackId;
       targetNoteIds: Set<NoteId>;
@@ -131,7 +131,7 @@ type StateDefinitions = [
   },
   {
     id: "resizeNoteLeft";
-    factoryFuncArgs: {
+    factoryArgs: {
       cursorPosAtStart: PositionOnSequencer;
       targetTrackId: TrackId;
       targetNoteIds: Set<NoteId>;
@@ -140,7 +140,7 @@ type StateDefinitions = [
   },
   {
     id: "resizeNoteRight";
-    factoryFuncArgs: {
+    factoryArgs: {
       cursorPosAtStart: PositionOnSequencer;
       targetTrackId: TrackId;
       targetNoteIds: Set<NoteId>;
@@ -149,20 +149,20 @@ type StateDefinitions = [
   },
   {
     id: "selectNotesWithRect";
-    factoryFuncArgs: {
+    factoryArgs: {
       cursorPosAtStart: PositionOnSequencer;
     };
   },
   {
     id: "drawPitch";
-    factoryFuncArgs: {
+    factoryArgs: {
       cursorPosAtStart: PositionOnSequencer;
       targetTrackId: TrackId;
     };
   },
   {
     id: "erasePitch";
-    factoryFuncArgs: {
+    factoryArgs: {
       cursorPosAtStart: PositionOnSequencer;
       targetTrackId: TrackId;
     };
@@ -247,7 +247,7 @@ class IdleState implements State<StateDefinitions, Input, Context> {
   }: {
     input: Input;
     context: Context;
-    setNextState: SetNextStateFunc<StateDefinitions>;
+    setNextState: SetNextState<StateDefinitions>;
   }) {
     const mouseButton = getButton(input.mouseEvent);
     const selectedTrackId = context.selectedTrackId.value;
@@ -418,7 +418,7 @@ class AddNoteState implements State<StateDefinitions, Input, Context> {
   }: {
     input: Input;
     context: Context;
-    setNextState: SetNextStateFunc<StateDefinitions>;
+    setNextState: SetNextState<StateDefinitions>;
   }) {
     if (this.innerContext == undefined) {
       throw new Error("innerContext is undefined.");
@@ -582,7 +582,7 @@ class MoveNoteState implements State<StateDefinitions, Input, Context> {
   }: {
     input: Input;
     context: Context;
-    setNextState: SetNextStateFunc<StateDefinitions>;
+    setNextState: SetNextState<StateDefinitions>;
   }) {
     if (this.innerContext == undefined) {
       throw new Error("innerContext is undefined.");
@@ -743,7 +743,7 @@ class ResizeNoteLeftState implements State<StateDefinitions, Input, Context> {
   }: {
     input: Input;
     context: Context;
-    setNextState: SetNextStateFunc<StateDefinitions>;
+    setNextState: SetNextState<StateDefinitions>;
   }) {
     if (this.innerContext == undefined) {
       throw new Error("innerContext is undefined.");
@@ -902,7 +902,7 @@ class ResizeNoteRightState implements State<StateDefinitions, Input, Context> {
   }: {
     input: Input;
     context: Context;
-    setNextState: SetNextStateFunc<StateDefinitions>;
+    setNextState: SetNextState<StateDefinitions>;
   }) {
     if (this.innerContext == undefined) {
       throw new Error("innerContext is undefined.");
@@ -991,7 +991,7 @@ class SelectNotesWithRectState
   }: {
     input: Input;
     context: Context;
-    setNextState: SetNextStateFunc<StateDefinitions>;
+    setNextState: SetNextState<StateDefinitions>;
   }) {
     const mouseButton = getButton(input.mouseEvent);
     if (input.targetArea === "SequencerBody") {
@@ -1177,7 +1177,7 @@ class DrawPitchState implements State<StateDefinitions, Input, Context> {
   }: {
     input: Input;
     context: Context;
-    setNextState: SetNextStateFunc<StateDefinitions>;
+    setNextState: SetNextState<StateDefinitions>;
   }) {
     if (this.innerContext == undefined) {
       throw new Error("innerContext is undefined.");
@@ -1313,7 +1313,7 @@ class ErasePitchState implements State<StateDefinitions, Input, Context> {
   }: {
     input: Input;
     context: Context;
-    setNextState: SetNextStateFunc<StateDefinitions>;
+    setNextState: SetNextState<StateDefinitions>;
   }) {
     if (this.innerContext == undefined) {
       throw new Error("innerContext is undefined.");
