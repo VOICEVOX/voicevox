@@ -104,7 +104,7 @@ import {
   round,
 } from "@/sing/utility";
 import { getWorkaroundKeyRangeAdjustment } from "@/sing/workaroundKeyRangeAdjustment";
-import { createLogger } from "@/domain/frontend/log";
+import { createLogger } from "@/helpers/log";
 import { noteSchema } from "@/domain/project/schema";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
@@ -1549,18 +1549,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         throw new Error("previewSynth is undefined.");
       }
       previewSynth.noteOff("immediately", noteNumber);
-    },
-  },
-
-  SET_IS_DRAG: {
-    mutation(state, { isDrag }: { isDrag: boolean }) {
-      // FIXME: state.isDragが無くなっているので修正する
-      state.isDrag = isDrag;
-    },
-    async action({ mutations }, { isDrag }) {
-      mutations.SET_IS_DRAG({
-        isDrag,
-      });
     },
   },
 

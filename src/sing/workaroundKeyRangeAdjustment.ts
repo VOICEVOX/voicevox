@@ -5,7 +5,7 @@
  * FIXME: スタイルの音域をエンジンから取得可能にし、音域調整量を計算するように修正する。
  */
 
-import { createLogger } from "@/domain/frontend/log";
+import { createLogger } from "@/helpers/log";
 import { Singer } from "@/store/type";
 import { CharacterInfo, EngineId } from "@/type/preload";
 

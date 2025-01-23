@@ -690,7 +690,12 @@ export type AudioCommandStoreTypes = {
     mutation: {
       audioKeyItemPairs: { audioItem: AudioItem; audioKey: AudioKey }[];
     };
-    action(payload: { filePath?: string }): void;
+    action(
+      payload:
+        | { type: "dialog" }
+        | { type: "path"; filePath: string }
+        | { type: "file"; file: File },
+    ): void;
   };
 
   COMMAND_PUT_TEXTS: {
@@ -1149,11 +1154,6 @@ export type SingingStoreTypes = {
   SET_SEQUENCER_PITCH_TOOL: {
     mutation: { sequencerPitchTool: PitchEditTool };
     action(payload: { sequencerPitchTool: PitchEditTool }): void;
-  };
-
-  SET_IS_DRAG: {
-    mutation: { isDrag: boolean };
-    action(payload: { isDrag: boolean }): void;
   };
 
   EXPORT_LABEL_FILES: {
@@ -1842,7 +1842,12 @@ export type ProjectStoreTypes = {
   };
 
   LOAD_PROJECT_FILE: {
-    action(payload: { filePath?: string }): boolean;
+    action(
+      payload:
+        | { type: "dialog" }
+        | { type: "path"; filePath: string }
+        | { type: "file"; file: File },
+    ): boolean;
   };
 
   SAVE_PROJECT_FILE: {
@@ -2272,7 +2277,7 @@ export type PresetStoreTypes = {
  * Dictionary Store Types
  */
 
-export type DictionaryStoreState = Record<string, unknown>;
+export type DictionaryStoreState = Record<never, unknown>;
 
 export type DictionaryStoreTypes = {
   LOAD_USER_DICT: {
@@ -2312,7 +2317,7 @@ export type DictionaryStoreTypes = {
  * Setting Store Types
  */
 
-export type ProxyStoreState = Record<string, unknown>;
+export type ProxyStoreState = Record<never, unknown>;
 
 export type IEngineConnectorFactoryActions = ReturnType<
   IEngineConnectorFactory["instance"]

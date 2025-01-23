@@ -27,7 +27,7 @@ import {
   onUnmountedOrDeactivated,
 } from "@/composables/onMountOrActivate";
 import { ExhaustiveError } from "@/type/utility";
-import { createLogger } from "@/domain/frontend/log";
+import { createLogger } from "@/helpers/log";
 import { getLast } from "@/sing/utility";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { EditorFrameAudioQuery } from "@/store/type";

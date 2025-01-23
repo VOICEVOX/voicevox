@@ -1,7 +1,9 @@
 import fs from "fs";
-import log from "electron-log/main";
 import { moveFileSync } from "move-file";
 import { uuid4 } from "@/helpers/random";
+import { createLogger } from "@/helpers/log";
+
+const log = createLogger("fileHelper");
 
 /**
  * 書き込みに失敗したときにファイルが消えないように、

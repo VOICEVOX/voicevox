@@ -219,15 +219,15 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
 
   SET_ROOT_MISC_SETTING: {
     mutation(state, { key, value }) {
-      // Vuexの型処理でUnionが解かれてしまうのを迂回している
+      // @ts-expect-error Vuexの型処理でUnionが解かれてしまうのを迂回している
       // FIXME: このワークアラウンドをなくす
-      state[key as never] = value;
+      state[key] = value;
     },
     action({ mutations }, { key, value }) {
       void window.backend.setSetting(key, value);
-      // Vuexの型処理でUnionが解かれてしまうのを迂回している
+      // @ts-expect-error Vuexの型処理でUnionが解かれてしまうのを迂回している
       // FIXME: このワークアラウンドをなくす
-      mutations.SET_ROOT_MISC_SETTING({ key: key as never, value });
+      mutations.SET_ROOT_MISC_SETTING({ key, value });
     },
   },
 
