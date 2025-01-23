@@ -12,7 +12,7 @@ import {
   Rect,
 } from "@/sing/utility";
 import {
-  IState,
+  State,
   SetNextStateFunc,
   StateMachine,
 } from "@/sing/stateMachine/stateMachineBase";
@@ -235,7 +235,7 @@ const executeNotesSelectionProcess = (
   }
 };
 
-class IdleState implements IState<StateDefinitions, Input, Context> {
+class IdleState implements State<StateDefinitions, Input, Context> {
   readonly id = "idle";
 
   onEnter() {}
@@ -328,7 +328,7 @@ class IdleState implements IState<StateDefinitions, Input, Context> {
   onExit() {}
 }
 
-class AddNoteState implements IState<StateDefinitions, Input, Context> {
+class AddNoteState implements State<StateDefinitions, Input, Context> {
   readonly id = "addNote";
 
   private readonly cursorPosAtStart: PositionOnSequencer;
@@ -462,7 +462,7 @@ class AddNoteState implements IState<StateDefinitions, Input, Context> {
   }
 }
 
-class MoveNoteState implements IState<StateDefinitions, Input, Context> {
+class MoveNoteState implements State<StateDefinitions, Input, Context> {
   readonly id = "moveNote";
 
   private readonly cursorPosAtStart: PositionOnSequencer;
@@ -628,7 +628,7 @@ class MoveNoteState implements IState<StateDefinitions, Input, Context> {
   }
 }
 
-class ResizeNoteLeftState implements IState<StateDefinitions, Input, Context> {
+class ResizeNoteLeftState implements State<StateDefinitions, Input, Context> {
   readonly id = "resizeNoteLeft";
 
   private readonly cursorPosAtStart: PositionOnSequencer;
@@ -788,7 +788,7 @@ class ResizeNoteLeftState implements IState<StateDefinitions, Input, Context> {
   }
 }
 
-class ResizeNoteRightState implements IState<StateDefinitions, Input, Context> {
+class ResizeNoteRightState implements State<StateDefinitions, Input, Context> {
   readonly id = "resizeNoteRight";
 
   private readonly cursorPosAtStart: PositionOnSequencer;
@@ -950,7 +950,7 @@ class ResizeNoteRightState implements IState<StateDefinitions, Input, Context> {
 }
 
 class SelectNotesWithRectState
-  implements IState<StateDefinitions, Input, Context>
+  implements State<StateDefinitions, Input, Context>
 {
   readonly id = "selectNotesWithRect";
 
@@ -1046,7 +1046,7 @@ class SelectNotesWithRectState
   }
 }
 
-class DrawPitchState implements IState<StateDefinitions, Input, Context> {
+class DrawPitchState implements State<StateDefinitions, Input, Context> {
   readonly id = "drawPitch";
 
   private readonly cursorPosAtStart: PositionOnSequencer;
@@ -1229,7 +1229,7 @@ class DrawPitchState implements IState<StateDefinitions, Input, Context> {
   }
 }
 
-class ErasePitchState implements IState<StateDefinitions, Input, Context> {
+class ErasePitchState implements State<StateDefinitions, Input, Context> {
   readonly id = "erasePitch";
 
   private readonly cursorPosAtStart: PositionOnSequencer;

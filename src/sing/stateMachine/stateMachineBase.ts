@@ -43,7 +43,7 @@ export type SetNextStateFunc<T extends StateDefinition[]> = <
  * @template Input ステートが処理する入力の型。
  * @template Context ステート間で共有されるコンテキストの型。
  */
-export interface IState<
+export interface State<
   StateDefinitions extends StateDefinition[],
   Input,
   Context,
@@ -87,7 +87,7 @@ type StateFactories<
 > = {
   [P in U]: (
     args: FactoryFuncArgs<T, P>,
-  ) => IState<T, Input, Context> & { readonly id: P };
+  ) => State<T, Input, Context> & { readonly id: P };
 };
 
 /**
@@ -110,7 +110,7 @@ export class StateMachine<
   >;
   private readonly context: Context;
 
-  private currentState: IState<StateDefinitions, Input, Context>;
+  private currentState: State<StateDefinitions, Input, Context>;
 
   /**
    * ステートマシンの現在のステートのID。
@@ -130,7 +130,7 @@ export class StateMachine<
       Input,
       Context
     >,
-    initialState: IState<StateDefinitions, Input, Context>,
+    initialState: State<StateDefinitions, Input, Context>,
     context: Context,
   ) {
     this.stateFactories = stateFactories;
@@ -147,7 +147,7 @@ export class StateMachine<
    * @param input 処理する入力。
    */
   process(input: Input) {
-    let nextState: IState<StateDefinitions, Input, Context> | undefined =
+    let nextState: State<StateDefinitions, Input, Context> | undefined =
       undefined;
     this.currentState.process({
       input,
