@@ -1,6 +1,6 @@
 <template>
-  <div class="clipping-container">
-    <div v-if="showSingCharacterPortrait" class="character-portrait-wrap">
+  <div v-if="showSingCharacterPortrait" class="clipping-container">
+    <div class="character-portrait-wrap">
       <img class="character-portrait" :src="portraitPath" />
     </div>
   </div>
