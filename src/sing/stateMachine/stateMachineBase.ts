@@ -17,6 +17,11 @@ type StateDefinition = {
 };
 
 /**
+ * ステートの定義のリストを表す型。
+ */
+export type StateDefinitions<T extends StateDefinition[]> = T;
+
+/**
  * ステートのIDを表す型。
  */
 type StateId<T extends StateDefinition[]> = T[number]["id"];

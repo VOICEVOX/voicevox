@@ -15,6 +15,7 @@ import {
   State,
   SetNextState,
   StateMachine,
+  StateDefinitions,
 } from "@/sing/stateMachine/stateMachineBase";
 import {
   getButton,
@@ -108,66 +109,68 @@ type PartialStore = {
 
 type Context = ComputedRefs & Refs & { readonly store: PartialStore };
 
-type StateDefinitions = [
-  {
-    id: "idle";
-    factoryArgs: undefined;
-  },
-  {
-    id: "addNote";
-    factoryArgs: {
-      cursorPosAtStart: PositionOnSequencer;
-      targetTrackId: TrackId;
-    };
-  },
-  {
-    id: "moveNote";
-    factoryArgs: {
-      cursorPosAtStart: PositionOnSequencer;
-      targetTrackId: TrackId;
-      targetNoteIds: Set<NoteId>;
-      mouseDownNoteId: NoteId;
-    };
-  },
-  {
-    id: "resizeNoteLeft";
-    factoryArgs: {
-      cursorPosAtStart: PositionOnSequencer;
-      targetTrackId: TrackId;
-      targetNoteIds: Set<NoteId>;
-      mouseDownNoteId: NoteId;
-    };
-  },
-  {
-    id: "resizeNoteRight";
-    factoryArgs: {
-      cursorPosAtStart: PositionOnSequencer;
-      targetTrackId: TrackId;
-      targetNoteIds: Set<NoteId>;
-      mouseDownNoteId: NoteId;
-    };
-  },
-  {
-    id: "selectNotesWithRect";
-    factoryArgs: {
-      cursorPosAtStart: PositionOnSequencer;
-    };
-  },
-  {
-    id: "drawPitch";
-    factoryArgs: {
-      cursorPosAtStart: PositionOnSequencer;
-      targetTrackId: TrackId;
-    };
-  },
-  {
-    id: "erasePitch";
-    factoryArgs: {
-      cursorPosAtStart: PositionOnSequencer;
-      targetTrackId: TrackId;
-    };
-  },
-];
+type SequencerStateDefinitions = StateDefinitions<
+  [
+    {
+      id: "idle";
+      factoryArgs: undefined;
+    },
+    {
+      id: "addNote";
+      factoryArgs: {
+        cursorPosAtStart: PositionOnSequencer;
+        targetTrackId: TrackId;
+      };
+    },
+    {
+      id: "moveNote";
+      factoryArgs: {
+        cursorPosAtStart: PositionOnSequencer;
+        targetTrackId: TrackId;
+        targetNoteIds: Set<NoteId>;
+        mouseDownNoteId: NoteId;
+      };
+    },
+    {
+      id: "resizeNoteLeft";
+      factoryArgs: {
+        cursorPosAtStart: PositionOnSequencer;
+        targetTrackId: TrackId;
+        targetNoteIds: Set<NoteId>;
+        mouseDownNoteId: NoteId;
+      };
+    },
+    {
+      id: "resizeNoteRight";
+      factoryArgs: {
+        cursorPosAtStart: PositionOnSequencer;
+        targetTrackId: TrackId;
+        targetNoteIds: Set<NoteId>;
+        mouseDownNoteId: NoteId;
+      };
+    },
+    {
+      id: "selectNotesWithRect";
+      factoryArgs: {
+        cursorPosAtStart: PositionOnSequencer;
+      };
+    },
+    {
+      id: "drawPitch";
+      factoryArgs: {
+        cursorPosAtStart: PositionOnSequencer;
+        targetTrackId: TrackId;
+      };
+    },
+    {
+      id: "erasePitch";
+      factoryArgs: {
+        cursorPosAtStart: PositionOnSequencer;
+        targetTrackId: TrackId;
+      };
+    },
+  ]
+>;
 
 const getGuideLineTicks = (
   cursorPos: PositionOnSequencer,
@@ -235,7 +238,7 @@ const executeNotesSelectionProcess = (
   }
 };
 
-class IdleState implements State<StateDefinitions, Input, Context> {
+class IdleState implements State<SequencerStateDefinitions, Input, Context> {
   readonly id = "idle";
 
   onEnter() {}
@@ -247,7 +250,7 @@ class IdleState implements State<StateDefinitions, Input, Context> {
   }: {
     input: Input;
     context: Context;
-    setNextState: SetNextState<StateDefinitions>;
+    setNextState: SetNextState<SequencerStateDefinitions>;
   }) {
     const mouseButton = getButton(input.mouseEvent);
     const selectedTrackId = context.selectedTrackId.value;
@@ -328,7 +331,7 @@ class IdleState implements State<StateDefinitions, Input, Context> {
   onExit() {}
 }
 
-class AddNoteState implements State<StateDefinitions, Input, Context> {
+class AddNoteState implements State<SequencerStateDefinitions, Input, Context> {
   readonly id = "addNote";
 
   private readonly cursorPosAtStart: PositionOnSequencer;
@@ -418,7 +421,7 @@ class AddNoteState implements State<StateDefinitions, Input, Context> {
   }: {
     input: Input;
     context: Context;
-    setNextState: SetNextState<StateDefinitions>;
+    setNextState: SetNextState<SequencerStateDefinitions>;
   }) {
     if (this.innerContext == undefined) {
       throw new Error("innerContext is undefined.");
@@ -462,7 +465,9 @@ class AddNoteState implements State<StateDefinitions, Input, Context> {
   }
 }
 
-class MoveNoteState implements State<StateDefinitions, Input, Context> {
+class MoveNoteState
+  implements State<SequencerStateDefinitions, Input, Context>
+{
   readonly id = "moveNote";
 
   private readonly cursorPosAtStart: PositionOnSequencer;
@@ -582,7 +587,7 @@ class MoveNoteState implements State<StateDefinitions, Input, Context> {
   }: {
     input: Input;
     context: Context;
-    setNextState: SetNextState<StateDefinitions>;
+    setNextState: SetNextState<SequencerStateDefinitions>;
   }) {
     if (this.innerContext == undefined) {
       throw new Error("innerContext is undefined.");
@@ -628,7 +633,9 @@ class MoveNoteState implements State<StateDefinitions, Input, Context> {
   }
 }
 
-class ResizeNoteLeftState implements State<StateDefinitions, Input, Context> {
+class ResizeNoteLeftState
+  implements State<SequencerStateDefinitions, Input, Context>
+{
   readonly id = "resizeNoteLeft";
 
   private readonly cursorPosAtStart: PositionOnSequencer;
@@ -743,7 +750,7 @@ class ResizeNoteLeftState implements State<StateDefinitions, Input, Context> {
   }: {
     input: Input;
     context: Context;
-    setNextState: SetNextState<StateDefinitions>;
+    setNextState: SetNextState<SequencerStateDefinitions>;
   }) {
     if (this.innerContext == undefined) {
       throw new Error("innerContext is undefined.");
@@ -788,7 +795,9 @@ class ResizeNoteLeftState implements State<StateDefinitions, Input, Context> {
   }
 }
 
-class ResizeNoteRightState implements State<StateDefinitions, Input, Context> {
+class ResizeNoteRightState
+  implements State<SequencerStateDefinitions, Input, Context>
+{
   readonly id = "resizeNoteRight";
 
   private readonly cursorPosAtStart: PositionOnSequencer;
@@ -902,7 +911,7 @@ class ResizeNoteRightState implements State<StateDefinitions, Input, Context> {
   }: {
     input: Input;
     context: Context;
-    setNextState: SetNextState<StateDefinitions>;
+    setNextState: SetNextState<SequencerStateDefinitions>;
   }) {
     if (this.innerContext == undefined) {
       throw new Error("innerContext is undefined.");
@@ -950,7 +959,7 @@ class ResizeNoteRightState implements State<StateDefinitions, Input, Context> {
 }
 
 class SelectNotesWithRectState
-  implements State<StateDefinitions, Input, Context>
+  implements State<SequencerStateDefinitions, Input, Context>
 {
   readonly id = "selectNotesWithRect";
 
@@ -991,7 +1000,7 @@ class SelectNotesWithRectState
   }: {
     input: Input;
     context: Context;
-    setNextState: SetNextState<StateDefinitions>;
+    setNextState: SetNextState<SequencerStateDefinitions>;
   }) {
     const mouseButton = getButton(input.mouseEvent);
     if (input.targetArea === "SequencerBody") {
@@ -1046,7 +1055,9 @@ class SelectNotesWithRectState
   }
 }
 
-class DrawPitchState implements State<StateDefinitions, Input, Context> {
+class DrawPitchState
+  implements State<SequencerStateDefinitions, Input, Context>
+{
   readonly id = "drawPitch";
 
   private readonly cursorPosAtStart: PositionOnSequencer;
@@ -1177,7 +1188,7 @@ class DrawPitchState implements State<StateDefinitions, Input, Context> {
   }: {
     input: Input;
     context: Context;
-    setNextState: SetNextState<StateDefinitions>;
+    setNextState: SetNextState<SequencerStateDefinitions>;
   }) {
     if (this.innerContext == undefined) {
       throw new Error("innerContext is undefined.");
@@ -1229,7 +1240,9 @@ class DrawPitchState implements State<StateDefinitions, Input, Context> {
   }
 }
 
-class ErasePitchState implements State<StateDefinitions, Input, Context> {
+class ErasePitchState
+  implements State<SequencerStateDefinitions, Input, Context>
+{
   readonly id = "erasePitch";
 
   private readonly cursorPosAtStart: PositionOnSequencer;
@@ -1313,7 +1326,7 @@ class ErasePitchState implements State<StateDefinitions, Input, Context> {
   }: {
     input: Input;
     context: Context;
-    setNextState: SetNextState<StateDefinitions>;
+    setNextState: SetNextState<SequencerStateDefinitions>;
   }) {
     if (this.innerContext == undefined) {
       throw new Error("innerContext is undefined.");
@@ -1373,7 +1386,11 @@ export const useSequencerStateMachine = (store: PartialStore) => {
     previewPitchEdit: ref(undefined),
     guideLineTicks: ref(0),
   };
-  const stateMachine = new StateMachine<StateDefinitions, Input, Context>(
+  const stateMachine = new StateMachine<
+    SequencerStateDefinitions,
+    Input,
+    Context
+  >(
     {
       idle: () => new IdleState(),
       addNote: (args) => new AddNoteState(args),
