@@ -11,7 +11,10 @@ type ExtractById<T, U> = T extends { id: U } ? T : never;
 /**
  * ステートの定義を表す型。
  */
-type StateDefinition = { id: string; factoryFuncArgs: object | undefined };
+type StateDefinition = {
+  id: string;
+  factoryFuncArgs: Record<string, unknown> | undefined;
+};
 
 /**
  * ステートのIDを表す型。
