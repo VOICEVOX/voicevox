@@ -11,18 +11,24 @@ import {
   linearInterpolation,
   Rect,
 } from "@/sing/utility";
-import { IState, StateMachine } from "@/sing/stateMachine/stateMachineBase";
+import {
+  State,
+  SetNextState,
+  StateMachine,
+  StateDefinitions,
+} from "@/sing/stateMachine/stateMachineBase";
 import {
   getButton,
   getDoremiFromNoteNumber,
   isSelfEventTarget,
   PREVIEW_SOUND_DURATION,
 } from "@/sing/viewHelper";
-import { Note, SequencerEditTarget, Track } from "@/store/type";
+import { Note, SequencerEditTarget } from "@/store/type";
 import { NoteId, TrackId } from "@/type/preload";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import { getNoteDuration } from "@/sing/domain";
+import { Store } from "@/store";
 
 export type PositionOnSequencer = {
   readonly x: number;
@@ -80,57 +86,91 @@ type Refs = {
 };
 
 type PartialStore = {
-  state: {
-    tpqn: number;
-    sequencerSnapType: number;
-    sequencerEditTarget: SequencerEditTarget;
-    editorFrameRate: number;
-  };
-  getters: {
-    SELECTED_TRACK_ID: TrackId;
-    SELECTED_TRACK: Track;
-    SELECTED_NOTE_IDS: Set<NoteId>;
-  };
-  actions: {
-    SELECT_NOTES: (payload: { noteIds: NoteId[] }) => Promise<void>;
-    DESELECT_NOTES: (payload: { noteIds: NoteId[] }) => Promise<void>;
-    DESELECT_ALL_NOTES: () => Promise<void>;
-    PLAY_PREVIEW_SOUND: (payload: {
-      noteNumber: number;
-      duration?: number;
-    }) => Promise<void>;
-    COMMAND_ADD_NOTES: (payload: {
-      notes: Note[];
-      trackId: TrackId;
-    }) => Promise<void>;
-    COMMAND_UPDATE_NOTES: (payload: {
-      notes: Note[];
-      trackId: TrackId;
-    }) => Promise<void>;
-    COMMAND_SET_PITCH_EDIT_DATA: (payload: {
-      pitchArray: number[];
-      startFrame: number;
-      trackId: TrackId;
-    }) => Promise<void>;
-    COMMAND_ERASE_PITCH_EDIT_DATA: (payload: {
-      startFrame: number;
-      frameLength: number;
-      trackId: TrackId;
-    }) => Promise<void>;
-  };
+  state: Pick<
+    Store["state"],
+    "tpqn" | "sequencerSnapType" | "sequencerEditTarget" | "editorFrameRate"
+  >;
+  getters: Pick<
+    Store["getters"],
+    "SELECTED_TRACK_ID" | "SELECTED_TRACK" | "SELECTED_NOTE_IDS"
+  >;
+  actions: Pick<
+    Store["actions"],
+    | "SELECT_NOTES"
+    | "DESELECT_NOTES"
+    | "DESELECT_ALL_NOTES"
+    | "PLAY_PREVIEW_SOUND"
+    | "COMMAND_ADD_NOTES"
+    | "COMMAND_UPDATE_NOTES"
+    | "COMMAND_SET_PITCH_EDIT_DATA"
+    | "COMMAND_ERASE_PITCH_EDIT_DATA"
+  >;
 };
 
 type Context = ComputedRefs & Refs & { readonly store: PartialStore };
 
-type State =
-  | IdleState
-  | AddNoteState
-  | MoveNoteState
-  | ResizeNoteLeftState
-  | ResizeNoteRightState
-  | SelectNotesWithRectState
-  | DrawPitchState
-  | ErasePitchState;
+type SequencerStateDefinitions = StateDefinitions<
+  [
+    {
+      id: "idle";
+      factoryArgs: undefined;
+    },
+    {
+      id: "addNote";
+      factoryArgs: {
+        cursorPosAtStart: PositionOnSequencer;
+        targetTrackId: TrackId;
+      };
+    },
+    {
+      id: "moveNote";
+      factoryArgs: {
+        cursorPosAtStart: PositionOnSequencer;
+        targetTrackId: TrackId;
+        targetNoteIds: Set<NoteId>;
+        mouseDownNoteId: NoteId;
+      };
+    },
+    {
+      id: "resizeNoteLeft";
+      factoryArgs: {
+        cursorPosAtStart: PositionOnSequencer;
+        targetTrackId: TrackId;
+        targetNoteIds: Set<NoteId>;
+        mouseDownNoteId: NoteId;
+      };
+    },
+    {
+      id: "resizeNoteRight";
+      factoryArgs: {
+        cursorPosAtStart: PositionOnSequencer;
+        targetTrackId: TrackId;
+        targetNoteIds: Set<NoteId>;
+        mouseDownNoteId: NoteId;
+      };
+    },
+    {
+      id: "selectNotesWithRect";
+      factoryArgs: {
+        cursorPosAtStart: PositionOnSequencer;
+      };
+    },
+    {
+      id: "drawPitch";
+      factoryArgs: {
+        cursorPosAtStart: PositionOnSequencer;
+        targetTrackId: TrackId;
+      };
+    },
+    {
+      id: "erasePitch";
+      factoryArgs: {
+        cursorPosAtStart: PositionOnSequencer;
+        targetTrackId: TrackId;
+      };
+    },
+  ]
+>;
 
 const getGuideLineTicks = (
   cursorPos: PositionOnSequencer,
@@ -198,7 +238,7 @@ const executeNotesSelectionProcess = (
   }
 };
 
-class IdleState implements IState<State, Input, Context> {
+class IdleState implements State<SequencerStateDefinitions, Input, Context> {
   readonly id = "idle";
 
   onEnter() {}
@@ -210,7 +250,7 @@ class IdleState implements IState<State, Input, Context> {
   }: {
     input: Input;
     context: Context;
-    setNextState: (nextState: State) => void;
+    setNextState: SetNextState<SequencerStateDefinitions>;
   }) {
     const mouseButton = getButton(input.mouseEvent);
     const selectedTrackId = context.selectedTrackId.value;
@@ -229,45 +269,40 @@ class IdleState implements IState<State, Input, Context> {
       ) {
         if (input.targetArea === "SequencerBody") {
           if (input.mouseEvent.shiftKey) {
-            const selectNotesWithRectState = new SelectNotesWithRectState(
-              input.cursorPos,
-            );
-            setNextState(selectNotesWithRectState);
+            setNextState("selectNotesWithRect", {
+              cursorPosAtStart: input.cursorPos,
+            });
           } else {
             void context.store.actions.DESELECT_ALL_NOTES();
-            const addNoteState = new AddNoteState(
-              input.cursorPos,
-              selectedTrackId,
-            );
-            setNextState(addNoteState);
+            setNextState("addNote", {
+              cursorPosAtStart: input.cursorPos,
+              targetTrackId: selectedTrackId,
+            });
           }
         } else if (input.targetArea === "Note") {
           executeNotesSelectionProcess(context, input.mouseEvent, input.note);
-          const moveNoteState = new MoveNoteState(
-            input.cursorPos,
-            selectedTrackId,
-            context.selectedNoteIds.value,
-            input.note.id,
-          );
-          setNextState(moveNoteState);
+          setNextState("moveNote", {
+            cursorPosAtStart: input.cursorPos,
+            targetTrackId: selectedTrackId,
+            targetNoteIds: context.selectedNoteIds.value,
+            mouseDownNoteId: input.note.id,
+          });
         } else if (input.targetArea === "NoteLeftEdge") {
           executeNotesSelectionProcess(context, input.mouseEvent, input.note);
-          const moveNoteState = new ResizeNoteLeftState(
-            input.cursorPos,
-            selectedTrackId,
-            context.selectedNoteIds.value,
-            input.note.id,
-          );
-          setNextState(moveNoteState);
+          setNextState("resizeNoteLeft", {
+            cursorPosAtStart: input.cursorPos,
+            targetTrackId: selectedTrackId,
+            targetNoteIds: context.selectedNoteIds.value,
+            mouseDownNoteId: input.note.id,
+          });
         } else if (input.targetArea === "NoteRightEdge") {
           executeNotesSelectionProcess(context, input.mouseEvent, input.note);
-          const moveNoteState = new ResizeNoteRightState(
-            input.cursorPos,
-            selectedTrackId,
-            context.selectedNoteIds.value,
-            input.note.id,
-          );
-          setNextState(moveNoteState);
+          setNextState("resizeNoteRight", {
+            cursorPosAtStart: input.cursorPos,
+            targetTrackId: selectedTrackId,
+            targetNoteIds: context.selectedNoteIds.value,
+            mouseDownNoteId: input.note.id,
+          });
         }
       }
     } else if (context.editTarget.value === "PITCH") {
@@ -279,17 +314,15 @@ class IdleState implements IState<State, Input, Context> {
         // TODO: Ctrlが押されているときではなく、
         //       ピッチ削除ツールのときにErasePitchStateに遷移するようにする
         if (isOnCommandOrCtrlKeyDown(input.mouseEvent)) {
-          const erasePitchState = new ErasePitchState(
-            input.cursorPos,
-            selectedTrackId,
-          );
-          setNextState(erasePitchState);
+          setNextState("erasePitch", {
+            cursorPosAtStart: input.cursorPos,
+            targetTrackId: selectedTrackId,
+          });
         } else {
-          const drawPitchState = new DrawPitchState(
-            input.cursorPos,
-            selectedTrackId,
-          );
-          setNextState(drawPitchState);
+          setNextState("drawPitch", {
+            cursorPosAtStart: input.cursorPos,
+            targetTrackId: selectedTrackId,
+          });
         }
       }
     }
@@ -298,7 +331,7 @@ class IdleState implements IState<State, Input, Context> {
   onExit() {}
 }
 
-class AddNoteState implements IState<State, Input, Context> {
+class AddNoteState implements State<SequencerStateDefinitions, Input, Context> {
   readonly id = "addNote";
 
   private readonly cursorPosAtStart: PositionOnSequencer;
@@ -313,11 +346,14 @@ class AddNoteState implements IState<State, Input, Context> {
       }
     | undefined;
 
-  constructor(cursorPosAtStart: PositionOnSequencer, targetTrackId: TrackId) {
-    this.cursorPosAtStart = cursorPosAtStart;
-    this.targetTrackId = targetTrackId;
+  constructor(args: {
+    cursorPosAtStart: PositionOnSequencer;
+    targetTrackId: TrackId;
+  }) {
+    this.cursorPosAtStart = args.cursorPosAtStart;
+    this.targetTrackId = args.targetTrackId;
 
-    this.currentCursorPos = cursorPosAtStart;
+    this.currentCursorPos = args.cursorPosAtStart;
   }
 
   private previewAdd(context: Context) {
@@ -385,7 +421,7 @@ class AddNoteState implements IState<State, Input, Context> {
   }: {
     input: Input;
     context: Context;
-    setNextState: (nextState: State) => void;
+    setNextState: SetNextState<SequencerStateDefinitions>;
   }) {
     if (this.innerContext == undefined) {
       throw new Error("innerContext is undefined.");
@@ -397,7 +433,7 @@ class AddNoteState implements IState<State, Input, Context> {
         this.innerContext.executePreviewProcess = true;
       } else if (input.mouseEvent.type === "mouseup") {
         if (mouseButton === "LEFT_BUTTON") {
-          setNextState(new IdleState());
+          setNextState("idle", undefined);
         }
       }
     }
@@ -429,7 +465,9 @@ class AddNoteState implements IState<State, Input, Context> {
   }
 }
 
-class MoveNoteState implements IState<State, Input, Context> {
+class MoveNoteState
+  implements State<SequencerStateDefinitions, Input, Context>
+{
   readonly id = "moveNote";
 
   private readonly cursorPosAtStart: PositionOnSequencer;
@@ -449,21 +487,21 @@ class MoveNoteState implements IState<State, Input, Context> {
       }
     | undefined;
 
-  constructor(
-    cursorPosAtStart: PositionOnSequencer,
-    targetTrackId: TrackId,
-    targetNoteIds: Set<NoteId>,
-    mouseDownNoteId: NoteId,
-  ) {
-    if (!targetNoteIds.has(mouseDownNoteId)) {
+  constructor(args: {
+    cursorPosAtStart: PositionOnSequencer;
+    targetTrackId: TrackId;
+    targetNoteIds: Set<NoteId>;
+    mouseDownNoteId: NoteId;
+  }) {
+    if (!args.targetNoteIds.has(args.mouseDownNoteId)) {
       throw new Error("mouseDownNoteId is not included in targetNoteIds.");
     }
-    this.cursorPosAtStart = cursorPosAtStart;
-    this.targetTrackId = targetTrackId;
-    this.targetNoteIds = targetNoteIds;
-    this.mouseDownNoteId = mouseDownNoteId;
+    this.cursorPosAtStart = args.cursorPosAtStart;
+    this.targetTrackId = args.targetTrackId;
+    this.targetNoteIds = args.targetNoteIds;
+    this.mouseDownNoteId = args.mouseDownNoteId;
 
-    this.currentCursorPos = cursorPosAtStart;
+    this.currentCursorPos = args.cursorPosAtStart;
   }
 
   private previewMove(context: Context) {
@@ -549,7 +587,7 @@ class MoveNoteState implements IState<State, Input, Context> {
   }: {
     input: Input;
     context: Context;
-    setNextState: (nextState: State) => void;
+    setNextState: SetNextState<SequencerStateDefinitions>;
   }) {
     if (this.innerContext == undefined) {
       throw new Error("innerContext is undefined.");
@@ -561,7 +599,7 @@ class MoveNoteState implements IState<State, Input, Context> {
         this.innerContext.executePreviewProcess = true;
       } else if (input.mouseEvent.type === "mouseup") {
         if (mouseButton === "LEFT_BUTTON") {
-          setNextState(new IdleState());
+          setNextState("idle", undefined);
         }
       }
     }
@@ -595,7 +633,9 @@ class MoveNoteState implements IState<State, Input, Context> {
   }
 }
 
-class ResizeNoteLeftState implements IState<State, Input, Context> {
+class ResizeNoteLeftState
+  implements State<SequencerStateDefinitions, Input, Context>
+{
   readonly id = "resizeNoteLeft";
 
   private readonly cursorPosAtStart: PositionOnSequencer;
@@ -615,21 +655,21 @@ class ResizeNoteLeftState implements IState<State, Input, Context> {
       }
     | undefined;
 
-  constructor(
-    cursorPosAtStart: PositionOnSequencer,
-    targetTrackId: TrackId,
-    targetNoteIds: Set<NoteId>,
-    mouseDownNoteId: NoteId,
-  ) {
-    if (!targetNoteIds.has(mouseDownNoteId)) {
+  constructor(args: {
+    cursorPosAtStart: PositionOnSequencer;
+    targetTrackId: TrackId;
+    targetNoteIds: Set<NoteId>;
+    mouseDownNoteId: NoteId;
+  }) {
+    if (!args.targetNoteIds.has(args.mouseDownNoteId)) {
       throw new Error("mouseDownNoteId is not included in targetNoteIds.");
     }
-    this.cursorPosAtStart = cursorPosAtStart;
-    this.targetTrackId = targetTrackId;
-    this.targetNoteIds = targetNoteIds;
-    this.mouseDownNoteId = mouseDownNoteId;
+    this.cursorPosAtStart = args.cursorPosAtStart;
+    this.targetTrackId = args.targetTrackId;
+    this.targetNoteIds = args.targetNoteIds;
+    this.mouseDownNoteId = args.mouseDownNoteId;
 
-    this.currentCursorPos = cursorPosAtStart;
+    this.currentCursorPos = args.cursorPosAtStart;
   }
 
   private previewResizeLeft(context: Context) {
@@ -710,7 +750,7 @@ class ResizeNoteLeftState implements IState<State, Input, Context> {
   }: {
     input: Input;
     context: Context;
-    setNextState: (nextState: State) => void;
+    setNextState: SetNextState<SequencerStateDefinitions>;
   }) {
     if (this.innerContext == undefined) {
       throw new Error("innerContext is undefined.");
@@ -724,7 +764,7 @@ class ResizeNoteLeftState implements IState<State, Input, Context> {
         input.mouseEvent.type === "mouseup" &&
         mouseButton === "LEFT_BUTTON"
       ) {
-        setNextState(new IdleState());
+        setNextState("idle", undefined);
       }
     }
   }
@@ -755,7 +795,9 @@ class ResizeNoteLeftState implements IState<State, Input, Context> {
   }
 }
 
-class ResizeNoteRightState implements IState<State, Input, Context> {
+class ResizeNoteRightState
+  implements State<SequencerStateDefinitions, Input, Context>
+{
   readonly id = "resizeNoteRight";
 
   private readonly cursorPosAtStart: PositionOnSequencer;
@@ -775,21 +817,21 @@ class ResizeNoteRightState implements IState<State, Input, Context> {
       }
     | undefined;
 
-  constructor(
-    cursorPosAtStart: PositionOnSequencer,
-    targetTrackId: TrackId,
-    targetNoteIds: Set<NoteId>,
-    mouseDownNoteId: NoteId,
-  ) {
-    if (!targetNoteIds.has(mouseDownNoteId)) {
+  constructor(args: {
+    cursorPosAtStart: PositionOnSequencer;
+    targetTrackId: TrackId;
+    targetNoteIds: Set<NoteId>;
+    mouseDownNoteId: NoteId;
+  }) {
+    if (!args.targetNoteIds.has(args.mouseDownNoteId)) {
       throw new Error("mouseDownNoteId is not included in targetNoteIds.");
     }
-    this.cursorPosAtStart = cursorPosAtStart;
-    this.targetTrackId = targetTrackId;
-    this.targetNoteIds = targetNoteIds;
-    this.mouseDownNoteId = mouseDownNoteId;
+    this.cursorPosAtStart = args.cursorPosAtStart;
+    this.targetTrackId = args.targetTrackId;
+    this.targetNoteIds = args.targetNoteIds;
+    this.mouseDownNoteId = args.mouseDownNoteId;
 
-    this.currentCursorPos = cursorPosAtStart;
+    this.currentCursorPos = args.cursorPosAtStart;
   }
 
   private previewResizeRight(context: Context) {
@@ -869,7 +911,7 @@ class ResizeNoteRightState implements IState<State, Input, Context> {
   }: {
     input: Input;
     context: Context;
-    setNextState: (nextState: State) => void;
+    setNextState: SetNextState<SequencerStateDefinitions>;
   }) {
     if (this.innerContext == undefined) {
       throw new Error("innerContext is undefined.");
@@ -883,7 +925,7 @@ class ResizeNoteRightState implements IState<State, Input, Context> {
         input.mouseEvent.type === "mouseup" &&
         mouseButton === "LEFT_BUTTON"
       ) {
-        setNextState(new IdleState());
+        setNextState("idle", undefined);
       }
     }
   }
@@ -916,7 +958,9 @@ class ResizeNoteRightState implements IState<State, Input, Context> {
   }
 }
 
-class SelectNotesWithRectState implements IState<State, Input, Context> {
+class SelectNotesWithRectState
+  implements State<SequencerStateDefinitions, Input, Context>
+{
   readonly id = "selectNotesWithRect";
 
   private readonly cursorPosAtStart: PositionOnSequencer;
@@ -924,10 +968,10 @@ class SelectNotesWithRectState implements IState<State, Input, Context> {
   private currentCursorPos: PositionOnSequencer;
   private additive: boolean;
 
-  constructor(cursorPosAtStart: PositionOnSequencer) {
-    this.cursorPosAtStart = cursorPosAtStart;
+  constructor(args: { cursorPosAtStart: PositionOnSequencer }) {
+    this.cursorPosAtStart = args.cursorPosAtStart;
 
-    this.currentCursorPos = cursorPosAtStart;
+    this.currentCursorPos = args.cursorPosAtStart;
     this.additive = false;
   }
 
@@ -956,7 +1000,7 @@ class SelectNotesWithRectState implements IState<State, Input, Context> {
   }: {
     input: Input;
     context: Context;
-    setNextState: (nextState: State) => void;
+    setNextState: SetNextState<SequencerStateDefinitions>;
   }) {
     const mouseButton = getButton(input.mouseEvent);
     if (input.targetArea === "SequencerBody") {
@@ -968,7 +1012,7 @@ class SelectNotesWithRectState implements IState<State, Input, Context> {
         mouseButton === "LEFT_BUTTON"
       ) {
         this.additive = isOnCommandOrCtrlKeyDown(input.mouseEvent);
-        setNextState(new IdleState());
+        setNextState("idle", undefined);
       }
     }
   }
@@ -1011,7 +1055,9 @@ class SelectNotesWithRectState implements IState<State, Input, Context> {
   }
 }
 
-class DrawPitchState implements IState<State, Input, Context> {
+class DrawPitchState
+  implements State<SequencerStateDefinitions, Input, Context>
+{
   readonly id = "drawPitch";
 
   private readonly cursorPosAtStart: PositionOnSequencer;
@@ -1027,11 +1073,14 @@ class DrawPitchState implements IState<State, Input, Context> {
       }
     | undefined;
 
-  constructor(cursorPosAtStart: PositionOnSequencer, targetTrackId: TrackId) {
-    this.cursorPosAtStart = cursorPosAtStart;
-    this.targetTrackId = targetTrackId;
+  constructor(args: {
+    cursorPosAtStart: PositionOnSequencer;
+    targetTrackId: TrackId;
+  }) {
+    this.cursorPosAtStart = args.cursorPosAtStart;
+    this.targetTrackId = args.targetTrackId;
 
-    this.currentCursorPos = cursorPosAtStart;
+    this.currentCursorPos = args.cursorPosAtStart;
   }
 
   private previewDrawPitch(context: Context) {
@@ -1139,7 +1188,7 @@ class DrawPitchState implements IState<State, Input, Context> {
   }: {
     input: Input;
     context: Context;
-    setNextState: (nextState: State) => void;
+    setNextState: SetNextState<SequencerStateDefinitions>;
   }) {
     if (this.innerContext == undefined) {
       throw new Error("innerContext is undefined.");
@@ -1151,7 +1200,7 @@ class DrawPitchState implements IState<State, Input, Context> {
         this.innerContext.executePreviewProcess = true;
       } else if (input.mouseEvent.type === "mouseup") {
         if (mouseButton === "LEFT_BUTTON") {
-          setNextState(new IdleState());
+          setNextState("idle", undefined);
         }
       }
     }
@@ -1191,7 +1240,9 @@ class DrawPitchState implements IState<State, Input, Context> {
   }
 }
 
-class ErasePitchState implements IState<State, Input, Context> {
+class ErasePitchState
+  implements State<SequencerStateDefinitions, Input, Context>
+{
   readonly id = "erasePitch";
 
   private readonly cursorPosAtStart: PositionOnSequencer;
@@ -1206,11 +1257,14 @@ class ErasePitchState implements IState<State, Input, Context> {
       }
     | undefined;
 
-  constructor(cursorPosAtStart: PositionOnSequencer, targetTrackId: TrackId) {
-    this.cursorPosAtStart = cursorPosAtStart;
-    this.targetTrackId = targetTrackId;
+  constructor(args: {
+    cursorPosAtStart: PositionOnSequencer;
+    targetTrackId: TrackId;
+  }) {
+    this.cursorPosAtStart = args.cursorPosAtStart;
+    this.targetTrackId = args.targetTrackId;
 
-    this.currentCursorPos = cursorPosAtStart;
+    this.currentCursorPos = args.cursorPosAtStart;
   }
 
   private previewErasePitch(context: Context) {
@@ -1272,7 +1326,7 @@ class ErasePitchState implements IState<State, Input, Context> {
   }: {
     input: Input;
     context: Context;
-    setNextState: (nextState: State) => void;
+    setNextState: SetNextState<SequencerStateDefinitions>;
   }) {
     if (this.innerContext == undefined) {
       throw new Error("innerContext is undefined.");
@@ -1284,7 +1338,7 @@ class ErasePitchState implements IState<State, Input, Context> {
         this.innerContext.executePreviewProcess = true;
       } else if (input.mouseEvent.type === "mouseup") {
         if (mouseButton === "LEFT_BUTTON") {
-          setNextState(new IdleState());
+          setNextState("idle", undefined);
         }
       }
     }
@@ -1332,7 +1386,21 @@ export const useSequencerStateMachine = (store: PartialStore) => {
     previewPitchEdit: ref(undefined),
     guideLineTicks: ref(0),
   };
-  const stateMachine = new StateMachine<State, Input, Context>(
+  const stateMachine = new StateMachine<
+    SequencerStateDefinitions,
+    Input,
+    Context
+  >(
+    {
+      idle: () => new IdleState(),
+      addNote: (args) => new AddNoteState(args),
+      moveNote: (args) => new MoveNoteState(args),
+      resizeNoteLeft: (args) => new ResizeNoteLeftState(args),
+      resizeNoteRight: (args) => new ResizeNoteRightState(args),
+      selectNotesWithRect: (args) => new SelectNotesWithRectState(args),
+      drawPitch: (args) => new DrawPitchState(args),
+      erasePitch: (args) => new ErasePitchState(args),
+    },
     new IdleState(),
     {
       ...computedRefs,
