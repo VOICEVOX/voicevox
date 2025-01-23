@@ -82,8 +82,8 @@
           @scroll="onScroll"
           @contextmenu.prevent
         >
-          <!-- 実際のグリッド全体と同じ大きさを持つダミーのグリッド -->
-          <SequencerDummyGrid />
+          <!-- 実際のグリッド全体と同じ大きさを持つ要素 -->
+          <SequencerGridSpacer />
           <!-- undefinedだと警告が出るのでnullを渡す -->
           <!-- TODO: ちゃんとしたトラックIDを渡す -->
           <SequencerShadowNote
@@ -244,7 +244,7 @@ import {
   provide,
 } from "vue";
 import SequencerParameterPanel from "./SequencerParameterPanel.vue";
-import SequencerDummyGrid from "./SequencerDummyGrid.vue";
+import SequencerGridSpacer from "./SequencerGridSpacer.vue";
 import ContextMenu, {
   ContextMenuItemData,
 } from "@/components/Menu/ContextMenu/Container.vue";

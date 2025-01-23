@@ -1,5 +1,5 @@
 <template>
-  <div class="sequencer-dummy-grid"></div>
+  <div class="sequencer-grid-spacer"></div>
 </template>
 
 <script setup lang="ts">
@@ -18,7 +18,7 @@ const { gridWidth, gridHeight } = injectedValue;
 @use "@/styles/variables" as vars;
 @use "@/styles/colors" as colors;
 
-.sequencer-dummy-grid {
+.sequencer-grid-spacer {
   display: block;
   width: v-bind("`${gridWidth}px`");
   height: v-bind("`${gridHeight}px`");
