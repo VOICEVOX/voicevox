@@ -36,4 +36,10 @@ describe("writeFileSafely", () => {
     const filePath = path.join(nonExistentDir, "test.txt");
     expect(() => writeFileSafely(filePath, "data")).toThrow();
   });
+
+  test("指定したパスにディレクトリが存在するとエラー", async () => {
+    const filePath = path.join(tmpDir, uuid4());
+    fs.mkdirSync(filePath);
+    expect(() => writeFileSafely(filePath, "data")).toThrow();
+  });
 });
