@@ -14,6 +14,7 @@ export async function mockShowExportFileDialog(page: Page): Promise<{
     };
   };
 
+  // モックを差し込む
   await page.evaluate(() => {
     const _window = window as unknown as _Window;
     _window._mockShowExportFileDialog = {
@@ -45,6 +46,7 @@ export async function mockWriteFile(page: Page): Promise<{
     _mockWriteFile: Record<string | TestFileId, Uint8Array>;
   };
 
+  // モックを差し込む
   await page.evaluate(
     ({ sucecssResult }) => {
       const _window = window as unknown as _Window;
