@@ -5,12 +5,12 @@ import { success } from "@/type/result";
 type TestFileId = Brand<string, "TestFileId">;
 
 /** ファイル書き出し選択ダイアログをモックにする */
-// TODO: 元に戻せるようにしておく
-export async function mockShowExportFileDialog(
-  page: Page,
-): Promise<{ getFileIds: () => Promise<TestFileId[]> }> {
+export async function mockShowExportFileDialog(page: Page): Promise<{
+  getFileIds: () => Promise<TestFileId[]>;
+}> {
   type _Window = Window & {
     _mockShowExportFileDialog: {
+      original: typeof window.backend.showExportFileDialog;
       returnValues: TestFileId[];
     };
   };
@@ -18,6 +18,9 @@ export async function mockShowExportFileDialog(
   await page.evaluate(() => {
     const _window = window as unknown as _Window;
     _window._mockShowExportFileDialog = {
+      // TODO: 関数化する
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      original: window.backend.showExportFileDialog,
       returnValues: [],
     };
 

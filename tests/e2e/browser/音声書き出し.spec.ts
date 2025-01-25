@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { gotoHome, navigateToMain } from "../navigators";
 import { getQuasarMenu } from "../locators";
-import { mockShowExportFileDialog, mockWriteFile } from "./helper";
+import { mockShowExportFileDialog, mockWriteFile } from "./utility";
 
 test.beforeEach(gotoHome);
 
