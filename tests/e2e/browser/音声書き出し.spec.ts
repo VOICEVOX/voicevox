@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { gotoHome, navigateToMain } from "../navigators";
 import { getQuasarMenu } from "../locators";
-import { spyWriteFile } from "./helper";
+import { mockShowExportFileDialog, mockWriteFile } from "./helper";
 
 test.beforeEach(gotoHome);
 
@@ -20,12 +20,15 @@ test.describe("音声書き出し", () => {
   });
 
   test("デフォルト", async ({ page }, { title }) => {
-    const { buffer } = await spyWriteFile(page, { num: 1 });
+    const { getFileIds } = await mockShowExportFileDialog(page);
+    const { getWritedFileBuffers } = await mockWriteFile(page);
 
     await page.getByRole("button", { name: "ファイル" }).click();
     await getQuasarMenu(page, "選択音声を書き出し").click();
     await expect(page.getByText("音声を書き出しました")).toBeVisible();
 
-    expect(await buffer(0)).toMatchSnapshot(`${title}.wav`);
+    const fileId = (await getFileIds())[0];
+    const buffer = (await getWritedFileBuffers())[fileId];
+    expect(buffer).toMatchSnapshot(`${title}.wav`);
   });
 });

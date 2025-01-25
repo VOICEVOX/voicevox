@@ -4,52 +4,75 @@ import { success } from "@/type/result";
 
 type TestFileId = Brand<string, "TestFileId">;
 
-type TestStorageWindow = Window & {
-  _testStorage: Record<TestFileId, Uint8Array>;
-};
-
-/** ファイル書き出しのスパイを設定する */
-// TODO: showExportFileDialogを呼ばない場合のことを考える
+/** ファイル書き出し選択ダイアログをモックにする */
 // TODO: 元に戻せるようにしておく
-export async function spyWriteFile(
+export async function mockShowExportFileDialog(
   page: Page,
-  payload: { num: number },
-): Promise<{ buffer: (index: number) => Promise<Buffer> }> {
-  const id = `${Date.now()}`;
-  const ids = Array.from(
-    { length: payload.num },
-    (_, i) => `${id}-${i}` as TestFileId,
-  );
+): Promise<{ getFileIds: () => Promise<TestFileId[]> }> {
+  type _Window = Window & {
+    _mockShowExportFileDialog: {
+      returnValues: TestFileId[];
+    };
+  };
+
+  await page.evaluate(() => {
+    const _window = window as unknown as _Window;
+    _window._mockShowExportFileDialog = {
+      returnValues: [],
+    };
+
+    _window.backend.showExportFileDialog = async () => {
+      const id = `${Date.now()}` as TestFileId;
+      _window._mockShowExportFileDialog.returnValues.push(id);
+      return id;
+    };
+  });
+
+  return {
+    getFileIds: async () => {
+      return page.evaluate(() => {
+        const _window = window as unknown as _Window;
+        return _window._mockShowExportFileDialog.returnValues;
+      });
+    },
+  };
+}
+
+/** ファイル書き出しをモックにする */
+export async function mockWriteFile(page: Page): Promise<{
+  getWritedFileBuffers: () => Promise<Record<string | TestFileId, Buffer>>;
+}> {
+  type _Window = Window & {
+    _mockWriteFile: Record<string | TestFileId, Uint8Array>;
+  };
 
   await page.evaluate(
-    ({ sucecssResult, ids }) => {
-      const testStorageWindow = window as unknown as TestStorageWindow;
-      testStorageWindow._testStorage = testStorageWindow._testStorage || {};
+    ({ sucecssResult }) => {
+      const _window = window as unknown as _Window;
+      _window._mockWriteFile = {};
 
-      let count = 0;
-      testStorageWindow.backend.showExportFileDialog = async ({ title }) => {
-        if (count >= ids.length)
-          throw new Error(
-            `Unexpected call: ${title}. Call count: ${count}, expected: ${ids.length}`,
-          );
-        return ids[count++];
-      };
-      testStorageWindow.backend.writeFile = async ({ filePath, buffer }) => {
-        const array = new Uint8Array(buffer);
-        testStorageWindow._testStorage[filePath as TestFileId] = array;
+      _window.backend.writeFile = async ({ filePath, buffer }) => {
+        _window._mockWriteFile[filePath] = new Uint8Array(buffer);
         return sucecssResult;
       };
     },
-    { sucecssResult: success(undefined), ids },
+    { sucecssResult: success(undefined) },
   );
 
-  const buffer = async (index: number) => {
-    const array = await page.evaluate((id) => {
-      const testStorageWindow = window as unknown as TestStorageWindow;
-      return Array.from(testStorageWindow._testStorage[id]);
-    }, ids[index]);
-    return Buffer.from(array);
+  return {
+    getWritedFileBuffers: async () => {
+      const arrays = await page.evaluate(() => {
+        const _window = window as unknown as _Window;
+        return Object.fromEntries(
+          Object.entries(_window._mockWriteFile).map(([key, value]) => [
+            key,
+            Array.from(value),
+          ]),
+        );
+      });
+      return Object.fromEntries(
+        Object.entries(arrays).map(([key, value]) => [key, Buffer.from(value)]),
+      );
+    },
   };
-
-  return { buffer };
 }
