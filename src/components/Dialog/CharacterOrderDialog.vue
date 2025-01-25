@@ -53,7 +53,8 @@
       <QPageContainer>
         <QPage>
           <div class="container">
-            <BaseScrollArea>
+            <!-- スクロールバー再計算のため、keyにstyleTypeを設定 -->
+            <BaseScrollArea :key="styleType">
               <div class="inner">
                 <div class="header">
                   <span class="title">キャラクター一覧</span>
