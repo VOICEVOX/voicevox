@@ -9,13 +9,15 @@ import {
   OpenDialogSyncOptions,
   SaveDialogOptions,
 } from "electron";
-import log from "electron-log/main";
 import windowStateKeeper from "electron-window-state";
 import { getConfigManager } from "../electronConfig";
 import { getEngineAndVvppController } from "../engineAndVvppController";
 import { ipcMainSendProxy } from "../ipc";
 import { isMac } from "@/helpers/platform";
 import { themes } from "@/domain/theme";
+import { createLogger } from "@/helpers/log";
+
+const log = createLogger("WindowManager");
 
 type WindowManagerOption = {
   appStateGetter: () => { willQuit: boolean };
