@@ -6,18 +6,18 @@ import {
   PartialStore,
   Refs,
   SequencerStateDefinitions,
-} from "@/components/Sing/sequencerStateMachine/common";
+} from "@/composables/sequencerStateMachine/common";
 import { getNoteDuration } from "@/sing/domain";
 import { StateMachine } from "@/sing/stateMachine";
 
-import { IdleState } from "@/components/Sing/sequencerStateMachine/states/idleState";
-import { AddNoteState } from "@/components/Sing/sequencerStateMachine/states/addNoteState";
-import { MoveNoteState } from "@/components/Sing/sequencerStateMachine/states/moveNoteState";
-import { ResizeNoteLeftState } from "@/components/Sing/sequencerStateMachine/states/resizeNoteLeftState";
-import { ResizeNoteRightState } from "@/components/Sing/sequencerStateMachine/states/resizeNoteRightState";
-import { SelectNotesWithRectState } from "@/components/Sing/sequencerStateMachine/states/selectNotesWithRectState";
-import { DrawPitchState } from "@/components/Sing/sequencerStateMachine/states/drawPitchState";
-import { ErasePitchState } from "@/components/Sing/sequencerStateMachine/states/erasePitchState";
+import { IdleState } from "@/composables/sequencerStateMachine/states/idleState";
+import { AddNoteState } from "@/composables/sequencerStateMachine/states/addNoteState";
+import { MoveNoteState } from "@/composables/sequencerStateMachine/states/moveNoteState";
+import { ResizeNoteLeftState } from "@/composables/sequencerStateMachine/states/resizeNoteLeftState";
+import { ResizeNoteRightState } from "@/composables/sequencerStateMachine/states/resizeNoteRightState";
+import { SelectNotesWithRectState } from "@/composables/sequencerStateMachine/states/selectNotesWithRectState";
+import { DrawPitchState } from "@/composables/sequencerStateMachine/states/drawPitchState";
+import { ErasePitchState } from "@/composables/sequencerStateMachine/states/erasePitchState";
 
 export const useSequencerStateMachine = (store: PartialStore) => {
   const computedRefs: ComputedRefs = {

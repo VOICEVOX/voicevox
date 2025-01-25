@@ -7,7 +7,7 @@ import {
   Input,
   PositionOnSequencer,
   SequencerStateDefinitions,
-} from "@/components/Sing/sequencerStateMachine/common";
+} from "@/composables/sequencerStateMachine/common";
 import { Note } from "@/store/type";
 import { getOrThrow } from "@/helpers/mapHelper";
 

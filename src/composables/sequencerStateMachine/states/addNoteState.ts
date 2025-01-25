@@ -1,109 +1,84 @@
-import { getOrThrow } from "@/helpers/mapHelper";
-import { State, SetNextState } from "@/sing/stateMachine";
-import { clamp } from "@/sing/utility";
-import { getButton, PREVIEW_SOUND_DURATION } from "@/sing/viewHelper";
-import { Note } from "@/store/type";
-import { TrackId, NoteId } from "@/type/preload";
+import { SetNextState, State } from "@/sing/stateMachine";
 import {
   Context,
   getGuideLineTicks,
   Input,
   PositionOnSequencer,
   SequencerStateDefinitions,
-} from "@/components/Sing/sequencerStateMachine/common";
+} from "@/composables/sequencerStateMachine/common";
+import { NoteId, TrackId } from "@/type/preload";
+import { Note } from "@/store/type";
+import {
+  getButton,
+  getDoremiFromNoteNumber,
+  PREVIEW_SOUND_DURATION,
+} from "@/sing/viewHelper";
+import { clamp } from "@/sing/utility";
 
-export class MoveNoteState
+export class AddNoteState
   implements State<SequencerStateDefinitions, Input, Context>
 {
-  readonly id = "moveNote";
+  readonly id = "addNote";
 
   private readonly cursorPosAtStart: PositionOnSequencer;
   private readonly targetTrackId: TrackId;
-  private readonly targetNoteIds: Set<NoteId>;
-  private readonly mouseDownNoteId: NoteId;
 
   private currentCursorPos: PositionOnSequencer;
-
   private innerContext:
     | {
-        targetNotesAtStart: Map<NoteId, Note>;
+        noteToAdd: Note;
         previewRequestId: number;
         executePreviewProcess: boolean;
-        edited: boolean;
-        guideLineTicksAtStart: number;
       }
     | undefined;
 
   constructor(args: {
     cursorPosAtStart: PositionOnSequencer;
     targetTrackId: TrackId;
-    targetNoteIds: Set<NoteId>;
-    mouseDownNoteId: NoteId;
   }) {
-    if (!args.targetNoteIds.has(args.mouseDownNoteId)) {
-      throw new Error("mouseDownNoteId is not included in targetNoteIds.");
-    }
     this.cursorPosAtStart = args.cursorPosAtStart;
     this.targetTrackId = args.targetTrackId;
-    this.targetNoteIds = args.targetNoteIds;
-    this.mouseDownNoteId = args.mouseDownNoteId;
 
     this.currentCursorPos = args.cursorPosAtStart;
   }
 
-  private previewMove(context: Context) {
+  private previewAdd(context: Context) {
     if (this.innerContext == undefined) {
       throw new Error("innerContext is undefined.");
     }
+    const noteToAdd = this.innerContext.noteToAdd;
     const snapTicks = context.snapTicks.value;
-    const previewNotes = context.previewNotes.value;
-    const targetNotesAtStart = this.innerContext.targetNotesAtStart;
-    const mouseDownNote = getOrThrow(targetNotesAtStart, this.mouseDownNoteId);
     const dragTicks = this.currentCursorPos.ticks - this.cursorPosAtStart.ticks;
-    const notePos = mouseDownNote.position;
-    const newNotePos =
-      Math.round((notePos + dragTicks) / snapTicks) * snapTicks;
-    const movingTicks = newNotePos - notePos;
-    const movingSemitones =
-      this.currentCursorPos.noteNumber - this.cursorPosAtStart.noteNumber;
+    const noteDuration = Math.round(dragTicks / snapTicks) * snapTicks;
+    const noteEndPos = noteToAdd.position + noteDuration;
+    const previewNotes = context.previewNotes.value;
 
     const editedNotes = new Map<NoteId, Note>();
     for (const note of previewNotes) {
-      const targetNoteAtStart = getOrThrow(targetNotesAtStart, note.id);
-      const position = Math.max(0, targetNoteAtStart.position + movingTicks);
-      const noteNumber = clamp(
-        targetNoteAtStart.noteNumber + movingSemitones,
-        0,
-        127,
-      );
-
-      if (note.position !== position || note.noteNumber !== noteNumber) {
-        editedNotes.set(note.id, { ...note, noteNumber, position });
+      const duration = Math.max(snapTicks, noteDuration);
+      if (note.duration !== duration) {
+        editedNotes.set(note.id, { ...note, duration });
       }
     }
-
     if (editedNotes.size !== 0) {
       context.previewNotes.value = previewNotes.map((value) => {
         return editedNotes.get(value.id) ?? value;
       });
-      this.innerContext.edited = true;
     }
-
-    context.guideLineTicks.value =
-      this.innerContext.guideLineTicksAtStart + movingTicks;
+    context.guideLineTicks.value = noteEndPos;
   }
 
   onEnter(context: Context) {
     const guideLineTicks = getGuideLineTicks(this.cursorPosAtStart, context);
-    const targetNotesArray = context.notesInSelectedTrack.value.filter(
-      (value) => this.targetNoteIds.has(value.id),
-    );
-    const targetNotesMap = new Map<NoteId, Note>();
-    for (const targetNote of targetNotesArray) {
-      targetNotesMap.set(targetNote.id, targetNote);
-    }
+    const noteToAdd = {
+      id: NoteId(crypto.randomUUID()),
+      position: Math.max(0, guideLineTicks),
+      duration: context.snapTicks.value,
+      noteNumber: clamp(this.cursorPosAtStart.noteNumber, 0, 127),
+      lyric: getDoremiFromNoteNumber(this.cursorPosAtStart.noteNumber),
+    };
 
-    context.previewNotes.value = [...targetNotesArray];
+    context.previewNotes.value = [noteToAdd];
     context.nowPreviewing.value = true;
 
     const previewIfNeeded = () => {
@@ -111,7 +86,7 @@ export class MoveNoteState
         throw new Error("innerContext is undefined.");
       }
       if (this.innerContext.executePreviewProcess) {
-        this.previewMove(context);
+        this.previewAdd(context);
         this.innerContext.executePreviewProcess = false;
       }
       this.innerContext.previewRequestId =
@@ -120,11 +95,9 @@ export class MoveNoteState
     const previewRequestId = requestAnimationFrame(previewIfNeeded);
 
     this.innerContext = {
-      targetNotesAtStart: targetNotesMap,
+      noteToAdd,
       executePreviewProcess: false,
       previewRequestId,
-      edited: false,
-      guideLineTicksAtStart: guideLineTicks,
     };
   }
 
@@ -161,13 +134,11 @@ export class MoveNoteState
 
     cancelAnimationFrame(this.innerContext.previewRequestId);
 
-    void context.store.actions.COMMAND_UPDATE_NOTES({
-      notes: previewNotes,
+    void context.store.actions.COMMAND_ADD_NOTES({
+      notes: context.previewNotes.value,
       trackId: this.targetTrackId,
     });
-    void context.store.actions.SELECT_NOTES({
-      noteIds: previewNoteIds,
-    });
+    void context.store.actions.SELECT_NOTES({ noteIds: previewNoteIds });
 
     if (previewNotes.length === 1) {
       void context.store.actions.PLAY_PREVIEW_SOUND({
