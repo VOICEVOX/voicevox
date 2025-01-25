@@ -2008,7 +2008,6 @@ export type UiStoreState = {
 export type DialogStates = {
   isSettingDialogOpen: boolean;
   isCharacterOrderDialogOpen: boolean;
-  isDefaultStyleSelectDialogOpen: boolean;
   isHotkeySettingDialogOpen: boolean;
   isToolbarSettingDialogOpen: boolean;
   isAcceptRetrieveTelemetryDialogOpen: boolean;
