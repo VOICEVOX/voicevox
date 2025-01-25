@@ -84,7 +84,7 @@ import BaseNavigationView from "@/components/Base/BaseNavigationView.vue";
 import { UpdateInfo as UpdateInfoObject, UrlString } from "@/type/preload";
 import { useStore } from "@/store";
 import { useFetchNewUpdateInfos } from "@/composables/useFetchNewUpdateInfos";
-import { createLogger } from "@/domain/frontend/log";
+import { createLogger } from "@/helpers/log";
 
 type PageItem = {
   type: "item";
