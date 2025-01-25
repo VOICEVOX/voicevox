@@ -1,105 +1,58 @@
 <template>
-  <QItem
-    v-ripple="isHoverableItem"
-    clickable
-    class="q-pa-none character-item"
-    :class="[
-      isHoverableItem && 'hoverable-character-item',
-      isSelected && 'selected-character-item',
-    ]"
-    @click="
-      selectCharacter(speakerUuid);
-      togglePlayOrStop(speakerUuid, selectedStyle, 0);
-    "
-  >
-    <div class="character-item-inner">
-      <img
-        :src="characterInfo.metas.styles[selectedStyleIndex || 0].iconPath"
-        :alt="characterInfo.metas.speakerName"
-        class="style-icon"
-      />
-      <span class="text-subtitle1 q-ma-sm">{{
-        characterInfo.metas.speakerName
-      }}</span>
-      <div
+  <button class="character-card" @click="$emit('selectCharacter', speakerUuid)">
+    <img
+      :src="selectedStyle.iconPath"
+      :alt="characterInfo.metas.speakerName"
+      class="style-icon"
+    />
+    <div class="speaker-name">{{ characterInfo.metas.speakerName }}</div>
+    <div class="style-select-container">
+      <BaseIconButton
         v-if="characterInfo.metas.styles.length > 1"
-        class="style-select-container"
-      >
-        <QBtn
-          flat
-          dense
-          icon="chevron_left"
-          textColor="display"
-          class="style-select-button"
-          aria-label="前のスタイル"
-          @mouseenter="isHoverableItem = false"
-          @mouseleave="isHoverableItem = true"
-          @click.stop="
-            selectCharacter(speakerUuid);
-            rollStyleIndex(speakerUuid, -1);
-          "
-        />
-        <span aria-live="polite">{{
-          selectedStyle.styleName || DEFAULT_STYLE_NAME
-        }}</span>
-        <QBtn
-          flat
-          dense
-          icon="chevron_right"
-          textColor="display"
-          class="style-select-button"
-          aria-label="次のスタイル"
-          @mouseenter="isHoverableItem = false"
-          @mouseleave="isHoverableItem = true"
-          @click.stop="
-            selectCharacter(speakerUuid);
-            rollStyleIndex(speakerUuid, 1);
-          "
-        />
-      </div>
-      <div class="voice-samples">
-        <QBtn
-          v-for="voiceSampleIndex of [...Array(3).keys()]"
-          :key="voiceSampleIndex"
-          round
-          outline
-          :icon="
-            playing != undefined &&
-            speakerUuid === playing.speakerUuid &&
-            selectedStyle.styleId === playing.styleId &&
-            voiceSampleIndex === playing.index
-              ? 'stop'
-              : 'play_arrow'
-          "
-          color="primary"
-          class="voice-sample-btn"
-          :aria-label="`サンプルボイス${voiceSampleIndex + 1}`"
-          @mouseenter="isHoverableItem = false"
-          @mouseleave="isHoverableItem = true"
-          @click.stop="
-            selectCharacter(speakerUuid);
-            togglePlayOrStop(speakerUuid, selectedStyle, voiceSampleIndex);
-          "
-        />
-      </div>
-      <div
-        v-if="isNewCharacter"
-        class="new-character-item q-pa-sm text-weight-bold"
-      >
-        NEW!
-      </div>
+        icon="chevron_left"
+        label="前のスタイル"
+        @click.stop="rollStyleIndex(speakerUuid, -1)"
+      />
+      <span aria-live="polite">{{
+        selectedStyle.styleName || DEFAULT_STYLE_NAME
+      }}</span>
+      <BaseIconButton
+        v-if="characterInfo.metas.styles.length > 1"
+        icon="chevron_right"
+        label="次のスタイル"
+        @click.stop="rollStyleIndex(speakerUuid, 1)"
+      />
     </div>
-  </QItem>
+    <div class="voice-samples">
+      <BaseIconButton
+        v-for="voiceSampleIndex of [...Array(3).keys()]"
+        :key="voiceSampleIndex"
+        :icon="
+          playing != undefined &&
+          speakerUuid === playing.speakerUuid &&
+          selectedStyle.styleId === playing.styleId &&
+          voiceSampleIndex === playing.index
+            ? 'stop'
+            : 'play_arrow'
+        "
+        :label="`サンプルボイス${voiceSampleIndex + 1}`"
+        @click.stop="
+          togglePlayOrStop(speakerUuid, selectedStyle, voiceSampleIndex)
+        "
+      />
+    </div>
+    <div v-if="isNewCharacter" class="new-character-item">NEW!</div>
+  </button>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
+import BaseIconButton from "@/components/Base/BaseIconButton.vue";
 import { CharacterInfo, SpeakerId, StyleId, StyleInfo } from "@/type/preload";
 import { DEFAULT_STYLE_NAME } from "@/store/utility";
 
 const props = defineProps<{
   characterInfo: CharacterInfo;
-  isSelected: boolean;
   isNewCharacter?: boolean;
   playing?: {
     speakerUuid: SpeakerId;
@@ -113,28 +66,9 @@ const props = defineProps<{
   ) => void;
 }>();
 
-const emit = defineEmits<{
-  (event: "update:selectCharacter", speakerUuid: SpeakerId): void;
-  (event: "update:portrait", portrait: string): void;
+defineEmits<{
+  (event: "selectCharacter", speakerUuid: SpeakerId): void;
 }>();
-
-// キャラクター枠のホバー状態を表示するかどうか
-// 再生ボタンなどにカーソルがある場合はキャラクター枠のホバーUIを表示しないようにするため
-const isHoverableItem = ref(true);
-
-const selectCharacter = (speakerUuid: SpeakerId) => {
-  emit("update:selectCharacter", speakerUuid);
-  updatePortrait();
-};
-
-const updatePortrait = () => {
-  let portraitPath = props.characterInfo.portraitPath;
-  const stylePortraitPath = selectedStyle.value.portraitPath;
-  if (stylePortraitPath) {
-    portraitPath = stylePortraitPath;
-  }
-  emit("update:portrait", portraitPath);
-};
 
 const speakerUuid = computed(() => props.characterInfo.metas.speakerUuid);
 
@@ -155,59 +89,80 @@ const rollStyleIndex = (speakerUuid: SpeakerId, diff: number) => {
 
   // 音声を再生する。同じstyleIndexだったら停止する。
   props.togglePlayOrStop(speakerUuid, selectedStyle.value, 0);
-  updatePortrait();
 };
 </script>
 
 <style scoped lang="scss">
-@use "@/styles/variables" as vars;
-@use "@/styles/colors" as colors;
+@use "@/styles/v2/variables" as vars;
+@use "@/styles/v2/colors" as colors;
+@use "@/styles/v2/mixin" as mixin;
 
-.character-item {
-  box-shadow: 0 0 0 1px rgba(colors.$primary-rgb, 0.5);
-  border-radius: 10px;
-  overflow: hidden;
-  &.selected-character-item {
-    box-shadow: 0 0 0 2px colors.$primary;
+.character-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 1px solid colors.$border;
+  background-color: colors.$surface;
+  color: colors.$display;
+  border-radius: vars.$radius-2;
+  padding: vars.$padding-1;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  position: relative;
+
+  &:hover {
+    background-color: colors.$control-hovered;
   }
-  &:hover :deep(.q-focus-helper) {
-    opacity: 0 !important;
+
+  &:active {
+    background-color: colors.$control-pressed;
+    box-shadow: 0 0 0 transparent;
   }
-  &.hoverable-character-item:hover :deep(.q-focus-helper) {
-    opacity: 0.15 !important;
+
+  &:focus-visible {
+    @include mixin.on-focus;
   }
-  .character-item-inner {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    height: 100%;
-    .style-icon {
-      $icon-size: calc(vars.$character-item-size / 2);
-      width: $icon-size;
-      height: $icon-size;
-      border-radius: 5px;
-    }
-    .style-select-container {
-      display: flex;
-      flex-direction: row;
-      justify-content: center;
-      align-items: center;
-      margin-top: -1rem;
-    }
-    .voice-samples {
-      display: flex;
-      column-gap: 5px;
-      align-items: center;
-      justify-content: center;
-    }
-    .new-character-item {
-      color: colors.$primary;
-      position: absolute;
-      left: 0px;
-      top: 0px;
-    }
+
+  &:disabled {
+    opacity: 0.5;
   }
+}
+
+.style-icon {
+  width: 100%;
+  max-width: 128px;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  border-radius: vars.$radius-2;
+  margin-bottom: vars.$gap-1;
+}
+
+.speaker-name {
+  font-size: 1.125rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.style-select-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: vars.$size-control;
+}
+
+.voice-samples {
+  display: flex;
+}
+
+.new-character-item {
+  position: absolute;
+  left: vars.$padding-1;
+  top: vars.$padding-1;
+  border-radius: vars.$radius-1;
+  background-color: colors.$primary;
+  color: colors.$display-oncolor;
+  padding: vars.$padding-1;
+  line-height: 1;
+  font-weight: bold;
 }
 </style>
