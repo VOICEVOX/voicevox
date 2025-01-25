@@ -1,4 +1,10 @@
 <template>
+  <DefaultStyleSelectDialog
+    v-if="selectedCharacterInfo"
+    v-model:isOpen="showStyleSelectDialog"
+    :characterInfo="selectedCharacterInfo"
+  />
+
   <QDialog
     v-model="modelValueComputed"
     maximized
@@ -13,90 +19,98 @@
             <QToolbarTitle class="text-display">{{
               hasNewCharacter
                 ? "追加キャラクターの紹介"
-                : "設定 / キャラクター並び替え・試聴"
+                : "設定 / キャラクターの管理"
             }}</QToolbarTitle>
           </div>
 
           <QSpace />
 
           <div class="row items-center no-wrap">
+            <BaseTooltip
+              label="トーク画面でのスタイル選択の並び順を編集できます。"
+            >
+              <QBtn
+                unelevated
+                color="toolbar-button"
+                textColor="toolbar-button-display"
+                class="text-no-wrap text-bold q-mr-sm"
+                icon="sort"
+                @click="showOrderPane = !showOrderPane"
+                >並び順を編集</QBtn
+              >
+            </BaseTooltip>
             <QBtn
-              unelevated
-              label="完了"
-              color="toolbar-button"
-              textColor="toolbar-button-display"
-              class="text-no-wrap"
+              round
+              flat
+              icon="close"
+              color="display"
               @click="closeDialog"
             />
           </div>
         </QToolbar>
       </QHeader>
 
-      <QDrawer
-        bordered
-        showIfAbove
-        :modelValue="true"
-        :width="$q.screen.width / 3 > 300 ? 300 : $q.screen.width / 3"
-        :breakpoint="0"
-      >
-        <div class="character-portrait-wrapper">
-          <img :src="portrait" class="character-portrait" />
-        </div>
-      </QDrawer>
-
       <QPageContainer>
-        <QPage class="main">
-          <div class="character-items-container">
-            <span class="text-h6 q-py-md">サンプルボイス一覧</span>
-            <div>
-              <CharacterTryListenCard
-                v-for="characterInfo of characterInfos"
-                :key="characterInfo.metas.speakerUuid"
-                :characterInfo
-                :isSelected="
-                  selectedCharacter === characterInfo.metas.speakerUuid
-                "
-                :isNewCharacter="
-                  newCharacters.includes(characterInfo.metas.speakerUuid)
-                "
-                :playing
-                :togglePlayOrStop
-                @update:portrait="updatePortrait"
-                @update:selectCharacter="selectCharacter"
+        <QPage>
+          <div class="container">
+            <BaseScrollArea>
+              <div class="inner">
+                <div class="header">
+                  <span class="title">キャラクター一覧</span>
+                  <div class="header-controls">
+                    <BaseToggleGroup v-model="styleType" type="single">
+                      <BaseToggleGroupItem label="トーク" value="talk" />
+                      <BaseToggleGroupItem label="ソング" value="singerLike" />
+                    </BaseToggleGroup>
+                  </div>
+                </div>
+                <div class="character-items-container">
+                  <template
+                    v-for="characterInfo of filterCharacterInfosByStyleType(
+                      characterInfos,
+                      styleType,
+                    )"
+                    :key="characterInfo.metas.speakerUuid"
+                  >
+                    <CharacterTryListenCard
+                      v-if="characterInfo.metas.styles.length > 0"
+                      :characterInfo
+                      :isNewCharacter="
+                        newCharacters.includes(characterInfo.metas.speakerUuid)
+                      "
+                      :playing
+                      :togglePlayOrStop
+                      @selectCharacter="selectCharacter"
+                    />
+                  </template>
+                </div>
+              </div>
+            </BaseScrollArea>
+          </div>
+          <div v-if="showOrderPane" class="character-order-overlay"></div>
+          <div v-if="showOrderPane" class="character-order-container">
+            <div class="character-order-headline">
+              キャラクター並び替え
+              <BaseIconButton
+                label="閉じる"
+                icon="close"
+                @click="showOrderPane = false"
               />
             </div>
-          </div>
-
-          <div class="character-order-container">
-            <div class="text-subtitle1 text-weight-bold text-center q-py-md">
-              キャラクター並び替え
-            </div>
-            <Draggable
-              v-model="characterOrder"
-              class="character-order q-px-sm"
-              :itemKey="keyOfCharacterOrderItem"
-              @start="characterOrderDragging = true"
-              @end="characterOrderDragging = false"
-            >
-              <template #item="{ element }">
-                <div
-                  class="character-order-item q-py-sm"
-                  :class="[
-                    selectedCharacter === element.metas.speakerUuid &&
-                      'selected-character-order-item',
-                  ]"
-                  @mouseenter="
-                    // ドラッグ中はバグるので無視
-                    characterOrderDragging ||
-                      selectCharacterWithChangePortrait(
-                        element.metas.speakerUuid,
-                      )
-                  "
-                >
-                  {{ element.metas.speakerName }}
-                </div>
-              </template>
-            </Draggable>
+            <BaseScrollArea>
+              <Draggable
+                v-model="characterOrder"
+                class="character-order"
+                :itemKey="keyOfCharacterOrderItem"
+                @end="saveCharacterOrder(characterOrder)"
+              >
+                <template #item="{ element }">
+                  <div class="character-order-item">
+                    {{ element.metas.speakerName }}
+                  </div>
+                </template>
+              </Draggable>
+            </BaseScrollArea>
           </div>
         </QPage>
       </QPageContainer>
@@ -107,10 +121,17 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import Draggable from "vuedraggable";
-import { useQuasar } from "quasar";
+import DefaultStyleSelectDialog from "./DefaultStyleSelectDialog.vue";
 import CharacterTryListenCard from "./CharacterTryListenCard.vue";
+import BaseToggleGroup from "@/components/Base/BaseToggleGroup.vue";
+import BaseToggleGroupItem from "@/components/Base/BaseToggleGroupItem.vue";
+import BaseIconButton from "@/components/Base/BaseIconButton.vue";
+import BaseTooltip from "@/components/Base/BaseTooltip.vue";
+import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 import { useStore } from "@/store";
 import { CharacterInfo, SpeakerId, StyleId, StyleInfo } from "@/type/preload";
+import { filterCharacterInfosByStyleType } from "@/store/utility";
+import { debounce } from "@/helpers/timer";
 
 const props = defineProps<{
   modelValue: boolean;
@@ -120,8 +141,6 @@ const props = defineProps<{
 const emit = defineEmits<{
   (event: "update:modelValue", value: boolean): void;
 }>();
-
-const $q = useQuasar();
 
 const store = useStore();
 
@@ -142,6 +161,11 @@ const characterInfosMap = computed(() => {
 const newCharacters = ref<SpeakerId[]>([]);
 const hasNewCharacter = computed(() => newCharacters.value.length > 0);
 
+const showStyleSelectDialog = ref<boolean>(false);
+const showOrderPane = ref<boolean>(false);
+
+const styleType = ref<"talk" | "singerLike">("talk");
+
 // サンプルボイス一覧のキャラクター順番
 const sampleCharacterOrder = ref<SpeakerId[]>([]);
 
@@ -149,11 +173,15 @@ const sampleCharacterOrder = ref<SpeakerId[]>([]);
 const selectedCharacter = ref(props.characterInfos[0].metas.speakerUuid);
 const selectCharacter = (speakerUuid: SpeakerId) => {
   selectedCharacter.value = speakerUuid;
+  showStyleSelectDialog.value = true;
 };
-const selectCharacterWithChangePortrait = (speakerUuid: SpeakerId) => {
-  selectCharacter(speakerUuid);
-  portrait.value = characterInfosMap.value[speakerUuid].portraitPath;
-};
+
+const selectedCharacterInfo = computed(() => {
+  return props.characterInfos.find(
+    (characterInfo) =>
+      characterInfo.metas.speakerUuid === selectedCharacter.value,
+  );
+});
 
 // キャラクター表示順序
 const characterOrder = ref<CharacterInfo[]>([]);
@@ -252,99 +280,112 @@ const togglePlayOrStop = (
   }
 };
 
-// ドラッグ中かどうか
-const characterOrderDragging = ref(false);
+const saveCharacterOrder = debounce((characterInfos: CharacterInfo[]) => {
+  void store.actions.SET_USER_CHARACTER_ORDER(
+    characterInfos.map((info) => info.metas.speakerUuid),
+  );
+}, 300);
 
 const closeDialog = () => {
-  void store.actions.SET_USER_CHARACTER_ORDER(
-    characterOrder.value.map((info) => info.metas.speakerUuid),
-  );
   stop();
+  styleType.value = "talk";
+  showOrderPane.value = false;
   modelValueComputed.value = false;
-};
-
-const portrait = ref<string | undefined>(
-  characterInfosMap.value[selectedCharacter.value].portraitPath,
-);
-const updatePortrait = (portraitPath: string) => {
-  portrait.value = portraitPath;
 };
 </script>
 
 <style scoped lang="scss">
-@use "@/styles/variables" as vars;
-@use "@/styles/colors" as colors;
+@use "@/styles/v2/variables" as vars;
+@use "@/styles/v2/colors" as colors;
+@use "@/styles/v2/mixin" as mixin;
 
 .q-toolbar div:first-child {
   min-width: 0;
 }
-.character-portrait-wrapper {
-  display: grid;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  .character-portrait {
-    margin: auto;
-  }
+
+.container {
+  // TODO: 親コンポーネントからheightを取得できないため一時的にcalcを使用、Dialogの構造を再設計後100%に変更する
+  // height: 100%;
+  height: calc(100vh - 90px);
+  background-color: colors.$background;
 }
 
-.main {
-  height: calc(
-    100vh - #{vars.$menubar-height + vars.$toolbar-height +
-      vars.$window-border-width}
-  );
-
-  display: flex;
-  flex-direction: row;
+.inner {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: vars.$gap-1;
+  padding: vars.$padding-2;
 }
 
 .character-items-container {
-  height: 100%;
-  padding: 5px 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: vars.$gap-1;
+}
 
-  flex-grow: 1;
-
+.header {
   display: flex;
-  flex-direction: column;
-  overflow-y: scroll;
+  justify-content: space-between;
+  align-items: center;
+  gap: vars.$gap-1;
+  width: 100%;
+}
 
-  > div {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, vars.$character-item-size);
-    grid-auto-rows: vars.$character-item-size;
-    column-gap: 10px;
-    row-gap: 10px;
-    align-content: center;
-    justify-content: center;
-  }
+.title {
+  @include mixin.headline-1;
+}
+
+.header-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: vars.$gap-1;
+}
+
+.character-order-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba($color: #000000, $alpha: 0.4);
 }
 
 .character-order-container {
-  width: 180px;
-  height: 100%;
-
+  // TODO: 親コンポーネントからheightを取得できないため一時的にcalcを使用、HelpDialogの構造を再設計後100%に変更する
+  // height: 100%;
+  height: calc(100vh - 90px);
+  position: absolute;
+  top: 0;
+  right: 0;
   display: flex;
   flex-direction: column;
+  background-color: colors.$background;
+  border-left: 1px solid colors.$border;
+  z-index: vars.$z-index-fixed;
+}
 
-  .character-order {
-    flex: 1;
+.character-order-headline {
+  display: flex;
+  align-items: center;
+  padding: vars.$padding-2;
+  gap: vars.$gap-1;
+}
 
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    height: 100%;
+.character-order {
+  display: flex;
+  flex-direction: column;
+  padding: vars.$padding-2;
+  padding-top: 0;
+  gap: vars.$gap-1;
 
-    overflow-y: auto;
+  .character-order-item {
+    border-radius: vars.$radius-1;
+    padding: vars.$padding-1;
+    border: 1px solid colors.$border;
+    background-color: colors.$surface;
+    text-align: center;
+    cursor: grab;
 
-    .character-order-item {
-      border-radius: 10px;
-      border: 2px solid rgba(colors.$display-rgb, 0.15);
-      text-align: center;
-      cursor: grab;
-      &.selected-character-order-item {
-        border: 2px solid colors.$primary;
-      }
+    &[draggable="true"] {
+      border: 2px solid colors.$primary;
     }
   }
 }
@@ -354,18 +395,6 @@ const updatePortrait = (portraitPath: string) => {
   > .scroll {
     width: unset !important;
     overflow: hidden;
-  }
-}
-
-@media screen and (max-width: 880px) {
-  .q-drawer-container {
-    display: none;
-  }
-  .q-page-container {
-    padding-left: unset !important;
-    .q-page-sticky {
-      left: 0 !important;
-    }
   }
 }
 </style>
