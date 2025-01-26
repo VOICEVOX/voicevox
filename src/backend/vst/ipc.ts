@@ -1,4 +1,4 @@
-import { toBytes } from "fast-base64";
+import { toBase64, toBytes } from "fast-base64";
 import { Routing } from "./type";
 import { Metadata } from "@/backend/common/ConfigManager";
 import { ShowImportFileDialogOptions, TrackId } from "@/type/preload";
@@ -152,8 +152,26 @@ const ipcGetVersion = createMessageFunction<() => string>("getVersion");
 const ipcShowImportFileDialog = createMessageFunction<
   (options: ShowImportFileDialogOptions) => string | null
 >("showImportFileDialog");
-const ipcReadFile = createMessageFunction<(path: string) => string>("readFile");
+const ipcShowExportFileDialog = createMessageFunction<
+  (obj: {
+    defaultPath?: string;
+    extensionName: string;
+    extensions: string[];
+    title: string;
+  }) => string | null
+>("showExportFileDialog");
+const ipcShowSaveDirectoryDialog = createMessageFunction<
+  (obj: { title: string }) => string | null
+>("showSaveDirectoryDialog");
 const ipcExportProject = createMessageFunction<() => boolean>("exportProject");
+
+const ipcReadFile = createMessageFunction<(path: string) => string>("readFile");
+const ipcWriteFile =
+  createMessageFunction<(obj: { path: string; data: string }) => void>(
+    "writeFile",
+  );
+const ipcCheckFileExists =
+  createMessageFunction<(path: string) => boolean>("checkFileExists");
 
 const ipcSetPhrases = createMessageFunction<
   (phrases: VstPhrase[]) => {
@@ -246,6 +264,15 @@ export async function readFile(filePath: string): Promise<ArrayBuffer> {
   return uint8array.buffer;
 }
 
+export async function writeFile(filePath: string, buffer: ArrayBuffer) {
+  const base64 = await toBase64(new Uint8Array(buffer));
+  await ipcWriteFile({ path: filePath, data: base64 });
+}
+
+export async function checkFileExists(filePath: string): Promise<boolean> {
+  return await ipcCheckFileExists(filePath);
+}
+
 export async function getProjectName(): Promise<string> {
   return await ipcGetProjectName();
 }
@@ -301,4 +328,23 @@ export async function changeEnginePath() {
 
 export async function zoom(factor: number) {
   await ipcZoom(factor);
+}
+
+export async function showExportFileDialog(obj: {
+  defaultPath?: string;
+  extensionName: string;
+  extensions: string[];
+  title: string;
+}): Promise<string | undefined> {
+  return await ipcShowExportFileDialog(obj).then(
+    (result) => result || undefined,
+  );
+}
+
+export async function showSaveDirectoryDialog(obj: {
+  title: string;
+}): Promise<string | undefined> {
+  return await ipcShowSaveDirectoryDialog(obj).then(
+    (result) => result || undefined,
+  );
 }

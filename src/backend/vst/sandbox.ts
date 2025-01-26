@@ -8,6 +8,10 @@ import {
   setProject,
   showImportFileDialog,
   zoom,
+  writeFile,
+  showExportFileDialog,
+  showSaveDirectoryDialog,
+  checkFileExists,
 } from "./ipc";
 import {
   EngineId,
@@ -21,7 +25,7 @@ import { failure, success } from "@/type/result";
 import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
 import { UnreachableError } from "@/type/utility";
 
-export const projectFilePath = "/meta/vst-project.vvproj";
+export const projectFilePath = "/dev/vst-project.vvproj";
 
 let zoomValue = 1;
 /**
@@ -105,12 +109,21 @@ export const api: Sandbox = {
   showImportFileDialog(options) {
     return showImportFileDialog(options);
   },
+  async checkFileExists(file) {
+    return await checkFileExists(file);
+  },
   async writeFile(options) {
     if (options.filePath === projectFilePath) {
       await setProject(new TextDecoder().decode(options.buffer));
       return success(undefined);
     }
-    throw new Error("Not implemented");
+
+    try {
+      await writeFile(options.filePath, options.buffer);
+      return success(undefined);
+    } catch (e) {
+      return failure(e as Error);
+    }
   },
   async readFile(options) {
     if (options.filePath === projectFilePath) {
@@ -125,6 +138,13 @@ export const api: Sandbox = {
       }
     }
   },
+  async showExportFileDialog(obj) {
+    return await showExportFileDialog(obj);
+  },
+  async showSaveDirectoryDialog(obj) {
+    return await showSaveDirectoryDialog(obj);
+  },
+
   async getSetting(key) {
     const configManager = await getConfigManager();
     return configManager.get(key);

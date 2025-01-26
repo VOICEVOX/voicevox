@@ -161,16 +161,6 @@ const saveProject = async () => {
   }
 };
 
-const vstExportProject = async () => {
-  if (!uiLocked.value) {
-    if (!isVst) {
-      throw new Error("VST以外でのエクスポートはサポートされていません");
-    }
-
-    await store.dispatch("VST_EXPORT_PROJECT");
-  }
-};
-
 const vstOpenRoutingDialog = async () => {
   if (!uiLocked.value) {
     if (!isVst) {
@@ -368,12 +358,6 @@ const menudata = computed<MenuItemData[]>(() => [
               type: "button",
               label: "新規プロジェクト",
               onClick: createNewProject,
-              disableWhenUiLocked: true,
-            },
-            {
-              type: "button",
-              label: "プロジェクトをエクスポート",
-              onClick: vstExportProject,
               disableWhenUiLocked: true,
             },
             {
