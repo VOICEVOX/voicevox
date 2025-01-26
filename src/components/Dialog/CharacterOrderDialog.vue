@@ -227,6 +227,11 @@ watch(
         ...characterOrder.value,
         ...notIncludesCharacterInfos,
       ];
+
+      // 新しいキャラクターがいる場合は判定を無くすため並び順を保存
+      if (hasNewCharacter.value) {
+        saveCharacterOrder(characterOrder.value);
+      }
     }
   },
 );
