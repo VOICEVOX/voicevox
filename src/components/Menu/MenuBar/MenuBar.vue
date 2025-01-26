@@ -484,7 +484,7 @@ const menudata = computed<MenuItemData[]>(() => [
       },
       {
         type: "button",
-        label: "キャラクター並び替え・試聴",
+        label: "キャラクターの管理",
         onClick() {
           void store.actions.SET_DIALOG_OPEN({
             isCharacterOrderDialogOpen: true,
