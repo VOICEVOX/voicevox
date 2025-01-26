@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { moveFile } from "move-file";
-import { dialog } from "electron";
+import { app, dialog } from "electron";
 import AsyncLock from "async-lock";
 import {
   EngineId,
@@ -114,8 +114,11 @@ export class VvppManager {
     callbacks?: { onProgress?: ProgressCallback },
   ) {
     const { outputDir, manifest } = await extractVvpp(
-      vvppPath,
-      this.vvppEngineDir,
+      {
+        vvppLikeFilePath: vvppPath,
+        vvppEngineDir: this.vvppEngineDir,
+        tmpDir: app.getPath("temp"),
+      },
       callbacks,
     );
 
