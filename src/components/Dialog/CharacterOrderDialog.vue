@@ -44,6 +44,7 @@
               flat
               icon="close"
               color="display"
+              aria-label="キャラクターの管理を閉じる"
               @click="closeDialog"
             />
           </div>
