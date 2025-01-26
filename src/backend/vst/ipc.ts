@@ -184,6 +184,8 @@ const ipcStartEngine =
 const ipcChangeEnginePath =
   createMessageFunction<() => void>("changeEnginePath");
 
+const ipcZoom = createMessageFunction<(factor: number) => void>("zoom");
+
 type Config = Record<string, unknown> & Metadata;
 const log = createLogger("vst/ipc");
 
@@ -295,4 +297,8 @@ export async function startEngine(args: {
 
 export async function changeEnginePath() {
   await ipcChangeEnginePath();
+}
+
+export async function zoom(factor: number) {
+  await ipcZoom(factor);
 }

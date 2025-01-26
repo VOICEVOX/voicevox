@@ -7,6 +7,7 @@ import {
   startEngine,
   setProject,
   showImportFileDialog,
+  zoom,
 } from "./ipc";
 import {
   EngineId,
@@ -22,6 +23,7 @@ import { UnreachableError } from "@/type/utility";
 
 export const projectFilePath = "/meta/vst-project.vvproj";
 
+let zoomValue = 1;
 /**
  * VST版のSandBox実装
  * ブラウザ版のSandBoxを継承している
@@ -139,5 +141,18 @@ export const api: Sandbox = {
     engineSettings[engineId] = engineSetting;
     await this.setSetting("engineSettings", engineSettings);
     return;
+  },
+
+  async zoomIn() {
+    zoomValue = Math.min(Math.max(zoomValue + 0.1, 0.5), 3);
+    await zoom(zoomValue);
+  },
+  async zoomOut() {
+    zoomValue = Math.min(Math.max(zoomValue - 0.1, 0.5), 3);
+    await zoom(zoomValue);
+  },
+  async zoomReset() {
+    zoomValue = 1;
+    await zoom(zoomValue);
   },
 };
