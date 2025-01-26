@@ -15,7 +15,7 @@ test("利用規約同意前に各種UIが無効になっている", async ({ pag
   });
 
   // ソングボタン
-  const songButton = page.getByText("ソング");
+  const songButton = page.getByRole("toolbar").getByText("ソング");
   await expect(songButton).toBeVisible();
   await expect(songButton).toBeDisabled();
 });
