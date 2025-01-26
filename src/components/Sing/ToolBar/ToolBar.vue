@@ -704,7 +704,7 @@ const snapTypeSelectModel = computed({
 }
 
 .sing-playback-loop {
-  margin-left: 4px;
+  margin-left: 8px;
   color: var(--scheme-color-on-surface-variant);
   background: transparent;
 
