@@ -27,6 +27,7 @@ const meta: Meta<typeof Presentation> = {
     offset: 0,
     numMeasures: 32,
     sequencerSnapType: 16,
+    uiLocked: false,
     "onUpdate:playheadTicks": fn<(value: number) => void>(),
     onDeselectAllNotes: fn(),
   },
