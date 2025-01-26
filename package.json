@@ -6,11 +6,12 @@
   "main": "./dist/main.js",
   "engines": {
     "node": ">=22.11.0 <23",
-    "npm": ">=10.9.0 <11"
+    "pnpm": ">=9.15.3 <10"
   },
+  "packageManager": "pnpm@9.15.3",
   "volta": {
     "node": "22.11.0",
-    "npm": "10.9.0"
+    "pnpm": "9.15.3"
   },
   "scripts": {
     "test:unit": "vitest --run",
@@ -33,7 +34,7 @@
     "electron:serve": "cross-env VITE_TARGET=electron vite",
     "browser:serve": "cross-env VITE_TARGET=browser vite",
     "browser:build": "cross-env VITE_TARGET=browser vite build",
-    "postinstall": "npm run postinstall:packages && npm run postinstall:download-scripts",
+    "postinstall": "pnpm run postinstall:packages && pnpm run postinstall:download-scripts",
     "postinstall:packages": "electron-builder install-app-deps && playwright install chromium",
     "postinstall:download-scripts": "tsx tools/download7z.mts && tsx tools/downloadTypos.mts",
     "postuninstall": "electron-builder install-app-deps",
