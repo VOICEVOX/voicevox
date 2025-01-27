@@ -10,7 +10,7 @@ import {
   Input,
   PositionOnSequencer,
   SequencerStateDefinitions,
-} from "@/composables/sequencerStateMachine/common";
+} from "@/sing/sequencerStateMachine/common";
 
 export class MoveNoteState
   implements State<SequencerStateDefinitions, Input, Context>

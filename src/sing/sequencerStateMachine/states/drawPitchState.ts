@@ -4,7 +4,7 @@ import {
   Input,
   PositionOnSequencer,
   SequencerStateDefinitions,
-} from "@/composables/sequencerStateMachine/common";
+} from "@/sing/sequencerStateMachine/common";
 import { TrackId } from "@/type/preload";
 import {
   applyGaussianFilter,

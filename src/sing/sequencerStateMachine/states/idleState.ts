@@ -5,7 +5,7 @@ import {
   getGuideLineTicks,
   Input,
   SequencerStateDefinitions,
-} from "@/composables/sequencerStateMachine/common";
+} from "@/sing/sequencerStateMachine/common";
 import { getButton, isSelfEventTarget } from "@/sing/viewHelper";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 

@@ -4,7 +4,7 @@ import {
   Input,
   PositionOnSequencer,
   SequencerStateDefinitions,
-} from "@/composables/sequencerStateMachine/common";
+} from "@/sing/sequencerStateMachine/common";
 import { getButton } from "@/sing/viewHelper";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import { NoteId } from "@/type/preload";

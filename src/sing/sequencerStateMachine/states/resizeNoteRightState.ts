@@ -1,21 +1,20 @@
-import { getOrThrow } from "@/helpers/mapHelper";
 import { State, SetNextState } from "@/sing/stateMachine";
 import { getButton, PREVIEW_SOUND_DURATION } from "@/sing/viewHelper";
-import { Note } from "@/store/type";
-import { TrackId, NoteId } from "@/type/preload";
+import { NoteId, TrackId } from "@/type/preload";
 import {
   Context,
   getGuideLineTicks,
   Input,
   PositionOnSequencer,
   SequencerStateDefinitions,
-} from "@/composables/sequencerStateMachine/common";
-import { clamp } from "@/sing/utility";
+} from "@/sing/sequencerStateMachine/common";
+import { Note } from "@/store/type";
+import { getOrThrow } from "@/helpers/mapHelper";
 
-export class ResizeNoteLeftState
+export class ResizeNoteRightState
   implements State<SequencerStateDefinitions, Input, Context>
 {
-  readonly id = "resizeNoteLeft";
+  readonly id = "resizeNoteRight";
 
   private readonly cursorPosAtStart: PositionOnSequencer;
   private readonly targetTrackId: TrackId;
@@ -51,7 +50,7 @@ export class ResizeNoteLeftState
     this.currentCursorPos = args.cursorPosAtStart;
   }
 
-  private previewResizeLeft(context: Context) {
+  private previewResizeRight(context: Context) {
     if (this.innerContext == undefined) {
       throw new Error("innerContext is undefined.");
     }
@@ -60,10 +59,10 @@ export class ResizeNoteLeftState
     const targetNotesAtStart = this.innerContext.targetNotesAtStart;
     const mouseDownNote = getOrThrow(targetNotesAtStart, this.mouseDownNoteId);
     const dragTicks = this.currentCursorPos.ticks - this.cursorPosAtStart.ticks;
-    const notePos = mouseDownNote.position;
-    const newNotePos =
-      Math.round((notePos + dragTicks) / snapTicks) * snapTicks;
-    const movingTicks = newNotePos - notePos;
+    const noteEndPos = mouseDownNote.position + mouseDownNote.duration;
+    const newNoteEndPos =
+      Math.round((noteEndPos + dragTicks) / snapTicks) * snapTicks;
+    const movingTicks = newNoteEndPos - noteEndPos;
 
     const editedNotes = new Map<NoteId, Note>();
     for (const note of previewNotes) {
@@ -71,11 +70,10 @@ export class ResizeNoteLeftState
       const notePos = targetNoteAtStart.position;
       const noteEndPos =
         targetNoteAtStart.position + targetNoteAtStart.duration;
-      const position = clamp(notePos + movingTicks, 0, noteEndPos - snapTicks);
-      const duration = noteEndPos - position;
+      const duration = Math.max(snapTicks, noteEndPos + movingTicks - notePos);
 
-      if (note.position !== position || note.duration !== duration) {
-        editedNotes.set(note.id, { ...note, position, duration });
+      if (note.duration !== duration) {
+        editedNotes.set(note.id, { ...note, duration });
       }
     }
     if (editedNotes.size !== 0) {
@@ -85,7 +83,7 @@ export class ResizeNoteLeftState
       this.innerContext.edited = true;
     }
 
-    context.guideLineTicks.value = newNotePos;
+    context.guideLineTicks.value = newNoteEndPos;
   }
 
   onEnter(context: Context) {
@@ -106,7 +104,7 @@ export class ResizeNoteLeftState
         throw new Error("innerContext is undefined.");
       }
       if (this.innerContext.executePreviewProcess) {
-        this.previewResizeLeft(context);
+        this.previewResizeRight(context);
         this.innerContext.executePreviewProcess = false;
       }
       this.innerContext.previewRequestId =
@@ -161,7 +159,9 @@ export class ResizeNoteLeftState
       notes: previewNotes,
       trackId: this.targetTrackId,
     });
-    void context.store.actions.SELECT_NOTES({ noteIds: previewNoteIds });
+    void context.store.actions.SELECT_NOTES({
+      noteIds: previewNoteIds,
+    });
 
     if (previewNotes.length === 1) {
       void context.store.actions.PLAY_PREVIEW_SOUND({
