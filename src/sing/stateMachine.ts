@@ -85,15 +85,10 @@ export interface State<
 /**
  * ステートのファクトリ関数を表す型。
  */
-type StateFactories<
-  T extends StateDefinition[],
-  U extends StateId<T>,
-  Input,
-  Context,
-> = {
-  [P in U]: (
-    args: FactoryArgs<T, P>,
-  ) => State<T, Input, Context> & { readonly id: P };
+type StateFactories<T extends StateDefinition[], Input, Context> = {
+  [U in StateId<T>]: (
+    args: FactoryArgs<T, U>,
+  ) => State<T, Input, Context> & { readonly id: U };
 };
 
 /**
@@ -110,7 +105,6 @@ export class StateMachine<
 > {
   private readonly stateFactories: StateFactories<
     StateDefinitions,
-    StateId<StateDefinitions>,
     Input,
     Context
   >;
@@ -130,12 +124,7 @@ export class StateMachine<
    * @param context ステート間で共有されるコンテキスト。
    */
   constructor(
-    stateFactories: StateFactories<
-      StateDefinitions,
-      StateId<StateDefinitions>,
-      Input,
-      Context
-    >,
+    stateFactories: StateFactories<StateDefinitions, Input, Context>,
     initialState: State<StateDefinitions, Input, Context>,
     context: Context,
   ) {
