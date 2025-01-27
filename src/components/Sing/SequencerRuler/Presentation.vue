@@ -130,7 +130,7 @@ import { UnreachableError } from "@/type/utility";
 import TempoChangeDialog from "@/components/Sing/ChangeValueDialog/TempoChangeDialog.vue";
 import TimeSignatureChangeDialog from "@/components/Sing/ChangeValueDialog/TimeSignatureChangeDialog.vue";
 import { FontSpecification, predictTextWidth } from "@/helpers/textWidth";
-import { createLogger } from "@/domain/frontend/log";
+import { createLogger } from "@/helpers/log";
 import { useSequencerGrid } from "@/composables/useSequencerGridPattern";
 
 const props = defineProps<{
