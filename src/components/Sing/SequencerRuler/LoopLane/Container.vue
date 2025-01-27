@@ -265,6 +265,12 @@ const stopDragging = () => {
   }
 
   try {
+    // ループ範囲が0の場合はクリア
+    if (previewLoopStartTick.value === previewLoopEndTick.value) {
+      void store.actions.COMMAND_CLEAR_LOOP_RANGE();
+      return;
+    }
+
     // ループ範囲を設定
     void store.actions.COMMAND_SET_LOOP_RANGE({
       loopStartTick: previewLoopStartTick.value,
@@ -272,11 +278,9 @@ const stopDragging = () => {
     });
 
     // ループ範囲が有効な場合は再生ヘッドをループ開始位置に移動
-    if (previewLoopStartTick.value !== previewLoopEndTick.value) {
-      void store.actions.SET_PLAYHEAD_POSITION({
-        position: previewLoopStartTick.value,
-      });
-    }
+    void store.actions.SET_PLAYHEAD_POSITION({
+      position: previewLoopStartTick.value,
+    });
   } catch (error) {
     throw new UnreachableError("Failed to set loop range");
   }

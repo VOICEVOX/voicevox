@@ -74,10 +74,15 @@ const applySongProjectToStore = async (
       }),
     ),
   });
-  await actions.SET_LOOP_ENABLED({ isLoopEnabled: loop.isLoopEnabled });
+
+  // ループ情報を設定（ない場合はデフォルト値を使用）
+  // TODO: オプショナルチェインを避けたい(プロジェクト関連の仕様がよくわかっていない)
+  await actions.SET_LOOP_ENABLED({
+    isLoopEnabled: loop?.isLoopEnabled ?? false,
+  });
   await actions.SET_LOOP_RANGE({
-    loopStartTick: loop.startTick,
-    loopEndTick: loop.endTick,
+    loopStartTick: loop?.startTick ?? 0,
+    loopEndTick: loop?.endTick ?? 0,
   });
 };
 

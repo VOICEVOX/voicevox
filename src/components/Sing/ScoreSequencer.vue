@@ -23,6 +23,8 @@
           :offset="scrollX"
           :numMeasures
         />
+        <!-- ループエリア -->
+        <LoopLane :offset="scrollX" />
         <!-- 鍵盤 -->
         <SequencerKeys
           class="sequencer-keys"

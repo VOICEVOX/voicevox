@@ -100,9 +100,9 @@ export const trackSchema = z.object({
 });
 
 export const loopSchema = z.object({
-  isLoopEnabled: z.boolean(),
   startTick: z.number(), // ループ開始ティック
   endTick: z.number(), // ループ終了ティック
+  isLoopEnabled: z.boolean(),
 });
 
 // プロジェクトファイルのスキーマ
@@ -120,11 +120,7 @@ export const projectSchema = z.object({
     timeSignatures: z.array(timeSignatureSchema),
     tracks: z.record(trackIdSchema, trackSchema),
     trackOrder: z.array(trackIdSchema),
-    loop: z.object({
-      startTick: z.number(),
-      endTick: z.number(),
-      isLoopEnabled: z.boolean(),
-    }),
+    loop: loopSchema.optional(),
   }),
 });
 
