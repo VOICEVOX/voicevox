@@ -15,20 +15,47 @@
     @setTempo="setTempo"
     @setTimeSignature="setTimeSignature"
     @deselectAllNotes="deselectAllNotes"
-  />
+  >
+    <GridLaneContainer
+      :tpqn
+      :sequencerZoomX
+      :numMeasures
+      :timeSignatures
+      :offset
+    />
+    <ValueMarkerLaneContainer
+      :tpqn
+      :sequencerZoomX
+      :tempos
+      :timeSignatures
+      :offset
+      :playheadTicks
+      :uiLocked
+      @setTempo="setTempo"
+      @removeTempo="removeTempo"
+      @setTimeSignature="setTimeSignature"
+      @removeTimeSignature="removeTimeSignature"
+    />
+    <LoopLaneContainer :offset :width />
+  </Presentation>
 </template>
 
 <script setup lang="ts">
 import { computed } from "vue";
 import Presentation from "./Presentation.vue";
+import GridLaneContainer from "./GridLane/Container.vue";
+import ValueMarkerLaneContainer from "./ValueMarkerLane/Container.vue";
+import LoopLaneContainer from "./LoopLane/Container.vue";
 import { useStore } from "@/store";
 import { Tempo, TimeSignature } from "@/store/type";
+import { tickToBaseX } from "@/sing/viewHelper";
+import { getTimeSignaturePositions, getMeasureDuration } from "@/sing/domain";
 
 defineOptions({
   name: "SequencerRuler",
 });
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     offset: number;
     numMeasures: number;
@@ -63,19 +90,40 @@ const setTempo = (tempo: Tempo) => {
     tempo,
   });
 };
+
 const setTimeSignature = (timeSignature: TimeSignature) => {
   void store.actions.COMMAND_SET_TIME_SIGNATURE({
     timeSignature,
   });
 };
+
 const removeTempo = (position: number) => {
   void store.actions.COMMAND_REMOVE_TEMPO({
     position,
   });
 };
+
 const removeTimeSignature = (measureNumber: number) => {
   void store.actions.COMMAND_REMOVE_TIME_SIGNATURE({
     measureNumber,
   });
 };
+
+const width = computed(() => {
+  const lastTs = timeSignatures.value[timeSignatures.value.length - 1];
+  const tsPositions = getTimeSignaturePositions(
+    timeSignatures.value,
+    tpqn.value,
+  );
+  const lastTsPosition = tsPositions[tsPositions.length - 1];
+  const measureDuration = getMeasureDuration(
+    lastTs.beats,
+    lastTs.beatType,
+    tpqn.value,
+  );
+  const endTicks =
+    lastTsPosition +
+    measureDuration * (props.numMeasures - lastTs.measureNumber + 1);
+  return tickToBaseX(endTicks, tpqn.value) * sequencerZoomX.value;
+});
 </script>

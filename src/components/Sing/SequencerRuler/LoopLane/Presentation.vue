@@ -7,6 +7,7 @@
       'is-empty': isEmpty,
       [cursorClass]: true,
     }"
+    :style="{ width: `${width}px` }"
     @click.stop
     @contextmenu.prevent="handleContextMenu"
   >
@@ -94,6 +95,10 @@
 import ContextMenu, {
   ContextMenuItemData,
 } from "@/components/Menu/ContextMenu/Presentation.vue";
+
+defineOptions({
+  name: "LoopLanePresentation",
+});
 
 defineProps<{
   width: number;
