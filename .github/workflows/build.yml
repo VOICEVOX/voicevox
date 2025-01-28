@@ -159,7 +159,7 @@ jobs:
           $sed -i 's/"version": "999.999.999"/"version": "${{ env.VOICEVOX_EDITOR_VERSION }}"/' package.json
 
       - name: Setup pnpm
-        run: npx corepack enable
+        run: corepack enable
 
       - name: Setup Node
         uses: actions/setup-node@v4
