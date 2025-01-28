@@ -92,6 +92,9 @@ img {
 // ダイアログ
 .q-dialog,
 #q-loading {
+  // ダイアログをQLoading（z-index: 9998）の上に出す
+  z-index: 10000;
+
   .q-dialog__backdrop,
   .q-dialog__inner,
   .q-loading,
@@ -278,7 +281,7 @@ img {
   font-family: "Material Symbols Outlined";
   font-weight: normal;
   font-style: normal;
-  font-size: 24px;  /* Preferred icon size */
+  font-size: 24px; /* Preferred icon size */
   display: inline-block;
   line-height: 1;
   text-transform: none;
