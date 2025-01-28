@@ -1,16 +1,14 @@
 <template>
   <Presentation
-    v-bind="{
-      width,
-      offset,
-      loopStartX,
-      loopEndX,
-      isLoopEnabled,
-      isDragging,
-      isEmpty,
-      cursorClass,
-      contextMenuData,
-    }"
+    :width
+    :offset
+    :loopStartX
+    :loopEndX
+    :isLoopEnabled
+    :isDragging
+    :isEmpty
+    :cursorClass
+    :contextMenuData
     @loopAreaMouseDown="handleLoopAreaMouseDown"
     @loopRangeClick="handleLoopRangeClick"
     @loopRangeDoubleClick="handleLoopRangeDoubleClick"
@@ -24,34 +22,40 @@
 import { computed, ref, onUnmounted } from "vue";
 import Presentation from "./Presentation.vue";
 import { useStore } from "@/store";
-import { tickToBaseX, baseXToTick } from "@/sing/viewHelper";
-import {
-  snapTicksToGrid,
-  getTimeSignaturePositions,
-  getMeasureDuration,
-} from "@/sing/domain";
+import { getMeasureDuration, snapTicksToGrid } from "@/sing/domain";
 import { ContextMenuItemData } from "@/components/Menu/ContextMenu/Presentation.vue";
 import { UnreachableError } from "@/type/utility";
+import { useSequencerRuler } from "@/composables/useSequencerRuler";
 
 const store = useStore();
 
-// offsetやwidthはルーラー側から受け取る
-// TODO: 依存をなくす
 const props = defineProps<{
   offset: number;
-  width: number;
+  numMeasures: number;
 }>();
 
 // クリック位置
 const clickX = ref(0);
 
-// store状態
 const tpqn = computed(() => store.state.tpqn);
 const sequencerZoomX = computed(() => store.state.sequencerZoomX);
 const timeSignatures = computed(() => store.state.timeSignatures);
 const isLoopEnabled = computed(() => store.state.isLoopEnabled);
 const loopStartTick = computed(() => store.state.loopStartTick);
 const loopEndTick = computed(() => store.state.loopEndTick);
+const playheadTicks = computed(() => store.getters.PLAYHEAD_POSITION);
+const sequencerSnapType = computed(() => store.state.sequencerSnapType);
+
+const { width, endTicks, tsPositions, getSnappedTickFromOffsetX } =
+  useSequencerRuler({
+    offset: computed(() => props.offset),
+    numMeasures: computed(() => props.numMeasures),
+    tpqn,
+    timeSignatures,
+    sequencerZoomX,
+    playheadTicks,
+    sequencerSnapType,
+  });
 
 // ドラッグ関連の状態
 const isDragging = ref(false);
@@ -77,15 +81,11 @@ const currentLoopEndTick = computed(() =>
 
 // ループのX座標を計算
 const loopStartX = computed(() =>
-  Math.round(
-    tickToBaseX(currentLoopStartTick.value, tpqn.value) * sequencerZoomX.value,
-  ),
+  Math.round((width.value / endTicks.value) * currentLoopStartTick.value),
 );
 
 const loopEndX = computed(() =>
-  Math.round(
-    tickToBaseX(currentLoopEndTick.value, tpqn.value) * sequencerZoomX.value,
-  ),
+  Math.round((width.value / endTicks.value) * currentLoopEndTick.value),
 );
 
 // ループが空かどうか
@@ -130,12 +130,7 @@ const handleLoopAreaMouseDown = (event: MouseEvent) => {
   const target = event.currentTarget as HTMLElement;
   const rect = target.getBoundingClientRect();
   const clickX = event.clientX - rect.left;
-  const x = clickX + props.offset;
-  const tick = snapTicksToGrid(
-    baseXToTick(x / sequencerZoomX.value, tpqn.value),
-    timeSignatures.value,
-    tpqn.value,
-  );
+  const tick = getSnappedTickFromOffsetX(clickX);
 
   // クリック位置をループ範囲の開始/終了に設定
   previewLoopStartTick.value = tick;
@@ -201,9 +196,8 @@ const preview = () => {
     const dx = event.clientX - dragStartX.value;
     // ドラッグ中のハンドル位置
     const newX = dragStartHandleX.value + dx;
-    // ドラッグ中の基準tick
-    const baseTick = baseXToTick(newX / sequencerZoomX.value, tpqn.value);
     // ドラッグ中の新しいtick
+    const baseTick = Math.round((endTicks.value * newX) / width.value);
     const newTick = Math.max(
       0,
       snapTicksToGrid(baseTick, timeSignatures.value, tpqn.value),
@@ -256,6 +250,7 @@ const stopDragging = () => {
   dragTarget.value = null;
   executePreviewProcess.value = false;
   cursorState.value = "default";
+
   window.removeEventListener("mousemove", handleMouseMove, true);
   window.removeEventListener("mouseup", stopDragging, true);
 
@@ -265,19 +260,17 @@ const stopDragging = () => {
   }
 
   try {
-    // ループ範囲が0の場合はクリア
     if (previewLoopStartTick.value === previewLoopEndTick.value) {
+      // ループ範囲 0 の場合はクリア
       void store.actions.COMMAND_CLEAR_LOOP_RANGE();
       return;
     }
-
-    // ループ範囲を設定
+    // ループ設定
     void store.actions.COMMAND_SET_LOOP_RANGE({
       loopStartTick: previewLoopStartTick.value,
       loopEndTick: previewLoopEndTick.value,
     });
-
-    // ループ範囲が有効な場合は再生ヘッドをループ開始位置に移動
+    // 有効なら再生ヘッドをスタートへ
     void store.actions.SET_PLAYHEAD_POSITION({
       position: previewLoopStartTick.value,
     });
@@ -286,7 +279,7 @@ const stopDragging = () => {
   }
 };
 
-// コンテキストメニューをクリック位置に表示
+// 右クリックメニュー
 const handleContextMenu = (event: MouseEvent) => {
   event.preventDefault();
   event.stopPropagation();
@@ -327,59 +320,45 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => [
   },
 ]);
 
-// クリック位置から1小節分のループ範囲を作成
-// メニューのループ範囲の作成時用
-const addOneMeasureLoop = (clickX: number) => {
-  const baseX = (props.offset + clickX) / sequencerZoomX.value;
-  const cursorTick = baseXToTick(baseX, tpqn.value);
-  const tsPositions = getTimeSignaturePositions(
-    timeSignatures.value,
-    tpqn.value,
-  );
-  const currentTs = timeSignatures.value.findLast((_, index) => {
-    return tsPositions[index] <= cursorTick;
+// クリック位置から1小節ぶんのループ範囲を作成
+function addOneMeasureLoop(localX: number) {
+  const snappedTick = getSnappedTickFromOffsetX(localX);
+  // そのTick時点にある拍子情報を取得
+  const currentTs = timeSignatures.value.findLast((_, idx) => {
+    return tsPositions.value[idx] <= snappedTick;
   });
+  if (!currentTs) return;
 
-  if (!currentTs) {
-    throw new Error("assert: At least one time signature exists.");
-  }
-
-  // 1小節分のtick数を計算
   const oneMeasureTicks = getMeasureDuration(
     currentTs.beats,
     currentTs.beatType,
     tpqn.value,
   );
 
-  // 拍子情報を考慮してスナップ
-  const startTick = snapTicksToGrid(
-    cursorTick,
-    timeSignatures.value,
-    tpqn.value,
-  );
-  const endTick = snapTicksToGrid(
-    startTick + oneMeasureTicks,
-    timeSignatures.value,
-    tpqn.value,
+  const startTick = getSnappedTickFromOffsetX(localX);
+  const endTick = Math.min(
+    getSnappedTickFromOffsetX(localX + oneMeasureTicks),
+    endTicks.value,
   );
 
   void store.actions.COMMAND_SET_LOOP_RANGE({
     loopStartTick: startTick,
     loopEndTick: endTick,
   });
-
-  // ループ範囲設定後は再生ヘッドをループ開始位置に移動
   void store.actions.SET_PLAYHEAD_POSITION({
     position: startTick,
   });
-};
+}
 
+// アンマウント時に必ずドラッグを停止
 onUnmounted(() => {
+  executePreviewProcess.value = false;
+  if (previewRequestId != null) {
+    cancelAnimationFrame(previewRequestId);
+    previewRequestId = null;
+  }
   cursorState.value = "default";
   window.removeEventListener("mousemove", handleMouseMove, true);
   window.removeEventListener("mouseup", stopDragging, true);
-  if (previewRequestId != null) {
-    cancelAnimationFrame(previewRequestId);
-  }
 });
 </script>

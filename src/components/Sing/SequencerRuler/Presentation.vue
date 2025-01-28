@@ -1,39 +1,45 @@
 <template>
-  <div
-    ref="sequencerRuler"
-    class="sequencer-ruler"
-    @click="onClick"
-    @contextmenu="onContextMenu"
-  >
-    <slot />
-    <div
-      class="sequencer-ruler-playhead"
-      :style="{
-        transform: `translateX(${playheadX - offset}px)`,
-      }"
-    />
+  <div ref="sequencerRuler" class="sequencer-ruler" @click="onClick">
+    <div class="sequencer-ruler-content" :style="{ width: `${width}px` }">
+      <div class="sequencer-ruler-grid">
+        <!-- NOTE: slotを使う(Copilotくんが提案してくれた) -->
+        <slot name="grid" />
+      </div>
+      <div class="sequencer-ruler-changes">
+        <slot name="changes" />
+      </div>
+      <div class="sequencer-ruler-loop">
+        <slot name="loop" />
+      </div>
+      <div
+        class="sequencer-ruler-playhead"
+        :style="{
+          transform: `translateX(${playheadX - offset}px)`,
+        }"
+      />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
-import { snapTicksToGrid } from "@/sing/domain";
-import { baseXToTick, tickToBaseX } from "@/sing/viewHelper";
+import { ref } from "vue";
 import { Tempo, TimeSignature } from "@/store/type";
-
 defineOptions({
   name: "RulerPresentation",
 });
 
 const props = defineProps<{
-  offset: number;
+  width: number;
   numMeasures: number;
-  tpqn: number;
+  playheadX: number;
+  offset: number;
   tempos: Tempo[];
   timeSignatures: TimeSignature[];
+  tpqn: number;
   sequencerZoomX: number;
-  uiLocked: boolean;
   sequencerSnapType: number;
+  uiLocked: boolean;
+  getSnappedTickFromOffsetX: (offsetX: number) => number;
 }>();
 
 const playheadTicks = defineModel<number>("playheadTicks", {
@@ -42,28 +48,9 @@ const playheadTicks = defineModel<number>("playheadTicks", {
 
 const emit = defineEmits<{
   deselectAllNotes: [];
-  setTempo: [tempo: Tempo];
-  removeTempo: [position: number];
-  setTimeSignature: [timeSignature: TimeSignature];
-  removeTimeSignature: [measureNumber: number];
 }>();
 
 const sequencerRuler = ref<HTMLDivElement | null>(null);
-
-const playheadX = computed(() => {
-  return Math.floor(
-    tickToBaseX(playheadTicks.value, props.tpqn) * props.sequencerZoomX,
-  );
-});
-
-const getSnappedTickFromOffsetX = (offsetX: number) => {
-  const baseX = (props.offset + offsetX) / props.sequencerZoomX;
-  return snapTicksToGrid(
-    baseXToTick(baseX, props.tpqn),
-    props.timeSignatures,
-    props.tpqn,
-  );
-};
 
 const onClick = (event: MouseEvent) => {
   emit("deselectAllNotes");
@@ -72,15 +59,8 @@ const onClick = (event: MouseEvent) => {
   if (!sequencerRulerElement) {
     throw new Error("sequencerRulerElement is null.");
   }
-  const ticks = getSnappedTickFromOffsetX(event.offsetX);
+  const ticks = props.getSnappedTickFromOffsetX(event.offsetX);
   playheadTicks.value = ticks;
-};
-
-const onContextMenu = async (event: MouseEvent) => {
-  emit("deselectAllNotes");
-
-  const snappedTicks = getSnappedTickFromOffsetX(event.offsetX);
-  playheadTicks.value = snappedTicks;
 };
 </script>
 
@@ -93,6 +73,26 @@ const onContextMenu = async (event: MouseEvent) => {
   position: relative;
   overflow: hidden;
   isolation: isolate;
+}
+
+.sequencer-ruler-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.sequencer-ruler-grid,
+.sequencer-ruler-changess,
+.sequencer-ruler-loop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.sequencer-ruler-loop {
+  height: 20px;
 }
 
 .sequencer-ruler-playhead {

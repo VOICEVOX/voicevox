@@ -1,10 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/vue3";
 import { fn, expect, Mock } from "@storybook/test";
-import { ref } from "vue";
+import { ref, computed } from "vue";
 
 import Presentation from "./Presentation.vue";
 import { UnreachableError } from "@/type/utility";
 import { ZOOM_X_MIN, ZOOM_X_MAX, ZOOM_X_STEP } from "@/sing/viewHelper";
+import { useSequencerRuler } from "@/composables/useSequencerRuler";
+import type { TimeSignature } from "@/store/type";
 
 const meta: Meta<typeof Presentation> = {
   component: Presentation,
@@ -45,9 +47,25 @@ const meta: Meta<typeof Presentation> = {
     components: { Presentation },
     setup() {
       const playheadTicks = ref(0);
-      return { args, playheadTicks };
+
+      // useSequencerRulerから実際の実装を取得
+      const { getSnappedTickFromOffsetX } = useSequencerRuler({
+        offset: computed(() => args.offset as number),
+        numMeasures: computed(() => args.numMeasures as number),
+        tpqn: computed(() => args.tpqn as number),
+        timeSignatures: computed(() => args.timeSignatures as TimeSignature[]),
+        sequencerZoomX: computed(() => args.sequencerZoomX as number),
+        playheadTicks: computed(() => playheadTicks.value),
+        sequencerSnapType: computed(() => args.sequencerSnapType as number),
+      });
+
+      return {
+        args,
+        playheadTicks,
+        getSnappedTickFromOffsetX,
+      };
     },
-    template: `<Presentation v-bind="args" v-model:playheadTicks="playheadTicks" />`,
+    template: `<Presentation v-bind="args" v-model:playheadTicks="playheadTicks" :getSnappedTickFromOffsetX="getSnappedTickFromOffsetX" />`,
   }),
 };
 

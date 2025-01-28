@@ -61,7 +61,7 @@
 import { computed, ref } from "vue";
 import { TimeSignature } from "@/store/type";
 import { useSequencerGrid } from "@/composables/useSequencerGridPattern";
-import { getMeasureDuration, getTimeSignaturePositions } from "@/sing/domain";
+import { getMeasureDuration } from "@/sing/domain";
 import { tickToBaseX } from "@/sing/viewHelper";
 
 defineOptions({
@@ -74,27 +74,12 @@ const props = defineProps<{
   numMeasures: number;
   timeSignatures: TimeSignature[];
   offset: number;
+  width: number;
+  endTicks: number;
+  tsPositions: number[];
 }>();
 
 const height = ref(40);
-
-const tsPositions = computed(() => {
-  return getTimeSignaturePositions(props.timeSignatures, props.tpqn);
-});
-
-const endTicks = computed(() => {
-  const lastTs = props.timeSignatures[props.timeSignatures.length - 1];
-  const lastTsPosition = tsPositions.value[tsPositions.value.length - 1];
-  return (
-    lastTsPosition +
-    getMeasureDuration(lastTs.beats, lastTs.beatType, props.tpqn) *
-      (props.numMeasures - lastTs.measureNumber + 1)
-  );
-});
-
-const width = computed(() => {
-  return tickToBaseX(endTicks.value, props.tpqn) * props.sequencerZoomX;
-});
 
 const gridPatterns = useSequencerGrid({
   timeSignatures: computed(() => props.timeSignatures),
@@ -112,9 +97,9 @@ const measureInfos = computed(() => {
     );
     const nextTsPosition =
       i !== props.timeSignatures.length - 1
-        ? tsPositions.value[i + 1]
-        : endTicks.value;
-    const start = tsPositions.value[i];
+        ? props.tsPositions[i + 1]
+        : props.endTicks;
+    const start = props.tsPositions[i];
     const end = nextTsPosition;
     const numMeasures = Math.floor((end - start) / measureDuration);
     return Array.from({ length: numMeasures }, (_, index) => {
@@ -144,6 +129,7 @@ const measureInfos = computed(() => {
   stroke: var(--scheme-color-sing-ruler-measure-line);
   stroke-width: 1px;
 
+  // NOTE: 最初の小節線を非表示。必要に応じて再表示・位置合わせする
   &.first-measure-line {
     stroke: var(--scheme-color-sing-ruler-surface);
   }

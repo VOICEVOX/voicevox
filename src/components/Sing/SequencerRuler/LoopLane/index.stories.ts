@@ -31,6 +31,9 @@ const meta: Meta<typeof Presentation> = {
   }),
 };
 
+// 表示のみ
+// TODO: テスト追加
+
 export default meta;
 type Story = StoryObj<typeof Presentation>;
 
