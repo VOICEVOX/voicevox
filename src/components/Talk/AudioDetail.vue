@@ -52,11 +52,11 @@
             マウスホイールを使って<br />
             スライダーを微調整できます。
           </p>
-          ホイール: ±0.1<br />
-          <span v-if="isMac">Command</span><span v-else>Ctrl</span> + ホイール:
-          ±0.01<br />
-          <span v-if="isMac">Option</span><span v-else>Alt</span> + ホイール:
-          一括調整
+          {{ t("message.wheel") }}: ±0.1<br />
+          <span v-if="isMac">Command</span><span v-else>Ctrl</span> +
+          {{ t("message.wheel") }}: ±0.01<br />
+          <span v-if="isMac">Option</span><span v-else>Alt</span> +
+          {{ t("message.wheel") }}: 一括調整
         </ToolTip>
         <AccentPhrase
           v-for="(accentPhrase, accentPhraseIndex) in accentPhrases"
@@ -82,6 +82,7 @@
 
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from "vue";
+import { useI18n } from "vue-i18n";
 import AccentPhrase from "./AccentPhrase.vue";
 import ToolTip from "@/components/ToolTip.vue";
 import { useStore } from "@/store";
@@ -91,6 +92,8 @@ import { EngineManifest } from "@/openapi/models";
 import { useShiftKey, useAltKey } from "@/composables/useModifierKey";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import { handlePossiblyNotMorphableError } from "@/store/audioGenerate";
+
+const { t } = useI18n();
 
 const props = defineProps<{
   activeAudioKey: AudioKey;

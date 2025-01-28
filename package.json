@@ -70,6 +70,7 @@
     "systeminformation": "5.21.15",
     "tree-kill": "1.2.2",
     "vue": "3.5.13",
+    "vue-i18n": "10.0.5",
     "vuedraggable": "4.1.0",
     "vuex": "4.0.2",
     "zod": "3.22.4"
@@ -79,6 +80,7 @@
   },
   "devDependencies": {
     "@chromatic-com/storybook": "1.5.0",
+    "@intlify/unplugin-vue-i18n": "6.0.3",
     "@openapitools/openapi-generator-cli": "2.15.3",
     "@playwright/test": "1.48.2",
     "@quasar/vite-plugin": "1.8.1",

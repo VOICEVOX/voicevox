@@ -14,7 +14,7 @@
     "resolveJsonModule": true,
     "sourceMap": true,
     "baseUrl": ".",
-    "types": ["vitest/globals"],
+    "types": ["vitest/globals", "@intlify/unplugin-vue-i18n/messages"],
     "paths": {
       "@/*": ["src/*"]
     },
