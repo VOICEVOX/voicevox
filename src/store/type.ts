@@ -2087,14 +2087,6 @@ export type UiStoreTypes = {
     action(payload: NotifyAndNotShowAgainButtonOption): void;
   };
 
-  SHOW_LOADING_SCREEN: {
-    action(payload: LoadingScreenOption): void;
-  };
-
-  HIDE_ALL_LOADING_SCREEN: {
-    action(): void;
-  };
-
   ON_VUEX_READY: {
     mutation: void;
     action(): void;

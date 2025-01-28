@@ -681,16 +681,10 @@ const acceptRetrieveTelemetryComputed = computed({
 });
 
 const changeUseGpu = async (useGpu: boolean) => {
-  void store.actions.SHOW_LOADING_SCREEN({
-    message: "起動モードを変更中です",
-  });
-
   await store.actions.CHANGE_USE_GPU({
     useGpu,
     engineId: selectedEngineId.value,
   });
-
-  void store.actions.HIDE_ALL_LOADING_SCREEN();
 };
 
 const changeinheritAudioInfo = async (inheritAudioInfo: boolean) => {

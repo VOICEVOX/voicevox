@@ -229,18 +229,6 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     },
   },
 
-  SHOW_LOADING_SCREEN: {
-    action(_, payload: LoadingScreenOption) {
-      showLoadingScreen(payload);
-    },
-  },
-
-  HIDE_ALL_LOADING_SCREEN: {
-    action() {
-      hideAllLoadingScreen();
-    },
-  },
-
   HYDRATE_UI_STORE: {
     async action({ mutations }) {
       mutations.SET_INHERIT_AUDIOINFO({

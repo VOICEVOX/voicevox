@@ -92,9 +92,6 @@ img {
 // ダイアログ
 .q-dialog,
 #q-loading {
-  // ダイアログをQLoading（z-index: 9998）の上に出す
-  z-index: 10000;
-
   .q-dialog__backdrop,
   .q-dialog__inner,
   .q-loading,
