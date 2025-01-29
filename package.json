@@ -32,7 +32,7 @@
     "electron:serve": "cross-env VITE_TARGET=electron vite",
     "browser:serve": "cross-env VITE_TARGET=browser vite",
     "browser:build": "cross-env VITE_TARGET=browser vite build",
-    "preinstall": "npx only-allow pnpm",
+    "preinstall": "npx -y only-allow pnpm",
     "postinstall": "pnpm run postinstall:packages && pnpm run postinstall:download-scripts",
     "postinstall:packages": "electron-builder install-app-deps && playwright install chromium",
     "postinstall:download-scripts": "tsx tools/download7z.mts && tsx tools/downloadTypos.mts",
