@@ -25,6 +25,9 @@ export type ViewInfo = {
   readonly offsetY: number;
 };
 
+/**
+ * ピッチラインを描画するクラス。
+ */
 export class PitchLine {
   color: Color;
   width: number;
@@ -48,6 +51,9 @@ export class PitchLine {
     this.container = new PIXI.Container();
   }
 
+  /**
+   * ピッチラインを更新する。（パラメーターの変更を適用する）
+   */
   update(viewInfo: ViewInfo) {
     this.container.renderable = this.isVisible;
     if (!this.isVisible) {
@@ -126,6 +132,9 @@ export class PitchLine {
     }
   }
 
+  /**
+   * 破棄する。
+   */
   destroy() {
     this.lineStripMap.forEach((value) => value.destroy());
     this.lineStripMap.clear();
