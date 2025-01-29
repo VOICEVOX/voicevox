@@ -39,7 +39,7 @@ export class PitchLine {
   }
 
   constructor(args: { color?: Color; width?: number; isVisible?: boolean }) {
-    this.color = args.color ?? new Color(255, 0, 0, 255);
+    this.color = args.color ?? new Color(0, 0, 0, 255);
     this.width = args.width ?? 1;
     this.isVisible = args.isVisible ?? true;
     this.pitchDataMap = new Map();
@@ -126,7 +126,7 @@ export class PitchLine {
     }
   }
 
-  dispose() {
+  destroy() {
     this.lineStripMap.forEach((value) => value.destroy());
     this.lineStripMap.clear();
     this.container.destroy();

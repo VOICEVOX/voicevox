@@ -374,8 +374,8 @@ onUnmountedOrDeactivated(() => {
   if (requestId != undefined) {
     window.cancelAnimationFrame(requestId);
   }
-  originalPitchLine.dispose();
-  pitchEditLine.dispose();
+  originalPitchLine.destroy();
+  pitchEditLine.destroy();
   stage?.destroy();
   renderer?.destroy(true);
   resizeObserver?.disconnect();
