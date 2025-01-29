@@ -9,7 +9,6 @@ import checker from "vite-plugin-checker";
 import { BuildOptions, defineConfig, loadEnv, Plugin } from "vite";
 import { quasar } from "@quasar/vite-plugin";
 import { z } from "zod";
-import packageJson from "./package.json";
 
 const isElectron = process.env.VITE_TARGET === "electron";
 const isBrowser = process.env.VITE_TARGET === "browser";
@@ -81,7 +80,7 @@ export default defineConfig((options) => {
         checker({
           overlay: false,
           eslint: {
-            lintCommand: packageJson.scripts.lint,
+            lintCommand: "eslint --ext .ts,.vue .",
           },
           vueTsc: true,
         }),
