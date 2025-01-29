@@ -47,7 +47,10 @@ Node.js をインストール後、[このリポジトリ](https://github.com/VO
 次のコマンドを実行することで依存ライブラリがインストール・アップデートされます。
 
 ```bash
-npm ci
+# 初回のみ
+npm i -g pnpm
+
+pnpm i
 ```
 
 ## 実行
@@ -75,10 +78,10 @@ VOICEVOX エディタの実行とは別にエンジン API のサーバを立て
 
 ```bash
 # 開発しやすい環境で実行
-npm run electron:serve
+pnpm run electron:serve
 
 # ビルド時に近い環境で実行
-npm run electron:serve -- --mode production
+pnpm run electron:serve --mode production
 ```
 
 音声合成エンジンのリポジトリはこちらです <https://github.com/VOICEVOX/voicevox_engine>
@@ -88,7 +91,7 @@ npm run electron:serve -- --mode production
 Storybook を使ってコンポーネントを開発することができます。
 
 ```bash
-npm run storybook
+pnpm run storybook
 ```
 
 main ブランチの Storybook は[VOICEVOX/preview-pages](https://github.com/VOICEVOX/preview-pages)から確認できます。  
@@ -99,7 +102,7 @@ main ブランチの Storybook は[VOICEVOX/preview-pages](https://github.com/VO
 別途音声合成エンジンを起動し、以下を実行して表示された localhost へアクセスします。
 
 ```bash
-npm run browser:serve
+pnpm run browser:serve
 ```
 
 また、main ブランチのビルド結果が[VOICEVOX/preview-pages](https://github.com/VOICEVOX/preview-pages)にデプロイされています。  
@@ -109,7 +112,7 @@ npm run browser:serve
 ## ビルド
 
 ```bash
-npm run electron:build
+pnpm run electron:build
 ```
 
 ### Github Actions でビルド
@@ -124,10 +127,10 @@ fork したリポジトリで Actions を ON にし、workflow_dispatch で`buil
 `./tests/unit/` 以下にあるテストと、Storybookのテストを実行します。
 
 ```bash
-npm run test:unit
-npm run test-watch:unit # 監視モード
-npm run test-ui:unit # VitestのUIを表示
-npm run test:unit -- --update # スナップショットの更新
+pnpm run test:unit
+pnpm run test-watch:unit # 監視モード
+pnpm run test-ui:unit # VitestのUIを表示
+pnpm run test:unit -- --update # スナップショットの更新
 ```
 
 > [!NOTE]  
@@ -145,17 +148,17 @@ Electron の機能が不要な、UI や音声合成などの End to End テス�
 > 一部のエンジンの設定を書き換えるテストは、CI(Github Actions)上でのみ実行されるようになっています。
 
 ```bash
-npm run test:browser-e2e
-npm run test-watch:browser-e2e # 監視モード
-npm run test-watch:browser-e2e -- --headed # テスト中の UI を表示
-npm run test-ui:browser-e2e # Playwright の UI を表示
+pnpm run test:browser-e2e
+pnpm run test-watch:browser-e2e # 監視モード
+pnpm run test-watch:browser-e2e -- --headed # テスト中の UI を表示
+pnpm run test-ui:browser-e2e # Playwright の UI を表示
 ```
 
 Playwright を使用しているためテストパターンを生成することもできます。
 **ブラウザ版を起動している状態で**以下のコマンドを実行してください。
 
 ```bash
-npx playwright codegen http://localhost:5173/  --viewport-size=1024,630
+pnpm exec playwright codegen http://localhost:5173/ --viewport-size=1024,630
 ```
 
 詳細は [Playwright ドキュメントの Test generator](https://playwright.dev/docs/codegen-intro) を参照してください。
@@ -168,9 +171,9 @@ Storybook のコンポーネントのスクリーンショットを比較して�
 > このテストは Windows でのみ実行できます。
 
 ```bash
-npm run test:storybook-vrt
-npm run test-watch:storybook-vrt # 監視モード
-npm run test-ui:storybook-vrt # Playwright の UI を表示
+pnpm run test:storybook-vrt
+pnpm run test-watch:storybook-vrt # 監視モード
+pnpm run test-ui:storybook-vrt # Playwright の UI を表示
 ```
 
 #### スクリーンショットの更新
@@ -215,7 +218,7 @@ npm run test-ui:storybook-vrt # Playwright の UI を表示
 ローカル PC の OS に対応したもののみが更新されます。
 
 ```bash
-npm run test:browser-e2e -- --update-snapshots
+pnpm run test:browser-e2e -- --update-snapshots
 ```
 
 ### Electron End to End テスト
@@ -223,8 +226,8 @@ npm run test:browser-e2e -- --update-snapshots
 Electron の機能が必要な、エンジン起動・終了などを含めた End to End テストを実行します。
 
 ```bash
-npm run test:electron-e2e
-npm run test-watch:electron-e2e # 監視モード
+pnpm run test:electron-e2e
+pnpm run test-watch:electron-e2e # 監視モード
 ```
 
 ## 依存ライブラリのライセンス情報の生成
@@ -234,8 +237,8 @@ npm run test-watch:electron-e2e # 監視モード
 ```bash
 # get licenses.json from voicevox_engine as engine_licenses.json
 
-npm run license:generate -- -o voicevox_licenses.json
-npm run license:merge -- -o public/licenses.json -i engine_licenses.json -i voicevox_licenses.json
+pnpm run license:generate -o voicevox_licenses.json
+pnpm run license:merge -o public/licenses.json -i engine_licenses.json -i voicevox_licenses.json
 ```
 
 ## コードフォーマット
@@ -243,7 +246,7 @@ npm run license:merge -- -o public/licenses.json -i engine_licenses.json -i voic
 コードのフォーマットを整えます。プルリクエストを送る前に実行してください。
 
 ```bash
-npm run fmt
+pnpm run fmt
 ```
 
 ## リント（静的解析）
@@ -251,7 +254,7 @@ npm run fmt
 コードの静的解析を行い、バグを未然に防ぎます。プルリクエストを送る前に実行してください。
 
 ```bash
-npm run lint
+pnpm run lint
 ```
 
 ## タイポチェック
@@ -259,7 +262,7 @@ npm run lint
 [typos](https://github.com/crate-ci/typos) を使ってタイポのチェックを行っています。
 
 ```bash
-npm run typos
+pnpm run typos
 ```
 
 でタイポチェックを行えます。
@@ -271,7 +274,7 @@ npm run typos
 TypeScript の型チェックを行います。
 
 ```bash
-npm run typecheck
+pnpm run typecheck
 ```
 
 ## Markdownlint
@@ -279,7 +282,7 @@ npm run typecheck
 Markdown の文法チェックを行います。
 
 ```bash
-npm run markdownlint
+pnpm run markdownlint
 ```
 
 ## Shellcheck
@@ -298,13 +301,13 @@ shellcheck ./build/*.sh
 ```bash
 curl http://127.0.0.1:50021/openapi.json >openapi.json
 
-npx openapi-generator-cli generate \
+pnpm exec openapi-generator-cli generate \
     -i openapi.json \
     -g typescript-fetch \
     -o src/openapi/ \
     --additional-properties "modelPropertyNaming=camelCase,supportsES6=true,withInterfaces=true,typescriptThreePlus=true"
 
-npm run fmt
+pnpm run fmt
 ```
 
 ### OpanAPI generator のバージョンアップ
@@ -312,7 +315,7 @@ npm run fmt
 新しいバージョンの確認・インストールは次のコマンドで行えます。
 
 ```bash
-npx openapi-generator-cli version-manager list
+pnpm exec openapi-generator-cli version-manager list
 ```
 
 ## VS Code でのデバッグ実行
