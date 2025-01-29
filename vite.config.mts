@@ -10,6 +10,11 @@ import { BuildOptions, defineConfig, loadEnv, Plugin } from "vite";
 import { quasar } from "@quasar/vite-plugin";
 import { z } from "zod";
 
+import {
+  checkSuspiciousImports,
+  CheckSuspiciousImportsOptions,
+} from "./tools/checkSuspiciousImports.mjs";
+
 const isElectron = process.env.VITE_TARGET === "electron";
 const isBrowser = process.env.VITE_TARGET === "browser";
 
@@ -97,7 +102,15 @@ export default defineConfig((options) => {
               }
             },
             vite: {
-              plugins: [tsconfigPaths({ root: import.meta.dirname })],
+              plugins: [
+                tsconfigPaths({ root: import.meta.dirname }),
+                checkSuspiciousImportsPlugin({
+                  allowedInTryCatchModules: [
+                    // systeminformationのoptionalな依存。try-catch内なので許可。
+                    "osx-temperature-sensor",
+                  ],
+                }),
+              ],
               build: {
                 outDir: path.resolve(import.meta.dirname, "dist"),
                 sourcemap,
@@ -113,7 +126,10 @@ export default defineConfig((options) => {
               }
             },
             vite: {
-              plugins: [tsconfigPaths({ root: import.meta.dirname })],
+              plugins: [
+                tsconfigPaths({ root: import.meta.dirname }),
+                checkSuspiciousImportsPlugin({}),
+              ],
               build: {
                 outDir: path.resolve(import.meta.dirname, "dist"),
                 sourcemap,
@@ -153,6 +169,23 @@ const injectBrowserPreloadPlugin = (): Plugin => {
           "<!-- %BROWSER_PRELOAD% -->",
           `<script type="module" src="./backend/browser/preload.ts"></script>`,
         ),
+    },
+  };
+};
+
+const checkSuspiciousImportsPlugin = (
+  options: CheckSuspiciousImportsOptions,
+): Plugin => {
+  return {
+    name: "check-suspicious-imports",
+    enforce: "post",
+    apply: "build",
+    writeBundle(_options, bundle) {
+      for (const [file, chunk] of Object.entries(bundle)) {
+        if (chunk.type === "chunk") {
+          checkSuspiciousImports(file, chunk.code, options);
+        }
+      }
     },
   };
 };

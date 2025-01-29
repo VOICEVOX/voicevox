@@ -40,7 +40,8 @@
     "license:generate": "tsx tools/generateLicenses.mts",
     "license:merge": "tsx tools/mergeLicenses.mts",
     "storybook": "storybook dev --port 6006",
-    "storybook:build": "storybook build"
+    "storybook:build": "storybook build",
+    "check-suspicious-imports": "tsx tools/checkSuspiciousImports.mts"
   },
   "dependencies": {
     "@gtm-support/vue-gtm": "1.2.3",
@@ -110,6 +111,8 @@
     "@vue/eslint-config-prettier": "9.0.0",
     "@vue/eslint-config-typescript": "13.0.0",
     "@vue/test-utils": "2.4.5",
+    "acorn": "8.14.0",
+    "acorn-walk": "8.3.4",
     "chromatic": "11.5.4",
     "cross-env": "7.0.3",
     "dotenv": "16.0.0",
