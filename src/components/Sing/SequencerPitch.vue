@@ -293,6 +293,10 @@ watch(
   { immediate: true },
 );
 
+watch(isDark, () => {
+  renderInNextFrame = true;
+});
+
 watch(
   () => [
     store.state.sequencerZoomX,
@@ -304,10 +308,6 @@ watch(
     renderInNextFrame = true;
   },
 );
-
-watch(isDark, () => {
-  renderInNextFrame = true;
-});
 
 onMountedOrActivated(() => {
   const canvasContainerElement = canvasContainer.value;
