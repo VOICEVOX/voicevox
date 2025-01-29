@@ -33,11 +33,11 @@ jobs:
           fi
 
           # Storybookのビルド
-          npm run storybook:build -- --output-dir $(pwd)/dist_preview/storybook
+          pnpm run storybook:build --output-dir $(pwd)/dist_preview/storybook
 
           # ブラウザ版エディタのビルド
           VITE_EXTRA_VERSION_INFO="${LOCATION} @ ${SHORT_SHA}" \
-            npm run browser:build -- --base ./ --outDir $(pwd)/dist_preview/editor
+            pnpm run browser:build --base ./ --outDir $(pwd)/dist_preview/editor
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4

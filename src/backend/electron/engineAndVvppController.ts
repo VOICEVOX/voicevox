@@ -234,7 +234,7 @@ export class EngineAndVvppController {
           }
 
           // ファイルを確実に閉じる
-          const { promise, resolve, reject } = Promise.withResolvers();
+          const { promise, resolve, reject } = Promise.withResolvers<void>();
           fileStream.on("close", resolve);
           fileStream.on("error", reject);
           fileStream.close();
