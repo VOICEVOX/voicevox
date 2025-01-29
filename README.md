@@ -47,9 +47,7 @@ Node.js をインストール後、[このリポジトリ](https://github.com/VO
 次のコマンドを実行することで依存ライブラリがインストール・アップデートされます。
 
 ```bash
-# 初回のみ
-npm i -g pnpm
-
+npm i -g pnpm # 初回のみ
 pnpm i
 ```
 
