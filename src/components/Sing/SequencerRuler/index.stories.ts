@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/vue3";
 import { fn, expect, Mock } from "@storybook/test";
 import { ref, computed } from "vue";
-
 import Presentation from "./Presentation.vue";
 import GridLaneContainer from "./GridLane/Container.vue";
 import ValueChangesLaneContainer from "./ValueChangesLane/Container.vue";
@@ -11,12 +10,34 @@ import { ZOOM_X_MIN, ZOOM_X_MAX, ZOOM_X_STEP } from "@/sing/viewHelper";
 import { UnreachableError } from "@/type/utility";
 import { useSequencerRuler } from "@/composables/useSequencerRuler";
 import { Tempo, TimeSignature } from "@/store/type";
+import { useStore } from "@/store";
 
-// NOTE: 混合コンポーネントのためstoreを使っている
-// 本来は各Presentation.vueのstoryにすべきだが、まずは現状と同等
 const meta = {
   title: "Components/Sing/SequencerRuler",
   component: Presentation,
+  // NOTE: 混合コンポーネントのため実際のstoreをデコレーター経由で利用している
+  // 本来はPresentationのみのテストにすべきかもしれない
+  decorators: [
+    (story, context) => ({
+      components: { story },
+      setup() {
+        // テンポや拍子の変更をエミュレートするため各storyのargsをstoreに設定する
+        const store = useStore();
+        if (context.args.tempos) {
+          store.commit("SET_TEMPOS", {
+            tempos: context.args.tempos as Tempo[],
+          });
+        }
+        if (context.args.timeSignatures) {
+          store.commit("SET_TIME_SIGNATURES", {
+            timeSignatures: context.args.timeSignatures as TimeSignature[],
+          });
+        }
+        return {};
+      },
+      template: `<story />`,
+    }),
+  ],
   args: {
     width: 1000,
     numMeasures: 32,
@@ -75,35 +96,33 @@ const meta = {
       };
     },
     template: `
-      <div style="width: 100%; height: 40px; position: relative; overflow: hidden;">
-        <Presentation
-          v-bind="args"
-          :width="width"
-          :playheadX="playheadX"
-          :getSnappedTickFromOffsetX="getSnappedTickFromOffsetX"
-          v-model:playheadTicks="playheadTicks"
-        >
-          <template #grid>
-            <GridLaneContainer
-              :numMeasures="args.numMeasures"
-              :offset="args.offset"
-            />
-          </template>
-          <template #changes>
-            <ValueChangesLaneContainer
-              :offset="args.offset"
-              :numMeasures="args.numMeasures"
-              @setPlayheadPosition="(ticks) => playheadTicks = ticks"
-            />
-          </template>
-          <template #loop>
-            <LoopLaneContainer
-              :offset="args.offset"
-              :numMeasures="args.numMeasures"
-            />
-          </template>
-        </Presentation>
-      </div>
+      <Presentation
+        v-bind="args"
+        :width="width"
+        :playheadX="playheadX"
+        :getSnappedTickFromOffsetX="getSnappedTickFromOffsetX"
+        v-model:playheadTicks="playheadTicks"
+      >
+        <template #grid>
+          <GridLaneContainer
+            :numMeasures="args.numMeasures"
+            :offset="args.offset"
+          />
+        </template>
+        <template #changes>
+          <ValueChangesLaneContainer
+            :offset="args.offset"
+            :numMeasures="args.numMeasures"
+            @setPlayheadPosition="(ticks) => playheadTicks = ticks"
+          />
+        </template>
+        <template #loop>
+          <LoopLaneContainer
+            :offset="args.offset"
+            :numMeasures="args.numMeasures"
+          />
+        </template>
+      </Presentation>
     `,
   }),
 } satisfies Meta<typeof Presentation>;
