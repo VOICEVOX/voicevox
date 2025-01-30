@@ -82,7 +82,7 @@ const onClick = (event: MouseEvent) => {
 }
 
 .sequencer-ruler-grid,
-.sequencer-ruler-changess,
+.sequencer-ruler-changes,
 .sequencer-ruler-loop {
   position: absolute;
   top: 0;
