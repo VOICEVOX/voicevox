@@ -24,7 +24,7 @@ import {
   SingingVoiceKey,
   State,
 } from "@/store/type";
-import { secondToTick } from "@/sing/domain";
+import { secondToTick, tickToSecond } from "@/sing/domain";
 import { phraseSingingVoices, singingVoiceCache } from "@/store/singing";
 import onetimeWatch from "@/helpers/onetimeWatch";
 import { createLogger } from "@/helpers/log";
@@ -215,17 +215,24 @@ export const vstPlugin: Plugin = {
       void lock.acquire("phrases", async () => {
         log.info("Sending phrases");
         const missingVoices = await setPhrases(
-          [...phrases.values()].flatMap((phrase) =>
-            phrase.singingVoiceKey
-              ? [
-                  {
-                    start: phrase.startTime,
-                    trackId: phrase.trackId,
-                    voice: phrase.singingVoiceKey,
-                  },
-                ]
-              : [],
-          ),
+          [...phrases.values()].map((phrase) => ({
+            start: phrase.startTime,
+            trackId: phrase.trackId,
+            voice: phrase.singingVoiceKey || null,
+            notes: phrase.notes.map((note) => ({
+              start: tickToSecond(
+                note.position,
+                store.state.tempos,
+                store.state.tpqn,
+              ),
+              end: tickToSecond(
+                note.position + note.duration,
+                store.state.tempos,
+                store.state.tpqn,
+              ),
+              noteNumber: note.noteNumber,
+            })),
+          })),
         );
 
         if (missingVoices.length > 0) {

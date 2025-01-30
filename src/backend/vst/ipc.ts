@@ -138,7 +138,14 @@ const createMessageFunction = <F extends (arg?: any) => any>(
 
 export type VstPhrase = {
   start: number;
-  voice: string;
+  trackId: TrackId;
+  voice: string | null;
+  notes: VstNote[];
+};
+export type VstNote = {
+  start: number;
+  end: number;
+  noteNumber: number;
 };
 
 const ipcGetConfig = createMessageFunction<() => string | null>("getConfig");
