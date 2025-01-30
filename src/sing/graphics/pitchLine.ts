@@ -41,10 +41,10 @@ export class PitchLine {
     return this.container;
   }
 
-  constructor(args: { color?: Color; width?: number; isVisible?: boolean }) {
-    this.color = args.color ?? new Color(0, 0, 0, 255);
-    this.width = args.width ?? 1;
-    this.isVisible = args.isVisible ?? true;
+  constructor(params: { color?: Color; width?: number; isVisible?: boolean }) {
+    this.color = params.color ?? new Color(0, 0, 0, 255);
+    this.width = params.width ?? 1;
+    this.isVisible = params.isVisible ?? true;
     this.pitchDataMap = new Map();
 
     this.lineStripMap = new Map();
