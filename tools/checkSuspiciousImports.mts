@@ -7,6 +7,12 @@
  * また、try-catch内での明示的に許可されたパッケージが使われていない場合も警告を出力する。
  *
  * pnpm run check-suspicious-imports ./path/to/file.js のように単体でも実行可能。
+ *
+ * 文脈：
+ * electron-builderはpnpmを一緒に使うとnode_modulesが壊れる問題があるが、
+ * それはビルド後（dist/{main.js,preload.js}）でパッケージがimport/requireされなければ問題ないため、
+ * このスクリプトを使って問題がないかチェックする。
+ * ref: https://github.com/VOICEVOX/voicevox/issues/2508
  */
 
 import { builtinModules } from "module";
