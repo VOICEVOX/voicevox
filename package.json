@@ -18,6 +18,9 @@
     "typecheck": "vue-tsc --noEmit",
     "typos": "cross-env ./vendored/typos/typos",
 
+    "license:generate": "tsx tools/generateLicenses.mts",
+    "license:merge": "tsx tools/mergeLicenses.mts",
+
     "test:unit": "vitest --run",
     "test-watch:unit": "vitest --watch",
     "test-ui:unit": "vitest --ui",
@@ -36,9 +39,6 @@
     "browser:build": "cross-env VITE_TARGET=browser vite build",
     "storybook": "storybook dev --port 6006",
     "storybook:build": "storybook build",
-
-    "license:generate": "tsx tools/generateLicenses.mts",
-    "license:merge": "tsx tools/mergeLicenses.mts",
 
     "preinstall": "npx -y only-allow pnpm",
     "postinstall": "pnpm run postinstall:packages && pnpm run postinstall:download-scripts",
