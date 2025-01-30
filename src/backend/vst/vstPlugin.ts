@@ -2,6 +2,7 @@ import { Plugin, ref, watch } from "vue";
 import AsyncLock from "async-lock";
 import { debounce } from "quasar";
 import { toBase64, toBytes } from "fast-base64";
+import { dequal } from "dequal";
 import {
   getProject,
   onReceivedIPCMessage,
@@ -12,6 +13,7 @@ import {
   getCurrentPosition,
   exportProject,
   startEngine,
+  VstPhrase,
 } from "./ipc";
 import { projectFilePath } from "./sandbox";
 import { Store } from "@/store/vuex";
@@ -211,29 +213,36 @@ export const vstPlugin: Plugin = {
     });
 
     // フレーズ送信
+    let lastPhrases: VstPhrase[] = [];
     const sendPhrases = debounce(async (phrases: Map<PhraseKey, Phrase>) => {
       void lock.acquire("phrases", async () => {
         log.info("Sending phrases");
-        const missingVoices = await setPhrases(
-          [...phrases.values()].map((phrase) => ({
-            start: phrase.startTime,
-            trackId: phrase.trackId,
-            voice: phrase.singingVoiceKey || null,
-            notes: phrase.notes.map((note) => ({
-              start: tickToSecond(
-                note.position,
-                store.state.tempos,
-                store.state.tpqn,
-              ),
-              end: tickToSecond(
-                note.position + note.duration,
-                store.state.tempos,
-                store.state.tpqn,
-              ),
-              noteNumber: note.noteNumber,
-            })),
+        const newPhrases = [...phrases.values()].map((phrase) => ({
+          start: phrase.startTime,
+          trackId: phrase.trackId,
+          voice: phrase.singingVoiceKey || null,
+          notes: phrase.notes.map((note) => ({
+            start: tickToSecond(
+              note.position,
+              store.state.tempos,
+              store.state.tpqn,
+            ),
+            end: tickToSecond(
+              note.position + note.duration,
+              store.state.tempos,
+              store.state.tpqn,
+            ),
+            noteNumber: note.noteNumber,
           })),
-        );
+        }));
+        if (newPhrases.length === 0) {
+          return;
+        }
+        if (dequal(newPhrases, lastPhrases)) {
+          return;
+        }
+        lastPhrases = newPhrases;
+        const missingVoices = await setPhrases(newPhrases);
 
         if (missingVoices.length > 0) {
           log.info(`Missing ${missingVoices.length} voices`);
@@ -253,7 +262,7 @@ export const vstPlugin: Plugin = {
           log.info("All voices are available");
         }
       });
-    }, 500);
+    }, 100);
 
     watch(
       () => [store.state.phrases, isReady] as const,

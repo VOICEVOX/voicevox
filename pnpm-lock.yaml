@@ -26,6 +26,9 @@ importers:
       dayjs:
         specifier: 1.10.7
         version: 1.10.7
+      dequal:
+        specifier: 2.0.3
+        version: 2.0.3
       electron-log:
         specifier: 5.1.2
         version: 5.1.2

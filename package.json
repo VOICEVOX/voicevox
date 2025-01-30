@@ -17,10 +17,8 @@
     "markdownlint": "markdownlint --ignore node_modules/ --ignore dist/ --ignore dist_electron/ --ignore dist_preview/ ./",
     "typecheck": "vue-tsc --noEmit",
     "typos": "cross-env ./vendored/typos/typos",
-
     "license:generate": "tsx tools/generateLicenses.mts",
     "license:merge": "tsx tools/mergeLicenses.mts",
-
     "test:unit": "vitest --run",
     "test-watch:unit": "vitest --watch",
     "test-ui:unit": "vitest --ui",
@@ -32,7 +30,6 @@
     "test:storybook-vrt": "cross-env TARGET=storybook playwright test",
     "test-watch:storybook-vrt": "cross-env TARGET=storybook PWTEST_WATCH=1 playwright test",
     "test-ui:storybook-vrt": "cross-env TARGET=storybook playwright test --ui",
-
     "electron:build": "cross-env VITE_TARGET=electron vite build && electron-builder --config electron-builder.config.js --publish never",
     "electron:serve": "cross-env VITE_TARGET=electron vite",
     "browser:serve": "cross-env VITE_TARGET=browser vite",
@@ -41,7 +38,6 @@
     "vst:build": "cross-env VITE_TARGET=vst vite build",
     "storybook": "storybook dev --port 6006",
     "storybook:build": "storybook build",
-
     "preinstall": "npx -y only-allow pnpm",
     "postinstall": "pnpm run postinstall:packages && pnpm run postinstall:download-scripts",
     "postinstall:packages": "electron-builder install-app-deps && playwright install chromium",
@@ -55,6 +51,7 @@
     "@std/path": "npm:@jsr/std__path@1.0.8",
     "async-lock": "1.4.0",
     "dayjs": "1.10.7",
+    "dequal": "2.0.3",
     "electron-log": "5.1.2",
     "electron-window-state": "5.0.3",
     "encoding-japanese": "1.0.30",
