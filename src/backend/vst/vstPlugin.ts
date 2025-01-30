@@ -220,7 +220,8 @@ export const vstPlugin: Plugin = {
         const newPhrases = [...phrases.values()].map((phrase) => ({
           start: phrase.startTime,
           trackId: phrase.trackId,
-          voice: phrase.singingVoiceKey || null,
+          voice:
+            (phrase.state === "PLAYABLE" && phrase.singingVoiceKey) || null,
           notes: phrase.notes.map((note) => ({
             start: tickToSecond(
               note.position,
