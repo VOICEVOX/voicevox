@@ -7,6 +7,7 @@ import { TrackId, NoteId } from "@/type/preload";
 import {
   Context,
   getGuideLineTicks,
+  IdleStateId,
   Input,
   PositionOnSequencer,
   SequencerStateDefinitions,
@@ -21,6 +22,7 @@ export class MoveNoteState
   private readonly targetTrackId: TrackId;
   private readonly targetNoteIds: Set<NoteId>;
   private readonly mouseDownNoteId: NoteId;
+  private readonly returnStateId: IdleStateId;
 
   private currentCursorPos: PositionOnSequencer;
 
@@ -39,6 +41,7 @@ export class MoveNoteState
     targetTrackId: TrackId;
     targetNoteIds: Set<NoteId>;
     mouseDownNoteId: NoteId;
+    returnStateId: IdleStateId;
   }) {
     if (!args.targetNoteIds.has(args.mouseDownNoteId)) {
       throw new Error("mouseDownNoteId is not included in targetNoteIds.");
@@ -47,6 +50,7 @@ export class MoveNoteState
     this.targetTrackId = args.targetTrackId;
     this.targetNoteIds = args.targetNoteIds;
     this.mouseDownNoteId = args.mouseDownNoteId;
+    this.returnStateId = args.returnStateId;
 
     this.currentCursorPos = args.cursorPosAtStart;
   }
@@ -146,7 +150,7 @@ export class MoveNoteState
         this.innerContext.executePreviewProcess = true;
       } else if (input.mouseEvent.type === "mouseup") {
         if (mouseButton === "LEFT_BUTTON") {
-          setNextState("idle", undefined);
+          setNextState(this.returnStateId, undefined);
         }
       }
     }

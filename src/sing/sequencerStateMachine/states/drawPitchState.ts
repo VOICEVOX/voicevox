@@ -1,6 +1,7 @@
 import { SetNextState, State } from "@/sing/stateMachine";
 import {
   Context,
+  IdleStateId,
   Input,
   PositionOnSequencer,
   SequencerStateDefinitions,
@@ -20,6 +21,7 @@ export class DrawPitchState
 
   private readonly cursorPosAtStart: PositionOnSequencer;
   private readonly targetTrackId: TrackId;
+  private readonly returnStateId: IdleStateId;
 
   private currentCursorPos: PositionOnSequencer;
 
@@ -34,9 +36,11 @@ export class DrawPitchState
   constructor(args: {
     cursorPosAtStart: PositionOnSequencer;
     targetTrackId: TrackId;
+    returnStateId: IdleStateId;
   }) {
     this.cursorPosAtStart = args.cursorPosAtStart;
     this.targetTrackId = args.targetTrackId;
+    this.returnStateId = args.returnStateId;
 
     this.currentCursorPos = args.cursorPosAtStart;
   }
@@ -158,7 +162,7 @@ export class DrawPitchState
         this.innerContext.executePreviewProcess = true;
       } else if (input.mouseEvent.type === "mouseup") {
         if (mouseButton === "LEFT_BUTTON") {
-          setNextState("idle", undefined);
+          setNextState(this.returnStateId, undefined);
         }
       }
     }

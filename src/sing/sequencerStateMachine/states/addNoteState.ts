@@ -2,6 +2,7 @@ import { SetNextState, State } from "@/sing/stateMachine";
 import {
   Context,
   getGuideLineTicks,
+  IdleStateId,
   Input,
   PositionOnSequencer,
   SequencerStateDefinitions,
@@ -22,6 +23,7 @@ export class AddNoteState
 
   private readonly cursorPosAtStart: PositionOnSequencer;
   private readonly targetTrackId: TrackId;
+  private readonly returnStateId: IdleStateId;
 
   private currentCursorPos: PositionOnSequencer;
   private innerContext:
@@ -35,9 +37,11 @@ export class AddNoteState
   constructor(args: {
     cursorPosAtStart: PositionOnSequencer;
     targetTrackId: TrackId;
+    returnStateId: IdleStateId;
   }) {
     this.cursorPosAtStart = args.cursorPosAtStart;
     this.targetTrackId = args.targetTrackId;
+    this.returnStateId = args.returnStateId;
 
     this.currentCursorPos = args.cursorPosAtStart;
   }
@@ -119,7 +123,7 @@ export class AddNoteState
         this.innerContext.executePreviewProcess = true;
       } else if (input.mouseEvent.type === "mouseup") {
         if (mouseButton === "LEFT_BUTTON") {
-          setNextState("idle", undefined);
+          setNextState(this.returnStateId, undefined);
         }
       }
     }
