@@ -89,6 +89,7 @@ export default defineConfig((options) => {
         }),
       isElectron && [
         cleanDistPlugin(),
+        // TODO: 関数で切り出して共通化できる部分はまとめる
         electron([
           {
             entry: "./backend/electron/main.ts",
