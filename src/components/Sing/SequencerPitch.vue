@@ -83,8 +83,28 @@ const originalPitchLineColorDark = new Color(114, 116, 114, 255);
 const pitchEditLineColorLight = new Color(0, 167, 63, 255);
 const pitchEditLineColorDark = new Color(95, 188, 117, 255);
 
-const originalPitchLine = new PitchLine({ width: 1.125 });
-const pitchEditLine = new PitchLine({ width: 2.25 });
+const originalPitchLineColor = computed(() => {
+  return isDark.value
+    ? originalPitchLineColorDark
+    : originalPitchLineColorLight;
+});
+const pitchEditLineColor = computed(() => {
+  return isDark.value ? pitchEditLineColorDark : pitchEditLineColorLight;
+});
+const isPitchLineVisible = computed(() => {
+  return store.getters.SELECTED_TRACK.singer != undefined;
+});
+
+const originalPitchLine = new PitchLine(
+  originalPitchLineColor.value,
+  1.125,
+  isPitchLineVisible.value,
+);
+const pitchEditLine = new PitchLine(
+  pitchEditLineColor.value,
+  2.25,
+  isPitchLineVisible.value,
+);
 
 const canvasContainer = ref<HTMLElement | null>(null);
 const canvas = ref<HTMLCanvasElement | null>(null);
@@ -116,17 +136,11 @@ const render = () => {
     offsetY: props.offsetY,
   };
 
-  const singer = store.getters.SELECTED_TRACK.singer;
+  originalPitchLine.color = originalPitchLineColor.value;
+  pitchEditLine.color = pitchEditLineColor.value;
 
-  originalPitchLine.color = isDark.value
-    ? originalPitchLineColorDark
-    : originalPitchLineColorLight;
-  pitchEditLine.color = isDark.value
-    ? pitchEditLineColorDark
-    : pitchEditLineColorLight;
-
-  originalPitchLine.isVisible = singer != undefined;
-  pitchEditLine.isVisible = singer != undefined;
+  originalPitchLine.isVisible = isPitchLineVisible.value;
+  pitchEditLine.isVisible = isPitchLineVisible.value;
 
   originalPitchLine.update(viewInfo);
   pitchEditLine.update(viewInfo);
