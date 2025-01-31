@@ -1,17 +1,13 @@
 import { computed, ref } from "vue";
 import {
   ComputedRefs,
-  IdleStateId,
   PartialStore,
   Refs,
 } from "@/sing/sequencerStateMachine/common";
 import { getNoteDuration } from "@/sing/domain";
 import { createSequencerStateMachine } from "@/sing/sequencerStateMachine";
 
-export const useSequencerStateMachine = (
-  store: PartialStore,
-  initialStateId: IdleStateId,
-) => {
+export const useSequencerStateMachine = (store: PartialStore) => {
   const computedRefs: ComputedRefs = {
     snapTicks: computed(() =>
       getNoteDuration(store.state.sequencerSnapType, store.state.tpqn),
@@ -29,14 +25,11 @@ export const useSequencerStateMachine = (
     previewPitchEdit: ref(undefined),
     guideLineTicks: ref(0),
   };
-  const stateMachine = createSequencerStateMachine(
-    {
-      ...computedRefs,
-      ...refs,
-      store,
-    },
-    initialStateId,
-  );
+  const stateMachine = createSequencerStateMachine({
+    ...computedRefs,
+    ...refs,
+    store,
+  });
   return {
     stateMachine,
     nowPreviewing: computed(() => refs.nowPreviewing.value),

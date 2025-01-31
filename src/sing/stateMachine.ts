@@ -44,6 +44,7 @@ export type SetNextState<T extends StateDefinition[]> = <U extends StateId<T>>(
 
 /**
  * ステートマシンのステートを表すインターフェース。
+ *
  * @template State このインターフェースを実装するステートの型。
  * @template Input ステートが処理する入力の型。
  * @template Context ステート間で共有されるコンテキストの型。
@@ -57,6 +58,7 @@ export interface State<
 
   /**
    * 入力を処理し、必要に応じて次のステートを設定する。
+   *
    * @param payload `input`、`context`、`setNextState`関数を含むペイロード。
    */
   process(payload: {
@@ -67,12 +69,14 @@ export interface State<
 
   /**
    * ステートに入ったときに呼び出される。
+   *
    * @param context ステート間で共有されるコンテキスト。
    */
   onEnter(context: Context): void;
 
   /**
    * ステートから出るときに呼び出される。
+   *
    * @param context ステート間で共有されるコンテキスト。
    */
   onExit(context: Context): void;
@@ -88,16 +92,8 @@ type StateFactories<T extends StateDefinition[], Input, Context> = {
 };
 
 /**
- * 初期ステートとして設定可能なステートのIDを表す型。
- */
-type InitialStateId<T extends StateDefinition[]> = T[number] extends infer U
-  ? U extends { id: string; factoryArgs: undefined }
-    ? U["id"]
-    : never
-  : never;
-
-/**
  * ステートマシンを表すクラス。
+ *
  * @template State ステートマシンのステートの型。
  * @template Input ステートが処理する入力の型。
  * @template Context ステート間で共有されるコンテキストの型。
@@ -115,7 +111,6 @@ export class StateMachine<
   private readonly context: Context;
 
   private currentState: State<StateDefinitions, Input, Context>;
-  private isDisposed = false;
 
   /**
    * ステートマシンの現在のステートのID。
@@ -125,50 +120,30 @@ export class StateMachine<
   }
 
   /**
-   * @param stateFactories ステートのファクトリー関数。
-   * @param context ステートマシンのコンテキスト。
-   * @param initialStateId ステートマシンの初期ステートのID。
+   * @param initialState ステートマシンの初期ステート。
+   * @param context ステート間で共有されるコンテキスト。
    */
   constructor(
     stateFactories: StateFactories<StateDefinitions, Input, Context>,
+    initialState: State<StateDefinitions, Input, Context>,
     context: Context,
-    initialStateId: InitialStateId<StateDefinitions>,
   ) {
     this.stateFactories = stateFactories;
     this.context = context;
 
-    this.currentState = stateFactories[initialStateId](undefined);
-  }
+    this.currentState = initialState;
 
-  /**
-   * ステートを設定する。
-   * @param id ステートのID。
-   * @param factoryArgs ステートのファクトリー関数の引数。
-   */
-  setState<T extends StateId<StateDefinitions>>(
-    id: T,
-    factoryArgs: FactoryArgs<StateDefinitions, T>,
-  ) {
-    if (this.isDisposed) {
-      throw new Error("This state machine is already disposed.");
-    }
-    this.currentState.onExit(this.context);
-    this.currentState = this.stateFactories[id](factoryArgs);
     this.currentState.onEnter(this.context);
   }
 
   /**
    * 現在のステートを使用して入力を処理し、必要に応じてステートの遷移を行う。
+   *
    * @param input 処理する入力。
    */
   process(input: Input) {
-    if (this.isDisposed) {
-      throw new Error("This state machine is already disposed.");
-    }
-
     let nextState: State<StateDefinitions, Input, Context> | undefined =
       undefined;
-
     this.currentState.process({
       input,
       context: this.context,
@@ -176,16 +151,10 @@ export class StateMachine<
         nextState = this.stateFactories[id](factoryArgs);
       },
     });
-
     if (nextState != undefined) {
       this.currentState.onExit(this.context);
       this.currentState = nextState;
       this.currentState.onEnter(this.context);
     }
-  }
-
-  dispose() {
-    this.currentState.onExit(this.context);
-    this.isDisposed = true;
   }
 }
