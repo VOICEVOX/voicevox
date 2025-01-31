@@ -20,6 +20,7 @@
 
     "license:generate": "tsx tools/generateLicenses.mts",
     "license:merge": "tsx tools/mergeLicenses.mts",
+    "check-suspicious-imports": "tsx tools/checkSuspiciousImports.mts",
 
     "test:unit": "vitest --run",
     "test-watch:unit": "vitest --watch",
@@ -33,10 +34,10 @@
     "test-watch:storybook-vrt": "cross-env TARGET=storybook PWTEST_WATCH=1 playwright test",
     "test-ui:storybook-vrt": "cross-env TARGET=storybook playwright test --ui",
 
-    "electron:build": "cross-env VITE_TARGET=electron vite build && electron-builder --config electron-builder.config.js --publish never",
     "electron:serve": "cross-env VITE_TARGET=electron vite",
+    "electron:build": "cross-env VITE_TARGET=electron NODE_ENV=production vite build && electron-builder --config electron-builder.config.js --publish never",
     "browser:serve": "cross-env VITE_TARGET=browser vite",
-    "browser:build": "cross-env VITE_TARGET=browser vite build",
+    "browser:build": "cross-env VITE_TARGET=browser NODE_ENV=production vite build",
     "storybook": "storybook dev --port 6006",
     "storybook:build": "storybook build",
 
@@ -114,6 +115,8 @@
     "@vue/eslint-config-prettier": "9.0.0",
     "@vue/eslint-config-typescript": "13.0.0",
     "@vue/test-utils": "2.4.5",
+    "acorn": "8.14.0",
+    "acorn-walk": "8.3.4",
     "chromatic": "11.5.4",
     "cross-env": "7.0.3",
     "dotenv": "16.0.0",
