@@ -8,7 +8,7 @@
  *
  * pnpm run check-suspicious-imports ./path/to/file.js のように単体でも実行可能。
  *
- * 文脈：
+ * NOTE:
  * electron-builderはpnpmを一緒に使うとnode_modulesが壊れる問題があるが、
  * それはビルド後（dist/{main.js,preload.js}）でパッケージがimport/requireされなければ問題ないため、
  * このスクリプトを使って問題がないかチェックする。
