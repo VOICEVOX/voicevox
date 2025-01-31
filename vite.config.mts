@@ -84,9 +84,6 @@ export default defineConfig((options) => {
       mode !== "test" &&
         checker({
           overlay: false,
-          eslint: {
-            lintCommand: "eslint --ext .ts,.vue .",
-          },
           vueTsc: true,
         }),
       isElectron && [
