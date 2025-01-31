@@ -17,6 +17,7 @@ import {
 
 const isElectron = process.env.VITE_TARGET === "electron";
 const isBrowser = process.env.VITE_TARGET === "browser";
+const isProduction = process.env.NODE_ENV === "production";
 
 export default defineConfig((options) => {
   const mode = z
@@ -101,12 +102,13 @@ export default defineConfig((options) => {
             vite: {
               plugins: [
                 tsconfigPaths({ root: import.meta.dirname }),
-                checkSuspiciousImportsPlugin({
-                  allowedInTryCatchModules: [
-                    // systeminformationのoptionalな依存。try-catch内なので許可。
-                    "osx-temperature-sensor",
-                  ],
-                }),
+                isProduction &&
+                  checkSuspiciousImportsPlugin({
+                    allowedInTryCatchModules: [
+                      // systeminformationのoptionalな依存。try-catch内なので許可。
+                      "osx-temperature-sensor",
+                    ],
+                  }),
               ],
               build: {
                 outDir: path.resolve(import.meta.dirname, "dist"),
@@ -125,7 +127,7 @@ export default defineConfig((options) => {
             vite: {
               plugins: [
                 tsconfigPaths({ root: import.meta.dirname }),
-                checkSuspiciousImportsPlugin({}),
+                isProduction && checkSuspiciousImportsPlugin({}),
               ],
               build: {
                 outDir: path.resolve(import.meta.dirname, "dist"),
