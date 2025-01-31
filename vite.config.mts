@@ -54,7 +54,7 @@ export default defineConfig((options) => {
     : false;
 
   // ref: electronの起動をスキップしてデバッグ起動を軽くする
-  const skipLahnchElectron =
+  const skipLaunchElectron =
     mode === "test" || process.env.SKIP_LAUNCH_ELECTRON === "1";
 
   return {
@@ -95,7 +95,7 @@ export default defineConfig((options) => {
             // ref: https://github.com/electron-vite/vite-plugin-electron/pull/122
             onstart: ({ startup }) => {
               console.log("main process build is complete.");
-              if (!skipLahnchElectron) {
+              if (!skipLaunchElectron) {
                 void startup([".", "--no-sandbox"]);
               }
             },
@@ -120,7 +120,7 @@ export default defineConfig((options) => {
             // ref: https://electron-vite.github.io/guide/preload-not-split.html
             entry: "./backend/electron/preload.ts",
             onstart({ reload }) {
-              if (!skipLahnchElectron) {
+              if (!skipLaunchElectron) {
                 reload();
               }
             },
