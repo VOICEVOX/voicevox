@@ -12,6 +12,9 @@ import {
   showExportFileDialog,
   showSaveDirectoryDialog,
   checkFileExists,
+  logInfo,
+  logWarn,
+  logError,
 } from "./ipc";
 import {
   EngineId,
@@ -174,5 +177,17 @@ export const api: Sandbox = {
   async zoomReset() {
     zoomValue = 1;
     await zoom(zoomValue);
+  },
+
+  logInfo(...params) {
+    logInfo(params.map(String).join(" "));
+  },
+
+  logWarn(...params) {
+    logWarn(params.map(String).join(" "));
+  },
+
+  logError(...params) {
+    logError(params.map(String).join(" "));
   },
 };

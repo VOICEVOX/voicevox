@@ -211,6 +211,17 @@ const ipcChangeEnginePath =
 
 const ipcZoom = createMessageFunction<(factor: number) => void>("zoom");
 
+const ipcLogInfo = createMessageFunction<(message: string) => void>("logInfo", {
+  silent: true,
+});
+const ipcLogWarn = createMessageFunction<(message: string) => void>("logWarn", {
+  silent: true,
+});
+const ipcLogError = createMessageFunction<(message: string) => void>(
+  "logError",
+  { silent: true },
+);
+
 type Config = Record<string, unknown> & Metadata;
 const log = createLogger("vst/ipc");
 
@@ -354,4 +365,16 @@ export async function showSaveDirectoryDialog(obj: {
   return await ipcShowSaveDirectoryDialog(obj).then(
     (result) => result || undefined,
   );
+}
+
+export function logInfo(message: string) {
+  void ipcLogInfo(message);
+}
+
+export function logWarn(message: string) {
+  void ipcLogWarn(message);
+}
+
+export function logError(message: string) {
+  void ipcLogError(message);
 }
