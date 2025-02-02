@@ -86,10 +86,28 @@ export type PartialStore = {
 
 export type Context = ComputedRefs & Refs & { readonly store: PartialStore };
 
+export type IdleStateId =
+  | "selectNotesToolIdle"
+  | "editNotesToolIdle"
+  | "drawPitchToolIdle"
+  | "erasePitchToolIdle";
+
 export type SequencerStateDefinitions = StateDefinitions<
   [
     {
-      id: "idle";
+      id: "selectNotesToolIdle";
+      factoryArgs: undefined;
+    },
+    {
+      id: "editNotesToolIdle";
+      factoryArgs: undefined;
+    },
+    {
+      id: "drawPitchToolIdle";
+      factoryArgs: undefined;
+    },
+    {
+      id: "erasePitchToolIdle";
       factoryArgs: undefined;
     },
     {
@@ -97,6 +115,7 @@ export type SequencerStateDefinitions = StateDefinitions<
       factoryArgs: {
         cursorPosAtStart: PositionOnSequencer;
         targetTrackId: TrackId;
+        returnStateId: IdleStateId;
       };
     },
     {
@@ -106,6 +125,7 @@ export type SequencerStateDefinitions = StateDefinitions<
         targetTrackId: TrackId;
         targetNoteIds: Set<NoteId>;
         mouseDownNoteId: NoteId;
+        returnStateId: IdleStateId;
       };
     },
     {
@@ -115,6 +135,7 @@ export type SequencerStateDefinitions = StateDefinitions<
         targetTrackId: TrackId;
         targetNoteIds: Set<NoteId>;
         mouseDownNoteId: NoteId;
+        returnStateId: IdleStateId;
       };
     },
     {
@@ -124,12 +145,14 @@ export type SequencerStateDefinitions = StateDefinitions<
         targetTrackId: TrackId;
         targetNoteIds: Set<NoteId>;
         mouseDownNoteId: NoteId;
+        returnStateId: IdleStateId;
       };
     },
     {
       id: "selectNotesWithRect";
       factoryArgs: {
         cursorPosAtStart: PositionOnSequencer;
+        returnStateId: IdleStateId;
       };
     },
     {
@@ -137,6 +160,7 @@ export type SequencerStateDefinitions = StateDefinitions<
       factoryArgs: {
         cursorPosAtStart: PositionOnSequencer;
         targetTrackId: TrackId;
+        returnStateId: IdleStateId;
       };
     },
     {
@@ -144,6 +168,7 @@ export type SequencerStateDefinitions = StateDefinitions<
       factoryArgs: {
         cursorPosAtStart: PositionOnSequencer;
         targetTrackId: TrackId;
+        returnStateId: IdleStateId;
       };
     },
   ]

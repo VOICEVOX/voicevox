@@ -1,6 +1,7 @@
 import { SetNextState, State } from "@/sing/stateMachine";
 import {
   Context,
+  IdleStateId,
   Input,
   PositionOnSequencer,
   SequencerStateDefinitions,
@@ -15,12 +16,17 @@ export class SelectNotesWithRectState
   readonly id = "selectNotesWithRect";
 
   private readonly cursorPosAtStart: PositionOnSequencer;
+  private readonly returnStateId: IdleStateId;
 
   private currentCursorPos: PositionOnSequencer;
   private additive: boolean;
 
-  constructor(args: { cursorPosAtStart: PositionOnSequencer }) {
+  constructor(args: {
+    cursorPosAtStart: PositionOnSequencer;
+    returnStateId: IdleStateId;
+  }) {
     this.cursorPosAtStart = args.cursorPosAtStart;
+    this.returnStateId = args.returnStateId;
 
     this.currentCursorPos = args.cursorPosAtStart;
     this.additive = false;
@@ -63,7 +69,7 @@ export class SelectNotesWithRectState
         mouseButton === "LEFT_BUTTON"
       ) {
         this.additive = isOnCommandOrCtrlKeyDown(input.mouseEvent);
-        setNextState("idle", undefined);
+        setNextState(this.returnStateId, undefined);
       }
     }
   }
