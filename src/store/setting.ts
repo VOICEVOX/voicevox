@@ -364,6 +364,9 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
           showLoadingScreen({ message: "GPUデバイスを確認中です" });
 
           const isAvailableGPUMode = await window.backend.isAvailableGPUMode();
+
+          hideAllLoadingScreen();
+
           if (!isAvailableGPUMode) {
             const result = await showQuestionDialog({
               type: "warning",
@@ -378,8 +381,6 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
               return;
             }
           }
-
-          hideAllLoadingScreen();
         }
 
         showLoadingScreen({
