@@ -1,5 +1,6 @@
 import {
   Context,
+  IdleStateId,
   Input,
   SequencerStateDefinitions,
 } from "@/sing/sequencerStateMachine/common";
@@ -17,7 +18,10 @@ import { SelectNotesWithRectState } from "@/sing/sequencerStateMachine/states/se
 import { DrawPitchState } from "@/sing/sequencerStateMachine/states/drawPitchState";
 import { ErasePitchState } from "@/sing/sequencerStateMachine/states/erasePitchState";
 
-export const createSequencerStateMachine = (context: Context) => {
+export const createSequencerStateMachine = (
+  context: Context,
+  initialStateId: IdleStateId,
+) => {
   return new StateMachine<SequencerStateDefinitions, Input, Context>(
     {
       selectNotesToolIdle: () => new SelectNotesToolIdleState(),
@@ -32,7 +36,7 @@ export const createSequencerStateMachine = (context: Context) => {
       drawPitch: (args) => new DrawPitchState(args),
       erasePitch: (args) => new ErasePitchState(args),
     },
-    new SelectNotesToolIdleState(),
     context,
+    initialStateId,
   );
 };

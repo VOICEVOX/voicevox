@@ -92,6 +92,15 @@ type StateFactories<T extends StateDefinition[], Input, Context> = {
 };
 
 /**
+ * 初期ステートとして設定可能なステートのIDを表す型。
+ */
+type InitialStateId<T extends StateDefinition[]> = T[number] extends infer U
+  ? U extends { id: string; factoryArgs: undefined }
+    ? U["id"]
+    : never
+  : never;
+
+/**
  * ステートマシンを表すクラス。
  *
  * @template State ステートマシンのステートの型。
@@ -120,19 +129,35 @@ export class StateMachine<
   }
 
   /**
-   * @param initialState ステートマシンの初期ステート。
-   * @param context ステート間で共有されるコンテキスト。
+   * @param stateFactories ステートのファクトリー関数。
+   * @param context ステートマシンのコンテキスト。
+   * @param initialStateId ステートマシンの初期ステートのID。
    */
   constructor(
     stateFactories: StateFactories<StateDefinitions, Input, Context>,
-    initialState: State<StateDefinitions, Input, Context>,
     context: Context,
+    initialStateId: InitialStateId<StateDefinitions>,
   ) {
     this.stateFactories = stateFactories;
     this.context = context;
 
-    this.currentState = initialState;
+    this.currentState = stateFactories[initialStateId](undefined);
+  }
 
+  /**
+   * ステートを設定する。
+   * @param id ステートのID。
+   * @param factoryArgs ステートのファクトリー関数の引数。
+   */
+  setState<T extends StateId<StateDefinitions>>(
+    id: T,
+    factoryArgs: FactoryArgs<StateDefinitions, T>,
+  ) {
+    if (this.isDisposed) {
+      throw new Error("This state machine is already disposed.");
+    }
+    this.currentState.onExit(this.context);
+    this.currentState = this.stateFactories[id](factoryArgs);
     this.currentState.onEnter(this.context);
   }
 
