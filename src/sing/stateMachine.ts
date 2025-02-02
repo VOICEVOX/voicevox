@@ -44,7 +44,6 @@ export type SetNextState<T extends StateDefinition[]> = <U extends StateId<T>>(
 
 /**
  * ステートマシンのステートを表すインターフェース。
- *
  * @template State このインターフェースを実装するステートの型。
  * @template Input ステートが処理する入力の型。
  * @template Context ステート間で共有されるコンテキストの型。
@@ -58,7 +57,6 @@ export interface State<
 
   /**
    * 入力を処理し、必要に応じて次のステートを設定する。
-   *
    * @param payload `input`、`context`、`setNextState`関数を含むペイロード。
    */
   process(payload: {
@@ -69,14 +67,12 @@ export interface State<
 
   /**
    * ステートに入ったときに呼び出される。
-   *
    * @param context ステート間で共有されるコンテキスト。
    */
   onEnter(context: Context): void;
 
   /**
    * ステートから出るときに呼び出される。
-   *
    * @param context ステート間で共有されるコンテキスト。
    */
   onExit(context: Context): void;
@@ -102,7 +98,6 @@ type InitialStateId<T extends StateDefinition[]> = T[number] extends infer U
 
 /**
  * ステートマシンを表すクラス。
- *
  * @template State ステートマシンのステートの型。
  * @template Input ステートが処理する入力の型。
  * @template Context ステート間で共有されるコンテキストの型。
@@ -164,7 +159,6 @@ export class StateMachine<
 
   /**
    * 現在のステートを使用して入力を処理し、必要に応じてステートの遷移を行う。
-   *
    * @param input 処理する入力。
    */
   process(input: Input) {
