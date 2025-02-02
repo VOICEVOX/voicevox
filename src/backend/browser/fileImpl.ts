@@ -3,7 +3,7 @@ import { openDB } from "./browserConfig";
 import { createFakePath, FakePath, isFakePath } from "./fakePath";
 import { SandboxKey } from "@/type/preload";
 import { failure, success } from "@/type/result";
-import { createLogger } from "@/domain/frontend/log";
+import { createLogger } from "@/helpers/log";
 import { normalizeError } from "@/helpers/normalizeError";
 import path from "@/helpers/path";
 import { ExhaustiveError } from "@/type/utility";

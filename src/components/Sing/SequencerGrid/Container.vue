@@ -6,17 +6,35 @@
     :sequencerZoomY
     :sequencerSnapType
     :numMeasures
+    :gridWidth
+    :gridHeight
+    :offsetX="props.offsetX"
+    :offsetY="props.offsetY"
   />
 </template>
 
 <script setup lang="ts">
 import { computed } from "vue";
+import { inject } from "vue";
+import { gridInfoInjectionKey } from "../ScoreSequencer.vue";
 import Presentation from "./Presentation.vue";
 import { useStore } from "@/store";
 
 defineOptions({
   name: "SequencerGrid",
 });
+
+const props = defineProps<{
+  offsetX: number;
+  offsetY: number;
+}>();
+
+const injectedValue = inject(gridInfoInjectionKey);
+if (injectedValue == undefined) {
+  throw new Error("injectedValue is undefined.");
+}
+
+const { gridWidth, gridHeight } = injectedValue;
 
 const store = useStore();
 

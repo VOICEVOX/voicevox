@@ -95,9 +95,12 @@ elif command -v 7zr &> /dev/null; then
 elif command -v 7za &> /dev/null; then
     # CentOS/Fedora
     COMMAND_7Z=7za
+elif command -v 7zz &> /dev/null; then
+    # Official 7zip
+    COMMAND_7Z=7zz
 else
     cat << 'EOS' && exit 1
-[!] Command '7z', '7zr' or '7za' not found
+[!] Command '7z', '7zr', '7za' or '7zz' not found
 
 Required to extract compressed files
 
@@ -115,7 +118,7 @@ Or
     sudo yum install p7zip
 
 Arch Linux:
-    sudo pacman -S p7zip
+    sudo pacman -S 7zip
 
 MacOS:
     brew install p7zip
