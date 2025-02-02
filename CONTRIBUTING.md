@@ -78,6 +78,7 @@ VOICEVOXには、下記のような貢献の仕方があります。
 ### 2. 開発環境の構築
 
 - 必須ツール
+
   - [Node.js](https://nodejs.org/en/download/releases/)\
     [こちら](https://github.com/VOICEVOX/voicevox/blob/main/.node-version)に記載されているバージョンのインストーラを入手し、インストールします。
 
@@ -119,8 +120,13 @@ git clone git@github.com:(個人のGitHubアカウント名)/voicevox.git
 ### 5. 必要なプログラムをダウンロードする
 
 - 手順４で手に入れたフォルダを開いて、コマンドプロンプトを開きます。
-- 環境を準備するコマンド `npm ci`
-  を実行してください。自動的にダウンロードされます。
+- 環境を準備する以下のコマンドを実行してください。自動的にダウンロードされます。
+
+```bash
+npm install -g pnpm
+pnpm i
+```
+
 - ツールの組み合わせや実装に関する警告が表示されますが、開発環境を作るうえでは無視して差し支えありません。
 
 ### 6. エンジンを指定する
@@ -150,7 +156,7 @@ VITE_DEFAULT_ENGINE_INFOS=`[
 
 ### 7. 始動してみる
 
-- `npm run electron:serve`を実行します。
+- `pnpm run electron:serve`を実行します。
 - 設定が正しければ、開発環境が起動するはずです。
 
 ## プロジェクトへの貢献手順
@@ -222,46 +228,46 @@ VITE_DEFAULT_ENGINE_INFOS=`[
 - 記述コードがコーディングルールに沿っていることを確認します。（特に今回の作業によって警告やエラーが増えていないかどうかに注目してください）
 
   ```bash
-  npm run lint
-  npm run fmt
+  pnpm run lint
+  pnpm run fmt
   ```
 
 - TypeScriptの型チェックを行います。
 
   ```bash
-  npm run typecheck
+  pnpm run typecheck
   ```
 
 - Markdownの記述が正しいことを確認します。
 
   ```bash
-  npm run markdownlint ./*/*.md
+  pnpm run markdownlint ./*/*.md
   ```
 
 - 命名に使っている英語が誤っていないことを確認します。
 
   ```bash
-  npm run typos
+  pnpm run typos
   ```
 
 - 個人環境でVOICEVOXを実行し、提出前に、一通り動くことを確認します。
 
   ```bash
-  npm run electron:serve
+  pnpm run electron:serve
   ```
 
 - 使用するライブラリのライセンスに使用出来ないものが使われていないことを確認します。
 
   ```bash
-  npm run license:generate -- -o voicevox_licenses.json
+  pnpm run license:generate -- -o voicevox_licenses.json
   ```
 
 - e2eテストの内容を確認します。
 
   ```bash
-  npm run test:unit
-  npm run test:browser-e2e
-  npm run test:electron-e2e
+  pnpm run test:unit
+  pnpm run test:browser-e2e
+  pnpm run test:electron-e2e
   ```
 
   - e2eテストは実際には自分が提出する範囲外の指摘をしたり、完全に警告が消えないことがあります。
