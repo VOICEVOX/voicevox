@@ -120,6 +120,7 @@ export class StateMachine<
   private readonly context: Context;
 
   private currentState: State<StateDefinitions, Input, Context>;
+  private isDisposed = false;
 
   /**
    * ステートマシンの現在のステートのID。
@@ -167,8 +168,13 @@ export class StateMachine<
    * @param input 処理する入力。
    */
   process(input: Input) {
+    if (this.isDisposed) {
+      throw new Error("This state machine is already disposed.");
+    }
+
     let nextState: State<StateDefinitions, Input, Context> | undefined =
       undefined;
+
     this.currentState.process({
       input,
       context: this.context,
@@ -176,10 +182,19 @@ export class StateMachine<
         nextState = this.stateFactories[id](factoryArgs);
       },
     });
+
     if (nextState != undefined) {
       this.currentState.onExit(this.context);
       this.currentState = nextState;
       this.currentState.onEnter(this.context);
+    }
+  }
+
+  dispose() {
+    try {
+      this.currentState.onExit(this.context);
+    } finally {
+      this.isDisposed = true;
     }
   }
 }
