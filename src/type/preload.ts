@@ -141,6 +141,7 @@ export interface Sandbox {
   uninstallVvppEngine(engineId: EngineId): Promise<boolean>;
   validateEngineDir(engineDir: string): Promise<EngineDirValidationResult>;
   reloadApp(obj: { isMultiEngineOffMode?: boolean }): Promise<void>;
+  getPathForFile(file: File): string;
 }
 
 export type AppInfos = {
@@ -356,6 +357,7 @@ export const experimentalSettingSchema = z.object({
   enableMorphing: z.boolean().default(false),
   enableMultiSelect: z.boolean().default(false),
   shouldKeepTuningOnTextChange: z.boolean().default(false),
+  showParameterPanel: z.boolean().default(false),
 });
 
 export type ExperimentalSettingType = z.infer<typeof experimentalSettingSchema>;

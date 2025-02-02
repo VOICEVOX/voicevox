@@ -29,6 +29,7 @@ exports[`0.13.0からマイグレーションできる 1`] = `
     "enableMorphing": false,
     "enableMultiSelect": false,
     "shouldKeepTuningOnTextChange": false,
+    "showParameterPanel": false,
   },
   "hotkeySettings": [
     {

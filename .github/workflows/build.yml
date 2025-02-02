@@ -158,11 +158,14 @@ jobs:
 
           $sed -i 's/"version": "999.999.999"/"version": "${{ env.VOICEVOX_EDITOR_VERSION }}"/' package.json
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version-file: ".node-version"
-          cache: "npm"
+          cache: "pnpm"
 
       - name: Cache Electron
         uses: actions/cache@v4
@@ -181,7 +184,7 @@ jobs:
             ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm i --frozen-lockfile
 
       - name: Checkout Product Version Resource
         uses: actions/checkout@v4
@@ -221,7 +224,7 @@ jobs:
           $sed -i 's/VITE_GTM_CONTAINER_ID=.*/VITE_GTM_CONTAINER_ID='"$gtm_id"'/' .env.production
 
       - name: Generate public/licenses.json
-        run: npm run license:generate -- -o public/licenses.json
+        run: pnpm run license:generate -o public/licenses.json
 
       - name: Define Code Signing Envs
         if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'
@@ -251,7 +254,7 @@ jobs:
 
           # https://github.com/electron-userland/electron-builder/issues/3179
           USE_HARD_LINKS: false
-        run: npm run electron:build -- --dir
+        run: pnpm run electron:build --dir
 
       - name: Reset Code Signing Envs
         if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'
@@ -284,7 +287,7 @@ jobs:
           rm "${{ matrix.app_asar_dir }}/app.asar"
 
           mv voicevox_engine/licenses.json engine_licenses.json
-          npm run license:merge -- -o "${{ matrix.app_asar_dir }}/app/dist/licenses.json" -i engine_licenses.json -i "${{ matrix.app_asar_dir }}/app/dist/licenses.json"
+          pnpm run license:merge -o "${{ matrix.app_asar_dir }}/app/dist/licenses.json" -i engine_licenses.json -i "${{ matrix.app_asar_dir }}/app/dist/licenses.json"
 
           # Repack asar
           npx asar pack "${{ matrix.app_asar_dir }}/app" "${{ matrix.app_asar_dir }}/app.asar"
@@ -413,14 +416,14 @@ jobs:
           LINUX_ARTIFACT_NAME: ${{ matrix.linux_artifact_name }}
           LINUX_EXECUTABLE_NAME: ${{ matrix.linux_executable_name }}
         run: |
-          npm run electron:build -- --prepackaged prepackage/
+          pnpm run electron:build --prepackaged prepackage/
 
       - name: Build Electron (for macOS)
         if: endsWith(matrix.installer_artifact_name, '-dmg') # macOS
         env:
           MACOS_ARTIFACT_NAME: ${{ matrix.macos_artifact_name }}
         run: |
-          npm run electron:build -- --prepackaged prepackage/VOICEVOX.app
+          pnpm run electron:build --prepackaged prepackage/VOICEVOX.app
 
       - name: Reset Code Signing Envs
         if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'

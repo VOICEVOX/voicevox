@@ -175,11 +175,9 @@
 </template>
 
 <script lang="ts">
-import { Ref, ComputedRef } from "vue";
+import { Ref, ComputedRef, type InjectionKey } from "vue";
 
-export const dictionaryManageDialogContextKey = "dictionaryManageDialogContext";
-
-export interface DictionaryManageDialogContext {
+export const dictionaryManageDialogContextKey: InjectionKey<{
   wordEditing: Ref<boolean>;
   surfaceInput: Ref<QInput | undefined>;
   selectedId: Ref<string>;
@@ -204,7 +202,7 @@ export interface DictionaryManageDialogContext {
   toInitialState: () => void;
   toWordEditingState: () => void;
   cancel: () => void;
-}
+}> = Symbol("dictionaryManageDialogContextKey");
 </script>
 
 <script setup lang="ts">
@@ -546,7 +544,7 @@ const toDialogClosedState = () => {
   dictionaryManageDialogOpenedComputed.value = false;
 };
 
-provide<DictionaryManageDialogContext>(dictionaryManageDialogContextKey, {
+provide(dictionaryManageDialogContextKey, {
   wordEditing,
   surfaceInput,
   selectedId,
