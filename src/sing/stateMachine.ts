@@ -186,10 +186,10 @@ export class StateMachine<
   }
 
   dispose() {
-    try {
-      this.currentState.onExit(this.context);
-    } finally {
-      this.isDisposed = true;
+    if (this.isDisposed) {
+      throw new Error("Already disposed.");
     }
+    this.isDisposed = true;
+    this.currentState.onExit(this.context);
   }
 }
