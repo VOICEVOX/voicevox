@@ -141,11 +141,12 @@ export class StateMachine<
   }
 
   /**
-   * ステートを設定する。
-   * @param id ステートのID。
-   * @param factoryArgs ステートのファクトリー関数の引数。
+   * ステートの遷移を行う。
+   * このメソッドは副作用として、現在のステートの onExit を呼び出し、遷移後のステートの onEnter を呼び出す。
+   * @param id 遷移先のステートのID。
+   * @param factoryArgs 遷移先のステートのファクトリー関数の引数。
    */
-  setState<T extends StateId<StateDefinitions>>(
+  transitionTo<T extends StateId<StateDefinitions>>(
     id: T,
     factoryArgs: FactoryArgs<StateDefinitions, T>,
   ) {
