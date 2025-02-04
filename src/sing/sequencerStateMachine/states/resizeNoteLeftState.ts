@@ -25,7 +25,6 @@ export class ResizeNoteLeftState
   private readonly returnStateId: IdleStateId;
 
   private currentCursorPos: PositionOnSequencer;
-  private edited: boolean;
   private applyPreview: boolean;
 
   private innerContext:
@@ -33,6 +32,7 @@ export class ResizeNoteLeftState
         targetNotesAtStart: Map<NoteId, Note>;
         previewRequestId: number;
         executePreviewProcess: boolean;
+        edited: boolean;
         guideLineTicksAtStart: number;
       }
     | undefined;
@@ -54,7 +54,6 @@ export class ResizeNoteLeftState
     this.returnStateId = args.returnStateId;
 
     this.currentCursorPos = args.cursorPosAtStart;
-    this.edited = false;
     this.applyPreview = false;
   }
 
@@ -89,7 +88,7 @@ export class ResizeNoteLeftState
       context.previewNotes.value = previewNotes.map((value) => {
         return editedNotes.get(value.id) ?? value;
       });
-      this.edited = true;
+      this.innerContext.edited = true;
     }
 
     context.guideLineTicks.value = newNotePos;
@@ -127,6 +126,7 @@ export class ResizeNoteLeftState
       targetNotesAtStart: targetNotesMap,
       executePreviewProcess: false,
       previewRequestId,
+      edited: false,
       guideLineTicksAtStart: guideLineTicks,
     };
   }
@@ -151,7 +151,7 @@ export class ResizeNoteLeftState
         input.mouseEvent.type === "mouseup" &&
         mouseButton === "LEFT_BUTTON"
       ) {
-        this.applyPreview = this.edited;
+        this.applyPreview = this.innerContext.edited;
         setNextState(this.returnStateId, undefined);
       }
     }
