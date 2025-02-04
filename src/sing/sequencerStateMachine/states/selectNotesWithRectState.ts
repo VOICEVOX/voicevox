@@ -19,6 +19,7 @@ export class SelectNotesWithRectState
   private readonly returnStateId: IdleStateId;
 
   private currentCursorPos: PositionOnSequencer;
+  private applyPreview: boolean;
   private additive: boolean;
 
   constructor(args: {
@@ -29,6 +30,7 @@ export class SelectNotesWithRectState
     this.returnStateId = args.returnStateId;
 
     this.currentCursorPos = args.cursorPosAtStart;
+    this.applyPreview = false;
     this.additive = false;
   }
 
@@ -48,6 +50,9 @@ export class SelectNotesWithRectState
 
   onEnter(context: Context) {
     this.updatePreviewRect(context);
+
+    // TODO: ScoreSequencer.vueのコードをnowPreview == trueを考慮したコードにする
+    context.nowPreviewing.value = true;
   }
 
   process({
@@ -68,6 +73,7 @@ export class SelectNotesWithRectState
         input.mouseEvent.type === "mouseup" &&
         mouseButton === "LEFT_BUTTON"
       ) {
+        this.applyPreview = true;
         this.additive = isOnCommandOrCtrlKeyDown(input.mouseEvent);
         setNextState(this.returnStateId, undefined);
       }
@@ -75,39 +81,42 @@ export class SelectNotesWithRectState
   }
 
   onExit(context: Context) {
-    context.previewRectForRectSelect.value = undefined;
+    if (this.applyPreview) {
+      const startTicks = Math.min(
+        this.cursorPosAtStart.ticks,
+        this.currentCursorPos.ticks,
+      );
+      const endTicks = Math.max(
+        this.cursorPosAtStart.ticks,
+        this.currentCursorPos.ticks,
+      );
+      const startNoteNumber = Math.min(
+        this.cursorPosAtStart.noteNumber,
+        this.currentCursorPos.noteNumber,
+      );
+      const endNoteNumber = Math.max(
+        this.cursorPosAtStart.noteNumber,
+        this.currentCursorPos.noteNumber,
+      );
 
-    const startTicks = Math.min(
-      this.cursorPosAtStart.ticks,
-      this.currentCursorPos.ticks,
-    );
-    const endTicks = Math.max(
-      this.cursorPosAtStart.ticks,
-      this.currentCursorPos.ticks,
-    );
-    const startNoteNumber = Math.min(
-      this.cursorPosAtStart.noteNumber,
-      this.currentCursorPos.noteNumber,
-    );
-    const endNoteNumber = Math.max(
-      this.cursorPosAtStart.noteNumber,
-      this.currentCursorPos.noteNumber,
-    );
-
-    const noteIdsToSelect: NoteId[] = [];
-    for (const note of context.notesInSelectedTrack.value) {
-      if (
-        note.position + note.duration >= startTicks &&
-        note.position <= endTicks &&
-        note.noteNumber >= startNoteNumber &&
-        note.noteNumber <= endNoteNumber
-      ) {
-        noteIdsToSelect.push(note.id);
+      const noteIdsToSelect: NoteId[] = [];
+      for (const note of context.notesInSelectedTrack.value) {
+        if (
+          note.position + note.duration >= startTicks &&
+          note.position <= endTicks &&
+          note.noteNumber >= startNoteNumber &&
+          note.noteNumber <= endNoteNumber
+        ) {
+          noteIdsToSelect.push(note.id);
+        }
       }
+      if (!this.additive) {
+        void context.store.actions.DESELECT_ALL_NOTES();
+      }
+      void context.store.actions.SELECT_NOTES({ noteIds: noteIdsToSelect });
     }
-    if (!this.additive) {
-      void context.store.actions.DESELECT_ALL_NOTES();
-    }
-    void context.store.actions.SELECT_NOTES({ noteIds: noteIdsToSelect });
+
+    context.previewRectForRectSelect.value = undefined;
+    context.nowPreviewing.value = false;
   }
 }

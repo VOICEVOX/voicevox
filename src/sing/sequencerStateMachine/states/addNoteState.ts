@@ -26,6 +26,8 @@ export class AddNoteState
   private readonly returnStateId: IdleStateId;
 
   private currentCursorPos: PositionOnSequencer;
+  private applyPreview: boolean;
+
   private innerContext:
     | {
         noteToAdd: Note;
@@ -44,6 +46,7 @@ export class AddNoteState
     this.returnStateId = args.returnStateId;
 
     this.currentCursorPos = args.cursorPosAtStart;
+    this.applyPreview = false;
   }
 
   private previewAdd(context: Context) {
@@ -81,8 +84,10 @@ export class AddNoteState
       noteNumber: clamp(this.cursorPosAtStart.noteNumber, 0, 127),
       lyric: getDoremiFromNoteNumber(this.cursorPosAtStart.noteNumber),
     };
+    const noteEndPos = noteToAdd.position + noteToAdd.duration;
 
     context.previewNotes.value = [noteToAdd];
+    context.guideLineTicks.value = noteEndPos;
     context.nowPreviewing.value = true;
 
     const previewIfNeeded = () => {
@@ -121,10 +126,12 @@ export class AddNoteState
       if (input.mouseEvent.type === "mousemove") {
         this.currentCursorPos = input.cursorPos;
         this.innerContext.executePreviewProcess = true;
-      } else if (input.mouseEvent.type === "mouseup") {
-        if (mouseButton === "LEFT_BUTTON") {
-          setNextState(this.returnStateId, undefined);
-        }
+      } else if (
+        input.mouseEvent.type === "mouseup" &&
+        mouseButton === "LEFT_BUTTON"
+      ) {
+        this.applyPreview = true;
+        setNextState(this.returnStateId, undefined);
       }
     }
   }
@@ -138,18 +145,21 @@ export class AddNoteState
 
     cancelAnimationFrame(this.innerContext.previewRequestId);
 
-    void context.store.actions.COMMAND_ADD_NOTES({
-      notes: context.previewNotes.value,
-      trackId: this.targetTrackId,
-    });
-    void context.store.actions.SELECT_NOTES({ noteIds: previewNoteIds });
-
-    if (previewNotes.length === 1) {
-      void context.store.actions.PLAY_PREVIEW_SOUND({
-        noteNumber: previewNotes[0].noteNumber,
-        duration: PREVIEW_SOUND_DURATION,
+    if (this.applyPreview) {
+      void context.store.actions.COMMAND_ADD_NOTES({
+        notes: context.previewNotes.value,
+        trackId: this.targetTrackId,
       });
+      void context.store.actions.SELECT_NOTES({ noteIds: previewNoteIds });
+
+      if (previewNotes.length === 1) {
+        void context.store.actions.PLAY_PREVIEW_SOUND({
+          noteNumber: previewNotes[0].noteNumber,
+          duration: PREVIEW_SOUND_DURATION,
+        });
+      }
     }
+
     context.previewNotes.value = [];
     context.nowPreviewing.value = false;
   }

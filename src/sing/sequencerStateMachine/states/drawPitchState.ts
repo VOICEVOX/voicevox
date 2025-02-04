@@ -24,6 +24,7 @@ export class DrawPitchState
   private readonly returnStateId: IdleStateId;
 
   private currentCursorPos: PositionOnSequencer;
+  private applyPreview: boolean;
 
   private innerContext:
     | {
@@ -43,6 +44,7 @@ export class DrawPitchState
     this.returnStateId = args.returnStateId;
 
     this.currentCursorPos = args.cursorPosAtStart;
+    this.applyPreview = false;
   }
 
   private previewDrawPitch(context: Context) {
@@ -146,6 +148,7 @@ export class DrawPitchState
 
   process({
     input,
+    context,
     setNextState,
   }: {
     input: Input;
@@ -155,15 +158,27 @@ export class DrawPitchState
     if (this.innerContext == undefined) {
       throw new Error("innerContext is undefined.");
     }
+    if (context.previewPitchEdit.value == undefined) {
+      throw new Error("previewPitchEdit is undefined.");
+    }
+    if (context.previewPitchEdit.value.type !== "draw") {
+      throw new Error("previewPitchEdit.type is not draw.");
+    }
     const mouseButton = getButton(input.mouseEvent);
     if (input.targetArea === "SequencerBody") {
       if (input.mouseEvent.type === "mousemove") {
         this.currentCursorPos = input.cursorPos;
         this.innerContext.executePreviewProcess = true;
-      } else if (input.mouseEvent.type === "mouseup") {
-        if (mouseButton === "LEFT_BUTTON") {
-          setNextState(this.returnStateId, undefined);
-        }
+      } else if (
+        input.mouseEvent.type === "mouseup" &&
+        mouseButton === "LEFT_BUTTON"
+      ) {
+        // カーソルを動かさずにマウスのボタンを離したときに1フレームのみの変更になり、
+        // 1フレームの変更はピッチ編集ラインとして表示されないので、無視する
+        const previewPitchEditDataLength =
+          context.previewPitchEdit.value.data.length;
+        this.applyPreview = previewPitchEditDataLength >= 2;
+        setNextState(this.returnStateId, undefined);
       }
     }
   }
@@ -181,9 +196,7 @@ export class DrawPitchState
 
     cancelAnimationFrame(this.innerContext.previewRequestId);
 
-    // カーソルを動かさずにマウスのボタンを離したときに1フレームのみの変更になり、
-    // 1フレームの変更はピッチ編集ラインとして表示されないので、無視する
-    if (context.previewPitchEdit.value.data.length >= 2) {
+    if (this.applyPreview) {
       // 平滑化を行う
       let data = context.previewPitchEdit.value.data;
       data = data.map((value) => Math.log(value));

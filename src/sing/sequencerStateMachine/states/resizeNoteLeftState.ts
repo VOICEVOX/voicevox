@@ -25,6 +25,7 @@ export class ResizeNoteLeftState
   private readonly returnStateId: IdleStateId;
 
   private currentCursorPos: PositionOnSequencer;
+  private applyPreview: boolean;
 
   private innerContext:
     | {
@@ -53,6 +54,7 @@ export class ResizeNoteLeftState
     this.returnStateId = args.returnStateId;
 
     this.currentCursorPos = args.cursorPosAtStart;
+    this.applyPreview = false;
   }
 
   private previewResizeLeft(context: Context) {
@@ -101,8 +103,10 @@ export class ResizeNoteLeftState
     for (const targetNote of targetNotesArray) {
       targetNotesMap.set(targetNote.id, targetNote);
     }
+    const mouseDownNote = getOrThrow(targetNotesMap, this.mouseDownNoteId);
 
     context.previewNotes.value = [...targetNotesArray];
+    context.guideLineTicks.value = mouseDownNote.position;
     context.nowPreviewing.value = true;
 
     const previewIfNeeded = () => {
@@ -147,6 +151,7 @@ export class ResizeNoteLeftState
         input.mouseEvent.type === "mouseup" &&
         mouseButton === "LEFT_BUTTON"
       ) {
+        this.applyPreview = this.innerContext.edited;
         setNextState(this.returnStateId, undefined);
       }
     }
@@ -161,18 +166,21 @@ export class ResizeNoteLeftState
 
     cancelAnimationFrame(this.innerContext.previewRequestId);
 
-    void context.store.actions.COMMAND_UPDATE_NOTES({
-      notes: previewNotes,
-      trackId: this.targetTrackId,
-    });
-    void context.store.actions.SELECT_NOTES({ noteIds: previewNoteIds });
-
-    if (previewNotes.length === 1) {
-      void context.store.actions.PLAY_PREVIEW_SOUND({
-        noteNumber: previewNotes[0].noteNumber,
-        duration: PREVIEW_SOUND_DURATION,
+    if (this.applyPreview) {
+      void context.store.actions.COMMAND_UPDATE_NOTES({
+        notes: previewNotes,
+        trackId: this.targetTrackId,
       });
+      void context.store.actions.SELECT_NOTES({ noteIds: previewNoteIds });
+
+      if (previewNotes.length === 1) {
+        void context.store.actions.PLAY_PREVIEW_SOUND({
+          noteNumber: previewNotes[0].noteNumber,
+          duration: PREVIEW_SOUND_DURATION,
+        });
+      }
     }
+
     context.previewNotes.value = [];
     context.nowPreviewing.value = false;
   }

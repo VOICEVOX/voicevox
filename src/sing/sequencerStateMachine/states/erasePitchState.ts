@@ -19,6 +19,7 @@ export class ErasePitchState
   private readonly returnStateId: IdleStateId;
 
   private currentCursorPos: PositionOnSequencer;
+  private applyPreview: boolean;
 
   private innerContext:
     | {
@@ -37,6 +38,7 @@ export class ErasePitchState
     this.returnStateId = args.returnStateId;
 
     this.currentCursorPos = args.cursorPosAtStart;
+    this.applyPreview = false;
   }
 
   private previewErasePitch(context: Context) {
@@ -108,10 +110,12 @@ export class ErasePitchState
       if (input.mouseEvent.type === "mousemove") {
         this.currentCursorPos = input.cursorPos;
         this.innerContext.executePreviewProcess = true;
-      } else if (input.mouseEvent.type === "mouseup") {
-        if (mouseButton === "LEFT_BUTTON") {
-          setNextState(this.returnStateId, undefined);
-        }
+      } else if (
+        input.mouseEvent.type === "mouseup" &&
+        mouseButton === "LEFT_BUTTON"
+      ) {
+        this.applyPreview = true;
+        setNextState(this.returnStateId, undefined);
       }
     }
   }
@@ -129,11 +133,13 @@ export class ErasePitchState
 
     cancelAnimationFrame(this.innerContext.previewRequestId);
 
-    void context.store.actions.COMMAND_ERASE_PITCH_EDIT_DATA({
-      startFrame: context.previewPitchEdit.value.startFrame,
-      frameLength: context.previewPitchEdit.value.frameLength,
-      trackId: this.targetTrackId,
-    });
+    if (this.applyPreview) {
+      void context.store.actions.COMMAND_ERASE_PITCH_EDIT_DATA({
+        startFrame: context.previewPitchEdit.value.startFrame,
+        frameLength: context.previewPitchEdit.value.frameLength,
+        trackId: this.targetTrackId,
+      });
+    }
 
     context.previewPitchEdit.value = undefined;
     context.nowPreviewing.value = false;
