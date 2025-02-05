@@ -9,6 +9,8 @@
     }"
     :style="{ width: `${width}px` }"
     @click.stop
+    @mousedown.stop="handleLoopAreaMouseDown"
+    @mouseup.stop
     @contextmenu.prevent="handleContextMenu"
   >
     <svg
@@ -17,23 +19,13 @@
       :height="16"
       shape-rendering="crispEdges"
     >
-      <!-- ループエリア -->
-      <rect
-        x="0"
-        y="0"
-        :width
-        height="16"
-        class="loop-background"
-        @mousedown.stop="handleLoopAreaMouseDown"
-        @mouseup.stop
-      />
       <!-- ループ範囲 -->
       <rect
         v-if="!isEmpty"
         :x="loopStartX - offset + 4"
         y="0"
         :width="Math.max(loopEndX - loopStartX - 8, 0)"
-        height="5"
+        height="4"
         rx="2"
         ry="2"
         class="loop-range"
@@ -149,8 +141,9 @@ const handleContextMenu = (event: MouseEvent) => {
 <style scoped lang="scss">
 @use "@/styles/v2/variables" as vars;
 
-// レーン背景
+// ループ背景
 .loop-lane {
+  border-radius: 6px;
   height: 16px;
   position: absolute;
   top: 0;
@@ -159,126 +152,123 @@ const handleContextMenu = (event: MouseEvent) => {
   overflow: hidden;
   pointer-events: auto;
   cursor: pointer;
-  z-index: vars.$z-index-sing-loop-background;
+  transition: background-color 0.2s ease-out;
 
-  // TODO: ドラッグで追加できることがわかりづらい場合、hoverで変更可能を示す
-  /*
-  &:hover {
-    fill: var(--scheme-color-outline);
-  }
-  */
-
+  // カーソル状態
   &.cursor-ew-resize {
     cursor: ew-resize;
   }
+
+  // ホバー状態
+  &:hover {
+    background: var(--scheme-color-sing-ruler-surface-hover);
+  }
 }
 
-// ループ背景
-.loop-background {
-  fill: transparent;
-  z-index: vars.$z-index-sing-loop-background;
-}
-
-// ループ範囲
+// ループ範囲(ループ上部の背景)
 .loop-range {
   fill: var(--scheme-color-primary);
-  z-index: vars.$z-index-sing-loop-range;
 
   &-area {
     fill: transparent;
   }
 }
 
-// ハンドル
+// ループハンドル
 .loop-handle {
   fill: var(--scheme-color-primary);
   cursor: ew-resize;
-  z-index: vars.$z-index-sing-loop-handle;
-  opacity: 0.8;
-
-  &.is-empty {
-    fill: var(--scheme-color-outline);
-    opacity: 0.5;
-  }
 
   &-drag-area {
     fill: transparent;
     cursor: ew-resize;
   }
-}
 
-.loop-handle-group {
-  &:hover {
-    cursor: ew-resize;
+  &-group {
+    &:hover {
+      cursor: ew-resize;
+    }
   }
 }
 
-.loop-lane {
-  // 有効時
+// ホバー時のハンドル強調（ドラッグ中以外）
+.loop-lane:not(.is-dragging) {
+  .loop-handle-group:hover {
+    .loop-handle {
+      opacity: 1;
+      stroke-width: 1.5px;
+    }
+  }
+}
+
+// ループ有効時
+.loop-lane.is-enabled {
+  .loop-range {
+    fill: var(--scheme-color-primary);
+    opacity: 0.5;
+  }
+
+  .loop-handle {
+    fill: var(--scheme-color-primary);
+    stroke: var(--scheme-color-primary);
+    opacity: 1;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+
+// ループ無効時
+.loop-lane:not(.is-enabled):not(.is-dragging) {
+  .loop-range {
+    fill: var(--scheme-color-outline);
+    opacity: 0.38;
+  }
+
+  .loop-handle {
+    fill: var(--scheme-color-outline);
+    stroke: var(--scheme-color-outline);
+    opacity: 0.5;
+
+    &:hover {
+      fill: var(--scheme-color-secondary);
+      stroke: var(--scheme-color-secondary);
+    }
+  }
+}
+
+// ドラッグ中
+.loop-lane.is-dragging {
+  background: var(--scheme-color-sing-ruler-surface-hover);
+
+  // ドラッグ中かつ有効
   &.is-enabled {
+    .loop-handle {
+      fill: var(--scheme-color-primary-fixed-dim);
+      stroke: var(--scheme-color-primary-fixed-dim);
+      stroke-width: 1.5px;
+    }
+  }
+
+  // ドラッグ中かつ無効
+  &:not(.is-enabled) {
     .loop-range {
-      fill: var(--scheme-color-primary);
-      opacity: 0.3;
-      z-index: vars.$z-index-sing-loop-range;
+      fill: var(--scheme-color-outline);
     }
 
     .loop-handle {
-      fill: var(--scheme-color-primary);
-      z-index: vars.$z-index-sing-loop-handle;
+      fill: var(--scheme-color-secondary);
+      stroke: var(--scheme-color-secondary);
+      stroke-width: 1.5px;
     }
   }
+}
 
-  // 無効時
-  &:not(.is-enabled):not(.is-dragging) {
-    .loop-range {
-      fill: var(--scheme-color-outline);
-      opacity: 0.3;
-    }
-
-    .loop-handle {
-      fill: var(--scheme-color-outline);
-      stroke: var(--scheme-color-outline-variant);
-      opacity: 0.5;
-    }
-  }
-
-  // ドラッグ中
-  &.is-dragging {
-    .loop-background {
-      fill: var(--scheme-color-surface-variant);
-      opacity: 0.1;
-    }
-
-    // ドラッグ中（有効時）
-    &.is-enabled {
-      .loop-range {
-        opacity: 0.4;
-      }
-
-      .loop-handle {
-        fill: var(--scheme-color-primary-fixed-dim);
-        stroke: var(--scheme-color-primary-fixed-dim);
-        stroke-width: 1.5px;
-      }
-    }
-
-    // ドラッグ中（無効時）
-    &:not(.is-enabled) {
-      .loop-range {
-        fill: var(--scheme-color-outline);
-        opacity: 0.4;
-      }
-
-      .loop-handle {
-        fill: var(--scheme-color-outline);
-        stroke: var(--scheme-color-outline);
-        stroke-width: 1.5px;
-      }
-    }
-  }
-
-  // 空の状態
-  &.is-empty:not(.is-dragging) {
+// 空の状態のスタイル
+.loop-lane.is-empty {
+  // 空かつドラッグ中でない
+  &:not(.is-dragging) {
     .loop-range,
     .loop-handle,
     .loop-drag-area {
@@ -286,7 +276,8 @@ const handleContextMenu = (event: MouseEvent) => {
     }
   }
 
-  &.is-dragging.is-empty {
+  // 空かつドラッグ中
+  &.is-dragging {
     .loop-handle {
       fill: var(--scheme-color-outline);
       stroke: var(--scheme-color-outline);
@@ -294,14 +285,10 @@ const handleContextMenu = (event: MouseEvent) => {
     }
   }
 
-  // ホバー時（ドラッグ中以外）
-  &:not(.is-dragging) {
-    .loop-handle-group:hover {
-      .loop-handle {
-        opacity: 1;
-        stroke-width: 1.5px;
-      }
-    }
+  // 空のハンドル
+  .loop-handle.is-empty {
+    fill: var(--scheme-color-outline);
+    opacity: 0.5;
   }
 }
 </style>

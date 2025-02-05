@@ -5,7 +5,7 @@
         <!-- NOTE: slotを使う(Copilotくんが提案してくれた) -->
         <slot name="grid" />
       </div>
-      <div class="sequencer-ruler-changes">
+      <div class="sequencer-ruler-value-changes">
         <slot name="changes" />
       </div>
       <div class="sequencer-ruler-loop">
@@ -72,7 +72,8 @@ const onClick = (event: MouseEvent) => {
   height: 40px;
   position: relative;
   overflow: hidden;
-  isolation: isolate;
+  z-index: vars.$z-index-sing-ruler;
+  isolation: isolate; // ルーラー内で重なりを局所管理
 }
 
 .sequencer-ruler-content {
@@ -81,18 +82,20 @@ const onClick = (event: MouseEvent) => {
   height: 100%;
 }
 
-.sequencer-ruler-grid,
-.sequencer-ruler-changes,
 .sequencer-ruler-loop {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  z-index: 0; // ルーラー内においてグリッドより下
 }
 
-.sequencer-ruler-loop {
-  height: 20px;
+.sequencer-ruler-grid {
+  position: absolute;
+  z-index: 1; // ルーラー内でグリッド線が重なりの影響を受けないようにするため一番上に
+  pointer-events: none; // クリック無効
+}
+
+.sequencer-ruler-value-changes {
+  position: absolute;
+  z-index: 2; // ルーラー内においてグリッドより上
 }
 
 .sequencer-ruler-playhead {

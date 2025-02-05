@@ -321,7 +321,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => [
 ]);
 
 // クリック位置から1小節ぶんのループ範囲を作成
-function addOneMeasureLoop(localX: number) {
+const addOneMeasureLoop = (localX: number) => {
   const snappedTick = getSnappedTickFromOffsetX(localX);
   // そのTick時点にある拍子情報を取得
   const currentTs = timeSignatures.value.findLast((_, idx) => {
@@ -348,7 +348,7 @@ function addOneMeasureLoop(localX: number) {
   void store.actions.SET_PLAYHEAD_POSITION({
     position: startTick,
   });
-}
+};
 
 // アンマウント時に必ずドラッグを停止
 onUnmounted(() => {
