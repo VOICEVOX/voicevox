@@ -106,6 +106,7 @@ export class ResizeNoteLeftState
     const mouseDownNote = getOrThrow(targetNotesMap, this.mouseDownNoteId);
 
     context.previewNotes.value = [...targetNotesArray];
+    context.cursorState.value = "EW_RESIZE";
     context.guideLineTicks.value = mouseDownNote.position;
     context.nowPreviewing.value = true;
 

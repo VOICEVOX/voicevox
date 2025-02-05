@@ -1,7 +1,7 @@
 import { ComputedRef, Ref } from "vue";
 import { StateDefinitions } from "@/sing/stateMachine";
 import { Rect } from "@/sing/utility";
-import { PREVIEW_SOUND_DURATION } from "@/sing/viewHelper";
+import { CursorState, PREVIEW_SOUND_DURATION } from "@/sing/viewHelper";
 import { Store } from "@/store";
 import { Note, SequencerEditTarget } from "@/store/type";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
@@ -48,6 +48,8 @@ export type ComputedRefs = {
   readonly notesInSelectedTrack: ComputedRef<Note[]>;
   readonly selectedNoteIds: ComputedRef<Set<NoteId>>;
   readonly editorFrameRate: ComputedRef<number>;
+  readonly isShiftKeyDown: ComputedRef<boolean>;
+  readonly isCommandOrCtrlKeyDown: ComputedRef<boolean>;
 };
 
 export type Refs = {
@@ -59,6 +61,7 @@ export type Refs = {
     | { type: "erase"; startFrame: number; frameLength: number }
     | undefined
   >;
+  readonly cursorState: Ref<CursorState>;
   readonly guideLineTicks: Ref<number>;
 };
 

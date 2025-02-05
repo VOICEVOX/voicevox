@@ -87,6 +87,7 @@ export class AddNoteState
     const noteEndPos = noteToAdd.position + noteToAdd.duration;
 
     context.previewNotes.value = [noteToAdd];
+    context.cursorState.value = "DRAW";
     context.guideLineTicks.value = noteEndPos;
     context.nowPreviewing.value = true;
 

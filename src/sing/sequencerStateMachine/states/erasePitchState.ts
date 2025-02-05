@@ -73,6 +73,7 @@ export class ErasePitchState
       startFrame: this.cursorPosAtStart.frame,
       frameLength: 1,
     };
+    context.cursorState.value = "ERASE";
     context.nowPreviewing.value = true;
 
     const previewIfNeeded = () => {

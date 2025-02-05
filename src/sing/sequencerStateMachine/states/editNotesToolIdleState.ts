@@ -1,3 +1,4 @@
+import { watch, WatchHandle } from "vue";
 import { SetNextState, State } from "@/sing/stateMachine";
 import {
   Context,
@@ -14,7 +15,17 @@ export class EditNotesToolIdleState
 {
   readonly id = "editNotesToolIdle";
 
-  onEnter() {}
+  private watchHandle: WatchHandle | undefined;
+
+  onEnter(context: Context) {
+    this.watchHandle = watch(context.isCommandOrCtrlKeyDown, (value) => {
+      if (value) {
+        context.cursorState.value = "UNSET";
+      } else {
+        context.cursorState.value = "DRAW";
+      }
+    });
+  }
 
   process({
     input,
@@ -87,5 +98,10 @@ export class EditNotesToolIdleState
     }
   }
 
-  onExit() {}
+  onExit() {
+    if (this.watchHandle == undefined) {
+      throw new Error("unwatch is undefined.");
+    }
+    this.watchHandle.stop();
+  }
 }

@@ -1,3 +1,4 @@
+import { watch, WatchHandle } from "vue";
 import { SetNextState, State } from "@/sing/stateMachine";
 import {
   Context,
@@ -12,7 +13,17 @@ export class DrawPitchToolIdleState
 {
   readonly id = "drawPitchToolIdle";
 
-  onEnter() {}
+  private watchHandle: WatchHandle | undefined;
+
+  onEnter(context: Context) {
+    this.watchHandle = watch(context.isCommandOrCtrlKeyDown, (value) => {
+      if (value) {
+        context.cursorState.value = "ERASE";
+      } else {
+        context.cursorState.value = "DRAW";
+      }
+    });
+  }
 
   process({
     input,
@@ -47,5 +58,10 @@ export class DrawPitchToolIdleState
     }
   }
 
-  onExit() {}
+  onExit() {
+    if (this.watchHandle == undefined) {
+      throw new Error("unwatch is undefined.");
+    }
+    this.watchHandle.stop();
+  }
 }

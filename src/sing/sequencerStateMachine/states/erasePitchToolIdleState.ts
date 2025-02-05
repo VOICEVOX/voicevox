@@ -11,7 +11,9 @@ export class ErasePitchToolIdleState
 {
   readonly id = "erasePitchToolIdle";
 
-  onEnter() {}
+  onEnter(context: Context) {
+    context.cursorState.value = "UNSET";
+  }
 
   process({
     input,

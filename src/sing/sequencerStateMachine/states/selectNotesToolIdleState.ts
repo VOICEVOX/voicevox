@@ -1,3 +1,4 @@
+import { watch, WatchHandle } from "vue";
 import { SetNextState, State } from "@/sing/stateMachine";
 import {
   Context,
@@ -13,7 +14,17 @@ export class SelectNotesToolIdleState
 {
   readonly id = "selectNotesToolIdle";
 
-  onEnter() {}
+  private watchHandle: WatchHandle | undefined;
+
+  onEnter(context: Context) {
+    this.watchHandle = watch(context.isShiftKeyDown, (value) => {
+      if (value) {
+        context.cursorState.value = "CROSSHAIR";
+      } else {
+        context.cursorState.value = "UNSET";
+      }
+    });
+  }
 
   process({
     input,
@@ -80,5 +91,10 @@ export class SelectNotesToolIdleState
     }
   }
 
-  onExit() {}
+  onExit() {
+    if (this.watchHandle == undefined) {
+      throw new Error("unwatch is undefined.");
+    }
+    this.watchHandle.stop();
+  }
 }

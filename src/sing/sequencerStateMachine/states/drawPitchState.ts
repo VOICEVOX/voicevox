@@ -124,6 +124,7 @@ export class DrawPitchState
       data: [this.cursorPosAtStart.frequency],
       startFrame: this.cursorPosAtStart.frame,
     };
+    context.cursorState.value = "UNSET";
     context.nowPreviewing.value = true;
 
     const previewIfNeeded = () => {

@@ -51,6 +51,7 @@ export class SelectNotesWithRectState
   onEnter(context: Context) {
     this.updatePreviewRect(context);
 
+    context.cursorState.value = "CROSSHAIR";
     // TODO: ScoreSequencer.vueのコードをnowPreview == trueを考慮したコードにする
     context.nowPreviewing.value = true;
   }
