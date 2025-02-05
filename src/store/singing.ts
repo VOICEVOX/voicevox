@@ -3510,8 +3510,15 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   CLEAR_LOOP_RANGE: {
-    action({ mutations }) {
-      mutations.SET_LOOP_RANGE({ loopStartTick: 0, loopEndTick: 0 });
+    action({ mutations, actions }) {
+      mutations.SET_LOOP_RANGE({
+        loopStartTick: 0,
+        loopEndTick: 0,
+      });
+      // ループ範囲をクリアする際はループも無効にする
+      return actions.SET_LOOP_ENABLED({
+        isLoopEnabled: false,
+      });
     },
   },
 

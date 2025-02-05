@@ -177,6 +177,7 @@ import {
   BEAT_TYPES,
   getSnapTypes,
   getTimeSignaturePositions,
+  getMeasureDuration,
   isTriplet,
   isValidBeatType,
   isValidBeats,
@@ -423,8 +424,51 @@ const goToZero = () => {
 
 const isLoopEnabled = computed(() => store.state.isLoopEnabled);
 
-const toggleLoop = () => {
-  void store.actions.SET_LOOP_ENABLED({ isLoopEnabled: !isLoopEnabled.value });
+const toggleLoop = async () => {
+  // ループを有効にする場合、
+  // ループ範囲が未設定の場合は現在のplayhead位置から1小節追加する
+  if (!isLoopEnabled.value) {
+    const loopStartTick = store.state.loopStartTick;
+    const loopEndTick = store.state.loopEndTick;
+
+    // NOTE: LoopLaneのaddOneMeasureLoopと基本的なロジックは同じなものの、
+    // 開始位置の指定方法が異なるため共通化はしていない。
+    // Toolbar内はplayhead位置を基準に設定
+    // LoopLaneはユーザーのクリック位置を基準に設定
+    // 共通化の意味ではむしろ特定の位置の拍子記号を取得する関数を作った方がいいかもです
+    if (loopStartTick === loopEndTick) {
+      // 現在のplayhead位置の拍子記号を取得
+      const nextTsIndex = tsPositions.value.findIndex(
+        (pos) => pos > playheadTicks.value,
+      );
+      const currentTsIndex =
+        nextTsIndex === -1 ? tsPositions.value.length - 1 : nextTsIndex - 1;
+      const currentTs = timeSignatures.value[currentTsIndex];
+
+      if (currentTs) {
+        // 現在の拍子記号から1小節分の長さを計算
+        const oneMeasureTicks = getMeasureDuration(
+          currentTs.beats,
+          currentTs.beatType,
+          tpqn.value,
+        );
+
+        // playhead位置から1小節分のループ範囲を設定
+        await store.actions.COMMAND_SET_LOOP_RANGE({
+          loopStartTick: playheadTicks.value,
+          loopEndTick: Math.min(
+            playheadTicks.value + oneMeasureTicks,
+            store.getters.SEQUENCER_NUM_MEASURES * store.state.tpqn * 4,
+          ),
+        });
+      }
+    }
+  }
+
+  // ループをトグルする
+  void store.actions.COMMAND_SET_LOOP_ENABLED({
+    isLoopEnabled: !isLoopEnabled.value,
+  });
 };
 
 const volume = computed({

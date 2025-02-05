@@ -161,13 +161,6 @@ const handleContextMenu = (event: MouseEvent) => {
   cursor: pointer;
   z-index: vars.$z-index-sing-loop-background;
 
-  // TODO: ドラッグで追加できることがわかりづらい場合、hoverで変更可能を示す
-  /*
-  &:hover {
-    fill: var(--scheme-color-outline);
-  }
-  */
-
   &.cursor-ew-resize {
     cursor: ew-resize;
   }
@@ -175,8 +168,15 @@ const handleContextMenu = (event: MouseEvent) => {
 
 // ループ背景
 .loop-background {
-  fill: transparent;
-  z-index: vars.$z-index-sing-loop-background;
+  fill: var(--scheme-color-secondary-container);
+  opacity: 0;
+
+  // TODO: ドラッグで追加できることがわかりづらい場合、hoverで変更可能を示す
+  /*
+  &:hover {
+    opacity: 0.2;
+  }
+  */
 }
 
 // ループ範囲
