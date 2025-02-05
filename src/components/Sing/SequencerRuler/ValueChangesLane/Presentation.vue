@@ -37,16 +37,6 @@
             :y2="height"
             class="value-changes-lane-value-change-line"
           />
-          <rect
-            :x="item.x - offset - 2"
-            y="0"
-            width="40"
-            height="40"
-            fill="transparent"
-            class="value-changes-lane-value-change-hitbox"
-            @click.stop="onValueClick($event, item.original)"
-            @contextmenu.stop.prevent="onValueClick($event, item.original)"
-          />
         </g>
       </template>
     </svg>
@@ -209,7 +199,7 @@ const onValueClick = (event: MouseEvent, valueChange: ValueChange) => {
 }
 
 .value-changes-lane-svg {
-  pointer-events: auto;
+  pointer-events: none;
 }
 
 .value-changes-lane-item {
@@ -233,9 +223,5 @@ const onValueClick = (event: MouseEvent, valueChange: ValueChange) => {
   stroke: var(--scheme-color-on-surface-variant);
   stroke-width: 1px;
   pointer-events: none;
-}
-
-.value-changes-lane-value-change-hitbox {
-  pointer-events: all;
 }
 </style>

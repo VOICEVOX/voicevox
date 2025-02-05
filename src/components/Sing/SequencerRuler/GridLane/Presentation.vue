@@ -4,6 +4,7 @@
     :width
     :height
     shape-rendering="crispEdges"
+    class="grid-lane"
   >
     <defs>
       <pattern
@@ -21,7 +22,7 @@
           :key="n"
           :x1="gridPattern.beatWidth * n"
           :x2="gridPattern.beatWidth * n"
-          y1="28"
+          y1="30"
           :y2="height"
           class="grid-lane-beat-line"
         />
