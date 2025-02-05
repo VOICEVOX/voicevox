@@ -55,8 +55,6 @@ export type NotifyAndNotShowAgainButtonOption = {
   tipName: keyof ConfirmedTips;
 };
 
-export type LoadingScreenOption = { message: string };
-
 // 汎用ダイアログを表示
 
 /** メッセージを知らせるダイアログ */
@@ -410,6 +408,8 @@ export const showNotifyAndNotShowAgainButton = (
     ],
   });
 };
+
+type LoadingScreenOption = { message: string };
 
 export const showLoadingScreen = (options: LoadingScreenOption) => {
   Loading.show({

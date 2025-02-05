@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { StyleInfo } from "@/type/preload";
-import { calculateHash } from "@/sing/utility";
 import { isMac } from "@/helpers/platform";
 
 const BASE_X_PER_QUARTER_NOTE = 120;
@@ -118,20 +117,6 @@ export const getStyleDescription = (style: StyleInfo) => {
   }
   return description.join("・");
 };
-
-export type PitchData = {
-  readonly ticksArray: number[];
-  readonly data: number[];
-};
-
-const pitchDataHashSchema = z.string().brand<"PitchDataHash">();
-
-export type PitchDataHash = z.infer<typeof pitchDataHashSchema>;
-
-export async function calculatePitchDataHash(pitchData: PitchData) {
-  const hash = await calculateHash(pitchData);
-  return pitchDataHashSchema.parse(hash);
-}
 
 export type MouseButton = "LEFT_BUTTON" | "RIGHT_BUTTON" | "OTHER_BUTTON";
 
