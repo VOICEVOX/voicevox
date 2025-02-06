@@ -1,6 +1,6 @@
 <template>
   <div ref="sequencerRuler" class="sequencer-ruler" @click="onClick">
-    <div class="sequencer-ruler-content" :style="{ width: `${width}px` }">
+    <div class="sequencer-ruler-content" :style="{ width: `${props.width}px` }">
       <div class="sequencer-ruler-grid">
         <!-- NOTE: slotを使う(Copilotくんが提案してくれた) -->
         <slot name="grid" />
@@ -14,7 +14,7 @@
       <div
         class="sequencer-ruler-playhead"
         :style="{
-          transform: `translateX(${playheadX - offset}px)`,
+          transform: `translateX(${props.playheadX - props.offset}px)`,
         }"
       />
     </div>
@@ -23,44 +23,24 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import { Tempo, TimeSignature } from "@/store/type";
 defineOptions({
   name: "RulerPresentation",
 });
 
 const props = defineProps<{
   width: number;
-  numMeasures: number;
   playheadX: number;
   offset: number;
-  tempos: Tempo[];
-  timeSignatures: TimeSignature[];
-  tpqn: number;
-  sequencerZoomX: number;
-  sequencerSnapType: number;
-  uiLocked: boolean;
-  getSnappedTickFromOffsetX: (offsetX: number) => number;
 }>();
 
-const playheadTicks = defineModel<number>("playheadTicks", {
-  required: true,
-});
-
 const emit = defineEmits<{
-  deselectAllNotes: [];
+  click: [MouseEvent];
 }>();
 
 const sequencerRuler = ref<HTMLDivElement | null>(null);
 
 const onClick = (event: MouseEvent) => {
-  emit("deselectAllNotes");
-
-  const sequencerRulerElement = sequencerRuler.value;
-  if (!sequencerRulerElement) {
-    throw new Error("sequencerRulerElement is null.");
-  }
-  const ticks = props.getSnappedTickFromOffsetX(event.offsetX);
-  playheadTicks.value = ticks;
+  emit("click", event);
 };
 </script>
 

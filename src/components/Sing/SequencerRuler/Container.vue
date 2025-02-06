@@ -3,17 +3,8 @@
     :width
     :numMeasures="props.numMeasures"
     :playheadX
-    :playheadTicks
     :offset="props.offset"
-    :tempos
-    :timeSignatures
-    :tpqn
-    :sequencerZoomX
-    :sequencerSnapType
-    :getSnappedTickFromOffsetX
-    :uiLocked
-    @update:playheadTicks="updatePlayheadTicks"
-    @deselectAllNotes="deselectAllNotes"
+    @click="handleClick"
   >
     <!-- TODO: 各コンポーネントもなるべく疎にしたつもりだが、少なくともplayheadまわりがリファクタリング必要そう -->
     <template #grid>
@@ -66,11 +57,9 @@ const store = useStore();
 
 const tpqn = computed(() => store.state.tpqn);
 const timeSignatures = computed(() => store.state.timeSignatures);
-const tempos = computed(() => store.state.tempos);
 const sequencerZoomX = computed(() => store.state.sequencerZoomX);
 const sequencerSnapType = computed(() => store.state.sequencerSnapType);
 const playheadTicks = computed(() => store.getters.PLAYHEAD_POSITION);
-const uiLocked = computed(() => store.getters.UI_LOCKED);
 
 // ルーラーおよび内部レーンで共通化した計算ロジック
 const { width, playheadX, getSnappedTickFromOffsetX } = useSequencerRuler({
@@ -90,5 +79,11 @@ const updatePlayheadTicks = (ticks: number) => {
 
 const deselectAllNotes = () => {
   void store.actions.DESELECT_ALL_NOTES();
+};
+
+const handleClick = (event: MouseEvent) => {
+  deselectAllNotes();
+  const ticks = getSnappedTickFromOffsetX(event.offsetX);
+  updatePlayheadTicks(ticks);
 };
 </script>
