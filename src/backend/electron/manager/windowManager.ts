@@ -80,13 +80,14 @@ class WindowManager {
       titleBarStyle: "hidden",
       trafficLightPosition: { x: 6, y: 4 },
       minWidth: 320,
-      show: false,
+      show: true,
       backgroundColor,
       webPreferences: {
         preload: path.join(__dirname, "preload.js"),
       },
       icon: path.join(this.staticDir, "icon.png"),
     });
+    win.webContents.openDevTools();
 
     let projectFilePath = "";
     if (isMac) {

@@ -39,7 +39,7 @@
     "browser:serve": "cross-env VITE_TARGET=browser vite",
     "browser:build": "cross-env VITE_TARGET=browser NODE_ENV=production vite build",
     "vst:serve": "cross-env VITE_TARGET=vst vite",
-    "vst:build": "cross-env VITE_TARGET=vst vite build",
+    "vst:build": "cross-env VITE_TARGET=vst NODE_ENV=production vite build",
     "storybook": "storybook dev --port 6006",
     "storybook:build": "storybook build",
 
