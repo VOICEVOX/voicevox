@@ -46,6 +46,7 @@ export type Message =
 
 const log = createLogger("vstMessageReceiver");
 
+// VSTプラグインからのメッセージを受け取る。
 export const vstPlugin: Plugin = {
   install: (
     _,
@@ -103,6 +104,7 @@ export const vstPlugin: Plugin = {
       })();
     }
 
+    // 再生位置の更新
     const updatePlayheadPosition = async () => {
       const maybeCurrentPosition = await getCurrentPosition();
       if (maybeCurrentPosition != undefined) {
@@ -122,6 +124,8 @@ export const vstPlugin: Plugin = {
     const lock = new AsyncLock();
 
     const isReady = ref(false);
+    // プロジェクトの保存と送信。
+    // しばらく操作がない（最後の操作から5秒）場合に自動で保存する。（SAVE_PROJECT_FILEはuiLockがかかるため）
     watch(
       () => ({
         tempos: store.state.tempos,
@@ -140,6 +144,7 @@ export const vstPlugin: Plugin = {
       { deep: true },
     );
 
+    // ソングエディタを強制。
     watch(
       () => store.state.openedEditor,
       (openedEditor) => {
@@ -152,6 +157,7 @@ export const vstPlugin: Plugin = {
       },
     );
 
+    // プロジェクトの読み込み
     void getProject().then((project) => {
       if (!project) {
         log.info("project not found");
@@ -171,6 +177,7 @@ export const vstPlugin: Plugin = {
             type: "path",
             filePath: projectFilePath,
           });
+          // プロジェクトが読み込めなかった場合の緊急脱出口。
           if (!loaded) {
             log.info("Failed to load project");
             const questionResult = await showQuestionDialog({
@@ -193,6 +200,7 @@ export const vstPlugin: Plugin = {
             }
           }
 
+          // キャッシュされた歌声を読み込む
           log.info("Loading cached voices");
           const encodedVoices = await getVoices();
           for (const [key, encodedVoice] of Object.entries(encodedVoices)) {
@@ -212,7 +220,7 @@ export const vstPlugin: Plugin = {
       );
     });
 
-    // フレーズ送信
+    // フレーズの送信。100msごとに送信する。
     let lastPhrases: VstPhrase[] = [];
     const sendPhrases = debounce(async (phrases: Map<PhraseKey, Phrase>) => {
       void lock.acquire("phrases", async () => {
