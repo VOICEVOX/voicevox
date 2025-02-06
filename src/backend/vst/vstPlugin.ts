@@ -59,24 +59,11 @@ export const vstPlugin: Plugin = {
     if (import.meta.env.VITE_TARGET !== "vst") {
       return;
     }
-    let resolveUiLock: (() => void) | undefined;
 
     // 再生状態の更新
     onReceivedIPCMessage("updatePlayingState", (isPlaying: boolean) => {
-      if (isPlaying && !resolveUiLock) {
-        const { promise, resolve } = Promise.withResolvers<void>();
-        resolveUiLock = resolve;
+      if (isPlaying) {
         void store.dispatch("SING_STOP_AUDIO");
-        void store.dispatch("ASYNC_UI_LOCK", {
-          callback: () => promise,
-        });
-      } else if (!isPlaying && resolveUiLock) {
-        resolveUiLock();
-        resolveUiLock = undefined;
-      } else {
-        log.warn(
-          `unexpected isPlaying state: isPlaying=${isPlaying}, uiLockPromiseResolve=${!!resolveUiLock}`,
-        );
       }
     });
 
