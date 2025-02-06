@@ -258,16 +258,6 @@ export async function setVoices(voices: Record<SingingVoiceKey, string>) {
   await ipcSetVoices(voices);
 }
 
-declare global {
-  interface Window {
-    vstOnFileChosen?: (uuid: string, path: string) => void;
-    vstOnExportProjectFinished?: (
-      uuid: string,
-      result: "cancelled" | "error" | "success",
-    ) => void;
-  }
-}
-
 export async function showImportFileDialog(
   options: ShowImportFileDialogOptions,
 ): Promise<string | undefined> {
@@ -305,16 +295,6 @@ export async function exportProject(): Promise<
   return await ipcExportProject()
     .then((result) => (result ? "success" : "cancelled"))
     .catch(() => "error");
-}
-
-export function onReceivedIPCMessage<T extends keyof Notifications>(
-  name: T,
-  callback: (value: Notifications[T]) => void,
-) {
-  if (!notificationReceivers.has(name)) {
-    notificationReceivers.set(name, []);
-  }
-  notificationReceivers.get(name)?.push(callback as (value: unknown) => void);
 }
 
 export async function setTracks(tracks: Record<TrackId, Track>) {
@@ -377,4 +357,14 @@ export function logWarn(message: string) {
 
 export function logError(message: string) {
   void ipcLogError(message);
+}
+
+export function onReceivedIPCMessage<T extends keyof Notifications>(
+  name: T,
+  callback: (value: Notifications[T]) => void,
+) {
+  if (!notificationReceivers.has(name)) {
+    notificationReceivers.set(name, []);
+  }
+  notificationReceivers.get(name)?.push(callback as (value: unknown) => void);
 }
