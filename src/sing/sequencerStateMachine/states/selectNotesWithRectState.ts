@@ -65,18 +65,21 @@ export class SelectNotesWithRectState
     context: Context;
     setNextState: SetNextState<SequencerStateDefinitions>;
   }) {
-    const mouseButton = getButton(input.mouseEvent);
-    if (input.targetArea === "SequencerBody") {
-      if (input.mouseEvent.type === "mousemove") {
-        this.currentCursorPos = input.cursorPos;
-        this.updatePreviewRect(context);
-      } else if (
-        input.mouseEvent.type === "mouseup" &&
-        mouseButton === "LEFT_BUTTON"
-      ) {
-        this.applyPreview = true;
-        this.additive = isOnCommandOrCtrlKeyDown(input.mouseEvent);
-        setNextState(this.returnStateId, undefined);
+    if (input.type === "mouseEvent") {
+      const mouseButton = getButton(input.mouseEvent);
+
+      if (input.targetArea === "SequencerBody") {
+        if (input.mouseEvent.type === "mousemove") {
+          this.currentCursorPos = input.cursorPos;
+          this.updatePreviewRect(context);
+        } else if (
+          input.mouseEvent.type === "mouseup" &&
+          mouseButton === "LEFT_BUTTON"
+        ) {
+          this.applyPreview = true;
+          this.additive = isOnCommandOrCtrlKeyDown(input.mouseEvent);
+          setNextState(this.returnStateId, undefined);
+        }
       }
     }
   }

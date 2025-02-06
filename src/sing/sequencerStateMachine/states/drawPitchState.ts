@@ -165,21 +165,24 @@ export class DrawPitchState
     if (context.previewPitchEdit.value.type !== "draw") {
       throw new Error("previewPitchEdit.type is not draw.");
     }
-    const mouseButton = getButton(input.mouseEvent);
-    if (input.targetArea === "SequencerBody") {
-      if (input.mouseEvent.type === "mousemove") {
-        this.currentCursorPos = input.cursorPos;
-        this.innerContext.executePreviewProcess = true;
-      } else if (
-        input.mouseEvent.type === "mouseup" &&
-        mouseButton === "LEFT_BUTTON"
-      ) {
-        // カーソルを動かさずにマウスのボタンを離したときに1フレームのみの変更になり、
-        // 1フレームの変更はピッチ編集ラインとして表示されないので、無視する
-        const previewPitchEditDataLength =
-          context.previewPitchEdit.value.data.length;
-        this.applyPreview = previewPitchEditDataLength >= 2;
-        setNextState(this.returnStateId, undefined);
+    if (input.type === "mouseEvent") {
+      const mouseButton = getButton(input.mouseEvent);
+
+      if (input.targetArea === "SequencerBody") {
+        if (input.mouseEvent.type === "mousemove") {
+          this.currentCursorPos = input.cursorPos;
+          this.innerContext.executePreviewProcess = true;
+        } else if (
+          input.mouseEvent.type === "mouseup" &&
+          mouseButton === "LEFT_BUTTON"
+        ) {
+          // カーソルを動かさずにマウスのボタンを離したときに1フレームのみの変更になり、
+          // 1フレームの変更はピッチ編集ラインとして表示されないので、無視する
+          const previewPitchEditDataLength =
+            context.previewPitchEdit.value.data.length;
+          this.applyPreview = previewPitchEditDataLength >= 2;
+          setNextState(this.returnStateId, undefined);
+        }
       }
     }
   }

@@ -147,17 +147,20 @@ export class MoveNoteState
     if (this.innerContext == undefined) {
       throw new Error("innerContext is undefined.");
     }
-    const mouseButton = getButton(input.mouseEvent);
-    if (input.targetArea === "SequencerBody") {
-      if (input.mouseEvent.type === "mousemove") {
-        this.currentCursorPos = input.cursorPos;
-        this.innerContext.executePreviewProcess = true;
-      } else if (
-        input.mouseEvent.type === "mouseup" &&
-        mouseButton === "LEFT_BUTTON"
-      ) {
-        this.applyPreview = this.innerContext.edited;
-        setNextState(this.returnStateId, undefined);
+    if (input.type === "mouseEvent") {
+      const mouseButton = getButton(input.mouseEvent);
+
+      if (input.targetArea === "SequencerBody") {
+        if (input.mouseEvent.type === "mousemove") {
+          this.currentCursorPos = input.cursorPos;
+          this.innerContext.executePreviewProcess = true;
+        } else if (
+          input.mouseEvent.type === "mouseup" &&
+          mouseButton === "LEFT_BUTTON"
+        ) {
+          this.applyPreview = this.innerContext.edited;
+          setNextState(this.returnStateId, undefined);
+        }
       }
     }
   }

@@ -1,4 +1,3 @@
-import { watch, WatchHandle } from "vue";
 import { SetNextState, State } from "@/sing/stateMachine";
 import {
   Context,
@@ -13,16 +12,12 @@ export class DrawPitchToolIdleState
 {
   readonly id = "drawPitchToolIdle";
 
-  private watchHandle: WatchHandle | undefined;
-
   onEnter(context: Context) {
-    this.watchHandle = watch(context.isCommandOrCtrlKeyDown, (value) => {
-      if (value) {
-        context.cursorState.value = "ERASE";
-      } else {
-        context.cursorState.value = "DRAW";
-      }
-    });
+    if (context.isCommandOrCtrlKeyDown.value) {
+      context.cursorState.value = "ERASE";
+    } else {
+      context.cursorState.value = "DRAW";
+    }
   }
 
   process({
@@ -34,34 +29,37 @@ export class DrawPitchToolIdleState
     context: Context;
     setNextState: SetNextState<SequencerStateDefinitions>;
   }) {
-    const mouseButton = getButton(input.mouseEvent);
-    const selectedTrackId = context.selectedTrackId.value;
-
-    if (
-      input.mouseEvent.type === "mousedown" &&
-      mouseButton === "LEFT_BUTTON" &&
-      input.targetArea === "SequencerBody"
-    ) {
-      if (isOnCommandOrCtrlKeyDown(input.mouseEvent)) {
-        setNextState("erasePitch", {
-          cursorPosAtStart: input.cursorPos,
-          targetTrackId: selectedTrackId,
-          returnStateId: this.id,
-        });
+    if (input.type === "keyboardEvent") {
+      if (isOnCommandOrCtrlKeyDown(input.keyboardEvent)) {
+        context.cursorState.value = "ERASE";
       } else {
-        setNextState("drawPitch", {
-          cursorPosAtStart: input.cursorPos,
-          targetTrackId: selectedTrackId,
-          returnStateId: this.id,
-        });
+        context.cursorState.value = "DRAW";
+      }
+    } else if (input.type === "mouseEvent") {
+      const mouseButton = getButton(input.mouseEvent);
+      const selectedTrackId = context.selectedTrackId.value;
+
+      if (
+        input.mouseEvent.type === "mousedown" &&
+        mouseButton === "LEFT_BUTTON" &&
+        input.targetArea === "SequencerBody"
+      ) {
+        if (isOnCommandOrCtrlKeyDown(input.mouseEvent)) {
+          setNextState("erasePitch", {
+            cursorPosAtStart: input.cursorPos,
+            targetTrackId: selectedTrackId,
+            returnStateId: this.id,
+          });
+        } else {
+          setNextState("drawPitch", {
+            cursorPosAtStart: input.cursorPos,
+            targetTrackId: selectedTrackId,
+            returnStateId: this.id,
+          });
+        }
       }
     }
   }
 
-  onExit() {
-    if (this.watchHandle == undefined) {
-      throw new Error("unwatch is undefined.");
-    }
-    this.watchHandle.stop();
-  }
+  onExit() {}
 }
