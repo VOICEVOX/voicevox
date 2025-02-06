@@ -81,6 +81,7 @@ export const OpenedMono: Story = {
 
 export const Closed: Story = {
   name: "閉じている",
+  tags: ["skip-screenshot"],
   args: {
     modelValue: false,
   },
