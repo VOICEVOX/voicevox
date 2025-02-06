@@ -96,25 +96,18 @@ const engineInfos = computed(() => store.state.engineInfos);
 const engineManifests = computed(() => store.state.engineManifests);
 const engineIcons = useEngineIcons(engineManifests);
 const enableMultiEngine = computed(() => store.state.enableMultiEngine);
-const titleText = isVst
-  ? computed(
-      () =>
-        (isEdited.value ? "*" : "") +
-        "VVVST" +
-        (currentVersion.value ? " - Ver. " + currentVersion.value : ""),
-    )
-  : computed(
-      () =>
-        (isEdited.value ? "*" : "") +
-        (projectName.value != undefined ? projectName.value + " - " : "") +
-        "VOICEVOX" +
-        (currentVersion.value ? " - Ver. " + currentVersion.value : "") +
-        (extraVersionInfo ? ` (${extraVersionInfo})` : "") +
-        (isMultiEngineOffMode.value ? " - マルチエンジンオフ" : "") +
-        (defaultEngineAltPortTo.value != null
-          ? ` - Port: ${defaultEngineAltPortTo.value}`
-          : ""),
-    );
+const titleText = computed(
+  () =>
+    (isEdited.value ? "*" : "") +
+    (projectName.value != undefined ? projectName.value + " - " : "") +
+    "VOICEVOX" +
+    (currentVersion.value ? " - Ver. " + currentVersion.value : "") +
+    (extraVersionInfo ? ` (${extraVersionInfo})` : "") +
+    (isMultiEngineOffMode.value ? " - マルチエンジンオフ" : "") +
+    (defaultEngineAltPortTo.value != null
+      ? ` - Port: ${defaultEngineAltPortTo.value}`
+      : ""),
+);
 const canUndo = computed(() => store.getters.CAN_UNDO(props.editor));
 const canRedo = computed(() => store.getters.CAN_REDO(props.editor));
 const isMultiSelectEnabled = computed(
