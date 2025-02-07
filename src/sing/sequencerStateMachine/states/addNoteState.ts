@@ -165,6 +165,7 @@ export class AddNoteState
     }
 
     context.previewNotes.value = [];
+    context.cursorState.value = "UNSET";
     context.nowPreviewing.value = false;
   }
 }

@@ -192,6 +192,7 @@ export class MoveNoteState
     }
 
     context.previewNotes.value = [];
+    context.cursorState.value = "UNSET";
     context.nowPreviewing.value = false;
   }
 }

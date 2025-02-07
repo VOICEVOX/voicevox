@@ -42,5 +42,7 @@ export class ErasePitchToolIdleState
     }
   }
 
-  onExit() {}
+  onExit(context: Context) {
+    context.cursorState.value = "UNSET";
+  }
 }

@@ -89,7 +89,9 @@ export class SelectNotesToolIdleState
     }
   }
 
-  onExit() {}
+  onExit(context: Context) {
+    context.cursorState.value = "UNSET";
+  }
 
   private updateCursorState(context: Context, isShiftKeyDown: boolean) {
     if (isShiftKeyDown) {

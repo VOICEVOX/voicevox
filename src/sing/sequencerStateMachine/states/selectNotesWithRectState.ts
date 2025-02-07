@@ -121,6 +121,7 @@ export class SelectNotesWithRectState
     }
 
     context.previewRectForRectSelect.value = undefined;
+    context.cursorState.value = "UNSET";
     context.nowPreviewing.value = false;
   }
 }

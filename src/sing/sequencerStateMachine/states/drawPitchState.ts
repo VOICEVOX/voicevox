@@ -215,6 +215,7 @@ export class DrawPitchState
     }
 
     context.previewPitchEdit.value = undefined;
+    context.cursorState.value = "UNSET";
     context.nowPreviewing.value = false;
   }
 }

@@ -96,7 +96,9 @@ export class EditNotesToolIdleState
     }
   }
 
-  onExit() {}
+  onExit(context: Context) {
+    context.cursorState.value = "UNSET";
+  }
 
   private updateCursorState(context: Context, isCommandOrCtrlKeyDown: boolean) {
     if (isCommandOrCtrlKeyDown) {
