@@ -15,11 +15,7 @@ export class EditNotesToolIdleState
   readonly id = "editNotesToolIdle";
 
   onEnter(context: Context) {
-    if (context.isCommandOrCtrlKeyDown.value) {
-      context.cursorState.value = "UNSET";
-    } else {
-      context.cursorState.value = "DRAW";
-    }
+    this.updateCursorState(context, context.isCommandOrCtrlKeyDown.value);
   }
 
   process({
@@ -32,11 +28,10 @@ export class EditNotesToolIdleState
     setNextState: SetNextState<SequencerStateDefinitions>;
   }) {
     if (input.type === "keyboardEvent") {
-      if (isOnCommandOrCtrlKeyDown(input.keyboardEvent)) {
-        context.cursorState.value = "UNSET";
-      } else {
-        context.cursorState.value = "DRAW";
-      }
+      this.updateCursorState(
+        context,
+        isOnCommandOrCtrlKeyDown(input.keyboardEvent),
+      );
     } else if (input.type === "mouseEvent") {
       const mouseButton = getButton(input.mouseEvent);
       const selectedTrackId = context.selectedTrackId.value;
@@ -102,4 +97,12 @@ export class EditNotesToolIdleState
   }
 
   onExit() {}
+
+  private updateCursorState(context: Context, isCommandOrCtrlKeyDown: boolean) {
+    if (isCommandOrCtrlKeyDown) {
+      context.cursorState.value = "UNSET";
+    } else {
+      context.cursorState.value = "DRAW";
+    }
+  }
 }

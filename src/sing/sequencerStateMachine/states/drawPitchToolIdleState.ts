@@ -13,11 +13,7 @@ export class DrawPitchToolIdleState
   readonly id = "drawPitchToolIdle";
 
   onEnter(context: Context) {
-    if (context.isCommandOrCtrlKeyDown.value) {
-      context.cursorState.value = "ERASE";
-    } else {
-      context.cursorState.value = "DRAW";
-    }
+    this.updateCursorState(context, context.isCommandOrCtrlKeyDown.value);
   }
 
   process({
@@ -30,11 +26,10 @@ export class DrawPitchToolIdleState
     setNextState: SetNextState<SequencerStateDefinitions>;
   }) {
     if (input.type === "keyboardEvent") {
-      if (isOnCommandOrCtrlKeyDown(input.keyboardEvent)) {
-        context.cursorState.value = "ERASE";
-      } else {
-        context.cursorState.value = "DRAW";
-      }
+      this.updateCursorState(
+        context,
+        isOnCommandOrCtrlKeyDown(input.keyboardEvent),
+      );
     } else if (input.type === "mouseEvent") {
       const mouseButton = getButton(input.mouseEvent);
       const selectedTrackId = context.selectedTrackId.value;
@@ -62,4 +57,12 @@ export class DrawPitchToolIdleState
   }
 
   onExit() {}
+
+  private updateCursorState(context: Context, isCommandOrCtrlKeyDown: boolean) {
+    if (isCommandOrCtrlKeyDown) {
+      context.cursorState.value = "ERASE";
+    } else {
+      context.cursorState.value = "DRAW";
+    }
+  }
 }

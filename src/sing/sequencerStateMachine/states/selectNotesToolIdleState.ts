@@ -14,11 +14,7 @@ export class SelectNotesToolIdleState
   readonly id = "selectNotesToolIdle";
 
   onEnter(context: Context) {
-    if (context.isShiftKeyDown.value) {
-      context.cursorState.value = "CROSSHAIR";
-    } else {
-      context.cursorState.value = "UNSET";
-    }
+    this.updateCursorState(context, context.isShiftKeyDown.value);
   }
 
   process({
@@ -31,11 +27,7 @@ export class SelectNotesToolIdleState
     setNextState: SetNextState<SequencerStateDefinitions>;
   }) {
     if (input.type === "keyboardEvent") {
-      if (input.keyboardEvent.shiftKey) {
-        context.cursorState.value = "CROSSHAIR";
-      } else {
-        context.cursorState.value = "UNSET";
-      }
+      this.updateCursorState(context, input.keyboardEvent.shiftKey);
     } else if (input.type === "mouseEvent") {
       const mouseButton = getButton(input.mouseEvent);
       const selectedTrackId = context.selectedTrackId.value;
@@ -98,4 +90,12 @@ export class SelectNotesToolIdleState
   }
 
   onExit() {}
+
+  private updateCursorState(context: Context, isShiftKeyDown: boolean) {
+    if (isShiftKeyDown) {
+      context.cursorState.value = "CROSSHAIR";
+    } else {
+      context.cursorState.value = "UNSET";
+    }
+  }
 }
