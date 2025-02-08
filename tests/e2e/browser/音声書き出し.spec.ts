@@ -8,14 +8,14 @@ test.beforeEach(gotoHome);
 /** 選択音声を書き出し、その音声ファイルのバイナリをスナップショットテストする */
 async function exportSelectedAudioAndSnapshot(page: Page, name: string) {
   const { getFileIds } = await mockShowExportFileDialog(page);
-  const { getWritedFileBuffers } = await mockWriteFile(page);
+  const { getWrittenFileBuffers } = await mockWriteFile(page);
 
   await page.getByRole("button", { name: "ファイル" }).click();
   await getQuasarMenu(page, "選択音声を書き出し").click();
   await expect(page.getByText("音声を書き出しました")).toBeVisible();
 
   const fileId = (await getFileIds())[0];
-  const buffer = (await getWritedFileBuffers())[fileId];
+  const buffer = (await getWrittenFileBuffers())[fileId];
   expect(buffer).toMatchSnapshot(`${name}.wav`);
 }
 

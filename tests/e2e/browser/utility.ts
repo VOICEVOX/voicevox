@@ -40,7 +40,7 @@ export async function mockShowExportFileDialog(page: Page): Promise<{
 
 /** ファイル書き出しをモックにする */
 export async function mockWriteFile(page: Page): Promise<{
-  getWritedFileBuffers: () => Promise<Record<string | TestFileId, Buffer>>;
+  getWrittenFileBuffers: () => Promise<Record<string | TestFileId, Buffer>>;
 }> {
   type _Window = Window & {
     _mockWriteFile: Record<string | TestFileId, Uint8Array>;
@@ -61,7 +61,7 @@ export async function mockWriteFile(page: Page): Promise<{
   );
 
   return {
-    getWritedFileBuffers: async () => {
+    getWrittenFileBuffers: async () => {
       const arrays = await page.evaluate(() => {
         const _window = window as unknown as _Window;
         return Object.fromEntries(
