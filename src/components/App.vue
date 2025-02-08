@@ -114,9 +114,6 @@ onMounted(async () => {
 
   await store.actions.INIT_VUEX();
 
-  // プロジェクトファイルのパスを取得
-  const projectFilePath = urlParams.get("projectFilePath");
-
   // ショートカットキーの設定を登録
   const hotkeySettings = store.state.hotkeySettings;
   hotkeyManager.load(structuredClone(toRaw(hotkeySettings)));
@@ -163,6 +160,7 @@ onMounted(async () => {
   });
 
   // プロジェクトファイルが指定されていればロード
+  const projectFilePath = await window.backend.getInitialProjectFilePath();
   if (typeof projectFilePath === "string" && projectFilePath !== "") {
     isProjectFileLoaded.value = await store.actions.LOAD_PROJECT_FILE({
       type: "path",

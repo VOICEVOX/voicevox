@@ -38,7 +38,7 @@ import {
   EngineId,
   TextAsset,
 } from "@/type/preload";
-import { isMac } from "@/helpers/platform";
+import { isMac, isProduction } from "@/helpers/platform";
 import { createLogger } from "@/helpers/log";
 
 type SingleInstanceLockData = {
@@ -245,7 +245,27 @@ function checkMultiEngineEnabled(): boolean {
   return enabled;
 }
 
-let filePathOnMac: string | undefined = undefined;
+let argv: string[] = [];
+if (!isMac) {
+  // 製品版：引数はargv[1]以降をそのまま
+  if (isProduction) {
+    argv = process.argv.slice(1);
+  }
+  // 開発版：引数は`--`がある場合は`--`以降、無い場合は引数なしとして扱う
+  else {
+    const index = process.argv.indexOf("--");
+    if (index !== -1) {
+      argv = process.argv.slice(index + 1);
+    }
+  }
+}
+
+let initialFilePath: string | undefined = undefined;
+let initialProjectFilePath: string | undefined = undefined;
+
+if (!isMac) {
+  initialFilePath = argv[0];
+}
 
 const menuTemplateForMac: Electron.MenuItemConstructorOptions[] = [
   {
@@ -353,6 +373,10 @@ registerIpcMainHandle<IpcMainHandle>({
 
   GET_ALT_PORT_INFOS: () => {
     return engineInfoManager.altPortInfos;
+  },
+
+  GET_INITIAL_PROJECT_FILE_PATH: async () => {
+    return initialProjectFilePath;
   },
 
   /**
@@ -689,7 +713,7 @@ app.once("will-finish-launching", () => {
   // macOS only
   app.once("open-file", (event, filePath) => {
     event.preventDefault();
-    filePathOnMac = filePath;
+    initialFilePath = filePath;
   });
 });
 
@@ -817,45 +841,46 @@ void app.whenReady().then(async () => {
     );
   }
 
-  // runEngineAllの前にVVPPを読み込む
-  let filePath: string | undefined;
-  if (process.platform === "darwin") {
-    filePath = filePathOnMac;
-  } else {
-    if (process.argv.length > 1) {
-      filePath = process.argv[1];
-    }
-  }
-
   // 多重起動防止
   // TODO: readyを待たずにもっと早く実行すべき
   if (
     !isDevelopment &&
     !isTest &&
     !app.requestSingleInstanceLock({
-      filePath,
-    } as SingleInstanceLockData)
+      filePath: initialFilePath,
+    } satisfies SingleInstanceLockData)
   ) {
     log.info("VOICEVOX already running. Cancelling launch.");
-    log.info(`File path sent: ${filePath}`);
+    log.info(`File path sent: ${initialFilePath}`);
     appState.willQuit = true;
     app.quit();
     return;
   }
 
-  if (filePath && isVvppFile(filePath)) {
-    log.info(`vvpp file install: ${filePath}`);
-    // FIXME: GUI側に合流させる
-    if (checkMultiEngineEnabled()) {
-      await engineAndVvppController.installVvppEngineWithWarning({
-        vvppPath: filePath,
-        reloadNeeded: false,
-      });
+  if (initialFilePath) {
+    if (isVvppFile(initialFilePath)) {
+      log.info(`vvpp file install: ${initialFilePath}`);
+      // FIXME: GUI側に合流させる
+      if (checkMultiEngineEnabled()) {
+        await engineAndVvppController.installVvppEngineWithWarning({
+          vvppPath: initialFilePath,
+          reloadNeeded: false,
+        });
+      }
+    } else if (
+      fs.existsSync(initialFilePath) &&
+      fs.statSync(initialFilePath).isFile() &&
+      initialFilePath.endsWith(".vvproj")
+    ) {
+      log.info(`vvproj file load: ${initialFilePath}`);
+      initialProjectFilePath = initialFilePath;
+    } else {
+      log.warn(`Unrecognized file path: ${initialFilePath}`);
     }
   }
 
   await engineAndVvppController.launchEngines();
-  await windowManager.createWindow(filePath);
+  await windowManager.createWindow();
 });
 
 // 他のプロセスが起動したとき、`requestSingleInstanceLock`経由で`rawData`が送信される。

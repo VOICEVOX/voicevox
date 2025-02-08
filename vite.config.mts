@@ -97,7 +97,13 @@ export default defineConfig((options) => {
             onstart: ({ startup }) => {
               console.log("main process build is complete.");
               if (!skipLaunchElectron) {
-                void startup([".", "--no-sandbox"]);
+                // process.argvは["node", ".../vite.js", "--", その他引数]の形式
+                void startup([
+                  ".",
+                  "--no-sandbox",
+                  "--",
+                  ...process.argv.slice(3),
+                ]);
               }
             },
             vite: {
