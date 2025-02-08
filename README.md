@@ -128,7 +128,7 @@ fork したリポジトリで Actions を ON にし、workflow_dispatch で`buil
 pnpm run test:unit
 pnpm run test-watch:unit # 監視モード
 pnpm run test-ui:unit # VitestのUIを表示
-pnpm run test:unit -- --update # スナップショットの更新
+pnpm run test:unit --update # スナップショットの更新
 ```
 
 > [!NOTE]  
@@ -148,7 +148,7 @@ Electron の機能が不要な、UI や音声合成などの End to End テス�
 ```bash
 pnpm run test:browser-e2e
 pnpm run test-watch:browser-e2e # 監視モード
-pnpm run test-watch:browser-e2e -- --headed # テスト中の UI を表示
+pnpm run test-watch:browser-e2e --headed # テスト中の UI を表示
 pnpm run test-ui:browser-e2e # Playwright の UI を表示
 ```
 
@@ -216,7 +216,7 @@ pnpm run test-ui:storybook-vrt # Playwright の UI を表示
 ローカル PC の OS に対応したもののみが更新されます。
 
 ```bash
-pnpm run test:browser-e2e -- --update-snapshots
+pnpm run test:browser-e2e --update-snapshots
 ```
 
 ### Electron End to End テスト
