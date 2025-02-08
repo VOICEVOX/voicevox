@@ -58,12 +58,6 @@ export const defaultToolbarButtonSetting: ToolbarSettingType = [
   "REDO",
 ];
 
-export type ShowImportFileDialogOptions = {
-  title: string;
-  name?: string;
-  extensions?: string[];
-};
-
 export type TextAsset = {
   Contact: string;
   HowToUse: string;
@@ -90,9 +84,11 @@ export interface Sandbox {
     defaultPath?: string;
   }): Promise<string | undefined>;
   showProjectLoadDialog(obj: { title: string }): Promise<string[] | undefined>;
-  showImportFileDialog(
-    obj: ShowImportFileDialogOptions,
-  ): Promise<string | undefined>;
+  showImportFileDialog(obj: {
+    name?: string;
+    extensions?: string[];
+    title: string;
+  }): Promise<string | undefined>;
   showExportFileDialog(obj: {
     title: string;
     defaultPath?: string;

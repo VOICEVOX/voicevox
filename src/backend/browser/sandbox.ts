@@ -16,7 +16,6 @@ import {
   EngineId,
   EngineSettingType,
   EngineSettings,
-  ShowImportFileDialogOptions,
   Sandbox,
 } from "@/type/preload";
 import { AssetTextFileNames } from "@/type/staticResources";
@@ -116,7 +115,11 @@ export const api: Sandbox = {
       ],
     });
   },
-  async showImportFileDialog(obj: ShowImportFileDialogOptions) {
+  async showImportFileDialog(obj: {
+    name?: string;
+    extensions?: string[];
+    title: string;
+  }) {
     const fileHandle = await showOpenFilePickerImpl({
       multiple: false,
       fileTypes: [

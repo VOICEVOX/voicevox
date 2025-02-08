@@ -1,7 +1,7 @@
 import { toBase64, toBytes } from "fast-base64";
 import { Routing } from "./type";
 import { Metadata } from "@/backend/common/ConfigManager";
-import { ShowImportFileDialogOptions, TrackId } from "@/type/preload";
+import { TrackId } from "@/type/preload";
 import { createLogger } from "@/helpers/log";
 import { UnreachableError } from "@/type/utility";
 import { SingingVoiceKey, Track } from "@/store/type";
@@ -157,7 +157,11 @@ const ipcSetProject =
 const ipcGetProjectName = createMessageFunction<() => string>("getProjectName");
 const ipcGetVersion = createMessageFunction<() => string>("getVersion");
 const ipcShowImportFileDialog = createMessageFunction<
-  (options: ShowImportFileDialogOptions) => string | null
+  (options: {
+    name?: string;
+    extensions?: string[];
+    title: string;
+  }) => string | null
 >("showImportFileDialog");
 const ipcShowExportFileDialog = createMessageFunction<
   (obj: {
@@ -258,9 +262,11 @@ export async function setVoices(voices: Record<SingingVoiceKey, string>) {
   await ipcSetVoices(voices);
 }
 
-export async function showImportFileDialog(
-  options: ShowImportFileDialogOptions,
-): Promise<string | undefined> {
+export async function showImportFileDialog(options: {
+  name?: string;
+  extensions?: string[];
+  title: string;
+}): Promise<string | undefined> {
   return await ipcShowImportFileDialog(options).then(
     (result) => result || undefined,
   );
