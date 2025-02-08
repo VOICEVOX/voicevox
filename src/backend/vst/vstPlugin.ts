@@ -145,67 +145,69 @@ export const vstPlugin: Plugin = {
     );
 
     // プロジェクトの読み込み
-    void getProject().then((project) => {
-      if (!project) {
-        log.info("project not found");
-        isReady.value = true;
-        return;
-      }
-      log.info("project found");
-      onetimeWatch(
-        () => store.state.isEditorReady,
-        async (isEditorReady) => {
-          if (!isEditorReady) {
-            return "continue";
-          }
+    const projectPromise = getProject();
+    onetimeWatch(
+      () => store.state.isEditorReady,
+      async (isEditorReady) => {
+        if (!isEditorReady) {
+          return "continue";
+        }
 
-          log.info("Engine is ready, loading project");
-          const loaded = await store.dispatch("LOAD_PROJECT_FILE", {
-            type: "path",
-            filePath: projectFilePath,
-          });
-          // プロジェクトが読み込めなかった場合の緊急脱出口。
-          if (!loaded) {
-            log.info("Failed to load project");
-            const questionResult = await showQuestionDialog({
-              title: "プロジェクトをエクスポートしますか？",
-              message:
-                "このまま続行すると、現在プラグインに保存されているプロジェクトは破棄されます。",
-              buttons: [
-                {
-                  text: "破棄",
-                  color: "warning",
-                },
-                {
-                  text: "エクスポート",
-                  color: "primary",
-                },
-              ],
-            });
-            if (questionResult === 1) {
-              await exportProject();
-            }
-          }
-
-          // キャッシュされた歌声を読み込む
-          log.info("Loading cached voices");
-          const encodedVoices = await getVoices();
-          for (const [key, encodedVoice] of Object.entries(encodedVoices)) {
-            singingVoiceCache.set(
-              SingingVoiceKey(key),
-              new Blob([await toBytes(encodedVoice)]),
-            );
-          }
-
-          log.info(`Loaded ${Object.keys(encodedVoices).length} voices`);
-
+        const project = await projectPromise;
+        if (!project) {
+          log.info("project not found");
           isReady.value = true;
-
           return "unwatch";
-        },
-        { deep: true },
-      );
-    });
+        }
+        log.info("project found");
+
+        log.info("Engine is ready, loading project");
+        const loaded = await store.dispatch("LOAD_PROJECT_FILE", {
+          type: "path",
+          filePath: projectFilePath,
+        });
+        // プロジェクトが読み込めなかった場合の緊急脱出口。
+        if (!loaded) {
+          log.info("Failed to load project");
+          const questionResult = await showQuestionDialog({
+            title: "プロジェクトをエクスポートしますか？",
+            message:
+              "このまま続行すると、現在プラグインに保存されているプロジェクトは破棄されます。",
+            buttons: [
+              {
+                text: "破棄",
+                color: "warning",
+              },
+              {
+                text: "エクスポート",
+                color: "primary",
+              },
+            ],
+            cancel: "noCancel",
+          });
+          if (questionResult === 1) {
+            await exportProject();
+          }
+        }
+
+        // キャッシュされた歌声を読み込む
+        log.info("Loading cached voices");
+        const encodedVoices = await getVoices();
+        for (const [key, encodedVoice] of Object.entries(encodedVoices)) {
+          singingVoiceCache.set(
+            SingingVoiceKey(key),
+            new Blob([await toBytes(encodedVoice)]),
+          );
+        }
+
+        log.info(`Loaded ${Object.keys(encodedVoices).length} voices`);
+
+        isReady.value = true;
+
+        return "unwatch";
+      },
+      { deep: true },
+    );
 
     // フレーズの送信。100msごとに送信する。
     let lastPhrases: VstPhrase[] = [];

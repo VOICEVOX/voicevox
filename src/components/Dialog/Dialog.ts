@@ -44,7 +44,7 @@ export type QuestionDialogOptions = {
   title: string;
   message: string;
   buttons: (string | { text: string; color: string })[];
-  cancel?: number;
+  cancel: number | "noCancel";
   default?: number;
 };
 
@@ -149,15 +149,15 @@ export const showQuestionDialog = async (options: QuestionDialogOptions) => {
       title: options.title,
       message: options.message,
       buttons: options.buttons,
-      persistent: options.cancel == undefined,
+      persistent: options.cancel === "noCancel",
       default: options.default,
     },
   })
     .onOk(({ index }: { index: number }) => resolve(index))
     .onCancel(() => {
-      if (options.cancel == undefined)
+      if (options.cancel == "noCancel")
         throw new UnreachableError(
-          "Unreachable: options.cancel == undefined, but onCancel is called",
+          "Unreachable: options.cancel == 'noCancel', but onCancel is called",
         );
       resolve(options.cancel);
     });
