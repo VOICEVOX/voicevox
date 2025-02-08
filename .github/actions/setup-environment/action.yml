@@ -11,11 +11,14 @@ runs:
         echo "ELECTRON_BUILDER_CACHE=${{ runner.temp }}/electron-builder-cache" >> $GITHUB_ENV
         echo "cache-version=1" >> $GITHUB_ENV
 
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v4
+
     - name: Setup Node
       uses: actions/setup-node@v4
       with:
         node-version-file: ".node-version"
-        cache: "npm"
+        cache: "pnpm"
 
     - name: Cache Electron
       uses: actions/cache@v4
@@ -34,4 +37,4 @@ runs:
           ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-
 
     - shell: bash
-      run: npm ci
+      run: pnpm install --frozen-lockfile
