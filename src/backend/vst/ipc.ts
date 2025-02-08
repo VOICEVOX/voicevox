@@ -110,7 +110,7 @@ const createMessageFunction = <F extends (arg?: any) => any>(
   name: string,
   options: Partial<{ logInfo: boolean }> = {},
 ) => {
-  const logInfo = options?.logOk ?? true;
+  const logInfo = options?.logInfo ?? true;
   return (arg?: Parameters<F>[0]) => {
     if (!window.ipc?.postMessage) {
       throw new UnreachableError(
