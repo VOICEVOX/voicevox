@@ -155,7 +155,7 @@ export const showQuestionDialog = async (options: QuestionDialogOptions) => {
   })
     .onOk(({ index }: { index: number }) => resolve(index))
     .onCancel(() => {
-      if (options.cancel == "noCancel")
+      if (options.cancel === "noCancel")
         throw new UnreachableError(
           "Unreachable: options.cancel == 'noCancel', but onCancel is called",
         );
