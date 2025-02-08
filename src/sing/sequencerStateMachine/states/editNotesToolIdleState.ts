@@ -15,7 +15,11 @@ export class EditNotesToolIdleState
   readonly id = "editNotesToolIdle";
 
   onEnter(context: Context) {
-    this.updateCursorState(context, context.isCommandOrCtrlKeyDown.value);
+    this.updateCursorState(
+      context,
+      context.isCommandOrCtrlKeyDown.value,
+      context.isShiftKeyDown.value,
+    );
   }
 
   process({
@@ -31,6 +35,7 @@ export class EditNotesToolIdleState
       this.updateCursorState(
         context,
         isOnCommandOrCtrlKeyDown(input.keyboardEvent),
+        input.keyboardEvent.shiftKey,
       );
     } else if (input.type === "mouseEvent") {
       const mouseButton = getButton(input.mouseEvent);
@@ -100,9 +105,15 @@ export class EditNotesToolIdleState
     context.cursorState.value = "UNSET";
   }
 
-  private updateCursorState(context: Context, isCommandOrCtrlKeyDown: boolean) {
-    if (isCommandOrCtrlKeyDown) {
+  private updateCursorState(
+    context: Context,
+    isCommandOrCtrlKeyDown: boolean,
+    isShiftKeyDown: boolean,
+  ) {
+    if (isShiftKeyDown) {
       context.cursorState.value = "CROSSHAIR";
+    } else if (isCommandOrCtrlKeyDown) {
+      context.cursorState.value = "UNSET";
     } else {
       context.cursorState.value = "DRAW";
     }
