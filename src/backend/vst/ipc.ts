@@ -61,7 +61,7 @@ const messagePromises = new Map<
     resolve: (value: unknown) => void;
     reject: (reason?: unknown) => void;
     name: string;
-    silent: boolean;
+    logInfo: boolean;
   }
 >();
 const initializeMessageHandler = () => {
@@ -71,7 +71,7 @@ const initializeMessageHandler = () => {
       requestId: number;
       payload: { Ok: unknown } | { Err: string };
     };
-    const { resolve, reject, name, silent } =
+    const { resolve, reject, name, logInfo } =
       messagePromises.get(requestId) ?? {};
     if (!resolve || !reject) {
       log.warn(`No promise found for requestId: ${requestId}`);
@@ -79,7 +79,7 @@ const initializeMessageHandler = () => {
     }
     messagePromises.delete(requestId);
     if ("Ok" in payload) {
-      if (!silent) {
+      if (logInfo) {
         log.info(`From plugin: ${name}(${requestId}), Ok`);
       }
       resolve(payload.Ok);
@@ -108,9 +108,9 @@ const initializeMessageHandler = () => {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const createMessageFunction = <F extends (arg?: any) => any>(
   name: string,
-  options: Partial<{ silent: boolean }> = {},
+  options: Partial<{ logInfo: boolean }> = {},
 ) => {
-  const silent = options?.silent ?? false;
+  const logInfo = options?.logOk ?? true;
   return (arg?: Parameters<F>[0]) => {
     if (!window.ipc?.postMessage) {
       throw new UnreachableError(
@@ -122,7 +122,7 @@ const createMessageFunction = <F extends (arg?: any) => any>(
       initializeMessageHandler();
     }
     const currentNonce = getRequestId();
-    if (!silent) {
+    if (logInfo) {
       log.info(`To plugin: ${name}(${currentNonce})`);
     }
     window.ipc.postMessage(
@@ -135,7 +135,12 @@ const createMessageFunction = <F extends (arg?: any) => any>(
       }),
     );
     const { promise, resolve, reject } = Promise.withResolvers();
-    messagePromises.set(currentNonce, { resolve, reject, name, silent });
+    messagePromises.set(currentNonce, {
+      resolve,
+      reject,
+      name,
+      logInfo,
+    });
 
     return promise as Promise<ReturnType<F>>;
   };
@@ -208,7 +213,7 @@ const ipcSetRouting =
 
 const ipcGetCurrentPosition = createMessageFunction<() => number | null>(
   "getCurrentPosition",
-  { silent: true },
+  { logInfo: false },
 );
 
 const ipcStartEngine =
@@ -221,14 +226,14 @@ const ipcChangeEnginePath =
 const ipcZoom = createMessageFunction<(factor: number) => void>("zoom");
 
 const ipcLogInfo = createMessageFunction<(message: string) => void>("logInfo", {
-  silent: true,
+  logInfo: false,
 });
 const ipcLogWarn = createMessageFunction<(message: string) => void>("logWarn", {
-  silent: true,
+  logInfo: false,
 });
 const ipcLogError = createMessageFunction<(message: string) => void>(
   "logError",
-  { silent: true },
+  { logInfo: false },
 );
 
 type Config = Record<string, unknown> & Metadata;
