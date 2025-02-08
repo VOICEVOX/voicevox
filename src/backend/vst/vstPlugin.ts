@@ -33,6 +33,7 @@ import { createLogger } from "@/helpers/log";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { showQuestionDialog } from "@/components/Dialog/Dialog";
 import { UnreachableError } from "@/type/utility";
+import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
 
 export type Message =
   | {
@@ -67,29 +68,20 @@ export const vstPlugin: Plugin = {
       }
     });
 
-    // エンジンが準備完了したときの処理
-    onReceivedIPCMessage("engineReady", ({ port }: { port: number }) => {
-      location.search = `?engineStatus=ready&port=${port}`;
-    });
-
-    // エンジンが起動していない時はエンジンを起動するように頼む
-    const urlState = new URLSearchParams(window.location.search);
-    if (urlState.get("engineStatus") !== "ready") {
-      void (async () => {
-        const engineInfos = await window.backend.engineInfos();
-        const engineSettings =
-          await window.backend.getSetting("engineSettings");
-        const engineId = engineInfos[0].uuid;
-        const engineSetting = engineSettings[engineId];
-        if (!engineSetting) {
-          throw new UnreachableError(`unreachable: engineSetting is not found`);
-        }
-        await startEngine({
-          useGpu: engineSetting.useGpu,
-          forceRestart: false,
-        });
-      })();
-    }
+    // エンジンを起動するように指示
+    void (async () => {
+      const baseEngineInfo = loadEnvEngineInfos()[0];
+      const engineSettings = await window.backend.getSetting("engineSettings");
+      const engineId = baseEngineInfo.uuid;
+      const engineSetting = engineSettings[engineId];
+      if (!engineSetting) {
+        throw new UnreachableError(`unreachable: engineSetting is not found`);
+      }
+      await startEngine({
+        useGpu: engineSetting.useGpu,
+        forceRestart: false,
+      });
+    })();
 
     // 再生位置の更新
     const updatePlayheadPosition = async () => {

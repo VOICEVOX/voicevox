@@ -15,6 +15,7 @@ import {
   logInfo,
   logWarn,
   logError,
+  onReceivedIPCMessage,
 } from "./ipc";
 import {
   EngineId,
@@ -31,6 +32,9 @@ import { UnreachableError } from "@/type/utility";
 export const projectFilePath = "/dev/vst-project.vvproj";
 
 let zoomValue = 1;
+
+let engineInfoPromise: Promise<EngineInfo[]> | undefined;
+
 /**
  * VST版のSandBox実装
  * ブラウザ版のSandBoxを継承している
@@ -45,45 +49,30 @@ export const api: Sandbox = {
     return appInfo;
   },
   async engineInfos() {
-    const state = new URLSearchParams(window.location.search);
-    const status = state.get("engineStatus");
-    const baseEngineInfo = loadEnvEngineInfos()[0];
-    if (baseEngineInfo.type != "path") {
-      throw new Error("default engine type must be path");
+    if (!engineInfoPromise) {
+      const { promise, resolve } = Promise.withResolvers<EngineInfo[]>();
+      // エンジンが準備完了したときの処理
+      onReceivedIPCMessage("engineReady", ({ port }: { port: number }) => {
+        const baseEngineInfo = loadEnvEngineInfos()[0];
+        if (baseEngineInfo.type != "path") {
+          throw new Error("default engine type must be path");
+        }
+        resolve([
+          {
+            ...baseEngineInfo,
+            protocol: "http://",
+            hostname: "localhost",
+            defaultPort: port.toString(),
+            pathname: "",
+            type: "path",
+            isDefault: true,
+          },
+        ]);
+      });
+      engineInfoPromise = promise;
     }
-    if (status === "ready") {
-      const port = state.get("port");
-      if (!port) {
-        throw new Error("port is not found");
-      }
 
-      const { protocol, hostname, pathname } = new URL(baseEngineInfo.host);
-      return [
-        {
-          ...baseEngineInfo,
-          protocol,
-          hostname,
-          defaultPort: port,
-          pathname: pathname === "/" ? "" : pathname,
-          type: "path",
-          isDefault: true,
-        } satisfies EngineInfo,
-      ];
-    } else {
-      // 「エンジン起動中...」を出すため、常に失敗するエンジン情報を返す。
-      // TODO: もっと良い方法を考える
-      return [
-        {
-          ...baseEngineInfo,
-          type: "path",
-          protocol: "http://",
-          hostname: "voicevox-always-fail.internal",
-          defaultPort: "0",
-          pathname: "/",
-          isDefault: true,
-        },
-      ];
-    }
+    return engineInfoPromise;
   },
   async restartEngine(engineId) {
     const engineInfos = await this.engineInfos();
