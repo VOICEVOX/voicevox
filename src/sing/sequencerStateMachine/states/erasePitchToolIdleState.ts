@@ -11,7 +11,9 @@ export class ErasePitchToolIdleState
 {
   readonly id = "erasePitchToolIdle";
 
-  onEnter() {}
+  onEnter(context: Context) {
+    context.cursorState.value = "UNSET";
+  }
 
   process({
     input,
@@ -22,21 +24,25 @@ export class ErasePitchToolIdleState
     context: Context;
     setNextState: SetNextState<SequencerStateDefinitions>;
   }) {
-    const mouseButton = getButton(input.mouseEvent);
-    const selectedTrackId = context.selectedTrackId.value;
+    if (input.type === "mouseEvent") {
+      const mouseButton = getButton(input.mouseEvent);
+      const selectedTrackId = context.selectedTrackId.value;
 
-    if (
-      input.mouseEvent.type === "mousedown" &&
-      mouseButton === "LEFT_BUTTON" &&
-      input.targetArea === "SequencerBody"
-    ) {
-      setNextState("erasePitch", {
-        cursorPosAtStart: input.cursorPos,
-        targetTrackId: selectedTrackId,
-        returnStateId: this.id,
-      });
+      if (
+        input.mouseEvent.type === "mousedown" &&
+        mouseButton === "LEFT_BUTTON" &&
+        input.targetArea === "SequencerBody"
+      ) {
+        setNextState("erasePitch", {
+          cursorPosAtStart: input.cursorPos,
+          targetTrackId: selectedTrackId,
+          returnStateId: this.id,
+        });
+      }
     }
   }
 
-  onExit() {}
+  onExit(context: Context) {
+    context.cursorState.value = "UNSET";
+  }
 }

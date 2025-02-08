@@ -12,7 +12,9 @@ export class DrawPitchToolIdleState
 {
   readonly id = "drawPitchToolIdle";
 
-  onEnter() {}
+  onEnter(context: Context) {
+    this.updateCursorState(context, context.isCommandOrCtrlKeyDown.value);
+  }
 
   process({
     input,
@@ -23,29 +25,46 @@ export class DrawPitchToolIdleState
     context: Context;
     setNextState: SetNextState<SequencerStateDefinitions>;
   }) {
-    const mouseButton = getButton(input.mouseEvent);
-    const selectedTrackId = context.selectedTrackId.value;
+    if (input.type === "keyboardEvent") {
+      this.updateCursorState(
+        context,
+        isOnCommandOrCtrlKeyDown(input.keyboardEvent),
+      );
+    } else if (input.type === "mouseEvent") {
+      const mouseButton = getButton(input.mouseEvent);
+      const selectedTrackId = context.selectedTrackId.value;
 
-    if (
-      input.mouseEvent.type === "mousedown" &&
-      mouseButton === "LEFT_BUTTON" &&
-      input.targetArea === "SequencerBody"
-    ) {
-      if (isOnCommandOrCtrlKeyDown(input.mouseEvent)) {
-        setNextState("erasePitch", {
-          cursorPosAtStart: input.cursorPos,
-          targetTrackId: selectedTrackId,
-          returnStateId: this.id,
-        });
-      } else {
-        setNextState("drawPitch", {
-          cursorPosAtStart: input.cursorPos,
-          targetTrackId: selectedTrackId,
-          returnStateId: this.id,
-        });
+      if (
+        input.mouseEvent.type === "mousedown" &&
+        mouseButton === "LEFT_BUTTON" &&
+        input.targetArea === "SequencerBody"
+      ) {
+        if (isOnCommandOrCtrlKeyDown(input.mouseEvent)) {
+          setNextState("erasePitch", {
+            cursorPosAtStart: input.cursorPos,
+            targetTrackId: selectedTrackId,
+            returnStateId: this.id,
+          });
+        } else {
+          setNextState("drawPitch", {
+            cursorPosAtStart: input.cursorPos,
+            targetTrackId: selectedTrackId,
+            returnStateId: this.id,
+          });
+        }
       }
     }
   }
 
-  onExit() {}
+  onExit(context: Context) {
+    context.cursorState.value = "UNSET";
+  }
+
+  private updateCursorState(context: Context, isCommandOrCtrlKeyDown: boolean) {
+    if (isCommandOrCtrlKeyDown) {
+      context.cursorState.value = "ERASE";
+    } else {
+      context.cursorState.value = "DRAW";
+    }
+  }
 }

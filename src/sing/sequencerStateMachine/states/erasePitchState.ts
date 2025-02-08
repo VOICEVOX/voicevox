@@ -73,6 +73,7 @@ export class ErasePitchState
       startFrame: this.cursorPosAtStart.frame,
       frameLength: 1,
     };
+    context.cursorState.value = "ERASE";
     context.nowPreviewing.value = true;
 
     const previewIfNeeded = () => {
@@ -105,17 +106,20 @@ export class ErasePitchState
     if (this.innerContext == undefined) {
       throw new Error("innerContext is undefined.");
     }
-    const mouseButton = getButton(input.mouseEvent);
-    if (input.targetArea === "SequencerBody") {
-      if (input.mouseEvent.type === "mousemove") {
-        this.currentCursorPos = input.cursorPos;
-        this.innerContext.executePreviewProcess = true;
-      } else if (
-        input.mouseEvent.type === "mouseup" &&
-        mouseButton === "LEFT_BUTTON"
-      ) {
-        this.applyPreview = true;
-        setNextState(this.returnStateId, undefined);
+    if (input.type === "mouseEvent") {
+      const mouseButton = getButton(input.mouseEvent);
+
+      if (input.targetArea === "SequencerBody") {
+        if (input.mouseEvent.type === "mousemove") {
+          this.currentCursorPos = input.cursorPos;
+          this.innerContext.executePreviewProcess = true;
+        } else if (
+          input.mouseEvent.type === "mouseup" &&
+          mouseButton === "LEFT_BUTTON"
+        ) {
+          this.applyPreview = true;
+          setNextState(this.returnStateId, undefined);
+        }
       }
     }
   }
@@ -142,6 +146,7 @@ export class ErasePitchState
     }
 
     context.previewPitchEdit.value = undefined;
+    context.cursorState.value = "UNSET";
     context.nowPreviewing.value = false;
   }
 }
