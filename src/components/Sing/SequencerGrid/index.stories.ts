@@ -25,6 +25,10 @@ const meta: Meta<typeof Presentation> = {
     tpqn: 480,
     sequencerSnapType: 16,
     numMeasures: 32,
+    gridWidth: 3840,
+    gridHeight: 2880,
+    offsetX: 0,
+    offsetY: 0,
   },
   argTypes: {
     sequencerZoomX: {

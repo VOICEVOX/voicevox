@@ -58,7 +58,6 @@ import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import {
   TextDialogResult,
   NotifyAndNotShowAgainButtonOption,
-  LoadingScreenOption,
   MessageDialogOptions,
   ConfirmDialogOptions,
   WarningDialogOptions,
@@ -2085,14 +2084,6 @@ export type UiStoreTypes = {
 
   SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON: {
     action(payload: NotifyAndNotShowAgainButtonOption): void;
-  };
-
-  SHOW_LOADING_SCREEN: {
-    action(payload: LoadingScreenOption): void;
-  };
-
-  HIDE_ALL_LOADING_SCREEN: {
-    action(): void;
   };
 
   ON_VUEX_READY: {
