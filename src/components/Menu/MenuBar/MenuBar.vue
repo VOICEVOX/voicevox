@@ -1,7 +1,7 @@
 <template>
   <QBar
     class="bg-background q-pa-none relative-position"
-    :class="[isVst || 'enable-drag']"
+    :class="[isElectron && 'enable-drag']"
   >
     <div
       v-if="!isVst && $q.platform.is.mac && !isFullscreen"

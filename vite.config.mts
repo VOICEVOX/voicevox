@@ -1,5 +1,4 @@
 /// <reference types="vitest" />
-/* eslint-disable no-console */
 import path from "path";
 import { rm } from "fs/promises";
 
@@ -163,7 +162,7 @@ const cleanDistPlugin = (): Plugin => {
   };
 };
 
-const injectPreloadPlugin = (name: string): Plugin => {
+const injectPreloadPlugin = (backendName: "browser" | "vst"): Plugin => {
   return {
     name: "inject-browser-preload",
     transformIndexHtml: {
@@ -171,7 +170,7 @@ const injectPreloadPlugin = (name: string): Plugin => {
       handler: (html: string) =>
         html.replace(
           `<!-- %PRELOAD% -->`,
-          `<script type="module" src="./backend/${name}/preload.ts"></script>`,
+          `<script type="module" src="./backend/${backendName}/preload.ts"></script>`,
         ),
     },
   };

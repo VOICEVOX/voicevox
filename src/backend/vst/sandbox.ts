@@ -101,14 +101,6 @@ export const api: Sandbox = {
     }
     await startEngine({ useGpu: engineSetting.useGpu, forceRestart: true });
   },
-  async showProjectLoadDialog({ title }) {
-    const filePath = await window.backend.showImportFileDialog({
-      title,
-      name: "VOICEVOX Project file",
-      extensions: ["vvproj"],
-    });
-    return filePath ? [filePath] : undefined;
-  },
   showImportFileDialog(options) {
     return showImportFileDialog(options);
   },
