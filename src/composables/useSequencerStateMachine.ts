@@ -5,6 +5,7 @@ import {
   IdleStateId,
   PartialStore,
   Refs,
+  SequencerStateId,
 } from "@/sing/sequencerStateMachine/common";
 import { getNoteDuration } from "@/sing/domain";
 import { createSequencerStateMachine } from "@/sing/sequencerStateMachine";
@@ -38,6 +39,7 @@ export const useSequencerStateMachine = (
     guideLineTicks: ref(0),
   };
 
+  const currentStateId = ref<SequencerStateId>(initialStateId);
   const stateMachine = createSequencerStateMachine(
     {
       ...computedRefs,
@@ -45,10 +47,14 @@ export const useSequencerStateMachine = (
       store,
     },
     initialStateId,
+    (stateId: SequencerStateId) => {
+      currentStateId.value = stateId;
+    },
   );
 
   return {
     stateMachine,
+    currentStateId: computed(() => currentStateId.value),
     nowPreviewing: computed(() => refs.nowPreviewing.value),
     previewNotes: computed(() => refs.previewNotes.value),
     previewRectForRectSelect: computed(

@@ -24,7 +24,7 @@ export type StateDefinitions<T extends StateDefinition[]> = T;
 /**
  * ステートのIDを表す型。
  */
-type StateId<T extends StateDefinition[]> = T[number]["id"];
+export type StateId<T extends StateDefinition[]> = T[number]["id"];
 
 /**
  * ファクトリ関数の引数を表す型。
@@ -119,6 +119,9 @@ export class StateMachine<
   >;
   private readonly context: Context;
 
+  // NOTE: EventTargetを継承する形だと型指定が面倒なので、ひとまずコールバックの形にしている
+  private readonly onStateChanged: (stateId: StateId<StateDefinitions>) => void;
+
   private currentState: State<StateDefinitions, Input, Context>;
   private isDisposed = false;
 
@@ -138,9 +141,11 @@ export class StateMachine<
     stateFactories: StateFactories<StateDefinitions, Input, Context>,
     context: Context,
     initialStateId: InitialStateId<StateDefinitions>,
+    onStateChanged: (stateId: StateId<StateDefinitions>) => void,
   ) {
     this.stateFactories = stateFactories;
     this.context = context;
+    this.onStateChanged = onStateChanged;
 
     this.currentState = stateFactories[initialStateId](undefined);
   }
@@ -161,6 +166,8 @@ export class StateMachine<
     this.currentState.onExit(this.context);
     this.currentState = this.stateFactories[id](factoryArgs);
     this.currentState.onEnter(this.context);
+
+    this.onStateChanged(this.currentState.id);
   }
 
   /**
@@ -188,6 +195,8 @@ export class StateMachine<
       this.currentState.onExit(this.context);
       this.currentState = nextState;
       this.currentState.onEnter(this.context);
+
+      this.onStateChanged(this.currentState.id);
     }
   }
 

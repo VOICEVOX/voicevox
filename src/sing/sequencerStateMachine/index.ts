@@ -3,6 +3,7 @@ import {
   IdleStateId,
   Input,
   SequencerStateDefinitions,
+  SequencerStateId,
 } from "@/sing/sequencerStateMachine/common";
 import { StateMachine } from "@/sing/stateMachine";
 
@@ -21,6 +22,7 @@ import { ErasePitchState } from "@/sing/sequencerStateMachine/states/erasePitchS
 export const createSequencerStateMachine = (
   context: Context,
   initialStateId: IdleStateId,
+  onStateChanged: (stateId: SequencerStateId) => void,
 ) => {
   return new StateMachine<SequencerStateDefinitions, Input, Context>(
     {
@@ -38,5 +40,6 @@ export const createSequencerStateMachine = (
     },
     context,
     initialStateId,
+    onStateChanged,
   );
 };

@@ -1,5 +1,5 @@
 import { ComputedRef, Ref } from "vue";
-import { StateDefinitions } from "@/sing/stateMachine";
+import { StateDefinitions, StateId } from "@/sing/stateMachine";
 import { Rect } from "@/sing/utility";
 import { CursorState, PREVIEW_SOUND_DURATION } from "@/sing/viewHelper";
 import { Store } from "@/store";
@@ -184,6 +184,8 @@ export type SequencerStateDefinitions = StateDefinitions<
     },
   ]
 >;
+
+export type SequencerStateId = StateId<SequencerStateDefinitions>;
 
 /**
  * カーソル位置に対応する補助線の位置を取得する。
