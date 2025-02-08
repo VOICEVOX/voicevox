@@ -102,7 +102,7 @@ export class EditNotesToolIdleState
 
   private updateCursorState(context: Context, isCommandOrCtrlKeyDown: boolean) {
     if (isCommandOrCtrlKeyDown) {
-      context.cursorState.value = "UNSET";
+      context.cursorState.value = "CROSSHAIR";
     } else {
       context.cursorState.value = "DRAW";
     }
