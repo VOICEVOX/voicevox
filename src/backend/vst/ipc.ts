@@ -3,7 +3,7 @@ import { Routing } from "./type";
 import { Metadata } from "@/backend/common/ConfigManager";
 import { TrackId } from "@/type/preload";
 import { createLogger } from "@/helpers/log";
-import { UnreachableError } from "@/type/utility";
+import { Brand, UnreachableError } from "@/type/utility";
 import { SingingVoiceKey, Track } from "@/store/type";
 
 /*
@@ -12,7 +12,7 @@ import { SingingVoiceKey, Track } from "@/store/type";
 - 送信はpostMessage、受信はonIpcResponseとonIpcNotificationを使う。
 - 通信内容はJSONでやり取りする。
 - だいたいの流れ：
-  - requestIdを振る（連番、nonce）
+  - requestIdを振る
   - Promiseを作っておく
   - postMessageでJSONを送信
   - onIpcResponseで受信
@@ -47,7 +47,12 @@ type Notifications = {
   engineReady: { port: number };
 };
 
-let nonce = 0;
+type RequestId = Brand<number, "RequestId">;
+const createGetRequestId = (): (() => RequestId) => {
+  let requestId = 0;
+  return () => requestId++ as RequestId;
+};
+const getRequestId = createGetRequestId();
 let handlerInitialized = false;
 const notificationReceivers = new Map<string, ((value: unknown) => void)[]>();
 const messagePromises = new Map<
@@ -116,7 +121,7 @@ const createMessageFunction = <F extends (arg?: any) => any>(
       handlerInitialized = true;
       initializeMessageHandler();
     }
-    const currentNonce = nonce++;
+    const currentNonce = getRequestId();
     if (!silent) {
       log.info(`To plugin: ${name}(${currentNonce})`);
     }
