@@ -17,40 +17,80 @@ import { createLogger } from "@/helpers/log";
 
 const log = createLogger("vvppFile");
 
-/** VVPPファイルが分割されている場合、それらのファイルを取得する */
-async function getArchiveFileParts(
-  vvppLikeFilePath: string,
-): Promise<string[]> {
-  // 名前.数値.vvpppの場合は分割されているとみなして連結する
-  if (isSplitFile(vvppLikeFilePath)) {
-    log.info("vvpp is split, finding other parts...");
-    const filePaths = await findSplitFileParts(vvppLikeFilePath);
-    return sortFileParts(filePaths);
-  } else {
-    log.info("Not a split file");
-    return [vvppLikeFilePath];
+/** VVPPファイルを vvppEngineDir で指定したディレクトリ以下の .tmp ディレクトリに展開する */
+export class VvppFileExtractor {
+  private readonly vvppLikeFilePath: string;
+  private readonly tmpDir: string;
+  private readonly callbacks?: { onProgress?: ProgressCallback };
+
+  private readonly outputDir: string;
+
+  constructor(params: {
+    vvppLikeFilePath: string;
+    vvppEngineDir: string;
+    tmpDir: string;
+    callbacks?: { onProgress?: ProgressCallback };
+  }) {
+    this.vvppLikeFilePath = params.vvppLikeFilePath;
+    this.tmpDir = params.tmpDir;
+    this.callbacks = params.callbacks;
+
+    this.outputDir = this.createOutputDirPath(params.vvppEngineDir);
   }
 
-  function isSplitFile(filePath: string): boolean {
+  private createOutputDirPath(vvppEngineDir: string): string {
+    const nonce = new Date().getTime().toString();
+    return path.join(vvppEngineDir, ".tmp", nonce);
+  }
+
+  async extract(): Promise<{
+    outputDir: string;
+    manifest: MinimumEngineManifestType;
+  }> {
+    const archiveFileParts = await this.getArchiveFileParts();
+    const manifest = await this.extractOrCleanup(archiveFileParts);
+    return { outputDir: this.outputDir, manifest };
+  }
+
+  /** VVPPファイルが分割されている場合、それらのファイルを取得する */
+  private async getArchiveFileParts(): Promise<string[]> {
+    // 名前.数値.vvpppの場合は分割されているとみなして連結する
+    const { vvppLikeFilePath } = this;
+    if (this.isSplitFile(vvppLikeFilePath)) {
+      log.info("vvpp is split, finding other parts...");
+      const filePaths = await this.findSplitFileParts(vvppLikeFilePath);
+      return this.sortFileParts(filePaths);
+    } else {
+      log.info("Not a split file");
+      return [vvppLikeFilePath];
+    }
+  }
+
+  private isSplitFile(filePath: string): boolean {
     return filePath.match(/\.[0-9]+\.vvppp$/) != null;
   }
 
-  async function findSplitFileParts(filePath: string): Promise<string[]> {
+  private async findSplitFileParts(filePath: string): Promise<string[]> {
     const vvpppPathGlob = filePath
       .replace(/\.[0-9]+\.vvppp$/, ".*.vvppp")
       .replace(/\\/g, "/"); // node-globはバックスラッシュを使えないので、スラッシュに置換する
     const filePaths: string[] = [];
-    for (const p of await glob(vvpppPathGlob)) {
+    const matchingFiles = await glob(vvpppPathGlob);
+    for (const p of matchingFiles) {
       if (!p.match(/\.[0-9]+\.vvppp$/)) {
         continue;
       }
       log.info(`found ${p}`);
       filePaths.push(p);
     }
+
+    if (filePaths.length === 0) {
+      throw new Error(`No split files found for path: ${filePath}`);
+    }
     return filePaths;
   }
 
-  function sortFileParts(filePaths: string[]): string[] {
+  private sortFileParts(filePaths: string[]): string[] {
     return filePaths.sort((a, b) => {
       const aMatch = a.match(/\.([0-9]+)\.vvppp$/);
       const bMatch = b.match(/\.([0-9]+)\.vvppp$/);
@@ -60,56 +100,132 @@ async function getArchiveFileParts(
       return parseInt(aMatch[1]) - parseInt(bMatch[1]);
     });
   }
-}
 
-/** 分割されているVVPPファイルを連結して返す */
-async function concatenateVvppFiles(
-  archiveFileParts: string[],
-  outputFilePath: string,
-) {
-  log.info(`Concatenating ${archiveFileParts.length} files...`);
+  private async extractOrCleanup(
+    archiveFileParts: string[],
+  ): Promise<MinimumEngineManifestType> {
+    try {
+      return await this.extractVvppFiles(archiveFileParts);
+    } catch (e) {
+      await this.cleanupOutputDir();
+      throw e;
+    }
+  }
 
-  await new Promise<void>((resolve, reject) => {
-    const inputStreams = archiveFileParts.map((f) => fs.createReadStream(f));
-    const outputStream = fs.createWriteStream(outputFilePath);
-    new MultiStream(inputStreams)
-      .pipe(outputStream)
-      .on("close", () => {
-        outputStream.close();
-        resolve();
-      })
-      .on("error", reject);
-  });
-  log.info("Concatenated");
-}
+  private async extractVvppFiles(
+    archiveFileParts: string[],
+  ): Promise<MinimumEngineManifestType> {
+    await this.unarchiveVvppFiles(archiveFileParts);
+    return await this.readManifest();
+  }
 
-/** 7zでファイルを解凍する */
-async function unarchive(
-  payload: {
-    archiveFile: string;
-    outputDir: string;
-    format: "zip" | "7z";
-  },
-  callbacks?: { onProgress?: ProgressCallback },
-) {
-  const args = createSevenZipArgs();
-  const sevenZipPath = getSevenZipPath();
+  private async unarchiveVvppFiles(archiveFileParts: string[]) {
+    const format = await this.detectFileFormat(archiveFileParts[0]);
+    log.info("Format:", format);
 
-  log.info("Spawning 7z:", sevenZipPath, args.join(" "));
-  await spawnSevenZip(sevenZipPath, args, callbacks);
+    if (archiveFileParts.length > 1) {
+      // -siオプションでの7z解凍はサポートされていないため、
+      // ファイルを連結した一次ファイルを作成し、それを7zで解凍する。
+      const archiveFile = this.createTmpConcatenatedFilePath(format);
+      log.info("Temporary file:", archiveFile);
 
-  function createSevenZipArgs(): string[] {
-    const { archiveFile, outputDir, format } = payload;
+      try {
+        await this.concatenateVvppFiles(archiveFileParts, archiveFile);
+        await this.unarchive(archiveFile, format);
+      } finally {
+        log.info("Removing temporary file", archiveFile);
+        await fs.promises.rm(archiveFile);
+      }
+    } else {
+      const archiveFile = archiveFileParts[0];
+      log.info("Single file, not concatenating");
+
+      await this.unarchive(archiveFile, format);
+    }
+  }
+
+  private async detectFileFormat(filePath: string): Promise<"zip" | "7z"> {
+    const buffer = await this.readFileHeader(filePath);
+
+    // https://www.garykessler.net/library/file_sigs.html#:~:text=7-zip%20compressed%20file
+    const SEVEN_ZIP_MAGIC_NUMBER = Buffer.from([
+      0x37, 0x7a, 0xbc, 0xaf, 0x27, 0x1c,
+    ]);
+    const ZIP_MAGIC_NUMBER = Buffer.from([0x50, 0x4b, 0x03, 0x04]);
+
+    if (this.isBufferEqual(buffer, SEVEN_ZIP_MAGIC_NUMBER, 6)) {
+      return "7z";
+    } else if (this.isBufferEqual(buffer, ZIP_MAGIC_NUMBER, 4)) {
+      return "zip";
+    }
+
+    throw new Error(`Unknown file format: ${filePath}`);
+  }
+
+  private async readFileHeader(filePath: string): Promise<Buffer> {
+    const file = await fs.promises.open(filePath, "r");
+    const buffer = Buffer.alloc(8);
+    await file.read(buffer, 0, 8, 0);
+    await file.close();
+    return buffer;
+  }
+
+  private isBufferEqual(
+    buffer1: Buffer,
+    buffer2: Buffer,
+    length: number,
+  ): boolean {
+    return buffer1.compare(buffer2, 0, length, 0, length) === 0;
+  }
+
+  private createTmpConcatenatedFilePath(format: "zip" | "7z"): string {
+    return path.join(this.tmpDir, `vvpp-${new Date().getTime()}.${format}`);
+  }
+
+  /** 分割されているVVPPファイルを連結して返す */
+  private async concatenateVvppFiles(
+    archiveFileParts: string[],
+    outputFilePath: string,
+  ) {
+    log.info(`Concatenating ${archiveFileParts.length} files...`);
+
+    await new Promise<void>((resolve, reject) => {
+      const inputStreams = archiveFileParts.map((f) => fs.createReadStream(f));
+      const outputStream = fs.createWriteStream(outputFilePath);
+      new MultiStream(inputStreams)
+        .pipe(outputStream)
+        .on("close", () => {
+          outputStream.close();
+          resolve();
+        })
+        .on("error", reject);
+    });
+    log.info("Concatenated");
+  }
+
+  /** 7zでファイルを解凍する */
+  private async unarchive(archiveFile: string, format: "zip" | "7z") {
+    const args = this.createSevenZipArgs(archiveFile, format);
+    const sevenZipPath = this.getSevenZipPath();
+
+    log.info("Spawning 7z:", sevenZipPath, args.join(" "));
+    await this.spawnSevenZip(sevenZipPath, args);
+  }
+
+  private createSevenZipArgs(
+    archiveFile: string,
+    format: "zip" | "7z",
+  ): string[] {
     return [
       "x",
-      "-o" + outputDir,
+      "-o" + this.outputDir,
       archiveFile,
       "-t" + format,
       "-bsp1", // 進捗出力
     ];
   }
 
-  function getSevenZipPath(): string {
+  private getSevenZipPath(): string {
     let sevenZipPath = import.meta.env.VITE_7Z_BIN_NAME;
     if (!sevenZipPath) {
       throw new Error("7z path is not defined");
@@ -120,11 +236,7 @@ async function unarchive(
     return sevenZipPath;
   }
 
-  async function spawnSevenZip(
-    sevenZipPath: string,
-    args: string[],
-    callbacks?: { onProgress?: ProgressCallback },
-  ) {
+  private async spawnSevenZip(sevenZipPath: string, args: string[]) {
     const { promise, resolve, reject } = Promise.withResolvers<void>();
 
     const child = spawn(sevenZipPath, args, {
@@ -132,7 +244,7 @@ async function unarchive(
     });
 
     child.stdout?.on("data", (data: Buffer) => {
-      handleStdout(data, callbacks);
+      this.handleStdout(data);
     });
 
     child.stderr?.on("data", (data: Buffer) => {
@@ -141,7 +253,7 @@ async function unarchive(
 
     child.on("exit", (code) => {
       if (code === 0) {
-        callbacks?.onProgress?.({ progress: 100 });
+        this.callbacks?.onProgress?.({ progress: 100 });
         resolve();
       } else {
         reject(new Error(`7z exited with code ${code}`));
@@ -154,10 +266,7 @@ async function unarchive(
     await promise;
   }
 
-  function handleStdout(
-    data: Buffer,
-    callbacks?: { onProgress?: ProgressCallback },
-  ) {
+  private handleStdout(data: Buffer) {
     const output = data.toString("utf-8");
     log.info(`7z STDOUT: ${output}`);
 
@@ -168,121 +277,25 @@ async function unarchive(
       / *(?<percent>\d+)% ?(?<fileCount>\d+)? ?(?<file>.*)/,
     );
     if (progressMatch?.groups?.percent) {
-      callbacks?.onProgress?.({
+      this.callbacks?.onProgress?.({
         progress: parseInt(progressMatch.groups.percent),
       });
     }
   }
-}
 
-async function unarchiveVvppFiles(
-  payload: { archiveFileParts: string[]; outputDir: string; tmpDir: string },
-  callbacks?: { onProgress?: ProgressCallback },
-) {
-  const { archiveFileParts, outputDir, tmpDir } = payload;
-
-  const format = await detectFileFormat(archiveFileParts[0]);
-  log.info("Format:", format);
-
-  if (archiveFileParts.length > 1) {
-    // -siオプションでの7z解凍はサポートされていないため、
-    // ファイルを連結した一次ファイルを作成し、それを7zで解凍する。
-    const archiveFile = createTmpConcatenatedFilePath();
-    log.info("Temporary file:", archiveFile);
-
-    try {
-      await concatenateVvppFiles(archiveFileParts, archiveFile);
-      await unarchive({ archiveFile, outputDir, format }, callbacks);
-    } finally {
-      log.info("Removing temporary file", archiveFile);
-      await fs.promises.rm(archiveFile);
-    }
-  } else {
-    const archiveFile = archiveFileParts[0];
-    log.info("Single file, not concatenating");
-
-    await unarchive({ archiveFile, outputDir, format }, callbacks);
-  }
-
-  async function detectFileFormat(filePath: string): Promise<"zip" | "7z"> {
-    const buffer = await readFileHeader(filePath);
-
-    // https://www.garykessler.net/library/file_sigs.html#:~:text=7-zip%20compressed%20file
-    const SEVEN_ZIP_MAGIC_NUMBER = Buffer.from([
-      0x37, 0x7a, 0xbc, 0xaf, 0x27, 0x1c,
-    ]);
-    const ZIP_MAGIC_NUMBER = Buffer.from([0x50, 0x4b, 0x03, 0x04]);
-
-    if (isBufferEqual(buffer, SEVEN_ZIP_MAGIC_NUMBER, 6)) {
-      return "7z";
-    } else if (isBufferEqual(buffer, ZIP_MAGIC_NUMBER, 4)) {
-      return "zip";
-    }
-
-    throw new Error(`Unknown file format: ${archiveFileParts[0]}`);
-
-    async function readFileHeader(filePath: string): Promise<Buffer> {
-      const file = await fs.promises.open(filePath, "r");
-      const buffer = Buffer.alloc(8);
-      await file.read(buffer, 0, 8, 0);
-      await file.close();
-      return buffer;
-    }
-
-    function isBufferEqual(
-      buffer1: Buffer,
-      buffer2: Buffer,
-      length: number,
-    ): boolean {
-      return buffer1.compare(buffer2, 0, length, 0, length) === 0;
-    }
-  }
-
-  function createTmpConcatenatedFilePath(): string {
-    return path.join(tmpDir, `vvpp-${new Date().getTime()}.${format}`);
-  }
-}
-
-/** VVPPファイルを vvppEngineDir で指定したディレクトリ以下の .tmp ディレクトリに展開する */
-export async function extractVvpp(
-  payload: { vvppLikeFilePath: string; vvppEngineDir: string; tmpDir: string },
-  callbacks?: { onProgress?: ProgressCallback },
-): Promise<{ outputDir: string; manifest: MinimumEngineManifestType }> {
-  const { vvppLikeFilePath, vvppEngineDir, tmpDir } = payload;
-  callbacks?.onProgress?.({ progress: 0 });
-
-  const outputDir = createOutputDirPath();
-  const archiveFileParts = await getArchiveFileParts(vvppLikeFilePath);
-
-  try {
-    await unarchiveVvppFiles({ archiveFileParts, outputDir, tmpDir });
-    const manifest = await readManifest(outputDir);
-    return { outputDir, manifest };
-  } catch (e) {
-    await cleanupOutputDir(outputDir);
-    throw e;
-  }
-
-  function createOutputDirPath(): string {
-    const nonce = new Date().getTime().toString();
-    const outputDir = path.join(vvppEngineDir, ".tmp", nonce);
-    return outputDir;
-  }
-
-  async function readManifest(
-    outputDir: string,
-  ): Promise<MinimumEngineManifestType> {
+  private async readManifest(): Promise<MinimumEngineManifestType> {
     return minimumEngineManifestSchema.parse(
       JSON.parse(
         await fs.promises.readFile(
-          path.join(outputDir, "engine_manifest.json"),
+          path.join(this.outputDir, "engine_manifest.json"),
           "utf-8",
         ),
       ),
     );
   }
 
-  async function cleanupOutputDir(outputDir: string) {
+  private async cleanupOutputDir() {
+    const { outputDir } = this;
     if (fs.existsSync(outputDir)) {
       log.info("Failed to extract vvpp, removing", outputDir);
       await fs.promises.rm(outputDir, { recursive: true });

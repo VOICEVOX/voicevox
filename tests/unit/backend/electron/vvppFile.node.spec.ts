@@ -4,7 +4,7 @@ import { exec } from "child_process";
 import fs from "fs";
 import { promisify } from "util";
 import { test, afterAll, beforeAll } from "vitest";
-import { extractVvpp } from "@/backend/electron/vvppFile";
+import { VvppFileExtractor } from "@/backend/electron/vvppFile";
 import { uuid4 } from "@/helpers/random";
 
 let tmpDir: string;
@@ -22,11 +22,11 @@ test("正しいVVPPファイルからエンジンを切り出せる", async () =
   await createZipFile(sourceDir, outputFilePath);
 
   const vvppEngineDir = createVvppEngineDir();
-  await extractVvpp({
+  await new VvppFileExtractor({
     vvppLikeFilePath: outputFilePath,
     vvppEngineDir,
     tmpDir,
-  });
+  }).extract();
   expectManifestExists(vvppEngineDir);
 });
 
@@ -41,11 +41,11 @@ test("分割されたVVPPファイルからエンジンを切り出せる", asyn
   splitFile(outputFilePath, outputFilePath1, outputFilePath2);
 
   const vvppEngineDir = createVvppEngineDir();
-  await extractVvpp({
+  await new VvppFileExtractor({
     vvppLikeFilePath: outputFilePath1,
     vvppEngineDir,
     tmpDir,
-  });
+  }).extract();
   expectManifestExists(vvppEngineDir);
 });
 
@@ -60,11 +60,11 @@ test.each([
     const outputFilePath = path.join(tmpDir, uuid4() + targetName);
     await createZipFile(sourceDir, outputFilePath);
     await expect(
-      extractVvpp({
+      new VvppFileExtractor({
         vvppLikeFilePath: outputFilePath,
         vvppEngineDir: tmpDir,
         tmpDir,
-      }),
+      }).extract(),
     ).rejects.toThrow(expectedError);
   },
 );
