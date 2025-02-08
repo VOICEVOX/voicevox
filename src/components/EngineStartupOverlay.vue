@@ -20,7 +20,7 @@
         }}
       </div>
 
-      <template v-if="isEngineWaitingLong && !isVst">
+      <template v-if="isEngineWaitingLong">
         <QSeparator spaced />
         エンジン起動に時間がかかっています。<br />
         <QBtn
