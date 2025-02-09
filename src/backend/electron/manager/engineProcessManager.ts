@@ -4,7 +4,6 @@ import treeKill from "tree-kill";
 
 import { app, dialog } from "electron"; // FIXME: ここでelectronをimportするのは良くない
 
-import log from "electron-log/main";
 import {
   findAltPort,
   getPidFromPort,
@@ -16,6 +15,9 @@ import {
 import { getConfigManager } from "../electronConfig";
 import { getEngineInfoManager } from "./engineInfoManager";
 import { EngineId, EngineInfo } from "@/type/preload";
+import { createLogger } from "@/helpers/log";
+
+const log = createLogger("EngineProcessManager");
 
 type EngineProcessContainer = {
   willQuitEngine: boolean;
@@ -99,7 +101,7 @@ export class EngineProcessManager {
       if (pid != undefined) {
         const processName = await getProcessNameFromPid(engineHostInfo, pid);
         log.warn(
-          `ENGINE ${engineId}: Port ${port} has already been assigned by ${processName} (pid=${pid})`,
+          `ENGINE ${engineId}: Port ${port} has already been assigned by ${processName ?? "(not found)"} (pid=${pid})`,
         );
       } else {
         // ポートは使用不可能だがプロセスidは見つからなかった

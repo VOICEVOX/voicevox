@@ -1,0 +1,257 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`0.13.0からマイグレーションできる 1`] = `
+{
+  "acceptRetrieveTelemetry": "Accepted",
+  "acceptTerms": "Accepted",
+  "activePointScrollMode": "OFF",
+  "confirmedTips": {
+    "engineStartedOnAltPort": false,
+    "notifyOnGenerate": false,
+    "tweakableSliderByScroll": false,
+  },
+  "currentTheme": "Default",
+  "defaultPresetKeys": {},
+  "defaultStyleIds": [],
+  "editorFont": "default",
+  "enableMemoNotation": false,
+  "enableMultiEngine": false,
+  "enablePreset": false,
+  "enableRubyNotation": false,
+  "engineSettings": {
+    "00000000-0000-0000-0000-000000000000": {
+      "outputSamplingRate": "engineDefault",
+      "useGpu": false,
+    },
+  },
+  "experimentalSetting": {
+    "enableInterrogativeUpspeak": false,
+    "enableMorphing": false,
+    "enableMultiSelect": false,
+    "shouldKeepTuningOnTextChange": false,
+    "showParameterPanel": false,
+  },
+  "hotkeySettings": [
+    {
+      "action": "音声書き出し",
+      "combination": "Ctrl E",
+    },
+    {
+      "action": "選択音声を書き出し",
+      "combination": "E",
+    },
+    {
+      "action": "音声を繋げて書き出し",
+      "combination": "",
+    },
+    {
+      "action": "再生/停止",
+      "combination": "Space",
+    },
+    {
+      "action": "連続再生/停止",
+      "combination": "Shift Space",
+    },
+    {
+      "action": "ｱｸｾﾝﾄ欄を表示",
+      "combination": "1",
+    },
+    {
+      "action": "ｲﾝﾄﾈｰｼｮﾝ欄を表示",
+      "combination": "2",
+    },
+    {
+      "action": "長さ欄を表示",
+      "combination": "3",
+    },
+    {
+      "action": "テキスト欄を追加",
+      "combination": "Shift Enter",
+    },
+    {
+      "action": "テキスト欄を複製",
+      "combination": "Ctrl D",
+    },
+    {
+      "action": "テキスト欄を削除",
+      "combination": "Shift Delete",
+    },
+    {
+      "action": "テキスト欄からフォーカスを外す",
+      "combination": "Escape",
+    },
+    {
+      "action": "テキスト欄にフォーカスを戻す",
+      "combination": "Enter",
+    },
+    {
+      "action": "元に戻す",
+      "combination": "Ctrl Z",
+    },
+    {
+      "action": "やり直す",
+      "combination": "Ctrl Y",
+    },
+    {
+      "action": "拡大",
+      "combination": "",
+    },
+    {
+      "action": "縮小",
+      "combination": "",
+    },
+    {
+      "action": "拡大率のリセット",
+      "combination": "",
+    },
+    {
+      "action": "新規プロジェクト",
+      "combination": "Ctrl N",
+    },
+    {
+      "action": "全画面表示を切り替え",
+      "combination": "F11",
+    },
+    {
+      "action": "プロジェクトを名前を付けて保存",
+      "combination": "Ctrl Shift S",
+    },
+    {
+      "action": "プロジェクトを上書き保存",
+      "combination": "Ctrl S",
+    },
+    {
+      "action": "プロジェクトを読み込む",
+      "combination": "Ctrl O",
+    },
+    {
+      "action": "テキストを読み込む",
+      "combination": "",
+    },
+    {
+      "action": "全体のイントネーションをリセット",
+      "combination": "Ctrl G",
+    },
+    {
+      "action": "選択中のアクセント句のイントネーションをリセット",
+      "combination": "R",
+    },
+    {
+      "action": "コピー",
+      "combination": "Ctrl C",
+    },
+    {
+      "action": "切り取り",
+      "combination": "Ctrl X",
+    },
+    {
+      "action": "貼り付け",
+      "combination": "Ctrl V",
+    },
+    {
+      "action": "すべて選択",
+      "combination": "Ctrl A",
+    },
+    {
+      "action": "選択解除",
+      "combination": "",
+    },
+    {
+      "action": "1番目のキャラクターを選択",
+      "combination": "Ctrl 1",
+    },
+    {
+      "action": "2番目のキャラクターを選択",
+      "combination": "Ctrl 2",
+    },
+    {
+      "action": "3番目のキャラクターを選択",
+      "combination": "Ctrl 3",
+    },
+    {
+      "action": "4番目のキャラクターを選択",
+      "combination": "Ctrl 4",
+    },
+    {
+      "action": "5番目のキャラクターを選択",
+      "combination": "Ctrl 5",
+    },
+    {
+      "action": "6番目のキャラクターを選択",
+      "combination": "Ctrl 6",
+    },
+    {
+      "action": "7番目のキャラクターを選択",
+      "combination": "Ctrl 7",
+    },
+    {
+      "action": "8番目のキャラクターを選択",
+      "combination": "Ctrl 8",
+    },
+    {
+      "action": "9番目のキャラクターを選択",
+      "combination": "Ctrl 9",
+    },
+    {
+      "action": "10番目のキャラクターを選択",
+      "combination": "Ctrl 0",
+    },
+  ],
+  "inheritAudioInfo": true,
+  "openedEditor": "talk",
+  "playheadPositionDisplayFormat": "MINUTES_SECONDS",
+  "presets": {
+    "items": {},
+    "keys": [],
+  },
+  "recentlyUsedProjects": [],
+  "registeredEngineDirs": [],
+  "savingSetting": {
+    "audioOutputDevice": "default",
+    "avoidOverwrite": false,
+    "exportLab": false,
+    "exportText": false,
+    "fileEncoding": "UTF-8",
+    "fileNamePattern": "",
+    "fixedExportDir": "",
+    "fixedExportEnabled": false,
+    "outputStereo": false,
+    "songTrackFileNamePattern": "",
+  },
+  "shouldApplyDefaultPresetOnVoiceChanged": false,
+  "showAddAudioItemButton": true,
+  "showSingCharacterPortrait": true,
+  "showTextLineNumber": false,
+  "splitTextWhenPaste": "PERIOD_AND_NEW_LINE",
+  "splitterPosition": {},
+  "toolbarSetting": [
+    "PLAY_CONTINUOUSLY",
+    "STOP",
+    "EXPORT_AUDIO_SELECTED",
+    "EMPTY",
+    "UNDO",
+    "REDO",
+  ],
+  "undoableTrackOperations": {
+    "panAndGain": true,
+    "soloAndMute": true,
+  },
+  "userCharacterOrder": [
+    "7ffcb7ce-00ec-4bdc-82cd-45a8889e43ff",
+    "388f246b-8c41-4ac1-8e2d-5d79f3ff56d9",
+    "35b2c544-660e-401e-b503-0e14c635303a",
+    "3474ee95-c274-47f9-aa1a-8322163d96f1",
+    "b1a81618-b27b-40d2-b0ea-27a9ad408c4b",
+    "c30dc15a-0992-4f8d-8bb8-ad3b314e6a6f",
+    "e5020595-5c5d-4e87-b849-270a518d0dcf",
+    "4f51116a-d9ee-4516-925d-21f183e2afad",
+    "8eaad775-3119-417e-8cf4-2a10bfd592c8",
+    "481fb609-6446-4870-9f46-90c4dd623403",
+    "9f3ee141-26ad-437e-97bd-d22298d02ad2",
+    "1a17ca16-7ee5-4ea5-b191-2f02ace24d21",
+    "67d5d8da-acd7-4207-bb10-b5542d3a663b",
+    "0f56c2f2-644c-49c9-8989-94e11f7129d0",
+    "044830d2-f23b-44d6-ac0d-b5d733caa900",
+  ],
+}
+`;

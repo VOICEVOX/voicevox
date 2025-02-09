@@ -13,6 +13,9 @@ const tsEslintRules = {
   // TODO: いずれは有効化する
   "@typescript-eslint/require-await": "off",
 
+  // 比較関数無しでのsortは文字列での比較になり、ミスが起こりやすいため有効化
+  "@typescript-eslint/require-array-sort-compare": "error",
+
   "@typescript-eslint/no-misused-promises": [
     "error",
     {
