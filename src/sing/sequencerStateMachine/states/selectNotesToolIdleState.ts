@@ -32,7 +32,10 @@ export class SelectNotesToolIdleState
       const mouseButton = getButton(input.mouseEvent);
       const selectedTrackId = context.selectedTrackId.value;
 
-      if (input.targetArea === "SequencerBody") {
+      if (
+        input.targetArea === "Window" &&
+        input.mouseEvent.type === "mousemove"
+      ) {
         context.guideLineTicks.value = getGuideLineTicks(
           input.cursorPos,
           context,

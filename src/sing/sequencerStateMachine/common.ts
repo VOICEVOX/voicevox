@@ -19,8 +19,14 @@ export type PositionOnSequencer = {
 export type Input =
   | {
       readonly type: "keyboardEvent";
-      readonly targetArea: "SequencerBody";
+      readonly targetArea: "Document";
       readonly keyboardEvent: KeyboardEvent;
+    }
+  | {
+      readonly type: "mouseEvent";
+      readonly targetArea: "Window";
+      readonly mouseEvent: MouseEvent;
+      readonly cursorPos: PositionOnSequencer;
     }
   | {
       readonly type: "mouseEvent";
