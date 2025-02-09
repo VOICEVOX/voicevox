@@ -145,7 +145,7 @@ export class ResizeNoteRightState
     if (input.type === "mouseEvent") {
       const mouseButton = getButton(input.mouseEvent);
 
-      if (input.targetArea === "SequencerBody") {
+      if (input.targetArea === "Window") {
         if (input.mouseEvent.type === "mousemove") {
           this.currentCursorPos = input.cursorPos;
           this.innerContext.executePreviewProcess = true;
