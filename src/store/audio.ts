@@ -1,5 +1,3 @@
-import path from "path";
-import Encoding from "encoding-japanese";
 import { createUILockAction, withProgress } from "./ui";
 import {
   AudioItem,
@@ -64,6 +62,8 @@ import { uuid4 } from "@/helpers/random";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { UnreachableError } from "@/type/utility";
 import { errorToMessage } from "@/helpers/errorHelper";
+import path from "@/helpers/path";
+import { generateTextFileData } from "@/helpers/fileDataGenerator";
 
 function generateAudioKey() {
   return AudioKey(uuid4());
@@ -129,6 +129,7 @@ function parseTextFile(
   return audioItems;
 }
 
+// TODO: src/sing/fileUtils.tsのgenerateUniqueFilePathと統合する
 async function changeFileTailToNonExistent(
   filePath: string,
   extension: string,
@@ -147,29 +148,13 @@ export async function writeTextFile(obj: {
   text: string;
   encoding?: EncodingType;
 }) {
-  obj.encoding ??= "UTF-8";
-
-  const textBlob = {
-    "UTF-8": (text: string) => {
-      const bom = new Uint8Array([0xef, 0xbb, 0xbf]);
-      return new Blob([bom, text], {
-        type: "text/plain;charset=UTF-8",
-      });
-    },
-    Shift_JIS: (text: string) => {
-      const sjisArray = Encoding.convert(Encoding.stringToCode(text), {
-        to: "SJIS",
-        type: "arraybuffer",
-      });
-      return new Blob([new Uint8Array(sjisArray)], {
-        type: "text/plain;charset=Shift_JIS",
-      });
-    },
-  }[obj.encoding](obj.text);
-
+  const textFileData = await generateTextFileData({
+    text: obj.text,
+    encoding: obj.encoding,
+  });
   return window.backend.writeFile({
     filePath: obj.filePath,
-    buffer: await textBlob.arrayBuffer(),
+    buffer: textFileData,
   });
 }
 
@@ -570,9 +555,10 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         audioKeys,
       });
       await actions
-        .INITIALIZE_ENGINE_SPEAKER({
+        .INITIALIZE_ENGINE_CHARACTER({
           engineId,
           styleId,
+          uiLock: true,
         })
         .finally(() => {
           mutations.SET_AUDIO_KEYS_WITH_INITIALIZING_SPEAKER({
@@ -1226,6 +1212,12 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
   DEFAULT_PROJECT_FILE_BASE_NAME: {
     getter: (state) => {
+      // NOTE: 起動時にソングエディタが開かれた場合、トークの初期化が行われずAudioCellが作成されない
+      // TODO: ソングエディタが開かれてい場合はこの関数を呼ばないようにし、warningを出す
+      if (state.audioKeys.length === 0) {
+        return DEFAULT_PROJECT_NAME;
+      }
+
       const headItemText = state.audioItems[state.audioKeys[0]].text;
 
       const tailItemText =
@@ -1384,9 +1376,11 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             defaultAudioFileName,
           );
         } else {
-          filePath ??= await window.backend.showAudioSaveDialog({
+          filePath ??= await window.backend.showExportFileDialog({
             title: "音声を保存",
             defaultPath: defaultAudioFileName,
+            extensionName: "WAV ファイル",
+            extensions: ["wav"],
           });
         }
 
@@ -1531,9 +1525,11 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             defaultFileName,
           );
         } else {
-          filePath ??= await window.backend.showAudioSaveDialog({
+          filePath ??= await window.backend.showExportFileDialog({
             title: "音声を全て繋げて保存",
             defaultPath: defaultFileName,
+            extensionName: "WAV ファイル",
+            extensions: ["wav"],
           });
         }
 
@@ -1674,9 +1670,11 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             defaultFileName,
           );
         } else {
-          filePath ??= await window.backend.showTextSaveDialog({
+          filePath ??= await window.backend.showExportFileDialog({
             title: "文章を全て繋げてテキストファイルに保存",
             defaultPath: defaultFileName,
+            extensionName: "テキストファイル",
+            extensions: ["txt"],
           });
         }
 
@@ -2894,24 +2892,36 @@ export const audioCommandStore = transformCommandStore(
           prevAudioKey: undefined,
         });
       },
+      /**
+       * セリフテキストファイルを読み込む。
+       * ファイル選択ダイアログを表示するか、ファイルパス指定するか、Fileインスタンスを渡すか選べる。
+       */
       action: createUILockAction(
-        async (
-          { state, mutations, actions, getters },
-          { filePath }: { filePath?: string },
-        ) => {
-          if (!filePath) {
+        async ({ state, mutations, actions, getters }, payload) => {
+          let filePath: undefined | string;
+          if (payload.type == "dialog") {
             filePath = await window.backend.showImportFileDialog({
               title: "セリフ読み込み",
             });
             if (!filePath) return;
+          } else if (payload.type == "path") {
+            filePath = payload.filePath;
           }
-          let body = new TextDecoder("utf-8").decode(
-            await window.backend.readFile({ filePath }).then(getValueOrThrow),
-          );
+
+          let buf: ArrayBuffer;
+          if (filePath != undefined) {
+            buf = await window.backend
+              .readFile({ filePath })
+              .then(getValueOrThrow);
+          } else {
+            if (payload.type != "file")
+              throw new UnreachableError("payload.type != 'file'");
+            buf = await payload.file.arrayBuffer();
+          }
+
+          let body = new TextDecoder("utf-8").decode(buf);
           if (body.includes("\ufffd")) {
-            body = new TextDecoder("shift-jis").decode(
-              await window.backend.readFile({ filePath }).then(getValueOrThrow),
-            );
+            body = new TextDecoder("shift-jis").decode(buf);
           }
           const audioItems: AudioItem[] = [];
           let baseAudioItem: AudioItem | undefined = undefined;

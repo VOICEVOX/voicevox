@@ -22,8 +22,9 @@ test("ツールバーのカスタマイズでボタンを追加でき、デフ�
   await page.getByText("設定").click();
   await page.waitForTimeout(100);
   await getQuasarMenu(page, "ツールバーのカスタマイズ").click();
-  await page.waitForTimeout(100);
-  await expect(page.getByText("ツールバーのカスタマイズ")).toBeVisible();
+  await expect(
+    getNewestQuasarDialog(page).getByText("ツールバーのカスタマイズ"),
+  ).toBeVisible();
 
   // 全部書き出しボタンを追加する
   expect(
@@ -62,7 +63,7 @@ test("ツールバーのカスタマイズでボタンを追加でき、デフ�
       .count(),
   ).toBe(1);
   await page.getByText("デフォルトに戻す").click();
-  await page.locator(".q-card").getByText("はい").click();
+  await page.locator(".q-card").getByText("デフォルトに戻す").click();
   await page.getByText("保存", { exact: true }).click();
   expect(
     await page

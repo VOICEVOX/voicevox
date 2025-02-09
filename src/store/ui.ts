@@ -14,22 +14,20 @@ import {
 import { createPartialStore } from "./vuex";
 import { ActivePointScrollMode } from "@/type/preload";
 import {
-  AlertDialogOptions,
+  MessageDialogOptions,
   ConfirmDialogOptions,
   WarningDialogOptions,
-  LoadingScreenOption,
   NotifyAndNotShowAgainButtonOption,
   connectAndExportTextWithDialog,
   generateAndConnectAndSaveAudioWithDialog,
   generateAndSaveOneAudioWithDialog,
-  hideAllLoadingScreen,
   multiGenerateAndSaveAudioWithDialog,
   showAlertDialog,
   showConfirmDialog,
-  showLoadingScreen,
   showNotifyAndNotShowAgainButton,
   showWarningDialog,
 } from "@/components/Dialog/Dialog";
+import { objectEntries } from "@/helpers/typedEntries";
 
 export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
   action: (
@@ -68,7 +66,6 @@ export const uiStoreState: UiStoreState = {
   reloadingLock: false,
   inheritAudioInfo: true,
   activePointScrollMode: "OFF",
-  isHelpDialogOpen: false,
   isSettingDialogOpen: false,
   isHotkeySettingDialogOpen: false,
   isToolbarSettingDialogOpen: false,
@@ -178,15 +175,18 @@ export const uiStore = createPartialStore<UiStoreTypes>({
 
   SET_DIALOG_OPEN: {
     mutation(state, dialogState) {
-      for (const [key, value] of Object.entries(dialogState)) {
+      for (const [key, value] of objectEntries(dialogState)) {
         if (!(key in state)) {
           throw new Error(`Unknown dialog state: ${key}`);
+        }
+        if (value == undefined) {
+          throw new Error(`Invalid dialog state: ${key}`);
         }
         state[key] = value;
       }
     },
     async action({ state, mutations }, dialogState) {
-      for (const [key, value] of Object.entries(dialogState)) {
+      for (const [key, value] of objectEntries(dialogState)) {
         if (state[key] === value) continue;
 
         if (value) {
@@ -203,7 +203,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   },
 
   SHOW_ALERT_DIALOG: {
-    action: createUILockAction(async (_, payload: AlertDialogOptions) => {
+    action: createUILockAction(async (_, payload: MessageDialogOptions) => {
       return await showAlertDialog(payload);
     }),
   },
@@ -223,18 +223,6 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON: {
     action({ actions }, payload: NotifyAndNotShowAgainButtonOption) {
       showNotifyAndNotShowAgainButton({ actions }, payload);
-    },
-  },
-
-  SHOW_LOADING_SCREEN: {
-    action(_, payload: LoadingScreenOption) {
-      showLoadingScreen(payload);
-    },
-  },
-
-  HIDE_ALL_LOADING_SCREEN: {
-    action() {
-      hideAllLoadingScreen();
     },
   },
 

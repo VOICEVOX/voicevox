@@ -11,6 +11,7 @@ import {
 } from "@/store/vuex";
 import { CommandId, EditorType } from "@/type/preload";
 import { uuid4 } from "@/helpers/random";
+import { objectEntries, objectFromEntries } from "@/helpers/typedEntries";
 
 enablePatches();
 enableMapSet();
@@ -32,10 +33,10 @@ export const createCommandMutationTree = <S, M extends MutationsBase>(
   payloadRecipeTree: PayloadRecipeTree<S, M>,
   editor: EditorType,
 ): MutationTree<S, M> =>
-  Object.fromEntries(
-    Object.entries(payloadRecipeTree).map(([key, val]) => [
+  objectFromEntries(
+    objectEntries(payloadRecipeTree).map(([key, val]) => [
       key,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      // @ts-expect-error とりあえず動くので無視
       createCommandMutation(val, editor),
     ]),
   ) as MutationTree<S, M>;

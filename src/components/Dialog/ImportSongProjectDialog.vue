@@ -99,7 +99,7 @@ import {
   SupportedExtensions as UfSupportedExtensions,
 } from "@sevenc-nanashi/utaformatix-ts";
 import { useStore } from "@/store";
-import { createLogger } from "@/domain/frontend/log";
+import { createLogger } from "@/helpers/log";
 import { ExhaustiveError } from "@/type/utility";
 import { IsEqual } from "@/type/utility";
 import { LatestProjectType } from "@/domain/project/schema";
@@ -306,7 +306,7 @@ const handleImportTrack = () => {
     throw new Error("project or selected track is not set");
   }
   // トラックをインポート
-  const trackIndexes = selectedTrackIndexes.value.toSorted();
+  const trackIndexes = selectedTrackIndexes.value.toSorted((a, b) => a - b);
   if (project.value.type === "vvproj") {
     void store.actions.COMMAND_IMPORT_VOICEVOX_PROJECT({
       project: project.value.project,

@@ -1,5 +1,58 @@
 [
   {
+    "version": "0.22.4",
+    "descriptions": [
+      "ソング：トークエディタを開かないと保存できない問題を修正"
+    ],
+    "contributors": ["sigprogramming"]
+  },
+  {
+    "version": "0.22.3",
+    "descriptions": ["キャラクター「ぞん子」を追加"],
+    "contributors": []
+  },
+  {
+    "version": "0.22.2",
+    "descriptions": ["キャラクター「中部つるぎ」を追加"],
+    "contributors": []
+  },
+  {
+    "version": "0.22.1",
+    "descriptions": ["バグ修正"],
+    "contributors": ["Hiroshiba", "sevenc-nanashi"]
+  },
+  {
+    "version": "0.22.0",
+    "descriptions": [
+      "トーク：間の長さの一括制御",
+      "ソング：対応モーラを追加",
+      "ソング：ツール選択機能",
+      "ソング：途中でBPMや拍子を変更可能に",
+      "フルスクリーンに対応",
+      "ショートカットキー設定ダイアログのデザインを刷新",
+      "UIの拡大・縮小機能",
+      "開発環境の向上",
+      "バグ修正"
+    ],
+    "contributors": [
+      "aoirint",
+      "Hiroshiba",
+      "kebin628",
+      "rokujyushi",
+      "romot-co",
+      "sabonerune",
+      "Segu-g",
+      "sevenc-nanashi",
+      "sigprogramming",
+      "takana-v",
+      "takusea",
+      "tarepan",
+      "terapotan",
+      "tsunekazuomija",
+      "X-20A"
+    ]
+  },
+  {
     "version": "0.21.1",
     "descriptions": ["キャラクター「Voidoll」を追加"],
     "contributors": []

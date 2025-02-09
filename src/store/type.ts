@@ -26,7 +26,6 @@ import {
   DefaultStyleId,
   AcceptRetrieveTelemetryStatus,
   AcceptTermsStatus,
-  HotkeySettingType,
   MoraDataType,
   SavingSetting,
   ThemeConf,
@@ -59,8 +58,7 @@ import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import {
   TextDialogResult,
   NotifyAndNotShowAgainButtonOption,
-  LoadingScreenOption,
-  AlertDialogOptions,
+  MessageDialogOptions,
   ConfirmDialogOptions,
   WarningDialogOptions,
 } from "@/components/Dialog/Dialog";
@@ -72,6 +70,11 @@ import {
   timeSignatureSchema,
   trackSchema,
 } from "@/domain/project/schema";
+import { HotkeySettingType } from "@/domain/hotkeyAction";
+import {
+  MultiFileProjectFormat,
+  SingleFileProjectFormat,
+} from "@/sing/utaformatixProject/utils";
 
 /**
  * エディタ用のAudioQuery
@@ -686,7 +689,12 @@ export type AudioCommandStoreTypes = {
     mutation: {
       audioKeyItemPairs: { audioItem: AudioItem; audioKey: AudioKey }[];
     };
-    action(payload: { filePath?: string }): void;
+    action(
+      payload:
+        | { type: "dialog" }
+        | { type: "path"; filePath: string }
+        | { type: "file"; file: File },
+    ): void;
   };
 
   COMMAND_PUT_TEXTS: {
@@ -847,6 +855,11 @@ export type NoteEditTool = "SELECT_FIRST" | "EDIT_FIRST";
 // ピッチ編集ツール
 export type PitchEditTool = "DRAW" | "ERASE";
 
+// プロジェクトの書き出しに使えるファイル形式
+export type ExportSongProjectFileType =
+  | SingleFileProjectFormat
+  | MultiFileProjectFormat;
+
 export type TrackParameters = {
   gain: boolean;
   pan: boolean;
@@ -859,6 +872,11 @@ export type SongExportSetting = {
   withLimiter: boolean;
   withTrackParameters: TrackParameters;
 };
+
+export type SongExportState =
+  | "EXPORTING_AUDIO"
+  | "EXPORTING_LABEL"
+  | "NOT_EXPORTING";
 
 export type SingingStoreState = {
   tpqn: number; // Ticks Per Quarter Note
@@ -885,8 +903,8 @@ export type SingingStoreState = {
   startRenderingRequested: boolean;
   stopRenderingRequested: boolean;
   nowRendering: boolean;
-  nowAudioExporting: boolean;
-  cancellationOfAudioExportRequested: boolean;
+  exportState: SongExportState;
+  cancellationOfExportRequested: boolean;
   isSongSidebarOpen: boolean;
 };
 
@@ -1137,9 +1155,8 @@ export type SingingStoreTypes = {
     action(payload: { sequencerPitchTool: PitchEditTool }): void;
   };
 
-  SET_IS_DRAG: {
-    mutation: { isDrag: boolean };
-    action(payload: { isDrag: boolean }): void;
+  EXPORT_LABEL_FILES: {
+    action(payload: { dirPath?: string }): SaveResultObject[];
   };
 
   EXPORT_AUDIO_FILE: {
@@ -1156,6 +1173,14 @@ export type SingingStoreTypes = {
     }): SaveResultObject;
   };
 
+  GENERATE_FILE_PATH_FOR_TRACK_EXPORT: {
+    action(payload: {
+      trackId: TrackId;
+      directoryPath: string;
+      extension: string;
+    }): Promise<string>;
+  };
+
   EXPORT_FILE: {
     action(payload: {
       filePath: string;
@@ -1163,7 +1188,7 @@ export type SingingStoreTypes = {
     }): Promise<SaveResultObject>;
   };
 
-  CANCEL_AUDIO_EXPORT: {
+  CANCEL_EXPORT: {
     action(): void;
   };
 
@@ -1229,12 +1254,12 @@ export type SingingStoreTypes = {
     mutation: { nowRendering: boolean };
   };
 
-  SET_NOW_AUDIO_EXPORTING: {
-    mutation: { nowAudioExporting: boolean };
+  SET_EXPORT_STATE: {
+    mutation: { exportState: SongExportState };
   };
 
-  SET_CANCELLATION_OF_AUDIO_EXPORT_REQUESTED: {
-    mutation: { cancellationOfAudioExportRequested: boolean };
+  SET_CANCELLATION_OF_EXPORT_REQUESTED: {
+    mutation: { cancellationOfExportRequested: boolean };
   };
 
   RENDER: {
@@ -1353,6 +1378,13 @@ export type SingingStoreTypes = {
 
   APPLY_DEVICE_ID_TO_AUDIO_CONTEXT: {
     action(payload: { device: string }): void;
+  };
+
+  EXPORT_SONG_PROJECT: {
+    action(payload: {
+      fileType: ExportSongProjectFileType;
+      fileTypeLabel: string;
+    }): Promise<SaveResultObject>;
   };
 };
 
@@ -1638,8 +1670,12 @@ export type EngineStoreTypes = {
     action(payload: { engineId: EngineId; styleId: StyleId }): Promise<boolean>;
   };
 
-  INITIALIZE_ENGINE_SPEAKER: {
-    action(payload: { engineId: EngineId; styleId: StyleId }): void;
+  INITIALIZE_ENGINE_CHARACTER: {
+    action(payload: {
+      engineId: EngineId;
+      styleId: StyleId;
+      uiLock: boolean;
+    }): void;
   };
 
   VALIDATE_ENGINE_DIR: {
@@ -1805,7 +1841,12 @@ export type ProjectStoreTypes = {
   };
 
   LOAD_PROJECT_FILE: {
-    action(payload: { filePath?: string; confirm?: boolean }): boolean;
+    action(
+      payload:
+        | { type: "dialog" }
+        | { type: "path"; filePath: string }
+        | { type: "file"; file: File },
+    ): boolean;
   };
 
   SAVE_PROJECT_FILE: {
@@ -1964,7 +2005,6 @@ export type UiStoreState = {
 } & DialogStates;
 
 export type DialogStates = {
-  isHelpDialogOpen: boolean;
   isSettingDialogOpen: boolean;
   isCharacterOrderDialogOpen: boolean;
   isDefaultStyleSelectDialogOpen: boolean;
@@ -2031,7 +2071,7 @@ export type UiStoreTypes = {
   };
 
   SHOW_ALERT_DIALOG: {
-    action(payload: AlertDialogOptions): TextDialogResult;
+    action(payload: MessageDialogOptions): TextDialogResult;
   };
 
   SHOW_CONFIRM_DIALOG: {
@@ -2044,14 +2084,6 @@ export type UiStoreTypes = {
 
   SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON: {
     action(payload: NotifyAndNotShowAgainButtonOption): void;
-  };
-
-  SHOW_LOADING_SCREEN: {
-    action(payload: LoadingScreenOption): void;
-  };
-
-  HIDE_ALL_LOADING_SCREEN: {
-    action(): void;
   };
 
   ON_VUEX_READY: {
@@ -2236,7 +2268,7 @@ export type PresetStoreTypes = {
  * Dictionary Store Types
  */
 
-export type DictionaryStoreState = Record<string, unknown>;
+export type DictionaryStoreState = Record<never, unknown>;
 
 export type DictionaryStoreTypes = {
   LOAD_USER_DICT: {
@@ -2276,7 +2308,7 @@ export type DictionaryStoreTypes = {
  * Setting Store Types
  */
 
-export type ProxyStoreState = Record<string, unknown>;
+export type ProxyStoreState = Record<never, unknown>;
 
 export type IEngineConnectorFactoryActions = ReturnType<
   IEngineConnectorFactory["instance"]

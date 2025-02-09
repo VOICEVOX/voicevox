@@ -444,6 +444,15 @@
                     )
                   "
                 />
+                <ToggleCell
+                  v-if="!isProduction"
+                  title="[開発時のみ機能] ソング：パラメーターパネルの表示"
+                  description="ONの場合、ソングエディタでパラメーターパネルが表示されます。"
+                  :modelValue="experimentalSetting.showParameterPanel"
+                  @update:modelValue="
+                    changeExperimentalSetting('showParameterPanel', $event)
+                  "
+                />
               </div>
               <div class="setting-card">
                 <h5 class="headline">データ収集</h5>
@@ -492,7 +501,7 @@ import {
   EngineId,
   EditorFontType,
 } from "@/type/preload";
-import { createLogger } from "@/domain/frontend/log";
+import { createLogger } from "@/helpers/log";
 import { useRootMiscSetting } from "@/composables/useRootMiscSetting";
 import { isProduction } from "@/helpers/platform";
 
@@ -672,16 +681,10 @@ const acceptRetrieveTelemetryComputed = computed({
 });
 
 const changeUseGpu = async (useGpu: boolean) => {
-  void store.actions.SHOW_LOADING_SCREEN({
-    message: "起動モードを変更中です",
-  });
-
   await store.actions.CHANGE_USE_GPU({
     useGpu,
     engineId: selectedEngineId.value,
   });
-
-  void store.actions.HIDE_ALL_LOADING_SCREEN();
 };
 
 const changeinheritAudioInfo = async (inheritAudioInfo: boolean) => {
@@ -767,11 +770,10 @@ const outputSamplingRate = computed({
   set: async (outputSamplingRate: SamplingRateOption) => {
     if (outputSamplingRate !== "engineDefault") {
       const result = await store.actions.SHOW_CONFIRM_DIALOG({
-        title: "出力サンプリングレートを変更します",
+        title: "出力サンプリングレートを変更しますか？",
         message:
-          "出力サンプリングレートを変更しても、音質は変化しません。また、音声の生成処理に若干時間がかかる場合があります。\n変更しますか？",
+          "出力サンプリングレートを変更しても、音質は変化しません。また、音声の生成処理に若干時間がかかる場合があります。",
         actionName: "変更する",
-        cancel: "変更しない",
       });
       if (result !== "OK") {
         return;

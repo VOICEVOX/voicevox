@@ -4,8 +4,10 @@ import {
   IpcMainInvokeEvent,
   IpcRendererEvent,
 } from "electron";
-import log from "electron-log/main";
 import { IpcIHData, IpcSOData } from "@/type/ipc";
+import { createLogger } from "@/helpers/log";
+
+const log = createLogger("ipc");
 
 export type IpcRendererInvoke = {
   [K in keyof IpcIHData]: (

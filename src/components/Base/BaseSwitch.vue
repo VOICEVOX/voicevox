@@ -45,7 +45,6 @@ const checked = defineModel<boolean>("checked", { required: true });
 
   &:focus-visible {
     @include mixin.on-focus;
-    outline-offset: 2px;
   }
 
   &[data-state="checked"] {
