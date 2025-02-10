@@ -33,6 +33,7 @@ export const useSequencerStateMachine = (
   const refs: Refs = {
     nowPreviewing: ref(false),
     previewNotes: ref([]),
+    previewNoteIds: ref(new Set()),
     previewRectForRectSelect: ref(undefined),
     previewPitchEdit: ref(undefined),
     cursorState: ref("UNSET"),
@@ -57,6 +58,7 @@ export const useSequencerStateMachine = (
     currentStateId: computed(() => currentStateId.value),
     nowPreviewing: computed(() => refs.nowPreviewing.value),
     previewNotes: computed(() => refs.previewNotes.value),
+    previewNoteIds: computed(() => refs.previewNoteIds.value),
     previewRectForRectSelect: computed(
       () => refs.previewRectForRectSelect.value,
     ),

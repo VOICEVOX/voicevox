@@ -69,6 +69,7 @@ export type ComputedRefs = {
 export type Refs = {
   readonly nowPreviewing: Ref<boolean>;
   readonly previewNotes: Ref<Note[]>;
+  readonly previewNoteIds: Ref<Set<NoteId>>;
   readonly previewRectForRectSelect: Ref<Rect | undefined>;
   readonly previewPitchEdit: Ref<
     | { type: "draw"; data: number[]; startFrame: number }
