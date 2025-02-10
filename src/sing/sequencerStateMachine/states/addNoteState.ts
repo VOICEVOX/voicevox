@@ -87,6 +87,7 @@ export class AddNoteState
     const noteEndPos = noteToAdd.position + noteToAdd.duration;
 
     context.previewNotes.value = [noteToAdd];
+    context.previewNoteIds.value = new Set([noteToAdd.id]);
     context.cursorState.value = "DRAW";
     context.guideLineTicks.value = noteEndPos;
     context.nowPreviewing.value = true;
@@ -165,6 +166,7 @@ export class AddNoteState
     }
 
     context.previewNotes.value = [];
+    context.previewNoteIds.value = new Set();
     context.cursorState.value = "UNSET";
     context.nowPreviewing.value = false;
   }

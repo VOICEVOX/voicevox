@@ -110,6 +110,7 @@ export class MoveNoteState
     }
 
     context.previewNotes.value = [...targetNotesArray];
+    context.previewNoteIds.value = new Set(this.targetNoteIds);
     context.cursorState.value = "MOVE";
     context.guideLineTicks.value = guideLineTicks;
     context.nowPreviewing.value = true;
@@ -192,6 +193,7 @@ export class MoveNoteState
     }
 
     context.previewNotes.value = [];
+    context.previewNoteIds.value = new Set();
     context.cursorState.value = "UNSET";
     context.nowPreviewing.value = false;
   }
