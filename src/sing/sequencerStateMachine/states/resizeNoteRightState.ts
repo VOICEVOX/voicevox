@@ -92,7 +92,12 @@ export class ResizeNoteRightState
     context.guideLineTicks.value = newNoteEndPos;
   }
 
-  onEnter(context: Context) {
+  onEnter({
+    context,
+  }: {
+    context: Context;
+    setNextState: SetNextState<SequencerStateDefinitions>;
+  }) {
     const guideLineTicks = getGuideLineTicks(this.cursorPosAtStart, context);
     const targetNotesArray = context.notesInSelectedTrack.value.filter(
       (value) => this.targetNoteIds.has(value.id),

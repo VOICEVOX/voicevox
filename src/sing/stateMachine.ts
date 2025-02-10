@@ -57,6 +57,16 @@ export interface State<
   readonly id: StateId<StateDefinitions>;
 
   /**
+   * ステートに入ったときに呼び出される。
+   *
+   * @param payload `context`、`setNextState`関数を含むペイロード。
+   */
+  onEnter(payload: {
+    context: Context;
+    setNextState: SetNextState<StateDefinitions>;
+  }): void;
+
+  /**
    * 入力を処理し、必要に応じて次のステートを設定する。
    *
    * @param payload `input`、`context`、`setNextState`関数を含むペイロード。
@@ -66,13 +76,6 @@ export interface State<
     context: Context;
     setNextState: SetNextState<StateDefinitions>;
   }): void;
-
-  /**
-   * ステートに入ったときに呼び出される。
-   *
-   * @param context ステート間で共有されるコンテキスト。
-   */
-  onEnter(context: Context): void;
 
   /**
    * ステートから出るときに呼び出される。
@@ -163,10 +166,9 @@ export class StateMachine<
     if (this.isDisposed) {
       throw new Error("This state machine is already disposed.");
     }
-    this.currentState.onExit(this.context);
-    this.currentState = this.stateFactories[id](factoryArgs);
-    this.currentState.onEnter(this.context);
+    const initialNextState = this.stateFactories[id](factoryArgs);
 
+    this.executeTransitionsWithLifecycle(initialNextState);
     this.onStateChanged(this.currentState.id);
   }
 
@@ -192,10 +194,7 @@ export class StateMachine<
     });
 
     if (nextState != undefined) {
-      this.currentState.onExit(this.context);
-      this.currentState = nextState;
-      this.currentState.onEnter(this.context);
-
+      this.executeTransitionsWithLifecycle(nextState);
       this.onStateChanged(this.currentState.id);
     }
   }
@@ -209,5 +208,26 @@ export class StateMachine<
     }
     this.isDisposed = true;
     this.currentState.onExit(this.context);
+  }
+
+  private executeTransitionsWithLifecycle(
+    initialNextState: State<StateDefinitions, Input, Context>,
+  ) {
+    let nextState: State<StateDefinitions, Input, Context> | undefined =
+      initialNextState;
+
+    while (nextState != undefined) {
+      this.currentState.onExit(this.context);
+
+      this.currentState = nextState;
+      nextState = undefined;
+
+      this.currentState.onEnter({
+        context: this.context,
+        setNextState: (id, factoryArgs) => {
+          nextState = this.stateFactories[id](factoryArgs);
+        },
+      });
+    }
   }
 }

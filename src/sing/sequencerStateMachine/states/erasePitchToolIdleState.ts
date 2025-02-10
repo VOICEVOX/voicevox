@@ -11,7 +11,12 @@ export class ErasePitchToolIdleState
 {
   readonly id = "erasePitchToolIdle";
 
-  onEnter(context: Context) {
+  onEnter({
+    context,
+  }: {
+    context: Context;
+    setNextState: SetNextState<SequencerStateDefinitions>;
+  }) {
     context.cursorState.value = "UNSET";
   }
 

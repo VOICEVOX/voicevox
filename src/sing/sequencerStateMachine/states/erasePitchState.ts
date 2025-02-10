@@ -67,7 +67,12 @@ export class ErasePitchState
     context.previewPitchEdit.value = tempPitchEdit;
   }
 
-  onEnter(context: Context) {
+  onEnter({
+    context,
+  }: {
+    context: Context;
+    setNextState: SetNextState<SequencerStateDefinitions>;
+  }) {
     context.previewPitchEdit.value = {
       type: "erase",
       startFrame: this.cursorPosAtStart.frame,

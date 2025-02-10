@@ -118,7 +118,12 @@ export class DrawPitchState
     this.innerContext.prevCursorPos = this.currentCursorPos;
   }
 
-  onEnter(context: Context) {
+  onEnter({
+    context,
+  }: {
+    context: Context;
+    setNextState: SetNextState<SequencerStateDefinitions>;
+  }) {
     context.previewPitchEdit.value = {
       type: "draw",
       data: [this.cursorPosAtStart.frequency],

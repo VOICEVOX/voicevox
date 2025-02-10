@@ -24,6 +24,7 @@ export class AddNoteState
   private readonly cursorPosAtStart: PositionOnSequencer;
   private readonly targetTrackId: TrackId;
   private readonly returnStateId: IdleStateId;
+  private readonly applyImmediatelyAndExit: boolean;
 
   private currentCursorPos: PositionOnSequencer;
   private applyPreview: boolean;
@@ -40,10 +41,12 @@ export class AddNoteState
     cursorPosAtStart: PositionOnSequencer;
     targetTrackId: TrackId;
     returnStateId: IdleStateId;
+    applyImmediatelyAndExit: boolean;
   }) {
     this.cursorPosAtStart = args.cursorPosAtStart;
     this.targetTrackId = args.targetTrackId;
     this.returnStateId = args.returnStateId;
+    this.applyImmediatelyAndExit = args.applyImmediatelyAndExit;
 
     this.currentCursorPos = args.cursorPosAtStart;
     this.applyPreview = false;
@@ -75,7 +78,13 @@ export class AddNoteState
     context.guideLineTicks.value = noteEndPos;
   }
 
-  onEnter(context: Context) {
+  onEnter({
+    context,
+    setNextState,
+  }: {
+    context: Context;
+    setNextState: SetNextState<SequencerStateDefinitions>;
+  }) {
     const guideLineTicks = getGuideLineTicks(this.cursorPosAtStart, context);
     const noteToAdd = {
       id: NoteId(crypto.randomUUID()),
@@ -110,6 +119,11 @@ export class AddNoteState
       executePreviewProcess: false,
       previewRequestId,
     };
+
+    if (this.applyImmediatelyAndExit) {
+      this.applyPreview = true;
+      setNextState(this.returnStateId, undefined);
+    }
   }
 
   process({

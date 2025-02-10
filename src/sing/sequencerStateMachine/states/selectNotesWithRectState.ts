@@ -48,7 +48,12 @@ export class SelectNotesWithRectState
     };
   }
 
-  onEnter(context: Context) {
+  onEnter({
+    context,
+  }: {
+    context: Context;
+    setNextState: SetNextState<SequencerStateDefinitions>;
+  }) {
     this.updatePreviewRect(context);
 
     context.cursorState.value = "CROSSHAIR";

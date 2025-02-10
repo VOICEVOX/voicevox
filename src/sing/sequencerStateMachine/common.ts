@@ -134,6 +134,7 @@ export type SequencerStateDefinitions = StateDefinitions<
         cursorPosAtStart: PositionOnSequencer;
         targetTrackId: TrackId;
         returnStateId: IdleStateId;
+        applyImmediatelyAndExit: boolean;
       };
     },
     {

@@ -12,7 +12,12 @@ export class DrawPitchToolIdleState
 {
   readonly id = "drawPitchToolIdle";
 
-  onEnter(context: Context) {
+  onEnter({
+    context,
+  }: {
+    context: Context;
+    setNextState: SetNextState<SequencerStateDefinitions>;
+  }) {
     this.updateCursorState(context, context.isCommandOrCtrlKeyDown.value);
   }
 

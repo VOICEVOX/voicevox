@@ -17,7 +17,12 @@ export class SelectNotesToolIdleState
 {
   readonly id = "selectNotesToolIdle";
 
-  onEnter(context: Context) {
+  onEnter({
+    context,
+  }: {
+    context: Context;
+    setNextState: SetNextState<SequencerStateDefinitions>;
+  }) {
     this.updateCursorState(context, context.isShiftKeyDown.value);
   }
 
@@ -102,6 +107,7 @@ export class SelectNotesToolIdleState
             cursorPosAtStart: input.cursorPos,
             targetTrackId: selectedTrackId,
             returnStateId: this.id,
+            applyImmediatelyAndExit: true,
           });
         }
       }

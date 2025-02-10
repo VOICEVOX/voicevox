@@ -17,7 +17,12 @@ export class EditNotesToolIdleState
 {
   readonly id = "editNotesToolIdle";
 
-  onEnter(context: Context) {
+  onEnter({
+    context,
+  }: {
+    context: Context;
+    setNextState: SetNextState<SequencerStateDefinitions>;
+  }) {
     this.updateCursorState(
       context,
       context.isCommandOrCtrlKeyDown.value,
@@ -73,6 +78,7 @@ export class EditNotesToolIdleState
               cursorPosAtStart: input.cursorPos,
               targetTrackId: selectedTrackId,
               returnStateId: this.id,
+              applyImmediatelyAndExit: false,
             });
           }
         } else if (input.targetArea === "Note") {
