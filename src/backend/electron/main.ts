@@ -261,7 +261,6 @@ if (!isMac) {
 }
 
 let initialFilePath: string | undefined = undefined;
-let initialProjectFilePath: string | undefined = undefined;
 
 if (!isMac) {
   initialFilePath = argv[0];
@@ -376,7 +375,14 @@ registerIpcMainHandle<IpcMainHandle>({
   },
 
   GET_INITIAL_PROJECT_FILE_PATH: async () => {
-    return initialProjectFilePath;
+    if (
+      initialFilePath &&
+      fs.existsSync(initialFilePath) &&
+      fs.statSync(initialFilePath).isFile() &&
+      initialFilePath.endsWith(".vvproj")
+    ) {
+      return initialFilePath;
+    }
   },
 
   /**
@@ -868,12 +874,6 @@ void app.whenReady().then(async () => {
           reloadNeeded: false,
         });
       }
-    } else if (
-      fs.existsSync(initialFilePath) &&
-      fs.statSync(initialFilePath).isFile() &&
-      initialFilePath.endsWith(".vvproj")
-    ) {
-      initialProjectFilePath = initialFilePath;
     }
   }
 
