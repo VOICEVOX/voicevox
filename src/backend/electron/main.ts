@@ -872,7 +872,6 @@ void app.whenReady().then(async () => {
       fs.statSync(initialFilePath).isFile() &&
       initialFilePath.endsWith(".vvproj")
     ) {
-      log.info(`vvproj file load: ${initialFilePath}`);
       initialProjectFilePath = initialFilePath;
     } else {
       log.warn(`Unrecognized file path: ${initialFilePath}`);
