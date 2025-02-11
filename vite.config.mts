@@ -98,12 +98,17 @@ export default defineConfig((options) => {
               console.log("main process build is complete.");
               if (!skipLaunchElectron) {
                 // ここのprocess.argvは["node", ".../vite.js", "--", その他引数]の形式で渡ってくる。
-                void startup([
-                  ".",
-                  "--no-sandbox",
-                  "--",
-                  ...process.argv.slice(3),
-                ]);
+                const args: string[] = [".", "--no-sandbox"];
+                const extraArgv = process.argv.slice(2);
+                if (extraArgv.length > 0) {
+                  if (extraArgv[0] !== "--") {
+                    throw new Error(
+                      `Invalid arguments: ${extraArgv.join(" ")}`,
+                    );
+                  }
+                  args.push("--", ...extraArgv.slice(1));
+                }
+                void startup(args);
               }
             },
             vite: {
