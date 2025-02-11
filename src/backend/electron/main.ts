@@ -245,26 +245,24 @@ function checkMultiEngineEnabled(): boolean {
   return enabled;
 }
 
-let argv: string[] = [];
-if (!isMac) {
-  // 製品版：引数はargv[1]以降をそのまま
+function getArgv(): string[] {
+  // 製品版でmacOS以外の場合、引数はargv[1]以降をそのまま
   if (isProduction) {
-    argv = process.argv.slice(1);
+    if (!isMac) {
+      return process.argv.slice(1);
+    }
   }
-  // 開発版：引数は`--`がある場合は`--`以降、無い場合は引数なしとして扱う
+  // 開発版の場合、引数は`--`がある場合は`--`以降、無い場合は引数なしとして扱う
   else {
     const index = process.argv.indexOf("--");
     if (index !== -1) {
-      argv = process.argv.slice(index + 1);
+      return process.argv.slice(index + 1);
     }
   }
+  return [];
 }
 
-let initialFilePath: string | undefined = undefined;
-
-if (!isMac) {
-  initialFilePath = argv[0];
-}
+let initialFilePath: string | undefined = getArgv()[0];
 
 const menuTemplateForMac: Electron.MenuItemConstructorOptions[] = [
   {
