@@ -858,6 +858,7 @@ void app.whenReady().then(async () => {
   }
 
   if (initialFilePath) {
+    log.info(`Initial file path provided: ${initialFilePath}`);
     if (isVvppFile(initialFilePath)) {
       log.info(`vvpp file install: ${initialFilePath}`);
       // FIXME: GUI側に合流させる
@@ -873,8 +874,6 @@ void app.whenReady().then(async () => {
       initialFilePath.endsWith(".vvproj")
     ) {
       initialProjectFilePath = initialFilePath;
-    } else {
-      log.warn(`Unrecognized file path: ${initialFilePath}`);
     }
   }
 
