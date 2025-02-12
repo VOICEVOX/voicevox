@@ -10,7 +10,7 @@
   "volta": {
     "node": "22.11.0"
   },
-  "packageManager": "pnpm@9.15.4",
+  "packageManager": "pnpm@10.3.0",
   "scripts": {
     "lint": "eslint --ext .js,.vue,.ts,.mts *.config.* src tests build .storybook",
     "fmt": "eslint --ext .js,.vue,.ts,.mts *.config.* src tests build .storybook --fix",
