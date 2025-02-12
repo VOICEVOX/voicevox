@@ -23,7 +23,7 @@ VOICEVOXプロジェクトは興味ある方の参画を歓迎しています。
 貢献というとプログラム作成と思われがちですが、ドキュメント執筆、テスト生成、改善提案への議論参加など様々な参加方法があります。
 初心者歓迎タスクもありますので、皆様のご参加をお待ちしております。
 
-VOICEVOX のエディタは Electron・TypeScript・Vue・Vuex などが活用されており、全体構成がわかりにくくなっています。
+VOICEVOX のエディタは Electron・TypeScript・Vue・Vuex などが活用されており、全体構成がわかりにくくなっています。  
 [コードの歩き方](./docs/コードの歩き方.md)で構成を紹介しているので、開発の一助になれば幸いです。
 
 Issue を解決するプルリクエストを作成される際は、別の方と同じ Issue に取り組むことを避けるため、
@@ -37,7 +37,7 @@ Issue 側で取り組み始めたことを伝えるか、最初に Draft プル�
 
 ## 環境構築
 
-[.node-version](.node-version) に記載されているバージョンの Node.js をインストールしてください。
+[.node-version](.node-version) に記載されているバージョンの Node.js をインストールしてください。  
 Node.js の管理ツール（[nvs](https://github.com/jasongin/nvs)や[Volta](https://volta.sh)など）を利用すると簡単にインストールでき、Node.js の自動切り替えもできます。
 
 Node.js をインストール後、[このリポジトリ](https://github.com/VOICEVOX/voicevox.git) を Fork して `git clone` してください。
@@ -58,7 +58,7 @@ pnpm i
 `.env.production`をコピーして`.env`を作成し、`VITE_DEFAULT_ENGINE_INFOS`内の`executionFilePath`に
 [製品版 VOICEVOX](https://voicevox.hiroshiba.jp/) 内の`vv-engine/run.exe`を指定すれば動きます。
 
-Windows でインストール先を変更していない場合は`C:/Users/(ユーザー名)/AppData/Local/Programs/VOICEVOX/vv-engine/run.exe`を指定してください。
+Windows でインストール先を変更していない場合は`C:/Users/(ユーザー名)/AppData/Local/Programs/VOICEVOX/vv-engine/run.exe`を指定してください。  
 パスの区切り文字は`\`ではなく`/`なのでご注意ください。
 
 macOS 向けの`VOICEVOX.app`を利用している場合は`/path/to/VOICEVOX.app/Resources/MacOS/vv-engine/run`を指定してください。
@@ -92,7 +92,7 @@ Storybook を使ってコンポーネントを開発することができます�
 pnpm run storybook
 ```
 
-main ブランチの Storybook は[VOICEVOX/preview-pages](https://github.com/VOICEVOX/preview-pages)から確認できます。
+main ブランチの Storybook は[VOICEVOX/preview-pages](https://github.com/VOICEVOX/preview-pages)から確認できます。  
 <https://voicevox.github.io/preview-pages/preview/branch-main/storybook/index.html>
 
 ### ブラウザ版の実行（開発中）
@@ -103,8 +103,8 @@ main ブランチの Storybook は[VOICEVOX/preview-pages](https://github.com/VO
 pnpm run browser:serve
 ```
 
-また、main ブランチのビルド結果が[VOICEVOX/preview-pages](https://github.com/VOICEVOX/preview-pages)にデプロイされています。
-<https://voicevox.github.io/preview-pages/preview/branch-main/editor/index.html>
+また、main ブランチのビルド結果が[VOICEVOX/preview-pages](https://github.com/VOICEVOX/preview-pages)にデプロイされています。  
+<https://voicevox.github.io/preview-pages/preview/branch-main/editor/index.html>  
 今はローカル PC 上で音声合成エンジンを起動する必要があります。
 
 ## ビルド
@@ -131,7 +131,7 @@ pnpm run test-ui:unit # VitestのUIを表示
 pnpm run test:unit --update # スナップショットの更新
 ```
 
-> [!NOTE]
+> [!NOTE]  
 > `./tests/unit` 下のテストは、ファイル名によってテストを実行する環境が変化します。
 >
 > - `.node.spec.ts`：Node.js 環境
@@ -327,5 +327,5 @@ npm scripts の `serve` や `electron:serve` などの開発ビルド下では�
 ## ライセンス
 
 LGPL v3 と、ソースコードの公開が不要な別ライセンスのデュアルライセンスです。
-別ライセンスを取得したい場合は、ヒホに求めてください。
+別ライセンスを取得したい場合は、ヒホに求めてください。  
 X アカウント: [@hiho_karuta](https://x.com/hiho_karuta)
