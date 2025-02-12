@@ -259,7 +259,7 @@ VITE_DEFAULT_ENGINE_INFOS=`[
 - 使用するライブラリのライセンスに使用出来ないものが使われていないことを確認します。
 
   ```bash
-  pnpm run license:generate -- -o voicevox_licenses.json
+  pnpm run license:generate -o voicevox_licenses.json
   ```
 
 - e2eテストの内容を確認します。
