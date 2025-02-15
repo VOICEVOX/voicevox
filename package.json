@@ -5,23 +5,24 @@
   "private": true,
   "main": "./dist/main.js",
   "engines": {
-    "node": ">=22.11.0 <23"
+    "node": ">=22.14.0 <23"
   },
   "volta": {
-    "node": "22.11.0"
+    "node": "22.14.0"
   },
-  "packageManager": "pnpm@9.15.4",
+  "packageManager": "pnpm@10.3.0",
   "scripts": {
+    "// --- lint ---": "",
     "lint": "eslint --ext .js,.vue,.ts,.mts *.config.* src tests build .storybook",
     "fmt": "eslint --ext .js,.vue,.ts,.mts *.config.* src tests build .storybook --fix",
     "markdownlint": "markdownlint --ignore node_modules/ --ignore dist/ --ignore dist_electron/ --ignore dist_preview/ ./",
     "typecheck": "vue-tsc --noEmit",
     "typos": "cross-env ./vendored/typos/typos",
-
+    "// --- tools ---": "",
     "license:generate": "tsx tools/generateLicenses.mts",
     "license:merge": "tsx tools/mergeLicenses.mts",
     "check-suspicious-imports": "tsx tools/checkSuspiciousImports.mts",
-
+    "// --- test ---": "",
     "test:unit": "vitest --run",
     "test-watch:unit": "vitest --watch",
     "test-ui:unit": "vitest --ui",
@@ -33,7 +34,7 @@
     "test:storybook-vrt": "cross-env TARGET=storybook playwright test",
     "test-watch:storybook-vrt": "cross-env TARGET=storybook PWTEST_WATCH=1 playwright test",
     "test-ui:storybook-vrt": "cross-env TARGET=storybook playwright test --ui",
-
+    "// --- build ---": "",
     "electron:serve": "cross-env VITE_TARGET=electron vite",
     "electron:build": "cross-env VITE_TARGET=electron NODE_ENV=production vite build && electron-builder --config electron-builder.config.js --publish never",
     "browser:serve": "cross-env VITE_TARGET=browser vite",
@@ -42,7 +43,7 @@
     "vst:build": "cross-env VITE_TARGET=vst NODE_ENV=production vite build",
     "storybook": "storybook dev --port 6006",
     "storybook:build": "storybook build",
-
+    "// --- lifecycle ---": "",
     "preinstall": "npx -y only-allow pnpm",
     "postinstall": "pnpm run postinstall:packages && pnpm run postinstall:download-scripts",
     "postinstall:packages": "electron-builder install-app-deps && playwright install chromium",
@@ -149,5 +150,15 @@
     "vue-component-type-helpers": "2.1.6",
     "vue-tsc": "2.1.10",
     "yargs": "17.2.1"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@nestjs/core",
+      "@openapitools/openapi-generator-cli",
+      "electron",
+      "esbuild",
+      "msw",
+      "vue-demi"
+    ]
   }
 }
