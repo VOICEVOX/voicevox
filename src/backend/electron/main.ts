@@ -245,6 +245,7 @@ function checkMultiEngineEnabled(): boolean {
   return enabled;
 }
 
+/** コマンドライン引数を取得する */
 function getArgv(): string[] {
   // 製品版でmacOS以外の場合、引数はargv[1]以降をそのまま
   if (isProduction) {
@@ -262,7 +263,7 @@ function getArgv(): string[] {
   return [];
 }
 
-let initialFilePath: string | undefined = getArgv()[0];
+let initialFilePath: string | undefined = getArgv()[0]; // TODO: カプセル化する
 
 const menuTemplateForMac: Electron.MenuItemConstructorOptions[] = [
   {
@@ -373,12 +374,7 @@ registerIpcMainHandle<IpcMainHandle>({
   },
 
   GET_INITIAL_PROJECT_FILE_PATH: async () => {
-    if (
-      initialFilePath &&
-      fs.existsSync(initialFilePath) &&
-      fs.statSync(initialFilePath).isFile() &&
-      initialFilePath.endsWith(".vvproj")
-    ) {
+    if (initialFilePath && initialFilePath.endsWith(".vvproj")) {
       return initialFilePath;
     }
   },

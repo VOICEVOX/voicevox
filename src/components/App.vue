@@ -160,8 +160,8 @@ onMounted(async () => {
   });
 
   // プロジェクトファイルが指定されていればロード
-  const projectFilePath = await window.backend.getInitialProjectFilePath();
-  if (typeof projectFilePath === "string" && projectFilePath !== "") {
+  const projectFilePath = await store.actions.GET_INITIAL_PROJECT_FILE_PATH();
+  if (projectFilePath != undefined) {
     isProjectFileLoaded.value = await store.actions.LOAD_PROJECT_FILE({
       type: "path",
       filePath: projectFilePath,

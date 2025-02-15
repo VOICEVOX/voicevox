@@ -100,12 +100,9 @@ export default defineConfig((options) => {
                 // ここのprocess.argvは以下のような形で渡ってくる：
                 // ["node", ".../vite.js", (...vite用の引数...), "--", その他引数...]
                 const args: string[] = [".", "--no-sandbox"];
-                const doubleSeparatorIndex = process.argv.indexOf("--");
-                if (doubleSeparatorIndex !== -1) {
-                  args.push(
-                    "--",
-                    ...process.argv.slice(doubleSeparatorIndex + 1),
-                  );
+                const doubleDashIndex = process.argv.indexOf("--");
+                if (doubleDashIndex !== -1) {
+                  args.push("--", ...process.argv.slice(doubleDashIndex + 1));
                 }
                 void startup(args);
               }
