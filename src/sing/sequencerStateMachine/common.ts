@@ -4,7 +4,6 @@ import { Rect } from "@/sing/utility";
 import { CursorState, PREVIEW_SOUND_DURATION } from "@/sing/viewHelper";
 import { Store } from "@/store";
 import { Note, SequencerEditTarget } from "@/store/type";
-import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import { NoteId, TrackId } from "@/type/preload";
 
 export type PositionOnSequencer = {
@@ -200,60 +199,63 @@ export const getGuideLineTicks = (
 };
 
 /**
- * 指定されたノートのみを選択状態にする。
+ * 指定されたノートとすでに選択されているノートの間にある全てのノートを選択状態にする。
+ * @param context シーケンサーのコンテキスト
+ * @param mouseDownNote マウスでクリックされたノート
  */
-export const selectOnlyThisNote = (context: Context, note: Note) => {
-  void context.store.actions.DESELECT_ALL_NOTES();
-  void context.store.actions.SELECT_NOTES({ noteIds: [note.id] });
+export const selectNotesInRange = (context: Context, mouseDownNote: Note) => {
+  let minIndex = context.notesInSelectedTrack.value.length - 1;
+  let maxIndex = 0;
+  for (let i = 0; i < context.notesInSelectedTrack.value.length; i++) {
+    const noteId = context.notesInSelectedTrack.value[i].id;
+    if (
+      context.selectedNoteIds.value.has(noteId) ||
+      noteId === mouseDownNote.id
+    ) {
+      minIndex = Math.min(minIndex, i);
+      maxIndex = Math.max(maxIndex, i);
+    }
+  }
+  const noteIdsToSelect: NoteId[] = [];
+  for (let i = minIndex; i <= maxIndex; i++) {
+    const noteId = context.notesInSelectedTrack.value[i].id;
+    if (!context.selectedNoteIds.value.has(noteId)) {
+      noteIdsToSelect.push(noteId);
+    }
+  }
+  void context.store.actions.SELECT_NOTES({ noteIds: noteIdsToSelect });
 };
 
 /**
- * mousedown時のノート選択・選択解除の処理を実行する。
+ * 指定されたノートの選択状態を切り替える。
+ * 選択されている場合は選択解除し、選択されていない場合は選択状態にする。
+ * @param context シーケンサーのコンテキスト
+ * @param note 選択状態を切り替えるノート
  */
-export const executeNotesSelectionProcess = (
-  context: Context,
-  mouseEvent: MouseEvent,
-  mouseDownNote: Note,
-) => {
-  if (mouseEvent.shiftKey) {
-    // Shiftキーが押されている場合は選択ノートまでの範囲選択
-    let minIndex = context.notesInSelectedTrack.value.length - 1;
-    let maxIndex = 0;
-    for (let i = 0; i < context.notesInSelectedTrack.value.length; i++) {
-      const noteId = context.notesInSelectedTrack.value[i].id;
-      if (
-        context.selectedNoteIds.value.has(noteId) ||
-        noteId === mouseDownNote.id
-      ) {
-        minIndex = Math.min(minIndex, i);
-        maxIndex = Math.max(maxIndex, i);
-      }
-    }
-    const noteIdsToSelect: NoteId[] = [];
-    for (let i = minIndex; i <= maxIndex; i++) {
-      const noteId = context.notesInSelectedTrack.value[i].id;
-      if (!context.selectedNoteIds.value.has(noteId)) {
-        noteIdsToSelect.push(noteId);
-      }
-    }
-    void context.store.actions.SELECT_NOTES({ noteIds: noteIdsToSelect });
-  } else if (isOnCommandOrCtrlKeyDown(mouseEvent)) {
-    // CommandキーかCtrlキーが押されている場合
-    if (context.selectedNoteIds.value.has(mouseDownNote.id)) {
-      // 選択中のノートなら選択解除
-      void context.store.actions.DESELECT_NOTES({
-        noteIds: [mouseDownNote.id],
-      });
-      return;
-    }
-    // 未選択のノートなら選択に追加
-    void context.store.actions.SELECT_NOTES({ noteIds: [mouseDownNote.id] });
-  } else if (!context.selectedNoteIds.value.has(mouseDownNote.id)) {
-    // 選択中のノートでない場合は選択状態にする
-    void selectOnlyThisNote(context, mouseDownNote);
-    void context.store.actions.PLAY_PREVIEW_SOUND({
-      noteNumber: mouseDownNote.noteNumber,
-      duration: PREVIEW_SOUND_DURATION,
+export const toggleNoteSelection = (context: Context, note: Note) => {
+  if (context.selectedNoteIds.value.has(note.id)) {
+    void context.store.actions.DESELECT_NOTES({
+      noteIds: [note.id],
     });
+  } else {
+    void context.store.actions.SELECT_NOTES({ noteIds: [note.id] });
   }
+};
+
+/**
+ * 指定されたノートのみを選択状態にし、そのノートのプレビュー音を再生する。
+ * 他のノートの選択状態は全て解除される。
+ * @param context シーケンサーのコンテキスト
+ * @param note 選択してプレビュー音を再生するノート
+ */
+export const selectOnlyThisNoteAndPlayPreviewSound = (
+  context: Context,
+  note: Note,
+) => {
+  void context.store.actions.DESELECT_ALL_NOTES();
+  void context.store.actions.SELECT_NOTES({ noteIds: [note.id] });
+  void context.store.actions.PLAY_PREVIEW_SOUND({
+    noteNumber: note.noteNumber,
+    duration: PREVIEW_SOUND_DURATION,
+  });
 };

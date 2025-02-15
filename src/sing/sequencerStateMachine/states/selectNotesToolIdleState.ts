@@ -1,12 +1,16 @@
 import { SetNextState, State } from "@/sing/stateMachine";
 import {
   Context,
-  executeNotesSelectionProcess,
   getGuideLineTicks,
   Input,
+  selectNotesInRange,
+  selectOnlyThisNoteAndPlayPreviewSound,
   SequencerStateDefinitions,
+  toggleNoteSelection,
 } from "@/sing/sequencerStateMachine/common";
 import { getButton, isSelfEventTarget } from "@/sing/viewHelper";
+import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
+import { Note } from "@/store/type";
 
 export class SelectNotesToolIdleState
   implements State<SequencerStateDefinitions, Input, Context>
@@ -50,7 +54,11 @@ export class SelectNotesToolIdleState
               returnStateId: this.id,
             });
           } else if (input.targetArea === "Note") {
-            executeNotesSelectionProcess(context, input.mouseEvent, input.note);
+            this.executeNotesSelectionProcess(
+              context,
+              input.mouseEvent,
+              input.note,
+            );
             setNextState("moveNote", {
               cursorPosAtStart: input.cursorPos,
               targetTrackId: selectedTrackId,
@@ -59,7 +67,11 @@ export class SelectNotesToolIdleState
               returnStateId: this.id,
             });
           } else if (input.targetArea === "NoteLeftEdge") {
-            executeNotesSelectionProcess(context, input.mouseEvent, input.note);
+            this.executeNotesSelectionProcess(
+              context,
+              input.mouseEvent,
+              input.note,
+            );
             setNextState("resizeNoteLeft", {
               cursorPosAtStart: input.cursorPos,
               targetTrackId: selectedTrackId,
@@ -68,7 +80,11 @@ export class SelectNotesToolIdleState
               returnStateId: this.id,
             });
           } else if (input.targetArea === "NoteRightEdge") {
-            executeNotesSelectionProcess(context, input.mouseEvent, input.note);
+            this.executeNotesSelectionProcess(
+              context,
+              input.mouseEvent,
+              input.note,
+            );
             setNextState("resizeNoteRight", {
               cursorPosAtStart: input.cursorPos,
               targetTrackId: selectedTrackId,
@@ -98,6 +114,20 @@ export class SelectNotesToolIdleState
       context.cursorState.value = "CROSSHAIR";
     } else {
       context.cursorState.value = "UNSET";
+    }
+  }
+
+  private executeNotesSelectionProcess(
+    context: Context,
+    mouseEvent: MouseEvent,
+    mouseDownNote: Note,
+  ) {
+    if (mouseEvent.shiftKey) {
+      selectNotesInRange(context, mouseDownNote);
+    } else if (isOnCommandOrCtrlKeyDown(mouseEvent)) {
+      toggleNoteSelection(context, mouseDownNote);
+    } else if (!context.selectedNoteIds.value.has(mouseDownNote.id)) {
+      selectOnlyThisNoteAndPlayPreviewSound(context, mouseDownNote);
     }
   }
 }
