@@ -535,14 +535,14 @@ if (window.AudioContext) {
 }
 
 const playheadPosition = ref(0); // 単位はtick
-export const phraseSingingVoices = new Map<SingingVoiceKey, SingingVoice>();
+const phraseSingingVoices = new Map<SingingVoiceKey, SingingVoice>();
 const sequences = new Map<SequenceId, Sequence & { trackId: TrackId }>();
 const animationTimer = new AnimationTimer();
 
 const queryCache = new Map<EditorFrameAudioQueryKey, EditorFrameAudioQuery>();
 const singingPitchCache = new Map<SingingPitchKey, SingingPitch>();
 const singingVolumeCache = new Map<SingingVolumeKey, SingingVolume>();
-export const singingVoiceCache = new Map<SingingVoiceKey, SingingVoice>();
+const singingVoiceCache = new Map<SingingVoiceKey, SingingVoice>();
 
 const initialTrackId = TrackId(uuid4());
 
@@ -3541,6 +3541,20 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         }
       },
     ),
+  },
+
+  LOAD_SINGING_VOICE_CACHE: {
+    action(_, { cache }) {
+      for (const [key, value] of cache.entries()) {
+        singingVoiceCache.set(key, value);
+      }
+    },
+  },
+
+  GET_SINGING_VOICE: {
+    action(_, { key }) {
+      return singingVoiceCache.get(key);
+    },
   },
 });
 

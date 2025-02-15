@@ -23,11 +23,11 @@ import {
   AllMutations,
   Phrase,
   PhraseKey,
+  SingingVoice,
   SingingVoiceKey,
   State,
 } from "@/store/type";
 import { secondToTick, tickToSecond } from "@/sing/domain";
-import { phraseSingingVoices, singingVoiceCache } from "@/store/singing";
 import onetimeWatch from "@/helpers/onetimeWatch";
 import { createLogger } from "@/helpers/log";
 import { getOrThrow } from "@/helpers/mapHelper";
@@ -185,12 +185,19 @@ export const vstPlugin: Plugin = {
         // キャッシュされた歌声を読み込む
         log.info("Loading cached voices");
         const encodedVoices = await getVoices();
-        for (const [key, encodedVoice] of Object.entries(encodedVoices)) {
-          singingVoiceCache.set(
-            SingingVoiceKey(key),
-            new Blob([await toBytes(encodedVoice)]),
-          );
-        }
+        await store.actions.LOAD_SINGING_VOICE_CACHE({
+          cache: new Map(
+            await Promise.all(
+              Object.entries(encodedVoices).map(
+                async ([key, encodedVoice]) =>
+                  [
+                    SingingVoiceKey(key),
+                    new Blob([await toBytes(encodedVoice)]),
+                  ] satisfies [SingingVoiceKey, SingingVoice],
+              ),
+            ),
+          ),
+        });
 
         log.info(`Loaded ${Object.keys(encodedVoices).length} voices`);
 
@@ -238,7 +245,9 @@ export const vstPlugin: Plugin = {
           log.info(`Missing ${missingVoices.length} voices`);
           const voices: Record<SingingVoiceKey, string> = {};
           for (const voice of missingVoices) {
-            const cachedVoice = phraseSingingVoices.get(voice);
+            const cachedVoice = await store.actions.GET_SINGING_VOICE({
+              key: voice,
+            });
             if (cachedVoice) {
               voices[voice] = await toBase64(
                 new Uint8Array(await cachedVoice.arrayBuffer()),
