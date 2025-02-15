@@ -69,6 +69,7 @@ import {
   tempoSchema,
   timeSignatureSchema,
   trackSchema,
+  loopSchema,
 } from "@/domain/project/schema";
 import { HotkeySettingType } from "@/domain/hotkeyAction";
 import {
@@ -759,6 +760,8 @@ export type Singer = z.infer<typeof singerSchema>;
 
 export type Track = z.infer<typeof trackSchema>;
 
+export type Loop = z.infer<typeof loopSchema>;
+
 export type PhraseState =
   | "SINGER_IS_NOT_SET"
   | "WAITING_TO_BE_RENDERED"
@@ -906,6 +909,9 @@ export type SingingStoreState = {
   exportState: SongExportState;
   cancellationOfExportRequested: boolean;
   isSongSidebarOpen: boolean;
+  isLoopEnabled: boolean;
+  loopStartTick: number;
+  loopEndTick: number;
 };
 
 export type SingingStoreTypes = {
@@ -1380,6 +1386,20 @@ export type SingingStoreTypes = {
     action(payload: { device: string }): void;
   };
 
+  SET_LOOP_ENABLED: {
+    mutation: { isLoopEnabled: boolean };
+    action(payload: { isLoopEnabled: boolean }): void;
+  };
+
+  SET_LOOP_RANGE: {
+    mutation: { loopStartTick: number; loopEndTick: number };
+    action(payload: { loopStartTick: number; loopEndTick: number }): void;
+  };
+
+  CLEAR_LOOP_RANGE: {
+    action(): void;
+  };
+
   EXPORT_SONG_PROJECT: {
     action(payload: {
       fileType: ExportSongProjectFileType;
@@ -1545,6 +1565,21 @@ export type SingingCommandStoreTypes = {
       project: LatestProjectType;
       trackIndexes: number[];
     }): void;
+  };
+
+  COMMAND_SET_LOOP_ENABLED: {
+    mutation: { isLoopEnabled: boolean };
+    action(payload: { isLoopEnabled: boolean }): void;
+  };
+
+  COMMAND_SET_LOOP_RANGE: {
+    mutation: { loopStartTick: number; loopEndTick: number };
+    action(payload: { loopStartTick: number; loopEndTick: number }): void;
+  };
+
+  COMMAND_CLEAR_LOOP_RANGE: {
+    mutation: undefined;
+    action(): void;
   };
 };
 
