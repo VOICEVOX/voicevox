@@ -33,6 +33,11 @@ export type IpcIHData = {
     return: AltPortInfos;
   };
 
+  GET_INITIAL_PROJECT_FILE_PATH: {
+    args: [];
+    return: string | undefined;
+  };
+
   SHOW_SAVE_DIRECTORY_DIALOG: {
     args: [obj: { title: string }];
     return?: string;
