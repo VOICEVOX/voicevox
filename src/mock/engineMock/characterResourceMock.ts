@@ -6,19 +6,25 @@
 import { Speaker, SpeakerInfo } from "@/openapi";
 
 /** 立ち絵のURLを得る */
-async function getPortraitUrl(characterIndex: number) {
+function getPortraitUrl(characterIndex: number) {
   const portraits = Object.values(
-    import.meta.glob<{ default: string }>("./assets/portrait_*.png"),
+    import.meta.glob<string>("./assets/portrait_*.png", {
+      import: "default",
+      eager: true,
+    }),
   );
-  return (await portraits[characterIndex]()).default;
+  return portraits[characterIndex];
 }
 
 /** アイコンのURLを得る */
-async function getIconUrl(characterIndex: number) {
+function getIconUrl(characterIndex: number) {
   const icons = Object.values(
-    import.meta.glob<{ default: string }>("./assets/icon_*.png"),
+    import.meta.glob<string>("./assets/icon_*.png", {
+      import: "default",
+      eager: true,
+    }),
   );
-  return (await icons[characterIndex]()).default;
+  return icons[characterIndex];
 }
 
 const baseCharactersMock = [
@@ -117,11 +123,11 @@ export async function getCharacterInfoMock(
 
   return {
     policy: `Dummy policy for ${speakerUuid}`,
-    portrait: await getPortraitUrl(characterIndex),
+    portrait: getPortraitUrl(characterIndex),
     styleInfos: await Promise.all(
       styleIds.map(async (id) => ({
         id,
-        icon: await getIconUrl(characterIndex),
+        icon: getIconUrl(characterIndex),
         voiceSamples: [],
       })),
     ),
