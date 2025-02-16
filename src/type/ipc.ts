@@ -1,5 +1,4 @@
 import {
-  AppInfos,
   ConfigType,
   EngineDirValidationResult,
   EngineId,
