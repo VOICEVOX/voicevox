@@ -333,15 +333,6 @@ const retryShowSaveDialogWhileSafeDir = async <
 
 // プロセス間通信
 registerIpcMainHandle<IpcMainHandle>({
-  GET_APP_INFOS: () => {
-    const name = app.getName();
-    const version = app.getVersion();
-    return {
-      name,
-      version,
-    };
-  },
-
   GET_TEXT_ASSET: async (_, textType) => {
     const fileName = path.join(__static, AssetTextFileNames[textType]);
     const text = await fs.promises.readFile(fileName, "utf-8");

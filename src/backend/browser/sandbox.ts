@@ -57,13 +57,6 @@ function onReceivedIPCMsg(listeners: {
  * まだ開発中のため、Browser版の実装も同時に行えない場合は、メソッドを追加して throw new Error() する
  */
 export const api: Sandbox = {
-  getAppInfos() {
-    const appInfo = {
-      name: import.meta.env.VITE_APP_NAME,
-      version: import.meta.env.VITE_APP_VERSION,
-    };
-    return Promise.resolve(appInfo);
-  },
   async getTextAsset(textType) {
     const fileName = AssetTextFileNames[textType];
     const v = await fetch(toStaticPath(fileName));
