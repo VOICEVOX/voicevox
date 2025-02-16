@@ -61,7 +61,6 @@ export function withProgress<T>(
 }
 
 export const uiStoreState: UiStoreState = {
-  isEditorReady: false,
   uiLockCount: 0,
   dialogLockCount: 0,
   reloadingLock: false,
@@ -88,15 +87,6 @@ export const uiStoreState: UiStoreState = {
 };
 
 export const uiStore = createPartialStore<UiStoreTypes>({
-  SET_EDITOR_READY: {
-    mutation(state, { isEditorReady }) {
-      state.isEditorReady = isEditorReady;
-    },
-    action({ commit }, { isEditorReady }) {
-      commit("SET_EDITOR_READY", { isEditorReady });
-    },
-  },
-
   UI_LOCKED: {
     getter(state) {
       return state.uiLockCount > 0;

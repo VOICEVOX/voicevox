@@ -169,7 +169,5 @@ onMounted(async () => {
   } else {
     isProjectFileLoaded.value = false;
   }
-
-  await store.dispatch("SET_EDITOR_READY", { isEditorReady: true });
 });
 </script>

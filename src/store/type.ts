@@ -2004,7 +2004,6 @@ export type SettingStoreTypes = {
  */
 
 export type UiStoreState = {
-  isEditorReady: boolean;
   uiLockCount: number;
   dialogLockCount: number;
   reloadingLock: boolean;
@@ -2034,11 +2033,6 @@ export type DialogStates = {
 };
 
 export type UiStoreTypes = {
-  SET_EDITOR_READY: {
-    mutation: { isEditorReady: boolean };
-    action(palyoad: { isEditorReady: boolean }): void;
-  };
-
   UI_LOCKED: {
     getter: boolean;
   };
