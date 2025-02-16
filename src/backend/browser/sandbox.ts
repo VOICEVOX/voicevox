@@ -76,6 +76,9 @@ export const api: Sandbox = {
     // NOTE: ブラウザ版ではサポートされていません
     return Promise.resolve({});
   },
+  getInitialProjectFilePath() {
+    return Promise.resolve(undefined);
+  },
   showSaveDirectoryDialog(obj: { title: string }) {
     return showOpenDirectoryDialogImpl(obj);
   },

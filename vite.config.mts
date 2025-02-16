@@ -99,7 +99,14 @@ export default defineConfig((options) => {
             onstart: ({ startup }) => {
               console.log("main process build is complete.");
               if (!skipLaunchElectron) {
-                void startup([".", "--no-sandbox"]);
+                // ここのprocess.argvは以下のような形で渡ってくる：
+                // ["node", ".../vite.js", (...vite用の引数...), "--", その他引数...]
+                const args: string[] = [".", "--no-sandbox"];
+                const doubleDashIndex = process.argv.indexOf("--");
+                if (doubleDashIndex !== -1) {
+                  args.push("--", ...process.argv.slice(doubleDashIndex + 1));
+                }
+                void startup(args);
               }
             },
             vite: {

@@ -1867,6 +1867,10 @@ export type ProjectStoreTypes = {
     }): "saved" | "discarded" | "canceled";
   };
 
+  GET_INITIAL_PROJECT_FILE_PATH: {
+    action(): Promise<string | undefined>;
+  };
+
   IS_EDITED: {
     getter: boolean;
   };
