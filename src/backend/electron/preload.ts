@@ -29,6 +29,10 @@ const api: Sandbox = {
     return await ipcRendererInvokeProxy.GET_ALT_PORT_INFOS();
   },
 
+  getInitialProjectFilePath: async () => {
+    return await ipcRendererInvokeProxy.GET_INITIAL_PROJECT_FILE_PATH();
+  },
+
   showSaveDirectoryDialog: ({ title }) => {
     return ipcRendererInvokeProxy.SHOW_SAVE_DIRECTORY_DIALOG({ title });
   },

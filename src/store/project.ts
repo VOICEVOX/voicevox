@@ -379,6 +379,12 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
     }),
   },
 
+  GET_INITIAL_PROJECT_FILE_PATH: {
+    action: async () => {
+      return await window.backend.getInitialProjectFilePath();
+    },
+  },
+
   IS_EDITED: {
     getter(state, getters) {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
