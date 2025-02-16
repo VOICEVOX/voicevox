@@ -107,6 +107,8 @@ export function createOpenAPIEngineMock(): DefaultApiInterface {
         volumeScale: 1.0,
         prePhonemeLength: 0.1,
         postPhonemeLength: 0.1,
+        pauseLength: null,
+        pauseLengthScale: 1.0,
         outputSamplingRate: getEngineManifestMock().defaultSamplingRate,
         outputStereo: false,
       };
