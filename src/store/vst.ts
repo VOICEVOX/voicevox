@@ -2,14 +2,14 @@ import { createPartialStore } from "./vuex";
 import { exportProject } from "@/backend/vst/ipc";
 import { VstStoreState, VstStoreTypes } from "@/store/type";
 import { notifyResult } from "@/components/Dialog/Dialog";
-import { projectFilePath } from "@/backend/vst/sandbox";
+import { internalProjectFilePath } from "@/backend/vst/sandbox";
 
 export const vstStoreState: VstStoreState = {};
 
 export const vstStore = createPartialStore<VstStoreTypes>({
   VST_EXPORT_PROJECT: {
     action: async ({ actions, state, commit, dispatch }) => {
-      commit("SET_PROJECT_FILEPATH", { filePath: projectFilePath });
+      commit("SET_PROJECT_FILEPATH", { filePath: internalProjectFilePath });
       await dispatch("SAVE_PROJECT_FILE", {
         overwrite: true,
       });

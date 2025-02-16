@@ -29,7 +29,7 @@ import { failure, success } from "@/type/result";
 import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
 import { UnreachableError } from "@/type/utility";
 
-export const projectFilePath = "/dev/vst-project.vvproj";
+export const internalProjectFilePath = "/dev/vst-project.vvproj";
 
 let zoomValue = 1;
 
@@ -97,7 +97,7 @@ export const api: Sandbox = {
     return await checkFileExists(file);
   },
   async writeFile(options) {
-    if (options.filePath === projectFilePath) {
+    if (options.filePath === internalProjectFilePath) {
       await setProject(new TextDecoder().decode(options.buffer));
       return success(undefined);
     }
@@ -110,7 +110,7 @@ export const api: Sandbox = {
     }
   },
   async readFile(options) {
-    if (options.filePath === projectFilePath) {
+    if (options.filePath === internalProjectFilePath) {
       const project = await getProject();
       const buffer = new TextEncoder().encode(project);
       return success(buffer);
@@ -170,5 +170,11 @@ export const api: Sandbox = {
 
   logError(...params) {
     logError(params.map(String).join(" "));
+  },
+
+  async getInitialProjectFilePath() {
+    const projectExists = await getProject();
+
+    return projectExists ? internalProjectFilePath : undefined;
   },
 };

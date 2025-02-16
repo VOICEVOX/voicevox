@@ -15,7 +15,7 @@ import {
   startEngine,
   VstPhrase,
 } from "./ipc";
-import { projectFilePath } from "./sandbox";
+import { internalProjectFilePath } from "./sandbox";
 import { Store } from "@/store/vuex";
 import {
   AllActions,
@@ -117,7 +117,7 @@ export const vstPlugin: Plugin = {
           return;
         }
         log.info("Saving project file");
-        store.commit("SET_PROJECT_FILEPATH", { filePath: projectFilePath });
+        store.commit("SET_PROJECT_FILEPATH", { filePath: internalProjectFilePath });
         void store.dispatch("SAVE_PROJECT_FILE", { overwrite: true });
       }, 5000),
       { deep: true },
@@ -156,7 +156,7 @@ export const vstPlugin: Plugin = {
         log.info("Engine is ready, loading project");
         const loaded = await store.dispatch("LOAD_PROJECT_FILE", {
           type: "path",
-          filePath: projectFilePath,
+          filePath: internalProjectFilePath,
         });
         // プロジェクトが読み込めなかった場合の緊急脱出口。
         if (!loaded) {
