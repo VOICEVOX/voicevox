@@ -8,7 +8,7 @@ import { UpdateInfo, UrlString, updateInfoSchema } from "@/type/preload";
  * あれば最新バージョンと、現在より新しいバージョンの情報を返す。
  */
 export const useFetchNewUpdateInfos = (
-  currentVersionGetter: () => Promise<string>,
+  currentVersionGetter: () => string | Promise<string>,
   newUpdateInfosUrl: UrlString,
 ) => {
   const result = ref<

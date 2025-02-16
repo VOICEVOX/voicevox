@@ -1,5 +1,4 @@
 import {
-  AppInfos,
   ConfigType,
   EngineDirValidationResult,
   EngineId,
@@ -18,11 +17,6 @@ import { HotkeySettingType } from "@/domain/hotkeyAction";
  * invoke, handle
  */
 export type IpcIHData = {
-  GET_APP_INFOS: {
-    args: [];
-    return: AppInfos;
-  };
-
   GET_TEXT_ASSET: {
     args: [textType: keyof TextAsset];
     return: TextAsset[keyof TextAsset];

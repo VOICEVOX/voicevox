@@ -70,7 +70,6 @@ export type TextAsset = {
 };
 
 export interface Sandbox {
-  getAppInfos(): Promise<AppInfos>;
   getTextAsset<K extends keyof TextAsset>(textType: K): Promise<TextAsset[K]>;
   getAltPortInfos(): Promise<AltPortInfos>;
   getInitialProjectFilePath(): Promise<string | undefined>;

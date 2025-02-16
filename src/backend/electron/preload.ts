@@ -19,10 +19,6 @@ const ipcRendererInvokeProxy = new Proxy(
 ) as IpcRendererInvoke;
 
 const api: Sandbox = {
-  getAppInfos: async () => {
-    return await ipcRendererInvokeProxy.GET_APP_INFOS();
-  },
-
   getTextAsset: (textType) => {
     return ipcRendererInvokeProxy.GET_TEXT_ASSET(textType) as Promise<
       TextAsset[typeof textType]
