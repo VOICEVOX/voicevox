@@ -188,8 +188,7 @@ export default defineConfig(
           ignoreRestSiblings: true,
         },
       ],
-      // FIXME: これを有効にするとeslint何故かセグフォで落ちる
-      // "import/order": "error",
+      "import/order": "error",
       "no-console": process.env.NODE_ENV === "production" ? "warn" : "off",
       "no-constant-condition": ["error", { checkLoops: false }], // while(true) などを許可
       "no-debugger": process.env.NODE_ENV === "production" ? "warn" : "off",
