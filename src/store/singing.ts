@@ -3542,6 +3542,20 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       },
     ),
   },
+
+  LOAD_SINGING_VOICE_CACHE: {
+    action(_, { cache }) {
+      for (const [key, value] of cache.entries()) {
+        singingVoiceCache.set(key, value);
+      }
+    },
+  },
+
+  GET_SINGING_VOICE: {
+    action(_, { key }) {
+      return singingVoiceCache.get(key);
+    },
+  },
 });
 
 export const singingCommandStoreState: SingingCommandStoreState = {};

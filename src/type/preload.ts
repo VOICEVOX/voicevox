@@ -73,6 +73,7 @@ export interface Sandbox {
   getAppInfos(): Promise<AppInfos>;
   getTextAsset<K extends keyof TextAsset>(textType: K): Promise<TextAsset[K]>;
   getAltPortInfos(): Promise<AltPortInfos>;
+  getInitialProjectFilePath(): Promise<string | undefined>;
   showSaveDirectoryDialog(obj: { title: string }): Promise<string | undefined>;
   showVvppOpenDialog(obj: {
     title: string;
@@ -85,9 +86,9 @@ export interface Sandbox {
   }): Promise<string | undefined>;
   showProjectLoadDialog(obj: { title: string }): Promise<string[] | undefined>;
   showImportFileDialog(obj: {
-    title: string;
     name?: string;
     extensions?: string[];
+    title: string;
   }): Promise<string | undefined>;
   showExportFileDialog(obj: {
     title: string;

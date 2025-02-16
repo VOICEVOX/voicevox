@@ -1,5 +1,6 @@
 import { computed } from "vue";
 import { useStore } from "@/store";
+import { isVst } from "@/helpers/platform";
 import { MenuItemData } from "@/components/Menu/type";
 import { useRootMiscSetting } from "@/composables/useRootMiscSetting";
 import { ExportSongProjectFileType } from "@/store/type";
@@ -57,16 +58,30 @@ export const useMenuBarData = () => {
     );
   };
 
+  const vstExportProject = async () => {
+    if (!uiLocked.value) {
+      if (!isVst) {
+        throw new Error("VST以外でのエクスポートはサポートされていません");
+      }
+
+      await store.dispatch("VST_EXPORT_PROJECT");
+    }
+  };
+
   // 「ファイル」メニュー
   const fileSubMenuData = computed<MenuItemData[]>(() => [
-    {
-      type: "button",
-      label: "音声書き出し",
-      onClick: () => {
-        void exportAudioFile();
-      },
-      disableWhenUiLocked: true,
-    },
+    ...(isVst
+      ? []
+      : ([
+          {
+            type: "button",
+            label: "音声書き出し",
+            onClick: () => {
+              void exportAudioFile();
+            },
+            disableWhenUiLocked: true,
+          },
+        ] satisfies MenuItemData[])),
     {
       type: "button",
       label: "labファイルを書き出し",
@@ -87,24 +102,38 @@ export const useMenuBarData = () => {
     {
       type: "root",
       label: "プロジェクトをエクスポート",
-      subMenu: (
-        [
-          ["smf", "MIDI (SMF)"],
-          ["musicxml", "MusicXML"],
-          ["ufdata", "Utaformatix"],
-          ["ust", "UTAU"],
-        ] satisfies [fileType: ExportSongProjectFileType, label: string][]
-      ).map(
-        ([fileType, label]) =>
-          ({
-            type: "button",
-            label,
-            onClick: () => {
-              void exportSongProject(fileType, label);
-            },
-            disableWhenUiLocked: true,
-          }) satisfies MenuItemData,
-      ),
+      subMenu: [
+        ...(isVst
+          ? ([
+              {
+                type: "button",
+                label: "VOICEVOX",
+                onClick: () => {
+                  void vstExportProject();
+                },
+                disableWhenUiLocked: true,
+              },
+            ] satisfies MenuItemData[])
+          : []),
+        ...(
+          [
+            ["smf", "MIDI (SMF)"],
+            ["musicxml", "MusicXML"],
+            ["ufdata", "Utaformatix"],
+            ["ust", "UTAU"],
+          ] satisfies [fileType: ExportSongProjectFileType, label: string][]
+        ).map(
+          ([fileType, label]) =>
+            ({
+              type: "button",
+              label,
+              onClick: () => {
+                void exportSongProject(fileType, label);
+              },
+              disableWhenUiLocked: true,
+            }) satisfies MenuItemData,
+        ),
+      ],
       disableWhenUiLocked: true,
     },
   ]);

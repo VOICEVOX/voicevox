@@ -1,7 +1,7 @@
 import { WatchOptions, WatchSource, watch } from "vue";
 
 /**
- * trueが返されたらunwatchするwatch
+ * "unwatch"が返されたらunwatchするwatch
  */
 const onetimeWatch = <T>(
   source: WatchSource<T>,

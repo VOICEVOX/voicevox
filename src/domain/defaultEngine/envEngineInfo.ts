@@ -5,7 +5,7 @@
 import { z } from "zod";
 
 import { engineIdSchema } from "@/type/preload";
-import { isElectron } from "@/helpers/platform";
+import { isElectron, isNode } from "@/helpers/platform";
 
 /** .envに書くデフォルトエンジン情報のスキーマ */
 const envEngineInfoSchema = z
@@ -40,7 +40,7 @@ type EnvEngineInfoType = z.infer<typeof envEngineInfoSchema>;
  */
 function getDefaultEngineInfosEnv(): string {
   let engineInfos;
-  if (isElectron) {
+  if (isElectron && isNode) {
     engineInfos = process?.env?.VITE_DEFAULT_ENGINE_INFOS;
   }
   if (engineInfos == undefined) {
