@@ -125,7 +125,7 @@ export class DrawPitchState
       startFrame: this.cursorPosAtStart.frame,
     };
     context.cursorState.value = "UNSET";
-    context.nowPreviewing.value = true;
+    context.previewMode.value = "DRAW_PITCH";
 
     const previewIfNeeded = () => {
       if (this.innerContext == undefined) {
@@ -216,6 +216,6 @@ export class DrawPitchState
 
     context.previewPitchEdit.value = undefined;
     context.cursorState.value = "UNSET";
-    context.nowPreviewing.value = false;
+    context.previewMode.value = "IDLE";
   }
 }

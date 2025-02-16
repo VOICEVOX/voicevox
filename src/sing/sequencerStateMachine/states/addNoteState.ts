@@ -89,7 +89,7 @@ export class AddNoteState
     context.previewNotes.value = [noteToAdd];
     context.cursorState.value = "DRAW";
     context.guideLineTicks.value = noteEndPos;
-    context.nowPreviewing.value = true;
+    context.previewMode.value = "ADD_NOTE";
 
     const previewIfNeeded = () => {
       if (this.innerContext == undefined) {
@@ -166,6 +166,6 @@ export class AddNoteState
 
     context.previewNotes.value = [];
     context.cursorState.value = "UNSET";
-    context.nowPreviewing.value = false;
+    context.previewMode.value = "IDLE";
   }
 }
