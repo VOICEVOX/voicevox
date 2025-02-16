@@ -30,7 +30,7 @@ export const useSequencerStateMachine = (
   };
 
   const refs: Refs = {
-    nowPreviewing: ref(false),
+    previewMode: ref("IDLE"),
     previewNotes: ref([]),
     previewRectForRectSelect: ref(undefined),
     previewPitchEdit: ref(undefined),
@@ -49,7 +49,7 @@ export const useSequencerStateMachine = (
 
   return {
     stateMachine,
-    nowPreviewing: computed(() => refs.nowPreviewing.value),
+    previewMode: computed(() => refs.previewMode.value),
     previewNotes: computed(() => refs.previewNotes.value),
     previewRectForRectSelect: computed(
       () => refs.previewRectForRectSelect.value,

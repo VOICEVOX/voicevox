@@ -1,7 +1,11 @@
 import { ComputedRef, Ref } from "vue";
 import { StateDefinitions } from "@/sing/stateMachine";
 import { Rect } from "@/sing/utility";
-import { CursorState, PREVIEW_SOUND_DURATION } from "@/sing/viewHelper";
+import {
+  CursorState,
+  PREVIEW_SOUND_DURATION,
+  PreviewMode,
+} from "@/sing/viewHelper";
 import { Store } from "@/store";
 import { Note, SequencerEditTarget } from "@/store/type";
 import { NoteId, TrackId } from "@/type/preload";
@@ -67,7 +71,7 @@ export type ComputedRefs = {
 };
 
 export type Refs = {
-  readonly nowPreviewing: Ref<boolean>;
+  readonly previewMode: Ref<PreviewMode>;
   readonly previewNotes: Ref<Note[]>;
   readonly previewRectForRectSelect: Ref<Rect | undefined>;
   readonly previewPitchEdit: Ref<

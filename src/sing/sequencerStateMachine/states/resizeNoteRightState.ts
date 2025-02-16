@@ -107,7 +107,7 @@ export class ResizeNoteRightState
     context.previewNotes.value = [...targetNotesArray];
     context.cursorState.value = "EW_RESIZE";
     context.guideLineTicks.value = noteEndPos;
-    context.nowPreviewing.value = true;
+    context.previewMode.value = "RESIZE_NOTE_RIGHT";
 
     const previewIfNeeded = () => {
       if (this.innerContext == undefined) {
@@ -188,6 +188,6 @@ export class ResizeNoteRightState
 
     context.previewNotes.value = [];
     context.cursorState.value = "UNSET";
-    context.nowPreviewing.value = false;
+    context.previewMode.value = "IDLE";
   }
 }

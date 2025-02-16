@@ -74,7 +74,7 @@ export class ErasePitchState
       frameLength: 1,
     };
     context.cursorState.value = "ERASE";
-    context.nowPreviewing.value = true;
+    context.previewMode.value = "ERASE_PITCH";
 
     const previewIfNeeded = () => {
       if (this.innerContext == undefined) {
@@ -147,6 +147,6 @@ export class ErasePitchState
 
     context.previewPitchEdit.value = undefined;
     context.cursorState.value = "UNSET";
-    context.nowPreviewing.value = false;
+    context.previewMode.value = "IDLE";
   }
 }

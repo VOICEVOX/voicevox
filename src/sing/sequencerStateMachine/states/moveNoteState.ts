@@ -112,7 +112,7 @@ export class MoveNoteState
     context.previewNotes.value = [...targetNotesArray];
     context.cursorState.value = "MOVE";
     context.guideLineTicks.value = guideLineTicks;
-    context.nowPreviewing.value = true;
+    context.previewMode.value = "MOVE_NOTE";
 
     const previewIfNeeded = () => {
       if (this.innerContext == undefined) {
@@ -193,6 +193,6 @@ export class MoveNoteState
 
     context.previewNotes.value = [];
     context.cursorState.value = "UNSET";
-    context.nowPreviewing.value = false;
+    context.previewMode.value = "IDLE";
   }
 }
