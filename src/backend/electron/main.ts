@@ -449,7 +449,7 @@ registerIpcMainHandle<IpcMainHandle>({
     });
   },
 
-  SHOW_IMPORT_FILE_DIALOG: (_, { title, name, extensions, defaultPath }) => {
+  SHOW_OPEN_FILE_DIALOG: (_, { title, name, extensions, defaultPath }) => {
     return windowManager.showOpenDialogSync({
       title,
       defaultPath,

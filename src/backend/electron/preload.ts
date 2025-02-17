@@ -53,7 +53,7 @@ const api: Sandbox = {
   },
 
   showOpenFileDialog: ({ title, name, extensions, defaultPath }) => {
-    return ipcRendererInvokeProxy.SHOW_IMPORT_FILE_DIALOG({
+    return ipcRendererInvokeProxy.SHOW_OPEN_FILE_DIALOG({
       title,
       name,
       extensions,
