@@ -179,10 +179,10 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             mimeType: "application/json",
             extensions: ["vvproj"],
           });
-          if (ret == undefined || ret?.length == 0) {
+          if (ret == undefined) {
             return false;
           }
-          filePath = ret[0];
+          filePath = ret;
         } else if (payload.type == "path") {
           filePath = payload.filePath;
         }
