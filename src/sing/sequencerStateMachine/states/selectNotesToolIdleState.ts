@@ -8,9 +8,16 @@ import {
   SequencerStateDefinitions,
   toggleNoteSelection,
 } from "@/sing/sequencerStateMachine/common";
-import { getButton, isSelfEventTarget } from "@/sing/viewHelper";
+import {
+  getButton,
+  getDoremiFromNoteNumber,
+  isSelfEventTarget,
+  PREVIEW_SOUND_DURATION,
+} from "@/sing/viewHelper";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import { Note } from "@/store/type";
+import { NoteId } from "@/type/preload";
+import { clamp } from "@/sing/utility";
 
 export class SelectNotesToolIdleState
   implements State<SequencerStateDefinitions, Input, Context>
@@ -98,10 +105,25 @@ export class SelectNotesToolIdleState
           }
         } else if (input.mouseEvent.type === "dblclick") {
           void context.store.actions.DESELECT_ALL_NOTES();
-          setNextState("addNote", {
-            cursorPosAtStart: input.cursorPos,
-            targetTrackId: selectedTrackId,
-            returnStateId: this.id,
+
+          const guideLineTicks = getGuideLineTicks(input.cursorPos, context);
+          const noteToAdd = {
+            id: NoteId(crypto.randomUUID()),
+            position: Math.max(0, guideLineTicks),
+            duration: context.snapTicks.value,
+            noteNumber: clamp(input.cursorPos.noteNumber, 0, 127),
+            lyric: getDoremiFromNoteNumber(input.cursorPos.noteNumber),
+          };
+
+          void context.store.actions.COMMAND_ADD_NOTES({
+            notes: [noteToAdd],
+            trackId: selectedTrackId,
+          });
+          void context.store.actions.SELECT_NOTES({ noteIds: [noteToAdd.id] });
+
+          void context.store.actions.PLAY_PREVIEW_SOUND({
+            noteNumber: noteToAdd.noteNumber,
+            duration: PREVIEW_SOUND_DURATION,
           });
         }
       }
