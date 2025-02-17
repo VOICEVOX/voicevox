@@ -476,7 +476,7 @@ registerIpcMainHandle<IpcMainHandle>({
   SHOW_IMPORT_FILE_DIALOG: (_, { title, name, extensions }) => {
     return windowManager.showOpenDialogSync({
       title,
-      filters: [{ name: name ?? "Text", extensions: extensions ?? ["txt"] }],
+      filters: [{ name, extensions }],
       properties: ["openFile", "createDirectory", "treatPackageAsDirectory"],
     })?.[0];
   },
@@ -508,27 +508,34 @@ registerIpcMainHandle<IpcMainHandle>({
     appState.willQuit = true;
     windowManager.destroyWindow();
   },
+
   MINIMIZE_WINDOW: () => {
     windowManager.minimize();
   },
+
   TOGGLE_MAXIMIZE_WINDOW: () => {
     windowManager.toggleMaximizeWindow();
   },
+
   TOGGLE_FULLSCREEN: () => {
     windowManager.toggleFullScreen();
   },
+
   /** UIの拡大 */
   ZOOM_IN: () => {
     windowManager.zoomIn();
   },
+
   /** UIの縮小 */
   ZOOM_OUT: () => {
     windowManager.zoomOut();
   },
+
   /** UIの拡大率リセット */
   ZOOM_RESET: () => {
     windowManager.zoomReset();
   },
+
   OPEN_LOG_DIRECTORY: () => {
     void shell.openPath(app.getPath("logs"));
   },
@@ -567,6 +574,7 @@ registerIpcMainHandle<IpcMainHandle>({
   CHECK_FILE_EXISTS: (_, { file }) => {
     return fs.existsSync(file);
   },
+
   CHANGE_PIN_WINDOW: () => {
     windowManager.togglePinWindow();
   },

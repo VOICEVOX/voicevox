@@ -54,7 +54,7 @@ export type IpcIHData = {
   };
 
   SHOW_IMPORT_FILE_DIALOG: {
-    args: [obj: { title: string; name?: string; extensions?: string[] }];
+    args: [obj: { title: string; name: string; extensions: string[] }];
     return?: string;
   };
 

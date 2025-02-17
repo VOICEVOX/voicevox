@@ -119,24 +119,17 @@ export const api: Sandbox = {
     });
   },
   async showImportFileDialog(obj: {
-    name?: string;
-    extensions?: string[];
     title: string;
+    name: string;
+    mimeType: string;
+    extensions: string[];
   }) {
     const fileHandle = await showOpenFilePickerImpl({
       multiple: false,
       fileTypes: [
         {
-          description: obj.name ?? "Text",
-          accept: obj.extensions
-            ? {
-                "application/octet-stream": obj.extensions.map(
-                  (ext) => `.${ext}`,
-                ),
-              }
-            : {
-                "plain/text": [".txt"],
-              },
+          description: obj.name,
+          accept: { [obj.mimeType]: obj.extensions.map((ext) => `.${ext}`) },
         },
       ],
     });
