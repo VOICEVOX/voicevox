@@ -105,19 +105,6 @@ export const api: Sandbox = {
       }
     });
   },
-  async showProjectLoadDialog() {
-    return showOpenFilePickerImpl({
-      multiple: false,
-      fileTypes: [
-        {
-          description: "Voicevox Project File",
-          accept: {
-            "application/json": [".vvproj"],
-          },
-        },
-      ],
-    });
-  },
   async showImportFileDialog(obj: {
     title: string;
     name: string;

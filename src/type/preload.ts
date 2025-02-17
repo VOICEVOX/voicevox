@@ -84,7 +84,6 @@ export interface Sandbox {
     title: string;
     defaultPath?: string;
   }): Promise<string | undefined>;
-  showProjectLoadDialog(obj: { title: string }): Promise<string[] | undefined>;
   showImportFileDialog(obj: {
     title: string;
     name: string;

@@ -445,18 +445,6 @@ registerIpcMainHandle<IpcMainHandle>({
     return result.filePath;
   },
 
-  SHOW_PROJECT_LOAD_DIALOG: async (_, { title }) => {
-    const result = await windowManager.showOpenDialog({
-      title,
-      filters: [{ name: "VOICEVOX Project file", extensions: ["vvproj"] }],
-      properties: ["openFile", "createDirectory", "treatPackageAsDirectory"],
-    });
-    if (result.canceled) {
-      return undefined;
-    }
-    return result.filePaths;
-  },
-
   SHOW_WARNING_DIALOG: (_, { title, message }) => {
     return windowManager.showMessageBox({
       type: "warning",

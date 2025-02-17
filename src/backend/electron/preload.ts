@@ -56,10 +56,6 @@ const api: Sandbox = {
     });
   },
 
-  showProjectLoadDialog: ({ title }) => {
-    return ipcRendererInvokeProxy.SHOW_PROJECT_LOAD_DIALOG({ title });
-  },
-
   showImportFileDialog: ({ title, name, extensions }) => {
     return ipcRendererInvokeProxy.SHOW_IMPORT_FILE_DIALOG({
       title,

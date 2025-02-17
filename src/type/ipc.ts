@@ -63,11 +63,6 @@ export type IpcIHData = {
     return?: string;
   };
 
-  SHOW_PROJECT_LOAD_DIALOG: {
-    args: [obj: { title: string }];
-    return?: string[];
-  };
-
   SHOW_WARNING_DIALOG: {
     args: [
       obj: {
