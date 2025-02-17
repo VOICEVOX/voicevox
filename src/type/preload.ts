@@ -80,7 +80,7 @@ export interface Sandbox {
     title: string;
     defaultPath?: string;
   }): Promise<string | undefined>;
-  showImportFileDialog(obj: {
+  showOpenFileDialog(obj: {
     title: string;
     name: string;
     mimeType: string;

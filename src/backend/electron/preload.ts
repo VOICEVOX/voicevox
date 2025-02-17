@@ -52,7 +52,7 @@ const api: Sandbox = {
     });
   },
 
-  showImportFileDialog: ({ title, name, extensions, defaultPath }) => {
+  showOpenFileDialog: ({ title, name, extensions, defaultPath }) => {
     return ipcRendererInvokeProxy.SHOW_IMPORT_FILE_DIALOG({
       title,
       name,

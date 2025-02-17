@@ -173,7 +173,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
       async ({ actions, mutations, getters }, payload) => {
         let filePath: undefined | string;
         if (payload.type == "dialog") {
-          const ret = await window.backend.showImportFileDialog({
+          const ret = await window.backend.showOpenFileDialog({
             title: "プロジェクトファイルの選択",
             name: "VOICEVOX Project file",
             mimeType: "application/json",

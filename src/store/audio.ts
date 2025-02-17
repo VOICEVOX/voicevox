@@ -2900,7 +2900,7 @@ export const audioCommandStore = transformCommandStore(
         async ({ state, mutations, actions, getters }, payload) => {
           let filePath: undefined | string;
           if (payload.type == "dialog") {
-            filePath = await window.backend.showImportFileDialog({
+            filePath = await window.backend.showOpenFileDialog({
               title: "セリフ読み込み",
               name: "Text",
               mimeType: "plain/text",

@@ -99,7 +99,7 @@ export const api: Sandbox = {
       }
     });
   },
-  async showImportFileDialog(obj: {
+  async showOpenFileDialog(obj: {
     title: string;
     name: string;
     mimeType: string;
