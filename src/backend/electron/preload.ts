@@ -41,10 +41,6 @@ const api: Sandbox = {
     return ipcRendererInvokeProxy.SHOW_SAVE_DIRECTORY_DIALOG({ title });
   },
 
-  showVvppOpenDialog: ({ title, defaultPath }) => {
-    return ipcRendererInvokeProxy.SHOW_VVPP_OPEN_DIALOG({ title, defaultPath });
-  },
-
   showOpenDirectoryDialog: ({ title }) => {
     return ipcRendererInvokeProxy.SHOW_OPEN_DIRECTORY_DIALOG({ title });
   },
@@ -56,11 +52,12 @@ const api: Sandbox = {
     });
   },
 
-  showImportFileDialog: ({ title, name, extensions }) => {
+  showImportFileDialog: ({ title, name, extensions, defaultPath }) => {
     return ipcRendererInvokeProxy.SHOW_IMPORT_FILE_DIALOG({
       title,
       name,
       extensions,
+      defaultPath,
     });
   },
 

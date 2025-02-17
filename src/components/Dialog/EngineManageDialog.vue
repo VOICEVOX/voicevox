@@ -545,8 +545,11 @@ const selectEngineDir = async () => {
 
 const vvppFilePath = ref("");
 const selectVvppFile = async () => {
-  const path = await window.backend.showVvppOpenDialog({
+  const path = await window.backend.showImportFileDialog({
     title: "vvppファイルを選択",
+    name: "VOICEVOX Plugin Package",
+    mimeType: "application/octet-stream",
+    extensions: ["vvpp", "vvppp"],
     defaultPath: vvppFilePath.value,
   });
   if (path) {

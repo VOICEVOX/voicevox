@@ -399,18 +399,6 @@ registerIpcMainHandle<IpcMainHandle>({
     return result.filePaths[0];
   },
 
-  SHOW_VVPP_OPEN_DIALOG: async (_, { title, defaultPath }) => {
-    const result = await windowManager.showOpenDialog({
-      title,
-      defaultPath,
-      filters: [
-        { name: "VOICEVOX Plugin Package", extensions: ["vvpp", "vvppp"] },
-      ],
-      properties: ["openFile", "createDirectory", "treatPackageAsDirectory"],
-    });
-    return result.filePaths[0];
-  },
-
   /**
    * ディレクトリ選択ダイアログを表示する。
    * 保存先として選ぶ場合は SHOW_SAVE_DIRECTORY_DIALOG を使うべき。
@@ -461,9 +449,10 @@ registerIpcMainHandle<IpcMainHandle>({
     });
   },
 
-  SHOW_IMPORT_FILE_DIALOG: (_, { title, name, extensions }) => {
+  SHOW_IMPORT_FILE_DIALOG: (_, { title, name, extensions, defaultPath }) => {
     return windowManager.showOpenDialogSync({
       title,
+      defaultPath,
       filters: [{ name, extensions }],
       properties: ["openFile", "createDirectory", "treatPackageAsDirectory"],
     })?.[0];
