@@ -15,6 +15,7 @@ import {
   PREVIEW_SOUND_DURATION,
 } from "@/sing/viewHelper";
 import { clamp } from "@/sing/utility";
+import { uuid4 } from "@/helpers/random";
 
 export class AddNoteState
   implements State<SequencerStateDefinitions, Input, Context>
@@ -78,7 +79,7 @@ export class AddNoteState
   onEnter(context: Context) {
     const guideLineTicks = getGuideLineTicks(this.cursorPosAtStart, context);
     const noteToAdd = {
-      id: NoteId(crypto.randomUUID()),
+      id: NoteId(uuid4()),
       position: Math.max(0, guideLineTicks),
       duration: context.snapTicks.value,
       noteNumber: clamp(this.cursorPosAtStart.noteNumber, 0, 127),

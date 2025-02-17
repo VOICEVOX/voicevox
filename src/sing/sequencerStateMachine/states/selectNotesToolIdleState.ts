@@ -18,6 +18,7 @@ import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import { Note } from "@/store/type";
 import { NoteId } from "@/type/preload";
 import { clamp } from "@/sing/utility";
+import { uuid4 } from "@/helpers/random";
 
 export class SelectNotesToolIdleState
   implements State<SequencerStateDefinitions, Input, Context>
@@ -108,7 +109,7 @@ export class SelectNotesToolIdleState
 
           const guideLineTicks = getGuideLineTicks(input.cursorPos, context);
           const noteToAdd = {
-            id: NoteId(crypto.randomUUID()),
+            id: NoteId(uuid4()),
             position: Math.max(0, guideLineTicks),
             duration: context.snapTicks.value,
             noteNumber: clamp(input.cursorPos.noteNumber, 0, 127),
