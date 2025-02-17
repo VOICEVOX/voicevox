@@ -13,7 +13,10 @@ export const engineStoreState: EngineStoreState = {
 const { info, error } = createLogger("store/engine");
 
 export const engineStore = createPartialStore<EngineStoreTypes>({
-  /** backendのエンジン情報をstateに同期して初期化する。 */
+  /**
+   * backendのエンジン情報をstateに同期して初期化する。
+   * エンジンIDも同期する。
+   */
   PULL_AND_INIT_ENGINE_INFOS: {
     async action({ state, mutations }) {
       let engineInfos = await window.backend.engineInfos();
@@ -37,6 +40,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
     },
   },
 
+  /** backendのエンジン情報をstateに同期する。 */
   PULL_ENGINE_INFOS: {
     async action({ mutations }, { engineIds }) {
       const engineInfos = await window.backend.engineInfos();
