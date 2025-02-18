@@ -124,21 +124,19 @@ export class VvppFileExtractor {
     if (archiveFileParts.length > 1) {
       // -siオプションでの7z解凍はサポートされていないため、
       // ファイルを連結した一次ファイルを作成し、それを7zで解凍する。
-      const archiveFile = this.createTmpConcatenatedFilePath(format);
-      log.info("Temporary file:", archiveFile);
+      const tmpConcatenatedFile = this.createTmpConcatenatedFilePath(format);
+      log.info("Temporary file:", tmpConcatenatedFile);
 
       try {
-        await this.concatenateVvppFiles(archiveFileParts, archiveFile);
-        await this.unarchive(archiveFile, format);
+        await this.concatenateVvppFiles(archiveFileParts, tmpConcatenatedFile);
+        await this.unarchive(tmpConcatenatedFile, format);
       } finally {
-        log.info("Removing temporary file", archiveFile);
-        await fs.promises.rm(archiveFile);
+        log.info("Removing temporary file", tmpConcatenatedFile);
+        await fs.promises.rm(tmpConcatenatedFile);
       }
     } else {
-      const archiveFile = archiveFileParts[0];
       log.info("Single file, not concatenating");
-
-      await this.unarchive(archiveFile, format);
+      await this.unarchive(archiveFileParts[0], format);
     }
   }
 
