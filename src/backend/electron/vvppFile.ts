@@ -17,6 +17,8 @@ import { createLogger } from "@/helpers/log";
 
 const log = createLogger("vvppFile");
 
+type Format = "zip" | "7z";
+
 /** VVPPファイルを vvppEngineDir で指定したディレクトリ以下の .tmp ディレクトリに展開する */
 export class VvppFileExtractor {
   private readonly vvppLikeFilePath: string;
@@ -174,7 +176,7 @@ export class VvppFileExtractor {
     return buffer1.compare(buffer2, 0, length, 0, length) === 0;
   }
 
-  private createTmpConcatenatedFilePath(format: "zip" | "7z"): string {
+  private createTmpConcatenatedFilePath(format: Format): string {
     return path.join(this.tmpDir, `vvpp-${new Date().getTime()}.${format}`);
   }
 
@@ -200,7 +202,7 @@ export class VvppFileExtractor {
   }
 
   /** 7zでファイルを解凍する */
-  private async unarchive(archiveFile: string, format: "zip" | "7z") {
+  private async unarchive(archiveFile: string, format: Format) {
     const args = this.createSevenZipArgs(archiveFile, format);
     const sevenZipPath = this.getSevenZipPath();
 
@@ -208,10 +210,7 @@ export class VvppFileExtractor {
     await this.spawnSevenZip(sevenZipPath, args);
   }
 
-  private createSevenZipArgs(
-    archiveFile: string,
-    format: "zip" | "7z",
-  ): string[] {
+  private createSevenZipArgs(archiveFile: string, format: Format): string[] {
     return [
       "x",
       "-o" + this.outputDir,
