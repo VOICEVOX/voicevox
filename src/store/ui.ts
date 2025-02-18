@@ -17,16 +17,13 @@ import {
   MessageDialogOptions,
   ConfirmDialogOptions,
   WarningDialogOptions,
-  LoadingScreenOption,
   NotifyAndNotShowAgainButtonOption,
   connectAndExportTextWithDialog,
   generateAndConnectAndSaveAudioWithDialog,
   generateAndSaveOneAudioWithDialog,
-  hideAllLoadingScreen,
   multiGenerateAndSaveAudioWithDialog,
   showAlertDialog,
   showConfirmDialog,
-  showLoadingScreen,
   showNotifyAndNotShowAgainButton,
   showWarningDialog,
 } from "@/components/Dialog/Dialog";
@@ -227,18 +224,6 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON: {
     action({ actions }, payload: NotifyAndNotShowAgainButtonOption) {
       showNotifyAndNotShowAgainButton({ actions }, payload);
-    },
-  },
-
-  SHOW_LOADING_SCREEN: {
-    action(_, payload: LoadingScreenOption) {
-      showLoadingScreen(payload);
-    },
-  },
-
-  HIDE_ALL_LOADING_SCREEN: {
-    action() {
-      hideAllLoadingScreen();
     },
   },
 
