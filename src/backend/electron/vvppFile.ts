@@ -85,9 +85,6 @@ export class VvppFileExtractor {
       filePaths.push(p);
     }
 
-    if (filePaths.length === 0) {
-      throw new Error(`No split files found for path: ${filePath}`);
-    }
     return filePaths;
   }
 
