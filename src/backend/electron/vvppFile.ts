@@ -47,6 +47,7 @@ export class VvppFileExtractor {
     outputDir: string;
     manifest: MinimumEngineManifestType;
   }> {
+    log.info("Extracting vvpp to", this.outputDir);
     const archiveFileParts = await this.getArchiveFileParts();
     const manifest = await this.extractOrCleanup(archiveFileParts);
     return { outputDir: this.outputDir, manifest };
