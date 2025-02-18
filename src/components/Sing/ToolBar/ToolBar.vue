@@ -454,7 +454,7 @@ const toggleLoop = async () => {
         );
 
         // playhead位置から1小節分のループ範囲を設定
-        await store.actions.COMMAND_SET_LOOP_RANGE({
+        await store.actions.SET_LOOP_RANGE({
           loopStartTick: playheadTicks.value,
           loopEndTick: Math.min(
             playheadTicks.value + oneMeasureTicks,
@@ -466,7 +466,7 @@ const toggleLoop = async () => {
   }
 
   // ループをトグルする
-  void store.actions.COMMAND_SET_LOOP_ENABLED({
+  void store.actions.SET_LOOP_ENABLED({
     isLoopEnabled: !isLoopEnabled.value,
   });
 };

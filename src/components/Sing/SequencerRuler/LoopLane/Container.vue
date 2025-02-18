@@ -105,14 +105,14 @@ const cursorClass = computed(() => {
 
 // ループ範囲部をクリックで有効/無効をトグル
 const handleLoopRangeClick = () => {
-  void store.actions.COMMAND_SET_LOOP_ENABLED({
+  void store.actions.SET_LOOP_ENABLED({
     isLoopEnabled: !isLoopEnabled.value,
   });
 };
 
 // ループ範囲部をダブルクリックでループ範囲を削除
 const handleLoopRangeDoubleClick = () => {
-  void store.actions.COMMAND_CLEAR_LOOP_RANGE();
+  void store.actions.CLEAR_LOOP_RANGE();
 };
 
 // ループのクリックで前処理後にドラッグ開始
@@ -137,7 +137,7 @@ const handleLoopAreaMouseDown = (event: MouseEvent) => {
   previewLoopEndTick.value = tick;
 
   // ループ範囲を設定
-  void store.actions.COMMAND_SET_LOOP_RANGE({
+  void store.actions.SET_LOOP_RANGE({
     loopStartTick: tick,
     loopEndTick: tick,
   });
@@ -262,11 +262,11 @@ const stopDragging = () => {
   try {
     if (previewLoopStartTick.value === previewLoopEndTick.value) {
       // ループ範囲 0 の場合はクリア
-      void store.actions.COMMAND_CLEAR_LOOP_RANGE();
+      void store.actions.CLEAR_LOOP_RANGE();
       return;
     }
     // ループ設定
-    void store.actions.COMMAND_SET_LOOP_RANGE({
+    void store.actions.SET_LOOP_RANGE({
       loopStartTick: previewLoopStartTick.value,
       loopEndTick: previewLoopEndTick.value,
     });
@@ -293,7 +293,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => [
     type: "button",
     label: isLoopEnabled.value ? "ループ無効" : "ループ有効",
     onClick: () => {
-      void store.actions.COMMAND_SET_LOOP_ENABLED({
+      void store.actions.SET_LOOP_ENABLED({
         isLoopEnabled: !isLoopEnabled.value,
       });
     },
@@ -313,7 +313,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => [
     type: "button",
     label: "ループ範囲を削除",
     onClick: () => {
-      void store.actions.COMMAND_CLEAR_LOOP_RANGE();
+      void store.actions.CLEAR_LOOP_RANGE();
     },
     disabled: isEmpty.value,
     disableWhenUiLocked: true,
@@ -341,7 +341,7 @@ const addOneMeasureLoop = (localX: number) => {
     endTicks.value,
   );
 
-  void store.actions.COMMAND_SET_LOOP_RANGE({
+  void store.actions.SET_LOOP_RANGE({
     loopStartTick: startTick,
     loopEndTick: endTick,
   });

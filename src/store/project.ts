@@ -59,8 +59,7 @@ const applySongProjectToStore = async (
   actions: DotNotationDispatch<AllActions>,
   songProject: LatestProjectType["song"],
 ) => {
-  const { tpqn, tempos, timeSignatures, tracks, trackOrder, loop } =
-    songProject;
+  const { tpqn, tempos, timeSignatures, tracks, trackOrder } = songProject;
 
   await actions.SET_TPQN({ tpqn });
   await actions.SET_TEMPOS({ tempos });
@@ -73,16 +72,6 @@ const applySongProjectToStore = async (
         return [trackId, track];
       }),
     ),
-  });
-
-  // ループ情報を設定（ない場合はデフォルト値を使用）
-  // TODO: オプショナルチェインを避けたい(プロジェクト関連の仕様がよくわかっていない)
-  await actions.SET_LOOP_ENABLED({
-    isLoopEnabled: loop?.isLoopEnabled ?? false,
-  });
-  await actions.SET_LOOP_RANGE({
-    loopStartTick: loop?.startTick ?? 0,
-    loopEndTick: loop?.endTick ?? 0,
   });
 };
 
@@ -306,9 +295,6 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             timeSignatures,
             tracks,
             trackOrder,
-            isLoopEnabled,
-            loopStartTick,
-            loopEndTick,
           } = context.state;
           const projectData: LatestProjectType = {
             appVersion: appInfos.version,
@@ -322,11 +308,6 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               timeSignatures,
               tracks: Object.fromEntries(tracks),
               trackOrder,
-              loop: {
-                isLoopEnabled,
-                startTick: loopStartTick,
-                endTick: loopEndTick,
-              },
             },
           };
 

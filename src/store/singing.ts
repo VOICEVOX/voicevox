@@ -4123,36 +4123,6 @@ export const singingCommandStore = transformCommandStore(
         },
       ),
     },
-    COMMAND_SET_LOOP_ENABLED: {
-      mutation(draft, { isLoopEnabled }) {
-        singingStore.mutations.SET_LOOP_ENABLED(draft, { isLoopEnabled });
-      },
-      action({ mutations }, { isLoopEnabled }) {
-        mutations.COMMAND_SET_LOOP_ENABLED({ isLoopEnabled });
-      },
-    },
-    COMMAND_SET_LOOP_RANGE: {
-      mutation(draft, { loopStartTick, loopEndTick }) {
-        singingStore.mutations.SET_LOOP_RANGE(draft, {
-          loopStartTick,
-          loopEndTick,
-        });
-      },
-      action({ mutations }, { loopStartTick, loopEndTick }) {
-        mutations.COMMAND_SET_LOOP_RANGE({ loopStartTick, loopEndTick });
-      },
-    },
-    COMMAND_CLEAR_LOOP_RANGE: {
-      mutation(draft) {
-        singingStore.mutations.SET_LOOP_RANGE(draft, {
-          loopStartTick: 0,
-          loopEndTick: 0,
-        });
-      },
-      action({ mutations }) {
-        mutations.COMMAND_CLEAR_LOOP_RANGE();
-      },
-    },
   }),
   "song",
 );

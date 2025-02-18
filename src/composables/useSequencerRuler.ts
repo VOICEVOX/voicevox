@@ -56,10 +56,8 @@ export const useSequencerRuler = (params: {
 
   // 再生ヘッドのX位置(px)
   const playheadX = computed(() => {
-    return Math.floor(
-      tickToBaseX(params.playheadTicks.value, params.tpqn.value) *
-        params.sequencerZoomX.value,
-    );
+    const baseX = tickToBaseX(params.playheadTicks.value, params.tpqn.value);
+    return baseX * params.sequencerZoomX.value;
   });
 
   /**
