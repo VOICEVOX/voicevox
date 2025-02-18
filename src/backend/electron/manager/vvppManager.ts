@@ -137,7 +137,7 @@ export class VvppManager {
     const manifest = await new VvppFileExtractor({
       vvppLikeFilePath: vvppPath,
       outputDir: tmpEngineDir,
-      tmpDir: app.getPath("temp"),
+      tmpDir: this.tmpDir,
       callbacks,
     }).extract();
 
