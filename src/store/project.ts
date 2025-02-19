@@ -28,6 +28,7 @@ import {
   showQuestionDialog,
 } from "@/components/Dialog/Dialog";
 import { uuid4 } from "@/helpers/random";
+import { getAppInfos } from "@/domain/appInfo";
 
 export const projectStoreState: ProjectStoreState = {
   savedLastCommandIds: { talk: null, song: null },
@@ -289,7 +290,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           await context.actions.APPEND_RECENTLY_USED_PROJECT({
             filePath,
           });
-          const appInfos = await window.backend.getAppInfos();
+          const appVersion = getAppInfos().version;
           const {
             audioItems,
             audioKeys,
@@ -300,7 +301,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             trackOrder,
           } = context.state;
           const projectData: LatestProjectType = {
-            appVersion: appInfos.version,
+            appVersion,
             talk: {
               audioKeys,
               audioItems,
