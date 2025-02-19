@@ -142,7 +142,7 @@ export class VvppFileExtractor {
     }
   }
 
-  private async detectFileFormat(filePath: string): Promise<"zip" | "7z"> {
+  private async detectFileFormat(filePath: string): Promise<Format> {
     const buffer = await this.readFileHeader(filePath);
 
     // https://www.garykessler.net/library/file_sigs.html#:~:text=7-zip%20compressed%20file
