@@ -171,7 +171,7 @@ export class VvppFileExtractor {
         await fs.promises.rm(tmpConcatenatedFile);
       }
     } else {
-      log.info("Not a split file");
+      log.info("Single file, not concatenating");
       await this.unarchive(archiveFileParts[0], format);
     }
   }
