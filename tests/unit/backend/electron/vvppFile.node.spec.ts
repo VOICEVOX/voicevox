@@ -18,7 +18,7 @@ test("正しいVVPPファイルからエンジンを切り出せる", async () =
   const targetName = "perfect.vvpp";
   const vvppFilePath = await createVvppFile(targetName, tmpDir);
 
-  const outputDir = createOutputDir();
+  const outputDir = buildOutputDir();
   await new VvppFileExtractor({
     vvppLikeFilePath: vvppFilePath,
     outputDir,
@@ -35,7 +35,7 @@ test("分割されたVVPPファイルからエンジンを切り出せる", asyn
   const vvpppFilePath2 = vvppFilePath + ".2.vvppp";
   splitFile(vvppFilePath, vvpppFilePath1, vvpppFilePath2);
 
-  const outputDir = createOutputDir();
+  const outputDir = buildOutputDir();
   await new VvppFileExtractor({
     vvppLikeFilePath: vvpppFilePath1,
     outputDir,
@@ -55,14 +55,14 @@ test.each([
     await expect(
       new VvppFileExtractor({
         vvppLikeFilePath: outputFilePath,
-        outputDir: createOutputDir(),
+        outputDir: buildOutputDir(),
         tmpDir,
       }).extract(),
     ).rejects.toThrow(expectedError);
   },
 );
 
-function createOutputDir() {
+function buildOutputDir() {
   const dir = path.join(tmpDir, uuid4());
   fs.mkdirSync(dir);
   return dir;
