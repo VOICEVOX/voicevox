@@ -75,20 +75,17 @@ export interface Sandbox {
   getAltPortInfos(): Promise<AltPortInfos>;
   getInitialProjectFilePath(): Promise<string | undefined>;
   showSaveDirectoryDialog(obj: { title: string }): Promise<string | undefined>;
-  showVvppOpenDialog(obj: {
-    title: string;
-    defaultPath?: string;
-  }): Promise<string | undefined>;
   showOpenDirectoryDialog(obj: { title: string }): Promise<string | undefined>;
   showProjectSaveDialog(obj: {
     title: string;
     defaultPath?: string;
   }): Promise<string | undefined>;
-  showProjectLoadDialog(obj: { title: string }): Promise<string[] | undefined>;
-  showImportFileDialog(obj: {
+  showOpenFileDialog(obj: {
     title: string;
-    name?: string;
-    extensions?: string[];
+    name: string;
+    mimeType: string;
+    extensions: string[];
+    defaultPath?: string;
   }): Promise<string | undefined>;
   showExportFileDialog(obj: {
     title: string;

@@ -43,29 +43,26 @@ export type IpcIHData = {
     return?: string;
   };
 
-  SHOW_VVPP_OPEN_DIALOG: {
-    args: [obj: { title: string; defaultPath?: string }];
-    return?: string;
-  };
-
   SHOW_OPEN_DIRECTORY_DIALOG: {
     args: [obj: { title: string }];
     return?: string;
   };
 
-  SHOW_IMPORT_FILE_DIALOG: {
-    args: [obj: { title: string; name?: string; extensions?: string[] }];
+  SHOW_OPEN_FILE_DIALOG: {
+    args: [
+      obj: {
+        title: string;
+        name: string;
+        extensions: string[];
+        defaultPath?: string;
+      },
+    ];
     return?: string;
   };
 
   SHOW_PROJECT_SAVE_DIALOG: {
     args: [obj: { title: string; defaultPath?: string }];
     return?: string;
-  };
-
-  SHOW_PROJECT_LOAD_DIALOG: {
-    args: [obj: { title: string }];
-    return?: string[];
   };
 
   SHOW_WARNING_DIALOG: {
