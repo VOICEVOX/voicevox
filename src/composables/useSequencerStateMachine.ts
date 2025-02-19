@@ -3,6 +3,7 @@ import { useCommandOrControlKey, useShiftKey } from "./useModifierKey";
 import {
   ComputedRefs,
   IdleStateId,
+  Input,
   PartialStore,
   Refs,
 } from "@/sing/sequencerStateMachine/common";
@@ -74,7 +75,7 @@ export const useSequencerStateMachine = (store: PartialStore) => {
   });
 
   return {
-    stateMachine,
+    processWithStateMachine: (input: Input) => stateMachine.process(input),
     previewMode: computed(() => refs.previewMode.value),
     previewNotes: computed(() => refs.previewNotes.value),
     previewRectForRectSelect: computed(
