@@ -37,10 +37,10 @@ export class VvppFileExtractor {
     this.tmpDir = params.tmpDir;
     this.callbacks = params.callbacks;
 
-    this.outputDir = this.createOutputDirPath(params.vvppEngineDir);
+    this.outputDir = this.buildOutputDirPath(params.vvppEngineDir);
   }
 
-  private createOutputDirPath(vvppEngineDir: string): string {
+  private buildOutputDirPath(vvppEngineDir: string): string {
     const nonce = new Date().getTime().toString();
     return path.join(vvppEngineDir, ".tmp", nonce);
   }
@@ -115,69 +115,33 @@ export class VvppFileExtractor {
   private async extractAndReadManifest(
     archiveFileParts: string[],
   ): Promise<MinimumEngineManifestType> {
-    const format = await this.detectFileFormat(archiveFileParts[0]);
-    log.info("Format:", format);
+    if (archiveFileParts.length > 1) {
+      await this.concatenateAndUnarchive(archiveFileParts);
+    } else {
+      log.info("Single file, not concatenating");
+      await this.unarchive(archiveFileParts[0]);
+    }
 
-    await this.unarchiveVvppFiles(archiveFileParts, format);
     return await this.readManifest();
   }
 
-  private async detectFileFormat(filePath: string): Promise<Format> {
-    const buffer = await this.readFileHeader(filePath);
+  private async concatenateAndUnarchive(archiveFileParts: string[]) {
+    // -siオプションでの7z解凍はサポートされていないため、
+    // ファイルを連結した一次ファイルを作成し、それを7zで解凍する。
+    const tmpConcatenatedFile = this.buildTmpConcatenatedFilePath();
+    log.info("Temporary file:", tmpConcatenatedFile);
 
-    // https://www.garykessler.net/library/file_sigs.html#:~:text=7-zip%20compressed%20file
-    const SEVEN_ZIP_MAGIC_NUMBER = Buffer.from([
-      0x37, 0x7a, 0xbc, 0xaf, 0x27, 0x1c,
-    ]);
-    const ZIP_MAGIC_NUMBER = Buffer.from([0x50, 0x4b, 0x03, 0x04]);
-
-    if (this.isBufferEqual(buffer, SEVEN_ZIP_MAGIC_NUMBER, 6)) {
-      return "7z";
-    } else if (this.isBufferEqual(buffer, ZIP_MAGIC_NUMBER, 4)) {
-      return "zip";
-    }
-
-    throw new Error(`Unknown file format: ${filePath}`);
-  }
-
-  private async readFileHeader(filePath: string): Promise<Buffer> {
-    const file = await fs.promises.open(filePath, "r");
-    const buffer = Buffer.alloc(8);
-    await file.read(buffer, 0, 8, 0);
-    await file.close();
-    return buffer;
-  }
-
-  private isBufferEqual(
-    buffer1: Buffer,
-    buffer2: Buffer,
-    length: number,
-  ): boolean {
-    return buffer1.compare(buffer2, 0, length, 0, length) === 0;
-  }
-
-  private async unarchiveVvppFiles(archiveFileParts: string[], format: Format) {
-    if (archiveFileParts.length > 1) {
-      // -siオプションでの7z解凍はサポートされていないため、
-      // ファイルを連結した一次ファイルを作成し、それを7zで解凍する。
-      const tmpConcatenatedFile = this.createTmpConcatenatedFilePath(format);
-      log.info("Temporary file:", tmpConcatenatedFile);
-
-      try {
-        await this.concatenateVvppFiles(archiveFileParts, tmpConcatenatedFile);
-        await this.unarchive(tmpConcatenatedFile, format);
-      } finally {
-        log.info("Removing temporary file", tmpConcatenatedFile);
-        await fs.promises.rm(tmpConcatenatedFile);
-      }
-    } else {
-      log.info("Single file, not concatenating");
-      await this.unarchive(archiveFileParts[0], format);
+    try {
+      await this.concatenateVvppFiles(archiveFileParts, tmpConcatenatedFile);
+      await this.unarchive(tmpConcatenatedFile);
+    } finally {
+      log.info("Removing temporary file", tmpConcatenatedFile);
+      await fs.promises.rm(tmpConcatenatedFile);
     }
   }
 
-  private createTmpConcatenatedFilePath(format: Format): string {
-    return path.join(this.tmpDir, `vvpp-${new Date().getTime()}.${format}`);
+  private buildTmpConcatenatedFilePath(): string {
+    return path.join(this.tmpDir, `vvpp-${new Date().getTime()}`);
   }
 
   /** 分割されているVVPPファイルを連結して返す */
@@ -202,15 +166,54 @@ export class VvppFileExtractor {
   }
 
   /** 7zでファイルを解凍する */
-  private async unarchive(archiveFile: string, format: Format) {
-    const args = this.createSevenZipArgs(archiveFile, format);
+  private async unarchive(archiveFile: string) {
+    const format = await this.detectFileFormat(archiveFile);
+    const args = this.buildSevenZipArgs(archiveFile, format);
     const sevenZipPath = this.getSevenZipPath();
 
     log.info("Spawning 7z:", sevenZipPath, args.join(" "));
     await this.spawnSevenZip(sevenZipPath, args);
   }
 
-  private createSevenZipArgs(archiveFile: string, format: Format): string[] {
+  private async detectFileFormat(filePath: string): Promise<Format> {
+    const buffer = await this.readFileHeader(filePath);
+
+    // https://www.garykessler.net/library/file_sigs.html#:~:text=7-zip%20compressed%20file
+    const SEVEN_ZIP_MAGIC_NUMBER = Buffer.from([
+      0x37, 0x7a, 0xbc, 0xaf, 0x27, 0x1c,
+    ]);
+    const ZIP_MAGIC_NUMBER = Buffer.from([0x50, 0x4b, 0x03, 0x04]);
+
+    let format: Format;
+    if (this.isBufferEqual(buffer, SEVEN_ZIP_MAGIC_NUMBER, 6)) {
+      format = "7z";
+    } else if (this.isBufferEqual(buffer, ZIP_MAGIC_NUMBER, 4)) {
+      format = "zip";
+    } else {
+      throw new Error(`Unknown file format: ${filePath}`);
+    }
+
+    log.info("Format:", format);
+    return format;
+  }
+
+  private async readFileHeader(filePath: string): Promise<Buffer> {
+    const file = await fs.promises.open(filePath, "r");
+    const buffer = Buffer.alloc(8);
+    await file.read(buffer, 0, 8, 0);
+    await file.close();
+    return buffer;
+  }
+
+  private isBufferEqual(
+    buffer1: Buffer,
+    buffer2: Buffer,
+    length: number,
+  ): boolean {
+    return buffer1.compare(buffer2, 0, length, 0, length) === 0;
+  }
+
+  private buildSevenZipArgs(archiveFile: string, format: Format): string[] {
     return [
       "x",
       "-o" + this.outputDir,
