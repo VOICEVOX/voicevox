@@ -399,18 +399,6 @@ registerIpcMainHandle<IpcMainHandle>({
     return result.filePaths[0];
   },
 
-  SHOW_VVPP_OPEN_DIALOG: async (_, { title, defaultPath }) => {
-    const result = await windowManager.showOpenDialog({
-      title,
-      defaultPath,
-      filters: [
-        { name: "VOICEVOX Plugin Package", extensions: ["vvpp", "vvppp"] },
-      ],
-      properties: ["openFile", "createDirectory", "treatPackageAsDirectory"],
-    });
-    return result.filePaths[0];
-  },
-
   /**
    * ディレクトリ選択ダイアログを表示する。
    * 保存先として選ぶ場合は SHOW_SAVE_DIRECTORY_DIALOG を使うべき。
@@ -445,18 +433,6 @@ registerIpcMainHandle<IpcMainHandle>({
     return result.filePath;
   },
 
-  SHOW_PROJECT_LOAD_DIALOG: async (_, { title }) => {
-    const result = await windowManager.showOpenDialog({
-      title,
-      filters: [{ name: "VOICEVOX Project file", extensions: ["vvproj"] }],
-      properties: ["openFile", "createDirectory", "treatPackageAsDirectory"],
-    });
-    if (result.canceled) {
-      return undefined;
-    }
-    return result.filePaths;
-  },
-
   SHOW_WARNING_DIALOG: (_, { title, message }) => {
     return windowManager.showMessageBox({
       type: "warning",
@@ -473,10 +449,11 @@ registerIpcMainHandle<IpcMainHandle>({
     });
   },
 
-  SHOW_IMPORT_FILE_DIALOG: (_, { title, name, extensions }) => {
+  SHOW_OPEN_FILE_DIALOG: (_, { title, name, extensions, defaultPath }) => {
     return windowManager.showOpenDialogSync({
       title,
-      filters: [{ name: name ?? "Text", extensions: extensions ?? ["txt"] }],
+      defaultPath,
+      filters: [{ name, extensions }],
       properties: ["openFile", "createDirectory", "treatPackageAsDirectory"],
     })?.[0];
   },
@@ -508,27 +485,34 @@ registerIpcMainHandle<IpcMainHandle>({
     appState.willQuit = true;
     windowManager.destroyWindow();
   },
+
   MINIMIZE_WINDOW: () => {
     windowManager.minimize();
   },
+
   TOGGLE_MAXIMIZE_WINDOW: () => {
     windowManager.toggleMaximizeWindow();
   },
+
   TOGGLE_FULLSCREEN: () => {
     windowManager.toggleFullScreen();
   },
+
   /** UIの拡大 */
   ZOOM_IN: () => {
     windowManager.zoomIn();
   },
+
   /** UIの縮小 */
   ZOOM_OUT: () => {
     windowManager.zoomOut();
   },
+
   /** UIの拡大率リセット */
   ZOOM_RESET: () => {
     windowManager.zoomReset();
   },
+
   OPEN_LOG_DIRECTORY: () => {
     void shell.openPath(app.getPath("logs"));
   },
@@ -567,6 +551,7 @@ registerIpcMainHandle<IpcMainHandle>({
   CHECK_FILE_EXISTS: (_, { file }) => {
     return fs.existsSync(file);
   },
+
   CHANGE_PIN_WINDOW: () => {
     windowManager.togglePinWindow();
   },

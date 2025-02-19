@@ -1596,7 +1596,7 @@ export type EngineStoreState = {
 };
 
 export type EngineStoreTypes = {
-  GET_ENGINE_INFOS: {
+  PULL_AND_INIT_ENGINE_INFOS: {
     action(): void;
   };
 
@@ -1604,7 +1604,7 @@ export type EngineStoreTypes = {
     mutation: { engineId: EngineId; engineInfo: EngineInfo };
   };
 
-  GET_ONLY_ENGINE_INFOS: {
+  PULL_ENGINE_INFOS: {
     action: (payload: { engineIds: EngineId[] }) => Promise<void>;
   };
 
@@ -1612,7 +1612,7 @@ export type EngineStoreTypes = {
     getter: EngineInfo[];
   };
 
-  GET_ALT_PORT_INFOS: {
+  PULL_ALT_PORT_INFOS: {
     action(): Promise<AltPortInfos>;
   };
 
