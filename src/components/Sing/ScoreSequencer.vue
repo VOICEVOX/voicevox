@@ -613,8 +613,7 @@ const onMouseDown = (event: MouseEvent) => {
     throw new Error("sequencerBodyElement is null.");
   }
   const cursorPos = getCursorPosOnSequencer(event);
-  // NOTE: SequencerBodyにスクロールバーが含まれているため、
-  //       スクロールバーのところはクリックイベントを無視する
+  // NOTE: SequencerBodyにスクロールバーが含まれているため、スクロールバーのところはクリックイベントを無視する
   if (
     cursorPos.x >= sequencerBodyElement.clientWidth ||
     cursorPos.y >= sequencerBodyElement.clientHeight
