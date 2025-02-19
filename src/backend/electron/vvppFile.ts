@@ -23,37 +23,27 @@ type Format = "zip" | "7z";
 /** VVPPファイルを vvppEngineDir で指定したディレクトリ以下の .tmp ディレクトリに展開する */
 export class VvppFileExtractor {
   private readonly vvppLikeFilePath: string;
+  private readonly outputDir: string;
   private readonly tmpDir: string;
   private readonly callbacks?: { onProgress?: ProgressCallback };
 
-  private readonly outputDir: string;
-
   constructor(params: {
     vvppLikeFilePath: string;
-    vvppEngineDir: string;
+    outputDir: string;
     tmpDir: string;
     callbacks?: { onProgress?: ProgressCallback };
   }) {
     this.vvppLikeFilePath = params.vvppLikeFilePath;
+    this.outputDir = params.outputDir;
     this.tmpDir = params.tmpDir;
     this.callbacks = params.callbacks;
-
-    this.outputDir = this.buildOutputDirPath(params.vvppEngineDir);
   }
 
-  private buildOutputDirPath(vvppEngineDir: string): string {
-    const nonce = new Date().getTime().toString();
-    return path.join(vvppEngineDir, ".tmp", nonce);
-  }
-
-  async extract(): Promise<{
-    outputDir: string;
-    manifest: MinimumEngineManifestType;
-  }> {
+  async extract(): Promise<MinimumEngineManifestType> {
     log.info("Extracting vvpp to", this.outputDir);
     const archiveFileParts = await this.getArchiveFileParts();
     const manifest = await this.extractOrCleanup(archiveFileParts);
-    return { outputDir: this.outputDir, manifest };
+    return manifest;
   }
 
   /** VVPPファイルが分割されている場合、それらのファイルを取得する */
