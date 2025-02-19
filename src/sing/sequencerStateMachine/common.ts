@@ -86,7 +86,12 @@ export type Refs = {
 export type PartialStore = {
   state: Pick<
     Store["state"],
-    "tpqn" | "sequencerSnapType" | "sequencerEditTarget" | "editorFrameRate"
+    | "tpqn"
+    | "sequencerSnapType"
+    | "sequencerEditTarget"
+    | "sequencerNoteTool"
+    | "sequencerPitchTool"
+    | "editorFrameRate"
   >;
   getters: Pick<
     Store["getters"],

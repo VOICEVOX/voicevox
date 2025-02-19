@@ -288,11 +288,7 @@ import { createLogger } from "@/helpers/log";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import { useLyricInput } from "@/composables/useLyricInput";
 import { useSequencerStateMachine } from "@/composables/useSequencerStateMachine";
-import {
-  IdleStateId,
-  PositionOnSequencer,
-} from "@/sing/sequencerStateMachine/common";
-import { ExhaustiveError } from "@/type/utility";
+import { PositionOnSequencer } from "@/sing/sequencerStateMachine/common";
 
 const { warn } = createLogger("ScoreSequencer");
 const store = useStore();
@@ -461,28 +457,6 @@ const onLyricConfirmed = (nextNoteId: NoteId | undefined) => {
 };
 
 // ステートマシン
-const idleStateId = computed((): IdleStateId => {
-  if (state.sequencerEditTarget === "NOTE") {
-    if (state.sequencerNoteTool === "SELECT_FIRST") {
-      return "selectNotesToolIdle";
-    } else if (state.sequencerNoteTool === "EDIT_FIRST") {
-      return "editNotesToolIdle";
-    } else {
-      throw new ExhaustiveError(state.sequencerNoteTool);
-    }
-  } else if (state.sequencerEditTarget === "PITCH") {
-    if (state.sequencerPitchTool === "DRAW") {
-      return "drawPitchToolIdle";
-    } else if (state.sequencerPitchTool === "ERASE") {
-      return "erasePitchToolIdle";
-    } else {
-      throw new ExhaustiveError(state.sequencerPitchTool);
-    }
-  } else {
-    throw new ExhaustiveError(state.sequencerEditTarget);
-  }
-});
-
 const {
   stateMachine,
   previewMode,
@@ -491,18 +465,12 @@ const {
   previewPitchEdit,
   cursorState,
   guideLineTicks,
-} = useSequencerStateMachine(store, idleStateId.value);
+} = useSequencerStateMachine(store);
 
 const nowPreviewing = computed(() => previewMode.value !== "IDLE");
 
 const previewNoteIds = computed(() => {
   return new Set(previewNotes.value.map((note) => note.id));
-});
-
-watch(idleStateId, (value) => {
-  if (stateMachine.currentStateId !== value) {
-    stateMachine.transitionTo(value, undefined);
-  }
 });
 
 // 歌詞を編集中のノート

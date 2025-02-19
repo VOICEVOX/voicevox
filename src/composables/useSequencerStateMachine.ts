@@ -1,4 +1,4 @@
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { useCommandOrControlKey, useShiftKey } from "./useModifierKey";
 import {
   ComputedRefs,
@@ -8,11 +8,9 @@ import {
 } from "@/sing/sequencerStateMachine/common";
 import { getNoteDuration } from "@/sing/domain";
 import { createSequencerStateMachine } from "@/sing/sequencerStateMachine";
+import { ExhaustiveError } from "@/type/utility";
 
-export const useSequencerStateMachine = (
-  store: PartialStore,
-  initialStateId: IdleStateId,
-) => {
+export const useSequencerStateMachine = (store: PartialStore) => {
   const isShiftKeyDown = useShiftKey();
   const isCommandOrCtrlKeyDown = useCommandOrControlKey();
 
@@ -38,14 +36,42 @@ export const useSequencerStateMachine = (
     guideLineTicks: ref(0),
   };
 
+  const idleStateId = computed((): IdleStateId => {
+    if (store.state.sequencerEditTarget === "NOTE") {
+      if (store.state.sequencerNoteTool === "SELECT_FIRST") {
+        return "selectNotesToolIdle";
+      } else if (store.state.sequencerNoteTool === "EDIT_FIRST") {
+        return "editNotesToolIdle";
+      } else {
+        throw new ExhaustiveError(store.state.sequencerNoteTool);
+      }
+    } else if (store.state.sequencerEditTarget === "PITCH") {
+      if (store.state.sequencerPitchTool === "DRAW") {
+        return "drawPitchToolIdle";
+      } else if (store.state.sequencerPitchTool === "ERASE") {
+        return "erasePitchToolIdle";
+      } else {
+        throw new ExhaustiveError(store.state.sequencerPitchTool);
+      }
+    } else {
+      throw new ExhaustiveError(store.state.sequencerEditTarget);
+    }
+  });
+
   const stateMachine = createSequencerStateMachine(
     {
       ...computedRefs,
       ...refs,
       store,
     },
-    initialStateId,
+    idleStateId.value,
   );
+
+  watch(idleStateId, (value) => {
+    if (stateMachine.currentStateId !== value) {
+      stateMachine.transitionTo(value, undefined);
+    }
+  });
 
   return {
     stateMachine,
