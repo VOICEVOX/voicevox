@@ -14,6 +14,7 @@ import {
 } from "@/type/preload";
 import { ProgressCallback } from "@/helpers/progressHelper";
 import { createLogger } from "@/helpers/log";
+import { UnreachableError } from "@/type/utility";
 
 const log = createLogger("vvppFile");
 
@@ -91,14 +92,17 @@ export class VvppFileExtractor {
   }
 
   private sortFileParts(filePaths: string[]): string[] {
-    return filePaths.sort((a, b) => {
-      const aMatch = a.match(/\.([0-9]+)\.vvppp$/);
-      const bMatch = b.match(/\.([0-9]+)\.vvppp$/);
-      if (aMatch == null || bMatch == null) {
-        throw new Error(`match is null: a=${a}, b=${b}`);
-      }
-      return parseInt(aMatch[1]) - parseInt(bMatch[1]);
-    });
+    return filePaths.sort(
+      (a, b) => this.parseFileNumber(a) - this.parseFileNumber(b),
+    );
+  }
+
+  private parseFileNumber(filePath: string): number {
+    const match = filePath.match(/\.([0-9]+)\.vvppp$/);
+    if (match == null) {
+      throw new UnreachableError(`match is null: filePath=${filePath}`);
+    }
+    return parseInt(match[1]);
   }
 
   private async extractOrCleanup(
