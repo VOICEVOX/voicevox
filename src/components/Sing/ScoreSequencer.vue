@@ -458,7 +458,7 @@ const onLyricConfirmed = (nextNoteId: NoteId | undefined) => {
 
 // ステートマシン
 const {
-  processWithStateMachine,
+  stateMachineProcess,
   previewMode,
   previewNotes,
   previewRectForRectSelect,
@@ -555,7 +555,7 @@ const getCursorPosOnSequencer = (
 
 const onNoteBarMouseDown = (event: MouseEvent, note: Note) => {
   if (state.editingLyricNoteId == undefined) {
-    processWithStateMachine({
+    stateMachineProcess({
       type: "mouseEvent",
       targetArea: "Note",
       mouseEvent: event,
@@ -573,7 +573,7 @@ const onNoteBarDoubleClick = (event: MouseEvent, note: Note) => {
   ) {
     void store.actions.SET_EDITING_LYRIC_NOTE_ID({ noteId: note.id });
   } else if (state.editingLyricNoteId == undefined) {
-    processWithStateMachine({
+    stateMachineProcess({
       type: "mouseEvent",
       targetArea: "Note",
       mouseEvent: event,
@@ -585,7 +585,7 @@ const onNoteBarDoubleClick = (event: MouseEvent, note: Note) => {
 
 const onNoteLeftEdgeMouseDown = (event: MouseEvent, note: Note) => {
   if (state.editingLyricNoteId == undefined) {
-    processWithStateMachine({
+    stateMachineProcess({
       type: "mouseEvent",
       targetArea: "NoteLeftEdge",
       mouseEvent: event,
@@ -597,7 +597,7 @@ const onNoteLeftEdgeMouseDown = (event: MouseEvent, note: Note) => {
 
 const onNoteRightEdgeMouseDown = (event: MouseEvent, note: Note) => {
   if (state.editingLyricNoteId == undefined) {
-    processWithStateMachine({
+    stateMachineProcess({
       type: "mouseEvent",
       targetArea: "NoteRightEdge",
       mouseEvent: event,
@@ -621,7 +621,7 @@ const onMouseDown = (event: MouseEvent) => {
     return;
   }
   if (state.editingLyricNoteId == undefined) {
-    processWithStateMachine({
+    stateMachineProcess({
       type: "mouseEvent",
       targetArea: "SequencerBody",
       mouseEvent: event,
@@ -632,7 +632,7 @@ const onMouseDown = (event: MouseEvent) => {
 
 const onMouseMove = (event: MouseEvent) => {
   if (state.editingLyricNoteId == undefined) {
-    processWithStateMachine({
+    stateMachineProcess({
       type: "mouseEvent",
       targetArea: "Window",
       mouseEvent: event,
@@ -643,7 +643,7 @@ const onMouseMove = (event: MouseEvent) => {
 
 const onMouseUp = (event: MouseEvent) => {
   if (state.editingLyricNoteId == undefined) {
-    processWithStateMachine({
+    stateMachineProcess({
       type: "mouseEvent",
       targetArea: "Window",
       mouseEvent: event,
@@ -654,7 +654,7 @@ const onMouseUp = (event: MouseEvent) => {
 
 const onDoubleClick = (event: MouseEvent) => {
   if (state.editingLyricNoteId == undefined) {
-    processWithStateMachine({
+    stateMachineProcess({
       type: "mouseEvent",
       targetArea: "SequencerBody",
       mouseEvent: event,
@@ -759,7 +759,7 @@ const handleNotesBackspaceOrDelete = () => {
 };
 
 const handleKeydown = (event: KeyboardEvent) => {
-  processWithStateMachine({
+  stateMachineProcess({
     type: "keyboardEvent",
     targetArea: "Document",
     keyboardEvent: event,
@@ -795,7 +795,7 @@ const handleKeydown = (event: KeyboardEvent) => {
 };
 
 const handleKeyUp = (event: KeyboardEvent) => {
-  processWithStateMachine({
+  stateMachineProcess({
     type: "keyboardEvent",
     targetArea: "Document",
     keyboardEvent: event,

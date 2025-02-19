@@ -76,7 +76,7 @@ export const useSequencerStateMachine = (store: PartialStore) => {
   });
 
   return {
-    processWithStateMachine: (input: Input) => stateMachine.process(input),
+    stateMachineProcess: (input: Input) => stateMachine.process(input),
     previewMode: computed(() => refs.previewMode.value),
     previewNotes: computed(() => refs.previewNotes.value),
     previewRectForRectSelect: computed(
