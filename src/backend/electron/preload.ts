@@ -45,13 +45,6 @@ const api: Sandbox = {
     return ipcRendererInvokeProxy.SHOW_OPEN_DIRECTORY_DIALOG({ title });
   },
 
-  showProjectSaveDialog: ({ title, defaultPath }) => {
-    return ipcRendererInvokeProxy.SHOW_PROJECT_SAVE_DIALOG({
-      title,
-      defaultPath,
-    });
-  },
-
   showOpenFileDialog: ({ title, name, extensions, defaultPath }) => {
     return ipcRendererInvokeProxy.SHOW_OPEN_FILE_DIALOG({
       title,
@@ -61,12 +54,12 @@ const api: Sandbox = {
     });
   },
 
-  showExportFileDialog: ({ title, defaultPath, extensionName, extensions }) => {
+  showExportFileDialog: ({ title, name, extensions, defaultPath }) => {
     return ipcRendererInvokeProxy.SHOW_EXPORT_FILE_DIALOG({
       title,
-      defaultPath,
-      extensionName,
+      name,
       extensions,
+      defaultPath,
     });
   },
 

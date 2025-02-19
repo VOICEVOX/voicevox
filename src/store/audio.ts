@@ -1378,9 +1378,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         } else {
           filePath ??= await window.backend.showExportFileDialog({
             title: "音声を保存",
-            defaultPath: defaultAudioFileName,
-            extensionName: "WAV ファイル",
+            name: "WAV ファイル",
             extensions: ["wav"],
+            defaultPath: defaultAudioFileName,
           });
         }
 
@@ -1527,9 +1527,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         } else {
           filePath ??= await window.backend.showExportFileDialog({
             title: "音声を全て繋げて保存",
-            defaultPath: defaultFileName,
-            extensionName: "WAV ファイル",
+            name: "WAV ファイル",
             extensions: ["wav"],
+            defaultPath: defaultFileName,
           });
         }
 
@@ -1672,9 +1672,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         } else {
           filePath ??= await window.backend.showExportFileDialog({
             title: "文章を全て繋げてテキストファイルに保存",
-            defaultPath: defaultFileName,
-            extensionName: "テキストファイル",
+            name: "テキストファイル",
             extensions: ["txt"],
+            defaultPath: defaultFileName,
           });
         }
 

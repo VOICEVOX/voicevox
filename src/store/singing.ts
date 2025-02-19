@@ -2758,9 +2758,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           } else {
             filePath ??= await window.backend.showExportFileDialog({
               title: "音声を保存",
-              defaultPath: fileName,
+              name: "WAV ファイル",
               extensions: ["wav"],
-              extensionName: "WAV ファイル",
+              defaultPath: fileName,
             });
           }
           if (!filePath) {
@@ -3521,9 +3521,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
           let filePath = await window.backend.showExportFileDialog({
             title: "プロジェクトを書き出し",
-            defaultPath: fileBaseName,
-            extensionName: fileTypeLabel,
+            name: fileTypeLabel,
             extensions: [extension],
+            defaultPath: fileBaseName,
           });
           if (!filePath) {
             return { result: "CANCELED", path: "" };

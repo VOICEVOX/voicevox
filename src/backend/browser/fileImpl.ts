@@ -268,7 +268,7 @@ export const readFileImpl = async (filePath: string) => {
 export const showExportFilePickerImpl: (typeof window)[typeof SandboxKey]["showExportFileDialog"] =
   async (obj: {
     defaultPath?: string;
-    extensionName: string;
+    name: string;
     extensions: string[];
     title: string;
   }) => {
