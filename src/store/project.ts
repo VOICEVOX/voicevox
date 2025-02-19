@@ -173,13 +173,16 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
       async ({ actions, mutations, getters }, payload) => {
         let filePath: undefined | string;
         if (payload.type == "dialog") {
-          const ret = await window.backend.showProjectLoadDialog({
+          const ret = await window.backend.showOpenFileDialog({
             title: "プロジェクトファイルの選択",
+            name: "VOICEVOX Project file",
+            mimeType: "application/json",
+            extensions: ["vvproj"],
           });
-          if (ret == undefined || ret?.length == 0) {
+          if (ret == undefined) {
             return false;
           }
-          filePath = ret[0];
+          filePath = ret;
         } else if (payload.type == "path") {
           filePath = payload.filePath;
         }

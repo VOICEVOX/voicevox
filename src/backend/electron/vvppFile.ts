@@ -6,7 +6,6 @@ import fs from "node:fs";
 import path from "node:path";
 import { spawn } from "node:child_process";
 import MultiStream from "multistream";
-import { glob } from "glob";
 import { app } from "electron";
 import {
   minimumEngineManifestSchema,
@@ -79,7 +78,9 @@ export class VvppFileExtractor {
       .replace(/\.[0-9]+\.vvppp$/, ".*.vvppp")
       .replace(/\\/g, "/"); // node-globはバックスラッシュを使えないので、スラッシュに置換する
     const filePaths: string[] = [];
-    const matchingFiles = await glob(vvpppPathGlob);
+    const matchingFiles = await Array.fromAsync(
+      fs.promises.glob(vvpppPathGlob),
+    );
     for (const p of matchingFiles) {
       if (!p.match(/\.[0-9]+\.vvppp$/)) {
         continue;

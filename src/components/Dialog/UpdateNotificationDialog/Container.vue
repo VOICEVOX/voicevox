@@ -15,7 +15,7 @@
 
 <script setup lang="ts">
 import semver from "semver";
-import { computed, watch } from "vue";
+import { computed, watchEffect } from "vue";
 import UpdateNotificationDialog from "./Presentation.vue";
 import { useFetchNewUpdateInfos } from "@/composables/useFetchNewUpdateInfos";
 import { useStore } from "@/store";
@@ -74,15 +74,12 @@ const handleSkipThisVersionClick = (version: string) => {
 };
 
 // ダイアログを開くかどうか
-watch(
-  () => [props.canOpenDialog, newUpdateResult],
-  () => {
-    if (
-      props.canOpenDialog &&
-      newUpdateResult.value.status == "updateAvailable"
-    ) {
-      isDialogOpenComputed.value = true;
-    }
-  },
-);
+watchEffect(() => {
+  if (
+    props.canOpenDialog &&
+    newUpdateResult.value.status == "updateAvailable"
+  ) {
+    isDialogOpenComputed.value = true;
+  }
+});
 </script>

@@ -82,12 +82,6 @@ export const api: Sandbox = {
   showSaveDirectoryDialog(obj: { title: string }) {
     return showOpenDirectoryDialogImpl(obj);
   },
-  showVvppOpenDialog(obj: { title: string; defaultPath?: string }) {
-    // NOTE: 今後接続先を変える手段としてVvppが使われるかもしれないので、そのタイミングで実装する
-    throw new Error(
-      `not implemented: showVvppOpenDialog, request: ${JSON.stringify(obj)}`,
-    );
-  },
   showOpenDirectoryDialog(obj: { title: string }) {
     return showOpenDirectoryDialogImpl(obj);
   },
@@ -105,38 +99,18 @@ export const api: Sandbox = {
       }
     });
   },
-  async showProjectLoadDialog() {
-    return showOpenFilePickerImpl({
-      multiple: false,
-      fileTypes: [
-        {
-          description: "Voicevox Project File",
-          accept: {
-            "application/json": [".vvproj"],
-          },
-        },
-      ],
-    });
-  },
-  async showImportFileDialog(obj: {
-    name?: string;
-    extensions?: string[];
+  async showOpenFileDialog(obj: {
     title: string;
+    name: string;
+    mimeType: string;
+    extensions: string[];
   }) {
     const fileHandle = await showOpenFilePickerImpl({
       multiple: false,
       fileTypes: [
         {
-          description: obj.name ?? "Text",
-          accept: obj.extensions
-            ? {
-                "application/octet-stream": obj.extensions.map(
-                  (ext) => `.${ext}`,
-                ),
-              }
-            : {
-                "plain/text": [".txt"],
-              },
+          description: obj.name,
+          accept: { [obj.mimeType]: obj.extensions.map((ext) => `.${ext}`) },
         },
       ],
     });
