@@ -9,7 +9,7 @@ import {
   MinimumEngineManifestType,
 } from "@/type/preload";
 import { errorToMessage } from "@/helpers/errorHelper";
-import { extractVvpp } from "@/backend/electron/vvppFile";
+import { VvppFileExtractor } from "@/backend/electron/vvppFile";
 import { ProgressCallback } from "@/helpers/progressHelper";
 import { createLogger } from "@/helpers/log";
 
@@ -113,14 +113,12 @@ export class VvppManager {
     vvppPath: string,
     callbacks?: { onProgress?: ProgressCallback },
   ) {
-    const { outputDir, manifest } = await extractVvpp(
-      {
-        vvppLikeFilePath: vvppPath,
-        vvppEngineDir: this.vvppEngineDir,
-        tmpDir: app.getPath("temp"),
-      },
+    const { outputDir, manifest } = await new VvppFileExtractor({
+      vvppLikeFilePath: vvppPath,
+      vvppEngineDir: this.vvppEngineDir,
+      tmpDir: app.getPath("temp"),
       callbacks,
-    );
+    }).extract();
 
     const dirName = this.toValidDirName(manifest);
     const engineDirectory = path.join(this.vvppEngineDir, dirName);
