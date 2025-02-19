@@ -111,6 +111,7 @@ export class VvppFileExtractor {
     try {
       return await this.extractAndReadManifest(archiveFileParts);
     } catch (e) {
+      log.info("Failed to extract vvpp");
       await this.cleanupOutputDir();
       throw e;
     }
@@ -299,7 +300,7 @@ export class VvppFileExtractor {
   private async cleanupOutputDir() {
     const { outputDir } = this;
     if (fs.existsSync(outputDir)) {
-      log.info("Failed to extract vvpp, removing", outputDir);
+      log.info("Removing", this.outputDir);
       await fs.promises.rm(outputDir, { recursive: true });
     }
   }
