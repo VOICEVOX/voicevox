@@ -105,41 +105,21 @@ export class VvppFileExtractor {
     archiveFileParts: string[],
   ): Promise<MinimumEngineManifestType> {
     try {
-      return await this.extractVvppFiles(archiveFileParts);
+      return await this.extractAndReadManifest(archiveFileParts);
     } catch (e) {
       await this.cleanupOutputDir();
       throw e;
     }
   }
 
-  private async extractVvppFiles(
+  private async extractAndReadManifest(
     archiveFileParts: string[],
   ): Promise<MinimumEngineManifestType> {
-    await this.unarchiveVvppFiles(archiveFileParts);
-    return await this.readManifest();
-  }
-
-  private async unarchiveVvppFiles(archiveFileParts: string[]) {
     const format = await this.detectFileFormat(archiveFileParts[0]);
     log.info("Format:", format);
 
-    if (archiveFileParts.length > 1) {
-      // -siオプションでの7z解凍はサポートされていないため、
-      // ファイルを連結した一次ファイルを作成し、それを7zで解凍する。
-      const tmpConcatenatedFile = this.createTmpConcatenatedFilePath(format);
-      log.info("Temporary file:", tmpConcatenatedFile);
-
-      try {
-        await this.concatenateVvppFiles(archiveFileParts, tmpConcatenatedFile);
-        await this.unarchive(tmpConcatenatedFile, format);
-      } finally {
-        log.info("Removing temporary file", tmpConcatenatedFile);
-        await fs.promises.rm(tmpConcatenatedFile);
-      }
-    } else {
-      log.info("Single file, not concatenating");
-      await this.unarchive(archiveFileParts[0], format);
-    }
+    await this.unarchiveVvppFiles(archiveFileParts, format);
+    return await this.readManifest();
   }
 
   private async detectFileFormat(filePath: string): Promise<Format> {
@@ -174,6 +154,26 @@ export class VvppFileExtractor {
     length: number,
   ): boolean {
     return buffer1.compare(buffer2, 0, length, 0, length) === 0;
+  }
+
+  private async unarchiveVvppFiles(archiveFileParts: string[], format: Format) {
+    if (archiveFileParts.length > 1) {
+      // -siオプションでの7z解凍はサポートされていないため、
+      // ファイルを連結した一次ファイルを作成し、それを7zで解凍する。
+      const tmpConcatenatedFile = this.createTmpConcatenatedFilePath(format);
+      log.info("Temporary file:", tmpConcatenatedFile);
+
+      try {
+        await this.concatenateVvppFiles(archiveFileParts, tmpConcatenatedFile);
+        await this.unarchive(tmpConcatenatedFile, format);
+      } finally {
+        log.info("Removing temporary file", tmpConcatenatedFile);
+        await fs.promises.rm(tmpConcatenatedFile);
+      }
+    } else {
+      log.info("Single file, not concatenating");
+      await this.unarchive(archiveFileParts[0], format);
+    }
   }
 
   private createTmpConcatenatedFilePath(format: Format): string {
