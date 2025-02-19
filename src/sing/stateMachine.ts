@@ -138,6 +138,7 @@ export class StateMachine<
     this.context = context;
 
     this.currentState = stateFactories[initialStateId](undefined);
+    this.currentState.onEnter(context);
   }
 
   /**
