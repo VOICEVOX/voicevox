@@ -70,6 +70,7 @@ export const useSequencerStateMachine = (store: PartialStore) => {
 
   watch(idleStateId, (value) => {
     if (stateMachine.currentStateId !== value) {
+      // TODO: transitionToを使わない形で実装し直す
       stateMachine.transitionTo(value, undefined);
     }
   });
