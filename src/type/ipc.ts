@@ -80,7 +80,7 @@ export type IpcIHData = {
     return: MessageBoxReturnValue;
   };
 
-  SHOW_EXPORT_FILE_DIALOG: {
+  SHOW_SAVE_FILE_DIALOG: {
     args: [
       obj: {
         title: string;

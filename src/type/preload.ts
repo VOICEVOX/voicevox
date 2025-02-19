@@ -83,7 +83,7 @@ export interface Sandbox {
     extensions: string[];
     defaultPath?: string;
   }): Promise<string | undefined>;
-  showExportFileDialog(obj: {
+  showSaveFileDialog(obj: {
     title: string;
     name: string;
     extensions: string[];

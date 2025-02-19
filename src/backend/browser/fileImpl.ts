@@ -265,7 +265,7 @@ export const readFileImpl = async (filePath: string) => {
 
 // ファイル選択ダイアログを開く
 // 返り値はファイルパスではなく、疑似パスを返す
-export const showExportFilePickerImpl: (typeof window)[typeof SandboxKey]["showExportFileDialog"] =
+export const showExportFilePickerImpl: (typeof window)[typeof SandboxKey]["showSaveFileDialog"] =
   async (obj: {
     defaultPath?: string;
     name: string;

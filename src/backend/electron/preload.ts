@@ -54,8 +54,8 @@ const api: Sandbox = {
     });
   },
 
-  showExportFileDialog: ({ title, name, extensions, defaultPath }) => {
-    return ipcRendererInvokeProxy.SHOW_EXPORT_FILE_DIALOG({
+  showSaveFileDialog: ({ title, name, extensions, defaultPath }) => {
+    return ipcRendererInvokeProxy.SHOW_SAVE_FILE_DIALOG({
       title,
       name,
       extensions,

@@ -443,15 +443,15 @@ registerIpcMainHandle<IpcMainHandle>({
     })?.[0];
   },
 
-  SHOW_EXPORT_FILE_DIALOG: async (
+  SHOW_SAVE_FILE_DIALOG: async (
     _,
-    { title, defaultPath, name: extensionName, extensions },
+    { title, defaultPath, name, extensions },
   ) => {
     const result = await retryShowSaveDialogWhileSafeDir(() =>
       windowManager.showSaveDialog({
         title,
         defaultPath,
-        filters: [{ name: extensionName, extensions: extensions }],
+        filters: [{ name, extensions }],
         properties: ["createDirectory"],
       }),
     );

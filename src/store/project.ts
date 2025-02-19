@@ -266,7 +266,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             }
 
             // Write the current status to a project file.
-            const ret = await window.backend.showExportFileDialog({
+            const ret = await window.backend.showSaveFileDialog({
               title: "プロジェクトファイルの保存",
               name: "VOICEVOX Project file",
               extensions: ["vvproj"],

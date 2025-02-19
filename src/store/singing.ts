@@ -2756,7 +2756,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           if (state.savingSetting.fixedExportEnabled) {
             filePath = path.join(state.savingSetting.fixedExportDir, fileName);
           } else {
-            filePath ??= await window.backend.showExportFileDialog({
+            filePath ??= await window.backend.showSaveFileDialog({
               title: "音声を保存",
               name: "WAV ファイル",
               extensions: ["wav"],
@@ -3519,7 +3519,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             buffer = (await ufProjectToMultiFile(project, fileType))[0];
           }
 
-          let filePath = await window.backend.showExportFileDialog({
+          let filePath = await window.backend.showSaveFileDialog({
             title: "プロジェクトを書き出し",
             name: fileTypeLabel,
             extensions: [extension],
