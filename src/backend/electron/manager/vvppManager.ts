@@ -34,8 +34,10 @@ type MoveParams = { tempEngineFiles: TempEngineFiles; to: string };
 // engine.0.vvppp、engine.1.vvppp、engine.2.vvppp、...というように分割されている。
 // UUIDはengine_manifest.jsonのuuidを使用し、同一エンジンの判定にはこれを使用する。
 //
-// 追加：
+// 展開：
 // * エンジンを仮フォルダ（vvpp-engines/.tmp/現在の時刻）に展開する
+//
+// 追加：
 // * エンジンが既に存在しているか確認する
 //   - 存在していた場合：上書き処理を行う
 //   - 存在していなかった場合：仮フォルダをvvpp-engines/エンジン名+UUIDに移動する
@@ -121,18 +123,12 @@ export class VvppManager {
   }
 
   /**
-   * 追加
+   * 展開
    */
-  async install(
+  async extract(
     vvppPath: string,
     callbacks?: { onProgress?: ProgressCallback },
-  ) {
-    await this.withLockAcquired(() => this._install(vvppPath, callbacks));
-  }
-  private async _install(
-    vvppPath: string,
-    callbacks?: { onProgress?: ProgressCallback },
-  ) {
+  ): Promise<TempEngineFiles> {
     const tmpEngineDir = this.buildTemporaryEngineDir(this.vvppEngineDir);
     log.info("Extracting vvpp to", tmpEngineDir);
 
@@ -142,17 +138,11 @@ export class VvppManager {
       tmpDir: this.tmpDir,
       callbacks,
     }).extract();
-    const manifest = tempEngineFiles.getManifest();
 
+    const manifest = tempEngineFiles.getManifest();
     await this.applyExecutablePermissions(tmpEngineDir, manifest.command);
 
-    const hasOldEngine = await this.hasOldEngine(manifest.uuid);
-    const engineDir = this.buildEngineDirPath(manifest);
-    if (hasOldEngine) {
-      this.markWillMove({ tempEngineFiles, to: engineDir });
-    } else {
-      await tempEngineFiles.move(engineDir);
-    }
+    return tempEngineFiles;
   }
 
   private buildTemporaryEngineDir(vvppEngineDir: string): string {
@@ -166,6 +156,24 @@ export class VvppManager {
   ) {
     if (!isWindows) {
       await fs.promises.chmod(path.join(engineDirectory, commandPath), "755");
+    }
+  }
+
+  /**
+   * 追加
+   */
+  async install(tempEngineFiles: TempEngineFiles) {
+    await this.withLockAcquired(() => this._install(tempEngineFiles));
+  }
+  private async _install(tempEngineFiles: TempEngineFiles) {
+    const manifest = tempEngineFiles.getManifest();
+
+    const hasOldEngine = await this.hasOldEngine(manifest.uuid);
+    const engineDir = this.buildEngineDirPath(manifest);
+    if (hasOldEngine) {
+      this.markWillMove({ tempEngineFiles, to: engineDir });
+    } else {
+      await tempEngineFiles.move(engineDir);
     }
   }
 

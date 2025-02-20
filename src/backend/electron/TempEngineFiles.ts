@@ -33,4 +33,12 @@ export class TempEngineFiles {
   async cleanup() {
     await fs.promises.rmdir(this.tmpEngineDir, { recursive: true });
   }
+
+  /**
+   * 後処理が必要かどうか。moveかcleanupを実行済みであれば不要。
+   * 主にテスト用。
+   */
+  async needsCleanup() {
+    return fs.existsSync(this.tmpEngineDir);
+  }
 }

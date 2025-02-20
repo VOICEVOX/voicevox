@@ -44,6 +44,17 @@ test<Context>("追加エンジンのディレクトリ名は想定通りか", ({
   expect(dirName).toMatch(pattern);
 });
 
+test<Context>("エンジンを展開できる", async ({ manager }) => {
+  const targetName = "perfect.vvpp";
+  const vvppFilePath = await createVvppFile(targetName, tmpDir);
+
+  const tempEngineFiles = await manager.extract(vvppFilePath);
+  await expect(tempEngineFiles.needsCleanup()).resolves.toBe(true);
+
+  await tempEngineFiles.cleanup();
+  await expect(tempEngineFiles.needsCleanup()).resolves.toBe(false);
+});
+
 test<Context>("エンジンをインストールできる", async ({
   vvppEngineDir,
   manager,
@@ -51,8 +62,10 @@ test<Context>("エンジンをインストールできる", async ({
   const targetName = "perfect.vvpp";
   const vvppFilePath = await createVvppFile(targetName, tmpDir);
 
-  await manager.install(vvppFilePath);
+  const tempEngineFiles = await manager.extract(vvppFilePath);
+  await manager.install(tempEngineFiles);
   expect(getEngineDirInfos(vvppEngineDir).length).toBe(1);
+  await expect(tempEngineFiles.needsCleanup()).resolves.toBe(false);
 });
 
 test<Context>("エンジンを２回インストールすると処理が予約され、後で上書きされる", async ({
@@ -62,11 +75,11 @@ test<Context>("エンジンを２回インストールすると処理が予約�
   const targetName = "perfect.vvpp";
   const vvppFilePath = await createVvppFile(targetName, tmpDir);
 
-  await manager.install(vvppFilePath);
+  await manager.install(await manager.extract(vvppFilePath));
   const infos1 = getEngineDirInfos(vvppEngineDir);
   expect(infos1.length).toBe(1);
 
-  await manager.install(vvppFilePath);
+  await manager.install(await manager.extract(vvppFilePath));
   const infos2 = getEngineDirInfos(vvppEngineDir);
   expect(infos2.length).toBe(1);
   expect(infos1[0].createdTime).toBe(infos2[0].createdTime); // 同じファイル
@@ -85,7 +98,7 @@ test<Context>("エンジンをアンインストール予約すると、後で�
   const targetUuid = EngineId("00000000-0000-0000-0000-000000000001");
   const vvppFilePath = await createVvppFile(targetName, tmpDir);
 
-  await manager.install(vvppFilePath);
+  await manager.install(await manager.extract(vvppFilePath));
   const infos1 = getEngineDirInfos(vvppEngineDir);
   expect(infos1.length).toBe(1);
 
