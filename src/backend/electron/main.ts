@@ -409,21 +409,6 @@ registerIpcMainHandle<IpcMainHandle>({
     return result.filePaths[0];
   },
 
-  SHOW_PROJECT_SAVE_DIALOG: async (_, { title, defaultPath }) => {
-    const result = await retryShowSaveDialogWhileSafeDir(() =>
-      windowManager.showSaveDialog({
-        title,
-        defaultPath,
-        filters: [{ name: "VOICEVOX Project file", extensions: ["vvproj"] }],
-        properties: ["showOverwriteConfirmation"],
-      }),
-    );
-    if (result.canceled) {
-      return undefined;
-    }
-    return result.filePath;
-  },
-
   SHOW_WARNING_DIALOG: (_, { title, message }) => {
     return windowManager.showMessageBox({
       type: "warning",
@@ -449,18 +434,21 @@ registerIpcMainHandle<IpcMainHandle>({
     })?.[0];
   },
 
-  SHOW_EXPORT_FILE_DIALOG: async (
+  SHOW_SAVE_FILE_DIALOG: async (
     _,
-    { title, defaultPath, extensionName, extensions },
+    { title, defaultPath, name, extensions },
   ) => {
     const result = await retryShowSaveDialogWhileSafeDir(() =>
       windowManager.showSaveDialog({
         title,
         defaultPath,
-        filters: [{ name: extensionName, extensions: extensions }],
+        filters: [{ name, extensions }],
         properties: ["createDirectory"],
       }),
     );
+    if (result.canceled) {
+      return undefined;
+    }
     return result.filePath;
   },
 

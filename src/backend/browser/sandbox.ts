@@ -2,7 +2,7 @@ import { defaultEngine } from "./contract";
 import {
   checkFileExistsImpl,
   readFileImpl,
-  showExportFilePickerImpl,
+  showSaveFilePickerImpl,
   showOpenDirectoryDialogImpl,
   showOpenFilePickerImpl,
   WritableFilePath,
@@ -78,20 +78,6 @@ export const api: Sandbox = {
   showOpenDirectoryDialog(obj: { title: string }) {
     return showOpenDirectoryDialogImpl(obj);
   },
-  showProjectSaveDialog(obj: { title: string; defaultPath?: string }) {
-    return new Promise((resolve, reject) => {
-      if (obj.defaultPath == undefined) {
-        reject(
-          // storeやvue componentからdefaultPathを設定していなかったらrejectされる
-          new Error(
-            "ブラウザ版ではファイルの保存機能が一部サポートされていません。",
-          ),
-        );
-      } else {
-        resolve(obj.defaultPath);
-      }
-    });
-  },
   async showOpenFileDialog(obj: {
     title: string;
     name: string;
@@ -109,13 +95,13 @@ export const api: Sandbox = {
     });
     return fileHandle?.[0];
   },
-  async showExportFileDialog(obj: {
-    defaultPath?: string;
-    extensionName: string;
-    extensions: string[];
+  async showSaveFileDialog(obj: {
     title: string;
+    name: string;
+    extensions: string[];
+    defaultPath?: string;
   }) {
-    const fileHandle = await showExportFilePickerImpl(obj);
+    const fileHandle = await showSaveFilePickerImpl(obj);
     return fileHandle;
   },
   writeFile(obj: { filePath: string; buffer: ArrayBuffer }) {

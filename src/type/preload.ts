@@ -75,10 +75,6 @@ export interface Sandbox {
   getInitialProjectFilePath(): Promise<string | undefined>;
   showSaveDirectoryDialog(obj: { title: string }): Promise<string | undefined>;
   showOpenDirectoryDialog(obj: { title: string }): Promise<string | undefined>;
-  showProjectSaveDialog(obj: {
-    title: string;
-    defaultPath?: string;
-  }): Promise<string | undefined>;
   showOpenFileDialog(obj: {
     title: string;
     name: string;
@@ -86,11 +82,11 @@ export interface Sandbox {
     extensions: string[];
     defaultPath?: string;
   }): Promise<string | undefined>;
-  showExportFileDialog(obj: {
+  showSaveFileDialog(obj: {
     title: string;
-    defaultPath?: string;
-    extensionName: string;
+    name: string;
     extensions: string[];
+    defaultPath?: string;
   }): Promise<string | undefined>;
   writeFile(obj: {
     filePath: string;
