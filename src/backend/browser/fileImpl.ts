@@ -133,7 +133,7 @@ export type WritableFilePath =
 
 // NOTE: fixedExportEnabled が有効になっている GENERATE_AND_SAVE_AUDIO action では、ファイル名に加えディレクトリ名も指定された状態でfilePathが渡ってくる
 // また GENERATE_AND_SAVE_ALL_AUDIO action では fixedExportEnabled の有効の有無に関わらず、ディレクトリ名も指定された状態でfilePathが渡ってくる
-// showExportFilePicker での疑似パスが渡ってくる可能性もある。
+// showSaveFilePicker での疑似パスが渡ってくる可能性もある。
 export const writeFileImpl = async (obj: {
   filePath: WritableFilePath;
   buffer: ArrayBuffer;
@@ -265,7 +265,7 @@ export const readFileImpl = async (filePath: string) => {
 
 // ファイル選択ダイアログを開く
 // 返り値はファイルパスではなく、疑似パスを返す
-export const showExportFilePickerImpl: (typeof window)[typeof SandboxKey]["showSaveFileDialog"] =
+export const showSaveFilePickerImpl: (typeof window)[typeof SandboxKey]["showSaveFileDialog"] =
   async (obj: {
     defaultPath?: string;
     name: string;

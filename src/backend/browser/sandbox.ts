@@ -2,7 +2,7 @@ import { defaultEngine } from "./contract";
 import {
   checkFileExistsImpl,
   readFileImpl,
-  showExportFilePickerImpl as showSaveFilePickerImpl,
+  showSaveFilePickerImpl,
   showOpenDirectoryDialogImpl,
   showOpenFilePickerImpl,
   WritableFilePath,
