@@ -183,12 +183,7 @@ export class VvppManager {
         }
 
         try {
-          await retry(() =>
-            fs.promises.rm(deletingEngineDir, {
-              recursive: true,
-              force: true,
-            }),
-          );
+          await deleteDirWithRetry(deletingEngineDir);
           log.info(`Engine ${engineId} deleted successfully.`);
         } catch (e) {
           log.error("Failed to delete engine directory: ", e);
@@ -209,15 +204,10 @@ export class VvppManager {
         }
 
         try {
-          await retry(() =>
-            fs.promises.rm(deletingEngineDir, {
-              recursive: true,
-              force: true,
-            }),
-          );
+          await deleteDirWithRetry(deletingEngineDir);
           log.info(`Engine ${engineId} deleted successfully.`);
 
-          await retry(() => moveFile(from, to));
+          await moveFileWithRetry({ from, to });
           log.info(`Renamed ${from} to ${to}`);
         } catch (e) {
           log.error("Failed to rename engine directory: ", e);
@@ -236,6 +226,20 @@ export class VvppManager {
       this.willReplaceEngineDirs.length > 0 || this.willDeleteEngineIds.size > 0
     );
   }
+}
+
+async function deleteDirWithRetry(dir: string) {
+  await retry(() =>
+    fs.promises.rm(dir, {
+      recursive: true,
+      force: true,
+    }),
+  );
+}
+
+async function moveFileWithRetry(params: { from: string; to: string }) {
+  const { from, to } = params;
+  await retry(() => moveFile(from, to));
 }
 
 async function retry(fn: () => Promise<void>) {
