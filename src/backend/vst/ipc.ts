@@ -165,7 +165,6 @@ const ipcGetProject = createMessageFunction<() => string>("getProject");
 const ipcSetProject =
   createMessageFunction<(project: string) => void>("setProject");
 const ipcGetProjectName = createMessageFunction<() => string>("getProjectName");
-const ipcGetVersion = createMessageFunction<() => string>("getVersion");
 const ipcShowImportFileDialog = createMessageFunction<
   (options: {
     name?: string;
@@ -222,6 +221,12 @@ const ipcStartEngine =
   >("startEngine");
 const ipcChangeEnginePath =
   createMessageFunction<() => void>("changeEnginePath");
+
+const ipcOpenLogDirectory =
+  createMessageFunction<() => void>("openLogDirectory");
+const ipcOpenEngineDirectory = createMessageFunction<() => void>(
+  "openEngineDirectory",
+);
 
 const ipcZoom = createMessageFunction<(factor: number) => void>("zoom");
 
@@ -301,10 +306,6 @@ export async function getProjectName(): Promise<string> {
   return await ipcGetProjectName();
 }
 
-export async function getVersion(): Promise<string> {
-  return await ipcGetVersion();
-}
-
 export async function exportProject(): Promise<
   "success" | "cancelled" | "error"
 > {
@@ -361,6 +362,14 @@ export async function showSaveDirectoryDialog(obj: {
   return await ipcShowSaveDirectoryDialog(obj).then(
     (result) => result || undefined,
   );
+}
+
+export async function openLogDirectory() {
+  await ipcOpenLogDirectory();
+}
+
+export async function openEngineDirectory() {
+  await ipcOpenEngineDirectory();
 }
 
 export function logInfo(message: string) {

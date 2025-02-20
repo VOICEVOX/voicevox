@@ -292,14 +292,27 @@ const engineSubMenuData = computed<MenuItemData[]>(() => {
     ];
   }
   if (isVst) {
-    subMenu.push({
-      type: "button",
-      label: "エンジンの場所を変更",
-      onClick: () => {
-        void changeEnginePath();
+    subMenu.push(
+      {
+        type: "button",
+        label: "エンジンの場所を変更",
+        onClick: () => {
+          void changeEnginePath();
+        },
+        disableWhenUiLocked: false,
       },
-      disableWhenUiLocked: false,
-    });
+      {
+        type: "button",
+        label: "フォルダを開く",
+        onClick: () => {
+          const engineInfo = Object.values(engineInfos.value)[0];
+          void store.actions.OPEN_ENGINE_DIRECTORY({
+            engineId: engineInfo.uuid,
+          });
+        },
+        disableWhenUiLocked: false,
+      },
+    );
   } else if (enableMultiEngine.value) {
     subMenu.push({
       type: "button",

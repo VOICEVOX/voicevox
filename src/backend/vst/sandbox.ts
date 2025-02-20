@@ -16,6 +16,8 @@ import {
   logError,
   onReceivedIPCMessage,
   getVoices,
+  openLogDirectory,
+  openEngineDirectory,
 } from "./ipc";
 import {
   EngineId,
@@ -196,14 +198,12 @@ export const api: Sandbox = {
     return Promise.resolve(false);
   },
 
-  openLogDirectory(): void {
-    // TODO
-    throw new UnimplementedError();
+  openLogDirectory() {
+    void openLogDirectory();
   },
 
   openEngineDirectory() {
-    // TODO
-    throw new UnimplementedError();
+    void openEngineDirectory();
   },
 
   setNativeTheme() {
@@ -242,8 +242,8 @@ export const api: Sandbox = {
   onReceivedIPCMsg(listeners) {
     return browserSandbox.onReceivedIPCMsg(listeners);
   },
-  hotkeySettings() {
-    return browserSandbox.hotkeySettings();
+  hotkeySettings(data) {
+    return browserSandbox.hotkeySettings.bind(this)(data);
   },
   getDefaultToolbarSetting() {
     return browserSandbox.getDefaultToolbarSetting();
