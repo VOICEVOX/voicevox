@@ -24,6 +24,8 @@ export const isVvppFile = (filePath: string) => {
 
 const lockKey = "lock-key-for-vvpp-manager";
 
+type MoveParams = { from: string; to: string; engineId: EngineId };
+
 // # 軽い概要
 //
 // フォルダ名："エンジン名+UUID"
@@ -53,11 +55,7 @@ export class VvppManager {
   private tmpDir: string;
 
   private willDeleteEngineIds: Set<EngineId>;
-  private willMoveEngineDirs: {
-    from: string;
-    to: string;
-    engineId: EngineId;
-  }[];
+  private willMoveEngineDirs: MoveParams[];
 
   private lock = new AsyncLock();
 
@@ -68,7 +66,7 @@ export class VvppManager {
     this.willMoveEngineDirs = [];
   }
 
-  markWillMove(params: { from: string; to: string; engineId: EngineId }) {
+  markWillMove(params: MoveParams) {
     this.willMoveEngineDirs.push(params);
   }
 
