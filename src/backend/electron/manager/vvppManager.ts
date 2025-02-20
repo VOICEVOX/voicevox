@@ -94,7 +94,7 @@ export class VvppManager {
       (dir) => this.isEngineDirName(dir, engineId),
     );
     if (dirNames.length > 1) {
-      throw new Error("Multiple or no installed engine directories found.");
+      throw new Error("Multiple installed engine directories found.");
     } else if (dirNames.length == 0) {
       return undefined;
     }
