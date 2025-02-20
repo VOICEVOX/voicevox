@@ -108,19 +108,24 @@ export class EditLyricState
             }
             const nextNoteId = targetTrackNotesAtStart[nextNoteIndex].id;
 
-            this.applyPreview = this.innerContext.edited;
+            this.applyPreview =
+              this.innerContext.edited &&
+              context.previewLyrics.value.size !== 0;
             setNextState("editNoteLyric", {
               targetTrackId: this.targetTrackId,
               editStartNoteId: nextNoteId,
               returnStateId: this.returnStateId,
             });
           } else if (input.keyboardEvent.key === "Enter") {
-            this.applyPreview = this.innerContext.edited;
+            this.applyPreview =
+              this.innerContext.edited &&
+              context.previewLyrics.value.size !== 0;
             setNextState(this.returnStateId, undefined);
           }
         }
       } else if (input.type === "blurEvent") {
-        this.applyPreview = this.innerContext.edited;
+        this.applyPreview =
+          this.innerContext.edited && context.previewLyrics.value.size !== 0;
         setNextState(this.returnStateId, undefined);
       }
     }
@@ -199,9 +204,7 @@ export class EditLyricState
       newPreviewLyrics.set(note.id, mora);
     }
 
-    if (newPreviewLyrics.size !== 0) {
-      context.previewLyrics.value = newPreviewLyrics;
-      this.innerContext.edited = true;
-    }
+    context.previewLyrics.value = newPreviewLyrics;
+    this.innerContext.edited = true;
   }
 }
