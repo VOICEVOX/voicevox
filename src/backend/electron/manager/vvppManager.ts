@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { moveFile } from "move-file";
-import { app, dialog } from "electron";
+import { dialog } from "electron";
 import AsyncLock from "async-lock";
 import {
   EngineId,
@@ -9,13 +9,12 @@ import {
   MinimumEngineManifestType,
 } from "@/type/preload";
 import { errorToMessage } from "@/helpers/errorHelper";
-import { extractVvpp } from "@/backend/electron/vvppFile";
+import { VvppFileExtractor } from "@/backend/electron/vvppFile";
 import { ProgressCallback } from "@/helpers/progressHelper";
 import { createLogger } from "@/helpers/log";
+import { isWindows } from "@/helpers/platform";
 
 const log = createLogger("VvppManager");
-
-const isNotWin = process.platform !== "win32";
 
 export const isVvppFile = (filePath: string) => {
   return (
@@ -50,15 +49,17 @@ const lockKey = "lock-key-for-vvpp-manager";
 //
 // エンジンを停止してからではないとディレクトリを削除できないため、このような実装になっている。
 export class VvppManager {
-  vvppEngineDir: string;
+  private vvppEngineDir: string;
+  private tmpDir: string;
 
-  willDeleteEngineIds: Set<EngineId>;
-  willReplaceEngineDirs: { from: string; to: string }[];
+  private willDeleteEngineIds: Set<EngineId>;
+  private willReplaceEngineDirs: { from: string; to: string }[];
 
   private lock = new AsyncLock();
 
-  constructor({ vvppEngineDir }: { vvppEngineDir: string }) {
-    this.vvppEngineDir = vvppEngineDir;
+  constructor(params: { vvppEngineDir: string; tmpDir: string }) {
+    this.vvppEngineDir = params.vvppEngineDir;
+    this.tmpDir = params.tmpDir;
     this.willDeleteEngineIds = new Set();
     this.willReplaceEngineDirs = [];
   }
@@ -77,6 +78,10 @@ export class VvppManager {
   toValidDirName(manifest: MinimumEngineManifestType) {
     // フォルダに使用できない文字が含まれている場合は置換する
     return `${manifest.name.replace(/[\s<>:"/\\|?*]+/g, "_")}+${manifest.uuid}`;
+  }
+
+  buildEngineDirPath(manifest: MinimumEngineManifestType) {
+    return path.join(this.vvppEngineDir, this.toValidDirName(manifest));
   }
 
   isEngineDirName(dir: string, manifest: MinimumEngineManifestType) {
@@ -113,14 +118,15 @@ export class VvppManager {
     vvppPath: string,
     callbacks?: { onProgress?: ProgressCallback },
   ) {
-    const { outputDir, manifest } = await extractVvpp(
-      {
-        vvppLikeFilePath: vvppPath,
-        vvppEngineDir: this.vvppEngineDir,
-        tmpDir: app.getPath("temp"),
-      },
+    const tmpEngineDir = this.buildTemporaryEngineDir(this.vvppEngineDir);
+    log.info("Extracting vvpp to", tmpEngineDir);
+
+    const manifest = await new VvppFileExtractor({
+      vvppLikeFilePath: vvppPath,
+      outputDir: tmpEngineDir,
+      tmpDir: this.tmpDir,
       callbacks,
-    );
+    }).extract();
 
     const dirName = this.toValidDirName(manifest);
     const engineDirectory = path.join(this.vvppEngineDir, dirName);
@@ -130,16 +136,21 @@ export class VvppManager {
       return this.isEngineDirName(dir, manifest);
     });
     if (oldEngineDirName) {
-      this.markWillMove(outputDir, dirName);
+      this.markWillMove(tmpEngineDir, dirName);
     } else {
-      await moveFile(outputDir, engineDirectory);
+      await moveFile(tmpEngineDir, engineDirectory);
     }
-    if (isNotWin) {
+    if (!isWindows) {
       await fs.promises.chmod(
         path.join(engineDirectory, manifest.command),
         "755",
       );
     }
+  }
+
+  private buildTemporaryEngineDir(vvppEngineDir: string): string {
+    const nonce = new Date().getTime().toString();
+    return path.join(vvppEngineDir, ".tmp", nonce);
   }
 
   async handleMarkedEngineDirs() {
@@ -220,8 +231,11 @@ export default VvppManager;
 
 let manager: VvppManager | undefined;
 
-export function initializeVvppManager(payload: { vvppEngineDir: string }) {
-  manager = new VvppManager(payload);
+export function initializeVvppManager(params: {
+  vvppEngineDir: string;
+  tmpDir: string;
+}) {
+  manager = new VvppManager(params);
 }
 
 export function getVvppManager() {

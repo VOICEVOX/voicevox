@@ -19,10 +19,6 @@ const ipcRendererInvokeProxy = new Proxy(
 ) as IpcRendererInvoke;
 
 const api: Sandbox = {
-  getAppInfos: async () => {
-    return await ipcRendererInvokeProxy.GET_APP_INFOS();
-  },
-
   getTextAsset: (textType) => {
     return ipcRendererInvokeProxy.GET_TEXT_ASSET(textType) as Promise<
       TextAsset[typeof textType]
@@ -41,39 +37,25 @@ const api: Sandbox = {
     return ipcRendererInvokeProxy.SHOW_SAVE_DIRECTORY_DIALOG({ title });
   },
 
-  showVvppOpenDialog: ({ title, defaultPath }) => {
-    return ipcRendererInvokeProxy.SHOW_VVPP_OPEN_DIALOG({ title, defaultPath });
-  },
-
   showOpenDirectoryDialog: ({ title }) => {
     return ipcRendererInvokeProxy.SHOW_OPEN_DIRECTORY_DIALOG({ title });
   },
 
-  showProjectSaveDialog: ({ title, defaultPath }) => {
-    return ipcRendererInvokeProxy.SHOW_PROJECT_SAVE_DIALOG({
-      title,
-      defaultPath,
-    });
-  },
-
-  showProjectLoadDialog: ({ title }) => {
-    return ipcRendererInvokeProxy.SHOW_PROJECT_LOAD_DIALOG({ title });
-  },
-
-  showImportFileDialog: ({ title, name, extensions }) => {
-    return ipcRendererInvokeProxy.SHOW_IMPORT_FILE_DIALOG({
+  showOpenFileDialog: ({ title, name, extensions, defaultPath }) => {
+    return ipcRendererInvokeProxy.SHOW_OPEN_FILE_DIALOG({
       title,
       name,
       extensions,
+      defaultPath,
     });
   },
 
-  showExportFileDialog: ({ title, defaultPath, extensionName, extensions }) => {
-    return ipcRendererInvokeProxy.SHOW_EXPORT_FILE_DIALOG({
+  showSaveFileDialog: ({ title, name, extensions, defaultPath }) => {
+    return ipcRendererInvokeProxy.SHOW_SAVE_FILE_DIALOG({
       title,
-      defaultPath,
-      extensionName,
+      name,
       extensions,
+      defaultPath,
     });
   },
 
