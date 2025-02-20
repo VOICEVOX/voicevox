@@ -8,25 +8,29 @@ import { MinimumEngineManifestType } from "@/type/preload";
  */
 export class TempEngineFiles {
   private manifest: MinimumEngineManifestType;
-  private engineDir: string;
+  private tmpEngineDir: string;
 
   constructor(params: {
     manifest: MinimumEngineManifestType;
     engineDir: string;
   }) {
     this.manifest = params.manifest;
-    this.engineDir = params.engineDir;
+    this.tmpEngineDir = params.engineDir;
   }
 
   getManifest() {
     return this.manifest;
   }
 
+  getTmpEngineDir() {
+    return this.tmpEngineDir;
+  }
+
   async move(destDir: string) {
-    await moveFile(this.engineDir, destDir);
+    await moveFile(this.tmpEngineDir, destDir);
   }
 
   async cleanup() {
-    await fs.promises.rmdir(this.engineDir, { recursive: true });
+    await fs.promises.rmdir(this.tmpEngineDir, { recursive: true });
   }
 }

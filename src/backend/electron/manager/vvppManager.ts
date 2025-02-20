@@ -1,8 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
-import { moveFile } from "move-file";
 import { dialog } from "electron";
 import AsyncLock from "async-lock";
+import { TempEngineFiles } from "../tempEngineFiles";
 import {
   EngineId,
   EngineInfo,
@@ -24,7 +24,7 @@ export const isVvppFile = (filePath: string) => {
 
 const lockKey = "lock-key-for-vvpp-manager";
 
-type MoveParams = { from: string; to: string; engineId: EngineId };
+type MoveParams = { tempEngineFiles: TempEngineFiles; to: string };
 
 // # 軽い概要
 //
@@ -149,13 +149,9 @@ export class VvppManager {
     const hasOldEngine = await this.hasOldEngine(manifest.uuid);
     const engineDir = this.buildEngineDirPath(manifest);
     if (hasOldEngine) {
-      this.markWillMove({
-        from: tmpEngineDir,
-        to: engineDir,
-        engineId: manifest.uuid,
-      });
+      this.markWillMove({ tempEngineFiles, to: engineDir });
     } else {
-      await moveFile(tmpEngineDir, engineDir);
+      await tempEngineFiles.move(engineDir);
     }
   }
 
@@ -188,22 +184,15 @@ export class VvppManager {
           throw new Error("エンジンが見つかりませんでした。");
         }
 
-        try {
-          await deleteDirWithRetry(deletingEngineDir);
-          log.info(`Engine ${engineId} deleted successfully.`);
-        } catch (e) {
-          log.error("Failed to delete engine directory: ", e);
-          dialog.showErrorBox(
-            "エンジン削除エラー",
-            `エンジンの削除に失敗しました。エンジンのフォルダを手動で削除してください。\n${deletingEngineDir}\nエラー内容: ${errorToMessage(e)}`,
-          );
-        }
+        await deleteDirWithRetry(deletingEngineDir);
+        log.info(`Engine ${engineId} deleted successfully.`);
       }),
     );
     this.willDeleteEngineIds.clear();
 
     await Promise.all(
-      [...this.willMoveEngineDirs].map(async ({ from, to, engineId }) => {
+      [...this.willMoveEngineDirs].map(async ({ tempEngineFiles, to }) => {
+        const engineId = tempEngineFiles.getManifest().uuid;
         const deletingEngineDir = await this.getInstalledEngineDir(engineId);
         if (deletingEngineDir == undefined) {
           throw new Error("エンジンが見つかりませんでした。");
@@ -213,13 +202,13 @@ export class VvppManager {
           await deleteDirWithRetry(deletingEngineDir);
           log.info(`Engine ${engineId} deleted successfully.`);
 
-          await moveFileWithRetry({ from, to });
-          log.info(`Renamed ${from} to ${to}`);
+          await moveFileWithRetry({ tempEngineFiles, to });
+          log.info(`Renamed ${tempEngineFiles.getTmpEngineDir()} to ${to}`);
         } catch (e) {
           log.error("Failed to rename engine directory: ", e);
           dialog.showErrorBox(
             "エンジン追加エラー",
-            `エンジンの追加に失敗しました。エンジンのフォルダを手動で移動してください。\n${from} -> ${to}\nエラー内容: ${errorToMessage(e)}`,
+            `エンジンの追加に失敗しました。エンジンのフォルダを手動で移動してください。\n${tempEngineFiles.getTmpEngineDir()} -> ${to}\nエラー内容: ${errorToMessage(e)}`,
           );
         }
       }),
@@ -243,9 +232,12 @@ async function deleteDirWithRetry(dir: string) {
   );
 }
 
-async function moveFileWithRetry(params: { from: string; to: string }) {
-  const { from, to } = params;
-  await retry(() => moveFile(from, to));
+async function moveFileWithRetry(params: {
+  tempEngineFiles: TempEngineFiles;
+  to: string;
+}) {
+  const { tempEngineFiles, to } = params;
+  await retry(() => tempEngineFiles.move(to));
 }
 
 async function retry(fn: () => Promise<void>) {
