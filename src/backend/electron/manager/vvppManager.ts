@@ -136,12 +136,13 @@ export class VvppManager {
     const tmpEngineDir = this.buildTemporaryEngineDir(this.vvppEngineDir);
     log.info("Extracting vvpp to", tmpEngineDir);
 
-    const manifest = await new VvppFileExtractor({
+    const tempEngineFiles = await new VvppFileExtractor({
       vvppLikeFilePath: vvppPath,
       outputDir: tmpEngineDir,
       tmpDir: this.tmpDir,
       callbacks,
     }).extract();
+    const manifest = tempEngineFiles.getManifest();
 
     await this.applyExecutablePermissions(tmpEngineDir, manifest.command);
 

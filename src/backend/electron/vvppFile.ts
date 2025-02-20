@@ -14,6 +14,7 @@ import {
 import { ProgressCallback } from "@/helpers/progressHelper";
 import { createLogger } from "@/helpers/log";
 import { UnreachableError } from "@/type/utility";
+import { TempEngineFiles } from "./TempEngineFiles";
 
 const log = createLogger("vvppFile");
 
@@ -38,11 +39,14 @@ export class VvppFileExtractor {
     this.callbacks = params.callbacks;
   }
 
-  async extract(): Promise<MinimumEngineManifestType> {
+  async extract(): Promise<TempEngineFiles> {
     log.info("Extracting vvpp to", this.outputDir);
     const archiveFileParts = await this.getArchiveFileParts();
     const manifest = await this.extractOrCleanup(archiveFileParts);
-    return manifest;
+    return new TempEngineFiles({
+      manifest,
+      engineDir: this.outputDir,
+    });
   }
 
   /** VVPPファイルが分割されている場合、それらのファイルを取得する */

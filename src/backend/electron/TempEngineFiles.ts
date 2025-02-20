@@ -6,7 +6,7 @@ import { MinimumEngineManifestType } from "@/type/preload";
  * VVPPインストール直前の一時エンジンファイル群。
  * 実態はディレクトリ。
  */
-export class TempEngineDir {
+export class TempEngineFiles {
   private manifest: MinimumEngineManifestType;
   private engineDir: string;
 
