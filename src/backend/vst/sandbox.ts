@@ -1,8 +1,7 @@
+import { toBytes } from "fast-base64";
 import { getConfigManager } from "./vstConfig";
 import {
   getProject,
-  getProjectName,
-  getVersion,
   readFile,
   startEngine,
   setProject,
@@ -16,6 +15,7 @@ import {
   logWarn,
   logError,
   onReceivedIPCMessage,
+  getVoices,
 } from "./ipc";
 import {
   EngineId,
@@ -28,8 +28,19 @@ import { api as browserSandbox } from "@/backend/browser/sandbox";
 import { failure, success } from "@/type/result";
 import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
 import { UnreachableError } from "@/type/utility";
+import { createLogger } from "@/helpers/log";
+import { SingingVoice, SingingVoiceKey } from "@/store/type";
+import { loadSingingVoiceCache } from "@/store/singing";
 
 export const internalProjectFilePath = "/dev/vst-project.vvproj";
+
+const log = createLogger("vst/sandbox");
+
+class UnimplementedError extends Error {
+  constructor() {
+    super("Function not implemented.");
+  }
+}
 
 let zoomValue = 1;
 
@@ -40,14 +51,6 @@ let engineInfoPromise: Promise<EngineInfo[]> | undefined;
  * ブラウザ版のSandBoxを継承している
  */
 export const api: Sandbox = {
-  ...browserSandbox,
-  async getAppInfos() {
-    const appInfo = {
-      name: await getProjectName(),
-      version: await getVersion(),
-    };
-    return appInfo;
-  },
   async engineInfos() {
     if (!engineInfoPromise) {
       const { promise, resolve } = Promise.withResolvers<EngineInfo[]>();
@@ -90,7 +93,7 @@ export const api: Sandbox = {
     }
     await startEngine({ useGpu: engineSetting.useGpu, forceRestart: true });
   },
-  showImportFileDialog(options) {
+  showOpenFileDialog(options) {
     return showImportFileDialog(options);
   },
   async checkFileExists(file) {
@@ -122,8 +125,13 @@ export const api: Sandbox = {
       }
     }
   },
-  async showExportFileDialog(obj) {
-    return await showExportFileDialog(obj);
+  async showSaveFileDialog(obj) {
+    return await showExportFileDialog({
+      extensionName: obj.name,
+      extensions: obj.extensions,
+      title: obj.title,
+      defaultPath: obj.defaultPath,
+    });
   },
   async showSaveDirectoryDialog(obj) {
     return await showSaveDirectoryDialog(obj);
@@ -176,5 +184,104 @@ export const api: Sandbox = {
     const projectExists = await getProject();
 
     return projectExists ? internalProjectFilePath : undefined;
+  },
+
+  isAvailableGPUMode(): Promise<boolean> {
+    // TODO: Rust側でちゃんと実装する
+    return Promise.resolve(true);
+  },
+
+  isMaximizedWindow() {
+    // 表示だけなのでとりあえずfalseを返す
+    return Promise.resolve(false);
+  },
+
+  openLogDirectory(): void {
+    // TODO
+    throw new UnimplementedError();
+  },
+
+  openEngineDirectory() {
+    // TODO
+    throw new UnimplementedError();
+  },
+
+  setNativeTheme() {
+    // なにもしない。
+  },
+
+  vuexReady() {
+    // キャッシュされた歌声を読み込む。
+    log.info("Loading cached voices");
+    void (async () => {
+      const encodedVoices = await getVoices();
+      loadSingingVoiceCache(
+        new Map(
+          await Promise.all(
+            Object.entries(encodedVoices).map(
+              async ([key, encodedVoice]) =>
+                [
+                  SingingVoiceKey(key),
+                  new Blob([await toBytes(encodedVoice)]),
+                ] satisfies [SingingVoiceKey, SingingVoice],
+            ),
+          ),
+        ),
+      );
+    });
+    return browserSandbox.vuexReady();
+  },
+
+  // ブラウザ版を使い回す
+  getTextAsset(key) {
+    return browserSandbox.getTextAsset(key);
+  },
+  getAltPortInfos() {
+    return browserSandbox.getAltPortInfos();
+  },
+  onReceivedIPCMsg(listeners) {
+    return browserSandbox.onReceivedIPCMsg(listeners);
+  },
+  hotkeySettings() {
+    return browserSandbox.hotkeySettings();
+  },
+  getDefaultToolbarSetting() {
+    return browserSandbox.getDefaultToolbarSetting();
+  },
+
+  // 未実装
+  showOpenDirectoryDialog() {
+    // エンジン管理で使っている。VST版では使わないので未実装
+    throw new UnimplementedError();
+  },
+  closeWindow() {
+    throw new UnimplementedError();
+  },
+  minimizeWindow() {
+    throw new UnimplementedError();
+  },
+  changePinWindow() {
+    throw new UnimplementedError();
+  },
+  toggleMaximizeWindow() {
+    throw new UnimplementedError();
+  },
+  toggleFullScreen() {
+    throw new UnimplementedError();
+  },
+  installVvppEngine() {
+    throw new UnimplementedError();
+  },
+  uninstallVvppEngine() {
+    throw new UnimplementedError();
+  },
+  validateEngineDir() {
+    throw new UnimplementedError();
+  },
+  reloadApp() {
+    throw new UnimplementedError();
+  },
+  getPathForFile() {
+    throw new UnimplementedError();
   },
 };

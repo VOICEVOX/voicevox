@@ -1387,10 +1387,6 @@ export type SingingStoreTypes = {
     }): Promise<SaveResultObject>;
   };
 
-  LOAD_SINGING_VOICE_CACHE: {
-    action(payload: { cache: Map<SingingVoiceKey, SingingVoice> }): void;
-  };
-
   GET_SINGING_VOICE: {
     action(payload: { key: SingingVoiceKey }): SingingVoice | undefined;
   };
