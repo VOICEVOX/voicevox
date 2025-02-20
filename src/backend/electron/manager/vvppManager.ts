@@ -53,7 +53,7 @@ export class VvppManager {
   private tmpDir: string;
 
   private willDeleteEngineIds: Set<EngineId>;
-  private willReplaceEngineDirs: {
+  private willMoveEngineDirs: {
     from: string;
     to: string;
     engineId: EngineId;
@@ -65,11 +65,11 @@ export class VvppManager {
     this.vvppEngineDir = params.vvppEngineDir;
     this.tmpDir = params.tmpDir;
     this.willDeleteEngineIds = new Set();
-    this.willReplaceEngineDirs = [];
+    this.willMoveEngineDirs = [];
   }
 
   markWillMove(params: { from: string; to: string; engineId: EngineId }) {
-    this.willReplaceEngineDirs.push(params);
+    this.willMoveEngineDirs.push(params);
   }
 
   markWillDelete(engineId: EngineId) {
@@ -204,7 +204,7 @@ export class VvppManager {
     this.willDeleteEngineIds.clear();
 
     await Promise.all(
-      [...this.willReplaceEngineDirs].map(async ({ from, to, engineId }) => {
+      [...this.willMoveEngineDirs].map(async ({ from, to, engineId }) => {
         const deletingEngineDir = await this.getInstalledEngineDir(engineId);
         if (deletingEngineDir == undefined) {
           throw new Error("エンジンが見つかりませんでした。");
@@ -225,12 +225,12 @@ export class VvppManager {
         }
       }),
     );
-    this.willReplaceEngineDirs = [];
+    this.willMoveEngineDirs = [];
   }
 
   hasMarkedEngineDirs() {
     return (
-      this.willReplaceEngineDirs.length > 0 || this.willDeleteEngineIds.size > 0
+      this.willMoveEngineDirs.length > 0 || this.willDeleteEngineIds.size > 0
     );
   }
 }
