@@ -1,9 +1,8 @@
 import os from "os";
 import path from "path";
-import { exec } from "child_process";
 import fs from "fs";
-import { promisify } from "util";
 import { test, afterAll, beforeAll } from "vitest";
+import { createVvppFile } from "./helper";
 import { VvppFileExtractor } from "@/backend/electron/vvppFile";
 import { uuid4 } from "@/helpers/random";
 
@@ -17,36 +16,32 @@ afterAll(() => {
 
 test("正しいVVPPファイルからエンジンを切り出せる", async () => {
   const targetName = "perfect.vvpp";
-  const sourceDir = path.join(__dirname, "vvpps", targetName);
-  const outputFilePath = path.join(tmpDir, uuid4() + targetName);
-  await createZipFile(sourceDir, outputFilePath);
+  const vvppFilePath = await createVvppFile(targetName, tmpDir);
 
-  const vvppEngineDir = createVvppEngineDir();
+  const outputDir = buildOutputDir();
   await new VvppFileExtractor({
-    vvppLikeFilePath: outputFilePath,
-    vvppEngineDir,
+    vvppLikeFilePath: vvppFilePath,
+    outputDir,
     tmpDir,
   }).extract();
-  expectManifestExists(vvppEngineDir);
+  assertIsEngineDir(outputDir);
 });
 
 test("分割されたVVPPファイルからエンジンを切り出せる", async () => {
   const targetName = "perfect.vvpp";
-  const sourceDir = path.join(__dirname, "vvpps", targetName);
-  const outputFilePath = path.join(tmpDir, uuid4() + targetName);
-  await createZipFile(sourceDir, outputFilePath);
+  const vvppFilePath = await createVvppFile(targetName, tmpDir);
 
-  const outputFilePath1 = outputFilePath + ".1.vvppp";
-  const outputFilePath2 = outputFilePath + ".2.vvppp";
-  splitFile(outputFilePath, outputFilePath1, outputFilePath2);
+  const vvpppFilePath1 = vvppFilePath + ".1.vvppp";
+  const vvpppFilePath2 = vvppFilePath + ".2.vvppp";
+  splitFile(vvppFilePath, vvpppFilePath1, vvpppFilePath2);
 
-  const vvppEngineDir = createVvppEngineDir();
+  const outputDir = buildOutputDir();
   await new VvppFileExtractor({
-    vvppLikeFilePath: outputFilePath1,
-    vvppEngineDir,
+    vvppLikeFilePath: vvpppFilePath1,
+    outputDir,
     tmpDir,
   }).extract();
-  expectManifestExists(vvppEngineDir);
+  assertIsEngineDir(outputDir);
 });
 
 test.each([
@@ -56,37 +51,32 @@ test.each([
 ])(
   "不正なVVPPファイルからエンジンを切り出せない: %s",
   async (targetName, expectedError) => {
-    const sourceDir = path.join(__dirname, "vvpps", targetName);
-    const outputFilePath = path.join(tmpDir, uuid4() + targetName);
-    await createZipFile(sourceDir, outputFilePath);
+    const outputFilePath = await createVvppFile(targetName, tmpDir);
     await expect(
       new VvppFileExtractor({
         vvppLikeFilePath: outputFilePath,
-        vvppEngineDir: tmpDir,
+        outputDir: buildOutputDir(),
         tmpDir,
       }).extract(),
     ).rejects.toThrow(expectedError);
   },
 );
 
-/** 7zを使って指定したフォルダからzipファイルを作成する */
-async function createZipFile(sourceDir: string, outputFilePath: string) {
-  const sevenZipBin = import.meta.env.VITE_7Z_BIN_NAME;
-  const command = `"${sevenZipBin}" a -tzip "${outputFilePath}" "${path.join(sourceDir, "*")}"`;
-  await promisify(exec)(command);
-}
-
-function createVvppEngineDir() {
+function buildOutputDir() {
   const dir = path.join(tmpDir, uuid4());
   fs.mkdirSync(dir);
   return dir;
 }
 
-function expectManifestExists(vvppEngineDir: string) {
+/**
+ * エンジンディレクトリであることを確認する。
+ */
+function assertIsEngineDir(vvppEngineDir: string) {
   const files = fs.readdirSync(vvppEngineDir, { recursive: true });
   const manifestExists = files.some(
     (file) =>
-      typeof file === "string" && path.basename(file) == "engine_manifest.json",
+      typeof file === "string" &&
+      path.basename(file) === "engine_manifest.json",
   );
   expect(manifestExists).toBe(true);
 }

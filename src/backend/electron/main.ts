@@ -210,7 +210,7 @@ initializeEngineInfoManager({
   vvppEngineDir,
 });
 initializeEngineProcessManager({ onEngineProcessError });
-initializeVvppManager({ vvppEngineDir });
+initializeVvppManager({ vvppEngineDir, tmpDir: app.getPath("temp") });
 
 const configManager = getConfigManager();
 const windowManager = getWindowManager();
