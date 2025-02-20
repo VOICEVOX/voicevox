@@ -118,6 +118,10 @@ export class VvppManager {
     return true;
   }
 
+  private async lockAcquire(fn: () => Promise<void>) {
+    await this.lock.acquire(lockKey, () => fn());
+  }
+
   /**
    * 追加
    */
@@ -125,7 +129,7 @@ export class VvppManager {
     vvppPath: string,
     callbacks?: { onProgress?: ProgressCallback },
   ) {
-    await this.lock.acquire(lockKey, () => this._install(vvppPath, callbacks));
+    await this.lockAcquire(() => this._install(vvppPath, callbacks));
   }
   private async _install(
     vvppPath: string,
@@ -172,7 +176,7 @@ export class VvppManager {
   }
 
   async handleMarkedEngineDirs() {
-    await this.lock.acquire(lockKey, () => this._handleMarkedEngineDirs());
+    await this.lockAcquire(() => this._handleMarkedEngineDirs());
   }
   private async _handleMarkedEngineDirs() {
     await Promise.all(
