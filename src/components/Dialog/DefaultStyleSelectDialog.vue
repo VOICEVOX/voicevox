@@ -12,7 +12,7 @@
         <QToolbar>
           <div class="column">
             <QToolbarTitle class="text-display"
-              >設定 / デフォルトスタイル・試聴 /
+              >設定 / キャラクターの管理 /
               {{ characterInfo.metas.speakerName }}</QToolbarTitle
             >
           </div>
@@ -22,7 +22,7 @@
           <div class="row items-center no-wrap">
             <QBtn
               unelevated
-              :label="isModified ? '保存' : '戻る'"
+              label="戻る"
               color="toolbar-button"
               textColor="toolbar-button-display"
               class="text-no-wrap"
@@ -32,83 +32,92 @@
         </QToolbar>
       </QHeader>
 
-      <QDrawer
-        bordered
-        showIfAbove
-        :modelValue="true"
-        :width="$q.screen.width / 3"
-        :breakpoint="0"
-      >
-        <div class="character-portrait-wrapper">
-          <img :src="characterInfo.portraitPath" class="character-portrait" />
-        </div>
-      </QDrawer>
-
       <QPageContainer>
         <QPage>
-          <div class="style-items-container">
-            <div class="q-py-md">
-              <QItem
-                v-for="(style, styleIndex) of characterInfo.metas.styles"
-                :key="styleIndex"
-                v-ripple="isHoverableStyleItem"
-                clickable
-                class="q-pa-none style-item"
-                :class="[
-                  selectedStyleIndexComputed === styleIndex &&
-                    'active-style-item',
-                  isHoverableStyleItem && 'hoverable-style-item',
-                ]"
-                @click="selectStyleIndex(styleIndex)"
-              >
-                <div class="style-item-inner">
-                  <img :src="style.iconPath" class="style-icon" />
-                  <span class="text-subtitle1 q-ma-sm">{{
-                    style.styleName || DEFAULT_STYLE_NAME
-                  }}</span>
-                  <div class="voice-samples">
-                    <QBtn
-                      v-for="voiceSampleIndex of [...Array(3).keys()]"
-                      :key="voiceSampleIndex"
-                      round
-                      outline
-                      :icon="
-                        playing != undefined &&
-                        characterInfo.metas.speakerUuid ===
-                          playing.speakerUuid &&
-                        style.styleId === playing.styleId &&
-                        voiceSampleIndex === playing.index
-                          ? 'stop'
-                          : 'play_arrow'
-                      "
-                      color="primary"
-                      class="voice-sample-btn"
-                      @mouseenter="isHoverableStyleItem = false"
-                      @mouseleave="isHoverableStyleItem = true"
-                      @click.stop="
-                        playing != undefined &&
-                        characterInfo.metas.speakerUuid ===
-                          playing.speakerUuid &&
-                        style.styleId === playing.styleId &&
-                        voiceSampleIndex === playing.index
-                          ? stop()
-                          : play(
-                              characterInfo.metas.speakerUuid,
-                              style,
-                              voiceSampleIndex,
-                            )
-                      "
-                    />
-                    <QRadio
-                      class="absolute-top-right no-pointer-events text-primary"
-                      :modelValue="selectedStyleIndexComputed"
-                      :val="styleIndex"
-                      @update:modelValue="selectStyleIndex(styleIndex)"
-                    />
-                  </div>
+          <div class="container">
+            <img :src="characterInfo.portraitPath" class="character-portrait" />
+            <BaseScrollArea>
+              <div class="inner">
+                <div class="character-detail">
+                  <h1 class="character-name">
+                    {{ characterInfo.metas.speakerName }}
+                  </h1>
+                  <section class="section">
+                    <h2 class="headline">スタイル</h2>
+                    <div>
+                      デフォルトスタイル：{{
+                        characterInfo.metas.styles[selectedStyleIndex].styleName
+                      }}
+                    </div>
+                    <div class="style-grid">
+                      <button
+                        v-for="(
+                          style, styleIndex
+                        ) of characterInfo.metas.styles.filter(
+                          (style) => style.styleType === 'talk',
+                        )"
+                        :key="styleIndex"
+                        clickable
+                        class="q-pa-none style-item"
+                        :class="[
+                          selectedStyleIndex === styleIndex &&
+                            'active-style-item',
+                          isHoverableStyleItem && 'hoverable-style-item',
+                        ]"
+                        @click="selectStyleIndex(styleIndex)"
+                      >
+                        <QRadio
+                          class="style-radio"
+                          :modelValue="selectedStyleIndex"
+                          :val="styleIndex"
+                          @update:modelValue="selectStyleIndex(styleIndex)"
+                        />
+                        <img :src="style.iconPath" class="style-icon" />
+                        <span class="style-name">{{
+                          style.styleName || DEFAULT_STYLE_NAME
+                        }}</span>
+                        <div class="voice-samples">
+                          <BaseIconButton
+                            v-for="voiceSampleIndex of [...Array(3).keys()]"
+                            :key="voiceSampleIndex"
+                            :icon="
+                              playing != undefined &&
+                              characterInfo.metas.speakerUuid ===
+                                playing.speakerUuid &&
+                              style.styleId === playing.styleId &&
+                              voiceSampleIndex === playing.index
+                                ? 'stop'
+                                : 'play_arrow'
+                            "
+                            :label="`サンプルボイス${voiceSampleIndex + 1}`"
+                            @click.stop="
+                              playing != undefined &&
+                              characterInfo.metas.speakerUuid ===
+                                playing.speakerUuid &&
+                              style.styleId === playing.styleId &&
+                              voiceSampleIndex === playing.index
+                                ? stop()
+                                : play(
+                                    characterInfo.metas.speakerUuid,
+                                    style,
+                                    voiceSampleIndex,
+                                  )
+                            "
+                          />
+                        </div>
+                      </button>
+                    </div>
+                  </section>
+                  <section class="section">
+                    <h2 class="headline">利用規約</h2>
+                    <BaseDocumentView class="character-policy">
+                      <!-- eslint-disable-next-line vue/no-v-html -->
+                      <div v-html="policyHtml"></div>
+                    </BaseDocumentView>
+                  </section>
                 </div>
-              </QItem>
-            </div>
+              </div>
+            </BaseScrollArea>
           </div>
         </QPage>
       </QPageContainer>
@@ -118,7 +127,10 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import { useQuasar } from "quasar";
+import BaseIconButton from "@/components/Base/BaseIconButton.vue";
+import BaseDocumentView from "@/components/Base/BaseDocumentView.vue";
+import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
+import { useMarkdownIt } from "@/plugins/markdownItPlugin";
 import { useStore } from "@/store";
 import { DEFAULT_STYLE_NAME } from "@/store/utility";
 import {
@@ -128,10 +140,10 @@ import {
   StyleId,
   StyleInfo,
 } from "@/type/preload";
+import { debounce } from "@/helpers/timer";
 
 const props = defineProps<{
   isOpen: boolean;
-  selectedStyleIndex: number;
   characterInfo: CharacterInfo;
 }>();
 
@@ -140,8 +152,6 @@ const emit = defineEmits<{
   (e: "update:selectedStyleIndex", value: number): void;
 }>();
 
-const $q = useQuasar();
-
 const store = useStore();
 
 const isOpenComputed = computed({
@@ -149,27 +159,52 @@ const isOpenComputed = computed({
   set: (val) => emit("update:isOpen", val),
 });
 
-const firstSelectedStyleIndex = ref(0);
-const isModified = computed(() => {
-  return firstSelectedStyleIndex.value !== props.selectedStyleIndex;
-});
+const selectedStyleIndex = ref<number>(0);
 
 // ダイアログが開かれたときに初期値を求める
 watch([() => props.isOpen], async ([newValue]) => {
-  if (newValue) {
-    firstSelectedStyleIndex.value = props.selectedStyleIndex;
+  if (!newValue) return;
+
+  const defaultStyle = store.state.defaultStyleIds.find(
+    (defaultStyleId) =>
+      defaultStyleId.speakerUuid === props.characterInfo.metas.speakerUuid,
+  );
+
+  if (!defaultStyle) {
+    selectedStyleIndex.value = 0;
+    return;
   }
+
+  selectedStyleIndex.value = props.characterInfo.metas.styles.findIndex(
+    (style) => style.styleId === defaultStyle.defaultStyleId,
+  );
 });
 
-const selectedStyleIndexComputed = computed({
-  get: () => props.selectedStyleIndex,
-  set: (val) => {
-    emit("update:selectedStyleIndex", val);
-  },
-});
+const saveDefaultStyle = debounce((styleIndex: number) => {
+  console.log("saved!" + styleIndex);
+  // 既に設定が存在する場合があるので、新しい設定と既存設定を合成させる
+  const defaultStyleIds = JSON.parse(
+    JSON.stringify(store.state.defaultStyleIds),
+  ) as DefaultStyleId[];
+  void store.actions.SET_DEFAULT_STYLE_IDS([
+    ...defaultStyleIds.filter(
+      (defaultStyleId) =>
+        defaultStyleId.speakerUuid !== props.characterInfo.metas.speakerUuid,
+    ),
+    {
+      speakerUuid: props.characterInfo.metas.speakerUuid,
+      defaultStyleId: props.characterInfo.metas.styles[styleIndex].styleId,
+      engineId: props.characterInfo.metas.styles[styleIndex].engineId,
+    },
+  ]);
+}, 300);
 
 const selectStyleIndex = (styleIndex: number) => {
-  selectedStyleIndexComputed.value = styleIndex;
+  if (selectedStyleIndex.value !== styleIndex) {
+    saveDefaultStyle(styleIndex);
+  }
+
+  selectedStyleIndex.value = styleIndex;
 
   // 音声を再生する。同じ話者/styleIndexだったら停止する。
   const selectedStyleInfo = props.characterInfo.metas.styles[styleIndex];
@@ -210,112 +245,139 @@ const stop = () => {
   playing.value = undefined;
 };
 
-// 既に設定が存在する場合があるので、新しい設定と既存設定を合成させる
-const closeDialog = () => {
-  const defaultStyleIds = JSON.parse(
-    JSON.stringify(store.state.defaultStyleIds),
-  ) as DefaultStyleId[];
-  void store.actions.SET_DEFAULT_STYLE_IDS([
-    ...defaultStyleIds.filter(
-      (defaultStyleId) =>
-        defaultStyleId.speakerUuid !== props.characterInfo.metas.speakerUuid,
-    ),
-    {
-      speakerUuid: props.characterInfo.metas.speakerUuid,
-      defaultStyleId:
-        props.characterInfo.metas.styles[selectedStyleIndexComputed.value]
-          .styleId,
-      engineId:
-        props.characterInfo.metas.styles[selectedStyleIndexComputed.value]
-          .engineId,
-    },
-  ]);
+const md = useMarkdownIt();
 
+const policyHtml = computed(() => {
+  return md.render(props.characterInfo.metas.policy);
+});
+
+const closeDialog = () => {
   stop();
   isOpenComputed.value = false;
 };
 </script>
 
 <style scoped lang="scss">
-@use "@/styles/variables" as vars;
-@use "@/styles/colors" as colors;
+@use "@/styles/v2/variables" as vars;
+@use "@/styles/v2/colors" as colors;
+@use "@/styles/v2/mixin" as mixin;
 
 .q-toolbar div:first-child {
   min-width: 0;
 }
-.character-portrait-wrapper {
+
+.container {
+  // TODO: 親コンポーネントからheightを取得できないため一時的にcalcを使用、Dialogの構造を再設計後100%に変更する
+  // height: 100%;
+  height: calc(100vh - 90px);
+  background-color: colors.$background;
   display: grid;
-  justify-content: center;
+  grid-template-columns: 33vw 1fr;
+  gap: vars.$gap-2;
+}
+
+.inner {
+  padding: vars.$padding-2;
+}
+
+.character-detail {
+  max-width: 960px;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: vars.$gap-2;
+}
+
+.character-portrait {
+  height: auto;
+  max-height: 80vh;
   width: 100%;
-  height: 100%;
-  overflow: hidden;
-  .character-portrait {
-    margin: auto;
+  margin: auto;
+  object-fit: contain;
+}
+
+.character-name {
+  @include mixin.headline-1;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: vars.$gap-1;
+}
+
+.headline {
+  @include mixin.headline-2;
+}
+
+.style-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  column-gap: 10px;
+  row-gap: 10px;
+}
+
+.style-item {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  place-items: center;
+  grid-template-rows: auto auto;
+  border: 1px solid colors.$border;
+  background-color: colors.$surface;
+  color: colors.$display;
+  border-radius: vars.$radius-2;
+  padding: vars.$padding-1;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  position: relative;
+
+  &:hover {
+    background-color: colors.$control-hovered;
+  }
+
+  &:active {
+    background-color: colors.$control-pressed;
+    box-shadow: 0 0 0 transparent;
+  }
+
+  &:focus-visible {
+    @include mixin.on-focus;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+  }
+
+  .style-radio {
+    grid-column: 1 / 2;
+    grid-row: 1 / 3;
+  }
+
+  .style-icon {
+    grid-column: 2 / 3;
+    grid-row: 1 / 3;
+    $icon-size: 64px;
+    width: $icon-size;
+    height: $icon-size;
+    border-radius: vars.$radius-1;
+  }
+
+  .style-name {
+    text-align: left;
+    font-weight: 600;
+  }
+
+  .voice-samples {
+    display: flex;
   }
 }
-.q-page {
-  height: calc(
-    100vh - #{vars.$menubar-height + vars.$toolbar-height +
-      vars.$window-border-width}
-  );
-  overflow-y: scroll;
 
-  > :deep(.scroll) {
-    overflow-y: scroll;
-    .q-tab-panel {
-      padding: 5px 16px;
-    }
-  }
-
-  .style-items-container {
-    display: grid;
-    align-items: center;
-    height: calc(100% - 30px);
-    > div {
-      $style-item-size: 215px;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, $style-item-size);
-      grid-auto-rows: $style-item-size;
-      column-gap: 10px;
-      row-gap: 10px;
-      align-content: center;
-      justify-content: center;
-      .style-item {
-        box-shadow: 0 0 0 1px rgba(colors.$primary-rgb, 0.5);
-        border-radius: 10px;
-        overflow: hidden;
-        &.active-style-item {
-          box-shadow: 0 0 0 2px colors.$primary;
-        }
-        &:hover :deep(.q-focus-helper) {
-          opacity: 0 !important;
-        }
-        &.hoverable-style-item:hover :deep(.q-focus-helper) {
-          opacity: 0.15 !important;
-        }
-        .style-item-inner {
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-          width: 100%;
-          height: 100%;
-          .style-icon {
-            $icon-size: calc($style-item-size / 2);
-            width: $icon-size;
-            height: $icon-size;
-            border-radius: 5px;
-          }
-          .voice-samples {
-            display: flex;
-            column-gap: 5px;
-            align-items: center;
-            justify-content: center;
-          }
-        }
-      }
-    }
-  }
+.character-policy {
+  line-height: 1.75;
+  padding: vars.$padding-2;
+  border-radius: vars.$radius-2;
+  border: 1px solid colors.$border;
+  background-color: colors.$surface;
 }
 
 .q-layout-container > :deep(.absolute-full) {
@@ -327,14 +389,12 @@ const closeDialog = () => {
 }
 
 @media screen and (max-width: 700px) {
-  .q-drawer-container {
-    display: none;
+  .container {
+    grid-template-columns: 1fr;
   }
-  .q-page-container {
-    padding-left: unset !important;
-    .q-page-sticky {
-      left: 0 !important;
-    }
+
+  .character-portrait {
+    display: none;
   }
 }
 </style>
