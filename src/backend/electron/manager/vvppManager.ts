@@ -145,7 +145,7 @@ export class VvppManager {
       callbacks,
     }).extract();
 
-    await this.applyPermissions(tmpEngineDir, manifest.command);
+    await this.applyExecutablePermissions(tmpEngineDir, manifest.command);
 
     const hasOldEngine = await this.hasOldEngine(manifest.uuid);
     const engineDir = this.buildEngineDirPath(manifest);
@@ -165,7 +165,10 @@ export class VvppManager {
     return path.join(vvppEngineDir, ".tmp", nonce);
   }
 
-  private async applyPermissions(engineDirectory: string, commandPath: string) {
+  private async applyExecutablePermissions(
+    engineDirectory: string,
+    commandPath: string,
+  ) {
     if (!isWindows) {
       await fs.promises.chmod(path.join(engineDirectory, commandPath), "755");
     }
