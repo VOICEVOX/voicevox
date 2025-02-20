@@ -23,6 +23,7 @@ export const useSequencerStateMachine = (store: PartialStore) => {
     selectedTrackId: computed(() => store.getters.SELECTED_TRACK_ID),
     notesInSelectedTrack: computed(() => store.getters.SELECTED_TRACK.notes),
     selectedNoteIds: computed(() => store.getters.SELECTED_NOTE_IDS),
+    editingLyricNoteId: computed(() => store.state.editingLyricNoteId),
     editorFrameRate: computed(() => store.state.editorFrameRate),
     isShiftKeyDown: computed(() => isShiftKeyDown.value),
     isCommandOrCtrlKeyDown: computed(() => isCommandOrCtrlKeyDown.value),
@@ -31,6 +32,7 @@ export const useSequencerStateMachine = (store: PartialStore) => {
   const refs: Refs = {
     previewMode: ref("IDLE"),
     previewNotes: ref([]),
+    previewLyrics: ref(new Map()),
     previewRectForRectSelect: ref(undefined),
     previewPitchEdit: ref(undefined),
     cursorState: ref("UNSET"),
@@ -79,6 +81,7 @@ export const useSequencerStateMachine = (store: PartialStore) => {
     stateMachineProcess: (input: Input) => stateMachine.process(input),
     previewMode: computed(() => refs.previewMode.value),
     previewNotes: computed(() => refs.previewNotes.value),
+    previewLyrics: computed(() => refs.previewLyrics.value),
     previewRectForRectSelect: computed(
       () => refs.previewRectForRectSelect.value,
     ),

@@ -26,6 +26,11 @@ export type Input =
       readonly keyboardEvent: KeyboardEvent;
     }
   | {
+      readonly type: "keyboardEvent";
+      readonly targetArea: "LyricInput";
+      readonly keyboardEvent: KeyboardEvent;
+    }
+  | {
       readonly type: "mouseEvent";
       readonly targetArea: "Window";
       readonly mouseEvent: MouseEvent;
@@ -57,6 +62,15 @@ export type Input =
       readonly mouseEvent: MouseEvent;
       readonly cursorPos: PositionOnSequencer;
       readonly note: Note;
+    }
+  | {
+      readonly type: "inputEvent";
+      readonly targetArea: "LyricInput";
+      readonly inputEvent: Event;
+    }
+  | {
+      readonly type: "blurEvent";
+      readonly targetArea: "LyricInput";
     };
 
 export type ComputedRefs = {
@@ -65,6 +79,7 @@ export type ComputedRefs = {
   readonly selectedTrackId: ComputedRef<TrackId>;
   readonly notesInSelectedTrack: ComputedRef<Note[]>;
   readonly selectedNoteIds: ComputedRef<Set<NoteId>>;
+  readonly editingLyricNoteId: ComputedRef<NoteId | undefined>;
   readonly editorFrameRate: ComputedRef<number>;
   readonly isShiftKeyDown: ComputedRef<boolean>;
   readonly isCommandOrCtrlKeyDown: ComputedRef<boolean>;
@@ -73,6 +88,7 @@ export type ComputedRefs = {
 export type Refs = {
   readonly previewMode: Ref<PreviewMode>;
   readonly previewNotes: Ref<Note[]>;
+  readonly previewLyrics: Ref<Map<NoteId, string>>;
   readonly previewRectForRectSelect: Ref<Rect | undefined>;
   readonly previewPitchEdit: Ref<
     | { type: "draw"; data: number[]; startFrame: number }
@@ -91,6 +107,7 @@ export type PartialStore = {
     | "sequencerEditTarget"
     | "sequencerNoteTool"
     | "sequencerPitchTool"
+    | "editingLyricNoteId"
     | "editorFrameRate"
   >;
   getters: Pick<
@@ -107,6 +124,7 @@ export type PartialStore = {
     | "COMMAND_UPDATE_NOTES"
     | "COMMAND_SET_PITCH_EDIT_DATA"
     | "COMMAND_ERASE_PITCH_EDIT_DATA"
+    | "SET_EDITING_LYRIC_NOTE_ID"
   >;
 };
 
@@ -171,6 +189,14 @@ export type SequencerStateDefinitions = StateDefinitions<
         targetTrackId: TrackId;
         targetNoteIds: Set<NoteId>;
         mouseDownNoteId: NoteId;
+        returnStateId: IdleStateId;
+      };
+    },
+    {
+      id: "editNoteLyric";
+      factoryArgs: {
+        targetTrackId: TrackId;
+        editStartNoteId: NoteId;
         returnStateId: IdleStateId;
       };
     },

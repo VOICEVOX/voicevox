@@ -128,7 +128,8 @@ export type PreviewMode =
   | "RESIZE_NOTE_LEFT"
   | "DRAW_PITCH"
   | "ERASE_PITCH"
-  | "SELECT_NOTES_WITH_RECT";
+  | "SELECT_NOTES_WITH_RECT"
+  | "EDIT_NOTE_LYRIC";
 
 // マウスダウン時の振る舞い
 export const mouseDownBehaviorSchema = z.enum([

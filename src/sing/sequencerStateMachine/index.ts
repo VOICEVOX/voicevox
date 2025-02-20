@@ -15,6 +15,7 @@ import { MoveNoteState } from "@/sing/sequencerStateMachine/states/moveNoteState
 import { ResizeNoteLeftState } from "@/sing/sequencerStateMachine/states/resizeNoteLeftState";
 import { ResizeNoteRightState } from "@/sing/sequencerStateMachine/states/resizeNoteRightState";
 import { SelectNotesWithRectState } from "@/sing/sequencerStateMachine/states/selectNotesWithRectState";
+import { EditLyricState } from "@/sing/sequencerStateMachine/states/editLyricState";
 import { DrawPitchState } from "@/sing/sequencerStateMachine/states/drawPitchState";
 import { ErasePitchState } from "@/sing/sequencerStateMachine/states/erasePitchState";
 
@@ -33,6 +34,7 @@ export const createSequencerStateMachine = (
       resizeNoteLeft: (args) => new ResizeNoteLeftState(args),
       resizeNoteRight: (args) => new ResizeNoteRightState(args),
       selectNotesWithRect: (args) => new SelectNotesWithRectState(args),
+      editNoteLyric: (args) => new EditLyricState(args),
       drawPitch: (args) => new DrawPitchState(args),
       erasePitch: (args) => new ErasePitchState(args),
     },
