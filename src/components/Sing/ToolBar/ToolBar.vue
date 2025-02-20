@@ -113,6 +113,15 @@
         icon="stop"
         @click="stop"
       />
+      <QBtn
+        flat
+        round
+        size="sm"
+        class="sing-playback-button sing-playback-loop"
+        :class="{ 'sing-playback-loop-enabled': isLoopEnabled }"
+        icon="loop"
+        @click="toggleLoop"
+      />
       <PlayheadPositionDisplay class="sing-playhead-position" />
     </div>
     <!-- settings for edit controls -->
@@ -168,6 +177,7 @@ import {
   BEAT_TYPES,
   getSnapTypes,
   getTimeSignaturePositions,
+  getMeasureDuration,
   isTriplet,
   isValidBeatType,
   isValidBeats,
@@ -410,6 +420,55 @@ const stop = () => {
 
 const goToZero = () => {
   void store.actions.SET_PLAYHEAD_POSITION({ position: 0 });
+};
+
+const isLoopEnabled = computed(() => store.state.isLoopEnabled);
+
+const toggleLoop = async () => {
+  // ループを有効にする場合、
+  // ループ範囲が未設定の場合は現在のplayhead位置から1小節追加する
+  if (!isLoopEnabled.value) {
+    const loopStartTick = store.state.loopStartTick;
+    const loopEndTick = store.state.loopEndTick;
+
+    // NOTE: LoopLaneのaddOneMeasureLoopと基本的なロジックは同じなものの、
+    // 開始位置の指定方法が異なるため共通化はしていない。
+    // Toolbar内はplayhead位置を基準に設定
+    // LoopLaneはユーザーのクリック位置を基準に設定
+    // 共通化の意味ではむしろ特定の位置の拍子記号を取得する関数を作った方がいいかもです
+    if (loopStartTick === loopEndTick) {
+      // 現在のplayhead位置の拍子記号を取得
+      const nextTsIndex = tsPositions.value.findIndex(
+        (pos) => pos > playheadTicks.value,
+      );
+      const currentTsIndex =
+        nextTsIndex === -1 ? tsPositions.value.length - 1 : nextTsIndex - 1;
+      const currentTs = timeSignatures.value[currentTsIndex];
+
+      if (currentTs) {
+        // 現在の拍子記号から1小節分の長さを計算
+        const oneMeasureTicks = getMeasureDuration(
+          currentTs.beats,
+          currentTs.beatType,
+          tpqn.value,
+        );
+
+        // playhead位置から1小節分のループ範囲を設定
+        await store.actions.SET_LOOP_RANGE({
+          loopStartTick: playheadTicks.value,
+          loopEndTick: Math.min(
+            playheadTicks.value + oneMeasureTicks,
+            store.getters.SEQUENCER_NUM_MEASURES * store.state.tpqn * 4,
+          ),
+        });
+      }
+    }
+  }
+
+  // ループをトグルする
+  void store.actions.SET_LOOP_ENABLED({
+    isLoopEnabled: !isLoopEnabled.value,
+  });
 };
 
 const volume = computed({
@@ -685,6 +744,17 @@ const snapTypeSelectModel = computed({
 
   &.sing-playback-stop .q-btn__wrapper .q-icon {
     transform: translateX(-0.5px);
+  }
+}
+
+.sing-playback-loop {
+  margin-left: 8px;
+  color: var(--scheme-color-on-surface-variant);
+  background: transparent;
+
+  &-enabled {
+    color: var(--scheme-color-primary);
+    background: var(--scheme-color-secondary-container);
   }
 }
 
