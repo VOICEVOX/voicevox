@@ -53,6 +53,106 @@ let engineInfoPromise: Promise<EngineInfo[]> | undefined;
  * ブラウザ版のSandBoxを継承している
  */
 export const api: Sandbox = {
+  // ブラウザ版を使い回す
+  getTextAsset(key) {
+    return browserSandbox.getTextAsset(key);
+  },
+
+  getAltPortInfos() {
+    return browserSandbox.getAltPortInfos();
+  },
+
+  async getInitialProjectFilePath() {
+    const projectExists = await getProject();
+
+    return projectExists ? internalProjectFilePath : undefined;
+  },
+
+  async showSaveDirectoryDialog(obj) {
+    return await showSaveDirectoryDialog(obj);
+  },
+
+  showOpenFileDialog(options) {
+    return showImportFileDialog(options);
+  },
+
+  async showSaveFileDialog(obj) {
+    return await showExportFileDialog({
+      extensionName: obj.name,
+      extensions: obj.extensions,
+      title: obj.title,
+      defaultPath: obj.defaultPath,
+    });
+  },
+
+  async writeFile(options) {
+    if (options.filePath === internalProjectFilePath) {
+      await setProject(new TextDecoder().decode(options.buffer));
+      return success(undefined);
+    }
+
+    try {
+      await writeFile(options.filePath, options.buffer);
+      return success(undefined);
+    } catch (e) {
+      return failure(e as Error);
+    }
+  },
+
+  async readFile(options) {
+    if (options.filePath === internalProjectFilePath) {
+      const project = await getProject();
+      const buffer = new TextEncoder().encode(project);
+      return success(buffer);
+    } else {
+      try {
+        return success(await readFile(options.filePath));
+      } catch (e) {
+        return failure(e as Error);
+      }
+    }
+  },
+
+  isAvailableGPUMode(): Promise<boolean> {
+    // TODO: Rust側でちゃんと実装する
+    return Promise.resolve(true);
+  },
+
+  onReceivedIPCMsg(listeners) {
+    return browserSandbox.onReceivedIPCMsg(listeners);
+  },
+
+  async zoomIn() {
+    zoomValue = Math.min(Math.max(zoomValue + 0.1, 0.5), 3);
+    await zoom(zoomValue);
+  },
+
+  async zoomOut() {
+    zoomValue = Math.min(Math.max(zoomValue - 0.1, 0.5), 3);
+    await zoom(zoomValue);
+  },
+
+  async zoomReset() {
+    zoomValue = 1;
+    await zoom(zoomValue);
+  },
+
+  logInfo(...params) {
+    logInfo(params.map(String).join(" "));
+  },
+
+  logWarn(...params) {
+    logWarn(params.map(String).join(" "));
+  },
+
+  logError(...params) {
+    logError(params.map(String).join(" "));
+  },
+
+  openLogDirectory() {
+    void openLogDirectory();
+  },
+
   async engineInfos() {
     if (!engineInfoPromise) {
       const { promise, resolve } = Promise.withResolvers<EngineInfo[]>();
@@ -79,6 +179,7 @@ export const api: Sandbox = {
 
     return engineInfoPromise;
   },
+
   async restartEngine(engineId) {
     const engineInfos = await this.engineInfos();
     if (engineInfos.length === 0) {
@@ -94,112 +195,6 @@ export const api: Sandbox = {
       throw new UnreachableError(`unreachable: engineSetting is not found`);
     }
     await startEngine({ useGpu: engineSetting.useGpu, forceRestart: true });
-  },
-  showOpenFileDialog(options) {
-    return showImportFileDialog(options);
-  },
-  async checkFileExists(file) {
-    return await checkFileExists(file);
-  },
-  async writeFile(options) {
-    if (options.filePath === internalProjectFilePath) {
-      await setProject(new TextDecoder().decode(options.buffer));
-      return success(undefined);
-    }
-
-    try {
-      await writeFile(options.filePath, options.buffer);
-      return success(undefined);
-    } catch (e) {
-      return failure(e as Error);
-    }
-  },
-  async readFile(options) {
-    if (options.filePath === internalProjectFilePath) {
-      const project = await getProject();
-      const buffer = new TextEncoder().encode(project);
-      return success(buffer);
-    } else {
-      try {
-        return success(await readFile(options.filePath));
-      } catch (e) {
-        return failure(e as Error);
-      }
-    }
-  },
-  async showSaveFileDialog(obj) {
-    return await showExportFileDialog({
-      extensionName: obj.name,
-      extensions: obj.extensions,
-      title: obj.title,
-      defaultPath: obj.defaultPath,
-    });
-  },
-  async showSaveDirectoryDialog(obj) {
-    return await showSaveDirectoryDialog(obj);
-  },
-
-  async getSetting(key) {
-    const configManager = await getConfigManager();
-    return configManager.get(key);
-  },
-  async setSetting(key, newValue) {
-    const configManager = await getConfigManager();
-    configManager.set(key, newValue);
-    return newValue;
-  },
-  async setEngineSetting(engineId: EngineId, engineSetting: EngineSettingType) {
-    const engineSettings = (await this.getSetting(
-      "engineSettings",
-    )) as EngineSettings;
-    engineSettings[engineId] = engineSetting;
-    await this.setSetting("engineSettings", engineSettings);
-    return;
-  },
-
-  async zoomIn() {
-    zoomValue = Math.min(Math.max(zoomValue + 0.1, 0.5), 3);
-    await zoom(zoomValue);
-  },
-  async zoomOut() {
-    zoomValue = Math.min(Math.max(zoomValue - 0.1, 0.5), 3);
-    await zoom(zoomValue);
-  },
-  async zoomReset() {
-    zoomValue = 1;
-    await zoom(zoomValue);
-  },
-
-  logInfo(...params) {
-    logInfo(params.map(String).join(" "));
-  },
-
-  logWarn(...params) {
-    logWarn(params.map(String).join(" "));
-  },
-
-  logError(...params) {
-    logError(params.map(String).join(" "));
-  },
-
-  async getInitialProjectFilePath() {
-    const projectExists = await getProject();
-
-    return projectExists ? internalProjectFilePath : undefined;
-  },
-
-  isAvailableGPUMode(): Promise<boolean> {
-    // TODO: Rust側でちゃんと実装する
-    return Promise.resolve(true);
-  },
-
-  isMaximizedWindow() {
-    // 表示だけなのでとりあえずfalseを返す
-    return Promise.resolve(false);
-  },
-
-  openLogDirectory() {
-    void openLogDirectory();
   },
 
   openEngineDirectory() {
@@ -232,21 +227,41 @@ export const api: Sandbox = {
     return browserSandbox.vuexReady();
   },
 
-  // ブラウザ版を使い回す
-  getTextAsset(key) {
-    return browserSandbox.getTextAsset(key);
+  async checkFileExists(file) {
+    return await checkFileExists(file);
   },
-  getAltPortInfos() {
-    return browserSandbox.getAltPortInfos();
-  },
-  onReceivedIPCMsg(listeners) {
-    return browserSandbox.onReceivedIPCMsg(listeners);
-  },
-  hotkeySettings(data) {
-    return browserSandbox.hotkeySettings.bind(this)(data);
-  },
+
   getDefaultToolbarSetting() {
     return browserSandbox.getDefaultToolbarSetting();
+  },
+
+  async getSetting(key) {
+    const configManager = await getConfigManager();
+    return configManager.get(key);
+  },
+
+  async setSetting(key, newValue) {
+    const configManager = await getConfigManager();
+    configManager.set(key, newValue);
+    return newValue;
+  },
+
+  async setEngineSetting(engineId: EngineId, engineSetting: EngineSettingType) {
+    const engineSettings = (await this.getSetting(
+      "engineSettings",
+    )) as EngineSettings;
+    engineSettings[engineId] = engineSetting;
+    await this.setSetting("engineSettings", engineSettings);
+    return;
+  },
+
+  isMaximizedWindow() {
+    // 表示だけなのでとりあえずfalseを返す
+    return Promise.resolve(false);
+  },
+
+  hotkeySettings(data) {
+    return browserSandbox.hotkeySettings.bind(this)(data);
   },
 
   // 未実装
@@ -254,33 +269,43 @@ export const api: Sandbox = {
     // エンジン管理で使っている。VST版では使わないので未実装
     throw new UnimplementedError();
   },
+
   closeWindow() {
     throw new UnimplementedError();
   },
+
   minimizeWindow() {
     throw new UnimplementedError();
   },
+
   changePinWindow() {
     throw new UnimplementedError();
   },
+
   toggleMaximizeWindow() {
     throw new UnimplementedError();
   },
+
   toggleFullScreen() {
     throw new UnimplementedError();
   },
+
   installVvppEngine() {
     throw new UnimplementedError();
   },
+
   uninstallVvppEngine() {
     throw new UnimplementedError();
   },
+
   validateEngineDir() {
     throw new UnimplementedError();
   },
+
   reloadApp() {
     throw new UnimplementedError();
   },
+
   getPathForFile() {
     throw new UnimplementedError();
   },
