@@ -164,7 +164,6 @@ const ipcSetConfig =
 const ipcGetProject = createMessageFunction<() => string>("getProject");
 const ipcSetProject =
   createMessageFunction<(project: string) => void>("setProject");
-const ipcGetProjectName = createMessageFunction<() => string>("getProjectName");
 const ipcShowImportFileDialog = createMessageFunction<
   (options: {
     name?: string;
@@ -300,10 +299,6 @@ export async function writeFile(filePath: string, buffer: ArrayBuffer) {
 
 export async function checkFileExists(filePath: string): Promise<boolean> {
   return await ipcCheckFileExists(filePath);
-}
-
-export async function getProjectName(): Promise<string> {
-  return await ipcGetProjectName();
 }
 
 export async function exportProject(): Promise<
