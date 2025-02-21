@@ -57,48 +57,6 @@ export class MoveNoteState
     this.applyPreview = false;
   }
 
-  private previewMove(context: Context) {
-    if (this.innerContext == undefined) {
-      throw new Error("innerContext is undefined.");
-    }
-    const snapTicks = context.snapTicks.value;
-    const previewNotes = context.previewNotes.value;
-    const targetNotesAtStart = this.innerContext.targetNotesAtStart;
-    const mouseDownNote = getOrThrow(targetNotesAtStart, this.mouseDownNoteId);
-    const dragTicks = this.currentCursorPos.ticks - this.cursorPosAtStart.ticks;
-    const notePos = mouseDownNote.position;
-    const newNotePos =
-      Math.round((notePos + dragTicks) / snapTicks) * snapTicks;
-    const movingTicks = newNotePos - notePos;
-    const movingSemitones =
-      this.currentCursorPos.noteNumber - this.cursorPosAtStart.noteNumber;
-
-    const editedNotes = new Map<NoteId, Note>();
-    for (const note of previewNotes) {
-      const targetNoteAtStart = getOrThrow(targetNotesAtStart, note.id);
-      const position = Math.max(0, targetNoteAtStart.position + movingTicks);
-      const noteNumber = clamp(
-        targetNoteAtStart.noteNumber + movingSemitones,
-        0,
-        127,
-      );
-
-      if (note.position !== position || note.noteNumber !== noteNumber) {
-        editedNotes.set(note.id, { ...note, noteNumber, position });
-      }
-    }
-
-    if (editedNotes.size !== 0) {
-      context.previewNotes.value = previewNotes.map((value) => {
-        return editedNotes.get(value.id) ?? value;
-      });
-      this.innerContext.edited = true;
-    }
-
-    context.guideLineTicks.value =
-      this.innerContext.guideLineTicksAtStart + movingTicks;
-  }
-
   onEnter(context: Context) {
     const guideLineTicks = getGuideLineTicks(this.cursorPosAtStart, context);
     const targetNotesArray = context.notesInSelectedTrack.value.filter(
@@ -194,5 +152,47 @@ export class MoveNoteState
     context.previewNotes.value = [];
     context.cursorState.value = "UNSET";
     context.previewMode.value = "IDLE";
+  }
+
+  private previewMove(context: Context) {
+    if (this.innerContext == undefined) {
+      throw new Error("innerContext is undefined.");
+    }
+    const snapTicks = context.snapTicks.value;
+    const previewNotes = context.previewNotes.value;
+    const targetNotesAtStart = this.innerContext.targetNotesAtStart;
+    const mouseDownNote = getOrThrow(targetNotesAtStart, this.mouseDownNoteId);
+    const dragTicks = this.currentCursorPos.ticks - this.cursorPosAtStart.ticks;
+    const notePos = mouseDownNote.position;
+    const newNotePos =
+      Math.round((notePos + dragTicks) / snapTicks) * snapTicks;
+    const movingTicks = newNotePos - notePos;
+    const movingSemitones =
+      this.currentCursorPos.noteNumber - this.cursorPosAtStart.noteNumber;
+
+    const editedNotes = new Map<NoteId, Note>();
+    for (const note of previewNotes) {
+      const targetNoteAtStart = getOrThrow(targetNotesAtStart, note.id);
+      const position = Math.max(0, targetNoteAtStart.position + movingTicks);
+      const noteNumber = clamp(
+        targetNoteAtStart.noteNumber + movingSemitones,
+        0,
+        127,
+      );
+
+      if (note.position !== position || note.noteNumber !== noteNumber) {
+        editedNotes.set(note.id, { ...note, noteNumber, position });
+      }
+    }
+
+    if (editedNotes.size !== 0) {
+      context.previewNotes.value = previewNotes.map((value) => {
+        return editedNotes.get(value.id) ?? value;
+      });
+      this.innerContext.edited = true;
+    }
+
+    context.guideLineTicks.value =
+      this.innerContext.guideLineTicksAtStart + movingTicks;
   }
 }

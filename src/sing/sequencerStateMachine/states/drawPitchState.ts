@@ -47,77 +47,6 @@ export class DrawPitchState
     this.applyPreview = false;
   }
 
-  private previewDrawPitch(context: Context) {
-    if (this.innerContext == undefined) {
-      throw new Error("innerContext is undefined.");
-    }
-    if (context.previewPitchEdit.value == undefined) {
-      throw new Error("previewPitchEdit.value is undefined.");
-    }
-    if (context.previewPitchEdit.value.type !== "draw") {
-      throw new Error("previewPitchEdit.value.type is not draw.");
-    }
-    const cursorFrame = this.currentCursorPos.frame;
-    const cursorFrequency = this.currentCursorPos.frequency;
-    const prevCursorFrame = this.innerContext.prevCursorPos.frame;
-    const prevCursorFrequency = this.innerContext.prevCursorPos.frequency;
-    if (cursorFrame < 0) {
-      return;
-    }
-    const tempPitchEdit = {
-      ...context.previewPitchEdit.value,
-      data: [...context.previewPitchEdit.value.data],
-    };
-
-    if (cursorFrame < tempPitchEdit.startFrame) {
-      const numOfFramesToUnshift = tempPitchEdit.startFrame - cursorFrame;
-      tempPitchEdit.data = createArray(numOfFramesToUnshift, () => 0).concat(
-        tempPitchEdit.data,
-      );
-      tempPitchEdit.startFrame = cursorFrame;
-    }
-
-    const lastFrame = tempPitchEdit.startFrame + tempPitchEdit.data.length - 1;
-    if (cursorFrame > lastFrame) {
-      const numOfFramesToPush = cursorFrame - lastFrame;
-      tempPitchEdit.data = tempPitchEdit.data.concat(
-        createArray(numOfFramesToPush, () => 0),
-      );
-    }
-
-    if (cursorFrame === prevCursorFrame) {
-      const i = cursorFrame - tempPitchEdit.startFrame;
-      tempPitchEdit.data[i] = cursorFrequency;
-    } else if (cursorFrame < prevCursorFrame) {
-      for (let i = cursorFrame; i <= prevCursorFrame; i++) {
-        tempPitchEdit.data[i - tempPitchEdit.startFrame] = Math.exp(
-          linearInterpolation(
-            cursorFrame,
-            Math.log(cursorFrequency),
-            prevCursorFrame,
-            Math.log(prevCursorFrequency),
-            i,
-          ),
-        );
-      }
-    } else {
-      for (let i = prevCursorFrame; i <= cursorFrame; i++) {
-        tempPitchEdit.data[i - tempPitchEdit.startFrame] = Math.exp(
-          linearInterpolation(
-            prevCursorFrame,
-            Math.log(prevCursorFrequency),
-            cursorFrame,
-            Math.log(cursorFrequency),
-            i,
-          ),
-        );
-      }
-    }
-
-    context.previewPitchEdit.value = tempPitchEdit;
-    this.innerContext.prevCursorPos = this.currentCursorPos;
-  }
-
   onEnter(context: Context) {
     context.previewPitchEdit.value = {
       type: "draw",
@@ -217,5 +146,76 @@ export class DrawPitchState
     context.previewPitchEdit.value = undefined;
     context.cursorState.value = "UNSET";
     context.previewMode.value = "IDLE";
+  }
+
+  private previewDrawPitch(context: Context) {
+    if (this.innerContext == undefined) {
+      throw new Error("innerContext is undefined.");
+    }
+    if (context.previewPitchEdit.value == undefined) {
+      throw new Error("previewPitchEdit.value is undefined.");
+    }
+    if (context.previewPitchEdit.value.type !== "draw") {
+      throw new Error("previewPitchEdit.value.type is not draw.");
+    }
+    const cursorFrame = this.currentCursorPos.frame;
+    const cursorFrequency = this.currentCursorPos.frequency;
+    const prevCursorFrame = this.innerContext.prevCursorPos.frame;
+    const prevCursorFrequency = this.innerContext.prevCursorPos.frequency;
+    if (cursorFrame < 0) {
+      return;
+    }
+    const tempPitchEdit = {
+      ...context.previewPitchEdit.value,
+      data: [...context.previewPitchEdit.value.data],
+    };
+
+    if (cursorFrame < tempPitchEdit.startFrame) {
+      const numOfFramesToUnshift = tempPitchEdit.startFrame - cursorFrame;
+      tempPitchEdit.data = createArray(numOfFramesToUnshift, () => 0).concat(
+        tempPitchEdit.data,
+      );
+      tempPitchEdit.startFrame = cursorFrame;
+    }
+
+    const lastFrame = tempPitchEdit.startFrame + tempPitchEdit.data.length - 1;
+    if (cursorFrame > lastFrame) {
+      const numOfFramesToPush = cursorFrame - lastFrame;
+      tempPitchEdit.data = tempPitchEdit.data.concat(
+        createArray(numOfFramesToPush, () => 0),
+      );
+    }
+
+    if (cursorFrame === prevCursorFrame) {
+      const i = cursorFrame - tempPitchEdit.startFrame;
+      tempPitchEdit.data[i] = cursorFrequency;
+    } else if (cursorFrame < prevCursorFrame) {
+      for (let i = cursorFrame; i <= prevCursorFrame; i++) {
+        tempPitchEdit.data[i - tempPitchEdit.startFrame] = Math.exp(
+          linearInterpolation(
+            cursorFrame,
+            Math.log(cursorFrequency),
+            prevCursorFrame,
+            Math.log(prevCursorFrequency),
+            i,
+          ),
+        );
+      }
+    } else {
+      for (let i = prevCursorFrame; i <= cursorFrame; i++) {
+        tempPitchEdit.data[i - tempPitchEdit.startFrame] = Math.exp(
+          linearInterpolation(
+            prevCursorFrame,
+            Math.log(prevCursorFrequency),
+            cursorFrame,
+            Math.log(cursorFrequency),
+            i,
+          ),
+        );
+      }
+    }
+
+    context.previewPitchEdit.value = tempPitchEdit;
+    this.innerContext.prevCursorPos = this.currentCursorPos;
   }
 }
