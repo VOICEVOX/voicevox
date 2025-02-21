@@ -100,7 +100,7 @@
             :isSelected="selectedNoteIds.has(note.id)"
             :isPreview="previewNoteIds.has(note.id)"
             :isOverlapping="overlappingNoteIdsInSelectedTrack.has(note.id)"
-            :previewLyric="previewLyrics.get(note.id) || null"
+            :previewLyric="previewLyrics.get(note.id) ?? null"
             :nowPreviewing
             :previewMode
             :cursorClass
@@ -112,8 +112,9 @@
           <SequencerLyricInput
             v-if="editingLyricNote != undefined"
             :editingLyricNote
-            @lyricInput="onLyricInput"
-            @lyricConfirmed="onLyricConfirmed"
+            @input="onLyricInput"
+            @keydown="onLyricInputKeydown"
+            @blur="onLyricInputBlur"
           />
         </div>
         <SequencerPitch
@@ -246,7 +247,6 @@ import SequencerGridSpacer from "./SequencerGridSpacer.vue";
 import ContextMenu, {
   ContextMenuItemData,
 } from "@/components/Menu/ContextMenu/Container.vue";
-import { NoteId } from "@/type/preload";
 import { useStore } from "@/store";
 import { Note } from "@/store/type";
 import {
@@ -270,7 +270,6 @@ import {
   ZOOM_Y_MAX,
   ZOOM_Y_STEP,
   PREVIEW_SOUND_DURATION,
-  getButton,
   getKeyBaseHeight,
 } from "@/sing/viewHelper";
 import SequencerGrid from "@/components/Sing/SequencerGrid/Container.vue";
@@ -286,7 +285,6 @@ import SequencerToolPalette from "@/components/Sing/SequencerToolPalette.vue";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import { createLogger } from "@/helpers/log";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
-import { useLyricInput } from "@/composables/useLyricInput";
 import { useSequencerStateMachine } from "@/composables/useSequencerStateMachine";
 import { PositionOnSequencer } from "@/sing/sequencerStateMachine/common";
 
@@ -443,24 +441,12 @@ const setParameterPanelHeight = (height: number) => {
 const scrollBarWidth = ref(12);
 const sequencerBody = ref<HTMLElement | null>(null);
 
-// 歌詞入力
-const { previewLyrics, commitPreviewLyrics, splitAndUpdatePreview } =
-  useLyricInput();
-
-const onLyricInput = (text: string, note: Note) => {
-  splitAndUpdatePreview(text, note);
-};
-
-const onLyricConfirmed = (nextNoteId: NoteId | undefined) => {
-  commitPreviewLyrics();
-  void store.actions.SET_EDITING_LYRIC_NOTE_ID({ noteId: nextNoteId });
-};
-
 // ステートマシン
 const {
   stateMachineProcess,
   previewMode,
   previewNotes,
+  previewLyrics,
   previewRectForRectSelect,
   previewPitchEdit,
   cursorState,
@@ -554,57 +540,43 @@ const getCursorPosOnSequencer = (
 };
 
 const onNoteBarMouseDown = (event: MouseEvent, note: Note) => {
-  if (state.editingLyricNoteId == undefined) {
-    stateMachineProcess({
-      type: "mouseEvent",
-      targetArea: "Note",
-      mouseEvent: event,
-      cursorPos: getCursorPosOnSequencer(event),
-      note,
-    });
-  }
+  stateMachineProcess({
+    type: "mouseEvent",
+    targetArea: "Note",
+    mouseEvent: event,
+    cursorPos: getCursorPosOnSequencer(event),
+    note,
+  });
 };
 
 const onNoteBarDoubleClick = (event: MouseEvent, note: Note) => {
-  if (
-    note.id !== state.editingLyricNoteId &&
-    editTarget.value === "NOTE" &&
-    getButton(event) === "LEFT_BUTTON"
-  ) {
-    void store.actions.SET_EDITING_LYRIC_NOTE_ID({ noteId: note.id });
-  } else if (state.editingLyricNoteId == undefined) {
-    stateMachineProcess({
-      type: "mouseEvent",
-      targetArea: "Note",
-      mouseEvent: event,
-      cursorPos: getCursorPosOnSequencer(event),
-      note,
-    });
-  }
+  stateMachineProcess({
+    type: "mouseEvent",
+    targetArea: "Note",
+    mouseEvent: event,
+    cursorPos: getCursorPosOnSequencer(event),
+    note,
+  });
 };
 
 const onNoteLeftEdgeMouseDown = (event: MouseEvent, note: Note) => {
-  if (state.editingLyricNoteId == undefined) {
-    stateMachineProcess({
-      type: "mouseEvent",
-      targetArea: "NoteLeftEdge",
-      mouseEvent: event,
-      cursorPos: getCursorPosOnSequencer(event),
-      note,
-    });
-  }
+  stateMachineProcess({
+    type: "mouseEvent",
+    targetArea: "NoteLeftEdge",
+    mouseEvent: event,
+    cursorPos: getCursorPosOnSequencer(event),
+    note,
+  });
 };
 
 const onNoteRightEdgeMouseDown = (event: MouseEvent, note: Note) => {
-  if (state.editingLyricNoteId == undefined) {
-    stateMachineProcess({
-      type: "mouseEvent",
-      targetArea: "NoteRightEdge",
-      mouseEvent: event,
-      cursorPos: getCursorPosOnSequencer(event),
-      note,
-    });
-  }
+  stateMachineProcess({
+    type: "mouseEvent",
+    targetArea: "NoteRightEdge",
+    mouseEvent: event,
+    cursorPos: getCursorPosOnSequencer(event),
+    note,
+  });
 };
 
 const onMouseDown = (event: MouseEvent) => {
@@ -615,12 +587,9 @@ const onMouseDown = (event: MouseEvent) => {
   const cursorPos = getCursorPosOnSequencer(event);
   // NOTE: SequencerBodyにスクロールバーが含まれているため、スクロールバーのところはクリックイベントを無視する
   if (
-    cursorPos.x >= sequencerBodyElement.clientWidth ||
-    cursorPos.y >= sequencerBodyElement.clientHeight
+    cursorPos.x < sequencerBodyElement.clientWidth &&
+    cursorPos.y < sequencerBodyElement.clientHeight
   ) {
-    return;
-  }
-  if (state.editingLyricNoteId == undefined) {
     stateMachineProcess({
       type: "mouseEvent",
       targetArea: "SequencerBody",
@@ -631,36 +600,53 @@ const onMouseDown = (event: MouseEvent) => {
 };
 
 const onMouseMove = (event: MouseEvent) => {
-  if (state.editingLyricNoteId == undefined) {
-    stateMachineProcess({
-      type: "mouseEvent",
-      targetArea: "Window",
-      mouseEvent: event,
-      cursorPos: getCursorPosOnSequencer(event),
-    });
-  }
+  stateMachineProcess({
+    type: "mouseEvent",
+    targetArea: "Window",
+    mouseEvent: event,
+    cursorPos: getCursorPosOnSequencer(event),
+  });
 };
 
 const onMouseUp = (event: MouseEvent) => {
-  if (state.editingLyricNoteId == undefined) {
-    stateMachineProcess({
-      type: "mouseEvent",
-      targetArea: "Window",
-      mouseEvent: event,
-      cursorPos: getCursorPosOnSequencer(event),
-    });
-  }
+  stateMachineProcess({
+    type: "mouseEvent",
+    targetArea: "Window",
+    mouseEvent: event,
+    cursorPos: getCursorPosOnSequencer(event),
+  });
 };
 
 const onDoubleClick = (event: MouseEvent) => {
-  if (state.editingLyricNoteId == undefined) {
-    stateMachineProcess({
-      type: "mouseEvent",
-      targetArea: "SequencerBody",
-      mouseEvent: event,
-      cursorPos: getCursorPosOnSequencer(event),
-    });
-  }
+  stateMachineProcess({
+    type: "mouseEvent",
+    targetArea: "SequencerBody",
+    mouseEvent: event,
+    cursorPos: getCursorPosOnSequencer(event),
+  });
+};
+
+const onLyricInput = (event: Event) => {
+  stateMachineProcess({
+    type: "inputEvent",
+    targetArea: "LyricInput",
+    inputEvent: event,
+  });
+};
+
+const onLyricInputKeydown = (event: KeyboardEvent) => {
+  stateMachineProcess({
+    type: "keyboardEvent",
+    targetArea: "LyricInput",
+    keyboardEvent: event,
+  });
+};
+
+const onLyricInputBlur = () => {
+  stateMachineProcess({
+    type: "blurEvent",
+    targetArea: "LyricInput",
+  });
 };
 
 const onMouseEnter = () => {

@@ -54,77 +54,92 @@ export class SelectNotesToolIdleState
         );
       }
 
-      if (
-        mouseButton === "LEFT_BUTTON" &&
-        isSelfEventTarget(input.mouseEvent)
-      ) {
-        if (input.mouseEvent.type === "mousedown") {
-          if (input.targetArea === "SequencerBody") {
-            setNextState("selectNotesWithRect", {
-              cursorPosAtStart: input.cursorPos,
-              returnStateId: this.id,
+      if (mouseButton === "LEFT_BUTTON") {
+        if (isSelfEventTarget(input.mouseEvent)) {
+          if (input.mouseEvent.type === "mousedown") {
+            if (input.targetArea === "SequencerBody") {
+              setNextState("selectNotesWithRect", {
+                cursorPosAtStart: input.cursorPos,
+                returnStateId: this.id,
+              });
+            } else if (input.targetArea === "Note") {
+              this.executeNotesSelectionProcess(
+                context,
+                input.mouseEvent,
+                input.note,
+              );
+              setNextState("moveNote", {
+                cursorPosAtStart: input.cursorPos,
+                targetTrackId: selectedTrackId,
+                targetNoteIds: context.selectedNoteIds.value,
+                mouseDownNoteId: input.note.id,
+                returnStateId: this.id,
+              });
+            } else if (input.targetArea === "NoteLeftEdge") {
+              this.executeNotesSelectionProcess(
+                context,
+                input.mouseEvent,
+                input.note,
+              );
+              setNextState("resizeNoteLeft", {
+                cursorPosAtStart: input.cursorPos,
+                targetTrackId: selectedTrackId,
+                targetNoteIds: context.selectedNoteIds.value,
+                mouseDownNoteId: input.note.id,
+                returnStateId: this.id,
+              });
+            } else if (input.targetArea === "NoteRightEdge") {
+              this.executeNotesSelectionProcess(
+                context,
+                input.mouseEvent,
+                input.note,
+              );
+              setNextState("resizeNoteRight", {
+                cursorPosAtStart: input.cursorPos,
+                targetTrackId: selectedTrackId,
+                targetNoteIds: context.selectedNoteIds.value,
+                mouseDownNoteId: input.note.id,
+                returnStateId: this.id,
+              });
+            }
+          } else if (
+            input.mouseEvent.type === "dblclick" &&
+            input.targetArea === "SequencerBody"
+          ) {
+            void context.store.actions.DESELECT_ALL_NOTES();
+
+            const guideLineTicks = getGuideLineTicks(input.cursorPos, context);
+            const noteToAdd = {
+              id: NoteId(uuid4()),
+              position: Math.max(0, guideLineTicks),
+              duration: context.snapTicks.value,
+              noteNumber: clamp(input.cursorPos.noteNumber, 0, 127),
+              lyric: getDoremiFromNoteNumber(input.cursorPos.noteNumber),
+            };
+
+            void context.store.actions.COMMAND_ADD_NOTES({
+              notes: [noteToAdd],
+              trackId: selectedTrackId,
             });
-          } else if (input.targetArea === "Note") {
-            this.executeNotesSelectionProcess(
-              context,
-              input.mouseEvent,
-              input.note,
-            );
-            setNextState("moveNote", {
-              cursorPosAtStart: input.cursorPos,
-              targetTrackId: selectedTrackId,
-              targetNoteIds: context.selectedNoteIds.value,
-              mouseDownNoteId: input.note.id,
-              returnStateId: this.id,
+            void context.store.actions.SELECT_NOTES({
+              noteIds: [noteToAdd.id],
             });
-          } else if (input.targetArea === "NoteLeftEdge") {
-            this.executeNotesSelectionProcess(
-              context,
-              input.mouseEvent,
-              input.note,
-            );
-            setNextState("resizeNoteLeft", {
-              cursorPosAtStart: input.cursorPos,
-              targetTrackId: selectedTrackId,
-              targetNoteIds: context.selectedNoteIds.value,
-              mouseDownNoteId: input.note.id,
-              returnStateId: this.id,
-            });
-          } else if (input.targetArea === "NoteRightEdge") {
-            this.executeNotesSelectionProcess(
-              context,
-              input.mouseEvent,
-              input.note,
-            );
-            setNextState("resizeNoteRight", {
-              cursorPosAtStart: input.cursorPos,
-              targetTrackId: selectedTrackId,
-              targetNoteIds: context.selectedNoteIds.value,
-              mouseDownNoteId: input.note.id,
-              returnStateId: this.id,
+
+            void context.store.actions.PLAY_PREVIEW_SOUND({
+              noteNumber: noteToAdd.noteNumber,
+              duration: PREVIEW_SOUND_DURATION,
             });
           }
-        } else if (input.mouseEvent.type === "dblclick") {
-          void context.store.actions.DESELECT_ALL_NOTES();
+        }
 
-          const guideLineTicks = getGuideLineTicks(input.cursorPos, context);
-          const noteToAdd = {
-            id: NoteId(uuid4()),
-            position: Math.max(0, guideLineTicks),
-            duration: context.snapTicks.value,
-            noteNumber: clamp(input.cursorPos.noteNumber, 0, 127),
-            lyric: getDoremiFromNoteNumber(input.cursorPos.noteNumber),
-          };
-
-          void context.store.actions.COMMAND_ADD_NOTES({
-            notes: [noteToAdd],
-            trackId: selectedTrackId,
-          });
-          void context.store.actions.SELECT_NOTES({ noteIds: [noteToAdd.id] });
-
-          void context.store.actions.PLAY_PREVIEW_SOUND({
-            noteNumber: noteToAdd.noteNumber,
-            duration: PREVIEW_SOUND_DURATION,
+        if (
+          input.mouseEvent.type === "dblclick" &&
+          input.targetArea === "Note"
+        ) {
+          setNextState("editNoteLyric", {
+            targetTrackId: selectedTrackId,
+            editStartNoteId: input.note.id,
+            returnStateId: this.id,
           });
         }
       }
