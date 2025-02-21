@@ -23,7 +23,6 @@ export class EditLyricState
   private innerContext:
     | {
         targetTrackNotesAtStart: Note[];
-        edited: boolean;
       }
     | undefined;
 
@@ -50,7 +49,6 @@ export class EditLyricState
 
     this.innerContext = {
       targetTrackNotesAtStart: targetTrackNotes,
-      edited: false,
     };
   }
 
@@ -66,6 +64,8 @@ export class EditLyricState
     if (this.innerContext == undefined) {
       throw new Error("innerContext is undefined.");
     }
+    const previewLyrics = context.previewLyrics.value;
+
     if (input.targetArea === "LyricInput") {
       const editingLyricNoteId = context.editingLyricNoteId.value;
       if (editingLyricNoteId == undefined) {
@@ -108,24 +108,19 @@ export class EditLyricState
             }
             const nextNoteId = targetTrackNotesAtStart[nextNoteIndex].id;
 
-            this.applyPreview =
-              this.innerContext.edited &&
-              context.previewLyrics.value.size !== 0;
+            this.applyPreview = previewLyrics.size !== 0;
             setNextState("editNoteLyric", {
               targetTrackId: this.targetTrackId,
               editStartNoteId: nextNoteId,
               returnStateId: this.returnStateId,
             });
           } else if (input.keyboardEvent.key === "Enter") {
-            this.applyPreview =
-              this.innerContext.edited &&
-              context.previewLyrics.value.size !== 0;
+            this.applyPreview = previewLyrics.size !== 0;
             setNextState(this.returnStateId, undefined);
           }
         }
       } else if (input.type === "blurEvent") {
-        this.applyPreview =
-          this.innerContext.edited && context.previewLyrics.value.size !== 0;
+        this.applyPreview = previewLyrics.size !== 0;
         setNextState(this.returnStateId, undefined);
       }
     }
@@ -205,6 +200,5 @@ export class EditLyricState
     }
 
     context.previewLyrics.value = newPreviewLyrics;
-    this.innerContext.edited = true;
   }
 }
