@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { IpcSOData } from "./ipc";
-import { AltPortInfos } from "@/store/type";
+import { AltPortInfos, SingingVoice, SingingVoiceKey } from "@/store/type";
 import { Result } from "@/type/result";
 import {
   HotkeySettingType,
@@ -135,6 +135,7 @@ export interface Sandbox {
   validateEngineDir(engineDir: string): Promise<EngineDirValidationResult>;
   reloadApp(obj: { isMultiEngineOffMode?: boolean }): Promise<void>;
   getPathForFile(file: File): string;
+  fetchCachedSingingVoices(): Promise<Record<SingingVoiceKey, SingingVoice>>;
 }
 
 export type AppInfos = {

@@ -328,6 +328,8 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
       promises.push(actions.HYDRATE_PRESET_STORE());
       promises.push(actions.HYDRATE_SETTING_STORE());
 
+      promises.push(actions.LOAD_SINGING_VOICE_CACHE());
+
       await Promise.all(promises).then(() => {
         void actions.ON_VUEX_READY();
       });

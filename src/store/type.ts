@@ -1390,6 +1390,10 @@ export type SingingStoreTypes = {
   GET_SINGING_VOICE: {
     action(payload: { key: SingingVoiceKey }): SingingVoice | undefined;
   };
+
+  LOAD_SINGING_VOICE_CACHE: {
+    action(): Promise<void>;
+  };
 };
 
 export type SingingCommandStoreState = {

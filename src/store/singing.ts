@@ -544,14 +544,6 @@ const singingPitchCache = new Map<SingingPitchKey, SingingPitch>();
 const singingVolumeCache = new Map<SingingVolumeKey, SingingVolume>();
 const singingVoiceCache = new Map<SingingVoiceKey, SingingVoice>();
 
-export const loadSingingVoiceCache = (
-  cache: Map<SingingVoiceKey, SingingVoice>,
-) => {
-  for (const [key, value] of cache) {
-    singingVoiceCache.set(key, value);
-  }
-};
-
 const initialTrackId = TrackId(uuid4());
 
 /**
@@ -3554,6 +3546,15 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   GET_SINGING_VOICE: {
     action(_, { key }) {
       return phraseSingingVoices.get(key);
+    },
+  },
+
+  LOAD_SINGING_VOICE_CACHE: {
+    async action() {
+      const cache = await window.backend.fetchCachedSingingVoices();
+      for (const [key, value] of Object.entries(cache)) {
+        phraseSingingVoices.set(SingingVoiceKey(key), value);
+      }
     },
   },
 });

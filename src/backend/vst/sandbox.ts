@@ -32,7 +32,6 @@ import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
 import { UnreachableError } from "@/type/utility";
 import { createLogger } from "@/helpers/log";
 import { SingingVoice, SingingVoiceKey } from "@/store/type";
-import { loadSingingVoiceCache } from "@/store/singing";
 
 export const internalProjectFilePath = "/dev/vst-project.vvproj";
 
@@ -206,24 +205,6 @@ export const api: Sandbox = {
   },
 
   vuexReady() {
-    // キャッシュされた歌声を読み込む。
-    log.info("Loading cached voices");
-    void (async () => {
-      const encodedVoices = await getVoices();
-      loadSingingVoiceCache(
-        new Map(
-          await Promise.all(
-            Object.entries(encodedVoices).map(
-              async ([key, encodedVoice]) =>
-                [
-                  SingingVoiceKey(key),
-                  new Blob([await toBytes(encodedVoice)]),
-                ] satisfies [SingingVoiceKey, SingingVoice],
-            ),
-          ),
-        ),
-      );
-    });
     return browserSandbox.vuexReady();
   },
 
@@ -262,6 +243,23 @@ export const api: Sandbox = {
 
   hotkeySettings(data) {
     return browserSandbox.hotkeySettings.bind(this)(data);
+  },
+
+  async fetchCachedSingingVoices() {
+    // キャッシュされた歌声を読み込む。
+    log.info("Loading cached voices");
+    const encodedVoices = await getVoices();
+    return Object.fromEntries(
+      await Promise.all(
+        Object.entries(encodedVoices).map(
+          async ([key, encodedVoice]) =>
+            [
+              SingingVoiceKey(key),
+              new Blob([await toBytes(encodedVoice)]),
+            ] satisfies [SingingVoiceKey, SingingVoice],
+        ),
+      ),
+    );
   },
 
   // 未実装

@@ -219,6 +219,11 @@ const api: Sandbox = {
   getPathForFile: (file) => {
     return webUtils.getPathForFile(file);
   },
+
+  fetchCachedSingingVoices() {
+    // TODO: 実装する
+    return Promise.resolve({});
+  },
 };
 
 contextBridge.exposeInMainWorld(SandboxKey, api);
