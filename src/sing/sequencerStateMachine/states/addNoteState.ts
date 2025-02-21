@@ -50,32 +50,6 @@ export class AddNoteState
     this.applyPreview = false;
   }
 
-  private previewAdd(context: Context) {
-    if (this.innerContext == undefined) {
-      throw new Error("innerContext is undefined.");
-    }
-    const noteToAdd = this.innerContext.noteToAdd;
-    const snapTicks = context.snapTicks.value;
-    const dragTicks = this.currentCursorPos.ticks - this.cursorPosAtStart.ticks;
-    const noteDuration = Math.round(dragTicks / snapTicks) * snapTicks;
-    const noteEndPos = noteToAdd.position + noteDuration;
-    const previewNotes = context.previewNotes.value;
-
-    const editedNotes = new Map<NoteId, Note>();
-    for (const note of previewNotes) {
-      const duration = Math.max(snapTicks, noteDuration);
-      if (note.duration !== duration) {
-        editedNotes.set(note.id, { ...note, duration });
-      }
-    }
-    if (editedNotes.size !== 0) {
-      context.previewNotes.value = previewNotes.map((value) => {
-        return editedNotes.get(value.id) ?? value;
-      });
-    }
-    context.guideLineTicks.value = noteEndPos;
-  }
-
   onEnter(context: Context) {
     const guideLineTicks = getGuideLineTicks(this.cursorPosAtStart, context);
     const noteToAdd = {
@@ -168,5 +142,31 @@ export class AddNoteState
     context.previewNotes.value = [];
     context.cursorState.value = "UNSET";
     context.previewMode.value = "IDLE";
+  }
+
+  private previewAdd(context: Context) {
+    if (this.innerContext == undefined) {
+      throw new Error("innerContext is undefined.");
+    }
+    const noteToAdd = this.innerContext.noteToAdd;
+    const snapTicks = context.snapTicks.value;
+    const dragTicks = this.currentCursorPos.ticks - this.cursorPosAtStart.ticks;
+    const noteDuration = Math.round(dragTicks / snapTicks) * snapTicks;
+    const noteEndPos = noteToAdd.position + noteDuration;
+    const previewNotes = context.previewNotes.value;
+
+    const editedNotes = new Map<NoteId, Note>();
+    for (const note of previewNotes) {
+      const duration = Math.max(snapTicks, noteDuration);
+      if (note.duration !== duration) {
+        editedNotes.set(note.id, { ...note, duration });
+      }
+    }
+    if (editedNotes.size !== 0) {
+      context.previewNotes.value = previewNotes.map((value) => {
+        return editedNotes.get(value.id) ?? value;
+      });
+    }
+    context.guideLineTicks.value = noteEndPos;
   }
 }
