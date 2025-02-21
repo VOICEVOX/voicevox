@@ -91,13 +91,10 @@ export class EditLyricState
 
             const targetTrackNotesAtStart =
               this.innerContext.targetTrackNotesAtStart;
-            const index = this.findNoteIndex(
+            const index = this.findNoteIndexOrThrow(
               targetTrackNotesAtStart,
               editingLyricNoteId,
             );
-            if (index === -1) {
-              return;
-            }
             const nextNoteIndex =
               index + (input.keyboardEvent.shiftKey ? -1 : 1);
             if (
@@ -159,10 +156,6 @@ export class EditLyricState
       throw new Error(`Note with id ${noteId} not found.`);
     }
     return note;
-  }
-
-  private findNoteIndex(notes: Note[], noteId: NoteId) {
-    return notes.findIndex((note) => note.id === noteId);
   }
 
   private findNoteIndexOrThrow(notes: Note[], noteId: NoteId) {
