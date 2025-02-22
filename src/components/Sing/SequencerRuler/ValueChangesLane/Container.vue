@@ -12,16 +12,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, inject } from "vue";
 import { Dialog } from "quasar";
+import { sequencerRulerInjectionKey } from "../Container.vue";
 import Presentation from "./Presentation.vue";
-import { useStore } from "@/store";
 import { tickToMeasureNumber } from "@/sing/domain";
 import { Tempo, TimeSignature } from "@/store/type";
 import { ContextMenuItemData } from "@/components/Menu/ContextMenu/Presentation.vue";
 import TempoChangeDialog from "@/components/Sing/ChangeValueDialog/TempoChangeDialog.vue";
 import TimeSignatureChangeDialog from "@/components/Sing/ChangeValueDialog/TimeSignatureChangeDialog.vue";
-import { useSequencerRuler } from "@/composables/useSequencerRuler";
 
 export type ValueChange = {
   position: number;
@@ -35,54 +34,33 @@ defineOptions({
   name: "ValueChangesLaneContainer",
 });
 
-const props = defineProps<{
-  offset: number;
-  numMeasures: number;
-}>();
-
 const emit = defineEmits<{
   setPlayheadPosition: [position: number];
 }>();
 
-const store = useStore();
+const injectedValue = inject(sequencerRulerInjectionKey);
+if (injectedValue == undefined) {
+  throw new Error("injectedValue is undefined.");
+}
 
-const tpqn = computed(() => store.state.tpqn);
-const sequencerZoomX = computed(() => store.state.sequencerZoomX);
-const timeSignatures = computed(() => store.state.timeSignatures);
-const tempos = computed(() => store.state.tempos);
-const playheadTicks = computed(() => store.getters.PLAYHEAD_POSITION);
-const uiLocked = computed(() => store.getters.UI_LOCKED);
-const sequencerSnapType = computed(() => store.state.sequencerSnapType);
-
-const { width, endTicks, tsPositions, getSnappedTickFromOffsetX } =
-  useSequencerRuler({
-    offset: computed(() => props.offset),
-    numMeasures: computed(() => props.numMeasures),
-    tpqn,
-    timeSignatures,
-    sequencerZoomX,
-    playheadTicks,
-    sequencerSnapType,
-  });
+const {
+  tsPositions,
+  width,
+  endTicks,
+  tpqn,
+  timeSignatures,
+  offset,
+  uiLocked,
+  tempos,
+  setTempo,
+  removeTempo,
+  setTimeSignature,
+  removeTimeSignature,
+  offsetXToSnappedTick,
+  playheadTicks,
+} = injectedValue;
 
 const valueChange = ref<ValueChange | null>(null);
-
-// テンポ/拍子変更のメソッド
-const setTempo = (tempo: Tempo) => {
-  void store.actions.COMMAND_SET_TEMPO({ tempo });
-};
-
-const removeTempo = (position: number) => {
-  void store.actions.COMMAND_REMOVE_TEMPO({ position });
-};
-
-const setTimeSignature = (timeSignature: TimeSignature) => {
-  void store.actions.COMMAND_SET_TIME_SIGNATURE({ timeSignature });
-};
-
-const removeTimeSignature = (measureNumber: number) => {
-  void store.actions.COMMAND_REMOVE_TIME_SIGNATURE({ measureNumber });
-};
 
 const valueChanges = computed<ValueChange[]>(() => {
   const timeSignaturesWithTicks = tsPositions.value.map((tsPosition, i) => ({
@@ -140,7 +118,7 @@ const onValueChangeClick = async (
     emit("setPlayheadPosition", newValueChange.position);
   } else {
     // 空き部分クリック時は、クリック位置から計算してスナップ位置に合わせる
-    const snappedTick = getSnappedTickFromOffsetX(event.offsetX);
+    const snappedTick = offsetXToSnappedTick(event.offsetX);
     emit("setPlayheadPosition", snappedTick);
   }
   valueChange.value = newValueChange;

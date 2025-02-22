@@ -1019,38 +1019,6 @@ export const shouldPlayTracks = (tracks: Map<TrackId, Track>): Set<TrackId> => {
   );
 };
 
-/**
- * 指定されたティックを直近のグリッドに合わせる
- * @param ticks スナップ対象のtick位置
- * @param timeSignatures 拍子情報の配列
- * @param tpqn TPQNの値
- * @returns スナップ後のtick位置
- */
-export function snapTicksToGrid(
-  ticks: number,
-  timeSignatures: TimeSignature[],
-  tpqn: number,
-): number {
-  const tsPositions = getTimeSignaturePositions(timeSignatures, tpqn);
-  const nextTsIndex = tsPositions.findIndex((pos) => pos > ticks);
-  const currentTsIndex =
-    nextTsIndex === -1 ? tsPositions.length - 1 : nextTsIndex - 1;
-  const currentTs = timeSignatures[currentTsIndex];
-
-  // 現在の拍子に基づくグリッドサイズを計算
-  const gridSize = getBeatDuration(currentTs.beatType, tpqn);
-
-  // 拍子の開始位置からの相対位置を計算
-  const tsPosition = tsPositions[currentTsIndex];
-  const relativePosition = ticks - tsPosition;
-
-  // グリッドにスナップ
-  const snappedRelativePosition =
-    Math.round(relativePosition / gridSize) * gridSize;
-
-  return tsPosition + snappedRelativePosition;
-}
-
 /*
  * ループ範囲が有効かどうかを判定する
  * @param startTick ループ開始位置(tick)
