@@ -1,4 +1,3 @@
-import fs from "fs";
 import path from "path";
 import {
   BrowserWindow,
@@ -9,13 +8,14 @@ import {
   OpenDialogSyncOptions,
   SaveDialogOptions,
 } from "electron";
-import log from "electron-log/main";
 import windowStateKeeper from "electron-window-state";
 import { getConfigManager } from "../electronConfig";
 import { getEngineAndVvppController } from "../engineAndVvppController";
 import { ipcMainSendProxy } from "../ipc";
-import { isMac } from "@/helpers/platform";
 import { themes } from "@/domain/theme";
+import { createLogger } from "@/helpers/log";
+
+const log = createLogger("WindowManager");
 
 type WindowManagerOption = {
   appStateGetter: () => { willQuit: boolean };
@@ -55,7 +55,7 @@ class WindowManager {
     return this._win;
   }
 
-  public async createWindow(filePathOnMac: string | undefined) {
+  public async createWindow() {
     if (this.win != undefined) {
       throw new Error("Window has already been created");
     }
@@ -85,27 +85,6 @@ class WindowManager {
       },
       icon: path.join(this.staticDir, "icon.png"),
     });
-
-    let projectFilePath = "";
-    if (isMac) {
-      if (filePathOnMac) {
-        if (filePathOnMac.endsWith(".vvproj")) {
-          projectFilePath = filePathOnMac;
-        }
-        filePathOnMac = undefined;
-      }
-    } else {
-      if (process.argv.length >= 2) {
-        const filePath = process.argv[1];
-        if (
-          fs.existsSync(filePath) &&
-          fs.statSync(filePath).isFile() &&
-          filePath.endsWith(".vvproj")
-        ) {
-          projectFilePath = filePath;
-        }
-      }
-    }
 
     win.on("maximize", () => {
       ipcMainSendProxy.DETECT_MAXIMIZED(win);
@@ -147,7 +126,7 @@ class WindowManager {
     mainWindowState.manage(win);
     this._win = win;
 
-    await this.load({ projectFilePath });
+    await this.load({});
 
     if (this.isDevelopment && !this.isTest) win.webContents.openDevTools();
   }
@@ -155,13 +134,9 @@ class WindowManager {
   /**
    * 画面の読み込みを開始する。
    * @param obj.isMultiEngineOffMode マルチエンジンオフモードにするかどうか。無指定時はfalse扱いになる。
-   * @param obj.projectFilePath 初期化時に読み込むプロジェクトファイル。無指定時は何も読み込まない。
    * @returns ロードの完了を待つPromise。
    */
-  public async load(obj: {
-    isMultiEngineOffMode?: boolean;
-    projectFilePath?: string;
-  }) {
+  public async load(obj: { isMultiEngineOffMode?: boolean }) {
     const win = this.getWindow();
     const firstUrl =
       import.meta.env.VITE_DEV_SERVER_URL ?? "app://./index.html";
@@ -170,7 +145,6 @@ class WindowManager {
       "isMultiEngineOffMode",
       (obj?.isMultiEngineOffMode ?? false).toString(),
     );
-    url.searchParams.append("projectFilePath", obj?.projectFilePath ?? "");
     await win.loadURL(url.toString());
   }
 

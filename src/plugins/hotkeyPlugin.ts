@@ -14,7 +14,7 @@ import {
   HotkeyCombination,
   HotkeySettingType,
 } from "@/domain/hotkeyAction";
-import { createLogger } from "@/domain/frontend/log";
+import { createLogger } from "@/helpers/log";
 import { Brand } from "@/type/utility";
 
 const hotkeyManagerKey = "hotkeyManager";

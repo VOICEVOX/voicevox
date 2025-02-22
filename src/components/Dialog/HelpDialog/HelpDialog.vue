@@ -84,7 +84,8 @@ import BaseNavigationView from "@/components/Base/BaseNavigationView.vue";
 import { UpdateInfo as UpdateInfoObject, UrlString } from "@/type/preload";
 import { useStore } from "@/store";
 import { useFetchNewUpdateInfos } from "@/composables/useFetchNewUpdateInfos";
-import { createLogger } from "@/domain/frontend/log";
+import { createLogger } from "@/helpers/log";
+import { getAppInfos } from "@/domain/appInfo";
 
 type PageItem = {
   type: "item";
@@ -115,7 +116,7 @@ if (!import.meta.env.VITE_LATEST_UPDATE_INFOS_URL) {
   );
 }
 const newUpdateResult = useFetchNewUpdateInfos(
-  () => window.backend.getAppInfos().then((obj) => obj.version), // アプリのバージョン
+  () => getAppInfos().version,
   UrlString(import.meta.env.VITE_LATEST_UPDATE_INFOS_URL),
 );
 

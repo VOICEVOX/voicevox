@@ -1,0 +1,7 @@
+{
+  "name": "Dummy Engine",
+  "uuid": "00000000-0000-0000-0000-000000000001",
+  "command": "dummy",
+  "port": 404,
+  "supported_features": {}
+}

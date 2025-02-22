@@ -30,6 +30,7 @@ exports[`0.13.0からマイグレーションできる 1`] = `
     "enableMultiSelect": false,
     "shouldKeepTuningOnTextChange": false,
     "showPreviewSoundEditor": false,
+    "showParameterPanel": false,
   },
   "hotkeySettings": [
     {

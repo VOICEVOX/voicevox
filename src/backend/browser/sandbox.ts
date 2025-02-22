@@ -2,7 +2,7 @@ import { defaultEngine } from "./contract";
 import {
   checkFileExistsImpl,
   readFileImpl,
-  showExportFilePickerImpl,
+  showSaveFilePickerImpl,
   showOpenDirectoryDialogImpl,
   showOpenFilePickerImpl,
   WritableFilePath,
@@ -57,13 +57,6 @@ function onReceivedIPCMsg(listeners: {
  * まだ開発中のため、Browser版の実装も同時に行えない場合は、メソッドを追加して throw new Error() する
  */
 export const api: Sandbox = {
-  getAppInfos() {
-    const appInfo = {
-      name: import.meta.env.VITE_APP_NAME,
-      version: import.meta.env.VITE_APP_VERSION,
-    };
-    return Promise.resolve(appInfo);
-  },
   async getTextAsset(textType) {
     const fileName = AssetTextFileNames[textType];
     const v = await fetch(toStaticPath(fileName));
@@ -76,76 +69,39 @@ export const api: Sandbox = {
     // NOTE: ブラウザ版ではサポートされていません
     return Promise.resolve({});
   },
+  getInitialProjectFilePath() {
+    return Promise.resolve(undefined);
+  },
   showSaveDirectoryDialog(obj: { title: string }) {
     return showOpenDirectoryDialogImpl(obj);
-  },
-  showVvppOpenDialog(obj: { title: string; defaultPath?: string }) {
-    // NOTE: 今後接続先を変える手段としてVvppが使われるかもしれないので、そのタイミングで実装する
-    throw new Error(
-      `not implemented: showVvppOpenDialog, request: ${JSON.stringify(obj)}`,
-    );
   },
   showOpenDirectoryDialog(obj: { title: string }) {
     return showOpenDirectoryDialogImpl(obj);
   },
-  showProjectSaveDialog(obj: { title: string; defaultPath?: string }) {
-    return new Promise((resolve, reject) => {
-      if (obj.defaultPath == undefined) {
-        reject(
-          // storeやvue componentからdefaultPathを設定していなかったらrejectされる
-          new Error(
-            "ブラウザ版ではファイルの保存機能が一部サポートされていません。",
-          ),
-        );
-      } else {
-        resolve(obj.defaultPath);
-      }
-    });
-  },
-  async showProjectLoadDialog() {
-    return showOpenFilePickerImpl({
-      multiple: false,
-      fileTypes: [
-        {
-          description: "Voicevox Project File",
-          accept: {
-            "application/json": [".vvproj"],
-          },
-        },
-      ],
-    });
-  },
-  async showImportFileDialog(obj: {
-    name?: string;
-    extensions?: string[];
+  async showOpenFileDialog(obj: {
     title: string;
+    name: string;
+    mimeType: string;
+    extensions: string[];
   }) {
     const fileHandle = await showOpenFilePickerImpl({
       multiple: false,
       fileTypes: [
         {
-          description: obj.name ?? "Text",
-          accept: obj.extensions
-            ? {
-                "application/octet-stream": obj.extensions.map(
-                  (ext) => `.${ext}`,
-                ),
-              }
-            : {
-                "plain/text": [".txt"],
-              },
+          description: obj.name,
+          accept: { [obj.mimeType]: obj.extensions.map((ext) => `.${ext}`) },
         },
       ],
     });
     return fileHandle?.[0];
   },
-  async showExportFileDialog(obj: {
-    defaultPath?: string;
-    extensionName: string;
-    extensions: string[];
+  async showSaveFileDialog(obj: {
     title: string;
+    name: string;
+    extensions: string[];
+    defaultPath?: string;
   }) {
-    const fileHandle = await showExportFilePickerImpl(obj);
+    const fileHandle = await showSaveFilePickerImpl(obj);
     return fileHandle;
   },
   writeFile(obj: { filePath: string; buffer: ArrayBuffer }) {

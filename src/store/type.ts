@@ -58,7 +58,6 @@ import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import {
   TextDialogResult,
   NotifyAndNotShowAgainButtonOption,
-  LoadingScreenOption,
   MessageDialogOptions,
   ConfirmDialogOptions,
   WarningDialogOptions,
@@ -1658,7 +1657,7 @@ export type EngineStoreState = {
 };
 
 export type EngineStoreTypes = {
-  GET_ENGINE_INFOS: {
+  PULL_AND_INIT_ENGINE_INFOS: {
     action(): void;
   };
 
@@ -1666,7 +1665,7 @@ export type EngineStoreTypes = {
     mutation: { engineId: EngineId; engineInfo: EngineInfo };
   };
 
-  GET_ONLY_ENGINE_INFOS: {
+  PULL_ENGINE_INFOS: {
     action: (payload: { engineIds: EngineId[] }) => Promise<void>;
   };
 
@@ -1674,7 +1673,7 @@ export type EngineStoreTypes = {
     getter: EngineInfo[];
   };
 
-  GET_ALT_PORT_INFOS: {
+  PULL_ALT_PORT_INFOS: {
     action(): Promise<AltPortInfos>;
   };
 
@@ -1921,6 +1920,10 @@ export type ProjectStoreTypes = {
     }): "saved" | "discarded" | "canceled";
   };
 
+  GET_INITIAL_PROJECT_FILE_PATH: {
+    action(): Promise<string | undefined>;
+  };
+
   IS_EDITED: {
     getter: boolean;
   };
@@ -2146,14 +2149,6 @@ export type UiStoreTypes = {
 
   SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON: {
     action(payload: NotifyAndNotShowAgainButtonOption): void;
-  };
-
-  SHOW_LOADING_SCREEN: {
-    action(payload: LoadingScreenOption): void;
-  };
-
-  HIDE_ALL_LOADING_SCREEN: {
-    action(): void;
   };
 
   ON_VUEX_READY: {

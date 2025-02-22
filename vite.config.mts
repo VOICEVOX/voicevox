@@ -10,8 +10,14 @@ import { BuildOptions, defineConfig, loadEnv, Plugin } from "vite";
 import { quasar } from "@quasar/vite-plugin";
 import { z } from "zod";
 
+import {
+  checkSuspiciousImports,
+  CheckSuspiciousImportsOptions,
+} from "./tools/checkSuspiciousImports.mjs";
+
 const isElectron = process.env.VITE_TARGET === "electron";
 const isBrowser = process.env.VITE_TARGET === "browser";
+const isProduction = process.env.NODE_ENV === "production";
 
 export default defineConfig((options) => {
   const mode = z
@@ -48,7 +54,7 @@ export default defineConfig((options) => {
     : false;
 
   // ref: electronの起動をスキップしてデバッグ起動を軽くする
-  const skipLahnchElectron =
+  const skipLaunchElectron =
     mode === "test" || process.env.SKIP_LAUNCH_ELECTRON === "1";
 
   return {
@@ -79,25 +85,39 @@ export default defineConfig((options) => {
       mode !== "test" &&
         checker({
           overlay: false,
-          eslint: {
-            lintCommand: "eslint --ext .ts,.vue .",
-          },
           vueTsc: true,
         }),
       isElectron && [
         cleanDistPlugin(),
+        // TODO: 関数で切り出して共通化できる部分はまとめる
         electron([
           {
             entry: "./backend/electron/main.ts",
             // ref: https://github.com/electron-vite/vite-plugin-electron/pull/122
             onstart: ({ startup }) => {
               console.log("main process build is complete.");
-              if (!skipLahnchElectron) {
-                void startup([".", "--no-sandbox"]);
+              if (!skipLaunchElectron) {
+                // ここのprocess.argvは以下のような形で渡ってくる：
+                // ["node", ".../vite.js", (...vite用の引数...), "--", その他引数...]
+                const args: string[] = [".", "--no-sandbox"];
+                const doubleDashIndex = process.argv.indexOf("--");
+                if (doubleDashIndex !== -1) {
+                  args.push("--", ...process.argv.slice(doubleDashIndex + 1));
+                }
+                void startup(args);
               }
             },
             vite: {
-              plugins: [tsconfigPaths({ root: import.meta.dirname })],
+              plugins: [
+                tsconfigPaths({ root: import.meta.dirname }),
+                isProduction &&
+                  checkSuspiciousImportsPlugin({
+                    allowedInTryCatchModules: [
+                      // systeminformationのoptionalな依存。try-catch内なので許可。
+                      "osx-temperature-sensor",
+                    ],
+                  }),
+              ],
               build: {
                 outDir: path.resolve(import.meta.dirname, "dist"),
                 sourcemap,
@@ -108,12 +128,15 @@ export default defineConfig((options) => {
             // ref: https://electron-vite.github.io/guide/preload-not-split.html
             entry: "./backend/electron/preload.ts",
             onstart({ reload }) {
-              if (!skipLahnchElectron) {
+              if (!skipLaunchElectron) {
                 reload();
               }
             },
             vite: {
-              plugins: [tsconfigPaths({ root: import.meta.dirname })],
+              plugins: [
+                tsconfigPaths({ root: import.meta.dirname }),
+                isProduction && checkSuspiciousImportsPlugin({}),
+              ],
               build: {
                 outDir: path.resolve(import.meta.dirname, "dist"),
                 sourcemap,
@@ -153,6 +176,23 @@ const injectBrowserPreloadPlugin = (): Plugin => {
           "<!-- %BROWSER_PRELOAD% -->",
           `<script type="module" src="./backend/browser/preload.ts"></script>`,
         ),
+    },
+  };
+};
+
+const checkSuspiciousImportsPlugin = (
+  options: CheckSuspiciousImportsOptions,
+): Plugin => {
+  return {
+    name: "check-suspicious-imports",
+    enforce: "post",
+    apply: "build",
+    writeBundle(_options, bundle) {
+      for (const [file, chunk] of Object.entries(bundle)) {
+        if (chunk.type === "chunk") {
+          checkSuspiciousImports(file, chunk.code, options);
+        }
+      }
     },
   };
 };

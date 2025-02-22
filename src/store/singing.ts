@@ -105,7 +105,7 @@ import {
   round,
 } from "@/sing/utility";
 import { getWorkaroundKeyRangeAdjustment } from "@/sing/workaroundKeyRangeAdjustment";
-import { createLogger } from "@/domain/frontend/log";
+import { createLogger } from "@/helpers/log";
 import { noteSchema } from "@/domain/project/schema";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
@@ -2835,11 +2835,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           if (state.savingSetting.fixedExportEnabled) {
             filePath = path.join(state.savingSetting.fixedExportDir, fileName);
           } else {
-            filePath ??= await window.backend.showExportFileDialog({
+            filePath ??= await window.backend.showSaveFileDialog({
               title: "音声を保存",
-              defaultPath: fileName,
+              name: "WAV ファイル",
               extensions: ["wav"],
-              extensionName: "WAV ファイル",
+              defaultPath: fileName,
             });
           }
           if (!filePath) {
@@ -3598,11 +3598,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             buffer = (await ufProjectToMultiFile(project, fileType))[0];
           }
 
-          let filePath = await window.backend.showExportFileDialog({
+          let filePath = await window.backend.showSaveFileDialog({
             title: "プロジェクトを書き出し",
-            defaultPath: fileBaseName,
-            extensionName: fileTypeLabel,
+            name: fileTypeLabel,
             extensions: [extension],
+            defaultPath: fileBaseName,
           });
           if (!filePath) {
             return { result: "CANCELED", path: "" };

@@ -1,0 +1,6 @@
+{
+  "name": "Dummy Engine",
+  "command": "dummy",
+  "port": 404,
+  "supported_features": {}
+}

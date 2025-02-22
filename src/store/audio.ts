@@ -1212,6 +1212,12 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
   DEFAULT_PROJECT_FILE_BASE_NAME: {
     getter: (state) => {
+      // NOTE: 起動時にソングエディタが開かれた場合、トークの初期化が行われずAudioCellが作成されない
+      // TODO: ソングエディタが開かれてい場合はこの関数を呼ばないようにし、warningを出す
+      if (state.audioKeys.length === 0) {
+        return DEFAULT_PROJECT_NAME;
+      }
+
       const headItemText = state.audioItems[state.audioKeys[0]].text;
 
       const tailItemText =
@@ -1370,11 +1376,11 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             defaultAudioFileName,
           );
         } else {
-          filePath ??= await window.backend.showExportFileDialog({
+          filePath ??= await window.backend.showSaveFileDialog({
             title: "音声を保存",
-            defaultPath: defaultAudioFileName,
-            extensionName: "WAV ファイル",
+            name: "WAV ファイル",
             extensions: ["wav"],
+            defaultPath: defaultAudioFileName,
           });
         }
 
@@ -1519,11 +1525,11 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             defaultFileName,
           );
         } else {
-          filePath ??= await window.backend.showExportFileDialog({
+          filePath ??= await window.backend.showSaveFileDialog({
             title: "音声を全て繋げて保存",
-            defaultPath: defaultFileName,
-            extensionName: "WAV ファイル",
+            name: "WAV ファイル",
             extensions: ["wav"],
+            defaultPath: defaultFileName,
           });
         }
 
@@ -1664,11 +1670,11 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             defaultFileName,
           );
         } else {
-          filePath ??= await window.backend.showExportFileDialog({
+          filePath ??= await window.backend.showSaveFileDialog({
             title: "文章を全て繋げてテキストファイルに保存",
-            defaultPath: defaultFileName,
-            extensionName: "テキストファイル",
+            name: "テキストファイル",
             extensions: ["txt"],
+            defaultPath: defaultFileName,
           });
         }
 
@@ -2894,8 +2900,11 @@ export const audioCommandStore = transformCommandStore(
         async ({ state, mutations, actions, getters }, payload) => {
           let filePath: undefined | string;
           if (payload.type == "dialog") {
-            filePath = await window.backend.showImportFileDialog({
+            filePath = await window.backend.showOpenFileDialog({
               title: "セリフ読み込み",
+              name: "Text",
+              mimeType: "plain/text",
+              extensions: ["txt"],
             });
             if (!filePath) return;
           } else if (payload.type == "path") {

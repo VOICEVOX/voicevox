@@ -1,7 +1,6 @@
 import path from "path";
 import fs from "fs";
 import { ReadableStream } from "node:stream/web";
-import log from "electron-log/main";
 import { dialog } from "electron";
 
 import { getConfigManager } from "./electronConfig";
@@ -10,7 +9,6 @@ import { getEngineProcessManager } from "./manager/engineProcessManager";
 import { getRuntimeInfoManager } from "./manager/RuntimeInfoManager";
 import { getVvppManager } from "./manager/vvppManager";
 import { getWindowManager } from "./manager/windowManager";
-import { ProgressCallback } from "./type";
 import {
   EngineId,
   EngineInfo,
@@ -24,6 +22,10 @@ import {
 } from "@/domain/defaultEngine/latetDefaultEngine";
 import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
 import { UnreachableError } from "@/type/utility";
+import { ProgressCallback } from "@/helpers/progressHelper";
+import { createLogger } from "@/helpers/log";
+
+const log = createLogger("EngineAndVvppController");
 
 /**
  * エンジンとVVPP周りの処理の流れを制御するクラス。
@@ -232,7 +234,7 @@ export class EngineAndVvppController {
           }
 
           // ファイルを確実に閉じる
-          const { promise, resolve, reject } = Promise.withResolvers();
+          const { promise, resolve, reject } = Promise.withResolvers<void>();
           fileStream.on("close", resolve);
           fileStream.on("error", reject);
           fileStream.close();
