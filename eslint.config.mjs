@@ -6,17 +6,15 @@ import globals from "globals";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore 型の定義が無い
 import importPlugin from "eslint-plugin-import";
-import prettierConfigRecommended from "eslint-plugin-prettier/recommended";
 import storybookPlugin from "eslint-plugin-storybook";
 import vueParser from "vue-eslint-parser";
 import vuePlugin from "eslint-plugin-vue";
 import vuePrettierConfig from "@vue/eslint-config-prettier";
-import vueTypeScriptConfig from "@vue/eslint-config-typescript";
 import {
-  config as defineConfig,
-  configs,
-  parser as typescriptParser,
-} from "typescript-eslint";
+  defineConfigWithVueTs,
+  vueTsConfigs,
+} from "@vue/eslint-config-typescript";
+import { configs, parser as typescriptParser } from "typescript-eslint";
 import voicevoxPlugin from "./eslint-plugin/index.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -58,6 +56,7 @@ const pluginConfig = (nameOrConfigs, config) => {
 const vueParserOptions = {
   ecmaVersion: 2020,
   parser: typescriptParser,
+  extraFileExtensions: [".vue"],
 };
 
 /** @type {ParserOptions} */
@@ -87,7 +86,7 @@ const typeCheckedRules = {
   ],
 };
 
-export default defineConfig(
+export default defineConfigWithVueTs(
   {
     name: "voicevox/defaults/plugins",
     plugins: {
@@ -123,8 +122,7 @@ export default defineConfig(
   ...pluginConfig(vuePlugin.configs["flat/recommended"]),
   ...pluginConfig("eslint:recommended", js.configs.recommended),
   ...pluginConfig("@vue/prettier", vuePrettierConfig),
-  ...pluginConfig(vueTypeScriptConfig()),
-  ...pluginConfig("prettier:recommended", prettierConfigRecommended),
+  ...pluginConfig(vueTsConfigs.recommended.toConfigArray()),
   ...pluginConfig(voicevoxPlugin.configs.all),
   ...pluginConfig(storybookPlugin.configs["flat/recommended"]),
 
