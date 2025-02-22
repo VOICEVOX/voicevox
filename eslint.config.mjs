@@ -3,9 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import js from "@eslint/js";
 import globals from "globals";
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore 型の定義が無い
-import importPlugin from "eslint-plugin-import";
+import * as importPlugin from "eslint-plugin-import";
 import storybookPlugin from "eslint-plugin-storybook";
 import vueParser from "vue-eslint-parser";
 import vuePlugin from "eslint-plugin-vue";
