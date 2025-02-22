@@ -1,6 +1,6 @@
 {
   "name": "Dummy Engine",
-  "command": "dummy.exe",
+  "command": "dummy",
   "port": 404,
   "supported_features": {}
 }

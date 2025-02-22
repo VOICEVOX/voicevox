@@ -210,7 +210,7 @@ initializeEngineInfoManager({
   vvppEngineDir,
 });
 initializeEngineProcessManager({ onEngineProcessError });
-initializeVvppManager({ vvppEngineDir });
+initializeVvppManager({ vvppEngineDir, tmpDir: app.getPath("temp") });
 
 const configManager = getConfigManager();
 const windowManager = getWindowManager();
@@ -351,15 +351,6 @@ const retryShowSaveDialogWhileSafeDir = async <
 
 // プロセス間通信
 registerIpcMainHandle<IpcMainHandle>({
-  GET_APP_INFOS: () => {
-    const name = app.getName();
-    const version = app.getVersion();
-    return {
-      name,
-      version,
-    };
-  },
-
   GET_TEXT_ASSET: async (_, textType) => {
     const fileName = path.join(__static, AssetTextFileNames[textType]);
     const text = await fs.promises.readFile(fileName, "utf-8");
@@ -399,18 +390,6 @@ registerIpcMainHandle<IpcMainHandle>({
     return result.filePaths[0];
   },
 
-  SHOW_VVPP_OPEN_DIALOG: async (_, { title, defaultPath }) => {
-    const result = await windowManager.showOpenDialog({
-      title,
-      defaultPath,
-      filters: [
-        { name: "VOICEVOX Plugin Package", extensions: ["vvpp", "vvppp"] },
-      ],
-      properties: ["openFile", "createDirectory", "treatPackageAsDirectory"],
-    });
-    return result.filePaths[0];
-  },
-
   /**
    * ディレクトリ選択ダイアログを表示する。
    * 保存先として選ぶ場合は SHOW_SAVE_DIRECTORY_DIALOG を使うべき。
@@ -430,33 +409,6 @@ registerIpcMainHandle<IpcMainHandle>({
     return result.filePaths[0];
   },
 
-  SHOW_PROJECT_SAVE_DIALOG: async (_, { title, defaultPath }) => {
-    const result = await retryShowSaveDialogWhileSafeDir(() =>
-      windowManager.showSaveDialog({
-        title,
-        defaultPath,
-        filters: [{ name: "VOICEVOX Project file", extensions: ["vvproj"] }],
-        properties: ["showOverwriteConfirmation"],
-      }),
-    );
-    if (result.canceled) {
-      return undefined;
-    }
-    return result.filePath;
-  },
-
-  SHOW_PROJECT_LOAD_DIALOG: async (_, { title }) => {
-    const result = await windowManager.showOpenDialog({
-      title,
-      filters: [{ name: "VOICEVOX Project file", extensions: ["vvproj"] }],
-      properties: ["openFile", "createDirectory", "treatPackageAsDirectory"],
-    });
-    if (result.canceled) {
-      return undefined;
-    }
-    return result.filePaths;
-  },
-
   SHOW_WARNING_DIALOG: (_, { title, message }) => {
     return windowManager.showMessageBox({
       type: "warning",
@@ -473,26 +425,30 @@ registerIpcMainHandle<IpcMainHandle>({
     });
   },
 
-  SHOW_IMPORT_FILE_DIALOG: (_, { title, name, extensions }) => {
+  SHOW_OPEN_FILE_DIALOG: (_, { title, name, extensions, defaultPath }) => {
     return windowManager.showOpenDialogSync({
       title,
-      filters: [{ name: name ?? "Text", extensions: extensions ?? ["txt"] }],
+      defaultPath,
+      filters: [{ name, extensions }],
       properties: ["openFile", "createDirectory", "treatPackageAsDirectory"],
     })?.[0];
   },
 
-  SHOW_EXPORT_FILE_DIALOG: async (
+  SHOW_SAVE_FILE_DIALOG: async (
     _,
-    { title, defaultPath, extensionName, extensions },
+    { title, defaultPath, name, extensions },
   ) => {
     const result = await retryShowSaveDialogWhileSafeDir(() =>
       windowManager.showSaveDialog({
         title,
         defaultPath,
-        filters: [{ name: extensionName, extensions: extensions }],
+        filters: [{ name, extensions }],
         properties: ["createDirectory"],
       }),
     );
+    if (result.canceled) {
+      return undefined;
+    }
     return result.filePath;
   },
 
@@ -508,27 +464,34 @@ registerIpcMainHandle<IpcMainHandle>({
     appState.willQuit = true;
     windowManager.destroyWindow();
   },
+
   MINIMIZE_WINDOW: () => {
     windowManager.minimize();
   },
+
   TOGGLE_MAXIMIZE_WINDOW: () => {
     windowManager.toggleMaximizeWindow();
   },
+
   TOGGLE_FULLSCREEN: () => {
     windowManager.toggleFullScreen();
   },
+
   /** UIの拡大 */
   ZOOM_IN: () => {
     windowManager.zoomIn();
   },
+
   /** UIの縮小 */
   ZOOM_OUT: () => {
     windowManager.zoomOut();
   },
+
   /** UIの拡大率リセット */
   ZOOM_RESET: () => {
     windowManager.zoomReset();
   },
+
   OPEN_LOG_DIRECTORY: () => {
     void shell.openPath(app.getPath("logs"));
   },
@@ -567,6 +530,7 @@ registerIpcMainHandle<IpcMainHandle>({
   CHECK_FILE_EXISTS: (_, { file }) => {
     return fs.existsSync(file);
   },
+
   CHANGE_PIN_WINDOW: () => {
     windowManager.togglePinWindow();
   },
