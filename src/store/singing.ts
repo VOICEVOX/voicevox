@@ -3553,7 +3553,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     async action() {
       const cache = await window.backend.fetchCachedSingingVoices();
       for (const [key, value] of Object.entries(cache)) {
-        phraseSingingVoices.set(SingingVoiceKey(key), value);
+        singingVoiceCache.set(SingingVoiceKey(key), value);
       }
     },
   },
