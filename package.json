@@ -10,19 +10,20 @@
   "volta": {
     "node": "22.14.0"
   },
-  "packageManager": "pnpm@9.15.4",
+  "packageManager": "pnpm@10.3.0",
   "scripts": {
+    "// --- lint ---": "",
     "lint": "eslint .",
     "lint:inspector": "cross-env ESLINT_INSPECTOR=1 eslint --inspect-config",
     "fmt": "eslint . --fix",
     "markdownlint": "markdownlint --ignore node_modules/ --ignore dist/ --ignore dist_electron/ --ignore dist_preview/ ./",
     "typecheck": "vue-tsc --noEmit",
     "typos": "cross-env ./vendored/typos/typos",
-
+    "// --- tools ---": "",
     "license:generate": "tsx tools/generateLicenses.mts",
     "license:merge": "tsx tools/mergeLicenses.mts",
     "check-suspicious-imports": "tsx tools/checkSuspiciousImports.mts",
-
+    "// --- test ---": "",
     "test:unit": "vitest --run",
     "test-watch:unit": "vitest --watch",
     "test-ui:unit": "vitest --ui",
@@ -34,14 +35,14 @@
     "test:storybook-vrt": "cross-env TARGET=storybook playwright test",
     "test-watch:storybook-vrt": "cross-env TARGET=storybook PWTEST_WATCH=1 playwright test",
     "test-ui:storybook-vrt": "cross-env TARGET=storybook playwright test --ui",
-
+    "// --- build ---": "",
     "electron:serve": "cross-env VITE_TARGET=electron vite",
     "electron:build": "cross-env VITE_TARGET=electron NODE_ENV=production vite build && electron-builder --config electron-builder.config.js --publish never",
     "browser:serve": "cross-env VITE_TARGET=browser vite",
     "browser:build": "cross-env VITE_TARGET=browser NODE_ENV=production vite build",
     "storybook": "storybook dev --port 6006",
     "storybook:build": "storybook build",
-
+    "// --- lifecycle ---": "",
     "preinstall": "npx -y only-allow pnpm",
     "postinstall": "pnpm run postinstall:packages && pnpm run postinstall:download-scripts",
     "postinstall:packages": "electron-builder install-app-deps && playwright install chromium",
@@ -60,7 +61,6 @@
     "encoding-japanese": "1.0.30",
     "fast-array-diff": "1.1.0",
     "fast-base64": "0.1.8",
-    "glob": "11.0.0",
     "hotkeys-js": "3.13.6",
     "immer": "9.0.21",
     "kuromoji": "github:VOICEVOX/kuromoji.js#0.0.1",
@@ -101,7 +101,6 @@
     "@storybook/vue3-vite": "8.4.4",
     "@types/async-lock": "1.4.0",
     "@types/encoding-japanese": "1.0.18",
-    "@types/glob": "8.0.0",
     "@types/markdown-it": "12.2.0",
     "@types/multistream": "4.1.0",
     "@types/semver": "7.3.9",
@@ -148,5 +147,15 @@
     "vue-eslint-parser": "9.4.3",
     "vue-tsc": "2.1.10",
     "yargs": "17.2.1"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@nestjs/core",
+      "@openapitools/openapi-generator-cli",
+      "electron",
+      "esbuild",
+      "msw",
+      "vue-demi"
+    ]
   }
 }

@@ -37,6 +37,7 @@ import { useStore } from "@/store";
 import { HotkeyAction, useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import { useEngineIcons } from "@/composables/useEngineIcons";
 import HelpDialog from "@/components/Dialog/HelpDialog/HelpDialog.vue";
+import { getAppInfos } from "@/domain/appInfo";
 
 const props = defineProps<{
   /** 「ファイル」メニューのサブメニュー */
@@ -52,7 +53,6 @@ const props = defineProps<{
 const $q = useQuasar();
 const store = useStore();
 const { registerHotkeyWithCleanup } = useHotkeyManager();
-const currentVersion = ref("");
 
 /** 追加のバージョン情報。コミットハッシュなどを書ける。 */
 const extraVersionInfo = import.meta.env.VITE_EXTRA_VERSION_INFO;
@@ -77,9 +77,6 @@ const defaultEngineAltPortTo = computed<string | undefined>(() => {
   }
 });
 
-void window.backend.getAppInfos().then((obj) => {
-  currentVersion.value = obj.version;
-});
 const isMultiEngineOffMode = computed(() => store.state.isMultiEngineOffMode);
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 const menubarLocked = computed(() => store.getters.MENUBAR_LOCKED);
@@ -96,7 +93,7 @@ const titleText = computed(
     (isEdited.value ? "*" : "") +
     (projectName.value != undefined ? projectName.value + " - " : "") +
     "VOICEVOX" +
-    (currentVersion.value ? " - Ver. " + currentVersion.value : "") +
+    (" - Ver. " + getAppInfos().version) +
     (extraVersionInfo ? ` (${extraVersionInfo})` : "") +
     (isMultiEngineOffMode.value ? " - マルチエンジンオフ" : "") +
     (defaultEngineAltPortTo.value != null

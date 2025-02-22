@@ -28,6 +28,7 @@ import {
   showQuestionDialog,
 } from "@/components/Dialog/Dialog";
 import { uuid4 } from "@/helpers/random";
+import { getAppInfos } from "@/domain/appInfo";
 
 export const projectStoreState: ProjectStoreState = {
   savedLastCommandIds: { talk: null, song: null },
@@ -173,13 +174,16 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
       async ({ actions, mutations, getters }, payload) => {
         let filePath: undefined | string;
         if (payload.type == "dialog") {
-          const ret = await window.backend.showProjectLoadDialog({
+          const ret = await window.backend.showOpenFileDialog({
             title: "プロジェクトファイルの選択",
+            name: "VOICEVOX Project file",
+            mimeType: "application/json",
+            extensions: ["vvproj"],
           });
-          if (ret == undefined || ret?.length == 0) {
+          if (ret == undefined) {
             return false;
           }
-          filePath = ret[0];
+          filePath = ret;
         } else if (payload.type == "path") {
           filePath = payload.filePath;
         }
@@ -263,8 +267,10 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             }
 
             // Write the current status to a project file.
-            const ret = await window.backend.showProjectSaveDialog({
+            const ret = await window.backend.showSaveFileDialog({
               title: "プロジェクトファイルの保存",
+              name: "VOICEVOX Project file",
+              extensions: ["vvproj"],
               defaultPath,
             });
             if (ret == undefined) {
@@ -286,7 +292,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           await context.actions.APPEND_RECENTLY_USED_PROJECT({
             filePath,
           });
-          const appInfos = await window.backend.getAppInfos();
+          const appVersion = getAppInfos().version;
           const {
             audioItems,
             audioKeys,
@@ -297,7 +303,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             trackOrder,
           } = context.state;
           const projectData: LatestProjectType = {
-            appVersion: appInfos.version,
+            appVersion,
             talk: {
               audioKeys,
               audioItems,
@@ -376,6 +382,12 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         return "canceled";
       }
     }),
+  },
+
+  GET_INITIAL_PROJECT_FILE_PATH: {
+    action: async () => {
+      return await window.backend.getInitialProjectFilePath();
+    },
   },
 
   IS_EDITED: {
