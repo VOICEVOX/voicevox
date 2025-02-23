@@ -65,7 +65,7 @@ export class EngineAndVvppController {
           tempEngineFiles.getManifest().uuid,
         )
       ) {
-        throw new Error("Cannot install default engine");
+        throw new Error("デフォルトエンジンはインストールできません。");
       }
 
       await this.vvppManager.install(tempEngineFiles);
