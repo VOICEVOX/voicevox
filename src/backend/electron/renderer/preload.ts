@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer, webUtils } from "electron";
-import type { IpcRendererInvoke } from "./ipc";
+import { type IpcRendererInvoke } from "./ipc";
+import { getOrThrowIpcResult } from "./ipcResultHelper";
 import {
   ConfigType,
   EngineId,
@@ -13,8 +14,12 @@ const ipcRendererInvokeProxy = new Proxy(
   {
     get:
       (_, channel: string) =>
-      (...args: unknown[]) =>
-        ipcRenderer.invoke(channel, ...args),
+      async (...args: unknown[]) => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        const ipcResult = await ipcRenderer.invoke(channel, ...args);
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+        return getOrThrowIpcResult(ipcResult);
+      },
   },
 ) as IpcRendererInvoke;
 
