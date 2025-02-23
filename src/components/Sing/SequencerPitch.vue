@@ -95,17 +95,6 @@ const isPitchLineVisible = computed(() => {
   return store.getters.SELECTED_TRACK.singer != undefined;
 });
 
-const originalPitchLine = new PitchLine(
-  originalPitchLineColor.value,
-  1.125,
-  isPitchLineVisible.value,
-);
-const pitchEditLine = new PitchLine(
-  pitchEditLineColor.value,
-  2.25,
-  isPitchLineVisible.value,
-);
-
 const canvasContainer = ref<HTMLElement | null>(null);
 const canvas = ref<HTMLCanvasElement | null>(null);
 let resizeObserver: ResizeObserver | undefined;
@@ -114,6 +103,8 @@ let canvasHeight: number | undefined;
 
 let renderer: PIXI.Renderer | undefined;
 let stage: PIXI.Container | undefined;
+let originalPitchLine: PitchLine | undefined;
+let pitchEditLine: PitchLine | undefined;
 let requestId: number | undefined;
 let renderInNextFrame = false;
 
@@ -123,6 +114,12 @@ const render = () => {
   }
   if (stage == undefined) {
     throw new Error("stage is undefined.");
+  }
+  if (originalPitchLine == undefined) {
+    throw new Error("originalPitchLine is undefined.");
+  }
+  if (pitchEditLine == undefined) {
+    throw new Error("pitchEditLine is undefined.");
   }
   if (canvasWidth == undefined) {
     throw new Error("canvasWidth is undefined.");
@@ -275,6 +272,9 @@ watch(
     asyncLock.acquire(
       "originalPitch",
       async () => {
+        if (originalPitchLine == undefined) {
+          throw new Error("originalPitchLine is undefined.");
+        }
         originalPitchLine.pitchDataMap = await generateOriginalPitchDataMap();
         renderInNextFrame = true;
       },
@@ -294,6 +294,9 @@ watch(
     asyncLock.acquire(
       "pitchEdit",
       async () => {
+        if (pitchEditLine == undefined) {
+          throw new Error("pitchEditLine is undefined.");
+        }
         pitchEditLine.pitchDataMap = await generatePitchEditDataMap();
         renderInNextFrame = true;
       },
@@ -346,6 +349,16 @@ onMountedOrActivated(() => {
     height: canvasHeight,
   });
   stage = new PIXI.Container();
+  originalPitchLine = new PitchLine(
+    originalPitchLineColor.value,
+    1.125,
+    isPitchLineVisible.value,
+  );
+  pitchEditLine = new PitchLine(
+    pitchEditLineColor.value,
+    2.25,
+    isPitchLineVisible.value,
+  );
 
   stage.addChild(originalPitchLine.displayObject);
   stage.addChild(pitchEditLine.displayObject);
@@ -388,8 +401,8 @@ onUnmountedOrDeactivated(() => {
   if (requestId != undefined) {
     window.cancelAnimationFrame(requestId);
   }
-  originalPitchLine.destroy();
-  pitchEditLine.destroy();
+  originalPitchLine?.destroy();
+  pitchEditLine?.destroy();
   stage?.destroy();
   renderer?.destroy(true);
   resizeObserver?.disconnect();
