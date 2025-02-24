@@ -5,7 +5,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from "vue";
+import { ref, watch, computed, onUnmounted, onMounted } from "vue";
 import * as PIXI from "pixi.js";
 import AsyncLock from "async-lock";
 import { useStore } from "@/store";
@@ -18,10 +18,6 @@ import {
 } from "@/sing/domain";
 import { noteNumberToBaseY, tickToBaseX } from "@/sing/viewHelper";
 import { Color } from "@/sing/graphics/lineStrip";
-import {
-  onMountedOrActivated,
-  onUnmountedOrDeactivated,
-} from "@/composables/onMountOrActivate";
 import { ExhaustiveError } from "@/type/utility";
 import { createLogger } from "@/helpers/log";
 import { getLast } from "@/sing/utility";
@@ -264,6 +260,24 @@ const generatePitchEditDataMap = async () => {
   return await toPitchDataMap(framewiseData, frameRate);
 };
 
+const updateOriginalPitchLineDataMap = async () => {
+  if (originalPitchLine == undefined) {
+    throw new Error("originalPitchLine is undefined.");
+  }
+  originalPitchLine.pitchDataMap = await generateOriginalPitchDataMap();
+  renderInNextFrame = true;
+};
+
+const updatePitchEditLineDataMap = async () => {
+  if (pitchEditLine == undefined) {
+    throw new Error("pitchEditLine is undefined.");
+  }
+  pitchEditLine.pitchDataMap = await generatePitchEditDataMap();
+  renderInNextFrame = true;
+};
+
+let initialized = false;
+
 const asyncLock = new AsyncLock({ maxPending: 1 });
 
 watch(
@@ -272,11 +286,9 @@ watch(
     asyncLock.acquire(
       "originalPitch",
       async () => {
-        if (originalPitchLine == undefined) {
-          throw new Error("originalPitchLine is undefined.");
+        if (initialized) {
+          await updateOriginalPitchLineDataMap();
         }
-        originalPitchLine.pitchDataMap = await generateOriginalPitchDataMap();
-        renderInNextFrame = true;
       },
       (err) => {
         if (err != undefined) {
@@ -294,11 +306,9 @@ watch(
     asyncLock.acquire(
       "pitchEdit",
       async () => {
-        if (pitchEditLine == undefined) {
-          throw new Error("pitchEditLine is undefined.");
+        if (initialized) {
+          await updatePitchEditLineDataMap();
         }
-        pitchEditLine.pitchDataMap = await generatePitchEditDataMap();
-        renderInNextFrame = true;
       },
       (err) => {
         if (err != undefined) {
@@ -326,7 +336,7 @@ watch(
   },
 );
 
-onMountedOrActivated(() => {
+onMounted(() => {
   const canvasContainerElement = canvasContainer.value;
   const canvasElement = canvas.value;
   if (!canvasContainerElement) {
@@ -378,7 +388,10 @@ onMountedOrActivated(() => {
     requestId = window.requestAnimationFrame(callback);
   };
   requestId = window.requestAnimationFrame(callback);
-  renderInNextFrame = true;
+
+  // NOTE: watchのimmediateはonMountedの前に実行されるので、最初の更新はwatchではなくここで直接実行する
+  void updateOriginalPitchLineDataMap();
+  void updatePitchEditLineDataMap();
 
   resizeObserver = new ResizeObserver(() => {
     if (renderer == undefined) {
@@ -395,9 +408,11 @@ onMountedOrActivated(() => {
     }
   });
   resizeObserver.observe(canvasContainerElement);
+
+  initialized = true;
 });
 
-onUnmountedOrDeactivated(() => {
+onUnmounted(() => {
   if (requestId != undefined) {
     window.cancelAnimationFrame(requestId);
   }
