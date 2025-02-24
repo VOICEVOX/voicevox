@@ -327,7 +327,7 @@ const closeDialog = () => {
 .character-items-container {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: vars.$gap-1;
+  gap: vars.$gap-2;
 }
 
 .header {
