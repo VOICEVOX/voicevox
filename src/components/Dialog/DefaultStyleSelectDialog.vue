@@ -10,25 +10,18 @@
     <QLayout container view="hHh Lpr lff" class="bg-background">
       <QHeader class="q-py-sm">
         <QToolbar>
-          <div class="column">
-            <QToolbarTitle class="text-display"
-              >設定 / キャラクターの管理 /
-              {{ characterInfo.metas.speakerName }}</QToolbarTitle
-            >
-          </div>
-
-          <QSpace />
-
-          <div class="row items-center no-wrap">
-            <QBtn
-              unelevated
-              label="戻る"
-              color="toolbar-button"
-              textColor="toolbar-button-display"
-              class="text-no-wrap"
-              @click="closeDialog"
-            />
-          </div>
+          <QBtn
+            unelevated
+            label="戻る"
+            color="toolbar-button"
+            textColor="toolbar-button-display"
+            class="text-no-wrap"
+            @click="closeDialog"
+          />
+          <QToolbarTitle class="text-display"
+            >設定 / キャラクターの管理 /
+            {{ characterInfo.metas.speakerName }}</QToolbarTitle
+          >
         </QToolbar>
       </QHeader>
 
