@@ -9,7 +9,10 @@
         :alt="characterInfo.metas.speakerName"
         class="style-icon"
       />
-      <QIcon name="info_outline" class="info-icon" />
+      <div class="info">
+        <QIcon class="info-icon" name="info_outline" />
+        <span class="info-label"> 詳細を表示 </span>
+      </div>
     </button>
     <div class="speaker-name">{{ characterInfo.metas.speakerName }}</div>
     <div class="style-select-container">
@@ -125,10 +128,6 @@ const rollStyleIndex = (speakerUuid: SpeakerId, diff: number) => {
   padding: 0;
   overflow: hidden;
 
-  &:hover {
-    background-color: colors.$control-hovered;
-  }
-
   &:active {
     background-color: colors.$control-pressed;
     box-shadow: 0 0 0 transparent;
@@ -143,17 +142,35 @@ const rollStyleIndex = (speakerUuid: SpeakerId, diff: number) => {
   }
 }
 
-.info-icon {
+.style-icon {
+  height: 100%;
+  aspect-ratio: 1 / 1;
+}
+
+.info {
   position: absolute;
   bottom: vars.$padding-1;
   left: vars.$padding-1;
+  display: flex;
+  align-items: center;
+  gap: vars.$gap-1;
+}
+
+.info-icon {
   font-size: 24px;
   opacity: 0.5;
 }
 
-.style-icon {
-  height: 100%;
-  aspect-ratio: 1 / 1;
+.info-label {
+  opacity: 0;
+}
+
+.character-card:hover > .info > * {
+  opacity: 1;
+}
+
+.character-card:hover > .style-icon {
+  opacity: 0.25;
 }
 
 .speaker-name {
