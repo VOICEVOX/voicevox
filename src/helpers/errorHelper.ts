@@ -33,7 +33,11 @@ export const errorToMessages = (
   e: unknown,
 ): { displayable: string[]; internal: string[] } => {
   const errors = flattenErrors(e);
-  return toMessageLines(errors);
+  const { displayable, internal } = splitErrors(errors);
+  return {
+    displayable: toMessages(displayable),
+    internal: toMessages(internal),
+  };
 
   function flattenErrors(e: unknown): unknown[] {
     if (e instanceof AggregateError) {
@@ -45,9 +49,9 @@ export const errorToMessages = (
     return [e];
   }
 
-  function toMessageLines(errors: unknown[]): {
-    displayable: string[];
-    internal: string[];
+  function splitErrors(errors: unknown[]): {
+    displayable: unknown[];
+    internal: unknown[];
   } {
     let displayableCount = errors.findIndex(
       (e) => !(e instanceof DisplayableError),
@@ -56,40 +60,38 @@ export const errorToMessages = (
       displayableCount = errors.length;
     }
 
-    const displayable: string[] = [];
-    for (const e of errors.slice(0, displayableCount)) {
-      if (!(e instanceof DisplayableError)) {
-        throw new UnreachableError();
-      }
-      displayable.push(e.message);
-    }
+    return {
+      displayable: errors.slice(0, displayableCount),
+      internal: errors.slice(displayableCount),
+    };
+  }
 
-    const internal: string[] = [];
-    for (const e of errors.slice(displayableCount)) {
+  function toMessages(errors: unknown[]): string[] {
+    const messages: string[] = [];
+    for (const e of errors) {
       if (e instanceof Error) {
         let message = "";
         if (!["Error", "AggregateError", "DisplayableError"].includes(e.name)) {
           message += `${e.name}: `;
         }
         message += e.message;
-        internal.push(message);
+        messages.push(message);
         continue;
       }
 
       if (typeof e === "string") {
-        internal.push(`Unknown Error: ${e}`);
+        messages.push(`Unknown Error: ${e}`);
         continue;
       }
 
       if (typeof e === "object" && e != undefined) {
-        internal.push(`Unknown Error: ${JSON.stringify(e)}`);
+        messages.push(`Unknown Error: ${JSON.stringify(e)}`);
         continue;
       }
 
-      internal.push(`Unknown Error: ${String(e)}`);
+      messages.push(`Unknown Error: ${String(e)}`);
     }
-
-    return { displayable, internal };
+    return messages;
   }
 };
 
