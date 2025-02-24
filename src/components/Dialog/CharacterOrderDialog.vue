@@ -26,19 +26,6 @@
           <QSpace />
 
           <div class="row items-center no-wrap">
-            <BaseTooltip
-              label="トーク画面でのスタイル選択の並び順を編集できます。"
-            >
-              <QBtn
-                unelevated
-                color="toolbar-button"
-                textColor="toolbar-button-display"
-                class="text-no-wrap text-bold q-mr-sm"
-                icon="sort"
-                @click="showOrderPane = !showOrderPane"
-                >並び順を編集</QBtn
-              >
-            </BaseTooltip>
             <QBtn
               round
               flat
@@ -88,31 +75,23 @@
                 </div>
               </div>
             </BaseScrollArea>
-          </div>
-          <div v-if="showOrderPane" class="character-order-overlay"></div>
-          <div v-if="showOrderPane" class="character-order-container">
-            <div class="character-order-headline">
-              キャラクター並び替え
-              <BaseIconButton
-                label="閉じる"
-                icon="close"
-                @click="showOrderPane = false"
-              />
+            <div class="character-order-container">
+              <div class="character-order-headline">キャラクター並び替え</div>
+              <BaseScrollArea>
+                <Draggable
+                  v-model="characterOrder"
+                  class="character-order"
+                  :itemKey="keyOfCharacterOrderItem"
+                  @end="saveCharacterOrder(characterOrder)"
+                >
+                  <template #item="{ element }">
+                    <div class="character-order-item">
+                      {{ element.metas.speakerName }}
+                    </div>
+                  </template>
+                </Draggable>
+              </BaseScrollArea>
             </div>
-            <BaseScrollArea>
-              <Draggable
-                v-model="characterOrder"
-                class="character-order"
-                :itemKey="keyOfCharacterOrderItem"
-                @end="saveCharacterOrder(characterOrder)"
-              >
-                <template #item="{ element }">
-                  <div class="character-order-item">
-                    {{ element.metas.speakerName }}
-                  </div>
-                </template>
-              </Draggable>
-            </BaseScrollArea>
           </div>
         </QPage>
       </QPageContainer>
@@ -127,8 +106,6 @@ import DefaultStyleSelectDialog from "./DefaultStyleSelectDialog.vue";
 import CharacterTryListenCard from "./CharacterTryListenCard.vue";
 import BaseToggleGroup from "@/components/Base/BaseToggleGroup.vue";
 import BaseToggleGroupItem from "@/components/Base/BaseToggleGroupItem.vue";
-import BaseIconButton from "@/components/Base/BaseIconButton.vue";
-import BaseTooltip from "@/components/Base/BaseTooltip.vue";
 import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 import { useStore } from "@/store";
 import { CharacterInfo, SpeakerId, StyleId, StyleInfo } from "@/type/preload";
@@ -315,6 +292,8 @@ const closeDialog = () => {
   // height: 100%;
   height: calc(100vh - 90px);
   background-color: colors.$background;
+  display: grid;
+  grid-template-columns: 1fr auto;
 }
 
 .inner {
@@ -359,9 +338,6 @@ const closeDialog = () => {
   // TODO: 親コンポーネントからheightを取得できないため一時的にcalcを使用、HelpDialogの構造を再設計後100%に変更する
   // height: 100%;
   height: calc(100vh - 90px);
-  position: absolute;
-  top: 0;
-  right: 0;
   display: flex;
   flex-direction: column;
   background-color: colors.$background;
@@ -370,10 +346,8 @@ const closeDialog = () => {
 }
 
 .character-order-headline {
-  display: flex;
-  align-items: center;
+  @include mixin.headline-3;
   padding: vars.$padding-2;
-  gap: vars.$gap-1;
 }
 
 .character-order {
