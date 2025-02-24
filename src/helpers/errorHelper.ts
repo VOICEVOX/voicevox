@@ -53,16 +53,15 @@ export const errorToMessages = (
     displayable: unknown[];
     internal: unknown[];
   } {
-    let displayableCount = errors.findIndex(
-      (e) => !(e instanceof DisplayableError),
+    const firstInternalErrorIndex = errors.findIndex(
+      (error) => !(error instanceof DisplayableError),
     );
-    if (displayableCount === -1) {
-      displayableCount = errors.length;
-    }
+    const splitIndex =
+      firstInternalErrorIndex === -1 ? errors.length : firstInternalErrorIndex;
 
     return {
-      displayable: errors.slice(0, displayableCount),
-      internal: errors.slice(displayableCount),
+      displayable: errors.slice(0, splitIndex),
+      internal: errors.slice(splitIndex),
     };
   }
 
