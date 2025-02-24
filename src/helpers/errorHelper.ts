@@ -1,3 +1,5 @@
+import { UnreachableError } from "@/type/utility";
+
 /** 入力がnullかundefinedの場合エラーを投げ、それ以外の場合は入力をそのまま返す */
 export const ensureNotNullish = <T>(
   value: T | null | undefined,
@@ -11,7 +13,7 @@ export const ensureNotNullish = <T>(
 
 /**
  * ユーザーに表示するメッセージを持つエラー。
- * errorToMessageに渡すとユーザー向けのメッセージとして扱われる。
+ * {@link errorToMessages}でユーザー向けのメッセージとして扱われる。
  */
 export class DisplayableError extends Error {
   constructor(userFriendlyMessage: string, { cause }: { cause?: Error } = {}) {
@@ -21,17 +23,17 @@ export class DisplayableError extends Error {
 }
 
 /**
- * 例外からエラーメッセージを作る。
- * DisplayableErrorのメッセージはユーザー向けのメッセージとして扱う。
- * それ以外の例外のメッセージは内部エラーメッセージとして扱う。
+ * 例外からユーザー向けのエラーメッセージと内部向けのエラーメッセージを作る。
+ * DisplayableErrorのメッセージはユーザー向けとして扱う。
+ * それ以外の例外のメッセージは内部向けとして扱う。
  * causeやAggregateErrorの場合は再帰的に処理する。
- * 再帰的に処理する際、一度DisplayableError以外の例外を処理した後は内部エラーメッセージとして扱う。
- * 長い場合は後ろを切る。
+ * 再帰的に処理する際、一度DisplayableError以外の例外を処理した後は内部向けとして扱う。
  */
-export const errorToMessage = (e: unknown): string => {
+export const errorToMessages = (
+  e: unknown,
+): { displayable: string[]; internal: string[] } => {
   const errors = flattenErrors(e);
-  const messages = toMessageLines(errors);
-  return trim(messages.join("\n"));
+  return toMessageLines(errors);
 
   function flattenErrors(e: unknown): unknown[] {
     if (e instanceof AggregateError) {
@@ -43,43 +45,66 @@ export const errorToMessage = (e: unknown): string => {
     return [e];
   }
 
-  function toMessageLines(errors: unknown[]): string[] {
-    const messageLines: string[] = [];
+  function toMessageLines(errors: unknown[]): {
+    displayable: string[];
+    internal: string[];
+  } {
+    let displayableCount = errors.findIndex(
+      (e) => !(e instanceof DisplayableError),
+    );
+    if (displayableCount === -1) {
+      displayableCount = errors.length;
+    }
 
-    let isInner = false;
-    for (const e of errors) {
-      if (e instanceof DisplayableError) {
-        messageLines.push(e.message);
-        continue;
+    const displayable: string[] = [];
+    for (const e of errors.slice(0, displayableCount)) {
+      if (!(e instanceof DisplayableError)) {
+        throw new UnreachableError();
       }
+      displayable.push(e.message);
+    }
 
-      if (!isInner) {
-        messageLines.push("（内部エラーメッセージ）");
-        isInner = true;
-      }
-
+    const internal: string[] = [];
+    for (const e of errors.slice(displayableCount)) {
       if (e instanceof Error) {
-        messageLines.push(
-          e.name !== "Error" ? `${e.name}: ${e.message}` : e.message,
-        );
+        let message = "";
+        if (!["Error", "AggregateError", "DisplayableError"].includes(e.name)) {
+          message += `${e.name}: `;
+        }
+        message += e.message;
+        internal.push(message);
         continue;
       }
 
       if (typeof e === "string") {
-        messageLines.push(`Unknown Error: ${e}`);
+        internal.push(`Unknown Error: ${e}`);
         continue;
       }
 
       if (typeof e === "object" && e != undefined) {
-        messageLines.push(`Unknown Error: ${JSON.stringify(e)}`);
+        internal.push(`Unknown Error: ${JSON.stringify(e)}`);
         continue;
       }
 
-      messageLines.push(`Unknown Error: ${String(e)}`);
+      internal.push(`Unknown Error: ${String(e)}`);
     }
 
-    return messageLines;
+    return { displayable, internal };
   }
+};
+
+/**
+ * 例外からエラーメッセージを作る。
+ * {@link errorToMessages}の結果を結合して返す。
+ * 長い場合は後ろを切る。
+ */
+export const errorToMessage = (e: unknown): string => {
+  const { displayable, internal } = errorToMessages(e);
+  const messages = [...displayable];
+  if (internal.length > 0) {
+    messages.push("（内部エラーメッセージ）", ...internal);
+  }
+  return trim(messages.join("\n"));
 
   function trim(str: string) {
     return trimLongString(trimLines(str));

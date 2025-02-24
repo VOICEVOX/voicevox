@@ -34,7 +34,7 @@ describe("errorToMessage", () => {
       "aggregate error",
     );
     const expected =
-      "（内部エラーメッセージ）\nAggregateError: aggregate error\nerror1\nerror2";
+      "（内部エラーメッセージ）\naggregate error\nerror1\nerror2";
     expect(errorToMessage(input)).toEqual(expected);
   });
 
