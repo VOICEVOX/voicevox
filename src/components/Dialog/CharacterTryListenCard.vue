@@ -1,10 +1,16 @@
 <template>
-  <button class="character-card" @click="$emit('selectCharacter', speakerUuid)">
-    <img
-      :src="selectedStyle.iconPath"
-      :alt="characterInfo.metas.speakerName"
-      class="style-icon"
-    />
+  <div class="character-card-container">
+    <button
+      class="character-card"
+      @click="$emit('selectCharacter', speakerUuid)"
+    >
+      <img
+        :src="selectedStyle.iconPath"
+        :alt="characterInfo.metas.speakerName"
+        class="style-icon"
+      />
+      <QIcon name="info_outline" class="info-icon" />
+    </button>
     <div class="speaker-name">{{ characterInfo.metas.speakerName }}</div>
     <div class="style-select-container">
       <BaseIconButton
@@ -13,9 +19,24 @@
         label="前のスタイル"
         @click.stop="rollStyleIndex(speakerUuid, -1)"
       />
-      <span aria-live="polite">{{
-        selectedStyle.styleName || DEFAULT_STYLE_NAME
-      }}</span>
+      <BaseTooltip label="サンプルボイスを再生">
+        <BaseButton
+          v-for="voiceSampleIndex of [0]"
+          :key="voiceSampleIndex"
+          :icon="
+            playing != undefined &&
+            speakerUuid === playing.speakerUuid &&
+            selectedStyle.styleId === playing.styleId &&
+            voiceSampleIndex === playing.index
+              ? 'stop'
+              : 'play_arrow'
+          "
+          :label="selectedStyle.styleName || DEFAULT_STYLE_NAME"
+          @click.stop="
+            togglePlayOrStop(speakerUuid, selectedStyle, voiceSampleIndex)
+          "
+        />
+      </BaseTooltip>
       <BaseIconButton
         v-if="characterInfo.metas.styles.length > 1"
         icon="chevron_right"
@@ -23,31 +44,15 @@
         @click.stop="rollStyleIndex(speakerUuid, 1)"
       />
     </div>
-    <div class="voice-samples">
-      <BaseIconButton
-        v-for="voiceSampleIndex of [...Array(3).keys()]"
-        :key="voiceSampleIndex"
-        :icon="
-          playing != undefined &&
-          speakerUuid === playing.speakerUuid &&
-          selectedStyle.styleId === playing.styleId &&
-          voiceSampleIndex === playing.index
-            ? 'stop'
-            : 'play_arrow'
-        "
-        :label="`サンプルボイス${voiceSampleIndex + 1}`"
-        @click.stop="
-          togglePlayOrStop(speakerUuid, selectedStyle, voiceSampleIndex)
-        "
-      />
-    </div>
     <div v-if="isNewCharacter" class="new-character-item">NEW!</div>
-  </button>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import BaseIconButton from "@/components/Base/BaseIconButton.vue";
+import BaseButton from "@/components/Base/BaseButton.vue";
+import BaseTooltip from "@/components/Base/BaseTooltip.vue";
 import { CharacterInfo, SpeakerId, StyleId, StyleInfo } from "@/type/preload";
 import { DEFAULT_STYLE_NAME } from "@/store/utility";
 
@@ -97,7 +102,16 @@ const rollStyleIndex = (speakerUuid: SpeakerId, diff: number) => {
 @use "@/styles/v2/colors" as colors;
 @use "@/styles/v2/mixin" as mixin;
 
+.character-card-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: vars.$gap-1;
+}
+
 .character-card {
+  width: 100%;
+  height: 128px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -105,10 +119,11 @@ const rollStyleIndex = (speakerUuid: SpeakerId, diff: number) => {
   background-color: colors.$surface;
   color: colors.$display;
   border-radius: vars.$radius-2;
-  padding: vars.$padding-1;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   cursor: pointer;
   position: relative;
+  padding: 0;
+  overflow: hidden;
 
   &:hover {
     background-color: colors.$control-hovered;
@@ -128,19 +143,24 @@ const rollStyleIndex = (speakerUuid: SpeakerId, diff: number) => {
   }
 }
 
+.info-icon {
+  position: absolute;
+  bottom: vars.$padding-1;
+  left: vars.$padding-1;
+  font-size: 24px;
+  opacity: 0.5;
+}
+
 .style-icon {
-  width: 100%;
-  max-width: 128px;
-  height: auto;
+  height: 100%;
   aspect-ratio: 1 / 1;
-  border-radius: vars.$radius-2;
-  margin-bottom: vars.$gap-1;
 }
 
 .speaker-name {
   font-size: 1.125rem;
   font-weight: 600;
   text-align: center;
+  line-height: 1;
 }
 
 .style-select-container {
@@ -148,10 +168,6 @@ const rollStyleIndex = (speakerUuid: SpeakerId, diff: number) => {
   justify-content: center;
   align-items: center;
   height: vars.$size-control;
-}
-
-.voice-samples {
-  display: flex;
 }
 
 .new-character-item {
