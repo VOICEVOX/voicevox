@@ -1,5 +1,3 @@
-import { UnreachableError } from "@/type/utility";
-
 /** 入力がnullかundefinedの場合エラーを投げ、それ以外の場合は入力をそのまま返す */
 export const ensureNotNullish = <T>(
   value: T | null | undefined,
@@ -40,13 +38,14 @@ export const errorToMessages = (
   };
 
   function flattenErrors(e: unknown): unknown[] {
+    const errors = [e];
     if (e instanceof AggregateError) {
-      return [e, ...e.errors.flatMap(flattenErrors)];
+      errors.push(...e.errors.flatMap(flattenErrors));
     }
-    if (e instanceof Error) {
-      return [e, ...(e.cause ? flattenErrors(e.cause) : [])];
+    if (e instanceof Error && e.cause) {
+      errors.push(...flattenErrors(e.cause));
     }
-    return [e];
+    return errors;
   }
 
   function splitErrors(errors: unknown[]): {
