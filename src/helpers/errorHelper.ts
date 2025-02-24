@@ -29,58 +29,55 @@ export class DisplayableError extends Error {
  * 長い場合は後ろを切る。
  */
 export const errorToMessage = (e: unknown): string => {
-  return trim(errorToMessageLines(e).join("\n"));
+  const errors = flattenErrors(e);
+  const messages = toMessageLines(errors);
+  return trim(messages.join("\n"));
 
-  function errorToMessageLines(
-    e: unknown,
-    { isInner }: { isInner?: boolean } = {},
-  ): string[] {
+  function flattenErrors(e: unknown): unknown[] {
+    if (e instanceof AggregateError) {
+      return [e, ...e.errors.flatMap(flattenErrors)];
+    }
+    if (e instanceof Error) {
+      return [e, ...(e.cause ? flattenErrors(e.cause) : [])];
+    }
+    return [e];
+  }
+
+  function toMessageLines(errors: unknown[]): string[] {
     const messageLines: string[] = [];
 
-    if (e instanceof DisplayableError) {
-      messageLines.push(e.message);
-      if (e.cause) {
-        messageLines.push(...errorToMessageLines(e.cause, { isInner }));
-      }
-      return messageLines;
-    }
-
-    if (!isInner) {
-      messageLines.push("（内部エラーメッセージ）");
-      isInner = true;
-    }
-
-    if (e instanceof AggregateError) {
-      if (e.message) {
+    let isInner = false;
+    for (const e of errors) {
+      if (e instanceof DisplayableError) {
         messageLines.push(e.message);
+        continue;
       }
-      for (const error of e.errors) {
-        messageLines.push(...errorToMessageLines(error, { isInner }));
+
+      if (!isInner) {
+        messageLines.push("（内部エラーメッセージ）");
+        isInner = true;
       }
-      return messageLines;
-    }
 
-    if (e instanceof Error) {
-      messageLines.push(
-        e.name !== "Error" ? `${e.name}: ${e.message}` : e.message,
-      );
-      if (e.cause) {
-        messageLines.push(...errorToMessageLines(e.cause, { isInner }));
+      if (e instanceof Error) {
+        messageLines.push(
+          e.name !== "Error" ? `${e.name}: ${e.message}` : e.message,
+        );
+        continue;
       }
-      return messageLines;
+
+      if (typeof e === "string") {
+        messageLines.push(`Unknown Error: ${e}`);
+        continue;
+      }
+
+      if (typeof e === "object" && e != undefined) {
+        messageLines.push(`Unknown Error: ${JSON.stringify(e)}`);
+        continue;
+      }
+
+      messageLines.push(`Unknown Error: ${String(e)}`);
     }
 
-    if (typeof e === "string") {
-      messageLines.push(`Unknown Error: ${e}`);
-      return messageLines;
-    }
-
-    if (typeof e === "object" && e != undefined) {
-      messageLines.push(`Unknown Error: ${JSON.stringify(e)}`);
-      return messageLines;
-    }
-
-    messageLines.push(`Unknown Error: ${String(e)}`);
     return messageLines;
   }
 
