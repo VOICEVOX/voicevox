@@ -280,43 +280,37 @@ let initialized = false;
 
 const asyncLock = new AsyncLock({ maxPending: 1 });
 
-watch(
-  [singingGuidesInSelectedTrack, tempos, tpqn],
-  async () => {
-    asyncLock.acquire(
-      "originalPitch",
-      async () => {
-        if (initialized) {
-          await updateOriginalPitchLineDataMap();
-        }
-      },
-      (err) => {
-        if (err != undefined) {
-          warn(`An error occurred.`, err);
-        }
-      },
-    );
-  }
-);
+watch([singingGuidesInSelectedTrack, tempos, tpqn], async () => {
+  asyncLock.acquire(
+    "originalPitch",
+    async () => {
+      if (initialized) {
+        await updateOriginalPitchLineDataMap();
+      }
+    },
+    (err) => {
+      if (err != undefined) {
+        warn(`An error occurred.`, err);
+      }
+    },
+  );
+});
 
-watch(
-  [pitchEditData, previewPitchEdit, tempos, tpqn],
-  async () => {
-    asyncLock.acquire(
-      "pitchEdit",
-      async () => {
-        if (initialized) {
-          await updatePitchEditLineDataMap();
-        }
-      },
-      (err) => {
-        if (err != undefined) {
-          warn(`An error occurred.`, err);
-        }
-      },
-    );
-  }
-);
+watch([pitchEditData, previewPitchEdit, tempos, tpqn], async () => {
+  asyncLock.acquire(
+    "pitchEdit",
+    async () => {
+      if (initialized) {
+        await updatePitchEditLineDataMap();
+      }
+    },
+    (err) => {
+      if (err != undefined) {
+        warn(`An error occurred.`, err);
+      }
+    },
+  );
+});
 
 watch(isDark, () => {
   renderInNextFrame = true;
