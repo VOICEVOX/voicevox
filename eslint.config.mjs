@@ -25,12 +25,16 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
  */
 
 /**
+ * プラグイン読込ラッパー関数
+ * nameが設定されていないプラグイン用
  * @overload
- * @param {string} name
+ * @param {string} name ESLint Config Inspectorで表示される名前
  * @param {Config} config
  * @returns {ConfigArray}
  */
 /**
+ * プラグイン読込ラッパー関数
+ * nameが設定されている or Arrayを渡すプラグイン用
  * @overload
  * @param {Config | ConfigArray} configs
  * @returns {ConfigArray}
