@@ -55,7 +55,6 @@ export async function navigateToSettingDialog(page: Page): Promise<Locator> {
     await navigateToMain(page);
     await page.waitForTimeout(100);
     await page.getByRole("button", { name: "設定" }).click();
-    await page.waitForTimeout(100);
     await getQuasarMenu(page, "オプション").click();
     return getNewestQuasarDialog(page);
   });
