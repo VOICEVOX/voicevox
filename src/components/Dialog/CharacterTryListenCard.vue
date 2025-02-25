@@ -24,20 +24,15 @@
       />
       <BaseTooltip label="サンプルボイスを再生">
         <BaseButton
-          v-for="voiceSampleIndex of [0]"
-          :key="voiceSampleIndex"
           :icon="
             playing != undefined &&
             speakerUuid === playing.speakerUuid &&
-            selectedStyle.styleId === playing.styleId &&
-            voiceSampleIndex === playing.index
+            selectedStyle.styleId === playing.styleId
               ? 'stop'
               : 'play_arrow'
           "
           :label="selectedStyle.styleName || DEFAULT_STYLE_NAME"
-          @click.stop="
-            togglePlayOrStop(speakerUuid, selectedStyle, voiceSampleIndex)
-          "
+          @click.stop="togglePlayOrStop(speakerUuid, selectedStyle, 0)"
         />
       </BaseTooltip>
       <BaseIconButton
