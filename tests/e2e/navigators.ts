@@ -1,4 +1,4 @@
-import { expect, Page, test } from "@playwright/test";
+import { expect, Locator, Page, test } from "@playwright/test";
 import { getNewestQuasarDialog, getQuasarMenu } from "./locators";
 
 export async function gotoHome({ page }: { page: Page }) {
@@ -41,8 +41,8 @@ export async function toggleSetting(page: Page, settingName: string) {
   await page.waitForTimeout(500);
 }
 
-export async function navigateToHelpDialog(page: Page) {
-  await test.step("ヘルプダイアログの表示まで移動", async () => {
+export async function navigateToHelpDialog(page: Page): Promise<Locator> {
+  return await test.step("ヘルプダイアログの表示まで移動", async () => {
     await navigateToMain(page);
     await page.waitForTimeout(100);
     await page.getByRole("button", { name: "ヘルプ" }).click();
@@ -50,8 +50,8 @@ export async function navigateToHelpDialog(page: Page) {
   });
 }
 
-export async function navigateToSettingDialog(page: Page) {
-  await test.step("設定ダイアログの表示まで移動", async () => {
+export async function navigateToSettingDialog(page: Page): Promise<Locator> {
+  return await test.step("設定ダイアログの表示まで移動", async () => {
     await navigateToMain(page);
     await page.waitForTimeout(100);
     await page.getByRole("button", { name: "設定" }).click();
