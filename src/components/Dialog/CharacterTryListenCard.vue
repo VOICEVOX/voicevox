@@ -1,20 +1,22 @@
 <template>
-  <div class="character-card-container">
+  <div class="character-card">
     <button
-      class="character-card"
+      class="character-detail-button"
       @click="$emit('selectCharacter', speakerUuid)"
     >
-      <img
-        :src="selectedStyle.iconPath"
-        :alt="characterInfo.metas.speakerName"
-        class="style-icon"
-      />
-      <div class="info">
-        <QIcon class="info-icon" name="info_outline" />
-        <span class="info-label"> 詳細を表示 </span>
+      <div class="character-detail">
+        <img
+          :src="selectedStyle.iconPath"
+          :alt="characterInfo.metas.speakerName"
+          class="style-icon"
+        />
+        <div class="info">
+          <QIcon class="info-icon" name="info_outline" />
+          <span class="info-label"> 詳細を表示 </span>
+        </div>
       </div>
+      <div class="speaker-name">{{ characterInfo.metas.speakerName }}</div>
     </button>
-    <div class="speaker-name">{{ characterInfo.metas.speakerName }}</div>
     <div class="style-select-container">
       <BaseIconButton
         v-if="characterInfo.metas.styles.length > 1"
@@ -100,25 +102,35 @@ const rollStyleIndex = (speakerUuid: SpeakerId, diff: number) => {
 @use "@/styles/v2/colors" as colors;
 @use "@/styles/v2/mixin" as mixin;
 
-.character-card-container {
+.character-card {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: vars.$gap-1;
 }
 
-.character-card {
+.character-detail-button {
+  display: contents;
+  cursor: pointer;
+  color: inherit;
+}
+
+.character-detail-button:hover {
+  & .info > * {
+    opacity: 1;
+  }
+  & .style-icon {
+    opacity: 0.25;
+  }
+}
+
+.character-detail {
   width: 100%;
   height: 128px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   border: 1px solid colors.$border;
   background-color: colors.$surface;
-  color: colors.$display;
   border-radius: vars.$radius-2;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  cursor: pointer;
   position: relative;
   padding: 0;
   overflow: hidden;
@@ -158,14 +170,6 @@ const rollStyleIndex = (speakerUuid: SpeakerId, diff: number) => {
 
 .info-label {
   opacity: 0;
-}
-
-.character-card:hover > .info > * {
-  opacity: 1;
-}
-
-.character-card:hover > .style-icon {
-  opacity: 0.25;
 }
 
 .speaker-name {
