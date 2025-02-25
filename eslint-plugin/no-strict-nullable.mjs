@@ -3,14 +3,14 @@ import { AST_NODE_TYPES } from "@typescript-eslint/utils";
 import { createRule } from "./create-rule.mjs";
 
 /**
- * @param {import("@typescript-eslint/types").TSESTree.BinaryExpression["left"]} node
+ * @param {import("@typescript-eslint/utils").TSESTree.Expression} node
  */
 function isNull(node) {
   return node.type === AST_NODE_TYPES.Literal && node.value == null;
 }
 
 /**
- * @param {import("@typescript-eslint/types").TSESTree.BinaryExpression["right"]} node
+ * @param {import("@typescript-eslint/utils").TSESTree.Expression} node
  */
 function isUndefined(node) {
   return node.type === AST_NODE_TYPES.Identifier && node.name === "undefined";
