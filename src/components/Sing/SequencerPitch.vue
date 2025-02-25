@@ -296,8 +296,7 @@ watch(
         }
       },
     );
-  },
-  { immediate: true },
+  }
 );
 
 watch(
@@ -316,8 +315,7 @@ watch(
         }
       },
     );
-  },
-  { immediate: true },
+  }
 );
 
 watch(isDark, () => {
