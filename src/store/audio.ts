@@ -64,6 +64,7 @@ import { UnreachableError } from "@/type/utility";
 import { errorToMessage } from "@/helpers/errorHelper";
 import path from "@/helpers/path";
 import { generateTextFileData } from "@/helpers/fileDataGenerator";
+import { toBase64 } from "fast-base64";
 
 function generateAudioKey() {
   return AudioKey(uuid4());
@@ -1545,21 +1546,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         const labs: string[] = [];
         const texts: string[] = [];
 
-        const base64Encoder = (blob: Blob): Promise<string | undefined> => {
-          return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => {
-              // string/undefined以外が来ることはないと思うが、型定義的にArrayBufferも来るので、toStringする
-              const result = reader.result?.toString();
-              if (result) {
-                // resultの中身は、"data:audio/wav;base64,<content>"という形なので、カンマ以降を抜き出す
-                resolve(result.slice(result.indexOf(",") + 1));
-              } else {
-                reject();
-              }
-            };
-            reader.readAsDataURL(blob);
-          });
+        const base64Encoder = async (blob: Blob): Promise<string> => {
+          const arrayBuffer = await blob.arrayBuffer();
+          return toBase64(new Uint8Array(arrayBuffer));
         };
 
         const totalCount = state.audioKeys.length;
