@@ -6,8 +6,8 @@ import { WatchOptions, WatchSource, watch } from "vue";
 const onetimeWatch = <T>(
   source: WatchSource<T>,
   fn: (
-    before: T,
-    after: T | undefined,
+    after: T,
+    before: T | undefined,
   ) => Promise<"unwatch" | "continue"> | "unwatch" | "continue",
   options: WatchOptions = {},
 ) => {
