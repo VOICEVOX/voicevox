@@ -1,3 +1,4 @@
+import { toBase64 } from "fast-base64";
 import { createUILockAction, withProgress } from "./ui";
 import {
   AudioItem,
@@ -64,7 +65,6 @@ import { UnreachableError } from "@/type/utility";
 import { errorToMessage } from "@/helpers/errorHelper";
 import path from "@/helpers/path";
 import { generateTextFileData } from "@/helpers/fileDataGenerator";
-import { toBase64 } from "fast-base64";
 
 function generateAudioKey() {
   return AudioKey(uuid4());
