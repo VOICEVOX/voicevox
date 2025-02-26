@@ -22,6 +22,9 @@ switch (process.platform) {
     if (!fs.existsSync(sevenzrPath)) {
       console.log("Downloading 7zr from " + sevenzrUrl);
       const res = await retryFetch(sevenzrUrl);
+      if (!res.ok) {
+        throw new Error(`Failed to download binary: ${res.statusText}`);
+      }
       const buffer = await res.arrayBuffer();
 
       await fs.promises.writeFile(sevenzrPath, Buffer.from(buffer));
@@ -62,6 +65,9 @@ if (notDownloaded.length === 0) {
 
 console.log("Downloading 7z from " + url);
 const res = await retryFetch(url);
+if (!res.ok) {
+  throw new Error(`Failed to download binary: ${res.statusText}`);
+}
 const buffer = await res.arrayBuffer();
 const sevenZipPath = path.resolve(distPath, path.basename(url));
 await fs.promises.writeFile(sevenZipPath, Buffer.from(buffer));
