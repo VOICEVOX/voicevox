@@ -1,9 +1,6 @@
 // @ts-check
-import { createRequire } from "node:module";
 import noStrictNullable from "./no-strict-nullable.mjs";
-
-const require = createRequire(import.meta.url);
-const { name, version } = require("./package.json");
+import pkg from "./package.json" with { type: "json" };
 
 /** @type {import("@typescript-eslint/utils/ts-eslint").FlatConfig.Plugin["rules"]} */
 const rules = {
@@ -12,7 +9,7 @@ const rules = {
 
 /** @type {import("@typescript-eslint/utils/ts-eslint").FlatConfig.Plugin} */
 const plugin = {
-  meta: { name, version },
+  meta: { name: pkg.name, version: pkg.version },
   rules,
 };
 
