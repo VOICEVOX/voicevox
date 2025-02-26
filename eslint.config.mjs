@@ -1,6 +1,4 @@
 // @ts-check
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import js from "@eslint/js";
 import globals from "globals";
 import * as importPlugin from "eslint-plugin-import";
@@ -15,7 +13,7 @@ import {
 import { configs, parser as typescriptParser } from "typescript-eslint";
 import voicevoxPlugin from "./eslint-plugin/index.mjs";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __dirname = import.meta.dirname;
 
 /**
  * @typedef {import("@typescript-eslint/utils/ts-eslint").FlatConfig.Config} Config
