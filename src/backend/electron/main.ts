@@ -129,7 +129,12 @@ function getAppPaths() {
   return { appDirPath, __static };
 }
 const { appDirPath, __static } = getAppPaths();
-process.chdir(appDirPath);
+
+// 製品版はカレントディレクトリを.exeのパスにする
+// TODO: ディレクトリを移動しないようにしたい
+if (!isDevelopment) {
+  process.chdir(appDirPath);
+}
 
 protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true, stream: true } },
