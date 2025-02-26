@@ -4,19 +4,16 @@ interface DI {
   /**
    * 音声を生成する
    */
-  generateAudio({ audioKey }: { audioKey: AudioKey }): Promise<Blob>;
+  generateAudio: (params: { audioKey: AudioKey }) => Promise<Blob>;
 
   /**
    * 音声を再生する。
    * 再生が完了した場合trueを、途中で停止した場合falseを返す。
    */
-  playAudioBlob({
-    audioBlob,
-    audioKey,
-  }: {
+  playAudioBlob: (params: {
     audioBlob: Blob;
     audioKey: AudioKey;
-  }): Promise<boolean>;
+  }) => Promise<boolean>;
 }
 
 /**
