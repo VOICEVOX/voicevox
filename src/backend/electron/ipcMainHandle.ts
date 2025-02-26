@@ -89,9 +89,10 @@ export function getIpcMainHandle(params: {
   appStateGetter: () => { willQuit: boolean };
   staticDirPath: string;
   appDirPath: string;
-  initialFilePath: string | undefined;
+  initialFilePathGetter: () => string | undefined;
 }): IpcMainHandle {
-  const { appStateGetter, staticDirPath, appDirPath, initialFilePath } = params;
+  const { appStateGetter, staticDirPath, appDirPath, initialFilePathGetter } =
+    params;
 
   const configManager = getConfigManager();
   const engineAndVvppController = getEngineAndVvppController();
@@ -113,6 +114,7 @@ export function getIpcMainHandle(params: {
     },
 
     GET_INITIAL_PROJECT_FILE_PATH: async () => {
+      const initialFilePath = initialFilePathGetter();
       if (initialFilePath && initialFilePath.endsWith(".vvproj")) {
         return initialFilePath;
       }

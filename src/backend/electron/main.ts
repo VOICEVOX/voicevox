@@ -270,7 +270,7 @@ registerIpcMainHandle<IpcMainHandle>(
     appStateGetter: () => appState,
     staticDirPath: __static,
     appDirPath,
-    initialFilePath,
+    initialFilePathGetter: () => initialFilePath,
   }),
 );
 
