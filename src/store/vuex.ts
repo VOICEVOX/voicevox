@@ -87,7 +87,8 @@ export interface Dispatch<A extends ActionsBase> {
       any
     >
       ? Parameters<A[T]>[0]
-      : {}),
+      : // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+        {}),
   ): Promise<PromiseType<ReturnType<A[T]>>>;
 }
 
@@ -99,7 +100,8 @@ export interface Commit<M extends MutationsBase> {
   <T extends keyof M>(
     payloadWithType: { type: T } & (M[T] extends Record<string, any>
       ? M[T]
-      : {}),
+      : // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+        {}),
   ): void;
 }
 
