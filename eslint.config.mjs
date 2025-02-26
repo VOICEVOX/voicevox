@@ -202,18 +202,18 @@ export default defineConfigWithVueTs(
         },
       ],
       "vue/attribute-hyphenation": ["error", "never"],
+      "vue/block-order": [
+        "error",
+        {
+          order: ["template", "script", "style"],
+        },
+      ],
       "vue/component-name-in-template-casing": [
         "error",
         "PascalCase",
         {
           registeredComponentsOnly: false,
           ignores: [],
-        },
-      ],
-      "vue/component-tags-order": [
-        "error",
-        {
-          order: ["template", "script", "style"],
         },
       ],
       "vue/multi-word-component-names": [
