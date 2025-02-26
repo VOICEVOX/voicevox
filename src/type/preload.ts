@@ -130,8 +130,8 @@ export interface Sandbox {
     engineId: EngineId,
     engineSetting: EngineSettingType,
   ): Promise<void>;
-  installVvppEngine(path: string): Promise<boolean>;
-  uninstallVvppEngine(engineId: EngineId): Promise<boolean>;
+  installVvppEngine(path: string): Promise<void>;
+  uninstallVvppEngine(engineId: EngineId): Promise<void>;
   validateEngineDir(engineDir: string): Promise<EngineDirValidationResult>;
   reloadApp(obj: { isMultiEngineOffMode?: boolean }): Promise<void>;
   getPathForFile(file: File): string;

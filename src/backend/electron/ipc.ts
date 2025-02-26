@@ -4,6 +4,7 @@ import {
   IpcMainInvokeEvent,
   IpcRendererEvent,
 } from "electron";
+import { wrapToIpcResult } from "./ipcResultHelper";
 import { IpcIHData, IpcSOData } from "@/type/ipc";
 import { createLogger } from "@/helpers/log";
 
@@ -47,10 +48,12 @@ export function registerIpcMainHandle(listeners: {
     const errorHandledListener: typeof listener = (event, ...args) => {
       try {
         validateIpcSender(event);
-        return listener(event, ...args);
       } catch (e) {
         log.error(e);
+        return;
       }
+
+      return wrapToIpcResult(() => listener(event, ...args));
     };
     ipcMain.handle(channel, errorHandledListener);
   });

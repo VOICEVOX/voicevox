@@ -198,12 +198,12 @@ export type IpcIHData = {
 
   INSTALL_VVPP_ENGINE: {
     args: [path: string];
-    return: Promise<boolean>;
+    return: Promise<void>;
   };
 
   UNINSTALL_VVPP_ENGINE: {
     args: [engineId: EngineId];
-    return: Promise<boolean>;
+    return: Promise<void>;
   };
 
   VALIDATE_ENGINE_DIR: {
