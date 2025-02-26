@@ -85,12 +85,14 @@ async function retryShowSaveDialogWhileSafeDir<
   }
 }
 
-export function getIpcMainHandle(
-  appStateGetter: () => { willQuit: boolean },
-  staticDirPath: string,
-  appDirPath: string,
-  initialFilePath: string | undefined,
-): IpcMainHandle {
+export function getIpcMainHandle(params: {
+  appStateGetter: () => { willQuit: boolean };
+  staticDirPath: string;
+  appDirPath: string;
+  initialFilePath: string | undefined;
+}): IpcMainHandle {
+  const { appStateGetter, staticDirPath, appDirPath, initialFilePath } = params;
+
   const configManager = getConfigManager();
   const engineAndVvppController = getEngineAndVvppController();
   const engineInfoManager = getEngineInfoManager();

@@ -266,7 +266,12 @@ if (isMac) {
 
 // プロセス間通信
 registerIpcMainHandle<IpcMainHandle>(
-  getIpcMainHandle(() => appState, __static, appDirPath, initialFilePath),
+  getIpcMainHandle({
+    appStateGetter: () => appState,
+    staticDirPath: __static,
+    appDirPath,
+    initialFilePath,
+  }),
 );
 
 // app callback
