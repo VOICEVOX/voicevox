@@ -128,7 +128,7 @@ process.on("unhandledRejection", (reason) => {
   log.error(reason);
 });
 
-function getAppPaths() {
+function initializeAppPaths() {
   let appDirPath: string;
   let __static: string;
 
@@ -144,7 +144,7 @@ function getAppPaths() {
 
   return { appDirPath, __static };
 }
-const { appDirPath, __static } = getAppPaths();
+const { appDirPath, __static } = initializeAppPaths();
 
 protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true, stream: true } },
