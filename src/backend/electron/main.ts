@@ -128,18 +128,23 @@ process.on("unhandledRejection", (reason) => {
   log.error(reason);
 });
 
-let appDirPath: string;
-let __static: string;
+function getAppPaths() {
+  let appDirPath: string;
+  let __static: string;
 
-if (isDevelopment) {
-  // __dirnameはdist_electronを指しているので、一つ上のディレクトリに移動する
-  appDirPath = path.resolve(__dirname, "..");
-  __static = path.join(appDirPath, "public");
-} else {
-  appDirPath = path.dirname(app.getPath("exe"));
-  process.chdir(appDirPath);
-  __static = __dirname;
+  if (isDevelopment) {
+    // __dirnameはdist_electronを指しているので、一つ上のディレクトリに移動する
+    appDirPath = path.resolve(__dirname, "..");
+    __static = path.join(appDirPath, "public");
+  } else {
+    appDirPath = path.dirname(app.getPath("exe"));
+    process.chdir(appDirPath);
+    __static = __dirname;
+  }
+
+  return { appDirPath, __static };
 }
+const { appDirPath, __static } = getAppPaths();
 
 protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true, stream: true } },
