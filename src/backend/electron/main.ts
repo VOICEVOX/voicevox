@@ -130,12 +130,6 @@ function getAppPaths() {
 }
 const { appDirPath, __static } = getAppPaths();
 
-// 製品版はカレントディレクトリを.exeのパスにする
-// TODO: ディレクトリを移動しないようにしたい
-if (!isDevelopment) {
-  process.chdir(appDirPath);
-}
-
 protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true, stream: true } },
 ]);
@@ -201,7 +195,7 @@ initializeRuntimeInfoManager({
   appVersion: app.getVersion(),
 });
 initializeEngineInfoManager({
-  defaultEngineDir: appDirPath,
+  appDirPath,
   vvppEngineDir,
 });
 initializeEngineProcessManager({ onEngineProcessError });
