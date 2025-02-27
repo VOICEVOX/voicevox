@@ -329,14 +329,11 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
       let defaultPath: string;
 
       if (!defaultFilePath) {
-        // if new project: use generated name
         defaultPath = `${context.getters.DEFAULT_PROJECT_FILE_BASE_NAME}.vvproj`;
       } else {
-        // if saveAs for existing project: use current project path
         defaultPath = defaultFilePath;
       }
 
-      // Write the current status to a project file.
       return await window.backend.showSaveFileDialog({
         title: "プロジェクトファイルの保存",
         name: "VOICEVOX Project file",
