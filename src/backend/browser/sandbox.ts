@@ -61,6 +61,7 @@ export const api: Sandbox = {
     const fileName = AssetTextFileNames[textType];
     const v = await fetch(toStaticPath(fileName));
     if (textType === "OssLicenses" || textType === "UpdateInfos") {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return v.json();
     }
     return v.text();
