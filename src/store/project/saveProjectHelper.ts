@@ -1,9 +1,9 @@
+import { ActionContext } from "../type";
 import { showErrorDialog } from "@/components/Dialog/Dialog";
 import { getAppInfos } from "@/domain/appInfo";
 import { LatestProjectType } from "@/domain/project/schema";
-import { DisplayableError, errorToMessage } from "@/helpers/errorHelper";
+import { DisplayableError } from "@/helpers/errorHelper";
 import { ResultError } from "@/type/result";
-import { ActionContext } from "../type";
 
 export async function promptProjectSaveFilePath(
   context: ActionContext,

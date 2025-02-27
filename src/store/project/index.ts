@@ -1,4 +1,10 @@
 import { createPartialStore, DotNotationDispatch } from "../vuex";
+import {
+  executeWritePromiseOrDialog,
+  promptProjectSaveFilePath,
+  handleCurrentProjectSave,
+  writeProjectFile,
+} from "./saveProjectHelper";
 import { createUILockAction } from "@/store/ui";
 import {
   AllActions,
@@ -28,12 +34,6 @@ import {
   showQuestionDialog,
 } from "@/components/Dialog/Dialog";
 import { uuid4 } from "@/helpers/random";
-import {
-  executeWritePromiseOrDialog,
-  promptProjectSaveFilePath,
-  handleCurrentProjectSave,
-  writeProjectFile,
-} from "./saveProjectHelper";
 
 export const projectStoreState: ProjectStoreState = {
   savedLastCommandIds: { talk: null, song: null },
