@@ -1853,6 +1853,10 @@ export type ProjectStoreTypes = {
     action(payload: { overwrite?: boolean }): boolean;
   };
 
+  SAVE_PROJECT_FILE_AS_COPY: {
+    action(payload: { filePath?: string }): boolean;
+  };
+
   SAVE_OR_DISCARD_PROJECT_FILE: {
     action(palyoad: {
       additionalMessage?: string;
