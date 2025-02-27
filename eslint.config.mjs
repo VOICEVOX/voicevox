@@ -100,6 +100,7 @@ export default defineConfigWithVueTs(
   {
     name: "voicevox/defaults/linterOptions",
     linterOptions: {
+      // TODO: いずれは有効化する
       reportUnusedDisableDirectives: false,
     },
   },
