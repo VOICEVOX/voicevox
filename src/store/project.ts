@@ -261,6 +261,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             return false;
           }
         }
+        await context.actions.WRITE_PROJECT_FILE({ filePath });
 
         return true;
       } catch (err) {
@@ -281,39 +282,48 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
     action: createUILockAction(
       async (context, { overwrite }: { overwrite?: boolean }) => {
         let filePath = context.state.projectFilePath;
-        if (!overwrite || !filePath) {
-          filePath = await context.actions.PROMPT_PROJECT_SAVE_FILE_PATH({
-            defaultFilePath: filePath,
-          });
-          if (!filePath) {
-            return false;
-          }
-        }
-        if (
-          context.state.projectFilePath &&
-          context.state.projectFilePath != filePath
-        ) {
-          await showMessageDialog({
-            type: "info",
-            title: "保存",
-            message: `編集中のプロジェクトが ${filePath} に切り替わりました。`,
-          });
-        }
 
-        await context.actions.APPEND_RECENTLY_USED_PROJECT({
-          filePath,
-        });
-        const result = await context.actions.SAVE_PROJECT_FILE_AS_COPY({
-          filePath,
-        });
-        if (result) {
+        try {
+          if (!overwrite || !filePath) {
+            filePath = await context.actions.PROMPT_PROJECT_SAVE_FILE_PATH({
+              defaultFilePath: filePath,
+            });
+            if (!filePath) {
+              return false;
+            }
+          }
+          await context.actions.WRITE_PROJECT_FILE({ filePath });
+
+          if (
+            context.state.projectFilePath &&
+            context.state.projectFilePath != filePath
+          ) {
+            await showMessageDialog({
+              type: "info",
+              title: "保存",
+              message: `編集中のプロジェクトが ${filePath} に切り替わりました。`,
+            });
+          }
+
+          await context.actions.APPEND_RECENTLY_USED_PROJECT({
+            filePath,
+          });
+          await context.actions.WRITE_PROJECT_FILE({ filePath });
+
           context.mutations.SET_PROJECT_FILEPATH({ filePath });
           context.mutations.SET_SAVED_LAST_COMMAND_IDS(
             context.getters.LAST_COMMAND_IDS,
           );
-        }
 
-        return result;
+          return true;
+        } catch (err) {
+          window.backend.logError(err);
+          await showAlertDialog({
+            title: "エラー",
+            message: `プロジェクトファイルの保存に失敗しました。\n${errorToMessage(err)}`,
+          });
+          return false;
+        }
       },
     ),
   },
