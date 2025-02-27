@@ -170,9 +170,7 @@ export default defineConfigWithVueTs(
 
   {
     name: "voicevox/defaults/files",
-    files: [
-      "**/*.{js,mjs,ts,mts,vue}",
-    ],
+    files: ["**/*.{js,mjs,ts,mts,vue}"],
   },
 
   {
