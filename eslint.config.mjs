@@ -171,13 +171,7 @@ export default defineConfigWithVueTs(
   {
     name: "voicevox/defaults/files",
     files: [
-      "*.config.*",
-      "src/**/*.{js,ts,vue}",
-      "tests/**/*.{js,ts,mts,vue}",
-      "build/**/*.{js,ts,vue}",
-      "tools/**/*.{js,ts,mts}",
-      ".storybook/**/*.{js,ts,vue}",
-      "eslint-plugin/**/*.{js,mjs,ts,mts}",
+      "**/*.{js,mjs,ts,mts,vue}",
     ],
   },
 
