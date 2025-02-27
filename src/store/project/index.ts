@@ -320,6 +320,65 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
     }),
   },
 
+  PROMPT_PROJECT_SAVE_FILE_PATH: {
+    async action(context, { defaultFilePath }) {
+      let defaultPath: string;
+
+      if (!defaultFilePath) {
+        // if new project: use generated name
+        defaultPath = `${context.getters.DEFAULT_PROJECT_FILE_BASE_NAME}.vvproj`;
+      } else {
+        // if saveAs for existing project: use current project path
+        defaultPath = defaultFilePath;
+      }
+
+      // Write the current status to a project file.
+      return await window.backend.showSaveFileDialog({
+        title: "プロジェクトファイルの保存",
+        name: "VOICEVOX Project file",
+        extensions: ["vvproj"],
+        defaultPath,
+      });
+    },
+  },
+
+  WRITE_PROJECT_FILE: {
+    action: async (context, { filePath }) => {
+      const appVersion = getAppInfos().version;
+      const {
+        audioItems,
+        audioKeys,
+        tpqn,
+        tempos,
+        timeSignatures,
+        tracks,
+        trackOrder,
+      } = context.state;
+      const projectData: LatestProjectType = {
+        appVersion,
+        talk: {
+          audioKeys,
+          audioItems,
+        },
+        song: {
+          tpqn,
+          tempos,
+          timeSignatures,
+          tracks: Object.fromEntries(tracks),
+          trackOrder,
+        },
+      };
+
+      const buf = new TextEncoder().encode(JSON.stringify(projectData)).buffer;
+      await window.backend
+        .writeFile({
+          filePath,
+          buffer: buf,
+        })
+        .then(getValueOrThrow);
+    },
+  },
+
   /**
    * プロジェクトファイルを保存するか破棄するかキャンセルするかのダイアログを出して、保存する場合は保存する。
    * 何を選択したかが返る。

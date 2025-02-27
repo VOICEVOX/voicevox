@@ -28,7 +28,7 @@ export const hotkeyActionNameSchema = z.enum([
   "新規プロジェクト",
   "プロジェクトを上書き保存",
   "プロジェクトを名前を付けて保存",
-  "プロジェクトを複製として保存",
+  "プロジェクトの複製を保存",
   "プロジェクトを読み込む",
   "テキストを読み込む",
   "全体のイントネーションをリセット",
@@ -156,7 +156,7 @@ export function getDefaultHotkeySettings({
       combination: HotkeyCombination(!isMac ? "Ctrl Shift S" : "Shift Meta S"),
     },
     {
-      action: "プロジェクトを複製として保存",
+      action: "プロジェクトの複製を保存",
       combination: HotkeyCombination(!isMac ? "Ctrl Alt S" : "Alt Meta S"),
     },
     {

@@ -121,7 +121,7 @@ exports[`0.13.0からマイグレーションできる 1`] = `
       "combination": "Ctrl Shift S",
     },
     {
-      "action": "プロジェクトを複製として保存",
+      "action": "プロジェクトの複製を保存",
       "combination": "Ctrl Alt S",
     },
     {
