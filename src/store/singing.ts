@@ -2373,9 +2373,19 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           if (singingVoice != undefined) {
             logger.info(`Loaded singing voice from cache.`);
           } else {
-            singingVoice = await synthesizeSingingVoice(singingVoiceSource);
-            logger.info(`Generated singing voice.`);
-            singingVoiceCache.set(singingVoiceKey, singingVoice);
+            const cachedSingingVoice = await actions.FETCH_CACHED_SINGING_VOICE(
+              {
+                key: singingVoiceKey,
+              },
+            );
+            if (cachedSingingVoice != undefined) {
+              logger.info(`Loaded singing voice from backend cache.`);
+              singingVoice = cachedSingingVoice;
+            } else {
+              singingVoice = await synthesizeSingingVoice(singingVoiceSource);
+              logger.info(`Generated singing voice.`);
+              singingVoiceCache.set(singingVoiceKey, singingVoice);
+            }
           }
 
           const phrase = getOrThrow(state.phrases, phraseKey);
