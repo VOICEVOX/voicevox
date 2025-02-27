@@ -95,4 +95,13 @@ describe("errorToMessage", () => {
       "displayable error instance\n（内部エラーメッセージ）\ncause\ndisplayable cause";
     expect(errorToMessage(input)).toEqual(expected);
   });
+
+  it("CustomDisplayableErrorインスタンス", () => {
+    class CustomDisplayableError extends DisplayableError {}
+    const input = new CustomDisplayableError(
+      "custom displayable error instance",
+    );
+    const expected = "custom displayable error instance";
+    expect(errorToMessage(input)).toEqual(expected);
+  });
 });

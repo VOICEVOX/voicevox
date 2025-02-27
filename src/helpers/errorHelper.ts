@@ -69,8 +69,14 @@ export const errorToMessages = (
     for (const e of errors) {
       if (e instanceof Error) {
         let message = "";
-        if (!["Error", "AggregateError", "DisplayableError"].includes(e.name)) {
-          message += `${e.name}: `;
+        if (
+          !(
+            e.constructor === Error ||
+            e instanceof AggregateError ||
+            e instanceof DisplayableError
+          )
+        ) {
+          message += `${e.constructor.name}: `;
         }
         message += e.message;
         messages.push(message);
