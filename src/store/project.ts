@@ -256,63 +256,12 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
       let filePath = filePathArg;
       try {
         if (!filePath) {
-          let defaultPath: string;
-
+          filePath = await context.actions.PROMPT_PROJECT_SAVE_FILE_PATH({});
           if (!filePath) {
-            // if new project: use generated name
-            defaultPath = `${context.getters.DEFAULT_PROJECT_FILE_BASE_NAME}.vvproj`;
-          } else {
-            // if saveAs for existing project: use current project path
-            defaultPath = filePath;
-          }
-
-          // Write the current status to a project file.
-          const ret = await window.backend.showSaveFileDialog({
-            title: "プロジェクトファイルの保存",
-            name: "VOICEVOX Project file",
-            extensions: ["vvproj"],
-            defaultPath,
-          });
-          if (ret == undefined) {
             return false;
           }
-          filePath = ret;
         }
 
-        const appVersion = getAppInfos().version;
-        const {
-          audioItems,
-          audioKeys,
-          tpqn,
-          tempos,
-          timeSignatures,
-          tracks,
-          trackOrder,
-        } = context.state;
-        const projectData: LatestProjectType = {
-          appVersion,
-          talk: {
-            audioKeys,
-            audioItems,
-          },
-          song: {
-            tpqn,
-            tempos,
-            timeSignatures,
-            tracks: Object.fromEntries(tracks),
-            trackOrder,
-          },
-        };
-
-        const buf = new TextEncoder().encode(
-          JSON.stringify(projectData),
-        ).buffer;
-        await window.backend
-          .writeFile({
-            filePath,
-            buffer: buf,
-          })
-          .then(getValueOrThrow);
         return true;
       } catch (err) {
         window.backend.logError(err);
@@ -333,27 +282,12 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
       async (context, { overwrite }: { overwrite?: boolean }) => {
         let filePath = context.state.projectFilePath;
         if (!overwrite || !filePath) {
-          let defaultPath: string;
-
-          if (!filePath) {
-            // if new project: use generated name
-            defaultPath = `${context.getters.DEFAULT_PROJECT_FILE_BASE_NAME}.vvproj`;
-          } else {
-            // if saveAs for existing project: use current project path
-            defaultPath = filePath;
-          }
-
-          // Write the current status to a project file.
-          const ret = await window.backend.showSaveFileDialog({
-            title: "プロジェクトファイルの保存",
-            name: "VOICEVOX Project file",
-            extensions: ["vvproj"],
-            defaultPath,
+          filePath = await context.actions.PROMPT_PROJECT_SAVE_FILE_PATH({
+            defaultFilePath: filePath,
           });
-          if (ret == undefined) {
+          if (!filePath) {
             return false;
           }
-          filePath = ret;
         }
         if (
           context.state.projectFilePath &&
@@ -382,6 +316,65 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         return result;
       },
     ),
+  },
+
+  PROMPT_PROJECT_SAVE_FILE_PATH: {
+    async action(context, { defaultFilePath }) {
+      let defaultPath: string;
+
+      if (!defaultFilePath) {
+        // if new project: use generated name
+        defaultPath = `${context.getters.DEFAULT_PROJECT_FILE_BASE_NAME}.vvproj`;
+      } else {
+        // if saveAs for existing project: use current project path
+        defaultPath = defaultFilePath;
+      }
+
+      // Write the current status to a project file.
+      return await window.backend.showSaveFileDialog({
+        title: "プロジェクトファイルの保存",
+        name: "VOICEVOX Project file",
+        extensions: ["vvproj"],
+        defaultPath,
+      });
+    },
+  },
+
+  WRITE_PROJECT_FILE: {
+    action: createUILockAction(async (context, { filePath }) => {
+      const appVersion = getAppInfos().version;
+      const {
+        audioItems,
+        audioKeys,
+        tpqn,
+        tempos,
+        timeSignatures,
+        tracks,
+        trackOrder,
+      } = context.state;
+      const projectData: LatestProjectType = {
+        appVersion,
+        talk: {
+          audioKeys,
+          audioItems,
+        },
+        song: {
+          tpqn,
+          tempos,
+          timeSignatures,
+          tracks: Object.fromEntries(tracks),
+          trackOrder,
+        },
+      };
+
+      const buf = new TextEncoder().encode(JSON.stringify(projectData)).buffer;
+      await window.backend
+        .writeFile({
+          filePath,
+          buffer: buf,
+        })
+        .then(getValueOrThrow);
+    }),
   },
 
   /**
