@@ -83,7 +83,7 @@
         />
       </div>
       <!-- プリセット管理ダイアログ -->
-      <PresetManageDialog v-model:open-dialog="showsPresetEditDialog" />
+      <PresetManageDialog v-model:openDialog="showsPresetEditDialog" />
 
       <!-- プリセット登録ダイアログ -->
       <QDialog v-model="showsPresetNameDialog" @beforeHide="closeAllDialog">
@@ -216,7 +216,7 @@
       <span class="text-body1 q-mb-xs">モーフィング</span>
       <div class="row no-wrap items-center">
         <CharacterButton
-          v-model:selected-voice="morphingTargetVoice"
+          v-model:selectedVoice="morphingTargetVoice"
           class="q-my-xs"
           :characterInfos="morphingTargetCharacters"
           :showEngineInfo="morphingTargetEngines.length >= 2"

@@ -88,9 +88,7 @@
                   @mouseenter="
                     // ドラッグ中はバグるので無視
                     characterOrderDragging ||
-                      selectCharacterWithChangePortrait(
-                        element.metas.speakerUuid,
-                      )
+                    selectCharacterWithChangePortrait(element.metas.speakerUuid)
                   "
                 >
                   {{ element.metas.speakerName }}
