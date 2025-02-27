@@ -1,4 +1,4 @@
-import { createPartialStore, DotNotationDispatch } from "./vuex";
+import { createPartialStore, DotNotationDispatch } from "../vuex";
 import { createUILockAction } from "@/store/ui";
 import {
   AllActions,
