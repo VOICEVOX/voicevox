@@ -10,10 +10,7 @@ import {
   defineConfigWithVueTs,
   vueTsConfigs,
 } from "@vue/eslint-config-typescript";
-import {
-  configs as tseslintConfigs,
-  parser as typescriptParser,
-} from "typescript-eslint";
+import { configs as tsConfigs, parser as tsParser } from "typescript-eslint";
 import voicevoxPlugin from "./eslint-plugin/index.mjs";
 
 const __dirname = import.meta.dirname;
@@ -58,7 +55,7 @@ const pluginConfig = (nameOrConfigs, config) => {
 /** @type {ParserOptions} */
 const vueParserOptions = {
   ecmaVersion: 2020,
-  parser: typescriptParser,
+  parser: tsParser,
   extraFileExtensions: [".vue"],
 };
 
@@ -133,9 +130,9 @@ export default defineConfigWithVueTs(
   {
     name: "voicevox/type-checked/typescript",
     files: ["**/*.ts", "**/*.mts"],
-    extends: [...tseslintConfigs.recommendedTypeChecked],
+    extends: [...tsConfigs.recommendedTypeChecked],
     languageOptions: {
-      parser: typescriptParser,
+      parser: tsParser,
       parserOptions: {
         ...typeCheckedParserOptions,
       },
@@ -148,7 +145,7 @@ export default defineConfigWithVueTs(
   {
     name: "voicevox/type-checked/vue",
     files: ["**/*.vue"],
-    extends: [...tseslintConfigs.recommendedTypeChecked],
+    extends: [...tsConfigs.recommendedTypeChecked],
     languageOptions: {
       parser: vueParser,
       parserOptions: {
