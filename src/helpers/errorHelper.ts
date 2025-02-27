@@ -76,7 +76,7 @@ export const errorToMessages = (
             e instanceof DisplayableError
           )
         ) {
-          message += `${e.constructor.name}: `;
+          message += `${e.name}: `;
         }
         message += e.message;
         messages.push(message);
