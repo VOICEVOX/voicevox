@@ -1391,8 +1391,10 @@ export type SingingStoreTypes = {
     action(payload: { key: SingingVoiceKey }): SingingVoice | undefined;
   };
 
-  LOAD_SINGING_VOICE_CACHE: {
-    action(): Promise<void>;
+  FETCH_CACHED_SINGING_VOICE: {
+    action(payload: {
+      key: SingingVoiceKey;
+    }): Promise<SingingVoice | undefined>;
   };
 };
 

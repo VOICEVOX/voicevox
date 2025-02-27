@@ -135,7 +135,9 @@ export interface Sandbox {
   validateEngineDir(engineDir: string): Promise<EngineDirValidationResult>;
   reloadApp(obj: { isMultiEngineOffMode?: boolean }): Promise<void>;
   getPathForFile(file: File): string;
-  fetchCachedSingingVoices(): Promise<Record<SingingVoiceKey, SingingVoice>>;
+  fetchCachedSingingVoice(
+    key: SingingVoiceKey,
+  ): Promise<SingingVoice | undefined>;
 }
 
 export type AppInfos = {

@@ -3549,12 +3549,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  LOAD_SINGING_VOICE_CACHE: {
-    async action() {
-      const cache = await window.backend.fetchCachedSingingVoices();
-      for (const [key, value] of Object.entries(cache)) {
-        singingVoiceCache.set(SingingVoiceKey(key), value);
-      }
+  FETCH_CACHED_SINGING_VOICE: {
+    async action(_, { key }) {
+      return await window.backend.fetchCachedSingingVoice(key);
     },
   },
 });

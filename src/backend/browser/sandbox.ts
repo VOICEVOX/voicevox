@@ -241,7 +241,7 @@ export const api: Sandbox = {
     throw new Error(`Not supported on Browser version: getPathForFile`);
   },
 
-  fetchCachedSingingVoices() {
-    return Promise.resolve({});
+  fetchCachedSingingVoice() {
+    return Promise.resolve(undefined);
   },
 };

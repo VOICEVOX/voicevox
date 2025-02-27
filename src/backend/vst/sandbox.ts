@@ -15,9 +15,9 @@ import {
   logWarn,
   logError,
   onReceivedIPCMessage,
-  getVoices,
   openLogDirectory,
   openEngineDirectory,
+  getVoice,
 } from "./ipc";
 import {
   EngineId,
@@ -31,7 +31,6 @@ import { failure, success } from "@/type/result";
 import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
 import { UnreachableError } from "@/type/utility";
 import { createLogger } from "@/helpers/log";
-import { SingingVoice, SingingVoiceKey } from "@/store/type";
 
 export const internalProjectFilePath = "/dev/vst-project.vvproj";
 
@@ -245,21 +244,14 @@ export const api: Sandbox = {
     return browserSandbox.hotkeySettings.bind(this)(data);
   },
 
-  async fetchCachedSingingVoices() {
+  async fetchCachedSingingVoice(key) {
     // キャッシュされた歌声を読み込む。
     log.info("Loading cached voices");
-    const encodedVoices = await getVoices();
-    return Object.fromEntries(
-      await Promise.all(
-        Object.entries(encodedVoices).map(
-          async ([key, encodedVoice]) =>
-            [
-              SingingVoiceKey(key),
-              new Blob([await toBytes(encodedVoice)]),
-            ] satisfies [SingingVoiceKey, SingingVoice],
-        ),
-      ),
-    );
+    const encodedVoice = await getVoice(key);
+    if (!encodedVoice) {
+      return undefined;
+    }
+    return new Blob([await toBytes(encodedVoice)]);
   },
 
   // 未実装

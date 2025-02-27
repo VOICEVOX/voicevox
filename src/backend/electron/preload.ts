@@ -220,9 +220,9 @@ const api: Sandbox = {
     return webUtils.getPathForFile(file);
   },
 
-  fetchCachedSingingVoices() {
+  fetchCachedSingingVoice() {
     // TODO: 実装する
-    return Promise.resolve({});
+    return Promise.resolve(undefined);
   },
 };
 
