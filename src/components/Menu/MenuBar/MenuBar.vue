@@ -346,7 +346,7 @@ const menudata = computed<MenuItemData[]>(() => [
       },
       {
         type: "button",
-        label: "プロジェクトを複製として保存",
+        label: "プロジェクトの複製を保存",
         onClick: async () => {
           await saveProjectCopy();
         },
@@ -601,7 +601,7 @@ registerHotkeyForAllEditors({
 });
 registerHotkeyForAllEditors({
   callback: saveProjectCopy,
-  name: "プロジェクトを複製として保存",
+  name: "プロジェクトの複製を保存",
 });
 registerHotkeyForAllEditors({
   callback: importProject,
