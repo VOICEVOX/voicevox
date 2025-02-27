@@ -30,7 +30,6 @@ import { api as browserSandbox } from "@/backend/browser/sandbox";
 import { failure, success } from "@/type/result";
 import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
 import { UnreachableError } from "@/type/utility";
-import { createLogger } from "@/helpers/log";
 
 export const internalProjectFilePath = "/dev/vst-project.vvproj";
 
