@@ -75,7 +75,7 @@ export async function executeWritePromiseOrDialog(
   }
 }
 
-export async function handleCurrentProjectSave(
+export async function markCurrentProjectAsSaved(
   context: ActionContext,
   filePath: string,
 ) {

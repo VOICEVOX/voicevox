@@ -2,7 +2,7 @@ import { createPartialStore, DotNotationDispatch } from "../vuex";
 import {
   executeWritePromiseOrDialog,
   promptProjectSaveFilePath,
-  handleCurrentProjectSave,
+  markCurrentProjectAsSaved,
   writeProjectFile,
 } from "./saveProjectHelper";
 import { createUILockAction } from "@/store/ui";
@@ -269,7 +269,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
       );
       if (!result) return false;
 
-      await handleCurrentProjectSave(context, filePath);
+      await markCurrentProjectAsSaved(context, filePath);
       return true;
     }),
   },
@@ -298,7 +298,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         });
       }
 
-      await handleCurrentProjectSave(context, filePath);
+      await markCurrentProjectAsSaved(context, filePath);
       return true;
     }),
   },
