@@ -1855,6 +1855,18 @@ export type ProjectStoreTypes = {
     action(payload: { overwrite?: boolean }): boolean;
   };
 
+  SAVE_PROJECT_FILE_AS_COPY: {
+    action(payload: { filePath?: string }): boolean;
+  };
+
+  PROMPT_PROJECT_SAVE_FILE_PATH: {
+    action(payload: { defaultFilePath?: string }): Promise<string | undefined>;
+  };
+
+  WRITE_PROJECT_FILE: {
+    action(payload: { filePath: string }): Promise<void>;
+  };
+
   SAVE_OR_DISCARD_PROJECT_FILE: {
     action(palyoad: {
       additionalMessage?: string;
