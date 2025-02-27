@@ -5,7 +5,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from "vue";
+import { ref, watch, computed, onUnmounted, onMounted } from "vue";
 import * as PIXI from "pixi.js";
 import AsyncLock from "async-lock";
 import { useStore } from "@/store";
@@ -18,10 +18,6 @@ import {
 } from "@/sing/domain";
 import { noteNumberToBaseY, tickToBaseX } from "@/sing/viewHelper";
 import { Color } from "@/sing/graphics/lineStrip";
-import {
-  onMountedOrActivated,
-  onUnmountedOrDeactivated,
-} from "@/composables/onMountOrActivate";
 import { ExhaustiveError } from "@/type/utility";
 import { createLogger } from "@/helpers/log";
 import { getLast } from "@/sing/utility";
@@ -95,17 +91,6 @@ const isPitchLineVisible = computed(() => {
   return store.getters.SELECTED_TRACK.singer != undefined;
 });
 
-const originalPitchLine = new PitchLine(
-  originalPitchLineColor.value,
-  1.125,
-  isPitchLineVisible.value,
-);
-const pitchEditLine = new PitchLine(
-  pitchEditLineColor.value,
-  2.25,
-  isPitchLineVisible.value,
-);
-
 const canvasContainer = ref<HTMLElement | null>(null);
 const canvas = ref<HTMLCanvasElement | null>(null);
 let resizeObserver: ResizeObserver | undefined;
@@ -114,6 +99,8 @@ let canvasHeight: number | undefined;
 
 let renderer: PIXI.Renderer | undefined;
 let stage: PIXI.Container | undefined;
+let originalPitchLine: PitchLine | undefined;
+let pitchEditLine: PitchLine | undefined;
 let requestId: number | undefined;
 let renderInNextFrame = false;
 
@@ -123,6 +110,12 @@ const render = () => {
   }
   if (stage == undefined) {
     throw new Error("stage is undefined.");
+  }
+  if (originalPitchLine == undefined) {
+    throw new Error("originalPitchLine is undefined.");
+  }
+  if (pitchEditLine == undefined) {
+    throw new Error("pitchEditLine is undefined.");
   }
   if (canvasWidth == undefined) {
     throw new Error("canvasWidth is undefined.");
@@ -267,45 +260,60 @@ const generatePitchEditDataMap = async () => {
   return await toPitchDataMap(framewiseData, frameRate);
 };
 
+const updateOriginalPitchLineDataMap = async () => {
+  if (originalPitchLine == undefined) {
+    throw new Error("originalPitchLine is undefined.");
+  }
+  originalPitchLine.pitchDataMap = await generateOriginalPitchDataMap();
+  renderInNextFrame = true;
+};
+
+const updatePitchEditLineDataMap = async () => {
+  if (pitchEditLine == undefined) {
+    throw new Error("pitchEditLine is undefined.");
+  }
+  pitchEditLine.pitchDataMap = await generatePitchEditDataMap();
+  renderInNextFrame = true;
+};
+
+// onMountedのときにtrueになるだけのref
+const mounted = ref(false);
+
 const asyncLock = new AsyncLock({ maxPending: 1 });
 
-watch(
-  [singingGuidesInSelectedTrack, tempos, tpqn],
-  async () => {
-    asyncLock.acquire(
-      "originalPitch",
-      async () => {
-        originalPitchLine.pitchDataMap = await generateOriginalPitchDataMap();
-        renderInNextFrame = true;
-      },
-      (err) => {
-        if (err != undefined) {
-          warn(`An error occurred.`, err);
-        }
-      },
-    );
-  },
-  { immediate: true },
-);
+// NOTE: mountedをwatchしているので、onMountedの直後に必ず１回実行される
+watch([mounted, singingGuidesInSelectedTrack, tempos, tpqn], ([mounted]) => {
+  asyncLock.acquire(
+    "originalPitch",
+    async () => {
+      if (mounted) {
+        await updateOriginalPitchLineDataMap();
+      }
+    },
+    (err) => {
+      if (err != undefined) {
+        warn(`An error occurred.`, err);
+      }
+    },
+  );
+});
 
-watch(
-  [pitchEditData, previewPitchEdit, tempos, tpqn],
-  async () => {
-    asyncLock.acquire(
-      "pitchEdit",
-      async () => {
-        pitchEditLine.pitchDataMap = await generatePitchEditDataMap();
-        renderInNextFrame = true;
-      },
-      (err) => {
-        if (err != undefined) {
-          warn(`An error occurred.`, err);
-        }
-      },
-    );
-  },
-  { immediate: true },
-);
+// NOTE: mountedをwatchしているので、onMountedの直後に必ず１回実行される
+watch([mounted, pitchEditData, previewPitchEdit, tempos, tpqn], ([mounted]) => {
+  asyncLock.acquire(
+    "pitchEdit",
+    async () => {
+      if (mounted) {
+        await updatePitchEditLineDataMap();
+      }
+    },
+    (err) => {
+      if (err != undefined) {
+        warn(`An error occurred.`, err);
+      }
+    },
+  );
+});
 
 watch(isDark, () => {
   renderInNextFrame = true;
@@ -323,7 +331,9 @@ watch(
   },
 );
 
-onMountedOrActivated(() => {
+onMounted(() => {
+  mounted.value = true;
+
   const canvasContainerElement = canvasContainer.value;
   const canvasElement = canvas.value;
   if (!canvasContainerElement) {
@@ -346,6 +356,16 @@ onMountedOrActivated(() => {
     height: canvasHeight,
   });
   stage = new PIXI.Container();
+  originalPitchLine = new PitchLine(
+    originalPitchLineColor.value,
+    1.125,
+    isPitchLineVisible.value,
+  );
+  pitchEditLine = new PitchLine(
+    pitchEditLineColor.value,
+    2.25,
+    isPitchLineVisible.value,
+  );
 
   stage.addChild(originalPitchLine.displayObject);
   stage.addChild(pitchEditLine.displayObject);
@@ -365,7 +385,6 @@ onMountedOrActivated(() => {
     requestId = window.requestAnimationFrame(callback);
   };
   requestId = window.requestAnimationFrame(callback);
-  renderInNextFrame = true;
 
   resizeObserver = new ResizeObserver(() => {
     if (renderer == undefined) {
@@ -384,12 +403,12 @@ onMountedOrActivated(() => {
   resizeObserver.observe(canvasContainerElement);
 });
 
-onUnmountedOrDeactivated(() => {
+onUnmounted(() => {
   if (requestId != undefined) {
     window.cancelAnimationFrame(requestId);
   }
-  originalPitchLine.destroy();
-  pitchEditLine.destroy();
+  originalPitchLine?.destroy();
+  pitchEditLine?.destroy();
   stage?.destroy();
   renderer?.destroy(true);
   resizeObserver?.disconnect();

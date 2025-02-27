@@ -2474,7 +2474,7 @@ export const audioCommandStore = transformCommandStore(
             audioKey,
             accentPhrases: resultAccentPhrases,
           });
-        } catch (error) {
+        } catch {
           mutations.COMMAND_CHANGE_SINGLE_ACCENT_PHRASE({
             audioKey,
             accentPhrases: newAccentPhrases,

@@ -483,6 +483,7 @@ export type AudioStoreTypes = {
  * Audio Command Store Types
  */
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export type AudioCommandStoreState = {
   //
 };
@@ -1389,6 +1390,7 @@ export type SingingStoreTypes = {
   };
 };
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export type SingingCommandStoreState = {
   //
 };
