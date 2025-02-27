@@ -261,7 +261,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
     action: createUILockAction(async (context) => {
       const filePath = context.state.projectFilePath;
       if (!filePath) {
-        return await context.actions.SAVE_PROJECT_FILE_AS({});
+        return await context.actions.SAVE_PROJECT_FILE_AS();
       }
 
       const result = await executeWritePromiseOrDialog(
@@ -344,7 +344,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         cancel: 0,
       });
       if (result == 2) {
-        const saved = await actions.SAVE_PROJECT_FILE_OVERWRITE({});
+        const saved = await actions.SAVE_PROJECT_FILE_OVERWRITE();
         return saved ? "saved" : "canceled";
       } else if (result == 1) {
         return "discarded";
