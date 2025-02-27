@@ -247,75 +247,81 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
     ),
   },
 
-  SAVE_PROJECT_FILE_AS_COPY: {
+  SAVE_PROJECT_FILE_OVERWRITE: {
     /**
-     * プロジェクトファイルを複製として保存する。保存の成否が返る。
+     * プロジェクトファイルを上書き保存する。
+     * 現在のプロジェクトファイルが未設定の場合は名前をつけて保存する。
      * エラー発生時はダイアログが表示される。
      */
-    action: createUILockAction(async (context, { filePath: filePathArg }) => {
-      let filePath = filePathArg;
-      try {
-        if (!filePath) {
-          filePath = await context.actions.PROMPT_PROJECT_SAVE_FILE_PATH({});
-          if (!filePath) {
-            return false;
-          }
-        }
-
-        return true;
-      } catch (err) {
-        window.backend.logError(err);
-        await showAlertDialog({
-          title: "エラー",
-          message: `プロジェクトファイルの保存に失敗しました。\n${errorToMessage(err)}`,
-        });
-        return false;
+    action: createUILockAction(async (context) => {
+      const filePath = context.state.projectFilePath;
+      if (!filePath) {
+        await context.actions.SAVE_PROJECT_FILE_AS({});
+        return;
       }
+
+      const result = await context.actions.WRITE_PROJECT_FILE({
+        filePath,
+      });
+      if (!result) return;
+
+      await context.actions.APPEND_RECENTLY_USED_PROJECT({
+        filePath,
+      });
+      context.mutations.SET_SAVED_LAST_COMMAND_IDS(
+        context.getters.LAST_COMMAND_IDS,
+      );
     }),
   },
 
-  SAVE_PROJECT_FILE: {
+  SAVE_PROJECT_FILE_AS: {
     /**
-     * プロジェクトファイルを保存し、現在のプロジェクトファイルのパスを更新する。保存の成否が返る。
+     * プロジェクトファイルを名前をつけて保存し、現在のプロジェクトファイルのパスを更新する。
+     * エラー発生時はダイアログが表示される。
      */
-    action: createUILockAction(
-      async (context, { overwrite }: { overwrite?: boolean }) => {
-        let filePath = context.state.projectFilePath;
-        if (!overwrite || !filePath) {
-          filePath = await context.actions.PROMPT_PROJECT_SAVE_FILE_PATH({
-            defaultFilePath: filePath,
-          });
-          if (!filePath) {
-            return false;
-          }
-        }
-        if (
-          context.state.projectFilePath &&
-          context.state.projectFilePath != filePath
-        ) {
-          await showMessageDialog({
-            type: "info",
-            title: "保存",
-            message: `編集中のプロジェクトが ${filePath} に切り替わりました。`,
-          });
-        }
+    action: createUILockAction(async (context, {}) => {
+      const filePath = await context.actions.PROMPT_PROJECT_SAVE_FILE_PATH({});
+      if (!filePath) return;
 
-        await context.actions.APPEND_RECENTLY_USED_PROJECT({
-          filePath,
-        });
-        const result = await context.actions.SAVE_PROJECT_FILE_AS_COPY({
-          filePath,
-        });
-        if (result) {
-          context.mutations.SET_PROJECT_FILEPATH({ filePath });
-          context.mutations.SET_SAVED_LAST_COMMAND_IDS(
-            context.getters.LAST_COMMAND_IDS,
-          );
-        }
+      const result = await context.actions.WRITE_PROJECT_FILE({
+        filePath,
+      });
+      if (!result) return;
 
-        return result;
-      },
-    ),
+      if (
+        context.state.projectFilePath &&
+        context.state.projectFilePath != filePath
+      ) {
+        context.mutations.SET_PROJECT_FILEPATH({ filePath });
+        await showMessageDialog({
+          type: "info",
+          title: "保存",
+          message: `編集中のプロジェクトが ${filePath} に切り替わりました。`,
+        });
+      }
+
+      await context.actions.APPEND_RECENTLY_USED_PROJECT({
+        filePath,
+      });
+      context.mutations.SET_SAVED_LAST_COMMAND_IDS(
+        context.getters.LAST_COMMAND_IDS,
+      );
+    }),
+  },
+
+  SAVE_PROJECT_FILE_AS_COPY: {
+    /**
+     * プロジェクトファイルを複製として保存する。
+     * エラー発生時はダイアログが表示される。
+     */
+    action: createUILockAction(async (context, {}) => {
+      const filePath = await context.actions.PROMPT_PROJECT_SAVE_FILE_PATH({});
+      if (!filePath) return;
+
+      await context.actions.WRITE_PROJECT_FILE({
+        filePath,
+      });
+    }),
   },
 
   PROMPT_PROJECT_SAVE_FILE_PATH: {
@@ -368,12 +374,22 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
       };
 
       const buf = new TextEncoder().encode(JSON.stringify(projectData)).buffer;
-      await window.backend
-        .writeFile({
-          filePath,
-          buffer: buf,
-        })
-        .then(getValueOrThrow);
+      try {
+        await window.backend
+          .writeFile({
+            filePath,
+            buffer: buf,
+          })
+          .then(getValueOrThrow);
+        return true;
+      } catch (err) {
+        window.backend.logError(err);
+        await showAlertDialog({
+          title: "エラー",
+          message: `プロジェクトファイルの保存に失敗しました。\n${errorToMessage(err)}`,
+        });
+        return false;
+      }
     }),
   },
 

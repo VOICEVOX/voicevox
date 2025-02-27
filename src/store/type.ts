@@ -1849,12 +1849,16 @@ export type ProjectStoreTypes = {
     ): boolean;
   };
 
-  SAVE_PROJECT_FILE: {
-    action(payload: { overwrite?: boolean }): boolean;
+  SAVE_PROJECT_FILE_OVERWRITE: {
+    action(payload: {}): void;
+  };
+
+  SAVE_PROJECT_FILE_AS: {
+    action(payload: {}): void;
   };
 
   SAVE_PROJECT_FILE_AS_COPY: {
-    action(payload: { filePath?: string }): boolean;
+    action(payload: {}): void;
   };
 
   PROMPT_PROJECT_SAVE_FILE_PATH: {
@@ -1862,7 +1866,7 @@ export type ProjectStoreTypes = {
   };
 
   WRITE_PROJECT_FILE: {
-    action(payload: { filePath: string }): Promise<void>;
+    action(payload: { filePath: string }): Promise<boolean>;
   };
 
   SAVE_OR_DISCARD_PROJECT_FILE: {
