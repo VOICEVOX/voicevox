@@ -28,10 +28,9 @@ import {
   showQuestionDialog,
 } from "@/components/Dialog/Dialog";
 import { uuid4 } from "@/helpers/random";
-import { getAppInfos } from "@/domain/appInfo";
-import { errorToMessage } from "@/helpers/errorHelper";
 import {
   promptProjectSaveFilePath,
+  updateCurrentProject,
   writeProjectFile,
 } from "./saveProjectHelper";
 
@@ -266,12 +265,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
       const result = await writeProjectFile(context, filePath);
       if (!result) return false;
 
-      await context.actions.APPEND_RECENTLY_USED_PROJECT({
-        filePath,
-      });
-      context.mutations.SET_SAVED_LAST_COMMAND_IDS(
-        context.getters.LAST_COMMAND_IDS,
-      );
+      await updateCurrentProject(context, filePath);
       return true;
     }),
   },
@@ -288,10 +282,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
       const result = await writeProjectFile(context, filePath);
       if (!result) return false;
 
-      if (
-        context.state.projectFilePath &&
-        context.state.projectFilePath != filePath
-      ) {
+      if (context.state.projectFilePath !== filePath) {
         context.mutations.SET_PROJECT_FILEPATH({ filePath });
         await showMessageDialog({
           type: "info",
@@ -300,12 +291,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         });
       }
 
-      await context.actions.APPEND_RECENTLY_USED_PROJECT({
-        filePath,
-      });
-      context.mutations.SET_SAVED_LAST_COMMAND_IDS(
-        context.getters.LAST_COMMAND_IDS,
-      );
+      await updateCurrentProject(context, filePath);
       return true;
     }),
   },

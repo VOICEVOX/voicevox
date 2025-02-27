@@ -1,4 +1,4 @@
-import { showAlertDialog } from "@/components/Dialog/Dialog";
+import { showAlertDialog, showMessageDialog } from "@/components/Dialog/Dialog";
 import { getAppInfos } from "@/domain/appInfo";
 import { LatestProjectType } from "@/domain/project/schema";
 import { errorToMessage } from "@/helpers/errorHelper";
@@ -64,4 +64,16 @@ export async function writeProjectFile(
     });
     return false;
   }
+}
+
+export async function updateCurrentProject(
+  context: ActionContext,
+  filePath: string,
+) {
+  await context.actions.APPEND_RECENTLY_USED_PROJECT({
+    filePath,
+  });
+  context.mutations.SET_SAVED_LAST_COMMAND_IDS(
+    context.getters.LAST_COMMAND_IDS,
+  );
 }
