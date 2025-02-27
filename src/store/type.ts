@@ -1853,27 +1853,15 @@ export type ProjectStoreTypes = {
   };
 
   SAVE_PROJECT_FILE_OVERWRITE: {
-    action(payload: {}): Promise<boolean>;
+    action(): Promise<boolean>;
   };
 
   SAVE_PROJECT_FILE_AS: {
-    action(payload: {}): Promise<boolean>;
+    action(): Promise<boolean>;
   };
 
   SAVE_PROJECT_FILE_AS_COPY: {
-    action(payload: {}): Promise<boolean>;
-  };
-
-  SAVE_PROJECT_FILE_AS_COPY: {
-    action(payload: { filePath?: string }): boolean;
-  };
-
-  PROMPT_PROJECT_SAVE_FILE_PATH: {
-    action(payload: { defaultFilePath?: string }): Promise<string | undefined>;
-  };
-
-  WRITE_PROJECT_FILE: {
-    action(payload: { filePath: string }): Promise<void>;
+    action(): Promise<boolean>;
   };
 
   SAVE_OR_DISCARD_PROJECT_FILE: {

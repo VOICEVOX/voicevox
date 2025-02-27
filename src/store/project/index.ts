@@ -280,7 +280,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
      * ファイルを保存できた場合はtrueが、キャンセルしたか例外が発生した場合はfalseが返る。
      * エラー発生時はダイアログが表示される。
      */
-    action: createUILockAction(async (context, {}) => {
+    action: createUILockAction(async (context) => {
       const filePath = await promptProjectSaveFilePath(context);
       if (!filePath) return false;
 
@@ -309,7 +309,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
      * ファイルを保存できた場合はtrueが、キャンセルしたか例外が発生した場合はfalseが返る。
      * エラー発生時はダイアログが表示される。
      */
-    action: createUILockAction(async (context, {}) => {
+    action: createUILockAction(async (context) => {
       const filePath = await promptProjectSaveFilePath(context);
       if (!filePath) return false;
 
@@ -318,65 +318,6 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
       );
       return result;
     }),
-  },
-
-  PROMPT_PROJECT_SAVE_FILE_PATH: {
-    async action(context, { defaultFilePath }) {
-      let defaultPath: string;
-
-      if (!defaultFilePath) {
-        // if new project: use generated name
-        defaultPath = `${context.getters.DEFAULT_PROJECT_FILE_BASE_NAME}.vvproj`;
-      } else {
-        // if saveAs for existing project: use current project path
-        defaultPath = defaultFilePath;
-      }
-
-      // Write the current status to a project file.
-      return await window.backend.showSaveFileDialog({
-        title: "プロジェクトファイルの保存",
-        name: "VOICEVOX Project file",
-        extensions: ["vvproj"],
-        defaultPath,
-      });
-    },
-  },
-
-  WRITE_PROJECT_FILE: {
-    action: async (context, { filePath }) => {
-      const appVersion = getAppInfos().version;
-      const {
-        audioItems,
-        audioKeys,
-        tpqn,
-        tempos,
-        timeSignatures,
-        tracks,
-        trackOrder,
-      } = context.state;
-      const projectData: LatestProjectType = {
-        appVersion,
-        talk: {
-          audioKeys,
-          audioItems,
-        },
-        song: {
-          tpqn,
-          tempos,
-          timeSignatures,
-          tracks: Object.fromEntries(tracks),
-          trackOrder,
-        },
-      };
-
-      const buf = new TextEncoder().encode(JSON.stringify(projectData)).buffer;
-      await window.backend
-        .writeFile({
-          filePath,
-          buffer: buf,
-        })
-        .then(getValueOrThrow);
-    },
   },
 
   /**
