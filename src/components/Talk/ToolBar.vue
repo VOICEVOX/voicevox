@@ -142,7 +142,7 @@ const generateAndConnectAndSaveAudio = async () => {
   });
 };
 const saveProject = async () => {
-  await store.actions.SAVE_PROJECT_FILE({ overwrite: true });
+  await store.actions.SAVE_PROJECT_FILE_OVERWRITE({});
 };
 const importTextFile = () => {
   void store.actions.COMMAND_IMPORT_FROM_FILE({ type: "dialog" });
