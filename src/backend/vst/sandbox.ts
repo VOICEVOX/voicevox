@@ -34,8 +34,6 @@ import { createLogger } from "@/helpers/log";
 
 export const internalProjectFilePath = "/dev/vst-project.vvproj";
 
-const log = createLogger("vst/sandbox");
-
 class UnimplementedError extends Error {
   constructor() {
     super("Function not implemented.");
