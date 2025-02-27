@@ -1,8 +1,8 @@
-import { showAlertDialog, showMessageDialog } from "@/components/Dialog/Dialog";
+import { showErrorDialog } from "@/components/Dialog/Dialog";
 import { getAppInfos } from "@/domain/appInfo";
 import { LatestProjectType } from "@/domain/project/schema";
-import { errorToMessage } from "@/helpers/errorHelper";
-import { getValueOrThrow } from "@/type/result";
+import { DisplayableError, errorToMessage } from "@/helpers/errorHelper";
+import { ResultError } from "@/type/result";
 import { ActionContext } from "../type";
 
 export async function promptProjectSaveFilePath(
@@ -18,10 +18,13 @@ export async function promptProjectSaveFilePath(
   });
 }
 
+/**
+ * @throws ファイルの保存に失敗した場合
+ */
 export async function writeProjectFile(
   context: ActionContext,
   filePath: string,
-): Promise<boolean> {
+) {
   const appVersion = getAppInfos().version;
   const {
     audioItems,
@@ -48,25 +51,31 @@ export async function writeProjectFile(
   };
 
   const buf = new TextEncoder().encode(JSON.stringify(projectData)).buffer;
-  try {
-    await window.backend
-      .writeFile({
-        filePath,
-        buffer: buf,
-      })
-      .then(getValueOrThrow);
-    return true;
-  } catch (err) {
-    window.backend.logError(err);
-    await showAlertDialog({
-      title: "エラー",
-      message: `プロジェクトファイルの保存に失敗しました。\n${errorToMessage(err)}`,
+  const result = await window.backend.writeFile({
+    filePath,
+    buffer: buf,
+  });
+  if (!result.ok) {
+    throw new DisplayableError("ファイルの保存に失敗しました。", {
+      cause: new ResultError(result),
     });
+  }
+}
+
+export async function executeWritePromiseOrDialog(
+  savePromise: Promise<void>,
+): Promise<boolean> {
+  try {
+    await savePromise;
+    return true;
+  } catch (e) {
+    window.backend.logError(e);
+    await showErrorDialog("プロジェクトファイルの保存に失敗しました", e);
     return false;
   }
 }
 
-export async function updateCurrentProject(
+export async function handleCurrentProjectSave(
   context: ActionContext,
   filePath: string,
 ) {

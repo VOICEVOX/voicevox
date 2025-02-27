@@ -29,8 +29,9 @@ import {
 } from "@/components/Dialog/Dialog";
 import { uuid4 } from "@/helpers/random";
 import {
+  executeWritePromiseOrDialog,
   promptProjectSaveFilePath,
-  updateCurrentProject,
+  handleCurrentProjectSave,
   writeProjectFile,
 } from "./saveProjectHelper";
 
@@ -254,6 +255,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
     /**
      * プロジェクトファイルを上書き保存する。
      * 現在のプロジェクトファイルが未設定の場合は名前をつけて保存する。
+     * ファイルを保存できた場合はtrueが、キャンセルしたか例外が発生した場合はfalseが返る。
      * エラー発生時はダイアログが表示される。
      */
     action: createUILockAction(async (context) => {
@@ -262,10 +264,12 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         return await context.actions.SAVE_PROJECT_FILE_AS({});
       }
 
-      const result = await writeProjectFile(context, filePath);
+      const result = await executeWritePromiseOrDialog(
+        writeProjectFile(context, filePath),
+      );
       if (!result) return false;
 
-      await updateCurrentProject(context, filePath);
+      await handleCurrentProjectSave(context, filePath);
       return true;
     }),
   },
@@ -273,13 +277,16 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
   SAVE_PROJECT_FILE_AS: {
     /**
      * プロジェクトファイルを名前をつけて保存し、現在のプロジェクトファイルのパスを更新する。
+     * ファイルを保存できた場合はtrueが、キャンセルしたか例外が発生した場合はfalseが返る。
      * エラー発生時はダイアログが表示される。
      */
     action: createUILockAction(async (context, {}) => {
       const filePath = await promptProjectSaveFilePath(context);
       if (!filePath) return false;
 
-      const result = await writeProjectFile(context, filePath);
+      const result = await executeWritePromiseOrDialog(
+        writeProjectFile(context, filePath),
+      );
       if (!result) return false;
 
       if (context.state.projectFilePath !== filePath) {
@@ -291,7 +298,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         });
       }
 
-      await updateCurrentProject(context, filePath);
+      await handleCurrentProjectSave(context, filePath);
       return true;
     }),
   },
@@ -299,13 +306,17 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
   SAVE_PROJECT_FILE_AS_COPY: {
     /**
      * プロジェクトファイルを複製として保存する。
+     * ファイルを保存できた場合はtrueが、キャンセルしたか例外が発生した場合はfalseが返る。
      * エラー発生時はダイアログが表示される。
      */
     action: createUILockAction(async (context, {}) => {
       const filePath = await promptProjectSaveFilePath(context);
       if (!filePath) return false;
 
-      return await writeProjectFile(context, filePath);
+      const result = await executeWritePromiseOrDialog(
+        writeProjectFile(context, filePath),
+      );
+      return result;
     }),
   },
 
