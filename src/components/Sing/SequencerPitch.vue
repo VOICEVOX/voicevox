@@ -276,15 +276,17 @@ const updatePitchEditLineDataMap = async () => {
   renderInNextFrame = true;
 };
 
-let initialized = false;
+// onMountedのときにtrueになるだけのref
+const mounted = ref(false);
 
 const asyncLock = new AsyncLock({ maxPending: 1 });
 
-watch([singingGuidesInSelectedTrack, tempos, tpqn], async () => {
+// NOTE: mountedをwatchしているので、onMountedの直後に必ず１回実行される
+watch([mounted, singingGuidesInSelectedTrack, tempos, tpqn], ([mounted]) => {
   asyncLock.acquire(
     "originalPitch",
     async () => {
-      if (initialized) {
+      if (mounted) {
         await updateOriginalPitchLineDataMap();
       }
     },
@@ -296,11 +298,12 @@ watch([singingGuidesInSelectedTrack, tempos, tpqn], async () => {
   );
 });
 
-watch([pitchEditData, previewPitchEdit, tempos, tpqn], async () => {
+// NOTE: mountedをwatchしているので、onMountedの直後に必ず１回実行される
+watch([mounted, pitchEditData, previewPitchEdit, tempos, tpqn], ([mounted]) => {
   asyncLock.acquire(
     "pitchEdit",
     async () => {
-      if (initialized) {
+      if (mounted) {
         await updatePitchEditLineDataMap();
       }
     },
@@ -329,6 +332,8 @@ watch(
 );
 
 onMounted(() => {
+  mounted.value = true;
+
   const canvasContainerElement = canvasContainer.value;
   const canvasElement = canvas.value;
   if (!canvasContainerElement) {
@@ -381,10 +386,6 @@ onMounted(() => {
   };
   requestId = window.requestAnimationFrame(callback);
 
-  // NOTE: watchのimmediateはonMountedの前に実行されるので、最初の更新はwatchではなくここで直接実行する
-  void updateOriginalPitchLineDataMap();
-  void updatePitchEditLineDataMap();
-
   resizeObserver = new ResizeObserver(() => {
     if (renderer == undefined) {
       throw new Error("renderer is undefined.");
@@ -400,8 +401,6 @@ onMounted(() => {
     }
   });
   resizeObserver.observe(canvasContainerElement);
-
-  initialized = true;
 });
 
 onUnmounted(() => {
