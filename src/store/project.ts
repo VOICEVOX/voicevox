@@ -292,7 +292,6 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
               return false;
             }
           }
-          await context.actions.WRITE_PROJECT_FILE({ filePath });
 
           if (
             context.state.projectFilePath &&
