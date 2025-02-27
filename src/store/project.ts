@@ -351,7 +351,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
   },
 
   WRITE_PROJECT_FILE: {
-    action: createUILockAction(async (context, { filePath }) => {
+    action: async (context, { filePath }) => {
       const appVersion = getAppInfos().version;
       const {
         audioItems,
@@ -384,7 +384,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           buffer: buf,
         })
         .then(getValueOrThrow);
-    }),
+    },
   },
 
   /**
