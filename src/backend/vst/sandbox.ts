@@ -17,7 +17,7 @@ import {
   onReceivedIPCMessage,
   openLogDirectory,
   openEngineDirectory,
-  getVoice,
+  getCachedVoice,
 } from "./ipc";
 import {
   EngineId,
@@ -246,8 +246,7 @@ export const api: Sandbox = {
 
   async fetchCachedSingingVoice(key) {
     // キャッシュされた歌声を読み込む。
-    log.info("Loading cached voices");
-    const encodedVoice = await getVoice(key);
+    const encodedVoice = await getCachedVoice(key);
     if (!encodedVoice) {
       return undefined;
     }
