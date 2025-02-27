@@ -1,13 +1,13 @@
 import { WatchOptions, WatchSource, watch } from "vue";
 
 /**
- * trueが返されたらunwatchするwatch
+ * "unwatch"が返されたらunwatchするwatch
  */
 const onetimeWatch = <T>(
   source: WatchSource<T>,
   fn: (
-    before: T,
-    after: T | undefined,
+    after: T,
+    before: T | undefined,
   ) => Promise<"unwatch" | "continue"> | "unwatch" | "continue",
   options: WatchOptions = {},
 ) => {
