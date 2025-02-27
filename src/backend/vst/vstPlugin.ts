@@ -11,6 +11,7 @@ import {
   getCurrentPosition,
   startEngine,
   VstPhrase,
+  getProject,
 } from "./ipc";
 import { internalProjectFilePath } from "./sandbox";
 import { Store } from "@/store/vuex";
@@ -28,6 +29,7 @@ import { createLogger } from "@/helpers/log";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { UnreachableError } from "@/type/utility";
 import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
+import onetimeWatch from "@/helpers/onetimeWatch";
 
 export type Message =
   | {
@@ -132,77 +134,38 @@ export const vstPlugin: Plugin = {
       },
     );
 
-    // // プロジェクトの読み込み
-    // const projectPromise = getProject();
-    // onetimeWatch(
-    //   () => store.state.projectFilePath,
-    //   async (isEditorReady) => {
-    //     if (!isEditorReady) {
-    //       return "continue";
-    //     }
-    //
-    //     const project = await projectPromise;
-    //     if (!project) {
-    //       log.info("project not found");
-    //       isReady.value = true;
-    //       return "unwatch";
-    //     }
-    //     log.info("project found");
-    //
-    //     log.info("Engine is ready, loading project");
-    //     const loaded = await store.dispatch("LOAD_PROJECT_FILE", {
-    //       type: "path",
-    //       filePath: internalProjectFilePath,
-    //     });
-    //     // プロジェクトが読み込めなかった場合の緊急脱出口。
-    //     if (!loaded) {
-    //       log.info("Failed to load project");
-    //       const questionResult = await showQuestionDialog({
-    //         title: "プロジェクトをエクスポートしますか？",
-    //         message:
-    //           "このまま続行すると、現在プラグインに保存されているプロジェクトは破棄されます。",
-    //         buttons: [
-    //           {
-    //             text: "破棄",
-    //             color: "warning",
-    //           },
-    //           {
-    //             text: "エクスポート",
-    //             color: "primary",
-    //           },
-    //         ],
-    //         cancel: "noCancel",
-    //       });
-    //       if (questionResult === 1) {
-    //         await exportProject();
-    //       }
-    //     }
-    //
-    //     // キャッシュされた歌声を読み込む
-    //     log.info("Loading cached voices");
-    //     const encodedVoices = await getVoices();
-    //     await store.actions.LOAD_SINGING_VOICE_CACHE({
-    //       cache: new Map(
-    //         await Promise.all(
-    //           Object.entries(encodedVoices).map(
-    //             async ([key, encodedVoice]) =>
-    //               [
-    //                 SingingVoiceKey(key),
-    //                 new Blob([await toBytes(encodedVoice)]),
-    //               ] satisfies [SingingVoiceKey, SingingVoice],
-    //           ),
-    //         ),
-    //       ),
-    //     });
-    //
-    //     log.info(`Loaded ${Object.keys(encodedVoices).length} voices`);
-    //
-    //     isReady.value = true;
-    //
-    //     return "unwatch";
-    //   },
-    //   { deep: true },
-    // );
+    // プロジェクトの読み込み
+    const projectPromise = getProject();
+    const projectState = ref<"loading" | "exists" | "notExists">("loading");
+    void projectPromise.then((project) => {
+      if (project) {
+        projectState.value = "exists";
+      } else {
+        projectState.value = "notExists";
+      }
+    });
+
+    // - プロジェクトが存在する状態でプロジェクトの読み込みが完了した
+    // - プロジェクトが存在しないことが判った
+    // のいずれかの状態になったら、プロジェクトなどの保存を開始する。
+    onetimeWatch(
+      () => [store.state.projectFilePath, projectState.value] as const,
+      async ([projectFilePath, projectState]) => {
+        if (
+          !(
+            (projectState === "exists" && projectFilePath) ||
+            projectState === "notExists"
+          )
+        ) {
+          return "continue";
+        }
+
+        isReady.value = true;
+
+        return "unwatch";
+      },
+      { deep: true },
+    );
 
     // フレーズの送信。100msごとに送信する。
     let lastPhrases: VstPhrase[] = [];
