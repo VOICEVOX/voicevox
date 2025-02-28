@@ -1388,7 +1388,7 @@ export type SingingStoreTypes = {
     }): Promise<SaveResultObject>;
   };
 
-  GET_SINGING_VOICE: {
+  GET_PHRASE_SINGING_VOICE: {
     action(payload: { key: SingingVoiceKey }): SingingVoice | undefined;
   };
 

@@ -203,7 +203,7 @@ export const vstPlugin: Plugin = {
           log.info(`Missing ${missingVoices.length} voices`);
           const voices: Record<SingingVoiceKey, string> = {};
           for (const voice of missingVoices) {
-            const cachedVoice = await store.actions.GET_SINGING_VOICE({
+            const cachedVoice = await store.actions.GET_PHRASE_SINGING_VOICE({
               key: voice,
             });
             if (cachedVoice) {

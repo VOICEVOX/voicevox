@@ -3553,7 +3553,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     ),
   },
 
-  GET_SINGING_VOICE: {
+  GET_PHRASE_SINGING_VOICE: {
     action(_, { key }) {
       return phraseSingingVoices.get(key);
     },
