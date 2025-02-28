@@ -1,5 +1,32 @@
 [
   {
+    "version": "0.23.0",
+    "descriptions": [
+      "プリセット管理ダイアログのデザインを刷新",
+      "ソング：リップシンク用のlabファイルの生成",
+      "ソング：様々な形式のプロジェクトファイルのエクスポートに対応",
+      "開発環境の向上",
+      "バグ修正"
+    ],
+    "contributors": [
+      "aoirint",
+      "Hiroshiba",
+      "HyodaKazuaki",
+      "jdkfx",
+      "madosuki",
+      "MT224244",
+      "nanae772",
+      "raa0121",
+      "romot-co",
+      "sabonerune",
+      "sevenc-nanashi",
+      "shunjilin",
+      "sigprogramming",
+      "takana-v",
+      "takusea"
+    ]
+  },
+  {
     "version": "0.22.4",
     "descriptions": [
       "ソング：トークエディタを開かないと保存できない問題を修正"

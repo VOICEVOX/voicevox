@@ -505,9 +505,9 @@ const snapTypeSelectModel = computed({
 }
 
 :deep(
-    .q-input .q-field__control:hover:before,
-    .q-select .q-field__control:hover:before
-  ) {
+  .q-input .q-field__control:hover:before,
+  .q-select .q-field__control:hover:before
+) {
   border: 1px solid var(--scheme-color-outline);
 }
 

@@ -302,11 +302,6 @@ app.on("web-contents-created", (_e, contents) => {
   });
 });
 
-app.on("window-all-closed", () => {
-  log.info("All windows closed. Quitting app");
-  app.quit();
-});
-
 // Called before window closing
 app.on("before-quit", async (event) => {
   if (!appState.willQuit) {

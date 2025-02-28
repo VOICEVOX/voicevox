@@ -38,7 +38,7 @@ defineProps<{
   uiLocked?: boolean;
 }>();
 defineExpose({
-  show: (event?: MouseEvent | undefined) => {
+  show: (event?: MouseEvent) => {
     contextMenu.value?.show(event);
   },
   hide: () => {
