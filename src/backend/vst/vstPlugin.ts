@@ -100,12 +100,12 @@ export const vstPlugin: Plugin = {
 
     const isReady = ref(false);
     // プロジェクトの保存と送信。
-    // しばらく操作がない（最後の操作から5秒）場合に自動で保存する。（SAVE_PROJECT_FILEはuiLockがかかるため）
+    // 操作がない（最後の操作から1秒）場合に自動で保存する。
     watch(
       () => ({
         tempos: store.state.tempos,
         tpqn: store.state.tpqn,
-        timeSignature: store.state.timeSignature,
+        timeSignatures: store.state.timeSignatures,
         tracks: store.state.tracks,
       }),
       debounce(() => {
@@ -113,11 +113,10 @@ export const vstPlugin: Plugin = {
           return;
         }
         log.info("Saving project file");
-        store.commit("SET_PROJECT_FILEPATH", {
+        void store.dispatch("WRITE_PROJECT_FILE", {
           filePath: internalProjectFilePath,
         });
-        void store.dispatch("SAVE_PROJECT_FILE", { overwrite: true });
-      }, 5000),
+      }, 1000),
       { deep: true },
     );
 

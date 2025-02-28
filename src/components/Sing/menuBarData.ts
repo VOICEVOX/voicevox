@@ -58,13 +58,9 @@ export const useMenuBarData = () => {
     );
   };
 
-  const vstExportProject = async () => {
+  const saveProjectCopy = async () => {
     if (!uiLocked.value) {
-      if (!isVst) {
-        throw new Error("VST以外でのエクスポートはサポートされていません");
-      }
-
-      await store.dispatch("VST_EXPORT_PROJECT");
+      await store.actions.SAVE_PROJECT_FILE_AS_COPY({});
     }
   };
 
@@ -109,7 +105,7 @@ export const useMenuBarData = () => {
                 type: "button",
                 label: "VOICEVOX",
                 onClick: () => {
-                  void vstExportProject();
+                  void saveProjectCopy();
                 },
                 disableWhenUiLocked: true,
               },

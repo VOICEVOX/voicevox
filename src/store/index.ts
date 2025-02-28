@@ -36,7 +36,6 @@ import { dictionaryStoreState, dictionaryStore } from "./dictionary";
 import { proxyStore, proxyStoreState } from "./proxy";
 import { createPartialStore } from "./vuex";
 import { engineStoreState, engineStore } from "./engine";
-import { vstStoreState, vstStore } from "./vst";
 import { filterCharacterInfosByStyleType } from "./utility";
 import {
   DefaultStyleId,
@@ -361,7 +360,6 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...proxyStoreState,
     ...singingStoreState,
     ...singingCommandStoreState,
-    ...vstStoreState,
   },
 
   getters: {
@@ -379,7 +377,6 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...proxyStore.getters,
     ...singingStore.getters,
     ...singingCommandStore.getters,
-    ...vstStore.getters,
   },
 
   mutations: {
@@ -397,7 +394,6 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...proxyStore.mutations,
     ...singingStore.mutations,
     ...singingCommandStore.mutations,
-    ...vstStore.mutations,
   },
 
   actions: {
@@ -415,7 +411,6 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...proxyStore.actions,
     ...singingStore.actions,
     ...singingCommandStore.actions,
-    ...vstStore.actions,
   },
   strict: !isProduction,
 });
