@@ -12,7 +12,7 @@ export const dictionaryStore = createPartialStore<DictionaryStoreTypes>({
         .INSTANTIATE_ENGINE_CONNECTOR({
           engineId,
         })
-        .then((instance) => instance.invoke("getUserDict")({}));
+        .then((instance) => instance.invoke("getUserDictWords")({}));
 
       // 50音順にソートするために、一旦arrayにする
       const dictArray = Object.keys(engineDict).map((k) => {
