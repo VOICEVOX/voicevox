@@ -12,7 +12,7 @@ export const dictionaryStore = createPartialStore<DictionaryStoreTypes>({
         .INSTANTIATE_ENGINE_CONNECTOR({
           engineId,
         })
-        .then((instance) => instance.invoke("getUserDictWordsUserDictGet")({}));
+        .then((instance) => instance.invoke("getUserDict")({}));
 
       // 50音順にソートするために、一旦arrayにする
       const dictArray = Object.keys(engineDict).map((k) => {
@@ -76,7 +76,7 @@ export const dictionaryStore = createPartialStore<DictionaryStoreTypes>({
           engineId,
         })
         .then((instance) =>
-          instance.invoke("addUserDictWordUserDictWordPost")({
+          instance.invoke("addUserDictWord")({
             surface,
             pronunciation,
             accentType,
@@ -101,7 +101,7 @@ export const dictionaryStore = createPartialStore<DictionaryStoreTypes>({
             engineId,
           })
           .then((instance) =>
-            instance.invoke("rewriteUserDictWordUserDictWordWordUuidPut")({
+            instance.invoke("rewriteUserDictWord")({
               wordUuid,
               surface,
               pronunciation,
@@ -123,7 +123,7 @@ export const dictionaryStore = createPartialStore<DictionaryStoreTypes>({
             engineId,
           })
           .then((instance) =>
-            instance.invoke("deleteUserDictWordUserDictWordWordUuidDelete")({
+            instance.invoke("deleteUserDictWord")({
               wordUuid,
             }),
           );
@@ -143,9 +143,7 @@ export const dictionaryStore = createPartialStore<DictionaryStoreTypes>({
           .then(
             async (instance) =>
               new Set(
-                Object.keys(
-                  await instance.invoke("getUserDictWordsUserDictGet")({}),
-                ),
+                Object.keys(await instance.invoke("getUserDictWords")({})),
               ),
           );
         if (Object.keys(mergedDict).some((id) => !dictIdSet.has(id))) {
@@ -155,7 +153,7 @@ export const dictionaryStore = createPartialStore<DictionaryStoreTypes>({
             })
             .then((instance) =>
               // マージした辞書をエンジンにインポートする。
-              instance.invoke("importUserDictWordsImportUserDictPost")({
+              instance.invoke("importUserDictWords")({
                 override: true,
                 requestBody: Object.fromEntries(
                   Object.entries(mergedDict).map(([k, v]) => [
@@ -181,11 +179,9 @@ export const dictionaryStore = createPartialStore<DictionaryStoreTypes>({
             // マージ処理で削除された項目をエンジンから削除する。
             void Promise.all(
               [...removedDictIdSet].map((id) =>
-                instance.invoke("deleteUserDictWordUserDictWordWordUuidDelete")(
-                  {
-                    wordUuid: id,
-                  },
-                ),
+                instance.invoke("deleteUserDictWord")({
+                  wordUuid: id,
+                }),
               ),
             );
           });
