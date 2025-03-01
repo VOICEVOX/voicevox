@@ -5,18 +5,27 @@ import { mockShowSaveFileDialog, mockWriteFile } from "./utility";
 
 test.beforeEach(gotoHome);
 
-/** 選択音声を書き出し、その音声ファイルのバイナリをスナップショットテストする */
 async function exportSelectedAudioAndSnapshot(page: Page, name: string) {
   const { getFileIds } = await mockShowSaveFileDialog(page);
   const { getWrittenFileBuffers } = await mockWriteFile(page);
 
-  await page.getByRole("button", { name: "ファイル" }).click();
-  await getQuasarMenu(page, "選択音声を書き出し").click();
-  await expect(page.getByText("音声を書き出しました")).toBeVisible();
+  await test.step("選択音声を書き出す", async () => {
+    await page.getByRole("button", { name: "ファイル" }).click();
+    await getQuasarMenu(page, "選択音声を書き出し").click();
+  });
 
-  const fileId = (await getFileIds())[0];
-  const buffer = (await getWrittenFileBuffers())[fileId];
-  expect(buffer).toMatchSnapshot(`${name}.wav`);
+  await test.step("書き出し完了の通知を確認して閉じる", async () => {
+    const notify = page.locator("#q-notify");
+    await expect(notify.getByText("音声を書き出しました")).toBeVisible();
+    await notify.getByRole("button", { name: "閉じる" }).click();
+    await expect(notify).not.toBeVisible();
+  });
+
+  await test.step("音声ファイルのバイナリをスナップショット", async () => {
+    const fileId = (await getFileIds())[0];
+    const buffer = (await getWrittenFileBuffers())[fileId];
+    expect(buffer).toMatchSnapshot(`${name}.wav`);
+  });
 }
 
 test.describe("音声書き出し", () => {
@@ -25,13 +34,15 @@ test.describe("音声書き出し", () => {
   test.beforeEach(async ({ page }) => {
     await navigateToMain(page);
 
-    const audioCell = page.getByRole("textbox", { name: "1行目" });
-    const accentPhrase = page.locator(".accent-phrase");
+    await test.step("テキスト欄にテキストを入力", async () => {
+      const audioCell = page.getByRole("textbox", { name: "1行目" });
+      const accentPhrase = page.locator(".accent-phrase");
 
-    await audioCell.click();
-    await audioCell.fill("こんにちは、テストです");
-    await audioCell.press("Enter");
-    await expect(accentPhrase).not.toHaveCount(0);
+      await audioCell.click();
+      await audioCell.fill("こんにちは、テストです");
+      await audioCell.press("Enter");
+      await expect(accentPhrase).not.toHaveCount(0);
+    });
   });
 
   test("各パラメータを変更して音声書き出し", async ({ page }) => {
@@ -52,13 +63,17 @@ test.describe("音声書き出し", () => {
         const input = page.getByLabel(name);
         const originalValue = await input.inputValue();
 
-        await input.fill(newValue);
-        await input.press("Enter");
+        await test.step("パラメータを変更", async () => {
+          await input.fill(newValue);
+          await input.press("Enter");
+        });
 
         await exportSelectedAudioAndSnapshot(page, `${name}変更`);
 
-        await input.fill(originalValue);
-        await input.press("Enter");
+        await test.step("元の値に戻す", async () => {
+          await input.fill(originalValue);
+          await input.press("Enter");
+        });
       });
     }
   });
