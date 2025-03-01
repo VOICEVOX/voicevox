@@ -213,6 +213,9 @@ importers:
       eslint:
         specifier: 9.21.0
         version: 9.21.0
+      eslint-plugin-file-progress:
+        specifier: 3.0.1
+        version: 3.0.1(eslint@9.21.0)
       eslint-plugin-import:
         specifier: 2.31.0
         version: 2.31.0(@typescript-eslint/parser@8.24.1(eslint@9.21.0)(typescript@5.5.2))(eslint@9.21.0)
@@ -2733,6 +2736,12 @@ packages:
       eslint-import-resolver-webpack:
         optional: true
 
+  eslint-plugin-file-progress@3.0.1:
+    resolution: {integrity: sha512-sPUOIifutW3Ehhmujt40IU5ytXL6HnuGVev2n9cp4d5fzVOoQp1K17DJ/I+cRdctmTpMcYit/fOuF9efjmD98A==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    peerDependencies:
+      eslint: ^9.0.0
+
   eslint-plugin-import@2.31.0:
     resolution: {integrity: sha512-ixmkI62Rbc2/w8Vfxyh1jQRTdRTF52VxwRVHl/ykPAmqG+Nb7/kNn+byLP0LxPgI7zWA16Jt82SybJInmMia3A==}
     engines: {node: '>=4'}
@@ -3794,6 +3803,9 @@ packages:
     resolution: {integrity: sha512-Aooyr6MXU6HpvvWXKoVoXwKMs/KyVakWwg7xQfv5/S/RIgJMy0Ifa45H9qqYy7pTCszrHzP21Uk4PZq2HpEM8Q==}
     engines: {node: ^18 || >=20}
     hasBin: true
+
+  nanospinner@1.2.2:
+    resolution: {integrity: sha512-Zt/AmG6qRU3e+WnzGGLuMCEAO/dAu45stNbHY223tUxldaDAeE+FxSPsd9Q+j+paejmm0ZbrNVs5Sraqy3dRxA==}
 
   natural-compare@1.4.0:
     resolution: {integrity: sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw==}
@@ -5146,8 +5158,8 @@ packages:
   vue-component-type-helpers@2.2.0:
     resolution: {integrity: sha512-cYrAnv2me7bPDcg9kIcGwjJiSB6Qyi08+jLDo9yuvoFQjzHiPTzML7RnkJB1+3P6KMsX/KbCD4QE3Tv/knEllw==}
 
-  vue-component-type-helpers@2.2.2:
-    resolution: {integrity: sha512-6lLY+n2xz2kCYshl59mL6gy8OUUTmkscmDFMO8i7Lj+QKwgnIFUZmM1i/iTYObtrczZVdw7UakPqDTGwVSGaRg==}
+  vue-component-type-helpers@2.2.6:
+    resolution: {integrity: sha512-kFdh3gw9DN+h6d/JEQfW8GbNG4XHwiJSJO1T3Akx1QtLT0tS/4njk4JpAzQ6i9PvOwALg3ESMnS31xr2wXluXA==}
 
   vue-demi@0.14.10:
     resolution: {integrity: sha512-nMZBOwuzabUO0nLgIcc6rycZEebF6eeUfaiQx9+WSk8e29IbLvPU9feI6tqW4kTo3hvoYAJkMh8n8D0fuISphg==}
@@ -6472,7 +6484,7 @@ snapshots:
       ts-dedent: 2.2.0
       type-fest: 2.19.0
       vue: 3.5.13(typescript@5.5.2)
-      vue-component-type-helpers: 2.2.2
+      vue-component-type-helpers: 2.2.6
 
   '@swc/helpers@0.5.15':
     dependencies:
@@ -8009,6 +8021,12 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  eslint-plugin-file-progress@3.0.1(eslint@9.21.0):
+    dependencies:
+      eslint: 9.21.0
+      nanospinner: 1.2.2
+      picocolors: 1.1.1
+
   eslint-plugin-import@2.31.0(@typescript-eslint/parser@8.24.1(eslint@9.21.0)(typescript@5.5.2))(eslint@9.21.0):
     dependencies:
       '@rtsao/scc': 1.1.0
@@ -9174,6 +9192,10 @@ snapshots:
   nanoid@3.3.8: {}
 
   nanoid@5.0.9: {}
+
+  nanospinner@1.2.2:
+    dependencies:
+      picocolors: 1.1.1
 
   natural-compare@1.4.0: {}
 
@@ -10634,7 +10656,7 @@ snapshots:
 
   vue-component-type-helpers@2.2.0: {}
 
-  vue-component-type-helpers@2.2.2: {}
+  vue-component-type-helpers@2.2.6: {}
 
   vue-demi@0.14.10(vue@3.5.13(typescript@5.5.2)):
     dependencies:
