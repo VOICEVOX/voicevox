@@ -77,7 +77,7 @@ jobs:
           - artifact_name: linux-arm64-cpu-prepackage
             artifact_path: dist_electron/linux-arm64-unpacked
             voicevox_engine_asset_name: linux-cpu-arm64
-            package_name: voicevox-cpu # macOS と同じでいいならok
+            package_name: voicevox-cpu
             compressed_artifact_name: voicevox-linux-arm64-cpu
             app_asar_dir: prepackage/resources
             installer_artifact_name: linux-arm64-cpu-appimage
