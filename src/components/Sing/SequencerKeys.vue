@@ -88,8 +88,8 @@
 
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted } from "vue";
-import { useStore } from "@/store";
-import { keyInfos, getKeyBaseHeight } from "@/sing/viewHelper";
+import { useStore } from "@/store/index.ts";
+import { keyInfos, getKeyBaseHeight } from "@/sing/viewHelper.ts";
 
 const props = withDefaults(
   defineProps<{

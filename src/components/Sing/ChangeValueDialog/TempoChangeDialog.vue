@@ -22,8 +22,8 @@
 import { QInput, useDialogPluginComponent } from "quasar";
 import { ref } from "vue";
 import CommonDialog from "./CommonDialog.vue";
-import { Tempo } from "@/store/type";
-import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
+import { Tempo } from "@/store/type.ts";
+import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy.ts";
 
 const modelValue = defineModel<boolean>();
 const props = defineProps<{

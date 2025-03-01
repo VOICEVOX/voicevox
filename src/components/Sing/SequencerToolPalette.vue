@@ -78,7 +78,7 @@
 </template>
 
 <script setup lang="ts">
-import { SequencerEditTarget, NoteEditTool, PitchEditTool } from "@/store/type";
+import { SequencerEditTarget, NoteEditTool, PitchEditTool } from "@/store/type.ts";
 
 defineProps<{
   editTarget: SequencerEditTarget;

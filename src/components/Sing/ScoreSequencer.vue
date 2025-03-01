@@ -248,14 +248,14 @@ import SequencerGridSpacer from "./SequencerGridSpacer.vue";
 import ContextMenu, {
   ContextMenuItemData,
 } from "@/components/Menu/ContextMenu/Container.vue";
-import { NoteId } from "@/type/preload";
-import { useStore } from "@/store";
+import { NoteId } from "@/type/preload.ts";
+import { useStore } from "@/store/index.ts";
 import {
   Note,
   SequencerEditTarget,
   NoteEditTool,
   PitchEditTool,
-} from "@/store/type";
+} from "@/store/type.ts";
 import {
   getEndTicksOfPhrase,
   getMeasureDuration,
@@ -263,7 +263,7 @@ import {
   getStartTicksOfPhrase,
   noteNumberToFrequency,
   tickToSecond,
-} from "@/sing/domain";
+} from "@/sing/domain.ts";
 import {
   tickToBaseX,
   baseXToTick,
@@ -285,7 +285,7 @@ import {
   MouseDoubleClickBehavior,
   CursorState,
   getKeyBaseHeight,
-} from "@/sing/viewHelper";
+} from "@/sing/viewHelper.ts";
 import SequencerGrid from "@/components/Sing/SequencerGrid/Container.vue";
 import SequencerRuler from "@/components/Sing/SequencerRuler/Container.vue";
 import SequencerKeys from "@/components/Sing/SequencerKeys.vue";
@@ -296,17 +296,17 @@ import CharacterPortrait from "@/components/Sing/CharacterPortrait.vue";
 import SequencerPitch from "@/components/Sing/SequencerPitch.vue";
 import SequencerLyricInput from "@/components/Sing/SequencerLyricInput.vue";
 import SequencerToolPalette from "@/components/Sing/SequencerToolPalette.vue";
-import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
-import { createLogger } from "@/helpers/log";
-import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
+import { isOnCommandOrCtrlKeyDown } from "@/store/utility.ts";
+import { createLogger } from "@/helpers/log.ts";
+import { useHotkeyManager } from "@/plugins/hotkeyPlugin.ts";
 import {
   useCommandOrControlKey,
   useShiftKey,
-} from "@/composables/useModifierKey";
-import { applyGaussianFilter, linearInterpolation } from "@/sing/utility";
-import { useLyricInput } from "@/composables/useLyricInput";
-import { ExhaustiveError } from "@/type/utility";
-import { uuid4 } from "@/helpers/random";
+} from "@/composables/useModifierKey.ts";
+import { applyGaussianFilter, linearInterpolation } from "@/sing/utility.ts";
+import { useLyricInput } from "@/composables/useLyricInput.ts";
+import { ExhaustiveError } from "@/type/utility.ts";
+import { uuid4 } from "@/helpers/random.ts";
 
 // 直接イベントが来ているかどうか
 const isSelfEventTarget = (event: UIEvent) => {

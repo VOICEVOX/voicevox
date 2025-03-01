@@ -73,7 +73,7 @@
 
 <script setup lang="ts">
 import { useDialogPluginComponent } from "quasar";
-import { ErrorTypeForSaveAllResultDialog } from "@/store/type";
+import { ErrorTypeForSaveAllResultDialog } from "@/store/type.ts";
 
 const props = defineProps<{
   successArray: string | undefined[];

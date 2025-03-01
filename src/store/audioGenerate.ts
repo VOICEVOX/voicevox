@@ -5,9 +5,9 @@ import {
   FetchAudioResult,
   IEngineConnectorFactoryActionsMapper,
   SettingStoreState,
-} from "./type";
-import { convertAudioQueryFromEditorToEngine } from "./proxy";
-import { generateTempUniqueId } from "./utility";
+} from "./type.ts";
+import { convertAudioQueryFromEditorToEngine } from "./proxy.ts";
+import { generateTempUniqueId } from "./utility.ts";
 
 const audioBlobCache: Record<string, Blob> = {};
 

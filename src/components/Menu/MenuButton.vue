@@ -38,8 +38,8 @@
 import { computed, ref, watch } from "vue";
 import { debounce } from "quasar";
 import MenuItem from "./MenuItem.vue";
-import { MenuItemData } from "./type";
-import { useStore } from "@/store";
+import { MenuItemData } from "./type.ts";
+import { useStore } from "@/store/index.ts";
 
 const props = withDefaults(
   defineProps<{

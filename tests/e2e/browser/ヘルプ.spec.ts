@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-import { gotoHome, navigateToHelpDialog } from "../navigators";
+import { gotoHome, navigateToHelpDialog } from "../navigators.ts";
 
 test.beforeEach(gotoHome);
 

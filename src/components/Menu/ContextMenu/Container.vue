@@ -11,7 +11,7 @@ export type { ContextMenuItemData } from "./Presentation.vue";
 import { computed, useTemplateRef } from "vue";
 import type { ComponentExposed } from "vue-component-type-helpers";
 import Presentation, { ContextMenuItemData } from "./Presentation.vue";
-import { useStore } from "@/store";
+import { useStore } from "@/store/index.ts";
 
 defineOptions({
   name: "ContextMenu",

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { DisplayableError, errorToMessage } from "@/helpers/errorHelper";
+import { DisplayableError, errorToMessage } from "@/helpers/errorHelper.ts";
 
 describe("errorToMessage", () => {
   it("Errorインスタンス", () => {

@@ -8,7 +8,7 @@ import {
   speakerIdSchema,
   styleIdSchema,
   trackIdSchema,
-} from "@/type/preload";
+} from "@/type/preload.ts";
 
 // トーク系のスキーマ
 const moraSchema = z.object({

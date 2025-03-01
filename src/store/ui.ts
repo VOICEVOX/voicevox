@@ -3,16 +3,16 @@ import {
   DotNotationAction,
   DotNotationActionContext,
   DotNotationDispatch,
-} from "./vuex";
+} from "./vuex.ts";
 import {
   AllActions,
   AllGetters,
   AllMutations,
   UiStoreState,
   UiStoreTypes,
-} from "./type";
-import { createPartialStore } from "./vuex";
-import { ActivePointScrollMode } from "@/type/preload";
+} from "./type.ts";
+import { createPartialStore } from "./vuex.ts";
+import { ActivePointScrollMode } from "@/type/preload.ts";
 import {
   MessageDialogOptions,
   ConfirmDialogOptions,
@@ -26,8 +26,8 @@ import {
   showConfirmDialog,
   showNotifyAndNotShowAgainButton,
   showWarningDialog,
-} from "@/components/Dialog/Dialog";
-import { objectEntries } from "@/helpers/typedEntries";
+} from "@/components/Dialog/Dialog.ts";
+import { objectEntries } from "@/helpers/typedEntries.ts";
 
 export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
   action: (

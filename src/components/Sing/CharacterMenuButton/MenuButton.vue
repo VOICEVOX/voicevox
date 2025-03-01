@@ -9,7 +9,7 @@
 import { computed } from "vue";
 import SelectedCharacter from "./SelectedCharacter.vue";
 import CharacterSelectMenu from "./CharacterSelectMenu.vue";
-import { useStore } from "@/store";
+import { useStore } from "@/store/index.ts";
 
 defineOptions({
   name: "CharacterMenuButton",

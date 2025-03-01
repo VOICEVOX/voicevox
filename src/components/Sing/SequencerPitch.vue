@@ -8,28 +8,28 @@
 import { ref, watch, computed, onUnmounted, onMounted } from "vue";
 import * as PIXI from "pixi.js";
 import AsyncLock from "async-lock";
-import { useStore } from "@/store";
+import { useStore } from "@/store/index.ts";
 import {
   UNVOICED_PHONEMES,
   VALUE_INDICATING_NO_DATA,
   convertToFramePhonemes,
   frequencyToNoteNumber,
   secondToTick,
-} from "@/sing/domain";
-import { noteNumberToBaseY, tickToBaseX } from "@/sing/viewHelper";
-import { Color } from "@/sing/graphics/lineStrip";
-import { ExhaustiveError } from "@/type/utility";
-import { createLogger } from "@/helpers/log";
-import { getLast } from "@/sing/utility";
-import { getOrThrow } from "@/helpers/mapHelper";
-import { EditorFrameAudioQuery } from "@/store/type";
+} from "@/sing/domain.ts";
+import { noteNumberToBaseY, tickToBaseX } from "@/sing/viewHelper.ts";
+import { Color } from "@/sing/graphics/lineStrip.ts";
+import { ExhaustiveError } from "@/type/utility.ts";
+import { createLogger } from "@/helpers/log.ts";
+import { getLast } from "@/sing/utility.ts";
+import { getOrThrow } from "@/helpers/mapHelper.ts";
+import { EditorFrameAudioQuery } from "@/store/type.ts";
 import {
   calculatePitchDataHash,
   PitchData,
   PitchDataHash,
   PitchLine,
   ViewInfo,
-} from "@/sing/graphics/pitchLine";
+} from "@/sing/graphics/pitchLine.ts";
 
 const props = defineProps<{
   offsetX: number;

@@ -1,4 +1,4 @@
-import { defaultEngine } from "./contract";
+import { defaultEngine } from "./contract.ts";
 import {
   checkFileExistsImpl,
   readFileImpl,
@@ -7,20 +7,20 @@ import {
   showOpenFilePickerImpl,
   WritableFilePath,
   writeFileImpl,
-} from "./fileImpl";
-import { getConfigManager } from "./browserConfig";
-import { isFakePath } from "./fakePath";
-import { IpcSOData } from "@/type/ipc";
+} from "./fileImpl.ts";
+import { getConfigManager } from "./browserConfig.ts";
+import { isFakePath } from "./fakePath.ts";
+import { IpcSOData } from "@/type/ipc.ts";
 import {
   defaultToolbarButtonSetting,
   EngineId,
   EngineSettingType,
   EngineSettings,
   Sandbox,
-} from "@/type/preload";
-import { AssetTextFileNames } from "@/type/staticResources";
-import { HotkeySettingType } from "@/domain/hotkeyAction";
-import path from "@/helpers/path";
+} from "@/type/preload.ts";
+import { AssetTextFileNames } from "@/type/staticResources.ts";
+import { HotkeySettingType } from "@/domain/hotkeyAction.ts";
+import path from "@/helpers/path.ts";
 
 const toStaticPath = (fileName: string) =>
   `${import.meta.env.BASE_URL}/${fileName}`.replaceAll(/\/\/+/g, "/");

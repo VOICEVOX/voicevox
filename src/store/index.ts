@@ -3,7 +3,7 @@ import {
   createStore,
   Store as BaseStore,
   useStore as baseUseStore,
-} from "./vuex";
+} from "./vuex.ts";
 
 import {
   AllActions,
@@ -12,39 +12,39 @@ import {
   IndexStoreState,
   IndexStoreTypes,
   State,
-} from "./type";
-import { commandStoreState, commandStore } from "./command";
+} from "./type.ts";
+import { commandStoreState, commandStore } from "./command.ts";
 import {
   audioStoreState,
   audioStore,
   audioCommandStore,
   audioCommandStoreState,
   getCharacterInfo,
-} from "./audio";
-import { audioPlayerStoreState, audioPlayerStore } from "./audioPlayer";
+} from "./audio.ts";
+import { audioPlayerStoreState, audioPlayerStore } from "./audioPlayer.ts";
 import {
   singingStoreState,
   singingStore,
   singingCommandStoreState,
   singingCommandStore,
-} from "./singing";
-import { projectStoreState, projectStore } from "./project";
-import { uiStoreState, uiStore } from "./ui";
-import { settingStoreState, settingStore } from "./setting";
-import { presetStoreState, presetStore } from "./preset";
-import { dictionaryStoreState, dictionaryStore } from "./dictionary";
-import { proxyStore, proxyStoreState } from "./proxy";
-import { createPartialStore } from "./vuex";
-import { engineStoreState, engineStore } from "./engine";
-import { filterCharacterInfosByStyleType } from "./utility";
+} from "./singing.ts";
+import { projectStoreState, projectStore } from "./project.ts";
+import { uiStoreState, uiStore } from "./ui.ts";
+import { settingStoreState, settingStore } from "./setting.ts";
+import { presetStoreState, presetStore } from "./preset.ts";
+import { dictionaryStoreState, dictionaryStore } from "./dictionary.ts";
+import { proxyStore, proxyStoreState } from "./proxy.ts";
+import { createPartialStore } from "./vuex.ts";
+import { engineStoreState, engineStore } from "./engine.ts";
+import { filterCharacterInfosByStyleType } from "./utility.ts";
 import {
   DefaultStyleId,
   EngineId,
   SpeakerId,
   StyleId,
   Voice,
-} from "@/type/preload";
-import { isProduction } from "@/helpers/platform";
+} from "@/type/preload.ts";
+import { isProduction } from "@/helpers/platform.ts";
 
 export type Store = BaseStore<State, AllGetters, AllActions, AllMutations>;
 export const storeKey: InjectionKey<Store> = Symbol();

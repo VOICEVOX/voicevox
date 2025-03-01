@@ -84,13 +84,13 @@
 import { computed, nextTick, ref, watch } from "vue";
 import AccentPhrase from "./AccentPhrase.vue";
 import ToolTip from "@/components/ToolTip.vue";
-import { useStore } from "@/store";
-import { AudioKey } from "@/type/preload";
-import { isMac } from "@/helpers/platform";
-import { EngineManifest } from "@/openapi/models";
-import { useShiftKey, useAltKey } from "@/composables/useModifierKey";
-import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
-import { handlePossiblyNotMorphableError } from "@/store/audioGenerate";
+import { useStore } from "@/store/index.ts";
+import { AudioKey } from "@/type/preload.ts";
+import { isMac } from "@/helpers/platform.ts";
+import { EngineManifest } from "@/openapi/models/index.ts";
+import { useShiftKey, useAltKey } from "@/composables/useModifierKey.ts";
+import { useHotkeyManager } from "@/plugins/hotkeyPlugin.ts";
+import { handlePossiblyNotMorphableError } from "@/store/audioGenerate.ts";
 
 const props = defineProps<{
   activeAudioKey: AudioKey;

@@ -1,13 +1,13 @@
-import { SettingStoreState, SettingStoreTypes } from "./type";
-import { createUILockAction } from "./ui";
-import { createPartialStore } from "./vuex";
-import { themes } from "@/domain/theme";
+import { SettingStoreState, SettingStoreTypes } from "./type.ts";
+import { createUILockAction } from "./ui.ts";
+import { createPartialStore } from "./vuex.ts";
+import { themes } from "@/domain/theme/index.ts";
 import {
   hideAllLoadingScreen,
   showAlertDialog,
   showLoadingScreen,
   showQuestionDialog,
-} from "@/components/Dialog/Dialog";
+} from "@/components/Dialog/Dialog.ts";
 import {
   SavingSetting,
   ExperimentalSettingType,
@@ -15,9 +15,9 @@ import {
   EngineId,
   ConfirmedTips,
   RootMiscSettingType,
-} from "@/type/preload";
-import { IsEqual } from "@/type/utility";
-import { HotkeySettingType } from "@/domain/hotkeyAction";
+} from "@/type/preload.ts";
+import { IsEqual } from "@/type/utility.ts";
+import { HotkeySettingType } from "@/domain/hotkeyAction.ts";
 
 export const settingStoreState: SettingStoreState = {
   openedEditor: undefined,

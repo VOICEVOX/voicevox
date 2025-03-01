@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { StyleInfo } from "@/type/preload";
-import { isMac } from "@/helpers/platform";
+import { StyleInfo } from "@/type/preload.ts";
+import { isMac } from "@/helpers/platform.ts";
 
 const BASE_X_PER_QUARTER_NOTE = 120;
 const BASE_Y_PER_SEMITONE = 30;

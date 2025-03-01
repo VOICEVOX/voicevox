@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { uuid4 } from "@/helpers/random";
+import { uuid4 } from "@/helpers/random.ts";
 
 const fakePathSchema = z
   .string()

@@ -1,7 +1,7 @@
 // TODO: エクスポート機能を実装する
 
 import { Project as UfProject, UfData } from "@sevenc-nanashi/utaformatix-ts";
-import { VoicevoxScore } from "./common";
+import { VoicevoxScore } from "./common.ts";
 
 /** Voicevoxの楽譜データをUtaformatixのProjectに変換する */
 export const ufProjectFromVoicevox = (

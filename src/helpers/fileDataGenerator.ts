@@ -1,5 +1,5 @@
 import Encoding from "encoding-japanese";
-import { Encoding as EncodingType } from "@/type/preload";
+import { Encoding as EncodingType } from "@/type/preload.ts";
 
 export function generateWavFileData(
   audioBuffer: Pick<

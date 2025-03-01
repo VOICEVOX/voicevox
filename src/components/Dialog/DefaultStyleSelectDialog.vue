@@ -119,15 +119,15 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import { useQuasar } from "quasar";
-import { useStore } from "@/store";
-import { DEFAULT_STYLE_NAME } from "@/store/utility";
+import { useStore } from "@/store/index.ts";
+import { DEFAULT_STYLE_NAME } from "@/store/utility.ts";
 import {
   CharacterInfo,
   DefaultStyleId,
   SpeakerId,
   StyleId,
   StyleInfo,
-} from "@/type/preload";
+} from "@/type/preload.ts";
 
 const props = defineProps<{
   isOpen: boolean;

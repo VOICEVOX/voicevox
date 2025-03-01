@@ -15,7 +15,7 @@
 import { computed } from "vue";
 import BaseDocumentView from "@/components/Base/BaseDocumentView.vue";
 import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
-import { useMarkdownIt } from "@/plugins/markdownItPlugin";
+import { useMarkdownIt } from "@/plugins/markdownItPlugin.ts";
 
 const props = defineProps<{
   markdown: string;

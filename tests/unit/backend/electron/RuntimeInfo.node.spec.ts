@@ -2,9 +2,9 @@ import { tmpdir } from "os";
 import { join } from "path";
 import fs from "fs";
 import { expect, test } from "vitest";
-import { EngineId } from "@/type/preload";
+import { EngineId } from "@/type/preload.ts";
 
-import { RuntimeInfoManager } from "@/backend/electron/manager/RuntimeInfoManager";
+import { RuntimeInfoManager } from "@/backend/electron/manager/RuntimeInfoManager.ts";
 
 test("想定通りのラインタイム情報が保存されている", async () => {
   const randomName = Math.random().toString(36).substring(7);

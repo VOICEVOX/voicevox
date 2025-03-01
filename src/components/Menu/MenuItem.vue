@@ -72,9 +72,9 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
-import { MenuItemData } from "./type";
-import { useStore } from "@/store";
-import { hotkeyActionNameSchema } from "@/domain/hotkeyAction";
+import { MenuItemData } from "./type.ts";
+import { useStore } from "@/store/index.ts";
+import { hotkeyActionNameSchema } from "@/domain/hotkeyAction.ts";
 const props = withDefaults(
   defineProps<{
     selected?: boolean;

@@ -1,5 +1,5 @@
 import { colors, Dark, setCssVar } from "quasar";
-import { EditorFontType, ThemeColorType, ThemeConf } from "@/type/preload";
+import { EditorFontType, ThemeColorType, ThemeConf } from "@/type/preload.ts";
 
 /** テーマの設定をCSSへ反映する */
 export function setThemeToCss(theme: ThemeConf) {

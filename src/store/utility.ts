@@ -5,12 +5,12 @@ import {
   StyleInfo,
   StyleType,
   ToolbarButtonTagType,
-} from "@/type/preload";
-import { AccentPhrase, FramePhoneme, Mora } from "@/openapi";
-import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
-import { DEFAULT_TRACK_NAME, isVowel } from "@/sing/domain";
-import { isMac } from "@/helpers/platform";
-import { generateTextFileData } from "@/helpers/fileDataGenerator";
+} from "@/type/preload.ts";
+import { AccentPhrase, FramePhoneme, Mora } from "@/openapi/index.ts";
+import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy.ts";
+import { DEFAULT_TRACK_NAME, isVowel } from "@/sing/domain.ts";
+import { isMac } from "@/helpers/platform.ts";
+import { generateTextFileData } from "@/helpers/fileDataGenerator.ts";
 
 export const DEFAULT_STYLE_NAME = "ノーマル";
 export const DEFAULT_PROJECT_NAME = "Untitled";

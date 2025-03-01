@@ -20,10 +20,10 @@
 
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from "vue";
-import { useStore } from "@/store";
-import { tickToBaseX, noteNumberToBaseY } from "@/sing/viewHelper";
-import { NoteId } from "@/type/preload";
-import { Note } from "@/store/type";
+import { useStore } from "@/store/index.ts";
+import { tickToBaseX, noteNumberToBaseY } from "@/sing/viewHelper.ts";
+import { NoteId } from "@/type/preload.ts";
+import { Note } from "@/store/type.ts";
 
 const props = defineProps<{
   editingLyricNote: Note;

@@ -156,7 +156,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import Draggable from "vuedraggable";
-import { useStore } from "@/store";
+import { useStore } from "@/store/index.ts";
 import BaseListItem from "@/components/Base/BaseListItem.vue";
 import BaseNavigationView from "@/components/Base/BaseNavigationView.vue";
 import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
@@ -164,18 +164,18 @@ import BaseIconButton from "@/components/Base/BaseIconButton.vue";
 import BaseTextField from "@/components/Base/BaseTextField.vue";
 import CharacterButton from "@/components/CharacterButton.vue";
 import ParameterSlider from "@/components/Talk/v2/ParameterSlider.vue";
-import { useDefaultPreset } from "@/composables/useDefaultPreset";
+import { useDefaultPreset } from "@/composables/useDefaultPreset.ts";
 import {
   CharacterInfo,
   Preset,
   PresetKey,
   PresetSliderKey,
   Voice,
-} from "@/type/preload";
-import { SLIDER_PARAMETERS } from "@/store/utility";
-import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
-import { debounce } from "@/helpers/timer";
-import { UnreachableError } from "@/type/utility";
+} from "@/type/preload.ts";
+import { SLIDER_PARAMETERS } from "@/store/utility.ts";
+import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy.ts";
+import { debounce } from "@/helpers/timer.ts";
+import { UnreachableError } from "@/type/utility.ts";
 
 const props = defineProps<{
   openDialog: boolean;

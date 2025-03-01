@@ -47,7 +47,7 @@
 <script setup lang="ts">
 import { useDialogPluginComponent } from "quasar";
 import { computed } from "vue";
-import { DialogType, getColor, getIcon } from "./common";
+import { DialogType, getColor, getIcon } from "./common.ts";
 
 const modelValue = defineModel<boolean>({ default: false });
 const props = withDefaults(

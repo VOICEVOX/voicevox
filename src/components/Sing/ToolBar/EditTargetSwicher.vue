@@ -41,8 +41,8 @@
 </template>
 
 <script setup lang="ts">
-import { SequencerEditTarget } from "@/store/type";
-import { isMac } from "@/helpers/platform";
+import { SequencerEditTarget } from "@/store/type.ts";
+import { isMac } from "@/helpers/platform.ts";
 
 defineProps<{
   editTarget: SequencerEditTarget;

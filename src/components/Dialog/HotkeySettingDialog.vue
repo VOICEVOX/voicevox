@@ -125,14 +125,14 @@ import HotkeyRecordingDialog from "./HotkeyRecordingDialog.vue";
 import BaseButton from "@/components/Base/BaseButton.vue";
 import BaseIconButton from "@/components/Base/BaseIconButton.vue";
 import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
-import { useStore } from "@/store";
-import { useHotkeyManager, eventToCombination } from "@/plugins/hotkeyPlugin";
+import { useStore } from "@/store/index.ts";
+import { useHotkeyManager, eventToCombination } from "@/plugins/hotkeyPlugin.ts";
 import {
   HotkeyCombination,
   HotkeyActionNameType,
   getDefaultHotkeySettings,
-} from "@/domain/hotkeyAction";
-import { isMac } from "@/helpers/platform";
+} from "@/domain/hotkeyAction.ts";
+import { isMac } from "@/helpers/platform.ts";
 
 const props = defineProps<{
   modelValue: boolean;

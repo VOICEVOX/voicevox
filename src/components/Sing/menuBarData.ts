@@ -1,9 +1,9 @@
 import { computed } from "vue";
-import { useStore } from "@/store";
-import { MenuItemData } from "@/components/Menu/type";
-import { useRootMiscSetting } from "@/composables/useRootMiscSetting";
-import { ExportSongProjectFileType } from "@/store/type";
-import { notifyResult } from "@/components/Dialog/Dialog";
+import { useStore } from "@/store/index.ts";
+import { MenuItemData } from "@/components/Menu/type.ts";
+import { useRootMiscSetting } from "@/composables/useRootMiscSetting.ts";
+import { ExportSongProjectFileType } from "@/store/type.ts";
+import { notifyResult } from "@/components/Dialog/Dialog.ts";
 
 export const useMenuBarData = () => {
   const store = useStore();

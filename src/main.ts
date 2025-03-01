@@ -2,11 +2,11 @@ import { createApp } from "vue";
 import { createGtm } from "@gtm-support/vue-gtm";
 import { Quasar, Dialog, Loading, Notify } from "quasar";
 import iconSet from "quasar/icon-set/material-icons";
-import { store, storeKey } from "./store";
-import { ipcMessageReceiver } from "./plugins/ipcMessageReceiverPlugin";
-import { hotkeyPlugin } from "./plugins/hotkeyPlugin";
+import { store, storeKey } from "./store/index.ts";
+import { ipcMessageReceiver } from "./plugins/ipcMessageReceiverPlugin.ts";
+import { hotkeyPlugin } from "./plugins/hotkeyPlugin.ts";
 import App from "@/components/App.vue";
-import { markdownItPlugin } from "@/plugins/markdownItPlugin";
+import { markdownItPlugin } from "@/plugins/markdownItPlugin.ts";
 
 import "@quasar/extras/material-icons/material-icons.css";
 import "quasar/dist/quasar.sass";

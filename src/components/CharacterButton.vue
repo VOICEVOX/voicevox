@@ -196,11 +196,11 @@
 <script setup lang="ts">
 import { debounce, QBtn } from "quasar";
 import { computed, Ref, ref } from "vue";
-import { useStore } from "@/store";
-import { CharacterInfo, SpeakerId, Voice } from "@/type/preload";
-import { formatCharacterStyleName } from "@/store/utility";
-import { getDefaultStyle } from "@/domain/talk";
-import { useEngineIcons } from "@/composables/useEngineIcons";
+import { useStore } from "@/store/index.ts";
+import { CharacterInfo, SpeakerId, Voice } from "@/type/preload.ts";
+import { formatCharacterStyleName } from "@/store/utility.ts";
+import { getDefaultStyle } from "@/domain/talk.ts";
+import { useEngineIcons } from "@/composables/useEngineIcons.ts";
 
 const props = withDefaults(
   defineProps<{

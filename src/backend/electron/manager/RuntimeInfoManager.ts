@@ -5,10 +5,10 @@
 
 import AsyncLock from "async-lock";
 import type { AltPortInfos } from "@/store/type";
-import { EngineId, EngineInfo } from "@/type/preload";
-import { writeFileSafely } from "@/backend/electron/fileHelper";
-import { createEngineUrl } from "@/domain/url";
-import { createLogger } from "@/helpers/log";
+import { EngineId, EngineInfo } from "@/type/preload.ts";
+import { writeFileSafely } from "@/backend/electron/fileHelper.ts";
+import { createEngineUrl } from "@/domain/url.ts";
+import { createLogger } from "@/helpers/log.ts";
 
 const log = createLogger("RuntimeInfoManager");
 

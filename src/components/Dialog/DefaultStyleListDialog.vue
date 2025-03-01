@@ -103,9 +103,9 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import DefaultStyleSelectDialog from "./DefaultStyleSelectDialog.vue";
-import { useStore } from "@/store";
-import { DEFAULT_STYLE_NAME } from "@/store/utility";
-import { CharacterInfo, SpeakerId, StyleInfo } from "@/type/preload";
+import { useStore } from "@/store/index.ts";
+import { DEFAULT_STYLE_NAME } from "@/store/utility.ts";
+import { CharacterInfo, SpeakerId, StyleInfo } from "@/type/preload.ts";
 const props = defineProps<{
   modelValue: boolean;
   characterInfos: CharacterInfo[];

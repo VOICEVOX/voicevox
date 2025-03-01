@@ -6,7 +6,7 @@ import {
   Sandbox,
   SandboxKey,
   TextAsset,
-} from "@/type/preload";
+} from "@/type/preload.ts";
 
 const ipcRendererInvokeProxy = new Proxy(
   {},

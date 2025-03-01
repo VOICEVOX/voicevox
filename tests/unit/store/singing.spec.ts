@@ -1,8 +1,8 @@
-import { store } from "@/store";
-import { TrackId } from "@/type/preload";
-import { resetMockMode, uuid4 } from "@/helpers/random";
-import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
-import { createDefaultTrack } from "@/sing/domain";
+import { store } from "@/store/index.ts";
+import { TrackId } from "@/type/preload.ts";
+import { resetMockMode, uuid4 } from "@/helpers/random.ts";
+import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy.ts";
+import { createDefaultTrack } from "@/sing/domain.ts";
 
 const initialState = cloneWithUnwrapProxy(store.state);
 beforeEach(() => {

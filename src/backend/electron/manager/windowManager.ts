@@ -9,11 +9,11 @@ import {
   SaveDialogOptions,
 } from "electron";
 import windowStateKeeper from "electron-window-state";
-import { getConfigManager } from "../electronConfig";
-import { getEngineAndVvppController } from "../engineAndVvppController";
-import { ipcMainSendProxy } from "../ipc";
-import { themes } from "@/domain/theme";
-import { createLogger } from "@/helpers/log";
+import { getConfigManager } from "../electronConfig.ts";
+import { getEngineAndVvppController } from "../engineAndVvppController.ts";
+import { ipcMainSendProxy } from "../ipc.ts";
+import { themes } from "@/domain/theme/index.ts";
+import { createLogger } from "@/helpers/log.ts";
 
 const log = createLogger("WindowManager");
 

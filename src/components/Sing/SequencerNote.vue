@@ -65,14 +65,14 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { useStore } from "@/store";
-import { Note } from "@/store/type";
+import { useStore } from "@/store/index.ts";
+import { Note } from "@/store/type.ts";
 import {
   getKeyBaseHeight,
   tickToBaseX,
   noteNumberToBaseY,
   PreviewMode,
-} from "@/sing/viewHelper";
+} from "@/sing/viewHelper.ts";
 import ContextMenu, {
   ContextMenuItemData,
 } from "@/components/Menu/ContextMenu/Container.vue";

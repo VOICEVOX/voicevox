@@ -1,7 +1,7 @@
 import { computed, ref } from "vue";
-import { splitLyricsByMoras } from "@/sing/domain";
-import { useStore } from "@/store";
-import { Note } from "@/store/type";
+import { splitLyricsByMoras } from "@/sing/domain.ts";
+import { useStore } from "@/store/index.ts";
+import { Note } from "@/store/type.ts";
 
 // 歌詞入力のロジック。
 export const useLyricInput = () => {

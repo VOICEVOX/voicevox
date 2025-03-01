@@ -9,22 +9,22 @@ import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 
 import electronLog from "electron-log/main";
 import dayjs from "dayjs";
-import { initializeEngineInfoManager } from "./manager/engineInfoManager";
-import { initializeEngineProcessManager } from "./manager/engineProcessManager";
-import { initializeVvppManager, isVvppFile } from "./manager/vvppManager";
+import { initializeEngineInfoManager } from "./manager/engineInfoManager.ts";
+import { initializeEngineProcessManager } from "./manager/engineProcessManager.ts";
+import { initializeVvppManager, isVvppFile } from "./manager/vvppManager.ts";
 import {
   getWindowManager,
   initializeWindowManager,
-} from "./manager/windowManager";
-import configMigration014 from "./configMigration014";
-import { initializeRuntimeInfoManager } from "./manager/RuntimeInfoManager";
-import { registerIpcMainHandle, ipcMainSendProxy, IpcMainHandle } from "./ipc";
-import { getConfigManager } from "./electronConfig";
-import { getEngineAndVvppController } from "./engineAndVvppController";
-import { getIpcMainHandle } from "./ipcMainHandle";
-import { EngineInfo } from "@/type/preload";
-import { isMac, isProduction } from "@/helpers/platform";
-import { createLogger } from "@/helpers/log";
+} from "./manager/windowManager.ts";
+import configMigration014 from "./configMigration014.ts";
+import { initializeRuntimeInfoManager } from "./manager/RuntimeInfoManager.ts";
+import { registerIpcMainHandle, ipcMainSendProxy, IpcMainHandle } from "./ipc.ts";
+import { getConfigManager } from "./electronConfig.ts";
+import { getEngineAndVvppController } from "./engineAndVvppController.ts";
+import { getIpcMainHandle } from "./ipcMainHandle.ts";
+import { EngineInfo } from "@/type/preload.ts";
+import { isMac, isProduction } from "@/helpers/platform.ts";
+import { createLogger } from "@/helpers/log.ts";
 
 type SingleInstanceLockData = {
   filePath: string | undefined;

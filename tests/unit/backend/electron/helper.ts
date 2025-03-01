@@ -1,7 +1,7 @@
 import { exec } from "child_process";
 import { promisify } from "util";
-import path from "@/helpers/path";
-import { uuid4 } from "@/helpers/random";
+import path from "@/helpers/path.ts";
+import { uuid4 } from "@/helpers/random.ts";
 
 /** テスト用のVVPPファイルを作成する */
 export async function createVvppFile(targetName: string, tmpDir: string) {

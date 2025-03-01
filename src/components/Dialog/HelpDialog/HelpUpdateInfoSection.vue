@@ -45,7 +45,7 @@
 <script setup lang="ts">
 import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 import BaseDocumentView from "@/components/Base/BaseDocumentView.vue";
-import { UpdateInfo } from "@/type/preload";
+import { UpdateInfo } from "@/type/preload.ts";
 
 const props = defineProps<{
   latestVersion: string;

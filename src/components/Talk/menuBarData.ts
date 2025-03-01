@@ -1,8 +1,8 @@
 import { computed } from "vue";
-import { MenuItemData } from "@/components/Menu/type";
+import { MenuItemData } from "@/components/Menu/type.ts";
 
-import { useStore } from "@/store";
-import { useRootMiscSetting } from "@/composables/useRootMiscSetting";
+import { useStore } from "@/store/index.ts";
+import { useRootMiscSetting } from "@/composables/useRootMiscSetting.ts";
 
 export const useMenuBarData = () => {
   const store = useStore();
