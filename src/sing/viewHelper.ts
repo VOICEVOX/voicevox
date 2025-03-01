@@ -127,7 +127,9 @@ export type PreviewMode =
   | "RESIZE_NOTE_RIGHT"
   | "RESIZE_NOTE_LEFT"
   | "DRAW_PITCH"
-  | "ERASE_PITCH";
+  | "ERASE_PITCH"
+  | "SELECT_NOTES_WITH_RECT"
+  | "EDIT_NOTE_LYRIC";
 
 // マウスダウン時の振る舞い
 export const mouseDownBehaviorSchema = z.enum([
@@ -159,6 +161,19 @@ export function getButton(event: MouseEvent): MouseButton {
     return "OTHER_BUTTON";
   }
 }
+
+export const getXInBorderBox = (clientX: number, element: HTMLElement) => {
+  return clientX - element.getBoundingClientRect().left;
+};
+
+export const getYInBorderBox = (clientY: number, element: HTMLElement) => {
+  return clientY - element.getBoundingClientRect().top;
+};
+
+/** 直接イベントが来ているかどうか */
+export const isSelfEventTarget = (event: UIEvent) => {
+  return event.target === event.currentTarget;
+};
 
 // カーソルの状態
 export const cursorStateSchema = z.enum([
