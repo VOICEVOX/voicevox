@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-require-imports */
 const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");

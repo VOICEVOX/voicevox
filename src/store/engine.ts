@@ -13,7 +13,11 @@ export const engineStoreState: EngineStoreState = {
 const { info, error } = createLogger("store/engine");
 
 export const engineStore = createPartialStore<EngineStoreTypes>({
-  GET_ENGINE_INFOS: {
+  /**
+   * backendのエンジン情報をstateに同期して初期化する。
+   * エンジンIDも同期する。
+   */
+  PULL_AND_INIT_ENGINE_INFOS: {
     async action({ state, mutations }) {
       let engineInfos = await window.backend.engineInfos();
 
@@ -36,7 +40,8 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
     },
   },
 
-  GET_ONLY_ENGINE_INFOS: {
+  /** backendのエンジン情報をstateに同期する。 */
+  PULL_ENGINE_INFOS: {
     async action({ mutations }, { engineIds }) {
       const engineInfos = await window.backend.engineInfos();
       for (const engineInfo of engineInfos) {
@@ -64,7 +69,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
     },
   },
 
-  GET_ALT_PORT_INFOS: {
+  PULL_ALT_PORT_INFOS: {
     async action({ mutations }) {
       const altPortInfos = await window.backend.getAltPortInfos();
       mutations.SET_ALT_PORT_INFOS({ altPortInfos });
@@ -212,7 +217,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
           mutations.SET_ENGINE_STATE({ engineId, engineState: "STARTING" });
           try {
             return window.backend.restartEngine(engineId);
-          } catch (e) {
+          } catch {
             error(`Failed to restart engine: ${engineId}`);
             await actions.DETECTED_ENGINE_ERROR({ engineId });
             return {
@@ -223,7 +228,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
         }),
       );
 
-      await actions.GET_ONLY_ENGINE_INFOS({ engineIds });
+      await actions.PULL_ENGINE_INFOS({ engineIds });
 
       const result = await actions.POST_ENGINE_START({
         engineIds,
@@ -235,7 +240,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
 
   POST_ENGINE_START: {
     async action({ state, actions }, { engineIds }) {
-      await actions.GET_ALT_PORT_INFOS();
+      await actions.PULL_ALT_PORT_INFOS();
       const result = await Promise.all(
         engineIds.map(async (engineId) => {
           if (state.engineStates[engineId] === "STARTING") {
@@ -355,11 +360,13 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
       }
     },
   },
+
   VALIDATE_ENGINE_DIR: {
     action: async (_, { engineDir }) => {
       return window.backend.validateEngineDir(engineDir);
     },
   },
+
   ADD_ENGINE_DIR: {
     action: async (_, { engineDir }) => {
       const registeredEngineDirs = await window.backend.getSetting(
@@ -371,6 +378,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
       ]);
     },
   },
+
   REMOVE_ENGINE_DIR: {
     action: async (_, { engineDir }) => {
       const registeredEngineDirs = await window.backend.getSetting(
@@ -382,16 +390,19 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
       );
     },
   },
+
   INSTALL_VVPP_ENGINE: {
     action: async (_, path) => {
       return window.backend.installVvppEngine(path);
     },
   },
+
   UNINSTALL_VVPP_ENGINE: {
     action: async (_, engineId) => {
       return window.backend.uninstallVvppEngine(engineId);
     },
   },
+
   SET_ENGINE_MANIFEST: {
     mutation(
       state,

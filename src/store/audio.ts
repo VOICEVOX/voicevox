@@ -1,3 +1,4 @@
+import { toBase64 } from "fast-base64";
 import { createUILockAction, withProgress } from "./ui";
 import {
   AudioItem,
@@ -1376,11 +1377,11 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             defaultAudioFileName,
           );
         } else {
-          filePath ??= await window.backend.showExportFileDialog({
+          filePath ??= await window.backend.showSaveFileDialog({
             title: "音声を保存",
-            defaultPath: defaultAudioFileName,
-            extensionName: "WAV ファイル",
+            name: "WAV ファイル",
             extensions: ["wav"],
+            defaultPath: defaultAudioFileName,
           });
         }
 
@@ -1525,11 +1526,11 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             defaultFileName,
           );
         } else {
-          filePath ??= await window.backend.showExportFileDialog({
+          filePath ??= await window.backend.showSaveFileDialog({
             title: "音声を全て繋げて保存",
-            defaultPath: defaultFileName,
-            extensionName: "WAV ファイル",
+            name: "WAV ファイル",
             extensions: ["wav"],
+            defaultPath: defaultFileName,
           });
         }
 
@@ -1545,21 +1546,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         const labs: string[] = [];
         const texts: string[] = [];
 
-        const base64Encoder = (blob: Blob): Promise<string | undefined> => {
-          return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => {
-              // string/undefined以外が来ることはないと思うが、型定義的にArrayBufferも来るので、toStringする
-              const result = reader.result?.toString();
-              if (result) {
-                // resultの中身は、"data:audio/wav;base64,<content>"という形なので、カンマ以降を抜き出す
-                resolve(result.slice(result.indexOf(",") + 1));
-              } else {
-                reject();
-              }
-            };
-            reader.readAsDataURL(blob);
-          });
+        const base64Encoder = async (blob: Blob): Promise<string> => {
+          const arrayBuffer = await blob.arrayBuffer();
+          return toBase64(new Uint8Array(arrayBuffer));
         };
 
         const totalCount = state.audioKeys.length;
@@ -1670,11 +1659,11 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             defaultFileName,
           );
         } else {
-          filePath ??= await window.backend.showExportFileDialog({
+          filePath ??= await window.backend.showSaveFileDialog({
             title: "文章を全て繋げてテキストファイルに保存",
-            defaultPath: defaultFileName,
-            extensionName: "テキストファイル",
+            name: "テキストファイル",
             extensions: ["txt"],
+            defaultPath: defaultFileName,
           });
         }
 
@@ -2485,7 +2474,7 @@ export const audioCommandStore = transformCommandStore(
             audioKey,
             accentPhrases: resultAccentPhrases,
           });
-        } catch (error) {
+        } catch {
           mutations.COMMAND_CHANGE_SINGLE_ACCENT_PHRASE({
             audioKey,
             accentPhrases: newAccentPhrases,
@@ -2900,8 +2889,11 @@ export const audioCommandStore = transformCommandStore(
         async ({ state, mutations, actions, getters }, payload) => {
           let filePath: undefined | string;
           if (payload.type == "dialog") {
-            filePath = await window.backend.showImportFileDialog({
+            filePath = await window.backend.showOpenFileDialog({
               title: "セリフ読み込み",
+              name: "Text",
+              mimeType: "plain/text",
+              extensions: ["txt"],
             });
             if (!filePath) return;
           } else if (payload.type == "path") {
