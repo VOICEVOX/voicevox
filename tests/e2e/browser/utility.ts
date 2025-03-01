@@ -5,11 +5,11 @@ import { success } from "@/type/result";
 type TestFileId = Brand<string, "TestFileId">;
 
 /** ファイル書き出し選択ダイアログをモックにする */
-export async function mockShowExportFileDialog(page: Page): Promise<{
+export async function mockShowSaveFileDialog(page: Page): Promise<{
   getFileIds: () => Promise<TestFileId[]>;
 }> {
   type _Window = Window & {
-    _mockShowExportFileDialog: {
+    _mockShowSaveFileDialog: {
       returnValues: TestFileId[];
     };
   };
@@ -17,13 +17,13 @@ export async function mockShowExportFileDialog(page: Page): Promise<{
   // モックを差し込む
   await page.evaluate(() => {
     const _window = window as unknown as _Window;
-    _window._mockShowExportFileDialog = {
+    _window._mockShowSaveFileDialog = {
       returnValues: [],
     };
 
-    _window.backend.showExportFileDialog = async () => {
+    _window.backend.showSaveFileDialog = async () => {
       const id = `${Date.now()}` as TestFileId;
-      _window._mockShowExportFileDialog.returnValues.push(id);
+      _window._mockShowSaveFileDialog.returnValues.push(id);
       return id;
     };
   });
@@ -32,7 +32,7 @@ export async function mockShowExportFileDialog(page: Page): Promise<{
     getFileIds: async () => {
       return page.evaluate(() => {
         const _window = window as unknown as _Window;
-        return _window._mockShowExportFileDialog.returnValues;
+        return _window._mockShowSaveFileDialog.returnValues;
       });
     },
   };
