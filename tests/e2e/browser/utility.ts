@@ -5,6 +5,7 @@ import { success } from "@/type/result";
 type TestFileId = Brand<string, "TestFileId">;
 
 /** ファイル書き出し選択ダイアログをモックにする */
+// TODO: モックを戻せるようにする
 export async function mockShowSaveFileDialog(page: Page): Promise<{
   getFileIds: () => Promise<TestFileId[]>;
 }> {
@@ -39,6 +40,7 @@ export async function mockShowSaveFileDialog(page: Page): Promise<{
 }
 
 /** ファイル書き出しをモックにする */
+// TODO: モックを戻せるようにする
 export async function mockWriteFile(page: Page): Promise<{
   getWrittenFileBuffers: () => Promise<Record<string | TestFileId, Buffer>>;
 }> {
