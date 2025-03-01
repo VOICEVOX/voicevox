@@ -22,9 +22,11 @@
   },
   "include": [
     "playwright.config.ts",
+    "*.js",
     "*.ts",
+    "*.cjs",
     "eslint-plugin/**/*.ts",
-    "build/**/*.ts",
+    "build/**/*.cjs",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/**/*.vue",

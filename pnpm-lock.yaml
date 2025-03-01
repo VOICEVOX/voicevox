@@ -35,6 +35,9 @@ importers:
       encoding-japanese:
         specifier: 1.0.30
         version: 1.0.30
+      eslint-plugin-file-progress:
+        specifier: 3.0.1
+        version: 3.0.1(eslint@9.21.0(jiti@2.4.2))
       fast-array-diff:
         specifier: 1.1.0
         version: 1.1.0
