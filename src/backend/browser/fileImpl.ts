@@ -6,7 +6,7 @@ import { failure, success } from "@/type/result";
 import { createLogger } from "@/helpers/log";
 import { normalizeError } from "@/helpers/normalizeError";
 import path from "@/helpers/path";
-import { ExhaustiveError } from "@/type/utility";
+import { assertNonNullable, ExhaustiveError } from "@/type/utility";
 
 const log = createLogger("fileImpl");
 
@@ -22,6 +22,7 @@ const storeDirectoryHandle = async (
       resolve();
     };
     request.onerror = () => {
+      assertNonNullable(request.error);
       reject(request.error);
     };
   });
@@ -38,6 +39,7 @@ const fetchStoredDirectoryHandle = async (maybeDirectoryHandleName: string) => {
         resolve(request.result as FileSystemDirectoryHandle | undefined);
       };
       request.onerror = () => {
+        assertNonNullable(request.error);
         reject(request.error);
       };
     },
