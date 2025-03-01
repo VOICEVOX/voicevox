@@ -4,6 +4,7 @@
 import path from "path";
 import fs from "fs";
 import { spawnSync } from "child_process";
+import { retryFetch } from "./helper.mjs";
 
 const distPath = path.resolve(import.meta.dirname, "..", "vendored", "7z");
 let url;
@@ -20,7 +21,10 @@ switch (process.platform) {
     const sevenzrPath = path.resolve(distPath, "7zr.exe");
     if (!fs.existsSync(sevenzrPath)) {
       console.log("Downloading 7zr from " + sevenzrUrl);
-      const res = await fetch(sevenzrUrl);
+      const res = await retryFetch(sevenzrUrl);
+      if (!res.ok) {
+        throw new Error(`Failed to download binary: ${res.statusText}`);
+      }
       const buffer = await res.arrayBuffer();
 
       await fs.promises.writeFile(sevenzrPath, Buffer.from(buffer));
@@ -60,7 +64,10 @@ if (notDownloaded.length === 0) {
 }
 
 console.log("Downloading 7z from " + url);
-const res = await fetch(url);
+const res = await retryFetch(url);
+if (!res.ok) {
+  throw new Error(`Failed to download binary: ${res.statusText}`);
+}
 const buffer = await res.arrayBuffer();
 const sevenZipPath = path.resolve(distPath, path.basename(url));
 await fs.promises.writeFile(sevenZipPath, Buffer.from(buffer));

@@ -30,6 +30,7 @@
     "tests/**/*.ts",
     "tests/**/*.mts",
     "tests/**/*.tsx",
+    "tools/**/*.ts",
     "tools/**/*.mts",
     ".storybook/**/*.ts"
   ],
