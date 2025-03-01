@@ -217,7 +217,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
           mutations.SET_ENGINE_STATE({ engineId, engineState: "STARTING" });
           try {
             return window.backend.restartEngine(engineId);
-          } catch (e) {
+          } catch {
             error(`Failed to restart engine: ${engineId}`);
             await actions.DETECTED_ENGINE_ERROR({ engineId });
             return {
