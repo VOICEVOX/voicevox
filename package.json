@@ -4,6 +4,7 @@
   "author": "Hiroshiba Kazuyuki",
   "private": true,
   "main": "./dist/main.js",
+  "type": "module",
   "engines": {
     "node": ">=22.14.0 <23"
   },

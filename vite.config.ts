@@ -13,7 +13,7 @@ import { z } from "zod";
 import {
   checkSuspiciousImports,
   CheckSuspiciousImportsOptions,
-} from "./tools/checkSuspiciousImports.mjs";
+} from "./tools/checkSuspiciousImports.js";
 
 const isElectron = process.env.VITE_TARGET === "electron";
 const isBrowser = process.env.VITE_TARGET === "browser";
