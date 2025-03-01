@@ -20,6 +20,7 @@ async function addNotes(page: Page, count: number) {
   });
 }
 
+/** Locator の配列を x 座標でソートする */
 async function toSortedLocator(locators: Locator[]): Promise<Locator[]> {
   const locatorsWithPosition = await Promise.all(
     locators.map(async (locator) => ({
