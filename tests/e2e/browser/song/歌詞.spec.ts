@@ -10,7 +10,7 @@ function getSequencer(page: Page) {
 }
 
 async function addNotes(page: Page, count: number) {
-  await test.step(`ノートを ${count} つ追加`, async () => {
+  await test.step(`ノートを${count}つ追加`, async () => {
     const sequencer = getSequencer(page);
     for (let i = 0; i < count; i++) {
       await sequencer.click({ position: { x: (i + 1) * 100, y: 171 } });
