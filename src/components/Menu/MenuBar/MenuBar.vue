@@ -1,7 +1,10 @@
 <template>
-  <QBar class="bg-background q-pa-none relative-position">
+  <QBar
+    class="bg-background q-pa-none relative-position"
+    :class="[isElectron && 'enable-drag']"
+  >
     <div
-      v-if="$q.platform.is.mac && !isFullscreen"
+      v-if="!isVst && $q.platform.is.mac && !isFullscreen"
       class="mac-traffic-light-space"
     ></div>
     <img v-else src="/icon.png" class="window-logo" alt="application logo" />
@@ -21,8 +24,8 @@
       {{ titleText }}
     </div>
     <QSpace />
-    <TitleBarEditorSwitcher />
-    <TitleBarButtons />
+    <TitleBarEditorSwitcher v-if="!isVst" />
+    <TitleBarButtons v-if="isElectron" />
   </QBar>
 </template>
 
@@ -34,9 +37,11 @@ import MenuButton from "../MenuButton.vue";
 import TitleBarButtons from "./TitleBarButtons.vue";
 import TitleBarEditorSwitcher from "./TitleBarEditorSwitcher.vue";
 import { useStore } from "@/store";
+import { isElectron, isVst } from "@/helpers/platform";
 import { HotkeyAction, useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import { useEngineIcons } from "@/composables/useEngineIcons";
 import HelpDialog from "@/components/Dialog/HelpDialog/HelpDialog.vue";
+import { changeEnginePath } from "@/backend/vst/ipc";
 import { getAppInfos } from "@/domain/appInfo";
 
 const props = defineProps<{
@@ -143,6 +148,18 @@ const createNewProject = async () => {
 const saveProject = async () => {
   if (!uiLocked.value) {
     await store.actions.SAVE_PROJECT_FILE({ overwrite: true });
+  }
+};
+
+const vstOpenRoutingDialog = async () => {
+  if (!uiLocked.value) {
+    if (!isVst) {
+      throw new Error("VST以外でのルーティングの設定はサポートされていません");
+    }
+
+    await store.dispatch("SET_DIALOG_OPEN", {
+      isVstRoutingDialogOpen: true,
+    });
   }
 };
 
@@ -280,7 +297,29 @@ const engineSubMenuData = computed<MenuItemData[]>(() => {
       },
     ];
   }
-  if (enableMultiEngine.value) {
+  if (isVst) {
+    subMenu.push(
+      {
+        type: "button",
+        label: "エンジンの場所を変更",
+        onClick: () => {
+          void changeEnginePath();
+        },
+        disableWhenUiLocked: false,
+      },
+      {
+        type: "button",
+        label: "フォルダを開く",
+        onClick: () => {
+          const engineInfo = Object.values(engineInfos.value)[0];
+          void store.actions.OPEN_ENGINE_DIRECTORY({
+            engineId: engineInfo.uuid,
+          });
+        },
+        disableWhenUiLocked: false,
+      },
+    );
+  } else if (enableMultiEngine.value) {
     subMenu.push({
       type: "button",
       label: "エンジンの管理",
@@ -322,52 +361,70 @@ const menudata = computed<MenuItemData[]>(() => [
     subMenu: [
       ...props.fileSubMenuData,
       { type: "separator" },
-      {
-        type: "button",
-        label: "新規プロジェクト",
-        onClick: createNewProject,
-        disableWhenUiLocked: true,
-      },
-      {
-        type: "button",
-        label: "プロジェクトを上書き保存",
-        onClick: async () => {
-          await saveProject();
-        },
-        disableWhenUiLocked: true,
-      },
-      {
-        type: "button",
-        label: "プロジェクトを名前を付けて保存",
-        onClick: async () => {
-          await saveProjectAs();
-        },
-        disableWhenUiLocked: true,
-      },
-      {
-        type: "button",
-        label: "プロジェクトの複製を保存",
-        onClick: async () => {
-          await saveProjectCopy();
-        },
-        disableWhenUiLocked: true,
-      },
-      {
-        type: "button",
-        label: "プロジェクトを読み込む",
-        onClick: () => {
-          importProject();
-        },
-        disableWhenUiLocked: true,
-      },
-      {
-        type: "root",
-        label: "最近使ったプロジェクト",
-        disableWhenUiLocked: true,
-        subMenu: recentProjectsSubMenuData.value,
-      },
+      ...((isVst
+        ? [
+            {
+              type: "button",
+              label: "新規プロジェクト",
+              onClick: createNewProject,
+              disableWhenUiLocked: true,
+            },
+            {
+              type: "button",
+              label: "ルーティング",
+              onClick: vstOpenRoutingDialog,
+              disableWhenUiLocked: true,
+            },
+          ]
+        : [
+            {
+              type: "button",
+              label: "新規プロジェクト",
+              onClick: createNewProject,
+              disableWhenUiLocked: true,
+            },
+            {
+              type: "button",
+              label: "プロジェクトを上書き保存",
+              onClick: async () => {
+                await saveProject();
+              },
+              disableWhenUiLocked: true,
+            },
+            {
+              type: "button",
+              label: "プロジェクトを名前を付けて保存",
+              onClick: async () => {
+                await saveProjectAs();
+              },
+              disableWhenUiLocked: true,
+            },
+            {
+              type: "button",
+              label: "プロジェクトの複製を保存",
+              onClick: async () => {
+                await saveProjectCopy();
+              },
+              disableWhenUiLocked: true,
+            },
+            {
+              type: "button",
+              label: "プロジェクトを読み込む",
+              onClick: () => {
+                importProject();
+              },
+              disableWhenUiLocked: true,
+            },
+            {
+              type: "root",
+              label: "最近使ったプロジェクト",
+              disableWhenUiLocked: true,
+              subMenu: recentProjectsSubMenuData.value,
+            },
+          ]) as MenuItemData[]),
     ],
   },
+
   {
     type: "root",
     label: "編集",
@@ -639,7 +696,10 @@ registerHotkeyForAllEditors({
 
 .q-bar {
   min-height: vars.$menubar-height;
-  -webkit-app-region: drag; // Electronのドラッグ領域
+
+  &.enable-drag {
+    -webkit-app-region: drag; // Electronのドラッグ領域
+  }
   :deep(.q-btn) {
     margin-left: 0;
     -webkit-app-region: no-drag; // Electronのドラッグ領域対象から外す

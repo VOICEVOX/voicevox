@@ -240,4 +240,8 @@ export const api: Sandbox = {
   getPathForFile(/* file: File */) {
     throw new Error(`Not supported on Browser version: getPathForFile`);
   },
+
+  fetchCachedSingingVoice() {
+    return Promise.resolve(undefined);
+  },
 };
