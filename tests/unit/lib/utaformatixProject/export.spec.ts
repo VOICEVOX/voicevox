@@ -1,12 +1,12 @@
 import { it, expect } from "vitest";
-import { ufProjectFromVoicevox } from "@/sing/utaformatixProject/fromVoicevox";
+import { ufProjectFromVoicevox } from "@/sing/utaformatixProject/fromVoicevox.ts";
 import {
   createDefaultTempo,
   createDefaultTimeSignature,
   createDefaultTrack,
-} from "@/sing/domain";
-import { NoteId } from "@/type/preload";
-import { uuid4 } from "@/helpers/random";
+} from "@/sing/domain.ts";
+import { NoteId } from "@/type/preload.ts";
+import { uuid4 } from "@/helpers/random.ts";
 
 const createNoteId = () => NoteId(uuid4());
 

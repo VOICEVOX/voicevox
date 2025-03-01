@@ -22,15 +22,17 @@
   },
   "include": [
     "playwright.config.ts",
-    "*.mts",
-    "eslint-plugin/**/*.mts",
+    "*.js",
+    "*.ts",
+    "*.cjs",
+    "eslint-plugin/**/*.ts",
+    "build/**/*.cjs",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/**/*.vue",
     "tests/**/*.ts",
-    "tests/**/*.mts",
     "tests/**/*.tsx",
-    "tools/**/*.mts",
+    "tools/**/*.ts",
     ".storybook/**/*.ts"
   ],
   "exclude": ["node_modules"]

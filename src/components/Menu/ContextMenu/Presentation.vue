@@ -29,7 +29,7 @@
 import { onMounted, onUnmounted, ref } from "vue";
 import { QMenu } from "quasar";
 import MenuItem from "../MenuItem.vue";
-import { MenuItemButton, MenuItemSeparator } from "../type";
+import { MenuItemButton, MenuItemSeparator } from "../type.ts";
 
 defineProps<{
   header?: string;

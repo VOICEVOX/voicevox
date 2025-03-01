@@ -14,13 +14,13 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { useStore } from "@/store";
-import { Note } from "@/store/type";
+import { useStore } from "@/store/index.ts";
+import { Note } from "@/store/type.ts";
 import {
   getKeyBaseHeight,
   tickToBaseX,
   noteNumberToBaseY,
-} from "@/sing/viewHelper";
+} from "@/sing/viewHelper.ts";
 
 const props = defineProps<{
   note: Note;

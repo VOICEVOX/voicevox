@@ -120,18 +120,18 @@ import {
   getTimeSignaturePositions,
   snapTicksToGrid,
   tickToMeasureNumber,
-} from "@/sing/domain";
-import { baseXToTick, tickToBaseX } from "@/sing/viewHelper";
-import { Tempo, TimeSignature } from "@/store/type";
+} from "@/sing/domain.ts";
+import { baseXToTick, tickToBaseX } from "@/sing/viewHelper.ts";
+import { Tempo, TimeSignature } from "@/store/type.ts";
 import ContextMenu, {
   ContextMenuItemData,
 } from "@/components/Menu/ContextMenu/Presentation.vue";
-import { UnreachableError } from "@/type/utility";
+import { UnreachableError } from "@/type/utility.ts";
 import TempoChangeDialog from "@/components/Sing/ChangeValueDialog/TempoChangeDialog.vue";
 import TimeSignatureChangeDialog from "@/components/Sing/ChangeValueDialog/TimeSignatureChangeDialog.vue";
-import { FontSpecification, predictTextWidth } from "@/helpers/textWidth";
-import { createLogger } from "@/helpers/log";
-import { useSequencerGrid } from "@/composables/useSequencerGridPattern";
+import { FontSpecification, predictTextWidth } from "@/helpers/textWidth.ts";
+import { createLogger } from "@/helpers/log.ts";
+import { useSequencerGrid } from "@/composables/useSequencerGridPattern.ts";
 
 const props = defineProps<{
   offset: number;

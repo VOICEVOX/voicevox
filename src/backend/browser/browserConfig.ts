@@ -1,11 +1,11 @@
 import AsyncLock from "async-lock";
-import { defaultEngine, directoryHandleStoreKey } from "./contract";
+import { defaultEngine, directoryHandleStoreKey } from "./contract.ts";
 
-import { BaseConfigManager, Metadata } from "@/backend/common/ConfigManager";
-import { ConfigType, EngineId, engineSettingSchema } from "@/type/preload";
-import { ensureNotNullish } from "@/helpers/errorHelper";
-import { UnreachableError } from "@/type/utility";
-import { isMac } from "@/helpers/platform";
+import { BaseConfigManager, Metadata } from "@/backend/common/ConfigManager.ts";
+import { ConfigType, EngineId, engineSettingSchema } from "@/type/preload.ts";
+import { ensureNotNullish } from "@/helpers/errorHelper.ts";
+import { UnreachableError } from "@/type/utility.ts";
+import { isMac } from "@/helpers/platform.ts";
 
 const dbName = `${import.meta.env.VITE_APP_NAME}-web`;
 const settingStoreKey = "config";

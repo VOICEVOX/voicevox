@@ -3,8 +3,8 @@
  * VOICEVOX ENGINEの voicevox_engine/tts_pipeline/kana_converter.py の移植。
  */
 
-import { moraToPhonemes } from "./phonemeMock";
-import { AccentPhrase, Mora } from "@/openapi";
+import { moraToPhonemes } from "./phonemeMock.ts";
+import { AccentPhrase, Mora } from "@/openapi/index.ts";
 
 enum ParseKanaErrorCode {
   UNKNOWN_TEXT = "判別できない読み仮名があります: {text}",

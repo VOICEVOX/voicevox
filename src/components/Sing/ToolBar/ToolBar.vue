@@ -162,7 +162,7 @@
 import { computed, watch, ref } from "vue";
 import PlayheadPositionDisplay from "../PlayheadPositionDisplay.vue";
 import EditTargetSwicher from "./EditTargetSwicher.vue";
-import { useStore } from "@/store";
+import { useStore } from "@/store/index.ts";
 
 import {
   BEAT_TYPES,
@@ -174,11 +174,11 @@ import {
   isValidBpm,
   isValidKeyRangeAdjustment,
   isValidVolumeRangeAdjustment,
-} from "@/sing/domain";
+} from "@/sing/domain.ts";
 import CharacterMenuButton from "@/components/Sing/CharacterMenuButton/MenuButton.vue";
-import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
-import { SequencerEditTarget } from "@/store/type";
-import { UnreachableError } from "@/type/utility";
+import { useHotkeyManager } from "@/plugins/hotkeyPlugin.ts";
+import { SequencerEditTarget } from "@/store/type.ts";
+import { UnreachableError } from "@/type/utility.ts";
 
 const store = useStore();
 

@@ -158,14 +158,14 @@ export const dictionaryManageDialogContextKey: InjectionKey<{
 import { computed, ref, watch, provide } from "vue";
 import { QInput } from "quasar";
 import DictionaryEditWordDialog from "./DictionaryEditWordDialog.vue";
-import { useStore } from "@/store";
-import { AccentPhrase, UserDictWord } from "@/openapi";
-import { EngineId, SpeakerId, StyleId } from "@/type/preload";
+import { useStore } from "@/store/index.ts";
+import { AccentPhrase, UserDictWord } from "@/openapi/index.ts";
+import { EngineId, SpeakerId, StyleId } from "@/type/preload.ts";
 import {
   convertHiraToKana,
   convertLongVowel,
   createKanaRegex,
-} from "@/domain/japanese";
+} from "@/domain/japanese/index.ts";
 
 const defaultDictPriority = 5;
 

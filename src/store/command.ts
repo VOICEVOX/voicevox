@@ -1,17 +1,17 @@
 import { toRaw } from "vue";
 import { enablePatches, enableMapSet, Immer } from "immer";
 
-import { Command, CommandStoreState, CommandStoreTypes, State } from "./type";
-import { applyPatches } from "@/store/immerPatchUtility";
+import { Command, CommandStoreState, CommandStoreTypes, State } from "./type.ts";
+import { applyPatches } from "@/store/immerPatchUtility.ts";
 import {
   createPartialStore,
   Mutation,
   MutationsBase,
   MutationTree,
-} from "@/store/vuex";
-import { CommandId, EditorType } from "@/type/preload";
-import { uuid4 } from "@/helpers/random";
-import { objectEntries, objectFromEntries } from "@/helpers/typedEntries";
+} from "@/store/vuex.ts";
+import { CommandId, EditorType } from "@/type/preload.ts";
+import { uuid4 } from "@/helpers/random.ts";
+import { objectEntries, objectFromEntries } from "@/helpers/typedEntries.ts";
 
 enablePatches();
 enableMapSet();

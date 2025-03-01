@@ -38,8 +38,8 @@
 </template>
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import { useStore } from "@/store";
-import { EngineState } from "@/store/type";
+import { useStore } from "@/store/index.ts";
+import { EngineState } from "@/store/type.ts";
 
 const store = useStore();
 const props = defineProps<{

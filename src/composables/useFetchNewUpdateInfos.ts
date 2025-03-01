@@ -1,7 +1,7 @@
 import { ref } from "vue";
 import semver from "semver";
 import { z } from "zod";
-import { UpdateInfo, UrlString, updateInfoSchema } from "@/type/preload";
+import { UpdateInfo, UrlString, updateInfoSchema } from "@/type/preload.ts";
 
 /**
  * 現在のバージョンより新しいバージョンがリリースされているか調べる。

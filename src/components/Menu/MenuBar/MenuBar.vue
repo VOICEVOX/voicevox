@@ -29,15 +29,15 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
 import { useQuasar, Dialog } from "quasar";
-import { MenuItemData, MenuItemRoot } from "../type";
+import { MenuItemData, MenuItemRoot } from "../type.ts";
 import MenuButton from "../MenuButton.vue";
 import TitleBarButtons from "./TitleBarButtons.vue";
 import TitleBarEditorSwitcher from "./TitleBarEditorSwitcher.vue";
-import { useStore } from "@/store";
-import { HotkeyAction, useHotkeyManager } from "@/plugins/hotkeyPlugin";
-import { useEngineIcons } from "@/composables/useEngineIcons";
+import { useStore } from "@/store/index.ts";
+import { HotkeyAction, useHotkeyManager } from "@/plugins/hotkeyPlugin.ts";
+import { useEngineIcons } from "@/composables/useEngineIcons.ts";
 import HelpDialog from "@/components/Dialog/HelpDialog/HelpDialog.vue";
-import { getAppInfos } from "@/domain/appInfo";
+import { getAppInfos } from "@/domain/appInfo.ts";
 
 const props = defineProps<{
   /** 「ファイル」メニューのサブメニュー */

@@ -113,17 +113,17 @@
 import { computed, watch, ref, nextTick } from "vue";
 import { QInput } from "quasar";
 import CharacterButton from "@/components/CharacterButton.vue";
-import { MenuItemButton, MenuItemSeparator } from "@/components/Menu/type";
+import { MenuItemButton, MenuItemSeparator } from "@/components/Menu/type.ts";
 import ContextMenu from "@/components/Menu/ContextMenu/Container.vue";
-import { useStore } from "@/store";
-import { AudioKey, SplitTextWhenPasteType, Voice } from "@/type/preload";
-import { SelectionHelperForQInput } from "@/helpers/SelectionHelperForQInput";
-import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
+import { useStore } from "@/store/index.ts";
+import { AudioKey, SplitTextWhenPasteType, Voice } from "@/type/preload.ts";
+import { SelectionHelperForQInput } from "@/helpers/SelectionHelperForQInput.ts";
+import { isOnCommandOrCtrlKeyDown } from "@/store/utility.ts";
 import {
   useShiftKey,
   useCommandOrControlKey,
-} from "@/composables/useModifierKey";
-import { getDefaultStyle } from "@/domain/talk";
+} from "@/composables/useModifierKey.ts";
+import { getDefaultStyle } from "@/domain/talk.ts";
 
 const props = defineProps<{
   audioKey: AudioKey;

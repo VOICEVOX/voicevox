@@ -1,7 +1,7 @@
 import { mount, flushPromises } from "@vue/test-utils";
 import { describe, it } from "vitest";
 import HelpMarkdownViewSection from "@/components/Dialog/HelpDialog/HelpMarkdownViewSection.vue";
-import { markdownItPlugin } from "@/plugins/markdownItPlugin";
+import { markdownItPlugin } from "@/plugins/markdownItPlugin.ts";
 
 describe("HelpMarkdownViewSection.vue", () => {
   it("can mount", () => {

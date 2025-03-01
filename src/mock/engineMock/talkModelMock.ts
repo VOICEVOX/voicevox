@@ -3,11 +3,11 @@
  */
 
 import { builder, IpadicFeatures, Tokenizer } from "kuromoji";
-import { moraToPhonemes } from "./phonemeMock";
-import { parseKana } from "./aquestalkLikeMock";
-import { moraPattern } from "@/domain/japanese";
-import { AccentPhrase, Mora } from "@/openapi";
-import { isNode } from "@/helpers/platform";
+import { moraToPhonemes } from "./phonemeMock.ts";
+import { parseKana } from "./aquestalkLikeMock.ts";
+import { moraPattern } from "@/domain/japanese/index.ts";
+import { AccentPhrase, Mora } from "@/openapi/index.ts";
+import { isNode } from "@/helpers/platform.ts";
 
 let _tokenizer: Tokenizer<IpadicFeatures> | undefined;
 

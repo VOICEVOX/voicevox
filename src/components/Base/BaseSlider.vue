@@ -26,8 +26,8 @@
 
 <script setup lang="ts">
 import { SliderRange, SliderRoot, SliderThumb, SliderTrack } from "radix-vue";
-import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
-import { debounce } from "@/helpers/timer";
+import { isOnCommandOrCtrlKeyDown } from "@/store/utility.ts";
+import { debounce } from "@/helpers/timer.ts";
 
 const props = withDefaults(
   defineProps<{

@@ -3,27 +3,27 @@ import fs from "fs";
 import { ReadableStream } from "node:stream/web";
 import { dialog } from "electron";
 
-import { getConfigManager } from "./electronConfig";
-import { getEngineInfoManager } from "./manager/engineInfoManager";
-import { getEngineProcessManager } from "./manager/engineProcessManager";
-import { getRuntimeInfoManager } from "./manager/RuntimeInfoManager";
-import { getVvppManager } from "./manager/vvppManager";
-import { getWindowManager } from "./manager/windowManager";
+import { getConfigManager } from "./electronConfig.ts";
+import { getEngineInfoManager } from "./manager/engineInfoManager.ts";
+import { getEngineProcessManager } from "./manager/engineProcessManager.ts";
+import { getRuntimeInfoManager } from "./manager/RuntimeInfoManager.ts";
+import { getVvppManager } from "./manager/vvppManager.ts";
+import { getWindowManager } from "./manager/windowManager.ts";
 import {
   EngineId,
   EngineInfo,
   engineSettingSchema,
   EngineSettingType,
-} from "@/type/preload";
+} from "@/type/preload.ts";
 import {
   PackageInfo,
   fetchLatestDefaultEngineInfo,
   getSuitablePackageInfo,
-} from "@/domain/defaultEngine/latetDefaultEngine";
-import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
-import { UnreachableError } from "@/type/utility";
-import { ProgressCallback } from "@/helpers/progressHelper";
-import { createLogger } from "@/helpers/log";
+} from "@/domain/defaultEngine/latetDefaultEngine.ts";
+import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo.ts";
+import { UnreachableError } from "@/type/utility.ts";
+import { ProgressCallback } from "@/helpers/progressHelper.ts";
+import { createLogger } from "@/helpers/log.ts";
 
 const log = createLogger("EngineAndVvppController");
 

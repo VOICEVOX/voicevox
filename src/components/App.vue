@@ -28,16 +28,16 @@ import { useGtm } from "@gtm-support/vue-gtm";
 import { TooltipProvider } from "radix-vue";
 import TalkEditor from "@/components/Talk/TalkEditor.vue";
 import SingEditor from "@/components/Sing/SingEditor.vue";
-import { EngineId } from "@/type/preload";
+import { EngineId } from "@/type/preload.ts";
 import ErrorBoundary from "@/components/ErrorBoundary.vue";
-import { useStore } from "@/store";
-import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
+import { useStore } from "@/store/index.ts";
+import { useHotkeyManager } from "@/plugins/hotkeyPlugin.ts";
 import AllDialog from "@/components/Dialog/AllDialog.vue";
 import MenuBar from "@/components/Menu/MenuBar/MenuBar.vue";
-import { useMenuBarData as useTalkMenuBarData } from "@/components/Talk/menuBarData";
-import { useMenuBarData as useSingMenuBarData } from "@/components/Sing/menuBarData";
-import { setFontToCss, setThemeToCss } from "@/domain/dom";
-import { ExhaustiveError } from "@/type/utility";
+import { useMenuBarData as useTalkMenuBarData } from "@/components/Talk/menuBarData.ts";
+import { useMenuBarData as useSingMenuBarData } from "@/components/Sing/menuBarData.ts";
+import { setFontToCss, setThemeToCss } from "@/domain/dom.ts";
+import { ExhaustiveError } from "@/type/utility.ts";
 
 const store = useStore();
 

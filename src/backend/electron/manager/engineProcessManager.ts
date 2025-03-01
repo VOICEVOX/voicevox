@@ -10,12 +10,12 @@ import {
   getProcessNameFromPid,
   type HostInfo,
   isAssignablePort,
-} from "../portHelper";
+} from "../portHelper.ts";
 
-import { getConfigManager } from "../electronConfig";
-import { getEngineInfoManager } from "./engineInfoManager";
-import { EngineId, EngineInfo } from "@/type/preload";
-import { createLogger } from "@/helpers/log";
+import { getConfigManager } from "../electronConfig.ts";
+import { getEngineInfoManager } from "./engineInfoManager.ts";
+import { EngineId, EngineInfo } from "@/type/preload.ts";
+import { createLogger } from "@/helpers/log.ts";
 
 const log = createLogger("EngineProcessManager");
 

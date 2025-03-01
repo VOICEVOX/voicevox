@@ -1,7 +1,7 @@
 import {
   getDefaultHotkeySettings,
   hotkeyActionNameSchema,
-} from "@/domain/hotkeyAction";
+} from "@/domain/hotkeyAction.ts";
 
 test("すべてのホットキーに初期値が設定されている", async () => {
   const defaultHotkeySettings = getDefaultHotkeySettings({ isMac: false });

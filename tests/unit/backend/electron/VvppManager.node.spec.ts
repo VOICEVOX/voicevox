@@ -2,10 +2,10 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 import { beforeEach, expect, test } from "vitest";
-import { createVvppFile } from "./helper";
-import { EngineId, MinimumEngineManifestType } from "@/type/preload";
-import VvppManager from "@/backend/electron/manager/vvppManager";
-import { uuid4 } from "@/helpers/random";
+import { createVvppFile } from "./helper.ts";
+import { EngineId, MinimumEngineManifestType } from "@/type/preload.ts";
+import VvppManager from "@/backend/electron/manager/vvppManager.ts";
+import { uuid4 } from "@/helpers/random.ts";
 
 interface Context {
   vvppEngineDir: string;

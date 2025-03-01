@@ -108,9 +108,9 @@ import BaseSwitch from "@/components/Base/BaseSwitch.vue";
 import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 import BaseRowCard from "@/components/Base/BaseRowCard.vue";
 import BaseTooltip from "@/components/Base/BaseTooltip.vue";
-import { useStore } from "@/store";
-import { ToolbarButtonTagType, ToolbarSettingType } from "@/type/preload";
-import { getToolbarButtonName } from "@/store/utility";
+import { useStore } from "@/store/index.ts";
+import { ToolbarButtonTagType, ToolbarSettingType } from "@/type/preload.ts";
+import { getToolbarButtonName } from "@/store/utility.ts";
 
 const props = defineProps<{
   modelValue: boolean;

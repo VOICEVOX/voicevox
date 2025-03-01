@@ -5,9 +5,9 @@
 
 import { QInput } from "quasar";
 import { ref, Ref, nextTick } from "vue";
-import { MenuItemButton, MenuItemSeparator } from "@/components/Menu/type";
+import { MenuItemButton, MenuItemSeparator } from "@/components/Menu/type.ts";
 import ContextMenu from "@/components/Menu/ContextMenu/Container.vue";
-import { SelectionHelperForQInput } from "@/helpers/SelectionHelperForQInput";
+import { SelectionHelperForQInput } from "@/helpers/SelectionHelperForQInput.ts";
 
 /**
  * <QInput> に対して切り取りやコピー、貼り付けの処理を行う

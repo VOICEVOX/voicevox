@@ -4,9 +4,9 @@
  * 音素は適当に別々の電子音にする。
  */
 
-import { FrameAudioQuery } from "@/openapi";
-import { generateWavFileData } from "@/helpers/fileDataGenerator";
-import { applyGaussianFilter } from "@/sing/utility";
+import { FrameAudioQuery } from "@/openapi/index.ts";
+import { generateWavFileData } from "@/helpers/fileDataGenerator.ts";
+import { applyGaussianFilter } from "@/sing/utility.ts";
 
 /** 0~1を返す疑似乱数生成器 */
 function Random(seed: number = 0) {

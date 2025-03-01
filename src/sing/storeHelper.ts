@@ -1,5 +1,5 @@
-import { NoteId } from "@/type/preload";
-import { Note } from "@/store/type";
+import { NoteId } from "@/type/preload.ts";
+import { Note } from "@/store/type.ts";
 
 export function getOverlappingNoteIds(notes: Note[]): Set<NoteId> {
   const events: {

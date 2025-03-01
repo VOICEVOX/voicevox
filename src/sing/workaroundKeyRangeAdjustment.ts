@@ -5,9 +5,9 @@
  * FIXME: スタイルの音域をエンジンから取得可能にし、音域調整量を計算するように修正する。
  */
 
-import { createLogger } from "@/helpers/log";
-import { Singer } from "@/store/type";
-import { CharacterInfo, EngineId } from "@/type/preload";
+import { createLogger } from "@/helpers/log.ts";
+import { Singer } from "@/store/type.ts";
+import { CharacterInfo, EngineId } from "@/type/preload.ts";
 
 const logger = createLogger("sing/workaroundKeyRangeAdjustment");
 

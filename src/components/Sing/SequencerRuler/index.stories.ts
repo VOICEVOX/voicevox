@@ -3,8 +3,8 @@ import { fn, expect, Mock } from "@storybook/test";
 import { ref } from "vue";
 
 import Presentation from "./Presentation.vue";
-import { UnreachableError } from "@/type/utility";
-import { ZOOM_X_MIN, ZOOM_X_MAX, ZOOM_X_STEP } from "@/sing/viewHelper";
+import { UnreachableError } from "@/type/utility.ts";
+import { ZOOM_X_MIN, ZOOM_X_MAX, ZOOM_X_STEP } from "@/sing/viewHelper.ts";
 
 const meta: Meta<typeof Presentation> = {
   component: Presentation,

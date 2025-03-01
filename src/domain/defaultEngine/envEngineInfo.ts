@@ -4,8 +4,8 @@
 
 import { z } from "zod";
 
-import { engineIdSchema } from "@/type/preload";
-import { isElectron, isNode } from "@/helpers/platform";
+import { engineIdSchema } from "@/type/preload.ts";
+import { isElectron, isNode } from "@/helpers/platform.ts";
 
 /** .envに書くデフォルトエンジン情報のスキーマ */
 const envEngineInfoSchema = z

@@ -13,8 +13,6 @@ import {
 import { configs as tsConfigs, parser as tsParser } from "typescript-eslint";
 import voicevoxPlugin from "./eslint-plugin/index.mjs";
 
-const __dirname = import.meta.dirname;
-
 /**
  * @typedef {import("@typescript-eslint/utils/ts-eslint").FlatConfig.Config} Config
  * @typedef {import("@typescript-eslint/utils/ts-eslint").FlatConfig.ConfigArray} ConfigArray
@@ -62,7 +60,7 @@ const vueParserOptions = {
 /** @type {ParserOptions} */
 const typeCheckedParserOptions = {
   project: ["./tsconfig.json"],
-  tsconfigRootDir: __dirname,
+  tsconfigRootDir: import.meta.dirname,
 };
 
 /** @type {Rules} */
@@ -117,7 +115,12 @@ export default defineConfigWithVueTs(
 
   {
     name: "voicevox/defaults/ignores",
-    ignores: ["dist/**/*", "dist_*/**/*", "node_modules/**/*"],
+    ignores: [
+      "dist/**/*",
+      "dist_*/**/*",
+      "storybook-static/**/*",
+      "node_modules/**/*",
+    ],
   },
 
   ...pluginConfig(vuePlugin.configs["flat/recommended"]),
@@ -180,6 +183,7 @@ export default defineConfigWithVueTs(
           ignoreRestSiblings: true,
         },
       ],
+      "import/extensions": ["error", "ignorePackages"],
       "import/order": "error",
       "no-console": process.env.NODE_ENV === "production" ? "warn" : "off",
       "no-constant-condition": ["error", { checkLoops: false }], // while(true) などを許可

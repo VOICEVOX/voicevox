@@ -38,9 +38,9 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { Singer } from "@/store/type";
-import { CharacterInfo } from "@/type/preload";
-import { getStyleDescription } from "@/sing/viewHelper";
+import { Singer } from "@/store/type.ts";
+import { CharacterInfo } from "@/type/preload.ts";
+import { getStyleDescription } from "@/sing/viewHelper.ts";
 
 const props = defineProps<{
   showSkeleton: boolean;

@@ -1,8 +1,8 @@
 import fs from "fs";
-import { migrateProjectFileObject } from "@/domain/project";
-import { EngineId, SpeakerId, StyleId } from "@/type/preload";
-import { resetMockMode } from "@/helpers/random";
-import path from "@/helpers/path";
+import { migrateProjectFileObject } from "@/domain/project/index.ts";
+import { EngineId, SpeakerId, StyleId } from "@/type/preload.ts";
+import { resetMockMode } from "@/helpers/random.ts";
+import path from "@/helpers/path.ts";
 
 const engineId = EngineId("074fc39e-678b-4c13-8916-ffca8d505d1d");
 

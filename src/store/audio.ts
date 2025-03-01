@@ -1,5 +1,5 @@
 import { toBase64 } from "fast-base64";
-import { createUILockAction, withProgress } from "./ui";
+import { createUILockAction, withProgress } from "./ui.ts";
 import {
   AudioItem,
   SaveResultObject,
@@ -11,7 +11,7 @@ import {
   transformCommandStore,
   FetchAudioResult,
   EditorAudioQuery,
-} from "./type";
+} from "./type.ts";
 import {
   buildAudioFileNameFromRawData,
   isAccentPhrasesTextDifferent,
@@ -24,22 +24,22 @@ import {
   TuningTranscription,
   filterCharacterInfosByStyleType,
   DEFAULT_PROJECT_NAME,
-} from "./utility";
-import { createPartialStore } from "./vuex";
-import { determineNextPresetKey } from "./preset";
+} from "./utility.ts";
+import { createPartialStore } from "./vuex.ts";
+import { determineNextPresetKey } from "./preset.ts";
 import {
   fetchAudioFromAudioItem,
   generateLabFromAudioQuery,
   handlePossiblyNotMorphableError,
   isMorphable,
-} from "./audioGenerate";
-import { ContinuousPlayer } from "./audioContinuousPlayer";
-import { convertAudioQueryFromEngineToEditor } from "./proxy";
+} from "./audioGenerate.ts";
+import { ContinuousPlayer } from "./audioContinuousPlayer.ts";
+import { convertAudioQueryFromEngineToEditor } from "./proxy.ts";
 import {
   convertHiraToKana,
   convertLongVowel,
   createKanaRegex,
-} from "@/domain/japanese";
+} from "@/domain/japanese/index.ts";
 import {
   AudioKey,
   CharacterInfo,
@@ -54,17 +54,17 @@ import {
   StyleId,
   StyleInfo,
   Voice,
-} from "@/type/preload";
-import { AudioQuery, AccentPhrase, Speaker, SpeakerInfo } from "@/openapi";
-import { base64ImageToUri, base64ToUri } from "@/helpers/base64Helper";
-import { getValueOrThrow, ResultError } from "@/type/result";
-import { generateWriteErrorMessage } from "@/helpers/fileHelper";
-import { uuid4 } from "@/helpers/random";
-import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
-import { UnreachableError } from "@/type/utility";
-import { errorToMessage } from "@/helpers/errorHelper";
-import path from "@/helpers/path";
-import { generateTextFileData } from "@/helpers/fileDataGenerator";
+} from "@/type/preload.ts";
+import { AudioQuery, AccentPhrase, Speaker, SpeakerInfo } from "@/openapi/index.ts";
+import { base64ImageToUri, base64ToUri } from "@/helpers/base64Helper.ts";
+import { getValueOrThrow, ResultError } from "@/type/result.ts";
+import { generateWriteErrorMessage } from "@/helpers/fileHelper.ts";
+import { uuid4 } from "@/helpers/random.ts";
+import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy.ts";
+import { UnreachableError } from "@/type/utility.ts";
+import { errorToMessage } from "@/helpers/errorHelper.ts";
+import path from "@/helpers/path.ts";
+import { generateTextFileData } from "@/helpers/fileDataGenerator.ts";
 
 function generateAudioKey() {
   return AudioKey(uuid4());

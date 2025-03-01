@@ -39,9 +39,9 @@
 import { useDialogPluginComponent } from "quasar";
 import { ref } from "vue";
 import CommonDialog from "./CommonDialog.vue";
-import { TimeSignature } from "@/store/type";
-import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
-import { BEAT_TYPES } from "@/sing/domain";
+import { TimeSignature } from "@/store/type.ts";
+import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy.ts";
+import { BEAT_TYPES } from "@/sing/domain.ts";
 
 const modelValue = defineModel<boolean>();
 const props = defineProps<{

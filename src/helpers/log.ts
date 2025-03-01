@@ -1,5 +1,5 @@
 import { type Logger } from "electron-log";
-import { isElectron, isNode } from "@/helpers/platform";
+import { isElectron, isNode } from "@/helpers/platform.ts";
 
 type LogLevel = "info" | "warn" | "error";
 type LogFunction = (...args: unknown[]) => void;

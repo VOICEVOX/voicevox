@@ -1,7 +1,7 @@
-import pastConfigs from "./pastConfigs";
+import pastConfigs from "./pastConfigs/index.ts";
 import configBugDefaultPreset1996 from "./pastConfigs/0.19.1-bug_default_preset.json";
-import { BaseConfigManager } from "@/backend/common/ConfigManager";
-import { getConfigSchema } from "@/type/preload";
+import { BaseConfigManager } from "@/backend/common/ConfigManager.ts";
+import { getConfigSchema } from "@/type/preload.ts";
 
 const configBase = {
   ...getConfigSchema({ isMac: false }).parse({}),

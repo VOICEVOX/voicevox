@@ -1,4 +1,4 @@
-import { AudioKey } from "@/type/preload";
+import { AudioKey } from "@/type/preload.ts";
 
 interface DI {
   /**

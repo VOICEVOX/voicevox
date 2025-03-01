@@ -1,22 +1,22 @@
 import fs from "fs";
 import path from "path";
 import { app, nativeTheme, shell } from "electron";
-import { hasSupportedGpu } from "./device";
-import { getConfigManager } from "./electronConfig";
-import { getEngineAndVvppController } from "./engineAndVvppController";
-import { writeFileSafely } from "./fileHelper";
-import { IpcMainHandle } from "./ipc";
-import { getEngineInfoManager } from "./manager/engineInfoManager";
-import { getEngineProcessManager } from "./manager/engineProcessManager";
-import { getWindowManager } from "./manager/windowManager";
-import { AssetTextFileNames } from "@/type/staticResources";
-import { failure, success } from "@/type/result";
+import { hasSupportedGpu } from "./device.ts";
+import { getConfigManager } from "./electronConfig.ts";
+import { getEngineAndVvppController } from "./engineAndVvppController.ts";
+import { writeFileSafely } from "./fileHelper.ts";
+import { IpcMainHandle } from "./ipc.ts";
+import { getEngineInfoManager } from "./manager/engineInfoManager.ts";
+import { getEngineProcessManager } from "./manager/engineProcessManager.ts";
+import { getWindowManager } from "./manager/windowManager.ts";
+import { AssetTextFileNames } from "@/type/staticResources.ts";
+import { failure, success } from "@/type/result.ts";
 import {
   defaultToolbarButtonSetting,
   EngineId,
   SystemError,
   TextAsset,
-} from "@/type/preload";
+} from "@/type/preload.ts";
 
 // エンジンのフォルダを開く
 function openEngineDirectory(engineId: EngineId) {

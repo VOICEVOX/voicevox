@@ -15,7 +15,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import { useStore } from "@/store";
+import { useStore } from "@/store/index.ts";
 import ContextMenu, {
   ContextMenuItemData,
 } from "@/components/Menu/ContextMenu/Container.vue";
@@ -23,8 +23,8 @@ import {
   getTimeSignaturePositions,
   MeasuresBeats,
   ticksToMeasuresBeats,
-} from "@/sing/domain";
-import { useRootMiscSetting } from "@/composables/useRootMiscSetting";
+} from "@/sing/domain.ts";
+import { useRootMiscSetting } from "@/composables/useRootMiscSetting.ts";
 
 const store = useStore();
 

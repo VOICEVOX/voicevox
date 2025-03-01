@@ -1,4 +1,4 @@
-import { CharacterInfo, DefaultStyleId, SpeakerId } from "@/type/preload";
+import { CharacterInfo, DefaultStyleId, SpeakerId } from "@/type/preload.ts";
 
 /** 話者に対応するデフォルトスタイルを取得する */
 export const getDefaultStyle = (

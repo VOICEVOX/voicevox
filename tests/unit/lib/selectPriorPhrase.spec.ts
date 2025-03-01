@@ -1,13 +1,13 @@
 import { it, expect } from "vitest";
-import { Phrase, PhraseKey, PhraseState } from "@/store/type";
+import { Phrase, PhraseKey, PhraseState } from "@/store/type.ts";
 import {
   DEFAULT_BPM,
   DEFAULT_TPQN,
   selectPriorPhrase,
   tickToSecond,
-} from "@/sing/domain";
-import { NoteId, TrackId } from "@/type/preload";
-import { uuid4 } from "@/helpers/random";
+} from "@/sing/domain.ts";
+import { NoteId, TrackId } from "@/type/preload.ts";
+import { uuid4 } from "@/helpers/random.ts";
 
 const trackId = TrackId("00000000-0000-0000-0000-000000000000");
 

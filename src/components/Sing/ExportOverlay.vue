@@ -24,8 +24,8 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { useStore } from "@/store";
-import { ExhaustiveError } from "@/type/utility";
+import { useStore } from "@/store/index.ts";
+import { ExhaustiveError } from "@/type/utility.ts";
 
 type ExportingInfo =
   | { nowExporting: false }

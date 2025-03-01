@@ -11,7 +11,7 @@ const createIni = (sizes, hashes) => {
 };
 
 // target: electron-builder.Target
-exports.default = async function (target) {
+module.exports.default = async function (target) {
   const projectName = process.env.npm_package_name;
   if (projectName == undefined) {
     const ErrorMessage = "Project name is undefined.";

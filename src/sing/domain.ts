@@ -1,5 +1,5 @@
-import { calculateHash, getLast, getNext, getPrev, isSorted } from "./utility";
-import { convertLongVowel, moraPattern } from "@/domain/japanese";
+import { calculateHash, getLast, getNext, getPrev, isSorted } from "./utility.ts";
+import { convertLongVowel, moraPattern } from "@/domain/japanese/index.ts";
 import {
   Note,
   Phrase,
@@ -9,9 +9,9 @@ import {
   PhraseKey,
   Track,
   EditorFrameAudioQuery,
-} from "@/store/type";
-import { FramePhoneme } from "@/openapi";
-import { NoteId, TrackId } from "@/type/preload";
+} from "@/store/type.ts";
+import { FramePhoneme } from "@/openapi/index.ts";
+import { NoteId, TrackId } from "@/type/preload.ts";
 
 // TODO: 後でdomain/type.tsに移す
 export type MeasuresBeats = {

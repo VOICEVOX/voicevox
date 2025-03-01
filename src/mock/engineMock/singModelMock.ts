@@ -2,9 +2,9 @@
  * ソング系の構造体を作るモック。
  */
 
-import { moraToPhonemes } from "./phonemeMock";
-import { convertHiraToKana } from "@/domain/japanese";
-import { Note, FramePhoneme } from "@/openapi";
+import { moraToPhonemes } from "./phonemeMock.ts";
+import { convertHiraToKana } from "@/domain/japanese/index.ts";
+import { Note, FramePhoneme } from "@/openapi/index.ts";
 
 function noteNumberToFrequency(noteNumber: number) {
   return 440 * Math.pow(2, (noteNumber - 69) / 12);

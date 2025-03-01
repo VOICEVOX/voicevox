@@ -1,7 +1,7 @@
-import { EngineState, EngineStoreState, EngineStoreTypes } from "./type";
-import { createUILockAction } from "./ui";
-import { createPartialStore } from "./vuex";
-import { createLogger } from "@/helpers/log";
+import { EngineState, EngineStoreState, EngineStoreTypes } from "./type.ts";
+import { createUILockAction } from "./ui.ts";
+import { createPartialStore } from "./vuex.ts";
+import { createLogger } from "@/helpers/log.ts";
 import type { EngineManifest } from "@/openapi";
 import type { EngineId, EngineInfo } from "@/type/preload";
 
