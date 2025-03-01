@@ -257,6 +257,7 @@ import {
   PitchEditTool,
 } from "@/store/type";
 import {
+  PREVIEW_SOUND_DURATION_SECONDS,
   getEndTicksOfPhrase,
   getMeasureDuration,
   getNoteDuration,
@@ -277,7 +278,6 @@ import {
   ZOOM_Y_MIN,
   ZOOM_Y_MAX,
   ZOOM_Y_STEP,
-  PREVIEW_SOUND_DURATION,
   getButton,
   PreviewMode,
   MouseButton,
@@ -1079,7 +1079,7 @@ const selectOnlyThis = (note: Note) => {
   void store.actions.SELECT_NOTES({ noteIds: [note.id] });
   void store.actions.PLAY_PREVIEW_SOUND({
     noteNumber: note.noteNumber,
-    duration: PREVIEW_SOUND_DURATION,
+    duration: PREVIEW_SOUND_DURATION_SECONDS,
   });
 };
 
@@ -1241,7 +1241,7 @@ const endPreview = () => {
       if (previewNotes.value.length === 1) {
         void store.actions.PLAY_PREVIEW_SOUND({
           noteNumber: previewNotes.value[0].noteNumber,
-          duration: PREVIEW_SOUND_DURATION,
+          duration: PREVIEW_SOUND_DURATION_SECONDS,
         });
       }
     }
@@ -1522,7 +1522,7 @@ const handleNotesArrowUp = () => {
   if (editedNotes.length === 1) {
     void store.actions.PLAY_PREVIEW_SOUND({
       noteNumber: editedNotes[0].noteNumber,
-      duration: PREVIEW_SOUND_DURATION,
+      duration: PREVIEW_SOUND_DURATION_SECONDS,
     });
   }
 };
@@ -1544,7 +1544,7 @@ const handleNotesArrowDown = () => {
   if (editedNotes.length === 1) {
     void store.actions.PLAY_PREVIEW_SOUND({
       noteNumber: editedNotes[0].noteNumber,
-      duration: PREVIEW_SOUND_DURATION,
+      duration: PREVIEW_SOUND_DURATION_SECONDS,
     });
   }
 };
