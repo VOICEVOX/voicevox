@@ -113,7 +113,7 @@ process.on("unhandledRejection", (reason) => {
   log.error(reason);
 });
 
-function initializeAppPaths() {
+function getAppPaths() {
   let appDirPath: string;
   let __static: string;
 
@@ -123,13 +123,12 @@ function initializeAppPaths() {
     __static = path.join(appDirPath, "public");
   } else {
     appDirPath = path.dirname(app.getPath("exe"));
-    process.chdir(appDirPath);
     __static = __dirname;
   }
 
   return { appDirPath, __static };
 }
-const { appDirPath, __static } = initializeAppPaths();
+const { appDirPath, __static } = getAppPaths();
 
 protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true, stream: true } },
@@ -196,7 +195,7 @@ initializeRuntimeInfoManager({
   appVersion: app.getVersion(),
 });
 initializeEngineInfoManager({
-  defaultEngineDir: appDirPath,
+  appDirPath,
   vvppEngineDir,
 });
 initializeEngineProcessManager({ onEngineProcessError });
