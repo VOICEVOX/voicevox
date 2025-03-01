@@ -10,6 +10,7 @@ import fs from "fs/promises";
 import { Readable } from "stream";
 import { ReadableStream } from "stream/web";
 import { pipeline } from "stream/promises";
+import { retryFetch } from "./helper.mjs";
 
 // OS名を定義するオブジェクト
 const OS = {
@@ -115,7 +116,7 @@ async function downloadAndUnarchive({ url }: { url: string }) {
     await fs.mkdir(TYPOS_BINARY_PATH, { recursive: true });
   }
 
-  const response = await fetch(url);
+  const response = await retryFetch(url);
   if (!response.ok) {
     throw new Error(`Failed to download binary: ${response.statusText}`);
   }
