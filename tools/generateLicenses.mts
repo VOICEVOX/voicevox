@@ -60,12 +60,7 @@ if (!sevenZipBinName) {
   throw new Error(`Unsupported platform: ${process.platform}`);
 }
 
-const sevenZipRoot = path.join(
-  import.meta.dirname,
-  "..",
-  "vendored",
-  "7z",
-);
+const sevenZipRoot = path.join(import.meta.dirname, "..", "vendored", "7z");
 
 const sevenZipVersionMatch = execFileSync(
   path.join(sevenZipRoot, sevenZipBinName),

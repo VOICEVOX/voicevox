@@ -4,20 +4,13 @@ import path from "path";
 
 import fs from "fs";
 import { pathToFileURL } from "url";
-import { app, dialog, Menu, nativeTheme, net, protocol, shell } from "electron";
+import { app, dialog, Menu, net, protocol, shell } from "electron";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 
 import electronLog from "electron-log/main";
 import dayjs from "dayjs";
-import { hasSupportedGpu } from "./device";
-import {
-  getEngineInfoManager,
-  initializeEngineInfoManager,
-} from "./manager/engineInfoManager";
-import {
-  getEngineProcessManager,
-  initializeEngineProcessManager,
-} from "./manager/engineProcessManager";
+import { initializeEngineInfoManager } from "./manager/engineInfoManager";
+import { initializeEngineProcessManager } from "./manager/engineProcessManager";
 import { initializeVvppManager, isVvppFile } from "./manager/vvppManager";
 import {
   getWindowManager,
@@ -28,17 +21,9 @@ import { initializeRuntimeInfoManager } from "./manager/RuntimeInfoManager";
 import { registerIpcMainHandle, ipcMainSendProxy, IpcMainHandle } from "./ipc";
 import { getConfigManager } from "./electronConfig";
 import { getEngineAndVvppController } from "./engineAndVvppController";
-import { writeFileSafely } from "./fileHelper";
-import { failure, success } from "@/type/result";
-import { AssetTextFileNames } from "@/type/staticResources";
-import {
-  EngineInfo,
-  SystemError,
-  defaultToolbarButtonSetting,
-  EngineId,
-  TextAsset,
-} from "@/type/preload";
-import { isMac } from "@/helpers/platform";
+import { getIpcMainHandle } from "./ipcMainHandle";
+import { EngineInfo } from "@/type/preload";
+import { isMac, isProduction } from "@/helpers/platform";
 import { createLogger } from "@/helpers/log";
 
 type SingleInstanceLockData = {
@@ -128,18 +113,23 @@ process.on("unhandledRejection", (reason) => {
   log.error(reason);
 });
 
-let appDirPath: string;
-let __static: string;
+function initializeAppPaths() {
+  let appDirPath: string;
+  let __static: string;
 
-if (isDevelopment) {
-  // __dirnameはdist_electronを指しているので、一つ上のディレクトリに移動する
-  appDirPath = path.resolve(__dirname, "..");
-  __static = path.join(appDirPath, "public");
-} else {
-  appDirPath = path.dirname(app.getPath("exe"));
-  process.chdir(appDirPath);
-  __static = __dirname;
+  if (isDevelopment) {
+    // __dirnameはdist_electronを指しているので、一つ上のディレクトリに移動する
+    appDirPath = path.resolve(__dirname, "..");
+    __static = path.join(appDirPath, "public");
+  } else {
+    appDirPath = path.dirname(app.getPath("exe"));
+    process.chdir(appDirPath);
+    __static = __dirname;
+  }
+
+  return { appDirPath, __static };
 }
+const { appDirPath, __static } = initializeAppPaths();
 
 protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true, stream: true } },
@@ -210,22 +200,11 @@ initializeEngineInfoManager({
   vvppEngineDir,
 });
 initializeEngineProcessManager({ onEngineProcessError });
-initializeVvppManager({ vvppEngineDir });
+initializeVvppManager({ vvppEngineDir, tmpDir: app.getPath("temp") });
 
 const configManager = getConfigManager();
 const windowManager = getWindowManager();
-const engineInfoManager = getEngineInfoManager();
-const engineProcessManager = getEngineProcessManager();
 const engineAndVvppController = getEngineAndVvppController();
-
-// エンジンのフォルダを開く
-function openEngineDirectory(engineId: EngineId) {
-  const engineDirectory = engineInfoManager.fetchEngineDirectory(engineId);
-
-  // Windows環境だとスラッシュ区切りのパスが動かない。
-  // path.resolveはWindowsだけバックスラッシュ区切りにしてくれるため、path.resolveを挟む。
-  void shell.openPath(path.resolve(engineDirectory));
-}
 
 /**
  * マルチエンジン機能が有効だった場合はtrueを返す。
@@ -245,7 +224,25 @@ function checkMultiEngineEnabled(): boolean {
   return enabled;
 }
 
-let filePathOnMac: string | undefined = undefined;
+/** コマンドライン引数を取得する */
+function getArgv(): string[] {
+  // 製品版でmacOS以外の場合、引数はargv[1]以降をそのまま
+  if (isProduction) {
+    if (!isMac) {
+      return process.argv.slice(1);
+    }
+  }
+  // 開発版の場合、引数は`--`がある場合は`--`以降、無い場合は引数なしとして扱う
+  else {
+    const index = process.argv.indexOf("--");
+    if (index !== -1) {
+      return process.argv.slice(index + 1);
+    }
+  }
+  return [];
+}
+
+let initialFilePath: string | undefined = getArgv()[0]; // TODO: カプセル化する
 
 const menuTemplateForMac: Electron.MenuItemConstructorOptions[] = [
   {
@@ -272,343 +269,15 @@ if (isMac) {
   }
 }
 
-/**
- * 保存に適した場所を選択するかキャンセルするまでダイアログを繰り返し表示する。
- * アンインストール等で消えうる場所などを避ける。
- * @param showDialogFunction ダイアログを表示する関数
- */
-const retryShowSaveDialogWhileSafeDir = async <
-  T extends Electron.OpenDialogReturnValue | Electron.SaveDialogReturnValue,
->(
-  showDialogFunction: () => Promise<T>,
-): Promise<T> => {
-  /**
-   * 指定されたパスが安全でないかどうかを判断する
-   */
-  const isUnsafePath = (filePath: string) => {
-    const unsafeSaveDirs = [appDirPath, app.getPath("userData")]; // アンインストールで消えうるフォルダ
-    return unsafeSaveDirs.some((unsafeDir) => {
-      const relativePath = path.relative(unsafeDir, filePath);
-      return !(
-        path.isAbsolute(relativePath) ||
-        relativePath.startsWith(`..${path.sep}`) ||
-        relativePath === ".."
-      );
-    });
-  };
-
-  /**
-   * 警告ダイアログを表示し、ユーザーが再試行を選択したかどうかを返す
-   */
-  const showWarningDialog = async () => {
-    const productName = app.getName().toUpperCase();
-    const warningResult = await windowManager.showMessageBox({
-      message: `指定された保存先は${productName}により自動的に削除される可能性があります。\n他の場所に保存することをおすすめします。`,
-      type: "warning",
-      buttons: ["保存場所を変更", "無視して保存"],
-      defaultId: 0,
-      title: "警告",
-      cancelId: 0,
-    });
-    return warningResult.response === 0 ? "retry" : "forceSave";
-  };
-
-  while (true) {
-    const result = await showDialogFunction();
-    // キャンセルされた場合、結果を直ちに返す
-    if (result.canceled) return result;
-
-    // 選択されたファイルパスを取得
-    const filePath =
-      "filePaths" in result ? result.filePaths[0] : result.filePath;
-
-    // 選択されたパスが安全かどうかを確認
-    if (isUnsafePath(filePath)) {
-      const result = await showWarningDialog();
-      if (result === "retry") continue; // ユーザーが保存場所を変更を選択した場合
-    }
-    return result; // 安全なパスが選択された場合
-  }
-};
-
 // プロセス間通信
-registerIpcMainHandle<IpcMainHandle>({
-  GET_APP_INFOS: () => {
-    const name = app.getName();
-    const version = app.getVersion();
-    return {
-      name,
-      version,
-    };
-  },
-
-  GET_TEXT_ASSET: async (_, textType) => {
-    const fileName = path.join(__static, AssetTextFileNames[textType]);
-    const text = await fs.promises.readFile(fileName, "utf-8");
-    if (textType === "OssLicenses" || textType === "UpdateInfos") {
-      return JSON.parse(text) as TextAsset[typeof textType];
-    }
-    return text;
-  },
-
-  GET_ALT_PORT_INFOS: () => {
-    return engineInfoManager.altPortInfos;
-  },
-
-  /**
-   * 保存先になるディレクトリを選ぶダイアログを表示する。
-   */
-  SHOW_SAVE_DIRECTORY_DIALOG: async (_, { title }) => {
-    const result = await retryShowSaveDialogWhileSafeDir(() =>
-      windowManager.showOpenDialog({
-        title,
-        properties: [
-          "openDirectory",
-          "createDirectory",
-          "treatPackageAsDirectory",
-        ],
-      }),
-    );
-    if (result.canceled) {
-      return undefined;
-    }
-    return result.filePaths[0];
-  },
-
-  SHOW_VVPP_OPEN_DIALOG: async (_, { title, defaultPath }) => {
-    const result = await windowManager.showOpenDialog({
-      title,
-      defaultPath,
-      filters: [
-        { name: "VOICEVOX Plugin Package", extensions: ["vvpp", "vvppp"] },
-      ],
-      properties: ["openFile", "createDirectory", "treatPackageAsDirectory"],
-    });
-    return result.filePaths[0];
-  },
-
-  /**
-   * ディレクトリ選択ダイアログを表示する。
-   * 保存先として選ぶ場合は SHOW_SAVE_DIRECTORY_DIALOG を使うべき。
-   */
-  SHOW_OPEN_DIRECTORY_DIALOG: async (_, { title }) => {
-    const result = await windowManager.showOpenDialog({
-      title,
-      properties: [
-        "openDirectory",
-        "createDirectory",
-        "treatPackageAsDirectory",
-      ],
-    });
-    if (result.canceled) {
-      return undefined;
-    }
-    return result.filePaths[0];
-  },
-
-  SHOW_PROJECT_SAVE_DIALOG: async (_, { title, defaultPath }) => {
-    const result = await retryShowSaveDialogWhileSafeDir(() =>
-      windowManager.showSaveDialog({
-        title,
-        defaultPath,
-        filters: [{ name: "VOICEVOX Project file", extensions: ["vvproj"] }],
-        properties: ["showOverwriteConfirmation"],
-      }),
-    );
-    if (result.canceled) {
-      return undefined;
-    }
-    return result.filePath;
-  },
-
-  SHOW_PROJECT_LOAD_DIALOG: async (_, { title }) => {
-    const result = await windowManager.showOpenDialog({
-      title,
-      filters: [{ name: "VOICEVOX Project file", extensions: ["vvproj"] }],
-      properties: ["openFile", "createDirectory", "treatPackageAsDirectory"],
-    });
-    if (result.canceled) {
-      return undefined;
-    }
-    return result.filePaths;
-  },
-
-  SHOW_WARNING_DIALOG: (_, { title, message }) => {
-    return windowManager.showMessageBox({
-      type: "warning",
-      title,
-      message,
-    });
-  },
-
-  SHOW_ERROR_DIALOG: (_, { title, message }) => {
-    return windowManager.showMessageBox({
-      type: "error",
-      title,
-      message,
-    });
-  },
-
-  SHOW_IMPORT_FILE_DIALOG: (_, { title, name, extensions }) => {
-    return windowManager.showOpenDialogSync({
-      title,
-      filters: [{ name: name ?? "Text", extensions: extensions ?? ["txt"] }],
-      properties: ["openFile", "createDirectory", "treatPackageAsDirectory"],
-    })?.[0];
-  },
-
-  SHOW_EXPORT_FILE_DIALOG: async (
-    _,
-    { title, defaultPath, extensionName, extensions },
-  ) => {
-    const result = await retryShowSaveDialogWhileSafeDir(() =>
-      windowManager.showSaveDialog({
-        title,
-        defaultPath,
-        filters: [{ name: extensionName, extensions: extensions }],
-        properties: ["createDirectory"],
-      }),
-    );
-    return result.filePath;
-  },
-
-  IS_AVAILABLE_GPU_MODE: () => {
-    return hasSupportedGpu(process.platform);
-  },
-
-  IS_MAXIMIZED_WINDOW: () => {
-    return windowManager.isMaximized();
-  },
-
-  CLOSE_WINDOW: () => {
-    appState.willQuit = true;
-    windowManager.destroyWindow();
-  },
-  MINIMIZE_WINDOW: () => {
-    windowManager.minimize();
-  },
-  TOGGLE_MAXIMIZE_WINDOW: () => {
-    windowManager.toggleMaximizeWindow();
-  },
-  TOGGLE_FULLSCREEN: () => {
-    windowManager.toggleFullScreen();
-  },
-  /** UIの拡大 */
-  ZOOM_IN: () => {
-    windowManager.zoomIn();
-  },
-  /** UIの縮小 */
-  ZOOM_OUT: () => {
-    windowManager.zoomOut();
-  },
-  /** UIの拡大率リセット */
-  ZOOM_RESET: () => {
-    windowManager.zoomReset();
-  },
-  OPEN_LOG_DIRECTORY: () => {
-    void shell.openPath(app.getPath("logs"));
-  },
-
-  ENGINE_INFOS: () => {
-    // エンジン情報を設定ファイルに保存しないためにelectron-storeは使わない
-    return engineInfoManager.fetchEngineInfos();
-  },
-
-  RESTART_ENGINE: async (_, { engineId }) => {
-    return engineProcessManager.restartEngine(engineId);
-  },
-
-  OPEN_ENGINE_DIRECTORY: async (_, { engineId }) => {
-    openEngineDirectory(engineId);
-  },
-
-  HOTKEY_SETTINGS: (_, { newData }) => {
-    if (newData != undefined) {
-      const hotkeySettings = configManager.get("hotkeySettings");
-      const hotkeySetting = hotkeySettings.find(
-        (hotkey) => hotkey.action == newData.action,
-      );
-      if (hotkeySetting != undefined) {
-        hotkeySetting.combination = newData.combination;
-      }
-      configManager.set("hotkeySettings", hotkeySettings);
-    }
-    return configManager.get("hotkeySettings");
-  },
-
-  ON_VUEX_READY: () => {
-    windowManager.show();
-  },
-
-  CHECK_FILE_EXISTS: (_, { file }) => {
-    return fs.existsSync(file);
-  },
-  CHANGE_PIN_WINDOW: () => {
-    windowManager.togglePinWindow();
-  },
-
-  GET_DEFAULT_TOOLBAR_SETTING: () => {
-    return defaultToolbarButtonSetting;
-  },
-
-  GET_SETTING: (_, key) => {
-    return configManager.get(key);
-  },
-
-  SET_SETTING: (_, key, newValue) => {
-    configManager.set(key, newValue);
-    return configManager.get(key);
-  },
-
-  SET_ENGINE_SETTING: async (_, engineId, engineSetting) => {
-    engineAndVvppController.updateEngineSetting(engineId, engineSetting);
-  },
-
-  SET_NATIVE_THEME: (_, source) => {
-    nativeTheme.themeSource = source;
-  },
-
-  INSTALL_VVPP_ENGINE: async (_, path: string) => {
-    return await engineAndVvppController.installVvppEngine(path);
-  },
-
-  UNINSTALL_VVPP_ENGINE: async (_, engineId: EngineId) => {
-    return await engineAndVvppController.uninstallVvppEngine(engineId);
-  },
-
-  VALIDATE_ENGINE_DIR: (_, { engineDir }) => {
-    return engineInfoManager.validateEngineDir(engineDir);
-  },
-
-  RELOAD_APP: async (_, { isMultiEngineOffMode }) => {
-    await windowManager.reload(isMultiEngineOffMode);
-  },
-
-  WRITE_FILE: (_, { filePath, buffer }) => {
-    try {
-      writeFileSafely(
-        filePath,
-        new DataView(buffer instanceof Uint8Array ? buffer.buffer : buffer),
-      );
-      return success(undefined);
-    } catch (e) {
-      // throwだと`.code`の情報が消えるのでreturn
-      const a = e as SystemError;
-      return failure(a.code, a);
-    }
-  },
-
-  READ_FILE: async (_, { filePath }) => {
-    try {
-      const result = await fs.promises.readFile(filePath);
-      return success(result);
-    } catch (e) {
-      // throwだと`.code`の情報が消えるのでreturn
-      const a = e as SystemError;
-      return failure(a.code, a);
-    }
-  },
-});
+registerIpcMainHandle<IpcMainHandle>(
+  getIpcMainHandle({
+    appStateGetter: () => appState,
+    staticDirPath: __static,
+    appDirPath,
+    initialFilePathGetter: () => initialFilePath,
+  }),
+);
 
 // app callback
 app.on("web-contents-created", (_e, contents) => {
@@ -631,11 +300,6 @@ app.on("web-contents-created", (_e, contents) => {
       event.preventDefault();
     }
   });
-});
-
-app.on("window-all-closed", () => {
-  log.info("All windows closed. Quitting app");
-  app.quit();
 });
 
 // Called before window closing
@@ -689,7 +353,7 @@ app.once("will-finish-launching", () => {
   // macOS only
   app.once("open-file", (event, filePath) => {
     event.preventDefault();
-    filePathOnMac = filePath;
+    initialFilePath = filePath;
   });
 });
 
@@ -817,45 +481,38 @@ void app.whenReady().then(async () => {
     );
   }
 
-  // runEngineAllの前にVVPPを読み込む
-  let filePath: string | undefined;
-  if (process.platform === "darwin") {
-    filePath = filePathOnMac;
-  } else {
-    if (process.argv.length > 1) {
-      filePath = process.argv[1];
-    }
-  }
-
   // 多重起動防止
   // TODO: readyを待たずにもっと早く実行すべき
   if (
     !isDevelopment &&
     !isTest &&
     !app.requestSingleInstanceLock({
-      filePath,
-    } as SingleInstanceLockData)
+      filePath: initialFilePath,
+    } satisfies SingleInstanceLockData)
   ) {
     log.info("VOICEVOX already running. Cancelling launch.");
-    log.info(`File path sent: ${filePath}`);
+    log.info(`File path sent: ${initialFilePath}`);
     appState.willQuit = true;
     app.quit();
     return;
   }
 
-  if (filePath && isVvppFile(filePath)) {
-    log.info(`vvpp file install: ${filePath}`);
-    // FIXME: GUI側に合流させる
-    if (checkMultiEngineEnabled()) {
-      await engineAndVvppController.installVvppEngineWithWarning({
-        vvppPath: filePath,
-        reloadNeeded: false,
-      });
+  if (initialFilePath) {
+    log.info(`Initial file path provided: ${initialFilePath}`);
+    if (isVvppFile(initialFilePath)) {
+      log.info(`vvpp file install: ${initialFilePath}`);
+      // FIXME: GUI側に合流させる
+      if (checkMultiEngineEnabled()) {
+        await engineAndVvppController.installVvppEngineWithWarning({
+          vvppPath: initialFilePath,
+          reloadNeeded: false,
+        });
+      }
     }
   }
 
   await engineAndVvppController.launchEngines();
-  await windowManager.createWindow(filePath);
+  await windowManager.createWindow();
 });
 
 // 他のプロセスが起動したとき、`requestSingleInstanceLock`経由で`rawData`が送信される。

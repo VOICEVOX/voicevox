@@ -80,6 +80,9 @@ pnpm run electron:serve
 
 # ビルド時に近い環境で実行
 pnpm run electron:serve --mode production
+
+# 引数を指定して実行
+pnpm run electron:serve -- ...
 ```
 
 音声合成エンジンのリポジトリはこちらです <https://github.com/VOICEVOX/voicevox_engine>

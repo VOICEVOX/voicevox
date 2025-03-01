@@ -23,6 +23,7 @@
   "include": [
     "playwright.config.ts",
     "*.mts",
+    "eslint-plugin/**/*.mts",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/**/*.vue",

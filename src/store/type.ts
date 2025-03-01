@@ -482,6 +482,7 @@ export type AudioStoreTypes = {
  * Audio Command Store Types
  */
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export type AudioCommandStoreState = {
   //
 };
@@ -1388,6 +1389,7 @@ export type SingingStoreTypes = {
   };
 };
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export type SingingCommandStoreState = {
   //
 };
@@ -1596,7 +1598,7 @@ export type EngineStoreState = {
 };
 
 export type EngineStoreTypes = {
-  GET_ENGINE_INFOS: {
+  PULL_AND_INIT_ENGINE_INFOS: {
     action(): void;
   };
 
@@ -1604,7 +1606,7 @@ export type EngineStoreTypes = {
     mutation: { engineId: EngineId; engineInfo: EngineInfo };
   };
 
-  GET_ONLY_ENGINE_INFOS: {
+  PULL_ENGINE_INFOS: {
     action: (payload: { engineIds: EngineId[] }) => Promise<void>;
   };
 
@@ -1612,7 +1614,7 @@ export type EngineStoreTypes = {
     getter: EngineInfo[];
   };
 
-  GET_ALT_PORT_INFOS: {
+  PULL_ALT_PORT_INFOS: {
     action(): Promise<AltPortInfos>;
   };
 
@@ -1853,10 +1855,26 @@ export type ProjectStoreTypes = {
     action(payload: { overwrite?: boolean }): boolean;
   };
 
+  SAVE_PROJECT_FILE_AS_COPY: {
+    action(payload: { filePath?: string }): boolean;
+  };
+
+  PROMPT_PROJECT_SAVE_FILE_PATH: {
+    action(payload: { defaultFilePath?: string }): Promise<string | undefined>;
+  };
+
+  WRITE_PROJECT_FILE: {
+    action(payload: { filePath: string }): Promise<void>;
+  };
+
   SAVE_OR_DISCARD_PROJECT_FILE: {
     action(palyoad: {
       additionalMessage?: string;
     }): "saved" | "discarded" | "canceled";
+  };
+
+  GET_INITIAL_PROJECT_FILE_PATH: {
+    action(): Promise<string | undefined>;
   };
 
   IS_EDITED: {

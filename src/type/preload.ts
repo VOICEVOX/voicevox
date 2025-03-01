@@ -70,30 +70,23 @@ export type TextAsset = {
 };
 
 export interface Sandbox {
-  getAppInfos(): Promise<AppInfos>;
   getTextAsset<K extends keyof TextAsset>(textType: K): Promise<TextAsset[K]>;
   getAltPortInfos(): Promise<AltPortInfos>;
+  getInitialProjectFilePath(): Promise<string | undefined>;
   showSaveDirectoryDialog(obj: { title: string }): Promise<string | undefined>;
-  showVvppOpenDialog(obj: {
-    title: string;
-    defaultPath?: string;
-  }): Promise<string | undefined>;
   showOpenDirectoryDialog(obj: { title: string }): Promise<string | undefined>;
-  showProjectSaveDialog(obj: {
+  showOpenFileDialog(obj: {
     title: string;
-    defaultPath?: string;
-  }): Promise<string | undefined>;
-  showProjectLoadDialog(obj: { title: string }): Promise<string[] | undefined>;
-  showImportFileDialog(obj: {
-    title: string;
-    name?: string;
-    extensions?: string[];
-  }): Promise<string | undefined>;
-  showExportFileDialog(obj: {
-    title: string;
-    defaultPath?: string;
-    extensionName: string;
+    name: string;
+    mimeType: string;
     extensions: string[];
+    defaultPath?: string;
+  }): Promise<string | undefined>;
+  showSaveFileDialog(obj: {
+    title: string;
+    name: string;
+    extensions: string[];
+    defaultPath?: string;
   }): Promise<string | undefined>;
   writeFile(obj: {
     filePath: string;
@@ -497,7 +490,7 @@ export type ConfigType = z.infer<ReturnType<typeof getConfigSchema>>;
 // workaround. SystemError(https://nodejs.org/api/errors.html#class-systemerror)が2022/05/19時点ではNodeJSの型定義に記述されていないためこれを追加しています。
 export class SystemError extends Error {
   code?: string | undefined;
-  constructor(message: string, code?: string | undefined) {
+  constructor(message: string, code?: string) {
     super(message);
 
     this.name = new.target.name;
