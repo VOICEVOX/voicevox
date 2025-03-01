@@ -113,6 +113,15 @@
         icon="stop"
         @click="stop"
       />
+      <QBtn
+        flat
+        round
+        size="sm"
+        class="sing-playback-button sing-playback-loop"
+        :class="{ 'sing-playback-loop-enabled': isLoopEnabled }"
+        icon="loop"
+        @click="toggleLoop"
+      />
       <PlayheadPositionDisplay class="sing-playhead-position" />
     </div>
     <!-- settings for edit controls -->
@@ -168,6 +177,7 @@ import {
   BEAT_TYPES,
   getSnapTypes,
   getTimeSignaturePositions,
+  getMeasureDuration,
   isTriplet,
   isValidBeatType,
   isValidBeats,
@@ -410,6 +420,72 @@ const stop = () => {
 
 const goToZero = () => {
   void store.actions.SET_PLAYHEAD_POSITION({ position: 0 });
+};
+
+const isLoopEnabled = computed(() => store.state.isLoopEnabled);
+
+const toggleLoop = async () => {
+  // ループを有効にする場合、
+  // ループ範囲が未設定の場合は現在のplayheadが含まれる1小節をループ範囲とする
+  if (!isLoopEnabled.value) {
+    const loopStartTick = store.state.loopStartTick;
+    const loopEndTick = store.state.loopEndTick;
+
+    // NOTE: LoopLaneのaddOneMeasureLoopと基本的なロジックは同じなものの、
+    // 開始位置の指定方法が異なるため共通化はしていない。
+    // Toolbar内はplayhead位置を基準に設定
+    // LoopLaneはユーザーのクリック位置を基準に設定
+    // 共通化の意味ではむしろ特定の位置の拍子記号を取得する関数を作った方がいいかもです
+
+    // ループ範囲が未設定の場合は、現在のplayhead位置の1小節分をループ範囲とする
+    if (loopStartTick === loopEndTick) {
+      // 現在のplayhead位置のTimeSignature位置index
+      const playheadTsIndex = tsPositions.value.findIndex(
+        (pos) => pos > playheadTicks.value,
+      );
+      // 現在の小節位置index
+      const currentTsIndex =
+        playheadTsIndex === -1
+          ? tsPositions.value.length - 1
+          : playheadTsIndex - 1;
+      // 現在のplayheadがある小節
+      const currentTs = timeSignatures.value[currentTsIndex];
+
+      if (!currentTs) {
+        throw new Error("Could not find current time signature");
+      }
+
+      // 現在のplayheadがある小節の長さ
+      const oneMeasureTicks = getMeasureDuration(
+        currentTs.beats,
+        currentTs.beatType,
+        tpqn.value,
+      );
+
+      // 現在のplayheadがある小節の開始位置
+      const currentMeasureStartTick =
+        tsPositions.value[currentTsIndex] +
+        Math.round(
+          (playheadTicks.value - tsPositions.value[currentTsIndex]) /
+            oneMeasureTicks,
+        ) *
+          oneMeasureTicks;
+
+      // 現在のplayheadがある小節の終了位置
+      const currentMeasureEndTick = currentMeasureStartTick + oneMeasureTicks;
+
+      // 小節の頭から1小節分のループ範囲を設定
+      await store.actions.SET_LOOP_RANGE({
+        loopStartTick: currentMeasureStartTick,
+        loopEndTick: currentMeasureEndTick,
+      });
+    }
+  }
+
+  // ループをトグルする
+  void store.actions.SET_LOOP_ENABLED({
+    isLoopEnabled: !isLoopEnabled.value,
+  });
 };
 
 const volume = computed({
@@ -685,6 +761,17 @@ const snapTypeSelectModel = computed({
 
   &.sing-playback-stop .q-btn__wrapper .q-icon {
     transform: translateX(-0.5px);
+  }
+}
+
+.sing-playback-loop {
+  margin-left: 8px;
+  color: var(--scheme-color-on-surface-variant);
+  background: transparent;
+
+  &-enabled {
+    color: var(--scheme-color-primary);
+    background: var(--scheme-color-secondary-container);
   }
 }
 
