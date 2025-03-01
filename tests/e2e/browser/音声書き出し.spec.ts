@@ -1,13 +1,13 @@
 import { test, expect, Page } from "@playwright/test";
 import { gotoHome, navigateToMain } from "../navigators";
 import { getQuasarMenu } from "../locators";
-import { mockShowExportFileDialog, mockWriteFile } from "./utility";
+import { mockShowSaveFileDialog, mockWriteFile } from "./utility";
 
 test.beforeEach(gotoHome);
 
 /** 選択音声を書き出し、その音声ファイルのバイナリをスナップショットテストする */
 async function exportSelectedAudioAndSnapshot(page: Page, name: string) {
-  const { getFileIds } = await mockShowExportFileDialog(page);
+  const { getFileIds } = await mockShowSaveFileDialog(page);
   const { getWrittenFileBuffers } = await mockWriteFile(page);
 
   await page.getByRole("button", { name: "ファイル" }).click();
