@@ -71,7 +71,7 @@ jobs:
             installer_artifact_name: linux-x64-cpu-appimage
             linux_artifact_name: "VOICEVOX.${version}-x64.${ext}"
             linux_executable_name: voicevox
-            linux_appimage_7z_name: VOICEVOX-CPU.AppImage
+            linux_appimage_7z_name: VOICEVOX-X64-CPU.AppImage
             os: ubuntu-20.04
           # Linux CPU (arm64)
           - artifact_name: linux-arm64-cpu-prepackage
@@ -83,7 +83,7 @@ jobs:
             installer_artifact_name: linux-arm64-cpu-appimage
             linux_artifact_name: "VOICEVOX.${version}-arm64.${ext}"
             linux_executable_name: voicevox
-            linux_appimage_7z_name: VOICEVOX-CPU.AppImage
+            linux_appimage_7z_name: VOICEVOX-ARM64-CPU.AppImage
             os: ubuntu-22.04-arm
           # Windows CUDA
           - artifact_name: windows-nvidia-prepackage
