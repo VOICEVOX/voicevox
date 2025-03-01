@@ -117,7 +117,12 @@ export default defineConfigWithVueTs(
 
   {
     name: "voicevox/defaults/ignores",
-    ignores: ["dist/**/*", "dist_*/**/*", "node_modules/**/*"],
+    ignores: [
+      "dist/**/*",
+      "dist_*/**/*",
+      "storybook-static/**/*",
+      "node_modules/**/*",
+    ],
   },
 
   ...pluginConfig(vuePlugin.configs["flat/recommended"]),
