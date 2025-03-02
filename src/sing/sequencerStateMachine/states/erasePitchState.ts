@@ -41,32 +41,6 @@ export class ErasePitchState
     this.applyPreview = false;
   }
 
-  private previewErasePitch(context: Context) {
-    if (this.innerContext == undefined) {
-      throw new Error("innerContext is undefined.");
-    }
-    if (context.previewPitchEdit.value == undefined) {
-      throw new Error("previewPitchEdit.value is undefined.");
-    }
-    if (context.previewPitchEdit.value.type !== "erase") {
-      throw new Error("previewPitchEdit.value.type is not erase.");
-    }
-    const cursorFrame = Math.max(0, this.currentCursorPos.frame);
-    const tempPitchEdit = { ...context.previewPitchEdit.value };
-
-    if (tempPitchEdit.startFrame > cursorFrame) {
-      tempPitchEdit.frameLength += tempPitchEdit.startFrame - cursorFrame;
-      tempPitchEdit.startFrame = cursorFrame;
-    }
-
-    const lastFrame = tempPitchEdit.startFrame + tempPitchEdit.frameLength - 1;
-    if (lastFrame < cursorFrame) {
-      tempPitchEdit.frameLength += cursorFrame - lastFrame;
-    }
-
-    context.previewPitchEdit.value = tempPitchEdit;
-  }
-
   onEnter(context: Context) {
     context.previewPitchEdit.value = {
       type: "erase",
@@ -148,5 +122,31 @@ export class ErasePitchState
     context.previewPitchEdit.value = undefined;
     context.cursorState.value = "UNSET";
     context.previewMode.value = "IDLE";
+  }
+
+  private previewErasePitch(context: Context) {
+    if (this.innerContext == undefined) {
+      throw new Error("innerContext is undefined.");
+    }
+    if (context.previewPitchEdit.value == undefined) {
+      throw new Error("previewPitchEdit.value is undefined.");
+    }
+    if (context.previewPitchEdit.value.type !== "erase") {
+      throw new Error("previewPitchEdit.value.type is not erase.");
+    }
+    const cursorFrame = Math.max(0, this.currentCursorPos.frame);
+    const tempPitchEdit = { ...context.previewPitchEdit.value };
+
+    if (tempPitchEdit.startFrame > cursorFrame) {
+      tempPitchEdit.frameLength += tempPitchEdit.startFrame - cursorFrame;
+      tempPitchEdit.startFrame = cursorFrame;
+    }
+
+    const lastFrame = tempPitchEdit.startFrame + tempPitchEdit.frameLength - 1;
+    if (lastFrame < cursorFrame) {
+      tempPitchEdit.frameLength += cursorFrame - lastFrame;
+    }
+
+    context.previewPitchEdit.value = tempPitchEdit;
   }
 }
