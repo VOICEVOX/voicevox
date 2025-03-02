@@ -36,7 +36,6 @@ const TYPOS_URLS = {
       "https://github.com/crate-ci/typos/releases/download/v1.30.0/typos-v1.30.0-x86_64-apple-darwin.tar.gz",
   },
   [OS.LINUX]: {
-    // typos v.1.21.0にARM64(aarch64)対応のものが無かったので最新にしておく
     [CPU_ARCHITECTURE.ARM]:
       "https://github.com/crate-ci/typos/releases/download/v1.30.0/typos-v1.30.0-aarch64-unknown-linux-musl.tar.gz",
     [CPU_ARCHITECTURE.X86_64]:
