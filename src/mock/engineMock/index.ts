@@ -82,7 +82,6 @@ export function createOpenAPIEngineMock(): DefaultApiInterface {
       return getSingersMock();
     },
 
-
     async singerInfo(payload: SingerInfoRequest): Promise<SpeakerInfo> {
       return getSpeakerInfoMock(payload.speakerUuid);
     },
