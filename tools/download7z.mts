@@ -1,9 +1,10 @@
 /**
  * OSに合った7-Zipのバイナリとライセンスをダウンロードするスクリプト。
  */
-import path from "path";
-import fs from "fs";
 import { spawnSync } from "child_process";
+import fs from "fs";
+import { arch } from "os";
+import path from "path";
 import { retryFetch } from "./helper.mjs";
 
 const distPath = path.resolve(import.meta.dirname, "..", "vendored", "7z");
@@ -38,7 +39,19 @@ switch (process.platform) {
     break;
   }
   case "linux": {
-    url = "https://www.7-zip.org/a/7z2201-linux-x64.tar.xz";
+    switch (arch()) {
+      case "arm64": {
+        url = "https://www.7-zip.org/a/7z2201-linux-arm64.tar.xz";
+        break;
+      }
+      case "x64": {
+        url = "https://www.7-zip.org/a/7z2201-linux-x64.tar.xz";
+        break;
+      }
+      default: {
+        throw new Error("Unsupported architecture for Linux");
+      }
+    }
     filesToExtract = ["7zzs", "License.txt"];
     break;
   }

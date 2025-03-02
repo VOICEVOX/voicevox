@@ -36,6 +36,8 @@ const TYPOS_URLS = {
       "https://github.com/crate-ci/typos/releases/download/v1.30.0/typos-v1.30.0-x86_64-apple-darwin.tar.gz",
   },
   [OS.LINUX]: {
+    [CPU_ARCHITECTURE.ARM]:
+      "https://github.com/crate-ci/typos/releases/download/v1.30.0/typos-v1.30.0-aarch64-unknown-linux-musl.tar.gz",
     [CPU_ARCHITECTURE.X86_64]:
       "https://github.com/crate-ci/typos/releases/download/v1.30.0/typos-v1.30.0-x86_64-unknown-linux-musl.tar.gz",
   },
