@@ -798,6 +798,15 @@ const previewAdd = () => {
 const previewMove = () => {
   const cursorBaseX = (scrollX.value + cursorX.value) / zoomX.value;
   const cursorBaseY = (scrollY.value + cursorY.value) / zoomY.value;
+
+  if (sequencerBody.value) {
+    if (cursorX.value > sequencerBody.value.clientWidth - 5) {
+      sequencerBody.value.scrollTo({
+        left: sequencerBody.value.scrollLeft + 5,
+        behavior: "auto",
+      });
+    }
+  }
   const cursorTicks = baseXToTick(cursorBaseX, tpqn.value);
   const cursorNoteNumber = baseYToNoteNumber(cursorBaseY);
   const draggingNote = copiedNotesForPreview.get(draggingNoteId);
@@ -1338,6 +1347,7 @@ const onMouseDown = (event: MouseEvent) => {
   // TODO: isSelfEventTarget、mouseButton、editingLyricNoteId以外は必要ないが、
   // 必要な依存関係明示のため(とuseEditModeからのコピペのためcontextに入れている
   // ステートマシン実装時に要修正
+
   const mouseDownContext = {
     ctrlKey: ctrlKey.value,
     shiftKey: shiftKey.value,
@@ -1349,7 +1359,7 @@ const onMouseDown = (event: MouseEvent) => {
     mouseButton: getButton(event),
     editingLyricNoteId: state.editingLyricNoteId,
   } satisfies EditModeContext;
-  // マウスダウン時の振る舞い
+
   const behavior = determineMouseDownBehavior(mouseDownContext);
 
   switch (behavior) {
