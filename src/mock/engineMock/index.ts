@@ -85,9 +85,9 @@ export function createOpenAPIEngineMock(): DefaultApiInterface {
     },
 
     async singerInfoSingerInfoGet(
-      paload: SingerInfoSingerInfoGetRequest,
+      payload: SingerInfoSingerInfoGetRequest,
     ): Promise<SpeakerInfo> {
-      return getSpeakerInfoMock(paload.speakerUuid);
+      return getSpeakerInfoMock(payload.speakerUuid);
     },
 
     // トーク系
