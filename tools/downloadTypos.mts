@@ -31,20 +31,20 @@ const TYPOS_BINARY_PATH = resolve(BINARY_BASE_PATH, "typos");
 const TYPOS_URLS = {
   [OS.MACOS]: {
     [CPU_ARCHITECTURE.ARM]:
-      "https://github.com/crate-ci/typos/releases/download/v1.21.0/typos-v1.21.0-aarch64-apple-darwin.tar.gz",
+      "https://github.com/crate-ci/typos/releases/download/v1.30.0/typos-v1.30.0-aarch64-apple-darwin.tar.gz",
     [CPU_ARCHITECTURE.X86_64]:
-      "https://github.com/crate-ci/typos/releases/download/v1.21.0/typos-v1.21.0-x86_64-apple-darwin.tar.gz",
+      "https://github.com/crate-ci/typos/releases/download/v1.30.0/typos-v1.30.0-x86_64-apple-darwin.tar.gz",
   },
   [OS.LINUX]: {
     // typos v.1.21.0にARM64(aarch64)対応のものが無かったので最新にしておく
     [CPU_ARCHITECTURE.ARM]:
       "https://github.com/crate-ci/typos/releases/download/v1.30.0/typos-v1.30.0-aarch64-unknown-linux-musl.tar.gz",
     [CPU_ARCHITECTURE.X86_64]:
-      "https://github.com/crate-ci/typos/releases/download/v1.21.0/typos-v1.21.0-x86_64-unknown-linux-musl.tar.gz",
+      "https://github.com/crate-ci/typos/releases/download/v1.30.0/typos-v1.30.0-x86_64-unknown-linux-musl.tar.gz",
   },
   [OS.WINDOWS]: {
     [CPU_ARCHITECTURE.X86_64]:
-      "https://github.com/crate-ci/typos/releases/download/v1.21.0/typos-v1.21.0-x86_64-pc-windows-msvc.zip",
+      "https://github.com/crate-ci/typos/releases/download/v1.30.0/typos-v1.30.0-x86_64-pc-windows-msvc.zip",
   },
 };
 

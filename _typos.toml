@@ -7,6 +7,7 @@ splited = "splited" # コードで使う時、もっと自然な感じを与え�
 [default.extend-words]
 ba = "ba" # 7zコマンドの-baオプション
 commitish = "commitish" # softprops/action-gh-releaseのオプションの１つ
+GAM = "GAM" # VuexのGetter・Action・Mutationの略
 
 [files]
 extend-exclude = [
