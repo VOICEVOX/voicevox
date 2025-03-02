@@ -131,23 +131,6 @@ export type PreviewMode =
   | "SELECT_NOTES_WITH_RECT"
   | "EDIT_NOTE_LYRIC";
 
-// マウスダウン時の振る舞い
-export const mouseDownBehaviorSchema = z.enum([
-  "IGNORE",
-  "DESELECT_ALL",
-  "ADD_NOTE",
-  "START_RECT_SELECT",
-  "DRAW_PITCH",
-  "ERASE_PITCH",
-]);
-export type MouseDownBehavior = z.infer<typeof mouseDownBehaviorSchema>;
-
-// ダブルクリック時の振る舞い
-export const mouseDoubleClickBehaviorSchema = z.enum(["IGNORE", "ADD_NOTE"]);
-export type MouseDoubleClickBehavior = z.infer<
-  typeof mouseDoubleClickBehaviorSchema
->;
-
 export function getButton(event: MouseEvent): MouseButton {
   // macOSの場合、Ctrl+クリックは右クリック
   if (isMac && event.button === 0 && event.ctrlKey) {

@@ -34,20 +34,6 @@ export class SelectNotesWithRectState
     this.additive = false;
   }
 
-  private updatePreviewRect(context: Context) {
-    const startX = Math.min(this.cursorPosAtStart.x, this.currentCursorPos.x);
-    const endX = Math.max(this.cursorPosAtStart.x, this.currentCursorPos.x);
-    const startY = Math.min(this.cursorPosAtStart.y, this.currentCursorPos.y);
-    const endY = Math.max(this.cursorPosAtStart.y, this.currentCursorPos.y);
-
-    context.previewRectForRectSelect.value = {
-      x: startX,
-      y: startY,
-      width: Math.max(1, endX - startX),
-      height: Math.max(1, endY - startY),
-    };
-  }
-
   onEnter(context: Context) {
     this.updatePreviewRect(context);
 
@@ -123,5 +109,19 @@ export class SelectNotesWithRectState
     context.previewRectForRectSelect.value = undefined;
     context.cursorState.value = "UNSET";
     context.previewMode.value = "IDLE";
+  }
+
+  private updatePreviewRect(context: Context) {
+    const startX = Math.min(this.cursorPosAtStart.x, this.currentCursorPos.x);
+    const endX = Math.max(this.cursorPosAtStart.x, this.currentCursorPos.x);
+    const startY = Math.min(this.cursorPosAtStart.y, this.currentCursorPos.y);
+    const endY = Math.max(this.cursorPosAtStart.y, this.currentCursorPos.y);
+
+    context.previewRectForRectSelect.value = {
+      x: startX,
+      y: startY,
+      width: Math.max(1, endX - startX),
+      height: Math.max(1, endY - startY),
+    };
   }
 }
