@@ -1244,7 +1244,7 @@ export type SingingStoreTypes = {
     action(payload: { noteNumber: number }): void;
   };
 
-  SET_PREVIEW_MODE_FLAG: {
+  SET_AUTO_SCROLLABLE_MODE: {
     mutation: { flag: boolean };
     action(payload: { flag: boolean }): void;
   };

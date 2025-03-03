@@ -1553,12 +1553,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  SET_PREVIEW_MODE_FLAG: {
+  SET_AUTO_SCROLLABLE_MODE: {
     mutation(state, { flag }) {
       state.autoScrollableMode = flag;
     },
     async action({ mutations }, { flag }) {
-      mutations.SET_PREVIEW_MODE_FLAG({ flag });
+      mutations.SET_AUTO_SCROLLABLE_MODE({ flag });
     },
   },
 

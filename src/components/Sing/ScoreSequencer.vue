@@ -292,6 +292,8 @@ const { warn } = createLogger("ScoreSequencer");
 const store = useStore();
 const state = store.state;
 
+let autoScrollInterval: NodeJS.Timeout | null = null;
+
 // トラック、TPQN、テンポ、ノーツ
 const tpqn = computed(() => state.tpqn);
 const tempos = computed(() => state.tempos);
@@ -600,15 +602,60 @@ const onMouseDown = (event: MouseEvent) => {
 };
 
 const onMouseMove = (event: MouseEvent) => {
+  // カーソルがノートを持っていて、カーソルがシーケンサーの範囲外に出たときに
+  // 自動スクロールする処理を以下で行う
   if (store.state.autoScrollableMode) {
+    const threshold = 5;
+    const scrollSpeed = 1;
+    let scrollX = 0;
+    let scrollY = 0;
     const cursorPos = getCursorPosOnSequencer(event);
+
     if (sequencerBody.value) {
-      if (cursorPos.x > sequencerBody.value.clientWidth - 5) {
-        sequencerBody.value.scrollTo({
-          left: sequencerBody.value.scrollLeft + 5,
-          behavior: "auto",
-        });
+      // 右端
+      if (cursorPos.x > sequencerBody.value.clientWidth - threshold) {
+        scrollX = scrollSpeed;
+        scrollY = 0;
       }
+
+      // 左端
+      if (cursorPos.x < threshold) {
+        scrollX = -scrollSpeed;
+        scrollY = 0;
+      }
+
+      // 上端
+      if (cursorPos.y < threshold) {
+        scrollX = 0;
+        scrollY = -scrollSpeed;
+      }
+
+      // 下端
+      if (cursorPos.y > sequencerBody.value.clientHeight - threshold) {
+        scrollX = 0;
+        scrollY = scrollSpeed;
+      }
+    }
+
+    if (scrollX != 0 || scrollY != 0) {
+      if (autoScrollInterval == null) {
+        // マウスを動かさなくても自動スクロールが働くように
+        // タイマーで定期的に自動スクロールをするようにしている
+        autoScrollInterval = setInterval(() => {
+          if (sequencerBody.value) {
+            sequencerBody.value.scrollBy({
+              top: scrollY,
+              left: scrollX,
+              behavior: "auto",
+            });
+          }
+        }, 8);
+      }
+    } else {
+      if (autoScrollInterval != null) {
+        clearInterval(autoScrollInterval);
+      }
+      autoScrollInterval = null;
     }
   }
 
@@ -621,6 +668,14 @@ const onMouseMove = (event: MouseEvent) => {
 };
 
 const onMouseUp = (event: MouseEvent) => {
+  // マウスの左クリックを離したとき=previewModeが終了するとき
+  // previewModeの遷移を伴わないmouseUpイベントの発火時は
+  // このコードは何もしない
+  if (autoScrollInterval != null) {
+    clearInterval(autoScrollInterval);
+    autoScrollInterval = null;
+  }
+
   stateMachineProcess({
     type: "mouseEvent",
     targetArea: "Window",
