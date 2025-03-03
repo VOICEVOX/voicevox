@@ -600,6 +600,18 @@ const onMouseDown = (event: MouseEvent) => {
 };
 
 const onMouseMove = (event: MouseEvent) => {
+  if (store.state.autoScrollableMode) {
+    const cursorPos = getCursorPosOnSequencer(event);
+    if (sequencerBody.value) {
+      if (cursorPos.x > sequencerBody.value.clientWidth - 5) {
+        sequencerBody.value.scrollTo({
+          left: sequencerBody.value.scrollLeft + 5,
+          behavior: "auto",
+        });
+      }
+    }
+  }
+
   stateMachineProcess({
     type: "mouseEvent",
     targetArea: "Window",

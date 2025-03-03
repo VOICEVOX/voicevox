@@ -58,6 +58,7 @@ export class MoveNoteState
   }
 
   onEnter(context: Context) {
+    void context.store.actions.SET_PREVIEW_MODE_FLAG({ flag: true });
     const guideLineTicks = getGuideLineTicks(this.cursorPosAtStart, context);
     const targetNotesArray = context.notesInSelectedTrack.value.filter(
       (value) => this.targetNoteIds.has(value.id),
@@ -124,6 +125,7 @@ export class MoveNoteState
   }
 
   onExit(context: Context) {
+    void context.store.actions.SET_PREVIEW_MODE_FLAG({ flag: false });
     if (this.innerContext == undefined) {
       throw new Error("innerContext is undefined.");
     }

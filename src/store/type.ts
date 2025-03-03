@@ -880,6 +880,7 @@ export type SongExportState =
   | "NOT_EXPORTING";
 
 export type SingingStoreState = {
+  autoScrollableMode: boolean;
   tpqn: number; // Ticks Per Quarter Note
   tempos: Tempo[];
   timeSignatures: TimeSignature[];
@@ -1241,6 +1242,11 @@ export type SingingStoreTypes = {
 
   STOP_PREVIEW_SOUND: {
     action(payload: { noteNumber: number }): void;
+  };
+
+  SET_PREVIEW_MODE_FLAG: {
+    mutation: { flag: boolean };
+    action(payload: { flag: boolean }): void;
   };
 
   SET_START_RENDERING_REQUESTED: {

@@ -725,6 +725,7 @@ const getSelectedTrackWithFallback = (partialState: {
 };
 
 export const singingStoreState: SingingStoreState = {
+  autoScrollableMode: false,
   tpqn: DEFAULT_TPQN,
   tempos: [createDefaultTempo(0)],
   timeSignatures: [createDefaultTimeSignature(1)],
@@ -1549,6 +1550,15 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         throw new Error("previewSynth is undefined.");
       }
       previewSynth.noteOff("immediately", noteNumber);
+    },
+  },
+
+  SET_PREVIEW_MODE_FLAG: {
+    mutation(state, { flag }) {
+      state.autoScrollableMode = flag;
+    },
+    async action({ mutations }, { flag }) {
+      mutations.SET_PREVIEW_MODE_FLAG({ flag });
     },
   },
 
