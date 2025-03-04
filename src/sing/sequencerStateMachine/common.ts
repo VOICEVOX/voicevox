@@ -97,6 +97,7 @@ export type Refs = {
   >;
   readonly cursorState: Ref<CursorState>;
   readonly guideLineTicks: Ref<number>;
+  enableAutoScrollDuringDrag: Ref<boolean>;
 };
 
 export type PartialStore = {
@@ -122,7 +123,6 @@ export type PartialStore = {
     | "PLAY_PREVIEW_SOUND"
     | "COMMAND_ADD_NOTES"
     | "COMMAND_UPDATE_NOTES"
-    | "SET_AUTO_SCROLLABLE_MODE"
     | "COMMAND_SET_PITCH_EDIT_DATA"
     | "COMMAND_ERASE_PITCH_EDIT_DATA"
     | "SET_EDITING_LYRIC_NOTE_ID"

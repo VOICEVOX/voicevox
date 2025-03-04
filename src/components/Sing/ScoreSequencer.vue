@@ -292,8 +292,6 @@ const { warn } = createLogger("ScoreSequencer");
 const store = useStore();
 const state = store.state;
 
-let autoScrollInterval: NodeJS.Timeout | null = null;
-
 // トラック、TPQN、テンポ、ノーツ
 const tpqn = computed(() => state.tpqn);
 const tempos = computed(() => state.tempos);
@@ -453,6 +451,7 @@ const {
   previewPitchEdit,
   cursorState,
   guideLineTicks,
+  enableAutoScrollDuringDrag,
 } = useSequencerStateMachine(store);
 
 const nowPreviewing = computed(() => previewMode.value !== "IDLE");
@@ -601,64 +600,81 @@ const onMouseDown = (event: MouseEvent) => {
   }
 };
 
+let autoScrollDuringDragAnimationId: number | undefined = undefined;
+let previousTimeStamp: number | undefined = undefined;
+const scrollSpeedPerMS = 0.15;
+let scrollXMultiplier: number = 0; //右方向+1,左方向-1
+let scrollYMultiplier: number = 0; //上方向-1,下方向+1
+
+const autoScrollAnimation = (timestamp: number) => {
+  if (previousTimeStamp == undefined) {
+    previousTimeStamp = timestamp;
+  }
+  const elapsed = timestamp - previousTimeStamp;
+  if (sequencerBody.value) {
+    sequencerBody.value.scrollBy({
+      top: Math.floor(scrollYMultiplier * scrollSpeedPerMS * elapsed),
+      left: Math.floor(scrollXMultiplier * scrollSpeedPerMS * elapsed),
+      behavior: "auto",
+    });
+  }
+
+  previousTimeStamp = timestamp;
+  autoScrollDuringDragAnimationId = requestAnimationFrame(autoScrollAnimation);
+};
+
 const onMouseMove = (event: MouseEvent) => {
   // カーソルがノートを持っていて、カーソルがシーケンサーの範囲外に出たときに
   // 自動スクロールする処理を以下で行う
-  if (store.state.autoScrollableMode) {
+  if (enableAutoScrollDuringDrag.value) {
     const threshold = 5;
-    const scrollSpeed = 1;
-    let scrollX = 0;
-    let scrollY = 0;
+
     const cursorPos = getCursorPosOnSequencer(event);
+
+    scrollXMultiplier = 0;
+    scrollYMultiplier = 0;
 
     if (sequencerBody.value) {
       // 右端
       if (cursorPos.x > sequencerBody.value.clientWidth - threshold) {
-        scrollX = scrollSpeed;
-        scrollY = 0;
+        scrollXMultiplier = 1;
+        scrollYMultiplier = 0;
       }
 
       // 左端
       if (cursorPos.x < threshold) {
-        scrollX = -scrollSpeed;
-        scrollY = 0;
+        scrollXMultiplier = -1;
+        scrollYMultiplier = 0;
       }
 
       // 上端
       if (cursorPos.y < threshold) {
-        scrollX = 0;
-        scrollY = -scrollSpeed;
+        scrollXMultiplier = 0;
+        scrollYMultiplier = -1;
       }
 
       // 下端
       if (cursorPos.y > sequencerBody.value.clientHeight - threshold) {
-        scrollX = 0;
-        scrollY = scrollSpeed;
+        scrollXMultiplier = 0;
+        scrollYMultiplier = 1;
       }
     }
 
-    if (scrollX != 0 || scrollY != 0) {
-      if (autoScrollInterval == null) {
-        // マウスを動かさなくても自動スクロールが働くように
-        // タイマーで定期的に自動スクロールをするようにしている
-        autoScrollInterval = setInterval(() => {
-          if (sequencerBody.value) {
-            sequencerBody.value.scrollBy({
-              top: scrollY,
-              left: scrollX,
-              behavior: "auto",
-            });
-          }
-        }, 8);
-      }
+    if (scrollXMultiplier != 0 || scrollYMultiplier != 0) {
+      // マウスを動かさなくても自動スクロールが働くように
+      // requestAnimationFrameで定期的に自動スクロールをするようにしている
+      autoScrollDuringDragAnimationId =
+        requestAnimationFrame(autoScrollAnimation);
     } else {
-      if (autoScrollInterval != null) {
-        clearInterval(autoScrollInterval);
+      if (autoScrollDuringDragAnimationId != undefined) {
+        cancelAnimationFrame(autoScrollDuringDragAnimationId);
       }
-      autoScrollInterval = null;
+
+      autoScrollDuringDragAnimationId = undefined;
+      scrollXMultiplier = 0;
+      scrollYMultiplier = 0;
     }
   }
-
   stateMachineProcess({
     type: "mouseEvent",
     targetArea: "Window",
@@ -667,15 +683,20 @@ const onMouseMove = (event: MouseEvent) => {
   });
 };
 
-const onMouseUp = (event: MouseEvent) => {
-  // マウスの左クリックを離したとき=previewModeが終了するとき
-  // previewModeの遷移を伴わないmouseUpイベントの発火時は
-  // このコードは何もしない
-  if (autoScrollInterval != null) {
-    clearInterval(autoScrollInterval);
-    autoScrollInterval = null;
+watch(enableAutoScrollDuringDrag, (newFlag, oldFlag) => {
+  // previewModeを抜けるとき
+  // 自動スクロールを停止する
+  if (!newFlag && oldFlag) {
+    if (autoScrollDuringDragAnimationId != undefined) {
+      cancelAnimationFrame(autoScrollDuringDragAnimationId);
+      autoScrollDuringDragAnimationId = undefined;
+      scrollXMultiplier = 0;
+      scrollYMultiplier = 0;
+    }
   }
+});
 
+const onMouseUp = (event: MouseEvent) => {
   stateMachineProcess({
     type: "mouseEvent",
     targetArea: "Window",
