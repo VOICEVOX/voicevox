@@ -12,7 +12,7 @@ import {
 } from "@vue/eslint-config-typescript";
 import { configs as tsConfigs, parser as tsParser } from "typescript-eslint";
 import progress from "eslint-plugin-file-progress";
-import gitignore from "eslint-config-flat-gitignore"
+import gitignore from "eslint-config-flat-gitignore";
 import voicevoxPlugin from "./eslint-plugin/index.mjs";
 
 const __dirname = import.meta.dirname;
