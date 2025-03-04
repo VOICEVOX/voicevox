@@ -12,6 +12,7 @@ import {
 } from "@vue/eslint-config-typescript";
 import { configs as tsConfigs, parser as tsParser } from "typescript-eslint";
 import progress from "eslint-plugin-file-progress";
+import gitignore from "eslint-config-flat-gitignore"
 import voicevoxPlugin from "./eslint-plugin/index.mjs";
 
 const __dirname = import.meta.dirname;
@@ -117,15 +118,7 @@ export default defineConfigWithVueTs(
     },
   },
 
-  {
-    name: "voicevox/defaults/ignores",
-    ignores: [
-      "dist/**/*",
-      "dist_*/**/*",
-      "storybook-static/**/*",
-      "node_modules/**/*",
-    ],
-  },
+  gitignore(),
 
   ...pluginConfig(vuePlugin.configs["flat/recommended"]),
   ...pluginConfig("eslint:recommended", js.configs.recommended),
