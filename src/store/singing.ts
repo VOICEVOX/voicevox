@@ -725,7 +725,6 @@ const getSelectedTrackWithFallback = (partialState: {
 };
 
 export const singingStoreState: SingingStoreState = {
-  autoScrollableMode: false,
   tpqn: DEFAULT_TPQN,
   tempos: [createDefaultTempo(0)],
   timeSignatures: [createDefaultTimeSignature(1)],

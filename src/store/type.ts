@@ -880,7 +880,6 @@ export type SongExportState =
   | "NOT_EXPORTING";
 
 export type SingingStoreState = {
-  autoScrollableMode: boolean;
   tpqn: number; // Ticks Per Quarter Note
   tempos: Tempo[];
   timeSignatures: TimeSignature[];
