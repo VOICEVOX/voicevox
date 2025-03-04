@@ -13,9 +13,9 @@
   "packageManager": "pnpm@10.3.0",
   "scripts": {
     "// --- lint ---": "",
-    "lint": "eslint . --plugin file-progress --rule 'file-progress/activate: 1'",
+    "lint": "cross-env ESLINT_FILE_PROGRESS=1 eslint .",
     "lint:inspector": "eslint --inspect-config",
-    "fmt": "eslint . --fix --plugin file-progress --rule 'file-progress/activate: 1'",
+    "fmt": "cross-env ESLINT_FILE_PROGRESS=1 eslint . --fix",
     "markdownlint": "markdownlint --ignore node_modules/ --ignore dist/ --ignore dist_electron/ --ignore dist_preview/ ./",
     "typecheck": "vue-tsc --noEmit",
     "typos": "cross-env ./vendored/typos/typos",

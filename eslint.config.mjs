@@ -11,6 +11,7 @@ import {
   vueTsConfigs,
 } from "@vue/eslint-config-typescript";
 import { configs as tsConfigs, parser as tsParser } from "typescript-eslint";
+import progress from "eslint-plugin-file-progress";
 import voicevoxPlugin from "./eslint-plugin/index.mjs";
 
 const __dirname = import.meta.dirname;
@@ -91,6 +92,7 @@ export default defineConfigWithVueTs(
     name: "voicevox/defaults/plugins",
     plugins: {
       import: importPlugin,
+      progress,
     },
   },
 
@@ -222,6 +224,9 @@ export default defineConfigWithVueTs(
         { sameNameShorthand: "always" },
       ],
       "vue/v-on-event-hyphenation": ["error", "never", { autofix: true }],
+
+      "progress/activate":
+        process.env.ESLINT_FILE_PROGRESS === "1" ? "error" : "off",
     },
   },
 
