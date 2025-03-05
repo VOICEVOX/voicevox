@@ -146,7 +146,7 @@ const builderOptions = {
     target: [
       {
         target: "AppImage",
-        arch: ["x64"],
+        arch: [isArm64 ? "arm64" : "x64"],
       },
     ],
   },
