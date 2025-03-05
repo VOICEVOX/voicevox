@@ -2371,19 +2371,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           if (singingVoice != undefined) {
             logger.info(`Loaded singing voice from cache.`);
           } else {
-            const cachedSingingVoice = await actions.FETCH_CACHED_SINGING_VOICE(
-              {
-                key: singingVoiceKey,
-              },
-            );
-            if (cachedSingingVoice != undefined) {
-              logger.info(`Loaded singing voice from backend cache.`);
-              singingVoice = cachedSingingVoice;
-            } else {
-              singingVoice = await synthesizeSingingVoice(singingVoiceSource);
-              logger.info(`Generated singing voice.`);
-              singingVoiceCache.set(singingVoiceKey, singingVoice);
-            }
+            singingVoice = await synthesizeSingingVoice(singingVoiceSource);
+            logger.info(`Generated singing voice.`);
+            singingVoiceCache.set(singingVoiceKey, singingVoice);
           }
 
           const phrase = getOrThrow(state.phrases, phraseKey);
@@ -3554,12 +3544,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   GET_PHRASE_SINGING_VOICE: {
     action(_, { key }) {
       return phraseSingingVoices.get(key);
-    },
-  },
-
-  FETCH_CACHED_SINGING_VOICE: {
-    async action(_, { key }) {
-      return await window.backend.fetchCachedSingingVoice(key);
     },
   },
 });

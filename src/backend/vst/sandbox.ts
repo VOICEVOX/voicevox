@@ -1,4 +1,3 @@
-import { toBytes } from "fast-base64";
 import { getConfigManager } from "./vstConfig";
 import {
   getProject,
@@ -17,7 +16,6 @@ import {
   onReceivedIPCMessage,
   openLogDirectory,
   openEngineDirectory,
-  getCachedVoice,
 } from "./ipc";
 import {
   EngineId,
@@ -239,15 +237,6 @@ export const api: Sandbox = {
 
   hotkeySettings(data) {
     return browserSandbox.hotkeySettings.bind(this)(data);
-  },
-
-  async fetchCachedSingingVoice(key) {
-    // キャッシュされた歌声を読み込む。
-    const encodedVoice = await getCachedVoice(key);
-    if (!encodedVoice) {
-      return undefined;
-    }
-    return new Blob([await toBytes(encodedVoice)]);
   },
 
   // 未実装
