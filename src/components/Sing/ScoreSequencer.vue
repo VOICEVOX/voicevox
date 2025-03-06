@@ -602,7 +602,7 @@ const onMouseDown = (event: MouseEvent) => {
 
 let autoScrollDuringDragAnimationId: number | undefined = undefined;
 let previousTimeStamp: number | undefined = undefined;
-const scrollSpeedPerMS = 0.15;
+const scrollSpeedPerMS = 0.2; // 1msあたりの自動スクロールスピード
 let scrollXMultiplier: number = 0; //右方向+1,左方向-1
 let scrollYMultiplier: number = 0; //上方向-1,下方向+1
 
@@ -624,53 +624,34 @@ const autoScrollAnimation = (timestamp: number) => {
 };
 
 const onMouseMove = (event: MouseEvent) => {
+  if (sequencerBody.value == undefined) {
+    throw new Error("sequencer.value is undefined.");
+  }
+  const cursorPos = getCursorPosOnSequencer(event);
+
   // カーソルがノートを持っていて、カーソルがシーケンサーの範囲外に出たときに
   // 自動スクロールする処理を以下で行う
   if (enableAutoScrollDuringDrag.value) {
-    const threshold = 5;
+    const threshold = 15;
 
-    const cursorPos = getCursorPosOnSequencer(event);
-
-    scrollXMultiplier = 0;
-    scrollYMultiplier = 0;
-
-    if (sequencerBody.value) {
+    if (cursorPos.x > sequencerBody.value.clientWidth - threshold) {
       // 右端
-      if (cursorPos.x > sequencerBody.value.clientWidth - threshold) {
-        scrollXMultiplier = 1;
-        scrollYMultiplier = 0;
-      }
-
+      scrollXMultiplier = 1;
+      scrollYMultiplier = 0;
+    } else if (cursorPos.x < threshold) {
       // 左端
-      if (cursorPos.x < threshold) {
-        scrollXMultiplier = -1;
-        scrollYMultiplier = 0;
-      }
-
+      scrollXMultiplier = -1;
+      scrollYMultiplier = 0;
+    } else if (cursorPos.y < threshold) {
       // 上端
-      if (cursorPos.y < threshold) {
-        scrollXMultiplier = 0;
-        scrollYMultiplier = -1;
-      }
-
+      scrollXMultiplier = 0;
+      scrollYMultiplier = -1;
+    } else if (cursorPos.y > sequencerBody.value.clientHeight - threshold) {
       // 下端
-      if (cursorPos.y > sequencerBody.value.clientHeight - threshold) {
-        scrollXMultiplier = 0;
-        scrollYMultiplier = 1;
-      }
-    }
-
-    if (scrollXMultiplier != 0 || scrollYMultiplier != 0) {
-      // マウスを動かさなくても自動スクロールが働くように
-      // requestAnimationFrameで定期的に自動スクロールをするようにしている
-      autoScrollDuringDragAnimationId =
-        requestAnimationFrame(autoScrollAnimation);
+      scrollXMultiplier = 0;
+      scrollYMultiplier = 1;
     } else {
-      if (autoScrollDuringDragAnimationId != undefined) {
-        cancelAnimationFrame(autoScrollDuringDragAnimationId);
-      }
-
-      autoScrollDuringDragAnimationId = undefined;
+      // マウスカーソルが上下左右の端にないとき
       scrollXMultiplier = 0;
       scrollYMultiplier = 0;
     }
@@ -679,20 +660,27 @@ const onMouseMove = (event: MouseEvent) => {
     type: "mouseEvent",
     targetArea: "Window",
     mouseEvent: event,
-    cursorPos: getCursorPosOnSequencer(event),
+    cursorPos: cursorPos,
   });
 };
 
 watch(enableAutoScrollDuringDrag, (newFlag, oldFlag) => {
   // previewModeを抜けるとき
   // 自動スクロールを停止する
-  if (!newFlag && oldFlag) {
+  if (!newFlag) {
     if (autoScrollDuringDragAnimationId != undefined) {
       cancelAnimationFrame(autoScrollDuringDragAnimationId);
       autoScrollDuringDragAnimationId = undefined;
-      scrollXMultiplier = 0;
-      scrollYMultiplier = 0;
     }
+    scrollXMultiplier = 0;
+    scrollYMultiplier = 0;
+  } else {
+    // previewModeに入ったとき
+    // 常にアニメーションループをスタートする
+    // 実際に動かさなければならない場面になったら
+    // scrollXMultiplier,scrollYMultiplierの値を0以外にセットする
+    autoScrollDuringDragAnimationId =
+      requestAnimationFrame(autoScrollAnimation);
   }
 });
 
