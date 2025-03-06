@@ -10,7 +10,9 @@
       :key="index"
       v-model:selected="subMenuOpenFlags[index]"
       :menudata="root"
-      :disable="menubarLocked"
+      :disable="
+        menubarLocked || (root.disableWhenUiLocked && uiLocked) || root.disabled
+      "
       @mouseover="reassignSubMenuOpen(index)"
       @mouseleave="
         root.type === 'button' ? (subMenuOpenFlags[index] = false) : undefined
@@ -29,12 +31,11 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
 import { useQuasar, Dialog } from "quasar";
-import { MenuItemData } from "../type";
+import { MenuItemButton, MenuItemData, MenuItemRoot } from "../type";
 import MenuButton from "../MenuButton.vue";
 import TitleBarButtons from "./TitleBarButtons.vue";
 import TitleBarEditorSwitcher from "./TitleBarEditorSwitcher.vue";
 import { useStore } from "@/store";
-import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import HelpDialog from "@/components/Dialog/HelpDialog/HelpDialog.vue";
 import { getAppInfos } from "@/domain/appInfo";
 
@@ -55,7 +56,6 @@ const props = defineProps<{
 
 const $q = useQuasar();
 const store = useStore();
-const { registerHotkeyWithCleanup } = useHotkeyManager();
 
 /** 追加のバージョン情報。コミットハッシュなどを書ける。 */
 const extraVersionInfo = import.meta.env.VITE_EXTRA_VERSION_INFO;
@@ -102,50 +102,56 @@ watch(titleText, (newTitle) => {
   window.document.title = newTitle;
 });
 
-const menudata = computed<MenuItemData[]>(() => {
-  return [
-    {
-      type: "root",
-      label: "ファイル",
-      subMenu: props.fileSubMenuData,
-      disableWhenUiLocked: false,
-    },
-    {
-      type: "root",
-      label: "編集",
-      subMenu: props.editSubMenuData,
-      disableWhenUiLocked: false,
-    },
-    {
-      type: "root",
-      label: "表示",
-      subMenu: props.viewSubMenuData,
-      disableWhenUiLocked: false,
-    },
-    {
-      type: "root",
-      label: "エンジン",
-      subMenu: props.engineSubMenuData,
-      disableWhenUiLocked: false,
-    },
-    {
-      type: "root",
-      label: "設定",
-      subMenu: props.settingSubMenuData,
-      disableWhenUiLocked: false,
-    },
-    {
-      type: "button",
-      label: "ヘルプ",
-      onClick: () => {
-        Dialog.create({
-          component: HelpDialog,
-        });
+const menudata = computed<(MenuItemButton | MenuItemRoot)[]>(
+  () =>
+    [
+      {
+        type: "root",
+        label: "ファイル",
+        subMenu: props.fileSubMenuData,
+        disabled: props.fileSubMenuData.length === 0,
+        disableWhenUiLocked: false,
       },
-      disableWhenUiLocked: false,
-    },
-  ].filter((x) => x.subMenu == null || x.subMenu.length > 0);
-});
+      {
+        type: "root",
+        label: "編集",
+        subMenu: props.editSubMenuData,
+        disabled: props.editSubMenuData.length === 0,
+        disableWhenUiLocked: false,
+      },
+      {
+        type: "root",
+        label: "表示",
+        subMenu: props.viewSubMenuData,
+        disabled: props.viewSubMenuData.length === 0,
+        disableWhenUiLocked: false,
+      },
+      {
+        type: "root",
+        label: "エンジン",
+        subMenu: props.engineSubMenuData,
+        disabled: props.engineSubMenuData.length === 0,
+        disableWhenUiLocked: false,
+      },
+      {
+        type: "root",
+        label: "設定",
+        subMenu: props.settingSubMenuData,
+        disabled: props.settingSubMenuData.length === 0,
+        disableWhenUiLocked: false,
+      },
+      {
+        type: "button",
+        label: "ヘルプ",
+        onClick: () => {
+          Dialog.create({
+            component: HelpDialog,
+          });
+        },
+        disableWhenUiLocked: false,
+      },
+    ] satisfies MenuItemData[],
+);
 
 // メニュー一覧
 const subMenuOpenFlags = ref(

@@ -1,7 +1,6 @@
 import { ref, computed, watch, MaybeRef, unref } from "vue";
-import { MenuItemData, MenuItemRoot } from "@/components/Menu/type";
+import { MenuItemData } from "@/components/Menu/type";
 import { useStore } from "@/store";
-import { useEngineIcons } from "@/composables/useEngineIcons";
 import { HotkeyAction, useHotkeyManager } from "@/plugins/hotkeyPlugin";
 
 export type MenuBarData = {
@@ -23,11 +22,6 @@ export const useCommonMenuBarData = () => {
   const store = useStore();
 
   const uiLocked = computed(() => store.getters.UI_LOCKED);
-  const engineIds = computed(() => store.state.engineIds);
-  const engineInfos = computed(() => store.state.engineInfos);
-  const engineManifests = computed(() => store.state.engineManifests);
-  const engineIcons = useEngineIcons(engineManifests);
-  const enableMultiEngine = computed(() => store.state.enableMultiEngine);
 
   const editor = computed(() => store.state.openedEditor);
   const canUndo = computed(
@@ -125,103 +119,6 @@ export const useCommonMenuBarData = () => {
   const projectFilePath = computed(() => store.state.projectFilePath);
   watch(projectFilePath, updateRecentProjects, {
     immediate: true,
-  });
-
-  // 「エンジン」メニューのエンジン毎の項目
-  const engineSubMenuData = computed<MenuItemData[]>(() => {
-    let subMenu: MenuItemData[] = [];
-
-    if (Object.values(engineInfos.value).length === 1) {
-      const engineInfo = Object.values(engineInfos.value)[0];
-      subMenu = [
-        {
-          type: "button",
-          label: "再起動",
-          onClick: () => {
-            void store.actions.RESTART_ENGINES({
-              engineIds: [engineInfo.uuid],
-            });
-          },
-          disableWhenUiLocked: false,
-        },
-      ].filter((x) => x) as MenuItemData[];
-    } else {
-      subMenu = [
-        ...store.getters.GET_SORTED_ENGINE_INFOS.map(
-          (engineInfo) =>
-            ({
-              type: "root",
-              label: engineInfo.name,
-              icon:
-                engineManifests.value[engineInfo.uuid] &&
-                engineIcons.value[engineInfo.uuid],
-              subMenu: [
-                engineInfo.path && {
-                  type: "button",
-                  label: "フォルダを開く",
-                  onClick: () => {
-                    void store.actions.OPEN_ENGINE_DIRECTORY({
-                      engineId: engineInfo.uuid,
-                    });
-                  },
-                  disableWhenUiLocked: false,
-                },
-                {
-                  type: "button",
-                  label: "再起動",
-                  onClick: () => {
-                    void store.actions.RESTART_ENGINES({
-                      engineIds: [engineInfo.uuid],
-                    });
-                  },
-                  disableWhenUiLocked: false,
-                },
-              ].filter((x) => x),
-            }) as MenuItemRoot,
-        ),
-        {
-          type: "separator",
-        },
-        {
-          type: "button",
-          label: "全てのエンジンを再起動",
-          onClick: () => {
-            void store.actions.RESTART_ENGINES({
-              engineIds: engineIds.value,
-            });
-          },
-          disableWhenUiLocked: false,
-        },
-      ];
-    }
-    if (enableMultiEngine.value) {
-      subMenu.push({
-        type: "button",
-        label: "エンジンの管理",
-        onClick: () => {
-          void store.actions.SET_DIALOG_OPEN({
-            isEngineManageDialogOpen: true,
-          });
-        },
-        disableWhenUiLocked: false,
-      });
-    }
-    // マルチエンジンオフモードの解除
-    if (store.state.isMultiEngineOffMode) {
-      subMenu.push({
-        type: "button",
-        label: "マルチエンジンをオンにして再読み込み",
-        onClick() {
-          void store.actions.RELOAD_APP({
-            isMultiEngineOffMode: false,
-          });
-        },
-        disableWhenUiLocked: false,
-        disablreloadingLocked: true,
-      });
-    }
-
-    return subMenu;
   });
 
   // TODO: 本来はこのファイルにホットキーの登録を書くべきではないので、どこかに移す。
@@ -399,7 +296,7 @@ export const useCommonMenuBarData = () => {
         disableWhenUiLocked: false,
       },
     ],
-    engine: engineSubMenuData.value,
+    engine: [],
     setting: [
       {
         type: "button",
@@ -510,6 +407,12 @@ export const concatMenuBarData = (
       if (value[i].type === "separator" && value[i + 1]?.type === "separator") {
         value.splice(i, 1);
       }
+    }
+    if (value[0]?.type === "separator") {
+      value.shift();
+    }
+    if (value[value.length - 1]?.type === "separator") {
+      value.pop();
     }
   }
 

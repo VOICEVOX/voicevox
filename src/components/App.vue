@@ -41,12 +41,15 @@ import { useMenuBarData as useSingMenuBarData } from "@/components/Sing/menuBarD
 import { setFontToCss, setThemeToCss } from "@/domain/dom";
 import { useCommonMenuBarData } from "@/domain/menuBarData";
 import { concatMenuBarData } from "@/domain/menuBarData";
+import { isElectron } from "@/helpers/platform";
+import { useElectronMenuBarData } from "@/backend/electron/menuBarData";
 
 const store = useStore();
 
 const commonMenuBarData = useCommonMenuBarData();
 const talkMenuBarData = useTalkMenuBarData();
 const singMenuBarData = useSingMenuBarData();
+const electronMenuBarData = useElectronMenuBarData();
 
 const subMenuData = computed(() =>
   concatMenuBarData([
@@ -77,6 +80,17 @@ const subMenuData = computed(() =>
       data: singMenuBarData,
       order: {
         file: "pre",
+        edit: "post",
+        view: "post",
+        engine: "post",
+        setting: "post",
+      },
+    },
+    {
+      visible: isElectron,
+      data: electronMenuBarData,
+      order: {
+        file: "post",
         edit: "post",
         view: "post",
         engine: "post",
