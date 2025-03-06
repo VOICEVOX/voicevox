@@ -112,7 +112,7 @@ function getBinaryURL() {
  * Typosのダウンロードが必要か判定する関数
  * @returns {Promise<boolean>} Typosのダウンロードが必要か
  */
-async function needsDownloadTypos(): Promise<boolean> {
+async function shouldDownloadTypos(): Promise<boolean> {
   // TYPOS_BINARY_PATHが存在する場合、typosのバージョンをチェック
   if (await exists(TYPOS_DIRECTORY_PATH)) {
     const currentVersion = await fs
@@ -149,7 +149,7 @@ async function needsDownloadTypos(): Promise<boolean> {
  * バイナリをダウンロードして解凍し、実行権限を付与する関数
  */
 async function downloadAndUnarchive({ url }: { url: string }) {
-  if (!(await needsDownloadTypos())) {
+  if (!(await shouldDownloadTypos())) {
     console.log("typos already downloaded");
     return;
   }
