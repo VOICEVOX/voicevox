@@ -607,17 +607,19 @@ let scrollXMultiplier: number = 0; //右方向+1,左方向-1
 let scrollYMultiplier: number = 0; //上方向-1,下方向+1
 
 const autoScrollAnimation = (timestamp: number) => {
+  if (sequencerBody.value == undefined) {
+    throw new Error("sequencer.value is undefined.");
+  }
+
   if (previousTimeStamp == undefined) {
     previousTimeStamp = timestamp;
   }
   const elapsed = timestamp - previousTimeStamp;
-  if (sequencerBody.value) {
-    sequencerBody.value.scrollBy({
-      top: Math.floor(scrollYMultiplier * scrollSpeedPerMS * elapsed),
-      left: Math.floor(scrollXMultiplier * scrollSpeedPerMS * elapsed),
-      behavior: "auto",
-    });
-  }
+  sequencerBody.value.scrollBy({
+    top: Math.floor(scrollYMultiplier * scrollSpeedPerMS * elapsed),
+    left: Math.floor(scrollXMultiplier * scrollSpeedPerMS * elapsed),
+    behavior: "auto",
+  });
 
   previousTimeStamp = timestamp;
   autoScrollDuringDragAnimationId = requestAnimationFrame(autoScrollAnimation);
