@@ -29,6 +29,7 @@
     "*.cjs",
     "eslint-plugin/**/*.ts",
     "build/**/*.cjs",
+    ".storybook/**/*.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/**/*.vue",
