@@ -14,7 +14,7 @@
   "scripts": {
     "// --- lint ---": "",
     "lint": "eslint --cache",
-    "lint:inspector": "eslint --inspect-config --cache",
+    "lint:inspector": "eslint --inspect-config",
     "fmt": "eslint --fix --cache",
     "markdownlint": "markdownlint --ignore node_modules/ --ignore dist/ --ignore dist_electron/ --ignore dist_preview/ ./",
     "typecheck": "vue-tsc --noEmit",
