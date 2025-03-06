@@ -10,6 +10,7 @@ import fs from "fs/promises";
 import { Readable } from "stream";
 import { ReadableStream } from "stream/web";
 import { pipeline } from "stream/promises";
+import { retryFetch } from "./helper.mjs";
 
 // OS名を定義するオブジェクト
 const OS = {
@@ -30,17 +31,19 @@ const TYPOS_BINARY_PATH = resolve(BINARY_BASE_PATH, "typos");
 const TYPOS_URLS = {
   [OS.MACOS]: {
     [CPU_ARCHITECTURE.ARM]:
-      "https://github.com/crate-ci/typos/releases/download/v1.21.0/typos-v1.21.0-aarch64-apple-darwin.tar.gz",
+      "https://github.com/crate-ci/typos/releases/download/v1.30.0/typos-v1.30.0-aarch64-apple-darwin.tar.gz",
     [CPU_ARCHITECTURE.X86_64]:
-      "https://github.com/crate-ci/typos/releases/download/v1.21.0/typos-v1.21.0-x86_64-apple-darwin.tar.gz",
+      "https://github.com/crate-ci/typos/releases/download/v1.30.0/typos-v1.30.0-x86_64-apple-darwin.tar.gz",
   },
   [OS.LINUX]: {
+    [CPU_ARCHITECTURE.ARM]:
+      "https://github.com/crate-ci/typos/releases/download/v1.30.0/typos-v1.30.0-aarch64-unknown-linux-musl.tar.gz",
     [CPU_ARCHITECTURE.X86_64]:
-      "https://github.com/crate-ci/typos/releases/download/v1.21.0/typos-v1.21.0-x86_64-unknown-linux-musl.tar.gz",
+      "https://github.com/crate-ci/typos/releases/download/v1.30.0/typos-v1.30.0-x86_64-unknown-linux-musl.tar.gz",
   },
   [OS.WINDOWS]: {
     [CPU_ARCHITECTURE.X86_64]:
-      "https://github.com/crate-ci/typos/releases/download/v1.21.0/typos-v1.21.0-x86_64-pc-windows-msvc.zip",
+      "https://github.com/crate-ci/typos/releases/download/v1.30.0/typos-v1.30.0-x86_64-pc-windows-msvc.zip",
   },
 };
 
@@ -115,7 +118,7 @@ async function downloadAndUnarchive({ url }: { url: string }) {
     await fs.mkdir(TYPOS_BINARY_PATH, { recursive: true });
   }
 
-  const response = await fetch(url);
+  const response = await retryFetch(url);
   if (!response.ok) {
     throw new Error(`Failed to download binary: ${response.statusText}`);
   }

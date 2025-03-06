@@ -1,42 +1,101 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, Page, Locator } from "@playwright/test";
 
 import { gotoHome, navigateToSong } from "../../navigators.ts";
+import { ensureNotNullish } from "@/helpers/errorHelper.ts";
 
 test.beforeEach(gotoHome);
+
+function getSequencer(page: Page) {
+  return page.getByLabel("シーケンサ");
+}
+
+async function addNotes(page: Page, count: number) {
+  await test.step(`ノートを${count}つ追加`, async () => {
+    const sequencer = getSequencer(page);
+    for (let i = 0; i < count; i++) {
+      await sequencer.click({ position: { x: (i + 1) * 100, y: 171 } });
+    }
+    const notes = sequencer.locator(".note");
+    await expect(notes).toHaveCount(count);
+  });
+}
+
+/** Locator の配列を x 座標でソートする */
+async function toSortedLocator(locators: Locator[]): Promise<Locator[]> {
+  const locatorsWithPosition = await Promise.all(
+    locators.map(async (locator) => ({
+      locator,
+      x: ensureNotNullish(await locator.boundingBox()).x,
+    })),
+  );
+  locatorsWithPosition.sort((a, b) => a.x - b.x);
+  return locatorsWithPosition.map(({ locator }) => locator);
+}
+
+async function getSortedNotes(page: Page): Promise<Locator[]> {
+  return await test.step("ノートをソートして取得", async () => {
+    const sequencer = getSequencer(page);
+    const notes = await sequencer.locator(".note").all();
+    return toSortedLocator(notes);
+  });
+}
+
+async function getSortedNoteLylics(page: Page): Promise<string[]> {
+  return await test.step("ノートをソートして歌詞を取得", async () => {
+    const sequencer = getSequencer(page);
+    const lyrics = await sequencer.locator(".note-lyric").all();
+    const sortedLyrics = await toSortedLocator(lyrics);
+    return Promise.all(
+      sortedLyrics.map(async (lyric) =>
+        ensureNotNullish(await lyric.textContent()),
+      ),
+    );
+  });
+}
+
+async function editNoteLyric(page: Page, note: Locator, lyric: string) {
+  await test.step("ノートをダブルクリックして歌詞を入力", async () => {
+    await note.dblclick();
+
+    const sequencer = getSequencer(page);
+    const lyricInput = sequencer.locator(".lyric-input");
+    await expect(lyricInput).toBeVisible();
+    await lyricInput.fill(lyric);
+    await lyricInput.press("Enter");
+    await expect(lyricInput).not.toBeVisible();
+  });
+}
 
 test("ダブルクリックで歌詞を編集できる", async ({ page }) => {
   await navigateToSong(page);
 
-  const sequencer = page.getByLabel("シーケンサ");
+  await addNotes(page, 1);
+  const note = (await getSortedNotes(page))[0];
+  const beforeLyric = (await getSortedNoteLylics(page))[0];
 
-  const getCurrentNoteLyric = async () =>
-    await sequencer.locator(".note-lyric").first().textContent();
+  await editNoteLyric(page, note, "あ");
 
-  // ノートを追加し、表示されるまで待つ
-  await sequencer.click({ position: { x: 107, y: 171 } });
-  await page.waitForSelector(".note");
+  await test.step("歌詞が変更されていることを確認", async () => {
+    const afterLyric = await getSortedNoteLylics(page);
+    expect(afterLyric[0]).not.toEqual(beforeLyric);
+    expect(afterLyric[0]).toEqual("あ");
+  });
+});
 
-  // ノートの歌詞を取得
-  const note = sequencer.locator(".note").first();
-  const beforeLyric = await getCurrentNoteLyric();
+test("複数ノートの歌詞を一度に編集できる", async ({ page }) => {
+  await navigateToSong(page);
 
-  // ノートをダブルクリックし、入力フィールドが表示されるまで待つ
-  await note.dblclick();
-  await page.waitForSelector(".lyric-input");
+  await addNotes(page, 3);
 
-  // 歌詞を入力し、Enterキーを押す
-  const lyricInput = sequencer.locator(".lyric-input");
-  await lyricInput.fill("あ");
-  await lyricInput.press("Enter");
-
-  // 変更が反映されるまで待つ
-  await page.waitForFunction(() => {
-    const lyricElement = document.querySelector(".note-lyric");
-    return lyricElement && lyricElement.textContent === "あ";
+  await editNoteLyric(page, (await getSortedNotes(page))[0], "あいう");
+  await test.step("全てのノートの歌詞が変更されていることを確認", async () => {
+    const afterLyrics = await getSortedNoteLylics(page);
+    expect(afterLyrics).toEqual(["あ", "い", "う"]);
   });
 
-  // 歌詞が変更されたことを確認
-  const afterLyric = await getCurrentNoteLyric();
-  expect(afterLyric).not.toEqual(beforeLyric);
-  expect(afterLyric).toEqual("あ");
+  await editNoteLyric(page, (await getSortedNotes(page))[0], "かきくけこ");
+  await test.step("最後のノートに残りの文字が入力されていることを確認", async () => {
+    const afterLyrics = await getSortedNoteLylics(page);
+    expect(afterLyrics).toEqual(["か", "き", "くけこ"]);
+  });
 });

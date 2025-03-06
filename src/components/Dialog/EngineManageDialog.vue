@@ -340,7 +340,7 @@ watch(
       if (engineVersions.value[id]) continue;
       const version = await store.actions
         .INSTANTIATE_ENGINE_CONNECTOR({ engineId: id })
-        .then((instance) => instance.invoke("versionVersionGet")({}))
+        .then((instance) => instance.invoke("version")({}))
         .then((version) => {
           // OpenAPIのバグで"latest"のようにダブルクォーテーションで囲まれていることがあるので外す
           if (version.startsWith('"') && version.endsWith('"')) {

@@ -127,9 +127,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
                     async (instance) =>
                       [
                         engineId,
-                        await instance.invoke(
-                          "engineManifestEngineManifestGet",
-                        )({}),
+                        await instance.invoke("engineManifest")({}),
                       ] as const,
                   ),
             ),
@@ -188,7 +186,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
               .INSTANTIATE_ENGINE_CONNECTOR({
                 engineId,
               })
-              .then((instance) => instance.invoke("versionVersionGet")({}));
+              .then((instance) => instance.invoke("version")({}));
           } catch {
             await new Promise((resolve) => setTimeout(resolve, 1000));
 
@@ -326,7 +324,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
           engineId,
         })
         .then((instance) =>
-          instance.invoke("isInitializedSpeakerIsInitializedSpeakerGet")({
+          instance.invoke("isInitializedSpeaker")({
             speaker: styleId,
           }),
         );
@@ -346,7 +344,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
             engineId,
           })
           .then((instance) =>
-            instance.invoke("initializeSpeakerInitializeSpeakerPost")({
+            instance.invoke("initializeSpeaker")({
               speaker: styleId,
             }),
           );
@@ -426,9 +424,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
           .INSTANTIATE_ENGINE_CONNECTOR({
             engineId,
           })
-          .then((instance) =>
-            instance.invoke("engineManifestEngineManifestGet")({}),
-          ),
+          .then((instance) => instance.invoke("engineManifest")({})),
       });
     },
   },
@@ -449,8 +445,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
           engineId,
         })
         .then(
-          async (instance) =>
-            await instance.invoke("supportedDevicesSupportedDevicesGet")({}),
+          async (instance) => await instance.invoke("supportedDevices")({}),
         );
 
       mutations.SET_ENGINE_SUPPORTED_DEVICES({

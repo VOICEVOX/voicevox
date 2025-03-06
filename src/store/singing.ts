@@ -1886,9 +1886,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           const instance = await actions.INSTANTIATE_ENGINE_CONNECTOR({
             engineId,
           });
-          const query = await instance.invoke(
-            "singFrameAudioQuerySingFrameAudioQueryPost",
-          )({
+          const query = await instance.invoke("singFrameAudioQuery")({
             score: { notes: notesForRequestToEngine },
             speaker: singingTeacherStyleId,
           });
@@ -2304,7 +2302,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           const instance = await actions.INSTANTIATE_ENGINE_CONNECTOR({
             engineId: singer.engineId,
           });
-          return await instance.invoke("frameSynthesisFrameSynthesisPost")({
+          return await instance.invoke("frameSynthesis")({
             frameAudioQuery: query,
             speaker: singer.styleId,
           });
@@ -2709,7 +2707,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const instance = await actions.INSTANTIATE_ENGINE_CONNECTOR({
         engineId,
       });
-      return await instance.invoke("singFrameVolumeSingFrameVolumePost")({
+      return await instance.invoke("singFrameVolume")({
         bodySingFrameVolumeSingFrameVolumePost: {
           score: {
             notes,
