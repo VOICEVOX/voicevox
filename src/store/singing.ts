@@ -42,7 +42,10 @@ import {
   StyleId,
   TrackId,
 } from "@/type/preload.ts";
-import { FramePhoneme, Note as NoteForRequestToEngine } from "@/openapi/index.ts";
+import {
+  FramePhoneme,
+  Note as NoteForRequestToEngine,
+} from "@/openapi/index.ts";
 import { ResultError, getValueOrThrow } from "@/type/result.ts";
 import {
   AudioEvent,

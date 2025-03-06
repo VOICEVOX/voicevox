@@ -1,7 +1,12 @@
 import { toRaw } from "vue";
 import { enablePatches, enableMapSet, Immer } from "immer";
 
-import { Command, CommandStoreState, CommandStoreTypes, State } from "./type.ts";
+import {
+  Command,
+  CommandStoreState,
+  CommandStoreTypes,
+  State,
+} from "./type.ts";
 import { applyPatches } from "@/store/immerPatchUtility.ts";
 import {
   createPartialStore,

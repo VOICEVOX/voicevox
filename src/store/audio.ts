@@ -55,7 +55,12 @@ import {
   StyleInfo,
   Voice,
 } from "@/type/preload.ts";
-import { AudioQuery, AccentPhrase, Speaker, SpeakerInfo } from "@/openapi/index.ts";
+import {
+  AudioQuery,
+  AccentPhrase,
+  Speaker,
+  SpeakerInfo,
+} from "@/openapi/index.ts";
 import { base64ImageToUri, base64ToUri } from "@/helpers/base64Helper.ts";
 import { getValueOrThrow, ResultError } from "@/type/result.ts";
 import { generateWriteErrorMessage } from "@/helpers/fileHelper.ts";

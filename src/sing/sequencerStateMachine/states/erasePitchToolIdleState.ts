@@ -1,10 +1,10 @@
-import { SetNextState, State } from "@/sing/stateMachine";
+import { SetNextState, State } from "@/sing/stateMachine.ts";
 import {
   Context,
   Input,
   SequencerStateDefinitions,
-} from "@/sing/sequencerStateMachine/common";
-import { getButton } from "@/sing/viewHelper";
+} from "@/sing/sequencerStateMachine/common.ts";
+import { getButton } from "@/sing/viewHelper.ts";
 
 export class ErasePitchToolIdleState
   implements State<SequencerStateDefinitions, Input, Context>

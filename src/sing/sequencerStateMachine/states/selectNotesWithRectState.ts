@@ -1,14 +1,14 @@
-import { SetNextState, State } from "@/sing/stateMachine";
+import { SetNextState, State } from "@/sing/stateMachine.ts";
 import {
   Context,
   IdleStateId,
   Input,
   PositionOnSequencer,
   SequencerStateDefinitions,
-} from "@/sing/sequencerStateMachine/common";
-import { getButton } from "@/sing/viewHelper";
-import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
-import { NoteId } from "@/type/preload";
+} from "@/sing/sequencerStateMachine/common.ts";
+import { getButton } from "@/sing/viewHelper.ts";
+import { isOnCommandOrCtrlKeyDown } from "@/store/utility.ts";
+import { NoteId } from "@/type/preload.ts";
 
 export class SelectNotesWithRectState
   implements State<SequencerStateDefinitions, Input, Context>

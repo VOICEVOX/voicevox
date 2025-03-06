@@ -1,6 +1,6 @@
-import { State, SetNextState } from "@/sing/stateMachine";
-import { getButton, PREVIEW_SOUND_DURATION } from "@/sing/viewHelper";
-import { NoteId, TrackId } from "@/type/preload";
+import { State, SetNextState } from "@/sing/stateMachine.ts";
+import { getButton, PREVIEW_SOUND_DURATION } from "@/sing/viewHelper.ts";
+import { NoteId, TrackId } from "@/type/preload.ts";
 import {
   Context,
   getGuideLineTicks,
@@ -8,9 +8,9 @@ import {
   Input,
   PositionOnSequencer,
   SequencerStateDefinitions,
-} from "@/sing/sequencerStateMachine/common";
-import { Note } from "@/store/type";
-import { getOrThrow } from "@/helpers/mapHelper";
+} from "@/sing/sequencerStateMachine/common.ts";
+import { Note } from "@/store/type.ts";
+import { getOrThrow } from "@/helpers/mapHelper.ts";
 
 export class ResizeNoteRightState
   implements State<SequencerStateDefinitions, Input, Context>

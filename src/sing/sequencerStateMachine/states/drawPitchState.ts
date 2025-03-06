@@ -1,18 +1,18 @@
-import { SetNextState, State } from "@/sing/stateMachine";
+import { SetNextState, State } from "@/sing/stateMachine.ts";
 import {
   Context,
   IdleStateId,
   Input,
   PositionOnSequencer,
   SequencerStateDefinitions,
-} from "@/sing/sequencerStateMachine/common";
-import { TrackId } from "@/type/preload";
+} from "@/sing/sequencerStateMachine/common.ts";
+import { TrackId } from "@/type/preload.ts";
 import {
   applyGaussianFilter,
   createArray,
   linearInterpolation,
-} from "@/sing/utility";
-import { getButton } from "@/sing/viewHelper";
+} from "@/sing/utility.ts";
+import { getButton } from "@/sing/viewHelper.ts";
 
 export class DrawPitchState
   implements State<SequencerStateDefinitions, Input, Context>

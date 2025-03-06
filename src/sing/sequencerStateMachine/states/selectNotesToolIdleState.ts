@@ -1,4 +1,4 @@
-import { SetNextState, State } from "@/sing/stateMachine";
+import { SetNextState, State } from "@/sing/stateMachine.ts";
 import {
   Context,
   getGuideLineTicks,
@@ -7,18 +7,18 @@ import {
   selectOnlyThisNoteAndPlayPreviewSound,
   SequencerStateDefinitions,
   toggleNoteSelection,
-} from "@/sing/sequencerStateMachine/common";
+} from "@/sing/sequencerStateMachine/common.ts";
 import {
   getButton,
   getDoremiFromNoteNumber,
   isSelfEventTarget,
   PREVIEW_SOUND_DURATION,
-} from "@/sing/viewHelper";
-import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
-import { Note } from "@/store/type";
-import { NoteId } from "@/type/preload";
-import { clamp } from "@/sing/utility";
-import { uuid4 } from "@/helpers/random";
+} from "@/sing/viewHelper.ts";
+import { isOnCommandOrCtrlKeyDown } from "@/store/utility.ts";
+import { Note } from "@/store/type.ts";
+import { NoteId } from "@/type/preload.ts";
+import { clamp } from "@/sing/utility.ts";
+import { uuid4 } from "@/helpers/random.ts";
 
 export class SelectNotesToolIdleState
   implements State<SequencerStateDefinitions, Input, Context>

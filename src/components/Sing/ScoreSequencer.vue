@@ -282,7 +282,7 @@ import CharacterPortrait from "@/components/Sing/CharacterPortrait.vue";
 import SequencerPitch from "@/components/Sing/SequencerPitch.vue";
 import SequencerLyricInput from "@/components/Sing/SequencerLyricInput.vue";
 import SequencerToolPalette from "@/components/Sing/SequencerToolPalette.vue";
-import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
+import { isOnCommandOrCtrlKeyDown } from "@/store/utility.ts";
 import { createLogger } from "@/helpers/log.ts";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin.ts";
 import { useSequencerStateMachine } from "@/composables/useSequencerStateMachine.ts";

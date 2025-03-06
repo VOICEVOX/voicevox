@@ -1,4 +1,10 @@
-import { calculateHash, getLast, getNext, getPrev, isSorted } from "./utility.ts";
+import {
+  calculateHash,
+  getLast,
+  getNext,
+  getPrev,
+  isSorted,
+} from "./utility.ts";
 import { convertLongVowel, moraPattern } from "@/domain/japanese/index.ts";
 import {
   Note,

@@ -18,7 +18,11 @@ import {
 } from "./manager/windowManager.ts";
 import configMigration014 from "./configMigration014.ts";
 import { initializeRuntimeInfoManager } from "./manager/RuntimeInfoManager.ts";
-import { registerIpcMainHandle, ipcMainSendProxy, IpcMainHandle } from "./ipc.ts";
+import {
+  registerIpcMainHandle,
+  ipcMainSendProxy,
+  IpcMainHandle,
+} from "./ipc.ts";
 import { getConfigManager } from "./electronConfig.ts";
 import { getEngineAndVvppController } from "./engineAndVvppController.ts";
 import { getIpcMainHandle } from "./ipcMainHandle.ts";

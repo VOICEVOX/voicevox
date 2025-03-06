@@ -126,7 +126,10 @@ import BaseButton from "@/components/Base/BaseButton.vue";
 import BaseIconButton from "@/components/Base/BaseIconButton.vue";
 import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 import { useStore } from "@/store/index.ts";
-import { useHotkeyManager, eventToCombination } from "@/plugins/hotkeyPlugin.ts";
+import {
+  useHotkeyManager,
+  eventToCombination,
+} from "@/plugins/hotkeyPlugin.ts";
 import {
   HotkeyCombination,
   HotkeyActionNameType,

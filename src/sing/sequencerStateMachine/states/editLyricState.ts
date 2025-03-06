@@ -1,13 +1,13 @@
-import { SetNextState, State } from "@/sing/stateMachine";
+import { SetNextState, State } from "@/sing/stateMachine.ts";
 import {
   Context,
   IdleStateId,
   Input,
   SequencerStateDefinitions,
-} from "@/sing/sequencerStateMachine/common";
-import { NoteId, TrackId } from "@/type/preload";
-import { Note } from "@/store/type";
-import { splitLyricsByMoras } from "@/sing/domain";
+} from "@/sing/sequencerStateMachine/common.ts";
+import { NoteId, TrackId } from "@/type/preload.ts";
+import { Note } from "@/store/type.ts";
+import { splitLyricsByMoras } from "@/sing/domain.ts";
 
 export class EditLyricState
   implements State<SequencerStateDefinitions, Input, Context>

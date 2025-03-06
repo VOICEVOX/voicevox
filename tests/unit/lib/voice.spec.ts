@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { EngineId, SpeakerId, StyleId, Voice, VoiceId } from "@/type/preload.ts";
+import {
+  EngineId,
+  SpeakerId,
+  StyleId,
+  Voice,
+  VoiceId,
+} from "@/type/preload.ts";
 
 const voiceIdToVoice = (voiceId: VoiceId): Voice => {
   const [engineId, speakerId, styleId] = voiceId.split(":");
