@@ -3,9 +3,11 @@
     <TooltipProvider disableHoverableContent :delayDuration="500">
       <MenuBar
         v-if="openedEditor != undefined"
-        :fileSubMenuData="subMenuData.fileSubMenuData.value"
-        :editSubMenuData="subMenuData.editSubMenuData.value"
-        :viewSubMenuData="subMenuData.viewSubMenuData.value"
+        :fileSubMenuData="subMenuData.file"
+        :editSubMenuData="subMenuData.edit"
+        :viewSubMenuData="subMenuData.view"
+        :engineSubMenuData="subMenuData.engine"
+        :settingSubMenuData="subMenuData.setting"
         :editor="openedEditor"
       />
       <KeepAlive>
@@ -37,22 +39,52 @@ import MenuBar from "@/components/Menu/MenuBar/MenuBar.vue";
 import { useMenuBarData as useTalkMenuBarData } from "@/components/Talk/menuBarData";
 import { useMenuBarData as useSingMenuBarData } from "@/components/Sing/menuBarData";
 import { setFontToCss, setThemeToCss } from "@/domain/dom";
-import { ExhaustiveError } from "@/type/utility";
+import { useCommonMenuBarData } from "@/domain/menuBarData";
+import { concatMenuBarData } from "@/domain/menuBarData";
 
 const store = useStore();
 
+const commonMenuBarData = useCommonMenuBarData();
 const talkMenuBarData = useTalkMenuBarData();
 const singMenuBarData = useSingMenuBarData();
 
-const subMenuData = computed(() => {
-  if (openedEditor.value === "talk" || openedEditor.value == undefined) {
-    return talkMenuBarData;
-  } else if (openedEditor.value === "song") {
-    return singMenuBarData;
-  }
-
-  throw new ExhaustiveError(openedEditor.value);
-});
+const subMenuData = computed(() =>
+  concatMenuBarData([
+    {
+      visible: true,
+      data: commonMenuBarData,
+      order: {
+        file: "post",
+        edit: "post",
+        view: "post",
+        engine: "post",
+        setting: "post",
+      },
+    },
+    {
+      visible: store.state.openedEditor === "talk",
+      data: talkMenuBarData,
+      order: {
+        file: "pre",
+        edit: "post",
+        view: "post",
+        engine: "post",
+        setting: "post",
+      },
+    },
+    {
+      visible: store.state.openedEditor === "song",
+      data: singMenuBarData,
+      order: {
+        file: "pre",
+        edit: "post",
+        view: "post",
+        engine: "post",
+        setting: "post",
+      },
+    },
+  ]),
+);
 
 const openedEditor = computed(() => store.state.openedEditor);
 

@@ -3,8 +3,9 @@ import { MenuItemData } from "@/components/Menu/type";
 
 import { useStore } from "@/store";
 import { useRootMiscSetting } from "@/composables/useRootMiscSetting";
+import { MenuBarDataOrRef } from "@/domain/menuBarData";
 
-export const useMenuBarData = () => {
+export const useMenuBarData = (): MenuBarDataOrRef => {
   const store = useStore();
 
   // 「ファイル」メニュー
@@ -72,8 +73,10 @@ export const useMenuBarData = () => {
   ]);
 
   return {
-    fileSubMenuData,
-    editSubMenuData,
-    viewSubMenuData,
+    file: fileSubMenuData,
+    edit: editSubMenuData,
+    view: viewSubMenuData,
+    engine: [],
+    setting: [],
   };
 };

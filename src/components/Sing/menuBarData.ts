@@ -4,8 +4,9 @@ import { MenuItemData } from "@/components/Menu/type";
 import { useRootMiscSetting } from "@/composables/useRootMiscSetting";
 import { ExportSongProjectFileType } from "@/store/type";
 import { notifyResult } from "@/components/Dialog/Dialog";
+import { MenuBarDataOrRef } from "@/domain/menuBarData";
 
-export const useMenuBarData = () => {
+export const useMenuBarData = (): MenuBarDataOrRef => {
   const store = useStore();
   const uiLocked = computed(() => store.getters.UI_LOCKED);
   const isNotesSelected = computed(
@@ -190,5 +191,11 @@ export const useMenuBarData = () => {
     },
   ]);
 
-  return { fileSubMenuData, editSubMenuData, viewSubMenuData };
+  return {
+    file: fileSubMenuData,
+    edit: editSubMenuData,
+    view: viewSubMenuData,
+    engine: [],
+    setting: [],
+  };
 };
