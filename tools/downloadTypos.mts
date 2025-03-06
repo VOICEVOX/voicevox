@@ -27,6 +27,9 @@ const CPU_ARCHITECTURE = {
 const BINARY_BASE_PATH = resolve(import.meta.dirname, "..", "vendored");
 // typosのバイナリを格納するディレクトリ
 const TYPOS_DIRECTORY_PATH = resolve(BINARY_BASE_PATH, "typos");
+// typosのバージョンを保存しておくテキストファイル
+const TYPOS_VERSION_FILE_NAME = "version.txt";
+
 const TYPOS_VERSION = "v1.30.0";
 
 // 各OSとアーキテクチャに対応するtyposバイナリのターゲットトリプル
@@ -113,7 +116,7 @@ async function needsDownloadTypos(): Promise<boolean> {
   // TYPOS_BINARY_PATHが存在する場合、typosのバージョンをチェック
   if (await exists(TYPOS_DIRECTORY_PATH)) {
     const currentVersion = await fs
-      .readFile(resolve(TYPOS_DIRECTORY_PATH, ".typos-version"), "utf-8")
+      .readFile(resolve(TYPOS_DIRECTORY_PATH, TYPOS_VERSION_FILE_NAME), "utf-8")
       .catch((error: NodeJS.ErrnoException) => {
         if (error.code === "ENOENT") {
           return ""; // バージョンファイルが存在しない場合は空文字列を返却
@@ -193,8 +196,8 @@ async function downloadAndUnarchive({ url }: { url: string }) {
   }
 
   // typosのバージョンを保存
-  const versionFile = resolve(TYPOS_DIRECTORY_PATH, ".typos-version");
-  await fs.writeFile(versionFile, `${TYPOS_VERSION}`);
+  const versionFile = resolve(TYPOS_DIRECTORY_PATH, TYPOS_VERSION_FILE_NAME);
+  await fs.writeFile(versionFile, TYPOS_VERSION);
 
   // 解凍後に圧縮ファイルを削除
   await fs.rm(compressedFilePath);
