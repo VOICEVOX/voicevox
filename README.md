@@ -208,7 +208,7 @@ pnpm run test-ui:storybook-vrt # Playwright の UI を表示
 > 2. 適当な名前を入力し、 `ユーザー名/voicevox` へのアクセス権を与え、 Repository permissions の Contents で Read and write を選択します。
 >    <details>
 >    <summary>設定例</summary>
->    <img src="./docs/res/Fine-granted_Tokensの作成.png" width="320">
+>    <img src="./docs/res/Fine-granted_Tokensの作成.png" width="320" alt="https://github.com/VOICEVOX/voicevox/blob/main/docs/res/Fine-granted_Tokens%E3%81%AE%E4%BD%9C%E6%88%90.png">
 >    </details>
 > 3. トークンを作成して文字列をコピーします。
 > 4. `ユーザー名/voicevox` のリポジトリの Settings > Secrets and variables > Actions > New repository secret を開きます。
