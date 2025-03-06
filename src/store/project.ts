@@ -190,7 +190,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         }
 
         try {
-          let buf: ArrayBuffer;
+          let buf: Uint8Array;
           if (filePath != undefined) {
             buf = await window.backend
               .readFile({ filePath })
@@ -202,7 +202,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           } else {
             if (payload.type != "file")
               throw new UnreachableError("payload.type != 'file'");
-            buf = await payload.file.arrayBuffer();
+            buf = new Uint8Array(await payload.file.arrayBuffer());
           }
 
           const text = new TextDecoder("utf-8").decode(buf).trim();
@@ -380,7 +380,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
       await window.backend
         .writeFile({
           filePath,
-          buffer: buf,
+          buffer: new Uint8Array(buf),
         })
         .then(getValueOrThrow);
     },

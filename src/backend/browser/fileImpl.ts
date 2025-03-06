@@ -229,7 +229,7 @@ export const showOpenFilePickerImpl = async (options: {
   multiple: boolean;
   fileTypes: {
     description: string;
-    accept: Record<string, string[]>;
+    accept: Record<MIMEType, FileExtension[]>;
   }[];
 }) => {
   try {
@@ -262,7 +262,7 @@ export const readFileImpl = async (filePath: string) => {
   }
   const file = await fileHandle.getFile();
   const buffer = await file.arrayBuffer();
-  return success(buffer);
+  return success(new Uint8Array(buffer));
 };
 
 // ファイル選択ダイアログを開く
@@ -280,7 +280,9 @@ export const showSaveFilePickerImpl: (typeof window)[typeof SandboxKey]["showSav
         {
           description: obj.extensions.join("、"),
           accept: {
-            "application/octet-stream": obj.extensions.map((ext) => `.${ext}`),
+            "application/octet-stream": obj.extensions.map(
+              (ext): FileExtension => `.${ext}`,
+            ),
           },
         },
       ],
