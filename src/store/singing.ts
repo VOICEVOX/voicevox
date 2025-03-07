@@ -550,7 +550,10 @@ const singingVoiceCache = new Map<SingingVoiceKey, SingingVoice>();
 
 const initialTrackId = TrackId(uuid4());
 
-const setPreviewSynthParamsToSynth = (params: PreviewSynthParams, synth: PolySynth) => {
+const setPreviewSynthParamsToSynth = (
+  params: PreviewSynthParams,
+  synth: PolySynth,
+) => {
   synth.oscParams = params.oscParams;
   synth.filterParams = params.filterParams;
   synth.ampParams = params.ampParams;
@@ -1636,7 +1639,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   REFLECT_PREVIEW_SYNTH_PARAMS: {
     async action({ state }) {
       reflectPreviewSynthParams(state.previewSynthParams);
-    }
+    },
   },
 
   DEFAULT_PREVIEW_SYNTH_PARAMS: {
@@ -2646,7 +2649,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               snapshot.tempos,
               snapshot.tpqn,
               phrase.trackId,
-              state.previewSynthParams
+              state.previewSynthParams,
             );
             registerSequence(sequenceId, noteSequence);
             mutations.SET_SEQUENCE_ID_TO_PHRASE({ phraseKey, sequenceId });
@@ -2676,7 +2679,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
           try {
             // フレーズのレンダリングを行う
-            /*const trackId = phrase.trackId;
+            const trackId = phrase.trackId;
             const startStageId = getOrThrow(renderStartStageIds, phraseKey);
             const startStageIndex = stages.findIndex((value) => {
               return value.id === startStageId;
@@ -2717,7 +2720,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               phrase.trackId,
             );
             registerSequence(sequenceId, audioSequence);
-            mutations.SET_SEQUENCE_ID_TO_PHRASE({ phraseKey, sequenceId });*/
+            mutations.SET_SEQUENCE_ID_TO_PHRASE({ phraseKey, sequenceId });
 
             mutations.SET_STATE_TO_PHRASE({
               phraseKey,

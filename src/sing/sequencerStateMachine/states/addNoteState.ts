@@ -9,13 +9,10 @@ import {
 } from "@/sing/sequencerStateMachine/common";
 import { NoteId, TrackId } from "@/type/preload";
 import { Note } from "@/store/type";
-import {
-  getButton,
-  getDoremiFromNoteNumber,
-  PREVIEW_SOUND_DURATION,
-} from "@/sing/viewHelper";
+import { getButton, getDoremiFromNoteNumber } from "@/sing/viewHelper";
 import { clamp } from "@/sing/utility";
 import { uuid4 } from "@/helpers/random";
+import { PREVIEW_SOUND_DURATION_SECONDS } from "@/sing/domain";
 
 export class AddNoteState
   implements State<SequencerStateDefinitions, Input, Context>
@@ -134,7 +131,7 @@ export class AddNoteState
       if (previewNotes.length === 1) {
         void context.store.actions.PLAY_PREVIEW_SOUND({
           noteNumber: previewNotes[0].noteNumber,
-          duration: PREVIEW_SOUND_DURATION,
+          duration: PREVIEW_SOUND_DURATION_SECONDS,
         });
       }
     }

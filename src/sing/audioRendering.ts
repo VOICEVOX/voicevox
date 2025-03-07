@@ -876,9 +876,12 @@ export class PolySynth implements Instrument {
 
     this.highPassFilterNode.connect(this.gainNode);
 
-    this.debouncedReflectVoiceParams = debounce(() => {
-      this.restartCurrentlyActiveVoices();
-    }, { type: "microtask" });
+    this.debouncedReflectVoiceParams = debounce(
+      () => {
+        this.restartCurrentlyActiveVoices();
+      },
+      { type: "microtask" },
+    );
   }
 
   private updateOscPeriodicWave(oscParams: SynthOscParams) {

@@ -248,12 +248,7 @@ import ContextMenu, {
   ContextMenuItemData,
 } from "@/components/Menu/ContextMenu/Container.vue";
 import { useStore } from "@/store";
-import {
-  Note,
-  SequencerEditTarget,
-  NoteEditTool,
-  PitchEditTool,
-} from "@/store/type";
+import { Note } from "@/store/type";
 import {
   PREVIEW_SOUND_DURATION_SECONDS,
   getEndTicksOfPhrase,

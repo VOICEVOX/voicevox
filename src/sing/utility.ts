@@ -224,7 +224,7 @@ type DebounceOptions =
 
 export const debounce = <T extends unknown[]>(
   fn: (...args: T) => void,
-  options: DebounceOptions
+  options: DebounceOptions,
 ) => {
   let scheduled = false;
   let timeoutId: number | undefined = undefined;

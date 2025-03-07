@@ -1,14 +1,11 @@
 import { ComputedRef, Ref } from "vue";
 import { StateDefinitions } from "@/sing/stateMachine";
 import { Rect } from "@/sing/utility";
-import {
-  CursorState,
-  PREVIEW_SOUND_DURATION,
-  PreviewMode,
-} from "@/sing/viewHelper";
+import { CursorState, PreviewMode } from "@/sing/viewHelper";
 import { Store } from "@/store";
 import { Note, SequencerEditTarget } from "@/store/type";
 import { NoteId, TrackId } from "@/type/preload";
+import { PREVIEW_SOUND_DURATION_SECONDS } from "@/sing/domain";
 
 export type PositionOnSequencer = {
   readonly x: number;
@@ -297,6 +294,6 @@ export const selectOnlyThisNoteAndPlayPreviewSound = (
   void context.store.actions.SELECT_NOTES({ noteIds: [note.id] });
   void context.store.actions.PLAY_PREVIEW_SOUND({
     noteNumber: note.noteNumber,
-    duration: PREVIEW_SOUND_DURATION,
+    duration: PREVIEW_SOUND_DURATION_SECONDS,
   });
 };
