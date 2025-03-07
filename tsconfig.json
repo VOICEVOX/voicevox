@@ -23,12 +23,14 @@
   "include": [
     "playwright.config.ts",
     "*.mts",
+    "eslint-plugin/**/*.mts",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/**/*.vue",
     "tests/**/*.ts",
     "tests/**/*.mts",
     "tests/**/*.tsx",
+    "tools/**/*.ts",
     "tools/**/*.mts",
     ".storybook/**/*.ts"
   ],

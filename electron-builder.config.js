@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 // @ts-check
 const path = require("path");
 const fs = require("fs");
@@ -145,7 +146,7 @@ const builderOptions = {
     target: [
       {
         target: "AppImage",
-        arch: ["x64"],
+        arch: [isArm64 ? "arm64" : "x64"],
       },
     ],
   },

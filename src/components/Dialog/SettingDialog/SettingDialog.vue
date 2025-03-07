@@ -218,7 +218,7 @@
                 </QSlideTransition>
 
                 <FileNameTemplateDialog
-                  v-model:open-dialog="showAudioFilePatternEditDialog"
+                  v-model:openDialog="showAudioFilePatternEditDialog"
                   :savedTemplate="audioFileNamePattern"
                   :defaultTemplate="DEFAULT_AUDIO_FILE_NAME_TEMPLATE"
                   :availableTags="[
@@ -236,7 +236,7 @@
                   "
                 />
                 <FileNameTemplateDialog
-                  v-model:open-dialog="showSongTrackAudioFilePatternEditDialog"
+                  v-model:openDialog="showSongTrackAudioFilePatternEditDialog"
                   :savedTemplate="songTrackFileNamePattern"
                   :defaultTemplate="DEFAULT_SONG_AUDIO_FILE_NAME_TEMPLATE"
                   :availableTags="[

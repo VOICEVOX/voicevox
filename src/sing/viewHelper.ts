@@ -126,24 +126,9 @@ export type PreviewMode =
   | "RESIZE_NOTE_RIGHT"
   | "RESIZE_NOTE_LEFT"
   | "DRAW_PITCH"
-  | "ERASE_PITCH";
-
-// マウスダウン時の振る舞い
-export const mouseDownBehaviorSchema = z.enum([
-  "IGNORE",
-  "DESELECT_ALL",
-  "ADD_NOTE",
-  "START_RECT_SELECT",
-  "DRAW_PITCH",
-  "ERASE_PITCH",
-]);
-export type MouseDownBehavior = z.infer<typeof mouseDownBehaviorSchema>;
-
-// ダブルクリック時の振る舞い
-export const mouseDoubleClickBehaviorSchema = z.enum(["IGNORE", "ADD_NOTE"]);
-export type MouseDoubleClickBehavior = z.infer<
-  typeof mouseDoubleClickBehaviorSchema
->;
+  | "ERASE_PITCH"
+  | "SELECT_NOTES_WITH_RECT"
+  | "EDIT_NOTE_LYRIC";
 
 export function getButton(event: MouseEvent): MouseButton {
   // macOSの場合、Ctrl+クリックは右クリック
@@ -158,6 +143,19 @@ export function getButton(event: MouseEvent): MouseButton {
     return "OTHER_BUTTON";
   }
 }
+
+export const getXInBorderBox = (clientX: number, element: HTMLElement) => {
+  return clientX - element.getBoundingClientRect().left;
+};
+
+export const getYInBorderBox = (clientY: number, element: HTMLElement) => {
+  return clientY - element.getBoundingClientRect().top;
+};
+
+/** 直接イベントが来ているかどうか */
+export const isSelfEventTarget = (event: UIEvent) => {
+  return event.target === event.currentTarget;
+};
 
 // カーソルの状態
 export const cursorStateSchema = z.enum([

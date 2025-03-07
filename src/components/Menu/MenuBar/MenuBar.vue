@@ -152,6 +152,12 @@ const saveProjectAs = async () => {
   }
 };
 
+const saveProjectCopy = async () => {
+  if (!uiLocked.value) {
+    await store.actions.SAVE_PROJECT_FILE_AS_COPY({});
+  }
+};
+
 const importProject = () => {
   if (!uiLocked.value) {
     void store.actions.LOAD_PROJECT_FILE({ type: "dialog" });
@@ -335,6 +341,14 @@ const menudata = computed<MenuItemData[]>(() => [
         label: "プロジェクトを名前を付けて保存",
         onClick: async () => {
           await saveProjectAs();
+        },
+        disableWhenUiLocked: true,
+      },
+      {
+        type: "button",
+        label: "プロジェクトの複製を保存",
+        onClick: async () => {
+          await saveProjectCopy();
         },
         disableWhenUiLocked: true,
       },
@@ -584,6 +598,10 @@ registerHotkeyForAllEditors({
 registerHotkeyForAllEditors({
   callback: saveProjectAs,
   name: "プロジェクトを名前を付けて保存",
+});
+registerHotkeyForAllEditors({
+  callback: saveProjectCopy,
+  name: "プロジェクトの複製を保存",
 });
 registerHotkeyForAllEditors({
   callback: importProject,

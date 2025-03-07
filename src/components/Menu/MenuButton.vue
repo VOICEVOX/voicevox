@@ -8,7 +8,7 @@
     aria-haspopup="menu"
     @click="
       (menudata.type === 'button' || menudata.type === 'root') &&
-        menudata.onClick?.()
+      menudata.onClick?.()
     "
   >
     {{ menudata.label }}

@@ -491,7 +491,7 @@ export type ConfigType = z.infer<ReturnType<typeof getConfigSchema>>;
 // workaround. SystemError(https://nodejs.org/api/errors.html#class-systemerror)が2022/05/19時点ではNodeJSの型定義に記述されていないためこれを追加しています。
 export class SystemError extends Error {
   code?: string | undefined;
-  constructor(message: string, code?: string | undefined) {
+  constructor(message: string, code?: string) {
     super(message);
 
     this.name = new.target.name;

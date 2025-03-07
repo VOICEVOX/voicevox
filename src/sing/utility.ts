@@ -1,5 +1,17 @@
 import { ExhaustiveError } from "@/type/utility";
 
+export type Rect = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+export function round(value: number, digits: number) {
+  const powerOf10 = 10 ** digits;
+  return Math.round(value * powerOf10) / powerOf10;
+}
+
 export function clamp(value: number, min: number, max: number) {
   if (min > max) {
     throw new Error(
@@ -7,11 +19,6 @@ export function clamp(value: number, min: number, max: number) {
     );
   }
   return Math.min(max, Math.max(min, value));
-}
-
-export function round(value: number, digits: number) {
-  const powerOf10 = 10 ** digits;
-  return Math.round(value * powerOf10) / powerOf10;
 }
 
 export function getLast<T>(array: T[]) {
