@@ -3,7 +3,7 @@ import {
   decibelToLinear,
   linearToDecibel,
 } from "@/sing/domain";
-import { clamp, Timer } from "@/sing/utility";
+import { clamp, debounce, Timer } from "@/sing/utility";
 
 const getEarliestSchedulableContextTime = (audioContext: BaseAudioContext) => {
   const renderQuantumSize = 128;
@@ -781,6 +781,7 @@ export class PolySynth implements Instrument {
   private readonly audioContext: BaseAudioContext;
   private readonly highPassFilterNode: BiquadFilterNode;
   private readonly gainNode: GainNode;
+  private readonly debouncedReflectVoiceParams: () => void;
 
   private _oscParams: SynthOscParams;
   private oscPeriodicWave: PeriodicWave | undefined;
@@ -799,7 +800,7 @@ export class PolySynth implements Instrument {
   set oscParams(value: SynthOscParams) {
     this._oscParams = value;
     this.updateOscPeriodicWave(value);
-    this.restartCurrentlyActiveVoices();
+    this.debouncedReflectVoiceParams();
   }
 
   get filterParams() {
@@ -807,7 +808,7 @@ export class PolySynth implements Instrument {
   }
   set filterParams(value: SynthFilterParams) {
     this._filterParams = value;
-    this.restartCurrentlyActiveVoices();
+    this.debouncedReflectVoiceParams();
   }
 
   get ampParams() {
@@ -815,7 +816,7 @@ export class PolySynth implements Instrument {
   }
   set ampParams(value: SynthAmpParams) {
     this._ampParams = value;
-    this.restartCurrentlyActiveVoices();
+    this.debouncedReflectVoiceParams();
   }
 
   get lowCutFrequency() {
@@ -860,6 +861,10 @@ export class PolySynth implements Instrument {
     });
 
     this.highPassFilterNode.connect(this.gainNode);
+
+    this.debouncedReflectVoiceParams = debounce(() => {
+      this.restartCurrentlyActiveVoices();
+    }, { type: "microtask" });
   }
 
   private updateOscPeriodicWave(oscParams: SynthOscParams) {

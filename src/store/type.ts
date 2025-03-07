@@ -1299,6 +1299,10 @@ export type SingingStoreTypes = {
     action(payload: { volume: number }): void;
   };
 
+  REFLECT_PREVIEW_SYNTH_PARAMS: {
+    action(): void;
+  }
+
   DEFAULT_PREVIEW_SYNTH_PARAMS: {
     getter: Readonly<PreviewSynthParams>;
   };

@@ -26,6 +26,7 @@ import {
   TrackParameters,
   SingingPitchKey,
   SingingPitch,
+  PreviewSynthParams,
 } from "./type";
 import {
   buildSongTrackAudioFileNameFromRawData,
@@ -549,6 +550,27 @@ const singingVoiceCache = new Map<SingingVoiceKey, SingingVoice>();
 
 const initialTrackId = TrackId(uuid4());
 
+const setPreviewSynthParamsToSynth = (params: PreviewSynthParams, synth: PolySynth) => {
+  synth.oscParams = params.oscParams;
+  synth.filterParams = params.filterParams;
+  synth.ampParams = params.ampParams;
+  synth.lowCutFrequency = params.lowCutFrequency;
+  synth.volume = params.volume;
+};
+
+const reflectPreviewSynthParams = (params: PreviewSynthParams) => {
+  if (synthForPreview == undefined) {
+    throw new Error("synthForPreview is undefined.");
+  }
+
+  setPreviewSynthParamsToSynth(params, synthForPreview);
+  for (const sequence of sequences.values()) {
+    if (sequence.type === "note" && sequence.instrument instanceof PolySynth) {
+      setPreviewSynthParamsToSynth(params, sequence.instrument);
+    }
+  }
+};
+
 /**
  * シーケンスの音源の出力を取得する。
  * @param sequence シーケンス
@@ -624,12 +646,13 @@ const generateNoteSequence = (
   tempos: Tempo[],
   tpqn: number,
   trackId: TrackId,
+  previewSynthParams: PreviewSynthParams,
 ): NoteSequence & { trackId: TrackId } => {
   if (!audioContext) {
     throw new Error("audioContext is undefined.");
   }
   const noteEvents = generateNoteEvents(notes, tempos, tpqn);
-  const polySynth = new PolySynth(audioContext);
+  const polySynth = new PolySynth(audioContext, previewSynthParams);
   return {
     type: "note",
     instrument: polySynth,
@@ -1560,13 +1583,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     mutation(state, { oscParams }) {
       state.previewSynthParams.oscParams = oscParams;
     },
-    async action({ mutations }, { oscParams }) {
-      if (synthForPreview == undefined) {
-        throw new Error("synthForPreview is undefined.");
-      }
+    async action({ mutations, actions }, { oscParams }) {
       mutations.SET_PREVIEW_SYNTH_OSC_PARAMS({ oscParams });
 
-      synthForPreview.oscParams = oscParams;
+      void actions.REFLECT_PREVIEW_SYNTH_PARAMS();
     },
   },
 
@@ -1574,13 +1594,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     mutation(state, { filterParams }) {
       state.previewSynthParams.filterParams = filterParams;
     },
-    async action({ mutations }, { filterParams }) {
-      if (synthForPreview == undefined) {
-        throw new Error("synthForPreview is undefined.");
-      }
+    async action({ mutations, actions }, { filterParams }) {
       mutations.SET_PREVIEW_SYNTH_FILTER_PARAMS({ filterParams });
 
-      synthForPreview.filterParams = filterParams;
+      void actions.REFLECT_PREVIEW_SYNTH_PARAMS();
     },
   },
 
@@ -1588,26 +1605,20 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     mutation(state, { ampParams }) {
       state.previewSynthParams.ampParams = ampParams;
     },
-    async action({ mutations }, { ampParams }) {
-      if (synthForPreview == undefined) {
-        throw new Error("synthForPreview is undefined.");
-      }
+    async action({ mutations, actions }, { ampParams }) {
       mutations.SET_PREVIEW_SYNTH_AMP_PARAMS({ ampParams });
 
-      synthForPreview.ampParams = ampParams;
+      void actions.REFLECT_PREVIEW_SYNTH_PARAMS();
     },
   },
   SET_PREVIEW_SYNTH_LOW_CUT_FREQUENCY: {
     mutation(state, { lowCutFrequency }) {
       state.previewSynthParams.lowCutFrequency = lowCutFrequency;
     },
-    async action({ mutations }, { lowCutFrequency }) {
-      if (synthForPreview == undefined) {
-        throw new Error("synthForPreview is undefined.");
-      }
+    async action({ mutations, actions }, { lowCutFrequency }) {
       mutations.SET_PREVIEW_SYNTH_LOW_CUT_FREQUENCY({ lowCutFrequency });
 
-      synthForPreview.lowCutFrequency = lowCutFrequency;
+      void actions.REFLECT_PREVIEW_SYNTH_PARAMS();
     },
   },
 
@@ -1615,14 +1626,17 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     mutation(state, { volume }) {
       state.previewSynthParams.volume = volume;
     },
-    async action({ mutations }, { volume }) {
-      if (synthForPreview == undefined) {
-        throw new Error("synthForPreview is undefined.");
-      }
+    async action({ mutations, actions }, { volume }) {
       mutations.SET_PREVIEW_SYNTH_VOLUME({ volume });
 
-      synthForPreview.volume = volume;
+      void actions.REFLECT_PREVIEW_SYNTH_PARAMS();
     },
+  },
+
+  REFLECT_PREVIEW_SYNTH_PARAMS: {
+    async action({ state }) {
+      reflectPreviewSynthParams(state.previewSynthParams);
+    }
   },
 
   DEFAULT_PREVIEW_SYNTH_PARAMS: {
@@ -2634,6 +2648,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               snapshot.tempos,
               snapshot.tpqn,
               phrase.trackId,
+              state.previewSynthParams
             );
             registerSequence(sequenceId, noteSequence);
             mutations.SET_SEQUENCE_ID_TO_PHRASE({ phraseKey, sequenceId });
@@ -2663,7 +2678,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
           try {
             // フレーズのレンダリングを行う
-            const trackId = phrase.trackId;
+            /*const trackId = phrase.trackId;
             const startStageId = getOrThrow(renderStartStageIds, phraseKey);
             const startStageIndex = stages.findIndex((value) => {
               return value.id === startStageId;
@@ -2704,7 +2719,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               phrase.trackId,
             );
             registerSequence(sequenceId, audioSequence);
-            mutations.SET_SEQUENCE_ID_TO_PHRASE({ phraseKey, sequenceId });
+            mutations.SET_SEQUENCE_ID_TO_PHRASE({ phraseKey, sequenceId });*/
 
             mutations.SET_STATE_TO_PHRASE({
               phraseKey,
