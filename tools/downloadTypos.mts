@@ -113,36 +113,42 @@ function getBinaryURL() {
  * @returns {Promise<boolean>} Typosのダウンロードが必要か
  */
 async function shouldDownloadTypos(): Promise<boolean> {
-  // TYPOS_BINARY_PATHが存在する場合、typosのバージョンをチェック
-  if (await exists(TYPOS_DIRECTORY_PATH)) {
-    const currentVersion = await fs
-      .readFile(resolve(TYPOS_DIRECTORY_PATH, TYPOS_VERSION_FILE_NAME), "utf-8")
-      .catch((error: NodeJS.ErrnoException) => {
-        if (error.code === "ENOENT") {
-          return ""; // バージョンファイルが存在しない場合は空文字列を返却
-        }
-        throw error;
-      });
-    if (currentVersion === TYPOS_VERSION) {
-      return false;
-    }
+  if (!(await exists(TYPOS_DIRECTORY_PATH))) {
+    return true;
+  }
 
-    console.log(
-      "The downloaded version of typos differs from the specified version, so it will be re-downloaded",
+  // TYPOS_BINARY_PATHが存在する場合、typosのバージョンをチェック
+  const versionFilePath = resolve(
+    TYPOS_DIRECTORY_PATH,
+    TYPOS_VERSION_FILE_NAME,
+  );
+  if (!(await exists(versionFilePath))) {
+    return true;
+  }
+
+  const currentVersion = await fs.readFile(versionFilePath, "utf-8");
+  if (currentVersion === TYPOS_VERSION) {
+    return false;
+  }
+
+  console.log(
+    "The downloaded version of typos differs from the specified version, so it will be re-downloaded",
+  );
+  return true;
+}
+/**
+ * Typos用にディレクトリを空にする関数
+ */
+async function clearTyposDirectory() {
+  // TYPOS_BINARY_PATHが存在する場合、削除する
+  if (await exists(TYPOS_DIRECTORY_PATH)) {
+    const files = await fs.readdir(TYPOS_DIRECTORY_PATH);
+    await Promise.all(
+      files.map((file) => fs.unlink(resolve(TYPOS_DIRECTORY_PATH, file))),
     );
-    // 既にダウンロードされているtyposが指定のバージョンと異なる場合、それを削除
-    try {
-      const files = await fs.readdir(TYPOS_DIRECTORY_PATH);
-      await Promise.all(
-        files.map((file) => fs.unlink(resolve(TYPOS_DIRECTORY_PATH, file))),
-      );
-    } catch (error) {
-      console.error("Error removing downloaded typos:", error);
-    }
   } else {
     await fs.mkdir(TYPOS_DIRECTORY_PATH, { recursive: true });
   }
-  return true;
 }
 
 /**
@@ -153,6 +159,8 @@ async function downloadAndUnarchive({ url }: { url: string }) {
     console.log("typos already downloaded");
     return;
   }
+
+  await clearTyposDirectory();
 
   const response = await retryFetch(url);
   if (!response.ok) {
@@ -196,8 +204,11 @@ async function downloadAndUnarchive({ url }: { url: string }) {
   }
 
   // typosのバージョンを保存
-  const versionFile = resolve(TYPOS_DIRECTORY_PATH, TYPOS_VERSION_FILE_NAME);
-  await fs.writeFile(versionFile, TYPOS_VERSION);
+  const versionFilePath = resolve(
+    TYPOS_DIRECTORY_PATH,
+    TYPOS_VERSION_FILE_NAME,
+  );
+  await fs.writeFile(versionFilePath, TYPOS_VERSION);
 
   // 解凍後に圧縮ファイルを削除
   await fs.rm(compressedFilePath);
