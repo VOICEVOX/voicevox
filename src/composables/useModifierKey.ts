@@ -6,7 +6,7 @@ import {
   MaybeRefOrGetter,
   toValue,
 } from "vue";
-import { isMac } from "@/helpers/platform.ts";
+import { isMac } from "@/helpers/platform";
 
 type Target = EventTarget & GlobalEventHandlers;
 

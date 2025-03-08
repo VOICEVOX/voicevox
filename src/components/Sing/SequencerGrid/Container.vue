@@ -18,7 +18,7 @@ import { computed } from "vue";
 import { inject } from "vue";
 import { gridInfoInjectionKey } from "../ScoreSequencer.vue";
 import Presentation from "./Presentation.vue";
-import { useStore } from "@/store/index.ts";
+import { useStore } from "@/store";
 
 defineOptions({
   name: "SequencerGrid",

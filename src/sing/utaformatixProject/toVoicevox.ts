@@ -1,10 +1,10 @@
 import { Project as UfProject } from "@sevenc-nanashi/utaformatix-ts";
-import { VoicevoxScore } from "./common.ts";
-import { DEFAULT_TPQN, createDefaultTrack } from "@/sing/domain.ts";
-import { getDoremiFromNoteNumber } from "@/sing/viewHelper.ts";
-import { NoteId } from "@/type/preload.ts";
-import { Note, Tempo, TimeSignature, Track } from "@/store/type.ts";
-import { uuid4 } from "@/helpers/random.ts";
+import { VoicevoxScore } from "./common";
+import { DEFAULT_TPQN, createDefaultTrack } from "@/sing/domain";
+import { getDoremiFromNoteNumber } from "@/sing/viewHelper";
+import { NoteId } from "@/type/preload";
+import { Note, Tempo, TimeSignature, Track } from "@/store/type";
+import { uuid4 } from "@/helpers/random";
 
 /** UtaformatixのプロジェクトをVoicevoxの楽譜データに変換する */
 export const ufProjectToVoicevox = (project: UfProject): VoicevoxScore => {

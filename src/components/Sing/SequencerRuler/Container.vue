@@ -21,8 +21,8 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import Presentation from "./Presentation.vue";
-import { useStore } from "@/store/index.ts";
-import { Tempo, TimeSignature } from "@/store/type.ts";
+import { useStore } from "@/store";
+import { Tempo, TimeSignature } from "@/store/type";
 
 defineOptions({
   name: "SequencerRuler",

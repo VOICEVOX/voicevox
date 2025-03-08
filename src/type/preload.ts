@@ -1,12 +1,12 @@
 import { z } from "zod";
-import { IpcSOData } from "./ipc.ts";
-import { AltPortInfos } from "@/store/type.ts";
-import { Result } from "@/type/result.ts";
+import { IpcSOData } from "./ipc";
+import { AltPortInfos } from "@/store/type";
+import { Result } from "@/type/result";
 import {
   HotkeySettingType,
   hotkeySettingSchema,
   getDefaultHotkeySettings,
-} from "@/domain/hotkeyAction.ts";
+} from "@/domain/hotkeyAction";
 
 const urlStringSchema = z.string().url().brand("URL");
 export type UrlString = z.infer<typeof urlStringSchema>;

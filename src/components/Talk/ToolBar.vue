@@ -24,12 +24,12 @@ import {
   generateAndConnectAndSaveAudioWithDialog,
   multiGenerateAndSaveAudioWithDialog,
   generateAndSaveOneAudioWithDialog,
-} from "@/components/Dialog/Dialog.ts";
-import { useStore } from "@/store/index.ts";
-import { ToolbarButtonTagType } from "@/type/preload.ts";
-import { getToolbarButtonName } from "@/store/utility.ts";
-import { useHotkeyManager } from "@/plugins/hotkeyPlugin.ts";
-import { handlePossiblyNotMorphableError } from "@/store/audioGenerate.ts";
+} from "@/components/Dialog/Dialog";
+import { useStore } from "@/store";
+import { ToolbarButtonTagType } from "@/type/preload";
+import { getToolbarButtonName } from "@/store/utility";
+import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
+import { handlePossiblyNotMorphableError } from "@/store/audioGenerate";
 
 type ButtonContent = {
   text: string;

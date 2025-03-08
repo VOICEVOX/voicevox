@@ -5,7 +5,7 @@ import FileNameTemplateDialog from "./FileNameTemplateDialog.vue";
 import {
   buildAudioFileNameFromRawData,
   DEFAULT_AUDIO_FILE_NAME_TEMPLATE,
-} from "@/store/utility.ts";
+} from "@/store/utility";
 
 const meta: Meta<typeof FileNameTemplateDialog> = {
   component: FileNameTemplateDialog,

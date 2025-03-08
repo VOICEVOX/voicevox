@@ -107,11 +107,11 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { debounce } from "quasar";
-import { useStore } from "@/store/index.ts";
-import { SpeakerId, StyleId, TrackId } from "@/type/preload.ts";
-import { getStyleDescription } from "@/sing/viewHelper.ts";
+import { useStore } from "@/store";
+import { SpeakerId, StyleId, TrackId } from "@/type/preload";
+import { getStyleDescription } from "@/sing/viewHelper";
 import SingerIcon from "@/components/Sing/SingerIcon.vue";
-import { useEngineIcons } from "@/composables/useEngineIcons.ts";
+import { useEngineIcons } from "@/composables/useEngineIcons";
 
 defineOptions({
   name: "CharacterMenuButton",

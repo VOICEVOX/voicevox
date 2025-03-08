@@ -32,13 +32,13 @@ import ScoreSequencer from "./ScoreSequencer.vue";
 import SideBar from "./SideBar/SideBar.vue";
 import EngineStartupOverlay from "@/components/EngineStartupOverlay.vue";
 import ExportOverlay from "@/components/Sing/ExportOverlay.vue";
-import { useStore } from "@/store/index.ts";
-import onetimeWatch from "@/helpers/onetimeWatch.ts";
+import { useStore } from "@/store";
+import onetimeWatch from "@/helpers/onetimeWatch";
 import {
   DEFAULT_TPQN,
   createDefaultTempo,
   createDefaultTimeSignature,
-} from "@/sing/domain.ts";
+} from "@/sing/domain";
 
 const props = defineProps<{
   isEnginesReady: boolean;

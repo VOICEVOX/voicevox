@@ -22,7 +22,7 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from "vue";
 import AcceptDialog from "./AcceptDialog.vue";
-import { useStore } from "@/store/index.ts";
+import { useStore } from "@/store";
 
 const props = defineProps<{
   modelValue: boolean;

@@ -17,10 +17,10 @@
 import semver from "semver";
 import { computed, watchEffect } from "vue";
 import UpdateNotificationDialog from "./Presentation.vue";
-import { useFetchNewUpdateInfos } from "@/composables/useFetchNewUpdateInfos.ts";
-import { useStore } from "@/store/index.ts";
-import { UrlString } from "@/type/preload.ts";
-import { getAppInfos } from "@/domain/appInfo.ts";
+import { useFetchNewUpdateInfos } from "@/composables/useFetchNewUpdateInfos";
+import { useStore } from "@/store";
+import { UrlString } from "@/type/preload";
+import { getAppInfos } from "@/domain/appInfo";
 
 const props = defineProps<{
   canOpenDialog: boolean; // ダイアログを開いても良いかどうか

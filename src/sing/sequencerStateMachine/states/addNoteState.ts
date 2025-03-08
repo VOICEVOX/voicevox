@@ -1,4 +1,4 @@
-import { SetNextState, State } from "@/sing/stateMachine.ts";
+import { SetNextState, State } from "@/sing/stateMachine";
 import {
   Context,
   getGuideLineTicks,
@@ -6,16 +6,16 @@ import {
   Input,
   PositionOnSequencer,
   SequencerStateDefinitions,
-} from "@/sing/sequencerStateMachine/common.ts";
-import { NoteId, TrackId } from "@/type/preload.ts";
-import { Note } from "@/store/type.ts";
+} from "@/sing/sequencerStateMachine/common";
+import { NoteId, TrackId } from "@/type/preload";
+import { Note } from "@/store/type";
 import {
   getButton,
   getDoremiFromNoteNumber,
   PREVIEW_SOUND_DURATION,
-} from "@/sing/viewHelper.ts";
-import { clamp } from "@/sing/utility.ts";
-import { uuid4 } from "@/helpers/random.ts";
+} from "@/sing/viewHelper";
+import { clamp } from "@/sing/utility";
+import { uuid4 } from "@/helpers/random";
 
 export class AddNoteState
   implements State<SequencerStateDefinitions, Input, Context>

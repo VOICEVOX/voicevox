@@ -1,6 +1,6 @@
 import { ref, computed, Ref, Events } from "vue";
 import { QSliderProps, debounce } from "quasar";
-import { isOnCommandOrCtrlKeyDown } from "@/store/utility.ts";
+import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 
 export type Props = {
   onPan?: QSliderProps["onPan"];

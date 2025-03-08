@@ -21,8 +21,8 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { useStore } from "@/store/index.ts";
-import { EditorType } from "@/type/preload.ts";
+import { useStore } from "@/store";
+import { EditorType } from "@/type/preload";
 
 const store = useStore();
 

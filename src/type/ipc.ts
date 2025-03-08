@@ -8,10 +8,10 @@ import {
   NativeThemeType,
   TextAsset,
   ToolbarSettingType,
-} from "@/type/preload.ts";
-import { AltPortInfos } from "@/store/type.ts";
-import { Result } from "@/type/result.ts";
-import { HotkeySettingType } from "@/domain/hotkeyAction.ts";
+} from "@/type/preload";
+import { AltPortInfos } from "@/store/type";
+import { Result } from "@/type/result";
+import { HotkeySettingType } from "@/domain/hotkeyAction";
 
 /**
  * invoke, handle

@@ -2,15 +2,15 @@ import { setup, Preview } from "@storybook/vue3";
 import { Quasar, Dialog, Loading, Notify } from "quasar";
 import iconSet from "quasar/icon-set/material-icons";
 import { withThemeByDataAttribute } from "@storybook/addon-themes";
-import { addActionsWithEmits } from "./utils/argTypesEnhancers.ts";
-import { markdownItPlugin } from "@/plugins/markdownItPlugin.ts";
+import { addActionsWithEmits } from "./utils/argTypesEnhancers";
+import { markdownItPlugin } from "@/plugins/markdownItPlugin";
 
 import "@quasar/extras/material-icons/material-icons.css";
 import "quasar/dist/quasar.sass";
 import "@/styles/_index.scss";
-import { UnreachableError } from "@/type/utility.ts";
-import { setThemeToCss, setFontToCss } from "@/domain/dom.ts";
-import { themes } from "@/domain/theme/index.ts";
+import { UnreachableError } from "@/type/utility";
+import { setThemeToCss, setFontToCss } from "@/domain/dom";
+import { themes } from "@/domain/theme";
 
 setup((app) => {
   app.use(Quasar, {

@@ -1,10 +1,10 @@
 import { join } from "path";
 import fs from "fs";
 import { app } from "electron";
-import { writeFileSafely } from "./fileHelper.ts";
-import { BaseConfigManager, Metadata } from "@/backend/common/ConfigManager.ts";
-import { ConfigType } from "@/type/preload.ts";
-import { isMac } from "@/helpers/platform.ts";
+import { writeFileSafely } from "./fileHelper";
+import { BaseConfigManager, Metadata } from "@/backend/common/ConfigManager";
+import { ConfigType } from "@/type/preload";
+import { isMac } from "@/helpers/platform";
 
 export class ElectronConfigManager extends BaseConfigManager {
   protected getAppVersion() {

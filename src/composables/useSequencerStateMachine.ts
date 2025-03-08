@@ -1,15 +1,15 @@
 import { computed, ref, watch } from "vue";
-import { useCommandOrControlKey, useShiftKey } from "./useModifierKey.ts";
+import { useCommandOrControlKey, useShiftKey } from "./useModifierKey";
 import {
   ComputedRefs,
   IdleStateId,
   Input,
   PartialStore,
   Refs,
-} from "@/sing/sequencerStateMachine/common.ts";
-import { getNoteDuration } from "@/sing/domain.ts";
-import { createSequencerStateMachine } from "@/sing/sequencerStateMachine/index.ts";
-import { ExhaustiveError } from "@/type/utility.ts";
+} from "@/sing/sequencerStateMachine/common";
+import { getNoteDuration } from "@/sing/domain";
+import { createSequencerStateMachine } from "@/sing/sequencerStateMachine";
+import { ExhaustiveError } from "@/type/utility";
 
 export const useSequencerStateMachine = (store: PartialStore) => {
   const isShiftKeyDown = useShiftKey();

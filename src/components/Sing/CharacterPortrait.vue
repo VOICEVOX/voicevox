@@ -8,7 +8,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { useStore } from "@/store/index.ts";
+import { useStore } from "@/store";
 
 const store = useStore();
 const showSingCharacterPortrait = computed(

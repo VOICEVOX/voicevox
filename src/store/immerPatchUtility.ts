@@ -1,5 +1,5 @@
 import { Patch } from "immer";
-import { ExhaustiveError } from "@/type/utility.ts";
+import { ExhaustiveError } from "@/type/utility";
 
 /**
  * produceWithPatchesにより生成された複数のパッチをオブジェクトに適用する。

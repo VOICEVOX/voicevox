@@ -30,7 +30,7 @@
 
 <script setup lang="ts">
 import { computed, onUnmounted, ref, watch } from "vue";
-import { useStore } from "@/store/index.ts";
+import { useStore } from "@/store";
 
 const store = useStore();
 

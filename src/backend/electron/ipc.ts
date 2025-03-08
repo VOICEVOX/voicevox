@@ -4,8 +4,8 @@ import {
   IpcMainInvokeEvent,
   IpcRendererEvent,
 } from "electron";
-import { IpcIHData, IpcSOData } from "@/type/ipc.ts";
-import { createLogger } from "@/helpers/log.ts";
+import { IpcIHData, IpcSOData } from "@/type/ipc";
+import { createLogger } from "@/helpers/log";
 
 const log = createLogger("ipc");
 

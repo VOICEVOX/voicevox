@@ -3,15 +3,15 @@
  * 辞書クラス内で辞書を単語を管理し、API用の関数を払い出す。
  */
 
-import { uuid4 } from "@/helpers/random.ts";
+import { uuid4 } from "@/helpers/random";
 import {
   AddUserDictWordRequest,
   DefaultApiInterface,
   DeleteUserDictWordRequest,
   RewriteUserDictWordRequest,
   UserDictWord,
-} from "@/openapi/index.ts";
-import { Brand } from "@/type/utility.ts";
+} from "@/openapi";
+import { Brand } from "@/type/utility";
 
 type UserDictWordId = Brand<string, "UserDictWordId">;
 

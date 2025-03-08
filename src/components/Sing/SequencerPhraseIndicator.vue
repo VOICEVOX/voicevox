@@ -4,9 +4,9 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { useStore } from "@/store/index.ts";
-import { getOrThrow } from "@/helpers/mapHelper.ts";
-import { PhraseKey, PhraseState } from "@/store/type.ts";
+import { useStore } from "@/store";
+import { getOrThrow } from "@/helpers/mapHelper";
+import { PhraseKey, PhraseState } from "@/store/type";
 
 const props = defineProps<{
   phraseKey: PhraseKey;

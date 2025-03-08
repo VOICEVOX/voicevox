@@ -85,7 +85,7 @@
 import { computed } from "vue";
 import { useQuasar } from "quasar";
 import MinMaxCloseButtons from "./MinMaxCloseButtons.vue";
-import { useStore } from "@/store/index.ts";
+import { useStore } from "@/store";
 
 const $q = useQuasar();
 const store = useStore();

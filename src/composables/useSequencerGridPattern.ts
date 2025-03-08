@@ -1,6 +1,6 @@
 import { computed, Ref } from "vue";
-import { tickToBaseX } from "@/sing/viewHelper.ts";
-import { TimeSignature } from "@/store/type.ts";
+import { tickToBaseX } from "@/sing/viewHelper";
+import { TimeSignature } from "@/store/type";
 
 const beatWidth = (
   timeSignature: TimeSignature,

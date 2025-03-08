@@ -39,8 +39,8 @@ import EngineManageDialog from "@/components/Dialog/EngineManageDialog.vue";
 import UpdateNotificationDialogContainer from "@/components/Dialog/UpdateNotificationDialog/Container.vue";
 import ImportSongProjectDialog from "@/components/Dialog/ImportSongProjectDialog.vue";
 import ExportSongAudioDialog from "@/components/Dialog/ExportSongAudioDialog/Container.vue";
-import { useStore } from "@/store/index.ts";
-import { filterCharacterInfosByStyleType } from "@/store/utility.ts";
+import { useStore } from "@/store";
+import { filterCharacterInfosByStyleType } from "@/store/utility";
 
 const props = defineProps<{
   isEnginesReady: boolean;

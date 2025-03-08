@@ -1,10 +1,6 @@
-import { createEngineUrl, EngineUrlParams } from "@/domain/url.ts";
-import { createOpenAPIEngineMock } from "@/mock/engineMock/index.ts";
-import {
-  Configuration,
-  DefaultApi,
-  DefaultApiInterface,
-} from "@/openapi/index.ts";
+import { createEngineUrl, EngineUrlParams } from "@/domain/url";
+import { createOpenAPIEngineMock } from "@/mock/engineMock";
+import { Configuration, DefaultApi, DefaultApiInterface } from "@/openapi";
 
 export interface IEngineConnectorFactory {
   // FIXME: hostという名前の時点で外部APIに接続するという知識が出てきてしまっているので

@@ -1,11 +1,11 @@
-import { SetNextState, State } from "@/sing/stateMachine.ts";
+import { SetNextState, State } from "@/sing/stateMachine";
 import {
   Context,
   Input,
   SequencerStateDefinitions,
-} from "@/sing/sequencerStateMachine/common.ts";
-import { getButton } from "@/sing/viewHelper.ts";
-import { isOnCommandOrCtrlKeyDown } from "@/store/utility.ts";
+} from "@/sing/sequencerStateMachine/common";
+import { getButton } from "@/sing/viewHelper";
+import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 
 export class DrawPitchToolIdleState
   implements State<SequencerStateDefinitions, Input, Context>

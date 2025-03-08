@@ -94,7 +94,7 @@
 import { ref, computed } from "vue";
 import { useDialogPluginComponent } from "quasar";
 import BaseCell from "./BaseCell.vue";
-import { SongExportSetting, TrackParameters } from "@/store/type.ts";
+import { SongExportSetting, TrackParameters } from "@/store/type";
 
 export type ExportTarget = "master" | "stem";
 const { dialogRef, onDialogOK, onDialogCancel } = useDialogPluginComponent();

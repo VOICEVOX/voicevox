@@ -107,13 +107,8 @@ import { computed, ref, watch } from "vue";
 import Draggable from "vuedraggable";
 import { useQuasar } from "quasar";
 import CharacterTryListenCard from "./CharacterTryListenCard.vue";
-import { useStore } from "@/store/index.ts";
-import {
-  CharacterInfo,
-  SpeakerId,
-  StyleId,
-  StyleInfo,
-} from "@/type/preload.ts";
+import { useStore } from "@/store";
+import { CharacterInfo, SpeakerId, StyleId, StyleInfo } from "@/type/preload";
 
 const props = defineProps<{
   modelValue: boolean;

@@ -6,17 +6,17 @@
 
 import semver from "semver";
 
-import { LatestProjectType, projectSchema } from "./schema.ts";
-import { AccentPhrase } from "@/openapi/index.ts";
-import { EngineId, StyleId, TrackId, Voice } from "@/type/preload.ts";
+import { LatestProjectType, projectSchema } from "./schema";
+import { AccentPhrase } from "@/openapi";
+import { EngineId, StyleId, TrackId, Voice } from "@/type/preload";
 import {
   DEFAULT_BEAT_TYPE,
   DEFAULT_BEATS,
   DEFAULT_BPM,
   DEFAULT_TPQN,
   DEFAULT_TRACK_NAME,
-} from "@/sing/domain.ts";
-import { uuid4 } from "@/helpers/random.ts";
+} from "@/sing/domain";
+import { uuid4 } from "@/helpers/random";
 
 const DEFAULT_SAMPLING_RATE = 24000;
 

@@ -9,8 +9,8 @@ import {
   StoreOptions,
   PayloadFunction,
   Store,
-} from "./vuex.ts";
-import { createCommandMutationTree, PayloadRecipeTree } from "./command.ts";
+} from "./vuex";
+import { createCommandMutationTree, PayloadRecipeTree } from "./command";
 import {
   AccentPhrase,
   AudioQuery,
@@ -20,7 +20,7 @@ import {
   MorphableTargetInfo,
   FrameAudioQuery,
   Note as NoteForRequestToEngine,
-} from "@/openapi/index.ts";
+} from "@/openapi";
 import {
   CharacterInfo,
   DefaultStyleId,
@@ -53,15 +53,15 @@ import {
   NoteId,
   CommandId,
   TrackId,
-} from "@/type/preload.ts";
-import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector.ts";
+} from "@/type/preload";
+import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import {
   TextDialogResult,
   NotifyAndNotShowAgainButtonOption,
   MessageDialogOptions,
   ConfirmDialogOptions,
   WarningDialogOptions,
-} from "@/components/Dialog/Dialog.ts";
+} from "@/components/Dialog/Dialog";
 import {
   LatestProjectType,
   noteSchema,
@@ -69,12 +69,12 @@ import {
   tempoSchema,
   timeSignatureSchema,
   trackSchema,
-} from "@/domain/project/schema.ts";
-import { HotkeySettingType } from "@/domain/hotkeyAction.ts";
+} from "@/domain/project/schema";
+import { HotkeySettingType } from "@/domain/hotkeyAction";
 import {
   MultiFileProjectFormat,
   SingleFileProjectFormat,
-} from "@/sing/utaformatixProject/utils.ts";
+} from "@/sing/utaformatixProject/utils";
 
 /**
  * エディタ用のAudioQuery

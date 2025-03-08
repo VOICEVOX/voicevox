@@ -178,7 +178,6 @@ export default defineConfigWithVueTs(
           ignoreRestSiblings: true,
         },
       ],
-      "import/extensions": ["error", "ignorePackages"],
       "import/order": "error",
       "no-console": process.env.NODE_ENV === "production" ? "warn" : "off",
       "no-constant-condition": ["error", { checkLoops: false }], // while(true) などを許可

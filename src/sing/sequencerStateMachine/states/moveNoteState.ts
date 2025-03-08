@@ -1,9 +1,9 @@
-import { getOrThrow } from "@/helpers/mapHelper.ts";
-import { State, SetNextState } from "@/sing/stateMachine.ts";
-import { clamp } from "@/sing/utility.ts";
-import { getButton, PREVIEW_SOUND_DURATION } from "@/sing/viewHelper.ts";
-import { Note } from "@/store/type.ts";
-import { TrackId, NoteId } from "@/type/preload.ts";
+import { getOrThrow } from "@/helpers/mapHelper";
+import { State, SetNextState } from "@/sing/stateMachine";
+import { clamp } from "@/sing/utility";
+import { getButton, PREVIEW_SOUND_DURATION } from "@/sing/viewHelper";
+import { Note } from "@/store/type";
+import { TrackId, NoteId } from "@/type/preload";
 import {
   Context,
   getGuideLineTicks,
@@ -11,7 +11,7 @@ import {
   Input,
   PositionOnSequencer,
   SequencerStateDefinitions,
-} from "@/sing/sequencerStateMachine/common.ts";
+} from "@/sing/sequencerStateMachine/common";
 
 export class MoveNoteState
   implements State<SequencerStateDefinitions, Input, Context>

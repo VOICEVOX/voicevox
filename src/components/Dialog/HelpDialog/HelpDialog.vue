@@ -81,11 +81,11 @@ import UpdateInfo from "./HelpUpdateInfoSection.vue";
 import LibraryPolicy from "./HelpLibraryPolicySection.vue";
 import BaseListItem from "@/components/Base/BaseListItem.vue";
 import BaseNavigationView from "@/components/Base/BaseNavigationView.vue";
-import { UpdateInfo as UpdateInfoObject, UrlString } from "@/type/preload.ts";
-import { useStore } from "@/store/index.ts";
-import { useFetchNewUpdateInfos } from "@/composables/useFetchNewUpdateInfos.ts";
-import { createLogger } from "@/helpers/log.ts";
-import { getAppInfos } from "@/domain/appInfo.ts";
+import { UpdateInfo as UpdateInfoObject, UrlString } from "@/type/preload";
+import { useStore } from "@/store";
+import { useFetchNewUpdateInfos } from "@/composables/useFetchNewUpdateInfos";
+import { createLogger } from "@/helpers/log";
+import { getAppInfos } from "@/domain/appInfo";
 
 type PageItem = {
   type: "item";

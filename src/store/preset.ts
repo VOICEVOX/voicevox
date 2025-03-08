@@ -1,8 +1,8 @@
-import { createPartialStore } from "./vuex.ts";
-import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy.ts";
-import { uuid4 } from "@/helpers/random.ts";
-import { PresetStoreState, PresetStoreTypes, State } from "@/store/type.ts";
-import { Preset, PresetKey, Voice, VoiceId } from "@/type/preload.ts";
+import { createPartialStore } from "./vuex";
+import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
+import { uuid4 } from "@/helpers/random";
+import { PresetStoreState, PresetStoreTypes, State } from "@/store/type";
+import { Preset, PresetKey, Voice, VoiceId } from "@/type/preload";
 
 /**
  * configを参照して割り当てるべきpresetKeyとそのPresetを適用すべきかどうかを返す

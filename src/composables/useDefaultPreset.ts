@@ -1,6 +1,6 @@
 import { computed } from "vue";
-import { useStore } from "@/store/index.ts";
-import { PresetKey, Voice, VoiceId } from "@/type/preload.ts";
+import { useStore } from "@/store";
+import { PresetKey, Voice, VoiceId } from "@/type/preload";
 
 export const useDefaultPreset = () => {
   const store = useStore();

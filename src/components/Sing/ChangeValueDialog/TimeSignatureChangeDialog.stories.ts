@@ -1,7 +1,7 @@
 import { userEvent, within, expect, fn } from "@storybook/test";
 import { Meta, StoryObj } from "@storybook/vue3";
 import TimeSignatureChangeDialog from "./TimeSignatureChangeDialog.vue";
-import { DEFAULT_BEAT_TYPE, DEFAULT_BEATS } from "@/sing/domain.ts";
+import { DEFAULT_BEAT_TYPE, DEFAULT_BEATS } from "@/sing/domain";
 
 const meta: Meta<typeof TimeSignatureChangeDialog> = {
   component: TimeSignatureChangeDialog,

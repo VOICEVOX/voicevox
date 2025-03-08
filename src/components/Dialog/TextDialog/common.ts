@@ -1,4 +1,4 @@
-import { ExhaustiveError } from "@/type/utility.ts";
+import { ExhaustiveError } from "@/type/utility";
 
 export type DialogType = "info" | "error" | "question" | "warning";
 

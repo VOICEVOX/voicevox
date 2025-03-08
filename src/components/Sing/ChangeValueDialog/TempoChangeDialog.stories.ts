@@ -1,7 +1,7 @@
 import { userEvent, within, expect, fn } from "@storybook/test";
 import { Meta, StoryObj } from "@storybook/vue3";
 import TempoChangeDialog from "./TempoChangeDialog.vue";
-import { DEFAULT_BPM } from "@/sing/domain.ts";
+import { DEFAULT_BPM } from "@/sing/domain";
 
 const meta: Meta<typeof TempoChangeDialog> = {
   component: TempoChangeDialog,

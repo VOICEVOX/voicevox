@@ -1,4 +1,4 @@
-import { TextAsset } from "./preload.ts";
+import { TextAsset } from "./preload";
 
 export const AssetTextFileNames: Record<keyof TextAsset, string> = {
   Contact: "contact.md",

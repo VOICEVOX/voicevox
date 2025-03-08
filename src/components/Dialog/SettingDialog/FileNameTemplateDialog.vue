@@ -78,8 +78,8 @@
 <script setup lang="ts">
 import { computed, ref, nextTick } from "vue";
 import { QInput } from "quasar";
-import { replaceTagIdToTagString, sanitizeFileName } from "@/store/utility.ts";
-import { UnreachableError } from "@/type/utility.ts";
+import { replaceTagIdToTagString, sanitizeFileName } from "@/store/utility";
+import { UnreachableError } from "@/type/utility";
 
 const props = defineProps<{
   /** ダイアログが開いているかどうか */

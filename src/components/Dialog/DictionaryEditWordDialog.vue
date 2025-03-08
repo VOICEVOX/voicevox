@@ -166,8 +166,8 @@ import { QInput } from "quasar";
 import { dictionaryManageDialogContextKey } from "./DictionaryManageDialog.vue";
 import AudioAccent from "@/components/Talk/AudioAccent.vue";
 import ContextMenu from "@/components/Menu/ContextMenu/Container.vue";
-import { useRightClickContextMenu } from "@/composables/useRightClickContextMenu.ts";
-import { useStore } from "@/store/index.ts";
+import { useRightClickContextMenu } from "@/composables/useRightClickContextMenu";
+import { useStore } from "@/store";
 import type { FetchAudioResult } from "@/store/type";
 
 const store = useStore();

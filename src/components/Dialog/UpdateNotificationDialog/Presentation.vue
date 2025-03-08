@@ -71,7 +71,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { UpdateInfo } from "@/type/preload.ts";
+import { UpdateInfo } from "@/type/preload";
 
 const props = defineProps<{
   /** ダイアログの表示状態 */

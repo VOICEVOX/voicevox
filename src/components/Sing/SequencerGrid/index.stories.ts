@@ -8,7 +8,7 @@ import {
   ZOOM_Y_MAX,
   ZOOM_Y_MIN,
   ZOOM_Y_STEP,
-} from "@/sing/viewHelper.ts";
+} from "@/sing/viewHelper";
 
 const meta: Meta<typeof Presentation> = {
   component: Presentation,

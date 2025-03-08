@@ -1,4 +1,4 @@
-import { SetNextState, State } from "@/sing/stateMachine.ts";
+import { SetNextState, State } from "@/sing/stateMachine";
 import {
   Context,
   getGuideLineTicks,
@@ -7,10 +7,10 @@ import {
   selectOnlyThisNoteAndPlayPreviewSound,
   SequencerStateDefinitions,
   toggleNoteSelection,
-} from "@/sing/sequencerStateMachine/common.ts";
-import { getButton, isSelfEventTarget } from "@/sing/viewHelper.ts";
-import { isOnCommandOrCtrlKeyDown } from "@/store/utility.ts";
-import { Note } from "@/store/type.ts";
+} from "@/sing/sequencerStateMachine/common";
+import { getButton, isSelfEventTarget } from "@/sing/viewHelper";
+import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
+import { Note } from "@/store/type";
 
 export class EditNotesToolIdleState
   implements State<SequencerStateDefinitions, Input, Context>

@@ -8,14 +8,14 @@ import {
   ExperimentalSettingType,
   VoiceId,
   PresetKey,
-} from "@/type/preload.ts";
-import { ensureNotNullish } from "@/helpers/errorHelper.ts";
-import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo.ts";
+} from "@/type/preload";
+import { ensureNotNullish } from "@/helpers/errorHelper";
+import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
 import {
   HotkeyCombination,
   getDefaultHotkeySettings,
   HotkeySettingType,
-} from "@/domain/hotkeyAction.ts";
+} from "@/domain/hotkeyAction";
 
 const lockKey = "save";
 

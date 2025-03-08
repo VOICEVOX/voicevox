@@ -2,16 +2,16 @@ import { Dialog, Notify, Loading } from "quasar";
 import SaveAllResultDialog from "./SaveAllResultDialog.vue";
 import QuestionDialog from "./TextDialog/QuestionDialog.vue";
 import MessageDialog from "./TextDialog/MessageDialog.vue";
-import { DialogType } from "./TextDialog/common.ts";
-import { AudioKey, ConfirmedTips } from "@/type/preload.ts";
+import { DialogType } from "./TextDialog/common";
+import { AudioKey, ConfirmedTips } from "@/type/preload";
 import {
   AllActions,
   SaveResultObject,
   SaveResult,
   ErrorTypeForSaveAllResultDialog,
-} from "@/store/type.ts";
-import { DotNotationDispatch } from "@/store/vuex.ts";
-import { withProgress } from "@/store/ui.ts";
+} from "@/store/type";
+import { DotNotationDispatch } from "@/store/vuex";
+import { withProgress } from "@/store/ui";
 
 type MediaType = "audio" | "text" | "project" | "label";
 

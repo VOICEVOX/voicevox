@@ -7,12 +7,12 @@ import {
   EngineId,
   EngineInfo,
   MinimumEngineManifestType,
-} from "@/type/preload.ts";
-import { errorToMessage } from "@/helpers/errorHelper.ts";
-import { VvppFileExtractor } from "@/backend/electron/vvppFile.ts";
-import { ProgressCallback } from "@/helpers/progressHelper.ts";
-import { createLogger } from "@/helpers/log.ts";
-import { isWindows } from "@/helpers/platform.ts";
+} from "@/type/preload";
+import { errorToMessage } from "@/helpers/errorHelper";
+import { VvppFileExtractor } from "@/backend/electron/vvppFile";
+import { ProgressCallback } from "@/helpers/progressHelper";
+import { createLogger } from "@/helpers/log";
+import { isWindows } from "@/helpers/platform";
 
 const log = createLogger("VvppManager");
 

@@ -13,9 +13,9 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { useStore } from "@/store/index.ts";
-import { AudioKey } from "@/type/preload.ts";
-import { formatCharacterStyleName } from "@/store/utility.ts";
+import { useStore } from "@/store";
+import { AudioKey } from "@/type/preload";
+import { formatCharacterStyleName } from "@/store/utility";
 
 const store = useStore();
 

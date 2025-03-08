@@ -1,25 +1,25 @@
-import { audioQueryToFrameAudioQueryMock } from "./audioQueryMock.ts";
-import { getEngineManifestMock } from "./manifestMock.ts";
+import { audioQueryToFrameAudioQueryMock } from "./audioQueryMock";
+import { getEngineManifestMock } from "./manifestMock";
 import {
   getSingersMock,
   getSpeakerInfoMock,
   getSpeakersMock,
-} from "./characterResourceMock.ts";
-import { synthesisFrameAudioQueryMock } from "./synthesisMock.ts";
+} from "./characterResourceMock";
+import { synthesisFrameAudioQueryMock } from "./synthesisMock";
 import {
   aquestalkLikeToAccentPhrasesMock,
   replaceLengthMock,
   replacePitchMock,
   textToActtentPhrasesMock,
-} from "./talkModelMock.ts";
+} from "./talkModelMock";
 import {
   notesAndFramePhonemesAndPitchToVolumeMock,
   notesAndFramePhonemesToPitchMock,
   notesToFramePhonemesMock,
-} from "./singModelMock.ts";
+} from "./singModelMock";
 
-import { DictMock } from "./dictMock.ts";
-import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy.ts";
+import { DictMock } from "./dictMock";
+import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import {
   AccentPhrase,
   AccentPhrasesRequest,
@@ -38,7 +38,7 @@ import {
   SpeakerInfoRequest,
   SupportedDevicesInfo,
   SynthesisRequest,
-} from "@/openapi/index.ts";
+} from "@/openapi";
 
 /**
  * エンジンのOpenAPIの関数群のモック。

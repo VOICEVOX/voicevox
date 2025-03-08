@@ -4,18 +4,18 @@ import shlex from "shlex";
 
 import { dialog } from "electron"; // FIXME: ここでelectronをimportするのは良くない
 
-import { getConfigManager } from "../electronConfig.ts";
+import { getConfigManager } from "../electronConfig";
 import {
   EngineInfo,
   EngineDirValidationResult,
   MinimumEngineManifestType,
   EngineId,
   minimumEngineManifestSchema,
-} from "@/type/preload.ts";
-import { AltPortInfos } from "@/store/type.ts";
-import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo.ts";
-import { failure, Result, success } from "@/type/result.ts";
-import { createLogger } from "@/helpers/log.ts";
+} from "@/type/preload";
+import { AltPortInfos } from "@/store/type";
+import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
+import { failure, Result, success } from "@/type/result";
+import { createLogger } from "@/helpers/log";
 
 const log = createLogger("EngineInfoManager");
 

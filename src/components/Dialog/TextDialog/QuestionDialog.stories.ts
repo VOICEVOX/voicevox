@@ -2,7 +2,7 @@ import { userEvent, within, expect, fn } from "@storybook/test";
 
 import { Meta, StoryObj } from "@storybook/vue3";
 import QuestionDialog from "./QuestionDialog.vue";
-import { UnreachableError } from "@/type/utility.ts";
+import { UnreachableError } from "@/type/utility";
 
 const meta: Meta<typeof QuestionDialog> = {
   component: QuestionDialog,

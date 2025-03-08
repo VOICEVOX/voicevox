@@ -485,13 +485,13 @@ import BaseSelect from "@/components/Base/BaseSelect.vue";
 import BaseSelectItem from "@/components/Base/BaseSelectItem.vue";
 import BaseCheckbox from "@/components/Base/BaseCheckbox.vue";
 import BaseTooltip from "@/components/Base/BaseTooltip.vue";
-import { useStore } from "@/store/index.ts";
+import { useStore } from "@/store";
 import {
   DEFAULT_AUDIO_FILE_NAME_TEMPLATE,
   DEFAULT_SONG_AUDIO_FILE_NAME_TEMPLATE,
   buildAudioFileNameFromRawData,
   buildSongTrackAudioFileNameFromRawData,
-} from "@/store/utility.ts";
+} from "@/store/utility";
 import {
   SavingSetting,
   EngineSettingType,
@@ -500,10 +500,10 @@ import {
   RootMiscSettingType,
   EngineId,
   EditorFontType,
-} from "@/type/preload.ts";
-import { createLogger } from "@/helpers/log.ts";
-import { useRootMiscSetting } from "@/composables/useRootMiscSetting.ts";
-import { isProduction } from "@/helpers/platform.ts";
+} from "@/type/preload";
+import { createLogger } from "@/helpers/log";
+import { useRootMiscSetting } from "@/composables/useRootMiscSetting";
+import { isProduction } from "@/helpers/platform";
 
 type SamplingRateOption = EngineSettingType["outputSamplingRate"];
 

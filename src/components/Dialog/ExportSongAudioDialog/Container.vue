@@ -3,10 +3,10 @@
 </template>
 
 <script setup lang="ts">
-import { notifyResult } from "../Dialog.ts";
+import { notifyResult } from "../Dialog";
 import Presentation, { ExportTarget } from "./Presentation.vue";
-import { useStore } from "@/store/index.ts";
-import { SaveResultObject, SongExportSetting } from "@/store/type.ts";
+import { useStore } from "@/store";
+import { SaveResultObject, SongExportSetting } from "@/store/type";
 
 defineOptions({
   name: "ExportSongAudioDialog",

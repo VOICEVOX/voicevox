@@ -98,12 +98,12 @@ import {
   supportedExtensions,
   SupportedExtensions as UfSupportedExtensions,
 } from "@sevenc-nanashi/utaformatix-ts";
-import { useStore } from "@/store/index.ts";
-import { createLogger } from "@/helpers/log.ts";
-import { ExhaustiveError } from "@/type/utility.ts";
-import { IsEqual } from "@/type/utility.ts";
-import { LatestProjectType } from "@/domain/project/schema.ts";
-import { DEFAULT_TRACK_NAME } from "@/sing/domain.ts";
+import { useStore } from "@/store";
+import { createLogger } from "@/helpers/log";
+import { ExhaustiveError } from "@/type/utility";
+import { IsEqual } from "@/type/utility";
+import { LatestProjectType } from "@/domain/project/schema";
+import { DEFAULT_TRACK_NAME } from "@/sing/domain";
 
 const { dialogRef, onDialogOK, onDialogCancel } = useDialogPluginComponent();
 

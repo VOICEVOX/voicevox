@@ -1,5 +1,5 @@
-import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo.ts";
-import { type EngineInfo } from "@/type/preload.ts";
+import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
+import { type EngineInfo } from "@/type/preload";
 
 const baseEngineInfo = loadEnvEngineInfos()[0];
 if (baseEngineInfo.type != "path") {

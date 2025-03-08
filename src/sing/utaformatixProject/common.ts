@@ -1,4 +1,4 @@
-import { Tempo, TimeSignature, Track } from "@/store/type.ts";
+import { Tempo, TimeSignature, Track } from "@/store/type";
 
 export type VoicevoxScore = {
   tracks: Track[];

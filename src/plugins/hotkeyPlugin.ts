@@ -13,9 +13,9 @@ import {
   HotkeyActionNameType,
   HotkeyCombination,
   HotkeySettingType,
-} from "@/domain/hotkeyAction.ts";
-import { createLogger } from "@/helpers/log.ts";
-import { Brand } from "@/type/utility.ts";
+} from "@/domain/hotkeyAction";
+import { createLogger } from "@/helpers/log";
+import { Brand } from "@/type/utility";
 
 const hotkeyManagerKey = "hotkeyManager";
 export const useHotkeyManager = () => {

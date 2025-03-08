@@ -1,6 +1,6 @@
 import fs from "fs";
-import { uuid4 } from "@/helpers/random.ts";
-import { createLogger } from "@/helpers/log.ts";
+import { uuid4 } from "@/helpers/random";
+import { createLogger } from "@/helpers/log";
 
 const log = createLogger("fileHelper");
 

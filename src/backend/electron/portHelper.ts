@@ -1,6 +1,6 @@
 import { execFileSync } from "child_process";
 import { createServer } from "net";
-import { createLogger } from "@/helpers/log.ts";
+import { createLogger } from "@/helpers/log";
 
 const log = createLogger("portHelper");
 

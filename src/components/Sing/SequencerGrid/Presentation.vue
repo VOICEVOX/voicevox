@@ -112,10 +112,10 @@
 
 <script setup lang="ts">
 import { computed, toRef } from "vue";
-import { getKeyBaseHeight, keyInfos, tickToBaseX } from "@/sing/viewHelper.ts";
-import { TimeSignature } from "@/store/type.ts";
-import { useSequencerGrid } from "@/composables/useSequencerGridPattern.ts";
-import { getNoteDuration } from "@/sing/domain.ts";
+import { getKeyBaseHeight, keyInfos, tickToBaseX } from "@/sing/viewHelper";
+import { TimeSignature } from "@/store/type";
+import { useSequencerGrid } from "@/composables/useSequencerGridPattern";
+import { getNoteDuration } from "@/sing/domain";
 
 const props = defineProps<{
   tpqn: number;

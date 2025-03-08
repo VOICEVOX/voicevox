@@ -300,7 +300,7 @@ import { computed, ref, watchEffect } from "vue";
 import { QSelectProps } from "quasar";
 import CharacterButton from "@/components/CharacterButton.vue";
 import PresetManageDialog from "@/components/Dialog/PresetManageDialog.vue";
-import { useStore } from "@/store/index.ts";
+import { useStore } from "@/store";
 
 import {
   AudioKey,
@@ -310,16 +310,16 @@ import {
   PresetKey,
   PresetSliderKey,
   Voice,
-} from "@/type/preload.ts";
+} from "@/type/preload";
 import {
   previewSliderHelper,
   PreviewSliderHelper,
   Props as PreviewSliderHelperProps,
-} from "@/helpers/previewSliderHelper.ts";
-import { EngineManifest } from "@/openapi/index.ts";
-import { useDefaultPreset } from "@/composables/useDefaultPreset.ts";
-import { SLIDER_PARAMETERS } from "@/store/utility.ts";
-import { createLogger } from "@/helpers/log.ts";
+} from "@/helpers/previewSliderHelper";
+import { EngineManifest } from "@/openapi";
+import { useDefaultPreset } from "@/composables/useDefaultPreset";
+import { SLIDER_PARAMETERS } from "@/store/utility";
+import { createLogger } from "@/helpers/log";
 
 const props = defineProps<{
   activeAudioKey: AudioKey;

@@ -247,8 +247,8 @@ import SequencerGridSpacer from "./SequencerGridSpacer.vue";
 import ContextMenu, {
   ContextMenuItemData,
 } from "@/components/Menu/ContextMenu/Container.vue";
-import { useStore } from "@/store/index.ts";
-import { Note } from "@/store/type.ts";
+import { useStore } from "@/store";
+import { Note } from "@/store/type";
 import {
   getEndTicksOfPhrase,
   getMeasureDuration,
@@ -256,7 +256,7 @@ import {
   getStartTicksOfPhrase,
   noteNumberToFrequency,
   tickToSecond,
-} from "@/sing/domain.ts";
+} from "@/sing/domain";
 import {
   tickToBaseX,
   baseXToTick,
@@ -271,7 +271,7 @@ import {
   ZOOM_Y_STEP,
   PREVIEW_SOUND_DURATION,
   getKeyBaseHeight,
-} from "@/sing/viewHelper.ts";
+} from "@/sing/viewHelper";
 import SequencerGrid from "@/components/Sing/SequencerGrid/Container.vue";
 import SequencerRuler from "@/components/Sing/SequencerRuler/Container.vue";
 import SequencerKeys from "@/components/Sing/SequencerKeys.vue";
@@ -282,11 +282,11 @@ import CharacterPortrait from "@/components/Sing/CharacterPortrait.vue";
 import SequencerPitch from "@/components/Sing/SequencerPitch.vue";
 import SequencerLyricInput from "@/components/Sing/SequencerLyricInput.vue";
 import SequencerToolPalette from "@/components/Sing/SequencerToolPalette.vue";
-import { isOnCommandOrCtrlKeyDown } from "@/store/utility.ts";
-import { createLogger } from "@/helpers/log.ts";
-import { useHotkeyManager } from "@/plugins/hotkeyPlugin.ts";
-import { useSequencerStateMachine } from "@/composables/useSequencerStateMachine.ts";
-import { PositionOnSequencer } from "@/sing/sequencerStateMachine/common.ts";
+import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
+import { createLogger } from "@/helpers/log";
+import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
+import { useSequencerStateMachine } from "@/composables/useSequencerStateMachine";
+import { PositionOnSequencer } from "@/sing/sequencerStateMachine/common";
 
 const { warn } = createLogger("ScoreSequencer");
 const store = useStore();

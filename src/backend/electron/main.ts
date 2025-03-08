@@ -9,26 +9,22 @@ import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 
 import electronLog from "electron-log/main";
 import dayjs from "dayjs";
-import { initializeEngineInfoManager } from "./manager/engineInfoManager.ts";
-import { initializeEngineProcessManager } from "./manager/engineProcessManager.ts";
-import { initializeVvppManager, isVvppFile } from "./manager/vvppManager.ts";
+import { initializeEngineInfoManager } from "./manager/engineInfoManager";
+import { initializeEngineProcessManager } from "./manager/engineProcessManager";
+import { initializeVvppManager, isVvppFile } from "./manager/vvppManager";
 import {
   getWindowManager,
   initializeWindowManager,
-} from "./manager/windowManager.ts";
-import configMigration014 from "./configMigration014.ts";
-import { initializeRuntimeInfoManager } from "./manager/RuntimeInfoManager.ts";
-import {
-  registerIpcMainHandle,
-  ipcMainSendProxy,
-  IpcMainHandle,
-} from "./ipc.ts";
-import { getConfigManager } from "./electronConfig.ts";
-import { getEngineAndVvppController } from "./engineAndVvppController.ts";
-import { getIpcMainHandle } from "./ipcMainHandle.ts";
-import { EngineInfo } from "@/type/preload.ts";
-import { isMac, isProduction } from "@/helpers/platform.ts";
-import { createLogger } from "@/helpers/log.ts";
+} from "./manager/windowManager";
+import configMigration014 from "./configMigration014";
+import { initializeRuntimeInfoManager } from "./manager/RuntimeInfoManager";
+import { registerIpcMainHandle, ipcMainSendProxy, IpcMainHandle } from "./ipc";
+import { getConfigManager } from "./electronConfig";
+import { getEngineAndVvppController } from "./engineAndVvppController";
+import { getIpcMainHandle } from "./ipcMainHandle";
+import { EngineInfo } from "@/type/preload";
+import { isMac, isProduction } from "@/helpers/platform";
+import { createLogger } from "@/helpers/log";
 
 type SingleInstanceLockData = {
   filePath: string | undefined;
@@ -122,13 +118,13 @@ function initializeAppPaths() {
   let __static: string;
 
   if (isDevelopment) {
-    // import.meta.dirnameはdist_electronを指しているので、一つ上のディレクトリに移動する
-    appDirPath = path.resolve(import.meta.dirname, "..");
+    // __dirnameはdist_electronを指しているので、一つ上のディレクトリに移動する
+    appDirPath = path.resolve(__dirname, "..");
     __static = path.join(appDirPath, "public");
   } else {
     appDirPath = path.dirname(app.getPath("exe"));
     process.chdir(appDirPath);
-    __static = import.meta.dirname;
+    __static = __dirname;
   }
 
   return { appDirPath, __static };
@@ -145,8 +141,8 @@ void app.whenReady().then(() => {
     // 読み取り先のファイルがインストールディレクトリ内であることを確認する
     // ref: https://www.electronjs.org/ja/docs/latest/api/protocol#protocolhandlescheme-handler
     const { pathname } = new URL(request.url);
-    const pathToServe = path.resolve(path.join(import.meta.dirname, pathname));
-    const relativePath = path.relative(import.meta.dirname, pathToServe);
+    const pathToServe = path.resolve(path.join(__dirname, pathname));
+    const relativePath = path.relative(__dirname, pathToServe);
     const isUnsafe =
       path.isAbsolute(relativePath) ||
       relativePath.startsWith("..") ||

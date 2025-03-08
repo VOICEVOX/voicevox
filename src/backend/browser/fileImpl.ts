@@ -1,12 +1,12 @@
-import { directoryHandleStoreKey } from "./contract.ts";
-import { openDB } from "./browserConfig.ts";
-import { createFakePath, FakePath, isFakePath } from "./fakePath.ts";
-import { SandboxKey } from "@/type/preload.ts";
-import { failure, success } from "@/type/result.ts";
-import { createLogger } from "@/helpers/log.ts";
-import { normalizeError } from "@/helpers/normalizeError.ts";
-import path from "@/helpers/path.ts";
-import { assertNonNullable, ExhaustiveError } from "@/type/utility.ts";
+import { directoryHandleStoreKey } from "./contract";
+import { openDB } from "./browserConfig";
+import { createFakePath, FakePath, isFakePath } from "./fakePath";
+import { SandboxKey } from "@/type/preload";
+import { failure, success } from "@/type/result";
+import { createLogger } from "@/helpers/log";
+import { normalizeError } from "@/helpers/normalizeError";
+import path from "@/helpers/path";
+import { assertNonNullable, ExhaustiveError } from "@/type/utility";
 
 const log = createLogger("fileImpl");
 

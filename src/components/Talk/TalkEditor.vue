@@ -126,24 +126,24 @@ import AudioDetail from "./AudioDetail.vue";
 import AudioInfo from "./AudioInfo.vue";
 import CharacterPortrait from "./CharacterPortrait.vue";
 import ToolBar from "./ToolBar.vue";
-import { useStore } from "@/store/index.ts";
+import { useStore } from "@/store";
 import ProgressView from "@/components/ProgressView.vue";
 import EngineStartupOverlay from "@/components/EngineStartupOverlay.vue";
-import { AudioItem } from "@/store/type.ts";
+import { AudioItem } from "@/store/type";
 import {
   AudioKey,
   PresetKey,
   SplitterPositionType,
   Voice,
-} from "@/type/preload.ts";
-import { useHotkeyManager } from "@/plugins/hotkeyPlugin.ts";
-import onetimeWatch from "@/helpers/onetimeWatch.ts";
-import path from "@/helpers/path.ts";
+} from "@/type/preload";
+import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
+import onetimeWatch from "@/helpers/onetimeWatch";
+import path from "@/helpers/path";
 import {
   actionPostfixSelectNthCharacter,
   HotkeyActionNameType,
-} from "@/domain/hotkeyAction.ts";
-import { isElectron } from "@/helpers/platform.ts";
+} from "@/domain/hotkeyAction";
+import { isElectron } from "@/helpers/platform";
 
 const props = defineProps<{
   isEnginesReady: boolean;

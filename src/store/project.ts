@@ -1,35 +1,35 @@
-import { createPartialStore, DotNotationDispatch } from "./vuex.ts";
-import { createUILockAction } from "@/store/ui.ts";
+import { createPartialStore, DotNotationDispatch } from "./vuex";
+import { createUILockAction } from "@/store/ui";
 import {
   AllActions,
   AudioItem,
   ProjectStoreState,
   ProjectStoreTypes,
-} from "@/store/type.ts";
-import { TrackId } from "@/type/preload.ts";
-import path from "@/helpers/path.ts";
-import { getValueOrThrow, ResultError } from "@/type/result.ts";
-import { LatestProjectType } from "@/domain/project/schema.ts";
+} from "@/store/type";
+import { TrackId } from "@/type/preload";
+import path from "@/helpers/path";
+import { getValueOrThrow, ResultError } from "@/type/result";
+import { LatestProjectType } from "@/domain/project/schema";
 import {
   migrateProjectFileObject,
   ProjectFileFormatError,
-} from "@/domain/project/index.ts";
+} from "@/domain/project";
 import {
   createDefaultTempo,
   createDefaultTimeSignature,
   createDefaultTrack,
   DEFAULT_TPQN,
-} from "@/sing/domain.ts";
-import { EditorType } from "@/type/preload.ts";
-import { IsEqual, UnreachableError } from "@/type/utility.ts";
+} from "@/sing/domain";
+import { EditorType } from "@/type/preload";
+import { IsEqual, UnreachableError } from "@/type/utility";
 import {
   showAlertDialog,
   showMessageDialog,
   showQuestionDialog,
-} from "@/components/Dialog/Dialog.ts";
-import { uuid4 } from "@/helpers/random.ts";
-import { getAppInfos } from "@/domain/appInfo.ts";
-import { errorToMessage } from "@/helpers/errorHelper.ts";
+} from "@/components/Dialog/Dialog";
+import { uuid4 } from "@/helpers/random";
+import { getAppInfos } from "@/domain/appInfo";
+import { errorToMessage } from "@/helpers/errorHelper";
 
 export const projectStoreState: ProjectStoreState = {
   savedLastCommandIds: { talk: null, song: null },

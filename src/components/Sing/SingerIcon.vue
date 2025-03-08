@@ -9,7 +9,7 @@
 
 <script setup lang="ts">
 import { useAttrs } from "vue";
-import { EngineId, StyleInfo } from "@/type/preload.ts";
+import { EngineId, StyleInfo } from "@/type/preload";
 
 const attr = useAttrs();
 const props = withDefaults(

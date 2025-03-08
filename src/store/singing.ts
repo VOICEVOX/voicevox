@@ -1,6 +1,6 @@
 import { ref, toRaw } from "vue";
-import { createPartialStore } from "./vuex.ts";
-import { createUILockAction } from "./ui.ts";
+import { createPartialStore } from "./vuex";
+import { createUILockAction } from "./ui";
 import {
   Tempo,
   TimeSignature,
@@ -26,7 +26,7 @@ import {
   TrackParameters,
   SingingPitchKey,
   SingingPitch,
-} from "./type.ts";
+} from "./type";
 import {
   buildSongTrackAudioFileNameFromRawData,
   currentDateString,
@@ -34,19 +34,16 @@ import {
   DEFAULT_STYLE_NAME,
   generateLabelFileDataFromFramePhonemes,
   sanitizeFileName,
-} from "./utility.ts";
+} from "./utility";
 import {
   CharacterInfo,
   EngineId,
   NoteId,
   StyleId,
   TrackId,
-} from "@/type/preload.ts";
-import {
-  FramePhoneme,
-  Note as NoteForRequestToEngine,
-} from "@/openapi/index.ts";
-import { ResultError, getValueOrThrow } from "@/type/result.ts";
+} from "@/type/preload";
+import { FramePhoneme, Note as NoteForRequestToEngine } from "@/openapi";
+import { ResultError, getValueOrThrow } from "@/type/result";
 import {
   AudioEvent,
   AudioPlayer,
@@ -60,7 +57,7 @@ import {
   PolySynth,
   Sequence,
   Transport,
-} from "@/sing/audioRendering.ts";
+} from "@/sing/audioRendering";
 import {
   selectPriorPhrase,
   getNoteDuration,
@@ -96,8 +93,8 @@ import {
   toEntirePhonemeTimings,
   adjustPhonemeTimingsAndPhraseEndFrames,
   phonemeTimingsToPhonemes,
-} from "@/sing/domain.ts";
-import { getOverlappingNoteIds } from "@/sing/storeHelper.ts";
+} from "@/sing/domain";
+import { getOverlappingNoteIds } from "@/sing/storeHelper";
 import {
   AnimationTimer,
   calculateHash,
@@ -105,27 +102,27 @@ import {
   createPromiseThatResolvesWhen,
   linearInterpolation,
   round,
-} from "@/sing/utility.ts";
-import { getWorkaroundKeyRangeAdjustment } from "@/sing/workaroundKeyRangeAdjustment.ts";
-import { createLogger } from "@/helpers/log.ts";
-import { noteSchema } from "@/domain/project/schema.ts";
-import { getOrThrow } from "@/helpers/mapHelper.ts";
-import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy.ts";
-import { ufProjectToVoicevox } from "@/sing/utaformatixProject/toVoicevox.ts";
-import { uuid4 } from "@/helpers/random.ts";
-import { generateWriteErrorMessage } from "@/helpers/fileHelper.ts";
-import { generateWavFileData } from "@/helpers/fileDataGenerator.ts";
-import path from "@/helpers/path.ts";
-import { showAlertDialog } from "@/components/Dialog/Dialog.ts";
-import { ufProjectFromVoicevox } from "@/sing/utaformatixProject/fromVoicevox.ts";
-import { generateUniqueFilePath } from "@/sing/fileUtils.ts";
+} from "@/sing/utility";
+import { getWorkaroundKeyRangeAdjustment } from "@/sing/workaroundKeyRangeAdjustment";
+import { createLogger } from "@/helpers/log";
+import { noteSchema } from "@/domain/project/schema";
+import { getOrThrow } from "@/helpers/mapHelper";
+import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
+import { ufProjectToVoicevox } from "@/sing/utaformatixProject/toVoicevox";
+import { uuid4 } from "@/helpers/random";
+import { generateWriteErrorMessage } from "@/helpers/fileHelper";
+import { generateWavFileData } from "@/helpers/fileDataGenerator";
+import path from "@/helpers/path";
+import { showAlertDialog } from "@/components/Dialog/Dialog";
+import { ufProjectFromVoicevox } from "@/sing/utaformatixProject/fromVoicevox";
+import { generateUniqueFilePath } from "@/sing/fileUtils";
 import {
   isMultiFileProjectFormat,
   isSingleFileProjectFormat,
   projectFileExtensions,
   ufProjectToMultiFile,
   ufProjectToSingleFile,
-} from "@/sing/utaformatixProject/utils.ts";
+} from "@/sing/utaformatixProject/utils";
 
 const logger = createLogger("store/singing");
 

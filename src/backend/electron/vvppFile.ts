@@ -10,10 +10,10 @@ import { app } from "electron";
 import {
   minimumEngineManifestSchema,
   MinimumEngineManifestType,
-} from "@/type/preload.ts";
-import { ProgressCallback } from "@/helpers/progressHelper.ts";
-import { createLogger } from "@/helpers/log.ts";
-import { UnreachableError } from "@/type/utility.ts";
+} from "@/type/preload";
+import { ProgressCallback } from "@/helpers/progressHelper";
+import { createLogger } from "@/helpers/log";
+import { UnreachableError } from "@/type/utility";
 
 const log = createLogger("vvppFile");
 

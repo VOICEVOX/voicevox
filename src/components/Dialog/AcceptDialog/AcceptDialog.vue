@@ -63,7 +63,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { useMarkdownIt } from "@/plugins/markdownItPlugin.ts";
+import { useMarkdownIt } from "@/plugins/markdownItPlugin";
 import BaseDocumentView from "@/components/Base/BaseDocumentView.vue";
 import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 

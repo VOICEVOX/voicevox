@@ -9,11 +9,11 @@ import {
   SaveDialogOptions,
 } from "electron";
 import windowStateKeeper from "electron-window-state";
-import { getConfigManager } from "../electronConfig.ts";
-import { getEngineAndVvppController } from "../engineAndVvppController.ts";
-import { ipcMainSendProxy } from "../ipc.ts";
-import { themes } from "@/domain/theme/index.ts";
-import { createLogger } from "@/helpers/log.ts";
+import { getConfigManager } from "../electronConfig";
+import { getEngineAndVvppController } from "../engineAndVvppController";
+import { ipcMainSendProxy } from "../ipc";
+import { themes } from "@/domain/theme";
+import { createLogger } from "@/helpers/log";
 
 const log = createLogger("WindowManager");
 
@@ -81,7 +81,7 @@ class WindowManager {
       show: false,
       backgroundColor,
       webPreferences: {
-        preload: path.join(import.meta.dirname, "preload.mjs"),
+        preload: path.join(__dirname, "preload.js"),
       },
       icon: path.join(this.staticDir, "icon.png"),
     });
