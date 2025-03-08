@@ -232,6 +232,9 @@ VITE_DEFAULT_ENGINE_INFOS=`[
   pnpm run fmt
   ```
 
+リントを行うとリポジトリルートにキャッシュファイル`.eslintcache`が作られます。
+ESLintがバージョンアップした場合や、設定が変わった場合、キャッシュが壊れた場合はこのファイルを消してください。
+
 - TypeScriptの型チェックを行います。
 
   ```bash

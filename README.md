@@ -258,6 +258,9 @@ pnpm run fmt
 pnpm run lint
 ```
 
+リントを行うとリポジトリルートにキャッシュファイル`.eslintcache`が作られます。
+ESLintがバージョンアップした場合や、設定が変わった場合、キャッシュが壊れた場合はこのファイルを消してください。
+
 ## タイポチェック
 
 [typos](https://github.com/crate-ci/typos) を使ってタイポのチェックを行っています。
