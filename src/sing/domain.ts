@@ -1034,11 +1034,11 @@ export function createPreviewSynthParams(): PreviewSynthParams {
   return {
     oscParams: {
       type: "custom",
-      oddHarmonicsAmount: 0.83,
+      oddHarmonicsAmount: 0.84,
       evenHarmonicsAmount: 0,
     },
     filterParams: {
-      cutoff: 1930,
+      cutoff: 2300,
       resonance: 0,
       keyTrack: 0,
     },
