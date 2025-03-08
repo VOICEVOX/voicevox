@@ -1,11 +1,11 @@
-import { AccentPhrase, Mora } from "@/openapi/index.ts";
+import { AccentPhrase, Mora } from "@/openapi";
 import {
   CharacterInfo,
   EngineId,
   SpeakerId,
   StyleId,
   ToolbarButtonTagType,
-} from "@/type/preload.ts";
+} from "@/type/preload";
 import {
   formatCharacterStyleName,
   sanitizeFileName,
@@ -19,9 +19,9 @@ import {
   getToolbarButtonName,
   isOnCommandOrCtrlKeyDown,
   filterCharacterInfosByStyleType,
-} from "@/store/utility.ts";
-import { uuid4 } from "@/helpers/random.ts";
-import { isMac } from "@/helpers/platform.ts";
+} from "@/store/utility";
+import { uuid4 } from "@/helpers/random";
+import { isMac } from "@/helpers/platform";
 
 function createDummyMora(text: string): Mora {
   return {

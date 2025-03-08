@@ -1,6 +1,6 @@
-import { hash } from "../../utils.ts";
-import { resetMockMode } from "@/helpers/random.ts";
-import { createOpenAPIEngineMock } from "@/mock/engineMock/index.ts";
+import { hash } from "../../utils";
+import { resetMockMode } from "@/helpers/random";
+import { createOpenAPIEngineMock } from "@/mock/engineMock";
 
 beforeEach(() => {
   resetMockMode();

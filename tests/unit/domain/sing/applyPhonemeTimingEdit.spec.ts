@@ -1,12 +1,12 @@
-import { uuid4 } from "@/helpers/random.ts";
-import { FramePhoneme } from "@/openapi/index.ts";
+import { uuid4 } from "@/helpers/random";
+import { FramePhoneme } from "@/openapi";
 import {
   applyPhonemeTimingEditAndAdjust,
   PhonemeTimingEdit,
-} from "@/sing/domain.ts";
-import { createArray } from "@/sing/utility.ts";
-import { EditorFrameAudioQuery } from "@/store/type.ts";
-import { NoteId } from "@/type/preload.ts";
+} from "@/sing/domain";
+import { createArray } from "@/sing/utility";
+import { EditorFrameAudioQuery } from "@/store/type";
+import { NoteId } from "@/type/preload";
 
 const frameRate = 93.75;
 

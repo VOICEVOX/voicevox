@@ -1,6 +1,6 @@
 import { test, expect, Locator, Page } from "@playwright/test";
 
-import { gotoHome, navigateToMain } from "../navigators.ts";
+import { gotoHome, navigateToMain } from "../navigators";
 
 test.beforeEach(gotoHome);
 

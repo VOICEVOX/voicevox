@@ -2,7 +2,7 @@ import {
   createKanaRegex,
   convertHiraToKana,
   convertLongVowel,
-} from "@/domain/japanese/index.ts";
+} from "@/domain/japanese";
 
 describe("createKanaRegex", () => {
   it("includeSeparationがtrueの場合、読点とクエスチョンも含む", () => {

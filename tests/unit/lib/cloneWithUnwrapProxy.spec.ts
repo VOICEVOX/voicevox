@@ -1,5 +1,5 @@
 import { test } from "vitest";
-import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy.ts";
+import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 
 const original = { a: 1, b: { c: 2 } };
 

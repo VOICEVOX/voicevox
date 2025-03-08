@@ -1,5 +1,5 @@
 import { enableMapSet, enablePatches, Immer, Patch } from "immer";
-import { applyPatches } from "@/store/immerPatchUtility.ts";
+import { applyPatches } from "@/store/immerPatchUtility";
 
 describe("object", () => {
   test("add/remove - 1", () => {

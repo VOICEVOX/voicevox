@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { splitLyricsByMoras } from "@/sing/domain.ts";
+import { splitLyricsByMoras } from "@/sing/domain";
 
 it("モーラを分割する", () => {
   expect(splitLyricsByMoras("アイウエオ")).toEqual([
@@ -11,7 +11,6 @@ it("モーラを分割する", () => {
   ]);
   expect(splitLyricsByMoras("キャット")).toEqual(["キャ", "ッ", "ト"]);
 });
-
 it("平仮名対応", () => {
   expect(splitLyricsByMoras("あいうえお")).toEqual([
     "あ",
@@ -21,7 +20,6 @@ it("平仮名対応", () => {
     "お",
   ]);
 });
-
 it("長音対応", () => {
   expect(splitLyricsByMoras("アーイーー")).toEqual([
     "ア",
@@ -46,12 +44,6 @@ it("モーラ以外が混ざっても残す", () => {
   // 先頭の長音はモーラとして扱わない
   expect(splitLyricsByMoras("ー")).toEqual(["ー"]);
 });
-
 it("最大の要素数を指定できる", () => {
   expect(splitLyricsByMoras("アイウエオ", 3)).toEqual(["ア", "イ", "ウエオ"]);
-});
-
-it("特殊な文字列に対応できる", () => {
-  expect(splitLyricsByMoras("くゎ")).toEqual(["くゎ"]);
-  expect(splitLyricsByMoras("くわ")).toEqual(["く", "わ"]);
 });

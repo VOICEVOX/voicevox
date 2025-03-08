@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { gotoHome } from "../navigators.ts";
+import { gotoHome } from "../navigators";
 
 test.beforeEach(gotoHome);
 

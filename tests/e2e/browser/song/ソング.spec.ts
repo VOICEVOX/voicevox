@@ -1,7 +1,7 @@
 import { test, expect, Page } from "@playwright/test";
 
-import { gotoHome, navigateToSong } from "../../navigators.ts";
-import { ensureNotNullish } from "@/helpers/errorHelper.ts";
+import { gotoHome, navigateToSong } from "../../navigators";
+import { ensureNotNullish } from "@/helpers/errorHelper";
 
 test.beforeEach(gotoHome);
 

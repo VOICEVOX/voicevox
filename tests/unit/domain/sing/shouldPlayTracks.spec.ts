@@ -1,7 +1,7 @@
-import { uuid4 } from "@/helpers/random.ts";
-import { createDefaultTrack, shouldPlayTracks } from "@/sing/domain.ts";
-import { Track } from "@/store/type.ts";
-import { TrackId } from "@/type/preload.ts";
+import { uuid4 } from "@/helpers/random";
+import { createDefaultTrack, shouldPlayTracks } from "@/sing/domain";
+import { Track } from "@/store/type";
+import { TrackId } from "@/type/preload";
 
 const createTrack = ({ solo, mute }: { solo: boolean; mute: boolean }) => {
   const track = createDefaultTrack();

@@ -1,6 +1,6 @@
 import { Ref } from "vue";
-import { UpdateInfo, UrlString } from "@/type/preload.ts";
-import { useFetchNewUpdateInfos } from "@/composables/useFetchNewUpdateInfos.ts";
+import { UpdateInfo, UrlString } from "@/type/preload";
+import { useFetchNewUpdateInfos } from "@/composables/useFetchNewUpdateInfos";
 
 // 最新バージョンの情報をfetchするモックを作成する
 const setupFetchMock = (latestVersion: string) => {

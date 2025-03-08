@@ -1,4 +1,4 @@
-import { isFakePath, createFakePath } from "@/backend/browser/fakePath.ts";
+import { isFakePath, createFakePath } from "@/backend/browser/fakePath";
 
 it.each([
   "spaced file name",

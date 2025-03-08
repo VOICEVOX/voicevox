@@ -1,10 +1,10 @@
 import { test, expect } from "@playwright/test";
 import dotenv from "dotenv";
 import semver from "semver";
-import { navigateToMain, gotoHome } from "../navigators.ts";
-import { getNewestQuasarDialog } from "../locators.ts";
-import { UpdateInfo } from "@/type/preload.ts";
-import { assertNonNullable } from "@/type/utility.ts";
+import { navigateToMain, gotoHome } from "../navigators";
+import { getNewestQuasarDialog } from "../locators";
+import { UpdateInfo } from "@/type/preload";
+import { assertNonNullable } from "@/type/utility";
 
 // アップデート通知が出る環境にする
 test.beforeEach(async ({ page }) => {

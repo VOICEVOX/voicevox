@@ -1,5 +1,5 @@
 import latestDefaultEngineInfos from "./latestDefaultEngineInfos.json";
-import { fetchLatestDefaultEngineInfo } from "@/domain/defaultEngine/latetDefaultEngine.ts";
+import { fetchLatestDefaultEngineInfo } from "@/domain/defaultEngine/latetDefaultEngine";
 
 test("fetchLatestDefaultEngineInfo", async () => {
   // テスト用のjsonファイルでfetchをモックする

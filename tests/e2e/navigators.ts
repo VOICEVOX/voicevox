@@ -1,5 +1,5 @@
 import { expect, Locator, Page, test } from "@playwright/test";
-import { getNewestQuasarDialog, getQuasarMenu } from "./locators.ts";
+import { getNewestQuasarDialog, getQuasarMenu } from "./locators";
 
 export async function gotoHome({ page }: { page: Page }) {
   await test.step("最初の画面に移動", async () => {

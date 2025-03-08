@@ -2,8 +2,8 @@ import fs from "fs";
 import path from "path";
 import os from "os";
 import { test, expect, beforeAll, afterAll } from "vitest";
-import { writeFileSafely } from "@/backend/electron/fileHelper.ts";
-import { uuid4 } from "@/helpers/random.ts";
+import { writeFileSafely } from "@/backend/electron/fileHelper";
+import { uuid4 } from "@/helpers/random";
 
 let tmpDir: string;
 

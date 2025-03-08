@@ -3,9 +3,9 @@ import { Ref } from "vue";
 import {
   useCommandOrControlKey,
   useShiftKey,
-} from "@/composables/useModifierKey.ts";
+} from "@/composables/useModifierKey";
 
-import { isMac } from "@/helpers/platform.ts";
+import { isMac } from "@/helpers/platform";
 
 describe("useModifierKey", () => {
   // テスト用のコンポーネント

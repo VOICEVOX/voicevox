@@ -2,9 +2,9 @@ import os from "os";
 import path from "path";
 import fs from "fs";
 import { test, afterAll, beforeAll } from "vitest";
-import { createVvppFile } from "./helper.ts";
-import { VvppFileExtractor } from "@/backend/electron/vvppFile.ts";
-import { uuid4 } from "@/helpers/random.ts";
+import { createVvppFile } from "./helper";
+import { VvppFileExtractor } from "@/backend/electron/vvppFile";
+import { uuid4 } from "@/helpers/random";
 
 let tmpDir: string;
 beforeAll(() => {

@@ -1,7 +1,7 @@
-import { store } from "@/store/index.ts";
-import { AudioKey } from "@/type/preload.ts";
-import { resetMockMode, uuid4 } from "@/helpers/random.ts";
-import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy.ts";
+import { store } from "@/store";
+import { AudioKey } from "@/type/preload";
+import { resetMockMode, uuid4 } from "@/helpers/random";
+import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 
 const initialState = cloneWithUnwrapProxy(store.state);
 beforeEach(() => {

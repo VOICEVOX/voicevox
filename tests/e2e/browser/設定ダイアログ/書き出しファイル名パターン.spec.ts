@@ -1,7 +1,7 @@
 import { test, expect, Page, Locator } from "@playwright/test";
 
-import { gotoHome, navigateToSettingDialog } from "../../navigators.ts";
-import { getNewestQuasarDialog } from "../../locators.ts";
+import { gotoHome, navigateToSettingDialog } from "../../navigators";
+import { getNewestQuasarDialog } from "../../locators";
 
 test.beforeEach(gotoHome);
 
