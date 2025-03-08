@@ -5,6 +5,7 @@ import iconSet from "quasar/icon-set/material-icons";
 import { store, storeKey } from "./store";
 import { ipcMessageReceiver } from "./plugins/ipcMessageReceiverPlugin";
 import { hotkeyPlugin } from "./plugins/hotkeyPlugin";
+import { vstPlugin } from "@/backend/vst/vstPlugin";
 import App from "@/components/App.vue";
 import { markdownItPlugin } from "@/plugins/markdownItPlugin";
 
@@ -43,4 +44,5 @@ createApp(App)
   .use(hotkeyPlugin)
   .use(ipcMessageReceiver, { store })
   .use(markdownItPlugin)
+  .use(vstPlugin, { store })
   .mount("#app");
