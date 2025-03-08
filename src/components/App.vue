@@ -42,7 +42,7 @@ import { setFontToCss, setThemeToCss } from "@/domain/dom";
 import { useCommonMenuBarData } from "@/domain/menuBarData";
 import { concatMenuBarData } from "@/domain/menuBarData";
 import { isElectron } from "@/helpers/platform";
-import { useElectronMenuBarData } from "@/backend/electron/menuBarData";
+import { useElectronMenuBarData } from "@/backend/electron/renderer/menuBarData";
 
 const store = useStore();
 
