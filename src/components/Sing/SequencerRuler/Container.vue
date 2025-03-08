@@ -30,8 +30,8 @@ defineOptions({
 
 withDefaults(
   defineProps<{
-    offset: number;
-    numMeasures: number;
+    offset?: number;
+    numMeasures?: number;
   }>(),
   {
     offset: 0,
