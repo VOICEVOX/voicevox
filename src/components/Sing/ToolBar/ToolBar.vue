@@ -36,7 +36,7 @@
       </div>
       <QInput
         type="number"
-        :modelValue="bpmInputBuffer"
+        :modelValue="previewableBpm"
         dense
         hideBottomSpace
         outlined
@@ -44,7 +44,9 @@
         label="テンポ"
         class="sing-tempo"
         padding="0"
-        @update:modelValue="setBpmInputBuffer"
+        @focus="startBpmPreview"
+        @blur="stopBpmPreview"
+        @update:modelValue="updateBpmPreviewValueWrapper"
         @change="setTempo"
       />
       <QField
@@ -179,6 +181,7 @@ import CharacterMenuButton from "@/components/Sing/CharacterMenuButton/MenuButto
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import { SequencerEditTarget } from "@/store/type";
 import { UnreachableError } from "@/type/utility";
+import { usePreviewableValue } from "@/composables/usePreviewableValue";
 
 const store = useStore();
 
@@ -267,7 +270,29 @@ const beatTypeOptions = BEAT_TYPES.map((beatType) => ({
   value: beatType,
 }));
 
-const bpmInputBuffer = ref(120);
+const {
+  currentValue: previewableBpm,
+  startPreview: startBpmPreview,
+  stopPreview: stopBpmPreview,
+  updatePreviewValue: updateBpmPreviewValue,
+} = usePreviewableValue(() => {
+  const currentTempo = tempos.value.findLast(
+    (tempo) => tempo.position <= playheadTicks.value,
+  );
+  if (!currentTempo) {
+    throw new UnreachableError("assert: at least one tempo exists");
+  }
+  return currentTempo.bpm;
+});
+
+const updateBpmPreviewValueWrapper = (bpm: string | number | null) => {
+  const bpmValue = Number(bpm);
+  if (!isValidBpm(bpmValue)) {
+    return;
+  }
+  updateBpmPreviewValue(bpmValue);
+};
+
 const keyRangeAdjustmentInputBuffer = ref(0);
 const volumeRangeAdjustmentInputBuffer = ref(0);
 
@@ -286,14 +311,6 @@ watch(
   },
   { immediate: true },
 );
-
-const setBpmInputBuffer = (bpmStr: string | number | null) => {
-  const bpmValue = Number(bpmStr);
-  if (!isValidBpm(bpmValue)) {
-    return;
-  }
-  bpmInputBuffer.value = bpmValue;
-};
 
 const currentTimeSignature = computed(() => {
   const maybeTimeSignature = timeSignatures.value.findLast(
@@ -352,8 +369,11 @@ const setVolumeRangeAdjustmentInputBuffer = (
   volumeRangeAdjustmentInputBuffer.value = volumeRangeAdjustmentValue;
 };
 
-const setTempo = () => {
-  const bpm = bpmInputBuffer.value;
+const setTempo = (bpm: string | number | null) => {
+  const bpmValue = Number(bpm);
+  if (!isValidBpm(bpmValue)) {
+    return;
+  }
   const position = tempos.value.findLast(
     (tempo) => tempo.position <= playheadTicks.value,
   )?.position;
@@ -363,7 +383,7 @@ const setTempo = () => {
   void store.actions.COMMAND_SET_TEMPO({
     tempo: {
       position,
-      bpm,
+      bpm: bpmValue,
     },
   });
 };
@@ -383,20 +403,6 @@ const setVolumeRangeAdjustment = () => {
     trackId: selectedTrackId.value,
   });
 };
-
-watch(
-  [tempos, playheadTicks],
-  () => {
-    const currentTempo = tempos.value.findLast(
-      (tempo) => tempo.position <= playheadTicks.value,
-    );
-    if (!currentTempo) {
-      throw new UnreachableError("assert: at least one tempo exists");
-    }
-    bpmInputBuffer.value = currentTempo.bpm;
-  },
-  { immediate: true },
-);
 
 const nowPlaying = computed(() => store.state.nowPlaying);
 
