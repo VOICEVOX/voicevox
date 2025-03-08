@@ -36,7 +36,7 @@
       </div>
       <QInput
         type="number"
-        :modelValue="previewableBpm"
+        :modelValue="cureentBpm"
         dense
         hideBottomSpace
         outlined
@@ -44,10 +44,7 @@
         label="テンポ"
         class="sing-tempo"
         padding="0"
-        @focus="startBpmPreview"
-        @blur="stopBpmPreview"
-        @update:modelValue="updateBpmPreviewValueWrapper"
-        @change="setTempo"
+        @change="setBpm"
       />
       <QField
         hideBottomSpace
@@ -181,7 +178,6 @@ import CharacterMenuButton from "@/components/Sing/CharacterMenuButton/MenuButto
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import { SequencerEditTarget } from "@/store/type";
 import { UnreachableError } from "@/type/utility";
-import { usePreviewableValue } from "@/composables/usePreviewableValue";
 
 const store = useStore();
 
@@ -270,12 +266,7 @@ const beatTypeOptions = BEAT_TYPES.map((beatType) => ({
   value: beatType,
 }));
 
-const {
-  currentValue: previewableBpm,
-  startPreview: startBpmPreview,
-  stopPreview: stopBpmPreview,
-  updatePreviewValue: updateBpmPreviewValue,
-} = usePreviewableValue(() => {
+const cureentBpm = computed(() => {
   const currentTempo = tempos.value.findLast(
     (tempo) => tempo.position <= playheadTicks.value,
   );
@@ -284,14 +275,6 @@ const {
   }
   return currentTempo.bpm;
 });
-
-const updateBpmPreviewValueWrapper = (bpm: string | number | null) => {
-  const bpmValue = Number(bpm);
-  if (!isValidBpm(bpmValue)) {
-    return;
-  }
-  updateBpmPreviewValue(bpmValue);
-};
 
 const keyRangeAdjustmentInputBuffer = ref(0);
 const volumeRangeAdjustmentInputBuffer = ref(0);
@@ -369,7 +352,7 @@ const setVolumeRangeAdjustmentInputBuffer = (
   volumeRangeAdjustmentInputBuffer.value = volumeRangeAdjustmentValue;
 };
 
-const setTempo = (bpm: string | number | null) => {
+const setBpm = (bpm: string | number | null) => {
   const bpmValue = Number(bpm);
   if (!isValidBpm(bpmValue)) {
     return;
