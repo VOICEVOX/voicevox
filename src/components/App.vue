@@ -46,10 +46,10 @@ import { useElectronMenuBarData } from "@/backend/electron/renderer/menuBarData"
 
 const store = useStore();
 
-const commonMenuBarData = useCommonMenuBarData();
-const talkMenuBarData = useTalkMenuBarData();
-const singMenuBarData = useSingMenuBarData();
-const electronMenuBarData = useElectronMenuBarData();
+const commonMenuBarData = useCommonMenuBarData(store);
+const talkMenuBarData = useTalkMenuBarData(store);
+const singMenuBarData = useSingMenuBarData(store);
+const electronMenuBarData = useElectronMenuBarData(store);
 
 const subMenuData = computed(() =>
   concatMenuBarData([

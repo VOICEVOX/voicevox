@@ -1,12 +1,10 @@
 import { computed } from "vue";
 import { useEngineIcons } from "@/composables/useEngineIcons";
 import { MenuBarDataOrRef } from "@/domain/menuBarData";
-import { useStore } from "@/store";
 import { MenuItemData, MenuItemRoot } from "@/components/Menu/type";
+import { Store } from "@/store";
 
-export const useElectronMenuBarData = (): MenuBarDataOrRef => {
-  const store = useStore();
-
+export const useElectronMenuBarData = (store: Store): MenuBarDataOrRef => {
   const engineIds = computed(() => store.state.engineIds);
   const engineInfos = computed(() => store.state.engineInfos);
   const engineManifests = computed(() => store.state.engineManifests);

@@ -1,13 +1,11 @@
 import { computed } from "vue";
 import { MenuItemData } from "@/components/Menu/type";
 
-import { useStore } from "@/store";
+import { Store } from "@/store";
 import { useRootMiscSetting } from "@/composables/useRootMiscSetting";
 import { MenuBarDataOrRef } from "@/domain/menuBarData";
 
-export const useMenuBarData = (): MenuBarDataOrRef => {
-  const store = useStore();
-
+export const useMenuBarData = (store: Store): MenuBarDataOrRef => {
   // 「ファイル」メニュー
   const fileSubMenuData = computed<MenuItemData[]>(() => [
     {

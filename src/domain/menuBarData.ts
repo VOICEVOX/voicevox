@@ -1,9 +1,9 @@
 import { ref, computed, watch, MaybeRef, unref } from "vue";
 import { MenuItemData } from "@/components/Menu/type";
-import { useStore } from "@/store";
+import { Store } from "@/store";
 import { HotkeyAction, useHotkeyManager } from "@/plugins/hotkeyPlugin";
 
-export type MenuBarData = {
+type MenuBarData = {
   file: MenuItemData[];
   edit: MenuItemData[];
   view: MenuItemData[];
@@ -18,9 +18,7 @@ export type MenuBarDataOrRef = {
   setting: MaybeRef<MenuItemData[]>;
 };
 
-export const useCommonMenuBarData = () => {
-  const store = useStore();
-
+export const useCommonMenuBarData = (store: Store) => {
   const uiLocked = computed(() => store.getters.UI_LOCKED);
 
   const editor = computed(() => store.state.openedEditor);
@@ -363,7 +361,7 @@ export const useCommonMenuBarData = () => {
   }));
 };
 
-export type MenuBarConcatSpecification = {
+type MenuBarConcatSpecification = {
   visible: boolean;
   data: MaybeRef<MenuBarDataOrRef>;
   order: Record<keyof MenuBarData, "pre" | "post">;

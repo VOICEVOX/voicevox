@@ -1,13 +1,12 @@
 import { computed } from "vue";
-import { useStore } from "@/store";
+import { Store } from "@/store";
 import { MenuItemData } from "@/components/Menu/type";
 import { useRootMiscSetting } from "@/composables/useRootMiscSetting";
 import { ExportSongProjectFileType } from "@/store/type";
 import { notifyResult } from "@/components/Dialog/Dialog";
 import { MenuBarDataOrRef } from "@/domain/menuBarData";
 
-export const useMenuBarData = (): MenuBarDataOrRef => {
-  const store = useStore();
+export const useMenuBarData = (store: Store): MenuBarDataOrRef => {
   const uiLocked = computed(() => store.getters.UI_LOCKED);
   const isNotesSelected = computed(
     () => store.getters.SELECTED_NOTE_IDS.size > 0,
