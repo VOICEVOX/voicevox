@@ -58,7 +58,6 @@ export class MoveNoteState
   }
 
   onEnter(context: Context) {
-    context.enableAutoScrollDuringDrag.value = true;
     const guideLineTicks = getGuideLineTicks(this.cursorPosAtStart, context);
     const targetNotesArray = context.notesInSelectedTrack.value.filter(
       (value) => this.targetNoteIds.has(value.id),
@@ -72,6 +71,7 @@ export class MoveNoteState
     context.cursorState.value = "MOVE";
     context.guideLineTicks.value = guideLineTicks;
     context.previewMode.value = "MOVE_NOTE";
+    context.enableAutoScrollDuringDrag.value = true;
 
     const previewIfNeeded = () => {
       if (this.innerContext == undefined) {
@@ -125,7 +125,6 @@ export class MoveNoteState
   }
 
   onExit(context: Context) {
-    context.enableAutoScrollDuringDrag.value = false;
     if (this.innerContext == undefined) {
       throw new Error("innerContext is undefined.");
     }
@@ -154,6 +153,7 @@ export class MoveNoteState
     context.previewNotes.value = [];
     context.cursorState.value = "UNSET";
     context.previewMode.value = "IDLE";
+    context.enableAutoScrollDuringDrag.value = false;
   }
 
   private previewMove(context: Context) {

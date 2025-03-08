@@ -65,6 +65,7 @@ export class AddNoteState
     context.cursorState.value = "DRAW";
     context.guideLineTicks.value = noteEndPos;
     context.previewMode.value = "ADD_NOTE";
+    context.enableAutoScrollDuringDrag.value = true;
 
     const previewIfNeeded = () => {
       if (this.innerContext == undefined) {
@@ -119,6 +120,7 @@ export class AddNoteState
     if (this.innerContext == undefined) {
       throw new Error("innerContext is undefined.");
     }
+    context.enableAutoScrollDuringDrag.value = false;
     const previewNotes = context.previewNotes.value;
     const previewNoteIds = previewNotes.map((value) => value.id);
 
@@ -142,6 +144,7 @@ export class AddNoteState
     context.previewNotes.value = [];
     context.cursorState.value = "UNSET";
     context.previewMode.value = "IDLE";
+    context.enableAutoScrollDuringDrag.value = false;
   }
 
   private previewAdd(context: Context) {

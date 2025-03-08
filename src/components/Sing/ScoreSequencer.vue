@@ -602,7 +602,7 @@ const onMouseDown = (event: MouseEvent) => {
 
 let autoScrollDuringDragAnimationId: number | undefined = undefined;
 let previousTimeStamp: number | undefined = undefined;
-const scrollSpeedPerMS = 0.2; // 1msあたりの自動スクロールスピード
+const scrollSpeedPerMS = 0.3; // 1msあたりの自動スクロールスピード
 let scrollXMultiplier: number = 0; //右方向+1,左方向-1
 let scrollYMultiplier: number = 0; //上方向-1,下方向+1
 
@@ -615,11 +615,13 @@ const autoScrollAnimation = (timestamp: number) => {
     previousTimeStamp = timestamp;
   }
   const elapsed = timestamp - previousTimeStamp;
-  sequencerBody.value.scrollBy({
-    top: Math.floor(scrollYMultiplier * scrollSpeedPerMS * elapsed),
-    left: Math.floor(scrollXMultiplier * scrollSpeedPerMS * elapsed),
-    behavior: "auto",
-  });
+  if (scrollXMultiplier !== 0 || scrollYMultiplier !== 0) {
+    sequencerBody.value.scrollBy({
+      top: Math.floor(scrollYMultiplier * scrollSpeedPerMS * elapsed),
+      left: Math.floor(scrollXMultiplier * scrollSpeedPerMS * elapsed),
+      behavior: "auto",
+    });
+  }
 
   previousTimeStamp = timestamp;
   autoScrollDuringDragAnimationId = requestAnimationFrame(autoScrollAnimation);
@@ -631,8 +633,7 @@ const onMouseMove = (event: MouseEvent) => {
   }
   const cursorPos = getCursorPosOnSequencer(event);
 
-  // カーソルがノートを持っていて、カーソルがシーケンサーの範囲外に出たときに
-  // 自動スクロールする処理を以下で行う
+  // ドラッグ時の自動スクロールが有効な場合は、スクロール量を更新する処理を行う
   if (enableAutoScrollDuringDrag.value) {
     const threshold = 15;
 
@@ -666,23 +667,21 @@ const onMouseMove = (event: MouseEvent) => {
   });
 };
 
-watch(enableAutoScrollDuringDrag, (newFlag, oldFlag) => {
-  // previewModeを抜けるとき
-  // 自動スクロールを停止する
-  if (!newFlag) {
+watch(enableAutoScrollDuringDrag, (newFlag) => {
+  if (newFlag) {
+    // 自動スクロールのアニメーションループをスタートする
+    // 実際に動かさなければならない場面になったら
+    // scrollXMultiplier,scrollYMultiplierの値を0以外にセットする
+    autoScrollDuringDragAnimationId =
+      requestAnimationFrame(autoScrollAnimation);
+  } else {
+    // 自動スクロールのアニメーションループを停止する
     if (autoScrollDuringDragAnimationId != undefined) {
       cancelAnimationFrame(autoScrollDuringDragAnimationId);
       autoScrollDuringDragAnimationId = undefined;
     }
     scrollXMultiplier = 0;
     scrollYMultiplier = 0;
-  } else {
-    // previewModeに入ったとき
-    // 常にアニメーションループをスタートする
-    // 実際に動かさなければならない場面になったら
-    // scrollXMultiplier,scrollYMultiplierの値を0以外にセットする
-    autoScrollDuringDragAnimationId =
-      requestAnimationFrame(autoScrollAnimation);
   }
 });
 
