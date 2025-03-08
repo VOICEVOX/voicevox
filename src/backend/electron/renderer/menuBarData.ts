@@ -1,36 +1,38 @@
 import { computed } from "vue";
 import { useEngineIcons } from "@/composables/useEngineIcons";
-import { MenuBarDataOrRef } from "@/domain/menuBarData";
+import { MenuBarData } from "@/domain/menuBarData";
 import { MenuItemData, MenuItemRoot } from "@/components/Menu/type";
 import { Store } from "@/store";
 
-export const useElectronMenuBarData = (store: Store): MenuBarDataOrRef => {
+export const useElectronMenuBarData = (store: Store): MenuBarData => {
   const engineIds = computed(() => store.state.engineIds);
   const engineInfos = computed(() => store.state.engineInfos);
   const engineManifests = computed(() => store.state.engineManifests);
   const engineIcons = useEngineIcons(engineManifests);
   const enableMultiEngine = computed(() => store.state.enableMultiEngine);
   // 「エンジン」メニューのエンジン毎の項目
-  const engineSubMenuData = computed<MenuItemData[]>(() => {
-    let subMenu: MenuItemData[] = [];
+  const engineSubMenuData = computed<MenuItemData[][]>(() => {
+    let subMenu: MenuItemData[][] = [];
 
     if (Object.values(engineInfos.value).length === 1) {
       const engineInfo = Object.values(engineInfos.value)[0];
       subMenu = [
-        {
-          type: "button",
-          label: "再起動",
-          onClick: () => {
-            void store.actions.RESTART_ENGINES({
-              engineIds: [engineInfo.uuid],
-            });
+        [
+          {
+            type: "button",
+            label: "再起動",
+            onClick: () => {
+              void store.actions.RESTART_ENGINES({
+                engineIds: [engineInfo.uuid],
+              });
+            },
+            disableWhenUiLocked: false,
           },
-          disableWhenUiLocked: false,
-        },
-      ].filter((x) => x) as MenuItemData[];
+        ].filter((x) => x) as MenuItemData[],
+      ];
     } else {
       subMenu = [
-        ...store.getters.GET_SORTED_ENGINE_INFOS.map(
+        store.getters.GET_SORTED_ENGINE_INFOS.map(
           (engineInfo) =>
             ({
               type: "root",
@@ -62,23 +64,24 @@ export const useElectronMenuBarData = (store: Store): MenuBarDataOrRef => {
               ].filter((x) => x),
             }) as MenuItemRoot,
         ),
-        {
-          type: "separator",
-        },
-        {
-          type: "button",
-          label: "全てのエンジンを再起動",
-          onClick: () => {
-            void store.actions.RESTART_ENGINES({
-              engineIds: engineIds.value,
-            });
+        [
+          {
+            type: "button",
+            label: "全てのエンジンを再起動",
+            onClick: () => {
+              void store.actions.RESTART_ENGINES({
+                engineIds: engineIds.value,
+              });
+            },
+            disableWhenUiLocked: false,
           },
-          disableWhenUiLocked: false,
-        },
+        ],
       ];
     }
+
+    const lastSubMenu = subMenu[subMenu.length - 1];
     if (enableMultiEngine.value) {
-      subMenu.push({
+      lastSubMenu.push({
         type: "button",
         label: "エンジンの管理",
         onClick: () => {
@@ -91,7 +94,7 @@ export const useElectronMenuBarData = (store: Store): MenuBarDataOrRef => {
     }
     // マルチエンジンオフモードの解除
     if (store.state.isMultiEngineOffMode) {
-      subMenu.push({
+      lastSubMenu.push({
         type: "button",
         label: "マルチエンジンをオンにして再読み込み",
         onClick() {
@@ -108,10 +111,6 @@ export const useElectronMenuBarData = (store: Store): MenuBarDataOrRef => {
   });
 
   return {
-    file: [],
-    edit: [],
-    view: [],
     engine: engineSubMenuData,
-    setting: [],
   };
 };

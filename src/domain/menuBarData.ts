@@ -2,21 +2,16 @@ import { ref, computed, watch, MaybeRef, unref } from "vue";
 import { MenuItemData } from "@/components/Menu/type";
 import { Store } from "@/store";
 import { HotkeyAction, useHotkeyManager } from "@/plugins/hotkeyPlugin";
+import { ensureNotNullish } from "@/helpers/errorHelper";
+import { flatWithSeparator } from "@/helpers/flatWithSeparator";
 
-type MenuBarData = {
-  file: MenuItemData[];
-  edit: MenuItemData[];
-  view: MenuItemData[];
-  engine: MenuItemData[];
-  setting: MenuItemData[];
-};
-export type MenuBarDataOrRef = {
-  file: MaybeRef<MenuItemData[]>;
-  edit: MaybeRef<MenuItemData[]>;
-  view: MaybeRef<MenuItemData[]>;
-  engine: MaybeRef<MenuItemData[]>;
-  setting: MaybeRef<MenuItemData[]>;
-};
+export type MenuBarData = Partial<{
+  file: MaybeRef<MenuItemData[][]>;
+  edit: MaybeRef<MenuItemData[][]>;
+  view: MaybeRef<MenuItemData[][]>;
+  engine: MaybeRef<MenuItemData[][]>;
+  setting: MaybeRef<MenuItemData[][]>;
+}>;
 
 export const useCommonMenuBarData = (store: Store) => {
   const uiLocked = computed(() => store.getters.UI_LOCKED);
@@ -175,202 +170,214 @@ export const useCommonMenuBarData = (store: Store) => {
 
   return computed<MenuBarData>(() => ({
     file: [
-      {
-        type: "button",
-        label: "新規プロジェクト",
-        onClick: createNewProject,
-        disableWhenUiLocked: true,
-      },
-      {
-        type: "button",
-        label: "プロジェクトを上書き保存",
-        onClick: async () => {
-          await saveProject();
+      [
+        {
+          type: "button",
+          label: "新規プロジェクト",
+          onClick: createNewProject,
+          disableWhenUiLocked: true,
         },
-        disableWhenUiLocked: true,
-      },
-      {
-        type: "button",
-        label: "プロジェクトを名前を付けて保存",
-        onClick: async () => {
-          await saveProjectAs();
+        {
+          type: "button",
+          label: "プロジェクトを上書き保存",
+          onClick: async () => {
+            await saveProject();
+          },
+          disableWhenUiLocked: true,
         },
-        disableWhenUiLocked: true,
-      },
-      {
-        type: "button",
-        label: "プロジェクトの複製を保存",
-        onClick: async () => {
-          await saveProjectCopy();
+        {
+          type: "button",
+          label: "プロジェクトを名前を付けて保存",
+          onClick: async () => {
+            await saveProjectAs();
+          },
+          disableWhenUiLocked: true,
         },
-        disableWhenUiLocked: true,
-      },
-      {
-        type: "button",
-        label: "プロジェクトを読み込む",
-        onClick: () => {
-          importProject();
+        {
+          type: "button",
+          label: "プロジェクトの複製を保存",
+          onClick: async () => {
+            await saveProjectCopy();
+          },
+          disableWhenUiLocked: true,
         },
-        disableWhenUiLocked: true,
-      },
-      {
-        type: "root",
-        label: "最近使ったプロジェクト",
-        disableWhenUiLocked: true,
-        subMenu: recentProjectsSubMenuData.value,
-      },
+        {
+          type: "button",
+          label: "プロジェクトを読み込む",
+          onClick: () => {
+            importProject();
+          },
+          disableWhenUiLocked: true,
+        },
+        {
+          type: "root",
+          label: "最近使ったプロジェクト",
+          disableWhenUiLocked: true,
+          subMenu: recentProjectsSubMenuData.value,
+        },
+      ],
     ],
 
     edit: [
-      {
-        type: "button",
-        label: "元に戻す",
-        onClick: async () => {
-          if (!uiLocked.value && editor.value) {
-            await store.actions.UNDO({ editor: editor.value });
-          }
+      [
+        {
+          type: "button",
+          label: "元に戻す",
+          onClick: async () => {
+            if (!uiLocked.value) {
+              await store.actions.UNDO({
+                editor: ensureNotNullish(editor.value),
+              });
+            }
+          },
+          disabled: !canUndo.value,
+          disableWhenUiLocked: true,
         },
-        disabled: !canUndo.value,
-        disableWhenUiLocked: true,
-      },
-      {
-        type: "button",
-        label: "やり直す",
-        onClick: async () => {
-          if (!uiLocked.value && editor.value) {
-            await store.actions.REDO({ editor: editor.value });
-          }
+        {
+          type: "button",
+          label: "やり直す",
+          onClick: async () => {
+            if (!uiLocked.value) {
+              await store.actions.REDO({
+                editor: ensureNotNullish(editor.value),
+              });
+            }
+          },
+          disabled: !canRedo.value,
+          disableWhenUiLocked: true,
         },
-        disabled: !canRedo.value,
-        disableWhenUiLocked: true,
-      },
-      ...(isMultiSelectEnabled.value
-        ? [
-            {
-              type: "button",
-              label: "すべて選択",
-              onClick: async () => {
-                if (!uiLocked.value && isMultiSelectEnabled.value) {
-                  await store.actions.SET_SELECTED_AUDIO_KEYS({
-                    audioKeys: audioKeys.value,
-                  });
-                }
-              },
-              disableWhenUiLocked: true,
-            } as const,
-          ]
-        : []),
+        ...(isMultiSelectEnabled.value
+          ? [
+              {
+                type: "button",
+                label: "すべて選択",
+                onClick: async () => {
+                  if (!uiLocked.value && isMultiSelectEnabled.value) {
+                    await store.actions.SET_SELECTED_AUDIO_KEYS({
+                      audioKeys: audioKeys.value,
+                    });
+                  }
+                },
+                disableWhenUiLocked: true,
+              } as const,
+            ]
+          : []),
+      ],
     ],
 
     view: [
-      {
-        type: "button",
-        label: "全画面表示を切り替え",
-        onClick: toggleFullScreen,
-        disableWhenUiLocked: false,
-      },
-      {
-        type: "button",
-        label: "拡大",
-        onClick: () => {
-          void zoomIn();
+      [
+        {
+          type: "button",
+          label: "全画面表示を切り替え",
+          onClick: toggleFullScreen,
+          disableWhenUiLocked: false,
         },
-        disableWhenUiLocked: false,
-      },
-      {
-        type: "button",
-        label: "縮小",
-        onClick: () => {
-          void zoomOut();
+        {
+          type: "button",
+          label: "拡大",
+          onClick: () => {
+            void zoomIn();
+          },
+          disableWhenUiLocked: false,
         },
-        disableWhenUiLocked: false,
-      },
-      {
-        type: "button",
-        label: "拡大率のリセット",
-        onClick: () => {
-          void zoomReset();
+        {
+          type: "button",
+          label: "縮小",
+          onClick: () => {
+            void zoomOut();
+          },
+          disableWhenUiLocked: false,
         },
-        disableWhenUiLocked: false,
-      },
+        {
+          type: "button",
+          label: "拡大率のリセット",
+          onClick: () => {
+            void zoomReset();
+          },
+          disableWhenUiLocked: false,
+        },
+      ],
     ],
-    engine: [],
     setting: [
-      {
-        type: "button",
-        label: "キー割り当て",
-        onClick() {
-          void store.actions.SET_DIALOG_OPEN({
-            isHotkeySettingDialogOpen: true,
-          });
+      [
+        {
+          type: "button",
+          label: "キー割り当て",
+          onClick() {
+            void store.actions.SET_DIALOG_OPEN({
+              isHotkeySettingDialogOpen: true,
+            });
+          },
+          disableWhenUiLocked: false,
         },
-        disableWhenUiLocked: false,
-      },
-      {
-        type: "button",
-        label: "ツールバーのカスタマイズ",
-        onClick() {
-          void store.actions.SET_DIALOG_OPEN({
-            isToolbarSettingDialogOpen: true,
-          });
+        {
+          type: "button",
+          label: "ツールバーのカスタマイズ",
+          onClick() {
+            void store.actions.SET_DIALOG_OPEN({
+              isToolbarSettingDialogOpen: true,
+            });
+          },
+          disableWhenUiLocked: false,
         },
-        disableWhenUiLocked: false,
-      },
-      {
-        type: "button",
-        label: "キャラクター並び替え・試聴",
-        onClick() {
-          void store.actions.SET_DIALOG_OPEN({
-            isCharacterOrderDialogOpen: true,
-          });
+        {
+          type: "button",
+          label: "キャラクター並び替え・試聴",
+          onClick() {
+            void store.actions.SET_DIALOG_OPEN({
+              isCharacterOrderDialogOpen: true,
+            });
+          },
+          disableWhenUiLocked: true,
         },
-        disableWhenUiLocked: true,
-      },
-      {
-        type: "button",
-        label: "デフォルトスタイル",
-        onClick() {
-          void store.actions.SET_DIALOG_OPEN({
-            isDefaultStyleSelectDialogOpen: true,
-          });
+        {
+          type: "button",
+          label: "デフォルトスタイル",
+          onClick() {
+            void store.actions.SET_DIALOG_OPEN({
+              isDefaultStyleSelectDialogOpen: true,
+            });
+          },
+          disableWhenUiLocked: true,
         },
-        disableWhenUiLocked: true,
-      },
-      {
-        type: "button",
-        label: "読み方＆アクセント辞書",
-        onClick() {
-          void store.actions.SET_DIALOG_OPEN({
-            isDictionaryManageDialogOpen: true,
-          });
+        {
+          type: "button",
+          label: "読み方＆アクセント辞書",
+          onClick() {
+            void store.actions.SET_DIALOG_OPEN({
+              isDictionaryManageDialogOpen: true,
+            });
+          },
+          disableWhenUiLocked: true,
         },
-        disableWhenUiLocked: true,
-      },
-      { type: "separator" },
-      {
-        type: "button",
-        label: "オプション",
-        onClick() {
-          void store.actions.SET_DIALOG_OPEN({
-            isSettingDialogOpen: true,
-          });
+      ],
+      [
+        {
+          type: "button",
+          label: "オプション",
+          onClick() {
+            void store.actions.SET_DIALOG_OPEN({
+              isSettingDialogOpen: true,
+            });
+          },
+          disableWhenUiLocked: false,
         },
-        disableWhenUiLocked: false,
-      },
+      ],
     ],
   }));
 };
 
 type MenuBarConcatSpecification = {
   visible: boolean;
-  data: MaybeRef<MenuBarDataOrRef>;
+  data: MaybeRef<MenuBarData>;
   order: Record<keyof MenuBarData, "pre" | "post">;
 };
 
 export const concatMenuBarData = (
   menuBarSpecifications: MenuBarConcatSpecification[],
-): MenuBarData => {
-  const result: MenuBarData = {
+): Record<keyof MenuBarData, MenuItemData[]> => {
+  const result: Record<keyof MenuBarData, MenuItemData[]> = {
     file: [],
     edit: [],
     view: [],
@@ -383,34 +390,16 @@ export const concatMenuBarData = (
       continue;
     }
     for (const key of Object.keys(result) as (keyof MenuBarData)[]) {
-      const data = unref(specification.data);
+      const data = unref(unref(specification.data)[key]);
+      if (!data) {
+        continue;
+      }
+      const joinedData = flatWithSeparator(data, { type: "separator" });
       if (specification.order[key] === "pre") {
-        result[key] = [
-          ...result[key],
-          { type: "separator" },
-          ...unref(data[key]),
-        ];
+        result[key] = [...result[key], { type: "separator" }, ...joinedData];
       } else {
-        result[key] = [
-          ...unref(data[key]),
-          { type: "separator" },
-          ...result[key],
-        ];
+        result[key] = [...joinedData, { type: "separator" }, ...result[key]];
       }
-    }
-  }
-
-  for (const value of Object.values(result)) {
-    for (let i = value.length - 1; i >= 0; i--) {
-      if (value[i].type === "separator" && value[i + 1]?.type === "separator") {
-        value.splice(i, 1);
-      }
-    }
-    if (value[0]?.type === "separator") {
-      value.shift();
-    }
-    if (value[value.length - 1]?.type === "separator") {
-      value.pop();
     }
   }
 
