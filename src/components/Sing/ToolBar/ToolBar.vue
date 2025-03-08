@@ -266,16 +266,6 @@ const beatTypeOptions = BEAT_TYPES.map((beatType) => ({
   value: beatType,
 }));
 
-const cureentBpm = computed(() => {
-  const currentTempo = tempos.value.findLast(
-    (tempo) => tempo.position <= playheadTicks.value,
-  );
-  if (!currentTempo) {
-    throw new UnreachableError("assert: at least one tempo exists");
-  }
-  return currentTempo.bpm;
-});
-
 const keyRangeAdjustmentInputBuffer = ref(0);
 const volumeRangeAdjustmentInputBuffer = ref(0);
 
@@ -386,6 +376,16 @@ const setVolumeRangeAdjustment = () => {
     trackId: selectedTrackId.value,
   });
 };
+
+const cureentBpm = computed(() => {
+  const currentTempo = tempos.value.findLast(
+    (tempo) => tempo.position <= playheadTicks.value,
+  );
+  if (!currentTempo) {
+    throw new UnreachableError("assert: at least one tempo exists");
+  }
+  return currentTempo.bpm;
+});
 
 const nowPlaying = computed(() => store.state.nowPlaying);
 
