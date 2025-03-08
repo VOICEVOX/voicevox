@@ -138,7 +138,8 @@ export class LineStrip {
    * 折れ線を更新します。（設定されたポイントを適用します）
    */
   update() {
-    this.pointsBuffer.update([...this.points]);
+    // @ts-expect-error 動くので無視。恐らくpixi.js v7の型定義がTypeScript 5.7以降に対応していないため。
+    this.pointsBuffer.update(this.points);
     if (this.geometry.instanceCount !== this.numOfPoints - 1) {
       this.geometry.instanceCount = this.numOfPoints - 1;
     }
