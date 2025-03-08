@@ -52,5 +52,6 @@ it("最大の要素数を指定できる", () => {
 });
 
 it("特殊な文字列に対応できる", () => {
+  expect(splitLyricsByMoras("くゎ")).toEqual(["くゎ"]);
   expect(splitLyricsByMoras("くわ")).toEqual(["く", "わ"]);
 });
