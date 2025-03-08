@@ -219,7 +219,7 @@ async function downloadAndUnarchive({ url }: { url: string }) {
 
 /**
  * /vendored/typos ディレクトリから不要なドキュメントを削除する関数
- * ダウンロード・解凍後に実行される
+ * ダウンロード・解凍後に実行する
  */
 async function removeTyposDocumentation() {
   const typosDocDirPath = join(TYPOS_DIRECTORY_PATH, "doc");
