@@ -136,17 +136,20 @@ async function shouldDownloadTypos(): Promise<boolean> {
   );
   return true;
 }
+
 /**
- * Typos用にディレクトリを空にする関数
+ * Typosのダウンロード前にディレクトリを準備する関数
+ * 既存のディレクトリがある場合は中身を空にし、無い場合は新規作成する
  */
-async function clearTyposDirectory() {
-  // TYPOS_BINARY_PATHが存在する場合、削除する
+async function prepareTyposDirectory() {
+  // TYPOS_DIRECTORY_PATHが存在する場合、中身を空にする
   if (await exists(TYPOS_DIRECTORY_PATH)) {
     const files = await fs.readdir(TYPOS_DIRECTORY_PATH);
     await Promise.all(
       files.map((file) => fs.unlink(resolve(TYPOS_DIRECTORY_PATH, file))),
     );
   } else {
+    // 無い場合は新規作成する
     await fs.mkdir(TYPOS_DIRECTORY_PATH, { recursive: true });
   }
 }
@@ -160,7 +163,7 @@ async function downloadAndUnarchive({ url }: { url: string }) {
     return;
   }
 
-  await clearTyposDirectory();
+  await prepareTyposDirectory();
 
   const response = await retryFetch(url);
   if (!response.ok) {
@@ -215,9 +218,10 @@ async function downloadAndUnarchive({ url }: { url: string }) {
 }
 
 /**
- * /vendored/typos ディレクトリから不要なファイルとディレクトリを削除する関数
+ * /vendored/typos ディレクトリから不要なドキュメントを削除する関数
+ * ダウンロード・解凍後に実行される
  */
-async function cleanupTyposDirectory() {
+async function removeTyposDocumentation() {
   const typosDocDirPath = join(TYPOS_DIRECTORY_PATH, "doc");
   const typosReadmeFilePath = join(TYPOS_DIRECTORY_PATH, "README.md");
 
@@ -241,8 +245,8 @@ async function main() {
   const url = getBinaryURL();
   await downloadAndUnarchive({ url });
 
-  // 不要なファイルとディレクトリを削除
-  await cleanupTyposDirectory();
+  // 不要なドキュメントを削除
+  await removeTyposDocumentation();
 }
 
 // main関数実行
