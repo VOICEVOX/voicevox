@@ -97,7 +97,7 @@ export const useElectronMenuBarData = (
               });
             },
             disableWhenUiLocked: false,
-            disableOnReloadingLocked: true,
+            disableWhileReloadingLock: true,
           },
         ])
       : [];
