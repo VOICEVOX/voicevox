@@ -22,21 +22,6 @@
     },
     "lib": ["esnext", "dom", "dom.iterable"]
   },
-  "include": [
-    "playwright.config.ts",
-    "*.js",
-    "*.ts",
-    "*.cjs",
-    "eslint-plugin/**/*.ts",
-    "build/**/*.cjs",
-    ".storybook/**/*.ts",
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/**/*.vue",
-    "tests/**/*.ts",
-    "tests/**/*.tsx",
-    "tools/**/*.ts",
-    ".storybook/**/*.ts"
-  ],
+  "include": ["**/*.js", "**/*.ts", "**/*.cjs", "**/*.vue"],
   "exclude": ["node_modules"]
 }
