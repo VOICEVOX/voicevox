@@ -22,6 +22,12 @@
     },
     "lib": ["esnext", "dom", "dom.iterable"]
   },
-  "include": ["**/*.js", "**/*.ts", "**/*.cjs", "**/*.vue"],
+  "include": [
+    ".storybook/**/*.ts",
+    "**/*.js",
+    "**/*.ts",
+    "**/*.cjs",
+    "**/*.vue"
+  ],
   "exclude": ["node_modules"]
 }
