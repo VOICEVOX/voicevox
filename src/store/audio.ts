@@ -2900,7 +2900,7 @@ export const audioCommandStore = transformCommandStore(
             filePath = payload.filePath;
           }
 
-          let buf: ArrayBuffer;
+          let buf: Uint8Array;
           if (filePath != undefined) {
             buf = await window.backend
               .readFile({ filePath })
@@ -2908,7 +2908,7 @@ export const audioCommandStore = transformCommandStore(
           } else {
             if (payload.type != "file")
               throw new UnreachableError("payload.type != 'file'");
-            buf = await payload.file.arrayBuffer();
+            buf = new Uint8Array(await payload.file.arrayBuffer());
           }
 
           let body = new TextDecoder("utf-8").decode(buf);
