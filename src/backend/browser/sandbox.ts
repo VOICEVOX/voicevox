@@ -82,7 +82,7 @@ export const api: Sandbox = {
   async showOpenFileDialog(obj: {
     title: string;
     name: string;
-    mimeType: string;
+    mimeType: MIMEType;
     extensions: string[];
   }) {
     const fileHandle = await showOpenFilePickerImpl({
@@ -90,7 +90,11 @@ export const api: Sandbox = {
       fileTypes: [
         {
           description: obj.name,
-          accept: { [obj.mimeType]: obj.extensions.map((ext) => `.${ext}`) },
+          accept: {
+            [obj.mimeType]: obj.extensions.map(
+              (ext): FileExtension => `.${ext}`,
+            ),
+          },
         },
       ],
     });
