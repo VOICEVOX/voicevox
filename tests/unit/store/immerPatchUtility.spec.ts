@@ -88,9 +88,7 @@ describe("array", () => {
     );
     // テストケースの可視化
     expect(redoPatches).toStrictEqual([{ op: "add", path: [3], value: 4 }]);
-    expect(undoPatches).toStrictEqual([
-      { op: "replace", path: ["length"], value: 3 },
-    ]);
+    expect(undoPatches).toStrictEqual([{ op: "remove", path: [3] }]);
 
     applyPatches(object, redoPatches);
     expect(object).toStrictEqual([1, 2, 3, 4]);
@@ -119,7 +117,7 @@ describe("array", () => {
     expect(undoPatches).toStrictEqual([
       { op: "replace", path: [1], value: 2 },
       { op: "replace", path: [2], value: 3 },
-      { op: "replace", path: ["length"], value: 3 },
+      { op: "remove", path: [3] },
     ]);
 
     applyPatches(object, redoPatches);
@@ -151,7 +149,7 @@ describe("array", () => {
       { op: "replace", path: [0], value: 1 },
       { op: "replace", path: [1], value: 2 },
       { op: "replace", path: [2], value: 3 },
-      { op: "replace", path: ["length"], value: 3 },
+      { op: "remove", path: [3] },
     ]);
 
     applyPatches(object, redoPatches);
@@ -175,7 +173,7 @@ describe("array", () => {
     // テストケースの可視化
     expect(redoPatches).toStrictEqual([
       { op: "replace", path: [1], value: 3 },
-      { op: "replace", path: ["length"], value: 2 },
+      { op: "remove", path: [2] },
     ]);
     expect(undoPatches).toStrictEqual([
       { op: "replace", path: [1], value: 2 },
@@ -201,9 +199,7 @@ describe("array", () => {
       },
     );
     // テストケースの可視化
-    expect(redoPatches).toStrictEqual([
-      { op: "replace", path: ["length"], value: 2 },
-    ]);
+    expect(redoPatches).toStrictEqual([{ op: "remove", path: [2] }]);
     expect(undoPatches).toStrictEqual([{ op: "add", path: [2], value: 3 }]);
 
     applyPatches(object, redoPatches);
