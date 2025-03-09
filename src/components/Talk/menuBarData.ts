@@ -1,14 +1,15 @@
 import { computed } from "vue";
-import { MenuItemData } from "@/components/Menu/type";
-
 import { Store } from "@/store";
 import { useRootMiscSetting } from "@/composables/useRootMiscSetting";
-import { MenuBarData } from "@/domain/menuBarData";
+import {
+  MaybeComputedMenuBarContent,
+  MenuBarContent,
+} from "@/domain/menuBarData";
 
-export const useMenuBarData = (store: Store): MenuBarData => {
+export const useMenuBarData = (store: Store): MaybeComputedMenuBarContent => {
   // 「ファイル」メニュー
-  const fileSubMenuData = computed<MenuItemData[][]>(() => [
-    [
+  const fileSubMenuData = computed<MenuBarContent["file"]>(() => ({
+    audioExport: [
       {
         type: "button",
         label: "音声書き出し",
@@ -34,7 +35,7 @@ export const useMenuBarData = (store: Store): MenuBarData => {
         disableWhenUiLocked: true,
       },
     ],
-    [
+    externalProject: [
       {
         type: "button",
         label: "テキストを繋げて書き出し",
@@ -52,15 +53,15 @@ export const useMenuBarData = (store: Store): MenuBarData => {
         disableWhenUiLocked: true,
       },
     ],
-  ]);
+  }));
 
   // 「表示」メニュー
   const [showTextLineNumber, changeShowTextLineNumber] = useRootMiscSetting(
     store,
     "showTextLineNumber",
   );
-  const viewSubMenuData = computed<MenuItemData[][]>(() => [
-    [
+  const viewSubMenuData = computed<MenuBarContent["view"]>(() => ({
+    guide: [
       {
         type: "button",
         label: showTextLineNumber.value ? "行番号を非表示" : "行番号を表示",
@@ -70,7 +71,7 @@ export const useMenuBarData = (store: Store): MenuBarData => {
         disableWhenUiLocked: true,
       },
     ],
-  ]);
+  }));
 
   return {
     file: fileSubMenuData,

@@ -4,9 +4,12 @@ import { MenuItemData } from "@/components/Menu/type";
 import { useRootMiscSetting } from "@/composables/useRootMiscSetting";
 import { ExportSongProjectFileType } from "@/store/type";
 import { notifyResult } from "@/components/Dialog/Dialog";
-import { MenuBarData } from "@/domain/menuBarData";
+import {
+  MaybeComputedMenuBarContent,
+  MenuBarContent,
+} from "@/domain/menuBarData";
 
-export const useMenuBarData = (store: Store): MenuBarData => {
+export const useMenuBarData = (store: Store): MaybeComputedMenuBarContent => {
   const uiLocked = computed(() => store.getters.UI_LOCKED);
   const isNotesSelected = computed(
     () => store.getters.SELECTED_NOTE_IDS.size > 0,
@@ -58,8 +61,8 @@ export const useMenuBarData = (store: Store): MenuBarData => {
   };
 
   // 「ファイル」メニュー
-  const fileSubMenuData = computed<MenuItemData[][]>(() => [
-    [
+  const fileSubMenuData = computed<MenuBarContent["file"]>(() => ({
+    audioExport: [
       {
         type: "button",
         label: "音声書き出し",
@@ -77,7 +80,7 @@ export const useMenuBarData = (store: Store): MenuBarData => {
         disableWhenUiLocked: true,
       },
     ],
-    [
+    externalProject: [
       {
         type: "button",
         label: "プロジェクトをインポート",
@@ -110,11 +113,11 @@ export const useMenuBarData = (store: Store): MenuBarData => {
         disableWhenUiLocked: true,
       },
     ],
-  ]);
+  }));
 
   // 「編集」メニュー
-  const editSubMenuData = computed<MenuItemData[][]>(() => [
-    [
+  const editSubMenuData = computed<MenuBarContent["edit"]>(() => ({
+    copyPaste: [
       {
         type: "button",
         label: "コピー",
@@ -145,7 +148,7 @@ export const useMenuBarData = (store: Store): MenuBarData => {
         disableWhenUiLocked: true,
       },
     ],
-    [
+    select: [
       {
         type: "button",
         label: "すべて選択",
@@ -167,7 +170,7 @@ export const useMenuBarData = (store: Store): MenuBarData => {
         disableWhenUiLocked: true,
       },
     ],
-    [
+    misc: [
       {
         type: "button",
         label: "クオンタイズ",
@@ -178,13 +181,13 @@ export const useMenuBarData = (store: Store): MenuBarData => {
         disableWhenUiLocked: true,
       },
     ],
-  ]);
+  }));
 
   // 「表示」メニュー
   const [showSingCharacterPortrait, setShowSingCharacterPortrait] =
     useRootMiscSetting(store, "showSingCharacterPortrait");
-  const viewSubMenuData = computed<MenuItemData[][]>(() => [
-    [
+  const viewSubMenuData = computed<MenuBarContent["view"]>(() => ({
+    portrait: [
       {
         type: "button",
         label: showSingCharacterPortrait.value
@@ -196,7 +199,7 @@ export const useMenuBarData = (store: Store): MenuBarData => {
         disableWhenUiLocked: true,
       },
     ],
-  ]);
+  }));
 
   return {
     file: fileSubMenuData,

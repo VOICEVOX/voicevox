@@ -1,3 +1,4 @@
+:w
 <template>
   <QBtn
     flat
@@ -73,7 +74,7 @@ const subMenuOpenFlags = ref(
 const isDisabledMenuItem = computed(() => (menu: MenuItemData) => {
   if (menu.type === "separator") return false;
   if (menu.disableWhenUiLocked && uiLocked.value) return true;
-  if (menu.disablreloadingLocked && reloadingLocked.value) return true;
+  if (menu.disableOnReloadingLocked && reloadingLocked.value) return true;
   return false;
 });
 

@@ -1,16 +1,27 @@
-import { ref, computed, watch, MaybeRef, unref } from "vue";
+import { ref, computed, watch, MaybeRef, ComputedRef, unref } from "vue";
 import { MenuItemData } from "@/components/Menu/type";
 import { Store } from "@/store";
 import { HotkeyAction, useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import { ensureNotNullish } from "@/helpers/errorHelper";
-import { flatWithSeparator } from "@/helpers/flatWithSeparator";
+import { flatWithSeparator } from "@/helpers/arrayHelper";
 
-export type MenuBarData = Partial<{
-  file: MaybeRef<MenuItemData[][]>;
-  edit: MaybeRef<MenuItemData[][]>;
-  view: MaybeRef<MenuItemData[][]>;
-  engine: MaybeRef<MenuItemData[][]>;
-  setting: MaybeRef<MenuItemData[][]>;
+type MenuBarRoots = "file" | "edit" | "view" | "engine" | "setting";
+
+export const menuItemIndex = {
+  file: ["audioExport", "externalProject", "project"],
+  edit: ["undoRedo", "copyPaste", "select", "misc"],
+  view: ["guide", "portrait", "window"],
+  engine: ["singleEngine", "allEngines"],
+  setting: ["subOptions", "options"],
+} as const satisfies Record<MenuBarRoots, string[]>;
+
+export type MenuBarContent = Partial<{
+  [K in MenuBarRoots]: Partial<
+    Record<(typeof menuItemIndex)[K][number], MenuItemData[]>
+  >;
+}>;
+export type MaybeComputedMenuBarContent = Partial<{
+  [K in MenuBarRoots]: ComputedRef<MenuBarContent[K]> | MenuBarContent[K];
 }>;
 
 export const useCommonMenuBarData = (store: Store) => {
@@ -168,9 +179,9 @@ export const useCommonMenuBarData = (store: Store) => {
     name: "拡大率のリセット",
   });
 
-  return computed<MenuBarData>(() => ({
-    file: [
-      [
+  return computed<MenuBarContent>(() => ({
+    file: {
+      project: [
         {
           type: "button",
           label: "新規プロジェクト",
@@ -216,10 +227,10 @@ export const useCommonMenuBarData = (store: Store) => {
           subMenu: recentProjectsSubMenuData.value,
         },
       ],
-    ],
+    },
 
-    edit: [
-      [
+    edit: {
+      undoRedo: [
         {
           type: "button",
           label: "元に戻す",
@@ -263,10 +274,10 @@ export const useCommonMenuBarData = (store: Store) => {
             ]
           : []),
       ],
-    ],
+    },
 
-    view: [
-      [
+    view: {
+      window: [
         {
           type: "button",
           label: "全画面表示を切り替え",
@@ -298,9 +309,9 @@ export const useCommonMenuBarData = (store: Store) => {
           disableWhenUiLocked: false,
         },
       ],
-    ],
-    setting: [
-      [
+    },
+    setting: {
+      subOptions: [
         {
           type: "button",
           label: "キー割り当て",
@@ -352,7 +363,7 @@ export const useCommonMenuBarData = (store: Store) => {
           disableWhenUiLocked: true,
         },
       ],
-      [
+      options: [
         {
           type: "button",
           label: "オプション",
@@ -364,44 +375,59 @@ export const useCommonMenuBarData = (store: Store) => {
           disableWhenUiLocked: false,
         },
       ],
-    ],
+    },
   }));
 };
 
-type MenuBarConcatSpecification = {
-  visible: boolean;
-  data: MaybeRef<MenuBarData>;
-  order: Record<keyof MenuBarData, "pre" | "post">;
-};
-
 export const concatMenuBarData = (
-  menuBarSpecifications: MenuBarConcatSpecification[],
-): Record<keyof MenuBarData, MenuItemData[]> => {
-  const result: Record<keyof MenuBarData, MenuItemData[]> = {
-    file: [],
-    edit: [],
-    view: [],
-    engine: [],
-    setting: [],
+  menuBarContents: MaybeRef<MaybeComputedMenuBarContent>[],
+): Record<keyof MenuBarContent, MenuItemData[]> => {
+  const indexItems = Object.fromEntries(
+    Object.entries(menuItemIndex).map(([key, value]) => [
+      key as keyof MenuBarRoots,
+      Object.fromEntries(value.map((item) => [item, []])),
+    ]),
+  ) as {
+    [K in MenuBarRoots]: Record<
+      keyof NonNullable<MenuBarContent>[K],
+      MenuItemData[]
+    >;
   };
 
-  for (const specification of menuBarSpecifications) {
-    if (!unref(specification.visible)) {
-      continue;
-    }
-    for (const key of Object.keys(result) as (keyof MenuBarData)[]) {
-      const data = unref(unref(specification.data)[key]);
-      if (!data) {
-        continue;
-      }
-      const joinedData = flatWithSeparator(data, { type: "separator" });
-      if (specification.order[key] === "pre") {
-        result[key] = [...result[key], { type: "separator" }, ...joinedData];
-      } else {
-        result[key] = [...joinedData, { type: "separator" }, ...result[key]];
+  for (const menuBarContent of unref(menuBarContents)) {
+    for (const key in menuBarContent) {
+      const root = key as MenuBarRoots;
+      const items = unref(menuBarContent)[root];
+      if (items) {
+        for (const itemKey in items) {
+          // @ts-expect-error 型パズルが大変なので手動で型を合わせる
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          const item = items[itemKey];
+          if (item) {
+            // @ts-expect-error 型パズルが大変なので手動で型を合わせる
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+            indexItems[root][itemKey].push(...item);
+          }
+        }
       }
     }
   }
+
+  const result = Object.fromEntries(
+    Object.entries(menuItemIndex).map(([key, value]) => [
+      key,
+      flatWithSeparator(
+        (
+          value.map(
+            // @ts-expect-error 型パズルが大変なので手動で型を合わせる
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+            (item) => indexItems[key as MenuBarRoots][item],
+          ) as MenuItemData[][]
+        ).filter((x) => x.length > 0),
+        { type: "separator" },
+      ),
+    ]),
+  ) as Record<keyof MenuBarContent, MenuItemData[]>;
 
   return result;
 };

@@ -43,6 +43,7 @@ import { useCommonMenuBarData } from "@/domain/menuBarData";
 import { concatMenuBarData } from "@/domain/menuBarData";
 import { isElectron } from "@/helpers/platform";
 import { useElectronMenuBarData } from "@/backend/electron/renderer/menuBarData";
+import { removeNonValue } from "@/helpers/arrayHelper";
 
 const store = useStore();
 
@@ -52,52 +53,14 @@ const singMenuBarData = useSingMenuBarData(store);
 const electronMenuBarData = useElectronMenuBarData(store);
 
 const subMenuData = computed(() =>
-  concatMenuBarData([
-    {
-      visible: true,
-      data: commonMenuBarData,
-      order: {
-        file: "post",
-        edit: "post",
-        view: "post",
-        engine: "post",
-        setting: "post",
-      },
-    },
-    {
-      visible: store.state.openedEditor === "talk",
-      data: talkMenuBarData,
-      order: {
-        file: "pre",
-        edit: "post",
-        view: "post",
-        engine: "post",
-        setting: "post",
-      },
-    },
-    {
-      visible: store.state.openedEditor === "song",
-      data: singMenuBarData,
-      order: {
-        file: "pre",
-        edit: "post",
-        view: "post",
-        engine: "post",
-        setting: "post",
-      },
-    },
-    {
-      visible: isElectron,
-      data: electronMenuBarData,
-      order: {
-        file: "post",
-        edit: "post",
-        view: "post",
-        engine: "post",
-        setting: "post",
-      },
-    },
-  ]),
+  concatMenuBarData(
+    removeNonValue([
+      commonMenuBarData,
+      store.state.openedEditor === "talk" && talkMenuBarData,
+      store.state.openedEditor === "song" && singMenuBarData,
+      isElectron && electronMenuBarData,
+    ]),
+  ),
 );
 
 const openedEditor = computed(() => store.state.openedEditor);
