@@ -4,6 +4,7 @@
   "author": "Hiroshiba Kazuyuki",
   "private": true,
   "main": "./dist/main.js",
+  "type": "module",
   "engines": {
     "node": ">=22.14.0 <23"
   },
@@ -20,9 +21,9 @@
     "typecheck": "vue-tsc --noEmit",
     "typos": "cross-env ./vendored/typos/typos",
     "// --- tools ---": "",
-    "license:generate": "tsx tools/generateLicenses.mts",
-    "license:merge": "tsx tools/mergeLicenses.mts",
-    "check-suspicious-imports": "tsx tools/checkSuspiciousImports.mts",
+    "license:generate": "tsx tools/generateLicenses.ts",
+    "license:merge": "tsx tools/mergeLicenses.ts",
+    "check-suspicious-imports": "tsx tools/checkSuspiciousImports.ts",
     "// --- test ---": "",
     "test:unit": "vitest --run",
     "test-watch:unit": "vitest --watch",
@@ -37,7 +38,7 @@
     "test-ui:storybook-vrt": "cross-env TARGET=storybook playwright test --ui",
     "// --- build ---": "",
     "electron:serve": "cross-env VITE_TARGET=electron vite",
-    "electron:build": "cross-env VITE_TARGET=electron NODE_ENV=production vite build && electron-builder --config electron-builder.config.js --publish never",
+    "electron:build": "cross-env VITE_TARGET=electron NODE_ENV=production vite build && electron-builder --config electron-builder.config.cjs --publish never",
     "browser:serve": "cross-env VITE_TARGET=browser vite",
     "browser:build": "cross-env VITE_TARGET=browser NODE_ENV=production vite build",
     "storybook": "storybook dev --port 6006",
@@ -46,7 +47,7 @@
     "preinstall": "npx -y only-allow pnpm",
     "postinstall": "pnpm run postinstall:packages && pnpm run postinstall:download-scripts",
     "postinstall:packages": "electron-builder install-app-deps && playwright install chromium",
-    "postinstall:download-scripts": "tsx tools/download7z.mts && tsx tools/downloadTypos.mts",
+    "postinstall:download-scripts": "tsx tools/download7z.ts && tsx tools/downloadTypos.ts",
     "postuninstall": "electron-builder install-app-deps"
   },
   "dependencies": {
