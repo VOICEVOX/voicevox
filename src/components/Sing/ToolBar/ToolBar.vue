@@ -14,23 +14,21 @@
         <QInput
           type="number"
           dense
-          :modelValue="keyRangeAdjustmentInputBuffer"
+          :modelValue="keyRangeAdjustment"
           label="音域"
           hideBottomSpace
           unelevated
           class="key-range-adjustment"
-          @update:modelValue="setKeyRangeAdjustmentInputBuffer"
           @change="setKeyRangeAdjustment"
         />
         <QInput
           type="number"
           dense
-          :modelValue="volumeRangeAdjustmentInputBuffer"
+          :modelValue="volumeRangeAdjustment"
           label="声量"
           hideBottomSpace
           unelevated
           class="volume-range-adjustment"
-          @update:modelValue="setVolumeRangeAdjustmentInputBuffer"
           @change="setVolumeRangeAdjustment"
         />
       </div>
@@ -158,7 +156,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch, ref } from "vue";
+import { computed } from "vue";
 import PlayheadPositionDisplay from "../PlayheadPositionDisplay.vue";
 import EditTargetSwicher from "./EditTargetSwicher.vue";
 import { useStore } from "@/store";
@@ -266,25 +264,6 @@ const beatTypeOptions = BEAT_TYPES.map((beatType) => ({
   value: beatType,
 }));
 
-const keyRangeAdjustmentInputBuffer = ref(0);
-const volumeRangeAdjustmentInputBuffer = ref(0);
-
-watch(
-  keyRangeAdjustment,
-  () => {
-    keyRangeAdjustmentInputBuffer.value = keyRangeAdjustment.value;
-  },
-  { immediate: true },
-);
-
-watch(
-  volumeRangeAdjustment,
-  () => {
-    volumeRangeAdjustmentInputBuffer.value = volumeRangeAdjustment.value;
-  },
-  { immediate: true },
-);
-
 const currentTimeSignature = computed(() => {
   const maybeTimeSignature = timeSignatures.value.findLast(
     (_timeSignature, i) => tsPositions.value[i] <= playheadTicks.value,
@@ -322,26 +301,6 @@ const setBeatType = (beatType: { label: string; value: number }) => {
   });
 };
 
-const setKeyRangeAdjustmentInputBuffer = (
-  KeyRangeAdjustmentStr: string | number | null,
-) => {
-  const KeyRangeAdjustmentValue = Number(KeyRangeAdjustmentStr);
-  if (!isValidKeyRangeAdjustment(KeyRangeAdjustmentValue)) {
-    return;
-  }
-  keyRangeAdjustmentInputBuffer.value = KeyRangeAdjustmentValue;
-};
-
-const setVolumeRangeAdjustmentInputBuffer = (
-  volumeRangeAdjustmentStr: string | number | null,
-) => {
-  const volumeRangeAdjustmentValue = Number(volumeRangeAdjustmentStr);
-  if (!isValidVolumeRangeAdjustment(volumeRangeAdjustmentValue)) {
-    return;
-  }
-  volumeRangeAdjustmentInputBuffer.value = volumeRangeAdjustmentValue;
-};
-
 const setBpm = (bpm: string | number | null) => {
   const bpmValue = Number(bpm);
   if (!isValidBpm(bpmValue)) {
@@ -361,18 +320,28 @@ const setBpm = (bpm: string | number | null) => {
   });
 };
 
-const setKeyRangeAdjustment = () => {
-  const keyRangeAdjustment = keyRangeAdjustmentInputBuffer.value;
+const setKeyRangeAdjustment = (
+  KeyRangeAdjustmentStr: string | number | null,
+) => {
+  const KeyRangeAdjustmentValue = Number(KeyRangeAdjustmentStr);
+  if (!isValidKeyRangeAdjustment(KeyRangeAdjustmentValue)) {
+    return;
+  }
   void store.actions.COMMAND_SET_KEY_RANGE_ADJUSTMENT({
-    keyRangeAdjustment,
+    keyRangeAdjustment: KeyRangeAdjustmentValue,
     trackId: selectedTrackId.value,
   });
 };
 
-const setVolumeRangeAdjustment = () => {
-  const volumeRangeAdjustment = volumeRangeAdjustmentInputBuffer.value;
+const setVolumeRangeAdjustment = (
+  volumeRangeAdjustmentStr: string | number | null,
+) => {
+  const volumeRangeAdjustmentValue = Number(volumeRangeAdjustmentStr);
+  if (!isValidVolumeRangeAdjustment(volumeRangeAdjustmentValue)) {
+    return;
+  }
   void store.actions.COMMAND_SET_VOLUME_RANGE_ADJUSTMENT({
-    volumeRangeAdjustment,
+    volumeRangeAdjustment: volumeRangeAdjustmentValue,
     trackId: selectedTrackId.value,
   });
 };
