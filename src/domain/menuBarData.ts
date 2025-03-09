@@ -179,7 +179,7 @@ export const useCommonMenuBarData = (store: Store) => {
     name: "拡大率のリセット",
   });
 
-  return computed<MenuBarContent>(() => ({
+  return computed<MaybeComputedMenuBarContent>(() => ({
     file: {
       project: [
         {
@@ -310,6 +310,7 @@ export const useCommonMenuBarData = (store: Store) => {
         },
       ],
     },
+
     setting: {
       subOptions: [
         {
@@ -395,9 +396,9 @@ export const concatMenuBarData = (
   };
 
   for (const menuBarContent of unref(menuBarContents)) {
-    for (const key in menuBarContent) {
+    for (const key in unref(menuBarContent)) {
       const root = key as MenuBarRoots;
-      const items = unref(menuBarContent)[root];
+      const items = unref(unref(menuBarContent)[root]);
       if (items) {
         for (const itemKey in items) {
           // @ts-expect-error 型パズルが大変なので手動で型を合わせる
