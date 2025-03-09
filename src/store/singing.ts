@@ -82,8 +82,6 @@ import {
   createDefaultTimeSignature,
   isValidNotes,
   isValidTrack,
-  SEQUENCER_MIN_NUM_MEASURES,
-  getNumMeasures,
   isTracksEmpty,
   shouldPlayTracks,
   decibelToLinear,
@@ -1377,22 +1375,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         throw new Error("The snap type is invalid.");
       }
       mutations.SET_SNAP_TYPE({ snapType });
-    },
-  },
-
-  SEQUENCER_NUM_MEASURES: {
-    getter(state) {
-      // NOTE: スコア長(曲長さ)が決まっていないため、無限スクロール化する or 最後尾に足した場合は伸びるようにするなど？
-      // NOTE: いったん最後尾に足した場合は伸びるようにする
-      return Math.max(
-        SEQUENCER_MIN_NUM_MEASURES,
-        getNumMeasures(
-          [...state.tracks.values()].flatMap((track) => track.notes),
-          state.tempos,
-          state.timeSignatures,
-          state.tpqn,
-        ) + 8,
-      );
     },
   },
 
