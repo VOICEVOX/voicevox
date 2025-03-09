@@ -108,7 +108,7 @@ export const migrateProjectFileObject = async (
     );
   }
 
-  const semverSatisfiesOptions: semver.Options = {
+  const semverSatisfiesOptions: semver.RangeOptions = {
     includePrerelease: true,
   };
 

@@ -45,7 +45,7 @@ export default defineWorkspace([
       name: "browser",
       browser: {
         enabled: true,
-        name: "chromium",
+        instances: [{ browser: "chromium" }],
         provider: "playwright",
         headless: true,
         api: 7158,
@@ -70,12 +70,11 @@ export default defineWorkspace([
       },
     },
     test: {
-      include: ["./**/*.stories.ts"],
       globals: true,
       name: "storybook",
       browser: {
         enabled: true,
-        name: "chromium",
+        instances: [{ browser: "chromium" }],
         provider: "playwright",
         headless: true,
         api: 7159,
