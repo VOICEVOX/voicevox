@@ -126,7 +126,7 @@ export default defineConfig((options) => {
           },
           {
             // ref: https://electron-vite.github.io/guide/preload-not-split.html
-            entry: "./backend/electron/preload.ts",
+            entry: "./backend/electron/renderer/preload.ts",
             onstart({ reload }) {
               if (!skipLaunchElectron) {
                 reload();
