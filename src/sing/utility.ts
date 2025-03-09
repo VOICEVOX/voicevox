@@ -1,3 +1,5 @@
+import { ExhaustiveError } from "@/type/utility";
+
 export type Rect = {
   x: number;
   y: number;
@@ -215,3 +217,37 @@ export class AnimationTimer {
     this.requestId = undefined;
   }
 }
+
+type DebounceOptions =
+  | { type: "microtask" }
+  | { type: "timeout"; delay: number };
+
+export const debounce = <T extends unknown[]>(
+  fn: (...args: T) => void,
+  options: DebounceOptions,
+) => {
+  let scheduled = false;
+  let timeoutId: number | undefined = undefined;
+
+  return (...args: T): void => {
+    if (options.type === "microtask") {
+      if (!scheduled) {
+        scheduled = true;
+        queueMicrotask(() => {
+          scheduled = false;
+          fn(...args);
+        });
+      }
+    } else if (options.type === "timeout") {
+      if (timeoutId != undefined) {
+        window.clearTimeout(timeoutId);
+      }
+      timeoutId = window.setTimeout(() => {
+        fn(...args);
+        timeoutId = undefined;
+      }, options.delay);
+    } else {
+      throw new ExhaustiveError(options);
+    }
+  };
+};

@@ -3,7 +3,7 @@ import {
   decibelToLinear,
   linearToDecibel,
 } from "@/sing/domain";
-import { Timer } from "@/sing/utility";
+import { clamp, debounce, Timer } from "@/sing/utility";
 
 /**
  * オーディオコンテキストで最も早くスケジュール可能な時刻を取得します。
@@ -632,9 +632,15 @@ export class AudioPlayer {
   }
 }
 
-export type SynthOscParams = {
-  readonly type: OscillatorType;
-};
+export type SynthOscParams =
+  | {
+      readonly type: Exclude<OscillatorType, "custom">;
+    }
+  | {
+      readonly type: Extract<OscillatorType, "custom">;
+      readonly oddHarmonicsAmount: number;
+      readonly evenHarmonicsAmount: number;
+    };
 
 export type SynthFilterParams = {
   readonly cutoff: number;
@@ -651,9 +657,10 @@ export type SynthAmpParams = {
 
 type SynthVoiceParams = {
   readonly noteNumber: number;
-  readonly osc: SynthOscParams;
-  readonly filter: SynthFilterParams;
-  readonly amp: SynthAmpParams;
+  readonly oscParams: SynthOscParams;
+  readonly oscPeriodicWave?: PeriodicWave;
+  readonly filterParams: SynthFilterParams;
+  readonly ampParams: SynthAmpParams;
 };
 
 /**
@@ -686,21 +693,25 @@ class SynthVoice {
   constructor(audioContext: BaseAudioContext, params: SynthVoiceParams) {
     this.noteNumber = params.noteNumber;
     this.audioContext = audioContext;
-    this.ampParams = params.amp;
+    this.ampParams = params.ampParams;
 
     this.oscNode = new OscillatorNode(audioContext);
-    this.oscNode.type = params.osc.type;
+    if (params.oscPeriodicWave != undefined) {
+      this.oscNode.setPeriodicWave(params.oscPeriodicWave);
+    } else {
+      this.oscNode.type = params.oscParams.type;
+    }
     this.oscNode.onended = () => {
       this._isStopped = true;
     };
     this.filterNode = new BiquadFilterNode(audioContext);
     this.filterNode.type = "lowpass";
     this.filterNode.frequency.value = this.calcFilterFreq(
-      params.filter.cutoff,
-      params.filter.keyTrack,
+      params.filterParams.cutoff,
+      params.filterParams.keyTrack,
       params.noteNumber,
     );
-    this.filterNode.Q.value = this.calcFilterQ(params.filter.resonance);
+    this.filterNode.Q.value = this.calcFilterQ(params.filterParams.resonance);
     this.gainNode = new GainNode(audioContext, { gain: 0 });
     this.oscNode.connect(this.filterNode);
     this.filterNode.connect(this.gainNode);
@@ -770,10 +781,11 @@ class SynthVoice {
 }
 
 export type PolySynthOptions = {
+  readonly oscParams?: SynthOscParams;
+  readonly filterParams?: SynthFilterParams;
+  readonly ampParams?: SynthAmpParams;
+  readonly lowCutFrequency?: number;
   readonly volume?: number;
-  readonly osc?: SynthOscParams;
-  readonly filter?: SynthFilterParams;
-  readonly amp?: SynthAmpParams;
 };
 
 /**
@@ -781,10 +793,14 @@ export type PolySynthOptions = {
  */
 export class PolySynth implements Instrument {
   private readonly audioContext: BaseAudioContext;
+  private readonly highPassFilterNode: BiquadFilterNode;
   private readonly gainNode: GainNode;
-  private readonly oscParams: SynthOscParams;
-  private readonly filterParams: SynthFilterParams;
-  private readonly ampParams: SynthAmpParams;
+  private readonly debouncedReflectVoiceParams: () => void;
+
+  private _oscParams: SynthOscParams;
+  private oscPeriodicWave: PeriodicWave | undefined;
+  private _filterParams: SynthFilterParams;
+  private _ampParams: SynthAmpParams;
 
   private voices: SynthVoice[] = [];
 
@@ -792,25 +808,140 @@ export class PolySynth implements Instrument {
     return this.gainNode;
   }
 
+  get oscParams() {
+    return this._oscParams;
+  }
+  set oscParams(value: SynthOscParams) {
+    this._oscParams = value;
+    this.updateOscPeriodicWave(value);
+    this.debouncedReflectVoiceParams();
+  }
+
+  get filterParams() {
+    return this._filterParams;
+  }
+  set filterParams(value: SynthFilterParams) {
+    this._filterParams = value;
+    this.debouncedReflectVoiceParams();
+  }
+
+  get ampParams() {
+    return this._ampParams;
+  }
+  set ampParams(value: SynthAmpParams) {
+    this._ampParams = value;
+    this.debouncedReflectVoiceParams();
+  }
+
+  get lowCutFrequency() {
+    return this.highPassFilterNode.frequency.value;
+  }
+  set lowCutFrequency(value: number) {
+    this.highPassFilterNode.frequency.value = value;
+  }
+
+  get volume() {
+    return this.gainNode.gain.value;
+  }
+  set volume(value: number) {
+    this.gainNode.gain.value = value;
+  }
+
   constructor(audioContext: BaseAudioContext, options?: PolySynthOptions) {
     this.audioContext = audioContext;
-    this.oscParams = options?.osc ?? {
-      type: "square",
+    this._oscParams = options?.oscParams ?? {
+      type: "triangle",
     };
-    this.filterParams = options?.filter ?? {
-      cutoff: 2500,
+    this._filterParams = options?.filterParams ?? {
+      cutoff: 15000,
       resonance: 0,
-      keyTrack: 0.25,
+      keyTrack: 0,
     };
-    this.ampParams = options?.amp ?? {
+    this._ampParams = options?.ampParams ?? {
       attack: 0.001,
-      decay: 0.18,
-      sustain: 0.5,
+      decay: 0.2,
+      sustain: 0.8,
       release: 0.02,
     };
+    this.updateOscPeriodicWave(this._oscParams);
 
-    this.gainNode = new GainNode(this.audioContext);
-    this.gainNode.gain.value = options?.volume ?? 0.1;
+    this.highPassFilterNode = new BiquadFilterNode(audioContext, {
+      type: "highpass",
+      frequency: options?.lowCutFrequency ?? 60,
+      Q: linearToDecibel(Math.SQRT1_2),
+    });
+    this.gainNode = new GainNode(this.audioContext, {
+      gain: options?.volume ?? 0.1,
+    });
+
+    this.highPassFilterNode.connect(this.gainNode);
+
+    this.debouncedReflectVoiceParams = debounce(
+      () => {
+        this.restartCurrentlyActiveVoices();
+      },
+      { type: "microtask" },
+    );
+  }
+
+  private updateOscPeriodicWave(oscParams: SynthOscParams) {
+    if (oscParams.type !== "custom") {
+      this.oscPeriodicWave = undefined;
+      return;
+    }
+    const MAX_NUMBER = 1e10;
+
+    const NUM_HARMONICS = 36;
+    const MIN_HARMONICS_AMOUNT = 0;
+    const MAX_HARMONICS_AMOUNT = 1;
+
+    const real = new Float32Array(NUM_HARMONICS);
+    const imag = new Float32Array(NUM_HARMONICS);
+
+    imag[1] = 1;
+
+    for (let i = 2; i <= NUM_HARMONICS; i++) {
+      const isEven = (i & 1) === 0;
+      const harmonicsAmount = isEven
+        ? oscParams.evenHarmonicsAmount
+        : oscParams.oddHarmonicsAmount;
+      const clampedHarmonicsAmount = clamp(
+        harmonicsAmount,
+        MIN_HARMONICS_AMOUNT,
+        MAX_HARMONICS_AMOUNT,
+      );
+      const maxHarmonics = Math.pow(MAX_NUMBER, clampedHarmonicsAmount);
+      if (i <= maxHarmonics) {
+        imag[i] = 1 / Math.pow(i, 1 / clampedHarmonicsAmount);
+      } else {
+        imag[i] = 0;
+      }
+    }
+    this.oscPeriodicWave = this.audioContext.createPeriodicWave(real, imag);
+  }
+
+  private restartCurrentlyActiveVoices() {
+    this.voices = this.voices.map((voice) => {
+      if (!voice.isActive) {
+        return voice;
+      }
+      const noteNumber = voice.noteNumber;
+      const contextTime = getEarliestSchedulableContextTime(this.audioContext);
+
+      voice.noteOff(contextTime);
+
+      const newVoice = new SynthVoice(this.audioContext, {
+        noteNumber,
+        oscParams: this._oscParams,
+        oscPeriodicWave: this.oscPeriodicWave,
+        filterParams: this._filterParams,
+        ampParams: { ...this._ampParams, attack: 0.04 },
+      });
+      newVoice.output.connect(this.highPassFilterNode);
+      newVoice.noteOn(contextTime);
+
+      return newVoice;
+    });
   }
 
   /**
@@ -835,11 +966,12 @@ export class PolySynth implements Instrument {
     if (!voice) {
       voice = new SynthVoice(this.audioContext, {
         noteNumber,
-        osc: this.oscParams,
-        filter: this.filterParams,
-        amp: this.ampParams,
+        oscParams: this._oscParams,
+        oscPeriodicWave: this.oscPeriodicWave,
+        filterParams: this._filterParams,
+        ampParams: this._ampParams,
       });
-      voice.output.connect(this.gainNode);
+      voice.output.connect(this.highPassFilterNode);
       voice.noteOn(contextTime);
 
       this.voices = this.voices.filter((value) => {

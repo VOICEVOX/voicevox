@@ -1,7 +1,7 @@
 import { getOrThrow } from "@/helpers/mapHelper";
 import { State, SetNextState } from "@/sing/stateMachine";
 import { clamp } from "@/sing/utility";
-import { getButton, PREVIEW_SOUND_DURATION } from "@/sing/viewHelper";
+import { getButton } from "@/sing/viewHelper";
 import { Note } from "@/store/type";
 import { TrackId, NoteId } from "@/type/preload";
 import {
@@ -12,6 +12,7 @@ import {
   PositionOnSequencer,
   SequencerStateDefinitions,
 } from "@/sing/sequencerStateMachine/common";
+import { PREVIEW_SOUND_DURATION_SECONDS } from "@/sing/domain";
 
 export class MoveNoteState
   implements State<SequencerStateDefinitions, Input, Context>
@@ -144,7 +145,7 @@ export class MoveNoteState
       if (previewNotes.length === 1) {
         void context.store.actions.PLAY_PREVIEW_SOUND({
           noteNumber: previewNotes[0].noteNumber,
-          duration: PREVIEW_SOUND_DURATION,
+          duration: PREVIEW_SOUND_DURATION_SECONDS,
         });
       }
     }

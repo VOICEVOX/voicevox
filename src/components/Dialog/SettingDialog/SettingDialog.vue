@@ -446,6 +446,15 @@
                 />
                 <ToggleCell
                   v-if="!isProduction"
+                  title="[開発時のみ機能] プレビュー音のエディット画面を表示"
+                  description="ONの場合、プレビュー音のエディット画面を表示します。"
+                  :modelValue="experimentalSetting.showPreviewSoundEditor"
+                  @update:modelValue="
+                    changeExperimentalSetting('showPreviewSoundEditor', $event)
+                  "
+                />
+                <ToggleCell
+                  v-if="!isProduction"
                   title="[開発時のみ機能] ソング：パラメーターパネルの表示"
                   description="ONの場合、ソングエディタでパラメーターパネルが表示されます。"
                   :modelValue="experimentalSetting.showParameterPanel"

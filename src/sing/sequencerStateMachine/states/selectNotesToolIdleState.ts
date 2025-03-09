@@ -12,13 +12,13 @@ import {
   getButton,
   getDoremiFromNoteNumber,
   isSelfEventTarget,
-  PREVIEW_SOUND_DURATION,
 } from "@/sing/viewHelper";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import { Note } from "@/store/type";
 import { NoteId } from "@/type/preload";
 import { clamp } from "@/sing/utility";
 import { uuid4 } from "@/helpers/random";
+import { PREVIEW_SOUND_DURATION_SECONDS } from "@/sing/domain";
 
 export class SelectNotesToolIdleState
   implements State<SequencerStateDefinitions, Input, Context>
@@ -127,7 +127,7 @@ export class SelectNotesToolIdleState
 
             void context.store.actions.PLAY_PREVIEW_SOUND({
               noteNumber: noteToAdd.noteNumber,
-              duration: PREVIEW_SOUND_DURATION,
+              duration: PREVIEW_SOUND_DURATION_SECONDS,
             });
           }
         }

@@ -1,6 +1,6 @@
 import { getOrThrow } from "@/helpers/mapHelper";
 import { State, SetNextState } from "@/sing/stateMachine";
-import { getButton, PREVIEW_SOUND_DURATION } from "@/sing/viewHelper";
+import { getButton } from "@/sing/viewHelper";
 import { Note } from "@/store/type";
 import { TrackId, NoteId } from "@/type/preload";
 import {
@@ -12,6 +12,7 @@ import {
   SequencerStateDefinitions,
 } from "@/sing/sequencerStateMachine/common";
 import { clamp } from "@/sing/utility";
+import { PREVIEW_SOUND_DURATION_SECONDS } from "@/sing/domain";
 
 export class ResizeNoteLeftState
   implements State<SequencerStateDefinitions, Input, Context>
@@ -143,7 +144,7 @@ export class ResizeNoteLeftState
       if (previewNotes.length === 1) {
         void context.store.actions.PLAY_PREVIEW_SOUND({
           noteNumber: previewNotes[0].noteNumber,
-          duration: PREVIEW_SOUND_DURATION,
+          duration: PREVIEW_SOUND_DURATION_SECONDS,
         });
       }
     }

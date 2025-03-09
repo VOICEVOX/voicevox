@@ -50,6 +50,7 @@ export const settingStoreState: SettingStoreState = {
     enableMorphing: false,
     enableMultiSelect: false,
     shouldKeepTuningOnTextChange: false,
+    showPreviewSoundEditor: false,
     showParameterPanel: false,
   },
   splitTextWhenPaste: "PERIOD_AND_NEW_LINE",

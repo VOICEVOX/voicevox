@@ -26,6 +26,7 @@ import {
   TrackParameters,
   SingingPitchKey,
   SingingPitch,
+  PreviewSynthParams,
 } from "./type";
 import {
   buildSongTrackAudioFileNameFromRawData,
@@ -93,6 +94,7 @@ import {
   toEntirePhonemeTimings,
   adjustPhonemeTimingsAndPhraseEndFrames,
   phonemeTimingsToPhonemes,
+  createPreviewSynthParams,
 } from "@/sing/domain";
 import { getOverlappingNoteIds } from "@/sing/storeHelper";
 import {
@@ -513,7 +515,7 @@ const offlineRenderTracks = async (
 
 let audioContext: AudioContext | undefined;
 let transport: Transport | undefined;
-let previewSynth: PolySynth | undefined;
+let synthForPreview: PolySynth | undefined;
 let mainChannelStrip: ChannelStrip | undefined;
 const trackChannelStrips = new Map<TrackId, ChannelStrip>();
 let limiter: Limiter | undefined;
@@ -521,14 +523,16 @@ let clipper: Clipper | undefined;
 
 // NOTE: テスト時はAudioContextが存在しない
 if (window.AudioContext) {
+  const previewSynthInitialParams = createPreviewSynthParams();
+
   audioContext = new AudioContext();
   transport = new Transport(audioContext);
-  previewSynth = new PolySynth(audioContext);
+  synthForPreview = new PolySynth(audioContext, previewSynthInitialParams);
   mainChannelStrip = new ChannelStrip(audioContext);
   limiter = new Limiter(audioContext);
   clipper = new Clipper(audioContext);
 
-  previewSynth.output.connect(mainChannelStrip.input);
+  synthForPreview.output.connect(mainChannelStrip.input);
   mainChannelStrip.output.connect(limiter.input);
   limiter.output.connect(clipper.input);
   clipper.output.connect(audioContext.destination);
@@ -545,6 +549,30 @@ const singingVolumeCache = new Map<SingingVolumeKey, SingingVolume>();
 const singingVoiceCache = new Map<SingingVoiceKey, SingingVoice>();
 
 const initialTrackId = TrackId(uuid4());
+
+const setPreviewSynthParamsToSynth = (
+  params: PreviewSynthParams,
+  synth: PolySynth,
+) => {
+  synth.oscParams = params.oscParams;
+  synth.filterParams = params.filterParams;
+  synth.ampParams = params.ampParams;
+  synth.lowCutFrequency = params.lowCutFrequency;
+  synth.volume = params.volume;
+};
+
+const reflectPreviewSynthParams = (params: PreviewSynthParams) => {
+  if (synthForPreview == undefined) {
+    throw new Error("synthForPreview is undefined.");
+  }
+
+  setPreviewSynthParamsToSynth(params, synthForPreview);
+  for (const sequence of sequences.values()) {
+    if (sequence.type === "note" && sequence.instrument instanceof PolySynth) {
+      setPreviewSynthParamsToSynth(params, sequence.instrument);
+    }
+  }
+};
 
 /**
  * シーケンスの音源の出力を取得する。
@@ -621,12 +649,13 @@ const generateNoteSequence = (
   tempos: Tempo[],
   tpqn: number,
   trackId: TrackId,
+  previewSynthParams: PreviewSynthParams,
 ): NoteSequence & { trackId: TrackId } => {
   if (!audioContext) {
     throw new Error("audioContext is undefined.");
   }
   const noteEvents = generateNoteEvents(notes, tempos, tpqn);
-  const polySynth = new PolySynth(audioContext);
+  const polySynth = new PolySynth(audioContext, previewSynthParams);
   return {
     type: "note",
     instrument: polySynth,
@@ -758,6 +787,7 @@ export const singingStoreState: SingingStoreState = {
   exportState: "NOT_EXPORTING",
   cancellationOfExportRequested: false,
   isSongSidebarOpen: false,
+  previewSynthParams: createPreviewSynthParams(),
 };
 
 export const singingStore = createPartialStore<SingingStoreTypes>({
@@ -1533,10 +1563,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       if (!audioContext) {
         throw new Error("audioContext is undefined.");
       }
-      if (!previewSynth) {
-        throw new Error("previewSynth is undefined.");
+      if (!synthForPreview) {
+        throw new Error("synthForPreview is undefined.");
       }
-      previewSynth.noteOn("immediately", noteNumber, duration);
+      synthForPreview.noteOn("immediately", noteNumber, duration);
     },
   },
 
@@ -1545,10 +1575,76 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       if (!audioContext) {
         throw new Error("audioContext is undefined.");
       }
-      if (!previewSynth) {
-        throw new Error("previewSynth is undefined.");
+      if (!synthForPreview) {
+        throw new Error("synthForPreview is undefined.");
       }
-      previewSynth.noteOff("immediately", noteNumber);
+      synthForPreview.noteOff("immediately", noteNumber);
+    },
+  },
+
+  SET_PREVIEW_SYNTH_OSC_PARAMS: {
+    mutation(state, { oscParams }) {
+      state.previewSynthParams.oscParams = oscParams;
+    },
+    async action({ mutations, actions }, { oscParams }) {
+      mutations.SET_PREVIEW_SYNTH_OSC_PARAMS({ oscParams });
+
+      void actions.REFLECT_PREVIEW_SYNTH_PARAMS();
+    },
+  },
+
+  SET_PREVIEW_SYNTH_FILTER_PARAMS: {
+    mutation(state, { filterParams }) {
+      state.previewSynthParams.filterParams = filterParams;
+    },
+    async action({ mutations, actions }, { filterParams }) {
+      mutations.SET_PREVIEW_SYNTH_FILTER_PARAMS({ filterParams });
+
+      void actions.REFLECT_PREVIEW_SYNTH_PARAMS();
+    },
+  },
+
+  SET_PREVIEW_SYNTH_AMP_PARAMS: {
+    mutation(state, { ampParams }) {
+      state.previewSynthParams.ampParams = ampParams;
+    },
+    async action({ mutations, actions }, { ampParams }) {
+      mutations.SET_PREVIEW_SYNTH_AMP_PARAMS({ ampParams });
+
+      void actions.REFLECT_PREVIEW_SYNTH_PARAMS();
+    },
+  },
+  SET_PREVIEW_SYNTH_LOW_CUT_FREQUENCY: {
+    mutation(state, { lowCutFrequency }) {
+      state.previewSynthParams.lowCutFrequency = lowCutFrequency;
+    },
+    async action({ mutations, actions }, { lowCutFrequency }) {
+      mutations.SET_PREVIEW_SYNTH_LOW_CUT_FREQUENCY({ lowCutFrequency });
+
+      void actions.REFLECT_PREVIEW_SYNTH_PARAMS();
+    },
+  },
+
+  SET_PREVIEW_SYNTH_VOLUME: {
+    mutation(state, { volume }) {
+      state.previewSynthParams.volume = volume;
+    },
+    async action({ mutations, actions }, { volume }) {
+      mutations.SET_PREVIEW_SYNTH_VOLUME({ volume });
+
+      void actions.REFLECT_PREVIEW_SYNTH_PARAMS();
+    },
+  },
+
+  REFLECT_PREVIEW_SYNTH_PARAMS: {
+    async action({ state }) {
+      reflectPreviewSynthParams(state.previewSynthParams);
+    },
+  },
+
+  DEFAULT_PREVIEW_SYNTH_PARAMS: {
+    getter() {
+      return createPreviewSynthParams();
     },
   },
 
@@ -2553,6 +2649,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               snapshot.tempos,
               snapshot.tpqn,
               phrase.trackId,
+              state.previewSynthParams,
             );
             registerSequence(sequenceId, noteSequence);
             mutations.SET_SEQUENCE_ID_TO_PHRASE({ phraseKey, sequenceId });
