@@ -36,7 +36,7 @@
       </div>
       <QInput
         type="number"
-        :modelValue="cureentBpm"
+        :modelValue="currentBpm"
         dense
         hideBottomSpace
         outlined
@@ -377,7 +377,7 @@ const setVolumeRangeAdjustment = () => {
   });
 };
 
-const cureentBpm = computed(() => {
+const currentBpm = computed(() => {
   const currentTempo = tempos.value.findLast(
     (tempo) => tempo.position <= playheadTicks.value,
   );
