@@ -67,6 +67,7 @@ watch(
     void nextTick(() => {
       lyricInput.value?.focus();
       lyricInput.value?.select();
+      lyricInput.value?.scrollIntoView({block: "nearest", inline: "nearest"});
     });
   },
   { immediate: true },
