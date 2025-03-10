@@ -7,7 +7,7 @@ import { flatWithSeparator } from "@/helpers/arrayHelper";
 
 type MenuBarCategories = "file" | "edit" | "view" | "engine" | "setting";
 
-export const menuItemIndex = {
+const menuItemStructure = {
   file: ["audioExport", "externalProject", "project"],
   edit: ["undoRedo", "copyPaste", "select", "misc"],
   view: ["guide", "portrait", "window"],
@@ -17,7 +17,7 @@ export const menuItemIndex = {
 
 export type MenuBarContent = Partial<{
   [K in MenuBarCategories]: Partial<
-    Record<(typeof menuItemIndex)[K][number], MenuItemData[]>
+    Record<(typeof menuItemStructure)[K][number], MenuItemData[]>
   >;
 }>;
 export type MaybeComputedMenuBarContent = Partial<{
@@ -384,7 +384,7 @@ export const concatMenuBarData = (
   menuBarContents: MaybeRef<MaybeComputedMenuBarContent>[],
 ): Record<keyof MenuBarContent, MenuItemData[]> => {
   const indexItems = Object.fromEntries(
-    Object.entries(menuItemIndex).map(([key, value]) => [
+    Object.entries(menuItemStructure).map(([key, value]) => [
       key as keyof MenuBarCategories,
       Object.fromEntries(value.map((item) => [item, []])),
     ]),
@@ -415,7 +415,7 @@ export const concatMenuBarData = (
   }
 
   const result = Object.fromEntries(
-    Object.entries(menuItemIndex).map(([key, value]) => [
+    Object.entries(menuItemStructure).map(([key, value]) => [
       key,
       flatWithSeparator(
         (
