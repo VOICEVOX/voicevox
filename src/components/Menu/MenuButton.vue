@@ -1,4 +1,3 @@
-:w
 <template>
   <QBtn
     flat
