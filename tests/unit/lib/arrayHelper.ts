@@ -1,5 +1,8 @@
 import { describe, expect, test } from "vitest";
-import { flatWithSeparator, removeNullableAndBoolean } from "@/helpers/arrayHelper";
+import {
+  flatWithSeparator,
+  removeNullableAndBoolean,
+} from "@/helpers/arrayHelper";
 
 describe("flatWithSeparator", () => {
   test("配列が空の場合", () => {
