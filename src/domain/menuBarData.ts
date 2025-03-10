@@ -5,7 +5,7 @@ import { HotkeyAction, useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import { ensureNotNullish } from "@/helpers/errorHelper";
 import { flatWithSeparator } from "@/helpers/arrayHelper";
 
-type MenuBarRoots = "file" | "edit" | "view" | "engine" | "setting";
+type MenuBarCategories = "file" | "edit" | "view" | "engine" | "setting";
 
 export const menuItemIndex = {
   file: ["audioExport", "externalProject", "project"],
@@ -13,15 +13,15 @@ export const menuItemIndex = {
   view: ["guide", "portrait", "window"],
   engine: ["singleEngine", "allEngines"],
   setting: ["subOptions", "options"],
-} as const satisfies Record<MenuBarRoots, string[]>;
+} as const satisfies Record<MenuBarCategories, string[]>;
 
 export type MenuBarContent = Partial<{
-  [K in MenuBarRoots]: Partial<
+  [K in MenuBarCategories]: Partial<
     Record<(typeof menuItemIndex)[K][number], MenuItemData[]>
   >;
 }>;
 export type MaybeComputedMenuBarContent = Partial<{
-  [K in MenuBarRoots]: ComputedRef<MenuBarContent[K]> | MenuBarContent[K];
+  [K in MenuBarCategories]: ComputedRef<MenuBarContent[K]> | MenuBarContent[K];
 }>;
 
 export const useCommonMenuBarData = (store: Store) => {
@@ -385,11 +385,11 @@ export const concatMenuBarData = (
 ): Record<keyof MenuBarContent, MenuItemData[]> => {
   const indexItems = Object.fromEntries(
     Object.entries(menuItemIndex).map(([key, value]) => [
-      key as keyof MenuBarRoots,
+      key as keyof MenuBarCategories,
       Object.fromEntries(value.map((item) => [item, []])),
     ]),
   ) as {
-    [K in MenuBarRoots]: Record<
+    [K in MenuBarCategories]: Record<
       keyof NonNullable<MenuBarContent>[K],
       MenuItemData[]
     >;
@@ -397,7 +397,7 @@ export const concatMenuBarData = (
 
   for (const menuBarContent of unref(menuBarContents)) {
     for (const key in unref(menuBarContent)) {
-      const root = key as MenuBarRoots;
+      const root = key as MenuBarCategories;
       const items = unref(unref(menuBarContent)[root]);
       if (items) {
         for (const itemKey in items) {
@@ -422,7 +422,7 @@ export const concatMenuBarData = (
           value.map(
             // @ts-expect-error 型パズルが大変なので手動で型を合わせる
             // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-            (item) => indexItems[key as MenuBarRoots][item],
+            (item) => indexItems[key as MenuBarCategories][item],
           ) as MenuItemData[][]
         ).filter((x) => x.length > 0),
         { type: "separator" },
