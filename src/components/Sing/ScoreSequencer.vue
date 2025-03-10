@@ -451,6 +451,7 @@ const {
   previewPitchEdit,
   cursorState,
   guideLineTicks,
+  enableAutoScrollDuringDrag,
 } = useSequencerStateMachine(store);
 
 const nowPreviewing = computed(() => previewMode.value !== "IDLE");
@@ -599,14 +600,90 @@ const onMouseDown = (event: MouseEvent) => {
   }
 };
 
+let autoScrollDuringDragAnimationId: number | undefined = undefined;
+let previousTimeStamp: number | undefined = undefined;
+const scrollSpeedPerMS = 0.3; // 1msあたりの自動スクロールスピード
+let scrollXMultiplier: number = 0; //右方向+1,左方向-1
+let scrollYMultiplier: number = 0; //上方向-1,下方向+1
+
+const autoScrollAnimation = (timestamp: number) => {
+  if (sequencerBody.value == undefined) {
+    throw new Error("sequencer.value is undefined.");
+  }
+
+  if (previousTimeStamp == undefined) {
+    previousTimeStamp = timestamp;
+  }
+  const elapsed = timestamp - previousTimeStamp;
+  if (scrollXMultiplier !== 0 || scrollYMultiplier !== 0) {
+    sequencerBody.value.scrollBy({
+      top: Math.floor(scrollYMultiplier * scrollSpeedPerMS * elapsed),
+      left: Math.floor(scrollXMultiplier * scrollSpeedPerMS * elapsed),
+      behavior: "auto",
+    });
+  }
+
+  previousTimeStamp = timestamp;
+  autoScrollDuringDragAnimationId = requestAnimationFrame(autoScrollAnimation);
+};
+
 const onMouseMove = (event: MouseEvent) => {
+  if (sequencerBody.value == undefined) {
+    throw new Error("sequencer.value is undefined.");
+  }
+  const cursorPos = getCursorPosOnSequencer(event);
+
+  // ドラッグ時の自動スクロールが有効な場合は、スクロール量を更新する処理を行う
+  if (enableAutoScrollDuringDrag.value) {
+    const threshold = 15;
+
+    if (cursorPos.x > sequencerBody.value.clientWidth - threshold) {
+      // 右端
+      scrollXMultiplier = 1;
+      scrollYMultiplier = 0;
+    } else if (cursorPos.x < threshold) {
+      // 左端
+      scrollXMultiplier = -1;
+      scrollYMultiplier = 0;
+    } else if (cursorPos.y < threshold) {
+      // 上端
+      scrollXMultiplier = 0;
+      scrollYMultiplier = -1;
+    } else if (cursorPos.y > sequencerBody.value.clientHeight - threshold) {
+      // 下端
+      scrollXMultiplier = 0;
+      scrollYMultiplier = 1;
+    } else {
+      // マウスカーソルが上下左右の端にないとき
+      scrollXMultiplier = 0;
+      scrollYMultiplier = 0;
+    }
+  }
   stateMachineProcess({
     type: "mouseEvent",
     targetArea: "Window",
     mouseEvent: event,
-    cursorPos: getCursorPosOnSequencer(event),
+    cursorPos: cursorPos,
   });
 };
+
+watch(enableAutoScrollDuringDrag, (newFlag) => {
+  if (newFlag) {
+    // 自動スクロールのアニメーションループをスタートする
+    // 実際に動かさなければならない場面になったら
+    // scrollXMultiplier,scrollYMultiplierの値を0以外にセットする
+    autoScrollDuringDragAnimationId =
+      requestAnimationFrame(autoScrollAnimation);
+  } else {
+    // 自動スクロールのアニメーションループを停止する
+    if (autoScrollDuringDragAnimationId != undefined) {
+      cancelAnimationFrame(autoScrollDuringDragAnimationId);
+      autoScrollDuringDragAnimationId = undefined;
+    }
+    scrollXMultiplier = 0;
+    scrollYMultiplier = 0;
+  }
+});
 
 const onMouseUp = (event: MouseEvent) => {
   stateMachineProcess({
