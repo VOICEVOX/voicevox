@@ -43,7 +43,7 @@ import { useCommonMenuBarData } from "@/domain/menuBarData";
 import { concatMenuBarData } from "@/domain/menuBarData";
 import { isElectron } from "@/helpers/platform";
 import { useElectronMenuBarData } from "@/backend/electron/renderer/menuBarData";
-import { removeNonValue } from "@/helpers/arrayHelper";
+import { removeNullableAndBoolean } from "@/helpers/arrayHelper";
 
 const store = useStore();
 
@@ -54,7 +54,7 @@ const electronMenuBarData = useElectronMenuBarData(store);
 
 const subMenuData = computed(() =>
   concatMenuBarData(
-    removeNonValue([
+    removeNullableAndBoolean([
       commonMenuBarData,
       store.state.openedEditor === "talk" && talkMenuBarData,
       store.state.openedEditor === "song" && singMenuBarData,

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { flatWithSeparator, removeNonValue } from "@/helpers/arrayHelper";
+import { flatWithSeparator, removeNullableAndBoolean } from "@/helpers/arrayHelper";
 
 describe("flatWithSeparator", () => {
   test("配列が空の場合", () => {
@@ -17,12 +17,12 @@ describe("flatWithSeparator", () => {
 
 describe("removeNonValue", () => {
   test("配列が空の場合", () => {
-    expect(removeNonValue([])).toEqual([]);
+    expect(removeNullableAndBoolean([])).toEqual([]);
   });
 
   test("配列にnull, undefined, false, trueが含まれる場合", () => {
     expect(
-      removeNonValue([1, null, 2, undefined, 3, false, 4, true, 5]),
+      removeNullableAndBoolean([1, null, 2, undefined, 3, false, 4, true, 5]),
     ).toEqual([1, 2, 3, 4, 5]);
   });
 });

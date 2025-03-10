@@ -6,7 +6,7 @@ import {
 } from "@/domain/menuBarData";
 import { MenuItemData } from "@/components/Menu/type";
 import { Store } from "@/store";
-import { removeNonValue } from "@/helpers/arrayHelper";
+import { removeNullableAndBoolean } from "@/helpers/arrayHelper";
 
 export const useElectronMenuBarData = (
   store: Store,
@@ -41,7 +41,7 @@ export const useElectronMenuBarData = (
                 engineManifests.value[engineInfo.uuid] &&
                 engineIcons.value[engineInfo.uuid],
               disableWhenUiLocked: false,
-              subMenu: removeNonValue([
+              subMenu: removeNullableAndBoolean([
                 engineInfo.path != "" && {
                   type: "button",
                   label: "フォルダを開く",
@@ -67,7 +67,7 @@ export const useElectronMenuBarData = (
           );
 
     const allEnginesSubMenuData = enableMultiEngine.value
-      ? removeNonValue<MenuItemData>([
+      ? removeNullableAndBoolean<MenuItemData>([
           {
             type: "button",
             label: "全てのエンジンを再起動",

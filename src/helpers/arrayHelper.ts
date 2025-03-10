@@ -9,6 +9,6 @@ export const flatWithSeparator = <T>(arr: T[][], separator: T): T[] => {
   return result;
 };
 
-export const removeNonValue = <T>(
+export const removeNullableAndBoolean = <T>(
   arr: (T | null | undefined | false | true)[],
 ): T[] => arr.filter((x): x is T => x != null && x !== false && x !== true);
