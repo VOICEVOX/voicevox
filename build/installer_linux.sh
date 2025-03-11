@@ -318,13 +318,9 @@ FIRST_ARCHIVE=${ARCHIVE_NAME_LIST[0]}
 
 # Rename
 APPIMAGE="VOICEVOX.AppImage"
-OUT_APPIMAGE_NAME=$("${COMMAND_7Z}" l -slt -ba "${FIRST_ARCHIVE}" | grep 'Path = ' | head -n1 | sed 's/Path = \(.*\)/\1/')
-if [ "$OUT_APPIMAGE_NAME" != "$APPIMAGE" ]; then
-    if ! mv "$OUT_APPIMAGE_NAME" "$APPIMAGE"; then
-        echo "Failed rename a AppImage file."
-        rm "$OUT_APPIMAGE_NAME"
-        exit 1
-    fi
+EXTRACTED_APPIMAGE_NAME=$("${COMMAND_7Z}" l -slt -ba "${FIRST_ARCHIVE}" | grep 'Path = ' | head -n1 | sed 's/Path = \(.*\)/\1/')
+if [ "$EXTRACTED_APPIMAGE_NAME" != "$APPIMAGE" ]; then
+    mv "$EXTRACTED_APPIMAGE_NAME" "$APPIMAGE"
 fi
 chmod +x "${APPIMAGE}"
 
