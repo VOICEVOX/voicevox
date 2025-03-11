@@ -152,11 +152,10 @@ const isInitialSettingsDialogOpenComputed = computed({
     !store.state.isDefaultStyleSelectDialogOpen &&
     !store.state.isAcceptRetrieveTelemetryDialogOpen &&
     store.state.isInitialSettingsDialogOpen,
-  set: (val) => {
-    void store.actions.SET_DIALOG_OPEN({
+  set: (val) =>
+    store.actions.SET_DIALOG_OPEN({
       isInitialSettingsDialogOpen: val,
-    });
-  },
+    }),
 });
 
 // エディタのアップデート確認ダイアログ
