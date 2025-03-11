@@ -316,6 +316,7 @@ echo "[+] Extracting archive..."
 FIRST_ARCHIVE=${ARCHIVE_NAME_LIST[0]}
 "${COMMAND_7Z}" x "${FIRST_ARCHIVE}" -y
 
+# Rename
 APPIMAGE="VOICEVOX.AppImage"
 OUT_APPIMAGE_NAME=$("${COMMAND_7Z}" l -slt -ba "${FIRST_ARCHIVE}" | grep 'Path = ' | head -n1 | sed 's/Path = \(.*\)/\1/')
 if [ "$OUT_APPIMAGE_NAME" != "$APPIMAGE" ]; then
