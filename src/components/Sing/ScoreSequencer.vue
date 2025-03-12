@@ -600,25 +600,129 @@ const onMouseDown = (event: MouseEvent) => {
   }
 };
 
+// 二次元ベクトルを表現するクラス
+class vector2D {
+  x: number;
+  y: number;
+
+  constructor(x: number, y: number) {
+    this.x = x;
+    this.y = y;
+  }
+
+  // スカラー倍: スカラー値との積を返す
+  scale(scalar: number): vector2D {
+    return new vector2D(this.x * scalar, this.y * scalar);
+  }
+
+  // 自分自身のベクトルの大きさ（ノルム）を求める
+  magnitude(): number {
+    return Math.sqrt(this.x * this.x + this.y * this.y);
+  }
+
+  toString(): string {
+    return `Vector2D(${this.x}, ${this.y})`;
+  }
+}
+
+class triggerRect {
+  sx: number;
+  sy: number;
+  width: number;
+  height: number;
+
+  constructor(sx: number, sy: number, width: number, height: number) {
+    this.sx = sx;
+    this.sy = sy;
+    this.width = width;
+    this.height = height;
+  }
+
+  isPointInsideInRect(point: vector2D): boolean {
+    return (
+      point.x >= this.sx &&
+      point.x <= this.sx + this.width &&
+      point.y >= this.sy &&
+      point.y <= this.sy + this.height
+    );
+  }
+
+  calcMinimumDistanceVectorRectAndPoint(point: vector2D): vector2D {
+    const clamp = (min: number, val: number, max: number) =>
+      Math.max(min, Math.min(val, max));
+
+    const xc = clamp(this.sx, point.x, this.sx + this.width);
+    const yc = clamp(this.sy, point.y, this.sy + this.height);
+    // 各辺の最近点へのベクトル
+    const vectors: vector2D[] = [
+      new vector2D(xc - point.x, this.sy - point.y), // 底辺
+      new vector2D(xc - point.x, this.sy + this.height - point.y), // 上辺
+      new vector2D(this.sx - point.x, yc - point.y), // 左辺
+      new vector2D(this.sx + this.width - point.x, yc - point.y), // 右辺
+    ];
+
+    const vectorDistances = [
+      vectors[0].magnitude(),
+      vectors[1].magnitude(),
+      vectors[2].magnitude(),
+      vectors[3].magnitude(),
+    ];
+
+    // 各ベクトルのうち最小ノルムのインデックスを見つける
+    const minIndex = vectorDistances.indexOf(Math.min(...vectorDistances));
+
+    return vectors[minIndex];
+  }
+}
+
 let autoScrollDuringDragAnimationId: number | undefined = undefined;
 let previousTimeStamp: number | undefined = undefined;
-const scrollSpeedPerMS = 0.3; // 1msあたりの自動スクロールスピード
-let scrollXMultiplier: number = 0; //右方向+1,左方向-1
-let scrollYMultiplier: number = 0; //上方向-1,下方向+1
+const initialSpeed = 4;
+const scrollSpeedFactor = 0.05;
+const maxScrollSpeed = 60;
+const threshold = 15;
+const vectorCursor = new vector2D(0, 0);
+let autoScrollTriggerRect: triggerRect | undefined = undefined;
 
 const autoScrollAnimation = (timestamp: number) => {
   if (sequencerBody.value == undefined) {
     throw new Error("sequencer.value is undefined.");
+  }
+  if (autoScrollTriggerRect == undefined) {
+    throw new Error("autoScrollTriggerRect is undefined.");
   }
 
   if (previousTimeStamp == undefined) {
     previousTimeStamp = timestamp;
   }
   const elapsed = timestamp - previousTimeStamp;
-  if (scrollXMultiplier !== 0 || scrollYMultiplier !== 0) {
+  if (!autoScrollTriggerRect.isPointInsideInRect(vectorCursor)) {
+    // スクロールベクトル算出
+    const minimumDistanceVector =
+      autoScrollTriggerRect.calcMinimumDistanceVectorRectAndPoint(vectorCursor);
+    const magnitudeMinimumDistanceVector = minimumDistanceVector.magnitude();
+    let normalizeMinimumDistanceVector = new vector2D(0, 0);
+    if (magnitudeMinimumDistanceVector !== 0) {
+      normalizeMinimumDistanceVector = minimumDistanceVector.scale(
+        1 / magnitudeMinimumDistanceVector,
+      );
+    }
+
+    const scrollVector = normalizeMinimumDistanceVector
+      .scale(elapsed / 10)
+      .scale(
+        Math.min(
+          scrollSpeedFactor *
+            (magnitudeMinimumDistanceVector / 10) *
+            (magnitudeMinimumDistanceVector / 10) +
+            initialSpeed,
+          maxScrollSpeed,
+        ),
+      );
+
     sequencerBody.value.scrollBy({
-      top: Math.floor(scrollYMultiplier * scrollSpeedPerMS * elapsed),
-      left: Math.floor(scrollXMultiplier * scrollSpeedPerMS * elapsed),
+      top: Math.floor(-scrollVector.y),
+      left: Math.floor(-scrollVector.x),
       behavior: "auto",
     });
   }
@@ -628,46 +732,39 @@ const autoScrollAnimation = (timestamp: number) => {
 };
 
 const onMouseMove = (event: MouseEvent) => {
-  if (sequencerBody.value == undefined) {
-    throw new Error("sequencer.value is undefined.");
-  }
   const cursorPos = getCursorPosOnSequencer(event);
 
-  // ドラッグ時の自動スクロールが有効な場合は、スクロール量を更新する処理を行う
-  if (enableAutoScrollDuringDrag.value) {
-    const threshold = 15;
+  vectorCursor.x = cursorPos.x;
+  vectorCursor.y = cursorPos.y;
 
-    if (cursorPos.x > sequencerBody.value.clientWidth - threshold) {
-      // 右端
-      scrollXMultiplier = 1;
-      scrollYMultiplier = 0;
-    } else if (cursorPos.x < threshold) {
-      // 左端
-      scrollXMultiplier = -1;
-      scrollYMultiplier = 0;
-    } else if (cursorPos.y < threshold) {
-      // 上端
-      scrollXMultiplier = 0;
-      scrollYMultiplier = -1;
-    } else if (cursorPos.y > sequencerBody.value.clientHeight - threshold) {
-      // 下端
-      scrollXMultiplier = 0;
-      scrollYMultiplier = 1;
-    } else {
-      // マウスカーソルが上下左右の端にないとき
-      scrollXMultiplier = 0;
-      scrollYMultiplier = 0;
-    }
-  }
   stateMachineProcess({
     type: "mouseEvent",
     targetArea: "Window",
     mouseEvent: event,
-    cursorPos: cursorPos,
+    cursorPos,
   });
 };
 
 watch(enableAutoScrollDuringDrag, (newFlag) => {
+  autoScrollTriggerRect = new triggerRect(
+    0,
+    0,
+    (() => {
+      if (sequencerBody.value == undefined) {
+        throw new Error("sequencer.value is undefined.");
+      }
+
+      return sequencerBody.value.clientWidth - threshold;
+    })(),
+    (() => {
+      if (sequencerBody.value == undefined) {
+        throw new Error("sequencer.value is undefined.");
+      }
+
+      return sequencerBody.value.clientHeight - threshold;
+    })(),
+  );
+
   if (newFlag) {
     // 自動スクロールのアニメーションループをスタートする
     // 実際に動かさなければならない場面になったら
@@ -680,8 +777,6 @@ watch(enableAutoScrollDuringDrag, (newFlag) => {
       cancelAnimationFrame(autoScrollDuringDragAnimationId);
       autoScrollDuringDragAnimationId = undefined;
     }
-    scrollXMultiplier = 0;
-    scrollYMultiplier = 0;
   }
 });
 
