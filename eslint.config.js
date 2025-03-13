@@ -15,8 +15,6 @@ import progress from "eslint-plugin-file-progress";
 import gitignore from "eslint-config-flat-gitignore";
 import voicevoxPlugin from "./eslint-plugin/index.mjs";
 
-const __dirname = import.meta.dirname;
-
 /**
  * @typedef {import("@typescript-eslint/utils/ts-eslint").FlatConfig.Config} Config
  * @typedef {import("@typescript-eslint/utils/ts-eslint").FlatConfig.ConfigArray} ConfigArray
@@ -64,7 +62,7 @@ const vueParserOptions = {
 /** @type {ParserOptions} */
 const typeCheckedParserOptions = {
   project: ["./tsconfig.json"],
-  tsconfigRootDir: __dirname,
+  tsconfigRootDir: import.meta.dirname,
 };
 
 /** @type {Rules} */

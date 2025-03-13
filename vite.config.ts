@@ -2,7 +2,7 @@
 import path from "path";
 import { rm } from "fs/promises";
 
-import electron from "vite-plugin-electron";
+import electron from "vite-plugin-electron/simple";
 import tsconfigPaths from "vite-tsconfig-paths";
 import vue from "@vitejs/plugin-vue";
 import checker from "vite-plugin-checker";
@@ -13,7 +13,7 @@ import { z } from "zod";
 import {
   checkSuspiciousImports,
   CheckSuspiciousImportsOptions,
-} from "./tools/checkSuspiciousImports.mjs";
+} from "./tools/checkSuspiciousImports.js";
 
 const isElectron = process.env.VITE_TARGET === "electron";
 const isBrowser = process.env.VITE_TARGET === "browser";
@@ -90,9 +90,10 @@ export default defineConfig((options) => {
       isElectron && [
         cleanDistPlugin(),
         // TODO: 関数で切り出して共通化できる部分はまとめる
-        electron([
-          {
+        electron({
+          main: {
             entry: "./backend/electron/main.ts",
+
             // ref: https://github.com/electron-vite/vite-plugin-electron/pull/122
             onstart: ({ startup }) => {
               console.log("main process build is complete.");
@@ -124,9 +125,8 @@ export default defineConfig((options) => {
               },
             },
           },
-          {
-            // ref: https://electron-vite.github.io/guide/preload-not-split.html
-            entry: "./backend/electron/renderer/preload.ts",
+          preload: {
+            input: "./src/backend/electron/renderer/preload.ts",
             onstart({ reload }) {
               if (!skipLaunchElectron) {
                 reload();
@@ -140,13 +140,10 @@ export default defineConfig((options) => {
               build: {
                 outDir: path.resolve(import.meta.dirname, "dist"),
                 sourcemap,
-                rollupOptions: {
-                  output: { inlineDynamicImports: true },
-                },
               },
             },
           },
-        ]),
+        }),
       ],
       isBrowser && injectBrowserPreloadPlugin(),
     ],
