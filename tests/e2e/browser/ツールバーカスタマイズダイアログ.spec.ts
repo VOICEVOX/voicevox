@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-import { gotoHome, navigateToMain } from "../navigators";
+import { gotoHome, navigateToTalk } from "../navigators";
 import { getNewestQuasarDialog, getQuasarMenu } from "../locators";
 
 test.beforeEach(gotoHome);
@@ -8,7 +8,7 @@ test.beforeEach(gotoHome);
 test("ツールバーのカスタマイズでボタンを追加でき、デフォルトに戻すこともできる", async ({
   page,
 }) => {
-  await navigateToMain(page);
+  await navigateToTalk(page);
   // 全部書き出しボタンはデフォルトでないことを確認
   expect(
     await page

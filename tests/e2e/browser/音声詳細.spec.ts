@@ -1,6 +1,6 @@
 import { test, expect, Page } from "@playwright/test";
 
-import { gotoHome, navigateToMain } from "../navigators";
+import { gotoHome, navigateToTalk } from "../navigators";
 
 test.beforeEach(gotoHome);
 
@@ -9,7 +9,7 @@ function getNthAccentPhraseInput({ page, n }: { page: Page; n: number }) {
 }
 
 test("単体アクセント句の読み変更", async ({ page }) => {
-  await navigateToMain(page);
+  await navigateToTalk(page);
   await page.waitForTimeout(100);
 
   const textField = page.getByRole("textbox", { name: "1行目" });
@@ -51,7 +51,7 @@ test("単体アクセント句の読み変更", async ({ page }) => {
 });
 
 test("詳細調整欄のコンテキストメニュー", async ({ page }) => {
-  await navigateToMain(page);
+  await navigateToTalk(page);
   await page.waitForTimeout(100);
 
   // 削除
