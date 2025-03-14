@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-require-imports */
 const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
@@ -11,7 +11,7 @@ const createIni = (sizes, hashes) => {
 };
 
 // target: electron-builder.Target
-exports.default = async function (target) {
+module.exports.default = async function (target) {
   const projectName = process.env.npm_package_name;
   if (projectName == undefined) {
     const ErrorMessage = "Project name is undefined.";

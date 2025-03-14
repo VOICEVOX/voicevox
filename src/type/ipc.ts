@@ -1,5 +1,4 @@
 import {
-  AppInfos,
   ConfigType,
   EngineDirValidationResult,
   EngineId,
@@ -18,11 +17,6 @@ import { HotkeySettingType } from "@/domain/hotkeyAction";
  * invoke, handle
  */
 export type IpcIHData = {
-  GET_APP_INFOS: {
-    args: [];
-    return: AppInfos;
-  };
-
   GET_TEXT_ASSET: {
     args: [textType: keyof TextAsset];
     return: TextAsset[keyof TextAsset];
@@ -43,29 +37,21 @@ export type IpcIHData = {
     return?: string;
   };
 
-  SHOW_VVPP_OPEN_DIALOG: {
-    args: [obj: { title: string; defaultPath?: string }];
-    return?: string;
-  };
-
   SHOW_OPEN_DIRECTORY_DIALOG: {
     args: [obj: { title: string }];
     return?: string;
   };
 
-  SHOW_IMPORT_FILE_DIALOG: {
-    args: [obj: { title: string; name?: string; extensions?: string[] }];
+  SHOW_OPEN_FILE_DIALOG: {
+    args: [
+      obj: {
+        title: string;
+        name: string;
+        extensions: string[];
+        defaultPath?: string;
+      },
+    ];
     return?: string;
-  };
-
-  SHOW_PROJECT_SAVE_DIALOG: {
-    args: [obj: { title: string; defaultPath?: string }];
-    return?: string;
-  };
-
-  SHOW_PROJECT_LOAD_DIALOG: {
-    args: [obj: { title: string }];
-    return?: string[];
   };
 
   SHOW_WARNING_DIALOG: {
@@ -88,12 +74,12 @@ export type IpcIHData = {
     return: MessageBoxReturnValue;
   };
 
-  SHOW_EXPORT_FILE_DIALOG: {
+  SHOW_SAVE_FILE_DIALOG: {
     args: [
       obj: {
         title: string;
         defaultPath?: string;
-        extensionName: string;
+        name: string;
         extensions: string[];
       },
     ];
@@ -237,7 +223,7 @@ export type IpcIHData = {
 
   READ_FILE: {
     args: [obj: { filePath: string }];
-    return: Result<ArrayBuffer>;
+    return: Result<Uint8Array>;
   };
 };
 

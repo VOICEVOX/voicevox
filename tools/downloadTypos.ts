@@ -10,6 +10,7 @@ import fs from "fs/promises";
 import { Readable } from "stream";
 import { ReadableStream } from "stream/web";
 import { pipeline } from "stream/promises";
+import { retryFetch } from "./helper.mjs";
 
 // OS名を定義するオブジェクト
 const OS = {
@@ -24,23 +25,25 @@ const CPU_ARCHITECTURE = {
 };
 // ダウンロードしたバイナリを格納するディレクトリ
 const BINARY_BASE_PATH = resolve(import.meta.dirname, "..", "vendored");
-// typosのバイナリのパス
-const TYPOS_BINARY_PATH = resolve(BINARY_BASE_PATH, "typos");
-// 各OSとアーキテクチャに対応するtyposバイナリのダウンロードURL
-const TYPOS_URLS = {
+// typosのバイナリを格納するディレクトリ
+const TYPOS_DIRECTORY_PATH = resolve(BINARY_BASE_PATH, "typos");
+// typosのバージョンを保存しておくテキストファイル
+const TYPOS_VERSION_FILE_NAME = "version.txt";
+
+const TYPOS_VERSION = "v1.30.0";
+
+// 各OSとアーキテクチャに対応するtyposバイナリのターゲットトリプル
+const TYPOS_TARGET_TRIPLES = {
   [OS.MACOS]: {
-    [CPU_ARCHITECTURE.ARM]:
-      "https://github.com/crate-ci/typos/releases/download/v1.21.0/typos-v1.21.0-aarch64-apple-darwin.tar.gz",
-    [CPU_ARCHITECTURE.X86_64]:
-      "https://github.com/crate-ci/typos/releases/download/v1.21.0/typos-v1.21.0-x86_64-apple-darwin.tar.gz",
+    [CPU_ARCHITECTURE.ARM]: "aarch64-apple-darwin",
+    [CPU_ARCHITECTURE.X86_64]: "x86_64-apple-darwin",
   },
   [OS.LINUX]: {
-    [CPU_ARCHITECTURE.X86_64]:
-      "https://github.com/crate-ci/typos/releases/download/v1.21.0/typos-v1.21.0-x86_64-unknown-linux-musl.tar.gz",
+    [CPU_ARCHITECTURE.ARM]: "aarch64-unknown-linux-musl",
+    [CPU_ARCHITECTURE.X86_64]: "x86_64-unknown-linux-musl",
   },
   [OS.WINDOWS]: {
-    [CPU_ARCHITECTURE.X86_64]:
-      "https://github.com/crate-ci/typos/releases/download/v1.21.0/typos-v1.21.0-x86_64-pc-windows-msvc.zip",
+    [CPU_ARCHITECTURE.X86_64]: "x86_64-pc-windows-msvc",
   },
 };
 
@@ -90,7 +93,11 @@ async function runCommand({
  * 現在のOSとアーキテクチャに基づいてバイナリのダウンロード先URLを定数のオブジェクトから取得する関数
  */
 function getBinaryURL() {
-  const url = TYPOS_URLS[currentOS][currentCpuArchitecture];
+  const baseUrl = "https://github.com/crate-ci/typos/releases/download";
+  const targetTriple = TYPOS_TARGET_TRIPLES[currentOS][currentCpuArchitecture];
+  const extension = currentOS === OS.WINDOWS ? ".zip" : ".tar.gz";
+
+  const url = `${baseUrl}/${TYPOS_VERSION}/typos-${TYPOS_VERSION}-${targetTriple}${extension}`;
 
   if (!url) {
     throw new Error(
@@ -102,52 +109,96 @@ function getBinaryURL() {
 }
 
 /**
+ * Typosのダウンロードが必要か判定する関数
+ * @returns {Promise<boolean>} Typosのダウンロードが必要か
+ */
+async function shouldDownloadTypos(): Promise<boolean> {
+  if (!(await exists(TYPOS_DIRECTORY_PATH))) {
+    return true;
+  }
+
+  // TYPOS_BINARY_PATHが存在する場合、typosのバージョンをチェック
+  const versionFilePath = resolve(
+    TYPOS_DIRECTORY_PATH,
+    TYPOS_VERSION_FILE_NAME,
+  );
+  if (!(await exists(versionFilePath))) {
+    return true;
+  }
+
+  const currentVersion = await fs.readFile(versionFilePath, "utf-8");
+  if (currentVersion === TYPOS_VERSION) {
+    return false;
+  }
+
+  console.log(
+    "The downloaded version of typos differs from the specified version, so it will be re-downloaded",
+  );
+  return true;
+}
+
+/**
+ * Typosのダウンロード前にディレクトリを準備する関数
+ * 既存のディレクトリがある場合は中身を空にし、無い場合は新規作成する
+ */
+async function prepareTyposDirectory() {
+  // TYPOS_DIRECTORY_PATHが存在する場合、中身を空にする
+  if (await exists(TYPOS_DIRECTORY_PATH)) {
+    const files = await fs.readdir(TYPOS_DIRECTORY_PATH);
+    await Promise.all(
+      files.map((file) => fs.unlink(resolve(TYPOS_DIRECTORY_PATH, file))),
+    );
+  } else {
+    // 無い場合は新規作成する
+    await fs.mkdir(TYPOS_DIRECTORY_PATH, { recursive: true });
+  }
+}
+
+/**
  * バイナリをダウンロードして解凍し、実行権限を付与する関数
  */
 async function downloadAndUnarchive({ url }: { url: string }) {
-  const compressedFilePath = `${TYPOS_BINARY_PATH}/typos${currentOS === OS.WINDOWS ? ".zip" : ".tar.gz"}`;
-
-  // バイナリディレクトリが存在する場合ダウンロードをスキップし、存在しない場合はディレクトリを作成する
-  if (await exists(TYPOS_BINARY_PATH)) {
-    console.log(`typos already downloaded`);
+  if (!(await shouldDownloadTypos())) {
+    console.log("typos already downloaded");
     return;
-  } else {
-    await fs.mkdir(TYPOS_BINARY_PATH, { recursive: true });
   }
 
-  const response = await fetch(url);
+  await prepareTyposDirectory();
+
+  const response = await retryFetch(url);
   if (!response.ok) {
     throw new Error(`Failed to download binary: ${response.statusText}`);
   }
 
   const responseStream = Readable.fromWeb(response.body as ReadableStream);
+  const compressedFilePath = `${TYPOS_DIRECTORY_PATH}/typos${currentOS === OS.WINDOWS ? ".zip" : ".tar.gz"}`;
   const fileStream = fsSync.createWriteStream(compressedFilePath);
   await pipeline(responseStream, fileStream);
 
   if (currentOS === OS.WINDOWS) {
     // Windows用のZIPファイルを解凍
     await runCommand({
-      command: `"${sevenZipBinaryPath}" x ${compressedFilePath} -o${TYPOS_BINARY_PATH}`,
+      command: `"${sevenZipBinaryPath}" x ${compressedFilePath} -o${TYPOS_DIRECTORY_PATH}`,
       description: `Extracting typos binary`,
     });
   } else {
-    const archiveFilePath = `${TYPOS_BINARY_PATH}/typos.tar`;
+    const archiveFilePath = `${TYPOS_DIRECTORY_PATH}/typos.tar`;
 
     // .tar.gzファイルの解凍
     await runCommand({
-      command: `"${sevenZipBinaryPath}" e ${compressedFilePath} -o${TYPOS_BINARY_PATH} -y`,
+      command: `"${sevenZipBinaryPath}" e ${compressedFilePath} -o${TYPOS_DIRECTORY_PATH} -y`,
       description: `Extracting typos.tar.gz file`,
     });
 
     // tarファイルの解凍
     await runCommand({
-      command: `"${sevenZipBinaryPath}" x ${archiveFilePath} -o${TYPOS_BINARY_PATH} -y`,
+      command: `"${sevenZipBinaryPath}" x ${archiveFilePath} -o${TYPOS_DIRECTORY_PATH} -y`,
       description: `Extracting typos.tar file`,
     });
 
     // バイナリに実行権限を付与
     await runCommand({
-      command: `chmod +x ${TYPOS_BINARY_PATH}/typos`,
+      command: `chmod +x ${TYPOS_DIRECTORY_PATH}/typos`,
       description: `Granting execute permissions to typos binary`,
     });
 
@@ -155,16 +206,24 @@ async function downloadAndUnarchive({ url }: { url: string }) {
     await fs.rm(archiveFilePath);
   }
 
+  // typosのバージョンを保存
+  const versionFilePath = resolve(
+    TYPOS_DIRECTORY_PATH,
+    TYPOS_VERSION_FILE_NAME,
+  );
+  await fs.writeFile(versionFilePath, TYPOS_VERSION);
+
   // 解凍後に圧縮ファイルを削除
   await fs.rm(compressedFilePath);
 }
 
 /**
- * /vendored/typos ディレクトリから不要なファイルとディレクトリを削除する関数
+ * /vendored/typos ディレクトリから不要なドキュメントを削除する関数
+ * ダウンロード・解凍後に実行する
  */
-async function cleanupTyposDirectory() {
-  const typosDocDirPath = join(TYPOS_BINARY_PATH, "doc");
-  const typosReadmeFilePath = join(TYPOS_BINARY_PATH, "README.md");
+async function removeTyposDocumentation() {
+  const typosDocDirPath = join(TYPOS_DIRECTORY_PATH, "doc");
+  const typosReadmeFilePath = join(TYPOS_DIRECTORY_PATH, "README.md");
 
   // doc ディレクトリの削除
   if (await exists(typosDocDirPath)) {
@@ -186,8 +245,8 @@ async function main() {
   const url = getBinaryURL();
   await downloadAndUnarchive({ url });
 
-  // 不要なファイルとディレクトリを削除
-  await cleanupTyposDirectory();
+  // 不要なドキュメントを削除
+  await removeTyposDocumentation();
 }
 
 // main関数実行

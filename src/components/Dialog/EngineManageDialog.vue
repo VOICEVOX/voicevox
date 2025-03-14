@@ -340,7 +340,7 @@ watch(
       if (engineVersions.value[id]) continue;
       const version = await store.actions
         .INSTANTIATE_ENGINE_CONNECTOR({ engineId: id })
-        .then((instance) => instance.invoke("versionVersionGet")({}))
+        .then((instance) => instance.invoke("version")({}))
         .then((version) => {
           // OpenAPIのバグで"latest"のようにダブルクォーテーションで囲まれていることがあるので外す
           if (version.startsWith('"') && version.endsWith('"')) {
@@ -545,8 +545,11 @@ const selectEngineDir = async () => {
 
 const vvppFilePath = ref("");
 const selectVvppFile = async () => {
-  const path = await window.backend.showVvppOpenDialog({
+  const path = await window.backend.showOpenFileDialog({
     title: "vvppファイルを選択",
+    name: "VOICEVOX Plugin Package",
+    mimeType: "application/octet-stream",
+    extensions: ["vvpp", "vvppp"],
     defaultPath: vvppFilePath.value,
   });
   if (path) {

@@ -1,3 +1,4 @@
+import { toBase64 } from "fast-base64";
 import { createUILockAction, withProgress } from "./ui";
 import {
   AudioItem,
@@ -326,7 +327,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           let speakerStylePromise: Promise<StyleInfo[]> | undefined = undefined;
           if (speaker != undefined) {
             speakerInfoPromise = instance
-              .invoke("speakerInfoSpeakerInfoGet")({
+              .invoke("speakerInfo")({
                 speakerUuid: speaker.speakerUuid,
                 ...(useResourceUrl && { resourceFormat: "url" }),
               })
@@ -343,7 +344,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           let singerStylePromise: Promise<StyleInfo[]> | undefined = undefined;
           if (singer != undefined) {
             singerInfoPromise = instance
-              .invoke("singerInfoSingerInfoGet")({
+              .invoke("singerInfo")({
                 speakerUuid: singer.speakerUuid,
                 ...(useResourceUrl && { resourceFormat: "url" }),
               })
@@ -387,9 +388,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         };
 
         const [speakers, singers] = await Promise.all([
-          instance.invoke("speakersSpeakersGet")({}),
+          instance.invoke("speakers")({}),
           state.engineManifests[engineId].supportedFeatures.sing
-            ? await instance.invoke("singersSingersGet")({})
+            ? await instance.invoke("singers")({})
             : [],
         ]).catch((error) => {
           window.backend.logError(error, `Failed to get Speakers.`);
@@ -443,7 +444,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       const rawMorphableTargets = (
         await (
           await actions.INSTANTIATE_ENGINE_CONNECTOR({ engineId })
-        ).invoke("morphableTargetsMorphableTargetsPost")({
+        ).invoke("morphableTargets")({
           requestBody: [baseStyleId],
         })
       )[0];
@@ -986,7 +987,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         })
         .then(async (instance) =>
           convertAudioQueryFromEngineToEditor(
-            await instance.invoke("audioQueryAudioQueryPost")({
+            await instance.invoke("audioQuery")({
               text,
               speaker: styleId,
             }),
@@ -1042,7 +1043,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           engineId,
         })
         .then((instance) =>
-          instance.invoke("accentPhrasesAccentPhrasesPost")({
+          instance.invoke("accentPhrases")({
             text,
             speaker: styleId,
             isKana,
@@ -1165,7 +1166,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           engineId,
         })
         .then((instance) =>
-          instance.invoke("moraDataMoraDataPost")({
+          instance.invoke("moraData")({
             accentPhrase: accentPhrases,
             speaker: styleId,
           }),
@@ -1346,7 +1347,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           engineId,
         });
         try {
-          return instance.invoke("connectWavesConnectWavesPost")({
+          return instance.invoke("connectWaves")({
             requestBody: encodedBlobs,
           });
         } catch (e) {
@@ -1376,11 +1377,11 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             defaultAudioFileName,
           );
         } else {
-          filePath ??= await window.backend.showExportFileDialog({
+          filePath ??= await window.backend.showSaveFileDialog({
             title: "音声を保存",
-            defaultPath: defaultAudioFileName,
-            extensionName: "WAV ファイル",
+            name: "WAV ファイル",
             extensions: ["wav"],
+            defaultPath: defaultAudioFileName,
           });
         }
 
@@ -1525,11 +1526,11 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             defaultFileName,
           );
         } else {
-          filePath ??= await window.backend.showExportFileDialog({
+          filePath ??= await window.backend.showSaveFileDialog({
             title: "音声を全て繋げて保存",
-            defaultPath: defaultFileName,
-            extensionName: "WAV ファイル",
+            name: "WAV ファイル",
             extensions: ["wav"],
+            defaultPath: defaultFileName,
           });
         }
 
@@ -1545,21 +1546,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         const labs: string[] = [];
         const texts: string[] = [];
 
-        const base64Encoder = (blob: Blob): Promise<string | undefined> => {
-          return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => {
-              // string/undefined以外が来ることはないと思うが、型定義的にArrayBufferも来るので、toStringする
-              const result = reader.result?.toString();
-              if (result) {
-                // resultの中身は、"data:audio/wav;base64,<content>"という形なので、カンマ以降を抜き出す
-                resolve(result.slice(result.indexOf(",") + 1));
-              } else {
-                reject();
-              }
-            };
-            reader.readAsDataURL(blob);
-          });
+        const base64Encoder = async (blob: Blob): Promise<string> => {
+          const arrayBuffer = await blob.arrayBuffer();
+          return toBase64(new Uint8Array(arrayBuffer));
         };
 
         const totalCount = state.audioKeys.length;
@@ -1670,11 +1659,11 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             defaultFileName,
           );
         } else {
-          filePath ??= await window.backend.showExportFileDialog({
+          filePath ??= await window.backend.showSaveFileDialog({
             title: "文章を全て繋げてテキストファイルに保存",
-            defaultPath: defaultFileName,
-            extensionName: "テキストファイル",
+            name: "テキストファイル",
             extensions: ["txt"],
+            defaultPath: defaultFileName,
           });
         }
 
@@ -2485,7 +2474,7 @@ export const audioCommandStore = transformCommandStore(
             audioKey,
             accentPhrases: resultAccentPhrases,
           });
-        } catch (error) {
+        } catch {
           mutations.COMMAND_CHANGE_SINGLE_ACCENT_PHRASE({
             audioKey,
             accentPhrases: newAccentPhrases,
@@ -2900,15 +2889,18 @@ export const audioCommandStore = transformCommandStore(
         async ({ state, mutations, actions, getters }, payload) => {
           let filePath: undefined | string;
           if (payload.type == "dialog") {
-            filePath = await window.backend.showImportFileDialog({
+            filePath = await window.backend.showOpenFileDialog({
               title: "セリフ読み込み",
+              name: "Text",
+              mimeType: "plain/text",
+              extensions: ["txt"],
             });
             if (!filePath) return;
           } else if (payload.type == "path") {
             filePath = payload.filePath;
           }
 
-          let buf: ArrayBuffer;
+          let buf: Uint8Array;
           if (filePath != undefined) {
             buf = await window.backend
               .readFile({ filePath })
@@ -2916,7 +2908,7 @@ export const audioCommandStore = transformCommandStore(
           } else {
             if (payload.type != "file")
               throw new UnreachableError("payload.type != 'file'");
-            buf = await payload.file.arrayBuffer();
+            buf = new Uint8Array(await payload.file.arrayBuffer());
           }
 
           let body = new TextDecoder("utf-8").decode(buf);

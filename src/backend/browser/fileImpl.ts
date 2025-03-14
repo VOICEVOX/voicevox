@@ -6,7 +6,7 @@ import { failure, success } from "@/type/result";
 import { createLogger } from "@/helpers/log";
 import { normalizeError } from "@/helpers/normalizeError";
 import path from "@/helpers/path";
-import { ExhaustiveError } from "@/type/utility";
+import { assertNonNullable, ExhaustiveError } from "@/type/utility";
 
 const log = createLogger("fileImpl");
 
@@ -22,6 +22,7 @@ const storeDirectoryHandle = async (
       resolve();
     };
     request.onerror = () => {
+      assertNonNullable(request.error);
       reject(request.error);
     };
   });
@@ -38,6 +39,7 @@ const fetchStoredDirectoryHandle = async (maybeDirectoryHandleName: string) => {
         resolve(request.result as FileSystemDirectoryHandle | undefined);
       };
       request.onerror = () => {
+        assertNonNullable(request.error);
         reject(request.error);
       };
     },
@@ -133,7 +135,7 @@ export type WritableFilePath =
 
 // NOTE: fixedExportEnabled が有効になっている GENERATE_AND_SAVE_AUDIO action では、ファイル名に加えディレクトリ名も指定された状態でfilePathが渡ってくる
 // また GENERATE_AND_SAVE_ALL_AUDIO action では fixedExportEnabled の有効の有無に関わらず、ディレクトリ名も指定された状態でfilePathが渡ってくる
-// showExportFilePicker での疑似パスが渡ってくる可能性もある。
+// showSaveFilePicker での疑似パスが渡ってくる可能性もある。
 export const writeFileImpl = async (obj: {
   filePath: WritableFilePath;
   buffer: ArrayBuffer;
@@ -227,7 +229,7 @@ export const showOpenFilePickerImpl = async (options: {
   multiple: boolean;
   fileTypes: {
     description: string;
-    accept: Record<string, string[]>;
+    accept: Record<MIMEType, FileExtension[]>;
   }[];
 }) => {
   try {
@@ -260,15 +262,15 @@ export const readFileImpl = async (filePath: string) => {
   }
   const file = await fileHandle.getFile();
   const buffer = await file.arrayBuffer();
-  return success(buffer);
+  return success(new Uint8Array(buffer));
 };
 
 // ファイル選択ダイアログを開く
 // 返り値はファイルパスではなく、疑似パスを返す
-export const showExportFilePickerImpl: (typeof window)[typeof SandboxKey]["showExportFileDialog"] =
+export const showSaveFilePickerImpl: (typeof window)[typeof SandboxKey]["showSaveFileDialog"] =
   async (obj: {
     defaultPath?: string;
-    extensionName: string;
+    name: string;
     extensions: string[];
     title: string;
   }) => {
@@ -278,7 +280,9 @@ export const showExportFilePickerImpl: (typeof window)[typeof SandboxKey]["showE
         {
           description: obj.extensions.join("、"),
           accept: {
-            "application/octet-stream": obj.extensions.map((ext) => `.${ext}`),
+            "application/octet-stream": obj.extensions.map(
+              (ext): FileExtension => `.${ext}`,
+            ),
           },
         },
       ],

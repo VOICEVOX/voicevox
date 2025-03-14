@@ -45,7 +45,7 @@
       {{ textLineNumberIndex }}
     </div>
     <CharacterButton
-      v-model:selected-voice="selectedVoice"
+      v-model:selectedVoice="selectedVoice"
       :characterInfos="userOrderedCharacterInfos"
       :loading="isInitializingSpeaker"
       :showEngineInfo="isMultipleEngine"

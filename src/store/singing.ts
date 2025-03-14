@@ -1905,9 +1905,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           const instance = await actions.INSTANTIATE_ENGINE_CONNECTOR({
             engineId,
           });
-          const query = await instance.invoke(
-            "singFrameAudioQuerySingFrameAudioQueryPost",
-          )({
+          const query = await instance.invoke("singFrameAudioQuery")({
             score: { notes: notesForRequestToEngine },
             speaker: singingTeacherStyleId,
           });
@@ -2323,7 +2321,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           const instance = await actions.INSTANTIATE_ENGINE_CONNECTOR({
             engineId: singer.engineId,
           });
-          return await instance.invoke("frameSynthesisFrameSynthesisPost")({
+          return await instance.invoke("frameSynthesis")({
             frameAudioQuery: query,
             speaker: singer.styleId,
           });
@@ -2728,7 +2726,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const instance = await actions.INSTANTIATE_ENGINE_CONNECTOR({
         engineId,
       });
-      return await instance.invoke("singFrameVolumeSingFrameVolumePost")({
+      return await instance.invoke("singFrameVolume")({
         bodySingFrameVolumeSingFrameVolumePost: {
           score: {
             notes,
@@ -2775,11 +2773,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           if (state.savingSetting.fixedExportEnabled) {
             filePath = path.join(state.savingSetting.fixedExportDir, fileName);
           } else {
-            filePath ??= await window.backend.showExportFileDialog({
+            filePath ??= await window.backend.showSaveFileDialog({
               title: "音声を保存",
-              defaultPath: fileName,
+              name: "WAV ファイル",
               extensions: ["wav"],
-              extensionName: "WAV ファイル",
+              defaultPath: fileName,
             });
           }
           if (!filePath) {
@@ -3593,11 +3591,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             buffer = (await ufProjectToMultiFile(project, fileType))[0];
           }
 
-          let filePath = await window.backend.showExportFileDialog({
+          let filePath = await window.backend.showSaveFileDialog({
             title: "プロジェクトを書き出し",
-            defaultPath: fileBaseName,
-            extensionName: fileTypeLabel,
+            name: fileTypeLabel,
             extensions: [extension],
+            defaultPath: fileBaseName,
           });
           if (!filePath) {
             return { result: "CANCELED", path: "" };

@@ -113,12 +113,16 @@ exports[`0.13.0からマイグレーションできる 1`] = `
       "combination": "F11",
     },
     {
+      "action": "プロジェクトを上書き保存",
+      "combination": "Ctrl S",
+    },
+    {
       "action": "プロジェクトを名前を付けて保存",
       "combination": "Ctrl Shift S",
     },
     {
-      "action": "プロジェクトを上書き保存",
-      "combination": "Ctrl S",
+      "action": "プロジェクトの複製を保存",
+      "combination": "Ctrl Alt S",
     },
     {
       "action": "プロジェクトを読み込む",

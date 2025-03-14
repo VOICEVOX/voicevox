@@ -5,10 +5,10 @@
 
 import { uuid4 } from "@/helpers/random";
 import {
-  AddUserDictWordUserDictWordPostRequest,
+  AddUserDictWordRequest,
   DefaultApiInterface,
-  DeleteUserDictWordUserDictWordWordUuidDeleteRequest,
-  RewriteUserDictWordUserDictWordWordUuidPutRequest,
+  DeleteUserDictWordRequest,
+  RewriteUserDictWordRequest,
   UserDictWord,
 } from "@/openapi";
 import { Brand } from "@/type/utility";
@@ -16,9 +16,7 @@ import { Brand } from "@/type/utility";
 type UserDictWordId = Brand<string, "UserDictWordId">;
 
 /** 単語追加リクエストで送られる断片的な単語情報からUserDictWordを作成する */
-function createWord(
-  wordProperty: AddUserDictWordUserDictWordPostRequest,
-): UserDictWord {
+function createWord(wordProperty: AddUserDictWordRequest): UserDictWord {
   return {
     surface: wordProperty.surface,
     pronunciation: wordProperty.pronunciation,
@@ -60,37 +58,31 @@ export class DictMock {
   /** 辞書系のOpenAPIの関数を返す */
   createDictMockApi(): Pick<
     DefaultApiInterface,
-    | "getUserDictWordsUserDictGet"
-    | "addUserDictWordUserDictWordPost"
-    | "rewriteUserDictWordUserDictWordWordUuidPut"
-    | "deleteUserDictWordUserDictWordWordUuidDelete"
+    | "getUserDictWords"
+    | "addUserDictWord"
+    | "rewriteUserDictWord"
+    | "deleteUserDictWord"
   > {
     return {
-      getUserDictWordsUserDictGet: async (): Promise<{
+      getUserDictWords: async (): Promise<{
         [key: UserDictWordId]: UserDictWord;
       }> => {
         return Object.fromEntries(this.userDictWords.entries());
       },
 
-      addUserDictWordUserDictWordPost: async (
-        payload: AddUserDictWordUserDictWordPostRequest,
-      ) => {
+      addUserDictWord: async (payload: AddUserDictWordRequest) => {
         const id = uuid4() as UserDictWordId;
         const word = createWord(payload);
         this.userDictWords.set(id, word);
         return id;
       },
 
-      rewriteUserDictWordUserDictWordWordUuidPut: async (
-        payload: RewriteUserDictWordUserDictWordWordUuidPutRequest,
-      ) => {
+      rewriteUserDictWord: async (payload: RewriteUserDictWordRequest) => {
         const word = createWord(payload);
         this.userDictWords.set(payload.wordUuid as UserDictWordId, word);
       },
 
-      deleteUserDictWordUserDictWordWordUuidDelete: async (
-        payload: DeleteUserDictWordUserDictWordWordUuidDeleteRequest,
-      ) => {
+      deleteUserDictWord: async (payload: DeleteUserDictWordRequest) => {
         this.userDictWords.delete(payload.wordUuid as UserDictWordId);
       },
     };

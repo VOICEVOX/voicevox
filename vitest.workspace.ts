@@ -11,7 +11,7 @@ const ignorePaths = (paths: string[]) => paths.map((path) => `!${path}`);
 export default defineWorkspace([
   // Node.js環境
   {
-    extends: "./vite.config.mts",
+    extends: "./vite.config.ts",
     test: {
       include: nodeTestPaths,
       name: "node",
@@ -22,7 +22,7 @@ export default defineWorkspace([
 
   // happy-domのエミュレート版ブラウザ環境
   {
-    extends: "./vite.config.mts",
+    extends: "./vite.config.ts",
     plugins: [],
     test: {
       include: [
@@ -38,14 +38,14 @@ export default defineWorkspace([
 
   // Chromiumブラウザ環境
   {
-    extends: "./vite.config.mts",
+    extends: "./vite.config.ts",
     test: {
       include: browserTestPaths,
       globals: true,
       name: "browser",
       browser: {
         enabled: true,
-        name: "chromium",
+        instances: [{ browser: "chromium" }],
         provider: "playwright",
         headless: true,
         api: 7158,
@@ -56,7 +56,7 @@ export default defineWorkspace([
 
   // Storybook
   {
-    extends: "./vite.config.mts",
+    extends: "./vite.config.ts",
     plugins: [
       storybookTest({
         storybookScript: "storybook --ci --port 7160",
@@ -70,12 +70,11 @@ export default defineWorkspace([
       },
     },
     test: {
-      include: ["./**/*.stories.ts"],
       globals: true,
       name: "storybook",
       browser: {
         enabled: true,
-        name: "chromium",
+        instances: [{ browser: "chromium" }],
         provider: "playwright",
         headless: true,
         api: 7159,

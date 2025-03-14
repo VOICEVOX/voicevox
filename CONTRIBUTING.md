@@ -223,7 +223,7 @@ VITE_DEFAULT_ENGINE_INFOS=`[
 
 ### 4. 事前テスト
 
-- 提出前にコードをテストします。テストにはいくつかのツールを使います。このガイドラインの手順で進んでいれば既に必要なものはそろっている
+- 提出前にコードをテストします。テストにはいくつかのツールを使います。このガイドラインの手順で進んでいれば既に必要なものはそろっています。
 
 - 記述コードがコーディングルールに沿っていることを確認します。（特に今回の作業によって警告やエラーが増えていないかどうかに注目してください）
 
@@ -231,6 +231,9 @@ VITE_DEFAULT_ENGINE_INFOS=`[
   pnpm run lint
   pnpm run fmt
   ```
+
+リントを行うとリポジトリルートにキャッシュファイル`.eslintcache`が作られます。
+ESLintがバージョンアップした場合や、設定が変わった場合、キャッシュが壊れた場合はこのファイルを消してください。
 
 - TypeScriptの型チェックを行います。
 
@@ -259,7 +262,7 @@ VITE_DEFAULT_ENGINE_INFOS=`[
 - 使用するライブラリのライセンスに使用出来ないものが使われていないことを確認します。
 
   ```bash
-  pnpm run license:generate -- -o voicevox_licenses.json
+  pnpm run license:generate -o voicevox_licenses.json
   ```
 
 - e2eテストの内容を確認します。
