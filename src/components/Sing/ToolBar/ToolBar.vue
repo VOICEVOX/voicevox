@@ -401,12 +401,12 @@ const toggleLoop = async () => {
       const playheadTsIndex = tsPositions.value.findIndex(
         (pos) => pos > playheadTicks.value,
       );
-      // 現在の小節位置index
+      // 現在の拍子index
       const currentTsIndex =
         playheadTsIndex === -1
           ? tsPositions.value.length - 1
           : playheadTsIndex - 1;
-      // 現在のplayheadがある小節
+      // 現在のplayheadがある拍子
       const currentTs = timeSignatures.value[currentTsIndex];
 
       if (!currentTs) {
