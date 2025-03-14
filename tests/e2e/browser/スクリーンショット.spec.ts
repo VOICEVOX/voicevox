@@ -1,11 +1,11 @@
 import { test, expect } from "@playwright/test";
-import { gotoHome, navigateToTalk } from "../navigators";
+import { gotoHome, navigateToMain } from "../navigators";
 
 test.beforeEach(gotoHome);
 
 test("メイン画面の表示", async ({ page }) => {
   test.skip(process.platform !== "win32", "Windows以外のためスキップします");
-  await navigateToTalk(page);
+  await navigateToMain(page);
 
   // トーク画面の表示
   while (true) {

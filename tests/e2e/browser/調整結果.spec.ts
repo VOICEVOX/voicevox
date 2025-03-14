@@ -1,5 +1,5 @@
 import { test, expect, Page } from "@playwright/test";
-import { toggleSetting, navigateToTalk, gotoHome } from "../navigators";
+import { toggleSetting, navigateToMain, gotoHome } from "../navigators";
 
 test.beforeEach(gotoHome);
 
@@ -26,7 +26,7 @@ async function getSliderValues(page: Page) {
 }
 
 test("実験的機能：調整結果の保持", async ({ page }) => {
-  await navigateToTalk(page);
+  await navigateToMain(page);
 
   await toggleSetting(page, "調整結果の保持");
   await page.waitForTimeout(100);

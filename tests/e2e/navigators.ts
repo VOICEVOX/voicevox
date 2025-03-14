@@ -43,7 +43,7 @@ export async function toggleSetting(page: Page, settingName: string) {
 
 export async function navigateToHelpDialog(page: Page): Promise<Locator> {
   return await test.step("ヘルプダイアログの表示まで移動", async () => {
-    await navigateToTalk(page);
+    await navigateToMain(page);
     await page.waitForTimeout(100);
     await page.getByRole("button", { name: "ヘルプ" }).click();
     return getNewestQuasarDialog(page);
@@ -52,7 +52,7 @@ export async function navigateToHelpDialog(page: Page): Promise<Locator> {
 
 export async function navigateToSettingDialog(page: Page): Promise<Locator> {
   return await test.step("設定ダイアログの表示まで移動", async () => {
-    await navigateToTalk(page);
+    await navigateToMain(page);
     await page.waitForTimeout(100);
     await page.getByRole("button", { name: "設定" }).click();
     await getQuasarMenu(page, "オプション").click();
@@ -60,21 +60,11 @@ export async function navigateToSettingDialog(page: Page): Promise<Locator> {
   });
 }
 
-export async function navigateToTalk(page: Page) {
-  await navigateToMain(page);
-
-  await test.step("トーク画面に移動", async () => {
-    await page.getByRole("button", { name: "トーク" }).click();
-    await page.waitForTimeout(100);
-  });
-}
-
 export async function navigateToSong(page: Page) {
-  await navigateToMain(page);
-
   await test.step("ソング画面に移動", async () => {
-    await page.getByRole("button", { name: "ソング" }).click();
-    await page.waitForTimeout(100);
+    await navigateToMain(page);
+    await expect(page.getByText("ソング")).toBeVisible();
+    await page.getByText("ソング").click();
 
     // 見やすいようにスナップを1/8に変更
     await page.getByLabel("スナップ").click();

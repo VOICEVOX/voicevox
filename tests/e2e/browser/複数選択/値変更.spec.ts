@@ -1,5 +1,5 @@
 import { test, expect, Page } from "@playwright/test";
-import { toggleSetting, navigateToTalk, gotoHome } from "../../navigators";
+import { toggleSetting, navigateToMain, gotoHome } from "../../navigators";
 import { addAudioCells } from "./utils";
 
 /*
@@ -70,7 +70,7 @@ async function getAudioInfoParameters(
 test.beforeEach(async ({ page }) => {
   await gotoHome({ page });
 
-  await navigateToTalk(page);
+  await navigateToMain(page);
   await page.waitForTimeout(100);
   await toggleSetting(page, "複数選択");
 

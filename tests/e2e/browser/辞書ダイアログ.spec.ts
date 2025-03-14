@@ -1,5 +1,5 @@
 import { test, expect, Page, Locator } from "@playwright/test";
-import { gotoHome, navigateToTalk } from "../navigators";
+import { gotoHome, navigateToMain } from "../navigators";
 import { getNewestQuasarDialog } from "../locators";
 
 test.beforeEach(gotoHome);
@@ -50,7 +50,7 @@ async function validateInputTag(
 test("「設定」→「読み方＆アクセント辞書」で「読み方＆アクセント辞書」ページが表示される", async ({
   page,
 }) => {
-  await navigateToTalk(page);
+  await navigateToMain(page);
 
   const targetString = "あいうえお";
 

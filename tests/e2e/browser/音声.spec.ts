@@ -1,13 +1,13 @@
 import { test } from "@playwright/test";
 
-import { gotoHome, navigateToTalk } from "../navigators";
+import { gotoHome, navigateToMain } from "../navigators";
 
 test.beforeEach(gotoHome);
 
 test("テキストを入力→アクセントを変更→音声合成→再生ができる", async ({
   page,
 }) => {
-  await navigateToTalk(page);
+  await navigateToMain(page);
 
   await page.getByRole("textbox", { name: "1行目" }).click();
   await page.getByRole("textbox", { name: "1行目" }).fill("テストです");

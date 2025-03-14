@@ -1,6 +1,6 @@
 import { test, expect, Locator } from "@playwright/test";
 
-import { gotoHome, navigateToTalk, toggleSetting } from "../navigators";
+import { gotoHome, navigateToMain, toggleSetting } from "../navigators";
 
 test.beforeEach(gotoHome);
 
@@ -10,7 +10,7 @@ async function validateValue(locator: Locator, expectedValue: string) {
 }
 
 test("音声パラメータ引き継ぎの設定", async ({ page }) => {
-  await navigateToTalk(page);
+  await navigateToMain(page);
   await page.waitForTimeout(100);
   await page.locator(".audio-cell input").first().press("Enter");
   await page.waitForTimeout(100);

@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import dotenv from "dotenv";
 import semver from "semver";
-import { navigateToTalk, gotoHome } from "../navigators";
+import { navigateToMain, gotoHome } from "../navigators";
 import { getNewestQuasarDialog } from "../locators";
 import { UpdateInfo } from "@/type/preload";
 import { assertNonNullable } from "@/type/utility";
@@ -39,7 +39,7 @@ test.beforeEach(async ({ page }) => {
 test.beforeEach(async ({ page }) => {
   await gotoHome({ page });
 
-  await navigateToTalk(page);
+  await navigateToMain(page);
   await page.waitForTimeout(100);
 });
 
