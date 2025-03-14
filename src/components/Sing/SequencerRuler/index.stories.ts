@@ -11,6 +11,12 @@ type StoryProps = {
   timeSignatures?: TimeSignature[];
 };
 
+// setupStoryStateの型を定義
+type SetupStoryState = {
+  tempos?: Tempo[];
+  timeSignatures?: TimeSignature[];
+};
+
 const meta = {
   title: "Components/Sing/SequencerRuler",
   component: Container,
@@ -19,6 +25,7 @@ const meta = {
       components: { story },
       setup() {
         const store = useStore();
+        // コンポーネントのプロパティからデータを取得
         const args = context.args as StoryProps;
         if (args.tempos) {
           store.commit("SET_TEMPOS", {
@@ -29,6 +36,23 @@ const meta = {
           store.commit("SET_TIME_SIGNATURES", {
             timeSignatures: args.timeSignatures,
           });
+        }
+
+        // setupStoryStateパラメータからデータを取得
+        const setupState = context?.parameters?.setupStoryState as
+          | SetupStoryState
+          | undefined;
+        if (setupState) {
+          if (setupState.tempos) {
+            store.commit("SET_TEMPOS", {
+              tempos: setupState.tempos,
+            });
+          }
+          if (setupState.timeSignatures) {
+            store.commit("SET_TIME_SIGNATURES", {
+              timeSignatures: setupState.timeSignatures,
+            });
+          }
         }
         return {};
       },

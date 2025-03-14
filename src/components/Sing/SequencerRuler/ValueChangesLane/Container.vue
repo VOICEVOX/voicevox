@@ -3,8 +3,8 @@
     :valueChanges
     :contextMenuData
     :contextMenuHeader
-    :width
-    :offset
+    :width="rulerWidth"
+    :offset="props.offset"
     :uiLocked
     @valueChangeClick="onValueChangeClick"
     @contextMenuHide="onContextMenuHide"
@@ -12,10 +12,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, inject } from "vue";
+import { computed, ref } from "vue";
 import { Dialog } from "quasar";
-import { sequencerRulerInjectionKey } from "../Container.vue";
 import Presentation from "./Presentation.vue";
+import { useStore } from "@/store";
+import { useSequencerLayout } from "@/composables/useSequencerLayout";
+import { offsetXToSnappedTick } from "@/sing/rulerHelper";
 import { tickToMeasureNumber } from "@/sing/domain";
 import { Tempo, TimeSignature } from "@/store/type";
 import { ContextMenuItemData } from "@/components/Menu/ContextMenu/Presentation.vue";
@@ -34,31 +36,57 @@ defineOptions({
   name: "ValueChangesLaneContainer",
 });
 
-const emit = defineEmits<{
-  setPlayheadPosition: [position: number];
-}>();
+const props = withDefaults(
+  defineProps<{
+    offset?: number;
+    numMeasures?: number;
+  }>(),
+  {
+    offset: 0,
+    numMeasures: 32,
+  },
+);
 
-const injectedValue = inject(sequencerRulerInjectionKey);
-if (injectedValue == undefined) {
-  throw new Error("injectedValue is undefined.");
-}
+const store = useStore();
 
-const {
-  tsPositions,
-  width,
-  endTicks,
-  tpqn,
+// 基本的な値
+const tpqn = computed(() => store.state.tpqn);
+const timeSignatures = computed(() => store.state.timeSignatures);
+const sequencerZoomX = computed(() => store.state.sequencerZoomX);
+const playheadPosition = computed(() => store.getters.PLAYHEAD_POSITION);
+const tempos = computed(() => store.state.tempos);
+const uiLocked = computed(() => store.getters.UI_LOCKED);
+
+// useSequencerLayoutを使用してレイアウト計算を行う
+const { rulerWidth, tsPositions, endTicks } = useSequencerLayout({
   timeSignatures,
-  offset,
-  uiLocked,
-  tempos,
-  setTempo,
-  removeTempo,
-  setTimeSignature,
-  removeTimeSignature,
-  offsetXToSnappedTick,
-  playheadTicks,
-} = injectedValue;
+  tpqn,
+  playheadPosition,
+  sequencerZoomX,
+  offset: computed(() => props.offset),
+  numMeasures: computed(() => props.numMeasures),
+});
+
+// ストアアクション
+const setTempo = (tempo: Tempo) => {
+  void store.dispatch("COMMAND_SET_TEMPO", { tempo });
+};
+
+const removeTempo = (position: number) => {
+  void store.dispatch("COMMAND_REMOVE_TEMPO", { position });
+};
+
+const setTimeSignature = (timeSignature: TimeSignature) => {
+  void store.dispatch("COMMAND_SET_TIME_SIGNATURE", { timeSignature });
+};
+
+const removeTimeSignature = (measureNumber: number) => {
+  void store.dispatch("COMMAND_REMOVE_TIME_SIGNATURE", { measureNumber });
+};
+
+const setPlayheadPosition = (ticks: number) => {
+  void store.dispatch("SET_PLAYHEAD_POSITION", { position: ticks });
+};
 
 const valueChange = ref<ValueChange | null>(null);
 
@@ -101,7 +129,7 @@ const valueChanges = computed<ValueChange[]>(() => {
         text,
         tempoChange: tempo,
         timeSignatureChange: timeSignature,
-        x: (width.value / endTicks.value) * tick,
+        x: (rulerWidth.value / endTicks.value) * tick,
       };
     });
 });
@@ -115,11 +143,17 @@ const onValueChangeClick = async (
   // 再生位置を変更
   if (newValueChange) {
     // テキストクリック時は、そのvalueChangeの位置へ移動
-    emit("setPlayheadPosition", newValueChange.position);
+    setPlayheadPosition(newValueChange.position);
   } else {
     // 空き部分クリック時は、クリック位置から計算してスナップ位置に合わせる
-    const snappedTick = offsetXToSnappedTick(event.offsetX);
-    emit("setPlayheadPosition", snappedTick);
+    const snappedTick = offsetXToSnappedTick(
+      event.offsetX,
+      props.offset,
+      sequencerZoomX.value,
+      timeSignatures.value,
+      tpqn.value,
+    );
+    setPlayheadPosition(snappedTick);
   }
   valueChange.value = newValueChange;
 };
@@ -280,7 +314,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
         }).onOk((result: { tempoChange: Omit<Tempo, "position"> }) => {
           setTempo({
             ...result.tempoChange,
-            position: playheadTicks.value,
+            position: playheadPosition.value,
           });
         });
       },
@@ -304,7 +338,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
             setTimeSignature({
               ...result.timeSignatureChange,
               measureNumber: tickToMeasureNumber(
-                playheadTicks.value,
+                playheadPosition.value,
                 timeSignatures.value,
                 tpqn.value,
               ),

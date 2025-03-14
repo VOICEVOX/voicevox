@@ -1,7 +1,7 @@
 <template>
   <Presentation
-    :width
-    :offset
+    :width="rulerWidth"
+    :offset="props.offset"
     :loopStartX
     :loopEndX
     :isLoopEnabled
@@ -19,34 +19,49 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onUnmounted, inject } from "vue";
-import { sequencerRulerInjectionKey } from "../Container.vue";
+import { computed, ref, onUnmounted } from "vue";
 import Presentation from "./Presentation.vue";
+import { useStore } from "@/store";
+import { useSequencerLayout } from "@/composables/useSequencerLayout";
+import { offsetXToSnappedTick, ticksToSnappedBeat } from "@/sing/rulerHelper";
 import { getMeasureDuration } from "@/sing/domain";
 import { ContextMenuItemData } from "@/components/Menu/ContextMenu/Presentation.vue";
-import { UnreachableError } from "@/type/utility";
-const injectedValue = inject(sequencerRulerInjectionKey);
-if (injectedValue == undefined) {
-  throw new Error("injectedValue is undefined.");
-}
 
-const {
-  offset,
-  width,
-  endTicks,
-  tsPositions,
-  loopStartTick,
-  loopEndTick,
-  isLoopEnabled,
-  tpqn,
+defineOptions({
+  name: "LoopLaneContainer",
+});
+
+const props = withDefaults(
+  defineProps<{
+    offset?: number;
+    numMeasures?: number;
+  }>(),
+  {
+    offset: 0,
+    numMeasures: 32,
+  },
+);
+
+const store = useStore();
+
+// 基本的な値
+const tpqn = computed(() => store.state.tpqn);
+const timeSignatures = computed(() => store.state.timeSignatures);
+const sequencerZoomX = computed(() => store.state.sequencerZoomX);
+const playheadPosition = computed(() => store.getters.PLAYHEAD_POSITION);
+const loopStartTick = computed(() => store.state.loopStartTick);
+const loopEndTick = computed(() => store.state.loopEndTick);
+const isLoopEnabled = computed(() => store.state.isLoopEnabled);
+
+// useSequencerLayoutを使用してレイアウト計算を行う
+const { rulerWidth, tsPositions, endTicks } = useSequencerLayout({
   timeSignatures,
-  offsetXToSnappedTick,
-  ticksToSnappedBeat,
-  setLoopRange,
-  clearLoopRange,
-  setLoopEnabled,
-  setPlayheadPosition,
-} = injectedValue;
+  tpqn,
+  playheadPosition,
+  sequencerZoomX,
+  offset: computed(() => props.offset),
+  numMeasures: computed(() => props.numMeasures),
+});
 
 // クリック位置
 const clickX = ref(0);
@@ -75,11 +90,11 @@ const currentLoopEndTick = computed(() =>
 
 // ループのX座標を計算
 const loopStartX = computed(() =>
-  Math.round((width.value / endTicks.value) * currentLoopStartTick.value),
+  Math.round((rulerWidth.value / endTicks.value) * currentLoopStartTick.value),
 );
 
 const loopEndX = computed(() =>
-  Math.round((width.value / endTicks.value) * currentLoopEndTick.value),
+  Math.round((rulerWidth.value / endTicks.value) * currentLoopEndTick.value),
 );
 
 // ループが空かどうか
@@ -96,6 +111,23 @@ const cursorClass = computed(() => {
       return "";
   }
 });
+
+// ストアアクション
+const setLoopRange = (start: number, end: number) => {
+  void store.actions.SET_LOOP_RANGE({ loopStartTick: start, loopEndTick: end });
+};
+
+const clearLoopRange = () => {
+  void store.actions.CLEAR_LOOP_RANGE();
+};
+
+const setLoopEnabled = (enabled: boolean) => {
+  void store.actions.SET_LOOP_ENABLED({ isLoopEnabled: enabled });
+};
+
+const setPlayheadPosition = (ticks: number) => {
+  void store.actions.SET_PLAYHEAD_POSITION({ position: ticks });
+};
 
 // ループ範囲部をクリックで有効/無効をトグル
 const handleLoopRangeClick = () => {
@@ -130,7 +162,13 @@ const handleLoopAreaMouseDown = (event: MouseEvent) => {
     previewRequestId = null;
   }
 
-  const tick = offsetXToSnappedTick(clickX);
+  const tick = offsetXToSnappedTick(
+    clickX,
+    props.offset,
+    sequencerZoomX.value,
+    timeSignatures.value,
+    tpqn.value,
+  );
 
   // クリック位置をループ範囲の開始/終了に設定
   previewLoopStartTick.value = tick;
@@ -194,14 +232,14 @@ const preview = () => {
     // ドラッグ中のハンドル位置
     const newX = dragStartHandleX.value + dx;
     // ドラッグ中の新しいtick
-    const baseTick = Math.round((endTicks.value * newX) / width.value);
+    const baseTick = Math.round((endTicks.value * newX) / rulerWidth.value);
     const newTick = Math.max(
       0,
       ticksToSnappedBeat(baseTick, timeSignatures.value, tpqn.value),
     );
 
     try {
-      // 開始ハンドルのドラッグ
+      // ドラッグ対象がループの開始か終了かによって処理を分ける
       if (dragTarget.value === "start") {
         if (newTick <= previewLoopEndTick.value) {
           previewLoopStartTick.value = newTick;
@@ -213,9 +251,7 @@ const preview = () => {
           dragStartX.value = event.clientX;
           dragStartHandleX.value = newX;
         }
-      }
-      // 終了ハンドルのドラッグ
-      if (dragTarget.value === "end") {
+      } else if (dragTarget.value === "end") {
         if (newTick >= previewLoopStartTick.value) {
           previewLoopEndTick.value = newTick;
         } else {
@@ -234,12 +270,10 @@ const preview = () => {
 
   if (isDragging.value) {
     previewRequestId = requestAnimationFrame(preview);
-  } else {
-    previewRequestId = null;
   }
 };
 
-// ドラッグ終了処理
+// ドラッグ終了
 const stopDragging = () => {
   if (!isDragging.value) return;
 
@@ -267,7 +301,7 @@ const stopDragging = () => {
     // 有効なら再生ヘッドをスタートへ
     setPlayheadPosition(previewLoopStartTick.value);
   } catch (error) {
-    throw new UnreachableError("Failed to set loop range");
+    throw new Error("Failed to set loop range", { cause: error });
   }
 };
 
@@ -312,7 +346,13 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => [
 
 // クリック位置から1小節ぶんのループ範囲を作成
 const addOneMeasureLoop = (localX: number) => {
-  const snappedTick = offsetXToSnappedTick(localX);
+  const snappedTick = offsetXToSnappedTick(
+    localX,
+    props.offset,
+    sequencerZoomX.value,
+    timeSignatures.value,
+    tpqn.value,
+  );
   // そのTick時点にある拍子情報を取得
   const currentTs = timeSignatures.value.findLast((_, idx) => {
     return tsPositions.value[idx] <= snappedTick;
@@ -325,9 +365,19 @@ const addOneMeasureLoop = (localX: number) => {
     tpqn.value,
   );
 
-  const startTick = offsetXToSnappedTick(localX);
+  const startTick = offsetXToSnappedTick(
+    localX,
+    props.offset,
+    sequencerZoomX.value,
+    timeSignatures.value,
+    tpqn.value,
+  );
   const endTick = Math.min(
-    offsetXToSnappedTick(localX + oneMeasureTicks),
+    ticksToSnappedBeat(
+      startTick + oneMeasureTicks,
+      timeSignatures.value,
+      tpqn.value,
+    ),
     endTicks.value,
   );
 
