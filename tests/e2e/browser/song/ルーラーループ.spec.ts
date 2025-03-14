@@ -10,14 +10,14 @@ test("ループ範囲をドラッグして追加できる", async ({ page }) => 
 
   // レーンの親要素を取得
   const loopLane = page.locator(".sequencer-ruler-loop .loop-lane");
-  
+
   // 初期状態ではループが存在しないことを確認
   const initialLoopRange = loopLane.locator(".loop-range");
   await expect(initialLoopRange).toHaveCount(0);
-  
+
   const startPos = { x: 100, y: 5 };
   const endPos = { x: 200, y: 5 };
-  
+
   // ドラッグをエミュレート startPos から endPos までドラッグ
   // NOTE: 正しい方法があれば修正
   await loopLane.hover({ position: startPos });
