@@ -1,6 +1,6 @@
 import { test, expect, Locator, Page } from "@playwright/test";
 
-import { gotoHome, navigateToMain } from "../navigators";
+import { gotoHome, navigateToSong } from "../navigators";
 
 test.beforeEach(gotoHome);
 
@@ -27,7 +27,7 @@ async function getCenter(locator: Locator) {
 
 test("テキストの追加・入れ替え・削除", async ({ page }) => {
   // デフォルトでaudioCellは一つなのを確認
-  await navigateToMain(page);
+  await navigateToSong(page);
   await expect(
     page.getByRole("button").filter({ hasText: "add" }),
   ).toBeVisible();
