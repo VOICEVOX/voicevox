@@ -3228,12 +3228,38 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           const { id, ...noteWithoutId } = note;
           return noteWithoutId;
         });
-      // ノートをJSONにシリアライズしてクリップボードにコピーする
-      const serializedNotes = JSON.stringify(selectedNotes);
-      // クリップボードにテキストとしてコピーする
-      // NOTE: Electronのclipboardも使用する必要ある？
-      await navigator.clipboard.writeText(serializedNotes);
-      logger.info("Copied to clipboard.", serializedNotes);
+
+      // MIMEタイプとしてapplication/jsonとtext/plainを使用してクリップボードにコピーする
+      // web application/vnd.voicevox.song-notes - VOICEVOXでのノート構造を保持してペーストできる
+      // text/plain - 歌詞テキストだけを内部または他のエディタなどで利用できるようにする
+      // web形式からはじまる形式はChromeのみでサポートされている
+      // https://developer.chrome.com/blog/web-custom-formats-for-the-async-clipboard-api?hl=ja
+      try {
+        // 歌詞のみのテキストのコピーとしてノートのテキストを結合
+        const lyricText = selectedNotes.map((note) => note.lyric).join("");
+        // VOICEVOXのノートのペースト用としてノートをJSONにシリアライズ
+        const serializedNotes = JSON.stringify(selectedNotes);
+        // ノートコピー＆ペースト用のカスタムMIMEタイプ
+        const customMimeType = "web application/vnd.voicevox.song-notes";
+        const serializedNotesBlob = new Blob([serializedNotes], {
+          type: customMimeType,
+        });
+        const lyricTextBlob = new Blob([lyricText], {
+          type: "text/plain",
+        });
+        const clipboardItems = [
+          new ClipboardItem({
+            // VOICEVOXのノートのペースト用
+            [customMimeType]: serializedNotesBlob,
+            // 歌詞のみのテキストのコピー用
+            "text/plain": lyricTextBlob,
+          }),
+        ];
+        await navigator.clipboard.write(clipboardItems);
+        logger.info("Copied to clipboard.", serializedNotes);
+      } catch (e) {
+        logger.error("Failed to copy notes to clipboard.", e);
+      }
     },
   },
 
@@ -3246,13 +3272,42 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   COMMAND_PASTE_NOTES_FROM_CLIPBOARD: {
     async action({ mutations, state, getters, actions }) {
-      // クリップボードからテキストを読み込む
       let clipboardText;
+
+      // クリップボードからテキストを読み込む
+      // 優先順位はVOICEVOXのノートのペースト用のカスタムMIMEタイプ > 通常のテキスト
       try {
-        clipboardText = await navigator.clipboard.readText();
-      } catch (error) {
-        throw new Error("Failed to read the clipboard text.", {
-          cause: error,
+        const clipboardItems = await navigator.clipboard.read();
+        // カスタムMIMEタイプのデータを読み込む
+        const customMimeType = "web application/vnd.voicevox.song-notes";
+        // クリップボードアイテムからカスタムMIMEタイプのデータを探す
+        for (const item of clipboardItems) {
+          if (item.types.includes(customMimeType)) {
+            const blob = await item.getType(customMimeType);
+            clipboardText = await blob.text();
+            break;
+          }
+        }
+
+        // カスタムMIMEタイプが見つからない場合は通常のテキストを試す
+        if (!clipboardText) {
+          for (const item of clipboardItems) {
+            if (item.types.includes("text/plain")) {
+              const blob = await item.getType("text/plain");
+              clipboardText = await blob.text();
+              break;
+            }
+          }
+        }
+
+        // データが取得できなかった場合はなにもしない
+        if (!clipboardText) {
+          logger.info("No valid data found in clipboard");
+          return;
+        }
+      } catch (e) {
+        throw new Error("Failed to paste notes from clipboard.", {
+          cause: e,
         });
       }
 
