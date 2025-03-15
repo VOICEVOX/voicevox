@@ -2,14 +2,14 @@
  * OSに合ったtyposのバイナリをダウンロードするスクリプト。
  */
 import { exec } from "child_process";
-import { promisify } from "util";
-import { platform, arch } from "os";
-import { join } from "path";
 import fsSync from "fs";
 import fs from "fs/promises";
+import { arch, platform } from "os";
+import { join } from "path";
 import { Readable } from "stream";
-import { ReadableStream } from "stream/web";
 import { pipeline } from "stream/promises";
+import { ReadableStream } from "stream/web";
+import { promisify } from "util";
 import { retryFetch } from "./helper.mjs";
 
 // OS名を定義するオブジェクト
