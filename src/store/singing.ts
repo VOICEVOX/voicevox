@@ -3229,36 +3229,45 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           return noteWithoutId;
         });
 
+      // 歌詞のみのテキストのコピーとしてノートのテキストを結合
+      const lyricText = selectedNotes.map((note) => note.lyric).join("");
+      // VOICEVOXのノートのペースト用としてノートをJSONにシリアライズ
+      const serializedNotes = JSON.stringify(selectedNotes);
+
       // MIMEタイプとしてapplication/jsonとtext/plainを使用してクリップボードにコピーする
       // web application/vnd.voicevox.song-notes - VOICEVOXでのノート構造を保持してペーストできる
       // text/plain - 歌詞テキストだけを内部または他のエディタなどで利用できるようにする
       // web形式からはじまる形式はChromeのみでサポートされている
       // https://developer.chrome.com/blog/web-custom-formats-for-the-async-clipboard-api?hl=ja
       try {
-        // 歌詞のみのテキストのコピーとしてノートのテキストを結合
-        const lyricText = selectedNotes.map((note) => note.lyric).join("");
-        // VOICEVOXのノートのペースト用としてノートをJSONにシリアライズ
-        const serializedNotes = JSON.stringify(selectedNotes);
         // ノートコピー＆ペースト用のカスタムMIMEタイプ
         const customMimeType = "web application/vnd.voicevox.song-notes";
-        const serializedNotesBlob = new Blob([serializedNotes], {
-          type: customMimeType,
-        });
-        const lyricTextBlob = new Blob([lyricText], {
-          type: "text/plain",
-        });
         const clipboardItems = [
           new ClipboardItem({
             // VOICEVOXのノートのペースト用
-            [customMimeType]: serializedNotesBlob,
+            [customMimeType]: new Blob([serializedNotes], {
+              type: customMimeType,
+            }),
             // 歌詞のみのテキストのコピー用
-            "text/plain": lyricTextBlob,
+            "text/plain": new Blob([lyricText], { type: "text/plain" }),
           }),
         ];
         await navigator.clipboard.write(clipboardItems);
-        logger.info("Copied to clipboard.", serializedNotes);
+        logger.info(
+          "Copied to clipboard with custom MIME type.",
+          serializedNotes,
+        );
       } catch (e) {
-        logger.error("Failed to copy notes to clipboard.", e);
+        // カスタムMIMEタイプがサポートされていないブラウザの場合はフォールバック
+        try {
+          await navigator.clipboard.writeText(serializedNotes);
+          logger.info("Fallback to plain text.", e);
+          logger.info("Copied to clipboard as plain text", serializedNotes);
+        } catch (e) {
+          throw new Error("Failed to copy notes to clipboard.", {
+            cause: e,
+          });
+        }
       }
     },
   },
