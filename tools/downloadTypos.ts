@@ -4,7 +4,7 @@
 import { exec } from "child_process";
 import { promisify } from "util";
 import { platform, arch } from "os";
-import { join, resolve } from "path";
+import { join } from "path";
 import fsSync from "fs";
 import fs from "fs/promises";
 import { Readable } from "stream";
@@ -24,9 +24,9 @@ const CPU_ARCHITECTURE = {
   ARM: "aarch64",
 };
 // ダウンロードしたバイナリを格納するディレクトリ
-const BINARY_BASE_PATH = resolve(import.meta.dirname, "..", "vendored");
+const BINARY_BASE_PATH = join(import.meta.dirname, "..", "vendored");
 // typosのバイナリを格納するディレクトリ
-const TYPOS_DIRECTORY_PATH = resolve(BINARY_BASE_PATH, "typos");
+const TYPOS_DIRECTORY_PATH = join(BINARY_BASE_PATH, "typos");
 // typosのバージョンを保存しておくテキストファイル
 const TYPOS_VERSION_FILE_NAME = "version.txt";
 
@@ -118,10 +118,7 @@ async function shouldDownloadTypos(): Promise<boolean> {
   }
 
   // TYPOS_BINARY_PATHが存在する場合、typosのバージョンをチェック
-  const versionFilePath = resolve(
-    TYPOS_DIRECTORY_PATH,
-    TYPOS_VERSION_FILE_NAME,
-  );
+  const versionFilePath = join(TYPOS_DIRECTORY_PATH, TYPOS_VERSION_FILE_NAME);
   if (!(await exists(versionFilePath))) {
     return true;
   }
@@ -146,7 +143,7 @@ async function prepareTyposDirectory() {
   if (await exists(TYPOS_DIRECTORY_PATH)) {
     const files = await fs.readdir(TYPOS_DIRECTORY_PATH);
     await Promise.all(
-      files.map((file) => fs.unlink(resolve(TYPOS_DIRECTORY_PATH, file))),
+      files.map((file) => fs.unlink(join(TYPOS_DIRECTORY_PATH, file))),
     );
   } else {
     // 無い場合は新規作成する
@@ -207,10 +204,7 @@ async function downloadAndUnarchive({ url }: { url: string }) {
   }
 
   // typosのバージョンを保存
-  const versionFilePath = resolve(
-    TYPOS_DIRECTORY_PATH,
-    TYPOS_VERSION_FILE_NAME,
-  );
+  const versionFilePath = join(TYPOS_DIRECTORY_PATH, TYPOS_VERSION_FILE_NAME);
   await fs.writeFile(versionFilePath, TYPOS_VERSION);
 
   // 解凍後に圧縮ファイルを削除
