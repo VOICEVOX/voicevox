@@ -97,6 +97,7 @@ export type Refs = {
   >;
   readonly cursorState: Ref<CursorState>;
   readonly guideLineTicks: Ref<number>;
+  enableAutoScrollDuringDrag: Ref<boolean>;
 };
 
 export type PartialStore = {
