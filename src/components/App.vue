@@ -3,9 +3,11 @@
     <TooltipProvider disableHoverableContent :delayDuration="500">
       <MenuBar
         v-if="openedEditor != undefined"
-        :fileSubMenuData="subMenuData.fileSubMenuData.value"
-        :editSubMenuData="subMenuData.editSubMenuData.value"
-        :viewSubMenuData="subMenuData.viewSubMenuData.value"
+        :fileSubMenuData="subMenuData.file"
+        :editSubMenuData="subMenuData.edit"
+        :viewSubMenuData="subMenuData.view"
+        :engineSubMenuData="subMenuData.engine"
+        :settingSubMenuData="subMenuData.setting"
         :editor="openedEditor"
       />
       <KeepAlive>
@@ -37,22 +39,29 @@ import MenuBar from "@/components/Menu/MenuBar/MenuBar.vue";
 import { useMenuBarData as useTalkMenuBarData } from "@/components/Talk/menuBarData";
 import { useMenuBarData as useSingMenuBarData } from "@/components/Sing/menuBarData";
 import { setFontToCss, setThemeToCss } from "@/domain/dom";
-import { ExhaustiveError } from "@/type/utility";
+import { useCommonMenuBarData } from "@/domain/menuBarData";
+import { concatMenuBarData } from "@/domain/menuBarData";
+import { isElectron } from "@/helpers/platform";
+import { useElectronMenuBarData } from "@/backend/electron/renderer/menuBarData";
+import { removeNullableAndBoolean } from "@/helpers/arrayHelper";
 
 const store = useStore();
 
-const talkMenuBarData = useTalkMenuBarData();
-const singMenuBarData = useSingMenuBarData();
+const commonMenuBarData = useCommonMenuBarData(store);
+const talkMenuBarData = useTalkMenuBarData(store);
+const singMenuBarData = useSingMenuBarData(store);
+const electronMenuBarData = useElectronMenuBarData(store);
 
-const subMenuData = computed(() => {
-  if (openedEditor.value === "talk" || openedEditor.value == undefined) {
-    return talkMenuBarData;
-  } else if (openedEditor.value === "song") {
-    return singMenuBarData;
-  }
-
-  throw new ExhaustiveError(openedEditor.value);
-});
+const subMenuData = computed(() =>
+  concatMenuBarData(
+    removeNullableAndBoolean([
+      commonMenuBarData,
+      store.state.openedEditor === "talk" && talkMenuBarData,
+      store.state.openedEditor === "song" && singMenuBarData,
+      isElectron && electronMenuBarData,
+    ]),
+  ),
+);
 
 const openedEditor = computed(() => store.state.openedEditor);
 
