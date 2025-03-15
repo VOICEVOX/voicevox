@@ -1,11 +1,11 @@
 import { test, expect } from "@playwright/test";
 
-import { gotoHome, navigateToMain } from "../navigators";
+import { gotoHome, navigateToTalk, navigateToSong } from "../navigators";
 
 test.beforeEach(gotoHome);
 
 test("アクセント分割したらアクセント区間が増える", async ({ page }) => {
-  await navigateToMain(page);
+  await navigateToSong(page);
   await expect(page.locator(".audio-cell").first()).toBeVisible();
   await page.locator(".audio-cell input").first().fill("こんにちは");
   await page.locator(".audio-cell input").first().press("Enter");
@@ -19,7 +19,7 @@ test("アクセント分割したらアクセント区間が増える", async ({
 test("アクセントの読み部分をクリックすると読みを変更できる", async ({
   page,
 }) => {
-  await navigateToMain(page);
+  await navigateToTalk(page);
 
   await page.getByRole("textbox", { name: "1行目" }).click();
   await page.getByRole("textbox", { name: "1行目" }).fill("テストです");

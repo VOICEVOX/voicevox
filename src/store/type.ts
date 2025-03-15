@@ -1912,9 +1912,7 @@ export type SettingStoreState = {
   experimentalSetting: ExperimentalSettingType;
   confirmedTips: ConfirmedTips;
   engineSettings: EngineSettings;
-} & Omit<RootMiscSettingType, "openedEditor"> & {
-    openedEditor: EditorType | undefined; // undefinedのときはどのエディタを開くか定まっていない
-  };
+} & RootMiscSettingType;
 
 // keyとvalueの型を連動するようにしたPayloadを作る
 type KeyValuePayload<R, K extends keyof R = keyof R> = K extends keyof R
@@ -2035,6 +2033,7 @@ export type DialogStates = {
   isUpdateNotificationDialogOpen: boolean;
   isExportSongAudioDialogOpen: boolean;
   isImportSongProjectDialogOpen: boolean;
+  isInitialSettingsDialogOpen: boolean;
 };
 
 export type UiStoreTypes = {
