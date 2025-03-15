@@ -879,6 +879,37 @@ export type SongExportState =
   | "EXPORTING_LABEL"
   | "NOT_EXPORTING";
 
+export type PreviewSynthOscParams =
+  | {
+      type: "sawtooth" | "sine" | "square" | "triangle";
+    }
+  | {
+      type: "custom";
+      oddHarmonicsAmount: number;
+      evenHarmonicsAmount: number;
+    };
+
+export type PreviewSynthFilterParams = {
+  cutoff: number;
+  resonance: number;
+  keyTrack: number;
+};
+
+export type PreviewSynthAmpParams = {
+  attack: number;
+  decay: number;
+  sustain: number;
+  release: number;
+};
+
+export type PreviewSynthParams = {
+  oscParams: PreviewSynthOscParams;
+  filterParams: PreviewSynthFilterParams;
+  ampParams: PreviewSynthAmpParams;
+  lowCutFrequency: number;
+  volume: number;
+};
+
 export type SingingStoreState = {
   tpqn: number; // Ticks Per Quarter Note
   tempos: Tempo[];
@@ -907,6 +938,7 @@ export type SingingStoreState = {
   exportState: SongExportState;
   cancellationOfExportRequested: boolean;
   isSongSidebarOpen: boolean;
+  previewSynthParams: PreviewSynthParams;
 };
 
 export type SingingStoreTypes = {
@@ -1241,6 +1273,39 @@ export type SingingStoreTypes = {
 
   STOP_PREVIEW_SOUND: {
     action(payload: { noteNumber: number }): void;
+  };
+
+  SET_PREVIEW_SYNTH_OSC_PARAMS: {
+    mutation: { oscParams: PreviewSynthOscParams };
+    action(payload: { oscParams: PreviewSynthOscParams }): void;
+  };
+
+  SET_PREVIEW_SYNTH_FILTER_PARAMS: {
+    mutation: { filterParams: PreviewSynthFilterParams };
+    action(payload: { filterParams: PreviewSynthFilterParams }): void;
+  };
+
+  SET_PREVIEW_SYNTH_AMP_PARAMS: {
+    mutation: { ampParams: PreviewSynthAmpParams };
+    action(payload: { ampParams: PreviewSynthAmpParams }): void;
+  };
+
+  SET_PREVIEW_SYNTH_LOW_CUT_FREQUENCY: {
+    mutation: { lowCutFrequency: number };
+    action(payload: { lowCutFrequency: number }): void;
+  };
+
+  SET_PREVIEW_SYNTH_VOLUME: {
+    mutation: { volume: number };
+    action(payload: { volume: number }): void;
+  };
+
+  REFLECT_PREVIEW_SYNTH_PARAMS: {
+    action(): void;
+  };
+
+  DEFAULT_PREVIEW_SYNTH_PARAMS: {
+    getter: Readonly<PreviewSynthParams>;
   };
 
   SET_START_RENDERING_REQUESTED: {

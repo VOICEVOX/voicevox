@@ -250,6 +250,7 @@ import ContextMenu, {
 import { useStore } from "@/store";
 import { Note } from "@/store/type";
 import {
+  PREVIEW_SOUND_DURATION_SECONDS,
   getEndTicksOfPhrase,
   getMeasureDuration,
   getNoteDuration,
@@ -269,7 +270,6 @@ import {
   ZOOM_Y_MIN,
   ZOOM_Y_MAX,
   ZOOM_Y_STEP,
-  PREVIEW_SOUND_DURATION,
   getKeyBaseHeight,
 } from "@/sing/viewHelper";
 import SequencerGrid from "@/components/Sing/SequencerGrid/Container.vue";
@@ -675,7 +675,7 @@ const handleNotesArrowUp = () => {
   if (editedNotes.length === 1) {
     void store.actions.PLAY_PREVIEW_SOUND({
       noteNumber: editedNotes[0].noteNumber,
-      duration: PREVIEW_SOUND_DURATION,
+      duration: PREVIEW_SOUND_DURATION_SECONDS,
     });
   }
 };
@@ -697,7 +697,7 @@ const handleNotesArrowDown = () => {
   if (editedNotes.length === 1) {
     void store.actions.PLAY_PREVIEW_SOUND({
       noteNumber: editedNotes[0].noteNumber,
-      duration: PREVIEW_SOUND_DURATION,
+      duration: PREVIEW_SOUND_DURATION_SECONDS,
     });
   }
 };
