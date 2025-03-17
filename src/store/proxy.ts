@@ -64,6 +64,13 @@ function createValidateOpenApiResponse() {
   };
 }
 
+/**
+ * OpenAPIのスキーマを修正する。
+ *
+ * 具体的には以下の変更を行う：
+ * - `$ref`の参照先を`#/components/schemas/`から`openapi.json#/definitions/`に変更する
+ * - オブジェクトのプロパティ名をキャメルケースに変換する
+ */
 function patchOpenApiJson<T extends Record<string, unknown>>(schema: T): T {
   return inner(cloneWithUnwrapProxy(schema)) as T;
 
