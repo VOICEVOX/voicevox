@@ -19,52 +19,54 @@ export const useElectronMenuBarData = (
 
   // 「エンジン」メニューのエンジン毎の項目
   const engineSubMenuData = computed<MenuBarContent["engine"]>(() => {
-    const singleEngineSubMenuData: MenuItemData[] =
-      Object.values(engineInfos.value).length === 1
-        ? [
+    let singleEngineSubMenuData: MenuItemData[];
+    if (Object.values(engineInfos.value).length === 1) {
+      singleEngineSubMenuData = [
+        {
+          type: "button",
+          label: "再起動",
+          onClick: () => {
+            void store.actions.RESTART_ENGINES({
+              engineIds: [engineIds.value[0]],
+            });
+          },
+          disableWhenUiLocked: false,
+        },
+      ];
+    } else {
+      singleEngineSubMenuData = store.getters.GET_SORTED_ENGINE_INFOS.map(
+        (engineInfo): MenuItemData => ({
+          type: "root",
+          label: engineInfo.name,
+          icon:
+            engineManifests.value[engineInfo.uuid] &&
+            engineIcons.value[engineInfo.uuid],
+          disableWhenUiLocked: false,
+          subMenu: removeNullableAndBoolean([
+            engineInfo.path != "" && {
+              type: "button",
+              label: "フォルダを開く",
+              onClick: () => {
+                void store.actions.OPEN_ENGINE_DIRECTORY({
+                  engineId: engineInfo.uuid,
+                });
+              },
+              disableWhenUiLocked: false,
+            },
             {
               type: "button",
               label: "再起動",
               onClick: () => {
                 void store.actions.RESTART_ENGINES({
-                  engineIds: [engineIds.value[0]],
+                  engineIds: [engineInfo.uuid],
                 });
               },
               disableWhenUiLocked: false,
             },
-          ]
-        : store.getters.GET_SORTED_ENGINE_INFOS.map(
-            (engineInfo): MenuItemData => ({
-              type: "root",
-              label: engineInfo.name,
-              icon:
-                engineManifests.value[engineInfo.uuid] &&
-                engineIcons.value[engineInfo.uuid],
-              disableWhenUiLocked: false,
-              subMenu: removeNullableAndBoolean([
-                engineInfo.path != "" && {
-                  type: "button",
-                  label: "フォルダを開く",
-                  onClick: () => {
-                    void store.actions.OPEN_ENGINE_DIRECTORY({
-                      engineId: engineInfo.uuid,
-                    });
-                  },
-                  disableWhenUiLocked: false,
-                },
-                {
-                  type: "button",
-                  label: "再起動",
-                  onClick: () => {
-                    void store.actions.RESTART_ENGINES({
-                      engineIds: [engineInfo.uuid],
-                    });
-                  },
-                  disableWhenUiLocked: false,
-                },
-              ]),
-            }),
-          );
+          ]),
+        }),
+      );
+    }
 
     const allEnginesSubMenuData = enableMultiEngine.value
       ? removeNullableAndBoolean<MenuItemData>([
