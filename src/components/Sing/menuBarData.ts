@@ -99,17 +99,14 @@ export const useMenuBarData = (store: Store): MaybeComputedMenuBarContent => {
             ["ufdata", "Utaformatix"],
             ["ust", "UTAU"],
           ] satisfies [fileType: ExportSongProjectFileType, label: string][]
-        ).map(
-          ([fileType, label]) =>
-            ({
-              type: "button",
-              label,
-              onClick: () => {
-                void exportSongProject(fileType, label);
-              },
-              disableWhenUiLocked: true,
-            }) satisfies MenuItemData,
-        ),
+        ).map(([fileType, label]) => ({
+          type: "button",
+          label,
+          onClick: () => {
+            void exportSongProject(fileType, label);
+          },
+          disableWhenUiLocked: true,
+        })),
         disableWhenUiLocked: true,
       },
     ],

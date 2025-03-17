@@ -102,56 +102,53 @@ watch(titleText, (newTitle) => {
   window.document.title = newTitle;
 });
 
-const menudata = computed<(MenuItemButton | MenuItemRoot)[]>(
-  () =>
-    [
-      {
-        type: "root",
-        label: "ファイル",
-        subMenu: props.fileSubMenuData,
-        disabled: props.fileSubMenuData.length === 0,
-        disableWhenUiLocked: false,
-      },
-      {
-        type: "root",
-        label: "編集",
-        subMenu: props.editSubMenuData,
-        disabled: props.editSubMenuData.length === 0,
-        disableWhenUiLocked: false,
-      },
-      {
-        type: "root",
-        label: "表示",
-        subMenu: props.viewSubMenuData,
-        disabled: props.viewSubMenuData.length === 0,
-        disableWhenUiLocked: false,
-      },
-      {
-        type: "root",
-        label: "エンジン",
-        subMenu: props.engineSubMenuData,
-        disabled: props.engineSubMenuData.length === 0,
-        disableWhenUiLocked: false,
-      },
-      {
-        type: "root",
-        label: "設定",
-        subMenu: props.settingSubMenuData,
-        disabled: props.settingSubMenuData.length === 0,
-        disableWhenUiLocked: false,
-      },
-      {
-        type: "button",
-        label: "ヘルプ",
-        onClick: () => {
-          Dialog.create({
-            component: HelpDialog,
-          });
-        },
-        disableWhenUiLocked: false,
-      },
-    ] satisfies MenuItemData[],
-);
+const menudata = computed<(MenuItemButton | MenuItemRoot)[]>(() => [
+  {
+    type: "root",
+    label: "ファイル",
+    subMenu: props.fileSubMenuData,
+    disabled: props.fileSubMenuData.length === 0,
+    disableWhenUiLocked: false,
+  },
+  {
+    type: "root",
+    label: "編集",
+    subMenu: props.editSubMenuData,
+    disabled: props.editSubMenuData.length === 0,
+    disableWhenUiLocked: false,
+  },
+  {
+    type: "root",
+    label: "表示",
+    subMenu: props.viewSubMenuData,
+    disabled: props.viewSubMenuData.length === 0,
+    disableWhenUiLocked: false,
+  },
+  {
+    type: "root",
+    label: "エンジン",
+    subMenu: props.engineSubMenuData,
+    disabled: props.engineSubMenuData.length === 0,
+    disableWhenUiLocked: false,
+  },
+  {
+    type: "root",
+    label: "設定",
+    subMenu: props.settingSubMenuData,
+    disabled: props.settingSubMenuData.length === 0,
+    disableWhenUiLocked: false,
+  },
+  {
+    type: "button",
+    label: "ヘルプ",
+    onClick: () => {
+      Dialog.create({
+        component: HelpDialog,
+      });
+    },
+    disableWhenUiLocked: false,
+  },
+]);
 
 // メニュー一覧
 const subMenuOpenFlags = ref(

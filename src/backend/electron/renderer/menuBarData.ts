@@ -31,7 +31,7 @@ export const useElectronMenuBarData = (
                 });
               },
               disableWhenUiLocked: false,
-            } satisfies MenuItemData,
+            },
           ]
         : store.getters.GET_SORTED_ENGINE_INFOS.map(
             (engineInfo): MenuItemData => ({
