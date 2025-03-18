@@ -36,7 +36,7 @@
                     {{ characterInfo.metas.speakerName }}
                   </h1>
                   <section class="section">
-                    <h2 class="headline">スタイル</h2>
+                    <h2 class="headline">デフォルトスタイル</h2>
                     <div>
                       デフォルトスタイル：{{
                         characterInfo.metas.styles[selectedStyleIndex].styleName
