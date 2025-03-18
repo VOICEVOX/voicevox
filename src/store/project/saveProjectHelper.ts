@@ -53,7 +53,7 @@ export async function writeProjectFile(
   const buf = new TextEncoder().encode(JSON.stringify(projectData)).buffer;
   const result = await window.backend.writeFile({
     filePath,
-    buffer: buf,
+    buffer: new Uint8Array(buf),
   });
   if (!result.ok) {
     throw new DisplayableError("ファイルの保存に失敗しました。", {
