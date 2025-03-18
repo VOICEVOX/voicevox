@@ -2497,11 +2497,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           }
         }
 
-        // 無くなったフレーズのシーケンスを削除する
+        // 無くなったフレーズのピッチなどのデータとシーケンスを削除する
         for (const phraseKey of disappearedPhraseKeys) {
           const phraseSequenceId = getPhraseSequenceId(phraseKey);
           if (phraseSequenceId != undefined) {
             deleteSequence(phraseSequenceId);
+          }
+          for (let i = stages.length - 1; i >= 0; i--) {
+            stages[i].deleteExecutionResult(phraseKey);
           }
         }
 
