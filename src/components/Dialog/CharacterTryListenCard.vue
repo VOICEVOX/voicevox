@@ -159,6 +159,7 @@ const rollStyleIndex = (speakerUuid: SpeakerId, diff: number) => {
 .style-select-container {
   display: grid;
   grid-template-columns: vars.$size-control 1fr vars.$size-control;
+  align-items: center;
   width: 100%;
   margin: auto;
 }
