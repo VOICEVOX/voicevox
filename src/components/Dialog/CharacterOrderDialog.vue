@@ -47,6 +47,7 @@
                 <div class="header">
                   <span class="title">キャラクター一覧</span>
                   <div class="header-controls">
+                    サンプル音声
                     <BaseToggleGroup v-model="styleType" type="single">
                       <BaseToggleGroupItem label="トーク" value="talk" />
                       <BaseToggleGroupItem label="ソング" value="singerLike" />
