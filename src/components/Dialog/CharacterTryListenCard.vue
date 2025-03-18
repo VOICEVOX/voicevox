@@ -4,19 +4,14 @@
       class="character-detail-button"
       @click="$emit('selectCharacter', speakerUuid)"
     >
-      <div class="character-detail">
-        <img
-          :src="selectedStyle.iconPath"
-          :alt="characterInfo.metas.speakerName"
-          class="style-icon"
-        />
-        <div class="info">
-          <QIcon class="info-icon" name="info_outline" />
-          <span class="info-label"> 詳細を表示 </span>
-        </div>
-      </div>
+      <img
+        :src="selectedStyle.iconPath"
+        :alt="characterInfo.metas.speakerName"
+        class="style-icon"
+      />
       <div class="speaker-name">{{ characterInfo.metas.speakerName }}</div>
     </button>
+    <hr class="line" />
     <div class="style-select-container">
       <BaseIconButton
         v-if="characterInfo.metas.styles.length > 1"
@@ -24,6 +19,7 @@
         label="前のスタイル"
         @click.stop="rollStyleIndex(speakerUuid, -1)"
       />
+      <div v-else></div>
       <BaseTooltip label="サンプルボイスを再生">
         <BaseButton
           :icon="
@@ -107,33 +103,27 @@ const rollStyleIndex = (speakerUuid: SpeakerId, diff: number) => {
   flex-direction: column;
   align-items: center;
   gap: vars.$gap-1;
-}
-
-.character-detail-button {
-  display: contents;
-  cursor: pointer;
-  color: inherit;
-}
-
-.character-detail-button:hover {
-  & .info > * {
-    opacity: 1;
-  }
-  & .style-icon {
-    opacity: 0.25;
-  }
-}
-
-.character-detail {
-  width: 100%;
-  height: 128px;
+  padding: vars.$padding-1;
   border: 1px solid colors.$border;
   background-color: colors.$surface;
   border-radius: vars.$radius-2;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  position: relative;
-  padding: 0;
-  overflow: hidden;
+}
+
+.character-detail-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: vars.$gap-1;
+  cursor: pointer;
+  width: 100%;
+  border-radius: vars.$radius-1;
+  border: none;
+  background-color: transparent;
+
+  &:hover {
+    background-color: colors.$clear-hovered;
+  }
 
   &:active {
     background-color: colors.$control-pressed;
@@ -143,33 +133,12 @@ const rollStyleIndex = (speakerUuid: SpeakerId, diff: number) => {
   &:focus-visible {
     @include mixin.on-focus;
   }
-
-  &:disabled {
-    opacity: 0.5;
-  }
 }
 
 .style-icon {
-  height: 100%;
+  height: 128px;
   aspect-ratio: 1 / 1;
-}
-
-.info {
-  position: absolute;
-  bottom: vars.$padding-1;
-  left: vars.$padding-1;
-  display: flex;
-  align-items: center;
-  gap: vars.$gap-1;
-}
-
-.info-icon {
-  font-size: 24px;
-  opacity: 0.5;
-}
-
-.info-label {
-  opacity: 0;
+  border-radius: vars.$radius-1;
 }
 
 .speaker-name {
@@ -179,11 +148,19 @@ const rollStyleIndex = (speakerUuid: SpeakerId, diff: number) => {
   line-height: 1;
 }
 
+.line {
+  height: 1px;
+  width: 100%;
+  background-color: colors.$border;
+  border: none;
+  margin: 0;
+}
+
 .style-select-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: vars.$size-control;
+  display: grid;
+  grid-template-columns: vars.$size-control 1fr vars.$size-control;
+  width: 100%;
+  margin: auto;
 }
 
 .new-character-item {
