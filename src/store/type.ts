@@ -1127,10 +1127,6 @@ export type SingingStoreTypes = {
     action(payload: { snapType: number }): void;
   };
 
-  SEQUENCER_NUM_MEASURES: {
-    getter: number;
-  };
-
   SET_ZOOM_X: {
     mutation: { zoomX: number };
     action(payload: { zoomX: number }): void;
