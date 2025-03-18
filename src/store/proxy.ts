@@ -1,7 +1,8 @@
-import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
+import Ajv, { JSONSchemaType, ValidateFunction } from "ajv";
 import openapi from "../../openapi.json";
 import { ProxyStoreState, ProxyStoreTypes, EditorAudioQuery } from "./type";
 import { createPartialStore } from "./vuex";
+import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { createEngineUrl } from "@/domain/url";
 import { isElectron, isProduction } from "@/helpers/platform";
 import {
@@ -11,7 +12,6 @@ import {
 } from "@/infrastructures/EngineConnector";
 import { AudioQuery, DefaultApiInterface } from "@/openapi";
 import { EngineInfo } from "@/type/preload";
-import Ajv, { ValidateFunction } from "ajv";
 
 export const proxyStoreState: ProxyStoreState = {};
 
@@ -30,9 +30,16 @@ function createValidateOpenApiResponse() {
   const validatorCache = new Map<string, ValidateFunction>();
 
   for (const path of Object.values(openapi.paths)) {
-    for (const method of Object.values(path)) {
-      const schema =
-        method.responses["200"]?.content?.["application/json"]?.schema;
+    for (const rawMethod of Object.values(path)) {
+      const method = rawMethod as {
+        operationId: string;
+        responses: Record<
+          string,
+          { content?: Record<string, { schema?: unknown }> }
+        >;
+      };
+      const schema = method.responses["200"]?.content?.["application/json"]
+        ?.schema as JSONSchemaType<unknown>;
       if (schema == null) {
         continue;
       }
@@ -98,7 +105,9 @@ function patchOpenApiJson<T extends Record<string, unknown>>(schema: T): T {
         ]),
       );
 
-      schema["required"] = schema["required"].map((key) => toCamelCase(key));
+      schema["required"] = schema["required"].map((key: string) =>
+        toCamelCase(key),
+      );
     }
 
     for (const key in schema) {
