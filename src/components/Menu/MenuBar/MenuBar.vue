@@ -484,7 +484,7 @@ const menudata = computed<MenuItemData[]>(() => [
       },
       {
         type: "button",
-        label: "キャラクターの管理",
+        label: "キャラクター・スタイルの管理",
         onClick() {
           void store.actions.SET_DIALOG_OPEN({
             isCharacterOrderDialogOpen: true,

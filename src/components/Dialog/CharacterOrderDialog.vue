@@ -19,7 +19,7 @@
             <QToolbarTitle class="text-display">{{
               hasNewCharacter
                 ? "追加キャラクターの紹介"
-                : "設定 / キャラクターの管理"
+                : "設定 / キャラクター・スタイルの管理"
             }}</QToolbarTitle>
           </div>
 
@@ -31,7 +31,7 @@
               flat
               icon="close"
               color="display"
-              aria-label="キャラクターの管理を閉じる"
+              aria-label="キャラクター・スタイルの管理を閉じる"
               @click="closeDialog"
             />
           </div>

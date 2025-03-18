@@ -19,7 +19,7 @@
             @click="closeDialog"
           />
           <QToolbarTitle class="text-display"
-            >設定 / キャラクターの管理 /
+            >設定 / キャラクター・スタイルの管理 /
             {{ characterInfo.metas.speakerName }}</QToolbarTitle
           >
         </QToolbar>
