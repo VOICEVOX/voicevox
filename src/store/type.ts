@@ -721,7 +721,7 @@ export type AudioPlayerStoreState = {
 
 export type AudioPlayerStoreTypes = {
   ACTIVE_AUDIO_ELEM_CURRENT_TIME_GETTER: {
-    getter: (() => number) | undefined;
+    getter: () => number | undefined;
   };
 
   NOW_PLAYING: {

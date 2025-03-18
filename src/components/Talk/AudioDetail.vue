@@ -319,10 +319,10 @@ watch(nowPlaying, async (newState) => {
     // 現在再生されているaudio elementの再生時刻を描画毎に取得(監視)し、
     // それに合わせてフォーカスするアクセント句を変えていく
     const focusAccentPhrase = () => {
-      if (currentTimeGetter == undefined) {
-        throw new Error("currentTimeGetter == undefined");
-      }
       const currentTime = currentTimeGetter();
+      if (currentTime == undefined) {
+        throw new Error("currentTime == undefined");
+      }
       const playingAccentPhraseIndex =
         accentPhraseOffsets.findIndex(
           (currentOffset) => currentTime < currentOffset,
