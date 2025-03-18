@@ -50,3 +50,6 @@ dist_preview/
 
 # Downloaded binaries
 vendored
+
+# Cache
+.eslintcache
