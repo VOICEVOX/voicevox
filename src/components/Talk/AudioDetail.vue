@@ -308,6 +308,10 @@ const scrollToActivePoint = () => {
   }
 };
 
+const currentTimeGetter = computed(
+  () => store.getters.ACTIVE_AUDIO_ELEM_CURRENT_TIME_GETTER,
+);
+
 let requestId: number | undefined;
 watch(nowPlaying, async (newState) => {
   if (newState) {
@@ -317,10 +321,10 @@ watch(nowPlaying, async (newState) => {
     // 現在再生されているaudio elementの再生時刻を描画毎に取得(監視)し、
     // それに合わせてフォーカスするアクセント句を変えていく
     const focusAccentPhrase = () => {
-      const currentTime = store.getters.ACTIVE_AUDIO_ELEM_CURRENT_TIME;
-      if (currentTime == undefined) {
+      if (currentTimeGetter.value == undefined) {
         throw new Error("currentTime === undefined)");
       }
+      const currentTime = currentTimeGetter.value();
       const playingAccentPhraseIndex =
         accentPhraseOffsets.findIndex(
           (currentOffset) => currentTime < currentOffset,
