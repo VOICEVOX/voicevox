@@ -27,11 +27,11 @@
 
           <div class="row items-center no-wrap">
             <QBtn
-              round
-              flat
-              icon="close"
-              color="display"
-              aria-label="キャラクター・スタイルの管理を閉じる"
+              unelevated
+              label="完了"
+              color="toolbar-button"
+              textColor="toolbar-button-display"
+              class="text-no-wrap"
               @click="closeDialog"
             />
           </div>

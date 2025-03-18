@@ -10,6 +10,13 @@
     <QLayout container view="hHh Lpr lff" class="bg-background">
       <QHeader class="q-py-sm">
         <QToolbar>
+          <QToolbarTitle class="text-display"
+            >設定 / キャラクター・スタイルの管理 /
+            {{ characterInfo.metas.speakerName }}</QToolbarTitle
+          >
+
+          <QSpace />
+
           <QBtn
             unelevated
             label="戻る"
@@ -18,10 +25,6 @@
             class="text-no-wrap"
             @click="closeDialog"
           />
-          <QToolbarTitle class="text-display"
-            >設定 / キャラクター・スタイルの管理 /
-            {{ characterInfo.metas.speakerName }}</QToolbarTitle
-          >
         </QToolbar>
       </QHeader>
 
