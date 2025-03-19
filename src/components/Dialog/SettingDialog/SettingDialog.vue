@@ -1,6 +1,6 @@
 <template>
   <QDialog
-    v-model="settingDialogOpenedComputed"
+    v-model="dialogOpened"
     maximized
     allowFocusOutside
     transitionShow="jump-up"
@@ -22,7 +22,7 @@
               icon="close"
               color="display"
               aria-label="設定を閉じる"
-              @click="settingDialogOpenedComputed = false"
+              @click="dialogOpened = false"
             />
           </QToolbar>
         </QHeader>
@@ -507,20 +507,10 @@ import { isProduction } from "@/helpers/platform";
 
 type SamplingRateOption = EngineSettingType["outputSamplingRate"];
 
-const props = defineProps<{
-  modelValue: boolean;
-}>();
-const emit = defineEmits<{
-  (e: "update:modelValue", val: boolean): void;
-}>();
+const dialogOpened = defineModel<boolean>();
 
 const store = useStore();
 const { warn } = createLogger("SettingDialog");
-
-const settingDialogOpenedComputed = computed({
-  get: () => props.modelValue,
-  set: (val) => emit("update:modelValue", val),
-});
 
 const engineUseGpu = computed({
   get: () => {
