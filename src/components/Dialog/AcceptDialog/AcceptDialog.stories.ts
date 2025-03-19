@@ -12,7 +12,6 @@ const meta: Meta<typeof AcceptDialog> = {
     terms: "# 見出し1\n文章文章文章\n## 見出し2\n文章文章文章",
     rejectLabel: "拒否",
     acceptLabel: "承諾",
-    "onUpdate:modelValue": fn(),
     onAccept: fn(),
     onReject: fn(),
   },
