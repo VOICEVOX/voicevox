@@ -23,7 +23,7 @@
   />
   <ExportSongAudioDialog v-model="isExportSongAudioDialogOpen" />
   <ImportSongProjectDialog v-model="isImportSongProjectDialogOpenComputed" />
-  <PresetManageDialog v-model="isPresetManageDialogOpenComupted" />
+  <PresetManageDialog v-model="isPresetManageDialogOpenComputed" />
 </template>
 
 <script setup lang="ts">
@@ -174,7 +174,7 @@ const isImportSongProjectDialogOpenComputed = computed({
 });
 
 // プリセット管理ダイアログ
-const isPresetManageDialogOpenComupted = computed({
+const isPresetManageDialogOpenComputed = computed({
   get: () => store.state.isPresetManageDialogOpen,
   set: (val) =>
     store.actions.SET_DIALOG_OPEN({
