@@ -1,6 +1,6 @@
 <template>
   <QDialog
-    v-model="modelValue"
+    v-model="dialogOpened"
     maximized
     transitionShow="jump-up"
     transitionHide="jump-down"
@@ -13,7 +13,13 @@
 
           <QSpace />
 
-          <QBtn round flat icon="close" color="display" @click="closeDialog" />
+          <QBtn
+            round
+            flat
+            icon="close"
+            color="display"
+            @click="dialogOpened = false"
+          />
         </QToolbar>
       </QHeader>
 
@@ -170,10 +176,7 @@ import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { debounce } from "@/helpers/timer";
 import { UnreachableError } from "@/type/utility";
 
-const modelValue = defineModel<boolean>();
-const closeDialog = () => {
-  modelValue.value = false;
-};
+const dialogOpened = defineModel<boolean>();
 
 const store = useStore();
 const { isDefaultPresetKey } = useDefaultPreset();
