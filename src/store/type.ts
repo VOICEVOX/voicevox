@@ -9,6 +9,7 @@ import {
   StoreOptions,
   PayloadFunction,
   Store,
+  DotNotationActionContext,
 } from "./vuex";
 import { createCommandMutationTree, PayloadRecipeTree } from "./command";
 import {
@@ -720,8 +721,8 @@ export type AudioPlayerStoreState = {
 };
 
 export type AudioPlayerStoreTypes = {
-  ACTIVE_AUDIO_ELEM_CURRENT_TIME: {
-    getter: number | undefined;
+  ACTIVE_AUDIO_ELEM_CURRENT_TIME_GETTER: {
+    getter: () => number | undefined;
   };
 
   NOW_PLAYING: {
@@ -1125,10 +1126,6 @@ export type SingingStoreTypes = {
   SET_SNAP_TYPE: {
     mutation: { snapType: number };
     action(payload: { snapType: number }): void;
-  };
-
-  SEQUENCER_NUM_MEASURES: {
-    getter: number;
   };
 
   SET_ZOOM_X: {
@@ -1851,24 +1848,20 @@ export type ProjectStoreTypes = {
     ): boolean;
   };
 
-  SAVE_PROJECT_FILE: {
-    action(payload: { overwrite?: boolean }): boolean;
+  SAVE_PROJECT_FILE_OVERWRITE: {
+    action(): Promise<boolean>;
+  };
+
+  SAVE_PROJECT_FILE_AS: {
+    action(): Promise<boolean>;
   };
 
   SAVE_PROJECT_FILE_AS_COPY: {
-    action(payload: { filePath?: string }): boolean;
-  };
-
-  PROMPT_PROJECT_SAVE_FILE_PATH: {
-    action(payload: { defaultFilePath?: string }): Promise<string | undefined>;
-  };
-
-  WRITE_PROJECT_FILE: {
-    action(payload: { filePath: string }): Promise<void>;
+    action(): Promise<boolean>;
   };
 
   SAVE_OR_DISCARD_PROJECT_FILE: {
-    action(palyoad: {
+    action(payload: {
       additionalMessage?: string;
     }): "saved" | "discarded" | "canceled";
   };
@@ -2386,6 +2379,14 @@ type AllStoreTypes = AudioStoreTypes &
 export type AllGetters = StoreType<AllStoreTypes, "getter">;
 export type AllMutations = StoreType<AllStoreTypes, "mutation">;
 export type AllActions = StoreType<AllStoreTypes, "action">;
+
+export type ActionContext = DotNotationActionContext<
+  State,
+  State,
+  AllGetters,
+  AllActions,
+  AllMutations
+>;
 
 export const commandMutationsCreator = <S, M extends MutationsBase>(
   arg: PayloadRecipeTree<S, M>,
