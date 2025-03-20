@@ -1,11 +1,10 @@
 <template>
   <QDialog
-    :modelValue="props.openDialog"
+    v-model="dialogOpened"
     maximized
     transitionShow="jump-up"
     transitionHide="jump-down"
     class="setting-dialog transparent-backdrop"
-    @update:modelValue="updateOpenDialog"
   >
     <QLayout container view="hHh Lpr lff">
       <QHeader class="q-py-sm">
@@ -19,7 +18,7 @@
             flat
             icon="close"
             color="display"
-            @click="emit('update:openDialog', false)"
+            @click="dialogOpened = false"
           />
         </QToolbar>
       </QHeader>
@@ -177,14 +176,7 @@ import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { debounce } from "@/helpers/timer";
 import { UnreachableError } from "@/type/utility";
 
-const props = defineProps<{
-  openDialog: boolean;
-}>();
-const emit = defineEmits<{
-  (e: "update:openDialog", val: boolean): void;
-}>();
-
-const updateOpenDialog = (isOpen: boolean) => emit("update:openDialog", isOpen);
+const dialogOpened = defineModel<boolean>();
 
 const store = useStore();
 const { isDefaultPresetKey } = useDefaultPreset();
