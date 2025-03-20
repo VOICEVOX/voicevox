@@ -120,7 +120,6 @@ export class AddNoteState
     if (this.innerContext == undefined) {
       throw new Error("innerContext is undefined.");
     }
-    context.enableAutoScrollDuringDrag.value = false;
     const previewNotes = context.previewNotes.value;
     const previewNoteIds = previewNotes.map((value) => value.id);
 

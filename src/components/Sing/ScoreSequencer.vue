@@ -675,31 +675,48 @@ class triggerRect {
   }
 }
 
-let autoScrollDuringDragAnimationId: number | undefined = undefined;
-let previousTimeStamp: number | undefined = undefined;
-const initialSpeed = 4;
-const scrollSpeedFactor = 0.05;
-const maxScrollSpeed = 60;
-const threshold = 15;
-const vectorCursor = new vector2D(0, 0);
-let autoScrollTriggerRect: triggerRect | undefined = undefined;
+const autoScrollObject: {
+  animationId: number | undefined;
+  previousTimeStamp: number | undefined;
+  initialSpeed: number;
+  scrollSpeedFactor: number;
+  maxScrollSpeed: number;
+  threshold: number;
+  vectorCursor: vector2D;
+  autoScrollTriggerRect: triggerRect | undefined;
+} = {
+  animationId: undefined,
+  previousTimeStamp: undefined,
+  initialSpeed: 4,
+  scrollSpeedFactor: 0.05,
+  maxScrollSpeed: 60,
+  threshold: 15,
+  vectorCursor: new vector2D(0, 0),
+  autoScrollTriggerRect: undefined,
+};
 
 const autoScrollAnimation = (timestamp: number) => {
   if (sequencerBody.value == undefined) {
-    throw new Error("sequencer.value is undefined.");
+    throw new Error("sequencerBody.value is undefined.");
   }
-  if (autoScrollTriggerRect == undefined) {
+  if (autoScrollObject.autoScrollTriggerRect == undefined) {
     throw new Error("autoScrollTriggerRect is undefined.");
   }
 
-  if (previousTimeStamp == undefined) {
-    previousTimeStamp = timestamp;
+  if (autoScrollObject.previousTimeStamp == undefined) {
+    autoScrollObject.previousTimeStamp = timestamp;
   }
-  const elapsed = timestamp - previousTimeStamp;
-  if (!autoScrollTriggerRect.isPointInsideInRect(vectorCursor)) {
+  const elapsed = timestamp - autoScrollObject.previousTimeStamp;
+  if (
+    !autoScrollObject.autoScrollTriggerRect.isPointInsideInRect(
+      autoScrollObject.vectorCursor,
+    )
+  ) {
     // スクロールベクトル算出
     const minimumDistanceVector =
-      autoScrollTriggerRect.calcMinimumDistanceVectorRectAndPoint(vectorCursor);
+      autoScrollObject.autoScrollTriggerRect.calcMinimumDistanceVectorRectAndPoint(
+        autoScrollObject.vectorCursor,
+      );
     const magnitudeMinimumDistanceVector = minimumDistanceVector.magnitude();
     let normalizeMinimumDistanceVector = new vector2D(0, 0);
     if (magnitudeMinimumDistanceVector !== 0) {
@@ -712,11 +729,11 @@ const autoScrollAnimation = (timestamp: number) => {
       .scale(elapsed / 10)
       .scale(
         Math.min(
-          scrollSpeedFactor *
+          autoScrollObject.scrollSpeedFactor *
             (magnitudeMinimumDistanceVector / 10) *
             (magnitudeMinimumDistanceVector / 10) +
-            initialSpeed,
-          maxScrollSpeed,
+            autoScrollObject.initialSpeed,
+          autoScrollObject.maxScrollSpeed,
         ),
       );
 
@@ -727,15 +744,15 @@ const autoScrollAnimation = (timestamp: number) => {
     });
   }
 
-  previousTimeStamp = timestamp;
-  autoScrollDuringDragAnimationId = requestAnimationFrame(autoScrollAnimation);
+  autoScrollObject.previousTimeStamp = timestamp;
+  autoScrollObject.animationId = requestAnimationFrame(autoScrollAnimation);
 };
 
 const onMouseMove = (event: MouseEvent) => {
   const cursorPos = getCursorPosOnSequencer(event);
 
-  vectorCursor.x = cursorPos.x;
-  vectorCursor.y = cursorPos.y;
+  autoScrollObject.vectorCursor.x = cursorPos.x;
+  autoScrollObject.vectorCursor.y = cursorPos.y;
 
   stateMachineProcess({
     type: "mouseEvent",
@@ -746,36 +763,32 @@ const onMouseMove = (event: MouseEvent) => {
 };
 
 watch(enableAutoScrollDuringDrag, (newFlag) => {
-  autoScrollTriggerRect = new triggerRect(
+  autoScrollObject.autoScrollTriggerRect = new triggerRect(
     0,
     0,
     (() => {
       if (sequencerBody.value == undefined) {
-        throw new Error("sequencer.value is undefined.");
+        throw new Error("sequencerBody.value is undefined.");
       }
 
-      return sequencerBody.value.clientWidth - threshold;
+      return sequencerBody.value.clientWidth - autoScrollObject.threshold;
     })(),
     (() => {
       if (sequencerBody.value == undefined) {
-        throw new Error("sequencer.value is undefined.");
+        throw new Error("sequencerBody.value is undefined.");
       }
 
-      return sequencerBody.value.clientHeight - threshold;
+      return sequencerBody.value.clientHeight - autoScrollObject.threshold;
     })(),
   );
 
   if (newFlag) {
-    // 自動スクロールのアニメーションループをスタートする
-    // 実際に動かさなければならない場面になったら
-    // scrollXMultiplier,scrollYMultiplierの値を0以外にセットする
-    autoScrollDuringDragAnimationId =
-      requestAnimationFrame(autoScrollAnimation);
+    autoScrollObject.animationId = requestAnimationFrame(autoScrollAnimation);
   } else {
     // 自動スクロールのアニメーションループを停止する
-    if (autoScrollDuringDragAnimationId != undefined) {
-      cancelAnimationFrame(autoScrollDuringDragAnimationId);
-      autoScrollDuringDragAnimationId = undefined;
+    if (autoScrollObject.animationId != undefined) {
+      cancelAnimationFrame(autoScrollObject.animationId);
+      autoScrollObject.animationId = undefined;
     }
   }
 });
