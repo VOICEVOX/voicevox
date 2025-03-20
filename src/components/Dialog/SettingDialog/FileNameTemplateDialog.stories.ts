@@ -23,6 +23,7 @@ const meta: Meta<typeof FileNameTemplateDialog> = {
     fileNameBuilder: buildAudioFileNameFromRawData,
     extension: ".wav",
     "onUpdate:template": fn(),
+    "onUpdate:modelValue": fn(),
   },
   tags: ["!autodocs"], // ダイアログ系はautodocsのプレビューが正しく表示されないので無効化
 };
@@ -114,7 +115,7 @@ export const Save: Story = {
 
     // 確定とダイアログを閉じるイベントが呼ばれる
     await expect(args["onUpdate:template"]).toBeCalledWith("$連番$");
-    await expect(args["modelValue"]).toBeFalsy();
+    await expect(args["onUpdate:modelValue"]).toBeCalledWith(false);
   },
 };
 
@@ -144,7 +145,7 @@ export const Close: Story = {
 
     // ダイアログを閉じるイベントが呼ばれる、確定イベントは呼ばれない
     await expect(args["onUpdate:template"]).not.toBeCalled();
-    await expect(args["modelValue"]).toBeFalsy();
+    await expect(args["onUpdate:modelValue"]).toBeCalledWith(false);
   },
 };
 

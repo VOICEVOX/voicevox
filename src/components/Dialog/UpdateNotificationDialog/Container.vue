@@ -73,12 +73,13 @@ const handleSkipThisVersionClick = (version: string) => {
 };
 
 // ダイアログを開くかどうか
-watchEffect(() => {
+const stopWatchEffect = watchEffect(() => {
   if (
     props.canOpenDialog &&
     newUpdateResult.value.status == "updateAvailable"
   ) {
     isDialogOpenComputed.value = true;
+    stopWatchEffect();
   }
 });
 </script>
