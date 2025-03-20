@@ -15,6 +15,7 @@ import {
   EngineId,
   ConfirmedTips,
   RootMiscSettingType,
+  EditorType,
 } from "@/type/preload";
 import { IsEqual } from "@/type/utility";
 import { HotkeySettingType } from "@/domain/hotkeyAction";
@@ -429,6 +430,16 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         "recentlyUsedProjects",
         newRecentlyUsedProjects,
       );
+    },
+  },
+
+  SET_INIT_OPEN_EDITOR: {
+    mutation(state, { editorType }: { editorType: EditorType }) {
+      state.openedEditor = editorType;
+    },
+    action({ mutations }, { editorType }: { editorType: EditorType }) {
+      void window.backend.setSetting("openedEditor", editorType);
+      mutations.SET_INIT_OPEN_EDITOR({ editorType });
     },
   },
 });

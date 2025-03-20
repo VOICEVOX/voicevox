@@ -66,9 +66,8 @@ const isInitialSettingsDialogOpenComputed = computed({
 const store = useStore();
 
 const selectEditor = async (editorType: EditorType) => {
-  await store.actions.SET_ROOT_MISC_SETTING({
-    key: "openedEditor",
-    value: editorType,
+  await store.actions.SET_INIT_OPEN_EDITOR({
+    editorType: editorType,
   });
 
   isInitialSettingsDialogOpenComputed.value = false;

@@ -1994,6 +1994,11 @@ export type SettingStoreTypes = {
   APPEND_RECENTLY_USED_PROJECT: {
     action(payload: { filePath: string }): Promise<void>;
   };
+
+  SET_INIT_OPEN_EDITOR: {
+    mutation: { editorType: EditorType };
+    action(payload: { editorType: EditorType }): void;
+  };
 };
 
 /*
