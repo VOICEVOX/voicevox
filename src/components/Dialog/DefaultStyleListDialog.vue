@@ -5,14 +5,14 @@
       selectedStyleIndexes[selectedCharacterInfo.metas.speakerUuid] !==
         undefined
     "
-    v-model:isOpen="showStyleSelectDialog"
+    v-model:dialogOpened="showStyleSelectDialog"
     v-model:selectedStyleIndex="
       selectedStyleIndexes[selectedCharacterInfo.metas.speakerUuid]
     "
     :characterInfo="selectedCharacterInfo"
   />
   <QDialog
-    v-model="modelValueComputed"
+    v-model="dialogOpened"
     maximized
     transitionShow="jump-up"
     transitionHide="jump-down"
@@ -106,20 +106,14 @@ import DefaultStyleSelectDialog from "./DefaultStyleSelectDialog.vue";
 import { useStore } from "@/store";
 import { DEFAULT_STYLE_NAME } from "@/store/utility";
 import { CharacterInfo, SpeakerId, StyleInfo } from "@/type/preload";
+
+const dialogOpened = defineModel<boolean>("dialogOpened", { default: false });
+
 const props = defineProps<{
-  modelValue: boolean;
   characterInfos: CharacterInfo[];
-}>();
-const emit = defineEmits<{
-  (e: "update:modelValue", val: boolean): void;
 }>();
 
 const store = useStore();
-
-const modelValueComputed = computed({
-  get: () => props.modelValue,
-  set: (val) => emit("update:modelValue", val),
-});
 
 // 選択中のキャラクター
 const selectedCharacter = ref(props.characterInfos[0].metas.speakerUuid);
@@ -157,7 +151,7 @@ const selectedStyles = computed(() => {
 });
 
 // ダイアログが開かれたときに初期値を求める
-watch([() => props.modelValue], async ([newValue]) => {
+watch([dialogOpened], async ([newValue]) => {
   if (newValue) {
     speakerWithMultipleStyles.value = store.state.userCharacterOrder
       .map((speakerUuid) => characterInfosMap.value[speakerUuid])
@@ -208,7 +202,7 @@ const closeDialog = () => {
     ),
   );
   stop();
-  modelValueComputed.value = false;
+  dialogOpened.value = false;
 };
 const openStyleSelectDialog = (characterInfo: CharacterInfo) => {
   stop();

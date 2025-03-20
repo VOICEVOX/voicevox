@@ -1,29 +1,35 @@
 <template>
   <AcceptRetrieveTelemetryDialog
-    v-model="isAcceptRetrieveTelemetryDialogOpenComputed"
+    v-model:dialogOpened="isAcceptRetrieveTelemetryDialogOpenComputed"
   />
-  <AcceptTermsDialog v-model="isAcceptTermsDialogOpenComputed" />
-  <SettingDialog v-model="isSettingDialogOpenComputed" />
-  <HotkeySettingDialog v-model="isHotkeySettingDialogOpenComputed" />
-  <ToolBarCustomDialog v-model="isToolbarSettingDialogOpenComputed" />
+  <AcceptTermsDialog v-model:dialogOpened="isAcceptTermsDialogOpenComputed" />
+  <SettingDialog v-model:dialogOpened="isSettingDialogOpenComputed" />
+  <HotkeySettingDialog
+    v-model:dialogOpened="isHotkeySettingDialogOpenComputed"
+  />
+  <ToolBarCustomDialog
+    v-model:dialogOpened="isToolbarSettingDialogOpenComputed"
+  />
   <CharacterOrderDialog
     v-if="orderedAllCharacterInfos.length > 0"
-    v-model="isCharacterOrderDialogOpenComputed"
+    v-model:dialogOpened="isCharacterOrderDialogOpenComputed"
     :characterInfos="orderedAllCharacterInfos"
   />
   <DefaultStyleListDialog
     v-if="orderedTalkCharacterInfos.length > 0"
-    v-model="isDefaultStyleSelectDialogOpenComputed"
+    v-model:dialogOpened="isDefaultStyleSelectDialogOpenComputed"
     :characterInfos="orderedTalkCharacterInfos"
   />
-  <DictionaryManageDialog v-model="isDictionaryManageDialogOpenComputed" />
-  <EngineManageDialog v-model="isEngineManageDialogOpenComputed" />
+  <DictionaryManageDialog
+    v-model:dialogOpened="isDictionaryManageDialogOpenComputed"
+  />
+  <EngineManageDialog v-model:dialogOpened="isEngineManageDialogOpenComputed" />
   <UpdateNotificationDialogContainer
     :canOpenDialog="canOpenNotificationDialog"
   />
-  <ExportSongAudioDialog v-model="isExportSongAudioDialogOpen" />
+  <ExportSongAudioDialog v-model:dialogOpened="isExportSongAudioDialogOpen" />
   <ImportSongProjectDialog v-model="isImportSongProjectDialogOpenComputed" />
-  <PresetManageDialog v-model="isPresetManageDialogOpenComputed" />
+  <PresetManageDialog v-model:dialogOpened="isPresetManageDialogOpenComputed" />
 </template>
 
 <script setup lang="ts">
