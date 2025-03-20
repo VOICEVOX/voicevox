@@ -32,7 +32,7 @@
               icon="close"
               color="display"
               aria-label="ヘルプを閉じる"
-              @click="closeDialog"
+              @click="onDialogOK"
             />
           </QToolbar>
         </QHeader>
@@ -103,10 +103,6 @@ type PageData = PageItem | PageSeparator;
 
 const { dialogRef, onDialogOK } = useDialogPluginComponent();
 defineEmits([...useDialogPluginComponent.emits]);
-
-const closeDialog = () => {
-  onDialogOK();
-};
 
 // エディタのアップデート確認
 const store = useStore();
