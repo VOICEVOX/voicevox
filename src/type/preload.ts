@@ -92,7 +92,7 @@ export interface Sandbox {
     filePath: string;
     buffer: ArrayBuffer | Uint8Array;
   }): Promise<Result<undefined>>;
-  readFile(obj: { filePath: string }): Promise<Result<ArrayBuffer>>;
+  readFile(obj: { filePath: string }): Promise<Result<Uint8Array>>;
   isAvailableGPUMode(): Promise<boolean>;
   isMaximizedWindow(): Promise<boolean>;
   onReceivedIPCMsg(listeners: {

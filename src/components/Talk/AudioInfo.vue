@@ -22,11 +22,7 @@
                   <QItemLabel>プリセット新規登録</QItemLabel>
                 </QItemSection>
               </QItem>
-              <QItem
-                v-close-popup
-                clickable
-                @click="showsPresetEditDialog = true"
-              >
+              <QItem v-close-popup clickable @click="openPresetManageDialog()">
                 <QItemSection avatar>
                   <QAvatar
                     icon="edit_note"
@@ -82,8 +78,6 @@
           @click="registerPreset({ overwrite: isRegisteredPreset })"
         />
       </div>
-      <!-- プリセット管理ダイアログ -->
-      <PresetManageDialog v-model:openDialog="showsPresetEditDialog" />
 
       <!-- プリセット登録ダイアログ -->
       <QDialog v-model="showsPresetNameDialog" @beforeHide="closeAllDialog">
@@ -299,7 +293,6 @@
 import { computed, ref, watchEffect } from "vue";
 import { QSelectProps } from "quasar";
 import CharacterButton from "@/components/CharacterButton.vue";
-import PresetManageDialog from "@/components/Dialog/PresetManageDialog.vue";
 import { useStore } from "@/store";
 
 import {
@@ -940,7 +933,11 @@ const updatePreset = async (fullApply: boolean) => {
 };
 
 // プリセットの編集
-const showsPresetEditDialog = ref(false);
+const openPresetManageDialog = () => {
+  void store.actions.SET_DIALOG_OPEN({
+    isPresetManageDialogOpen: true,
+  });
+};
 
 const adjustSliderValue = (
   inputItemName: string,

@@ -24,6 +24,7 @@
   <ExportSongAudioDialog v-model="isExportSongAudioDialogOpen" />
   <ImportSongProjectDialog v-model="isImportSongProjectDialogOpenComputed" />
   <InitialSettingsDialog v-model="isInitialSettingsDialogOpenComputed" />
+  <PresetManageDialog v-model="isPresetManageDialogOpenComputed" />
 </template>
 
 <script setup lang="ts">
@@ -41,6 +42,7 @@ import UpdateNotificationDialogContainer from "@/components/Dialog/UpdateNotific
 import ImportSongProjectDialog from "@/components/Dialog/ImportSongProjectDialog.vue";
 import InitialSettingsDialog from "@/components/Dialog/InitialSettingsDialog.vue";
 import ExportSongAudioDialog from "@/components/Dialog/ExportSongAudioDialog/Container.vue";
+import PresetManageDialog from "@/components/Dialog/PresetManageDialog.vue";
 import { useStore } from "@/store";
 import { filterCharacterInfosByStyleType } from "@/store/utility";
 
@@ -184,6 +186,15 @@ const isImportSongProjectDialogOpenComputed = computed({
   set: (val) =>
     store.actions.SET_DIALOG_OPEN({
       isImportSongProjectDialogOpen: val,
+    }),
+});
+
+// プリセット管理ダイアログ
+const isPresetManageDialogOpenComputed = computed({
+  get: () => store.state.isPresetManageDialogOpen,
+  set: (val) =>
+    store.actions.SET_DIALOG_OPEN({
+      isPresetManageDialogOpen: val,
     }),
 });
 </script>

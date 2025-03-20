@@ -142,19 +142,19 @@ const createNewProject = async () => {
 
 const saveProject = async () => {
   if (!uiLocked.value) {
-    await store.actions.SAVE_PROJECT_FILE({ overwrite: true });
+    await store.actions.SAVE_PROJECT_FILE_OVERWRITE();
   }
 };
 
 const saveProjectAs = async () => {
   if (!uiLocked.value) {
-    await store.actions.SAVE_PROJECT_FILE({});
+    await store.actions.SAVE_PROJECT_FILE_AS();
   }
 };
 
 const saveProjectCopy = async () => {
   if (!uiLocked.value) {
-    await store.actions.SAVE_PROJECT_FILE_AS_COPY({});
+    await store.actions.SAVE_PROJECT_FILE_AS_COPY();
   }
 };
 

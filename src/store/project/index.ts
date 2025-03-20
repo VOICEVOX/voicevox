@@ -1,4 +1,10 @@
-import { createPartialStore, DotNotationDispatch } from "./vuex";
+import { createPartialStore, DotNotationDispatch } from "../vuex";
+import {
+  executeWritePromiseOrDialog,
+  promptProjectSaveFilePath,
+  markCurrentProjectAsSaved,
+  writeProjectFile,
+} from "./saveProjectHelper";
 import { createUILockAction } from "@/store/ui";
 import {
   AllActions,
@@ -28,8 +34,6 @@ import {
   showQuestionDialog,
 } from "@/components/Dialog/Dialog";
 import { uuid4 } from "@/helpers/random";
-import { getAppInfos } from "@/domain/appInfo";
-import { errorToMessage } from "@/helpers/errorHelper";
 
 export const projectStoreState: ProjectStoreState = {
   savedLastCommandIds: { talk: null, song: null },
@@ -190,7 +194,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         }
 
         try {
-          let buf: ArrayBuffer;
+          let buf: Uint8Array;
           if (filePath != undefined) {
             buf = await window.backend
               .readFile({ filePath })
@@ -202,7 +206,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           } else {
             if (payload.type != "file")
               throw new UnreachableError("payload.type != 'file'");
-            buf = await payload.file.arrayBuffer();
+            buf = new Uint8Array(await payload.file.arrayBuffer());
           }
 
           const text = new TextDecoder("utf-8").decode(buf).trim();
@@ -247,143 +251,73 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
     ),
   },
 
-  SAVE_PROJECT_FILE_AS_COPY: {
+  SAVE_PROJECT_FILE_OVERWRITE: {
     /**
-     * プロジェクトファイルを複製として保存する。保存の成否が返る。
+     * プロジェクトファイルを上書き保存する。
+     * 現在のプロジェクトファイルが未設定の場合は名前をつけて保存する。
+     * ファイルを保存できた場合はtrueが、キャンセルしたか例外が発生した場合はfalseが返る。
      * エラー発生時はダイアログが表示される。
      */
-    action: createUILockAction(async (context, { filePath: filePathArg }) => {
-      let filePath = filePathArg;
-      try {
-        if (!filePath) {
-          filePath = await context.actions.PROMPT_PROJECT_SAVE_FILE_PATH({});
-          if (!filePath) {
-            return false;
-          }
-        }
-        await context.actions.WRITE_PROJECT_FILE({ filePath });
-
-        return true;
-      } catch (err) {
-        window.backend.logError(err);
-        await showAlertDialog({
-          title: "エラー",
-          message: `プロジェクトファイルの保存に失敗しました。\n${errorToMessage(err)}`,
-        });
-        return false;
+    action: createUILockAction(async (context) => {
+      const filePath = context.state.projectFilePath;
+      if (!filePath) {
+        return await context.actions.SAVE_PROJECT_FILE_AS();
       }
+
+      const result = await executeWritePromiseOrDialog(
+        writeProjectFile(context, filePath),
+      );
+      if (!result) return false;
+
+      await markCurrentProjectAsSaved(context, filePath);
+      return true;
     }),
   },
 
-  SAVE_PROJECT_FILE: {
+  SAVE_PROJECT_FILE_AS: {
     /**
-     * プロジェクトファイルを保存し、現在のプロジェクトファイルのパスを更新する。保存の成否が返る。
+     * プロジェクトファイルを名前をつけて保存し、現在のプロジェクトファイルのパスを更新する。
+     * ファイルを保存できた場合はtrueが、キャンセルしたか例外が発生した場合はfalseが返る。
+     * エラー発生時はダイアログが表示される。
      */
-    action: createUILockAction(
-      async (context, { overwrite }: { overwrite?: boolean }) => {
-        let filePath = context.state.projectFilePath;
+    action: createUILockAction(async (context) => {
+      const filePath = await promptProjectSaveFilePath(context);
+      if (!filePath) return false;
 
-        try {
-          if (!overwrite || !filePath) {
-            filePath = await context.actions.PROMPT_PROJECT_SAVE_FILE_PATH({
-              defaultFilePath: filePath,
-            });
-            if (!filePath) {
-              return false;
-            }
-          }
+      const result = await executeWritePromiseOrDialog(
+        writeProjectFile(context, filePath),
+      );
+      if (!result) return false;
 
-          if (
-            context.state.projectFilePath &&
-            context.state.projectFilePath != filePath
-          ) {
-            await showMessageDialog({
-              type: "info",
-              title: "保存",
-              message: `編集中のプロジェクトが ${filePath} に切り替わりました。`,
-            });
-          }
-
-          await context.actions.APPEND_RECENTLY_USED_PROJECT({
-            filePath,
-          });
-          await context.actions.WRITE_PROJECT_FILE({ filePath });
-
-          context.mutations.SET_PROJECT_FILEPATH({ filePath });
-          context.mutations.SET_SAVED_LAST_COMMAND_IDS(
-            context.getters.LAST_COMMAND_IDS,
-          );
-
-          return true;
-        } catch (err) {
-          window.backend.logError(err);
-          await showAlertDialog({
-            title: "エラー",
-            message: `プロジェクトファイルの保存に失敗しました。\n${errorToMessage(err)}`,
-          });
-          return false;
-        }
-      },
-    ),
-  },
-
-  PROMPT_PROJECT_SAVE_FILE_PATH: {
-    async action(context, { defaultFilePath }) {
-      let defaultPath: string;
-
-      if (!defaultFilePath) {
-        // if new project: use generated name
-        defaultPath = `${context.getters.DEFAULT_PROJECT_FILE_BASE_NAME}.vvproj`;
-      } else {
-        // if saveAs for existing project: use current project path
-        defaultPath = defaultFilePath;
+      if (context.state.projectFilePath !== filePath) {
+        context.mutations.SET_PROJECT_FILEPATH({ filePath });
+        await showMessageDialog({
+          type: "info",
+          title: "保存",
+          message: `編集中のプロジェクトが ${filePath} に切り替わりました。`,
+        });
       }
 
-      // Write the current status to a project file.
-      return await window.backend.showSaveFileDialog({
-        title: "プロジェクトファイルの保存",
-        name: "VOICEVOX Project file",
-        extensions: ["vvproj"],
-        defaultPath,
-      });
-    },
+      await markCurrentProjectAsSaved(context, filePath);
+      return true;
+    }),
   },
 
-  WRITE_PROJECT_FILE: {
-    action: async (context, { filePath }) => {
-      const appVersion = getAppInfos().version;
-      const {
-        audioItems,
-        audioKeys,
-        tpqn,
-        tempos,
-        timeSignatures,
-        tracks,
-        trackOrder,
-      } = context.state;
-      const projectData: LatestProjectType = {
-        appVersion,
-        talk: {
-          audioKeys,
-          audioItems,
-        },
-        song: {
-          tpqn,
-          tempos,
-          timeSignatures,
-          tracks: Object.fromEntries(tracks),
-          trackOrder,
-        },
-      };
+  SAVE_PROJECT_FILE_AS_COPY: {
+    /**
+     * プロジェクトファイルを複製として保存する。
+     * ファイルを保存できた場合はtrueが、キャンセルしたか例外が発生した場合はfalseが返る。
+     * エラー発生時はダイアログが表示される。
+     */
+    action: createUILockAction(async (context) => {
+      const filePath = await promptProjectSaveFilePath(context);
+      if (!filePath) return false;
 
-      const buf = new TextEncoder().encode(JSON.stringify(projectData)).buffer;
-      await window.backend
-        .writeFile({
-          filePath,
-          buffer: buf,
-        })
-        .then(getValueOrThrow);
-    },
+      const result = await executeWritePromiseOrDialog(
+        writeProjectFile(context, filePath),
+      );
+      return result;
+    }),
   },
 
   /**
@@ -410,9 +344,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         cancel: 0,
       });
       if (result == 2) {
-        const saved = await actions.SAVE_PROJECT_FILE({
-          overwrite: true,
-        });
+        const saved = await actions.SAVE_PROJECT_FILE_OVERWRITE();
         return saved ? "saved" : "canceled";
       } else if (result == 1) {
         return "discarded";

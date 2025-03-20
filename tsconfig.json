@@ -10,6 +10,8 @@
     "skipLibCheck": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
     "isolatedModules": true,
     "resolveJsonModule": true,
     "sourceMap": true,
@@ -21,17 +23,11 @@
     "lib": ["esnext", "dom", "dom.iterable"]
   },
   "include": [
-    "playwright.config.ts",
-    "*.mts",
-    "eslint-plugin/**/*.mts",
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/**/*.vue",
-    "tests/**/*.ts",
-    "tests/**/*.mts",
-    "tests/**/*.tsx",
-    "tools/**/*.mts",
-    ".storybook/**/*.ts"
+    ".storybook/**/*.ts",
+    "**/*.js",
+    "**/*.ts",
+    "**/*.cjs",
+    "**/*.vue"
   ],
   "exclude": ["node_modules"]
 }
