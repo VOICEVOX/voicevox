@@ -1,6 +1,5 @@
 import { computed } from "vue";
 import { Store } from "@/store";
-import { MenuItemData } from "@/components/Menu/type";
 import { useRootMiscSetting } from "@/composables/useRootMiscSetting";
 import { ExportSongProjectFileType } from "@/store/type";
 import { notifyResult } from "@/components/Dialog/Dialog";
