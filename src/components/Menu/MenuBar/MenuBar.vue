@@ -28,7 +28,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
-import { useQuasar, Dialog } from "quasar";
+import { useQuasar } from "quasar";
 import { MenuItemData, MenuItemRoot } from "../type";
 import MenuButton from "../MenuButton.vue";
 import TitleBarButtons from "./TitleBarButtons.vue";
