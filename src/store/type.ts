@@ -2029,6 +2029,7 @@ export type DialogStates = {
   isExportSongAudioDialogOpen: boolean;
   isImportSongProjectDialogOpen: boolean;
   isPresetManageDialogOpen: boolean;
+  isHelpDialogOpen: boolean;
 };
 
 export type UiStoreTypes = {

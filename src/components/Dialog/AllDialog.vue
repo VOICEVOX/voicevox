@@ -30,6 +30,7 @@
   <ExportSongAudioDialog v-model:dialogOpened="isExportSongAudioDialogOpen" />
   <ImportSongProjectDialog v-model="isImportSongProjectDialogOpenComputed" />
   <PresetManageDialog v-model:dialogOpened="isPresetManageDialogOpenComputed" />
+  <HelpDialog v-model:dialogOpened="isHelpDialogOpenComputed" />
 </template>
 
 <script setup lang="ts">
@@ -47,6 +48,7 @@ import UpdateNotificationDialogContainer from "@/components/Dialog/UpdateNotific
 import ImportSongProjectDialog from "@/components/Dialog/ImportSongProjectDialog.vue";
 import ExportSongAudioDialog from "@/components/Dialog/ExportSongAudioDialog/Container.vue";
 import PresetManageDialog from "@/components/Dialog/PresetManageDialog.vue";
+import HelpDialog from "@/components/Dialog/HelpDialog/HelpDialog.vue";
 import { useStore } from "@/store";
 import { filterCharacterInfosByStyleType } from "@/store/utility";
 
@@ -185,6 +187,15 @@ const isPresetManageDialogOpenComputed = computed({
   set: (val) =>
     store.actions.SET_DIALOG_OPEN({
       isPresetManageDialogOpen: val,
+    }),
+});
+
+// ヘルプダイアログ
+const isHelpDialogOpenComputed = computed({
+  get: () => store.state.isHelpDialogOpen,
+  set: (val) =>
+    store.actions.SET_DIALOG_OPEN({
+      isHelpDialogOpen: val,
     }),
 });
 </script>
