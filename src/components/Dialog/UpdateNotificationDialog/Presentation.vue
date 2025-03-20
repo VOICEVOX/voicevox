@@ -72,7 +72,7 @@
 <script setup lang="ts">
 import { UpdateInfo } from "@/type/preload";
 
-const dialogOpened = defineModel<boolean>({ default: false });
+const dialogOpened = defineModel<boolean>("dialogOpened", { default: false });
 const props = defineProps<{
   /** 公開されている最新のバージョン */
   latestVersion: string;

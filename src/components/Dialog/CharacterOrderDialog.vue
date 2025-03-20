@@ -110,7 +110,7 @@ import CharacterTryListenCard from "./CharacterTryListenCard.vue";
 import { useStore } from "@/store";
 import { CharacterInfo, SpeakerId, StyleId, StyleInfo } from "@/type/preload";
 
-const dialogOpened = defineModel<boolean>({ default: false });
+const dialogOpened = defineModel<boolean>("dialogOpened", { default: false });
 const props = defineProps<{
   characterInfos: CharacterInfo[];
 }>();

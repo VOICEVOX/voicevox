@@ -169,7 +169,7 @@ import {
 
 const defaultDictPriority = 5;
 
-const dialogOpened = defineModel<boolean>({ default: false });
+const dialogOpened = defineModel<boolean>("dialogOpened", { default: false });
 
 const store = useStore();
 

@@ -109,7 +109,7 @@
   </QDialog>
 
   <HotkeyRecordingDialog
-    v-model="isHotkeyDialogOpened"
+    v-model:dialogOpened="isHotkeyDialogOpened"
     :lastAction
     :lastRecord
     :duplicatedHotkey
@@ -134,7 +134,7 @@ import {
 } from "@/domain/hotkeyAction";
 import { isMac } from "@/helpers/platform";
 
-const dialogOpened = defineModel<boolean>({ default: false });
+const dialogOpened = defineModel<boolean>("dialogOpened", { default: false });
 
 const store = useStore();
 

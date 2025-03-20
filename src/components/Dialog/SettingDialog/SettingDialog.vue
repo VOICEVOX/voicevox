@@ -218,7 +218,7 @@
                 </QSlideTransition>
 
                 <FileNameTemplateDialog
-                  v-model="showAudioFilePatternEditDialog"
+                  v-model:dialogOpened="showAudioFilePatternEditDialog"
                   :savedTemplate="audioFileNamePattern"
                   :defaultTemplate="DEFAULT_AUDIO_FILE_NAME_TEMPLATE"
                   :availableTags="[
@@ -236,7 +236,7 @@
                   "
                 />
                 <FileNameTemplateDialog
-                  v-model="showSongTrackAudioFilePatternEditDialog"
+                  v-model:dialogOpened="showSongTrackAudioFilePatternEditDialog"
                   :savedTemplate="songTrackFileNamePattern"
                   :defaultTemplate="DEFAULT_SONG_AUDIO_FILE_NAME_TEMPLATE"
                   :availableTags="[
@@ -507,7 +507,7 @@ import { isProduction } from "@/helpers/platform";
 
 type SamplingRateOption = EngineSettingType["outputSamplingRate"];
 
-const dialogOpened = defineModel<boolean>();
+const dialogOpened = defineModel<boolean>("dialogOpened");
 
 const store = useStore();
 const { warn } = createLogger("SettingDialog");

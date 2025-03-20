@@ -23,7 +23,7 @@ const meta: Meta<typeof FileNameTemplateDialog> = {
     fileNameBuilder: buildAudioFileNameFromRawData,
     extension: ".wav",
     "onUpdate:template": fn(),
-    "onUpdate:modelValue": fn(),
+    "onUpdate:dialogOpened": fn(),
   },
   tags: ["!autodocs"], // ダイアログ系はautodocsのプレビューが正しく表示されないので無効化
 };
@@ -33,11 +33,8 @@ type Story = StoryObj<typeof meta>;
 
 export const Opened: Story = {
   name: "開いている",
-  // 対象のコンポーネントでconst foo = defineModel()と変数名を指定していてもStorybookではmodelValueという名前になっている
-  // ref: https://github.com/storybookjs/storybook/blob/next/code/renderers/vue3/template/stories_vue3-vite-default-ts/component-meta/define-model/component.vue
-  // ref: https://github.com/storybookjs/storybook/blob/next/code/renderers/vue3/template/stories_vue3-vite-default-ts/component-meta/DefineModel.stories.ts
   args: {
-    modelValue: true,
+    dialogOpened: true,
   },
 };
 
@@ -115,7 +112,7 @@ export const Save: Story = {
 
     // 確定とダイアログを閉じるイベントが呼ばれる
     await expect(args["onUpdate:template"]).toBeCalledWith("$連番$");
-    await expect(args["onUpdate:modelValue"]).toBeCalledWith(false);
+    await expect(args["onUpdate:dialogOpened"]).toBeCalledWith(false);
   },
 };
 
@@ -145,7 +142,7 @@ export const Close: Story = {
 
     // ダイアログを閉じるイベントが呼ばれる、確定イベントは呼ばれない
     await expect(args["onUpdate:template"]).not.toBeCalled();
-    await expect(args["onUpdate:modelValue"]).toBeCalledWith(false);
+    await expect(args["onUpdate:dialogOpened"]).toBeCalledWith(false);
   },
 };
 
@@ -153,6 +150,6 @@ export const Closed: Story = {
   name: "閉じている",
   tags: ["skip-screenshot"],
   args: {
-    modelValue: false,
+    dialogOpened: false,
   },
 };

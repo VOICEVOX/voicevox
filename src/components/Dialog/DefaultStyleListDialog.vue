@@ -5,7 +5,7 @@
       selectedStyleIndexes[selectedCharacterInfo.metas.speakerUuid] !==
         undefined
     "
-    v-model:modelValue="showStyleSelectDialog"
+    v-model:dialogOpened="showStyleSelectDialog"
     v-model:selectedStyleIndex="
       selectedStyleIndexes[selectedCharacterInfo.metas.speakerUuid]
     "
@@ -107,7 +107,7 @@ import { useStore } from "@/store";
 import { DEFAULT_STYLE_NAME } from "@/store/utility";
 import { CharacterInfo, SpeakerId, StyleInfo } from "@/type/preload";
 
-const dialogOpened = defineModel<boolean>({ default: false });
+const dialogOpened = defineModel<boolean>("dialogOpened", { default: false });
 
 const props = defineProps<{
   characterInfos: CharacterInfo[];

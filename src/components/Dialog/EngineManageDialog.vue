@@ -281,7 +281,7 @@ import { useEngineIcons } from "@/composables/useEngineIcons";
 
 type EngineLoaderType = "dir" | "vvpp";
 
-const dialogOpened = defineModel<boolean>();
+const dialogOpened = defineModel<boolean>("dialogOpened");
 
 const store = useStore();
 

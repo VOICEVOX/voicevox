@@ -67,7 +67,7 @@ import { useMarkdownIt } from "@/plugins/markdownItPlugin";
 import BaseDocumentView from "@/components/Base/BaseDocumentView.vue";
 import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 
-const dialogOpened = defineModel<boolean>({ default: false });
+const dialogOpened = defineModel<boolean>("dialogOpened", { default: false });
 const props = defineProps<{
   title: string;
   heading: string;

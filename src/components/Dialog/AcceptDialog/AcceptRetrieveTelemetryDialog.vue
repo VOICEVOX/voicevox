@@ -1,6 +1,6 @@
 <template>
   <AcceptDialog
-    v-model="dialogOpened"
+    v-model:dialogOpened="dialogOpened"
     title="使いやすさ向上のためのお願い"
     rejectLabel="拒否"
     acceptLabel="許可"
@@ -24,7 +24,7 @@ import { ref, onMounted } from "vue";
 import AcceptDialog from "./AcceptDialog.vue";
 import { useStore } from "@/store";
 
-const dialogOpened = defineModel<boolean>({ default: false });
+const dialogOpened = defineModel<boolean>("dialogOpened", { default: false });
 
 const store = useStore();
 
