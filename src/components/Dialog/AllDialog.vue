@@ -30,7 +30,7 @@
   <ExportSongAudioDialog v-model:dialogOpened="isExportSongAudioDialogOpen" />
   <ImportSongProjectDialog v-model="isImportSongProjectDialogOpenComputed" />
   <PresetManageDialog v-model:dialogOpened="isPresetManageDialogOpenComputed" />
-  <HelpDialog v-model="isHelpDialogOpenComputed" />
+  <HelpDialog v-model:dialogOpened="isHelpDialogOpenComputed" />
 </template>
 
 <script setup lang="ts">
