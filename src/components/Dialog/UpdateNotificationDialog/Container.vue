@@ -79,7 +79,7 @@ const stopWatchEffect = watchEffect(() => {
     newUpdateResult.value.status == "updateAvailable"
   ) {
     isDialogOpenComputed.value = true;
-    stopWatchEffect();
+    stopWatchEffect(); // ダイアログを再表示させない
   }
 });
 </script>
