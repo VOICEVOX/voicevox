@@ -110,23 +110,10 @@ import { CharacterInfo, SpeakerId, StyleInfo } from "@/type/preload";
 const dialogOpened = defineModel<boolean>({ default: false });
 
 const props = defineProps<{
-  // modelValue: boolean;
   characterInfos: CharacterInfo[];
 }>();
-/*
-const emit = defineEmits<{
-  (e: "update:modelValue", val: boolean): void;
-}>();
-*/
 
 const store = useStore();
-
-/*
-const modelValueComputed = computed({
-  get: () => props.modelValue,
-  set: (val) => emit("update:modelValue", val),
-});
-*/
 
 // 選択中のキャラクター
 const selectedCharacter = ref(props.characterInfos[0].metas.speakerUuid);
