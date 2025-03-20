@@ -5,7 +5,7 @@
   <AcceptTermsDialog v-model:dialogOpened="isAcceptTermsDialogOpenComputed" />
   <SettingDialog v-model:dialogOpened="isSettingDialogOpenComputed" />
   <HotkeySettingDialog
-    v-model:dialoOpened="isHotkeySettingDialogOpenComputed"
+    v-model:dialogOpened="isHotkeySettingDialogOpenComputed"
   />
   <ToolBarCustomDialog
     v-model:dialogOpened="isToolbarSettingDialogOpenComputed"
