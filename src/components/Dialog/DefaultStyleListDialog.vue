@@ -5,7 +5,7 @@
       selectedStyleIndexes[selectedCharacterInfo.metas.speakerUuid] !==
         undefined
     "
-    v-model:isOpen="showStyleSelectDialog"
+    v-model:modelValue="showStyleSelectDialog"
     v-model:selectedStyleIndex="
       selectedStyleIndexes[selectedCharacterInfo.metas.speakerUuid]
     "
