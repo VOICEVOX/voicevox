@@ -1,6 +1,6 @@
 <template>
   <QDialog
-    v-model="isOpenComputed"
+    v-model="dialogOpened"
     maximized
     transitionShow="none"
     transitionHide="none"
@@ -129,14 +129,14 @@ import {
   StyleInfo,
 } from "@/type/preload";
 
+const dialogOpened = defineModel<boolean>({ default: false });
+
 const props = defineProps<{
-  isOpen: boolean;
   selectedStyleIndex: number;
   characterInfo: CharacterInfo;
 }>();
 
 const emit = defineEmits<{
-  (e: "update:isOpen", value: boolean): void;
   (e: "update:selectedStyleIndex", value: number): void;
 }>();
 
@@ -144,18 +144,13 @@ const $q = useQuasar();
 
 const store = useStore();
 
-const isOpenComputed = computed({
-  get: () => props.isOpen,
-  set: (val) => emit("update:isOpen", val),
-});
-
 const firstSelectedStyleIndex = ref(0);
 const isModified = computed(() => {
   return firstSelectedStyleIndex.value !== props.selectedStyleIndex;
 });
 
 // ダイアログが開かれたときに初期値を求める
-watch([() => props.isOpen], async ([newValue]) => {
+watch([dialogOpened], async ([newValue]) => {
   if (newValue) {
     firstSelectedStyleIndex.value = props.selectedStyleIndex;
   }
@@ -232,7 +227,7 @@ const closeDialog = () => {
   ]);
 
   stop();
-  isOpenComputed.value = false;
+  dialogOpened.value = false;
 };
 </script>
 
