@@ -176,7 +176,7 @@ import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { debounce } from "@/helpers/timer";
 import { UnreachableError } from "@/type/utility";
 
-const dialogOpened = defineModel<boolean>();
+const dialogOpened = defineModel<boolean>({ default: false });
 
 const store = useStore();
 const { isDefaultPresetKey } = useDefaultPreset();

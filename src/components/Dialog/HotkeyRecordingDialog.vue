@@ -84,7 +84,7 @@
 import { computed } from "vue";
 import { HotkeyCombination } from "@/domain/hotkeyAction";
 
-const dialogOpened = defineModel<boolean>();
+const dialogOpened = defineModel<boolean>({ default: false });
 const props = defineProps<{
   lastAction: string;
   lastRecord: HotkeyCombination;

@@ -134,7 +134,7 @@ import {
 } from "@/domain/hotkeyAction";
 import { isMac } from "@/helpers/platform";
 
-const dialogOpened = defineModel<boolean>();
+const dialogOpened = defineModel<boolean>({ default: false });
 
 const store = useStore();
 
