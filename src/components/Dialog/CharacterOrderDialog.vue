@@ -112,26 +112,12 @@ import { CharacterInfo, SpeakerId, StyleId, StyleInfo } from "@/type/preload";
 
 const dialogOpened = defineModel<boolean>({ default: false });
 const props = defineProps<{
-  // modelValue: boolean;
   characterInfos: CharacterInfo[];
 }>();
-
-/*
-const emit = defineEmits<{
-  (event: "update:modelValue", value: boolean): void;
-}>();
-*/
 
 const $q = useQuasar();
 
 const store = useStore();
-
-/*
-const modelValueComputed = computed({
-  get: () => props.modelValue,
-  set: (val) => emit("update:modelValue", val),
-});
-*/
 
 const characterInfosMap = computed(() => {
   const map: { [key: SpeakerId]: CharacterInfo } = {};
@@ -258,7 +244,6 @@ const closeDialog = () => {
     characterOrder.value.map((info) => info.metas.speakerUuid),
   );
   stop();
-  // modelValueComputed.value = false;
   dialogOpened.value = false;
 };
 
