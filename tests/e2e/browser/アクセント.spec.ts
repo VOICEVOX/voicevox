@@ -1,11 +1,11 @@
 import { test, expect } from "@playwright/test";
 
-import { gotoHome, navigateToTalk, navigateToSong } from "../navigators";
+import { gotoHome, navigateToTalk } from "../navigators";
 
 test.beforeEach(gotoHome);
 
 test("アクセント分割したらアクセント区間が増える", async ({ page }) => {
-  await navigateToSong(page);
+  await navigateToTalk(page);
   await expect(page.locator(".audio-cell").first()).toBeVisible();
   await page.locator(".audio-cell input").first().fill("こんにちは");
   await page.locator(".audio-cell input").first().press("Enter");

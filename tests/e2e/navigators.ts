@@ -9,8 +9,8 @@ export async function gotoHome({ page }: { page: Page }) {
   });
 }
 
-export async function navigateToMain(page: Page) {
-  await test.step("初回起動時の確認を完了してメイン画面に移動", async () => {
+async function navigateToChoiceEditor(page: Page) {
+  await test.step("初回起動時の確認を完了してエディタ選択に移動", async () => {
     await expect(page.getByText("利用規約に関するお知らせ")).toBeVisible({
       timeout: 90 * 1000,
     });
@@ -61,18 +61,18 @@ export async function navigateToSettingDialog(page: Page): Promise<Locator> {
 }
 
 export async function navigateToTalk(page: Page) {
-  await navigateToMain(page);
-
-  await test.step("トーク画面に移動", async () => {
+  await test.step("初回起動時の確認を完了してトーク画面に移動", async () => {
+    await navigateToChoiceEditor(page);
+    await expect(page.getByText("どちらに興味がありますか？")).toBeVisible();
     await page.getByRole("button", { name: "トーク" }).click();
     await page.waitForTimeout(100);
   });
 }
 
 export async function navigateToSong(page: Page) {
-  await navigateToMain(page);
-
-  await test.step("ソング画面に移動", async () => {
+  await test.step("初回起動時の確認を完了してソング画面に移動", async () => {
+    await navigateToChoiceEditor(page);
+    await expect(page.getByText("どちらに興味がありますか？")).toBeVisible();
     await page.getByRole("button", { name: "ソング" }).click();
     await page.waitForTimeout(100);
 
