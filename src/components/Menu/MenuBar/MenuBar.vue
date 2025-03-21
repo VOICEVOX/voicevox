@@ -30,13 +30,12 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
-import { useQuasar, Dialog } from "quasar";
+import { useQuasar } from "quasar";
 import { MenuItemButton, MenuItemData, MenuItemRoot } from "../type";
 import MenuButton from "../MenuButton.vue";
 import TitleBarButtons from "./TitleBarButtons.vue";
 import TitleBarEditorSwitcher from "./TitleBarEditorSwitcher.vue";
 import { useStore } from "@/store";
-import HelpDialog from "@/components/Dialog/HelpDialog/HelpDialog.vue";
 import { getAppInfos } from "@/domain/appInfo";
 
 const props = defineProps<{
@@ -142,8 +141,8 @@ const menudata = computed<(MenuItemButton | MenuItemRoot)[]>(() => [
     type: "button",
     label: "ヘルプ",
     onClick: () => {
-      Dialog.create({
-        component: HelpDialog,
+      void store.actions.SET_DIALOG_OPEN({
+        isHelpDialogOpen: true,
       });
     },
     disableWhenUiLocked: false,

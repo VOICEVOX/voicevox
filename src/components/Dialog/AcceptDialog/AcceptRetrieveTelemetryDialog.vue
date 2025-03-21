@@ -1,6 +1,6 @@
 <template>
   <AcceptDialog
-    v-model="modelValueComputed"
+    v-model:dialogOpened="dialogOpened"
     title="使いやすさ向上のためのお願い"
     rejectLabel="拒否"
     acceptLabel="許可"
@@ -20,30 +20,20 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted } from "vue";
+import { ref, onMounted } from "vue";
 import AcceptDialog from "./AcceptDialog.vue";
 import { useStore } from "@/store";
 
-const props = defineProps<{
-  modelValue: boolean;
-}>();
-const emit = defineEmits<{
-  (e: "update:modelValue", value: boolean): void;
-}>();
+const dialogOpened = defineModel<boolean>("dialogOpened", { default: false });
 
 const store = useStore();
-
-const modelValueComputed = computed({
-  get: () => props.modelValue,
-  set: (val) => emit("update:modelValue", val),
-});
 
 const handler = (acceptRetrieveTelemetry: boolean) => {
   void store.actions.SET_ACCEPT_RETRIEVE_TELEMETRY({
     acceptRetrieveTelemetry: acceptRetrieveTelemetry ? "Accepted" : "Refused",
   });
 
-  modelValueComputed.value = false;
+  dialogOpened.value = false;
 };
 
 const privacyPolicy = ref("");
