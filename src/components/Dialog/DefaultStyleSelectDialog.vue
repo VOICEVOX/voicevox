@@ -46,6 +46,7 @@
                       }}
                     </div>
                     <div class="style-grid">
+                      <!-- TODO: Button in Buttonなデザインになっているのを変更する -->
                       <button
                         v-for="(
                           style, styleIndex
