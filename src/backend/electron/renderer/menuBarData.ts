@@ -3,7 +3,7 @@ import { useEngineIcons } from "@/composables/useEngineIcons";
 import {
   MaybeComputedMenuBarContent,
   MenuBarContent,
-} from "@/domain/menuBarData";
+} from "@/components/Menu/menuBarData";
 import { MenuItemData } from "@/components/Menu/type";
 import { Store } from "@/store";
 import { removeNullableAndBoolean } from "@/helpers/arrayHelper";
