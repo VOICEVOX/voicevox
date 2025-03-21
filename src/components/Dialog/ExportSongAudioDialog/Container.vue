@@ -1,5 +1,8 @@
 <template>
-  <Presentation v-model="modelValue" @exportAudio="handleExportAudio" />
+  <Presentation
+    v-model:dialogOpened="dialogOpened"
+    @exportAudio="handleExportAudio"
+  />
 </template>
 
 <script setup lang="ts">
@@ -12,7 +15,7 @@ defineOptions({
   name: "ExportSongAudioDialog",
 });
 
-const modelValue = defineModel<boolean>();
+const dialogOpened = defineModel<boolean>("dialogOpened");
 const store = useStore();
 
 const handleExportAudio = async (
