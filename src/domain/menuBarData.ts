@@ -49,7 +49,7 @@ export const useCommonMenuBarData = (store: Store) => {
 
   const saveProject = async () => {
     if (!uiLocked.value) {
-      await store.actions.SAVE_PROJECT_FILE_OVERWRITE()
+      await store.actions.SAVE_PROJECT_FILE_OVERWRITE();
     }
   };
 
