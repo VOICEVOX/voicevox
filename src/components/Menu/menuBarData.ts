@@ -383,52 +383,45 @@ export const useCommonMenuBarData = (store: Store) => {
 export const concatMenuBarData = (
   menuBarContents: MaybeRef<MaybeComputedMenuBarContent>[],
 ): Record<keyof MenuBarContent, MenuItemData[]> => {
-  const indexItems = Object.fromEntries(
-    Object.entries(menuItemStructure).map(([key, value]) => [
-      key as keyof MenuBarCategory,
-      Object.fromEntries(value.map((item) => [item, []])),
-    ]),
-  ) as {
-    [K in MenuBarCategory]: Record<
-      keyof NonNullable<MenuBarContent>[K],
-      MenuItemData[]
-    >;
-  };
+  const result = Object.fromEntries(
+    Object.entries(menuItemStructure).map(([key, value]) => {
+      const singleMenuBar = extractSinglemenuBar(
+        key as MenuBarCategory,
+        menuBarContents,
+      );
 
-  for (const menuBarContent of unref(menuBarContents)) {
-    for (const key in unref(menuBarContent)) {
-      const root = key as MenuBarCategory;
-      const items = unref(unref(menuBarContent)[root]);
-      if (items) {
-        for (const itemKey in items) {
-          // @ts-expect-error 型パズルが大変なので手動で型を合わせる
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-          const item = items[itemKey];
-          if (item) {
-            // @ts-expect-error 型パズルが大変なので手動で型を合わせる
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-            indexItems[root][itemKey].push(...item);
-          }
-        }
+      return [
+        key,
+        flatWithSeparator(
+          value
+            .map((menuItemKey) => singleMenuBar[menuItemKey])
+            .filter((v) => v.length > 0),
+          { type: "separator" },
+        ),
+      ];
+    }),
+  ) as Record<keyof MenuBarContent, MenuItemData[]>;
+
+  return result;
+};
+
+const extractSinglemenuBar = (
+  key: MenuBarCategory,
+  menuBarContents: MaybeRef<MaybeComputedMenuBarContent>[],
+) => {
+  const itemsArray: Record<string, MenuItemData[]> = {};
+  for (const menuItemKey of menuItemStructure[key]) {
+    itemsArray[menuItemKey] = [];
+  }
+
+  for (const menuBarContent of menuBarContents) {
+    const items = unref(unref(menuBarContent)[key]);
+    if (items) {
+      for (const [itemKey, itemValue] of Object.entries(items)) {
+        itemsArray[itemKey].push(...itemValue);
       }
     }
   }
 
-  const result = Object.fromEntries(
-    Object.entries(menuItemStructure).map(([key, value]) => [
-      key,
-      flatWithSeparator(
-        (
-          value.map(
-            // @ts-expect-error 型パズルが大変なので手動で型を合わせる
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-            (item) => indexItems[key as MenuBarCategory][item],
-          ) as MenuItemData[][]
-        ).filter((x) => x.length > 0),
-        { type: "separator" },
-      ),
-    ]),
-  ) as Record<keyof MenuBarContent, MenuItemData[]>;
-
-  return result;
+  return itemsArray;
 };
