@@ -1,11 +1,11 @@
 import { test, expect, Page } from "@playwright/test";
-import { toggleSetting, navigateToMain, gotoHome } from "../../navigators";
+import { toggleSetting, navigateToTalk, gotoHome } from "../../navigators";
 import { ctrlLike, addAudioCells } from "./utils";
 
 test.beforeEach(async ({ page }) => {
   await gotoHome({ page });
 
-  await navigateToMain(page);
+  await navigateToTalk(page);
   await page.waitForTimeout(100);
   await toggleSetting(page, "複数選択");
 
