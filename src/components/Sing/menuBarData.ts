@@ -6,7 +6,7 @@ import { notifyResult } from "@/components/Dialog/Dialog";
 import {
   MaybeComputedMenuBarContent,
   MenuBarContent,
-} from "@/components/Menu/menuBarData";
+} from "@/components/Menu/MenuBar/menuBarData";
 
 export const useMenuBarData = (store: Store): MaybeComputedMenuBarContent => {
   const uiLocked = computed(() => store.getters.UI_LOCKED);

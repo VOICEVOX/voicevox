@@ -4,7 +4,7 @@ import { useRootMiscSetting } from "@/composables/useRootMiscSetting";
 import {
   MaybeComputedMenuBarContent,
   MenuBarContent,
-} from "@/components/Menu/menuBarData";
+} from "@/components/Menu/MenuBar/menuBarData";
 
 export const useMenuBarData = (store: Store): MaybeComputedMenuBarContent => {
   // 「ファイル」メニュー
