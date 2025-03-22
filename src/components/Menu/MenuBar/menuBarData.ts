@@ -9,7 +9,6 @@ import {
   objectEntries,
   objectFromEntries,
 } from "@/helpers/typedEntries";
-import { Ref } from "vue";
 
 type MenuBarCategory = "file" | "edit" | "view" | "engine" | "setting";
 
@@ -390,7 +389,7 @@ export const concatMenuBarData = (
   menuBarContents: MaybeRef<MaybeComputedMenuBarContent>[],
 ): Record<keyof MenuBarContent, MenuItemData[]> => {
   const result = mapObjectValues(menuItemStructure, (key, value) => {
-    const singleMenuBar = extractSingleMenuBar(key, menuBarContents);
+    const singleMenuBar = concatSingleMenuBarCategory(key, menuBarContents);
 
     return flatWithSeparator(
       value
@@ -403,7 +402,7 @@ export const concatMenuBarData = (
   return result;
 };
 
-const extractSingleMenuBar = (
+const concatSingleMenuBarCategory = (
   key: MenuBarCategory,
   menuBarContents: MaybeRef<MaybeComputedMenuBarContent>[],
 ) => {
