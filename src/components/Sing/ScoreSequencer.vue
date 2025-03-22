@@ -452,7 +452,7 @@ const {
   previewPitchEdit,
   cursorState,
   guideLineTicks,
-  enableAutoScrollDuringDrag,
+  enableAutoScrollOnEdge,
 } = useSequencerStateMachine(store);
 
 const nowPreviewing = computed(() => previewMode.value !== "IDLE");
@@ -462,7 +462,7 @@ const previewNoteIds = computed(() => {
 });
 
 // マウスカーソルがシーケンサーの端に行ったときの自動スクロール
-useAutoScrollOnEdge(sequencerBody, enableAutoScrollDuringDrag);
+useAutoScrollOnEdge(sequencerBody, enableAutoScrollOnEdge);
 
 // 歌詞を編集中のノート
 const editingLyricNote = computed(() => {

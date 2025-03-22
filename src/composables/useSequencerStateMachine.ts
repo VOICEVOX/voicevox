@@ -89,8 +89,6 @@ export const useSequencerStateMachine = (store: PartialStore) => {
     previewPitchEdit: computed(() => refs.previewPitchEdit.value),
     cursorState: computed(() => refs.cursorState.value),
     guideLineTicks: computed(() => refs.guideLineTicks.value),
-    enableAutoScrollDuringDrag: computed(
-      () => refs.enableAutoScrollOnEdge.value,
-    ),
+    enableAutoScrollOnEdge: computed(() => refs.enableAutoScrollOnEdge.value),
   };
 };
