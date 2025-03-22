@@ -17,13 +17,6 @@ export class Vector2D {
   };
 
   /**
-   * ゼロベクトル。
-   */
-  static get ZERO() {
-    return new Vector2D(0, 0);
-  }
-
-  /**
    * 自分自身のベクトルの大きさ（L2ノルム）。
    */
   get magnitude() {
@@ -74,21 +67,21 @@ export function calcMinimumDistanceVectorRectAndPoint(
   rect: Rect,
   point: Vector2D,
 ) {
-  let deltaX = 0;
+  let distanceX = 0;
   if (point.x < rect.x) {
-    deltaX = point.x - rect.x;
+    distanceX = point.x - rect.x;
   } else if (point.x > rect.x + rect.width) {
-    deltaX = point.x - (rect.x + rect.width);
+    distanceX = point.x - (rect.x + rect.width);
   }
 
-  let deltaY = 0;
+  let distanceY = 0;
   if (point.y < rect.y) {
-    deltaY = point.y - rect.y;
+    distanceY = point.y - rect.y;
   } else if (point.y > rect.y + rect.height) {
-    deltaY = point.y - (rect.y + rect.height);
+    distanceY = point.y - (rect.y + rect.height);
   }
 
-  return new Vector2D(deltaX, deltaY);
+  return new Vector2D(distanceX, distanceY);
 }
 
 export function round(value: number, digits: number) {
