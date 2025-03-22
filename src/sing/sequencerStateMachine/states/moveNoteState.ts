@@ -71,6 +71,7 @@ export class MoveNoteState
     context.cursorState.value = "MOVE";
     context.guideLineTicks.value = guideLineTicks;
     context.previewMode.value = "MOVE_NOTE";
+    context.enableAutoScrollOnEdge.value = true;
 
     const previewIfNeeded = () => {
       if (this.innerContext == undefined) {
@@ -152,6 +153,7 @@ export class MoveNoteState
     context.previewNotes.value = [];
     context.cursorState.value = "UNSET";
     context.previewMode.value = "IDLE";
+    context.enableAutoScrollOnEdge.value = false;
   }
 
   private previewMove(context: Context) {
