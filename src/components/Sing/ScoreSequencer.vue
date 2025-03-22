@@ -640,7 +640,7 @@ const autoScrollAnimation = (timestamp: number) => {
       autoScrollObject.autoScrollTriggerRect,
       autoScrollObject.vectorCursor,
     );
-    if (!minimumDistanceVector.isMagnitudeZero) {
+    if (minimumDistanceVector.magnitude !== 0) {
       // NOTE: 速度の単位はpixels/s（ピクセル毎秒）
       const dt = (timestamp - previousTimeStamp) / 1000;
       const d = minimumDistanceVector.magnitude;

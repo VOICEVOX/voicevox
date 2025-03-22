@@ -26,13 +26,6 @@ export class Vector2D {
     return this.cache.magnitude;
   }
 
-  /**
-   * 自分自身のベクトルの大きさがゼロかどうか。
-   */
-  get isMagnitudeZero() {
-    return this.x === 0 && this.y === 0;
-  }
-
   constructor(x: number, y: number) {
     this.x = x;
     this.y = y;
