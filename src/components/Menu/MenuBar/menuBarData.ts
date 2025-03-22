@@ -17,6 +17,8 @@ const menuItemStructure = {
   setting: ["subOptions", "options"],
 } as const satisfies Record<MenuBarCategory, string[]>;
 
+type MenuItemSection = (typeof menuItemStructure)[MenuBarCategory][number];
+
 export type MenuBarContent = Partial<{
   [K in MenuBarCategory]: Partial<
     Record<(typeof menuItemStructure)[K][number], MenuItemData[]>
@@ -30,14 +32,14 @@ export const concatMenuBarData = (
   menuBarContents: MaybeRef<MaybeComputedMenuBarContent>[],
 ): Record<keyof MenuBarContent, MenuItemData[]> => {
   const result = mapObjectValues(menuItemStructure, (category, contents) => {
-    const singleMenuBar = concatSingleMenuBarCategory(
+    const singleMenuCategoryItems = concatSingleMenuBarCategory(
       category,
       menuBarContents,
     );
 
     return flatWithSeparator(
       contents
-        .map((menuItemKey) => singleMenuBar[menuItemKey])
+        .map((menuItemKey) => singleMenuCategoryItems[menuItemKey])
         .filter((v) => v.length > 0),
       { type: "separator" },
     );
@@ -50,21 +52,19 @@ const concatSingleMenuBarCategory = (
   key: MenuBarCategory,
   menuBarContents: MaybeRef<MaybeComputedMenuBarContent>[],
 ) => {
-  const itemsArray: Record<
-    (typeof menuItemStructure)[typeof key][number],
-    MenuItemData[]
-  > = objectFromEntries(menuItemStructure[key].map((v) => [v, []]));
+  const sectionItems: Record<MenuItemSection, MenuItemData[]> =
+    objectFromEntries(menuItemStructure[key].map((v) => [v, []]));
 
   for (const menuBarContent of menuBarContents) {
     const items = unref(unref(menuBarContent)[key]);
     if (items) {
-      for (const [itemKey, itemValue] of objectEntries(items)) {
+      for (const [section, sectionMenuItems] of objectEntries(items)) {
         // @ts-expect-error 型が合わないので無視する。
         // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        itemsArray[itemKey].push(...itemValue);
+        sectionItems[section].push(...sectionMenuItems);
       }
     }
   }
 
-  return itemsArray;
+  return sectionItems;
 };
