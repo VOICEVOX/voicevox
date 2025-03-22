@@ -5,6 +5,92 @@ export type Rect = {
   height: number;
 };
 
+/**
+ * 二次元ベクトルを表現するクラス。
+ */
+export class Vector2D {
+  readonly x: number;
+  readonly y: number;
+
+  private cache: {
+    magnitude: number | undefined;
+  };
+
+  /**
+   * ゼロベクトル。
+   */
+  static get ZERO() {
+    return new Vector2D(0, 0);
+  }
+
+  /**
+   * 自分自身のベクトルの大きさ（L2ノルム）。
+   */
+  get magnitude() {
+    if (this.cache.magnitude == undefined) {
+      this.cache.magnitude = Math.sqrt(this.x * this.x + this.y * this.y);
+    }
+    return this.cache.magnitude;
+  }
+
+  /**
+   * 自分自身のベクトルの大きさがゼロかどうか。
+   */
+  get isMagnitudeZero() {
+    return this.x === 0 && this.y === 0;
+  }
+
+  constructor(x: number, y: number) {
+    this.x = x;
+    this.y = y;
+
+    this.cache = {
+      magnitude: undefined,
+    };
+  }
+
+  /**
+   * スカラー倍: スカラー値との積を返す。
+   */
+  scale(scalar: number) {
+    return new Vector2D(this.x * scalar, this.y * scalar);
+  }
+
+  /**
+   * 単位ベクトルを返す。
+   */
+  toUnitVector() {
+    if (this.magnitude === 0) {
+      throw new Error("Cannot convert to unit vector: magnitude is zero.");
+    }
+    return new Vector2D(this.x / this.magnitude, this.y / this.magnitude);
+  }
+}
+
+/**
+ * 矩形から点への最小距離ベクトルを計算する。
+ */
+export function calcMinimumDistanceVectorRectAndPoint(
+  rect: Rect,
+  point: Vector2D,
+) {
+  let deltaX = 0;
+  if (point.x < rect.x) {
+    deltaX = point.x - rect.x;
+  } else if (point.x > rect.x + rect.width) {
+    deltaX = point.x - (rect.x + rect.width);
+  }
+
+  let deltaY = 0;
+  if (point.y < rect.y) {
+    deltaY = point.y - rect.y;
+  } else if (point.y > rect.y + rect.height) {
+    deltaY = point.y - (rect.y + rect.height);
+  }
+
+  return new Vector2D(deltaX, deltaY);
+}
+
 export function round(value: number, digits: number) {
   const powerOf10 = 10 ** digits;
   return Math.round(value * powerOf10) / powerOf10;

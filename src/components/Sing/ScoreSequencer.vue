@@ -272,6 +272,11 @@ import {
   PREVIEW_SOUND_DURATION,
   getKeyBaseHeight,
 } from "@/sing/viewHelper";
+import {
+  calcMinimumDistanceVectorRectAndPoint,
+  Rect,
+  Vector2D,
+} from "@/sing/utility";
 import SequencerGrid from "@/components/Sing/SequencerGrid/Container.vue";
 import SequencerRuler from "@/components/Sing/SequencerRuler/Container.vue";
 import SequencerKeys from "@/components/Sing/SequencerKeys.vue";
@@ -600,98 +605,23 @@ const onMouseDown = (event: MouseEvent) => {
   }
 };
 
-// 二次元ベクトルを表現するクラス
-class vector2D {
-  x: number;
-  y: number;
-
-  constructor(x: number, y: number) {
-    this.x = x;
-    this.y = y;
-  }
-
-  // スカラー倍: スカラー値との積を返す
-  scale(scalar: number): vector2D {
-    return new vector2D(this.x * scalar, this.y * scalar);
-  }
-
-  // 自分自身のベクトルの大きさ（ノルム）を求める
-  magnitude(): number {
-    return Math.sqrt(this.x * this.x + this.y * this.y);
-  }
-
-  toString(): string {
-    return `Vector2D(${this.x}, ${this.y})`;
-  }
-}
-
-class triggerRect {
-  sx: number;
-  sy: number;
-  width: number;
-  height: number;
-
-  constructor(sx: number, sy: number, width: number, height: number) {
-    this.sx = sx;
-    this.sy = sy;
-    this.width = width;
-    this.height = height;
-  }
-
-  isPointInsideInRect(point: vector2D): boolean {
-    return (
-      point.x >= this.sx &&
-      point.x <= this.sx + this.width &&
-      point.y >= this.sy &&
-      point.y <= this.sy + this.height
-    );
-  }
-
-  calcMinimumDistanceVectorRectAndPoint(point: vector2D): vector2D {
-    const clamp = (min: number, val: number, max: number) =>
-      Math.max(min, Math.min(val, max));
-
-    const xc = clamp(this.sx, point.x, this.sx + this.width);
-    const yc = clamp(this.sy, point.y, this.sy + this.height);
-    // 各辺の最近点へのベクトル
-    const vectors: vector2D[] = [
-      new vector2D(xc - point.x, this.sy - point.y), // 底辺
-      new vector2D(xc - point.x, this.sy + this.height - point.y), // 上辺
-      new vector2D(this.sx - point.x, yc - point.y), // 左辺
-      new vector2D(this.sx + this.width - point.x, yc - point.y), // 右辺
-    ];
-
-    const vectorDistances = [
-      vectors[0].magnitude(),
-      vectors[1].magnitude(),
-      vectors[2].magnitude(),
-      vectors[3].magnitude(),
-    ];
-
-    // 各ベクトルのうち最小ノルムのインデックスを見つける
-    const minIndex = vectorDistances.indexOf(Math.min(...vectorDistances));
-
-    return vectors[minIndex];
-  }
-}
-
 const autoScrollObject: {
+  readonly baseSpeed: number;
+  readonly accelerationFactor: number;
+  readonly maxSpeed: number;
+  readonly threshold: number;
   animationId: number | undefined;
   previousTimeStamp: number | undefined;
-  initialSpeed: number;
-  scrollSpeedFactor: number;
-  maxScrollSpeed: number;
-  threshold: number;
-  vectorCursor: vector2D;
-  autoScrollTriggerRect: triggerRect | undefined;
+  vectorCursor: Vector2D | undefined;
+  autoScrollTriggerRect: Rect | undefined;
 } = {
+  baseSpeed: 100,
+  accelerationFactor: 1.7,
+  maxSpeed: 2000,
+  threshold: 16,
   animationId: undefined,
   previousTimeStamp: undefined,
-  initialSpeed: 4,
-  scrollSpeedFactor: 0.05,
-  maxScrollSpeed: 60,
-  threshold: 15,
-  vectorCursor: new vector2D(0, 0),
+  vectorCursor: undefined,
   autoScrollTriggerRect: undefined,
 };
 
@@ -702,46 +632,32 @@ const autoScrollAnimation = (timestamp: number) => {
   if (autoScrollObject.autoScrollTriggerRect == undefined) {
     throw new Error("autoScrollTriggerRect is undefined.");
   }
+  const previousTimeStamp = autoScrollObject.previousTimeStamp ?? timestamp;
 
-  if (autoScrollObject.previousTimeStamp == undefined) {
-    autoScrollObject.previousTimeStamp = timestamp;
-  }
-  const elapsed = timestamp - autoScrollObject.previousTimeStamp;
-  if (
-    !autoScrollObject.autoScrollTriggerRect.isPointInsideInRect(
+  if (autoScrollObject.vectorCursor != undefined) {
+    // マウスカーソルがTriggerRectの外に出たらスクロールする
+    const minimumDistanceVector = calcMinimumDistanceVectorRectAndPoint(
+      autoScrollObject.autoScrollTriggerRect,
       autoScrollObject.vectorCursor,
-    )
-  ) {
-    // スクロールベクトル算出
-    const minimumDistanceVector =
-      autoScrollObject.autoScrollTriggerRect.calcMinimumDistanceVectorRectAndPoint(
-        autoScrollObject.vectorCursor,
-      );
-    const magnitudeMinimumDistanceVector = minimumDistanceVector.magnitude();
-    let normalizeMinimumDistanceVector = new vector2D(0, 0);
-    if (magnitudeMinimumDistanceVector !== 0) {
-      normalizeMinimumDistanceVector = minimumDistanceVector.scale(
-        1 / magnitudeMinimumDistanceVector,
-      );
+    );
+    if (!minimumDistanceVector.isMagnitudeZero) {
+      // NOTE: 速度の単位はpixels/s（ピクセル毎秒）
+      const dt = (timestamp - previousTimeStamp) / 1000;
+      const d = minimumDistanceVector.magnitude;
+      const k = autoScrollObject.accelerationFactor;
+      const vbase = autoScrollObject.baseSpeed;
+      const vmax = autoScrollObject.maxSpeed;
+
+      const scrollVector = minimumDistanceVector
+        .toUnitVector()
+        .scale(Math.min(vbase + k * d * d, vmax) * dt);
+
+      sequencerBody.value.scrollBy({
+        top: Math.floor(scrollVector.y),
+        left: Math.floor(scrollVector.x),
+        behavior: "auto",
+      });
     }
-
-    const scrollVector = normalizeMinimumDistanceVector
-      .scale(elapsed / 10)
-      .scale(
-        Math.min(
-          autoScrollObject.scrollSpeedFactor *
-            (magnitudeMinimumDistanceVector / 10) *
-            (magnitudeMinimumDistanceVector / 10) +
-            autoScrollObject.initialSpeed,
-          autoScrollObject.maxScrollSpeed,
-        ),
-      );
-
-    sequencerBody.value.scrollBy({
-      top: Math.floor(-scrollVector.y),
-      left: Math.floor(-scrollVector.x),
-      behavior: "auto",
-    });
   }
 
   autoScrollObject.previousTimeStamp = timestamp;
@@ -751,8 +667,7 @@ const autoScrollAnimation = (timestamp: number) => {
 const onMouseMove = (event: MouseEvent) => {
   const cursorPos = getCursorPosOnSequencer(event);
 
-  autoScrollObject.vectorCursor.x = cursorPos.x;
-  autoScrollObject.vectorCursor.y = cursorPos.y;
+  autoScrollObject.vectorCursor = new Vector2D(cursorPos.x, cursorPos.y);
 
   stateMachineProcess({
     type: "mouseEvent",
@@ -762,27 +677,25 @@ const onMouseMove = (event: MouseEvent) => {
   });
 };
 
-watch(enableAutoScrollDuringDrag, (newFlag) => {
-  autoScrollObject.autoScrollTriggerRect = new triggerRect(
-    0,
-    0,
-    (() => {
-      if (sequencerBody.value == undefined) {
-        throw new Error("sequencerBody.value is undefined.");
-      }
+watch(enableAutoScrollDuringDrag, (value) => {
+  if (value) {
+    // 自動スクロールのアニメーションループを開始する
+    if (sequencerBody.value == undefined) {
+      throw new Error("sequencerBody.value is undefined.");
+    }
+    const sequencerBodyWidth = sequencerBody.value.clientWidth;
+    const sequencerBodyHeight = sequencerBody.value.clientHeight;
+    const threshold = autoScrollObject.threshold;
 
-      return sequencerBody.value.clientWidth - autoScrollObject.threshold;
-    })(),
-    (() => {
-      if (sequencerBody.value == undefined) {
-        throw new Error("sequencerBody.value is undefined.");
-      }
+    autoScrollObject.autoScrollTriggerRect = {
+      x: threshold,
+      y: threshold,
+      width: Math.max(sequencerBodyWidth - threshold * 2, 0),
+      height: Math.max(sequencerBodyHeight - threshold * 2, 0),
+    };
+    autoScrollObject.vectorCursor = undefined;
+    autoScrollObject.previousTimeStamp = undefined;
 
-      return sequencerBody.value.clientHeight - autoScrollObject.threshold;
-    })(),
-  );
-
-  if (newFlag) {
     autoScrollObject.animationId = requestAnimationFrame(autoScrollAnimation);
   } else {
     // 自動スクロールのアニメーションループを停止する
