@@ -37,7 +37,7 @@ export const useSequencerStateMachine = (store: PartialStore) => {
     previewPitchEdit: ref(undefined),
     cursorState: ref("UNSET"),
     guideLineTicks: ref(0),
-    enableAutoScrollDuringDrag: ref(false),
+    enableAutoScrollOnEdge: ref(false),
   };
 
   const idleStateId = computed((): IdleStateId => {
@@ -90,7 +90,7 @@ export const useSequencerStateMachine = (store: PartialStore) => {
     cursorState: computed(() => refs.cursorState.value),
     guideLineTicks: computed(() => refs.guideLineTicks.value),
     enableAutoScrollDuringDrag: computed(
-      () => refs.enableAutoScrollDuringDrag.value,
+      () => refs.enableAutoScrollOnEdge.value,
     ),
   };
 };

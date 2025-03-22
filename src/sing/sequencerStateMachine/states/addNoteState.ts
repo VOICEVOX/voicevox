@@ -65,7 +65,7 @@ export class AddNoteState
     context.cursorState.value = "DRAW";
     context.guideLineTicks.value = noteEndPos;
     context.previewMode.value = "ADD_NOTE";
-    context.enableAutoScrollDuringDrag.value = true;
+    context.enableAutoScrollOnEdge.value = true;
 
     const previewIfNeeded = () => {
       if (this.innerContext == undefined) {
@@ -143,7 +143,7 @@ export class AddNoteState
     context.previewNotes.value = [];
     context.cursorState.value = "UNSET";
     context.previewMode.value = "IDLE";
-    context.enableAutoScrollDuringDrag.value = false;
+    context.enableAutoScrollOnEdge.value = false;
   }
 
   private previewAdd(context: Context) {

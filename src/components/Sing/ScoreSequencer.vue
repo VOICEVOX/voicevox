@@ -272,11 +272,6 @@ import {
   PREVIEW_SOUND_DURATION,
   getKeyBaseHeight,
 } from "@/sing/viewHelper";
-import {
-  calcMinimumDistanceVectorRectAndPoint,
-  Rect,
-  Vector2D,
-} from "@/sing/utility";
 import SequencerGrid from "@/components/Sing/SequencerGrid/Container.vue";
 import SequencerRuler from "@/components/Sing/SequencerRuler/Container.vue";
 import SequencerKeys from "@/components/Sing/SequencerKeys.vue";
@@ -292,6 +287,7 @@ import { createLogger } from "@/helpers/log";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import { useSequencerStateMachine } from "@/composables/useSequencerStateMachine";
 import { PositionOnSequencer } from "@/sing/sequencerStateMachine/common";
+import { useAutoScrollOnEdge } from "@/composables/useAutoScrollOnEdge";
 
 const { warn } = createLogger("ScoreSequencer");
 const store = useStore();
@@ -465,6 +461,9 @@ const previewNoteIds = computed(() => {
   return new Set(previewNotes.value.map((note) => note.id));
 });
 
+// マウスカーソルがシーケンサーの端に行ったときの自動スクロール
+useAutoScrollOnEdge(sequencerBody, enableAutoScrollDuringDrag);
+
 // 歌詞を編集中のノート
 const editingLyricNote = computed(() => {
   return notesInSelectedTrack.value.find(
@@ -605,107 +604,14 @@ const onMouseDown = (event: MouseEvent) => {
   }
 };
 
-const autoScrollObject: {
-  readonly baseSpeed: number;
-  readonly accelerationFactor: number;
-  readonly maxSpeed: number;
-  readonly threshold: number;
-  animationId: number | undefined;
-  previousTimeStamp: number | undefined;
-  vectorCursor: Vector2D | undefined;
-  autoScrollTriggerRect: Rect | undefined;
-} = {
-  baseSpeed: 100,
-  accelerationFactor: 1.7,
-  maxSpeed: 2000,
-  threshold: 16,
-  animationId: undefined,
-  previousTimeStamp: undefined,
-  vectorCursor: undefined,
-  autoScrollTriggerRect: undefined,
-};
-
-const autoScrollAnimation = (timestamp: number) => {
-  if (sequencerBody.value == undefined) {
-    throw new Error("sequencerBody.value is undefined.");
-  }
-  if (autoScrollObject.autoScrollTriggerRect == undefined) {
-    throw new Error("autoScrollTriggerRect is undefined.");
-  }
-  const previousTimeStamp = autoScrollObject.previousTimeStamp ?? timestamp;
-
-  if (autoScrollObject.vectorCursor != undefined) {
-    // マウスカーソルがTriggerRectの外に出たらスクロールする
-    const minimumDistanceVector = calcMinimumDistanceVectorRectAndPoint(
-      autoScrollObject.autoScrollTriggerRect,
-      autoScrollObject.vectorCursor,
-    );
-    if (minimumDistanceVector.magnitude !== 0) {
-      // NOTE: 速度の単位はpixels/s（ピクセル毎秒）
-      const dt = (timestamp - previousTimeStamp) / 1000;
-      const d = minimumDistanceVector.magnitude;
-      const k = autoScrollObject.accelerationFactor;
-      const vbase = autoScrollObject.baseSpeed;
-      const vmax = autoScrollObject.maxSpeed;
-
-      const scrollSpeed = Math.min(vbase + k * d * d, vmax);
-      const scrollVector = minimumDistanceVector
-        .toUnitVector()
-        .scale(scrollSpeed * dt);
-
-      sequencerBody.value.scrollBy({
-        top: Math.floor(scrollVector.y),
-        left: Math.floor(scrollVector.x),
-        behavior: "auto",
-      });
-    }
-  }
-
-  autoScrollObject.previousTimeStamp = timestamp;
-  autoScrollObject.animationId = requestAnimationFrame(autoScrollAnimation);
-};
-
 const onMouseMove = (event: MouseEvent) => {
-  const cursorPos = getCursorPosOnSequencer(event);
-
-  autoScrollObject.vectorCursor = new Vector2D(cursorPos.x, cursorPos.y);
-
   stateMachineProcess({
     type: "mouseEvent",
     targetArea: "Window",
     mouseEvent: event,
-    cursorPos,
+    cursorPos: getCursorPosOnSequencer(event),
   });
 };
-
-watch(enableAutoScrollDuringDrag, (value) => {
-  if (value) {
-    // 自動スクロールのアニメーションループを開始する
-    if (sequencerBody.value == undefined) {
-      throw new Error("sequencerBody.value is undefined.");
-    }
-    const sequencerBodyWidth = sequencerBody.value.clientWidth;
-    const sequencerBodyHeight = sequencerBody.value.clientHeight;
-    const threshold = autoScrollObject.threshold;
-
-    autoScrollObject.autoScrollTriggerRect = {
-      x: threshold,
-      y: threshold,
-      width: Math.max(sequencerBodyWidth - threshold * 2, 0),
-      height: Math.max(sequencerBodyHeight - threshold * 2, 0),
-    };
-    autoScrollObject.vectorCursor = undefined;
-    autoScrollObject.previousTimeStamp = undefined;
-
-    autoScrollObject.animationId = requestAnimationFrame(autoScrollAnimation);
-  } else {
-    // 自動スクロールのアニメーションループを停止する
-    if (autoScrollObject.animationId != undefined) {
-      cancelAnimationFrame(autoScrollObject.animationId);
-      autoScrollObject.animationId = undefined;
-    }
-  }
-});
 
 const onMouseUp = (event: MouseEvent) => {
   stateMachineProcess({
