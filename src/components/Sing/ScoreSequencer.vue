@@ -648,9 +648,10 @@ const autoScrollAnimation = (timestamp: number) => {
       const vbase = autoScrollObject.baseSpeed;
       const vmax = autoScrollObject.maxSpeed;
 
+      const scrollSpeed = Math.min(vbase + k * d * d, vmax);
       const scrollVector = minimumDistanceVector
         .toUnitVector()
-        .scale(Math.min(vbase + k * d * d, vmax) * dt);
+        .scale(scrollSpeed * dt);
 
       sequencerBody.value.scrollBy({
         top: Math.floor(scrollVector.y),
