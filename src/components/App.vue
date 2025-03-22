@@ -47,6 +47,7 @@ import { removeNullableAndBoolean } from "@/helpers/arrayHelper";
 
 const store = useStore();
 
+// TODO: useMenuBarData系の関数をcomposableじゃなくする
 const commonMenuBarData = useCommonMenuBarData(store);
 const talkMenuBarData = useTalkMenuBarData(store);
 const singMenuBarData = useSingMenuBarData(store);
