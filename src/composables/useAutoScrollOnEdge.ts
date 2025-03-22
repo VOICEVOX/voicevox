@@ -29,8 +29,8 @@ export const useAutoScrollOnEdge = (
     | undefined = undefined;
 
   const autoScrollAnimation = (timestamp: number) => {
-    if (element.value == undefined) {
-      throw new Error("element.value is undefined.");
+    if (element.value == null) {
+      throw new Error("element.value is null.");
     }
     if (autoScrollState == undefined) {
       throw new Error("autoScrollState is undefined.");
@@ -71,9 +71,9 @@ export const useAutoScrollOnEdge = (
   watch(enable, (value) => {
     if (value) {
       // 自動スクロールのアニメーションループを開始する
-      if (element.value == undefined) {
+      if (element.value == null) {
         throw new Error(
-          "element.value is undefined. Auto-scroll should be enabled after mounting.",
+          "element.value is null. Auto-scroll should be enabled after mounting.",
         );
       }
       const elementWidth = element.value.clientWidth;
@@ -100,7 +100,7 @@ export const useAutoScrollOnEdge = (
   });
 
   const onMouseMove = (event: MouseEvent) => {
-    if (element.value == undefined) {
+    if (element.value == null) {
       throw new Error("element.value is null.");
     }
     if (autoScrollState != undefined) {
