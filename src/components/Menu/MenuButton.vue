@@ -73,7 +73,7 @@ const subMenuOpenFlags = ref(
 const isDisabledMenuItem = computed(() => (menu: MenuItemData) => {
   if (menu.type === "separator") return false;
   if (menu.disableWhenUiLocked && uiLocked.value) return true;
-  if (menu.disablreloadingLocked && reloadingLocked.value) return true;
+  if (menu.disableWhileReloadingLock && reloadingLocked.value) return true;
   return false;
 });
 
