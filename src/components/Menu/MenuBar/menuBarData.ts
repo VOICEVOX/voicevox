@@ -388,11 +388,14 @@ export const useCommonMenuBarData = (store: Store) => {
 export const concatMenuBarData = (
   menuBarContents: MaybeRef<MaybeComputedMenuBarContent>[],
 ): Record<keyof MenuBarContent, MenuItemData[]> => {
-  const result = mapObjectValues(menuItemStructure, (key, value) => {
-    const singleMenuBar = concatSingleMenuBarCategory(key, menuBarContents);
+  const result = mapObjectValues(menuItemStructure, (category, contents) => {
+    const singleMenuBar = concatSingleMenuBarCategory(
+      category,
+      menuBarContents,
+    );
 
     return flatWithSeparator(
-      value
+      contents
         .map((menuItemKey) => singleMenuBar[menuItemKey])
         .filter((v) => v.length > 0),
       { type: "separator" },
