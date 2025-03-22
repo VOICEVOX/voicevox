@@ -4,6 +4,12 @@ import { Store } from "@/store";
 import { HotkeyAction, useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import { ensureNotNullish } from "@/helpers/errorHelper";
 import { flatWithSeparator } from "@/helpers/arrayHelper";
+import {
+  mapObjectValues,
+  objectEntries,
+  objectFromEntries,
+} from "@/helpers/typedEntries";
+import { Ref } from "vue";
 
 type MenuBarCategory = "file" | "edit" | "view" | "engine" | "setting";
 
@@ -383,41 +389,35 @@ export const useCommonMenuBarData = (store: Store) => {
 export const concatMenuBarData = (
   menuBarContents: MaybeRef<MaybeComputedMenuBarContent>[],
 ): Record<keyof MenuBarContent, MenuItemData[]> => {
-  const result = Object.fromEntries(
-    Object.entries(menuItemStructure).map(([key, value]) => {
-      const singleMenuBar = extractSinglemenuBar(
-        key as MenuBarCategory,
-        menuBarContents,
-      );
+  const result = mapObjectValues(menuItemStructure, (key, value) => {
+    const singleMenuBar = extractSingleMenuBar(key, menuBarContents);
 
-      return [
-        key,
-        flatWithSeparator(
-          value
-            .map((menuItemKey) => singleMenuBar[menuItemKey])
-            .filter((v) => v.length > 0),
-          { type: "separator" },
-        ),
-      ];
-    }),
-  ) as Record<keyof MenuBarContent, MenuItemData[]>;
+    return flatWithSeparator(
+      value
+        .map((menuItemKey) => singleMenuBar[menuItemKey])
+        .filter((v) => v.length > 0),
+      { type: "separator" },
+    );
+  });
 
   return result;
 };
 
-const extractSinglemenuBar = (
+const extractSingleMenuBar = (
   key: MenuBarCategory,
   menuBarContents: MaybeRef<MaybeComputedMenuBarContent>[],
 ) => {
-  const itemsArray: Record<string, MenuItemData[]> = {};
-  for (const menuItemKey of menuItemStructure[key]) {
-    itemsArray[menuItemKey] = [];
-  }
+  const itemsArray: Record<
+    (typeof menuItemStructure)[typeof key][number],
+    MenuItemData[]
+  > = objectFromEntries(menuItemStructure[key].map((v) => [v, []]));
 
   for (const menuBarContent of menuBarContents) {
     const items = unref(unref(menuBarContent)[key]);
     if (items) {
-      for (const [itemKey, itemValue] of Object.entries(items)) {
+      for (const [itemKey, itemValue] of objectEntries(items)) {
+        // @ts-expect-error 型が合わないので無視する。
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
         itemsArray[itemKey].push(...itemValue);
       }
     }
