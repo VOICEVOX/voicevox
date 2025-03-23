@@ -6,7 +6,7 @@
 <template>
   <UpdateNotificationDialog
     v-if="newUpdateResult.status == 'updateAvailable'"
-    v-model="isDialogOpenComputed"
+    v-model:dialogOpened="isDialogOpenComputed"
     :latestVersion="newUpdateResult.latestVersion"
     :newUpdateInfos="newUpdateResult.newUpdateInfos"
     @skipThisVersionClick="handleSkipThisVersionClick"
@@ -73,12 +73,13 @@ const handleSkipThisVersionClick = (version: string) => {
 };
 
 // ダイアログを開くかどうか
-watchEffect(() => {
+const stopWatchEffect = watchEffect(() => {
   if (
     props.canOpenDialog &&
     newUpdateResult.value.status == "updateAvailable"
   ) {
     isDialogOpenComputed.value = true;
+    stopWatchEffect(); // ダイアログを再表示させない
   }
 });
 </script>

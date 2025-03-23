@@ -225,9 +225,8 @@
 import { ComputedRef } from "vue";
 import type { InjectionKey } from "vue";
 
-export const gridInfoInjectionKey: InjectionKey<{
-  gridWidth: ComputedRef<number>;
-  gridHeight: ComputedRef<number>;
+export const numMeasuresInjectionKey: InjectionKey<{
+  numMeasures: ComputedRef<number>;
 }> = Symbol();
 </script>
 
@@ -242,8 +241,8 @@ import {
   watch,
   provide,
 } from "vue";
-import SequencerParameterPanel from "./SequencerParameterPanel.vue";
-import SequencerGridSpacer from "./SequencerGridSpacer.vue";
+import SequencerParameterPanel from "@/components/Sing/SequencerParameterPanel.vue";
+import SequencerGridSpacer from "@/components/Sing/SequencerGridSpacer.vue";
 import ContextMenu, {
   ContextMenuItemData,
 } from "@/components/Menu/ContextMenu/Container.vue";
@@ -251,10 +250,11 @@ import { useStore } from "@/store";
 import { Note } from "@/store/type";
 import {
   getEndTicksOfPhrase,
-  getMeasureDuration,
   getNoteDuration,
   getStartTicksOfPhrase,
+  getTimeSignaturePositions,
   noteNumberToFrequency,
+  tickToMeasureNumber,
   tickToSecond,
 } from "@/sing/domain";
 import {
@@ -262,7 +262,6 @@ import {
   baseXToTick,
   noteNumberToBaseY,
   baseYToNoteNumber,
-  keyInfos,
   ZOOM_X_MIN,
   ZOOM_X_MAX,
   ZOOM_X_STEP,
@@ -270,8 +269,9 @@ import {
   ZOOM_Y_MAX,
   ZOOM_Y_STEP,
   PREVIEW_SOUND_DURATION,
-  getKeyBaseHeight,
+  SEQUENCER_MIN_NUM_MEASURES,
 } from "@/sing/viewHelper";
+import { getLast } from "@/sing/utility";
 import SequencerGrid from "@/components/Sing/SequencerGrid/Container.vue";
 import SequencerRuler from "@/components/Sing/SequencerRuler/Container.vue";
 import SequencerKeys from "@/components/Sing/SequencerKeys.vue";
@@ -293,13 +293,15 @@ const { warn } = createLogger("ScoreSequencer");
 const store = useStore();
 const state = store.state;
 
-// トラック、TPQN、テンポ、ノーツ
+// トラック、TPQN、テンポ、拍子、ノーツ
 const tpqn = computed(() => state.tpqn);
 const tempos = computed(() => state.tempos);
+const timeSignatures = computed(() => store.state.timeSignatures);
+const tracks = computed(() => store.state.tracks);
 const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
 const notesInSelectedTrack = computed(() => store.getters.SELECTED_TRACK.notes);
 const notesInOtherTracks = computed(() =>
-  [...store.state.tracks.entries()].flatMap(([trackId, track]) =>
+  [...tracks.value.entries()].flatMap(([trackId, track]) =>
     trackId === selectedTrackId.value ? [] : track.notes,
   ),
 );
@@ -307,7 +309,7 @@ const overlappingNoteIdsInSelectedTrack = computed(() =>
   store.getters.OVERLAPPING_NOTE_IDS(selectedTrackId.value),
 );
 const selectedNotes = computed(() =>
-  store.getters.SELECTED_TRACK.notes.filter((note) =>
+  notesInSelectedTrack.value.filter((note) =>
     selectedNoteIds.value.has(note.id),
   ),
 );
@@ -363,35 +365,35 @@ const snapTicks = computed(() => {
 });
 
 // 小節の数
+// NOTE: スコア長(曲長さ)が決まっていないため、無限スクロール化する or 最後尾に足した場合は伸びるようにするなど？
+// NOTE: いったん最後尾に足した場合は伸びるようにする
 const numMeasures = computed(() => {
-  return store.getters.SEQUENCER_NUM_MEASURES;
-});
+  const tsPositions = getTimeSignaturePositions(
+    timeSignatures.value,
+    tpqn.value,
+  );
+  const notes = [...tracks.value.values()].flatMap((track) => track.notes);
+  const noteEndPositions = notes.map((note) => note.position + note.duration);
 
-// グリッド関係の値
-const gridWidth = computed(() => {
-  const timeSignatures = store.state.timeSignatures;
-  const gridCellWidth = tickToBaseX(snapTicks.value, tpqn.value) * zoomX.value;
+  let maxTicks = 0;
 
-  let numOfGridColumns = 0;
-  for (const [i, timeSignature] of timeSignatures.entries()) {
-    const nextTimeSignature = timeSignatures[i + 1];
-    const nextMeasureNumber =
-      nextTimeSignature?.measureNumber ?? numMeasures.value + 1;
-    const beats = timeSignature.beats;
-    const beatType = timeSignature.beatType;
-    const measureDuration = getMeasureDuration(beats, beatType, tpqn.value);
-    numOfGridColumns +=
-      Math.round(measureDuration / snapTicks.value) *
-      (nextMeasureNumber - timeSignature.measureNumber);
+  const lastTsPosition = tsPositions[tsPositions.length - 1];
+  maxTicks = Math.max(maxTicks, lastTsPosition);
+
+  const lastTempoPosition = getLast(tempos.value).position;
+  maxTicks = Math.max(maxTicks, lastTempoPosition);
+
+  for (const noteEndPosition of noteEndPositions) {
+    maxTicks = Math.max(maxTicks, noteEndPosition);
   }
-  return gridCellWidth * numOfGridColumns;
-});
-const gridHeight = computed(() => {
-  const gridCellHeight = getKeyBaseHeight() * zoomY.value;
-  return gridCellHeight * keyInfos.length;
+
+  return Math.max(
+    SEQUENCER_MIN_NUM_MEASURES,
+    tickToMeasureNumber(maxTicks, timeSignatures.value, tpqn.value) + 8,
+  );
 });
 
-provide(gridInfoInjectionKey, { gridWidth, gridHeight });
+provide(numMeasuresInjectionKey, { numMeasures });
 
 // スクロール位置
 const scrollX = ref(0);

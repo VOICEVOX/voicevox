@@ -1,28 +1,36 @@
 <template>
   <AcceptRetrieveTelemetryDialog
-    v-model="isAcceptRetrieveTelemetryDialogOpenComputed"
+    v-model:dialogOpened="isAcceptRetrieveTelemetryDialogOpenComputed"
   />
-  <AcceptTermsDialog v-model="isAcceptTermsDialogOpenComputed" />
-  <SettingDialog v-model="isSettingDialogOpenComputed" />
-  <HotkeySettingDialog v-model="isHotkeySettingDialogOpenComputed" />
-  <ToolBarCustomDialog v-model="isToolbarSettingDialogOpenComputed" />
+  <AcceptTermsDialog v-model:dialogOpened="isAcceptTermsDialogOpenComputed" />
+  <SettingDialog v-model:dialogOpened="isSettingDialogOpenComputed" />
+  <HotkeySettingDialog
+    v-model:dialogOpened="isHotkeySettingDialogOpenComputed"
+  />
+  <ToolBarCustomDialog
+    v-model:dialogOpened="isToolbarSettingDialogOpenComputed"
+  />
   <CharacterOrderDialog
     v-if="orderedAllCharacterInfos.length > 0"
-    v-model="isCharacterOrderDialogOpenComputed"
+    v-model:dialogOpened="isCharacterOrderDialogOpenComputed"
     :characterInfos="orderedAllCharacterInfos"
   />
   <DefaultStyleListDialog
     v-if="orderedTalkCharacterInfos.length > 0"
-    v-model="isDefaultStyleSelectDialogOpenComputed"
+    v-model:dialogOpened="isDefaultStyleSelectDialogOpenComputed"
     :characterInfos="orderedTalkCharacterInfos"
   />
-  <DictionaryManageDialog v-model="isDictionaryManageDialogOpenComputed" />
-  <EngineManageDialog v-model="isEngineManageDialogOpenComputed" />
+  <DictionaryManageDialog
+    v-model:dialogOpened="isDictionaryManageDialogOpenComputed"
+  />
+  <EngineManageDialog v-model:dialogOpened="isEngineManageDialogOpenComputed" />
   <UpdateNotificationDialogContainer
     :canOpenDialog="canOpenNotificationDialog"
   />
-  <ExportSongAudioDialog v-model="isExportSongAudioDialogOpen" />
+  <ExportSongAudioDialog v-model:dialogOpened="isExportSongAudioDialogOpen" />
   <ImportSongProjectDialog v-model="isImportSongProjectDialogOpenComputed" />
+  <PresetManageDialog v-model:dialogOpened="isPresetManageDialogOpenComputed" />
+  <HelpDialog v-model:dialogOpened="isHelpDialogOpenComputed" />
 </template>
 
 <script setup lang="ts">
@@ -39,6 +47,8 @@ import EngineManageDialog from "@/components/Dialog/EngineManageDialog.vue";
 import UpdateNotificationDialogContainer from "@/components/Dialog/UpdateNotificationDialog/Container.vue";
 import ImportSongProjectDialog from "@/components/Dialog/ImportSongProjectDialog.vue";
 import ExportSongAudioDialog from "@/components/Dialog/ExportSongAudioDialog/Container.vue";
+import PresetManageDialog from "@/components/Dialog/PresetManageDialog.vue";
+import HelpDialog from "@/components/Dialog/HelpDialog/HelpDialog.vue";
 import { useStore } from "@/store";
 import { filterCharacterInfosByStyleType } from "@/store/utility";
 
@@ -168,6 +178,24 @@ const isImportSongProjectDialogOpenComputed = computed({
   set: (val) =>
     store.actions.SET_DIALOG_OPEN({
       isImportSongProjectDialogOpen: val,
+    }),
+});
+
+// プリセット管理ダイアログ
+const isPresetManageDialogOpenComputed = computed({
+  get: () => store.state.isPresetManageDialogOpen,
+  set: (val) =>
+    store.actions.SET_DIALOG_OPEN({
+      isPresetManageDialogOpen: val,
+    }),
+});
+
+// ヘルプダイアログ
+const isHelpDialogOpenComputed = computed({
+  get: () => store.state.isHelpDialogOpen,
+  set: (val) =>
+    store.actions.SET_DIALOG_OPEN({
+      isHelpDialogOpen: val,
     }),
 });
 </script>

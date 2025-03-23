@@ -4,7 +4,7 @@ import fs from "fs/promises";
 import path from "path";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import licenseChecker from "license-checker-rseidelsohn";
+import * as licenseChecker from "license-checker-rseidelsohn";
 
 const argv = await yargs(hideBin(process.argv))
   .option("output_path", {

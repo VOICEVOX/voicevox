@@ -314,12 +314,14 @@ watch(nowPlaying, async (newState) => {
     const accentPhraseOffsets = await store.actions.GET_AUDIO_PLAY_OFFSETS({
       audioKey: props.activeAudioKey,
     });
+    const currentTimeGetter =
+      store.getters.ACTIVE_AUDIO_ELEM_CURRENT_TIME_GETTER;
     // 現在再生されているaudio elementの再生時刻を描画毎に取得(監視)し、
     // それに合わせてフォーカスするアクセント句を変えていく
     const focusAccentPhrase = () => {
-      const currentTime = store.getters.ACTIVE_AUDIO_ELEM_CURRENT_TIME;
+      const currentTime = currentTimeGetter();
       if (currentTime == undefined) {
-        throw new Error("currentTime === undefined)");
+        throw new Error("currentTime == undefined");
       }
       const playingAccentPhraseIndex =
         accentPhraseOffsets.findIndex(
