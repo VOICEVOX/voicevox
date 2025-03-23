@@ -1,7 +1,7 @@
 <template>
   <ErrorBoundary>
     <TooltipProvider disableHoverableContent :delayDuration="500">
-      <!-- TODO: subMenuDataのpropsをまとめる -->
+      <!-- TODO: subMenuDataのpropsを分けず、１つにまとめて渡す -->
       <MenuBar
         v-if="openedEditor != undefined"
         :fileSubMenuData="subMenuData.file"
