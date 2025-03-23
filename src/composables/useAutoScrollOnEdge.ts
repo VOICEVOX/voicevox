@@ -1,4 +1,4 @@
-import { ComputedRef, onMounted, onUnmounted, Ref, watch } from "vue";
+import { ComputedRef, onMounted, onUnmounted, ref, Ref, watch } from "vue";
 import {
   calcMinimumDistanceVectorRectAndPoint,
   Rect,
@@ -68,8 +68,13 @@ export const useAutoScrollOnEdge = (
     autoScrollState.animationId = requestAnimationFrame(autoScrollAnimation);
   };
 
-  watch(enable, (value) => {
-    if (value) {
+  const mounted = ref(false);
+
+  watch([enable, mounted], ([enableValue, mountedValue]) => {
+    if (!mountedValue) {
+      return;
+    }
+    if (enableValue && autoScrollState == undefined) {
       // 自動スクロールのアニメーションループを開始する
       if (element.value == null) {
         throw new Error(
@@ -90,12 +95,11 @@ export const useAutoScrollOnEdge = (
           height: Math.max(elementHeight - threshold * 2, 0),
         },
       };
-    } else {
+    }
+    if (!enableValue && autoScrollState != undefined) {
       // 自動スクロールのアニメーションループを停止する
-      if (autoScrollState != undefined) {
-        cancelAnimationFrame(autoScrollState.animationId);
-        autoScrollState = undefined;
-      }
+      cancelAnimationFrame(autoScrollState.animationId);
+      autoScrollState = undefined;
     }
   });
 
@@ -112,6 +116,7 @@ export const useAutoScrollOnEdge = (
   };
 
   onMounted(() => {
+    mounted.value = true;
     window.addEventListener("mousemove", onMouseMove);
   });
 
