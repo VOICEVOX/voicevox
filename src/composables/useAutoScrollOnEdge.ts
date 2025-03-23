@@ -10,10 +10,6 @@ export const useAutoScrollOnEdge = (
   element: Ref<HTMLElement | null>,
   enable: ComputedRef<boolean>,
 ) => {
-  if (enable.value) {
-    throw new Error("Auto-scroll should be enabled after mounting.");
-  }
-
   const baseSpeed = 100;
   const accelerationFactor = 1.7;
   const maxSpeed = 2000;
@@ -77,9 +73,7 @@ export const useAutoScrollOnEdge = (
     if (enableValue && autoScrollState == undefined) {
       // 自動スクロールのアニメーションループを開始する
       if (element.value == null) {
-        throw new Error(
-          "element.value is null. Auto-scroll should be enabled after mounting.",
-        );
+        throw new Error("element.value is null.");
       }
       const elementWidth = element.value.clientWidth;
       const elementHeight = element.value.clientHeight;
