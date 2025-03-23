@@ -4,6 +4,7 @@ import HelpMarkdownViewSection from "@/components/Dialog/HelpDialog/HelpMarkdown
 import { markdownItPlugin } from "@/plugins/markdownItPlugin";
 
 describe("HelpMarkdownViewSection.vue", () => {
+  // eslint-disable-next-line vitest/expect-expect
   it("can mount", () => {
     mount(HelpMarkdownViewSection, {
       global: {

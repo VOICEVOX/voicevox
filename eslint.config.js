@@ -13,6 +13,7 @@ import {
 import { configs as tsConfigs, parser as tsParser } from "typescript-eslint";
 import progress from "eslint-plugin-file-progress";
 import gitignore from "eslint-config-flat-gitignore";
+import vitestPlugin from "@vitest/eslint-plugin";
 import voicevoxPlugin from "./eslint-plugin/index.mjs";
 
 /**
@@ -124,6 +125,7 @@ export default defineConfigWithVueTs(
   ...pluginConfig(vueTsConfigs.recommended.toConfigArray()),
   ...pluginConfig(voicevoxPlugin.configs.all),
   ...pluginConfig(storybookPlugin.configs["flat/recommended"]),
+  ...pluginConfig(vitestPlugin.configs.recommended),
 
   {
     name: "voicevox/type-checked/typescript",
@@ -217,6 +219,7 @@ export default defineConfigWithVueTs(
       "vue/v-on-event-hyphenation": ["error", "never", { autofix: true }],
       "progress/activate":
         process.env.ESLINT_FILE_PROGRESS === "1" ? "error" : "off",
+      "vitest/expect-expect": ["error", { assertFunctionNames: ["expect*"] }],
     },
   },
 

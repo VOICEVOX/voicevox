@@ -24,7 +24,7 @@ test("正しいVVPPファイルからエンジンを切り出せる", async () =
     outputDir,
     tmpDir,
   }).extract();
-  assertIsEngineDir(outputDir);
+  expectIsEngineDir(outputDir);
 });
 
 test("分割されたVVPPファイルからエンジンを切り出せる", async () => {
@@ -41,7 +41,7 @@ test("分割されたVVPPファイルからエンジンを切り出せる", asyn
     outputDir,
     tmpDir,
   }).extract();
-  assertIsEngineDir(outputDir);
+  expectIsEngineDir(outputDir);
 });
 
 test.each([
@@ -71,7 +71,7 @@ function buildOutputDir() {
 /**
  * エンジンディレクトリであることを確認する。
  */
-function assertIsEngineDir(vvppEngineDir: string) {
+function expectIsEngineDir(vvppEngineDir: string) {
   const files = fs.readdirSync(vvppEngineDir, { recursive: true });
   const manifestExists = files.some(
     (file) =>
