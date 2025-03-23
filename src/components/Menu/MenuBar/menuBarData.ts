@@ -1,11 +1,7 @@
 import { MaybeRef, ComputedRef, unref } from "vue";
 import { MenuItemData } from "@/components/Menu/type";
 import { flatWithSeparator } from "@/helpers/arrayHelper";
-import {
-  mapObjectValues,
-  objectEntries,
-  objectFromEntries,
-} from "@/helpers/typedEntries";
+import { objectEntries, objectFromEntries } from "@/helpers/typedEntries";
 
 type MenuBarCategory = "file" | "edit" | "view" | "engine" | "setting";
 
@@ -30,41 +26,38 @@ export type MaybeComputedMenuBarContent = Partial<{
 
 export const concatMenuBarData = (
   menuBarContents: MaybeRef<MaybeComputedMenuBarContent>[],
-): Record<keyof MenuBarContent, MenuItemData[]> => {
-  const result = mapObjectValues(menuItemStructure, (category, contents) => {
-    const singleMenuCategoryItems = concatSingleMenuBarCategory(
+): Record<MenuBarCategory, MenuItemData[]> => {
+  return objectFromEntries(
+    objectEntries(menuItemStructure).map(([category]) => [
       category,
-      menuBarContents,
-    );
-
-    return flatWithSeparator(
-      contents
-        .map((menuItemKey) => singleMenuCategoryItems[menuItemKey])
-        .filter((v) => v.length > 0),
-      { type: "separator" },
-    );
-  });
-
-  return result;
+      concatMenuItemsByCategory(category, menuBarContents),
+    ]),
+  );
 };
 
-const concatSingleMenuBarCategory = (
-  key: MenuBarCategory,
+function concatMenuItemsByCategory(
+  category: MenuBarCategory,
   menuBarContents: MaybeRef<MaybeComputedMenuBarContent>[],
-) => {
+): MenuItemData[] {
   const sectionItems: Record<MenuItemSection, MenuItemData[]> =
-    objectFromEntries(menuItemStructure[key].map((v) => [v, []]));
+    objectFromEntries(
+      menuItemStructure[category].map((section) => [section, []]),
+    );
 
   for (const menuBarContent of menuBarContents) {
-    const items = unref(unref(menuBarContent)[key]);
-    if (items) {
-      for (const [section, sectionMenuItems] of objectEntries(items)) {
-        // @ts-expect-error 型が合わないので無視する。
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-        sectionItems[section].push(...sectionMenuItems);
-      }
+    const items = unref(unref(menuBarContent)[category]);
+    if (!items) continue;
+
+    for (const [section, sectionMenuItems] of objectEntries(items)) {
+      // @ts-expect-error 型が合わないので無視する。
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+      sectionItems[section].push(...sectionMenuItems);
     }
   }
 
-  return sectionItems;
-};
+  const nonEmptyItems = menuItemStructure[category]
+    .map((section) => sectionItems[section])
+    .filter((items) => items.length > 0);
+
+  return flatWithSeparator(nonEmptyItems, { type: "separator" });
+}
