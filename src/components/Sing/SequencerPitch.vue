@@ -6,10 +6,10 @@
 
 <script setup lang="ts">
 import { ref, watch, computed, onUnmounted, onMounted } from "vue";
-import { useMounted } from "@/composables/useMounted";
 import * as PIXI from "pixi.js";
 import AsyncLock from "async-lock";
 import { useStore } from "@/store";
+import { useMounted } from "@/composables/useMounted";
 import {
   UNVOICED_PHONEMES,
   VALUE_INDICATING_NO_DATA,
