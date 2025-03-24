@@ -1,4 +1,5 @@
-import { ComputedRef, onMounted, onUnmounted, ref, Ref, watch } from "vue";
+import { ComputedRef, onMounted, onUnmounted, Ref, watch } from "vue";
+import { useMounted } from "@/composables/useMounted";
 import {
   calcMinimumDistanceVectorRectAndPoint,
   Rect,
@@ -64,7 +65,7 @@ export const useAutoScrollOnEdge = (
     autoScrollState.animationId = requestAnimationFrame(autoScrollAnimation);
   };
 
-  const mounted = ref(false);
+  const { mounted } = useMounted();
 
   watch([enable, mounted], ([enableValue, mountedValue]) => {
     if (!mountedValue) {
@@ -110,7 +111,6 @@ export const useAutoScrollOnEdge = (
   };
 
   onMounted(() => {
-    mounted.value = true;
     window.addEventListener("mousemove", onMouseMove);
   });
 
