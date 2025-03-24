@@ -1,7 +1,7 @@
 import os from "os";
 import path from "path";
 import fs from "fs";
-import { test, afterAll, beforeAll } from "vitest";
+import { afterAll, beforeAll, expect, test } from "vitest";
 import { createVvppFile } from "./helper";
 import { VvppFileExtractor } from "@/backend/electron/vvppFile";
 import { uuid4 } from "@/helpers/random";
