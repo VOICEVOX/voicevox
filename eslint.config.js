@@ -217,7 +217,7 @@ export default defineConfigWithVueTs(
         { sameNameShorthand: "always" },
       ],
       "vue/v-on-event-hyphenation": ["error", "never", { autofix: true }],
-      "progressPlugin/activate":
+      "progress/activate":
         process.env.ESLINT_FILE_PROGRESS === "1" ? "error" : "off",
       "vitest/expect-expect": ["error", { assertFunctionNames: ["expect*"] }],
     },
