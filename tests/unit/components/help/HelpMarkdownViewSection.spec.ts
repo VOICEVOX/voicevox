@@ -1,5 +1,5 @@
 import { mount, flushPromises } from "@vue/test-utils";
-import { describe, it } from "vitest";
+import { describe, it, expect } from "vitest";
 import HelpMarkdownViewSection from "@/components/Dialog/HelpDialog/HelpMarkdownViewSection.vue";
 import { markdownItPlugin } from "@/plugins/markdownItPlugin";
 

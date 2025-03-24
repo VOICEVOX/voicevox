@@ -1,3 +1,4 @@
+import { beforeEach, expect, test } from "vitest";
 import { store } from "@/store";
 import { AudioKey } from "@/type/preload";
 import { resetMockMode, uuid4 } from "@/helpers/random";
