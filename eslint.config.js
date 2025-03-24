@@ -92,7 +92,7 @@ export default defineConfigWithVueTs(
     name: "voicevox/defaults/plugins",
     plugins: {
       import: importPlugin,
-      progressPlugin,
+      progress: progressPlugin,
     },
   },
 
