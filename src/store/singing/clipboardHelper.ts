@@ -1,23 +1,25 @@
 import { ActionContext, Note } from "../type";
+import { noteSchema } from "@/domain/project/schema";
 
 // VOICEVOXソングのノート専用のMIMEType
-export const VOICEVOX_NOTES_MIME_TYPE = "web application/vnd.voicevox.song-notes";
+export const VOICEVOX_NOTES_MIME_TYPE =
+  "web application/vnd.voicevox.song-notes";
 
 /**
  * 選択されたノートをクリップボードにコピーする
  */
 export async function copyNotesToClipboard(
-  context: ActionContext
+  context: ActionContext,
 ): Promise<void> {
   const { getters } = context;
   const selectedTrack = getters.SELECTED_TRACK;
   const noteIds = getters.SELECTED_NOTE_IDS;
-  
+
   // ノートが選択されていない場合は何もしない
   if (noteIds.size === 0) {
     return;
   }
-  
+
   // 選択されたノートのみをコピーする
   const selectedNotes = selectedTrack.notes
     .filter((note: Note) => noteIds.has(note.id))
@@ -49,7 +51,9 @@ export async function writeNotesToClipboard(
     // web application/vnd.voicevox.song-notes - VOICEVOXでのノート構造を保持してペーストできる
     // text/plain - 歌詞テキストだけを内部または他のエディタなどで利用できるようにする
     // web形式からはじまる形式はChromeのみでサポートされている
-    const voicevoxNotesBlob = new Blob([jsonVoicevoxNotes], { type: VOICEVOX_NOTES_MIME_TYPE });
+    const voicevoxNotesBlob = new Blob([jsonVoicevoxNotes], {
+      type: VOICEVOX_NOTES_MIME_TYPE,
+    });
     const textBlob = new Blob([plainTextLyric], { type: "text/plain" });
     const clipboardItem = new ClipboardItem({
       [VOICEVOX_NOTES_MIME_TYPE]: voicevoxNotesBlob,
@@ -73,24 +77,31 @@ export async function writeNotesToClipboard(
  * クリップボードからVOICEVOXノートを読み取る
  * @returns 読み取ったノート配列(idは除外されている)
  */
-export async function readNotesFromClipboard(): Promise<Omit<Note, 'id'>[]> {
+export async function readNotesFromClipboard(): Promise<Omit<Note, "id">[]> {
   try {
     const clipboardItems = await navigator.clipboard.read();
-    
+
     // カスタムMIMEタイプのアイテムを探す
     for (const item of clipboardItems) {
       if (item.types.includes(VOICEVOX_NOTES_MIME_TYPE)) {
         const blob = await item.getType(VOICEVOX_NOTES_MIME_TYPE);
         const voicevoxNotesText = await blob.text();
-        // カスタムMIMEタイプのアイテムがあれば返して終了
-        return JSON.parse(voicevoxNotesText);
+        // noteSchemaでバリデーション
+        return noteSchema
+          .omit({ id: true })
+          .array()
+          .parse(JSON.parse(voicevoxNotesText));
       }
     }
-    
+
     // カスタムMIMEタイプが見つからなかったらテキストとして読み取り、JSONとしてパースを試みる
     const clipboardText = await navigator.clipboard.readText();
     try {
-      return JSON.parse(clipboardText);
+      // noteSchemaでバリデーション
+      return noteSchema
+        .omit({ id: true })
+        .array()
+        .parse(JSON.parse(clipboardText));
     } catch (e) {
       throw new Error("Failed to parse notes from clipboard.", { cause: e });
     }

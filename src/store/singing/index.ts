@@ -36,6 +36,10 @@ import {
   sanitizeFileName,
 } from "../utility";
 import {
+  copyNotesToClipboard,
+  readNotesFromClipboard,
+} from "./clipboardHelper";
+import {
   CharacterInfo,
   EngineId,
   NoteId,
@@ -103,7 +107,6 @@ import {
 } from "@/sing/utility";
 import { getWorkaroundKeyRangeAdjustment } from "@/sing/workaroundKeyRangeAdjustment";
 import { createLogger } from "@/helpers/log";
-import { noteSchema } from "@/domain/project/schema";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { ufProjectToVoicevox } from "@/sing/utaformatixProject/toVoicevox";
@@ -121,7 +124,6 @@ import {
   ufProjectToMultiFile,
   ufProjectToSingleFile,
 } from "@/sing/utaformatixProject/utils";
-import { copyNotesToClipboard, readNotesFromClipboard } from "./clipboardHelper";
 
 const logger = createLogger("store/singing");
 
