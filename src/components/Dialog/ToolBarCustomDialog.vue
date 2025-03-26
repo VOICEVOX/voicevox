@@ -1,6 +1,6 @@
 <template>
   <QDialog
-    v-model="ToolBarCustomDialogOpenComputed"
+    v-model="dialogOpened"
     maximized
     transitionShow="jump-up"
     transitionHide="jump-down"
@@ -112,12 +112,7 @@ import { useStore } from "@/store";
 import { ToolbarButtonTagType, ToolbarSettingType } from "@/type/preload";
 import { getToolbarButtonName } from "@/store/utility";
 
-const props = defineProps<{
-  modelValue: boolean;
-}>();
-const emit = defineEmits<{
-  (e: "update:modelValue", val: boolean): void;
-}>();
+const dialogOpened = defineModel<boolean>("dialogOpened", { default: false });
 
 const store = useStore();
 
@@ -170,11 +165,6 @@ const usableButtonsDesc: Record<ToolbarButtonTagType, string> = {
   EMPTY:
     "これはボタンではありません。レイアウトの調整に使います。また、実際には表示されません。",
 };
-
-const ToolBarCustomDialogOpenComputed = computed({
-  get: () => props.modelValue || isChanged.value,
-  set: (val) => emit("update:modelValue", val),
-});
 
 const isChanged = computed(() => {
   const nowSetting = store.state.toolbarSetting;
@@ -235,11 +225,11 @@ const finishOrNotDialog = async () => {
     if (result === "OK") {
       toolbarButtons.value = [...store.state.toolbarSetting];
       selectedButton.value = toolbarButtons.value[0];
-      ToolBarCustomDialogOpenComputed.value = false;
+      dialogOpened.value = false;
     }
   } else {
     selectedButton.value = toolbarButtons.value[0];
-    ToolBarCustomDialogOpenComputed.value = false;
+    dialogOpened.value = false;
   }
 };
 </script>
