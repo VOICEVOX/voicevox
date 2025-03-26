@@ -67,7 +67,8 @@ export async function writeNotesToClipboard(
     });
     await navigator.clipboard.write([clipboardItem]);
   } catch {
-    // 2. カスタムMIMEタイプを利用してのコピーが失敗した場合、クリップボードに通常のテキスト形式で書き込みを試みる
+    // 2. カスタムMIMEタイプを利用してのコピーが失敗した場合、
+    // クリップボードにノートデータをシリアライズした形式で書き込みを試みる
     try {
       await navigator.clipboard.writeText(jsonVoicevoxNotes);
     } catch (clipboardWriteError) {
