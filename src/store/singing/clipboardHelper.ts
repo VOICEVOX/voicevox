@@ -15,6 +15,11 @@ export async function copyNotesToClipboard(
   const selectedTrack = getters.SELECTED_TRACK;
   const noteIds = getters.SELECTED_NOTE_IDS;
 
+  // 選択されたトラックがない場合は何もしない
+  if (!selectedTrack) {
+    return;
+  }
+
   // ノートが選択されていない場合は何もしない
   if (noteIds.size === 0) {
     return;
@@ -45,8 +50,8 @@ export async function writeNotesToClipboard(
   jsonVoicevoxNotes: string,
   plainTextLyric: string,
 ): Promise<void> {
-  // カスタムMIMEタイプを利用してクリップボードに書き込みを試みる
   try {
+    // 1. カスタムMIMEタイプを利用してクリップボードに書き込みを試みる
     // MIMEタイプとしてapplication/jsonとtext/plainを使用してクリップボードにコピーする
     // web application/vnd.voicevox.song-notes - VOICEVOXでのノート構造を保持してペーストできる
     // text/plain - 歌詞テキストだけを内部または他のエディタなどで利用できるようにする
@@ -55,19 +60,20 @@ export async function writeNotesToClipboard(
       type: VOICEVOX_NOTES_MIME_TYPE,
     });
     const textBlob = new Blob([plainTextLyric], { type: "text/plain" });
+    // 書き込むデータ
     const clipboardItem = new ClipboardItem({
       [VOICEVOX_NOTES_MIME_TYPE]: voicevoxNotesBlob,
       "text/plain": textBlob,
     });
     await navigator.clipboard.write([clipboardItem]);
   } catch {
-    // カスタムMIMEタイプを利用してのコピーが失敗した場合、クリップボードに通常のテキスト形式で書き込みを試みる
+    // 2. カスタムMIMEタイプを利用してのコピーが失敗した場合、クリップボードに通常のテキスト形式で書き込みを試みる
     try {
       await navigator.clipboard.writeText(jsonVoicevoxNotes);
-    } catch (e) {
+    } catch (clipboardWriteError) {
       // クリップボード書き込みに失敗した場合はエラー
       throw new Error("Failed to copy notes to clipboard.", {
-        cause: e,
+        cause: clipboardWriteError,
       });
     }
   }
@@ -81,33 +87,51 @@ export async function readNotesFromClipboard(): Promise<Omit<Note, "id">[]> {
   try {
     const clipboardItems = await navigator.clipboard.read();
 
-    // カスタムMIMEタイプのアイテムを探す
+    // 1. カスタムMIMEタイプのアイテムを先に探して、あれば返す
     for (const item of clipboardItems) {
       if (item.types.includes(VOICEVOX_NOTES_MIME_TYPE)) {
         const blob = await item.getType(VOICEVOX_NOTES_MIME_TYPE);
         const voicevoxNotesText = await blob.text();
-        // noteSchemaでバリデーション
-        return noteSchema
-          .omit({ id: true })
-          .array()
-          .parse(JSON.parse(voicevoxNotesText));
+        // 発見したら早期リターン
+        return validateVoicevoxNotesForClipboard(voicevoxNotesText);
       }
     }
 
-    // カスタムMIMEタイプが見つからなかったらテキストとして読み取り、JSONとしてパースを試みる
+    // 2. カスタムMIMEタイプが見つからなかったらテキストとして読み取り、JSONとしてパースを試みて返す
     const clipboardText = await navigator.clipboard.readText();
     try {
-      // noteSchemaでバリデーション
-      return noteSchema
-        .omit({ id: true })
-        .array()
-        .parse(JSON.parse(clipboardText));
-    } catch (e) {
-      throw new Error("Failed to parse notes from clipboard.", { cause: e });
+      return validateVoicevoxNotesForClipboard(clipboardText);
+    } catch (validationError) {
+      // バリデーション失敗したらエラーをスロー
+      throw new Error("Failed to parse notes from clipboard.", {
+        cause: validationError,
+      });
     }
-  } catch (e) {
+  // クリップボードが読めないなどであればエラーをスロー
+  } catch (clipboardReadError) {
     throw new Error("Failed to read notes from clipboard.", {
-      cause: e,
+      cause: clipboardReadError,
+    });
+  }
+}
+
+/**
+ * コピー＆ペースト用のノートデータをバリデーションする
+ * @param jsonVoicevoxNotes
+ * @returns バリデーション済みのノート配列（idは除外）
+ * @throws バリデーション失敗時にエラーをスロー
+ */
+export function validateVoicevoxNotesForClipboard(
+  jsonVoicevoxNotes: string,
+): Omit<Note, "id">[] {
+  try {
+    return noteSchema
+      .omit({ id: true })
+      .array()
+      .parse(JSON.parse(jsonVoicevoxNotes));
+  } catch (validationError) {
+    throw new Error("Failed to validate notes for clipboard data.", {
+      cause: validationError,
     });
   }
 }
