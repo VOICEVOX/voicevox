@@ -108,7 +108,7 @@ export async function readNotesFromClipboard(): Promise<Omit<Note, "id">[]> {
         cause: validationError,
       });
     }
-  // クリップボードが読めないなどであればエラーをスロー
+    // クリップボードが読めないなどであればエラーをスロー
   } catch (clipboardReadError) {
     throw new Error("Failed to read notes from clipboard.", {
       cause: clipboardReadError,
