@@ -19,6 +19,7 @@ const envEngineInfoSchema = z
   .and(
     z.union([
       // エンジンをパス指定する場合
+      // NOTE: 相対パスの場合はアプリのパスで解決する
       z.object({
         type: z.literal("path").default("path"),
         executionFilePath: z.string(),
