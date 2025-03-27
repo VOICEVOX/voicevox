@@ -9,8 +9,8 @@ export async function gotoHome({ page }: { page: Page }) {
   });
 }
 
-export async function navigateToMain(page: Page) {
-  await test.step("初回起動時の確認を完了してメイン画面に移動", async () => {
+async function navigateToChoiceEditor(page: Page) {
+  await test.step("初回起動時の確認を完了してエディタ選択に移動", async () => {
     await expect(page.getByText("利用規約に関するお知らせ")).toBeVisible({
       timeout: 90 * 1000,
     });
@@ -43,7 +43,7 @@ export async function toggleSetting(page: Page, settingName: string) {
 
 export async function navigateToHelpDialog(page: Page): Promise<Locator> {
   return await test.step("ヘルプダイアログの表示まで移動", async () => {
-    await navigateToMain(page);
+    await navigateToTalk(page);
     await page.waitForTimeout(100);
     await page.getByRole("button", { name: "ヘルプ" }).click();
     return getNewestQuasarDialog(page);
@@ -52,7 +52,7 @@ export async function navigateToHelpDialog(page: Page): Promise<Locator> {
 
 export async function navigateToSettingDialog(page: Page): Promise<Locator> {
   return await test.step("設定ダイアログの表示まで移動", async () => {
-    await navigateToMain(page);
+    await navigateToTalk(page);
     await page.waitForTimeout(100);
     await page.getByRole("button", { name: "設定" }).click();
     await getQuasarMenu(page, "オプション").click();
@@ -60,11 +60,21 @@ export async function navigateToSettingDialog(page: Page): Promise<Locator> {
   });
 }
 
+export async function navigateToTalk(page: Page) {
+  await test.step("初回起動時の確認を完了してトーク画面に移動", async () => {
+    await navigateToChoiceEditor(page);
+    await expect(page.getByText("どちらに興味がありますか？")).toBeVisible();
+    await page.getByRole("button", { name: "トーク" }).click();
+    await page.waitForTimeout(100);
+  });
+}
+
 export async function navigateToSong(page: Page) {
-  await test.step("ソング画面に移動", async () => {
-    await navigateToMain(page);
-    await expect(page.getByText("ソング")).toBeVisible();
-    await page.getByText("ソング").click();
+  await test.step("初回起動時の確認を完了してソング画面に移動", async () => {
+    await navigateToChoiceEditor(page);
+    await expect(page.getByText("どちらに興味がありますか？")).toBeVisible();
+    await page.getByRole("button", { name: "ソング" }).click();
+    await page.waitForTimeout(100);
 
     // 見やすいようにスナップを1/8に変更
     await page.getByLabel("スナップ").click();
