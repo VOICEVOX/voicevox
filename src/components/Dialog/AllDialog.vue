@@ -29,6 +29,7 @@
   />
   <ExportSongAudioDialog v-model:dialogOpened="isExportSongAudioDialogOpen" />
   <ImportSongProjectDialog v-model="isImportSongProjectDialogOpenComputed" />
+  <InitialSettingsDialog v-model="isInitialSettingsDialogOpenComputed" />
   <PresetManageDialog v-model:dialogOpened="isPresetManageDialogOpenComputed" />
   <HelpDialog v-model:dialogOpened="isHelpDialogOpenComputed" />
 </template>
@@ -46,6 +47,7 @@ import DictionaryManageDialog from "@/components/Dialog/DictionaryManageDialog.v
 import EngineManageDialog from "@/components/Dialog/EngineManageDialog.vue";
 import UpdateNotificationDialogContainer from "@/components/Dialog/UpdateNotificationDialog/Container.vue";
 import ImportSongProjectDialog from "@/components/Dialog/ImportSongProjectDialog.vue";
+import InitialSettingsDialog from "@/components/Dialog/InitialSettingsDialog.vue";
 import ExportSongAudioDialog from "@/components/Dialog/ExportSongAudioDialog/Container.vue";
 import PresetManageDialog from "@/components/Dialog/PresetManageDialog.vue";
 import HelpDialog from "@/components/Dialog/HelpDialog/HelpDialog.vue";
@@ -149,6 +151,20 @@ const isAcceptRetrieveTelemetryDialogOpenComputed = computed({
   set: (val) =>
     store.actions.SET_DIALOG_OPEN({
       isAcceptRetrieveTelemetryDialogOpen: val,
+    }),
+});
+
+// 初期設定ダイアログ
+const isInitialSettingsDialogOpenComputed = computed({
+  get: () =>
+    !store.state.isAcceptTermsDialogOpen &&
+    !store.state.isCharacterOrderDialogOpen &&
+    !store.state.isDefaultStyleSelectDialogOpen &&
+    !store.state.isAcceptRetrieveTelemetryDialogOpen &&
+    store.state.isInitialSettingsDialogOpen,
+  set: (val) =>
+    store.actions.SET_DIALOG_OPEN({
+      isInitialSettingsDialogOpen: val,
     }),
 });
 
