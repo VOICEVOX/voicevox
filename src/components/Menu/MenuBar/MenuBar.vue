@@ -32,6 +32,7 @@
 import { ref, computed, watch } from "vue";
 import { useQuasar } from "quasar";
 import { MenuItemButton, MenuItemData, MenuItemRoot } from "../type";
+import { MenuBarCategory } from "./menuBarData";
 import MenuButton from "../MenuButton.vue";
 import TitleBarButtons from "./TitleBarButtons.vue";
 import TitleBarEditorSwitcher from "./TitleBarEditorSwitcher.vue";
@@ -39,16 +40,8 @@ import { useStore } from "@/store";
 import { getAppInfos } from "@/domain/appInfo";
 
 const props = defineProps<{
-  /** 「ファイル」メニューのサブメニュー */
-  fileSubMenuData: MenuItemData[];
-  /** 「編集」メニューのサブメニュー */
-  editSubMenuData: MenuItemData[];
-  /** 「表示」メニューのサブメニュー */
-  viewSubMenuData: MenuItemData[];
-  /** 「エンジン」メニューのサブメニュー */
-  engineSubMenuData: MenuItemData[];
-  /** 「設定」メニューのサブメニュー */
-  settingSubMenuData: MenuItemData[];
+  /** メニューバーの全サブメニューデータ */
+  subMenus: Record<MenuBarCategory, MenuItemData[]>;
   /** エディタの種類 */
   editor: "talk" | "song";
 }>();
@@ -105,36 +98,36 @@ const menudata = computed<(MenuItemButton | MenuItemRoot)[]>(() => [
   {
     type: "root",
     label: "ファイル",
-    subMenu: props.fileSubMenuData,
-    disabled: props.fileSubMenuData.length === 0,
+    subMenu: props.subMenus.file,
+    disabled: props.subMenus.file.length === 0,
     disableWhenUiLocked: false,
   },
   {
     type: "root",
     label: "編集",
-    subMenu: props.editSubMenuData,
-    disabled: props.editSubMenuData.length === 0,
+    subMenu: props.subMenus.edit,
+    disabled: props.subMenus.edit.length === 0,
     disableWhenUiLocked: false,
   },
   {
     type: "root",
     label: "表示",
-    subMenu: props.viewSubMenuData,
-    disabled: props.viewSubMenuData.length === 0,
+    subMenu: props.subMenus.view,
+    disabled: props.subMenus.view.length === 0,
     disableWhenUiLocked: false,
   },
   {
     type: "root",
     label: "エンジン",
-    subMenu: props.engineSubMenuData,
-    disabled: props.engineSubMenuData.length === 0,
+    subMenu: props.subMenus.engine,
+    disabled: props.subMenus.engine.length === 0,
     disableWhenUiLocked: false,
   },
   {
     type: "root",
     label: "設定",
-    subMenu: props.settingSubMenuData,
-    disabled: props.settingSubMenuData.length === 0,
+    subMenu: props.subMenus.setting,
+    disabled: props.subMenus.setting.length === 0,
     disableWhenUiLocked: false,
   },
   {

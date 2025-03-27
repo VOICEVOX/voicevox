@@ -3,7 +3,7 @@ import { MenuItemData } from "@/components/Menu/type";
 import { flatWithSeparator } from "@/helpers/arrayHelper";
 import { objectEntries, objectFromEntries } from "@/helpers/typedEntries";
 
-type MenuBarCategory = "file" | "edit" | "view" | "engine" | "setting";
+export type MenuBarCategory = "file" | "edit" | "view" | "engine" | "setting"; // exportを追加
 
 const menuItemStructure = {
   file: ["audioExport", "externalProject", "project"],
