@@ -246,7 +246,7 @@ export default defineConfigWithVueTs(
         {
           patterns: [
             {
-              group: ["electron"],
+              regex: "^electron(\\/|$)",
               message:
                 "このファイル内でelectronはimportできません。許可されているファイル内へ移すか、ESLintの設定を見直してください",
             },
