@@ -3,7 +3,7 @@
     <TooltipProvider disableHoverableContent :delayDuration="500">
       <MenuBar
         v-if="openedEditor != undefined"
-        :subMenus="subMenuData"
+        :subMenuData
         :editor="openedEditor"
       />
       <KeepAlive>
