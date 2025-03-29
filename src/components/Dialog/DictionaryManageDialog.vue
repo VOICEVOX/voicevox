@@ -1,6 +1,6 @@
 <template>
   <QDialog
-    v-model="dictionaryManageDialogOpenedComputed"
+    v-model="dialogOpened"
     maximized
     transitionShow="jump-up"
     transitionHide="jump-down"
@@ -169,19 +169,10 @@ import {
 
 const defaultDictPriority = 5;
 
-const props = defineProps<{
-  modelValue: boolean;
-}>();
-const emit = defineEmits<{
-  (e: "update:modelValue", v: boolean): void;
-}>();
+const dialogOpened = defineModel<boolean>("dialogOpened", { default: false });
 
 const store = useStore();
 
-const dictionaryManageDialogOpenedComputed = computed({
-  get: () => props.modelValue,
-  set: (val) => emit("update:modelValue", val),
-});
 const uiLocked = ref(false); // ダイアログ内でstore.getters.UI_LOCKEDは常にtrueなので独自に管理
 
 // word-list の要素のうち、どの要素がホバーされているか
@@ -212,7 +203,7 @@ const loadingDictProcess = async () => {
       message: "エンジンの再起動をお試しください。",
     });
     if (result === "OK") {
-      dictionaryManageDialogOpenedComputed.value = false;
+      dialogOpened.value = false;
     }
   }
   loadingDictState.value = "synchronizing";
@@ -226,7 +217,7 @@ const loadingDictProcess = async () => {
   }
   loadingDictState.value = null;
 };
-watch(dictionaryManageDialogOpenedComputed, async (newValue) => {
+watch(dialogOpened, async (newValue) => {
   if (newValue) {
     await loadingDictProcess();
     toInitialState();
@@ -421,7 +412,7 @@ const toWordEditingState = () => {
 };
 // ダイアログが閉じている状態
 const toDialogClosedState = () => {
-  dictionaryManageDialogOpenedComputed.value = false;
+  dialogOpened.value = false;
 };
 
 provide(dictionaryManageDialogContextKey, {

@@ -1,5 +1,5 @@
 <template>
-  <QDialog v-model="modelValueComputed">
+  <QDialog v-model="dialogOpened">
     <QCard class="q-py-sm q-px-md dialog-card">
       <QCardSection>
         <div class="text-h5">アップデートのお知らせ</div>
@@ -70,31 +70,22 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
 import { UpdateInfo } from "@/type/preload";
 
+const dialogOpened = defineModel<boolean>("dialogOpened", { default: false });
 const props = defineProps<{
-  /** ダイアログの表示状態 */
-  modelValue: boolean;
   /** 公開されている最新のバージョン */
   latestVersion: string;
   /** 表示するアップデート情報 */
   newUpdateInfos: UpdateInfo[];
 }>();
 const emit = defineEmits<{
-  /** ダイアログの表示状態が変わるときに呼ばれる */
-  (e: "update:modelValue", value: boolean): void;
   /** スキップするときに呼ばれる */
   (e: "skipThisVersionClick", version: string): void;
 }>();
 
-const modelValueComputed = computed({
-  get: () => props.modelValue,
-  set: (val) => emit("update:modelValue", val),
-});
-
 const closeUpdateNotificationDialog = () => {
-  modelValueComputed.value = false;
+  dialogOpened.value = false;
 };
 
 const openOfficialWebsite = () => {

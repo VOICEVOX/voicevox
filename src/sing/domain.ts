@@ -194,6 +194,9 @@ export function getTimeSignaturePositions(
   return tsPositions;
 }
 
+/**
+ * tick位置に対応する小節番号（整数）を計算する。
+ */
 export function tickToMeasureNumber(
   ticks: number,
   timeSignatures: TimeSignature[],
@@ -208,6 +211,25 @@ export function tickToMeasureNumber(
   const ticksWithinTs = ticks - tsPosition;
   const measureDuration = getMeasureDuration(ts.beats, ts.beatType, tpqn);
   return ts.measureNumber + Math.floor(ticksWithinTs / measureDuration);
+}
+
+/**
+ * 小節番号に対応するtick位置（小節の開始位置）を計算する。
+ */
+export function measureNumberToTick(
+  measureNumber: number,
+  timeSignatures: TimeSignature[],
+  tpqn: number,
+) {
+  const tsPositions = getTimeSignaturePositions(timeSignatures, tpqn);
+  const tsIndex = timeSignatures.findLastIndex((value) => {
+    return measureNumber >= value.measureNumber;
+  });
+  const ts = timeSignatures[tsIndex];
+  const tsPosition = tsPositions[tsIndex];
+  const measureOffset = measureNumber - ts.measureNumber;
+  const measureDuration = getMeasureDuration(ts.beats, ts.beatType, tpqn);
+  return tsPosition + measureOffset * measureDuration;
 }
 
 // NOTE: 戻り値の単位はtick
@@ -255,26 +277,6 @@ export const ticksToMeasuresBeats = (
 
   return { measures, beats };
 };
-
-export function getNumMeasures(
-  notes: Note[],
-  tempos: Tempo[],
-  timeSignatures: TimeSignature[],
-  tpqn: number,
-) {
-  const tsPositions = getTimeSignaturePositions(timeSignatures, tpqn);
-  let maxTicks = 0;
-  const lastTsPosition = tsPositions[tsPositions.length - 1];
-  const lastTempoPosition = tempos[tempos.length - 1].position;
-  maxTicks = Math.max(maxTicks, lastTsPosition);
-  maxTicks = Math.max(maxTicks, lastTempoPosition);
-  if (notes.length > 0) {
-    const noteEndPositions = notes.map((note) => note.position + note.duration);
-    const lastNoteEndPosition = Math.max(...noteEndPositions);
-    maxTicks = Math.max(maxTicks, lastNoteEndPosition);
-  }
-  return tickToMeasureNumber(maxTicks, timeSignatures, tpqn);
-}
 
 // NOTE: 戻り値の単位はtick
 export function getNoteDuration(noteType: number, tpqn: number) {
@@ -332,7 +334,6 @@ export const DEFAULT_TPQN = 480;
 export const DEFAULT_BPM = 120;
 export const DEFAULT_BEATS = 4;
 export const DEFAULT_BEAT_TYPE = 4;
-export const SEQUENCER_MIN_NUM_MEASURES = 32;
 
 // マルチエンジン対応のために将来的に廃止予定で、利用は非推奨
 export const DEPRECATED_DEFAULT_EDITOR_FRAME_RATE = 93.75;

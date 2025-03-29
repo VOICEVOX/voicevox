@@ -1,3 +1,4 @@
+import { it, expect, describe, test } from "vitest";
 import { AccentPhrase, Mora } from "@/openapi";
 import {
   CharacterInfo,
