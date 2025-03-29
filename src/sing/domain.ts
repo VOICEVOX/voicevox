@@ -1020,9 +1020,22 @@ export const shouldPlayTracks = (tracks: Map<TrackId, Track>): Set<TrackId> => {
   );
 };
 
-/**
- * 指定されたティックを直近のグリッドに合わせる
+/*
+ * ループ範囲が有効かどうかを判定する
+ * @param startTick ループ開始位置(tick)
+ * @param endTick ループ終了位置(tick)
+ * @returns ループ範囲が有効な場合はtrue
  */
-export function snapTicksToGrid(ticks: number, snapTicks: number): number {
-  return Math.round(ticks / snapTicks) * snapTicks;
-}
+export const isValidLoopRange = (
+  startTick: number,
+  endTick: number,
+): boolean => {
+  return (
+    // 負の値は許容しない
+    startTick >= 0 &&
+    endTick >= 0 &&
+    // 整数である必要がある
+    Number.isInteger(startTick) &&
+    Number.isInteger(endTick)
+  );
+};

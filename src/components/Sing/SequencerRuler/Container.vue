@@ -1,34 +1,38 @@
 <template>
   <Presentation
-    :offset
-    :numMeasures
-    :tpqn
-    :tempos
-    :timeSignatures
-    :sequencerZoomX
-    :uiLocked
-    :playheadTicks
-    :sequencerSnapType
-    @update:playheadTicks="updatePlayheadTicks"
-    @removeTempo="removeTempo"
-    @removeTimeSignature="removeTimeSignature"
-    @setTempo="setTempo"
-    @setTimeSignature="setTimeSignature"
-    @deselectAllNotes="deselectAllNotes"
-  />
+    :width="rulerWidth"
+    :playheadX
+    :offset="props.offset"
+    @click="handleClick"
+  >
+    <!-- TODO: 各コンポーネントもなるべく疎にしたつもりだが、少なくともplayheadまわりがリファクタリング必要そう -->
+    <template #grid>
+      <GridLaneContainer />
+    </template>
+    <template #changes>
+      <ValueChangesLaneContainer />
+    </template>
+    <template #loop>
+      <LoopLaneContainer />
+    </template>
+  </Presentation>
 </template>
 
 <script setup lang="ts">
 import { computed } from "vue";
 import Presentation from "./Presentation.vue";
+import GridLaneContainer from "./GridLane/Container.vue";
+import ValueChangesLaneContainer from "./ValueChangesLane/Container.vue";
+import LoopLaneContainer from "./LoopLane/Container.vue";
 import { useStore } from "@/store";
-import { Tempo, TimeSignature } from "@/store/type";
+import { useSequencerLayout } from "@/composables/useSequencerLayout";
+import { offsetXToSnappedTick } from "@/sing/rulerHelper";
 
 defineOptions({
   name: "SequencerRuler",
 });
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     offset?: number;
     numMeasures?: number;
@@ -41,41 +45,42 @@ withDefaults(
 
 const store = useStore();
 
+// 基本的な値
 const tpqn = computed(() => store.state.tpqn);
-const tempos = computed(() => store.state.tempos);
 const timeSignatures = computed(() => store.state.timeSignatures);
 const sequencerZoomX = computed(() => store.state.sequencerZoomX);
-const uiLocked = computed(() => store.getters.UI_LOCKED);
-const sequencerSnapType = computed(() => store.state.sequencerSnapType);
+const playheadPosition = computed(() => store.getters.PLAYHEAD_POSITION);
 
-const playheadTicks = computed(() => store.getters.PLAYHEAD_POSITION);
+// useSequencerLayoutを使用してレイアウト計算を行う
+const { rulerWidth, playheadX } = useSequencerLayout({
+  timeSignatures,
+  tpqn,
+  playheadPosition,
+  sequencerZoomX,
+  offset: computed(() => props.offset),
+  numMeasures: computed(() => props.numMeasures),
+});
 
-const updatePlayheadTicks = (ticks: number) => {
+// 再生ヘッド位置の設定
+const setPlayheadPosition = (ticks: number) => {
   void store.actions.SET_PLAYHEAD_POSITION({ position: ticks });
 };
 
+// ノートの選択解除
 const deselectAllNotes = () => {
   void store.actions.DESELECT_ALL_NOTES();
 };
 
-const setTempo = (tempo: Tempo) => {
-  void store.actions.COMMAND_SET_TEMPO({
-    tempo,
-  });
-};
-const setTimeSignature = (timeSignature: TimeSignature) => {
-  void store.actions.COMMAND_SET_TIME_SIGNATURE({
-    timeSignature,
-  });
-};
-const removeTempo = (position: number) => {
-  void store.actions.COMMAND_REMOVE_TEMPO({
-    position,
-  });
-};
-const removeTimeSignature = (measureNumber: number) => {
-  void store.actions.COMMAND_REMOVE_TIME_SIGNATURE({
-    measureNumber,
-  });
+// クリック時のハンドラ
+const handleClick = (event: MouseEvent) => {
+  deselectAllNotes();
+  const ticks = offsetXToSnappedTick(
+    event.offsetX,
+    props.offset,
+    sequencerZoomX.value,
+    timeSignatures.value,
+    tpqn.value,
+  );
+  setPlayheadPosition(ticks);
 };
 </script>
