@@ -9,7 +9,7 @@ import { generateWavFileData } from "@/helpers/fileDataGenerator";
 import { applyGaussianFilter } from "@/sing/utility";
 
 /** 0~1を返す疑似乱数生成器 */
-function Random(seed: number = 123456789) {
+function Random(seed: number = 0) {
   // 線形合同法
   const a = 1664525;
   const c = 1013904223;
@@ -17,7 +17,7 @@ function Random(seed: number = 123456789) {
 
   return () => {
     seed = (a * seed + c) % m;
-    return Math.round(seed / m * 1000) / 1000;
+    return seed / m;
   };
 }
 
@@ -37,7 +37,8 @@ function generateWave(
   const samplesPerOriginal = sampleRate / frameRate;
   const wave = new Float32Array(sampleRate * duration);
 
-  const seed = 123456789;
+  const seed =
+    Math.round(f0.concat(volume).reduce((acc, v) => acc + v, 0)) % 2 ** 31; // そこそこ被らないシード値
   const random = Random(seed);
   let phase = 0;
   for (let frameIndex = 0; frameIndex < f0.length; frameIndex++) {
@@ -47,22 +48,21 @@ function generateWave(
 
     for (let i = 0; i < samplesPerOriginal; i++) {
       const sampleIndex = frameIndex * samplesPerOriginal + i;
-      let value = 0;
       switch (type) {
         case "sine":
-          value = Math.sin(phase);
+          wave[sampleIndex] = Math.sin(phase);
           break;
         case "square":
-          value = (phase / Math.PI) % 2 < 1 ? 1 : -1;
+          wave[sampleIndex] = (phase / Math.PI) % 2 < 1 ? 1 : -1;
           break;
         case "noise":
-          value = random() * 2 - 1;
+          wave[sampleIndex] = random() * 2 - 1;
           break;
         case "silence":
-          value = 0;
+          wave[sampleIndex] = 0;
           break;
       }
-      wave[sampleIndex] = Math.round(value * vol * 1000) / 1000;
+      wave[sampleIndex] *= vol;
 
       phase += omega;
       if (phase > 2 * Math.PI) {
