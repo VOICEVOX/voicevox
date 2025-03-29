@@ -4,10 +4,9 @@
  */
 import { computed, ComputedRef, Ref } from "vue";
 import { getTimeSignaturePositions } from "@/sing/domain";
-import { tickToBaseX } from "@/sing/viewHelper";
+import { tickToBaseX, SEQUENCER_MIN_NUM_MEASURES } from "@/sing/viewHelper";
 import { calculateEndTicks, calculateMeasureInfos } from "@/sing/rulerHelper";
 import type { TimeSignature } from "@/store/type";
-import { SEQUENCER_MIN_NUM_MEASURES } from "@/sing/domain";
 
 // 小節のレイアウト位置
 export interface MeasureInfo {
