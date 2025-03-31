@@ -24,7 +24,10 @@ export const ticksToSnappedBeat = (
   if (timeSignatures.length === 0) return ticks;
 
   const tsPositions = getTimeSignaturePositions(timeSignatures, tpqn);
+  // 次の拍子の位置
   const nextTsIndex = tsPositions.findIndex((pos: number) => pos > ticks);
+  const nextTsPosition = tsPositions[nextTsIndex];
+  // 現在の拍子の位置
   const currentTsIndex =
     nextTsIndex === -1 ? tsPositions.length - 1 : nextTsIndex - 1;
   const currentTs = timeSignatures[currentTsIndex];
@@ -36,11 +39,12 @@ export const ticksToSnappedBeat = (
   const tsPosition = tsPositions[currentTsIndex];
   const relativePosition = ticks - tsPosition;
 
-  // グリッドにスナップ
+  // スナップするグリッド位置
   const snappedRelativePosition =
     Math.round(relativePosition / gridSize) * gridSize;
+  const snappedPositionTicks = tsPosition + snappedRelativePosition;
 
-  return tsPosition + snappedRelativePosition;
+  return Math.min(snappedPositionTicks, nextTsPosition);
 };
 
 /**

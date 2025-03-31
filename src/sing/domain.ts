@@ -1031,10 +1031,8 @@ export const isValidLoopRange = (
   endTick: number,
 ): boolean => {
   return (
-    // 負の値は許容しない
     startTick >= 0 &&
     endTick >= 0 &&
-    // 整数である必要がある
     Number.isInteger(startTick) &&
     Number.isInteger(endTick)
   );

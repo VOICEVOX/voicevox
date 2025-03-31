@@ -3493,8 +3493,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   CLEAR_LOOP_RANGE: {
-    action({ mutations, actions }) {
-      mutations.SET_LOOP_RANGE({
+    async action({ actions }) {
+      // ループ範囲をSET_LOOP_RANGEで0指定
+      // transportも
+      await actions.SET_LOOP_RANGE({
         loopStartTick: 0,
         loopEndTick: 0,
       });
