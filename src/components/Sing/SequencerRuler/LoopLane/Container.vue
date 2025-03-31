@@ -280,19 +280,15 @@ const stopDragging = () => {
     previewRequestId = null;
   }
 
-  try {
-    if (previewLoopStartTick.value === previewLoopEndTick.value) {
-      // ループ範囲 0 の場合はクリア
-      clearLoopRange();
-      return;
-    }
-    // ループ設定
-    setLoopRange(previewLoopStartTick.value, previewLoopEndTick.value);
-    // 有効なら再生ヘッドをスタートへ
-    setPlayheadPosition(previewLoopStartTick.value);
-  } catch (error) {
-    throw new Error("Failed to set loop range", { cause: error });
+  if (previewLoopStartTick.value === previewLoopEndTick.value) {
+    // ループ範囲 0 の場合はクリア
+    clearLoopRange();
+    return;
   }
+  // ループ設定
+  setLoopRange(previewLoopStartTick.value, previewLoopEndTick.value);
+  // 有効なら再生ヘッドをスタートへ
+  setPlayheadPosition(previewLoopStartTick.value);
 };
 
 // 右クリックメニュー
