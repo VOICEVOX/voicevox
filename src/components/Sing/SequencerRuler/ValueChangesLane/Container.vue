@@ -4,7 +4,7 @@
     :contextMenuData
     :contextMenuHeader
     :width="rulerWidth"
-    :offset="props.offset"
+    :offset="currentOffset"
     :uiLocked
     @valueChangeClick="onValueChangeClick"
     @contextMenuHide="onContextMenuHide"
@@ -36,17 +36,6 @@ defineOptions({
   name: "ValueChangesLaneContainer",
 });
 
-const props = withDefaults(
-  defineProps<{
-    offset?: number;
-    numMeasures?: number;
-  }>(),
-  {
-    offset: 0,
-    numMeasures: 32,
-  },
-);
-
 const store = useStore();
 
 // 基本的な値
@@ -58,14 +47,15 @@ const tempos = computed(() => store.state.tempos);
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
 // useSequencerLayoutを使用してレイアウト計算を行う
-const { rulerWidth, tsPositions, endTicks } = useSequencerLayout({
-  timeSignatures,
-  tpqn,
-  playheadPosition,
-  sequencerZoomX,
-  offset: computed(() => props.offset),
-  numMeasures: computed(() => props.numMeasures),
-});
+const { rulerWidth, tsPositions, endTicks, currentOffset } = useSequencerLayout(
+  {
+    timeSignatures,
+    tpqn,
+    playheadPosition,
+    sequencerZoomX,
+    offset: computed(() => 0),
+  },
+);
 
 // ストアアクション
 const setTempo = (tempo: Tempo) => {
@@ -148,7 +138,7 @@ const onValueChangeClick = async (
     // 空き部分クリック時は、クリック位置から計算してスナップ位置に合わせる
     const snappedTick = offsetXToSnappedTick(
       event.offsetX,
-      props.offset,
+      currentOffset.value,
       sequencerZoomX.value,
       timeSignatures.value,
       tpqn.value,

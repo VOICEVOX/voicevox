@@ -2,10 +2,10 @@
   <Presentation
     :tpqn
     :sequencerZoomX
-    :numMeasures="props.numMeasures"
+    :numMeasures="currentNumMeasures"
     :timeSignatures
     :tsPositions
-    :offset="props.offset"
+    :offset="currentOffset"
     :width="rulerWidth"
     :endTicks
   />
@@ -21,17 +21,6 @@ defineOptions({
   name: "GridLaneContainer",
 });
 
-const props = withDefaults(
-  defineProps<{
-    offset?: number;
-    numMeasures?: number;
-  }>(),
-  {
-    offset: 0,
-    numMeasures: 32,
-  },
-);
-
 const store = useStore();
 
 // 基本的な値
@@ -41,12 +30,12 @@ const sequencerZoomX = computed(() => store.state.sequencerZoomX);
 const playheadPosition = computed(() => store.getters.PLAYHEAD_POSITION);
 
 // useSequencerLayoutを使用してレイアウト計算を行う
-const { rulerWidth, tsPositions, endTicks } = useSequencerLayout({
-  timeSignatures,
-  tpqn,
-  playheadPosition,
-  sequencerZoomX,
-  offset: computed(() => props.offset),
-  numMeasures: computed(() => props.numMeasures),
-});
+const { rulerWidth, tsPositions, endTicks, currentOffset, currentNumMeasures } =
+  useSequencerLayout({
+    timeSignatures,
+    tpqn,
+    playheadPosition,
+    sequencerZoomX,
+    offset: computed(() => 0),
+  });
 </script>

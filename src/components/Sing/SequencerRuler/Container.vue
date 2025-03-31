@@ -52,7 +52,7 @@ const sequencerZoomX = computed(() => store.state.sequencerZoomX);
 const playheadPosition = computed(() => store.getters.PLAYHEAD_POSITION);
 
 // useSequencerLayoutを使用してレイアウト計算を行う
-const { rulerWidth, playheadX } = useSequencerLayout({
+const { rulerWidth, playheadX, currentOffset } = useSequencerLayout({
   timeSignatures,
   tpqn,
   playheadPosition,
@@ -76,7 +76,7 @@ const handleClick = (event: MouseEvent) => {
   deselectAllNotes();
   const ticks = offsetXToSnappedTick(
     event.offsetX,
-    props.offset,
+    currentOffset.value,
     sequencerZoomX.value,
     timeSignatures.value,
     tpqn.value,

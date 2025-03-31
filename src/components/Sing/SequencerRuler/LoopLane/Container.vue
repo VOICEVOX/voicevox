@@ -1,7 +1,7 @@
 <template>
   <Presentation
     :width="rulerWidth"
-    :offset="props.offset"
+    :offset="currentOffset"
     :loopStartX
     :loopEndX
     :isLoopEnabled
@@ -31,17 +31,6 @@ defineOptions({
   name: "LoopLaneContainer",
 });
 
-const props = withDefaults(
-  defineProps<{
-    offset?: number;
-    numMeasures?: number;
-  }>(),
-  {
-    offset: 0,
-    numMeasures: 32,
-  },
-);
-
 const store = useStore();
 
 // 基本的な値
@@ -54,14 +43,15 @@ const loopEndTick = computed(() => store.state.loopEndTick);
 const isLoopEnabled = computed(() => store.state.isLoopEnabled);
 
 // useSequencerLayoutを使用してレイアウト計算を行う
-const { rulerWidth, tsPositions, endTicks } = useSequencerLayout({
-  timeSignatures,
-  tpqn,
-  playheadPosition,
-  sequencerZoomX,
-  offset: computed(() => props.offset),
-  numMeasures: computed(() => props.numMeasures),
-});
+const { rulerWidth, tsPositions, endTicks, currentOffset } = useSequencerLayout(
+  {
+    timeSignatures,
+    tpqn,
+    playheadPosition,
+    sequencerZoomX,
+    offset: computed(() => 0),
+  },
+);
 
 // クリック位置
 const clickX = ref(0);
@@ -164,7 +154,7 @@ const handleLoopAreaMouseDown = (event: MouseEvent) => {
 
   const tick = offsetXToSnappedTick(
     clickX,
-    props.offset,
+    currentOffset.value,
     sequencerZoomX.value,
     timeSignatures.value,
     tpqn.value,
@@ -348,7 +338,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => [
 const addOneMeasureLoop = (localX: number) => {
   const snappedTick = offsetXToSnappedTick(
     localX,
-    props.offset,
+    currentOffset.value,
     sequencerZoomX.value,
     timeSignatures.value,
     tpqn.value,
@@ -367,7 +357,7 @@ const addOneMeasureLoop = (localX: number) => {
 
   const startTick = offsetXToSnappedTick(
     localX,
-    props.offset,
+    currentOffset.value,
     sequencerZoomX.value,
     timeSignatures.value,
     tpqn.value,
