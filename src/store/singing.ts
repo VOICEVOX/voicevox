@@ -2002,8 +2002,32 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const generateSingingPitch = async (
         singingPitchSource: SingingPitchSource,
       ) => {
-        // TODO: ピッチ生成APIに対応する
-        return singingPitchSource.queryForPitchGeneration.f0;
+        const notesForRequestToEngine = createNotesForRequestToEngine(
+          singingPitchSource.firstRestDuration,
+          lastRestDurationSeconds,
+          singingPitchSource.notes,
+          singingPitchSource.tempos,
+          singingPitchSource.tpqn,
+          singingPitchSource.engineFrameRate,
+        );
+        const queryForPitchGeneration =
+          singingPitchSource.queryForPitchGeneration;
+
+        shiftKeyOfNotes(
+          notesForRequestToEngine,
+          -singingPitchSource.keyRangeAdjustment,
+        );
+
+        const singingPitch = await actions.FETCH_SING_FRAME_F0({
+          notes: notesForRequestToEngine,
+          query: queryForPitchGeneration,
+          engineId: singingPitchSource.engineId,
+          styleId: singingTeacherStyleId,
+        });
+
+        shiftPitch(singingPitch, singingPitchSource.keyRangeAdjustment);
+
+        return singingPitch;
       };
 
       const singingPitchGenerationStage: PhraseRenderStage = {
@@ -2672,6 +2696,36 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         logger.info("Rendering stopped.");
       }
     }),
+  },
+
+  FETCH_SING_FRAME_F0: {
+    async action(
+      { actions },
+      {
+        notes,
+        query,
+        engineId,
+        styleId,
+      }: {
+        notes: NoteForRequestToEngine[];
+        query: EditorFrameAudioQuery;
+        engineId: EngineId;
+        styleId: StyleId;
+      },
+    ) {
+      const instance = await actions.INSTANTIATE_ENGINE_CONNECTOR({
+        engineId,
+      });
+      return await instance.invoke("singFrameF0")({
+        bodySingFrameF0SingFrameF0Post: {
+          score: {
+            notes,
+          },
+          frameAudioQuery: query,
+        },
+        speaker: styleId,
+      });
+    },
   },
 
   FETCH_SING_FRAME_VOLUME: {

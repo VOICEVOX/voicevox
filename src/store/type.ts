@@ -1190,6 +1190,15 @@ export type SingingStoreTypes = {
     action(): void;
   };
 
+  FETCH_SING_FRAME_F0: {
+    action(palyoad: {
+      notes: NoteForRequestToEngine[];
+      query: EditorFrameAudioQuery;
+      engineId: EngineId;
+      styleId: StyleId;
+    }): Promise<number[]>;
+  };
+
   FETCH_SING_FRAME_VOLUME: {
     action(palyoad: {
       notes: NoteForRequestToEngine[];
