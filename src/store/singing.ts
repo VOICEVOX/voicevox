@@ -1980,12 +1980,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           throw new Error("track.singer is undefined.");
         }
         const phrase = getOrThrow(state.phrases, phraseKey);
-        const phraseQueryKey = phrase.queryKey;
-        if (phraseQueryKey == undefined) {
-          throw new Error("phraseQueryKey is undefined.");
+        if (phrase.queryKey == undefined) {
+          throw new Error("phrase.queryKey is undefined.");
         }
-        const query = getOrThrow(state.phraseQueries, phraseQueryKey);
+
+        const query = getOrThrow(state.phraseQueries, phrase.queryKey);
+
         const clonedQuery = cloneWithUnwrapProxy(query);
+
         // TODO: 音素タイミングの編集データの適用を行うようにする
         return {
           engineId: track.singer.engineId,
@@ -2113,19 +2115,31 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           throw new Error("track.singer is undefined.");
         }
         const phrase = getOrThrow(state.phrases, phraseKey);
-        const phraseQueryKey = phrase.queryKey;
-        if (phraseQueryKey == undefined) {
-          throw new Error("phraseQueryKey is undefined.");
+        if (phrase.queryKey == undefined) {
+          throw new Error("phrase.queryKey is undefined.");
         }
-        // TODO: ピッチ生成ステージで生成したピッチを使用するようにする
-        const query = getOrThrow(state.phraseQueries, phraseQueryKey);
+        if (phrase.singingPitchKey == undefined) {
+          throw new Error("phrase.singingPitchKey is undefined.");
+        }
+
+        const query = getOrThrow(state.phraseQueries, phrase.queryKey);
+        const singingPitch = getOrThrow(
+          state.phraseSingingPitches,
+          phrase.singingPitchKey,
+        );
+
         const clonedQuery = cloneWithUnwrapProxy(query);
+        const clonedSingingPitch = cloneWithUnwrapProxy(singingPitch);
+
+        clonedQuery.f0 = clonedSingingPitch;
+
         applyPitchEdit(
           clonedQuery,
           phrase.startTime,
           track.pitchEditData,
           snapshot.editorFrameRate,
         );
+
         return {
           engineId: track.singer.engineId,
           engineFrameRate: query.frameRate,
@@ -2267,28 +2281,40 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           throw new Error("track.singer is undefined.");
         }
         const phrase = getOrThrow(state.phrases, phraseKey);
-        const phraseQueryKey = phrase.queryKey;
-        const phraseSingingVolumeKey = phrase.singingVolumeKey;
-        if (phraseQueryKey == undefined) {
-          throw new Error("phraseQueryKey is undefined.");
+        if (phrase.queryKey == undefined) {
+          throw new Error("phrase.queryKey is undefined.");
         }
-        if (phraseSingingVolumeKey == undefined) {
-          throw new Error("phraseSingingVolumeKey is undefined.");
+        if (phrase.singingPitchKey == undefined) {
+          throw new Error("phrase.singingPitchKey is undefined.");
         }
-        const query = getOrThrow(state.phraseQueries, phraseQueryKey);
+        if (phrase.singingVolumeKey == undefined) {
+          throw new Error("phrase.singingVolumeKey is undefined.");
+        }
+
+        const query = getOrThrow(state.phraseQueries, phrase.queryKey);
+        const singingPitch = getOrThrow(
+          state.phraseSingingPitches,
+          phrase.singingPitchKey,
+        );
         const singingVolume = getOrThrow(
           state.phraseSingingVolumes,
-          phraseSingingVolumeKey,
+          phrase.singingVolumeKey,
         );
+
         const clonedQuery = cloneWithUnwrapProxy(query);
+        const clonedSingingPitch = cloneWithUnwrapProxy(singingPitch);
         const clonedSingingVolume = cloneWithUnwrapProxy(singingVolume);
+
+        clonedQuery.f0 = clonedSingingPitch;
+        clonedQuery.volume = clonedSingingVolume;
+
         applyPitchEdit(
           clonedQuery,
           phrase.startTime,
           track.pitchEditData,
           snapshot.editorFrameRate,
         );
-        clonedQuery.volume = clonedSingingVolume;
+
         return {
           singer: track.singer,
           queryForSingingVoiceSynthesis: clonedQuery,
