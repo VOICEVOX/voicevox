@@ -1191,7 +1191,7 @@ export type SingingStoreTypes = {
   };
 
   FETCH_SING_FRAME_F0: {
-    action(palyoad: {
+    action(payload: {
       notes: NoteForRequestToEngine[];
       query: EditorFrameAudioQuery;
       engineId: EngineId;
@@ -1200,7 +1200,7 @@ export type SingingStoreTypes = {
   };
 
   FETCH_SING_FRAME_VOLUME: {
-    action(palyoad: {
+    action(payload: {
       notes: NoteForRequestToEngine[];
       query: EditorFrameAudioQuery;
       engineId: EngineId;
