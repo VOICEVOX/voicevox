@@ -3450,6 +3450,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  IS_LOOP_EMPTY: {
+    getter(state) {
+      return state.loopStartTick === state.loopEndTick;
+    },
+  },
+
   SET_LOOP_ENABLED: {
     mutation(state, { isLoopEnabled }) {
       state.isLoopEnabled = isLoopEnabled;

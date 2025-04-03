@@ -4,7 +4,7 @@
     :class="{
       'is-enabled': isLoopEnabled,
       'is-dragging': isDragging,
-      'is-empty': isEmpty,
+      'is-empty': isLoopEmpty,
       [cursorClass]: true,
     }"
     :style="{ width: `${width}px` }"
@@ -21,7 +21,7 @@
     >
       <!-- ループ範囲 -->
       <rect
-        v-if="!isEmpty"
+        v-if="!isLoopEmpty"
         :x="loopStartX - offset + 4"
         y="0"
         :width="Math.max(loopEndX - loopStartX - 8, 0)"
@@ -42,7 +42,7 @@
           rx="1"
           ry="1"
           class="loop-handle loop-handle-start"
-          :class="{ 'is-empty': isEmpty }"
+          :class="{ 'is-empty': isLoopEmpty }"
           @mousedown.stop="handleStartHandleMouseDown"
         />
         <!-- 開始ハンドルのドラッグエリア(ドラッグしやすくするためハンドルよりも大きい) -->
@@ -65,7 +65,7 @@
           rx="1"
           ry="1"
           class="loop-handle loop-handle-end"
-          :class="{ 'is-empty': isEmpty }"
+          :class="{ 'is-empty': isLoopEmpty }"
           @mousedown.stop="handleEndHandleMouseDown"
         />
         <!-- 終了ハンドルのドラッグエリア(ドラッグしやすくするためハンドルよりも大きい) -->
@@ -99,7 +99,7 @@ defineProps<{
   loopEndX: number;
   isLoopEnabled: boolean;
   isDragging: boolean;
-  isEmpty: boolean;
+  isLoopEmpty: boolean;
   cursorClass: string;
   contextMenuData: ContextMenuItemData[];
 }>();

@@ -6,7 +6,7 @@
     :loopEndX
     :isLoopEnabled
     :isDragging
-    :isEmpty
+    :isLoopEmpty
     :cursorClass
     :contextMenuData
     @loopAreaMouseDown="handleLoopAreaMouseDown"
@@ -87,10 +87,8 @@ const loopEndX = computed(() =>
   Math.round((rulerWidth.value / endTicks.value) * currentLoopEndTick.value),
 );
 
-// ループが空かどうか
-const isEmpty = computed(
-  () => currentLoopStartTick.value === currentLoopEndTick.value,
-);
+// ループが空かどうか (ストアのゲッターを使用)
+const isLoopEmpty = computed(() => store.getters.IS_LOOP_EMPTY);
 
 // カーソルのCSSクラス
 const cursorClass = computed(() => {
@@ -140,7 +138,9 @@ const handleLoopAreaMouseDown = (event: MouseEvent) => {
 
   // 既存のループ範囲内でのクリックかどうかを確認
   const isWithinLoop =
-    clickX >= loopStartX.value && clickX <= loopEndX.value && !isEmpty.value;
+    clickX >= loopStartX.value &&
+    clickX <= loopEndX.value &&
+    !isLoopEmpty.value;
 
   // 既存のループ範囲内でのクリックの場合は、ループのオン/オフを切り替える
   if (isWithinLoop) return;
@@ -325,7 +325,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => [
     onClick: () => {
       clearLoopRange();
     },
-    disabled: isEmpty.value,
+    disabled: isLoopEmpty.value,
     disableWhenUiLocked: true,
   },
 ]);
