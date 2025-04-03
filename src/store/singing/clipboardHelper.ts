@@ -62,8 +62,17 @@ async function writeNotesToClipboard(serializedNotes: string): Promise<void> {
   } catch {
     // 2. カスタムMIMEタイプが利用できない(Chrome以外のブラウザ環境)の場合のフォールバック
     // クリップボードにノートデータオブジェクトをシリアライズした形式で書き込みを試みる
+    // text/plainは空文字を書き込むことで、一般的なペーストでは何も起きないようにする
     try {
-      await navigator.clipboard.writeText(serializedNotes);
+      const jsonBlob = new Blob([serializedNotes], {
+        type: "application/json",
+      });
+      const emptyTextBlob = new Blob([""], { type: "text/plain" });
+      const clipboardItem = new ClipboardItem({
+        "application/json": jsonBlob,
+        "text/plain": emptyTextBlob,
+      });
+      await navigator.clipboard.write([clipboardItem]);
     } catch (clipboardWriteError) {
       // クリップボード書き込みに失敗した場合はエラー
       throw new Error("Failed to copy notes to clipboard.", {
@@ -81,27 +90,23 @@ export async function readNotesFromClipboard(): Promise<Omit<Note, "id">[]> {
   try {
     const clipboardItems = await navigator.clipboard.read();
 
-    // 1. カスタムMIMEタイプのアイテムを先に探して、あれば返す
     for (const item of clipboardItems) {
+      // 1. カスタムMIMEタイプがあればそれを優先してパース
       if (item.types.includes(VOICEVOX_NOTES_MIME_TYPE)) {
         const blob = await item.getType(VOICEVOX_NOTES_MIME_TYPE);
         const notesText = await blob.text();
-        // 発見したら早期リターン
         return validateNotesForClipboard(notesText);
+      } else if (item.types.includes("application/json")) {
+        // 2. 次にapplication/jsonをチェックしてパース
+        const blob = await item.getType("application/json");
+        const jsonText = await blob.text();
+        return validateNotesForClipboard(jsonText);
       }
+      // 他のタイプは無視
     }
 
-    // 2. カスタムMIMEタイプが見つからなかったらテキストとして読み取り、JSONとしてパースを試みて返す
-    const clipboardPlainText = await navigator.clipboard.readText();
-    try {
-      return validateNotesForClipboard(clipboardPlainText);
-    } catch (validationError) {
-      // バリデーション失敗したらエラーをスロー
-      throw new Error("Failed to parse notes from clipboard.", {
-        cause: validationError,
-      });
-    }
-    // クリップボードが読めないなどであればエラーをスロー
+    // どちらも見つからなければ空配列とし何もペーストされない
+    return [];
   } catch (clipboardReadError) {
     throw new Error("Failed to read notes from clipboard.", {
       cause: clipboardReadError,
