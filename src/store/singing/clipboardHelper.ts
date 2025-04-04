@@ -48,7 +48,7 @@ export async function copyNotesToClipboard(
  * @throws クリップボードへの書き込みに失敗した場合
  */
 async function writeNotesToClipboard(serializedNotes: string): Promise<void> {
-  // clipboard.wrtie APIが利用可能な場合
+  // clipboard.write APIが利用可能な場合
   if (navigator.clipboard && navigator.clipboard.write) {
     try {
       // 1. カスタムMIMEタイプを利用してコピー
