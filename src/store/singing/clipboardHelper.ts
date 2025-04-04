@@ -48,34 +48,46 @@ export async function copyNotesToClipboard(
  * @throws クリップボードへの書き込みに失敗した場合
  */
 async function writeNotesToClipboard(serializedNotes: string): Promise<void> {
-  try {
-    // 1. カスタムMIMEタイプを利用してコピー
-    // web application/vnd.voicevox.song-notes
-    // web からはじまる形式はChromeのみでサポート
-    const notesBlob = new Blob([serializedNotes], {
-      type: VOICEVOX_NOTES_MIME_TYPE,
-    });
-    const clipboardItem = new ClipboardItem({
-      [VOICEVOX_NOTES_MIME_TYPE]: notesBlob,
-    });
-    await navigator.clipboard.write([clipboardItem]);
-  } catch {
-    // 2. カスタムMIMEタイプが利用できない(Chrome以外のブラウザ環境)の場合のフォールバック
-    // クリップボードにノートデータオブジェクトをシリアライズした形式で書き込みを試みる
-    // text/plainは空文字を書き込むことで、一般的なペーストでは何も起きないようにする
+  // clipboard.wrtie APIが利用可能な場合
+  if (navigator.clipboard && navigator.clipboard.write) {
     try {
-      const jsonBlob = new Blob([serializedNotes], {
-        type: "application/json",
+      // 1. カスタムMIMEタイプを利用してコピー
+      // web application/vnd.voicevox.song-notes
+      // web からはじまる形式はChromeのみでサポート
+      const notesBlob = new Blob([serializedNotes], {
+        type: VOICEVOX_NOTES_MIME_TYPE,
       });
-      const emptyTextBlob = new Blob([""], { type: "text/plain" });
       const clipboardItem = new ClipboardItem({
-        "application/json": jsonBlob,
-        "text/plain": emptyTextBlob,
+        [VOICEVOX_NOTES_MIME_TYPE]: notesBlob,
       });
       await navigator.clipboard.write([clipboardItem]);
+    } catch {
+      // 2. カスタムMIMEタイプが利用できない(Chrome以外のブラウザ環境)の場合のフォールバック
+      // クリップボードにノートデータオブジェクトをシリアライズした形式で書き込みを試みる
+      // text/plainは空文字を書き込むことで、一般的なペーストでは何も起きないようにする
+      try {
+        const jsonBlob = new Blob([serializedNotes], {
+          type: "application/json",
+        });
+        const emptyTextBlob = new Blob([""], { type: "text/plain" });
+        const clipboardItem = new ClipboardItem({
+          "application/json": jsonBlob,
+          "text/plain": emptyTextBlob,
+        });
+        await navigator.clipboard.write([clipboardItem]);
+      } catch (clipboardWriteError) {
+        // クリップボード書き込みに失敗した場合はエラー
+        throw new Error("Failed to copy notes to clipboard as MIME type.", {
+          cause: clipboardWriteError,
+        });
+      }
+    }
+  } else {
+    // clipboard.writeText API のみ利用可能な場合
+    try {
+      await navigator.clipboard.writeText(serializedNotes);
     } catch (clipboardWriteError) {
-      // クリップボード書き込みに失敗した場合はエラー
-      throw new Error("Failed to copy notes to clipboard.", {
+      throw new Error("Failed to copy notes to clipboard as text.", {
         cause: clipboardWriteError,
       });
     }
@@ -105,8 +117,9 @@ export async function readNotesFromClipboard(): Promise<Omit<Note, "id">[]> {
       // 他のタイプは無視
     }
 
-    // どちらも見つからなければ空配列とし何もペーストされない
-    return [];
+    // どちらも見つからない場合はシリアライズされたノートデータをパースを試みる
+    const clipboardText = await navigator.clipboard.readText();
+    return validateNotesForClipboard(clipboardText);
   } catch (clipboardReadError) {
     throw new Error("Failed to read notes from clipboard.", {
       cause: clipboardReadError,
