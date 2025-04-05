@@ -11,6 +11,11 @@
     v-model="isCharacterOrderDialogOpenComputed"
     :characterInfos="orderedAllCharacterInfos"
   />
+  <DefaultStyleListDialog
+    v-if="orderedTalkCharacterInfos.length > 0"
+    v-model="isDefaultStyleSelectDialogOpenComputed"
+    :characterInfos="orderedTalkCharacterInfos"
+  />
   <DictionaryManageDialog v-model="isDictionaryManageDialogOpenComputed" />
   <EngineManageDialog v-model="isEngineManageDialogOpenComputed" />
   <UpdateNotificationDialogContainer
@@ -25,6 +30,7 @@ import { computed } from "vue";
 import SettingDialog from "@/components/Dialog/SettingDialog/SettingDialog.vue";
 import HotkeySettingDialog from "@/components/Dialog/HotkeySettingDialog.vue";
 import ToolBarCustomDialog from "@/components/Dialog/ToolBarCustomDialog.vue";
+import DefaultStyleListDialog from "@/components/Dialog/DefaultStyleListDialog.vue";
 import CharacterOrderDialog from "@/components/Dialog/CharacterOrderDialog.vue";
 import AcceptRetrieveTelemetryDialog from "@/components/Dialog/AcceptDialog/AcceptRetrieveTelemetryDialog.vue";
 import AcceptTermsDialog from "@/components/Dialog/AcceptDialog/AcceptTermsDialog.vue";
@@ -34,6 +40,7 @@ import UpdateNotificationDialogContainer from "@/components/Dialog/UpdateNotific
 import ImportSongProjectDialog from "@/components/Dialog/ImportSongProjectDialog.vue";
 import ExportSongAudioDialog from "@/components/Dialog/ExportSongAudioDialog/Container.vue";
 import { useStore } from "@/store";
+import { filterCharacterInfosByStyleType } from "@/store/utility";
 
 const props = defineProps<{
   isEnginesReady: boolean;
@@ -87,6 +94,24 @@ const isCharacterOrderDialogOpenComputed = computed({
     }),
 });
 
+// デフォルトスタイル選択(トーク)
+const orderedTalkCharacterInfos = computed(() => {
+  return filterCharacterInfosByStyleType(
+    store.getters.GET_ORDERED_ALL_CHARACTER_INFOS,
+    "talk",
+  );
+});
+const isDefaultStyleSelectDialogOpenComputed = computed({
+  get: () =>
+    !store.state.isAcceptTermsDialogOpen &&
+    !store.state.isCharacterOrderDialogOpen &&
+    store.state.isDefaultStyleSelectDialogOpen,
+  set: (val) =>
+    store.actions.SET_DIALOG_OPEN({
+      isDefaultStyleSelectDialogOpen: val,
+    }),
+});
+
 // エンジン管理
 const isEngineManageDialogOpenComputed = computed({
   get: () => store.state.isEngineManageDialogOpen,
@@ -109,6 +134,7 @@ const isAcceptRetrieveTelemetryDialogOpenComputed = computed({
   get: () =>
     !store.state.isAcceptTermsDialogOpen &&
     !store.state.isCharacterOrderDialogOpen &&
+    !store.state.isDefaultStyleSelectDialogOpen &&
     store.state.isAcceptRetrieveTelemetryDialogOpen,
   set: (val) =>
     store.actions.SET_DIALOG_OPEN({
@@ -121,6 +147,7 @@ const canOpenNotificationDialog = computed(() => {
   return (
     !store.state.isAcceptTermsDialogOpen &&
     !store.state.isCharacterOrderDialogOpen &&
+    !store.state.isDefaultStyleSelectDialogOpen &&
     !store.state.isAcceptRetrieveTelemetryDialogOpen &&
     props.isEnginesReady
   );

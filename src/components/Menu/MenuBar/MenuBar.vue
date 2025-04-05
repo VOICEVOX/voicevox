@@ -128,6 +128,9 @@ const closeAllDialog = () => {
   void store.actions.SET_DIALOG_OPEN({
     isCharacterOrderDialogOpen: false,
   });
+  void store.actions.SET_DIALOG_OPEN({
+    isDefaultStyleSelectDialogOpen: false,
+  });
 };
 
 const toggleFullScreen = async () => {
@@ -488,6 +491,16 @@ const menudata = computed<MenuItemData[]>(() => [
         onClick() {
           void store.actions.SET_DIALOG_OPEN({
             isCharacterOrderDialogOpen: true,
+          });
+        },
+        disableWhenUiLocked: true,
+      },
+      {
+        type: "button",
+        label: "デフォルトスタイル",
+        onClick() {
+          void store.actions.SET_DIALOG_OPEN({
+            isDefaultStyleSelectDialogOpen: true,
           });
         },
         disableWhenUiLocked: true,
