@@ -18,14 +18,10 @@ export async function copyNotesToClipboard(
   const noteIds = getters.SELECTED_NOTE_IDS;
 
   // 選択されたトラックがない場合は何もしない
-  if (!selectedTrack) {
-    return;
-  }
+  if (!selectedTrack) return;
 
   // ノートが選択されていない場合は何もしない
-  if (noteIds.size === 0) {
-    return;
-  }
+  if (noteIds.size === 0) return;
 
   // 選択されたノートのみをコピーする
   const selectedNotesForCopy = selectedTrack.notes
@@ -61,15 +57,22 @@ async function writeNotesToClipboard(serializedNotes: string): Promise<void> {
     await navigator.clipboard.write([clipboardItem]);
   } catch {
     // 2. カスタムMIMEタイプが利用できない(Chrome以外のブラウザ環境)の場合のフォールバック
-    // クリップボードにノートデータオブジェクトをシリアライズした形式で書き込みを試みる
-    // text/plainは空文字を書き込むことで、一般的なペーストでは何も起きないようにする
+    // VOICEVOXのシーケンサでは、ペースト時に text/html を読み取り、data-* 属性からノートデータを復元できる。
+    // VOICEVOXの歌詞入力など他の入力inputや多くの他のアプリケーションでは、<i> タグや data-* 属性は無視され、
+    // text/plainの空文字が優先されるため、結果的に何もペーストされないように見える
     try {
-      const jsonBlob = new Blob([serializedNotes], {
-        type: "application/json",
+      // <i>のdata属性にノートオブジェクトを埋め込む
+      const encodedHtmlNotes = `<i data-voicevox-song-notes="${encodeURIComponent(serializedNotes)}" />`;
+      // ノートデータを持つtext/html
+      const textHtmlBlob = new Blob([encodedHtmlNotes], {
+        type: "text/html",
       });
-      const emptyTextBlob = new Blob([""], { type: "text/plain" });
+      // 多くの場合に表示される空文字
+      const emptyTextBlob = new Blob([""], {
+        type: "text/plain",
+      });
       const clipboardItem = new ClipboardItem({
-        "application/json": jsonBlob,
+        "text/html": textHtmlBlob,
         "text/plain": emptyTextBlob,
       });
       await navigator.clipboard.write([clipboardItem]);
@@ -96,16 +99,32 @@ export async function readNotesFromClipboard(): Promise<Omit<Note, "id">[]> {
         const blob = await item.getType(VOICEVOX_NOTES_MIME_TYPE);
         const notesText = await blob.text();
         return validateNotesForClipboard(notesText);
-      } else if (item.types.includes("application/json")) {
-        // 2. 次にapplication/jsonをチェックしてパース
-        const blob = await item.getType("application/json");
-        const jsonText = await blob.text();
-        return validateNotesForClipboard(jsonText);
       }
-      // 他のタイプは無視
+      // 2. なければフォールバックとしてtext/htmlをチェックしてパース
+      if (item.types.includes("text/html")) {
+        const blob = await item.getType("text/html");
+        const htmlText = await blob.text();
+        const domParser = new DOMParser();
+        const doc = domParser.parseFromString(htmlText, "text/html");
+        // data-voicevox-song-notesデータ属性を持つ要素を取得
+        const elementCandidate = doc.querySelector(
+          "[data-voicevox-song-notes]",
+        );
+        // 要素が取得できないなら次のClipboardItemへ
+        if (!elementCandidate) continue;
+        // data-voicevox-song-notesデータ属性値を取得
+        const encodedData = elementCandidate.getAttribute(
+          "data-voicevox-song-notes",
+        );
+        // 属性値がないなら次のClipboardItemへ
+        if (!encodedData) continue;
+        const decodedData = decodeURIComponent(encodedData);
+        return validateNotesForClipboard(decodedData);
+      }
+      // 他のタイプはノートペーストにおいては無視
     }
 
-    // どちらも見つからなければ空配列とし何もペーストされない
+    // なにも見つからなければ空配列とし何もペーストされない
     return [];
   } catch (clipboardReadError) {
     throw new Error("Failed to read notes from clipboard.", {

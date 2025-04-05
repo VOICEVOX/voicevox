@@ -1668,6 +1668,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         throw new Error("audioContext is undefined.");
       }
       const sinkId = device === "default" ? "" : device;
+      if (typeof audioContext.setSinkId !== "function") {
+        return;
+      }
       audioContext.setSinkId(sinkId).catch((err: unknown) => {
         void showAlertDialog({
           title: "エラー",
@@ -3215,7 +3218,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   COMMAND_PASTE_NOTES_FROM_CLIPBOARD: {
     async action({ mutations, state, getters, actions }) {
+      // ノートをクリップボードから読み込む
       const notes = await readNotesFromClipboard();
+
+      // notesが空の場合は何もしない
+      if (notes.length === 0) return;
 
       // パースしたJSONのノートの位置を現在の再生位置に合わせてクオンタイズして貼り付ける
       const currentPlayheadPosition = getters.PLAYHEAD_POSITION;
