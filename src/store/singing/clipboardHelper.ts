@@ -1,9 +1,9 @@
 import { ActionContext, Note } from "../type";
 import { noteSchema } from "@/domain/project/schema";
 
-// VOICEVOXソングのノート専用のMIMEType
-export const VOICEVOX_NOTES_MIME_TYPE =
-  "web application/vnd.voicevox.song-notes";
+// VOICEVOXソングのノート専用のMIMEタイプ
+// VOICEVOX内でノートデータを共有するために使用
+const VOICEVOX_NOTES_MIME_TYPE = "web application/vnd.voicevox.song-notes";
 
 /**
  * 選択されたノートをクリップボードにコピーする
@@ -45,9 +45,11 @@ export async function copyNotesToClipboard(
  */
 async function writeNotesToClipboard(serializedNotes: string): Promise<void> {
   try {
-    // 1. カスタムMIMEタイプを利用してコピー
-    // web application/vnd.voicevox.song-notes
-    // web からはじまる形式はChromeのみでサポート
+    // 1. カスタムMIMEタイプを利用してコピー(ElectronをふくむChrome用)
+    // Chromeの場合は以下のカスタムMIMEタイプでのコピーを行います。
+    // "web application/vnd.voicevox.song-notes"
+    //
+    // 参考: https://developer.chrome.com/blog/web-custom-formats-for-the-async-clipboard-api?hl=ja
     const notesBlob = new Blob([serializedNotes], {
       type: VOICEVOX_NOTES_MIME_TYPE,
     });
@@ -57,9 +59,15 @@ async function writeNotesToClipboard(serializedNotes: string): Promise<void> {
     await navigator.clipboard.write([clipboardItem]);
   } catch {
     // 2. カスタムMIMEタイプが利用できない(Chrome以外のブラウザ環境)の場合のフォールバック
-    // VOICEVOXのシーケンサでは、ペースト時に text/html を読み取り、data-* 属性からノートデータを復元できる。
-    // VOICEVOXの歌詞入力など他の入力inputや多くの他のアプリケーションでは、<i> タグや data-* 属性は無視され、
-    // text/plainの空文字が優先されるため、結果的に何もペーストされないように見える
+    // ノートデータをdata属性に埋め込んだ text/html でコピーします。
+    // - VOICEVOXシーケンサーだと、ペースト時に data-* 属性からノートを復元できます。
+    // - 他のアプリでは通常、<i> タグや data-* 属性は無視され、何もペーストされません。
+    //
+    // さらに安全策としての text/plain を追加しています。
+    // コピー＆ペーストはブラウザやアプリの実装依存となり、
+    // text/html しかない場合にHTMLタグ自体がペーストされる可能性があります。
+    // これを防ぐ目的でより優先されやすい text/plain に空文字を設定し、
+    // 実質的に何もペーストされない動作を期待します。
     try {
       // <i>のdata属性にノートオブジェクトを埋め込む
       const encodedHtmlNotes = `<i data-voicevox-song-notes="${encodeURIComponent(serializedNotes)}" />`;
@@ -67,7 +75,7 @@ async function writeNotesToClipboard(serializedNotes: string): Promise<void> {
       const textHtmlBlob = new Blob([encodedHtmlNotes], {
         type: "text/html",
       });
-      // 多くの場合に表示される空文字
+      // 安全策としてのtext/plainの空文字
       const emptyTextBlob = new Blob([""], {
         type: "text/plain",
       });
