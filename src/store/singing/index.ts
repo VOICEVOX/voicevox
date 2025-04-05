@@ -1668,9 +1668,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         throw new Error("audioContext is undefined.");
       }
       const sinkId = device === "default" ? "" : device;
-      if (typeof audioContext.setSinkId !== "function") {
-        return;
-      }
       audioContext.setSinkId(sinkId).catch((err: unknown) => {
         void showAlertDialog({
           title: "エラー",
