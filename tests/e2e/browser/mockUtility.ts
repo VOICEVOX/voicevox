@@ -1,3 +1,12 @@
+/**
+ * Playwright E2Eテストでブラウザ側の関数をモックするユーティリティ。
+ *
+ * `page.evaluate()` を介してブラウザ側の `window.backend` の関数をモック化する。
+ * 結果はブラウザ側の `window` オブジェクトのプロパティに一時的に追加し、`page.evaluate()` を介して取得する。
+ *
+ * TODO: モックを戻せるようにする？
+ */
+
 import { Page } from "@playwright/test";
 import { Brand } from "@/type/utility";
 import { success } from "@/type/result";
@@ -5,7 +14,6 @@ import { success } from "@/type/result";
 type TestFileId = Brand<string, "TestFileId">;
 
 /** ファイル書き出し選択ダイアログをモックにする */
-// TODO: モックを戻せるようにする？
 export async function mockShowSaveFileDialog(page: Page): Promise<{
   getFileIds: () => Promise<TestFileId[]>;
 }> {
@@ -40,7 +48,6 @@ export async function mockShowSaveFileDialog(page: Page): Promise<{
 }
 
 /** ファイル書き出しをモックにする */
-// TODO: モックを戻せるようにする
 export async function mockWriteFile(page: Page): Promise<{
   getWrittenFileBuffers: () => Promise<Record<string | TestFileId, Buffer>>;
 }> {
