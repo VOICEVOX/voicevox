@@ -74,8 +74,9 @@ export async function mockWriteFile(page: Page): Promise<{
     getWrittenFileBuffers: async () => {
       const arrays = await page.evaluate(() => {
         const _window = window as unknown as _Window;
-        return objectFromEntries(
-          objectEntries(_window._mockWriteFile).map(([key, value]) => [
+        // NOTE: evaluate() 内で `objectFromEntries` 等は使えない
+        return Object.fromEntries(
+          Object.entries(_window._mockWriteFile).map(([key, value]) => [
             key,
             Array.from(value),
           ]),
