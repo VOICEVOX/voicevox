@@ -58,16 +58,16 @@ export async function mockWriteFile(page: Page): Promise<{
 
   // モックを差し込む
   await page.evaluate(
-    ({ sucecssResult }) => {
+    ({ successResult }) => {
       const _window = window as unknown as _Window;
       _window._mockWriteFile = {};
 
       _window.backend.writeFile = async ({ filePath, buffer }) => {
         _window._mockWriteFile[filePath as TestFileId] = new Uint8Array(buffer);
-        return sucecssResult;
+        return successResult;
       };
     },
-    { sucecssResult: success(undefined) },
+    { successResult: success(undefined) },
   );
 
   return {
