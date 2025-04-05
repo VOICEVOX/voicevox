@@ -26,8 +26,8 @@ on:
         default: false
 
 env:
-  VOICEVOX_ENGINE_VERSION: 0.22.2
-  VOICEVOX_RESOURCE_VERSION: 0.22.2
+  VOICEVOX_ENGINE_VERSION: 0.23.0
+  VOICEVOX_RESOURCE_VERSION: 0.23.0
   VOICEVOX_EDITOR_VERSION:
     |- # releaseタグ名か、workflow_dispatchでのバージョン名か、999.999.999-developが入る
     ${{ github.event.release.tag_name || github.event.inputs.version || '999.999.999-develop' }}
@@ -48,14 +48,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        artifact_name:
-          - linux-nvidia-prepackage
-          - linux-cpu-prepackage
-          - windows-nvidia-prepackage
-          - windows-cpu-prepackage
-          - windows-directml-prepackage
-          - macos-x64-cpu-prepackage
-          - macos-arm64-cpu-prepackage
         include:
           # Linux NVIDIA GPU
           - artifact_name: linux-nvidia-prepackage
@@ -69,18 +61,30 @@ jobs:
             linux_executable_name: voicevox
             linux_appimage_7z_name: VOICEVOX.AppImage
             os: ubuntu-20.04
-          # Linux CPU
-          - artifact_name: linux-cpu-prepackage
+          # Linux CPU (x64)
+          - artifact_name: linux-cpu-x64-prepackage
             artifact_path: dist_electron/linux-unpacked
-            voicevox_engine_asset_name: linux-cpu
+            voicevox_engine_asset_name: linux-cpu-x64
             package_name: voicevox-cpu
-            compressed_artifact_name: voicevox-linux-cpu
+            compressed_artifact_name: voicevox-linux-cpu-x64
             app_asar_dir: prepackage/resources
-            installer_artifact_name: linux-cpu-appimage
-            linux_artifact_name: "VOICEVOX.${ext}"
+            installer_artifact_name: linux-cpu-x64-appimage
+            linux_artifact_name: "VOICEVOX.${version}-x64.${ext}"
             linux_executable_name: voicevox
-            linux_appimage_7z_name: VOICEVOX-CPU.AppImage
+            linux_appimage_7z_name: VOICEVOX-CPU-X64.AppImage
             os: ubuntu-20.04
+          # Linux CPU (arm64)
+          - artifact_name: linux-cpu-arm64-prepackage
+            artifact_path: dist_electron/linux-arm64-unpacked
+            voicevox_engine_asset_name: linux-cpu-arm64
+            package_name: voicevox-cpu
+            compressed_artifact_name: voicevox-linux-cpu-arm64
+            app_asar_dir: prepackage/resources
+            installer_artifact_name: linux-cpu-arm64-appimage
+            linux_artifact_name: "VOICEVOX.${version}-arm64.${ext}"
+            linux_executable_name: voicevox
+            linux_appimage_7z_name: VOICEVOX-CPU-ARM64.AppImage
+            os: ubuntu-22.04-arm
           # Windows CUDA
           - artifact_name: windows-nvidia-prepackage
             artifact_path: dist_electron/win-unpacked
@@ -112,23 +116,23 @@ jobs:
             nsis_web_artifact_name: "VOICEVOX.Web.Setup.${version}.${ext}"
             os: windows-2019
           # macOS CPU (x64)
-          - artifact_name: macos-x64-cpu-prepackage
+          - artifact_name: macos-cpu-x64-prepackage
             artifact_path: dist_electron/mac
             voicevox_engine_asset_name: macos-x64
             package_name: voicevox-cpu
-            compressed_artifact_name: voicevox-macos-x64-cpu
+            compressed_artifact_name: voicevox-macos-cpu-x64
             app_asar_dir: prepackage/VOICEVOX.app/Contents/Resources
-            installer_artifact_name: macos-x64-cpu-dmg
+            installer_artifact_name: macos-cpu-x64-dmg
             macos_artifact_name: "VOICEVOX.${version}-x64.${ext}"
             os: macos-13
           # macOS CPU (arm64)
-          - artifact_name: macos-arm64-cpu-prepackage
+          - artifact_name: macos-cpu-arm64-prepackage
             artifact_path: dist_electron/mac-arm64
             voicevox_engine_asset_name: macos-arm64
             package_name: voicevox-cpu
-            compressed_artifact_name: voicevox-macos-arm64-cpu
+            compressed_artifact_name: voicevox-macos-cpu-arm64
             app_asar_dir: prepackage/VOICEVOX.app/Contents/Resources
-            installer_artifact_name: macos-arm64-cpu-dmg
+            installer_artifact_name: macos-cpu-arm64-dmg
             macos_artifact_name: "VOICEVOX.${version}-arm64.${ext}"
             os: macos-14
 
@@ -158,11 +162,14 @@ jobs:
 
           $sed -i 's/"version": "999.999.999"/"version": "${{ env.VOICEVOX_EDITOR_VERSION }}"/' package.json
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version-file: ".node-version"
-          cache: "npm"
+          cache: "pnpm"
 
       - name: Cache Electron
         uses: actions/cache@v4
@@ -181,7 +188,7 @@ jobs:
             ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm i --frozen-lockfile
 
       - name: Checkout Product Version Resource
         uses: actions/checkout@v4
@@ -221,7 +228,7 @@ jobs:
           $sed -i 's/VITE_GTM_CONTAINER_ID=.*/VITE_GTM_CONTAINER_ID='"$gtm_id"'/' .env.production
 
       - name: Generate public/licenses.json
-        run: npm run license:generate -- -o public/licenses.json
+        run: pnpm run license:generate -o public/licenses.json
 
       - name: Define Code Signing Envs
         if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'
@@ -251,7 +258,7 @@ jobs:
 
           # https://github.com/electron-userland/electron-builder/issues/3179
           USE_HARD_LINKS: false
-        run: npm run electron:build -- --dir
+        run: pnpm run electron:build --dir
 
       - name: Reset Code Signing Envs
         if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'
@@ -284,7 +291,7 @@ jobs:
           rm "${{ matrix.app_asar_dir }}/app.asar"
 
           mv voicevox_engine/licenses.json engine_licenses.json
-          npm run license:merge -- -o "${{ matrix.app_asar_dir }}/app/dist/licenses.json" -i engine_licenses.json -i "${{ matrix.app_asar_dir }}/app/dist/licenses.json"
+          pnpm run license:merge -o "${{ matrix.app_asar_dir }}/app/dist/licenses.json" -i engine_licenses.json -i "${{ matrix.app_asar_dir }}/app/dist/licenses.json"
 
           # Repack asar
           npx asar pack "${{ matrix.app_asar_dir }}/app" "${{ matrix.app_asar_dir }}/app.asar"
@@ -413,14 +420,14 @@ jobs:
           LINUX_ARTIFACT_NAME: ${{ matrix.linux_artifact_name }}
           LINUX_EXECUTABLE_NAME: ${{ matrix.linux_executable_name }}
         run: |
-          npm run electron:build -- --prepackaged prepackage/
+          pnpm run electron:build --prepackaged prepackage/
 
       - name: Build Electron (for macOS)
         if: endsWith(matrix.installer_artifact_name, '-dmg') # macOS
         env:
           MACOS_ARTIFACT_NAME: ${{ matrix.macos_artifact_name }}
         run: |
-          npm run electron:build -- --prepackaged prepackage/VOICEVOX.app
+          pnpm run electron:build --prepackaged prepackage/VOICEVOX.app
 
       - name: Reset Code Signing Envs
         if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'

@@ -6,7 +6,7 @@
   />
 
   <QDialog
-    v-model="modelValueComputed"
+    v-model="dialogOpened"
     maximized
     transitionShow="jump-up"
     transitionHide="jump-down"
@@ -113,21 +113,12 @@ import { CharacterInfo, SpeakerId, StyleId, StyleInfo } from "@/type/preload";
 import { filterCharacterInfosByStyleType } from "@/store/utility";
 import { debounce } from "@/helpers/timer";
 
+const dialogOpened = defineModel<boolean>("dialogOpened", { default: false });
 const props = defineProps<{
-  modelValue: boolean;
   characterInfos: CharacterInfo[];
 }>();
 
-const emit = defineEmits<{
-  (event: "update:modelValue", value: boolean): void;
-}>();
-
 const store = useStore();
-
-const modelValueComputed = computed({
-  get: () => props.modelValue,
-  set: (val) => emit("update:modelValue", val),
-});
 
 const characterInfosMap = computed(() => {
   const map: { [key: SpeakerId]: CharacterInfo } = {};
@@ -167,30 +158,26 @@ const selectedCharacterInfo = computed(() => {
 const characterOrder = ref<CharacterInfo[]>([]);
 
 // ダイアログが開かれたときに初期値を求める
-watch(
-  () => props.modelValue,
-  async (newValue, oldValue) => {
-    if (!oldValue && newValue) {
-      // 新しいキャラクター
-      newCharacters.value = await store.actions.GET_NEW_CHARACTERS();
+watch(dialogOpened, async (newValue, oldValue) => {
+  if (!oldValue && newValue) {
+    // 新しいキャラクター
+    newCharacters.value = await store.actions.GET_NEW_CHARACTERS();
 
-      // サンプルの順番、新しいキャラクターは上に
-      sampleCharacterOrder.value = [
-        ...newCharacters.value,
-        ...props.characterInfos
-          .filter(
-            (info) => !newCharacters.value.includes(info.metas.speakerUuid),
-          )
-          .map((info) => info.metas.speakerUuid),
-      ];
+    // サンプルの順番、新しいキャラクターは上に
+    sampleCharacterOrder.value = [
+      ...newCharacters.value,
+      ...props.characterInfos
+        .filter((info) => !newCharacters.value.includes(info.metas.speakerUuid))
+        .map((info) => info.metas.speakerUuid),
+    ];
 
-      selectedCharacter.value = sampleCharacterOrder.value[0];
+    selectedCharacter.value = sampleCharacterOrder.value[0];
 
-      // 保存済みのキャラクターリストを取得
-      // FIXME: 不明なキャラを無視しているので、不明キャラの順番が保存時にリセットされてしまう
-      characterOrder.value = store.state.userCharacterOrder
-        .map((speakerUuid) => characterInfosMap.value[speakerUuid])
-        .filter((info) => info != undefined);
+    // 保存済みのキャラクターリストを取得
+    // FIXME: 不明なキャラを無視しているので、不明キャラの順番が保存時にリセットされてしまう
+    characterOrder.value = store.state.userCharacterOrder
+      .map((speakerUuid) => characterInfosMap.value[speakerUuid])
+      .filter((info) => info != undefined);
 
       // 含まれていないキャラクターを足す
       const notIncludesCharacterInfos = props.characterInfos.filter(
@@ -275,7 +262,7 @@ const closeDialog = () => {
   stop();
   styleType.value = "talk";
   showOrderPane.value = false;
-  modelValueComputed.value = false;
+  dialogOpened.value = false;
 };
 </script>
 

@@ -1,9 +1,5 @@
 <template>
-  <QDialog
-    :modelValue="props.openDialog"
-    @update:modelValue="updateOpenDialog"
-    @beforeShow="initializeInput"
-  >
+  <QDialog v-model="dialogOpened" @beforeShow="initializeInput">
     <QCard class="q-pa-md dialog-card">
       <QCardSection>
         <div class="text-h5">書き出しファイル名パターン</div>
@@ -58,7 +54,7 @@
             outline
             textColor="display"
             class="text-no-wrap text-bold q-mr-sm col-2"
-            @click="updateOpenDialog(false)"
+            @click="dialogOpened = false"
           />
           <QBtn
             label="確定"
@@ -81,9 +77,8 @@ import { QInput } from "quasar";
 import { replaceTagIdToTagString, sanitizeFileName } from "@/store/utility";
 import { UnreachableError } from "@/type/utility";
 
+const dialogOpened = defineModel<boolean>("dialogOpened", { default: false });
 const props = defineProps<{
-  /** ダイアログが開いているかどうか */
-  openDialog: boolean;
   /** デフォルトのテンプレート */
   defaultTemplate: string;
   /** 使用可能なタグ */
@@ -97,11 +92,9 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (e: "update:openDialog", val: boolean): void;
   (e: "update:template", val: string): void;
 }>();
 
-const updateOpenDialog = (isOpen: boolean) => emit("update:openDialog", isOpen);
 const updateFileNamePattern = (pattern: string) =>
   emit("update:template", pattern);
 
@@ -185,7 +178,7 @@ const submit = async () => {
   }
 
   updateFileNamePattern(temporaryTemplate.value);
-  updateOpenDialog(false);
+  dialogOpened.value = false;
 };
 </script>
 

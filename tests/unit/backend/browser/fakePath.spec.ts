@@ -1,3 +1,4 @@
+import { it, expect } from "vitest";
 import { isFakePath, createFakePath } from "@/backend/browser/fakePath";
 
 it.each([

@@ -6,7 +6,7 @@
 <template>
   <UpdateNotificationDialog
     v-if="newUpdateResult.status == 'updateAvailable'"
-    v-model="isDialogOpenComputed"
+    v-model:dialogOpened="isDialogOpenComputed"
     :latestVersion="newUpdateResult.latestVersion"
     :newUpdateInfos="newUpdateResult.newUpdateInfos"
     @skipThisVersionClick="handleSkipThisVersionClick"
@@ -15,11 +15,12 @@
 
 <script setup lang="ts">
 import semver from "semver";
-import { computed, watch } from "vue";
+import { computed, watchEffect } from "vue";
 import UpdateNotificationDialog from "./Presentation.vue";
 import { useFetchNewUpdateInfos } from "@/composables/useFetchNewUpdateInfos";
 import { useStore } from "@/store";
 import { UrlString } from "@/type/preload";
+import { getAppInfos } from "@/domain/appInfo";
 
 const props = defineProps<{
   canOpenDialog: boolean; // ダイアログを開いても良いかどうか
@@ -44,9 +45,7 @@ if (!import.meta.env.VITE_LATEST_UPDATE_INFOS_URL) {
 
 // アプリのバージョンとスキップしたバージョンのうち、新しい方を返す
 const currentVersionGetter = async () => {
-  const appVersion = await window.backend
-    .getAppInfos()
-    .then((obj) => obj.version);
+  const appVersion = getAppInfos().version;
 
   await store.actions.WAIT_VUEX_READY({ timeout: 15000 });
   const skipUpdateVersion = store.state.skipUpdateVersion ?? "0.0.0";
@@ -74,15 +73,13 @@ const handleSkipThisVersionClick = (version: string) => {
 };
 
 // ダイアログを開くかどうか
-watch(
-  () => [props.canOpenDialog, newUpdateResult],
-  () => {
-    if (
-      props.canOpenDialog &&
-      newUpdateResult.value.status == "updateAvailable"
-    ) {
-      isDialogOpenComputed.value = true;
-    }
-  },
-);
+const stopWatchEffect = watchEffect(() => {
+  if (
+    props.canOpenDialog &&
+    newUpdateResult.value.status == "updateAvailable"
+  ) {
+    isDialogOpenComputed.value = true;
+    stopWatchEffect(); // ダイアログを再表示させない
+  }
+});
 </script>

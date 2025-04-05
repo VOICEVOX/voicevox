@@ -12,6 +12,7 @@ import {
 } from "@/store/type";
 import { DotNotationDispatch } from "@/store/vuex";
 import { withProgress } from "@/store/ui";
+import { errorToMessage } from "@/helpers/errorHelper";
 
 type MediaType = "audio" | "text" | "project" | "label";
 
@@ -54,8 +55,6 @@ export type NotifyAndNotShowAgainButtonOption = {
   tipName: keyof ConfirmedTips;
 };
 
-export type LoadingScreenOption = { message: string };
-
 // 汎用ダイアログを表示
 
 /** メッセージを知らせるダイアログ */
@@ -85,6 +84,14 @@ export const showAlertDialog = async (
   return await showMessageDialog({
     ...options,
     type: "error",
+  });
+};
+
+/** 例外からエラーダイアログを表示する便利関数 */
+export const showErrorDialog = async (title: string, e: unknown) => {
+  return showAlertDialog({
+    title,
+    message: errorToMessage(e),
   });
 };
 
@@ -403,6 +410,8 @@ export const showNotifyAndNotShowAgainButton = (
     ],
   });
 };
+
+type LoadingScreenOption = { message: string };
 
 export const showLoadingScreen = (options: LoadingScreenOption) => {
   Loading.show({

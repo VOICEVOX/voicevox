@@ -9,6 +9,7 @@ import {
   StoreOptions,
   PayloadFunction,
   Store,
+  DotNotationActionContext,
 } from "./vuex";
 import { createCommandMutationTree, PayloadRecipeTree } from "./command";
 import {
@@ -58,7 +59,6 @@ import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import {
   TextDialogResult,
   NotifyAndNotShowAgainButtonOption,
-  LoadingScreenOption,
   MessageDialogOptions,
   ConfirmDialogOptions,
   WarningDialogOptions,
@@ -483,6 +483,7 @@ export type AudioStoreTypes = {
  * Audio Command Store Types
  */
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export type AudioCommandStoreState = {
   //
 };
@@ -720,8 +721,8 @@ export type AudioPlayerStoreState = {
 };
 
 export type AudioPlayerStoreTypes = {
-  ACTIVE_AUDIO_ELEM_CURRENT_TIME: {
-    getter: number | undefined;
+  ACTIVE_AUDIO_ELEM_CURRENT_TIME_GETTER: {
+    getter: () => number | undefined;
   };
 
   NOW_PLAYING: {
@@ -1127,10 +1128,6 @@ export type SingingStoreTypes = {
     action(payload: { snapType: number }): void;
   };
 
-  SEQUENCER_NUM_MEASURES: {
-    getter: number;
-  };
-
   SET_ZOOM_X: {
     mutation: { zoomX: number };
     action(payload: { zoomX: number }): void;
@@ -1389,6 +1386,7 @@ export type SingingStoreTypes = {
   };
 };
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export type SingingCommandStoreState = {
   //
 };
@@ -1597,7 +1595,7 @@ export type EngineStoreState = {
 };
 
 export type EngineStoreTypes = {
-  GET_ENGINE_INFOS: {
+  PULL_AND_INIT_ENGINE_INFOS: {
     action(): void;
   };
 
@@ -1605,7 +1603,7 @@ export type EngineStoreTypes = {
     mutation: { engineId: EngineId; engineInfo: EngineInfo };
   };
 
-  GET_ONLY_ENGINE_INFOS: {
+  PULL_ENGINE_INFOS: {
     action: (payload: { engineIds: EngineId[] }) => Promise<void>;
   };
 
@@ -1613,7 +1611,7 @@ export type EngineStoreTypes = {
     getter: EngineInfo[];
   };
 
-  GET_ALT_PORT_INFOS: {
+  PULL_ALT_PORT_INFOS: {
     action(): Promise<AltPortInfos>;
   };
 
@@ -1850,14 +1848,26 @@ export type ProjectStoreTypes = {
     ): boolean;
   };
 
-  SAVE_PROJECT_FILE: {
-    action(payload: { overwrite?: boolean }): boolean;
+  SAVE_PROJECT_FILE_OVERWRITE: {
+    action(): Promise<boolean>;
+  };
+
+  SAVE_PROJECT_FILE_AS: {
+    action(): Promise<boolean>;
+  };
+
+  SAVE_PROJECT_FILE_AS_COPY: {
+    action(): Promise<boolean>;
   };
 
   SAVE_OR_DISCARD_PROJECT_FILE: {
-    action(palyoad: {
+    action(payload: {
       additionalMessage?: string;
     }): "saved" | "discarded" | "canceled";
+  };
+
+  GET_INITIAL_PROJECT_FILE_PATH: {
+    action(): Promise<string | undefined>;
   };
 
   IS_EDITED: {
@@ -2018,6 +2028,8 @@ export type DialogStates = {
   isUpdateNotificationDialogOpen: boolean;
   isExportSongAudioDialogOpen: boolean;
   isImportSongProjectDialogOpen: boolean;
+  isPresetManageDialogOpen: boolean;
+  isHelpDialogOpen: boolean;
 };
 
 export type UiStoreTypes = {
@@ -2085,14 +2097,6 @@ export type UiStoreTypes = {
 
   SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON: {
     action(payload: NotifyAndNotShowAgainButtonOption): void;
-  };
-
-  SHOW_LOADING_SCREEN: {
-    action(payload: LoadingScreenOption): void;
-  };
-
-  HIDE_ALL_LOADING_SCREEN: {
-    action(): void;
   };
 
   ON_VUEX_READY: {
@@ -2376,6 +2380,14 @@ type AllStoreTypes = AudioStoreTypes &
 export type AllGetters = StoreType<AllStoreTypes, "getter">;
 export type AllMutations = StoreType<AllStoreTypes, "mutation">;
 export type AllActions = StoreType<AllStoreTypes, "action">;
+
+export type ActionContext = DotNotationActionContext<
+  State,
+  State,
+  AllGetters,
+  AllActions,
+  AllMutations
+>;
 
 export const commandMutationsCreator = <S, M extends MutationsBase>(
   arg: PayloadRecipeTree<S, M>,

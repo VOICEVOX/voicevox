@@ -23,7 +23,7 @@ const meta: Meta<typeof FileNameTemplateDialog> = {
     fileNameBuilder: buildAudioFileNameFromRawData,
     extension: ".wav",
     "onUpdate:template": fn(),
-    "onUpdate:openDialog": fn(),
+    "onUpdate:dialogOpened": fn(),
   },
   tags: ["!autodocs"], // ダイアログ系はautodocsのプレビューが正しく表示されないので無効化
 };
@@ -34,7 +34,7 @@ type Story = StoryObj<typeof meta>;
 export const Opened: Story = {
   name: "開いている",
   args: {
-    openDialog: true,
+    dialogOpened: true,
   },
 };
 
@@ -112,7 +112,7 @@ export const Save: Story = {
 
     // 確定とダイアログを閉じるイベントが呼ばれる
     await expect(args["onUpdate:template"]).toBeCalledWith("$連番$");
-    await expect(args["onUpdate:openDialog"]).toBeCalledWith(false);
+    await expect(args["onUpdate:dialogOpened"]).toBeCalledWith(false);
   },
 };
 
@@ -142,7 +142,7 @@ export const Close: Story = {
 
     // ダイアログを閉じるイベントが呼ばれる、確定イベントは呼ばれない
     await expect(args["onUpdate:template"]).not.toBeCalled();
-    await expect(args["onUpdate:openDialog"]).toBeCalledWith(false);
+    await expect(args["onUpdate:dialogOpened"]).toBeCalledWith(false);
   },
 };
 
@@ -150,6 +150,6 @@ export const Closed: Story = {
   name: "閉じている",
   tags: ["skip-screenshot"],
   args: {
-    openDialog: false,
+    dialogOpened: false,
   },
 };

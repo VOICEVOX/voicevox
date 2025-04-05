@@ -18,6 +18,7 @@ on:
 jobs:
   trigger:
     runs-on: ubuntu-latest
+    if: github.repository_owner == 'VOICEVOX'
     steps:
       - name: Trigger Workflow
         run: |

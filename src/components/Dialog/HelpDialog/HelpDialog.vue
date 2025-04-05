@@ -1,6 +1,6 @@
 <template>
   <QDialog
-    ref="dialogRef"
+    v-model="dialogOpened"
     maximized
     transitionShow="jump-up"
     transitionHide="jump-down"
@@ -32,7 +32,7 @@
               icon="close"
               color="display"
               aria-label="ヘルプを閉じる"
-              @click="onDialogOK"
+              @click="dialogOpened = false"
             />
           </QToolbar>
         </QHeader>
@@ -74,7 +74,6 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import type { Component } from "vue";
-import { useDialogPluginComponent } from "quasar";
 import MarkdownView from "./HelpMarkdownViewSection.vue";
 import OssLicense from "./HelpOssLicenseSection.vue";
 import UpdateInfo from "./HelpUpdateInfoSection.vue";
@@ -85,6 +84,7 @@ import { UpdateInfo as UpdateInfoObject, UrlString } from "@/type/preload";
 import { useStore } from "@/store";
 import { useFetchNewUpdateInfos } from "@/composables/useFetchNewUpdateInfos";
 import { createLogger } from "@/helpers/log";
+import { getAppInfos } from "@/domain/appInfo";
 
 type PageItem = {
   type: "item";
@@ -100,7 +100,7 @@ type PageSeparator = {
 };
 type PageData = PageItem | PageSeparator;
 
-const { dialogRef, onDialogOK } = useDialogPluginComponent();
+const dialogOpened = defineModel<boolean>("dialogOpened", { default: false });
 
 // エディタのアップデート確認
 const store = useStore();
@@ -115,7 +115,7 @@ if (!import.meta.env.VITE_LATEST_UPDATE_INFOS_URL) {
   );
 }
 const newUpdateResult = useFetchNewUpdateInfos(
-  () => window.backend.getAppInfos().then((obj) => obj.version), // アプリのバージョン
+  () => getAppInfos().version,
   UrlString(import.meta.env.VITE_LATEST_UPDATE_INFOS_URL),
 );
 

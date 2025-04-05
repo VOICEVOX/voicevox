@@ -1,11 +1,11 @@
 import { z } from "zod";
 import { StyleInfo } from "@/type/preload";
-import { calculateHash } from "@/sing/utility";
 import { isMac } from "@/helpers/platform";
 
 const BASE_X_PER_QUARTER_NOTE = 120;
 const BASE_Y_PER_SEMITONE = 30;
 
+export const SEQUENCER_MIN_NUM_MEASURES = 32;
 export const ZOOM_X_MIN = 0.15;
 export const ZOOM_X_MAX = 2;
 export const ZOOM_X_STEP = 0.05;
@@ -102,6 +102,10 @@ export const keyInfos = Array.from({ length: 128 }, (_, noteNumber) => {
   };
 }).toReversed();
 
+export const getNumKeys = () => {
+  return keyInfos.length;
+};
+
 export const getStyleDescription = (style: StyleInfo) => {
   const description: string[] = [];
   if (style.styleType === "talk") {
@@ -119,20 +123,6 @@ export const getStyleDescription = (style: StyleInfo) => {
   return description.join("・");
 };
 
-export type PitchData = {
-  readonly ticksArray: number[];
-  readonly data: number[];
-};
-
-const pitchDataHashSchema = z.string().brand<"PitchDataHash">();
-
-export type PitchDataHash = z.infer<typeof pitchDataHashSchema>;
-
-export async function calculatePitchDataHash(pitchData: PitchData) {
-  const hash = await calculateHash(pitchData);
-  return pitchDataHashSchema.parse(hash);
-}
-
 export type MouseButton = "LEFT_BUTTON" | "RIGHT_BUTTON" | "OTHER_BUTTON";
 
 export type PreviewMode =
@@ -142,24 +132,9 @@ export type PreviewMode =
   | "RESIZE_NOTE_RIGHT"
   | "RESIZE_NOTE_LEFT"
   | "DRAW_PITCH"
-  | "ERASE_PITCH";
-
-// マウスダウン時の振る舞い
-export const mouseDownBehaviorSchema = z.enum([
-  "IGNORE",
-  "DESELECT_ALL",
-  "ADD_NOTE",
-  "START_RECT_SELECT",
-  "DRAW_PITCH",
-  "ERASE_PITCH",
-]);
-export type MouseDownBehavior = z.infer<typeof mouseDownBehaviorSchema>;
-
-// ダブルクリック時の振る舞い
-export const mouseDoubleClickBehaviorSchema = z.enum(["IGNORE", "ADD_NOTE"]);
-export type MouseDoubleClickBehavior = z.infer<
-  typeof mouseDoubleClickBehaviorSchema
->;
+  | "ERASE_PITCH"
+  | "SELECT_NOTES_WITH_RECT"
+  | "EDIT_NOTE_LYRIC";
 
 export function getButton(event: MouseEvent): MouseButton {
   // macOSの場合、Ctrl+クリックは右クリック
@@ -174,6 +149,19 @@ export function getButton(event: MouseEvent): MouseButton {
     return "OTHER_BUTTON";
   }
 }
+
+export const getXInBorderBox = (clientX: number, element: HTMLElement) => {
+  return clientX - element.getBoundingClientRect().left;
+};
+
+export const getYInBorderBox = (clientY: number, element: HTMLElement) => {
+  return clientY - element.getBoundingClientRect().top;
+};
+
+/** 直接イベントが来ているかどうか */
+export const isSelfEventTarget = (event: UIEvent) => {
+  return event.target === event.currentTarget;
+};
 
 // カーソルの状態
 export const cursorStateSchema = z.enum([

@@ -112,10 +112,15 @@
 
 <script setup lang="ts">
 import { computed, toRef } from "vue";
-import { getKeyBaseHeight, keyInfos, tickToBaseX } from "@/sing/viewHelper";
+import {
+  getKeyBaseHeight,
+  getNumKeys,
+  keyInfos,
+  tickToBaseX,
+} from "@/sing/viewHelper";
 import { TimeSignature } from "@/store/type";
 import { useSequencerGrid } from "@/composables/useSequencerGridPattern";
-import { getNoteDuration } from "@/sing/domain";
+import { getNoteDuration, measureNumberToTick } from "@/sing/domain";
 
 const props = defineProps<{
   tpqn: number;
@@ -124,11 +129,27 @@ const props = defineProps<{
   sequencerZoomY: number;
   sequencerSnapType: number;
   numMeasures: number;
-  gridWidth: number;
-  gridHeight: number;
   offsetX: number;
   offsetY: number;
 }>();
+
+const endMeasureNumber = computed(() => props.numMeasures + 1);
+
+const endTicks = computed(() => {
+  return measureNumberToTick(
+    endMeasureNumber.value,
+    props.timeSignatures,
+    props.tpqn,
+  );
+});
+
+const gridWidth = computed(() => {
+  return tickToBaseX(endTicks.value, props.tpqn) * props.sequencerZoomX;
+});
+
+const gridHeight = computed(() => {
+  return getKeyBaseHeight() * getNumKeys() * props.sequencerZoomY;
+});
 
 const gridCellWidth = computed(() => {
   const snapTicks = getNoteDuration(props.sequencerSnapType, props.tpqn);
@@ -262,7 +283,7 @@ const octaveLineIndices = computed(() => gridLines.value.octaveLines);
   }
 
   .sequencer-grid-measure-line {
-    stroke: var(--scheme-color-sing-grid-beat-line);
+    stroke: var(--scheme-color-sing-grid-measure-line);
   }
 
   .sequencer-grid-octave-line {
@@ -270,7 +291,7 @@ const octaveLineIndices = computed(() => gridLines.value.octaveLines);
   }
 
   .sequencer-grid-beat-line {
-    stroke: transparent;
+    stroke: var(--scheme-color-sing-grid-beat-line);
   }
 }
 </style>

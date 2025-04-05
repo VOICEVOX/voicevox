@@ -4,7 +4,7 @@ import fs from "fs/promises";
 import path from "path";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import licenseChecker from "license-checker-rseidelsohn";
+import * as licenseChecker from "license-checker-rseidelsohn";
 
 const argv = await yargs(hideBin(process.argv))
   .option("output_path", {
@@ -60,12 +60,7 @@ if (!sevenZipBinName) {
   throw new Error(`Unsupported platform: ${process.platform}`);
 }
 
-const sevenZipRoot = path.join(
-  import.meta.dirname,
-  "..",
-  "vendored",
-  "7z",
-);
+const sevenZipRoot = path.join(import.meta.dirname, "..", "vendored", "7z");
 
 const sevenZipVersionMatch = execFileSync(
   path.join(sevenZipRoot, sevenZipBinName),
