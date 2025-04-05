@@ -9,6 +9,7 @@ import { ref, watch, computed, onUnmounted, onMounted } from "vue";
 import * as PIXI from "pixi.js";
 import AsyncLock from "async-lock";
 import { useStore } from "@/store";
+import { useMounted } from "@/composables/useMounted";
 import {
   UNVOICED_PHONEMES,
   VALUE_INDICATING_NO_DATA,
@@ -90,6 +91,8 @@ const pitchEditLineColor = computed(() => {
 const isPitchLineVisible = computed(() => {
   return store.getters.SELECTED_TRACK.singer != undefined;
 });
+
+const { mounted } = useMounted();
 
 const canvasContainer = ref<HTMLElement | null>(null);
 const canvas = ref<HTMLCanvasElement | null>(null);
@@ -276,9 +279,6 @@ const updatePitchEditLineDataMap = async () => {
   renderInNextFrame = true;
 };
 
-// onMountedのときにtrueになるだけのref
-const mounted = ref(false);
-
 const asyncLock = new AsyncLock({ maxPending: 1 });
 
 // NOTE: mountedをwatchしているので、onMountedの直後に必ず１回実行される
@@ -332,8 +332,6 @@ watch(
 );
 
 onMounted(() => {
-  mounted.value = true;
-
   const canvasContainerElement = canvasContainer.value;
   const canvasElement = canvas.value;
   if (!canvasContainerElement) {

@@ -1,3 +1,4 @@
+import { it, expect, describe } from "vitest";
 import { uuid4 } from "@/helpers/random";
 import { createDefaultTrack, shouldPlayTracks } from "@/sing/domain";
 import { Track } from "@/store/type";

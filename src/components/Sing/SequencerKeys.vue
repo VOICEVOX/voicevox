@@ -93,8 +93,8 @@ import { keyInfos, getKeyBaseHeight } from "@/sing/viewHelper";
 
 const props = withDefaults(
   defineProps<{
-    offset: number;
-    blackKeyWidth: number;
+    offset?: number;
+    blackKeyWidth?: number;
   }>(),
   {
     offset: 0,

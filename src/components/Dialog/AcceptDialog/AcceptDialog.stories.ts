@@ -6,15 +6,15 @@ import AcceptDialog from "./AcceptDialog.vue";
 const meta: Meta<typeof AcceptDialog> = {
   component: AcceptDialog,
   args: {
-    modelValue: false,
+    dialogOpened: false,
     title: "タイトル",
     heading: "見出し",
     terms: "# 見出し1\n文章文章文章\n## 見出し2\n文章文章文章",
     rejectLabel: "拒否",
     acceptLabel: "承諾",
-    "onUpdate:modelValue": fn(),
     onAccept: fn(),
     onReject: fn(),
+    "onUpdate:dialogOpened": fn(),
   },
   tags: ["!autodocs"], // ダイアログ系はautodocsのプレビューが正しく表示されないので無効化
 };
@@ -25,7 +25,7 @@ type Story = StoryObj<typeof meta>;
 export const Opened: Story = {
   name: "開いている",
   args: {
-    modelValue: true,
+    dialogOpened: true,
   },
 };
 
