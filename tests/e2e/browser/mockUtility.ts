@@ -10,6 +10,7 @@
 import { Page } from "@playwright/test";
 import { Brand } from "@/type/utility";
 import { success } from "@/type/result";
+import { objectEntries, objectFromEntries } from "@/helpers/typedEntries";
 
 type TestFileId = Brand<string, "TestFileId">;
 
@@ -49,10 +50,10 @@ export async function mockShowSaveFileDialog(page: Page): Promise<{
 
 /** ファイル書き出しをモックにする */
 export async function mockWriteFile(page: Page): Promise<{
-  getWrittenFileBuffers: () => Promise<Record<string | TestFileId, Buffer>>;
+  getWrittenFileBuffers: () => Promise<Record<TestFileId, Buffer>>;
 }> {
   type _Window = Window & {
-    _mockWriteFile: Record<string | TestFileId, Uint8Array>;
+    _mockWriteFile: Record<TestFileId, Uint8Array>;
   };
 
   // モックを差し込む
@@ -62,7 +63,7 @@ export async function mockWriteFile(page: Page): Promise<{
       _window._mockWriteFile = {};
 
       _window.backend.writeFile = async ({ filePath, buffer }) => {
-        _window._mockWriteFile[filePath] = new Uint8Array(buffer);
+        _window._mockWriteFile[filePath as TestFileId] = new Uint8Array(buffer);
         return sucecssResult;
       };
     },
@@ -73,15 +74,15 @@ export async function mockWriteFile(page: Page): Promise<{
     getWrittenFileBuffers: async () => {
       const arrays = await page.evaluate(() => {
         const _window = window as unknown as _Window;
-        return Object.fromEntries(
-          Object.entries(_window._mockWriteFile).map(([key, value]) => [
+        return objectFromEntries(
+          objectEntries(_window._mockWriteFile).map(([key, value]) => [
             key,
             Array.from(value),
           ]),
         );
       });
-      return Object.fromEntries(
-        Object.entries(arrays).map(([key, value]) => [key, Buffer.from(value)]),
+      return objectFromEntries(
+        objectEntries(arrays).map(([key, value]) => [key, Buffer.from(value)]),
       );
     },
   };
