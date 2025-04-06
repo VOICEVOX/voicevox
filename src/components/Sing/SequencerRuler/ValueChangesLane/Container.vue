@@ -42,7 +42,8 @@ defineOptions({
 const store = useStore();
 
 // SequencerRulerのContainerからprovideされる想定のためデフォルト値いらなそうだが、
-// コンポーネント単位で個別テスト可能にするのと初期化タイミング問題があったためデフォルト値をセットしておく
+// コンポーネント単位で個別テスト可能にするのと
+// 開発時のHMR時に値が渡らずエラーになったりStorybookのテスト時に問題が出たためデフォルト値をセットしておく
 const injectedOffset = inject(offsetInjectionKey, ref(0));
 const injectedNumMeasures = inject(numMeasuresInjectionKey, {
   numMeasures: computed(() => SEQUENCER_MIN_NUM_MEASURES),
