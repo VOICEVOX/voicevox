@@ -11,40 +11,60 @@ import { tickToBaseX, baseXToTick } from "@/sing/viewHelper";
 
 /**
  * 指定されたティックを直近の拍に合わせる
- * @param ticks スナップ対象のtick位置
+ * @param targetTick スナップ対象のtick位置
  * @param timeSignatures 拍子情報の配列
  * @param tpqn TPQNの値
  * @returns スナップ後のtick位置
  */
 export const ticksToSnappedBeat = (
-  ticks: number,
+  targetTick: number,
   timeSignatures: TimeSignature[],
   tpqn: number,
 ): number => {
-  if (timeSignatures.length === 0) return ticks;
+  if (timeSignatures.length === 0 || tpqn == undefined) return targetTick;
 
-  const tsPositions = getTimeSignaturePositions(timeSignatures, tpqn);
-  // 次の拍子の位置
-  const nextTsIndex = tsPositions.findIndex((pos: number) => pos > ticks);
-  const nextTsPosition = tsPositions[nextTsIndex];
-  // 現在の拍子の位置
+  // 各拍子記号の開始tick位置を計算
+  const tsStartTicks = getTimeSignaturePositions(timeSignatures, tpqn);
+
+  // targetTickがどの拍子記号区間に属するかを特定
+  const nextTsIndex = tsStartTicks.findIndex(
+    (startTick: number) => startTick > targetTick,
+  );
   const currentTsIndex =
-    nextTsIndex === -1 ? tsPositions.length - 1 : nextTsIndex - 1;
+    nextTsIndex === -1 ? tsStartTicks.length - 1 : nextTsIndex - 1;
   const currentTs = timeSignatures[currentTsIndex];
 
-  // 現在の拍子に基づくグリッドサイズを計算
-  const gridSize = getBeatDuration(currentTs.beatType, tpqn);
+  if (!currentTs) return targetTick;
 
-  // 拍子の開始位置からの相対位置を計算
-  const tsPosition = tsPositions[currentTsIndex];
-  const relativePosition = ticks - tsPosition;
+  // 現在の拍子における1拍あたりのtick数を計算
+  const currentBeatDuration = getBeatDuration(currentTs.beatType, tpqn);
 
-  // スナップするグリッド位置
-  const snappedRelativePosition =
-    Math.round(relativePosition / gridSize) * gridSize;
-  const snappedPositionTicks = tsPosition + snappedRelativePosition;
+  // 現在の拍子記号の開始tick位置を取得
+  const currentTsStartTick = tsStartTicks.at(currentTsIndex);
+  if (currentTsStartTick == undefined) return targetTick;
 
-  return Math.min(snappedPositionTicks, nextTsPosition);
+  // 現在の拍子記号の開始位置からの相対tick位置を計算
+  const tickFromCurrentTsStart = targetTick - currentTsStartTick;
+
+  // 相対tick位置を拍のグリッドにスナップ
+  const snappedTickFromCurrentTsStart =
+    Math.round(tickFromCurrentTsStart / currentBeatDuration) *
+    currentBeatDuration;
+
+  // スナップ後の絶対tick位置を計算
+  const snappedTick = currentTsStartTick + snappedTickFromCurrentTsStart;
+
+  // 最後の拍子記号区間かどうかを判定
+  const isLastTs = nextTsIndex === -1;
+
+  if (isLastTs) {
+    // 最後の拍子記号の場合、上限なし
+    return snappedTick;
+  } else {
+    // 次の拍子記号の開始位置を上限とする
+    const nextTsStartTick = tsStartTicks[nextTsIndex];
+    return Math.min(snappedTick, nextTsStartTick);
+  }
 };
 
 /**
@@ -61,6 +81,9 @@ export const calculateEndTicks = (
   numMeasures: number,
   tpqn: number,
 ): number => {
+  if (timeSignatures.length === 0 || tpqn === 0) {
+    return 0;
+  }
   // 最後の拍子の位置
   const lastTsIndex = timeSignatures.length - 1;
   const lastTs = timeSignatures[lastTsIndex];

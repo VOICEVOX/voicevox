@@ -14,7 +14,7 @@
       <div
         class="sequencer-ruler-playhead"
         :style="{
-          transform: `translateX(${props.playheadX - props.offset}px)`,
+          transform: `translateX(${props.playheadX}px)`,
         }"
       />
     </div>

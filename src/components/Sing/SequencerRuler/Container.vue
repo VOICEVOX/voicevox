@@ -2,7 +2,7 @@
   <Presentation
     :width="rulerWidth"
     :playheadX
-    :offset="props.offset"
+    :offset="currentOffset"
     @click="handleClick"
   >
     <!-- TODO: 各コンポーネントもなるべく疎にしたつもりだが、少なくともplayheadまわりがリファクタリング必要そう -->
@@ -19,14 +19,19 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, provide, readonly, toRef } from "vue";
 import Presentation from "./Presentation.vue";
 import GridLaneContainer from "./GridLane/Container.vue";
 import ValueChangesLaneContainer from "./ValueChangesLane/Container.vue";
 import LoopLaneContainer from "./LoopLane/Container.vue";
 import { useStore } from "@/store";
-import { useSequencerLayout } from "@/composables/useSequencerLayout";
-import { offsetXToSnappedTick } from "@/sing/rulerHelper";
+import {
+  useSequencerLayout,
+  offsetKey,
+  numMeasuresKey,
+} from "@/composables/useSequencerLayout";
+import { SEQUENCER_MIN_NUM_MEASURES, baseXToTick } from "@/sing/viewHelper";
+import { ticksToSnappedBeat } from "@/sing/rulerHelper";
 
 defineOptions({
   name: "SequencerRuler",
@@ -39,26 +44,33 @@ const props = withDefaults(
   }>(),
   {
     offset: 0,
-    numMeasures: 32,
+    numMeasures: SEQUENCER_MIN_NUM_MEASURES,
   },
 );
 
 const store = useStore();
 
-// 基本的な値
+// provideするoffsetとnumMeasures
+// toRefでリアクティブ性を維持する
+const currentOffset = toRef(props, "offset");
+const currentNumMeasures = toRef(props, "numMeasures");
+
+// provideする値はreadonlyにして子コンポーネントでの変更を防ぐ
+provide(offsetKey, readonly(currentOffset));
+provide(numMeasuresKey, readonly(currentNumMeasures));
+
 const tpqn = computed(() => store.state.tpqn);
 const timeSignatures = computed(() => store.state.timeSignatures);
 const sequencerZoomX = computed(() => store.state.sequencerZoomX);
 const playheadPosition = computed(() => store.getters.PLAYHEAD_POSITION);
 
-// useSequencerLayoutを使用してレイアウト計算を行う
-const { rulerWidth, playheadX, currentOffset } = useSequencerLayout({
+const { rulerWidth, playheadX } = useSequencerLayout({
   timeSignatures,
   tpqn,
   playheadPosition,
   sequencerZoomX,
-  offset: computed(() => props.offset),
-  numMeasures: computed(() => props.numMeasures),
+  offset: currentOffset,
+  numMeasures: currentNumMeasures,
 });
 
 // 再生ヘッド位置の設定
@@ -71,16 +83,22 @@ const deselectAllNotes = () => {
   void store.actions.DESELECT_ALL_NOTES();
 };
 
-// クリック時のハンドラ
+// クリックでスナップした位置に移動
+// 再生ヘッドも移動
 const handleClick = (event: MouseEvent) => {
   deselectAllNotes();
-  const ticks = offsetXToSnappedTick(
-    event.offsetX,
-    currentOffset.value,
-    sequencerZoomX.value,
-    timeSignatures.value,
-    tpqn.value,
+  const currentOffsetX = event.offsetX;
+  const currentOffsetValue = currentOffset.value;
+  const currentZoomX = sequencerZoomX.value;
+  const currentTpqn = tpqn.value;
+  const currentTimeSignatures = timeSignatures.value;
+  const baseX = (currentOffsetValue + currentOffsetX) / currentZoomX;
+  const baseTick = baseXToTick(baseX, currentTpqn);
+  const nextTicks = ticksToSnappedBeat(
+    baseTick,
+    currentTimeSignatures,
+    currentTpqn,
   );
-  setPlayheadPosition(ticks);
+  setPlayheadPosition(nextTicks);
 };
 </script>
