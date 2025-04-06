@@ -1,15 +1,15 @@
 /**
  * シーケンサーのレイアウト計算に関するコンポーザブル
- * TODO: 元はルーラー用に作成したが、複数のコンポーネントで使用しそうなど用途が広いため、ここからの分割を想定
+ * NOTE: 雑多です
  */
-import { computed, ComputedRef, Ref, provide, inject, InjectionKey } from "vue";
+import { computed, ComputedRef, Ref, InjectionKey } from "vue";
 import { getTimeSignaturePositions } from "@/sing/domain";
-import { tickToBaseX, SEQUENCER_MIN_NUM_MEASURES } from "@/sing/viewHelper";
+import { tickToBaseX } from "@/sing/viewHelper";
 import { calculateEndTicks, calculateMeasureInfos } from "@/sing/rulerHelper";
 import type { TimeSignature } from "@/store/type";
 
-// 共用のオフセット・小節数のprovide/inject
-// インジェクションキーの定義
+// Provide/Injectで使用するキー
+// NOTE: composableに置くものではないように思えるが、全体用かつ不定のためまずはuseSequencerLayoutにまとめておく
 export const offsetKey: InjectionKey<Ref<number>> = Symbol("sequencerOffset");
 export const numMeasuresKey: InjectionKey<Ref<number>> = Symbol(
   "sequencerNumMeasures",
@@ -27,7 +27,7 @@ export interface SequencerLayoutOptions {
   playheadPosition: Ref<number>;
   sequencerZoomX: Ref<number>;
   offset: Ref<number>;
-  numMeasures?: Ref<number>;
+  numMeasures: Ref<number>;
 }
 
 export interface SequencerLayout {
@@ -36,8 +36,6 @@ export interface SequencerLayout {
   endTicks: ComputedRef<number>;
   rulerWidth: ComputedRef<number>;
   playheadX: ComputedRef<number>;
-  currentOffset: Ref<number>;
-  currentNumMeasures: Ref<number>;
 }
 
 /**
@@ -54,18 +52,8 @@ export function useSequencerLayout(
     playheadPosition,
     sequencerZoomX,
     offset,
-    numMeasures = computed(() => SEQUENCER_MIN_NUM_MEASURES),
+    numMeasures,
   } = options;
-
-  // 親コンポーネントからの呼び出し時にprovide
-  if (offset && numMeasures) {
-    provide(offsetKey, offset);
-    provide(numMeasuresKey, numMeasures);
-  }
-
-  // offsetとnumMeasuresを取得（親からinjectするか、引数から直接使用）
-  const currentOffset = inject(offsetKey, offset);
-  const currentNumMeasures = inject(numMeasuresKey, numMeasures);
 
   // 拍子の位置を計算
   const tsPositions = computed(() => {
@@ -77,7 +65,7 @@ export function useSequencerLayout(
     return calculateEndTicks(
       timeSignatures.value,
       tsPositions.value,
-      currentNumMeasures.value,
+      numMeasures.value,
       tpqn.value,
     );
   });
@@ -102,7 +90,8 @@ export function useSequencerLayout(
   // 再生ヘッドの位置を計算
   const playheadX = computed(() => {
     const baseX = tickToBaseX(playheadPosition.value, tpqn.value);
-    return Math.round(baseX * sequencerZoomX.value) - currentOffset.value;
+    const playheadBaseX = Math.floor(baseX * sequencerZoomX.value);
+    return playheadBaseX - offset.value;
   });
 
   return {
@@ -111,7 +100,5 @@ export function useSequencerLayout(
     endTicks,
     rulerWidth,
     playheadX,
-    currentOffset,
-    currentNumMeasures,
   };
 }

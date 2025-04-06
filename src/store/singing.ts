@@ -3450,12 +3450,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  IS_LOOP_EMPTY: {
-    getter(state) {
-      return state.loopStartTick === state.loopEndTick;
-    },
-  },
-
   SET_LOOP_ENABLED: {
     mutation(state, { isLoopEnabled }) {
       state.isLoopEnabled = isLoopEnabled;
@@ -3502,7 +3496,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     async action({ actions }) {
       // ループ範囲をSET_LOOP_RANGEで0指定
       // transportも
-      await actions.SET_LOOP_RANGE({
+      void actions.SET_LOOP_RANGE({
         loopStartTick: 0,
         loopEndTick: 0,
       });

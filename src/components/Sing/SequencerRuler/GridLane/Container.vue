@@ -2,20 +2,26 @@
   <Presentation
     :tpqn
     :sequencerZoomX
-    :numMeasures="currentNumMeasures"
+    :numMeasures
     :timeSignatures
     :tsPositions
-    :offset="currentOffset"
+    :offset
     :width="rulerWidth"
     :endTicks
+    :measureInfos
   />
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, inject, ref } from "vue";
 import Presentation from "./Presentation.vue";
 import { useStore } from "@/store";
-import { useSequencerLayout } from "@/composables/useSequencerLayout";
+import {
+  useSequencerLayout,
+  offsetKey,
+  numMeasuresKey,
+} from "@/composables/useSequencerLayout";
+import { SEQUENCER_MIN_NUM_MEASURES } from "@/sing/viewHelper";
 
 defineOptions({
   name: "GridLaneContainer",
@@ -23,19 +29,22 @@ defineOptions({
 
 const store = useStore();
 
-// 基本的な値
+// SequencerRulerのContainerからprovideされる想定だが、
+// コンポーネント単位で個別テスト可能にするのと初期化タイミング問題があったためデフォルト値をセットしておく
+const offset = inject(offsetKey, ref(0));
+const numMeasures = inject(numMeasuresKey, ref(SEQUENCER_MIN_NUM_MEASURES));
+
 const tpqn = computed(() => store.state.tpqn);
 const timeSignatures = computed(() => store.state.timeSignatures);
 const sequencerZoomX = computed(() => store.state.sequencerZoomX);
 const playheadPosition = computed(() => store.getters.PLAYHEAD_POSITION);
 
-// useSequencerLayoutを使用してレイアウト計算を行う
-const { rulerWidth, tsPositions, endTicks, currentOffset, currentNumMeasures } =
-  useSequencerLayout({
-    timeSignatures,
-    tpqn,
-    playheadPosition,
-    sequencerZoomX,
-    offset: computed(() => 0),
-  });
+const { rulerWidth, tsPositions, endTicks, measureInfos } = useSequencerLayout({
+  timeSignatures,
+  tpqn,
+  playheadPosition,
+  sequencerZoomX,
+  offset,
+  numMeasures,
+});
 </script>

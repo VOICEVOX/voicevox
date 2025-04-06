@@ -4,7 +4,7 @@
     :contextMenuData
     :contextMenuHeader
     :width="rulerWidth"
-    :offset="currentOffset"
+    :offset
     :uiLocked
     @valueChangeClick="onValueChangeClick"
     @contextMenuHide="onContextMenuHide"
@@ -12,12 +12,17 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, inject } from "vue";
 import { Dialog } from "quasar";
 import Presentation from "./Presentation.vue";
 import { useStore } from "@/store";
-import { useSequencerLayout } from "@/composables/useSequencerLayout";
+import {
+  useSequencerLayout,
+  offsetKey,
+  numMeasuresKey,
+} from "@/composables/useSequencerLayout";
 import { offsetXToSnappedTick } from "@/sing/rulerHelper";
+import { SEQUENCER_MIN_NUM_MEASURES } from "@/sing/viewHelper";
 import { tickToMeasureNumber } from "@/sing/domain";
 import { Tempo, TimeSignature } from "@/store/type";
 import { ContextMenuItemData } from "@/components/Menu/ContextMenu/Presentation.vue";
@@ -38,7 +43,11 @@ defineOptions({
 
 const store = useStore();
 
-// 基本的な値
+// SequencerRulerのContainerからprovideされる想定のためデフォルト値いらなそうだが、
+// コンポーネント単位で個別テスト可能にするのと初期化タイミング問題があったためデフォルト値をセットしておく
+const offset = inject(offsetKey, ref(0));
+const numMeasures = inject(numMeasuresKey, ref(SEQUENCER_MIN_NUM_MEASURES));
+
 const tpqn = computed(() => store.state.tpqn);
 const timeSignatures = computed(() => store.state.timeSignatures);
 const sequencerZoomX = computed(() => store.state.sequencerZoomX);
@@ -46,16 +55,14 @@ const playheadPosition = computed(() => store.getters.PLAYHEAD_POSITION);
 const tempos = computed(() => store.state.tempos);
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
-// useSequencerLayoutを使用してレイアウト計算を行う
-const { rulerWidth, tsPositions, endTicks, currentOffset } = useSequencerLayout(
-  {
-    timeSignatures,
-    tpqn,
-    playheadPosition,
-    sequencerZoomX,
-    offset: computed(() => 0),
-  },
-);
+const { rulerWidth, tsPositions, endTicks } = useSequencerLayout({
+  timeSignatures,
+  tpqn,
+  playheadPosition,
+  sequencerZoomX,
+  offset,
+  numMeasures,
+});
 
 // ストアアクション
 const setTempo = (tempo: Tempo) => {
@@ -138,7 +145,7 @@ const onValueChangeClick = async (
     // 空き部分クリック時は、クリック位置から計算してスナップ位置に合わせる
     const snappedTick = offsetXToSnappedTick(
       event.offsetX,
-      currentOffset.value,
+      offset.value,
       sequencerZoomX.value,
       timeSignatures.value,
       tpqn.value,
@@ -158,6 +165,8 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   if (valueChange.value) {
     // テンポ変更のメニュー項目
     if (valueChange.value.tempoChange) {
+      // ダイアログを開く前の valueChange の値を保持
+      const targetValueChange = valueChange.value;
       menuData.push({
         type: "button",
         label: "テンポ変化を編集",
@@ -165,13 +174,13 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
           Dialog.create({
             component: TempoChangeDialog,
             componentProps: {
-              tempoChange: valueChange.value!.tempoChange,
+              tempoChange: targetValueChange.tempoChange,
               mode: "edit",
             },
           }).onOk((result: { tempoChange: Omit<Tempo, "position"> }) => {
             setTempo({
               ...result.tempoChange,
-              position: valueChange.value!.position,
+              position: targetValueChange.position,
             });
           });
         },
@@ -188,6 +197,8 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
         disableWhenUiLocked: true,
       });
     } else {
+      // 位置情報のみ保持
+      const position = valueChange.value.position;
       menuData.push({
         type: "button",
         label: "テンポ変化を挿入",
@@ -201,7 +212,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
           }).onOk((result: { tempoChange: Omit<Tempo, "position"> }) => {
             setTempo({
               ...result.tempoChange,
-              position: valueChange.value!.position,
+              position,
             });
           });
         },
@@ -217,6 +228,8 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 
     // 拍子変更のメニュー項目
     if (valueChange.value.timeSignatureChange) {
+      // ダイアログを開く前の valueChange の値を保持
+      const targetValueChange = valueChange.value;
       menuData.push({
         type: "button",
         label: "拍子変化を編集",
@@ -224,17 +237,17 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
           Dialog.create({
             component: TimeSignatureChangeDialog,
             componentProps: {
-              timeSignatureChange: valueChange.value!.timeSignatureChange,
+              timeSignatureChange: targetValueChange.timeSignatureChange,
               mode: "edit",
             },
           }).onOk(
             (result: {
-              timeSignatureChange: Omit<TimeSignature, "position">;
+              timeSignatureChange: Omit<TimeSignature, "measureNumber">;
             }) => {
               setTimeSignature({
                 ...result.timeSignatureChange,
                 measureNumber: tickToMeasureNumber(
-                  valueChange.value!.position,
+                  targetValueChange.position,
                   timeSignatures.value,
                   tpqn.value,
                 ),
@@ -261,6 +274,8 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
         disableWhenUiLocked: true,
       });
     } else {
+      // 位置情報のみを保持
+      const position = valueChange.value.position;
       menuData.push({
         type: "button",
         label: "拍子変化を挿入",
@@ -273,12 +288,13 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
             },
           }).onOk(
             (result: {
-              timeSignatureChange: Omit<TimeSignature, "position">;
+              timeSignatureChange: Omit<TimeSignature, "measureNumber">;
             }) => {
               setTimeSignature({
                 ...result.timeSignatureChange,
+                // 保持した位置情報を使用
                 measureNumber: tickToMeasureNumber(
-                  valueChange.value!.position,
+                  position,
                   timeSignatures.value,
                   tpqn.value,
                 ),

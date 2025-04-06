@@ -1395,10 +1395,6 @@ export type SingingStoreTypes = {
     action(): void;
   };
 
-  IS_LOOP_EMPTY: {
-    getter: boolean;
-  };
-
   EXPORT_SONG_PROJECT: {
     action(payload: {
       fileType: ExportSongProjectFileType;

@@ -12,7 +12,6 @@ const meta: Meta<typeof Presentation> = {
     loopEndX: 300,
     isLoopEnabled: true,
     isDragging: false,
-    isEmpty: false,
     cursorClass: "",
     contextMenuData: [],
     onLoopAreaMouseDown: fn(),
@@ -52,7 +51,6 @@ export const Disabled: Story = {
 export const Empty: Story = {
   name: "空の状態",
   args: {
-    isEmpty: true,
     loopStartX: 0,
     loopEndX: 0,
   },

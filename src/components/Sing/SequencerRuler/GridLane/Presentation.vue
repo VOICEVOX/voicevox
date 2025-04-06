@@ -62,8 +62,7 @@
 import { computed, ref } from "vue";
 import { TimeSignature } from "@/store/type";
 import { useSequencerGrid } from "@/composables/useSequencerGridPattern";
-import { getMeasureDuration } from "@/sing/domain";
-import { tickToBaseX } from "@/sing/viewHelper";
+import { MeasureInfo } from "@/composables/useSequencerLayout";
 
 defineOptions({
   name: "GridLanePresentation",
@@ -78,6 +77,7 @@ const props = defineProps<{
   width: number;
   endTicks: number;
   tsPositions: number[];
+  measureInfos: MeasureInfo[];
 }>();
 
 const height = ref(40);
@@ -87,32 +87,6 @@ const gridPatterns = useSequencerGrid({
   tpqn: computed(() => props.tpqn),
   sequencerZoomX: computed(() => props.sequencerZoomX),
   numMeasures: computed(() => props.numMeasures),
-});
-
-const measureInfos = computed(() => {
-  return props.timeSignatures.flatMap((timeSignature, i) => {
-    const measureDuration = getMeasureDuration(
-      timeSignature.beats,
-      timeSignature.beatType,
-      props.tpqn,
-    );
-    const nextTsPosition =
-      i !== props.timeSignatures.length - 1
-        ? props.tsPositions[i + 1]
-        : props.endTicks;
-    const start = props.tsPositions[i];
-    const end = nextTsPosition;
-    const numMeasures = Math.floor((end - start) / measureDuration);
-    return Array.from({ length: numMeasures }, (_, index) => {
-      const measureNumber = timeSignature.measureNumber + index;
-      const measurePosition = start + index * measureDuration;
-      const baseX = tickToBaseX(measurePosition, props.tpqn);
-      return {
-        number: measureNumber,
-        x: Math.round(baseX * props.sequencerZoomX),
-      };
-    });
-  });
 });
 </script>
 

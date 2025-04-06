@@ -4,7 +4,7 @@
     :class="{
       'is-enabled': isLoopEnabled,
       'is-dragging': isDragging,
-      'is-empty': isLoopEmpty,
+      'is-range-zero': isLoopRangeZero,
       [cursorClass]: true,
     }"
     :style="{ width: `${width}px` }"
@@ -21,7 +21,7 @@
     >
       <!-- ループ範囲 -->
       <rect
-        v-if="!isLoopEmpty"
+        v-if="!isLoopRangeZero"
         :x="loopStartX - offset + 4"
         y="0"
         :width="Math.max(loopEndX - loopStartX - 8, 0)"
@@ -42,7 +42,7 @@
           rx="1"
           ry="1"
           class="loop-handle loop-handle-start"
-          :class="{ 'is-empty': isLoopEmpty }"
+          :class="{ 'is-range-zero': isLoopRangeZero }"
           @mousedown.stop="handleStartHandleMouseDown"
         />
         <!-- 開始ハンドルのドラッグエリア(ドラッグしやすくするためハンドルよりも大きい) -->
@@ -65,7 +65,7 @@
           rx="1"
           ry="1"
           class="loop-handle loop-handle-end"
-          :class="{ 'is-empty': isLoopEmpty }"
+          :class="{ 'is-range-zero': isLoopRangeZero }"
           @mousedown.stop="handleEndHandleMouseDown"
         />
         <!-- 終了ハンドルのドラッグエリア(ドラッグしやすくするためハンドルよりも大きい) -->
@@ -84,6 +84,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from "vue";
 import ContextMenu, {
   ContextMenuItemData,
 } from "@/components/Menu/ContextMenu/Presentation.vue";
@@ -92,14 +93,13 @@ defineOptions({
   name: "LoopLanePresentation",
 });
 
-defineProps<{
+const props = defineProps<{
   width: number;
   offset: number;
   loopStartX: number;
   loopEndX: number;
   isLoopEnabled: boolean;
   isDragging: boolean;
-  isLoopEmpty: boolean;
   cursorClass: string;
   contextMenuData: ContextMenuItemData[];
 }>();
@@ -136,6 +136,9 @@ const handleEndHandleMouseDown = (event: MouseEvent) => {
 const handleContextMenu = (event: MouseEvent) => {
   emit("contextMenu", event);
 };
+
+// 範囲ゼロにするとそのあと消えるよ、という表現のためだけのもの
+const isLoopRangeZero = computed(() => props.loopStartX === props.loopEndX);
 </script>
 
 <style scoped lang="scss">
@@ -266,7 +269,7 @@ const handleContextMenu = (event: MouseEvent) => {
 }
 
 // 空の状態のスタイル
-.loop-lane.is-empty {
+.loop-lane.is-range-zero {
   // 空かつドラッグ中でない
   &:not(.is-dragging) {
     .loop-range,
@@ -286,7 +289,7 @@ const handleContextMenu = (event: MouseEvent) => {
   }
 
   // 空のハンドル
-  .loop-handle.is-empty {
+  .loop-handle.is-range-zero {
     fill: var(--scheme-color-outline);
     opacity: 0.5;
   }
