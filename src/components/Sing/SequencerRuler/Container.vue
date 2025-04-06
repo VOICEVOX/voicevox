@@ -18,6 +18,13 @@
   </Presentation>
 </template>
 
+<script lang="ts">
+import type { InjectionKey, Ref } from "vue";
+// Provide/Injectで使用するキー
+export const offsetInjectionKey: InjectionKey<Ref<number>> =
+  Symbol("sequencerOffset");
+</script>
+
 <script setup lang="ts">
 import { computed, provide, readonly, toRef } from "vue";
 import Presentation from "./Presentation.vue";
@@ -25,11 +32,7 @@ import GridLaneContainer from "./GridLane/Container.vue";
 import ValueChangesLaneContainer from "./ValueChangesLane/Container.vue";
 import LoopLaneContainer from "./LoopLane/Container.vue";
 import { useStore } from "@/store";
-import {
-  useSequencerLayout,
-  offsetKey,
-  numMeasuresKey,
-} from "@/composables/useSequencerLayout";
+import { useSequencerLayout } from "@/composables/useSequencerLayout";
 import { SEQUENCER_MIN_NUM_MEASURES, baseXToTick } from "@/sing/viewHelper";
 import { ticksToSnappedBeat } from "@/sing/rulerHelper";
 
@@ -56,8 +59,7 @@ const currentOffset = toRef(props, "offset");
 const currentNumMeasures = toRef(props, "numMeasures");
 
 // provideする値はreadonlyにして子コンポーネントでの変更を防ぐ
-provide(offsetKey, readonly(currentOffset));
-provide(numMeasuresKey, readonly(currentNumMeasures));
+provide(offsetInjectionKey, readonly(currentOffset));
 
 const tpqn = computed(() => store.state.tpqn);
 const timeSignatures = computed(() => store.state.timeSignatures);
@@ -87,17 +89,13 @@ const deselectAllNotes = () => {
 // 再生ヘッドも移動
 const handleClick = (event: MouseEvent) => {
   deselectAllNotes();
-  const currentOffsetX = event.offsetX;
-  const currentOffsetValue = currentOffset.value;
-  const currentZoomX = sequencerZoomX.value;
-  const currentTpqn = tpqn.value;
-  const currentTimeSignatures = timeSignatures.value;
-  const baseX = (currentOffsetValue + currentOffsetX) / currentZoomX;
-  const baseTick = baseXToTick(baseX, currentTpqn);
+  const targetOffsetX = event.offsetX;
+  const baseX = (currentOffset.value + targetOffsetX) / sequencerZoomX.value;
+  const baseXTick = baseXToTick(baseX, tpqn.value);
   const nextTicks = ticksToSnappedBeat(
-    baseTick,
-    currentTimeSignatures,
-    currentTpqn,
+    baseXTick,
+    timeSignatures.value,
+    tpqn.value,
   );
   setPlayheadPosition(nextTicks);
 };

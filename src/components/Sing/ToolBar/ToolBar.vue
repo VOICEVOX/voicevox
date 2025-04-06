@@ -386,7 +386,7 @@ const toggleLoop = async () => {
   // ループを有効にする場合
   if (!isLoopEnabled.value) {
     // ループ範囲が未設定の場合のみ、現在のplayheadが含まれる1小節をループ範囲とする
-    if (store.state.loopStartTick == null || store.state.loopEndTick == null) {
+    if (store.state.loopStartTick === 0 && store.state.loopEndTick === 0) {
       // NOTE: LoopLaneのaddOneMeasureLoopと基本的なロジックは同じなものの、
       // 開始位置の指定方法が異なるため共通化はしていない。
       // Toolbar内はplayhead位置を基準に設定

@@ -2,18 +2,11 @@
  * シーケンサーのレイアウト計算に関するコンポーザブル
  * NOTE: 雑多です
  */
-import { computed, ComputedRef, Ref, InjectionKey } from "vue";
+import { computed, ComputedRef, Ref } from "vue";
 import { getTimeSignaturePositions } from "@/sing/domain";
 import { tickToBaseX } from "@/sing/viewHelper";
 import { calculateEndTicks, calculateMeasureInfos } from "@/sing/rulerHelper";
 import type { TimeSignature } from "@/store/type";
-
-// Provide/Injectで使用するキー
-// NOTE: composableに置くものではないように思えるが、全体用かつ不定のためまずはuseSequencerLayoutにまとめておく
-export const offsetKey: InjectionKey<Ref<number>> = Symbol("sequencerOffset");
-export const numMeasuresKey: InjectionKey<Ref<number>> = Symbol(
-  "sequencerNumMeasures",
-);
 
 // 小節のレイアウト位置
 export interface MeasureInfo {

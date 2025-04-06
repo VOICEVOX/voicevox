@@ -1,7 +1,7 @@
 <template>
   <Presentation
     :width="rulerWidth"
-    :offset
+    :offset="injectedOffset"
     :loopStartX
     :loopEndX
     :isLoopEnabled
@@ -19,13 +19,11 @@
 
 <script setup lang="ts">
 import { computed, ref, onUnmounted, inject } from "vue";
+import { offsetInjectionKey } from "../Container.vue";
+import { numMeasuresInjectionKey } from "../../ScoreSequencer.vue";
 import Presentation from "./Presentation.vue";
 import { useStore } from "@/store";
-import {
-  useSequencerLayout,
-  offsetKey,
-  numMeasuresKey,
-} from "@/composables/useSequencerLayout";
+import { useSequencerLayout } from "@/composables/useSequencerLayout";
 import { offsetXToSnappedTick, ticksToSnappedBeat } from "@/sing/rulerHelper";
 import { getMeasureDuration } from "@/sing/domain";
 import { ContextMenuItemData } from "@/components/Menu/ContextMenu/Presentation.vue";
@@ -39,8 +37,12 @@ const store = useStore();
 
 // SequencerRulerのContainerからprovideされる想定のためデフォルト値いらなそうだが、
 // コンポーネント単位で個別テスト可能にするのと初期化タイミング問題があったためデフォルト値をセットしておく
-const offset = inject(offsetKey, ref(0));
-const numMeasures = inject(numMeasuresKey, ref(SEQUENCER_MIN_NUM_MEASURES));
+const injectedOffset = inject(offsetInjectionKey, ref(0));
+const injectedNumMeasures = inject(numMeasuresInjectionKey, {
+  numMeasures: computed(() => SEQUENCER_MIN_NUM_MEASURES),
+});
+
+const numMeasures = computed(() => injectedNumMeasures.numMeasures);
 
 const tpqn = computed(() => store.state.tpqn);
 const timeSignatures = computed(() => store.state.timeSignatures);
@@ -55,8 +57,8 @@ const { rulerWidth, tsPositions, endTicks } = useSequencerLayout({
   tpqn,
   playheadPosition,
   sequencerZoomX,
-  offset,
-  numMeasures,
+  offset: injectedOffset,
+  numMeasures: numMeasures.value,
 });
 
 // クリック位置
@@ -161,7 +163,7 @@ const handleLoopAreaMouseDown = (event: MouseEvent) => {
 
   const tick = offsetXToSnappedTick(
     clickX,
-    offset.value,
+    injectedOffset.value,
     sequencerZoomX.value,
     timeSignatures.value,
     tpqn.value,
@@ -338,7 +340,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => [
 const addOneMeasureLoop = (localX: number) => {
   const snappedTick = offsetXToSnappedTick(
     localX,
-    offset.value,
+    injectedOffset.value,
     sequencerZoomX.value,
     timeSignatures.value,
     tpqn.value,
@@ -357,7 +359,7 @@ const addOneMeasureLoop = (localX: number) => {
 
   const startTick = offsetXToSnappedTick(
     localX,
-    offset.value,
+    injectedOffset.value,
     sequencerZoomX.value,
     timeSignatures.value,
     tpqn.value,
