@@ -316,6 +316,16 @@ export const useCommonMenuBarData = (store: Store) => {
         },
         {
           type: "button",
+          label: "キャラクター・スタイルの管理",
+          onClick() {
+            void store.actions.SET_DIALOG_OPEN({
+              isCharacterOrderDialogOpen: true,
+            });
+          },
+          disableWhenUiLocked: true,
+        },
+        {
+          type: "button",
           label: "キャラクター並び替え・試聴",
           onClick() {
             void store.actions.SET_DIALOG_OPEN({
