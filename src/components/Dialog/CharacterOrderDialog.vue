@@ -179,27 +179,26 @@ watch(dialogOpened, async (newValue, oldValue) => {
       .map((speakerUuid) => characterInfosMap.value[speakerUuid])
       .filter((info) => info != undefined);
 
-      // 含まれていないキャラクターを足す
-      const notIncludesCharacterInfos = props.characterInfos.filter(
-        (characterInfo) =>
-          !characterOrder.value.find(
-            (characterInfoInList) =>
-              characterInfoInList.metas.speakerUuid ===
-              characterInfo.metas.speakerUuid,
-          ),
-      );
-      characterOrder.value = [
-        ...characterOrder.value,
-        ...notIncludesCharacterInfos,
-      ];
+    // 含まれていないキャラクターを足す
+    const notIncludesCharacterInfos = props.characterInfos.filter(
+      (characterInfo) =>
+        !characterOrder.value.find(
+          (characterInfoInList) =>
+            characterInfoInList.metas.speakerUuid ===
+            characterInfo.metas.speakerUuid,
+        ),
+    );
+    characterOrder.value = [
+      ...characterOrder.value,
+      ...notIncludesCharacterInfos,
+    ];
 
-      // 新しいキャラクターがいる場合は判定を無くすため並び順を保存
-      if (hasNewCharacter.value) {
-        saveCharacterOrder(characterOrder.value);
-      }
+    // 新しいキャラクターがいる場合は判定を無くすため並び順を保存
+    if (hasNewCharacter.value) {
+      saveCharacterOrder(characterOrder.value);
     }
-  },
-);
+  }
+});
 
 // draggable用
 const keyOfCharacterOrderItem = (item: CharacterInfo) => item.metas.speakerUuid;
