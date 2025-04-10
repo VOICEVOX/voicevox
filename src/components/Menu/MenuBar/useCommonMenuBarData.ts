@@ -4,6 +4,7 @@ import { MaybeComputedMenuBarContent } from "./menuBarData";
 import { ensureNotNullish } from "@/helpers/errorHelper";
 import { useHotkeyManager, HotkeyAction } from "@/plugins/hotkeyPlugin";
 import { Store } from "@/store";
+import { isProduction } from "@/helpers/platform";
 
 export const useCommonMenuBarData = (store: Store) => {
   const uiLocked = computed(() => store.getters.UI_LOCKED);
@@ -314,16 +315,20 @@ export const useCommonMenuBarData = (store: Store) => {
           },
           disableWhenUiLocked: false,
         },
-        {
-          type: "button",
-          label: "キャラクター・スタイルの管理",
-          onClick() {
-            void store.actions.SET_DIALOG_OPEN({
-              isCharacterOrderDialogOpen: true,
-            });
-          },
-          disableWhenUiLocked: true,
-        },
+        ...(isProduction
+          ? [
+              {
+                type: "button",
+                label: "キャラクター・スタイルの管理",
+                onClick() {
+                  void store.actions.SET_DIALOG_OPEN({
+                    isCharacterOrderDialogOpen: true,
+                  });
+                },
+                disableWhenUiLocked: true,
+              } as const,
+            ]
+          : []),
         {
           type: "button",
           label: "キャラクター並び替え・試聴",
