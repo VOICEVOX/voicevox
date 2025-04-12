@@ -19,21 +19,17 @@ export async function mockShowSaveFileDialog(page: Page): Promise<{
   getFileIds: () => Promise<TestFileId[]>;
 }> {
   type _Window = Window & {
-    _mockShowSaveFileDialog: {
-      returnValues: TestFileId[];
-    };
+    _mockShownSaveFileDialogFileIds: TestFileId[];
   };
 
   // モックを差し込む
   await page.evaluate(() => {
     const _window = window as unknown as _Window;
-    _window._mockShowSaveFileDialog = {
-      returnValues: [],
-    };
+    _window._mockShownSaveFileDialogFileIds = [];
 
     _window.backend.showSaveFileDialog = async () => {
       const id = `${Date.now()}` as TestFileId;
-      _window._mockShowSaveFileDialog.returnValues.push(id);
+      _window._mockShownSaveFileDialogFileIds.push(id);
       return id;
     };
   });
@@ -42,7 +38,7 @@ export async function mockShowSaveFileDialog(page: Page): Promise<{
     getFileIds: async () => {
       return page.evaluate(() => {
         const _window = window as unknown as _Window;
-        return _window._mockShowSaveFileDialog.returnValues;
+        return _window._mockShownSaveFileDialogFileIds;
       });
     },
   };
@@ -53,17 +49,18 @@ export async function mockWriteFile(page: Page): Promise<{
   getWrittenFileBuffers: () => Promise<Record<TestFileId, Buffer>>;
 }> {
   type _Window = Window & {
-    _mockWriteFile: Record<TestFileId, Uint8Array>;
+    _mockWrittenFileBuffers: Record<TestFileId, Uint8Array>;
   };
 
   // モックを差し込む
   await page.evaluate(
     ({ successResult }) => {
       const _window = window as unknown as _Window;
-      _window._mockWriteFile = {};
+      _window._mockWrittenFileBuffers = {};
 
       _window.backend.writeFile = async ({ filePath, buffer }) => {
-        _window._mockWriteFile[filePath as TestFileId] = new Uint8Array(buffer);
+        _window._mockWrittenFileBuffers[filePath as TestFileId] =
+          new Uint8Array(buffer);
         return successResult;
       };
     },
@@ -77,10 +74,9 @@ export async function mockWriteFile(page: Page): Promise<{
         const _window = window as unknown as _Window;
         // NOTE: evaluate() 内で `objectFromEntries` 等は使えない
         return Object.fromEntries(
-          Object.entries(_window._mockWriteFile).map(([key, value]) => [
-            key,
-            Array.from(value),
-          ]),
+          Object.entries(_window._mockWrittenFileBuffers).map(
+            ([key, value]) => [key, Array.from(value)],
+          ),
         );
       });
       return objectFromEntries(
