@@ -67,6 +67,7 @@ export async function mockWriteFile(page: Page): Promise<{
         return successResult;
       };
     },
+    // NOTE: page.evaluate内ではimportしたものは使えないので、ここで生成して渡す
     { successResult: success(undefined) },
   );
 
