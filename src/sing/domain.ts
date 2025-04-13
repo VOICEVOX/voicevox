@@ -444,11 +444,16 @@ export function getEndTicksOfPhrase(phrase: Phrase) {
   return lastNote.position + lastNote.duration;
 }
 
-export function toSortedPhrases<K extends string>(phrases: Map<K, Phrase>) {
-  return [...phrases.entries()].sort((a, b) => {
-    const startTicksOfPhraseA = getStartTicksOfPhrase(a[1]);
-    const startTicksOfPhraseB = getStartTicksOfPhrase(b[1]);
-    return startTicksOfPhraseA - startTicksOfPhraseB;
+export type PhraseRange = {
+  startTicks: number;
+  endTicks: number;
+};
+
+export function toSortedPhrases<K extends string>(
+  phraseRanges: Map<K, PhraseRange>,
+) {
+  return [...phraseRanges.entries()].sort((a, b) => {
+    return a[1].startTicks - b[1].startTicks;
   });
 }
 
@@ -461,32 +466,32 @@ export function toSortedPhrases<K extends string>(phrases: Map<K, Phrase>) {
  * - 再生位置より前のPhrase
  */
 export function selectPriorPhrase<K extends string>(
-  phrases: Map<K, Phrase>,
+  phraseRanges: Map<K, PhraseRange>,
   position: number,
-): [K, Phrase] {
-  if (phrases.size === 0) {
-    throw new Error("Received empty phrases");
+): K {
+  if (phraseRanges.size === 0) {
+    throw new Error("phraseRanges.size is 0.");
   }
   // 再生位置が含まれるPhrase
-  for (const [phraseKey, phrase] of phrases) {
+  for (const [phraseKey, phraseRange] of phraseRanges) {
     if (
-      getStartTicksOfPhrase(phrase) <= position &&
-      position <= getEndTicksOfPhrase(phrase)
+      phraseRange.startTicks <= position &&
+      position <= phraseRange.endTicks
     ) {
-      return [phraseKey, phrase];
+      return phraseKey;
     }
   }
 
-  const sortedPhrases = toSortedPhrases(phrases);
+  const sortedPhraseRanges = toSortedPhrases(phraseRanges);
   // 再生位置より後のPhrase
-  for (const [phraseKey, phrase] of sortedPhrases) {
-    if (getStartTicksOfPhrase(phrase) > position) {
-      return [phraseKey, phrase];
+  for (const [phraseKey, phraseRange] of sortedPhraseRanges) {
+    if (phraseRange.startTicks > position) {
+      return phraseKey;
     }
   }
 
   // 再生位置より前のPhrase
-  return sortedPhrases[0];
+  return sortedPhraseRanges[0][0];
 }
 
 export function convertToFramePhonemes(phonemes: FramePhoneme[]) {
