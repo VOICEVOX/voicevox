@@ -2491,7 +2491,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         });
       } catch (error) {
         const phonemes = query.phonemes.map((value) => value.phoneme).join(" ");
-        logger.error(`Failed to synthesis. Phonemes are "${phonemes}".`, error);
+        logger.error(`Failed to synthesize. Phonemes are "${phonemes}".`, error);
         throw error;
       }
     },
