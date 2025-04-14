@@ -449,7 +449,7 @@ export type PhraseRange = {
   endTicks: number;
 };
 
-export function toSortedPhrases<K extends string>(
+export function toSortedPhraseRanges<K extends string>(
   phraseRanges: Map<K, PhraseRange>,
 ) {
   return [...phraseRanges.entries()].sort((a, b) => {
@@ -459,7 +459,7 @@ export function toSortedPhrases<K extends string>(
 
 /**
  * 次にレンダリングするべきPhraseを探す。
- * phrasesが空の場合はエラー
+ * phraseRangesが空の場合はエラー
  * 優先順：
  * - 再生位置が含まれるPhrase
  * - 再生位置より後のPhrase
@@ -482,7 +482,7 @@ export function selectPriorPhrase<K extends string>(
     }
   }
 
-  const sortedPhraseRanges = toSortedPhrases(phraseRanges);
+  const sortedPhraseRanges = toSortedPhraseRanges(phraseRanges);
   // 再生位置より後のPhrase
   for (const [phraseKey, phraseRange] of sortedPhraseRanges) {
     if (phraseRange.startTicks > position) {
