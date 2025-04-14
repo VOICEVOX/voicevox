@@ -2127,34 +2127,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
         const renderStartStageIds = new Map<PhraseKey, PhraseRenderStageId>();
 
-        // 重なっているノートを削除する
-        const filteredTrackNotes = new Map<TrackId, Note[]>();
-        for (const [trackId, track] of snapshot.tracks) {
-          const overlappingNoteIds = getOrThrow(
-            snapshot.trackOverlappingNoteIds,
-            trackId,
-          );
-          const filteredNotes = track.notes.filter(
-            (value) => !overlappingNoteIds.has(value.id),
-          );
-          filteredTrackNotes.set(trackId, filteredNotes);
-        }
-
-        // ノーツからフレーズを生成する
-        const generatedPhrases = new Map<PhraseKey, Phrase>();
-        for (const trackId of snapshot.tracks.keys()) {
-          const filteredNotes = getOrThrow(filteredTrackNotes, trackId);
-          const phrases = await generatePhrases(
-            filteredNotes,
-            snapshot.tempos,
-            snapshot.tpqn,
-            firstRestMinDurationSeconds,
-            trackId,
-          );
-          for (const [phraseKey, phrase] of phrases) {
-            generatedPhrases.set(phraseKey, phrase);
-          }
-        }
+        // 各トラックのノーツからフレーズを生成する
+        const generatedPhrases = await generatePhrases(
+          snapshot,
+          firstRestMinDurationSeconds,
+        );
 
         const mergedPhrases = new Map<PhraseKey, Phrase>();
         const newlyCreatedPhraseKeys = new Set<PhraseKey>();
