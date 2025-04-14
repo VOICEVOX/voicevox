@@ -5,14 +5,17 @@ import {
   Phrase,
   PhraseKey,
   Singer,
+  SingingPitch,
   SingingPitchKey,
   SingingVoiceKey,
+  SingingVolume,
   SingingVolumeKey,
   Tempo,
   Track,
 } from "@/store/type";
 import { calculateHash, linearInterpolation } from "@/sing/utility";
 import {
+  applyPitchEdit,
   calculatePhraseKey,
   decibelToLinear,
   getNoteDuration,
@@ -21,6 +24,8 @@ import {
 } from "@/sing/domain";
 import { FramePhoneme, Note as NoteForRequestToEngine } from "@/openapi";
 import { EngineId, TrackId } from "@/type/preload";
+import { getOrThrow } from "@/helpers/mapHelper";
+import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 
 /**
  * フレーズレンダリングに必要なデータのスナップショット
@@ -364,4 +369,138 @@ export const generatePhrases = async (
     }
   }
   return generatedPhrases;
+};
+
+export const generateQuerySource = (
+  phrase: Phrase,
+  snapshot: SnapshotForPhraseRender,
+): QuerySource => {
+  const track = getOrThrow(snapshot.tracks, phrase.trackId);
+  if (track.singer == undefined) {
+    throw new Error("track.singer is undefined.");
+  }
+  const engineFrameRate = getOrThrow(
+    snapshot.engineFrameRates,
+    track.singer.engineId,
+  );
+  return {
+    engineId: track.singer.engineId,
+    engineFrameRate,
+    tpqn: snapshot.tpqn,
+    tempos: snapshot.tempos,
+    firstRestDuration: phrase.firstRestDuration,
+    notes: phrase.notes,
+    keyRangeAdjustment: track.keyRangeAdjustment,
+  };
+};
+
+export const generateSingingPitchSource = (
+  query: EditorFrameAudioQuery,
+  phrase: Phrase,
+  snapshot: SnapshotForPhraseRender,
+): SingingPitchSource => {
+  const track = getOrThrow(snapshot.tracks, phrase.trackId);
+  if (track.singer == undefined) {
+    throw new Error("track.singer is undefined.");
+  }
+  if (phrase.queryKey == undefined) {
+    throw new Error("phrase.queryKey is undefined.");
+  }
+
+  const clonedQuery = cloneWithUnwrapProxy(query);
+
+  // TODO: 音素タイミングの編集データの適用を行うようにする
+  return {
+    engineId: track.singer.engineId,
+    engineFrameRate: query.frameRate,
+    tpqn: snapshot.tpqn,
+    tempos: snapshot.tempos,
+    firstRestDuration: phrase.firstRestDuration,
+    notes: phrase.notes,
+    keyRangeAdjustment: track.keyRangeAdjustment,
+    queryForPitchGeneration: clonedQuery,
+  };
+};
+
+export const generateSingingVolumeSource = (
+  query: EditorFrameAudioQuery,
+  singingPitch: SingingPitch,
+  phrase: Phrase,
+  snapshot: SnapshotForPhraseRender,
+): SingingVolumeSource => {
+  const track = getOrThrow(snapshot.tracks, phrase.trackId);
+  if (track.singer == undefined) {
+    throw new Error("track.singer is undefined.");
+  }
+  if (phrase.queryKey == undefined) {
+    throw new Error("phrase.queryKey is undefined.");
+  }
+  if (phrase.singingPitchKey == undefined) {
+    throw new Error("phrase.singingPitchKey is undefined.");
+  }
+
+  const clonedQuery = cloneWithUnwrapProxy(query);
+  const clonedSingingPitch = cloneWithUnwrapProxy(singingPitch);
+
+  clonedQuery.f0 = clonedSingingPitch;
+
+  applyPitchEdit(
+    clonedQuery,
+    phrase.startTime,
+    track.pitchEditData,
+    snapshot.editorFrameRate,
+  );
+
+  return {
+    engineId: track.singer.engineId,
+    engineFrameRate: query.frameRate,
+    tpqn: snapshot.tpqn,
+    tempos: snapshot.tempos,
+    firstRestDuration: phrase.firstRestDuration,
+    notes: phrase.notes,
+    keyRangeAdjustment: track.keyRangeAdjustment,
+    volumeRangeAdjustment: track.volumeRangeAdjustment,
+    queryForVolumeGeneration: clonedQuery,
+  };
+};
+
+export const generateSingingVoiceSource = (
+  query: EditorFrameAudioQuery,
+  singingPitch: SingingPitch,
+  singingVolume: SingingVolume,
+  phrase: Phrase,
+  snapshot: SnapshotForPhraseRender,
+): SingingVoiceSource => {
+  const track = getOrThrow(snapshot.tracks, phrase.trackId);
+  if (track.singer == undefined) {
+    throw new Error("track.singer is undefined.");
+  }
+  if (phrase.queryKey == undefined) {
+    throw new Error("phrase.queryKey is undefined.");
+  }
+  if (phrase.singingPitchKey == undefined) {
+    throw new Error("phrase.singingPitchKey is undefined.");
+  }
+  if (phrase.singingVolumeKey == undefined) {
+    throw new Error("phrase.singingVolumeKey is undefined.");
+  }
+
+  const clonedQuery = cloneWithUnwrapProxy(query);
+  const clonedSingingPitch = cloneWithUnwrapProxy(singingPitch);
+  const clonedSingingVolume = cloneWithUnwrapProxy(singingVolume);
+
+  clonedQuery.f0 = clonedSingingPitch;
+  clonedQuery.volume = clonedSingingVolume;
+
+  applyPitchEdit(
+    clonedQuery,
+    phrase.startTime,
+    track.pitchEditData,
+    snapshot.editorFrameRate,
+  );
+
+  return {
+    singer: track.singer,
+    queryForSingingVoiceSynthesis: clonedQuery,
+  };
 };
