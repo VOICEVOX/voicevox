@@ -467,7 +467,7 @@ export function toSortedPhraseRanges<K extends string>(
  */
 export function selectPriorPhrase<K extends string>(
   phraseRanges: Map<K, PhraseRange>,
-  position: number,
+  playheadPosition: number,
 ): K {
   if (phraseRanges.size === 0) {
     throw new Error("phraseRanges.size is 0.");
@@ -475,8 +475,8 @@ export function selectPriorPhrase<K extends string>(
   // 再生位置が含まれるPhrase
   for (const [phraseKey, phraseRange] of phraseRanges) {
     if (
-      phraseRange.startTicks <= position &&
-      position <= phraseRange.endTicks
+      phraseRange.startTicks <= playheadPosition &&
+      playheadPosition <= phraseRange.endTicks
     ) {
       return phraseKey;
     }
@@ -485,7 +485,7 @@ export function selectPriorPhrase<K extends string>(
   const sortedPhraseRanges = toSortedPhraseRanges(phraseRanges);
   // 再生位置より後のPhrase
   for (const [phraseKey, phraseRange] of sortedPhraseRanges) {
-    if (phraseRange.startTicks > position) {
+    if (phraseRange.startTicks > playheadPosition) {
       return phraseKey;
     }
   }
