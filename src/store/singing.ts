@@ -1526,39 +1526,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         };
       };
 
-      const fetchQuery = async (
-        engineId: EngineId,
-        engineFrameRate: number,
-        notesForRequestToEngine: NoteForRequestToEngine[],
-      ) => {
-        try {
-          if (!getters.IS_ENGINE_READY(engineId)) {
-            throw new Error("Engine not ready.");
-          }
-          const instance = await actions.INSTANTIATE_ENGINE_CONNECTOR({
-            engineId,
-          });
-          const query = await instance.invoke("singFrameAudioQuery")({
-            score: { notes: notesForRequestToEngine },
-            speaker: singingTeacherStyleId,
-          });
-          const editorQuery: EditorFrameAudioQuery = {
-            ...query,
-            frameRate: engineFrameRate,
-          };
-          return editorQuery;
-        } catch (error) {
-          const lyrics = notesForRequestToEngine
-            .map((value) => value.lyric)
-            .join("");
-          logger.error(
-            `Failed to fetch FrameAudioQuery. Lyrics of score are "${lyrics}".`,
-            error,
-          );
-          throw error;
-        }
-      };
-
       const generateQuery = async (querySource: QuerySource) => {
         const notesForRequestToEngine = createNotesForRequestToEngine(
           querySource.firstRestDuration,
@@ -1574,11 +1541,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           -querySource.keyRangeAdjustment,
         );
 
-        const query = await fetchQuery(
-          querySource.engineId,
-          querySource.engineFrameRate,
-          notesForRequestToEngine,
-        );
+        const query = await actions.FETCH_SING_FRAME_AUDIO_QUERY({
+          engineId: querySource.engineId,
+          styleId: singingTeacherStyleId,
+          engineFrameRate: querySource.engineFrameRate,
+          notes: notesForRequestToEngine,
+        });
 
         shiftPitch(query.f0, querySource.keyRangeAdjustment);
         return query;
@@ -1994,30 +1962,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const synthesizeSingingVoice = async (
         singingVoiceSource: SingingVoiceSource,
       ) => {
-        const singer = singingVoiceSource.singer;
-        const query = singingVoiceSource.queryForSingingVoiceSynthesis;
-
-        if (!getters.IS_ENGINE_READY(singer.engineId)) {
-          throw new Error("Engine not ready.");
-        }
-        try {
-          const instance = await actions.INSTANTIATE_ENGINE_CONNECTOR({
-            engineId: singer.engineId,
-          });
-          return await instance.invoke("frameSynthesis")({
-            frameAudioQuery: query,
-            speaker: singer.styleId,
-          });
-        } catch (error) {
-          const phonemes = query.phonemes
-            .map((value) => value.phoneme)
-            .join(" ");
-          logger.error(
-            `Failed to synthesis. Phonemes are "${phonemes}".`,
-            error,
-          );
-          throw error;
-        }
+        return await actions.FRAME_SYNTHESIS({
+          query: singingVoiceSource.queryForSingingVoiceSynthesis,
+          engineId: singingVoiceSource.singer.engineId,
+          styleId: singingVoiceSource.singer.styleId,
+        });
       };
 
       const singingVoiceSynthesisStage: PhraseRenderStage = {
@@ -2394,9 +2343,47 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     }),
   },
 
+  FETCH_SING_FRAME_AUDIO_QUERY: {
+    async action(
+      { getters, actions },
+      {
+        notes,
+        engineFrameRate,
+        engineId,
+        styleId,
+      }: {
+        notes: NoteForRequestToEngine[];
+        engineFrameRate: number;
+        engineId: EngineId;
+        styleId: StyleId;
+      },
+    ) {
+      try {
+        if (!getters.IS_ENGINE_READY(engineId)) {
+          throw new Error("Engine not ready.");
+        }
+        const instance = await actions.INSTANTIATE_ENGINE_CONNECTOR({
+          engineId,
+        });
+        const query = await instance.invoke("singFrameAudioQuery")({
+          score: { notes },
+          speaker: styleId,
+        });
+        return { ...query, frameRate: engineFrameRate };
+      } catch (error) {
+        const lyrics = notes.map((value) => value.lyric).join("");
+        logger.error(
+          `Failed to fetch FrameAudioQuery. Lyrics of score are "${lyrics}".`,
+          error,
+        );
+        throw error;
+      }
+    },
+  },
+
   FETCH_SING_FRAME_F0: {
     async action(
-      { actions },
+      { getters, actions },
       {
         notes,
         query,
@@ -2409,24 +2396,36 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         styleId: StyleId;
       },
     ) {
-      const instance = await actions.INSTANTIATE_ENGINE_CONNECTOR({
-        engineId,
-      });
-      return await instance.invoke("singFrameF0")({
-        bodySingFrameF0SingFrameF0Post: {
-          score: {
-            notes,
+      try {
+        if (!getters.IS_ENGINE_READY(engineId)) {
+          throw new Error("Engine not ready.");
+        }
+        const instance = await actions.INSTANTIATE_ENGINE_CONNECTOR({
+          engineId,
+        });
+        return await instance.invoke("singFrameF0")({
+          bodySingFrameF0SingFrameF0Post: {
+            score: {
+              notes,
+            },
+            frameAudioQuery: query,
           },
-          frameAudioQuery: query,
-        },
-        speaker: styleId,
-      });
+          speaker: styleId,
+        });
+      } catch (error) {
+        const lyrics = notes.map((value) => value.lyric).join("");
+        logger.error(
+          `Failed to fetch sing frame f0. Lyrics of score are "${lyrics}".`,
+          error,
+        );
+        throw error;
+      }
     },
   },
 
   FETCH_SING_FRAME_VOLUME: {
     async action(
-      { actions },
+      { getters, actions },
       {
         notes,
         query,
@@ -2439,18 +2438,65 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         styleId: StyleId;
       },
     ) {
-      const instance = await actions.INSTANTIATE_ENGINE_CONNECTOR({
-        engineId,
-      });
-      return await instance.invoke("singFrameVolume")({
-        bodySingFrameVolumeSingFrameVolumePost: {
-          score: {
-            notes,
+      try {
+        if (!getters.IS_ENGINE_READY(engineId)) {
+          throw new Error("Engine not ready.");
+        }
+        const instance = await actions.INSTANTIATE_ENGINE_CONNECTOR({
+          engineId,
+        });
+        return await instance.invoke("singFrameVolume")({
+          bodySingFrameVolumeSingFrameVolumePost: {
+            score: {
+              notes,
+            },
+            frameAudioQuery: query,
           },
+          speaker: styleId,
+        });
+      } catch (error) {
+        const lyrics = notes.map((value) => value.lyric).join("");
+        logger.error(
+          `Failed to fetch sing frame volume. Lyrics of score are "${lyrics}".`,
+          error,
+        );
+        throw error;
+      }
+    },
+  },
+
+  FRAME_SYNTHESIS: {
+    async action(
+      { getters, actions },
+      {
+        query,
+        engineId,
+        styleId,
+      }: {
+        query: EditorFrameAudioQuery;
+        engineId: EngineId;
+        styleId: StyleId;
+      },
+    ) {
+      if (!getters.IS_ENGINE_READY(engineId)) {
+        throw new Error("Engine not ready.");
+      }
+      try {
+        const instance = await actions.INSTANTIATE_ENGINE_CONNECTOR({
+          engineId,
+        });
+        return await instance.invoke("frameSynthesis")({
           frameAudioQuery: query,
-        },
-        speaker: styleId,
-      });
+          speaker: styleId,
+        });
+      } catch (error) {
+        const phonemes = query.phonemes.map((value) => value.phoneme).join(" ");
+        logger.error(
+          `Failed to synthesize. Phonemes are "${phonemes}".`,
+          error,
+        );
+        throw error;
+      }
     },
   },
 
