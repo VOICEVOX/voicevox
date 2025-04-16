@@ -1190,6 +1190,15 @@ export type SingingStoreTypes = {
     action(): void;
   };
 
+  FETCH_SING_FRAME_AUDIO_QUERY: {
+    action(payload: {
+      notes: NoteForRequestToEngine[];
+      engineFrameRate: number;
+      engineId: EngineId;
+      styleId: StyleId;
+    }): Promise<EditorFrameAudioQuery>;
+  };
+
   FETCH_SING_FRAME_F0: {
     action(payload: {
       notes: NoteForRequestToEngine[];
@@ -1206,6 +1215,14 @@ export type SingingStoreTypes = {
       engineId: EngineId;
       styleId: StyleId;
     }): Promise<number[]>;
+  };
+
+  FRAME_SYNTHESIS: {
+    action(payload: {
+      query: EditorFrameAudioQuery;
+      engineId: EngineId;
+      styleId: StyleId;
+    }): Promise<Blob>;
   };
 
   TICK_TO_SECOND: {
