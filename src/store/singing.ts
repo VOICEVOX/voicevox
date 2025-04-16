@@ -95,6 +95,7 @@ import {
   AnimationTimer,
   createArray,
   createPromiseThatResolvesWhen,
+  getLast,
   round,
 } from "@/sing/utility";
 import { getWorkaroundKeyRangeAdjustment } from "@/sing/workaroundKeyRangeAdjustment";
@@ -2223,10 +2224,23 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           if (startRenderingRequested() || stopRenderingRequested()) {
             return;
           }
-          const [phraseKey, phrase] = selectPriorPhrase(
-            phrasesToBeRendered,
+          const phraseKey = selectPriorPhrase(
+            new Map(
+              [...phrasesToBeRendered.entries()].map(([phraseKey, phrase]) => {
+                const phraseFirstNote = phrase.notes[0];
+                const phraseLastNote = getLast(phrase.notes);
+                return [
+                  phraseKey,
+                  {
+                    startTicks: phraseFirstNote.position,
+                    endTicks: phraseLastNote.position + phraseLastNote.duration,
+                  },
+                ];
+              }),
+            ),
             playheadPosition.value,
           );
+          const phrase = getOrThrow(phrasesToBeRendered, phraseKey);
           phrasesToBeRendered.delete(phraseKey);
 
           mutations.SET_STATE_TO_PHRASE({
