@@ -23,7 +23,6 @@ import { ExhaustiveError } from "@/type/utility";
 import { createLogger } from "@/helpers/log";
 import { getLast } from "@/sing/utility";
 import { getOrThrow } from "@/helpers/mapHelper";
-import { EditorFrameAudioQuery } from "@/store/type";
 import {
   calculatePitchDataHash,
   PitchData,
@@ -31,6 +30,7 @@ import {
   PitchLine,
   ViewInfo,
 } from "@/sing/graphics/pitchLine";
+import { FramePhoneme } from "@/openapi";
 
 const props = defineProps<{
   offsetX: number;
@@ -53,8 +53,10 @@ const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
 const editorFrameRate = computed(() => store.state.editorFrameRate);
 const singingGuidesInSelectedTrack = computed(() => {
   const singingGuides: {
-    query: EditorFrameAudioQuery;
     startTime: number;
+    frameRate: number;
+    phonemes: FramePhoneme[];
+    f0: number[];
   }[] = [];
   for (const phrase of store.state.phrases.values()) {
     if (phrase.trackId !== selectedTrackId.value) {
@@ -63,10 +65,20 @@ const singingGuidesInSelectedTrack = computed(() => {
     if (phrase.queryKey == undefined) {
       continue;
     }
+    if (phrase.singingPitchKey == undefined) {
+      continue;
+    }
     const phraseQuery = getOrThrow(store.state.phraseQueries, phrase.queryKey);
+    const phraseSingingPitch = getOrThrow(
+      store.state.phraseSingingPitches,
+      phrase.singingPitchKey,
+    );
+
     singingGuides.push({
       startTime: phrase.startTime,
-      query: phraseQuery,
+      frameRate: phraseQuery.frameRate,
+      phonemes: phraseQuery.phonemes,
+      f0: phraseSingingPitch,
     });
   }
   return singingGuides;
@@ -181,16 +193,16 @@ const generateOriginalPitchDataMap = async () => {
   const framewiseData = [];
   for (const singingGuide of singingGuidesInSelectedTrack.value) {
     // TODO: 補間を行うようにする
-    if (singingGuide.query.frameRate !== frameRate) {
+    if (singingGuide.frameRate !== frameRate) {
       throw new Error(
         "The frame rate between the singing guide and the edit does not match.",
       );
     }
-    const phonemes = singingGuide.query.phonemes;
+    const phonemes = singingGuide.phonemes;
     if (phonemes.length === 0) {
       throw new Error("phonemes.length is 0.");
     }
-    const f0 = singingGuide.query.f0;
+    const f0 = singingGuide.f0;
 
     // 各フレームの音素の配列を生成する
     const framePhonemes = convertToFramePhonemes(phonemes);

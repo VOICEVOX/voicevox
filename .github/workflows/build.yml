@@ -60,7 +60,7 @@ jobs:
             linux_artifact_name: "VOICEVOX.${ext}"
             linux_executable_name: voicevox
             linux_appimage_7z_name: VOICEVOX.AppImage
-            os: ubuntu-20.04
+            os: ubuntu-22.04
           # Linux CPU (x64)
           - artifact_name: linux-cpu-x64-prepackage
             artifact_path: dist_electron/linux-unpacked
@@ -72,7 +72,7 @@ jobs:
             linux_artifact_name: "VOICEVOX.${version}-x64.${ext}"
             linux_executable_name: voicevox
             linux_appimage_7z_name: VOICEVOX-CPU-X64.AppImage
-            os: ubuntu-20.04
+            os: ubuntu-22.04
           # Linux CPU (arm64)
           - artifact_name: linux-cpu-arm64-prepackage
             artifact_path: dist_electron/linux-arm64-unpacked
