@@ -21,7 +21,7 @@ const log = createLogger("EngineInfoManager");
 
 /** 利用可能なエンジンの情報を管理するクラス */
 export class EngineInfoManager {
-  defaultEngineDir: string;
+  appDirPath: string;
   vvppEngineDir: string;
 
   /** 代替ポート情報 */
@@ -29,8 +29,8 @@ export class EngineInfoManager {
 
   private envEngineInfos = loadEnvEngineInfos();
 
-  constructor(payload: { defaultEngineDir: string; vvppEngineDir: string }) {
-    this.defaultEngineDir = payload.defaultEngineDir;
+  constructor(payload: { appDirPath: string; vvppEngineDir: string }) {
+    this.appDirPath = payload.appDirPath;
     this.vvppEngineDir = payload.vvppEngineDir;
   }
 
@@ -93,11 +93,14 @@ export class EngineInfoManager {
           pathname: pathname === "/" ? "" : pathname,
           isDefault: true,
           type: engineInfo.type,
-          executionFilePath: path.resolve(engineInfo.executionFilePath),
+          executionFilePath: path.resolve(
+            this.appDirPath,
+            engineInfo.executionFilePath,
+          ),
           path:
             engineInfo.path == undefined
               ? undefined
-              : path.resolve(this.defaultEngineDir, engineInfo.path),
+              : path.resolve(this.appDirPath, engineInfo.path),
         } satisfies EngineInfo;
       });
   }
@@ -253,7 +256,7 @@ export class EngineInfoManager {
 let manager: EngineInfoManager | undefined;
 
 export function initializeEngineInfoManager(payload: {
-  defaultEngineDir: string;
+  appDirPath: string;
   vvppEngineDir: string;
 }) {
   manager = new EngineInfoManager(payload);
