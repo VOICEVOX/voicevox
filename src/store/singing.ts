@@ -122,22 +122,19 @@ import {
   calculateSingingPitchKey,
   calculateSingingVoiceKey,
   calculateSingingVolumeKey,
-  createNotesForRequestToEngine,
   generatePhrases,
+  generateQuery,
   generateQuerySource,
+  generateSingingPitch,
   generateSingingPitchSource,
   generateSingingVoiceSource,
+  generateSingingVolume,
   generateSingingVolumeSource,
   getPhonemes,
-  muteLastPauSection,
-  QuerySource,
-  shiftKeyOfNotes,
-  shiftPitch,
-  shiftVolume,
-  SingingPitchSource,
-  SingingVoiceSource,
-  SingingVolumeSource,
   SnapshotForPhraseRender,
+  SongTrackRenderingConfig,
+  synthesizeSingingVoice,
+  VoicevoxEngineApi,
 } from "@/sing/songTrackRendering";
 
 const logger = createLogger("store/singing");
@@ -1474,9 +1471,27 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
    */
   RENDER: {
     async action({ state, getters, mutations, actions }) {
-      const singingTeacherStyleId = StyleId(6000); // TODO: 設定できるようにする
-      const lastRestDurationSeconds = 0.5; // TODO: 設定できるようにする
-      const fadeOutDurationSeconds = 0.15; // TODO: 設定できるようにする
+      const config: SongTrackRenderingConfig = {
+        singingTeacherStyleId: StyleId(6000),
+        lastRestDurationSeconds: 0.5,
+        fadeOutDurationSeconds: 0.15,
+        firstRestMinDurationSeconds: 0.12,
+      };
+
+      const voicevoxEngineApi: VoicevoxEngineApi = {
+        fetchFrameAudioQuery: async (args) => {
+          return await actions.FETCH_SING_FRAME_AUDIO_QUERY(args);
+        },
+        fetchSingFrameF0: async (args) => {
+          return await actions.FETCH_SING_FRAME_F0(args);
+        },
+        fetchSingFrameVolume: async (args) => {
+          return await actions.FETCH_SING_FRAME_VOLUME(args);
+        },
+        frameSynthesis: async (args) => {
+          return await actions.FRAME_SYNTHESIS(args);
+        },
+      };
 
       /**
        * レンダリング中に変更される可能性のあるデータのコピーを作成する。
@@ -1502,32 +1517,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           ),
           editorFrameRate: state.editorFrameRate,
         } as const;
-      };
-
-      const generateQuery = async (querySource: QuerySource) => {
-        const notesForRequestToEngine = createNotesForRequestToEngine(
-          querySource.firstRestDuration,
-          lastRestDurationSeconds,
-          querySource.notes,
-          querySource.tempos,
-          querySource.tpqn,
-          querySource.engineFrameRate,
-        );
-
-        shiftKeyOfNotes(
-          notesForRequestToEngine,
-          -querySource.keyRangeAdjustment,
-        );
-
-        const query = await actions.FETCH_SING_FRAME_AUDIO_QUERY({
-          engineId: querySource.engineId,
-          styleId: singingTeacherStyleId,
-          engineFrameRate: querySource.engineFrameRate,
-          notes: notesForRequestToEngine,
-        });
-
-        shiftPitch(query.f0, querySource.keyRangeAdjustment);
-        return query;
       };
 
       const queryGenerationStage: PhraseRenderStage = {
@@ -1570,7 +1559,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           if (query != undefined) {
             logger.info(`Loaded query from cache.`);
           } else {
-            query = await generateQuery(querySource);
+            query = await generateQuery(querySource, config, voicevoxEngineApi);
             const phonemes = getPhonemes(query);
             logger.info(`Generated query. phonemes: ${phonemes}`);
             queryCache.set(queryKey, query);
@@ -1584,37 +1573,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           mutations.SET_PHRASE_QUERY({ queryKey, query });
           mutations.SET_QUERY_KEY_TO_PHRASE({ phraseKey, queryKey });
         },
-      };
-
-      const generateSingingPitch = async (
-        singingPitchSource: SingingPitchSource,
-      ) => {
-        const notesForRequestToEngine = createNotesForRequestToEngine(
-          singingPitchSource.firstRestDuration,
-          lastRestDurationSeconds,
-          singingPitchSource.notes,
-          singingPitchSource.tempos,
-          singingPitchSource.tpqn,
-          singingPitchSource.engineFrameRate,
-        );
-        const queryForPitchGeneration =
-          singingPitchSource.queryForPitchGeneration;
-
-        shiftKeyOfNotes(
-          notesForRequestToEngine,
-          -singingPitchSource.keyRangeAdjustment,
-        );
-
-        const singingPitch = await actions.FETCH_SING_FRAME_F0({
-          notes: notesForRequestToEngine,
-          query: queryForPitchGeneration,
-          engineId: singingPitchSource.engineId,
-          styleId: singingTeacherStyleId,
-        });
-
-        shiftPitch(singingPitch, singingPitchSource.keyRangeAdjustment);
-
-        return singingPitch;
       };
 
       const singingPitchGenerationStage: PhraseRenderStage = {
@@ -1674,7 +1632,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           if (singingPitch != undefined) {
             logger.info(`Loaded singing pitch from cache.`);
           } else {
-            singingPitch = await generateSingingPitch(singingPitchSource);
+            singingPitch = await generateSingingPitch(
+              singingPitchSource,
+              config,
+              voicevoxEngineApi,
+            );
             logger.info(`Generated singing pitch.`);
             singingPitchCache.set(singingPitchKey, singingPitch);
           }
@@ -1690,46 +1652,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             singingPitchKey,
           });
         },
-      };
-
-      const generateSingingVolume = async (
-        singingVolumeSource: SingingVolumeSource,
-      ) => {
-        const notesForRequestToEngine = createNotesForRequestToEngine(
-          singingVolumeSource.firstRestDuration,
-          lastRestDurationSeconds,
-          singingVolumeSource.notes,
-          singingVolumeSource.tempos,
-          singingVolumeSource.tpqn,
-          singingVolumeSource.engineFrameRate,
-        );
-        const queryForVolumeGeneration =
-          singingVolumeSource.queryForVolumeGeneration;
-
-        shiftKeyOfNotes(
-          notesForRequestToEngine,
-          -singingVolumeSource.keyRangeAdjustment,
-        );
-        shiftPitch(
-          queryForVolumeGeneration.f0,
-          -singingVolumeSource.keyRangeAdjustment,
-        );
-
-        const singingVolume = await actions.FETCH_SING_FRAME_VOLUME({
-          notes: notesForRequestToEngine,
-          query: queryForVolumeGeneration,
-          engineId: singingVolumeSource.engineId,
-          styleId: singingTeacherStyleId,
-        });
-
-        shiftVolume(singingVolume, singingVolumeSource.volumeRangeAdjustment);
-        muteLastPauSection(
-          singingVolume,
-          queryForVolumeGeneration.phonemes,
-          singingVolumeSource.engineFrameRate,
-          fadeOutDurationSeconds,
-        );
-        return singingVolume;
       };
 
       const singingVolumeGenerationStage: PhraseRenderStage = {
@@ -1799,7 +1721,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           if (singingVolume != undefined) {
             logger.info(`Loaded singing volume from cache.`);
           } else {
-            singingVolume = await generateSingingVolume(singingVolumeSource);
+            singingVolume = await generateSingingVolume(
+              singingVolumeSource,
+              config,
+              voicevoxEngineApi,
+            );
             logger.info(`Generated singing volume.`);
             singingVolumeCache.set(singingVolumeKey, singingVolume);
           }
@@ -1820,16 +1746,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             singingVolumeKey,
           });
         },
-      };
-
-      const synthesizeSingingVoice = async (
-        singingVoiceSource: SingingVoiceSource,
-      ) => {
-        return await actions.FRAME_SYNTHESIS({
-          query: singingVoiceSource.queryForSingingVoiceSynthesis,
-          engineId: singingVoiceSource.singer.engineId,
-          styleId: singingVoiceSource.singer.styleId,
-        });
       };
 
       const singingVoiceSynthesisStage: PhraseRenderStage = {
@@ -1907,7 +1823,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           if (singingVoice != undefined) {
             logger.info(`Loaded singing voice from cache.`);
           } else {
-            singingVoice = await synthesizeSingingVoice(singingVoiceSource);
+            singingVoice = await synthesizeSingingVoice(
+              singingVoiceSource,
+              voicevoxEngineApi,
+            );
             logger.info(`Generated singing voice.`);
             singingVoiceCache.set(singingVoiceKey, singingVoice);
           }
