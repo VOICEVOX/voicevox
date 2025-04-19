@@ -7,15 +7,7 @@
 import { errorToMessage } from "@/helpers/errorHelper";
 
 /** 例外メッセージ用のオブジェクト */
-type IpcResult<T> =
-  | {
-      ok: true;
-      value: T;
-    }
-  | {
-      ok: false;
-      message: string;
-    };
+type IpcResult<T> = { ok: true; value: T } | { ok: false; message: string };
 
 /** 例外メッセージ用のオブジェクトにラップする */
 export async function wrapToIpcResult<T>(
