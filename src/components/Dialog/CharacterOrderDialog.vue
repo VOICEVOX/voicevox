@@ -1,8 +1,9 @@
 <template>
   <DefaultStyleSelectDialog
     v-if="styleSelectDialogState.isOpen"
-    v-model="styleSelectDialogState.isOpen"
+    :modelValue="styleSelectDialogState.isOpen"
     :characterInfo="styleSelectDialogState.characterInfo"
+    @update:modelValue="onCloseStyleSelectDialog"
   />
 
   <QDialog
@@ -152,6 +153,10 @@ const selectCharacter = (speakerUuid: SpeakerId) => {
   if (characterInfo == undefined)
     throw new Error(`キャラクターが見つかりません: ${speakerUuid}`);
   styleSelectDialogState.value = { isOpen: true, characterInfo };
+};
+
+const onCloseStyleSelectDialog = () => {
+  styleSelectDialogState.value = { isOpen: false };
 };
 
 // キャラクター表示順序
