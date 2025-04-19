@@ -5,14 +5,17 @@ import {
   Phrase,
   PhraseKey,
   Singer,
+  SingingPitch,
   SingingPitchKey,
   SingingVoiceKey,
+  SingingVolume,
   SingingVolumeKey,
   Tempo,
   Track,
 } from "@/store/type";
-import { calculateHash, linearInterpolation } from "@/sing/utility";
+import { calculateHash, getPrev, linearInterpolation } from "@/sing/utility";
 import {
+  applyPitchEdit,
   calculatePhraseKey,
   decibelToLinear,
   getNoteDuration,
@@ -20,7 +23,9 @@ import {
   tickToSecond,
 } from "@/sing/domain";
 import { FramePhoneme, Note as NoteForRequestToEngine } from "@/openapi";
-import { EngineId, TrackId } from "@/type/preload";
+import { EngineId, NoteId, TrackId } from "@/type/preload";
+import { getOrThrow } from "@/helpers/mapHelper";
+import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 
 /**
  * フレーズレンダリングに必要なデータのスナップショット
@@ -29,6 +34,7 @@ export type SnapshotForPhraseRender = Readonly<{
   tpqn: number;
   tempos: Tempo[];
   tracks: Map<TrackId, Track>;
+  trackOverlappingNoteIds: Map<TrackId, Set<NoteId>>;
   engineFrameRates: Map<EngineId, number>;
   editorFrameRate: number;
 }>;
@@ -308,60 +314,248 @@ const calculatePhraseStartTime = (
   );
 };
 
-export const generatePhrases = async (
-  notes: Note[],
-  tempos: Tempo[],
-  tpqn: number,
-  phraseFirstRestMinDurationSeconds: number,
-  trackId: TrackId,
-) => {
-  const generatedPhrases = new Map<PhraseKey, Phrase>();
+/**
+ * トラックのノーツからフレーズごとのノーツを抽出する。
+ */
+const extractPhraseNotes = (trackNotes: Note[]) => {
+  const phraseNotes: Note[][] = [];
+  let currentPhraseNotes: Note[] = [];
 
-  let phraseNotes: Note[] = [];
-  let prevPhraseLastNote: Note | undefined = undefined;
-
-  for (let i = 0; i < notes.length; i++) {
-    const note = notes[i];
-    const nextNote = notes.at(i + 1);
+  for (let i = 0; i < trackNotes.length; i++) {
+    const note = trackNotes[i];
+    const nextNote = trackNotes.at(i + 1);
     const currentNoteEndPos = note.position + note.duration;
 
-    phraseNotes.push(note);
+    currentPhraseNotes.push(note);
 
     // ノートが途切れていたら別のフレーズにする
     if (nextNote == undefined || currentNoteEndPos !== nextNote.position) {
-      const phraseFirstNote = phraseNotes[0];
-      const phraseFirstRestDuration = calcPhraseFirstRestDuration(
-        prevPhraseLastNote,
-        phraseFirstNote,
-        phraseFirstRestMinDurationSeconds,
-        tempos,
-        tpqn,
-      );
-      const phraseStartTime = calculatePhraseStartTime(
-        phraseFirstRestDuration,
-        phraseNotes,
-        tempos,
-        tpqn,
-      );
-      const phraseKey = await calculatePhraseKey({
-        firstRestDuration: phraseFirstRestDuration,
-        notes: phraseNotes,
-        startTime: phraseStartTime,
-        trackId,
-      });
-      generatedPhrases.set(phraseKey, {
-        firstRestDuration: phraseFirstRestDuration,
-        notes: phraseNotes,
-        startTime: phraseStartTime,
-        state: "WAITING_TO_BE_RENDERED",
-        trackId,
-      });
-
-      if (nextNote != undefined) {
-        prevPhraseLastNote = phraseNotes.at(-1);
-        phraseNotes = [];
-      }
+      phraseNotes.push([...currentPhraseNotes]);
+      currentPhraseNotes = [];
     }
   }
-  return generatedPhrases;
+
+  return phraseNotes;
+};
+
+/**
+ * フレーズごとのノーツからフレーズを生成する。
+ */
+const createPhrasesFromNotes = async (
+  phraseNotesList: Note[][],
+  trackId: TrackId,
+  snapshot: SnapshotForPhraseRender,
+  firstRestMinDurationSeconds: number,
+) => {
+  const phrases = new Map<PhraseKey, Phrase>();
+
+  for (let i = 0; i < phraseNotesList.length; i++) {
+    const phraseNotes = phraseNotesList[i];
+    const phraseFirstNote = phraseNotes[0];
+    const prevPhraseNotes = getPrev(phraseNotesList, i);
+    const prevPhraseLastNote = prevPhraseNotes?.at(-1);
+
+    const phraseFirstRestDuration = calcPhraseFirstRestDuration(
+      prevPhraseLastNote,
+      phraseFirstNote,
+      firstRestMinDurationSeconds,
+      snapshot.tempos,
+      snapshot.tpqn,
+    );
+    const phraseStartTime = calculatePhraseStartTime(
+      phraseFirstRestDuration,
+      phraseNotes,
+      snapshot.tempos,
+      snapshot.tpqn,
+    );
+    const phraseKey = await calculatePhraseKey({
+      firstRestDuration: phraseFirstRestDuration,
+      notes: phraseNotes,
+      startTime: phraseStartTime,
+      trackId,
+    });
+    phrases.set(phraseKey, {
+      firstRestDuration: phraseFirstRestDuration,
+      notes: phraseNotes,
+      startTime: phraseStartTime,
+      state: "WAITING_TO_BE_RENDERED",
+      trackId,
+    });
+  }
+
+  return phrases;
+};
+
+/**
+ * 各トラックのノーツからフレーズを生成する。
+ * 重なっているノートはフレーズには含まれない。
+ */
+export const generatePhrases = async (
+  snapshot: SnapshotForPhraseRender,
+  firstRestMinDurationSeconds: number,
+) => {
+  const phrases = new Map<PhraseKey, Phrase>();
+
+  for (const [trackId, track] of snapshot.tracks) {
+    // 重なっているノートを除く
+    const overlappingNoteIds = getOrThrow(
+      snapshot.trackOverlappingNoteIds,
+      trackId,
+    );
+    const trackNotes = track.notes.filter(
+      (value) => !overlappingNoteIds.has(value.id),
+    );
+
+    // トラックのノーツからフレーズごとのノーツを抽出
+    const phraseNotesList = extractPhraseNotes(trackNotes);
+
+    // フレーズごとのノーツからフレーズを生成
+    const trackPhrases = await createPhrasesFromNotes(
+      phraseNotesList,
+      trackId,
+      snapshot,
+      firstRestMinDurationSeconds,
+    );
+
+    // 結果をマージ
+    for (const [key, phrase] of trackPhrases) {
+      phrases.set(key, phrase);
+    }
+  }
+
+  return phrases;
+};
+
+export const generateQuerySource = (
+  phrase: Phrase,
+  snapshot: SnapshotForPhraseRender,
+): QuerySource => {
+  const track = getOrThrow(snapshot.tracks, phrase.trackId);
+  if (track.singer == undefined) {
+    throw new Error("track.singer is undefined.");
+  }
+  const engineFrameRate = getOrThrow(
+    snapshot.engineFrameRates,
+    track.singer.engineId,
+  );
+  return {
+    engineId: track.singer.engineId,
+    engineFrameRate,
+    tpqn: snapshot.tpqn,
+    tempos: snapshot.tempos,
+    firstRestDuration: phrase.firstRestDuration,
+    notes: phrase.notes,
+    keyRangeAdjustment: track.keyRangeAdjustment,
+  };
+};
+
+export const generateSingingPitchSource = (
+  query: EditorFrameAudioQuery,
+  phrase: Phrase,
+  snapshot: SnapshotForPhraseRender,
+): SingingPitchSource => {
+  const track = getOrThrow(snapshot.tracks, phrase.trackId);
+  if (track.singer == undefined) {
+    throw new Error("track.singer is undefined.");
+  }
+  if (phrase.queryKey == undefined) {
+    throw new Error("phrase.queryKey is undefined.");
+  }
+
+  const clonedQuery = cloneWithUnwrapProxy(query);
+
+  // TODO: 音素タイミングの編集データの適用を行うようにする
+  return {
+    engineId: track.singer.engineId,
+    engineFrameRate: query.frameRate,
+    tpqn: snapshot.tpqn,
+    tempos: snapshot.tempos,
+    firstRestDuration: phrase.firstRestDuration,
+    notes: phrase.notes,
+    keyRangeAdjustment: track.keyRangeAdjustment,
+    queryForPitchGeneration: clonedQuery,
+  };
+};
+
+export const generateSingingVolumeSource = (
+  query: EditorFrameAudioQuery,
+  singingPitch: SingingPitch,
+  phrase: Phrase,
+  snapshot: SnapshotForPhraseRender,
+): SingingVolumeSource => {
+  const track = getOrThrow(snapshot.tracks, phrase.trackId);
+  if (track.singer == undefined) {
+    throw new Error("track.singer is undefined.");
+  }
+  if (phrase.queryKey == undefined) {
+    throw new Error("phrase.queryKey is undefined.");
+  }
+  if (phrase.singingPitchKey == undefined) {
+    throw new Error("phrase.singingPitchKey is undefined.");
+  }
+
+  const clonedQuery = cloneWithUnwrapProxy(query);
+  const clonedSingingPitch = cloneWithUnwrapProxy(singingPitch);
+
+  clonedQuery.f0 = clonedSingingPitch;
+
+  applyPitchEdit(
+    clonedQuery,
+    phrase.startTime,
+    track.pitchEditData,
+    snapshot.editorFrameRate,
+  );
+
+  return {
+    engineId: track.singer.engineId,
+    engineFrameRate: query.frameRate,
+    tpqn: snapshot.tpqn,
+    tempos: snapshot.tempos,
+    firstRestDuration: phrase.firstRestDuration,
+    notes: phrase.notes,
+    keyRangeAdjustment: track.keyRangeAdjustment,
+    volumeRangeAdjustment: track.volumeRangeAdjustment,
+    queryForVolumeGeneration: clonedQuery,
+  };
+};
+
+export const generateSingingVoiceSource = (
+  query: EditorFrameAudioQuery,
+  singingPitch: SingingPitch,
+  singingVolume: SingingVolume,
+  phrase: Phrase,
+  snapshot: SnapshotForPhraseRender,
+): SingingVoiceSource => {
+  const track = getOrThrow(snapshot.tracks, phrase.trackId);
+  if (track.singer == undefined) {
+    throw new Error("track.singer is undefined.");
+  }
+  if (phrase.queryKey == undefined) {
+    throw new Error("phrase.queryKey is undefined.");
+  }
+  if (phrase.singingPitchKey == undefined) {
+    throw new Error("phrase.singingPitchKey is undefined.");
+  }
+  if (phrase.singingVolumeKey == undefined) {
+    throw new Error("phrase.singingVolumeKey is undefined.");
+  }
+
+  const clonedQuery = cloneWithUnwrapProxy(query);
+  const clonedSingingPitch = cloneWithUnwrapProxy(singingPitch);
+  const clonedSingingVolume = cloneWithUnwrapProxy(singingVolume);
+
+  clonedQuery.f0 = clonedSingingPitch;
+  clonedQuery.volume = clonedSingingVolume;
+
+  applyPitchEdit(
+    clonedQuery,
+    phrase.startTime,
+    track.pitchEditData,
+    snapshot.editorFrameRate,
+  );
+
+  return {
+    singer: track.singer,
+    queryForSingingVoiceSynthesis: clonedQuery,
+  };
 };
