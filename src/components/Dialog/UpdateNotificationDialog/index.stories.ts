@@ -6,7 +6,7 @@ import Presentation from "./Presentation.vue";
 const meta: Meta<typeof Presentation> = {
   component: Presentation,
   args: {
-    modelValue: false,
+    dialogOpened: false,
     latestVersion: "1.0.0",
     newUpdateInfos: [
       {
@@ -20,7 +20,7 @@ const meta: Meta<typeof Presentation> = {
         contributors: ["これは表示されないはず"],
       },
     ],
-    "onUpdate:modelValue": fn(),
+    "onUpdate:dialogOpened": fn(),
     onSkipThisVersionClick: fn(),
   },
   tags: ["!autodocs"], // ダイアログ系はautodocsのプレビューが正しく表示されないので無効化
@@ -32,7 +32,7 @@ type Story = StoryObj<typeof meta>;
 export const Opened: Story = {
   name: "開いている",
   args: {
-    modelValue: true,
+    dialogOpened: true,
   },
 };
 
@@ -46,7 +46,7 @@ export const Close: Story = {
     await userEvent.click(button);
 
     // ダイアログを閉じるイベントが呼ばれる
-    await expect(args["onUpdate:modelValue"]).toBeCalledWith(false);
+    await expect(args["onUpdate:dialogOpened"]).toBeCalledWith(false);
   },
 };
 
@@ -66,7 +66,7 @@ export const SkipThisVersion: Story = {
     // スキップイベントが呼ばれる
     await expect(args["onSkipThisVersionClick"]).toBeCalledWith("1.0.0");
     // ダイアログを閉じるイベントが呼ばれる
-    await expect(args["onUpdate:modelValue"]).toBeCalledWith(false);
+    await expect(args["onUpdate:dialogOpened"]).toBeCalledWith(false);
   },
 };
 
@@ -89,7 +89,7 @@ export const OpenOfficialSite: Story = {
       "_blank",
     );
     // ダイアログを閉じるイベントが呼ばれる
-    await expect(args["onUpdate:modelValue"]).toBeCalledWith(false);
+    await expect(args["onUpdate:dialogOpened"]).toBeCalledWith(false);
   },
 };
 

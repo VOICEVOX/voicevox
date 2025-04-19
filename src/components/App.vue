@@ -3,9 +3,7 @@
     <TooltipProvider disableHoverableContent :delayDuration="500">
       <MenuBar
         v-if="openedEditor != undefined"
-        :fileSubMenuData="subMenuData.fileSubMenuData.value"
-        :editSubMenuData="subMenuData.editSubMenuData.value"
-        :viewSubMenuData="subMenuData.viewSubMenuData.value"
+        :subMenuData
         :editor="openedEditor"
       />
       <KeepAlive>
@@ -26,6 +24,7 @@
 import { watch, onMounted, ref, computed, toRaw, watchEffect } from "vue";
 import { useGtm } from "@gtm-support/vue-gtm";
 import { TooltipProvider } from "radix-vue";
+import { useCommonMenuBarData } from "./Menu/MenuBar/useCommonMenuBarData";
 import TalkEditor from "@/components/Talk/TalkEditor.vue";
 import SingEditor from "@/components/Sing/SingEditor.vue";
 import { EngineId } from "@/type/preload";
@@ -37,22 +36,29 @@ import MenuBar from "@/components/Menu/MenuBar/MenuBar.vue";
 import { useMenuBarData as useTalkMenuBarData } from "@/components/Talk/menuBarData";
 import { useMenuBarData as useSingMenuBarData } from "@/components/Sing/menuBarData";
 import { setFontToCss, setThemeToCss } from "@/domain/dom";
-import { ExhaustiveError } from "@/type/utility";
+import { concatMenuBarData } from "@/components/Menu/MenuBar/menuBarData";
+import { isElectron } from "@/helpers/platform";
+import { useElectronMenuBarData } from "@/backend/electron/renderer/menuBarData";
+import { removeNullableAndBoolean } from "@/helpers/arrayHelper";
 
 const store = useStore();
 
-const talkMenuBarData = useTalkMenuBarData();
-const singMenuBarData = useSingMenuBarData();
+// TODO: useMenuBarData系の関数をcomposableじゃなくする
+const commonMenuBarData = useCommonMenuBarData(store);
+const talkMenuBarData = useTalkMenuBarData(store);
+const singMenuBarData = useSingMenuBarData(store);
+const electronMenuBarData = useElectronMenuBarData(store);
 
-const subMenuData = computed(() => {
-  if (openedEditor.value === "talk" || openedEditor.value == undefined) {
-    return talkMenuBarData;
-  } else if (openedEditor.value === "song") {
-    return singMenuBarData;
-  }
-
-  throw new ExhaustiveError(openedEditor.value);
-});
+const subMenuData = computed(() =>
+  concatMenuBarData(
+    removeNullableAndBoolean([
+      commonMenuBarData,
+      store.state.openedEditor === "talk" && talkMenuBarData,
+      store.state.openedEditor === "song" && singMenuBarData,
+      isElectron && electronMenuBarData,
+    ]),
+  ),
+);
 
 const openedEditor = computed(() => store.state.openedEditor);
 

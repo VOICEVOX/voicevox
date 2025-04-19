@@ -49,14 +49,14 @@ export async function fetchAudioFromAudioItem(
   // FIXME: モーフィングが設定で無効化されていてもモーフィングが行われるので気づけるUIを作成する
   if (audioItem.morphingInfo != undefined) {
     if (!isMorphable(state, { audioItem })) throw new NotMorphableError();
-    blob = await instance.invoke("synthesisMorphingSynthesisMorphingPost")({
+    blob = await instance.invoke("synthesisMorphing")({
       audioQuery: engineAudioQuery,
       baseSpeaker: speaker,
       targetSpeaker: audioItem.morphingInfo.targetStyleId,
       morphRate: audioItem.morphingInfo.rate,
     });
   } else {
-    blob = await instance.invoke("synthesisSynthesisPost")({
+    blob = await instance.invoke("synthesis")({
       audioQuery: engineAudioQuery,
       speaker,
       enableInterrogativeUpspeak:

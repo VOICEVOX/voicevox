@@ -81,7 +81,7 @@ class WindowManager {
       show: false,
       backgroundColor,
       webPreferences: {
-        preload: path.join(__dirname, "preload.js"),
+        preload: path.join(import.meta.dirname, "preload.mjs"),
       },
       icon: path.join(this.staticDir, "icon.png"),
     });
@@ -99,9 +99,11 @@ class WindowManager {
       ipcMainSendProxy.DETECT_LEAVE_FULLSCREEN(win);
     });
     win.on("always-on-top-changed", () => {
-      win.isAlwaysOnTop()
-        ? ipcMainSendProxy.DETECT_PINNED(win)
-        : ipcMainSendProxy.DETECT_UNPINNED(win);
+      if (win.isAlwaysOnTop()) {
+        ipcMainSendProxy.DETECT_PINNED(win);
+      } else {
+        ipcMainSendProxy.DETECT_UNPINNED(win);
+      }
     });
     win.on("close", (event) => {
       const appState = this.appStateGetter();

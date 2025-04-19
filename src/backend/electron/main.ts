@@ -118,12 +118,12 @@ function getAppPaths() {
   let __static: string;
 
   if (isDevelopment) {
-    // __dirnameはdist_electronを指しているので、一つ上のディレクトリに移動する
-    appDirPath = path.resolve(__dirname, "..");
+    // import.meta.dirnameはdist_electronを指しているので、一つ上のディレクトリに移動する
+    appDirPath = path.resolve(import.meta.dirname, "..");
     __static = path.join(appDirPath, "public");
   } else {
     appDirPath = path.dirname(app.getPath("exe"));
-    __static = __dirname;
+    __static = import.meta.dirname;
   }
 
   return { appDirPath, __static };
@@ -146,8 +146,8 @@ void app.whenReady().then(() => {
     // 読み取り先のファイルがインストールディレクトリ内であることを確認する
     // ref: https://www.electronjs.org/ja/docs/latest/api/protocol#protocolhandlescheme-handler
     const { pathname } = new URL(request.url);
-    const pathToServe = path.resolve(path.join(__dirname, pathname));
-    const relativePath = path.relative(__dirname, pathToServe);
+    const pathToServe = path.resolve(path.join(import.meta.dirname, pathname));
+    const relativePath = path.relative(import.meta.dirname, pathToServe);
     const isUnsafe =
       path.isAbsolute(relativePath) ||
       relativePath.startsWith("..") ||
@@ -305,11 +305,6 @@ app.on("web-contents-created", (_e, contents) => {
       event.preventDefault();
     }
   });
-});
-
-app.on("window-all-closed", () => {
-  log.info("All windows closed. Quitting app");
-  app.quit();
 });
 
 // Called before window closing

@@ -1,5 +1,5 @@
 <template>
-  <QDialog ref="dialogRef" v-model="modelValue">
+  <QDialog ref="dialogRef" v-model="dialogOpened">
     <QCard class="q-py-sm q-px-md dialog-card">
       <QCardSection>
         <div class="text-h5">音声書き出し</div>
@@ -99,7 +99,7 @@ import { SongExportSetting, TrackParameters } from "@/store/type";
 export type ExportTarget = "master" | "stem";
 const { dialogRef, onDialogOK, onDialogCancel } = useDialogPluginComponent();
 
-const modelValue = defineModel<boolean>();
+const dialogOpened = defineModel<boolean>("dialogOpened");
 const emit = defineEmits<{
   /** 音声をエクスポートするときに呼ばれる */
   exportAudio: [exportTarget: ExportTarget, setting: SongExportSetting];
@@ -177,7 +177,7 @@ const handleExportTrack = () => {
 // キャンセルボタンクリック時
 const handleCancel = () => {
   onDialogCancel();
-  modelValue.value = false;
+  dialogOpened.value = false;
 };
 </script>
 

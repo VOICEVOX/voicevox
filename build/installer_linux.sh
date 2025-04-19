@@ -316,8 +316,12 @@ echo "[+] Extracting archive..."
 FIRST_ARCHIVE=${ARCHIVE_NAME_LIST[0]}
 "${COMMAND_7Z}" x "${FIRST_ARCHIVE}" -y
 
-# Get AppImage filename from 7z archive
-APPIMAGE=$("${COMMAND_7Z}" l -slt -ba "${FIRST_ARCHIVE}" | grep 'Path = ' | head -n1 | sed 's/Path = \(.*\)/\1/')
+# Rename
+APPIMAGE="VOICEVOX.AppImage"
+EXTRACTED_APPIMAGE_NAME=$("${COMMAND_7Z}" l -slt -ba "${FIRST_ARCHIVE}" | grep 'Path = ' | head -n1 | sed 's/Path = \(.*\)/\1/')
+if [ "$EXTRACTED_APPIMAGE_NAME" != "$APPIMAGE" ]; then
+    mv "$EXTRACTED_APPIMAGE_NAME" "$APPIMAGE"
+fi
 chmod +x "${APPIMAGE}"
 
 # Dump version

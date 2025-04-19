@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`createOpenAPIEngineMock > audioQueryAudioQueryPost 1`] = `
+exports[`createOpenAPIEngineMock > audioQuery 1`] = `
 {
   "accentPhrases": [
     {
@@ -53,6 +53,8 @@ exports[`createOpenAPIEngineMock > audioQueryAudioQueryPost 1`] = `
   "intonationScale": 1,
   "outputSamplingRate": 24000,
   "outputStereo": false,
+  "pauseLength": null,
+  "pauseLengthScale": 1,
   "pitchScale": 0,
   "postPhonemeLength": 0.1,
   "prePhonemeLength": 0.1,
@@ -61,9 +63,9 @@ exports[`createOpenAPIEngineMock > audioQueryAudioQueryPost 1`] = `
 }
 `;
 
-exports[`createOpenAPIEngineMock > frameSynthesisFrameSynthesisPost 1`] = `"394cfbc01397e0b6fcc3433d9537aa850e6131f7d89048da6889e7375fe03a24"`;
+exports[`createOpenAPIEngineMock > frameSynthesis 1`] = `"394cfbc01397e0b6fcc3433d9537aa850e6131f7d89048da6889e7375fe03a24"`;
 
-exports[`createOpenAPIEngineMock > singFrameAudioQuerySingFrameAudioQueryPost 1`] = `
+exports[`createOpenAPIEngineMock > singFrameAudioQuery 1`] = `
 {
   "f0": [
     0,
@@ -171,9 +173,9 @@ exports[`createOpenAPIEngineMock > singFrameAudioQuerySingFrameAudioQueryPost 1`
 }
 `;
 
-exports[`createOpenAPIEngineMock > synthesisSynthesisPost 1`] = `"23f4b910863418a7188648f7c5226a0f02b9d067b964be1690b69b1e9ffde7bc"`;
+exports[`createOpenAPIEngineMock > synthesis 1`] = `"23f4b910863418a7188648f7c5226a0f02b9d067b964be1690b69b1e9ffde7bc"`;
 
-exports[`createOpenAPIEngineMock > versionVersionGet 1`] = `"mock"`;
+exports[`createOpenAPIEngineMock > version 1`] = `"mock"`;
 
 exports[`createOpenAPIEngineMock > 辞書系 1`] = `
 {

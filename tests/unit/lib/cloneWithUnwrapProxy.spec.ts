@@ -1,4 +1,4 @@
-import { test } from "vitest";
+import { expect, test } from "vitest";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 
 const original = { a: 1, b: { c: 2 } };

@@ -1,3 +1,4 @@
+import { vi, it, expect, afterEach } from "vitest";
 import pastConfigs from "./pastConfigs";
 import configBugDefaultPreset1996 from "./pastConfigs/0.19.1-bug_default_preset.json";
 import { BaseConfigManager } from "@/backend/common/ConfigManager";

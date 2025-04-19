@@ -1,4 +1,5 @@
 import fs from "fs";
+import { beforeEach, describe, expect, test } from "vitest";
 import { migrateProjectFileObject } from "@/domain/project";
 import { EngineId, SpeakerId, StyleId } from "@/type/preload";
 import { resetMockMode } from "@/helpers/random";

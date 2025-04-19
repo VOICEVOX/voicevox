@@ -22,22 +22,22 @@ import { DictMock } from "./dictMock";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import {
   AccentPhrase,
-  AccentPhrasesAccentPhrasesPostRequest,
+  AccentPhrasesRequest,
   AudioQuery,
-  AudioQueryAudioQueryPostRequest,
+  AudioQueryRequest,
   DefaultApiInterface,
   EngineManifest,
   FrameAudioQuery,
-  FrameSynthesisFrameSynthesisPostRequest,
-  MoraDataMoraDataPostRequest,
-  SingerInfoSingerInfoGetRequest,
-  SingFrameAudioQuerySingFrameAudioQueryPostRequest,
-  SingFrameVolumeSingFrameVolumePostRequest,
+  FrameSynthesisRequest,
+  MoraDataRequest,
+  SingerInfoRequest,
+  SingFrameAudioQueryRequest,
+  SingFrameVolumeRequest,
   Speaker,
   SpeakerInfo,
-  SpeakerInfoSpeakerInfoGetRequest,
+  SpeakerInfoRequest,
   SupportedDevicesInfo,
-  SynthesisSynthesisPostRequest,
+  SynthesisRequest,
 } from "@/openapi";
 
 /**
@@ -48,52 +48,46 @@ export function createOpenAPIEngineMock(): DefaultApiInterface {
   const dictMock = new DictMock();
 
   const mockApi: Partial<DefaultApiInterface> = {
-    async versionVersionGet(): Promise<string> {
+    async version(): Promise<string> {
       return "mock";
     },
 
     // メタ情報
-    async engineManifestEngineManifestGet(): Promise<EngineManifest> {
+    async engineManifest(): Promise<EngineManifest> {
       return getEngineManifestMock();
     },
 
-    async supportedDevicesSupportedDevicesGet(): Promise<SupportedDevicesInfo> {
+    async supportedDevices(): Promise<SupportedDevicesInfo> {
       return { cpu: true, cuda: false, dml: false };
     },
 
     // キャラクター情報
-    async isInitializedSpeakerIsInitializedSpeakerGet(): Promise<boolean> {
+    async isInitializedSpeaker(): Promise<boolean> {
       return true;
     },
 
-    async initializeSpeakerInitializeSpeakerPost(): Promise<void> {
+    async initializeSpeaker(): Promise<void> {
       return;
     },
 
-    async speakersSpeakersGet(): Promise<Speaker[]> {
+    async speakers(): Promise<Speaker[]> {
       return getSpeakersMock();
     },
 
-    async speakerInfoSpeakerInfoGet(
-      payload: SpeakerInfoSpeakerInfoGetRequest,
-    ): Promise<SpeakerInfo> {
+    async speakerInfo(payload: SpeakerInfoRequest): Promise<SpeakerInfo> {
       return getSpeakerInfoMock(payload.speakerUuid);
     },
 
-    async singersSingersGet(): Promise<Speaker[]> {
+    async singers(): Promise<Speaker[]> {
       return getSingersMock();
     },
 
-    async singerInfoSingerInfoGet(
-      paload: SingerInfoSingerInfoGetRequest,
-    ): Promise<SpeakerInfo> {
-      return getSpeakerInfoMock(paload.speakerUuid);
+    async singerInfo(payload: SingerInfoRequest): Promise<SpeakerInfo> {
+      return getSpeakerInfoMock(payload.speakerUuid);
     },
 
     // トーク系
-    async audioQueryAudioQueryPost(
-      payload: AudioQueryAudioQueryPostRequest,
-    ): Promise<AudioQuery> {
+    async audioQuery(payload: AudioQueryRequest): Promise<AudioQuery> {
       const accentPhrases = await textToActtentPhrasesMock(
         dictMock.applyDict(payload.text),
         payload.speaker,
@@ -107,13 +101,15 @@ export function createOpenAPIEngineMock(): DefaultApiInterface {
         volumeScale: 1.0,
         prePhonemeLength: 0.1,
         postPhonemeLength: 0.1,
+        pauseLength: null,
+        pauseLengthScale: 1.0,
         outputSamplingRate: getEngineManifestMock().defaultSamplingRate,
         outputStereo: false,
       };
     },
 
-    async accentPhrasesAccentPhrasesPost(
-      payload: AccentPhrasesAccentPhrasesPostRequest,
+    async accentPhrases(
+      payload: AccentPhrasesRequest,
     ): Promise<AccentPhrase[]> {
       let accentPhrases: AccentPhrase[];
       if (payload.isKana) {
@@ -130,18 +126,14 @@ export function createOpenAPIEngineMock(): DefaultApiInterface {
       return accentPhrases;
     },
 
-    async moraDataMoraDataPost(
-      payload: MoraDataMoraDataPostRequest,
-    ): Promise<AccentPhrase[]> {
+    async moraData(payload: MoraDataRequest): Promise<AccentPhrase[]> {
       const accentPhrase = cloneWithUnwrapProxy(payload.accentPhrase);
       replaceLengthMock(accentPhrase, payload.speaker);
       replacePitchMock(accentPhrase, payload.speaker);
       return accentPhrase;
     },
 
-    async synthesisSynthesisPost(
-      payload: SynthesisSynthesisPostRequest,
-    ): Promise<Blob> {
+    async synthesis(payload: SynthesisRequest): Promise<Blob> {
       const frameAudioQuery = audioQueryToFrameAudioQueryMock(
         payload.audioQuery,
         {
@@ -157,8 +149,8 @@ export function createOpenAPIEngineMock(): DefaultApiInterface {
     },
 
     // ソング系
-    async singFrameAudioQuerySingFrameAudioQueryPost(
-      payload: SingFrameAudioQuerySingFrameAudioQueryPostRequest,
+    async singFrameAudioQuery(
+      payload: SingFrameAudioQueryRequest,
     ): Promise<FrameAudioQuery> {
       const { score, speaker: styleId } = cloneWithUnwrapProxy(payload);
 
@@ -185,8 +177,8 @@ export function createOpenAPIEngineMock(): DefaultApiInterface {
       };
     },
 
-    async singFrameVolumeSingFrameVolumePost(
-      payload: SingFrameVolumeSingFrameVolumePostRequest,
+    async singFrameVolume(
+      payload: SingFrameVolumeRequest,
     ): Promise<Array<number>> {
       const {
         speaker: styleId,
@@ -202,9 +194,7 @@ export function createOpenAPIEngineMock(): DefaultApiInterface {
       return volume;
     },
 
-    async frameSynthesisFrameSynthesisPost(
-      payload: FrameSynthesisFrameSynthesisPostRequest,
-    ): Promise<Blob> {
+    async frameSynthesis(payload: FrameSynthesisRequest): Promise<Blob> {
       const { speaker: styleId, frameAudioQuery } =
         cloneWithUnwrapProxy(payload);
       const buffer = synthesisFrameAudioQueryMock(frameAudioQuery, styleId);

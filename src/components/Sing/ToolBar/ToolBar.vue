@@ -14,29 +14,27 @@
         <QInput
           type="number"
           dense
-          :modelValue="keyRangeAdjustmentInputBuffer"
+          :modelValue="keyRangeAdjustment"
           label="音域"
           hideBottomSpace
           unelevated
           class="key-range-adjustment"
-          @update:modelValue="setKeyRangeAdjustmentInputBuffer"
           @change="setKeyRangeAdjustment"
         />
         <QInput
           type="number"
           dense
-          :modelValue="volumeRangeAdjustmentInputBuffer"
+          :modelValue="volumeRangeAdjustment"
           label="声量"
           hideBottomSpace
           unelevated
           class="volume-range-adjustment"
-          @update:modelValue="setVolumeRangeAdjustmentInputBuffer"
           @change="setVolumeRangeAdjustment"
         />
       </div>
       <QInput
         type="number"
-        :modelValue="bpmInputBuffer"
+        :modelValue="currentBpm"
         dense
         hideBottomSpace
         outlined
@@ -44,8 +42,7 @@
         label="テンポ"
         class="sing-tempo"
         padding="0"
-        @update:modelValue="setBpmInputBuffer"
-        @change="setTempo"
+        @change="setBpm"
       />
       <QField
         hideBottomSpace
@@ -159,7 +156,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch, ref } from "vue";
+import { computed } from "vue";
 import PlayheadPositionDisplay from "../PlayheadPositionDisplay.vue";
 import EditTargetSwicher from "./EditTargetSwicher.vue";
 import { useStore } from "@/store";
@@ -267,34 +264,6 @@ const beatTypeOptions = BEAT_TYPES.map((beatType) => ({
   value: beatType,
 }));
 
-const bpmInputBuffer = ref(120);
-const keyRangeAdjustmentInputBuffer = ref(0);
-const volumeRangeAdjustmentInputBuffer = ref(0);
-
-watch(
-  keyRangeAdjustment,
-  () => {
-    keyRangeAdjustmentInputBuffer.value = keyRangeAdjustment.value;
-  },
-  { immediate: true },
-);
-
-watch(
-  volumeRangeAdjustment,
-  () => {
-    volumeRangeAdjustmentInputBuffer.value = volumeRangeAdjustment.value;
-  },
-  { immediate: true },
-);
-
-const setBpmInputBuffer = (bpmStr: string | number | null) => {
-  const bpmValue = Number(bpmStr);
-  if (!isValidBpm(bpmValue)) {
-    return;
-  }
-  bpmInputBuffer.value = bpmValue;
-};
-
 const currentTimeSignature = computed(() => {
   const maybeTimeSignature = timeSignatures.value.findLast(
     (_timeSignature, i) => tsPositions.value[i] <= playheadTicks.value,
@@ -332,28 +301,11 @@ const setBeatType = (beatType: { label: string; value: number }) => {
   });
 };
 
-const setKeyRangeAdjustmentInputBuffer = (
-  KeyRangeAdjustmentStr: string | number | null,
-) => {
-  const KeyRangeAdjustmentValue = Number(KeyRangeAdjustmentStr);
-  if (!isValidKeyRangeAdjustment(KeyRangeAdjustmentValue)) {
+const setBpm = (bpm: string | number | null) => {
+  const bpmValue = Number(bpm);
+  if (!isValidBpm(bpmValue)) {
     return;
   }
-  keyRangeAdjustmentInputBuffer.value = KeyRangeAdjustmentValue;
-};
-
-const setVolumeRangeAdjustmentInputBuffer = (
-  volumeRangeAdjustmentStr: string | number | null,
-) => {
-  const volumeRangeAdjustmentValue = Number(volumeRangeAdjustmentStr);
-  if (!isValidVolumeRangeAdjustment(volumeRangeAdjustmentValue)) {
-    return;
-  }
-  volumeRangeAdjustmentInputBuffer.value = volumeRangeAdjustmentValue;
-};
-
-const setTempo = () => {
-  const bpm = bpmInputBuffer.value;
   const position = tempos.value.findLast(
     (tempo) => tempo.position <= playheadTicks.value,
   )?.position;
@@ -363,40 +315,46 @@ const setTempo = () => {
   void store.actions.COMMAND_SET_TEMPO({
     tempo: {
       position,
-      bpm,
+      bpm: bpmValue,
     },
   });
 };
 
-const setKeyRangeAdjustment = () => {
-  const keyRangeAdjustment = keyRangeAdjustmentInputBuffer.value;
+const setKeyRangeAdjustment = (
+  KeyRangeAdjustmentStr: string | number | null,
+) => {
+  const KeyRangeAdjustmentValue = Number(KeyRangeAdjustmentStr);
+  if (!isValidKeyRangeAdjustment(KeyRangeAdjustmentValue)) {
+    return;
+  }
   void store.actions.COMMAND_SET_KEY_RANGE_ADJUSTMENT({
-    keyRangeAdjustment,
+    keyRangeAdjustment: KeyRangeAdjustmentValue,
     trackId: selectedTrackId.value,
   });
 };
 
-const setVolumeRangeAdjustment = () => {
-  const volumeRangeAdjustment = volumeRangeAdjustmentInputBuffer.value;
+const setVolumeRangeAdjustment = (
+  volumeRangeAdjustmentStr: string | number | null,
+) => {
+  const volumeRangeAdjustmentValue = Number(volumeRangeAdjustmentStr);
+  if (!isValidVolumeRangeAdjustment(volumeRangeAdjustmentValue)) {
+    return;
+  }
   void store.actions.COMMAND_SET_VOLUME_RANGE_ADJUSTMENT({
-    volumeRangeAdjustment,
+    volumeRangeAdjustment: volumeRangeAdjustmentValue,
     trackId: selectedTrackId.value,
   });
 };
 
-watch(
-  [tempos, playheadTicks],
-  () => {
-    const currentTempo = tempos.value.findLast(
-      (tempo) => tempo.position <= playheadTicks.value,
-    );
-    if (!currentTempo) {
-      throw new UnreachableError("assert: at least one tempo exists");
-    }
-    bpmInputBuffer.value = currentTempo.bpm;
-  },
-  { immediate: true },
-);
+const currentBpm = computed(() => {
+  const currentTempo = tempos.value.findLast(
+    (tempo) => tempo.position <= playheadTicks.value,
+  );
+  if (!currentTempo) {
+    throw new UnreachableError("assert: at least one tempo exists");
+  }
+  return currentTempo.bpm;
+});
 
 const nowPlaying = computed(() => store.state.nowPlaying);
 
@@ -505,9 +463,9 @@ const snapTypeSelectModel = computed({
 }
 
 :deep(
-    .q-input .q-field__control:hover:before,
-    .q-select .q-field__control:hover:before
-  ) {
+  .q-input .q-field__control:hover:before,
+  .q-select .q-field__control:hover:before
+) {
   border: 1px solid var(--scheme-color-outline);
 }
 
