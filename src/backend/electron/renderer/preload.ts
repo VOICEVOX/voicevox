@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer, webUtils } from "electron";
+import { getOrThrowIpcResult } from "../ipcResultHelper";
 import { type IpcRendererInvoke } from "./ipc";
-import { getOrThrowIpcResult } from "./ipcResultHelper";
 import {
   ConfigType,
   EngineId,
