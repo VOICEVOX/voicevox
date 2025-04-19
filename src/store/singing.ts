@@ -1472,7 +1472,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   RENDER: {
     async action({ state, getters, mutations, actions }) {
       const config: SongTrackRenderingConfig = {
-        singingTeacherStyleId: StyleId(6000),
+        singingTeacherStyleId: StyleId(6000), // TODO: UIで設定できるようにする
         lastRestDurationSeconds: 0.5,
         fadeOutDurationSeconds: 0.15,
         firstRestMinDurationSeconds: 0.12,
