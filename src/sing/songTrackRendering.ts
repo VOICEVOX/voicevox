@@ -92,7 +92,7 @@ export type SingingVoiceSource = Readonly<{
   queryForSingingVoiceSynthesis: EditorFrameAudioQuery;
 }>;
 
-export type VoicevoxEngineApi = Readonly<{
+export type EngineSongApi = Readonly<{
   fetchFrameAudioQuery: (args: {
     engineId: EngineId;
     styleId: StyleId;
@@ -599,7 +599,7 @@ export const generateSingingVoiceSource = (
 export const generateQuery = async (
   querySource: QuerySource,
   config: SongTrackRenderingConfig,
-  voicevoxEngineApi: VoicevoxEngineApi,
+  engineSongApi: EngineSongApi,
 ) => {
   const notesForRequestToEngine = createNotesForRequestToEngine(
     querySource.firstRestDuration,
@@ -612,7 +612,7 @@ export const generateQuery = async (
 
   shiftKeyOfNotes(notesForRequestToEngine, -querySource.keyRangeAdjustment);
 
-  const query = await voicevoxEngineApi.fetchFrameAudioQuery({
+  const query = await engineSongApi.fetchFrameAudioQuery({
     engineId: querySource.engineId,
     styleId: config.singingTeacherStyleId,
     engineFrameRate: querySource.engineFrameRate,
@@ -630,7 +630,7 @@ export const generateQuery = async (
 export const generateSingingPitch = async (
   singingPitchSource: SingingPitchSource,
   config: SongTrackRenderingConfig,
-  voicevoxEngineApi: VoicevoxEngineApi,
+  engineSongApi: EngineSongApi,
 ) => {
   const notesForRequestToEngine = createNotesForRequestToEngine(
     singingPitchSource.firstRestDuration,
@@ -647,7 +647,7 @@ export const generateSingingPitch = async (
     -singingPitchSource.keyRangeAdjustment,
   );
 
-  const singingPitch = await voicevoxEngineApi.fetchSingFrameF0({
+  const singingPitch = await engineSongApi.fetchSingFrameF0({
     notes: notesForRequestToEngine,
     query: queryForPitchGeneration,
     engineId: singingPitchSource.engineId,
@@ -664,7 +664,7 @@ export const generateSingingPitch = async (
 export const generateSingingVolume = async (
   singingVolumeSource: SingingVolumeSource,
   config: SongTrackRenderingConfig,
-  voicevoxEngineApi: VoicevoxEngineApi,
+  engineSongApi: EngineSongApi,
 ) => {
   const notesForRequestToEngine = createNotesForRequestToEngine(
     singingVolumeSource.firstRestDuration,
@@ -685,7 +685,7 @@ export const generateSingingVolume = async (
     -singingVolumeSource.keyRangeAdjustment,
   );
 
-  const singingVolume = await voicevoxEngineApi.fetchSingFrameVolume({
+  const singingVolume = await engineSongApi.fetchSingFrameVolume({
     notes: notesForRequestToEngine,
     query: queryForVolumeGeneration,
     engineId: singingVolumeSource.engineId,
@@ -707,9 +707,9 @@ export const generateSingingVolume = async (
 
 export const synthesizeSingingVoice = async (
   singingVoiceSource: SingingVoiceSource,
-  voicevoxEngineApi: VoicevoxEngineApi,
+  engineSongApi: EngineSongApi,
 ) => {
-  const singingVoice = await voicevoxEngineApi.frameSynthesis({
+  const singingVoice = await engineSongApi.frameSynthesis({
     query: singingVoiceSource.queryForSingingVoiceSynthesis,
     engineId: singingVoiceSource.singer.engineId,
     styleId: singingVoiceSource.singer.styleId,

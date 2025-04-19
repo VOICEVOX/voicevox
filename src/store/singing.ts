@@ -134,7 +134,7 @@ import {
   SnapshotForPhraseRender,
   SongTrackRenderingConfig,
   synthesizeSingingVoice,
-  VoicevoxEngineApi,
+  EngineSongApi,
 } from "@/sing/songTrackRendering";
 
 const logger = createLogger("store/singing");
@@ -1478,7 +1478,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         firstRestMinDurationSeconds: 0.12,
       };
 
-      const voicevoxEngineApi: VoicevoxEngineApi = {
+      const engineSongApi: EngineSongApi = {
         fetchFrameAudioQuery: async (args) => {
           return await actions.FETCH_SING_FRAME_AUDIO_QUERY(args);
         },
@@ -1559,7 +1559,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           if (query != undefined) {
             logger.info(`Loaded query from cache.`);
           } else {
-            query = await generateQuery(querySource, config, voicevoxEngineApi);
+            query = await generateQuery(querySource, config, engineSongApi);
             const phonemes = getPhonemes(query);
             logger.info(`Generated query. phonemes: ${phonemes}`);
             queryCache.set(queryKey, query);
@@ -1635,7 +1635,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             singingPitch = await generateSingingPitch(
               singingPitchSource,
               config,
-              voicevoxEngineApi,
+              engineSongApi,
             );
             logger.info(`Generated singing pitch.`);
             singingPitchCache.set(singingPitchKey, singingPitch);
@@ -1724,7 +1724,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             singingVolume = await generateSingingVolume(
               singingVolumeSource,
               config,
-              voicevoxEngineApi,
+              engineSongApi,
             );
             logger.info(`Generated singing volume.`);
             singingVolumeCache.set(singingVolumeKey, singingVolume);
@@ -1825,7 +1825,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           } else {
             singingVoice = await synthesizeSingingVoice(
               singingVoiceSource,
-              voicevoxEngineApi,
+              engineSongApi,
             );
             logger.info(`Generated singing voice.`);
             singingVoiceCache.set(singingVoiceKey, singingVoice);
@@ -1875,7 +1875,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       };
 
       const render = async () => {
-        const firstRestMinDurationSeconds = 0.12;
         const snapshot = createSnapshot();
 
         const renderStartStageIds = new Map<PhraseKey, PhraseRenderStageId>();
@@ -1883,7 +1882,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         // 各トラックのノーツからフレーズを生成する
         const generatedPhrases = await generatePhrases(
           snapshot,
-          firstRestMinDurationSeconds,
+          config.firstRestMinDurationSeconds,
         );
 
         const mergedPhrases = new Map<PhraseKey, Phrase>();
