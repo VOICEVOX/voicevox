@@ -140,14 +140,10 @@ import {
 } from "@/type/preload";
 import { debounce } from "@/helpers/timer";
 
-const dialogOpened = defineModel<boolean>("dialogOpened", { default: false });
+const dialogOpened = defineModel<boolean>({ default: false });
 
 const props = defineProps<{
   characterInfo: CharacterInfo;
-}>();
-
-const emit = defineEmits<{
-  (e: "update:selectedStyleIndex", value: number): void;
 }>();
 
 const store = useStore();
