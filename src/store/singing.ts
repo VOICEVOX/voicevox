@@ -42,7 +42,7 @@ import {
   StyleId,
   TrackId,
 } from "@/type/preload";
-import { FramePhoneme, Note as NoteForRequestToEngine } from "@/openapi";
+import { Note as NoteForRequestToEngine } from "@/openapi";
 import { ResultError, getValueOrThrow } from "@/type/result";
 import {
   AudioEvent,
@@ -71,7 +71,6 @@ import {
   tickToSecond,
   VALUE_INDICATING_NO_DATA,
   isValidPitchEditData,
-  calculatePhraseKey,
   isValidTempos,
   isValidTimeSignatures,
   isValidTpqn,
@@ -82,12 +81,8 @@ import {
   createDefaultTimeSignature,
   isValidNotes,
   isValidTrack,
-  SEQUENCER_MIN_NUM_MEASURES,
-  getNumMeasures,
   isTracksEmpty,
   shouldPlayTracks,
-  decibelToLinear,
-  applyPitchEdit,
   calcPhraseStartFrames,
   calcPhraseEndFrames,
   toEntirePhonemeTimings,
@@ -97,10 +92,9 @@ import {
 import { getOverlappingNoteIds } from "@/sing/storeHelper";
 import {
   AnimationTimer,
-  calculateHash,
   createArray,
   createPromiseThatResolvesWhen,
-  linearInterpolation,
+  getLast,
   round,
 } from "@/sing/utility";
 import { getWorkaroundKeyRangeAdjustment } from "@/sing/workaroundKeyRangeAdjustment";
@@ -123,19 +117,30 @@ import {
   ufProjectToMultiFile,
   ufProjectToSingleFile,
 } from "@/sing/utaformatixProject/utils";
+import {
+  calculateQueryKey,
+  calculateSingingPitchKey,
+  calculateSingingVoiceKey,
+  calculateSingingVolumeKey,
+  createNotesForRequestToEngine,
+  generatePhrases,
+  generateQuerySource,
+  generateSingingPitchSource,
+  generateSingingVoiceSource,
+  generateSingingVolumeSource,
+  getPhonemes,
+  muteLastPauSection,
+  QuerySource,
+  shiftKeyOfNotes,
+  shiftPitch,
+  shiftVolume,
+  SingingPitchSource,
+  SingingVoiceSource,
+  SingingVolumeSource,
+  SnapshotForPhraseRender,
+} from "@/sing/songTrackRendering";
 
 const logger = createLogger("store/singing");
-
-/**
- * フレーズレンダリングに必要なデータのスナップショット
- */
-type SnapshotForPhraseRender = Readonly<{
-  tpqn: number;
-  tempos: Tempo[];
-  tracks: Map<TrackId, Track>;
-  engineFrameRates: Map<EngineId, number>;
-  editorFrameRate: number;
-}>;
 
 type PhraseRenderStageId =
   | "queryGeneration"
@@ -172,223 +177,10 @@ type PhraseRenderStage = Readonly<{
    * @param context コンテキスト
    */
   execute: (
-    trackId: TrackId,
     phraseKey: PhraseKey,
     snapshot: SnapshotForPhraseRender,
   ) => Promise<void>;
 }>;
-
-/**
- * クエリの生成に必要なデータ
- */
-type QuerySource = Readonly<{
-  engineId: EngineId;
-  engineFrameRate: number;
-  tpqn: number;
-  tempos: Tempo[];
-  firstRestDuration: number;
-  notes: Note[];
-  keyRangeAdjustment: number;
-}>;
-
-/**
- * 歌唱ピッチの生成に必要なデータ
- */
-type SingingPitchSource = Readonly<{
-  engineId: EngineId;
-  engineFrameRate: number;
-  tpqn: number;
-  tempos: Tempo[];
-  firstRestDuration: number;
-  notes: Note[];
-  keyRangeAdjustment: number;
-  queryForPitchGeneration: EditorFrameAudioQuery;
-}>;
-
-/**
- * 歌唱ボリュームの生成に必要なデータ
- */
-type SingingVolumeSource = Readonly<{
-  engineId: EngineId;
-  engineFrameRate: number;
-  tpqn: number;
-  tempos: Tempo[];
-  firstRestDuration: number;
-  notes: Note[];
-  keyRangeAdjustment: number;
-  volumeRangeAdjustment: number;
-  queryForVolumeGeneration: EditorFrameAudioQuery;
-}>;
-
-/**
- * 歌唱音声の合成に必要なデータ
- */
-type SingingVoiceSource = Readonly<{
-  singer: Singer;
-  queryForSingingVoiceSynthesis: EditorFrameAudioQuery;
-}>;
-
-/**
- * リクエスト用のノーツ（と休符）を作成する。
- */
-const createNotesForRequestToEngine = (
-  firstRestDuration: number,
-  lastRestDurationSeconds: number,
-  notes: Note[],
-  tempos: Tempo[],
-  tpqn: number,
-  frameRate: number,
-) => {
-  const notesForRequestToEngine: NoteForRequestToEngine[] = [];
-
-  // 先頭の休符を変換
-  const firstRestStartSeconds = tickToSecond(
-    notes[0].position - firstRestDuration,
-    tempos,
-    tpqn,
-  );
-  const firstRestStartFrame = Math.round(firstRestStartSeconds * frameRate);
-  const firstRestEndSeconds = tickToSecond(notes[0].position, tempos, tpqn);
-  const firstRestEndFrame = Math.round(firstRestEndSeconds * frameRate);
-  notesForRequestToEngine.push({
-    key: undefined,
-    frameLength: firstRestEndFrame - firstRestStartFrame,
-    lyric: "",
-  });
-
-  // ノートを変換
-  for (const note of notes) {
-    const noteOnSeconds = tickToSecond(note.position, tempos, tpqn);
-    const noteOnFrame = Math.round(noteOnSeconds * frameRate);
-    const noteOffSeconds = tickToSecond(
-      note.position + note.duration,
-      tempos,
-      tpqn,
-    );
-    const noteOffFrame = Math.round(noteOffSeconds * frameRate);
-    notesForRequestToEngine.push({
-      id: note.id,
-      key: note.noteNumber,
-      frameLength: noteOffFrame - noteOnFrame,
-      lyric: note.lyric,
-    });
-  }
-
-  // 末尾に休符を追加
-  const lastRestFrameLength = Math.round(lastRestDurationSeconds * frameRate);
-  notesForRequestToEngine.push({
-    key: undefined,
-    frameLength: lastRestFrameLength,
-    lyric: "",
-  });
-
-  // frameLengthが1以上になるようにする
-  for (let i = 0; i < notesForRequestToEngine.length; i++) {
-    const frameLength = notesForRequestToEngine[i].frameLength;
-    const frameToShift = Math.max(0, 1 - frameLength);
-    notesForRequestToEngine[i].frameLength += frameToShift;
-    if (i < notesForRequestToEngine.length - 1) {
-      notesForRequestToEngine[i + 1].frameLength -= frameToShift;
-    }
-  }
-
-  return notesForRequestToEngine;
-};
-
-const shiftKeyOfNotes = (notes: NoteForRequestToEngine[], keyShift: number) => {
-  for (const note of notes) {
-    if (note.key != undefined) {
-      note.key += keyShift;
-    }
-  }
-};
-
-const getPhonemes = (query: EditorFrameAudioQuery) => {
-  return query.phonemes.map((value) => value.phoneme).join(" ");
-};
-
-const shiftPitch = (f0: number[], pitchShift: number) => {
-  for (let i = 0; i < f0.length; i++) {
-    f0[i] *= Math.pow(2, pitchShift / 12);
-  }
-};
-
-const shiftVolume = (volume: number[], volumeShift: number) => {
-  for (let i = 0; i < volume.length; i++) {
-    volume[i] *= decibelToLinear(volumeShift);
-  }
-};
-
-/**
- * 末尾のpauの区間のvolumeを0にする。（歌とpauの呼吸音が重ならないようにする）
- * fadeOutDurationSecondsが0の場合は即座にvolumeを0にする。
- */
-const muteLastPauSection = (
-  volume: number[],
-  phonemes: FramePhoneme[],
-  frameRate: number,
-  fadeOutDurationSeconds: number,
-) => {
-  const lastPhoneme = phonemes.at(-1);
-  if (lastPhoneme == undefined || lastPhoneme.phoneme !== "pau") {
-    throw new Error("No pau exists at the end.");
-  }
-
-  let lastPauStartFrame = 0;
-  for (let i = 0; i < phonemes.length - 1; i++) {
-    lastPauStartFrame += phonemes[i].frameLength;
-  }
-
-  const lastPauFrameLength = lastPhoneme.frameLength;
-  let fadeOutFrameLength = Math.round(fadeOutDurationSeconds * frameRate);
-  fadeOutFrameLength = Math.max(0, fadeOutFrameLength);
-  fadeOutFrameLength = Math.min(lastPauFrameLength, fadeOutFrameLength);
-
-  // フェードアウト処理を行う
-  if (fadeOutFrameLength === 1) {
-    volume[lastPauStartFrame] *= 0.5;
-  } else {
-    for (let i = 0; i < fadeOutFrameLength; i++) {
-      volume[lastPauStartFrame + i] *= linearInterpolation(
-        0,
-        1,
-        fadeOutFrameLength - 1,
-        0,
-        i,
-      );
-    }
-  }
-  // 音量を0にする
-  for (let i = fadeOutFrameLength; i < lastPauFrameLength; i++) {
-    volume[lastPauStartFrame + i] = 0;
-  }
-};
-
-const calculateQueryKey = async (querySource: QuerySource) => {
-  const hash = await calculateHash(querySource);
-  return EditorFrameAudioQueryKey(hash);
-};
-
-const calculateSingingPitchKey = async (
-  singingPitchSource: SingingPitchSource,
-) => {
-  const hash = await calculateHash(singingPitchSource);
-  return SingingPitchKey(hash);
-};
-
-const calculateSingingVolumeKey = async (
-  singingVolumeSource: SingingVolumeSource,
-) => {
-  const hash = await calculateHash(singingVolumeSource);
-  return SingingVolumeKey(hash);
-};
-
-const calculateSingingVoiceKey = async (
-  singingVoiceSource: SingingVoiceSource,
-) => {
-  const hash = await calculateHash(singingVoiceSource);
-  return SingingVoiceKey(hash);
-};
 
 const generateAudioEvents = async (
   audioContext: BaseAudioContext,
@@ -1380,22 +1172,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  SEQUENCER_NUM_MEASURES: {
-    getter(state) {
-      // NOTE: スコア長(曲長さ)が決まっていないため、無限スクロール化する or 最後尾に足した場合は伸びるようにするなど？
-      // NOTE: いったん最後尾に足した場合は伸びるようにする
-      return Math.max(
-        SEQUENCER_MIN_NUM_MEASURES,
-        getNumMeasures(
-          [...state.tracks.values()].flatMap((track) => track.notes),
-          state.tempos,
-          state.timeSignatures,
-          state.tpqn,
-        ) + 8,
-      );
-    },
-  },
-
   SET_ZOOM_X: {
     mutation(state, { zoomX }: { zoomX: number }) {
       state.sequencerZoomX = zoomX;
@@ -1728,185 +1504,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         } as const;
       };
 
-      const calcPhraseFirstRestDuration = (
-        prevPhraseLastNote: Note | undefined,
-        phraseFirstNote: Note,
-        phraseFirstRestMinDurationSeconds: number,
-        tempos: Tempo[],
-        tpqn: number,
-      ) => {
-        const quarterNoteDuration = getNoteDuration(4, tpqn);
-        let phraseFirstRestDuration: number | undefined = undefined;
-
-        // 実際のフレーズ先頭の休符の長さを調べる
-        if (prevPhraseLastNote == undefined) {
-          if (phraseFirstNote.position === 0) {
-            // 1小節目の最初から始まっているフレーズの場合は、
-            // とりあえず4分音符の長さをフレーズ先頭の休符の長さにする
-            phraseFirstRestDuration = quarterNoteDuration;
-          } else {
-            phraseFirstRestDuration = phraseFirstNote.position;
-          }
-        } else {
-          const prevPhraseLastNoteEndPos =
-            prevPhraseLastNote.position + prevPhraseLastNote.duration;
-          phraseFirstRestDuration =
-            phraseFirstNote.position - prevPhraseLastNoteEndPos;
-        }
-        // 4分音符の長さ以下にする
-        phraseFirstRestDuration = Math.min(
-          phraseFirstRestDuration,
-          quarterNoteDuration,
-        );
-        // 最小の長さ以上にする
-        phraseFirstRestDuration = Math.max(
-          phraseFirstRestDuration,
-          phraseFirstNote.position -
-            secondToTick(
-              tickToSecond(phraseFirstNote.position, tempos, tpqn) -
-                phraseFirstRestMinDurationSeconds,
-              tempos,
-              tpqn,
-            ),
-        );
-        // 1tick以上にする
-        phraseFirstRestDuration = Math.max(1, phraseFirstRestDuration);
-
-        return phraseFirstRestDuration;
-      };
-
-      const calculatePhraseStartTime = (
-        phraseFirstRestDuration: number,
-        phraseNotes: Note[],
-        tempos: Tempo[],
-        tpqn: number,
-      ) => {
-        return tickToSecond(
-          phraseNotes[0].position - phraseFirstRestDuration,
-          tempos,
-          tpqn,
-        );
-      };
-
-      const generatePhrases = async (
-        notes: Note[],
-        tempos: Tempo[],
-        tpqn: number,
-        phraseFirstRestMinDurationSeconds: number,
-        trackId: TrackId,
-      ) => {
-        const generatedPhrases = new Map<PhraseKey, Phrase>();
-
-        let phraseNotes: Note[] = [];
-        let prevPhraseLastNote: Note | undefined = undefined;
-
-        for (let i = 0; i < notes.length; i++) {
-          const note = notes[i];
-          const nextNote = notes.at(i + 1);
-          const currentNoteEndPos = note.position + note.duration;
-
-          phraseNotes.push(note);
-
-          // ノートが途切れていたら別のフレーズにする
-          if (
-            nextNote == undefined ||
-            currentNoteEndPos !== nextNote.position
-          ) {
-            const phraseFirstNote = phraseNotes[0];
-            const phraseFirstRestDuration = calcPhraseFirstRestDuration(
-              prevPhraseLastNote,
-              phraseFirstNote,
-              phraseFirstRestMinDurationSeconds,
-              tempos,
-              tpqn,
-            );
-            const phraseStartTime = calculatePhraseStartTime(
-              phraseFirstRestDuration,
-              phraseNotes,
-              tempos,
-              tpqn,
-            );
-            const phraseKey = await calculatePhraseKey({
-              firstRestDuration: phraseFirstRestDuration,
-              notes: phraseNotes,
-              startTime: phraseStartTime,
-              trackId,
-            });
-            generatedPhrases.set(phraseKey, {
-              firstRestDuration: phraseFirstRestDuration,
-              notes: phraseNotes,
-              startTime: phraseStartTime,
-              state: "WAITING_TO_BE_RENDERED",
-              trackId,
-            });
-
-            if (nextNote != undefined) {
-              prevPhraseLastNote = phraseNotes.at(-1);
-              phraseNotes = [];
-            }
-          }
-        }
-        return generatedPhrases;
-      };
-
-      const generateQuerySource = (
-        trackId: TrackId,
-        phraseKey: PhraseKey,
-        snapshot: SnapshotForPhraseRender,
-      ): QuerySource => {
-        const track = getOrThrow(snapshot.tracks, trackId);
-        if (track.singer == undefined) {
-          throw new Error("track.singer is undefined.");
-        }
-        const engineFrameRate = getOrThrow(
-          snapshot.engineFrameRates,
-          track.singer.engineId,
-        );
-        const phrase = getOrThrow(state.phrases, phraseKey);
-        return {
-          engineId: track.singer.engineId,
-          engineFrameRate,
-          tpqn: snapshot.tpqn,
-          tempos: snapshot.tempos,
-          firstRestDuration: phrase.firstRestDuration,
-          notes: phrase.notes,
-          keyRangeAdjustment: track.keyRangeAdjustment,
-        };
-      };
-
-      const fetchQuery = async (
-        engineId: EngineId,
-        engineFrameRate: number,
-        notesForRequestToEngine: NoteForRequestToEngine[],
-      ) => {
-        try {
-          if (!getters.IS_ENGINE_READY(engineId)) {
-            throw new Error("Engine not ready.");
-          }
-          const instance = await actions.INSTANTIATE_ENGINE_CONNECTOR({
-            engineId,
-          });
-          const query = await instance.invoke("singFrameAudioQuery")({
-            score: { notes: notesForRequestToEngine },
-            speaker: singingTeacherStyleId,
-          });
-          const editorQuery: EditorFrameAudioQuery = {
-            ...query,
-            frameRate: engineFrameRate,
-          };
-          return editorQuery;
-        } catch (error) {
-          const lyrics = notesForRequestToEngine
-            .map((value) => value.lyric)
-            .join("");
-          logger.error(
-            `Failed to fetch FrameAudioQuery. Lyrics of score are "${lyrics}".`,
-            error,
-          );
-          throw error;
-        }
-      };
-
       const generateQuery = async (querySource: QuerySource) => {
         const notesForRequestToEngine = createNotesForRequestToEngine(
           querySource.firstRestDuration,
@@ -1922,11 +1519,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           -querySource.keyRangeAdjustment,
         );
 
-        const query = await fetchQuery(
-          querySource.engineId,
-          querySource.engineFrameRate,
-          notesForRequestToEngine,
-        );
+        const query = await actions.FETCH_SING_FRAME_AUDIO_QUERY({
+          engineId: querySource.engineId,
+          styleId: singingTeacherStyleId,
+          engineFrameRate: querySource.engineFrameRate,
+          notes: notesForRequestToEngine,
+        });
 
         shiftPitch(query.f0, querySource.keyRangeAdjustment);
         return query;
@@ -1945,7 +1543,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           }
           const phrase = getOrThrow(state.phrases, phraseKey);
           const phraseQueryKey = phrase.queryKey;
-          const querySource = generateQuerySource(trackId, phraseKey, snapshot);
+          const querySource = generateQuerySource(phrase, snapshot);
           const queryKey = await calculateQueryKey(querySource);
           return phraseQueryKey == undefined || phraseQueryKey !== queryKey;
         },
@@ -1961,11 +1559,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           }
         },
         execute: async (
-          trackId: TrackId,
           phraseKey: PhraseKey,
           snapshot: SnapshotForPhraseRender,
         ) => {
-          const querySource = generateQuerySource(trackId, phraseKey, snapshot);
+          let phrase = getOrThrow(state.phrases, phraseKey);
+          const querySource = generateQuerySource(phrase, snapshot);
           const queryKey = await calculateQueryKey(querySource);
 
           let query = queryCache.get(queryKey);
@@ -1978,7 +1576,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             queryCache.set(queryKey, query);
           }
 
-          const phrase = getOrThrow(state.phrases, phraseKey);
+          phrase = getOrThrow(state.phrases, phraseKey);
           const phraseQueryKey = phrase.queryKey;
           if (phraseQueryKey != undefined) {
             throw new Error("The previous query has not been removed.");
@@ -1988,40 +1586,35 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         },
       };
 
-      const generateSingingPitchSource = (
-        trackId: TrackId,
-        phraseKey: PhraseKey,
-        snapshot: SnapshotForPhraseRender,
-      ): SingingPitchSource => {
-        const track = getOrThrow(snapshot.tracks, trackId);
-        if (track.singer == undefined) {
-          throw new Error("track.singer is undefined.");
-        }
-        const phrase = getOrThrow(state.phrases, phraseKey);
-        const phraseQueryKey = phrase.queryKey;
-        if (phraseQueryKey == undefined) {
-          throw new Error("phraseQueryKey is undefined.");
-        }
-        const query = getOrThrow(state.phraseQueries, phraseQueryKey);
-        const clonedQuery = cloneWithUnwrapProxy(query);
-        // TODO: 音素タイミングの編集データの適用を行うようにする
-        return {
-          engineId: track.singer.engineId,
-          engineFrameRate: query.frameRate,
-          tpqn: snapshot.tpqn,
-          tempos: snapshot.tempos,
-          firstRestDuration: phrase.firstRestDuration,
-          notes: phrase.notes,
-          keyRangeAdjustment: track.keyRangeAdjustment,
-          queryForPitchGeneration: clonedQuery,
-        };
-      };
-
       const generateSingingPitch = async (
         singingPitchSource: SingingPitchSource,
       ) => {
-        // TODO: ピッチ生成APIに対応する
-        return singingPitchSource.queryForPitchGeneration.f0;
+        const notesForRequestToEngine = createNotesForRequestToEngine(
+          singingPitchSource.firstRestDuration,
+          lastRestDurationSeconds,
+          singingPitchSource.notes,
+          singingPitchSource.tempos,
+          singingPitchSource.tpqn,
+          singingPitchSource.engineFrameRate,
+        );
+        const queryForPitchGeneration =
+          singingPitchSource.queryForPitchGeneration;
+
+        shiftKeyOfNotes(
+          notesForRequestToEngine,
+          -singingPitchSource.keyRangeAdjustment,
+        );
+
+        const singingPitch = await actions.FETCH_SING_FRAME_F0({
+          notes: notesForRequestToEngine,
+          query: queryForPitchGeneration,
+          engineId: singingPitchSource.engineId,
+          styleId: singingTeacherStyleId,
+        });
+
+        shiftPitch(singingPitch, singingPitchSource.keyRangeAdjustment);
+
+        return singingPitch;
       };
 
       const singingPitchGenerationStage: PhraseRenderStage = {
@@ -2036,10 +1629,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             return false;
           }
           const phrase = getOrThrow(state.phrases, phraseKey);
+          const query = getOrThrow(state.phraseQueries, phrase.queryKey);
           const phraseSingingPitchKey = phrase.singingPitchKey;
           const singingPitchSource = generateSingingPitchSource(
-            trackId,
-            phraseKey,
+            query,
+            phrase,
             snapshot,
           );
           const singingPitchKey =
@@ -2063,13 +1657,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           }
         },
         execute: async (
-          trackId: TrackId,
           phraseKey: PhraseKey,
           snapshot: SnapshotForPhraseRender,
         ) => {
+          let phrase = getOrThrow(state.phrases, phraseKey);
+          const query = getOrThrow(state.phraseQueries, phrase.queryKey);
           const singingPitchSource = generateSingingPitchSource(
-            trackId,
-            phraseKey,
+            query,
+            phrase,
             snapshot,
           );
           const singingPitchKey =
@@ -2084,7 +1679,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             singingPitchCache.set(singingPitchKey, singingPitch);
           }
 
-          const phrase = getOrThrow(state.phrases, phraseKey);
+          phrase = getOrThrow(state.phrases, phraseKey);
           const phraseSingingPitchKey = phrase.singingPitchKey;
           if (phraseSingingPitchKey != undefined) {
             throw new Error("The previous singing pitch has not been removed.");
@@ -2095,42 +1690,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             singingPitchKey,
           });
         },
-      };
-
-      const generateSingingVolumeSource = (
-        trackId: TrackId,
-        phraseKey: PhraseKey,
-        snapshot: SnapshotForPhraseRender,
-      ): SingingVolumeSource => {
-        const track = getOrThrow(snapshot.tracks, trackId);
-        if (track.singer == undefined) {
-          throw new Error("track.singer is undefined.");
-        }
-        const phrase = getOrThrow(state.phrases, phraseKey);
-        const phraseQueryKey = phrase.queryKey;
-        if (phraseQueryKey == undefined) {
-          throw new Error("phraseQueryKey is undefined.");
-        }
-        // TODO: ピッチ生成ステージで生成したピッチを使用するようにする
-        const query = getOrThrow(state.phraseQueries, phraseQueryKey);
-        const clonedQuery = cloneWithUnwrapProxy(query);
-        applyPitchEdit(
-          clonedQuery,
-          phrase.startTime,
-          track.pitchEditData,
-          snapshot.editorFrameRate,
-        );
-        return {
-          engineId: track.singer.engineId,
-          engineFrameRate: query.frameRate,
-          tpqn: snapshot.tpqn,
-          tempos: snapshot.tempos,
-          firstRestDuration: phrase.firstRestDuration,
-          notes: phrase.notes,
-          keyRangeAdjustment: track.keyRangeAdjustment,
-          volumeRangeAdjustment: track.volumeRangeAdjustment,
-          queryForVolumeGeneration: clonedQuery,
-        };
       };
 
       const generateSingingVolume = async (
@@ -2184,14 +1743,20 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           if (track.singer == undefined) {
             return false;
           }
+          const phrase = getOrThrow(state.phrases, phraseKey);
+          const query = getOrThrow(state.phraseQueries, phrase.queryKey);
+          const singingPitch = getOrThrow(
+            state.phraseSingingPitches,
+            phrase.singingPitchKey,
+          );
           const singingVolumeSource = generateSingingVolumeSource(
-            trackId,
-            phraseKey,
+            query,
+            singingPitch,
+            phrase,
             snapshot,
           );
           const singingVolumeKey =
             await calculateSingingVolumeKey(singingVolumeSource);
-          const phrase = getOrThrow(state.phrases, phraseKey);
           const phraseSingingVolumeKey = phrase.singingVolumeKey;
           return (
             phraseSingingVolumeKey == undefined ||
@@ -2212,13 +1777,19 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           }
         },
         execute: async (
-          trackId: TrackId,
           phraseKey: PhraseKey,
           snapshot: SnapshotForPhraseRender,
         ) => {
+          let phrase = getOrThrow(state.phrases, phraseKey);
+          const query = getOrThrow(state.phraseQueries, phrase.queryKey);
+          const singingPitch = getOrThrow(
+            state.phraseSingingPitches,
+            phrase.singingPitchKey,
+          );
           const singingVolumeSource = generateSingingVolumeSource(
-            trackId,
-            phraseKey,
+            query,
+            singingPitch,
+            phrase,
             snapshot,
           );
           const singingVolumeKey =
@@ -2233,7 +1804,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             singingVolumeCache.set(singingVolumeKey, singingVolume);
           }
 
-          const phrase = getOrThrow(state.phrases, phraseKey);
+          phrase = getOrThrow(state.phrases, phraseKey);
           const phraseSingingVolumeKey = phrase.singingVolumeKey;
           if (phraseSingingVolumeKey != undefined) {
             throw new Error(
@@ -2251,71 +1822,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         },
       };
 
-      const generateSingingVoiceSource = (
-        trackId: TrackId,
-        phraseKey: PhraseKey,
-        snapshot: SnapshotForPhraseRender,
-      ): SingingVoiceSource => {
-        const track = getOrThrow(snapshot.tracks, trackId);
-        if (track.singer == undefined) {
-          throw new Error("track.singer is undefined.");
-        }
-        const phrase = getOrThrow(state.phrases, phraseKey);
-        const phraseQueryKey = phrase.queryKey;
-        const phraseSingingVolumeKey = phrase.singingVolumeKey;
-        if (phraseQueryKey == undefined) {
-          throw new Error("phraseQueryKey is undefined.");
-        }
-        if (phraseSingingVolumeKey == undefined) {
-          throw new Error("phraseSingingVolumeKey is undefined.");
-        }
-        const query = getOrThrow(state.phraseQueries, phraseQueryKey);
-        const singingVolume = getOrThrow(
-          state.phraseSingingVolumes,
-          phraseSingingVolumeKey,
-        );
-        const clonedQuery = cloneWithUnwrapProxy(query);
-        const clonedSingingVolume = cloneWithUnwrapProxy(singingVolume);
-        applyPitchEdit(
-          clonedQuery,
-          phrase.startTime,
-          track.pitchEditData,
-          snapshot.editorFrameRate,
-        );
-        clonedQuery.volume = clonedSingingVolume;
-        return {
-          singer: track.singer,
-          queryForSingingVoiceSynthesis: clonedQuery,
-        };
-      };
-
       const synthesizeSingingVoice = async (
         singingVoiceSource: SingingVoiceSource,
       ) => {
-        const singer = singingVoiceSource.singer;
-        const query = singingVoiceSource.queryForSingingVoiceSynthesis;
-
-        if (!getters.IS_ENGINE_READY(singer.engineId)) {
-          throw new Error("Engine not ready.");
-        }
-        try {
-          const instance = await actions.INSTANTIATE_ENGINE_CONNECTOR({
-            engineId: singer.engineId,
-          });
-          return await instance.invoke("frameSynthesis")({
-            frameAudioQuery: query,
-            speaker: singer.styleId,
-          });
-        } catch (error) {
-          const phonemes = query.phonemes
-            .map((value) => value.phoneme)
-            .join(" ");
-          logger.error(
-            `Failed to synthesis. Phonemes are "${phonemes}".`,
-            error,
-          );
-          throw error;
-        }
+        return await actions.FRAME_SYNTHESIS({
+          query: singingVoiceSource.queryForSingingVoiceSynthesis,
+          engineId: singingVoiceSource.singer.engineId,
+          styleId: singingVoiceSource.singer.styleId,
+        });
       };
 
       const singingVoiceSynthesisStage: PhraseRenderStage = {
@@ -2329,14 +1843,25 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           if (track.singer == undefined) {
             return false;
           }
+          const phrase = getOrThrow(state.phrases, phraseKey);
+          const query = getOrThrow(state.phraseQueries, phrase.queryKey);
+          const singingPitch = getOrThrow(
+            state.phraseSingingPitches,
+            phrase.singingPitchKey,
+          );
+          const singingVolume = getOrThrow(
+            state.phraseSingingVolumes,
+            phrase.singingVolumeKey,
+          );
           const singingVoiceSource = generateSingingVoiceSource(
-            trackId,
-            phraseKey,
+            query,
+            singingPitch,
+            singingVolume,
+            phrase,
             snapshot,
           );
           const singingVoiceKey =
             await calculateSingingVoiceKey(singingVoiceSource);
-          const phrase = getOrThrow(state.phrases, phraseKey);
           const phraseSingingVoiceKey = phrase.singingVoiceKey;
           return (
             phraseSingingVoiceKey == undefined ||
@@ -2355,13 +1880,24 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           }
         },
         execute: async (
-          trackId: TrackId,
           phraseKey: PhraseKey,
           snapshot: SnapshotForPhraseRender,
         ) => {
+          let phrase = getOrThrow(state.phrases, phraseKey);
+          const query = getOrThrow(state.phraseQueries, phrase.queryKey);
+          const singingPitch = getOrThrow(
+            state.phraseSingingPitches,
+            phrase.singingPitchKey,
+          );
+          const singingVolume = getOrThrow(
+            state.phraseSingingVolumes,
+            phrase.singingVolumeKey,
+          );
           const singingVoiceSource = generateSingingVoiceSource(
-            trackId,
-            phraseKey,
+            query,
+            singingPitch,
+            singingVolume,
+            phrase,
             snapshot,
           );
           const singingVoiceKey =
@@ -2376,7 +1912,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             singingVoiceCache.set(singingVoiceKey, singingVoice);
           }
 
-          const phrase = getOrThrow(state.phrases, phraseKey);
+          phrase = getOrThrow(state.phrases, phraseKey);
           const phraseSingingVoiceKey = phrase.singingVoiceKey;
           if (phraseSingingVoiceKey != undefined) {
             throw new Error("The previous singing voice has not been removed.");
@@ -2425,34 +1961,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
         const renderStartStageIds = new Map<PhraseKey, PhraseRenderStageId>();
 
-        // 重なっているノートを削除する
-        const filteredTrackNotes = new Map<TrackId, Note[]>();
-        for (const [trackId, track] of snapshot.tracks) {
-          const overlappingNoteIds = getOrThrow(
-            snapshot.trackOverlappingNoteIds,
-            trackId,
-          );
-          const filteredNotes = track.notes.filter(
-            (value) => !overlappingNoteIds.has(value.id),
-          );
-          filteredTrackNotes.set(trackId, filteredNotes);
-        }
-
-        // ノーツからフレーズを生成する
-        const generatedPhrases = new Map<PhraseKey, Phrase>();
-        for (const trackId of snapshot.tracks.keys()) {
-          const filteredNotes = getOrThrow(filteredTrackNotes, trackId);
-          const phrases = await generatePhrases(
-            filteredNotes,
-            snapshot.tempos,
-            snapshot.tpqn,
-            firstRestMinDurationSeconds,
-            trackId,
-          );
-          for (const [phraseKey, phrase] of phrases) {
-            generatedPhrases.set(phraseKey, phrase);
-          }
-        }
+        // 各トラックのノーツからフレーズを生成する
+        const generatedPhrases = await generatePhrases(
+          snapshot,
+          firstRestMinDurationSeconds,
+        );
 
         const mergedPhrases = new Map<PhraseKey, Phrase>();
         const newlyCreatedPhraseKeys = new Set<PhraseKey>();
@@ -2515,11 +2028,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           }
         }
 
-        // 無くなったフレーズのシーケンスを削除する
+        // 無くなったフレーズのピッチなどのデータとシーケンスを削除する
         for (const phraseKey of disappearedPhraseKeys) {
           const phraseSequenceId = getPhraseSequenceId(phraseKey);
           if (phraseSequenceId != undefined) {
             deleteSequence(phraseSequenceId);
+          }
+          for (let i = stages.length - 1; i >= 0; i--) {
+            stages[i].deleteExecutionResult(phraseKey);
           }
         }
 
@@ -2569,10 +2085,23 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           if (startRenderingRequested() || stopRenderingRequested()) {
             return;
           }
-          const [phraseKey, phrase] = selectPriorPhrase(
-            phrasesToBeRendered,
+          const phraseKey = selectPriorPhrase(
+            new Map(
+              [...phrasesToBeRendered.entries()].map(([phraseKey, phrase]) => {
+                const phraseFirstNote = phrase.notes[0];
+                const phraseLastNote = getLast(phrase.notes);
+                return [
+                  phraseKey,
+                  {
+                    startTicks: phraseFirstNote.position,
+                    endTicks: phraseLastNote.position + phraseLastNote.duration,
+                  },
+                ];
+              }),
+            ),
             playheadPosition.value,
           );
+          const phrase = getOrThrow(phrasesToBeRendered, phraseKey);
           phrasesToBeRendered.delete(phraseKey);
 
           mutations.SET_STATE_TO_PHRASE({
@@ -2582,7 +2111,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
           try {
             // フレーズのレンダリングを行う
-            const trackId = phrase.trackId;
             const startStageId = getOrThrow(renderStartStageIds, phraseKey);
             const startStageIndex = stages.findIndex((value) => {
               return value.id === startStageId;
@@ -2594,7 +2122,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               stages[i].deleteExecutionResult(phraseKey);
             }
             for (let i = startStageIndex; i < stages.length; i++) {
-              await stages[i].execute(trackId, phraseKey, snapshot);
+              await stages[i].execute(phraseKey, snapshot);
             }
 
             // シーケンスが存在する場合、シーケンスを削除する
@@ -2689,9 +2217,47 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     }),
   },
 
-  FETCH_SING_FRAME_VOLUME: {
+  FETCH_SING_FRAME_AUDIO_QUERY: {
     async action(
-      { actions },
+      { getters, actions },
+      {
+        notes,
+        engineFrameRate,
+        engineId,
+        styleId,
+      }: {
+        notes: NoteForRequestToEngine[];
+        engineFrameRate: number;
+        engineId: EngineId;
+        styleId: StyleId;
+      },
+    ) {
+      try {
+        if (!getters.IS_ENGINE_READY(engineId)) {
+          throw new Error("Engine not ready.");
+        }
+        const instance = await actions.INSTANTIATE_ENGINE_CONNECTOR({
+          engineId,
+        });
+        const query = await instance.invoke("singFrameAudioQuery")({
+          score: { notes },
+          speaker: styleId,
+        });
+        return { ...query, frameRate: engineFrameRate };
+      } catch (error) {
+        const lyrics = notes.map((value) => value.lyric).join("");
+        logger.error(
+          `Failed to fetch FrameAudioQuery. Lyrics of score are "${lyrics}".`,
+          error,
+        );
+        throw error;
+      }
+    },
+  },
+
+  FETCH_SING_FRAME_F0: {
+    async action(
+      { getters, actions },
       {
         notes,
         query,
@@ -2704,18 +2270,107 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         styleId: StyleId;
       },
     ) {
-      const instance = await actions.INSTANTIATE_ENGINE_CONNECTOR({
-        engineId,
-      });
-      return await instance.invoke("singFrameVolume")({
-        bodySingFrameVolumeSingFrameVolumePost: {
-          score: {
-            notes,
+      try {
+        if (!getters.IS_ENGINE_READY(engineId)) {
+          throw new Error("Engine not ready.");
+        }
+        const instance = await actions.INSTANTIATE_ENGINE_CONNECTOR({
+          engineId,
+        });
+        return await instance.invoke("singFrameF0")({
+          bodySingFrameF0SingFrameF0Post: {
+            score: {
+              notes,
+            },
+            frameAudioQuery: query,
           },
+          speaker: styleId,
+        });
+      } catch (error) {
+        const lyrics = notes.map((value) => value.lyric).join("");
+        logger.error(
+          `Failed to fetch sing frame f0. Lyrics of score are "${lyrics}".`,
+          error,
+        );
+        throw error;
+      }
+    },
+  },
+
+  FETCH_SING_FRAME_VOLUME: {
+    async action(
+      { getters, actions },
+      {
+        notes,
+        query,
+        engineId,
+        styleId,
+      }: {
+        notes: NoteForRequestToEngine[];
+        query: EditorFrameAudioQuery;
+        engineId: EngineId;
+        styleId: StyleId;
+      },
+    ) {
+      try {
+        if (!getters.IS_ENGINE_READY(engineId)) {
+          throw new Error("Engine not ready.");
+        }
+        const instance = await actions.INSTANTIATE_ENGINE_CONNECTOR({
+          engineId,
+        });
+        return await instance.invoke("singFrameVolume")({
+          bodySingFrameVolumeSingFrameVolumePost: {
+            score: {
+              notes,
+            },
+            frameAudioQuery: query,
+          },
+          speaker: styleId,
+        });
+      } catch (error) {
+        const lyrics = notes.map((value) => value.lyric).join("");
+        logger.error(
+          `Failed to fetch sing frame volume. Lyrics of score are "${lyrics}".`,
+          error,
+        );
+        throw error;
+      }
+    },
+  },
+
+  FRAME_SYNTHESIS: {
+    async action(
+      { getters, actions },
+      {
+        query,
+        engineId,
+        styleId,
+      }: {
+        query: EditorFrameAudioQuery;
+        engineId: EngineId;
+        styleId: StyleId;
+      },
+    ) {
+      if (!getters.IS_ENGINE_READY(engineId)) {
+        throw new Error("Engine not ready.");
+      }
+      try {
+        const instance = await actions.INSTANTIATE_ENGINE_CONNECTOR({
+          engineId,
+        });
+        return await instance.invoke("frameSynthesis")({
           frameAudioQuery: query,
-        },
-        speaker: styleId,
-      });
+          speaker: styleId,
+        });
+      } catch (error) {
+        const phonemes = query.phonemes.map((value) => value.phoneme).join(" ");
+        logger.error(
+          `Failed to synthesize. Phonemes are "${phonemes}".`,
+          error,
+        );
+        throw error;
+      }
     },
   },
 

@@ -113,23 +113,28 @@ process.on("unhandledRejection", (reason) => {
   log.error(reason);
 });
 
-function initializeAppPaths() {
+function getAppPaths() {
   let appDirPath: string;
   let __static: string;
 
   if (isDevelopment) {
-    // __dirnameはdist_electronを指しているので、一つ上のディレクトリに移動する
-    appDirPath = path.resolve(__dirname, "..");
+    // import.meta.dirnameはdist_electronを指しているので、一つ上のディレクトリに移動する
+    appDirPath = path.resolve(import.meta.dirname, "..");
     __static = path.join(appDirPath, "public");
   } else {
     appDirPath = path.dirname(app.getPath("exe"));
-    process.chdir(appDirPath);
-    __static = __dirname;
+    __static = import.meta.dirname;
   }
 
   return { appDirPath, __static };
 }
-const { appDirPath, __static } = initializeAppPaths();
+const { appDirPath, __static } = getAppPaths();
+
+// 製品版はカレントディレクトリを.exeのパスにする
+// TODO: ディレクトリを移動しないようにしたい
+if (!isDevelopment) {
+  process.chdir(appDirPath);
+}
 
 protocol.registerSchemesAsPrivileged([
   { scheme: "app", privileges: { secure: true, standard: true, stream: true } },
@@ -141,8 +146,8 @@ void app.whenReady().then(() => {
     // 読み取り先のファイルがインストールディレクトリ内であることを確認する
     // ref: https://www.electronjs.org/ja/docs/latest/api/protocol#protocolhandlescheme-handler
     const { pathname } = new URL(request.url);
-    const pathToServe = path.resolve(path.join(__dirname, pathname));
-    const relativePath = path.relative(__dirname, pathToServe);
+    const pathToServe = path.resolve(path.join(import.meta.dirname, pathname));
+    const relativePath = path.relative(import.meta.dirname, pathToServe);
     const isUnsafe =
       path.isAbsolute(relativePath) ||
       relativePath.startsWith("..") ||

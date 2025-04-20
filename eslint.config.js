@@ -11,9 +11,10 @@ import {
   vueTsConfigs,
 } from "@vue/eslint-config-typescript";
 import { configs as tsConfigs, parser as tsParser } from "typescript-eslint";
+import progressPlugin from "eslint-plugin-file-progress";
+import gitignoreConfig from "eslint-config-flat-gitignore";
+import vitestPlugin from "@vitest/eslint-plugin";
 import voicevoxPlugin from "./eslint-plugin/index.mjs";
-
-const __dirname = import.meta.dirname;
 
 /**
  * @typedef {import("@typescript-eslint/utils/ts-eslint").FlatConfig.Config} Config
@@ -62,7 +63,7 @@ const vueParserOptions = {
 /** @type {ParserOptions} */
 const typeCheckedParserOptions = {
   project: ["./tsconfig.json"],
-  tsconfigRootDir: __dirname,
+  tsconfigRootDir: import.meta.dirname,
 };
 
 /** @type {Rules} */
@@ -91,6 +92,7 @@ export default defineConfigWithVueTs(
     name: "voicevox/defaults/plugins",
     plugins: {
       import: importPlugin,
+      progress: progressPlugin,
     },
   },
 
@@ -115,10 +117,7 @@ export default defineConfigWithVueTs(
     },
   },
 
-  {
-    name: "voicevox/defaults/ignores",
-    ignores: ["dist/**/*", "dist_*/**/*", "node_modules/**/*"],
-  },
+  gitignoreConfig(),
 
   ...pluginConfig(vuePlugin.configs["flat/recommended"]),
   ...pluginConfig("eslint:recommended", js.configs.recommended),
@@ -126,6 +125,7 @@ export default defineConfigWithVueTs(
   ...pluginConfig(vueTsConfigs.recommended.toConfigArray()),
   ...pluginConfig(voicevoxPlugin.configs.all),
   ...pluginConfig(storybookPlugin.configs["flat/recommended"]),
+  ...pluginConfig(vitestPlugin.configs.recommended),
 
   {
     name: "voicevox/type-checked/typescript",
@@ -217,6 +217,9 @@ export default defineConfigWithVueTs(
         { sameNameShorthand: "always" },
       ],
       "vue/v-on-event-hyphenation": ["error", "never", { autofix: true }],
+      "progress/activate":
+        process.env.ESLINT_FILE_PROGRESS === "1" ? "error" : "off",
+      "vitest/expect-expect": ["error", { assertFunctionNames: ["expect*"] }],
     },
   },
 
@@ -243,7 +246,7 @@ export default defineConfigWithVueTs(
         {
           patterns: [
             {
-              group: ["electron"],
+              regex: "^electron(\\/|$)",
               message:
                 "このファイル内でelectronはimportできません。許可されているファイル内へ移すか、ESLintの設定を見直してください",
             },

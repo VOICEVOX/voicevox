@@ -344,7 +344,7 @@ export function getIpcMainHandle(params: {
     READ_FILE: async (_, { filePath }) => {
       try {
         const result = await fs.promises.readFile(filePath);
-        return success(result);
+        return success(new Uint8Array(result.buffer));
       } catch (e) {
         // throwだと`.code`の情報が消えるのでreturn
         const a = e as SystemError;

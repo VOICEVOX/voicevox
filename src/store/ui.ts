@@ -78,6 +78,8 @@ export const uiStoreState: UiStoreState = {
   isUpdateNotificationDialogOpen: false,
   isExportSongAudioDialogOpen: false,
   isImportSongProjectDialogOpen: false,
+  isPresetManageDialogOpen: false,
+  isHelpDialogOpen: false,
   isVstRoutingDialogOpen: false,
   isMaximized: false,
   isPinned: false,

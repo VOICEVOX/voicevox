@@ -47,6 +47,7 @@ const createHotkeyManager = (): {
   };
 };
 
+// eslint-disable-next-line vitest/expect-expect
 it("registerできる", () => {
   const { hotkeyManager } = createHotkeyManager();
   hotkeyManager.register({
