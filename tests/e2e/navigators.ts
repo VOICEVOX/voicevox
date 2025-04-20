@@ -17,9 +17,7 @@ export async function navigateToMain(page: Page) {
     await page.waitForTimeout(100);
     await page.getByRole("button", { name: "同意して使用開始" }).click();
     await page.waitForTimeout(100);
-    await page
-      .getByRole("button", { name: "キャラクター・スタイルの管理を閉じる" })
-      .click();
+    await page.getByRole("button", { name: "完了" }).click();
     await page.waitForTimeout(100);
     await page.getByRole("button", { name: "許可" }).click();
     await page.waitForTimeout(100);
