@@ -1,3 +1,4 @@
+<!-- TODO: ファイル名をCharacterListDialogに変える -->
 <template>
   <DefaultStyleSelectDialog
     v-if="selectedCharacterInfo"

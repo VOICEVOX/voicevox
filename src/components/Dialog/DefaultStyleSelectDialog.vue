@@ -1,3 +1,4 @@
+<!-- TODO: ファイル名をCharacterDetailDialogに変える -->
 <template>
   <QDialog
     v-model="dialogOpened"
