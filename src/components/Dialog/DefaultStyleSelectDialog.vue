@@ -49,11 +49,7 @@
                     <div class="style-grid">
                       <!-- TODO: Button in Buttonなデザインになっているのを変更する -->
                       <button
-                        v-for="(
-                          style, styleIndex
-                        ) of characterInfo.metas.styles.filter(
-                          (style) => style.styleType === 'talk',
-                        )"
+                        v-for="(style, styleIndex) of talkStyles"
                         :key="styleIndex"
                         clickable
                         class="q-pa-none style-item"
@@ -149,6 +145,12 @@ const props = defineProps<{
 const store = useStore();
 
 const selectedStyleIndex = ref<number>(0);
+
+const talkStyles = computed(() =>
+  props.characterInfo.metas.styles.filter(
+    (style) => style.styleType === "talk",
+  ),
+);
 
 // ダイアログが開かれたときに初期値を求める
 watch([dialogOpened], async ([newValue]) => {
