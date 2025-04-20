@@ -99,6 +99,7 @@ const rollStyleIndex = (speakerUuid: SpeakerId, diff: number) => {
 @use "@/styles/v2/mixin" as mixin;
 
 .character-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
