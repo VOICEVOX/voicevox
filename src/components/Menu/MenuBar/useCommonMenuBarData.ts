@@ -315,7 +315,7 @@ export const useCommonMenuBarData = (store: Store) => {
           },
           disableWhenUiLocked: false,
         },
-        ...(isProduction
+        ...(!isProduction
           ? [
               {
                 type: "button",
