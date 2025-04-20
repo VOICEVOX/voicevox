@@ -170,7 +170,6 @@ watch([dialogOpened], async ([newValue]) => {
 });
 
 const saveDefaultStyle = debounce((styleIndex: number) => {
-  console.log("saved!" + styleIndex);
   // 既に設定が存在する場合があるので、新しい設定と既存設定を合成させる
   const defaultStyleIds = JSON.parse(
     JSON.stringify(store.state.defaultStyleIds),

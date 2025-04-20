@@ -65,7 +65,6 @@
                     :key="characterInfo.metas.speakerUuid"
                   >
                     <CharacterTryListenCard
-                      v-if="characterInfo.metas.styles.length > 0"
                       :characterInfo
                       :isNewCharacter="
                         newCharacters.includes(characterInfo.metas.speakerUuid)
