@@ -113,9 +113,10 @@ export const vstPlugin: Plugin = {
           return;
         }
         log.info("Saving project file");
-        void store.dispatch("WRITE_PROJECT_FILE", {
+        void store.mutations.SET_PROJECT_FILEPATH({
           filePath: internalProjectFilePath,
         });
+        void store.actions.SAVE_PROJECT_FILE_OVERWRITE();
       }, 1000),
       { deep: true },
     );

@@ -85,7 +85,7 @@ export const api: Sandbox = {
     }
 
     try {
-      await writeFile(options.filePath, options.buffer);
+      await writeFile(options.filePath, new Uint8Array(options.buffer));
       return success(undefined);
     } catch (e) {
       return failure(e as Error);

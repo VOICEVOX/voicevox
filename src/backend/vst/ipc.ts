@@ -280,14 +280,13 @@ export async function showImportFileDialog(options: {
   );
 }
 
-export async function readFile(filePath: string): Promise<ArrayBuffer> {
+export async function readFile(filePath: string): Promise<Uint8Array> {
   const base64 = await ipcReadFile(filePath);
-  const uint8array = await toBytes(base64);
-  return uint8array.buffer;
+  return await toBytes(base64);
 }
 
-export async function writeFile(filePath: string, buffer: ArrayBuffer) {
-  const base64 = await toBase64(new Uint8Array(buffer));
+export async function writeFile(filePath: string, buffer: Uint8Array) {
+  const base64 = await toBase64(buffer);
   await ipcWriteFile({ path: filePath, data: base64 });
 }
 
