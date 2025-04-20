@@ -1,8 +1,9 @@
 <template>
   <DefaultStyleSelectDialog
-    v-if="selectedCharacterInfo"
-    v-model:isOpen="showStyleSelectDialog"
-    :characterInfo="selectedCharacterInfo"
+    v-if="styleSelectDialogState.isOpen"
+    :modelValue="styleSelectDialogState.isOpen"
+    :characterInfo="styleSelectDialogState.characterInfo"
+    @update:modelValue="onCloseStyleSelectDialog"
   />
 
   <QDialog
@@ -132,7 +133,6 @@ const characterInfosMap = computed(() => {
 const newCharacters = ref<SpeakerId[]>([]);
 const hasNewCharacter = computed(() => newCharacters.value.length > 0);
 
-const showStyleSelectDialog = ref<boolean>(false);
 const showOrderPane = ref<boolean>(false);
 
 const styleType = ref<"talk" | "singerLike">("talk");
@@ -141,18 +141,23 @@ const styleType = ref<"talk" | "singerLike">("talk");
 const sampleCharacterOrder = ref<SpeakerId[]>([]);
 
 // 選択中のキャラクター
-const selectedCharacter = ref(props.characterInfos[0].metas.speakerUuid);
+const styleSelectDialogState = ref<
+  { isOpen: true; characterInfo: CharacterInfo } | { isOpen: false }
+>({
+  isOpen: false,
+});
 const selectCharacter = (speakerUuid: SpeakerId) => {
-  selectedCharacter.value = speakerUuid;
-  showStyleSelectDialog.value = true;
+  const characterInfo = props.characterInfos.find(
+    (characterInfo) => characterInfo.metas.speakerUuid == speakerUuid,
+  );
+  if (characterInfo == undefined)
+    throw new Error(`キャラクターが見つかりません: ${speakerUuid}`);
+  styleSelectDialogState.value = { isOpen: true, characterInfo };
 };
 
-const selectedCharacterInfo = computed(() => {
-  return props.characterInfos.find(
-    (characterInfo) =>
-      characterInfo.metas.speakerUuid === selectedCharacter.value,
-  );
-});
+const onCloseStyleSelectDialog = () => {
+  styleSelectDialogState.value = { isOpen: false };
+};
 
 // キャラクター表示順序
 const characterOrder = ref<CharacterInfo[]>([]);
@@ -170,8 +175,6 @@ watch(dialogOpened, async (newValue, oldValue) => {
         .filter((info) => !newCharacters.value.includes(info.metas.speakerUuid))
         .map((info) => info.metas.speakerUuid),
     ];
-
-    selectedCharacter.value = sampleCharacterOrder.value[0];
 
     // 保存済みのキャラクターリストを取得
     // FIXME: 不明なキャラを無視しているので、不明キャラの順番が保存時にリセットされてしまう
