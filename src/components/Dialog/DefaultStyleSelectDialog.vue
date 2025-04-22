@@ -161,7 +161,7 @@ watch([dialogOpened], async ([newValue]) => {
       defaultStyleId.speakerUuid === props.characterInfo.metas.speakerUuid,
   );
 
-  if (!defaultStyle) {
+  if (defaultStyle == undefined) {
     selectedStyleIndex.value = 0;
     return;
   }
