@@ -196,9 +196,9 @@ watch(dialogOpened, async (newValue, oldValue) => {
       ...notIncludesCharacterInfos,
     ];
 
-    // 新しいキャラクターがいる場合は判定を無くすため並び順を保存
+    // 新しいキャラクターがいる場合は認識済みにする
     if (hasNewCharacter.value) {
-      saveCharacterOrder(characterOrder.value);
+      acknowledgeNewCharacters();
     }
   }
 });
@@ -259,6 +259,13 @@ const saveCharacterOrder = debounce((characterInfos: CharacterInfo[]) => {
     characterInfos.map((info) => info.metas.speakerUuid),
   );
 }, 300);
+
+function acknowledgeNewCharacters() {
+  // NOTE: 新しいキャラクターが存在するかはUSER_CHARACTER_ORDERで判定しているので、USER_CHARACTER_ORDERを更新する
+  // ref: https://github.com/VOICEVOX/voicevox/pull/2505#discussion_r2055218127
+  // FIXME: 新しいキャラクターをチェックしたかの判定をUSER_CHARACTER_ORDERで行わないようにする
+  saveCharacterOrder(characterOrder.value);
+}
 
 const closeDialog = () => {
   stop();
