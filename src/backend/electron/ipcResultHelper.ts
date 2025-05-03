@@ -4,10 +4,12 @@
  * ref: https://github.com/electron/electron/issues/24427
  */
 
-import { errorToMessage } from "@/helpers/errorHelper";
+import { DisplayableError, errorToMessage } from "@/helpers/errorHelper";
 
 /** 例外メッセージ用のオブジェクト */
-type IpcResult<T> = { ok: true; value: T } | { ok: false; message: string };
+type IpcResult<T> =
+  | { ok: true; value: T }
+  | { ok: false; message: string; isDisplayable: boolean };
 
 /** 例外メッセージ用のオブジェクトにラップする */
 export async function wrapToIpcResult<T>(
@@ -16,7 +18,11 @@ export async function wrapToIpcResult<T>(
   try {
     return { ok: true, value: await fn() };
   } catch (e) {
-    return { ok: false, message: errorToMessage(e) };
+    return {
+      ok: false,
+      message: errorToMessage(e),
+      isDisplayable: e instanceof DisplayableError,
+    };
   }
 }
 
@@ -25,6 +31,10 @@ export function getOrThrowIpcResult<T>(result: IpcResult<T>): T {
   if (result.ok) {
     return result.value;
   } else {
-    throw new Error(result.message);
+    if (result.isDisplayable) {
+      throw new DisplayableError(result.message);
+    } else {
+      throw new Error(result.message);
+    }
   }
 }

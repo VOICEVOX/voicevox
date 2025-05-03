@@ -3,6 +3,7 @@ import {
   wrapToIpcResult,
   getOrThrowIpcResult,
 } from "@/backend/electron/ipcResultHelper";
+import { DisplayableError } from "@/helpers/errorHelper";
 import { UnreachableError } from "@/type/utility";
 
 describe("ipcResultHelper", () => {
@@ -24,6 +25,7 @@ describe("ipcResultHelper", () => {
     });
     expect(result.ok).toBe(false);
     if (result.ok) throw new UnreachableError();
+    expect(result.isDisplayable).toBe(false);
     expect(() => getOrThrowIpcResult(result)).toThrow("custom error message");
   });
 
@@ -33,6 +35,45 @@ describe("ipcResultHelper", () => {
     });
     expect(result.ok).toBe(false);
     if (result.ok) throw new UnreachableError();
+    expect(result.isDisplayable).toBe(false);
     expect(() => getOrThrowIpcResult(result)).toThrow("custom error message");
+  });
+
+  it("DisplayableErrorをラップし、型情報を保持する", async () => {
+    const result = await wrapToIpcResult(() => {
+      throw new DisplayableError("user friendly message");
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new UnreachableError();
+    expect(result.isDisplayable).toBe(true);
+
+    let thrownError: Error | undefined;
+    try {
+      getOrThrowIpcResult(result);
+    } catch (e) {
+      thrownError = e as Error;
+    }
+
+    expect(thrownError).toBeInstanceOf(DisplayableError);
+    expect(thrownError?.message).toContain("user friendly message");
+  });
+
+  it("非同期DisplayableErrorもラップし、型情報を保持する", async () => {
+    const result = await wrapToIpcResult(async () => {
+      throw new DisplayableError("user friendly message");
+    });
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new UnreachableError();
+    expect(result.isDisplayable).toBe(true);
+
+    let thrownError: Error | undefined;
+    try {
+      getOrThrowIpcResult(result);
+    } catch (e) {
+      thrownError = e as Error;
+    }
+
+    expect(thrownError).toBeInstanceOf(DisplayableError);
+    expect(thrownError?.message).toContain("user friendly message");
   });
 });
