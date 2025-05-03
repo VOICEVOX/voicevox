@@ -245,7 +245,7 @@ export class EngineInfoManager {
     let manifestContent: MinimumEngineManifestType;
     try {
       manifestContent = minimumEngineManifestSchema.parse(JSON.parse(manifest));
-    } catch (e) {
+    } catch {
       return "invalidManifest";
     }
 

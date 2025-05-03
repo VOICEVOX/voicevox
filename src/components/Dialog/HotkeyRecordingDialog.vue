@@ -1,11 +1,10 @@
 <template>
   <QDialog
+    v-model="dialogOpened"
     noEscDismiss
     noShake
     transitionShow="none"
     transitionHide="none"
-    :modelValue="isHotkeyDialogOpened"
-    @update:modelValue="closeHotkeyDialog"
   >
     <QCard class="q-py-sm q-px-md">
       <QCardSection align="center">
@@ -85,15 +84,14 @@
 import { computed } from "vue";
 import { HotkeyCombination } from "@/domain/hotkeyAction";
 
+const dialogOpened = defineModel<boolean>("dialogOpened", { default: false });
 const props = defineProps<{
-  isHotkeyDialogOpened: boolean;
   lastAction: string;
   lastRecord: HotkeyCombination;
   duplicatedHotkey?: { action: string };
 }>();
 
 const emit = defineEmits<{
-  (e: "update:modelValue", value: boolean): void;
   (e: "deleteHotkey", action: string): void;
   (
     e: "changeHotkeySettings",
@@ -112,7 +110,7 @@ const confirmBtnEnabled = computed(() => {
 });
 
 const closeHotkeyDialog = () => {
-  emit("update:modelValue", false);
+  dialogOpened.value = false;
 };
 
 const changeHotkeyAndClose = () => {

@@ -61,6 +61,7 @@ export const api: Sandbox = {
     const fileName = AssetTextFileNames[textType];
     const v = await fetch(toStaticPath(fileName));
     if (textType === "OssLicenses" || textType === "UpdateInfos") {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return v.json();
     }
     return v.text();
@@ -81,7 +82,7 @@ export const api: Sandbox = {
   async showOpenFileDialog(obj: {
     title: string;
     name: string;
-    mimeType: string;
+    mimeType: MIMEType;
     extensions: string[];
   }) {
     const fileHandle = await showOpenFilePickerImpl({
@@ -89,7 +90,11 @@ export const api: Sandbox = {
       fileTypes: [
         {
           description: obj.name,
-          accept: { [obj.mimeType]: obj.extensions.map((ext) => `.${ext}`) },
+          accept: {
+            [obj.mimeType]: obj.extensions.map(
+              (ext): FileExtension => `.${ext}`,
+            ),
+          },
         },
       ],
     });

@@ -22,11 +22,12 @@ export const audioPlayerStoreState: AudioPlayerStoreState = {
 };
 
 export const audioPlayerStore = createPartialStore<AudioPlayerStoreTypes>({
-  ACTIVE_AUDIO_ELEM_CURRENT_TIME: {
+  ACTIVE_AUDIO_ELEM_CURRENT_TIME_GETTER: {
     getter: (state) => {
-      return state._activeAudioKey != undefined
-        ? getAudioElement().currentTime
-        : undefined;
+      return () =>
+        state._activeAudioKey != undefined
+          ? getAudioElement().currentTime
+          : undefined;
     },
   },
 

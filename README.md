@@ -96,7 +96,7 @@ pnpm run storybook
 ```
 
 main ブランチの Storybook は[VOICEVOX/preview-pages](https://github.com/VOICEVOX/preview-pages)から確認できます。  
-<https://voicevox.github.io/preview-pages/preview/branch-main/storybook/index.html>
+<https://voicevox.github.io/preview-pages/preview/editor/branch-main/storybook/index.html>
 
 ### ブラウザ版の実行（開発中）
 
@@ -107,7 +107,7 @@ pnpm run browser:serve
 ```
 
 また、main ブランチのビルド結果が[VOICEVOX/preview-pages](https://github.com/VOICEVOX/preview-pages)にデプロイされています。  
-<https://voicevox.github.io/preview-pages/preview/branch-main/editor/index.html>  
+<https://voicevox.github.io/preview-pages/preview/editor/branch-main/editor/index.html>  
 今はローカル PC 上で音声合成エンジンを起動する必要があります。
 
 ## ビルド
@@ -208,7 +208,7 @@ pnpm run test-ui:storybook-vrt # Playwright の UI を表示
 > 2. 適当な名前を入力し、 `ユーザー名/voicevox` へのアクセス権を与え、 Repository permissions の Contents で Read and write を選択します。
 >    <details>
 >    <summary>設定例</summary>
->    <img src="./docs/res/Fine-granted_Tokensの作成.png" width="320">
+>    <img src="./docs/res/Fine-granted_Tokensの作成.png" width="320" alt="">
 >    </details>
 > 3. トークンを作成して文字列をコピーします。
 > 4. `ユーザー名/voicevox` のリポジトリの Settings > Secrets and variables > Actions > New repository secret を開きます。
@@ -257,6 +257,9 @@ pnpm run fmt
 ```bash
 pnpm run lint
 ```
+
+リントを行うとリポジトリルートにキャッシュファイル`.eslintcache`が作られます。
+ESLintがバージョンアップした場合や、設定が変わった場合、キャッシュが壊れた場合はこのファイルを消してください。
 
 ## タイポチェック
 

@@ -1,11 +1,13 @@
 /**
  * OSに合った7-Zipのバイナリとライセンスをダウンロードするスクリプト。
  */
-import path from "path";
-import fs from "fs";
 import { spawnSync } from "child_process";
+import fs from "fs";
+import { arch } from "os";
+import path from "path";
+import { retryFetch } from "./helper.mjs";
 
-const distPath = path.resolve(import.meta.dirname, "..", "vendored", "7z");
+const distPath = path.join(import.meta.dirname, "..", "vendored", "7z");
 let url;
 let filesToExtract;
 
@@ -17,10 +19,13 @@ switch (process.platform) {
     // Actionsでインストーラーを動かすことはできないので、単独で配布されている7zr.exeを使い、
     // 7z形式で圧縮されている7za.exeを展開する。
     const sevenzrUrl = "https://www.7-zip.org/a/7zr.exe";
-    const sevenzrPath = path.resolve(distPath, "7zr.exe");
+    const sevenzrPath = path.join(distPath, "7zr.exe");
     if (!fs.existsSync(sevenzrPath)) {
       console.log("Downloading 7zr from " + sevenzrUrl);
-      const res = await fetch(sevenzrUrl);
+      const res = await retryFetch(sevenzrUrl);
+      if (!res.ok) {
+        throw new Error(`Failed to download binary: ${res.statusText}`);
+      }
       const buffer = await res.arrayBuffer();
 
       await fs.promises.writeFile(sevenzrPath, Buffer.from(buffer));
@@ -34,7 +39,19 @@ switch (process.platform) {
     break;
   }
   case "linux": {
-    url = "https://www.7-zip.org/a/7z2201-linux-x64.tar.xz";
+    switch (arch()) {
+      case "arm64": {
+        url = "https://www.7-zip.org/a/7z2201-linux-arm64.tar.xz";
+        break;
+      }
+      case "x64": {
+        url = "https://www.7-zip.org/a/7z2201-linux-x64.tar.xz";
+        break;
+      }
+      default: {
+        throw new Error("Unsupported architecture for Linux");
+      }
+    }
     filesToExtract = ["7zzs", "License.txt"];
     break;
   }
@@ -60,15 +77,18 @@ if (notDownloaded.length === 0) {
 }
 
 console.log("Downloading 7z from " + url);
-const res = await fetch(url);
+const res = await retryFetch(url);
+if (!res.ok) {
+  throw new Error(`Failed to download binary: ${res.statusText}`);
+}
 const buffer = await res.arrayBuffer();
-const sevenZipPath = path.resolve(distPath, path.basename(url));
+const sevenZipPath = path.join(distPath, path.basename(url));
 await fs.promises.writeFile(sevenZipPath, Buffer.from(buffer));
 
 console.log("Extracting 7z");
 const extractor = url.endsWith(".7z")
   ? spawnSync(
-      path.resolve(distPath, "7zr.exe"),
+      path.join(distPath, "7zr.exe"),
       ["x", "-y", "-o" + distPath, sevenZipPath, ...filesToExtract],
       {
         stdio: ["ignore", "inherit", "inherit"],

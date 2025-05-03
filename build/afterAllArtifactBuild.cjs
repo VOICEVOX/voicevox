@@ -1,9 +1,9 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-require-imports */
 const afterWindowsNsisWebArtifactBuild =
-  require("./afterNsisWebArtifactBuild").default;
+  require("./afterNsisWebArtifactBuild.cjs").default;
 
 // buildResult: electron-builder.BuildResult
-exports.default = async function (buildResult) {
+module.exports.default = async function (buildResult) {
   for (const [platform, targets] of buildResult.platformToTargets.entries()) {
     const platformName = platform.name;
 
