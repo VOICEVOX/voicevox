@@ -23,9 +23,12 @@ import {
   tickToSecond,
 } from "@/sing/domain";
 import { FramePhoneme, Note as NoteForRequestToEngine } from "@/openapi";
-import { EngineId, NoteId, TrackId } from "@/type/preload";
+import { EngineId, NoteId, StyleId, TrackId } from "@/type/preload";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
+import { createLogger } from "@/helpers/log";
+
+const logger = createLogger("sing/songTrackRendering");
 
 /**
  * フレーズレンダリングに必要なデータのスナップショット
@@ -89,10 +92,46 @@ export type SingingVoiceSource = Readonly<{
   queryForSingingVoiceSynthesis: EditorFrameAudioQuery;
 }>;
 
+export type EngineSongApi = Readonly<{
+  fetchFrameAudioQuery: (args: {
+    engineId: EngineId;
+    styleId: StyleId;
+    engineFrameRate: number;
+    notes: NoteForRequestToEngine[];
+  }) => Promise<EditorFrameAudioQuery>;
+
+  fetchSingFrameF0: (args: {
+    notes: NoteForRequestToEngine[];
+    query: EditorFrameAudioQuery;
+    engineId: EngineId;
+    styleId: StyleId;
+  }) => Promise<number[]>;
+
+  fetchSingFrameVolume: (args: {
+    notes: NoteForRequestToEngine[];
+    query: EditorFrameAudioQuery;
+    engineId: EngineId;
+    styleId: StyleId;
+  }) => Promise<number[]>;
+
+  frameSynthesis: (args: {
+    query: EditorFrameAudioQuery;
+    engineId: EngineId;
+    styleId: StyleId;
+  }) => Promise<Blob>;
+}>;
+
+export type SongTrackRenderingConfig = Readonly<{
+  singingTeacherStyleId: StyleId;
+  firstRestMinDurationSeconds: number;
+  lastRestDurationSeconds: number;
+  fadeOutDurationSeconds: number;
+}>;
+
 /**
  * リクエスト用のノーツ（と休符）を作成する。
  */
-export const createNotesForRequestToEngine = (
+const createNotesForRequestToEngine = (
   firstRestDuration: number,
   lastRestDurationSeconds: number,
   notes: Note[],
@@ -156,10 +195,7 @@ export const createNotesForRequestToEngine = (
   return notesForRequestToEngine;
 };
 
-export const shiftKeyOfNotes = (
-  notes: NoteForRequestToEngine[],
-  keyShift: number,
-) => {
+const shiftKeyOfNotes = (notes: NoteForRequestToEngine[], keyShift: number) => {
   for (const note of notes) {
     if (note.key != undefined) {
       note.key += keyShift;
@@ -171,13 +207,13 @@ export const getPhonemes = (query: EditorFrameAudioQuery) => {
   return query.phonemes.map((value) => value.phoneme).join(" ");
 };
 
-export const shiftPitch = (f0: number[], pitchShift: number) => {
+const shiftPitch = (f0: number[], pitchShift: number) => {
   for (let i = 0; i < f0.length; i++) {
     f0[i] *= Math.pow(2, pitchShift / 12);
   }
 };
 
-export const shiftVolume = (volume: number[], volumeShift: number) => {
+const shiftVolume = (volume: number[], volumeShift: number) => {
   for (let i = 0; i < volume.length; i++) {
     volume[i] *= decibelToLinear(volumeShift);
   }
@@ -187,7 +223,7 @@ export const shiftVolume = (volume: number[], volumeShift: number) => {
  * 末尾のpauの区間のvolumeを0にする。（歌とpauの呼吸音が重ならないようにする）
  * fadeOutDurationSecondsが0の場合は即座にvolumeを0にする。
  */
-export const muteLastPauSection = (
+const muteLastPauSection = (
   volume: number[],
   phonemes: FramePhoneme[],
   frameRate: number,
@@ -558,4 +594,128 @@ export const generateSingingVoiceSource = (
     singer: track.singer,
     queryForSingingVoiceSynthesis: clonedQuery,
   };
+};
+
+export const generateQuery = async (
+  querySource: QuerySource,
+  config: SongTrackRenderingConfig,
+  engineSongApi: EngineSongApi,
+) => {
+  const notesForRequestToEngine = createNotesForRequestToEngine(
+    querySource.firstRestDuration,
+    config.lastRestDurationSeconds,
+    querySource.notes,
+    querySource.tempos,
+    querySource.tpqn,
+    querySource.engineFrameRate,
+  );
+
+  shiftKeyOfNotes(notesForRequestToEngine, -querySource.keyRangeAdjustment);
+
+  const query = await engineSongApi.fetchFrameAudioQuery({
+    engineId: querySource.engineId,
+    styleId: config.singingTeacherStyleId,
+    engineFrameRate: querySource.engineFrameRate,
+    notes: notesForRequestToEngine,
+  });
+
+  shiftPitch(query.f0, querySource.keyRangeAdjustment);
+
+  const phonemes = getPhonemes(query);
+  logger.info(`Generated query. phonemes: ${phonemes}`);
+
+  return query;
+};
+
+export const generateSingingPitch = async (
+  singingPitchSource: SingingPitchSource,
+  config: SongTrackRenderingConfig,
+  engineSongApi: EngineSongApi,
+) => {
+  const notesForRequestToEngine = createNotesForRequestToEngine(
+    singingPitchSource.firstRestDuration,
+    config.lastRestDurationSeconds,
+    singingPitchSource.notes,
+    singingPitchSource.tempos,
+    singingPitchSource.tpqn,
+    singingPitchSource.engineFrameRate,
+  );
+  const queryForPitchGeneration = singingPitchSource.queryForPitchGeneration;
+
+  shiftKeyOfNotes(
+    notesForRequestToEngine,
+    -singingPitchSource.keyRangeAdjustment,
+  );
+
+  const singingPitch = await engineSongApi.fetchSingFrameF0({
+    notes: notesForRequestToEngine,
+    query: queryForPitchGeneration,
+    engineId: singingPitchSource.engineId,
+    styleId: config.singingTeacherStyleId,
+  });
+
+  shiftPitch(singingPitch, singingPitchSource.keyRangeAdjustment);
+
+  logger.info(`Generated singing pitch.`);
+
+  return singingPitch;
+};
+
+export const generateSingingVolume = async (
+  singingVolumeSource: SingingVolumeSource,
+  config: SongTrackRenderingConfig,
+  engineSongApi: EngineSongApi,
+) => {
+  const notesForRequestToEngine = createNotesForRequestToEngine(
+    singingVolumeSource.firstRestDuration,
+    config.lastRestDurationSeconds,
+    singingVolumeSource.notes,
+    singingVolumeSource.tempos,
+    singingVolumeSource.tpqn,
+    singingVolumeSource.engineFrameRate,
+  );
+  const queryForVolumeGeneration = singingVolumeSource.queryForVolumeGeneration;
+
+  shiftKeyOfNotes(
+    notesForRequestToEngine,
+    -singingVolumeSource.keyRangeAdjustment,
+  );
+  shiftPitch(
+    queryForVolumeGeneration.f0,
+    -singingVolumeSource.keyRangeAdjustment,
+  );
+
+  const singingVolume = await engineSongApi.fetchSingFrameVolume({
+    notes: notesForRequestToEngine,
+    query: queryForVolumeGeneration,
+    engineId: singingVolumeSource.engineId,
+    styleId: config.singingTeacherStyleId,
+  });
+
+  shiftVolume(singingVolume, singingVolumeSource.volumeRangeAdjustment);
+  muteLastPauSection(
+    singingVolume,
+    queryForVolumeGeneration.phonemes,
+    singingVolumeSource.engineFrameRate,
+    config.fadeOutDurationSeconds,
+  );
+
+  logger.info(`Generated singing volume.`);
+
+  return singingVolume;
+};
+
+export const synthesizeSingingVoice = async (
+  singingVoiceSource: SingingVoiceSource,
+  engineSongApi: EngineSongApi,
+) => {
+  const singingVoice = await engineSongApi.frameSynthesis({
+    query: singingVoiceSource.queryForSingingVoiceSynthesis,
+    engineId: singingVoiceSource.singer.engineId,
+    styleId: singingVoiceSource.singer.styleId,
+  });
+
+  logger.info(`Generated singing voice.`);
+
+  return singingVoice;
 };
