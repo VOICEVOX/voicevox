@@ -7,7 +7,7 @@
 import { DisplayableError, errorToMessage } from "@/helpers/errorHelper";
 
 /** 例外メッセージ用のオブジェクト */
-type IpcResult<T> =
+export type IpcResult<T> =
   | { ok: true; value: T }
   | { ok: false; message: string; isDisplayable: boolean };
 
