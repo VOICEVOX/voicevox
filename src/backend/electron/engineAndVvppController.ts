@@ -24,7 +24,7 @@ import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
 import { UnreachableError } from "@/type/utility";
 import { ProgressCallback } from "@/helpers/progressHelper";
 import { createLogger } from "@/helpers/log";
-import { errorToMessage } from "@/helpers/errorHelper";
+import { DisplayableError, errorToMessage } from "@/helpers/errorHelper";
 
 const log = createLogger("EngineAndVvppController");
 
@@ -59,9 +59,10 @@ export class EngineAndVvppController {
     try {
       await this.vvppManager.install(vvppPath, callbacks);
     } catch (e) {
-      throw new Error(`${vvppPath} をインストールできませんでした。`, {
-        cause: e,
-      });
+      throw new DisplayableError(
+        `${vvppPath} をインストールできませんでした。`,
+        { cause: e },
+      );
     }
   }
 
@@ -141,9 +142,10 @@ export class EngineAndVvppController {
       // そのため、アプリの終了時に削除するようにする。
       this.vvppManager.markWillDelete(engineId);
     } catch (e) {
-      throw new Error(`${engineId} をアンインストールできませんでした。`, {
-        cause: e,
-      });
+      throw new DisplayableError(
+        `${engineId} をアンインストールできませんでした。`,
+        { cause: e },
+      );
     }
   }
 
