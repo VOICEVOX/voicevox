@@ -1716,11 +1716,11 @@ export type EngineStoreTypes = {
   };
 
   INSTALL_VVPP_ENGINE: {
-    action: (path: string) => Promise<boolean>;
+    action: (path: string) => Promise<void>;
   };
 
   UNINSTALL_VVPP_ENGINE: {
-    action: (engineId: EngineId) => Promise<boolean>;
+    action: (engineId: EngineId) => Promise<void>;
   };
 
   SET_ENGINE_INFOS: {
