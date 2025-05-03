@@ -134,8 +134,6 @@ const characterInfosMap = computed(() => {
 const newCharacters = ref<SpeakerId[]>([]);
 const hasNewCharacter = computed(() => newCharacters.value.length > 0);
 
-const showOrderPane = ref<boolean>(false);
-
 const styleType = ref<"talk" | "singerLike">("talk");
 
 // サンプルボイス一覧のキャラクター順番
@@ -271,7 +269,6 @@ function acknowledgeNewCharacters() {
 const closeDialog = () => {
   stop();
   styleType.value = "talk";
-  showOrderPane.value = false;
   dialogOpened.value = false;
 };
 </script>
@@ -340,7 +337,6 @@ const closeDialog = () => {
   flex-direction: column;
   background-color: colors.$background;
   border-left: 1px solid colors.$border;
-  z-index: vars.$z-index-fixed;
 }
 
 .character-order-headline {
