@@ -268,7 +268,6 @@ function acknowledgeNewCharacters() {
 
 const closeDialog = () => {
   stop();
-  styleType.value = "talk";
   dialogOpened.value = false;
 };
 </script>
