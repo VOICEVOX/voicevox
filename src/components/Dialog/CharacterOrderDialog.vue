@@ -44,7 +44,7 @@
       <QPageContainer>
         <QPage>
           <div class="container">
-            <!-- スクロールバー再計算のため、keyにstyleTypeを設定 -->
+            <!-- NOTE: styleTypeが変更されたときにスクロール領域を正しく再計算させる -->
             <BaseScrollArea :key="styleType">
               <div class="inner">
                 <div class="header">
