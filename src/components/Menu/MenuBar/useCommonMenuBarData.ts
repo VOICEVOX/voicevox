@@ -334,7 +334,7 @@ export const useCommonMenuBarData = (store: Store) => {
           label: "キャラクター並び替え・試聴",
           onClick() {
             void store.actions.SET_DIALOG_OPEN({
-              isCharacterOrderDialogOpen: true,
+              isOldCharacterOrderDialogOpen: true,
             });
           },
           disableWhenUiLocked: true,
@@ -344,7 +344,7 @@ export const useCommonMenuBarData = (store: Store) => {
           label: "デフォルトスタイル",
           onClick() {
             void store.actions.SET_DIALOG_OPEN({
-              isDefaultStyleSelectDialogOpen: true,
+              isOldDefaultStyleSelectDialogOpen: true,
             });
           },
           disableWhenUiLocked: true,
