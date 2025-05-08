@@ -1,6 +1,4 @@
 <template>
-  <!-- TODO: ファイル名をCharacterDetailDialogに変える -->
-
   <QDialog
     v-model="dialogOpened"
     maximized

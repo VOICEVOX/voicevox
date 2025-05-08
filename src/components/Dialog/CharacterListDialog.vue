@@ -1,6 +1,4 @@
 <template>
-  <!-- TODO: ファイル名をCharacterListDialogに変える -->
-
   <DefaultStyleSelectDialog
     v-if="styleSelectDialogState.isOpen"
     :modelValue="styleSelectDialogState.isOpen"
