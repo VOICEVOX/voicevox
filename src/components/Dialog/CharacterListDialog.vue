@@ -1,5 +1,5 @@
 <template>
-  <DefaultStyleSelectDialog
+  <CharacterDetailDialog
     v-if="styleSelectDialogState.isOpen"
     :modelValue="styleSelectDialogState.isOpen"
     :characterInfo="styleSelectDialogState.characterInfo"
@@ -103,7 +103,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import Draggable from "vuedraggable";
-import DefaultStyleSelectDialog from "./DefaultStyleSelectDialog.vue";
+import CharacterDetailDialog from "./CharacterDetailDialog.vue";
 import CharacterTryListenCard from "./CharacterTryListenCard.vue";
 import BaseToggleGroup from "@/components/Base/BaseToggleGroup.vue";
 import BaseToggleGroupItem from "@/components/Base/BaseToggleGroupItem.vue";
