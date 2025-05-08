@@ -15,7 +15,6 @@
     v-model:dialogOpened="isCharacterListDialogOpenComputed"
     :characterInfos="orderedAllCharacterInfos"
   />
-  />
   <CharacterOrderDialog
     v-if="orderedAllCharacterInfos.length > 0"
     v-model:dialogOpened="isOldCharacterOrderDialogOpenComputed"
