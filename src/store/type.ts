@@ -2043,7 +2043,7 @@ export type UiStoreState = {
 
 export type DialogStates = {
   isSettingDialogOpen: boolean;
-  isCharacterOrderDialogOpen: boolean;
+  isCharacterListDialogOpen: boolean;
   isOldCharacterOrderDialogOpen: boolean;
   isOldDefaultStyleSelectDialogOpen: boolean;
   isHotkeySettingDialogOpen: boolean;

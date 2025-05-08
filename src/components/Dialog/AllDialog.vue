@@ -12,7 +12,7 @@
   />
   <CharacterListDialog
     v-if="orderedAllCharacterInfos.length > 0"
-    v-model:dialogOpened="isCharacterOrderDialogOpenComputed"
+    v-model:dialogOpened="isCharacterListDialogOpenComputed"
     :characterInfos="orderedAllCharacterInfos"
   />
   />
@@ -98,11 +98,11 @@ const isAcceptTermsDialogOpenComputed = computed({
 });
 
 // キャラクター・スタイルの管理
-const isCharacterOrderDialogOpenComputed = computed({
-  get: () => store.state.isCharacterOrderDialogOpen,
+const isCharacterListDialogOpenComputed = computed({
+  get: () => store.state.isCharacterListDialogOpen,
   set: (val) =>
     store.actions.SET_DIALOG_OPEN({
-      isCharacterOrderDialogOpen: val,
+      isCharacterListDialogOpen: val,
     }),
 });
 

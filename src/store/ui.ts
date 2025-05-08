@@ -69,7 +69,7 @@ export const uiStoreState: UiStoreState = {
   isSettingDialogOpen: false,
   isHotkeySettingDialogOpen: false,
   isToolbarSettingDialogOpen: false,
-  isCharacterOrderDialogOpen: false,
+  isCharacterListDialogOpen: false,
   isOldCharacterOrderDialogOpen: false,
   isOldDefaultStyleSelectDialogOpen: false,
   isAcceptRetrieveTelemetryDialogOpen: false,
