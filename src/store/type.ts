@@ -1410,6 +1410,10 @@ export type SingingStoreTypes = {
       fileTypeLabel: string;
     }): Promise<SaveResultObject>;
   };
+
+  GET_PHRASE_SINGING_VOICE: {
+    action(payload: { key: SingingVoiceKey }): SingingVoice | undefined;
+  };
 };
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
@@ -2057,6 +2061,7 @@ export type DialogStates = {
   isImportSongProjectDialogOpen: boolean;
   isPresetManageDialogOpen: boolean;
   isHelpDialogOpen: boolean;
+  isVstRoutingDialogOpen: boolean;
 };
 
 export type UiStoreTypes = {

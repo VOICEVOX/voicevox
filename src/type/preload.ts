@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { IpcSOData } from "./ipc";
-import { AltPortInfos } from "@/store/type";
+import { AltPortInfos, SingingVoice, SingingVoiceKey } from "@/store/type";
 import { Result } from "@/type/result";
 import {
   HotkeySettingType,
