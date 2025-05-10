@@ -24,6 +24,7 @@ import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
 import { UnreachableError } from "@/type/utility";
 import { ProgressCallback } from "@/helpers/progressHelper";
 import { createLogger } from "@/helpers/log";
+import { DisplayableError, errorToMessage } from "@/helpers/errorHelper";
 
 const log = createLogger("EngineAndVvppController");
 
@@ -49,6 +50,7 @@ export class EngineAndVvppController {
 
   /**
    * VVPPエンジンをインストールする。
+   * 失敗した場合は例外を投げる。
    */
   async installVvppEngine(
     vvppPath: string,
@@ -69,14 +71,11 @@ export class EngineAndVvppController {
       }
 
       await this.vvppManager.install(tempEngineFiles);
-      return true;
     } catch (e) {
-      log.error(`Failed to install ${vvppPath},`, e);
-      dialog.showErrorBox(
-        "インストールエラー",
+      throw new DisplayableError(
         `${vvppPath} をインストールできませんでした。`,
+        { cause: e },
       );
-      return false;
     }
   }
 
@@ -106,7 +105,13 @@ export class EngineAndVvppController {
       return;
     }
 
-    await this.installVvppEngine(vvppPath);
+    try {
+      await this.installVvppEngine(vvppPath);
+    } catch (e) {
+      log.error(e);
+      dialog.showErrorBox("インストールエラー", errorToMessage(e));
+      return;
+    }
 
     if (reloadNeeded) {
       void windowManager
@@ -130,6 +135,7 @@ export class EngineAndVvppController {
   /**
    * VVPPエンジンをアンインストールする。
    * 関数を呼んだタイミングでアンインストール処理を途中まで行い、アプリ終了時に完遂する。
+   * 失敗した場合は例外を投げる。
    */
   async uninstallVvppEngine(engineId: EngineId) {
     let engineInfo: EngineInfo | undefined = undefined;
@@ -148,15 +154,11 @@ export class EngineAndVvppController {
       // Windows環境だとエンジンを終了してから削除する必要がある。
       // そのため、アプリの終了時に削除するようにする。
       this.vvppManager.markWillDelete(engineId);
-      return true;
     } catch (e) {
-      const engineName = engineInfo?.name ?? engineId;
-      dialog.showErrorBox(
-        "アンインストールエラー",
-        `${engineName} をアンインストールできませんでした。`,
+      throw new DisplayableError(
+        `${engineId} をアンインストールできませんでした。`,
+        { cause: e },
       );
-      log.error(`Failed to uninstall ${engineId},`, e);
-      return false;
     }
   }
 
