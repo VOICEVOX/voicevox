@@ -7,6 +7,7 @@ import path from "node:path";
 import { spawn } from "node:child_process";
 import MultiStream from "multistream";
 import { app } from "electron";
+import { ExtractedEngineFiles } from "./ExtractedEngineFiles";
 import {
   minimumEngineManifestSchema,
   MinimumEngineManifestType,
@@ -14,7 +15,6 @@ import {
 import { ProgressCallback } from "@/helpers/progressHelper";
 import { createLogger } from "@/helpers/log";
 import { UnreachableError } from "@/type/utility";
-import { TempEngineFiles } from "./TempEngineFiles";
 
 const log = createLogger("vvppFile");
 
@@ -39,11 +39,11 @@ export class VvppFileExtractor {
     this.callbacks = params.callbacks;
   }
 
-  async extract(): Promise<TempEngineFiles> {
+  async extract(): Promise<ExtractedEngineFiles> {
     log.info("Extracting vvpp to", this.outputDir);
     const archiveFileParts = await this.getArchiveFileParts();
     const manifest = await this.extractOrCleanup(archiveFileParts);
-    return new TempEngineFiles({
+    return new ExtractedEngineFiles({
       manifest,
       engineDir: this.outputDir,
     });

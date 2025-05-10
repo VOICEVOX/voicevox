@@ -57,20 +57,20 @@ export class EngineAndVvppController {
     callbacks?: { onProgress?: ProgressCallback },
   ) {
     try {
-      const tempEngineFiles = await this.vvppManager.extract(
+      const extractedEngineFiles = await this.vvppManager.extract(
         vvppPath,
         callbacks,
       );
 
       if (
         this.engineInfoManager.isDefaultEngine(
-          tempEngineFiles.getManifest().uuid,
+          extractedEngineFiles.getManifest().uuid,
         )
       ) {
         throw new Error("デフォルトエンジンはインストールできません。");
       }
 
-      await this.vvppManager.install(tempEngineFiles);
+      await this.vvppManager.install(extractedEngineFiles);
     } catch (e) {
       throw new DisplayableError(
         `${vvppPath} をインストールできませんでした。`,

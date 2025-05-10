@@ -3,35 +3,35 @@ import { moveFile } from "move-file";
 import { MinimumEngineManifestType } from "@/type/preload";
 
 /**
- * VVPPインストール直前の一時エンジンファイル群。
+ * VVPPインストール直前に展開されたエンジンファイル群。
  * 実態はディレクトリ。
  */
-export class TempEngineFiles {
+export class ExtractedEngineFiles {
   private manifest: MinimumEngineManifestType;
-  private tmpEngineDir: string;
+  private extractedEngineDir: string;
 
   constructor(params: {
     manifest: MinimumEngineManifestType;
     engineDir: string;
   }) {
     this.manifest = params.manifest;
-    this.tmpEngineDir = params.engineDir;
+    this.extractedEngineDir = params.engineDir;
   }
 
   getManifest() {
     return this.manifest;
   }
 
-  getTmpEngineDir() {
-    return this.tmpEngineDir;
+  getExtractedEngineDir() {
+    return this.extractedEngineDir;
   }
 
   async move(destDir: string) {
-    await moveFile(this.tmpEngineDir, destDir);
+    await moveFile(this.extractedEngineDir, destDir);
   }
 
   async cleanup() {
-    await fs.promises.rmdir(this.tmpEngineDir, { recursive: true });
+    await fs.promises.rmdir(this.extractedEngineDir, { recursive: true });
   }
 
   /**
@@ -39,6 +39,6 @@ export class TempEngineFiles {
    * 主にテスト用。
    */
   async needsCleanup() {
-    return fs.existsSync(this.tmpEngineDir);
+    return fs.existsSync(this.extractedEngineDir);
   }
 }

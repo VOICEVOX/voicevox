@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { dialog } from "electron";
 import AsyncLock from "async-lock";
-import { TempEngineFiles } from "../tempEngineFiles";
+import { ExtractedEngineFiles } from "../ExtractedEngineFiles";
 import {
   EngineId,
   EngineInfo,
@@ -24,7 +24,7 @@ export const isVvppFile = (filePath: string) => {
 
 const lockKey = "lock-key-for-vvpp-manager";
 
-type MoveParams = { tempEngineFiles: TempEngineFiles; to: string };
+type MoveParams = { extractedEngineFiles: ExtractedEngineFiles; to: string };
 
 // # 軽い概要
 //
@@ -128,21 +128,21 @@ export class VvppManager {
   async extract(
     vvppPath: string,
     callbacks?: { onProgress?: ProgressCallback },
-  ): Promise<TempEngineFiles> {
-    const tmpEngineDir = this.buildTemporaryEngineDir(this.vvppEngineDir);
-    log.info("Extracting vvpp to", tmpEngineDir);
+  ): Promise<ExtractedEngineFiles> {
+    const extractedEngineDir = this.buildTemporaryEngineDir(this.vvppEngineDir);
+    log.info("Extracting vvpp to", extractedEngineDir);
 
-    const tempEngineFiles = await new VvppFileExtractor({
+    const extractedEngineFiles = await new VvppFileExtractor({
       vvppLikeFilePath: vvppPath,
-      outputDir: tmpEngineDir,
+      outputDir: extractedEngineDir,
       tmpDir: this.tmpDir,
       callbacks,
     }).extract();
 
-    const manifest = tempEngineFiles.getManifest();
-    await this.applyExecutablePermissions(tmpEngineDir, manifest.command);
+    const manifest = extractedEngineFiles.getManifest();
+    await this.applyExecutablePermissions(extractedEngineDir, manifest.command);
 
-    return tempEngineFiles;
+    return extractedEngineFiles;
   }
 
   private buildTemporaryEngineDir(vvppEngineDir: string): string {
@@ -162,18 +162,18 @@ export class VvppManager {
   /**
    * 追加
    */
-  async install(tempEngineFiles: TempEngineFiles) {
-    await this.withLockAcquired(() => this._install(tempEngineFiles));
+  async install(extractedEngineFiles: ExtractedEngineFiles) {
+    await this.withLockAcquired(() => this._install(extractedEngineFiles));
   }
-  private async _install(tempEngineFiles: TempEngineFiles) {
-    const manifest = tempEngineFiles.getManifest();
+  private async _install(extractedEngineFiles: ExtractedEngineFiles) {
+    const manifest = extractedEngineFiles.getManifest();
 
     const hasOldEngine = await this.hasOldEngine(manifest.uuid);
     const engineDir = this.buildEngineDirPath(manifest);
     if (hasOldEngine) {
-      this.markWillMove({ tempEngineFiles, to: engineDir });
+      this.markWillMove({ extractedEngineFiles, to: engineDir });
     } else {
-      await tempEngineFiles.move(engineDir);
+      await extractedEngineFiles.move(engineDir);
     }
   }
 
@@ -199,8 +199,8 @@ export class VvppManager {
     this.willDeleteEngineIds.clear();
 
     await Promise.all(
-      [...this.willMoveEngineDirs].map(async ({ tempEngineFiles, to }) => {
-        const engineId = tempEngineFiles.getManifest().uuid;
+      [...this.willMoveEngineDirs].map(async ({ extractedEngineFiles, to }) => {
+        const engineId = extractedEngineFiles.getManifest().uuid;
         const deletingEngineDir = await this.getInstalledEngineDir(engineId);
         if (deletingEngineDir == undefined) {
           throw new Error("エンジンが見つかりませんでした。");
@@ -210,13 +210,15 @@ export class VvppManager {
           await deleteDirWithRetry(deletingEngineDir);
           log.info(`Engine ${engineId} deleted successfully.`);
 
-          await moveFileWithRetry({ tempEngineFiles, to });
-          log.info(`Renamed ${tempEngineFiles.getTmpEngineDir()} to ${to}`);
+          await moveFileWithRetry({ extractedEngineFiles, to });
+          log.info(
+            `Renamed ${extractedEngineFiles.getExtractedEngineDir()} to ${to}`,
+          );
         } catch (e) {
           log.error("Failed to rename engine directory: ", e);
           dialog.showErrorBox(
             "エンジン追加エラー",
-            `エンジンの追加に失敗しました。エンジンのフォルダを手動で移動してください。\n${tempEngineFiles.getTmpEngineDir()} -> ${to}\nエラー内容: ${errorToMessage(e)}`,
+            `エンジンの追加に失敗しました。エンジンのフォルダを手動で移動してください。\n${extractedEngineFiles.getExtractedEngineDir()} -> ${to}\nエラー内容: ${errorToMessage(e)}`,
           );
         }
       }),
@@ -241,11 +243,11 @@ async function deleteDirWithRetry(dir: string) {
 }
 
 async function moveFileWithRetry(params: {
-  tempEngineFiles: TempEngineFiles;
+  extractedEngineFiles: ExtractedEngineFiles;
   to: string;
 }) {
-  const { tempEngineFiles, to } = params;
-  await retry(() => tempEngineFiles.move(to));
+  const { extractedEngineFiles, to } = params;
+  await retry(() => extractedEngineFiles.move(to));
 }
 
 async function retry(fn: () => Promise<void>) {

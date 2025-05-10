@@ -48,11 +48,11 @@ test<Context>("エンジンを展開できる", async ({ manager }) => {
   const targetName = "perfect.vvpp";
   const vvppFilePath = await createVvppFile(targetName, tmpDir);
 
-  const tempEngineFiles = await manager.extract(vvppFilePath);
-  await expect(tempEngineFiles.needsCleanup()).resolves.toBe(true);
+  const extractedEngineFiles = await manager.extract(vvppFilePath);
+  await expect(extractedEngineFiles.needsCleanup()).resolves.toBe(true);
 
-  await tempEngineFiles.cleanup();
-  await expect(tempEngineFiles.needsCleanup()).resolves.toBe(false);
+  await extractedEngineFiles.cleanup();
+  await expect(extractedEngineFiles.needsCleanup()).resolves.toBe(false);
 });
 
 test<Context>("エンジンをインストールできる", async ({
@@ -62,10 +62,10 @@ test<Context>("エンジンをインストールできる", async ({
   const targetName = "perfect.vvpp";
   const vvppFilePath = await createVvppFile(targetName, tmpDir);
 
-  const tempEngineFiles = await manager.extract(vvppFilePath);
-  await manager.install(tempEngineFiles);
+  const extractedEngineFiles = await manager.extract(vvppFilePath);
+  await manager.install(extractedEngineFiles);
   expect(getEngineDirInfos(vvppEngineDir).length).toBe(1);
-  await expect(tempEngineFiles.needsCleanup()).resolves.toBe(false);
+  await expect(extractedEngineFiles.needsCleanup()).resolves.toBe(false);
 });
 
 test<Context>("エンジンを２回インストールすると処理が予約され、後で上書きされる", async ({
