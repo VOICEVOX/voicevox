@@ -1,6 +1,6 @@
 import { ref, toRaw } from "vue";
-import { createPartialStore } from "./vuex";
-import { createUILockAction } from "./ui";
+import { createPartialStore } from "../vuex";
+import { createUILockAction } from "../ui";
 import {
   Tempo,
   TimeSignature,
@@ -26,7 +26,7 @@ import {
   TrackParameters,
   SingingPitchKey,
   SingingPitch,
-} from "./type";
+} from "../type";
 import {
   buildSongTrackAudioFileNameFromRawData,
   currentDateString,
@@ -34,7 +34,11 @@ import {
   DEFAULT_STYLE_NAME,
   generateLabelFileDataFromFramePhonemes,
   sanitizeFileName,
-} from "./utility";
+} from "../utility";
+import {
+  copyNotesToClipboard,
+  readNotesFromClipboard,
+} from "./clipboardHelper";
 import {
   CharacterInfo,
   EngineId,
@@ -99,7 +103,6 @@ import {
 } from "@/sing/utility";
 import { getWorkaroundKeyRangeAdjustment } from "@/sing/workaroundKeyRangeAdjustment";
 import { createLogger } from "@/helpers/log";
-import { noteSchema } from "@/domain/project/schema";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { ufProjectToVoicevox } from "@/sing/utaformatixProject/toVoicevox";
@@ -2786,27 +2789,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   COPY_NOTES_TO_CLIPBOARD: {
-    async action({ getters }) {
-      const selectedTrack = getters.SELECTED_TRACK;
-      const noteIds = getters.SELECTED_NOTE_IDS;
-      // ノートが選択されていない場合は何もしない
-      if (noteIds.size === 0) {
-        return;
-      }
-      // 選択されたノートのみをコピーする
-      const selectedNotes = selectedTrack.notes
-        .filter((note: Note) => noteIds.has(note.id))
-        .map((note: Note) => {
-          // idのみコピーしない
-          const { id, ...noteWithoutId } = note;
-          return noteWithoutId;
-        });
-      // ノートをJSONにシリアライズしてクリップボードにコピーする
-      const serializedNotes = JSON.stringify(selectedNotes);
-      // クリップボードにテキストとしてコピーする
-      // NOTE: Electronのclipboardも使用する必要ある？
-      await navigator.clipboard.writeText(serializedNotes);
-      logger.info("Copied to clipboard.", serializedNotes);
+    async action(context) {
+      await copyNotesToClipboard(context);
     },
   },
 
@@ -2819,28 +2803,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   COMMAND_PASTE_NOTES_FROM_CLIPBOARD: {
     async action({ mutations, state, getters, actions }) {
-      // クリップボードからテキストを読み込む
-      let clipboardText;
-      try {
-        clipboardText = await navigator.clipboard.readText();
-      } catch (error) {
-        throw new Error("Failed to read the clipboard text.", {
-          cause: error,
-        });
-      }
+      // ノートをクリップボードから読み込む
+      const notes = await readNotesFromClipboard();
 
-      // クリップボードのテキストをJSONとしてパースする(失敗した場合はエラーを返す)
-      let notes;
-      try {
-        notes = noteSchema
-          .omit({ id: true })
-          .array()
-          .parse(JSON.parse(clipboardText));
-      } catch (error) {
-        throw new Error("Failed to parse the clipboard text as JSON.", {
-          cause: error,
-        });
-      }
+      // notesが空の場合は何もしない
+      if (notes.length === 0) return;
 
       // パースしたJSONのノートの位置を現在の再生位置に合わせてクオンタイズして貼り付ける
       const currentPlayheadPosition = getters.PLAYHEAD_POSITION;
