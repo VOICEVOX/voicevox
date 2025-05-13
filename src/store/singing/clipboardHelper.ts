@@ -3,7 +3,9 @@ import { noteSchema } from "@/domain/project/schema";
 
 // VOICEVOXソングのノート専用のMIMEタイプ
 // VOICEVOX内でノートデータを共有するために使用
-const VOICEVOX_NOTES_MIME_TYPE = "web application/vnd.voicevox.song-notes";
+// NOTE: どこかに定数で持たせるべきかもしれないが、適切な場所がなさそうなためヘルパーにまとめる
+export const VOICEVOX_NOTES_MIME_TYPE =
+  "web application/vnd.voicevox.song-notes";
 
 /**
  * 選択されたノートをクリップボードにコピーする

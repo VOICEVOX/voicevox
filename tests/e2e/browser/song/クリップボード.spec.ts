@@ -1,8 +1,7 @@
 import { test, expect, Page } from "@playwright/test";
 import { gotoHome, navigateToSong } from "../../navigators";
 import { noteSchema } from "@/domain/project/schema";
-
-const VOICEVOX_NOTES_MIME_TYPE = "web application/vnd.voicevox.song-notes";
+import { VOICEVOX_NOTES_MIME_TYPE } from "@/store/singing/clipboardHelper";
 
 async function grantClipboardPermissions(page: Page) {
   const origin = new URL(page.url()).origin;
@@ -48,7 +47,6 @@ test("選択した単一ノートをコピー＆ペーストできる", async ({
   });
 
   await test.step("ノートをコピーする", async () => {
-    // NOTE: macOSで動かず試験できないので、macもコピーできるようにしている
     const isMac = process.platform === "darwin";
     await page.keyboard.press(isMac ? "Meta+C" : "Control+C");
   });
@@ -97,12 +95,12 @@ test("選択した単一ノートをコピー＆ペーストできる", async ({
 
   await test.step("ペーストされたノートの歌詞は妥当なものである", async () => {
     const sequencer = getSequencer(page);
-    const noteLyricLocators = sequencer.locator(".note-lyric");
+    const noteLyrics = sequencer.locator(".note-lyric");
 
     // ノートはペースト分含め2つあるはず
-    await expect(noteLyricLocators).toHaveCount(2);
+    await expect(noteLyrics).toHaveCount(2);
     // ペーストされたノートは"ソ"であるはず
-    const pastedNoteLyric = await noteLyricLocators.nth(1).textContent();
+    const pastedNoteLyric = await noteLyrics.nth(1).textContent();
     expect(pastedNoteLyric).toBe("ソ");
   });
 });
