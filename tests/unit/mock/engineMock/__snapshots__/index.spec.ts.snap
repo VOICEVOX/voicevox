@@ -53,6 +53,8 @@ exports[`createOpenAPIEngineMock > audioQuery 1`] = `
   "intonationScale": 1,
   "outputSamplingRate": 24000,
   "outputStereo": false,
+  "pauseLength": null,
+  "pauseLengthScale": 1,
   "pitchScale": 0,
   "postPhonemeLength": 0.1,
   "prePhonemeLength": 0.1,

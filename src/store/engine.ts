@@ -266,7 +266,7 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
       };
       if (mergedResult.anyNewCharacters) {
         void actions.SET_DIALOG_OPEN({
-          isCharacterOrderDialogOpen: true,
+          isOldCharacterOrderDialogOpen: true,
         });
       }
 
