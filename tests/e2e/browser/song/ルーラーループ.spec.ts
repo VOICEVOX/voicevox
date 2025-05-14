@@ -19,7 +19,6 @@ test("ループ範囲をドラッグして追加できる", async ({ page }) => 
   const endPos = { x: 200, y: 5 };
 
   // ドラッグをエミュレート startPos から endPos までドラッグ
-  // NOTE: 正しい方法があれば修正
   await loopLane.hover({ position: startPos });
   await page.mouse.down();
   await page.mouse.move(endPos.x, endPos.y);

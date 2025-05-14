@@ -1,4 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/vue3";
+import { provide, computed } from "vue";
+import { numMeasuresInjectionKey } from "../ScoreSequencer.vue";
 import Container from "./Container.vue";
 import { UnreachableError } from "@/type/utility";
 import { Tempo, TimeSignature } from "@/store/type";
@@ -17,7 +19,12 @@ type SetupStoryState = {
   timeSignatures?: TimeSignature[];
 };
 
-const meta = {
+// Storybookプレイヤーのキャンバス要素の型...ないとstrict modeで怒られる
+interface PlayCanvasElement {
+  canvasElement: HTMLElement;
+}
+
+const meta: Meta<StoryProps> = {
   title: "Components/Sing/SequencerRuler",
   component: Container,
   decorators: [
@@ -54,9 +61,13 @@ const meta = {
             });
           }
         }
-        return {};
+
+        const numMeasures = computed(() => args.numMeasures ?? 32);
+        provide(numMeasuresInjectionKey, { numMeasures });
+
+        return { args };
       },
-      template: `<story />`,
+      template: `<story v-bind="args" />`, // args をstoryにバインド
     }),
   ],
   args: {
@@ -71,10 +82,10 @@ const meta = {
       control: { type: "number" },
     },
   },
-} satisfies Meta<typeof Container>;
+} satisfies Meta<StoryProps>;
 
 export default meta;
-type Story = StoryObj<typeof Container>;
+type Story = StoryObj<StoryProps>;
 
 export const Default: Story = {
   name: "デフォルト",
@@ -172,7 +183,7 @@ export const Dense: Story = {
 
 export const MovePlayhead: Story = {
   name: "再生位置を移動",
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement }: PlayCanvasElement) => {
     const ruler =
       canvasElement.querySelector<HTMLDivElement>(".sequencer-ruler");
 

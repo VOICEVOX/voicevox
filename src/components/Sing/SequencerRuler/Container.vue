@@ -5,7 +5,6 @@
     :offset="currentOffset"
     @click="handleClick"
   >
-    <!-- TODO: 各コンポーネントもなるべく疎にしたつもりだが、少なくともplayheadまわりがリファクタリング必要そう -->
     <template #grid>
       <GridLaneContainer />
     </template>
@@ -22,7 +21,7 @@
 import type { InjectionKey, Ref } from "vue";
 // Provide/Injectで使用するキー
 export const offsetInjectionKey: InjectionKey<Ref<number>> =
-  Symbol("sequencerOffset");
+  Symbol("rulerOffset");
 </script>
 
 <script setup lang="ts">
