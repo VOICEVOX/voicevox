@@ -24,7 +24,7 @@ import { numMeasuresInjectionKey } from "../../ScoreSequencer.vue";
 import Presentation from "./Presentation.vue";
 import { useStore } from "@/store";
 import { useSequencerLayout } from "@/composables/useSequencerLayout";
-import { offsetXToSnappedTick, ticksToSnappedBeat } from "@/sing/rulerHelper";
+import { ticksToSnappedBeat, baseXToTick } from "@/sing/rulerHelper";
 import { getMeasureDuration } from "@/sing/domain";
 import { ContextMenuItemData } from "@/components/Menu/ContextMenu/Presentation.vue";
 import { SEQUENCER_MIN_NUM_MEASURES } from "@/sing/viewHelper";
@@ -147,10 +147,11 @@ const handleLoopAreaMouseDown = (event: MouseEvent) => {
   // クリック位置を計算
   const target = event.currentTarget as HTMLElement;
   const rect = target.getBoundingClientRect();
-  const clickX = event.clientX - rect.left;
+  const clickXInLane = event.clientX - rect.left;
 
   // 既存のループ範囲内でのクリックかどうかを確認
-  const isWithinLoop = clickX >= loopStartX.value && clickX <= loopEndX.value;
+  const isWithinLoop =
+    clickXInLane >= loopStartX.value && clickXInLane <= loopEndX.value;
 
   // 既存のループ範囲内でのクリックの場合は、ループのオン/オフを切り替える
   if (isWithinLoop) return;
@@ -162,13 +163,9 @@ const handleLoopAreaMouseDown = (event: MouseEvent) => {
     previewRequestId = null;
   }
 
-  const tick = offsetXToSnappedTick(
-    clickX,
-    injectedOffset.value,
-    sequencerZoomX.value,
-    timeSignatures.value,
-    tpqn.value,
-  );
+  const baseX = (injectedOffset.value + clickXInLane) / sequencerZoomX.value;
+  const baseTick = baseXToTick(baseX, tpqn.value);
+  const tick = ticksToSnappedBeat(baseTick, timeSignatures.value, tpqn.value);
 
   // クリック位置をループ範囲の開始/終了に設定
   previewLoopStartTick.value = tick;
@@ -339,16 +336,17 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => [
 
 // クリック位置から1小節ぶんのループ範囲を作成
 const addOneMeasureLoop = (localX: number) => {
-  const snappedTick = offsetXToSnappedTick(
-    localX,
-    injectedOffset.value,
-    sequencerZoomX.value,
+  const baseX = (injectedOffset.value + localX) / sequencerZoomX.value;
+  const baseTickForLoop = baseXToTick(baseX, tpqn.value);
+  const startTick = ticksToSnappedBeat(
+    baseTickForLoop,
     timeSignatures.value,
     tpqn.value,
   );
+
   // そのTick時点にある拍子情報を取得
   const currentTs = timeSignatures.value.findLast((_, idx) => {
-    return tsPositions.value[idx] <= snappedTick;
+    return tsPositions.value[idx] <= startTick;
   });
   if (!currentTs) return;
 
@@ -358,13 +356,6 @@ const addOneMeasureLoop = (localX: number) => {
     tpqn.value,
   );
 
-  const startTick = offsetXToSnappedTick(
-    localX,
-    injectedOffset.value,
-    sequencerZoomX.value,
-    timeSignatures.value,
-    tpqn.value,
-  );
   const endTick = Math.min(
     ticksToSnappedBeat(
       startTick + oneMeasureTicks,

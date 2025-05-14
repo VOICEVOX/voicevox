@@ -19,7 +19,7 @@ import { numMeasuresInjectionKey } from "../../ScoreSequencer.vue";
 import Presentation from "./Presentation.vue";
 import { useStore } from "@/store";
 import { useSequencerLayout } from "@/composables/useSequencerLayout";
-import { offsetXToSnappedTick } from "@/sing/rulerHelper";
+import { ticksToSnappedBeat, baseXToTick } from "@/sing/rulerHelper";
 import { SEQUENCER_MIN_NUM_MEASURES } from "@/sing/viewHelper";
 import { tickToMeasureNumber } from "@/sing/domain";
 import { Tempo, TimeSignature } from "@/store/type";
@@ -146,10 +146,10 @@ const onValueChangeClick = async (
     setPlayheadPosition(newValueChange.position);
   } else {
     // 空き部分クリック時は、クリック位置から計算してスナップ位置に合わせる
-    const snappedTick = offsetXToSnappedTick(
-      event.offsetX,
-      injectedOffset.value,
-      sequencerZoomX.value,
+    const baseX = (injectedOffset.value + event.offsetX) / sequencerZoomX.value;
+    const baseTick = baseXToTick(baseX, tpqn.value);
+    const snappedTick = ticksToSnappedBeat(
+      baseTick,
       timeSignatures.value,
       tpqn.value,
     );

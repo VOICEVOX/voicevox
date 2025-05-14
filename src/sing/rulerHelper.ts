@@ -102,27 +102,6 @@ export const calculateEndTicks = (
 };
 
 /**
- * オフセットX位置からスナップされたTickへの変換
- * @param offsetX オフセットX位置
- * @param offset 表示オフセット
- * @param sequencerZoomX ズーム倍率X
- * @param timeSignatures 拍子情報の配列
- * @param tpqn TPQNの値
- * @returns スナップされたtick位置
- */
-export const offsetXToSnappedTick = (
-  offsetX: number,
-  offset: number,
-  sequencerZoomX: number,
-  timeSignatures: TimeSignature[],
-  tpqn: number,
-): number => {
-  const baseX = (offset + offsetX) / sequencerZoomX;
-  const baseTick = baseXToTick(baseX, tpqn);
-  return ticksToSnappedBeat(baseTick, timeSignatures, tpqn);
-};
-
-/**
  * 小節情報を計算する
  * @param timeSignatures 拍子情報の配列
  * @param tsPositions 拍子位置の配列
