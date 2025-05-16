@@ -135,7 +135,7 @@ import {
   SongTrackRenderingConfig,
   synthesizeSingingVoice,
   EngineSongApi,
-} from "@/sing/songTrackRendering";
+} from "@/sing/oldSongTrackRendering";
 
 const logger = createLogger("store/singing");
 
