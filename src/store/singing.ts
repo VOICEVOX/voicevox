@@ -135,6 +135,7 @@ import {
   SongTrackRenderingConfig,
   synthesizeSingingVoice,
   EngineSongApi,
+// Temporary import: The oldSongTrackRendering module is being used until the full integration of SongTrackRenderer is completed.
 } from "@/sing/oldSongTrackRendering";
 
 const logger = createLogger("store/singing");
