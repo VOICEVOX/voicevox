@@ -443,7 +443,7 @@ const createTestNotes = (patternNumber: number) => {
 };
 
 /**
- * 不正な歌詞（レンダリングエラーを引き起こすことを期待）を持つテスト用ノーツを生成する。
+ * 不正な歌詞（クエリの生成でエラーになる歌詞）を持つテスト用ノーツを生成する。
  *
  * @returns ノーツ。
  */
@@ -543,7 +543,7 @@ const separateNotesIntoPhrases = (notes: Note[]) => {
 };
 
 /**
- * ノーツから各フレーズの範囲情報（開始・終了Tick）の配列を取得する。
+ * ノーツから各フレーズの範囲情報（開始・終了Tick）を取得する。
  *
  * @param notes 対象のノーツ。
  * @returns フレーズ範囲情報の配列。
@@ -696,7 +696,7 @@ describe("SongTrackRenderer", () => {
     phraseInfos1.sort((a, b) => a.notes[0].position - b.notes[0].position);
     phraseInfos2.sort((a, b) => a.notes[0].position - b.notes[0].position);
 
-    // 2番目のフレーズのみ、キャッシュが効かず異なるはず
+    // 1番目と3番目のフレーズは、キャッシュが効いて同一のはず
     expect(phraseInfos1[0]).toEqual(phraseInfos2[0]);
     expect(phraseInfos1[1]).not.toEqual(phraseInfos2[1]);
     expect(phraseInfos1[2]).toEqual(phraseInfos2[2]);

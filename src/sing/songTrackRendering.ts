@@ -987,7 +987,7 @@ export class SongTrackRenderer {
   /**
    * レンダリングイベントを受け取るリスナー関数を追加する。
    *
-   * @param listener - イベントを受け取るリスナー関数。
+   * @param listener イベントを受け取るリスナー関数。
    * @throws 同じリスナー関数が既に登録されている場合にエラーをスローする。
    */
   addEventListener(listener: (event: SongTrackRenderingEvent) => void) {
@@ -1001,7 +1001,7 @@ export class SongTrackRenderer {
   /**
    * 登録されているイベントリスナー関数を削除する。
    *
-   * @param listener - 削除するリスナー関数。
+   * @param listener 削除するリスナー関数。
    * @throws 指定されたリスナー関数が存在しない場合にエラーをスローする。
    */
   removeEventListener(listener: (event: SongTrackRenderingEvent) => void) {
