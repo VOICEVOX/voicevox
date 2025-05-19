@@ -268,29 +268,27 @@ export class Transport {
       // ジャンプイベントをスケジュールする（ループを行う）
       // ループ終了位置で再生を停止し、ループ開始位置で再生を開始する形でループを実現する
 
-      // ジャンプイベントの情報を記録
-      this.scheduledJumpEventInfos.push({
-        contextTime: contextTimeToJump,
-        timeBeforeJump: this.loopEndTime,
-        timeAfterJump: this.loopStartTime,
-      });
-
-      // ジャンプ時刻を開始時刻として、ジャンプ後の位置を開始位置として設定
-      this.startContextTime = contextTimeToJump;
-      this.startTime = this.loopStartTime;
-
-      // ループ終了位置（ジャンプ時刻）でシーケンスのイベントのスケジューリングを終了する
+      // ループ終了位置（ジャンプ時刻）で再生を停止する
       this.schedulers.forEach((value) => {
         value.stop(contextTimeToJump);
       });
       this.schedulers.clear();
 
-      // ループ開始位置（ジャンプ時刻）でシーケンスのイベントのスケジューリングを開始する
+      // ループ開始位置（ジャンプ時刻）で再生を開始する
+      this.startContextTime = contextTimeToJump;
+      this.startTime = this.loopStartTime;
       this.sequences.forEach((sequence) => {
         const scheduler = this.createScheduler(sequence);
         scheduler.start(contextTimeToJump, this.loopStartTime);
         scheduler.schedule(this.loopStartTime + this.scheduleAheadTime);
         this.schedulers.set(sequence, scheduler);
+      });
+
+      // ジャンプイベントの情報を記録
+      this.scheduledJumpEventInfos.push({
+        contextTime: contextTimeToJump,
+        timeBeforeJump: this.loopEndTime,
+        timeAfterJump: this.loopStartTime,
       });
 
       // 次のジャンプ時刻を設定
@@ -300,7 +298,7 @@ export class Transport {
 
   /**
    * イベントのスケジューリングを行います。
-   * @param currentContextTime 現在のコンテキスト時刻（スケジューリングを行う時刻）
+   * @param currentContextTime スケジューリングを行う時刻（現在のコンテキスト時刻）
    */
   private scheduleEvents(currentContextTime: number) {
     this.scheduleSequenceEvents(currentContextTime);
