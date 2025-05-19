@@ -106,7 +106,7 @@
 import { computed, ref, watch } from "vue";
 import Draggable from "vuedraggable";
 import { useQuasar } from "quasar";
-import CharacterTryListenCard from "./CharacterTryListenCard.vue";
+import CharacterTryListenCard from "./OldCharacterTryListenCard.vue";
 import { useStore } from "@/store";
 import { CharacterInfo, SpeakerId, StyleId, StyleInfo } from "@/type/preload";
 
