@@ -32,6 +32,7 @@ import {
   MoraDataRequest,
   SingerInfoRequest,
   SingFrameAudioQueryRequest,
+  SingFrameF0Request,
   SingFrameVolumeRequest,
   Speaker,
   SpeakerInfo,
@@ -175,6 +176,20 @@ export function createOpenAPIEngineMock(): DefaultApiInterface {
         outputSamplingRate: getEngineManifestMock().defaultSamplingRate,
         outputStereo: false,
       };
+    },
+
+    async singFrameF0(payload: SingFrameF0Request): Promise<Array<number>> {
+      const {
+        speaker: styleId,
+        bodySingFrameF0SingFrameF0Post: { score, frameAudioQuery },
+      } = cloneWithUnwrapProxy(payload);
+
+      const f0 = notesAndFramePhonemesToPitchMock(
+        score.notes,
+        frameAudioQuery.phonemes,
+        styleId,
+      );
+      return f0;
     },
 
     async singFrameVolume(
