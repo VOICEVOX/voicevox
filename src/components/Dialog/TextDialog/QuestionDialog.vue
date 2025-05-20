@@ -101,8 +101,4 @@ const onClick = (index: number) => {
   justify-content: end;
   gap: vars.$gap-1;
 }
-// primary色のボタンのテキスト色は特別扱い
-.q-btn.bg-primary {
-  color: var(--color-display-on-primary) !important;
-}
 </style>
