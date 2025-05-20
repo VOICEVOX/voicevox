@@ -10,6 +10,7 @@
           @interactOutside="persistent && $event.preventDefault()"
         >
           <DialogTitle class="DialogTitle">
+            <!-- 暫定でQIconを使用 -->
             <QIcon v-if="icon" :name="icon" size="sm" />
             {{ title }}
           </DialogTitle>
@@ -64,29 +65,29 @@ defineExpose({
   inset: 0;
   top: 24px;
   background-color: rgba($color: #000000, $alpha: 0.4);
+  // TODO: QDialogを上回るz-indexにするため値を直書き。置き換え後 vars.$z-index-dialog へ変更する。
   z-index: 6000;
 }
 
 .DialogContent {
   position: fixed;
   inset: vars.$padding-2;
-  width: fit-content;
   min-width: 240px;
   max-width: 480px;
+  width: fit-content;
   height: fit-content;
-  margin: auto;
-  display: grid;
-  grid-template-rows: auto 1fr;
-  z-index: 6000;
   display: flex;
   flex-direction: column;
+  margin: auto;
+  padding: vars.$padding-2;
   gap: vars.$gap-1;
   color: colors.$display;
   background-color: colors.$background;
   border: 1px solid colors.$border;
-  padding: vars.$padding-2;
   border-radius: vars.$radius-2;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+  // TODO: QDialogを上回るz-indexにするため値を直書き。置き換え後 vars.$z-index-dialog へ変更する。
+  z-index: 6000;
 }
 
 .DialogTitle {
