@@ -12,6 +12,7 @@ import {
 } from "@/store/type";
 import { DotNotationDispatch } from "@/store/vuex";
 import { withProgress } from "@/store/ui";
+import { UnreachableError } from "@/type/utility";
 import { errorToMessage } from "@/helpers/errorHelper";
 
 type MediaType = "audio" | "text" | "project" | "label";
@@ -44,7 +45,7 @@ export type QuestionDialogOptions = {
   title: string;
   message: string;
   buttons: (string | { text: string; color: string })[];
-  cancel: number;
+  cancel: number | "noCancel";
   default?: number;
 };
 
@@ -157,12 +158,18 @@ export const showQuestionDialog = async (options: QuestionDialogOptions) => {
       title: options.title,
       message: options.message,
       buttons: options.buttons,
-      persistent: options.cancel == undefined,
+      persistent: options.cancel === "noCancel",
       default: options.default,
     },
   })
     .onOk(({ index }: { index: number }) => resolve(index))
-    .onCancel(() => resolve(options.cancel));
+    .onCancel(() => {
+      if (options.cancel === "noCancel")
+        throw new UnreachableError(
+          "Unreachable: options.cancel == 'noCancel', but onCancel is called",
+        );
+      resolve(options.cancel);
+    });
 
   const index = await promise;
 
@@ -372,7 +379,7 @@ export const notifyResult = (
   }
 };
 
-const NOTIFY_TIMEOUT = 7000;
+export const NOTIFY_TIMEOUT = 7000;
 
 export const showNotifyAndNotShowAgainButton = (
   {

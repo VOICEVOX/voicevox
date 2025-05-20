@@ -1,4 +1,6 @@
 import { computed } from "vue";
+import { isVst } from "@/helpers/platform";
+import { MenuItemData } from "@/components/Menu/type";
 import { Store } from "@/store";
 import { useRootMiscSetting } from "@/composables/useRootMiscSetting";
 import { ExportSongProjectFileType } from "@/store/type";
@@ -59,17 +61,27 @@ export const useMenuBarData = (store: Store): MaybeComputedMenuBarContent => {
     );
   };
 
+  const saveProjectCopy = async () => {
+    if (!uiLocked.value) {
+      await store.actions.SAVE_PROJECT_FILE_AS_COPY();
+    }
+  };
+
   // 「ファイル」メニュー
   const fileSubMenuData = computed<MenuBarContent["file"]>(() => ({
     audioExport: [
-      {
-        type: "button",
-        label: "音声書き出し",
-        onClick: () => {
-          void exportAudioFile();
-        },
-        disableWhenUiLocked: true,
-      },
+      ...(isVst
+        ? []
+        : ([
+            {
+              type: "button",
+              label: "音声書き出し",
+              onClick: () => {
+                void exportAudioFile();
+              },
+              disableWhenUiLocked: true,
+            },
+          ] satisfies MenuItemData[])),
       {
         type: "button",
         label: "labファイルを書き出し",
@@ -91,22 +103,39 @@ export const useMenuBarData = (store: Store): MaybeComputedMenuBarContent => {
       {
         type: "root",
         label: "プロジェクトをエクスポート",
-        subMenu: (
-          [
-            ["smf", "MIDI (SMF)"],
-            ["musicxml", "MusicXML"],
-            ["ufdata", "Utaformatix"],
-            ["ust", "UTAU"],
-          ] satisfies [fileType: ExportSongProjectFileType, label: string][]
-        ).map(([fileType, label]) => ({
-          type: "button",
-          label,
-          onClick: () => {
-            void exportSongProject(fileType, label);
-          },
-          disableWhenUiLocked: true,
-        })),
         disableWhenUiLocked: true,
+        subMenu: [
+          ...(isVst
+            ? ([
+                {
+                  type: "button",
+                  label: "VOICEVOX",
+                  onClick: () => {
+                    void saveProjectCopy();
+                  },
+                  disableWhenUiLocked: true,
+                },
+              ] satisfies MenuItemData[])
+            : []),
+          ...(
+            [
+              ["smf", "MIDI (SMF)"],
+              ["musicxml", "MusicXML"],
+              ["ufdata", "Utaformatix"],
+              ["ust", "UTAU"],
+            ] satisfies [fileType: ExportSongProjectFileType, label: string][]
+          ).map(
+            ([fileType, label]) =>
+              ({
+                type: "button",
+                label,
+                onClick: () => {
+                  void exportSongProject(fileType, label);
+                },
+                disableWhenUiLocked: true,
+              }) satisfies MenuItemData,
+          ),
+        ],
       },
     ],
   }));
