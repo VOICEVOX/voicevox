@@ -11,7 +11,12 @@
         >
           <DialogTitle class="DialogTitle">
             <!-- 暫定でQIconを使用 -->
-            <QIcon v-if="icon" :name="icon" size="sm" />
+            <QIcon
+              v-if="icon"
+              :name="icon.name"
+              :color="icon.color"
+              size="sm"
+            />
             {{ title }}
           </DialogTitle>
           <DialogDescription class="DialogDescription">
@@ -37,7 +42,7 @@ import {
 defineProps<{
   title: string;
   description: string;
-  icon?: string;
+  icon?: { name: string; color: string };
   persistent?: boolean;
 }>();
 
