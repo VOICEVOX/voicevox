@@ -9,7 +9,11 @@
     v-model:open="modelValue"
     :title
     :description="message"
-    :icon="props.type !== 'info' ? { name: iconName, color: color } : undefined"
+    :icon="
+      props.type !== 'info'
+        ? { name: `sym_o_${iconName}`, color: color }
+        : undefined
+    "
     :persistent
     @hide="onDialogHide"
   >
