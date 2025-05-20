@@ -1039,6 +1039,7 @@ export const isValidLoopRange = (
     startTick >= 0 &&
     endTick >= 0 &&
     Number.isInteger(startTick) &&
-    Number.isInteger(endTick)
+    Number.isInteger(endTick) &&
+    startTick <= endTick // 範囲差0は許容する
   );
 };
