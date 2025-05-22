@@ -7,7 +7,7 @@
       <Transition name="content">
         <DialogContent
           class="DialogContent"
-          @interactOutside="persistent && $event.preventDefault()"
+          @interactOutside="persistent ? $event.preventDefault() : hide()"
         >
           <DialogTitle class="DialogTitle">
             <!-- 暫定でQIconを使用 -->
