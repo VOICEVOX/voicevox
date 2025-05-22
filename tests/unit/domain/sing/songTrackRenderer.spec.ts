@@ -480,67 +480,59 @@ const getNoteEndPos = (note: Note) => {
 };
 
 /**
- * 複数のノーツの配列（フレーズ群）を、間に休符を挟んで連結する。
+ * フレーズのノーツの配列をトラックのノーツに変換する。
  *
- * @param notesArray 連結するノーツの配列。
- * @returns 連結後のノーツ。
+ * @param phraseNotesArray フレーズのノーツの配列。
+ * @returns トラックのノーツ。
  */
-const joinNotesWithRest = (notesArray: Note[][]) => {
+const toTrackNotes = (phraseNotesArray: Note[][]) => {
   const quarterNoteDuration = tpqn;
+  const oneMeasureDuration = tpqn * 4;
 
-  const newNotes: Note[] = [];
+  let trackNotes: Note[] = [];
   let position = 0;
 
-  for (const notes of notesArray) {
-    for (const note of notes) {
-      newNotes.push({ ...note, position: position + note.position });
+  // 間に休符を挟んで連結する
+  for (const phraseNotes of phraseNotesArray) {
+    for (const note of phraseNotes) {
+      trackNotes.push({ ...note, position: position + note.position });
     }
 
-    const lastNote = getLast(newNotes);
+    const lastNote = getLast(trackNotes);
     const lastNoteEndPos = getNoteEndPos(lastNote);
 
     position = lastNoteEndPos + quarterNoteDuration;
   }
 
-  return newNotes;
-};
-
-/**
- * ノーツ全体を1小節分右（後ろ）にシフトする。
- *
- * @param notes シフトするノーツ。
- * @returns シフト後のノーツ。
- */
-const shiftNotesByOneMeasures = (notes: Note[]): Note[] => {
-  const oneMeasureDuration = tpqn * 4;
-
-  return notes.map((note) => ({
+  // ノーツ全体を1小節分後ろにシフトする
+  trackNotes = trackNotes.map((note) => ({
     ...note,
     position: note.position + oneMeasureDuration,
   }));
+
+  return trackNotes;
 };
 
 /**
- * ノーツをフレーズ（ノーツ）の配列に分割する。
- * ノート間に休符がある場合に新しいフレーズとして分割する。
+ * トラックのノーツをフレーズのノーツの配列に変換する。
  *
- * @param notes 分割対象のノーツ。
- * @returns フレーズ（ノーツ）の配列。
+ * @param trackNotes トラックのノーツ。
+ * @returns フレーズのノーツの配列。
  */
-const separateNotesIntoPhrases = (notes: Note[]) => {
-  const notesArray: Note[][] = [];
+const toPhraseNotesArray = (trackNotes: Note[]) => {
+  const phraseNotesArray: Note[][] = [];
 
-  for (let i = 0; i < notes.length; i++) {
-    const note = notes[i];
+  for (let i = 0; i < trackNotes.length; i++) {
+    const note = trackNotes[i];
 
-    if (i === 0 || getNoteEndPos(notes[i - 1]) < note.position) {
-      notesArray.push([note]);
+    if (i === 0 || getNoteEndPos(trackNotes[i - 1]) < note.position) {
+      phraseNotesArray.push([note]);
     } else {
-      getLast(notesArray).push(note);
+      getLast(phraseNotesArray).push(note);
     }
   }
 
-  return notesArray;
+  return phraseNotesArray;
 };
 
 /**
@@ -550,9 +542,9 @@ const separateNotesIntoPhrases = (notes: Note[]) => {
  * @returns フレーズ範囲情報の配列。
  */
 const getPhraseRangeInfos = (notes: Note[]): PhraseRangeInfo[] => {
-  const notesArray = separateNotesIntoPhrases(notes);
+  const phraseNotesArray = toPhraseNotesArray(notes);
 
-  return notesArray.map((notes) => ({
+  return phraseNotesArray.map((notes) => ({
     startTicks: notes[0].position,
     endTicks: getNoteEndPos(getLast(notes)),
   }));
@@ -565,11 +557,11 @@ beforeEach(() => {
 describe("SongTrackRenderer", () => {
   test("正しいレンダリング結果が返される", async () => {
     const trackId = TrackId(uuid4());
-    const notesArray = [
+    const trackNotes = toTrackNotes([
       createTestNotes(0),
       createTestNotes(1),
       createTestNotes(2),
-    ];
+    ]);
 
     const songTrackRenderer = createSongTrackRendererUsingMock({
       playheadPositionGetter: () => 0,
@@ -580,7 +572,7 @@ describe("SongTrackRenderer", () => {
         trackId,
         {
           singer: { engineId, styleId: singerStyleId },
-          notes: shiftNotesByOneMeasures(joinNotesWithRest(notesArray)),
+          notes: trackNotes,
         },
       ],
     ]);
@@ -593,11 +585,11 @@ describe("SongTrackRenderer", () => {
 
   test("レンダリングイベントが正しく発行される", async () => {
     const trackId = TrackId(uuid4());
-    const notesArray = [
+    const trackNotes = toTrackNotes([
       createTestNotes(0),
       createTestNotes(1),
       createTestNotes(2),
-    ];
+    ]);
 
     const songTrackRenderer = createSongTrackRendererUsingMock({
       playheadPositionGetter: () => 0,
@@ -613,7 +605,7 @@ describe("SongTrackRenderer", () => {
         trackId,
         {
           singer: { engineId, styleId: singerStyleId },
-          notes: shiftNotesByOneMeasures(joinNotesWithRest(notesArray)),
+          notes: trackNotes,
         },
       ],
     ]);
@@ -626,7 +618,7 @@ describe("SongTrackRenderer", () => {
 
   test("キャッシュがロードされる", async () => {
     const trackId = TrackId(uuid4());
-    const notesArray = [
+    const phraseNotesArray = [
       createTestNotes(0),
       createTestNotes(1),
       createTestNotes(2),
@@ -647,14 +639,14 @@ describe("SongTrackRenderer", () => {
         trackId,
         {
           singer: { engineId, styleId: singerStyleId },
-          notes: shiftNotesByOneMeasures(joinNotesWithRest(notesArray)),
+          notes: toTrackNotes(phraseNotesArray),
         },
       ],
     ]);
     const result1 = await songTrackRenderer.render(snapshot1);
 
     // 2番目のフレーズのノーツを変更
-    notesArray[1] = createTestNotes(3);
+    phraseNotesArray[1] = createTestNotes(3);
 
     // 2回目のレンダリング
     const snapshot2 = createSnapshot([
@@ -662,7 +654,7 @@ describe("SongTrackRenderer", () => {
         trackId,
         {
           singer: { engineId, styleId: singerStyleId },
-          notes: shiftNotesByOneMeasures(joinNotesWithRest(notesArray)),
+          notes: toTrackNotes(phraseNotesArray),
         },
       ],
     ]);
@@ -705,7 +697,7 @@ describe("SongTrackRenderer", () => {
 
   test("変更された部分（フレーズ）のみ再レンダリングされる", async () => {
     const trackId = TrackId(uuid4());
-    const notesArray = [
+    const phraseNotesArray = [
       createTestNotes(0),
       createTestNotes(1),
       createTestNotes(2),
@@ -721,14 +713,14 @@ describe("SongTrackRenderer", () => {
         trackId,
         {
           singer: { engineId, styleId: singerStyleId },
-          notes: shiftNotesByOneMeasures(joinNotesWithRest(notesArray)),
+          notes: toTrackNotes(phraseNotesArray),
         },
       ],
     ]);
     await songTrackRenderer.render(snapshot1);
 
     // 2番目のフレーズのノーツを変更
-    notesArray[1] = createTestNotes(3);
+    phraseNotesArray[1] = createTestNotes(3);
 
     const renderingEventInfoPromises: Promise<RenderingEventInfo>[] = [];
     songTrackRenderer.addEventListener((event) => {
@@ -741,7 +733,7 @@ describe("SongTrackRenderer", () => {
         trackId,
         {
           singer: { engineId, styleId: singerStyleId },
-          notes: shiftNotesByOneMeasures(joinNotesWithRest(notesArray)),
+          notes: toTrackNotes(phraseNotesArray),
         },
       ],
     ]);
@@ -764,11 +756,11 @@ describe("SongTrackRenderer", () => {
 
   test("レンダリングを中断できる", async () => {
     const trackId = TrackId(uuid4());
-    const notesArray = [
+    const trackNotes = toTrackNotes([
       createTestNotes(0),
       createTestNotes(1),
       createTestNotes(2),
-    ];
+    ]);
 
     const songTrackRenderer = createSongTrackRendererUsingMock({
       playheadPositionGetter: () => 0,
@@ -793,7 +785,7 @@ describe("SongTrackRenderer", () => {
         trackId,
         {
           singer: { engineId, styleId: singerStyleId },
-          notes: shiftNotesByOneMeasures(joinNotesWithRest(notesArray)),
+          notes: trackNotes,
         },
       ],
     ]);
@@ -818,11 +810,11 @@ describe("SongTrackRenderer", () => {
 
   test("クエリの生成でエラーが発生した場合、phraseRenderingError イベントが発行され、次のフレーズのレンダリングに進む", async () => {
     const trackId = TrackId(uuid4());
-    const notesArray = [
+    const trackNotes = toTrackNotes([
       createTestNotes(0),
       createTestNotesWithInvalidLyrics(),
       createTestNotes(2),
-    ];
+    ]);
 
     const songTrackRenderer = createSongTrackRendererUsingMock({
       playheadPositionGetter: () => 0,
@@ -838,7 +830,7 @@ describe("SongTrackRenderer", () => {
         trackId,
         {
           singer: { engineId, styleId: singerStyleId },
-          notes: shiftNotesByOneMeasures(joinNotesWithRest(notesArray)),
+          notes: trackNotes,
         },
       ],
     ]);
@@ -875,19 +867,19 @@ describe("SongTrackRenderer", () => {
   test("トラックにシンガーが割り当てられていない場合、そのトラックのフレーズはレンダリングされない", async () => {
     const trackId1 = TrackId(uuid4());
     const singer1 = undefined;
-    const notesArray1 = [
+    const trackNotes1 = toTrackNotes([
       createTestNotes(0),
       createTestNotes(1),
       createTestNotes(2),
-    ];
+    ]);
 
     const trackId2 = TrackId(uuid4());
     const singer2 = { engineId, styleId: singerStyleId };
-    const notesArray2 = [
+    const trackNotes2 = toTrackNotes([
       createTestNotes(0),
       createTestNotes(3),
       createTestNotes(4),
-    ];
+    ]);
 
     const songTrackRenderer = createSongTrackRendererUsingMock({
       playheadPositionGetter: () => 0,
@@ -903,14 +895,14 @@ describe("SongTrackRenderer", () => {
         trackId1,
         {
           singer: singer1,
-          notes: shiftNotesByOneMeasures(joinNotesWithRest(notesArray1)),
+          notes: trackNotes1,
         },
       ],
       [
         trackId2,
         {
           singer: singer2,
-          notes: shiftNotesByOneMeasures(joinNotesWithRest(notesArray2)),
+          notes: trackNotes2,
         },
       ],
     ]);
@@ -944,20 +936,18 @@ describe("SongTrackRenderer", () => {
 
   test("再生ヘッド位置に近いフレーズから優先的にレンダリングされる", async () => {
     const trackId = TrackId(uuid4());
-    const notes = shiftNotesByOneMeasures(
-      joinNotesWithRest([
-        createTestNotes(0),
-        createTestNotes(1),
-        createTestNotes(2),
-        createTestNotes(3),
-        createTestNotes(4),
-        createTestNotes(5),
-        createTestNotes(6),
-      ]),
-    );
+    const trackNotes = toTrackNotes([
+      createTestNotes(0),
+      createTestNotes(1),
+      createTestNotes(2),
+      createTestNotes(3),
+      createTestNotes(4),
+      createTestNotes(5),
+      createTestNotes(6),
+    ]);
     const phraseIndexesPointedToByPlayhead = [3, 3, 6, 6, 6, 6, 6];
     const phraseIndexesInExpectedRenderingOrder = [3, 4, 6, 0, 1, 2, 5];
-    const phraseRangeInfos = getPhraseRangeInfos(notes);
+    const phraseRangeInfos = getPhraseRangeInfos(trackNotes);
 
     let currentIndex = 0;
     const movePlayheadToNextPosition = () => {
@@ -990,7 +980,7 @@ describe("SongTrackRenderer", () => {
         trackId,
         {
           singer: { engineId, styleId: singerStyleId },
-          notes,
+          notes: trackNotes,
         },
       ],
     ]);
