@@ -328,56 +328,57 @@ const toPhraseInfos = async (phrases: Map<PhraseKey, PhraseForRender>) => {
 const toRenderingEventInfo = async (
   event: SongTrackRenderingEvent,
 ): Promise<RenderingEventInfo> => {
-  if (event.type === "phrasesGenerated") {
-    return {
-      type: event.type,
-      phraseInfos: await toPhraseInfos(event.phrases),
-    };
-  } else if (event.type === "cacheLoaded") {
-    return {
-      type: event.type,
-      phraseInfos: await toPhraseInfos(event.phrases),
-    };
-  } else if (event.type === "phraseRenderingStarted") {
-    return event;
-  } else if (event.type === "queryGenerationComplete") {
-    return {
-      type: event.type,
-      phraseKey: event.phraseKey,
-      queryKey: event.queryKey,
-      queryHash: await calculateHash(event.query),
-    };
-  } else if (event.type === "pitchGenerationComplete") {
-    return {
-      type: event.type,
-      phraseKey: event.phraseKey,
-      singingPitchKey: event.singingPitchKey,
-      singingPitchHash: await calculateHash(event.singingPitch),
-    };
-  } else if (event.type === "volumeGenerationComplete") {
-    return {
-      type: event.type,
-      phraseKey: event.phraseKey,
-      singingVolumeKey: event.singingVolumeKey,
-      singingVolumeHash: await calculateHash(event.singingVolume),
-    };
-  } else if (event.type === "voiceSynthesisComplete") {
-    return {
-      type: event.type,
-      phraseKey: event.phraseKey,
-      singingVoiceKey: event.singingVoiceKey,
-      singingVoiceHash: await calculateSingingVoiceHash(event.singingVoice),
-    };
-  } else if (event.type === "phraseRenderingComplete") {
-    return {
-      type: event.type,
-      phraseKey: event.phraseKey,
-      phraseInfo: await toPhraseInfo(event.phrase),
-    };
-  } else if (event.type === "phraseRenderingError") {
-    return event;
-  } else {
-    throw new ExhaustiveError(event);
+  switch (event.type) {
+    case "phrasesGenerated":
+      return {
+        type: event.type,
+        phraseInfos: await toPhraseInfos(event.phrases),
+      };
+    case "cacheLoaded":
+      return {
+        type: event.type,
+        phraseInfos: await toPhraseInfos(event.phrases),
+      };
+    case "phraseRenderingStarted":
+      return event;
+    case "queryGenerationComplete":
+      return {
+        type: event.type,
+        phraseKey: event.phraseKey,
+        queryKey: event.queryKey,
+        queryHash: await calculateHash(event.query),
+      };
+    case "pitchGenerationComplete":
+      return {
+        type: event.type,
+        phraseKey: event.phraseKey,
+        singingPitchKey: event.singingPitchKey,
+        singingPitchHash: await calculateHash(event.singingPitch),
+      };
+    case "volumeGenerationComplete":
+      return {
+        type: event.type,
+        phraseKey: event.phraseKey,
+        singingVolumeKey: event.singingVolumeKey,
+        singingVolumeHash: await calculateHash(event.singingVolume),
+      };
+    case "voiceSynthesisComplete":
+      return {
+        type: event.type,
+        phraseKey: event.phraseKey,
+        singingVoiceKey: event.singingVoiceKey,
+        singingVoiceHash: await calculateSingingVoiceHash(event.singingVoice),
+      };
+    case "phraseRenderingComplete":
+      return {
+        type: event.type,
+        phraseKey: event.phraseKey,
+        phraseInfo: await toPhraseInfo(event.phrase),
+      };
+    case "phraseRenderingError":
+      return event;
+    default:
+      throw new ExhaustiveError(event);
   }
 };
 
