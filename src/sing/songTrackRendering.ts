@@ -1021,20 +1021,9 @@ export class SongTrackRenderer {
   private clonePhrases(phrases: Map<PhraseKey, PhraseForRender>) {
     return new Map(
       [...phrases.entries()].map(([phraseKey, phrase]) => {
-        return [phraseKey, this.clonePhrase(phrase)];
+        return [phraseKey, SongTrackRenderer.clonePhrase(phrase)];
       }),
     );
-  }
-
-  /**
-   * フレーズを複製する。
-   *
-   * @param phrase フレーズオブジェクト。
-   * @returns 複製されたフレーズオブジェクト。
-   */
-  private clonePhrase(phrase: PhraseForRender): PhraseForRender {
-    // 歌唱ピッチや歌声などは、SongTrackRenderer内ではイミュータブルとして扱われるので、シャローコピーで問題なし
-    return { ...phrase };
   }
 
   /**
@@ -1229,7 +1218,7 @@ export class SongTrackRenderer {
     this.dispatchEvent({
       type: "phraseRenderingComplete",
       phraseKey,
-      phrase: this.clonePhrase(phrase),
+      phrase: SongTrackRenderer.clonePhrase(phrase),
     });
   }
 
@@ -1393,5 +1382,16 @@ export class SongTrackRenderer {
     for (const listener of this.listeners) {
       listener(event);
     }
+  }
+
+  /**
+   * フレーズを複製する。
+   *
+   * @param phrase フレーズオブジェクト。
+   * @returns 複製されたフレーズオブジェクト。
+   */
+  private static clonePhrase(phrase: PhraseForRender): PhraseForRender {
+    // 歌唱ピッチや歌声などは、SongTrackRenderer内ではイミュータブルとして扱われるので、シャローコピーで問題なし
+    return { ...phrase };
   }
 }
