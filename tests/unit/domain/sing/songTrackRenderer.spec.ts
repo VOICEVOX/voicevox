@@ -424,13 +424,13 @@ const createTestNotes = (patternNumber: number) => {
     [8, { lyrics: "はち", noteNumbers: [72, 72] }],
   ]);
   const pattern = getOrThrow(patterns, patternNumber);
+  if (pattern.lyrics.length !== pattern.noteNumbers.length) {
+    throw new Error("The number of noteNumbers and lyrics does not match.");
+  }
 
   const notes: Note[] = [];
 
   for (let i = 0; i < pattern.lyrics.length; i++) {
-    if (pattern.lyrics.length !== pattern.noteNumbers.length) {
-      throw new Error("The number of noteNumbers and lyrics does not match.");
-    }
     notes.push({
       id: NoteId(uuid4()),
       position: quarterNoteDuration * i,
