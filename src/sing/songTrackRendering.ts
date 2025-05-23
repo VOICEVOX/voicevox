@@ -913,7 +913,7 @@ export class SongTrackRenderer {
       const phrases = await generatePhrases(snapshot, this.config);
       this.dispatchEvent({
         type: "phrasesGenerated",
-        phrases: this.clonePhrases(phrases),
+        phrases: SongTrackRenderer.clonePhrases(phrases),
         snapshot,
       });
 
@@ -924,7 +924,7 @@ export class SongTrackRenderer {
       await this.applyCachedDataToPhrases(renderablePhrases, snapshot);
       this.dispatchEvent({
         type: "cacheLoaded",
-        phrases: this.clonePhrases(phrases),
+        phrases: SongTrackRenderer.clonePhrases(phrases),
         snapshot,
       });
 
@@ -1010,20 +1010,6 @@ export class SongTrackRenderer {
       throw new Error("Listener does not exist.");
     }
     this.listeners.delete(listener);
-  }
-
-  /**
-   * フレーズのマップを複製する。
-   *
-   * @param phrases フレーズのマップ。
-   * @returns 複製されたフレーズのマップ。
-   */
-  private clonePhrases(phrases: Map<PhraseKey, PhraseForRender>) {
-    return new Map(
-      [...phrases.entries()].map(([phraseKey, phrase]) => {
-        return [phraseKey, SongTrackRenderer.clonePhrase(phrase)];
-      }),
-    );
   }
 
   /**
@@ -1385,7 +1371,21 @@ export class SongTrackRenderer {
   }
 
   /**
-   * フレーズを複製する。
+   * フレーズのマップを複製する。（シャローコピー）
+   *
+   * @param phrases フレーズのマップ。
+   * @returns 複製されたフレーズのマップ。
+   */
+  private static clonePhrases(phrases: Map<PhraseKey, PhraseForRender>) {
+    return new Map(
+      [...phrases.entries()].map(([phraseKey, phrase]) => {
+        return [phraseKey, SongTrackRenderer.clonePhrase(phrase)];
+      }),
+    );
+  }
+
+  /**
+   * フレーズを複製する。（シャローコピー）
    *
    * @param phrase フレーズオブジェクト。
    * @returns 複製されたフレーズオブジェクト。
