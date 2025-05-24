@@ -163,6 +163,7 @@ const cleanDistPlugin = (): Plugin => {
   };
 };
 
+/** バックエンドAPIをフロントエンドから実行するコードを注入する */
 const injectBridgeScriptPlugin = (): Plugin => {
   return {
     name: "inject-bridge-script",
