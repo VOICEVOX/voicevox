@@ -171,7 +171,7 @@
             class="sequencer-playhead"
             data-testid="sequencer-playhead"
             :style="{
-              transform: `translateX(${playheadX - scrollX}px)`,
+              transform: `translateX(${playheadX - scrollX - 1}px)`,
             }"
           ></div>
         </div>

@@ -2,7 +2,6 @@
   <div ref="sequencerRuler" class="sequencer-ruler" @click="onClick">
     <div class="sequencer-ruler-content" :style="{ width: `${props.width}px` }">
       <div class="sequencer-ruler-grid">
-        <!-- NOTE: slotを使う(Copilotくんが提案してくれた) -->
         <slot name="grid" />
       </div>
       <div class="sequencer-ruler-value-changes">
@@ -62,12 +61,13 @@ const onClick = (event: MouseEvent) => {
   height: 100%;
 }
 
-.sequencer-ruler-loop {
+.sequencer-ruler-grid {
   position: absolute;
-  z-index: 0; // ルーラー内においてグリッドより下
+  z-index: 0; // ルーラー内でベースとなるグリッド線
+  pointer-events: none; // クリック無効
 }
 
-.sequencer-ruler-grid {
+.sequencer-ruler-loop {
   position: absolute;
   z-index: 1; // ルーラー内でグリッド線が重なりの影響を受けないようにするため一番上に
   pointer-events: none; // クリック無効
@@ -75,13 +75,13 @@ const onClick = (event: MouseEvent) => {
 
 .sequencer-ruler-value-changes {
   position: absolute;
-  z-index: 2; // ルーラー内においてグリッドより上
+  z-index: 2; // ルーラー内において一番上
 }
 
 .sequencer-ruler-playhead {
   position: absolute;
   top: 0;
-  left: 0;
+  left: -1px;
   width: 2px;
   height: 100%;
   background: var(--scheme-color-inverse-surface);

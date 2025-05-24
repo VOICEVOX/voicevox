@@ -11,6 +11,9 @@
     @click.stop
     @mousedown.stop="handleLoopAreaMouseDown"
     @mouseup.stop
+    @mousemove="handleLaneMouseMove"
+    @mouseenter="handleLaneMouseEnter"
+    @mouseleave="handleLaneMouseLeave"
     @contextmenu.prevent="handleContextMenu"
   >
     <svg
@@ -20,22 +23,34 @@
       shape-rendering="crispEdges"
     >
       <!-- ループ範囲 -->
-      <rect
-        v-if="!isLoopRangeZero"
-        :x="loopStartX - offset + 4"
-        y="0"
-        :width="Math.max(loopEndX - loopStartX - 8, 0)"
-        height="4"
-        rx="2"
-        ry="2"
-        class="loop-range"
-        @click.stop="handleLoopRangeClick"
-        @dblclick.stop="handleLoopRangeDoubleClick"
-      />
+      <g v-if="!isLoopRangeZero" class="loop-range-group">
+        <rect
+          :x="loopStartX - offset + 4"
+          y="0"
+          :width="Math.max(loopEndX - loopStartX - 8, 0)"
+          height="4"
+          rx="2"
+          ry="2"
+          class="loop-range"
+        />
+        <!-- ループ範囲のドラッグエリア(クリックしやすくするためループ範囲よりも大きい) -->
+        <rect
+          :x="loopStartX - offset + 4"
+          y="0"
+          :width="Math.max(loopEndX - loopStartX - 8, 0)"
+          height="8"
+          class="loop-range-drag-area"
+          @click.stop="handleLoopRangeClick"
+          @dblclick.stop="handleLoopRangeDoubleClick"
+          @mousedown.stop
+          @mouseenter="handleLoopRangeMouseEnter"
+          @mouseleave="handleLoopRangeMouseLeave"
+        />
+      </g>
       <!-- ループ開始ハンドル -->
       <g class="loop-handle-group">
         <rect
-          :x="loopStartX - offset"
+          :x="loopStartX - offset - 1"
           y="0"
           width="2"
           height="16"
@@ -43,22 +58,22 @@
           ry="1"
           class="loop-handle loop-handle-start"
           :class="{ 'is-range-zero': isLoopRangeZero }"
-          @mousedown.stop="handleStartHandleMouseDown"
+          @mousedown.stop="handleLoopStartMouseDown"
         />
         <!-- 開始ハンドルのドラッグエリア(ドラッグしやすくするためハンドルよりも大きい) -->
         <rect
-          :x="loopStartX - offset - 2"
+          :x="loopStartX - offset - 5"
           y="0"
-          width="8"
+          width="12"
           height="24"
           class="loop-handle-drag-area"
-          @mousedown.stop="handleStartHandleMouseDown"
+          @mousedown.stop="handleLoopStartMouseDown"
         />
       </g>
       <!-- ループ終了ハンドル -->
       <g class="loop-handle-group">
         <rect
-          :x="loopEndX - offset - 2"
+          :x="loopEndX - offset - 1"
           y="0"
           width="2"
           height="16"
@@ -66,16 +81,28 @@
           ry="1"
           class="loop-handle loop-handle-end"
           :class="{ 'is-range-zero': isLoopRangeZero }"
-          @mousedown.stop="handleEndHandleMouseDown"
+          @mousedown.stop="handleLoopEndMouseDown"
         />
         <!-- 終了ハンドルのドラッグエリア(ドラッグしやすくするためハンドルよりも大きい) -->
         <rect
-          :x="loopEndX - offset - 6"
+          :x="loopEndX - offset - 5"
           y="0"
-          width="8"
+          width="12"
           height="24"
           class="loop-handle-drag-area"
-          @mousedown.stop="handleEndHandleMouseDown"
+          @mousedown.stop="handleLoopEndMouseDown"
+        />
+      </g>
+      <!-- プレビューハンドル（ホバー時のみ表示） -->
+      <g v-if="shouldShowPreviewHandle" class="loop-preview-handle-group">
+        <rect
+          :x="previewHandleX - 1"
+          y="0"
+          width="2"
+          height="16"
+          rx="1"
+          ry="1"
+          class="loop-preview-handle"
         />
       </g>
     </svg>
@@ -88,6 +115,7 @@ import { computed } from "vue";
 import ContextMenu, {
   ContextMenuItemData,
 } from "@/components/Menu/ContextMenu/Presentation.vue";
+import { TimeSignature } from "@/store/type";
 
 defineOptions({
   name: "LoopLanePresentation",
@@ -102,19 +130,45 @@ const props = defineProps<{
   isDragging: boolean;
   cursorClass: string;
   contextMenuData: ContextMenuItemData[];
+  tpqn: number;
+  timeSignatures: TimeSignature[];
+  sequencerZoomX: number;
+  snapTicks: number;
+  previewHandleX: number;
+  shouldShowPreviewHandle: boolean;
 }>();
 
 const emit = defineEmits<{
   (e: "loopAreaMouseDown", event: MouseEvent): void;
   (e: "loopRangeClick"): void;
   (e: "loopRangeDoubleClick"): void;
-  (e: "startHandleMouseDown", event: MouseEvent): void;
-  (e: "endHandleMouseDown", event: MouseEvent): void;
+  (e: "loopStartMouseDown", event: MouseEvent): void;
+  (e: "loopEndMouseDown", event: MouseEvent): void;
   (e: "contextMenu", event: MouseEvent): void;
+  (e: "laneMouseMove", event: MouseEvent): void;
+  (e: "laneMouseEnter"): void;
+  (e: "laneMouseLeave"): void;
+  (e: "loopRangeMouseEnter"): void;
+  (e: "loopRangeMouseLeave"): void;
 }>();
+
+// 範囲ゼロにするとそのあと消えるよ、という表現のためのもの
+const isLoopRangeZero = computed(() => props.loopStartX === props.loopEndX);
 
 const handleLoopAreaMouseDown = (event: MouseEvent) => {
   emit("loopAreaMouseDown", event);
+};
+
+const handleLaneMouseMove = (event: MouseEvent) => {
+  emit("laneMouseMove", event);
+};
+
+const handleLaneMouseEnter = () => {
+  emit("laneMouseEnter");
+};
+
+const handleLaneMouseLeave = () => {
+  emit("laneMouseLeave");
 };
 
 const handleLoopRangeClick = () => {
@@ -125,20 +179,25 @@ const handleLoopRangeDoubleClick = () => {
   emit("loopRangeDoubleClick");
 };
 
-const handleStartHandleMouseDown = (event: MouseEvent) => {
-  emit("startHandleMouseDown", event);
+const handleLoopStartMouseDown = (event: MouseEvent) => {
+  emit("loopStartMouseDown", event);
 };
 
-const handleEndHandleMouseDown = (event: MouseEvent) => {
-  emit("endHandleMouseDown", event);
+const handleLoopEndMouseDown = (event: MouseEvent) => {
+  emit("loopEndMouseDown", event);
 };
 
 const handleContextMenu = (event: MouseEvent) => {
   emit("contextMenu", event);
 };
 
-// 範囲ゼロにするとそのあと消えるよ、という表現のためだけのもの
-const isLoopRangeZero = computed(() => props.loopStartX === props.loopEndX);
+const handleLoopRangeMouseEnter = () => {
+  emit("loopRangeMouseEnter");
+};
+
+const handleLoopRangeMouseLeave = () => {
+  emit("loopRangeMouseLeave");
+};
 </script>
 
 <style scoped lang="scss">
@@ -155,16 +214,11 @@ const isLoopRangeZero = computed(() => props.loopStartX === props.loopEndX);
   overflow: hidden;
   pointer-events: auto;
   cursor: pointer;
-  transition: background-color 0.2s ease-out;
+  transition: background-color 0.15s ease-out;
 
   // カーソル状態
   &.cursor-ew-resize {
     cursor: ew-resize;
-  }
-
-  // ホバー状態
-  &:hover {
-    background: var(--scheme-color-sing-ruler-surface-hover);
   }
 }
 
@@ -172,8 +226,18 @@ const isLoopRangeZero = computed(() => props.loopStartX === props.loopEndX);
 .loop-range {
   fill: var(--scheme-color-primary);
 
-  &-area {
+  &-drag-area {
     fill: transparent;
+    cursor: pointer;
+    pointer-events: auto;
+  }
+
+  &-group {
+    &:hover {
+      .loop-range {
+        opacity: 0.8;
+      }
+    }
   }
 }
 
@@ -208,7 +272,13 @@ const isLoopRangeZero = computed(() => props.loopStartX === props.loopEndX);
 .loop-lane.is-enabled {
   .loop-range {
     fill: var(--scheme-color-primary);
-    opacity: 0.5;
+    opacity: 0.5; // TODO: 透明度はSASSまたはCSS変数で一括管理する
+  }
+
+  .loop-range-group:hover {
+    .loop-range {
+      opacity: 0.7;
+    }
   }
 
   .loop-handle {
@@ -229,6 +299,13 @@ const isLoopRangeZero = computed(() => props.loopStartX === props.loopEndX);
     opacity: 0.38;
   }
 
+  .loop-range-group:hover {
+    .loop-range {
+      fill: var(--scheme-color-secondary);
+      opacity: 0.5;
+    }
+  }
+
   .loop-handle {
     fill: var(--scheme-color-outline);
     stroke: var(--scheme-color-outline);
@@ -243,8 +320,6 @@ const isLoopRangeZero = computed(() => props.loopStartX === props.loopEndX);
 
 // ドラッグ中
 .loop-lane.is-dragging {
-  background: var(--scheme-color-sing-ruler-surface-hover);
-
   // ドラッグ中かつ有効
   &.is-enabled {
     .loop-handle {
@@ -293,5 +368,13 @@ const isLoopRangeZero = computed(() => props.loopStartX === props.loopEndX);
     fill: var(--scheme-color-outline);
     opacity: 0.5;
   }
+}
+
+// プレビューハンドル（ホバー時のみ表示）
+.loop-preview-handle {
+  fill: var(--scheme-color-primary);
+  opacity: 0.3;
+  pointer-events: none;
+  transition: opacity 0.15s ease-out;
 }
 </style>
