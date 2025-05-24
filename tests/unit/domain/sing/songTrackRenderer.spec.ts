@@ -233,7 +233,7 @@ const createSongTrackRendererUsingMock = ({
  * @param trackEntries トラックIDとトラック情報（シンガー、ノーツ）のエントリー配列。
  * @returns スナップショットオブジェクト。
  */
-const createSnapshot = (
+const createSnapshotObject = (
   trackEntries: [TrackId, { singer?: Singer; notes: Note[] }][],
 ) => {
   const tracks = new Map<TrackId, Track>();
@@ -567,7 +567,7 @@ describe("SongTrackRenderer", () => {
       playheadPositionGetter: () => 0,
     });
 
-    const snapshot = createSnapshot([
+    const snapshot = createSnapshotObject([
       [
         trackId,
         {
@@ -600,7 +600,7 @@ describe("SongTrackRenderer", () => {
       renderingEventInfoPromises.push(toRenderingEventInfo(event));
     });
 
-    const snapshot = createSnapshot([
+    const snapshot = createSnapshotObject([
       [
         trackId,
         {
@@ -634,7 +634,7 @@ describe("SongTrackRenderer", () => {
     });
 
     // 1回目のレンダリング
-    const snapshot1 = createSnapshot([
+    const snapshot1 = createSnapshotObject([
       [
         trackId,
         {
@@ -649,7 +649,7 @@ describe("SongTrackRenderer", () => {
     phraseNotesArray[1] = createTestNotes(3);
 
     // 2回目のレンダリング
-    const snapshot2 = createSnapshot([
+    const snapshot2 = createSnapshotObject([
       [
         trackId,
         {
@@ -708,7 +708,7 @@ describe("SongTrackRenderer", () => {
     });
 
     // 1回目のレンダリング
-    const snapshot1 = createSnapshot([
+    const snapshot1 = createSnapshotObject([
       [
         trackId,
         {
@@ -728,7 +728,7 @@ describe("SongTrackRenderer", () => {
     });
 
     // 2回目のレンダリング
-    const snapshot2 = createSnapshot([
+    const snapshot2 = createSnapshotObject([
       [
         trackId,
         {
@@ -780,7 +780,7 @@ describe("SongTrackRenderer", () => {
       }
     });
 
-    const snapshot = createSnapshot([
+    const snapshot = createSnapshotObject([
       [
         trackId,
         {
@@ -825,7 +825,7 @@ describe("SongTrackRenderer", () => {
       renderingEventInfoPromises.push(toRenderingEventInfo(event));
     });
 
-    const snapshot = createSnapshot([
+    const snapshot = createSnapshotObject([
       [
         trackId,
         {
@@ -890,7 +890,7 @@ describe("SongTrackRenderer", () => {
       renderingEventInfoPromises.push(toRenderingEventInfo(event));
     });
 
-    const snapshot = createSnapshot([
+    const snapshot = createSnapshotObject([
       [
         trackId1,
         {
@@ -975,7 +975,7 @@ describe("SongTrackRenderer", () => {
       }
     });
 
-    const snapshot = createSnapshot([
+    const snapshot = createSnapshotObject([
       [
         trackId,
         {
