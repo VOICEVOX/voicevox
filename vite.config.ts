@@ -14,6 +14,7 @@ import {
   checkSuspiciousImports,
   CheckSuspiciousImportsOptions,
 } from "./tools/checkSuspiciousImports.js";
+import { UnreachableError } from "@/type/utility.js";
 
 const isElectron = process.env.VITE_TARGET === "electron";
 const isBrowser = process.env.VITE_TARGET === "browser";
@@ -145,7 +146,7 @@ export default defineConfig((options) => {
           },
         }),
       ],
-      injectBridgeScriptPlugin(),
+      (isElectron || isBrowser) && injectBridgeScriptPlugin(),
     ],
   };
 });
@@ -182,9 +183,7 @@ const injectBridgeScriptPlugin = (): Plugin => {
             `<script type="module" src="./backend/browser/bridge.ts"></script>`,
           );
         }
-        throw new Error(
-          "Unsupported target. Please set VITE_TARGET to 'electron' or 'browser'.",
-        );
+        throw new UnreachableError();
       },
     },
   };
