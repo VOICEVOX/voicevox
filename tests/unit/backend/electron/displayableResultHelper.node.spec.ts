@@ -1,25 +1,25 @@
 import { describe, it, expect } from "vitest";
 import {
-  wrapToIpcResult,
-  getOrThrowIpcResult,
-  IpcResult,
-} from "@/backend/electron/ipcResultHelper";
+  wrapToDisplayableResult,
+  getOrThrowDisplayableResult,
+  DisplayableResult,
+} from "@/backend/electron/displayableResultHelper";
 import { DisplayableError } from "@/helpers/errorHelper";
 import { UnreachableError } from "@/type/utility";
 
-describe("ipcResultHelper", () => {
+describe("displayableResultHelper", () => {
   it("正常値をラップ・アンラップできる（同期）", async () => {
-    const result = await wrapToIpcResult(() => 42);
+    const result = await wrapToDisplayableResult(() => 42);
     expectSuccessResult(result, 42);
   });
 
   it("正常値をラップ・アンラップできる（非同期）", async () => {
-    const result = await wrapToIpcResult(async () => "abc");
+    const result = await wrapToDisplayableResult(async () => "abc");
     expectSuccessResult(result, "abc");
   });
 
   it("エラーをラップし、アンラップ時にthrowされる（同期）", async () => {
-    const result = await wrapToIpcResult<number>(() => {
+    const result = await wrapToDisplayableResult<number>(() => {
       throw new Error("custom error message");
     });
     expectErrorResult({
@@ -30,7 +30,7 @@ describe("ipcResultHelper", () => {
   });
 
   it("エラーをラップし、アンラップ時にthrowされる（非同期）", async () => {
-    const result = await wrapToIpcResult<string>(async () => {
+    const result = await wrapToDisplayableResult<string>(async () => {
       throw new Error("custom error message");
     });
     expectErrorResult({
@@ -41,7 +41,7 @@ describe("ipcResultHelper", () => {
   });
 
   it("DisplayableErrorをラップし、型情報を保持する（同期）", async () => {
-    const result = await wrapToIpcResult<number>(() => {
+    const result = await wrapToDisplayableResult<number>(() => {
       throw new DisplayableError("user friendly message");
     });
     expectErrorResult({
@@ -52,7 +52,7 @@ describe("ipcResultHelper", () => {
   });
 
   it("DisplayableErrorをラップし、型情報を保持する（非同期）", async () => {
-    const result = await wrapToIpcResult<string>(async () => {
+    const result = await wrapToDisplayableResult<string>(async () => {
       throw new DisplayableError("user friendly message");
     });
     expectErrorResult({
@@ -64,16 +64,16 @@ describe("ipcResultHelper", () => {
 
   /** 正常系の結果を検証する */
   function expectSuccessResult<T>(
-    result: IpcResult<T>,
+    result: DisplayableResult<T>,
     expectedValue: T,
   ): void {
     expect(result).toEqual({ ok: true, value: expectedValue });
-    expect(getOrThrowIpcResult(result)).toBe(expectedValue);
+    expect(getOrThrowDisplayableResult(result)).toBe(expectedValue);
   }
 
   /** 異常系の結果を検証する */
   function expectErrorResult(params: {
-    result: IpcResult<unknown>;
+    result: DisplayableResult<unknown>;
     expectedMessage: string;
     isDisplayable: boolean;
   }): void {
@@ -85,7 +85,7 @@ describe("ipcResultHelper", () => {
 
     let thrownError: Error | null = null;
     try {
-      getOrThrowIpcResult(result);
+      getOrThrowDisplayableResult(result);
     } catch (e) {
       thrownError = e as Error;
     }

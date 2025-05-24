@@ -145,7 +145,7 @@ export default defineConfig((options) => {
           },
         }),
       ],
-      isBrowser && injectBrowserPreloadPlugin(),
+      (isElectron || isBrowser) && injectBridgeScriptPlugin(),
     ],
   };
 });
@@ -163,16 +163,27 @@ const cleanDistPlugin = (): Plugin => {
   };
 };
 
-const injectBrowserPreloadPlugin = (): Plugin => {
+/** バックエンドAPIをフロントエンドから実行するコードを注入する */
+const injectBridgeScriptPlugin = (): Plugin => {
   return {
-    name: "inject-browser-preload",
+    name: "inject-bridge-script",
     transformIndexHtml: {
       order: "pre",
-      handler: (html: string) =>
-        html.replace(
-          "<!-- %BROWSER_PRELOAD% -->",
-          `<script type="module" src="./backend/browser/preload.ts"></script>`,
-        ),
+      handler: (html: string) => {
+        if (isElectron) {
+          return html.replace(
+            "<!-- %BRIDGE_SCRIPT% -->",
+            `<script type="module" src="./backend/electron/renderer/bridge.ts"></script>`,
+          );
+        }
+        if (isBrowser) {
+          return html.replace(
+            "<!-- %BRIDGE_SCRIPT% -->",
+            `<script type="module" src="./backend/browser/bridge.ts"></script>`,
+          );
+        }
+        throw new Error("UnreachableError");
+      },
     },
   };
 };
