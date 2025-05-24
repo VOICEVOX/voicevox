@@ -10,7 +10,6 @@ import { BuildOptions, defineConfig, loadEnv, Plugin } from "vite";
 import { quasar } from "@quasar/vite-plugin";
 import { z } from "zod";
 
-import { UnreachableError } from "src/type/utility.js";
 import {
   checkSuspiciousImports,
   CheckSuspiciousImportsOptions,
@@ -183,7 +182,7 @@ const injectBridgeScriptPlugin = (): Plugin => {
             `<script type="module" src="./backend/browser/bridge.ts"></script>`,
           );
         }
-        throw new UnreachableError();
+        throw new Error("UnreachableError");
       },
     },
   };
