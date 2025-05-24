@@ -1,5 +1,5 @@
 import { BrowserWindow, ipcMain, IpcMainInvokeEvent } from "electron";
-import { wrapToIpcResult } from "./ipcResultHelper";
+import { wrapToDisplayableResult } from "./displayableResultHelper";
 import { IpcIHData, IpcSOData } from "@/type/ipc";
 import { createLogger } from "@/helpers/log";
 
@@ -35,7 +35,7 @@ export function registerIpcMainHandle(listeners: {
         return;
       }
 
-      return wrapToIpcResult(() => listener(event, ...args));
+      return wrapToDisplayableResult(() => listener(event, ...args));
     };
     ipcMain.handle(channel, errorHandledListener);
   });

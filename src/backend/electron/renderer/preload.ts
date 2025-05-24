@@ -1,5 +1,8 @@
 import { contextBridge, ipcRenderer, webUtils } from "electron";
-import { getOrThrowIpcResult } from "../ipcResultHelper";
+import {
+  wrapToDisplayableResult,
+  getOrThrowDisplayableResult,
+} from "../displayableResultHelper";
 import { type IpcRendererInvoke } from "./ipc";
 import {
   ConfigType,
@@ -8,6 +11,7 @@ import {
   SandboxKey,
   TextAsset,
 } from "@/type/preload";
+import { BridgeKey } from "./bridge";
 
 const ipcRendererInvokeProxy = new Proxy(
   {},
@@ -16,9 +20,9 @@ const ipcRendererInvokeProxy = new Proxy(
       (_, channel: string) =>
       async (...args: unknown[]) => {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        const ipcResult = await ipcRenderer.invoke(channel, ...args);
+        const displayableResult = await ipcRenderer.invoke(channel, ...args);
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        return getOrThrowIpcResult(ipcResult);
+        return getOrThrowDisplayableResult(displayableResult);
       },
   },
 ) as IpcRendererInvoke;
@@ -226,4 +230,17 @@ const api: Sandbox = {
   },
 };
 
-contextBridge.exposeInMainWorld(SandboxKey, api);
+const wrapApiForMainWorld = (baseApi: Sandbox): Sandbox => {
+  const wrappedApi = {} as Sandbox;
+  for (const key in baseApi) {
+    const propKey = key as keyof Sandbox;
+    // @ts-expect-error とりあえず動くので無視
+    wrappedApi[propKey] = async (...args: unknown[]) => {
+      // @ts-expect-error とりあえず動くので無視
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      return wrapToDisplayableResult(() => baseApi[propKey](...args));
+    };
+  }
+  return wrappedApi;
+};
+contextBridge.exposeInMainWorld(BridgeKey, wrapApiForMainWorld(api));
