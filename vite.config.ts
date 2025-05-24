@@ -10,11 +10,11 @@ import { BuildOptions, defineConfig, loadEnv, Plugin } from "vite";
 import { quasar } from "@quasar/vite-plugin";
 import { z } from "zod";
 
+import { UnreachableError } from "src/type/utility.js";
 import {
   checkSuspiciousImports,
   CheckSuspiciousImportsOptions,
 } from "./tools/checkSuspiciousImports.js";
-import { UnreachableError } from "@/type/utility.js";
 
 const isElectron = process.env.VITE_TARGET === "electron";
 const isBrowser = process.env.VITE_TARGET === "browser";
