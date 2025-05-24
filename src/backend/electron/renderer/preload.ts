@@ -4,14 +4,8 @@ import {
   getOrThrowDisplayableResult,
 } from "../displayableResultHelper";
 import { type IpcRendererInvoke } from "./ipc";
-import {
-  ConfigType,
-  EngineId,
-  Sandbox,
-  SandboxKey,
-  TextAsset,
-} from "@/type/preload";
 import { BridgeKey } from "./bridge";
+import { ConfigType, EngineId, Sandbox, TextAsset } from "@/type/preload";
 
 const ipcRendererInvokeProxy = new Proxy(
   {},
@@ -230,7 +224,7 @@ const api: Sandbox = {
   },
 };
 
-const wrapApiForMainWorld = (baseApi: Sandbox): Sandbox => {
+const wrapApi = (baseApi: Sandbox): Sandbox => {
   const wrappedApi = {} as Sandbox;
   for (const key in baseApi) {
     const propKey = key as keyof Sandbox;
@@ -243,4 +237,4 @@ const wrapApiForMainWorld = (baseApi: Sandbox): Sandbox => {
   }
   return wrappedApi;
 };
-contextBridge.exposeInMainWorld(BridgeKey, wrapApiForMainWorld(api));
+contextBridge.exposeInMainWorld(BridgeKey, wrapApi(api));

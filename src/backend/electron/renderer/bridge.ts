@@ -9,24 +9,24 @@ declare global {
   }
 }
 
-const unwrapDisplayableResultFromMainWorld = (api: Sandbox): Sandbox => {
-  const wrappedApi = {} as Sandbox;
-  for (const key in api) {
+const unwrapApi = (baseApi: Sandbox): Sandbox => {
+  const unwrappedApi = {} as Sandbox;
+  for (const key in baseApi) {
     const propKey = key as keyof Sandbox;
     // @ts-expect-error とりあえず動くので無視
-    wrappedApi[propKey] = async (...args: unknown[]) => {
+    unwrappedApi[propKey] = async (...args: unknown[]) => {
       // @ts-expect-error とりあえず動くので無視
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const displayableResult = await api[propKey](...args);
+      const displayableResult = await baseApi[propKey](...args);
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       return getOrThrowDisplayableResult(displayableResult);
     };
   }
-  return wrappedApi;
+  return unwrappedApi;
 };
 
 // @ts-expect-error readonlyになっているが、初期化処理はここで行うので問題ない
-window[SandboxKey] = unwrapDisplayableResultFromMainWorld(
+window[SandboxKey] = unwrapApi(
   // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   window[BridgeKey],
 );
