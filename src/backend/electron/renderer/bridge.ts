@@ -1,3 +1,7 @@
+/**
+ * ElectronのpreloadプロセスとMainWorldプロセスの橋渡し。
+ */
+
 import { getOrThrowDisplayableResult } from "../displayableResultHelper";
 import { SandboxKey, Sandbox } from "@/type/preload";
 
