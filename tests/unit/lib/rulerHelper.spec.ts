@@ -17,7 +17,7 @@ describe("rulerHelper", () => {
 
       // 0tickは1拍目にスナップ
       expect(ticksToSnappedBeat(0, timeSignatures, tpqn)).toBe(0);
-      // 239tickは2拍目にスナップ（0に近い）
+      // 239tickは1拍目にスナップ（0に近い）
       expect(ticksToSnappedBeat(239, timeSignatures, tpqn)).toBe(0);
       // 240tickは2拍目にスナップ
       expect(ticksToSnappedBeat(240, timeSignatures, tpqn)).toBe(480);
