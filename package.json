@@ -161,6 +161,9 @@
       "esbuild",
       "msw",
       "vue-demi"
-    ]
+    ],
+    "overrides": {
+      "eslint-config-prettier": "10.1.5"
+    }
   }
 }
