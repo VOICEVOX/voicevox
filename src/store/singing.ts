@@ -136,7 +136,9 @@ import {
   SongTrackRenderingConfig,
   synthesizeSingingVoice,
   EngineSongApi,
-} from "@/sing/songTrackRendering";
+  // 一時的なインポート：SongTrackRenderer の統合が完了するまで、oldSongTrackRendering モジュールを使用する
+  // TODO: SongTrackRenderer の統合が完了したら、このインポートを削除する
+} from "@/sing/oldSongTrackRendering";
 
 const logger = createLogger("store/singing");
 
