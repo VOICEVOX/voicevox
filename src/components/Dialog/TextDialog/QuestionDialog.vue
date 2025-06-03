@@ -15,7 +15,7 @@
         : undefined
     "
     :persistent
-    @hide="onDialogHide"
+    @update:open="if (!$event) onDialogHide();"
   >
     <div class="footer">
       <BaseButton
