@@ -15,7 +15,7 @@
         : undefined
     "
     :persistent
-    @update:open="if (!$event) onDialogHide();"
+    @update:open="handleOpenUpdate"
   >
     <div class="footer">
       <BaseButton
@@ -89,6 +89,12 @@ onMounted(() => {
 });
 
 let buttonClicked = false;
+
+function handleOpenUpdate(isOpen: boolean) {
+  if (!isOpen) {
+    onDialogHide();
+  }
+}
 
 const onClick = (index: number) => {
   if (buttonClicked) return;
