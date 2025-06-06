@@ -50,13 +50,12 @@ jobs:
       matrix:
         artifact_name:
           - linux-nvidia-prepackage
-          # TODO: あとでもどす
-          # - linux-cpu-prepackage
-          # - windows-nvidia-prepackage
-          # - windows-cpu-prepackage
-          # - windows-directml-prepackage
-          # - macos-x64-cpu-prepackage
-          # - macos-arm64-cpu-prepackage
+          - linux-cpu-prepackage
+          - windows-nvidia-prepackage
+          - windows-cpu-prepackage
+          - windows-directml-prepackage
+          - macos-x64-cpu-prepackage
+          - macos-arm64-cpu-prepackage
         include:
           # Linux NVIDIA GPU
           - artifact_name: linux-nvidia-prepackage
@@ -70,69 +69,68 @@ jobs:
             linux_executable_name: voicevox
             linux_appimage_7z_name: VOICEVOX.AppImage
             os: ubuntu-22.04
-          # TODO: あとでもどす
-          # # Linux CPU
-          # - artifact_name: linux-cpu-prepackage
-          #   artifact_path: dist_electron/linux-unpacked
-          #   voicevox_engine_asset_name: linux-cpu-x64
-          #   package_name: voicevox-cpu
-          #   compressed_artifact_name: voicevox-linux-cpu
-          #   app_asar_dir: prepackage/resources
-          #   installer_artifact_name: linux-cpu-appimage
-          #   linux_artifact_name: "VOICEVOX.${ext}"
-          #   linux_executable_name: voicevox
-          #   linux_appimage_7z_name: VOICEVOX-CPU.AppImage
-          #   os: ubuntu-22.04
-          # # Windows CUDA
-          # - artifact_name: windows-nvidia-prepackage
-          #   artifact_path: dist_electron/win-unpacked
-          #   voicevox_engine_asset_name: windows-nvidia
-          #   package_name: voicevox-cuda
-          #   compressed_artifact_name: voicevox-windows-nvidia
-          #   app_asar_dir: prepackage/resources
-          #   installer_artifact_name: windows-nvidia-nsis-web
-          #   nsis_web_artifact_name: "VOICEVOX-CUDA.Web.Setup.${version}.${ext}"
-          #   os: windows-2019
-          # # Windows CPU
-          # - artifact_name: windows-cpu-prepackage
-          #   artifact_path: dist_electron/win-unpacked
-          #   voicevox_engine_asset_name: windows-cpu
-          #   package_name: voicevox-cpu
-          #   compressed_artifact_name: voicevox-windows-cpu
-          #   app_asar_dir: prepackage/resources
-          #   installer_artifact_name: windows-cpu-nsis-web
-          #   nsis_web_artifact_name: "VOICEVOX-CPU.Web.Setup.${version}.${ext}"
-          #   os: windows-2019
-          # # Windows DirectML
-          # - artifact_name: windows-directml-prepackage
-          #   artifact_path: dist_electron/win-unpacked
-          #   voicevox_engine_asset_name: windows-directml
-          #   package_name: voicevox
-          #   compressed_artifact_name: voicevox-windows-directml
-          #   app_asar_dir: prepackage/resources
-          #   installer_artifact_name: windows-directml-nsis-web
-          #   nsis_web_artifact_name: "VOICEVOX.Web.Setup.${version}.${ext}"
-          #   os: windows-2019
-          # # macOS CPU (x64)
-          # - artifact_name: macos-x64-cpu-prepackage
-          #   artifact_path: dist_electron/mac
-          #   voicevox_engine_asset_name: macos-x64
-          #   package_name: voicevox-cpu
-          #   compressed_artifact_name: voicevox-macos-x64-cpu
-          #   app_asar_dir: prepackage/VOICEVOX.app/Contents/Resources
-          #   installer_artifact_name: macos-x64-cpu-dmg
-          #   macos_artifact_name: "VOICEVOX.${version}-x64.${ext}"
-          #   os: macos-13
-          # # macOS CPU (arm64)
-          # - artifact_name: macos-arm64-cpu-prepackage
-          #   artifact_path: dist_electron/mac-arm64
-          #   voicevox_engine_asset_name: macos-arm64
-          #   package_name: voicevox-cpu
-          #   compressed_artifact_name: voicevox-macos-arm64-cpu
-          #   app_asar_dir: prepackage/VOICEVOX.app/Contents/Resources
-          #   installer_artifact_name: macos-arm64-cpu-dmg
-          #   macos_artifact_name: "VOICEVOX.${version}-arm64.${ext}"
-          #   os: macos-14
+          # Linux CPU
+          - artifact_name: linux-cpu-prepackage
+            artifact_path: dist_electron/linux-unpacked
+            voicevox_engine_asset_name: linux-cpu-x64
+            package_name: voicevox-cpu
+            compressed_artifact_name: voicevox-linux-cpu
+            app_asar_dir: prepackage/resources
+            installer_artifact_name: linux-cpu-appimage
+            linux_artifact_name: "VOICEVOX.${ext}"
+            linux_executable_name: voicevox
+            linux_appimage_7z_name: VOICEVOX-CPU.AppImage
+            os: ubuntu-22.04
+          # Windows CUDA
+          - artifact_name: windows-nvidia-prepackage
+            artifact_path: dist_electron/win-unpacked
+            voicevox_engine_asset_name: windows-nvidia
+            package_name: voicevox-cuda
+            compressed_artifact_name: voicevox-windows-nvidia
+            app_asar_dir: prepackage/resources
+            installer_artifact_name: windows-nvidia-nsis-web
+            nsis_web_artifact_name: "VOICEVOX-CUDA.Web.Setup.${version}.${ext}"
+            os: windows-2019
+          # Windows CPU
+          - artifact_name: windows-cpu-prepackage
+            artifact_path: dist_electron/win-unpacked
+            voicevox_engine_asset_name: windows-cpu
+            package_name: voicevox-cpu
+            compressed_artifact_name: voicevox-windows-cpu
+            app_asar_dir: prepackage/resources
+            installer_artifact_name: windows-cpu-nsis-web
+            nsis_web_artifact_name: "VOICEVOX-CPU.Web.Setup.${version}.${ext}"
+            os: windows-2019
+          # Windows DirectML
+          - artifact_name: windows-directml-prepackage
+            artifact_path: dist_electron/win-unpacked
+            voicevox_engine_asset_name: windows-directml
+            package_name: voicevox
+            compressed_artifact_name: voicevox-windows-directml
+            app_asar_dir: prepackage/resources
+            installer_artifact_name: windows-directml-nsis-web
+            nsis_web_artifact_name: "VOICEVOX.Web.Setup.${version}.${ext}"
+            os: windows-2019
+          # macOS CPU (x64)
+          - artifact_name: macos-x64-cpu-prepackage
+            artifact_path: dist_electron/mac
+            voicevox_engine_asset_name: macos-x64
+            package_name: voicevox-cpu
+            compressed_artifact_name: voicevox-macos-x64-cpu
+            app_asar_dir: prepackage/VOICEVOX.app/Contents/Resources
+            installer_artifact_name: macos-x64-cpu-dmg
+            macos_artifact_name: "VOICEVOX.${version}-x64.${ext}"
+            os: macos-13
+          # macOS CPU (arm64)
+          - artifact_name: macos-arm64-cpu-prepackage
+            artifact_path: dist_electron/mac-arm64
+            voicevox_engine_asset_name: macos-arm64
+            package_name: voicevox-cpu
+            compressed_artifact_name: voicevox-macos-arm64-cpu
+            app_asar_dir: prepackage/VOICEVOX.app/Contents/Resources
+            installer_artifact_name: macos-arm64-cpu-dmg
+            macos_artifact_name: "VOICEVOX.${version}-arm64.${ext}"
+            os: macos-14
 
     runs-on: ${{ matrix.os }}
     steps:
