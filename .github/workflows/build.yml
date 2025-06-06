@@ -49,7 +49,8 @@ jobs:
       fail-fast: false
       matrix:
         artifact_name:
-          - linux-nvidia-prepackage
+          # TODO: 一時的なコメントアウトを戻す
+          # - linux-nvidia-prepackage
           - linux-cpu-prepackage
           - windows-nvidia-prepackage
           - windows-cpu-prepackage
