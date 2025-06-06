@@ -92,7 +92,7 @@ export interface Sandbox {
     filePath: string;
     buffer: ArrayBuffer | Uint8Array;
   }): Promise<Result<undefined>>;
-  readFile(obj: { filePath: string }): Promise<Result<ArrayBuffer>>;
+  readFile(obj: { filePath: string }): Promise<Result<Uint8Array>>;
   isAvailableGPUMode(): Promise<boolean>;
   isMaximizedWindow(): Promise<boolean>;
   onReceivedIPCMsg(listeners: {
@@ -130,8 +130,8 @@ export interface Sandbox {
     engineId: EngineId,
     engineSetting: EngineSettingType,
   ): Promise<void>;
-  installVvppEngine(path: string): Promise<boolean>;
-  uninstallVvppEngine(engineId: EngineId): Promise<boolean>;
+  installVvppEngine(path: string): Promise<void>;
+  uninstallVvppEngine(engineId: EngineId): Promise<void>;
   validateEngineDir(engineDir: string): Promise<EngineDirValidationResult>;
   reloadApp(obj: { isMultiEngineOffMode?: boolean }): Promise<void>;
   getPathForFile(file: File): string;

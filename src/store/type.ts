@@ -9,6 +9,7 @@ import {
   StoreOptions,
   PayloadFunction,
   Store,
+  DotNotationActionContext,
 } from "./vuex";
 import { createCommandMutationTree, PayloadRecipeTree } from "./command";
 import {
@@ -720,8 +721,8 @@ export type AudioPlayerStoreState = {
 };
 
 export type AudioPlayerStoreTypes = {
-  ACTIVE_AUDIO_ELEM_CURRENT_TIME: {
-    getter: number | undefined;
+  ACTIVE_AUDIO_ELEM_CURRENT_TIME_GETTER: {
+    getter: () => number | undefined;
   };
 
   NOW_PLAYING: {
@@ -1127,10 +1128,6 @@ export type SingingStoreTypes = {
     action(payload: { snapType: number }): void;
   };
 
-  SEQUENCER_NUM_MEASURES: {
-    getter: number;
-  };
-
   SET_ZOOM_X: {
     mutation: { zoomX: number };
     action(payload: { zoomX: number }): void;
@@ -1193,13 +1190,39 @@ export type SingingStoreTypes = {
     action(): void;
   };
 
-  FETCH_SING_FRAME_VOLUME: {
-    action(palyoad: {
+  FETCH_SING_FRAME_AUDIO_QUERY: {
+    action(payload: {
+      notes: NoteForRequestToEngine[];
+      engineFrameRate: number;
+      engineId: EngineId;
+      styleId: StyleId;
+    }): Promise<EditorFrameAudioQuery>;
+  };
+
+  FETCH_SING_FRAME_F0: {
+    action(payload: {
       notes: NoteForRequestToEngine[];
       query: EditorFrameAudioQuery;
       engineId: EngineId;
       styleId: StyleId;
     }): Promise<number[]>;
+  };
+
+  FETCH_SING_FRAME_VOLUME: {
+    action(payload: {
+      notes: NoteForRequestToEngine[];
+      query: EditorFrameAudioQuery;
+      engineId: EngineId;
+      styleId: StyleId;
+    }): Promise<number[]>;
+  };
+
+  FRAME_SYNTHESIS: {
+    action(payload: {
+      query: EditorFrameAudioQuery;
+      engineId: EngineId;
+      styleId: StyleId;
+    }): Promise<Blob>;
   };
 
   TICK_TO_SECOND: {
@@ -1693,11 +1716,11 @@ export type EngineStoreTypes = {
   };
 
   INSTALL_VVPP_ENGINE: {
-    action: (path: string) => Promise<boolean>;
+    action: (path: string) => Promise<void>;
   };
 
   UNINSTALL_VVPP_ENGINE: {
-    action: (engineId: EngineId) => Promise<boolean>;
+    action: (engineId: EngineId) => Promise<void>;
   };
 
   SET_ENGINE_INFOS: {
@@ -1851,12 +1874,20 @@ export type ProjectStoreTypes = {
     ): boolean;
   };
 
-  SAVE_PROJECT_FILE: {
-    action(payload: { overwrite?: boolean }): boolean;
+  SAVE_PROJECT_FILE_OVERWRITE: {
+    action(): Promise<boolean>;
+  };
+
+  SAVE_PROJECT_FILE_AS: {
+    action(): Promise<boolean>;
+  };
+
+  SAVE_PROJECT_FILE_AS_COPY: {
+    action(): Promise<boolean>;
   };
 
   SAVE_OR_DISCARD_PROJECT_FILE: {
-    action(palyoad: {
+    action(payload: {
       additionalMessage?: string;
     }): "saved" | "discarded" | "canceled";
   };
@@ -2012,8 +2043,9 @@ export type UiStoreState = {
 
 export type DialogStates = {
   isSettingDialogOpen: boolean;
-  isCharacterOrderDialogOpen: boolean;
-  isDefaultStyleSelectDialogOpen: boolean;
+  isCharacterListDialogOpen: boolean;
+  isOldCharacterOrderDialogOpen: boolean;
+  isOldDefaultStyleSelectDialogOpen: boolean;
   isHotkeySettingDialogOpen: boolean;
   isToolbarSettingDialogOpen: boolean;
   isAcceptRetrieveTelemetryDialogOpen: boolean;
@@ -2023,6 +2055,8 @@ export type DialogStates = {
   isUpdateNotificationDialogOpen: boolean;
   isExportSongAudioDialogOpen: boolean;
   isImportSongProjectDialogOpen: boolean;
+  isPresetManageDialogOpen: boolean;
+  isHelpDialogOpen: boolean;
 };
 
 export type UiStoreTypes = {
@@ -2373,6 +2407,14 @@ type AllStoreTypes = AudioStoreTypes &
 export type AllGetters = StoreType<AllStoreTypes, "getter">;
 export type AllMutations = StoreType<AllStoreTypes, "mutation">;
 export type AllActions = StoreType<AllStoreTypes, "action">;
+
+export type ActionContext = DotNotationActionContext<
+  State,
+  State,
+  AllGetters,
+  AllActions,
+  AllMutations
+>;
 
 export const commandMutationsCreator = <S, M extends MutationsBase>(
   arg: PayloadRecipeTree<S, M>,

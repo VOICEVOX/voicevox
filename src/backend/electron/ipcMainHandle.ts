@@ -312,11 +312,11 @@ export function getIpcMainHandle(params: {
     },
 
     INSTALL_VVPP_ENGINE: async (_, path: string) => {
-      return await engineAndVvppController.installVvppEngine(path);
+      await engineAndVvppController.installVvppEngine(path);
     },
 
     UNINSTALL_VVPP_ENGINE: async (_, engineId: EngineId) => {
-      return await engineAndVvppController.uninstallVvppEngine(engineId);
+      await engineAndVvppController.uninstallVvppEngine(engineId);
     },
 
     VALIDATE_ENGINE_DIR: (_, { engineDir }) => {
@@ -344,7 +344,7 @@ export function getIpcMainHandle(params: {
     READ_FILE: async (_, { filePath }) => {
       try {
         const result = await fs.promises.readFile(filePath);
-        return success(result);
+        return success(new Uint8Array(result.buffer));
       } catch (e) {
         // throwだと`.code`の情報が消えるのでreturn
         const a = e as SystemError;

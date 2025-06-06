@@ -1,6 +1,6 @@
 <template>
   <QDialog
-    v-model="engineManageDialogOpenedComputed"
+    v-model="dialogOpened"
     maximized
     transitionShow="jump-up"
     transitionHide="jump-down"
@@ -278,22 +278,15 @@ import { useStore } from "@/store";
 import { EngineDirValidationResult, EngineId } from "@/type/preload";
 import type { SupportedFeatures } from "@/openapi/models/SupportedFeatures";
 import { useEngineIcons } from "@/composables/useEngineIcons";
+import { errorToMessage } from "@/helpers/errorHelper";
+import { ExhaustiveError } from "@/type/utility";
 
 type EngineLoaderType = "dir" | "vvpp";
 
-const props = defineProps<{
-  modelValue: boolean;
-}>();
-const emit = defineEmits<{
-  (e: "update:modelValue", val: boolean): void;
-}>();
+const dialogOpened = defineModel<boolean>("dialogOpened");
 
 const store = useStore();
 
-const engineManageDialogOpenedComputed = computed({
-  get: () => props.modelValue,
-  set: (val) => emit("update:modelValue", val),
-});
 const uiLockedState = ref<null | "addingEngine" | "deletingEngine">(null); // ダイアログ内でstore.getters.UI_LOCKEDは常にtrueなので独自に管理
 const uiLocked = computed(() => uiLockedState.value != null);
 const isAddingEngine = ref(false);
@@ -340,7 +333,7 @@ watch(
       if (engineVersions.value[id]) continue;
       const version = await store.actions
         .INSTANTIATE_ENGINE_CONNECTOR({ engineId: id })
-        .then((instance) => instance.invoke("versionVersionGet")({}))
+        .then((instance) => instance.invoke("version")({}))
         .then((version) => {
           // OpenAPIのバグで"latest"のようにダブルクォーテーションで囲まれていることがあるので外す
           if (version.startsWith('"') && version.endsWith('"')) {
@@ -427,14 +420,21 @@ const addEngine = async () => {
         "エンジンを追加しました。反映には再読み込みが必要です。",
       );
     } else {
-      const success = await lockUi(
-        "addingEngine",
-        store.actions.INSTALL_VVPP_ENGINE(vvppFilePath.value),
-      );
-      if (success) {
+      try {
+        await lockUi(
+          "addingEngine",
+          store.actions.INSTALL_VVPP_ENGINE(vvppFilePath.value),
+        );
+
         void requireReload(
           "エンジンを追加しました。反映には再読み込みが必要です。",
         );
+      } catch (e) {
+        console.error(e);
+        void store.actions.SHOW_ALERT_DIALOG({
+          title: "エンジンの追加に失敗しました",
+          message: errorToMessage(e),
+        });
       }
     }
   }
@@ -474,17 +474,23 @@ const deleteEngine = async () => {
         break;
       }
       case "vvpp": {
-        const success = await lockUi(
-          "deletingEngine",
-          store.actions.UNINSTALL_VVPP_ENGINE(engineId),
-        );
-        if (success) {
+        try {
+          await lockUi(
+            "deletingEngine",
+            store.actions.UNINSTALL_VVPP_ENGINE(engineId),
+          );
           void requireReload("エンジンの削除には再読み込みが必要です。");
+        } catch (e) {
+          console.error(e);
+          void store.actions.SHOW_ALERT_DIALOG({
+            title: "エンジンの削除に失敗しました",
+            message: errorToMessage(e),
+          });
         }
         break;
       }
       default:
-        throw new Error("assert engineInfos[selectedId.value].type");
+        throw new ExhaustiveError(engineInfo.type);
     }
   }
 };
@@ -586,7 +592,7 @@ const toAddEngineState = () => {
 };
 // ダイアログが閉じている状態
 const toDialogClosedState = () => {
-  engineManageDialogOpenedComputed.value = false;
+  dialogOpened.value = false;
   isAddingEngine.value = false;
 };
 </script>

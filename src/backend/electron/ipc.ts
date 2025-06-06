@@ -1,19 +1,9 @@
-import {
-  BrowserWindow,
-  ipcMain,
-  IpcMainInvokeEvent,
-  IpcRendererEvent,
-} from "electron";
+import { BrowserWindow, ipcMain, IpcMainInvokeEvent } from "electron";
+import { wrapToIpcResult } from "./ipcResultHelper";
 import { IpcIHData, IpcSOData } from "@/type/ipc";
 import { createLogger } from "@/helpers/log";
 
 const log = createLogger("ipc");
-
-export type IpcRendererInvoke = {
-  [K in keyof IpcIHData]: (
-    ...args: IpcIHData[K]["args"]
-  ) => Promise<IpcIHData[K]["return"]>;
-};
 
 export type IpcMainHandle = {
   [K in keyof IpcIHData]: (
@@ -22,18 +12,11 @@ export type IpcMainHandle = {
   ) => Promise<IpcIHData[K]["return"]> | IpcIHData[K]["return"];
 };
 
-export type IpcMainSend = {
+type IpcMainSend = {
   [K in keyof IpcSOData]: (
     win: BrowserWindow,
     ...args: IpcSOData[K]["args"]
   ) => void;
-};
-
-export type IpcRendererOn = {
-  [K in keyof IpcSOData]: (
-    event: IpcRendererEvent,
-    ...args: IpcSOData[K]["args"]
-  ) => Promise<IpcSOData[K]["return"]> | IpcSOData[K]["return"];
 };
 
 // FIXME: asを使わないようオーバーロードにした。オーバーロードも使わない書き方にしたい。
@@ -47,10 +30,12 @@ export function registerIpcMainHandle(listeners: {
     const errorHandledListener: typeof listener = (event, ...args) => {
       try {
         validateIpcSender(event);
-        return listener(event, ...args);
       } catch (e) {
         log.error(e);
+        return;
       }
+
+      return wrapToIpcResult(() => listener(event, ...args));
     };
     ipcMain.handle(channel, errorHandledListener);
   });

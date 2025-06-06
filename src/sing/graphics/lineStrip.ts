@@ -83,6 +83,7 @@ export class LineStrip {
       { color: color.toRgbaArray().map((value) => value / 255) },
     );
     this.points = new Float32Array(numOfPoints * 2);
+    // @ts-expect-error 動くので無視。恐らくpixi.js v7の型定義がTypeScript 5.7以降に対応していないため。
     this.pointsBuffer = new PIXI.Buffer(this.points, false);
     const vertices = this.generateLineSegmentVertices(width);
     const sizeOfFloat = 4;
@@ -137,6 +138,7 @@ export class LineStrip {
    * 折れ線を更新します。（設定されたポイントを適用します）
    */
   update() {
+    // @ts-expect-error 動くので無視。恐らくpixi.js v7の型定義がTypeScript 5.7以降に対応していないため。
     this.pointsBuffer.update(this.points);
     if (this.geometry.instanceCount !== this.numOfPoints - 1) {
       this.geometry.instanceCount = this.numOfPoints - 1;

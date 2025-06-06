@@ -81,7 +81,7 @@ class WindowManager {
       show: false,
       backgroundColor,
       webPreferences: {
-        preload: path.join(__dirname, "preload.js"),
+        preload: path.join(import.meta.dirname, "preload.mjs"),
       },
       icon: path.join(this.staticDir, "icon.png"),
     });
