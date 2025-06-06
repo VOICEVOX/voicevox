@@ -57,18 +57,19 @@ jobs:
           - macos-x64-cpu-prepackage
           - macos-arm64-cpu-prepackage
         include:
-          # Linux NVIDIA GPU
-          - artifact_name: linux-nvidia-prepackage
-            artifact_path: dist_electron/linux-unpacked
-            voicevox_engine_asset_name: linux-nvidia
-            package_name: voicevox
-            compressed_artifact_name: voicevox-linux-nvidia
-            app_asar_dir: prepackage/resources
-            installer_artifact_name: linux-nvidia-appimage
-            linux_artifact_name: "VOICEVOX.${ext}"
-            linux_executable_name: voicevox
-            linux_appimage_7z_name: VOICEVOX.AppImage
-            os: ubuntu-22.04
+          # TODO: 一時的なコメントアウトを戻す
+          # # Linux NVIDIA GPU
+          # - artifact_name: linux-nvidia-prepackage
+          #   artifact_path: dist_electron/linux-unpacked
+          #   voicevox_engine_asset_name: linux-nvidia
+          #   package_name: voicevox
+          #   compressed_artifact_name: voicevox-linux-nvidia
+          #   app_asar_dir: prepackage/resources
+          #   installer_artifact_name: linux-nvidia-appimage
+          #   linux_artifact_name: "VOICEVOX.${ext}"
+          #   linux_executable_name: voicevox
+          #   linux_appimage_7z_name: VOICEVOX.AppImage
+          #   os: ubuntu-22.04
           # Linux CPU
           - artifact_name: linux-cpu-prepackage
             artifact_path: dist_electron/linux-unpacked
