@@ -313,7 +313,6 @@ export function getIpcMainHandle(params: {
     },
 
     INSTALL_VVPP_ENGINE: async (_, path: string) => {
-      throw new DisplayableError("テストエラー");
       await engineAndVvppController.installVvppEngine(path);
     },
 
