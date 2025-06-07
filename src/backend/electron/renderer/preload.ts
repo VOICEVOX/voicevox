@@ -4,7 +4,7 @@ import {
   getOrThrowTransferableResult,
 } from "../transferableResultHelper";
 import { type IpcRendererInvoke } from "./ipc";
-import { BridgeKey, SandboxWithTransferableResult } from "./backendApiBridge";
+import { BridgeKey, SandboxWithTransferableResult } from "./backendApiLoader";
 import { ConfigType, EngineId, Sandbox, TextAsset } from "@/type/preload";
 
 const ipcRendererInvokeProxy = new Proxy(
