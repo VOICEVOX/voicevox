@@ -146,11 +146,11 @@ export default defineConfig((options) => {
         }),
       ],
       isElectron &&
-        injectBridgeScriptPlugin(
+        injectLoaderScriptPlugin(
           "./backend/electron/renderer/backendApiBridge.ts",
         ),
       isBrowser &&
-        injectBridgeScriptPlugin("./backend/browser/backendApiBridge.ts"),
+        injectLoaderScriptPlugin("./backend/browser/backendApiBridge.ts"),
     ],
   };
 });
@@ -169,14 +169,14 @@ const cleanDistPlugin = (): Plugin => {
 };
 
 /** バックエンドAPIをフロントエンドから実行するコードを注入する */
-const injectBridgeScriptPlugin = (scriptPath: string): Plugin => {
+const injectLoaderScriptPlugin = (scriptPath: string): Plugin => {
   return {
-    name: "inject-bridge-script",
+    name: "inject-loader-script",
     transformIndexHtml: {
       order: "pre",
       handler: (html: string) => {
         return html.replace(
-          "<!-- %BRIDGE_SCRIPT% -->",
+          "<!-- %LOADER_SCRIPT% -->",
           `<script type="module" src="${scriptPath}"></script>`,
         );
       },
