@@ -15,7 +15,7 @@
         : undefined
     "
     :persistent
-    @hide="onDialogHide"
+    @update:open="handleOpenUpdate"
   >
     <div class="footer">
       <BaseButton :label="ok" @click="onOk" />
@@ -52,6 +52,12 @@ defineEmits({
 const iconName = computed(() => getIcon(props.type));
 const color = computed(() => getColor(props.type));
 const { dialogRef, onDialogHide, onDialogOK } = useDialogPluginComponent();
+
+function handleOpenUpdate(isOpen: boolean) {
+  if (!isOpen) {
+    onDialogHide();
+  }
+}
 
 function onOk() {
   onDialogOK();
