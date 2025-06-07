@@ -2,35 +2,57 @@
  * ElectronのpreloadプロセスとMainWorldプロセスの橋渡し。
  */
 
-import { getOrThrowDisplayableResult } from "../displayableResultHelper";
+import {
+  DisplayableResult,
+  getOrThrowDisplayableResult,
+} from "../displayableResultHelper";
 import { SandboxKey, Sandbox } from "@/type/preload";
 
 export const BridgeKey = "electronBridge";
 
-declare global {
-  interface Window {
-    [BridgeKey]: Sandbox;
-  }
-}
-
-const unwrapApi = (baseApi: Sandbox): Sandbox => {
-  const unwrappedApi = {} as Sandbox;
-  for (const key in baseApi) {
-    const propKey = key as keyof Sandbox;
-    // @ts-expect-error とりあえず動くので無視
-    unwrappedApi[propKey] = async (...args: unknown[]) => {
-      // @ts-expect-error とりあえず動くので無視
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const displayableResult = await baseApi[propKey](...args);
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      return getOrThrowDisplayableResult(displayableResult);
-    };
-  }
-  return unwrappedApi;
+export type SandboxWithDisplayableResult = {
+  [K in keyof Sandbox]: (
+    ...args: Parameters<Sandbox[K]>
+  ) => ReturnType<Sandbox[K]> extends Promise<infer R>
+    ? Promise<DisplayableResult<R>>
+    : DisplayableResult<ReturnType<Sandbox[K]>>;
 };
+
+const unwrapApi = (baseApi: SandboxWithDisplayableResult): Sandbox =>
+  new Proxy<Sandbox>({} as Sandbox, {
+    get(_target, prop: keyof SandboxWithDisplayableResult) {
+      const value = baseApi[prop];
+      if (typeof value !== "function") {
+        return value;
+      }
+
+      // 元の関数を呼び出し、getOrThrowDisplayableResultで中の値を取り出す。
+      // Promiseが帰ってきた場合はthenの中で取り出す。
+      return (
+        ...args: Parameters<SandboxWithDisplayableResult[typeof prop]>
+      ) => {
+        const result: ReturnType<SandboxWithDisplayableResult[typeof prop]> =
+          // @ts-expect-error 動いているので無視
+          value(...args);
+
+        if (result instanceof Promise) {
+          return result.then((res) =>
+            // @ts-expect-error 動いているので無視
+            getOrThrowDisplayableResult(res),
+          );
+        } else {
+          // @ts-expect-error 動いているので無視
+          return getOrThrowDisplayableResult(result);
+        }
+      };
+    },
+  });
 
 // @ts-expect-error readonlyになっているが、初期化処理はここで行うので問題ない
 window[SandboxKey] = unwrapApi(
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-  window[BridgeKey],
+  (
+    window as unknown as {
+      [BridgeKey]: SandboxWithDisplayableResult;
+    }
+  )[BridgeKey],
 );

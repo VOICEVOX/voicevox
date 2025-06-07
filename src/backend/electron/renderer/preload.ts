@@ -4,7 +4,7 @@ import {
   getOrThrowDisplayableResult,
 } from "../displayableResultHelper";
 import { type IpcRendererInvoke } from "./ipc";
-import { BridgeKey } from "./bridge";
+import { BridgeKey, SandboxWithDisplayableResult } from "./bridge";
 import { ConfigType, EngineId, Sandbox, TextAsset } from "@/type/preload";
 
 const ipcRendererInvokeProxy = new Proxy(
@@ -224,10 +224,10 @@ const api: Sandbox = {
   },
 };
 
-const wrapApi = (baseApi: Sandbox): Sandbox => {
-  const wrappedApi = {} as Sandbox;
+const wrapApi = (baseApi: Sandbox): SandboxWithDisplayableResult => {
+  const wrappedApi = {} as SandboxWithDisplayableResult;
   for (const key in baseApi) {
-    const propKey = key as keyof Sandbox;
+    const propKey = key as keyof SandboxWithDisplayableResult;
     // @ts-expect-error とりあえず動くので無視
     wrappedApi[propKey] = async (...args: unknown[]) => {
       // @ts-expect-error とりあえず動くので無視
