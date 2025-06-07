@@ -471,34 +471,64 @@ const generateAudioSequence = async (
 };
 
 /**
- * フレーズのシーケンスを更新する。
+ * フレーズの状態と再生されるシーケンスの状態を同期させる。
+ * 不要なシーケンスを削除し、不足しているシーケンスを生成する。
  */
-const updatePhraseSequences = (
+const syncPhraseSequences = (
   phrases: Map<PhraseKey, Phrase>,
   phraseSingingVoices: Map<SingingVoiceKey, SingingVoice>,
   tempos: Tempo[],
   tpqn: number,
 ) => {
-  // シーケンスの削除を行う
+  // 不要になったシーケンスを削除する
+  deleteUnnecessarySequences(phrases, phraseSequenceInfos);
+
+  // 不足しているシーケンスを新しく作成する
+  createMissingSequences(
+    phrases,
+    phraseSingingVoices,
+    tempos,
+    tpqn,
+    phraseSequenceInfos,
+  );
+};
+
+/**
+ * 不要になったフレーズシーケンスを削除する。
+ *
+ * 以下の場合に不要と判断される。
+ * - フレーズ自体が削除された
+ * - レンダリング状態が変わり、シーケンスのタイプが不一致になった
+ * - 歌声が変更された
+ */
+const deleteUnnecessarySequences = (
+  phrases: Map<PhraseKey, Phrase>,
+  phraseSequenceInfos: Map<PhraseKey, PhraseSequenceInfo>,
+) => {
   for (const [phraseKey, sequenceInfo] of phraseSequenceInfos) {
     const phrase = phrases.get(phraseKey);
 
     let needToDelete = false;
 
-    // シーケンスの削除が必要かどうかを判断する
     if (phrase == undefined) {
+      // フレーズが無くなった場合は、既存のシーケンスを削除する
       needToDelete = true;
     } else if (
       phrase.state === "RENDERED" &&
-      (sequenceInfo.type !== "audio" ||
+      (sequenceInfo.type === "note" ||
         sequenceInfo.singingVoiceKey !== phrase.singingVoiceKey)
     ) {
+      // フレーズがレンダリング済みの状態に更新された、または歌声が変更された場合は、
+      // フレーズは最新の歌声のオーディオシーケンスで再生される必要があるので、
+      // 既存の仮再生用のノートシーケンスまたは歌声が変更される前のオーディオシーケンスを削除する
       needToDelete = true;
-    } else if (phrase.state !== "RENDERED" && sequenceInfo.type !== "note") {
+    } else if (phrase.state !== "RENDERED" && sequenceInfo.type === "audio") {
+      // レンダリング済みのフレーズが、再び未レンダリングの状態に戻った場合は、
+      // フレーズは仮再生用のノートシーケンスで再生される必要があるので、
+      // 既存のオーディオシーケンスを削除する
       needToDelete = true;
     }
 
-    // シーケンスの削除が必要な場合は、シーケンスを削除する
     // TODO: ピッチを編集したときは行わないようにする
     if (needToDelete) {
       phraseSequenceInfos.delete(phraseKey);
@@ -508,68 +538,109 @@ const updatePhraseSequences = (
       }
     }
   }
+};
 
-  // シーケンスの生成と登録を行う
+/**
+ * 不足しているフレーズシーケンスを状態に応じて生成・登録する。
+ */
+const createMissingSequences = (
+  phrases: Map<PhraseKey, Phrase>,
+  phraseSingingVoices: Map<SingingVoiceKey, SingingVoice>,
+  tempos: Tempo[],
+  tpqn: number,
+  phraseSequenceInfos: Map<PhraseKey, PhraseSequenceInfo>,
+) => {
   for (const [phraseKey, phrase] of phrases) {
+    // 既にシーケンスが存在する場合は、この関数では何もしない
     if (phraseSequenceInfos.has(phraseKey)) {
-      // 既にシーケンスが登録されている場合はcontinue
       continue;
     }
 
-    const newSequenceId = SequenceId(uuid4());
-
-    // フレーズの状態が"RENDERED"の場合はオーディオシーケンスを生成し、
-    // "RENDERED"でない場合はノートシーケンスを生成して、登録する
+    // フレーズの状態に応じて、適切なシーケンス生成処理を呼び出す
     if (phrase.state === "RENDERED") {
-      if (phrase.singingVoiceKey == undefined) {
-        throw new UnreachableError("phrase.singingVoiceKey is undefined.");
-      }
-      const singingVoice = getOrThrow(
+      createAudioSequenceForPhrase(
+        phraseKey,
+        phrase,
         phraseSingingVoices,
-        phrase.singingVoiceKey,
+        phraseSequenceInfos,
       );
-
-      phraseSequenceInfos.set(phraseKey, {
-        type: "audio",
-        sequenceId: newSequenceId,
-        singingVoiceKey: phrase.singingVoiceKey,
-      });
-
-      const audioSequencePromise = generateAudioSequence(
-        phrase.startTime,
-        singingVoice,
-        phrase.trackId,
-      );
-
-      // Promiseが解決されたときに、フレーズと紐づいているシーケンスの情報が変わっているか確認し、
-      // 変わっていなければシーケンスを登録する
-      void audioSequencePromise.then((audioSequence) => {
-        const sequenceInfo = phraseSequenceInfos.get(phraseKey);
-        if (
-          sequenceInfo != undefined &&
-          sequenceInfo.sequenceId === newSequenceId
-        ) {
-          registerSequence(newSequenceId, audioSequence);
-          logger.info(`Registered audio sequence. ID: ${newSequenceId}`);
-        }
-      });
     } else {
-      phraseSequenceInfos.set(phraseKey, {
-        type: "note",
-        sequenceId: newSequenceId,
-      });
-
-      const noteSequence = generateNoteSequence(
-        phrase.notes,
+      createNoteSequenceForPhrase(
+        phraseKey,
+        phrase,
         tempos,
         tpqn,
-        phrase.trackId,
+        phraseSequenceInfos,
       );
-
-      registerSequence(newSequenceId, noteSequence);
-      logger.info(`Registered note sequence. ID: ${newSequenceId}`);
     }
   }
+};
+
+/**
+ * 指定されたフレーズのオーディオシーケンスを非同期で生成・登録する。
+ */
+const createAudioSequenceForPhrase = (
+  phraseKey: PhraseKey,
+  phrase: Phrase,
+  phraseSingingVoices: Map<SingingVoiceKey, SingingVoice>,
+  phraseSequenceInfos: Map<PhraseKey, PhraseSequenceInfo>,
+) => {
+  if (phrase.singingVoiceKey == undefined) {
+    throw new UnreachableError("phrase.singingVoiceKey is undefined.");
+  }
+  const singingVoice = getOrThrow(phraseSingingVoices, phrase.singingVoiceKey);
+
+  const newSequenceId = SequenceId(uuid4());
+  phraseSequenceInfos.set(phraseKey, {
+    type: "audio",
+    sequenceId: newSequenceId,
+    singingVoiceKey: phrase.singingVoiceKey,
+  });
+
+  const audioSequencePromise = generateAudioSequence(
+    phrase.startTime,
+    singingVoice,
+    phrase.trackId,
+  );
+
+  // Promise解決時に、情報が古くなっていないか確認してから登録する
+  void audioSequencePromise.then((audioSequence) => {
+    const currentSequenceInfo = phraseSequenceInfos.get(phraseKey);
+    if (
+      currentSequenceInfo != undefined &&
+      currentSequenceInfo.sequenceId === newSequenceId
+    ) {
+      registerSequence(newSequenceId, audioSequence);
+      logger.info(`Registered audio sequence. ID: ${newSequenceId}`);
+    }
+  });
+};
+
+/**
+ * 指定されたフレーズのノートシーケンスを生成・登録する。
+ */
+const createNoteSequenceForPhrase = (
+  phraseKey: PhraseKey,
+  phrase: Phrase,
+  tempos: Tempo[],
+  tpqn: number,
+  phraseSequenceInfos: Map<PhraseKey, PhraseSequenceInfo>,
+) => {
+  const newSequenceId = SequenceId(uuid4());
+  phraseSequenceInfos.set(phraseKey, {
+    type: "note",
+    sequenceId: newSequenceId,
+  });
+
+  const noteSequence = generateNoteSequence(
+    phrase.notes,
+    tempos,
+    tpqn,
+    phrase.trackId,
+  );
+
+  registerSequence(newSequenceId, noteSequence);
+  logger.info(`Registered note sequence. ID: ${newSequenceId}`);
 };
 
 /**
@@ -2048,8 +2119,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         // state.phrasesを更新する
         mutations.SET_PHRASES({ phrases: mergedPhrases });
 
-        // フレーズのシーケンスを更新する
-        updatePhraseSequences(
+        // フレーズの状態と再生されるシーケンスの状態を同期させる
+        syncPhraseSequences(
           state.phrases,
           phraseSingingVoices,
           snapshot.tempos,
@@ -2112,8 +2183,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               phraseState: "RENDERED",
             });
 
-            // フレーズのシーケンスを更新する
-            updatePhraseSequences(
+            // フレーズの状態と再生されるシーケンスの状態を同期させる
+            syncPhraseSequences(
               state.phrases,
               phraseSingingVoices,
               snapshot.tempos,
