@@ -1,7 +1,10 @@
 <template>
-  <QBar class="bg-background q-pa-none relative-position">
+  <QBar
+    class="bg-background q-pa-none relative-position"
+    :class="[isElectron && 'enable-drag']"
+  >
     <div
-      v-if="$q.platform.is.mac && !isFullscreen"
+      v-if="!isVst && $q.platform.is.mac && !isFullscreen"
       class="mac-traffic-light-space"
     ></div>
     <img v-else src="/icon.png" class="window-logo" alt="application logo" />
@@ -23,8 +26,8 @@
       {{ titleText }}
     </div>
     <QSpace />
-    <TitleBarEditorSwitcher />
-    <TitleBarButtons />
+    <TitleBarEditorSwitcher v-if="!isVst" />
+    <TitleBarButtons v-if="isElectron" />
   </QBar>
 </template>
 
@@ -37,6 +40,7 @@ import { MenuBarCategory } from "./menuBarData";
 import TitleBarButtons from "./TitleBarButtons.vue";
 import TitleBarEditorSwitcher from "./TitleBarEditorSwitcher.vue";
 import { useStore } from "@/store";
+import { isElectron, isVst } from "@/helpers/platform";
 import { getAppInfos } from "@/domain/appInfo";
 
 const props = defineProps<{
@@ -178,7 +182,10 @@ watch(uiLocked, () => {
 
 .q-bar {
   min-height: vars.$menubar-height;
-  -webkit-app-region: drag; // Electronのドラッグ領域
+
+  &.enable-drag {
+    -webkit-app-region: drag; // Electronのドラッグ領域
+  }
   :deep(.q-btn) {
     margin-left: 0;
     -webkit-app-region: no-drag; // Electronのドラッグ領域対象から外す

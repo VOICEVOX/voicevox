@@ -17,6 +17,8 @@ import {
 
 const isElectron = process.env.VITE_TARGET === "electron";
 const isBrowser = process.env.VITE_TARGET === "browser";
+const isVst = process.env.VITE_TARGET === "vst";
+
 const isProduction = process.env.NODE_ENV === "production";
 
 export default defineConfig((options) => {
@@ -145,7 +147,8 @@ export default defineConfig((options) => {
           },
         }),
       ],
-      isBrowser && injectBrowserPreloadPlugin(),
+      isBrowser && injectPreloadPlugin("browser"),
+      isVst && injectPreloadPlugin("vst"),
     ],
   };
 });
@@ -163,15 +166,15 @@ const cleanDistPlugin = (): Plugin => {
   };
 };
 
-const injectBrowserPreloadPlugin = (): Plugin => {
+const injectPreloadPlugin = (backendName: "browser" | "vst"): Plugin => {
   return {
     name: "inject-browser-preload",
     transformIndexHtml: {
       order: "pre",
       handler: (html: string) =>
         html.replace(
-          "<!-- %BROWSER_PRELOAD% -->",
-          `<script type="module" src="./backend/browser/preload.ts"></script>`,
+          `<!-- %PRELOAD% -->`,
+          `<script type="module" src="./backend/${backendName}/preload.ts"></script>`,
         ),
     },
   };

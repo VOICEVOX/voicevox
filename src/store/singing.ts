@@ -3115,6 +3115,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       },
     ),
   },
+
+  GET_PHRASE_SINGING_VOICE: {
+    action(_, { key }) {
+      return phraseSingingVoices.get(key);
+    },
+  },
 });
 
 export const singingCommandStoreState: SingingCommandStoreState = {};

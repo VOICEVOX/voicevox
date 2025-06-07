@@ -36,6 +36,7 @@
   <ImportSongProjectDialog v-model="isImportSongProjectDialogOpenComputed" />
   <PresetManageDialog v-model:dialogOpened="isPresetManageDialogOpenComputed" />
   <HelpDialog v-model:dialogOpened="isHelpDialogOpenComputed" />
+  <VstRoutingDialog v-model="isVstRoutingDialogOpen" />
 </template>
 
 <script setup lang="ts">
@@ -55,6 +56,7 @@ import ImportSongProjectDialog from "@/components/Dialog/ImportSongProjectDialog
 import ExportSongAudioDialog from "@/components/Dialog/ExportSongAudioDialog/Container.vue";
 import PresetManageDialog from "@/components/Dialog/PresetManageDialog.vue";
 import HelpDialog from "@/components/Dialog/HelpDialog/HelpDialog.vue";
+import VstRoutingDialog from "@/components/Dialog/VstRoutingDialog/Container.vue";
 import { useStore } from "@/store";
 import { filterCharacterInfosByStyleType } from "@/store/utility";
 
@@ -211,6 +213,15 @@ const isHelpDialogOpenComputed = computed({
   set: (val) =>
     store.actions.SET_DIALOG_OPEN({
       isHelpDialogOpen: val,
+    }),
+});
+
+// VSTのルーティング設定ダイアログ
+const isVstRoutingDialogOpen = computed({
+  get: () => store.state.isVstRoutingDialogOpen,
+  set: (val) =>
+    store.dispatch("SET_DIALOG_OPEN", {
+      isVstRoutingDialogOpen: val,
     }),
 });
 </script>
