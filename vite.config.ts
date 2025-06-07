@@ -147,10 +147,10 @@ export default defineConfig((options) => {
       ],
       isElectron &&
         injectLoaderScriptPlugin(
-          "./backend/electron/renderer/backendApiBridge.ts",
+          "./backend/electron/renderer/backendApiLoader.ts",
         ),
       isBrowser &&
-        injectLoaderScriptPlugin("./backend/browser/backendApiBridge.ts"),
+        injectLoaderScriptPlugin("./backend/browser/backendApiLoader.ts"),
     ],
   };
 });
