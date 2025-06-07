@@ -17,6 +17,7 @@ import {
   SystemError,
   TextAsset,
 } from "@/type/preload";
+import { DisplayableError } from "@/helpers/errorHelper";
 
 // エンジンのフォルダを開く
 function openEngineDirectory(engineId: EngineId) {
@@ -312,6 +313,7 @@ export function getIpcMainHandle(params: {
     },
 
     INSTALL_VVPP_ENGINE: async (_, path: string) => {
+      throw new DisplayableError("テストエラー");
       await engineAndVvppController.installVvppEngine(path);
     },
 

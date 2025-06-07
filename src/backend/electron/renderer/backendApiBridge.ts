@@ -3,46 +3,46 @@
  */
 
 import {
-  DisplayableResult,
-  getOrThrowDisplayableResult,
-} from "../displayableResultHelper";
+  TransferableResult,
+  getOrThrowTransferableResult,
+} from "../transferableResultHelper";
 import { SandboxKey, Sandbox } from "@/type/preload";
 
 export const BridgeKey = "electronBridge";
 
-export type SandboxWithDisplayableResult = {
+export type SandboxWithTransferableResult = {
   [K in keyof Sandbox]: (
     ...args: Parameters<Sandbox[K]>
   ) => ReturnType<Sandbox[K]> extends Promise<infer R>
-    ? Promise<DisplayableResult<R>>
-    : DisplayableResult<ReturnType<Sandbox[K]>>;
+    ? Promise<TransferableResult<R>>
+    : TransferableResult<ReturnType<Sandbox[K]>>;
 };
 
-const unwrapApi = (baseApi: SandboxWithDisplayableResult): Sandbox =>
+const unwrapApi = (baseApi: SandboxWithTransferableResult): Sandbox =>
   new Proxy<Sandbox>({} as Sandbox, {
-    get(_target, prop: keyof SandboxWithDisplayableResult) {
+    get(_target, prop: keyof SandboxWithTransferableResult) {
       const value = baseApi[prop];
       if (typeof value !== "function") {
         return value;
       }
 
-      // 元の関数を呼び出し、getOrThrowDisplayableResultで中の値を取り出す。
+      // 元の関数を呼び出し、getOrThrowTransferableResultで中の値を取り出す。
       // Promiseが帰ってきた場合はthenの中で取り出す。
       return (
-        ...args: Parameters<SandboxWithDisplayableResult[typeof prop]>
+        ...args: Parameters<SandboxWithTransferableResult[typeof prop]>
       ) => {
-        const result: ReturnType<SandboxWithDisplayableResult[typeof prop]> =
+        const result: ReturnType<SandboxWithTransferableResult[typeof prop]> =
           // @ts-expect-error 動いているので無視
           value(...args);
 
         if (result instanceof Promise) {
           return result.then((res) =>
             // @ts-expect-error 動いているので無視
-            getOrThrowDisplayableResult(res),
+            getOrThrowTransferableResult(res),
           );
         } else {
           // @ts-expect-error 動いているので無視
-          return getOrThrowDisplayableResult(result);
+          return getOrThrowTransferableResult(result);
         }
       };
     },
@@ -52,7 +52,7 @@ const unwrapApi = (baseApi: SandboxWithDisplayableResult): Sandbox =>
 window[SandboxKey] = unwrapApi(
   (
     window as unknown as {
-      [BridgeKey]: SandboxWithDisplayableResult;
+      [BridgeKey]: SandboxWithTransferableResult;
     }
   )[BridgeKey],
 );

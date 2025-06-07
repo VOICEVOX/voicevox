@@ -1,10 +1,10 @@
 import { contextBridge, ipcRenderer, webUtils } from "electron";
 import {
-  wrapToDisplayableResult,
-  getOrThrowDisplayableResult,
-} from "../displayableResultHelper";
+  wrapToTransferableResult,
+  getOrThrowTransferableResult,
+} from "../transferableResultHelper";
 import { type IpcRendererInvoke } from "./ipc";
-import { BridgeKey, SandboxWithDisplayableResult } from "./bridge";
+import { BridgeKey, SandboxWithTransferableResult } from "./backendApiBridge";
 import { ConfigType, EngineId, Sandbox, TextAsset } from "@/type/preload";
 
 const ipcRendererInvokeProxy = new Proxy(
@@ -14,9 +14,9 @@ const ipcRendererInvokeProxy = new Proxy(
       (_, channel: string) =>
       async (...args: unknown[]) => {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        const displayableResult = await ipcRenderer.invoke(channel, ...args);
+        const transferableResult = await ipcRenderer.invoke(channel, ...args);
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        return getOrThrowDisplayableResult(displayableResult);
+        return getOrThrowTransferableResult(transferableResult);
       },
   },
 ) as IpcRendererInvoke;
@@ -224,15 +224,15 @@ const api: Sandbox = {
   },
 };
 
-const wrapApi = (baseApi: Sandbox): SandboxWithDisplayableResult => {
-  const wrappedApi = {} as SandboxWithDisplayableResult;
+const wrapApi = (baseApi: Sandbox): SandboxWithTransferableResult => {
+  const wrappedApi = {} as SandboxWithTransferableResult;
   for (const key in baseApi) {
-    const propKey = key as keyof SandboxWithDisplayableResult;
+    const propKey = key as keyof SandboxWithTransferableResult;
     // @ts-expect-error とりあえず動くので無視
     wrappedApi[propKey] = async (...args: unknown[]) => {
       // @ts-expect-error とりあえず動くので無視
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      return wrapToDisplayableResult(() => baseApi[propKey](...args));
+      return wrapToTransferableResult(() => baseApi[propKey](...args));
     };
   }
   return wrappedApi;
