@@ -1159,7 +1159,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       /**
        * `cacheLoaded` イベントのハンドラ。
        * キャッシュデータが読み込まれた後に呼び出される。
-       * `store.state` を更新し、必要に応じてシーケンスの生成・登録を行う。
+       * `store.state` を更新し、シーケンスの同期を行う。
        */
       const onCacheLoaded = (event: CacheLoadedEvent) => {
         const newPhrases = new Map<PhraseKey, Phrase>();
@@ -1359,7 +1359,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       /**
        * `phraseRenderingComplete` イベントのハンドラ。
        * 特定のフレーズの全レンダリング工程（クエリ、ピッチ、ボリューム、歌声）が完了したときに呼び出される。
-       * フレーズの状態を 'RENDERED' に設定し、最終的なオーディオシーケンスの生成・更新処理を開始する。
+       * フレーズの状態を 'RENDERED' に設定し、シーケンスの同期を行う。
        */
       const onPhraseRenderingComplete = (
         event: PhraseRenderingCompleteEvent,
