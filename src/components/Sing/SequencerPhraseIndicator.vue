@@ -19,7 +19,7 @@ const classNames: Record<PhraseState, string> = {
   WAITING_TO_BE_RENDERED: "waiting-to-be-rendered",
   NOW_RENDERING: "now-rendering",
   COULD_NOT_RENDER: "could-not-render",
-  PLAYABLE: "playable",
+  RENDERED: "rendered",
 };
 const className = computed(() => {
   const phrase = getOrThrow(store.state.phrases, props.phraseKey);
@@ -114,7 +114,7 @@ const className = computed(() => {
   );
 }
 
-.playable {
+.rendered {
   visibility: hidden;
 }
 </style>

@@ -26,9 +26,6 @@ import { FramePhoneme, Note as NoteForRequestToEngine } from "@/openapi";
 import { EngineId, NoteId, StyleId, TrackId } from "@/type/preload";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
-import { createLogger } from "@/helpers/log";
-
-const logger = createLogger("sing/songTrackRendering");
 
 /**
  * フレーズレンダリングに必要なデータのスナップショット
@@ -621,9 +618,6 @@ export const generateQuery = async (
 
   shiftPitch(query.f0, querySource.keyRangeAdjustment);
 
-  const phonemes = getPhonemes(query);
-  logger.info(`Generated query. phonemes: ${phonemes}`);
-
   return query;
 };
 
@@ -655,8 +649,6 @@ export const generateSingingPitch = async (
   });
 
   shiftPitch(singingPitch, singingPitchSource.keyRangeAdjustment);
-
-  logger.info(`Generated singing pitch.`);
 
   return singingPitch;
 };
@@ -700,8 +692,6 @@ export const generateSingingVolume = async (
     config.fadeOutDurationSeconds,
   );
 
-  logger.info(`Generated singing volume.`);
-
   return singingVolume;
 };
 
@@ -714,8 +704,6 @@ export const synthesizeSingingVoice = async (
     engineId: singingVoiceSource.singer.engineId,
     styleId: singingVoiceSource.singer.styleId,
   });
-
-  logger.info(`Generated singing voice.`);
 
   return singingVoice;
 };
