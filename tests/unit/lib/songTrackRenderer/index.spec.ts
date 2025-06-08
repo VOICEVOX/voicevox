@@ -262,7 +262,7 @@ describe("SongTrackRenderer", () => {
       }
       // 2番目のフレーズのボリューム生成が終わったら中断要求を出す
       if (volumeGenerationCompleteEventCount === 2) {
-        songTrackRenderer.interruptRendering();
+        songTrackRenderer.requestRenderingInterruption();
       }
     });
 
