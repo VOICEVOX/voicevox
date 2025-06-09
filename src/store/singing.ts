@@ -1431,26 +1431,36 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       // イベントリスナーを登録
       // 各イベントタイプに応じて、上で定義したハンドラ関数を呼び出す
       songTrackRenderer.addEventListener((event) => {
-        if (event.type === "phrasesGenerated") {
-          onPhrasesGenerated();
-        } else if (event.type === "cacheLoaded") {
-          onCacheLoaded(event);
-        } else if (event.type === "phraseRenderingStarted") {
-          onPhraseRenderingStarted(event);
-        } else if (event.type === "queryGenerationComplete") {
-          onQueryGenerationComplete(event);
-        } else if (event.type === "pitchGenerationComplete") {
-          onPitchGenerationComplete(event);
-        } else if (event.type === "volumeGenerationComplete") {
-          onVolumeGenerationComplete(event);
-        } else if (event.type === "voiceSynthesisComplete") {
-          onVoiceSynthesisComplete(event);
-        } else if (event.type === "phraseRenderingComplete") {
-          onPhraseRenderingComplete(event);
-        } else if (event.type === "phraseRenderingError") {
-          onPhraseRenderingError(event);
-        } else {
-          throw new ExhaustiveError(event);
+        switch (event.type) {
+          case "phrasesGenerated":
+            onPhrasesGenerated();
+            break;
+          case "cacheLoaded":
+            onCacheLoaded(event);
+            break;
+          case "phraseRenderingStarted":
+            onPhraseRenderingStarted(event);
+            break;
+          case "queryGenerationComplete":
+            onQueryGenerationComplete(event);
+            break;
+          case "pitchGenerationComplete":
+            onPitchGenerationComplete(event);
+            break;
+          case "volumeGenerationComplete":
+            onVolumeGenerationComplete(event);
+            break;
+          case "voiceSynthesisComplete":
+            onVoiceSynthesisComplete(event);
+            break;
+          case "phraseRenderingComplete":
+            onPhraseRenderingComplete(event);
+            break;
+          case "phraseRenderingError":
+            onPhraseRenderingError(event);
+            break;
+          default:
+            throw new ExhaustiveError(event);
         }
       });
     },
