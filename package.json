@@ -24,6 +24,7 @@
     "license:generate": "tsx tools/generateLicenses.ts",
     "license:merge": "tsx tools/mergeLicenses.ts",
     "check-suspicious-imports": "tsx tools/checkSuspiciousImports.ts",
+    "generate-openapi": "tsx tools/generateOpenapi.ts",
     "// --- test ---": "",
     "test:unit": "vitest --run",
     "test-watch:unit": "vitest --watch",

@@ -1,8 +1,8 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * DUMMY Engine
- * DUMMY の音声合成エンジンです。
+ * VOICEVOX ENGINE OSS
+ * VOICEVOX OSS の音声合成エンジンです。
  *
  * The version of the OpenAPI document: latest
  * 
@@ -21,7 +21,7 @@ import {
 } from './Mora';
 
 /**
- * アクセント句ごとの情報
+ * アクセント句ごとの情報。
  * @export
  * @interface AccentPhrase
  */

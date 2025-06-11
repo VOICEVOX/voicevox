@@ -5,7 +5,7 @@ import { spawnSync } from "child_process";
 import fs from "fs";
 import os from "os";
 import path from "path";
-import { retryFetch } from "./helper.mjs";
+import { retryFetch } from "./helper.js";
 
 const distPath = path.join(import.meta.dirname, "..", "vendored", "7z");
 let url;
