@@ -56,9 +56,9 @@
                     description="GPU モードの利用には GPU が必要です。Linux は NVIDIA™ 製 GPU のみ対応しています。"
                     :options="engineUseGpuOptions"
                     :disable="!gpuSwitchEnabled(selectedEngineId)"
-                    :modelValue="engineUseGpu ? 'GPU' : 'CPU'"
+                    :modelValue="selectedEngineUseGpu ? 'GPU' : 'CPU'"
                     @update:modelValue="
-                      (mode) => (engineUseGpu = mode === 'GPU')
+                      (mode) => (selectedEngineUseGpu = mode === 'GPU')
                     "
                   />
                 </BaseTooltip>
@@ -79,6 +79,26 @@
                       (outputSamplingRate = Number(value) || 'engineDefault')
                   "
                 />
+                <BaseTooltip
+                  :label="
+                    engineInfos[selectedEngineId].name +
+                    'はこの機能をサポートしていません。'
+                  "
+                  :disabled="
+                    store.state.engineManifests[selectedEngineId]
+                      .supportedFeatures.applyKatakanaEnglish
+                  "
+                >
+                  <ToggleCell
+                    v-model="selectedEngineApplyKatakanaEnglish"
+                    title="未知の英単語をカタカナ読みに変換"
+                    description="ONの場合、未知の英単語をカタカナ読みに変換します。"
+                    :disable="
+                      !store.state.engineManifests[selectedEngineId]
+                        .supportedFeatures.applyKatakanaEnglish
+                    "
+                  />
+                </BaseTooltip>
               </div>
               <!-- Preservation Setting -->
               <div class="setting-card">
@@ -512,14 +532,6 @@ const dialogOpened = defineModel<boolean>("dialogOpened");
 const store = useStore();
 const { warn } = createLogger("SettingDialog");
 
-const engineUseGpu = computed({
-  get: () => {
-    return store.state.engineSettings[selectedEngineId.value].useGpu;
-  },
-  set: (mode: boolean) => {
-    void changeUseGpu(mode);
-  },
-});
 const engineIds = computed(() => store.state.engineIds);
 const engineInfos = computed(() => store.state.engineInfos);
 const inheritAudioInfoMode = computed(() => store.state.inheritAudioInfo);
@@ -532,6 +544,101 @@ const activePointScrollMode = computed({
   },
 });
 const experimentalSetting = computed(() => store.state.experimentalSetting);
+
+const handleSavingSettingChange = (
+  key: keyof SavingSetting,
+  data: string | boolean | number,
+) => {
+  void store.actions.SET_SAVING_SETTING({
+    data: { ...savingSetting.value, [key]: data },
+  });
+};
+
+// エンジン：エンジンモード
+const selectedEngineUseGpu = computed({
+  get: () => {
+    return store.state.engineSettings[selectedEngineId.value].useGpu;
+  },
+  set: (mode: boolean) => {
+    void changeUseGpu(mode);
+  },
+});
+
+// エンジン：音声のサンプリングレート
+const samplingRateOptions: SamplingRateOption[] = [
+  "engineDefault",
+  24000,
+  44100,
+  48000,
+  88200,
+  96000,
+];
+const renderSamplingRateLabel = (value: SamplingRateOption): string => {
+  if (value === "engineDefault") {
+    return "デフォルト";
+  } else {
+    return `${value / 1000} kHz`;
+  }
+};
+const outputSamplingRate = computed({
+  get: () => {
+    return store.state.engineSettings[selectedEngineId.value]
+      .outputSamplingRate;
+  },
+  set: async (outputSamplingRate: SamplingRateOption) => {
+    if (outputSamplingRate !== "engineDefault") {
+      const result = await store.actions.SHOW_CONFIRM_DIALOG({
+        title: "出力サンプリングレートを変更しますか？",
+        message:
+          "出力サンプリングレートを変更しても、音質は変化しません。また、音声の生成処理に若干時間がかかる場合があります。",
+        actionName: "変更する",
+      });
+      if (result !== "OK") {
+        return;
+      }
+    }
+
+    void store.actions.SET_ENGINE_SETTING({
+      engineId: selectedEngineId.value,
+      engineSetting: {
+        ...store.state.engineSettings[selectedEngineId.value],
+        outputSamplingRate,
+      },
+    });
+  },
+});
+
+// エンジン：未知の英単語をカタカナ読みに変換
+const selectedEngineApplyKatakanaEnglish = computed({
+  get: () => {
+    if (
+      !store.state.engineManifests[selectedEngineId.value].supportedFeatures
+        .applyKatakanaEnglish
+    ) {
+      // サポートされていないエンジンの場合は常に false
+      return false;
+    }
+
+    return store.state.engineSettings[selectedEngineId.value]
+      .applyKatakanaEnglish;
+  },
+  set: (applyKatakanaEnglish: boolean) => {
+    if (
+      !store.state.engineManifests[selectedEngineId.value].supportedFeatures
+        .applyKatakanaEnglish
+    ) {
+      // サポートされていないエンジンの場合は何もしない
+      return;
+    }
+    void store.actions.SET_ENGINE_SETTING({
+      engineId: selectedEngineId.value,
+      engineSetting: {
+        ...store.state.engineSettings[selectedEngineId.value],
+        applyKatakanaEnglish,
+      },
+    });
+  },
+});
 
 // 非表示にしたヒントの再表示
 const hasResetConfirmedTips = ref(false);
@@ -724,61 +831,10 @@ const songTrackFileNamePatternWithExt = computed(() =>
 
 const gpuSwitchEnabled = (engineId: EngineId) => {
   // CPU版でもGPUモードからCPUモードに変更できるようにする
-  return store.getters.ENGINE_CAN_USE_GPU(engineId) || engineUseGpu.value;
+  return (
+    store.getters.ENGINE_CAN_USE_GPU(engineId) || selectedEngineUseGpu.value
+  );
 };
-
-const samplingRateOptions: SamplingRateOption[] = [
-  "engineDefault",
-  24000,
-  44100,
-  48000,
-  88200,
-  96000,
-];
-const renderSamplingRateLabel = (value: SamplingRateOption): string => {
-  if (value === "engineDefault") {
-    return "デフォルト";
-  } else {
-    return `${value / 1000} kHz`;
-  }
-};
-
-const handleSavingSettingChange = (
-  key: keyof SavingSetting,
-  data: string | boolean | number,
-) => {
-  void store.actions.SET_SAVING_SETTING({
-    data: { ...savingSetting.value, [key]: data },
-  });
-};
-
-const outputSamplingRate = computed({
-  get: () => {
-    return store.state.engineSettings[selectedEngineId.value]
-      .outputSamplingRate;
-  },
-  set: async (outputSamplingRate: SamplingRateOption) => {
-    if (outputSamplingRate !== "engineDefault") {
-      const result = await store.actions.SHOW_CONFIRM_DIALOG({
-        title: "出力サンプリングレートを変更しますか？",
-        message:
-          "出力サンプリングレートを変更しても、音質は変化しません。また、音声の生成処理に若干時間がかかる場合があります。",
-        actionName: "変更する",
-      });
-      if (result !== "OK") {
-        return;
-      }
-    }
-
-    void store.actions.SET_ENGINE_SETTING({
-      engineId: selectedEngineId.value,
-      engineSetting: {
-        ...store.state.engineSettings[selectedEngineId.value],
-        outputSamplingRate,
-      },
-    });
-  },
-});
 
 const openFileExplore = () => {
   return window.backend.showSaveDirectoryDialog({

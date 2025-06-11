@@ -207,6 +207,7 @@ export const engineSettingSchema = z.object({
   outputSamplingRate: z
     .union([z.number(), z.literal("engineDefault")])
     .default("engineDefault"),
+  applyKatakanaEnglish: z.boolean().default(true),
 });
 export type EngineSettingType = z.infer<typeof engineSettingSchema>;
 

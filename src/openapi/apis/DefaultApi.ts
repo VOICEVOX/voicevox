@@ -80,7 +80,7 @@ export interface AccentPhrasesRequest {
     text: string;
     speaker: number;
     isKana?: boolean;
-    enableE2k?: boolean;
+    enableKatakanaEnglish?: boolean;
     coreVersion?: string;
 }
 
@@ -99,14 +99,14 @@ export interface AddUserDictWordRequest {
 export interface AudioQueryRequest {
     text: string;
     speaker: number;
-    enableE2k?: boolean;
+    enableKatakanaEnglish?: boolean;
     coreVersion?: string;
 }
 
 export interface AudioQueryFromPresetRequest {
     text: string;
     presetId: number;
-    enableE2k?: boolean;
+    enableKatakanaEnglish?: boolean;
     coreVersion?: string;
 }
 
@@ -277,12 +277,12 @@ export interface ValidateKanaRequest {
  */
 export interface DefaultApiInterface {
     /**
-     * テキストからアクセント句を得ます。  is_kanaが`true`のとき、テキストは次のAquesTalk 風記法で解釈されます。デフォルトは`false`です。 * 全てのカナはカタカナで記述される * アクセント句は`/`または`、`で区切る。`、`で区切った場合に限り無音区間が挿入される。 * カナの手前に`_`を入れるとそのカナは無声化される * アクセント位置を`\'`で指定する。全てのアクセント句にはアクセント位置を1つ指定する必要がある。 * アクセント句末に`？`(全角)を入れることにより疑問文の発音ができる。 enable_e2kが`true`のとき、テキスト中の読みが不明な英単語を、e2kで解析します。デフォルトは`true`です。 is_kanaが`true`のとき、enable_e2kの値は無視されます。
+     * テキストからアクセント句を得ます。  is_kanaが`true`のとき、テキストは次のAquesTalk 風記法で解釈されます。デフォルトは`false`です。 * 全てのカナはカタカナで記述される * アクセント句は`/`または`、`で区切る。`、`で区切った場合に限り無音区間が挿入される。 * カナの手前に`_`を入れるとそのカナは無声化される * アクセント位置を`\'`で指定する。全てのアクセント句にはアクセント位置を1つ指定する必要がある。 * アクセント句末に`？`(全角)を入れることにより疑問文の発音ができる。 enable_katakana_englishが`true`のとき、テキスト中の読みが不明な英単語をカタカナ読みにします。デフォルトは`true`です。 is_kanaが`true`のとき、enable_katakana_englishの値は無視されます。
      * @summary テキストからアクセント句を得る
      * @param {string} text 
      * @param {number} speaker 
      * @param {boolean} [isKana] 
-     * @param {boolean} [enableE2k] 
+     * @param {boolean} [enableKatakanaEnglish] 
      * @param {string} [coreVersion] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -291,7 +291,7 @@ export interface DefaultApiInterface {
     accentPhrasesRaw(requestParameters: AccentPhrasesRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<AccentPhrase>>>;
 
     /**
-     * テキストからアクセント句を得ます。  is_kanaが`true`のとき、テキストは次のAquesTalk 風記法で解釈されます。デフォルトは`false`です。 * 全てのカナはカタカナで記述される * アクセント句は`/`または`、`で区切る。`、`で区切った場合に限り無音区間が挿入される。 * カナの手前に`_`を入れるとそのカナは無声化される * アクセント位置を`\'`で指定する。全てのアクセント句にはアクセント位置を1つ指定する必要がある。 * アクセント句末に`？`(全角)を入れることにより疑問文の発音ができる。 enable_e2kが`true`のとき、テキスト中の読みが不明な英単語を、e2kで解析します。デフォルトは`true`です。 is_kanaが`true`のとき、enable_e2kの値は無視されます。
+     * テキストからアクセント句を得ます。  is_kanaが`true`のとき、テキストは次のAquesTalk 風記法で解釈されます。デフォルトは`false`です。 * 全てのカナはカタカナで記述される * アクセント句は`/`または`、`で区切る。`、`で区切った場合に限り無音区間が挿入される。 * カナの手前に`_`を入れるとそのカナは無声化される * アクセント位置を`\'`で指定する。全てのアクセント句にはアクセント位置を1つ指定する必要がある。 * アクセント句末に`？`(全角)を入れることにより疑問文の発音ができる。 enable_katakana_englishが`true`のとき、テキスト中の読みが不明な英単語をカタカナ読みにします。デフォルトは`true`です。 is_kanaが`true`のとき、enable_katakana_englishの値は無視されます。
      * テキストからアクセント句を得る
      */
     accentPhrases(requestParameters: AccentPhrasesRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<AccentPhrase>>;
@@ -337,7 +337,7 @@ export interface DefaultApiInterface {
      * @summary 音声合成用のクエリを作成する
      * @param {string} text 
      * @param {number} speaker 
-     * @param {boolean} [enableE2k] 
+     * @param {boolean} [enableKatakanaEnglish] 
      * @param {string} [coreVersion] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -356,7 +356,7 @@ export interface DefaultApiInterface {
      * @summary 音声合成用のクエリをプリセットを用いて作成する
      * @param {string} text 
      * @param {number} presetId 
-     * @param {boolean} [enableE2k] 
+     * @param {boolean} [enableKatakanaEnglish] 
      * @param {string} [coreVersion] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -1012,7 +1012,7 @@ export interface DefaultApiInterface {
 export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
 
     /**
-     * テキストからアクセント句を得ます。  is_kanaが`true`のとき、テキストは次のAquesTalk 風記法で解釈されます。デフォルトは`false`です。 * 全てのカナはカタカナで記述される * アクセント句は`/`または`、`で区切る。`、`で区切った場合に限り無音区間が挿入される。 * カナの手前に`_`を入れるとそのカナは無声化される * アクセント位置を`\'`で指定する。全てのアクセント句にはアクセント位置を1つ指定する必要がある。 * アクセント句末に`？`(全角)を入れることにより疑問文の発音ができる。 enable_e2kが`true`のとき、テキスト中の読みが不明な英単語を、e2kで解析します。デフォルトは`true`です。 is_kanaが`true`のとき、enable_e2kの値は無視されます。
+     * テキストからアクセント句を得ます。  is_kanaが`true`のとき、テキストは次のAquesTalk 風記法で解釈されます。デフォルトは`false`です。 * 全てのカナはカタカナで記述される * アクセント句は`/`または`、`で区切る。`、`で区切った場合に限り無音区間が挿入される。 * カナの手前に`_`を入れるとそのカナは無声化される * アクセント位置を`\'`で指定する。全てのアクセント句にはアクセント位置を1つ指定する必要がある。 * アクセント句末に`？`(全角)を入れることにより疑問文の発音ができる。 enable_katakana_englishが`true`のとき、テキスト中の読みが不明な英単語をカタカナ読みにします。デフォルトは`true`です。 is_kanaが`true`のとき、enable_katakana_englishの値は無視されます。
      * テキストからアクセント句を得る
      */
     async accentPhrasesRaw(requestParameters: AccentPhrasesRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<AccentPhrase>>> {
@@ -1038,8 +1038,8 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
             queryParameters['is_kana'] = requestParameters.isKana;
         }
 
-        if (requestParameters.enableE2k !== undefined) {
-            queryParameters['enable_e2k'] = requestParameters.enableE2k;
+        if (requestParameters.enableKatakanaEnglish !== undefined) {
+            queryParameters['enable_katakana_english'] = requestParameters.enableKatakanaEnglish;
         }
 
         if (requestParameters.coreVersion !== undefined) {
@@ -1059,7 +1059,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
     /**
-     * テキストからアクセント句を得ます。  is_kanaが`true`のとき、テキストは次のAquesTalk 風記法で解釈されます。デフォルトは`false`です。 * 全てのカナはカタカナで記述される * アクセント句は`/`または`、`で区切る。`、`で区切った場合に限り無音区間が挿入される。 * カナの手前に`_`を入れるとそのカナは無声化される * アクセント位置を`\'`で指定する。全てのアクセント句にはアクセント位置を1つ指定する必要がある。 * アクセント句末に`？`(全角)を入れることにより疑問文の発音ができる。 enable_e2kが`true`のとき、テキスト中の読みが不明な英単語を、e2kで解析します。デフォルトは`true`です。 is_kanaが`true`のとき、enable_e2kの値は無視されます。
+     * テキストからアクセント句を得ます。  is_kanaが`true`のとき、テキストは次のAquesTalk 風記法で解釈されます。デフォルトは`false`です。 * 全てのカナはカタカナで記述される * アクセント句は`/`または`、`で区切る。`、`で区切った場合に限り無音区間が挿入される。 * カナの手前に`_`を入れるとそのカナは無声化される * アクセント位置を`\'`で指定する。全てのアクセント句にはアクセント位置を1つ指定する必要がある。 * アクセント句末に`？`(全角)を入れることにより疑問文の発音ができる。 enable_katakana_englishが`true`のとき、テキスト中の読みが不明な英単語をカタカナ読みにします。デフォルトは`true`です。 is_kanaが`true`のとき、enable_katakana_englishの値は無視されます。
      * テキストからアクセント句を得る
      */
     async accentPhrases(requestParameters: AccentPhrasesRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<AccentPhrase>> {
@@ -1193,8 +1193,8 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
             queryParameters['speaker'] = requestParameters.speaker;
         }
 
-        if (requestParameters.enableE2k !== undefined) {
-            queryParameters['enable_e2k'] = requestParameters.enableE2k;
+        if (requestParameters.enableKatakanaEnglish !== undefined) {
+            queryParameters['enable_katakana_english'] = requestParameters.enableKatakanaEnglish;
         }
 
         if (requestParameters.coreVersion !== undefined) {
@@ -1245,8 +1245,8 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
             queryParameters['preset_id'] = requestParameters.presetId;
         }
 
-        if (requestParameters.enableE2k !== undefined) {
-            queryParameters['enable_e2k'] = requestParameters.enableE2k;
+        if (requestParameters.enableKatakanaEnglish !== undefined) {
+            queryParameters['enable_katakana_english'] = requestParameters.enableKatakanaEnglish;
         }
 
         if (requestParameters.coreVersion !== undefined) {
