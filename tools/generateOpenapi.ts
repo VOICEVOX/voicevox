@@ -1,7 +1,7 @@
 /**
  * OpenAPI Generator でエンジンのHTTPクライアント（/src/openapi下）を生成するスクリプト。
  *
- * NOTE: 生成元となるOpenAPIは開発版のVoicevox Engineのものを使用する必要がある。
+ * NOTE: 生成元となるOpenAPIはソースから実行しているVoicevox Engineのものを使用する必要がある。
  */
 
 import { execSync } from "node:child_process";
@@ -9,6 +9,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { fetchJson } from "./helper.js";
 
+const openapiDir = path.join(import.meta.dirname, "..", "src", "openapi");
 const openapiJsonPath = path.join(import.meta.dirname, "..", "openapi.json");
 
 async function main() {
@@ -52,10 +53,10 @@ async function runOpenapiGenerator() {
       "generate",
       "-i",
       openapiJsonPath,
+      "-o",
+      openapiDir,
       "-g",
       "typescript-fetch",
-      "-o",
-      "src/openapi/",
       "--additional-properties",
       "modelPropertyNaming=camelCase,supportsES6=true,withInterfaces=true,typescriptThreePlus=true",
     ].join(" "),
