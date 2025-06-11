@@ -10,7 +10,7 @@ import { Readable } from "stream";
 import { pipeline } from "stream/promises";
 import { ReadableStream } from "stream/web";
 import { promisify } from "util";
-import { retryFetch } from "./helper.mjs";
+import { retryFetch } from "./helper.js";
 
 // OS名を定義するオブジェクト
 const OS = {
