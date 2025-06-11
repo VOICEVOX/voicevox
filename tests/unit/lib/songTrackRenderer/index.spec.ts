@@ -260,9 +260,9 @@ describe("SongTrackRenderer", () => {
       if (event.type === "volumeGenerationComplete") {
         volumeGenerationCompleteEventCount++;
       }
-      // 2番目のフレーズのボリューム生成が終わったら中断要求を出す
+      // 2番目のフレーズのボリューム生成が終わったら、レンダリングの中断要求を出す
       if (volumeGenerationCompleteEventCount === 2) {
-        songTrackRenderer.interruptRendering();
+        songTrackRenderer.requestRenderingInterruption();
       }
     });
 
