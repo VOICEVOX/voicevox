@@ -73,12 +73,14 @@ const handleSkipThisVersionClick = (version: string) => {
 };
 
 // ダイアログを開くかどうか
-watchEffect(() => {
+// ダイアログを開ける状態、かつ新しいアップデートがある場合にダイアログを開く
+const stopWatchEffect = watchEffect(() => {
   if (
     props.canOpenDialog &&
     newUpdateResult.value.status == "updateAvailable"
   ) {
     isDialogOpenComputed.value = true;
+    stopWatchEffect(); // ダイアログを開く処理は一度だけしか実行しないようにする
   }
 });
 </script>
