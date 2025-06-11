@@ -138,6 +138,7 @@ import {
   // 一時的なインポート：SongTrackRenderer の統合が完了するまで、oldSongTrackRendering モジュールを使用する
   // TODO: SongTrackRenderer の統合が完了したら、このインポートを削除する
 } from "@/sing/oldSongTrackRendering";
+import { UnreachableError } from "@/type/utility";
 
 const logger = createLogger("store/singing");
 
@@ -264,7 +265,7 @@ const offlineRenderTracks = async (
   }
 
   for (const phrase of phrases.values()) {
-    if (phrase.singingVoiceKey == undefined || phrase.state !== "PLAYABLE") {
+    if (phrase.singingVoiceKey == undefined || phrase.state !== "RENDERED") {
       continue;
     }
     const singingVoice = getOrThrow(singingVoices, phrase.singingVoiceKey);
@@ -302,6 +303,17 @@ const offlineRenderTracks = async (
   return audioBuffer;
 };
 
+type PhraseSequenceInfo =
+  | {
+      readonly type: "note";
+      readonly sequenceId: SequenceId;
+    }
+  | {
+      readonly type: "audio";
+      readonly sequenceId: SequenceId;
+      readonly singingVoiceKey: SingingVoiceKey;
+    };
+
 let audioContext: AudioContext | undefined;
 let transport: Transport | undefined;
 let previewSynth: PolySynth | undefined;
@@ -327,6 +339,7 @@ if (window.AudioContext) {
 
 const playheadPosition = ref(0); // 単位はtick
 const phraseSingingVoices = new Map<SingingVoiceKey, SingingVoice>();
+const phraseSequenceInfos = new Map<PhraseKey, PhraseSequenceInfo>();
 const sequences = new Map<SequenceId, Sequence & { trackId: TrackId }>();
 const animationTimer = new AnimationTimer();
 
@@ -405,6 +418,16 @@ const deleteSequence = (sequenceId: SequenceId) => {
 };
 
 /**
+ * シーケンスが登録されているかどうかを確認する。
+ *
+ * @param sequenceId シーケンスID。
+ * @returns シーケンスが登録されている場合はtrue、そうでない場合はfalse。
+ */
+const isRegisteredSequence = (sequenceId: SequenceId) => {
+  return sequences.has(sequenceId);
+};
+
+/**
  * ノートシーケンスを生成する。
  */
 const generateNoteSequence = (
@@ -445,6 +468,179 @@ const generateAudioSequence = async (
     audioEvents,
     trackId,
   };
+};
+
+/**
+ * フレーズの状態と再生されるシーケンスの状態を同期させる。
+ * 不要なシーケンスを削除し、不足しているシーケンスを生成する。
+ */
+const syncPhraseSequences = (
+  phrases: Map<PhraseKey, Phrase>,
+  phraseSingingVoices: Map<SingingVoiceKey, SingingVoice>,
+  tempos: Tempo[],
+  tpqn: number,
+) => {
+  // 不要になったシーケンスを削除する
+  deleteUnnecessarySequences(phrases, phraseSequenceInfos);
+
+  // 不足しているシーケンスを新しく作成する
+  createMissingSequences(
+    phrases,
+    phraseSingingVoices,
+    tempos,
+    tpqn,
+    phraseSequenceInfos,
+  );
+};
+
+/**
+ * 不要になったフレーズシーケンスを削除する。
+ *
+ * 以下の場合に不要と判断される。
+ * - フレーズ自体が削除された
+ * - レンダリング状態が変わり、シーケンスのタイプが不一致になった
+ * - 歌声が変更された
+ */
+const deleteUnnecessarySequences = (
+  phrases: Map<PhraseKey, Phrase>,
+  phraseSequenceInfos: Map<PhraseKey, PhraseSequenceInfo>,
+) => {
+  for (const [phraseKey, sequenceInfo] of phraseSequenceInfos) {
+    const phrase = phrases.get(phraseKey);
+
+    let needToDelete = false;
+
+    if (phrase == undefined) {
+      // フレーズが無くなった場合は、既存のシーケンスを削除する
+      needToDelete = true;
+    } else if (
+      phrase.state === "RENDERED" &&
+      (sequenceInfo.type === "note" ||
+        sequenceInfo.singingVoiceKey !== phrase.singingVoiceKey)
+    ) {
+      // フレーズがレンダリング済みの状態に更新された、または歌声が変更された場合は、
+      // フレーズは最新の歌声のオーディオシーケンスで再生される必要があるので、
+      // 既存の仮再生用のノートシーケンスまたは歌声が変更される前のオーディオシーケンスを削除する
+      needToDelete = true;
+    } else if (phrase.state !== "RENDERED" && sequenceInfo.type === "audio") {
+      // レンダリング済みのフレーズが、再び未レンダリングの状態に戻った場合は、
+      // フレーズは仮再生用のノートシーケンスで再生される必要があるので、
+      // 既存のオーディオシーケンスを削除する
+      needToDelete = true;
+    }
+
+    // TODO: ピッチを編集したときは行わないようにする
+    if (needToDelete) {
+      phraseSequenceInfos.delete(phraseKey);
+      if (isRegisteredSequence(sequenceInfo.sequenceId)) {
+        deleteSequence(sequenceInfo.sequenceId);
+        logger.info(`Deleted sequence. ID: ${sequenceInfo.sequenceId}`);
+      }
+    }
+  }
+};
+
+/**
+ * 不足しているフレーズシーケンスを状態に応じて生成・登録する。
+ */
+const createMissingSequences = (
+  phrases: Map<PhraseKey, Phrase>,
+  phraseSingingVoices: Map<SingingVoiceKey, SingingVoice>,
+  tempos: Tempo[],
+  tpqn: number,
+  phraseSequenceInfos: Map<PhraseKey, PhraseSequenceInfo>,
+) => {
+  for (const [phraseKey, phrase] of phrases) {
+    // 既にシーケンスが存在する場合は、この関数では何もしない
+    if (phraseSequenceInfos.has(phraseKey)) {
+      continue;
+    }
+
+    // フレーズの状態に応じて、適切なシーケンス生成処理を呼び出す
+    if (phrase.state === "RENDERED") {
+      createAudioSequenceForPhrase(
+        phraseKey,
+        phrase,
+        phraseSingingVoices,
+        phraseSequenceInfos,
+      );
+    } else {
+      createNoteSequenceForPhrase(
+        phraseKey,
+        phrase,
+        tempos,
+        tpqn,
+        phraseSequenceInfos,
+      );
+    }
+  }
+};
+
+/**
+ * 指定されたフレーズのオーディオシーケンスを非同期で生成・登録する。
+ */
+const createAudioSequenceForPhrase = (
+  phraseKey: PhraseKey,
+  phrase: Phrase,
+  phraseSingingVoices: Map<SingingVoiceKey, SingingVoice>,
+  phraseSequenceInfos: Map<PhraseKey, PhraseSequenceInfo>,
+) => {
+  if (phrase.singingVoiceKey == undefined) {
+    throw new UnreachableError("phrase.singingVoiceKey is undefined.");
+  }
+  const singingVoice = getOrThrow(phraseSingingVoices, phrase.singingVoiceKey);
+
+  const newSequenceId = SequenceId(uuid4());
+  phraseSequenceInfos.set(phraseKey, {
+    type: "audio",
+    sequenceId: newSequenceId,
+    singingVoiceKey: phrase.singingVoiceKey,
+  });
+
+  const audioSequencePromise = generateAudioSequence(
+    phrase.startTime,
+    singingVoice,
+    phrase.trackId,
+  );
+
+  // Promise解決時に、情報が古くなっていないか確認してから登録する
+  void audioSequencePromise.then((audioSequence) => {
+    const currentSequenceInfo = phraseSequenceInfos.get(phraseKey);
+    if (
+      currentSequenceInfo != undefined &&
+      currentSequenceInfo.sequenceId === newSequenceId
+    ) {
+      registerSequence(newSequenceId, audioSequence);
+      logger.info(`Registered audio sequence. ID: ${newSequenceId}`);
+    }
+  });
+};
+
+/**
+ * 指定されたフレーズのノートシーケンスを生成・登録する。
+ */
+const createNoteSequenceForPhrase = (
+  phraseKey: PhraseKey,
+  phrase: Phrase,
+  tempos: Tempo[],
+  tpqn: number,
+  phraseSequenceInfos: Map<PhraseKey, PhraseSequenceInfo>,
+) => {
+  const newSequenceId = SequenceId(uuid4());
+  phraseSequenceInfos.set(phraseKey, {
+    type: "note",
+    sequenceId: newSequenceId,
+  });
+
+  const noteSequence = generateNoteSequence(
+    phrase.notes,
+    tempos,
+    tpqn,
+    phrase.trackId,
+  );
+
+  registerSequence(newSequenceId, noteSequence);
+  logger.info(`Registered note sequence. ID: ${newSequenceId}`);
 };
 
 /**
@@ -1072,23 +1268,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const phrase = getOrThrow(state.phrases, phraseKey);
 
       phrase.singingVoiceKey = singingVoiceKey;
-    },
-  },
-
-  SET_SEQUENCE_ID_TO_PHRASE: {
-    mutation(
-      state,
-      {
-        phraseKey,
-        sequenceId,
-      }: {
-        phraseKey: PhraseKey;
-        sequenceId: SequenceId | undefined;
-      },
-    ) {
-      const phrase = getOrThrow(state.phrases, phraseKey);
-
-      phrase.sequenceId = sequenceId;
     },
   },
 
@@ -1858,24 +2037,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const startRenderingRequested = () => state.startRenderingRequested;
       const stopRenderingRequested = () => state.stopRenderingRequested;
 
-      /**
-       * フレーズが持つシーケンスのIDを取得する。
-       * @param phraseKey フレーズのキー
-       * @returns シーケンスID
-       */
-      const getPhraseSequenceId = (phraseKey: PhraseKey) => {
-        return getOrThrow(state.phrases, phraseKey).sequenceId;
-      };
-
-      /**
-       * フレーズが持つ歌声のキーを取得する。
-       * @param phraseKey フレーズのキー
-       * @returns 歌声のキー
-       */
-      const getPhraseSingingVoiceKey = (phraseKey: PhraseKey) => {
-        return getOrThrow(state.phrases, phraseKey).singingVoiceKey;
-      };
-
       const render = async () => {
         const snapshot = createSnapshot();
 
@@ -1943,17 +2104,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             if (renderStartStageIds.has(phraseKey)) {
               phrase.state = "WAITING_TO_BE_RENDERED";
             } else {
-              phrase.state = "PLAYABLE";
+              phrase.state = "RENDERED";
             }
           }
         }
 
-        // 無くなったフレーズのピッチなどのデータとシーケンスを削除する
+        // 無くなったフレーズのピッチなどのデータを削除する
         for (const phraseKey of disappearedPhraseKeys) {
-          const phraseSequenceId = getPhraseSequenceId(phraseKey);
-          if (phraseSequenceId != undefined) {
-            deleteSequence(phraseSequenceId);
-          }
           for (let i = stages.length - 1; i >= 0; i--) {
             stages[i].deleteExecutionResult(phraseKey);
           }
@@ -1962,38 +2119,15 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         // state.phrasesを更新する
         mutations.SET_PHRASES({ phrases: mergedPhrases });
 
+        // フレーズの状態と再生されるシーケンスの状態を同期させる
+        syncPhraseSequences(
+          state.phrases,
+          phraseSingingVoices,
+          snapshot.tempos,
+          snapshot.tpqn,
+        );
+
         logger.info("Phrases updated.");
-
-        // シンガーが設定されていないフレーズとレンダリング未完了のフレーズが
-        // プレビュー音で再生されるようにする
-        for (const [phraseKey, phrase] of state.phrases.entries()) {
-          if (
-            phrase.state === "SINGER_IS_NOT_SET" ||
-            phrase.state === "WAITING_TO_BE_RENDERED"
-          ) {
-            // シーケンスが存在する場合は、シーケンスを削除する
-            // TODO: ピッチを編集したときは行わないようにする
-            const phraseSequenceId = getPhraseSequenceId(phraseKey);
-            if (phraseSequenceId != undefined) {
-              deleteSequence(phraseSequenceId);
-              mutations.SET_SEQUENCE_ID_TO_PHRASE({
-                phraseKey,
-                sequenceId: undefined,
-              });
-            }
-
-            // ノートシーケンスを生成して登録し、プレビュー音が鳴るようにする
-            const sequenceId = SequenceId(uuid4());
-            const noteSequence = generateNoteSequence(
-              phrase.notes,
-              snapshot.tempos,
-              snapshot.tpqn,
-              phrase.trackId,
-            );
-            registerSequence(sequenceId, noteSequence);
-            mutations.SET_SEQUENCE_ID_TO_PHRASE({ phraseKey, sequenceId });
-          }
-        }
 
         // 各フレーズのレンダリングを行い、レンダリングされた音声が再生されるようにする
         const phrasesToBeRendered = new Map(
@@ -2021,7 +2155,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             ),
             playheadPosition.value,
           );
-          const phrase = getOrThrow(phrasesToBeRendered, phraseKey);
           phrasesToBeRendered.delete(phraseKey);
 
           mutations.SET_STATE_TO_PHRASE({
@@ -2045,38 +2178,18 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               await stages[i].execute(phraseKey, snapshot);
             }
 
-            // シーケンスが存在する場合、シーケンスを削除する
-            const phraseSequenceId = getPhraseSequenceId(phraseKey);
-            if (phraseSequenceId != undefined) {
-              deleteSequence(phraseSequenceId);
-              mutations.SET_SEQUENCE_ID_TO_PHRASE({
-                phraseKey,
-                sequenceId: undefined,
-              });
-            }
-
-            // オーディオシーケンスを生成して登録する
-            const singingVoiceKey = getPhraseSingingVoiceKey(phraseKey);
-            if (singingVoiceKey == undefined) {
-              throw new Error("singingVoiceKey is undefined.");
-            }
-            const singingVoice = getOrThrow(
-              phraseSingingVoices,
-              singingVoiceKey,
-            );
-            const sequenceId = SequenceId(uuid4());
-            const audioSequence = await generateAudioSequence(
-              phrase.startTime,
-              singingVoice,
-              phrase.trackId,
-            );
-            registerSequence(sequenceId, audioSequence);
-            mutations.SET_SEQUENCE_ID_TO_PHRASE({ phraseKey, sequenceId });
-
             mutations.SET_STATE_TO_PHRASE({
               phraseKey,
-              phraseState: "PLAYABLE",
+              phraseState: "RENDERED",
             });
+
+            // フレーズの状態と再生されるシーケンスの状態を同期させる
+            syncPhraseSequences(
+              state.phrases,
+              phraseSingingVoices,
+              snapshot.tempos,
+              snapshot.tpqn,
+            );
           } catch (error) {
             mutations.SET_STATE_TO_PHRASE({
               phraseKey,

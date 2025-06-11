@@ -766,7 +766,7 @@ export type PhraseState =
   | "WAITING_TO_BE_RENDERED"
   | "NOW_RENDERING"
   | "COULD_NOT_RENDER"
-  | "PLAYABLE";
+  | "RENDERED";
 
 /**
  * エディタ用のFrameAudioQuery
@@ -830,7 +830,6 @@ export type Phrase = {
   singingPitchKey?: SingingPitchKey;
   singingVolumeKey?: SingingVolumeKey;
   singingVoiceKey?: SingingVoiceKey;
-  sequenceId?: SequenceId;
   trackId: TrackId; // NOTE: state.tracksと同期していないので使用する際は注意
 };
 
@@ -1076,13 +1075,6 @@ export type SingingStoreTypes = {
     mutation: {
       phraseKey: PhraseKey;
       singingVoiceKey: SingingVoiceKey | undefined;
-    };
-  };
-
-  SET_SEQUENCE_ID_TO_PHRASE: {
-    mutation: {
-      phraseKey: PhraseKey;
-      sequenceId: SequenceId | undefined;
     };
   };
 

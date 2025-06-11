@@ -7,14 +7,14 @@
 import { DisplayableError, errorToMessage } from "@/helpers/errorHelper";
 
 /** 例外メッセージ用のオブジェクト */
-export type IpcResult<T> =
+export type TransferableResult<T> =
   | { ok: true; value: T }
   | { ok: false; message: string; isDisplayable: boolean };
 
 /** 例外メッセージ用のオブジェクトにラップする */
-export async function wrapToIpcResult<T>(
+export async function wrapToTransferableResult<T>(
   fn: () => Promise<T> | T,
-): Promise<IpcResult<T>> {
+): Promise<TransferableResult<T>> {
   try {
     return { ok: true, value: await fn() };
   } catch (e) {
@@ -27,7 +27,9 @@ export async function wrapToIpcResult<T>(
 }
 
 /** 例外メッセージ用のオブジェクトをアンラップし、例外があれば投げる */
-export function getOrThrowIpcResult<T>(result: IpcResult<T>): T {
+export function getOrThrowTransferableResult<T>(
+  result: TransferableResult<T>,
+): T {
   if (result.ok) {
     return result.value;
   } else {
