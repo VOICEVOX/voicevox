@@ -20,6 +20,7 @@ exports[`0.13.0からマイグレーションできる 1`] = `
   "enableRubyNotation": false,
   "engineSettings": {
     "00000000-0000-0000-0000-000000000000": {
+      "applyKatakanaEnglish": true,
       "outputSamplingRate": "engineDefault",
       "useGpu": false,
     },
