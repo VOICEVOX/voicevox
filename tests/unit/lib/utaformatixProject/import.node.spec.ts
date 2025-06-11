@@ -1,4 +1,4 @@
-import { promises as fs } from "fs";
+import fs from "fs/promises";
 import { it, expect } from "vitest";
 import { Project as UfProject } from "@sevenc-nanashi/utaformatix-ts";
 import { ufProjectToVoicevox } from "@/sing/utaformatixProject/toVoicevox";

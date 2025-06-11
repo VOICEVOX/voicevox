@@ -3,7 +3,7 @@
  */
 import { spawnSync } from "child_process";
 import fs from "fs";
-import { arch } from "os";
+import os from "os";
 import path from "path";
 import { retryFetch } from "./helper.mjs";
 
@@ -39,7 +39,7 @@ switch (process.platform) {
     break;
   }
   case "linux": {
-    switch (arch()) {
+    switch (os.arch()) {
       case "arm64": {
         url = "https://www.7-zip.org/a/7z2201-linux-arm64.tar.xz";
         break;

@@ -113,12 +113,14 @@ const builderOptions = {
         arch: ["x64"],
       },
     ],
-    certificateSha1:
-      WIN_CERTIFICATE_SHA1 !== "" ? WIN_CERTIFICATE_SHA1 : undefined,
-    signingHashAlgorithms:
-      WIN_SIGNING_HASH_ALGORITHMS !== ""
-        ? WIN_SIGNING_HASH_ALGORITHMS
-        : undefined,
+    signtoolOptions: {
+      certificateSha1:
+        WIN_CERTIFICATE_SHA1 !== "" ? WIN_CERTIFICATE_SHA1 : undefined,
+      signingHashAlgorithms:
+        WIN_SIGNING_HASH_ALGORITHMS !== ""
+          ? WIN_SIGNING_HASH_ALGORITHMS
+          : undefined,
+    },
   },
   nsisWeb: {
     artifactName:

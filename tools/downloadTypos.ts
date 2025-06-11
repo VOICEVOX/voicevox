@@ -4,8 +4,8 @@
 import { exec } from "child_process";
 import fsSync from "fs";
 import fs from "fs/promises";
-import { arch, platform } from "os";
-import { join } from "path";
+import os from "os";
+import path from "path";
 import { Readable } from "stream";
 import { pipeline } from "stream/promises";
 import { ReadableStream } from "stream/web";
@@ -24,9 +24,9 @@ const CPU_ARCHITECTURE = {
   ARM: "aarch64",
 };
 // ダウンロードしたバイナリを格納するディレクトリ
-const BINARY_BASE_PATH = join(import.meta.dirname, "..", "vendored");
+const BINARY_BASE_PATH = path.join(import.meta.dirname, "..", "vendored");
 // typosのバイナリを格納するディレクトリ
-const TYPOS_DIRECTORY_PATH = join(BINARY_BASE_PATH, "typos");
+const TYPOS_DIRECTORY_PATH = path.join(BINARY_BASE_PATH, "typos");
 // typosのバージョンを保存しておくテキストファイル
 const TYPOS_VERSION_FILE_NAME = "version.txt";
 
@@ -48,9 +48,9 @@ const TYPOS_TARGET_TRIPLES = {
 };
 
 // 動作環境でのOSとCPUアーキテクチャ
-const currentOS = platform();
+const currentOS = os.platform();
 const currentCpuArchitecture =
-  arch() === "arm64" ? CPU_ARCHITECTURE.ARM : CPU_ARCHITECTURE.X86_64;
+  os.arch() === "arm64" ? CPU_ARCHITECTURE.ARM : CPU_ARCHITECTURE.X86_64;
 // 7zバイナリのパス
 // WARNING: linuxとmacで異なるバイナリでないとエラーが出る
 const sevenZipBinaryName =
@@ -59,7 +59,11 @@ const sevenZipBinaryName =
     : currentOS === OS.MACOS
       ? "7zz"
       : "7zzs";
-const sevenZipBinaryPath = join(BINARY_BASE_PATH, "7z", sevenZipBinaryName);
+const sevenZipBinaryPath = path.join(
+  BINARY_BASE_PATH,
+  "7z",
+  sevenZipBinaryName,
+);
 // 非同期でOSコマンドを処理するための関数
 const execAsync = promisify(exec);
 
@@ -118,7 +122,10 @@ async function shouldDownloadTypos(): Promise<boolean> {
   }
 
   // TYPOS_BINARY_PATHが存在する場合、typosのバージョンをチェック
-  const versionFilePath = join(TYPOS_DIRECTORY_PATH, TYPOS_VERSION_FILE_NAME);
+  const versionFilePath = path.join(
+    TYPOS_DIRECTORY_PATH,
+    TYPOS_VERSION_FILE_NAME,
+  );
   if (!(await exists(versionFilePath))) {
     return true;
   }
@@ -143,7 +150,7 @@ async function prepareTyposDirectory() {
   if (await exists(TYPOS_DIRECTORY_PATH)) {
     const files = await fs.readdir(TYPOS_DIRECTORY_PATH);
     await Promise.all(
-      files.map((file) => fs.unlink(join(TYPOS_DIRECTORY_PATH, file))),
+      files.map((file) => fs.unlink(path.join(TYPOS_DIRECTORY_PATH, file))),
     );
   } else {
     // 無い場合は新規作成する
@@ -204,7 +211,10 @@ async function downloadAndUnarchive({ url }: { url: string }) {
   }
 
   // typosのバージョンを保存
-  const versionFilePath = join(TYPOS_DIRECTORY_PATH, TYPOS_VERSION_FILE_NAME);
+  const versionFilePath = path.join(
+    TYPOS_DIRECTORY_PATH,
+    TYPOS_VERSION_FILE_NAME,
+  );
   await fs.writeFile(versionFilePath, TYPOS_VERSION);
 
   // 解凍後に圧縮ファイルを削除
@@ -216,8 +226,8 @@ async function downloadAndUnarchive({ url }: { url: string }) {
  * ダウンロード・解凍後に実行する
  */
 async function removeTyposDocumentation() {
-  const typosDocDirPath = join(TYPOS_DIRECTORY_PATH, "doc");
-  const typosReadmeFilePath = join(TYPOS_DIRECTORY_PATH, "README.md");
+  const typosDocDirPath = path.join(TYPOS_DIRECTORY_PATH, "doc");
+  const typosReadmeFilePath = path.join(TYPOS_DIRECTORY_PATH, "README.md");
 
   // doc ディレクトリの削除
   if (await exists(typosDocDirPath)) {

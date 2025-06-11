@@ -820,6 +820,7 @@ export type PhraseRenderingCompleteEvent = {
   readonly type: "phraseRenderingComplete";
   readonly phraseKey: PhraseKey;
   readonly phrase: PhraseForRender;
+  readonly snapshot: SnapshotForRender;
 };
 
 /**
@@ -971,13 +972,13 @@ export class SongTrackRenderer {
   }
 
   /**
-   * 現在進行中のレンダリング処理を中断する。
+   * 現在進行中のレンダリング処理の中断を要求する。
    * 中断要求は、次のフレーズのレンダリング処理に移る前にチェックされる。
    * 既に実行中の個々のフレーズレンダリング処理は中断されない。
    *
    * @throws レンダリング処理が進行中でない場合にエラーをスローする。
    */
-  interruptRendering() {
+  requestRenderingInterruption() {
     if (!this._isRendering) {
       throw new Error("Rendering is not in progress.");
     }
@@ -1205,6 +1206,7 @@ export class SongTrackRenderer {
       type: "phraseRenderingComplete",
       phraseKey,
       phrase: SongTrackRenderer.clonePhrase(phrase),
+      snapshot,
     });
   }
 

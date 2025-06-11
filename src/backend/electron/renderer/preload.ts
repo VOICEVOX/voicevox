@@ -1,13 +1,11 @@
 import { contextBridge, ipcRenderer, webUtils } from "electron";
-import { getOrThrowIpcResult } from "../ipcResultHelper";
-import { type IpcRendererInvoke } from "./ipc";
 import {
-  ConfigType,
-  EngineId,
-  Sandbox,
-  SandboxKey,
-  TextAsset,
-} from "@/type/preload";
+  wrapToTransferableResult,
+  getOrThrowTransferableResult,
+} from "../transferableResultHelper";
+import { type IpcRendererInvoke } from "./ipc";
+import { BridgeKey, SandboxWithTransferableResult } from "./backendApiLoader";
+import { ConfigType, EngineId, Sandbox, TextAsset } from "@/type/preload";
 
 const ipcRendererInvokeProxy = new Proxy(
   {},
@@ -16,9 +14,9 @@ const ipcRendererInvokeProxy = new Proxy(
       (_, channel: string) =>
       async (...args: unknown[]) => {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        const ipcResult = await ipcRenderer.invoke(channel, ...args);
+        const transferableResult = await ipcRenderer.invoke(channel, ...args);
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-        return getOrThrowIpcResult(ipcResult);
+        return getOrThrowTransferableResult(transferableResult);
       },
   },
 ) as IpcRendererInvoke;
@@ -226,4 +224,17 @@ const api: Sandbox = {
   },
 };
 
-contextBridge.exposeInMainWorld(SandboxKey, api);
+const wrapApi = (baseApi: Sandbox): SandboxWithTransferableResult => {
+  const wrappedApi = {} as SandboxWithTransferableResult;
+  for (const key in baseApi) {
+    const propKey = key as keyof SandboxWithTransferableResult;
+    // @ts-expect-error とりあえず動くので無視
+    wrappedApi[propKey] = async (...args: unknown[]) => {
+      // @ts-expect-error とりあえず動くので無視
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      return wrapToTransferableResult(() => baseApi[propKey](...args));
+    };
+  }
+  return wrappedApi;
+};
+contextBridge.exposeInMainWorld(BridgeKey, wrapApi(api));
