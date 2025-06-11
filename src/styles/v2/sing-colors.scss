@@ -344,6 +344,9 @@ SASSのmapなどで構造化+mixin一括処理などで処理可能ですが、
   --scheme-color-sing-ruler-surface: oklch(
     var(--lr-90) var(--neutral-c) var(--neutral-h)
   );
+  --scheme-color-sing-ruler-surface-hover: oklch(
+    var(--lr-87) var(--neutral-c) var(--neutral-h)
+  );
   --scheme-color-sing-ruler-measure-line: oklch(
     var(--lr-65) var(--neutral-c) var(--neutral-h)
   );
@@ -599,6 +602,9 @@ SASSのmapなどで構造化+mixin一括処理などで処理可能ですが、
 
   --scheme-color-sing-ruler-surface: oklch(
     var(--lr-30) var(--neutral-c) var(--neutral-h)
+  );
+  --scheme-color-sing-ruler-surface-hover: oklch(
+    var(--lr-33) var(--neutral-c) var(--neutral-h)
   );
   --scheme-color-sing-ruler-measure-line: oklch(
     var(--lr-60) var(--neutral-c) var(--neutral-h)
