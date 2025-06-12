@@ -207,7 +207,6 @@ export const engineSettingSchema = z.object({
   outputSamplingRate: z
     .union([z.number(), z.literal("engineDefault")])
     .default("engineDefault"),
-  applyKatakanaEnglish: z.boolean().default(true),
 });
 export type EngineSettingType = z.infer<typeof engineSettingSchema>;
 
@@ -395,6 +394,7 @@ export const rootMiscSettingSchema = z.object({
   playheadPositionDisplayFormat: z
     .enum(["MINUTES_SECONDS", "MEASURES_BEATS"])
     .default("MINUTES_SECONDS"), // 再生ヘッド位置の表示モード
+  applyKatakanaEnglish: z.boolean().default(true), // 未知の英単語をカタカナ読みに変換するかどうか
 });
 export type RootMiscSettingType = z.infer<typeof rootMiscSettingSchema>;
 

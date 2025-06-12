@@ -79,26 +79,6 @@
                       (outputSamplingRate = Number(value) || 'engineDefault')
                   "
                 />
-                <BaseTooltip
-                  :label="
-                    engineInfos[selectedEngineId].name +
-                    'はこの機能をサポートしていません。'
-                  "
-                  :disabled="
-                    store.state.engineManifests[selectedEngineId]
-                      .supportedFeatures.applyKatakanaEnglish
-                  "
-                >
-                  <ToggleCell
-                    v-model="selectedEngineApplyKatakanaEnglish"
-                    title="未知の英単語をカタカナ読みに変換"
-                    description="ONの場合、未知の英単語をカタカナ読みに変換します。"
-                    :disable="
-                      !store.state.engineManifests[selectedEngineId]
-                        .supportedFeatures.applyKatakanaEnglish
-                    "
-                  />
-                </BaseTooltip>
               </div>
               <!-- Preservation Setting -->
               <div class="setting-card">
@@ -399,6 +379,17 @@
                   >
                   </SelectCell>
                 </BaseTooltip>
+                <BaseTooltip
+                  :label="canApplyKatakanaEnglishTooltip"
+                  :disabled="canApplyKatakanaEnglish === 'all'"
+                >
+                  <ToggleCell
+                    v-model="applyKatakanaEnglish"
+                    title="未知の英単語をカタカナ読みに変換"
+                    description="ONの場合、未知の英単語をカタカナ読みに変換します。"
+                    :disable="canApplyKatakanaEnglish === 'none'"
+                  />
+                </BaseTooltip>
                 <BaseRowCard
                   title="ソング：元に戻すトラック操作"
                   description="「元に戻す」機能の対象とするトラック操作を指定します。"
@@ -524,6 +515,7 @@ import {
 import { createLogger } from "@/helpers/log";
 import { useRootMiscSetting } from "@/composables/useRootMiscSetting";
 import { isProduction } from "@/helpers/platform";
+import { ExhaustiveError } from "@/type/utility";
 
 type SamplingRateOption = EngineSettingType["outputSamplingRate"];
 
@@ -534,6 +526,7 @@ const { warn } = createLogger("SettingDialog");
 
 const engineIds = computed(() => store.state.engineIds);
 const engineInfos = computed(() => store.state.engineInfos);
+const engineManifests = computed(() => store.state.engineManifests);
 const inheritAudioInfoMode = computed(() => store.state.inheritAudioInfo);
 const activePointScrollMode = computed({
   get: () => store.state.activePointScrollMode,
@@ -608,38 +601,6 @@ const outputSamplingRate = computed({
   },
 });
 
-// エンジン：未知の英単語をカタカナ読みに変換
-const selectedEngineApplyKatakanaEnglish = computed({
-  get: () => {
-    if (
-      !store.state.engineManifests[selectedEngineId.value].supportedFeatures
-        .applyKatakanaEnglish
-    ) {
-      // サポートされていないエンジンの場合は常に false
-      return false;
-    }
-
-    return store.state.engineSettings[selectedEngineId.value]
-      .applyKatakanaEnglish;
-  },
-  set: (applyKatakanaEnglish: boolean) => {
-    if (
-      !store.state.engineManifests[selectedEngineId.value].supportedFeatures
-        .applyKatakanaEnglish
-    ) {
-      // サポートされていないエンジンの場合は何もしない
-      return;
-    }
-    void store.actions.SET_ENGINE_SETTING({
-      engineId: selectedEngineId.value,
-      engineSetting: {
-        ...store.state.engineSettings[selectedEngineId.value],
-        applyKatakanaEnglish,
-      },
-    });
-  },
-});
-
 // 非表示にしたヒントの再表示
 const hasResetConfirmedTips = ref(false);
 const isDefaultConfirmedTips = computed(() => {
@@ -690,6 +651,49 @@ const [showTextLineNumber, changeShowTextLineNumber] = useRootMiscSetting(
   store,
   "showTextLineNumber",
 );
+
+const canApplyKatakanaEnglish = computed(() => {
+  const supportedEngines = engineIds.value.filter(
+    (engineId) =>
+      engineManifests.value[engineId].supportedFeatures.applyKatakanaEnglish,
+  );
+  if (supportedEngines.length === 0) {
+    return "none";
+  }
+  if (supportedEngines.length === store.state.engineIds.length) {
+    return "all";
+  }
+
+  return "some";
+});
+const canApplyKatakanaEnglishTooltip = computed(() => {
+  switch (canApplyKatakanaEnglish.value) {
+    case "none":
+      return "この機能を利用できるエンジンがありません。";
+    case "some":
+      return "一部のエンジンではこの機能を利用できません。";
+    case "all":
+      // この場合はツールチップを表示しない
+      return "";
+    default:
+      throw new ExhaustiveError(canApplyKatakanaEnglish.value);
+  }
+});
+const [_applyKatakanaEnglish, setApplyKatakanaEnglish] = useRootMiscSetting(
+  store,
+  "applyKatakanaEnglish",
+);
+const applyKatakanaEnglish = computed({
+  get: () => {
+    if (canApplyKatakanaEnglish.value === "none") {
+      return false; // 利用できない場合は強制的にfalse
+    }
+    return _applyKatakanaEnglish.value;
+  },
+  set: (applyKatakanaEnglish: boolean) => {
+    setApplyKatakanaEnglish(applyKatakanaEnglish);
+  },
+});
 
 const [showAddAudioItemButton, changeShowAddAudioItemButton] =
   useRootMiscSetting(store, "showAddAudioItemButton");
