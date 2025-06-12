@@ -5,6 +5,7 @@ exports[`0.13.0からマイグレーションできる 1`] = `
   "acceptRetrieveTelemetry": "Accepted",
   "acceptTerms": "Accepted",
   "activePointScrollMode": "OFF",
+  "applyKatakanaEnglish": true,
   "confirmedTips": {
     "engineStartedOnAltPort": false,
     "notifyOnGenerate": false,

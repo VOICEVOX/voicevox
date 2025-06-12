@@ -8,6 +8,7 @@ import {
   ExperimentalSettingType,
   VoiceId,
   PresetKey,
+  EngineId,
 } from "@/type/preload";
 import { ensureNotNullish } from "@/helpers/errorHelper";
 import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
@@ -54,7 +55,13 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
       const outputSamplingRate: number = (
         config.savingSetting as { outputSamplingRate: number }
       ).outputSamplingRate;
-      const engineSettings: ConfigType["engineSettings"] = {};
+      const engineSettings: Record<
+        EngineId,
+        {
+          useGpu: boolean;
+          outputSamplingRate: "engineDefault" | number;
+        }
+      > = {};
       engineSettings[engineId] = {
         useGpu: config.useGpu as boolean,
         outputSamplingRate:

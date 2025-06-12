@@ -1,8 +1,8 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * DUMMY Engine
- * DUMMY の音声合成エンジンです。
+ * VOICEVOX ENGINE OSS
+ * VOICEVOX OSS の音声合成エンジンです。
  *
  * The version of the OpenAPI document: latest
  * 
@@ -14,7 +14,7 @@
 
 import { exists, mapValues } from '../runtime';
 /**
- * モーラ（子音＋母音）ごとの情報
+ * モーラ（子音＋母音）ごとの情報。
  * @export
  * @interface Mora
  */
@@ -32,7 +32,7 @@ export interface Mora {
      */
     consonant?: string;
     /**
-     * 子音の音長
+     * 子音の長さ
      * @type {number}
      * @memberof Mora
      */
@@ -44,7 +44,7 @@ export interface Mora {
      */
     vowel: string;
     /**
-     * 母音の音長
+     * 母音の長さ
      * @type {number}
      * @memberof Mora
      */
