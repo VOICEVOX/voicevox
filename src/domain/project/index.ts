@@ -311,6 +311,13 @@ export const migrateProjectFileObject = async (
     }
   }
 
+  if (semver.satisfies(projectAppVersion, "<0.24.0", semverSatisfiesOptions)) {
+    // 音素タイミング編集値の追加
+    for (const trackId in projectData.song.tracks) {
+      projectData.song.tracks[trackId].phonemeTimingEditData = {};
+    }
+  }
+
   // Validation check
   // トークはvalidateTalkProjectで検証する
   // ソングはSET_SCOREの中の`isValidScore`関数で検証される
