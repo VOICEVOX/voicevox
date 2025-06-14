@@ -145,7 +145,12 @@ export default defineConfig((options) => {
           },
         }),
       ],
-      isBrowser && injectBrowserPreloadPlugin(),
+      isElectron &&
+        injectLoaderScriptPlugin(
+          "./backend/electron/renderer/backendApiLoader.ts",
+        ),
+      isBrowser &&
+        injectLoaderScriptPlugin("./backend/browser/backendApiLoader.ts"),
     ],
   };
 });
@@ -163,16 +168,18 @@ const cleanDistPlugin = (): Plugin => {
   };
 };
 
-const injectBrowserPreloadPlugin = (): Plugin => {
+/** バックエンドAPIをフロントエンドから実行するコードを注入する */
+const injectLoaderScriptPlugin = (scriptPath: string): Plugin => {
   return {
-    name: "inject-browser-preload",
+    name: "inject-loader-script",
     transformIndexHtml: {
       order: "pre",
-      handler: (html: string) =>
-        html.replace(
-          "<!-- %BROWSER_PRELOAD% -->",
-          `<script type="module" src="./backend/browser/preload.ts"></script>`,
-        ),
+      handler: (html: string) => {
+        return html.replace(
+          "<!-- %LOADER_SCRIPT% -->",
+          `<script type="module" src="${scriptPath}"></script>`,
+        );
+      },
     },
   };
 };

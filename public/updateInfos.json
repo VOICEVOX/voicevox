@@ -1,5 +1,10 @@
 [
   {
+    "version": "0.23.1",
+    "descriptions": ["キャラクター「離途」「黒沢冴白」を追加"],
+    "contributors": []
+  },
+  {
     "version": "0.23.0",
     "descriptions": [
       "プリセット管理ダイアログのデザインを刷新",

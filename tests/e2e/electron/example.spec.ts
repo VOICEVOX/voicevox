@@ -1,4 +1,4 @@
-import { promises as fs } from "fs";
+import fs from "fs/promises";
 import os from "os";
 import path from "path";
 import { _electron as electron, test } from "@playwright/test";
