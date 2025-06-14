@@ -93,6 +93,7 @@ import {
   AnimationTimer,
   createArray,
   createPromiseThatResolvesWhen,
+  recordToMap,
   round,
 } from "@/sing/utility";
 import { getWorkaroundKeyRangeAdjustment } from "@/sing/workaroundKeyRangeAdjustment";
@@ -3517,12 +3518,16 @@ export const singingCommandStore = transformCommandStore(
             if (!track) {
               throw new Error("Track not found.");
             }
+            const rawTrack = toRaw(track);
             return {
-              ...toRaw(track),
-              notes: track.notes.map((note) => ({
+              ...rawTrack,
+              notes: rawTrack.notes.map((note) => ({
                 ...note,
                 id: NoteId(uuid4()),
               })),
+              phonemeTimingEditData: recordToMap(
+                rawTrack.phonemeTimingEditData,
+              ),
             };
           });
 

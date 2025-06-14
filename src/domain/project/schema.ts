@@ -85,6 +85,11 @@ export const singerSchema = z.object({
   styleId: styleIdSchema,
 });
 
+export const phonemeTimingEditSchema = z.object({
+  phonemeIndexInNote: z.number(), // ノート内での音素の順番
+  offsetSeconds: z.number(), // 単位は秒
+});
+
 export const trackSchema = z.object({
   name: z.string(),
   singer: singerSchema.optional(),
@@ -92,6 +97,10 @@ export const trackSchema = z.object({
   volumeRangeAdjustment: z.number(), // 声量調整量
   notes: z.array(noteSchema),
   pitchEditData: z.array(z.number()), // 値の単位はHzで、データが無いところはVALUE_INDICATING_NO_DATAの値
+  phonemeTimingEditData: z.record(
+    noteIdSchema,
+    z.array(phonemeTimingEditSchema),
+  ), // 音素タイミングの編集データはノートと紐づけて保持
 
   solo: z.boolean(),
   mute: z.boolean(),

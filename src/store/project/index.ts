@@ -34,6 +34,7 @@ import {
   showQuestionDialog,
 } from "@/components/Dialog/Dialog";
 import { uuid4 } from "@/helpers/random";
+import { recordToMap } from "@/sing/utility";
 
 export const projectStoreState: ProjectStoreState = {
   savedLastCommandIds: { talk: null, song: null },
@@ -75,7 +76,13 @@ const applySongProjectToStore = async (
       trackOrder.map((trackId) => {
         const track = tracks[trackId];
         if (!track) throw new Error("track == undefined");
-        return [trackId, track];
+        return [
+          trackId,
+          {
+            ...track,
+            phonemeTimingEditData: recordToMap(track.phonemeTimingEditData),
+          },
+        ];
       }),
     ),
   });
