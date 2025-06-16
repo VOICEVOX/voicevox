@@ -992,7 +992,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
               speaker: styleId,
               enableKatakanaEnglish:
                 state.engineManifests[engineId].supportedFeatures
-                  .applyKatakanaEnglish && state.applyKatakanaEnglish,
+                  .applyKatakanaEnglish && state.enableKatakanaEnglish,
             }),
           ),
         )
@@ -1052,7 +1052,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             isKana,
             enableKatakanaEnglish:
               state.engineManifests[engineId].supportedFeatures
-                .applyKatakanaEnglish && state.applyKatakanaEnglish,
+                .applyKatakanaEnglish && state.enableKatakanaEnglish,
           }),
         )
         .catch((error) => {

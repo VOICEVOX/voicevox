@@ -75,7 +75,7 @@ export const settingStoreState: SettingStoreState = {
   },
   showSingCharacterPortrait: true,
   playheadPositionDisplayFormat: "MINUTES_SECONDS",
-  applyKatakanaEnglish: true,
+  enableKatakanaEnglish: true,
 };
 
 export const settingStore = createPartialStore<SettingStoreTypes>({
