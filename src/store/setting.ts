@@ -154,7 +154,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         "showSingCharacterPortrait",
         "playheadPositionDisplayFormat",
         "openedEditor",
-        "applyKatakanaEnglish",
+        "enableKatakanaEnglish",
       ] as const;
 
       // rootMiscSettingKeysに値を足し忘れていたときに型エラーを出す検出用コード
