@@ -380,14 +380,22 @@
                   </SelectCell>
                 </BaseTooltip>
                 <BaseTooltip
-                  :label="canApplyKatakanaEnglishTooltip"
-                  :disabled="canApplyKatakanaEnglish === 'all'"
+                  :label="enableKatakanaEnglish.tooltip.value"
+                  :disabled="
+                    enableKatakanaEnglish.availableEngines.value === 'all'
+                  "
                 >
+                  <!-- オブジェクトのプロパティはWritableComputedRefでもv-modelを使えないので、手動で双方向バインディングをする -->
                   <ToggleCell
-                    v-model="applyKatakanaEnglish"
+                    :modelValue="enableKatakanaEnglish.enabled.value"
                     title="未知の英単語をカタカナ読みに変換"
                     description="ONの場合、未知の英単語をカタカナ読みに変換します。"
-                    :disable="canApplyKatakanaEnglish === 'none'"
+                    :disable="
+                      enableKatakanaEnglish.availableEngines.value === 'none'
+                    "
+                    @update:modelValue="
+                      enableKatakanaEnglish.enabled.value = $event
+                    "
                   />
                 </BaseTooltip>
                 <BaseRowCard
@@ -652,48 +660,50 @@ const [showTextLineNumber, changeShowTextLineNumber] = useRootMiscSetting(
   "showTextLineNumber",
 );
 
-const canApplyKatakanaEnglish = computed(() => {
-  const supportedEngines = engineIds.value.filter(
-    (engineId) =>
-      engineManifests.value[engineId].supportedFeatures.applyKatakanaEnglish,
-  );
-  if (supportedEngines.length === 0) {
-    return "none";
-  }
-  if (supportedEngines.length === store.state.engineIds.length) {
-    return "all";
-  }
-
-  return "some";
-});
-const canApplyKatakanaEnglishTooltip = computed(() => {
-  switch (canApplyKatakanaEnglish.value) {
-    case "none":
-      return "この機能を利用できるエンジンがありません。";
-    case "some":
-      return "一部のエンジンではこの機能を利用できません。";
-    case "all":
-      // この場合はツールチップを表示しない
-      return "";
-    default:
-      throw new ExhaustiveError(canApplyKatakanaEnglish.value);
-  }
-});
-const [_applyKatakanaEnglish, setApplyKatakanaEnglish] = useRootMiscSetting(
+const [_enableKatakanaEnglish, setEnableKatakanaEnglish] = useRootMiscSetting(
   store,
-  "applyKatakanaEnglish",
+  "enableKatakanaEnglish",
 );
-const applyKatakanaEnglish = computed({
-  get: () => {
-    if (canApplyKatakanaEnglish.value === "none") {
-      return false; // 利用できない場合は強制的にfalse
+const enableKatakanaEnglish = {
+  enabled: computed({
+    get: () => {
+      if (enableKatakanaEnglish.availableEngines.value === "none") {
+        return false; // 利用できない場合は強制的にfalse
+      }
+      return _enableKatakanaEnglish.value;
+    },
+    set: (enableKatakanaEnglish: boolean) => {
+      setEnableKatakanaEnglish(enableKatakanaEnglish);
+    },
+  }),
+  availableEngines: computed(() => {
+    const supportedEngines = engineIds.value.filter(
+      (engineId) =>
+        engineManifests.value[engineId].supportedFeatures.applyKatakanaEnglish,
+    );
+    if (supportedEngines.length === 0) {
+      return "none";
     }
-    return _applyKatakanaEnglish.value;
-  },
-  set: (applyKatakanaEnglish: boolean) => {
-    setApplyKatakanaEnglish(applyKatakanaEnglish);
-  },
-});
+    if (supportedEngines.length === store.state.engineIds.length) {
+      return "all";
+    }
+
+    return "some";
+  }),
+  tooltip: computed(() => {
+    switch (enableKatakanaEnglish.availableEngines.value) {
+      case "none":
+        return "この機能を利用できるエンジンがありません。";
+      case "some":
+        return "一部のエンジンではこの機能を利用できません。";
+      case "all":
+        // この場合はツールチップを表示しない
+        return "";
+      default:
+        throw new ExhaustiveError(enableKatakanaEnglish.availableEngines.value);
+    }
+  }),
+};
 
 const [showAddAudioItemButton, changeShowAddAudioItemButton] =
   useRootMiscSetting(store, "showAddAudioItemButton");
