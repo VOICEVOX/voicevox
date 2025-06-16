@@ -668,7 +668,10 @@ const enableKatakanaEnglish = {
   enabled: computed({
     get: () => {
       if (enableKatakanaEnglish.availableEngines.value === "none") {
-        return false; // 利用できない場合はfalseに見せかける
+        // 対応しているエンジンがないと、trueが表示されている状態でロックされることになって誤解が生まれそうなので、
+        // 対応しているエンジンがない場合はfalseに見せかける
+        // （特に強い意志で決めたわけではないので、問題があったら変更してもよい）
+        return false;
       }
       return _enableKatakanaEnglish.value;
     },
