@@ -389,10 +389,7 @@
                   <ToggleCell
                     :modelValue="enableKatakanaEnglish.enabled.value"
                     title="未知の英単語をカタカナ読みに変換"
-                    description="ONの場合、未知の英単語をカタカナ読みに変換します。"
-                    :disable="
-                      enableKatakanaEnglish.availableEngines.value === 'none'
-                    "
+                    description="ONの場合、エンジンが対応している場合は、未知の英単語をカタカナ読みに変換します。"
                     @update:modelValue="
                       enableKatakanaEnglish.enabled.value = $event
                     "
@@ -666,15 +663,7 @@ const [_enableKatakanaEnglish, setEnableKatakanaEnglish] = useRootMiscSetting(
 );
 const enableKatakanaEnglish = {
   enabled: computed({
-    get: () => {
-      if (enableKatakanaEnglish.availableEngines.value === "none") {
-        // 対応しているエンジンがないと、trueが表示されている状態でロックされることになって誤解が生まれそうなので、
-        // 対応しているエンジンがない場合はfalseに見せかける
-        // （特に強い意志で決めたわけではないので、問題があったら変更してもよい）
-        return false;
-      }
-      return _enableKatakanaEnglish.value;
-    },
+    get: () => _enableKatakanaEnglish.value,
     set: (enableKatakanaEnglish: boolean) => {
       setEnableKatakanaEnglish(enableKatakanaEnglish);
     },
