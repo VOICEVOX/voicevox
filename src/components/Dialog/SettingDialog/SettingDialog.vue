@@ -385,14 +385,10 @@
                     enableKatakanaEnglish.availableEngines.value === 'all'
                   "
                 >
-                  <!-- オブジェクトのプロパティはWritableComputedRefでもv-modelを使えないので、手動で双方向バインディングをする -->
                   <ToggleCell
-                    :modelValue="enableKatakanaEnglish.enabled.value"
+                    v-model="enableKatakanaEnglish.enabled.value"
                     title="未知の英単語をカタカナ読みに変換"
                     description="ONの場合、エンジンが対応している場合は、未知の英単語をカタカナ読みに変換します。"
-                    @update:modelValue="
-                      enableKatakanaEnglish.enabled.value = $event
-                    "
                   />
                 </BaseTooltip>
                 <BaseRowCard
