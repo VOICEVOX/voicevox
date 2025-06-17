@@ -907,6 +907,9 @@ export type SingingStoreState = {
   exportState: SongExportState;
   cancellationOfExportRequested: boolean;
   isSongSidebarOpen: boolean;
+  isLoopEnabled: boolean;
+  loopStartTick: number;
+  loopEndTick: number;
 };
 
 export type SingingStoreTypes = {
@@ -1416,6 +1419,20 @@ export type SingingStoreTypes = {
 
   APPLY_DEVICE_ID_TO_AUDIO_CONTEXT: {
     action(payload: { device: string }): void;
+  };
+
+  SET_LOOP_ENABLED: {
+    mutation: { isLoopEnabled: boolean };
+    action(payload: { isLoopEnabled: boolean }): void;
+  };
+
+  SET_LOOP_RANGE: {
+    mutation: { loopStartTick: number; loopEndTick: number };
+    action(payload: { loopStartTick: number; loopEndTick: number }): void;
+  };
+
+  CLEAR_LOOP_RANGE: {
+    action(): void;
   };
 
   EXPORT_SONG_PROJECT: {
