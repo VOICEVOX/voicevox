@@ -11,6 +11,7 @@ import {
   AudioItem,
   ProjectStoreState,
   ProjectStoreTypes,
+  Track,
 } from "@/store/type";
 import { TrackId } from "@/type/preload";
 import path from "@/helpers/path";
@@ -73,14 +74,23 @@ const applySongProjectToStore = async (
   await actions.SET_TIME_SIGNATURES({ timeSignatures });
   await actions.SET_TRACKS({
     tracks: new Map(
-      trackOrder.map((trackId) => {
+      trackOrder.map((trackId): [TrackId, Track] => {
         const track = tracks[trackId];
         if (!track) throw new Error("track == undefined");
         return [
           trackId,
           {
-            ...track,
+            name: track.name,
+            singer: track.singer,
+            keyRangeAdjustment: track.keyRangeAdjustment,
+            volumeRangeAdjustment: track.volumeRangeAdjustment,
+            notes: track.notes,
+            pitchEditData: track.pitchEditData,
             phonemeTimingEditData: recordToMap(track.phonemeTimingEditData),
+            solo: track.solo,
+            mute: track.mute,
+            gain: track.gain,
+            pan: track.pan,
           },
         ];
       }),

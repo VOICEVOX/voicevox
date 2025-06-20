@@ -51,8 +51,17 @@ export async function writeProjectFile(
           return [
             trackId,
             {
-              ...track,
+              name: track.name,
+              singer: track.singer,
+              keyRangeAdjustment: track.keyRangeAdjustment,
+              volumeRangeAdjustment: track.volumeRangeAdjustment,
+              notes: track.notes,
+              pitchEditData: track.pitchEditData,
               phonemeTimingEditData: mapToRecord(track.phonemeTimingEditData),
+              solo: track.solo,
+              mute: track.mute,
+              gain: track.gain,
+              pan: track.pan,
             },
           ];
         }),
