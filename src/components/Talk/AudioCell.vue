@@ -15,8 +15,7 @@
     }"
     @keydown.prevent.up="moveUpCell"
     @keydown.prevent.down="moveDownCell"
-    @focus="onRootFocus"
-    @click.stop=""
+    @click.stop="onRootClick"
   >
     <!-- 複数選択用のヒットボックス -->
     <!-- テキスト欄の範囲選択との競合を防ぐため、activeの時はCtrlでしか出現しないようにする。 -->
@@ -28,7 +27,7 @@
       "
       class="click-hitbox"
       tabindex="-1"
-      @click="onClickWithModifierKey"
+      @click.stop="onClickWithModifierKey"
     />
     <QIcon
       v-if="isActiveAudioCell"
@@ -187,7 +186,8 @@ const selectAndSetActiveAudioKey = () => {
   });
 };
 
-const onRootFocus = () => {
+const onRootClick = () => {
+console.debug("AudioCell onRootFocus", props.audioKey);
   if (uiLocked.value) return;
 
   selectAndSetActiveAudioKey();

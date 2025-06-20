@@ -48,13 +48,13 @@
                   <template #before>
                     <div
                       class="audio-cell-pane"
-                      :class="{ 'is-dragging': dragEventCounter > 0 }"
-                      @dragenter="dragEventCounter++"
-                      @dragleave="dragEventCounter--"
+                      :class="{ 'is-dragging': fileDropEventCounter > 0 }"
+                      @dragenter="fileDropEventCounter++"
+                      @dragleave="fileDropEventCounter--"
                       @dragover.prevent
                       @drop.prevent="
-                        dragEventCounter = 0;
-                        loadDraggedFile($event);
+                        fileDropEventCounter = 0;
+                        loadDroppedFile($event);
                       "
                       @click="onAudioCellPaneClick"
                     >
@@ -66,13 +66,19 @@
                         ghostClass="ghost"
                         filter="input"
                         :preventOnFilter="false"
-                        @update:modelValue="updateAudioKeys"
+                        @start="onDragStart"
+                        @end="onDragEnd"
                       >
-                        <template #item="{ element }">
+                        <template #item="{ element: audioKey }">
                           <AudioCell
                             :ref="addAudioCellRef"
                             class="draggable-cursor"
-                            :audioKey="element"
+                            :class="{
+                              ghost:
+                                isDragging &&
+                                selectedAudioKeys.includes(audioKey),
+                            }"
+                            :audioKey
                             @focusCell="focusCell"
                           />
                         </template>
@@ -144,6 +150,7 @@ import {
   HotkeyActionNameType,
 } from "@/domain/hotkeyAction";
 import { isElectron } from "@/helpers/platform";
+import { reorder } from "@/helpers/reorderHelper";
 
 const props = defineProps<{
   isEnginesReady: boolean;
@@ -153,6 +160,7 @@ const props = defineProps<{
 const store = useStore();
 
 const audioKeys = computed(() => store.state.audioKeys);
+const selectedAudioKeys = computed(() => store.getters.SELECTED_AUDIO_KEYS);
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
 const isMultiSelectEnabled = computed(
@@ -364,9 +372,45 @@ onBeforeUpdate(() => {
 const resizeObserverRef = ref<QResizeObserver>();
 
 // DaD
-const updateAudioKeys = (audioKeys: AudioKey[]) =>
-  store.actions.COMMAND_SET_AUDIO_KEYS({ audioKeys });
+// const updateAudioKeys = (audioKeys: AudioKey[]) => {
+//   if (store.state.experimentalSetting.enableMultiSelect) {
+//     return;
+//   }
+//   store.actions.COMMAND_SET_AUDIO_KEYS({ audioKeys });
+// };
 const itemKey = (key: string) => key;
+type DraggableEvent = CustomEvent & {
+  oldIndex: number;
+  newIndex: number | null;
+};
+
+const isDragging = ref(false);
+const onDragStart = (e: DraggableEvent) => {
+  isDragging.value = true;
+  const audioKey = audioKeys.value[e.oldIndex];
+  if (!selectedAudioKeys.value.includes(audioKey)) {
+    // 選択されていないものがドラッグされた場合は、クリックしたときにフォーカスを移す
+    void store.actions.SET_ACTIVE_AUDIO_KEY({ audioKey });
+    void store.actions.SET_SELECTED_AUDIO_KEYS({
+      audioKeys: [audioKey],
+    });
+  }
+};
+const onDragEnd = (e: DraggableEvent) => {
+  isDragging.value = false;
+  if (e.newIndex == undefined) return;
+
+  const newAudioKeys = reorder(
+    audioKeys.value,
+    new Set(selectedAudioKeys.value),
+    e.oldIndex,
+    e.newIndex,
+  );
+
+  void store.actions.COMMAND_SET_AUDIO_KEYS({
+    audioKeys: newAudioKeys,
+  });
+};
 
 // セルを追加
 const activeAudioKey = computed<AudioKey | undefined>(
@@ -570,9 +614,9 @@ watch(
   },
 );
 
-// ドラッグ＆ドロップ
-const dragEventCounter = ref(0);
-const loadDraggedFile = (event: { dataTransfer: DataTransfer | null }) => {
+// ファイルのドロップ
+const fileDropEventCounter = ref(0);
+const loadDroppedFile = (event: { dataTransfer: DataTransfer | null }) => {
   if (!event.dataTransfer || event.dataTransfer.files.length === 0) return;
   const file = event.dataTransfer.files[0];
 
@@ -679,7 +723,8 @@ const onAudioCellPaneClick = () => {
   }
 }
 
-.ghost {
+// :not(#dummy) で優先度を上げ、選択中の背景色より優先されるようにする
+.ghost:not(#dummy) {
   background-color: rgba(colors.$display-rgb, 0.15);
 }
 
