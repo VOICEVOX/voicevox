@@ -66,8 +66,8 @@
                         ghostClass="ghost"
                         filter="input"
                         :preventOnFilter="false"
-                        @start="onDragStart"
-                        @end="onDragEnd"
+                        @start="onReorderStart"
+                        @end="onReorderEnd"
                       >
                         <template #item="{ element: audioKey }">
                           <AudioCell
@@ -75,7 +75,7 @@
                             class="draggable-cursor"
                             :class="{
                               ghost:
-                                isDragging &&
+                                isReordering &&
                                 selectedAudioKeys.includes(audioKey),
                             }"
                             :audioKey
@@ -384,9 +384,9 @@ type DraggableEvent = CustomEvent & {
   newIndex: number | null;
 };
 
-const isDragging = ref(false);
-const onDragStart = (e: DraggableEvent) => {
-  isDragging.value = true;
+const isReordering = ref(false);
+const onReorderStart = (e: DraggableEvent) => {
+  isReordering.value = true;
   const audioKey = audioKeys.value[e.oldIndex];
   if (!selectedAudioKeys.value.includes(audioKey)) {
     // 選択されていないものがドラッグされた場合は、クリックしたときにフォーカスを移す
@@ -396,8 +396,8 @@ const onDragStart = (e: DraggableEvent) => {
     });
   }
 };
-const onDragEnd = (e: DraggableEvent) => {
-  isDragging.value = false;
+const onReorderEnd = (e: DraggableEvent) => {
+  isReordering.value = false;
   if (e.newIndex == undefined) return;
 
   const newAudioKeys = reorder(

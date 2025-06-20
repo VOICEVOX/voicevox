@@ -187,7 +187,6 @@ const selectAndSetActiveAudioKey = () => {
 };
 
 const onRootClick = () => {
-console.debug("AudioCell onRootFocus", props.audioKey);
   if (uiLocked.value) return;
 
   selectAndSetActiveAudioKey();
