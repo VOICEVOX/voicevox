@@ -211,14 +211,12 @@ export class VvppManager {
           log.info(`Engine ${engineId} deleted successfully.`);
 
           await moveFileWithRetry({ extractedEngineFiles, to });
-          log.info(
-            `Renamed ${extractedEngineFiles.getExtractedEngineDir()} to ${to}`,
-          );
+          log.info(`Moved ${extractedEngineFiles.getSourceDir()} to ${to}`);
         } catch (e) {
           log.error("Failed to rename engine directory: ", e);
           dialog.showErrorBox(
             "エンジン追加エラー",
-            `エンジンの追加に失敗しました。エンジンのフォルダを手動で移動してください。\n${extractedEngineFiles.getExtractedEngineDir()} -> ${to}\nエラー内容: ${errorToMessage(e)}`,
+            `エンジンの追加に失敗しました。エンジンのフォルダを手動で移動してください。\n${extractedEngineFiles.getSourceDir()} -> ${to}\nエラー内容: ${errorToMessage(e)}`,
           );
         }
       }),
