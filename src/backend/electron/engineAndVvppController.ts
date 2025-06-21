@@ -392,6 +392,7 @@ export class EngineAndVvppController {
       log.info(
         "All ENGINE process kill operations done. Running post engine kill process",
       );
+      // FIXME: handleMarkedEngineDirsはエラーをthrowしている。エラーがthrowされるとアプリが終了しないので、終了するようにしたい。
       return this.vvppManager.handleMarkedEngineDirs();
     });
   }
