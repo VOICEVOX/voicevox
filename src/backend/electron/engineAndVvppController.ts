@@ -94,10 +94,12 @@ export class EngineAndVvppController {
    */
   async installVvppEngineWithWarning({
     vvppPath,
+    asDefaultVvppEngine,
     reloadNeeded,
     reloadCallback,
   }: {
     vvppPath: string;
+    asDefaultVvppEngine: boolean;
     reloadNeeded: boolean;
     reloadCallback?: () => void; // 再読み込みが必要な場合のコールバック
   }) {
@@ -115,7 +117,7 @@ export class EngineAndVvppController {
     }
 
     try {
-      await this.installVvppEngine({ vvppPath, asDefaultVvppEngine: false }); //TODO: asDefaultVvppEngineを受け取るようにする
+      await this.installVvppEngine({ vvppPath, asDefaultVvppEngine });
     } catch (e) {
       log.error(e);
       dialog.showErrorBox("インストールエラー", errorToMessage(e));

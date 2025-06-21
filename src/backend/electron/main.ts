@@ -510,6 +510,7 @@ void app.whenReady().then(async () => {
       if (checkMultiEngineEnabled()) {
         await engineAndVvppController.installVvppEngineWithWarning({
           vvppPath: initialFilePath,
+          asDefaultVvppEngine: false,
           reloadNeeded: false,
         });
       }
@@ -537,6 +538,7 @@ app.on("second-instance", async (_event, _argv, _workDir, rawData) => {
     if (checkMultiEngineEnabled()) {
       await engineAndVvppController.installVvppEngineWithWarning({
         vvppPath: data.filePath,
+        asDefaultVvppEngine: false,
         reloadNeeded: true,
         reloadCallback: () => {
           ipcMainSendProxy.CHECK_EDITED_AND_NOT_SAVE(win, {
