@@ -22,7 +22,7 @@ export class ExtractedEngineFiles {
     return this.manifest;
   }
 
-  getSourceDir() {
+  getExtractedEngineDir() {
     return this.extractedEngineDir;
   }
 

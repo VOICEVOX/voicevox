@@ -390,10 +390,7 @@ export class EngineAndVvppController {
       log.info(
         "All ENGINE process kill operations done. Running post engine kill process",
       );
-      return this.vvppManager.handleMarkedEngineDirs().catch((e) => {
-        log.error("Failed to handle marked engine dirs:", e);
-        // エディタを終了するため、エラーが起きても続行する
-      });
+      return this.vvppManager.handleMarkedEngineDirs();
     });
   }
 

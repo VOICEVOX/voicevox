@@ -192,8 +192,16 @@ export class VvppManager {
           throw new Error("エンジンが見つかりませんでした。");
         }
 
-        await deleteDirWithRetry(deletingEngineDir);
-        log.info(`Engine ${engineId} deleted successfully.`);
+        try {
+          await deleteDirWithRetry(deletingEngineDir);
+          log.info(`Engine ${engineId} deleted successfully.`);
+        } catch (e) {
+          log.error("Failed to delete engine directory: ", e);
+          dialog.showErrorBox(
+            "エンジン削除エラー",
+            `エンジンの削除に失敗しました。エンジンのフォルダを手動で削除してください。\n${deletingEngineDir}\nエラー内容: ${errorToMessage(e)}`,
+          );
+        }
       }),
     );
     this.willDeleteEngineIds.clear();
@@ -211,12 +219,14 @@ export class VvppManager {
           log.info(`Engine ${engineId} deleted successfully.`);
 
           await moveFileWithRetry({ extractedEngineFiles, to });
-          log.info(`Moved ${extractedEngineFiles.getSourceDir()} to ${to}`);
+          log.info(
+            `Moved ${extractedEngineFiles.getExtractedEngineDir()} to ${to}`,
+          );
         } catch (e) {
           log.error("Failed to rename engine directory: ", e);
           dialog.showErrorBox(
             "エンジン追加エラー",
-            `エンジンの追加に失敗しました。エンジンのフォルダを手動で移動してください。\n${extractedEngineFiles.getSourceDir()} -> ${to}\nエラー内容: ${errorToMessage(e)}`,
+            `エンジンの追加に失敗しました。エンジンのフォルダを手動で移動してください。\n${extractedEngineFiles.getExtractedEngineDir()} -> ${to}\nエラー内容: ${errorToMessage(e)}`,
           );
         }
       }),
