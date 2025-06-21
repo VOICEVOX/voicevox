@@ -40,22 +40,11 @@ export function reorder<T>(
   clonedItems.splice(beforeIndex, 1);
   clonedItems.splice(afterIndex, 0, pivotItem);
 
-  // selectedItemsをitems[afterIndex]の位置に移動する
-  const beforePivotSelectedItems = orderedSelectedItems.slice(
-    0,
-    orderedSelectedItems.indexOf(pivotItem),
-  );
-  const afterPivotSelectedItems = orderedSelectedItems.slice(
-    orderedSelectedItems.indexOf(pivotItem) + 1,
-  );
-
   const newItems = [
     ...clonedItems
       .slice(0, afterIndex)
       .filter((item) => !selectedItems.has(item)),
-    ...beforePivotSelectedItems,
-    pivotItem,
-    ...afterPivotSelectedItems,
+    ...orderedSelectedItems,
     ...clonedItems.slice(afterIndex).filter((item) => !selectedItems.has(item)),
   ];
 
