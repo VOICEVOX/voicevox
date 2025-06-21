@@ -13,7 +13,7 @@ export function reorder<T>(
   beforeIndex: number,
   afterIndex: number,
 ): T[] {
-  // Validate inputs
+  // バリデーション
   if (new Set(items).size !== items.length) {
     throw new Error("items contains duplicate elements.");
   }
