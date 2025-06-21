@@ -371,13 +371,7 @@ onBeforeUpdate(() => {
 
 const resizeObserverRef = ref<QResizeObserver>();
 
-// DaD
-// const updateAudioKeys = (audioKeys: AudioKey[]) => {
-//   if (store.state.experimentalSetting.enableMultiSelect) {
-//     return;
-//   }
-//   store.actions.COMMAND_SET_AUDIO_KEYS({ audioKeys });
-// };
+// 並び替え
 const itemKey = (key: string) => key;
 type DraggableEvent = CustomEvent & {
   oldIndex: number;
