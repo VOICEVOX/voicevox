@@ -15,8 +15,7 @@
     }"
     @keydown.prevent.up="moveUpCell"
     @keydown.prevent.down="moveDownCell"
-    @focus="onRootFocus"
-    @click.stop=""
+    @click.stop="onRootClick"
   >
     <!-- 複数選択用のヒットボックス -->
     <!-- テキスト欄の範囲選択との競合を防ぐため、activeの時はCtrlでしか出現しないようにする。 -->
@@ -28,7 +27,7 @@
       "
       class="click-hitbox"
       tabindex="-1"
-      @click="onClickWithModifierKey"
+      @click.stop="onClickWithModifierKey"
     />
     <QIcon
       v-if="isActiveAudioCell"
@@ -55,6 +54,7 @@
           selectAndSetActiveAudioKey();
         }
       "
+      @click.stop=""
     />
     <!--
       input.valueをスクリプトから変更した場合は@changeが発火しないため、
@@ -187,7 +187,7 @@ const selectAndSetActiveAudioKey = () => {
   });
 };
 
-const onRootFocus = () => {
+const onRootClick = () => {
   if (uiLocked.value) return;
 
   selectAndSetActiveAudioKey();
@@ -415,19 +415,15 @@ const moveCell = (offset: number) => (e?: KeyboardEvent) => {
   const index = audioKeys.value.indexOf(props.audioKey) + offset;
   if (index >= 0 && index < audioKeys.value.length) {
     if (isMultiSelectEnabled.value && e?.shiftKey) {
-      // focusCellをemitする前にselectedAudioKeysを保存しておく。
-      // （focusCellでselectedAudioKeysが変更されるため）
-      const selectedAudioKeysBefore = selectedAudioKeys.value;
       emit("focusCell", {
         audioKey: audioKeys.value[index],
         focusTarget: "root",
       });
       void store.actions.SET_SELECTED_AUDIO_KEYS({
-        audioKeys: [
-          ...selectedAudioKeysBefore,
-          props.audioKey,
-          audioKeys.value[index],
-        ],
+        audioKeys: [...selectedAudioKeys.value, audioKeys.value[index]],
+      });
+      void store.actions.SET_ACTIVE_AUDIO_KEY({
+        audioKey: audioKeys.value[index],
       });
     } else {
       emit("focusCell", {
