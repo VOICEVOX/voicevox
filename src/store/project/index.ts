@@ -11,6 +11,7 @@ import {
   AudioItem,
   ProjectStoreState,
   ProjectStoreTypes,
+  Track,
 } from "@/store/type";
 import { TrackId } from "@/type/preload";
 import path from "@/helpers/path";
@@ -34,6 +35,7 @@ import {
   showQuestionDialog,
 } from "@/components/Dialog/Dialog";
 import { uuid4 } from "@/helpers/random";
+import { recordToMap } from "@/sing/utility";
 
 export const projectStoreState: ProjectStoreState = {
   savedLastCommandIds: { talk: null, song: null },
@@ -72,10 +74,25 @@ const applySongProjectToStore = async (
   await actions.SET_TIME_SIGNATURES({ timeSignatures });
   await actions.SET_TRACKS({
     tracks: new Map(
-      trackOrder.map((trackId) => {
+      trackOrder.map((trackId): [TrackId, Track] => {
         const track = tracks[trackId];
         if (!track) throw new Error("track == undefined");
-        return [trackId, track];
+        return [
+          trackId,
+          {
+            name: track.name,
+            singer: track.singer,
+            keyRangeAdjustment: track.keyRangeAdjustment,
+            volumeRangeAdjustment: track.volumeRangeAdjustment,
+            notes: track.notes,
+            pitchEditData: track.pitchEditData,
+            phonemeTimingEditData: recordToMap(track.phonemeTimingEditData),
+            solo: track.solo,
+            mute: track.mute,
+            gain: track.gain,
+            pan: track.pan,
+          },
+        ];
       }),
     ),
   });

@@ -1,3 +1,5 @@
+import { UnreachableError } from "@/type/utility";
+
 export type Rect = {
   x: number;
   y: number;
@@ -123,6 +125,22 @@ export function createArray<T>(
 ) {
   return Array.from({ length }, (_, i) => generateElementFn(i));
 }
+
+export const recordToMap = <K extends string, V>(record: Record<K, V>) => {
+  const keys = Object.keys(record) as K[];
+  const entries = keys.map((key) => {
+    const value = record[key];
+    if (value == undefined) {
+      throw new UnreachableError("value is undefined.");
+    }
+    return [key, value] as const;
+  });
+  return new Map(entries);
+};
+
+export const mapToRecord = <K extends string, V>(map: Map<K, V>) => {
+  return Object.fromEntries(map) as Record<K, V>;
+};
 
 export function linearInterpolation(
   x1: number,
