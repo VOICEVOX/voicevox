@@ -48,6 +48,7 @@ export async function writeProjectFile(
       timeSignatures,
       tracks: Object.fromEntries(
         [...tracks.entries()].map(([trackId, track]) => {
+          // TODO: トラックの変換処理を関数化する
           return [
             trackId,
             {

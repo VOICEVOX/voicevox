@@ -75,6 +75,7 @@ const applySongProjectToStore = async (
       trackOrder.map((trackId): [TrackId, Track] => {
         const track = tracks[trackId];
         if (!track) throw new Error("track == undefined");
+        // TODO: トラックの変換処理を関数化する
         return [
           trackId,
           {

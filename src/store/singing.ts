@@ -3484,6 +3484,7 @@ export const singingCommandStore = transformCommandStore(
               throw new Error("Track not found.");
             }
             const rawTrack = toRaw(selectedTrack);
+            // TODO: トラックの変換処理を関数化する
             return {
               name: rawTrack.name,
               singer: rawTrack.singer,
@@ -3531,6 +3532,7 @@ export const singingCommandStore = transformCommandStore(
               throw new Error("Track not found.");
             }
             const rawTrack = toRaw(track);
+            // TODO: トラックの変換処理を関数化する
             return {
               name: rawTrack.name,
               singer: rawTrack.singer,
