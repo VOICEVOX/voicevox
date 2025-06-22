@@ -15,18 +15,12 @@ import {
 } from "@/sing/songTrackRendering";
 import { getOverlappingNoteIds } from "@/sing/storeHelper";
 import { calculateHash, getLast } from "@/sing/utility";
-import {
-  Note,
-  PhraseKey,
-  Singer,
-  SingingVoice,
-  Tempo,
-  Track,
-} from "@/store/type";
+import { PhraseKey, SingingVoice } from "@/store/type";
 import { EngineId, NoteId, StyleId, TrackId } from "@/type/preload";
 import { ExhaustiveError } from "@/type/utility";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { createDefaultTrack } from "@/sing/domain";
+import { Note, Singer, Tempo, Track } from "@/domain/project/type";
 
 /**
  * SongTrackRenderer のテスト用のユーティリティー。

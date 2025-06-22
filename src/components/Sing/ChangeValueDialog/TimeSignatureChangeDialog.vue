@@ -39,7 +39,7 @@
 import { useDialogPluginComponent } from "quasar";
 import { ref } from "vue";
 import CommonDialog from "./CommonDialog.vue";
-import { TimeSignature } from "@/store/type";
+import { TimeSignature } from "@/domain/project/type";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { BEAT_TYPES } from "@/sing/domain";
 

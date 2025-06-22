@@ -9,7 +9,7 @@ import {
   PositionOnSequencer,
   SequencerStateDefinitions,
 } from "@/sing/sequencerStateMachine/common";
-import { Note } from "@/store/type";
+import { Note } from "@/domain/project/type";
 import { getOrThrow } from "@/helpers/mapHelper";
 
 export class ResizeNoteRightState

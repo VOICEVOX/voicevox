@@ -6,7 +6,7 @@
  */
 
 import { createLogger } from "@/helpers/log";
-import { Singer } from "@/store/type";
+import { Singer } from "@/domain/project/type";
 import { CharacterInfo, EngineId } from "@/type/preload";
 
 const logger = createLogger("sing/workaroundKeyRangeAdjustment");

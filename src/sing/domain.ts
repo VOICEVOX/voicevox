@@ -1,18 +1,20 @@
 import { calculateHash, getLast, getNext, getPrev, isSorted } from "./utility";
 import { convertLongVowel, moraPattern } from "@/domain/japanese";
 import {
-  Note,
   Phrase,
   PhraseSource,
-  Tempo,
-  TimeSignature,
   PhraseKey,
-  Track,
   EditorFrameAudioQuery,
-  PhonemeTimingEditData,
 } from "@/store/type";
 import { FramePhoneme } from "@/openapi";
 import { NoteId, TrackId } from "@/type/preload";
+import {
+  Note,
+  PhonemeTimingEditData,
+  Tempo,
+  TimeSignature,
+  Track,
+} from "@/domain/project/type";
 
 // TODO: 後でdomain/type.tsに移す
 export type MeasuresBeats = {

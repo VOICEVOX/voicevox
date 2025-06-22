@@ -2,21 +2,16 @@ import { ref, toRaw } from "vue";
 import { createPartialStore } from "./vuex";
 import { createUILockAction } from "./ui";
 import {
-  Tempo,
-  TimeSignature,
-  Note,
   SingingStoreState,
   SingingStoreTypes,
   SingingCommandStoreState,
   SingingCommandStoreTypes,
   SaveResultObject,
-  Singer,
   Phrase,
   transformCommandStore,
   SingingVoice,
   SequencerEditTarget,
   PhraseKey,
-  Track,
   SequenceId,
   SingingVolumeKey,
   SingingVolume,
@@ -98,7 +93,6 @@ import {
 } from "@/sing/utility";
 import { getWorkaroundKeyRangeAdjustment } from "@/sing/workaroundKeyRangeAdjustment";
 import { createLogger } from "@/helpers/log";
-import { noteSchema } from "@/domain/project/schema";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { ufProjectToVoicevox } from "@/sing/utaformatixProject/toVoicevox";
@@ -128,6 +122,14 @@ import {
   VoiceSynthesisCompleteEvent,
   VolumeGenerationCompleteEvent,
 } from "@/sing/songTrackRendering";
+import {
+  Note,
+  Singer,
+  Tempo,
+  TimeSignature,
+  Track,
+} from "@/domain/project/type";
+import { noteSchema } from "@/domain/project/schema";
 
 const logger = createLogger("store/singing");
 

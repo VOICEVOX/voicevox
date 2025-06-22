@@ -22,7 +22,7 @@
 import { computed } from "vue";
 import Presentation from "./Presentation.vue";
 import { useStore } from "@/store";
-import { Tempo, TimeSignature } from "@/store/type";
+import { Tempo, TimeSignature } from "@/domain/project/type";
 
 defineOptions({
   name: "SequencerRuler",

@@ -102,7 +102,7 @@ import { useStore } from "@/store";
 import { createLogger } from "@/helpers/log";
 import { ExhaustiveError } from "@/type/utility";
 import { IsEqual } from "@/type/utility";
-import { LatestProjectType } from "@/domain/project/schema";
+import { LatestProjectType } from "@/infrastructures/projectFile/type";
 import { DEFAULT_TRACK_NAME } from "@/sing/domain";
 
 const { dialogRef, onDialogOK, onDialogCancel } = useDialogPluginComponent();

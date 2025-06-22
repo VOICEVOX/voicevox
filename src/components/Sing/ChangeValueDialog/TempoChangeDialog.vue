@@ -22,7 +22,7 @@
 import { QInput, useDialogPluginComponent } from "quasar";
 import { ref } from "vue";
 import CommonDialog from "./CommonDialog.vue";
-import { Tempo } from "@/store/type";
+import { Tempo } from "@/domain/project/type";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 
 const modelValue = defineModel<boolean>();

@@ -1,7 +1,7 @@
 import { ActionContext } from "../type";
 import { showErrorDialog } from "@/components/Dialog/Dialog";
 import { getAppInfos } from "@/domain/appInfo";
-import { LatestProjectType } from "@/domain/project/schema";
+import { LatestProjectType } from "@/infrastructures/projectFile/type";
 import { DisplayableError } from "@/helpers/errorHelper";
 import { mapToRecord } from "@/sing/utility";
 import { ResultError } from "@/type/result";

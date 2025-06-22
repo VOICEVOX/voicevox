@@ -1,6 +1,6 @@
+import { Note } from "@/domain/project/type";
 import {
   EditorFrameAudioQueryKey,
-  Note,
   PhraseKey,
   SingingPitchKey,
   SingingVoiceKey,

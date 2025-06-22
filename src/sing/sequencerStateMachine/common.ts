@@ -7,8 +7,9 @@ import {
   PreviewMode,
 } from "@/sing/viewHelper";
 import { Store } from "@/store";
-import { Note, SequencerEditTarget } from "@/store/type";
+import { SequencerEditTarget } from "@/store/type";
 import { NoteId, TrackId } from "@/type/preload";
+import { Note } from "@/domain/project/type";
 
 export type PositionOnSequencer = {
   readonly x: number;
