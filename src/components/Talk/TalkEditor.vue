@@ -74,9 +74,6 @@
                             :ref="addAudioCellRef"
                             class="draggable-cursor"
                             :class="{
-                              ghost:
-                                isReordering &&
-                                selectedAudioKeys.includes(audioKey),
                               // 並び替え中はドラッグしているAudioCell以外の選択中のAudioCellは非表示にする
                               // TODO: SortableJSのmulti drag pluginを使う（https://github.com/SortableJS/Sortable/tree/master/plugins/MultiDrag）
                               hidden:
