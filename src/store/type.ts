@@ -68,7 +68,7 @@ import {
   MultiFileProjectFormat,
   SingleFileProjectFormat,
 } from "@/sing/utaformatixProject/utils";
-import {
+import type {
   Note,
   Singer,
   Tempo,

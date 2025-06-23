@@ -8,7 +8,7 @@ import {
 } from "@/store/type";
 import { FramePhoneme } from "@/openapi";
 import { NoteId, TrackId } from "@/type/preload";
-import {
+import type {
   Note,
   PhonemeTimingEditData,
   Tempo,

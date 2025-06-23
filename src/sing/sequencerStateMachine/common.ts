@@ -9,7 +9,7 @@ import {
 import { Store } from "@/store";
 import { SequencerEditTarget } from "@/store/type";
 import { NoteId, TrackId } from "@/type/preload";
-import { Note } from "@/domain/project/type";
+import type { Note } from "@/domain/project/type";
 
 export type PositionOnSequencer = {
   readonly x: number;

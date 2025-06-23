@@ -1,4 +1,4 @@
-import { Note } from "@/domain/project/type";
+import type { Note } from "@/domain/project/type";
 import {
   EditorFrameAudioQueryKey,
   PhraseKey,

@@ -15,7 +15,7 @@ import {
   PREVIEW_SOUND_DURATION,
 } from "@/sing/viewHelper";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
-import { Note } from "@/domain/project/type";
+import type { Note } from "@/domain/project/type";
 import { NoteId } from "@/type/preload";
 import { clamp } from "@/sing/utility";
 import { uuid4 } from "@/helpers/random";

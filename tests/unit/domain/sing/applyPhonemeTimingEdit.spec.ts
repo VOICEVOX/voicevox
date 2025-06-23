@@ -5,7 +5,7 @@ import { applyPhonemeTimingEditAndAdjust } from "@/sing/domain";
 import { createArray } from "@/sing/utility";
 import { EditorFrameAudioQuery } from "@/store/type";
 import { NoteId } from "@/type/preload";
-import { PhonemeTimingEdit } from "@/domain/project/type";
+import type { PhonemeTimingEdit } from "@/domain/project/type";
 
 const frameRate = 93.75;
 

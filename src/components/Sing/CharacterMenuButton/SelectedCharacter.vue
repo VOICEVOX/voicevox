@@ -38,7 +38,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { Singer } from "@/domain/project/type";
+import type { Singer } from "@/domain/project/type";
 import { CharacterInfo } from "@/type/preload";
 import { getStyleDescription } from "@/sing/viewHelper";
 

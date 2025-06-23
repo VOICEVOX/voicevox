@@ -122,7 +122,7 @@ import {
   VoiceSynthesisCompleteEvent,
   VolumeGenerationCompleteEvent,
 } from "@/sing/songTrackRendering";
-import {
+import type {
   Note,
   Singer,
   Tempo,

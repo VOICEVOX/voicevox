@@ -22,7 +22,7 @@
 import { computed, nextTick, ref, watch } from "vue";
 import { useStore } from "@/store";
 import { tickToBaseX, noteNumberToBaseY } from "@/sing/viewHelper";
-import { Note } from "@/domain/project/type";
+import type { Note } from "@/domain/project/type";
 
 const props = defineProps<{
   editingLyricNote: Note;

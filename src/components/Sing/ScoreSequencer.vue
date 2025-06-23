@@ -247,7 +247,7 @@ import ContextMenu, {
   ContextMenuItemData,
 } from "@/components/Menu/ContextMenu/Container.vue";
 import { useStore } from "@/store";
-import { Note } from "@/domain/project/type";
+import type { Note } from "@/domain/project/type";
 import {
   getEndTicksOfPhrase,
   getNoteDuration,

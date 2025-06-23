@@ -32,7 +32,7 @@ import {
 } from "@/components/Dialog/Dialog";
 import { uuid4 } from "@/helpers/random";
 import { recordToMap } from "@/sing/utility";
-import { Track } from "@/domain/project/type";
+import type { Track } from "@/domain/project/type";
 import { migrateProjectFileObject } from "@/infrastructures/projectFile/migration";
 
 export const projectStoreState: ProjectStoreState = {

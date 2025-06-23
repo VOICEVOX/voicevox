@@ -66,7 +66,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { useStore } from "@/store";
-import { Note } from "@/domain/project/type";
+import type { Note } from "@/domain/project/type";
 import {
   getKeyBaseHeight,
   tickToBaseX,

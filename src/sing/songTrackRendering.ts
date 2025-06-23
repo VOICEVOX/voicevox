@@ -27,7 +27,7 @@ import {
 import { FramePhoneme, Note as NoteForRequestToEngine } from "@/openapi";
 import { EngineId, NoteId, StyleId, TrackId } from "@/type/preload";
 import { getOrThrow } from "@/helpers/mapHelper";
-import { Note, Singer, Tempo, Track } from "@/domain/project/type";
+import type { Note, Singer, Tempo, Track } from "@/domain/project/type";
 
 /**
  * レンダリングに必要なデータのスナップショット
