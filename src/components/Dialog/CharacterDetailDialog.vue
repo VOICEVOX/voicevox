@@ -11,7 +11,7 @@
       <QHeader class="q-py-sm">
         <QToolbar>
           <QToolbarTitle class="text-display"
-            >設定 / キャラクター・スタイルの管理 /
+            >設定 / キャラクター＆スタイルの管理 /
             {{ characterInfo.metas.speakerName }}</QToolbarTitle
           >
 

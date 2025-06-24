@@ -96,7 +96,7 @@ const isAcceptTermsDialogOpenComputed = computed({
     }),
 });
 
-// キャラクター・スタイルの管理
+// キャラクター＆スタイルの管理
 const isCharacterListDialogOpenComputed = computed({
   get: () => store.state.isCharacterListDialogOpen,
   set: (val) =>
