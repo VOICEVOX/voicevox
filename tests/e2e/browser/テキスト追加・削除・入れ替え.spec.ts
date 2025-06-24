@@ -69,3 +69,44 @@ test("テキストの追加・入れ替え・削除", async ({ page }) => {
   await page.waitForTimeout(100);
   await validateInput(page.locator(".audio-cell input").nth(1), "bar");
 });
+
+test("選択中のAudioCellを削除しても正しくフォーカスが移動する", async ({
+  page,
+}) => {
+  await navigateToMain(page);
+
+  // 3つAudioCellを追加して合計4つにする
+  await page.getByRole("button").filter({ hasText: "add" }).click();
+  await page.getByRole("button").filter({ hasText: "add" }).click();
+  await page.getByRole("button").filter({ hasText: "add" }).click();
+  await page.waitForTimeout(100);
+
+  // それぞれにテキストを入力
+  await fillInput(page, page.locator(".audio-cell input").nth(0), "first");
+  await fillInput(page, page.locator(".audio-cell input").nth(1), "second");
+  await fillInput(page, page.locator(".audio-cell input").nth(2), "third");
+  await fillInput(page, page.locator(".audio-cell input").nth(3), "fourth");
+
+  // 2番目のAudioCellをクリックしてアクティブにする
+  await page.locator(".audio-cell").nth(1).click();
+  await page.waitForTimeout(100);
+
+  // アクティブなAudioCellが2番目であることを確認（activeクラスがついている）
+  await expect(page.locator(".audio-cell").nth(1)).toHaveClass(/active/);
+
+  // 2番目のAudioCellを削除
+  await page.locator(".audio-cell").nth(1).hover();
+  await page
+    .getByRole("button")
+    .filter({ hasText: "delete_outline" })
+    .nth(1)
+    .click();
+  await page.waitForTimeout(100);
+
+  // AudioCellが3つになっていることを確認
+  expect(await page.locator(".audio-cell").count()).toBe(3);
+
+  // 何らかのAudioCellがアクティブ状態を維持していることを確認
+  // （削除後に無選択状態にならないことを確認）
+  await expect(page.locator(".audio-cell.active")).toHaveCount(1);
+});
