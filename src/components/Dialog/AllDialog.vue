@@ -1,28 +1,41 @@
 <template>
   <AcceptRetrieveTelemetryDialog
-    v-model="isAcceptRetrieveTelemetryDialogOpenComputed"
+    v-model:dialogOpened="isAcceptRetrieveTelemetryDialogOpenComputed"
   />
-  <AcceptTermsDialog v-model="isAcceptTermsDialogOpenComputed" />
-  <SettingDialog v-model="isSettingDialogOpenComputed" />
-  <HotkeySettingDialog v-model="isHotkeySettingDialogOpenComputed" />
-  <ToolBarCustomDialog v-model="isToolbarSettingDialogOpenComputed" />
+  <AcceptTermsDialog v-model:dialogOpened="isAcceptTermsDialogOpenComputed" />
+  <SettingDialog v-model:dialogOpened="isSettingDialogOpenComputed" />
+  <HotkeySettingDialog
+    v-model:dialogOpened="isHotkeySettingDialogOpenComputed"
+  />
+  <ToolBarCustomDialog
+    v-model:dialogOpened="isToolbarSettingDialogOpenComputed"
+  />
+  <CharacterListDialog
+    v-if="orderedAllCharacterInfos.length > 0"
+    v-model:dialogOpened="isCharacterListDialogOpenComputed"
+    :characterInfos="orderedAllCharacterInfos"
+  />
   <CharacterOrderDialog
     v-if="orderedAllCharacterInfos.length > 0"
-    v-model="isCharacterOrderDialogOpenComputed"
+    v-model:dialogOpened="isOldCharacterOrderDialogOpenComputed"
     :characterInfos="orderedAllCharacterInfos"
   />
   <DefaultStyleListDialog
     v-if="orderedTalkCharacterInfos.length > 0"
-    v-model="isDefaultStyleSelectDialogOpenComputed"
+    v-model:dialogOpened="isOldDefaultStyleSelectDialogOpenComputed"
     :characterInfos="orderedTalkCharacterInfos"
   />
-  <DictionaryManageDialog v-model="isDictionaryManageDialogOpenComputed" />
-  <EngineManageDialog v-model="isEngineManageDialogOpenComputed" />
+  <DictionaryManageDialog
+    v-model:dialogOpened="isDictionaryManageDialogOpenComputed"
+  />
+  <EngineManageDialog v-model:dialogOpened="isEngineManageDialogOpenComputed" />
   <UpdateNotificationDialogContainer
     :canOpenDialog="canOpenNotificationDialog"
   />
-  <ExportSongAudioDialog v-model="isExportSongAudioDialogOpen" />
+  <ExportSongAudioDialog v-model:dialogOpened="isExportSongAudioDialogOpen" />
   <ImportSongProjectDialog v-model="isImportSongProjectDialogOpenComputed" />
+  <PresetManageDialog v-model:dialogOpened="isPresetManageDialogOpenComputed" />
+  <HelpDialog v-model:dialogOpened="isHelpDialogOpenComputed" />
 </template>
 
 <script setup lang="ts">
@@ -30,8 +43,9 @@ import { computed } from "vue";
 import SettingDialog from "@/components/Dialog/SettingDialog/SettingDialog.vue";
 import HotkeySettingDialog from "@/components/Dialog/HotkeySettingDialog.vue";
 import ToolBarCustomDialog from "@/components/Dialog/ToolBarCustomDialog.vue";
-import DefaultStyleListDialog from "@/components/Dialog/DefaultStyleListDialog.vue";
-import CharacterOrderDialog from "@/components/Dialog/CharacterOrderDialog.vue";
+import DefaultStyleListDialog from "@/components/Dialog/OldDefaultStyleListDialog.vue";
+import CharacterListDialog from "@/components/Dialog/CharacterListDialog.vue";
+import CharacterOrderDialog from "@/components/Dialog/OldCharacterOrderDialog.vue";
 import AcceptRetrieveTelemetryDialog from "@/components/Dialog/AcceptDialog/AcceptRetrieveTelemetryDialog.vue";
 import AcceptTermsDialog from "@/components/Dialog/AcceptDialog/AcceptTermsDialog.vue";
 import DictionaryManageDialog from "@/components/Dialog/DictionaryManageDialog.vue";
@@ -39,6 +53,8 @@ import EngineManageDialog from "@/components/Dialog/EngineManageDialog.vue";
 import UpdateNotificationDialogContainer from "@/components/Dialog/UpdateNotificationDialog/Container.vue";
 import ImportSongProjectDialog from "@/components/Dialog/ImportSongProjectDialog.vue";
 import ExportSongAudioDialog from "@/components/Dialog/ExportSongAudioDialog/Container.vue";
+import PresetManageDialog from "@/components/Dialog/PresetManageDialog.vue";
+import HelpDialog from "@/components/Dialog/HelpDialog/HelpDialog.vue";
 import { useStore } from "@/store";
 import { filterCharacterInfosByStyleType } from "@/store/utility";
 
@@ -80,17 +96,26 @@ const isAcceptTermsDialogOpenComputed = computed({
     }),
 });
 
+// キャラクター・スタイルの管理
+const isCharacterListDialogOpenComputed = computed({
+  get: () => store.state.isCharacterListDialogOpen,
+  set: (val) =>
+    store.actions.SET_DIALOG_OPEN({
+      isCharacterListDialogOpen: val,
+    }),
+});
+
 // キャラクター並び替え
 const orderedAllCharacterInfos = computed(
   () => store.getters.GET_ORDERED_ALL_CHARACTER_INFOS,
 );
-const isCharacterOrderDialogOpenComputed = computed({
+const isOldCharacterOrderDialogOpenComputed = computed({
   get: () =>
     !store.state.isAcceptTermsDialogOpen &&
-    store.state.isCharacterOrderDialogOpen,
+    store.state.isOldCharacterOrderDialogOpen,
   set: (val) =>
     store.actions.SET_DIALOG_OPEN({
-      isCharacterOrderDialogOpen: val,
+      isOldCharacterOrderDialogOpen: val,
     }),
 });
 
@@ -101,14 +126,14 @@ const orderedTalkCharacterInfos = computed(() => {
     "talk",
   );
 });
-const isDefaultStyleSelectDialogOpenComputed = computed({
+const isOldDefaultStyleSelectDialogOpenComputed = computed({
   get: () =>
     !store.state.isAcceptTermsDialogOpen &&
-    !store.state.isCharacterOrderDialogOpen &&
-    store.state.isDefaultStyleSelectDialogOpen,
+    !store.state.isOldCharacterOrderDialogOpen &&
+    store.state.isOldDefaultStyleSelectDialogOpen,
   set: (val) =>
     store.actions.SET_DIALOG_OPEN({
-      isDefaultStyleSelectDialogOpen: val,
+      isOldDefaultStyleSelectDialogOpen: val,
     }),
 });
 
@@ -133,8 +158,8 @@ const isDictionaryManageDialogOpenComputed = computed({
 const isAcceptRetrieveTelemetryDialogOpenComputed = computed({
   get: () =>
     !store.state.isAcceptTermsDialogOpen &&
-    !store.state.isCharacterOrderDialogOpen &&
-    !store.state.isDefaultStyleSelectDialogOpen &&
+    !store.state.isOldCharacterOrderDialogOpen &&
+    !store.state.isOldDefaultStyleSelectDialogOpen &&
     store.state.isAcceptRetrieveTelemetryDialogOpen,
   set: (val) =>
     store.actions.SET_DIALOG_OPEN({
@@ -146,8 +171,8 @@ const isAcceptRetrieveTelemetryDialogOpenComputed = computed({
 const canOpenNotificationDialog = computed(() => {
   return (
     !store.state.isAcceptTermsDialogOpen &&
-    !store.state.isCharacterOrderDialogOpen &&
-    !store.state.isDefaultStyleSelectDialogOpen &&
+    !store.state.isOldCharacterOrderDialogOpen &&
+    !store.state.isOldDefaultStyleSelectDialogOpen &&
     !store.state.isAcceptRetrieveTelemetryDialogOpen &&
     props.isEnginesReady
   );
@@ -168,6 +193,24 @@ const isImportSongProjectDialogOpenComputed = computed({
   set: (val) =>
     store.actions.SET_DIALOG_OPEN({
       isImportSongProjectDialogOpen: val,
+    }),
+});
+
+// プリセット管理ダイアログ
+const isPresetManageDialogOpenComputed = computed({
+  get: () => store.state.isPresetManageDialogOpen,
+  set: (val) =>
+    store.actions.SET_DIALOG_OPEN({
+      isPresetManageDialogOpen: val,
+    }),
+});
+
+// ヘルプダイアログ
+const isHelpDialogOpenComputed = computed({
+  get: () => store.state.isHelpDialogOpen,
+  set: (val) =>
+    store.actions.SET_DIALOG_OPEN({
+      isHelpDialogOpen: val,
     }),
 });
 </script>

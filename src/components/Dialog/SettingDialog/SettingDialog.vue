@@ -1,6 +1,6 @@
 <template>
   <QDialog
-    v-model="settingDialogOpenedComputed"
+    v-model="dialogOpened"
     maximized
     allowFocusOutside
     transitionShow="jump-up"
@@ -22,7 +22,7 @@
               icon="close"
               color="display"
               aria-label="設定を閉じる"
-              @click="settingDialogOpenedComputed = false"
+              @click="dialogOpened = false"
             />
           </QToolbar>
         </QHeader>
@@ -56,9 +56,9 @@
                     description="GPU モードの利用には GPU が必要です。Linux は NVIDIA™ 製 GPU のみ対応しています。"
                     :options="engineUseGpuOptions"
                     :disable="!gpuSwitchEnabled(selectedEngineId)"
-                    :modelValue="engineUseGpu ? 'GPU' : 'CPU'"
+                    :modelValue="selectedEngineUseGpu ? 'GPU' : 'CPU'"
                     @update:modelValue="
-                      (mode) => (engineUseGpu = mode === 'GPU')
+                      (mode) => (selectedEngineUseGpu = mode === 'GPU')
                     "
                   />
                 </BaseTooltip>
@@ -218,7 +218,7 @@
                 </QSlideTransition>
 
                 <FileNameTemplateDialog
-                  v-model:openDialog="showAudioFilePatternEditDialog"
+                  v-model:dialogOpened="showAudioFilePatternEditDialog"
                   :savedTemplate="audioFileNamePattern"
                   :defaultTemplate="DEFAULT_AUDIO_FILE_NAME_TEMPLATE"
                   :availableTags="[
@@ -236,7 +236,7 @@
                   "
                 />
                 <FileNameTemplateDialog
-                  v-model:openDialog="showSongTrackAudioFilePatternEditDialog"
+                  v-model:dialogOpened="showSongTrackAudioFilePatternEditDialog"
                   :savedTemplate="songTrackFileNamePattern"
                   :defaultTemplate="DEFAULT_SONG_AUDIO_FILE_NAME_TEMPLATE"
                   :availableTags="[
@@ -379,6 +379,18 @@
                   >
                   </SelectCell>
                 </BaseTooltip>
+                <BaseTooltip
+                  :label="enableKatakanaEnglish.tooltip.value"
+                  :disabled="
+                    enableKatakanaEnglish.availableEngines.value === 'all'
+                  "
+                >
+                  <ToggleCell
+                    v-model="enableKatakanaEnglish.enabled.value"
+                    title="未知の英単語をカタカナ読みに変換"
+                    description="ONの場合、エンジンが対応している場合は、未知の英単語をカタカナ読みに変換します。"
+                  />
+                </BaseTooltip>
                 <BaseRowCard
                   title="ソング：元に戻すトラック操作"
                   description="「元に戻す」機能の対象とするトラック操作を指定します。"
@@ -504,34 +516,18 @@ import {
 import { createLogger } from "@/helpers/log";
 import { useRootMiscSetting } from "@/composables/useRootMiscSetting";
 import { isProduction } from "@/helpers/platform";
+import { ExhaustiveError } from "@/type/utility";
 
 type SamplingRateOption = EngineSettingType["outputSamplingRate"];
 
-const props = defineProps<{
-  modelValue: boolean;
-}>();
-const emit = defineEmits<{
-  (e: "update:modelValue", val: boolean): void;
-}>();
+const dialogOpened = defineModel<boolean>("dialogOpened");
 
 const store = useStore();
 const { warn } = createLogger("SettingDialog");
 
-const settingDialogOpenedComputed = computed({
-  get: () => props.modelValue,
-  set: (val) => emit("update:modelValue", val),
-});
-
-const engineUseGpu = computed({
-  get: () => {
-    return store.state.engineSettings[selectedEngineId.value].useGpu;
-  },
-  set: (mode: boolean) => {
-    void changeUseGpu(mode);
-  },
-});
 const engineIds = computed(() => store.state.engineIds);
 const engineInfos = computed(() => store.state.engineInfos);
+const engineManifests = computed(() => store.state.engineManifests);
 const inheritAudioInfoMode = computed(() => store.state.inheritAudioInfo);
 const activePointScrollMode = computed({
   get: () => store.state.activePointScrollMode,
@@ -542,6 +538,69 @@ const activePointScrollMode = computed({
   },
 });
 const experimentalSetting = computed(() => store.state.experimentalSetting);
+
+const handleSavingSettingChange = (
+  key: keyof SavingSetting,
+  data: string | boolean | number,
+) => {
+  void store.actions.SET_SAVING_SETTING({
+    data: { ...savingSetting.value, [key]: data },
+  });
+};
+
+// エンジン：エンジンモード
+const selectedEngineUseGpu = computed({
+  get: () => {
+    return store.state.engineSettings[selectedEngineId.value].useGpu;
+  },
+  set: (mode: boolean) => {
+    void changeUseGpu(mode);
+  },
+});
+
+// エンジン：音声のサンプリングレート
+const samplingRateOptions: SamplingRateOption[] = [
+  "engineDefault",
+  24000,
+  44100,
+  48000,
+  88200,
+  96000,
+];
+const renderSamplingRateLabel = (value: SamplingRateOption): string => {
+  if (value === "engineDefault") {
+    return "デフォルト";
+  } else {
+    return `${value / 1000} kHz`;
+  }
+};
+const outputSamplingRate = computed({
+  get: () => {
+    return store.state.engineSettings[selectedEngineId.value]
+      .outputSamplingRate;
+  },
+  set: async (outputSamplingRate: SamplingRateOption) => {
+    if (outputSamplingRate !== "engineDefault") {
+      const result = await store.actions.SHOW_CONFIRM_DIALOG({
+        title: "出力サンプリングレートを変更しますか？",
+        message:
+          "出力サンプリングレートを変更しても、音質は変化しません。また、音声の生成処理に若干時間がかかる場合があります。",
+        actionName: "変更する",
+      });
+      if (result !== "OK") {
+        return;
+      }
+    }
+
+    void store.actions.SET_ENGINE_SETTING({
+      engineId: selectedEngineId.value,
+      engineSetting: {
+        ...store.state.engineSettings[selectedEngineId.value],
+        outputSamplingRate,
+      },
+    });
+  },
+});
 
 // 非表示にしたヒントの再表示
 const hasResetConfirmedTips = ref(false);
@@ -593,6 +652,46 @@ const [showTextLineNumber, changeShowTextLineNumber] = useRootMiscSetting(
   store,
   "showTextLineNumber",
 );
+
+const [_enableKatakanaEnglish, setEnableKatakanaEnglish] = useRootMiscSetting(
+  store,
+  "enableKatakanaEnglish",
+);
+const enableKatakanaEnglish = {
+  enabled: computed({
+    get: () => _enableKatakanaEnglish.value,
+    set: (enableKatakanaEnglish: boolean) => {
+      setEnableKatakanaEnglish(enableKatakanaEnglish);
+    },
+  }),
+  availableEngines: computed(() => {
+    const supportedEngines = engineIds.value.filter(
+      (engineId) =>
+        engineManifests.value[engineId].supportedFeatures.applyKatakanaEnglish,
+    );
+    if (supportedEngines.length === 0) {
+      return "none";
+    }
+    if (supportedEngines.length === store.state.engineIds.length) {
+      return "all";
+    }
+
+    return "some";
+  }),
+  tooltip: computed(() => {
+    switch (enableKatakanaEnglish.availableEngines.value) {
+      case "none":
+        return "この機能を利用できるエンジンがありません。";
+      case "some":
+        return "一部のエンジンではこの機能を利用できません。";
+      case "all":
+        // この場合はツールチップを表示しない
+        return "";
+      default:
+        throw new ExhaustiveError(enableKatakanaEnglish.availableEngines.value);
+    }
+  }),
+};
 
 const [showAddAudioItemButton, changeShowAddAudioItemButton] =
   useRootMiscSetting(store, "showAddAudioItemButton");
@@ -734,61 +833,10 @@ const songTrackFileNamePatternWithExt = computed(() =>
 
 const gpuSwitchEnabled = (engineId: EngineId) => {
   // CPU版でもGPUモードからCPUモードに変更できるようにする
-  return store.getters.ENGINE_CAN_USE_GPU(engineId) || engineUseGpu.value;
+  return (
+    store.getters.ENGINE_CAN_USE_GPU(engineId) || selectedEngineUseGpu.value
+  );
 };
-
-const samplingRateOptions: SamplingRateOption[] = [
-  "engineDefault",
-  24000,
-  44100,
-  48000,
-  88200,
-  96000,
-];
-const renderSamplingRateLabel = (value: SamplingRateOption): string => {
-  if (value === "engineDefault") {
-    return "デフォルト";
-  } else {
-    return `${value / 1000} kHz`;
-  }
-};
-
-const handleSavingSettingChange = (
-  key: keyof SavingSetting,
-  data: string | boolean | number,
-) => {
-  void store.actions.SET_SAVING_SETTING({
-    data: { ...savingSetting.value, [key]: data },
-  });
-};
-
-const outputSamplingRate = computed({
-  get: () => {
-    return store.state.engineSettings[selectedEngineId.value]
-      .outputSamplingRate;
-  },
-  set: async (outputSamplingRate: SamplingRateOption) => {
-    if (outputSamplingRate !== "engineDefault") {
-      const result = await store.actions.SHOW_CONFIRM_DIALOG({
-        title: "出力サンプリングレートを変更しますか？",
-        message:
-          "出力サンプリングレートを変更しても、音質は変化しません。また、音声の生成処理に若干時間がかかる場合があります。",
-        actionName: "変更する",
-      });
-      if (result !== "OK") {
-        return;
-      }
-    }
-
-    void store.actions.SET_ENGINE_SETTING({
-      engineId: selectedEngineId.value,
-      engineSetting: {
-        ...store.state.engineSettings[selectedEngineId.value],
-        outputSamplingRate,
-      },
-    });
-  },
-});
 
 const openFileExplore = () => {
   return window.backend.showSaveDirectoryDialog({

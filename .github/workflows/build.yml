@@ -48,14 +48,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        artifact_name:
-          - linux-nvidia-prepackage
-          - linux-cpu-prepackage
-          - windows-nvidia-prepackage
-          - windows-cpu-prepackage
-          - windows-directml-prepackage
-          - macos-x64-cpu-prepackage
-          - macos-arm64-cpu-prepackage
         include:
           # Linux NVIDIA GPU
           - artifact_name: linux-nvidia-prepackage
@@ -69,18 +61,30 @@ jobs:
             linux_executable_name: voicevox
             linux_appimage_7z_name: VOICEVOX.AppImage
             os: ubuntu-22.04
-          # Linux CPU
-          - artifact_name: linux-cpu-prepackage
+          # Linux CPU (x64)
+          - artifact_name: linux-cpu-x64-prepackage
             artifact_path: dist_electron/linux-unpacked
             voicevox_engine_asset_name: linux-cpu-x64
             package_name: voicevox-cpu
-            compressed_artifact_name: voicevox-linux-cpu
+            compressed_artifact_name: voicevox-linux-cpu-x64
             app_asar_dir: prepackage/resources
-            installer_artifact_name: linux-cpu-appimage
-            linux_artifact_name: "VOICEVOX.${ext}"
+            installer_artifact_name: linux-cpu-x64-appimage
+            linux_artifact_name: "VOICEVOX.${version}-x64.${ext}"
             linux_executable_name: voicevox
-            linux_appimage_7z_name: VOICEVOX-CPU.AppImage
+            linux_appimage_7z_name: VOICEVOX-CPU-X64.AppImage
             os: ubuntu-22.04
+          # Linux CPU (arm64)
+          - artifact_name: linux-cpu-arm64-prepackage
+            artifact_path: dist_electron/linux-arm64-unpacked
+            voicevox_engine_asset_name: linux-cpu-arm64
+            package_name: voicevox-cpu
+            compressed_artifact_name: voicevox-linux-cpu-arm64
+            app_asar_dir: prepackage/resources
+            installer_artifact_name: linux-cpu-arm64-appimage
+            linux_artifact_name: "VOICEVOX.${version}-arm64.${ext}"
+            linux_executable_name: voicevox
+            linux_appimage_7z_name: VOICEVOX-CPU-ARM64.AppImage
+            os: ubuntu-22.04-arm
           # Windows CUDA
           - artifact_name: windows-nvidia-prepackage
             artifact_path: dist_electron/win-unpacked
@@ -112,23 +116,23 @@ jobs:
             nsis_web_artifact_name: "VOICEVOX.Web.Setup.${version}.${ext}"
             os: windows-2019
           # macOS CPU (x64)
-          - artifact_name: macos-x64-cpu-prepackage
+          - artifact_name: macos-cpu-x64-prepackage
             artifact_path: dist_electron/mac
             voicevox_engine_asset_name: macos-x64
             package_name: voicevox-cpu
-            compressed_artifact_name: voicevox-macos-x64-cpu
+            compressed_artifact_name: voicevox-macos-cpu-x64
             app_asar_dir: prepackage/VOICEVOX.app/Contents/Resources
-            installer_artifact_name: macos-x64-cpu-dmg
+            installer_artifact_name: macos-cpu-x64-dmg
             macos_artifact_name: "VOICEVOX.${version}-x64.${ext}"
             os: macos-13
           # macOS CPU (arm64)
-          - artifact_name: macos-arm64-cpu-prepackage
+          - artifact_name: macos-cpu-arm64-prepackage
             artifact_path: dist_electron/mac-arm64
             voicevox_engine_asset_name: macos-arm64
             package_name: voicevox-cpu
-            compressed_artifact_name: voicevox-macos-arm64-cpu
+            compressed_artifact_name: voicevox-macos-cpu-arm64
             app_asar_dir: prepackage/VOICEVOX.app/Contents/Resources
-            installer_artifact_name: macos-arm64-cpu-dmg
+            installer_artifact_name: macos-cpu-arm64-dmg
             macos_artifact_name: "VOICEVOX.${version}-arm64.${ext}"
             os: macos-14
 

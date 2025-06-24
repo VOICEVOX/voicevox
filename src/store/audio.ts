@@ -327,7 +327,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           let speakerStylePromise: Promise<StyleInfo[]> | undefined = undefined;
           if (speaker != undefined) {
             speakerInfoPromise = instance
-              .invoke("speakerInfoSpeakerInfoGet")({
+              .invoke("speakerInfo")({
                 speakerUuid: speaker.speakerUuid,
                 ...(useResourceUrl && { resourceFormat: "url" }),
               })
@@ -344,7 +344,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           let singerStylePromise: Promise<StyleInfo[]> | undefined = undefined;
           if (singer != undefined) {
             singerInfoPromise = instance
-              .invoke("singerInfoSingerInfoGet")({
+              .invoke("singerInfo")({
                 speakerUuid: singer.speakerUuid,
                 ...(useResourceUrl && { resourceFormat: "url" }),
               })
@@ -388,9 +388,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         };
 
         const [speakers, singers] = await Promise.all([
-          instance.invoke("speakersSpeakersGet")({}),
+          instance.invoke("speakers")({}),
           state.engineManifests[engineId].supportedFeatures.sing
-            ? await instance.invoke("singersSingersGet")({})
+            ? await instance.invoke("singers")({})
             : [],
         ]).catch((error) => {
           window.backend.logError(error, `Failed to get Speakers.`);
@@ -444,7 +444,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       const rawMorphableTargets = (
         await (
           await actions.INSTANTIATE_ENGINE_CONNECTOR({ engineId })
-        ).invoke("morphableTargetsMorphableTargetsPost")({
+        ).invoke("morphableTargets")({
           requestBody: [baseStyleId],
         })
       )[0];
@@ -974,7 +974,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
   FETCH_AUDIO_QUERY: {
     action(
-      { actions },
+      { state, actions },
       {
         text,
         engineId,
@@ -987,9 +987,12 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         })
         .then(async (instance) =>
           convertAudioQueryFromEngineToEditor(
-            await instance.invoke("audioQueryAudioQueryPost")({
+            await instance.invoke("audioQuery")({
               text,
               speaker: styleId,
+              enableKatakanaEnglish:
+                state.engineManifests[engineId].supportedFeatures
+                  .applyKatakanaEnglish && state.enableKatakanaEnglish,
             }),
           ),
         )
@@ -1025,7 +1028,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
   FETCH_ACCENT_PHRASES: {
     action(
-      { actions },
+      { actions, state },
       {
         text,
         engineId,
@@ -1043,10 +1046,13 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           engineId,
         })
         .then((instance) =>
-          instance.invoke("accentPhrasesAccentPhrasesPost")({
+          instance.invoke("accentPhrases")({
             text,
             speaker: styleId,
             isKana,
+            enableKatakanaEnglish:
+              state.engineManifests[engineId].supportedFeatures
+                .applyKatakanaEnglish && state.enableKatakanaEnglish,
           }),
         )
         .catch((error) => {
@@ -1166,7 +1172,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           engineId,
         })
         .then((instance) =>
-          instance.invoke("moraDataMoraDataPost")({
+          instance.invoke("moraData")({
             accentPhrase: accentPhrases,
             speaker: styleId,
           }),
@@ -1347,7 +1353,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           engineId,
         });
         try {
-          return instance.invoke("connectWavesConnectWavesPost")({
+          return instance.invoke("connectWaves")({
             requestBody: encodedBlobs,
           });
         } catch (e) {
@@ -2900,7 +2906,7 @@ export const audioCommandStore = transformCommandStore(
             filePath = payload.filePath;
           }
 
-          let buf: ArrayBuffer;
+          let buf: Uint8Array;
           if (filePath != undefined) {
             buf = await window.backend
               .readFile({ filePath })
@@ -2908,7 +2914,7 @@ export const audioCommandStore = transformCommandStore(
           } else {
             if (payload.type != "file")
               throw new UnreachableError("payload.type != 'file'");
-            buf = await payload.file.arrayBuffer();
+            buf = new Uint8Array(await payload.file.arrayBuffer());
           }
 
           let body = new TextDecoder("utf-8").decode(buf);

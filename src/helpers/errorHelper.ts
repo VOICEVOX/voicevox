@@ -14,7 +14,10 @@ export const ensureNotNullish = <T>(
  * {@link errorToMessages}でユーザー向けのメッセージとして扱われる。
  */
 export class DisplayableError extends Error {
-  constructor(userFriendlyMessage: string, { cause }: { cause?: Error } = {}) {
+  constructor(
+    userFriendlyMessage: string,
+    { cause }: { cause?: unknown } = {},
+  ) {
     super(userFriendlyMessage, { cause });
     this.name = "DisplayableError";
   }

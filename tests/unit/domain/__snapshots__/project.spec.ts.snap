@@ -29,6 +29,7 @@ exports[`migrateProjectFileObject > v0.14.11 1`] = `
         "name": "無名トラック",
         "notes": [],
         "pan": 0,
+        "phonemeTimingEditData": {},
         "pitchEditData": [],
         "singer": undefined,
         "solo": false,

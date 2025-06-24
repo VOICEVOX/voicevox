@@ -108,7 +108,7 @@ export const migrateProjectFileObject = async (
     );
   }
 
-  const semverSatisfiesOptions: semver.Options = {
+  const semverSatisfiesOptions: semver.RangeOptions = {
     includePrerelease: true,
   };
 
@@ -308,6 +308,13 @@ export const migrateProjectFileObject = async (
     // 文内無音倍率の追加
     for (const audioItemsKey in projectData.talk.audioItems) {
       projectData.talk.audioItems[audioItemsKey].query.pauseLengthScale = 1;
+    }
+  }
+
+  if (semver.satisfies(projectAppVersion, "<0.24.0", semverSatisfiesOptions)) {
+    // 音素タイミング編集値の追加
+    for (const trackId in projectData.song.tracks) {
+      projectData.song.tracks[trackId].phonemeTimingEditData = {};
     }
   }
 
