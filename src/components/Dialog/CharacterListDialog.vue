@@ -20,7 +20,7 @@
             <QToolbarTitle class="text-display">{{
               hasNewCharacter
                 ? "追加キャラクターの紹介"
-                : "設定 / キャラクター・スタイルの管理"
+                : "設定 / キャラクター＆スタイルの管理"
             }}</QToolbarTitle>
           </div>
 

@@ -1,5 +1,28 @@
 [
   {
+    "version": "0.24.0",
+    "descriptions": [
+      "プロジェクトの複製を保存する機能を追加",
+      "ARM64版エディタの提供",
+      "トーク：辞書に登録されていない英単語の自然なカタカナ読みを可能に"
+    ],
+    "contributors": [
+      "aoirint",
+      "Hiroshiba",
+      "madosuki",
+      "nanae772",
+      "qryxip",
+      "sevenc-nanashi",
+      "sigprogramming",
+      "raa0121",
+      "sabonerune",
+      "takusea",
+      "tarepan",
+      "terapotan",
+      "yohaku7"
+    ]
+  },
+  {
     "version": "0.23.1",
     "descriptions": ["キャラクター「離途」「黒沢冴白」を追加"],
     "contributors": []
