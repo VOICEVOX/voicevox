@@ -17,7 +17,7 @@
 </template>
 
 <script setup lang="ts">
-import { ToggleGroupRoot } from "radix-vue";
+import { ToggleGroupRoot } from "reka-ui";
 
 defineProps<{
   type: "single" | "multiple";

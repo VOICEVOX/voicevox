@@ -10,7 +10,7 @@
 </template>
 
 <script setup lang="ts">
-import { CheckboxIndicator, CheckboxRoot } from "radix-vue";
+import { CheckboxIndicator, CheckboxRoot } from "reka-ui";
 
 defineProps<{ label: string }>();
 

@@ -37,7 +37,7 @@ import {
   DialogRoot,
   DialogTitle,
   DialogDescription,
-} from "radix-vue";
+} from "reka-ui";
 
 defineProps<{
   title: string;

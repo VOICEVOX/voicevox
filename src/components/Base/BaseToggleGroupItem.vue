@@ -6,7 +6,7 @@
 </template>
 
 <script setup lang="ts">
-import { ToggleGroupItem } from "radix-vue";
+import { ToggleGroupItem } from "reka-ui";
 
 defineProps<{
   label: string;

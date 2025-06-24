@@ -6,7 +6,7 @@
 </template>
 
 <script setup lang="ts">
-import { SelectItem, SelectItemText, SelectItemIndicator } from "radix-vue";
+import { SelectItem, SelectItemText, SelectItemIndicator } from "reka-ui";
 
 defineProps<{
   value: string;

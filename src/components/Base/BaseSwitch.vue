@@ -10,7 +10,7 @@
 </template>
 
 <script setup lang="ts">
-import { SwitchRoot, SwitchThumb } from "radix-vue";
+import { SwitchRoot, SwitchThumb } from "reka-ui";
 
 defineProps<{
   id?: string;
