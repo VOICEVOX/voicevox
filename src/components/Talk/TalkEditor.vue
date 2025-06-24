@@ -56,7 +56,6 @@
                         fileDropEventCounter = 0;
                         loadDroppedFile($event);
                       "
-                      @click.self="onAudioCellPaneClick"
                     >
                       <Draggable
                         ref="cellsRef"
@@ -68,6 +67,7 @@
                         :preventOnFilter="false"
                         @start="onReorderStart"
                         @end="onReorderEnd"
+                        @click.self="onAudioCellPaneClick"
                       >
                         <template #item="{ element: audioKey }">
                           <AudioCell
