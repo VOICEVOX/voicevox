@@ -3,6 +3,7 @@ import { showErrorDialog } from "@/components/Dialog/Dialog";
 import { getAppInfos } from "@/domain/appInfo";
 import { LatestProjectType } from "@/domain/project/schema";
 import { DisplayableError } from "@/helpers/errorHelper";
+import { mapToRecord } from "@/sing/utility";
 import { ResultError } from "@/type/result";
 
 export async function promptProjectSaveFilePath(
@@ -45,7 +46,26 @@ export async function writeProjectFile(
       tpqn,
       tempos,
       timeSignatures,
-      tracks: Object.fromEntries(tracks),
+      tracks: Object.fromEntries(
+        [...tracks.entries()].map(([trackId, track]) => {
+          return [
+            trackId,
+            {
+              name: track.name,
+              singer: track.singer,
+              keyRangeAdjustment: track.keyRangeAdjustment,
+              volumeRangeAdjustment: track.volumeRangeAdjustment,
+              notes: track.notes,
+              pitchEditData: track.pitchEditData,
+              phonemeTimingEditData: mapToRecord(track.phonemeTimingEditData),
+              solo: track.solo,
+              mute: track.mute,
+              gain: track.gain,
+              pan: track.pan,
+            },
+          ];
+        }),
+      ),
       trackOrder,
     },
   };

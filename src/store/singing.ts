@@ -93,6 +93,7 @@ import {
   AnimationTimer,
   createArray,
   createPromiseThatResolvesWhen,
+  recordToMap,
   round,
 } from "@/sing/utility";
 import { getWorkaroundKeyRangeAdjustment } from "@/sing/workaroundKeyRangeAdjustment";
@@ -3475,17 +3476,27 @@ export const singingCommandStore = transformCommandStore(
             getters.SELECTED_TRACK_ID,
           );
 
-          const filteredTracks = trackIndexes.map((trackIndex) => {
+          const filteredTracks = trackIndexes.map((trackIndex): Track => {
             const track = tracks[trackIndex];
             if (!track) {
               throw new Error("Track not found.");
             }
+            const rawTrack = toRaw(selectedTrack);
             return {
-              ...toRaw(selectedTrack),
-              notes: track.notes.map((note) => ({
+              name: rawTrack.name,
+              singer: rawTrack.singer,
+              keyRangeAdjustment: rawTrack.keyRangeAdjustment,
+              volumeRangeAdjustment: rawTrack.volumeRangeAdjustment,
+              notes: rawTrack.notes.map((note) => ({
                 ...note,
                 id: NoteId(uuid4()),
               })),
+              pitchEditData: rawTrack.pitchEditData,
+              phonemeTimingEditData: rawTrack.phonemeTimingEditData,
+              solo: rawTrack.solo,
+              mute: rawTrack.mute,
+              gain: rawTrack.gain,
+              pan: rawTrack.pan,
             };
           });
 
@@ -3512,17 +3523,29 @@ export const singingCommandStore = transformCommandStore(
             throw new Error("TPQN does not match. Must be converted.");
           }
 
-          const filteredTracks = trackIndexes.map((trackIndex) => {
+          const filteredTracks = trackIndexes.map((trackIndex): Track => {
             const track = tracks[trackOrder[trackIndex]];
             if (!track) {
               throw new Error("Track not found.");
             }
+            const rawTrack = toRaw(track);
             return {
-              ...toRaw(track),
-              notes: track.notes.map((note) => ({
+              name: rawTrack.name,
+              singer: rawTrack.singer,
+              keyRangeAdjustment: rawTrack.keyRangeAdjustment,
+              volumeRangeAdjustment: rawTrack.volumeRangeAdjustment,
+              notes: rawTrack.notes.map((note) => ({
                 ...note,
                 id: NoteId(uuid4()),
               })),
+              pitchEditData: rawTrack.pitchEditData,
+              phonemeTimingEditData: recordToMap(
+                rawTrack.phonemeTimingEditData,
+              ),
+              solo: rawTrack.solo,
+              mute: rawTrack.mute,
+              gain: rawTrack.gain,
+              pan: rawTrack.pan,
             };
           });
 

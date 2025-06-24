@@ -9,6 +9,7 @@ import {
   PhraseKey,
   Track,
   EditorFrameAudioQuery,
+  PhonemeTimingEditData,
 } from "@/store/type";
 import { FramePhoneme } from "@/openapi";
 import { NoteId, TrackId } from "@/type/preload";
@@ -382,6 +383,7 @@ export function createDefaultTrack(): Track {
     volumeRangeAdjustment: 0,
     notes: [],
     pitchEditData: [],
+    phonemeTimingEditData: new Map(),
 
     solo: false,
     mute: false,
@@ -514,13 +516,6 @@ type PhonemeTiming = {
   endFrame: number;
   phoneme: string;
 };
-
-export type PhonemeTimingEdit = {
-  phonemeIndexInNote: number;
-  offsetSeconds: number;
-};
-
-export type PhonemeTimingEditData = Map<NoteId, PhonemeTimingEdit[]>;
 
 /**
  * 音素列を音素タイミング列に変換する。

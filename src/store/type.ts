@@ -66,10 +66,10 @@ import {
 import {
   LatestProjectType,
   noteSchema,
+  phonemeTimingEditSchema,
   singerSchema,
   tempoSchema,
   timeSignatureSchema,
-  trackSchema,
 } from "@/domain/project/schema";
 import { HotkeySettingType } from "@/domain/hotkeyAction";
 import {
@@ -759,7 +759,24 @@ export type Note = z.infer<typeof noteSchema>;
 
 export type Singer = z.infer<typeof singerSchema>;
 
-export type Track = z.infer<typeof trackSchema>;
+export type Track = {
+  name: string;
+  singer?: Singer;
+  keyRangeAdjustment: number; // 音域調整量
+  volumeRangeAdjustment: number; // 声量調整量
+  notes: Note[];
+  pitchEditData: number[]; // 値の単位はHzで、データが無いところはVALUE_INDICATING_NO_DATAの値
+  phonemeTimingEditData: Map<NoteId, PhonemeTimingEdit[]>;
+
+  solo: boolean;
+  mute: boolean;
+  gain: number;
+  pan: number;
+};
+
+export type PhonemeTimingEdit = z.infer<typeof phonemeTimingEditSchema>;
+
+export type PhonemeTimingEditData = Map<NoteId, PhonemeTimingEdit[]>;
 
 export type PhraseState =
   | "SINGER_IS_NOT_SET"

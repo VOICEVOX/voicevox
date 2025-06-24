@@ -1,12 +1,9 @@
 import { it, expect, describe } from "vitest";
 import { uuid4 } from "@/helpers/random";
 import { FramePhoneme } from "@/openapi";
-import {
-  applyPhonemeTimingEditAndAdjust,
-  PhonemeTimingEdit,
-} from "@/sing/domain";
+import { applyPhonemeTimingEditAndAdjust } from "@/sing/domain";
 import { createArray } from "@/sing/utility";
-import { EditorFrameAudioQuery } from "@/store/type";
+import { EditorFrameAudioQuery, PhonemeTimingEdit } from "@/store/type";
 import { NoteId } from "@/type/preload";
 
 const frameRate = 93.75;
