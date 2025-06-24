@@ -1,7 +1,7 @@
 /**
  * OpenAPI Generator でエンジンのHTTPクライアント（/src/openapi下）を生成するスクリプト。
  *
- * NOTE: 生成元となるOpenAPIはソースから実行しているVoicevox Engineのものを使用する必要がある。
+ * NOTE: 生成元となるOpenAPIはソースから実行しているVOICEVOX ENGINEのものを使用する必要がある。
  */
 
 import { execSync } from "node:child_process";

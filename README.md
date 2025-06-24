@@ -301,13 +301,13 @@ shellcheck ./tools/*.bash
 
 ## OpenAPI generator
 
-[開発版のVoicevox Engine](https://github.com/voicevox/voicevox_engine)が起動している状態で以下のコマンドを実行してください。
+[開発版のVOICEVOX ENGINE](https://github.com/voicevox/voicevox_engine)が起動している状態で以下のコマンドを実行してください。
 
 ```bash
 pnpm run generate-openapi
 ```
 
-### OpanAPI generator のバージョンアップ
+### OpenAPI generator のバージョンアップ
 
 新しいバージョンの確認・インストールは次のコマンドで行えます。
 
