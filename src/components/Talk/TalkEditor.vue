@@ -153,7 +153,7 @@ import {
   HotkeyActionNameType,
 } from "@/domain/hotkeyAction";
 import { isElectron } from "@/helpers/platform";
-import { reorder } from "@/helpers/reorderHelper";
+import { dragAndDropReorder } from "@/helpers/reorderHelper";
 
 const props = defineProps<{
   isEnginesReady: boolean;
@@ -400,7 +400,7 @@ const onReorderEnd = (e: DraggableEvent) => {
   holdingAudioKey.value = undefined;
   if (e.newIndex == undefined) return;
 
-  const newAudioKeys = reorder(
+  const newAudioKeys = dragAndDropReorder(
     audioKeys.value,
     new Set(selectedAudioKeys.value),
     e.oldIndex,

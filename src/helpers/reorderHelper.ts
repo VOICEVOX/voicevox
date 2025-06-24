@@ -1,5 +1,5 @@
 /**
- * items[beforeIndex]を基準に、selectedItemsをafterIndexの位置に移動する。
+ * ドラッグ＆ドロップ操作において、選択された要素群を指定位置に移動する。
  *
  * 以下の場合は例外を投げる：
  * - items内の要素が重複している
@@ -7,7 +7,7 @@
  * - beforeIndexやafterIndexが範囲外
  * - items[beforeIndex]がselectedItemsに含まれていない
  */
-export function reorder<T>(
+export function dragAndDropReorder<T>(
   items: readonly T[],
   selectedItems: Set<T>,
   beforeIndex: number,
