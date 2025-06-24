@@ -66,15 +66,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
         include:
           - os: ubuntu-latest
             voicevox_engine_asset_name: linux-cpu-x64
           - os: macos-latest
-            voicevox_engine_asset_name: macos-x64
-          # TODO: voicevox_nemo_negineがarm64に対応したら変更する
-          # - os: macos-latest
-          #   voicevox_engine_asset_name: macos-arm64
+            voicevox_engine_asset_name: macos-arm64
           - os: windows-latest
             voicevox_engine_asset_name: windows-cpu
     steps:
