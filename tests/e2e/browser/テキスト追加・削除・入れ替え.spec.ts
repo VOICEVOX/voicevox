@@ -52,9 +52,6 @@ test("テキストの追加・入れ替え・削除", async ({ page }) => {
   expect(await page.locator(".audio-cell").count()).toBe(3);
   await validateInput(page.locator(".audio-cell input").first(), "bar");
 
-  // キャラクター表示欄などを出しておく
-  await page.locator(".audio-cell input").first().click();
-
   // ドラッグして一番上と２番めに上のものを入れ替えて、入れ替わってることを確認
   const dragFrom = await getCenter(
     page.locator(".audio-cell .icon-container").first(),

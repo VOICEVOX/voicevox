@@ -15,7 +15,7 @@
     }"
     @keydown.prevent.up="moveUpCell"
     @keydown.prevent.down="moveDownCell"
-    @click.stop="onRootClick"
+    @click.self="onRootClick"
   >
     <!-- 複数選択用のヒットボックス -->
     <!-- テキスト欄の範囲選択との競合を防ぐため、activeの時はCtrlでしか出現しないようにする。 -->
@@ -27,7 +27,7 @@
       "
       class="click-hitbox"
       tabindex="-1"
-      @click.stop="onClickWithModifierKey"
+      @click="onClickWithModifierKey"
     />
     <QIcon
       v-if="isActiveAudioCell"
@@ -54,7 +54,6 @@
           selectAndSetActiveAudioKey();
         }
       "
-      @click.stop=""
     />
     <!--
       input.valueをスクリプトから変更した場合は@changeが発火しないため、

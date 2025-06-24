@@ -56,7 +56,7 @@
                         fileDropEventCounter = 0;
                         loadDroppedFile($event);
                       "
-                      @click="onAudioCellPaneClick"
+                      @click.self="onAudioCellPaneClick"
                     >
                       <Draggable
                         ref="cellsRef"
