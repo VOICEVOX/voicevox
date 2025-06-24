@@ -572,12 +572,16 @@ watch(
 
 // ドラッグ＆ドロップ
 const dragEventCounter = ref(0);
-const loadDraggedFile = (event: { dataTransfer: DataTransfer | null }) => {
+const loadDraggedFile = async (event: {
+  dataTransfer: DataTransfer | null;
+}) => {
   if (!event.dataTransfer || event.dataTransfer.files.length === 0) return;
   const file = event.dataTransfer.files[0];
 
   // electronの場合のみファイルパスを取得できる
-  const filePath = isElectron ? window.backend.getPathForFile(file) : undefined;
+  const filePath = isElectron
+    ? await window.backend.getPathForFile(file)
+    : undefined;
 
   switch (path.extname(file.name)) {
     case ".txt":
