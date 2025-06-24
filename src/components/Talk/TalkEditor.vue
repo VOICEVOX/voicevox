@@ -77,9 +77,9 @@
                               // 並び替え中はドラッグしているAudioCell以外の選択中のAudioCellは非表示にする
                               // TODO: SortableJSのmulti drag pluginを使う（https://github.com/SortableJS/Sortable/tree/master/plugins/MultiDrag）
                               hidden:
-                                reorderingInfo.isReordering &&
+                                reorderingState.isReordering &&
                                 selectedAudioKeys.includes(audioKey) &&
-                                reorderingInfo.holdingAudioKey !== audioKey,
+                                reorderingState.holdingAudioKey !== audioKey,
                             }"
                             :audioKey
                             @focusCell="focusCell"
@@ -381,11 +381,11 @@ type DraggableEvent = CustomEvent & {
   newIndex: number | null;
 };
 
-type ReorderingInfo =
+type ReorderingState =
   | { isReordering: false }
   | { isReordering: true; holdingAudioKey: AudioKey };
 
-const reorderingInfo = ref<ReorderingInfo>({ isReordering: false });
+const reorderingState = ref<ReorderingState>({ isReordering: false });
 
 const onReorderStart = (e: DraggableEvent) => {
   const audioKey = audioKeys.value[e.oldIndex];
@@ -396,10 +396,10 @@ const onReorderStart = (e: DraggableEvent) => {
       audioKeys: [audioKey],
     });
   }
-  reorderingInfo.value = { isReordering: true, holdingAudioKey: audioKey };
+  reorderingState.value = { isReordering: true, holdingAudioKey: audioKey };
 };
 const onReorderEnd = (e: DraggableEvent) => {
-  reorderingInfo.value = { isReordering: false };
+  reorderingState.value = { isReordering: false };
   if (e.newIndex == undefined) return;
 
   const newAudioKeys = dragAndDropReorder(
