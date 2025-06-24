@@ -20,8 +20,7 @@
         <SelectViewport>
           <slot />
         </SelectViewport>
-        <!-- Radix Vue側でエラーが発生するため一時的にコメントアウト -->
-        <!-- <SelectArrow class="SelectArrow" /> -->
+        <SelectArrow class="SelectArrow" />
       </SelectContent>
     </SelectPortal>
   </SelectRoot>
@@ -36,6 +35,7 @@ import {
   SelectTrigger,
   SelectValue,
   SelectViewport,
+  SelectArrow,
 } from "reka-ui";
 
 defineProps<{
