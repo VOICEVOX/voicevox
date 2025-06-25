@@ -6,11 +6,11 @@
 </template>
 
 <script setup lang="ts">
-import { ToggleGroupItem } from "reka-ui";
+import { AcceptableValue, ToggleGroupItem } from "reka-ui";
 
 defineProps<{
   label: string;
-  value: string;
+  value: AcceptableValue;
 }>();
 </script>
 

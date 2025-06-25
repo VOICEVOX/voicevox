@@ -36,15 +36,16 @@ import {
   SelectValue,
   SelectViewport,
   SelectArrow,
+  AcceptableValue,
 } from "reka-ui";
 
 defineProps<{
   placeholder?: string;
-  defaultValue?: string;
+  defaultValue?: AcceptableValue;
   disabled?: boolean;
 }>();
 
-const model = defineModel<string>();
+const model = defineModel<AcceptableValue>();
 const open = defineModel<boolean>("open");
 </script>
 
