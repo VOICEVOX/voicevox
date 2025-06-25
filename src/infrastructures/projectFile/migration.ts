@@ -60,9 +60,12 @@ export const migrateProjectFileObject = async (
 
   if (semver.satisfies(projectAppVersion, "<0.4", semverSatisfiesOptions)) {
     for (const audioItemsKey in projectData.audioItems) {
+      // typos:ignore-next-line
       if ("charactorIndex" in projectData.audioItems[audioItemsKey]) {
         projectData.audioItems[audioItemsKey].characterIndex =
+          // typos:ignore-next-line
           projectData.audioItems[audioItemsKey].charactorIndex;
+        // typos:ignore-next-line
         delete projectData.audioItems[audioItemsKey].charactorIndex;
       }
     }
