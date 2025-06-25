@@ -1,6 +1,6 @@
 <template>
   <label class="root">
-    <CheckboxRoot v-model:checked="checked" class="CheckboxRoot">
+    <CheckboxRoot v-model="checked" class="CheckboxRoot">
       <CheckboxIndicator class="CheckboxIndicator">
         <QIcon class="check" name="check" />
       </CheckboxIndicator>

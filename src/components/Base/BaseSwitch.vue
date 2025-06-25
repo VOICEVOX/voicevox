@@ -1,7 +1,7 @@
 <template>
   <div class="root">
     <div class="label">{{ checked ? checkedLabel : uncheckedLabel }}</div>
-    <SwitchRoot :id v-model:checked="checked" :disabled class="SwitchRoot">
+    <SwitchRoot :id v-model="checked" :disabled class="SwitchRoot">
       <SwitchThumb class="SwitchThumb">
         <QIcon class="check" name="check" />
       </SwitchThumb>
