@@ -36,12 +36,9 @@ const unwrapApi = (baseApi: SandboxWithTransferableResult): Sandbox =>
           value(...args);
 
         if (result instanceof Promise) {
-          return result.then((res) =>
-            // @ts-expect-error 動いているので無視
-            getOrThrowTransferableResult(res),
-          );
-        } else {
           // @ts-expect-error 動いているので無視
+          return result.then((res) => getOrThrowTransferableResult(res));
+        } else {
           return getOrThrowTransferableResult(result);
         }
       };

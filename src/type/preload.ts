@@ -134,7 +134,7 @@ export interface Sandbox {
   uninstallVvppEngine(engineId: EngineId): Promise<void>;
   validateEngineDir(engineDir: string): Promise<EngineDirValidationResult>;
   reloadApp(obj: { isMultiEngineOffMode?: boolean }): Promise<void>;
-  getPathForFile(file: File): string;
+  getPathForFile(file: File): Promise<string>;
 }
 
 export type AppInfos = {
