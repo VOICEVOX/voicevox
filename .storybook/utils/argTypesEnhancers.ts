@@ -4,7 +4,10 @@
  */
 
 import { toHandlerKey } from "vue";
-import { type ArgTypesEnhancer, type StrictInputType } from "storybook/internal/types";
+import {
+  type ArgTypesEnhancer,
+  type StrictInputType,
+} from "storybook/internal/types";
 
 export const addActionsWithEmits: ArgTypesEnhancer = ({ argTypes }) => {
   const argTypesEntries = Object.entries(argTypes)
