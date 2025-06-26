@@ -10,7 +10,7 @@ import {
 } from "@/sing/sequencerStateMachine/common";
 import { getButton, isSelfEventTarget } from "@/sing/viewHelper";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
-import { Note } from "@/store/type";
+import type { Note } from "@/domain/project/type";
 
 export class EditNotesToolIdleState
   implements State<SequencerStateDefinitions, Input, Context>

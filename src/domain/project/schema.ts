@@ -1,17 +1,15 @@
 import { z } from "zod";
 
 import {
-  audioKeySchema,
   engineIdSchema,
   noteIdSchema,
   presetKeySchema,
   speakerIdSchema,
   styleIdSchema,
-  trackIdSchema,
 } from "@/type/preload";
 
 // トーク系のスキーマ
-const moraSchema = z.object({
+export const moraSchema = z.object({
   text: z.string(),
   vowel: z.string(),
   vowelLength: z.number(),
@@ -20,14 +18,14 @@ const moraSchema = z.object({
   consonantLength: z.number().optional(),
 });
 
-const accentPhraseSchema = z.object({
+export const accentPhraseSchema = z.object({
   moras: z.array(moraSchema),
   accent: z.number(),
   pauseMora: moraSchema.optional(),
   isInterrogative: z.boolean().optional(),
 });
 
-const audioQuerySchema = z.object({
+export const audioQuerySchema = z.object({
   accentPhrases: z.array(accentPhraseSchema),
   speedScale: z.number(),
   pitchScale: z.number(),
@@ -41,14 +39,14 @@ const audioQuerySchema = z.object({
   kana: z.string().optional(),
 });
 
-const morphingInfoSchema = z.object({
+export const morphingInfoSchema = z.object({
   rate: z.number(),
   targetEngineId: engineIdSchema,
   targetSpeakerId: speakerIdSchema,
   targetStyleId: styleIdSchema,
 });
 
-const audioItemSchema = z.object({
+export const audioItemSchema = z.object({
   text: z.string(),
   voice: z.object({
     engineId: engineIdSchema,
@@ -97,33 +95,10 @@ export const trackSchema = z.object({
   volumeRangeAdjustment: z.number(), // 声量調整量
   notes: z.array(noteSchema),
   pitchEditData: z.array(z.number()), // 値の単位はHzで、データが無いところはVALUE_INDICATING_NO_DATAの値
-  phonemeTimingEditData: z.record(
-    noteIdSchema,
-    z.array(phonemeTimingEditSchema),
-  ), // 音素タイミングの編集データはノートと紐づけて保持
+  phonemeTimingEditData: z.map(noteIdSchema, z.array(phonemeTimingEditSchema)), // 音素タイミングの編集データはノートと紐づけて保持
 
   solo: z.boolean(),
   mute: z.boolean(),
   gain: z.number(),
   pan: z.number(),
 });
-
-// プロジェクトファイルのスキーマ
-export const projectSchema = z.object({
-  appVersion: z.string(),
-  talk: z.object({
-    // description: "Attribute keys of audioItems.",
-    audioKeys: z.array(audioKeySchema),
-    // description: "VOICEVOX states per cell",
-    audioItems: z.record(audioKeySchema, audioItemSchema),
-  }),
-  song: z.object({
-    tpqn: z.number(),
-    tempos: z.array(tempoSchema),
-    timeSignatures: z.array(timeSignatureSchema),
-    tracks: z.record(trackIdSchema, trackSchema),
-    trackOrder: z.array(trackIdSchema),
-  }),
-});
-
-export type LatestProjectType = z.infer<typeof projectSchema>;
