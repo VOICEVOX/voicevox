@@ -10,8 +10,8 @@ import {
   timeSignatureSchema,
 } from "@/domain/project/schema";
 
-// シリアライズ（JSON.stringify）可能なトラックのスキーマ
-export const serializableTrackSchema = z.object({
+// プロジェクトファイルのトラックのスキーマ
+export const projectFileTrackSchema = z.object({
   name: z.string(),
   singer: singerSchema.optional(),
   keyRangeAdjustment: z.number(),
@@ -41,7 +41,7 @@ export const projectFileSchema = z.object({
     tpqn: z.number(),
     tempos: z.array(tempoSchema),
     timeSignatures: z.array(timeSignatureSchema),
-    tracks: z.record(trackIdSchema, serializableTrackSchema),
+    tracks: z.record(trackIdSchema, projectFileTrackSchema),
     trackOrder: z.array(trackIdSchema),
   }),
 });

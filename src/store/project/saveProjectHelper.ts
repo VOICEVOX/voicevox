@@ -3,7 +3,7 @@ import { showErrorDialog } from "@/components/Dialog/Dialog";
 import { getAppInfos } from "@/domain/appInfo";
 import {
   LatestProjectType,
-  SerializableTrack,
+  ProjectFileTrack,
 } from "@/infrastructures/projectFile/type";
 import { DisplayableError } from "@/helpers/errorHelper";
 import { mapToRecord } from "@/sing/utility";
@@ -52,7 +52,7 @@ export async function writeProjectFile(
       timeSignatures,
       tracks: Object.fromEntries(
         [...tracks.entries()].map(
-          ([trackId, track]): [TrackId, SerializableTrack] => {
+          ([trackId, track]): [TrackId, ProjectFileTrack] => {
             // TODO: トラックの変換処理を関数化する
             return [
               trackId,

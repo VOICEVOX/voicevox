@@ -1,10 +1,10 @@
 import { z } from "zod";
 import {
   projectFileSchema,
-  serializableTrackSchema,
+  projectFileTrackSchema,
 } from "@/infrastructures/projectFile/schema";
 
-export type SerializableTrack = z.infer<typeof serializableTrackSchema>;
+export type ProjectFileTrack = z.infer<typeof projectFileTrackSchema>;
 
 export type LatestProjectType = z.infer<typeof projectFileSchema>;
 
