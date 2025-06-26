@@ -9,7 +9,7 @@ on:
 
 env:
   VOICEVOX_ENGINE_REPO: "VOICEVOX/voicevox_nemo_engine" # 軽いのでNemoを使う
-  VOICEVOX_ENGINE_VERSION: "0.23.0"
+  VOICEVOX_ENGINE_VERSION: "0.24.0"
 
 defaults:
   run:
