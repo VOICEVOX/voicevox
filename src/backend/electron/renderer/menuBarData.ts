@@ -43,7 +43,7 @@ export const useElectronMenuBarData = (
             engineIcons.value[engineInfo.uuid],
           disableWhenUiLocked: false,
           subMenu: removeNullableAndBoolean([
-            engineInfo.path != "" && {
+            Boolean(engineInfo.path) && {
               type: "button",
               label: "フォルダを開く",
               onClick: () => {
