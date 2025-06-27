@@ -1,4 +1,4 @@
-import { ref, toRaw } from "vue";
+import { ref } from "vue";
 import { createPartialStore } from "./vuex";
 import { createUILockAction } from "./ui";
 import {
@@ -3473,33 +3473,21 @@ export const singingCommandStore = transformCommandStore(
             throw new Error("TPQN does not match. Must be converted.");
           }
 
-          const selectedTrack = getOrThrow(
-            state.tracks,
-            getters.SELECTED_TRACK_ID,
+          const selectedTrack = cloneWithUnwrapProxy(
+            getOrThrow(state.tracks, getters.SELECTED_TRACK_ID),
           );
 
           const filteredTracks = trackIndexes.map((trackIndex): Track => {
-            const track = tracks[trackIndex];
-            if (!track) {
+            const importedTrack = tracks[trackIndex];
+            if (!importedTrack) {
               throw new Error("Track not found.");
             }
-            const rawTrack = toRaw(selectedTrack);
-            // TODO: トラックの変換処理を関数化する
             return {
-              name: rawTrack.name,
-              singer: rawTrack.singer,
-              keyRangeAdjustment: rawTrack.keyRangeAdjustment,
-              volumeRangeAdjustment: rawTrack.volumeRangeAdjustment,
-              notes: rawTrack.notes.map((note) => ({
+              ...selectedTrack,
+              notes: importedTrack.notes.map((note) => ({
                 ...note,
                 id: NoteId(uuid4()),
               })),
-              pitchEditData: rawTrack.pitchEditData,
-              phonemeTimingEditData: rawTrack.phonemeTimingEditData,
-              solo: rawTrack.solo,
-              mute: rawTrack.mute,
-              gain: rawTrack.gain,
-              pan: rawTrack.pan,
             };
           });
 
@@ -3527,29 +3515,28 @@ export const singingCommandStore = transformCommandStore(
           }
 
           const filteredTracks = trackIndexes.map((trackIndex): Track => {
-            const track = tracks[trackOrder[trackIndex]];
-            if (!track) {
+            const importedTrack = tracks[trackOrder[trackIndex]];
+            if (!importedTrack) {
               throw new Error("Track not found.");
             }
-            const rawTrack = toRaw(track);
             // TODO: トラックの変換処理を関数化する
             return {
-              name: rawTrack.name,
-              singer: rawTrack.singer,
-              keyRangeAdjustment: rawTrack.keyRangeAdjustment,
-              volumeRangeAdjustment: rawTrack.volumeRangeAdjustment,
-              notes: rawTrack.notes.map((note) => ({
+              name: importedTrack.name,
+              singer: importedTrack.singer,
+              keyRangeAdjustment: importedTrack.keyRangeAdjustment,
+              volumeRangeAdjustment: importedTrack.volumeRangeAdjustment,
+              notes: importedTrack.notes.map((note) => ({
                 ...note,
                 id: NoteId(uuid4()),
               })),
-              pitchEditData: rawTrack.pitchEditData,
+              pitchEditData: importedTrack.pitchEditData,
               phonemeTimingEditData: recordToMap(
-                rawTrack.phonemeTimingEditData,
+                importedTrack.phonemeTimingEditData,
               ),
-              solo: rawTrack.solo,
-              mute: rawTrack.mute,
-              gain: rawTrack.gain,
-              pan: rawTrack.pan,
+              solo: importedTrack.solo,
+              mute: importedTrack.mute,
+              gain: importedTrack.gain,
+              pan: importedTrack.pan,
             };
           });
 
