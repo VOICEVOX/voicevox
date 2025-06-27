@@ -11,7 +11,7 @@
   "volta": {
     "node": "22.14.0"
   },
-  "packageManager": "pnpm@10.3.0",
+  "packageManager": "pnpm@10.12.4",
   "scripts": {
     "// --- lint ---": "",
     "lint": "cross-env ESLINT_FILE_PROGRESS=1 eslint --cache",
@@ -164,4 +164,3 @@
     }
   }
 }
-
