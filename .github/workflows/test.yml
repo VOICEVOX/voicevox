@@ -9,7 +9,7 @@ on:
 
 env:
   VOICEVOX_ENGINE_REPO: "VOICEVOX/voicevox_nemo_engine" # 軽いのでNemoを使う
-  VOICEVOX_ENGINE_VERSION: "0.14.0"
+  VOICEVOX_ENGINE_VERSION: "0.24.0"
 
 defaults:
   run:
@@ -66,15 +66,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
         include:
           - os: ubuntu-latest
-            voicevox_engine_asset_name: linux-cpu
+            voicevox_engine_asset_name: linux-cpu-x64
           - os: macos-latest
-            voicevox_engine_asset_name: macos-x64
-          # TODO: voicevox_nemo_negineがarm64に対応したら変更する
-          # - os: macos-latest
-          #   voicevox_engine_asset_name: macos-arm64
+            voicevox_engine_asset_name: macos-arm64
           - os: windows-latest
             voicevox_engine_asset_name: windows-cpu
     steps:
@@ -87,7 +83,6 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y xvfb x11-xserver-utils # for electron
-          sudo apt-get install -y libsndfile1 # for engine
 
       - name: Download VOICEVOX ENGINE
         id: download-engine
