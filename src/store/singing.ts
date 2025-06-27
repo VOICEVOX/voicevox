@@ -3473,9 +3473,8 @@ export const singingCommandStore = transformCommandStore(
             throw new Error("TPQN does not match. Must be converted.");
           }
 
-          const selectedTrack = getOrThrow(
-            state.tracks,
-            getters.SELECTED_TRACK_ID,
+          const selectedTrack = cloneWithUnwrapProxy(
+            getOrThrow(state.tracks, getters.SELECTED_TRACK_ID),
           );
 
           const filteredTracks = trackIndexes.map((trackIndex): Track => {
@@ -3484,20 +3483,11 @@ export const singingCommandStore = transformCommandStore(
               throw new Error("Track not found.");
             }
             return {
-              name: selectedTrack.name,
-              singer: selectedTrack.singer,
-              keyRangeAdjustment: selectedTrack.keyRangeAdjustment,
-              volumeRangeAdjustment: selectedTrack.volumeRangeAdjustment,
+              ...selectedTrack,
               notes: importedTrack.notes.map((note) => ({
                 ...note,
                 id: NoteId(uuid4()),
               })),
-              pitchEditData: selectedTrack.pitchEditData,
-              phonemeTimingEditData: selectedTrack.phonemeTimingEditData,
-              solo: selectedTrack.solo,
-              mute: selectedTrack.mute,
-              gain: selectedTrack.gain,
-              pan: selectedTrack.pan,
             };
           });
 
