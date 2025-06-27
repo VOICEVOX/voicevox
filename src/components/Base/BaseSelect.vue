@@ -20,8 +20,7 @@
         <SelectViewport>
           <slot />
         </SelectViewport>
-        <!-- Radix Vue側でエラーが発生するため一時的にコメントアウト -->
-        <!-- <SelectArrow class="SelectArrow" /> -->
+        <SelectArrow class="SelectArrow" />
       </SelectContent>
     </SelectPortal>
   </SelectRoot>
@@ -36,15 +35,17 @@ import {
   SelectTrigger,
   SelectValue,
   SelectViewport,
-} from "radix-vue";
+  SelectArrow,
+  AcceptableValue,
+} from "reka-ui";
 
 defineProps<{
   placeholder?: string;
-  defaultValue?: string;
+  defaultValue?: AcceptableValue;
   disabled?: boolean;
 }>();
 
-const model = defineModel<string>();
+const model = defineModel<AcceptableValue>();
 const open = defineModel<boolean>("open");
 </script>
 

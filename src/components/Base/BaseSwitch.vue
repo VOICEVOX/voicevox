@@ -1,7 +1,7 @@
 <template>
   <div class="root">
     <div class="label">{{ checked ? checkedLabel : uncheckedLabel }}</div>
-    <SwitchRoot :id v-model:checked="checked" :disabled class="SwitchRoot">
+    <SwitchRoot :id v-model="checked" :disabled class="SwitchRoot">
       <SwitchThumb class="SwitchThumb">
         <QIcon class="check" name="check" />
       </SwitchThumb>
@@ -10,7 +10,7 @@
 </template>
 
 <script setup lang="ts">
-import { SwitchRoot, SwitchThumb } from "radix-vue";
+import { SwitchRoot, SwitchThumb } from "reka-ui";
 
 defineProps<{
   id?: string;

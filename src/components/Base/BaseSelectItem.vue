@@ -6,10 +6,15 @@
 </template>
 
 <script setup lang="ts">
-import { SelectItem, SelectItemText, SelectItemIndicator } from "radix-vue";
+import {
+  SelectItem,
+  SelectItemText,
+  SelectItemIndicator,
+  AcceptableValue,
+} from "reka-ui";
 
 defineProps<{
-  value: string;
+  value: AcceptableValue;
   label: string;
   disabled?: boolean;
 }>();
