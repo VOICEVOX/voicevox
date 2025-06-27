@@ -3490,7 +3490,7 @@ export const singingCommandStore = transformCommandStore(
               singer: rawTrack.singer,
               keyRangeAdjustment: rawTrack.keyRangeAdjustment,
               volumeRangeAdjustment: rawTrack.volumeRangeAdjustment,
-              notes: rawTrack.notes.map((note) => ({
+              notes: track.notes.map((note) => ({
                 ...note,
                 id: NoteId(uuid4()),
               })),
