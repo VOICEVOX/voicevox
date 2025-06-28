@@ -7,6 +7,7 @@ import path from "node:path";
 import { spawn } from "node:child_process";
 import MultiStream from "multistream";
 import { app } from "electron";
+import { ExtractedEngineFiles } from "./ExtractedEngineFiles";
 import {
   minimumEngineManifestSchema,
   MinimumEngineManifestType,
@@ -38,11 +39,14 @@ export class VvppFileExtractor {
     this.callbacks = params.callbacks;
   }
 
-  async extract(): Promise<MinimumEngineManifestType> {
+  async extract(): Promise<ExtractedEngineFiles> {
     log.info("Extracting vvpp to", this.outputDir);
     const archiveFileParts = await this.getArchiveFileParts();
     const manifest = await this.extractOrCleanup(archiveFileParts);
-    return manifest;
+    return new ExtractedEngineFiles({
+      manifest,
+      engineDir: this.outputDir,
+    });
   }
 
   /** VVPPファイルが分割されている場合、それらのファイルを取得する */

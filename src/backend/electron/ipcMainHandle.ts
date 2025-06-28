@@ -312,7 +312,10 @@ export function getIpcMainHandle(params: {
     },
 
     INSTALL_VVPP_ENGINE: async (_, path: string) => {
-      await engineAndVvppController.installVvppEngine(path);
+      await engineAndVvppController.installVvppEngine({
+        vvppPath: path,
+        asDefaultVvppEngine: false,
+      });
     },
 
     UNINSTALL_VVPP_ENGINE: async (_, engineId: EngineId) => {
