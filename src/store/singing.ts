@@ -3513,7 +3513,9 @@ export const singingCommandStore = transformCommandStore(
           }
 
           const filteredTracks = trackIndexes.map((trackIndex): Track => {
-            const importedTrack = tracks[trackOrder[trackIndex]];
+            const importedTrack = cloneWithUnwrapProxy(
+              tracks[trackOrder[trackIndex]],
+            );
             if (!importedTrack) {
               throw new Error("Track not found.");
             }
