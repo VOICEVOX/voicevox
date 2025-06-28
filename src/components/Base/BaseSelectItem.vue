@@ -5,7 +5,7 @@
   </SelectItem>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" generic="T extends AcceptableValue">
 import {
   SelectItem,
   SelectItemText,
@@ -14,7 +14,7 @@ import {
 } from "reka-ui";
 
 defineProps<{
-  value: AcceptableValue;
+  value: T;
   label: string;
   disabled?: boolean;
 }>();

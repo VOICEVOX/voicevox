@@ -9,7 +9,7 @@
   </ToggleGroupRoot>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" generic="T extends AcceptableValue">
 import { AcceptableValue, ToggleGroupRoot } from "reka-ui";
 
 defineProps<{
@@ -17,7 +17,7 @@ defineProps<{
   disabled?: boolean;
 }>();
 
-const modelValue = defineModel<AcceptableValue | AcceptableValue[]>();
+const modelValue = defineModel<T | T[]>();
 </script>
 
 <style scoped lang="scss">

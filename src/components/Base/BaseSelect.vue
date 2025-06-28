@@ -26,7 +26,7 @@
   </SelectRoot>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" generic="T extends AcceptableValue">
 import {
   SelectContent,
   SelectPortal,
@@ -41,11 +41,11 @@ import {
 
 defineProps<{
   placeholder?: string;
-  defaultValue?: AcceptableValue;
+  defaultValue?: T;
   disabled?: boolean;
 }>();
 
-const model = defineModel<AcceptableValue>();
+const model = defineModel<T>();
 const open = defineModel<boolean>("open");
 </script>
 

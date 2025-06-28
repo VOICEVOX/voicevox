@@ -5,12 +5,12 @@
   </ToggleGroupItem>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" generic="T extends AcceptableValue">
 import { AcceptableValue, ToggleGroupItem } from "reka-ui";
 
 defineProps<{
   label: string;
-  value: AcceptableValue;
+  value: T;
 }>();
 </script>
 

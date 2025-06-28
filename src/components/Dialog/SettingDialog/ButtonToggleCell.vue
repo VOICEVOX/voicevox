@@ -34,7 +34,7 @@ defineProps<{
   disable?: boolean;
 }>();
 
-const model = defineModel<AcceptableValue | AcceptableValue[]>({
+const model = defineModel<T | T[]>({
   required: true,
 });
 </script>
