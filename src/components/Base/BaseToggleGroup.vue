@@ -1,10 +1,5 @@
 <template>
-  <ToggleGroupRoot
-    v-model="modelValue"
-    class="ToggleGroup"
-    :type
-    :disabled
-  >
+  <ToggleGroupRoot v-model="modelValue" class="ToggleGroup" :type :disabled>
     <slot />
   </ToggleGroupRoot>
 </template>
