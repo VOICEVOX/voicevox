@@ -1,6 +1,6 @@
 <template>
   <ToggleGroupRoot
-    v-model:modelValue="modelValue"
+    v-model="modelValue"
     class="ToggleGroup"
     :type
     :disabled
