@@ -1,5 +1,68 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`createOpenAPIEngineMock > audioQuery 1`] = `
+{
+  "accentPhrases": [
+    {
+      "accent": 5,
+      "moras": [
+        {
+          "consonant": "k",
+          "consonantLength": 0.0220625,
+          "pitch": 4.7734375,
+          "text": "コ",
+          "vowel": "o",
+          "vowelLength": 0.1140625,
+        },
+        {
+          "consonant": undefined,
+          "consonantLength": undefined,
+          "pitch": 3.609375,
+          "text": "ン",
+          "vowel": "N",
+          "vowelLength": 0.08312499999999999,
+        },
+        {
+          "consonant": "n",
+          "consonantLength": 0.022625,
+          "pitch": 4.75,
+          "text": "ニ",
+          "vowel": "i",
+          "vowelLength": 0.10843749999999999,
+        },
+        {
+          "consonant": "ch",
+          "consonantLength": 0.0400625,
+          "pitch": 4.0234375,
+          "text": "チ",
+          "vowel": "i",
+          "vowelLength": 0.10843749999999999,
+        },
+        {
+          "consonant": "h",
+          "consonantLength": 0.0315,
+          "pitch": 4.796875,
+          "text": "ハ",
+          "vowel": "a",
+          "vowelLength": 0.1509375,
+        },
+      ],
+      "pauseMora": undefined,
+    },
+  ],
+  "intonationScale": 1,
+  "outputSamplingRate": 24000,
+  "outputStereo": false,
+  "pauseLength": null,
+  "pauseLengthScale": 1,
+  "pitchScale": 0,
+  "postPhonemeLength": 0.1,
+  "prePhonemeLength": 0.1,
+  "speedScale": 1,
+  "volumeScale": 1,
+}
+`;
+
 exports[`createOpenAPIEngineMock > frameSynthesis 1`] = `"394cfbc01397e0b6fcc3433d9537aa850e6131f7d89048da6889e7375fe03a24"`;
 
 exports[`createOpenAPIEngineMock > singFrameAudioQuery 1`] = `
@@ -110,70 +173,7 @@ exports[`createOpenAPIEngineMock > singFrameAudioQuery 1`] = `
 }
 `;
 
-exports[`createOpenAPIEngineMock > synthesis 1`] = `
-{
-  "accentPhrases": [
-    {
-      "accent": 5,
-      "moras": [
-        {
-          "consonant": "k",
-          "consonantLength": 0.0220625,
-          "pitch": 4.7734375,
-          "text": "コ",
-          "vowel": "o",
-          "vowelLength": 0.1140625,
-        },
-        {
-          "consonant": undefined,
-          "consonantLength": undefined,
-          "pitch": 3.609375,
-          "text": "ン",
-          "vowel": "N",
-          "vowelLength": 0.08312499999999999,
-        },
-        {
-          "consonant": "n",
-          "consonantLength": 0.022625,
-          "pitch": 4.75,
-          "text": "ニ",
-          "vowel": "i",
-          "vowelLength": 0.10843749999999999,
-        },
-        {
-          "consonant": "ch",
-          "consonantLength": 0.0400625,
-          "pitch": 4.0234375,
-          "text": "チ",
-          "vowel": "i",
-          "vowelLength": 0.10843749999999999,
-        },
-        {
-          "consonant": "h",
-          "consonantLength": 0.0315,
-          "pitch": 4.796875,
-          "text": "ハ",
-          "vowel": "a",
-          "vowelLength": 0.1509375,
-        },
-      ],
-      "pauseMora": undefined,
-    },
-  ],
-  "intonationScale": 1,
-  "outputSamplingRate": 24000,
-  "outputStereo": false,
-  "pauseLength": null,
-  "pauseLengthScale": 1,
-  "pitchScale": 0,
-  "postPhonemeLength": 0.1,
-  "prePhonemeLength": 0.1,
-  "speedScale": 1,
-  "volumeScale": 1,
-}
-`;
-
-exports[`createOpenAPIEngineMock > synthesis 2`] = `"23f4b910863418a7188648f7c5226a0f02b9d067b964be1690b69b1e9ffde7bc"`;
+exports[`createOpenAPIEngineMock > synthesis 1`] = `"23f4b910863418a7188648f7c5226a0f02b9d067b964be1690b69b1e9ffde7bc"`;
 
 exports[`createOpenAPIEngineMock > version 1`] = `"mock"`;
 
