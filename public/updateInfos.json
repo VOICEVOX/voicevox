@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.24.1",
+    "descriptions": [
+      "ソング：vvproj以外のプロジェクトをインポートできない問題を修正"
+    ],
+    "contributors": ["sevenc-nanashi", "sigprogramming"]
+  },
+  {
     "version": "0.24.0",
     "descriptions": [
       "プロジェクトの複製を保存する機能を追加",
