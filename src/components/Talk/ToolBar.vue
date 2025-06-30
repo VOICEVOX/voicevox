@@ -112,7 +112,7 @@ const generateAndSaveSelectedAudio = async () => {
 
   const selectedAudioKeys = store.getters.SELECTED_AUDIO_KEYS;
   if (
-    store.state.experimentalSetting.enableMultiSelect &&
+    store.state.enableMultiSelect &&
     selectedAudioKeys.length > 1
   ) {
     await multiGenerateAndSaveAudioWithDialog({

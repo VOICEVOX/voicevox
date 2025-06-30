@@ -167,7 +167,7 @@ const selectedAudioKeys = computed(() => store.getters.SELECTED_AUDIO_KEYS);
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
 const isMultiSelectEnabled = computed(
-  () => store.state.experimentalSetting.enableMultiSelect,
+  () => store.state.enableMultiSelect,
 );
 
 const { registerHotkeyWithCleanup } = useHotkeyManager();
@@ -684,7 +684,7 @@ const showAddAudioItemButton = computed(() => {
 // 台本欄の空きスペースがクリックされたら選択解除
 const onAudioCellPaneClick = () => {
   if (
-    store.state.experimentalSetting.enableMultiSelect &&
+    store.state.enableMultiSelect &&
     activeAudioKey.value
   ) {
     void store.actions.SET_SELECTED_AUDIO_KEYS({

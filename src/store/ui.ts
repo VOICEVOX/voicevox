@@ -511,7 +511,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
 
       const selectedAudioKeys = getters.SELECTED_AUDIO_KEYS;
       if (
-        state.experimentalSetting.enableMultiSelect &&
+        state.enableMultiSelect &&
         selectedAudioKeys.length > 1
       ) {
         await multiGenerateAndSaveAudioWithDialog({

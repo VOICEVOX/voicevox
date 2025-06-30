@@ -337,7 +337,7 @@ const supportedFeatures = computed(
 );
 
 const selectedAudioKeys = computed(() =>
-  store.state.experimentalSetting.enableMultiSelect
+  store.state.enableMultiSelect
     ? store.getters.SELECTED_AUDIO_KEYS
     : [props.activeAudioKey],
 );

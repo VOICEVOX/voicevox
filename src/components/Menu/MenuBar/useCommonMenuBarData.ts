@@ -18,7 +18,7 @@ export const useCommonMenuBarData = (store: Store) => {
   );
 
   const isMultiSelectEnabled = computed(
-    () => store.state.experimentalSetting.enableMultiSelect,
+    () => store.state.enableMultiSelect,
   );
 
   const audioKeys = computed(() => store.state.audioKeys);
