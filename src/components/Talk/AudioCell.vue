@@ -175,9 +175,7 @@ const audioItem = computed(() => store.state.audioItems[props.audioKey]);
 
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
-const isMultiSelectEnabled = computed(
-  () => store.state.enableMultiSelect,
-);
+const isMultiSelectEnabled = computed(() => store.state.enableMultiSelect);
 
 const selectAndSetActiveAudioKey = () => {
   void store.actions.SET_ACTIVE_AUDIO_KEY({ audioKey: props.audioKey });
