@@ -974,7 +974,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
   FETCH_AUDIO_QUERY: {
     action(
-      { actions },
+      { state, actions },
       {
         text,
         engineId,
@@ -990,6 +990,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             await instance.invoke("audioQuery")({
               text,
               speaker: styleId,
+              enableKatakanaEnglish:
+                state.engineManifests[engineId].supportedFeatures
+                  .applyKatakanaEnglish && state.enableKatakanaEnglish,
             }),
           ),
         )
@@ -1025,7 +1028,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
   FETCH_ACCENT_PHRASES: {
     action(
-      { actions },
+      { actions, state },
       {
         text,
         engineId,
@@ -1047,6 +1050,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
             text,
             speaker: styleId,
             isKana,
+            enableKatakanaEnglish:
+              state.engineManifests[engineId].supportedFeatures
+                .applyKatakanaEnglish && state.enableKatakanaEnglish,
           }),
         )
         .catch((error) => {

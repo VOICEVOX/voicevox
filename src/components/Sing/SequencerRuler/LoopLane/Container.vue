@@ -12,8 +12,6 @@
     :timeSignatures
     :sequencerZoomX
     :snapTicks
-    :previewHandleX
-    :shouldShowPreviewHandle
     @loopAreaMouseDown="handleLoopAreaMouseDown"
     @loopRangeClick="handleLoopRangeClick"
     @loopRangeDoubleClick="handleLoopRangeDoubleClick"
@@ -35,7 +33,7 @@ import { numMeasuresInjectionKey } from "../../ScoreSequencer.vue";
 import Presentation from "./Presentation.vue";
 import { useStore } from "@/store";
 import { useSequencerLayout } from "@/composables/useSequencerLayout";
-import { baseXToTick, tickToBaseX } from "@/sing/viewHelper";
+import { baseXToTick } from "@/sing/viewHelper";
 import { getMeasureDuration, getNoteDuration } from "@/sing/domain";
 import { ContextMenuItemData } from "@/components/Menu/ContextMenu/Presentation.vue";
 
@@ -81,7 +79,6 @@ const { rulerWidth, tsPositions, endTicks } = useSequencerLayout({
 
 // マウス位置
 const clickX = ref(0); // 右クリック時の位置（コンテキストメニュー用）
-const pointerX = ref(0); // 現在のポインター位置（プレビュー用）
 
 // ホバー状態
 const isHoveringLane = ref(false);
@@ -127,39 +124,6 @@ const loopEndX = computed(() => {
   );
 });
 
-// ホバー時のプレビューハンドル位置
-const previewHandleX = computed(() => {
-  if (!isHoveringLane.value) return 0;
-
-  // スナップ設定にあわせたスナップ１
-  const baseX = (injectedOffset.value + pointerX.value) / sequencerZoomX.value;
-  const baseTick = baseXToTick(baseX, tpqn.value);
-  const snappedTick = Math.round(baseTick / snapTicks.value) * snapTicks.value;
-
-  // スナップした位置をピクセル座標に戻す
-  const snappedBaseX = tickToBaseX(snappedTick, tpqn.value);
-  return snappedBaseX * sequencerZoomX.value - injectedOffset.value;
-});
-
-// プレビューハンドルを表示するかどうか
-const shouldShowPreviewHandle = computed(() => {
-  if (!isHoveringLane.value || isDragging.value) return false;
-
-  // ループ範囲上でホバーしている場合は表示しない
-  if (isHoveringLoopRange.value) return false;
-
-  // ハンドルに近すぎる場合は非表示
-  const tolerance = 12; // ハンドル周辺の余裕
-  const isNearStartHandle =
-    Math.abs(previewHandleX.value - (loopStartX.value - injectedOffset.value)) <
-    tolerance;
-  const isNearEndHandle =
-    Math.abs(previewHandleX.value - (loopEndX.value - injectedOffset.value)) <
-    tolerance;
-
-  return !isNearStartHandle && !isNearEndHandle;
-});
-
 // カーソルのCSSクラス
 const cursorClass = computed(() => {
   switch (cursorState.value) {
@@ -191,11 +155,9 @@ const setPlayheadPosition = (ticks: number) => {
 // ハンドラ
 
 // レーン上でのマウス移動
-const handleLaneMouseMove = (event: MouseEvent) => {
+const handleLaneMouseMove = () => {
+  // ドラッグ中は処理しない
   if (isDragging.value) return;
-
-  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
-  pointerX.value = event.clientX - rect.left;
 };
 
 const handleLaneMouseEnter = () => {

@@ -319,7 +319,7 @@ export const useCommonMenuBarData = (store: Store) => {
           ? [
               {
                 type: "button",
-                label: "キャラクター・スタイルの管理",
+                label: "キャラクター＆スタイルの管理",
                 onClick() {
                   void store.actions.SET_DIALOG_OPEN({
                     isCharacterListDialogOpen: true,

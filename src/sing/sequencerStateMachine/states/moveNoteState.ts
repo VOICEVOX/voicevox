@@ -2,7 +2,7 @@ import { getOrThrow } from "@/helpers/mapHelper";
 import { State, SetNextState } from "@/sing/stateMachine";
 import { clamp } from "@/sing/utility";
 import { getButton, PREVIEW_SOUND_DURATION } from "@/sing/viewHelper";
-import { Note } from "@/store/type";
+import type { Note } from "@/domain/project/type";
 import { TrackId, NoteId } from "@/type/preload";
 import {
   Context,

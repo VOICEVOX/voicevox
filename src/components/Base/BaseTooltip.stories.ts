@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/vue3";
+import type { Meta, StoryObj } from "@storybook/vue3-vite";
 
 import { TooltipProvider } from "radix-vue";
 import BaseTooltip from "./BaseTooltip.vue";

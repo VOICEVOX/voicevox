@@ -6,7 +6,7 @@ import {
   SequencerStateDefinitions,
 } from "@/sing/sequencerStateMachine/common";
 import { NoteId, TrackId } from "@/type/preload";
-import { Note } from "@/store/type";
+import type { Note } from "@/domain/project/type";
 import { splitLyricsByMoras } from "@/sing/domain";
 
 export class EditLyricState

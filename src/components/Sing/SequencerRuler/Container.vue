@@ -18,7 +18,8 @@
 </template>
 
 <script lang="ts">
-import type { InjectionKey, Ref } from "vue";
+import { Ref, InjectionKey } from "vue";
+
 // Provide/Injectで使用するキー
 export const offsetInjectionKey: InjectionKey<Ref<number>> =
   Symbol("rulerOffset");

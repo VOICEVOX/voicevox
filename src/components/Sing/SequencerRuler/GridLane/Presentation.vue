@@ -60,7 +60,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { TimeSignature } from "@/store/type";
+import type { TimeSignature } from "@/domain/project/type";
 import { useSequencerGrid } from "@/composables/useSequencerGridPattern";
 import { MeasureInfo } from "@/composables/useSequencerLayout";
 

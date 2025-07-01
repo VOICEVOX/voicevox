@@ -6,7 +6,7 @@ import { computed, ComputedRef, Ref } from "vue";
 import { getTimeSignaturePositions } from "@/sing/domain";
 import { tickToBaseX } from "@/sing/viewHelper";
 import { calculateEndTicks, calculateMeasureInfos } from "@/sing/rulerHelper";
-import type { TimeSignature } from "@/store/type";
+import type { TimeSignature } from "@/domain/project/type";
 
 // 小節のレイアウト位置
 export interface MeasureInfo {
@@ -57,7 +57,6 @@ export function useSequencerLayout(
   const endTicks = computed(() => {
     return calculateEndTicks(
       timeSignatures.value,
-      tsPositions.value,
       numMeasures.value,
       tpqn.value,
     );
@@ -67,8 +66,7 @@ export function useSequencerLayout(
   const measureInfos = computed(() => {
     return calculateMeasureInfos(
       timeSignatures.value,
-      tsPositions.value,
-      endTicks.value,
+      numMeasures.value,
       tpqn.value,
       sequencerZoomX.value,
     );

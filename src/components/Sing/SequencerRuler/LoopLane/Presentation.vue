@@ -50,7 +50,7 @@
       <!-- ループ開始ハンドル -->
       <g class="loop-handle-group">
         <rect
-          :x="loopStartX - offset - 1"
+          :x="loopStartX - offset - 2"
           y="0"
           width="2"
           height="16"
@@ -73,7 +73,7 @@
       <!-- ループ終了ハンドル -->
       <g class="loop-handle-group">
         <rect
-          :x="loopEndX - offset - 1"
+          :x="loopEndX - offset - 2"
           y="0"
           width="2"
           height="16"
@@ -93,18 +93,6 @@
           @mousedown.stop="handleLoopEndMouseDown"
         />
       </g>
-      <!-- プレビューハンドル（ホバー時のみ表示） -->
-      <g v-if="shouldShowPreviewHandle" class="loop-preview-handle-group">
-        <rect
-          :x="previewHandleX - 1"
-          y="0"
-          width="2"
-          height="16"
-          rx="1"
-          ry="1"
-          class="loop-preview-handle"
-        />
-      </g>
     </svg>
     <ContextMenu :menudata="contextMenuData" />
   </div>
@@ -115,7 +103,7 @@ import { computed } from "vue";
 import ContextMenu, {
   ContextMenuItemData,
 } from "@/components/Menu/ContextMenu/Presentation.vue";
-import { TimeSignature } from "@/store/type";
+import type { TimeSignature } from "@/domain/project/type";
 
 defineOptions({
   name: "LoopLanePresentation",
@@ -134,8 +122,6 @@ const props = defineProps<{
   timeSignatures: TimeSignature[];
   sequencerZoomX: number;
   snapTicks: number;
-  previewHandleX: number;
-  shouldShowPreviewHandle: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -214,7 +200,19 @@ const handleLoopRangeMouseLeave = () => {
   overflow: hidden;
   pointer-events: auto;
   cursor: pointer;
-  transition: background-color 0.15s ease-out;
+  background-color: transparent;
+  transition: all 0.15s ease-out;
+  border: 1px solid transparent;
+  box-shadow: inset 0 0 0 0 transparent;
+
+  // ホバー時は半透明のオーバーレイと境界線でループエリアを示す
+  &:hover {
+    background-color: color-mix(
+      in oklch,
+      var(--scheme-color-primary) 8%,
+      transparent
+    );
+  }
 
   // カーソル状態
   &.cursor-ew-resize {
@@ -368,13 +366,5 @@ const handleLoopRangeMouseLeave = () => {
     fill: var(--scheme-color-outline);
     opacity: 0.5;
   }
-}
-
-// プレビューハンドル（ホバー時のみ表示）
-.loop-preview-handle {
-  fill: var(--scheme-color-primary);
-  opacity: 0.3;
-  pointer-events: none;
-  transition: opacity 0.15s ease-out;
 }
 </style>

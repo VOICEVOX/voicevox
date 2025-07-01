@@ -22,7 +22,7 @@ import { useSequencerLayout } from "@/composables/useSequencerLayout";
 import { ticksToSnappedBeat } from "@/sing/rulerHelper";
 import { baseXToTick } from "@/sing/viewHelper";
 import { tickToMeasureNumber } from "@/sing/domain";
-import { Tempo, TimeSignature } from "@/store/type";
+import type { Tempo, TimeSignature } from "@/domain/project/type";
 import { ContextMenuItemData } from "@/components/Menu/ContextMenu/Presentation.vue";
 import TempoChangeDialog from "@/components/Sing/ChangeValueDialog/TempoChangeDialog.vue";
 import TimeSignatureChangeDialog from "@/components/Sing/ChangeValueDialog/TimeSignatureChangeDialog.vue";

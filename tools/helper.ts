@@ -18,3 +18,14 @@ export async function retryFetch(
   }
   return fetch(url, options);
 }
+
+export async function fetchJson<T>(
+  url: string | URL,
+  options?: RequestInit,
+): Promise<T> {
+  const response = await fetch(url, options);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch JSON: ${response.statusText}`);
+  }
+  return response.json() as Promise<T>;
+}

@@ -1,6 +1,6 @@
 /// <reference types="vitest" />
 import { defineWorkspace } from "vitest/config";
-import { storybookTest } from "@storybook/experimental-addon-test/vitest-plugin";
+import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
 
 const nodeTestPaths = ["../tests/unit/**/*.node.{test,spec}.ts"];
 const browserTestPaths = ["../tests/unit/**/*.browser.{test,spec}.ts"];

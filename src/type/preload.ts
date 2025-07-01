@@ -134,7 +134,7 @@ export interface Sandbox {
   uninstallVvppEngine(engineId: EngineId): Promise<void>;
   validateEngineDir(engineDir: string): Promise<EngineDirValidationResult>;
   reloadApp(obj: { isMultiEngineOffMode?: boolean }): Promise<void>;
-  getPathForFile(file: File): string;
+  getPathForFile(file: File): Promise<string>;
 }
 
 export type AppInfos = {
@@ -394,6 +394,7 @@ export const rootMiscSettingSchema = z.object({
   playheadPositionDisplayFormat: z
     .enum(["MINUTES_SECONDS", "MEASURES_BEATS"])
     .default("MINUTES_SECONDS"), // 再生ヘッド位置の表示モード
+  enableKatakanaEnglish: z.boolean().default(true), // 未知の英単語をカタカナ読みに変換するかどうか
 });
 export type RootMiscSettingType = z.infer<typeof rootMiscSettingSchema>;
 

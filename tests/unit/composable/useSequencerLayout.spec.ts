@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { ref } from "vue";
 import { useSequencerLayout } from "@/composables/useSequencerLayout";
-import type { TimeSignature } from "@/store/type";
+import type { TimeSignature } from "@/domain/project/type";
 
 describe("useSequencerLayout", () => {
   const defaultOptions = {

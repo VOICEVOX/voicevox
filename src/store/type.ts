@@ -63,19 +63,19 @@ import {
   ConfirmDialogOptions,
   WarningDialogOptions,
 } from "@/components/Dialog/Dialog";
-import {
-  LatestProjectType,
-  noteSchema,
-  singerSchema,
-  tempoSchema,
-  timeSignatureSchema,
-  trackSchema,
-} from "@/domain/project/schema";
 import { HotkeySettingType } from "@/domain/hotkeyAction";
 import {
   MultiFileProjectFormat,
   SingleFileProjectFormat,
 } from "@/sing/utaformatixProject/utils";
+import type {
+  Note,
+  Singer,
+  Tempo,
+  TimeSignature,
+  Track,
+} from "@/domain/project/type";
+import { LatestProjectType } from "@/infrastructures/projectFile/type";
 
 /**
  * エディタ用のAudioQuery
@@ -750,23 +750,12 @@ export type AudioPlayerStoreTypes = {
  * Singing Store Types
  */
 
-// schemaはプロジェクトファイル用
-export type Tempo = z.infer<typeof tempoSchema>;
-
-export type TimeSignature = z.infer<typeof timeSignatureSchema>;
-
-export type Note = z.infer<typeof noteSchema>;
-
-export type Singer = z.infer<typeof singerSchema>;
-
-export type Track = z.infer<typeof trackSchema>;
-
 export type PhraseState =
   | "SINGER_IS_NOT_SET"
   | "WAITING_TO_BE_RENDERED"
   | "NOW_RENDERING"
   | "COULD_NOT_RENDER"
-  | "PLAYABLE";
+  | "RENDERED";
 
 /**
  * エディタ用のFrameAudioQuery
@@ -830,7 +819,6 @@ export type Phrase = {
   singingPitchKey?: SingingPitchKey;
   singingVolumeKey?: SingingVolumeKey;
   singingVoiceKey?: SingingVoiceKey;
-  sequenceId?: SequenceId;
   trackId: TrackId; // NOTE: state.tracksと同期していないので使用する際は注意
 };
 
@@ -1043,6 +1031,10 @@ export type SingingStoreTypes = {
     action(payload: { trackId: TrackId }): void;
   };
 
+  CREATE_AND_SETUP_SONG_TRACK_RENDERER: {
+    action(): void;
+  };
+
   SET_PHRASES: {
     mutation: { phrases: Map<PhraseKey, Phrase> };
   };
@@ -1082,10 +1074,9 @@ export type SingingStoreTypes = {
     };
   };
 
-  SET_SEQUENCE_ID_TO_PHRASE: {
+  SET_PHRASE_QUERIES: {
     mutation: {
-      phraseKey: PhraseKey;
-      sequenceId: SequenceId | undefined;
+      queries: Map<EditorFrameAudioQueryKey, EditorFrameAudioQuery>;
     };
   };
 
@@ -1100,6 +1091,12 @@ export type SingingStoreTypes = {
     mutation: { queryKey: EditorFrameAudioQueryKey };
   };
 
+  SET_PHRASE_SINGING_PITCHES: {
+    mutation: {
+      singingPitches: Map<SingingPitchKey, SingingPitch>;
+    };
+  };
+
   SET_PHRASE_SINGING_PITCH: {
     mutation: {
       singingPitchKey: SingingPitchKey;
@@ -1109,6 +1106,12 @@ export type SingingStoreTypes = {
 
   DELETE_PHRASE_SINGING_PITCH: {
     mutation: { singingPitchKey: SingingPitchKey };
+  };
+
+  SET_PHRASE_SINGING_VOLUMES: {
+    mutation: {
+      singingVolumes: Map<SingingVolumeKey, SingingVolume>;
+    };
   };
 
   SET_PHRASE_SINGING_VOLUME: {

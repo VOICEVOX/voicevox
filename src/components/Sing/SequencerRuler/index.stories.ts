@@ -1,9 +1,9 @@
-import type { Meta, StoryObj } from "@storybook/vue3";
+import type { Meta, StoryObj } from "@storybook/vue3-vite";
 import { provide, computed } from "vue";
 import { numMeasuresInjectionKey } from "../ScoreSequencer.vue";
 import Container from "./Container.vue";
 import { UnreachableError } from "@/type/utility";
-import { Tempo, TimeSignature } from "@/store/type";
+import type { Tempo, TimeSignature } from "@/domain/project/type";
 import { useStore } from "@/store";
 
 type StoryProps = {
@@ -46,7 +46,7 @@ const meta: Meta<StoryProps> = {
         }
 
         // setupStoryStateパラメータからデータを取得
-        const setupState = context?.parameters?.setupStoryState as
+        const setupState = context.parameters?.setupStoryState as
           | SetupStoryState
           | undefined;
         if (setupState) {

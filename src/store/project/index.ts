@@ -15,11 +15,8 @@ import {
 import { TrackId } from "@/type/preload";
 import path from "@/helpers/path";
 import { getValueOrThrow, ResultError } from "@/type/result";
-import { LatestProjectType } from "@/domain/project/schema";
-import {
-  migrateProjectFileObject,
-  ProjectFileFormatError,
-} from "@/domain/project";
+import { LatestProjectType } from "@/infrastructures/projectFile/type";
+import { ProjectFileFormatError } from "@/infrastructures/projectFile/type";
 import {
   createDefaultTempo,
   createDefaultTimeSignature,
@@ -34,6 +31,9 @@ import {
   showQuestionDialog,
 } from "@/components/Dialog/Dialog";
 import { uuid4 } from "@/helpers/random";
+import { recordToMap } from "@/sing/utility";
+import type { Track } from "@/domain/project/type";
+import { migrateProjectFileObject } from "@/infrastructures/projectFile/migration";
 
 export const projectStoreState: ProjectStoreState = {
   savedLastCommandIds: { talk: null, song: null },
@@ -72,10 +72,26 @@ const applySongProjectToStore = async (
   await actions.SET_TIME_SIGNATURES({ timeSignatures });
   await actions.SET_TRACKS({
     tracks: new Map(
-      trackOrder.map((trackId) => {
+      trackOrder.map((trackId): [TrackId, Track] => {
         const track = tracks[trackId];
         if (!track) throw new Error("track == undefined");
-        return [trackId, track];
+        // TODO: トラックの変換処理を関数化する
+        return [
+          trackId,
+          {
+            name: track.name,
+            singer: track.singer,
+            keyRangeAdjustment: track.keyRangeAdjustment,
+            volumeRangeAdjustment: track.volumeRangeAdjustment,
+            notes: track.notes,
+            pitchEditData: track.pitchEditData,
+            phonemeTimingEditData: recordToMap(track.phonemeTimingEditData),
+            solo: track.solo,
+            mute: track.mute,
+            gain: track.gain,
+            pan: track.pan,
+          },
+        ];
       }),
     ),
   });

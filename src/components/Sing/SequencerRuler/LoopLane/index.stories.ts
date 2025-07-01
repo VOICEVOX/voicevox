@@ -1,5 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/vue3";
-import { fn } from "@storybook/test";
+import type { Meta, StoryObj } from "@storybook/vue3-vite";
 
 import Presentation from "./Presentation.vue";
 
@@ -14,21 +13,12 @@ const meta: Meta<typeof Presentation> = {
     isDragging: false,
     cursorClass: "",
     contextMenuData: [],
-    onLoopAreaMouseDown: fn(),
-    onLoopRangeClick: fn(),
-    onLoopRangeDoubleClick: fn(),
-    onStartHandleMouseDown: fn(),
-    onEndHandleMouseDown: fn(),
-    onContextMenu: fn(),
+    tpqn: 480,
+    timeSignatures: [{ measureNumber: 1, beats: 4, beatType: 4 }],
+    sequencerZoomX: 1,
+    snapTicks: 480,
   },
-  render: (args) => ({
-    components: { Presentation },
-    setup() {
-      return { args };
-    },
-    template: `<div style="height: 40px; position: relative;"><Presentation v-bind="args" /></div>`,
-  }),
-};
+} satisfies Meta<typeof Presentation>;
 
 // 表示のみ
 // TODO: テスト追加

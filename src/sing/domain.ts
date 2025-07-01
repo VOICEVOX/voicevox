@@ -1,17 +1,20 @@
 import { calculateHash, getLast, getNext, getPrev, isSorted } from "./utility";
 import { convertLongVowel, moraPattern } from "@/domain/japanese";
 import {
-  Note,
   Phrase,
   PhraseSource,
-  Tempo,
-  TimeSignature,
   PhraseKey,
-  Track,
   EditorFrameAudioQuery,
 } from "@/store/type";
 import { FramePhoneme } from "@/openapi";
 import { NoteId, TrackId } from "@/type/preload";
+import type {
+  Note,
+  PhonemeTimingEditData,
+  Tempo,
+  TimeSignature,
+  Track,
+} from "@/domain/project/type";
 
 // TODO: 後でdomain/type.tsに移す
 export type MeasuresBeats = {
@@ -382,6 +385,7 @@ export function createDefaultTrack(): Track {
     volumeRangeAdjustment: 0,
     notes: [],
     pitchEditData: [],
+    phonemeTimingEditData: new Map(),
 
     solo: false,
     mute: false,
@@ -514,13 +518,6 @@ type PhonemeTiming = {
   endFrame: number;
   phoneme: string;
 };
-
-export type PhonemeTimingEdit = {
-  phonemeIndexInNote: number;
-  offsetSeconds: number;
-};
-
-export type PhonemeTimingEditData = Map<NoteId, PhonemeTimingEdit[]>;
 
 /**
  * 音素列を音素タイミング列に変換する。

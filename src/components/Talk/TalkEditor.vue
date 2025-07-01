@@ -48,15 +48,14 @@
                   <template #before>
                     <div
                       class="audio-cell-pane"
-                      :class="{ 'is-dragging': dragEventCounter > 0 }"
-                      @dragenter="dragEventCounter++"
-                      @dragleave="dragEventCounter--"
+                      :class="{ 'is-dragging': fileDropEventCounter > 0 }"
+                      @dragenter="fileDropEventCounter++"
+                      @dragleave="fileDropEventCounter--"
                       @dragover.prevent
                       @drop.prevent="
-                        dragEventCounter = 0;
-                        loadDraggedFile($event);
+                        fileDropEventCounter = 0;
+                        loadDroppedFile($event);
                       "
-                      @click="onAudioCellPaneClick"
                     >
                       <Draggable
                         ref="cellsRef"
@@ -66,13 +65,23 @@
                         ghostClass="ghost"
                         filter="input"
                         :preventOnFilter="false"
-                        @update:modelValue="updateAudioKeys"
+                        @start="onReorderStart"
+                        @end="onReorderEnd"
+                        @click.self="onAudioCellPaneClick"
                       >
-                        <template #item="{ element }">
+                        <template #item="{ element: audioKey }">
                           <AudioCell
                             :ref="addAudioCellRef"
                             class="draggable-cursor"
-                            :audioKey="element"
+                            :class="{
+                              // 並び替え中はドラッグしているAudioCell以外の選択中のAudioCellは非表示にする
+                              // TODO: SortableJSのmulti drag pluginを使う（https://github.com/SortableJS/Sortable/tree/master/plugins/MultiDrag）
+                              hidden:
+                                reorderingState.isReordering &&
+                                selectedAudioKeys.includes(audioKey) &&
+                                reorderingState.holdingAudioKey !== audioKey,
+                            }"
+                            :audioKey
                             @focusCell="focusCell"
                           />
                         </template>
@@ -144,6 +153,7 @@ import {
   HotkeyActionNameType,
 } from "@/domain/hotkeyAction";
 import { isElectron } from "@/helpers/platform";
+import { dragAndDropReorder } from "@/helpers/reorderHelper";
 
 const props = defineProps<{
   isEnginesReady: boolean;
@@ -153,6 +163,7 @@ const props = defineProps<{
 const store = useStore();
 
 const audioKeys = computed(() => store.state.audioKeys);
+const selectedAudioKeys = computed(() => store.getters.SELECTED_AUDIO_KEYS);
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
 const isMultiSelectEnabled = computed(
@@ -363,10 +374,45 @@ onBeforeUpdate(() => {
 
 const resizeObserverRef = ref<QResizeObserver>();
 
-// DaD
-const updateAudioKeys = (audioKeys: AudioKey[]) =>
-  store.actions.COMMAND_SET_AUDIO_KEYS({ audioKeys });
+// 並び替え
 const itemKey = (key: string) => key;
+type DraggableEvent = CustomEvent & {
+  oldIndex: number;
+  newIndex: number | null;
+};
+
+type ReorderingState =
+  | { isReordering: false }
+  | { isReordering: true; holdingAudioKey: AudioKey };
+
+const reorderingState = ref<ReorderingState>({ isReordering: false });
+
+const onReorderStart = (e: DraggableEvent) => {
+  const audioKey = audioKeys.value[e.oldIndex];
+  if (!selectedAudioKeys.value.includes(audioKey)) {
+    // 選択されていないものがドラッグされた場合は、クリックしたときにフォーカスを移す
+    void store.actions.SET_ACTIVE_AUDIO_KEY({ audioKey });
+    void store.actions.SET_SELECTED_AUDIO_KEYS({
+      audioKeys: [audioKey],
+    });
+  }
+  reorderingState.value = { isReordering: true, holdingAudioKey: audioKey };
+};
+const onReorderEnd = (e: DraggableEvent) => {
+  reorderingState.value = { isReordering: false };
+  if (e.newIndex == undefined) return;
+
+  const newAudioKeys = dragAndDropReorder(
+    audioKeys.value,
+    new Set(selectedAudioKeys.value),
+    e.oldIndex,
+    e.newIndex,
+  );
+
+  void store.actions.COMMAND_SET_AUDIO_KEYS({
+    audioKeys: newAudioKeys,
+  });
+};
 
 // セルを追加
 const activeAudioKey = computed<AudioKey | undefined>(
@@ -570,14 +616,18 @@ watch(
   },
 );
 
-// ドラッグ＆ドロップ
-const dragEventCounter = ref(0);
-const loadDraggedFile = (event: { dataTransfer: DataTransfer | null }) => {
+// ファイルのドロップ
+const fileDropEventCounter = ref(0);
+const loadDroppedFile = async (event: {
+  dataTransfer: DataTransfer | null;
+}) => {
   if (!event.dataTransfer || event.dataTransfer.files.length === 0) return;
   const file = event.dataTransfer.files[0];
 
   // electronの場合のみファイルパスを取得できる
-  const filePath = isElectron ? window.backend.getPathForFile(file) : undefined;
+  const filePath = isElectron
+    ? await window.backend.getPathForFile(file)
+    : undefined;
 
   switch (path.extname(file.name)) {
     case ".txt":
@@ -679,7 +729,8 @@ const onAudioCellPaneClick = () => {
   }
 }
 
-.ghost {
+// :not(#dummy) で優先度を上げ、選択中の背景色より優先されるようにする
+.ghost:not(#dummy) {
   background-color: rgba(colors.$display-rgb, 0.15);
 }
 

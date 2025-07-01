@@ -4,7 +4,7 @@
 /**
  * シーケンサーのルーラーに関する共通ロジック
  */
-import type { TimeSignature } from "@/store/type";
+import type { TimeSignature } from "@/domain/project/type";
 import {
   getTimeSignaturePositions,
   getMeasureDuration,
@@ -36,8 +36,6 @@ export const ticksToSnappedBeat = (
   const currentTsIndex =
     nextTsIndex === -1 ? tsStartTicks.length - 1 : nextTsIndex - 1;
   const currentTs = timeSignatures[currentTsIndex];
-
-  if (!currentTs) return targetTick;
 
   // 現在の拍子における1拍あたりのtick数を計算
   const currentBeatDuration = getBeatDuration(currentTs.beatType, tpqn);
@@ -73,32 +71,36 @@ export const ticksToSnappedBeat = (
 /**
  * 終了tick位置の計算
  * @param timeSignatures 拍子情報の配列
- * @param tsPositions 拍子位置の配列
  * @param numMeasures 表示する小節数
  * @param tpqn TPQNの値
  * @returns 終了tick位置
  */
 export const calculateEndTicks = (
   timeSignatures: TimeSignature[],
-  tsPositions: number[],
   numMeasures: number,
   tpqn: number,
 ): number => {
   if (timeSignatures.length === 0 || tpqn === 0) {
     return 0;
   }
+  // 拍子位置を計算
+  const tsPositions = getTimeSignaturePositions(timeSignatures, tpqn);
+
   // 最後の拍子の位置
   const lastTsIndex = timeSignatures.length - 1;
   const lastTs = timeSignatures[lastTsIndex];
   const lastTsPosition = tsPositions[lastTsIndex];
+
   // 小節の長さ
   const measureDuration = getMeasureDuration(
     lastTs.beats,
     lastTs.beatType,
     tpqn,
   );
+
   // 小節数
   const measuresFromLastTs = numMeasures - (lastTs.measureNumber - 1);
+
   // 終了tick位置 = 最後の拍子の位置 + 小節数 * 小節の長さ
   const endTicks = lastTsPosition + measuresFromLastTs * measureDuration;
   return endTicks;
@@ -107,19 +109,22 @@ export const calculateEndTicks = (
 /**
  * 小節情報を計算する
  * @param timeSignatures 拍子情報の配列
- * @param tsPositions 拍子位置の配列
- * @param endTicks 終了tick位置
+ * @param numMeasures 表示する小節数
  * @param tpqn TPQNの値
  * @param sequencerZoomX ズーム倍率X
  * @returns 小節情報の配列
  */
 export const calculateMeasureInfos = (
   timeSignatures: TimeSignature[],
-  tsPositions: number[],
-  endTicks: number,
+  numMeasures: number,
   tpqn: number,
   sequencerZoomX: number,
 ) => {
+  // 拍子位置を計算
+  const tsPositions = getTimeSignaturePositions(timeSignatures, tpqn);
+  // 終了tick位置を計算
+  const endTicks = calculateEndTicks(timeSignatures, numMeasures, tpqn);
+
   return timeSignatures.flatMap((timeSignature, i) => {
     // 小節の長さ
     const measureDuration = getMeasureDuration(
@@ -127,15 +132,19 @@ export const calculateMeasureInfos = (
       timeSignature.beatType,
       tpqn,
     );
+
     // 次の拍子の位置
     const nextTsPosition =
       i !== timeSignatures.length - 1 ? tsPositions[i + 1] : endTicks;
+
     // 小節の開始位置と終了位置
     const start = tsPositions[i];
     const end = nextTsPosition;
+
     // 小節数
-    const numMeasures = Math.floor((end - start) / measureDuration);
-    return Array.from({ length: numMeasures }, (_, index) => {
+    const numMeasuresInThisTs = Math.floor((end - start) / measureDuration);
+
+    return Array.from({ length: numMeasuresInThisTs }, (_, index) => {
       // 小節番号
       const measureNumber = timeSignature.measureNumber + index;
       // 小節の位置
