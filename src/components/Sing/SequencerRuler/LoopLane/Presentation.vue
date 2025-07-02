@@ -205,7 +205,7 @@ const handleLoopRangeMouseLeave = () => {
   border: 1px solid transparent;
   box-shadow: inset 0 0 0 0 transparent;
 
-  // ホバー時は半透明のオーバーレイと境界線でループエリアを示す
+  // ホバー時は半透明のオーバーレイでループエリアを示す
   &:hover {
     background-color: color-mix(
       in oklch,
