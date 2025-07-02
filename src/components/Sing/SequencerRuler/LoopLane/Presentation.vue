@@ -209,7 +209,7 @@ const handleLoopRangeMouseLeave = () => {
   &:hover {
     background-color: color-mix(
       in oklch,
-      var(--scheme-color-primary) 8%,
+      var(--scheme-color-primary) 7%,
       transparent
     );
   }
