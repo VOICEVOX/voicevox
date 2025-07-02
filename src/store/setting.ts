@@ -48,7 +48,6 @@ export const settingStoreState: SettingStoreState = {
   experimentalSetting: {
     enableInterrogativeUpspeak: false,
     enableMorphing: false,
-    enableMultiSelect: false,
     shouldKeepTuningOnTextChange: false,
     showParameterPanel: false,
   },
@@ -76,6 +75,7 @@ export const settingStoreState: SettingStoreState = {
   showSingCharacterPortrait: true,
   playheadPositionDisplayFormat: "MINUTES_SECONDS",
   enableKatakanaEnglish: true,
+  enableMultiSelect: true,
 };
 
 export const settingStore = createPartialStore<SettingStoreTypes>({
@@ -155,6 +155,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         "playheadPositionDisplayFormat",
         "openedEditor",
         "enableKatakanaEnglish",
+        "enableMultiSelect",
       ] as const;
 
       // rootMiscSettingKeysに値を足し忘れていたときに型エラーを出す検出用コード
