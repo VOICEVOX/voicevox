@@ -51,13 +51,35 @@ export class EngineAndVvppController {
   /**
    * VVPPエンジンをインストールする。
    * 失敗した場合は例外を投げる。
+   *
+   * @param asDefaultVvppEngine デフォルトエンジンとしてインストールするかどうか。デフォルトエンジン上書きを防ぐ目的で実装している。
    */
-  async installVvppEngine(
-    vvppPath: string,
-    callbacks?: { onProgress?: ProgressCallback },
-  ) {
+  async installVvppEngine(params: {
+    vvppPath: string;
+    asDefaultVvppEngine: boolean;
+    callbacks?: { onProgress?: ProgressCallback };
+  }) {
+    const { vvppPath, asDefaultVvppEngine, callbacks } = params;
+
     try {
-      await this.vvppManager.install(vvppPath, callbacks);
+      const extractedEngineFiles = await this.vvppManager.extract(
+        vvppPath,
+        callbacks,
+      );
+
+      const isDefaultEngine = this.engineInfoManager.isDefaultEngine(
+        extractedEngineFiles.getManifest().uuid,
+      );
+      if (asDefaultVvppEngine && !isDefaultEngine) {
+        throw new DisplayableError("これはデフォルトエンジンではありません。");
+      }
+      if (!asDefaultVvppEngine && isDefaultEngine) {
+        throw new DisplayableError(
+          "デフォルトエンジンと同じエンジンはインストールできません。",
+        );
+      }
+
+      await this.vvppManager.install(extractedEngineFiles);
     } catch (e) {
       throw new DisplayableError(
         `${vvppPath} をインストールできませんでした。`,
@@ -72,10 +94,12 @@ export class EngineAndVvppController {
    */
   async installVvppEngineWithWarning({
     vvppPath,
+    asDefaultVvppEngine,
     reloadNeeded,
     reloadCallback,
   }: {
     vvppPath: string;
+    asDefaultVvppEngine: boolean;
     reloadNeeded: boolean;
     reloadCallback?: () => void; // 再読み込みが必要な場合のコールバック
   }) {
@@ -93,7 +117,7 @@ export class EngineAndVvppController {
     }
 
     try {
-      await this.installVvppEngine(vvppPath);
+      await this.installVvppEngine({ vvppPath, asDefaultVvppEngine });
     } catch (e) {
       log.error(e);
       dialog.showErrorBox("インストールエラー", errorToMessage(e));
@@ -250,9 +274,13 @@ export class EngineAndVvppController {
       );
 
       // インストール
-      await this.installVvppEngine(downloadedPaths[0], {
-        onProgress: ({ progress }) => {
-          callbacks.onProgress({ type: "install", progress });
+      await this.installVvppEngine({
+        vvppPath: downloadedPaths[0],
+        asDefaultVvppEngine: true,
+        callbacks: {
+          onProgress: ({ progress }) => {
+            callbacks.onProgress({ type: "install", progress });
+          },
         },
       });
     } catch (e) {
@@ -364,6 +392,7 @@ export class EngineAndVvppController {
       log.info(
         "All ENGINE process kill operations done. Running post engine kill process",
       );
+      // FIXME: handleMarkedEngineDirsはエラーをthrowしている。エラーがthrowされるとアプリが終了しないので、終了するようにしたい。
       return this.vvppManager.handleMarkedEngineDirs();
     });
   }
