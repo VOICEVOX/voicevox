@@ -111,10 +111,7 @@ const generateAndSaveSelectedAudio = async () => {
     throw new Error("activeAudioKey is undefined");
 
   const selectedAudioKeys = store.getters.SELECTED_AUDIO_KEYS;
-  if (
-    store.state.experimentalSetting.enableMultiSelect &&
-    selectedAudioKeys.length > 1
-  ) {
+  if (store.state.enableMultiSelect && selectedAudioKeys.length > 1) {
     await multiGenerateAndSaveAudioWithDialog({
       audioKeys: selectedAudioKeys,
       actions: store.actions,
