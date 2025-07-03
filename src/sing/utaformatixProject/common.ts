@@ -1,4 +1,4 @@
-import { Tempo, TimeSignature, Track } from "@/store/type";
+import type { Tempo, TimeSignature, Track } from "@/domain/project/type";
 
 export type VoicevoxScore = {
   tracks: Track[];

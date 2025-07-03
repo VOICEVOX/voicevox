@@ -118,7 +118,7 @@ import {
   keyInfos,
   tickToBaseX,
 } from "@/sing/viewHelper";
-import { TimeSignature } from "@/store/type";
+import type { TimeSignature } from "@/domain/project/type";
 import { useSequencerGrid } from "@/composables/useSequencerGridPattern";
 import { getNoteDuration, measureNumberToTick } from "@/sing/domain";
 

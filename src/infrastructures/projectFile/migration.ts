@@ -1,12 +1,8 @@
-/**
- * プロジェクトファイル関連のコード
- */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
 import semver from "semver";
 
-import { LatestProjectType, projectSchema } from "./schema";
 import { AccentPhrase } from "@/openapi";
 import { EngineId, StyleId, TrackId, Voice } from "@/type/preload";
 import {
@@ -17,65 +13,12 @@ import {
   DEFAULT_TRACK_NAME,
 } from "@/sing/domain";
 import { uuid4 } from "@/helpers/random";
+import { projectFileSchema } from "@/infrastructures/projectFile/schema";
+import { ProjectFileFormatError } from "@/infrastructures/projectFile/type";
+import { validateTalkProject } from "@/infrastructures/projectFile/validation";
 
 const DEFAULT_SAMPLING_RATE = 24000;
 
-/**
- * プロジェクトファイルのフォーマットエラー
- * FIXME: Result型にする
- */
-export class ProjectFileFormatError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "ProjectFileFormatError";
-  }
-}
-
-const validateTalkProject = (talkProject: LatestProjectType["talk"]) => {
-  if (
-    !talkProject.audioKeys.every(
-      (audioKey) => audioKey in talkProject.audioItems,
-    )
-  ) {
-    throw new Error(
-      "Every audioKey in audioKeys should be a key of audioItems",
-    );
-  }
-  if (
-    !talkProject.audioKeys.every(
-      (audioKey) => talkProject.audioItems[audioKey]?.voice != undefined,
-    )
-  ) {
-    throw new Error('Every audioItem should have a "voice" attribute.');
-  }
-  if (
-    !talkProject.audioKeys.every(
-      (audioKey) =>
-        talkProject.audioItems[audioKey]?.voice.engineId != undefined,
-    )
-  ) {
-    throw new Error('Every voice should have a "engineId" attribute.');
-  }
-  // FIXME: assert engineId is registered
-  if (
-    !talkProject.audioKeys.every(
-      (audioKey) =>
-        talkProject.audioItems[audioKey]?.voice.speakerId != undefined,
-    )
-  ) {
-    throw new Error('Every voice should have a "speakerId" attribute.');
-  }
-  if (
-    !talkProject.audioKeys.every(
-      (audioKey) =>
-        talkProject.audioItems[audioKey]?.voice.styleId != undefined,
-    )
-  ) {
-    throw new Error('Every voice should have a "styleId" attribute.');
-  }
-};
-
-// TODO: マイグレーション（とファイルの最初のeslint-disable）を別ファイルに移す
 /**
  * プロジェクトファイルのマイグレーション
  */
@@ -117,9 +60,12 @@ export const migrateProjectFileObject = async (
 
   if (semver.satisfies(projectAppVersion, "<0.4", semverSatisfiesOptions)) {
     for (const audioItemsKey in projectData.audioItems) {
+      // typos:ignore-next-line
       if ("charactorIndex" in projectData.audioItems[audioItemsKey]) {
         projectData.audioItems[audioItemsKey].characterIndex =
+          // typos:ignore-next-line
           projectData.audioItems[audioItemsKey].charactorIndex;
+        // typos:ignore-next-line
         delete projectData.audioItems[audioItemsKey].charactorIndex;
       }
     }
@@ -321,7 +267,7 @@ export const migrateProjectFileObject = async (
   // Validation check
   // トークはvalidateTalkProjectで検証する
   // ソングはSET_SCOREの中の`isValidScore`関数で検証される
-  const parsedProjectData = projectSchema.parse(projectData);
+  const parsedProjectData = projectFileSchema.parse(projectData);
   validateTalkProject(parsedProjectData.talk);
 
   return parsedProjectData;

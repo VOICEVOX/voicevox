@@ -122,7 +122,7 @@ import {
   tickToMeasureNumber,
 } from "@/sing/domain";
 import { baseXToTick, tickToBaseX } from "@/sing/viewHelper";
-import { Tempo, TimeSignature } from "@/store/type";
+import type { Tempo, TimeSignature } from "@/domain/project/type";
 import ContextMenu, {
   ContextMenuItemData,
 } from "@/components/Menu/ContextMenu/Presentation.vue";

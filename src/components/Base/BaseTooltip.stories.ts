@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/vue3";
+import type { Meta, StoryObj } from "@storybook/vue3-vite";
 
 import { TooltipProvider } from "reka-ui";
 import BaseTooltip from "./BaseTooltip.vue";
