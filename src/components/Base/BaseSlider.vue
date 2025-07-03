@@ -25,7 +25,7 @@
 </template>
 
 <script setup lang="ts">
-import { SliderRange, SliderRoot, SliderThumb, SliderTrack } from "radix-vue";
+import { SliderRange, SliderRoot, SliderThumb, SliderTrack } from "reka-ui";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import { debounce } from "@/helpers/timer";
 
