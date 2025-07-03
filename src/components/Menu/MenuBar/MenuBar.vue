@@ -5,32 +5,72 @@
       class="mac-traffic-light-space"
     ></div>
     <img v-else src="/icon.png" class="window-logo" alt="application logo" />
-    <MenuButton
-      v-for="(root, index) of menudata"
-      :key="index"
-      v-model:selected="subMenuOpenFlags[index]"
-      :menudata="root"
-      :disable="
-        menubarLocked || (root.disableWhenUiLocked && uiLocked) || root.disabled
-      "
-      @mouseover="reassignSubMenuOpen(index)"
-      @mouseleave="
-        root.type === 'button' ? (subMenuOpenFlags[index] = false) : undefined
-      "
-    />
-    <QSpace />
-    <div class="window-title" :class="{ 'text-warning': isMultiEngineOffMode }">
-      {{ titleText }}
+    <div class="no-margin row col no-wrap items-center">
+      <div
+        ref="button-container"
+        class="button-container row no-wrap items-center overflow-hidden"
+      >
+        <div class="row other-menu-target-0"></div>
+        <div
+          v-for="(root, index) of menudata"
+          :key="index"
+          v-intersection="intersection"
+          :data-index="index"
+          :class="[
+            { invisible: isHidden[index] },
+            `other-menu-target-${index + 1}`,
+          ]"
+          class="row no-wrap"
+        >
+          <MenuButton
+            v-model:selected="subMenuOpenFlags[index]"
+            style="flex: none"
+            :menudata="root"
+            :disable="
+              menubarLocked ||
+              (root.disableWhenUiLocked && uiLocked) ||
+              root.disabled
+            "
+            @mouseover="reassignSubMenuOpen(index)"
+            @mouseleave="
+              root.type === 'button'
+                ? (subMenuOpenFlags[index] = false)
+                : undefined
+            "
+          />
+        </div>
+        <Teleport v-if="isHidden.some((v) => v)" defer :to="otherMenuTo">
+          <MenuButton
+            v-model:selected="otherMenuOpen"
+            aria-label="その他"
+            :icon="isHidden.every((v) => v) ? 'menu' : 'more_horiz'"
+            style="flex: none"
+            :menudata="otherMenudata"
+            :disable="
+              menubarLocked ||
+              (otherMenudata.disableWhenUiLocked && uiLocked) ||
+              otherMenudata.disabled
+            "
+            @mouseover="reassignOtherMenuOpen"
+        /></Teleport>
+      </div>
+      <div
+        class="window-title"
+        :class="{ 'text-warning': isMultiEngineOffMode }"
+      >
+        {{ titleText }}
+      </div>
     </div>
-    <QSpace />
-    <TitleBarEditorSwitcher />
-    <TitleBarButtons />
+    <div class="no-margin row items-center no-wrap">
+      <TitleBarEditorSwitcher />
+      <TitleBarButtons />
+    </div>
   </QBar>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from "vue";
-import { useQuasar } from "quasar";
+import { computed, ref, useTemplateRef, watch } from "vue";
+import { IntersectionValue, useQuasar } from "quasar";
 import { MenuItemButton, MenuItemData, MenuItemRoot } from "../type";
 import MenuButton from "../MenuButton.vue";
 import { MenuBarCategory } from "./menuBarData";
@@ -149,7 +189,8 @@ const subMenuOpenFlags = ref(
 
 const reassignSubMenuOpen = (idx: number) => {
   if (subMenuOpenFlags.value[idx]) return;
-  if (subMenuOpenFlags.value.find((x) => x)) {
+  if (otherMenuOpen.value || subMenuOpenFlags.value.find((x) => x)) {
+    otherMenuOpen.value = false;
     const arr = [...Array(menudata.value.length)].map(() => false);
     arr[idx] = true;
     subMenuOpenFlags.value = arr;
@@ -162,6 +203,58 @@ watch(uiLocked, () => {
     subMenuOpenFlags.value = [...Array(menudata.value.length)].map(() => false);
   }
 });
+
+// 省略されたメニューの処理
+const isHidden = ref(menudata.value.map(() => false));
+const otherMenuOpen = ref(false);
+const otherMenudata = computed<MenuItemRoot>(() => {
+  return {
+    type: "root",
+    disableWhenUiLocked: false,
+    subMenu: menudata.value.filter((_, i) => isHidden.value[i]),
+  };
+});
+const otherMenuTo = computed(() => {
+  const i = isHidden.value.findIndex((v) => v);
+  return `.other-menu-target-${i}`;
+});
+const buttonContainer = useTemplateRef("button-container");
+const intersection: IntersectionValue = {
+  handler(entry) {
+    const element = entry?.target;
+    if (entry == undefined || !(element instanceof HTMLElement)) {
+      throw new Error("element is not HTMLElement");
+    }
+    if (element.dataset.index == undefined) {
+      throw new Error("element.dataset.index is undefined");
+    }
+    isHidden.value[parseInt(element.dataset.index)] = !entry.isIntersecting;
+    return true;
+  },
+  cfg: {
+    root: buttonContainer.value ?? undefined,
+    threshold: [1],
+  },
+};
+const reassignOtherMenuOpen = () => {
+  if (subMenuOpenFlags.value.some((v) => v)) {
+    subMenuOpenFlags.value.fill(false);
+    otherMenuOpen.value = true;
+  }
+};
+watch(
+  isHidden,
+  (isHidden) => {
+    isHidden.forEach((v, i) => {
+      if (v) {
+        subMenuOpenFlags.value[i] = false; // 省略されたメニューは閉じる
+      }
+    });
+    // 省略されたメニューの内容が変化したときは常に閉じる
+    otherMenuOpen.value = false;
+  },
+  { deep: true },
+);
 </script>
 
 <style lang="scss">
@@ -180,7 +273,6 @@ watch(uiLocked, () => {
   min-height: vars.$menubar-height;
   -webkit-app-region: drag; // Electronのドラッグ領域
   :deep(.q-btn) {
-    margin-left: 0;
     -webkit-app-region: no-drag; // Electronのドラッグ領域対象から外す
   }
 }
@@ -189,11 +281,19 @@ watch(uiLocked, () => {
   height: vars.$menubar-height;
 }
 
+.button-container {
+  flex: none;
+  max-width: 50%;
+}
+
 .window-title {
+  flex: 1 max-content;
   height: vars.$menubar-height;
-  margin-right: 10%;
-  text-overflow: ellipsis;
   overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  -webkit-app-region: drag;
 }
 
 .mac-traffic-light-space {
