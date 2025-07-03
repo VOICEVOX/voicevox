@@ -18,6 +18,11 @@ const meta: Meta<typeof Presentation> = {
     sequencerZoomX: 1,
     snapTicks: 480,
   },
+  decorators: [
+    () => ({
+      template: `<div style="position: relative; width: 800px; height: 40px;"><story /></div>`,
+    }),
+  ],
 } satisfies Meta<typeof Presentation>;
 
 // 表示のみ

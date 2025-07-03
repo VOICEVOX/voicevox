@@ -25,9 +25,9 @@
       <!-- ループ範囲 -->
       <g v-if="!isLoopRangeZero" class="loop-range-group">
         <rect
-          :x="loopStartX - offset + 4"
+          :x="loopStartX - offset + 2"
           y="0"
-          :width="Math.max(loopEndX - loopStartX - 8, 0)"
+          :width="Math.max(loopEndX - loopStartX - 6, 0)"
           height="4"
           rx="2"
           ry="2"
@@ -54,8 +54,6 @@
           y="0"
           width="2"
           height="16"
-          rx="1"
-          ry="1"
           class="loop-handle loop-handle-start"
           :class="{ 'is-range-zero': isLoopRangeZero }"
           @mousedown.stop="handleLoopStartMouseDown"
@@ -77,8 +75,6 @@
           y="0"
           width="2"
           height="16"
-          rx="1"
-          ry="1"
           class="loop-handle loop-handle-end"
           :class="{ 'is-range-zero': isLoopRangeZero }"
           @mousedown.stop="handleLoopEndMouseDown"
@@ -223,6 +219,7 @@ const handleLoopRangeMouseLeave = () => {
 // ループ範囲(ループ上部の背景)
 .loop-range {
   fill: var(--scheme-color-primary);
+  stroke: none;
 
   &-drag-area {
     fill: transparent;
@@ -242,10 +239,12 @@ const handleLoopRangeMouseLeave = () => {
 // ループハンドル
 .loop-handle {
   fill: var(--scheme-color-primary);
+  stroke: none;
   cursor: ew-resize;
 
   &-drag-area {
     fill: transparent;
+    stroke: none;
     cursor: ew-resize;
   }
 
