@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/vue3-vite";
 
-import { TooltipProvider } from "radix-vue";
+import { TooltipProvider } from "reka-ui";
 import BaseIconButton from "./BaseIconButton.vue";
 
 const meta: Meta<typeof BaseIconButton> = {

@@ -5,7 +5,7 @@ import BaseSelect from "./BaseSelect.vue";
 import BaseSelectItem from "./BaseSelectItem.vue";
 
 const meta: Meta<typeof BaseSelect> = {
-  component: BaseSelect,
+  component: BaseSelect as Record<keyof typeof BaseSelect, unknown>,
   render: (args) => ({
     components: { BaseSelect, BaseSelectItem },
     setup() {

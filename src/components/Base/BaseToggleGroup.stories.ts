@@ -5,7 +5,7 @@ import BaseToggleGroup from "./BaseToggleGroup.vue";
 import BaseToggleGroupItem from "./BaseToggleGroupItem.vue";
 
 const meta: Meta<typeof BaseToggleGroup> = {
-  component: BaseToggleGroup,
+  component: BaseToggleGroup as Record<keyof typeof BaseToggleGroup, unknown>,
 };
 
 export default meta;
