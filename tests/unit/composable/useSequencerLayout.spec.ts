@@ -18,14 +18,14 @@ describe("useSequencerLayout", () => {
   it("基本的なレイアウト計算が行える", () => {
     const options = { ...defaultOptions };
 
-    const { tsPositions, endTicks, measureInfos, rulerWidth, playheadX } =
+    const { tsPositions, totalTicks, measureInfos, rulerWidth, playheadX } =
       useSequencerLayout(options);
 
     expect(tsPositions.value).toEqual([0]);
 
     // 2小節分 = 2 * 4 * 480 = 3840tick
-    const expectedEndTicks = 2 * 4 * 480;
-    expect(endTicks.value).toBe(expectedEndTicks);
+    const expectedTotalTicks = 2 * 4 * 480;
+    expect(totalTicks.value).toBe(expectedTotalTicks);
 
     // 2小節分
     expect(measureInfos.value).toHaveLength(2);
@@ -34,7 +34,7 @@ describe("useSequencerLayout", () => {
     // 2小節目
     expect(measureInfos.value[1]).toEqual({ number: 2, x: 480 });
 
-    const expectedWidth = Math.round((expectedEndTicks / 480) * 120 * 1);
+    const expectedWidth = Math.round((expectedTotalTicks / 480) * 120 * 1);
     expect(rulerWidth.value).toBe(expectedWidth);
 
     expect(playheadX.value).toBe(0);
@@ -73,8 +73,8 @@ describe("useSequencerLayout", () => {
     expect(measureInfos.value[0]).toEqual({ number: 1, x: 0 });
     expect(measureInfos.value[1]).toEqual({ number: 2, x: 960 });
 
-    const expectedEndTicks = 2 * 4 * 480;
-    const expectedWidth = Math.round((expectedEndTicks / 480) * 120 * 2);
+    const expectedTotalTicks = 2 * 4 * 480;
+    const expectedWidth = Math.round((expectedTotalTicks / 480) * 120 * 2);
     expect(rulerWidth.value).toBe(expectedWidth);
   });
 

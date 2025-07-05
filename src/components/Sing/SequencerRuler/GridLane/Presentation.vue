@@ -75,7 +75,7 @@ const props = defineProps<{
   timeSignatures: TimeSignature[];
   offset: number;
   width: number;
-  endTicks: number;
+  totalTicks: number;
   tsPositions: number[];
   measureInfos: MeasureInfo[];
 }>();

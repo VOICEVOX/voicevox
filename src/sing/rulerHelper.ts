@@ -19,7 +19,7 @@ import { tickToBaseX } from "@/sing/viewHelper";
  * @param tpqn TPQNの値
  * @returns スナップ後のtick位置
  */
-export const ticksToSnappedBeat = (
+export const snapTickToBeat = (
   targetTick: number,
   timeSignatures: TimeSignature[],
   tpqn: number,
@@ -69,13 +69,13 @@ export const ticksToSnappedBeat = (
 };
 
 /**
- * 終了tick位置の計算
+ * シーケンサ内の総小節数に対応するtick位置の計算
  * @param timeSignatures 拍子情報の配列
  * @param numMeasures 表示する小節数
  * @param tpqn TPQNの値
- * @returns 終了tick位置
+ * @returns 最後尾のtick位置
  */
-export const calculateEndTicks = (
+export const getTotalTicks = (
   timeSignatures: TimeSignature[],
   numMeasures: number,
   tpqn: number,
@@ -101,9 +101,9 @@ export const calculateEndTicks = (
   // 小節数
   const measuresFromLastTs = numMeasures - (lastTs.measureNumber - 1);
 
-  // 終了tick位置 = 最後の拍子の位置 + 小節数 * 小節の長さ
-  const endTicks = lastTsPosition + measuresFromLastTs * measureDuration;
-  return endTicks;
+  // 最後尾のtick位置 = 最後の拍子の位置 + 小節数 * 小節の長さ
+  const totalTicks = lastTsPosition + measuresFromLastTs * measureDuration;
+  return totalTicks;
 };
 
 /**
@@ -123,7 +123,7 @@ export const calculateMeasureInfos = (
   // 拍子位置を計算
   const tsPositions = getTimeSignaturePositions(timeSignatures, tpqn);
   // 終了tick位置を計算
-  const endTicks = calculateEndTicks(timeSignatures, numMeasures, tpqn);
+  const lastTicks = getTotalTicks(timeSignatures, numMeasures, tpqn);
 
   return timeSignatures.flatMap((timeSignature, i) => {
     // 小節の長さ
@@ -135,7 +135,7 @@ export const calculateMeasureInfos = (
 
     // 次の拍子の位置
     const nextTsPosition =
-      i !== timeSignatures.length - 1 ? tsPositions[i + 1] : endTicks;
+      i !== timeSignatures.length - 1 ? tsPositions[i + 1] : lastTicks;
 
     // 小節の開始位置と終了位置
     const start = tsPositions[i];

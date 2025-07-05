@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
-  ticksToSnappedBeat,
-  calculateEndTicks,
+  snapTickToBeat,
+  getTotalTicks,
   calculateMeasureInfos,
 } from "@/sing/rulerHelper";
 import type { TimeSignature } from "@/domain/project/type";
@@ -16,11 +16,11 @@ describe("rulerHelper", () => {
       ];
 
       // 0tickは1拍目にスナップ
-      expect(ticksToSnappedBeat(0, timeSignatures, tpqn)).toBe(0);
+      expect(snapTickToBeat(0, timeSignatures, tpqn)).toBe(0);
       // 239tickは1拍目にスナップ（0に近い）
-      expect(ticksToSnappedBeat(239, timeSignatures, tpqn)).toBe(0);
+      expect(snapTickToBeat(239, timeSignatures, tpqn)).toBe(0);
       // 240tickは2拍目にスナップ
-      expect(ticksToSnappedBeat(240, timeSignatures, tpqn)).toBe(480);
+      expect(snapTickToBeat(240, timeSignatures, tpqn)).toBe(480);
     });
 
     it("拍子記号が途中から変更されていても適切にスナップする", () => {
@@ -34,7 +34,7 @@ describe("rulerHelper", () => {
       // 2小節目の1拍目近く
       const targetTick = measure2Start + 200;
       // 2小節目の1拍目にスナップするはず
-      expect(ticksToSnappedBeat(targetTick, timeSignatures, tpqn)).toBe(
+      expect(snapTickToBeat(targetTick, timeSignatures, tpqn)).toBe(
         measure2Start,
       );
     });
@@ -51,9 +51,7 @@ describe("rulerHelper", () => {
       const targetTick = measure2Start + 600;
       // 2小節目の3分音符にスナップするはず（640tick）
       const expected = measure2Start + 640; // 3分音符1個分
-      expect(ticksToSnappedBeat(targetTick, timeSignatures, tpqn)).toBe(
-        expected,
-      );
+      expect(snapTickToBeat(targetTick, timeSignatures, tpqn)).toBe(expected);
     });
   });
 
@@ -68,9 +66,7 @@ describe("rulerHelper", () => {
 
       // 8小節分 = 8 * 4 * 480 = 15360tick
       const expected = 8 * 4 * tpqn;
-      expect(calculateEndTicks(timeSignatures, numMeasures, tpqn)).toBe(
-        expected,
-      );
+      expect(getTotalTicks(timeSignatures, numMeasures, tpqn)).toBe(expected);
     });
 
     it("拍子が4/4から3/4に変更される場合の終了位置を計算する", () => {
@@ -84,9 +80,7 @@ describe("rulerHelper", () => {
       // 3/4拍子の3小節分 = 3 * 3 * 480 = 4320tick
       const measure2Start = 1 * 4 * tpqn; // 2小節目は1小節分後
       const expected = measure2Start + 3 * 3 * tpqn;
-      expect(calculateEndTicks(timeSignatures, numMeasures, tpqn)).toBe(
-        expected,
-      );
+      expect(getTotalTicks(timeSignatures, numMeasures, tpqn)).toBe(expected);
     });
 
     it("拍子が4/4から7/3拍子に変更される場合の終了位置を計算する", () => {
@@ -102,9 +96,7 @@ describe("rulerHelper", () => {
       const measure2Start = 1 * 4 * tpqn; // 1920tick
       const measure3rdDuration = (tpqn * 4) / 3; // 3分音符 = 640tick
       const expected = measure2Start + 2 * 7 * measure3rdDuration; // 1920 + 8960 = 10880tick
-      expect(calculateEndTicks(timeSignatures, numMeasures, tpqn)).toBe(
-        expected,
-      );
+      expect(getTotalTicks(timeSignatures, numMeasures, tpqn)).toBe(expected);
     });
   });
 

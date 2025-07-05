@@ -34,7 +34,7 @@ import LoopLaneContainer from "./LoopLane/Container.vue";
 import { useStore } from "@/store";
 import { useSequencerLayout } from "@/composables/useSequencerLayout";
 import { SEQUENCER_MIN_NUM_MEASURES, baseXToTick } from "@/sing/viewHelper";
-import { ticksToSnappedBeat } from "@/sing/rulerHelper";
+import { snapTickToBeat } from "@/sing/rulerHelper";
 
 defineOptions({
   name: "SequencerRuler",
@@ -92,11 +92,7 @@ const handleClick = (event: MouseEvent) => {
   const targetOffsetX = event.offsetX;
   const baseX = (currentOffset.value + targetOffsetX) / sequencerZoomX.value;
   const baseXTick = baseXToTick(baseX, tpqn.value);
-  const nextTicks = ticksToSnappedBeat(
-    baseXTick,
-    timeSignatures.value,
-    tpqn.value,
-  );
+  const nextTicks = snapTickToBeat(baseXTick, timeSignatures.value, tpqn.value);
   setPlayheadPosition(nextTicks);
 };
 </script>

@@ -7,7 +7,7 @@
     :timeSignatures
     :tsPositions
     :width="rulerWidth"
-    :endTicks
+    :totalTicks
     :measureInfos
   />
 </template>
@@ -43,12 +43,13 @@ const timeSignatures = computed(() => store.state.timeSignatures);
 const sequencerZoomX = computed(() => store.state.sequencerZoomX);
 const playheadPosition = computed(() => store.getters.PLAYHEAD_POSITION);
 
-const { rulerWidth, tsPositions, endTicks, measureInfos } = useSequencerLayout({
-  timeSignatures,
-  tpqn,
-  playheadPosition,
-  sequencerZoomX,
-  offset: injectedOffset,
-  numMeasures: numMeasures.value,
-});
+const { rulerWidth, tsPositions, totalTicks, measureInfos } =
+  useSequencerLayout({
+    timeSignatures,
+    tpqn,
+    playheadPosition,
+    sequencerZoomX,
+    offset: injectedOffset,
+    numMeasures: numMeasures.value,
+  });
 </script>

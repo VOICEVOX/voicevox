@@ -19,7 +19,7 @@ import { numMeasuresInjectionKey } from "../../ScoreSequencer.vue";
 import Presentation from "./Presentation.vue";
 import { useStore } from "@/store";
 import { useSequencerLayout } from "@/composables/useSequencerLayout";
-import { ticksToSnappedBeat } from "@/sing/rulerHelper";
+import { snapTickToBeat } from "@/sing/rulerHelper";
 import { baseXToTick } from "@/sing/viewHelper";
 import { tickToMeasureNumber } from "@/sing/domain";
 import type { Tempo, TimeSignature } from "@/domain/project/type";
@@ -60,7 +60,7 @@ const playheadPosition = computed(() => store.getters.PLAYHEAD_POSITION);
 const tempos = computed(() => store.state.tempos);
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
-const { rulerWidth, tsPositions, endTicks } = useSequencerLayout({
+const { rulerWidth, tsPositions, totalTicks } = useSequencerLayout({
   timeSignatures,
   tpqn,
   playheadPosition,
@@ -131,7 +131,7 @@ const valueChanges = computed<ValueChange[]>(() => {
         text,
         tempoChange: tempo,
         timeSignatureChange: timeSignature,
-        x: (rulerWidth.value / endTicks.value) * tick,
+        x: (rulerWidth.value / totalTicks.value) * tick,
       };
     });
 });
@@ -150,7 +150,7 @@ const onValueChangeClick = async (
     // 空き部分クリック時は、クリック位置から計算してスナップ位置に合わせる
     const baseX = (injectedOffset.value + event.offsetX) / sequencerZoomX.value;
     const baseTick = baseXToTick(baseX, tpqn.value);
-    const snappedTick = ticksToSnappedBeat(
+    const snappedTick = snapTickToBeat(
       baseTick,
       timeSignatures.value,
       tpqn.value,

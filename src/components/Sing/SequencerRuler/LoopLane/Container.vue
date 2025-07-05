@@ -68,7 +68,7 @@ const snapTicks = computed(() => {
 });
 
 // レイアウト計算
-const { rulerWidth, tsPositions, endTicks } = useSequencerLayout({
+const { rulerWidth, tsPositions, totalTicks } = useSequencerLayout({
   timeSignatures,
   tpqn,
   playheadPosition,
@@ -111,16 +111,16 @@ const currentLoopEndTick = computed(() =>
 
 // ループハンドルのピクセル位置
 const loopStartX = computed(() => {
-  if (rulerWidth.value === 0 || endTicks.value === 0) return 0;
+  if (rulerWidth.value === 0 || totalTicks.value === 0) return 0;
   return Math.round(
-    (rulerWidth.value / endTicks.value) * currentLoopStartTick.value,
+    (rulerWidth.value / totalTicks.value) * currentLoopStartTick.value,
   );
 });
 
 const loopEndX = computed(() => {
-  if (rulerWidth.value === 0 || endTicks.value === 0) return 0;
+  if (rulerWidth.value === 0 || totalTicks.value === 0) return 0;
   return Math.round(
-    (rulerWidth.value / endTicks.value) * currentLoopEndTick.value,
+    (rulerWidth.value / totalTicks.value) * currentLoopEndTick.value,
   );
 });
 
@@ -269,7 +269,7 @@ const preview = () => {
     // ドラッグ中のハンドル位置
     const newX = dragStartHandleX.value + dx;
     // ドラッグ中の新しいtick
-    const baseTick = Math.round((endTicks.value * newX) / rulerWidth.value);
+    const baseTick = Math.round((totalTicks.value * newX) / rulerWidth.value);
     const newTick = Math.max(
       0,
       Math.round(baseTick / snapTicks.value) * snapTicks.value,
@@ -397,7 +397,7 @@ const addOneMeasureLoop = (localX: number) => {
   const endTick = Math.min(
     Math.round((startTick + oneMeasureTicks) / snapTicks.value) *
       snapTicks.value,
-    endTicks.value,
+    totalTicks.value,
   );
 
   setLoopRange(startTick, endTick);

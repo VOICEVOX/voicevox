@@ -5,7 +5,7 @@
 import { computed, ComputedRef, Ref } from "vue";
 import { getTimeSignaturePositions } from "@/sing/domain";
 import { tickToBaseX } from "@/sing/viewHelper";
-import { calculateEndTicks, calculateMeasureInfos } from "@/sing/rulerHelper";
+import { getTotalTicks, calculateMeasureInfos } from "@/sing/rulerHelper";
 import type { TimeSignature } from "@/domain/project/type";
 
 // 小節のレイアウト位置
@@ -26,7 +26,7 @@ export interface SequencerLayoutOptions {
 export interface SequencerLayout {
   measureInfos: ComputedRef<MeasureInfo[]>;
   tsPositions: ComputedRef<number[]>;
-  endTicks: ComputedRef<number>;
+  totalTicks: ComputedRef<number>;
   rulerWidth: ComputedRef<number>;
   playheadX: ComputedRef<number>;
 }
@@ -54,12 +54,8 @@ export function useSequencerLayout(
   });
 
   // 終了ティック位置を計算
-  const endTicks = computed(() => {
-    return calculateEndTicks(
-      timeSignatures.value,
-      numMeasures.value,
-      tpqn.value,
-    );
+  const totalTicks = computed(() => {
+    return getTotalTicks(timeSignatures.value, numMeasures.value, tpqn.value);
   });
 
   // 表示する小節情報を計算
@@ -74,7 +70,7 @@ export function useSequencerLayout(
 
   // ルーラーの幅を計算
   const rulerWidth = computed(() => {
-    const baseX = tickToBaseX(endTicks.value, tpqn.value);
+    const baseX = tickToBaseX(totalTicks.value, tpqn.value);
     return Math.round(baseX * sequencerZoomX.value);
   });
 
@@ -88,7 +84,7 @@ export function useSequencerLayout(
   return {
     measureInfos,
     tsPositions,
-    endTicks,
+    totalTicks,
     rulerWidth,
     playheadX,
   };
