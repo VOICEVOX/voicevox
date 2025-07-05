@@ -20,7 +20,10 @@ import configMigration014 from "./configMigration014";
 import { initializeRuntimeInfoManager } from "./manager/RuntimeInfoManager";
 import { registerIpcMainHandle, ipcMainSendProxy, IpcMainHandle } from "./ipc";
 import { getConfigManager } from "./electronConfig";
-import { getEngineAndVvppController } from "./engineAndVvppController";
+import {
+  getEngineAndVvppController,
+  type EnginePackageStatus,
+} from "./engineAndVvppController";
 import { getIpcMainHandle } from "./ipcMainHandle";
 import { EngineInfo } from "@/type/preload";
 import { isMac, isProduction } from "@/helpers/platform";
@@ -451,17 +454,33 @@ void app.whenReady().then(async () => {
     }
   }
 
-  // VVPPがデフォルトエンジンに指定されていたらインストールする
-  // NOTE: この機能は工事中。参照: https://github.com/VOICEVOX/voicevox/issues/1194
-  const packageInfos =
-    await engineAndVvppController.fetchInsallablePackageInfos();
-  for (const { engineName, packageInfo } of packageInfos) {
+  // VVPPエンジンのインストール・アップデート処理
+  // NOTE: https://github.com/VOICEVOX/voicevox/issues/1194
+  const packageStatuses =
+    await engineAndVvppController.fetchEnginePackageStatuses();
+
+  for (const status of packageStatuses) {
+    // 最新版がインストール済みの場合はスキップ
+    if (status.status === "installed_latest") {
+      continue;
+    }
+
+    let title: string;
+    let message: string;
+    if (status.status === "not_installed") {
+      title = "デフォルトエンジンのインストール";
+      message = `${status.engineName} をインストールしますか？`;
+    } else {
+      title = "デフォルトエンジンのアップデート";
+      message = `${status.engineName} の新しいバージョン（${status.latestVersion}）にアップデートしますか？`;
+    }
+
     // インストールするか確認
     const result = dialog.showMessageBoxSync({
       type: "info",
-      title: "デフォルトエンジンのインストール",
-      message: `${engineName} をインストールしますか？`,
-      buttons: ["インストール", "キャンセル"],
+      title,
+      message,
+      buttons: ["はい", "いいえ"],
       cancelId: 1,
     });
     if (result == 1) {
@@ -472,12 +491,12 @@ void app.whenReady().then(async () => {
     let lastLogTime = 0; // とりあえずログを0.1秒に1回だけ出力する
     await engineAndVvppController.downloadAndInstallVvppEngine(
       app.getPath("downloads"),
-      packageInfo,
+      status.packageInfo,
       {
         onProgress: ({ type, progress }) => {
           if (Date.now() - lastLogTime > 100) {
             log.info(
-              `VVPP default engine progress: ${type}: ${Math.floor(progress)}%`,
+              `VVPP default engine install progress: ${type}: ${Math.floor(progress)}%`,
             );
             lastLogTime = Date.now();
           }

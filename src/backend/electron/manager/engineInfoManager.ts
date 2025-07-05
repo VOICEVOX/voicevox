@@ -81,6 +81,7 @@ export class EngineInfoManager {
       executionArgs: args,
       type,
       isDefault: this.isDefaultEngine(manifest.uuid),
+      version: manifest.version,
     } satisfies EngineInfo);
   }
 

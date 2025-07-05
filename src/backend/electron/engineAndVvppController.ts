@@ -25,8 +25,19 @@ import { UnreachableError } from "@/type/utility";
 import { ProgressCallback } from "@/helpers/progressHelper";
 import { createLogger } from "@/helpers/log";
 import { DisplayableError, errorToMessage } from "@/helpers/errorHelper";
+import semver from "semver";
 
 const log = createLogger("EngineAndVvppController");
+
+/** エンジンパッケージの状態 */
+export type EnginePackageStatus = {
+  engineName: string;
+  engineId: EngineId;
+  packageInfo: PackageInfo;
+  status: "not_installed" | "installed_outdated" | "installed_latest";
+  installedVersion?: string;
+  latestVersion: string;
+};
 
 /**
  * エンジンとVVPP周りの処理の流れを制御するクラス。
@@ -171,6 +182,69 @@ export class EngineAndVvppController {
         { cause: e },
       );
     }
+  }
+
+  /**
+   * エンジンパッケージの状況を取得する（インストール済み・未インストール・アップデート可能など）
+   */
+  async fetchEnginePackageStatuses(): Promise<EnginePackageStatus[]> {
+    const statuses: EnginePackageStatus[] = [];
+
+    for (const envEngineInfo of loadEnvEngineInfos()) {
+      if (envEngineInfo.type != "downloadVvpp") {
+        continue;
+      }
+
+      // 最新情報を取得
+      const latestUrl = envEngineInfo.latestUrl;
+      if (latestUrl == undefined) throw new Error("latestUrl is undefined");
+
+      const latestInfo = await fetchLatestDefaultEngineInfo(latestUrl);
+      if (latestInfo.formatVersion != 1) {
+        log.error(`Unsupported format version: ${latestInfo.formatVersion}`);
+        continue;
+      }
+
+      // 実行環境に合うパッケージを取得
+      const packageInfo = getSuitablePackageInfo(latestInfo);
+      const latestVersion = packageInfo.version;
+      log.info(`Latest default engine version: ${latestVersion}`);
+
+      // インストール状況を確認
+      const installedEngine = this.engineInfoManager.hasEngineInfo(
+        envEngineInfo.uuid,
+      )
+        ? this.engineInfoManager.fetchEngineInfo(envEngineInfo.uuid)
+        : undefined;
+
+      let status: EnginePackageStatus["status"];
+      let installedVersion: string | undefined;
+
+      if (!installedEngine) {
+        status = "not_installed";
+      } else {
+        installedVersion = installedEngine.version;
+        if (!installedVersion) {
+          // バージョン情報がない場合は古いとみなす
+          status = "installed_outdated";
+        } else if (semver.lt(installedVersion, latestVersion)) {
+          status = "installed_outdated";
+        } else {
+          status = "installed_latest";
+        }
+      }
+
+      statuses.push({
+        engineName: envEngineInfo.name,
+        engineId: envEngineInfo.uuid,
+        packageInfo,
+        status,
+        installedVersion,
+        latestVersion,
+      });
+    }
+
+    return statuses;
   }
 
   /**
