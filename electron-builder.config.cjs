@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-const { join, resolve } = require("path");
-const { readdirSync, existsSync, rmSync } = require("fs");
-const { config } = require("dotenv");
+const {join, resolve} = require("path");
+const {readdirSync, existsSync, rmSync} = require("fs");
+const {config} = require("dotenv");
 const {
   default: afterAllArtifactBuild,
 } = require("./build/afterAllArtifactBuild.cjs");
 
 const dotenvPath = join(process.cwd(), ".env.production");
-config({ path: dotenvPath });
+config({path: dotenvPath});
 
 const VOICEVOX_ENGINE_DIR =
   process.env.VOICEVOX_ENGINE_DIR ?? "../voicevox_engine/dist/run/";
@@ -55,7 +55,7 @@ if (!sevenZipFile) {
 const builderOptions = {
   beforeBuild: async () => {
     if (existsSync(resolve(__dirname, "dist_electron"))) {
-      rmSync(resolve(__dirname, "dist_electron"), { recursive: true });
+      rmSync(resolve(__dirname, "dist_electron"), {recursive: true});
     }
   },
   directories: {
@@ -130,9 +130,9 @@ const builderOptions = {
     allowToChangeInstallationDirectory: true,
   },
   publish: {
-    provider: "github",
-    repo: "voicevox",
-    vPrefixedTagName: false,
+    provider: "generic",
+    url: "http://localhost:8787",
+    useMultipleRangeRequest: false,
   },
   linux: {
     artifactName: LINUX_ARTIFACT_NAME !== "" ? LINUX_ARTIFACT_NAME : undefined,

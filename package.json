@@ -1,6 +1,6 @@
 {
   "name": "voicevox",
-  "version": "999.999.999",
+  "version": "0.24.0",
   "author": "Hiroshiba Kazuyuki",
   "private": true,
   "main": "./dist/main.js",
@@ -59,6 +59,7 @@
     "async-lock": "1.4.1",
     "dayjs": "1.11.13",
     "electron-log": "5.4.1",
+    "electron-updater": "6.6.2",
     "electron-window-state": "5.0.3",
     "encoding-japanese": "2.2.0",
     "fast-array-diff": "1.1.0",
