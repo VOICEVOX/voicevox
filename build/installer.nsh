@@ -300,8 +300,17 @@ verifyPartedFile_finish${UniqueID}:
 !macro verifyArchive Result
   Push $0 ; Stack $0
   Push $1 ;       $1 $0
+  Push $2 ;       $2 $1 $0
 
-  StrCpy $0 "$EXEDIR\$archiveName"
+  ${StdUtils.ValidPathSpec} $2 $archiveName
+  ${If} $2 == "ok"
+    ; アーカイブ名が有効なパスであるならそのまま使う
+    StrCpy $0 $archiveName
+  ${Else}
+    ; そうでないなら $EXEDIR からフルパスを作成する
+    StrCpy $0 "$EXEDIR\$archiveName"
+  ${EndIf}
+
   ${IfNot} ${FileExists} $0
     StrCpy $0 "File not found"
   ${Else}
@@ -315,7 +324,8 @@ verifyPartedFile_finish${UniqueID}:
     ${EndIf}
   ${EndIf}
 
-                  ; Stack $1 $0
+                  ; Stack $2 $1 $0
+  Pop $2          ;       $1 $0
   Pop $1          ;       $0
   Exch $0         ;       <Result>
   Pop "${Result}" ;       -empty-
@@ -776,31 +786,31 @@ FunctionEnd
 
 ; README を表示するためのオプションを流用して、
 ; セットアップ完了画面にファイル削除のチェックボックスを追加する
-Function deleteArchive
-  Delete "$EXEDIR\$archiveName"
-FunctionEnd
-!define MUI_FINISHPAGE_SHOWREADME
-!define MUI_FINISHPAGE_SHOWREADME_TEXT "使い終わったダウンロード済みファイルを削除する"
-!define MUI_FINISHPAGE_SHOWREADME_NOTCHECKED
-!define MUI_FINISHPAGE_SHOWREADME_FUNCTION deleteArchive
+; Function deleteArchive
+;   Delete "$EXEDIR\$archiveName"
+; FunctionEnd
+; !define MUI_FINISHPAGE_SHOWREADME
+; !define MUI_FINISHPAGE_SHOWREADME_TEXT "使い終わったダウンロード済みファイルを削除する"
+; !define MUI_FINISHPAGE_SHOWREADME_NOTCHECKED
+; !define MUI_FINISHPAGE_SHOWREADME_FUNCTION deleteArchive
 
 !macroend
 
 !macro customHeader
   ; インストール成功後に%LOCALAPPDATA%\voicevox-updater\を削除する
-  Function .onInstSuccess
-    ; https://github.com/electron-userland/electron-builder/blob/f717e0ea67cec7c5c298889efee7df724838491a/packages/app-builder-lib/templates/nsis/include/installer.nsh#L77
-    ${if} $installMode == "all"
-      SetShellVarContext current
-    ${endif}
-    Push $R0
-    ${GetParent} "$LOCALAPPDATA\${APP_PACKAGE_STORE_FILE}" $R0
-    RMDir /r "$R0"
-    Pop $R0
-    ${if} $installMode == "all"
-      SetShellVarContext all
-    ${endif}
-  FunctionEnd
+  ; Function .onInstSuccess
+  ;   ; https://github.com/electron-userland/electron-builder/blob/f717e0ea67cec7c5c298889efee7df724838491a/packages/app-builder-lib/templates/nsis/include/installer.nsh#L77
+  ;   ${if} $installMode == "all"
+  ;     SetShellVarContext current
+  ;   ${endif}
+  ;   Push $R0
+  ;   ${GetParent} "$LOCALAPPDATA\${APP_PACKAGE_STORE_FILE}" $R0
+  ;   RMDir /r "$R0"
+  ;   Pop $R0
+  ;   ${if} $installMode == "all"
+  ;     SetShellVarContext all
+  ;   ${endif}
+  ; FunctionEnd
 !macroend
 
 ; "%VITE_APP_NAME%"が空の状態でビルドすると他のソフトのファイルを消してしまうためビルドエラーにする。
