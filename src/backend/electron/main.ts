@@ -1,31 +1,31 @@
-"use strict";
-
 import path from "path";
-
 import fs from "fs";
-import {pathToFileURL} from "url";
-import {app, dialog, Menu, net, protocol, shell} from "electron";
-import installExtension, {VUEJS_DEVTOOLS} from "electron-devtools-installer";
-import {autoUpdater} from "electron-updater"
+import { pathToFileURL } from "url";
+import { app, dialog, Menu, net, protocol, shell } from "electron";
+import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
+import { autoUpdater } from "electron-updater";
 
 import electronLog from "electron-log/main";
 import dayjs from "dayjs";
-import {initializeEngineInfoManager} from "./manager/engineInfoManager";
-import {initializeEngineProcessManager} from "./manager/engineProcessManager";
-import {initializeVvppManager, isVvppFile} from "./manager/vvppManager";
+import { initializeEngineInfoManager } from "./manager/engineInfoManager";
+import { initializeEngineProcessManager } from "./manager/engineProcessManager";
+import { initializeVvppManager, isVvppFile } from "./manager/vvppManager";
 import {
   getWindowManager,
   initializeWindowManager,
 } from "./manager/windowManager";
 import configMigration014 from "./configMigration014";
-import {initializeRuntimeInfoManager} from "./manager/RuntimeInfoManager";
-import {registerIpcMainHandle, ipcMainSendProxy, IpcMainHandle} from "./ipc";
-import {getConfigManager} from "./electronConfig";
-import {getEngineAndVvppController} from "./engineAndVvppController";
-import {getIpcMainHandle} from "./ipcMainHandle";
-import {EngineInfo} from "@/type/preload";
-import {isMac, isProduction} from "@/helpers/platform";
-import {createLogger} from "@/helpers/log";
+import { initializeRuntimeInfoManager } from "./manager/RuntimeInfoManager";
+import { registerIpcMainHandle, ipcMainSendProxy, IpcMainHandle } from "./ipc";
+import { getConfigManager } from "./electronConfig";
+import { getEngineAndVvppController } from "./engineAndVvppController";
+import { getIpcMainHandle } from "./ipcMainHandle";
+import { EngineInfo } from "@/type/preload";
+import { isMac, isProduction } from "@/helpers/platform";
+import { createLogger } from "@/helpers/log";
+
+autoUpdater.forceDevUpdateConfig = true;
+autoUpdater.logger = createLogger("electron-updater");
 
 type SingleInstanceLockData = {
   filePath: string | undefined;
@@ -53,7 +53,7 @@ const beforeUserDataDir = app.getPath("userData"); // マイグレーション�
 // app.getPath("userData")を呼ぶとディレクトリが作成されてしまうため空なら削除する。
 let errorForRemoveBeforeUserDataDir: Error | undefined;
 try {
-  fs.rmdirSync(beforeUserDataDir, {recursive: false});
+  fs.rmdirSync(beforeUserDataDir, { recursive: false });
 } catch (e) {
   const err = e as NodeJS.ErrnoException;
   if (err?.code !== "ENOTEMPTY") {
@@ -72,10 +72,10 @@ if (!fs.existsSync(fixedUserDataDir)) {
 }
 app.setPath("userData", fixedUserDataDir);
 if (!isDevelopment) {
-  configMigration014({fixedUserDataDir, beforeUserDataDir}); // 以前のファイルがあれば持ってくる
+  configMigration014({ fixedUserDataDir, beforeUserDataDir }); // 以前のファイルがあれば持ってくる
 }
 
-electronLog.initialize({preload: false});
+electronLog.initialize({ preload: false });
 // silly以上のログをコンソールに出力
 electronLog.transports.console.format = "[{h}:{i}:{s}.{ms}] [{level}] {text}";
 electronLog.transports.console.level = "silly";
@@ -98,7 +98,7 @@ process.on("uncaughtException", (error) => {
   if (isDevelopment) {
     app.exit(1);
   } else {
-    const {message, name} = error;
+    const { message, name } = error;
     let detailedMessage = "";
     detailedMessage += `メインプロセスで原因不明のエラーが発生しました。\n`;
     detailedMessage += `エラー名: ${name}\n`;
@@ -127,9 +127,9 @@ function getAppPaths() {
     __static = import.meta.dirname;
   }
 
-  return {appDirPath, __static};
+  return { appDirPath, __static };
 }
-const {appDirPath, __static} = getAppPaths();
+const { appDirPath, __static } = getAppPaths();
 
 // 製品版はカレントディレクトリを.exeのパスにする
 // TODO: ディレクトリを移動しないようにしたい
@@ -138,7 +138,7 @@ if (!isDevelopment) {
 }
 
 protocol.registerSchemesAsPrivileged([
-  {scheme: "app", privileges: {secure: true, standard: true, stream: true}},
+  { scheme: "app", privileges: { secure: true, standard: true, stream: true } },
 ]);
 
 // ソフトウェア起動時はプロトコルを app にする
@@ -146,7 +146,7 @@ void app.whenReady().then(() => {
   protocol.handle("app", (request) => {
     // 読み取り先のファイルがインストールディレクトリ内であることを確認する
     // ref: https://www.electronjs.org/ja/docs/latest/api/protocol#protocolhandlescheme-handler
-    const {pathname} = new URL(request.url);
+    const { pathname } = new URL(request.url);
     const pathToServe = path.resolve(path.join(import.meta.dirname, pathname));
     const relativePath = path.relative(import.meta.dirname, pathToServe);
     const isUnsafe =
@@ -157,7 +157,7 @@ void app.whenReady().then(() => {
       log.error(`Bad Request URL: ${request.url}`);
       return new Response("bad", {
         status: 400,
-        headers: {"content-type": "text/html"},
+        headers: { "content-type": "text/html" },
       });
     }
     return net.fetch(pathToFileURL(pathToServe).toString());
@@ -179,7 +179,7 @@ const onEngineProcessError = (engineInfo: EngineInfo, error: Error) => {
   // FIXME: winが作られた後にエンジンを起動させる
   const win = windowManager.win;
   if (win != undefined) {
-    ipcMainSendProxy.DETECTED_ENGINE_ERROR(win, {engineId});
+    ipcMainSendProxy.DETECTED_ENGINE_ERROR(win, { engineId });
   } else {
     log.error(`onEngineProcessError: win is undefined`);
   }
@@ -205,8 +205,8 @@ initializeEngineInfoManager({
   defaultEngineDir: appDirPath,
   vvppEngineDir,
 });
-initializeEngineProcessManager({onEngineProcessError});
-initializeVvppManager({vvppEngineDir, tmpDir: app.getPath("temp")});
+initializeEngineProcessManager({ onEngineProcessError });
+initializeVvppManager({ vvppEngineDir, tmpDir: app.getPath("temp") });
 
 const configManager = getConfigManager();
 const windowManager = getWindowManager();
@@ -253,15 +253,15 @@ let initialFilePath: string | undefined = getArgv()[0]; // TODO: カプセル化
 const menuTemplateForMac: Electron.MenuItemConstructorOptions[] = [
   {
     label: "VOICEVOX",
-    submenu: [{role: "quit"}],
+    submenu: [{ role: "quit" }],
   },
   {
     label: "Edit",
     submenu: [
-      {role: "cut"},
-      {role: "copy"},
-      {role: "paste"},
-      {role: "selectAll"},
+      { role: "cut" },
+      { role: "copy" },
+      { role: "paste" },
+      { role: "selectAll" },
     ],
   },
 ];
@@ -288,14 +288,14 @@ registerIpcMainHandle<IpcMainHandle>(
 // app callback
 app.on("web-contents-created", (_e, contents) => {
   // リンククリック時はブラウザを開く
-  contents.setWindowOpenHandler(({url}) => {
-    const {protocol} = new URL(url);
+  contents.setWindowOpenHandler(({ url }) => {
+    const { protocol } = new URL(url);
     if (protocol.match(/^https?:/)) {
       void shell.openExternal(url);
     } else {
       log.error(`許可されないリンクです。url: ${url}`);
     }
-    return {action: "deny"};
+    return { action: "deny" };
   });
 
   // ナビゲーションを無効化
@@ -319,7 +319,7 @@ app.on("before-quit", async (event) => {
   }
 
   log.info("Checking ENGINE status before app quit");
-  const {engineCleanupResult, configSavedResult} =
+  const { engineCleanupResult, configSavedResult } =
     engineAndVvppController.gracefulShutdown();
 
   // - エンジンの停止
@@ -397,7 +397,7 @@ void app.whenReady().then(async () => {
           noLink: true,
           cancelId: 0,
         })
-        .then(async ({response}) => {
+        .then(async ({ response }) => {
           switch (response) {
             case 0:
               await appExit();
@@ -426,7 +426,7 @@ void app.whenReady().then(async () => {
           noLink: true,
           cancelId: 0,
         })
-        .then(async ({response}) => {
+        .then(async ({ response }) => {
           switch (response) {
             case 0:
               await appExit();
@@ -456,7 +456,7 @@ void app.whenReady().then(async () => {
   // NOTE: この機能は工事中。参照: https://github.com/VOICEVOX/voicevox/issues/1194
   const packageInfos =
     await engineAndVvppController.fetchInsallablePackageInfos();
-  for (const {engineName, packageInfo} of packageInfos) {
+  for (const { engineName, packageInfo } of packageInfos) {
     // インストールするか確認
     const result = dialog.showMessageBoxSync({
       type: "info",
@@ -475,7 +475,7 @@ void app.whenReady().then(async () => {
       app.getPath("downloads"),
       packageInfo,
       {
-        onProgress: ({type, progress}) => {
+        onProgress: ({ type, progress }) => {
           if (Date.now() - lastLogTime > 100) {
             log.info(
               `VVPP default engine progress: ${type}: ${Math.floor(progress)}%`,
@@ -521,7 +521,7 @@ void app.whenReady().then(async () => {
   await engineAndVvppController.launchEngines();
   await windowManager.createWindow();
 
-  autoUpdater.checkForUpdatesAndNotify()
+  autoUpdater.checkForUpdatesAndNotify();
 });
 
 // 他のプロセスが起動したとき、`requestSingleInstanceLock`経由で`rawData`が送信される。

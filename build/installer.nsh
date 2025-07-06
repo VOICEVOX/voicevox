@@ -485,6 +485,9 @@ verifyPartedFile_finish${UniqueID}:
     ; 正しいハッシュ値を持った 7z ファイルがあるか検証する
     ${verifyArchive} $0
   ${EndIf}
+
+  MessageBox MB_OK|MB_ICONINFORMATION "$0 $archiveName $archiveHash"
+
   ${If} $0 == "OK"
 
     StrCpy $additionalProcess "None"

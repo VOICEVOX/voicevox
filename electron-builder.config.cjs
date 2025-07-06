@@ -131,7 +131,7 @@ const builderOptions = {
   },
   publish: {
     provider: "generic",
-    url: "http://localhost:8787",
+    url: "http://localhost:3000",
     useMultipleRangeRequest: false,
   },
   linux: {
