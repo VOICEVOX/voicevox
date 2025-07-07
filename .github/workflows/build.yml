@@ -552,6 +552,6 @@ jobs:
           pip3 install huggingface_hub[cli]
 
           huggingface-cli login --token ${{ secrets.HUGGINGFACE_TOKEN }}
-          huggingface-ci upload \
+          huggingface-cli upload \
             sevenc-nanashi/vv-poc-editor-update-storage \
-            . $VOICEVOX_EDITOR_VERSION
+            artifacts $VOICEVOX_EDITOR_VERSION
