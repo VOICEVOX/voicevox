@@ -525,7 +525,7 @@ jobs:
   upload-to-huggingface:
     needs: build-and-upload
     runs-on: ubuntu-latest
-    if: github.event.release.tag_name != '' && github.event.inputs.prerelease == 'false' && secrets.HUGGINGFACE_TOKEN != ''
+    if: github.event.release.tag_name != '' && github.event.inputs.prerelease == 'false'
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v4
@@ -542,6 +542,7 @@ jobs:
           done
 
       - name: Upload to Hugging Face
+        if: secrets.HUGGINGFACE_TOKEN != ''
         run: |
           pip3 install huggingface_hub[cli]
 
