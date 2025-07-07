@@ -781,34 +781,6 @@ Function readyPageLeave
   ${EndIf}
   readyPageLeave_finish:
 FunctionEnd
-
-; README を表示するためのオプションを流用して、
-; セットアップ完了画面にファイル削除のチェックボックスを追加する
-; Function deleteArchive
-;   Delete "$EXEDIR\$archiveName"
-; FunctionEnd
-; !define MUI_FINISHPAGE_SHOWREADME
-; !define MUI_FINISHPAGE_SHOWREADME_TEXT "使い終わったダウンロード済みファイルを削除する"
-; !define MUI_FINISHPAGE_SHOWREADME_NOTCHECKED
-; !define MUI_FINISHPAGE_SHOWREADME_FUNCTION deleteArchive
-
-!macroend
-
-!macro customHeader
-  ; インストール成功後に%LOCALAPPDATA%\voicevox-updater\を削除する
-  ; Function .onInstSuccess
-  ;   ; https://github.com/electron-userland/electron-builder/blob/f717e0ea67cec7c5c298889efee7df724838491a/packages/app-builder-lib/templates/nsis/include/installer.nsh#L77
-  ;   ${if} $installMode == "all"
-  ;     SetShellVarContext current
-  ;   ${endif}
-  ;   Push $R0
-  ;   ${GetParent} "$LOCALAPPDATA\${APP_PACKAGE_STORE_FILE}" $R0
-  ;   RMDir /r "$R0"
-  ;   Pop $R0
-  ;   ${if} $installMode == "all"
-  ;     SetShellVarContext all
-  ;   ${endif}
-  ; FunctionEnd
 !macroend
 
 ; "%VITE_APP_NAME%"が空の状態でビルドすると他のソフトのファイルを消してしまうためビルドエラーにする。

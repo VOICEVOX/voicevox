@@ -9,6 +9,7 @@ import { IpcMainHandle } from "./ipc";
 import { getEngineInfoManager } from "./manager/engineInfoManager";
 import { getEngineProcessManager } from "./manager/engineProcessManager";
 import { getWindowManager } from "./manager/windowManager";
+import { getUpdateManager } from "./manager/updateManager";
 import { AssetTextFileNames } from "@/type/staticResources";
 import { failure, success } from "@/type/result";
 import {
@@ -17,7 +18,6 @@ import {
   SystemError,
   TextAsset,
 } from "@/type/preload";
-import { getUpdateManager } from "./manager/updateManager";
 
 // エンジンのフォルダを開く
 function openEngineDirectory(engineId: EngineId) {
