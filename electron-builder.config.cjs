@@ -24,6 +24,9 @@ const LINUX_EXECUTABLE_NAME = process.env.LINUX_EXECUTABLE_NAME;
 // ${productName}-${version}.${ext}
 const MACOS_ARTIFACT_NAME = process.env.MACOS_ARTIFACT_NAME;
 
+// OS・バージョン・CPU/GPU・アーキテクチャが定まる名前。アップデート用。
+const ARTIFACT_NAME = process.env.ARTIFACT_NAME;
+
 // コード署名証明書
 const WIN_CERTIFICATE_SHA1 = process.env.WIN_CERTIFICATE_SHA1;
 const WIN_SIGNING_HASH_ALGORITHMS = process.env.WIN_SIGNING_HASH_ALGORITHMS
@@ -131,7 +134,7 @@ const builderOptions = {
   },
   publish: {
     provider: "generic",
-    url: "http://localhost:3000",
+    url: `https://vv-update-api.sevenc7c.workers.dev/${ARTIFACT_NAME}`,
     useMultipleRangeRequest: false,
   },
   linux: {

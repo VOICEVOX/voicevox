@@ -20,8 +20,8 @@ on:
         description: "コード署名する"
         type: boolean
         default: false
-      upload_artifact:
-        description: "デバッグ用に成果物をartifactにアップロードするか"
+      upload_all_artifacts:
+        description: "デバッグ用にすべての成果物をartifactにアップロードするか"
         type: boolean
         default: false
 
@@ -255,6 +255,7 @@ jobs:
           LINUX_ARTIFACT_NAME: ${{ matrix.linux_artifact_name }}
           LINUX_EXECUTABLE_NAME: ${{ matrix.linux_executable_name }}
           MACOS_ARTIFACT_NAME: ${{ matrix.macos_artifact_name }}
+          ARTIFACT_NAME: ${{ matrix.artifact_name }}
 
           # https://github.com/electron-userland/electron-builder/issues/3179
           USE_HARD_LINKS: false
@@ -342,7 +343,7 @@ jobs:
           rm $name.tar
 
       - name: Upload Linux tar.gz (without nvidia) to Artifacts
-        if: startsWith(matrix.artifact_name, 'linux-') && !contains(matrix.artifact_name, 'nvidia') && github.event.inputs.upload_artifact == 'true'
+        if: startsWith(matrix.artifact_name, 'linux-') && !contains(matrix.artifact_name, 'nvidia') && github.event.inputs.upload_all_artifacts == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}-targz
@@ -372,7 +373,7 @@ jobs:
           7z rn $name.zip prepackage/ VOICEVOX/
 
       - name: Upload Windows & Mac zip (without nvidia) to Artifacts
-        if: (startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')) && !contains(matrix.artifact_name, 'nvidia') && github.event.inputs.upload_artifact == 'true'
+        if: (startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')) && !contains(matrix.artifact_name, 'nvidia') && github.event.inputs.upload_all_artifacts == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}-zip
@@ -419,6 +420,7 @@ jobs:
           NSIS_WEB_ARTIFACT_NAME: ${{ matrix.nsis_web_artifact_name }}
           LINUX_ARTIFACT_NAME: ${{ matrix.linux_artifact_name }}
           LINUX_EXECUTABLE_NAME: ${{ matrix.linux_executable_name }}
+          ARTIFACT_NAME: ${{ matrix.artifact_name }}
         run: |
           pnpm run electron:build --prepackaged prepackage/
 
@@ -426,6 +428,7 @@ jobs:
         if: endsWith(matrix.installer_artifact_name, '-dmg') # macOS
         env:
           MACOS_ARTIFACT_NAME: ${{ matrix.macos_artifact_name }}
+          ARTIFACT_NAME: ${{ matrix.artifact_name }}
         run: |
           pnpm run electron:build --prepackaged prepackage/VOICEVOX.app
 
@@ -460,13 +463,14 @@ jobs:
             mv archives.txt "${{ matrix.installer_artifact_name }}.7z.txt"
           done
 
-      - name: Upload Linux AppImage split to Artifacts
-        if: endsWith(matrix.installer_artifact_name, '-appimage') && github.event.inputs.upload_artifact == 'true'
+      - name: Upload Linux AppImage to Artifacts
+        if: endsWith(matrix.installer_artifact_name, '-appimage')
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.installer_artifact_name }}-release
           path: |-
-            dist_electron/*.7z.*
+            dist_electron/*.AppImage
+            dist_electron/latest.yml
 
       - name: Upload Linux AppImage split to Release Assets
         if: endsWith(matrix.installer_artifact_name, '-appimage') && (github.event.release.tag_name || github.event.inputs.version) != ''
@@ -479,12 +483,13 @@ jobs:
           target_commitish: ${{ github.sha }}
 
       - name: Upload macOS dmg to Artifacts
-        if: endsWith(matrix.installer_artifact_name, '-dmg') && github.event.inputs.upload_artifact == 'true'
+        if: endsWith(matrix.installer_artifact_name, '-dmg')
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.installer_artifact_name }}-release
           path: |-
             dist_electron/*.dmg
+            dist_electron/latest.yml
 
       - name: Upload macOS dmg to Release Assets
         if: endsWith(matrix.installer_artifact_name, '-dmg') && (github.event.release.tag_name || github.event.inputs.version) != ''
@@ -497,13 +502,14 @@ jobs:
           target_commitish: ${{ github.sha }}
 
       - name: Upload Windows NSIS Web to Artifacts
-        if: endsWith(matrix.installer_artifact_name, '-nsis-web') && github.event.inputs.upload_artifact == 'true'
+        if: endsWith(matrix.installer_artifact_name, '-nsis-web')
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.installer_artifact_name }}-release
           path: |-
-            dist_electron/nsis-web/out/*.7z.*
+            dist_electron/nsis-web/*.7z
             dist_electron/nsis-web/*.exe
+            dist_electron/nsis-web/latest.yml
 
       - name: Upload Windows NSIS Web to Release Assets
         if: endsWith(matrix.installer_artifact_name, '-nsis-web') && (github.event.release.tag_name || github.event.inputs.version) != ''
@@ -515,3 +521,31 @@ jobs:
             dist_electron/nsis-web/out/*.7z.*
             dist_electron/nsis-web/*.exe
           target_commitish: ${{ github.sha }}
+
+  upload-to-huggingface:
+    needs: build-and-upload
+    runs-on: ubuntu-latest
+    if: github.event.release.tag_name != '' && github.event.inputs.prerelease == 'false' && secrets.HUGGINGFACE_TOKEN != ''
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: "*-release"
+          path: ./artifacts
+
+      - name: Organize artifacts
+        run: |
+          cd artifacts
+          for file in *; do
+            # -releaseを消す
+            mv "$file" "${file//-release/}"
+          done
+
+      - name: Upload to Hugging Face
+        run: |
+          pip3 install huggingface_hub[cli]
+
+          huggingface-cli login --token ${{ secrets.HUGGINGFACE_TOKEN }}
+          huggingface-ci upload \
+            sevenc-nanashi/vv-poc-editor-update-storage \
+            . $VOICEVOX_EDITOR_VERSION
