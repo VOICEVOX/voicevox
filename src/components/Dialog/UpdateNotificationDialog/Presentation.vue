@@ -57,7 +57,7 @@
           label="公式サイトを開く"
           unelevated
           color="surface"
-          textColor="display-on-primary"
+          textColor="display"
           class="q-mt-sm"
           @click="
             openOfficialWebsite();
