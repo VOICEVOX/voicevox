@@ -16,13 +16,13 @@
           :key="infoIndex"
         >
           <h3>バージョン {{ info.version }}</h3>
-          <ul>
-            <template
+          <ul class="q-mt-none">
+            <li
               v-for="(item, descriptionIndex) of info.descriptions"
               :key="descriptionIndex"
             >
-              <li>{{ item }}</li>
-            </template>
+              {{ item }}
+            </li>
           </ul>
         </template>
       </QCardSection>

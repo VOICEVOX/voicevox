@@ -23,7 +23,9 @@
         :thickness="0.3"
         size="xl"
       />
-      <div class="q-mt-md">生成中です...</div>
+      <div class="q-mt-md">
+        {{ options && operationTexts[options.operation] }}
+      </div>
     </div>
   </div>
 </template>
@@ -31,20 +33,33 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref, watch } from "vue";
 import { useStore } from "@/store";
+import { ProgressOptions } from "@/store/type";
 
 const store = useStore();
 
 const progress = computed(() => store.getters.PROGRESS);
+const options = computed(() => store.state.progressOptions);
 const isShowProgress = ref<boolean>(false);
 const isDeterminate = ref<boolean>(false);
 
+const operationTexts: Record<ProgressOptions["operation"], string> = {
+  download: "ダウンロード中...",
+  generateAudio: "生成中...",
+};
+
 let timeoutId: ReturnType<typeof setTimeout>;
 
+const defaultDeferTime = 3000; // デフォルトの遅延時間
 const deferredProgressStart = () => {
-  // 3秒待ってから表示する
+  if (!options.value) return;
+  if (options.value.visibleAfter === 0) {
+    // visibleAfterが0の場合は即座に表示
+    isShowProgress.value = true;
+    return;
+  }
   timeoutId = setTimeout(() => {
     isShowProgress.value = true;
-  }, 3000);
+  }, options.value.visibleAfter ?? defaultDeferTime);
 };
 
 watch(progress, (newValue, oldValue) => {
@@ -86,7 +101,7 @@ const formattedProgress = computed(() =>
   > div {
     color: colors.$display;
     background: colors.$surface;
-    width: 200px;
+    min-width: 200px;
     border-radius: 6px;
     padding: 14px 48px;
   }

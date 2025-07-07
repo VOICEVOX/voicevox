@@ -29,7 +29,7 @@ import {
   singingCommandStore,
 } from "./singing";
 import { projectStoreState, projectStore } from "./project";
-import { uiStoreState, uiStore } from "./ui";
+import { uiStoreState, uiStore, withProgress } from "./ui";
 import { settingStoreState, settingStore } from "./setting";
 import { presetStoreState, presetStore } from "./preset";
 import { dictionaryStoreState, dictionaryStore } from "./dictionary";
@@ -45,6 +45,7 @@ import {
   Voice,
 } from "@/type/preload";
 import { isProduction } from "@/helpers/platform";
+import { errorToMessage } from "@/helpers/errorHelper";
 
 export type Store = BaseStore<State, AllGetters, AllActions, AllMutations>;
 export const storeKey: InjectionKey<Store> = Symbol();
@@ -339,6 +340,28 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
     },
     action({ mutations }, isMultiEngineOffMode) {
       mutations.SET_IS_MULTI_ENGINE_OFF_MODE({ isMultiEngineOffMode });
+    },
+  },
+
+  UPDATE_APP: {
+    async action({ actions }, { version }) {
+      try {
+        await withProgress(
+          {
+            operation: "download",
+            visibleAfter: 0,
+          },
+          window.backend.updateApp({
+            version,
+          }),
+          actions,
+        );
+      } catch (error) {
+        await actions.SHOW_ALERT_DIALOG({
+          title: "アップデートに失敗しました",
+          message: errorToMessage(error),
+        });
+      }
     },
   },
 });

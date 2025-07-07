@@ -1836,6 +1836,10 @@ export type IndexStoreTypes = {
     mutation: { isMultiEngineOffMode: boolean };
     action(payload: boolean): void;
   };
+
+  UPDATE_APP: {
+    action(payload: { version: string }): Promise<void>;
+  };
 };
 
 /*
@@ -2031,6 +2035,12 @@ export type SettingStoreTypes = {
  * Ui Store Types
  */
 
+export type ProgressOptions = {
+  operation: "generateAudio" | "download";
+  /** 一定時間経ってから表示する（ms単位） */
+  visibleAfter?: number;
+};
+
 export type UiStoreState = {
   uiLockCount: number;
   dialogLockCount: number;
@@ -2041,6 +2051,7 @@ export type UiStoreState = {
   isPinned: boolean;
   isFullscreen: boolean;
   progress: number;
+  progressOptions: ProgressOptions | undefined;
   isVuexReady: boolean;
 } & DialogStates;
 
@@ -2218,7 +2229,8 @@ export type UiStoreTypes = {
   };
 
   START_PROGRESS: {
-    action(): void;
+    mutation: { options: ProgressOptions };
+    action(obj: ProgressOptions): void;
   };
 
   SET_PROGRESS: {

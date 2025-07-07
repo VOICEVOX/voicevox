@@ -86,6 +86,9 @@ const stopWatchEffect = watchEffect(() => {
 });
 
 const doUpdateApp = (version: string) => {
-  window.backend.updateApp({ version });
+  isDialogOpenComputed.value = false;
+  void store.actions.UPDATE_APP({
+    version,
+  });
 };
 </script>

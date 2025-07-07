@@ -8,6 +8,7 @@ import {
   AllActions,
   AllGetters,
   AllMutations,
+  ProgressOptions,
   UiStoreState,
   UiStoreTypes,
 } from "./type";
@@ -53,10 +54,11 @@ export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
 }
 
 export function withProgress<T>(
+  options: ProgressOptions,
   action: Promise<T>,
   actions: DotNotationDispatch<AllActions>,
 ): Promise<T> {
-  void actions.START_PROGRESS();
+  void actions.START_PROGRESS(options);
   return action.finally(() => actions.RESET_PROGRESS());
 }
 
@@ -85,6 +87,7 @@ export const uiStoreState: UiStoreState = {
   isPinned: false,
   isFullscreen: false,
   progress: -1,
+  progressOptions: undefined,
   isVuexReady: false,
 };
 
@@ -450,8 +453,12 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   },
 
   START_PROGRESS: {
-    action({ actions }) {
-      void actions.SET_PROGRESS({ progress: 0 });
+    mutation(state, { options }) {
+      state.progress = 0;
+      state.progressOptions = options;
+    },
+    action({ mutations }, options) {
+      mutations.START_PROGRESS({ options });
     },
   },
 

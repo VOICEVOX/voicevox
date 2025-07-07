@@ -356,8 +356,8 @@ export function getIpcMainHandle(params: {
       }
     },
 
-    UPDATE_APP(_, obj) {
-      getUpdateManager().updateApp(obj.version);
+    UPDATE_APP: async (_, obj) => {
+      await getUpdateManager().updateApp(obj.version);
     },
   };
 }
