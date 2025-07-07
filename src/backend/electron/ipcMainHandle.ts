@@ -17,7 +17,7 @@ import {
   SystemError,
   TextAsset,
 } from "@/type/preload";
-import {getAutoUpdateManager} from "./manager/autoUpdateManager";
+import { getUpdateManager } from "./manager/updateManager";
 
 // エンジンのフォルダを開く
 function openEngineDirectory(engineId: EngineId) {
@@ -356,8 +356,8 @@ export function getIpcMainHandle(params: {
       }
     },
 
-    DOWNLOAD_UPDATE(_, obj) {
-      return getAutoUpdateManager().downloadUpdate(obj.version)
+    UPDATE_APP(_, obj) {
+      getUpdateManager().updateApp(obj.version);
     },
   };
 }

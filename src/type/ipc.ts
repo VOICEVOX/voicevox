@@ -226,7 +226,7 @@ export type IpcIHData = {
     return: Result<Uint8Array>;
   };
 
-  DOWNLOAD_UPDATE: {
+  UPDATE_APP: {
     args: [obj: { version: string }];
     return: void;
   };

@@ -71,7 +71,7 @@
           color="primary"
           textColor="display-on-primary"
           class="q-mt-sm"
-          @click="doUpdate()"
+          @click="updateApp()"
         />
       </QCardActions>
     </QCard>
@@ -91,6 +91,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   /** スキップするときに呼ばれる */
   (e: "skipThisVersionClick", version: string): void;
+  /** アップデートを開始するときに呼ばれる */
+  (e: "updateApp", version: string): void;
 }>();
 
 const closeUpdateNotificationDialog = () => {
@@ -101,10 +103,8 @@ const openOfficialWebsite = () => {
   window.open(import.meta.env.VITE_OFFICIAL_WEBSITE_URL, "_blank");
 };
 
-const doUpdate = () => {
-  window.backend.downloadUpdate({
-    version: props.latestVersion,
-  });
+const updateApp = () => {
+  emit("updateApp", props.latestVersion);
 };
 </script>
 

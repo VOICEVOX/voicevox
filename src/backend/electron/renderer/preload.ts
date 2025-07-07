@@ -223,12 +223,8 @@ const api: Sandbox = {
     return webUtils.getPathForFile(file);
   },
 
-  downloadUpdate: async (obj) => {
-    return await ipcRendererInvokeProxy.DOWNLOAD_UPDATE(obj);
-  },
-
-  quitAndInstallUpdate: async () => {
-    throw new Error("Not implemented in preload script");
+  updateApp: async (obj) => {
+    return await ipcRendererInvokeProxy.UPDATE_APP(obj);
   },
 };
 

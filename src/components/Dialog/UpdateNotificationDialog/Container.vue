@@ -10,6 +10,7 @@
     :latestVersion="newUpdateResult.latestVersion"
     :newUpdateInfos="newUpdateResult.newUpdateInfos"
     @skipThisVersionClick="handleSkipThisVersionClick"
+    @updateApp="doUpdateApp"
   />
 </template>
 
@@ -83,4 +84,8 @@ const stopWatchEffect = watchEffect(() => {
     stopWatchEffect(); // ダイアログを開く処理は一度だけしか実行しないようにする
   }
 });
+
+const doUpdateApp = (version: string) => {
+  window.backend.updateApp({ version });
+};
 </script>
