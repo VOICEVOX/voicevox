@@ -542,8 +542,13 @@ jobs:
           done
 
       - name: Upload to Hugging Face
-        if: secrets.HUGGINGFACE_TOKEN != ''
         run: |
+          if [ -z "${{ secrets.HUGGINGFACE_TOKEN }}" ]; then
+            # NOTE: if内ではsecretsは展開されないので、run内でチェックする
+            echo "Hugging Face token is not set. Skipping upload."
+            exit 0
+          fi
+
           pip3 install huggingface_hub[cli]
 
           huggingface-cli login --token ${{ secrets.HUGGINGFACE_TOKEN }}
