@@ -1,6 +1,6 @@
 {
-  "name": "voicevox",
-  "version": "0.24.3",
+  "name": "voicevox-test",
+  "version": "0.24.8",
   "author": "Hiroshiba Kazuyuki",
   "private": true,
   "main": "./dist/main.js",

@@ -222,6 +222,14 @@ const api: Sandbox = {
   getPathForFile: async (file) => {
     return webUtils.getPathForFile(file);
   },
+
+  downloadUpdate: async (obj) => {
+    return await ipcRendererInvokeProxy.DOWNLOAD_UPDATE(obj);
+  },
+
+  quitAndInstallUpdate: async () => {
+    throw new Error("Not implemented in preload script");
+  },
 };
 
 const wrapApi = (baseApi: Sandbox): SandboxWithTransferableResult => {

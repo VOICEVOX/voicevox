@@ -56,13 +56,22 @@
           padding="xs md"
           label="公式サイトを開く"
           unelevated
-          color="primary"
+          color="surface"
           textColor="display-on-primary"
           class="q-mt-sm"
           @click="
             openOfficialWebsite();
             closeUpdateNotificationDialog();
           "
+        />
+        <QBtn
+          padding="xs md"
+          label="アップデート"
+          unelevated
+          color="primary"
+          textColor="display-on-primary"
+          class="q-mt-sm"
+          @click="doUpdate()"
         />
       </QCardActions>
     </QCard>
@@ -90,6 +99,12 @@ const closeUpdateNotificationDialog = () => {
 
 const openOfficialWebsite = () => {
   window.open(import.meta.env.VITE_OFFICIAL_WEBSITE_URL, "_blank");
+};
+
+const doUpdate = () => {
+  window.backend.downloadUpdate({
+    version: props.latestVersion,
+  });
 };
 </script>
 

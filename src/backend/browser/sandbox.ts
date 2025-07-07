@@ -244,4 +244,11 @@ export const api: Sandbox = {
   getPathForFile(/* file: File */) {
     throw new Error(`Not supported on Browser version: getPathForFile`);
   },
+  downloadUpdate: async () => {
+    throw new Error("Not implemented in preload script");
+  },
+
+  quitAndInstallUpdate: async () => {
+    throw new Error("Not implemented in preload script");
+  },
 };

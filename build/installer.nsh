@@ -496,8 +496,6 @@ verifyPartedFile_finish${UniqueID}:
     ${verifyArchive} $0
   ${EndIf}
 
-  MessageBox MB_OK|MB_ICONINFORMATION "$0 $archiveName $archiveHash"
-
   ${If} $0 == "OK"
 
     StrCpy $additionalProcess "None"

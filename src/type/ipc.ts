@@ -225,6 +225,11 @@ export type IpcIHData = {
     args: [obj: { filePath: string }];
     return: Result<Uint8Array>;
   };
+
+  DOWNLOAD_UPDATE: {
+    args: [obj: { version: string }];
+    return: void;
+  };
 };
 
 /**

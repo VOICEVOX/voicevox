@@ -24,9 +24,6 @@ import { EngineInfo } from "@/type/preload";
 import { isMac, isProduction } from "@/helpers/platform";
 import { createLogger } from "@/helpers/log";
 
-autoUpdater.forceDevUpdateConfig = true;
-autoUpdater.logger = createLogger("electron-updater");
-
 type SingleInstanceLockData = {
   filePath: string | undefined;
 };
