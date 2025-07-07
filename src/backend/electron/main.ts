@@ -3,7 +3,6 @@ import fs from "fs";
 import { pathToFileURL } from "url";
 import { app, dialog, Menu, net, protocol, shell } from "electron";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
-import { autoUpdater } from "electron-updater";
 
 import electronLog from "electron-log/main";
 import dayjs from "dayjs";
@@ -517,8 +516,6 @@ void app.whenReady().then(async () => {
 
   await engineAndVvppController.launchEngines();
   await windowManager.createWindow();
-
-  autoUpdater.checkForUpdatesAndNotify();
 });
 
 // 他のプロセスが起動したとき、`requestSingleInstanceLock`経由で`rawData`が送信される。
