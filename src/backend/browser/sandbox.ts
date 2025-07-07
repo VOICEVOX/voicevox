@@ -246,5 +246,5 @@ export const api: Sandbox = {
   },
   updateApp(/* version: string */) {
     throw new Error(`Not supported on Browser version: updateApp`);
-  }
+  },
 };

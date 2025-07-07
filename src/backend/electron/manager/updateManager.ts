@@ -1,6 +1,6 @@
+import { autoUpdater as electronUpdater } from "electron-updater";
 import { DisplayableError } from "@/helpers/errorHelper";
 import { createLogger } from "@/helpers/log";
-import { autoUpdater as electronUpdater } from "electron-updater";
 
 const log = createLogger("AutoUpdateManager");
 
@@ -48,7 +48,7 @@ export class UpdateManager {
 
 let managerInstance: UpdateManager | null = null;
 export function getUpdateManager(): UpdateManager {
-  if (managerInstance === null) {
+  if (managerInstance == null) {
     managerInstance = new UpdateManager();
   }
   return managerInstance;
