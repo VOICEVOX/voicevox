@@ -162,7 +162,7 @@ export default defineConfig((options) => {
       projects: [
         // Node.js環境
         {
-          extends: "./vite.config.ts",
+          extends: "../vite.config.ts",
           test: {
             include: nodeTestPaths,
             name: "node",
@@ -173,7 +173,7 @@ export default defineConfig((options) => {
 
         // happy-domのエミュレート版ブラウザ環境
         {
-          extends: "./vite.config.ts",
+          extends: "../vite.config.ts",
           plugins: [],
           test: {
             include: [
@@ -189,7 +189,7 @@ export default defineConfig((options) => {
 
         // Chromiumブラウザ環境
         {
-          extends: "./vite.config.ts",
+          extends: "../vite.config.ts",
           test: {
             include: browserTestPaths,
             globals: true,
@@ -207,7 +207,7 @@ export default defineConfig((options) => {
 
         // Storybook
         {
-          extends: "./vite.config.ts",
+          extends: "../vite.config.ts",
           plugins: [
             storybookTest({
               storybookScript: "storybook --ci --port 7160",
