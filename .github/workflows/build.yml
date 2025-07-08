@@ -157,7 +157,7 @@ jobs:
       #       so different package/product names should be used for CPU/DirectML/GPU builds.
       - name: Replace package name & version
         run: |
-          $sed -i 's/"name": "voicevox"/"name": "${{ matrix.package_name }}"/' package.json
+          $sed -i 's/"name": "voicevox-test"/"name": "${{ matrix.package_name }}"/' package.json
           # $sed -i 's/productName: "VOICEVOX"/productName: "${{ matrix.product_name }}"/' vue.config.js
 
           $sed -i 's/"version": "999.999.999"/"version": "${{ env.VOICEVOX_EDITOR_VERSION }}"/' package.json
