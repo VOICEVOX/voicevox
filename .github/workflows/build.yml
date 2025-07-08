@@ -50,7 +50,7 @@ jobs:
       matrix:
         include:
           # Linux NVIDIA GPU
-          - artifact_name: linux-nvidia
+          - artifact_name: linux-nvidia-prepackage
             artifact_path: dist_electron/linux-unpacked
             voicevox_engine_asset_name: linux-nvidia
             package_name: voicevox
@@ -62,7 +62,7 @@ jobs:
             linux_appimage_7z_name: VOICEVOX.AppImage
             os: ubuntu-22.04
           # Linux CPU (x64)
-          - artifact_name: linux-cpu-x64
+          - artifact_name: linux-cpu-x64-prepackage
             artifact_path: dist_electron/linux-unpacked
             voicevox_engine_asset_name: linux-cpu-x64
             package_name: voicevox-cpu
@@ -74,7 +74,7 @@ jobs:
             linux_appimage_7z_name: VOICEVOX-CPU-X64.AppImage
             os: ubuntu-22.04
           # Linux CPU (arm64)
-          - artifact_name: linux-cpu-arm64
+          - artifact_name: linux-cpu-arm64-prepackage
             artifact_path: dist_electron/linux-arm64-unpacked
             voicevox_engine_asset_name: linux-cpu-arm64
             package_name: voicevox-cpu
@@ -86,7 +86,7 @@ jobs:
             linux_appimage_7z_name: VOICEVOX-CPU-ARM64.AppImage
             os: ubuntu-22.04-arm
           # Windows CUDA
-          - artifact_name: windows-nvidia
+          - artifact_name: windows-nvidia-prepackage
             artifact_path: dist_electron/win-unpacked
             voicevox_engine_asset_name: windows-nvidia
             package_name: voicevox-cuda
@@ -96,7 +96,7 @@ jobs:
             nsis_web_artifact_name: "VOICEVOX-CUDA.Web.Setup.${version}.${ext}"
             os: windows-2022
           # Windows CPU
-          - artifact_name: windows-cpu
+          - artifact_name: windows-cpu-prepackage
             artifact_path: dist_electron/win-unpacked
             voicevox_engine_asset_name: windows-cpu
             package_name: voicevox-cpu
@@ -106,7 +106,7 @@ jobs:
             nsis_web_artifact_name: "VOICEVOX-CPU.Web.Setup.${version}.${ext}"
             os: windows-2022
           # Windows DirectML
-          - artifact_name: windows-directml
+          - artifact_name: windows-directml-prepackage
             artifact_path: dist_electron/win-unpacked
             voicevox_engine_asset_name: windows-directml
             package_name: voicevox
@@ -116,7 +116,7 @@ jobs:
             nsis_web_artifact_name: "VOICEVOX.Web.Setup.${version}.${ext}"
             os: windows-2022
           # macOS CPU (x64)
-          - artifact_name: macos-cpu-x64
+          - artifact_name: macos-cpu-x64-prepackage
             artifact_path: dist_electron/mac
             voicevox_engine_asset_name: macos-x64
             package_name: voicevox-cpu
@@ -126,7 +126,7 @@ jobs:
             macos_artifact_name: "VOICEVOX.${version}-x64.${ext}"
             os: macos-13
           # macOS CPU (arm64)
-          - artifact_name: macos-cpu-arm64
+          - artifact_name: macos-cpu-arm64-prepackage
             artifact_path: dist_electron/mac-arm64
             voicevox_engine_asset_name: macos-arm64
             package_name: voicevox-cpu
@@ -255,7 +255,7 @@ jobs:
           LINUX_ARTIFACT_NAME: ${{ matrix.linux_artifact_name }}
           LINUX_EXECUTABLE_NAME: ${{ matrix.linux_executable_name }}
           MACOS_ARTIFACT_NAME: ${{ matrix.macos_artifact_name }}
-          ARTIFACT_NAME: ${{ matrix.artifact_name }}
+          INSTALLER_ARTIFACT_NAME: ${{ matrix.installer_artifact_name }}
 
           # https://github.com/electron-userland/electron-builder/issues/3179
           USE_HARD_LINKS: false
@@ -420,7 +420,7 @@ jobs:
           NSIS_WEB_ARTIFACT_NAME: ${{ matrix.nsis_web_artifact_name }}
           LINUX_ARTIFACT_NAME: ${{ matrix.linux_artifact_name }}
           LINUX_EXECUTABLE_NAME: ${{ matrix.linux_executable_name }}
-          ARTIFACT_NAME: ${{ matrix.artifact_name }}
+          INSTALLER_ARTIFACT_NAME: ${{ matrix.installer_artifact_name }}
         run: |
           pnpm run electron:build --prepackaged prepackage/
 
@@ -428,7 +428,7 @@ jobs:
         if: endsWith(matrix.installer_artifact_name, '-dmg') # macOS
         env:
           MACOS_ARTIFACT_NAME: ${{ matrix.macos_artifact_name }}
-          ARTIFACT_NAME: ${{ matrix.artifact_name }}
+          INSTALLER_ARTIFACT_NAME: ${{ matrix.installer_artifact_name }}
         run: |
           pnpm run electron:build --prepackaged prepackage/VOICEVOX.app
 
@@ -509,8 +509,8 @@ jobs:
           path: |-
             dist_electron/nsis-web/*.7z
             dist_electron/nsis-web/*.exe
-            dist_electron/nsis-web/*.yml
             dist_electron/nsis-web/*.ini
+            dist_electron/nsis-web/*.yml
 
       - name: Upload Windows NSIS Web to Release Assets
         if: endsWith(matrix.installer_artifact_name, '-nsis-web') && (github.event.release.tag_name || github.event.inputs.version) != ''
