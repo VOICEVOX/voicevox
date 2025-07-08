@@ -1,6 +1,6 @@
 <template>
   <label class="root">
-    <CheckboxRoot v-model:checked="checked" class="CheckboxRoot">
+    <CheckboxRoot v-model="checked" class="CheckboxRoot">
       <CheckboxIndicator class="CheckboxIndicator">
         <QIcon class="check" name="check" />
       </CheckboxIndicator>
@@ -10,7 +10,7 @@
 </template>
 
 <script setup lang="ts">
-import { CheckboxIndicator, CheckboxRoot } from "radix-vue";
+import { CheckboxIndicator, CheckboxRoot } from "reka-ui";
 
 defineProps<{ label: string }>();
 

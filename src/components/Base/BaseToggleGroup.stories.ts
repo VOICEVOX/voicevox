@@ -1,11 +1,11 @@
 import { ref } from "vue";
-import type { Meta, StoryObj } from "@storybook/vue3";
+import type { Meta, StoryObj } from "@storybook/vue3-vite";
 
 import BaseToggleGroup from "./BaseToggleGroup.vue";
 import BaseToggleGroupItem from "./BaseToggleGroupItem.vue";
 
 const meta: Meta<typeof BaseToggleGroup> = {
-  component: BaseToggleGroup,
+  component: BaseToggleGroup as Record<keyof typeof BaseToggleGroup, unknown>,
 };
 
 export default meta;

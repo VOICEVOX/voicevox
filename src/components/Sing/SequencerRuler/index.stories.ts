@@ -1,5 +1,5 @@
-import type { Meta, StoryObj } from "@storybook/vue3";
-import { fn, expect, Mock } from "@storybook/test";
+import type { Meta, StoryObj } from "@storybook/vue3-vite";
+import { fn, expect, Mock } from "storybook/test";
 import { ref } from "vue";
 
 import Presentation from "./Presentation.vue";

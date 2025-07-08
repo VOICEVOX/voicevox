@@ -1,6 +1,13 @@
 # Files for typos
 # Instruction:  https://github.com/marketplace/actions/typos-action#getting-started
 
+[default]
+extend-ignore-re = [
+    # // typos:ignore-next-line を使って警告を無視できるようにする
+    # https://github.com/crate-ci/typos/issues/316#issuecomment-2886204780
+    "(?s)//\\s*typos:ignore-next-line[^\\n]*\\n[^\\n]*",
+]
+
 [default.extend-identifiers]
 splited = "splited" # コードで使う時、もっと自然な感じを与える
 
@@ -12,7 +19,6 @@ GAM = "GAM" # VuexのGetter・Action・Mutationの略
 [files]
 extend-exclude = [
     "package-lock.json",
-    "src/domain/project/index.ts",
     "*.svg",
     "public/res/macos-big-sur-software-update-rosetta-alert.jpg", # macos-big-surは正しい固有名詞
 ]

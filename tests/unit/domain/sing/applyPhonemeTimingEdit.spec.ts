@@ -3,8 +3,9 @@ import { uuid4 } from "@/helpers/random";
 import { FramePhoneme } from "@/openapi";
 import { applyPhonemeTimingEditAndAdjust } from "@/sing/domain";
 import { createArray } from "@/sing/utility";
-import { EditorFrameAudioQuery, PhonemeTimingEdit } from "@/store/type";
+import { EditorFrameAudioQuery } from "@/store/type";
 import { NoteId } from "@/type/preload";
+import type { PhonemeTimingEdit } from "@/domain/project/type";
 
 const frameRate = 93.75;
 

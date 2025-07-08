@@ -35,6 +35,15 @@ export class EngineInfoManager {
   }
 
   /**
+   * デフォルトエンジンかどうかを判定する。
+   */
+  isDefaultEngine(engineId: EngineId): boolean {
+    return this.envEngineInfos.some(
+      (engineInfo) => engineInfo.uuid === engineId,
+    );
+  }
+
+  /**
    * エンジンディレクトリのエンジンマニフェストからエンジンの情報を読み込む。
    */
   private loadEngineInfo(
@@ -71,7 +80,7 @@ export class EngineInfoManager {
       executionFilePath: path.join(engineDir, command),
       executionArgs: args,
       type,
-      isDefault: false,
+      isDefault: this.isDefaultEngine(manifest.uuid),
     } satisfies EngineInfo);
   }
 
@@ -91,7 +100,7 @@ export class EngineInfoManager {
           hostname,
           defaultPort: port,
           pathname: pathname === "/" ? "" : pathname,
-          isDefault: true,
+          isDefault: this.isDefaultEngine(engineInfo.uuid),
           type: engineInfo.type,
           executionFilePath: path.resolve(engineInfo.executionFilePath),
           path:

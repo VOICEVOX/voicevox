@@ -1,17 +1,13 @@
 import {
   EditorFrameAudioQuery,
   EditorFrameAudioQueryKey,
-  Note,
   PhraseKey,
-  Singer,
   SingingPitch,
   SingingPitchKey,
   SingingVoice,
   SingingVoiceKey,
   SingingVolume,
   SingingVolumeKey,
-  Tempo,
-  Track,
 } from "@/store/type";
 import {
   calculateHash,
@@ -31,6 +27,7 @@ import {
 import { FramePhoneme, Note as NoteForRequestToEngine } from "@/openapi";
 import { EngineId, NoteId, StyleId, TrackId } from "@/type/preload";
 import { getOrThrow } from "@/helpers/mapHelper";
+import type { Note, Singer, Tempo, Track } from "@/domain/project/type";
 
 /**
  * レンダリングに必要なデータのスナップショット

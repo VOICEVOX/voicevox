@@ -1,33 +1,18 @@
 <template>
-  <ToggleGroupRoot
-    class="ToggleGroup"
-    :type
-    :modelValue
-    :disabled
-    @update:modelValue="
-      (value) => {
-        if (value != undefined) {
-          $emit('update:modelValue', value);
-        }
-      }
-    "
-  >
+  <ToggleGroupRoot v-model="modelValue" class="ToggleGroup" :type :disabled>
     <slot />
   </ToggleGroupRoot>
 </template>
 
-<script setup lang="ts">
-import { ToggleGroupRoot } from "radix-vue";
+<script setup lang="ts" generic="T extends AcceptableValue">
+import { AcceptableValue, ToggleGroupRoot } from "reka-ui";
 
 defineProps<{
   type: "single" | "multiple";
-  modelValue: string | string[];
   disabled?: boolean;
 }>();
 
-defineEmits<{
-  "update:modelValue": [payload: string | string[]];
-}>();
+const modelValue = defineModel<T | T[]>();
 </script>
 
 <style scoped lang="scss">
