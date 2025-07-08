@@ -511,10 +511,10 @@ jobs:
             dist_electron/*.dmg
           target_commitish: ${{ github.sha }}
 
-      - name: Move Windows NSIS ini
+      - name: Copy Windows NSIS ini
         if: endsWith(matrix.installer_artifact_name, '-nsis-web')
         run: |
-          mv dist_electron/nsis-web/out/*.ini dist_electron/nsis-web/
+          cp dist_electron/nsis-web/out/*.ini dist_electron/nsis-web/
 
       - name: Upload Windows NSIS Web to Artifacts
         if: endsWith(matrix.installer_artifact_name, '-nsis-web')
