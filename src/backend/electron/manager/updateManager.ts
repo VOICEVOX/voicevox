@@ -1,6 +1,9 @@
+import fs from "fs/promises";
+import path from "path";
 import { autoUpdater as electronUpdater } from "electron-updater";
 import { DisplayableError } from "@/helpers/errorHelper";
 import { createLogger } from "@/helpers/log";
+import { isProduction } from "@/helpers/platform";
 
 const log = createLogger("AutoUpdateManager");
 
@@ -24,6 +27,19 @@ electronUpdater.on("update-downloaded", (info) => {
 export class UpdateManager {
   constructor() {}
   async updateApp(version: string) {
+    const appUpdateYmlExists = await fs
+      .stat(path.join(process.resourcesPath, "app-update.yml"))
+      .catch(() => false);
+
+    if (isProduction && !appUpdateYmlExists) {
+      log.error(
+        "app-update.yml does not exist in resources path, probably not an installer build.",
+      );
+      throw new DisplayableError(
+        `アプリ内部からのアップデートはインストーラー版でのみ利用可能です。`,
+      );
+    }
+
     const latest = await electronUpdater.checkForUpdates();
     if (latest == null || latest.updateInfo == null) {
       log.error("Assertion failed: Latest update info is null");
