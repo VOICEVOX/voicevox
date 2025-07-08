@@ -134,7 +134,7 @@ const builderOptions = {
   },
   publish: {
     provider: "generic",
-    url: `https://vv-update-api.sevenc7c.workers.dev/${INSTALLER_ARTIFACT_NAME}`,
+    url: `https://vv-update-api.sevenc7c.workers.dev/${INSTALLER_ARTIFACT_NAME !== "" ? INSTALLER_ARTIFACT_NAME : ""}`,
     useMultipleRangeRequest: false,
   },
   linux: {

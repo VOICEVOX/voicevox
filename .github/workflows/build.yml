@@ -413,6 +413,16 @@ jobs:
           THUMBPRINT_PATH: /tmp/esignercka_thumbprint.txt
           SIGNTOOL_PATH_PATH: /tmp/signtool_path.txt
 
+      - name: Create app-update.yml
+        run: |
+          # prepackageを使うとapp-update.ymlが生成されないので、手動で作成する
+          cat <<YAML > ${{ matrix.app_asar_dir }}/app-update.yml
+          provider: generic
+          url: https://vv-update-api.sevenc7c.workers.dev/${{ matrix.artifact_name }}
+          useMultipleRangeRequest: false
+          updaterCacheDirName: ${{ matrix.package_name }}-updater
+          YAML
+
       # NOTE: prepackage can be removed before splitting nsis-web archive
       - name: Build Electron
         if: endsWith(matrix.installer_artifact_name, '-nsis-web') || endsWith(matrix.installer_artifact_name, '-appimage') # windows and linux
