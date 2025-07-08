@@ -1,9 +1,24 @@
 [
   {
+    "version": "0.24.2",
+    "descriptions": [
+      "キャラクター「ユーレイちゃん」「東北ずん子」「東北きりたん」「東北イタコ」を追加",
+      "キャラクター「猫使アル」「猫使ビィ」「離途」「黒沢冴白」のスタイルを追加・更新"
+    ],
+    "contributors": []
+  },
+  {
+    "version": "0.24.1",
+    "descriptions": [
+      "ソング：vvproj以外のプロジェクトをインポートできない問題を修正"
+    ],
+    "contributors": ["sevenc-nanashi", "sigprogramming"]
+  },
+  {
     "version": "0.24.0",
     "descriptions": [
       "プロジェクトの複製を保存する機能を追加",
-      "ARM64版エディタの提供",
+      "ARM64版Linuxエディタの提供",
       "トーク：辞書に登録されていない英単語の自然なカタカナ読みを可能に"
     ],
     "contributors": [
