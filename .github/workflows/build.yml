@@ -418,7 +418,7 @@ jobs:
           # prepackageを使うとapp-update.ymlが生成されないので、手動で作成する
           cat <<YAML > ${{ matrix.app_asar_dir }}/app-update.yml
           provider: generic
-          url: https://vv-update-api.sevenc7c.workers.dev/${{ matrix.artifact_name }}
+          url: https://vv-update-api.sevenc7c.workers.dev/${{ matrix.installer_artifact_name }}
           useMultipleRangeRequest: false
           updaterCacheDirName: ${{ matrix.package_name }}-updater
           YAML
