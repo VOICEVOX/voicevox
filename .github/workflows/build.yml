@@ -53,7 +53,7 @@ jobs:
           - artifact_name: linux-nvidia-prepackage
             artifact_path: dist_electron/linux-unpacked
             voicevox_engine_asset_name: linux-nvidia
-            package_name: voicevox
+            package_name: voicevox-test
             compressed_artifact_name: voicevox-linux-nvidia
             app_asar_dir: prepackage/resources
             installer_artifact_name: linux-nvidia-appimage
@@ -65,7 +65,7 @@ jobs:
           - artifact_name: linux-cpu-x64-prepackage
             artifact_path: dist_electron/linux-unpacked
             voicevox_engine_asset_name: linux-cpu-x64
-            package_name: voicevox-cpu
+            package_name: voicevox-test-cpu
             compressed_artifact_name: voicevox-linux-cpu-x64
             app_asar_dir: prepackage/resources
             installer_artifact_name: linux-cpu-x64-appimage
@@ -77,7 +77,7 @@ jobs:
           - artifact_name: linux-cpu-arm64-prepackage
             artifact_path: dist_electron/linux-arm64-unpacked
             voicevox_engine_asset_name: linux-cpu-arm64
-            package_name: voicevox-cpu
+            package_name: voicevox-test-cpu
             compressed_artifact_name: voicevox-linux-cpu-arm64
             app_asar_dir: prepackage/resources
             installer_artifact_name: linux-cpu-arm64-appimage
@@ -89,7 +89,7 @@ jobs:
           - artifact_name: windows-nvidia-prepackage
             artifact_path: dist_electron/win-unpacked
             voicevox_engine_asset_name: windows-nvidia
-            package_name: voicevox-cuda
+            package_name: voicevox-test-cuda
             compressed_artifact_name: voicevox-windows-nvidia
             app_asar_dir: prepackage/resources
             installer_artifact_name: windows-nvidia-nsis-web
@@ -99,7 +99,7 @@ jobs:
           - artifact_name: windows-cpu-prepackage
             artifact_path: dist_electron/win-unpacked
             voicevox_engine_asset_name: windows-cpu
-            package_name: voicevox-cpu
+            package_name: voicevox-test-cpu
             compressed_artifact_name: voicevox-windows-cpu
             app_asar_dir: prepackage/resources
             installer_artifact_name: windows-cpu-nsis-web
@@ -109,7 +109,7 @@ jobs:
           - artifact_name: windows-directml-prepackage
             artifact_path: dist_electron/win-unpacked
             voicevox_engine_asset_name: windows-directml
-            package_name: voicevox
+            package_name: voicevox-test
             compressed_artifact_name: voicevox-windows-directml
             app_asar_dir: prepackage/resources
             installer_artifact_name: windows-directml-nsis-web
@@ -119,7 +119,7 @@ jobs:
           - artifact_name: macos-cpu-x64-prepackage
             artifact_path: dist_electron/mac
             voicevox_engine_asset_name: macos-x64
-            package_name: voicevox-cpu
+            package_name: voicevox-test-cpu
             compressed_artifact_name: voicevox-macos-cpu-x64
             app_asar_dir: prepackage/VOICEVOX.app/Contents/Resources
             installer_artifact_name: macos-cpu-x64-dmg
@@ -129,7 +129,7 @@ jobs:
           - artifact_name: macos-cpu-arm64-prepackage
             artifact_path: dist_electron/mac-arm64
             voicevox_engine_asset_name: macos-arm64
-            package_name: voicevox-cpu
+            package_name: voicevox-test-cpu
             compressed_artifact_name: voicevox-macos-cpu-arm64
             app_asar_dir: prepackage/VOICEVOX.app/Contents/Resources
             installer_artifact_name: macos-cpu-arm64-dmg
