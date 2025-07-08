@@ -1,6 +1,6 @@
 {
   "name": "voicevox-test",
-  "version": "999.999.999",
+  "version": "0.25.0-preview-diff.0",
   "author": "Hiroshiba Kazuyuki",
   "private": true,
   "main": "./dist/main.js",
