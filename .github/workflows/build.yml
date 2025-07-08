@@ -470,7 +470,7 @@ jobs:
           name: ${{ matrix.installer_artifact_name }}-release
           path: |-
             dist_electron/*.AppImage
-            dist_electron/latest.yml
+            dist_electron/*.yml
 
       - name: Upload Linux AppImage split to Release Assets
         if: endsWith(matrix.installer_artifact_name, '-appimage') && (github.event.release.tag_name || github.event.inputs.version) != ''
@@ -489,7 +489,7 @@ jobs:
           name: ${{ matrix.installer_artifact_name }}-release
           path: |-
             dist_electron/*.dmg
-            dist_electron/latest.yml
+            dist_electron/*.yml
 
       - name: Upload macOS dmg to Release Assets
         if: endsWith(matrix.installer_artifact_name, '-dmg') && (github.event.release.tag_name || github.event.inputs.version) != ''
@@ -509,7 +509,7 @@ jobs:
           path: |-
             dist_electron/nsis-web/*.7z
             dist_electron/nsis-web/*.exe
-            dist_electron/nsis-web/latest.yml
+            dist_electron/nsis-web/*.yml
 
       - name: Upload Windows NSIS Web to Release Assets
         if: endsWith(matrix.installer_artifact_name, '-nsis-web') && (github.event.release.tag_name || github.event.inputs.version) != ''
