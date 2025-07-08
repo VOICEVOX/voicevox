@@ -36,7 +36,7 @@ export class UpdateManager {
         "app-update.yml does not exist in resources path, probably not an installer build.",
       );
       throw new DisplayableError(
-        `アプリ内部からのアップデートはインストーラー版でのみ利用可能です。`,
+        `アプリ内からのアップデートはインストーラー版でのみ利用可能です。`,
       );
     }
 
