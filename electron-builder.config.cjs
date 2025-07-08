@@ -6,6 +6,8 @@ const {
   default: afterAllArtifactBuild,
 } = require("./build/afterAllArtifactBuild.cjs");
 
+const { version } = require("./package.json");
+
 const dotenvPath = join(process.cwd(), ".env.production");
 config({ path: dotenvPath });
 
@@ -131,6 +133,7 @@ const builderOptions = {
     include: "build/installer.nsh",
     oneClick: false,
     allowToChangeInstallationDirectory: true,
+    appPackageUrl: `https://vv-update-api.sevenc7c.workers.dev/${ARTIFACT_NAME}/${version}`,
   },
   publish: {
     provider: "generic",
