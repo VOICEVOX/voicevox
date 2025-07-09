@@ -1,7 +1,6 @@
 /// <reference types="vitest" />
 import path from "path";
 import { rm } from "fs/promises";
-
 import electron from "vite-plugin-electron/simple";
 import tsconfigPaths from "vite-tsconfig-paths";
 import vue from "@vitejs/plugin-vue";
@@ -9,15 +8,21 @@ import checker from "vite-plugin-checker";
 import { BuildOptions, defineConfig, loadEnv, Plugin } from "vite";
 import { quasar } from "@quasar/vite-plugin";
 import { z } from "zod";
-
+import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
 import {
   checkSuspiciousImports,
   CheckSuspiciousImportsOptions,
 } from "./tools/checkSuspiciousImports.js";
 
+const nodeTestPaths = ["../tests/unit/**/*.node.{test,spec}.ts"];
+const browserTestPaths = ["../tests/unit/**/*.browser.{test,spec}.ts"];
+const normalTestPaths = ["../tests/unit/**/*.{test,spec}.ts"];
+
 const isElectron = process.env.VITE_TARGET === "electron";
 const isBrowser = process.env.VITE_TARGET === "browser";
 const isProduction = process.env.NODE_ENV === "production";
+
+const ignorePaths = (paths: string[]) => paths.map((path) => `!${path}`);
 
 export default defineConfig((options) => {
   const mode = z
@@ -152,6 +157,86 @@ export default defineConfig((options) => {
       isBrowser &&
         injectLoaderScriptPlugin("./backend/browser/backendApiLoader.ts"),
     ],
+
+    test: {
+      projects: [
+        // Node.js環境
+        {
+          extends: "../vite.config.ts",
+          test: {
+            include: nodeTestPaths,
+            name: "node",
+            environment: "node",
+            globals: true,
+          },
+        },
+
+        // happy-domのエミュレート版ブラウザ環境
+        {
+          extends: "../vite.config.ts",
+          plugins: [],
+          test: {
+            include: [
+              ...normalTestPaths,
+              ...ignorePaths(nodeTestPaths),
+              ...ignorePaths(browserTestPaths),
+            ],
+            globals: true,
+            name: "unit",
+            environment: "happy-dom",
+          },
+        },
+
+        // Chromiumブラウザ環境
+        {
+          extends: "../vite.config.ts",
+          test: {
+            include: browserTestPaths,
+            globals: true,
+            name: "browser",
+            browser: {
+              enabled: true,
+              instances: [{ browser: "chromium" }],
+              provider: "playwright",
+              headless: true,
+              api: 7158,
+              ui: false,
+            },
+          },
+        },
+
+        // Storybook
+        {
+          extends: "../vite.config.ts",
+          plugins: [
+            storybookTest({
+              storybookScript: "storybook --ci --port 7160",
+              storybookUrl: "http://localhost:7160",
+            }),
+          ],
+          resolve: {
+            alias: {
+              // NOTE: Storybookで`template:`指定を使うために必要
+              vue: "vue/dist/vue.esm-bundler.js",
+            },
+          },
+          test: {
+            globals: true,
+            name: "storybook",
+            browser: {
+              enabled: true,
+              instances: [{ browser: "chromium" }],
+              provider: "playwright",
+              headless: true,
+              api: 7159,
+              ui: false,
+            },
+            isolate: false,
+            setupFiles: ["./.storybook/vitest.setup.ts"],
+          },
+        },
+      ],
+    },
   };
 });
 const cleanDistPlugin = (): Plugin => {
