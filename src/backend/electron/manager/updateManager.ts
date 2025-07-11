@@ -1,9 +1,11 @@
 import fs from "fs/promises";
 import path from "path";
 import { autoUpdater as electronUpdater } from "electron-updater";
-import { DisplayableError } from "@/helpers/errorHelper";
+import { getWindowManager } from "./windowManager";
+import { DisplayableError, errorToMessage } from "@/helpers/errorHelper";
 import { createLogger } from "@/helpers/log";
 import { isProduction, isMac } from "@/helpers/platform";
+import { ipcMainSendProxy } from "../ipc";
 
 const log = createLogger("AutoUpdateManager");
 
@@ -18,10 +20,29 @@ electronUpdater.forceDevUpdateConfig = true;
 
 electronUpdater.on("error", (error) => {
   log.error("AutoUpdater error:", error);
+  void getWindowManager().showMessageBox({
+    message: `アップデート中にエラーが発生しました。\n${errorToMessage(error)}`,
+    type: "error",
+  });
 });
 
 electronUpdater.on("update-downloaded", (info) => {
   log.info("Update downloaded:", info);
+});
+
+electronUpdater.on("download-progress", (info) => {
+  const win = getWindowManager().win;
+  if (win == null) {
+    log.error("Window is not available for sending download progress.");
+    return;
+  }
+  ipcMainSendProxy.ON_UPDATE_DOWNLOAD_PROGRESS(win, {
+    numBytes: info.transferred,
+    totalBytes: info.total,
+  });
+  log.info(
+    `Download progress: ${info.percent}% (${info.bytesPerSecond} bytes/s)`,
+  );
 });
 
 export class UpdateManager {

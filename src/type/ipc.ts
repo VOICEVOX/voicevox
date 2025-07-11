@@ -290,4 +290,9 @@ export type IpcSOData = {
     args: [obj: { width: number; height: number }];
     return: void;
   };
+
+  ON_UPDATE_DOWNLOAD_PROGRESS: {
+    args: [obj: { numBytes: number; totalBytes: number }];
+    return: void;
+  };
 };
