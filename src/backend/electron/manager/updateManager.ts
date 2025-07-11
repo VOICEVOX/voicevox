@@ -3,7 +3,7 @@ import path from "path";
 import { autoUpdater as electronUpdater } from "electron-updater";
 import { DisplayableError } from "@/helpers/errorHelper";
 import { createLogger } from "@/helpers/log";
-import { isProduction } from "@/helpers/platform";
+import { isProduction, isMac } from "@/helpers/platform";
 
 const log = createLogger("AutoUpdateManager");
 
@@ -27,6 +27,12 @@ electronUpdater.on("update-downloaded", (info) => {
 export class UpdateManager {
   constructor() {}
   async updateApp(version: string) {
+    if (isMac) {
+      throw new DisplayableError(
+        `macOSではアプリ内からのアップデートはサポートされていません。`,
+      );
+    }
+
     const appUpdateYmlExists = await fs
       .stat(path.join(process.resourcesPath, "app-update.yml"))
       .catch(() => false);
