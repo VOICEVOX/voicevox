@@ -1,11 +1,11 @@
 import fs from "fs/promises";
 import path from "path";
 import { autoUpdater as electronUpdater } from "electron-updater";
+import { ipcMainSendProxy } from "../ipc";
 import { getWindowManager } from "./windowManager";
 import { DisplayableError, errorToMessage } from "@/helpers/errorHelper";
 import { createLogger } from "@/helpers/log";
 import { isProduction, isMac } from "@/helpers/platform";
-import { ipcMainSendProxy } from "../ipc";
 
 const log = createLogger("AutoUpdateManager");
 
