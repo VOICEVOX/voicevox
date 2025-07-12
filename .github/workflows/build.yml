@@ -20,10 +20,6 @@ on:
         description: "コード署名する"
         type: boolean
         default: false
-      upload_all_artifacts:
-        description: "デバッグ用にすべての成果物をartifactにアップロードするか"
-        type: boolean
-        default: false
 
 env:
   VOICEVOX_ENGINE_VERSION: 0.24.1
@@ -343,7 +339,7 @@ jobs:
           rm $name.tar
 
       - name: Upload Linux tar.gz (without nvidia) to Artifacts
-        if: startsWith(matrix.artifact_name, 'linux-') && !contains(matrix.artifact_name, 'nvidia') && github.event.inputs.upload_all_artifacts == 'true'
+        if: startsWith(matrix.artifact_name, 'linux-') && !contains(matrix.artifact_name, 'nvidia')
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}-targz
@@ -373,7 +369,7 @@ jobs:
           7z rn $name.zip prepackage/ VOICEVOX/
 
       - name: Upload Windows & Mac zip (without nvidia) to Artifacts
-        if: (startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')) && !contains(matrix.artifact_name, 'nvidia') && github.event.inputs.upload_all_artifacts == 'true'
+        if: (startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')) && !contains(matrix.artifact_name, 'nvidia')
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}-zip
@@ -541,7 +537,7 @@ jobs:
   upload-to-huggingface:
     needs: build-and-upload
     runs-on: ubuntu-latest
-    if: (github.event.release.tag_name || github.event.inputs.version) && github.event.inputs.prerelease == 'false'
+    if: (github.event.release.tag_name || github.event.inputs.version)
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v4
