@@ -118,17 +118,12 @@ const builderOptions: ElectronBuilderConfiguration = {
       },
     ],
     signtoolOptions: {
-      certificateSha1:
-        WIN_CERTIFICATE_SHA1 !== "" ? WIN_CERTIFICATE_SHA1 : undefined,
-      signingHashAlgorithms:
-        WIN_SIGNING_HASH_ALGORITHMS != undefined
-          ? WIN_SIGNING_HASH_ALGORITHMS
-          : undefined,
+      certificateSha1: WIN_CERTIFICATE_SHA1 || undefined,
+      signingHashAlgorithms: WIN_SIGNING_HASH_ALGORITHMS,
     },
   },
   nsisWeb: {
-    artifactName:
-      NSIS_WEB_ARTIFACT_NAME !== "" ? NSIS_WEB_ARTIFACT_NAME : undefined,
+    artifactName: NSIS_WEB_ARTIFACT_NAME || undefined,
     include: "build/installer.nsh",
     oneClick: false,
     allowToChangeInstallationDirectory: true,
@@ -139,9 +134,8 @@ const builderOptions: ElectronBuilderConfiguration = {
     vPrefixedTagName: false,
   },
   linux: {
-    artifactName: LINUX_ARTIFACT_NAME !== "" ? LINUX_ARTIFACT_NAME : undefined,
-    executableName:
-      LINUX_EXECUTABLE_NAME !== "" ? LINUX_EXECUTABLE_NAME : undefined,
+    artifactName: LINUX_ARTIFACT_NAME || undefined,
+    executableName: LINUX_EXECUTABLE_NAME || undefined,
     icon: "public/icon.png",
     category: "AudioVideo",
     mimeTypes: ["application/x-voicevox"],
@@ -153,7 +147,7 @@ const builderOptions: ElectronBuilderConfiguration = {
     ],
   },
   mac: {
-    artifactName: MACOS_ARTIFACT_NAME !== "" ? MACOS_ARTIFACT_NAME : undefined,
+    artifactName: MACOS_ARTIFACT_NAME || undefined,
     icon: "public/icon-mac.png",
     category: "public.app-category.utilities",
     target: [
