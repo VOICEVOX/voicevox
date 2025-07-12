@@ -14,7 +14,7 @@ import { ContextMenuItem } from "reka-ui";
 
 defineProps<{
   label: string;
-  shortcut: string;
+  shortcut?: string;
   disabled?: boolean;
 }>();
 
