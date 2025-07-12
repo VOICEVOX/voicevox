@@ -1,10 +1,8 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
-const { join, resolve } = require("path");
-const { readdirSync, existsSync, rmSync } = require("fs");
-const { config } = require("dotenv");
-const {
-  default: afterAllArtifactBuild,
-} = require("./build/afterAllArtifactBuild.cjs");
+import { join, resolve } from "path";
+import { readdirSync, existsSync, rmSync } from "fs";
+import { config } from "dotenv";
+import { Configuration as ElectronBuilderConfiguration } from "electron-builder";
+import afterAllArtifactBuild from "./afterAllArtifactBuild";
 
 const dotenvPath = join(process.cwd(), ".env.production");
 config({ path: dotenvPath });
@@ -26,6 +24,7 @@ const MACOS_ARTIFACT_NAME = process.env.MACOS_ARTIFACT_NAME;
 
 // コード署名証明書
 const WIN_CERTIFICATE_SHA1 = process.env.WIN_CERTIFICATE_SHA1;
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 const WIN_SIGNING_HASH_ALGORITHMS = process.env.WIN_SIGNING_HASH_ALGORITHMS
   ? JSON.parse(process.env.WIN_SIGNING_HASH_ALGORITHMS)
   : undefined;
@@ -40,7 +39,9 @@ const isArm64 = process.arch === "arm64";
 // cf: https://k-hyoda.hatenablog.com/entry/2021/10/23/000349#%E8%BF%BD%E5%8A%A0%E5%B1%95%E9%96%8B%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB%E5%85%88%E3%81%AE%E8%A8%AD%E5%AE%9A
 const extraFilePrefix = isMac ? "MacOS/" : "";
 
-const sevenZipFile = readdirSync(resolve(__dirname, "vendored", "7z")).find(
+const sevenZipFile = readdirSync(
+  resolve(import.meta.dirname, "..", "vendored", "7z"),
+).find(
   // Windows: 7za.exe, Linux: 7zzs, macOS: 7zz
   (fileName) => ["7za.exe", "7zzs", "7zz"].includes(fileName),
 );
@@ -52,10 +53,12 @@ if (!sevenZipFile) {
 }
 
 /** @type {import("electron-builder").Configuration} */
-const builderOptions = {
+const builderOptions: ElectronBuilderConfiguration = {
   beforeBuild: async () => {
-    if (existsSync(resolve(__dirname, "dist_electron"))) {
-      rmSync(resolve(__dirname, "dist_electron"), { recursive: true });
+    if (existsSync(resolve(import.meta.dirname, "..", "dist_electron"))) {
+      rmSync(resolve(import.meta.dirname, "..", "dist_electron"), {
+        recursive: true,
+      });
     }
   },
   directories: {
@@ -96,7 +99,7 @@ const builderOptions = {
       to: join(extraFilePrefix, "vv-engine"),
     },
     {
-      from: resolve(__dirname, "vendored", "7z", sevenZipFile),
+      from: resolve(import.meta.dirname, "..", "vendored", "7z", sevenZipFile),
       to: extraFilePrefix + sevenZipFile,
     },
   ],
@@ -116,6 +119,7 @@ const builderOptions = {
     signtoolOptions: {
       certificateSha1:
         WIN_CERTIFICATE_SHA1 !== "" ? WIN_CERTIFICATE_SHA1 : undefined,
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       signingHashAlgorithms:
         WIN_SIGNING_HASH_ALGORITHMS !== ""
           ? WIN_SIGNING_HASH_ALGORITHMS
@@ -163,4 +167,5 @@ const builderOptions = {
     icon: "public/icon-dmg.icns",
   },
 };
-module.exports = builderOptions;
+
+export default builderOptions;
