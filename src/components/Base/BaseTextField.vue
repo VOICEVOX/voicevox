@@ -71,10 +71,15 @@ const model = defineModel<string>();
 
 const inputRef = useTemplateRef("inputRef");
 
-const selectAll = () => {
-  if (inputRef.value) {
-    inputRef.value.select();
+const isTextSelected = () => {
+  const input = inputRef.value;
+  if (input == null) {
+    throw new Error("inputRef is null");
   }
+
+  const selection = getSelection(input);
+
+  return selection.start < selection.end;
 };
 
 const getSelection = (input: HTMLInputElement) => {
@@ -91,17 +96,6 @@ const getSelection = (input: HTMLInputElement) => {
   };
 };
 
-const isTextSelected = () => {
-  const input = inputRef.value;
-  if (input == null) {
-    throw new Error("inputRef is null");
-  }
-
-  const selection = getSelection(input);
-
-  return selection.start < selection.end;
-};
-
 const replaceSelection = (input: HTMLInputElement, text: string) => {
   const selection = getSelection(input);
 
@@ -109,36 +103,11 @@ const replaceSelection = (input: HTMLInputElement, text: string) => {
   const afterText = input.value.substring(selection.end);
 
   model.value = beforeText + text + afterText;
+
+  // inputにfocusが戻ったあとに実行するため遅延させる
   setTimeout(() => {
     input.selectionStart = selection.start;
     input.selectionEnd = selection.start + text.length;
-  }, 0);
-};
-
-const paste = async () => {
-  const input = inputRef.value;
-  if (input == null) {
-    throw new Error("inputRef is null");
-  }
-
-  const text = await navigator.clipboard.readText();
-  replaceSelection(input, text);
-};
-
-const copy = async () => {
-  const input = inputRef.value;
-  if (input == null) {
-    throw new Error("inputRef is null");
-  }
-
-  const selection = getSelection(input);
-
-  const text = input.value.substring(selection.start, selection.end);
-  await navigator.clipboard.writeText(text);
-
-  setTimeout(() => {
-    input.selectionStart = selection.start;
-    input.selectionEnd = selection.end;
   }, 0);
 };
 
@@ -154,6 +123,40 @@ const cut = async () => {
   await navigator.clipboard.writeText(text);
 
   replaceSelection(input, "");
+};
+
+const copy = async () => {
+  const input = inputRef.value;
+  if (input == null) {
+    throw new Error("inputRef is null");
+  }
+
+  const selection = getSelection(input);
+
+  const text = input.value.substring(selection.start, selection.end);
+  await navigator.clipboard.writeText(text);
+
+  // inputにfocusが戻ったあとに実行するため遅延させる
+  setTimeout(() => {
+    input.selectionStart = selection.start;
+    input.selectionEnd = selection.end;
+  }, 0);
+};
+
+const paste = async () => {
+  const input = inputRef.value;
+  if (input == null) {
+    throw new Error("inputRef is null");
+  }
+
+  const text = await navigator.clipboard.readText();
+  replaceSelection(input, text);
+};
+
+const selectAll = () => {
+  if (inputRef.value) {
+    inputRef.value.select();
+  }
 };
 </script>
 
