@@ -234,6 +234,9 @@ importers:
       happy-dom:
         specifier: 18.0.1
         version: 18.0.1
+      jiti:
+        specifier: 2.4.2
+        version: 2.4.2
       license-checker-rseidelsohn:
         specifier: 4.4.2
         version: 4.4.2
@@ -8465,8 +8468,7 @@ snapshots:
       filelist: 1.0.4
       minimatch: 3.1.2
 
-  jiti@2.4.2:
-    optional: true
+  jiti@2.4.2: {}
 
   js-beautify@1.15.4:
     dependencies:
