@@ -2050,8 +2050,12 @@ export type UiStoreState = {
   isMaximized: boolean;
   isPinned: boolean;
   isFullscreen: boolean;
-  progress: number;
-  progressOptions: ProgressOptions | undefined;
+  progress:
+    | {
+        options: ProgressOptions;
+        value: number;
+      }
+    | undefined;
   isVuexReady: boolean;
 } & DialogStates;
 
@@ -2080,10 +2084,6 @@ export type UiStoreTypes = {
 
   MENUBAR_LOCKED: {
     getter: boolean;
-  };
-
-  PROGRESS: {
-    getter: number;
   };
 
   ASYNC_UI_LOCK: {
@@ -2234,7 +2234,9 @@ export type UiStoreTypes = {
   };
 
   SET_PROGRESS: {
-    mutation: { progress: number };
+    mutation: {
+      progress: number;
+    };
     action(payload: { progress: number }): void;
   };
 
@@ -2243,6 +2245,7 @@ export type UiStoreTypes = {
   };
 
   RESET_PROGRESS: {
+    mutation: undefined;
     action(): void;
   };
 

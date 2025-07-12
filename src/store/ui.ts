@@ -86,8 +86,7 @@ export const uiStoreState: UiStoreState = {
   isMaximized: false,
   isPinned: false,
   isFullscreen: false,
-  progress: -1,
-  progressOptions: undefined,
+  progress: undefined,
   isVuexReady: false,
 };
 
@@ -101,12 +100,6 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   MENUBAR_LOCKED: {
     getter(state) {
       return state.dialogLockCount > 0;
-    },
-  },
-
-  PROGRESS: {
-    getter(state) {
-      return state.progress;
     },
   },
 
@@ -454,8 +447,10 @@ export const uiStore = createPartialStore<UiStoreTypes>({
 
   START_PROGRESS: {
     mutation(state, { options }) {
-      state.progress = 0;
-      state.progressOptions = options;
+      state.progress = {
+        value: 0,
+        options,
+      };
     },
     action({ mutations }, options) {
       mutations.START_PROGRESS({ options });
@@ -464,9 +459,12 @@ export const uiStore = createPartialStore<UiStoreTypes>({
 
   SET_PROGRESS: {
     mutation(state, { progress }) {
-      state.progress = progress;
+      if (state.progress == undefined) {
+        throw new Error("Progress is not started yet.");
+      }
+      state.progress.value = progress;
     },
-    // progressは-1(非表示)と[0, 1]の範囲を取る
+    // progressは[0, 1]の範囲を取る
     action({ mutations }, { progress }) {
       mutations.SET_PROGRESS({ progress });
     },
@@ -479,9 +477,11 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   },
 
   RESET_PROGRESS: {
-    action({ actions }) {
-      // -1で非表示
-      void actions.SET_PROGRESS({ progress: -1 });
+    mutation(state) {
+      state.progress = undefined;
+    },
+    action({ mutations }) {
+      mutations.RESET_PROGRESS();
     },
   },
 
