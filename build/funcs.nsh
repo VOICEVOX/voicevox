@@ -39,38 +39,47 @@
   Push $0 ; Stack $0
   Push $1 ;       $1 $0
 
-  ; electron-builder のスクリプトに基づいたハッシュ値と対象ファイル名の取得
-  ; https://github.com/electron-userland/electron-builder/blob/28cb86bdcb6dd0b10e75a69ccd34ece6cca1d204/packages/app-builder-lib/templates/nsis/include/installer.nsh#L17-L70
-  !ifdef APP_64_NAME
-    !ifdef APP_32_NAME
-      !ifdef APP_ARM64_NAME
-        ${if} ${IsNativeARM64}
-          StrCpy $0 "${APP_ARM64_NAME}"
-          StrCpy $1 "${APP_ARM64_HASH}"
-        ${elseif} ${IsNativeAMD64}
-          StrCpy $0 "${APP_64_NAME}"
-          StrCpy $1 "${APP_64_HASH}"
-        ${else}
-          StrCpy $0 "${APP_32_NAME}"
-          StrCpy $1 "${APP_32_HASH}"
-        ${endif}
+  ${StdUtils.GetParameter} $0 "package-file" ""
+  ; 引数でパッケージのパスが指定されている場合はそれを優先する（electron-updater用）
+  ${If} $0 != ""
+    ; electron-updater のアップデート機構ではハッシュ値は取得できない、かつ electron-updater のアップデート機構ではすでにハッシュの検証が行われているため、
+    ; ハッシュチェックは省略する。
+    ; ref: https://github.com/VOICEVOX/voicevox/pull/2701#discussion_r2202709203
+    StrCpy $1 "__DANGEROUS_SKIP_HASH_CHECK__"
+  ${Else}
+    ; electron-builder のスクリプトに基づいたハッシュ値と対象ファイル名の取得
+    ; https://github.com/electron-userland/electron-builder/blob/28cb86bdcb6dd0b10e75a69ccd34ece6cca1d204/packages/app-builder-lib/templates/nsis/include/installer.nsh#L17-L70
+    !ifdef APP_64_NAME
+      !ifdef APP_32_NAME
+        !ifdef APP_ARM64_NAME
+          ${if} ${IsNativeARM64}
+            StrCpy $0 "${APP_ARM64_NAME}"
+            StrCpy $1 "${APP_ARM64_HASH}"
+          ${elseif} ${IsNativeAMD64}
+            StrCpy $0 "${APP_64_NAME}"
+            StrCpy $1 "${APP_64_HASH}"
+          ${else}
+            StrCpy $0 "${APP_32_NAME}"
+            StrCpy $1 "${APP_32_HASH}"
+          ${endif}
+        !else
+          ${if} ${RunningX64}
+            StrCpy $0 "${APP_64_NAME}"
+            StrCpy $1 "${APP_64_HASH}"
+          ${else}
+            StrCpy $0 "${APP_32_NAME}"
+            StrCpy $1 "${APP_32_HASH}"
+          ${endif}
+        !endif
       !else
-        ${if} ${RunningX64}
-          StrCpy $0 "${APP_64_NAME}"
-          StrCpy $1 "${APP_64_HASH}"
-        ${else}
-          StrCpy $0 "${APP_32_NAME}"
-          StrCpy $1 "${APP_32_HASH}"
-        ${endif}
+        StrCpy $0 "${APP_64_NAME}"
+        StrCpy $1 "${APP_64_HASH}"
       !endif
     !else
-      StrCpy $0 "${APP_64_NAME}"
-      StrCpy $1 "${APP_64_HASH}"
+      StrCpy $0 "${APP_32_NAME}"
+      StrCpy $1 "${APP_32_HASH}"
     !endif
-  !else
-    StrCpy $0 "${APP_32_NAME}"
-    StrCpy $1 "${APP_32_HASH}"
-  !endif
+  ${EndIf}
 
                       ; Stack $1 $0
   Exch $1             ;       <ResultHash> $0
@@ -225,11 +234,17 @@
   Exch 2             ;       <Hash> $1 $0
   Exch $2            ;       $2 $1 $0
 
-  ${StdUtils.HashFile} $0 "$1" "$0"
-  ${If} $0 == $2
+  ${If} $2 == "__DANGEROUS_SKIP_HASH_CHECK__"
+    ; ハッシュチェックをスキップする。
+    ; electron-updater などの、すでにハッシュが検証済みのものを使う場合にのみ使用すること。
     StrCpy $0 "OK"
   ${Else}
-    StrCpy $0 "Failed"
+    ${StdUtils.HashFile} $0 "$1" "$0"
+    ${If} $0 == $2
+      StrCpy $0 "OK"
+    ${Else}
+      StrCpy $0 "Failed"
+    ${EndIf}
   ${EndIf}
 
                   ; Stack $2 $1 $0
