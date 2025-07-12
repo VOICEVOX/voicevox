@@ -39,6 +39,17 @@ export const Opened: Story = {
   },
 };
 
+export const NotSupported: Story = {
+  name: "アップデートがサポートされていない",
+  args: {
+    dialogOpened: true,
+    isUpdateSupported: {
+      isUpdateSupported: false,
+      reason: "アップデートできない理由がここに入ります。",
+    },
+  },
+};
+
 export const Close: Story = {
   name: "閉じるボタンを押す",
   args: { ...Opened.args },
