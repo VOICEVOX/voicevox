@@ -2,6 +2,7 @@ import path from "path";
 import { readdirSync, existsSync, rmSync } from "fs";
 import { config } from "dotenv";
 import { Configuration as ElectronBuilderConfiguration } from "electron-builder";
+import { z } from "zod";
 import afterAllArtifactBuild from "./afterAllArtifactBuild";
 
 const rootDir = path.join(import.meta.dirname, "..");
@@ -24,10 +25,12 @@ const LINUX_EXECUTABLE_NAME = process.env.LINUX_EXECUTABLE_NAME;
 const MACOS_ARTIFACT_NAME = process.env.MACOS_ARTIFACT_NAME;
 
 // コード署名証明書
+const winSigningHashAlgorithmsSchema = z.array(z.enum(["sha1", "sha256"]));
 const WIN_CERTIFICATE_SHA1 = process.env.WIN_CERTIFICATE_SHA1;
-// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 const WIN_SIGNING_HASH_ALGORITHMS = process.env.WIN_SIGNING_HASH_ALGORITHMS
-  ? JSON.parse(process.env.WIN_SIGNING_HASH_ALGORITHMS)
+  ? winSigningHashAlgorithmsSchema.parse(
+      JSON.parse(process.env.WIN_SIGNING_HASH_ALGORITHMS),
+    )
   : undefined;
 
 const isMac = process.platform === "darwin";
@@ -51,7 +54,6 @@ if (!sevenZipFile) {
   );
 }
 
-/** @type {import("electron-builder").Configuration} */
 const builderOptions: ElectronBuilderConfiguration = {
   beforeBuild: async () => {
     if (existsSync(path.join(rootDir, "dist_electron"))) {
@@ -118,9 +120,8 @@ const builderOptions: ElectronBuilderConfiguration = {
     signtoolOptions: {
       certificateSha1:
         WIN_CERTIFICATE_SHA1 !== "" ? WIN_CERTIFICATE_SHA1 : undefined,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       signingHashAlgorithms:
-        WIN_SIGNING_HASH_ALGORITHMS !== ""
+        WIN_SIGNING_HASH_ALGORITHMS != undefined
           ? WIN_SIGNING_HASH_ALGORITHMS
           : undefined,
     },
