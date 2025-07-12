@@ -6,6 +6,7 @@ import { getWindowManager } from "./windowManager";
 import { DisplayableError, errorToMessage } from "@/helpers/errorHelper";
 import { createLogger } from "@/helpers/log";
 import { isProduction, isMac } from "@/helpers/platform";
+import { IsUpdateSupported } from "@/type/preload";
 
 const log = createLogger("AutoUpdateManager");
 
@@ -47,11 +48,12 @@ electronUpdater.on("download-progress", (info) => {
 
 export class UpdateManager {
   constructor() {}
-  async updateApp(version: string) {
+  async isUpdateSupported(): Promise<IsUpdateSupported> {
     if (isMac) {
-      throw new DisplayableError(
-        `macOSではアプリ内からのアップデートはサポートされていません。`,
-      );
+      return {
+        isUpdateSupported: false,
+        reason: "MacOSではアプリ内からのアップデートはサポートされていません。",
+      };
     }
 
     const appUpdateYmlExists = await fs
@@ -59,12 +61,23 @@ export class UpdateManager {
       .catch(() => false);
 
     if (isProduction && !appUpdateYmlExists) {
-      log.error(
-        "app-update.yml does not exist in resources path, probably not an installer build.",
-      );
-      throw new DisplayableError(
-        `アプリ内からのアップデートはインストーラー版でのみ利用可能です。`,
-      );
+      return {
+        isUpdateSupported: false,
+        reason:
+          "アプリ内アップデートはインストーラー版でのみサポートされています。",
+      };
+    }
+
+    return {
+      isUpdateSupported: true,
+    };
+  }
+
+  async updateApp(version: string) {
+    const canUpdate = await this.isUpdateSupported();
+    if (canUpdate.isUpdateSupported !== true) {
+      log.error(`Cannot update app: ${canUpdate.reason}`);
+      throw new DisplayableError(canUpdate.reason);
     }
 
     const latest = await electronUpdater.checkForUpdates();

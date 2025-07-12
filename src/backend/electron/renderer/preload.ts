@@ -223,6 +223,10 @@ const api: Sandbox = {
     return webUtils.getPathForFile(file);
   },
 
+  isUpdateSupported: async () => {
+    return await ipcRendererInvokeProxy.IS_UPDATE_SUPPORTED();
+  },
+
   updateApp: async (obj) => {
     return await ipcRendererInvokeProxy.UPDATE_APP(obj);
   },

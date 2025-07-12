@@ -20,6 +20,9 @@ const meta: Meta<typeof Presentation> = {
         contributors: ["これは表示されないはず"],
       },
     ],
+    isUpdateSupported: {
+      isUpdateSupported: true,
+    },
     "onUpdate:dialogOpened": fn(),
     onSkipThisVersionClick: fn(),
   },

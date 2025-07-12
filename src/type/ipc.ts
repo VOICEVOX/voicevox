@@ -4,6 +4,7 @@ import {
   EngineId,
   EngineInfo,
   EngineSettingType,
+  IsUpdateSupported,
   MessageBoxReturnValue,
   NativeThemeType,
   TextAsset,
@@ -224,6 +225,11 @@ export type IpcIHData = {
   READ_FILE: {
     args: [obj: { filePath: string }];
     return: Result<Uint8Array>;
+  };
+
+  IS_UPDATE_SUPPORTED: {
+    args: [];
+    return: IsUpdateSupported;
   };
 
   UPDATE_APP: {

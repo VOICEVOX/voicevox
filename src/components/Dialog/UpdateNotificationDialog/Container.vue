@@ -9,6 +9,7 @@
     v-model:dialogOpened="isDialogOpenComputed"
     :latestVersion="newUpdateResult.latestVersion"
     :newUpdateInfos="newUpdateResult.newUpdateInfos"
+    :isUpdateSupported
     @skipThisVersionClick="handleSkipThisVersionClick"
     @updateApp="doUpdateApp"
   />
@@ -16,11 +17,11 @@
 
 <script setup lang="ts">
 import semver from "semver";
-import { computed, watchEffect } from "vue";
+import { computed, onMounted, ref, watchEffect } from "vue";
 import UpdateNotificationDialog from "./Presentation.vue";
 import { useFetchNewUpdateInfos } from "@/composables/useFetchNewUpdateInfos";
 import { useStore } from "@/store";
-import { UrlString } from "@/type/preload";
+import { IsUpdateSupported, UrlString } from "@/type/preload";
 import { getAppInfos } from "@/domain/appInfo";
 
 const props = defineProps<{
@@ -58,6 +59,12 @@ const currentVersionGetter = async () => {
     ? appVersion
     : skipUpdateVersion;
 };
+
+// アップデートに対応しているか、と対応していない理由がある場合はその理由を返す
+const isUpdateSupported = ref<IsUpdateSupported | undefined>(undefined);
+onMounted(async () => {
+  isUpdateSupported.value = await store.actions.IS_UPDATE_SUPPORTED();
+});
 
 // 新しいバージョンがあれば取得
 const newUpdateResult = useFetchNewUpdateInfos(

@@ -54,6 +54,7 @@ import {
   NoteId,
   CommandId,
   TrackId,
+  IsUpdateSupported,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import {
@@ -1835,6 +1836,10 @@ export type IndexStoreTypes = {
   SET_IS_MULTI_ENGINE_OFF_MODE: {
     mutation: { isMultiEngineOffMode: boolean };
     action(payload: boolean): void;
+  };
+
+  IS_UPDATE_SUPPORTED: {
+    action(): Promise<IsUpdateSupported>;
   };
 
   UPDATE_APP: {

@@ -71,15 +71,23 @@
           color="primary"
           textColor="display-on-primary"
           class="q-mt-sm"
+          :disabled="!props.isUpdateSupported?.isUpdateSupported"
           @click="updateApp()"
-        />
+        >
+          <QTooltip
+            v-if="!props.isUpdateSupported?.isUpdateSupported"
+            :delay="500"
+          >
+            {{ props.isUpdateSupported?.reason }}
+          </QTooltip>
+        </QBtn>
       </QCardActions>
     </QCard>
   </QDialog>
 </template>
 
 <script setup lang="ts">
-import { UpdateInfo } from "@/type/preload";
+import { IsUpdateSupported, UpdateInfo } from "@/type/preload";
 
 const dialogOpened = defineModel<boolean>("dialogOpened", { default: false });
 const props = defineProps<{
@@ -87,6 +95,8 @@ const props = defineProps<{
   latestVersion: string;
   /** 表示するアップデート情報 */
   newUpdateInfos: UpdateInfo[];
+  /** アップデートがサポートされているかどうか */
+  isUpdateSupported: IsUpdateSupported | undefined;
 }>();
 const emit = defineEmits<{
   /** スキップするときに呼ばれる */

@@ -343,6 +343,12 @@ export const indexStore = createPartialStore<IndexStoreTypes>({
     },
   },
 
+  IS_UPDATE_SUPPORTED: {
+    async action() {
+      return await window.backend.isUpdateSupported();
+    },
+  },
+
   UPDATE_APP: {
     async action({ actions }, { version }) {
       try {
