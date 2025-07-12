@@ -1,24 +1,43 @@
 <template>
-  <div class="wrapper">
-    <input
-      :id
-      v-model="model"
-      type="text"
-      class="input"
-      :class="{ error: hasError }"
-      :placeholder
-      :readonly
-      :disabled
-      @change="(payload) => $emit('change', payload)"
-      @click="(payload) => $emit('click', payload)"
-    />
-    <div v-if="hasError" class="error-label">
-      <slot name="error" />
+  <BaseContextMenu>
+    <div class="wrapper">
+      <input
+        :id
+        ref="inputRef"
+        v-model="model"
+        type="text"
+        class="input"
+        :class="{ error: hasError }"
+        :placeholder
+        :readonly
+        :disabled
+        @change="(payload) => $emit('change', payload)"
+        @click="(payload) => $emit('click', payload)"
+      />
+      <div v-if="hasError" class="error-label">
+        <slot name="error" />
+      </div>
     </div>
-  </div>
+    <template #menu>
+      <BaseContextMenuItem label="切り取り" shortcut="Ctrl+X" @select="cut" />
+      <BaseContextMenuItem label="コピー" shortcut="Ctrl+C" @select="copy" />
+      <BaseContextMenuItem label="貼り付け" shortcut="Ctrl+V" @select="paste" />
+      <BaseContextMenuSeparator />
+      <BaseContextMenuItem
+        label="すべて選択"
+        shortcut="Ctrl+A"
+        @select="selectAll"
+      />
+    </template>
+  </BaseContextMenu>
 </template>
 
 <script setup lang="ts">
+import { useTemplateRef } from "vue";
+import BaseContextMenu from "./BaseContextMenu.vue";
+import BaseContextMenuItem from "./BaseContextMenuItem.vue";
+import BaseContextMenuSeparator from "./BaseContextMenuSeparator.vue";
+
 defineProps<{
   placeholder?: string;
   hasError?: boolean;
@@ -33,6 +52,82 @@ defineEmits<{
 }>();
 
 const model = defineModel<string>();
+
+const inputRef = useTemplateRef("inputRef");
+
+const selectAll = () => {
+  if (inputRef.value) {
+    inputRef.value.select();
+  }
+};
+
+const getSelection = (input: HTMLInputElement) => {
+  const selectionStart = input.selectionStart;
+  const selectionEnd = input.selectionEnd;
+
+  if (selectionStart == null || selectionEnd == null) {
+    throw new Error("selection is null");
+  }
+
+  return {
+    start: selectionStart,
+    end: selectionEnd,
+  };
+};
+
+const replaceSelection = (input: HTMLInputElement, text: string) => {
+  const selection = getSelection(input);
+
+  const beforeText = input.value.substring(0, selection.start);
+  const afterText = input.value.substring(selection.end);
+
+  model.value = beforeText + text + afterText;
+  setTimeout(() => {
+    input.selectionStart = selection.start;
+    input.selectionEnd = selection.start + text.length;
+  }, 0);
+};
+
+const paste = async () => {
+  const input = inputRef.value;
+  if (input == null) {
+    throw new Error("inputRef is null");
+  }
+
+  const text = await navigator.clipboard.readText();
+  replaceSelection(input, text);
+};
+
+const copy = async () => {
+  const input = inputRef.value;
+  if (input == null) {
+    throw new Error("inputRef is null");
+  }
+
+  const selection = getSelection(input);
+
+  const text = input.value.substring(selection.start, selection.end);
+  await navigator.clipboard.writeText(text);
+
+  setTimeout(() => {
+    input.selectionStart = selection.start;
+    input.selectionEnd = selection.end;
+  }, 0);
+};
+
+const cut = async () => {
+  const input = inputRef.value;
+  if (input == null) {
+    throw new Error("inputRef is null");
+  }
+
+  const selection = getSelection(input);
+
+  const text = input.value.substring(selection.start, selection.end);
+  await navigator.clipboard.writeText(text);
+
+  replaceSelection(input, "");
+};
 </script>
 
 <style scoped lang="scss">
