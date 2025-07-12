@@ -467,12 +467,15 @@ void app.whenReady().then(async () => {
 
     let title: string;
     let message: string;
+    let okButtonLabel: string;
     if (status.status === "not_installed") {
       title = "デフォルトエンジンのインストール";
       message = `${status.engineName} をインストールしますか？`;
+      okButtonLabel = "インストールする";
     } else {
       title = "デフォルトエンジンのアップデート";
       message = `${status.engineName} の新しいバージョン（${status.latestVersion}）にアップデートしますか？`;
+      okButtonLabel = "アップデートする";
     }
 
     // インストールするか確認
@@ -480,7 +483,7 @@ void app.whenReady().then(async () => {
       type: "info",
       title,
       message,
-      buttons: ["はい", "いいえ"],
+      buttons: [okButtonLabel, "キャンセル"],
       cancelId: 1,
     });
     if (result == 1) {

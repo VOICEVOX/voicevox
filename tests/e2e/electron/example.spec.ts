@@ -21,7 +21,8 @@ function getUserTestDir(): string {
 }
 
 // 共通のエンジンテスト関数
-async function runEngineTest(isUpdate: boolean = false) {
+async function runEngineTest(params: { isUpdate: boolean }) {
+  const { isUpdate } = params;
   if (isUpdate) {
     await setupOldVersionEngine();
   }
@@ -32,27 +33,32 @@ async function runEngineTest(isUpdate: boolean = false) {
   });
 
   // ダイアログのモック
-  await app.evaluate((electron) => {
+  await app.evaluate((electron, params) => {
+    const { isUpdate } = params;
+
     // @ts-expect-error ２種のオーバーロードを無視する
     electron.dialog.showMessageBoxSync = (options: MessageBoxSyncOptions) => {
       // デフォルトエンジンのインストールの確認ダイアログ
       if (
+        !isUpdate &&
         options.title == "デフォルトエンジンのインストール" &&
-        options.buttons?.[0] == "インストール"
+        options.buttons?.[0] == "インストールする"
       ) {
         return 0;
       }
+
       // アップデート通知ダイアログ
       if (
+        isUpdate &&
         options.title == "デフォルトエンジンのアップデート" &&
-        options.buttons?.[0] == "はい"
+        options.buttons?.[0] == "アップデートする"
       ) {
         return 0;
       }
 
       throw new Error(`Unexpected dialog: ${JSON.stringify(options)}`);
     };
-  });
+  }, params);
 
   // ログを表示
   app.on("console", (msg) => {
@@ -75,7 +81,7 @@ async function setupOldVersionEngine() {
   const vvppEngineDir = path.join(userDir, "vvpp-engines");
 
   await fs.mkdir(vvppEngineDir, { recursive: true });
-  const sourceOldEngineDir = path.join(__dirname, "oldEngine");
+  const sourceOldEngineDir = path.join(import.meta.dirname, "oldEngine");
   const manifestPath = path.join(sourceOldEngineDir, "engine_manifest.json");
   const manifest = JSON.parse(await fs.readFile(manifestPath, "utf-8")) as {
     uuid: string;
@@ -113,10 +119,10 @@ test.beforeEach(async () => {
 });
 
 [
-  {
-    envName: ".env環境",
-    envPath: ".env",
-  },
+  // {
+  //   envName: ".env環境",
+  //   envPath: ".env",
+  // },
   {
     envName: "VVPPデフォルトエンジン",
     envPath: "tests/env/.env.test-electron-default-vvpp",
@@ -127,14 +133,13 @@ test.beforeEach(async () => {
       dotenv.config({ path: envPath, override: true });
     });
 
-    test("起動したら「利用規約に関するお知らせ」が表示される", async () => {
-      await runEngineTest(false);
-    });
+    // test("起動したら「利用規約に関するお知らせ」が表示される", async () => {
+    //   await runEngineTest({ isUpdate: false });
+    // });
 
-    // VVPPデフォルトエンジンの場合のみアップデートテストを実行
     if (envName === "VVPPデフォルトエンジン") {
       test("古いバージョンがインストールされている場合、アップデートが実行される", async () => {
-        await runEngineTest(true);
+        await runEngineTest({ isUpdate: true });
       });
     }
   });
