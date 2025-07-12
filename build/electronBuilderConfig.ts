@@ -1,10 +1,11 @@
-import { join, resolve } from "path";
+import path from "path";
 import { readdirSync, existsSync, rmSync } from "fs";
 import { config } from "dotenv";
 import { Configuration as ElectronBuilderConfiguration } from "electron-builder";
 import afterAllArtifactBuild from "./afterAllArtifactBuild";
 
-const dotenvPath = join(process.cwd(), ".env.production");
+const rootDir = path.join(import.meta.dirname, "..");
+const dotenvPath = path.join(rootDir, ".env.production");
 config({ path: dotenvPath });
 
 const VOICEVOX_ENGINE_DIR =
@@ -39,9 +40,7 @@ const isArm64 = process.arch === "arm64";
 // cf: https://k-hyoda.hatenablog.com/entry/2021/10/23/000349#%E8%BF%BD%E5%8A%A0%E5%B1%95%E9%96%8B%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB%E5%85%88%E3%81%AE%E8%A8%AD%E5%AE%9A
 const extraFilePrefix = isMac ? "MacOS/" : "";
 
-const sevenZipFile = readdirSync(
-  resolve(import.meta.dirname, "..", "vendored", "7z"),
-).find(
+const sevenZipFile = readdirSync(path.join(rootDir, "vendored", "7z")).find(
   // Windows: 7za.exe, Linux: 7zzs, macOS: 7zz
   (fileName) => ["7za.exe", "7zzs", "7zz"].includes(fileName),
 );
@@ -55,8 +54,8 @@ if (!sevenZipFile) {
 /** @type {import("electron-builder").Configuration} */
 const builderOptions: ElectronBuilderConfiguration = {
   beforeBuild: async () => {
-    if (existsSync(resolve(import.meta.dirname, "..", "dist_electron"))) {
-      rmSync(resolve(import.meta.dirname, "..", "dist_electron"), {
+    if (existsSync(path.join(rootDir, "dist_electron"))) {
+      rmSync(path.join(rootDir, "dist_electron"), {
         recursive: true,
       });
     }
@@ -96,10 +95,10 @@ const builderOptions: ElectronBuilderConfiguration = {
     },
     {
       from: VOICEVOX_ENGINE_DIR,
-      to: join(extraFilePrefix, "vv-engine"),
+      to: path.join(extraFilePrefix, "vv-engine"),
     },
     {
-      from: resolve(import.meta.dirname, "..", "vendored", "7z", sevenZipFile),
+      from: path.join(rootDir, "vendored", "7z", sevenZipFile),
       to: extraFilePrefix + sevenZipFile,
     },
   ],
