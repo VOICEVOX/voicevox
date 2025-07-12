@@ -1,6 +1,6 @@
 /// <reference types="vitest" />
-import path from "path";
-import { rm } from "fs/promises";
+import path from "node:path";
+import { rm } from "node:fs/promises";
 import electron from "vite-plugin-electron/simple";
 import tsconfigPaths from "vite-tsconfig-paths";
 import vue from "@vitejs/plugin-vue";

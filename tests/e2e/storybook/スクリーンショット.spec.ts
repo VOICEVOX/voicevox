@@ -5,8 +5,8 @@
  * --update-snapshotsをつけてPlaywrightを実行するとスクリーンショットが更新される。
  * 同時に、Storyが消えたスクリーンショットの削除も行う。
  */
-import fs from "fs/promises";
-import path from "path";
+import fs from "node:fs/promises";
+import path from "node:path";
 import { test, expect, Locator } from "@playwright/test";
 import z from "zod";
 

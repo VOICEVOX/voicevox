@@ -1,5 +1,5 @@
-import process from "process";
-import fs from "fs";
+import process from "node:process";
+import fs from "node:fs";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 

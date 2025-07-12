@@ -1,15 +1,15 @@
 /**
  * OSに合ったtyposのバイナリをダウンロードするスクリプト。
  */
-import { exec } from "child_process";
-import fsSync from "fs";
-import fs from "fs/promises";
-import os from "os";
-import path from "path";
-import { Readable } from "stream";
-import { pipeline } from "stream/promises";
-import { ReadableStream } from "stream/web";
-import { promisify } from "util";
+import { exec } from "node:child_process";
+import fsSync from "node:fs";
+import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import { Readable } from "node:stream";
+import { pipeline } from "node:stream/promises";
+import { ReadableStream } from "node:stream/web";
+import { promisify } from "node:util";
 import { retryFetch } from "./helper.js";
 
 // OS名を定義するオブジェクト
