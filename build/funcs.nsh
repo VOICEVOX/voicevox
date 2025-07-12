@@ -42,7 +42,9 @@
   ${StdUtils.GetParameter} $0 "package-file" ""
   ; 引数でパッケージのパスが指定されている場合はそれを優先する（electron-updater用）
   ${If} $0 != ""
-    ; ハッシュチェックは省略する（electron-updater がすでに行っているため）
+    ; electron-updater のアップデート機構ではハッシュ値は取得できない、かつ electron-updater のアップデート機構ではすでにハッシュの検証が行われているため、
+    ; ハッシュチェックは省略する。
+    ; ref: https://github.com/VOICEVOX/voicevox/pull/2701#discussion_r2202709203
     StrCpy $1 "__DANGEROUS_SKIP_HASH_CHECK__"
   ${Else}
     ; electron-builder のスクリプトに基づいたハッシュ値と対象ファイル名の取得
