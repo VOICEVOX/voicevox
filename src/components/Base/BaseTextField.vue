@@ -19,13 +19,29 @@
       </div>
     </div>
     <template #menu>
-      <BaseContextMenuItem label="切り取り" shortcut="Ctrl+X" @select="cut" />
-      <BaseContextMenuItem label="コピー" shortcut="Ctrl+C" @select="copy" />
-      <BaseContextMenuItem label="貼り付け" shortcut="Ctrl+V" @select="paste" />
+      <BaseContextMenuItem
+        label="切り取り"
+        shortcut="Ctrl+X"
+        :disabled="disabled || readonly || !isTextSelected()"
+        @select="cut"
+      />
+      <BaseContextMenuItem
+        label="コピー"
+        shortcut="Ctrl+C"
+        :disabled="disabled || !isTextSelected()"
+        @select="copy"
+      />
+      <BaseContextMenuItem
+        label="貼り付け"
+        shortcut="Ctrl+V"
+        :disabled="disabled || readonly"
+        @select="paste"
+      />
       <BaseContextMenuSeparator />
       <BaseContextMenuItem
         label="すべて選択"
         shortcut="Ctrl+A"
+        :disabled
         @select="selectAll"
       />
     </template>
@@ -73,6 +89,17 @@ const getSelection = (input: HTMLInputElement) => {
     start: selectionStart,
     end: selectionEnd,
   };
+};
+
+const isTextSelected = () => {
+  const input = inputRef.value;
+  if (input == null) {
+    throw new Error("inputRef is null");
+  }
+
+  const selection = getSelection(input);
+
+  return selection.start < selection.end;
 };
 
 const replaceSelection = (input: HTMLInputElement, text: string) => {
