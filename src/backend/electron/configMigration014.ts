@@ -1,6 +1,6 @@
 // configファイルの場所が0.14で変わったので、以前のファイルを持ってくる
-import fs from "fs";
-import path from "path";
+import fs from "node:fs";
+import path from "node:path";
 
 import semver from "semver";
 import { z } from "zod";

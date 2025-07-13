@@ -1,5 +1,5 @@
-import path from "path";
-import { readdirSync, existsSync, rmSync } from "fs";
+import path from "node:path";
+import { readdirSync, existsSync, rmSync } from "node:fs";
 import { config } from "dotenv";
 import { Configuration as ElectronBuilderConfiguration } from "electron-builder";
 import { z } from "zod";
