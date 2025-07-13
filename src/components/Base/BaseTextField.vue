@@ -44,12 +44,14 @@
         :disabled
         @select="selectAll"
       />
+      <BaseContextMenuSeparator v-if="slot['contextMenu'] != null" />
+      <slot name="contextMenu" />
     </template>
   </BaseContextMenu>
 </template>
 
 <script setup lang="ts">
-import { useTemplateRef } from "vue";
+import { useSlots, useTemplateRef } from "vue";
 import BaseContextMenu from "./BaseContextMenu.vue";
 import BaseContextMenuItem from "./BaseContextMenuItem.vue";
 import BaseContextMenuSeparator from "./BaseContextMenuSeparator.vue";
@@ -68,7 +70,7 @@ defineEmits<{
 }>();
 
 const model = defineModel<string>();
-
+const slot = useSlots();
 const inputRef = useTemplateRef("inputRef");
 
 const getInputOrThrow = () => {
