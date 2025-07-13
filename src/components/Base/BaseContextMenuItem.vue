@@ -37,6 +37,7 @@ defineEmits<{
   padding-left: vars.$padding-2;
   border-radius: vars.$radius-1;
   color: colors.$display;
+  cursor: pointer;
 
   &[data-disabled] {
     opacity: 0.5;
