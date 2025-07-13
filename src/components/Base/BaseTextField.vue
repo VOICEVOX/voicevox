@@ -1,5 +1,5 @@
 <template>
-  <BaseContextMenu>
+  <BaseContextMenu @update:open="handleUpdateOpen">
     <div class="wrapper">
       <input
         :id
@@ -22,13 +22,13 @@
       <BaseContextMenuItem
         label="切り取り"
         shortcut="Ctrl+X"
-        :disabled="disabled || readonly || !isTextSelected()"
+        :disabled="disabled || readonly || !isTextSelected"
         @select="cut"
       />
       <BaseContextMenuItem
         label="コピー"
         shortcut="Ctrl+C"
-        :disabled="disabled || !isTextSelected()"
+        :disabled="disabled || !isTextSelected"
         @select="copy"
       />
       <BaseContextMenuItem
@@ -51,7 +51,7 @@
 </template>
 
 <script setup lang="ts">
-import { useSlots, useTemplateRef } from "vue";
+import { computed, ref, useSlots, useTemplateRef } from "vue";
 import BaseContextMenu from "./BaseContextMenu.vue";
 import BaseContextMenuItem from "./BaseContextMenuItem.vue";
 import BaseContextMenuSeparator from "./BaseContextMenuSeparator.vue";
@@ -73,6 +73,8 @@ const model = defineModel<string>();
 const slot = useSlots();
 const inputRef = useTemplateRef("inputRef");
 
+const selection = ref<{ start: number; end: number }>({ start: 0, end: 0 });
+
 const getInputOrThrow = () => {
   const input = inputRef.value;
   if (input == null) {
@@ -82,56 +84,55 @@ const getInputOrThrow = () => {
   return input;
 };
 
-const getSelectionOrThrow = () => {
-  const input = getInputOrThrow();
-  const { selectionStart, selectionEnd } = input;
+const handleUpdateOpen = (isOpened: boolean) => {
+  if (isOpened) {
+    const input = getInputOrThrow();
+    const { selectionStart, selectionEnd } = input;
 
-  if (selectionStart == null || selectionEnd == null) {
-    throw new Error("selection is null");
+    if (selectionStart == null || selectionEnd == null) {
+      throw new Error("selection is null");
+    }
+
+    selection.value = { start: selectionStart, end: selectionEnd };
+  } else {
+    const input = getInputOrThrow();
+
+    // inputにfocusが戻ったあとに実行するため遅延させる
+    setTimeout(() => {
+      input.selectionStart = selection.value.start;
+      input.selectionEnd = selection.value.end;
+    }, 1);
   }
-
-  return { start: selectionStart, end: selectionEnd };
 };
 
-const isTextSelected = () => {
-  const { start, end } = getSelectionOrThrow();
-  return start < end;
-};
+const isTextSelected = computed(
+  () => selection.value.start < selection.value.end,
+);
 
 const replaceSelection = (text: string) => {
   const input = getInputOrThrow();
-  const { start, end } = getSelectionOrThrow();
-  model.value = input.value.slice(0, start) + text + input.value.slice(end);
+  model.value =
+    input.value.slice(0, selection.value.start) +
+    text +
+    input.value.slice(selection.value.end);
 
   // inputにfocusが戻ったあとに実行するため遅延させる
-  setTimeout(() => {
-    input.selectionStart = start;
-    input.selectionEnd = start + text.length;
-  }, 0);
+  selection.value = {
+    start: selection.value.start,
+    end: selection.value.start + text.length,
+  };
 };
 
 const cut = async () => {
-  const input = getInputOrThrow();
-  const { start, end } = getSelectionOrThrow();
-
-  const text = input.value.slice(start, end);
-  await navigator.clipboard.writeText(text);
-
+  await copy();
   replaceSelection("");
 };
 
 const copy = async () => {
   const input = getInputOrThrow();
-  const { start, end } = getSelectionOrThrow();
 
-  const text = input.value.slice(start, end);
+  const text = input.value.slice(selection.value.start, selection.value.end);
   await navigator.clipboard.writeText(text);
-
-  // inputにfocusが戻ったあとに実行するため遅延させる
-  setTimeout(() => {
-    input.selectionStart = start;
-    input.selectionEnd = end;
-  }, 0);
 };
 
 const paste = async () => {
@@ -141,7 +142,10 @@ const paste = async () => {
 
 const selectAll = () => {
   const input = getInputOrThrow();
-  input.select();
+  selection.value = {
+    start: 0,
+    end: input.value.length,
+  };
 };
 </script>
 

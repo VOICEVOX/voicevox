@@ -1,5 +1,5 @@
 <template>
-  <ContextMenuRoot>
+  <ContextMenuRoot v-model:open="open">
     <ContextMenuTrigger asChild>
       <slot />
     </ContextMenuTrigger>
@@ -23,6 +23,8 @@ import {
   ContextMenuRoot,
   ContextMenuTrigger,
 } from "reka-ui";
+
+const open = defineModel<boolean>("open", { default: false });
 </script>
 
 <style lang="scss">
