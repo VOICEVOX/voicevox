@@ -170,7 +170,8 @@ const selectAll = () => {
   background-color: colors.$control;
   color: colors.$display;
 
-  &:focus {
+  &:focus,
+  [data-state="open"] > & {
     @include mixin.on-focus;
   }
 
