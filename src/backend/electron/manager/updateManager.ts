@@ -1,5 +1,5 @@
-import fs from "fs/promises";
-import path from "path";
+import fs from "node:fs/promises";
+import path from "node:path";
 import { autoUpdater as electronUpdater } from "electron-updater";
 import { ipcMainSendProxy } from "../ipc";
 import { getWindowManager } from "./windowManager";
