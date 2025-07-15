@@ -14,7 +14,7 @@ import type { FlatConfig } from "@typescript-eslint/utils/ts-eslint";
 import progressPlugin from "eslint-plugin-file-progress";
 import gitignoreConfig from "eslint-config-flat-gitignore";
 import vitestPlugin from "@vitest/eslint-plugin";
-import voicevoxPlugin from "./eslint-plugin/index.mjs";
+import voicevoxPlugin from "./eslint-plugin";
 
 type Config = FlatConfig.Config;
 type ConfigArray = FlatConfig.ConfigArray;
