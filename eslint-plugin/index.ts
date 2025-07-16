@@ -25,6 +25,6 @@ const voicevoxPlugin = {
       },
     ],
   },
-} as const satisfies FlatConfig.Plugin;
+} satisfies FlatConfig.Plugin;
 
 export default voicevoxPlugin;
