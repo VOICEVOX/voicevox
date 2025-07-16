@@ -11,13 +11,7 @@ const plugin: FlatConfig.Plugin = {
   rules,
 };
 
-type VoicevoxPlugin = {
-  configs: {
-    all: FlatConfig.ConfigArray;
-  };
-};
-
-const voicevoxPlugin: VoicevoxPlugin = {
+const voicevoxPlugin = {
   configs: {
     all: [
       {
@@ -31,6 +25,6 @@ const voicevoxPlugin: VoicevoxPlugin = {
       },
     ],
   },
-};
+} satisfies FlatConfig.Plugin;
 
 export default voicevoxPlugin;
