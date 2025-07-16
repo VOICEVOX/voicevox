@@ -30,13 +30,18 @@
       anchor="top end"
       transitionShow="none"
       transitionHide="none"
-      :target="!uiLocked"
     >
       <MenuItem
         v-for="(menu, i) of menudata.subMenu"
         :key="i"
         v-model:selected="subMenuOpenFlags[i]"
         :menudata="menu"
+        :disable="
+          menu.type !== 'separator' &&
+          (menu.disabled ||
+            (menu.disableWhenUiLocked && uiLocked) ||
+            (menu.disableWhileReloadingLock && reloadingLocked))
+        "
         @mouseover="reassignSubMenuOpen(i)"
       />
     </QMenu>
@@ -110,6 +115,7 @@ const getMenuBarHotkey = (rawLabel: string) => {
   }
 };
 const uiLocked = computed(() => store.getters.UI_LOCKED);
+const reloadingLocked = computed(() => store.state.reloadingLock);
 const selectedComputed = computed({
   get: () => props.selected,
   set: (val) => emit("update:selected", val),
