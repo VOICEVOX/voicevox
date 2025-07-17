@@ -1,23 +1,29 @@
 <template>
   <BaseContextMenu @update:open="handleUpdateOpen">
     <div class="wrapper">
-      <input
+      <div
         :id
         ref="inputRef"
-        v-model="model"
-        type="text"
+        role="textbox"
+        aria-multiline="false"
+        spellcheck="false"
         class="input"
-        :class="{ error: hasError }"
+        :class="{ error: hasError, readonly, disabled }"
         :placeholder
-        :readonly
-        :disabled
-        @change="(payload) => $emit('change', payload)"
-        @click="(payload) => $emit('click', payload)"
+        :contenteditable="!readonly && !disabled ? 'plaintext-only' : false"
+        @click="$emit('click', $event)"
+        @blur="$emit('change', $event)"
+        @input="handleInput"
+        @paste="handlePaste"
+        @keydown="preventEnter"
+        v-text="innerValue"
       />
+
       <div v-if="hasError" class="error-label">
         <slot name="error" />
       </div>
     </div>
+
     <template #menu>
       <BaseContextMenuItem
         label="切り取り"
@@ -41,7 +47,7 @@
       <BaseContextMenuItem
         label="すべて選択"
         shortcut="Ctrl+A"
-        :disabled
+        :disabled="disabled || readonly"
         @select="selectAll"
       />
       <BaseContextMenuSeparator v-if="slot['contextMenu'] != null" />
@@ -64,7 +70,7 @@ defineProps<{
   id?: string;
 }>();
 
-defineEmits<{
+const emit = defineEmits<{
   change: [payload: Event];
   click: [payload: MouseEvent];
 }>();
@@ -73,54 +79,103 @@ const model = defineModel<string>();
 const slot = useSlots();
 const inputRef = useTemplateRef("inputRef");
 
-const selection = ref<{ start: number; end: number }>({ start: 0, end: 0 });
+const innerValue = ref<string>(model.value ?? "");
 
-const getInputOrThrow = () => {
-  const input = inputRef.value;
-  if (input == null) {
-    throw new Error("inputRef is null");
+const selectionOffset = ref<{ start: number; end: number }>({
+  start: 0,
+  end: 0,
+});
+
+const getInputOrThrow = (): HTMLDivElement => {
+  const element = inputRef.value;
+  if (!(element instanceof HTMLDivElement)) {
+    throw new Error("inputRef is not div");
+  }
+  return element;
+};
+
+const handleInput = () => {
+  const input = getInputOrThrow();
+  model.value = input.innerText;
+};
+
+const handlePaste = (event: ClipboardEvent) => {
+  event.preventDefault();
+  void paste();
+
+  setTimeout(restoreSelection, 1);
+};
+
+const preventEnter = (event: KeyboardEvent) => {
+  if (event.key == "Enter") {
+    event.preventDefault();
+  }
+};
+
+const getSelectionRange = () => {
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount <= 0) {
+    throw new Error("test");
+  }
+  const range = selection.getRangeAt(0);
+  return { start: range.startOffset, end: range.endOffset };
+};
+
+const restoreSelection = () => {
+  const input = getInputOrThrow();
+
+  if (input.firstChild == null) {
+    throw new Error("input.firstChild is null");
   }
 
-  return input;
+  const range = document.createRange();
+  range.setStart(input.firstChild, selectionOffset.value.start);
+  range.setEnd(input.firstChild, selectionOffset.value.end);
+
+  const selection = window.getSelection();
+
+  if (selection == null) {
+    throw new Error("selection is null");
+  }
+
+  selection.removeAllRanges();
+  selection.addRange(range);
 };
 
 const handleUpdateOpen = (isOpened: boolean) => {
   if (isOpened) {
-    const input = getInputOrThrow();
-    const { selectionStart, selectionEnd } = input;
-
-    if (selectionStart == null || selectionEnd == null) {
-      throw new Error("selection is null");
-    }
-
-    selection.value = { start: selectionStart, end: selectionEnd };
+    selectionOffset.value = getSelectionRange();
   } else {
-    const input = getInputOrThrow();
-
-    // inputにfocusが戻ったあとに実行するため遅延させる
-    setTimeout(() => {
-      input.selectionStart = selection.value.start;
-      input.selectionEnd = selection.value.end;
-    }, 1);
+    setTimeout(restoreSelection, 1);
   }
 };
 
 const isTextSelected = computed(
-  () => selection.value.start < selection.value.end,
+  () => selectionOffset.value.start < selectionOffset.value.end,
 );
 
 const replaceSelection = (text: string) => {
-  const input = getInputOrThrow();
-  model.value =
-    input.value.slice(0, selection.value.start) +
-    text +
-    input.value.slice(selection.value.end);
+  const selection = window.getSelection();
+  if (selection == null) {
+    throw new Error("selection is null");
+  }
 
-  // inputにfocusが戻ったあとに実行するため遅延させる
-  selection.value = {
-    start: selection.value.start,
-    end: selection.value.start + text.length,
-  };
+  if (selection.rangeCount === 0) {
+    throw new Error("No selection range found");
+  }
+
+  const range = selection.getRangeAt(0);
+  const input = getInputOrThrow();
+
+  const before = input.innerText.slice(0, range.startOffset);
+  const after = input.innerText.slice(range.endOffset);
+  const newText = before + text + after;
+
+  input.textContent = newText;
+  model.value = newText;
+
+  const offset = before.length + text.length;
+  selectionOffset.value = { start: offset, end: offset };
 };
 
 const cut = async () => {
@@ -129,23 +184,26 @@ const cut = async () => {
 };
 
 const copy = async () => {
-  const input = getInputOrThrow();
-
-  const text = input.value.slice(selection.value.start, selection.value.end);
-  await navigator.clipboard.writeText(text);
+  const selection = window.getSelection();
+  if (selection) {
+    await navigator.clipboard.writeText(selection.toString());
+  }
 };
 
 const paste = async () => {
   const text = await navigator.clipboard.readText();
-  replaceSelection(text);
+  replaceSelection(text.replace(/\n/g, " "));
 };
 
 const selectAll = () => {
   const input = getInputOrThrow();
-  selection.value = {
-    start: 0,
-    end: input.value.length,
-  };
+  const textContent = input.textContent;
+
+  if (textContent == null) {
+    throw new Error("input.textContent is null");
+  }
+
+  selectionOffset.value = { start: 0, end: textContent.length };
 };
 </script>
 
@@ -167,8 +225,13 @@ const selectAll = () => {
   border: 1px solid colors.$border;
   border-radius: vars.$radius-1;
   padding-inline: vars.$padding-1;
+  padding-block: calc((#{vars.$size-control} - 1rem) / 2);
   background-color: colors.$control;
   color: colors.$display;
+  line-height: 1rem;
+  text-wrap: nowrap;
+  overflow-x: scroll;
+  overflow-y: hidden;
 
   &:focus,
   [data-state="open"] > & {
@@ -181,6 +244,10 @@ const selectAll = () => {
 
   &::placeholder {
     color: colors.$display-sub;
+  }
+
+  &::-webkit-scrollbar {
+    display: none;
   }
 }
 
