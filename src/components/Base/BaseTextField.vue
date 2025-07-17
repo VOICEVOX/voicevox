@@ -109,6 +109,7 @@ const handlePaste = (event: ClipboardEvent) => {
 const preventEnter = (event: KeyboardEvent) => {
   if (event.key == "Enter") {
     event.preventDefault();
+    emit("change", event);
   }
 };
 
