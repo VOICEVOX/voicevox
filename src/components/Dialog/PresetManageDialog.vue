@@ -251,9 +251,15 @@ watch(
 );
 
 const changePresetName = (event: Event) => {
-  if (event.target instanceof HTMLInputElement && selected.value) {
-    selected.value.preset.name = event.target.value;
+  if (!(event.target instanceof HTMLDivElement)) {
+    throw new Error("event.target is not an HTMLDivElement");
   }
+
+  if (selected.value == null) {
+    throw new Error("No preset is selected");
+  }
+
+  selected.value.preset.name = event.target.innerText;
 };
 
 const reorderPreset = (featurePresetList: (Preset & { key: PresetKey })[]) => {
