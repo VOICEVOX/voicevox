@@ -207,7 +207,7 @@ export class HotkeyManager {
               (element.tagName === "INPUT" ||
                 element.tagName === "SELECT" ||
                 element.tagName === "TEXTAREA" ||
-                element.contentEditable !== "false")
+                element.contentEditable === "true")
             ) {
               return;
             }
