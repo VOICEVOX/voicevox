@@ -1,4 +1,4 @@
-import fs from "fs/promises";
+import fs from "node:fs/promises";
 import { it, expect } from "vitest";
 import { Project as UfProject } from "@sevenc-nanashi/utaformatix-ts";
 import { ufProjectToVoicevox } from "@/sing/utaformatixProject/toVoicevox";

@@ -1,19 +1,16 @@
-// @ts-check
-import noStrictNullable from "./no-strict-nullable.mjs";
+import { FlatConfig } from "@typescript-eslint/utils/ts-eslint";
+import noStrictNullable from "./no-strict-nullable";
 import pkg from "./package.json" with { type: "json" };
 
-/** @type {import("@typescript-eslint/utils/ts-eslint").FlatConfig.Plugin["rules"]} */
-const rules = {
+const rules: FlatConfig.Plugin["rules"] = {
   "no-strict-nullable": noStrictNullable,
 };
 
-/** @type {import("@typescript-eslint/utils/ts-eslint").FlatConfig.Plugin} */
-const plugin = {
+const plugin: FlatConfig.Plugin = {
   meta: { name: pkg.name, version: pkg.version },
   rules,
 };
 
-/** @type {import("@typescript-eslint/utils/ts-eslint").FlatConfig.Plugin} */
 const voicevoxPlugin = {
   configs: {
     all: [
@@ -28,6 +25,6 @@ const voicevoxPlugin = {
       },
     ],
   },
-};
+} satisfies FlatConfig.Plugin;
 
 export default voicevoxPlugin;

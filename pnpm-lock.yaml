@@ -234,6 +234,9 @@ importers:
       happy-dom:
         specifier: 18.0.1
         version: 18.0.1
+      jiti:
+        specifier: 2.4.2
+        version: 2.4.2
       license-checker-rseidelsohn:
         specifier: 4.4.2
         version: 4.4.2
@@ -634,8 +637,8 @@ packages:
     resolution: {integrity: sha512-bV0Tgo9K4hfPCek+aMAn81RppFKv2ySDQeMoSZuvTASywNTnVJCArCZE2FWqpvIatKu7VMRLWlR1EazvVhDyhQ==}
     engines: {node: '>=18.18'}
 
-  '@inquirer/confirm@5.1.12':
-    resolution: {integrity: sha512-dpq+ielV9/bqgXRUbNH//KsY6WEw9DrGPmipkpmgC1Y46cwuBTNx7PXFWTjc3MQ+urcc0QxoVHcMI0FW4Ok0hg==}
+  '@inquirer/confirm@5.1.13':
+    resolution: {integrity: sha512-EkCtvp67ICIVVzjsquUiVSd+V5HRGOGQfsqA4E4vMWhYnB7InUL0pa0TIWt1i+OfP16Gkds8CdIu6yGZwOM1Yw==}
     engines: {node: '>=18'}
     peerDependencies:
       '@types/node': '>=18'
@@ -643,8 +646,8 @@ packages:
       '@types/node':
         optional: true
 
-  '@inquirer/core@10.1.13':
-    resolution: {integrity: sha512-1viSxebkYN2nJULlzCxES6G9/stgHSepZ9LqqfdIGPHj5OHhiBUXVS0a6R0bEC2A+VL4D9w6QB66ebCr6HGllA==}
+  '@inquirer/core@10.1.14':
+    resolution: {integrity: sha512-Ma+ZpOJPewtIYl6HZHZckeX1STvDnHTCB2GVINNUlSEn2Am6LddWwfPkIGY0IUFVjUUrr/93XlBwTK6mfLjf0A==}
     engines: {node: '>=18'}
     peerDependencies:
       '@types/node': '>=18'
@@ -1702,8 +1705,8 @@ packages:
       dmg-builder: 26.0.12
       electron-builder-squirrel-windows: 26.0.12
 
-  aproba@2.0.0:
-    resolution: {integrity: sha512-lYe4Gx7QT+MKGbDsA+Z+he/Wtef0BiwDOlK/XkBrdfsh9J/jPPXbX0tE9x9cl27Tmu5gg3QUbUrQYa/y+KOHPQ==}
+  aproba@2.1.0:
+    resolution: {integrity: sha512-tLIEcj5GuR2RSTnxNKdkK0dJ/GrC7P38sUkiDmDuHfsHmbagTFAxDVIBltoklXEVIQ/f14IL8IMJ5pn9Hez1Ew==}
 
   archiver-utils@2.1.0:
     resolution: {integrity: sha512-bEL/yUb/fNNiNTuUz979Z0Yg5L+LzLxGJz8x79lYmR54fmTIb6ob/hNQgkQnIUDWIFjZVQwl9Xs356I6BAMHfw==}
@@ -4389,6 +4392,10 @@ packages:
     resolution: {integrity: sha512-iF+tNDQla22geJdTyJB1wM/qrX9DMRwWrciEPwWLPRWAUEM8sQiyxgckLxWT1f7+9VabJS0jTGGr4QgBuvi6Ww==}
     engines: {node: '>= 10.0.0', npm: '>= 3.0.0'}
 
+  socks@2.8.6:
+    resolution: {integrity: sha512-pe4Y2yzru68lXCb38aAqRf5gvN8YdjP1lok5o0J7BOHljkyCGKVz7H3vpVIXKD27rj2giOJ7DwVyk/GWrPHDWA==}
+    engines: {node: '>= 10.0.0', npm: '>= 3.0.0'}
+
   sortablejs@1.14.0:
     resolution: {integrity: sha512-pBXvQCs5/33fdN1/39pPL0NZF20LeRbLQ5jtnheIPN9JQAaufGjKdWduZn4U7wCtVuzKhmRkI0DFYHYRbB2H1w==}
 
@@ -5499,15 +5506,15 @@ snapshots:
 
   '@humanwhocodes/retry@0.4.3': {}
 
-  '@inquirer/confirm@5.1.12(@types/node@22.15.24)':
+  '@inquirer/confirm@5.1.13(@types/node@22.15.24)':
     dependencies:
-      '@inquirer/core': 10.1.13(@types/node@22.15.24)
+      '@inquirer/core': 10.1.14(@types/node@22.15.24)
       '@inquirer/type': 3.0.7(@types/node@22.15.24)
     optionalDependencies:
       '@types/node': 22.15.24
     optional: true
 
-  '@inquirer/core@10.1.13(@types/node@22.15.24)':
+  '@inquirer/core@10.1.14(@types/node@22.15.24)':
     dependencies:
       '@inquirer/figures': 1.0.12
       '@inquirer/type': 3.0.7(@types/node@22.15.24)
@@ -6721,7 +6728,7 @@ snapshots:
       - bluebird
       - supports-color
 
-  aproba@2.0.0: {}
+  aproba@2.1.0: {}
 
   archiver-utils@2.1.0:
     dependencies:
@@ -7984,7 +7991,7 @@ snapshots:
 
   gauge@4.0.4:
     dependencies:
-      aproba: 2.0.0
+      aproba: 2.1.0
       color-support: 1.1.3
       console-control-strings: 1.1.0
       has-unicode: 2.0.1
@@ -8465,8 +8472,7 @@ snapshots:
       filelist: 1.0.4
       minimatch: 3.1.2
 
-  jiti@2.4.2:
-    optional: true
+  jiti@2.4.2: {}
 
   js-beautify@1.15.4:
     dependencies:
@@ -8975,7 +8981,7 @@ snapshots:
       '@bundled-es-modules/cookie': 2.0.1
       '@bundled-es-modules/statuses': 1.0.1
       '@bundled-es-modules/tough-cookie': 0.1.6
-      '@inquirer/confirm': 5.1.12(@types/node@22.15.24)
+      '@inquirer/confirm': 5.1.13(@types/node@22.15.24)
       '@mswjs/interceptors': 0.37.6
       '@open-draft/deferred-promise': 2.2.0
       '@open-draft/until': 2.1.0
@@ -9901,7 +9907,7 @@ snapshots:
     dependencies:
       agent-base: 6.0.2
       debug: 4.4.1
-      socks: 2.8.5
+      socks: 2.8.6
     transitivePeerDependencies:
       - supports-color
 
@@ -9914,6 +9920,11 @@ snapshots:
       - supports-color
 
   socks@2.8.5:
+    dependencies:
+      ip-address: 9.0.5
+      smart-buffer: 4.2.0
+
+  socks@2.8.6:
     dependencies:
       ip-address: 9.0.5
       smart-buffer: 4.2.0

@@ -1,5 +1,5 @@
-import path from "path";
-import fs from "fs";
+import path from "node:path";
+import fs from "node:fs";
 import { ReadableStream } from "node:stream/web";
 import { dialog } from "electron";
 
