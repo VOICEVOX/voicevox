@@ -9,7 +9,6 @@
         spellcheck="false"
         class="input"
         :class="{ error: hasError, readonly, disabled }"
-        :placeholder
         :contenteditable="!readonly && !disabled ? 'plaintext-only' : false"
         @click="$emit('click', $event)"
         @blur="$emit('change', $event)"
@@ -18,6 +17,9 @@
         @keydown="preventEnter"
         v-text="innerValue"
       />
+      <div v-if="placeholder && !model" class="placeholder">
+        {{ placeholder }}
+      </div>
 
       <div v-if="hasError" class="error-label">
         <slot name="error" />
@@ -96,7 +98,7 @@ const getInputOrThrow = (): HTMLDivElement => {
 
 const handleInput = () => {
   const input = getInputOrThrow();
-  model.value = input.innerText;
+  model.value = input.textContent ?? "";
 };
 
 const handlePaste = (event: ClipboardEvent) => {
@@ -215,6 +217,7 @@ const selectAll = () => {
 
 .wrapper {
   width: 100%;
+  position: relative;
 }
 
 .input {
@@ -250,6 +253,16 @@ const selectAll = () => {
   &::-webkit-scrollbar {
     display: none;
   }
+}
+
+.placeholder {
+  position: absolute;
+  inset: 0;
+  opacity: 0.5;
+  display: flex;
+  align-items: center;
+  padding-inline: vars.$padding-1;
+  pointer-events: none;
 }
 
 .error {
