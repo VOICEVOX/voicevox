@@ -1,4 +1,4 @@
-import fs from "fs";
+import fs from "node:fs";
 import { beforeEach, describe, expect, test } from "vitest";
 import { migrateProjectFileObject } from "@/infrastructures/projectFile/migration";
 import { EngineId, SpeakerId, StyleId } from "@/type/preload";

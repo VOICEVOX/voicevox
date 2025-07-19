@@ -15,9 +15,9 @@
  * ref: https://github.com/VOICEVOX/voicevox/issues/2508
  */
 
-import { builtinModules } from "module";
-import { styleText } from "util";
-import fs from "fs/promises";
+import { builtinModules } from "node:module";
+import { styleText } from "node:util";
+import fs from "node:fs/promises";
 import yargs from "yargs";
 import { parse } from "acorn";
 import { ancestor as visitWithAncestor } from "acorn-walk";

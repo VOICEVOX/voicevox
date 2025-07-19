@@ -1,9 +1,9 @@
 "use strict";
 
-import path from "path";
+import path from "node:path";
 
-import fs from "fs";
-import { pathToFileURL } from "url";
+import fs from "node:fs";
+import { pathToFileURL } from "node:url";
 import { app, dialog, Menu, net, protocol, shell } from "electron";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 

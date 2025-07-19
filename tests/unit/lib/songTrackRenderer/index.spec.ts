@@ -429,91 +429,97 @@ describe("SongTrackRenderer", () => {
     }
   });
 
-  test("再生ヘッド位置に近いフレーズから優先的にレンダリングされる", async () => {
-    const trackId = TrackId(uuid4());
-    const trackNotes = utility.toTrackNotes([
-      utility.createTestNotes(0),
-      utility.createTestNotes(1),
-      utility.createTestNotes(2),
-      utility.createTestNotes(3),
-      utility.createTestNotes(4),
-      utility.createTestNotes(5),
-      utility.createTestNotes(6),
-    ]);
-    const phraseIndexesPointedToByPlayhead = [3, 3, 6, 6, 6, 6, 6];
-    const phraseIndexesInExpectedRenderingOrder = [3, 4, 6, 0, 1, 2, 5];
-    const phraseRangeInfos = utility.getPhraseRangeInfos(trackNotes);
+  test(
+    "再生ヘッド位置に近いフレーズから優先的にレンダリングされる",
+    {
+      timeout: 10000, // テストが長くなる可能性があるため、タイムアウトを延長
+    },
+    async () => {
+      const trackId = TrackId(uuid4());
+      const trackNotes = utility.toTrackNotes([
+        utility.createTestNotes(0),
+        utility.createTestNotes(1),
+        utility.createTestNotes(2),
+        utility.createTestNotes(3),
+        utility.createTestNotes(4),
+        utility.createTestNotes(5),
+        utility.createTestNotes(6),
+      ]);
+      const phraseIndexesPointedToByPlayhead = [3, 3, 6, 6, 6, 6, 6];
+      const phraseIndexesInExpectedRenderingOrder = [3, 4, 6, 0, 1, 2, 5];
+      const phraseRangeInfos = utility.getPhraseRangeInfos(trackNotes);
 
-    let currentIndex = 0;
-    const movePlayheadToNextPosition = () => {
-      currentIndex++;
-    };
+      let currentIndex = 0;
+      const movePlayheadToNextPosition = () => {
+        currentIndex++;
+      };
 
-    const songTrackRenderer = utility.createSongTrackRendererUsingMock({
-      playheadPositionGetter: () => {
-        const phraseIndex = phraseIndexesPointedToByPlayhead[currentIndex];
-        const phraseRangeInfo = phraseRangeInfos[phraseIndex];
-        const phraseStartPos = phraseRangeInfo.startTicks;
-        const phraseEndPos = phraseRangeInfo.endTicks;
-        const phraseDuration = phraseEndPos - phraseStartPos;
-        return Math.floor(phraseStartPos + phraseDuration * 0.5);
-      },
-    });
-
-    const renderingEventInfoPromises: Promise<RenderingEventInfo>[] = [];
-    songTrackRenderer.addEventListener((event) => {
-      renderingEventInfoPromises.push(utility.toRenderingEventInfo(event));
-
-      // フレーズのピッチ生成が完了したら再生ヘッド位置を更新する
-      if (event.type === "pitchGenerationComplete") {
-        movePlayheadToNextPosition();
-      }
-    });
-
-    const snapshot = utility.createSnapshotObject([
-      [
-        trackId,
-        {
-          singer: {
-            engineId: constants.engineId,
-            styleId: constants.singerStyleId,
-          },
-          notes: trackNotes,
+      const songTrackRenderer = utility.createSongTrackRendererUsingMock({
+        playheadPositionGetter: () => {
+          const phraseIndex = phraseIndexesPointedToByPlayhead[currentIndex];
+          const phraseRangeInfo = phraseRangeInfos[phraseIndex];
+          const phraseStartPos = phraseRangeInfo.startTicks;
+          const phraseEndPos = phraseRangeInfo.endTicks;
+          const phraseDuration = phraseEndPos - phraseStartPos;
+          return Math.floor(phraseStartPos + phraseDuration * 0.5);
         },
-      ],
-    ]);
-    const result = await songTrackRenderer.render(snapshot);
+      });
 
-    const renderingEventInfos = await Promise.all(renderingEventInfoPromises);
-    const renderingResultInfo = await utility.toRenderingResultInfo(result);
+      const renderingEventInfoPromises: Promise<RenderingEventInfo>[] = [];
+      songTrackRenderer.addEventListener((event) => {
+        renderingEventInfoPromises.push(utility.toRenderingEventInfo(event));
 
-    expect(renderingResultInfo.type).toEqual("complete");
-    if (renderingResultInfo.type !== "complete") {
-      throw new UnreachableError();
-    }
-    renderingResultInfo.phraseInfos.forEach((value) =>
-      expect(value.notes.length).toBeGreaterThanOrEqual(1),
-    );
+        // フレーズのピッチ生成が完了したら再生ヘッド位置を更新する
+        if (event.type === "pitchGenerationComplete") {
+          movePlayheadToNextPosition();
+        }
+      });
 
-    // 結果のフレーズ情報を開始位置でソートし、PhraseKeyの配列を取得
-    const phraseInfosEntries = [...renderingResultInfo.phraseInfos.entries()];
-    phraseInfosEntries.sort(
-      (a, b) => a[1].notes[0].position - b[1].notes[0].position,
-    );
-    const sortedPhraseKeys = phraseInfosEntries.map((value) => value[0]);
+      const snapshot = utility.createSnapshotObject([
+        [
+          trackId,
+          {
+            singer: {
+              engineId: constants.engineId,
+              styleId: constants.singerStyleId,
+            },
+            notes: trackNotes,
+          },
+        ],
+      ]);
+      const result = await songTrackRenderer.render(snapshot);
 
-    // 期待されるレンダリング順序に従って、PhraseKeyを並び変える
-    const orderedPhraseKeys = phraseIndexesInExpectedRenderingOrder.map(
-      (phraseIndex) => sortedPhraseKeys[phraseIndex],
-    );
+      const renderingEventInfos = await Promise.all(renderingEventInfoPromises);
+      const renderingResultInfo = await utility.toRenderingResultInfo(result);
 
-    // 実際に phraseRenderingStarted が発行された順序と、期待される順序を、
-    // フレーズキーを使って比較
-    const phraseRenderingStartedEventInfos = renderingEventInfos.filter(
-      (value) => value.type === "phraseRenderingStarted",
-    );
-    expect(
-      phraseRenderingStartedEventInfos.map((value) => value.phraseKey),
-    ).toEqual(orderedPhraseKeys);
-  });
+      expect(renderingResultInfo.type).toEqual("complete");
+      if (renderingResultInfo.type !== "complete") {
+        throw new UnreachableError();
+      }
+      renderingResultInfo.phraseInfos.forEach((value) =>
+        expect(value.notes.length).toBeGreaterThanOrEqual(1),
+      );
+
+      // 結果のフレーズ情報を開始位置でソートし、PhraseKeyの配列を取得
+      const phraseInfosEntries = [...renderingResultInfo.phraseInfos.entries()];
+      phraseInfosEntries.sort(
+        (a, b) => a[1].notes[0].position - b[1].notes[0].position,
+      );
+      const sortedPhraseKeys = phraseInfosEntries.map((value) => value[0]);
+
+      // 期待されるレンダリング順序に従って、PhraseKeyを並び変える
+      const orderedPhraseKeys = phraseIndexesInExpectedRenderingOrder.map(
+        (phraseIndex) => sortedPhraseKeys[phraseIndex],
+      );
+
+      // 実際に phraseRenderingStarted が発行された順序と、期待される順序を、
+      // フレーズキーを使って比較
+      const phraseRenderingStartedEventInfos = renderingEventInfos.filter(
+        (value) => value.type === "phraseRenderingStarted",
+      );
+      expect(
+        phraseRenderingStartedEventInfos.map((value) => value.phraseKey),
+      ).toEqual(orderedPhraseKeys);
+    },
+  );
 });

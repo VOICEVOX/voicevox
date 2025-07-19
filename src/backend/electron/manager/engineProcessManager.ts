@@ -1,5 +1,5 @@
-import { spawn, ChildProcess } from "child_process";
-import path from "path";
+import { spawn, ChildProcess } from "node:child_process";
+import path from "node:path";
 import treeKill from "tree-kill";
 
 import { app, dialog } from "electron"; // FIXME: ここでelectronをimportするのは良くない

@@ -1,10 +1,10 @@
 /**
  * OSに合った7-Zipのバイナリとライセンスをダウンロードするスクリプト。
  */
-import { spawnSync } from "child_process";
-import fs from "fs";
-import os from "os";
-import path from "path";
+import { spawnSync } from "node:child_process";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import { retryFetch } from "./helper.js";
 
 const distPath = path.join(import.meta.dirname, "..", "vendored", "7z");
