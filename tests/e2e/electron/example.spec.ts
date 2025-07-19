@@ -66,7 +66,7 @@ async function runEngineTest(params: { isUpdate: boolean }) {
   });
 
   const sut = await app.firstWindow({
-    timeout: process.env.CI ? 60000 : 30000,
+    timeout: process.env.CI ? 0 : 60000,
   });
   await sut.waitForSelector("text=利用規約に関するお知らせ", {
     timeout: 180000, // 3分。ダウンロード時間を考慮して長めに
@@ -119,10 +119,10 @@ test.beforeEach(async () => {
 });
 
 [
-  // {
-  //   envName: ".env環境",
-  //   envPath: ".env",
-  // },
+  {
+    envName: ".env環境",
+    envPath: ".env",
+  },
   {
     envName: "VVPPデフォルトエンジン",
     envPath: "tests/env/.env.test-electron-default-vvpp",
@@ -133,9 +133,9 @@ test.beforeEach(async () => {
       dotenv.config({ path: envPath, override: true });
     });
 
-    // test("起動したら「利用規約に関するお知らせ」が表示される", async () => {
-    //   await runEngineTest({ isUpdate: false });
-    // });
+    test("起動したら「利用規約に関するお知らせ」が表示される", async () => {
+      await runEngineTest({ isUpdate: false });
+    });
 
     if (envName === "VVPPデフォルトエンジン") {
       test("古いバージョンがインストールされている場合、アップデートが実行される", async () => {

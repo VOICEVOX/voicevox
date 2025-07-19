@@ -3,6 +3,7 @@ import fs from "node:fs";
 import { ReadableStream } from "node:stream/web";
 import { dialog } from "electron";
 
+import semver from "semver";
 import { getConfigManager } from "./electronConfig";
 import { getEngineInfoManager } from "./manager/engineInfoManager";
 import { getEngineProcessManager } from "./manager/engineProcessManager";
@@ -25,7 +26,6 @@ import { UnreachableError } from "@/type/utility";
 import { ProgressCallback } from "@/helpers/progressHelper";
 import { createLogger } from "@/helpers/log";
 import { DisplayableError, errorToMessage } from "@/helpers/errorHelper";
-import semver from "semver";
 
 const log = createLogger("EngineAndVvppController");
 
@@ -68,9 +68,10 @@ export class EngineAndVvppController {
   async installVvppEngine(params: {
     vvppPath: string;
     asDefaultVvppEngine: boolean;
+    immediate: boolean;
     callbacks?: { onProgress?: ProgressCallback };
   }) {
-    const { vvppPath, asDefaultVvppEngine, callbacks } = params;
+    const { vvppPath, asDefaultVvppEngine, immediate, callbacks } = params;
 
     try {
       const extractedEngineFiles = await this.vvppManager.extract(
@@ -90,7 +91,7 @@ export class EngineAndVvppController {
         );
       }
 
-      await this.vvppManager.install(extractedEngineFiles);
+      await this.vvppManager.install({ extractedEngineFiles, immediate });
     } catch (e) {
       throw new DisplayableError(
         `${vvppPath} をインストールできませんでした。`,
@@ -128,7 +129,11 @@ export class EngineAndVvppController {
     }
 
     try {
-      await this.installVvppEngine({ vvppPath, asDefaultVvppEngine });
+      await this.installVvppEngine({
+        vvppPath,
+        asDefaultVvppEngine,
+        immediate: false,
+      });
     } catch (e) {
       log.error(e);
       dialog.showErrorBox("インストールエラー", errorToMessage(e));
@@ -351,6 +356,7 @@ export class EngineAndVvppController {
       await this.installVvppEngine({
         vvppPath: downloadedPaths[0],
         asDefaultVvppEngine: true,
+        immediate: true,
         callbacks: {
           onProgress: ({ progress }) => {
             callbacks.onProgress({ type: "install", progress });
