@@ -88,31 +88,16 @@ const selectionOffset = ref<{ start: number; end: number }>({
   end: 0,
 });
 
+const isTextSelected = computed(
+  () => selectionOffset.value.start < selectionOffset.value.end,
+);
+
 const getInputOrThrow = (): HTMLDivElement => {
   const element = inputRef.value;
   if (!(element instanceof HTMLDivElement)) {
     throw new Error("inputRef is not div");
   }
   return element;
-};
-
-const handleInput = () => {
-  const input = getInputOrThrow();
-  model.value = input.textContent ?? "";
-};
-
-const handlePaste = (event: ClipboardEvent) => {
-  event.preventDefault();
-  void paste();
-
-  setTimeout(restoreSelection, 1);
-};
-
-const preventEnter = (event: KeyboardEvent) => {
-  if (event.key == "Enter") {
-    event.preventDefault();
-    emit("change", event);
-  }
 };
 
 const getSelectionRange = () => {
@@ -145,18 +130,6 @@ const restoreSelection = () => {
   selection.addRange(range);
 };
 
-const handleUpdateOpen = (isOpened: boolean) => {
-  if (isOpened) {
-    selectionOffset.value = getSelectionRange();
-  } else {
-    setTimeout(restoreSelection, 1);
-  }
-};
-
-const isTextSelected = computed(
-  () => selectionOffset.value.start < selectionOffset.value.end,
-);
-
 const replaceSelection = (text: string) => {
   const selection = window.getSelection();
   if (selection == null) {
@@ -179,6 +152,33 @@ const replaceSelection = (text: string) => {
 
   const offset = before.length + text.length;
   selectionOffset.value = { start: offset, end: offset };
+};
+
+const handleUpdateOpen = (isOpened: boolean) => {
+  if (isOpened) {
+    selectionOffset.value = getSelectionRange();
+  } else {
+    setTimeout(restoreSelection, 1);
+  }
+};
+
+const handleInput = () => {
+  const input = getInputOrThrow();
+  model.value = input.textContent ?? "";
+};
+
+const handlePaste = (event: ClipboardEvent) => {
+  event.preventDefault();
+  void paste();
+
+  setTimeout(restoreSelection, 1);
+};
+
+const preventEnter = (event: KeyboardEvent) => {
+  if (event.key == "Enter") {
+    event.preventDefault();
+    emit("change", event);
+  }
 };
 
 const cut = async () => {
