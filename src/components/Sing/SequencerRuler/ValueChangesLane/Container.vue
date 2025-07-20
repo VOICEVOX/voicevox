@@ -197,7 +197,8 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
         label: "テンポ変化を削除",
         disabled: valueChange.value.position === 0,
         onClick: () => {
-          removeTempo(valueChange.value!.position);
+          if (!valueChange.value) return;
+          removeTempo(valueChange.value.position);
         },
         disableWhenUiLocked: true,
       });
@@ -268,9 +269,10 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
         label: "拍子変化を削除",
         disabled: valueChange.value.position === 0,
         onClick: () => {
+          if (!valueChange.value) return;
           removeTimeSignature(
             tickToMeasureNumber(
-              valueChange.value!.position,
+              valueChange.value.position,
               timeSignatures.value,
               tpqn.value,
             ),
