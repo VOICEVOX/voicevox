@@ -67,8 +67,8 @@ const config: PlaywrightTestConfig = {
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
   reporter: process.env.CI
-    ? [["github"]]
-    : [["list"]],
+    ? [["html", { open: "never" }], ["github"]]
+    : [["html", { open: "never" }]],
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
   use: {
