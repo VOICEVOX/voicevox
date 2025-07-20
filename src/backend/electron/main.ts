@@ -462,25 +462,31 @@ void app.whenReady().then(async () => {
       continue;
     }
 
-    let title: string;
-    let message: string;
-    let okButtonLabel: string;
+    let dialogOptions: {
+      title: string;
+      message: string;
+      okButtonLabel: string;
+    };
     if (status.installed.status === "not_installed") {
-      title = "デフォルトエンジンのインストール";
-      message = `${status.package.engineName} をインストールしますか？`;
-      okButtonLabel = "インストールする";
+      dialogOptions = {
+        title: "デフォルトエンジンのインストール",
+        message: `${status.package.engineName} をインストールしますか？`,
+        okButtonLabel: "インストールする",
+      };
     } else {
-      title = "デフォルトエンジンのアップデート";
-      message = `${status.package.engineName} の新しいバージョン（${status.package.latestVersion}）にアップデートしますか？`;
-      okButtonLabel = "アップデートする";
+      dialogOptions = {
+        title: "デフォルトエンジンのアップデート",
+        message: `${status.package.engineName} の新しいバージョン（${status.package.latestVersion}）にアップデートしますか？`,
+        okButtonLabel: "アップデートする",
+      };
     }
 
     // インストールするか確認
     const result = dialog.showMessageBoxSync({
       type: "info",
-      title,
-      message,
-      buttons: [okButtonLabel, "キャンセル"],
+      title: dialogOptions.title,
+      message: dialogOptions.message,
+      buttons: [dialogOptions.okButtonLabel, "キャンセル"],
       cancelId: 1,
     });
     if (result == 1) {

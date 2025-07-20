@@ -128,10 +128,7 @@ export class EngineInfoManager {
       }
       const result = this.loadEngineInfo(engineDir, "vvpp");
       if (!result.ok) {
-        log.info(
-          `Failed to load engine: ${result.code}, ${engineDir}`,
-          result.error,
-        );
+        log.info(`Failed to load engine: ${result.code}, ${engineDir}`);
         continue;
       }
       engineInfos.push(result.value);

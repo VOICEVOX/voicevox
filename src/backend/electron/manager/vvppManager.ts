@@ -205,7 +205,7 @@ export class VvppManager {
       [...this.willDeleteEngineIds].map(async (engineId) => {
         const deletingEngineDir = await this.getInstalledEngineDir(engineId);
         if (deletingEngineDir == undefined) {
-          throw new Error("エンジンが見つかりませんでした。");
+          throw new UnreachableError("エンジンが見つかりませんでした。");
         }
 
         try {
