@@ -242,7 +242,7 @@ export class EngineAndVvppController {
           engineName: envEngineInfo.name,
           engineId: envEngineInfo.uuid,
           packageInfo,
-          latestVersion,
+          latestVersion: packageInfo.version,
         },
         installed: installedStatus,
       });
