@@ -1,4 +1,4 @@
-import fs from "fs";
+import fs from "node:fs";
 import { moveFile } from "move-file";
 import { MinimumEngineManifestType } from "@/type/preload";
 

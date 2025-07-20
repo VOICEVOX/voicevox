@@ -1,6 +1,6 @@
-import os from "os";
-import path from "path";
-import fs from "fs";
+import os from "node:os";
+import path from "node:path";
+import fs from "node:fs";
 import { afterAll, beforeAll, expect, test } from "vitest";
 import { createVvppFile } from "./helper";
 import { VvppFileExtractor } from "@/backend/electron/vvppFile";

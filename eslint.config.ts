@@ -1,7 +1,6 @@
-// @ts-check
 import js from "@eslint/js";
 import globals from "globals";
-import * as importPlugin from "eslint-plugin-import";
+import importPlugin from "eslint-plugin-import";
 import storybookPlugin from "eslint-plugin-storybook";
 import vueParser from "vue-eslint-parser";
 import vuePlugin from "eslint-plugin-vue";
@@ -11,69 +10,60 @@ import {
   vueTsConfigs,
 } from "@vue/eslint-config-typescript";
 import { configs as tsConfigs, parser as tsParser } from "typescript-eslint";
+import type { FlatConfig } from "@typescript-eslint/utils/ts-eslint";
 import progressPlugin from "eslint-plugin-file-progress";
 import gitignoreConfig from "eslint-config-flat-gitignore";
 import vitestPlugin from "@vitest/eslint-plugin";
-import voicevoxPlugin from "./eslint-plugin/index.mjs";
+import voicevoxPlugin from "./eslint-plugin";
 
-/**
- * @typedef {import("@typescript-eslint/utils/ts-eslint").FlatConfig.Config} Config
- * @typedef {import("@typescript-eslint/utils/ts-eslint").FlatConfig.ConfigArray} ConfigArray
- * @typedef {import("@typescript-eslint/utils/ts-eslint").FlatConfig.ParserOptions} ParserOptions
- * @typedef {import("@typescript-eslint/utils/ts-eslint").FlatConfig.Rules} Rules
- */
+type Config = FlatConfig.Config;
+type ConfigArray = FlatConfig.ConfigArray;
+type ParserOptions = FlatConfig.ParserOptions;
+type Rules = FlatConfig.Rules;
 
 /**
  * プラグイン読込ラッパー関数
  * nameが設定されていないプラグイン用
- * @overload
- * @param {string} name ESLint Config Inspectorで表示される名前
- * @param {Config} config
- * @returns {ConfigArray}
  */
+function pluginConfig(name: string, config: Config): ConfigArray;
 /**
  * プラグイン読込ラッパー関数
  * nameが設定されている or Arrayを渡すプラグイン用
- * @overload
- * @param {Config | ConfigArray} configs
- * @returns {ConfigArray}
  */
-/**
- * @param {string | Config | ConfigArray} nameOrConfigs
- * @param {Config} config
- * @returns {ConfigArray}
- */
-const pluginConfig = (nameOrConfigs, config) => {
+function pluginConfig(configs: Config | ConfigArray): ConfigArray;
+function pluginConfig(
+  nameOrConfigs: string | Config | ConfigArray,
+  config?: Config,
+): ConfigArray {
   if (typeof nameOrConfigs === "string") {
-    return /** @type {ConfigArray} */ ([{ name: nameOrConfigs, ...config }]);
+    return [{ name: nameOrConfigs, ...config }];
   } else if (Array.isArray(nameOrConfigs)) {
-    return /** @type {ConfigArray} */ (nameOrConfigs);
+    return nameOrConfigs;
   } else {
-    return /** @type {ConfigArray} */ ([nameOrConfigs]);
+    return [nameOrConfigs];
   }
-};
+}
 
-/** @type {ParserOptions} */
-const vueParserOptions = {
+const vueParserOptions: ParserOptions = {
   ecmaVersion: 2020,
   parser: tsParser,
   extraFileExtensions: [".vue"],
 };
 
-/** @type {ParserOptions} */
-const typeCheckedParserOptions = {
+const typeCheckedParserOptions: ParserOptions = {
   project: ["./tsconfig.json"],
   tsconfigRootDir: import.meta.dirname,
 };
 
-/** @type {Rules} */
-const typeCheckedRules = {
+const typeCheckedRules: Rules = {
   // Storeでよくasyncなしの関数を定義するので無効化
   // TODO: いずれは有効化する
   "@typescript-eslint/require-await": "off",
 
   // 比較関数無しでのsortは文字列での比較になり、ミスが起こりやすいため有効化
   "@typescript-eslint/require-array-sort-compare": "error",
+
+  "@typescript-eslint/no-non-null-assertion": "error",
 
   "@typescript-eslint/no-misused-promises": [
     "error",
@@ -181,6 +171,7 @@ export default defineConfigWithVueTs(
         },
       ],
       "import/order": "error",
+      "import/enforce-node-protocol-usage": ["error", "always"],
       "no-console": process.env.NODE_ENV === "production" ? "warn" : "off",
       "no-constant-condition": ["error", { checkLoops: false }], // while(true) などを許可
       "no-debugger": process.env.NODE_ENV === "production" ? "warn" : "off",

@@ -1,18 +1,11 @@
-// @ts-check
-import { AST_NODE_TYPES } from "@typescript-eslint/utils";
-import { createRule } from "./create-rule.mjs";
+import { AST_NODE_TYPES, TSESTree } from "@typescript-eslint/utils";
+import { createRule } from "./create-rule";
 
-/**
- * @param {import("@typescript-eslint/utils").TSESTree.Expression} node
- */
-function isNull(node) {
+function isNull(node: TSESTree.Expression) {
   return node.type === AST_NODE_TYPES.Literal && node.value == null;
 }
 
-/**
- * @param {import("@typescript-eslint/utils").TSESTree.Expression} node
- */
-function isUndefined(node) {
+function isUndefined(node: TSESTree.Expression) {
   return node.type === AST_NODE_TYPES.Identifier && node.name === "undefined";
 }
 
