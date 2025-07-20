@@ -103,7 +103,7 @@ const getInputOrThrow = (): HTMLDivElement => {
 const getSelectionRange = () => {
   const selection = window.getSelection();
   if (!selection || selection.rangeCount <= 0) {
-    throw new Error("test");
+    throw new Error("selection range is not available");
   }
   const range = selection.getRangeAt(0);
   return { start: range.startOffset, end: range.endOffset };
