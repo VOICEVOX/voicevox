@@ -458,20 +458,20 @@ void app.whenReady().then(async () => {
 
   for (const status of packageStatuses) {
     // 最新版がインストール済みの場合はスキップ
-    if (status.status === "installed_latest") {
+    if (status.installed.status === "installed_latest") {
       continue;
     }
 
     let title: string;
     let message: string;
     let okButtonLabel: string;
-    if (status.status === "not_installed") {
+    if (status.installed.status === "not_installed") {
       title = "デフォルトエンジンのインストール";
-      message = `${status.engineName} をインストールしますか？`;
+      message = `${status.package.engineName} をインストールしますか？`;
       okButtonLabel = "インストールする";
     } else {
       title = "デフォルトエンジンのアップデート";
-      message = `${status.engineName} の新しいバージョン（${status.latestVersion}）にアップデートしますか？`;
+      message = `${status.package.engineName} の新しいバージョン（${status.package.latestVersion}）にアップデートしますか？`;
       okButtonLabel = "アップデートする";
     }
 
@@ -491,12 +491,12 @@ void app.whenReady().then(async () => {
     let lastLogTime = 0; // とりあえずログを0.1秒に1回だけ出力する
     await engineAndVvppController.downloadAndInstallVvppEngine(
       app.getPath("downloads"),
-      status.packageInfo,
+      status.package.packageInfo,
       {
         onProgress: ({ type, progress }) => {
           if (Date.now() - lastLogTime > 100) {
             log.info(
-              `VVPP default engine install progress: ${type}: ${Math.floor(progress)}%`,
+              `VVPP default engine progress: ${type}: ${Math.floor(progress)}%`,
             );
             lastLogTime = Date.now();
           }
