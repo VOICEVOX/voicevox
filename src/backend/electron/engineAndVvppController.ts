@@ -5,10 +5,7 @@ import { dialog } from "electron";
 
 import semver from "semver";
 import { getConfigManager } from "./electronConfig";
-import {
-  EngineInfoManager,
-  getEngineInfoManager,
-} from "./manager/engineInfoManager";
+import { getEngineInfoManager } from "./manager/engineInfoManager";
 import { getEngineProcessManager } from "./manager/engineProcessManager";
 import { getRuntimeInfoManager } from "./manager/RuntimeInfoManager";
 import { getVvppManager } from "./manager/vvppManager";
@@ -41,11 +38,8 @@ export type EnginePackageStatus = {
     latestVersion: string;
   };
   installed:
-    | { status: "not_installed" }
-    | {
-        status: "installed_outdated" | "installed_latest";
-        installedVersion: string;
-      };
+    | { status: "not" }
+    | { status: "outdated" | "latest"; installedVersion: string };
 };
 
 /**
@@ -224,6 +218,26 @@ export class EngineAndVvppController {
       const latestVersion = packageInfo.version;
       log.info(`Latest default engine version: ${latestVersion}`);
 
+      // インストール状況を取得
+      let installedStatus: EnginePackageStatus["installed"];
+      const isInstalled = this.engineInfoManager.hasEngineInfo(
+        envEngineInfo.uuid,
+      );
+      if (!isInstalled) {
+        installedStatus = { status: "not" };
+      } else {
+        const installedEngineInfo = this.engineInfoManager.fetchEngineInfo(
+          envEngineInfo.uuid,
+        );
+        const installedVersion = installedEngineInfo.version;
+        installedStatus = {
+          status: semver.lt(installedVersion, latestVersion)
+            ? "outdated"
+            : "latest",
+          installedVersion,
+        };
+      }
+
       statuses.push({
         package: {
           engineName: envEngineInfo.name,
@@ -231,38 +245,11 @@ export class EngineAndVvppController {
           packageInfo,
           latestVersion,
         },
-        installed: getEngineInstalledStatus(
-          getEngineInfoManager(),
-          envEngineInfo.uuid,
-          latestVersion,
-        ),
+        installed: installedStatus,
       });
     }
 
     return statuses;
-
-    /** インストール状況を取得 */
-    function getEngineInstalledStatus(
-      engineInfoManager: EngineInfoManager,
-      engineId: EngineId,
-      latestVersion: string,
-    ) {
-      const installedEngine = engineInfoManager.hasEngineInfo(engineId)
-        ? engineInfoManager.fetchEngineInfo(engineId)
-        : undefined;
-
-      if (!installedEngine) {
-        return { status: "not_installed" as const };
-      } else {
-        const installedVersion = installedEngine.version;
-        return {
-          status: semver.lt(installedVersion, latestVersion)
-            ? ("installed_outdated" as const)
-            : ("installed_latest" as const),
-          installedVersion,
-        };
-      }
-    }
   }
 
   /**

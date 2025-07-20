@@ -458,7 +458,7 @@ void app.whenReady().then(async () => {
 
   for (const status of packageStatuses) {
     // 最新版がインストール済みの場合はスキップ
-    if (status.installed.status === "installed_latest") {
+    if (status.installed.status == "latest") {
       continue;
     }
 
@@ -467,7 +467,7 @@ void app.whenReady().then(async () => {
       message: string;
       okButtonLabel: string;
     };
-    if (status.installed.status === "not_installed") {
+    if (status.installed.status == "not") {
       dialogOptions = {
         title: "デフォルトエンジンのインストール",
         message: `${status.package.engineName} をインストールしますか？`,
