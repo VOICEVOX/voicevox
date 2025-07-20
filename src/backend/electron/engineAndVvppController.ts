@@ -215,8 +215,7 @@ export class EngineAndVvppController {
 
       // 実行環境に合うパッケージを取得
       const packageInfo = getSuitablePackageInfo(latestInfo);
-      const latestVersion = packageInfo.version;
-      log.info(`Latest default engine version: ${latestVersion}`);
+      log.info(`Latest default engine version: ${packageInfo.version}`);
 
       // インストール状況を取得
       let installedStatus: EnginePackageStatus["installed"];
@@ -231,7 +230,7 @@ export class EngineAndVvppController {
         );
         const installedVersion = installedEngineInfo.version;
         installedStatus = {
-          status: semver.lt(installedVersion, latestVersion)
+          status: semver.lt(installedVersion, packageInfo.version)
             ? "outdated"
             : "latest",
           installedVersion,
