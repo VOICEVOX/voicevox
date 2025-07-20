@@ -233,14 +233,14 @@ const startDragging = (target: "start" | "end", event: MouseEvent) => {
   // 左クリックでない場合はドラッグしない
   if (event.button !== 0) return;
 
+  previewLoopStartTick.value = loopStartTick.value;
+  previewLoopEndTick.value = loopEndTick.value;
+
   isDragging.value = true;
   dragTarget.value = target;
   dragStartX.value = event.clientX;
   dragStartHandleX.value =
     target === "start" ? loopStartX.value : loopEndX.value;
-
-  previewLoopStartTick.value = loopStartTick.value;
-  previewLoopEndTick.value = loopEndTick.value;
 
   cursorState.value = "ew-resize";
   lastMouseEvent.value = event;
@@ -306,22 +306,26 @@ const preview = () => {
   }
 };
 
-// ドラッグ終了
-const stopDragging = () => {
-  if (!isDragging.value) return;
-
+// ドラッグ終了時にドラッグプレビュー関連の状態とリソースをリセット
+const cleanUpDragPreview = () => {
   isDragging.value = false;
   dragTarget.value = null;
   executePreviewProcess.value = false;
-  cursorState.value = "default";
-
-  window.removeEventListener("mousemove", handleMouseMove, true);
-  window.removeEventListener("mouseup", stopDragging, true);
-
   if (previewRequestId != null) {
     cancelAnimationFrame(previewRequestId);
     previewRequestId = null;
   }
+  cursorState.value = "default";
+  window.removeEventListener("mousemove", handleMouseMove, true);
+  window.removeEventListener("mouseup", stopDragging, true);
+};
+
+// ドラッグ終了
+const stopDragging = () => {
+  if (!isDragging.value) return;
+
+  // ドラッグプレビュー関連の状態とリソースをリセット
+  cleanUpDragPreview();
 
   // ループ範囲の確定
   if (previewLoopStartTick.value === previewLoopEndTick.value) {
@@ -404,15 +408,8 @@ const addOneMeasureLoop = (localX: number) => {
   setPlayheadPosition(startTick);
 };
 
-// アンマウント時に必ずドラッグを停止
+// アンマウント時に必ずドラッグ関連の状態とリソースをリセット
 onUnmounted(() => {
-  executePreviewProcess.value = false;
-  if (previewRequestId != null) {
-    cancelAnimationFrame(previewRequestId);
-    previewRequestId = null;
-  }
-  cursorState.value = "default";
-  window.removeEventListener("mousemove", handleMouseMove, true);
-  window.removeEventListener("mouseup", stopDragging, true);
+  cleanUpDragPreview();
 });
 </script>

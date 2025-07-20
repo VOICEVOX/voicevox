@@ -19,11 +19,6 @@ type SetupStoryState = {
   timeSignatures?: TimeSignature[];
 };
 
-// Storybookプレイヤーのキャンバス要素の型...ないとstrict modeで怒られる
-interface PlayCanvasElement {
-  canvasElement: HTMLElement;
-}
-
 const meta: Meta<StoryProps> = {
   title: "Components/Sing/SequencerRuler",
   component: Container,
@@ -183,7 +178,7 @@ export const Dense: Story = {
 
 export const MovePlayhead: Story = {
   name: "再生位置を移動",
-  play: async ({ canvasElement }: PlayCanvasElement) => {
+  play: async ({ canvasElement }) => {
     const ruler =
       canvasElement.querySelector<HTMLDivElement>(".sequencer-ruler");
 

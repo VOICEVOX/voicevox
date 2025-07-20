@@ -175,6 +175,7 @@ import {
   getSnapTypes,
   getTimeSignaturePositions,
   getMeasureDuration,
+  getNoteDuration,
   isTriplet,
   isValidBeatType,
   isValidBeats,
@@ -260,6 +261,10 @@ const playheadTicks = computed(() => store.getters.PLAYHEAD_POSITION);
 
 const tsPositions = computed(() => {
   return getTimeSignaturePositions(timeSignatures.value, tpqn.value);
+});
+
+const snapTicks = computed(() => {
+  return getNoteDuration(store.state.sequencerSnapType, tpqn.value);
 });
 
 const beatsOptions = computed(() => {
@@ -416,14 +421,9 @@ const toggleLoop = async () => {
         tpqn.value,
       );
 
-      // 現在のplayheadがある小節の開始位置
+      // 現在のplayheadがある位置をスナップ位置に調整
       const currentMeasureStartTick =
-        tsPositions.value[currentTsIndex] +
-        Math.round(
-          (playheadTicks.value - tsPositions.value[currentTsIndex]) /
-            oneMeasureTicks,
-        ) *
-          oneMeasureTicks;
+        Math.round(playheadTicks.value / snapTicks.value) * snapTicks.value;
 
       // 現在のplayheadがある小節の終了位置
       const currentMeasureEndTick = currentMeasureStartTick + oneMeasureTicks;
