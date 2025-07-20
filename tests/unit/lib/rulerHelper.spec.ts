@@ -55,7 +55,7 @@ describe("rulerHelper", () => {
     });
   });
 
-  describe("calculateEndTicks", () => {
+  describe("getTotalTicks", () => {
     const tpqn = 480;
 
     it("4/4拍子で8小節の終了位置を計算する", () => {
