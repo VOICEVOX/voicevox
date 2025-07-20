@@ -1,99 +1,8 @@
 import fs from "node:fs/promises";
-import os from "node:os";
-import path from "node:path";
 import { _electron as electron, test } from "@playwright/test";
 import dotenv from "dotenv";
 import { MessageBoxSyncOptions } from "electron";
-
-/** テスト用のユーザーディレクトリパスを取得する */
-function getUserTestDir(): string {
-  const appDataMap: Partial<Record<NodeJS.Platform, string>> = {
-    win32: process.env.APPDATA,
-    darwin: os.homedir() + "/Library/Application Support",
-    linux: process.env.XDG_CONFIG_HOME || os.homedir() + "/.config",
-  } as const;
-
-  const appData = appDataMap[process.platform];
-  if (!appData) {
-    throw new Error("Unsupported platform");
-  }
-  return path.resolve(appData, `${process.env.VITE_APP_NAME}-test`);
-}
-
-// 共通のエンジンテスト関数
-async function runEngineTest(params: { isUpdate: boolean }) {
-  const { isUpdate } = params;
-  if (isUpdate) {
-    await setupOldVersionEngine();
-  }
-
-  const app = await electron.launch({
-    args: ["--no-sandbox", "."],
-    timeout: process.env.CI ? 0 : 60000,
-  });
-
-  // ダイアログのモック
-  await app.evaluate((electron, params) => {
-    const { isUpdate } = params;
-
-    // @ts-expect-error ２種のオーバーロードを無視する
-    electron.dialog.showMessageBoxSync = (options: MessageBoxSyncOptions) => {
-      // デフォルトエンジンのインストールの確認ダイアログ
-      if (
-        !isUpdate &&
-        options.title == "デフォルトエンジンのインストール" &&
-        options.buttons?.[0] == "インストールする"
-      ) {
-        return 0;
-      }
-
-      // アップデート通知ダイアログ
-      if (
-        isUpdate &&
-        options.title == "デフォルトエンジンのアップデート" &&
-        options.buttons?.[0] == "アップデートする"
-      ) {
-        return 0;
-      }
-
-      throw new Error(`Unexpected dialog: ${JSON.stringify(options)}`);
-    };
-  }, params);
-
-  // ログを表示
-  app.on("console", (msg) => {
-    console.log(msg.text());
-  });
-
-  const sut = await app.firstWindow({
-    timeout: process.env.CI ? 0 : 60000,
-  });
-  await sut.waitForSelector("text=利用規約に関するお知らせ", {
-    timeout: 180000, // 3分。ダウンロード時間を考慮して長めに
-  });
-
-  await app.close();
-}
-
-// 古いバージョンのvvpp-enginesディレクトリを作る
-async function setupOldVersionEngine() {
-  const userDir = getUserTestDir();
-  const vvppEngineDir = path.join(userDir, "vvpp-engines");
-
-  await fs.mkdir(vvppEngineDir, { recursive: true });
-  const sourceOldEngineDir = path.join(import.meta.dirname, "oldEngine");
-  const manifestPath = path.join(sourceOldEngineDir, "engine_manifest.json");
-  const manifest = JSON.parse(await fs.readFile(manifestPath, "utf-8")) as {
-    uuid: string;
-    name: string;
-  };
-
-  const oldEngineDir = path.join(
-    vvppEngineDir,
-    `${manifest.name}+${manifest.uuid}`,
-  );
-  await fs.cp(sourceOldEngineDir, oldEngineDir, { recursive: true });
-}
+import { getUserTestDir, setupOldVersionEngine } from "./helper";
 
 test.beforeAll(async () => {
   console.log("Waiting for main.js to be built...");
@@ -117,6 +26,59 @@ test.beforeEach(async () => {
     force: true,
   });
 });
+
+/** エンジンテストの共通操作 */
+async function runEngineTest(params: { isUpdate: boolean }) {
+  const { isUpdate } = params;
+  if (isUpdate) {
+    await setupOldVersionEngine();
+  }
+
+  const app = await electron.launch({
+    args: ["--no-sandbox", "."], // NOTE: --no-sandbox はUbuntu 24.04で動かすのに必要
+    timeout: process.env.CI ? 0 : 60000,
+  });
+
+  // ダイアログのモック
+  await app.evaluate((electron, isUpdate) => {
+    // @ts-expect-error ２種のオーバーロードを無視する
+    electron.dialog.showMessageBoxSync = (options: MessageBoxSyncOptions) => {
+      // デフォルトエンジンのインストールの確認ダイアログ
+      if (
+        !isUpdate &&
+        options.title == "デフォルトエンジンのインストール" &&
+        options.buttons?.[0] == "インストールする"
+      ) {
+        return 0;
+      }
+
+      // デフォルトエンジンのアップデートの確認ダイアログ
+      if (
+        isUpdate &&
+        options.title == "デフォルトエンジンのアップデート" &&
+        options.buttons?.[0] == "アップデートする"
+      ) {
+        return 0;
+      }
+
+      throw new Error(`Unexpected dialog: ${JSON.stringify(options)}`);
+    };
+  }, params.isUpdate);
+
+  // ログを表示
+  app.on("console", (msg) => {
+    console.log(msg.text());
+  });
+
+  const sut = await app.firstWindow({
+    timeout: process.env.CI ? 90000 : 60000,
+  });
+  await sut.waitForSelector("text=利用規約に関するお知らせ", {
+    timeout: 60000,
+  });
+
+  await app.close();
+}
 
 [
   {
