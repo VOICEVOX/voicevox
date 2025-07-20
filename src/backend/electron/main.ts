@@ -451,8 +451,8 @@ void app.whenReady().then(async () => {
     }
   }
 
-  // VVPPエンジンのインストール・アップデート処理
-  // NOTE: https://github.com/VOICEVOX/voicevox/issues/1194
+  // VVPPがデフォルトエンジンに指定されていたらインストール・アップデートする
+  // NOTE: この機能は工事中。参照: https://github.com/VOICEVOX/voicevox/issues/1194
   const packageStatuses =
     await engineAndVvppController.fetchEnginePackageStatuses();
 
