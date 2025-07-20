@@ -193,7 +193,7 @@ export class EngineAndVvppController {
   }
 
   /**
-   * エンジンパッケージの状況を取得する
+   * 最新のエンジンパッケージの情報や、そのエンジンのインストール状況を取得する。
    */
   async fetchEnginePackageStatuses(): Promise<EnginePackageStatus[]> {
     const statuses: EnginePackageStatus[] = [];
@@ -250,46 +250,6 @@ export class EngineAndVvppController {
     }
 
     return statuses;
-  }
-
-  /**
-   * インストール可能なデフォルトエンジンの情報とパッケージの情報を取得する。
-   */
-  async fetchInsallablePackageInfos(): Promise<
-    { engineName: string; packageInfo: PackageInfo }[]
-  > {
-    // ダウンロード可能なVVPPのうち、未インストールのものを返す
-    const targetInfos = [];
-    for (const envEngineInfo of loadEnvEngineInfos()) {
-      if (envEngineInfo.type != "downloadVvpp") {
-        continue;
-      }
-
-      // 最新情報を取得
-      const latestUrl = envEngineInfo.latestUrl;
-      if (latestUrl == undefined) throw new Error("latestUrl is undefined");
-
-      const latestInfo = await fetchLatestDefaultEngineInfo(latestUrl);
-      if (latestInfo.formatVersion != 1) {
-        log.error(`Unsupported format version: ${latestInfo.formatVersion}`);
-        continue;
-      }
-
-      // 実行環境に合うパッケージを取得
-      const packageInfo = getSuitablePackageInfo(latestInfo);
-      log.info(`Latest default engine version: ${packageInfo.version}`);
-
-      // インストール済みだった場合はスキップ
-      // FIXME: より新しいバージョンがあれば更新できるようにする
-      if (this.engineInfoManager.hasEngineInfo(envEngineInfo.uuid)) {
-        log.info(`Default engine ${envEngineInfo.uuid} is already installed.`);
-        continue;
-      }
-
-      targetInfos.push({ engineName: envEngineInfo.name, packageInfo });
-    }
-
-    return targetInfos;
   }
 
   /** VVPPパッケージをダウンロードし、インストールする */
