@@ -227,7 +227,7 @@ export const minimumEngineManifestSchema = z.object({
   uuid: engineIdSchema,
   command: z.string(),
   port: z.number(),
-  version: z.string(), // エンジンのバージョン
+  version: z.string(),
   supported_features: z.record(z.string(), supportedFeaturesItemSchema), // FIXME:JSON側はsnake_caseなので合わせているが、camelCaseに修正する
 });
 
@@ -243,7 +243,7 @@ export type EngineInfo = {
   pathname: string; // `/engine`など。空文字列もありえる。
   name: string;
   path?: string; // エンジンディレクトリのパス
-  version: string; // エンジンのバージョン
+  version: string;
   executionEnabled: boolean;
   executionFilePath: string;
   executionArgs: string[];
