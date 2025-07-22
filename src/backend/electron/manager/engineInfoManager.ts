@@ -108,6 +108,7 @@ export class EngineInfoManager {
             engineInfo.path == undefined
               ? undefined
               : path.resolve(this.defaultEngineDir, engineInfo.path),
+          version: "999.999.999", // NOTE: ダミー値。使わないため問題ない。
         } satisfies EngineInfo;
       });
   }
