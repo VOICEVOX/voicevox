@@ -108,7 +108,7 @@ export class EngineInfoManager {
             engineInfo.path == undefined
               ? undefined
               : path.resolve(this.defaultEngineDir, engineInfo.path),
-          version: "999.999.999", // NOTE: ダミー値。使わないため問題ない。
+          version: "999.999.999", // FIXME: ダミー値。使わないため問題ない。engine_manifest.jsonから取得すべき。
         } satisfies EngineInfo;
       });
   }
