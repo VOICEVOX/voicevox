@@ -12,6 +12,7 @@
         :contenteditable="!readonly && !disabled ? 'plaintext-only' : false"
         @click="$emit('click', $event)"
         @blur="$emit('change', $event)"
+        @focus="handleFocus"
         @input="handleInput"
         @paste="handlePaste"
         @keydown="preventEnter"
@@ -59,7 +60,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, useSlots, useTemplateRef } from "vue";
+import { computed, nextTick, ref, useSlots, useTemplateRef } from "vue";
 import BaseContextMenu from "./BaseContextMenu.vue";
 import BaseContextMenuItem from "./BaseContextMenuItem.vue";
 import BaseContextMenuSeparator from "./BaseContextMenuSeparator.vue";
@@ -154,11 +155,18 @@ const replaceSelection = (text: string) => {
   selectionOffset.value = { start: offset, end: offset };
 };
 
+let isContextMenuOpened = false;
 const handleUpdateOpen = (isOpened: boolean) => {
   if (isOpened) {
     selectionOffset.value = getSelectionRange();
-  } else {
-    setTimeout(restoreSelection, 1);
+    isContextMenuOpened = true;
+  }
+};
+
+const handleFocus = () => {
+  if (isContextMenuOpened) {
+    restoreSelection();
+    isContextMenuOpened = false;
   }
 };
 
@@ -167,11 +175,12 @@ const handleInput = () => {
   model.value = input.textContent ?? "";
 };
 
-const handlePaste = (event: ClipboardEvent) => {
+const handlePaste = async (event: ClipboardEvent) => {
   event.preventDefault();
-  void paste();
+  await paste();
 
-  setTimeout(restoreSelection, 1);
+  await nextTick();
+  restoreSelection();
 };
 
 const preventEnter = (event: KeyboardEvent) => {
