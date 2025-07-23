@@ -13,6 +13,7 @@ import { VvppFileExtractor } from "@/backend/electron/vvppFile";
 import { ProgressCallback } from "@/helpers/progressHelper";
 import { createLogger } from "@/helpers/log";
 import { isWindows } from "@/helpers/platform";
+import { UnreachableError } from "@/type/utility";
 
 const log = createLogger("VvppManager");
 
@@ -162,16 +163,31 @@ export class VvppManager {
   /**
    * 追加
    */
-  async install(extractedEngineFiles: ExtractedEngineFiles) {
-    await this.withLockAcquired(() => this._install(extractedEngineFiles));
+  async install(params: {
+    extractedEngineFiles: ExtractedEngineFiles;
+    immediate: boolean;
+  }) {
+    await this.withLockAcquired(() => this._install(params));
   }
-  private async _install(extractedEngineFiles: ExtractedEngineFiles) {
+  private async _install(params: {
+    extractedEngineFiles: ExtractedEngineFiles;
+    immediate: boolean;
+  }) {
+    const { extractedEngineFiles, immediate } = params;
+
     const manifest = extractedEngineFiles.getManifest();
 
     const hasOldEngine = await this.hasOldEngine(manifest.uuid);
     const engineDir = this.buildEngineDirPath(manifest);
     if (hasOldEngine) {
-      this.markWillMove({ extractedEngineFiles, to: engineDir });
+      if (immediate) {
+        await this._replaceEngineImmediately({
+          extractedEngineFiles,
+          to: engineDir,
+        });
+      } else {
+        this.markWillMove({ extractedEngineFiles, to: engineDir });
+      }
     } else {
       await extractedEngineFiles.move(engineDir);
     }
@@ -189,7 +205,7 @@ export class VvppManager {
       [...this.willDeleteEngineIds].map(async (engineId) => {
         const deletingEngineDir = await this.getInstalledEngineDir(engineId);
         if (deletingEngineDir == undefined) {
-          throw new Error("エンジンが見つかりませんでした。");
+          throw new UnreachableError("エンジンが見つかりませんでした。");
         }
 
         try {
@@ -208,20 +224,8 @@ export class VvppManager {
 
     await Promise.all(
       [...this.willMoveEngineDirs].map(async ({ extractedEngineFiles, to }) => {
-        const engineId = extractedEngineFiles.getManifest().uuid;
-        const deletingEngineDir = await this.getInstalledEngineDir(engineId);
-        if (deletingEngineDir == undefined) {
-          throw new Error("エンジンが見つかりませんでした。");
-        }
-
         try {
-          await deleteDirWithRetry(deletingEngineDir);
-          log.info(`Engine ${engineId} deleted successfully.`);
-
-          await moveFileWithRetry({ extractedEngineFiles, to });
-          log.info(
-            `Moved ${extractedEngineFiles.getExtractedEngineDir()} to ${to}`,
-          );
+          await this._replaceEngineImmediately({ extractedEngineFiles, to });
         } catch (e) {
           log.error("Failed to rename engine directory: ", e);
           dialog.showErrorBox(
@@ -232,6 +236,24 @@ export class VvppManager {
       }),
     );
     this.willMoveEngineDirs = [];
+  }
+
+  private async _replaceEngineImmediately(params: MoveParams): Promise<void> {
+    const { extractedEngineFiles, to } = params;
+    const engineId = extractedEngineFiles.getManifest().uuid;
+
+    const engineDir = await this.getInstalledEngineDir(engineId);
+    if (!engineDir) {
+      throw new UnreachableError(
+        "Engine directory not found after hasOldEngine check",
+      );
+    }
+
+    await deleteDirWithRetry(engineDir);
+    log.info(`Engine ${engineId}: deleted successfully`);
+
+    await moveFileWithRetry({ extractedEngineFiles, to });
+    log.info(`Engine ${engineId}: moved to ${to}`);
   }
 
   hasMarkedEngineDirs() {
