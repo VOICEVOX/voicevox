@@ -178,7 +178,7 @@ registerHotkeyWithCleanup({
 });
 
 // detail selector
-type DetailTypes = "accent" | "pitch" | "length";
+export type DetailTypes = "accent" | "pitch" | "length";
 const selectedDetail = ref<DetailTypes>("accent");
 
 // accent phrase

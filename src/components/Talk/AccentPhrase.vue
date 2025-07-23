@@ -216,6 +216,7 @@ import { useStore } from "@/store";
 import { AudioKey, MoraDataType } from "@/type/preload";
 import { Mora } from "@/openapi/models/Mora";
 import { AccentPhrase } from "@/openapi";
+import type { DetailTypes } from "./AudioDetail.vue";
 
 const props = defineProps<{
   audioKey: AudioKey;
@@ -236,8 +237,6 @@ const container = ref<HTMLElement>();
 defineExpose({
   container,
 });
-
-type DetailTypes = "accent" | "pitch" | "length";
 
 const store = useStore();
 
