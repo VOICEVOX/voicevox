@@ -223,7 +223,7 @@ const intersection: IntersectionValue = {
   handler(entry) {
     const element = entry?.target;
     if (entry == undefined || !(element instanceof HTMLElement)) {
-      throw new Error("element is not HTMLElement");
+      throw new Error("Intersection observer target is not an HTMLElement");
     }
     if (element.dataset.index == undefined) {
       throw new Error("Menu button element missing required data-index attribute");
