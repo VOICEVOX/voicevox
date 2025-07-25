@@ -226,7 +226,7 @@ const intersection: IntersectionValue = {
       throw new Error("element is not HTMLElement");
     }
     if (element.dataset.index == undefined) {
-      throw new Error("element.dataset.index is undefined");
+      throw new Error("Menu button element missing required data-index attribute");
     }
     isHidden.value[parseInt(element.dataset.index)] = !entry.isIntersecting;
     return true;
