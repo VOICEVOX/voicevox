@@ -232,13 +232,10 @@ const selectAll = () => {
 .input {
   height: vars.$size-control;
   width: 100%;
-  display: flex;
-  align-items: center;
   gap: vars.$gap-1;
   border: 1px solid colors.$border;
   border-radius: vars.$radius-1;
-  padding-inline: vars.$padding-1;
-  padding-block: calc((#{vars.$size-control} - 1rem) / 2);
+  padding: vars.$padding-1;
   background-color: colors.$control;
   color: colors.$display;
   line-height: 1rem;
