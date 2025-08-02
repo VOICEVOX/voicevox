@@ -179,11 +179,9 @@ export interface StoreOptions<
   strict?: boolean;
   devtools?: boolean;
 }
-
 export interface ActionContext<S, R, SG extends GettersBase> {
   /**
-   * @deprecated
-   * 本メソッドは非推奨です。代わりにactionsを使ってください。
+   * @deprecated 本メソッドは非推奨です。代わりにactionsを使ってください。
    *
    * VOICEVOXでは独自の型定義ラッパーを用いてvuexを利用しており、
    * 型定義ラッパーを用いた呼び出しが推奨されます。
@@ -192,8 +190,7 @@ export interface ActionContext<S, R, SG extends GettersBase> {
    */
   dispatch: DefaultDispatch;
   /**
-   * @deprecated
-   * 本メソッドは非推奨です。代わりにmutationsを使ってください。
+   * @deprecated 本メソッドは非推奨です。代わりにmutationsを使ってください。
    *
    * VOICEVOXでは独自の型定義ラッパーを用いてvuexを利用しており、
    * 型定義ラッパーを用いた呼び出しが推奨されます。
