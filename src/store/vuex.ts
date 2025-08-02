@@ -10,6 +10,8 @@ import {
   GetterTree as OriginalGetterTree,
   ActionTree as OriginalActionTree,
   MutationTree as OriginalMutationTree,
+  Dispatch as DefaultDispatch,
+  Commit as DefaultCommit,
 } from "vuex";
 import type {
   AllActions,
@@ -41,10 +43,25 @@ export class Store<
 
   declare readonly getters: G;
 
-  // @ts-expect-error Storeの型を非互換な型で書き換えているためエラー
-  declare dispatch: Dispatch<A>;
-  // @ts-expect-error Storeの型を非互換な型で書き換えているためエラー
-  declare commit: Commit<M>;
+  /**
+   * @deprecated 本メソッドは非推奨です。代わりにactionsを使ってください。
+   *
+   * VOICEVOXでは独自の型定義ラッパーを用いてvuexを利用しており、
+   * 型定義ラッパーを用いた呼び出しが推奨されます。
+   * 詳しくは以下のissueを参照ください。
+   * 関連issue: https://github.com/VOICEVOX/voicevox/issues/2088
+   */
+  declare dispatch: DefaultDispatch;
+  /**
+   * @deprecated 本メソッドは非推奨です。代わりにmutationsを使ってください。
+   *
+   * VOICEVOXでは独自の型定義ラッパーを用いてvuexを利用しており、
+   * 型定義ラッパーを用いた呼び出しが推奨されます。
+   * 詳しくは以下のissueを参照ください。
+   * 関連issue: https://github.com/VOICEVOX/voicevox/issues/2088
+   */
+  declare commit: DefaultCommit;
+
   /**
    * ドット記法用のActionを直接呼べる。エラーになる場合はdispatchを使う。
    * 詳細 https://github.com/VOICEVOX/voicevox/issues/2088
@@ -112,7 +129,7 @@ export type DotNotationDispatch<A extends ActionsBase> = {
 };
 
 const dotNotationDispatchProxy = <A extends ActionsBase>(
-  dispatch: Dispatch<A>,
+  dispatch: DefaultDispatch,
 ): DotNotationDispatch<A> =>
   new Proxy(
     { dispatch },
@@ -131,7 +148,7 @@ export type DotNotationCommit<M extends MutationsBase> = {
 };
 
 const dotNotationCommitProxy = <M extends MutationsBase>(
-  commit: Commit<M>,
+  commit: DefaultCommit,
 ): DotNotationCommit<M> =>
   new Proxy(
     { commit },
@@ -163,15 +180,27 @@ export interface StoreOptions<
   devtools?: boolean;
 }
 
-export interface ActionContext<
-  S,
-  R,
-  SG extends GettersBase,
-  SA extends ActionsBase,
-  SM extends MutationsBase,
-> {
-  dispatch: Dispatch<SA>;
-  commit: Commit<SM>;
+export interface ActionContext<S, R, SG extends GettersBase> {
+  /**
+   * @deprecated
+   * 本メソッドは非推奨です。代わりにactionsを使ってください。
+   *
+   * VOICEVOXでは独自の型定義ラッパーを用いてvuexを利用しており、
+   * 型定義ラッパーを用いた呼び出しが推奨されます。
+   * 詳しくは以下のissueを参照ください。
+   * 関連issue: https://github.com/VOICEVOX/voicevox/issues/2088
+   */
+  dispatch: DefaultDispatch;
+  /**
+   * @deprecated
+   * 本メソッドは非推奨です。代わりにmutationsを使ってください。
+   *
+   * VOICEVOXでは独自の型定義ラッパーを用いてvuexを利用しており、
+   * 型定義ラッパーを用いた呼び出しが推奨されます。
+   * 詳しくは以下のissueを参照ください。
+   * 関連issue: https://github.com/VOICEVOX/voicevox/issues/2088
+   */
+  commit: DefaultCommit;
   state: S;
   getters: SG;
   rootState: R;
@@ -187,7 +216,7 @@ export type ActionHandler<
   K extends keyof SA,
 > = (
   this: Store<S, SG, SA, SM>,
-  injectee: ActionContext<S, R, SG, SA, SM>,
+  injectee: ActionContext<S, R, SG>,
   payload: Parameters<SA[K]>[0],
 ) => ReturnType<SA[K]>;
 export interface ActionObject<
@@ -219,7 +248,7 @@ export type DotNotationActionContext<
    * 詳細 https://github.com/VOICEVOX/voicevox/issues/2088
    */
   mutations: DotNotationCommit<SM>;
-} & ActionContext<S, R, SG, SA, SM>;
+} & ActionContext<S, R, SG>;
 
 export type DotNotationActionHandler<
   S,
@@ -311,8 +340,8 @@ const unwrapDotNotationAction = <
   ) {
     const dotNotationInjectee = {
       ...injectee,
-      actions: dotNotationDispatchProxy(injectee.dispatch),
-      mutations: dotNotationCommitProxy(injectee.commit),
+      actions: dotNotationDispatchProxy<SA>(injectee.dispatch),
+      mutations: dotNotationCommitProxy<SM>(injectee.commit),
     };
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return wrappedHandler.call(this, dotNotationInjectee, payload);
