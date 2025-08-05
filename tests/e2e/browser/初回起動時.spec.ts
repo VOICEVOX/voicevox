@@ -11,7 +11,7 @@ test("起動したら利用規約ダイアログと利用規約内容が表示�
   });
 
   await test.step("利用規約の内容が表示されていることを確認", async () => {
-    expect(page.getByText("ダミー利用規約").isVisible()).toBeTruthy();
+    await expect(page.getByText("ダミー利用規約")).toBeVisible();
   });
 });
 
