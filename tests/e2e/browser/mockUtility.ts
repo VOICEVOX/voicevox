@@ -85,3 +85,36 @@ export async function mockWriteFile(page: Page): Promise<{
     },
   };
 }
+
+/**
+ * ディレクトリ選択ダイアログをモックにする
+ * TODO: 選択されたディレクトリIDを返すようにする
+ */
+export async function mockShowSaveDirectoryDialog(page: Page): Promise<void> {
+  type _Window = Window;
+
+  await page.evaluate(() => {
+    const _window = window as unknown as _Window;
+    _window.backend.showSaveDirectoryDialog = async () => {
+      return `${Date.now()}`;
+    };
+  });
+}
+
+/** writeFileを失敗Resultにモックする */
+export async function mockWriteFileError(page: Page): Promise<void> {
+  type _Window = Window;
+
+  const code = "EACCES";
+  const message = "mock write error";
+
+  await page.evaluate(
+    ({ code, message }) => {
+      const _window = window as unknown as _Window;
+      _window.backend.writeFile = async () => {
+        return { ok: false, code, error: new Error(message) };
+      };
+    },
+    { code, message },
+  );
+}
