@@ -49,7 +49,7 @@ test.describe("音声書き出し", () => {
   });
 
   test("各パラメータを変更して音声書き出し", async ({ page }) => {
-    test.skip(process.platform !== "win32", "Windows以外のためスキップします");
+    test.skip(process.platform !== "win32", "Windows以外のためスキップします"); // NOTE: 音声スナップショットが完全一致しないため
     await exportSelectedAudioAndSnapshot(page, "デフォルト");
 
     const parameters = [
