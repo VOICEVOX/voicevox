@@ -101,7 +101,7 @@ export async function mockShowSaveDirectoryDialog(page: Page): Promise<void> {
   });
 }
 
-/** writeFileを失敗Resultにモックする */
+/** writeFileを常に失敗Resultを返すモックにする */
 export async function mockWriteFileError(page: Page): Promise<void> {
   type _Window = Window;
 
