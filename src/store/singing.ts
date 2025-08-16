@@ -82,6 +82,7 @@ import {
   toEntirePhonemeTimings,
   adjustPhonemeTimingsAndPhraseEndFrames,
   phonemeTimingsToPhonemes,
+  isValidLoopRange,
 } from "@/sing/domain";
 import { getOverlappingNoteIds } from "@/sing/storeHelper";
 import {
@@ -702,6 +703,9 @@ export const singingStoreState: SingingStoreState = {
   exportState: "NOT_EXPORTING",
   cancellationOfExportRequested: false,
   isSongSidebarOpen: false,
+  isLoopEnabled: false,
+  loopStartTick: 0,
+  loopEndTick: 0,
 };
 
 export const singingStore = createPartialStore<SingingStoreTypes>({
@@ -1754,6 +1758,21 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         throw new Error("transport is undefined.");
       }
       mutations.SET_PLAYBACK_STATE({ nowPlaying: true });
+
+      // TODO: 以下の処理（ループの設定）は再生開始時に毎回行う必要はないので、
+      //       ソングエディタ初期化時に1回だけ行うようにする
+      // NOTE: 初期化のactionを作った方が良いかも
+      transport.loop = state.isLoopEnabled;
+      transport.loopStartTime = tickToSecond(
+        state.loopStartTick,
+        state.tempos,
+        state.tpqn,
+      );
+      transport.loopEndTime = tickToSecond(
+        state.loopEndTick,
+        state.tempos,
+        state.tpqn,
+      );
 
       transport.start();
       animationTimer.start(() => {
@@ -2939,6 +2958,63 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         state.tpqn,
       );
       return Math.max(1, lastNoteEndTime + 1);
+    },
+  },
+
+  SET_LOOP_ENABLED: {
+    mutation(state, { isLoopEnabled }) {
+      state.isLoopEnabled = isLoopEnabled;
+    },
+    async action({ mutations }, { isLoopEnabled }) {
+      if (!transport) {
+        throw new Error("transport is undefined");
+      }
+      mutations.SET_LOOP_ENABLED({ isLoopEnabled });
+      transport.loop = isLoopEnabled;
+    },
+  },
+
+  SET_LOOP_RANGE: {
+    mutation(state, { loopStartTick, loopEndTick }) {
+      state.loopStartTick = loopStartTick;
+      state.loopEndTick = loopEndTick;
+    },
+    async action({ state, mutations }, { loopStartTick, loopEndTick }) {
+      if (!transport) {
+        throw new Error("transport is undefined");
+      }
+
+      if (!isValidLoopRange(loopStartTick, loopEndTick)) {
+        throw new Error("The loop range is invalid.");
+      }
+
+      mutations.SET_LOOP_RANGE({ loopStartTick, loopEndTick });
+
+      transport.loopStartTime = tickToSecond(
+        loopStartTick,
+        state.tempos,
+        state.tpqn,
+      );
+      transport.loopEndTime = tickToSecond(
+        loopEndTick,
+        state.tempos,
+        state.tpqn,
+      );
+    },
+  },
+
+  CLEAR_LOOP_RANGE: {
+    async action({ actions }) {
+      // ループ範囲をSET_LOOP_RANGEで0指定
+      // transportも
+      void actions.SET_LOOP_RANGE({
+        loopStartTick: 0,
+        loopEndTick: 0,
+      });
+      // ループ範囲をクリアする際はループも無効にする
+      return actions.SET_LOOP_ENABLED({
+        isLoopEnabled: false,
+      });
     },
   },
 
