@@ -188,7 +188,6 @@ export async function generateAndSaveOneAudioWithDialog({
     actions,
   );
 
-  if (result == undefined) return;
   notifyResult(result, "audio", actions, disableNotifyOnGenerate);
 }
 
@@ -216,7 +215,7 @@ export async function multiGenerateAndSaveAudioWithDialog({
     actions,
   );
 
-  if (result == undefined) return;
+  if (result == "canceled") return;
 
   // 書き出し成功時の出力先パスを配列に格納
   const successArray: (string | undefined)[] = result.flatMap((result) =>
@@ -278,7 +277,6 @@ export async function generateAndConnectAndSaveAudioWithDialog({
     actions,
   );
 
-  if (result == undefined) return;
   notifyResult(result, "audio", actions, disableNotifyOnGenerate);
 }
 
