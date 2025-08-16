@@ -30,8 +30,9 @@ export function getEngineManifestMock() {
       interrogativeUpspeak: true,
       synthesisMorphing: false,
       sing: true,
-      manageLibrary: false,
+      manageLibrary: true,
       returnResourceUrl: true,
+      applyKatakanaEnglish: true,
     },
   } satisfies EngineManifest;
 }
