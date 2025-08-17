@@ -68,7 +68,7 @@ const config: PlaywrightTestConfig = {
   forbidOnly: !!process.env.CI,
   reporter: process.env.CI
     ? [["html", { open: "never" }], ["github"]]
-    : [["html", { open: "on-failure" }]],
+    : [["html", { open: "never" }]],
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
   use: {
