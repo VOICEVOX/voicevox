@@ -222,6 +222,14 @@ const api: Sandbox = {
   getPathForFile: async (file) => {
     return webUtils.getPathForFile(file);
   },
+
+  isUpdateSupported: async () => {
+    return await ipcRendererInvokeProxy.IS_UPDATE_SUPPORTED();
+  },
+
+  updateApp: async (obj) => {
+    return await ipcRendererInvokeProxy.UPDATE_APP(obj);
+  },
 };
 
 const wrapApi = (baseApi: Sandbox): SandboxWithTransferableResult => {
