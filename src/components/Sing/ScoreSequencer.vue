@@ -171,7 +171,7 @@
             class="sequencer-playhead"
             data-testid="sequencer-playhead"
             :style="{
-              transform: `translateX(${playheadX - scrollX}px)`,
+              transform: `translateX(${playheadX - scrollX - 1}px)`,
             }"
           ></div>
         </div>
@@ -227,7 +227,7 @@ import type { InjectionKey } from "vue";
 
 export const numMeasuresInjectionKey: InjectionKey<{
   numMeasures: ComputedRef<number>;
-}> = Symbol();
+}> = Symbol("sequencerNumMeasures");
 </script>
 
 <script setup lang="ts">
