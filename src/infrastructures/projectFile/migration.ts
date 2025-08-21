@@ -53,10 +53,6 @@ export const migrateProjectFileObject = async (
     );
   }
 
-  interface Backend {
-    getAppInfos: () => Promise<{ version: string }>;
-  }
-
   const appVersion = getAppInfos().version;
   validateProjectVersion(projectAppVersion, appVersion);
 
