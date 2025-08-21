@@ -16,6 +16,8 @@ import { uuid4 } from "@/helpers/random";
 import { projectFileSchema } from "@/infrastructures/projectFile/schema";
 import { ProjectFileFormatError } from "@/infrastructures/projectFile/type";
 import { validateTalkProject } from "@/infrastructures/projectFile/validation";
+import { validateProjectVersion } from "@/domain/project/type";
+import { getAppInfos } from "@/domain/appInfo";
 
 const DEFAULT_SAMPLING_RATE = 24000;
 
@@ -50,6 +52,13 @@ export const migrateProjectFileObject = async (
       `The app version of the project file "${projectAppVersion}" is invalid. The app version should be a string in semver format.`,
     );
   }
+
+  interface Backend {
+    getAppInfos: () => Promise<{ version: string }>;
+  }
+
+  const appVersion = getAppInfos().version;
+  validateProjectVersion(projectAppVersion, appVersion);
 
   const semverSatisfiesOptions: semver.RangeOptions = {
     includePrerelease: true,
