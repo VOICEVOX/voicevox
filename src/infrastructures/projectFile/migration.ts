@@ -17,7 +17,7 @@ import { projectFileSchema } from "@/infrastructures/projectFile/schema";
 import { ProjectFileFormatError } from "@/infrastructures/projectFile/type";
 import { validateTalkProject } from "@/infrastructures/projectFile/validation";
 import { getAppInfos } from "@/domain/appInfo";
-import { showQuestionDialog } from "@/components/Dialog/Dialog"; // 追加
+import { showWarningDialog } from "@/components/Dialog/Dialog";
 
 const DEFAULT_SAMPLING_RATE = 24000;
 
@@ -56,14 +56,14 @@ export const migrateProjectFileObject = async (
   const appVersion = getAppInfos().version;
 
   if (semver.gt(projectAppVersion, appVersion)) {
-    const result = await showQuestionDialog({
+    const result = await showWarningDialog({
       title: "プロジェクトファイルのバージョン警告",
       message: `このプロジェクトファイルは新しいバージョンのVOICEVOXで作成されたため、一部の機能が正しく動作しない可能性があります。読み込みを続行しますか？`,
-      buttons: ["いいえ", "はい"],
-      cancel: 0,
-      default: 1,
+      actionName: "はい",
+      cancel: "いいえ",
     });
-    if (result === 0) {
+    // 「いいえ」なら undefined を返す
+    if (result === "CANCEL") {
       return undefined;
     }
   }
