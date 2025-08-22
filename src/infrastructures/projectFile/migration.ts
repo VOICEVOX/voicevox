@@ -16,8 +16,8 @@ import { uuid4 } from "@/helpers/random";
 import { projectFileSchema } from "@/infrastructures/projectFile/schema";
 import { ProjectFileFormatError } from "@/infrastructures/projectFile/type";
 import { validateTalkProject } from "@/infrastructures/projectFile/validation";
-import { validateProjectVersion } from "@/domain/project/type";
 import { getAppInfos } from "@/domain/appInfo";
+import { showQuestionDialog } from "@/components/Dialog/Dialog"; // 追加
 
 const DEFAULT_SAMPLING_RATE = 24000;
 
@@ -54,7 +54,19 @@ export const migrateProjectFileObject = async (
   }
 
   const appVersion = getAppInfos().version;
-  validateProjectVersion(projectAppVersion, appVersion);
+
+  if (semver.gt(projectAppVersion, appVersion)) {
+    const result = await showQuestionDialog({
+      title: "プロジェクトファイルのバージョン警告",
+      message: `このプロジェクトファイルは新しいバージョンのVOICEVOXで作成されたため、一部の機能が正しく動作しない可能性があります。読み込みを続行しますか？`,
+      buttons: ["いいえ", "はい"],
+      cancel: 0,
+      default: 1,
+    });
+    if (result === 0) {
+      return undefined;
+    }
+  }
 
   const semverSatisfiesOptions: semver.RangeOptions = {
     includePrerelease: true,
@@ -274,6 +286,9 @@ export const migrateProjectFileObject = async (
   // ソングはSET_SCOREの中の`isValidScore`関数で検証される
   const parsedProjectData = projectFileSchema.parse(projectData);
   validateTalkProject(parsedProjectData.talk);
+
+  // Update the project version to the current app version after migration
+  parsedProjectData.appVersion = appVersion;
 
   return parsedProjectData;
 };
