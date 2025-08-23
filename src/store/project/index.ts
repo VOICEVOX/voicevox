@@ -37,6 +37,7 @@ import { migrateProjectFileObject } from "@/infrastructures/projectFile/migratio
 
 export const projectStoreState: ProjectStoreState = {
   savedLastCommandIds: { talk: null, song: null },
+  isProjectLoading: false,
 };
 
 const applyTalkProjectToStore = async (
@@ -98,6 +99,11 @@ const applySongProjectToStore = async (
 };
 
 export const projectStore = createPartialStore<ProjectStoreTypes>({
+  SET_IS_PROJECT_LOADING: {
+    mutation(state, { isProjectLoading }: { isProjectLoading: boolean }) {
+      state.isProjectLoading = isProjectLoading;
+    },
+  },
   PROJECT_NAME_WITH_EXT: {
     getter(state) {
       return state.projectFilePath
@@ -181,6 +187,10 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         ),
       });
 
+      if (parsedProjectData == undefined) {
+        return undefined;
+      }
+
       return parsedProjectData;
     },
   },
@@ -191,80 +201,93 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
      * ファイル選択ダイアログを表示するか、ファイルパス指定するか、Fileインスタンスを渡すか選べる。
      * エラー発生時はダイアログが表示される。
      */
-    action: createUILockAction(
-      async ({ actions, mutations, getters }, payload) => {
-        let filePath: undefined | string;
-        if (payload.type == "dialog") {
-          const ret = await window.backend.showOpenFileDialog({
-            title: "プロジェクトファイルの選択",
-            name: "VOICEVOX Project file",
-            mimeType: "application/json",
-            extensions: ["vvproj"],
-          });
-          if (ret == undefined) {
-            return false;
-          }
-          filePath = ret;
-        } else if (payload.type == "path") {
-          filePath = payload.filePath;
-        }
+    action: createUILockAction(({ actions, mutations, getters }, payload) => {
+      return new Promise((resolve) => {
+        mutations.SET_IS_PROJECT_LOADING({ isProjectLoading: true });
 
-        try {
-          let buf: Uint8Array;
-          if (filePath != undefined) {
-            buf = await window.backend
-              .readFile({ filePath })
-              .then(getValueOrThrow);
-
-            await actions.APPEND_RECENTLY_USED_PROJECT({
-              filePath,
-            });
-          } else {
-            if (payload.type != "file")
-              throw new UnreachableError("payload.type != 'file'");
-            buf = new Uint8Array(await payload.file.arrayBuffer());
-          }
-
-          const text = new TextDecoder("utf-8").decode(buf).trim();
-          const parsedProjectData = await actions.PARSE_PROJECT_FILE({
-            projectJson: text,
-          });
-
-          if (getters.IS_EDITED) {
-            const result = await actions.SAVE_OR_DISCARD_PROJECT_FILE({
-              additionalMessage:
-                "プロジェクトをロードすると現在のプロジェクトは破棄されます。",
-            });
-            if (result == "canceled") {
-              return false;
+        setTimeout(async () => {
+          try {
+            let filePath: undefined | string;
+            if (payload.type == "dialog") {
+              const ret = await window.backend.showOpenFileDialog({
+                title: "プロジェクトファイルの選択",
+                name: "VOICEVOX Project file",
+                mimeType: "application/json",
+                extensions: ["vvproj"],
+              });
+              if (ret == undefined) {
+                resolve(false);
+                return;
+              }
+              filePath = ret;
+            } else if (payload.type == "path") {
+              filePath = payload.filePath;
             }
+
+            let buf: Uint8Array;
+            if (filePath != undefined) {
+              buf = await window.backend
+                .readFile({ filePath })
+                .then(getValueOrThrow);
+
+              await actions.APPEND_RECENTLY_USED_PROJECT({
+                filePath,
+              });
+            } else {
+              if (payload.type != "file")
+                throw new UnreachableError("payload.type != 'file'");
+              buf = new Uint8Array(await payload.file.arrayBuffer());
+            }
+
+            const text = new TextDecoder("utf-8").decode(buf).trim();
+            const parsedProjectData = await actions.PARSE_PROJECT_FILE({
+              projectJson: text,
+            });
+
+            if (parsedProjectData == undefined) {
+              resolve(false);
+              return;
+            }
+
+            if (getters.IS_EDITED) {
+              const result = await actions.SAVE_OR_DISCARD_PROJECT_FILE({
+                additionalMessage:
+                  "プロジェクトをロードすると現在のプロジェクトは破棄されます。",
+              });
+              if (result == "canceled") {
+                resolve(false);
+                return;
+              }
+            }
+
+            await applyTalkProjectToStore(actions, parsedProjectData.talk);
+            await applySongProjectToStore(actions, parsedProjectData.song);
+
+            mutations.SET_PROJECT_FILEPATH({ filePath });
+            void actions.CLEAR_UNDO_HISTORY();
+            resolve(true);
+          } catch (err) {
+            window.backend.logError(err);
+            const message = (() => {
+              if (typeof err === "string") return err;
+              if (!(err instanceof Error)) return "エラーが発生しました。";
+              if (err instanceof ResultError && err.code === "ENOENT")
+                return "プロジェクトファイルが見つかりませんでした。ファイルが移動、または削除された可能性があります。";
+              if (err instanceof ProjectFileFormatError)
+                return "ファイルフォーマットが正しくありません。";
+              return err.message;
+            })();
+            await showAlertDialog({
+              title: "エラー",
+              message: `プロジェクトファイルの読み込みに失敗しました。\n${message}`,
+            });
+            resolve(false);
+          } finally {
+            mutations.SET_IS_PROJECT_LOADING({ isProjectLoading: false });
           }
-
-          await applyTalkProjectToStore(actions, parsedProjectData.talk);
-          await applySongProjectToStore(actions, parsedProjectData.song);
-
-          mutations.SET_PROJECT_FILEPATH({ filePath });
-          void actions.CLEAR_UNDO_HISTORY();
-          return true;
-        } catch (err) {
-          window.backend.logError(err);
-          const message = (() => {
-            if (typeof err === "string") return err;
-            if (!(err instanceof Error)) return "エラーが発生しました。";
-            if (err instanceof ResultError && err.code === "ENOENT")
-              return "プロジェクトファイルが見つかりませんでした。ファイルが移動、または削除された可能性があります。";
-            if (err instanceof ProjectFileFormatError)
-              return "ファイルフォーマットが正しくありません。";
-            return err.message;
-          })();
-          await showAlertDialog({
-            title: "エラー",
-            message: `プロジェクトファイルの読み込みに失敗しました。\n${message}`,
-          });
-          return false;
-        }
-      },
-    ),
+        }, 0);
+      });
+    }),
   },
 
   SAVE_PROJECT_FILE_OVERWRITE: {

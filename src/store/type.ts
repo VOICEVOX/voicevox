@@ -1845,9 +1845,14 @@ export type IndexStoreTypes = {
 export type ProjectStoreState = {
   projectFilePath?: string;
   savedLastCommandIds: Record<EditorType, CommandId | null>;
+  isProjectLoading: boolean;
 };
 
 export type ProjectStoreTypes = {
+  SET_IS_PROJECT_LOADING: {
+    mutation: { isProjectLoading: boolean };
+  };
+
   PROJECT_NAME_WITH_EXT: {
     getter: string | undefined;
   };

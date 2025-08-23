@@ -1,5 +1,6 @@
 <template>
   <ErrorBoundary>
+    <ProjectLoadingOverlay />
     <TooltipProvider disableHoverableContent :delayDuration="500">
       <MenuBar
         v-if="openedEditor != undefined"
@@ -29,6 +30,7 @@ import TalkEditor from "@/components/Talk/TalkEditor.vue";
 import SingEditor from "@/components/Sing/SingEditor.vue";
 import { EngineId } from "@/type/preload";
 import ErrorBoundary from "@/components/ErrorBoundary.vue";
+import ProjectLoadingOverlay from "@/components/ProjectLoadingOverlay.vue";
 import { useStore } from "@/store";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import AllDialog from "@/components/Dialog/AllDialog.vue";
