@@ -176,21 +176,26 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
       if (characterInfos == undefined)
         throw new Error("characterInfos == undefined");
 
-      const parsedProjectData = await migrateProjectFileObject(projectData, {
-        fetchMoraData: (payload) => actions.FETCH_MORA_DATA(payload),
-        voices: characterInfos.flatMap((characterInfo) =>
-          characterInfo.metas.styles.map((style) => ({
-            engineId: style.engineId,
-            speakerId: characterInfo.metas.speakerUuid,
-            styleId: style.styleId,
-          })),
-        ),
-      });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const parsedProjectData: any = await migrateProjectFileObject(
+        projectData,
+        {
+          fetchMoraData: (payload) => actions.FETCH_MORA_DATA(payload),
+          voices: characterInfos.flatMap((characterInfo) =>
+            characterInfo.metas.styles.map((style) => ({
+              engineId: style.engineId,
+              speakerId: characterInfo.metas.speakerUuid,
+              styleId: style.styleId,
+            })),
+          ),
+        },
+      );
 
       if (parsedProjectData == undefined) {
         return undefined;
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return parsedProjectData;
     },
   },
