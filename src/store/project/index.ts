@@ -181,7 +181,11 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         ),
       });
 
-      if (parsedProjectData === undefined) {
+      if (parsedProjectData === "oldProject") {
+        return undefined;
+      }
+
+      if (parsedProjectData == undefined) {
         return undefined;
       }
 
@@ -234,7 +238,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             projectJson: text,
           });
 
-          if (parsedProjectData === undefined) {
+          if (parsedProjectData == undefined) {
             return false;
           }
 
