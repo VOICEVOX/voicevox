@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
 import semver from "semver";
+import { z } from "zod";
 
 import { AccentPhrase } from "@/openapi";
 import { EngineId, StyleId, TrackId, Voice } from "@/type/preload";
@@ -16,8 +17,12 @@ import { uuid4 } from "@/helpers/random";
 import { projectFileSchema } from "@/infrastructures/projectFile/schema";
 import { ProjectFileFormatError } from "@/infrastructures/projectFile/type";
 import { validateTalkProject } from "@/infrastructures/projectFile/validation";
+import { getAppInfos } from "@/domain/appInfo";
+import { showWarningDialog } from "@/components/Dialog/Dialog";
 
 const DEFAULT_SAMPLING_RATE = 24000;
+
+type LatestProjectType = z.infer<typeof projectFileSchema>;
 
 /**
  * プロジェクトファイルのマイグレーション
@@ -33,7 +38,7 @@ export const migrateProjectFileObject = async (
     }) => Promise<AccentPhrase[]>;
     voices: Voice[];
   },
-) => {
+): Promise<LatestProjectType | "oldProject"> => {
   const { fetchMoraData, voices } = DI;
 
   // appVersion Validation check
@@ -49,6 +54,29 @@ export const migrateProjectFileObject = async (
     throw new ProjectFileFormatError(
       `The app version of the project file "${projectAppVersion}" is invalid. The app version should be a string in semver format.`,
     );
+  }
+
+  const appVersion = getAppInfos().version;
+
+  if (semver.gt(projectAppVersion, appVersion)) {
+    // 後で消す！！！
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    console.log("DEBUG: enter Project Version overflow action");
+    // 後で消す！！！
+    const result = await showWarningDialog({
+      title: "プロジェクトファイルのバージョン警告",
+      message: `このプロジェクトファイルは新しいバージョンのVOICEVOXで作成されたため、一部の機能が正しく動作しない可能性があります。読み込みを続行しますか？`,
+      actionName: "はい",
+      cancel: "いいえ",
+    });
+    // 「いいえ」なら "oldProject" を返す
+    if (result === "CANCEL") {
+      // 後で消す！！！
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+      console.log("DEBUG: return oldProject to CANCEL");
+      // 後で消す！！！
+      return "oldProject";
+    }
   }
 
   const semverSatisfiesOptions: semver.RangeOptions = {
@@ -269,6 +297,9 @@ export const migrateProjectFileObject = async (
   // ソングはSET_SCOREの中の`isValidScore`関数で検証される
   const parsedProjectData = projectFileSchema.parse(projectData);
   validateTalkProject(parsedProjectData.talk);
+
+  // Update the project version to the current app version after migration
+  parsedProjectData.appVersion = appVersion;
 
   return parsedProjectData;
 };

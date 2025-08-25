@@ -266,6 +266,11 @@ const handleFileChange = async (event: Event) => {
       const parsedProject = await store.actions.PARSE_PROJECT_FILE({
         projectJson: vvproj,
       });
+      if (parsedProject == undefined) {
+        error.value = "oldProject";
+        project.value = null;
+        return;
+      }
       project.value = {
         type: "vvproj",
         project: parsedProject,
@@ -277,6 +282,10 @@ const handleFileChange = async (event: Event) => {
           defaultLyric: "",
         }),
       };
+    }
+    if (project.value == null) {
+      error.value = "unknown";
+      return;
     }
     const firstSelectableTrack = getProjectTracks(project.value).findIndex(
       (track) => !track.disable,

@@ -181,6 +181,14 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         ),
       });
 
+      if (parsedProjectData === "oldProject") {
+        return undefined;
+      }
+
+      if (parsedProjectData == undefined) {
+        return undefined;
+      }
+
       return parsedProjectData;
     },
   },
@@ -229,6 +237,10 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           const parsedProjectData = await actions.PARSE_PROJECT_FILE({
             projectJson: text,
           });
+
+          if (parsedProjectData == undefined) {
+            return false;
+          }
 
           if (getters.IS_EDITED) {
             const result = await actions.SAVE_OR_DISCARD_PROJECT_FILE({
