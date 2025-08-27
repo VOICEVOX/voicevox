@@ -59,10 +59,6 @@ export const migrateProjectFileObject = async (
   const appVersion = getAppInfos().version;
 
   if (semver.gt(projectAppVersion, appVersion)) {
-    // 後で消す！！！
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-    console.log("DEBUG: enter Project Version overflow action");
-    // 後で消す！！！
     const result = await showWarningDialog({
       title: "プロジェクトファイルのバージョン警告",
       message: `このプロジェクトファイルは新しいバージョンのVOICEVOXで作成されたため、一部の機能が正しく動作しない可能性があります。読み込みを続行しますか？`,
@@ -71,10 +67,6 @@ export const migrateProjectFileObject = async (
     });
     // 「いいえ」なら "oldProject" を返す
     if (result === "CANCEL") {
-      // 後で消す！！！
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-      console.log("DEBUG: return oldProject to CANCEL");
-      // 後で消す！！！
       return "oldProject";
     }
   }
