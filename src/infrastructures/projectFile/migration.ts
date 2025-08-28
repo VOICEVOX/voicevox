@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
 import semver from "semver";
+import { z } from "zod";
 
 import { AccentPhrase } from "@/openapi";
 import { EngineId, StyleId, TrackId, Voice } from "@/type/preload";
@@ -16,8 +17,11 @@ import { uuid4 } from "@/helpers/random";
 import { projectFileSchema } from "@/infrastructures/projectFile/schema";
 import { ProjectFileFormatError } from "@/infrastructures/projectFile/type";
 import { validateTalkProject } from "@/infrastructures/projectFile/validation";
+import { getAppInfos } from "@/domain/appInfo";
 
 const DEFAULT_SAMPLING_RATE = 24000;
+
+type LatestProjectType = z.infer<typeof projectFileSchema>;
 
 /**
  * プロジェクトファイルのマイグレーション
@@ -32,9 +36,10 @@ export const migrateProjectFileObject = async (
       styleId: StyleId;
     }) => Promise<AccentPhrase[]>;
     voices: Voice[];
+    showOldProjectWarningDialog: () => Promise<boolean>;
   },
-) => {
-  const { fetchMoraData, voices } = DI;
+): Promise<LatestProjectType | "oldProject"> => {
+  const { fetchMoraData, voices, showOldProjectWarningDialog } = DI;
 
   // appVersion Validation check
   if (
@@ -49,6 +54,15 @@ export const migrateProjectFileObject = async (
     throw new ProjectFileFormatError(
       `The app version of the project file "${projectAppVersion}" is invalid. The app version should be a string in semver format.`,
     );
+  }
+
+  const appVersion = getAppInfos().version;
+
+  if (semver.gt(projectAppVersion, appVersion)) {
+    const result = await showOldProjectWarningDialog();
+    if (!result) {
+      return "oldProject";
+    }
   }
 
   const semverSatisfiesOptions: semver.RangeOptions = {
@@ -269,6 +283,9 @@ export const migrateProjectFileObject = async (
   // ソングはSET_SCOREの中の`isValidScore`関数で検証される
   const parsedProjectData = projectFileSchema.parse(projectData);
   validateTalkProject(parsedProjectData.talk);
+
+  // Update the project version to the current app version after migration
+  parsedProjectData.appVersion = appVersion;
 
   return parsedProjectData;
 };
