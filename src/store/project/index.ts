@@ -196,10 +196,6 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         return undefined;
       }
 
-      if (parsedProjectData == undefined) {
-        return undefined;
-      }
-
       return parsedProjectData;
     },
   },
