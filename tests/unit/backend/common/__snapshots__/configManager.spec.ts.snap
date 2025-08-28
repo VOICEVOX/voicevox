@@ -21,7 +21,7 @@ exports[`0.13.0からマイグレーションできる 1`] = `
   "enablePreset": false,
   "enableRubyNotation": false,
   "engineSettings": {
-    "074fc39e-678b-4c13-8916-ffca8d505d1d": {
+    "00000000-0000-0000-0000-000000000000": {
       "outputSamplingRate": "engineDefault",
       "useGpu": false,
     },
