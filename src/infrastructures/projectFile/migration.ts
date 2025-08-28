@@ -19,7 +19,6 @@ import { ProjectFileFormatError } from "@/infrastructures/projectFile/type";
 import { validateTalkProject } from "@/infrastructures/projectFile/validation";
 import { getAppInfos } from "@/domain/appInfo";
 
-
 const DEFAULT_SAMPLING_RATE = 24000;
 
 type LatestProjectType = z.infer<typeof projectFileSchema>;
