@@ -2,7 +2,7 @@
 
 exports[`migrateProjectFileObject > v0.14.11 1`] = `
 {
-  "appVersion": "0.14.7",
+  "appVersion": "999.999.999",
   "song": {
     "tempos": [
       {

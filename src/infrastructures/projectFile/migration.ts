@@ -18,7 +18,7 @@ import { projectFileSchema } from "@/infrastructures/projectFile/schema";
 import { ProjectFileFormatError } from "@/infrastructures/projectFile/type";
 import { validateTalkProject } from "@/infrastructures/projectFile/validation";
 import { getAppInfos } from "@/domain/appInfo";
-import { showWarningDialog } from "@/components/Dialog/Dialog";
+
 
 const DEFAULT_SAMPLING_RATE = 24000;
 
@@ -37,9 +37,10 @@ export const migrateProjectFileObject = async (
       styleId: StyleId;
     }) => Promise<AccentPhrase[]>;
     voices: Voice[];
+    showOldProjectWarningDialog: () => Promise<boolean>;
   },
 ): Promise<LatestProjectType | "oldProject"> => {
-  const { fetchMoraData, voices } = DI;
+  const { fetchMoraData, voices, showOldProjectWarningDialog } = DI;
 
   // appVersion Validation check
   if (
@@ -59,14 +60,8 @@ export const migrateProjectFileObject = async (
   const appVersion = getAppInfos().version;
 
   if (semver.gt(projectAppVersion, appVersion)) {
-    const result = await showWarningDialog({
-      title: "プロジェクトファイルのバージョン警告",
-      message: `このプロジェクトファイルは新しいバージョンのVOICEVOXで作成されたため、一部の機能が正しく動作しない可能性があります。読み込みを続行しますか？`,
-      actionName: "はい",
-      cancel: "いいえ",
-    });
-    // 「いいえ」なら "oldProject" を返す
-    if (result === "CANCEL") {
+    const result = await showOldProjectWarningDialog();
+    if (!result) {
       return "oldProject";
     }
   }

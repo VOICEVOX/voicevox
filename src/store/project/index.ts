@@ -179,6 +179,17 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             styleId: style.styleId,
           })),
         ),
+        showOldProjectWarningDialog: async () => {
+          const result = await showQuestionDialog({
+            type: "warning",
+            title: "プロジェクトファイルのバージョン警告",
+            message:
+              "このプロジェクトファイルは新しいバージョンのVOICEVOXで作成されたため、一部の機能が正しく動作しない可能性があります。読み込みを続行しますか？",
+            buttons: ["いいえ", { text: "はい", color: "primary" }],
+            cancel: 0,
+          });
+          return result === 1;
+        },
       });
 
       if (parsedProjectData === "oldProject") {

@@ -48,6 +48,7 @@ describe("migrateProjectFileObject", () => {
           styleId: StyleId(74),
         },
       ],
+      showOldProjectWarningDialog: async () => true,
     });
 
     // スナップショットテスト
