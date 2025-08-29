@@ -79,12 +79,12 @@ const emit = defineEmits<{
   click: [payload: MouseEvent];
 }>();
 
-const model = defineModel<string>();
+const model = defineModel<string>({ default: "" });
 const slot = useSlots();
 const inputRef = useTemplateRef("inputRef");
 
 // NOTE: model.valueをそのまま使うとカーソルの位置がリセットされるので、直接使わずバッファを用意する
-const innerValue = ref<string>(model.value ?? "");
+const innerValue = ref<string>(model.value);
 
 const selectionOffset = ref<{ start: number; end: number }>({
   start: 0,
@@ -108,7 +108,7 @@ watch(
   () => {
     const input = getInputOrThrow();
     if (input.textContent !== model.value) {
-      innerValue.value = model.value ?? "";
+      innerValue.value = model.value;
     }
   },
 );
@@ -181,7 +181,7 @@ const handleFocus = () => {
 
 const handleInput = () => {
   const input = getInputOrThrow();
-  model.value = input.textContent ?? "";
+  model.value = input.textContent;
 };
 
 const handlePaste = async (event: ClipboardEvent) => {
