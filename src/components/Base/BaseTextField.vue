@@ -16,8 +16,9 @@
         @input="handleInput"
         @paste="handlePaste"
         @keydown="preventEnter"
-        v-text="innerValue"
-      />
+      >
+        {{ innerValue }}
+      </div>
       <div v-if="placeholder && !model" class="placeholder">
         {{ placeholder }}
       </div>
