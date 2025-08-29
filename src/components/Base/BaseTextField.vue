@@ -181,7 +181,7 @@ const handleFocus = () => {
 
 const handleInput = () => {
   const input = getInputOrThrow();
-  model.value = input.textContent;
+  model.value = input.textContent ?? "";
 };
 
 const handlePaste = async (event: ClipboardEvent) => {
