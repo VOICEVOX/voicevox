@@ -180,6 +180,7 @@ const handlePaste = async (event: ClipboardEvent) => {
   event.preventDefault();
   await paste();
 
+  // DOM側が更新されるのを待つ
   await nextTick();
   restoreSelection();
 };
