@@ -82,6 +82,7 @@ const model = defineModel<string>();
 const slot = useSlots();
 const inputRef = useTemplateRef("inputRef");
 
+// NOTE: model.valueをそのまま使うとカーソルの位置がリセットされるので、直接使わずバッファを用意する
 const innerValue = ref<string>(model.value ?? "");
 
 const selectionOffset = ref<{ start: number; end: number }>({
