@@ -61,7 +61,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, ref, useSlots, useTemplateRef } from "vue";
+import { computed, nextTick, ref, useSlots, useTemplateRef, watch } from "vue";
 import BaseContextMenu from "./BaseContextMenu.vue";
 import BaseContextMenuItem from "./BaseContextMenuItem.vue";
 import BaseContextMenuSeparator from "./BaseContextMenuSeparator.vue";
@@ -102,6 +102,16 @@ const getInputOrThrow = (): HTMLDivElement => {
   }
   return element;
 };
+
+watch(
+  () => model.value,
+  () => {
+    const input = getInputOrThrow();
+    if (input.textContent !== model.value) {
+      innerValue.value = model.value ?? "";
+    }
+  },
+);
 
 const getSelectionRange = () => {
   const selection = window.getSelection();
