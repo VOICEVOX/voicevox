@@ -124,14 +124,11 @@ const getSelectionRange = () => {
 
 const restoreSelection = () => {
   const input = getInputOrThrow();
-
-  if (input.firstChild == null) {
-    throw new Error("input.firstChild is null");
-  }
+  const target = input.firstChild ?? input;
 
   const range = document.createRange();
-  range.setStart(input.firstChild, selectionOffset.value.start);
-  range.setEnd(input.firstChild, selectionOffset.value.end);
+  range.setStart(target, selectionOffset.value.start);
+  range.setEnd(target, selectionOffset.value.end);
 
   const selection = window.getSelection();
 
