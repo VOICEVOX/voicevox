@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/vue3-vite";
-import { ref } from "vue";
-import { expect, fn } from "storybook/test";
+import { expect } from "storybook/test";
 
 import BaseTextField from "./BaseTextField.vue";
 import { UnreachableError } from "@/type/utility";
