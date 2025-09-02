@@ -62,7 +62,7 @@ export const UpdateModelValue: Story = {
     }
     await expect(inputElement.textContent).toBe("hoge");
     // @ts-expect-error modelValueがreadonlyだが、動いているかつ周りに影響がないため無視する
-    // TOOD: ちゃんとした方法があればそちらに変更する
+    // TODO: ちゃんとした方法があればそちらに変更する
     args.modelValue = "fuga";
     await new Promise((resolve) => setTimeout(resolve, 0));
     await expect(inputElement.textContent).toBe("fuga");
