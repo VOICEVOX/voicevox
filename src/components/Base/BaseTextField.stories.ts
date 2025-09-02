@@ -1,6 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/vue3-vite";
+import { ref } from "vue";
+import { expect, fn } from "storybook/test";
 
 import BaseTextField from "./BaseTextField.vue";
+import { UnreachableError } from "@/type/utility";
 
 const meta: Meta<typeof BaseTextField> = {
   component: BaseTextField,
@@ -45,4 +48,24 @@ export const HasError: Story = {
         </template>
       </BaseTextField>`,
   }),
+};
+
+export const UpdateModelValue: Story = {
+  name: "Update modelValue",
+  args: {
+    modelValue: "hoge",
+  },
+  play: async ({ canvasElement, args }) => {
+    const inputElement =
+      canvasElement.querySelector<HTMLDivElement>("div.input");
+    if (!inputElement) {
+      throw new UnreachableError("div.input is not found");
+    }
+    await expect(inputElement.textContent).toBe("hoge");
+    // @ts-expect-error modelValueがreadonlyだが、動いているかつ周りに影響がないため無視する
+    // TOOD: ちゃんとした方法があればそちらに変更する
+    args.modelValue = "fuga";
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    await expect(inputElement.textContent).toBe("fuga");
+  },
 };
