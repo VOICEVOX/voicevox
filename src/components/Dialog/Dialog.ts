@@ -2,8 +2,9 @@ import { Dialog, Notify, Loading } from "quasar";
 import SaveAllResultDialog from "./SaveAllResultDialog.vue";
 import QuestionDialog from "./TextDialog/QuestionDialog.vue";
 import MessageDialog from "./TextDialog/MessageDialog.vue";
+import CharacterPolicyAgreementDialog from "./CharacterPolicyAgreementDialog.vue";
 import { DialogType } from "./TextDialog/common";
-import { AudioKey, ConfirmedTips } from "@/type/preload";
+import { ConfirmedTips, CharacterInfo, AcceptedAudioKey } from "@/type/preload";
 import {
   AllActions,
   SaveResultObject,
@@ -170,19 +171,19 @@ export const showQuestionDialog = async (options: QuestionDialogOptions) => {
 };
 
 export async function generateAndSaveOneAudioWithDialog({
-  audioKey,
+  acceptedAudioKey,
   actions,
   filePath,
   disableNotifyOnGenerate,
 }: {
-  audioKey: AudioKey;
+  acceptedAudioKey: AcceptedAudioKey;
   actions: DotNotationDispatch<AllActions>;
   filePath?: string;
   disableNotifyOnGenerate: boolean;
 }): Promise<void> {
   const result: SaveResultObject = await withProgress(
     actions.GENERATE_AND_SAVE_AUDIO({
-      audioKey,
+      acceptedAudioKey,
       filePath,
     }),
     actions,
@@ -192,24 +193,24 @@ export async function generateAndSaveOneAudioWithDialog({
 }
 
 export async function multiGenerateAndSaveAudioWithDialog({
-  audioKeys,
+  acceptedAudioKeys,
   actions,
   dirPath,
   disableNotifyOnGenerate,
 }: {
-  audioKeys: AudioKey[];
+  acceptedAudioKeys: AcceptedAudioKey[];
   actions: DotNotationDispatch<AllActions>;
   dirPath?: string;
   disableNotifyOnGenerate: boolean;
 }): Promise<void> {
   const result = await withProgress(
     actions.MULTI_GENERATE_AND_SAVE_AUDIO({
-      audioKeys,
+      acceptedAudioKeys,
       dirPath,
       callback: (finishedCount) =>
         actions.SET_PROGRESS_FROM_COUNT({
           finishedCount,
-          totalCount: audioKeys.length,
+          totalCount: acceptedAudioKeys.length,
         }),
     }),
     actions,
@@ -260,16 +261,19 @@ export async function multiGenerateAndSaveAudioWithDialog({
 }
 
 export async function generateAndConnectAndSaveAudioWithDialog({
+  acceptedAudioKeys,
   actions,
   filePath,
   disableNotifyOnGenerate,
 }: {
+  acceptedAudioKeys: AcceptedAudioKey[];
   actions: DotNotationDispatch<AllActions>;
   filePath?: string;
   disableNotifyOnGenerate: boolean;
 }): Promise<void> {
   const result = await withProgress(
     actions.GENERATE_AND_CONNECT_AND_SAVE_AUDIO({
+      acceptedAudioKeys,
       filePath,
       callback: (finishedCount, totalCount) =>
         actions.SET_PROGRESS_FROM_COUNT({ finishedCount, totalCount }),
@@ -294,6 +298,38 @@ export async function connectAndExportTextWithDialog({
   });
   if (!result) return;
   notifyResult(result, "text", actions, disableNotifyOnGenerate);
+}
+
+export async function showCharacterPolicyAgreementDialog({
+  unacceptedCharacterInfos,
+  actions,
+}: {
+  unacceptedCharacterInfos: CharacterInfo[];
+  actions: DotNotationDispatch<AllActions>;
+}): Promise<"accepted" | "canceled"> {
+  const { promise, resolve } = Promise.withResolvers<"accepted" | "canceled">();
+
+  Dialog.create({
+    component: CharacterPolicyAgreementDialog,
+    componentProps: {
+      characterPolicyInfos: unacceptedCharacterInfos.map((info) => ({
+        id: info.metas.speakerUuid,
+        name: info.metas.speakerName,
+        policy: info.metas.policy,
+        portraitPath: info.portraitPath,
+      })),
+    },
+  })
+    .onOk((acceptedIds) => {
+      // 同意状態を保存
+      void actions.SET_ACCEPTED_CHARACTER_IDS({
+        acceptedCharacterIds: acceptedIds,
+      });
+      resolve("accepted");
+    })
+    .onCancel(() => resolve("canceled"));
+
+  return promise;
 }
 
 // 書き出し成功時の通知を表示

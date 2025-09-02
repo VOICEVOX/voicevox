@@ -48,6 +48,7 @@ import {
   SpeakerId,
   StyleId,
   AudioKey,
+  AcceptedAudioKey,
   PresetKey,
   RootMiscSettingType,
   EditorType,
@@ -174,6 +175,10 @@ export type AudioStoreTypes = {
 
   SELECTED_AUDIO_KEYS: {
     getter: AudioKey[];
+  };
+
+  GET_UNACCEPTED_CHARACTER_IDS: {
+    getter(audioKeys: AudioKey[]): SpeakerId[];
   };
 
   AUDIO_PLAY_START_POINT: {
@@ -435,14 +440,14 @@ export type AudioStoreTypes = {
 
   GENERATE_AND_SAVE_AUDIO: {
     action(payload: {
-      audioKey: AudioKey;
+      acceptedAudioKey: AcceptedAudioKey;
       filePath?: string;
     }): SaveResultObject;
   };
 
   MULTI_GENERATE_AND_SAVE_AUDIO: {
     action(payload: {
-      audioKeys: AudioKey[];
+      acceptedAudioKeys: AcceptedAudioKey[];
       dirPath?: string;
       callback?: (finishedCount: number) => void;
     }): SaveResultObject[] | "canceled";
@@ -450,6 +455,7 @@ export type AudioStoreTypes = {
 
   GENERATE_AND_CONNECT_AND_SAVE_AUDIO: {
     action(payload: {
+      acceptedAudioKeys: AcceptedAudioKey[];
       filePath?: string;
       callback?: (finishedCount: number, totalCount: number) => void;
     }): SaveResultObject;
@@ -1931,6 +1937,7 @@ export type SettingStoreState = {
   availableThemes: ThemeConf[];
   acceptTerms: AcceptTermsStatus;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
+  acceptedCharacterIds: SpeakerId[]; // キャラクター利用規約に同意済みのキャラクターID
   experimentalSetting: ExperimentalSettingType;
   confirmedTips: ConfirmedTips;
   engineSettings: EngineSettings;
@@ -2004,6 +2011,11 @@ export type SettingStoreTypes = {
 
   RESET_CONFIRMED_TIPS: {
     action(): void;
+  };
+
+  SET_ACCEPTED_CHARACTER_IDS: {
+    mutation: { acceptedCharacterIds: SpeakerId[] };
+    action(payload: { acceptedCharacterIds: SpeakerId[] }): void;
   };
 
   SET_ENGINE_SETTING: {
@@ -2232,6 +2244,12 @@ export type UiStoreTypes = {
 
   RESET_PROGRESS: {
     action(): void;
+  };
+
+  SHOW_CHARACTER_POLICY_AGREEMENT_DIALOG: {
+    action(payload: {
+      audioKeys: AudioKey[];
+    }): Promise<"accepted" | "canceled">;
   };
 
   SHOW_GENERATE_AND_SAVE_ALL_AUDIO_DIALOG: {
