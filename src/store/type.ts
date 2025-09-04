@@ -1865,7 +1865,9 @@ export type ProjectStoreTypes = {
   };
 
   PARSE_PROJECT_FILE: {
-    action(payload: { projectJson: string }): Promise<LatestProjectType>;
+    action(payload: {
+      projectJson: string;
+    }): Promise<LatestProjectType | undefined>;
   };
 
   LOAD_PROJECT_FILE: {
