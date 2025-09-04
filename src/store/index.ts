@@ -377,7 +377,9 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...proxyStore.getters,
     ...singingStore.getters,
     ...singingCommandStore.getters,
-  },
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any,
 
   mutations: {
     ...uiStore.mutations,
@@ -394,7 +396,9 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...proxyStore.mutations,
     ...singingStore.mutations,
     ...singingCommandStore.mutations,
-  },
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any,
 
   actions: {
     ...uiStore.actions,
@@ -411,7 +415,9 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...proxyStore.actions,
     ...singingStore.actions,
     ...singingCommandStore.actions,
-  },
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any,
   strict: !isProduction,
 });
 
