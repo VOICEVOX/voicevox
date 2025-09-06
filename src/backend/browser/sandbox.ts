@@ -244,4 +244,13 @@ export const api: Sandbox = {
   getPathForFile(/* file: File */) {
     throw new Error(`Not supported on Browser version: getPathForFile`);
   },
+  isUpdateSupported() {
+    return Promise.resolve({
+      isUpdateSupported: false,
+      reason: "ブラウザ版ではアプリ内アップデートはサポートされていません。",
+    });
+  },
+  updateApp(/* version: string */) {
+    throw new Error(`Not supported on Browser version: updateApp`);
+  },
 };
