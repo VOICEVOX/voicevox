@@ -33,7 +33,7 @@
 <script setup lang="ts">
 import { QBtn, useDialogPluginComponent } from "quasar";
 import { computed, onMounted, useTemplateRef } from "vue";
-import { ButtonColor } from "../Dialog";
+import { QuestionDialogButtonColor } from "../Dialog";
 import { getIcon, getColor, DialogType } from "./common";
 import BaseDialog from "@/components/Base/BaseDialog.vue";
 import BaseButton from "@/components/Base/BaseButton.vue";
@@ -45,7 +45,7 @@ const props = withDefaults(
     type: DialogType;
     title: string;
     message: string;
-    buttons: (string | { text: string; color: ButtonColor })[];
+    buttons: (string | { text: string; color: QuestionDialogButtonColor })[];
     persistent?: boolean | undefined;
     default?: number | undefined;
   }>(),
@@ -63,7 +63,7 @@ const color = computed(() => getColor(props.type));
 const buttonObjects = computed(() =>
   props.buttons.map<{
     text: string;
-    color: ButtonColor;
+    color: QuestionDialogButtonColor;
   }>((button) =>
     typeof button === "string" ? { text: button, color: "display" } : button,
   ),
@@ -73,7 +73,7 @@ const { dialogRef, onDialogOK, onDialogHide } = useDialogPluginComponent();
 
 const buttonsRef = useTemplateRef<QBtn[]>("buttons");
 
-const toButtonVariant = (color: ButtonColor) => {
+const toButtonVariant = (color: QuestionDialogButtonColor) => {
   switch (color) {
     case "display":
       return "default";
