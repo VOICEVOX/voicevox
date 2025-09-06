@@ -33,9 +33,11 @@
 <script setup lang="ts">
 import { QBtn, useDialogPluginComponent } from "quasar";
 import { computed, onMounted, useTemplateRef } from "vue";
+import { QuestionDialogButtonColor } from "../Dialog";
 import { getIcon, getColor, DialogType } from "./common";
 import BaseDialog from "@/components/Base/BaseDialog.vue";
 import BaseButton from "@/components/Base/BaseButton.vue";
+import { ExhaustiveError } from "@/type/utility";
 
 const modelValue = defineModel<boolean>({ default: false });
 const props = withDefaults(
@@ -43,7 +45,7 @@ const props = withDefaults(
     type: DialogType;
     title: string;
     message: string;
-    buttons: (string | { text: string; color: string })[];
+    buttons: (string | { text: string; color: QuestionDialogButtonColor })[];
     persistent?: boolean | undefined;
     default?: number | undefined;
   }>(),
@@ -59,7 +61,10 @@ defineEmits({
 const iconName = computed(() => getIcon(props.type));
 const color = computed(() => getColor(props.type));
 const buttonObjects = computed(() =>
-  props.buttons.map((button) =>
+  props.buttons.map<{
+    text: string;
+    color: QuestionDialogButtonColor;
+  }>((button) =>
     typeof button === "string" ? { text: button, color: "display" } : button,
   ),
 );
@@ -68,7 +73,7 @@ const { dialogRef, onDialogOK, onDialogHide } = useDialogPluginComponent();
 
 const buttonsRef = useTemplateRef<QBtn[]>("buttons");
 
-const toButtonVariant = (color: string) => {
+const toButtonVariant = (color: QuestionDialogButtonColor) => {
   switch (color) {
     case "display":
       return "default";
@@ -77,7 +82,7 @@ const toButtonVariant = (color: string) => {
     case "warning":
       return "danger";
     default:
-      throw new Error("unknown color type: " + color);
+      throw new ExhaustiveError(color);
   }
 };
 
