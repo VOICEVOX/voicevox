@@ -73,5 +73,5 @@ test("未来のバージョンのプロジェクトを読み込むと警告を�
     showNewerVersionWarningDialog,
   });
   expect(showNewerVersionWarningDialog).toHaveBeenCalled();
-  expect(project).toEqual("oldProject");
+  expect(project).toEqual("projectCreatedByNewerVersion");
 });
