@@ -1842,15 +1842,20 @@ export type IndexStoreTypes = {
  * Project Store Types
  */
 
+export type ProjectLoadingInfo = {
+  text: string;
+  percent: number; // 0-100
+};
+
 export type ProjectStoreState = {
   projectFilePath?: string;
   savedLastCommandIds: Record<EditorType, CommandId | null>;
-  isProjectLoading: boolean;
+  projectLoadingInfo: ProjectLoadingInfo | null;
 };
 
 export type ProjectStoreTypes = {
-  SET_IS_PROJECT_LOADING: {
-    mutation: { isProjectLoading: boolean };
+  SET_PROJECT_LOADING_INFO: {
+    mutation: { projectLoadingInfo: ProjectLoadingInfo | null };
   };
 
   PROJECT_NAME_WITH_EXT: {

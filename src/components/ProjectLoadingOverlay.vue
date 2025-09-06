@@ -1,8 +1,17 @@
 <template>
-  <div v-if="isProjectLoading" class="loading-project">
+  <div v-if="projectLoadingInfo" class="loading-project">
     <div>
-      <QSpinner color="primary" size="2.5rem" />
-      <div class="q-mt-xs">プロジェクト読み込み中・・・</div>
+      <QCircularProgress
+        showValue
+        fontSize="12px"
+        :value="projectLoadingInfo.percent"
+        size="50px"
+        color="primary"
+        trackColor="grey-3"
+      >
+        {{ projectLoadingInfo.percent }}%
+      </QCircularProgress>
+      <div class="q-mt-sm">{{ projectLoadingInfo.text }}</div>
     </div>
   </div>
 </template>
@@ -13,7 +22,7 @@ import { useStore } from "@/store";
 
 const store = useStore();
 
-const isProjectLoading = computed(() => store.state.isProjectLoading);
+const projectLoadingInfo = computed(() => store.state.projectLoadingInfo);
 </script>
 
 <style scoped lang="scss">
@@ -32,7 +41,8 @@ const isProjectLoading = computed(() => store.state.isProjectLoading);
     color: colors.$display;
     background: colors.$surface;
     border-radius: 6px;
-    padding: 14px;
+    padding: 20px;
+    min-width: 240px;
   }
 }
 </style>
