@@ -1,7 +1,13 @@
-import { beforeEach, describe, expect, test } from "vitest";
+import { beforeAll, beforeEach, describe, expect, test } from "vitest";
 import { hash } from "../../utils";
 import { resetMockMode } from "@/helpers/random";
 import { createOpenAPIEngineMock } from "@/mock/engineMock";
+import { createOrGetTokenizer } from "@/mock/engineMock/talkModelMock";
+
+beforeAll(async () => {
+  // NOTE: ウォームアップのためトークナイザーを事前に生成する
+  await createOrGetTokenizer();
+});
 
 beforeEach(() => {
   resetMockMode();
