@@ -57,6 +57,7 @@ const applyTalkProjectToStore = async (
     AllMutations
   >,
   talkProject: LatestProjectType["talk"],
+  totalItems: number,
 ) => {
   const { actions, mutations } = context;
   await actions.REMOVE_ALL_AUDIO_ITEM();
@@ -64,12 +65,12 @@ const applyTalkProjectToStore = async (
   const { audioItems, audioKeys } = talkProject;
 
   let prevAudioKey = undefined;
-  const total = audioKeys.length;
   for (const [i, audioKey] of audioKeys.entries()) {
-    const percent = Math.round(((i + 1) / total) * 50) + 20; // 20%から70%の範囲で進捗
+    const processedItems = i + 1;
+    const percent = Math.round((processedItems / totalItems) * 100);
     mutations.SET_PROJECT_LOADING_INFO({
       projectLoadingInfo: {
-        text: `プロジェクトを読み込み中... (${i + 1}/${total})`,
+        text: `音声情報を適用中... (${i + 1}/${audioKeys.length})`,
         percent,
       },
     });
@@ -88,39 +89,56 @@ const applyTalkProjectToStore = async (
 };
 
 const applySongProjectToStore = async (
-  actions: DotNotationDispatch<AllActions>,
+  context: DotNotationActionContext<
+    State,
+    State,
+    AllGetters,
+    AllActions,
+    AllMutations
+  >,
   songProject: LatestProjectType["song"],
+  initialProcessedItems: number, // トーク側で処理済みのアイテム数
+  totalItems: number,
 ) => {
+  const { actions, mutations } = context;
   const { tpqn, tempos, timeSignatures, tracks, trackOrder } = songProject;
 
   await actions.SET_TPQN({ tpqn });
   await actions.SET_TEMPOS({ tempos });
   await actions.SET_TIME_SIGNATURES({ timeSignatures });
-  await actions.SET_TRACKS({
-    tracks: new Map(
-      trackOrder.map((trackId): [TrackId, Track] => {
-        const track = tracks[trackId];
-        if (!track) throw new Error("track == undefined");
-        // TODO: トラックの変換処理を関数化する
-        return [
-          trackId,
-          {
-            name: track.name,
-            singer: track.singer,
-            keyRangeAdjustment: track.keyRangeAdjustment,
-            volumeRangeAdjustment: track.volumeRangeAdjustment,
-            notes: track.notes,
-            pitchEditData: track.pitchEditData,
-            phonemeTimingEditData: recordToMap(track.phonemeTimingEditData),
-            solo: track.solo,
-            mute: track.mute,
-            gain: track.gain,
-            pan: track.pan,
-          },
-        ];
-      }),
-    ),
-  });
+
+  const newTracks = new Map<TrackId, Track>();
+  for (const [i, trackId] of trackOrder.entries()) {
+    const processedItems = initialProcessedItems + i + 1;
+    const percent = Math.round((processedItems / totalItems) * 100);
+    mutations.SET_PROJECT_LOADING_INFO({
+      projectLoadingInfo: {
+        text: `ソング情報を適用中... (${i + 1}/${trackOrder.length})`,
+        percent,
+      },
+    });
+    // 5件ごとにUIを更新
+    if (i % 5 === 0) {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+
+    const track = tracks[trackId];
+    if (!track) throw new Error("track == undefined");
+    newTracks.set(trackId, {
+      name: track.name,
+      singer: track.singer,
+      keyRangeAdjustment: track.keyRangeAdjustment,
+      volumeRangeAdjustment: track.volumeRangeAdjustment,
+      notes: track.notes,
+      pitchEditData: track.pitchEditData,
+      phonemeTimingEditData: recordToMap(track.phonemeTimingEditData),
+      solo: track.solo,
+      mute: track.mute,
+      gain: track.gain,
+      pan: track.pan,
+    });
+  }
+  await actions.SET_TRACKS({ tracks: newTracks });
 };
 
 export const projectStore = createPartialStore<ProjectStoreTypes>({
@@ -247,12 +265,6 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
       try {
         let filePath: undefined | string;
         if (payload.type == "dialog") {
-          mutations.SET_PROJECT_LOADING_INFO({
-            projectLoadingInfo: {
-              text: "ファイルを選択中...",
-              percent: 5,
-            },
-          });
           const ret = await window.backend.showOpenFileDialog({
             title: "プロジェクトファイルの選択",
             name: "VOICEVOX Project file",
@@ -269,12 +281,6 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
 
         let buf: Uint8Array;
         if (filePath != undefined) {
-          mutations.SET_PROJECT_LOADING_INFO({
-            projectLoadingInfo: {
-              text: "ファイルを読み込んでいます...",
-              percent: 10,
-            },
-          });
           buf = await window.backend
             .readFile({ filePath })
             .then(getValueOrThrow);
@@ -289,12 +295,6 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         }
 
         const text = new TextDecoder("utf-8").decode(buf).trim();
-        mutations.SET_PROJECT_LOADING_INFO({
-          projectLoadingInfo: {
-            text: "プロジェクトを解析中...",
-            percent: 20,
-          },
-        });
         const parsedProjectData = await actions.PARSE_PROJECT_FILE({
           projectJson: text,
         });
@@ -313,15 +313,24 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           }
         }
 
-        await applyTalkProjectToStore(context, parsedProjectData.talk);
+        const totalItems =
+          parsedProjectData.talk.audioKeys.length +
+          parsedProjectData.song.trackOrder.length;
+
+        await applyTalkProjectToStore(
+          context,
+          parsedProjectData.talk,
+          totalItems,
+        );
+        await applySongProjectToStore(
+          context,
+          parsedProjectData.song,
+          parsedProjectData.talk.audioKeys.length, // 処理済みアイテム数を渡す
+          totalItems,
+        );
 
         mutations.SET_PROJECT_LOADING_INFO({
-          projectLoadingInfo: { text: "ソング情報を適用中...", percent: 70 },
-        });
-        await applySongProjectToStore(actions, parsedProjectData.song);
-
-        mutations.SET_PROJECT_LOADING_INFO({
-          projectLoadingInfo: { text: "最終処理中...", percent: 95 },
+          projectLoadingInfo: { text: "最終処理中...", percent: 100 },
         });
 
         mutations.SET_PROJECT_FILEPATH({ filePath });
