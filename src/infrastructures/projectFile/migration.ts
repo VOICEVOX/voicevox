@@ -36,10 +36,10 @@ export const migrateProjectFileObject = async (
       styleId: StyleId;
     }) => Promise<AccentPhrase[]>;
     voices: Voice[];
-    showOldProjectWarningDialog: () => Promise<boolean>;
+    showNewerVersionWarningDialog: () => Promise<boolean>;
   },
-): Promise<LatestProjectType | "oldProject"> => {
-  const { fetchMoraData, voices, showOldProjectWarningDialog } = DI;
+): Promise<LatestProjectType | "projectCreatedByNewerVersion"> => {
+  const { fetchMoraData, voices, showNewerVersionWarningDialog } = DI;
 
   // appVersion Validation check
   if (
@@ -59,9 +59,9 @@ export const migrateProjectFileObject = async (
   const appVersion = getAppInfos().version;
 
   if (semver.gt(projectAppVersion, appVersion)) {
-    const result = await showOldProjectWarningDialog();
+    const result = await showNewerVersionWarningDialog();
     if (!result) {
-      return "oldProject";
+      return "projectCreatedByNewerVersion";
     }
   }
 

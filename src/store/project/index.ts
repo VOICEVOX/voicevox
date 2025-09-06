@@ -179,7 +179,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             styleId: style.styleId,
           })),
         ),
-        showOldProjectWarningDialog: async () => {
+        showNewerVersionWarningDialog: async () => {
           const result = await showQuestionDialog({
             type: "warning",
             title: "プロジェクトファイルのバージョン警告",
@@ -192,7 +192,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         },
       });
 
-      if (parsedProjectData === "oldProject") {
+      if (parsedProjectData === "projectCreatedByNewerVersion") {
         return undefined;
       }
 
