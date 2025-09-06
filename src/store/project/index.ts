@@ -182,7 +182,8 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         showNewerVersionWarningDialog: async () => {
           const result = await showQuestionDialog({
             type: "warning",
-            title: "プロジェクトファイルのバージョン警告",
+            title:
+              "プロジェクトファイルが新しいバージョンのVOICEVOXで作成されています",
             message:
               "このプロジェクトファイルは新しいバージョンのVOICEVOXで作成されたため、一部の機能が正しく動作しない可能性があります。読み込みを続行しますか？",
             buttons: ["いいえ", { text: "はい", color: "warning" }],

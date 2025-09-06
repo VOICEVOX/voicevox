@@ -35,6 +35,8 @@ test("未来のバージョンのプロジェクトを読み込むと警告を�
   );
   await loadProject(page, content);
   await expect(
-    page.getByText("プロジェクトファイルのバージョン警告"),
+    page.getByText(
+      "プロジェクトファイルが新しいバージョンのVOICEVOXで作成されています",
+    ),
   ).toBeVisible();
 });
