@@ -1,5 +1,10 @@
 <template>
-  <QDialog v-model="dialogOpened" persistent>
+  <QDialog
+    ref="dialogRef"
+    v-model="modelValue"
+    persistent
+    @update:modelValue="handleOpenUpdate"
+  >
     <QCard class="policy-dialog q-py-sm q-px-md">
       <QCardSection>
         <div class="text-h5">キャラクター利用規約への同意</div>
@@ -10,19 +15,24 @@
 
       <QSeparator />
 
-      <!-- 
-      TODO: 立ち絵を表示する
-      -->
-
-      <QCardSection class="q-py-none scroll scrollable-area">
+      <QCardSection class="q-py-md scroll scrollable-area">
         <div class="character-policies">
           <div
             v-for="info in characterPolicyInfos"
             :key="info.id"
             class="character-policy-item"
           >
-            <div class="character-name">{{ info.name }}</div>
-            <div class="character-policy">{{ info.policy }}</div>
+            <div class="character-portrait-section">
+              <img 
+                :src="info.portraitPath" 
+                class="character-portrait" 
+                :alt="info.name"
+              />
+            </div>
+            <div class="character-info-section">
+              <div class="character-name">{{ info.name }}</div>
+              <div class="character-policy">{{ info.policy }}</div>
+            </div>
           </div>
         </div>
       </QCardSection>
@@ -37,17 +47,17 @@
           unelevated
           color="surface"
           textColor="display"
-          class="q-mt-sm"
-          @click="$emit('cancel')"
+          class="q-mt-sm text-bold"
+          @click="handleCancel"
         />
         <QBtn
           padding="xs md"
           label="同意して続行"
           unelevated
-          color="primary"
-          textColor="display-on-primary"
-          class="q-mt-sm"
-          @click="$emit('accept', characterIds)"
+          color="surface"
+          textColor="display"
+          class="q-mt-sm text-bold"
+          @click="handleAccept"
         />
       </QCardActions>
     </QCard>
@@ -56,9 +66,10 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
+import { useDialogPluginComponent } from "quasar";
 import { SpeakerId } from "@/type/preload";
 
-const dialogOpened = defineModel<boolean>("dialogOpened", { default: false });
+const modelValue = defineModel<boolean>({ default: false });
 
 type CharacterPolicyInfo = {
   id: SpeakerId;
@@ -71,14 +82,30 @@ const props = defineProps<{
   characterPolicyInfos: CharacterPolicyInfo[];
 }>();
 
-defineEmits<{
-  (e: "cancel"): void;
-  (e: "accept", characterIds: SpeakerId[]): void;
-}>();
+defineEmits({
+  ...useDialogPluginComponent.emitsObject,
+});
+
+const { dialogRef, onDialogOK, onDialogCancel, onDialogHide } =
+  useDialogPluginComponent();
 
 const characterIds = computed(() =>
   props.characterPolicyInfos.map((c) => c.id),
 );
+
+const handleCancel = () => {
+  onDialogCancel();
+};
+
+const handleAccept = () => {
+  onDialogOK(characterIds.value);
+};
+
+const handleOpenUpdate = (isOpen: boolean) => {
+  if (!isOpen) {
+    onDialogHide();
+  }
+};
 </script>
 
 <style scoped lang="scss">
@@ -102,11 +129,37 @@ const characterIds = computed(() =>
 }
 
 .character-policy-item {
+  display: flex;
+  gap: vars.$gap-2;
   padding: vars.$padding-2;
   border: 1px solid colors.$border;
   background-color: colors.$surface;
   border-radius: vars.$radius-2;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.character-portrait-section {
+  flex-shrink: 0;
+  width: 5rem;
+  height: 7rem;
+  display: grid;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  border-radius: vars.$radius-1;
+}
+
+.character-portrait {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  border-radius: vars.$radius-1;
+}
+
+.character-info-section {
+  flex: 1;
+  min-width: 0;
 }
 
 .character-name {

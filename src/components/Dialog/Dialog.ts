@@ -4,7 +4,12 @@ import QuestionDialog from "./TextDialog/QuestionDialog.vue";
 import MessageDialog from "./TextDialog/MessageDialog.vue";
 import CharacterPolicyAgreementDialog from "./CharacterPolicyAgreementDialog.vue";
 import { DialogType } from "./TextDialog/common";
-import { ConfirmedTips, CharacterInfo, AcceptedAudioKey } from "@/type/preload";
+import {
+  ConfirmedTips,
+  CharacterInfo,
+  AcceptedAudioKey,
+  SpeakerId,
+} from "@/type/preload";
 import {
   AllActions,
   SaveResultObject,
@@ -320,7 +325,7 @@ export async function showCharacterPolicyAgreementDialog({
       })),
     },
   })
-    .onOk((acceptedIds) => {
+    .onOk((acceptedIds: SpeakerId[]) => {
       // 同意状態を保存
       void actions.SET_ACCEPTED_CHARACTER_IDS({
         acceptedCharacterIds: acceptedIds,
