@@ -119,13 +119,9 @@ export async function mockReadFile(
       const _window = window as unknown as _Window;
       const originalReadFile = _window.backend.readFile.bind(_window.backend);
       _window.backend.readFile = async ({ filePath: readingFilePath }) => {
-        console.log("mockReadFile: called with", readingFilePath);
-        console.log("mockReadFile: mockedFilePath", mockedFilePath);
         if (readingFilePath === mockedFilePath) {
-          console.log("mockReadFile: returning mock data");
           return successResult;
         } else {
-          console.log("mockReadFile: delegating to original readFile");
           return originalReadFile({ filePath: readingFilePath });
         }
       };
