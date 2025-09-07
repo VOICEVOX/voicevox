@@ -215,15 +215,6 @@ export default defineConfigWithVueTs(
   },
 
   {
-    name: "voicevox/store-index-override",
-    files: ["src/store/index.ts"],
-    rules: {
-      "@typescript-eslint/no-unsafe-assignment": "off",
-      "@typescript-eslint/no-explicit-any": "off",
-    },
-  },
-
-  {
     name: "voicevox/some-allow-console",
     files: [
       "src/backend/electron/**/*.ts",
