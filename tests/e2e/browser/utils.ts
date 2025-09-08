@@ -1,6 +1,12 @@
-import { test, Page } from "@playwright/test";
+import { test, Page, Locator, expect } from "@playwright/test";
 import { getQuasarMenu } from "../locators";
-import { mockReadFile, mockShowOpenFileDialog } from "./mockUtility";
+import {
+  mockReadFile,
+  mockShowOpenFileDialog,
+  mockShowSaveFileDialog,
+  mockWriteFile,
+} from "./mockUtility";
+import { UnreachableError } from "@/type/utility";
 
 /** UIのロックが解除されるまで待つ */
 export async function waitForUiUnlock(page: Page): Promise<void> {
@@ -10,7 +16,7 @@ export async function waitForUiUnlock(page: Page): Promise<void> {
   });
 }
 
-/** プロジェクトを読み込む。 */
+/** プロジェクトを読み込む */
 export async function loadProject(page: Page, proj: string): Promise<void> {
   await test.step("プロジェクトを読み込む", async () => {
     const testProjPath = `/tmp/${Date.now()}-testProj.vvproj`;
@@ -18,6 +24,27 @@ export async function loadProject(page: Page, proj: string): Promise<void> {
     await mockShowOpenFileDialog(page, testProjPath);
     await page.getByRole("button", { name: "ファイル" }).click();
     await getQuasarMenu(page, "プロジェクトを読み込む").click();
+  });
+}
+
+/** プロジェクトを保存する */
+export async function saveProject(page: Page): Promise<string> {
+  return await test.step("プロジェクトを保存する", async () => {
+    const writeFileHandle = await mockWriteFile(page);
+    const saveFileDialogHandle = await mockShowSaveFileDialog(page);
+    await page.getByRole("button", { name: "ファイル" }).click();
+    await getQuasarMenu(page, "プロジェクトの複製を保存").click();
+    await waitForUiUnlock(page);
+    const [fileId] = await saveFileDialogHandle.getFileIds();
+    if (!fileId) {
+      throw new UnreachableError("assertion failed: fileId is undefined");
+    }
+    const writtenFiles = await writeFileHandle.getWrittenFileBuffers();
+    const writtenFile = writtenFiles[fileId];
+    if (!writtenFile) {
+      throw new UnreachableError("assertion failed: writtenFile is undefined");
+    }
+    return writtenFile.toString("utf-8");
   });
 }
 
@@ -33,4 +60,18 @@ export async function collectAllAudioCellContents(
     );
   }
   return results;
+}
+
+/** AudioCellの入力欄にテキストを入力する */
+export async function fillAudioCell(page: Page, index: number, text: string) {
+  const locator = page.locator(".audio-cell input").nth(index);
+  await locator.fill(text);
+  await locator.press("Enter");
+  await page.waitForTimeout(100);
+  await validateInput(locator, text);
+}
+
+/** input要素の値が期待通りか検証する */
+export async function validateInput(locator: Locator, expectedText: string) {
+  expect(await locator.inputValue()).toBe(expectedText);
 }
