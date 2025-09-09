@@ -1,19 +1,9 @@
-import { test, expect, Locator, Page } from "@playwright/test";
+import { test, expect, Locator } from "@playwright/test";
 
 import { gotoHome, navigateToMain } from "../navigators";
+import { fillAudioCell, validateInput } from "./utils";
 
 test.beforeEach(gotoHome);
-
-async function fillInput(page: Page, locator: Locator, text: string) {
-  await locator.fill(text);
-  await locator.press("Enter");
-  await page.waitForTimeout(100);
-  await validateInput(locator, text);
-}
-
-async function validateInput(locator: Locator, expectedText: string) {
-  expect(await locator.inputValue()).toBe(expectedText);
-}
 
 async function getCenter(locator: Locator) {
   const box = (await locator.boundingBox()) || {
@@ -37,9 +27,9 @@ test("テキストの追加・入れ替え・削除", async ({ page }) => {
   await page.getByRole("button").filter({ hasText: "add" }).click();
   await page.getByRole("button").filter({ hasText: "add" }).click();
   await page.waitForTimeout(100);
-  await fillInput(page, page.locator(".audio-cell input").first(), "foo");
-  await fillInput(page, page.locator(".audio-cell input").nth(1), "bar");
-  await fillInput(page, page.locator(".audio-cell input").nth(2), "baz");
+  await fillAudioCell(page, 0, "foo");
+  await fillAudioCell(page, 1, "bar");
+  await fillAudioCell(page, 2, "baz");
   expect(await page.locator(".audio-cell").count()).toBe(4);
   // 一番上のAudioCellを削除しもともと２番めだったものが一番上に来てAudioCellが３つになることを確認
   await page.locator(".audio-cell").first().hover();
@@ -82,10 +72,10 @@ test("選択中のAudioCellを削除しても正しくフォーカスが移動�
   await page.waitForTimeout(100);
 
   // それぞれにテキストを入力
-  await fillInput(page, page.locator(".audio-cell input").nth(0), "first");
-  await fillInput(page, page.locator(".audio-cell input").nth(1), "second");
-  await fillInput(page, page.locator(".audio-cell input").nth(2), "third");
-  await fillInput(page, page.locator(".audio-cell input").nth(3), "fourth");
+  await fillAudioCell(page, 0, "first");
+  await fillAudioCell(page, 1, "second");
+  await fillAudioCell(page, 2, "third");
+  await fillAudioCell(page, 3, "fourth");
 
   // 2番目のAudioCellをクリックしてアクティブにする
   await page.locator(".audio-cell").nth(1).click();
