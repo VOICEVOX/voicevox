@@ -12,7 +12,7 @@ import { UnreachableError } from "@/type/utility";
 export async function waitForUiUnlock(page: Page): Promise<void> {
   await test.step("UIのロックが解除されるまで待つ", async () => {
     const addAudioButton = page.getByLabel("テキストを追加");
-    await test.expect(addAudioButton).toBeEnabled({ timeout: 10 * 1000 });
+    await expect(addAudioButton).toBeEnabled({ timeout: 10 * 1000 });
   });
 }
 
