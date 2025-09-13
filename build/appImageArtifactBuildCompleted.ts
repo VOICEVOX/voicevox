@@ -34,8 +34,8 @@ async function fixAppRun(appDir: string) {
       "electron-builder等の更新によりAppRunが予期せぬコードに変更されています。",
     );
   }
-  const fixdAppRun = appRun.replace(searchPattern, `$&\n${injectCode}`);
-  await fs.writeFile(appRunPath, fixdAppRun);
+  const fixedAppRun = appRun.replace(searchPattern, `$&\n${injectCode}`);
+  await fs.writeFile(appRunPath, fixedAppRun);
 }
 
 /**
