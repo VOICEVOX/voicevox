@@ -1,8 +1,4 @@
-import {
-  createPartialStore,
-  DotNotationDispatch,
-  DotNotationActionContext,
-} from "../vuex";
+import { createPartialStore, DotNotationActionContext } from "../vuex";
 import {
   executeWritePromiseOrDialog,
   promptProjectSaveFilePath,
