@@ -45,11 +45,11 @@ async function fixDesktopfile(desktopfilePath: string) {
   const desktopfile = await fs.readFile(desktopfilePath, {
     encoding: "utf-8",
   });
-  const fixdDesktopfile = desktopfile.replace(
+  const fixedDesktopfile = desktopfile.replace(
     /^(Exec=.*)( --no-sandbox(?= |$))(.*)/m,
     "$1$3",
   );
-  await fs.writeFile(desktopfilePath, fixdDesktopfile);
+  await fs.writeFile(desktopfilePath, fixedDesktopfile);
 }
 
 /*
