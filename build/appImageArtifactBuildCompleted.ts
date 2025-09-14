@@ -12,30 +12,22 @@ const appimagetoolPath = path.join(
   "appimagetool.AppImage",
 );
 
-const injectCode = `
-if ! unshare -Ur true 2>/dev/null ; then
-  args+=("--no-sandbox")
-  NUMBER_OF_ARGS=$((NUMBER_OF_ARGS + 1))
+const fixedAppRunCode = `#!/bin/bash
+apprun="\${APPDIR:-$(dirname "$0")}/AppRunOriginal"
+if unshare -Ur true 2>/dev/null ; then
+  exec "$apprun" "$@"
+else
+  exec "$apprun" "$@" --no-sandbox
 fi
 `;
 
 /**
- * AppRunスクリプトに'--no-sandbox'が必要か判定して自動的に追加するコードを注入する
+ * '--no-sandbox'が必要か判定して元のAppRunを呼び出すスクリプトに差し替える
  */
 async function fixAppRun(appDir: string) {
   const appRunPath = path.join(appDir, "AppRun");
-  const appRun = await fs.readFile(appRunPath, {
-    encoding: "utf-8",
-  });
-  const searchPattern = /^args=\("\$@"\)\nNUMBER_OF_ARGS="\$#"$/m;
-  if (!searchPattern.test(appRun) || appRun.search("--no-sandbox") >= 0) {
-    // 想定するコードが存在しない、または同様のコードが実装されている可能性がある
-    throw new Error(
-      "electron-builder等の更新によりAppRunが予期せぬコードに変更されています。",
-    );
-  }
-  const fixedAppRun = appRun.replace(searchPattern, `$&\n${injectCode}`);
-  await fs.writeFile(appRunPath, fixedAppRun);
+  await fs.rename(appRunPath, path.join(appDir, "AppRunOriginal"));
+  await fs.writeFile(appRunPath, fixedAppRunCode, { mode: 0o755 });
 }
 
 /**
