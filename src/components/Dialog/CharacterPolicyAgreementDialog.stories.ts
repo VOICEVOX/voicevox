@@ -4,20 +4,20 @@ import { Meta, StoryObj } from "@storybook/vue3-vite";
 import CharacterPolicyAgreementDialog from "./CharacterPolicyAgreementDialog.vue";
 import type { SpeakerId as SpeakerIdType } from "@/type/preload";
 import { SpeakerId as toSpeakerId } from "@/type/preload";
+import { getPortraitUrl } from "@/mock/engineMock/characterResourceMock";
 
 const samplePolicies = [
   {
-    id: toSpeakerId("speaker-1"),
+    id: toSpeakerId("00000000-0000-0000-0000-000000000001"),
     name: "テストキャラクターA",
-    policy:
-      "このキャラクターの音声は非商用目的に限り利用できます。\n再配布は禁止です。",
-    portraitPath: "dummy1",
+    policy: "markdownテスト。**太字**。\\\n改行。",
+    portraitPath: getPortraitUrl(0),
   },
   {
-    id: toSpeakerId("speaker-2"),
+    id: toSpeakerId("00000000-0000-0000-0000-000000000002"),
     name: "テストキャラクターB",
-    policy: "商用利用には別途ライセンス契約が必要です。",
-    portraitPath: "dummy2",
+    policy: Array(50).fill("長いテキスト").join(""),
+    portraitPath: getPortraitUrl(1),
   },
 ] satisfies Array<{
   id: SpeakerIdType;
@@ -29,11 +29,11 @@ const samplePolicies = [
 const meta: Meta<typeof CharacterPolicyAgreementDialog> = {
   component: CharacterPolicyAgreementDialog,
   args: {
-    dialogOpened: false,
+    modelValue: false,
     characterPolicyInfos: samplePolicies,
-    onAccept: fn(),
-    onCancel: fn(),
-    "onUpdate:dialogOpened": fn(),
+    onOk: fn(),
+    onHide: fn(),
+    "onUpdate:modelValue": fn(),
   },
   tags: ["!autodocs"], // ダイアログ系はautodocsのプレビューが正しく表示されないので無効化
 };
@@ -44,7 +44,7 @@ type Story = StoryObj<typeof meta>;
 export const Opened: Story = {
   name: "開いている",
   args: {
-    dialogOpened: true,
+    modelValue: true,
   },
 };
 
@@ -57,9 +57,9 @@ export const Accept: Story = {
     const button = canvas.getByRole("button", { name: /同意して続行/ });
     await userEvent.click(button);
 
-    await expect(args["onAccept"]).toBeCalledWith([
-      toSpeakerId("speaker-1"),
-      toSpeakerId("speaker-2"),
+    await expect(args["onOk"]).toBeCalledWith([
+      toSpeakerId("7ffcb7ce-00ec-4bdc-82cd-45a8889e43ff"),
+      toSpeakerId("388f246b-8c41-4ac1-8e2d-5d79f3ff56d9"),
     ]);
   },
 };
@@ -73,7 +73,7 @@ export const Cancel: Story = {
     const button = canvas.getByRole("button", { name: /キャンセル/ });
     await userEvent.click(button);
 
-    await expect(args["onCancel"]).toBeCalledWith();
+    await expect(args["onHide"]).toBeCalledWith();
   },
 };
 

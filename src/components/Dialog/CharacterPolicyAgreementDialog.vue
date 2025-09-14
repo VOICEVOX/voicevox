@@ -18,20 +18,25 @@
       <QCardSection class="q-py-md scroll scrollable-area">
         <div class="character-policies">
           <div
-            v-for="info in characterPolicyInfos"
+            v-for="info in enrichedCharacterInfos"
             :key="info.id"
             class="character-policy-item"
           >
             <div class="character-portrait-section">
-              <img 
-                :src="info.portraitPath" 
-                class="character-portrait" 
+              <img
+                :src="info.portraitPath"
+                class="character-portrait"
                 :alt="info.name"
               />
             </div>
             <div class="character-info-section">
               <div class="character-name">{{ info.name }}</div>
-              <div class="character-policy">{{ info.policy }}</div>
+              <div class="character-policy">
+                <BaseDocumentView>
+                  <!-- eslint-disable-next-line vue/no-v-html -->
+                  <div v-html="info.renderedPolicy"></div>
+                </BaseDocumentView>
+              </div>
             </div>
           </div>
         </div>
@@ -68,6 +73,8 @@
 import { computed } from "vue";
 import { useDialogPluginComponent } from "quasar";
 import { SpeakerId } from "@/type/preload";
+import BaseDocumentView from "@/components/Base/BaseDocumentView.vue";
+import { useMarkdownIt } from "@/plugins/markdownItPlugin";
 
 const modelValue = defineModel<boolean>({ default: false });
 
@@ -89,8 +96,19 @@ defineEmits({
 const { dialogRef, onDialogOK, onDialogCancel, onDialogHide } =
   useDialogPluginComponent();
 
+const md = useMarkdownIt();
+
+const enrichedCharacterInfos = computed(() =>
+  props.characterPolicyInfos.map((info) => ({
+    id: info.id,
+    name: info.name,
+    portraitPath: info.portraitPath,
+    renderedPolicy: md.render(info.policy),
+  })),
+);
+
 const characterIds = computed(() =>
-  props.characterPolicyInfos.map((c) => c.id),
+  enrichedCharacterInfos.value.map((c) => c.id),
 );
 
 const handleCancel = () => {
@@ -140,21 +158,17 @@ const handleOpenUpdate = (isOpen: boolean) => {
 
 .character-portrait-section {
   flex-shrink: 0;
-  width: 5rem;
-  height: 7rem;
-  display: grid;
+  width: 6rem;
+  height: 9rem;
+  display: flex;
   justify-content: center;
-  align-items: center;
   overflow: hidden;
-  border-radius: vars.$radius-1;
 }
 
 .character-portrait {
-  width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: center top;
-  border-radius: vars.$radius-1;
+  width: auto;
+  display: block;
 }
 
 .character-info-section {
@@ -173,6 +187,5 @@ const handleOpenUpdate = (isOpen: boolean) => {
   font-size: 0.875rem;
   line-height: 1.4;
   color: colors.$display;
-  white-space: pre-wrap;
 }
 </style>
