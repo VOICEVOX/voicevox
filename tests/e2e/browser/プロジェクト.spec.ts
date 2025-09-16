@@ -14,17 +14,19 @@ test.beforeEach(gotoHome);
 
 test("過去のプロジェクトを読み込める", async ({ page }) => {
   await navigateToMain(page);
-  const content = await fs.readFile(
+  const projectJson = await fs.readFile(
     `${import.meta.dirname}/vvproj/0.14.11.vvproj`,
     "utf-8",
   );
-  await loadProject(page, content);
+  const textContent = await fs.readFile(
+    `${import.meta.dirname}/vvproj/0.14.11.txt`,
+    "utf-8",
+  );
+  await loadProject(page, projectJson);
   await waitForUiUnlock(page);
-  expect(await collectAllAudioCellContents(page)).toEqual([
-    "hoge",
-    "fuga",
-    "piyo",
-  ]);
+  expect(await collectAllAudioCellContents(page)).toEqual(
+    textContent.split("\n").filter((line) => line.length > 0),
+  );
 });
 
 test("プロジェクトを保存して読み込み直せる", async ({ page }) => {
