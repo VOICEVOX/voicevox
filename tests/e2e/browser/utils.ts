@@ -69,7 +69,9 @@ export async function collectAllAudioCellContents(
   const results = [];
   for (let i = 0; i < count; i++) {
     results.push(
-      await page.getByRole("textbox", { name: `${i + 1}行目` ,exact: true}).inputValue(),
+      await page
+        .getByRole("textbox", { name: `${i + 1}行目`, exact: true })
+        .inputValue(),
     );
   }
   return results;
