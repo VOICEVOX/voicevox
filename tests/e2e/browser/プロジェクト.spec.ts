@@ -15,7 +15,7 @@ test.beforeEach(gotoHome);
 test("過去のプロジェクトを読み込める", async ({ page }) => {
   await navigateToMain(page);
   const content = await fs.readFile(
-    `${import.meta.dirname}/vvproj/simple.vvproj`,
+    `${import.meta.dirname}/vvproj/0.14.11.vvproj`,
     "utf-8",
   );
   await loadProject(page, content);
