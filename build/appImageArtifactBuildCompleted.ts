@@ -13,6 +13,7 @@ const appimagetoolPath = path.join(
 );
 
 const fixedAppRunCode = `#!/bin/bash
+set -e
 apprun="\${APPDIR:-$(dirname "$0")}/AppRunOriginal"
 if unshare -Ur true 2>/dev/null ; then
   exec "$apprun" "$@"
