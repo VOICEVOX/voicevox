@@ -16,18 +16,31 @@ export async function waitForUiUnlock(page: Page): Promise<void> {
   });
 }
 
-/** プロジェクトを読み込む */
-export async function loadProject(page: Page, proj: string): Promise<void> {
+/**
+ * ページ内でプロジェクトを読み込む。
+ *
+ * @param projectJson 読み込むプロジェクトファイルの内容
+ */
+export async function loadProject(
+  page: Page,
+  projectJson: string,
+): Promise<void> {
   await test.step("プロジェクトを読み込む", async () => {
     const testProjPath = `/tmp/${Date.now()}-testProj.vvproj`;
-    await mockReadFile(page, testProjPath, Buffer.from(proj, "utf-8"));
+    await mockReadFile(page, testProjPath, Buffer.from(projectJson, "utf-8"));
     await mockShowOpenFileDialog(page, testProjPath);
     await page.getByRole("button", { name: "ファイル" }).click();
     await getQuasarMenu(page, "プロジェクトを読み込む").click();
+
+    // TODO: 保存ダイアログに対応する
   });
 }
 
-/** プロジェクトを保存する */
+/**
+ * プロジェクトを保存する。
+ *
+ * @returns 保存されたプロジェクトファイルの内容
+ */
 export async function saveProject(page: Page): Promise<string> {
   return await test.step("プロジェクトを保存する", async () => {
     const writeFileHandle = await mockWriteFile(page);
