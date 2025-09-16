@@ -4,6 +4,7 @@ import { config } from "dotenv";
 import { Configuration as ElectronBuilderConfiguration } from "electron-builder";
 import { z } from "zod";
 import afterAllArtifactBuild from "./afterAllArtifactBuild";
+import artifactBuildCompleted from "./artifactBuildCompleted";
 
 const rootDir = path.join(import.meta.dirname, "..");
 const dotenvPath = path.join(rootDir, ".env.production");
@@ -109,6 +110,7 @@ const builderOptions: ElectronBuilderConfiguration = {
   appId: "jp.hiroshiba.voicevox",
   copyright: "Hiroshiba Kazuyuki",
   afterAllArtifactBuild,
+  artifactBuildCompleted,
   win: {
     icon: "public/icon.png",
     target: [
