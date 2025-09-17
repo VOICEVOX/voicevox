@@ -5,7 +5,7 @@ import { uuid4 } from "@/helpers/random";
 
 /** テスト用のVVPPファイルを作成する */
 export async function createVvppFile(targetName: string, tmpDir: string) {
-  const sourceDir = path.join(__dirname, "vvpps", targetName);
+  const sourceDir = path.join(import.meta.dirname, "vvpps", targetName);
   const outputFilePath = path.join(tmpDir, uuid4() + targetName);
   await createZipFile(sourceDir, outputFilePath);
   return outputFilePath;

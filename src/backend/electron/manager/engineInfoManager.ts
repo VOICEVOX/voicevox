@@ -81,6 +81,7 @@ export class EngineInfoManager {
       executionArgs: args,
       type,
       isDefault: this.isDefaultEngine(manifest.uuid),
+      version: manifest.version,
     } satisfies EngineInfo);
   }
 
@@ -107,6 +108,7 @@ export class EngineInfoManager {
             engineInfo.path == undefined
               ? undefined
               : path.resolve(this.defaultEngineDir, engineInfo.path),
+          version: "999.999.999", // FIXME: ダミー値。使わないため問題ない。engine_manifest.jsonから取得すべき。
         } satisfies EngineInfo;
       });
   }
