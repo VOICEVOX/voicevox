@@ -84,12 +84,14 @@ async function runEngineTest(params: { isUpdate: boolean }) {
   {
     envName: ".env環境",
     envPath: ".env",
+    envId: "dotenv-environment",
   },
   {
     envName: "VVPPデフォルトエンジン",
     envPath: "tests/env/.env.test-electron-default-vvpp",
+    envId: "vvpp-default-engine",
   },
-].forEach(({ envName, envPath }) => {
+].forEach(({ envName, envPath, envId }) => {
   test.describe(`${envName}`, () => {
     test.beforeEach(() => {
       dotenv.config({ path: envPath, override: true });
@@ -99,7 +101,7 @@ async function runEngineTest(params: { isUpdate: boolean }) {
       await runEngineTest({ isUpdate: false });
     });
 
-    if (envName === "VVPPデフォルトエンジン") {
+    if (envId === "vvpp-default-engine") {
       test("古いバージョンがインストールされている場合、アップデートが実行される", async () => {
         await runEngineTest({ isUpdate: true });
       });

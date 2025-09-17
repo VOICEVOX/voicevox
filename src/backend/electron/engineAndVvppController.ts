@@ -38,7 +38,7 @@ export type EnginePackageStatus = {
     latestVersion: string;
   };
   installed:
-    | { status: "not" }
+    | { status: "notInstalled" }
     | { status: "outdated" | "latest"; installedVersion: string };
 };
 
@@ -223,7 +223,7 @@ export class EngineAndVvppController {
         envEngineInfo.uuid,
       );
       if (!isInstalled) {
-        installedStatus = { status: "not" };
+        installedStatus = { status: "notInstalled" };
       } else {
         const installedEngineInfo = this.engineInfoManager.fetchEngineInfo(
           envEngineInfo.uuid,

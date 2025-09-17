@@ -467,7 +467,7 @@ void app.whenReady().then(async () => {
       message: string;
       okButtonLabel: string;
     };
-    if (status.installed.status == "not") {
+    if (status.installed.status == "notInstalled") {
       dialogOptions = {
         title: "デフォルトエンジンのインストール",
         message: `${status.package.engineName} をインストールしますか？`,
