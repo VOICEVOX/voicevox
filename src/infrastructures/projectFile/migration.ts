@@ -188,6 +188,7 @@ export const migrateProjectFileObject = async (
         );
         if (voice == undefined) {
           // Voiceの情報が見つからなかった場合は適当なSpeakerIdを入れておく
+          // NOTE: マルチエンジンの追加エンジンを削除してアップデートした際にundefinedになる
           audioItem.voice = {
             engineId: oldEngineId,
             speakerId: SpeakerId("00000000-0000-0000-0000-000000000000"),
