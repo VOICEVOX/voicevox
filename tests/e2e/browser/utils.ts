@@ -6,7 +6,7 @@ import {
   mockShowSaveFileDialog,
   mockWriteFile,
 } from "./mockUtility";
-import { UnreachableError } from "@/type/utility";
+import { assertNonNullable } from "@/type/utility";
 
 /** UIのロックが解除されるまで待つ */
 export async function waitForUiUnlock(page: Page): Promise<void> {
@@ -49,14 +49,10 @@ export async function saveProject(page: Page): Promise<string> {
     await getQuasarMenu(page, "プロジェクトの複製を保存").click();
     await waitForUiUnlock(page);
     const [fileId] = await saveFileDialogHandle.getFileIds();
-    if (!fileId) {
-      throw new UnreachableError("assertion failed: fileId is undefined");
-    }
+    assertNonNullable(fileId);
     const writtenFiles = await writeFileHandle.getWrittenFileBuffers();
     const writtenFile = writtenFiles[fileId];
-    if (!writtenFile) {
-      throw new UnreachableError("assertion failed: writtenFile is undefined");
-    }
+    assertNonNullable(writtenFile);
     return writtenFile.toString("utf-8");
   });
 }
