@@ -32,7 +32,7 @@ export async function loadProject(
     await page.getByRole("button", { name: "ファイル" }).click();
     await getQuasarMenu(page, "プロジェクトを読み込む").click();
 
-    // TODO: 保存ダイアログに対応する
+    // TODO: 編集中の内容を保存するか問うダイアログに対応する
   });
 }
 
