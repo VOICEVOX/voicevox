@@ -5,7 +5,7 @@ import semver from "semver";
 import { z } from "zod";
 
 import { AccentPhrase } from "@/openapi";
-import { EngineId, StyleId, TrackId, Voice } from "@/type/preload";
+import { EngineId, SpeakerId, StyleId, TrackId, Voice } from "@/type/preload";
 import {
   DEFAULT_BEAT_TYPE,
   DEFAULT_BEATS,
@@ -36,10 +36,10 @@ export const migrateProjectFileObject = async (
       styleId: StyleId;
     }) => Promise<AccentPhrase[]>;
     voices: Voice[];
-    showOldProjectWarningDialog: () => Promise<boolean>;
+    showNewerVersionWarningDialog: () => Promise<boolean>;
   },
-): Promise<LatestProjectType | "oldProject"> => {
-  const { fetchMoraData, voices, showOldProjectWarningDialog } = DI;
+): Promise<LatestProjectType | "projectCreatedByNewerVersion"> => {
+  const { fetchMoraData, voices, showNewerVersionWarningDialog } = DI;
 
   // appVersion Validation check
   if (
@@ -59,9 +59,9 @@ export const migrateProjectFileObject = async (
   const appVersion = getAppInfos().version;
 
   if (semver.gt(projectAppVersion, appVersion)) {
-    const result = await showOldProjectWarningDialog();
+    const result = await showNewerVersionWarningDialog();
     if (!result) {
-      return "oldProject";
+      return "projectCreatedByNewerVersion";
     }
   }
 
@@ -186,9 +186,17 @@ export const migrateProjectFileObject = async (
             voice.engineId === audioItem.engineId &&
             voice.styleId === audioItem.styleId,
         );
-        if (voice == undefined)
-          throw new Error(`voice == undefined: ${oldEngineId}, ${oldStyleId}`);
-        audioItem.voice = voice;
+        if (voice == undefined) {
+          // Voiceの情報が見つからなかった場合は適当なSpeakerIdを入れておく
+          // NOTE: マルチエンジンの追加エンジンを削除してアップデートした際にundefinedになる
+          audioItem.voice = {
+            engineId: oldEngineId,
+            speakerId: SpeakerId("00000000-0000-0000-0000-000000000000"),
+            styleId: oldStyleId,
+          };
+        } else {
+          audioItem.voice = voice;
+        }
 
         delete audioItem.engineId;
         delete audioItem.styleId;

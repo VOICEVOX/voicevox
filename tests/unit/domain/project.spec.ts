@@ -48,7 +48,7 @@ describe("migrateProjectFileObject", () => {
           styleId: StyleId(74),
         },
       ],
-      showOldProjectWarningDialog: async () => true,
+      showNewerVersionWarningDialog: async () => false,
     });
 
     // スナップショットテスト
@@ -64,14 +64,14 @@ test("未来のバージョンのプロジェクトを読み込むと警告を�
   };
   projectData.appVersion = "9999.9999.9999"; // 未来のバージョンに書き換え
 
-  const showOldProjectWarningDialog = vi.fn(async () => false);
+  const showNewerVersionWarningDialog = vi.fn(async () => false);
   const project = await migrateProjectFileObject(projectData, {
     fetchMoraData: async () => {
       throw new Error("fetchMoraData is not implemented");
     },
     voices: [],
-    showOldProjectWarningDialog,
+    showNewerVersionWarningDialog,
   });
-  expect(showOldProjectWarningDialog).toHaveBeenCalled();
-  expect(project).toEqual("oldProject");
+  expect(showNewerVersionWarningDialog).toHaveBeenCalled();
+  expect(project).toEqual("projectCreatedByNewerVersion");
 });
