@@ -150,7 +150,7 @@ const builderOptions: ElectronBuilderConfiguration = {
   },
   mac: {
     artifactName: MACOS_ARTIFACT_NAME || undefined,
-    icon: "public/icon-mac.png",
+    icon: "build/icons/icon-mac.png",
     category: "public.app-category.utilities",
     target: [
       {
@@ -160,7 +160,7 @@ const builderOptions: ElectronBuilderConfiguration = {
     ],
   },
   dmg: {
-    icon: "public/icon-dmg.icns",
+    icon: "build/icons/icon-dmg.icns",
   },
 };
 
