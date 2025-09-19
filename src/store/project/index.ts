@@ -1,4 +1,4 @@
-import { createPartialStore, DotNotationDispatch } from "../vuex";
+import { createPartialStore, DotNotationActionContext } from "../vuex";
 import {
   executeWritePromiseOrDialog,
   promptProjectSaveFilePath,
@@ -8,9 +8,13 @@ import {
 import { createUILockAction } from "@/store/ui";
 import {
   AllActions,
+  AllGetters,
+  AllMutations,
   AudioItem,
+  ProjectLoadingInfo,
   ProjectStoreState,
   ProjectStoreTypes,
+  State,
 } from "@/store/type";
 import { TrackId } from "@/type/preload";
 import path from "@/helpers/path";
@@ -37,22 +41,41 @@ import { migrateProjectFileObject } from "@/infrastructures/projectFile/migratio
 
 export const projectStoreState: ProjectStoreState = {
   savedLastCommandIds: { talk: null, song: null },
+  projectLoadingInfo: null,
 };
 
 const applyTalkProjectToStore = async (
-  actions: DotNotationDispatch<AllActions>,
+  context: DotNotationActionContext<
+    State,
+    State,
+    AllGetters,
+    AllActions,
+    AllMutations
+  >,
   talkProject: LatestProjectType["talk"],
+  totalItems: number,
 ) => {
+  const { actions, mutations } = context;
   await actions.REMOVE_ALL_AUDIO_ITEM();
 
   const { audioItems, audioKeys } = talkProject;
 
   let prevAudioKey = undefined;
-  for (const audioKey of audioKeys) {
+  for (const [i, audioKey] of audioKeys.entries()) {
+    const processedItems = i + 1;
+    const percent = Math.round((processedItems / totalItems) * 100);
+    mutations.SET_PROJECT_LOADING_INFO({
+      projectLoadingInfo: {
+        text: `音声情報を適用中... (${i + 1}/${audioKeys.length})`,
+        percent,
+      },
+    });
+    // 10件ごとにUIを更新
+    if (i % 10 === 0) {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+
     const audioItem = audioItems[audioKey];
-    // z.recordではvalueの型がundefinedになるが、
-    // valueがundefinedにならないことを検証したあとであれば、
-    // このif文に引っかかることはないはずである
     if (audioItem == undefined) throw new Error("audioItem == undefined");
     prevAudioKey = await actions.REGISTER_AUDIO_ITEM({
       prevAudioKey,
@@ -62,42 +85,67 @@ const applyTalkProjectToStore = async (
 };
 
 const applySongProjectToStore = async (
-  actions: DotNotationDispatch<AllActions>,
+  context: DotNotationActionContext<
+    State,
+    State,
+    AllGetters,
+    AllActions,
+    AllMutations
+  >,
   songProject: LatestProjectType["song"],
+  initialProcessedItems: number, // トーク側で処理済みのアイテム数
+  totalItems: number,
 ) => {
+  const { actions, mutations } = context;
   const { tpqn, tempos, timeSignatures, tracks, trackOrder } = songProject;
 
   await actions.SET_TPQN({ tpqn });
   await actions.SET_TEMPOS({ tempos });
   await actions.SET_TIME_SIGNATURES({ timeSignatures });
-  await actions.SET_TRACKS({
-    tracks: new Map(
-      trackOrder.map((trackId): [TrackId, Track] => {
-        const track = tracks[trackId];
-        if (!track) throw new Error("track == undefined");
-        // TODO: トラックの変換処理を関数化する
-        return [
-          trackId,
-          {
-            name: track.name,
-            singer: track.singer,
-            keyRangeAdjustment: track.keyRangeAdjustment,
-            volumeRangeAdjustment: track.volumeRangeAdjustment,
-            notes: track.notes,
-            pitchEditData: track.pitchEditData,
-            phonemeTimingEditData: recordToMap(track.phonemeTimingEditData),
-            solo: track.solo,
-            mute: track.mute,
-            gain: track.gain,
-            pan: track.pan,
-          },
-        ];
-      }),
-    ),
-  });
+
+  const newTracks = new Map<TrackId, Track>();
+  for (const [i, trackId] of trackOrder.entries()) {
+    const processedItems = initialProcessedItems + i + 1;
+    const percent = Math.round((processedItems / totalItems) * 100);
+    mutations.SET_PROJECT_LOADING_INFO({
+      projectLoadingInfo: {
+        text: `ソング情報を適用中... (${i + 1}/${trackOrder.length})`,
+        percent,
+      },
+    });
+    // 5件ごとにUIを更新
+    if (i % 5 === 0) {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+
+    const track = tracks[trackId];
+    if (!track) throw new Error("track == undefined");
+    newTracks.set(trackId, {
+      name: track.name,
+      singer: track.singer,
+      keyRangeAdjustment: track.keyRangeAdjustment,
+      volumeRangeAdjustment: track.volumeRangeAdjustment,
+      notes: track.notes,
+      pitchEditData: track.pitchEditData,
+      phonemeTimingEditData: recordToMap(track.phonemeTimingEditData),
+      solo: track.solo,
+      mute: track.mute,
+      gain: track.gain,
+      pan: track.pan,
+    });
+  }
+  await actions.SET_TRACKS({ tracks: newTracks });
 };
 
 export const projectStore = createPartialStore<ProjectStoreTypes>({
+  SET_PROJECT_LOADING_INFO: {
+    mutation(
+      state,
+      { projectLoadingInfo }: { projectLoadingInfo: ProjectLoadingInfo | null },
+    ) {
+      state.projectLoadingInfo = projectLoadingInfo;
+    },
+  },
   PROJECT_NAME_WITH_EXT: {
     getter(state) {
       return state.projectFilePath
@@ -207,8 +255,17 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
      * ファイル選択ダイアログを表示するか、ファイルパス指定するか、Fileインスタンスを渡すか選べる。
      * エラー発生時はダイアログが表示される。
      */
-    action: createUILockAction(
-      async ({ actions, mutations, getters }, payload) => {
+    action: createUILockAction(async (context, payload) => {
+      const { actions, mutations, getters } = context;
+      mutations.SET_PROJECT_LOADING_INFO({
+        projectLoadingInfo: {
+          text: "プロジェクトを読み込んでいます...",
+          percent: 0,
+        },
+      });
+      await new Promise((resolve) => setTimeout(resolve, 4));
+
+      try {
         let filePath: undefined | string;
         if (payload.type == "dialog") {
           const ret = await window.backend.showOpenFileDialog({
@@ -225,66 +282,84 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           filePath = payload.filePath;
         }
 
-        try {
-          let buf: Uint8Array;
-          if (filePath != undefined) {
-            buf = await window.backend
-              .readFile({ filePath })
-              .then(getValueOrThrow);
+        let buf: Uint8Array;
+        if (filePath != undefined) {
+          buf = await window.backend
+            .readFile({ filePath })
+            .then(getValueOrThrow);
 
-            await actions.APPEND_RECENTLY_USED_PROJECT({
-              filePath,
-            });
-          } else {
-            if (payload.type != "file")
-              throw new UnreachableError("payload.type != 'file'");
-            buf = new Uint8Array(await payload.file.arrayBuffer());
-          }
-
-          const text = new TextDecoder("utf-8").decode(buf).trim();
-          const parsedProjectData = await actions.PARSE_PROJECT_FILE({
-            projectJson: text,
+          await actions.APPEND_RECENTLY_USED_PROJECT({
+            filePath,
           });
+        } else {
+          if (payload.type != "file")
+            throw new UnreachableError("payload.type != 'file'");
+          buf = new Uint8Array(await payload.file.arrayBuffer());
+        }
 
-          if (parsedProjectData == undefined) {
-            return false;
-          }
+        const text = new TextDecoder("utf-8").decode(buf).trim();
+        const parsedProjectData = await actions.PARSE_PROJECT_FILE({
+          projectJson: text,
+        });
 
-          if (getters.IS_EDITED) {
-            const result = await actions.SAVE_OR_DISCARD_PROJECT_FILE({
-              additionalMessage:
-                "プロジェクトをロードすると現在のプロジェクトは破棄されます。",
-            });
-            if (result == "canceled") {
-              return false;
-            }
-          }
-
-          await applyTalkProjectToStore(actions, parsedProjectData.talk);
-          await applySongProjectToStore(actions, parsedProjectData.song);
-
-          mutations.SET_PROJECT_FILEPATH({ filePath });
-          void actions.CLEAR_UNDO_HISTORY();
-          return true;
-        } catch (err) {
-          window.backend.logError(err);
-          const message = (() => {
-            if (typeof err === "string") return err;
-            if (!(err instanceof Error)) return "エラーが発生しました。";
-            if (err instanceof ResultError && err.code === "ENOENT")
-              return "プロジェクトファイルが見つかりませんでした。ファイルが移動、または削除された可能性があります。";
-            if (err instanceof ProjectFileFormatError)
-              return "ファイルフォーマットが正しくありません。";
-            return err.message;
-          })();
-          await showAlertDialog({
-            title: "エラー",
-            message: `プロジェクトファイルの読み込みに失敗しました。\n${message}`,
-          });
+        if (parsedProjectData == undefined) {
           return false;
         }
-      },
-    ),
+
+        if (getters.IS_EDITED) {
+          const result = await actions.SAVE_OR_DISCARD_PROJECT_FILE({
+            additionalMessage:
+              "プロジェクトをロードすると現在のプロジェクトは破棄されます。",
+          });
+          if (result == "canceled") {
+            return false;
+          }
+        }
+
+        const totalItems =
+          parsedProjectData.talk.audioKeys.length +
+          parsedProjectData.song.trackOrder.length;
+
+        await applyTalkProjectToStore(
+          context,
+          parsedProjectData.talk,
+          totalItems,
+        );
+        await applySongProjectToStore(
+          context,
+          parsedProjectData.song,
+          parsedProjectData.talk.audioKeys.length, // 処理済みアイテム数を渡す
+          totalItems,
+        );
+
+        mutations.SET_PROJECT_LOADING_INFO({
+          projectLoadingInfo: { text: "最終処理中...", percent: 100 },
+        });
+
+        mutations.SET_PROJECT_FILEPATH({ filePath });
+        void actions.CLEAR_UNDO_HISTORY();
+        return true;
+      } catch (err) {
+        window.backend.logError(err);
+        const message = (() => {
+          if (typeof err === "string") return err;
+          if (!(err instanceof Error)) return "エラーが発生しました。";
+          if (err instanceof ResultError && err.code === "ENOENT")
+            return "プロジェクトファイルが見つかりませんでした。ファイルが移動、または削除された可能性があります。";
+          if (err instanceof ProjectFileFormatError)
+            return "ファイルフォーマットが正しくありません。";
+          return err.message;
+        })();
+        await showAlertDialog({
+          title: "エラー",
+          message: `プロジェクトファイルの読み込みに失敗しました。
+${message}`,
+        });
+        return false;
+      } finally {
+        mutations.SET_PROJECT_LOADING_INFO({ projectLoadingInfo: null });
+      }
+    }),
   },
 
   SAVE_PROJECT_FILE_OVERWRITE: {
