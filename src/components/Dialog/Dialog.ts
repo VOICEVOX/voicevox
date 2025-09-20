@@ -312,8 +312,8 @@ export async function showVoiceLibraryPolicyDialog({
 }: {
   unconfirmedCharacterInfos: CharacterInfo[];
   actions: DotNotationDispatch<AllActions>;
-}): Promise<"accepted" | "canceled"> {
-  const { promise, resolve } = Promise.withResolvers<"accepted" | "canceled">();
+}): Promise<"confirmed" | "canceled"> {
+  const { promise, resolve } = Promise.withResolvers<"confirmed" | "canceled">();
 
   Dialog.create({
     component: VoiceLibraryPolicyDialog,
@@ -326,12 +326,12 @@ export async function showVoiceLibraryPolicyDialog({
       })),
     },
   })
-    .onOk((acceptedIds: SpeakerId[]) => {
+    .onOk((confirmedIds: SpeakerId[]) => {
       // 同意状態を保存
       void actions.SET_CONFIRMED_CHARACTER_IDS({
-        confirmedCharacterIds: acceptedIds,
+        confirmedCharacterIds: confirmedIds,
       });
-      resolve("accepted");
+      resolve("confirmed");
     })
     .onCancel(() => resolve("canceled"));
 

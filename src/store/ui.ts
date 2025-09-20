@@ -490,7 +490,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
       const unconfirmedCharacterIds: SpeakerId[] =
         getters.GET_UNCONFIRMED_CHARACTER_IDS(audioKeys);
       if (unconfirmedCharacterIds.length === 0) {
-        return "accepted" as const;
+        return "confirmed" as const;
       }
 
       const unconfirmedCharacterInfos: CharacterInfo[] = Object.values(
