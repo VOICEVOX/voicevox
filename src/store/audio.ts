@@ -55,7 +55,7 @@ import {
   StyleInfo,
   Voice,
 } from "@/type/preload";
-import { AcceptedAudioKey } from "@/type/preload";
+import { ConfirmedAudioKey } from "@/type/preload";
 import { AudioQuery, AccentPhrase, Speaker, SpeakerInfo } from "@/openapi";
 import { base64ImageToUri, base64ToUri } from "@/helpers/base64Helper";
 import { getValueOrThrow, ResultError } from "@/type/result";
@@ -234,15 +234,15 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
-  /** 与えられたAudioKeyに対し、規約未同意なキャラクターIDのリストを返す。 */
-  GET_UNACCEPTED_CHARACTER_IDS: {
+  /** 与えられたAudioKeyに対し、未確認なキャラクターIDのリストを返す。 */
+  GET_UNCONFIRMED_CHARACTER_IDS: {
     getter: (state) => (audioKeys: AudioKey[]) => {
       const speakerIds = audioKeys.map(
         (audioKey) => state.audioItems[audioKey].voice.speakerId,
       );
       const uniqueSpeakerIds = Array.from(new Set(speakerIds));
       return uniqueSpeakerIds.filter(
-        (speakerId) => !state.acceptedCharacterIds.includes(speakerId),
+        (speakerId) => !state.confirmedCharacterIds.includes(speakerId),
       );
     },
   },
@@ -1383,15 +1383,15 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       async (
         { state, getters, actions },
         {
-          acceptedAudioKey,
+          confirmedAudioKey,
           filePath,
         }: {
-          acceptedAudioKey: AcceptedAudioKey;
+          confirmedAudioKey: ConfirmedAudioKey;
           filePath?: string;
         },
       ): Promise<SaveResultObject> => {
         const defaultAudioFileName =
-          getters.DEFAULT_AUDIO_FILE_NAME(acceptedAudioKey);
+          getters.DEFAULT_AUDIO_FILE_NAME(confirmedAudioKey);
         if (state.savingSetting.fixedExportEnabled) {
           filePath = path.join(
             state.savingSetting.fixedExportDir,
@@ -1417,7 +1417,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         let fetchAudioResult: FetchAudioResult;
         try {
           fetchAudioResult = await actions.FETCH_AUDIO({
-            audioKey: acceptedAudioKey,
+            audioKey: confirmedAudioKey,
           });
         } catch (e) {
           const errorMessage = handlePossiblyNotMorphableError(e);
@@ -1454,10 +1454,13 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
           if (state.savingSetting.exportText) {
             await writeTextFile({
-              text: extractExportText(state.audioItems[acceptedAudioKey].text, {
-                enableMemoNotation: state.enableMemoNotation,
-                enableRubyNotation: state.enableRubyNotation,
-              }),
+              text: extractExportText(
+                state.audioItems[confirmedAudioKey].text,
+                {
+                  enableMemoNotation: state.enableMemoNotation,
+                  enableRubyNotation: state.enableRubyNotation,
+                },
+              ),
               filePath: filePath.replace(/\.wav$/, ".txt"),
               encoding: state.savingSetting.fileEncoding,
             }).then(getValueOrThrow);
@@ -1490,11 +1493,11 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       async (
         { state, getters, actions },
         {
-          acceptedAudioKeys,
+          confirmedAudioKeys,
           dirPath,
           callback,
         }: {
-          acceptedAudioKeys: AcceptedAudioKey[];
+          confirmedAudioKeys: ConfirmedAudioKey[];
           dirPath?: string;
           callback?: (finishedCount: number) => void;
         },
@@ -1513,11 +1516,11 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
         let finishedCount = 0;
 
-        const promises = acceptedAudioKeys.map((acceptedAudioKey) => {
-          const name = getters.DEFAULT_AUDIO_FILE_NAME(acceptedAudioKey);
+        const promises = confirmedAudioKeys.map((confirmedAudioKey) => {
+          const name = getters.DEFAULT_AUDIO_FILE_NAME(confirmedAudioKey);
           return actions
             .GENERATE_AND_SAVE_AUDIO({
-              acceptedAudioKey,
+              confirmedAudioKey,
               filePath: path.join(dirPath, name),
             })
             .then((value) => {
@@ -1535,11 +1538,11 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       async (
         { state, getters, actions },
         {
-          acceptedAudioKeys,
+          confirmedAudioKeys,
           filePath,
           callback,
         }: {
-          acceptedAudioKeys: AcceptedAudioKey[];
+          confirmedAudioKeys: ConfirmedAudioKey[];
           filePath?: string;
           callback?: (finishedCount: number, totalCount: number) => void;
         },
@@ -1577,15 +1580,15 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           return toBase64(new Uint8Array(arrayBuffer));
         };
 
-        const totalCount = acceptedAudioKeys.length;
+        const totalCount = confirmedAudioKeys.length;
         let finishedCount = 0;
 
         let labOffset = 0;
-        for (const acceptedAudioKey of acceptedAudioKeys) {
+        for (const confirmedAudioKey of confirmedAudioKeys) {
           let fetchAudioResult: FetchAudioResult;
           try {
             fetchAudioResult = await actions.FETCH_AUDIO({
-              audioKey: acceptedAudioKey,
+              audioKey: confirmedAudioKey,
             });
           } catch (e) {
             const errorMessage = handlePossiblyNotMorphableError(e);
@@ -1614,7 +1617,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           labOffset = Number(splitLab[splitLab.length - 2]);
 
           texts.push(
-            extractExportText(state.audioItems[acceptedAudioKey].text, {
+            extractExportText(state.audioItems[confirmedAudioKey].text, {
               enableMemoNotation: state.enableMemoNotation,
               enableRubyNotation: state.enableRubyNotation,
             }),

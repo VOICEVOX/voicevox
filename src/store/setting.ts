@@ -45,7 +45,7 @@ export const settingStoreState: SettingStoreState = {
   showAddAudioItemButton: true,
   acceptTerms: "Unconfirmed",
   acceptRetrieveTelemetry: "Unconfirmed",
-  acceptedCharacterIds: [],
+  confirmedCharacterIds: [],
   experimentalSetting: {
     enableInterrogativeUpspeak: false,
     enableMorphing: false,
@@ -125,9 +125,9 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         confirmedTips: await window.backend.getSetting("confirmedTips"),
       });
 
-      mutations.SET_ACCEPTED_CHARACTER_IDS({
-        acceptedCharacterIds: await window.backend.getSetting(
-          "acceptedCharacterIds",
+      mutations.SET_CONFIRMED_CHARACTER_IDS({
+        confirmedCharacterIds: await window.backend.getSetting(
+          "confirmedCharacterIds",
         ),
       });
 
@@ -352,16 +352,16 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
     },
   },
 
-  SET_ACCEPTED_CHARACTER_IDS: {
-    mutation(state, { acceptedCharacterIds }) {
-      state.acceptedCharacterIds = acceptedCharacterIds;
+  SET_CONFIRMED_CHARACTER_IDS: {
+    mutation(state, { confirmedCharacterIds }) {
+      state.confirmedCharacterIds = confirmedCharacterIds;
     },
-    action({ mutations }, { acceptedCharacterIds }) {
+    action({ mutations }, { confirmedCharacterIds }) {
       void window.backend.setSetting(
-        "acceptedCharacterIds",
-        acceptedCharacterIds,
+        "confirmedCharacterIds",
+        confirmedCharacterIds,
       );
-      mutations.SET_ACCEPTED_CHARACTER_IDS({ acceptedCharacterIds });
+      mutations.SET_CONFIRMED_CHARACTER_IDS({ confirmedCharacterIds });
     },
   },
 

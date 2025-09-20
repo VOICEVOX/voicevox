@@ -16,7 +16,7 @@ import {
   ActivePointScrollMode,
   SpeakerId,
   CharacterInfo,
-  AcceptedAudioKey,
+  ConfirmedAudioKey,
 } from "@/type/preload";
 import {
   MessageDialogOptions,
@@ -487,21 +487,21 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   // TODO: この5つのアクションをVue側に移動したい
   SHOW_LIBRARY_POLICY_DIALOG: {
     async action({ getters, actions, state }, { audioKeys }) {
-      const unacceptedCharacterIds: SpeakerId[] =
-        getters.GET_UNACCEPTED_CHARACTER_IDS(audioKeys);
-      if (unacceptedCharacterIds.length === 0) {
+      const unconfirmedCharacterIds: SpeakerId[] =
+        getters.GET_UNCONFIRMED_CHARACTER_IDS(audioKeys);
+      if (unconfirmedCharacterIds.length === 0) {
         return "accepted" as const;
       }
 
-      const unacceptedCharacterInfos: CharacterInfo[] = Object.values(
+      const unconfirmedCharacterInfos: CharacterInfo[] = Object.values(
         state.characterInfos,
       )
         .flatMap((engineCharacterInfos) => engineCharacterInfos)
         .filter((characterInfo) =>
-          unacceptedCharacterIds.includes(characterInfo.metas.speakerUuid),
+          unconfirmedCharacterIds.includes(characterInfo.metas.speakerUuid),
         );
       const result = await showLibraryPolicyDialog({
-        unacceptedCharacterInfos,
+        unconfirmedCharacterInfos,
         actions,
       });
       return result;
@@ -516,7 +516,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
       if (result === "canceled") return;
 
       await multiGenerateAndSaveAudioWithDialog({
-        acceptedAudioKeys: state.audioKeys.map((k) => AcceptedAudioKey(k)),
+        confirmedAudioKeys: state.audioKeys.map((k) => ConfirmedAudioKey(k)),
         disableNotifyOnGenerate: state.confirmedTips.notifyOnGenerate,
         actions,
       });
@@ -531,7 +531,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
       if (result === "canceled") return;
 
       await generateAndConnectAndSaveAudioWithDialog({
-        acceptedAudioKeys: state.audioKeys.map((k) => AcceptedAudioKey(k)),
+        confirmedAudioKeys: state.audioKeys.map((k) => ConfirmedAudioKey(k)),
         actions,
         disableNotifyOnGenerate: state.confirmedTips.notifyOnGenerate,
       });
@@ -557,7 +557,9 @@ export const uiStore = createPartialStore<UiStoreTypes>({
         if (result === "canceled") return;
 
         await multiGenerateAndSaveAudioWithDialog({
-          acceptedAudioKeys: selectedAudioKeys.map((k) => AcceptedAudioKey(k)),
+          confirmedAudioKeys: selectedAudioKeys.map((k) =>
+            ConfirmedAudioKey(k),
+          ),
           actions: actions,
           disableNotifyOnGenerate: state.confirmedTips.notifyOnGenerate,
         });
@@ -568,7 +570,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
         if (result === "canceled") return;
 
         await generateAndSaveOneAudioWithDialog({
-          acceptedAudioKey: AcceptedAudioKey(activeAudioKey),
+          confirmedAudioKey: ConfirmedAudioKey(activeAudioKey),
           disableNotifyOnGenerate: state.confirmedTips.notifyOnGenerate,
           actions: actions,
         });
