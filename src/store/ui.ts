@@ -16,7 +16,7 @@ import {
   ActivePointScrollMode,
   SpeakerId,
   CharacterInfo,
-  ConfirmedAudioKey,
+  VoiceLibraryConfirmedAudioKey,
 } from "@/type/preload";
 import {
   MessageDialogOptions,
@@ -516,7 +516,9 @@ export const uiStore = createPartialStore<UiStoreTypes>({
       if (result === "canceled") return;
 
       await multiGenerateAndSaveAudioWithDialog({
-        confirmedAudioKeys: state.audioKeys.map((k) => ConfirmedAudioKey(k)),
+        voiceLibraryConfirmedAudioKeys: state.audioKeys.map((k) =>
+          VoiceLibraryConfirmedAudioKey(k),
+        ),
         disableNotifyOnGenerate: state.confirmedTips.notifyOnGenerate,
         actions,
       });
@@ -531,7 +533,9 @@ export const uiStore = createPartialStore<UiStoreTypes>({
       if (result === "canceled") return;
 
       await generateAndConnectAndSaveAudioWithDialog({
-        confirmedAudioKeys: state.audioKeys.map((k) => ConfirmedAudioKey(k)),
+        voiceLibraryConfirmedAudioKeys: state.audioKeys.map((k) =>
+          VoiceLibraryConfirmedAudioKey(k),
+        ),
         actions,
         disableNotifyOnGenerate: state.confirmedTips.notifyOnGenerate,
       });
@@ -557,8 +561,8 @@ export const uiStore = createPartialStore<UiStoreTypes>({
         if (result === "canceled") return;
 
         await multiGenerateAndSaveAudioWithDialog({
-          confirmedAudioKeys: selectedAudioKeys.map((k) =>
-            ConfirmedAudioKey(k),
+          voiceLibraryConfirmedAudioKeys: selectedAudioKeys.map((k) =>
+            VoiceLibraryConfirmedAudioKey(k),
           ),
           actions: actions,
           disableNotifyOnGenerate: state.confirmedTips.notifyOnGenerate,
@@ -570,7 +574,8 @@ export const uiStore = createPartialStore<UiStoreTypes>({
         if (result === "canceled") return;
 
         await generateAndSaveOneAudioWithDialog({
-          confirmedAudioKey: ConfirmedAudioKey(activeAudioKey),
+          voiceLibraryConfirmedAudioKey:
+            VoiceLibraryConfirmedAudioKey(activeAudioKey),
           disableNotifyOnGenerate: state.confirmedTips.notifyOnGenerate,
           actions: actions,
         });

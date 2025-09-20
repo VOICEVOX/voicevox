@@ -7,7 +7,7 @@ import { DialogType } from "./TextDialog/common";
 import {
   ConfirmedTips,
   CharacterInfo,
-  ConfirmedAudioKey,
+  VoiceLibraryConfirmedAudioKey,
   SpeakerId,
 } from "@/type/preload";
 import {
@@ -177,19 +177,19 @@ export const showQuestionDialog = async (options: QuestionDialogOptions) => {
 };
 
 export async function generateAndSaveOneAudioWithDialog({
-  confirmedAudioKey,
+  voiceLibraryConfirmedAudioKey,
   actions,
   filePath,
   disableNotifyOnGenerate,
 }: {
-  confirmedAudioKey: ConfirmedAudioKey;
+  voiceLibraryConfirmedAudioKey: VoiceLibraryConfirmedAudioKey;
   actions: DotNotationDispatch<AllActions>;
   filePath?: string;
   disableNotifyOnGenerate: boolean;
 }): Promise<void> {
   const result: SaveResultObject = await withProgress(
     actions.GENERATE_AND_SAVE_AUDIO({
-      confirmedAudioKey,
+      voiceLibraryConfirmedAudioKey,
       filePath,
     }),
     actions,
@@ -199,24 +199,24 @@ export async function generateAndSaveOneAudioWithDialog({
 }
 
 export async function multiGenerateAndSaveAudioWithDialog({
-  confirmedAudioKeys,
+  voiceLibraryConfirmedAudioKeys,
   actions,
   dirPath,
   disableNotifyOnGenerate,
 }: {
-  confirmedAudioKeys: ConfirmedAudioKey[];
+  voiceLibraryConfirmedAudioKeys: VoiceLibraryConfirmedAudioKey[];
   actions: DotNotationDispatch<AllActions>;
   dirPath?: string;
   disableNotifyOnGenerate: boolean;
 }): Promise<void> {
   const result = await withProgress(
     actions.MULTI_GENERATE_AND_SAVE_AUDIO({
-      confirmedAudioKeys,
+      voiceLibraryConfirmedAudioKeys,
       dirPath,
       callback: (finishedCount) =>
         actions.SET_PROGRESS_FROM_COUNT({
           finishedCount,
-          totalCount: confirmedAudioKeys.length,
+          totalCount: voiceLibraryConfirmedAudioKeys.length,
         }),
     }),
     actions,
@@ -267,19 +267,19 @@ export async function multiGenerateAndSaveAudioWithDialog({
 }
 
 export async function generateAndConnectAndSaveAudioWithDialog({
-  confirmedAudioKeys,
+  voiceLibraryConfirmedAudioKeys,
   actions,
   filePath,
   disableNotifyOnGenerate,
 }: {
-  confirmedAudioKeys: ConfirmedAudioKey[];
+  voiceLibraryConfirmedAudioKeys: VoiceLibraryConfirmedAudioKey[];
   actions: DotNotationDispatch<AllActions>;
   filePath?: string;
   disableNotifyOnGenerate: boolean;
 }): Promise<void> {
   const result = await withProgress(
     actions.GENERATE_AND_CONNECT_AND_SAVE_AUDIO({
-      confirmedAudioKeys,
+      voiceLibraryConfirmedAudioKeys,
       filePath,
       callback: (finishedCount, totalCount) =>
         actions.SET_PROGRESS_FROM_COUNT({ finishedCount, totalCount }),
@@ -313,7 +313,9 @@ export async function showVoiceLibraryPolicyDialog({
   unconfirmedCharacterInfos: CharacterInfo[];
   actions: DotNotationDispatch<AllActions>;
 }): Promise<"confirmed" | "canceled"> {
-  const { promise, resolve } = Promise.withResolvers<"confirmed" | "canceled">();
+  const { promise, resolve } = Promise.withResolvers<
+    "confirmed" | "canceled"
+  >();
 
   Dialog.create({
     component: VoiceLibraryPolicyDialog,
@@ -328,8 +330,8 @@ export async function showVoiceLibraryPolicyDialog({
   })
     .onOk((confirmedIds: SpeakerId[]) => {
       // 同意状態を保存
-      void actions.SET_CONFIRMED_CHARACTER_IDS({
-        confirmedCharacterIds: confirmedIds,
+      void actions.SET_VOICE_LIBRARY_CONFIRMED_CHARACTER_IDS({
+        voiceLibraryConfirmedCharacterIds: confirmedIds,
       });
       resolve("confirmed");
     })

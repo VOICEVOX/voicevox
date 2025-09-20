@@ -48,7 +48,7 @@ import {
   SpeakerId,
   StyleId,
   AudioKey,
-  ConfirmedAudioKey,
+  VoiceLibraryConfirmedAudioKey,
   PresetKey,
   RootMiscSettingType,
   EditorType,
@@ -440,14 +440,14 @@ export type AudioStoreTypes = {
 
   GENERATE_AND_SAVE_AUDIO: {
     action(payload: {
-      confirmedAudioKey: ConfirmedAudioKey;
+      voiceLibraryConfirmedAudioKey: VoiceLibraryConfirmedAudioKey;
       filePath?: string;
     }): SaveResultObject;
   };
 
   MULTI_GENERATE_AND_SAVE_AUDIO: {
     action(payload: {
-      confirmedAudioKeys: ConfirmedAudioKey[];
+      voiceLibraryConfirmedAudioKeys: VoiceLibraryConfirmedAudioKey[];
       dirPath?: string;
       callback?: (finishedCount: number) => void;
     }): SaveResultObject[] | "canceled";
@@ -455,7 +455,7 @@ export type AudioStoreTypes = {
 
   GENERATE_AND_CONNECT_AND_SAVE_AUDIO: {
     action(payload: {
-      confirmedAudioKeys: ConfirmedAudioKey[];
+      voiceLibraryConfirmedAudioKeys: VoiceLibraryConfirmedAudioKey[];
       filePath?: string;
       callback?: (finishedCount: number, totalCount: number) => void;
     }): SaveResultObject;
@@ -1939,7 +1939,7 @@ export type SettingStoreState = {
   availableThemes: ThemeConf[];
   acceptTerms: AcceptTermsStatus;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
-  confirmedCharacterIds: SpeakerId[]; // キャラクター利用規約に確認済みのキャラクターID
+  voiceLibraryConfirmedCharacterIds: SpeakerId[]; // キャラクター利用規約に確認済みのキャラクターID
   experimentalSetting: ExperimentalSettingType;
   confirmedTips: ConfirmedTips;
   engineSettings: EngineSettings;
@@ -2015,9 +2015,9 @@ export type SettingStoreTypes = {
     action(): void;
   };
 
-  SET_CONFIRMED_CHARACTER_IDS: {
-    mutation: { confirmedCharacterIds: SpeakerId[] };
-    action(payload: { confirmedCharacterIds: SpeakerId[] }): void;
+  SET_VOICE_LIBRARY_CONFIRMED_CHARACTER_IDS: {
+    mutation: { voiceLibraryConfirmedCharacterIds: SpeakerId[] };
+    action(payload: { voiceLibraryConfirmedCharacterIds: SpeakerId[] }): void;
   };
 
   SET_ENGINE_SETTING: {
