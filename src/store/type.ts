@@ -814,6 +814,8 @@ export type Phrase = {
   firstRestDuration: number;
   notes: Note[];
   startTime: number;
+  minNonPauseStartFrame: number | undefined;
+  maxNonPauseEndFrame: number | undefined;
   state: PhraseState;
   queryKey?: EditorFrameAudioQueryKey;
   singingPitchKey?: SingingPitchKey;
