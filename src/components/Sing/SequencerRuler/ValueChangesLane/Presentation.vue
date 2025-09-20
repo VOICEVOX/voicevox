@@ -25,7 +25,7 @@
             ref="valueChangeText"
             font-size="12"
             :x="item.x - offset + valueChangeTextPadding"
-            y="32"
+            y="34"
             class="value-changes-lane-value-change"
             @click.stop="onValueClick($event, item.original)"
             @contextmenu.stop.prevent="onValueClick($event, item.original)"
@@ -80,7 +80,7 @@ const emit = defineEmits<{
   contextMenuHide: [];
 }>();
 
-const height = ref(props.height ?? 40);
+const height = ref(props.height ?? 44);
 const valueChangeTextPadding = 4;
 const contextMenu = ref<InstanceType<typeof ContextMenu> | null>(null);
 const log = createLogger("ValueChangesLane");
@@ -213,7 +213,7 @@ const onValueClick = (event: MouseEvent, valueChange: ValueChange) => {
 }
 
 .value-changes-lane-value-change {
-  font-weight: 700;
+  font-weight: 600;
   fill: var(--scheme-color-on-surface-variant);
   pointer-events: auto;
   cursor: pointer;

@@ -9,7 +9,6 @@
     }"
     :style="{ width: `${width}px` }"
     @click.stop
-    @mousedown.stop="handleLoopAreaMouseDown"
     @mouseup.stop
     @mousemove="handleLaneMouseMove"
     @mouseenter="handleLaneMouseEnter"
@@ -19,16 +18,27 @@
     <svg
       xmlns="http://www.w3.org/2000/svg"
       :width
-      :height="16"
+      :height="24"
       shape-rendering="crispEdges"
+      style="pointer-events: none"
     >
+      <!-- 背景クリックエリア（12px高） -->
+      <rect
+        x="0"
+        y="0"
+        :width
+        height="12"
+        fill="transparent"
+        style="pointer-events: auto"
+        @mousedown.stop="handleLoopAreaMouseDown"
+      />
       <!-- ループ範囲 -->
       <g v-if="!isLoopRangeZero" class="loop-range-group">
         <rect
           :x="loopStartX - offset + 2"
           y="0"
           :width="Math.max(loopEndX - loopStartX - 6, 0)"
-          height="4"
+          height="5"
           rx="2"
           ry="2"
           class="loop-range"
@@ -38,8 +48,9 @@
           :x="loopStartX - offset + 4"
           y="0"
           :width="Math.max(loopEndX - loopStartX - 8, 0)"
-          height="8"
+          height="12"
           class="loop-range-drag-area"
+          style="pointer-events: auto"
           @click.stop="handleLoopRangeClick"
           @dblclick.stop="handleLoopRangeDoubleClick"
           @mousedown.stop
@@ -49,13 +60,11 @@
       </g>
       <!-- ループ開始ハンドル -->
       <g class="loop-handle-group">
-        <rect
-          :x="loopStartX - offset - 2"
-          y="0"
-          width="2"
-          height="16"
+        <path
+          :d="handlePath(loopStartX - offset - 2)"
           class="loop-handle loop-handle-start"
           :class="{ 'is-range-zero': isLoopRangeZero }"
+          style="pointer-events: auto"
           @mousedown.stop="handleLoopStartMouseDown"
         />
         <!-- 開始ハンドルのドラッグエリア(ドラッグしやすくするためハンドルよりも大きい) -->
@@ -65,18 +74,17 @@
           width="12"
           height="24"
           class="loop-handle-drag-area"
+          style="pointer-events: auto"
           @mousedown.stop="handleLoopStartMouseDown"
         />
       </g>
       <!-- ループ終了ハンドル -->
       <g class="loop-handle-group">
-        <rect
-          :x="loopEndX - offset - 2"
-          y="0"
-          width="2"
-          height="16"
+        <path
+          :d="handlePath(loopEndX - offset - 2)"
           class="loop-handle loop-handle-end"
           :class="{ 'is-range-zero': isLoopRangeZero }"
+          style="pointer-events: auto"
           @mousedown.stop="handleLoopEndMouseDown"
         />
         <!-- 終了ハンドルのドラッグエリア(ドラッグしやすくするためハンドルよりも大きい) -->
@@ -86,6 +94,7 @@
           width="12"
           height="24"
           class="loop-handle-drag-area"
+          style="pointer-events: auto"
           @mousedown.stop="handleLoopEndMouseDown"
         />
       </g>
@@ -137,6 +146,23 @@ const emit = defineEmits<{
 // 範囲ゼロにするとそのあと消えるよ、という表現のためのもの
 const isLoopRangeZero = computed(() => props.loopStartX === props.loopEndX);
 
+// ドラッグハンドル（2px幅・20px高）の下部のみ角丸にするためのパス
+// 形状を変えたい場合もあるので、SVGで形状を定義しておく
+const HANDLE_W = 2;
+const HANDLE_H = 20;
+const HANDLE_R = 1; // 下部角丸の半径
+const handlePath = (x: number) => {
+  const w = HANDLE_W;
+  const h = HANDLE_H;
+  const r = Math.min(HANDLE_R, w / 2, h / 2);
+  const x0 = x;
+  const y0 = 0;
+  const x1 = x0 + w;
+  const y1 = y0 + h;
+  // 上辺は直角、下辺左右のみ角丸
+  return `M ${x0} ${y0} L ${x1} ${y0} L ${x1} ${y1 - r} A ${r} ${r} 0 0 1 ${x1 - r} ${y1} L ${x0 + r} ${y1} A ${r} ${r} 0 0 1 ${x0} ${y1 - r} L ${x0} ${y0} Z`;
+};
+
 const handleLoopAreaMouseDown = (event: MouseEvent) => {
   emit("loopAreaMouseDown", event);
 };
@@ -187,16 +213,19 @@ const handleLoopRangeMouseLeave = () => {
 
 // ループ背景
 .loop-lane {
-  border-radius: 6px;
-  height: 16px;
+  border-radius: 0;
+  height: 6px;
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
-  overflow: hidden;
   pointer-events: auto;
   cursor: pointer;
-  background-color: transparent;
+  background-color: color-mix(
+    in oklch,
+    var(--scheme-color-neutral) 10%,
+    transparent
+  );
   transition: all 0.15s ease-out;
   border: 1px solid transparent;
   box-shadow: inset 0 0 0 0 transparent;
@@ -206,7 +235,7 @@ const handleLoopRangeMouseLeave = () => {
   &.is-dragging {
     background-color: color-mix(
       in oklch,
-      var(--scheme-color-primary) 7%,
+      var(--scheme-color-primary) 20%,
       transparent
     );
   }
@@ -261,7 +290,6 @@ const handleLoopRangeMouseLeave = () => {
   .loop-handle-group:hover {
     .loop-handle {
       opacity: 1;
-      stroke-width: 1.5px;
     }
   }
 }

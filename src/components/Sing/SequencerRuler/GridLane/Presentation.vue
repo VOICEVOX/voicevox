@@ -22,7 +22,7 @@
           :key="n"
           :x1="gridPattern.beatWidth * n"
           :x2="gridPattern.beatWidth * n"
-          y1="30"
+          y1="32"
           :y2="height"
           class="grid-lane-beat-line"
         />
@@ -49,7 +49,7 @@
       />
       <text
         :x="measureInfo.x - offset + 4"
-        y="16"
+        y="20"
         class="grid-lane-measure-number"
       >
         {{ measureInfo.number }}
