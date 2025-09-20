@@ -28,6 +28,16 @@ export const audioKeySchema = z.string().brand<"AudioKey">();
 export type AudioKey = z.infer<typeof audioKeySchema>;
 export const AudioKey = (id: string): AudioKey => audioKeySchema.parse(id);
 
+export const voiceLibraryConfirmedAudioKeySchema =
+  audioKeySchema.brand<"VoiceLibraryConfirmedAudioKey">();
+export type VoiceLibraryConfirmedAudioKey = z.infer<
+  typeof voiceLibraryConfirmedAudioKeySchema
+>;
+export const VoiceLibraryConfirmedAudioKey = (
+  id: string,
+): VoiceLibraryConfirmedAudioKey =>
+  voiceLibraryConfirmedAudioKeySchema.parse(id);
+
 export const presetKeySchema = z.string().brand<"PresetKey">();
 export type PresetKey = z.infer<typeof presetKeySchema>;
 export const PresetKey = (id: string): PresetKey => presetKeySchema.parse(id);
@@ -476,6 +486,7 @@ export function getConfigSchema({ isMac }: { isMac: boolean }) {
       acceptTerms: z
         .enum(["Unconfirmed", "Accepted", "Rejected"])
         .default("Unconfirmed"),
+      voiceLibraryConfirmedCharacterIds: speakerIdSchema.array().default([]),
       confirmedTips: z
         .object({
           tweakableSliderByScroll: z.boolean().default(false),

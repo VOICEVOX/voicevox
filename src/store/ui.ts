@@ -12,7 +12,12 @@ import {
   UiStoreTypes,
 } from "./type";
 import { createPartialStore } from "./vuex";
-import { ActivePointScrollMode } from "@/type/preload";
+import {
+  ActivePointScrollMode,
+  SpeakerId,
+  CharacterInfo,
+  VoiceLibraryConfirmedAudioKey,
+} from "@/type/preload";
 import {
   MessageDialogOptions,
   ConfirmDialogOptions,
@@ -23,6 +28,7 @@ import {
   generateAndSaveOneAudioWithDialog,
   multiGenerateAndSaveAudioWithDialog,
   showAlertDialog,
+  showVoiceLibraryPolicyDialog,
   showConfirmDialog,
   showNotifyAndNotShowAgainButton,
   showWarningDialog,
@@ -478,11 +484,41 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     },
   },
 
-  // TODO: この4つのアクションをVue側に移動したい
+  // TODO: この5つのアクションをVue側に移動したい
+  SHOW_VOICE_LIBRARY_POLICY_DIALOG: {
+    async action({ getters, actions, state }, { audioKeys }) {
+      const unconfirmedCharacterIds: SpeakerId[] =
+        getters.GET_UNCONFIRMED_CHARACTER_IDS(audioKeys);
+      if (unconfirmedCharacterIds.length === 0) {
+        return "confirmed" as const;
+      }
+
+      const unconfirmedCharacterInfos: CharacterInfo[] = Object.values(
+        state.characterInfos,
+      )
+        .flatMap((engineCharacterInfos) => engineCharacterInfos)
+        .filter((characterInfo) =>
+          unconfirmedCharacterIds.includes(characterInfo.metas.speakerUuid),
+        );
+      const result = await showVoiceLibraryPolicyDialog({
+        unconfirmedCharacterInfos,
+        actions,
+      });
+      return result;
+    },
+  },
+
   SHOW_GENERATE_AND_SAVE_ALL_AUDIO_DIALOG: {
     async action({ state, actions }) {
-      await multiGenerateAndSaveAudioWithDialog({
+      const result = await actions.SHOW_VOICE_LIBRARY_POLICY_DIALOG({
         audioKeys: state.audioKeys,
+      });
+      if (result === "canceled") return;
+
+      await multiGenerateAndSaveAudioWithDialog({
+        voiceLibraryConfirmedAudioKeys: state.audioKeys.map((k) =>
+          VoiceLibraryConfirmedAudioKey(k),
+        ),
         disableNotifyOnGenerate: state.confirmedTips.notifyOnGenerate,
         actions,
       });
@@ -491,7 +527,15 @@ export const uiStore = createPartialStore<UiStoreTypes>({
 
   SHOW_GENERATE_AND_CONNECT_ALL_AUDIO_DIALOG: {
     async action({ actions, state }) {
+      const result = await actions.SHOW_VOICE_LIBRARY_POLICY_DIALOG({
+        audioKeys: state.audioKeys,
+      });
+      if (result === "canceled") return;
+
       await generateAndConnectAndSaveAudioWithDialog({
+        voiceLibraryConfirmedAudioKeys: state.audioKeys.map((k) =>
+          VoiceLibraryConfirmedAudioKey(k),
+        ),
         actions,
         disableNotifyOnGenerate: state.confirmedTips.notifyOnGenerate,
       });
@@ -511,14 +555,27 @@ export const uiStore = createPartialStore<UiStoreTypes>({
 
       const selectedAudioKeys = getters.SELECTED_AUDIO_KEYS;
       if (state.enableMultiSelect && selectedAudioKeys.length > 1) {
-        await multiGenerateAndSaveAudioWithDialog({
+        const result = await actions.SHOW_VOICE_LIBRARY_POLICY_DIALOG({
           audioKeys: selectedAudioKeys,
+        });
+        if (result === "canceled") return;
+
+        await multiGenerateAndSaveAudioWithDialog({
+          voiceLibraryConfirmedAudioKeys: selectedAudioKeys.map((k) =>
+            VoiceLibraryConfirmedAudioKey(k),
+          ),
           actions: actions,
           disableNotifyOnGenerate: state.confirmedTips.notifyOnGenerate,
         });
       } else {
+        const result = await actions.SHOW_VOICE_LIBRARY_POLICY_DIALOG({
+          audioKeys: [activeAudioKey],
+        });
+        if (result === "canceled") return;
+
         await generateAndSaveOneAudioWithDialog({
-          audioKey: activeAudioKey,
+          voiceLibraryConfirmedAudioKey:
+            VoiceLibraryConfirmedAudioKey(activeAudioKey),
           disableNotifyOnGenerate: state.confirmedTips.notifyOnGenerate,
           actions: actions,
         });
