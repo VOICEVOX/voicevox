@@ -10,7 +10,8 @@ const samplePolicies = [
   {
     id: toSpeakerId("00000000-0000-0000-0000-000000000001"),
     name: "テストキャラクターA",
-    policy: "markdownテスト。**太字**。\\\n改行。",
+    policy:
+      "markdownテスト。**太字**。\\\n改行。\\\n[リンク](https://example.com)",
     portraitPath: getPortraitUrl(0),
   },
   {
