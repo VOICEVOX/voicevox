@@ -1,7 +1,7 @@
 import { userEvent, within, expect, fn } from "storybook/test";
 
 import { Meta, StoryObj } from "@storybook/vue3-vite";
-import LibraryPolicyDialog from "./LibraryPolicyDialog.vue";
+import VoiceLibraryPolicyDialog from "./VoiceLibraryPolicyDialog.vue";
 import type { SpeakerId as SpeakerIdType } from "@/type/preload";
 import { SpeakerId as toSpeakerId } from "@/type/preload";
 import { getPortraitUrl } from "@/mock/engineMock/characterResourceMock";
@@ -27,8 +27,8 @@ const samplePolicies = [
   portraitPath: string;
 }>;
 
-const meta: Meta<typeof LibraryPolicyDialog> = {
-  component: LibraryPolicyDialog,
+const meta: Meta<typeof VoiceLibraryPolicyDialog> = {
+  component: VoiceLibraryPolicyDialog,
   args: {
     modelValue: false,
     characterPolicyInfos: samplePolicies,

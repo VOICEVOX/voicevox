@@ -28,7 +28,7 @@ import {
   generateAndSaveOneAudioWithDialog,
   multiGenerateAndSaveAudioWithDialog,
   showAlertDialog,
-  showLibraryPolicyDialog,
+  showVoiceLibraryPolicyDialog,
   showConfirmDialog,
   showNotifyAndNotShowAgainButton,
   showWarningDialog,
@@ -500,7 +500,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
         .filter((characterInfo) =>
           unconfirmedCharacterIds.includes(characterInfo.metas.speakerUuid),
         );
-      const result = await showLibraryPolicyDialog({
+      const result = await showVoiceLibraryPolicyDialog({
         unconfirmedCharacterInfos,
         actions,
       });

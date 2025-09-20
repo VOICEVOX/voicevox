@@ -2,7 +2,7 @@ import { Dialog, Notify, Loading } from "quasar";
 import SaveAllResultDialog from "./SaveAllResultDialog.vue";
 import QuestionDialog from "./TextDialog/QuestionDialog.vue";
 import MessageDialog from "./TextDialog/MessageDialog.vue";
-import LibraryPolicyDialog from "./LibraryPolicyDialog.vue";
+import VoiceLibraryPolicyDialog from "./VoiceLibraryPolicyDialog.vue";
 import { DialogType } from "./TextDialog/common";
 import {
   ConfirmedTips,
@@ -306,7 +306,7 @@ export async function connectAndExportTextWithDialog({
   notifyResult(result, "text", actions, disableNotifyOnGenerate);
 }
 
-export async function showLibraryPolicyDialog({
+export async function showVoiceLibraryPolicyDialog({
   unconfirmedCharacterInfos,
   actions,
 }: {
@@ -316,7 +316,7 @@ export async function showLibraryPolicyDialog({
   const { promise, resolve } = Promise.withResolvers<"accepted" | "canceled">();
 
   Dialog.create({
-    component: LibraryPolicyDialog,
+    component: VoiceLibraryPolicyDialog,
     componentProps: {
       characterPolicyInfos: unconfirmedCharacterInfos.map((info) => ({
         id: info.metas.speakerUuid,
