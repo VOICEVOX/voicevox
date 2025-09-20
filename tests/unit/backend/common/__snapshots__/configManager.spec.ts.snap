@@ -31,6 +31,8 @@ exports[`0.13.0からマイグレーションできる 1`] = `
     "enableMorphing": false,
     "shouldKeepTuningOnTextChange": false,
     "showParameterPanel": false,
+    "showPhonemeTimings": false,
+    "showPhraseBoundaries": false,
   },
   "hotkeySettings": [
     {

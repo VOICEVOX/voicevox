@@ -463,6 +463,24 @@
                     changeExperimentalSetting('showParameterPanel', $event)
                   "
                 />
+                <ToggleCell
+                  v-if="!isProduction"
+                  title="[開発時のみ機能] ソング：音素タイミングの表示"
+                  description="ONの場合、ソングエディタで音素タイミングが表示されます。"
+                  :modelValue="experimentalSetting.showPhonemeTimings"
+                  @update:modelValue="
+                    changeExperimentalSetting('showPhonemeTimings', $event)
+                  "
+                />
+                <ToggleCell
+                  v-if="!isProduction"
+                  title="[開発時のみ機能] ソング：フレーズ境界の表示"
+                  description="ONの場合、ソングエディタでフレーズの境界が表示されます。"
+                  :modelValue="experimentalSetting.showPhraseBoundaries"
+                  @update:modelValue="
+                    changeExperimentalSetting('showPhraseBoundaries', $event)
+                  "
+                />
               </div>
               <div class="setting-card">
                 <h5 class="headline">データ収集</h5>

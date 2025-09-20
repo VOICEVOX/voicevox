@@ -117,6 +117,16 @@
             @blur="onLyricInputBlur"
           />
         </div>
+        <SequencerPhonemeTimings
+          v-if="showPhonemeTimings"
+          class="sequencer-phoneme-timings"
+          :style="{
+            marginRight: `${scrollBarWidth}px`,
+            marginBottom: `${scrollBarWidth}px`,
+          }"
+          :offsetX="scrollX"
+          :offsetY="scrollY"
+        />
         <SequencerPitch
           v-if="editTarget === 'PITCH'"
           class="sequencer-pitch"
@@ -166,6 +176,11 @@
               width: `${phraseInfo.width}px`,
               transform: `translateX(${phraseInfo.x - scrollX}px)`,
             }"
+          />
+          <SequencerDebugInfo
+            v-if="showPhraseBoundaries"
+            :showPhraseBoundaries
+            :offsetX="scrollX"
           />
           <div
             class="sequencer-playhead"
@@ -279,8 +294,10 @@ import SequencerNote from "@/components/Sing/SequencerNote.vue";
 import SequencerShadowNote from "@/components/Sing/SequencerShadowNote.vue";
 import SequencerPhraseIndicator from "@/components/Sing/SequencerPhraseIndicator.vue";
 import CharacterPortrait from "@/components/Sing/CharacterPortrait.vue";
+import SequencerPhonemeTimings from "@/components/Sing/SequencerPhonemeTimings.vue";
 import SequencerPitch from "@/components/Sing/SequencerPitch.vue";
 import SequencerLyricInput from "@/components/Sing/SequencerLyricInput.vue";
+import SequencerDebugInfo from "@/components/Sing/SequencerDebugInfo.vue";
 import SequencerToolPalette from "@/components/Sing/SequencerToolPalette.vue";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import { createLogger } from "@/helpers/log";
@@ -433,6 +450,12 @@ const phraseInfosInOtherTracks = computed(() => {
 const parameterPanelHeight = ref(300);
 const isParameterPanelOpen = computed(
   () => store.state.experimentalSetting.showParameterPanel,
+);
+const showPhonemeTimings = computed(
+  () => store.state.experimentalSetting.showPhonemeTimings,
+);
+const showPhraseBoundaries = computed(
+  () => store.state.experimentalSetting.showPhraseBoundaries,
 );
 
 const setParameterPanelHeight = (height: number) => {
@@ -1226,6 +1249,11 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   &::-webkit-scrollbar-track:active {
     cursor: default;
   }
+}
+
+.sequencer-phoneme-timings {
+  grid-row: 2;
+  grid-column: 2;
 }
 
 .sequencer-pitch {
