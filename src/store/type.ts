@@ -2248,7 +2248,7 @@ export type UiStoreTypes = {
     action(): void;
   };
 
-  SHOW_LIBRARY_POLICY_DIALOG: {
+  SHOW_VOICE_LIBRARY_POLICY_DIALOG: {
     action(payload: {
       audioKeys: AudioKey[];
     }): Promise<"confirmed" | "canceled">;

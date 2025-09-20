@@ -485,7 +485,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   },
 
   // TODO: この5つのアクションをVue側に移動したい
-  SHOW_LIBRARY_POLICY_DIALOG: {
+  SHOW_VOICE_LIBRARY_POLICY_DIALOG: {
     async action({ getters, actions, state }, { audioKeys }) {
       const unconfirmedCharacterIds: SpeakerId[] =
         getters.GET_UNCONFIRMED_CHARACTER_IDS(audioKeys);
@@ -510,7 +510,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
 
   SHOW_GENERATE_AND_SAVE_ALL_AUDIO_DIALOG: {
     async action({ state, actions }) {
-      const result = await actions.SHOW_LIBRARY_POLICY_DIALOG({
+      const result = await actions.SHOW_VOICE_LIBRARY_POLICY_DIALOG({
         audioKeys: state.audioKeys,
       });
       if (result === "canceled") return;
@@ -525,7 +525,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
 
   SHOW_GENERATE_AND_CONNECT_ALL_AUDIO_DIALOG: {
     async action({ actions, state }) {
-      const result = await actions.SHOW_LIBRARY_POLICY_DIALOG({
+      const result = await actions.SHOW_VOICE_LIBRARY_POLICY_DIALOG({
         audioKeys: state.audioKeys,
       });
       if (result === "canceled") return;
@@ -551,7 +551,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
 
       const selectedAudioKeys = getters.SELECTED_AUDIO_KEYS;
       if (state.enableMultiSelect && selectedAudioKeys.length > 1) {
-        const result = await actions.SHOW_LIBRARY_POLICY_DIALOG({
+        const result = await actions.SHOW_VOICE_LIBRARY_POLICY_DIALOG({
           audioKeys: selectedAudioKeys,
         });
         if (result === "canceled") return;
@@ -564,7 +564,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
           disableNotifyOnGenerate: state.confirmedTips.notifyOnGenerate,
         });
       } else {
-        const result = await actions.SHOW_LIBRARY_POLICY_DIALOG({
+        const result = await actions.SHOW_VOICE_LIBRARY_POLICY_DIALOG({
           audioKeys: [activeAudioKey],
         });
         if (result === "canceled") return;
