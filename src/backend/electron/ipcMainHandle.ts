@@ -315,6 +315,7 @@ export function getIpcMainHandle(params: {
       await engineAndVvppController.installVvppEngine({
         vvppPath: path,
         asDefaultVvppEngine: false,
+        immediate: false,
       });
     },
 

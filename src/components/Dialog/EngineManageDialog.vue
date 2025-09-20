@@ -2,6 +2,7 @@
   <QDialog
     v-model="dialogOpened"
     maximized
+    allowFocusOutside
     transitionShow="jump-up"
     transitionHide="jump-down"
     class="setting-dialog transparent-backdrop"
