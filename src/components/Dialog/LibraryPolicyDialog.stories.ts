@@ -1,7 +1,7 @@
 import { userEvent, within, expect, fn } from "storybook/test";
 
 import { Meta, StoryObj } from "@storybook/vue3-vite";
-import CharacterPolicyAgreementDialog from "./CharacterPolicyAgreementDialog.vue";
+import LibraryPolicyDialog from "./LibraryPolicyDialog.vue";
 import type { SpeakerId as SpeakerIdType } from "@/type/preload";
 import { SpeakerId as toSpeakerId } from "@/type/preload";
 import { getPortraitUrl } from "@/mock/engineMock/characterResourceMock";
@@ -26,8 +26,8 @@ const samplePolicies = [
   portraitPath: string;
 }>;
 
-const meta: Meta<typeof CharacterPolicyAgreementDialog> = {
-  component: CharacterPolicyAgreementDialog,
+const meta: Meta<typeof LibraryPolicyDialog> = {
+  component: LibraryPolicyDialog,
   args: {
     modelValue: false,
     characterPolicyInfos: samplePolicies,
@@ -48,13 +48,13 @@ export const Opened: Story = {
   },
 };
 
-export const Accept: Story = {
-  name: "同意ボタンを押す",
+export const Ok: Story = {
+  name: "確認ボタンを押す",
   args: { ...Opened.args },
   play: async ({ args }) => {
     const canvas = within(document.body); // ダイアログなので例外的にdocument.bodyを使う
 
-    const button = canvas.getByRole("button", { name: /同意して続行/ });
+    const button = canvas.getByRole("button", { name: /確認して続行/ });
     await userEvent.click(button);
 
     await expect(args["onOk"]).toBeCalledWith([

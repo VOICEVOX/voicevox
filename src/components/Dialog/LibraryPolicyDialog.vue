@@ -7,9 +7,9 @@
   >
     <QCard class="policy-dialog q-py-sm q-px-md">
       <QCardSection>
-        <div class="text-h5">キャラクター利用規約への同意</div>
+        <div class="text-h5">音声ライブラリ利用規約のご案内</div>
         <div class="text-body2 text-grey-8">
-          音声を書き出すには以下のキャラクターの利用規約への同意が必要です。
+          音声の利用には音声ライブラリ利用規約が適用されます。
         </div>
       </QCardSection>
 
@@ -57,12 +57,12 @@
         />
         <QBtn
           padding="xs md"
-          label="同意して続行"
+          label="確認して続行"
           unelevated
           color="surface"
           textColor="display"
           class="q-mt-sm text-bold"
-          @click="handleAccept"
+          @click="handleOk"
         />
       </QCardActions>
     </QCard>
@@ -115,7 +115,7 @@ const handleCancel = () => {
   onDialogCancel();
 };
 
-const handleAccept = () => {
+const handleOk = () => {
   onDialogOK(characterIds.value);
 };
 
