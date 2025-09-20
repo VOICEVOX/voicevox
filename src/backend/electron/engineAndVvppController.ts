@@ -3,6 +3,7 @@ import fs from "node:fs";
 import { ReadableStream } from "node:stream/web";
 import { dialog } from "electron";
 
+import semver from "semver";
 import { getConfigManager } from "./electronConfig";
 import { getEngineInfoManager } from "./manager/engineInfoManager";
 import { getEngineProcessManager } from "./manager/engineProcessManager";
@@ -27,6 +28,19 @@ import { createLogger } from "@/helpers/log";
 import { DisplayableError, errorToMessage } from "@/helpers/errorHelper";
 
 const log = createLogger("EngineAndVvppController");
+
+/** エンジンパッケージの状態 */
+export type EnginePackageStatus = {
+  package: {
+    engineName: string;
+    engineId: EngineId;
+    packageInfo: PackageInfo;
+    latestVersion: string;
+  };
+  installed:
+    | { status: "notInstalled" }
+    | { status: "outdated" | "latest"; installedVersion: string };
+};
 
 /**
  * エンジンとVVPP周りの処理の流れを制御するクラス。
@@ -57,9 +71,10 @@ export class EngineAndVvppController {
   async installVvppEngine(params: {
     vvppPath: string;
     asDefaultVvppEngine: boolean;
+    immediate: boolean;
     callbacks?: { onProgress?: ProgressCallback };
   }) {
-    const { vvppPath, asDefaultVvppEngine, callbacks } = params;
+    const { vvppPath, asDefaultVvppEngine, immediate, callbacks } = params;
 
     try {
       const extractedEngineFiles = await this.vvppManager.extract(
@@ -79,7 +94,7 @@ export class EngineAndVvppController {
         );
       }
 
-      await this.vvppManager.install(extractedEngineFiles);
+      await this.vvppManager.install({ extractedEngineFiles, immediate });
     } catch (e) {
       throw new DisplayableError(
         `${vvppPath} をインストールできませんでした。`,
@@ -117,7 +132,11 @@ export class EngineAndVvppController {
     }
 
     try {
-      await this.installVvppEngine({ vvppPath, asDefaultVvppEngine });
+      await this.installVvppEngine({
+        vvppPath,
+        asDefaultVvppEngine,
+        immediate: false,
+      });
     } catch (e) {
       log.error(e);
       dialog.showErrorBox("インストールエラー", errorToMessage(e));
@@ -174,13 +193,11 @@ export class EngineAndVvppController {
   }
 
   /**
-   * インストール可能なデフォルトエンジンの情報とパッケージの情報を取得する。
+   * 最新のエンジンパッケージの情報や、そのエンジンのインストール状況を取得する。
    */
-  async fetchInsallablePackageInfos(): Promise<
-    { engineName: string; packageInfo: PackageInfo }[]
-  > {
-    // ダウンロード可能なVVPPのうち、未インストールのものを返す
-    const targetInfos = [];
+  async fetchEnginePackageStatuses(): Promise<EnginePackageStatus[]> {
+    const statuses: EnginePackageStatus[] = [];
+
     for (const envEngineInfo of loadEnvEngineInfos()) {
       if (envEngineInfo.type != "downloadVvpp") {
         continue;
@@ -200,17 +217,38 @@ export class EngineAndVvppController {
       const packageInfo = getSuitablePackageInfo(latestInfo);
       log.info(`Latest default engine version: ${packageInfo.version}`);
 
-      // インストール済みだった場合はスキップ
-      // FIXME: より新しいバージョンがあれば更新できるようにする
-      if (this.engineInfoManager.hasEngineInfo(envEngineInfo.uuid)) {
-        log.info(`Default engine ${envEngineInfo.uuid} is already installed.`);
-        continue;
+      // インストール状況を取得
+      let installedStatus: EnginePackageStatus["installed"];
+      const isInstalled = this.engineInfoManager.hasEngineInfo(
+        envEngineInfo.uuid,
+      );
+      if (!isInstalled) {
+        installedStatus = { status: "notInstalled" };
+      } else {
+        const installedEngineInfo = this.engineInfoManager.fetchEngineInfo(
+          envEngineInfo.uuid,
+        );
+        const installedVersion = installedEngineInfo.version;
+        installedStatus = {
+          status: semver.lt(installedVersion, packageInfo.version)
+            ? "outdated"
+            : "latest",
+          installedVersion,
+        };
       }
 
-      targetInfos.push({ engineName: envEngineInfo.name, packageInfo });
+      statuses.push({
+        package: {
+          engineName: envEngineInfo.name,
+          engineId: envEngineInfo.uuid,
+          packageInfo,
+          latestVersion: packageInfo.version,
+        },
+        installed: installedStatus,
+      });
     }
 
-    return targetInfos;
+    return statuses;
   }
 
   /** VVPPパッケージをダウンロードし、インストールする */
@@ -277,6 +315,7 @@ export class EngineAndVvppController {
       await this.installVvppEngine({
         vvppPath: downloadedPaths[0],
         asDefaultVvppEngine: true,
+        immediate: true,
         callbacks: {
           onProgress: ({ progress }) => {
             callbacks.onProgress({ type: "install", progress });

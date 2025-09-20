@@ -2,9 +2,10 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 
 import semver from "semver";
+import { z } from "zod";
 
 import { AccentPhrase } from "@/openapi";
-import { EngineId, StyleId, TrackId, Voice } from "@/type/preload";
+import { EngineId, SpeakerId, StyleId, TrackId, Voice } from "@/type/preload";
 import {
   DEFAULT_BEAT_TYPE,
   DEFAULT_BEATS,
@@ -16,8 +17,11 @@ import { uuid4 } from "@/helpers/random";
 import { projectFileSchema } from "@/infrastructures/projectFile/schema";
 import { ProjectFileFormatError } from "@/infrastructures/projectFile/type";
 import { validateTalkProject } from "@/infrastructures/projectFile/validation";
+import { getAppInfos } from "@/domain/appInfo";
 
 const DEFAULT_SAMPLING_RATE = 24000;
+
+type LatestProjectType = z.infer<typeof projectFileSchema>;
 
 /**
  * プロジェクトファイルのマイグレーション
@@ -32,9 +36,10 @@ export const migrateProjectFileObject = async (
       styleId: StyleId;
     }) => Promise<AccentPhrase[]>;
     voices: Voice[];
+    showNewerVersionWarningDialog: () => Promise<boolean>;
   },
-) => {
-  const { fetchMoraData, voices } = DI;
+): Promise<LatestProjectType | "projectCreatedByNewerVersion"> => {
+  const { fetchMoraData, voices, showNewerVersionWarningDialog } = DI;
 
   // appVersion Validation check
   if (
@@ -49,6 +54,15 @@ export const migrateProjectFileObject = async (
     throw new ProjectFileFormatError(
       `The app version of the project file "${projectAppVersion}" is invalid. The app version should be a string in semver format.`,
     );
+  }
+
+  const appVersion = getAppInfos().version;
+
+  if (semver.gt(projectAppVersion, appVersion)) {
+    const result = await showNewerVersionWarningDialog();
+    if (!result) {
+      return "projectCreatedByNewerVersion";
+    }
   }
 
   const semverSatisfiesOptions: semver.RangeOptions = {
@@ -172,9 +186,17 @@ export const migrateProjectFileObject = async (
             voice.engineId === audioItem.engineId &&
             voice.styleId === audioItem.styleId,
         );
-        if (voice == undefined)
-          throw new Error(`voice == undefined: ${oldEngineId}, ${oldStyleId}`);
-        audioItem.voice = voice;
+        if (voice == undefined) {
+          // Voiceの情報が見つからなかった場合は適当なSpeakerIdを入れておく
+          // NOTE: マルチエンジンの追加エンジンを削除してアップデートした際にundefinedになる
+          audioItem.voice = {
+            engineId: oldEngineId,
+            speakerId: SpeakerId("00000000-0000-0000-0000-000000000000"),
+            styleId: oldStyleId,
+          };
+        } else {
+          audioItem.voice = voice;
+        }
 
         delete audioItem.engineId;
         delete audioItem.styleId;
@@ -269,6 +291,9 @@ export const migrateProjectFileObject = async (
   // ソングはSET_SCOREの中の`isValidScore`関数で検証される
   const parsedProjectData = projectFileSchema.parse(projectData);
   validateTalkProject(parsedProjectData.talk);
+
+  // Update the project version to the current app version after migration
+  parsedProjectData.appVersion = appVersion;
 
   return parsedProjectData;
 };

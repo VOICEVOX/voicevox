@@ -179,7 +179,23 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
             styleId: style.styleId,
           })),
         ),
+        showNewerVersionWarningDialog: async () => {
+          const result = await showQuestionDialog({
+            type: "warning",
+            title:
+              "プロジェクトファイルが新しいバージョンのVOICEVOXで作成されています",
+            message:
+              "このプロジェクトファイルは新しいバージョンのVOICEVOXで作成されたため、一部の機能が正しく動作しない可能性があります。読み込みを続行しますか？",
+            buttons: ["いいえ", { text: "はい", color: "warning" }],
+            cancel: 0,
+          });
+          return result === 1;
+        },
       });
+
+      if (parsedProjectData === "projectCreatedByNewerVersion") {
+        return undefined;
+      }
 
       return parsedProjectData;
     },
@@ -229,6 +245,10 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
           const parsedProjectData = await actions.PARSE_PROJECT_FILE({
             projectJson: text,
           });
+
+          if (parsedProjectData == undefined) {
+            return false;
+          }
 
           if (getters.IS_EDITED) {
             const result = await actions.SAVE_OR_DISCARD_PROJECT_FILE({

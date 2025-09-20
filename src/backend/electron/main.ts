@@ -451,17 +451,42 @@ void app.whenReady().then(async () => {
     }
   }
 
-  // VVPPがデフォルトエンジンに指定されていたらインストールする
+  // VVPPがデフォルトエンジンに指定されていたらインストール・アップデートする
   // NOTE: この機能は工事中。参照: https://github.com/VOICEVOX/voicevox/issues/1194
-  const packageInfos =
-    await engineAndVvppController.fetchInsallablePackageInfos();
-  for (const { engineName, packageInfo } of packageInfos) {
+  const packageStatuses =
+    await engineAndVvppController.fetchEnginePackageStatuses();
+
+  for (const status of packageStatuses) {
+    // 最新版がインストール済みの場合はスキップ
+    if (status.installed.status == "latest") {
+      continue;
+    }
+
+    let dialogOptions: {
+      title: string;
+      message: string;
+      okButtonLabel: string;
+    };
+    if (status.installed.status == "notInstalled") {
+      dialogOptions = {
+        title: "デフォルトエンジンのインストール",
+        message: `${status.package.engineName} をインストールしますか？`,
+        okButtonLabel: "インストールする",
+      };
+    } else {
+      dialogOptions = {
+        title: "デフォルトエンジンのアップデート",
+        message: `${status.package.engineName} の新しいバージョン（${status.package.latestVersion}）にアップデートしますか？`,
+        okButtonLabel: "アップデートする",
+      };
+    }
+
     // インストールするか確認
     const result = dialog.showMessageBoxSync({
       type: "info",
-      title: "デフォルトエンジンのインストール",
-      message: `${engineName} をインストールしますか？`,
-      buttons: ["インストール", "キャンセル"],
+      title: dialogOptions.title,
+      message: dialogOptions.message,
+      buttons: [dialogOptions.okButtonLabel, "キャンセル"],
       cancelId: 1,
     });
     if (result == 1) {
@@ -472,7 +497,7 @@ void app.whenReady().then(async () => {
     let lastLogTime = 0; // とりあえずログを0.1秒に1回だけ出力する
     await engineAndVvppController.downloadAndInstallVvppEngine(
       app.getPath("downloads"),
-      packageInfo,
+      status.package.packageInfo,
       {
         onProgress: ({ type, progress }) => {
           if (Date.now() - lastLogTime > 100) {

@@ -21,7 +21,7 @@ function getDicPath() {
 }
 
 /** テキストをトークン列に変換するトークナイザーを取得する */
-async function createOrGetTokenizer() {
+export async function createOrGetTokenizer() {
   if (_tokenizer != undefined) {
     return _tokenizer;
   }
