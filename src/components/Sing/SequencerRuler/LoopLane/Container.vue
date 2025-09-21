@@ -14,7 +14,6 @@
     :snapTicks
     @loopAreaMouseDown="handleLoopAreaMouseDown"
     @loopRangeClick="handleLoopRangeClick"
-    @loopRangeDoubleClick="handleLoopRangeDoubleClick"
     @loopStartMouseDown="handleLoopStartMouseDown"
     @loopEndMouseDown="handleLoopEndMouseDown"
     @laneMouseMove="handleLaneMouseMove"
@@ -40,6 +39,20 @@ import { ContextMenuItemData } from "@/components/Menu/ContextMenu/Presentation.
 defineOptions({
   name: "LoopLaneContainer",
 });
+
+// ドラッグ状態の型定義
+// NOTE: ループ作成時はレーンのマウスダウンから閾値を超えたらループ作成を開始するようにする
+// 即時ループ作成すると、レーンクリックで削除のような挙動に見えてしまうため
+// なお、リサイズの場合は即時でないと反応が遅れる・おかしく見えるため、即時リサイズする
+type LoopLaneDragState =
+  | "idle" // 何も操作していない
+  | "pending-create" // マウスダウンしたが閾値未満
+  | "creating" // 新規ループ作成中
+  | "resizing-start" // 開始ハンドルをリサイズ中
+  | "resizing-end"; // 終了ハンドルをリサイズ中
+
+// ドラッグ開始の閾値（ピクセル）
+const DRAG_THRESHOLD_PX = 4;
 
 // 依存注入
 const store = useStore();
@@ -85,12 +98,12 @@ const isHoveringLane = ref(false);
 const isHoveringLoopRange = ref(false);
 
 // ドラッグ状態
-const isDragging = ref(false);
-const dragTarget = ref<"start" | "end" | null>(null);
+const dragState = ref<LoopLaneDragState>("idle");
 const dragStartX = ref(0);
 const dragStartHandleX = ref(0);
 const cursorState = ref<"default" | "ew-resize">("default");
 const lastMouseEvent = ref<MouseEvent | null>(null);
+const pendingCreateStartX = ref(0);
 
 // ドラッグプレビュー用
 const previewLoopStartTick = ref(loopStartTick.value);
@@ -99,6 +112,11 @@ const executePreviewProcess = ref(false);
 let previewRequestId: number | null = null;
 
 // 表示用の計算値
+
+// ドラッグ中かどうか
+const isDragging = computed(
+  () => dragState.value !== "idle" && dragState.value !== "pending-create",
+);
 
 // 現在のループ範囲（ドラッグ中はプレビュー値を使用）
 const currentLoopStartTick = computed(() =>
@@ -182,13 +200,9 @@ const handleLoopRangeClick = () => {
   setLoopEnabled(!isLoopEnabled.value);
 };
 
-// ループ範囲部をダブルクリックでループ範囲を削除
-const handleLoopRangeDoubleClick = () => {
-  clearLoopRange();
-};
-
-// 新規ループ作成（レーンクリック時）
+// 新規ループ作成（レーンのマウスダウン時）
 const handleLoopAreaMouseDown = (event: MouseEvent) => {
+  // 修飾なしの左クリックのみ有効
   if (event.button !== 0 || (event.ctrlKey && event.button === 0)) return;
 
   // クリック位置を計算
@@ -196,51 +210,46 @@ const handleLoopAreaMouseDown = (event: MouseEvent) => {
   const rect = target.getBoundingClientRect();
   const clickXInLane = event.clientX - rect.left;
 
-  // 既存のプレビューをクリーンアップ
-  executePreviewProcess.value = false;
-  if (previewRequestId != null) {
-    cancelAnimationFrame(previewRequestId);
-    previewRequestId = null;
-  }
-
-  // クリック位置からスナップしてループ範囲を作成
+  // クリック位置からtickを計算して、ピクセル位置に変換（スナップ後の位置）
   const baseX = (injectedOffset.value + clickXInLane) / sequencerZoomX.value;
   const baseTick = baseXToTick(baseX, tpqn.value);
   const tick = Math.round(baseTick / snapTicks.value) * snapTicks.value;
+  const snapPixelX = Math.round((rulerWidth.value / totalTicks.value) * tick);
 
-  // クリック位置をループ範囲の開始/終了に設定
-  previewLoopStartTick.value = tick;
-  previewLoopEndTick.value = tick;
+  // pending-create状態へ遷移
+  dragState.value = "pending-create";
+  pendingCreateStartX.value = event.clientX;
+  dragStartHandleX.value = snapPixelX;
+  lastMouseEvent.value = event;
 
-  // ループ範囲を設定
-  setLoopRange(tick, tick);
-
-  // 終了ハンドルのドラッグを開始
-  startDragging("end", event);
+  // マウスイベントリスナーを設定
+  window.addEventListener("mousemove", handleMouseMove, true);
+  window.addEventListener("mouseup", stopDragging, true);
 };
 
 // ハンドルのドラッグ開始
 const handleLoopStartMouseDown = (event: MouseEvent) => {
-  startDragging("start", event);
+  if (event.button !== 0) return;
+  startResizing("resizing-start", event);
 };
 
 const handleLoopEndMouseDown = (event: MouseEvent) => {
-  startDragging("end", event);
+  if (event.button !== 0) return;
+  startResizing("resizing-end", event);
 };
 
-// ドラッグ処理
-const startDragging = (target: "start" | "end", event: MouseEvent) => {
-  // 左クリックでない場合はドラッグしない
-  if (event.button !== 0) return;
-
+// ハンドルのリサイズ開始
+const startResizing = (
+  state: "resizing-start" | "resizing-end",
+  event: MouseEvent,
+) => {
   previewLoopStartTick.value = loopStartTick.value;
   previewLoopEndTick.value = loopEndTick.value;
 
-  isDragging.value = true;
-  dragTarget.value = target;
+  dragState.value = state;
   dragStartX.value = event.clientX;
   dragStartHandleX.value =
-    target === "start" ? loopStartX.value : loopEndX.value;
+    state === "resizing-start" ? loopStartX.value : loopEndX.value;
 
   cursorState.value = "ew-resize";
   lastMouseEvent.value = event;
@@ -253,9 +262,43 @@ const startDragging = (target: "start" | "end", event: MouseEvent) => {
 };
 
 const handleMouseMove = (event: MouseEvent) => {
-  if (!isDragging.value) return;
   lastMouseEvent.value = event;
-  executePreviewProcess.value = true;
+
+  // ループ作成判定待ち(pending-create)状態の場合、閾値を超えていたらループ作成を開始
+  if (dragState.value === "pending-create") {
+    const dragDistance = Math.abs(event.clientX - pendingCreateStartX.value);
+    if (dragDistance >= DRAG_THRESHOLD_PX) {
+      // 閾値を超えたらループ作成を開始
+      executePreviewProcess.value = false;
+      if (previewRequestId != null) {
+        cancelAnimationFrame(previewRequestId);
+        previewRequestId = null;
+      }
+
+      // dragStartHandleXから開始tickを計算
+      const baseTick = Math.round(
+        (totalTicks.value * dragStartHandleX.value) / rulerWidth.value,
+      );
+      const tick = Math.round(baseTick / snapTicks.value) * snapTicks.value;
+
+      // ループ範囲を設定
+      previewLoopStartTick.value = tick;
+      previewLoopEndTick.value = tick;
+      setLoopRange(tick, tick);
+
+      // 作成中(creating)状態へ遷移
+      dragState.value = "creating";
+      dragStartX.value = pendingCreateStartX.value;
+      dragStartHandleX.value = loopEndX.value;
+      cursorState.value = "ew-resize";
+      executePreviewProcess.value = true;
+      if (previewRequestId == null) {
+        previewRequestId = requestAnimationFrame(preview);
+      }
+    }
+  } else if (isDragging.value) {
+    executePreviewProcess.value = true;
+  }
 };
 
 // ドラッグでのプレビュー
@@ -275,26 +318,29 @@ const preview = () => {
       Math.round(baseTick / snapTicks.value) * snapTicks.value,
     );
 
-    // ドラッグ対象がループの開始か終了かによって処理を分ける
-    if (dragTarget.value === "start") {
+    // ドラッグ状態に応じて処理を分ける
+    if (dragState.value === "resizing-start") {
       if (newTick <= previewLoopEndTick.value) {
         previewLoopStartTick.value = newTick;
       } else {
         // 開始ハンドルが終了ハンドルを超えた場合、開始と終了を入れ替える
         previewLoopStartTick.value = previewLoopEndTick.value;
         previewLoopEndTick.value = newTick;
-        dragTarget.value = "end";
+        dragState.value = "resizing-end";
         dragStartX.value = event.clientX;
         dragStartHandleX.value = newX;
       }
-    } else if (dragTarget.value === "end") {
+    } else if (
+      dragState.value === "resizing-end" ||
+      dragState.value === "creating"
+    ) {
       if (newTick >= previewLoopStartTick.value) {
         previewLoopEndTick.value = newTick;
       } else {
         // 終了ハンドルが開始ハンドルを下回った場合、開始と終了を入れ替える
         previewLoopEndTick.value = previewLoopStartTick.value;
         previewLoopStartTick.value = newTick;
-        dragTarget.value = "start";
+        dragState.value = "resizing-start";
         dragStartX.value = event.clientX;
         dragStartHandleX.value = newX;
       }
@@ -308,8 +354,7 @@ const preview = () => {
 
 // ドラッグ終了時にドラッグプレビュー関連の状態とリソースをリセット
 const cleanUpDragPreview = () => {
-  isDragging.value = false;
-  dragTarget.value = null;
+  dragState.value = "idle";
   executePreviewProcess.value = false;
   if (previewRequestId != null) {
     cancelAnimationFrame(previewRequestId);
@@ -322,6 +367,12 @@ const cleanUpDragPreview = () => {
 
 // ドラッグ終了
 const stopDragging = () => {
+  // pending-create状態のまま終了した場合は何もしない
+  if (dragState.value === "pending-create") {
+    cleanUpDragPreview();
+    return;
+  }
+
   if (!isDragging.value) return;
 
   // ドラッグプレビュー関連の状態とリソースをリセット
@@ -374,7 +425,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => [
     onClick: () => {
       clearLoopRange();
     },
-    disabled: isLoopEnabled.value,
+    disabled: false,
     disableWhenUiLocked: true,
   },
 ]);

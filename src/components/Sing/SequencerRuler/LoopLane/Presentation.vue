@@ -52,7 +52,6 @@
           class="loop-range-drag-area"
           style="pointer-events: auto"
           @click.stop="handleLoopRangeClick"
-          @dblclick.stop="handleLoopRangeDoubleClick"
           @mousedown.stop
           @mouseenter="handleLoopRangeMouseEnter"
           @mouseleave="handleLoopRangeMouseLeave"
@@ -132,7 +131,6 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: "loopAreaMouseDown", event: MouseEvent): void;
   (e: "loopRangeClick"): void;
-  (e: "loopRangeDoubleClick"): void;
   (e: "loopStartMouseDown", event: MouseEvent): void;
   (e: "loopEndMouseDown", event: MouseEvent): void;
   (e: "contextMenu", event: MouseEvent): void;
@@ -181,10 +179,6 @@ const handleLaneMouseLeave = () => {
 
 const handleLoopRangeClick = () => {
   emit("loopRangeClick");
-};
-
-const handleLoopRangeDoubleClick = () => {
-  emit("loopRangeDoubleClick");
 };
 
 const handleLoopStartMouseDown = (event: MouseEvent) => {
