@@ -88,7 +88,6 @@ import {
   AnimationTimer,
   createArray,
   createPromiseThatResolvesWhen,
-  recordToMap,
   round,
 } from "@/sing/utility";
 import { getWorkaroundKeyRangeAdjustment } from "@/sing/workaroundKeyRangeAdjustment";
@@ -130,6 +129,7 @@ import type {
   Track,
 } from "@/domain/project/type";
 import { noteSchema } from "@/domain/project/schema";
+import { toTrack } from "@/infrastructures/projectFile/conversion";
 
 const logger = createLogger("store/singing");
 
@@ -3516,33 +3516,23 @@ export const singingCommandStore = transformCommandStore(
             throw new Error("TPQN does not match. Must be converted.");
           }
 
-          const filteredTracks = trackIndexes.map((trackIndex): Track => {
+          const filteredTracks = trackIndexes.map((trackIndex) => {
             const importedTrack = cloneWithUnwrapProxy(
               tracks[trackOrder[trackIndex]],
             );
             if (!importedTrack) {
               throw new Error("Track not found.");
             }
-            // TODO: トラックの変換処理を関数化する
-            return {
-              name: importedTrack.name,
-              singer: importedTrack.singer,
-              keyRangeAdjustment: importedTrack.keyRangeAdjustment,
-              volumeRangeAdjustment: importedTrack.volumeRangeAdjustment,
-              notes: importedTrack.notes.map((note) => ({
-                ...note,
-                id: NoteId(uuid4()),
-              })),
-              pitchEditData: importedTrack.pitchEditData,
-              phonemeTimingEditData: recordToMap(
-                importedTrack.phonemeTimingEditData,
-              ),
-              solo: importedTrack.solo,
-              mute: importedTrack.mute,
-              gain: importedTrack.gain,
-              pan: importedTrack.pan,
-            };
+            return toTrack(importedTrack);
           });
+
+          // インポートなので、ノートIDは新しく振り直す
+          for (const track of filteredTracks) {
+            track.notes = track.notes.map((note) => ({
+              ...note,
+              id: NoteId(uuid4()),
+            }));
+          }
 
           await actions.COMMAND_IMPORT_TRACKS({
             tpqn,
