@@ -129,7 +129,7 @@ import type {
   Track,
 } from "@/domain/project/type";
 import { noteSchema } from "@/domain/project/schema";
-import { toTrack } from "@/infrastructures/projectFile/conversion";
+import { toEditorTrack } from "@/infrastructures/projectFile/conversion";
 
 const logger = createLogger("store/singing");
 
@@ -3523,7 +3523,7 @@ export const singingCommandStore = transformCommandStore(
             if (!importedTrack) {
               throw new Error("Track not found.");
             }
-            return toTrack(importedTrack);
+            return toEditorTrack(importedTrack);
           });
 
           // インポートなので、ノートIDは新しく振り直す

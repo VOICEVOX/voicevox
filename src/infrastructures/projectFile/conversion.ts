@@ -18,7 +18,7 @@ export function toProjectFileTrack(track: Track): ProjectFileTrack {
   };
 }
 
-export function toTrack(projectFileTrack: ProjectFileTrack): Track {
+export function toEditorTrack(projectFileTrack: ProjectFileTrack): Track {
   return {
     name: projectFileTrack.name,
     singer: projectFileTrack.singer,

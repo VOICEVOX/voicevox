@@ -33,7 +33,7 @@ import {
 import { uuid4 } from "@/helpers/random";
 import type { Track } from "@/domain/project/type";
 import { migrateProjectFileObject } from "@/infrastructures/projectFile/migration";
-import { toTrack } from "@/infrastructures/projectFile/conversion";
+import { toEditorTrack } from "@/infrastructures/projectFile/conversion";
 
 export const projectStoreState: ProjectStoreState = {
   savedLastCommandIds: { talk: null, song: null },
@@ -77,7 +77,7 @@ const applySongProjectToStore = async (
         if (projectFileTrack == undefined) {
           throw new Error("projectFileTrack == undefined");
         }
-        const track = toTrack(projectFileTrack);
+        const track = toEditorTrack(projectFileTrack);
         return [trackId, track];
       }),
     ),
