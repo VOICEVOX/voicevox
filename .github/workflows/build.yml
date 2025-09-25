@@ -304,9 +304,10 @@ jobs:
           npx asar pack "${{ matrix.app_asar_dir }}/app" "${{ matrix.app_asar_dir }}/app.asar"
           rm -rf "${{ matrix.app_asar_dir }}/app"
 
-      - name: Merge VOICEVOX ENGINE into prepackage/
+      - name: Merge VOICEVOX ENGINE into prepackage/ and purge locales
         if: startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'linux-')
         run: |
+          cd prepackage/locales && rm -v $(ls |grep -v -E '^(ja.pak|en-US.pak)') && cd ../..
           mv voicevox_engine/ prepackage/vv-engine/
 
       - name: Merge VOICEVOX ENGINE into prepackage/VOICEVOX.app/Contents/Resources/
