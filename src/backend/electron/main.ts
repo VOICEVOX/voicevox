@@ -166,14 +166,18 @@ void app.whenReady().then(() => {
 // リモートコンテンツからのセッション権限リクエストを全て拒否
 void app.whenReady().then(() => {
   session.defaultSession.setPermissionRequestHandler(
-    (webContents, permission, callback) => {
+    (webContents, permission, callback, { requestingUrl }) => {
       const parsedUrl = new URL(webContents.getURL());
+      const parsedRequestingUrl = new URL(requestingUrl);
       let isAppUrl: boolean;
       if (import.meta.env.VITE_DEV_SERVER_URL != undefined) {
         const { origin } = new URL(import.meta.env.VITE_DEV_SERVER_URL);
-        isAppUrl = parsedUrl.origin === origin;
+        isAppUrl =
+          parsedUrl.origin === origin && parsedRequestingUrl.origin === origin;
       } else {
-        isAppUrl = parsedUrl.protocol === "app:";
+        isAppUrl =
+          parsedUrl.protocol === "app:" &&
+          parsedRequestingUrl.protocol === "app:";
       }
       return callback(isAppUrl);
     },
