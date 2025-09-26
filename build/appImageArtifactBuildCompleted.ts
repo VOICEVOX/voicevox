@@ -48,6 +48,7 @@ async function fixDesktopfile(desktopfilePath: string) {
 /*
  * electron-builderが作成したAppImageを修正する
  * appimagetoolで再パッケージすることでlibfuse2をインストール不要にする
+ * 旧バージョンの為に--comp zstdを明示
  */
 export async function appImageArtifactBuildCompleted(
   artifactCreated: ArtifactCreated,
@@ -61,7 +62,7 @@ export async function appImageArtifactBuildCompleted(
     const productFilename = artifactCreated.packager.appInfo.productFilename;
     const desktopfilePath = path.join(appDir, `${productFilename}.desktop`);
     await fixDesktopfile(desktopfilePath);
-    execFileSync(appimagetoolPath, ["--no-appstream", appDir, artifactPath], {
+    execFileSync(appimagetoolPath, ["--no-appstream", "--comp", "zstd", appDir, artifactPath], {
       stdio: "inherit",
     });
     // NOTE: AutoUpdaterを使う場合'app-builder-bin blockmap ...'を使用してblockmapを生成する
