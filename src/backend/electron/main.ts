@@ -4,7 +4,7 @@ import path from "node:path";
 
 import fs from "node:fs";
 import { pathToFileURL } from "node:url";
-import { app, dialog, Menu, net, protocol, shell } from "electron";
+import { app, dialog, Menu, net, protocol, session, shell } from "electron";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 
 import electronLog from "electron-log/main";
@@ -161,6 +161,27 @@ void app.whenReady().then(() => {
     }
     return net.fetch(pathToFileURL(pathToServe).toString());
   });
+});
+
+// リモートコンテンツからのセッション権限リクエストを全て拒否
+void app.whenReady().then(() => {
+  session.defaultSession.setPermissionRequestHandler(
+    (webContents, permission, callback, { requestingUrl }) => {
+      const parsedUrl = new URL(webContents.getURL());
+      const parsedRequestingUrl = new URL(requestingUrl);
+      let isAllowedResource: boolean;
+      if (import.meta.env.VITE_DEV_SERVER_URL != undefined) {
+        const { origin } = new URL(import.meta.env.VITE_DEV_SERVER_URL);
+        isAllowedResource =
+          parsedUrl.origin === origin && parsedRequestingUrl.origin === origin;
+      } else {
+        isAllowedResource =
+          parsedUrl.protocol === "app:" &&
+          parsedRequestingUrl.protocol === "app:";
+      }
+      return callback(isAllowedResource);
+    },
+  );
 });
 
 // engine
