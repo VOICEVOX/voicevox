@@ -111,6 +111,7 @@ const builderOptions: ElectronBuilderConfiguration = {
   copyright: "Hiroshiba Kazuyuki",
   afterAllArtifactBuild,
   artifactBuildCompleted,
+  electronLanguages: ["en-US", "ja"],
   win: {
     icon: "public/icon.png",
     target: [
