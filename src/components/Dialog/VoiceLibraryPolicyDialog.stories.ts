@@ -5,17 +5,21 @@ import VoiceLibraryPolicyDialog from "./VoiceLibraryPolicyDialog.vue";
 import type { SpeakerId as SpeakerIdType } from "@/type/preload";
 import { SpeakerId as toSpeakerId } from "@/type/preload";
 import { getPortraitUrl } from "@/mock/engineMock/characterResourceMock";
+import { uuid4 } from "@/helpers/random";
+
+const testCharacterAId = toSpeakerId(uuid4());
+const testCharacterBId = toSpeakerId(uuid4());
 
 const samplePolicies = [
   {
-    id: toSpeakerId("00000000-0000-0000-0000-000000000001"),
+    id: testCharacterAId,
     name: "テストキャラクターA",
     policy:
       "markdownテスト。**太字**。\\\n改行。\\\n[リンク](https://example.com)",
     portraitPath: getPortraitUrl(0),
   },
   {
-    id: toSpeakerId("00000000-0000-0000-0000-000000000002"),
+    id: testCharacterBId,
     name: "テストキャラクターB",
     policy: Array(50).fill("長いテキスト").join(""),
     portraitPath: getPortraitUrl(1),
@@ -59,8 +63,8 @@ export const Ok: Story = {
     await userEvent.click(button);
 
     await expect(args["onOk"]).toBeCalledWith([
-      toSpeakerId("7ffcb7ce-00ec-4bdc-82cd-45a8889e43ff"),
-      toSpeakerId("388f246b-8c41-4ac1-8e2d-5d79f3ff56d9"),
+      testCharacterAId,
+      testCharacterBId,
     ]);
   },
 };
