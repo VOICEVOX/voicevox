@@ -169,17 +169,17 @@ void app.whenReady().then(() => {
     (webContents, permission, callback, { requestingUrl }) => {
       const parsedUrl = new URL(webContents.getURL());
       const parsedRequestingUrl = new URL(requestingUrl);
-      let isAppUrl: boolean;
+      let isAllowedResource: boolean;
       if (import.meta.env.VITE_DEV_SERVER_URL != undefined) {
         const { origin } = new URL(import.meta.env.VITE_DEV_SERVER_URL);
-        isAppUrl =
+        isAllowedResource =
           parsedUrl.origin === origin && parsedRequestingUrl.origin === origin;
       } else {
-        isAppUrl =
+        isAllowedResource =
           parsedUrl.protocol === "app:" &&
           parsedRequestingUrl.protocol === "app:";
       }
-      return callback(isAppUrl);
+      return callback(isAllowedResource);
     },
   );
 });
