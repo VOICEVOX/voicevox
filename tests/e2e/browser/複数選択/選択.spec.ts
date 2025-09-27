@@ -1,6 +1,6 @@
 import { test, expect, Page } from "@playwright/test";
 import { navigateToMain, gotoHome } from "../../navigators";
-import { ctrlLike, addAudioCells } from "./utils";
+import { ctrlLike, addAudioCells } from "../utils";
 
 test.beforeEach(async ({ page }) => {
   await gotoHome({ page });
