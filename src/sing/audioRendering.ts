@@ -61,6 +61,10 @@ interface EventScheduler {
  * 再生、停止、再生位置の変更などの機能を提供します。
  */
 export class Transport {
+  loop = false;
+  loopStartTime = 0;
+  loopEndTime = 0;
+
   private readonly audioContext: AudioContext;
   private readonly timer: Timer;
   private readonly scheduleAheadTime: number;
@@ -72,6 +76,12 @@ export class Transport {
   private startContextTime = 0;
   private startTime = 0;
   private schedulers = new Map<Sequence, EventScheduler>();
+  private scheduledContextTime = 0;
+  private scheduledJumpEventInfos: {
+    readonly contextTime: number;
+    readonly timeBeforeJump: number;
+    readonly timeAfterJump: number;
+  }[] = [];
 
   get state() {
     return this._state;
@@ -82,10 +92,8 @@ export class Transport {
    */
   get time() {
     if (this._state === "started") {
-      // 再生中の場合は、現在時刻から再生位置を計算する
-      const contextTime = this.audioContext.currentTime;
-      const elapsedTime = contextTime - this.startContextTime;
-      this._time = this.startTime + elapsedTime;
+      const currentContextTime = this.audioContext.currentTime;
+      this._time = this.calcCurrentTime(currentContextTime);
     }
     return this._time;
   }
@@ -118,11 +126,48 @@ export class Transport {
     this.audioContext = audioContext;
     this.scheduleAheadTime = scheduleAheadTime;
     this.timer = new Timer(lookahead * 1000);
+
     this.timer.start(() => {
       if (this._state === "started") {
-        this.schedule(this.audioContext.currentTime);
+        this.scheduleEvents(this.audioContext.currentTime);
       }
     });
+  }
+
+  /**
+   * 現在時刻から現在の再生位置を算出します。再生中にのみ使用可能です。
+   * @param currentContextTime 現在時刻（コンテキスト時刻）
+   * @returns 計算された再生位置（秒）
+   */
+  private calcCurrentTime(currentContextTime: number) {
+    if (this._state !== "started") {
+      throw new Error("This method can only be used during playback.");
+    }
+
+    if (currentContextTime >= this.startContextTime) {
+      // 現在時刻が、開始時刻よりも後の場合は、経過時間から再生位置を算出して返す
+      const elapsedTime = currentContextTime - this.startContextTime;
+      return this.startTime + elapsedTime;
+    } else {
+      // 現在時刻が、開始時刻よりも前の場合は、未完了のジャンプイベントが存在する
+      // 未完了のジャンプイベントを見つけて、そのジャンプイベントの情報から再生位置を算出する
+      while (this.scheduledJumpEventInfos.length !== 0) {
+        const jumpEventInfo = this.scheduledJumpEventInfos[0];
+
+        if (currentContextTime < jumpEventInfo.contextTime) {
+          // 未完了のジャンプイベントが見つかったので、再生位置を計算して返す
+          const timeUntilJump = jumpEventInfo.contextTime - currentContextTime;
+          return jumpEventInfo.timeBeforeJump - timeUntilJump;
+        } else {
+          // すでに完了しているジャンプイベントの情報はリストから削除する
+          this.scheduledJumpEventInfos.shift();
+        }
+      }
+
+      // 未完了のジャンプイベントが存在しなかった場合、ジャンプイベントのスケジュールが正しく行われていない
+      // （ジャンプイベントのスケジュール処理にバグが存在する）
+      throw new Error("Jump events are not scheduled correctly.");
+    }
   }
 
   /**
@@ -143,19 +188,27 @@ export class Transport {
   }
 
   /**
-   * スケジューリングを行います。
-   * @param contextTime スケジューリングを行う時刻（コンテキスト時刻）
+   * シーケンスのイベントのスケジューリングを行います。
+   * @param currentContextTime スケジューリングを行う時刻（現在のコンテキスト時刻）
    */
-  private schedule(contextTime: number) {
-    // 再生位置を計算
-    const elapsedTime = contextTime - this.startContextTime;
-    const time = this.startTime + elapsedTime;
+  private scheduleSequenceEvents(currentContextTime: number) {
+    if (currentContextTime < this.startContextTime) {
+      // ジャンプイベントがスケジュールされると、開始時刻がジャンプ時刻（未来の時刻）に設定されるので、
+      // ジャンプ未完了の場合にここに来る
+
+      // ジャンプ未完了の場合、ジャンプ完了までの間のイベントは既にスケジュールされているので、
+      // ジャンプが完了するまではイベントのスケジューリングは行わない
+      return;
+    }
+
+    // 現在の再生位置を計算
+    const currentTime = this.calcCurrentTime(currentContextTime);
 
     // シーケンスの削除を反映
     const removedSequences: Sequence[] = [];
     this.schedulers.forEach((scheduler, sequence) => {
       if (!this.sequences.has(sequence)) {
-        scheduler.stop(contextTime);
+        scheduler.stop(currentContextTime);
         removedSequences.push(sequence);
       }
     });
@@ -167,14 +220,91 @@ export class Transport {
     this.sequences.forEach((sequence) => {
       if (!this.schedulers.has(sequence)) {
         const scheduler = this.createScheduler(sequence);
-        scheduler.start(contextTime, time);
+        scheduler.start(currentContextTime, currentTime);
         this.schedulers.set(sequence, scheduler);
       }
     });
 
+    // スケジューリングを行う
     this.schedulers.forEach((scheduler) => {
-      scheduler.schedule(time + this.scheduleAheadTime);
+      scheduler.schedule(currentTime + this.scheduleAheadTime);
     });
+  }
+
+  /**
+   * ジャンプイベントのスケジューリング（ループ処理）を行います。
+   * @param currentContextTime スケジューリングを行う時刻（現在のコンテキスト時刻）
+   */
+  private scheduleJumpEvents(currentContextTime: number) {
+    // ループが無効、またはループ区間が無効の場合は、ループ処理は行わない
+    if (!this.loop || this.loopEndTime <= this.loopStartTime) {
+      return;
+    }
+
+    // ループ終了位置の後から再生を開始している場合も、ループ処理は行わない
+    if (this.startTime >= this.loopEndTime) {
+      return;
+    }
+
+    // ジャンプを行う時刻を計算する
+    const timeUntilJump = this.loopEndTime - this.startTime;
+    let contextTimeToJump = this.startContextTime + timeUntilJump;
+
+    // ジャンプを行う時刻が、スケジューリングが完了している時刻より前の場合、
+    // スケジュール可能な時刻を過ぎているので、ジャンプは行わない（スルーする）
+    // （ループ終了位置を大きく過ぎてからループを有効にした場合を考慮）
+    if (contextTimeToJump < this.scheduledContextTime) {
+      return;
+    }
+
+    // ジャンプを行う時刻が、現在時刻より前の場合、現在時刻でジャンプを行うことにする（処理落ちを考慮）
+    if (contextTimeToJump < currentContextTime) {
+      contextTimeToJump = currentContextTime;
+    }
+
+    const loopDuration = this.loopEndTime - this.loopStartTime;
+
+    while (contextTimeToJump < currentContextTime + this.scheduleAheadTime) {
+      // ジャンプイベントをスケジュールする（ループを行う）
+      // ループ終了位置で再生を停止し、ループ開始位置で再生を開始する形でループを実現する
+
+      // ループ終了位置（ジャンプ時刻）で再生を停止する
+      this.schedulers.forEach((value) => {
+        value.stop(contextTimeToJump);
+      });
+      this.schedulers.clear();
+
+      // ループ開始位置（ジャンプ時刻）で再生を開始する
+      this.startContextTime = contextTimeToJump;
+      this.startTime = this.loopStartTime;
+      this.sequences.forEach((sequence) => {
+        const scheduler = this.createScheduler(sequence);
+        scheduler.start(contextTimeToJump, this.loopStartTime);
+        scheduler.schedule(this.loopStartTime + this.scheduleAheadTime);
+        this.schedulers.set(sequence, scheduler);
+      });
+
+      // ジャンプイベントの情報を記録
+      this.scheduledJumpEventInfos.push({
+        contextTime: contextTimeToJump,
+        timeBeforeJump: this.loopEndTime,
+        timeAfterJump: this.loopStartTime,
+      });
+
+      // 次のジャンプ時刻を設定
+      contextTimeToJump += loopDuration;
+    }
+  }
+
+  /**
+   * イベントのスケジューリングを行います。
+   * @param currentContextTime スケジューリングを行う時刻（現在のコンテキスト時刻）
+   */
+  private scheduleEvents(currentContextTime: number) {
+    this.scheduleSequenceEvents(currentContextTime);
+    this.scheduleJumpEvents(currentContextTime);
+
+    this.scheduledContextTime = currentContextTime + this.scheduleAheadTime;
   }
 
   /**
@@ -210,8 +340,10 @@ export class Transport {
 
     this.startContextTime = contextTime;
     this.startTime = this._time;
+    this.scheduledContextTime = contextTime;
+    this.scheduledJumpEventInfos = [];
 
-    this.schedule(contextTime);
+    this.scheduleEvents(contextTime);
   }
 
   /**
@@ -222,8 +354,7 @@ export class Transport {
     const contextTime = this.audioContext.currentTime;
 
     // 停止する前に再生位置を更新する
-    const elapsedTime = contextTime - this.startContextTime;
-    this._time = this.startTime + elapsedTime;
+    this._time = this.calcCurrentTime(contextTime);
 
     this._state = "stopped";
 

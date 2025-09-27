@@ -343,10 +343,10 @@ jobs:
         if: startsWith(matrix.artifact_name, 'linux-') && !contains(matrix.artifact_name, 'nvidia')
         run: |
           name="${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}"
-          7z a -ttar $name.tar prepackage/
-          7z rn $name.tar prepackage/ VOICEVOX/
-          7z a -tgzip $name.tar.gz $name.tar
-          rm $name.tar
+          # Use archiver keeps file permissions
+          mv prepackage VOICEVOX
+          tar czf ${name}.tar.gz VOICEVOX
+          mv VOICEVOX prepackage
 
       - name: Upload Linux tar.gz (without nvidia) to Artifacts
         if: startsWith(matrix.artifact_name, 'linux-') && !contains(matrix.artifact_name, 'nvidia') && github.event.inputs.upload_artifact == 'true'

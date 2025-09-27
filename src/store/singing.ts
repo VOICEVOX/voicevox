@@ -82,13 +82,13 @@ import {
   toEntirePhonemeTimings,
   adjustPhonemeTimingsAndPhraseEndFrames,
   phonemeTimingsToPhonemes,
+  isValidLoopRange,
 } from "@/sing/domain";
 import { getOverlappingNoteIds } from "@/sing/storeHelper";
 import {
   AnimationTimer,
   createArray,
   createPromiseThatResolvesWhen,
-  recordToMap,
   round,
 } from "@/sing/utility";
 import { getWorkaroundKeyRangeAdjustment } from "@/sing/workaroundKeyRangeAdjustment";
@@ -130,6 +130,7 @@ import type {
   Track,
 } from "@/domain/project/type";
 import { noteSchema } from "@/domain/project/schema";
+import { toEditorTrack } from "@/infrastructures/projectFile/conversion";
 
 const logger = createLogger("store/singing");
 
@@ -702,6 +703,9 @@ export const singingStoreState: SingingStoreState = {
   exportState: "NOT_EXPORTING",
   cancellationOfExportRequested: false,
   isSongSidebarOpen: false,
+  isLoopEnabled: false,
+  loopStartTick: 0,
+  loopEndTick: 0,
 };
 
 export const singingStore = createPartialStore<SingingStoreTypes>({
@@ -1754,6 +1758,21 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         throw new Error("transport is undefined.");
       }
       mutations.SET_PLAYBACK_STATE({ nowPlaying: true });
+
+      // TODO: 以下の処理（ループの設定）は再生開始時に毎回行う必要はないので、
+      //       ソングエディタ初期化時に1回だけ行うようにする
+      // NOTE: 初期化のactionを作った方が良いかも
+      transport.loop = state.isLoopEnabled;
+      transport.loopStartTime = tickToSecond(
+        state.loopStartTick,
+        state.tempos,
+        state.tpqn,
+      );
+      transport.loopEndTime = tickToSecond(
+        state.loopEndTick,
+        state.tempos,
+        state.tpqn,
+      );
 
       transport.start();
       animationTimer.start(() => {
@@ -2942,6 +2961,63 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  SET_LOOP_ENABLED: {
+    mutation(state, { isLoopEnabled }) {
+      state.isLoopEnabled = isLoopEnabled;
+    },
+    async action({ mutations }, { isLoopEnabled }) {
+      if (!transport) {
+        throw new Error("transport is undefined");
+      }
+      mutations.SET_LOOP_ENABLED({ isLoopEnabled });
+      transport.loop = isLoopEnabled;
+    },
+  },
+
+  SET_LOOP_RANGE: {
+    mutation(state, { loopStartTick, loopEndTick }) {
+      state.loopStartTick = loopStartTick;
+      state.loopEndTick = loopEndTick;
+    },
+    async action({ state, mutations }, { loopStartTick, loopEndTick }) {
+      if (!transport) {
+        throw new Error("transport is undefined");
+      }
+
+      if (!isValidLoopRange(loopStartTick, loopEndTick)) {
+        throw new Error("The loop range is invalid.");
+      }
+
+      mutations.SET_LOOP_RANGE({ loopStartTick, loopEndTick });
+
+      transport.loopStartTime = tickToSecond(
+        loopStartTick,
+        state.tempos,
+        state.tpqn,
+      );
+      transport.loopEndTime = tickToSecond(
+        loopEndTick,
+        state.tempos,
+        state.tpqn,
+      );
+    },
+  },
+
+  CLEAR_LOOP_RANGE: {
+    async action({ actions }) {
+      // ループ範囲をSET_LOOP_RANGEで0指定
+      // transportも
+      void actions.SET_LOOP_RANGE({
+        loopStartTick: 0,
+        loopEndTick: 0,
+      });
+      // ループ範囲をクリアする際はループも無効にする
+      return actions.SET_LOOP_ENABLED({
+        isLoopEnabled: false,
+      });
+    },
+  },
+
   EXPORT_SONG_PROJECT: {
     action: createUILockAction(
       async (
@@ -3516,33 +3592,23 @@ export const singingCommandStore = transformCommandStore(
             throw new Error("TPQN does not match. Must be converted.");
           }
 
-          const filteredTracks = trackIndexes.map((trackIndex): Track => {
+          const filteredTracks = trackIndexes.map((trackIndex) => {
             const importedTrack = cloneWithUnwrapProxy(
               tracks[trackOrder[trackIndex]],
             );
             if (!importedTrack) {
               throw new Error("Track not found.");
             }
-            // TODO: トラックの変換処理を関数化する
-            return {
-              name: importedTrack.name,
-              singer: importedTrack.singer,
-              keyRangeAdjustment: importedTrack.keyRangeAdjustment,
-              volumeRangeAdjustment: importedTrack.volumeRangeAdjustment,
-              notes: importedTrack.notes.map((note) => ({
-                ...note,
-                id: NoteId(uuid4()),
-              })),
-              pitchEditData: importedTrack.pitchEditData,
-              phonemeTimingEditData: recordToMap(
-                importedTrack.phonemeTimingEditData,
-              ),
-              solo: importedTrack.solo,
-              mute: importedTrack.mute,
-              gain: importedTrack.gain,
-              pan: importedTrack.pan,
-            };
+            return toEditorTrack(importedTrack);
           });
+
+          // インポートなので、ノートIDは新しく振り直す
+          for (const track of filteredTracks) {
+            track.notes = track.notes.map((note) => ({
+              ...note,
+              id: NoteId(uuid4()),
+            }));
+          }
 
           await actions.COMMAND_IMPORT_TRACKS({
             tpqn,

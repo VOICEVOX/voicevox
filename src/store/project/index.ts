@@ -31,9 +31,9 @@ import {
   showQuestionDialog,
 } from "@/components/Dialog/Dialog";
 import { uuid4 } from "@/helpers/random";
-import { recordToMap } from "@/sing/utility";
 import type { Track } from "@/domain/project/type";
 import { migrateProjectFileObject } from "@/infrastructures/projectFile/migration";
+import { toEditorTrack } from "@/infrastructures/projectFile/conversion";
 
 export const projectStoreState: ProjectStoreState = {
   savedLastCommandIds: { talk: null, song: null },
@@ -73,25 +73,12 @@ const applySongProjectToStore = async (
   await actions.SET_TRACKS({
     tracks: new Map(
       trackOrder.map((trackId): [TrackId, Track] => {
-        const track = tracks[trackId];
-        if (!track) throw new Error("track == undefined");
-        // TODO: トラックの変換処理を関数化する
-        return [
-          trackId,
-          {
-            name: track.name,
-            singer: track.singer,
-            keyRangeAdjustment: track.keyRangeAdjustment,
-            volumeRangeAdjustment: track.volumeRangeAdjustment,
-            notes: track.notes,
-            pitchEditData: track.pitchEditData,
-            phonemeTimingEditData: recordToMap(track.phonemeTimingEditData),
-            solo: track.solo,
-            mute: track.mute,
-            gain: track.gain,
-            pan: track.pan,
-          },
-        ];
+        const projectFileTrack = tracks[trackId];
+        if (projectFileTrack == undefined) {
+          throw new Error("projectFileTrack == undefined");
+        }
+        const track = toEditorTrack(projectFileTrack);
+        return [trackId, track];
       }),
     ),
   });

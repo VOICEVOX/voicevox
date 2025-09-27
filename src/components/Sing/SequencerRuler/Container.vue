@@ -1,81 +1,98 @@
 <template>
   <Presentation
-    :offset
-    :numMeasures
-    :tpqn
-    :tempos
-    :timeSignatures
-    :sequencerZoomX
-    :uiLocked
-    :playheadTicks
-    :sequencerSnapType
-    @update:playheadTicks="updatePlayheadTicks"
-    @removeTempo="removeTempo"
-    @removeTimeSignature="removeTimeSignature"
-    @setTempo="setTempo"
-    @setTimeSignature="setTimeSignature"
-    @deselectAllNotes="deselectAllNotes"
-  />
+    :width="rulerWidth"
+    :playheadX
+    :offset="currentOffset"
+    @click="handleClick"
+  >
+    <template #grid>
+      <GridLaneContainer />
+    </template>
+    <template #changes>
+      <ValueChangesLaneContainer />
+    </template>
+    <template #loop>
+      <LoopLaneContainer />
+    </template>
+  </Presentation>
 </template>
 
+<script lang="ts">
+import { Ref, InjectionKey } from "vue";
+
+// Provide/Injectで使用するキー
+export const offsetInjectionKey: InjectionKey<Ref<number>> =
+  Symbol("rulerOffset");
+</script>
+
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, provide, readonly, toRef } from "vue";
 import Presentation from "./Presentation.vue";
+import GridLaneContainer from "./GridLane/Container.vue";
+import ValueChangesLaneContainer from "./ValueChangesLane/Container.vue";
+import LoopLaneContainer from "./LoopLane/Container.vue";
 import { useStore } from "@/store";
-import type { Tempo, TimeSignature } from "@/domain/project/type";
+import { useSequencerLayout } from "@/composables/useSequencerLayout";
+import { SEQUENCER_MIN_NUM_MEASURES, baseXToTick } from "@/sing/viewHelper";
+import { snapTickToBeat } from "@/sing/rulerHelper";
 
 defineOptions({
   name: "SequencerRuler",
 });
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     offset?: number;
     numMeasures?: number;
   }>(),
   {
     offset: 0,
-    numMeasures: 32,
+    numMeasures: SEQUENCER_MIN_NUM_MEASURES,
   },
 );
 
 const store = useStore();
 
+// provideするoffsetとnumMeasures
+// toRefでリアクティブ性を維持する
+const currentOffset = toRef(props, "offset");
+const currentNumMeasures = toRef(props, "numMeasures");
+
+// provideする値はreadonlyにして子コンポーネントでの変更を防ぐ
+provide(offsetInjectionKey, readonly(currentOffset));
+
 const tpqn = computed(() => store.state.tpqn);
-const tempos = computed(() => store.state.tempos);
 const timeSignatures = computed(() => store.state.timeSignatures);
 const sequencerZoomX = computed(() => store.state.sequencerZoomX);
-const uiLocked = computed(() => store.getters.UI_LOCKED);
-const sequencerSnapType = computed(() => store.state.sequencerSnapType);
+const playheadPosition = computed(() => store.getters.PLAYHEAD_POSITION);
 
-const playheadTicks = computed(() => store.getters.PLAYHEAD_POSITION);
+const { rulerWidth, playheadX } = useSequencerLayout({
+  timeSignatures,
+  tpqn,
+  playheadPosition,
+  sequencerZoomX,
+  offset: currentOffset,
+  numMeasures: currentNumMeasures,
+});
 
-const updatePlayheadTicks = (ticks: number) => {
+// 再生ヘッド位置の設定
+const setPlayheadPosition = (ticks: number) => {
   void store.actions.SET_PLAYHEAD_POSITION({ position: ticks });
 };
 
+// ノートの選択解除
 const deselectAllNotes = () => {
   void store.actions.DESELECT_ALL_NOTES();
 };
 
-const setTempo = (tempo: Tempo) => {
-  void store.actions.COMMAND_SET_TEMPO({
-    tempo,
-  });
-};
-const setTimeSignature = (timeSignature: TimeSignature) => {
-  void store.actions.COMMAND_SET_TIME_SIGNATURE({
-    timeSignature,
-  });
-};
-const removeTempo = (position: number) => {
-  void store.actions.COMMAND_REMOVE_TEMPO({
-    position,
-  });
-};
-const removeTimeSignature = (measureNumber: number) => {
-  void store.actions.COMMAND_REMOVE_TIME_SIGNATURE({
-    measureNumber,
-  });
+// クリックでスナップした位置に移動
+// 再生ヘッドも移動
+const handleClick = (event: MouseEvent) => {
+  deselectAllNotes();
+  const targetOffsetX = event.offsetX;
+  const baseX = (currentOffset.value + targetOffsetX) / sequencerZoomX.value;
+  const baseXTick = baseXToTick(baseX, tpqn.value);
+  const nextTicks = snapTickToBeat(baseXTick, timeSignatures.value, tpqn.value);
+  setPlayheadPosition(nextTicks);
 };
 </script>
