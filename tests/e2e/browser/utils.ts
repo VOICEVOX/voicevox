@@ -86,3 +86,14 @@ export async function fillAudioCell(page: Page, index: number, text: string) {
 export async function validateInput(locator: Locator, expectedText: string) {
   expect(await locator.inputValue()).toBe(expectedText);
 }
+
+/** 指定した数のAudioCellを追加する */
+export async function addAudioCells(page: Page, count: number) {
+  for (let i = 0; i < count; i++) {
+    await page.getByRole("button", { name: "テキストを追加" }).click();
+    await page.waitForTimeout(100);
+  }
+}
+
+/** プラットフォームに応じたCtrlキー（MacではMeta、それ以外ではControl） */
+export const ctrlLike = process.platform === "darwin" ? "Meta" : "Control";

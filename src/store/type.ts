@@ -76,6 +76,12 @@ import type {
   Track,
 } from "@/domain/project/type";
 import { LatestProjectType } from "@/infrastructures/projectFile/type";
+import { Brand } from "@/type/utility";
+
+/** 利用規約確認済みのAudioKey */
+export type TermConfirmedAudioKey = Brand<AudioKey, "TermConfirmedAudioKey">;
+export const TermConfirmedAudioKey = (id: AudioKey): TermConfirmedAudioKey =>
+  id as TermConfirmedAudioKey;
 
 /**
  * エディタ用のAudioQuery
@@ -174,6 +180,10 @@ export type AudioStoreTypes = {
 
   SELECTED_AUDIO_KEYS: {
     getter: AudioKey[];
+  };
+
+  GET_UNCONFIRMED_CHARACTER_IDS: {
+    getter(audioKeys: AudioKey[]): SpeakerId[];
   };
 
   AUDIO_PLAY_START_POINT: {
@@ -435,24 +445,25 @@ export type AudioStoreTypes = {
 
   GENERATE_AND_SAVE_AUDIO: {
     action(payload: {
-      audioKey: AudioKey;
+      termConfirmedAudioKey: TermConfirmedAudioKey;
       filePath?: string;
     }): SaveResultObject;
   };
 
   MULTI_GENERATE_AND_SAVE_AUDIO: {
     action(payload: {
-      audioKeys: AudioKey[];
+      termConfirmedAudioKeys: TermConfirmedAudioKey[];
       dirPath?: string;
       callback?: (finishedCount: number) => void;
-    }): SaveResultObject[] | undefined;
+    }): SaveResultObject[] | "canceled";
   };
 
   GENERATE_AND_CONNECT_AND_SAVE_AUDIO: {
     action(payload: {
+      termConfirmedAudioKeys: TermConfirmedAudioKey[];
       filePath?: string;
       callback?: (finishedCount: number, totalCount: number) => void;
-    }): SaveResultObject | undefined;
+    }): SaveResultObject;
   };
 
   CONNECT_AND_EXPORT_TEXT: {
@@ -1950,6 +1961,7 @@ export type SettingStoreState = {
   availableThemes: ThemeConf[];
   acceptTerms: AcceptTermsStatus;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
+  termConfirmedCharacterIds: SpeakerId[]; // 利用規約を確認済みのキャラクターID
   experimentalSetting: ExperimentalSettingType;
   confirmedTips: ConfirmedTips;
   engineSettings: EngineSettings;
@@ -2023,6 +2035,11 @@ export type SettingStoreTypes = {
 
   RESET_CONFIRMED_TIPS: {
     action(): void;
+  };
+
+  SET_VOICE_LIBRARY_CONFIRMED_CHARACTER_IDS: {
+    mutation: { termConfirmedCharacterIds: SpeakerId[] };
+    action(payload: { termConfirmedCharacterIds: SpeakerId[] }): void;
   };
 
   SET_ENGINE_SETTING: {
@@ -2251,6 +2268,12 @@ export type UiStoreTypes = {
 
   RESET_PROGRESS: {
     action(): void;
+  };
+
+  SHOW_VOICE_LIBRARY_POLICY_DIALOG: {
+    action(payload: {
+      audioKeys: AudioKey[];
+    }): Promise<"confirmed" | "canceled">;
   };
 
   SHOW_GENERATE_AND_SAVE_ALL_AUDIO_DIALOG: {

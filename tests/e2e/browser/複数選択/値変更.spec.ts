@@ -1,6 +1,6 @@
 import { test, expect, Page } from "@playwright/test";
 import { navigateToMain, gotoHome } from "../../navigators";
-import { addAudioCells } from "./utils";
+import { addAudioCells } from "../utils";
 
 /*
  * 全てのAudioCellのキャラクター+スタイル名を取得する。

@@ -45,6 +45,7 @@ export const settingStoreState: SettingStoreState = {
   showAddAudioItemButton: true,
   acceptTerms: "Unconfirmed",
   acceptRetrieveTelemetry: "Unconfirmed",
+  termConfirmedCharacterIds: [],
   experimentalSetting: {
     enableInterrogativeUpspeak: false,
     enableMorphing: false,
@@ -122,6 +123,12 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
 
       mutations.SET_CONFIRMED_TIPS({
         confirmedTips: await window.backend.getSetting("confirmedTips"),
+      });
+
+      mutations.SET_VOICE_LIBRARY_CONFIRMED_CHARACTER_IDS({
+        termConfirmedCharacterIds: await window.backend.getSetting(
+          "termConfirmedCharacterIds",
+        ),
       });
 
       // FIXME: engineSettingsをMapにする
@@ -341,6 +348,21 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
 
       void actions.SET_CONFIRMED_TIPS({
         confirmedTips: confirmedTips as ConfirmedTips,
+      });
+    },
+  },
+
+  SET_VOICE_LIBRARY_CONFIRMED_CHARACTER_IDS: {
+    mutation(state, { termConfirmedCharacterIds }) {
+      state.termConfirmedCharacterIds = termConfirmedCharacterIds;
+    },
+    action({ mutations }, { termConfirmedCharacterIds }) {
+      void window.backend.setSetting(
+        "termConfirmedCharacterIds",
+        termConfirmedCharacterIds,
+      );
+      mutations.SET_VOICE_LIBRARY_CONFIRMED_CHARACTER_IDS({
+        termConfirmedCharacterIds,
       });
     },
   },
