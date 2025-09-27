@@ -10,13 +10,13 @@ import {
   AllMutations,
   UiStoreState,
   UiStoreTypes,
+  TermConfirmedAudioKey,
 } from "./type";
 import { createPartialStore } from "./vuex";
 import {
   ActivePointScrollMode,
   SpeakerId,
   CharacterInfo,
-  VoiceLibraryConfirmedAudioKey,
 } from "@/type/preload";
 import {
   MessageDialogOptions,
@@ -516,8 +516,8 @@ export const uiStore = createPartialStore<UiStoreTypes>({
       if (result === "canceled") return;
 
       await multiGenerateAndSaveAudioWithDialog({
-        voiceLibraryConfirmedAudioKeys: state.audioKeys.map((k) =>
-          VoiceLibraryConfirmedAudioKey(k),
+        termConfirmedAudioKeys: state.audioKeys.map((k) =>
+          TermConfirmedAudioKey(k),
         ),
         disableNotifyOnGenerate: state.confirmedTips.notifyOnGenerate,
         actions,
@@ -533,8 +533,8 @@ export const uiStore = createPartialStore<UiStoreTypes>({
       if (result === "canceled") return;
 
       await generateAndConnectAndSaveAudioWithDialog({
-        voiceLibraryConfirmedAudioKeys: state.audioKeys.map((k) =>
-          VoiceLibraryConfirmedAudioKey(k),
+        termConfirmedAudioKeys: state.audioKeys.map((k) =>
+          TermConfirmedAudioKey(k),
         ),
         actions,
         disableNotifyOnGenerate: state.confirmedTips.notifyOnGenerate,
@@ -561,8 +561,8 @@ export const uiStore = createPartialStore<UiStoreTypes>({
         if (result === "canceled") return;
 
         await multiGenerateAndSaveAudioWithDialog({
-          voiceLibraryConfirmedAudioKeys: selectedAudioKeys.map((k) =>
-            VoiceLibraryConfirmedAudioKey(k),
+          termConfirmedAudioKeys: selectedAudioKeys.map((k) =>
+            TermConfirmedAudioKey(k),
           ),
           actions: actions,
           disableNotifyOnGenerate: state.confirmedTips.notifyOnGenerate,
@@ -574,8 +574,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
         if (result === "canceled") return;
 
         await generateAndSaveOneAudioWithDialog({
-          voiceLibraryConfirmedAudioKey:
-            VoiceLibraryConfirmedAudioKey(activeAudioKey),
+          termConfirmedAudioKey: TermConfirmedAudioKey(activeAudioKey),
           disableNotifyOnGenerate: state.confirmedTips.notifyOnGenerate,
           actions: actions,
         });

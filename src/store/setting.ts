@@ -45,7 +45,7 @@ export const settingStoreState: SettingStoreState = {
   showAddAudioItemButton: true,
   acceptTerms: "Unconfirmed",
   acceptRetrieveTelemetry: "Unconfirmed",
-  voiceLibraryConfirmedCharacterIds: [],
+  termConfirmedCharacterIds: [],
   experimentalSetting: {
     enableInterrogativeUpspeak: false,
     enableMorphing: false,
@@ -126,8 +126,8 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       });
 
       mutations.SET_VOICE_LIBRARY_CONFIRMED_CHARACTER_IDS({
-        voiceLibraryConfirmedCharacterIds: await window.backend.getSetting(
-          "voiceLibraryConfirmedCharacterIds",
+        termConfirmedCharacterIds: await window.backend.getSetting(
+          "termConfirmedCharacterIds",
         ),
       });
 
@@ -353,17 +353,16 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
   },
 
   SET_VOICE_LIBRARY_CONFIRMED_CHARACTER_IDS: {
-    mutation(state, { voiceLibraryConfirmedCharacterIds }) {
-      state.voiceLibraryConfirmedCharacterIds =
-        voiceLibraryConfirmedCharacterIds;
+    mutation(state, { termConfirmedCharacterIds }) {
+      state.termConfirmedCharacterIds = termConfirmedCharacterIds;
     },
-    action({ mutations }, { voiceLibraryConfirmedCharacterIds }) {
+    action({ mutations }, { termConfirmedCharacterIds }) {
       void window.backend.setSetting(
-        "voiceLibraryConfirmedCharacterIds",
-        voiceLibraryConfirmedCharacterIds,
+        "termConfirmedCharacterIds",
+        termConfirmedCharacterIds,
       );
       mutations.SET_VOICE_LIBRARY_CONFIRMED_CHARACTER_IDS({
-        voiceLibraryConfirmedCharacterIds,
+        termConfirmedCharacterIds,
       });
     },
   },

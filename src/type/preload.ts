@@ -476,7 +476,7 @@ export function getConfigSchema({ isMac }: { isMac: boolean }) {
       acceptTerms: z
         .enum(["Unconfirmed", "Accepted", "Rejected"])
         .default("Unconfirmed"),
-      voiceLibraryConfirmedCharacterIds: speakerIdSchema.array().default([]),
+      termConfirmedCharacterIds: speakerIdSchema.array().default([]),
       confirmedTips: z
         .object({
           tweakableSliderByScroll: z.boolean().default(false),

@@ -78,14 +78,10 @@ import type {
 import { LatestProjectType } from "@/infrastructures/projectFile/type";
 import { Brand } from "@/type/utility";
 
-/** 音声ライブラリ確認済みのAudioKey */
-export type VoiceLibraryConfirmedAudioKey = Brand<
-  AudioKey,
-  "VoiceLibraryConfirmedAudioKey"
->;
-export const VoiceLibraryConfirmedAudioKey = (
-  id: AudioKey,
-): VoiceLibraryConfirmedAudioKey => id as VoiceLibraryConfirmedAudioKey;
+/** 利用規約確認済みのAudioKey */
+export type TermConfirmedAudioKey = Brand<AudioKey, "TermConfirmedAudioKey">;
+export const TermConfirmedAudioKey = (id: AudioKey): TermConfirmedAudioKey =>
+  id as TermConfirmedAudioKey;
 
 /**
  * エディタ用のAudioQuery
@@ -449,14 +445,14 @@ export type AudioStoreTypes = {
 
   GENERATE_AND_SAVE_AUDIO: {
     action(payload: {
-      voiceLibraryConfirmedAudioKey: VoiceLibraryConfirmedAudioKey;
+      termConfirmedAudioKey: TermConfirmedAudioKey;
       filePath?: string;
     }): SaveResultObject;
   };
 
   MULTI_GENERATE_AND_SAVE_AUDIO: {
     action(payload: {
-      voiceLibraryConfirmedAudioKeys: VoiceLibraryConfirmedAudioKey[];
+      termConfirmedAudioKeys: TermConfirmedAudioKey[];
       dirPath?: string;
       callback?: (finishedCount: number) => void;
     }): SaveResultObject[] | "canceled";
@@ -464,7 +460,7 @@ export type AudioStoreTypes = {
 
   GENERATE_AND_CONNECT_AND_SAVE_AUDIO: {
     action(payload: {
-      voiceLibraryConfirmedAudioKeys: VoiceLibraryConfirmedAudioKey[];
+      termConfirmedAudioKeys: TermConfirmedAudioKey[];
       filePath?: string;
       callback?: (finishedCount: number, totalCount: number) => void;
     }): SaveResultObject;
@@ -1948,7 +1944,7 @@ export type SettingStoreState = {
   availableThemes: ThemeConf[];
   acceptTerms: AcceptTermsStatus;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
-  voiceLibraryConfirmedCharacterIds: SpeakerId[]; // 音声ライブラリ利用規約を確認済みのキャラクターID
+  termConfirmedCharacterIds: SpeakerId[]; // 利用規約を確認済みのキャラクターID
   experimentalSetting: ExperimentalSettingType;
   confirmedTips: ConfirmedTips;
   engineSettings: EngineSettings;
@@ -2025,8 +2021,8 @@ export type SettingStoreTypes = {
   };
 
   SET_VOICE_LIBRARY_CONFIRMED_CHARACTER_IDS: {
-    mutation: { voiceLibraryConfirmedCharacterIds: SpeakerId[] };
-    action(payload: { voiceLibraryConfirmedCharacterIds: SpeakerId[] }): void;
+    mutation: { termConfirmedCharacterIds: SpeakerId[] };
+    action(payload: { termConfirmedCharacterIds: SpeakerId[] }): void;
   };
 
   SET_ENGINE_SETTING: {
