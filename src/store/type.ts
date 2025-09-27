@@ -48,7 +48,6 @@ import {
   SpeakerId,
   StyleId,
   AudioKey,
-  VoiceLibraryConfirmedAudioKey,
   PresetKey,
   RootMiscSettingType,
   EditorType,
@@ -77,6 +76,16 @@ import type {
   Track,
 } from "@/domain/project/type";
 import { LatestProjectType } from "@/infrastructures/projectFile/type";
+import { Brand } from "@/type/utility";
+
+/** 音声ライブラリ確認済みのAudioKey */
+export type VoiceLibraryConfirmedAudioKey = Brand<
+  AudioKey,
+  "VoiceLibraryConfirmedAudioKey"
+>;
+export const VoiceLibraryConfirmedAudioKey = (
+  id: AudioKey,
+): VoiceLibraryConfirmedAudioKey => id as VoiceLibraryConfirmedAudioKey;
 
 /**
  * エディタ用のAudioQuery
@@ -1939,7 +1948,7 @@ export type SettingStoreState = {
   availableThemes: ThemeConf[];
   acceptTerms: AcceptTermsStatus;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
-  voiceLibraryConfirmedCharacterIds: SpeakerId[]; // キャラクター利用規約に確認済みのキャラクターID
+  voiceLibraryConfirmedCharacterIds: SpeakerId[]; // 音声ライブラリ利用規約を確認済みのキャラクターID
   experimentalSetting: ExperimentalSettingType;
   confirmedTips: ConfirmedTips;
   engineSettings: EngineSettings;

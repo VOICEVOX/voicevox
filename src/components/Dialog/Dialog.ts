@@ -4,17 +4,13 @@ import QuestionDialog from "./TextDialog/QuestionDialog.vue";
 import MessageDialog from "./TextDialog/MessageDialog.vue";
 import VoiceLibraryPolicyDialog from "./VoiceLibraryPolicyDialog.vue";
 import { DialogType } from "./TextDialog/common";
-import {
-  ConfirmedTips,
-  CharacterInfo,
-  VoiceLibraryConfirmedAudioKey,
-  SpeakerId,
-} from "@/type/preload";
+import { ConfirmedTips, CharacterInfo, SpeakerId } from "@/type/preload";
 import {
   AllActions,
   SaveResultObject,
   SaveResult,
   ErrorTypeForSaveAllResultDialog,
+  VoiceLibraryConfirmedAudioKey,
 } from "@/store/type";
 import { DotNotationDispatch } from "@/store/vuex";
 import { withProgress } from "@/store/ui";
