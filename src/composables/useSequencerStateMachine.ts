@@ -57,6 +57,10 @@ export const useSequencerStateMachine = (store: PartialStore) => {
       } else {
         throw new ExhaustiveError(store.state.sequencerPitchTool);
       }
+    } else if (store.state.sequencerEditTarget === "VOLUME") {
+      // TODO: ボリューム編集用のステートを追加する...
+      // TypeScriptの型定義エラーが出るので、とりあえずピッチ編集用のステートを返す
+      return "drawPitchToolIdle";
     } else {
       throw new ExhaustiveError(store.state.sequencerEditTarget);
     }
