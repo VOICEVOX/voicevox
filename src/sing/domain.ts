@@ -435,7 +435,7 @@ export function isValidVolumeEditData(volumeEditData: number[]) {
   return volumeEditData.every(
     (value) =>
       Number.isFinite(value) &&
-      (value > 0 || value <= 1 || value === VALUE_INDICATING_NO_DATA),
+      ((value >= 0 && value <= 1) || value === VALUE_INDICATING_NO_DATA),
   );
 }
 
