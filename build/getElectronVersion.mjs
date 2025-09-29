@@ -7,11 +7,6 @@ process.on("uncaughtException", () => {
   process.exit(1);
 });
 
-/**
- * @param {string} prefix
- * @param {string} rawVersion
- * @return {string}
- */
 function processVersion(prefix, rawVersion) {
   const version = rawVersion.split(".").slice(0, 3).join(".");
   return `${prefix}${version}`;
