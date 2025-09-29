@@ -30,11 +30,12 @@ function getElectronTargetVersion(): {
   node: string;
   chrome: string;
 } {
-  // @ts-expect-error: Electronの外でelectronをインポートするとファイルパスが得られる
-  const result = execFileSync(electronPath, [
-    "--no-sandbox",
-    path.join(import.meta.dirname, "build/getElectronVersion.mjs"),
-  ]);
+  const result = execFileSync(
+    // @ts-expect-error: Electronの外でelectronをインポートするとファイルパスが得られる
+    electronPath,
+    [path.join(import.meta.dirname, "build/getElectronVersion.mjs")],
+    { env: { ...process.env, ELECTRON_RUN_AS_NODE: "1" } },
+  );
   // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   return JSON.parse(result);
 }

@@ -1,8 +1,7 @@
 // @ts-check
 
 // Electron内部のNode.jsのバージョンとChromiumのバージョンを取得するスクリプト
-// 必ずElectronを使って実行する必要がある。
-import { app } from "electron";
+// 必ず環境変数"ELECTRON_RUN_AS_NODE"を設定した上でElectronを使って実行する必要がある。
 process.on("uncaughtException", () => {
   process.exit(1);
 });
@@ -18,4 +17,3 @@ process.stdout.write(
     chrome: processVersion("chrome", process.versions.chrome),
   }),
 );
-app.quit();
