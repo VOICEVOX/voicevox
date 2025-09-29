@@ -1,4 +1,5 @@
 // @ts-check
+
 // Electron内部のNode.jsのバージョンとChromiumのバージョンを取得するスクリプト
 // 必ずElectronを使って実行する必要がある。
 import { app } from "electron";
