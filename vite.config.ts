@@ -36,10 +36,7 @@ function getElectronTargetVersion(): {
 } {
   const result = execFileSync(
     electronPath,
-    [
-      "--no-sandbox",
-      path.join(import.meta.dirname, "build/getElectronVersion.mjs"),
-    ],
+    [path.join(import.meta.dirname, "build/getElectronVersion.mjs")],
     {
       encoding: "utf-8",
       env: { ...process.env, ELECTRON_RUN_AS_NODE: "1" },
