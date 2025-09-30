@@ -42,6 +42,7 @@ function getElectronTargetVersion(): {
     ],
     {
       encoding: "utf-8",
+      env: { ...process.env, ELECTRON_RUN_AS_NODE: "1" },
     },
   );
   return JSON.parse(result) as { node: string; chrome: string };
