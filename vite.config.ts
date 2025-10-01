@@ -2,10 +2,10 @@
 import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { rm } from "node:fs/promises";
-import electron from "vite-plugin-electron/simple";
+import electronPlugin from "vite-plugin-electron/simple";
 import tsconfigPaths from "vite-tsconfig-paths";
 import vue from "@vitejs/plugin-vue";
-import electronPath from "electron";
+import electronDefaultImport from "electron";
 import checker from "vite-plugin-checker";
 import { BuildOptions, defineConfig, loadEnv, Plugin } from "vite";
 import { quasar } from "@quasar/vite-plugin";
@@ -15,6 +15,10 @@ import {
   checkSuspiciousImports,
   CheckSuspiciousImportsOptions,
 } from "./tools/checkSuspiciousImports.js";
+
+// @ts-expect-error electronをelectron環境外からimportするとelectronのファイルパスが得られる。
+// https://github.com/electron/electron/blob/a95180e0806f4adba8009f46124b6bb4853ac0a6/npm/index.js
+const electronPath = electronDefaultImport as string;
 
 const nodeTestPaths = ["../tests/unit/**/*.node.{test,spec}.ts"];
 const browserTestPaths = ["../tests/unit/**/*.browser.{test,spec}.ts"];
@@ -31,13 +35,14 @@ function getElectronTargetVersion(): {
   chrome: string;
 } {
   const result = execFileSync(
-    // @ts-expect-error: Electronの外でelectronをインポートするとファイルパスが得られる
     electronPath,
     [path.join(import.meta.dirname, "build/getElectronVersion.mjs")],
-    { env: { ...process.env, ELECTRON_RUN_AS_NODE: "1" } },
+    {
+      encoding: "utf-8",
+      env: { ...process.env, ELECTRON_RUN_AS_NODE: "1" },
+    },
   );
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-  return JSON.parse(result);
+  return JSON.parse(result) as { node: string; chrome: string };
 }
 
 export default defineConfig((options) => {
@@ -116,7 +121,7 @@ export default defineConfig((options) => {
       isElectron && [
         cleanDistPlugin(),
         // TODO: 関数で切り出して共通化できる部分はまとめる
-        electron({
+        electronPlugin({
           main: {
             entry: "./backend/electron/main.ts",
 
