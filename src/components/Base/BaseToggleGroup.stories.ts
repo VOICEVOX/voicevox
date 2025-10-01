@@ -30,6 +30,26 @@ export const Single: Story = {
   }),
 };
 
+export const CanDeselect: Story = {
+  args: {
+    type: "single",
+    canDeselect: true,
+  },
+  render: (args) => ({
+    components: { BaseToggleGroup, BaseToggleGroupItem },
+    setup() {
+      const modelValue = ref("a");
+      return { args, modelValue };
+    },
+    template: `
+      <BaseToggleGroup v-bind="args" v-model="modelValue">
+        <BaseToggleGroupItem label="A" value="a" />
+        <BaseToggleGroupItem label="B" value="B" />
+        <BaseToggleGroupItem label="C" value="C" />
+      </BaseToggleGroup>`,
+  }),
+};
+
 export const Multiple: Story = {
   args: {
     type: "multiple",

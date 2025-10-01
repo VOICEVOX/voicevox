@@ -1,5 +1,17 @@
 <template>
-  <ToggleGroupRoot v-model="modelValue" class="ToggleGroup" :type :disabled>
+  <ToggleGroupRoot
+    :modelValue
+    class="ToggleGroup"
+    :type
+    :disabled
+    @update:modelValue="
+      (val) => {
+        if (props.canDeselect || typeof val !== 'undefined') {
+          modelValue = val as T;
+        }
+      }
+    "
+  >
     <slot />
   </ToggleGroupRoot>
 </template>
@@ -7,9 +19,10 @@
 <script setup lang="ts" generic="T extends AcceptableValue">
 import { AcceptableValue, ToggleGroupRoot } from "reka-ui";
 
-defineProps<{
+const props = defineProps<{
   type: "single" | "multiple";
   disabled?: boolean;
+  canDeselect?: boolean;
 }>();
 
 const modelValue = defineModel<T | T[]>();
