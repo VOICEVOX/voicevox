@@ -163,7 +163,7 @@ void app.whenReady().then(() => {
   });
 });
 
-// リモートコンテンツからのセッション権限リクエストを全て拒否
+// 信頼できるオリジン（開発サーバーまたは app プロトコル）からのセッション権限リクエストのみ許可し、それ以外は拒否
 void app.whenReady().then(() => {
   session.defaultSession.setPermissionRequestHandler(
     (webContents, permission, callback, { requestingUrl }) => {
