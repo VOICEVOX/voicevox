@@ -2,7 +2,16 @@
 
 <template>
   <BaseRowCard :title :description :disabled="disable">
-    <BaseToggleGroup v-model="model" type="single" :disabled="disable">
+    <BaseToggleGroup
+      :modelValue="model"
+      type="single"
+      :disabled="disable"
+      @update:modelValue="
+        (val) => {
+          if (typeof val !== 'undefined') model = val;
+        }
+      "
+    >
       <template v-for="option in options" :key="option.label">
         <BaseTooltip
           v-if="option.description != null"

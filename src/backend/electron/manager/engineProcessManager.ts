@@ -20,7 +20,7 @@ import { createLogger } from "@/helpers/log";
 const log = createLogger("EngineProcessManager");
 
 type EngineProcessContainer = {
-  willQuitEngine: boolean;
+  isGracefulShutdown: boolean;
   engineProcess?: ChildProcess;
 };
 
@@ -135,12 +135,12 @@ export class EngineProcessManager {
 
     if (!(engineId in this.engineProcessContainers)) {
       this.engineProcessContainers[engineId] = {
-        willQuitEngine: false,
+        isGracefulShutdown: false,
       };
     }
 
     const engineProcessContainer = this.engineProcessContainers[engineId];
-    engineProcessContainer.willQuitEngine = false;
+    engineProcessContainer.isGracefulShutdown = false;
 
     const engineSetting = this.configManager.get("engineSettings")[engineId];
     if (engineSetting == undefined)
@@ -193,7 +193,7 @@ export class EngineProcessManager {
       );
       log.info(`ENGINE ${engineId}: Process exited with code ${code}`);
 
-      if (!engineProcessContainer.willQuitEngine) {
+      if (!engineProcessContainer.isGracefulShutdown) {
         const errorMessage =
           engineInfos.length === 1
             ? "音声合成エンジンが異常終了しました。エンジンを再起動してください。"
@@ -275,7 +275,7 @@ export class EngineProcessManager {
       log.info(`ENGINE ${engineId}: Killing process (PID=${enginePid})`);
 
       // エラーダイアログを抑制
-      engineProcessContainer.willQuitEngine = true;
+      engineProcessContainer.isGracefulShutdown = true;
 
       // プロセス終了時のイベントハンドラ
       engineProcess.once("close", () => {
@@ -322,7 +322,7 @@ export class EngineProcessManager {
       }
 
       // エンジンエラー時のエラーウィンドウ抑制用。
-      engineProcessContainer.willQuitEngine = true;
+      engineProcessContainer.isGracefulShutdown = true;
 
       // 「killに使用するコマンドが終了するタイミング」と「OSがプロセスをkillするタイミング」が違うので単純にtreeKillのコールバック関数でrunEngine()を実行すると失敗します。
       // closeイベントはexitイベントよりも後に発火します。
