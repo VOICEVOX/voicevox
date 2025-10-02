@@ -337,13 +337,6 @@ export class EngineAndVvppController {
     }
   }
 
-  /** エンジンの設定を更新し、保存する */
-  updateEngineSetting(engineId: EngineId, engineSetting: EngineSettingType) {
-    const engineSettings = this.configManager.get("engineSettings");
-    engineSettings[engineId] = engineSetting;
-    this.configManager.set(`engineSettings`, engineSettings);
-  }
-
   // エンジンの準備と起動
   async launchEngines() {
     // AltPortInfosを再生成する。
