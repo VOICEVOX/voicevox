@@ -28,6 +28,8 @@ index b36e35c968c85b625f2080466f6518b1d355e4ef..c696497b36bfee5a917a9e88fb4d05d4
 +                        continue;
 +                    }
 +                }
++                // Re-throw if not handled above
++                throw err;
 +            }
              if (this.realModulePaths.has(realPath)) {
                  continue;
