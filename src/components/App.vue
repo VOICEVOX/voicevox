@@ -163,6 +163,7 @@ onMounted(async () => {
     isAcceptTermsDialogOpen:
       import.meta.env.MODE !== "development" &&
       store.state.acceptTerms !== "Accepted",
+    isInitialSettingsDialogOpen: store.state.openedEditor == undefined,
   });
 
   // プロジェクトファイルが指定されていればロード
