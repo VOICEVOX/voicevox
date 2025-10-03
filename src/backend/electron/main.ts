@@ -22,6 +22,7 @@ import { registerIpcMainHandle, ipcMainSendProxy, IpcMainHandle } from "./ipc";
 import { getConfigManager } from "./electronConfig";
 import { getEngineAndVvppController } from "./engineAndVvppController";
 import { getIpcMainHandle } from "./ipcMainHandle";
+import { assertNonNullable } from "@/type/utility";
 import { EngineInfo } from "@/type/preload";
 import { isMac, isProduction } from "@/helpers/platform";
 import { createLogger } from "@/helpers/log";
@@ -170,7 +171,8 @@ void app.whenReady().then(() => {
       const parsedUrl = new URL(webContents.getURL());
       const parsedRequestingUrl = new URL(requestingUrl);
       let isAllowedResource: boolean;
-      if (import.meta.env.VITE_DEV_SERVER_URL != undefined) {
+      if (isDevelopment) {
+        assertNonNullable(import.meta.env.VITE_DEV_SERVER_URL);
         const { origin } = new URL(import.meta.env.VITE_DEV_SERVER_URL);
         isAllowedResource =
           parsedUrl.origin === origin && parsedRequestingUrl.origin === origin;
