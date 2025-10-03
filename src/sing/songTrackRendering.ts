@@ -17,6 +17,7 @@ import {
 } from "@/sing/utility";
 import {
   applyPitchEdit,
+  applyVolumeEdit,
   calculatePhraseKey,
   decibelToLinear,
   getNoteDuration,
@@ -554,8 +555,9 @@ const generateSingingVolumeSource = (
   }
 
   const clonedQuery = structuredClone(phrase.query);
-  const clonedSingingPitch = structuredClone(phrase.singingPitch);
 
+  // ピッチ編集を適用したf0をボリューム生成に使うため、ピッチをクローンして適用する
+  const clonedSingingPitch = structuredClone(phrase.singingPitch);
   clonedQuery.f0 = clonedSingingPitch;
 
   applyPitchEdit(
@@ -607,6 +609,12 @@ const generateSingingVoiceSource = (
     clonedQuery,
     phrase.startTime,
     track.pitchEditData,
+    snapshot.editorFrameRate,
+  );
+  applyVolumeEdit(
+    clonedQuery,
+    phrase.startTime,
+    track.volumeEditData,
     snapshot.editorFrameRate,
   );
 

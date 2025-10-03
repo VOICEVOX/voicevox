@@ -975,6 +975,38 @@ export function applyPitchEdit(
   }
 }
 
+export function applyVolumeEdit(
+  phraseQuery: EditorFrameAudioQuery,
+  phraseStartTime: number,
+  volumeEditData: number[],
+  editorFrameRate: number,
+) {
+  if (phraseQuery.frameRate !== editorFrameRate) {
+    throw new Error(
+      "The frame rate between the phrase query and the editor does not match.",
+    );
+  }
+
+  const volume = phraseQuery.volume;
+  const phraseQueryFrameLength = volume.length;
+  const phraseQueryStartFrame = Math.round(
+    phraseStartTime * phraseQuery.frameRate,
+  );
+  const phraseQueryEndFrame = phraseQueryStartFrame + phraseQueryFrameLength;
+
+  const startFrame = Math.max(0, phraseQueryStartFrame);
+  const endFrame = Math.min(volumeEditData.length, phraseQueryEndFrame);
+  for (let i = startFrame; i < endFrame; i++) {
+    const editedVolume = volumeEditData[i];
+    if (editedVolume === VALUE_INDICATING_NO_DATA) {
+      continue;
+    }
+    // NOTE: APIの返却が0未満や1より大きい値の場合があるため、0-1の範囲でクランプ
+    const clampedVolume = Math.min(1, Math.max(0, editedVolume));
+    volume[i - phraseQueryStartFrame] = clampedVolume;
+  }
+}
+
 /**
  * 文字列をモーラと非モーラに分割する。長音は展開される。連続する非モーラはまとめる。
  * 例："カナー漢字" -> ["カ", "ナ", "ア", "漢字"]

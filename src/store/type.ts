@@ -887,6 +887,7 @@ export type SingingStoreState = {
   sequencerEditTarget: SequencerEditTarget;
   sequencerNoteTool: NoteEditTool;
   sequencerPitchTool: PitchEditTool;
+  sequencerVolumeTool: VolumeEditTool;
   _selectedNoteIds: Set<NoteId>;
   editingLyricNoteId?: NoteId;
   nowPlaying: boolean;
@@ -1158,6 +1159,11 @@ export type SingingStoreTypes = {
   SET_SEQUENCER_PITCH_TOOL: {
     mutation: { sequencerPitchTool: PitchEditTool };
     action(payload: { sequencerPitchTool: PitchEditTool }): void;
+  };
+
+  SET_SEQUENCER_VOLUME_TOOL: {
+    mutation: { sequencerVolumeTool: VolumeEditTool };
+    action(payload: { sequencerVolumeTool: VolumeEditTool }): void;
   };
 
   EXPORT_LABEL_FILES: {
