@@ -1001,9 +1001,8 @@ export function applyVolumeEdit(
     if (editedVolume === VALUE_INDICATING_NO_DATA) {
       continue;
     }
-    // NOTE: APIの返却が0未満や1より大きい値の場合があるため、0-1の範囲でクランプ
-    const clampedVolume = Math.min(1, Math.max(0, editedVolume));
-    volume[i - phraseQueryStartFrame] = clampedVolume;
+    // NOTE: ボリューム編集結果が範囲外になるケースに備えて0-1にクランプする
+    volume[i - phraseQueryStartFrame] = Math.min(1, Math.max(0, editedVolume));
   }
 }
 

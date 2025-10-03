@@ -242,6 +242,12 @@ const shiftVolume = (volume: number[], volumeShift: number) => {
   }
 };
 
+const clampVolume = (volume: number[]) => {
+  for (let i = 0; i < volume.length; i++) {
+    volume[i] = Math.min(1, Math.max(0, volume[i]));
+  }
+};
+
 /**
  * 末尾のpauの区間のvolumeを0にする。（歌とpauの呼吸音が重ならないようにする）
  * fadeOutDurationSecondsが0の場合は即座にvolumeを0にする。
@@ -722,6 +728,7 @@ const generateSingingVolume = async (
     singingVolumeSource.engineFrameRate,
     config.fadeOutDurationSeconds,
   );
+  clampVolume(singingVolume);
 
   return singingVolume;
 };
