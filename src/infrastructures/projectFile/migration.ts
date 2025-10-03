@@ -286,6 +286,15 @@ export const migrateProjectFileObject = async (
     }
   }
 
+  if (semver.satisfies(projectAppVersion, "<0.25.0", semverSatisfiesOptions)) {
+    // ボリューム編集値の追加
+    for (const trackId in projectData.song.tracks) {
+      if (projectData.song.tracks[trackId].volumeEditData == undefined) {
+        projectData.song.tracks[trackId].volumeEditData = [];
+      }
+    }
+  }
+
   // Validation check
   // トークはvalidateTalkProjectで検証する
   // ソングはSET_SCOREの中の`isValidScore`関数で検証される
