@@ -163,6 +163,9 @@
     ],
     "overrides": {
       "eslint-config-prettier": "10.1.5"
+    },
+    "patchedDependencies": {
+      "@electron/rebuild": "patches/@electron__rebuild.patch"
     }
   }
 }
