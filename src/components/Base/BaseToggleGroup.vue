@@ -2,12 +2,12 @@
   <ToggleGroupRoot
     :modelValue
     class="ToggleGroup"
-    :type
+    :type="rekaType"
     :disabled
     @update:modelValue="
       (val) => {
-        if (props.canDeselect || typeof val !== 'undefined') {
-          modelValue = val as T;
+        if (props.type === 'optionalSingle' || val !== undefined) {
+          modelValue = val as T | T[];
         }
       }
     "
@@ -18,14 +18,21 @@
 
 <script setup lang="ts" generic="T extends AcceptableValue">
 import { AcceptableValue, ToggleGroupRoot } from "reka-ui";
+import { computed } from "vue";
 
 const props = defineProps<{
-  type: "single" | "multiple";
+  type: "single" | "optionalSingle" | "multiple";
   disabled?: boolean;
-  canDeselect?: boolean;
 }>();
 
 const modelValue = defineModel<T | T[]>();
+
+const rekaType = computed(() => {
+  if (props.type === "optionalSingle") {
+    return "single";
+  }
+  return props.type;
+});
 </script>
 
 <style scoped lang="scss">

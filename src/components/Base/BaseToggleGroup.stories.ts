@@ -24,16 +24,15 @@ export const Single: Story = {
     template: `
       <BaseToggleGroup v-bind="args" v-model="modelValue">
         <BaseToggleGroupItem label="A" value="a" />
-        <BaseToggleGroupItem label="B" value="B" />
-        <BaseToggleGroupItem label="C" value="C" />
+        <BaseToggleGroupItem label="B" value="b" />
+        <BaseToggleGroupItem label="C" value="c" />
       </BaseToggleGroup>`,
   }),
 };
 
-export const CanDeselect: Story = {
+export const OptionalSingle: Story = {
   args: {
-    type: "single",
-    canDeselect: true,
+    type: "optionalSingle",
   },
   render: (args) => ({
     components: { BaseToggleGroup, BaseToggleGroupItem },
@@ -44,8 +43,8 @@ export const CanDeselect: Story = {
     template: `
       <BaseToggleGroup v-bind="args" v-model="modelValue">
         <BaseToggleGroupItem label="A" value="a" />
-        <BaseToggleGroupItem label="B" value="B" />
-        <BaseToggleGroupItem label="C" value="C" />
+        <BaseToggleGroupItem label="B" value="b" />
+        <BaseToggleGroupItem label="C" value="c" />
       </BaseToggleGroup>`,
   }),
 };
@@ -63,8 +62,8 @@ export const Multiple: Story = {
     template: `
       <BaseToggleGroup v-bind="args" v-model="modelValue">
         <BaseToggleGroupItem label="A" value="a" />
-        <BaseToggleGroupItem label="B" value="B" />
-        <BaseToggleGroupItem label="C" value="C" />
+        <BaseToggleGroupItem label="B" value="b" />
+        <BaseToggleGroupItem label="C" value="c" />
       </BaseToggleGroup>`,
   }),
 };
