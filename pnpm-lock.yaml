@@ -9,7 +9,7 @@ overrides:
 
 patchedDependencies:
   '@electron/rebuild':
-    hash: b7f53723c6232277049538ba405a102b752d6426be087a46c3e16c332b003e90
+    hash: 2078abb0ecbafb7a07ef14751383ffe73bec688cfae33a84c9d9dc69d02644f5
     path: patches/@electron__rebuild.patch
 
 importers:
@@ -5298,7 +5298,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@electron/rebuild@3.6.1(patch_hash=b7f53723c6232277049538ba405a102b752d6426be087a46c3e16c332b003e90)':
+  '@electron/rebuild@3.6.1(patch_hash=2078abb0ecbafb7a07ef14751383ffe73bec688cfae33a84c9d9dc69d02644f5)':
     dependencies:
       '@malept/cross-spawn-promise': 2.0.0
       chalk: 4.1.2
@@ -5318,7 +5318,7 @@ snapshots:
       - bluebird
       - supports-color
 
-  '@electron/rebuild@3.7.0(patch_hash=b7f53723c6232277049538ba405a102b752d6426be087a46c3e16c332b003e90)':
+  '@electron/rebuild@3.7.0(patch_hash=2078abb0ecbafb7a07ef14751383ffe73bec688cfae33a84c9d9dc69d02644f5)':
     dependencies:
       '@electron/node-gyp': https://codeload.github.com/electron/node-gyp/tar.gz/06b29aafb7708acef8b3669835c8a7857ebc92d2
       '@malept/cross-spawn-promise': 2.0.0
@@ -6667,7 +6667,7 @@ snapshots:
       '@develar/schema-utils': 2.6.5
       '@electron/notarize': 2.5.0
       '@electron/osx-sign': 1.3.1
-      '@electron/rebuild': 3.6.1(patch_hash=b7f53723c6232277049538ba405a102b752d6426be087a46c3e16c332b003e90)
+      '@electron/rebuild': 3.6.1(patch_hash=2078abb0ecbafb7a07ef14751383ffe73bec688cfae33a84c9d9dc69d02644f5)
       '@electron/universal': 2.0.1
       '@malept/flatpak-bundler': 0.4.0
       '@types/fs-extra': 9.0.13
@@ -6709,7 +6709,7 @@ snapshots:
       '@electron/fuses': 1.8.0
       '@electron/notarize': 2.5.0
       '@electron/osx-sign': 1.3.1
-      '@electron/rebuild': 3.7.0(patch_hash=b7f53723c6232277049538ba405a102b752d6426be087a46c3e16c332b003e90)
+      '@electron/rebuild': 3.7.0(patch_hash=2078abb0ecbafb7a07ef14751383ffe73bec688cfae33a84c9d9dc69d02644f5)
       '@electron/universal': 2.0.1
       '@malept/flatpak-bundler': 0.4.0
       '@types/fs-extra': 9.0.13

@@ -3,10 +3,10 @@ https://github.com/electron/rebuild/commit/2efb86db3e10e38f08f7be07c119f56b876c9
 pnpmで@electron/rebuildを使うときにたまにENOENTが発生する問題の修正。
 
 diff --git a/lib/module-walker.js b/lib/module-walker.js
-index b36e35c968c85b625f2080466f6518b1d355e4ef..c696497b36bfee5a917a9e88fb4d05d45a0f9cf0 100644
+index b36e35c968c85b625f2080466f6518b1d355e4ef..3a114af69addd42283076295e14499f567ef2095 100644
 --- a/lib/module-walker.js
 +++ b/lib/module-walker.js
-@@ -89,9 +89,24 @@ class ModuleWalker {
+@@ -89,9 +89,25 @@ class ModuleWalker {
              // Ignore the magical .bin directory
              if (modulePath === '.bin')
                  continue;
@@ -28,7 +28,6 @@ index b36e35c968c85b625f2080466f6518b1d355e4ef..c696497b36bfee5a917a9e88fb4d05d4
 +                        continue;
 +                    }
 +                }
-+                // Re-throw if not handled above
 +                throw err;
 +            }
              if (this.realModulePaths.has(realPath)) {
