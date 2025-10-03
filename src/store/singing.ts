@@ -694,7 +694,8 @@ export const singingStoreState: SingingStoreState = {
   sequencerEditTarget: "NOTE",
   sequencerNoteTool: "EDIT_FIRST",
   sequencerPitchTool: "DRAW",
-  sequencerVolumeTool: "DRAW",
+  volumeEditorTool: "DRAW",
+  volumeEditorVisible: false,
   _selectedNoteIds: new Set(),
   nowPlaying: false,
   volume: 0,
@@ -1716,12 +1717,21 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  SET_SEQUENCER_VOLUME_TOOL: {
-    mutation(state, { sequencerVolumeTool }) {
-      state.sequencerVolumeTool = sequencerVolumeTool;
+  SET_VOLUME_EDITOR_TOOL: {
+    mutation(state, { volumeEditorTool }) {
+      state.volumeEditorTool = volumeEditorTool;
     },
-    async action({ mutations }, { sequencerVolumeTool }) {
-      mutations.SET_SEQUENCER_VOLUME_TOOL({ sequencerVolumeTool });
+    async action({ mutations }, { volumeEditorTool }) {
+      mutations.SET_VOLUME_EDITOR_TOOL({ volumeEditorTool });
+    },
+  },
+
+  SET_VOLUME_EDITOR_VISIBLE: {
+    mutation(state, { volumeEditorVisible }) {
+      state.volumeEditorVisible = volumeEditorVisible;
+    },
+    async action({ mutations }, { volumeEditorVisible }) {
+      mutations.SET_VOLUME_EDITOR_VISIBLE({ volumeEditorVisible });
     },
   },
 

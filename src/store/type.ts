@@ -836,14 +836,14 @@ const phraseKeySchema = z.string().brand<"PhraseKey">();
 export type PhraseKey = z.infer<typeof phraseKeySchema>;
 export const PhraseKey = (id: string): PhraseKey => phraseKeySchema.parse(id);
 
-// 編集対象 ノート or ピッチ or ボリューム
-export type SequencerEditTarget = "NOTE" | "PITCH" | "VOLUME";
+// 編集対象 ノート or ピッチ
+export type SequencerEditTarget = "NOTE" | "PITCH";
 
 // ノート編集ツール
 export type NoteEditTool = "SELECT_FIRST" | "EDIT_FIRST";
 // ピッチ編集ツール
 export type PitchEditTool = "DRAW" | "ERASE";
-// ボリューム編集ツール
+// ボリューム編集ツール（VolumeEditor 専用）
 export type VolumeEditTool = "DRAW" | "ERASE";
 
 // プロジェクトの書き出しに使えるファイル形式
@@ -887,7 +887,8 @@ export type SingingStoreState = {
   sequencerEditTarget: SequencerEditTarget;
   sequencerNoteTool: NoteEditTool;
   sequencerPitchTool: PitchEditTool;
-  sequencerVolumeTool: VolumeEditTool;
+  volumeEditorTool: VolumeEditTool;
+  volumeEditorVisible: boolean;
   _selectedNoteIds: Set<NoteId>;
   editingLyricNoteId?: NoteId;
   nowPlaying: boolean;
@@ -1161,9 +1162,14 @@ export type SingingStoreTypes = {
     action(payload: { sequencerPitchTool: PitchEditTool }): void;
   };
 
-  SET_SEQUENCER_VOLUME_TOOL: {
-    mutation: { sequencerVolumeTool: VolumeEditTool };
-    action(payload: { sequencerVolumeTool: VolumeEditTool }): void;
+  SET_VOLUME_EDITOR_TOOL: {
+    mutation: { volumeEditorTool: VolumeEditTool };
+    action(payload: { volumeEditorTool: VolumeEditTool }): void;
+  };
+
+  SET_VOLUME_EDITOR_VISIBLE: {
+    mutation: { volumeEditorVisible: boolean };
+    action(payload: { volumeEditorVisible: boolean }): void;
   };
 
   EXPORT_LABEL_FILES: {
