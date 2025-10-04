@@ -11,12 +11,14 @@ import {
 } from "@/store/type";
 import {
   calculateHash,
+  clamp,
   getLast,
   getPrev,
   linearInterpolation,
 } from "@/sing/utility";
 import {
   applyPitchEdit,
+  applyVolumeEdit,
   calculatePhraseKey,
   decibelToLinear,
   getNoteDuration,
@@ -238,6 +240,12 @@ const shiftPitch = (f0: number[], pitchShift: number) => {
 const shiftVolume = (volume: number[], volumeShift: number) => {
   for (let i = 0; i < volume.length; i++) {
     volume[i] *= decibelToLinear(volumeShift);
+  }
+};
+
+const clampVolume = (volume: number[]) => {
+  for (let i = 0; i < volume.length; i++) {
+    volume[i] = clamp(volume[i], 0, 1);
   }
 };
 
@@ -554,8 +562,9 @@ const generateSingingVolumeSource = (
   }
 
   const clonedQuery = structuredClone(phrase.query);
-  const clonedSingingPitch = structuredClone(phrase.singingPitch);
 
+  // ピッチ編集を適用したf0をボリューム生成に使うため、ピッチをクローンして適用する
+  const clonedSingingPitch = structuredClone(phrase.singingPitch);
   clonedQuery.f0 = clonedSingingPitch;
 
   applyPitchEdit(
@@ -607,6 +616,12 @@ const generateSingingVoiceSource = (
     clonedQuery,
     phrase.startTime,
     track.pitchEditData,
+    snapshot.editorFrameRate,
+  );
+  applyVolumeEdit(
+    clonedQuery,
+    phrase.startTime,
+    track.volumeEditData,
     snapshot.editorFrameRate,
   );
 
@@ -714,6 +729,7 @@ const generateSingingVolume = async (
     singingVolumeSource.engineFrameRate,
     config.fadeOutDurationSeconds,
   );
+  clampVolume(singingVolume);
 
   return singingVolume;
 };

@@ -1,4 +1,11 @@
-import { calculateHash, getLast, getNext, getPrev, isSorted } from "./utility";
+import {
+  calculateHash,
+  clamp,
+  getLast,
+  getNext,
+  getPrev,
+  isSorted,
+} from "./utility";
 import { convertLongVowel, moraPattern } from "@/domain/japanese";
 import {
   Phrase,
@@ -972,6 +979,37 @@ export function applyPitchEdit(
     if (voiced && pitchEditData[i] !== VALUE_INDICATING_NO_DATA) {
       f0[i - phraseQueryStartFrame] = pitchEditData[i];
     }
+  }
+}
+
+export function applyVolumeEdit(
+  phraseQuery: EditorFrameAudioQuery,
+  phraseStartTime: number,
+  volumeEditData: number[],
+  editorFrameRate: number,
+) {
+  if (phraseQuery.frameRate !== editorFrameRate) {
+    throw new Error(
+      "The frame rate between the phrase query and the editor does not match.",
+    );
+  }
+
+  const volume = phraseQuery.volume;
+  const phraseQueryFrameLength = volume.length;
+  const phraseQueryStartFrame = Math.round(
+    phraseStartTime * phraseQuery.frameRate,
+  );
+  const phraseQueryEndFrame = phraseQueryStartFrame + phraseQueryFrameLength;
+
+  const startFrame = Math.max(0, phraseQueryStartFrame);
+  const endFrame = Math.min(volumeEditData.length, phraseQueryEndFrame);
+  for (let i = startFrame; i < endFrame; i++) {
+    const editedVolume = volumeEditData[i];
+    if (editedVolume === VALUE_INDICATING_NO_DATA) {
+      continue;
+    }
+    // NOTE: ボリューム編集結果が範囲外になるケースに備えて0-1にクランプする
+    volume[i - phraseQueryStartFrame] = clamp(editedVolume, 0, 1);
   }
 }
 
