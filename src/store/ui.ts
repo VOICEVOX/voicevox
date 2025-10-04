@@ -502,6 +502,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
         );
       const result = await showVoiceLibraryPolicyDialog({
         unconfirmedCharacterInfos,
+        currentConfirmedCharacterIds: state.termConfirmedCharacterIds,
         actions,
       });
       return result;

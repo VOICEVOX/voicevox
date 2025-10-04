@@ -61,7 +61,7 @@ test.describe("音声書き出し", () => {
       const accentPhrase = page.locator(".accent-phrase");
 
       await audioCell.click();
-      await audioCell.fill("こんにちは、テストです");
+      await audioCell.fill("1番目のテキスト");
       await audioCell.press("Enter");
       await expect(accentPhrase).not.toHaveCount(0);
     });

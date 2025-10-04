@@ -304,9 +304,11 @@ export async function connectAndExportTextWithDialog({
 
 export async function showVoiceLibraryPolicyDialog({
   unconfirmedCharacterInfos,
+  currentConfirmedCharacterIds,
   actions,
 }: {
   unconfirmedCharacterInfos: CharacterInfo[];
+  currentConfirmedCharacterIds: SpeakerId[];
   actions: DotNotationDispatch<AllActions>;
 }): Promise<"confirmed" | "canceled"> {
   const { promise, resolve } = Promise.withResolvers<
@@ -327,7 +329,10 @@ export async function showVoiceLibraryPolicyDialog({
     .onOk((confirmedIds: SpeakerId[]) => {
       // 同意状態を保存
       void actions.SET_VOICE_LIBRARY_CONFIRMED_CHARACTER_IDS({
-        termConfirmedCharacterIds: confirmedIds,
+        termConfirmedCharacterIds: [
+          ...currentConfirmedCharacterIds,
+          ...confirmedIds,
+        ],
       });
       resolve("confirmed");
     })
