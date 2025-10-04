@@ -95,5 +95,29 @@ export async function addAudioCells(page: Page, count: number) {
   }
 }
 
+/** AudioCellのキャラクターを変更する */
+export async function changeAudioCellCharacter(
+  page: Page,
+  nthChild: number,
+  digit: number,
+) {
+  await test.step(`${nthChild}人目のキャラクターを変更`, async () => {
+    const audioCell = page.locator(`.audio-cell:nth-child(${nthChild})`);
+    await audioCell.click();
+    await page.keyboard.press(`${ctrlLike}+Digit${digit}`);
+  });
+}
+
+/** トーク音声書き出し完了の通知を確認して閉じる */
+export async function waitForExportNotificationAndClose(page: Page) {
+  await test.step("トーク音声書き出し完了の通知を確認して閉じる", async () => {
+    // NOTE: なぜか前のnotifyの結果残ってしまっているので、.last()を使う
+    const notify = page.locator("#q-notify").last();
+    await expect(notify.getByText("音声を書き出しました").last()).toBeVisible();
+    await notify.getByRole("button", { name: "閉じる" }).last().click();
+    await expect(notify).not.toBeVisible();
+  });
+}
+
 /** プラットフォームに応じたCtrlキー（MacではMeta、それ以外ではControl） */
 export const ctrlLike = process.platform === "darwin" ? "Meta" : "Control";
