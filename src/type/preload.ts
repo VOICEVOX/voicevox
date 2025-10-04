@@ -397,6 +397,7 @@ export const rootMiscSettingSchema = z.object({
     .default("MINUTES_SECONDS"), // 再生ヘッド位置の表示モード
   enableKatakanaEnglish: z.boolean().default(true), // 未知の英単語をカタカナ読みに変換するかどうか
   enableMultiSelect: z.boolean().default(true), // 複数選択を有効にするかどうか
+  termConfirmedCharacterIds: speakerIdSchema.array().default([]), // 利用規約を確認済みのキャラクターID
 });
 export type RootMiscSettingType = z.infer<typeof rootMiscSettingSchema>;
 
@@ -476,7 +477,6 @@ export function getConfigSchema({ isMac }: { isMac: boolean }) {
       acceptTerms: z
         .enum(["Unconfirmed", "Accepted", "Rejected"])
         .default("Unconfirmed"),
-      termConfirmedCharacterIds: speakerIdSchema.array().default([]),
       confirmedTips: z
         .object({
           tweakableSliderByScroll: z.boolean().default(false),

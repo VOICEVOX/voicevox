@@ -57,13 +57,7 @@ test.describe("音声書き出し", () => {
     await navigateToMain(page);
 
     await test.step("テキスト欄にテキストを入力", async () => {
-      const audioCell = page.getByRole("textbox", { name: "1行目" });
-      const accentPhrase = page.locator(".accent-phrase");
-
-      await audioCell.click();
-      await audioCell.fill("1番目のテキスト");
-      await audioCell.press("Enter");
-      await expect(accentPhrase).not.toHaveCount(0);
+      await fillAudioCell(page, 0, "1番目のテキスト");
     });
   });
 

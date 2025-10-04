@@ -328,11 +328,9 @@ export async function showVoiceLibraryPolicyDialog({
   })
     .onOk((confirmedIds: SpeakerId[]) => {
       // 同意状態を保存
-      void actions.SET_VOICE_LIBRARY_CONFIRMED_CHARACTER_IDS({
-        termConfirmedCharacterIds: [
-          ...currentConfirmedCharacterIds,
-          ...confirmedIds,
-        ],
+      void actions.SET_ROOT_MISC_SETTING({
+        key: "termConfirmedCharacterIds",
+        value: [...currentConfirmedCharacterIds, ...confirmedIds],
       });
       resolve("confirmed");
     })

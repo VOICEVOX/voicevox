@@ -125,12 +125,6 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         confirmedTips: await window.backend.getSetting("confirmedTips"),
       });
 
-      mutations.SET_VOICE_LIBRARY_CONFIRMED_CHARACTER_IDS({
-        termConfirmedCharacterIds: await window.backend.getSetting(
-          "termConfirmedCharacterIds",
-        ),
-      });
-
       // FIXME: engineSettingsをMapにする
       for (const [engineIdStr, engineSetting] of Object.entries(
         await window.backend.getSetting("engineSettings"),
@@ -163,6 +157,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         "openedEditor",
         "enableKatakanaEnglish",
         "enableMultiSelect",
+        "termConfirmedCharacterIds",
       ] as const;
 
       // rootMiscSettingKeysに値を足し忘れていたときに型エラーを出す検出用コード
@@ -348,21 +343,6 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
 
       void actions.SET_CONFIRMED_TIPS({
         confirmedTips: confirmedTips as ConfirmedTips,
-      });
-    },
-  },
-
-  SET_VOICE_LIBRARY_CONFIRMED_CHARACTER_IDS: {
-    mutation(state, { termConfirmedCharacterIds }) {
-      state.termConfirmedCharacterIds = termConfirmedCharacterIds;
-    },
-    action({ mutations }, { termConfirmedCharacterIds }) {
-      void window.backend.setSetting(
-        "termConfirmedCharacterIds",
-        termConfirmedCharacterIds,
-      );
-      mutations.SET_VOICE_LIBRARY_CONFIRMED_CHARACTER_IDS({
-        termConfirmedCharacterIds,
       });
     },
   },

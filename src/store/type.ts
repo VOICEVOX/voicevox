@@ -2038,11 +2038,6 @@ export type SettingStoreTypes = {
     action(): void;
   };
 
-  SET_VOICE_LIBRARY_CONFIRMED_CHARACTER_IDS: {
-    mutation: { termConfirmedCharacterIds: SpeakerId[] };
-    action(payload: { termConfirmedCharacterIds: SpeakerId[] }): void;
-  };
-
   SET_ENGINE_SETTING: {
     mutation: { engineSetting: EngineSettingType; engineId: EngineId };
     action(payload: {
