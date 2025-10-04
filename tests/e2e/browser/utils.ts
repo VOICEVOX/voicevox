@@ -119,5 +119,5 @@ export async function waitForExportNotificationAndClose(page: Page) {
   });
 }
 
-/** プラットフォームに応じたCtrlキー（MacではMeta、それ以外ではControl） */
+/** プラットフォームに応じたCtrlキー。MacではMeta、それ以外ではControl。 */
 export const ctrlLike = process.platform === "darwin" ? "Meta" : "Control";
