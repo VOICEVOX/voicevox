@@ -11,6 +11,18 @@ import { fillAudioCell, waitForExportNotificationAndClose } from "./utils";
 
 test.beforeEach(gotoHome);
 
+async function handleVoiceLibraryPolicyDialogIfPresent(page: Page) {
+  await test.step("利用規約確認ダイアログが表示されていたら確認ボタンを押す", async () => {
+    const dialog = getNewestQuasarDialog(page);
+    const isVisible = await dialog
+      .getByText("音声ライブラリ利用規約のご案内")
+      .isVisible();
+    if (isVisible) {
+      await dialog.getByRole("button", { name: "確認して続行" }).click();
+    }
+  });
+}
+
 async function exportSelectedAudioAndSnapshot(page: Page, name: string) {
   const { getFileIds } = await mockShowSaveFileDialog(page);
   const { getWrittenFileBuffers } = await mockWriteFile(page);
@@ -20,6 +32,7 @@ async function exportSelectedAudioAndSnapshot(page: Page, name: string) {
     await getQuasarMenu(page, "選択音声を書き出し").click();
   });
 
+  await handleVoiceLibraryPolicyDialogIfPresent(page);
   await waitForExportNotificationAndClose(page);
 
   await test.step("音声ファイルのバイナリをスナップショット", async () => {
@@ -83,6 +96,8 @@ test.describe("音声書き出し", () => {
       await getQuasarMenu(page, "選択音声を書き出し").click();
     });
 
+    await handleVoiceLibraryPolicyDialogIfPresent(page);
+
     await test.step("エラーダイアログを確認して閉じる", async () => {
       const dialog = page.getByRole("dialog", {
         name: "書き出しに失敗しました。",
@@ -105,6 +120,8 @@ test.describe("音声書き出し", () => {
       await page.getByRole("button", { name: "ファイル" }).click();
       await getQuasarMenu(page, "音声書き出し").click();
     });
+
+    await handleVoiceLibraryPolicyDialogIfPresent(page);
 
     await test.step("結果ダイアログを確認して閉じる", async () => {
       const dialog = getNewestQuasarDialog(page);
@@ -129,6 +146,8 @@ test.describe("音声書き出し", () => {
       await page.getByRole("button", { name: "ファイル" }).click();
       await getQuasarMenu(page, "音声を繋げて書き出し").click();
     });
+
+    await handleVoiceLibraryPolicyDialogIfPresent(page);
 
     await test.step("エラーダイアログを確認して閉じる", async () => {
       const dialog = page.getByRole("dialog", {
