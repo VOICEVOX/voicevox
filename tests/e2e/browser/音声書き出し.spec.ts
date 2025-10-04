@@ -182,6 +182,10 @@ test.describe("音声書き出し", () => {
       await expect(
         dialog.getByText("音声ライブラリ利用規約のご案内"),
       ).toBeVisible();
+
+      // 1つのキャラクターの利用規約が表示されることを確認
+      const characterPolicies = dialog.getByRole("listitem");
+      await expect(characterPolicies).toHaveCount(1);
     });
 
     await test.step("キャンセルボタンを押すとダイアログが閉じる", async () => {
@@ -201,6 +205,10 @@ test.describe("音声書き出し", () => {
       await expect(
         dialog.getByText("音声ライブラリ利用規約のご案内"),
       ).toBeVisible();
+
+      // 1つのキャラクターの利用規約が表示されることを確認
+      const characterPolicies = dialog.getByRole("listitem");
+      await expect(characterPolicies).toHaveCount(1);
     });
 
     await test.step("確認ボタンを押すと書き出しが実行される", async () => {
@@ -255,7 +263,7 @@ test.describe("音声書き出し", () => {
       ).toBeVisible();
 
       // 2つのキャラクターの利用規約が表示されることを確認
-      const characterPolicies = dialog.locator(".character-policy-item");
+      const characterPolicies = dialog.getByRole("listitem");
       await expect(characterPolicies).toHaveCount(2);
     });
 

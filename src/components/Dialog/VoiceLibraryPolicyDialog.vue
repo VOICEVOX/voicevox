@@ -16,10 +16,11 @@
       <QSeparator />
 
       <QCardSection class="q-py-md scroll scrollable-area">
-        <div class="character-policies">
+        <div role="list" class="character-policies">
           <div
             v-for="info in enrichedCharacterInfos"
             :key="info.id"
+            role="listitem"
             class="character-policy-item"
           >
             <div class="character-portrait-section">
