@@ -11,6 +11,7 @@ import {
 } from "@/store/type";
 import {
   calculateHash,
+  clamp,
   getLast,
   getPrev,
   linearInterpolation,
@@ -244,7 +245,7 @@ const shiftVolume = (volume: number[], volumeShift: number) => {
 
 const clampVolume = (volume: number[]) => {
   for (let i = 0; i < volume.length; i++) {
-    volume[i] = Math.min(1, Math.max(0, volume[i]));
+    volume[i] = clamp(volume[i], 0, 1);
   }
 };
 

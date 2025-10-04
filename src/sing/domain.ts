@@ -1,4 +1,11 @@
-import { calculateHash, getLast, getNext, getPrev, isSorted } from "./utility";
+import {
+  calculateHash,
+  clamp,
+  getLast,
+  getNext,
+  getPrev,
+  isSorted,
+} from "./utility";
 import { convertLongVowel, moraPattern } from "@/domain/japanese";
 import {
   Phrase,
@@ -1002,7 +1009,7 @@ export function applyVolumeEdit(
       continue;
     }
     // NOTE: ボリューム編集結果が範囲外になるケースに備えて0-1にクランプする
-    volume[i - phraseQueryStartFrame] = Math.min(1, Math.max(0, editedVolume));
+    volume[i - phraseQueryStartFrame] = clamp(editedVolume, 0, 1);
   }
 }
 
