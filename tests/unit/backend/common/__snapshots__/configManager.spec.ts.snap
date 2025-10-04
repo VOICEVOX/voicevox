@@ -229,6 +229,7 @@ exports[`0.13.0からマイグレーションできる 1`] = `
   "showTextLineNumber": false,
   "splitTextWhenPaste": "PERIOD_AND_NEW_LINE",
   "splitterPosition": {},
+  "termConfirmedCharacterIds": [],
   "toolbarSetting": [
     "PLAY_CONTINUOUSLY",
     "STOP",
