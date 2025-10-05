@@ -884,11 +884,13 @@ export type SingingStoreState = {
   sequencerZoomX: number;
   sequencerZoomY: number;
   sequencerSnapType: number;
+  // sequencerEditTargetはUI上はシーケンサ全体ではなくピアノロールでの編集対象(ノート or ピッチ)を表す
+  // TODO: 編集対象がわかりづらいため、ピアノロールの編集対象を表すものに変更する eg: pianoRollEditTarget
   sequencerEditTarget: SequencerEditTarget;
   sequencerNoteTool: NoteEditTool;
   sequencerPitchTool: PitchEditTool;
-  volumeEditorTool: VolumeEditTool;
-  volumeEditorVisible: boolean;
+  sequencerVolumeTool: VolumeEditTool;
+  sequencerVolumeVisible: boolean;
   _selectedNoteIds: Set<NoteId>;
   editingLyricNoteId?: NoteId;
   nowPlaying: boolean;
@@ -1162,14 +1164,14 @@ export type SingingStoreTypes = {
     action(payload: { sequencerPitchTool: PitchEditTool }): void;
   };
 
-  SET_VOLUME_EDITOR_TOOL: {
-    mutation: { volumeEditorTool: VolumeEditTool };
-    action(payload: { volumeEditorTool: VolumeEditTool }): void;
+  SET_SEQUENCER_VOLUME_TOOL: {
+    mutation: { sequencerVolumeTool: VolumeEditTool };
+    action(payload: { sequencerVolumeTool: VolumeEditTool }): void;
   };
 
-  SET_VOLUME_EDITOR_VISIBLE: {
-    mutation: { volumeEditorVisible: boolean };
-    action(payload: { volumeEditorVisible: boolean }): void;
+  SET_SEQUENCER_VOLUME_VISIBLE: {
+    mutation: { sequencerVolumeVisible: boolean };
+    action(payload: { sequencerVolumeVisible: boolean }): void;
   };
 
   EXPORT_LABEL_FILES: {
