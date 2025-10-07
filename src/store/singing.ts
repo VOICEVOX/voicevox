@@ -3287,7 +3287,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           getters.SELECTED_TRACK,
           getters.CHARACTER_INFO,
         );
-        const project = ufProjectFromVoicevox(
+        const project = await ufProjectFromVoicevox(
           {
             tempos: state.tempos,
             timeSignatures: state.timeSignatures,
