@@ -93,7 +93,7 @@
     "@openapitools/openapi-generator-cli": "2.20.5",
     "@playwright/test": "1.53.1",
     "@quasar/vite-plugin": "1.9.0",
-    "@storybook/addon-docs": "^9.1.9",
+    "@storybook/addon-docs": "9.0.13",
     "@storybook/addon-links": "9.0.13",
     "@storybook/addon-themes": "9.0.13",
     "@storybook/addon-vitest": "9.0.13",
