@@ -245,7 +245,7 @@ const shiftVolume = (volume: number[], volumeShift: number) => {
 
 const clampVolume = (volume: number[]) => {
   for (let i = 0; i < volume.length; i++) {
-    volume[i] = clamp(volume[i], 0, 1);
+    volume[i] = Math.max(volume[i], 0);
   }
 };
 
@@ -624,6 +624,7 @@ const generateSingingVoiceSource = (
     track.volumeEditData,
     snapshot.editorFrameRate,
   );
+  shiftVolume(clonedQuery.volume, track.volumeRangeAdjustment);
 
   return {
     singer: track.singer,
@@ -722,7 +723,6 @@ const generateSingingVolume = async (
     styleId: config.singingTeacherStyleId,
   });
 
-  shiftVolume(singingVolume, singingVolumeSource.volumeRangeAdjustment);
   muteLastPauSection(
     singingVolume,
     queryForVolumeGeneration.phonemes,
