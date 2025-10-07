@@ -39,11 +39,12 @@ export type WarningDialogOptions = {
   isWarningColorButton?: boolean; // ボタンをWarning色にするか
   cancel?: string;
 };
+export type QuestionDialogButtonColor = "display" | "primary" | "warning";
 export type QuestionDialogOptions = {
   type?: DialogType;
   title: string;
   message: string;
-  buttons: (string | { text: string; color: string })[];
+  buttons: (string | { text: string; color: QuestionDialogButtonColor })[];
   cancel: number;
   default?: number;
 };

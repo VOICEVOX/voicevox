@@ -304,7 +304,9 @@ export function getIpcMainHandle(params: {
     },
 
     SET_ENGINE_SETTING: async (_, engineId, engineSetting) => {
-      engineAndVvppController.updateEngineSetting(engineId, engineSetting);
+      const engineSettings = configManager.get("engineSettings");
+      engineSettings[engineId] = engineSetting;
+      configManager.set("engineSettings", engineSettings);
     },
 
     SET_NATIVE_THEME: (_, source) => {
@@ -315,6 +317,7 @@ export function getIpcMainHandle(params: {
       await engineAndVvppController.installVvppEngine({
         vvppPath: path,
         asDefaultVvppEngine: false,
+        immediate: false,
       });
     },
 

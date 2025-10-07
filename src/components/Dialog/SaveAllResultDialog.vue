@@ -1,5 +1,5 @@
 <template>
-  <QDialog ref="dialogRef" persistent>
+  <QDialog ref="dialogRef" v-model="modelValue" persistent>
     <QLayout container view="hhh lpr fFf" class="q-dialog-plugin bg-background">
       <QPageContainer class="q-px-md">
         <h5 class="text-h5 q-my-md">音声書き出し結果</h5>
@@ -75,8 +75,10 @@
 import { useDialogPluginComponent } from "quasar";
 import { ErrorTypeForSaveAllResultDialog } from "@/store/type";
 
+const modelValue = defineModel<boolean>();
+
 const props = defineProps<{
-  successArray: string | undefined[];
+  successArray: string[];
   writeErrorArray: ErrorTypeForSaveAllResultDialog[];
   engineErrorArray: ErrorTypeForSaveAllResultDialog[];
 }>();

@@ -44,6 +44,26 @@ export async function mockShowSaveFileDialog(page: Page): Promise<{
   };
 }
 
+/** 次のファイル選択ダイアログをモックし、指定したファイルを選択したことにする */
+export async function mockShowOpenFileDialog(
+  page: Page,
+  filePath: string,
+): Promise<void> {
+  type _Window = Window;
+  await page.evaluate(
+    ({ filePath }) => {
+      const _window = window as unknown as _Window;
+      const originalShowOpenFileDialog =
+        _window.backend.showOpenFileDialog.bind(window.backend);
+      _window.backend.showOpenFileDialog = async () => {
+        _window.backend.showOpenFileDialog = originalShowOpenFileDialog;
+        return filePath;
+      };
+    },
+    { filePath },
+  );
+}
+
 /** ファイル書き出しをモックにする */
 export async function mockWriteFile(page: Page): Promise<{
   getWrittenFileBuffers: () => Promise<Record<TestFileId, Buffer>>;
@@ -84,4 +104,64 @@ export async function mockWriteFile(page: Page): Promise<{
       );
     },
   };
+}
+
+/** 特定のファイルの読み込みをモックにする */
+export async function mockReadFile(
+  page: Page,
+  filePath: string,
+  buffer: Buffer,
+): Promise<void> {
+  type _Window = Window;
+
+  await page.evaluate(
+    ({ mockedFilePath, successResult }) => {
+      const _window = window as unknown as _Window;
+      const originalReadFile = _window.backend.readFile.bind(_window.backend);
+      _window.backend.readFile = async ({ filePath: readingFilePath }) => {
+        if (readingFilePath === mockedFilePath) {
+          return successResult;
+        } else {
+          return originalReadFile({ filePath: readingFilePath });
+        }
+      };
+    },
+    {
+      mockedFilePath: filePath,
+      successResult: success(new Uint8Array(buffer)),
+    },
+  );
+}
+
+/**
+ * ディレクトリ選択ダイアログをモックにする
+ * TODO: 選択されたディレクトリIDを返すようにする
+ */
+export async function mockShowSaveDirectoryDialog(page: Page): Promise<void> {
+  type _Window = Window;
+
+  await page.evaluate(() => {
+    const _window = window as unknown as _Window;
+    _window.backend.showSaveDirectoryDialog = async () => {
+      return `${Date.now()}`;
+    };
+  });
+}
+
+/** writeFileを常に失敗Resultを返すモックにする */
+export async function mockWriteFileError(page: Page): Promise<void> {
+  type _Window = Window;
+
+  const code = "EACCES";
+  const message = "mock write error";
+
+  await page.evaluate(
+    ({ code, message }) => {
+      const _window = window as unknown as _Window;
+      _window.backend.writeFile = async () => {
+        return { ok: false, code, error: new Error(message) };
+      };
+    },
+    { code, message },
+  );
 }

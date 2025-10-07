@@ -20,11 +20,6 @@
 
 <script setup lang="ts">
 import { computed, ComputedRef } from "vue";
-import {
-  generateAndConnectAndSaveAudioWithDialog,
-  multiGenerateAndSaveAudioWithDialog,
-  generateAndSaveOneAudioWithDialog,
-} from "@/components/Dialog/Dialog";
 import { useStore } from "@/store";
 import { ToolbarButtonTagType } from "@/type/preload";
 import { getToolbarButtonName } from "@/store/utility";
@@ -107,36 +102,13 @@ const stop = () => {
   void store.actions.STOP_AUDIO();
 };
 const generateAndSaveSelectedAudio = async () => {
-  if (activeAudioKey.value == undefined)
-    throw new Error("activeAudioKey is undefined");
-
-  const selectedAudioKeys = store.getters.SELECTED_AUDIO_KEYS;
-  if (store.state.enableMultiSelect && selectedAudioKeys.length > 1) {
-    await multiGenerateAndSaveAudioWithDialog({
-      audioKeys: selectedAudioKeys,
-      actions: store.actions,
-      disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
-    });
-  } else {
-    await generateAndSaveOneAudioWithDialog({
-      audioKey: activeAudioKey.value,
-      disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
-      actions: store.actions,
-    });
-  }
+  await store.actions.SHOW_GENERATE_AND_SAVE_SELECTED_AUDIO_DIALOG();
 };
 const generateAndSaveAllAudio = async () => {
-  await multiGenerateAndSaveAudioWithDialog({
-    audioKeys: store.state.audioKeys,
-    actions: store.actions,
-    disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
-  });
+  await store.actions.SHOW_GENERATE_AND_SAVE_ALL_AUDIO_DIALOG();
 };
 const generateAndConnectAndSaveAudio = async () => {
-  await generateAndConnectAndSaveAudioWithDialog({
-    actions: store.actions,
-    disableNotifyOnGenerate: store.state.confirmedTips.notifyOnGenerate,
-  });
+  await store.actions.SHOW_GENERATE_AND_CONNECT_ALL_AUDIO_DIALOG();
 };
 const saveProject = async () => {
   await store.actions.SAVE_PROJECT_FILE_OVERWRITE();

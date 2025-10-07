@@ -48,7 +48,7 @@
     "preinstall": "npx -y only-allow pnpm",
     "postinstall": "pnpm run postinstall:packages && pnpm run postinstall:download-scripts",
     "postinstall:packages": "electron-builder install-app-deps && playwright install chromium",
-    "postinstall:download-scripts": "tsx tools/download7z.ts && tsx tools/downloadTypos.ts",
+    "postinstall:download-scripts": "tsx tools/download7z.ts && tsx tools/downloadTypos.ts && tsx tools/downloadAppimagetool.ts",
     "postuninstall": "electron-builder install-app-deps"
   },
   "dependencies": {
@@ -87,6 +87,7 @@
   },
   "devDependencies": {
     "@chromatic-com/storybook": "4.0.1",
+    "@electron/fuses": "2.0.0",
     "@eslint/eslintrc": "3.3.1",
     "@eslint/js": "9.29.0",
     "@openapitools/openapi-generator-cli": "2.20.5",
