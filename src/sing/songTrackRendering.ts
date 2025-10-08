@@ -11,7 +11,6 @@ import {
 } from "@/store/type";
 import {
   calculateHash,
-  clamp,
   getLast,
   getPrev,
   linearInterpolation,
@@ -243,7 +242,7 @@ const shiftVolume = (volume: number[], volumeShift: number) => {
   }
 };
 
-const clampVolume = (volume: number[]) => {
+const ensureNonNegativeVolume = (volume: number[]) => {
   for (let i = 0; i < volume.length; i++) {
     volume[i] = Math.max(volume[i], 0);
   }
@@ -729,7 +728,8 @@ const generateSingingVolume = async (
     singingVolumeSource.engineFrameRate,
     config.fadeOutDurationSeconds,
   );
-  clampVolume(singingVolume);
+
+  ensureNonNegativeVolume(singingVolume);
 
   return singingVolume;
 };
