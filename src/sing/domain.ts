@@ -1,6 +1,5 @@
 import {
   calculateHash,
-  clamp,
   getLast,
   getNext,
   getPrev,
