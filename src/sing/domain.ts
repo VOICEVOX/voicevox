@@ -1,11 +1,4 @@
-import {
-  calculateHash,
-  clamp,
-  getLast,
-  getNext,
-  getPrev,
-  isSorted,
-} from "./utility";
+import { calculateHash, getLast, getNext, getPrev, isSorted } from "./utility";
 import { convertLongVowel, moraPattern } from "@/domain/japanese";
 import {
   Phrase,
