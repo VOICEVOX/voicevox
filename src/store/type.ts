@@ -445,14 +445,14 @@ export type AudioStoreTypes = {
       audioKeys: AudioKey[];
       dirPath?: string;
       callback?: (finishedCount: number) => void;
-    }): SaveResultObject[] | undefined;
+    }): SaveResultObject[] | "canceled";
   };
 
   GENERATE_AND_CONNECT_AND_SAVE_AUDIO: {
     action(payload: {
       filePath?: string;
       callback?: (finishedCount: number, totalCount: number) => void;
-    }): SaveResultObject | undefined;
+    }): SaveResultObject;
   };
 
   CONNECT_AND_EXPORT_TEXT: {
