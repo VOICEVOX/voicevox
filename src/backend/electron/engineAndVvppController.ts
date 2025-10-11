@@ -10,12 +10,7 @@ import { getEngineProcessManager } from "./manager/engineProcessManager";
 import { getRuntimeInfoManager } from "./manager/RuntimeInfoManager";
 import { getVvppManager } from "./manager/vvppManager";
 import { getWindowManager } from "./manager/windowManager";
-import {
-  EngineId,
-  EngineInfo,
-  engineSettingSchema,
-  EngineSettingType,
-} from "@/type/preload";
+import { EngineId, EngineInfo, engineSettingSchema } from "@/type/preload";
 import {
   PackageInfo,
   fetchLatestDefaultEngineInfo,
