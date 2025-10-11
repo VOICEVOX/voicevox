@@ -105,6 +105,7 @@ export type PartialStore = {
   state: Pick<
     Store["state"],
     | "tpqn"
+    | "tracks"
     | "sequencerSnapType"
     | "sequencerEditTarget"
     | "sequencerNoteTool"

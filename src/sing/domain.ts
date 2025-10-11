@@ -1,4 +1,11 @@
-import { calculateHash, getLast, getNext, getPrev, isSorted } from "./utility";
+import {
+  applySmoothTransition,
+  calculateHash,
+  getLast,
+  getNext,
+  getPrev,
+  isSorted,
+} from "./utility";
 import { convertLongVowel, moraPattern } from "@/domain/japanese";
 import {
   Phrase,
@@ -933,7 +940,15 @@ export function applyPhonemeTimingEditAndAdjust(
   }
 }
 
-export function applyPitchEdit(
+/**
+ * ピッチ編集データをクエリのf0に適用し、編集領域の境界を滑らかに接続する。
+ *
+ * @param phraseQuery - 処理対象のクエリ
+ * @param phraseStartTime - フレーズの開始時刻
+ * @param pitchEditData - 適用するピッチ編集データ
+ * @param editorFrameRate - エディターのフレームレート
+ */
+export function applyPitchEditWithSmoothing(
   phraseQuery: EditorFrameAudioQuery,
   phraseStartTime: number,
   pitchEditData: number[],
@@ -963,16 +978,63 @@ export function applyPitchEdit(
   );
   const phraseQueryEndFrame = phraseQueryStartFrame + phraseQueryFrameLength;
 
-  // ピッチ編集をf0に適用する
+  // pitchEditDataの範囲内にクリップ
   const startFrame = Math.max(0, phraseQueryStartFrame);
   const endFrame = Math.min(pitchEditData.length, phraseQueryEndFrame);
+
+  const editedIndices: number[] = [];
+
+  // ピッチ編集データをf0に適用する（有声区間にのみ適用する）
   for (let i = startFrame; i < endFrame; i++) {
-    const phoneme = framePhonemes[i - phraseQueryStartFrame];
-    const voiced = !unvoicedPhonemes.includes(phoneme);
-    if (voiced && pitchEditData[i] !== VALUE_INDICATING_NO_DATA) {
-      f0[i - phraseQueryStartFrame] = pitchEditData[i];
+    const f0Index = i - phraseQueryStartFrame;
+    const phoneme = framePhonemes[f0Index];
+    const isVoiced = !unvoicedPhonemes.includes(phoneme);
+    if (isVoiced && pitchEditData[i] !== VALUE_INDICATING_NO_DATA) {
+      f0[f0Index] = pitchEditData[i];
+      editedIndices.push(f0Index);
     }
   }
+
+  const jumpIndicesInF0: number[] = [];
+
+  // 編集された区間の端を、f0が不連続になっている箇所として記録する
+  for (let i = 0; i < editedIndices.length; i++) {
+    const editedIndex = editedIndices[i];
+    const prevEditedIndex = getPrev(editedIndices, i);
+    const nextEditedIndex = getNext(editedIndices, i);
+
+    // 編集区間の開始位置を、f0が不連続になっている箇所として記録
+    if (prevEditedIndex == undefined) {
+      if (editedIndex !== 0) {
+        jumpIndicesInF0.push(editedIndex);
+      }
+    } else {
+      if (editedIndex !== prevEditedIndex + 1) {
+        jumpIndicesInF0.push(editedIndex);
+      }
+    }
+
+    // 編集区間の終了位置を、f0が不連続になっている箇所として記録
+    if (nextEditedIndex == undefined) {
+      if (editedIndex !== f0.length - 1) {
+        jumpIndicesInF0.push(editedIndex + 1);
+      }
+    } else {
+      if (editedIndex !== nextEditedIndex - 1) {
+        jumpIndicesInF0.push(editedIndex + 1);
+      }
+    }
+  }
+
+  // 対数スケールのf0に変換する
+  const lf0 = f0.map((value) => Math.log(value));
+
+  // f0が不連続になっている各箇所を滑らかにつなぐ
+  // NOTE: 最大6フレームかけて滑らかにする
+  applySmoothTransition(lf0, jumpIndicesInF0, 6);
+
+  // 元のスケールに戻して、f0を更新する
+  phraseQuery.f0 = lf0.map((value) => Math.exp(value));
 }
 
 /**
