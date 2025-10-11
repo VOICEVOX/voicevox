@@ -6,6 +6,6 @@
 
 ファイルの関連付け用。以下のどちらかに配置します:
 
-`/usr/share/mime/packages`(システム用)
+- `/usr/share/mime/packages`(システム用)
 
-`~/.local/share/mime/packages` (手動インストール用
+- `~/.local/share/mime/packages` (手動インストール用)
