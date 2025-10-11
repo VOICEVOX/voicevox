@@ -167,6 +167,11 @@
               transform: `translateX(${phraseInfo.x - scrollX}px)`,
             }"
           />
+          <SequencerDebugInfo
+            v-if="showEditedPitch"
+            :offsetX="scrollX"
+            :offsetY="scrollY"
+          />
           <div
             class="sequencer-playhead"
             data-testid="sequencer-playhead"
@@ -282,6 +287,7 @@ import CharacterPortrait from "@/components/Sing/CharacterPortrait.vue";
 import SequencerPitch from "@/components/Sing/SequencerPitch.vue";
 import SequencerLyricInput from "@/components/Sing/SequencerLyricInput.vue";
 import SequencerToolPalette from "@/components/Sing/SequencerToolPalette.vue";
+import SequencerDebugInfo from "@/components/Sing/SequencerDebugInfo.vue";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import { createLogger } from "@/helpers/log";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
@@ -433,6 +439,10 @@ const phraseInfosInOtherTracks = computed(() => {
 const parameterPanelHeight = ref(300);
 const isParameterPanelOpen = computed(
   () => store.state.experimentalSetting.showParameterPanel,
+);
+
+const showEditedPitch = computed(
+  () => store.state.experimentalSetting.showEditedPitch,
 );
 
 const setParameterPanelHeight = (height: number) => {
