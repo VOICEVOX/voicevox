@@ -45,6 +45,14 @@ export const ipcMessageReceiver: Plugin = {
           window.dataLayer?.push({ event: "windowResize", width, height }),
         300,
       ),
+
+      ON_UPDATE_DOWNLOAD_PROGRESS: (_, { numBytes, totalBytes }) => {
+        debugger;
+        void options.store.actions.SET_PROGRESS_FROM_COUNT({
+          finishedCount: numBytes,
+          totalCount: totalBytes,
+        });
+      },
     });
   },
 };
