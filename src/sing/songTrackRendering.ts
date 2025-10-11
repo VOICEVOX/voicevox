@@ -17,6 +17,7 @@ import {
 } from "@/sing/utility";
 import {
   applyPitchEdit,
+  applyVolumeEdit,
   calculatePhraseKey,
   decibelToLinear,
   getNoteDuration,
@@ -238,6 +239,12 @@ const shiftPitch = (f0: number[], pitchShift: number) => {
 const shiftVolume = (volume: number[], volumeShift: number) => {
   for (let i = 0; i < volume.length; i++) {
     volume[i] *= decibelToLinear(volumeShift);
+  }
+};
+
+const ensureNonNegativeVolume = (volume: number[]) => {
+  for (let i = 0; i < volume.length; i++) {
+    volume[i] = Math.max(volume[i], 0);
   }
 };
 
@@ -554,8 +561,9 @@ const generateSingingVolumeSource = (
   }
 
   const clonedQuery = structuredClone(phrase.query);
-  const clonedSingingPitch = structuredClone(phrase.singingPitch);
 
+  // ピッチ編集を適用したf0をボリューム生成に使うため、ピッチをクローンして適用する
+  const clonedSingingPitch = structuredClone(phrase.singingPitch);
   clonedQuery.f0 = clonedSingingPitch;
 
   applyPitchEdit(
@@ -609,6 +617,13 @@ const generateSingingVoiceSource = (
     track.pitchEditData,
     snapshot.editorFrameRate,
   );
+  applyVolumeEdit(
+    clonedQuery,
+    phrase.startTime,
+    track.volumeEditData,
+    snapshot.editorFrameRate,
+  );
+  shiftVolume(clonedQuery.volume, track.volumeRangeAdjustment);
 
   return {
     singer: track.singer,
@@ -707,13 +722,14 @@ const generateSingingVolume = async (
     styleId: config.singingTeacherStyleId,
   });
 
-  shiftVolume(singingVolume, singingVolumeSource.volumeRangeAdjustment);
   muteLastPauSection(
     singingVolume,
     queryForVolumeGeneration.phonemes,
     singingVolumeSource.engineFrameRate,
     config.fadeOutDurationSeconds,
   );
+
+  ensureNonNegativeVolume(singingVolume);
 
   return singingVolume;
 };
