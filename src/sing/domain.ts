@@ -385,6 +385,7 @@ export function createDefaultTrack(): Track {
     volumeRangeAdjustment: 0,
     notes: [],
     pitchEditData: [],
+    volumeEditData: [],
     phonemeTimingEditData: new Map(),
 
     solo: false,
@@ -425,6 +426,16 @@ export function isValidPitchEditData(pitchEditData: number[]) {
     (value) =>
       Number.isFinite(value) &&
       (value > 0 || value === VALUE_INDICATING_NO_DATA),
+  );
+}
+
+export function isValidVolumeEditData(volumeEditData: number[]) {
+  // NOTE: APIの返却が0未満や1より大きい値の場合があるため、
+  // APIからの返却値を0-1の範囲でクランプする必要がある
+  return volumeEditData.every(
+    (value) =>
+      Number.isFinite(value) &&
+      ((value >= 0 && value <= 1) || value === VALUE_INDICATING_NO_DATA),
   );
 }
 

@@ -836,14 +836,15 @@ const phraseKeySchema = z.string().brand<"PhraseKey">();
 export type PhraseKey = z.infer<typeof phraseKeySchema>;
 export const PhraseKey = (id: string): PhraseKey => phraseKeySchema.parse(id);
 
-// 編集対象 ノート or ピッチ
-// ボリュームを足すのであれば"VOLUME"を追加する
-export type SequencerEditTarget = "NOTE" | "PITCH";
+// 編集対象 ノート or ピッチ or ボリューム
+export type SequencerEditTarget = "NOTE" | "PITCH" | "VOLUME";
 
 // ノート編集ツール
 export type NoteEditTool = "SELECT_FIRST" | "EDIT_FIRST";
 // ピッチ編集ツール
 export type PitchEditTool = "DRAW" | "ERASE";
+// ボリューム編集ツール
+export type VolumeEditTool = "DRAW" | "ERASE";
 
 // プロジェクトの書き出しに使えるファイル形式
 export type ExportSongProjectFileType =
