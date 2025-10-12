@@ -4,7 +4,5 @@
 
 ## voicevox.xml
 
-ファイルの関連付け用。以下のどちらかに配置します。
-
-- システム用 `/usr/share/mime/packages`
-- 手動インストール用 `~/.local/share/mime/packages`
+ファイルの関連付け用。以下に配置するようにパッケージングする事を推奨します:
+`/usr/share/mime/packages/voicevox.xml`
