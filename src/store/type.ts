@@ -836,14 +836,14 @@ const phraseKeySchema = z.string().brand<"PhraseKey">();
 export type PhraseKey = z.infer<typeof phraseKeySchema>;
 export const PhraseKey = (id: string): PhraseKey => phraseKeySchema.parse(id);
 
-// 編集対象 ノート or ピッチ or ボリューム
-export type SequencerEditTarget = "NOTE" | "PITCH" | "VOLUME";
+// 編集対象 ノート or ピッチ
+export type SequencerEditTarget = "NOTE" | "PITCH";
 
 // ノート編集ツール
 export type NoteEditTool = "SELECT_FIRST" | "EDIT_FIRST";
 // ピッチ編集ツール
 export type PitchEditTool = "DRAW" | "ERASE";
-// ボリューム編集ツール
+// ボリューム編集ツール（VolumeEditor 専用）
 export type VolumeEditTool = "DRAW" | "ERASE";
 
 // プロジェクトの書き出しに使えるファイル形式
@@ -884,9 +884,13 @@ export type SingingStoreState = {
   sequencerZoomX: number;
   sequencerZoomY: number;
   sequencerSnapType: number;
+  // sequencerEditTargetはUI上はシーケンサ全体ではなくピアノロールでの編集対象(ノート or ピッチ)を表す
+  // TODO: 編集対象がわかりづらいため、ピアノロールの編集対象を表すものに変更する eg: pianoRollEditTarget
   sequencerEditTarget: SequencerEditTarget;
   sequencerNoteTool: NoteEditTool;
   sequencerPitchTool: PitchEditTool;
+  sequencerVolumeTool: VolumeEditTool;
+  sequencerVolumeVisible: boolean;
   _selectedNoteIds: Set<NoteId>;
   editingLyricNoteId?: NoteId;
   nowPlaying: boolean;
@@ -1158,6 +1162,16 @@ export type SingingStoreTypes = {
   SET_SEQUENCER_PITCH_TOOL: {
     mutation: { sequencerPitchTool: PitchEditTool };
     action(payload: { sequencerPitchTool: PitchEditTool }): void;
+  };
+
+  SET_SEQUENCER_VOLUME_TOOL: {
+    mutation: { sequencerVolumeTool: VolumeEditTool };
+    action(payload: { sequencerVolumeTool: VolumeEditTool }): void;
+  };
+
+  SET_SEQUENCER_VOLUME_VISIBLE: {
+    mutation: { sequencerVolumeVisible: boolean };
+    action(payload: { sequencerVolumeVisible: boolean }): void;
   };
 
   EXPORT_LABEL_FILES: {
