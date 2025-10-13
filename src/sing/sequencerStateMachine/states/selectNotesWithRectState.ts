@@ -6,9 +6,10 @@ import {
   PositionOnSequencer,
   SequencerStateDefinitions,
 } from "@/sing/sequencerStateMachine/common";
-import { getButton } from "@/sing/viewHelper";
+import { getButton, noteNumberToBaseY, tickToBaseX } from "@/sing/viewHelper";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import { NoteId } from "@/type/preload";
+import { frequencyToNoteNumber } from "@/sing/domain";
 
 export class SelectNotesWithRectState
   implements State<SequencerStateDefinitions, Input, Context>
@@ -68,6 +69,8 @@ export class SelectNotesWithRectState
           setNextState(this.returnStateId, undefined);
         }
       }
+    } else if (input.type === "scrollEvent") {
+      this.updatePreviewRect(context);
     }
   }
 
@@ -114,10 +117,25 @@ export class SelectNotesWithRectState
   }
 
   private updatePreviewRect(context: Context) {
-    const startX = Math.min(this.cursorPosAtStart.x, this.currentCursorPos.x);
-    const endX = Math.max(this.cursorPosAtStart.x, this.currentCursorPos.x);
-    const startY = Math.min(this.cursorPosAtStart.y, this.currentCursorPos.y);
-    const endY = Math.max(this.cursorPosAtStart.y, this.currentCursorPos.y);
+    const cursorNoteNumberAtStart = frequencyToNoteNumber(
+      this.cursorPosAtStart.frequency,
+    );
+    const cursorBaseXAtStart = tickToBaseX(
+      this.cursorPosAtStart.ticks,
+      context.tpqn.value,
+    );
+    const cursorBaseYAtStart = noteNumberToBaseY(cursorNoteNumberAtStart);
+
+    const viewportInfo = context.viewportInfo.value;
+    const cursorXAtStart =
+      cursorBaseXAtStart * viewportInfo.scaleX - viewportInfo.offsetX;
+    const cursorYAtStart =
+      cursorBaseYAtStart * viewportInfo.scaleY - viewportInfo.offsetY;
+
+    const startX = Math.min(cursorXAtStart, this.currentCursorPos.x);
+    const endX = Math.max(cursorXAtStart, this.currentCursorPos.x);
+    const startY = Math.min(cursorYAtStart, this.currentCursorPos.y);
+    const endY = Math.max(cursorYAtStart, this.currentCursorPos.y);
 
     context.previewRectForRectSelect.value = {
       x: startX,
