@@ -403,7 +403,7 @@ const scrollX = ref(0);
 const scrollY = ref(0);
 
 // ビューポートの情報
-const viewportInfo = computed((): ViewportInfo => {
+const viewportInfo = computed<ViewportInfo>(() => {
   return {
     scaleX: zoomX.value,
     scaleY: zoomY.value,
