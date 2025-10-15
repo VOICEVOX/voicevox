@@ -92,6 +92,3 @@ export class MultiDownloader {
     );
   }
 }
-
-//     return this.lock.acquire("vvpp-manager", fn);
-//   }
