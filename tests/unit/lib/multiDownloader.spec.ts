@@ -18,8 +18,12 @@ beforeAll(() => {
     return c.text("Hello, World 2!");
   });
   server.get("/slow", async (c) => {
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 200));
     return c.text("This was slow");
+  });
+  server.get("/slow-fail", async (c) => {
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    return c.text("This will fail", 500);
   });
   dummyServer = serve({
     ...server,
@@ -111,6 +115,44 @@ test("複数ファイルを同時にダウンロードできる", async () => {
     const startTime = Date.now();
     await downloader.download();
     const duration = Date.now() - startTime;
-    expect(duration).toBeLessThan(100 + 50); // 100msの遅延 + 50msの余裕。同時ダウンロードできていなかったら300ms以上かかる
+    expect(duration).toBeLessThan(200 + 50); // 200msの遅延 + 50msの余裕。同時ダウンロードできていなかったら600ms以上かかる
+  }
+});
+
+test("一つエラーが起きると全体が失敗し、そしてすべて削除される", async () => {
+  await using tempDir = await temporaryDirectory();
+  await using downloader = new MultiDownloader(
+    [
+      {
+        name: "slow1.txt",
+        size: 14,
+        url: `${dummyServerUrl}/slow`,
+      },
+      {
+        name: "fail.txt",
+        size: 14,
+        url: `${dummyServerUrl}/slow-fail`,
+      },
+      {
+        name: "slow3.txt",
+        size: 14,
+        url: `${dummyServerUrl}/slow`,
+      },
+    ],
+    tempDir.path,
+  );
+
+  const downloadedPaths = [
+    path.join(tempDir.path, "slow1.txt"),
+    path.join(tempDir.path, "fail.txt"),
+    path.join(tempDir.path, "slow3.txt"),
+  ];
+  const currentTime = Date.now();
+  await expect(downloader.download()).rejects.toThrow();
+  expect(Date.now() - currentTime).toBeLessThan(100); // 200ms待たずに失敗しているはず
+
+  // 一つ失敗したので削除されているはず
+  for (const filePath of downloadedPaths) {
+    await expect(fs.stat(filePath)).rejects.toThrow();
   }
 });
