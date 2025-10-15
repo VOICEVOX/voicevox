@@ -14,6 +14,9 @@ beforeAll(() => {
   server.get("/simple", (c) => {
     return c.text("Hello, World!");
   });
+  server.get("/simple2", (c) => {
+    return c.text("Hello, World 2!");
+  });
   server.get("/slow", async (c) => {
     await new Promise((resolve) => setTimeout(resolve, 100));
     return c.text("This was slow");
@@ -56,16 +59,27 @@ test("ファイルをダウンロードして削除できる", async () => {
           size: 13,
           url: `${dummyServerUrl}/simple`,
         },
+        {
+          name: "simple2.txt",
+          size: 14,
+          url: `${dummyServerUrl}/simple2`,
+        },
       ],
       tempDir.path,
     );
     await downloader.download();
     expect(downloader.downloadedPaths).toStrictEqual([
       path.join(tempDir.path, "simple.txt"),
+      path.join(tempDir.path, "simple2.txt"),
     ]);
-    expect(await fs.stat(downloader.downloadedPaths[0])).toBeDefined();
+    for (const filePath of downloader.downloadedPaths) {
+      const stat = await fs.stat(filePath);
+      expect(stat.isFile()).toBe(true);
+    }
     downloadedPaths = downloader.downloadedPaths;
   }
+
+  // スコープを抜けると削除される
   for (const filePath of downloadedPaths) {
     await expect(fs.stat(filePath)).rejects.toThrow();
   }
