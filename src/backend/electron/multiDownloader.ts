@@ -19,7 +19,7 @@ export class MultiDownloader {
     public downloadDir: string,
     private callbacks?: { onProgress: ProgressCallback<"download"> },
   ) {
-    // ダウンロード
+    // ダウンロード進捗の初期化
     callbacks?.onProgress?.({ type: "download", progress: 0 });
 
     let totalBytes = 0;
