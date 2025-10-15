@@ -132,12 +132,13 @@ test("複数ファイルを同時にダウンロードできる", async () => {
 
 test("一つエラーが起きると全体が失敗し、そしてすべて削除される", async () => {
   await using tempDir = await temporaryDirectory();
+  const longerDownloadTime = 1000;
   await using downloader = new MultiDownloader(
     [
       {
         name: "slow1.txt",
         size: 14,
-        url: `${dummyServerUrl}/slow?wait=1000`,
+        url: `${dummyServerUrl}/slow?wait=${longerDownloadTime}`,
       },
       {
         name: "fail.txt",
@@ -147,7 +148,7 @@ test("一つエラーが起きると全体が失敗し、そしてすべて削�
       {
         name: "slow3.txt",
         size: 14,
-        url: `${dummyServerUrl}/slow?wait=1000`,
+        url: `${dummyServerUrl}/slow?wait=${longerDownloadTime}`,
       },
     ],
     tempDir.path,
@@ -160,8 +161,8 @@ test("一つエラーが起きると全体が失敗し、そしてすべて削�
   ];
   const currentTime = Date.now();
   await expect(downloader.download()).rejects.toThrow();
-  // 他のリクエストを待たずにすぐに失敗しているはず
-  expect(Date.now() - currentTime).toBeLessThan(1000);
+  // 他の長いリクエストを待たずにすぐに失敗しているはず
+  expect(Date.now() - currentTime).toBeLessThan(longerDownloadTime);
 
   // 一つ失敗したので削除されているはず
   for (const filePath of downloadedPaths) {
