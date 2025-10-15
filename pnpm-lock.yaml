@@ -114,6 +114,9 @@ importers:
       '@hono/node-server':
         specifier: 1.19.5
         version: 1.19.5(hono@4.9.12)
+      '@hono/zod-validator':
+        specifier: 0.7.4
+        version: 0.7.4(hono@4.9.12)(zod@3.25.67)
       '@openapitools/openapi-generator-cli':
         specifier: 2.20.5
         version: 2.20.5(encoding@0.1.13)
@@ -636,6 +639,12 @@ packages:
     engines: {node: '>=18.14.1'}
     peerDependencies:
       hono: ^4
+
+  '@hono/zod-validator@0.7.4':
+    resolution: {integrity: sha512-biKGn3BRJVaftZlIPMyK+HCe/UHAjJ6sH0UyXe3+v0OcgVr9xfImDROTJFLtn9e3XEEAHGZIM9U6evu85abm8Q==}
+    peerDependencies:
+      hono: '>=3.9.0'
+      zod: ^3.25.0 || ^4.0.0
 
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -5522,6 +5531,11 @@ snapshots:
   '@hono/node-server@1.19.5(hono@4.9.12)':
     dependencies:
       hono: 4.9.12
+
+  '@hono/zod-validator@0.7.4(hono@4.9.12)(zod@3.25.67)':
+    dependencies:
+      hono: 4.9.12
+      zod: 3.25.67
 
   '@humanfs/core@0.19.1': {}
 

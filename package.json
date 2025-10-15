@@ -91,6 +91,7 @@
     "@eslint/eslintrc": "3.3.1",
     "@eslint/js": "9.29.0",
     "@hono/node-server": "1.19.5",
+    "@hono/zod-validator": "0.7.4",
     "@openapitools/openapi-generator-cli": "2.20.5",
     "@playwright/test": "1.53.1",
     "@quasar/vite-plugin": "1.9.0",

@@ -2,9 +2,13 @@ import fs from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { Hono } from "hono";
+import { zValidator } from "@hono/zod-validator";
 import { serve, ServerType } from "@hono/node-server";
 import { afterAll, beforeAll, expect, test } from "vitest";
+import { z } from "zod";
 import { MultiDownloader } from "@/backend/electron/multiDownloader";
+
+const marginTime = process.env.CI ? 100 : 50;
 
 let dummyServer: ServerType;
 const dummyServerPort = 7358;
@@ -17,10 +21,15 @@ beforeAll(() => {
   server.get("/simple2", (c) => {
     return c.text("Hello, World 2!");
   });
-  server.get("/slow", async (c) => {
-    await new Promise((resolve) => setTimeout(resolve, 200));
-    return c.text("This was slow");
-  });
+  server.get(
+    "/slow",
+    zValidator("query", z.object({ wait: z.string() })),
+    async (c) => {
+      const wait = Number(c.req.query("wait") ?? "100");
+      await new Promise((resolve) => setTimeout(resolve, wait));
+      return c.text("This was slow");
+    },
+  );
   server.get("/slow-fail", async (c) => {
     await new Promise((resolve) => setTimeout(resolve, 50));
     return c.text("This will fail", 500);
@@ -97,17 +106,17 @@ test("複数ファイルを同時にダウンロードできる", async () => {
         {
           name: "slow1.txt",
           size: 14,
-          url: `${dummyServerUrl}/slow`,
+          url: `${dummyServerUrl}/slow?wait=200`,
         },
         {
           name: "slow2.txt",
           size: 14,
-          url: `${dummyServerUrl}/slow`,
+          url: `${dummyServerUrl}/slow?wait=200`,
         },
         {
           name: "slow3.txt",
           size: 14,
-          url: `${dummyServerUrl}/slow`,
+          url: `${dummyServerUrl}/slow?wait=200`,
         },
       ],
       tempDir.path,
@@ -115,7 +124,9 @@ test("複数ファイルを同時にダウンロードできる", async () => {
     const startTime = Date.now();
     await downloader.download();
     const duration = Date.now() - startTime;
-    expect(duration).toBeLessThan(200 + 50); // 200msの遅延 + 50msの余裕。同時ダウンロードできていなかったら600ms以上かかる
+    // 200msの遅延 + 多少の余裕。
+    // 同時ダウンロードできていなかったら600ms以上かかる
+    expect(duration).toBeLessThan(200 + marginTime);
   }
 });
 
@@ -126,7 +137,7 @@ test("一つエラーが起きると全体が失敗し、そしてすべて削�
       {
         name: "slow1.txt",
         size: 14,
-        url: `${dummyServerUrl}/slow`,
+        url: `${dummyServerUrl}/slow?wait=1000`,
       },
       {
         name: "fail.txt",
@@ -136,7 +147,7 @@ test("一つエラーが起きると全体が失敗し、そしてすべて削�
       {
         name: "slow3.txt",
         size: 14,
-        url: `${dummyServerUrl}/slow`,
+        url: `${dummyServerUrl}/slow?wait=1000`,
       },
     ],
     tempDir.path,
@@ -149,7 +160,8 @@ test("一つエラーが起きると全体が失敗し、そしてすべて削�
   ];
   const currentTime = Date.now();
   await expect(downloader.download()).rejects.toThrow();
-  expect(Date.now() - currentTime).toBeLessThan(100); // 200ms待たずに失敗しているはず
+  // 他のリクエストを待たずにすぐに失敗しているはず
+  expect(Date.now() - currentTime).toBeLessThan(1000);
 
   // 一つ失敗したので削除されているはず
   for (const filePath of downloadedPaths) {
