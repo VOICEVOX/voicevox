@@ -3,7 +3,7 @@ import path from "node:path";
 import { createLogger } from "@/helpers/log";
 import { ProgressCallback } from "@/helpers/progressHelper";
 
-const log = createLogger("downloadFiles");
+const log = createLogger("multiDownloader");
 
 export type RemoteFile = {
   url: string;
