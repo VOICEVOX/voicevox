@@ -1,0 +1,22 @@
+diff --git a/package.json b/package.json
+index c52b34efaff650ed1f00107e1f860ed5550cf38e..1f6fc486e24ad98c2591855d6593bc933c099cc1 100644
+--- a/package.json
++++ b/package.json
+@@ -63,7 +63,7 @@
+   "dependencies": {
+     "@storybook/global": "^5.0.0",
+     "type-fest": "~2.19",
+-    "vue-component-type-helpers": "latest"
++    "vue-component-type-helpers": "~3.0.0"
+   },
+   "devDependencies": {
+     "@testing-library/vue": "^8.0.0",
+diff --git a/template/components/index.js b/template/components/index.js
+deleted file mode 100644
+index 4537bb7d9827690e6bd2c2fdeac19bf1ed022c0b..0000000000000000000000000000000000000000
+diff --git a/template/stories/preview.js b/template/stories/preview.js
+deleted file mode 100644
+index 1c07837174260b1f0a4defc19d94a183dc74a158..0000000000000000000000000000000000000000
+diff --git a/template/stories_vue3-vite-default-ts/OverrideArgs.stories.js b/template/stories_vue3-vite-default-ts/OverrideArgs.stories.js
+deleted file mode 100644
+index 968d60353212bc9264e90fdaa9c4276887c7a716..0000000000000000000000000000000000000000
