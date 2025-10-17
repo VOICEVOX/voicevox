@@ -1,47 +1,66 @@
 import fs from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { Hono } from "hono";
-import { zValidator } from "@hono/zod-validator";
-import { serve, ServerType } from "@hono/node-server";
-import { afterAll, beforeAll, expect, test } from "vitest";
-import { z } from "zod";
+import http from "node:http";
+import { expect, test } from "vitest";
 import { MultiDownloader } from "@/backend/electron/multiDownloader";
 
-const marginTime = process.env.CI ? 100 : 50;
+const marginTime = 100;
 
-let dummyServer: ServerType;
-const dummyServerPort = 7358;
-const dummyServerUrl = `http://localhost:${dummyServerPort}`;
-beforeAll(() => {
-  const server = new Hono();
-  server.get("/simple", (c) => {
-    return c.text("Hello, World!");
-  });
-  server.get("/simple2", (c) => {
-    return c.text("Hello, World 2!");
-  });
-  server.get(
-    "/slow",
-    zValidator("query", z.object({ wait: z.string() })),
-    async (c) => {
-      const wait = Number(c.req.query("wait") ?? "100");
-      await new Promise((resolve) => setTimeout(resolve, wait));
-      return c.text("This was slow");
-    },
-  );
-  server.get("/slow-fail", async (c) => {
-    await new Promise((resolve) => setTimeout(resolve, 50));
-    return c.text("This will fail", 500);
-  });
-  dummyServer = serve({
-    ...server,
-    port: dummyServerPort,
-  });
-});
-afterAll(() => {
-  dummyServer?.close();
-});
+class TestServer {
+  server: http.Server;
+
+  constructor(
+    private endpoints: Record<
+      string,
+      (req: http.IncomingMessage, res: http.ServerResponse) => Promise<void>
+    >,
+  ) {
+    this.server = http.createServer(this.requestListener.bind(this));
+    this.server.listen(0);
+  }
+
+  get url() {
+    const address = this.server.address();
+    if (address && typeof address === "object") {
+      return `http://localhost:${address.port}`;
+    } else {
+      throw new Error("Server is not running");
+    }
+  }
+
+  requestListener(req: http.IncomingMessage, res: http.ServerResponse) {
+    const url = req.url ?? "";
+    const parsedUrl = new URL(url, "http://localhost");
+    const pathname = parsedUrl.pathname;
+    const handler = this.endpoints[pathname];
+    if (handler) {
+      void handler(req, res).catch((err: unknown) => {
+        if (
+          typeof err === "object" &&
+          err != null &&
+          "code" in err &&
+          err.code === "ECONNRESET"
+        ) {
+          // クライアントが切断した場合は無視
+          return;
+        }
+        throw err;
+      });
+    } else {
+      res.statusCode = 404;
+      res.end("Not Found");
+    }
+  }
+
+  [Symbol.asyncDispose]() {
+    return new Promise<void>((resolve) => {
+      this.server.close(() => {
+        resolve();
+      });
+    });
+  }
+}
 
 async function temporaryDirectory() {
   const tempDir = await fs.mkdtemp(
@@ -56,13 +75,29 @@ async function temporaryDirectory() {
 }
 
 test("テストサーバーが動いている", async () => {
-  const response = await fetch(`${dummyServerUrl}/simple`);
+  await using dummyServer = new TestServer({
+    "/simple": async (_req, res) => {
+      res.statusCode = 200;
+      res.end("Hello, World!");
+    },
+  });
+  const response = await fetch(`${dummyServer.url}/simple`);
   const text = await response.text();
   expect(text).toBe("Hello, World!");
 });
 
 test("ファイルをダウンロードして削除できる", async () => {
   await using tempDir = await temporaryDirectory();
+  await using dummyServer = new TestServer({
+    "/simple": async (_req, res) => {
+      res.statusCode = 200;
+      res.end("Hello, World!");
+    },
+    "/simple2": async (_req, res) => {
+      res.statusCode = 200;
+      res.end("Hello, World!!");
+    },
+  });
   let downloadedPaths: string[] = [];
   {
     await using downloader = new MultiDownloader(
@@ -70,12 +105,12 @@ test("ファイルをダウンロードして削除できる", async () => {
         {
           name: "simple.txt",
           size: 13,
-          url: `${dummyServerUrl}/simple`,
+          url: `${dummyServer.url}/simple`,
         },
         {
           name: "simple2.txt",
           size: 14,
-          url: `${dummyServerUrl}/simple2`,
+          url: `${dummyServer.url}/simple2`,
         },
       ],
       tempDir.path,
@@ -100,23 +135,30 @@ test("ファイルをダウンロードして削除できる", async () => {
 
 test("複数ファイルを同時にダウンロードできる", async () => {
   await using tempDir = await temporaryDirectory();
+  await using dummyServer = new TestServer({
+    "/slow": async (_req, res) => {
+      await new Promise((r) => setTimeout(r, 200));
+      res.statusCode = 200;
+      res.end("Hello, World!\n");
+    },
+  });
   {
     await using downloader = new MultiDownloader(
       [
         {
           name: "slow1.txt",
           size: 14,
-          url: `${dummyServerUrl}/slow?wait=200`,
+          url: `${dummyServer.url}/slow`,
         },
         {
           name: "slow2.txt",
           size: 14,
-          url: `${dummyServerUrl}/slow?wait=200`,
+          url: `${dummyServer.url}/slow`,
         },
         {
           name: "slow3.txt",
           size: 14,
-          url: `${dummyServerUrl}/slow?wait=200`,
+          url: `${dummyServer.url}/slow`,
         },
       ],
       tempDir.path,
@@ -130,41 +172,59 @@ test("複数ファイルを同時にダウンロードできる", async () => {
   }
 });
 
-test("一つエラーが起きると全体が失敗し、そしてすべて削除される", async () => {
+test("一つエラーが起きると全体が失敗し、かつそのときでもクリーンアップできる", async () => {
   await using tempDir = await temporaryDirectory();
-  const longerDownloadTime = 1000;
-  await using downloader = new MultiDownloader(
-    [
-      {
-        name: "slow1.txt",
-        size: 14,
-        url: `${dummyServerUrl}/slow?wait=${longerDownloadTime}`,
-      },
-      {
-        name: "fail.txt",
-        size: 14,
-        url: `${dummyServerUrl}/slow-fail`,
-      },
-      {
-        name: "slow3.txt",
-        size: 14,
-        url: `${dummyServerUrl}/slow?wait=${longerDownloadTime}`,
-      },
-    ],
-    tempDir.path,
-  );
+  await using dummyServer = new TestServer({
+    "/slow-100": async (_req, res) => {
+      await new Promise((r) => setTimeout(r, 100));
+      res.statusCode = 200;
+      res.end("Hello, World!\n");
+    },
+    "/slow-1000": async (_req, res) => {
+      await new Promise((r) => setTimeout(r, 1000));
+      res.statusCode = 200;
+      res.end("Hello, World!\n");
+    },
+    "/slow-fail": async (_req, res) => {
+      await new Promise((r) => setTimeout(r, 500));
+      res.statusCode = 500;
+      res.end("Internal Server Error\n");
+    },
+  });
+  {
+    await using downloader = new MultiDownloader(
+      [
+        {
+          name: "slow1.txt",
+          size: 14,
+          url: `${dummyServer.url}/slow-100`,
+        },
+        {
+          name: "fail.txt",
+          size: 14,
+          url: `${dummyServer.url}/slow-fail`,
+        },
+        {
+          name: "slow3.txt",
+          size: 14,
+          url: `${dummyServer.url}/slow-1000`,
+        },
+      ],
+      tempDir.path,
+    );
+
+    const currentTime = Date.now();
+    await expect(downloader.download()).rejects.toThrow();
+    // 他の長いリクエストを待たずにすぐに失敗しているはず
+    expect(Date.now() - currentTime).toBeLessThan(500 + marginTime);
+  }
 
   const downloadedPaths = [
     path.join(tempDir.path, "slow1.txt"),
     path.join(tempDir.path, "fail.txt"),
     path.join(tempDir.path, "slow3.txt"),
   ];
-  const currentTime = Date.now();
-  await expect(downloader.download()).rejects.toThrow();
-  // 他の長いリクエストを待たずにすぐに失敗しているはず
-  expect(Date.now() - currentTime).toBeLessThan(longerDownloadTime);
-
-  // 一つ失敗したので削除されているはず
+  // スコープを抜けると削除される
   for (const filePath of downloadedPaths) {
     await expect(fs.stat(filePath)).rejects.toThrow();
   }

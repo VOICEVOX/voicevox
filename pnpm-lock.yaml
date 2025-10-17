@@ -111,12 +111,6 @@ importers:
       '@eslint/js':
         specifier: 9.29.0
         version: 9.29.0
-      '@hono/node-server':
-        specifier: 1.19.5
-        version: 1.19.5(hono@4.9.12)
-      '@hono/zod-validator':
-        specifier: 0.7.4
-        version: 0.7.4(hono@4.9.12)(zod@3.25.67)
       '@openapitools/openapi-generator-cli':
         specifier: 2.20.5
         version: 2.20.5(encoding@0.1.13)
@@ -243,9 +237,6 @@ importers:
       happy-dom:
         specifier: 18.0.1
         version: 18.0.1
-      hono:
-        specifier: 4.9.12
-        version: 4.9.12
       jiti:
         specifier: 2.4.2
         version: 2.4.2
@@ -633,18 +624,6 @@ packages:
     resolution: {integrity: sha512-kGUnCI+Z5lBeCKd7rzgU7UoFU8Q0EkJfh17SgeyAyx8cLdISqeq54BNJKZrME3WXersoigLZVJ1GLs0buYD3lA==}
     peerDependencies:
       vue: '>= 3.2.26 < 4.0.0'
-
-  '@hono/node-server@1.19.5':
-    resolution: {integrity: sha512-iBuhh+uaaggeAuf+TftcjZyWh2GEgZcVGXkNtskLVoWaXhnJtC5HLHrU8W1KHDoucqO1MswwglmkWLFyiDn4WQ==}
-    engines: {node: '>=18.14.1'}
-    peerDependencies:
-      hono: ^4
-
-  '@hono/zod-validator@0.7.4':
-    resolution: {integrity: sha512-biKGn3BRJVaftZlIPMyK+HCe/UHAjJ6sH0UyXe3+v0OcgVr9xfImDROTJFLtn9e3XEEAHGZIM9U6evu85abm8Q==}
-    peerDependencies:
-      hono: '>=3.9.0'
-      zod: ^3.25.0 || ^4.0.0
 
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -2919,10 +2898,6 @@ packages:
 
   headers-polyfill@4.0.3:
     resolution: {integrity: sha512-IScLbePpkvO846sIwOtOTDjutRMWdXdJmXdMvk6gCBHxFO8d+QKOQedyZSxFTTFYRSmlgSTDtXqqq4pcenBXLQ==}
-
-  hono@4.9.12:
-    resolution: {integrity: sha512-SrTC0YxqPwnN7yKa8gg/giLyQ2pILCKoideIHbYbFQlWZjYt68D2A4Ae1hehO/aDQ6RmTcpqOV/O2yBtMzx/VQ==}
-    engines: {node: '>=16.9.0'}
 
   hosted-git-info@4.1.0:
     resolution: {integrity: sha512-kyCuEOWjJqZuDbRHzL8V93NzQhwIB71oFWSyzVo+KPZI+pnQPPxucdkrOZvkLRnrf5URsQM+IJ09Dw29cRALIA==}
@@ -5527,15 +5502,6 @@ snapshots:
       vue: 3.5.17(typescript@5.8.3)
     optionalDependencies:
       vue-router: 4.5.1(vue@3.5.17(typescript@5.8.3))
-
-  '@hono/node-server@1.19.5(hono@4.9.12)':
-    dependencies:
-      hono: 4.9.12
-
-  '@hono/zod-validator@0.7.4(hono@4.9.12)(zod@3.25.67)':
-    dependencies:
-      hono: 4.9.12
-      zod: 3.25.67
 
   '@humanfs/core@0.19.1': {}
 
@@ -8211,8 +8177,6 @@ snapshots:
 
   headers-polyfill@4.0.3:
     optional: true
-
-  hono@4.9.12: {}
 
   hosted-git-info@4.1.0:
     dependencies:
