@@ -1,5 +1,5 @@
 NOTE:
-`@storybook/vue3`は`vue-component-type-helpers`を`latest`で依存しているが、そうすると勝手にバージョンが上がってしまし不都合なので
+`@storybook/vue3`は`vue-component-type-helpers`を`latest`で依存しているが、そうすると勝手にバージョンが上がってしまい不都合なので
 `~3.0.0`に固定する。
 ref: https://github.com/storybookjs/storybook/discussions/32739
 
