@@ -100,21 +100,18 @@ test("ファイルをダウンロードして削除できる", async () => {
   });
   let downloadedPaths: string[] = [];
   {
-    await using downloader = new MultiDownloader(
-      [
-        {
-          name: "simple.txt",
-          size: 13,
-          url: `${dummyServer.url}/simple`,
-        },
-        {
-          name: "simple2.txt",
-          size: 14,
-          url: `${dummyServer.url}/simple2`,
-        },
-      ],
-      tempDir.path,
-    );
+    await using downloader = new MultiDownloader(tempDir.path, [
+      {
+        name: "simple.txt",
+        size: 13,
+        url: `${dummyServer.url}/simple`,
+      },
+      {
+        name: "simple2.txt",
+        size: 14,
+        url: `${dummyServer.url}/simple2`,
+      },
+    ]);
     await downloader.download();
     expect(downloader.downloadedPaths).toStrictEqual([
       path.join(tempDir.path, "simple.txt"),
@@ -143,26 +140,23 @@ test("複数ファイルを同時にダウンロードできる", async () => {
     },
   });
   {
-    await using downloader = new MultiDownloader(
-      [
-        {
-          name: "slow1.txt",
-          size: 14,
-          url: `${dummyServer.url}/slow`,
-        },
-        {
-          name: "slow2.txt",
-          size: 14,
-          url: `${dummyServer.url}/slow`,
-        },
-        {
-          name: "slow3.txt",
-          size: 14,
-          url: `${dummyServer.url}/slow`,
-        },
-      ],
-      tempDir.path,
-    );
+    await using downloader = new MultiDownloader(tempDir.path, [
+      {
+        name: "slow1.txt",
+        size: 14,
+        url: `${dummyServer.url}/slow`,
+      },
+      {
+        name: "slow2.txt",
+        size: 14,
+        url: `${dummyServer.url}/slow`,
+      },
+      {
+        name: "slow3.txt",
+        size: 14,
+        url: `${dummyServer.url}/slow`,
+      },
+    ]);
     const startTime = Date.now();
     await downloader.download();
     const duration = Date.now() - startTime;
@@ -192,26 +186,23 @@ test("一つエラーが起きると全体が失敗し、かつそのときで�
     },
   });
   {
-    await using downloader = new MultiDownloader(
-      [
-        {
-          name: "slow1.txt",
-          size: 14,
-          url: `${dummyServer.url}/slow-100`,
-        },
-        {
-          name: "fail.txt",
-          size: 14,
-          url: `${dummyServer.url}/slow-fail`,
-        },
-        {
-          name: "slow3.txt",
-          size: 14,
-          url: `${dummyServer.url}/slow-1000`,
-        },
-      ],
-      tempDir.path,
-    );
+    await using downloader = new MultiDownloader(tempDir.path, [
+      {
+        name: "slow1.txt",
+        size: 14,
+        url: `${dummyServer.url}/slow-100`,
+      },
+      {
+        name: "fail.txt",
+        size: 14,
+        url: `${dummyServer.url}/slow-fail`,
+      },
+      {
+        name: "slow3.txt",
+        size: 14,
+        url: `${dummyServer.url}/slow-1000`,
+      },
+    ]);
 
     const currentTime = Date.now();
     await expect(downloader.download()).rejects.toThrow();

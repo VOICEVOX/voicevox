@@ -255,8 +255,8 @@ export class EngineAndVvppController {
     }
 
     await using downloader = new MultiDownloader(
-      packageInfo.packages,
       downloadDir,
+      packageInfo.packages,
       {
         onProgress: ({ progress }) => {
           callbacks.onProgress({ type: "download", progress });
