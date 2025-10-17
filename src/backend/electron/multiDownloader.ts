@@ -10,13 +10,20 @@ export type RemoteFileInfo = {
   size: number;
   name: string;
 };
+
+/**
+ * 複数のファイルを並列にダウンロードするクラス。
+ * ダウンロードしたファイルは、[Symbol.asyncDispose]で削除される。
+ *
+ * ファイルは`${downloadDir}/${name}`に保存される。
+ */
 export class MultiDownloader {
   private internalDownloadedPaths: string[] = [];
   public readonly totalBytes: number;
 
   constructor(
-    public remoteFiles: RemoteFileInfo[],
     public downloadDir: string,
+    public remoteFiles: RemoteFileInfo[],
     private callbacks?: { onProgress: ProgressCallback<"download"> },
   ) {
     // ダウンロード進捗の初期化
