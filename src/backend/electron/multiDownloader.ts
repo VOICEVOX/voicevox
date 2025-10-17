@@ -5,7 +5,7 @@ import { ProgressCallback } from "@/helpers/progressHelper";
 
 const log = createLogger("multiDownloader");
 
-export type RemoteFile = {
+export type RemoteFileInfo = {
   url: string;
   size: number;
   name: string;
@@ -15,7 +15,7 @@ export class MultiDownloader {
   public readonly totalBytes: number;
 
   constructor(
-    public remoteFiles: RemoteFile[],
+    public remoteFiles: RemoteFileInfo[],
     public downloadDir: string,
     private callbacks?: { onProgress: ProgressCallback<"download"> },
   ) {
