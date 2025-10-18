@@ -24,20 +24,14 @@
             class="character-policy-item"
           >
             <div class="character-portrait-section">
-              <img
-                :src="info.portraitPath"
-                class="character-portrait"
-                :alt="info.name"
-              />
+              <img :src="info.portraitPath" />
             </div>
             <div class="character-info-section">
               <div class="character-name">{{ info.name }}</div>
-              <div class="character-policy">
-                <BaseDocumentView>
-                  <!-- eslint-disable-next-line vue/no-v-html -->
-                  <div v-html="info.renderedPolicy"></div>
-                </BaseDocumentView>
-              </div>
+              <BaseDocumentView>
+                <!-- eslint-disable-next-line vue/no-v-html -->
+                <div v-html="info.renderedPolicy"></div>
+              </BaseDocumentView>
             </div>
           </div>
         </div>
@@ -130,6 +124,7 @@ const handleOpenUpdate = (isOpen: boolean) => {
 <style scoped lang="scss">
 @use "@/styles/v2/variables" as vars;
 @use "@/styles/v2/colors" as colors;
+@use "@/styles/v2/mixin" as mixin;
 
 .policy-dialog {
   width: 700px;
@@ -138,7 +133,7 @@ const handleOpenUpdate = (isOpen: boolean) => {
 
 .scrollable-area {
   overflow-y: auto;
-  max-height: 50vh;
+  max-height: calc(100vh - 100px - 295px);
 }
 
 .character-policies {
@@ -154,22 +149,14 @@ const handleOpenUpdate = (isOpen: boolean) => {
   border: 1px solid colors.$border;
   background-color: colors.$surface;
   border-radius: vars.$radius-2;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .character-portrait-section {
-  flex-shrink: 0;
   width: 6rem;
   height: 9rem;
   display: flex;
   justify-content: center;
   overflow: hidden;
-}
-
-.character-portrait {
-  height: 100%;
-  width: auto;
-  display: block;
 }
 
 .character-info-section {
@@ -178,15 +165,6 @@ const handleOpenUpdate = (isOpen: boolean) => {
 }
 
 .character-name {
-  font-size: 1.125rem;
-  font-weight: 600;
-  margin-bottom: vars.$gap-1;
-  color: colors.$display;
-}
-
-.character-policy {
-  font-size: 0.875rem;
-  line-height: 1.4;
-  color: colors.$display;
+  @include mixin.headline-2;
 }
 </style>

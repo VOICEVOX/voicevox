@@ -10,32 +10,25 @@ import { uuid4 } from "@/helpers/random";
 const testCharacterAId = toSpeakerId(uuid4());
 const testCharacterBId = toSpeakerId(uuid4());
 
-const samplePolicies = [
-  {
-    id: testCharacterAId,
-    name: "テストキャラクターA",
-    policy:
-      "markdownテスト。**太字**。\\\n改行。\\\n[リンク](https://example.com)",
-    portraitPath: getPortraitUrl(0),
-  },
-  {
-    id: testCharacterBId,
-    name: "テストキャラクターB",
-    policy: Array(50).fill("長いテキスト").join(""),
-    portraitPath: getPortraitUrl(1),
-  },
-] satisfies Array<{
-  id: SpeakerIdType;
-  name: string;
-  policy: string;
-  portraitPath: string;
-}>;
-
 const meta: Meta<typeof VoiceLibraryPolicyDialog> = {
   component: VoiceLibraryPolicyDialog,
   args: {
     modelValue: false,
-    characterPolicyInfos: samplePolicies,
+    characterPolicyInfos: [
+      {
+        id: testCharacterAId,
+        name: "テストキャラクターA",
+        policy:
+          "markdownテスト。**太字**。\\\n改行。\\\n[リンク](https://example.com)",
+        portraitPath: getPortraitUrl(0),
+      },
+      {
+        id: testCharacterBId,
+        name: "テストキャラクターB",
+        policy: Array(50).fill("長いテキスト").join(""),
+        portraitPath: getPortraitUrl(1),
+      },
+    ],
     onOk: fn(),
     onHide: fn(),
     "onUpdate:modelValue": fn(),

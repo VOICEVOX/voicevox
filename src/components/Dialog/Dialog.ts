@@ -302,6 +302,10 @@ export async function connectAndExportTextWithDialog({
   notifyResult(result, "text", actions, disableNotifyOnGenerate);
 }
 
+/**
+ * 音声ライブラリ利用規約ダイアログを表示する。
+ * 確認した場合は確認状況を保存する。
+ */
 export async function showVoiceLibraryPolicyDialog({
   unconfirmedCharacterInfos,
   currentConfirmedCharacterIds,
@@ -327,7 +331,6 @@ export async function showVoiceLibraryPolicyDialog({
     },
   })
     .onOk((confirmedIds: SpeakerId[]) => {
-      // 同意状態を保存
       void actions.SET_ROOT_MISC_SETTING({
         key: "termConfirmedCharacterIds",
         value: [...currentConfirmedCharacterIds, ...confirmedIds],
