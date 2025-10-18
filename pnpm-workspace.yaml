@@ -1,0 +1,3 @@
+managePackageManagerVersions: true
+resolutionMode: time-based
+minimumReleaseAge: 10080
