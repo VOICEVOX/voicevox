@@ -11,7 +11,7 @@
   "volta": {
     "node": "22.14.0"
   },
-  "packageManager": "pnpm@10.12.4",
+  "packageManager": "pnpm@10.17.1",
   "scripts": {
     "// --- lint ---": "",
     "lint": "cross-env ESLINT_FILE_PROGRESS=1 eslint --cache",
@@ -93,7 +93,7 @@
     "@openapitools/openapi-generator-cli": "2.20.5",
     "@playwright/test": "1.53.1",
     "@quasar/vite-plugin": "1.9.0",
-    "@storybook/addon-docs": "^9.0.11",
+    "@storybook/addon-docs": "9.0.13",
     "@storybook/addon-links": "9.0.13",
     "@storybook/addon-themes": "9.0.13",
     "@storybook/addon-vitest": "9.0.13",
@@ -111,7 +111,7 @@
     "@vitest/browser": "3.2.4",
     "@vitest/eslint-plugin": "1.2.7",
     "@vitest/ui": "3.2.4",
-    "@voicevox/eslint-plugin": "file:./eslint-plugin",
+    "@voicevox/eslint-plugin": "file:eslint-plugin",
     "@vue/eslint-config-prettier": "10.2.0",
     "@vue/eslint-config-typescript": "14.5.1",
     "@vue/test-utils": "2.4.6",
@@ -163,6 +163,9 @@
     ],
     "overrides": {
       "eslint-config-prettier": "10.1.5"
+    },
+    "patchedDependencies": {
+      "@storybook/vue3": "patches/@storybook__vue3.patch"
     }
   }
 }

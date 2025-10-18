@@ -437,12 +437,11 @@ export function isValidPitchEditData(pitchEditData: number[]) {
 }
 
 export function isValidVolumeEditData(volumeEditData: number[]) {
-  // NOTE: APIの返却が0未満や1より大きい値の場合があるため、
-  // APIからの返却値を0-1の範囲でクランプする必要がある
+  // NOTE: APIの返却が0未満になる場合があるため、0以上かどうかのみ検証する
   return volumeEditData.every(
     (value) =>
       Number.isFinite(value) &&
-      ((value >= 0 && value <= 1) || value === VALUE_INDICATING_NO_DATA),
+      (value >= 0 || value === VALUE_INDICATING_NO_DATA),
   );
 }
 
@@ -1035,6 +1034,37 @@ export function applyPitchEditWithSmoothing(
 
   // 元のスケールに戻して、f0を更新する
   phraseQuery.f0 = lf0.map((value) => Math.exp(value));
+}
+
+export function applyVolumeEdit(
+  phraseQuery: EditorFrameAudioQuery,
+  phraseStartTime: number,
+  volumeEditData: number[],
+  editorFrameRate: number,
+) {
+  if (phraseQuery.frameRate !== editorFrameRate) {
+    throw new Error(
+      "The frame rate between the phrase query and the editor does not match.",
+    );
+  }
+
+  const volume = phraseQuery.volume;
+  const phraseQueryFrameLength = volume.length;
+  const phraseQueryStartFrame = Math.round(
+    phraseStartTime * phraseQuery.frameRate,
+  );
+  const phraseQueryEndFrame = phraseQueryStartFrame + phraseQueryFrameLength;
+
+  const startFrame = Math.max(0, phraseQueryStartFrame);
+  const endFrame = Math.min(volumeEditData.length, phraseQueryEndFrame);
+  for (let i = startFrame; i < endFrame; i++) {
+    const editedVolume = volumeEditData[i];
+    if (editedVolume === VALUE_INDICATING_NO_DATA) {
+      continue;
+    }
+    // NOTE: ボリューム編集結果が負値になるケースに備えて0以上にクランプする
+    volume[i - phraseQueryStartFrame] = Math.max(editedVolume, 0);
+  }
 }
 
 /**
