@@ -344,10 +344,7 @@ export class EngineAndVvppController {
     this.configManager.set(`engineSettings`, engineSettings);
   }
 
-  /**
-   * 各エンジンの設定を初期化する。
-   * 設定が存在しないエンジンに対してデフォルト値を設定する。
-   */
+  /** 各エンジンの設定を初期化する */
   private initializeEngineSettings() {
     // TODO: デフォルトエンジンの処理をConfigManagerに移してブラウザ版と共通化する
     const engineInfos = this.engineInfoManager.fetchEngineInfos();
