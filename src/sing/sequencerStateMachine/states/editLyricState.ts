@@ -86,6 +86,7 @@ export class EditLyricState
         ) {
           // タブキーで次のノート入力に移動
           // Enterキーで入力を確定
+          // Escキーで入力を破棄
           if (input.keyboardEvent.key === "Tab") {
             input.keyboardEvent.preventDefault();
 
@@ -113,6 +114,9 @@ export class EditLyricState
             });
           } else if (input.keyboardEvent.key === "Enter") {
             this.applyPreview = previewLyrics.size !== 0;
+            setNextState(this.returnStateId, undefined);
+          } else if (input.keyboardEvent.key === "Escape") {
+            this.applyPreview = false;
             setNextState(this.returnStateId, undefined);
           }
         }
