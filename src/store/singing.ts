@@ -1785,10 +1785,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         throw new Error("transport is undefined.");
       }
 
-      if (
-        audioContext.state === "suspended" ||
-        audioContext.state === "interrupted"
-      ) {
+      // NOTE: interruptedも考慮する
+      if (audioContext.state === "suspended") {
         // NOTE: resumeできない場合はエラーが発生する（排他モードで専有中など）
         await audioContext.resume();
       }
