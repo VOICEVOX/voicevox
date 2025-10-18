@@ -45,6 +45,7 @@ export const settingStoreState: SettingStoreState = {
   showAddAudioItemButton: true,
   acceptTerms: "Unconfirmed",
   acceptRetrieveTelemetry: "Unconfirmed",
+  termConfirmedCharacterIds: [],
   experimentalSetting: {
     enableInterrogativeUpspeak: false,
     enableMorphing: false,
@@ -156,6 +157,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         "openedEditor",
         "enableKatakanaEnglish",
         "enableMultiSelect",
+        "termConfirmedCharacterIds",
       ] as const;
 
       // rootMiscSettingKeysに値を足し忘れていたときに型エラーを出す検出用コード
