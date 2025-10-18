@@ -182,8 +182,10 @@ export type AudioStoreTypes = {
     getter: AudioKey[];
   };
 
-  GET_UNCONFIRMED_CHARACTER_IDS: {
-    getter(audioKeys: AudioKey[]): SpeakerId[];
+  CHECK_VOICE_LIBRARY_POLICY_CONFIRMATION: {
+    action(payload: {
+      audioKeys: AudioKey[];
+    }): Promise<"canceled" | TermConfirmedAudioKey[]>;
   };
 
   AUDIO_PLAY_START_POINT: {
@@ -2173,12 +2175,6 @@ export type UiStoreTypes = {
 
   SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON: {
     action(payload: NotifyAndNotShowAgainButtonOption): void;
-  };
-
-  CHECK_VOICE_LIBRARY_POLICY_CONFIRMATION: {
-    action(payload: {
-      audioKeys: AudioKey[];
-    }): Promise<"canceled" | TermConfirmedAudioKey[]>;
   };
 
   ON_VUEX_READY: {

@@ -66,6 +66,8 @@ import { UnreachableError } from "@/type/utility";
 import { errorToMessage } from "@/helpers/errorHelper";
 import path from "@/helpers/path";
 import { generateTextFileData } from "@/helpers/fileDataGenerator";
+import { BRAND } from "zod";
+import { showVoiceLibraryPolicyDialog } from "@/components/Dialog/Dialog";
 
 function generateAudioKey() {
   return AudioKey(uuid4());
@@ -234,16 +236,44 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     },
   },
 
-  /** 与えられたAudioKeyに対し、未確認なキャラクターIDのリストを返す。 */
-  GET_UNCONFIRMED_CHARACTER_IDS: {
-    getter: (state) => (audioKeys: AudioKey[]) => {
-      const speakerIds = audioKeys.map(
-        (audioKey) => state.audioItems[audioKey].voice.speakerId,
-      );
-      const uniqueSpeakerIds = Array.from(new Set(speakerIds));
-      return uniqueSpeakerIds.filter(
-        (speakerId) => !state.termConfirmedCharacterIds.includes(speakerId),
-      );
+  /**
+   * 利用規約確認済みかどうかチェックし、確認済みならAudioKeyに変換する。
+   * 未確認のキャラクターが含まれている場合は利用規約確認ダイアログを表示する。
+   */
+  CHECK_VOICE_LIBRARY_POLICY_CONFIRMATION: {
+    async action({ actions, state }, { audioKeys }) {
+      // 利用規約を未確認なキャラクターを取得する
+      const unconfirmedCharacterIds = (() => {
+        const speakerIds = audioKeys.map(
+          (audioKey) => state.audioItems[audioKey].voice.speakerId,
+        );
+        const uniqueSpeakerIds = Array.from(new Set(speakerIds));
+        return uniqueSpeakerIds.filter(
+          (speakerId) => !state.termConfirmedCharacterIds.includes(speakerId),
+        );
+      })();
+
+      // 未確認キャラクターがいなければそのまま返す
+      if (unconfirmedCharacterIds.length === 0) {
+        return audioKeys.map((k) => TermConfirmedAudioKey(k));
+      }
+
+      // 未確認キャラクターに対して利用規約確認ダイアログを表示する
+      const unconfirmedCharacterInfos = Object.values(state.characterInfos)
+        .flatMap((engineCharacterInfos) => engineCharacterInfos)
+        .filter((characterInfo) =>
+          unconfirmedCharacterIds.includes(characterInfo.metas.speakerUuid),
+        );
+      const result = await showVoiceLibraryPolicyDialog({
+        unconfirmedCharacterInfos,
+        currentConfirmedCharacterIds: state.termConfirmedCharacterIds,
+        actions,
+      });
+      if (result === "canceled") {
+        return "canceled";
+      }
+
+      return audioKeys.map((k) => TermConfirmedAudioKey(k));
     },
   },
 

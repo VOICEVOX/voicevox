@@ -10,14 +10,9 @@ import {
   AllMutations,
   UiStoreState,
   UiStoreTypes,
-  TermConfirmedAudioKey,
 } from "./type";
 import { createPartialStore } from "./vuex";
-import {
-  ActivePointScrollMode,
-  SpeakerId,
-  CharacterInfo,
-} from "@/type/preload";
+import { ActivePointScrollMode } from "@/type/preload";
 import {
   MessageDialogOptions,
   ConfirmDialogOptions,
@@ -28,7 +23,6 @@ import {
   generateAndSaveOneAudioWithDialog,
   multiGenerateAndSaveAudioWithDialog,
   showAlertDialog,
-  showVoiceLibraryPolicyDialog,
   showConfirmDialog,
   showNotifyAndNotShowAgainButton,
   showWarningDialog,
@@ -233,31 +227,6 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   SHOW_NOTIFY_AND_NOT_SHOW_AGAIN_BUTTON: {
     action({ actions }, payload: NotifyAndNotShowAgainButtonOption) {
       showNotifyAndNotShowAgainButton({ actions }, payload);
-    },
-  },
-
-  CHECK_VOICE_LIBRARY_POLICY_CONFIRMATION: {
-    async action({ getters, actions, state }, { audioKeys }) {
-      const unconfirmedCharacterIds =
-        getters.GET_UNCONFIRMED_CHARACTER_IDS(audioKeys);
-      if (unconfirmedCharacterIds.length === 0) {
-        return audioKeys.map((k) => TermConfirmedAudioKey(k));
-      }
-
-      const unconfirmedCharacterInfos = Object.values(state.characterInfos)
-        .flatMap((engineCharacterInfos) => engineCharacterInfos)
-        .filter((characterInfo) =>
-          unconfirmedCharacterIds.includes(characterInfo.metas.speakerUuid),
-        );
-      const result = await showVoiceLibraryPolicyDialog({
-        unconfirmedCharacterInfos,
-        currentConfirmedCharacterIds: state.termConfirmedCharacterIds,
-        actions,
-      });
-      if (result === "canceled") {
-        return "canceled";
-      }
-      return audioKeys.map((k) => TermConfirmedAudioKey(k));
     },
   },
 
