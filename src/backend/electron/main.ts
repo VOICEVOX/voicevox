@@ -4,7 +4,7 @@ import path from "node:path";
 
 import fs from "node:fs";
 import { pathToFileURL } from "node:url";
-import { app, dialog, Menu, net, protocol, shell } from "electron";
+import { app, dialog, Menu, net, protocol, session, shell } from "electron";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 
 import electronLog from "electron-log/main";
@@ -22,6 +22,7 @@ import { registerIpcMainHandle, ipcMainSendProxy, IpcMainHandle } from "./ipc";
 import { getConfigManager } from "./electronConfig";
 import { getEngineAndVvppController } from "./engineAndVvppController";
 import { getIpcMainHandle } from "./ipcMainHandle";
+import { assertNonNullable } from "@/type/utility";
 import { EngineInfo } from "@/type/preload";
 import { isMac, isProduction } from "@/helpers/platform";
 import { createLogger } from "@/helpers/log";
@@ -161,6 +162,28 @@ void app.whenReady().then(() => {
     }
     return net.fetch(pathToFileURL(pathToServe).toString());
   });
+});
+
+// 信頼できるオリジン（開発サーバーまたは app プロトコル）からのセッション権限リクエストのみ許可し、それ以外は拒否
+void app.whenReady().then(() => {
+  session.defaultSession.setPermissionRequestHandler(
+    (webContents, permission, callback, { requestingUrl }) => {
+      const parsedUrl = new URL(webContents.getURL());
+      const parsedRequestingUrl = new URL(requestingUrl);
+      let isAllowedResource: boolean;
+      if (isDevelopment) {
+        assertNonNullable(import.meta.env.VITE_DEV_SERVER_URL);
+        const { origin } = new URL(import.meta.env.VITE_DEV_SERVER_URL);
+        isAllowedResource =
+          parsedUrl.origin === origin && parsedRequestingUrl.origin === origin;
+      } else {
+        isAllowedResource =
+          parsedUrl.protocol === "app:" &&
+          parsedRequestingUrl.protocol === "app:";
+      }
+      return callback(isAllowedResource);
+    },
+  );
 });
 
 // engine

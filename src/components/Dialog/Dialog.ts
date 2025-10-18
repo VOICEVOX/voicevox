@@ -218,7 +218,7 @@ export async function multiGenerateAndSaveAudioWithDialog({
     actions,
   );
 
-  if (result == "canceled") return;
+  if (result === "canceled") return;
 
   // 書き出し成功時の出力先パスを配列に格納
   const successArray: (string | undefined)[] = result.flatMap((result) =>
