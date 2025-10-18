@@ -1027,11 +1027,29 @@ export type SingingStoreTypes = {
     }): void;
   };
 
+  SET_VOLUME_EDIT_DATA: {
+    mutation: { volumeArray: number[]; startFrame: number; trackId: TrackId };
+    action(payload: {
+      volumeArray: number[];
+      startFrame: number;
+      trackId: TrackId;
+    }): void;
+  };
+
   ERASE_PITCH_EDIT_DATA: {
     mutation: { startFrame: number; frameLength: number; trackId: TrackId };
   };
 
+  ERASE_VOLUME_EDIT_DATA: {
+    mutation: { startFrame: number; frameLength: number; trackId: TrackId };
+  };
+
   CLEAR_PITCH_EDIT_DATA: {
+    mutation: { trackId: TrackId };
+    action(payload: { trackId: TrackId }): void;
+  };
+
+  CLEAR_VOLUME_EDIT_DATA: {
     mutation: { trackId: TrackId };
     action(payload: { trackId: TrackId }): void;
   };
@@ -1520,7 +1538,25 @@ export type SingingCommandStoreTypes = {
     }): void;
   };
 
+  COMMAND_SET_VOLUME_EDIT_DATA: {
+    mutation: { volumeArray: number[]; startFrame: number; trackId: TrackId };
+    action(payload: {
+      volumeArray: number[];
+      startFrame: number;
+      trackId: TrackId;
+    }): void;
+  };
+
   COMMAND_ERASE_PITCH_EDIT_DATA: {
+    mutation: { startFrame: number; frameLength: number; trackId: TrackId };
+    action(payload: {
+      startFrame: number;
+      frameLength: number;
+      trackId: TrackId;
+    }): void;
+  };
+
+  COMMAND_ERASE_VOLUME_EDIT_DATA: {
     mutation: { startFrame: number; frameLength: number; trackId: TrackId };
     action(payload: {
       startFrame: number;
