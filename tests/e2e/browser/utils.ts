@@ -112,7 +112,7 @@ export async function changeAudioCellCharacter(
 export async function waitForExportNotificationAndClose(page: Page) {
   await test.step("トーク音声書き出し完了の通知を確認して閉じる", async () => {
     // NOTE: なぜか前のnotifyの結果残ってしまっているので、.last()を使う
-    const notify = page.locator("#q-notify").last();
+    const notify = page.locator("#q-notify");
     await expect(notify.getByText("音声を書き出しました").last()).toBeVisible();
     await notify.getByRole("button", { name: "閉じる" }).last().click();
     await expect(notify).not.toBeVisible();
