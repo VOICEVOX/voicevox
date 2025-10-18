@@ -287,6 +287,10 @@ if (window.AudioContext) {
   mainChannelStrip.output.connect(limiter.input);
   limiter.output.connect(clipper.input);
   clipper.output.connect(audioContext.destination);
+
+  audioContext.addEventListener("statechange", () => {
+    logger.info(`AudioContext state changed: ${audioContext?.state}`);
+  });
 }
 
 let songTrackRenderer: SongTrackRenderer | undefined = undefined;
@@ -1774,9 +1778,19 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       if (state.nowPlaying) {
         return;
       }
+      if (audioContext == undefined) {
+        throw new Error("audioContext is undefined.");
+      }
       if (!transport) {
         throw new Error("transport is undefined.");
       }
+
+      // TODO: interruptedも考慮する
+      if (audioContext.state === "suspended") {
+        // NOTE: resumeできない場合はエラーが発生する（排他モードで専有中など）
+        await audioContext.resume();
+      }
+
       mutations.SET_PLAYBACK_STATE({ nowPlaying: true });
 
       // TODO: 以下の処理（ループの設定）は再生開始時に毎回行う必要はないので、
