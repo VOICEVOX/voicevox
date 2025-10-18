@@ -191,6 +191,101 @@ export function applyGaussianFilter(data: number[], sigma: number) {
   }
 }
 
+function smoothStep(x: number) {
+  const clampedX = Math.min(1.0, Math.max(0.0, x));
+  return clampedX * clampedX * (3.0 - 2.0 * clampedX);
+}
+
+/**
+ * 複数の不連続箇所を、滑らかに遷移させてつなぐ。
+ *
+ * @param data - 対象のデータ
+ * @param jumpIndices - 不連続箇所のインデックスの配列
+ * @param maxTransitionLength - 遷移長の上限
+ */
+export function applySmoothTransition(
+  data: number[],
+  jumpIndices: number[],
+  maxTransitionLength: number,
+) {
+  if (jumpIndices.some((value) => !Number.isInteger(value))) {
+    throw new Error("jumpIndices must contain integers.");
+  }
+  if (jumpIndices.some((value) => value <= 0 || value >= data.length)) {
+    throw new Error("jumpIndex must satisfy 0 < jumpIndex < data.length.");
+  }
+  if (!isSorted(jumpIndices, (a, b) => a - b)) {
+    throw new Error("jumpIndices must be sorted in ascending order.");
+  }
+  for (let i = 1; i < jumpIndices.length; i++) {
+    if (jumpIndices[i] === jumpIndices[i - 1]) {
+      throw new Error("jumpIndices must not contain duplicate values.");
+    }
+  }
+  if (!Number.isFinite(maxTransitionLength)) {
+    throw new Error("maxTransitionLength must be a finite number.");
+  }
+  if (maxTransitionLength < 2) {
+    throw new Error("maxTransitionLength must be greater than or equal to 2.");
+  }
+
+  // 各不連続箇所に対して処理
+  for (let i = 0; i < jumpIndices.length; i++) {
+    const jumpIndex = jumpIndices[i];
+
+    // 初期値は上限値
+    let transitionLength = maxTransitionLength;
+
+    // 他の不連続になっている箇所や配列の端と近すぎる場合は、
+    // 他の処理と範囲が重ならないように遷移長を短く調整する
+    if (i > 0) {
+      const prevJumpIndex = jumpIndices[i - 1];
+      transitionLength = Math.min(
+        (jumpIndex - prevJumpIndex) * 2,
+        transitionLength,
+      );
+    } else {
+      transitionLength = Math.min(jumpIndex * 2, transitionLength);
+    }
+    if (i < jumpIndices.length - 1) {
+      const nextJumpIndex = jumpIndices[i + 1];
+      transitionLength = Math.min(
+        (nextJumpIndex - jumpIndex) * 2,
+        transitionLength,
+      );
+    } else {
+      transitionLength = Math.min(
+        (data.length - jumpIndex) * 2,
+        transitionLength,
+      );
+    }
+
+    // 不連続箇所の値の差
+    const jumpSize = data[jumpIndex] - data[jumpIndex - 1];
+
+    // ジャンプの中心と、遷移の開始・終了位置
+    const jumpCenter = jumpIndex - 0.5;
+    const transitionStart = jumpCenter - transitionLength / 2;
+    const transitionEnd = transitionStart + transitionLength;
+
+    // 適用するインデックス範囲（配列境界でクリップ）
+    const startIndex = Math.max(0, Math.ceil(transitionStart));
+    const endIndex = Math.min(data.length, Math.floor(transitionEnd) + 1);
+
+    // 遷移を適用
+    for (let j = startIndex; j < endIndex; j++) {
+      const normalizedPosition = (j - transitionStart) / transitionLength;
+      const weight = smoothStep(normalizedPosition);
+
+      if (j < jumpCenter) {
+        data[j] += jumpSize * weight;
+      } else {
+        data[j] -= jumpSize * (1 - weight);
+      }
+    }
+  }
+}
+
 export async function calculateHash<T>(obj: T) {
   const textEncoder = new TextEncoder();
   const data = textEncoder.encode(JSON.stringify(obj));

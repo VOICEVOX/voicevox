@@ -9,10 +9,13 @@ import {
 import { TrackId } from "@/type/preload";
 import {
   applyGaussianFilter,
+  applySmoothTransition,
   createArray,
   linearInterpolation,
 } from "@/sing/utility";
 import { getButton } from "@/sing/viewHelper";
+import { getOrThrow } from "@/helpers/mapHelper";
+import { VALUE_INDICATING_NO_DATA } from "@/sing/domain";
 
 export class DrawPitchState
   implements State<SequencerStateDefinitions, Input, Context>
@@ -130,15 +133,79 @@ export class DrawPitchState
     cancelAnimationFrame(this.innerContext.previewRequestId);
 
     if (this.applyPreview) {
-      // 平滑化を行う
+      const editStartFrame = context.previewPitchEdit.value.startFrame;
       let data = context.previewPitchEdit.value.data;
+      const editEndFrame = editStartFrame + data.length;
+
+      // 平滑化を行う
       data = data.map((value) => Math.log(value));
       applyGaussianFilter(data, 0.7);
       data = data.map((value) => Math.exp(value));
 
+      const targetTrack = getOrThrow(
+        context.store.state.tracks,
+        this.targetTrackId,
+      );
+      const pitchEditData = targetTrack.pitchEditData;
+
+      // 前方にどこまで編集データが続いているか探す
+      let contiguousRegionStartFrame = editStartFrame;
+      if (editStartFrame - 1 < pitchEditData.length) {
+        for (let i = editStartFrame - 1; i >= 0; i--) {
+          if (pitchEditData[i] !== VALUE_INDICATING_NO_DATA) {
+            contiguousRegionStartFrame = i;
+          } else {
+            break;
+          }
+        }
+      }
+
+      // 後方にどこまで編集データが続いているか探す
+      let contiguousRegionEndFrame = editEndFrame;
+      for (let i = editEndFrame; i < pitchEditData.length; i++) {
+        if (pitchEditData[i] !== VALUE_INDICATING_NO_DATA) {
+          contiguousRegionEndFrame = i + 1;
+        } else {
+          break;
+        }
+      }
+
+      // 編集区間の前後に編集データがあれば、それらを結合する
+      if (contiguousRegionStartFrame !== editStartFrame) {
+        const frontData = pitchEditData.slice(
+          contiguousRegionStartFrame,
+          editStartFrame,
+        );
+        data = [...frontData, ...data];
+      }
+      if (contiguousRegionEndFrame !== editEndFrame) {
+        const backData = pitchEditData.slice(
+          editEndFrame,
+          contiguousRegionEndFrame,
+        );
+        data = [...data, ...backData];
+      }
+
+      // 既存の編集データと新しい編集データの境界を不連続箇所として記録する
+      const jumpIndices: number[] = [];
+      if (contiguousRegionStartFrame !== editStartFrame) {
+        jumpIndices.push(editStartFrame - contiguousRegionStartFrame);
+      }
+      if (contiguousRegionEndFrame !== editEndFrame) {
+        jumpIndices.push(editEndFrame - contiguousRegionStartFrame);
+      }
+
+      // 不連続箇所を滑らかにつなぐ
+      // NOTE: 最大6フレームかけて滑らかにする
+      if (jumpIndices.length !== 0) {
+        data = data.map((value) => Math.log(value));
+        applySmoothTransition(data, jumpIndices, 6);
+        data = data.map((value) => Math.exp(value));
+      }
+
       void context.store.actions.COMMAND_SET_PITCH_EDIT_DATA({
         pitchArray: data,
-        startFrame: context.previewPitchEdit.value.startFrame,
+        startFrame: contiguousRegionStartFrame,
         trackId: this.targetTrackId,
       });
     }
