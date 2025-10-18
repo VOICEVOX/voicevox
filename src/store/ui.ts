@@ -235,6 +235,28 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     },
   },
 
+  CHECK_VOICE_LIBRARY_POLICY_CONFIRMATION: {
+    async action({ getters, actions, state }, { audioKeys }) {
+      const unconfirmedCharacterIds =
+        getters.GET_UNCONFIRMED_CHARACTER_IDS(audioKeys);
+      if (unconfirmedCharacterIds.length === 0) {
+        return "confirmed" as const;
+      }
+
+      const unconfirmedCharacterInfos = Object.values(state.characterInfos)
+        .flatMap((engineCharacterInfos) => engineCharacterInfos)
+        .filter((characterInfo) =>
+          unconfirmedCharacterIds.includes(characterInfo.metas.speakerUuid),
+        );
+      const result = await showVoiceLibraryPolicyDialog({
+        unconfirmedCharacterInfos,
+        currentConfirmedCharacterIds: state.termConfirmedCharacterIds,
+        actions,
+      });
+      return result;
+    },
+  },
+
   HYDRATE_UI_STORE: {
     async action({ mutations }) {
       mutations.SET_INHERIT_AUDIOINFO({
@@ -484,29 +506,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
     },
   },
 
-  // TODO: この5つのアクションをVue側に移動したい
-  CHECK_VOICE_LIBRARY_POLICY_CONFIRMATION: {
-    async action({ getters, actions, state }, { audioKeys }) {
-      const unconfirmedCharacterIds =
-        getters.GET_UNCONFIRMED_CHARACTER_IDS(audioKeys);
-      if (unconfirmedCharacterIds.length === 0) {
-        return "confirmed" as const;
-      }
-
-      const unconfirmedCharacterInfos = Object.values(state.characterInfos)
-        .flatMap((engineCharacterInfos) => engineCharacterInfos)
-        .filter((characterInfo) =>
-          unconfirmedCharacterIds.includes(characterInfo.metas.speakerUuid),
-        );
-      const result = await showVoiceLibraryPolicyDialog({
-        unconfirmedCharacterInfos,
-        currentConfirmedCharacterIds: state.termConfirmedCharacterIds,
-        actions,
-      });
-      return result;
-    },
-  },
-
+  // TODO: この4つのアクションをVue側に移動したい
   SHOW_GENERATE_AND_SAVE_ALL_AUDIO_DIALOG: {
     async action({ state, actions }) {
       const result = await actions.CHECK_VOICE_LIBRARY_POLICY_CONFIRMATION({

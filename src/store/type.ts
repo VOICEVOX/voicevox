@@ -2175,6 +2175,12 @@ export type UiStoreTypes = {
     action(payload: NotifyAndNotShowAgainButtonOption): void;
   };
 
+  CHECK_VOICE_LIBRARY_POLICY_CONFIRMATION: {
+    action(payload: {
+      audioKeys: AudioKey[];
+    }): Promise<"confirmed" | "canceled">;
+  };
+
   ON_VUEX_READY: {
     mutation: void;
     action(): void;
@@ -2278,12 +2284,6 @@ export type UiStoreTypes = {
 
   RESET_PROGRESS: {
     action(): void;
-  };
-
-  CHECK_VOICE_LIBRARY_POLICY_CONFIRMATION: {
-    action(payload: {
-      audioKeys: AudioKey[];
-    }): Promise<"confirmed" | "canceled">;
   };
 
   SHOW_GENERATE_AND_SAVE_ALL_AUDIO_DIALOG: {
