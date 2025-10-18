@@ -289,7 +289,7 @@ if (window.AudioContext) {
   clipper.output.connect(audioContext.destination);
 
   audioContext.addEventListener("statechange", () => {
-    console.log(`AudioContext state: ${audioContext?.state}`);
+    logger.info(`AudioContext state changed: ${audioContext?.state}`);
   });
 }
 
