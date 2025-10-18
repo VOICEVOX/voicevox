@@ -2178,7 +2178,7 @@ export type UiStoreTypes = {
   CHECK_VOICE_LIBRARY_POLICY_CONFIRMATION: {
     action(payload: {
       audioKeys: AudioKey[];
-    }): Promise<"confirmed" | "canceled">;
+    }): Promise<"canceled" | TermConfirmedAudioKey[]>;
   };
 
   ON_VUEX_READY: {

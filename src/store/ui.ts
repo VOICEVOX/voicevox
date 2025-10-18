@@ -34,6 +34,7 @@ import {
   showWarningDialog,
 } from "@/components/Dialog/Dialog";
 import { objectEntries } from "@/helpers/typedEntries";
+import { UnreachableError } from "@/type/utility";
 
 export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
   action: (
@@ -240,7 +241,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
       const unconfirmedCharacterIds =
         getters.GET_UNCONFIRMED_CHARACTER_IDS(audioKeys);
       if (unconfirmedCharacterIds.length === 0) {
-        return "confirmed" as const;
+        return audioKeys.map((k) => TermConfirmedAudioKey(k));
       }
 
       const unconfirmedCharacterInfos = Object.values(state.characterInfos)
@@ -253,7 +254,10 @@ export const uiStore = createPartialStore<UiStoreTypes>({
         currentConfirmedCharacterIds: state.termConfirmedCharacterIds,
         actions,
       });
-      return result;
+      if (result === "canceled") {
+        return "canceled";
+      }
+      return audioKeys.map((k) => TermConfirmedAudioKey(k));
     },
   },
 
@@ -515,9 +519,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
       if (result === "canceled") return;
 
       await multiGenerateAndSaveAudioWithDialog({
-        termConfirmedAudioKeys: state.audioKeys.map((k) =>
-          TermConfirmedAudioKey(k),
-        ),
+        termConfirmedAudioKeys: result,
         disableNotifyOnGenerate: state.confirmedTips.notifyOnGenerate,
         actions,
       });
@@ -532,9 +534,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
       if (result === "canceled") return;
 
       await generateAndConnectAndSaveAudioWithDialog({
-        termConfirmedAudioKeys: state.audioKeys.map((k) =>
-          TermConfirmedAudioKey(k),
-        ),
+        termConfirmedAudioKeys: result,
         actions,
         disableNotifyOnGenerate: state.confirmedTips.notifyOnGenerate,
       });
@@ -560,9 +560,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
         if (result === "canceled") return;
 
         await multiGenerateAndSaveAudioWithDialog({
-          termConfirmedAudioKeys: selectedAudioKeys.map((k) =>
-            TermConfirmedAudioKey(k),
-          ),
+          termConfirmedAudioKeys: result,
           actions: actions,
           disableNotifyOnGenerate: state.confirmedTips.notifyOnGenerate,
         });
@@ -572,8 +570,11 @@ export const uiStore = createPartialStore<UiStoreTypes>({
         });
         if (result === "canceled") return;
 
+        if (result.length != 1) {
+          throw new UnreachableError("result.length != 1");
+        }
         await generateAndSaveOneAudioWithDialog({
-          termConfirmedAudioKey: TermConfirmedAudioKey(activeAudioKey),
+          termConfirmedAudioKey: result[0],
           disableNotifyOnGenerate: state.confirmedTips.notifyOnGenerate,
           actions: actions,
         });
