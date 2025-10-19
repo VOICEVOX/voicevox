@@ -10,7 +10,6 @@ import {
 } from "@/sing/sequencerStateMachine/common";
 import {
   getButton,
-  getDoremiFromNoteNumber,
   isSelfEventTarget,
   PREVIEW_SOUND_DURATION,
 } from "@/sing/viewHelper";
