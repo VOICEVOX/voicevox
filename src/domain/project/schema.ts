@@ -75,7 +75,7 @@ export const noteSchema = z.object({
   position: z.number(),
   duration: z.number(),
   noteNumber: z.number(),
-  lyric: z.string(),
+  lyric: z.union([z.string(), z.undefined()]),
 });
 
 export const singerSchema = z.object({

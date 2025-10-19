@@ -72,6 +72,7 @@ import {
   tickToBaseX,
   noteNumberToBaseY,
   PreviewMode,
+  getDoremiFromNoteNumber,
 } from "@/sing/viewHelper";
 import ContextMenu, {
   ContextMenuItemData,
@@ -166,7 +167,9 @@ const hasPhraseError = computed(() => {
 // 表示する歌詞。
 // 優先度：入力中の歌詞 > 渡された（=Storeの）歌詞
 const lyricToDisplay = computed(() => {
-  return props.previewLyric ?? props.note.lyric;
+  const noteLyric =
+    props.note.lyric ?? getDoremiFromNoteNumber(props.note.noteNumber);
+  return props.previewLyric ?? noteLyric;
 });
 
 // 状態に応じたCSSクラス
