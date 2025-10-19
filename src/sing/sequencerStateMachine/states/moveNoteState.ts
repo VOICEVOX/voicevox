@@ -11,6 +11,7 @@ import {
   Input,
   PositionOnSequencer,
   SequencerStateDefinitions,
+  shouldStartDrag,
 } from "@/sing/sequencerStateMachine/common";
 
 export class MoveNoteState
@@ -25,6 +26,7 @@ export class MoveNoteState
   private readonly returnStateId: IdleStateId;
 
   private currentCursorPos: PositionOnSequencer;
+  private dragStarted: boolean;
   private applyPreview: boolean;
 
   private innerContext:
@@ -54,6 +56,7 @@ export class MoveNoteState
     this.returnStateId = args.returnStateId;
 
     this.currentCursorPos = args.cursorPosAtStart;
+    this.dragStarted = false;
     this.applyPreview = false;
   }
 
@@ -112,7 +115,15 @@ export class MoveNoteState
       if (input.targetArea === "Window") {
         if (input.mouseEvent.type === "mousemove") {
           this.currentCursorPos = input.cursorPos;
-          this.innerContext.executePreviewProcess = true;
+          if (
+            !this.dragStarted &&
+            shouldStartDrag(this.cursorPosAtStart, this.currentCursorPos)
+          ) {
+            this.dragStarted = true;
+          }
+          if (this.dragStarted) {
+            this.innerContext.executePreviewProcess = true;
+          }
         } else if (
           input.mouseEvent.type === "mouseup" &&
           mouseButton === "LEFT_BUTTON"

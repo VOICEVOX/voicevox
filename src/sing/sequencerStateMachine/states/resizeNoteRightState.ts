@@ -8,6 +8,7 @@ import {
   Input,
   PositionOnSequencer,
   SequencerStateDefinitions,
+  shouldStartDrag,
 } from "@/sing/sequencerStateMachine/common";
 import type { Note } from "@/domain/project/type";
 import { getOrThrow } from "@/helpers/mapHelper";
@@ -24,6 +25,7 @@ export class ResizeNoteRightState
   private readonly returnStateId: IdleStateId;
 
   private currentCursorPos: PositionOnSequencer;
+  private dragStarted: boolean;
   private applyPreview: boolean;
 
   private innerContext:
@@ -53,6 +55,7 @@ export class ResizeNoteRightState
     this.returnStateId = args.returnStateId;
 
     this.currentCursorPos = args.cursorPosAtStart;
+    this.dragStarted = false;
     this.applyPreview = false;
   }
 
@@ -113,7 +116,15 @@ export class ResizeNoteRightState
       if (input.targetArea === "Window") {
         if (input.mouseEvent.type === "mousemove") {
           this.currentCursorPos = input.cursorPos;
-          this.innerContext.executePreviewProcess = true;
+          if (
+            !this.dragStarted &&
+            shouldStartDrag(this.cursorPosAtStart, this.currentCursorPos)
+          ) {
+            this.dragStarted = true;
+          }
+          if (this.dragStarted) {
+            this.innerContext.executePreviewProcess = true;
+          }
         } else if (
           input.mouseEvent.type === "mouseup" &&
           mouseButton === "LEFT_BUTTON"
