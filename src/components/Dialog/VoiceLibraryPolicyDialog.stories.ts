@@ -8,6 +8,7 @@ import { uuid4 } from "@/helpers/random";
 
 const testCharacterAId = toSpeakerId(uuid4());
 const testCharacterBId = toSpeakerId(uuid4());
+const testCharacterCId = toSpeakerId(uuid4());
 
 const meta: Meta<typeof VoiceLibraryPolicyDialog> = {
   component: VoiceLibraryPolicyDialog,
@@ -42,6 +43,22 @@ export const Opened: Story = {
   name: "開いている",
   args: {
     modelValue: true,
+  },
+};
+
+export const LongUrl: Story = {
+  name: "極端に長いURL",
+  args: {
+    modelValue: true,
+    characterPolicyInfos: [
+      {
+        id: testCharacterCId,
+        name: "テストキャラクターC",
+        policy:
+          "極端に長いURLのテスト。https://example.com/very/long/path/to/some/policy/document/that/has/many/nested/directories/and/a/very/long/filename/with/query/parameters?param1=value1&param2=value2&param3=value3&param4=value4&param5=value5&param6=value6&param7=value7&param8=value8&param9=value9&param10=value10",
+        portraitPath: getPortraitUrl(2),
+      },
+    ],
   },
 };
 
