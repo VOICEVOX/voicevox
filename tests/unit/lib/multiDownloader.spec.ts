@@ -86,7 +86,7 @@ test("テストサーバーが動いている", async () => {
   expect(text).toBe("Hello, World!");
 });
 
-test("ファイルをダウンロードして削除できる", async () => {
+test("ダウンロードしたファイルはSymbol.asyncDisposeで自動削除される", async () => {
   await using tempDir = await temporaryDirectory();
   await using dummyServer = new TestServer({
     "/simple": async (_req, res) => {
