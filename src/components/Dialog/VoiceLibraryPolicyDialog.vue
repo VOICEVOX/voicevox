@@ -162,6 +162,7 @@ const handleOpenUpdate = (isOpen: boolean) => {
 .character-info-section {
   flex: 1;
   min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .character-name {
