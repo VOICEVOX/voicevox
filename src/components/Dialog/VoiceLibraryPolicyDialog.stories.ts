@@ -2,7 +2,6 @@ import { userEvent, within, expect, fn } from "storybook/test";
 
 import { Meta, StoryObj } from "@storybook/vue3-vite";
 import VoiceLibraryPolicyDialog from "./VoiceLibraryPolicyDialog.vue";
-import type { SpeakerId as SpeakerIdType } from "@/type/preload";
 import { SpeakerId as toSpeakerId } from "@/type/preload";
 import { getPortraitUrl } from "@/mock/engineMock/characterResourceMock";
 import { uuid4 } from "@/helpers/random";
