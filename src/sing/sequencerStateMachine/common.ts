@@ -120,6 +120,7 @@ export type PartialStore = {
     Store["state"],
     | "tpqn"
     | "tempos"
+    | "tracks"
     | "sequencerSnapType"
     | "sequencerEditTarget"
     | "sequencerNoteTool"
