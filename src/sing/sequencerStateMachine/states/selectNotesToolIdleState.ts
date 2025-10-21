@@ -10,7 +10,6 @@ import {
 } from "@/sing/sequencerStateMachine/common";
 import {
   getButton,
-  getDoremiFromNoteNumber,
   isSelfEventTarget,
   PREVIEW_SOUND_DURATION,
 } from "@/sing/viewHelper";
@@ -114,7 +113,7 @@ export class SelectNotesToolIdleState
               position: Math.max(0, guideLineTicks),
               duration: context.snapTicks.value,
               noteNumber: clamp(input.cursorPos.noteNumber, 0, 127),
-              lyric: getDoremiFromNoteNumber(input.cursorPos.noteNumber),
+              lyric: undefined,
             };
 
             void context.store.actions.COMMAND_ADD_NOTES({

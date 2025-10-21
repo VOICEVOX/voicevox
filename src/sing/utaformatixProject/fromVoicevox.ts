@@ -29,7 +29,7 @@ export const ufProjectFromVoicevox = (
           key: note.noteNumber,
           tickOn: convertTicks(note.position),
           tickOff: convertTicks(note.position + note.duration),
-          lyric: note.lyric,
+          lyric: note.lyric ?? "",
         })),
       })),
     },
