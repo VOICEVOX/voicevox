@@ -26,7 +26,7 @@ export class MoveNoteState
   private readonly returnStateId: IdleStateId;
 
   private currentCursorPos: PositionOnSequencer;
-  private dragStarted: boolean;
+  private dragging: boolean;
   private applyPreview: boolean;
 
   private innerContext:
@@ -56,7 +56,7 @@ export class MoveNoteState
     this.returnStateId = args.returnStateId;
 
     this.currentCursorPos = args.cursorPosAtStart;
-    this.dragStarted = false;
+    this.dragging = false;
     this.applyPreview = false;
   }
 
@@ -116,12 +116,12 @@ export class MoveNoteState
         if (input.mouseEvent.type === "mousemove") {
           this.currentCursorPos = input.cursorPos;
           if (
-            !this.dragStarted &&
+            !this.dragging &&
             shouldStartDrag(this.cursorPosAtStart, this.currentCursorPos)
           ) {
-            this.dragStarted = true;
+            this.dragging = true;
           }
-          if (this.dragStarted) {
+          if (this.dragging) {
             this.innerContext.executePreviewProcess = true;
           }
         } else if (
