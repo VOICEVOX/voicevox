@@ -114,6 +114,7 @@ pnpm run browser:serve
 
 ```bash
 pnpm run electron:build
+pnpm run electron:pack
 ```
 
 ### Github Actions でビルド
