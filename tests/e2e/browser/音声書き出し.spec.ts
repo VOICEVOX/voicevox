@@ -7,11 +7,23 @@ import {
   mockShowSaveDirectoryDialog,
   mockWriteFileError,
 } from "./mockUtility";
-import { fillAudioCell } from "./utils";
+import { fillAudioCell, waitForExportNotificationAndClose } from "./utils";
 
 test.beforeEach(gotoHome);
 
-async function exportSelectedAudioAndSnapshot(page: Page, name: string) {
+async function handleVoiceLibraryPolicyDialog(page: Page) {
+  await test.step("利用規約確認ダイアログの確認ボタンを押す", async () => {
+    const dialog = getNewestQuasarDialog(page);
+    await dialog.getByText("音声ライブラリ利用規約のご案内").waitFor();
+    await dialog.getByRole("button", { name: "確認して続行" }).click();
+  });
+}
+
+async function exportSelectedAudioAndSnapshot(
+  page: Page,
+  name: string,
+  { isFirstExport = false }: { isFirstExport?: boolean } = {},
+) {
   const { getFileIds } = await mockShowSaveFileDialog(page);
   const { getWrittenFileBuffers } = await mockWriteFile(page);
 
@@ -20,12 +32,11 @@ async function exportSelectedAudioAndSnapshot(page: Page, name: string) {
     await getQuasarMenu(page, "選択音声を書き出し").click();
   });
 
-  await test.step("書き出し完了の通知を確認して閉じる", async () => {
-    const notify = page.locator("#q-notify");
-    await expect(notify.getByText("音声を書き出しました")).toBeVisible();
-    await notify.getByRole("button", { name: "閉じる" }).click();
-    await expect(notify).not.toBeVisible();
-  });
+  if (isFirstExport) {
+    await handleVoiceLibraryPolicyDialog(page);
+  }
+
+  await waitForExportNotificationAndClose(page);
 
   await test.step("音声ファイルのバイナリをスナップショット", async () => {
     const fileId = (await getFileIds())[0];
@@ -48,7 +59,9 @@ test.describe("音声書き出し", () => {
 
   test("各パラメータを変更して音声書き出し", async ({ page }) => {
     test.skip(process.platform !== "win32", "Windows以外のためスキップします"); // NOTE: 音声スナップショットが完全一致しないため
-    await exportSelectedAudioAndSnapshot(page, "デフォルト");
+    await exportSelectedAudioAndSnapshot(page, "デフォルト", {
+      isFirstExport: true,
+    });
 
     const parameters = [
       ["話速", "1.5"],
@@ -91,6 +104,8 @@ test.describe("音声書き出し", () => {
       await getQuasarMenu(page, "選択音声を書き出し").click();
     });
 
+    await handleVoiceLibraryPolicyDialog(page);
+
     await test.step("エラーダイアログを確認して閉じる", async () => {
       const dialog = page.getByRole("dialog", {
         name: "書き出しに失敗しました。",
@@ -113,6 +128,8 @@ test.describe("音声書き出し", () => {
       await page.getByRole("button", { name: "ファイル" }).click();
       await getQuasarMenu(page, "音声書き出し").click();
     });
+
+    await handleVoiceLibraryPolicyDialog(page);
 
     await test.step("結果ダイアログを確認して閉じる", async () => {
       const dialog = getNewestQuasarDialog(page);
@@ -137,6 +154,8 @@ test.describe("音声書き出し", () => {
       await page.getByRole("button", { name: "ファイル" }).click();
       await getQuasarMenu(page, "音声を繋げて書き出し").click();
     });
+
+    await handleVoiceLibraryPolicyDialog(page);
 
     await test.step("エラーダイアログを確認して閉じる", async () => {
       const dialog = page.getByRole("dialog", {

@@ -6,7 +6,7 @@
 import { Speaker, SpeakerInfo } from "@/openapi";
 
 /** 立ち絵のURLを得る */
-function getPortraitUrl(characterIndex: number) {
+export function getPortraitUrl(characterIndex: number) {
   const portraits = Object.values(
     import.meta.glob<string>("./assets/portrait_*.png", {
       import: "default",
