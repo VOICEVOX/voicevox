@@ -169,6 +169,7 @@ import ContextMenu from "@/components/Menu/ContextMenu/Container.vue";
 import { useRightClickContextMenu } from "@/composables/useRightClickContextMenu";
 import { useStore } from "@/store";
 import type { FetchAudioResult } from "@/store/type";
+import { convertHankakuToZenkaku } from "@/domain/japanese";
 
 const store = useStore();
 
@@ -260,16 +261,6 @@ const yomiFocus = (event?: KeyboardEvent) => {
 const setYomiWhenEnter = (event?: KeyboardEvent) => {
   if (event && event.isComposing) return;
   void setYomi(yomi.value);
-};
-
-const convertHankakuToZenkaku = (text: string) => {
-  // " "などの目に見えない文字をまとめて全角スペース(0x3000)に置き換える
-  text = text.replace(/\p{Z}/gu, () => String.fromCharCode(0x3000));
-
-  // "!"から"~"までの範囲の文字(数字やアルファベット)を全角に置き換える
-  return text.replace(/[\u0021-\u007e]/g, (s) => {
-    return String.fromCharCode(s.charCodeAt(0) + 0xfee0);
-  });
 };
 
 const setSurface = (text: string) => {
