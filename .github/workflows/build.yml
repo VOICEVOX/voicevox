@@ -265,9 +265,7 @@ jobs:
 
           # https://github.com/electron-userland/electron-builder/issues/3179
           USE_HARD_LINKS: false
-        run: |
-          pnpm run electron:build
-          pnpm run electron:pack --dir
+        run: pnpm run electron:build --dir
 
       - name: Reset Code Signing Envs
         if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'

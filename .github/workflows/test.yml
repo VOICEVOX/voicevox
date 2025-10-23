@@ -45,7 +45,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Setup environment
         uses: ./.github/actions/setup-environment
-      - run: pnpm run electron:build && pnpm run electron:pack
+      - run: pnpm run electron:build
 
   # unit テスト
   unit-test:
