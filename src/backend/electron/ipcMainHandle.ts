@@ -9,6 +9,7 @@ import { IpcMainHandle } from "./ipc";
 import { getEngineInfoManager } from "./manager/engineInfoManager";
 import { getEngineProcessManager } from "./manager/engineProcessManager";
 import { getWindowManager } from "./manager/windowManager";
+import { getUpdateManager } from "./manager/updateManager";
 import { AssetTextFileNames } from "@/type/staticResources";
 import { failure, success } from "@/type/result";
 import {
@@ -356,6 +357,14 @@ export function getIpcMainHandle(params: {
         const a = e as SystemError;
         return failure(a.code, a);
       }
+    },
+
+    IS_UPDATE_SUPPORTED: async () => {
+      return await getUpdateManager().isUpdateSupported();
+    },
+
+    UPDATE_APP: async (_, obj) => {
+      await getUpdateManager().updateApp(obj.version);
     },
   };
 }
