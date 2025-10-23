@@ -133,7 +133,7 @@ const builderOptions: ElectronBuilderConfiguration = {
   artifactBuildCompleted,
   electronLanguages: ["en-US", "ja"],
   win: {
-    icon: "public/icon_256x256.png",
+    icon: "public/icon.png",
     target: [
       {
         target: "nsis-web",
