@@ -163,9 +163,6 @@
     ],
     "overrides": {
       "eslint-config-prettier": "10.1.5"
-    },
-    "patchedDependencies": {
-      "@storybook/vue3": "patches/@storybook__vue3.patch"
     }
   }
 }
