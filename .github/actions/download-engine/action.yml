@@ -93,13 +93,13 @@ runs:
           chmod +x $DEST/run
         fi
 
-        echo "::group::ll $DEST"
-        ls -al $DEST
-        echo "::endgroup::"
-
         # バージョン情報を取得
         ENGINE_VERSION=$(jq -er '.tag_name' $TEMPDIR/target.json)
         echo ENGINE_VERSION=$ENGINE_VERSION >> $GITHUB_ENV
+
+        echo "::group::ll $DEST"
+        ls -al $DEST
+        echo "::endgroup::"
 
     - name: Cleanup tempdir
       shell: bash
