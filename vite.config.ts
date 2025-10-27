@@ -14,7 +14,7 @@ import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
 import {
   checkSuspiciousImports,
   CheckSuspiciousImportsOptions,
-  FileToCheck,
+  SourceFile,
 } from "./tools/checkSuspiciousImports.js";
 
 // @ts-expect-error electronをelectron環境外からimportするとelectronのファイルパスが得られる。
@@ -306,10 +306,10 @@ const checkSuspiciousImportsPlugin = (
     enforce: "post",
     apply: "build",
     writeBundle(_options, bundle) {
-      const files: FileToCheck[] = [];
+      const files: SourceFile[] = [];
       for (const [file, chunk] of Object.entries(bundle)) {
         if (chunk.type === "chunk") {
-          files.push({ file, content: chunk.code });
+          files.push({ path: file, content: chunk.code });
         }
       }
       checkSuspiciousImports(files, options);
