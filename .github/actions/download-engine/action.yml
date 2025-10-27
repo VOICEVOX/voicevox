@@ -35,6 +35,11 @@ runs:
         echo TEMPDIR=$TEMPDIR >> $GITHUB_ENV
         mkdir -p $TEMPDIR
 
+        # エンジンダウンロード用のサブディレクトリを作成（後で一括削除するため）
+        DOWNLOAD_DIR=$TEMPDIR/download-engine
+        echo DOWNLOAD_DIR=$DOWNLOAD_DIR >> $GITHUB_ENV
+        mkdir -p $DOWNLOAD_DIR
+
         DEST=$(echo '${{ inputs.dest }}' | sed -e 's_\\_/_g')
         echo DEST=$DEST >> $GITHUB_ENV
 
@@ -43,15 +48,16 @@ runs:
       run: |
         curl -fs https://api.github.com/repos/${{ inputs.repo }}/releases \
             -H 'authorization: Bearer ${{ github.token }}' \
-            -H 'content-type: application/json' > $TEMPDIR/releases.json
+            -H 'content-type: application/json' > $DOWNLOAD_DIR/releases.json
 
         if [ "${{ inputs.version }}" = "latest" ]; then
-          cat $TEMPDIR/releases.json | jq -er '[.[] | select(.prerelease == false)][0]' > $TEMPDIR/target.json
+          cat $DOWNLOAD_DIR/releases.json | jq -er '[.[] | select(.prerelease == false)][0]' > $DOWNLOAD_DIR/target.json
         elif [ "${{ inputs.version }}" = "prerelease-latest" ]; then
-          cat $TEMPDIR/releases.json | jq -er '[.[] | select(.prerelease == true)][0]' > $TEMPDIR/target.json
+          cat $DOWNLOAD_DIR/releases.json | jq -er '[.[] | select(.prerelease == true)][0]' > $DOWNLOAD_DIR/target.json
         else
-          cat $TEMPDIR/releases.json | jq -er '[.[] | select(.tag_name == "${{ inputs.version }}")][0]' > $TEMPDIR/target.json
+          cat $DOWNLOAD_DIR/releases.json | jq -er '[.[] | select(.tag_name == "${{ inputs.version }}")][0]' > $DOWNLOAD_DIR/target.json
         fi
+
     - name: Download and Extract
       shell: bash
       run: |
@@ -63,27 +69,27 @@ runs:
         fi
 
         # リリース情報からファイル一覧のtxtを取得
-        cat $TEMPDIR/target.json | jq -er '[.assets[] | select(.name | contains("'$TARGET'") and endswith(".7z.txt"))][0]' > $TEMPDIR/assets_txt.json
-        LIST_URL=$(cat $TEMPDIR/assets_txt.json | jq -er '.browser_download_url')
+        cat $DOWNLOAD_DIR/target.json | jq -er '[.assets[] | select(.name | contains("'$TARGET'") and endswith(".7z.txt"))][0]' > $DOWNLOAD_DIR/assets_txt.json
+        LIST_URL=$(cat $DOWNLOAD_DIR/assets_txt.json | jq -er '.browser_download_url')
         echo "7z.txt url: $LIST_URL"
-        echo $LIST_URL | xargs curl -fsSL --retry 3 --retry-delay 5 > $TEMPDIR/download_name.txt
+        echo $LIST_URL | xargs curl -fsSL --retry 3 --retry-delay 5 > $DOWNLOAD_DIR/download_name.txt
         echo "Files to download:"
-        cat $TEMPDIR/download_name.txt | sed -e 's|^|- |'
+        cat $DOWNLOAD_DIR/download_name.txt | sed -e 's|^|- |'
 
         # ファイル一覧のtxtにあるファイルをダウンロード
-        for i in $(cat $TEMPDIR/download_name.txt); do
-          URL=$(cat $TEMPDIR/target.json | jq -er "[.assets[] | select(.name == \"$i\")][0].browser_download_url")
-          echo "Download url: $URL, dest: $TEMPDIR/$i"
-          curl -fsSL $URL --retry 3 --retry-delay 5 -o $TEMPDIR/$i &
+        for i in $(cat $DOWNLOAD_DIR/download_name.txt); do
+          URL=$(cat $DOWNLOAD_DIR/target.json | jq -er "[.assets[] | select(.name == \"$i\")][0].browser_download_url")
+          echo "Download url: $URL, dest: $DOWNLOAD_DIR/$i"
+          curl -fsSL $URL --retry 3 --retry-delay 5 -o $DOWNLOAD_DIR/$i &
         done
         for job in `jobs -p`; do
           wait $job
         done
 
         # 一時ディレクトリに展開してから、本体（windows-cpuなどの中）を取り出す
-        7z x -y -o$TEMPDIR/tmp-extract $TEMPDIR/$(head -1 $TEMPDIR/download_name.txt)
+        7z x -y -o$DOWNLOAD_DIR/tmp-extract $DOWNLOAD_DIR/$(head -1 $DOWNLOAD_DIR/download_name.txt)
         mkdir -p $DEST
-        mv $TEMPDIR/tmp-extract/$TARGET/* $DEST
+        mv $DOWNLOAD_DIR/tmp-extract/$TARGET/* $DEST
 
         # 実行ファイルのパーミッションを変更
         if [ "${{ runner.os }}" = "Windows" ]; then
@@ -95,6 +101,14 @@ runs:
         echo "::group::ll $DEST"
         ls -al $DEST
         echo "::endgroup::"
+
+        # バージョン情報を保存してから削除（Set outputステップで使用）
+        ENGINE_VERSION=$(jq -er '.tag_name' $DOWNLOAD_DIR/target.json)
+        echo ENGINE_VERSION=$ENGINE_VERSION >> $GITHUB_ENV
+
+        # ダウンロードディレクトリを削除してディスクスペースを確保（約4GB削減）
+        rm -rf $DOWNLOAD_DIR
+
     - name: Set output
       id: result
       shell: bash
@@ -104,4 +118,4 @@ runs:
         else
           echo "run_path=$DEST/run" >> $GITHUB_OUTPUT
         fi
-        echo "version=$(jq -er '.tag_name' $TEMPDIR/target.json)" >> $GITHUB_OUTPUT
+        echo "version=$ENGINE_VERSION" >> $GITHUB_OUTPUT
