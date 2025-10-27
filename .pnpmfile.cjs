@@ -1,4 +1,5 @@
 function readPackage(pkg, context) {
+  // NOTE: @storybook/vue3はvue-component-type-helpersのlatestを要求しており、minimumReleaseAgeと相性が悪いので、ここで置き換える。
   if (pkg.name === "@storybook/vue3") {
     const deps = pkg.dependencies;
     if (deps["vue-component-type-helpers"] === "latest") {
