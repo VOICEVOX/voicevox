@@ -71,6 +71,10 @@ runs:
         echo "Files to download:"
         cat $TEMPDIR/download_name.txt | sed -e 's|^|- |'
 
+        # バージョン情報を取得
+        ENGINE_VERSION=$(jq -er '.tag_name' $TEMPDIR/target.json)
+        echo ENGINE_VERSION=$ENGINE_VERSION >> $GITHUB_ENV
+
         # ファイル一覧のtxtにあるファイルをダウンロード
         for i in $(cat $TEMPDIR/download_name.txt); do
           URL=$(cat $TEMPDIR/target.json | jq -er "[.assets[] | select(.name == \"$i\")][0].browser_download_url")
@@ -92,10 +96,6 @@ runs:
         else
           chmod +x $DEST/run
         fi
-
-        # バージョン情報を取得
-        ENGINE_VERSION=$(jq -er '.tag_name' $TEMPDIR/target.json)
-        echo ENGINE_VERSION=$ENGINE_VERSION >> $GITHUB_ENV
 
         echo "::group::ll $DEST"
         ls -al $DEST
