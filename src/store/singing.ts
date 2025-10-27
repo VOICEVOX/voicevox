@@ -2794,7 +2794,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   COMMAND_PASTE_NOTES_FROM_CLIPBOARD: {
-    async action({ mutations, state, getters, actions }) {
+    async action({ mutations, getters, actions }) {
       // クリップボードからテキストを読み込む
       let clipboardText;
       try {
@@ -2818,23 +2818,16 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         });
       }
 
-      // パースしたJSONのノートの位置を現在の再生位置に合わせてクオンタイズして貼り付ける
+      // パースしたJSONのノートの位置を現在の再生位置に合わせて貼り付ける
       const currentPlayheadPosition = getters.PLAYHEAD_POSITION;
       const firstNotePosition = notes[0].position;
-      // TODO: クオンタイズの処理を共通化する
-      const snapType = state.sequencerSnapType;
-      const tpqn = state.tpqn;
-      const snapTicks = getNoteDuration(snapType, tpqn);
       const notesToPaste: Note[] = notes.map((note) => {
         // 新しい位置を現在の再生位置に合わせて計算する
-        const pasteOriginPos =
+        const pastePos =
           Number(note.position) - firstNotePosition + currentPlayheadPosition;
-        // クオンタイズ
-        const quantizedPastePos =
-          Math.round(pasteOriginPos / snapTicks) * snapTicks;
         return {
           id: NoteId(uuid4()),
-          position: quantizedPastePos,
+          position: pastePos,
           duration: Number(note.duration),
           noteNumber: Number(note.noteNumber),
           lyric: String(note.lyric),
