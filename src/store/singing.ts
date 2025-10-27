@@ -287,6 +287,10 @@ if (window.AudioContext) {
   mainChannelStrip.output.connect(limiter.input);
   limiter.output.connect(clipper.input);
   clipper.output.connect(audioContext.destination);
+
+  audioContext.addEventListener("statechange", () => {
+    logger.info(`AudioContext state changed: ${audioContext?.state}`);
+  });
 }
 
 let songTrackRenderer: SongTrackRenderer | undefined = undefined;
@@ -694,6 +698,8 @@ export const singingStoreState: SingingStoreState = {
   sequencerEditTarget: "NOTE",
   sequencerNoteTool: "EDIT_FIRST",
   sequencerPitchTool: "DRAW",
+  sequencerVolumeTool: "DRAW",
+  sequencerVolumeVisible: false,
   _selectedNoteIds: new Set(),
   nowPlaying: false,
   volume: 0,
@@ -1715,6 +1721,24 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  SET_SEQUENCER_VOLUME_TOOL: {
+    mutation(state, { sequencerVolumeTool }) {
+      state.sequencerVolumeTool = sequencerVolumeTool;
+    },
+    async action({ mutations }, { sequencerVolumeTool }) {
+      mutations.SET_SEQUENCER_VOLUME_TOOL({ sequencerVolumeTool });
+    },
+  },
+
+  SET_SEQUENCER_VOLUME_VISIBLE: {
+    mutation(state, { sequencerVolumeVisible }) {
+      state.sequencerVolumeVisible = sequencerVolumeVisible;
+    },
+    async action({ mutations }, { sequencerVolumeVisible }) {
+      mutations.SET_SEQUENCER_VOLUME_VISIBLE({ sequencerVolumeVisible });
+    },
+  },
+
   TICK_TO_SECOND: {
     getter: (state) => (position) => {
       return tickToSecond(position, state.tempos, state.tpqn);
@@ -1754,9 +1778,19 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       if (state.nowPlaying) {
         return;
       }
+      if (audioContext == undefined) {
+        throw new Error("audioContext is undefined.");
+      }
       if (!transport) {
         throw new Error("transport is undefined.");
       }
+
+      // TODO: interruptedも考慮する
+      if (audioContext.state === "suspended") {
+        // NOTE: resumeできない場合はエラーが発生する（排他モードで専有中など）
+        await audioContext.resume();
+      }
+
       mutations.SET_PLAYBACK_STATE({ nowPlaying: true });
 
       // TODO: 以下の処理（ループの設定）は再生開始時に毎回行う必要はないので、
@@ -2760,7 +2794,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   COMMAND_PASTE_NOTES_FROM_CLIPBOARD: {
-    async action({ mutations, state, getters, actions }) {
+    async action({ mutations, getters, actions }) {
       // クリップボードからテキストを読み込む
       let clipboardText;
       try {
@@ -2784,23 +2818,16 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         });
       }
 
-      // パースしたJSONのノートの位置を現在の再生位置に合わせてクオンタイズして貼り付ける
+      // パースしたJSONのノートの位置を現在の再生位置に合わせて貼り付ける
       const currentPlayheadPosition = getters.PLAYHEAD_POSITION;
       const firstNotePosition = notes[0].position;
-      // TODO: クオンタイズの処理を共通化する
-      const snapType = state.sequencerSnapType;
-      const tpqn = state.tpqn;
-      const snapTicks = getNoteDuration(snapType, tpqn);
       const notesToPaste: Note[] = notes.map((note) => {
         // 新しい位置を現在の再生位置に合わせて計算する
-        const pasteOriginPos =
+        const pastePos =
           Number(note.position) - firstNotePosition + currentPlayheadPosition;
-        // クオンタイズ
-        const quantizedPastePos =
-          Math.round(pasteOriginPos / snapTicks) * snapTicks;
         return {
           id: NoteId(uuid4()),
-          position: quantizedPastePos,
+          position: pastePos,
           duration: Number(note.duration),
           noteNumber: Number(note.noteNumber),
           lyric: String(note.lyric),

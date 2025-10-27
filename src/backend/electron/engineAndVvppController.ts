@@ -10,12 +10,7 @@ import { getEngineProcessManager } from "./manager/engineProcessManager";
 import { getRuntimeInfoManager } from "./manager/RuntimeInfoManager";
 import { getVvppManager } from "./manager/vvppManager";
 import { getWindowManager } from "./manager/windowManager";
-import {
-  EngineId,
-  EngineInfo,
-  engineSettingSchema,
-  EngineSettingType,
-} from "@/type/preload";
+import { EngineId, EngineInfo, engineSettingSchema } from "@/type/preload";
 import {
   PackageInfo,
   fetchLatestDefaultEngineInfo,
@@ -335,13 +330,6 @@ export class EngineAndVvppController {
         }),
       );
     }
-  }
-
-  /** エンジンの設定を更新し、保存する */
-  updateEngineSetting(engineId: EngineId, engineSetting: EngineSettingType) {
-    const engineSettings = this.configManager.get("engineSettings");
-    engineSettings[engineId] = engineSetting;
-    this.configManager.set(`engineSettings`, engineSettings);
   }
 
   /** 各エンジンの設定を初期化する */

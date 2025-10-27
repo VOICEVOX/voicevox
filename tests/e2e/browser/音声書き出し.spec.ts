@@ -7,6 +7,7 @@ import {
   mockShowSaveDirectoryDialog,
   mockWriteFileError,
 } from "./mockUtility";
+import { fillAudioCell } from "./utils";
 
 test.beforeEach(gotoHome);
 
@@ -38,12 +39,9 @@ test.describe("音声書き出し", () => {
     await navigateToMain(page);
 
     await test.step("テキスト欄にテキストを入力", async () => {
-      const audioCell = page.getByRole("textbox", { name: "1行目" });
       const accentPhrase = page.locator(".accent-phrase");
 
-      await audioCell.click();
-      await audioCell.fill("こんにちは、テストです");
-      await audioCell.press("Enter");
+      await fillAudioCell(page, 0, "こんにちは、テストです");
       await expect(accentPhrase).not.toHaveCount(0);
     });
   });
