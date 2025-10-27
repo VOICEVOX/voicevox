@@ -205,7 +205,7 @@ if (import.meta.filename === process.argv[1]) {
 
   const files = await Promise.all(
     args._.map((f) => f.toString()).map(async (file) => ({
-      file,
+      path: file,
       content: await fs.readFile(file, "utf-8"),
     })),
   );
