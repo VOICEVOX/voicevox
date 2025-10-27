@@ -37,12 +37,12 @@ export type CheckSuspiciousImportsOptions = {
   allowedInTryCatchModules?: string[];
   list?: boolean;
 };
-export type FileToCheck = {
-  file: string;
+export type SourceFile = {
+  path: string;
   content: string;
 };
 export function checkSuspiciousImports(
-  files: FileToCheck[],
+  files: SourceFile[],
   options: CheckSuspiciousImportsOptions = {},
 ): void {
   const allImports: Import[] = [];
@@ -53,7 +53,7 @@ export function checkSuspiciousImports(
   ];
   const allowedInTryCatchModules = options.allowedInTryCatchModules ?? [];
   console.log(
-    `Checking suspicious imports in ${files.map((f) => f.file).join(", ")}`,
+    `Checking suspicious imports in ${files.map((f) => f.path).join(", ")}`,
   );
   for (const { content } of files) {
     const ast = parse(content, {
