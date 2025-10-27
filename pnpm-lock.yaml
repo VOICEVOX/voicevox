@@ -7,7 +7,7 @@ settings:
 overrides:
   eslint-config-prettier: 10.1.5
 
-pnpmfileChecksum: sha256-y+u5/mcFXUgrkotKDzttcAWH1wEQMZmp81KQsJ+HFO8=
+pnpmfileChecksum: sha256-eVCzrxOKZOuMwagy7hh+8bTyO6fQffMt/bGtaOzGVU8=
 
 importers:
 
