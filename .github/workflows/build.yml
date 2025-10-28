@@ -427,14 +427,14 @@ jobs:
           LINUX_ARTIFACT_NAME: ${{ matrix.linux_artifact_name }}
           LINUX_EXECUTABLE_NAME: ${{ matrix.linux_executable_name }}
         run: |
-          pnpm run electron:pack --prepackaged prepackage/
+          pnpm run electron:build:pack --prepackaged prepackage/
 
       - name: Build Electron (for macOS)
         if: endsWith(matrix.installer_artifact_name, '-dmg') # macOS
         env:
           MACOS_ARTIFACT_NAME: ${{ matrix.macos_artifact_name }}
         run: |
-          pnpm run electron:pack --prepackaged prepackage/VOICEVOX.app
+          pnpm run electron:build:pack --prepackaged prepackage/VOICEVOX.app
 
       - name: Reset Code Signing Envs
         if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'
