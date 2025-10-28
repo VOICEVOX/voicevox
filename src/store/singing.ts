@@ -2823,8 +2823,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const firstNotePosition = notes[0].position;
       const notesToPaste: Note[] = notes.map((note) => {
         // 新しい位置を現在の再生位置に合わせて計算する
-        const pastePos =
-          Number(note.position) - firstNotePosition + currentPlayheadPosition;
+        const pastePos = Math.round(
+          Number(note.position) - firstNotePosition + currentPlayheadPosition,
+        );
         return {
           id: NoteId(uuid4()),
           position: pastePos,
