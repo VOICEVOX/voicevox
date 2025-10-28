@@ -2835,6 +2835,15 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         };
       });
       const pastedNoteIds = notesToPaste.map((note) => note.id);
+
+      const existingNoteIds = getters.ALL_NOTE_IDS;
+      const isValidNotes = notesToPaste.every((value) => {
+        return !existingNoteIds.has(value.id) && isValidNote(value);
+      });
+      if (!isValidNotes) {
+        throw new Error("The notes are invalid.");
+      }
+
       // ノートを追加してレンダリングする
       mutations.COMMAND_ADD_NOTES({
         notes: notesToPaste,
