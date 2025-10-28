@@ -1,12 +1,11 @@
 import { app } from "electron";
 
-// hasSupportedGpuで使用する最小限のGPUInfo
-type MinimumGPUInfo = {
-  gpuDevice: { vendorId: number }[];
-};
-
 const microsoftVendorId = 0x1414;
 const nvidiaVendorId = 0x10de;
+
+function hasVendorId(device: unknown): device is Record<"vendorId", unknown> {
+  return device != null && typeof device === "object" && "vendorId" in device;
+}
 
 /**
  * GPUモードがサポートされているかどうか。
@@ -17,15 +16,23 @@ export async function hasSupportedGpu(platform: string): Promise<boolean> {
   return app
     .getGPUInfo("basic")
     .then((GPUInfo) => {
-      const info = GPUInfo as MinimumGPUInfo;
+      if (
+        GPUInfo == null ||
+        typeof GPUInfo !== "object" ||
+        !("gpuDevice" in GPUInfo) ||
+        !Array.isArray(GPUInfo.gpuDevice)
+      ) {
+        return false;
+      }
       if (platform === "win32") {
         // Microsoft Basic Render Driverは除外する
-        return info.gpuDevice.some(
-          (device) => device.vendorId !== microsoftVendorId,
+        return GPUInfo.gpuDevice.some(
+          (device) =>
+            hasVendorId(device) && device.vendorId !== microsoftVendorId,
         );
       } else if (platform === "linux") {
-        return info.gpuDevice.some(
-          (device) => device.vendorId === nvidiaVendorId,
+        return GPUInfo.gpuDevice.some(
+          (device) => hasVendorId(device) && device.vendorId === nvidiaVendorId,
         );
       }
       return false;
