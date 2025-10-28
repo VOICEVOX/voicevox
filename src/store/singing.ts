@@ -2823,8 +2823,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const firstNotePosition = notes[0].position;
       const notesToPaste: Note[] = notes.map((note) => {
         // 新しい位置を現在の再生位置に合わせて計算する
-        const pastePos =
-          Number(note.position) - firstNotePosition + currentPlayheadPosition;
+        const pastePos = Math.round(
+          Number(note.position) - firstNotePosition + currentPlayheadPosition,
+        );
         return {
           id: NoteId(uuid4()),
           position: pastePos,
@@ -2834,6 +2835,21 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         };
       });
       const pastedNoteIds = notesToPaste.map((note) => note.id);
+
+      const existingNoteIds = getters.ALL_NOTE_IDS;
+      const hasDuplicateNoteIds = notesToPaste.some((note) =>
+        existingNoteIds.has(note.id),
+      );
+      if (hasDuplicateNoteIds) {
+        throw new Error("Failed to paste notes: duplicate note IDs detected.");
+      }
+      const hasInvalidNotes = notesToPaste.some((note) => !isValidNote(note));
+      if (hasInvalidNotes) {
+        throw new Error(
+          "Failed to paste notes: invalid note properties detected.",
+        );
+      }
+
       // ノートを追加してレンダリングする
       mutations.COMMAND_ADD_NOTES({
         notes: notesToPaste,
