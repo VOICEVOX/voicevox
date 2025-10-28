@@ -2836,26 +2836,18 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       });
       const pastedNoteIds = notesToPaste.map((note) => note.id);
 
+      const existingNoteIds = getters.ALL_NOTE_IDS;
       const hasDuplicateNoteIds = notesToPaste.some((note) =>
         existingNoteIds.has(note.id),
       );
       if (hasDuplicateNoteIds) {
         throw new Error("Failed to paste notes: duplicate note IDs detected.");
       }
-
       const hasInvalidNotes = notesToPaste.some((note) => !isValidNote(note));
       if (hasInvalidNotes) {
         throw new Error(
           "Failed to paste notes: invalid note properties detected.",
         );
-      }
-
-      const existingNoteIds = getters.ALL_NOTE_IDS;
-      const isValidNotes = notesToPaste.every((value) => {
-        return !existingNoteIds.has(value.id) && isValidNote(value);
-      });
-      if (!isValidNotes) {
-        throw new Error("The notes are invalid.");
       }
 
       // ノートを追加してレンダリングする
