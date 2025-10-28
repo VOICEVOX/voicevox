@@ -39,9 +39,11 @@
     "test-ui:storybook-vrt": "cross-env TARGET=storybook playwright test --ui",
     "// --- build ---": "",
     "electron:serve": "cross-env VITE_TARGET=electron vite",
-    "electron:build": "cross-env VITE_TARGET=electron NODE_ENV=production vite build && electron-builder --config ./build/electronBuilderConfigLoader.cjs --publish never",
+    "electron:build": "pnpm run electron:build:compile && pnpm run electron:build:pack",
+    "electron:build:compile": "cross-env VITE_TARGET=electron vite build",
+    "electron:build:pack": "electron-builder --config ./build/electronBuilderConfigLoader.cjs --publish never",
     "browser:serve": "cross-env VITE_TARGET=browser vite",
-    "browser:build": "cross-env VITE_TARGET=browser NODE_ENV=production vite build",
+    "browser:build": "cross-env VITE_TARGET=browser vite build",
     "storybook": "storybook dev --port 6006",
     "storybook:build": "storybook build",
     "// --- lifecycle ---": "",
@@ -163,9 +165,6 @@
     ],
     "overrides": {
       "eslint-config-prettier": "10.1.5"
-    },
-    "patchedDependencies": {
-      "@storybook/vue3": "patches/@storybook__vue3.patch"
     }
   }
 }

@@ -31,7 +31,7 @@ runs:
     - name: Setup tempdir
       shell: bash
       run: |
-        TEMPDIR=$(echo '${{ runner.temp }}' | sed -e 's_\\_/_g')
+        TEMPDIR=$(echo '${{ runner.temp }}/download-engine' | sed -e 's_\\_/_g')
         echo TEMPDIR=$TEMPDIR >> $GITHUB_ENV
         mkdir -p $TEMPDIR
 
@@ -52,6 +52,7 @@ runs:
         else
           cat $TEMPDIR/releases.json | jq -er '[.[] | select(.tag_name == "${{ inputs.version }}")][0]' > $TEMPDIR/target.json
         fi
+
     - name: Download and Extract
       shell: bash
       run: |
@@ -69,6 +70,10 @@ runs:
         echo $LIST_URL | xargs curl -fsSL --retry 3 --retry-delay 5 > $TEMPDIR/download_name.txt
         echo "Files to download:"
         cat $TEMPDIR/download_name.txt | sed -e 's|^|- |'
+
+        # バージョン情報を取得
+        ENGINE_VERSION=$(jq -er '.tag_name' $TEMPDIR/target.json)
+        echo ENGINE_VERSION=$ENGINE_VERSION >> $GITHUB_ENV
 
         # ファイル一覧のtxtにあるファイルをダウンロード
         for i in $(cat $TEMPDIR/download_name.txt); do
@@ -95,6 +100,12 @@ runs:
         echo "::group::ll $DEST"
         ls -al $DEST
         echo "::endgroup::"
+
+    - name: Cleanup tempdir
+      shell: bash
+      run: |
+        rm -rf $TEMPDIR
+
     - name: Set output
       id: result
       shell: bash
@@ -104,4 +115,4 @@ runs:
         else
           echo "run_path=$DEST/run" >> $GITHUB_OUTPUT
         fi
-        echo "version=$(jq -er '.tag_name' $TEMPDIR/target.json)" >> $GITHUB_OUTPUT
+        echo "version=$ENGINE_VERSION" >> $GITHUB_OUTPUT
