@@ -313,11 +313,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
       if (!result) return false;
 
       const previousFilePath = context.state.projectFilePath;
-
-      if (previousFilePath !== filePath) {
-        context.mutations.SET_PROJECT_FILEPATH({ filePath });
-      }
-
+      context.mutations.SET_PROJECT_FILEPATH({ filePath });
       if (previousFilePath != undefined && previousFilePath !== filePath) {
         await showMessageDialog({
           type: "info",
