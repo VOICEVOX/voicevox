@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { gotoHome, navigateToMain } from "../navigators";
-import { getQuasarMenu, getNewestQuasarDialog } from "../locators";
+import { getQuasarMenu } from "../locators";
 import { mockShowSaveFileDialog, mockWriteFile } from "./mockUtility";
 import { fillAudioCell, waitForUiUnlock } from "./utils";
 
@@ -16,7 +16,9 @@ test("無保存状態から最初に保存したときにダイアログが表�
   });
 
   await test.step("保存ダイアログのモックを設定", async () => {
-    await mockShowSaveFileDialog(page);
+    await mockShowSaveFileDialog(page, {
+      nextFilePath: "first-save.vvproj",
+    });
     await mockWriteFile(page);
   });
 
@@ -44,7 +46,9 @@ test("既存プロジェクトを別名で保存したときにダイアログ�
   });
 
   await test.step("最初の保存", async () => {
-    await mockShowSaveFileDialog(page);
+    await mockShowSaveFileDialog(page, {
+      nextFilePath: "first-save.vvproj",
+    });
     await mockWriteFile(page);
     await page.getByRole("button", { name: "ファイル" }).click();
     await getQuasarMenu(page, "プロジェクトを名前を付けて保存").click();
@@ -52,7 +56,9 @@ test("既存プロジェクトを別名で保存したときにダイアログ�
   });
 
   await test.step("2回目の保存ダイアログのモックを設定", async () => {
-    await mockShowSaveFileDialog(page);
+    await mockShowSaveFileDialog(page, {
+      nextFilePath: "second-save.vvproj",
+    });
     await mockWriteFile(page);
   });
 
@@ -62,14 +68,14 @@ test("既存プロジェクトを別名で保存したときにダイアログ�
   });
 
   await test.step("「プロジェクトが切り替わりました」ダイアログが表示されることを確認", async () => {
-    const dialog = getNewestQuasarDialog(page);
-    await expect(dialog.getByText("保存")).toBeVisible();
+    const dialog = page.getByRole("dialog", { name: "保存" });
+    await expect(dialog).toBeVisible();
     await expect(
       dialog.getByText(/編集中のプロジェクトが .* に切り替わりました。/),
     ).toBeVisible();
 
     // ダイアログを閉じる
-    await dialog.getByRole("button", { name: "OK" }).click();
+    await dialog.getByRole("button", { name: "閉じる" }).click();
     await expect(dialog).not.toBeVisible();
   });
 });

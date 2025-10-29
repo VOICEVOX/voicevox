@@ -15,7 +15,14 @@ import { objectEntries, objectFromEntries } from "@/helpers/typedEntries";
 type TestFileId = Brand<string, "TestFileId">;
 
 /** ファイル書き出し選択ダイアログをモックにする */
-export async function mockShowSaveFileDialog(page: Page): Promise<{
+type SaveDialogMockOptions = {
+  nextFilePath?: string;
+};
+
+export async function mockShowSaveFileDialog(
+  page: Page,
+  options: SaveDialogMockOptions = {},
+): Promise<{
   getFileIds: () => Promise<TestFileId[]>;
 }> {
   type _Window = Window & {
@@ -23,16 +30,21 @@ export async function mockShowSaveFileDialog(page: Page): Promise<{
   };
 
   // モックを差し込む
-  await page.evaluate(() => {
-    const _window = window as unknown as _Window;
-    _window._mockShownSaveFileDialogFileIds = [];
+  await page.evaluate(
+    ({ fixedFilePath }) => {
+      const _window = window as unknown as _Window;
+      _window._mockShownSaveFileDialogFileIds = [];
 
-    _window.backend.showSaveFileDialog = async () => {
-      const id = `${Date.now()}` as TestFileId;
-      _window._mockShownSaveFileDialogFileIds.push(id);
-      return id;
-    };
-  });
+      _window.backend.showSaveFileDialog = async () => {
+        const id = (
+          fixedFilePath ?? `${Date.now()}`
+        ) as unknown as TestFileId;
+        _window._mockShownSaveFileDialogFileIds.push(id);
+        return id;
+      };
+    },
+    { fixedFilePath: options.nextFilePath },
+  );
 
   return {
     getFileIds: async () => {
