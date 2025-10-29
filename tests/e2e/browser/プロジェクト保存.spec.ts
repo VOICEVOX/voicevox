@@ -16,9 +16,7 @@ test("無保存状態から最初に保存したときにダイアログが表�
   });
 
   await test.step("保存ダイアログのモックを設定", async () => {
-    await mockShowSaveFileDialog(page, {
-      nextFilePath: "first-save.vvproj",
-    });
+    await mockShowSaveFileDialog(page);
     await mockWriteFile(page);
   });
 
@@ -46,9 +44,7 @@ test("既存プロジェクトを別名で保存したときにダイアログ�
   });
 
   await test.step("最初の保存", async () => {
-    await mockShowSaveFileDialog(page, {
-      nextFilePath: "first-save.vvproj",
-    });
+    await mockShowSaveFileDialog(page);
     await mockWriteFile(page);
     await page.getByRole("button", { name: "ファイル" }).click();
     await getQuasarMenu(page, "プロジェクトを名前を付けて保存").click();
@@ -56,9 +52,7 @@ test("既存プロジェクトを別名で保存したときにダイアログ�
   });
 
   await test.step("2回目の保存ダイアログのモックを設定", async () => {
-    await mockShowSaveFileDialog(page, {
-      nextFilePath: "second-save.vvproj",
-    });
+    await mockShowSaveFileDialog(page);
     await mockWriteFile(page);
   });
 
