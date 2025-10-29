@@ -318,7 +318,7 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
         context.mutations.SET_PROJECT_FILEPATH({ filePath });
       }
 
-      if (previousFilePath && previousFilePath !== filePath) {
+      if (previousFilePath != undefined && previousFilePath !== filePath) {
         await showMessageDialog({
           type: "info",
           title: "保存",
