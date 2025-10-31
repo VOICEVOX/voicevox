@@ -111,6 +111,7 @@
     "@typescript-eslint/utils": "8.46.2",
     "@vitejs/plugin-vue": "6.0.1",
     "@vitest/browser": "4.0.2",
+    "@vitest/browser-playwright": "4.0.2",
     "@vitest/eslint-plugin": "1.3.23",
     "@vitest/ui": "4.0.2",
     "@voicevox/eslint-plugin": "file:eslint-plugin",

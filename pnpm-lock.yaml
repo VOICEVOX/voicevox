@@ -170,6 +170,9 @@ importers:
       '@vitest/browser':
         specifier: 4.0.2
         version: 4.0.2(msw@2.7.3(@types/node@24.9.1)(typescript@5.9.3))(vite@7.1.12(@types/node@24.9.1)(jiti@2.6.1)(sass-embedded@1.93.2)(sass@1.93.2)(tsx@4.20.6))(vitest@4.0.2)
+      '@vitest/browser-playwright':
+        specifier: 4.0.2
+        version: 4.0.2(msw@2.7.3(@types/node@24.9.1)(typescript@5.9.3))(playwright@1.56.1)(vite@7.1.12(@types/node@24.9.1)(jiti@2.6.1)(sass-embedded@1.93.2)(sass@1.93.2)(tsx@4.20.6))(vitest@4.0.2)
       '@vitest/eslint-plugin':
         specifier: 1.3.23
         version: 1.3.23(eslint@9.38.0(jiti@2.6.1))(typescript@5.9.3)(vitest@4.0.2)
@@ -283,7 +286,7 @@ importers:
         version: 5.1.4(typescript@5.9.3)(vite@7.1.12(@types/node@24.9.1)(jiti@2.6.1)(sass-embedded@1.93.2)(sass@1.93.2)(tsx@4.20.6))
       vitest:
         specifier: 4.0.2
-        version: 4.0.2(@types/debug@4.1.12)(@types/node@24.9.1)(@vitest/ui@4.0.2)(happy-dom@20.0.8)(jiti@2.6.1)(msw@2.7.3(@types/node@24.9.1)(typescript@5.9.3))(sass-embedded@1.93.2)(sass@1.93.2)(tsx@4.20.6)
+        version: 4.0.2(@types/debug@4.1.12)(@types/node@24.9.1)(@vitest/browser-playwright@4.0.2)(@vitest/ui@4.0.2)(happy-dom@20.0.8)(jiti@2.6.1)(msw@2.7.3(@types/node@24.9.1)(typescript@5.9.3))(sass-embedded@1.93.2)(sass@1.93.2)(tsx@4.20.6)
       vue-component-type-helpers:
         specifier: 3.1.1
         version: 3.1.1
@@ -1594,6 +1597,12 @@ packages:
     peerDependencies:
       vite: ^5.0.0 || ^6.0.0 || ^7.0.0
       vue: ^3.2.25
+
+  '@vitest/browser-playwright@4.0.2':
+    resolution: {integrity: sha512-sEtZ4o2lsWx8lmRHP8oe1wplhY5J2fKr2YTA83NAJlXVdFlul/utxyPeCUVpADaggNMz3GnAz2Y/BkG0f86KmQ==}
+    peerDependencies:
+      playwright: '*'
+      vitest: 4.0.2
 
   '@vitest/browser@4.0.2':
     resolution: {integrity: sha512-TMTrx7f09nI6LgHELFSsSGF9rwPO5hS6LgnoQalGa0pmE75pv7jEIo/XlRu2TFm+jLwCgJzzaH0Ra4+gfDI+Ag==}
@@ -6336,7 +6345,7 @@ snapshots:
     optionalDependencies:
       '@vitest/browser': 4.0.2(msw@2.7.3(@types/node@24.9.1)(typescript@5.9.3))(vite@7.1.12(@types/node@24.9.1)(jiti@2.6.1)(sass-embedded@1.93.2)(sass@1.93.2)(tsx@4.20.6))(vitest@4.0.2)
       '@vitest/runner': 3.2.4
-      vitest: 4.0.2(@types/debug@4.1.12)(@types/node@24.9.1)(@vitest/ui@4.0.2)(happy-dom@20.0.8)(jiti@2.6.1)(msw@2.7.3(@types/node@24.9.1)(typescript@5.9.3))(sass-embedded@1.93.2)(sass@1.93.2)(tsx@4.20.6)
+      vitest: 4.0.2(@types/debug@4.1.12)(@types/node@24.9.1)(@vitest/browser-playwright@4.0.2)(@vitest/ui@4.0.2)(happy-dom@20.0.8)(jiti@2.6.1)(msw@2.7.3(@types/node@24.9.1)(typescript@5.9.3))(sass-embedded@1.93.2)(sass@1.93.2)(tsx@4.20.6)
     transitivePeerDependencies:
       - react
       - react-dom
@@ -6662,6 +6671,19 @@ snapshots:
       vite: 7.1.12(@types/node@24.9.1)(jiti@2.6.1)(sass-embedded@1.93.2)(sass@1.93.2)(tsx@4.20.6)
       vue: 3.5.22(typescript@5.9.3)
 
+  '@vitest/browser-playwright@4.0.2(msw@2.7.3(@types/node@24.9.1)(typescript@5.9.3))(playwright@1.56.1)(vite@7.1.12(@types/node@24.9.1)(jiti@2.6.1)(sass-embedded@1.93.2)(sass@1.93.2)(tsx@4.20.6))(vitest@4.0.2)':
+    dependencies:
+      '@vitest/browser': 4.0.2(msw@2.7.3(@types/node@24.9.1)(typescript@5.9.3))(vite@7.1.12(@types/node@24.9.1)(jiti@2.6.1)(sass-embedded@1.93.2)(sass@1.93.2)(tsx@4.20.6))(vitest@4.0.2)
+      '@vitest/mocker': 4.0.2(msw@2.7.3(@types/node@24.9.1)(typescript@5.9.3))(vite@7.1.12(@types/node@24.9.1)(jiti@2.6.1)(sass-embedded@1.93.2)(sass@1.93.2)(tsx@4.20.6))
+      playwright: 1.56.1
+      tinyrainbow: 3.0.3
+      vitest: 4.0.2(@types/debug@4.1.12)(@types/node@24.9.1)(@vitest/browser-playwright@4.0.2)(@vitest/ui@4.0.2)(happy-dom@20.0.8)(jiti@2.6.1)(msw@2.7.3(@types/node@24.9.1)(typescript@5.9.3))(sass-embedded@1.93.2)(sass@1.93.2)(tsx@4.20.6)
+    transitivePeerDependencies:
+      - bufferutil
+      - msw
+      - utf-8-validate
+      - vite
+
   '@vitest/browser@4.0.2(msw@2.7.3(@types/node@24.9.1)(typescript@5.9.3))(vite@7.1.12(@types/node@24.9.1)(jiti@2.6.1)(sass-embedded@1.93.2)(sass@1.93.2)(tsx@4.20.6))(vitest@4.0.2)':
     dependencies:
       '@vitest/mocker': 4.0.2(msw@2.7.3(@types/node@24.9.1)(typescript@5.9.3))(vite@7.1.12(@types/node@24.9.1)(jiti@2.6.1)(sass-embedded@1.93.2)(sass@1.93.2)(tsx@4.20.6))
@@ -6671,7 +6693,7 @@ snapshots:
       pngjs: 7.0.0
       sirv: 3.0.2
       tinyrainbow: 3.0.3
-      vitest: 4.0.2(@types/debug@4.1.12)(@types/node@24.9.1)(@vitest/ui@4.0.2)(happy-dom@20.0.8)(jiti@2.6.1)(msw@2.7.3(@types/node@24.9.1)(typescript@5.9.3))(sass-embedded@1.93.2)(sass@1.93.2)(tsx@4.20.6)
+      vitest: 4.0.2(@types/debug@4.1.12)(@types/node@24.9.1)(@vitest/browser-playwright@4.0.2)(@vitest/ui@4.0.2)(happy-dom@20.0.8)(jiti@2.6.1)(msw@2.7.3(@types/node@24.9.1)(typescript@5.9.3))(sass-embedded@1.93.2)(sass@1.93.2)(tsx@4.20.6)
       ws: 8.18.3
     transitivePeerDependencies:
       - bufferutil
@@ -6686,7 +6708,7 @@ snapshots:
       eslint: 9.38.0(jiti@2.6.1)
     optionalDependencies:
       typescript: 5.9.3
-      vitest: 4.0.2(@types/debug@4.1.12)(@types/node@24.9.1)(@vitest/ui@4.0.2)(happy-dom@20.0.8)(jiti@2.6.1)(msw@2.7.3(@types/node@24.9.1)(typescript@5.9.3))(sass-embedded@1.93.2)(sass@1.93.2)(tsx@4.20.6)
+      vitest: 4.0.2(@types/debug@4.1.12)(@types/node@24.9.1)(@vitest/browser-playwright@4.0.2)(@vitest/ui@4.0.2)(happy-dom@20.0.8)(jiti@2.6.1)(msw@2.7.3(@types/node@24.9.1)(typescript@5.9.3))(sass-embedded@1.93.2)(sass@1.93.2)(tsx@4.20.6)
     transitivePeerDependencies:
       - supports-color
 
@@ -6761,7 +6783,7 @@ snapshots:
       sirv: 3.0.2
       tinyglobby: 0.2.15
       tinyrainbow: 3.0.3
-      vitest: 4.0.2(@types/debug@4.1.12)(@types/node@24.9.1)(@vitest/ui@4.0.2)(happy-dom@20.0.8)(jiti@2.6.1)(msw@2.7.3(@types/node@24.9.1)(typescript@5.9.3))(sass-embedded@1.93.2)(sass@1.93.2)(tsx@4.20.6)
+      vitest: 4.0.2(@types/debug@4.1.12)(@types/node@24.9.1)(@vitest/browser-playwright@4.0.2)(@vitest/ui@4.0.2)(happy-dom@20.0.8)(jiti@2.6.1)(msw@2.7.3(@types/node@24.9.1)(typescript@5.9.3))(sass-embedded@1.93.2)(sass@1.93.2)(tsx@4.20.6)
 
   '@vitest/utils@3.0.9':
     dependencies:
@@ -6957,7 +6979,7 @@ snapshots:
 
   agent-base@6.0.2:
     dependencies:
-      debug: 4.4.1
+      debug: 4.4.3
     transitivePeerDependencies:
       - supports-color
 
@@ -8539,7 +8561,7 @@ snapshots:
     dependencies:
       '@tootallnate/once': 2.0.0
       agent-base: 6.0.2
-      debug: 4.4.1
+      debug: 4.4.3
     transitivePeerDependencies:
       - supports-color
 
@@ -8558,7 +8580,7 @@ snapshots:
   https-proxy-agent@5.0.1:
     dependencies:
       agent-base: 6.0.2
-      debug: 4.4.1
+      debug: 4.4.3
     transitivePeerDependencies:
       - supports-color
 
@@ -10305,7 +10327,7 @@ snapshots:
   socks-proxy-agent@7.0.0:
     dependencies:
       agent-base: 6.0.2
-      debug: 4.4.1
+      debug: 4.4.3
       socks: 2.8.7
     transitivePeerDependencies:
       - supports-color
@@ -10812,7 +10834,7 @@ snapshots:
       sass-embedded: 1.93.2
       tsx: 4.20.6
 
-  vitest@4.0.2(@types/debug@4.1.12)(@types/node@24.9.1)(@vitest/ui@4.0.2)(happy-dom@20.0.8)(jiti@2.6.1)(msw@2.7.3(@types/node@24.9.1)(typescript@5.9.3))(sass-embedded@1.93.2)(sass@1.93.2)(tsx@4.20.6):
+  vitest@4.0.2(@types/debug@4.1.12)(@types/node@24.9.1)(@vitest/browser-playwright@4.0.2)(@vitest/ui@4.0.2)(happy-dom@20.0.8)(jiti@2.6.1)(msw@2.7.3(@types/node@24.9.1)(typescript@5.9.3))(sass-embedded@1.93.2)(sass@1.93.2)(tsx@4.20.6):
     dependencies:
       '@vitest/expect': 4.0.2
       '@vitest/mocker': 4.0.2(msw@2.7.3(@types/node@24.9.1)(typescript@5.9.3))(vite@7.1.12(@types/node@24.9.1)(jiti@2.6.1)(sass-embedded@1.93.2)(sass@1.93.2)(tsx@4.20.6))
@@ -10837,6 +10859,7 @@ snapshots:
     optionalDependencies:
       '@types/debug': 4.1.12
       '@types/node': 24.9.1
+      '@vitest/browser-playwright': 4.0.2(msw@2.7.3(@types/node@24.9.1)(typescript@5.9.3))(playwright@1.56.1)(vite@7.1.12(@types/node@24.9.1)(jiti@2.6.1)(sass-embedded@1.93.2)(sass@1.93.2)(tsx@4.20.6))(vitest@4.0.2)
       '@vitest/ui': 4.0.2(vitest@4.0.2)
       happy-dom: 20.0.8
     transitivePeerDependencies:
