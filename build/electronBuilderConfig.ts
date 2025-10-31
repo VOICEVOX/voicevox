@@ -3,7 +3,6 @@ import { readdirSync, existsSync, rmSync } from "node:fs";
 import { config } from "dotenv";
 import { Configuration as ElectronBuilderConfiguration } from "electron-builder";
 import { z } from "zod";
-import packageJson from "../package.json" with { type: "json" };
 import afterAllArtifactBuild from "./afterAllArtifactBuild";
 import afterPack from "./afterPack";
 import artifactBuildCompleted from "./artifactBuildCompleted";
@@ -12,37 +11,20 @@ const rootDir = path.join(import.meta.dirname, "..");
 const dotenvPath = path.join(rootDir, ".env.production");
 config({ path: dotenvPath });
 
-function getEnvVar(name: string, defaultValue?: string): string {
-  const value = process.env[name] || defaultValue;
-  if (value == undefined) {
-    throw new Error(`Environment variable ${name} is not defined.`);
-  }
-  return value;
-}
-
 const VOICEVOX_ENGINE_DIR =
   process.env.VOICEVOX_ENGINE_DIR ?? "../voicevox_engine/dist/run/";
 
-const NSIS_WEB_ARTIFACT_NAME = getEnvVar(
-  "NSIS_WEB_ARTIFACT_NAME",
-  "${productName} Web Setup ${version}.${ext}",
-);
+// ${productName} Web Setup ${version}.${ext}
+const NSIS_WEB_ARTIFACT_NAME = process.env.NSIS_WEB_ARTIFACT_NAME;
 
-const LINUX_ARTIFACT_NAME = getEnvVar(
-  "LINUX_ARTIFACT_NAME",
-  "${productName}-${version}.${ext}",
-);
+// ${productName}-${version}.${ext}
+const LINUX_ARTIFACT_NAME = process.env.LINUX_ARTIFACT_NAME;
 
 // ${packageName}
-const LINUX_EXECUTABLE_NAME = getEnvVar(
-  "LINUX_EXECUTABLE_NAME",
-  packageJson.name,
-);
+const LINUX_EXECUTABLE_NAME = process.env.LINUX_EXECUTABLE_NAME;
 
-const MACOS_ARTIFACT_NAME = getEnvVar(
-  "MACOS_ARTIFACT_NAME",
-  "${productName}-${version}.${ext}",
-);
+// ${productName}-${version}.${ext}
+const MACOS_ARTIFACT_NAME = process.env.MACOS_ARTIFACT_NAME;
 
 // コード署名証明書
 const winSigningHashAlgorithmsSchema = z.array(z.enum(["sha1", "sha256"]));
