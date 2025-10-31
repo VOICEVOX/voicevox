@@ -332,11 +332,8 @@ export class EngineAndVvppController {
     }
   }
 
-  // エンジンの準備と起動
-  async launchEngines() {
-    // AltPortInfosを再生成する。
-    this.engineInfoManager.initializeAltPortInfo();
-
+  /** 各エンジンの設定を初期化する */
+  private initializeEngineSettings() {
     // TODO: デフォルトエンジンの処理をConfigManagerに移してブラウザ版と共通化する
     const engineInfos = this.engineInfoManager.fetchEngineInfos();
     const engineSettings = this.configManager.get("engineSettings");
@@ -347,7 +344,16 @@ export class EngineAndVvppController {
       }
     }
     this.configManager.set("engineSettings", engineSettings);
+  }
 
+  // エンジンの準備と起動
+  async launchEngines() {
+    // AltPortInfosを再生成する。
+    this.engineInfoManager.initializeAltPortInfo();
+
+    this.initializeEngineSettings();
+
+    const engineInfos = this.engineInfoManager.fetchEngineInfos();
     await this.engineProcessManager.runEngineAll();
     this.runtimeInfoManager.setEngineInfos(
       engineInfos,
