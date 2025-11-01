@@ -352,6 +352,7 @@ export const experimentalSettingSchema = z.object({
   enableMorphing: z.boolean().default(false),
   shouldKeepTuningOnTextChange: z.boolean().default(false),
   showParameterPanel: z.boolean().default(false),
+  showEditedPitch: z.boolean().default(false),
 });
 
 export type ExperimentalSettingType = z.infer<typeof experimentalSettingSchema>;
