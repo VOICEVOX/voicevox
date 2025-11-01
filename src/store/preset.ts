@@ -126,11 +126,8 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
 
   HYDRATE_PRESET_STORE: {
     async action({ mutations }) {
-      const defaultPresetKeys = (await window.backend.getSetting(
-        "defaultPresetKeys",
-        // z.BRAND型のRecordはPartialになる仕様なのでasで型を変換
-        // TODO: 将来的にzodのバージョンを上げてasを消す https://github.com/colinhacks/zod/pull/2097
-      )) as Record<VoiceId, PresetKey>;
+      const defaultPresetKeys =
+        await window.backend.getSetting("defaultPresetKeys");
 
       mutations.SET_DEFAULT_PRESET_MAP({
         defaultPresetKeys,

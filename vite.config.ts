@@ -9,6 +9,7 @@ import electronDefaultImport from "electron";
 import checker from "vite-plugin-checker";
 import { BuildOptions, defineConfig, loadEnv, Plugin } from "vite";
 import { quasar } from "@quasar/vite-plugin";
+import { playwright as playwrightProvider } from "@vitest/browser-playwright";
 import { z } from "zod";
 import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
 import {
@@ -101,8 +102,7 @@ export default defineConfig((options) => {
     css: {
       preprocessorOptions: {
         scss: {
-          api: "modern",
-          includePaths: [path.resolve(import.meta.dirname, "node_modules")],
+          loadPaths: [path.resolve(import.meta.dirname, "node_modules")],
         },
       },
     },
@@ -226,7 +226,7 @@ export default defineConfig((options) => {
             browser: {
               enabled: true,
               instances: [{ browser: "chromium" }],
-              provider: "playwright",
+              provider: playwrightProvider(),
               headless: true,
               api: 7158,
               ui: false,
@@ -255,7 +255,7 @@ export default defineConfig((options) => {
             browser: {
               enabled: true,
               instances: [{ browser: "chromium" }],
-              provider: "playwright",
+              provider: playwrightProvider(),
               headless: true,
               api: 7159,
               ui: false,
