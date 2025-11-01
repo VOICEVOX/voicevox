@@ -11,6 +11,7 @@ import {
   fillAudioCell,
   changeAudioCellCharacter,
   waitForExportNotificationAndClose,
+  selectAudioCellRange,
 } from "./utils";
 
 test.beforeEach(gotoHome);
@@ -105,11 +106,7 @@ test.describe("音声ライブラリ利用規約確認", () => {
     });
 
     await test.step("3人のキャラクターを選択", async () => {
-      // 複数選択
-      await page.locator(".audio-cell:nth-child(1)").click();
-      await page.keyboard.down("Shift");
-      await page.locator(".audio-cell:nth-child(3)").click();
-      await page.keyboard.up("Shift");
+      await selectAudioCellRange(page, 1, 3);
     });
 
     await test.step("3人選択して書き出し時にキャラクター2と3の利用規約のみ表示される", async () => {
@@ -138,11 +135,7 @@ test.describe("音声ライブラリ利用規約確認", () => {
     });
 
     await test.step("再度3人のキャラクターを選択", async () => {
-      // 複数選択
-      await page.locator(".audio-cell:nth-child(1)").click();
-      await page.keyboard.down("Shift");
-      await page.locator(".audio-cell:nth-child(3)").click();
-      await page.keyboard.up("Shift");
+      await selectAudioCellRange(page, 1, 3);
     });
 
     await test.step("全キャラクター確認済みでは利用規約が表示されない", async () => {

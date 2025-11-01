@@ -108,6 +108,20 @@ export async function changeAudioCellCharacter(
   });
 }
 
+/** AudioCellを範囲選択する */
+export async function selectAudioCellRange(
+  page: Page,
+  startIndex: number,
+  endIndex: number,
+) {
+  await test.step(`${startIndex}番目から${endIndex}番目のAudioCellを範囲選択`, async () => {
+    await page.locator(`.audio-cell:nth-child(${startIndex})`).click();
+    await page.keyboard.down("Shift");
+    await page.locator(`.audio-cell:nth-child(${endIndex})`).click();
+    await page.keyboard.up("Shift");
+  });
+}
+
 /** トーク音声書き出し完了の通知を確認して閉じる */
 export async function waitForExportNotificationAndClose(page: Page) {
   await test.step("トーク音声書き出し完了の通知を確認して閉じる", async () => {

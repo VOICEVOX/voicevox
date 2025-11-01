@@ -11,6 +11,10 @@
         <div class="text-body2 text-grey-8">
           音声の利用には音声ライブラリ利用規約が適用されます。
         </div>
+        <!-- FIXME: ヘルプの場所を動的に取得できるようにして、文言のメンテナンス性を向上させる -->
+        <div class="text-body2 text-grey-8">
+          「ヘルプ」の「音声ライブラリの利用規約」からも確認できます。
+        </div>
       </QCardSection>
 
       <QSeparator />

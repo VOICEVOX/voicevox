@@ -304,7 +304,7 @@ export async function connectAndExportTextWithDialog({
 
 /**
  * 音声ライブラリ利用規約ダイアログを表示する。
- * 確認した場合は確認状況を保存する。
+ * 確認ボタンを押された場合は確認状況を保存する。
  */
 export async function showVoiceLibraryPolicyDialog({
   unconfirmedCharacterInfos,
