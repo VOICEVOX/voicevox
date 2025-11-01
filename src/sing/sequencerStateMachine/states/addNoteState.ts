@@ -9,11 +9,7 @@ import {
 } from "@/sing/sequencerStateMachine/common";
 import { NoteId, TrackId } from "@/type/preload";
 import type { Note } from "@/domain/project/type";
-import {
-  getButton,
-  getDoremiFromNoteNumber,
-  PREVIEW_SOUND_DURATION,
-} from "@/sing/viewHelper";
+import { getButton, PREVIEW_SOUND_DURATION } from "@/sing/viewHelper";
 import { clamp } from "@/sing/utility";
 import { uuid4 } from "@/helpers/random";
 
@@ -57,7 +53,7 @@ export class AddNoteState
       position: Math.max(0, guideLineTicks),
       duration: context.snapTicks.value,
       noteNumber: clamp(this.cursorPosAtStart.noteNumber, 0, 127),
-      lyric: getDoremiFromNoteNumber(this.cursorPosAtStart.noteNumber),
+      lyric: undefined,
     };
     const noteEndPos = noteToAdd.position + noteToAdd.duration;
 
