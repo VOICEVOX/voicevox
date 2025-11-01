@@ -123,7 +123,7 @@
     "chromatic": "13.3.1",
     "cross-env": "10.1.0",
     "dotenv": "17.2.3",
-    "electron": "37.7.1",
+    "electron": "38.4.0",
     "electron-builder": "26.1.0",
     "electron-devtools-installer": "4.0.0",
     "eslint": "9.38.0",
