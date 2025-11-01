@@ -26,6 +26,9 @@ const LINUX_EXECUTABLE_NAME = process.env.LINUX_EXECUTABLE_NAME;
 // ${productName}-${version}.${ext}
 const MACOS_ARTIFACT_NAME = process.env.MACOS_ARTIFACT_NAME;
 
+// OS・バージョン・CPU/GPU・アーキテクチャ・インストーラーの種類が定まる名前。アップデート用。
+const INSTALLER_ARTIFACT_NAME = process.env.INSTALLER_ARTIFACT_NAME;
+
 // コード署名証明書
 const winSigningHashAlgorithmsSchema = z.array(z.enum(["sha1", "sha256"]));
 const WIN_CERTIFICATE_SHA1 = process.env.WIN_CERTIFICATE_SHA1;
@@ -134,9 +137,9 @@ const builderOptions: ElectronBuilderConfiguration = {
     allowToChangeInstallationDirectory: true,
   },
   publish: {
-    provider: "github",
-    repo: "voicevox",
-    vPrefixedTagName: false,
+    provider: "generic",
+    url: `https://vv-update-api.sevenc7c.workers.dev/${INSTALLER_ARTIFACT_NAME !== "" ? INSTALLER_ARTIFACT_NAME : ""}`,
+    useMultipleRangeRequest: false,
   },
   linux: {
     artifactName: LINUX_ARTIFACT_NAME || undefined,

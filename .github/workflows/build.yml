@@ -20,10 +20,6 @@ on:
         description: "コード署名する"
         type: boolean
         default: false
-      upload_artifact:
-        description: "デバッグ用に成果物をartifactにアップロードするか"
-        type: boolean
-        default: false
 
 env:
   VOICEVOX_ENGINE_VERSION: 0.25.0
@@ -53,7 +49,7 @@ jobs:
           - artifact_name: linux-nvidia-prepackage
             artifact_path: dist_electron/linux-unpacked
             voicevox_engine_asset_name: linux-nvidia
-            package_name: voicevox
+            package_name: voicevox-test
             compressed_artifact_name: voicevox-linux-nvidia
             app_asar_dir: prepackage/resources
             installer_artifact_name: linux-nvidia-appimage
@@ -65,7 +61,7 @@ jobs:
           - artifact_name: linux-cpu-x64-prepackage
             artifact_path: dist_electron/linux-unpacked
             voicevox_engine_asset_name: linux-cpu-x64
-            package_name: voicevox-cpu
+            package_name: voicevox-test-cpu
             compressed_artifact_name: voicevox-linux-cpu-x64
             app_asar_dir: prepackage/resources
             installer_artifact_name: linux-cpu-x64-appimage
@@ -77,7 +73,7 @@ jobs:
           - artifact_name: linux-cpu-arm64-prepackage
             artifact_path: dist_electron/linux-arm64-unpacked
             voicevox_engine_asset_name: linux-cpu-arm64
-            package_name: voicevox-cpu
+            package_name: voicevox-test-cpu
             compressed_artifact_name: voicevox-linux-cpu-arm64
             app_asar_dir: prepackage/resources
             installer_artifact_name: linux-cpu-arm64-appimage
@@ -89,7 +85,7 @@ jobs:
           - artifact_name: windows-nvidia-prepackage
             artifact_path: dist_electron/win-unpacked
             voicevox_engine_asset_name: windows-nvidia
-            package_name: voicevox-cuda
+            package_name: voicevox-test-cuda
             compressed_artifact_name: voicevox-windows-nvidia
             app_asar_dir: prepackage/resources
             installer_artifact_name: windows-nvidia-nsis-web
@@ -99,7 +95,7 @@ jobs:
           - artifact_name: windows-cpu-prepackage
             artifact_path: dist_electron/win-unpacked
             voicevox_engine_asset_name: windows-cpu
-            package_name: voicevox-cpu
+            package_name: voicevox-test-cpu
             compressed_artifact_name: voicevox-windows-cpu
             app_asar_dir: prepackage/resources
             installer_artifact_name: windows-cpu-nsis-web
@@ -109,7 +105,7 @@ jobs:
           - artifact_name: windows-directml-prepackage
             artifact_path: dist_electron/win-unpacked
             voicevox_engine_asset_name: windows-directml
-            package_name: voicevox
+            package_name: voicevox-test
             compressed_artifact_name: voicevox-windows-directml
             app_asar_dir: prepackage/resources
             installer_artifact_name: windows-directml-nsis-web
@@ -119,7 +115,7 @@ jobs:
           - artifact_name: macos-cpu-x64-prepackage
             artifact_path: dist_electron/mac
             voicevox_engine_asset_name: macos-x64
-            package_name: voicevox-cpu
+            package_name: voicevox-test-cpu
             compressed_artifact_name: voicevox-macos-cpu-x64
             app_asar_dir: prepackage/VOICEVOX.app/Contents/Resources
             installer_artifact_name: macos-cpu-x64-dmg
@@ -129,7 +125,7 @@ jobs:
           - artifact_name: macos-cpu-arm64-prepackage
             artifact_path: dist_electron/mac-arm64
             voicevox_engine_asset_name: macos-arm64
-            package_name: voicevox-cpu
+            package_name: voicevox-test-cpu
             compressed_artifact_name: voicevox-macos-cpu-arm64
             app_asar_dir: prepackage/VOICEVOX.app/Contents/Resources
             installer_artifact_name: macos-cpu-arm64-dmg
@@ -157,7 +153,7 @@ jobs:
       #       so different package/product names should be used for CPU/DirectML/GPU builds.
       - name: Replace package name & version
         run: |
-          $sed -i 's/"name": "voicevox"/"name": "${{ matrix.package_name }}"/' package.json
+          $sed -i 's/"name": "voicevox-test"/"name": "${{ matrix.package_name }}"/' package.json
           # $sed -i 's/productName: "VOICEVOX"/productName: "${{ matrix.product_name }}"/' vue.config.js
 
           $sed -i 's/"version": "999.999.999"/"version": "${{ env.VOICEVOX_EDITOR_VERSION }}"/' package.json
@@ -262,6 +258,7 @@ jobs:
           LINUX_ARTIFACT_NAME: ${{ matrix.linux_artifact_name }}
           LINUX_EXECUTABLE_NAME: ${{ matrix.linux_executable_name }}
           MACOS_ARTIFACT_NAME: ${{ matrix.macos_artifact_name }}
+          INSTALLER_ARTIFACT_NAME: ${{ matrix.installer_artifact_name }}
 
           # https://github.com/electron-userland/electron-builder/issues/3179
           USE_HARD_LINKS: false
@@ -349,7 +346,7 @@ jobs:
           mv VOICEVOX prepackage
 
       - name: Upload Linux tar.gz (without nvidia) to Artifacts
-        if: startsWith(matrix.artifact_name, 'linux-') && !contains(matrix.artifact_name, 'nvidia') && github.event.inputs.upload_artifact == 'true'
+        if: startsWith(matrix.artifact_name, 'linux-') && !contains(matrix.artifact_name, 'nvidia')
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}-targz
@@ -379,7 +376,7 @@ jobs:
           7z rn $name.zip prepackage/ VOICEVOX/
 
       - name: Upload Windows & Mac zip (without nvidia) to Artifacts
-        if: (startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')) && !contains(matrix.artifact_name, 'nvidia') && github.event.inputs.upload_artifact == 'true'
+        if: (startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')) && !contains(matrix.artifact_name, 'nvidia')
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}-zip
@@ -419,6 +416,16 @@ jobs:
           THUMBPRINT_PATH: /tmp/esignercka_thumbprint.txt
           SIGNTOOL_PATH_PATH: /tmp/signtool_path.txt
 
+      - name: Create app-update.yml
+        run: |
+          # prepackageを使うとapp-update.ymlが生成されないので、手動で作成する
+          cat <<YAML > ${{ matrix.app_asar_dir }}/app-update.yml
+          provider: generic
+          url: https://vv-update-api.sevenc7c.workers.dev/${{ matrix.installer_artifact_name }}
+          useMultipleRangeRequest: false
+          updaterCacheDirName: ${{ matrix.package_name }}-updater
+          YAML
+
       # NOTE: prepackage can be removed before splitting nsis-web archive
       - name: Build Electron
         if: endsWith(matrix.installer_artifact_name, '-nsis-web') || endsWith(matrix.installer_artifact_name, '-appimage') # windows and linux
@@ -426,6 +433,7 @@ jobs:
           NSIS_WEB_ARTIFACT_NAME: ${{ matrix.nsis_web_artifact_name }}
           LINUX_ARTIFACT_NAME: ${{ matrix.linux_artifact_name }}
           LINUX_EXECUTABLE_NAME: ${{ matrix.linux_executable_name }}
+          INSTALLER_ARTIFACT_NAME: ${{ matrix.installer_artifact_name }}
         run: |
           pnpm run electron:build:pack --prepackaged prepackage/
 
@@ -433,6 +441,7 @@ jobs:
         if: endsWith(matrix.installer_artifact_name, '-dmg') # macOS
         env:
           MACOS_ARTIFACT_NAME: ${{ matrix.macos_artifact_name }}
+          INSTALLER_ARTIFACT_NAME: ${{ matrix.installer_artifact_name }}
         run: |
           pnpm run electron:build:pack --prepackaged prepackage/VOICEVOX.app
 
@@ -469,13 +478,14 @@ jobs:
             mv archives.txt "${{ matrix.installer_artifact_name }}.7z.txt"
           done
 
-      - name: Upload Linux AppImage split to Artifacts
-        if: endsWith(matrix.installer_artifact_name, '-appimage') && github.event.inputs.upload_artifact == 'true'
+      - name: Upload Linux AppImage to Artifacts
+        if: endsWith(matrix.installer_artifact_name, '-appimage')
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.installer_artifact_name }}-release
           path: |-
-            dist_electron/*.7z.*
+            dist_electron/*.AppImage
+            dist_electron/*.yml
 
       - name: Upload Linux AppImage split to Release Assets
         if: endsWith(matrix.installer_artifact_name, '-appimage') && (github.event.release.tag_name || github.event.inputs.version) != ''
@@ -488,12 +498,13 @@ jobs:
           target_commitish: ${{ github.sha }}
 
       - name: Upload macOS dmg to Artifacts
-        if: endsWith(matrix.installer_artifact_name, '-dmg') && github.event.inputs.upload_artifact == 'true'
+        if: endsWith(matrix.installer_artifact_name, '-dmg')
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.installer_artifact_name }}-release
           path: |-
             dist_electron/*.dmg
+            dist_electron/*.yml
 
       - name: Upload macOS dmg to Release Assets
         if: endsWith(matrix.installer_artifact_name, '-dmg') && (github.event.release.tag_name || github.event.inputs.version) != ''
@@ -505,14 +516,21 @@ jobs:
             dist_electron/*.dmg
           target_commitish: ${{ github.sha }}
 
+      - name: Copy Windows NSIS ini
+        if: endsWith(matrix.installer_artifact_name, '-nsis-web')
+        run: |
+          cp dist_electron/nsis-web/out/*.ini dist_electron/nsis-web/
+
       - name: Upload Windows NSIS Web to Artifacts
-        if: endsWith(matrix.installer_artifact_name, '-nsis-web') && github.event.inputs.upload_artifact == 'true'
+        if: endsWith(matrix.installer_artifact_name, '-nsis-web')
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.installer_artifact_name }}-release
           path: |-
-            dist_electron/nsis-web/out/*.7z.*
+            dist_electron/nsis-web/*.7z
             dist_electron/nsis-web/*.exe
+            dist_electron/nsis-web/*.ini
+            dist_electron/nsis-web/*.yml
 
       - name: Upload Windows NSIS Web to Release Assets
         if: endsWith(matrix.installer_artifact_name, '-nsis-web') && (github.event.release.tag_name || github.event.inputs.version) != ''
@@ -524,3 +542,37 @@ jobs:
             dist_electron/nsis-web/out/*.7z.*
             dist_electron/nsis-web/*.exe
           target_commitish: ${{ github.sha }}
+
+  upload-to-huggingface:
+    needs: build-and-upload
+    runs-on: ubuntu-latest
+    if: (github.event.release.tag_name || github.event.inputs.version)
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: "*-release"
+          path: ./artifacts
+
+      - name: Organize artifacts
+        run: |
+          cd artifacts
+          for file in *; do
+            # -releaseを消す
+            mv "$file" "${file//-release/}"
+          done
+
+      - name: Upload to Hugging Face
+        run: |
+          if [ -z "${{ secrets.HUGGINGFACE_TOKEN }}" ]; then
+            # NOTE: if内ではsecretsは展開されないので、run内でチェックする
+            echo "Hugging Face token is not set. Skipping upload."
+            exit 0
+          fi
+
+          pip3 install huggingface_hub[cli]
+
+          huggingface-cli login --token ${{ secrets.HUGGINGFACE_TOKEN }}
+          huggingface-cli upload \
+            sevenc-nanashi/vv-poc-editor-update-storage \
+            artifacts $VOICEVOX_EDITOR_VERSION
