@@ -39,9 +39,11 @@
     "test-ui:storybook-vrt": "cross-env TARGET=storybook playwright test --ui",
     "// --- build ---": "",
     "electron:serve": "cross-env VITE_TARGET=electron vite",
-    "electron:build": "cross-env VITE_TARGET=electron NODE_ENV=production vite build && electron-builder --config ./build/electronBuilderConfigLoader.cjs --publish never",
+    "electron:build": "pnpm run electron:build:compile && pnpm run electron:build:pack",
+    "electron:build:compile": "cross-env VITE_TARGET=electron vite build",
+    "electron:build:pack": "electron-builder --config ./build/electronBuilderConfig.ts --publish never",
     "browser:serve": "cross-env VITE_TARGET=browser vite",
-    "browser:build": "cross-env VITE_TARGET=browser NODE_ENV=production vite build",
+    "browser:build": "cross-env VITE_TARGET=browser vite build",
     "storybook": "storybook dev --port 6006",
     "storybook:build": "storybook build",
     "// --- lifecycle ---": "",
@@ -75,7 +77,6 @@
     "rfdc": "1.4.1",
     "semver": "7.7.2",
     "shlex": "2.1.2",
-    "systeminformation": "5.27.6",
     "tree-kill": "1.2.2",
     "vue": "3.5.17",
     "vuedraggable": "4.1.0",
@@ -120,8 +121,8 @@
     "chromatic": "13.0.1",
     "cross-env": "7.0.3",
     "dotenv": "16.5.0",
-    "electron": "37.0.0",
-    "electron-builder": "26.0.12",
+    "electron": "37.7.1",
+    "electron-builder": "26.1.0",
     "electron-devtools-installer": "4.0.0",
     "eslint": "9.29.0",
     "eslint-config-flat-gitignore": "2.1.0",
@@ -163,9 +164,6 @@
     ],
     "overrides": {
       "eslint-config-prettier": "10.1.5"
-    },
-    "patchedDependencies": {
-      "@storybook/vue3": "patches/@storybook__vue3.patch"
     }
   }
 }
