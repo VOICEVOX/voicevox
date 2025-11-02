@@ -161,6 +161,7 @@ const builderOptions: ElectronBuilderConfiguration = {
         arch: [isArm64 ? "arm64" : "x64"],
       },
     ],
+    identity: null,
   },
   dmg: {
     icon: "build/icons/icon-dmg.icns",
