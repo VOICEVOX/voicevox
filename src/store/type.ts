@@ -845,6 +845,9 @@ export type NoteEditTool = "SELECT_FIRST" | "EDIT_FIRST";
 export type PitchEditTool = "DRAW" | "ERASE";
 // ボリューム編集ツール（VolumeEditor 専用）
 export type VolumeEditTool = "DRAW" | "ERASE";
+// パラメータパネル内の編集対象
+// NOTE: 音素タイミング編集などを追加する際に拡張
+export type ParameterPanelEditTarget = "VOLUME";
 
 // プロジェクトの書き出しに使えるファイル形式
 export type ExportSongProjectFileType =
@@ -890,6 +893,7 @@ export type SingingStoreState = {
   sequencerNoteTool: NoteEditTool;
   sequencerPitchTool: PitchEditTool;
   sequencerVolumeTool: VolumeEditTool;
+  parameterPanelEditTarget: ParameterPanelEditTarget;
   sequencerVolumeVisible: boolean;
   _selectedNoteIds: Set<NoteId>;
   editingLyricNoteId?: NoteId;
@@ -1185,6 +1189,15 @@ export type SingingStoreTypes = {
   SET_SEQUENCER_VOLUME_TOOL: {
     mutation: { sequencerVolumeTool: VolumeEditTool };
     action(payload: { sequencerVolumeTool: VolumeEditTool }): void;
+  };
+
+  PARAMETER_PANEL_EDIT_TARGET: {
+    getter: ParameterPanelEditTarget;
+  };
+
+  SET_PARAMETER_PANEL_EDIT_TARGET: {
+    mutation: { editTarget: ParameterPanelEditTarget };
+    action(payload: { editTarget: ParameterPanelEditTarget }): void;
   };
 
   SET_SEQUENCER_VOLUME_VISIBLE: {

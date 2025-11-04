@@ -31,50 +31,65 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject, onBeforeUnmount, ref, toRaw, watch } from "vue";
+import {
+  computed,
+  inject,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  toRaw,
+  watch,
+} from "vue";
 import { QBtn } from "quasar";
-import { useVolumeEditorStateMachine } from "@/composables/useVolumeEditorStateMachine";
+import { useParameterPanelStateMachine } from "@/composables/useParameterPanelStateMachine";
 import { useStore } from "@/store";
 import type { VolumeEditTool } from "@/store/type";
-import type { VolumeEditorInput } from "@/sing/volumeEditorStateMachine/common";
+import type {
+  ParameterPanelVolumeInput,
+  PositionOnParameterPanel,
+} from "@/sing/parameterPanelStateMachine/common";
 import { tickToSecond } from "@/sing/domain";
 import { clamp } from "@/sing/utility";
 import { getTotalTicks } from "@/sing/rulerHelper"; // TODO: ルーラーから切り出して共通化する
 import { numMeasuresInjectionKey } from "@/components/Sing/ScoreSequencer.vue"; // TODO: これも共通化できそう
 
 const store = useStore();
-const { previewVolumeEdit, stateMachineProcess } = useVolumeEditorStateMachine({
-  state: {
-    get tpqn() {
-      return store.state.tpqn;
+const { volumePreviewEdit, volumeStateMachineProcess } =
+  useParameterPanelStateMachine({
+    state: {
+      get tpqn() {
+        return store.state.tpqn;
+      },
+      get tempos() {
+        return store.state.tempos;
+      },
+      get sequencerZoomX() {
+        return store.state.sequencerZoomX;
+      },
+      get sequencerZoomY() {
+        return store.state.sequencerZoomY;
+      },
+      get sequencerVolumeTool() {
+        return store.state.sequencerVolumeTool;
+      },
+      get parameterPanelEditTarget() {
+        return store.state.parameterPanelEditTarget;
+      },
     },
-    get tempos() {
-      return store.state.tempos;
+    getters: {
+      get SELECTED_TRACK_ID() {
+        return store.getters.SELECTED_TRACK_ID;
+      },
+      get PLAYHEAD_POSITION() {
+        return store.getters.PLAYHEAD_POSITION;
+      },
     },
-    get sequencerZoomX() {
-      return store.state.sequencerZoomX;
+    actions: {
+      COMMAND_SET_VOLUME_EDIT_DATA: store.actions.COMMAND_SET_VOLUME_EDIT_DATA,
+      COMMAND_ERASE_VOLUME_EDIT_DATA:
+        store.actions.COMMAND_ERASE_VOLUME_EDIT_DATA,
     },
-    get sequencerZoomY() {
-      return store.state.sequencerZoomY;
-    },
-    get sequencerVolumeTool() {
-      return store.state.sequencerVolumeTool;
-    },
-  },
-  getters: {
-    get SELECTED_TRACK_ID() {
-      return store.getters.SELECTED_TRACK_ID;
-    },
-    get PLAYHEAD_POSITION() {
-      return store.getters.PLAYHEAD_POSITION;
-    },
-  },
-  actions: {
-    COMMAND_SET_VOLUME_EDIT_DATA: store.actions.COMMAND_SET_VOLUME_EDIT_DATA,
-    COMMAND_ERASE_VOLUME_EDIT_DATA:
-      store.actions.COMMAND_ERASE_VOLUME_EDIT_DATA,
-  },
-});
+  });
 
 const tool = computed<VolumeEditTool>(() => store.state.sequencerVolumeTool);
 const selectedTrack = computed(() => store.getters.SELECTED_TRACK);
@@ -87,15 +102,25 @@ const setTool = (value: VolumeEditTool) => {
   void store.actions.SET_SEQUENCER_VOLUME_TOOL({
     sequencerVolumeTool: value,
   });
-  console.debug(`[VolumeEditor] tool -> ${value}`);
+  console.debug(`[ParameterPanelVolume] tool -> ${value}`);
 };
+
+onMounted(() => {
+  if (store.state.parameterPanelEditTarget !== "VOLUME") {
+    void store.actions.SET_PARAMETER_PANEL_EDIT_TARGET({
+      editTarget: "VOLUME",
+    });
+  }
+});
 
 const viewportElement = ref<HTMLElement | null>(null);
 const isDragging = ref(false);
 
 // 座標変換処理
 // TODO: マウスイベントのたびに処理を行うのは非効率...現状はデバッグ確認用
-const computeViewportPosition = (mouseEvent: MouseEvent) => {
+const computeViewportPosition = (
+  mouseEvent: MouseEvent,
+): PositionOnParameterPanel => {
   const viewport = viewportElement.value;
   if (viewport == null) {
     throw new Error("volume editor viewport element is null.");
@@ -137,27 +162,24 @@ const computeViewportPosition = (mouseEvent: MouseEvent) => {
 
   return {
     frame: targetFrame,
-    amplitude: amplitudeRatio,
+    value: amplitudeRatio,
   };
 };
 
 const dispatchVolumeEditorEvent = (
   mouseEvent: MouseEvent,
-  targetArea: VolumeEditorInput["targetArea"],
+  targetArea: ParameterPanelVolumeInput["targetArea"],
 ) => {
   const position = computeViewportPosition(mouseEvent);
-  if (!position) {
-    return;
-  }
 
-  stateMachineProcess({
+  volumeStateMachineProcess({
     type: "mouseEvent",
     targetArea,
     mouseEvent,
     position,
   });
 
-  console.debug(`[VolumeEditor] ${targetArea}`, position);
+  console.debug(`[ParameterPanelVolume] ${targetArea}`, position);
 };
 
 const onSurfaceMouseDown = (event: MouseEvent) => {
@@ -207,7 +229,7 @@ onBeforeUnmount(() => {
 });
 
 watch(
-  previewVolumeEdit,
+  volumePreviewEdit,
   (next) => {
     // NOTE: デバッグ用
     const raw = next != undefined ? toRaw(next) : undefined;

@@ -1,24 +1,29 @@
 import {
-  VolumeEditorStateDefinitions,
-  VolumeEditorInput,
-  VolumeEditorContext,
-  VolumeEditorPosition,
-  IdleStateId,
+  ParameterPanelVolumeStateDefinitions,
+  ParameterPanelVolumeInput,
+  ParameterPanelVolumeContext,
+  PositionOnParameterPanel,
+  ParameterPanelVolumeIdleStateId,
 } from "../common";
 import { SetNextState, State } from "@/sing/stateMachine";
 import { TrackId } from "@/type/preload";
+import { getButton } from "@/sing/viewHelper";
 
 export class EraseVolumeState
   implements
-    State<VolumeEditorStateDefinitions, VolumeEditorInput, VolumeEditorContext>
+    State<
+      ParameterPanelVolumeStateDefinitions,
+      ParameterPanelVolumeInput,
+      ParameterPanelVolumeContext
+    >
 {
   readonly id = "eraseVolume";
 
-  private readonly cursorPosAtStart: VolumeEditorPosition;
+  private readonly cursorPosAtStart: PositionOnParameterPanel;
   private readonly trackId: TrackId;
-  private readonly returnStateId: IdleStateId;
+  private readonly returnStateId: ParameterPanelVolumeIdleStateId;
 
-  private currentCursorPos: VolumeEditorPosition;
+  private currentCursorPos: PositionOnParameterPanel;
   private applyPreview: boolean;
 
   private innerContext:
@@ -29,25 +34,25 @@ export class EraseVolumeState
     | undefined;
 
   constructor(args: {
-    startPosition: VolumeEditorPosition;
-    trackId: TrackId;
-    returnStateId: IdleStateId;
+    startPosition: PositionOnParameterPanel;
+    targetTrackId: TrackId;
+    returnStateId: ParameterPanelVolumeIdleStateId;
   }) {
     this.cursorPosAtStart = args.startPosition;
-    this.trackId = args.trackId;
+    this.trackId = args.targetTrackId;
     this.returnStateId = args.returnStateId;
     this.currentCursorPos = this.cursorPosAtStart;
     this.applyPreview = false;
   }
 
-  onEnter(context: VolumeEditorContext) {
+  onEnter(context: ParameterPanelVolumeContext) {
     context.previewVolumeEdit.value = {
       type: "erase",
       startFrame: this.cursorPosAtStart.frame,
       frameLength: 1,
     };
     context.cursorState.value = "ERASE";
-    context.previewMode.value = "ERASE_VOLUME";
+    context.previewMode.value = "VOLUME_ERASE";
 
     const previewIfNeeded = () => {
       if (this.innerContext == undefined) {
@@ -73,28 +78,32 @@ export class EraseVolumeState
     context,
     setNextState,
   }: {
-    input: VolumeEditorInput;
-    context: VolumeEditorContext;
-    setNextState: SetNextState<VolumeEditorStateDefinitions>;
+    input: ParameterPanelVolumeInput;
+    context: ParameterPanelVolumeContext;
+    setNextState: SetNextState<ParameterPanelVolumeStateDefinitions>;
   }) {
     if (this.innerContext == undefined) {
       throw new Error("innerContext is undefined.");
     }
     if (context.previewVolumeEdit.value == undefined) {
-      throw new Error("previewVolumeEdit is undefined.");
+      throw new Error("previewParameterEdit is undefined.");
     }
     if (context.previewVolumeEdit.value.type !== "erase") {
-      throw new Error("previewVolumeEdit.type is not erase.");
+      throw new Error("previewParameterEdit.type is not erase.");
     }
 
     if (input.type === "mouseEvent") {
       const { mouseEvent, position, targetArea } = input;
+      const mouseButton = getButton(mouseEvent);
 
       if (targetArea === "Window") {
         if (mouseEvent.type === "mousemove") {
           this.currentCursorPos = position;
           this.innerContext.executePreviewProcess = true;
-        } else if (mouseEvent.type === "mouseup" && mouseEvent.button === 0) {
+        } else if (
+          mouseEvent.type === "mouseup" &&
+          mouseButton === "LEFT_BUTTON"
+        ) {
           this.applyPreview = true;
           setNextState(this.returnStateId, undefined);
         }
@@ -105,22 +114,22 @@ export class EraseVolumeState
     }
   }
 
-  onExit(context: VolumeEditorContext) {
+  onExit(context: ParameterPanelVolumeContext) {
     if (this.innerContext == undefined) {
       throw new Error("innerContext is undefined.");
     }
     if (context.previewVolumeEdit.value == undefined) {
-      throw new Error("previewVolumeEdit is undefined.");
+      throw new Error("previewParameterEdit is undefined.");
     }
     if (context.previewVolumeEdit.value.type !== "erase") {
-      throw new Error("previewVolumeEdit.type is not erase.");
+      throw new Error("previewParameterEdit.type is not erase.");
     }
 
     cancelAnimationFrame(this.innerContext.previewRequestId);
     this.innerContext = undefined;
 
     if (this.applyPreview) {
-      void context.eraseVolumeEditData({
+      void context.store.actions.COMMAND_ERASE_VOLUME_EDIT_DATA({
         startFrame: context.previewVolumeEdit.value.startFrame,
         frameLength: context.previewVolumeEdit.value.frameLength,
         trackId: this.trackId,
@@ -132,12 +141,12 @@ export class EraseVolumeState
     context.previewMode.value = "IDLE";
   }
 
-  private previewEraseVolume(context: VolumeEditorContext) {
+  private previewEraseVolume(context: ParameterPanelVolumeContext) {
     if (context.previewVolumeEdit.value == undefined) {
-      throw new Error("previewVolumeEdit.value is undefined.");
+      throw new Error("previewParameterEdit.value is undefined.");
     }
     if (context.previewVolumeEdit.value.type !== "erase") {
-      throw new Error("previewVolumeEdit.value.type is not erase.");
+      throw new Error("previewParameterEdit.value.type is not erase.");
     }
 
     const cursorFrame = Math.max(0, this.currentCursorPos.frame);

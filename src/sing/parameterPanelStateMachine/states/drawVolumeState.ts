@@ -1,55 +1,60 @@
 import {
-  VolumeEditorStateDefinitions,
-  VolumeEditorInput,
-  VolumeEditorContext,
-  VolumeEditorPosition,
-  IdleStateId,
+  ParameterPanelVolumeStateDefinitions,
+  ParameterPanelVolumeInput,
+  ParameterPanelVolumeContext,
+  PositionOnParameterPanel,
+  ParameterPanelVolumeIdleStateId,
 } from "../common";
 import { SetNextState, State } from "@/sing/stateMachine";
 import { TrackId } from "@/type/preload";
 import { createArray } from "@/sing/utility";
+import { getButton } from "@/sing/viewHelper";
 
 export class DrawVolumeState
   implements
-    State<VolumeEditorStateDefinitions, VolumeEditorInput, VolumeEditorContext>
+    State<
+      ParameterPanelVolumeStateDefinitions,
+      ParameterPanelVolumeInput,
+      ParameterPanelVolumeContext
+    >
 {
   readonly id = "drawVolume";
 
-  private readonly cursorPosAtStart: VolumeEditorPosition;
+  private readonly cursorPosAtStart: PositionOnParameterPanel;
   private readonly trackId: TrackId;
-  private readonly returnStateId: IdleStateId;
+  private readonly returnStateId: ParameterPanelVolumeIdleStateId;
 
-  private currentCursorPos: VolumeEditorPosition;
+  private currentCursorPos: PositionOnParameterPanel;
   private applyPreview: boolean;
 
   private innerContext:
     | {
         previewRequestId: number;
         executePreviewProcess: boolean;
-        prevCursorPos: VolumeEditorPosition;
+        prevCursorPos: PositionOnParameterPanel;
       }
     | undefined;
 
   constructor(args: {
-    startPosition: VolumeEditorPosition;
-    trackId: TrackId;
-    returnStateId: IdleStateId;
+    startPosition: PositionOnParameterPanel;
+    targetTrackId: TrackId;
+    returnStateId: ParameterPanelVolumeIdleStateId;
   }) {
     this.cursorPosAtStart = args.startPosition;
-    this.trackId = args.trackId;
+    this.trackId = args.targetTrackId;
     this.returnStateId = args.returnStateId;
     this.currentCursorPos = this.cursorPosAtStart;
     this.applyPreview = false;
   }
 
-  onEnter(context: VolumeEditorContext) {
+  onEnter(context: ParameterPanelVolumeContext) {
     context.previewVolumeEdit.value = {
       type: "draw",
-      data: [this.cursorPosAtStart.amplitude],
+      data: [this.cursorPosAtStart.value],
       startFrame: this.cursorPosAtStart.frame,
     };
-    context.cursorState.value = "DRAW";
-    context.previewMode.value = "DRAW_VOLUME";
+    context.cursorState.value = "UNSET";
+    context.previewMode.value = "VOLUME_DRAW";
 
     const previewIfNeeded = () => {
       if (this.innerContext == undefined) {
@@ -76,18 +81,18 @@ export class DrawVolumeState
     context,
     setNextState,
   }: {
-    input: VolumeEditorInput;
-    context: VolumeEditorContext;
-    setNextState: SetNextState<VolumeEditorStateDefinitions>;
+    input: ParameterPanelVolumeInput;
+    context: ParameterPanelVolumeContext;
+    setNextState: SetNextState<ParameterPanelVolumeStateDefinitions>;
   }) {
     if (this.innerContext == undefined) {
       throw new Error("innerContext is undefined.");
     }
     if (context.previewVolumeEdit.value == undefined) {
-      throw new Error("previewVolumeEdit is undefined.");
+      throw new Error("previewParameterEdit is undefined.");
     }
     if (context.previewVolumeEdit.value.type !== "draw") {
-      throw new Error("previewVolumeEdit.type is not draw.");
+      throw new Error("previewParameterEdit.type is not draw.");
     }
 
     if (input.type != "mouseEvent") {
@@ -95,13 +100,17 @@ export class DrawVolumeState
     }
 
     const { mouseEvent, position, targetArea } = input;
+    const mouseButton = getButton(mouseEvent);
 
     // 対象がWindow
     if (targetArea === "Window") {
       if (mouseEvent.type === "mousemove") {
         this.currentCursorPos = position;
         this.innerContext.executePreviewProcess = true;
-      } else if (mouseEvent.type === "mouseup" && mouseEvent.button === 0) {
+      } else if (
+        mouseEvent.type === "mouseup" &&
+        mouseButton === "LEFT_BUTTON"
+      ) {
         // NOTE: ピッチと同様
         // カーソルを動かさずにマウスのボタンを離したときに1フレームのみの変更になり、
         // 1フレームの変更はピッチ編集ラインとして表示されないので、無視する
@@ -120,15 +129,15 @@ export class DrawVolumeState
     }
   }
 
-  onExit(context: VolumeEditorContext) {
+  onExit(context: ParameterPanelVolumeContext) {
     if (this.innerContext == undefined) {
       throw new Error("innerContext is undefined.");
     }
     if (context.previewVolumeEdit.value == undefined) {
-      throw new Error("previewVolumeEdit is undefined.");
+      throw new Error("previewParameterEdit is undefined.");
     }
     if (context.previewVolumeEdit.value.type !== "draw") {
-      throw new Error("previewVolumeEdit.type is not draw.");
+      throw new Error("previewParameterEdit.type is not draw.");
     }
 
     cancelAnimationFrame(this.innerContext.previewRequestId);
@@ -136,7 +145,7 @@ export class DrawVolumeState
 
     if (this.applyPreview) {
       // TODO: 平滑化を行う...特にdBスケールにするのであれば他も見直す必要がある
-      void context.setVolumeEditData({
+      void context.store.actions.COMMAND_SET_VOLUME_EDIT_DATA({
         volumeArray: context.previewVolumeEdit.value.data,
         startFrame: context.previewVolumeEdit.value.startFrame,
         trackId: this.trackId,
@@ -148,21 +157,21 @@ export class DrawVolumeState
     context.previewMode.value = "IDLE";
   }
 
-  private previewDrawVolume(context: VolumeEditorContext) {
+  private previewDrawVolume(context: ParameterPanelVolumeContext) {
     if (this.innerContext == undefined) {
       throw new Error("innerContext is undefined.");
     }
     if (context.previewVolumeEdit.value == undefined) {
-      throw new Error("previewVolumeEdit.value is undefined.");
+      throw new Error("previewParameterEdit.value is undefined.");
     }
     if (context.previewVolumeEdit.value.type !== "draw") {
-      throw new Error("previewVolumeEdit.value.type is not draw.");
+      throw new Error("previewParameterEdit.value.type is not draw.");
     }
 
     // TODO: 補間処理を実装する...表示含めスケールを先に決める必要ありそう
     // まずはUIが動くようにのみする
     const cursorFrame = this.currentCursorPos.frame;
-    const cursorAmplitude = this.currentCursorPos.amplitude;
+    const cursorValue = this.currentCursorPos.value;
 
     const temp = {
       ...context.previewVolumeEdit.value,
@@ -176,7 +185,7 @@ export class DrawVolumeState
       const prependLength = temp.startFrame - cursorFrame;
       const prepend = createArray(
         prependLength,
-        () => temp.data[0] ?? cursorAmplitude,
+        () => temp.data[0] ?? cursorValue,
       );
       temp.data = prepend.concat(temp.data);
       temp.startFrame = cursorFrame;
@@ -188,12 +197,12 @@ export class DrawVolumeState
       const appendLength = cursorFrame - lastFrame;
       const append = createArray(
         appendLength,
-        () => temp.data[temp.data.length - 1] ?? cursorAmplitude,
+        () => temp.data[temp.data.length - 1] ?? cursorValue,
       );
       temp.data = temp.data.concat(append);
     }
 
-    temp.data[cursorFrame - temp.startFrame] = cursorAmplitude;
+    temp.data[cursorFrame - temp.startFrame] = cursorValue;
 
     context.previewVolumeEdit.value = temp;
     this.innerContext.prevCursorPos = this.currentCursorPos;

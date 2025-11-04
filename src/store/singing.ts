@@ -11,6 +11,7 @@ import {
   transformCommandStore,
   SingingVoice,
   SequencerEditTarget,
+  ParameterPanelEditTarget,
   PhraseKey,
   SequenceId,
   SingingVolumeKey,
@@ -700,6 +701,7 @@ export const singingStoreState: SingingStoreState = {
   sequencerNoteTool: "EDIT_FIRST",
   sequencerPitchTool: "DRAW",
   sequencerVolumeTool: "DRAW",
+  parameterPanelEditTarget: "VOLUME",
   sequencerVolumeVisible: false,
   _selectedNoteIds: new Set(),
   nowPlaying: false,
@@ -1782,6 +1784,24 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
     async action({ mutations }, { sequencerVolumeTool }) {
       mutations.SET_SEQUENCER_VOLUME_TOOL({ sequencerVolumeTool });
+    },
+  },
+
+  PARAMETER_PANEL_EDIT_TARGET: {
+    getter(state) {
+      return state.parameterPanelEditTarget;
+    },
+  },
+
+  SET_PARAMETER_PANEL_EDIT_TARGET: {
+    mutation(state, { editTarget }: { editTarget: ParameterPanelEditTarget }) {
+      state.parameterPanelEditTarget = editTarget;
+    },
+    async action(
+      { mutations },
+      { editTarget }: { editTarget: ParameterPanelEditTarget },
+    ) {
+      mutations.SET_PARAMETER_PANEL_EDIT_TARGET({ editTarget });
     },
   },
 

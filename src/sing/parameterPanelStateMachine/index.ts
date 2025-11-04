@@ -1,8 +1,8 @@
 import {
-  VolumeEditorStateDefinitions,
-  VolumeEditorInput,
-  VolumeEditorContext,
-  IdleStateId,
+  ParameterPanelVolumeStateDefinitions,
+  ParameterPanelVolumeInput,
+  ParameterPanelVolumeContext,
+  ParameterPanelVolumeIdleStateId,
 } from "./common";
 import { DrawVolumeIdleState } from "./states/drawVolumeIdleState";
 import { EraseVolumeIdleState } from "./states/eraseVolumeIdleState";
@@ -10,14 +10,14 @@ import { DrawVolumeState } from "./states/drawVolumeState";
 import { EraseVolumeState } from "./states/eraseVolumeState";
 import { StateMachine } from "@/sing/stateMachine";
 
-export const createVolumeEditorStateMachine = (
-  context: VolumeEditorContext,
-  initialState: IdleStateId,
+export const createParameterPanelVolumeStateMachine = (
+  context: ParameterPanelVolumeContext,
+  initialState: ParameterPanelVolumeIdleStateId,
 ) => {
   return new StateMachine<
-    VolumeEditorStateDefinitions,
-    VolumeEditorInput,
-    VolumeEditorContext
+    ParameterPanelVolumeStateDefinitions,
+    ParameterPanelVolumeInput,
+    ParameterPanelVolumeContext
   >(
     {
       drawVolumeIdle: () => new DrawVolumeIdleState(),

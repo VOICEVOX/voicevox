@@ -1,20 +1,22 @@
 import {
-  VolumeEditorStateDefinitions,
-  VolumeEditorInput,
-  VolumeEditorContext,
-  IdleStateId,
+  ParameterPanelVolumeStateDefinitions,
+  ParameterPanelVolumeInput,
+  ParameterPanelVolumeContext,
 } from "../common";
 import { SetNextState, State } from "@/sing/stateMachine";
-import { TrackId } from "@/type/preload";
 import { getButton } from "@/sing/viewHelper";
 
 export class DrawVolumeIdleState
   implements
-    State<VolumeEditorStateDefinitions, VolumeEditorInput, VolumeEditorContext>
+    State<
+      ParameterPanelVolumeStateDefinitions,
+      ParameterPanelVolumeInput,
+      ParameterPanelVolumeContext
+    >
 {
   readonly id = "drawVolumeIdle";
 
-  onEnter(context: VolumeEditorContext) {
+  onEnter(context: ParameterPanelVolumeContext) {
     context.cursorState.value = "DRAW";
   }
 
@@ -23,13 +25,13 @@ export class DrawVolumeIdleState
     context,
     setNextState,
   }: {
-    input: VolumeEditorInput;
-    context: VolumeEditorContext;
-    setNextState: SetNextState<VolumeEditorStateDefinitions>;
+    input: ParameterPanelVolumeInput;
+    context: ParameterPanelVolumeContext;
+    setNextState: SetNextState<ParameterPanelVolumeStateDefinitions>;
   }) {
     if (input.type === "mouseEvent") {
       const mouseButton = getButton(input.mouseEvent);
-      const trackId: TrackId = context.getSelectedTrackId();
+      const trackId = context.selectedTrackId.value;
 
       if (
         input.mouseEvent.type === "mousedown" &&
@@ -38,14 +40,14 @@ export class DrawVolumeIdleState
       ) {
         setNextState("drawVolume", {
           startPosition: input.position,
-          trackId,
-          returnStateId: this.id as IdleStateId,
+          targetTrackId: trackId,
+          returnStateId: this.id,
         });
       }
     }
   }
 
-  onExit(context: VolumeEditorContext) {
+  onExit(context: ParameterPanelVolumeContext) {
     context.cursorState.value = "UNSET";
   }
 }
