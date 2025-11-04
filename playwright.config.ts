@@ -42,7 +42,7 @@ if (isElectron) {
 }
 
 // - ファイルシステムが関連してくるので、Electronテストでは並列化しない
-// - CI環境では並列化しない
+// - CI環境では安定性のため並列化しない
 const parallel = !isElectron && !process.env.CI;
 
 /**
