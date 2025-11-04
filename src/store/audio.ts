@@ -1754,6 +1754,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         });
         try {
           fetchAudioResult = await withProgress(
+            {
+              operation: "generateAudio",
+            },
             actions.FETCH_AUDIO({ audioKey }),
             actions,
           );
@@ -1838,7 +1841,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           mutations.SET_ACTIVE_AUDIO_KEY({ audioKey: e.audioKey });
         });
         player.addEventListener("waitstart", (e) => {
-          void actions.START_PROGRESS();
+          void actions.START_PROGRESS({
+            operation: "generateAudio",
+          });
           mutations.SET_ACTIVE_AUDIO_KEY({ audioKey: e.audioKey });
           mutations.SET_AUDIO_NOW_GENERATING({
             audioKey: e.audioKey,

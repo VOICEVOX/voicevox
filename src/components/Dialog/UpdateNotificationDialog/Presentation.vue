@@ -16,13 +16,13 @@
           :key="infoIndex"
         >
           <h3>バージョン {{ info.version }}</h3>
-          <ul>
-            <template
+          <ul class="q-mt-none">
+            <li
               v-for="(item, descriptionIndex) of info.descriptions"
               :key="descriptionIndex"
             >
-              <li>{{ item }}</li>
-            </template>
+              {{ item }}
+            </li>
           </ul>
         </template>
       </QCardSection>
@@ -56,21 +56,38 @@
           padding="xs md"
           label="公式サイトを開く"
           unelevated
-          color="primary"
-          textColor="display-on-primary"
+          color="surface"
+          textColor="display"
           class="q-mt-sm"
           @click="
             openOfficialWebsite();
             closeUpdateNotificationDialog();
           "
         />
+        <QBtn
+          padding="xs md"
+          label="アップデート"
+          unelevated
+          color="primary"
+          textColor="display-on-primary"
+          class="q-mt-sm"
+          :disabled="!props.isUpdateSupported?.isUpdateSupported"
+          @click="updateApp()"
+        >
+          <QTooltip
+            v-if="!props.isUpdateSupported?.isUpdateSupported"
+            :delay="500"
+          >
+            {{ props.isUpdateSupported?.reason }}
+          </QTooltip>
+        </QBtn>
       </QCardActions>
     </QCard>
   </QDialog>
 </template>
 
 <script setup lang="ts">
-import { UpdateInfo } from "@/type/preload";
+import { IsUpdateSupported, UpdateInfo } from "@/type/preload";
 
 const dialogOpened = defineModel<boolean>("dialogOpened", { default: false });
 const props = defineProps<{
@@ -78,10 +95,14 @@ const props = defineProps<{
   latestVersion: string;
   /** 表示するアップデート情報 */
   newUpdateInfos: UpdateInfo[];
+  /** アップデートがサポートされているかどうか */
+  isUpdateSupported: IsUpdateSupported | undefined;
 }>();
 const emit = defineEmits<{
   /** スキップするときに呼ばれる */
   (e: "skipThisVersionClick", version: string): void;
+  /** アップデートを開始するときに呼ばれる */
+  (e: "updateApp", version: string): void;
 }>();
 
 const closeUpdateNotificationDialog = () => {
@@ -90,6 +111,10 @@ const closeUpdateNotificationDialog = () => {
 
 const openOfficialWebsite = () => {
   window.open(import.meta.env.VITE_OFFICIAL_WEBSITE_URL, "_blank");
+};
+
+const updateApp = () => {
+  emit("updateApp", props.latestVersion);
 };
 </script>
 

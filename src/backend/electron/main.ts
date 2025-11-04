@@ -1,7 +1,4 @@
-"use strict";
-
 import path from "node:path";
-
 import fs from "node:fs";
 import { pathToFileURL } from "node:url";
 import { app, dialog, Menu, net, protocol, session, shell } from "electron";

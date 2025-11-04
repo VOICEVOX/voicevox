@@ -69,6 +69,15 @@ export type TextAsset = {
   UpdateInfos: UpdateInfo[];
 };
 
+export type IsUpdateSupported =
+  | {
+      isUpdateSupported: true;
+    }
+  | {
+      isUpdateSupported: false;
+      reason: string;
+    };
+
 export interface Sandbox {
   getTextAsset<K extends keyof TextAsset>(textType: K): Promise<TextAsset[K]>;
   getAltPortInfos(): Promise<AltPortInfos>;
@@ -135,6 +144,8 @@ export interface Sandbox {
   validateEngineDir(engineDir: string): Promise<EngineDirValidationResult>;
   reloadApp(obj: { isMultiEngineOffMode?: boolean }): Promise<void>;
   getPathForFile(file: File): Promise<string>;
+  isUpdateSupported(): Promise<IsUpdateSupported>;
+  updateApp(obj: { version: string }): Promise<void>;
 }
 
 export type AppInfos = {

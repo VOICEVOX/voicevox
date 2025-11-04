@@ -4,7 +4,7 @@
       <QCircularProgress
         v-if="isDeterminate"
         showValue
-        :value="progress"
+        :value="progress?.value ?? 0"
         :min="0"
         :max="1"
         rounded
@@ -23,7 +23,9 @@
         :thickness="0.3"
         size="xl"
       />
-      <div class="q-mt-md">生成中です...</div>
+      <div class="q-mt-md">
+        {{ progress && operationTexts[progress?.options.operation] }}
+      </div>
     </div>
   </div>
 </template>
@@ -31,42 +33,57 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref, watch } from "vue";
 import { useStore } from "@/store";
+import { ProgressOptions } from "@/store/type";
 
 const store = useStore();
 
-const progress = computed(() => store.getters.PROGRESS);
+const progress = computed(() => store.state.progress);
 const isShowProgress = ref<boolean>(false);
 const isDeterminate = ref<boolean>(false);
 
-let timeoutId: ReturnType<typeof setTimeout>;
-
-const deferredProgressStart = () => {
-  // 3秒待ってから表示する
-  timeoutId = setTimeout(() => {
-    isShowProgress.value = true;
-  }, 3000);
+const operationTexts: Record<ProgressOptions["operation"], string> = {
+  download: "ダウンロード中...",
+  generateAudio: "生成中...",
 };
 
-watch(progress, (newValue, oldValue) => {
-  if (newValue === -1) {
-    // → 非表示
-    clearTimeout(timeoutId);
-    isShowProgress.value = false;
-  } else if (oldValue === -1 && newValue <= 1) {
-    // 非表示 → 処理中
-    deferredProgressStart();
-    isDeterminate.value = false;
-  } else if (oldValue !== -1 && 0 < newValue) {
-    // 処理中 → 処理中(0%より大きな値)
-    // 0 < value <= 1の間のみ進捗を%で表示する
-    isDeterminate.value = true;
+let timeoutId: ReturnType<typeof setTimeout>;
+
+const defaultDeferTime = 3000; // デフォルトの遅延時間
+const deferredProgressStart = () => {
+  if (!progress.value) return;
+  if (progress.value.options.visibleAfter === 0) {
+    // visibleAfterが0の場合は即座に表示
+    isShowProgress.value = true;
+    return;
   }
-});
+  timeoutId = setTimeout(() => {
+    isShowProgress.value = true;
+  }, progress.value.options.visibleAfter ?? defaultDeferTime);
+};
+
+watch(
+  () => progress.value?.value,
+  (newValue, oldValue) => {
+    if (newValue == undefined) {
+      // → 非表示
+      clearTimeout(timeoutId);
+      isShowProgress.value = false;
+    } else if (oldValue == undefined && newValue <= 1) {
+      // 非表示 → 処理中
+      deferredProgressStart();
+      isDeterminate.value = false;
+    } else if (oldValue != undefined && 0 < newValue) {
+      // 処理中 → 処理中(0%より大きな値)
+      // 0 < value <= 1の間のみ進捗を%で表示する
+      isDeterminate.value = true;
+    }
+  },
+);
 
 onUnmounted(() => clearTimeout(timeoutId));
 
 const formattedProgress = computed(() =>
-  (store.getters.PROGRESS * 100).toFixed(),
+  ((progress.value?.value ?? 0) * 100).toFixed(),
 );
 </script>
 
@@ -86,7 +103,7 @@ const formattedProgress = computed(() =>
   > div {
     color: colors.$display;
     background: colors.$surface;
-    width: 200px;
+    min-width: 200px;
     border-radius: 6px;
     padding: 14px 48px;
   }

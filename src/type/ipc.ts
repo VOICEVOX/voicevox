@@ -4,6 +4,7 @@ import {
   EngineId,
   EngineInfo,
   EngineSettingType,
+  IsUpdateSupported,
   MessageBoxReturnValue,
   NativeThemeType,
   TextAsset,
@@ -225,6 +226,16 @@ export type IpcIHData = {
     args: [obj: { filePath: string }];
     return: Result<Uint8Array>;
   };
+
+  IS_UPDATE_SUPPORTED: {
+    args: [];
+    return: IsUpdateSupported;
+  };
+
+  UPDATE_APP: {
+    args: [obj: { version: string }];
+    return: void;
+  };
 };
 
 /**
@@ -283,6 +294,11 @@ export type IpcSOData = {
 
   DETECT_RESIZED: {
     args: [obj: { width: number; height: number }];
+    return: void;
+  };
+
+  ON_UPDATE_DOWNLOAD_PROGRESS: {
+    args: [obj: { numBytes: number; totalBytes: number }];
     return: void;
   };
 };

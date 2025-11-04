@@ -54,6 +54,7 @@ import {
   NoteId,
   CommandId,
   TrackId,
+  IsUpdateSupported,
 } from "@/type/preload";
 import { IEngineConnectorFactory } from "@/infrastructures/EngineConnector";
 import {
@@ -1868,6 +1869,14 @@ export type IndexStoreTypes = {
     mutation: { isMultiEngineOffMode: boolean };
     action(payload: boolean): void;
   };
+
+  IS_UPDATE_SUPPORTED: {
+    action(): Promise<IsUpdateSupported>;
+  };
+
+  UPDATE_APP: {
+    action(payload: { version: string }): Promise<void>;
+  };
 };
 
 /*
@@ -2065,6 +2074,12 @@ export type SettingStoreTypes = {
  * Ui Store Types
  */
 
+export type ProgressOptions = {
+  operation: "generateAudio" | "download";
+  /** 一定時間経ってから表示する（ms単位） */
+  visibleAfter?: number;
+};
+
 export type UiStoreState = {
   uiLockCount: number;
   dialogLockCount: number;
@@ -2074,7 +2089,12 @@ export type UiStoreState = {
   isMaximized: boolean;
   isPinned: boolean;
   isFullscreen: boolean;
-  progress: number;
+  progress:
+    | {
+        options: ProgressOptions;
+        value: number;
+      }
+    | undefined;
   isVuexReady: boolean;
 } & DialogStates;
 
@@ -2103,10 +2123,6 @@ export type UiStoreTypes = {
 
   MENUBAR_LOCKED: {
     getter: boolean;
-  };
-
-  PROGRESS: {
-    getter: number;
   };
 
   ASYNC_UI_LOCK: {
@@ -2252,11 +2268,14 @@ export type UiStoreTypes = {
   };
 
   START_PROGRESS: {
-    action(): void;
+    mutation: { options: ProgressOptions };
+    action(obj: ProgressOptions): void;
   };
 
   SET_PROGRESS: {
-    mutation: { progress: number };
+    mutation: {
+      progress: number;
+    };
     action(payload: { progress: number }): void;
   };
 
@@ -2265,6 +2284,7 @@ export type UiStoreTypes = {
   };
 
   RESET_PROGRESS: {
+    mutation: undefined;
     action(): void;
   };
 
