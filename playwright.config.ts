@@ -41,10 +41,9 @@ if (isElectron) {
   throw new Error(`VITE_TARGETの指定が不正です。${process.env.VITE_TARGET}`);
 }
 
-/**
- * Read environment variables from file.
- * https://github.com/motdotla/dotenv
- */
+// - ファイルシステムが関連してくるので、Electronテストでは並列化しない
+// - CI環境では並列化しない
+const parallel = !isElectron && !process.env.CI;
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -61,9 +60,8 @@ const config: PlaywrightTestConfig = {
      */
     timeout: 5 * 1000,
   },
-  // ファイルシステムが関連してくるので、Electronテストでは並列化しない
-  fullyParallel: !isElectron,
-  workers: isElectron ? 1 : undefined,
+  fullyParallel: !parallel,
+  workers: parallel ? 1 : undefined,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
   reporter: process.env.CI
