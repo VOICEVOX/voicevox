@@ -385,6 +385,7 @@ export function createDefaultTrack(): Track {
     volumeRangeAdjustment: 0,
     notes: [],
     pitchEditData: [],
+    volumeEditData: [],
     phonemeTimingEditData: new Map(),
 
     solo: false,
@@ -425,6 +426,15 @@ export function isValidPitchEditData(pitchEditData: number[]) {
     (value) =>
       Number.isFinite(value) &&
       (value > 0 || value === VALUE_INDICATING_NO_DATA),
+  );
+}
+
+export function isValidVolumeEditData(volumeEditData: number[]) {
+  // NOTE: APIの返却が0未満になる場合があるため、0以上かどうかのみ検証する
+  return volumeEditData.every(
+    (value) =>
+      Number.isFinite(value) &&
+      (value >= 0 || value === VALUE_INDICATING_NO_DATA),
   );
 }
 
@@ -732,6 +742,37 @@ export function applyPitchEdit(
   }
 }
 
+export function applyVolumeEdit(
+  phraseQuery: EditorFrameAudioQuery,
+  phraseStartTime: number,
+  volumeEditData: number[],
+  editorFrameRate: number,
+) {
+  if (phraseQuery.frameRate !== editorFrameRate) {
+    throw new Error(
+      "The frame rate between the phrase query and the editor does not match.",
+    );
+  }
+
+  const volume = phraseQuery.volume;
+  const phraseQueryFrameLength = volume.length;
+  const phraseQueryStartFrame = Math.round(
+    phraseStartTime * phraseQuery.frameRate,
+  );
+  const phraseQueryEndFrame = phraseQueryStartFrame + phraseQueryFrameLength;
+
+  const startFrame = Math.max(0, phraseQueryStartFrame);
+  const endFrame = Math.min(volumeEditData.length, phraseQueryEndFrame);
+  for (let i = startFrame; i < endFrame; i++) {
+    const editedVolume = volumeEditData[i];
+    if (editedVolume === VALUE_INDICATING_NO_DATA) {
+      continue;
+    }
+    // NOTE: ボリューム編集結果が負値になるケースに備えて0以上にクランプする
+    volume[i - phraseQueryStartFrame] = Math.max(editedVolume, 0);
+  }
+}
+
 /**
  * 文字列をモーラと非モーラに分割する。長音は展開される。連続する非モーラはまとめる。
  * 例："カナー漢字" -> ["カ", "ナ", "ア", "漢字"]
@@ -790,9 +831,21 @@ export const shouldPlayTracks = (tracks: Map<TrackId, Track>): Set<TrackId> => {
   );
 };
 
-/**
- * 指定されたティックを直近のグリッドに合わせる
+/*
+ * ループ範囲が有効かどうかを判定する
+ * @param startTick ループ開始位置(tick)
+ * @param endTick ループ終了位置(tick)
+ * @returns ループ範囲が有効な場合はtrue
  */
-export function snapTicksToGrid(ticks: number, snapTicks: number): number {
-  return Math.round(ticks / snapTicks) * snapTicks;
-}
+export const isValidLoopRange = (
+  startTick: number,
+  endTick: number,
+): boolean => {
+  return (
+    startTick >= 0 &&
+    endTick >= 0 &&
+    Number.isInteger(startTick) &&
+    Number.isInteger(endTick) &&
+    startTick <= endTick // 範囲差0は許容する
+  );
+};
