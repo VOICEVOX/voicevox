@@ -10,7 +10,7 @@ export type PositionOnParameterPanel = {
   readonly value: number;
 };
 
-export type ParameterPanelVolumeInput =
+export type ParameterPanelInput =
   | {
       readonly type: "mouseEvent";
       readonly targetArea: "Editor";
@@ -28,18 +28,15 @@ export type ParameterPanelVolumePreviewEdit =
   | { type: "draw"; data: number[]; startFrame: number }
   | { type: "erase"; startFrame: number; frameLength: number };
 
-export type ParameterPanelVolumePreviewMode =
-  | "IDLE"
-  | "VOLUME_DRAW"
-  | "VOLUME_ERASE";
+export type ParameterPanelPreviewMode = "IDLE" | "VOLUME_DRAW" | "VOLUME_ERASE";
 
-export type ParameterPanelVolumeRefs = {
+export type ParameterPanelRefs = {
   readonly previewVolumeEdit: Ref<ParameterPanelVolumePreviewEdit | undefined>;
-  readonly previewMode: Ref<ParameterPanelVolumePreviewMode>;
+  readonly previewMode: Ref<ParameterPanelPreviewMode>;
   readonly cursorState: Ref<CursorState>;
 };
 
-export type ParameterPanelVolumeComputedRefs = {
+export type ParameterPanelComputedRefs = {
   readonly selectedTrackId: ComputedRef<TrackId>;
   readonly playheadTicks: ComputedRef<number>;
   readonly tempos: ComputedRef<Tempo[]>;
@@ -48,7 +45,7 @@ export type ParameterPanelVolumeComputedRefs = {
   readonly zoomY: ComputedRef<number>;
 };
 
-export type ParameterPanelVolumePartialStore = {
+export type ParameterPanelPartialStore = {
   readonly state: Pick<
     Store["state"],
     | "tpqn"
@@ -68,16 +65,14 @@ export type ParameterPanelVolumePartialStore = {
   >;
 };
 
-export type ParameterPanelVolumeContext = ParameterPanelVolumeRefs &
-  ParameterPanelVolumeComputedRefs & {
-    readonly store: ParameterPanelVolumePartialStore;
+export type ParameterPanelContext = ParameterPanelRefs &
+  ParameterPanelComputedRefs & {
+    readonly store: ParameterPanelPartialStore;
   };
 
-export type ParameterPanelVolumeIdleStateId =
-  | "drawVolumeIdle"
-  | "eraseVolumeIdle";
+export type ParameterPanelIdleStateId = "drawVolumeIdle" | "eraseVolumeIdle";
 
-export type ParameterPanelVolumeStateDefinitions = StateDefinitions<
+export type ParameterPanelStateDefinitions = StateDefinitions<
   [
     {
       id: "drawVolumeIdle";
@@ -92,7 +87,7 @@ export type ParameterPanelVolumeStateDefinitions = StateDefinitions<
       factoryArgs: {
         startPosition: PositionOnParameterPanel;
         targetTrackId: TrackId;
-        returnStateId: ParameterPanelVolumeIdleStateId;
+        returnStateId: ParameterPanelIdleStateId;
       };
     },
     {
@@ -100,7 +95,7 @@ export type ParameterPanelVolumeStateDefinitions = StateDefinitions<
       factoryArgs: {
         startPosition: PositionOnParameterPanel;
         targetTrackId: TrackId;
-        returnStateId: ParameterPanelVolumeIdleStateId;
+        returnStateId: ParameterPanelIdleStateId;
       };
     },
   ]

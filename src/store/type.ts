@@ -1191,10 +1191,6 @@ export type SingingStoreTypes = {
     action(payload: { sequencerVolumeTool: VolumeEditTool }): void;
   };
 
-  PARAMETER_PANEL_EDIT_TARGET: {
-    getter: ParameterPanelEditTarget;
-  };
-
   SET_PARAMETER_PANEL_EDIT_TARGET: {
     mutation: { editTarget: ParameterPanelEditTarget };
     action(payload: { editTarget: ParameterPanelEditTarget }): void;

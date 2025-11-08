@@ -1787,12 +1787,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  PARAMETER_PANEL_EDIT_TARGET: {
-    getter(state) {
-      return state.parameterPanelEditTarget;
-    },
-  },
-
+  // TODO: これはパラメータパネル内で編集対象を切り替えるためのもの
+  // 最適なUIによっては必要ない場合があり、UIが固まった時点で削除する可能性あり
   SET_PARAMETER_PANEL_EDIT_TARGET: {
     mutation(state, { editTarget }: { editTarget: ParameterPanelEditTarget }) {
       state.parameterPanelEditTarget = editTarget;

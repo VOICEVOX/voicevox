@@ -2,28 +2,28 @@ import { computed, ref, watch } from "vue";
 import type { CursorState } from "@/sing/viewHelper";
 import type {
   ParameterPanelVolumePreviewEdit,
-  ParameterPanelVolumeIdleStateId,
-  ParameterPanelVolumePartialStore,
-  ParameterPanelVolumePreviewMode,
-  ParameterPanelVolumeInput,
-  ParameterPanelVolumeComputedRefs,
+  ParameterPanelIdleStateId,
+  ParameterPanelPartialStore,
+  ParameterPanelPreviewMode,
+  ParameterPanelInput,
+  ParameterPanelComputedRefs,
 } from "@/sing/parameterPanelStateMachine/common";
 import type { TrackId } from "@/type/preload";
 import type { Tempo } from "@/domain/project/type";
-import { createParameterPanelVolumeStateMachine } from "@/sing/parameterPanelStateMachine";
+import { createParameterPanelStateMachine } from "@/sing/parameterPanelStateMachine";
 
 export const useParameterPanelStateMachine = (
-  store: ParameterPanelVolumePartialStore,
+  store: ParameterPanelPartialStore,
 ) => {
   const refs = {
     previewVolumeEdit: ref<ParameterPanelVolumePreviewEdit | undefined>(
       undefined,
     ),
-    previewMode: ref<ParameterPanelVolumePreviewMode>("IDLE"),
+    previewMode: ref<ParameterPanelPreviewMode>("IDLE"),
     cursorState: ref<CursorState>("UNSET"),
   };
 
-  const computedRefs: ParameterPanelVolumeComputedRefs = {
+  const computedRefs: ParameterPanelComputedRefs = {
     selectedTrackId: computed<TrackId>(() => store.getters.SELECTED_TRACK_ID),
     playheadTicks: computed<number>(() => store.getters.PLAYHEAD_POSITION),
     tempos: computed<Tempo[]>(() => store.state.tempos),
@@ -34,17 +34,19 @@ export const useParameterPanelStateMachine = (
 
   // NOTE: parameterPanelEditTargetは今のところVOLUMEのみ。
   // 音素編集などを追加するときはここを拡張する。
-  const idleStateId = computed<ParameterPanelVolumeIdleStateId>(() =>
+  const idleStateId = computed<ParameterPanelIdleStateId>(() =>
     store.state.sequencerVolumeTool === "ERASE"
       ? "eraseVolumeIdle"
       : "drawVolumeIdle",
   );
 
+  // TODO:isVolumeEditTargetActiveはパラメータパネル内で編集対象がボリューム編集かどうかを判別するフラグ
+  // 最適なUIに応じて必要かどうかが異なるため、UIが固まった時点で変更・削除する可能性あり
   const isVolumeEditTargetActive = computed(
     () => store.state.parameterPanelEditTarget === "VOLUME",
   );
 
-  const stateMachine = createParameterPanelVolumeStateMachine(
+  const stateMachine = createParameterPanelStateMachine(
     {
       ...refs,
       ...computedRefs,
@@ -63,7 +65,7 @@ export const useParameterPanelStateMachine = (
   });
 
   return {
-    volumeStateMachineProcess: (input: ParameterPanelVolumeInput) => {
+    volumeStateMachineProcess: (input: ParameterPanelInput) => {
       if (!isVolumeEditTargetActive.value) {
         return;
       }

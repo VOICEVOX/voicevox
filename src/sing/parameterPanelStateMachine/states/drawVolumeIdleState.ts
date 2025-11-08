@@ -1,7 +1,7 @@
 import {
-  ParameterPanelVolumeStateDefinitions,
-  ParameterPanelVolumeInput,
-  ParameterPanelVolumeContext,
+  ParameterPanelStateDefinitions,
+  ParameterPanelInput,
+  ParameterPanelContext,
 } from "../common";
 import { SetNextState, State } from "@/sing/stateMachine";
 import { getButton } from "@/sing/viewHelper";
@@ -9,14 +9,14 @@ import { getButton } from "@/sing/viewHelper";
 export class DrawVolumeIdleState
   implements
     State<
-      ParameterPanelVolumeStateDefinitions,
-      ParameterPanelVolumeInput,
-      ParameterPanelVolumeContext
+      ParameterPanelStateDefinitions,
+      ParameterPanelInput,
+      ParameterPanelContext
     >
 {
   readonly id = "drawVolumeIdle";
 
-  onEnter(context: ParameterPanelVolumeContext) {
+  onEnter(context: ParameterPanelContext) {
     context.cursorState.value = "DRAW";
   }
 
@@ -25,9 +25,9 @@ export class DrawVolumeIdleState
     context,
     setNextState,
   }: {
-    input: ParameterPanelVolumeInput;
-    context: ParameterPanelVolumeContext;
-    setNextState: SetNextState<ParameterPanelVolumeStateDefinitions>;
+    input: ParameterPanelInput;
+    context: ParameterPanelContext;
+    setNextState: SetNextState<ParameterPanelStateDefinitions>;
   }) {
     if (input.type === "mouseEvent") {
       const mouseButton = getButton(input.mouseEvent);
@@ -47,7 +47,7 @@ export class DrawVolumeIdleState
     }
   }
 
-  onExit(context: ParameterPanelVolumeContext) {
+  onExit(context: ParameterPanelContext) {
     context.cursorState.value = "UNSET";
   }
 }

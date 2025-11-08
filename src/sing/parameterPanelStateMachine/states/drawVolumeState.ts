@@ -1,9 +1,9 @@
 import {
-  ParameterPanelVolumeStateDefinitions,
-  ParameterPanelVolumeInput,
-  ParameterPanelVolumeContext,
+  ParameterPanelStateDefinitions,
+  ParameterPanelInput,
+  ParameterPanelContext,
   PositionOnParameterPanel,
-  ParameterPanelVolumeIdleStateId,
+  ParameterPanelIdleStateId,
 } from "../common";
 import { SetNextState, State } from "@/sing/stateMachine";
 import { TrackId } from "@/type/preload";
@@ -13,16 +13,16 @@ import { getButton } from "@/sing/viewHelper";
 export class DrawVolumeState
   implements
     State<
-      ParameterPanelVolumeStateDefinitions,
-      ParameterPanelVolumeInput,
-      ParameterPanelVolumeContext
+      ParameterPanelStateDefinitions,
+      ParameterPanelInput,
+      ParameterPanelContext
     >
 {
   readonly id = "drawVolume";
 
   private readonly cursorPosAtStart: PositionOnParameterPanel;
   private readonly trackId: TrackId;
-  private readonly returnStateId: ParameterPanelVolumeIdleStateId;
+  private readonly returnStateId: ParameterPanelIdleStateId;
 
   private currentCursorPos: PositionOnParameterPanel;
   private applyPreview: boolean;
@@ -38,7 +38,7 @@ export class DrawVolumeState
   constructor(args: {
     startPosition: PositionOnParameterPanel;
     targetTrackId: TrackId;
-    returnStateId: ParameterPanelVolumeIdleStateId;
+    returnStateId: ParameterPanelIdleStateId;
   }) {
     this.cursorPosAtStart = args.startPosition;
     this.trackId = args.targetTrackId;
@@ -47,7 +47,7 @@ export class DrawVolumeState
     this.applyPreview = false;
   }
 
-  onEnter(context: ParameterPanelVolumeContext) {
+  onEnter(context: ParameterPanelContext) {
     context.previewVolumeEdit.value = {
       type: "draw",
       data: [this.cursorPosAtStart.value],
@@ -81,9 +81,9 @@ export class DrawVolumeState
     context,
     setNextState,
   }: {
-    input: ParameterPanelVolumeInput;
-    context: ParameterPanelVolumeContext;
-    setNextState: SetNextState<ParameterPanelVolumeStateDefinitions>;
+    input: ParameterPanelInput;
+    context: ParameterPanelContext;
+    setNextState: SetNextState<ParameterPanelStateDefinitions>;
   }) {
     if (this.innerContext == undefined) {
       throw new Error("innerContext is undefined.");
@@ -129,7 +129,7 @@ export class DrawVolumeState
     }
   }
 
-  onExit(context: ParameterPanelVolumeContext) {
+  onExit(context: ParameterPanelContext) {
     if (this.innerContext == undefined) {
       throw new Error("innerContext is undefined.");
     }
@@ -157,7 +157,7 @@ export class DrawVolumeState
     context.previewMode.value = "IDLE";
   }
 
-  private previewDrawVolume(context: ParameterPanelVolumeContext) {
+  private previewDrawVolume(context: ParameterPanelContext) {
     if (this.innerContext == undefined) {
       throw new Error("innerContext is undefined.");
     }

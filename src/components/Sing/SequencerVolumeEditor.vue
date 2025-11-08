@@ -45,7 +45,7 @@ import { useParameterPanelStateMachine } from "@/composables/useParameterPanelSt
 import { useStore } from "@/store";
 import type { VolumeEditTool } from "@/store/type";
 import type {
-  ParameterPanelVolumeInput,
+  ParameterPanelInput,
   PositionOnParameterPanel,
 } from "@/sing/parameterPanelStateMachine/common";
 import { tickToSecond } from "@/sing/domain";
@@ -168,7 +168,7 @@ const computeViewportPosition = (
 
 const dispatchVolumeEditorEvent = (
   mouseEvent: MouseEvent,
-  targetArea: ParameterPanelVolumeInput["targetArea"],
+  targetArea: ParameterPanelInput["targetArea"],
 ) => {
   const position = computeViewportPosition(mouseEvent);
 

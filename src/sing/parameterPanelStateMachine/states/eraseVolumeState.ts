@@ -1,9 +1,9 @@
 import {
-  ParameterPanelVolumeStateDefinitions,
-  ParameterPanelVolumeInput,
-  ParameterPanelVolumeContext,
+  ParameterPanelStateDefinitions,
+  ParameterPanelInput,
+  ParameterPanelContext,
   PositionOnParameterPanel,
-  ParameterPanelVolumeIdleStateId,
+  ParameterPanelIdleStateId,
 } from "../common";
 import { SetNextState, State } from "@/sing/stateMachine";
 import { TrackId } from "@/type/preload";
@@ -12,16 +12,16 @@ import { getButton } from "@/sing/viewHelper";
 export class EraseVolumeState
   implements
     State<
-      ParameterPanelVolumeStateDefinitions,
-      ParameterPanelVolumeInput,
-      ParameterPanelVolumeContext
+      ParameterPanelStateDefinitions,
+      ParameterPanelInput,
+      ParameterPanelContext
     >
 {
   readonly id = "eraseVolume";
 
   private readonly cursorPosAtStart: PositionOnParameterPanel;
   private readonly trackId: TrackId;
-  private readonly returnStateId: ParameterPanelVolumeIdleStateId;
+  private readonly returnStateId: ParameterPanelIdleStateId;
 
   private currentCursorPos: PositionOnParameterPanel;
   private applyPreview: boolean;
@@ -36,7 +36,7 @@ export class EraseVolumeState
   constructor(args: {
     startPosition: PositionOnParameterPanel;
     targetTrackId: TrackId;
-    returnStateId: ParameterPanelVolumeIdleStateId;
+    returnStateId: ParameterPanelIdleStateId;
   }) {
     this.cursorPosAtStart = args.startPosition;
     this.trackId = args.targetTrackId;
@@ -45,7 +45,7 @@ export class EraseVolumeState
     this.applyPreview = false;
   }
 
-  onEnter(context: ParameterPanelVolumeContext) {
+  onEnter(context: ParameterPanelContext) {
     context.previewVolumeEdit.value = {
       type: "erase",
       startFrame: this.cursorPosAtStart.frame,
@@ -78,9 +78,9 @@ export class EraseVolumeState
     context,
     setNextState,
   }: {
-    input: ParameterPanelVolumeInput;
-    context: ParameterPanelVolumeContext;
-    setNextState: SetNextState<ParameterPanelVolumeStateDefinitions>;
+    input: ParameterPanelInput;
+    context: ParameterPanelContext;
+    setNextState: SetNextState<ParameterPanelStateDefinitions>;
   }) {
     if (this.innerContext == undefined) {
       throw new Error("innerContext is undefined.");
@@ -114,7 +114,7 @@ export class EraseVolumeState
     }
   }
 
-  onExit(context: ParameterPanelVolumeContext) {
+  onExit(context: ParameterPanelContext) {
     if (this.innerContext == undefined) {
       throw new Error("innerContext is undefined.");
     }
@@ -141,7 +141,7 @@ export class EraseVolumeState
     context.previewMode.value = "IDLE";
   }
 
-  private previewEraseVolume(context: ParameterPanelVolumeContext) {
+  private previewEraseVolume(context: ParameterPanelContext) {
     if (context.previewVolumeEdit.value == undefined) {
       throw new Error("previewParameterEdit.value is undefined.");
     }
