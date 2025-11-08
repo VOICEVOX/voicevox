@@ -161,6 +161,7 @@ const builderOptions: ElectronBuilderConfiguration = {
         arch: [isArm64 ? "arm64" : "x64"],
       },
     ],
+    identity: null, // ad-hoc署名をしない
   },
   dmg: {
     icon: "build/icons/icon-dmg.icns",
