@@ -312,13 +312,16 @@ export const projectStore = createPartialStore<ProjectStoreTypes>({
       );
       if (!result) return false;
 
-      if (context.state.projectFilePath !== filePath) {
+      const previousFilePath = context.state.projectFilePath;
+      if (previousFilePath !== filePath) {
         context.mutations.SET_PROJECT_FILEPATH({ filePath });
-        await showMessageDialog({
-          type: "info",
-          title: "保存",
-          message: `編集中のプロジェクトが ${filePath} に切り替わりました。`,
-        });
+        if (previousFilePath != undefined) {
+          await showMessageDialog({
+            type: "info",
+            title: "保存",
+            message: `編集中のプロジェクトが ${filePath} に切り替わりました。`,
+          });
+        }
       }
 
       await markCurrentProjectAsSaved(context, filePath);

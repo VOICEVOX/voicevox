@@ -143,13 +143,7 @@ export default defineConfig((options) => {
             vite: {
               plugins: [
                 tsconfigPaths({ root: import.meta.dirname }),
-                isProduction &&
-                  checkSuspiciousImportsPlugin({
-                    allowedInTryCatchModules: [
-                      // systeminformationのoptionalな依存。try-catch内なので許可。
-                      "osx-temperature-sensor",
-                    ],
-                  }),
+                isProduction && checkSuspiciousImportsPlugin({}),
               ],
               build: {
                 target: electronTargetVersion?.node,
