@@ -17,7 +17,7 @@ import {
   linearInterpolation,
 } from "@/sing/utility";
 import {
-  applyPitchEdit,
+  applyPitchEditWithSmoothing,
   applyVolumeEdit,
   calculatePhraseKey,
   decibelToLinear,
@@ -567,7 +567,7 @@ const generateSingingVolumeSource = (
   const clonedSingingPitch = structuredClone(phrase.singingPitch);
   clonedQuery.f0 = clonedSingingPitch;
 
-  applyPitchEdit(
+  applyPitchEditWithSmoothing(
     clonedQuery,
     phrase.startTime,
     track.pitchEditData,
@@ -612,7 +612,7 @@ const generateSingingVoiceSource = (
   clonedQuery.f0 = clonedSingingPitch;
   clonedQuery.volume = clonedSingingVolume;
 
-  applyPitchEdit(
+  applyPitchEditWithSmoothing(
     clonedQuery,
     phrase.startTime,
     track.pitchEditData,
