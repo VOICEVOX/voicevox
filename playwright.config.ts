@@ -51,8 +51,9 @@ if (isElectron) {
  */
 const config: PlaywrightTestConfig = {
   testDir: "./tests/e2e",
-  /* Maximum time one test can run for. */
-  timeout: 60 * 1000,
+  // NOTE: Linux環境ではCIでGPU版をダウンロードしてしまい、かなりの時間がかかってしまうため、タイムアウトを長めに設定する。
+  // TODO: CIでCPU版をダウンロードするように修正し、タイムアウトを元に戻す。
+  timeout: process.env.CI ? 5 * 60 * 1000 : 60 * 1000,
   globalTimeout: 5 * 60 * 1000,
   expect: {
     /**
