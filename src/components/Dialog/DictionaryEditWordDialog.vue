@@ -9,8 +9,8 @@
             ref="surfaceInput"
             v-model="surface"
             :disabled="uiLocked"
-            @blur="setSurface(surface)"
-            @keydown.enter="yomiFocus"
+            @change="setSurface(surface)"
+            @keydown.enter="yomiInput?.focus()"
           />
         </div>
         <div class="form-row">
@@ -21,8 +21,7 @@
             v-model="yomi"
             :disabled="uiLocked"
             :hasError="!isOnlyHiraOrKana"
-            @blur="setYomi(yomi)"
-            @keydown.enter="setYomiWhenEnter"
+            @change="setYomi(yomi)"
           >
             <template #error>
               ひらがなとカタカナ以外の文字が入力されています。
@@ -210,16 +209,6 @@ const stop = () => {
 
 // メニュー系
 const yomiInput = ref<HTMLElement>();
-
-const yomiFocus = (event?: KeyboardEvent) => {
-  if (event && event.isComposing) return;
-  yomiInput.value?.focus();
-};
-
-const setYomiWhenEnter = (event?: KeyboardEvent) => {
-  if (event && event.isComposing) return;
-  void setYomi(yomi.value);
-};
 
 const convertHankakuToZenkaku = (text: string) => {
   // " "などの目に見えない文字をまとめて全角スペース(0x3000)に置き換える

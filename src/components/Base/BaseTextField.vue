@@ -11,11 +11,11 @@
         :class="{ error: hasError, readonly, disabled }"
         :contenteditable="!readonly && !disabled ? 'plaintext-only' : false"
         @click="$emit('click', $event)"
-        @blur="$emit('change', $event)"
+        @blur="handleBlur"
         @focus="handleFocus"
         @input="handleInput"
         @paste="handlePaste"
-        @keydown="preventEnter"
+        @keydown.enter="preventEnter"
       >
         {{ innerValue }}
       </div>
@@ -75,6 +75,7 @@ defineProps<{
 }>();
 
 const emit = defineEmits<{
+  keydown: [payload: KeyboardEvent];
   change: [payload: Event];
   click: [payload: MouseEvent];
 }>();
@@ -82,6 +83,11 @@ const emit = defineEmits<{
 const model = defineModel<string>({ default: "" });
 const slot = useSlots();
 const inputRef = useTemplateRef("inputRef");
+
+const focus = () => {
+  const input = getInputOrThrow();
+  input.focus();
+};
 
 // NOTE: model.valueをそのまま使うとカーソルの位置がリセットされるので、直接使わずバッファを用意する
 const innerValue = ref<string>(model.value);
@@ -172,6 +178,12 @@ const handleUpdateOpen = (isOpened: boolean) => {
   }
 };
 
+const handleBlur = (event: FocusEvent) => {
+  if (innerValue.value !== model.value) {
+    emit("change", event);
+  }
+};
+
 const handleFocus = () => {
   if (isContextMenuOpened) {
     restoreSelection();
@@ -194,10 +206,9 @@ const handlePaste = async (event: ClipboardEvent) => {
 };
 
 const preventEnter = (event: KeyboardEvent) => {
-  if (event.key == "Enter") {
-    event.preventDefault();
-    emit("change", event);
-  }
+  event.preventDefault();
+  emit("keydown", event);
+  emit("change", event);
 };
 
 const cut = async () => {
