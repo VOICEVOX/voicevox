@@ -248,6 +248,7 @@ const selectAll = () => {
 .wrapper {
   width: 100%;
   position: relative;
+  display: grid;
 }
 
 .input {
