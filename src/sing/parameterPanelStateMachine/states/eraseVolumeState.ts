@@ -86,10 +86,10 @@ export class EraseVolumeState
       throw new Error("innerContext is undefined.");
     }
     if (context.previewVolumeEdit.value == undefined) {
-      throw new Error("previewParameterEdit is undefined.");
+      throw new Error("previewVolumeEdit is undefined.");
     }
     if (context.previewVolumeEdit.value.type !== "erase") {
-      throw new Error("previewParameterEdit.type is not erase.");
+      throw new Error("previewVolumeEdit.type is not erase.");
     }
 
     if (input.type === "mouseEvent") {
@@ -119,10 +119,10 @@ export class EraseVolumeState
       throw new Error("innerContext is undefined.");
     }
     if (context.previewVolumeEdit.value == undefined) {
-      throw new Error("previewParameterEdit is undefined.");
+      throw new Error("previewVolumeEdit is undefined.");
     }
     if (context.previewVolumeEdit.value.type !== "erase") {
-      throw new Error("previewParameterEdit.type is not erase.");
+      throw new Error("previewVolumeEdit.type is not erase.");
     }
 
     cancelAnimationFrame(this.innerContext.previewRequestId);
@@ -143,10 +143,10 @@ export class EraseVolumeState
 
   private previewEraseVolume(context: ParameterPanelContext) {
     if (context.previewVolumeEdit.value == undefined) {
-      throw new Error("previewParameterEdit.value is undefined.");
+      throw new Error("previewVolumeEdit.value is undefined.");
     }
     if (context.previewVolumeEdit.value.type !== "erase") {
-      throw new Error("previewParameterEdit.value.type is not erase.");
+      throw new Error("previewVolumeEdit.value.type is not erase.");
     }
 
     const cursorFrame = Math.max(0, this.currentCursorPos.frame);

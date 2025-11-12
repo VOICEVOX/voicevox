@@ -89,10 +89,10 @@ export class DrawVolumeState
       throw new Error("innerContext is undefined.");
     }
     if (context.previewVolumeEdit.value == undefined) {
-      throw new Error("previewParameterEdit is undefined.");
+      throw new Error("previewVolumeEdit is undefined.");
     }
     if (context.previewVolumeEdit.value.type !== "draw") {
-      throw new Error("previewParameterEdit.type is not draw.");
+      throw new Error("previewVolumeEdit.type is not draw.");
     }
 
     if (input.type != "mouseEvent") {
@@ -134,10 +134,10 @@ export class DrawVolumeState
       throw new Error("innerContext is undefined.");
     }
     if (context.previewVolumeEdit.value == undefined) {
-      throw new Error("previewParameterEdit is undefined.");
+      throw new Error("previewVolumeEdit is undefined.");
     }
     if (context.previewVolumeEdit.value.type !== "draw") {
-      throw new Error("previewParameterEdit.type is not draw.");
+      throw new Error("previewVolumeEdit.type is not draw.");
     }
 
     cancelAnimationFrame(this.innerContext.previewRequestId);
@@ -162,10 +162,10 @@ export class DrawVolumeState
       throw new Error("innerContext is undefined.");
     }
     if (context.previewVolumeEdit.value == undefined) {
-      throw new Error("previewParameterEdit.value is undefined.");
+      throw new Error("previewVolumeEdit.value is undefined.");
     }
     if (context.previewVolumeEdit.value.type !== "draw") {
-      throw new Error("previewParameterEdit.value.type is not draw.");
+      throw new Error("previewVolumeEdit.value.type is not draw.");
     }
 
     // TODO: 補間処理を実装する...表示含めスケールを先に決める必要ありそう
