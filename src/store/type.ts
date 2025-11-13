@@ -860,6 +860,7 @@ export type TrackParameters = {
 export type SongExportSetting = {
   isMono: boolean;
   sampleRate: number;
+  bitDepth: 16 | 32;
   withLimiter: boolean;
   withTrackParameters: TrackParameters;
 };
