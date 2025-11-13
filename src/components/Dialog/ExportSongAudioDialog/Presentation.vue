@@ -50,6 +50,7 @@
           <QBtnToggle
             v-model="bitDepth"
             :options="bitDepthOptions"
+            noCaps
             padding="xs md"
             unelevated
             color="surface"
