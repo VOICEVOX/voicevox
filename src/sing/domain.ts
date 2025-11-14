@@ -534,15 +534,15 @@ export type PhonemeTiming = {
  */
 export function toPhonemeTimings(phonemes: FramePhoneme[]) {
   const phonemeTimings: PhonemeTiming[] = [];
-  let accumulativeFrame = 0;
+  let cumulativeFrame = 0;
   for (const phoneme of phonemes) {
     phonemeTimings.push({
       noteId: phoneme.noteId != undefined ? NoteId(phoneme.noteId) : undefined,
-      startFrame: accumulativeFrame,
-      endFrame: accumulativeFrame + phoneme.frameLength,
+      startFrame: cumulativeFrame,
+      endFrame: cumulativeFrame + phoneme.frameLength,
       phoneme: phoneme.phoneme,
     });
-    accumulativeFrame += phoneme.frameLength;
+    cumulativeFrame += phoneme.frameLength;
   }
   return phonemeTimings;
 }
