@@ -44,7 +44,7 @@
           </QSelect>
         </BaseCell>
         <BaseCell
-          title="ビット深度"
+          title="音声のビット深度"
           description="音声のビット深度を変更できます。16bitは互換性が高く、32bitは高品質です。"
         >
           <QBtnToggle
