@@ -118,13 +118,21 @@ export class EditNotesToolIdleState
       }
     } else if (input.type === "mouseEvent") {
       const selectedTrackId = context.selectedTrackId.value;
+      const mouseButton = getButton(input.mouseEvent);
 
-      if (input.mouseEvent.type === "dblclick" && input.targetArea === "Note") {
-        setNextState("editNoteLyric", {
-          targetTrackId: selectedTrackId,
-          editStartNoteId: input.note.id,
-          returnStateId: this.id,
-        });
+      if (mouseButton === "LEFT_BUTTON") {
+        if (isSelfEventTarget(input.mouseEvent)) {
+          if (
+            input.mouseEvent.type === "dblclick" &&
+            input.targetArea === "Note"
+          ) {
+            setNextState("editNoteLyric", {
+              targetTrackId: selectedTrackId,
+              editStartNoteId: input.note.id,
+              returnStateId: this.id,
+            });
+          }
+        }
       }
     }
   }
