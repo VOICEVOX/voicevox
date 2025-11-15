@@ -41,6 +41,8 @@ export function generateWavFileData(
   };
   const writeSample = (offset: number, value: number) => {
     if (bitDepth === 16) {
+      // NOTE: Int16 -> Float32変換では、32768(0x8000)で割るのが一般的なので、
+      //       往復変換での劣化を避けるために、Float32 -> Int16変換では、32768(0x8000)をかける
       const int16Value = clamp(Math.round(value * 0x8000), -0x8000, 0x7fff);
       dataView.setInt16(pos + offset * 2, int16Value, true);
     } else {
