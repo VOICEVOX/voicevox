@@ -2,13 +2,15 @@ import { Dialog, Notify, Loading } from "quasar";
 import SaveAllResultDialog from "./SaveAllResultDialog.vue";
 import QuestionDialog from "./TextDialog/QuestionDialog.vue";
 import MessageDialog from "./TextDialog/MessageDialog.vue";
+import VoiceLibraryPolicyDialog from "./VoiceLibraryPolicyDialog.vue";
 import { DialogType } from "./TextDialog/common";
-import { AudioKey, ConfirmedTips } from "@/type/preload";
+import { ConfirmedTips, CharacterInfo, SpeakerId } from "@/type/preload";
 import {
   AllActions,
   SaveResultObject,
   SaveResult,
   ErrorTypeForSaveAllResultDialog,
+  TermConfirmedAudioKey,
 } from "@/store/type";
 import { DotNotationDispatch } from "@/store/vuex";
 import { withProgress } from "@/store/ui";
@@ -171,47 +173,46 @@ export const showQuestionDialog = async (options: QuestionDialogOptions) => {
 };
 
 export async function generateAndSaveOneAudioWithDialog({
-  audioKey,
+  termConfirmedAudioKey,
   actions,
   filePath,
   disableNotifyOnGenerate,
 }: {
-  audioKey: AudioKey;
+  termConfirmedAudioKey: TermConfirmedAudioKey;
   actions: DotNotationDispatch<AllActions>;
   filePath?: string;
   disableNotifyOnGenerate: boolean;
 }): Promise<void> {
   const result: SaveResultObject = await withProgress(
     actions.GENERATE_AND_SAVE_AUDIO({
-      audioKey,
+      termConfirmedAudioKey,
       filePath,
     }),
     actions,
   );
 
-  if (result == undefined) return;
   notifyResult(result, "audio", actions, disableNotifyOnGenerate);
 }
 
 export async function multiGenerateAndSaveAudioWithDialog({
-  audioKeys,
+  termConfirmedAudioKeys,
   actions,
   dirPath,
   disableNotifyOnGenerate,
 }: {
-  audioKeys: AudioKey[];
+  termConfirmedAudioKeys: TermConfirmedAudioKey[];
   actions: DotNotationDispatch<AllActions>;
   dirPath?: string;
   disableNotifyOnGenerate: boolean;
 }): Promise<void> {
   const result = await withProgress(
     actions.MULTI_GENERATE_AND_SAVE_AUDIO({
-      audioKeys,
+      termConfirmedAudioKeys,
       dirPath,
       callback: (finishedCount) =>
         actions.SET_PROGRESS_FROM_COUNT({
           finishedCount,
-          totalCount: audioKeys.length,
+          totalCount: termConfirmedAudioKeys.length,
         }),
     }),
     actions,
@@ -262,16 +263,19 @@ export async function multiGenerateAndSaveAudioWithDialog({
 }
 
 export async function generateAndConnectAndSaveAudioWithDialog({
+  termConfirmedAudioKeys,
   actions,
   filePath,
   disableNotifyOnGenerate,
 }: {
+  termConfirmedAudioKeys: TermConfirmedAudioKey[];
   actions: DotNotationDispatch<AllActions>;
   filePath?: string;
   disableNotifyOnGenerate: boolean;
 }): Promise<void> {
   const result = await withProgress(
     actions.GENERATE_AND_CONNECT_AND_SAVE_AUDIO({
+      termConfirmedAudioKeys,
       filePath,
       callback: (finishedCount, totalCount) =>
         actions.SET_PROGRESS_FROM_COUNT({ finishedCount, totalCount }),
@@ -296,6 +300,46 @@ export async function connectAndExportTextWithDialog({
   });
   if (!result) return;
   notifyResult(result, "text", actions, disableNotifyOnGenerate);
+}
+
+/**
+ * 音声ライブラリ利用規約ダイアログを表示する。
+ * 確認ボタンを押された場合は確認状況を保存する。
+ */
+export async function showVoiceLibraryPolicyDialog({
+  unconfirmedCharacterInfos,
+  currentConfirmedCharacterIds,
+  actions,
+}: {
+  unconfirmedCharacterInfos: CharacterInfo[];
+  currentConfirmedCharacterIds: SpeakerId[];
+  actions: DotNotationDispatch<AllActions>;
+}): Promise<"confirmed" | "canceled"> {
+  const { promise, resolve } = Promise.withResolvers<
+    "confirmed" | "canceled"
+  >();
+
+  Dialog.create({
+    component: VoiceLibraryPolicyDialog,
+    componentProps: {
+      characterPolicyInfos: unconfirmedCharacterInfos.map((info) => ({
+        id: info.metas.speakerUuid,
+        name: info.metas.speakerName,
+        policy: info.metas.policy,
+        portraitPath: info.portraitPath,
+      })),
+    },
+  })
+    .onOk((confirmedIds: SpeakerId[]) => {
+      void actions.SET_ROOT_MISC_SETTING({
+        key: "termConfirmedCharacterIds",
+        value: [...currentConfirmedCharacterIds, ...confirmedIds],
+      });
+      resolve("confirmed");
+    })
+    .onCancel(() => resolve("canceled"));
+
+  return promise;
 }
 
 // 書き出し成功時の通知を表示

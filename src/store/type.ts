@@ -76,6 +76,12 @@ import type {
   Track,
 } from "@/domain/project/type";
 import { LatestProjectType } from "@/infrastructures/projectFile/type";
+import { Brand } from "@/type/utility";
+
+/** 利用規約確認済みのAudioKey */
+export type TermConfirmedAudioKey = Brand<AudioKey, "TermConfirmedAudioKey">;
+export const TermConfirmedAudioKey = (id: AudioKey): TermConfirmedAudioKey =>
+  id as TermConfirmedAudioKey;
 
 /**
  * エディタ用のAudioQuery
@@ -174,6 +180,12 @@ export type AudioStoreTypes = {
 
   SELECTED_AUDIO_KEYS: {
     getter: AudioKey[];
+  };
+
+  CHECK_VOICE_LIBRARY_POLICY_CONFIRMATION: {
+    action(payload: {
+      audioKeys: AudioKey[];
+    }): Promise<"canceled" | TermConfirmedAudioKey[]>;
   };
 
   AUDIO_PLAY_START_POINT: {
@@ -435,14 +447,14 @@ export type AudioStoreTypes = {
 
   GENERATE_AND_SAVE_AUDIO: {
     action(payload: {
-      audioKey: AudioKey;
+      termConfirmedAudioKey: TermConfirmedAudioKey;
       filePath?: string;
     }): SaveResultObject;
   };
 
   MULTI_GENERATE_AND_SAVE_AUDIO: {
     action(payload: {
-      audioKeys: AudioKey[];
+      termConfirmedAudioKeys: TermConfirmedAudioKey[];
       dirPath?: string;
       callback?: (finishedCount: number) => void;
     }): SaveResultObject[] | "canceled";
@@ -450,6 +462,7 @@ export type AudioStoreTypes = {
 
   GENERATE_AND_CONNECT_AND_SAVE_AUDIO: {
     action(payload: {
+      termConfirmedAudioKeys: TermConfirmedAudioKey[];
       filePath?: string;
       callback?: (finishedCount: number, totalCount: number) => void;
     }): SaveResultObject;
@@ -1967,6 +1980,7 @@ export type SettingStoreState = {
   availableThemes: ThemeConf[];
   acceptTerms: AcceptTermsStatus;
   acceptRetrieveTelemetry: AcceptRetrieveTelemetryStatus;
+  termConfirmedCharacterIds: SpeakerId[]; // 利用規約を確認済みのキャラクターID
   experimentalSetting: ExperimentalSettingType;
   confirmedTips: ConfirmedTips;
   engineSettings: EngineSettings;
