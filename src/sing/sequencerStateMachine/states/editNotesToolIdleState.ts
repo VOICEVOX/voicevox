@@ -121,17 +121,15 @@ export class EditNotesToolIdleState
       const mouseButton = getButton(input.mouseEvent);
 
       if (mouseButton === "LEFT_BUTTON") {
-        if (isSelfEventTarget(input.mouseEvent)) {
-          if (
-            input.mouseEvent.type === "dblclick" &&
-            input.targetArea === "Note"
-          ) {
-            setNextState("editNoteLyric", {
-              targetTrackId: selectedTrackId,
-              editStartNoteId: input.note.id,
-              returnStateId: this.id,
-            });
-          }
+        if (
+          input.mouseEvent.type === "dblclick" &&
+          input.targetArea === "Note"
+        ) {
+          setNextState("editNoteLyric", {
+            targetTrackId: selectedTrackId,
+            editStartNoteId: input.note.id,
+            returnStateId: this.id,
+          });
         }
       }
     }
