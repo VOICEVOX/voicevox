@@ -41,8 +41,7 @@ export function generateWavFileData(
   };
   const writeSample = (offset: number, value: number) => {
     if (bitDepth === 16) {
-      const clampedValue = clamp(value, -1, 1);
-      const int16Value = Math.round(clampedValue * 0x7fff);
+      const int16Value = clamp(Math.round(value * 0x8000), -0x8000, 0x7fff);
       dataView.setInt16(pos + offset * 2, int16Value, true);
     } else {
       dataView.setFloat32(pos + offset * 4, value, true);
