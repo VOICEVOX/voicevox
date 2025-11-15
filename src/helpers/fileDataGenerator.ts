@@ -1,14 +1,18 @@
 import Encoding from "encoding-japanese";
 import { Encoding as EncodingType } from "@/type/preload";
+import { clamp } from "@/sing/utility";
 
 export function generateWavFileData(
   audioBuffer: Pick<
     AudioBuffer,
     "sampleRate" | "length" | "numberOfChannels" | "getChannelData"
   >,
+  bitDepth: 16 | 32,
 ) {
-  const bytesPerSample = 4; // Float32
-  const formatCode = 3; // WAVE_FORMAT_IEEE_FLOAT
+  const bytesPerSample = bitDepth === 16 ? 2 : 4;
+
+  // 1: WAVE_FORMAT_PCM, 3: WAVE_FORMAT_IEEE_FLOAT
+  const formatCode = bitDepth === 16 ? 1 : 3;
 
   const numberOfChannels = audioBuffer.numberOfChannels;
   const numberOfSamples = audioBuffer.length;
@@ -36,7 +40,14 @@ export function generateWavFileData(
     pos += 2;
   };
   const writeSample = (offset: number, value: number) => {
-    dataView.setFloat32(pos + offset * 4, value, true);
+    if (bitDepth === 16) {
+      // NOTE: Int16 -> Float32変換では、32768(0x8000)で割るのが一般的なので、
+      //       往復変換での劣化を避けるために、Float32 -> Int16変換では、32768(0x8000)をかける
+      const int16Value = clamp(Math.round(value * 0x8000), -0x8000, 0x7fff);
+      dataView.setInt16(pos + offset * 2, int16Value, true);
+    } else {
+      dataView.setFloat32(pos + offset * 4, value, true);
+    }
   };
 
   writeString("RIFF");
