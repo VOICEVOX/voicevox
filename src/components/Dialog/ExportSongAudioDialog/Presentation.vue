@@ -48,8 +48,8 @@
           description="音声のビット深度を変更できます。16bitは互換性が高く、32bitは高品質です。"
         >
           <QBtnToggle
-            v-model="bitDepth"
-            :options="bitDepthOptions"
+            v-model="format"
+            :options="formatOptions"
             noCaps
             padding="xs md"
             unelevated
@@ -112,6 +112,7 @@ import { ref, computed } from "vue";
 import { useDialogPluginComponent } from "quasar";
 import BaseCell from "./BaseCell.vue";
 import { SongExportSetting, TrackParameters } from "@/store/type";
+import { WavFormat } from "@/helpers/fileDataGenerator";
 
 export type ExportTarget = "master" | "stem";
 const { dialogRef, onDialogOK, onDialogCancel } = useDialogPluginComponent();
@@ -144,10 +145,10 @@ const samplingRateOptions = [24000, 44100, 48000, 88200, 96000];
 const renderSamplingRateLabel = (rate: number) => `${rate} Hz`;
 
 // ビット深度
-const bitDepth = ref<16 | 32>(32);
-const bitDepthOptions = [
-  { label: "16bit", value: 16 },
-  { label: "32bit (Float)", value: 32 },
+const format = ref<WavFormat>("float32");
+const formatOptions = [
+  { label: "16bit", value: "signedInt16" },
+  { label: "32bit Float", value: "float32" },
 ];
 
 // リミッター
@@ -189,7 +190,7 @@ const handleExportTrack = () => {
   emit("exportAudio", exportTarget.value, {
     isMono: isMono.value,
     sampleRate: samplingRate.value,
-    bitDepth: bitDepth.value,
+    format: format.value,
     withLimiter: withLimiter.value,
     withTrackParameters: {
       pan: withTrackParameters.value.includes("pan"),

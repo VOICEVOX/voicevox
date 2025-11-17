@@ -251,7 +251,7 @@ export function synthesisFrameAudioQueryMock(
       numberOfChannels,
       getChannelData: () => wave,
     },
-    32,
+    "float32",
   );
   return buffer;
 }
