@@ -145,7 +145,7 @@ const samplingRateOptions = [24000, 44100, 48000, 88200, 96000];
 const renderSamplingRateLabel = (rate: number) => `${rate} Hz`;
 
 // ビット深度
-const format = ref<WavFormat>("float32");
+const format = ref<WavFormat>("signedInt16");
 const formatOptions = [
   { label: "16bit", value: "signedInt16" },
   { label: "32bit Float", value: "float32" },
