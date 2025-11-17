@@ -45,11 +45,11 @@
         </BaseCell>
         <BaseCell
           title="音声のビット深度"
-          description="音声のビット深度を変更できます。16bitは互換性が高く、32bitは高品質です。"
+          description="音声のビット深度を変更できます。16bitは互換性が高く、32bit floatは高品質です。"
         >
           <QBtnToggle
-            v-model="format"
-            :options="formatOptions"
+            v-model="bitDepth"
+            :options="bitDepthOptions"
             noCaps
             padding="xs md"
             unelevated
@@ -145,10 +145,10 @@ const samplingRateOptions = [24000, 44100, 48000, 88200, 96000];
 const renderSamplingRateLabel = (rate: number) => `${rate} Hz`;
 
 // ビット深度
-const format = ref<WavFormat>("signedInt16");
-const formatOptions = [
+const bitDepth = ref<WavFormat>("signedInt16");
+const bitDepthOptions = [
   { label: "16bit", value: "signedInt16" },
-  { label: "32bit Float", value: "float32" },
+  { label: "32bit float", value: "float32" },
 ];
 
 // リミッター
@@ -190,7 +190,7 @@ const handleExportTrack = () => {
   emit("exportAudio", exportTarget.value, {
     isMono: isMono.value,
     sampleRate: samplingRate.value,
-    format: format.value,
+    format: bitDepth.value,
     withLimiter: withLimiter.value,
     withTrackParameters: {
       pan: withTrackParameters.value.includes("pan"),
