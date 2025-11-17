@@ -140,6 +140,8 @@ export interface GuideRequest {
     refAudio: Blob;
     normalize?: boolean;
     trim?: boolean;
+    assignLength?: boolean;
+    assignPitch?: boolean;
 }
 
 export interface ImportUserDictWordsRequest {
@@ -553,11 +555,13 @@ export interface DefaultApiInterface {
 
     /**
      * 
-     * @summary 参考音声とqueryの発音をForced Alignし、調整されたAudioQueryを返す
+     * @summary 参考音声に合わせて発音タイミングとイントネーションを自動調整したAudioQueryを返します
      * @param {string} query 
      * @param {Blob} refAudio 
      * @param {boolean} [normalize] 
      * @param {boolean} [trim] 
+     * @param {boolean} [assignLength] 
+     * @param {boolean} [assignPitch] 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApiInterface
@@ -565,7 +569,7 @@ export interface DefaultApiInterface {
     guideRaw(requestParameters: GuideRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AudioQuery>>;
 
     /**
-     * 参考音声とqueryの発音をForced Alignし、調整されたAudioQueryを返す
+     * 参考音声に合わせて発音タイミングとイントネーションを自動調整したAudioQueryを返します
      */
     guide(requestParameters: GuideRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AudioQuery>;
 
@@ -1669,7 +1673,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
     /**
-     * 参考音声とqueryの発音をForced Alignし、調整されたAudioQueryを返す
+     * 参考音声に合わせて発音タイミングとイントネーションを自動調整したAudioQueryを返します
      */
     async guideRaw(requestParameters: GuideRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AudioQuery>> {
         if (requestParameters.query === null || requestParameters.query === undefined) {
@@ -1716,6 +1720,14 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
             formParams.append('trim', requestParameters.trim as any);
         }
 
+        if (requestParameters.assignLength !== undefined) {
+            formParams.append('assign_length', requestParameters.assignLength as any);
+        }
+
+        if (requestParameters.assignPitch !== undefined) {
+            formParams.append('assign_pitch', requestParameters.assignPitch as any);
+        }
+
         const response = await this.request({
             path: `/guide`,
             method: 'POST',
@@ -1728,7 +1740,7 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
     }
 
     /**
-     * 参考音声とqueryの発音をForced Alignし、調整されたAudioQueryを返す
+     * 参考音声に合わせて発音タイミングとイントネーションを自動調整したAudioQueryを返します
      */
     async guide(requestParameters: GuideRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AudioQuery> {
         const response = await this.guideRaw(requestParameters, initOverrides);
