@@ -4,7 +4,7 @@ import path from "node:path";
 
 import fs from "node:fs";
 import { pathToFileURL } from "node:url";
-import { app, dialog, Menu, net, protocol, shell } from "electron";
+import { app, dialog, Menu, net, protocol, session, shell } from "electron";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 
 import electronLog from "electron-log/main";
@@ -22,6 +22,7 @@ import { registerIpcMainHandle, ipcMainSendProxy, IpcMainHandle } from "./ipc";
 import { getConfigManager } from "./electronConfig";
 import { getEngineAndVvppController } from "./engineAndVvppController";
 import { getIpcMainHandle } from "./ipcMainHandle";
+import { assertNonNullable } from "@/type/utility";
 import { EngineInfo } from "@/type/preload";
 import { isMac, isProduction } from "@/helpers/platform";
 import { createLogger } from "@/helpers/log";
@@ -161,6 +162,28 @@ void app.whenReady().then(() => {
     }
     return net.fetch(pathToFileURL(pathToServe).toString());
   });
+});
+
+// 信頼できるオリジン（開発サーバーまたは app プロトコル）からのセッション権限リクエストのみ許可し、それ以外は拒否
+void app.whenReady().then(() => {
+  session.defaultSession.setPermissionRequestHandler(
+    (webContents, permission, callback, { requestingUrl }) => {
+      const parsedUrl = new URL(webContents.getURL());
+      const parsedRequestingUrl = new URL(requestingUrl);
+      let isAllowedResource: boolean;
+      if (isDevelopment) {
+        assertNonNullable(import.meta.env.VITE_DEV_SERVER_URL);
+        const { origin } = new URL(import.meta.env.VITE_DEV_SERVER_URL);
+        isAllowedResource =
+          parsedUrl.origin === origin && parsedRequestingUrl.origin === origin;
+      } else {
+        isAllowedResource =
+          parsedUrl.protocol === "app:" &&
+          parsedRequestingUrl.protocol === "app:";
+      }
+      return callback(isAllowedResource);
+    },
+  );
 });
 
 // engine
@@ -451,17 +474,42 @@ void app.whenReady().then(async () => {
     }
   }
 
-  // VVPPがデフォルトエンジンに指定されていたらインストールする
+  // VVPPがデフォルトエンジンに指定されていたらインストール・アップデートする
   // NOTE: この機能は工事中。参照: https://github.com/VOICEVOX/voicevox/issues/1194
-  const packageInfos =
-    await engineAndVvppController.fetchInsallablePackageInfos();
-  for (const { engineName, packageInfo } of packageInfos) {
+  const packageStatuses =
+    await engineAndVvppController.fetchEnginePackageStatuses();
+
+  for (const status of packageStatuses) {
+    // 最新版がインストール済みの場合はスキップ
+    if (status.installed.status == "latest") {
+      continue;
+    }
+
+    let dialogOptions: {
+      title: string;
+      message: string;
+      okButtonLabel: string;
+    };
+    if (status.installed.status == "notInstalled") {
+      dialogOptions = {
+        title: "デフォルトエンジンのインストール",
+        message: `${status.package.engineName} をインストールしますか？`,
+        okButtonLabel: "インストールする",
+      };
+    } else {
+      dialogOptions = {
+        title: "デフォルトエンジンのアップデート",
+        message: `${status.package.engineName} の新しいバージョン（${status.package.latestVersion}）にアップデートしますか？`,
+        okButtonLabel: "アップデートする",
+      };
+    }
+
     // インストールするか確認
     const result = dialog.showMessageBoxSync({
       type: "info",
-      title: "デフォルトエンジンのインストール",
-      message: `${engineName} をインストールしますか？`,
-      buttons: ["インストール", "キャンセル"],
+      title: dialogOptions.title,
+      message: dialogOptions.message,
+      buttons: [dialogOptions.okButtonLabel, "キャンセル"],
       cancelId: 1,
     });
     if (result == 1) {
@@ -472,7 +520,7 @@ void app.whenReady().then(async () => {
     let lastLogTime = 0; // とりあえずログを0.1秒に1回だけ出力する
     await engineAndVvppController.downloadAndInstallVvppEngine(
       app.getPath("downloads"),
-      packageInfo,
+      status.package.packageInfo,
       {
         onProgress: ({ type, progress }) => {
           if (Date.now() - lastLogTime > 100) {

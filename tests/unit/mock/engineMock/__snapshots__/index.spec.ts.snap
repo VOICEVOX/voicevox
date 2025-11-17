@@ -63,7 +63,7 @@ exports[`createOpenAPIEngineMock > audioQuery 1`] = `
 }
 `;
 
-exports[`createOpenAPIEngineMock > frameSynthesis 1`] = `"394cfbc01397e0b6fcc3433d9537aa850e6131f7d89048da6889e7375fe03a24"`;
+exports[`createOpenAPIEngineMock > frameSynthesis 1`] = `"714de942c735d44224422e2edf262aeccd056bbe33ccaec89b309ab9476fa165"`;
 
 exports[`createOpenAPIEngineMock > singFrameAudioQuery 1`] = `
 {
@@ -77,14 +77,14 @@ exports[`createOpenAPIEngineMock > singFrameAudioQuery 1`] = `
     0,
     0,
     0,
-    46.17422889791779,
-    46.08055781881967,
-    46.08055781881967,
-    46.16797823967303,
-    46.18048040243588,
-    46.18048040243588,
-    82.27312267254713,
-    82.21745071316357,
+    46.174228897917786,
+    46.08055781881966,
+    46.08055781881966,
+    46.167978239673026,
+    46.180480402435876,
+    46.180480402435876,
+    82.27312267254715,
+    82.21745071316359,
     0,
     0,
     0,
@@ -173,7 +173,7 @@ exports[`createOpenAPIEngineMock > singFrameAudioQuery 1`] = `
 }
 `;
 
-exports[`createOpenAPIEngineMock > synthesis 1`] = `"23f4b910863418a7188648f7c5226a0f02b9d067b964be1690b69b1e9ffde7bc"`;
+exports[`createOpenAPIEngineMock > synthesis 1`] = `"ff887a0ba8afcde990ab6a894811572ac2c169d39b5ff02f6e54c75f2878001c"`;
 
 exports[`createOpenAPIEngineMock > version 1`] = `"mock"`;
 

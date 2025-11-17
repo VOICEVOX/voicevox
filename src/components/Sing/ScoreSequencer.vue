@@ -171,7 +171,7 @@
             class="sequencer-playhead"
             data-testid="sequencer-playhead"
             :style="{
-              transform: `translateX(${playheadX - scrollX}px)`,
+              transform: `translateX(${playheadX - scrollX - 1}px)`,
             }"
           ></div>
         </div>
@@ -227,7 +227,7 @@ import type { InjectionKey } from "vue";
 
 export const numMeasuresInjectionKey: InjectionKey<{
   numMeasures: ComputedRef<number>;
-}> = Symbol();
+}> = Symbol("sequencerNumMeasures");
 </script>
 
 <script setup lang="ts">
@@ -286,7 +286,10 @@ import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import { createLogger } from "@/helpers/log";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import { useSequencerStateMachine } from "@/composables/useSequencerStateMachine";
-import { PositionOnSequencer } from "@/sing/sequencerStateMachine/common";
+import {
+  PositionOnSequencer,
+  ViewportInfo,
+} from "@/sing/sequencerStateMachine/common";
 import { useAutoScrollOnEdge } from "@/composables/useAutoScrollOnEdge";
 
 const { warn } = createLogger("ScoreSequencer");
@@ -399,6 +402,16 @@ provide(numMeasuresInjectionKey, { numMeasures });
 const scrollX = ref(0);
 const scrollY = ref(0);
 
+// ビューポートの情報
+const viewportInfo = computed<ViewportInfo>(() => {
+  return {
+    scaleX: zoomX.value,
+    scaleY: zoomY.value,
+    offsetX: scrollX.value,
+    offsetY: scrollY.value,
+  };
+});
+
 // 再生ヘッドの位置
 const playheadTicks = computed(() => store.getters.PLAYHEAD_POSITION);
 const playheadX = computed(() => {
@@ -455,7 +468,7 @@ const {
   cursorState,
   guideLineTicks,
   enableAutoScrollOnEdge,
-} = useSequencerStateMachine(store);
+} = useSequencerStateMachine({ store, viewportInfo });
 
 const nowPreviewing = computed(() => previewMode.value !== "IDLE");
 
@@ -869,10 +882,16 @@ const onWheel = (event: WheelEvent) => {
 };
 
 const onScroll = (event: Event) => {
-  if (event.target instanceof HTMLElement) {
-    scrollX.value = event.target.scrollLeft;
-    scrollY.value = event.target.scrollTop;
+  if (!(event.currentTarget instanceof HTMLElement)) {
+    throw new Error("event.currentTarget is not HTMLElement.");
   }
+  scrollX.value = event.currentTarget.scrollLeft;
+  scrollY.value = event.currentTarget.scrollTop;
+
+  stateMachineProcess({
+    type: "scrollEvent",
+    targetArea: "SequencerBody",
+  });
 };
 
 // オートスクロール

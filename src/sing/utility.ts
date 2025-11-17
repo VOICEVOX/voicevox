@@ -110,15 +110,6 @@ export function getNext<T>(array: T[], currentIndex: number) {
     : undefined;
 }
 
-export function isSorted<T>(array: T[], compareFn: (a: T, b: T) => number) {
-  for (let i = 0; i < array.length - 1; i++) {
-    if (compareFn(array[i], array[i + 1]) > 0) {
-      return false;
-    }
-  }
-  return true;
-}
-
 export function createArray<T>(
   length: number,
   generateElementFn: (index: number) => T,
@@ -155,13 +146,13 @@ export function linearInterpolation(
   return y1 + ((y2 - y1) * (x - x1)) / (x2 - x1);
 }
 
-function ceilToOdd(value: number) {
-  return 1 + Math.ceil((value - 1) / 2) * 2;
-}
-
 function createGaussianKernel(sigma: number) {
-  const kernelSize = ceilToOdd(sigma * 3);
+  if (sigma <= 0) {
+    throw new Error("sigma must be greater than 0.");
+  }
+  const kernelSize = Math.ceil(sigma * 2.5) * 2 + 1;
   const center = Math.floor(kernelSize / 2);
+
   let kernel: number[] = [];
   let sum = 0;
   for (let i = 0; i < kernelSize; i++) {
@@ -177,13 +168,15 @@ function createGaussianKernel(sigma: number) {
 export function applyGaussianFilter(data: number[], sigma: number) {
   const kernel = createGaussianKernel(sigma);
   const center = Math.floor(kernel.length / 2);
+  const clonedData = [...data];
+
   for (let i = 0; i < data.length; i++) {
     let sum = 0;
     for (let j = 0; j < kernel.length; j++) {
       let indexToRead = i - center + j;
       indexToRead = Math.max(0, indexToRead);
       indexToRead = Math.min(data.length - 1, indexToRead);
-      sum += data[indexToRead] * kernel[j];
+      sum += clonedData[indexToRead] * kernel[j];
     }
     data[i] = sum;
   }

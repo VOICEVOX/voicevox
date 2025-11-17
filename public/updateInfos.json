@@ -1,5 +1,28 @@
 [
   {
+    "version": "0.25.0",
+    "descriptions": [
+      "トーク：複数選択機能を通常機能に",
+      "ソング：ループ機能",
+      "開発環境の向上",
+      "バグ修正"
+    ],
+    "contributors": [
+      "Hiroshiba",
+      "MT224244",
+      "Segu-g",
+      "akikukeo",
+      "madosuki",
+      "oech3",
+      "qryxip",
+      "romot-co",
+      "sabonerune",
+      "sevenc-nanashi",
+      "sigprogramming",
+      "takusea"
+    ]
+  },
+  {
     "version": "0.24.2",
     "descriptions": [
       "キャラクター「ユーレイちゃん」「東北ずん子」「東北きりたん」「東北イタコ」を追加",

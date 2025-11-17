@@ -8,7 +8,7 @@ import {
   getDefaultHotkeySettings,
 } from "@/domain/hotkeyAction";
 
-const urlStringSchema = z.string().url().brand("URL");
+const urlStringSchema = z.url().brand("URL");
 export type UrlString = z.infer<typeof urlStringSchema>;
 export const UrlString = (url: string): UrlString => urlStringSchema.parse(url);
 
@@ -227,6 +227,7 @@ export const minimumEngineManifestSchema = z.object({
   uuid: engineIdSchema,
   command: z.string(),
   port: z.number(),
+  version: z.string(),
   supported_features: z.record(z.string(), supportedFeaturesItemSchema), // FIXME:JSON側はsnake_caseなので合わせているが、camelCaseに修正する
 });
 
@@ -242,6 +243,7 @@ export type EngineInfo = {
   pathname: string; // `/engine`など。空文字列もありえる。
   name: string;
   path?: string; // エンジンディレクトリのパス
+  version: string;
   executionEnabled: boolean;
   executionFilePath: string;
   executionArgs: string[];
@@ -388,7 +390,7 @@ export const rootMiscSettingSchema = z.object({
       soloAndMute: z.boolean().default(true),
       panAndGain: z.boolean().default(true),
     })
-    .default({}),
+    .prefault({}),
   showSingCharacterPortrait: z.boolean().default(true), // ソングエディタで立ち絵を表示するか
   playheadPositionDisplayFormat: z
     .enum(["MINUTES_SECONDS", "MEASURES_BEATS"])
@@ -399,92 +401,91 @@ export const rootMiscSettingSchema = z.object({
 export type RootMiscSettingType = z.infer<typeof rootMiscSettingSchema>;
 
 export function getConfigSchema({ isMac }: { isMac: boolean }) {
-  return z
-    .object({
-      inheritAudioInfo: z.boolean().default(true),
-      activePointScrollMode: z
-        .enum(["CONTINUOUSLY", "PAGE", "OFF"])
-        .default("OFF"),
-      savingSetting: z
-        .object({
-          fileEncoding: z.enum(["UTF-8", "Shift_JIS"]).default("UTF-8"),
-          fileNamePattern: z.string().default(""), // NOTE: ファイル名パターンは拡張子を含まない
-          fixedExportEnabled: z.boolean().default(false),
-          avoidOverwrite: z.boolean().default(false),
-          fixedExportDir: z.string().default(""),
-          exportLab: z.boolean().default(false),
-          exportText: z.boolean().default(false),
-          outputStereo: z.boolean().default(false),
-          audioOutputDevice: z.string().default(""),
-          songTrackFileNamePattern: z.string().default(""),
-        })
-        .default({}),
-      hotkeySettings: hotkeySettingSchema
-        .array()
-        .default(getDefaultHotkeySettings({ isMac })),
-      toolbarSetting: toolbarSettingSchema
-        .array()
-        .default(defaultToolbarButtonSetting),
-      engineSettings: z.record(engineIdSchema, engineSettingSchema).default({}),
-      userCharacterOrder: speakerIdSchema.array().default([]),
-      defaultStyleIds: z
-        .object({
-          engineId: engineIdSchema
-            .or(z.literal(EngineId("00000000-0000-0000-0000-000000000000")))
-            .default(EngineId("00000000-0000-0000-0000-000000000000")),
-          speakerUuid: speakerIdSchema,
-          defaultStyleId: styleIdSchema,
-        })
-        .array()
-        .default([]),
-      presets: z
-        .object({
-          items: z
-            .record(
-              presetKeySchema,
-              z.object({
-                name: z.string(),
-                speedScale: z.number(),
-                pitchScale: z.number(),
-                intonationScale: z.number(),
-                volumeScale: z.number(),
-                pauseLengthScale: z.number(),
-                prePhonemeLength: z.number(),
-                postPhonemeLength: z.number(),
-                morphingInfo: z
-                  .object({
-                    rate: z.number(),
-                    targetEngineId: engineIdSchema,
-                    targetSpeakerId: speakerIdSchema,
-                    targetStyleId: styleIdSchema,
-                  })
-                  .optional(),
-              }),
-            )
-            .default({}),
-          keys: presetKeySchema.array().default([]),
-        })
-        .default({}),
-      defaultPresetKeys: z.record(voiceIdSchema, presetKeySchema).default({}),
-      currentTheme: z.string().default("Default"),
-      experimentalSetting: experimentalSettingSchema.default({}),
-      acceptRetrieveTelemetry: z
-        .enum(["Unconfirmed", "Accepted", "Refused"])
-        .default("Unconfirmed"),
-      acceptTerms: z
-        .enum(["Unconfirmed", "Accepted", "Rejected"])
-        .default("Unconfirmed"),
-      confirmedTips: z
-        .object({
-          tweakableSliderByScroll: z.boolean().default(false),
-          engineStartedOnAltPort: z.boolean().default(false),
-          notifyOnGenerate: z.boolean().default(false),
-        })
-        .default({}),
-      registeredEngineDirs: z.string().array().default([]),
-      recentlyUsedProjects: z.string().array().default([]),
-    })
-    .merge(rootMiscSettingSchema);
+  return z.object({
+    inheritAudioInfo: z.boolean().default(true),
+    activePointScrollMode: z
+      .enum(["CONTINUOUSLY", "PAGE", "OFF"])
+      .default("OFF"),
+    savingSetting: z
+      .object({
+        fileEncoding: z.enum(["UTF-8", "Shift_JIS"]).default("UTF-8"),
+        fileNamePattern: z.string().default(""), // NOTE: ファイル名パターンは拡張子を含まない
+        fixedExportEnabled: z.boolean().default(false),
+        avoidOverwrite: z.boolean().default(false),
+        fixedExportDir: z.string().default(""),
+        exportLab: z.boolean().default(false),
+        exportText: z.boolean().default(false),
+        outputStereo: z.boolean().default(false),
+        audioOutputDevice: z.string().default(""),
+        songTrackFileNamePattern: z.string().default(""),
+      })
+      .prefault({}),
+    hotkeySettings: hotkeySettingSchema
+      .array()
+      .default(getDefaultHotkeySettings({ isMac })),
+    toolbarSetting: toolbarSettingSchema
+      .array()
+      .default(defaultToolbarButtonSetting),
+    engineSettings: z.record(engineIdSchema, engineSettingSchema).default({}),
+    userCharacterOrder: speakerIdSchema.array().default([]),
+    defaultStyleIds: z
+      .object({
+        engineId: engineIdSchema
+          .or(z.literal(EngineId("00000000-0000-0000-0000-000000000000")))
+          .default(EngineId("00000000-0000-0000-0000-000000000000")),
+        speakerUuid: speakerIdSchema,
+        defaultStyleId: styleIdSchema,
+      })
+      .array()
+      .default([]),
+    presets: z
+      .object({
+        items: z
+          .record(
+            presetKeySchema,
+            z.object({
+              name: z.string(),
+              speedScale: z.number(),
+              pitchScale: z.number(),
+              intonationScale: z.number(),
+              volumeScale: z.number(),
+              pauseLengthScale: z.number(),
+              prePhonemeLength: z.number(),
+              postPhonemeLength: z.number(),
+              morphingInfo: z
+                .object({
+                  rate: z.number(),
+                  targetEngineId: engineIdSchema,
+                  targetSpeakerId: speakerIdSchema,
+                  targetStyleId: styleIdSchema,
+                })
+                .optional(),
+            }),
+          )
+          .default({}),
+        keys: presetKeySchema.array().default([]),
+      })
+      .prefault({}),
+    defaultPresetKeys: z.record(voiceIdSchema, presetKeySchema).default({}),
+    currentTheme: z.string().default("Default"),
+    experimentalSetting: experimentalSettingSchema.prefault({}),
+    acceptRetrieveTelemetry: z
+      .enum(["Unconfirmed", "Accepted", "Refused"])
+      .default("Unconfirmed"),
+    acceptTerms: z
+      .enum(["Unconfirmed", "Accepted", "Rejected"])
+      .default("Unconfirmed"),
+    confirmedTips: z
+      .object({
+        tweakableSliderByScroll: z.boolean().default(false),
+        engineStartedOnAltPort: z.boolean().default(false),
+        notifyOnGenerate: z.boolean().default(false),
+      })
+      .prefault({}),
+    registeredEngineDirs: z.string().array().default([]),
+    recentlyUsedProjects: z.string().array().default([]),
+    ...rootMiscSettingSchema.shape,
+  });
 }
 export type ConfigType = z.infer<ReturnType<typeof getConfigSchema>>;
 

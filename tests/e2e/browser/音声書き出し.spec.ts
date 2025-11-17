@@ -1,7 +1,13 @@
 import { test, expect, Page } from "@playwright/test";
 import { gotoHome, navigateToMain } from "../navigators";
-import { getQuasarMenu } from "../locators";
-import { mockShowSaveFileDialog, mockWriteFile } from "./mockUtility";
+import { getQuasarMenu, getNewestQuasarDialog } from "../locators";
+import {
+  mockShowSaveFileDialog,
+  mockWriteFile,
+  mockShowSaveDirectoryDialog,
+  mockWriteFileError,
+} from "./mockUtility";
+import { fillAudioCell } from "./utils";
 
 test.beforeEach(gotoHome);
 
@@ -29,23 +35,19 @@ async function exportSelectedAudioAndSnapshot(page: Page, name: string) {
 }
 
 test.describe("音声書き出し", () => {
-  test.skip(process.platform !== "win32", "Windows以外のためスキップします");
-
   test.beforeEach(async ({ page }) => {
     await navigateToMain(page);
 
     await test.step("テキスト欄にテキストを入力", async () => {
-      const audioCell = page.getByRole("textbox", { name: "1行目" });
       const accentPhrase = page.locator(".accent-phrase");
 
-      await audioCell.click();
-      await audioCell.fill("こんにちは、テストです");
-      await audioCell.press("Enter");
+      await fillAudioCell(page, 0, "こんにちは、テストです");
       await expect(accentPhrase).not.toHaveCount(0);
     });
   });
 
   test("各パラメータを変更して音声書き出し", async ({ page }) => {
+    test.skip(process.platform !== "win32", "Windows以外のためスキップします"); // NOTE: 音声スナップショットが完全一致しないため
     await exportSelectedAudioAndSnapshot(page, "デフォルト");
 
     const parameters = [
@@ -76,5 +78,73 @@ test.describe("音声書き出し", () => {
         });
       });
     }
+  });
+
+  test("選択音声の書き出しでエラーダイアログが表示される", async ({ page }) => {
+    await test.step("書き出しエラーのモックを設定", async () => {
+      await mockShowSaveFileDialog(page);
+      await mockWriteFileError(page);
+    });
+
+    await test.step("選択音声を書き出す", async () => {
+      await page.getByRole("button", { name: "ファイル" }).click();
+      await getQuasarMenu(page, "選択音声を書き出し").click();
+    });
+
+    await test.step("エラーダイアログを確認して閉じる", async () => {
+      const dialog = page.getByRole("dialog", {
+        name: "書き出しに失敗しました。",
+      });
+      await expect(dialog).toBeVisible();
+      await dialog.getByRole("button", { name: "閉じる" }).click();
+      await expect(dialog).not.toBeVisible();
+    });
+  });
+
+  test("全ての音声の書き出しでエラーダイアログが表示される", async ({
+    page,
+  }) => {
+    await test.step("書き出しエラーのモックを設定", async () => {
+      await mockShowSaveDirectoryDialog(page);
+      await mockWriteFileError(page);
+    });
+
+    await test.step("音声を書き出す", async () => {
+      await page.getByRole("button", { name: "ファイル" }).click();
+      await getQuasarMenu(page, "音声書き出し").click();
+    });
+
+    await test.step("結果ダイアログを確認して閉じる", async () => {
+      const dialog = getNewestQuasarDialog(page);
+      await expect(dialog.getByText("音声書き出し結果")).toBeVisible();
+      await expect(
+        dialog.getByText("1件の書き込みエラーによる失敗"),
+      ).toBeVisible();
+      await dialog.getByRole("button", { name: "閉じる" }).click();
+      await expect(dialog).not.toBeVisible();
+    });
+  });
+
+  test("音声を繋げて書き出しでエラーダイアログが表示される", async ({
+    page,
+  }) => {
+    await test.step("書き出しエラーのモックを設定", async () => {
+      await mockShowSaveFileDialog(page);
+      await mockWriteFileError(page);
+    });
+
+    await test.step("音声を繋げて書き出す", async () => {
+      await page.getByRole("button", { name: "ファイル" }).click();
+      await getQuasarMenu(page, "音声を繋げて書き出し").click();
+    });
+
+    await test.step("エラーダイアログを確認して閉じる", async () => {
+      const dialog = page.getByRole("dialog", {
+        name: "書き出しに失敗しました。",
+      });
+      await expect(dialog).toBeVisible();
+      await dialog.getByRole("button", { name: "閉じる" }).click();
+      await expect(dialog).not.toBeVisible();
+    });
   });
 });

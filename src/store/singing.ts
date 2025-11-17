@@ -27,7 +27,8 @@ import {
   currentDateString,
   DEFAULT_PROJECT_NAME,
   DEFAULT_STYLE_NAME,
-  generateLabelFileDataFromFramePhonemes,
+  generateLabelFileData,
+  PhonemeTimingLabel,
   sanitizeFileName,
 } from "./utility";
 import {
@@ -77,18 +78,18 @@ import {
   isValidTrack,
   isTracksEmpty,
   shouldPlayTracks,
-  calcPhraseStartFrames,
-  calcPhraseEndFrames,
-  toEntirePhonemeTimings,
-  adjustPhonemeTimingsAndPhraseEndFrames,
-  phonemeTimingsToPhonemes,
+  toPhonemes,
+  toPhonemeTimings,
+  applyPhonemeTimingEdit,
+  adjustPhonemeTimings,
+  isValidLoopRange,
 } from "@/sing/domain";
 import { getOverlappingNoteIds } from "@/sing/storeHelper";
 import {
   AnimationTimer,
   createArray,
   createPromiseThatResolvesWhen,
-  recordToMap,
+  getNext,
   round,
 } from "@/sing/utility";
 import { getWorkaroundKeyRangeAdjustment } from "@/sing/workaroundKeyRangeAdjustment";
@@ -130,6 +131,7 @@ import type {
   Track,
 } from "@/domain/project/type";
 import { noteSchema } from "@/domain/project/schema";
+import { toEditorTrack } from "@/infrastructures/projectFile/conversion";
 
 const logger = createLogger("store/singing");
 
@@ -286,6 +288,10 @@ if (window.AudioContext) {
   mainChannelStrip.output.connect(limiter.input);
   limiter.output.connect(clipper.input);
   clipper.output.connect(audioContext.destination);
+
+  audioContext.addEventListener("statechange", () => {
+    logger.info(`AudioContext state changed: ${audioContext?.state}`);
+  });
 }
 
 let songTrackRenderer: SongTrackRenderer | undefined = undefined;
@@ -693,6 +699,8 @@ export const singingStoreState: SingingStoreState = {
   sequencerEditTarget: "NOTE",
   sequencerNoteTool: "EDIT_FIRST",
   sequencerPitchTool: "DRAW",
+  sequencerVolumeTool: "DRAW",
+  sequencerVolumeVisible: false,
   _selectedNoteIds: new Set(),
   nowPlaying: false,
   volume: 0,
@@ -702,6 +710,9 @@ export const singingStoreState: SingingStoreState = {
   exportState: "NOT_EXPORTING",
   cancellationOfExportRequested: false,
   isSongSidebarOpen: false,
+  isLoopEnabled: false,
+  loopStartTick: 0,
+  loopEndTick: 0,
 };
 
 export const singingStore = createPartialStore<SingingStoreTypes>({
@@ -1194,6 +1205,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             firstRestDuration: eventPhrase.firstRestDuration,
             notes: eventPhrase.notes,
             startTime: eventPhrase.startTime,
+            minNonPauseStartFrame: eventPhrase.minNonPauseStartFrame,
+            maxNonPauseEndFrame: eventPhrase.maxNonPauseEndFrame,
             state: singerIsNotSet
               ? "SINGER_IS_NOT_SET" // シンガー未設定
               : renderingIsNeeded
@@ -1711,6 +1724,24 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  SET_SEQUENCER_VOLUME_TOOL: {
+    mutation(state, { sequencerVolumeTool }) {
+      state.sequencerVolumeTool = sequencerVolumeTool;
+    },
+    async action({ mutations }, { sequencerVolumeTool }) {
+      mutations.SET_SEQUENCER_VOLUME_TOOL({ sequencerVolumeTool });
+    },
+  },
+
+  SET_SEQUENCER_VOLUME_VISIBLE: {
+    mutation(state, { sequencerVolumeVisible }) {
+      state.sequencerVolumeVisible = sequencerVolumeVisible;
+    },
+    async action({ mutations }, { sequencerVolumeVisible }) {
+      mutations.SET_SEQUENCER_VOLUME_VISIBLE({ sequencerVolumeVisible });
+    },
+  },
+
   TICK_TO_SECOND: {
     getter: (state) => (position) => {
       return tickToSecond(position, state.tempos, state.tpqn);
@@ -1750,10 +1781,35 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       if (state.nowPlaying) {
         return;
       }
+      if (audioContext == undefined) {
+        throw new Error("audioContext is undefined.");
+      }
       if (!transport) {
         throw new Error("transport is undefined.");
       }
+
+      // TODO: interruptedも考慮する
+      if (audioContext.state === "suspended") {
+        // NOTE: resumeできない場合はエラーが発生する（排他モードで専有中など）
+        await audioContext.resume();
+      }
+
       mutations.SET_PLAYBACK_STATE({ nowPlaying: true });
+
+      // TODO: 以下の処理（ループの設定）は再生開始時に毎回行う必要はないので、
+      //       ソングエディタ初期化時に1回だけ行うようにする
+      // NOTE: 初期化のactionを作った方が良いかも
+      transport.loop = state.isLoopEnabled;
+      transport.loopStartTime = tickToSecond(
+        state.loopStartTick,
+        state.tempos,
+        state.tpqn,
+      );
+      transport.loopEndTime = tickToSecond(
+        state.loopEndTick,
+        state.tempos,
+        state.tpqn,
+      );
 
       transport.start();
       animationTimer.start(() => {
@@ -2423,18 +2479,55 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   EXPORT_LABEL_FILES: {
     action: createUILockAction(
       async ({ actions, mutations, state }, { dirPath }) => {
+        /**
+         * 連続するpauseを一つにまとめる。
+         */
+        const mergeConsecutivePauses = (labels: PhonemeTimingLabel[]) => {
+          const mergedLabels: PhonemeTimingLabel[] = [];
+          let accumulatedPause: PhonemeTimingLabel | undefined = undefined;
+
+          for (const label of labels) {
+            if (label.phoneme === "pau") {
+              if (accumulatedPause == undefined) {
+                accumulatedPause = { ...label };
+              } else {
+                accumulatedPause.endTime = label.endTime;
+              }
+            } else {
+              if (accumulatedPause != undefined) {
+                mergedLabels.push(accumulatedPause);
+                accumulatedPause = undefined;
+              }
+              mergedLabels.push(label);
+            }
+          }
+          if (accumulatedPause != undefined) {
+            mergedLabels.push(accumulatedPause);
+          }
+
+          return mergedLabels;
+        };
+
+        /**
+         * 全トラックの音素タイミングをlabファイル形式でエクスポートする。
+         */
         const exportLabelFile = async () => {
+          // 音声が再生中であれば、エクスポート前に停止する
           if (state.nowPlaying) {
             await actions.SING_STOP_AUDIO();
           }
 
+          // 保存先ディレクトリを決定する
           if (state.savingSetting.fixedExportEnabled) {
+            // 保存先が固定されている場合は、設定済みのディレクトリパスを使用する
             dirPath = state.savingSetting.fixedExportDir;
           } else {
+            // 保存先が固定されていない場合、保存先のディレクトリを選択するダイアログを表示する
             dirPath ??= await window.backend.showSaveDirectoryDialog({
               title: "labファイルを保存",
             });
           }
+          // ディレクトリが選択されなかった（キャンセルされた）場合は、全トラックをキャンセル扱いとして処理を中断する
           if (!dirPath) {
             return createArray(
               state.tracks.size,
@@ -2442,10 +2535,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             );
           }
 
+          // レンダリング処理が実行中の場合、終了するかキャンセルされるまで待機する
           if (state.nowRendering) {
             await createPromiseThatResolvesWhen(() => {
               return !state.nowRendering || state.cancellationOfExportRequested;
             });
+            // 待機中にエクスポートがキャンセルされた場合は、全トラックをキャンセル扱いとして処理を中断する
             if (state.cancellationOfExportRequested) {
               return createArray(
                 state.tracks.size,
@@ -2456,110 +2551,119 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
           const results: SaveResultObject[] = [];
 
-          for (const trackId of state.tracks.keys()) {
-            const track = getOrThrow(state.tracks, trackId);
+          // トラックごとに音素タイミングの計算とラベルファイルの書き出しを行う
+          for (const [trackId, track] of state.tracks) {
+            // 歌手が設定されていないトラックはスキップする
             if (track.singer == undefined) {
               continue;
             }
 
+            // エクスポートするファイルパスを生成する
             const filePath = await actions.GENERATE_FILE_PATH_FOR_TRACK_EXPORT({
               trackId,
               directoryPath: dirPath,
               extension: "lab",
             });
 
-            const frameRate = state.editorFrameRate;
+            // トラックに属する有効なフレーズ（クエリを持つフレーズ）を取得し、開始時刻でソートする
             const phrases = [...state.phrases.values()]
               .filter((value) => value.trackId === trackId)
               .filter((value) => value.queryKey != undefined)
               .toSorted((a, b) => a.startTime - b.startTime);
 
+            // フレーズが存在しないトラックはスキップする
             if (phrases.length === 0) {
               continue;
             }
 
-            const phraseQueries = phrases.map((value) => {
-              const phraseQuery =
-                value.queryKey != undefined
-                  ? state.phraseQueries.get(value.queryKey)
-                  : undefined;
-              if (phraseQuery == undefined) {
-                throw new Error("phraseQuery is undefined.");
+            let phonemeTimingLabels: PhonemeTimingLabel[] = [];
+
+            // フレーズごとに音素タイミングを計算し、トラック全体の音素ラベル配列を生成する
+            for (const phrase of phrases) {
+              if (phrase.queryKey == undefined) {
+                throw new UnreachableError("phraseQuery is undefined.");
               }
-              return phraseQuery;
-            });
-            const phraseStartTimes = phrases.map((value) => value.startTime);
+              const query = getOrThrow(state.phraseQueries, phrase.queryKey);
 
-            for (const phraseQuery of phraseQueries) {
-              // フレーズのクエリのフレームレートとエディターのフレームレートが一致しない場合はエラー
-              // TODO: 補間するようにする
-              if (phraseQuery.frameRate != frameRate) {
-                throw new Error(
-                  "The frame rate between the phrase query and the editor does not match.",
-                );
+              // 音素タイミング編集の適用と調整を行う
+              const phonemeTimings = toPhonemeTimings(query.phonemes);
+              applyPhonemeTimingEdit(
+                phonemeTimings,
+                track.phonemeTimingEditData,
+                query.frameRate,
+              );
+              adjustPhonemeTimings(
+                phonemeTimings,
+                phrase.minNonPauseStartFrame,
+                phrase.maxNonPauseEndFrame,
+              );
+              const phonemes = toPhonemes(phonemeTimings);
+
+              // 音素情報からラベルを生成する
+              let phonemeStartFrame = 0;
+              let phonemeStartTime = phrase.startTime;
+              for (const phoneme of phonemes) {
+                const phonemeEndTime =
+                  phrase.startTime +
+                  (phonemeStartFrame + phoneme.frameLength) / query.frameRate;
+
+                phonemeTimingLabels.push({
+                  startTime: phonemeStartTime,
+                  endTime: phonemeEndTime,
+                  phoneme: phoneme.phoneme,
+                });
+
+                phonemeStartFrame += phoneme.frameLength;
+                phonemeStartTime = phonemeEndTime;
               }
             }
 
-            const phraseStartFrames = calcPhraseStartFrames(
-              phraseStartTimes,
-              frameRate,
-            );
-            const phraseEndFrames = calcPhraseEndFrames(
-              phraseStartFrames,
-              phraseQueries,
-            );
+            // 連続するpauを一つにまとめる
+            phonemeTimingLabels = mergeConsecutivePauses(phonemeTimingLabels);
 
-            const phrasePhonemeSequences = phraseQueries.map((query) => {
-              return query.phonemes;
-            });
-            const entirePhonemeTimings = toEntirePhonemeTimings(
-              phrasePhonemeSequences,
-              phraseStartFrames,
-            );
+            // 音素長が負の値にならないように前方から調整する
+            // NOTE: ほとんど起こらないが、pauの長さが負になる場合があるため、その対策
+            for (let i = 0; i < phonemeTimingLabels.length; i++) {
+              const phonemeTimingLabel = phonemeTimingLabels[i];
+              const nextPhonemeTimingLabel = getNext(phonemeTimingLabels, i);
 
-            // TODO: 音素タイミング編集データを取得して適用するようにする
-
-            adjustPhonemeTimingsAndPhraseEndFrames(
-              entirePhonemeTimings,
-              phraseStartFrames,
-              phraseEndFrames,
-            );
-
-            // 一番最初のpauseの開始フレームの値が0より大きい場合は0にする
-            if (entirePhonemeTimings.length === 0) {
-              throw new Error("entirePhonemeTimings.length is 0.");
-            }
-            if (entirePhonemeTimings[0].startFrame > 0) {
-              entirePhonemeTimings[0].startFrame = 0;
+              if (phonemeTimingLabel.endTime < phonemeTimingLabel.startTime) {
+                phonemeTimingLabel.endTime = phonemeTimingLabel.startTime;
+              }
+              if (nextPhonemeTimingLabel != undefined) {
+                nextPhonemeTimingLabel.startTime = phonemeTimingLabel.endTime;
+              }
             }
 
-            // 音素の開始・終了フレームの値が0より小さい場合は0にする
+            // 一番最初のpauseの開始時刻の値が0より大きい場合は0にする
+            if (phonemeTimingLabels.length === 0) {
+              throw new UnreachableError("phonemeTimingLabels.length is 0.");
+            }
+            if (phonemeTimingLabels[0].startTime > 0) {
+              phonemeTimingLabels[0].startTime = 0;
+            }
+
+            // 音素の開始時刻・終了時刻の値が0より小さい場合は0にする
             // （マイナス時間のところを書き出さないようにするため）
-            for (const phonemeTiming of entirePhonemeTimings) {
-              if (phonemeTiming.startFrame < 0) {
-                phonemeTiming.startFrame = 0;
+            for (const phonemeTimingLabel of phonemeTimingLabels) {
+              if (phonemeTimingLabel.startTime < 0) {
+                phonemeTimingLabel.startTime = 0;
               }
-              if (phonemeTiming.endFrame < 0) {
-                phonemeTiming.endFrame = 0;
+              if (phonemeTimingLabel.endTime < 0) {
+                phonemeTimingLabel.endTime = 0;
               }
             }
 
-            // フレーム数が1未満の音素を除く
-            const filteredEntirePhonemeTimings = entirePhonemeTimings.filter(
-              (value) => {
-                const frameLength = value.endFrame - value.startFrame;
-                return frameLength >= 1;
-              },
+            // 音素長が0の音素ラベルを除く
+            phonemeTimingLabels = phonemeTimingLabels.filter(
+              (value) => value.endTime - value.startTime > 0,
             );
 
-            const entirePhonemes = phonemeTimingsToPhonemes(
-              filteredEntirePhonemeTimings,
-            );
-            const labFileData = await generateLabelFileDataFromFramePhonemes(
-              entirePhonemes,
-              frameRate,
-            );
+            // ラベルファイルデータを生成する
+            const labFileData =
+              await generateLabelFileData(phonemeTimingLabels);
 
+            // ラベルファイルを書き出す
             try {
               await window.backend
                 .writeFile({
@@ -2741,7 +2845,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   COMMAND_PASTE_NOTES_FROM_CLIPBOARD: {
-    async action({ mutations, state, getters, actions }) {
+    async action({ mutations, getters, actions }) {
       // クリップボードからテキストを読み込む
       let clipboardText;
       try {
@@ -2765,29 +2869,38 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         });
       }
 
-      // パースしたJSONのノートの位置を現在の再生位置に合わせてクオンタイズして貼り付ける
+      // パースしたJSONのノートの位置を現在の再生位置に合わせて貼り付ける
       const currentPlayheadPosition = getters.PLAYHEAD_POSITION;
       const firstNotePosition = notes[0].position;
-      // TODO: クオンタイズの処理を共通化する
-      const snapType = state.sequencerSnapType;
-      const tpqn = state.tpqn;
-      const snapTicks = getNoteDuration(snapType, tpqn);
       const notesToPaste: Note[] = notes.map((note) => {
         // 新しい位置を現在の再生位置に合わせて計算する
-        const pasteOriginPos =
-          Number(note.position) - firstNotePosition + currentPlayheadPosition;
-        // クオンタイズ
-        const quantizedPastePos =
-          Math.round(pasteOriginPos / snapTicks) * snapTicks;
+        const pastePos = Math.round(
+          Number(note.position) - firstNotePosition + currentPlayheadPosition,
+        );
         return {
           id: NoteId(uuid4()),
-          position: quantizedPastePos,
+          position: pastePos,
           duration: Number(note.duration),
           noteNumber: Number(note.noteNumber),
           lyric: String(note.lyric),
         };
       });
       const pastedNoteIds = notesToPaste.map((note) => note.id);
+
+      const existingNoteIds = getters.ALL_NOTE_IDS;
+      const hasDuplicateNoteIds = notesToPaste.some((note) =>
+        existingNoteIds.has(note.id),
+      );
+      if (hasDuplicateNoteIds) {
+        throw new Error("Failed to paste notes: duplicate note IDs detected.");
+      }
+      const hasInvalidNotes = notesToPaste.some((note) => !isValidNote(note));
+      if (hasInvalidNotes) {
+        throw new Error(
+          "Failed to paste notes: invalid note properties detected.",
+        );
+      }
+
       // ノートを追加してレンダリングする
       mutations.COMMAND_ADD_NOTES({
         notes: notesToPaste,
@@ -2939,6 +3052,63 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         state.tpqn,
       );
       return Math.max(1, lastNoteEndTime + 1);
+    },
+  },
+
+  SET_LOOP_ENABLED: {
+    mutation(state, { isLoopEnabled }) {
+      state.isLoopEnabled = isLoopEnabled;
+    },
+    async action({ mutations }, { isLoopEnabled }) {
+      if (!transport) {
+        throw new Error("transport is undefined");
+      }
+      mutations.SET_LOOP_ENABLED({ isLoopEnabled });
+      transport.loop = isLoopEnabled;
+    },
+  },
+
+  SET_LOOP_RANGE: {
+    mutation(state, { loopStartTick, loopEndTick }) {
+      state.loopStartTick = loopStartTick;
+      state.loopEndTick = loopEndTick;
+    },
+    async action({ state, mutations }, { loopStartTick, loopEndTick }) {
+      if (!transport) {
+        throw new Error("transport is undefined");
+      }
+
+      if (!isValidLoopRange(loopStartTick, loopEndTick)) {
+        throw new Error("The loop range is invalid.");
+      }
+
+      mutations.SET_LOOP_RANGE({ loopStartTick, loopEndTick });
+
+      transport.loopStartTime = tickToSecond(
+        loopStartTick,
+        state.tempos,
+        state.tpqn,
+      );
+      transport.loopEndTime = tickToSecond(
+        loopEndTick,
+        state.tempos,
+        state.tpqn,
+      );
+    },
+  },
+
+  CLEAR_LOOP_RANGE: {
+    async action({ actions }) {
+      // ループ範囲をSET_LOOP_RANGEで0指定
+      // transportも
+      void actions.SET_LOOP_RANGE({
+        loopStartTick: 0,
+        loopEndTick: 0,
+      });
+      // ループ範囲をクリアする際はループも無効にする
+      return actions.SET_LOOP_ENABLED({
+        isLoopEnabled: false,
+      });
     },
   },
 
@@ -3516,33 +3686,23 @@ export const singingCommandStore = transformCommandStore(
             throw new Error("TPQN does not match. Must be converted.");
           }
 
-          const filteredTracks = trackIndexes.map((trackIndex): Track => {
+          const filteredTracks = trackIndexes.map((trackIndex) => {
             const importedTrack = cloneWithUnwrapProxy(
               tracks[trackOrder[trackIndex]],
             );
             if (!importedTrack) {
               throw new Error("Track not found.");
             }
-            // TODO: トラックの変換処理を関数化する
-            return {
-              name: importedTrack.name,
-              singer: importedTrack.singer,
-              keyRangeAdjustment: importedTrack.keyRangeAdjustment,
-              volumeRangeAdjustment: importedTrack.volumeRangeAdjustment,
-              notes: importedTrack.notes.map((note) => ({
-                ...note,
-                id: NoteId(uuid4()),
-              })),
-              pitchEditData: importedTrack.pitchEditData,
-              phonemeTimingEditData: recordToMap(
-                importedTrack.phonemeTimingEditData,
-              ),
-              solo: importedTrack.solo,
-              mute: importedTrack.mute,
-              gain: importedTrack.gain,
-              pan: importedTrack.pan,
-            };
+            return toEditorTrack(importedTrack);
           });
+
+          // インポートなので、ノートIDは新しく振り直す
+          for (const track of filteredTracks) {
+            track.notes = track.notes.map((note) => ({
+              ...note,
+              id: NoteId(uuid4()),
+            }));
+          }
 
           await actions.COMMAND_IMPORT_TRACKS({
             tpqn,

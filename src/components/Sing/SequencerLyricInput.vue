@@ -7,7 +7,7 @@
   >
     <input
       ref="lyricInput"
-      :value="editingLyricNote.lyric"
+      :value="currentLyric"
       class="lyric-input"
       @input="onInput"
       @mousedown.stop
@@ -46,6 +46,12 @@ const positionX = computed(() => {
 const positionY = computed(() => {
   const noteNumber = props.editingLyricNote.noteNumber;
   return noteNumberToBaseY(noteNumber + 0.5) * zoomY.value;
+});
+const currentLyric = computed(() => {
+  if (props.editingLyricNote.lyric == undefined) {
+    return "";
+  }
+  return props.editingLyricNote.lyric;
 });
 const lyricInput = ref<HTMLInputElement | null>(null);
 

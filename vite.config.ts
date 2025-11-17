@@ -1,18 +1,26 @@
 /// <reference types="vitest" />
+import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { rm } from "node:fs/promises";
-import electron from "vite-plugin-electron/simple";
+import electronPlugin from "vite-plugin-electron/simple";
 import tsconfigPaths from "vite-tsconfig-paths";
 import vue from "@vitejs/plugin-vue";
+import electronDefaultImport from "electron";
 import checker from "vite-plugin-checker";
 import { BuildOptions, defineConfig, loadEnv, Plugin } from "vite";
 import { quasar } from "@quasar/vite-plugin";
+import { playwright as playwrightProvider } from "@vitest/browser-playwright";
 import { z } from "zod";
 import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
 import {
   checkSuspiciousImports,
   CheckSuspiciousImportsOptions,
+  SourceFile,
 } from "./tools/checkSuspiciousImports.js";
+
+// @ts-expect-error electronをelectron環境外からimportするとelectronのファイルパスが得られる。
+// https://github.com/electron/electron/blob/a95180e0806f4adba8009f46124b6bb4853ac0a6/npm/index.js
+const electronPath = electronDefaultImport as string;
 
 const nodeTestPaths = ["../tests/unit/**/*.node.{test,spec}.ts"];
 const browserTestPaths = ["../tests/unit/**/*.browser.{test,spec}.ts"];
@@ -23,6 +31,21 @@ const isBrowser = process.env.VITE_TARGET === "browser";
 const isProduction = process.env.NODE_ENV === "production";
 
 const ignorePaths = (paths: string[]) => paths.map((path) => `!${path}`);
+
+function getElectronTargetVersion(): {
+  node: string;
+  chrome: string;
+} {
+  const result = execFileSync(
+    electronPath,
+    [path.join(import.meta.dirname, "build/getElectronVersion.mjs")],
+    {
+      encoding: "utf-8",
+      env: { ...process.env, ELECTRON_RUN_AS_NODE: "1" },
+    },
+  );
+  return JSON.parse(result) as { node: string; chrome: string };
+}
 
 export default defineConfig((options) => {
   const mode = z
@@ -58,6 +81,10 @@ export default defineConfig((options) => {
     ? "inline"
     : false;
 
+  const electronTargetVersion = isElectron
+    ? getElectronTargetVersion()
+    : undefined;
+
   // ref: electronの起動をスキップしてデバッグ起動を軽くする
   const skipLaunchElectron =
     mode === "test" || process.env.SKIP_LAUNCH_ELECTRON === "1";
@@ -66,6 +93,7 @@ export default defineConfig((options) => {
     root: path.resolve(import.meta.dirname, "src"),
     envDir: import.meta.dirname,
     build: {
+      target: electronTargetVersion?.chrome,
       outDir: path.resolve(import.meta.dirname, "dist"),
       chunkSizeWarningLimit: 10000,
       sourcemap,
@@ -74,8 +102,7 @@ export default defineConfig((options) => {
     css: {
       preprocessorOptions: {
         scss: {
-          api: "modern",
-          includePaths: [path.resolve(import.meta.dirname, "node_modules")],
+          loadPaths: [path.resolve(import.meta.dirname, "node_modules")],
         },
       },
     },
@@ -95,7 +122,7 @@ export default defineConfig((options) => {
       isElectron && [
         cleanDistPlugin(),
         // TODO: 関数で切り出して共通化できる部分はまとめる
-        electron({
+        electronPlugin({
           main: {
             entry: "./backend/electron/main.ts",
 
@@ -116,15 +143,10 @@ export default defineConfig((options) => {
             vite: {
               plugins: [
                 tsconfigPaths({ root: import.meta.dirname }),
-                isProduction &&
-                  checkSuspiciousImportsPlugin({
-                    allowedInTryCatchModules: [
-                      // systeminformationのoptionalな依存。try-catch内なので許可。
-                      "osx-temperature-sensor",
-                    ],
-                  }),
+                isProduction && checkSuspiciousImportsPlugin({}),
               ],
               build: {
+                target: electronTargetVersion?.node,
                 outDir: path.resolve(import.meta.dirname, "dist"),
                 sourcemap,
               },
@@ -143,6 +165,7 @@ export default defineConfig((options) => {
                 isProduction && checkSuspiciousImportsPlugin({}),
               ],
               build: {
+                target: electronTargetVersion?.chrome,
                 outDir: path.resolve(import.meta.dirname, "dist"),
                 sourcemap,
               },
@@ -197,7 +220,7 @@ export default defineConfig((options) => {
             browser: {
               enabled: true,
               instances: [{ browser: "chromium" }],
-              provider: "playwright",
+              provider: playwrightProvider(),
               headless: true,
               api: 7158,
               ui: false,
@@ -226,7 +249,7 @@ export default defineConfig((options) => {
             browser: {
               enabled: true,
               instances: [{ browser: "chromium" }],
-              provider: "playwright",
+              provider: playwrightProvider(),
               headless: true,
               api: 7159,
               ui: false,
@@ -277,11 +300,13 @@ const checkSuspiciousImportsPlugin = (
     enforce: "post",
     apply: "build",
     writeBundle(_options, bundle) {
+      const files: SourceFile[] = [];
       for (const [file, chunk] of Object.entries(bundle)) {
         if (chunk.type === "chunk") {
-          checkSuspiciousImports(file, chunk.code, options);
+          files.push({ path: file, content: chunk.code });
         }
       }
+      checkSuspiciousImports(files, options);
     },
   };
 };

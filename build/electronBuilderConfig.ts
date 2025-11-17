@@ -4,6 +4,8 @@ import { config } from "dotenv";
 import { Configuration as ElectronBuilderConfiguration } from "electron-builder";
 import { z } from "zod";
 import afterAllArtifactBuild from "./afterAllArtifactBuild";
+import afterPack from "./afterPack";
+import artifactBuildCompleted from "./artifactBuildCompleted";
 
 const rootDir = path.join(import.meta.dirname, "..");
 const dotenvPath = path.join(rootDir, ".env.production");
@@ -109,6 +111,9 @@ const builderOptions: ElectronBuilderConfiguration = {
   appId: "jp.hiroshiba.voicevox",
   copyright: "Hiroshiba Kazuyuki",
   afterAllArtifactBuild,
+  afterPack,
+  artifactBuildCompleted,
+  electronLanguages: ["en-US", "ja"],
   win: {
     icon: "public/icon.png",
     target: [
@@ -148,7 +153,7 @@ const builderOptions: ElectronBuilderConfiguration = {
   },
   mac: {
     artifactName: MACOS_ARTIFACT_NAME || undefined,
-    icon: "public/icon-mac.png",
+    icon: "build/icons/icon-mac.png",
     category: "public.app-category.utilities",
     target: [
       {
@@ -156,9 +161,10 @@ const builderOptions: ElectronBuilderConfiguration = {
         arch: [isArm64 ? "arm64" : "x64"],
       },
     ],
+    identity: null, // ad-hoc署名をしない
   },
   dmg: {
-    icon: "public/icon-dmg.icns",
+    icon: "build/icons/icon-dmg.icns",
   },
 };
 

@@ -9,7 +9,7 @@ import {
 import { Store } from "@/store";
 import { SequencerEditTarget } from "@/store/type";
 import { NoteId, TrackId } from "@/type/preload";
-import type { Note } from "@/domain/project/type";
+import type { Note, Tempo } from "@/domain/project/type";
 
 export type PositionOnSequencer = {
   readonly x: number;
@@ -18,6 +18,13 @@ export type PositionOnSequencer = {
   readonly noteNumber: number;
   readonly frame: number;
   readonly frequency: number;
+};
+
+export type ViewportInfo = {
+  readonly scaleX: number;
+  readonly scaleY: number;
+  readonly offsetX: number;
+  readonly offsetY: number;
 };
 
 export type Input =
@@ -65,6 +72,10 @@ export type Input =
       readonly note: Note;
     }
   | {
+      readonly type: "scrollEvent";
+      readonly targetArea: "SequencerBody";
+    }
+  | {
       readonly type: "inputEvent";
       readonly targetArea: "LyricInput";
       readonly inputEvent: Event;
@@ -75,6 +86,9 @@ export type Input =
     };
 
 export type ComputedRefs = {
+  readonly viewportInfo: ComputedRef<ViewportInfo>;
+  readonly tpqn: ComputedRef<number>;
+  readonly tempos: ComputedRef<Tempo[]>;
   readonly snapTicks: ComputedRef<number>;
   readonly editTarget: ComputedRef<SequencerEditTarget>;
   readonly selectedTrackId: ComputedRef<TrackId>;
@@ -105,6 +119,7 @@ export type PartialStore = {
   state: Pick<
     Store["state"],
     | "tpqn"
+    | "tempos"
     | "sequencerSnapType"
     | "sequencerEditTarget"
     | "sequencerNoteTool"
@@ -227,6 +242,21 @@ export type SequencerStateDefinitions = StateDefinitions<
     },
   ]
 >;
+
+const DRAG_START_THRESHOLD_X = 2;
+const DRAG_START_THRESHOLD_Y = 2;
+
+export const shouldStartDrag = (
+  cursorPosAtStart: PositionOnSequencer,
+  currentCursorPos: PositionOnSequencer,
+) => {
+  const dragDistanceX = Math.abs(currentCursorPos.x - cursorPosAtStart.x);
+  const dragDistanceY = Math.abs(currentCursorPos.y - cursorPosAtStart.y);
+  return (
+    dragDistanceX >= DRAG_START_THRESHOLD_X ||
+    dragDistanceY >= DRAG_START_THRESHOLD_Y
+  );
+};
 
 /**
  * カーソル位置に対応する補助線の位置を取得する。
