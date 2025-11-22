@@ -82,24 +82,8 @@ Arch Linux:
 EOS
 fi
 
-COMMAND_7Z=${COMMAND_7Z:-}
-if [ -n "${COMMAND_7Z}" ]; then
-    # use env var
-    :
-elif command -v 7z &> /dev/null; then
-    # Ubuntu/Debian p7zip-full
-    COMMAND_7Z=7z
-elif command -v 7zr &> /dev/null; then
-    # Ubuntu/Debian p7zip
-    COMMAND_7Z=7zr
-elif command -v 7za &> /dev/null; then
-    # CentOS/Fedora
-    COMMAND_7Z=7za
-elif command -v 7zz &> /dev/null; then
-    # Official 7zip
-    COMMAND_7Z=7zz
-else
-    cat << 'EOS' && exit 1
+COMMAND_7Z=$(command -v 7z||command -v 7zr||command -v 7za||command -v 7zz||echo false)
+${COMMAND_7Z} > /dev/null || { echo """
 [!] Command '7z', '7zr', '7za' or '7zz' not found
 
 Required to extract compressed files
@@ -122,9 +106,7 @@ Arch Linux:
 
 MacOS:
     brew install p7zip
-EOS
-fi
-echo "[-] 7z command: ${COMMAND_7Z}"
+""" && exit 1 }
 
 LATEST_RELEASE_URL=$REPO_URL/releases/latest
 
