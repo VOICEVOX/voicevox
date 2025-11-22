@@ -28,6 +28,7 @@ import {
   showWarningDialog,
 } from "@/components/Dialog/Dialog";
 import { objectEntries } from "@/helpers/typedEntries";
+import { UnreachableError } from "@/type/utility";
 
 export function createUILockAction<S, A extends ActionsBase, K extends keyof A>(
   action: (
@@ -481,8 +482,13 @@ export const uiStore = createPartialStore<UiStoreTypes>({
   // TODO: この4つのアクションをVue側に移動したい
   SHOW_GENERATE_AND_SAVE_ALL_AUDIO_DIALOG: {
     async action({ state, actions }) {
-      await multiGenerateAndSaveAudioWithDialog({
+      const result = await actions.CHECK_VOICE_LIBRARY_POLICY_CONFIRMATION({
         audioKeys: state.audioKeys,
+      });
+      if (result === "canceled") return;
+
+      await multiGenerateAndSaveAudioWithDialog({
+        termConfirmedAudioKeys: result,
         disableNotifyOnGenerate: state.confirmedTips.notifyOnGenerate,
         actions,
       });
@@ -491,7 +497,13 @@ export const uiStore = createPartialStore<UiStoreTypes>({
 
   SHOW_GENERATE_AND_CONNECT_ALL_AUDIO_DIALOG: {
     async action({ actions, state }) {
+      const result = await actions.CHECK_VOICE_LIBRARY_POLICY_CONFIRMATION({
+        audioKeys: state.audioKeys,
+      });
+      if (result === "canceled") return;
+
       await generateAndConnectAndSaveAudioWithDialog({
+        termConfirmedAudioKeys: result,
         actions,
         disableNotifyOnGenerate: state.confirmedTips.notifyOnGenerate,
       });
@@ -511,14 +523,27 @@ export const uiStore = createPartialStore<UiStoreTypes>({
 
       const selectedAudioKeys = getters.SELECTED_AUDIO_KEYS;
       if (state.enableMultiSelect && selectedAudioKeys.length > 1) {
-        await multiGenerateAndSaveAudioWithDialog({
+        const result = await actions.CHECK_VOICE_LIBRARY_POLICY_CONFIRMATION({
           audioKeys: selectedAudioKeys,
+        });
+        if (result === "canceled") return;
+
+        await multiGenerateAndSaveAudioWithDialog({
+          termConfirmedAudioKeys: result,
           actions: actions,
           disableNotifyOnGenerate: state.confirmedTips.notifyOnGenerate,
         });
       } else {
+        const result = await actions.CHECK_VOICE_LIBRARY_POLICY_CONFIRMATION({
+          audioKeys: [activeAudioKey],
+        });
+        if (result === "canceled") return;
+
+        if (result.length != 1) {
+          throw new UnreachableError("result.length != 1");
+        }
         await generateAndSaveOneAudioWithDialog({
-          audioKey: activeAudioKey,
+          termConfirmedAudioKey: result[0],
           disableNotifyOnGenerate: state.confirmedTips.notifyOnGenerate,
           actions: actions,
         });
