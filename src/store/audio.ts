@@ -34,7 +34,10 @@ import {
   isMorphable,
 } from "./audioGenerate";
 import { ContinuousPlayer } from "./audioContinuousPlayer";
-import { convertAudioQueryFromEngineToEditor } from "./proxy";
+import {
+  convertAudioQueryFromEditorToEngine,
+  convertAudioQueryFromEngineToEditor,
+} from "./proxy";
 import {
   convertHiraToKana,
   convertLongVowel,
@@ -1214,6 +1217,82 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         accentPhrases[index] = fetchedAccentPhrases[index];
       }
       return accentPhrases;
+    },
+  },
+
+  // Guide the audio query with reference audio
+  // replace the audio query with the analysis result from the reference audio
+  // parameters: audioKey: string, referenceAudioFile: Blob
+  // TODO: make it a redo-able command, I'm too dumb to do it myself
+  GUIDE_AUDIO_QUERY: {
+    async action(
+      { actions, state },
+      {
+        engineId,
+        audioKey,
+        refAudio,
+        normalize,
+        trim,
+        assignLength,
+        assignPitch,
+      }: {
+        engineId: EngineId;
+        audioKey: AudioKey;
+        refAudio: Blob;
+        normalize: boolean;
+        trim: boolean;
+        assignLength: boolean;
+        assignPitch: boolean;
+      },
+    ) {
+      // check if the engine supports guide feature
+      // as the frontend would disable the button if not,
+      // this shouldn't happen but just in case
+      if (!state.engineManifests[engineId].supportedFeatures.guide) {
+        throw new Error(`Engine "${engineId}" does not support guide feature.`);
+      }
+      const query = state.audioItems[audioKey].query;
+      if (query == undefined) throw new Error("query == undefined");
+      await actions
+        .INSTANTIATE_ENGINE_CONNECTOR({
+          engineId,
+        })
+        .then(async (instance) => {
+          await instance
+            .invoke("guide")({
+              // guided api uses form-based payload to include audio file
+              // the serialization won't work out of the box
+              // we need to manually convert AudioQuery to JSON string here
+              query: JSON.stringify(
+                convertAudioQueryFromEditorToEngine(query, 24000),
+              ),
+              refAudio: refAudio,
+              normalize: normalize,
+              trim: trim,
+              assignLength: assignLength,
+              assignPitch: assignPitch,
+            })
+            .catch((error) => {
+              window.backend.logError(
+                error,
+                `Failed to guide AudioQuery for the audioKey "${audioKey}".`,
+              );
+              throw error;
+            })
+            .then((result) => {
+              const new_query = convertAudioQueryFromEngineToEditor(result);
+              // replace the old query with the new one
+              actions
+                .SET_AUDIO_QUERY({ audioKey, audioQuery: new_query })
+                .catch((error) => {
+                  window.backend.logError(
+                    error,
+                    `Failed to set guided AudioQuery for the audioKey "${audioKey}".`,
+                  );
+                  throw error;
+                });
+            });
+        });
     },
   },
 

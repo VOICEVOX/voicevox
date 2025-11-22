@@ -400,6 +400,18 @@ export type AudioStoreTypes = {
     }): Promise<AccentPhrase[]>;
   };
 
+  GUIDE_AUDIO_QUERY: {
+    action(payload: {
+      engineId: EngineId;
+      audioKey: AudioKey;
+      refAudio: Blob;
+      normalize: boolean;
+      trim: boolean;
+      assignLength: boolean;
+      assignPitch: boolean;
+    }): void;
+  };
+
   FETCH_AND_COPY_MORA_DATA: {
     action(payload: {
       accentPhrases: AccentPhrase[];
@@ -2096,6 +2108,7 @@ export type DialogStates = {
   isImportSongProjectDialogOpen: boolean;
   isPresetManageDialogOpen: boolean;
   isHelpDialogOpen: boolean;
+  isGuideDialogOpen: boolean;
 };
 
 export type UiStoreTypes = {
