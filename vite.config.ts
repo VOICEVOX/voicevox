@@ -9,11 +9,13 @@ import electronDefaultImport from "electron";
 import checker from "vite-plugin-checker";
 import { BuildOptions, defineConfig, loadEnv, Plugin } from "vite";
 import { quasar } from "@quasar/vite-plugin";
+import { playwright as playwrightProvider } from "@vitest/browser-playwright";
 import { z } from "zod";
 import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
 import {
   checkSuspiciousImports,
   CheckSuspiciousImportsOptions,
+  SourceFile,
 } from "./tools/checkSuspiciousImports.js";
 
 // @ts-expect-error electronをelectron環境外からimportするとelectronのファイルパスが得られる。
@@ -100,8 +102,7 @@ export default defineConfig((options) => {
     css: {
       preprocessorOptions: {
         scss: {
-          api: "modern",
-          includePaths: [path.resolve(import.meta.dirname, "node_modules")],
+          loadPaths: [path.resolve(import.meta.dirname, "node_modules")],
         },
       },
     },
@@ -142,13 +143,7 @@ export default defineConfig((options) => {
             vite: {
               plugins: [
                 tsconfigPaths({ root: import.meta.dirname }),
-                isProduction &&
-                  checkSuspiciousImportsPlugin({
-                    allowedInTryCatchModules: [
-                      // systeminformationのoptionalな依存。try-catch内なので許可。
-                      "osx-temperature-sensor",
-                    ],
-                  }),
+                isProduction && checkSuspiciousImportsPlugin({}),
               ],
               build: {
                 target: electronTargetVersion?.node,
@@ -225,7 +220,7 @@ export default defineConfig((options) => {
             browser: {
               enabled: true,
               instances: [{ browser: "chromium" }],
-              provider: "playwright",
+              provider: playwrightProvider(),
               headless: true,
               api: 7158,
               ui: false,
@@ -254,7 +249,7 @@ export default defineConfig((options) => {
             browser: {
               enabled: true,
               instances: [{ browser: "chromium" }],
-              provider: "playwright",
+              provider: playwrightProvider(),
               headless: true,
               api: 7159,
               ui: false,
@@ -305,11 +300,13 @@ const checkSuspiciousImportsPlugin = (
     enforce: "post",
     apply: "build",
     writeBundle(_options, bundle) {
+      const files: SourceFile[] = [];
       for (const [file, chunk] of Object.entries(bundle)) {
         if (chunk.type === "chunk") {
-          checkSuspiciousImports(file, chunk.code, options);
+          files.push({ path: file, content: chunk.code });
         }
       }
+      checkSuspiciousImports(files, options);
     },
   };
 };

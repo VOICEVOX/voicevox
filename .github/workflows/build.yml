@@ -26,8 +26,8 @@ on:
         default: false
 
 env:
-  VOICEVOX_ENGINE_VERSION: 0.25.0-preview.2
-  VOICEVOX_RESOURCE_VERSION: 0.24.1
+  VOICEVOX_ENGINE_VERSION: 0.25.0
+  VOICEVOX_RESOURCE_VERSION: 0.25.0
   VOICEVOX_EDITOR_VERSION:
     |- # releaseタグ名か、workflow_dispatchでのバージョン名か、999.999.999-developが入る
     ${{ github.event.release.tag_name || github.event.inputs.version || '999.999.999-develop' }}
@@ -124,7 +124,7 @@ jobs:
             app_asar_dir: prepackage/VOICEVOX.app/Contents/Resources
             installer_artifact_name: macos-cpu-x64-dmg
             macos_artifact_name: "VOICEVOX.${version}-x64.${ext}"
-            os: macos-13
+            os: macos-15-intel
           # macOS CPU (arm64)
           - artifact_name: macos-cpu-arm64-prepackage
             artifact_path: dist_electron/mac-arm64
@@ -427,14 +427,14 @@ jobs:
           LINUX_ARTIFACT_NAME: ${{ matrix.linux_artifact_name }}
           LINUX_EXECUTABLE_NAME: ${{ matrix.linux_executable_name }}
         run: |
-          pnpm run electron:build --prepackaged prepackage/
+          pnpm run electron:build:pack --prepackaged prepackage/
 
       - name: Build Electron (for macOS)
         if: endsWith(matrix.installer_artifact_name, '-dmg') # macOS
         env:
           MACOS_ARTIFACT_NAME: ${{ matrix.macos_artifact_name }}
         run: |
-          pnpm run electron:build --prepackaged prepackage/VOICEVOX.app
+          pnpm run electron:build:pack --prepackaged prepackage/VOICEVOX.app
 
       - name: Reset Code Signing Envs
         if: startsWith(matrix.os, 'windows-') && github.event.inputs.code_signing == 'true'
