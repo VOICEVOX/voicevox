@@ -2346,7 +2346,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             phraseSingingVoices,
           );
 
-          const fileData = generateWavFileData(audioBuffer);
+          const fileData = generateWavFileData(audioBuffer, setting.format);
 
           const result = await actions.EXPORT_FILE({
             filePath,
@@ -2443,7 +2443,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
               phraseSingingVoices,
             );
 
-            const fileData = generateWavFileData(audioBuffer);
+            const fileData = generateWavFileData(audioBuffer, setting.format);
 
             const result = await actions.EXPORT_FILE({
               filePath,

@@ -76,9 +76,6 @@ CentOS/Fedora:
     sudo dnf install curl
 Or
     sudo yum install curl
-
-Arch Linux:
-    sudo pacman -S curl
 EOS
 fi
 
