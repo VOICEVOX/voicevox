@@ -101,9 +101,8 @@ Or
 Arch Linux:
     sudo pacman -S 7zip
 
-MacOS:
-    brew install p7zip
 """ && exit 1 }
+echo "[-] 7z command: ${COMMAND_7Z}"
 
 LATEST_RELEASE_URL=$REPO_URL/releases/latest
 
@@ -156,9 +155,6 @@ Or
 
 Arch Linux
     sudo pacman -S libsndfile
-
-MacOS:
-    brew install libsndfile
 EOS
         if [ "${IGNORE_RTCOND}" != "1" ]; then
             exit 1
@@ -328,7 +324,7 @@ BANNER
 VOICEVOX_INSTALLED_FILES=(
     "${DESKTOP_ENTRY_INSTALL_DIR}/voicevox.desktop"
     "${ICON_INSTALL_DIR}/voicevox.png"
-    "${ICON_INSTALL_DIR}/hicolor/0x0/apps/voicevox.png"
+    "${ICON_INSTALL_DIR}/hicolor/256x256/apps/voicevox.png"
     "${MIME_INSTALL_DIR}/packages/voicevox.xml"
 )
 
