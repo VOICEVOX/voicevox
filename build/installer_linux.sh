@@ -116,9 +116,6 @@ Or
 
 Arch Linux:
     sudo pacman -S 7zip
-
-MacOS:
-    brew install p7zip
 EOS
 fi
 echo "[-] 7z command: ${COMMAND_7Z}"
@@ -174,9 +171,6 @@ Or
 
 Arch Linux
     sudo pacman -S libsndfile
-
-MacOS:
-    brew install libsndfile
 EOS
         if [ "${IGNORE_RTCOND}" != "1" ]; then
             exit 1
