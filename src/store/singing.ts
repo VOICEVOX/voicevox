@@ -287,6 +287,10 @@ if (window.AudioContext) {
   mainChannelStrip.output.connect(limiter.input);
   limiter.output.connect(clipper.input);
   clipper.output.connect(audioContext.destination);
+
+  audioContext.addEventListener("statechange", () => {
+    logger.info(`AudioContext state changed: ${audioContext?.state}`);
+  });
 }
 
 let songTrackRenderer: SongTrackRenderer | undefined = undefined;
@@ -1774,9 +1778,19 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       if (state.nowPlaying) {
         return;
       }
+      if (audioContext == undefined) {
+        throw new Error("audioContext is undefined.");
+      }
       if (!transport) {
         throw new Error("transport is undefined.");
       }
+
+      // TODO: interruptedも考慮する
+      if (audioContext.state === "suspended") {
+        // NOTE: resumeできない場合はエラーが発生する（排他モードで専有中など）
+        await audioContext.resume();
+      }
+
       mutations.SET_PLAYBACK_STATE({ nowPlaying: true });
 
       // TODO: 以下の処理（ループの設定）は再生開始時に毎回行う必要はないので、
@@ -2780,7 +2794,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   COMMAND_PASTE_NOTES_FROM_CLIPBOARD: {
-    async action({ mutations, state, getters, actions }) {
+    async action({ mutations, getters, actions }) {
       // クリップボードからテキストを読み込む
       let clipboardText;
       try {
@@ -2804,29 +2818,38 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         });
       }
 
-      // パースしたJSONのノートの位置を現在の再生位置に合わせてクオンタイズして貼り付ける
+      // パースしたJSONのノートの位置を現在の再生位置に合わせて貼り付ける
       const currentPlayheadPosition = getters.PLAYHEAD_POSITION;
       const firstNotePosition = notes[0].position;
-      // TODO: クオンタイズの処理を共通化する
-      const snapType = state.sequencerSnapType;
-      const tpqn = state.tpqn;
-      const snapTicks = getNoteDuration(snapType, tpqn);
       const notesToPaste: Note[] = notes.map((note) => {
         // 新しい位置を現在の再生位置に合わせて計算する
-        const pasteOriginPos =
-          Number(note.position) - firstNotePosition + currentPlayheadPosition;
-        // クオンタイズ
-        const quantizedPastePos =
-          Math.round(pasteOriginPos / snapTicks) * snapTicks;
+        const pastePos = Math.round(
+          Number(note.position) - firstNotePosition + currentPlayheadPosition,
+        );
         return {
           id: NoteId(uuid4()),
-          position: quantizedPastePos,
+          position: pastePos,
           duration: Number(note.duration),
           noteNumber: Number(note.noteNumber),
           lyric: String(note.lyric),
         };
       });
       const pastedNoteIds = notesToPaste.map((note) => note.id);
+
+      const existingNoteIds = getters.ALL_NOTE_IDS;
+      const hasDuplicateNoteIds = notesToPaste.some((note) =>
+        existingNoteIds.has(note.id),
+      );
+      if (hasDuplicateNoteIds) {
+        throw new Error("Failed to paste notes: duplicate note IDs detected.");
+      }
+      const hasInvalidNotes = notesToPaste.some((note) => !isValidNote(note));
+      if (hasInvalidNotes) {
+        throw new Error(
+          "Failed to paste notes: invalid note properties detected.",
+        );
+      }
+
       // ノートを追加してレンダリングする
       mutations.COMMAND_ADD_NOTES({
         notes: notesToPaste,

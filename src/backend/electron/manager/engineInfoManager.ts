@@ -1,6 +1,6 @@
 import path from "node:path";
 import fs from "node:fs";
-import shlex from "shlex";
+import * as shlex from "shlex";
 
 import { dialog } from "electron"; // FIXME: ここでelectronをimportするのは良くない
 

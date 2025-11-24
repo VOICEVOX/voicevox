@@ -1,3 +1,4 @@
+import { getDoremiFromNoteNumber } from "./viewHelper";
 import {
   EditorFrameAudioQuery,
   EditorFrameAudioQueryKey,
@@ -197,7 +198,7 @@ const createNotesForRequestToEngine = (
       id: note.id,
       key: note.noteNumber,
       frameLength: noteOffFrame - noteOnFrame,
-      lyric: note.lyric,
+      lyric: note.lyric ?? getDoremiFromNoteNumber(note.noteNumber),
     });
   }
 

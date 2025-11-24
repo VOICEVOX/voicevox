@@ -244,6 +244,21 @@ export type SequencerStateDefinitions = StateDefinitions<
   ]
 >;
 
+const DRAG_START_THRESHOLD_X = 2;
+const DRAG_START_THRESHOLD_Y = 2;
+
+export const shouldStartDrag = (
+  cursorPosAtStart: PositionOnSequencer,
+  currentCursorPos: PositionOnSequencer,
+) => {
+  const dragDistanceX = Math.abs(currentCursorPos.x - cursorPosAtStart.x);
+  const dragDistanceY = Math.abs(currentCursorPos.y - cursorPosAtStart.y);
+  return (
+    dragDistanceX >= DRAG_START_THRESHOLD_X ||
+    dragDistanceY >= DRAG_START_THRESHOLD_Y
+  );
+};
+
 /**
  * カーソル位置に対応する補助線の位置を取得する。
  */
