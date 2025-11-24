@@ -346,7 +346,7 @@ BANNER
 VOICEVOX_INSTALLED_FILES=(
     "${DESKTOP_ENTRY_INSTALL_DIR}/voicevox.desktop"
     "${ICON_INSTALL_DIR}/voicevox.png"
-    "${ICON_INSTALL_DIR}/hicolor/0x0/apps/voicevox.png"
+    "${ICON_INSTALL_DIR}/hicolor/256x256/apps/voicevox.png"
     "${MIME_INSTALL_DIR}/packages/voicevox.xml"
 )
 
