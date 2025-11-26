@@ -43,6 +43,7 @@ export type ParameterPanelComputedRefs = {
   readonly tpqn: ComputedRef<number>;
   readonly zoomX: ComputedRef<number>;
   readonly zoomY: ComputedRef<number>;
+  readonly nowPlaying: ComputedRef<boolean>;
 };
 
 export type ParameterPanelPartialStore = {
@@ -54,6 +55,7 @@ export type ParameterPanelPartialStore = {
     | "sequencerZoomY"
     | "sequencerVolumeTool"
     | "parameterPanelEditTarget"
+    | "nowPlaying"
   >;
   readonly getters: Pick<
     Store["getters"],

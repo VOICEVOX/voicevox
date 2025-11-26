@@ -30,6 +30,9 @@ export class DrawVolumeIdleState
     setNextState: SetNextState<ParameterPanelStateDefinitions>;
   }) {
     if (input.type === "mouseEvent") {
+      if (context.nowPlaying.value) {
+        return;
+      }
       const mouseButton = getButton(input.mouseEvent);
       const trackId = context.selectedTrackId.value;
 

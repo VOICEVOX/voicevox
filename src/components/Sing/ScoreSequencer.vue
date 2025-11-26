@@ -216,18 +216,20 @@
       </div>
     </template>
     <template #after>
-      <SequencerParameterPanel v-if="isParameterPanelOpen" />
+      <SequencerParameterPanel v-if="isParameterPanelOpen" :offsetX="scrollX" />
     </template>
   </QSplitter>
 </template>
 
 <script lang="ts">
-import { ComputedRef } from "vue";
+import { ComputedRef, Ref } from "vue";
 import type { InjectionKey } from "vue";
 
 export const numMeasuresInjectionKey: InjectionKey<{
   numMeasures: ComputedRef<number>;
 }> = Symbol("sequencerNumMeasures");
+export const sequencerBodyInjectionKey: InjectionKey<Ref<HTMLElement | null>> =
+  Symbol("sequencerBody");
 </script>
 
 <script setup lang="ts">
@@ -456,6 +458,7 @@ const setParameterPanelHeight = (height: number) => {
 
 const scrollBarWidth = ref(12);
 const sequencerBody = ref<HTMLElement | null>(null);
+provide(sequencerBodyInjectionKey, sequencerBody);
 
 // ステートマシン
 const {

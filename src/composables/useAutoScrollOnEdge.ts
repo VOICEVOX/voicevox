@@ -103,10 +103,17 @@ export const useAutoScrollOnEdge = (
       throw new Error("element.value is null.");
     }
     if (autoScrollState != undefined) {
-      autoScrollState.cursorPos = new Vector2D(
-        getXInBorderBox(event.clientX, element.value),
-        getYInBorderBox(event.clientY, element.value),
-      );
+      const x = getXInBorderBox(event.clientX, element.value);
+      const y = getYInBorderBox(event.clientY, element.value);
+      const width = element.value.clientWidth;
+      const height = element.value.clientHeight;
+      // パラメータパネルなど別領域でのドラッグで不要にスクロールしないよう、
+      // 要素領域外のときはオートスクロールを無効化する
+      if (x < 0 || y < 0 || x > width || y > height) {
+        autoScrollState.cursorPos = undefined;
+        return;
+      }
+      autoScrollState.cursorPos = new Vector2D(x, y);
     }
   };
 
