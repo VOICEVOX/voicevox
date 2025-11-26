@@ -142,43 +142,23 @@ echo
 echo "[+] Listing of split archives..."
 _readarray ARCHIVE_LIST < "list.txt"
 
-if [ -z "$(echo "${ARCHIVE_LIST[0]}" | awk '$0=$1')" ]; then
-    # No size/hash information
-    # filename
-    _readarray ARCHIVE_NAME_LIST < <(
-        for line in "${ARCHIVE_LIST[@]}"; do
-            echo "$line"
-        done
-    )
-    _readarray ARCHIVE_SIZE_LIST < <(
-        for index in "${!ARCHIVE_LIST[@]}"; do
-            echo "x"
-        done
-    )
-    _readarray ARCHIVE_HASH_LIST <(
-        for index in "${!ARCHIVE_LIST[@]}"; do
-            echo "x"
-        done
-    )
-else
-    # filename<TAB>size<TAB>hash
-    _readarray ARCHIVE_NAME_LIST < <(
-        for line in "${ARCHIVE_LIST[@]}"; do
-            echo "$line"
-        done | awk '$0!=""{print $1}'
-    )
-    _readarray ARCHIVE_SIZE_LIST < <(
-        for line in "${ARCHIVE_LIST[@]}"; do
-            echo "$line"
-        done | awk '$0!=""{print $2}'
-    )
-    _readarray ARCHIVE_HASH_LIST < <(
-        for line in "${ARCHIVE_LIST[@]}"; do
-            echo "$line"
-        done | awk '$0!=""{print $3}' |
-            tr '[:lower:]' '[:upper:]'
-    )
-fi
+_readarray ARCHIVE_NAME_LIST < <(
+    for line in "${ARCHIVE_LIST[@]}"; do
+        echo "$line"
+    done | awk '$0!=""{print $1}'
+)
+_readarray ARCHIVE_SIZE_LIST < <(
+    for line in "${ARCHIVE_LIST[@]}"; do
+        echo "$line"
+    done | awk '$0!=""{print $2}'
+)
+_readarray ARCHIVE_HASH_LIST < <(
+    for line in "${ARCHIVE_LIST[@]}"; do
+        echo "$line"
+    done | awk '$0!=""{print $3}' |
+        tr '[:lower:]' '[:upper:]'
+)
+
 echo
 
 for index in "${!ARCHIVE_NAME_LIST[@]}"; do
