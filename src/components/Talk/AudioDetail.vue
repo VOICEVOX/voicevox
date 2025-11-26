@@ -407,4 +407,13 @@ const isAltKeyDown = useAltKey();
     overflow-x: scroll;
   }
 }
+
+.action-buttons-wrapper {
+  flex-grow: 1;
+  border: 1px solid red;
+  padding: 0.5rem;
+  display: flex;
+  justify-content: end;
+  align-items: end;
+}
 </style>

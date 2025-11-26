@@ -116,6 +116,9 @@ const saveProject = async () => {
 const importTextFile = () => {
   void store.actions.COMMAND_IMPORT_FROM_FILE({ type: "dialog" });
 };
+const openGuideDoalog = () => {
+  void store.actions.SET_DIALOG_OPEN({ isGuideDialogOpen: true });
+};
 
 const usableButtons: Record<
   ToolbarButtonTagType,
@@ -155,6 +158,10 @@ const usableButtons: Record<
   },
   IMPORT_TEXT: {
     click: importTextFile,
+    disable: uiLocked,
+  },
+  GUIDE: {
+    click: openGuideDoalog,
     disable: uiLocked,
   },
   EMPTY: null,

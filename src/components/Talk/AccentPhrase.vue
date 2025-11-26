@@ -210,13 +210,13 @@
 import { computed, ref } from "vue";
 import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
+import type { DetailTypes } from "./AudioDetail.vue";
 import { MenuItemButton } from "@/components/Menu/type";
 import ContextMenu from "@/components/Menu/ContextMenu/Container.vue";
 import { useStore } from "@/store";
 import { AudioKey, MoraDataType } from "@/type/preload";
 import { Mora } from "@/openapi/models/Mora";
 import { AccentPhrase } from "@/openapi";
-import type { DetailTypes } from "./AudioDetail.vue";
 
 const props = defineProps<{
   audioKey: AudioKey;

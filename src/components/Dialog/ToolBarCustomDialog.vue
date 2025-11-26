@@ -162,6 +162,7 @@ const usableButtonsDesc: Record<ToolbarButtonTagType, string> = {
   UNDO: "操作を一つ戻します。",
   REDO: "元に戻した操作をやり直します。",
   IMPORT_TEXT: "テキストファイル(.txt)を読み込みます。",
+  GUIDE: "音声ガイド機能を使用します。",
   EMPTY:
     "これはボタンではありません。レイアウトの調整に使います。また、実際には表示されません。",
 };

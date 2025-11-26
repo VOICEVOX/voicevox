@@ -58,7 +58,13 @@ import {
   StyleInfo,
   Voice,
 } from "@/type/preload";
-import { AudioQuery, AccentPhrase, Speaker, SpeakerInfo } from "@/openapi";
+import {
+  AudioQuery,
+  AccentPhrase,
+  Speaker,
+  SpeakerInfo,
+  AudioQueryToJSON,
+} from "@/openapi";
 import { base64ImageToUri, base64ToUri } from "@/helpers/base64Helper";
 import { getValueOrThrow, ResultError } from "@/type/result";
 import { generateWriteErrorMessage } from "@/helpers/fileHelper";
@@ -1222,78 +1228,91 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
   // Guide the audio query with reference audio
   // replace the audio query with the analysis result from the reference audio
-  // parameters: audioKey: string, referenceAudioFile: Blob
-  // TODO: make it a redo-able command, I'm too dumb to do it myself
+  // TODO: make it a redo-able command
   GUIDE_AUDIO_QUERY: {
-    async action(
-      { actions, state },
-      {
-        engineId,
-        audioKey,
-        refAudio,
-        normalize,
-        trim,
-        assignLength,
-        assignPitch,
-      }: {
-        engineId: EngineId;
-        audioKey: AudioKey;
-        refAudio: Blob;
-        normalize: boolean;
-        trim: boolean;
-        assignLength: boolean;
-        assignPitch: boolean;
-      },
-    ) {
-      // check if the engine supports guide feature
-      // as the frontend would disable the button if not,
-      // this shouldn't happen but just in case
-      if (!state.engineManifests[engineId].supportedFeatures.guide) {
-        throw new Error(`Engine "${engineId}" does not support guide feature.`);
-      }
-      const query = state.audioItems[audioKey].query;
-      if (query == undefined) throw new Error("query == undefined");
-      await actions
-        .INSTANTIATE_ENGINE_CONNECTOR({
+    action: createUILockAction(
+      async (
+        { actions, state },
+        {
           engineId,
-        })
-        .then(async (instance) => {
-          await instance
-            .invoke("guide")({
-              // guided api uses form-based payload to include audio file
-              // the serialization won't work out of the box
-              // we need to manually convert AudioQuery to JSON string here
-              query: JSON.stringify(
-                convertAudioQueryFromEditorToEngine(query, 24000),
-              ),
-              refAudio: refAudio,
-              normalize: normalize,
-              trim: trim,
-              assignLength: assignLength,
-              assignPitch: assignPitch,
-            })
-            .catch((error) => {
-              window.backend.logError(
-                error,
-                `Failed to guide AudioQuery for the audioKey "${audioKey}".`,
-              );
-              throw error;
-            })
-            .then((result) => {
-              const new_query = convertAudioQueryFromEngineToEditor(result);
-              // replace the old query with the new one
-              actions
-                .SET_AUDIO_QUERY({ audioKey, audioQuery: new_query })
-                .catch((error) => {
-                  window.backend.logError(
-                    error,
-                    `Failed to set guided AudioQuery for the audioKey "${audioKey}".`,
-                  );
-                  throw error;
-                });
-            });
-        });
-    },
+          audioKey,
+          refAudio,
+          normalize,
+          trim,
+          assignLength,
+          assignPitch,
+        }: {
+          engineId: EngineId;
+          audioKey: AudioKey;
+          refAudio: Blob;
+          normalize: boolean;
+          trim: boolean;
+          assignLength: boolean;
+          assignPitch: boolean;
+        },
+      ) => {
+        // check if the engine supports guide feature
+        // as the frontend would disable the button if not,
+        // this shouldn't happen but just in case
+        if (!state.engineManifests[engineId].supportedFeatures.guide) {
+          throw new Error(
+            `Engine "${engineId}" does not support guide feature.`,
+          );
+        }
+        const text = state.audioItems[audioKey].text;
+        const query = await actions.FETCH_AUDIO_QUERY({
+          text,
+          engineId,
+          styleId: state.audioItems[audioKey].voice.styleId,
+        }); // we fetch a fresh AudioQuery for the text to avoid inconsistency
+        if (query == undefined) throw new Error("query == undefined");
+        await actions
+          .INSTANTIATE_ENGINE_CONNECTOR({
+            engineId,
+          })
+          .then(async (instance) => {
+            await instance
+              .invoke("guide")({
+                // guided api uses form-based payload to include audio file
+                // the serialization won't work out of the box
+                // we need to manually convert AudioQuery to JSON string here
+                query: JSON.stringify(
+                  AudioQueryToJSON(
+                    convertAudioQueryFromEditorToEngine(
+                      query,
+                      state.engineManifests[engineId].defaultSamplingRate,
+                    ), // the sampling rate here is not used in guide API
+                  ) as unknown as AudioQuery, // the assertion here is not necessary but TS is happy now
+                ),
+                refAudio: refAudio,
+                normalize: normalize,
+                trim: trim,
+                assignLength: assignLength,
+                assignPitch: assignPitch,
+              })
+              .catch((error) => {
+                window.backend.logError(
+                  error,
+                  `Failed to guide AudioQuery for the audioKey "${audioKey}".`,
+                );
+                throw error;
+              })
+              .then((result) => {
+                const new_query = convertAudioQueryFromEngineToEditor(result);
+                // replace the old query with the new one
+                actions
+                  .SET_AUDIO_QUERY({ audioKey, audioQuery: new_query })
+                  .catch((error) => {
+                    window.backend.logError(
+                      error,
+                      `Failed to set guided AudioQuery for the audioKey "${audioKey}".`,
+                    );
+                    throw error;
+                  });
+              });
+          });
+      },
+    ),
   },
 
   DEFAULT_PROJECT_FILE_BASE_NAME: {
