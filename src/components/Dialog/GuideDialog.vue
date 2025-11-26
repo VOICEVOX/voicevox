@@ -3,12 +3,29 @@
     <QCard class="q-pa-md">
       <div class="guide-title">Guide</div>
       <div class="audio-selection-container">
-        <div>{{ audioDisplayName }}</div>
+        <QBtn
+          color="primary"
+          flat
+          dense
+          icon="play_arrow"
+          :disabled="audioFileBlob == null"
+          @click="playSelectedAudio"
+        />
+        <QInput
+          v-model="audioDisplayName"
+          label="Select Audio"
+          dense
+          readonly
+        />
         <QBtn flat icon="folder_open" dense @click="pickAudioFile" />
       </div>
-
-      <QExpansionItem dense label="Advanced Settings">
-        <QList>
+      <div class="q-my-xs" />
+      <QExpansionItem
+        v-model="advancedSettingsExpanded"
+        dense
+        label="Advanced Settings"
+      >
+        <QList dense>
           <QItem>
             <QToggle
               v-model="advancedSettings.normalize"
@@ -48,7 +65,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { useStore } from "@/store";
 
 const store = useStore();
@@ -57,6 +74,8 @@ const dialogOpened = defineModel<boolean>("dialogOpened");
 
 const audioFilePath = ref<string | null>(null);
 const audioFileBlob = ref<Blob | null>(null);
+
+const advancedSettingsExpanded = ref(false);
 
 const advancedSettings = ref({
   trim: false,
@@ -68,7 +87,7 @@ const advancedSettings = ref({
 
 const audioDisplayName = computed(() => {
   if (audioFilePath.value == null) {
-    return "No audio file selected.";
+    return "";
   } else {
     return `Selected: ${audioFilePath.value.split("/").pop()} `;
   }
@@ -117,6 +136,42 @@ const guide = () => {
     });
   dialogOpened.value = false;
 };
+
+const audioPlaying = ref(false);
+
+const playSelectedAudio = () => {
+  if (audioFileBlob.value == null) {
+    return;
+  }
+  audioPlaying.value = true;
+  store.actions
+    .PLAY_AUDIO_BLOB({
+      audioBlob: audioFileBlob.value,
+    })
+    .catch((error) => {
+      console.error("Error playing audio blob:", error);
+    })
+    .then(() => {
+      audioPlaying.value = false;
+    })
+    .catch(() => {
+      audioPlaying.value = false;
+    });
+};
+
+// stop audio when dialog is closed
+watch(
+  [dialogOpened, audioFilePath],
+  async ([dialogOpenedValue, newAudioFilePath]) => {
+    if (
+      (!dialogOpenedValue && audioPlaying.value) ||
+      newAudioFilePath != null
+    ) {
+      await store.actions.STOP_AUDIO();
+      audioPlaying.value = false;
+    }
+  },
+);
 </script>
 
 <style scoped lang="scss">
@@ -129,5 +184,6 @@ const guide = () => {
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
 }
 </style>
