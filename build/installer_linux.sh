@@ -25,8 +25,8 @@ cat << 'BANNER'
 +-+-+-+-+-+-+-+-+-+
 BANNER
 
-NAME=@@NAME@@ # replaced at CI
-VERSION=@@VERSION@@ # replaced at CI
+NAME=@@PLACEHOLDER@@ # placeholder for CI
+VERSION=@@PLACEHOLDER@@ # placeholder for CI
 REPO_URL=${REPO_URL:-https://github.com/VOICEVOX/voicevox}
 
 # Install directory

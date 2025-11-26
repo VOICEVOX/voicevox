@@ -469,15 +469,27 @@ jobs:
             mv archives.txt "${{ matrix.installer_artifact_name }}.7z.txt"
           done
 
-      - name: Upload Linux AppImage split to Artifacts
+      - name: Create Linux installer
+        if: endsWith(matrix.installer_artifact_name, '-appimage')
+        run: |
+          sed \
+            -e "s/^NAME=@@PLACEHOLDER@@ # placeholder for CI$/NAME=${{ matrix.installer_artifact_name }}/" \
+            -e "s/^VERSION=@@PLACEHOLDER@@ # placeholder for CI$/VERSION=${{ env.VOICEVOX_EDITOR_VERSION }}/" \
+            build/installer_linux.sh > VOICEVOX.${{ matrix.installer_artifact_name }}.${{ env.VOICEVOX_EDITOR_VERSION }}.sh
+
+          # Check that placeholders were replaced
+          ! grep "@@PLACEHOLDER@@" VOICEVOX.${{ matrix.installer_artifact_name }}.${{ env.VOICEVOX_EDITOR_VERSION }}.sh
+
+      - name: Upload Linux AppImage split and installer to Artifacts
         if: endsWith(matrix.installer_artifact_name, '-appimage') && github.event.inputs.upload_artifact == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.installer_artifact_name }}-release
           path: |-
             dist_electron/*.7z.*
+            VOICEVOX.${{ matrix.installer_artifact_name }}.${{ env.VOICEVOX_EDITOR_VERSION }}.sh
 
-      - name: Upload Linux AppImage split to Release Assets
+      - name: Upload Linux AppImage split and installer to Release Assets
         if: endsWith(matrix.installer_artifact_name, '-appimage') && (github.event.release.tag_name || github.event.inputs.version) != ''
         uses: softprops/action-gh-release@v2
         with:
@@ -485,34 +497,7 @@ jobs:
           tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
           files: |-
             dist_electron/*.7z.*
-          target_commitish: ${{ github.sha }}
-
-      - name: Create Linux installer
-        if: startsWith(matrix.os, 'ubuntu-')
-        run: |
-          sed \
-            -e "s/@@NAME@@.*/${{ matrix.installer_artifact_name }}/" \
-            -e "s/@@VERSION@@.*/${{ env.VOICEVOX_EDITOR_VERSION }}/" \
-            build/installer_linux.sh > voicevox-${{ matrix.installer_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}-installer.sh
-
-          # Check that .sh was sed'ded.
-          ! grep "replaced at CI" voicevox-${{ matrix.installer_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}-installer.sh
- 
-      - name: Upload Linux installer to Artifacts
-        if: startsWith(matrix.os, 'ubuntu-')
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ matrix.artifact_name }}-installer
-          path: |-
-            voicevox-${{ matrix.installer_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}-installer.sh
-
-      - name: Upload Linux installer to Release Assets
-        if: startsWith(matrix.os, 'ubuntu-') && (github.event.release.tag_name || github.event.inputs.version) != ''
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
-          files: "*-installer.sh"
-          prerelease: ${{ github.event.inputs.prerelease }}
+            VOICEVOX.${{ matrix.installer_artifact_name }}.${{ env.VOICEVOX_EDITOR_VERSION }}.sh
           target_commitish: ${{ github.sha }}
 
       - name: Upload macOS dmg to Artifacts
