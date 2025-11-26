@@ -73,9 +73,9 @@
             [cursorClass]: true,
           }"
           aria-label="シーケンサ"
-          @mousedown="onMouseDown"
-          @mouseenter="onMouseEnter"
-          @mouseleave="onMouseLeave"
+          @pointerdown="onPointerDown"
+          @pointerenter="onPointerEnter"
+          @pointerleave="onPointerLeave"
           @dblclick.stop="onDoubleClick"
           @wheel="onWheel"
           @scroll="onScroll"
@@ -104,10 +104,10 @@
             :nowPreviewing
             :previewMode
             :cursorClass
-            @barMousedown="onNoteBarMouseDown($event, note)"
+            @barPointerdown="onNoteBarPointerDown($event, note)"
             @barDoubleClick="onNoteBarDoubleClick($event, note)"
-            @leftEdgeMousedown="onNoteLeftEdgeMouseDown($event, note)"
-            @rightEdgeMousedown="onNoteRightEdgeMouseDown($event, note)"
+            @leftEdgePointerdown="onNoteLeftEdgePointerDown($event, note)"
+            @rightEdgePointerdown="onNoteRightEdgePointerDown($event, note)"
           />
           <SequencerLyricInput
             v-if="editingLyricNote != undefined"
@@ -559,11 +559,11 @@ const getCursorPosOnSequencer = (
   };
 };
 
-const onNoteBarMouseDown = (event: MouseEvent, note: Note) => {
+const onNoteBarPointerDown = (event: PointerEvent, note: Note) => {
   stateMachineProcess({
-    type: "mouseEvent",
+    type: "pointerEvent",
     targetArea: "Note",
-    mouseEvent: event,
+    pointerEvent: event,
     cursorPos: getCursorPosOnSequencer(event),
     note,
   });
@@ -579,27 +579,27 @@ const onNoteBarDoubleClick = (event: MouseEvent, note: Note) => {
   });
 };
 
-const onNoteLeftEdgeMouseDown = (event: MouseEvent, note: Note) => {
+const onNoteLeftEdgePointerDown = (event: PointerEvent, note: Note) => {
   stateMachineProcess({
-    type: "mouseEvent",
+    type: "pointerEvent",
     targetArea: "NoteLeftEdge",
-    mouseEvent: event,
+    pointerEvent: event,
     cursorPos: getCursorPosOnSequencer(event),
     note,
   });
 };
 
-const onNoteRightEdgeMouseDown = (event: MouseEvent, note: Note) => {
+const onNoteRightEdgePointerDown = (event: PointerEvent, note: Note) => {
   stateMachineProcess({
-    type: "mouseEvent",
+    type: "pointerEvent",
     targetArea: "NoteRightEdge",
-    mouseEvent: event,
+    pointerEvent: event,
     cursorPos: getCursorPosOnSequencer(event),
     note,
   });
 };
 
-const onMouseDown = (event: MouseEvent) => {
+const onPointerDown = (event: PointerEvent) => {
   const sequencerBodyElement = sequencerBody.value;
   if (!sequencerBodyElement) {
     throw new Error("sequencerBodyElement is null.");
@@ -611,28 +611,28 @@ const onMouseDown = (event: MouseEvent) => {
     cursorPos.y < sequencerBodyElement.clientHeight
   ) {
     stateMachineProcess({
-      type: "mouseEvent",
+      type: "pointerEvent",
       targetArea: "SequencerBody",
-      mouseEvent: event,
+      pointerEvent: event,
       cursorPos,
     });
   }
 };
 
-const onMouseMove = (event: MouseEvent) => {
+const onPointerMove = (event: PointerEvent) => {
   stateMachineProcess({
-    type: "mouseEvent",
+    type: "pointerEvent",
     targetArea: "Window",
-    mouseEvent: event,
+    pointerEvent: event,
     cursorPos: getCursorPosOnSequencer(event),
   });
 };
 
-const onMouseUp = (event: MouseEvent) => {
+const onPointerUp = (event: PointerEvent) => {
   stateMachineProcess({
-    type: "mouseEvent",
+    type: "pointerEvent",
     targetArea: "Window",
-    mouseEvent: event,
+    pointerEvent: event,
     cursorPos: getCursorPosOnSequencer(event),
   });
 };
@@ -669,11 +669,11 @@ const onLyricInputBlur = () => {
   });
 };
 
-const onMouseEnter = () => {
+const onPointerEnter = () => {
   showGuideLine.value = true;
 };
 
-const onMouseLeave = () => {
+const onPointerLeave = () => {
   showGuideLine.value = false;
 };
 
@@ -970,16 +970,16 @@ onActivated(() => {
 onActivated(() => {
   document.addEventListener("keydown", handleKeydown);
   document.addEventListener("keyup", handleKeyUp);
-  window.addEventListener("mousemove", onMouseMove);
-  window.addEventListener("mouseup", onMouseUp);
+  window.addEventListener("pointermove", onPointerMove);
+  window.addEventListener("pointerup", onPointerUp);
 });
 
 // リスナー解除
 onDeactivated(() => {
   document.removeEventListener("keydown", handleKeydown);
   document.removeEventListener("keyup", handleKeyUp);
-  window.removeEventListener("mousemove", onMouseMove);
-  window.removeEventListener("mouseup", onMouseUp);
+  window.removeEventListener("pointermove", onPointerMove);
+  window.removeEventListener("pointerup", onPointerUp);
 });
 
 // コンテキストメニュー
@@ -1237,6 +1237,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   backface-visibility: hidden;
   overflow: auto;
   position: relative;
+  touch-action: none;
 
   // スクロールバー上のカーソルが要素のものになってしまうためデフォルトカーソルにする
   &::-webkit-scrollbar-thumb:hover,
