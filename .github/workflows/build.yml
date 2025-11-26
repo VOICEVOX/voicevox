@@ -473,9 +473,9 @@ jobs:
         if: endsWith(matrix.installer_artifact_name, '-appimage')
         run: |
           sed \
-            -e "s/^NAME=@@PLACEHOLDER@@ # placeholder for CI$/NAME=${{ matrix.installer_artifact_name }}/" \
-            -e "s/^VERSION=@@PLACEHOLDER@@ # placeholder for CI$/VERSION=${{ env.VOICEVOX_EDITOR_VERSION }}/" \
-            build/installer_linux.sh > VOICEVOX.${{ matrix.installer_artifact_name }}.${{ env.VOICEVOX_EDITOR_VERSION }}.sh
+            -e 's/^NAME=@@PLACEHOLDER@@ # placeholder for CI$/NAME="${{ matrix.installer_artifact_name }}"/' \
+            -e 's/^VERSION=@@PLACEHOLDER@@ # placeholder for CI$/VERSION="${{ env.VOICEVOX_EDITOR_VERSION }}"/' \
+            build/installer_linux.templete.sh > VOICEVOX.${{ matrix.installer_artifact_name }}.${{ env.VOICEVOX_EDITOR_VERSION }}.sh
 
           # Check that placeholders were replaced
           ! grep "@@PLACEHOLDER@@" VOICEVOX.${{ matrix.installer_artifact_name }}.${{ env.VOICEVOX_EDITOR_VERSION }}.sh
