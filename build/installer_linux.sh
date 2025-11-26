@@ -122,61 +122,7 @@ echo "[-] 7z command: ${COMMAND_7Z}"
 
 LATEST_RELEASE_URL=$REPO_URL/releases/latest
 
-if [ -z "${VERSION}" ]; then
-    echo "[+] Checking the latest version..."
-
-    # releases/tag/{version}
-    RELEASE_TAG_URL=$(curl -fsSL -o /dev/null -w '%{url_effective}' "${LATEST_RELEASE_URL}")
-
-    # extract version (release tag name) from URL
-    VERSION=$(echo "${RELEASE_TAG_URL}" | sed 's/.*\/\(.*\)$/\1/')
-    echo "[-] Install version: ${VERSION} (latest)"
-else
-    echo "[-] Install version: ${VERSION}"
-fi
-
-IFS=" " read -r -a VERSION_ARRAY <<< "${VERSION//[.+-]/ }"
-if [ "${VERSION_ARRAY[0]}" -eq 0 ] && [ "${VERSION_ARRAY[1]}" -le 14 ]; then
-    # Check when version < 0.15
-    echo "[+] Checking runtime prerequisites..."
-
-    PATH=${PATH}:/usr/local/sbin:/usr/sbin:/sbin
-    if ! command -v ldconfig &> /dev/null; then
-        cat << EOS && exit 1
-[!] Command 'ldconfig' not found
-
-Required to check existence of required libraries.
-You must add a directory of contain ldconfig command to PATH environment variable.
-
-EOS
-    fi
-
-    if { ldconfig -p | grep 'libsndfile\.so';} &>/dev/null; then
-        echo "[-] libsndfile: OK"
-    elif [ -d /usr/local/Cellar/libsndfile ]; then
-        echo "[-] libsndfile: OK"
-    else
-        cat << 'EOS'
-[!] libsndfile: not found
-
-Required to run VOICEVOX ENGINE
-
-Ubuntu/Debian:
-    sudo apt install libsndfile1
-
-CentOS/Fedora:
-    sudo dnf install libsndfile
-Or
-    sudo yum install libsndfile
-
-Arch Linux
-    sudo pacman -S libsndfile
-EOS
-        if [ "${IGNORE_RTCOND}" != "1" ]; then
-            exit 1
-        fi
-    fi
-fi
+echo "[-] Install version: ${VERSION}"
 
 RELEASE_URL=${REPO_URL}/releases/download/${VERSION}
 ARCHIVE_LIST_URL=${RELEASE_URL}/${NAME}.7z.txt
