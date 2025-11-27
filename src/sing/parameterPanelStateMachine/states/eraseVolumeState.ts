@@ -85,11 +85,6 @@ export class EraseVolumeState
     if (this.innerContext == undefined) {
       throw new Error("innerContext is undefined.");
     }
-    if (context.nowPlaying.value) {
-      this.applyPreview = false;
-      setNextState(this.returnStateId, undefined);
-      return;
-    }
     if (context.previewVolumeEdit.value == undefined) {
       throw new Error("previewVolumeEdit is undefined.");
     }
