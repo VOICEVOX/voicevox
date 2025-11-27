@@ -1,11 +1,21 @@
 <template>
-  <div>パラメーターパネル</div>
-  <!-- TODO: 音素タイミングなどを実装する -->
+  <div class="sequencer-parameter-panel">
+    <SequencerVolumeEditor :offsetX="props.offsetX" />
+  </div>
 </template>
 
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import SequencerVolumeEditor from "@/components/Sing/SequencerVolumeEditor.vue";
+
+const props = defineProps<{
+  offsetX: number;
+}>();
+</script>
 
 <style scoped lang="scss">
-@use "@/styles/v2/variables" as vars;
-@use "@/styles/colors" as colors;
+.sequencer-parameter-panel {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+}
 </style>
