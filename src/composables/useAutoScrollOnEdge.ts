@@ -10,6 +10,10 @@ import { getXInBorderBox, getYInBorderBox } from "@/sing/viewHelper";
 export const useAutoScrollOnEdge = (
   element: Ref<HTMLElement | null>,
   enable: ComputedRef<boolean>,
+  options?: {
+    clampOutsideX?: boolean;
+    clampOutsideY?: boolean;
+  },
 ) => {
   const baseSpeed = 100;
   const accelerationFactor = 1.7;
@@ -103,16 +107,43 @@ export const useAutoScrollOnEdge = (
       throw new Error("element.value is null.");
     }
     if (autoScrollState != undefined) {
-      const x = getXInBorderBox(event.clientX, element.value);
-      const y = getYInBorderBox(event.clientY, element.value);
+      let x = getXInBorderBox(event.clientX, element.value);
+      let y = getYInBorderBox(event.clientY, element.value);
       const width = element.value.clientWidth;
       const height = element.value.clientHeight;
-      // パラメータパネルなど別領域でのドラッグで不要にスクロールしないよう、
-      // 要素領域外のときはオートスクロールを無効化する
-      if (x < 0 || y < 0 || x > width || y > height) {
-        autoScrollState.cursorPos = undefined;
+
+      const inside = x >= 0 && y >= 0 && x <= width && y <= height;
+
+      if (inside) {
+        autoScrollState.cursorPos = new Vector2D(x, y);
         return;
       }
+
+      // outside: either clamp or disable depending on options
+      // - clampOutsideX: UIパネル外にカーソルが出ても水平方向の自動スクロールを続けたい場合（VolumeEditorなど）
+      // - clampOutsideY: 縦方向スクロールは抑えつつ、Xはクランプして継続したい場合
+      // いずれも指定されていない場合は、要素外ではスクロールを止める（ScoreSequencer既存挙動）
+      if (options?.clampOutsideX ?? false) {
+        x = Math.min(Math.max(x, 0), width);
+      } else {
+        // if not clamping X, but outside horizontally, disable
+        if (x < 0 || x > width) {
+          autoScrollState.cursorPos = undefined;
+          return;
+        }
+      }
+
+      if (options?.clampOutsideY ?? false) {
+        if (y < 0 || y > height) {
+          y = height / 2;
+        }
+      } else {
+        if (y < 0 || y > height) {
+          autoScrollState.cursorPos = undefined;
+          return;
+        }
+      }
+
       autoScrollState.cursorPos = new Vector2D(x, y);
     }
   };

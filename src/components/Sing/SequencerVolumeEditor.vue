@@ -127,7 +127,10 @@ const enableAutoScrollOnEdge = computed(
   () => volumePreviewMode.value !== "IDLE",
 );
 if (sequencerBody != null) {
-  useAutoScrollOnEdge(sequencerBody, enableAutoScrollOnEdge);
+  useAutoScrollOnEdge(sequencerBody, enableAutoScrollOnEdge, {
+    clampOutsideX: true,
+    clampOutsideY: true,
+  });
 }
 
 const setTool = (value: VolumeEditTool) => {
