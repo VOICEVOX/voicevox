@@ -412,9 +412,8 @@ mv "${DESKTOP_FILE}" "${DESKTOP_ENTRY_INSTALL_DIR}"
 # Install icon
 echo "[+] Installing icon..."
 
-mkdir -p "${ICON_INSTALL_DIR}"
+install -Dm644 squashfs-root/*.png -t "${ICON_INSTALL_DIR}"
 cp -r squashfs-root/usr/share/icons/* "${ICON_INSTALL_DIR}"
-cp squashfs-root/*.png "${ICON_INSTALL_DIR}"
 
 # Register file association
 echo "[+] Registering file association..."
