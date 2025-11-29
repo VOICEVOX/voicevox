@@ -196,10 +196,13 @@ export class DrawPitchState
       }
 
       // 不連続箇所を滑らかにつなぐ
-      // NOTE: 最大6フレームかけて滑らかにする
+      // NOTE: 最大6フレーム（左右各3フレーム）かけて滑らかにする
       if (jumpIndices.length !== 0) {
         data = data.map((value) => Math.log(value));
-        applySmoothTransition(data, jumpIndices, 6);
+        applySmoothTransition(data, jumpIndices, {
+          left: 3,
+          right: 3,
+        });
         data = data.map((value) => Math.exp(value));
       }
 

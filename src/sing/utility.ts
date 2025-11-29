@@ -191,28 +191,42 @@ export function applyGaussianFilter(data: number[], sigma: number) {
   }
 }
 
+/**
+ * Smoothstep補間関数。0から1へ滑らかに遷移するS字カーブを生成する。
+ *
+ * @param x - 補間位置（0〜1）
+ * @returns 補間された値（0〜1）
+ */
 function smoothStep(x: number) {
   const clampedX = Math.min(1.0, Math.max(0.0, x));
   return clampedX * clampedX * (3.0 - 2.0 * clampedX);
 }
 
 /**
- * 複数の不連続箇所を、滑らかに遷移させてつなぐ。
+ * 配列内の複数の不連続箇所（ジャンプ）を、滑らかな遷移でつなぐ。
  *
- * @param data - 対象のデータ
- * @param jumpIndices - 不連続箇所のインデックスの配列
- * @param maxTransitionLength - 遷移長の上限
+ * この関数は `data` 配列を破壊的に変更する。
+ * ジャンプは `data[jumpIndex - 1]` と `data[jumpIndex]` の間に存在し、
+ * その中心を基準に左右へsmoothstep関数で重み付けされた遷移が適用される。
+ * 遷移長は配列の境界や隣接ジャンプまでの距離により自動的に制限される。
+ * 複数のジャンプは順次処理され、遷移範囲が重複する場合は両方の遷移が適用される。
+ *
+ * @param data - 対象のデータ配列
+ * @param jumpIndices - ジャンプのインデックスの配列
+ * @param maxTransitionLengths - 各ジャンプの左右の遷移長の上限。配列の場合は各ジャンプごとに異なる遷移長を指定できる。
  */
 export function applySmoothTransition(
   data: number[],
   jumpIndices: number[],
-  maxTransitionLength: number,
+  maxTransitionLengths:
+    | { left: number; right: number }
+    | { left: number; right: number }[],
 ) {
+  const maxTransitionLengthsArray = Array.isArray(maxTransitionLengths)
+    ? maxTransitionLengths
+    : createArray(jumpIndices.length, () => maxTransitionLengths);
   if (jumpIndices.some((value) => !Number.isInteger(value))) {
     throw new Error("jumpIndices must contain integers.");
-  }
-  if (jumpIndices.some((value) => value <= 0 || value >= data.length)) {
-    throw new Error("jumpIndex must satisfy 0 < jumpIndex < data.length.");
   }
   if (!isSorted(jumpIndices, (a, b) => a - b)) {
     throw new Error("jumpIndices must be sorted in ascending order.");
@@ -222,59 +236,70 @@ export function applySmoothTransition(
       throw new Error("jumpIndices must not contain duplicate values.");
     }
   }
-  if (!Number.isFinite(maxTransitionLength)) {
-    throw new Error("maxTransitionLength must be a finite number.");
+  if (jumpIndices.length !== 0) {
+    if (jumpIndices[0] <= 0 || getLast(jumpIndices) >= data.length) {
+      throw new Error("jumpIndex must satisfy 0 < jumpIndex < data.length.");
+    }
   }
-  if (maxTransitionLength < 2) {
-    throw new Error("maxTransitionLength must be greater than or equal to 2.");
+  if (maxTransitionLengthsArray.length !== jumpIndices.length) {
+    throw new Error(
+      "maxTransitionLengths must have the same length as jumpIndices.",
+    );
+  }
+  for (let i = 0; i < maxTransitionLengthsArray.length; i++) {
+    const { left, right } = maxTransitionLengthsArray[i];
+
+    if (!Number.isInteger(left) || !Number.isInteger(right)) {
+      throw new Error("maxTransitionLengths must contain only integers.");
+    }
+    if (left < 0 || right < 0) {
+      throw new Error("maxTransitionLengths must be non-negative.");
+    }
+    if (left === 0 && right === 0) {
+      throw new Error("maxTransitionLengths must not be both zero.");
+    }
   }
 
-  // 各不連続箇所に対して処理
+  // 各ジャンプに対して遷移を適用
   for (let i = 0; i < jumpIndices.length; i++) {
     const jumpIndex = jumpIndices[i];
-
-    // 初期値は上限値
-    let transitionLength = maxTransitionLength;
-
-    // 他の不連続になっている箇所や配列の端と近すぎる場合は、
-    // 他の処理と範囲が重ならないように遷移長を短く調整する
-    if (i > 0) {
-      const prevJumpIndex = jumpIndices[i - 1];
-      transitionLength = Math.min(
-        (jumpIndex - prevJumpIndex) * 2,
-        transitionLength,
-      );
-    } else {
-      transitionLength = Math.min(jumpIndex * 2, transitionLength);
-    }
-    if (i < jumpIndices.length - 1) {
-      const nextJumpIndex = jumpIndices[i + 1];
-      transitionLength = Math.min(
-        (nextJumpIndex - jumpIndex) * 2,
-        transitionLength,
-      );
-    } else {
-      transitionLength = Math.min(
-        (data.length - jumpIndex) * 2,
-        transitionLength,
-      );
-    }
-
-    // 不連続箇所の値の差
     const jumpSize = data[jumpIndex] - data[jumpIndex - 1];
 
-    // ジャンプの中心と、遷移の開始・終了位置
-    const jumpCenter = jumpIndex - 0.5;
-    const transitionStart = jumpCenter - transitionLength / 2;
-    const transitionEnd = transitionStart + transitionLength;
+    // ジャンプサイズが0の場合は処理をスキップ
+    if (jumpSize === 0) {
+      continue;
+    }
 
-    // 適用するインデックス範囲（配列境界でクリップ）
+    // 利用可能なスペースを計算
+    const leftSpace = i === 0 ? jumpIndex : jumpIndex - jumpIndices[i - 1];
+    const rightSpace =
+      i === jumpIndices.length - 1
+        ? data.length - jumpIndex
+        : jumpIndices[i + 1] - jumpIndex;
+
+    // 遷移長を利用可能なスペースに制限
+    const leftTransitionLength = Math.min(
+      leftSpace,
+      maxTransitionLengthsArray[i].left,
+    );
+    const rightTransitionLength = Math.min(
+      rightSpace,
+      maxTransitionLengthsArray[i].right,
+    );
+
+    // 遷移範囲を計算（ジャンプの中心を基準に左右に広がる）
+    const jumpCenter = jumpIndex - 0.5;
+    const transitionStart = jumpCenter - leftTransitionLength;
+    const transitionEnd = jumpCenter + rightTransitionLength;
+    const totalTransitionLength = leftTransitionLength + rightTransitionLength;
+
+    // 整数インデックス範囲に変換（配列境界内にクリップ）
     const startIndex = Math.max(0, Math.ceil(transitionStart));
     const endIndex = Math.min(data.length, Math.floor(transitionEnd) + 1);
 
-    // 遷移を適用
+    // smoothStepで重み付けした遷移を適用
     for (let j = startIndex; j < endIndex; j++) {
-      const normalizedPosition = (j - transitionStart) / transitionLength;
+      const normalizedPosition = (j - transitionStart) / totalTransitionLength;
       const weight = smoothStep(normalizedPosition);
 
       if (j < jumpCenter) {
