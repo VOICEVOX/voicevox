@@ -11,7 +11,7 @@ import AsyncLock from "async-lock";
 import { useStore } from "@/store";
 import { useMounted } from "@/composables/useMounted";
 import {
-  applyPitchEditWithSmoothing,
+  applyPitchEdit,
   frequencyToNoteNumber,
   secondToTick,
 } from "@/sing/domain";
@@ -70,7 +70,7 @@ const singingGuidesInSelectedTrack = computed(() => {
     const clonedQuery = cloneWithUnwrapProxy(phraseQuery);
     clonedQuery.f0 = cloneWithUnwrapProxy(phraseSingingPitch);
     if (pitchEditData.value != undefined) {
-      applyPitchEditWithSmoothing(
+      applyPitchEdit(
         clonedQuery,
         phrase.startTime,
         pitchEditData.value,

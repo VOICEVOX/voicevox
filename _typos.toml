@@ -18,7 +18,7 @@ GAM = "GAM" # VuexのGetter・Action・Mutationの略
 
 [files]
 extend-exclude = [
-    "package-lock.json",
+    "pnpm-lock.yaml",
     "*.svg",
     "public/res/macos-big-sur-software-update-rosetta-alert.jpg", # macos-big-surは正しい固有名詞
 ]
