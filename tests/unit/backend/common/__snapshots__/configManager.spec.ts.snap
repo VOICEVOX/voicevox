@@ -30,6 +30,7 @@ exports[`0.13.0からマイグレーションできる 1`] = `
     "enableInterrogativeUpspeak": false,
     "enableMorphing": false,
     "shouldKeepTuningOnTextChange": false,
+    "showEditedPitch": false,
     "showParameterPanel": false,
   },
   "hotkeySettings": [
