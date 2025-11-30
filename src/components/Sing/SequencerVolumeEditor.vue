@@ -52,6 +52,8 @@ import { tickToSecond } from "@/sing/domain";
 import { clamp } from "@/sing/utility";
 import { getTotalTicks } from "@/sing/rulerHelper"; // TODO: ルーラーから切り出して共通化する
 import { numMeasuresInjectionKey } from "@/components/Sing/ScoreSequencer.vue"; // TODO: これも共通化できそう
+import { createLogger } from "@/helpers/log";
+const { info } = createLogger("SequencerPitch");
 
 const store = useStore();
 const { volumePreviewEdit, volumeStateMachineProcess } =
@@ -102,7 +104,7 @@ const setTool = (value: VolumeEditTool) => {
   void store.actions.SET_SEQUENCER_VOLUME_TOOL({
     sequencerVolumeTool: value,
   });
-  console.debug(`[ParameterPanelVolume] tool -> ${value}`);
+  info(`[ParameterPanelVolume] tool -> ${value}`);
 };
 
 onMounted(() => {
@@ -179,7 +181,7 @@ const dispatchVolumeEditorEvent = (
     position,
   });
 
-  console.debug(`[ParameterPanelVolume] ${targetArea}`, position);
+  info(`[ParameterPanelVolume] ${targetArea}`, position);
 };
 
 const onSurfaceMouseDown = (event: MouseEvent) => {
@@ -234,7 +236,7 @@ watch(
     // NOTE: デバッグ用
     const raw = next != undefined ? toRaw(next) : undefined;
     if (raw) {
-      console.debug("[VolumeEditor] state:", raw);
+      info("[VolumeEditor] state:", raw);
     }
   },
   { deep: false },
