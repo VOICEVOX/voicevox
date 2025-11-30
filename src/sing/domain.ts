@@ -780,6 +780,12 @@ export function applyPitchEdit(
     }
   }
 
+  // 編集データが全くない場合は何もしない
+  const hasEditData = frameInfos.some((frameInfo) => frameInfo.isEdited);
+  if (!hasEditData) {
+    return;
+  }
+
   // 編集/未編集の境界（ジャンプポイント）を検出し、遷移長を計算する
   const jumpIndicesInPhrase: number[] = [];
   const maxTransitionLengths: { left: number; right: number }[] = [];
