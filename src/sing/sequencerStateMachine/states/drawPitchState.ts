@@ -134,13 +134,16 @@ export class DrawPitchState
 
     if (this.applyPreview) {
       const editStartFrame = context.previewPitchEdit.value.startFrame;
-      let data = context.previewPitchEdit.value.data;
-      const editEndFrame = editStartFrame + data.length;
+      const previewEditData = context.previewPitchEdit.value.data;
+      const editEndFrame = editStartFrame + previewEditData.length;
+
+      // プレビュー中の編集データを対数スケールに変換する
+      const logPreviewEditData = previewEditData.map((value) =>
+        Math.log(value),
+      );
 
       // 平滑化を行う
-      data = data.map((value) => Math.log(value));
-      applyGaussianFilter(data, 0.7);
-      data = data.map((value) => Math.exp(value));
+      applyGaussianFilter(logPreviewEditData, 0.7);
 
       const targetTrack = getOrThrow(
         context.store.state.tracks,
@@ -170,21 +173,26 @@ export class DrawPitchState
         }
       }
 
-      // 編集区間の前後に編集データがあれば、それらを結合する
+      // 前後の既存編集データを対数スケールで取得
+      let logFrontData: number[] = [];
       if (contiguousRegionStartFrame !== editStartFrame) {
-        const frontData = pitchEditData.slice(
-          contiguousRegionStartFrame,
-          editStartFrame,
-        );
-        data = [...frontData, ...data];
+        logFrontData = pitchEditData
+          .slice(contiguousRegionStartFrame, editStartFrame)
+          .map((value) => Math.log(value));
       }
+      let logBackData: number[] = [];
       if (contiguousRegionEndFrame !== editEndFrame) {
-        const backData = pitchEditData.slice(
-          editEndFrame,
-          contiguousRegionEndFrame,
-        );
-        data = [...data, ...backData];
+        logBackData = pitchEditData
+          .slice(editEndFrame, contiguousRegionEndFrame)
+          .map((value) => Math.log(value));
       }
+
+      // 対数スケールでデータを結合
+      const logCombinedData = [
+        ...logFrontData,
+        ...logPreviewEditData,
+        ...logBackData,
+      ];
 
       // 既存の編集データと新しい編集データの境界を不連続箇所として記録する
       const jumpIndices: number[] = [];
@@ -198,16 +206,19 @@ export class DrawPitchState
       // 不連続箇所を滑らかにつなぐ
       // NOTE: 最大6フレーム（左右各3フレーム）かけて滑らかにする
       if (jumpIndices.length !== 0) {
-        data = data.map((value) => Math.log(value));
-        applySmoothTransition(data, jumpIndices, {
+        applySmoothTransition(logCombinedData, jumpIndices, {
           left: 3,
           right: 3,
         });
-        data = data.map((value) => Math.exp(value));
       }
 
+      // 対数スケールから元のスケールに戻す
+      const finalPitchEditData = logCombinedData.map((value) =>
+        Math.exp(value),
+      );
+
       void context.store.actions.COMMAND_SET_PITCH_EDIT_DATA({
-        pitchArray: data,
+        pitchArray: finalPitchEditData,
         startFrame: contiguousRegionStartFrame,
         trackId: this.targetTrackId,
       });
