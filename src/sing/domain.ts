@@ -738,12 +738,14 @@ export function applyPitchEdit(
   const processStartFrame = Math.max(0, phraseQueryStartFrame);
   const processEndFrame = phraseQueryEndFrame;
 
+  const logWithMinOne = (value: number) => Math.log(Math.max(1, value));
+
   const frameInfos: {
     isEdited: boolean;
     isVoiced: boolean;
     indexInTrack: number;
   }[] = [];
-  const logF0 = f0.map((value) => Math.log(value));
+  const logF0 = f0.map(logWithMinOne);
 
   // 元の（推論された）ピッチとの差分を格納する配列
   const logF0Diff: number[] = [];
@@ -770,7 +772,7 @@ export function applyPitchEdit(
 
     if (isEdited) {
       const originalLogF0 = logF0[indexInPhrase];
-      const editedLogF0 = Math.log(editValue);
+      const editedLogF0 = logWithMinOne(editValue);
 
       logF0Diff.push(editedLogF0 - originalLogF0);
     } else {
