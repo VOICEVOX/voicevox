@@ -1,5 +1,5 @@
-import { getEngineAndVvppController } from "../engineAndVvppController";
-import { WindowManager, type WindowLoadOption } from "./windowManagerBase";
+import { getEngineAndVvppController } from "../../engineAndVvppController";
+import { WindowManager, type WindowLoadOption } from "./base";
 import { createLogger } from "@/helpers/log";
 
 const log = createLogger("WindowManager");

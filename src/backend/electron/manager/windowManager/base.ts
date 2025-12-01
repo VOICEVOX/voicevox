@@ -9,8 +9,8 @@ import {
   SaveDialogOptions,
 } from "electron";
 import windowStateKeeper from "electron-window-state";
-import { getConfigManager } from "../electronConfig";
-import { ipcMainSendProxy } from "../ipc";
+import { getConfigManager } from "../../electronConfig";
+import { ipcMainSendProxy } from "../../ipc";
 import { themes } from "@/domain/theme";
 
 export type WindowManagerOption = {

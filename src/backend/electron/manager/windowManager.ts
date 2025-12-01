@@ -1,10 +1,10 @@
-import { WindowManager } from "./windowManagerBase";
+import { WindowManager } from "./windowManager/base";
 import type {
   WindowManagerOption,
   WindowLoadOption,
-} from "./windowManagerBase";
-import { IndexWindowManager } from "./indexWindowManager";
-import { WelcomeWindowManager } from "./welcomeWindowManager";
+} from "./windowManager/base";
+import { IndexWindowManager } from "./windowManager/main";
+import { WelcomeWindowManager } from "./windowManager/welcome";
 
 export type WindowManagerInitializeOption = WindowManagerOption & {
   windowType?: "index" | "welcome";

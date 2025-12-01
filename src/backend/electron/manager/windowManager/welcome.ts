@@ -1,4 +1,4 @@
-import { WindowManager, type WindowLoadOption } from "./windowManagerBase";
+import { WindowManager, type WindowLoadOption } from "./base";
 
 export class WelcomeWindowManager extends WindowManager {
   protected buildLoadUrl(_obj: WindowLoadOption = {}) {
