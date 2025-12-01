@@ -12,13 +12,13 @@ import windowStateKeeper from "electron-window-state";
 import { getConfigManager } from "../electronConfig";
 import { getEngineAndVvppController } from "../engineAndVvppController";
 import { ipcMainSendProxy } from "../ipc";
+import { getAppStateController } from "../appStateController";
 import { themes } from "@/domain/theme";
 import { createLogger } from "@/helpers/log";
 
 const log = createLogger("WindowManager");
 
 type WindowManagerOption = {
-  appStateGetter: () => { willQuit: boolean };
   staticDir: string;
   isDevelopment: boolean;
   isTest: boolean;
@@ -26,13 +26,11 @@ type WindowManagerOption = {
 
 class WindowManager {
   private _win: BrowserWindow | undefined;
-  private appStateGetter: () => { willQuit: boolean };
   private staticDir: string;
   private isDevelopment: boolean;
   private isTest: boolean;
 
   constructor(payload: WindowManagerOption) {
-    this.appStateGetter = payload.appStateGetter;
     this.staticDir = payload.staticDir;
     this.isDevelopment = payload.isDevelopment;
     this.isTest = payload.isTest;
@@ -106,14 +104,9 @@ class WindowManager {
       }
     });
     win.on("close", (event) => {
-      const appState = this.appStateGetter();
-      if (!appState.willQuit) {
-        event.preventDefault();
-        ipcMainSendProxy.CHECK_EDITED_AND_NOT_SAVE(win, {
-          closeOrReload: "close",
-        });
-        return;
-      }
+      void getAppStateController().onQuitRequest({
+        preventQuit: () => event.preventDefault(),
+      });
     });
     win.on("closed", () => {
       this._win = undefined;
@@ -228,6 +221,10 @@ class WindowManager {
   public zoomReset() {
     const win = this.getWindow();
     win.webContents.setZoomFactor(1);
+  }
+
+  public closeWindow() {
+    this.getWindow().close();
   }
 
   public destroyWindow() {

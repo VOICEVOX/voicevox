@@ -17,6 +17,7 @@ import {
   SystemError,
   TextAsset,
 } from "@/type/preload";
+import {getAppStateController} from "./appStateController";
 
 // エンジンのフォルダを開く
 function openEngineDirectory(engineId: EngineId) {
@@ -86,13 +87,11 @@ async function retryShowSaveDialogWhileSafeDir<
 }
 
 export function getIpcMainHandle(params: {
-  appStateGetter: () => { willQuit: boolean };
   staticDirPath: string;
   appDirPath: string;
   initialFilePathGetter: () => string | undefined;
 }): IpcMainHandle {
-  const { appStateGetter, staticDirPath, appDirPath, initialFilePathGetter } =
-    params;
+  const { staticDirPath, appDirPath, initialFilePathGetter } = params;
 
   const configManager = getConfigManager();
   const engineAndVvppController = getEngineAndVvppController();
@@ -215,9 +214,7 @@ export function getIpcMainHandle(params: {
     },
 
     CLOSE_WINDOW: () => {
-      const appState = appStateGetter();
-      appState.willQuit = true;
-      windowManager.destroyWindow();
+      getAppStateController().shutdown();
     },
 
     MINIMIZE_WINDOW: () => {
