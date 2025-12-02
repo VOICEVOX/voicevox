@@ -16,12 +16,21 @@ export class AppStateController {
       case "unsaved": {
         log.info("Checking for unsaved edits before quitting");
         DI.preventQuit();
-        ipcMainSendProxy.CHECK_EDITED_AND_NOT_SAVE(
-          getWindowManager().getWindow(),
-          {
-            closeOrReload: "close",
-          },
-        );
+        try {
+          ipcMainSendProxy.CHECK_EDITED_AND_NOT_SAVE(
+            getWindowManager().getWindow(),
+            {
+              closeOrReload: "close",
+            },
+          );
+        } catch (error) {
+          log.error(
+            "Error while sending CHECK_EDITED_AND_NOT_SAVE IPC message:",
+            error,
+          );
+          log.info("Proceeding to shutdown without checking for unsaved edits");
+          this.shutdown();
+        }
         break;
       }
       case "clean": {
