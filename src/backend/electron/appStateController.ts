@@ -7,6 +7,9 @@ import { createLogger } from "@/helpers/log";
 
 const log = createLogger("AppStateController");
 
+// アプリの状態を管理するシングルトン。
+//
+// TODO: アプリの起動処理をここに移す
 export class AppStateController {
   private quitState: "unsaved" | "clean" | "done" = "unsaved";
 
