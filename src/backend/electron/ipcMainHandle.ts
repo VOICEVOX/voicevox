@@ -214,7 +214,8 @@ export function getIpcMainHandle(params: {
     },
 
     CLOSE_WINDOW: () => {
-      getAppStateController().shutdown();
+      const appStateController = getAppStateController();
+      appStateController.shutdown();
     },
 
     MINIMIZE_WINDOW: () => {

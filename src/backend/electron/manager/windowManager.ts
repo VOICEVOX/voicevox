@@ -104,7 +104,8 @@ class WindowManager {
       }
     });
     win.on("close", (event) => {
-      void getAppStateController().onQuitRequest({
+      const appStateController = getAppStateController();
+      void appStateController.onQuitRequest({
         preventQuit: () => event.preventDefault(),
       });
     });
