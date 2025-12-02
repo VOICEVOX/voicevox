@@ -11,8 +11,10 @@ export class AppStateController {
   private quitState: "unsaved" | "clean" | "done" = "unsaved";
 
   onQuitRequest(DI: { preventQuit: () => void }): Promise<void> {
+    log.info(`onQuitRequest called. Current quitState: ${this.quitState}`);
     switch (this.quitState) {
       case "unsaved": {
+        log.info("Checking for unsaved edits before quitting");
         DI.preventQuit();
         ipcMainSendProxy.CHECK_EDITED_AND_NOT_SAVE(
           getWindowManager().getWindow(),
@@ -23,10 +25,13 @@ export class AppStateController {
         break;
       }
       case "clean": {
+        log.info("Performing cleanup before quitting");
+        DI.preventQuit();
         this.quitState = "done";
         return this.cleanupEngine();
       }
       case "done":
+        log.info("Quit process already done. Proceeding to quit.");
         break;
       default:
         throw new ExhaustiveError(this.quitState);
