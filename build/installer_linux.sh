@@ -76,9 +76,6 @@ CentOS/Fedora:
     sudo dnf install curl
 Or
     sudo yum install curl
-
-Arch Linux:
-    sudo pacman -S curl
 EOS
 fi
 
@@ -119,9 +116,6 @@ Or
 
 Arch Linux:
     sudo pacman -S 7zip
-
-MacOS:
-    brew install p7zip
 EOS
 fi
 echo "[-] 7z command: ${COMMAND_7Z}"
@@ -177,9 +171,6 @@ Or
 
 Arch Linux
     sudo pacman -S libsndfile
-
-MacOS:
-    brew install libsndfile
 EOS
         if [ "${IGNORE_RTCOND}" != "1" ]; then
             exit 1
@@ -349,7 +340,7 @@ BANNER
 VOICEVOX_INSTALLED_FILES=(
     "${DESKTOP_ENTRY_INSTALL_DIR}/voicevox.desktop"
     "${ICON_INSTALL_DIR}/voicevox.png"
-    "${ICON_INSTALL_DIR}/hicolor/0x0/apps/voicevox.png"
+    "${ICON_INSTALL_DIR}/hicolor/256x256/apps/voicevox.png"
     "${MIME_INSTALL_DIR}/packages/voicevox.xml"
 )
 
