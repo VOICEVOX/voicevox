@@ -9,6 +9,7 @@ import { IpcMainHandle } from "./ipc";
 import { getEngineInfoManager } from "./manager/engineInfoManager";
 import { getEngineProcessManager } from "./manager/engineProcessManager";
 import { getWindowManager } from "./manager/windowManager";
+import { getAppStateController } from "./appStateController";
 import { AssetTextFileNames } from "@/type/staticResources";
 import { failure, success } from "@/type/result";
 import {
@@ -86,13 +87,11 @@ async function retryShowSaveDialogWhileSafeDir<
 }
 
 export function getIpcMainHandle(params: {
-  appStateGetter: () => { willQuit: boolean };
   staticDirPath: string;
   appDirPath: string;
   initialFilePathGetter: () => string | undefined;
 }): IpcMainHandle {
-  const { appStateGetter, staticDirPath, appDirPath, initialFilePathGetter } =
-    params;
+  const { staticDirPath, appDirPath, initialFilePathGetter } = params;
 
   const configManager = getConfigManager();
   const engineAndVvppController = getEngineAndVvppController();
@@ -215,9 +214,8 @@ export function getIpcMainHandle(params: {
     },
 
     CLOSE_WINDOW: () => {
-      const appState = appStateGetter();
-      appState.willQuit = true;
-      windowManager.destroyWindow();
+      const appStateController = getAppStateController();
+      appStateController.shutdown();
     },
 
     MINIMIZE_WINDOW: () => {
