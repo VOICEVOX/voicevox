@@ -1,4 +1,9 @@
-import { calculateHash, getNext, getPrev } from "./utility";
+import {
+  applySmoothTransition,
+  calculateHash,
+  getNext,
+  getPrev,
+} from "@/sing/utility";
 import { convertLongVowel, moraPattern } from "@/domain/japanese";
 import {
   Phrase,
@@ -713,7 +718,6 @@ export function applyPitchEdit(
       "The frame rate between the phrase query and the editor does not match.",
     );
   }
-  const unvoicedPhonemes = UNVOICED_PHONEMES;
   const f0 = phraseQuery.f0;
   const phonemes = phraseQuery.phonemes;
 
@@ -730,16 +734,132 @@ export function applyPitchEdit(
   );
   const phraseQueryEndFrame = phraseQueryStartFrame + phraseQueryFrameLength;
 
-  // ピッチ編集をf0に適用する
-  const startFrame = Math.max(0, phraseQueryStartFrame);
-  const endFrame = Math.min(pitchEditData.length, phraseQueryEndFrame);
-  for (let i = startFrame; i < endFrame; i++) {
-    const phoneme = framePhonemes[i - phraseQueryStartFrame];
-    const voiced = !unvoicedPhonemes.includes(phoneme);
-    if (voiced && pitchEditData[i] !== VALUE_INDICATING_NO_DATA) {
-      f0[i - phraseQueryStartFrame] = pitchEditData[i];
+  // 処理対象のフレーム範囲を計算（負のフレームは0にクリップ）
+  const processStartFrame = Math.max(0, phraseQueryStartFrame);
+  const processEndFrame = phraseQueryEndFrame;
+
+  const logWithMinOne = (value: number) => Math.log(Math.max(1, value));
+
+  const frameInfos: {
+    isEdited: boolean;
+    isVoiced: boolean;
+    indexInTrack: number;
+  }[] = [];
+  const logF0 = f0.map(logWithMinOne);
+
+  // 元の（推論された）ピッチとの差分を格納する配列
+  const logF0Diff: number[] = [];
+
+  // 各フレームの情報を収集し、対数f0の差分を計算する
+  for (let i = processStartFrame; i < processEndFrame; i++) {
+    const indexInPhrase = i - phraseQueryStartFrame;
+    const phoneme = framePhonemes[indexInPhrase];
+    const isVoiced = !UNVOICED_PHONEMES.includes(phoneme);
+
+    // NOTE: 無声区間またはpitchEditDataの範囲外の場合はVALUE_INDICATING_NO_DATAを使用
+    let editValue = VALUE_INDICATING_NO_DATA;
+    if (isVoiced && i < pitchEditData.length) {
+      editValue = pitchEditData[i];
+    }
+
+    const isEdited = editValue !== VALUE_INDICATING_NO_DATA;
+
+    frameInfos.push({
+      isEdited,
+      isVoiced,
+      indexInTrack: i,
+    });
+
+    if (isEdited) {
+      const originalLogF0 = logF0[indexInPhrase];
+      const editedLogF0 = logWithMinOne(editValue);
+
+      logF0Diff.push(editedLogF0 - originalLogF0);
+    } else {
+      logF0Diff.push(0);
     }
   }
+
+  // 編集データが全くない場合は何もしない
+  const hasEditData = frameInfos.some((frameInfo) => frameInfo.isEdited);
+  if (!hasEditData) {
+    return;
+  }
+
+  // 編集/未編集の境界（ジャンプポイント）を検出し、遷移長を計算する
+  const jumpIndicesInPhrase: number[] = [];
+  const maxTransitionLengths: { left: number; right: number }[] = [];
+
+  for (let i = 0; i < frameInfos.length; i++) {
+    const currentFrameInfo = frameInfos[i];
+    const prevFrameInfo = getPrev(frameInfos, i);
+
+    // 編集状態が前フレームと同じ場合は境界ではないのでスキップ
+    if (
+      prevFrameInfo == undefined ||
+      currentFrameInfo.isEdited === prevFrameInfo.isEdited
+    ) {
+      continue;
+    }
+
+    let maxLeftTransitionLength = 3;
+    let maxRightTransitionLength = 3;
+
+    // 無声区間に遷移を移動させて、有声区間での遷移を最小化する
+    // これにより、ユーザーが描いた歌唱表現（しゃくりやフォールなど）が
+    // スムージングで崩れることを防ぎ、意図した表現を忠実に反映する
+    if (currentFrameInfo.isEdited) {
+      const prevIndex = i - 1;
+      for (
+        let distanceFromBoundary = 0;
+        distanceFromBoundary < maxRightTransitionLength &&
+        prevIndex - distanceFromBoundary >= 0;
+        distanceFromBoundary++
+      ) {
+        if (!frameInfos[prevIndex - distanceFromBoundary].isVoiced) {
+          // 右側の遷移を縮小し、余った分を左側に移動
+          maxLeftTransitionLength +=
+            maxRightTransitionLength - distanceFromBoundary;
+          maxRightTransitionLength = distanceFromBoundary;
+          break;
+        }
+      }
+    } else {
+      for (
+        let distanceFromBoundary = 0;
+        distanceFromBoundary < maxLeftTransitionLength &&
+        i + distanceFromBoundary < frameInfos.length;
+        distanceFromBoundary++
+      ) {
+        if (!frameInfos[i + distanceFromBoundary].isVoiced) {
+          // 左側の遷移を縮小し、余った分を右側に移動
+          maxRightTransitionLength +=
+            maxLeftTransitionLength - distanceFromBoundary;
+          maxLeftTransitionLength = distanceFromBoundary;
+          break;
+        }
+      }
+    }
+
+    jumpIndicesInPhrase.push(i);
+    maxTransitionLengths.push({
+      left: maxLeftTransitionLength,
+      right: maxRightTransitionLength,
+    });
+  }
+
+  // 滑らかな遷移を適用する
+  applySmoothTransition(logF0Diff, jumpIndicesInPhrase, maxTransitionLengths);
+
+  // 対数f0の差分を元のf0に適用する
+  for (let i = processStartFrame; i < processEndFrame; i++) {
+    const indexInPhrase = i - phraseQueryStartFrame;
+
+    logF0[indexInPhrase] += logF0Diff[i - processStartFrame];
+  }
+
+  // 対数スケールから元のスケールに戻して、f0を更新する
+  phraseQuery.f0 = logF0.map((value) => Math.exp(value));
 }
 
 export function applyVolumeEdit(
