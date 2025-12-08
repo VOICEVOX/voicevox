@@ -34,7 +34,7 @@ const props = defineProps<{
   offsetY: number;
 }>();
 
-const { warn, error } = createLogger("SequencerPitch");
+const { warn, error } = createLogger("SequencerDebugInfo");
 const store = useStore();
 const tpqn = computed(() => store.state.tpqn);
 const tempos = computed(() => store.state.tempos);
