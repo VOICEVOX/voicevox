@@ -858,8 +858,13 @@ export function applyPitchEdit(
     logF0[indexInPhrase] += logF0Diff[i - processStartFrame];
   }
 
-  // 対数スケールから元のスケールに戻して、f0を更新する
-  phraseQuery.f0 = logF0.map((value) => Math.exp(value));
+  // 対数スケールから元のスケールに戻して、元のf0の値が1以上の箇所のみf0を更新する
+  // （1Hz未満の場合は元の値を維持する）
+  for (let i = 0; i < f0.length; i++) {
+    if (f0[i] >= 1) {
+      phraseQuery.f0[i] = Math.exp(logF0[i]);
+    }
+  }
 }
 
 export function applyVolumeEdit(
