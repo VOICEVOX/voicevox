@@ -786,7 +786,7 @@ export function applyPitchEdit(
     return;
   }
 
-  // 編集/未編集の境界（ジャンプポイント）を検出し、遷移長を計算する
+  // 編集と未編集の境界（ジャンプポイント）を検出し、遷移長を計算する
   const jumpIndicesInPhrase: number[] = [];
   const maxTransitionLengths: { left: number; right: number }[] = [];
 
