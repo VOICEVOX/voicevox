@@ -39,13 +39,13 @@ export class SelectNotesToolIdleState
   }) {
     if (input.type === "keyboardEvent") {
       this.updateCursorState(context, input.keyboardEvent.shiftKey);
-    } else if (input.type === "mouseEvent") {
-      const mouseButton = getButton(input.mouseEvent);
+    } else if (input.type === "pointerEvent") {
+      const mouseButton = getButton(input.pointerEvent);
       const selectedTrackId = context.selectedTrackId.value;
 
       if (
         input.targetArea === "Window" &&
-        input.mouseEvent.type === "mousemove"
+        input.pointerEvent.type === "pointermove"
       ) {
         context.guideLineTicks.value = getGuideLineTicks(
           input.cursorPos,
@@ -54,8 +54,8 @@ export class SelectNotesToolIdleState
       }
 
       if (mouseButton === "LEFT_BUTTON") {
-        if (isSelfEventTarget(input.mouseEvent)) {
-          if (input.mouseEvent.type === "mousedown") {
+        if (isSelfEventTarget(input.pointerEvent)) {
+          if (input.pointerEvent.type === "pointerdown") {
             if (input.targetArea === "SequencerBody") {
               setNextState("selectNotesWithRect", {
                 cursorPosAtStart: input.cursorPos,
@@ -64,7 +64,7 @@ export class SelectNotesToolIdleState
             } else if (input.targetArea === "Note") {
               this.executeNotesSelectionProcess(
                 context,
-                input.mouseEvent,
+                input.pointerEvent,
                 input.note,
               );
               setNextState("moveNote", {
@@ -77,7 +77,7 @@ export class SelectNotesToolIdleState
             } else if (input.targetArea === "NoteLeftEdge") {
               this.executeNotesSelectionProcess(
                 context,
-                input.mouseEvent,
+                input.pointerEvent,
                 input.note,
               );
               setNextState("resizeNoteLeft", {
@@ -90,7 +90,7 @@ export class SelectNotesToolIdleState
             } else if (input.targetArea === "NoteRightEdge") {
               this.executeNotesSelectionProcess(
                 context,
-                input.mouseEvent,
+                input.pointerEvent,
                 input.note,
               );
               setNextState("resizeNoteRight", {
@@ -101,7 +101,16 @@ export class SelectNotesToolIdleState
                 returnStateId: this.id,
               });
             }
-          } else if (
+          }
+        }
+      }
+    } else if (input.type === "mouseEvent") {
+      const selectedTrackId = context.selectedTrackId.value;
+      const mouseButton = getButton(input.mouseEvent);
+
+      if (mouseButton === "LEFT_BUTTON") {
+        if (isSelfEventTarget(input.mouseEvent)) {
+          if (
             input.mouseEvent.type === "dblclick" &&
             input.targetArea === "SequencerBody"
           ) {
@@ -159,12 +168,12 @@ export class SelectNotesToolIdleState
 
   private executeNotesSelectionProcess(
     context: Context,
-    mouseEvent: MouseEvent,
+    pointerEvent: PointerEvent,
     mouseDownNote: Note,
   ) {
-    if (mouseEvent.shiftKey) {
+    if (pointerEvent.shiftKey) {
       selectNotesInRange(context, mouseDownNote);
-    } else if (isOnCommandOrCtrlKeyDown(mouseEvent)) {
+    } else if (isOnCommandOrCtrlKeyDown(pointerEvent)) {
       toggleNoteSelection(context, mouseDownNote);
     } else if (!context.selectedNoteIds.value.has(mouseDownNote.id)) {
       selectOnlyThisNoteAndPlayPreviewSound(context, mouseDownNote);

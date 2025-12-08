@@ -15,7 +15,7 @@
   >
     <div
       class="note-bar"
-      @mousedown="onBarMouseDown"
+      @pointerdown="onBarPointerDown"
       @dblclick="onBarDoubleClick"
     >
       <ContextMenu
@@ -24,8 +24,8 @@
         :menudata="contextMenuData"
       />
     </div>
-    <div class="note-edge left" @mousedown="onLeftEdgeMouseDown"></div>
-    <div class="note-edge right" @mousedown="onRightEdgeMouseDown"></div>
+    <div class="note-edge left" @pointerdown="onLeftEdgePointerDown"></div>
+    <div class="note-edge right" @pointerdown="onRightEdgePointerDown"></div>
     <!-- エラー内容を表示 -->
     <QTooltip
       v-if="hasOverlappingError"
@@ -97,10 +97,10 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (name: "barMousedown", event: MouseEvent): void;
+  (name: "barPointerdown", event: PointerEvent): void;
   (name: "barDoubleClick", event: MouseEvent): void;
-  (name: "rightEdgeMousedown", event: MouseEvent): void;
-  (name: "leftEdgeMousedown", event: MouseEvent): void;
+  (name: "rightEdgePointerdown", event: PointerEvent): void;
+  (name: "leftEdgePointerdown", event: PointerEvent): void;
 }>();
 
 const store = useStore();
@@ -240,20 +240,20 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   ];
 });
 
-const onBarMouseDown = (event: MouseEvent) => {
-  emit("barMousedown", event);
+const onBarPointerDown = (event: PointerEvent) => {
+  emit("barPointerdown", event);
 };
 
 const onBarDoubleClick = (event: MouseEvent) => {
   emit("barDoubleClick", event);
 };
 
-const onRightEdgeMouseDown = (event: MouseEvent) => {
-  emit("rightEdgeMousedown", event);
+const onRightEdgePointerDown = (event: PointerEvent) => {
+  emit("rightEdgePointerdown", event);
 };
 
-const onLeftEdgeMouseDown = (event: MouseEvent) => {
-  emit("leftEdgeMousedown", event);
+const onLeftEdgePointerDown = (event: PointerEvent) => {
+  emit("leftEdgePointerdown", event);
 };
 </script>
 
