@@ -148,7 +148,20 @@ describe("applySmoothTransition", () => {
     expect(actual).toMatchSnapshot();
   });
 
-  it("隣接するジャンプでは遷移長が距離に応じて自動的に縮小される", () => {
+  it("隣接するジャンプの距離が遷移長より短い場合、遷移長が距離に応じて自動的に縮小される", () => {
+    const data = [0, 0, 0, 1, 2, 2, 2, 2, 2];
+    const jumpIndices = [3, 4];
+
+    const actual = [...data];
+    applySmoothTransition(actual, jumpIndices, [
+      { left: 3, right: 3 },
+      { left: 3, right: 3 },
+    ]);
+
+    expect(actual).toMatchSnapshot();
+  });
+
+  it("隣接するジャンプの遷移区間が重なる場合、重複して適用される", () => {
     const data = [0, 0, 0, 1, 1, 1, 2, 2, 2];
     const jumpIndices = [3, 6];
 
