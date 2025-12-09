@@ -17,34 +17,19 @@ export class AppStateController {
   // - done：クリーンアップ処理が完了し、アプリが終了する準備が整った状態
   private quitState: "unconfirmed" | "dirty" | "done" = "unconfirmed";
 
-  onQuitRequest(DI: { preventQuit: () => void }): Promise<void> {
+  onQuitRequest(DI: { preventQuit: () => void }): void {
     log.info(`onQuitRequest called. Current quitState: ${this.quitState}`);
     switch (this.quitState) {
       case "unconfirmed": {
-        log.info("Checking for unsaved edits before quitting");
         DI.preventQuit();
-        try {
-          // TODO: 本当にipcで失敗したのかどうかを判定して、ipcの失敗以外の理由であればshutdownしないようにする
-          ipcMainSendProxy.CHECK_EDITED_AND_NOT_SAVE(
-            getWindowManager().getWindow(),
-            {
-              closeOrReload: "close",
-            },
-          );
-        } catch (error) {
-          log.error(
-            "Error while sending CHECK_EDITED_AND_NOT_SAVE IPC message:",
-            error,
-          );
-          log.info("Proceeding to shutdown without checking for unsaved edits");
-          this.shutdown();
-        }
+        this.checkUnsavedEdit();
         break;
       }
       case "dirty": {
         log.info("Performing cleanup before quitting");
         DI.preventQuit();
-        return this.cleanup();
+        void this.cleanup();
+        break;
       }
       case "done":
         log.info("Quit process already done. Proceeding to quit.");
@@ -52,9 +37,28 @@ export class AppStateController {
       default:
         throw new ExhaustiveError(this.quitState);
     }
-    return Promise.resolve();
   }
 
+  private checkUnsavedEdit() {
+    log.info("Checking for unsaved edits before quitting");
+    try {
+      ipcMainSendProxy.CHECK_EDITED_AND_NOT_SAVE(
+        getWindowManager().getWindow(),
+        {
+          closeOrReload: "close",
+        },
+      );
+    } catch (error) {
+      log.error(
+        "Error while sending CHECK_EDITED_AND_NOT_SAVE IPC message:",
+        error,
+      );
+      log.info("Proceeding to shutdown without checking for unsaved edits");
+      this.shutdown();
+    }
+  }
+
+  /** 編集状態に関わらず終了する */
   shutdown() {
     this.quitState = "dirty";
     this.initiateQuit();
