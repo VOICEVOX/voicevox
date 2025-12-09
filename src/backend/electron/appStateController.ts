@@ -11,15 +11,20 @@ const log = createLogger("AppStateController");
 //
 // TODO: アプリの起動処理をここに移す
 export class AppStateController {
-  private quitState: "unsaved" | "clean" | "done" = "unsaved";
+  // NOTE:
+  // - unconfirmed：ユーザーが終了をリクエストした状態
+  // - dirty：クリーンアップ前の状態
+  // - done：クリーンアップ処理が完了し、アプリが終了する準備が整った状態
+  private quitState: "unconfirmed" | "dirty" | "done" = "unconfirmed";
 
   onQuitRequest(DI: { preventQuit: () => void }): Promise<void> {
     log.info(`onQuitRequest called. Current quitState: ${this.quitState}`);
     switch (this.quitState) {
-      case "unsaved": {
+      case "unconfirmed": {
         log.info("Checking for unsaved edits before quitting");
         DI.preventQuit();
         try {
+          // TODO: 本当にipcで失敗したのかどうかを判定して、ipcの失敗以外の理由であればshutdownしないようにする
           ipcMainSendProxy.CHECK_EDITED_AND_NOT_SAVE(
             getWindowManager().getWindow(),
             {
@@ -36,11 +41,10 @@ export class AppStateController {
         }
         break;
       }
-      case "clean": {
+      case "dirty": {
         log.info("Performing cleanup before quitting");
         DI.preventQuit();
-        this.quitState = "done";
-        return this.cleanupEngine();
+        return this.cleanup();
       }
       case "done":
         log.info("Quit process already done. Proceeding to quit.");
@@ -52,7 +56,7 @@ export class AppStateController {
   }
 
   shutdown() {
-    this.quitState = "clean";
+    this.quitState = "dirty";
     this.initiateQuit();
   }
 
@@ -65,20 +69,6 @@ export class AppStateController {
     const { engineCleanupResult, configSavedResult } =
       getEngineAndVvppController().gracefulShutdown();
 
-    // - エンジンの停止
-    // - エンジン終了後処理
-    // - 設定ファイルの保存
-    // が完了している
-    if (
-      engineCleanupResult === "alreadyCompleted" &&
-      configSavedResult === "alreadySaved"
-    ) {
-      log.info("Post engine kill process and config save done. Quitting app");
-      this.quitState = "done";
-      this.initiateQuit();
-      return;
-    }
-
     // すべてのエンジンプロセスのキルを開始
     if (engineCleanupResult !== "alreadyCompleted") {
       log.info("Waiting for post engine kill process");
@@ -88,10 +78,19 @@ export class AppStateController {
       log.info("Waiting for config save");
       await configSavedResult;
     }
+  }
 
-    // アプリケーションの終了を再試行する
-    log.info("Attempting to quit app again");
-    app.quit();
+  private async cleanup() {
+    log.info("Starting app cleanup process");
+    try {
+      await this.cleanupEngine();
+      log.info("App cleanup process completed");
+    } catch (error) {
+      log.error("Error during app cleanup process:", error);
+    } finally {
+      this.quitState = "done";
+      this.initiateQuit();
+    }
   }
 }
 

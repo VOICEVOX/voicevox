@@ -224,10 +224,6 @@ class WindowManager {
     win.webContents.setZoomFactor(1);
   }
 
-  public closeWindow() {
-    this.getWindow().close();
-  }
-
   public destroyWindow() {
     this.getWindow().destroy();
   }
