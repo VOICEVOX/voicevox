@@ -17,8 +17,11 @@ import {
   getDefaultHotkeySettings,
   HotkeySettingType,
 } from "@/domain/hotkeyAction";
+import { createLogger } from "@/helpers/log";
 
 const lockKey = "save";
+
+const log = createLogger("ConfigManager");
 
 const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
   [
@@ -327,10 +330,12 @@ export abstract class BaseConfigManager {
 
   public async initialize(): Promise<this> {
     if (await this.exists()) {
+      log.info("Config file exists. Loading...");
       const data = await this.load();
       const version = data.__internal__.migrations.version;
       for (const [versionRange, migration] of migrations) {
         if (!semver.satisfies(version, versionRange)) {
+          log.info(`Applying migration for version range ${versionRange}...`);
           migration(data);
         }
       }
@@ -339,6 +344,7 @@ export abstract class BaseConfigManager {
       );
       this._save();
     } else {
+      log.info("Config file does not exist. Creating default config...");
       this.reset();
     }
     await this.ensureSaved();
@@ -365,6 +371,7 @@ export abstract class BaseConfigManager {
 
   private _save() {
     void this.lock.acquire(lockKey, async () => {
+      log.info("Saving config...");
       await this.save({
         ...getConfigSchema({ isMac: this.isMac }).parse({
           ...this.config,
@@ -378,15 +385,7 @@ export abstract class BaseConfigManager {
     });
   }
 
-  ensureSaved(): Promise<void> | "alreadySaved" {
-    if (!this.lock.isBusy(lockKey)) {
-      return "alreadySaved";
-    }
-
-    return this._ensureSaved();
-  }
-
-  private async _ensureSaved(): Promise<void> {
+  async ensureSaved(): Promise<void> {
     // 10秒待っても保存が終わらなかったら諦める
     for (let i = 0; i < 100; i++) {
       // 他のスレッドに処理を譲る
@@ -395,10 +394,11 @@ export abstract class BaseConfigManager {
         return;
       }
     }
-    throw new Error("Failed to save config");
+    log.warn("Config save timeout exceeded");
   }
 
   private migrateHotkeySettings(data: ConfigType): ConfigType {
+    log.info("Migrating hotkey settings...");
     const COMBINATION_IS_NONE = HotkeyCombination("####");
     const loadedHotkeys = structuredClone(data.hotkeySettings);
     const hotkeysWithoutNewCombination = getDefaultHotkeySettings({

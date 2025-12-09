@@ -2,6 +2,7 @@ import { app } from "electron";
 import { ipcMainSendProxy } from "./ipc";
 import { getWindowManager } from "./manager/windowManager";
 import { getEngineAndVvppController } from "./engineAndVvppController";
+import { getConfigManager } from "./electronConfig";
 import { ExhaustiveError } from "@/type/utility";
 import { createLogger } from "@/helpers/log";
 
@@ -28,7 +29,7 @@ export class AppStateController {
       case "dirty": {
         log.info("Performing cleanup before quitting");
         DI.preventQuit();
-        void this.cleanup();
+        void this.onQuitRequestOnDirty();
         break;
       }
       case "done":
@@ -68,32 +69,31 @@ export class AppStateController {
     app.quit();
   }
 
-  private async cleanupEngine() {
-    log.info("Checking ENGINE status before app quit");
-    const { engineCleanupResult, configSavedResult } =
-      getEngineAndVvppController().gracefulShutdown();
-
-    // すべてのエンジンプロセスのキルを開始
-    if (engineCleanupResult !== "alreadyCompleted") {
-      log.info("Waiting for post engine kill process");
-      await engineCleanupResult;
-    }
-    if (configSavedResult !== "alreadySaved") {
-      log.info("Waiting for config save");
-      await configSavedResult;
-    }
-  }
-
-  private async cleanup() {
+  private async onQuitRequestOnDirty() {
     log.info("Starting app cleanup process");
     try {
-      await this.cleanupEngine();
+      await this.cleanup();
       log.info("App cleanup process completed");
     } catch (error) {
       log.error("Error during app cleanup process:", error);
     } finally {
       this.quitState = "done";
       this.initiateQuit();
+    }
+  }
+
+  private async cleanup() {
+    try {
+      log.info("Cleaning up engines before quitting");
+      await getEngineAndVvppController().cleanupEngines();
+    } catch (error) {
+      log.error("Error while cleaning up engines:", error);
+    }
+    try {
+      log.info("Saving configuration before quitting");
+      await getConfigManager().ensureSaved();
+    } catch (error) {
+      log.error("Error while saving configuration:", error);
     }
   }
 }
