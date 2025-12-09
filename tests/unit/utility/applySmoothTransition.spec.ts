@@ -1,6 +1,42 @@
 import { describe, it, expect } from "vitest";
 import { applySmoothTransition } from "@/sing/utility";
 
+const smoothStep = (x: number) => {
+  const clampedX = Math.min(1.0, Math.max(0.0, x));
+  return clampedX * clampedX * (3.0 - 2.0 * clampedX);
+};
+
+const applySingleTransition = (
+  data: number[],
+  jumpIndex: number,
+  transitionLengths: { left: number; right: number },
+) => {
+  const jumpSize = data[jumpIndex] - data[jumpIndex - 1];
+  const jumpCenter = jumpIndex - 0.5;
+  const transitionStart = jumpCenter - transitionLengths.left;
+  const transitionEnd = jumpCenter + transitionLengths.right;
+  const totalTransitionLength =
+    transitionLengths.left + transitionLengths.right;
+
+  const startIndex = Math.ceil(transitionStart);
+  const endIndex = Math.min(data.length, Math.floor(transitionEnd) + 1);
+
+  if (startIndex < 0 || endIndex > data.length) {
+    throw new Error("Transition range is out of data bounds.");
+  }
+
+  for (let j = startIndex; j < endIndex; j++) {
+    const normalizedPosition = (j - transitionStart) / totalTransitionLength;
+    const weight = smoothStep(normalizedPosition);
+
+    if (j < jumpCenter) {
+      data[j] += jumpSize * weight;
+    } else {
+      data[j] -= jumpSize * (1 - weight);
+    }
+  }
+};
+
 describe("applySmoothTransition", () => {
   it("jumpIndices に非整数を含むと例外を投げる", () => {
     const data = [0, 1, 2];
@@ -105,98 +141,6 @@ describe("applySmoothTransition", () => {
     }
   });
 
-  it("中央付近の単一ジャンプに対して、滑らかな遷移が適用される", () => {
-    const data = [0, 0, 0, 0, 1, 1, 1, 1, 1];
-    const jumpIndices = [4];
-
-    const actual = [...data];
-    applySmoothTransition(actual, jumpIndices, [{ left: 3, right: 3 }]);
-
-    expect(actual).toMatchSnapshot();
-  });
-
-  it("先頭近くのジャンプでは、遷移がデータの端に合わせて切り詰められる", () => {
-    const data = [0, 1, 1, 1, 1];
-    const jumpIndices = [1];
-
-    const actual = [...data];
-    applySmoothTransition(actual, jumpIndices, [{ left: 3, right: 3 }]);
-
-    expect(actual).toMatchSnapshot();
-  });
-
-  it("末尾近くのジャンプでは、遷移がデータの端に合わせて切り詰められる", () => {
-    const data = [0, 0, 0, 0, 1];
-    const jumpIndices = [4];
-
-    const actual = [...data];
-    applySmoothTransition(actual, jumpIndices, [{ left: 3, right: 3 }]);
-
-    expect(actual).toMatchSnapshot();
-  });
-
-  it("十分に離れた複数のジャンプに対して、それぞれ独立に遷移が適用される", () => {
-    const data = [0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2];
-    const jumpIndices = [3, 9];
-
-    const actual = [...data];
-    applySmoothTransition(actual, jumpIndices, [
-      { left: 3, right: 3 },
-      { left: 3, right: 3 },
-    ]);
-
-    expect(actual).toMatchSnapshot();
-  });
-
-  it("隣接するジャンプの距離が遷移長より短い場合、遷移長が距離に応じて自動的に縮小される", () => {
-    const data = [0, 0, 0, 1, 2, 2, 2, 2, 2];
-    const jumpIndices = [3, 4];
-
-    const actual = [...data];
-    applySmoothTransition(actual, jumpIndices, [
-      { left: 3, right: 3 },
-      { left: 3, right: 3 },
-    ]);
-
-    expect(actual).toMatchSnapshot();
-  });
-
-  it("隣接するジャンプの遷移区間が重なる場合、重複して適用される", () => {
-    const data = [0, 0, 0, 1, 1, 1, 2, 2, 2];
-    const jumpIndices = [3, 6];
-
-    const actual = [...data];
-    applySmoothTransition(actual, jumpIndices, [
-      { left: 3, right: 3 },
-      { left: 3, right: 3 },
-    ]);
-
-    expect(actual).toMatchSnapshot();
-  });
-
-  it("左右で異なる遷移長を指定できる", () => {
-    const data = [0, 0, 0, 0, 1, 1, 1, 1, 1];
-    const jumpIndices = [4];
-
-    const actual = [...data];
-    applySmoothTransition(actual, jumpIndices, [{ left: 2, right: 4 }]);
-
-    expect(actual).toMatchSnapshot();
-  });
-
-  it("各ジャンプで異なる遷移長を指定できる", () => {
-    const data = [0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2];
-    const jumpIndices = [3, 9];
-
-    const actual = [...data];
-    applySmoothTransition(actual, jumpIndices, [
-      { left: 2, right: 4 },
-      { left: 4, right: 2 },
-    ]);
-
-    expect(actual).toMatchSnapshot();
-  });
-
   it("ジャンプサイズが0の場合は、データは変更されない", () => {
     const data = [0, 0, 0, 0, 0];
     const actual = [...data];
@@ -208,49 +152,248 @@ describe("applySmoothTransition", () => {
     }
   });
 
-  it("片方の遷移長が0でも正常に動作する（右側のみ）", () => {
-    const data = [0, 0, 0, 1, 1, 1, 1];
+  it("中央付近の単一ジャンプに対して、滑らかな遷移が適用される", () => {
+    const data = [0, 0, 0, 0, 1, 1, 1, 1, 1];
+    const jumpIndices = [4];
+
+    const expectedManual = [...data];
+    for (let i = 0; i < 6; i++) {
+      expectedManual[1 + i] = smoothStep((i + 0.5) / 6);
+    }
+
+    const expectedHelperFunc = [...data];
+    applySingleTransition(expectedHelperFunc, 4, { left: 3, right: 3 });
+
     const actual = [...data];
+    applySmoothTransition(actual, jumpIndices, [{ left: 3, right: 3 }]);
 
-    applySmoothTransition(actual, [3], [{ left: 0, right: 3 }]);
-
-    expect(actual).toMatchSnapshot();
-  });
-
-  it("片方の遷移長が0でも正常に動作する（左側のみ）", () => {
-    const data = [0, 0, 0, 1, 1, 1, 1];
-    const actual = [...data];
-
-    applySmoothTransition(actual, [3], [{ left: 3, right: 0 }]);
-
-    expect(actual).toMatchSnapshot();
+    for (let i = 0; i < data.length; i++) {
+      expect(actual[i]).toBeCloseTo(expectedManual[i], 6);
+      expect(actual[i]).toBeCloseTo(expectedHelperFunc[i], 6);
+    }
   });
 
   it("負のジャンプ（下降）にも対応する", () => {
     const data = [1, 1, 1, 1, 0, 0, 0, 0];
     const actual = [...data];
 
+    const expectedManual = [...data];
+    for (let i = 0; i < 6; i++) {
+      expectedManual[1 + i] = 1 - smoothStep((i + 0.5) / 6);
+    }
+
+    const expectedHelperFunc = [...data];
+    applySingleTransition(expectedHelperFunc, 4, { left: 3, right: 3 });
+
     applySmoothTransition(actual, [4], [{ left: 3, right: 3 }]);
 
-    expect(actual).toMatchSnapshot();
+    for (let i = 0; i < data.length; i++) {
+      expect(actual[i]).toBeCloseTo(expectedManual[i], 6);
+      expect(actual[i]).toBeCloseTo(expectedHelperFunc[i], 6);
+    }
   });
 
   it("浮動小数点数のデータに対しても正常に動作する", () => {
     const data = [0.5, 0.5, 0.5, 1.7, 1.7, 1.7];
     const actual = [...data];
 
+    const expectedManual = [...data];
+    const jumpSize = data[3] - data[2];
+    for (let i = 0; i < 4; i++) {
+      expectedManual[1 + i] = 0.5 + jumpSize * smoothStep((i + 0.5) / 4);
+    }
+
+    const expectedHelperFunc = [...data];
+    applySingleTransition(expectedHelperFunc, 3, { left: 2, right: 2 });
+
     applySmoothTransition(actual, [3], [{ left: 2, right: 2 }]);
 
-    expect(actual).toMatchSnapshot();
+    for (let i = 0; i < data.length; i++) {
+      expect(actual[i]).toBeCloseTo(expectedManual[i], 6);
+      expect(actual[i]).toBeCloseTo(expectedHelperFunc[i], 6);
+    }
+  });
+
+  it("左右で異なる遷移長を指定できる", () => {
+    const data = [0, 0, 0, 0, 1, 1, 1, 1, 1];
+    const jumpIndices = [4];
+
+    const expectedManual = [...data];
+    for (let i = 0; i < 5; i++) {
+      expectedManual[3 + i] = smoothStep((i + 0.5) / 5);
+    }
+
+    const expectedHelperFunc = [...data];
+    applySingleTransition(expectedHelperFunc, 4, { left: 1, right: 4 });
+
+    const actual = [...data];
+    applySmoothTransition(actual, jumpIndices, [{ left: 1, right: 4 }]);
+
+    for (let i = 0; i < data.length; i++) {
+      expect(actual[i]).toBeCloseTo(expectedManual[i], 6);
+      expect(actual[i]).toBeCloseTo(expectedHelperFunc[i], 6);
+    }
+  });
+
+  it("各ジャンプで異なる遷移長を指定できる", () => {
+    const data = [0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2];
+    const jumpIndices = [3, 9];
+
+    const expected = [...data];
+    applySingleTransition(expected, 3, { left: 2, right: 4 });
+    applySingleTransition(expected, 9, { left: 4, right: 2 });
+
+    const actual = [...data];
+    applySmoothTransition(actual, jumpIndices, [
+      { left: 2, right: 4 },
+      { left: 4, right: 2 },
+    ]);
+
+    for (let i = 0; i < data.length; i++) {
+      expect(actual[i]).toBeCloseTo(expected[i], 6);
+    }
+  });
+
+  it("片方の遷移長が0でも正常に動作する（右側のみ）", () => {
+    const data = [0, 0, 0, 1, 1, 1, 1];
+    const actual = [...data];
+
+    const expectedManual = [...data];
+    for (let i = 0; i < 3; i++) {
+      expectedManual[3 + i] = smoothStep((i + 0.5) / 3);
+    }
+
+    const expectedHelperFunc = [...data];
+    applySingleTransition(expectedHelperFunc, 3, { left: 0, right: 3 });
+
+    applySmoothTransition(actual, [3], [{ left: 0, right: 3 }]);
+
+    for (let i = 0; i < data.length; i++) {
+      expect(actual[i]).toBeCloseTo(expectedManual[i], 6);
+      expect(actual[i]).toBeCloseTo(expectedHelperFunc[i], 6);
+    }
+  });
+
+  it("片方の遷移長が0でも正常に動作する（左側のみ）", () => {
+    const data = [0, 0, 0, 1, 1, 1, 1];
+    const actual = [...data];
+
+    const expectedManual = [...data];
+    for (let i = 0; i < 3; i++) {
+      expectedManual[i] = smoothStep((i + 0.5) / 3);
+    }
+
+    const expectedHelperFunc = [...data];
+    applySingleTransition(expectedHelperFunc, 3, { left: 3, right: 0 });
+
+    applySmoothTransition(actual, [3], [{ left: 3, right: 0 }]);
+
+    for (let i = 0; i < data.length; i++) {
+      expect(actual[i]).toBeCloseTo(expectedManual[i], 6);
+      expect(actual[i]).toBeCloseTo(expectedHelperFunc[i], 6);
+    }
   });
 
   it("遷移長が配列ではなくオブジェクトで渡された場合、すべてのジャンプに同じ遷移長が適用される", () => {
     const data = [0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2];
     const jumpIndices = [3, 9];
 
+    const expected = [...data];
+    applySingleTransition(expected, 3, { left: 3, right: 3 });
+    applySingleTransition(expected, 9, { left: 3, right: 3 });
+
     const actual = [...data];
     applySmoothTransition(actual, jumpIndices, { left: 3, right: 3 });
 
-    expect(actual).toMatchSnapshot();
+    for (let i = 0; i < data.length; i++) {
+      expect(actual[i]).toBeCloseTo(expected[i], 6);
+    }
+  });
+
+  it("先頭近くのジャンプでは、遷移がデータの端に合わせて切り詰められる", () => {
+    const data = [0, 1, 1, 1, 1];
+    const jumpIndices = [1];
+
+    const expected = [...data];
+    applySingleTransition(expected, 1, { left: 1, right: 3 });
+
+    const actual = [...data];
+    applySmoothTransition(actual, jumpIndices, [{ left: 3, right: 3 }]);
+
+    for (let i = 0; i < data.length; i++) {
+      expect(actual[i]).toBeCloseTo(expected[i], 6);
+    }
+  });
+
+  it("末尾近くのジャンプでは、遷移がデータの端に合わせて切り詰められる", () => {
+    const data = [0, 0, 0, 0, 1];
+    const jumpIndices = [4];
+
+    const expected = [...data];
+    applySingleTransition(expected, 4, { left: 3, right: 1 });
+
+    const actual = [...data];
+    applySmoothTransition(actual, jumpIndices, [{ left: 3, right: 3 }]);
+
+    for (let i = 0; i < data.length; i++) {
+      expect(actual[i]).toBeCloseTo(expected[i], 6);
+    }
+  });
+
+  it("十分に離れた複数のジャンプに対して、それぞれ独立に遷移が適用される", () => {
+    const data = [0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2];
+    const jumpIndices = [3, 9];
+
+    const expected = [...data];
+    applySingleTransition(expected, 3, { left: 3, right: 3 });
+    applySingleTransition(expected, 9, { left: 3, right: 3 });
+
+    const actual = [...data];
+    applySmoothTransition(actual, jumpIndices, [
+      { left: 3, right: 3 },
+      { left: 3, right: 3 },
+    ]);
+
+    for (let i = 0; i < data.length; i++) {
+      expect(actual[i]).toBeCloseTo(expected[i], 6);
+    }
+  });
+
+  it("隣接するジャンプの遷移区間が重なる場合、重複して適用される", () => {
+    const data = [0, 0, 0, 1, 1, 1, 2, 2, 2];
+    const jumpIndices = [3, 6];
+
+    const expected = [...data];
+    applySingleTransition(expected, 3, { left: 3, right: 3 });
+    applySingleTransition(expected, 6, { left: 3, right: 3 });
+
+    const actual = [...data];
+    applySmoothTransition(actual, jumpIndices, [
+      { left: 3, right: 3 },
+      { left: 3, right: 3 },
+    ]);
+
+    for (let i = 0; i < data.length; i++) {
+      expect(actual[i]).toBeCloseTo(expected[i], 6);
+    }
+  });
+
+  it("隣接するジャンプの距離が遷移長より短い場合、遷移長が距離に応じて自動的に縮小される", () => {
+    const data = [0, 0, 0, 1, 2, 2, 2, 2, 2];
+    const jumpIndices = [3, 4];
+
+    const expected = [...data];
+    applySingleTransition(expected, 3, { left: 3, right: 1 });
+    applySingleTransition(expected, 4, { left: 1, right: 3 });
+
+    const actual = [...data];
+    applySmoothTransition(actual, jumpIndices, [
+      { left: 3, right: 3 },
+      { left: 3, right: 3 },
+    ]);
+
+    for (let i = 0; i < data.length; i++) {
+      expect(actual[i]).toBeCloseTo(expected[i], 6);
+    }
   });
 });
