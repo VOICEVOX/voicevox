@@ -43,7 +43,6 @@ describe("mutex", () => {
     const waited = await Promise.allSettled(tasks);
     expect(waited.filter((t) => t.status === "fulfilled").length).toBe(2);
     expect(counter).toBe(2);
-    expect(counter).toBe(5);
     expect(mutex.isLocked()).toBe(false);
   });
 });
