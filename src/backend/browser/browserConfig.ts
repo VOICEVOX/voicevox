@@ -1,4 +1,4 @@
-import AsyncLock from "async-lock";
+import { Mutex } from "@core/asyncutil";
 import { defaultEngine, directoryHandleStoreKey } from "./contract";
 
 import { BaseConfigManager, Metadata } from "@/backend/common/ConfigManager";
@@ -15,16 +15,15 @@ const entryKey = "value";
 
 let configManager: BrowserConfigManager | undefined;
 
-const configManagerLock = new AsyncLock();
+const configManagerLock = new Mutex();
 const defaultEngineId = EngineId(defaultEngine.uuid);
 
 export async function getConfigManager() {
-  await configManagerLock.acquire("configManager", async () => {
-    if (!configManager) {
-      configManager = new BrowserConfigManager({ isMac });
-      await configManager.initialize();
-    }
-  });
+  using _lock = await configManagerLock.acquire();
+  if (!configManager) {
+    configManager = new BrowserConfigManager({ isMac });
+    await configManager.initialize();
+  }
 
   if (!configManager) {
     throw new Error("configManager is undefined");

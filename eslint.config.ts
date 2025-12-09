@@ -65,6 +65,13 @@ const typeCheckedRules: Rules = {
 
   "@typescript-eslint/no-non-null-assertion": "error",
 
+  "@typescript-eslint/no-unused-vars": [
+    "warn",
+    {
+      ignoreUsingDeclarations: true,
+    },
+  ],
+
   "@typescript-eslint/no-misused-promises": [
     "error",
     {
