@@ -153,12 +153,7 @@ class WindowManager {
 
     log.info("Checking ENGINE status before reload app");
     const engineAndVvppController = getEngineAndVvppController();
-    const engineCleanupResult = engineAndVvppController.cleanupEngines();
-
-    // エンジンの停止とエンジン終了後処理の待機
-    if (engineCleanupResult != "alreadyCompleted") {
-      await engineCleanupResult;
-    }
+    await engineAndVvppController.cleanupEngines();
     log.info("Post engine kill process done. Now reloading app");
 
     await engineAndVvppController.launchEngines();
