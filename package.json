@@ -54,11 +54,11 @@
     "postuninstall": "electron-builder install-app-deps"
   },
   "dependencies": {
-    "@core/asyncutil": "jsr:1.2.0",
     "@gtm-support/vue-gtm": "3.1.0",
     "@quasar/extras": "1.17.0",
     "@sevenc-nanashi/utaformatix-ts": "jsr:0.4.0",
     "@std/path": "jsr:1.0.8",
+    "async-lock": "1.4.1",
     "dayjs": "1.11.19",
     "electron-log": "5.4.3",
     "electron-window-state": "5.0.3",
@@ -100,6 +100,7 @@
     "@storybook/addon-themes": "10.0.2",
     "@storybook/addon-vitest": "10.0.2",
     "@storybook/vue3-vite": "10.0.2",
+    "@types/async-lock": "1.4.2",
     "@types/encoding-japanese": "2.2.1",
     "@types/markdown-it": "14.1.2",
     "@types/multistream": "4.1.3",
