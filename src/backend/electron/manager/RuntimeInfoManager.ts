@@ -3,12 +3,12 @@
  * ランタイム情報には起動しているエンジンのURLなどが含まれる。
  */
 
-import { Mutex } from "@core/asyncutil";
 import type { AltPortInfos } from "@/store/type";
 import { EngineId, EngineInfo } from "@/type/preload";
 import { writeFileSafely } from "@/backend/electron/fileHelper";
 import { createEngineUrl } from "@/domain/url";
 import { createLogger } from "@/helpers/log";
+import { Mutex } from "@/helpers/mutex";
 
 const log = createLogger("RuntimeInfoManager");
 
@@ -76,7 +76,7 @@ export class RuntimeInfoManager {
    * ランタイム情報ファイルを書き出す
    */
   public async exportFile() {
-    using _lock = await this.lock.acquire();
+    await using _lock = await this.lock.acquire();
     // データ化
     const runtimeInfoFormatFor3rdParty: RuntimeInfo = {
       formatVersion: this.fileFormatVersion,

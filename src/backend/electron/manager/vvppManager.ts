@@ -1,7 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
 import { dialog } from "electron";
-import { Mutex } from "@core/asyncutil";
 import { ExtractedEngineFiles } from "../ExtractedEngineFiles";
 import {
   EngineId,
@@ -14,6 +13,7 @@ import { ProgressCallback } from "@/helpers/progressHelper";
 import { createLogger } from "@/helpers/log";
 import { isWindows } from "@/helpers/platform";
 import { UnreachableError } from "@/type/utility";
+import { Mutex } from "@/helpers/mutex";
 
 const log = createLogger("VvppManager");
 
@@ -161,7 +161,7 @@ export class VvppManager {
     extractedEngineFiles: ExtractedEngineFiles;
     immediate: boolean;
   }) {
-    using _lock = await this.lock.acquire();
+    await using _lock = await this.lock.acquire();
     await this._install(params);
   }
   private async _install(params: {
@@ -193,7 +193,7 @@ export class VvppManager {
   }
 
   async handleMarkedEngineDirs() {
-    using _lock = await this.lock.acquire();
+    await using _lock = await this.lock.acquire();
     await this._handleMarkedEngineDirs();
   }
   private async _handleMarkedEngineDirs() {

@@ -1,5 +1,4 @@
 import semver from "semver";
-import { Mutex } from "@core/asyncutil";
 import {
   AcceptTermsStatus,
   ConfigType,
@@ -17,6 +16,7 @@ import {
   getDefaultHotkeySettings,
   HotkeySettingType,
 } from "@/domain/hotkeyAction";
+import { Mutex } from "@/helpers/mutex";
 
 const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
   [
@@ -362,7 +362,7 @@ export abstract class BaseConfigManager {
   }
 
   private async _save() {
-    using _lock = await this.lock.acquire();
+    await using _lock = await this.lock.acquire();
     await this.save({
       ...getConfigSchema({ isMac: this.isMac }).parse({
         ...this.config,
@@ -376,7 +376,7 @@ export abstract class BaseConfigManager {
   }
 
   ensureSaved(): Promise<void> | "alreadySaved" {
-    if (!this.lock.locked) {
+    if (!this.lock.isLocked()) {
       return "alreadySaved";
     }
 
@@ -388,7 +388,7 @@ export abstract class BaseConfigManager {
     for (let i = 0; i < 100; i++) {
       // 他のスレッドに処理を譲る
       await new Promise((resolve) => setTimeout(resolve, 100));
-      if (!this.lock.locked) {
+      if (!this.lock.isLocked()) {
         return;
       }
     }
