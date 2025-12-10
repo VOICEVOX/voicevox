@@ -1,4 +1,4 @@
-# installer_linux.shから使うファイル
+# installer_linux.template.shから使うファイル
 
 サードパーティパッケージからも利用できるファイルたち。
 
