@@ -156,20 +156,20 @@ describe("applySmoothTransition", () => {
     const data = [0, 0, 0, 0, 1, 1, 1, 1, 1];
     const jumpIndices = [4];
 
-    const expectedManual = [...data];
+    const manualExpected = [...data];
     for (let i = 0; i < 6; i++) {
-      expectedManual[1 + i] = smoothStep((i + 0.5) / 6);
+      manualExpected[1 + i] = smoothStep((i + 0.5) / 6);
     }
 
-    const expectedHelperFunc = [...data];
-    applySingleTransition(expectedHelperFunc, 4, { left: 3, right: 3 });
+    const helperExpected = [...data];
+    applySingleTransition(helperExpected, 4, { left: 3, right: 3 });
 
     const actual = [...data];
     applySmoothTransition(actual, jumpIndices, [{ left: 3, right: 3 }]);
 
     for (let i = 0; i < data.length; i++) {
-      expect(actual[i]).toBeCloseTo(expectedManual[i], 6);
-      expect(actual[i]).toBeCloseTo(expectedHelperFunc[i], 6);
+      expect(actual[i]).toBeCloseTo(manualExpected[i], 6);
+      expect(actual[i]).toBeCloseTo(helperExpected[i], 6);
     }
   });
 
@@ -177,19 +177,19 @@ describe("applySmoothTransition", () => {
     const data = [1, 1, 1, 1, 0, 0, 0, 0];
     const actual = [...data];
 
-    const expectedManual = [...data];
+    const manualExpected = [...data];
     for (let i = 0; i < 6; i++) {
-      expectedManual[1 + i] = 1 - smoothStep((i + 0.5) / 6);
+      manualExpected[1 + i] = 1 - smoothStep((i + 0.5) / 6);
     }
 
-    const expectedHelperFunc = [...data];
-    applySingleTransition(expectedHelperFunc, 4, { left: 3, right: 3 });
+    const helperExpected = [...data];
+    applySingleTransition(helperExpected, 4, { left: 3, right: 3 });
 
     applySmoothTransition(actual, [4], [{ left: 3, right: 3 }]);
 
     for (let i = 0; i < data.length; i++) {
-      expect(actual[i]).toBeCloseTo(expectedManual[i], 6);
-      expect(actual[i]).toBeCloseTo(expectedHelperFunc[i], 6);
+      expect(actual[i]).toBeCloseTo(manualExpected[i], 6);
+      expect(actual[i]).toBeCloseTo(helperExpected[i], 6);
     }
   });
 
@@ -197,20 +197,20 @@ describe("applySmoothTransition", () => {
     const data = [0.5, 0.5, 0.5, 1.7, 1.7, 1.7];
     const actual = [...data];
 
-    const expectedManual = [...data];
+    const manualExpected = [...data];
     const jumpSize = data[3] - data[2];
     for (let i = 0; i < 4; i++) {
-      expectedManual[1 + i] = 0.5 + jumpSize * smoothStep((i + 0.5) / 4);
+      manualExpected[1 + i] = 0.5 + jumpSize * smoothStep((i + 0.5) / 4);
     }
 
-    const expectedHelperFunc = [...data];
-    applySingleTransition(expectedHelperFunc, 3, { left: 2, right: 2 });
+    const helperExpected = [...data];
+    applySingleTransition(helperExpected, 3, { left: 2, right: 2 });
 
     applySmoothTransition(actual, [3], [{ left: 2, right: 2 }]);
 
     for (let i = 0; i < data.length; i++) {
-      expect(actual[i]).toBeCloseTo(expectedManual[i], 6);
-      expect(actual[i]).toBeCloseTo(expectedHelperFunc[i], 6);
+      expect(actual[i]).toBeCloseTo(manualExpected[i], 6);
+      expect(actual[i]).toBeCloseTo(helperExpected[i], 6);
     }
   });
 
@@ -218,20 +218,20 @@ describe("applySmoothTransition", () => {
     const data = [0, 0, 0, 0, 1, 1, 1, 1, 1];
     const jumpIndices = [4];
 
-    const expectedManual = [...data];
+    const manualExpected = [...data];
     for (let i = 0; i < 5; i++) {
-      expectedManual[3 + i] = smoothStep((i + 0.5) / 5);
+      manualExpected[3 + i] = smoothStep((i + 0.5) / 5);
     }
 
-    const expectedHelperFunc = [...data];
-    applySingleTransition(expectedHelperFunc, 4, { left: 1, right: 4 });
+    const helperExpected = [...data];
+    applySingleTransition(helperExpected, 4, { left: 1, right: 4 });
 
     const actual = [...data];
     applySmoothTransition(actual, jumpIndices, [{ left: 1, right: 4 }]);
 
     for (let i = 0; i < data.length; i++) {
-      expect(actual[i]).toBeCloseTo(expectedManual[i], 6);
-      expect(actual[i]).toBeCloseTo(expectedHelperFunc[i], 6);
+      expect(actual[i]).toBeCloseTo(manualExpected[i], 6);
+      expect(actual[i]).toBeCloseTo(helperExpected[i], 6);
     }
   });
 
@@ -258,19 +258,19 @@ describe("applySmoothTransition", () => {
     const data = [0, 0, 0, 1, 1, 1, 1];
     const actual = [...data];
 
-    const expectedManual = [...data];
+    const manualExpected = [...data];
     for (let i = 0; i < 3; i++) {
-      expectedManual[3 + i] = smoothStep((i + 0.5) / 3);
+      manualExpected[3 + i] = smoothStep((i + 0.5) / 3);
     }
 
-    const expectedHelperFunc = [...data];
-    applySingleTransition(expectedHelperFunc, 3, { left: 0, right: 3 });
+    const helperExpected = [...data];
+    applySingleTransition(helperExpected, 3, { left: 0, right: 3 });
 
     applySmoothTransition(actual, [3], [{ left: 0, right: 3 }]);
 
     for (let i = 0; i < data.length; i++) {
-      expect(actual[i]).toBeCloseTo(expectedManual[i], 6);
-      expect(actual[i]).toBeCloseTo(expectedHelperFunc[i], 6);
+      expect(actual[i]).toBeCloseTo(manualExpected[i], 6);
+      expect(actual[i]).toBeCloseTo(helperExpected[i], 6);
     }
   });
 
@@ -278,19 +278,19 @@ describe("applySmoothTransition", () => {
     const data = [0, 0, 0, 1, 1, 1, 1];
     const actual = [...data];
 
-    const expectedManual = [...data];
+    const manualExpected = [...data];
     for (let i = 0; i < 3; i++) {
-      expectedManual[i] = smoothStep((i + 0.5) / 3);
+      manualExpected[i] = smoothStep((i + 0.5) / 3);
     }
 
-    const expectedHelperFunc = [...data];
-    applySingleTransition(expectedHelperFunc, 3, { left: 3, right: 0 });
+    const helperExpected = [...data];
+    applySingleTransition(helperExpected, 3, { left: 3, right: 0 });
 
     applySmoothTransition(actual, [3], [{ left: 3, right: 0 }]);
 
     for (let i = 0; i < data.length; i++) {
-      expect(actual[i]).toBeCloseTo(expectedManual[i], 6);
-      expect(actual[i]).toBeCloseTo(expectedHelperFunc[i], 6);
+      expect(actual[i]).toBeCloseTo(manualExpected[i], 6);
+      expect(actual[i]).toBeCloseTo(helperExpected[i], 6);
     }
   });
 
