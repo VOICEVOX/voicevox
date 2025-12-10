@@ -3,7 +3,7 @@
 ## installer_linux.template.sh
 
 インストーラー生成用のテンプレート。
-https://github.com/VOICEVOX/voicevox/blob/main/.github/workflows/build.yml でinstaller_linux.shに変換してアップロードする。
+[build.yml](../../.github/workflows/build.yml) でLinux用インストールスクリプトに変換してデプロイする。
 
 ## voicevox.xml
 
