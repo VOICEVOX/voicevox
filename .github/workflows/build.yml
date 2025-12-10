@@ -457,7 +457,7 @@ jobs:
             # Split to MyArtifact.AppImage.7z.001, MyArtifact.AppImage.7z.002, ...
             # Use compression level 0 since AppImage is already compressed
             # .7z is needed for installer_linux.sh yet
-            7z -mx=0 -v1g a "${{ matrix.linux_appimage_7z_name }}.7z" "${appImageFile}"
+            7z -mx=0 -v1900m a "${{ matrix.linux_appimage_7z_name }}.7z" "${appImageFile}"
 
             # Output split archive name<TAB>size<TAB>hash list to myartifact.7z.txt
             ls "${{ matrix.linux_appimage_7z_name }}.7z".* > archives_name.txt
