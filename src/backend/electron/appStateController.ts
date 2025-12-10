@@ -8,14 +8,18 @@ import { createLogger } from "@/helpers/log";
 
 const log = createLogger("AppStateController");
 
-// アプリの状態を管理するシングルトン。
-//
-// TODO: アプリの起動処理をここに移す
+/**
+ * アプリの状態を管理するシングルトン。
+ *
+ * TODO: アプリの起動処理をここに移す
+ */
 export class AppStateController {
-  // NOTE:
-  // - unconfirmed：ユーザーが終了をリクエストした状態
-  // - dirty：クリーンアップ前の状態
-  // - done：クリーンアップ処理が完了し、アプリが終了する準備が整った状態
+  /**
+   * アプリの終了状態を表す。
+   * - unconfirmed：ユーザーが終了をリクエストした状態
+   * - dirty：クリーンアップ前の状態
+   * - done：クリーンアップ処理が完了し、アプリが終了する準備が整った状態
+   */
   private quitState: "unconfirmed" | "dirty" | "done" = "unconfirmed";
 
   onQuitRequest(DI: { preventQuit: () => void }): void {
