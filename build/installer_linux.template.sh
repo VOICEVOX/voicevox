@@ -25,8 +25,8 @@ cat << 'BANNER'
 +-+-+-+-+-+-+-+-+-+
 BANNER
 
-NAME=$(basename "${NAME:-linux-nvidia-appimage}")
-VERSION=$(basename "${VERSION:-}")
+NAME=@@PLACEHOLDER@@ # placeholder for CI
+VERSION=@@PLACEHOLDER@@ # placeholder for CI
 REPO_URL=${REPO_URL:-https://github.com/VOICEVOX/voicevox}
 
 # Install directory
