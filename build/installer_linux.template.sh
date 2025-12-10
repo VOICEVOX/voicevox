@@ -420,7 +420,7 @@ cp squashfs-root/*.png "${ICON_INSTALL_DIR}"
 echo "[+] Registering file association..."
 
 mkdir -p "${MIME_INSTALL_DIR}/packages"
-curl https://raw.githubusercontent.com/VOICEVOX/voicevox/refs/heads/main/build/linux/voicevox.xml > "${MIME_INSTALL_DIR}/packages/voicevox.xml"
+curl --fail -L -o "${MIME_INSTALL_DIR}/packages/voicevox.xml" "https://raw.githubusercontent.com/VOICEVOX/voicevox/refs/tags/${VERSION}/build/linux/voicevox.xml"
 
 # Update file association database
 echo "[+] Updating file association database..."
