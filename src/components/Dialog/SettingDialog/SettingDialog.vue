@@ -463,15 +463,6 @@
                     changeExperimentalSetting('showParameterPanel', $event)
                   "
                 />
-                <ToggleCell
-                  v-if="!isProduction"
-                  title="[開発時のみ機能] ソング：編集適用後のピッチを表示"
-                  description="ONの場合、ソングエディタで編集適用後のピッチが表示されます。無声区間・無音区間のピッチも表示されます。"
-                  :modelValue="experimentalSetting.showEditedPitch"
-                  @update:modelValue="
-                    changeExperimentalSetting('showEditedPitch', $event)
-                  "
-                />
               </div>
               <div class="setting-card">
                 <h5 class="headline">データ収集</h5>
