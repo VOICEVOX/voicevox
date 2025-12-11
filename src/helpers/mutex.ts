@@ -10,7 +10,7 @@ const key = "lock";
  * ```ts
  * const mutex = new Mutex();
  * {
- *   const lock = await mutex.acquire();
+ *   await using lock = await mutex.acquire();
  *   // ロック中
  * }
  * // ロック外
