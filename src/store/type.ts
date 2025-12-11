@@ -76,6 +76,7 @@ import type {
   Track,
 } from "@/domain/project/type";
 import { LatestProjectType } from "@/infrastructures/projectFile/type";
+import { WavFormat } from "@/helpers/fileDataGenerator";
 
 /**
  * エディタ用のAudioQuery
@@ -862,6 +863,7 @@ export type TrackParameters = {
 export type SongExportSetting = {
   isMono: boolean;
   sampleRate: number;
+  format: WavFormat;
   withLimiter: boolean;
   withTrackParameters: TrackParameters;
 };

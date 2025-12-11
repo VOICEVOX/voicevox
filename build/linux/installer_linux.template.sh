@@ -25,8 +25,8 @@ cat << 'BANNER'
 +-+-+-+-+-+-+-+-+-+
 BANNER
 
-NAME=$(basename "${NAME:-linux-nvidia-appimage}")
-VERSION=$(basename "${VERSION:-}")
+NAME=@@PLACEHOLDER@@ # placeholder for CI
+VERSION=@@PLACEHOLDER@@ # placeholder for CI
 REPO_URL=${REPO_URL:-https://github.com/VOICEVOX/voicevox}
 
 # Install directory
@@ -116,9 +116,6 @@ Or
 
 Arch Linux:
     sudo pacman -S 7zip
-
-MacOS:
-    brew install p7zip
 EOS
 fi
 echo "[-] 7z command: ${COMMAND_7Z}"
@@ -174,9 +171,6 @@ Or
 
 Arch Linux
     sudo pacman -S libsndfile
-
-MacOS:
-    brew install libsndfile
 EOS
         if [ "${IGNORE_RTCOND}" != "1" ]; then
             exit 1
@@ -346,7 +340,7 @@ BANNER
 VOICEVOX_INSTALLED_FILES=(
     "${DESKTOP_ENTRY_INSTALL_DIR}/voicevox.desktop"
     "${ICON_INSTALL_DIR}/voicevox.png"
-    "${ICON_INSTALL_DIR}/hicolor/0x0/apps/voicevox.png"
+    "${ICON_INSTALL_DIR}/hicolor/256x256/apps/voicevox.png"
     "${MIME_INSTALL_DIR}/packages/voicevox.xml"
 )
 
@@ -426,32 +420,7 @@ cp squashfs-root/*.png "${ICON_INSTALL_DIR}"
 echo "[+] Registering file association..."
 
 mkdir -p "${MIME_INSTALL_DIR}/packages"
-cat << EOS > "${MIME_INSTALL_DIR}/packages/voicevox.xml"
-<?xml version="1.0" encoding="utf-8"?>
-<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
-    <mime-type type="application/x-voicevox">
-        <comment>VOICEVOX Project file</comment>
-        <comment xml:lang="ja">VOICEVOX プロジェクトファイル</comment>
-        <sub-class-of type="application/json" />
-        <glob pattern="*.vvproj" />
-        <icon name="voicevox" />
-    </mime-type>
-    <mime-type type="application/x-voicevox-plugin-package">
-        <comment>VOICEVOX Plugin package</comment>
-        <comment xml:lang="ja">VOICEVOX プラグインパッケージ</comment>
-        <sub-class-of type="application/zip" />
-        <glob pattern="*.vvpp" />
-        <icon name="voicevox" />
-    </mime-type>
-    <mime-type type="application/x-voicevox-plugin-package-part">
-        <comment>VOICEVOX Plugin package (part)</comment>
-        <comment xml:lang="ja">VOICEVOX プラグインパッケージ（分割）</comment>
-        <sub-class-of type="application/zip" />
-        <glob pattern="*.vvppp" />
-        <icon name="voicevox" />
-    </mime-type>
-</mime-info>
-EOS
+curl --fail -L -o "${MIME_INSTALL_DIR}/packages/voicevox.xml" "https://raw.githubusercontent.com/VOICEVOX/voicevox/refs/tags/${VERSION}/build/linux/voicevox.xml"
 
 # Update file association database
 echo "[+] Updating file association database..."

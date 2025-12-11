@@ -116,20 +116,20 @@ process.on("unhandledRejection", (reason) => {
 
 function getAppPaths() {
   let appDirPath: string;
-  let __static: string;
+  let staticDir: string;
 
   if (isDevelopment) {
     // import.meta.dirnameはdist_electronを指しているので、一つ上のディレクトリに移動する
     appDirPath = path.resolve(import.meta.dirname, "..");
-    __static = path.join(appDirPath, "public");
+    staticDir = path.join(appDirPath, "public");
   } else {
     appDirPath = path.dirname(app.getPath("exe"));
-    __static = import.meta.dirname;
+    staticDir = import.meta.dirname;
   }
 
-  return { appDirPath, __static };
+  return { appDirPath, staticDir };
 }
-const { appDirPath, __static } = getAppPaths();
+const { appDirPath, staticDir } = getAppPaths();
 
 // 製品版はカレントディレクトリを.exeのパスにする
 // TODO: ディレクトリを移動しないようにしたい
@@ -217,7 +217,7 @@ initializeWindowManager({
   appStateGetter: () => appState,
   isDevelopment,
   isTest,
-  staticDir: __static,
+  staticDir: staticDir,
 });
 initializeRuntimeInfoManager({
   runtimeInfoPath: path.join(app.getPath("userData"), "runtime-info.json"),
@@ -301,7 +301,7 @@ if (isMac) {
 registerIpcMainHandle<IpcMainHandle>(
   getIpcMainHandle({
     appStateGetter: () => appState,
-    staticDirPath: __static,
+    staticDirPath: staticDir,
     appDirPath,
     initialFilePathGetter: () => initialFilePath,
   }),
