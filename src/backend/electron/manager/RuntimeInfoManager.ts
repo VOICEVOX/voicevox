@@ -48,7 +48,9 @@ export class RuntimeInfoManager {
   /**
    * ファイルロック用のインスタンス
    */
-  private lock = new Mutex();
+  private lock = new Mutex({
+    timeout: 1000,
+  });
 
   /**
    * ファイルフォーマットバージョン
