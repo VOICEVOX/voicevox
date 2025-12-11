@@ -348,6 +348,8 @@ export const DEPRECATED_DEFAULT_EDITOR_FRAME_RATE = 93.75;
 
 export const VALUE_INDICATING_NO_DATA = -1;
 
+export const MIN_F0_VALUE = 1e-5;
+
 export const VOWELS = ["N", "a", "e", "i", "o", "u", "A", "E", "I", "O", "U"];
 
 export const UNVOICED_PHONEMES = [
@@ -430,7 +432,7 @@ export function isValidPitchEditData(pitchEditData: number[]) {
   return pitchEditData.every(
     (value) =>
       Number.isFinite(value) &&
-      (value > 0 || value === VALUE_INDICATING_NO_DATA),
+      (value > MIN_F0_VALUE || value === VALUE_INDICATING_NO_DATA),
   );
 }
 
@@ -718,6 +720,18 @@ export function applyPitchEdit(
       "The frame rate between the phrase query and the editor does not match.",
     );
   }
+  if (phraseQuery.f0.some((value) => value < MIN_F0_VALUE)) {
+    throw new Error("phraseQuery.f0 contains values less than MIN_F0_VALUE.");
+  }
+  if (
+    pitchEditData.some(
+      (value) => value < MIN_F0_VALUE && value !== VALUE_INDICATING_NO_DATA,
+    )
+  ) {
+    throw new Error(
+      "pitchEditData contains values less than MIN_F0_VALUE that are not VALUE_INDICATING_NO_DATA.",
+    );
+  }
   const f0 = phraseQuery.f0;
   const phonemes = phraseQuery.phonemes;
 
@@ -738,14 +752,12 @@ export function applyPitchEdit(
   const processStartFrame = Math.max(0, phraseQueryStartFrame);
   const processEndFrame = phraseQueryEndFrame;
 
-  const logWithMinOne = (value: number) => Math.log(Math.max(1, value));
-
   const frameInfos: {
     isEdited: boolean;
     isVoiced: boolean;
     indexInTrack: number;
   }[] = [];
-  const logF0 = f0.map(logWithMinOne);
+  const logF0 = f0.map((value) => Math.log(value));
 
   // 元の（推論された）ピッチとの差分を格納する配列
   const logF0Diff: number[] = [];
@@ -772,7 +784,7 @@ export function applyPitchEdit(
 
     if (isEdited) {
       const originalLogF0 = logF0[indexInPhrase];
-      const editedLogF0 = logWithMinOne(editValue);
+      const editedLogF0 = Math.log(editValue);
 
       logF0Diff.push(editedLogF0 - originalLogF0);
     } else {

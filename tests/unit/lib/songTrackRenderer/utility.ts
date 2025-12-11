@@ -19,7 +19,7 @@ import { PhraseKey, SingingVoice } from "@/store/type";
 import { EngineId, NoteId, StyleId, TrackId } from "@/type/preload";
 import { ExhaustiveError } from "@/type/utility";
 import { getOrThrow } from "@/helpers/mapHelper";
-import { createDefaultTrack } from "@/sing/domain";
+import { createDefaultTrack, MIN_F0_VALUE } from "@/sing/domain";
 import type { Note, Singer, Tempo, Track } from "@/domain/project/type";
 
 /**
@@ -72,16 +72,23 @@ export class SongTrackRendererTestUtility {
             speaker: 0,
             score: { notes: args.notes },
           });
+          for (let i = 0; i < query.f0.length; i++) {
+            query.f0[i] = Math.max(MIN_F0_VALUE, query.f0[i]);
+          }
           return { ...query, frameRate: this.frameRate };
         },
         fetchSingFrameF0: async (args) => {
-          return await mock.singFrameF0({
+          const f0 = await mock.singFrameF0({
             speaker: 0,
             bodySingFrameF0SingFrameF0Post: {
               score: { notes: args.notes },
               frameAudioQuery: args.query,
             },
           });
+          for (let i = 0; i < f0.length; i++) {
+            f0[i] = Math.max(MIN_F0_VALUE, f0[i]);
+          }
+          return f0;
         },
         fetchSingFrameVolume: async (args) => {
           return await mock.singFrameVolume({

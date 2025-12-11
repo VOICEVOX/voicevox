@@ -83,6 +83,7 @@ import {
   applyPhonemeTimingEdit,
   adjustPhonemeTimings,
   isValidLoopRange,
+  MIN_F0_VALUE,
 } from "@/sing/domain";
 import { getOverlappingNoteIds } from "@/sing/storeHelper";
 import {
@@ -2140,6 +2141,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           score: { notes },
           speaker: styleId,
         });
+
+        for (let i = 0; i < query.f0.length; i++) {
+          query.f0[i] = Math.max(MIN_F0_VALUE, query.f0[i]);
+        }
+
         return { ...query, frameRate: engineFrameRate };
       } catch (error) {
         const lyrics = notes.map((value) => value.lyric).join("");
@@ -2174,7 +2180,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         const instance = await actions.INSTANTIATE_ENGINE_CONNECTOR({
           engineId,
         });
-        return await instance.invoke("singFrameF0")({
+        const f0 = await instance.invoke("singFrameF0")({
           bodySingFrameF0SingFrameF0Post: {
             score: {
               notes,
@@ -2183,6 +2189,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           },
           speaker: styleId,
         });
+
+        for (let i = 0; i < f0.length; i++) {
+          f0[i] = Math.max(MIN_F0_VALUE, f0[i]);
+        }
+
+        return f0;
       } catch (error) {
         const lyrics = notes.map((value) => value.lyric).join("");
         logger.error(
