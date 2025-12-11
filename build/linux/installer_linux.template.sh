@@ -37,7 +37,6 @@ FORCE_INSTALL=${FORCE_INSTALL:-}
 KEEP_ARCHIVE=${KEEP_ARCHIVE:-}
 REUSE_LIST=${REUSE_LIST:-}
 SKIP_VERIFY=${SKIP_VERIFY:-}
-IGNORE_RTCOND=${IGNORE_RTCOND:-}
 
 DESKTOP_ENTRY_INSTALL_DIR=${DESKTOP_ENTRY_INSTALL_DIR:-$HOME/.local/share/applications}
 ICON_INSTALL_DIR=${ICON_INSTALL_DIR:-$HOME/.local/share/icons}
@@ -120,64 +119,6 @@ EOS
 fi
 echo "[-] 7z command: ${COMMAND_7Z}"
 
-LATEST_RELEASE_URL=$REPO_URL/releases/latest
-
-if [ -z "${VERSION}" ]; then
-    echo "[+] Checking the latest version..."
-
-    # releases/tag/{version}
-    RELEASE_TAG_URL=$(curl -fsSL -o /dev/null -w '%{url_effective}' "${LATEST_RELEASE_URL}")
-
-    # extract version (release tag name) from URL
-    VERSION=$(echo "${RELEASE_TAG_URL}" | sed 's/.*\/\(.*\)$/\1/')
-    echo "[-] Install version: ${VERSION} (latest)"
-else
-    echo "[-] Install version: ${VERSION}"
-fi
-
-IFS=" " read -r -a VERSION_ARRAY <<< "${VERSION//[.+-]/ }"
-if [ "${VERSION_ARRAY[0]}" -eq 0 ] && [ "${VERSION_ARRAY[1]}" -le 14 ]; then
-    # Check when version < 0.15
-    echo "[+] Checking runtime prerequisites..."
-
-    PATH=${PATH}:/usr/local/sbin:/usr/sbin:/sbin
-    if ! command -v ldconfig &> /dev/null; then
-        cat << EOS && exit 1
-[!] Command 'ldconfig' not found
-
-Required to check existence of required libraries.
-You must add a directory of contain ldconfig command to PATH environment variable.
-
-EOS
-    fi
-
-    if { ldconfig -p | grep 'libsndfile\.so';} &>/dev/null; then
-        echo "[-] libsndfile: OK"
-    elif [ -d /usr/local/Cellar/libsndfile ]; then
-        echo "[-] libsndfile: OK"
-    else
-        cat << 'EOS'
-[!] libsndfile: not found
-
-Required to run VOICEVOX ENGINE
-
-Ubuntu/Debian:
-    sudo apt install libsndfile1
-
-CentOS/Fedora:
-    sudo dnf install libsndfile
-Or
-    sudo yum install libsndfile
-
-Arch Linux
-    sudo pacman -S libsndfile
-EOS
-        if [ "${IGNORE_RTCOND}" != "1" ]; then
-            exit 1
-        fi
-    fi
-fi
-
 RELEASE_URL=${REPO_URL}/releases/download/${VERSION}
 ARCHIVE_LIST_URL=${RELEASE_URL}/${NAME}.7z.txt
 
@@ -195,44 +136,24 @@ fi
 echo
 echo "[+] Listing of split archives..."
 _readarray ARCHIVE_LIST < "list.txt"
+# filename<TAB>size<TAB>hash
+_readarray ARCHIVE_NAME_LIST < <(
+    for line in "${ARCHIVE_LIST[@]}"; do
+        echo "$line"
+    done | awk '$0!=""{print $1}'
+)
+_readarray ARCHIVE_SIZE_LIST < <(
+    for line in "${ARCHIVE_LIST[@]}"; do
+        echo "$line"
+    done | awk '$0!=""{print $2}'
+)
+_readarray ARCHIVE_HASH_LIST < <(
+    for line in "${ARCHIVE_LIST[@]}"; do
+        echo "$line"
+    done | awk '$0!=""{print $3}' |
+        tr '[:lower:]' '[:upper:]'
+)
 
-if [ -z "$(echo "${ARCHIVE_LIST[0]}" | awk '$0=$1')" ]; then
-    # No size/hash information
-    # filename
-    _readarray ARCHIVE_NAME_LIST < <(
-        for line in "${ARCHIVE_LIST[@]}"; do
-            echo "$line"
-        done
-    )
-    _readarray ARCHIVE_SIZE_LIST < <(
-        for index in "${!ARCHIVE_LIST[@]}"; do
-            echo "x"
-        done
-    )
-    _readarray ARCHIVE_HASH_LIST <(
-        for index in "${!ARCHIVE_LIST[@]}"; do
-            echo "x"
-        done
-    )
-else
-    # filename<TAB>size<TAB>hash
-    _readarray ARCHIVE_NAME_LIST < <(
-        for line in "${ARCHIVE_LIST[@]}"; do
-            echo "$line"
-        done | awk '$0!=""{print $1}'
-    )
-    _readarray ARCHIVE_SIZE_LIST < <(
-        for line in "${ARCHIVE_LIST[@]}"; do
-            echo "$line"
-        done | awk '$0!=""{print $2}'
-    )
-    _readarray ARCHIVE_HASH_LIST < <(
-        for line in "${ARCHIVE_LIST[@]}"; do
-            echo "$line"
-        done | awk '$0!=""{print $3}' |
-            tr '[:lower:]' '[:upper:]'
-    )
-fi
 echo
 
 for index in "${!ARCHIVE_NAME_LIST[@]}"; do
