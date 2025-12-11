@@ -46,8 +46,12 @@ class MutexLock {
     private release: () => void,
     private ensureUnlocked: Promise<void>,
   ) {}
-  async [Symbol.asyncDispose]() {
+  async unlock() {
     this.release();
     await this.ensureUnlocked;
+  }
+
+  [Symbol.asyncDispose]() {
+    return this.unlock();
   }
 }

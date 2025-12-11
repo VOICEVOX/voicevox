@@ -65,13 +65,6 @@ const typeCheckedRules: Rules = {
 
   "@typescript-eslint/no-non-null-assertion": "error",
 
-  "no-unused-vars": [
-    "warn",
-    {
-      ignoreUsingDeclarations: true,
-    },
-  ],
-
   "@typescript-eslint/no-misused-promises": [
     "error",
     {
@@ -175,6 +168,7 @@ export default defineConfigWithVueTs(
         process.env.NODE_ENV !== "production" ? "warn" : "error", // 開発時のみwarn
         {
           ignoreRestSiblings: true,
+          ignoreUsingDeclarations: true,
         },
       ],
       "import/order": "error",
