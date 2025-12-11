@@ -40,7 +40,7 @@ const props = defineProps<{
     | { type: "erase"; startFrame: number; frameLength: number };
 }>();
 
-const { error } = createLogger("SequencerPitch");
+const { warn, error } = createLogger("SequencerPitch");
 const store = useStore();
 const tpqn = computed(() => store.state.tpqn);
 const isDark = computed(() => store.state.currentTheme === "Dark");
@@ -298,9 +298,13 @@ const pitchEditLock = new Mutex({ maxPending: 1 });
 watch(
   [mounted, singingGuidesInSelectedTrack, tempos, tpqn],
   async ([mounted]) => {
-    await using _lock = await originalPitchLock.acquire();
-    if (mounted) {
-      await updateOriginalPitchLineDataMap();
+    try {
+      await using _lock = await originalPitchLock.acquire();
+      if (mounted) {
+        await updateOriginalPitchLineDataMap();
+      }
+    } catch (e) {
+      warn("Failed to update original pitch line data map.", e);
     }
   },
 );
@@ -309,9 +313,13 @@ watch(
 watch(
   [mounted, pitchEditData, previewPitchEdit, tempos, tpqn],
   async ([mounted]) => {
-    await using _lock = await pitchEditLock.acquire();
-    if (mounted) {
-      await updatePitchEditLineDataMap();
+    try {
+      await using _lock = await pitchEditLock.acquire();
+      if (mounted) {
+        await updatePitchEditLineDataMap();
+      }
+    } catch (e) {
+      warn("Failed to update pitch edit line data map.", e);
     }
   },
 );
