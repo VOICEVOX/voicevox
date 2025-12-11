@@ -1,6 +1,21 @@
 import AsyncLock, { AsyncLockOptions } from "async-lock";
 
 const key = "lock";
+
+/**
+ * Mutex。
+ * `await using _lock = await mutex.acquire()`のように使用する。
+ *
+ * @example
+ * ```ts
+ * const mutex = new Mutex();
+ * {
+ *   const lock = await mutex.acquire();
+ *   // ロック中
+ * }
+ * // ロック外
+ * ```
+ */
 export class Mutex {
   private lock: AsyncLock;
 
