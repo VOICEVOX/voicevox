@@ -57,16 +57,19 @@ export class Mutex {
 }
 
 class MutexLock {
-  constructor(
-    private release: () => void,
-    private ensureUnlocked: Promise<void>,
-  ) {}
-  async unlock() {
-    this.release();
-    await this.ensureUnlocked;
+  #release: () => void;
+  #ensureUnlocked: Promise<void>;
+
+  constructor(release: () => void, ensureUnlocked: Promise<void>) {
+    this.#release = release;
+    this.#ensureUnlocked = ensureUnlocked;
+  }
+  async release() {
+    this.#release();
+    await this.#ensureUnlocked;
   }
 
   [Symbol.asyncDispose]() {
-    return this.unlock();
+    return this.release();
   }
 }

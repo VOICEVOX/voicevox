@@ -45,4 +45,36 @@ describe("mutex", () => {
     expect(counter).toBe(2);
     expect(mutex.isLocked()).toBe(false);
   });
+
+  test("isLockedでロック状態を取得できる", async () => {
+    const mutex = new Mutex();
+    expect(mutex.isLocked()).toBe(false);
+
+    const lock = await mutex.acquire();
+    expect(mutex.isLocked()).toBe(true);
+
+    await lock.release();
+    expect(mutex.isLocked()).toBe(false);
+  });
+
+  test("内部で例外が発生しても解放される", async () => {
+    const mutex = new Mutex();
+    let errorCaught = false;
+
+    const task = async () => {
+      await using _lock = await mutex.acquire();
+      throw new Error("Test error");
+    };
+
+    try {
+      const taskPromise = task();
+      expect(mutex.isLocked()).toBe(true);
+      await taskPromise;
+    } catch {
+      errorCaught = true;
+    }
+
+    expect(errorCaught).toBe(true);
+    expect(mutex.isLocked()).toBe(false);
+  });
 });
