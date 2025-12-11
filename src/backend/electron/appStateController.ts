@@ -1,4 +1,5 @@
 import { app } from "electron";
+import AsyncLock from "async-lock";
 import { ipcMainSendProxy } from "./ipc";
 import { getWindowManager } from "./manager/windowManager";
 import { getEngineAndVvppController } from "./engineAndVvppController";
@@ -7,6 +8,9 @@ import { ExhaustiveError } from "@/type/utility";
 import { createLogger } from "@/helpers/log";
 
 const log = createLogger("AppStateController");
+
+const lock = new AsyncLock();
+const lockKey = "onQuitRequest";
 
 /**
  * アプリの状態を管理するシングルトン。
@@ -23,17 +27,32 @@ export class AppStateController {
   private quitState: "unconfirmed" | "dirty" | "done" = "unconfirmed";
 
   onQuitRequest(DI: { preventQuit: () => void }): void {
+    if (lock.isBusy(lockKey)) {
+      log.info(
+        "onQuitRequest is already being processed, preventing quit and trying again later",
+      );
+      DI.preventQuit();
+      void (async () => {
+        await lock.acquire(lockKey, async () => {});
+        this.initiateQuit();
+      })();
+      return;
+    }
     log.info(`onQuitRequest called. Current quitState: ${this.quitState}`);
     switch (this.quitState) {
       case "unconfirmed": {
         DI.preventQuit();
-        this.checkUnsavedEdit();
+        void lock.acquire(lockKey, async () => {
+          this.checkUnsavedEdit();
+        });
         break;
       }
       case "dirty": {
         log.info("Performing cleanup before quitting");
         DI.preventQuit();
-        void this.onQuitRequestOnDirty();
+        void lock.acquire(lockKey, async () => {
+          await this.onQuitRequestOnDirty();
+        });
         break;
       }
       case "done":
@@ -66,6 +85,7 @@ export class AppStateController {
   /** 編集状態に関わらず終了する */
   shutdown() {
     this.quitState = "dirty";
+    getWindowManager().destroyWindow();
     this.initiateQuit();
   }
 
