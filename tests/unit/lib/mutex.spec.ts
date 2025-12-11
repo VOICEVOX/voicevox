@@ -1,15 +1,15 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, test } from "vitest";
 import { Mutex } from "@/helpers/mutex";
 
 describe("mutex", () => {
-  it("prevents concurrent access", async () => {
+  test("排他制御できる", async () => {
     const mutex = new Mutex({});
     let counter = 0;
 
     const increment = async () => {
       await using _lock = await mutex.acquire();
       const current = counter;
-      // Simulate some async work
+      // 時間のかかる処理
       await new Promise((resolve) => setTimeout(resolve, 10));
       counter = current + 1;
     };
@@ -23,14 +23,14 @@ describe("mutex", () => {
     expect(counter).toBe(5);
   });
 
-  it("accepts AsyncLock's options", async () => {
+  test("AsyncLockのオプションを使える", async () => {
     const mutex = new Mutex({ maxPending: 1 });
     let counter = 0;
 
     const increment = async () => {
       await using _lock = await mutex.acquire();
       const current = counter;
-      // Simulate some async work
+      // 時間のかかる処理
       await new Promise((resolve) => setTimeout(resolve, 10));
       counter = current + 1;
     };
