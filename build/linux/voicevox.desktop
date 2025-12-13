@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=VOICEVOX
+Exec=voicevox
+Terminal=false
+Type=Application
+Icon=voicevox
+StartupWMClass=VOICEVOX
+MimeType=application/x-voicevox;
+Categories=AudioVideo;
