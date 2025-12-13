@@ -15,7 +15,7 @@ import {
 } from "@/sing/utility";
 import { getButton } from "@/sing/viewHelper";
 import { getOrThrow } from "@/helpers/mapHelper";
-import { MIN_F0_VALUE, VALUE_INDICATING_NO_DATA } from "@/sing/domain";
+import { VALUE_INDICATING_NO_DATA } from "@/sing/domain";
 
 export class DrawPitchState
   implements State<SequencerStateDefinitions, Input, Context>
@@ -137,10 +137,10 @@ export class DrawPitchState
       const previewEditData = context.previewPitchEdit.value.data;
       const editEndFrame = editStartFrame + previewEditData.length;
 
-      // プレビュー中の編集データをMIN_F0_VALUE以上にして、対数スケールに変換する
-      const logPreviewEditData = previewEditData.map((value) =>
-        Math.log(Math.max(MIN_F0_VALUE, value)),
-      );
+      const logWithMinOne = (value: number) => Math.log(Math.max(1, value));
+
+      // プレビュー中の編集データを対数スケールに変換する
+      const logPreviewEditData = previewEditData.map(logWithMinOne);
 
       // 平滑化を行う
       applyGaussianFilter(logPreviewEditData, 0.7);
@@ -178,13 +178,13 @@ export class DrawPitchState
       if (contiguousRegionStartFrame !== editStartFrame) {
         logFrontData = pitchEditData
           .slice(contiguousRegionStartFrame, editStartFrame)
-          .map((value) => Math.log(value));
+          .map(logWithMinOne);
       }
       let logBackData: number[] = [];
       if (contiguousRegionEndFrame !== editEndFrame) {
         logBackData = pitchEditData
           .slice(editEndFrame, contiguousRegionEndFrame)
-          .map((value) => Math.log(value));
+          .map(logWithMinOne);
       }
 
       // 対数スケールでデータを結合
