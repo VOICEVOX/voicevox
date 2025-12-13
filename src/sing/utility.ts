@@ -213,18 +213,18 @@ function smoothStep(x: number) {
  *
  * @param data - 対象のデータ配列
  * @param jumpIndices - ジャンプのインデックスの配列
- * @param maxTransitionLengths - 各ジャンプの左右の遷移長の上限。配列の場合は各ジャンプごとに異なる遷移長を指定できる。
+ * @param transitionConstraints - 各ジャンプの左右の遷移長の制約。配列の場合は各ジャンプごとに異なる遷移長を指定できる。
  */
 export function applySmoothTransition(
   data: number[],
   jumpIndices: number[],
-  maxTransitionLengths:
+  transitionConstraints:
     | { left: number; right: number }
     | { left: number; right: number }[],
 ) {
-  const maxTransitionLengthsArray = Array.isArray(maxTransitionLengths)
-    ? maxTransitionLengths
-    : createArray(jumpIndices.length, () => maxTransitionLengths);
+  const transitionConstraintArray = Array.isArray(transitionConstraints)
+    ? transitionConstraints
+    : createArray(jumpIndices.length, () => transitionConstraints);
   if (jumpIndices.some((value) => !Number.isInteger(value))) {
     throw new Error("jumpIndices must contain integers.");
   }
@@ -241,22 +241,22 @@ export function applySmoothTransition(
       throw new Error("jumpIndex must satisfy 0 < jumpIndex < data.length.");
     }
   }
-  if (maxTransitionLengthsArray.length !== jumpIndices.length) {
+  if (transitionConstraintArray.length !== jumpIndices.length) {
     throw new Error(
-      "maxTransitionLengths must have the same length as jumpIndices.",
+      "transitionConstraints must have the same length as jumpIndices.",
     );
   }
-  for (let i = 0; i < maxTransitionLengthsArray.length; i++) {
-    const { left, right } = maxTransitionLengthsArray[i];
+  for (let i = 0; i < transitionConstraintArray.length; i++) {
+    const { left, right } = transitionConstraintArray[i];
 
     if (!Number.isInteger(left) || !Number.isInteger(right)) {
-      throw new Error("maxTransitionLengths must contain only integers.");
+      throw new Error("transitionConstraints must contain only integers.");
     }
     if (left < 0 || right < 0) {
-      throw new Error("maxTransitionLengths must be non-negative.");
+      throw new Error("transitionConstraints must be non-negative.");
     }
     if (left === 0 && right === 0) {
-      throw new Error("maxTransitionLengths must not be both zero.");
+      throw new Error("transitionConstraints must not be both zero.");
     }
   }
 
@@ -280,11 +280,11 @@ export function applySmoothTransition(
     // 遷移長を利用可能なスペースに制限
     const leftTransitionLength = Math.min(
       leftSpace,
-      maxTransitionLengthsArray[i].left,
+      transitionConstraintArray[i].left,
     );
     const rightTransitionLength = Math.min(
       rightSpace,
-      maxTransitionLengthsArray[i].right,
+      transitionConstraintArray[i].right,
     );
 
     // 遷移範囲を計算（ジャンプの中心を基準に左右に広がる）

@@ -705,159 +705,203 @@ export function adjustPhonemeTimings(
   }
 }
 
+/**
+ * ユーザーによるピッチ編集データを、クエリのf0に適用する。
+ * 単純な上書きではなく、編集箇所と未編集箇所の境界（つなぎ目）が自然になるように
+ * スムージング処理も行う。
+ *
+ * @param phraseQuery - 適用対象のクエリ
+ * @param phraseStartTime - フレーズの開始時刻（秒）
+ * @param pitchEditData - ユーザーが編集したピッチデータの配列
+ * @param editorFrameRate - エディターのフレームレート
+ */
 export function applyPitchEdit(
   phraseQuery: EditorFrameAudioQuery,
   phraseStartTime: number,
   pitchEditData: number[],
   editorFrameRate: number,
 ) {
-  // フレーズのクエリのフレームレートとエディターのフレームレートが一致しない場合はエラー
-  // TODO: 補間するようにする
+  // フレーズクエリとエディターのフレームレートの不一致をチェック
+  // TODO: 異なるフレームレート間での補間処理を実装する
   if (phraseQuery.frameRate !== editorFrameRate) {
     throw new Error(
       "The frame rate between the phrase query and the editor does not match.",
     );
   }
+
   const f0 = phraseQuery.f0;
   const phonemes = phraseQuery.phonemes;
 
-  // 各フレームの音素の配列を生成する
+  // 各フレームに対応する音素情報を生成
   const framePhonemes = convertToFramePhonemes(phonemes);
   if (f0.length !== framePhonemes.length) {
     throw new Error("f0.length and framePhonemes.length do not match.");
   }
 
-  // フレーズのクエリの開始フレームと終了フレームを計算する
+  // フレーズの開始・終了フレーム（絶対時間軸）を計算
   const phraseQueryFrameLength = f0.length;
   const phraseQueryStartFrame = Math.round(
     phraseStartTime * phraseQuery.frameRate,
   );
   const phraseQueryEndFrame = phraseQueryStartFrame + phraseQueryFrameLength;
 
-  // 処理対象のフレーム範囲を計算（負のフレームは0にクリップ）
-  const processStartFrame = Math.max(0, phraseQueryStartFrame);
-  const processEndFrame = phraseQueryEndFrame;
+  // 有効なピッチが存在する範囲（f0 >= 1e-5）を抽出する
+  // NOTE: 対数F0の計算で負無限大になるのを防ぐため、1e-5未満の値は無効とみなす
+  const validPitchRanges: { startFrame: number; endFrame: number }[] = [];
+  let currentStartFrame: number | undefined = undefined;
+  for (
+    let i = Math.max(0, phraseQueryStartFrame);
+    i < phraseQueryEndFrame;
+    i++
+  ) {
+    const f0Value = f0[i - phraseQueryStartFrame];
 
-  const logWithMinOne = (value: number) => Math.log(Math.max(1, value));
-
-  const frameInfos: {
-    isEdited: boolean;
-    isVoiced: boolean;
-  }[] = [];
-  const logF0 = f0.map(logWithMinOne);
-
-  // 元の（推論された）ピッチとの差分を格納する配列
-  const logF0Diff: number[] = [];
-
-  // 各フレームの情報を収集し、対数f0の差分を計算する
-  for (let i = processStartFrame; i < processEndFrame; i++) {
-    const indexInPhrase = i - phraseQueryStartFrame;
-    const phoneme = framePhonemes[indexInPhrase];
-    const isVoiced = !UNVOICED_PHONEMES.includes(phoneme);
-
-    // NOTE: 無声区間またはpitchEditDataの範囲外の場合はVALUE_INDICATING_NO_DATAを使用
-    let editValue = VALUE_INDICATING_NO_DATA;
-    if (isVoiced && i < pitchEditData.length) {
-      editValue = pitchEditData[i];
-    }
-
-    const isEdited = editValue !== VALUE_INDICATING_NO_DATA;
-
-    frameInfos.push({ isEdited, isVoiced });
-
-    if (isEdited) {
-      const originalLogF0 = logF0[indexInPhrase];
-      const editedLogF0 = logWithMinOne(editValue);
-
-      logF0Diff.push(editedLogF0 - originalLogF0);
-    } else {
-      logF0Diff.push(0);
-    }
-  }
-
-  // 編集データが全くない場合は何もしない
-  const hasEditData = frameInfos.some((frameInfo) => frameInfo.isEdited);
-  if (!hasEditData) {
-    return;
-  }
-
-  // 編集と未編集の境界（ジャンプポイント）を検出し、遷移長を計算する
-  const jumpIndicesInPhrase: number[] = [];
-  const maxTransitionLengths: { left: number; right: number }[] = [];
-
-  for (let i = 0; i < frameInfos.length; i++) {
-    const currentFrameInfo = frameInfos[i];
-    const prevFrameInfo = getPrev(frameInfos, i);
-
-    // 編集状態が前フレームと同じ場合は境界ではないのでスキップ
-    if (
-      prevFrameInfo == undefined ||
-      currentFrameInfo.isEdited === prevFrameInfo.isEdited
-    ) {
-      continue;
-    }
-
-    let maxLeftTransitionLength = 3;
-    let maxRightTransitionLength = 3;
-
-    // 無声区間に遷移を移動させて、有声区間での遷移を最小化する
-    // これにより、ユーザーが描いた歌唱表現（しゃくりやフォールなど）が
-    // スムージングで崩れることを防ぎ、意図した表現を忠実に反映する
-    if (currentFrameInfo.isEdited) {
-      const prevIndex = i - 1;
-      for (
-        let distanceFromBoundary = 0;
-        distanceFromBoundary < maxRightTransitionLength &&
-        prevIndex - distanceFromBoundary >= 0;
-        distanceFromBoundary++
-      ) {
-        if (!frameInfos[prevIndex - distanceFromBoundary].isVoiced) {
-          // 右側の遷移を縮小し、余った分を左側に移動
-          maxLeftTransitionLength +=
-            maxRightTransitionLength - distanceFromBoundary;
-          maxRightTransitionLength = distanceFromBoundary;
-          break;
-        }
+    if (f0Value >= 1e-5) {
+      if (currentStartFrame == undefined) {
+        currentStartFrame = i;
       }
     } else {
-      for (
-        let distanceFromBoundary = 0;
-        distanceFromBoundary < maxLeftTransitionLength &&
-        i + distanceFromBoundary < frameInfos.length;
-        distanceFromBoundary++
-      ) {
-        if (!frameInfos[i + distanceFromBoundary].isVoiced) {
-          // 左側の遷移を縮小し、余った分を右側に移動
-          maxRightTransitionLength +=
-            maxLeftTransitionLength - distanceFromBoundary;
-          maxLeftTransitionLength = distanceFromBoundary;
-          break;
-        }
+      if (currentStartFrame != undefined) {
+        validPitchRanges.push({ startFrame: currentStartFrame, endFrame: i });
+        currentStartFrame = undefined;
       }
     }
-
-    jumpIndicesInPhrase.push(i);
-    maxTransitionLengths.push({
-      left: maxLeftTransitionLength,
-      right: maxRightTransitionLength,
+  }
+  // 最後の区間を閉じる
+  if (currentStartFrame != undefined) {
+    validPitchRanges.push({
+      startFrame: currentStartFrame,
+      endFrame: phraseQueryEndFrame,
     });
   }
 
-  // 滑らかな遷移を適用する
-  applySmoothTransition(logF0Diff, jumpIndicesInPhrase, maxTransitionLengths);
+  // 各有効区間に対してピッチ編集処理を適用
+  for (const validPitchRange of validPitchRanges) {
+    const processStartFrame = validPitchRange.startFrame;
+    const processEndFrame = validPitchRange.endFrame;
 
-  // 対数f0の差分を元のf0に適用する
-  for (let i = processStartFrame; i < processEndFrame; i++) {
-    const indexInPhrase = i - phraseQueryStartFrame;
+    const frameInfos: {
+      isEdited: boolean;
+      isVoiced: boolean;
+    }[] = [];
+    const logF0: number[] = [];
 
-    logF0[indexInPhrase] += logF0Diff[i - processStartFrame];
-  }
+    // 元の（推論された）ピッチとの差分を格納する配列
+    const logF0Diff: number[] = [];
 
-  // 対数スケールから元のスケールに戻して、元のf0の値が1以上の箇所のみf0を更新する
-  // （1Hz未満の場合は元の値を維持する）
-  for (let i = 0; i < f0.length; i++) {
-    if (f0[i] >= 1) {
-      phraseQuery.f0[i] = Math.exp(logF0[i]);
+    // 区間内の各フレーム情報を収集し、対数F0の差分を計算する
+    for (let i = processStartFrame; i < processEndFrame; i++) {
+      const indexInPhrase = i - phraseQueryStartFrame;
+      const phoneme = framePhonemes[indexInPhrase];
+      const isVoiced = !UNVOICED_PHONEMES.includes(phoneme);
+
+      // NOTE: 無声区間、またはpitchEditDataの範囲外の場合は「データなし」として扱う
+      let editValue = VALUE_INDICATING_NO_DATA;
+      if (isVoiced && i < pitchEditData.length) {
+        editValue = pitchEditData[i];
+      }
+
+      const isEdited = editValue !== VALUE_INDICATING_NO_DATA;
+      const originalLogF0 = Math.log(f0[indexInPhrase]);
+
+      frameInfos.push({ isEdited, isVoiced });
+      logF0.push(originalLogF0);
+
+      if (isEdited) {
+        const editedLogF0 = Math.log(editValue);
+        logF0Diff.push(editedLogF0 - originalLogF0);
+      } else {
+        logF0Diff.push(0);
+      }
+    }
+
+    // 編集データが一つもない場合はスキップ
+    const hasEditData = frameInfos.some((frameInfo) => frameInfo.isEdited);
+    if (!hasEditData) {
+      continue;
+    }
+
+    // 「編集済み」と「未編集」の境界を検出し、遷移の制約（許容範囲）を計算する
+    const editBoundaryIndices: number[] = [];
+    const transitionConstraints: { left: number; right: number }[] = [];
+
+    // デフォルトの遷移制約幅（フレーム数）
+    // NOTE: 短すぎるとスムージングが十分にできず、長すぎると元のカーブを壊すため、3フレーム程度にしている
+    const BASE_TRANSITION_CONSTRAINT = 3;
+
+    for (let i = 0; i < frameInfos.length; i++) {
+      const currentFrameInfo = frameInfos[i];
+      const prevFrameInfo = getPrev(frameInfos, i);
+
+      // 前フレームと編集状態が変わらない場合は境界ではない
+      if (
+        prevFrameInfo == undefined ||
+        currentFrameInfo.isEdited === prevFrameInfo.isEdited
+      ) {
+        continue;
+      }
+
+      // 左右の遷移許容範囲（制約）の初期値
+      let leftConstraint = BASE_TRANSITION_CONSTRAINT;
+      let rightConstraint = BASE_TRANSITION_CONSTRAINT;
+
+      // 歌唱表現（しゃくりやフォールなど）を維持するため、
+      // 可能な限りスムージングの遷移区間を有声区間から無声区間へ移動させる調整を行う。
+      if (currentFrameInfo.isEdited) {
+        // 「未編集」から「編集済み」への切り替わり（開始点）
+        // 左側（過去方向）にある無声区間を探し、遷移区間をそちらへ割り振る
+        const prevIndex = i - 1;
+        for (
+          let distance = 0;
+          distance < rightConstraint && prevIndex - distance >= 0;
+          distance++
+        ) {
+          if (!frameInfos[prevIndex - distance].isVoiced) {
+            // 右側（編集済み区間）の遷移幅を短縮し、余った分を左側（無声区間）に追加する
+            leftConstraint += rightConstraint - distance;
+            rightConstraint = distance;
+            break;
+          }
+        }
+      } else {
+        // 「編集済み」から「未編集」への切り替わり（終了点）
+        // 右側（未来方向）にある無声区間を探し、遷移区間をそちらへ割り振る
+        for (
+          let distance = 0;
+          distance < leftConstraint && i + distance < frameInfos.length;
+          distance++
+        ) {
+          if (!frameInfos[i + distance].isVoiced) {
+            // 左側（編集済み区間）の遷移幅を短縮し、余った分を右側（無声区間）に追加する
+            rightConstraint += leftConstraint - distance;
+            leftConstraint = distance;
+            break;
+          }
+        }
+      }
+
+      if (leftConstraint !== 0 || rightConstraint !== 0) {
+        editBoundaryIndices.push(i);
+        transitionConstraints.push({
+          left: leftConstraint,
+          right: rightConstraint,
+        });
+      }
+    }
+
+    // 計算された制約に基づいて滑らかな遷移を適用
+    applySmoothTransition(
+      logF0Diff,
+      editBoundaryIndices,
+      transitionConstraints,
+    );
+
+    // 処理結果をphraseQuery.f0に書き戻す
+    for (let i = 0; i < logF0.length; i++) {
+      const processedLogF0 = logF0[i] + logF0Diff[i];
+
+      const indexInPhrase = processStartFrame + i - phraseQueryStartFrame;
+      phraseQuery.f0[indexInPhrase] = Math.exp(processedLogF0);
     }
   }
 }
