@@ -40,13 +40,13 @@ export class EditNotesToolIdleState
         isOnCommandOrCtrlKeyDown(input.keyboardEvent),
         input.keyboardEvent.shiftKey,
       );
-    } else if (input.type === "mouseEvent") {
-      const mouseButton = getButton(input.mouseEvent);
+    } else if (input.type === "pointerEvent") {
+      const mouseButton = getButton(input.pointerEvent);
       const selectedTrackId = context.selectedTrackId.value;
 
       if (
         input.targetArea === "Window" &&
-        input.mouseEvent.type === "mousemove"
+        input.pointerEvent.type === "pointermove"
       ) {
         context.guideLineTicks.value = getGuideLineTicks(
           input.cursorPos,
@@ -55,15 +55,15 @@ export class EditNotesToolIdleState
       }
 
       if (mouseButton === "LEFT_BUTTON") {
-        if (isSelfEventTarget(input.mouseEvent)) {
-          if (input.mouseEvent.type === "mousedown") {
+        if (isSelfEventTarget(input.pointerEvent)) {
+          if (input.pointerEvent.type === "pointerdown") {
             if (input.targetArea === "SequencerBody") {
-              if (input.mouseEvent.shiftKey) {
+              if (input.pointerEvent.shiftKey) {
                 setNextState("selectNotesWithRect", {
                   cursorPosAtStart: input.cursorPos,
                   returnStateId: this.id,
                 });
-              } else if (isOnCommandOrCtrlKeyDown(input.mouseEvent)) {
+              } else if (isOnCommandOrCtrlKeyDown(input.pointerEvent)) {
                 void context.store.actions.DESELECT_ALL_NOTES();
               } else {
                 void context.store.actions.DESELECT_ALL_NOTES();
@@ -76,7 +76,7 @@ export class EditNotesToolIdleState
             } else if (input.targetArea === "Note") {
               this.executeNotesSelectionProcess(
                 context,
-                input.mouseEvent,
+                input.pointerEvent,
                 input.note,
               );
               setNextState("moveNote", {
@@ -89,7 +89,7 @@ export class EditNotesToolIdleState
             } else if (input.targetArea === "NoteLeftEdge") {
               this.executeNotesSelectionProcess(
                 context,
-                input.mouseEvent,
+                input.pointerEvent,
                 input.note,
               );
               setNextState("resizeNoteLeft", {
@@ -102,7 +102,7 @@ export class EditNotesToolIdleState
             } else if (input.targetArea === "NoteRightEdge") {
               this.executeNotesSelectionProcess(
                 context,
-                input.mouseEvent,
+                input.pointerEvent,
                 input.note,
               );
               setNextState("resizeNoteRight", {
@@ -115,16 +115,23 @@ export class EditNotesToolIdleState
             }
           }
         }
+      }
+    } else if (input.type === "mouseEvent") {
+      const selectedTrackId = context.selectedTrackId.value;
+      const mouseButton = getButton(input.mouseEvent);
 
-        if (
-          input.mouseEvent.type === "dblclick" &&
-          input.targetArea === "Note"
-        ) {
-          setNextState("editNoteLyric", {
-            targetTrackId: selectedTrackId,
-            editStartNoteId: input.note.id,
-            returnStateId: this.id,
-          });
+      if (mouseButton === "LEFT_BUTTON") {
+        if (isSelfEventTarget(input.mouseEvent)) {
+          if (
+            input.mouseEvent.type === "dblclick" &&
+            input.targetArea === "Note"
+          ) {
+            setNextState("editNoteLyric", {
+              targetTrackId: selectedTrackId,
+              editStartNoteId: input.note.id,
+              returnStateId: this.id,
+            });
+          }
         }
       }
     }
@@ -150,12 +157,12 @@ export class EditNotesToolIdleState
 
   private executeNotesSelectionProcess(
     context: Context,
-    mouseEvent: MouseEvent,
+    pointerEvent: PointerEvent,
     mouseDownNote: Note,
   ) {
-    if (mouseEvent.shiftKey) {
+    if (pointerEvent.shiftKey) {
       selectNotesInRange(context, mouseDownNote);
-    } else if (isOnCommandOrCtrlKeyDown(mouseEvent)) {
+    } else if (isOnCommandOrCtrlKeyDown(pointerEvent)) {
       toggleNoteSelection(context, mouseDownNote);
     } else if (!context.selectedNoteIds.value.has(mouseDownNote.id)) {
       selectOnlyThisNoteAndPlayPreviewSound(context, mouseDownNote);

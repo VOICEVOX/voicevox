@@ -1,5 +1,4 @@
 import semver from "semver";
-import AsyncLock from "async-lock";
 import {
   AcceptTermsStatus,
   ConfigType,
@@ -17,9 +16,8 @@ import {
   getDefaultHotkeySettings,
   HotkeySettingType,
 } from "@/domain/hotkeyAction";
+import { Mutex } from "@/helpers/mutex";
 import { createLogger } from "@/helpers/log";
-
-const lockKey = "save";
 
 const log = createLogger("ConfigManager");
 
@@ -311,7 +309,7 @@ export abstract class BaseConfigManager {
   protected config: ConfigType | undefined;
   protected isMac: boolean;
 
-  private lock = new AsyncLock();
+  private lock = new Mutex();
 
   protected abstract exists(): Promise<boolean>;
   protected abstract load(): Promise<Record<string, unknown> & Metadata>;
@@ -325,7 +323,7 @@ export abstract class BaseConfigManager {
 
   public reset() {
     this.config = this.getDefaultConfig();
-    this._save();
+    void this._save();
   }
 
   public async initialize(): Promise<this> {
@@ -342,7 +340,7 @@ export abstract class BaseConfigManager {
       this.config = this.migrateHotkeySettings(
         getConfigSchema({ isMac: this.isMac }).parse(data),
       );
-      this._save();
+      void this._save();
     } else {
       log.info("Config file does not exist. Creating default config...");
       this.reset();
@@ -360,7 +358,7 @@ export abstract class BaseConfigManager {
   public set<K extends keyof ConfigType>(key: K, value: ConfigType[K]) {
     if (!this.config) throw new Error("Config is not initialized");
     this.config[key] = value;
-    this._save();
+    void this._save();
   }
 
   /** 全ての設定を取得する。テスト用。 */
@@ -369,19 +367,18 @@ export abstract class BaseConfigManager {
     return this.config;
   }
 
-  private _save() {
-    void this.lock.acquire(lockKey, async () => {
-      log.info("Saving config...");
-      await this.save({
-        ...getConfigSchema({ isMac: this.isMac }).parse({
-          ...this.config,
-        }),
-        __internal__: {
-          migrations: {
-            version: this.getAppVersion(),
-          },
+  private async _save() {
+    await using _lock = await this.lock.acquire();
+    log.info("Saving config...");
+    await this.save({
+      ...getConfigSchema({ isMac: this.isMac }).parse({
+        ...this.config,
+      }),
+      __internal__: {
+        migrations: {
+          version: this.getAppVersion(),
         },
-      });
+      },
     });
   }
 
@@ -390,7 +387,7 @@ export abstract class BaseConfigManager {
     for (let i = 0; i < 100; i++) {
       // 他のスレッドに処理を譲る
       await new Promise((resolve) => setTimeout(resolve, 100));
-      if (!this.lock.isBusy(lockKey)) {
+      if (!this.lock.isLocked()) {
         return;
       }
     }
