@@ -166,7 +166,7 @@ test("複数ファイルを同時にダウンロードできる", async () => {
   }
 });
 
-test("一つエラーが起きると全体が失敗し、かつそのときでもクリーンアップできる", async () => {
+test("一つエラーが起きると全体が失敗し、かつそのときでもクリーンアップされる", async () => {
   await using tempDir = await temporaryDirectory();
   await using dummyServer = new TestServer({
     "/slow-100": async (_req, res) => {
