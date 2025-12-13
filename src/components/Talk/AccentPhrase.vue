@@ -210,6 +210,7 @@
 import { computed, ref } from "vue";
 import AudioAccent from "./AudioAccent.vue";
 import AudioParameter from "./AudioParameter.vue";
+import type { DetailTypes } from "./AudioDetail.vue";
 import { MenuItemButton } from "@/components/Menu/type";
 import ContextMenu from "@/components/Menu/ContextMenu/Container.vue";
 import { useStore } from "@/store";
@@ -236,8 +237,6 @@ const container = ref<HTMLElement>();
 defineExpose({
   container,
 });
-
-type DetailTypes = "accent" | "pitch" | "length";
 
 const store = useStore();
 

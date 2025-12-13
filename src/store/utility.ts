@@ -455,6 +455,7 @@ export const getToolbarButtonName = (tag: ToolbarButtonTagType): string => {
     UNDO: "元に戻す",
     REDO: "やり直す",
     IMPORT_TEXT: "テキスト読み込み",
+    GUIDE: "ガイド",
     EMPTY: "空白",
   };
   return tag2NameObj[tag];

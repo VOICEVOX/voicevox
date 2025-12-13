@@ -308,6 +308,7 @@ export const toolbarButtonTagSchema = z.enum([
   "UNDO",
   "REDO",
   "IMPORT_TEXT",
+  "GUIDE",
   "EMPTY",
 ]);
 export type ToolbarButtonTagType = z.infer<typeof toolbarButtonTagSchema>;
