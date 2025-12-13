@@ -1,16 +1,13 @@
 import { app } from "electron";
-import AsyncLock from "async-lock";
 import { ipcMainSendProxy } from "./ipc";
 import { getWindowManager } from "./manager/windowManager";
 import { getEngineAndVvppController } from "./engineAndVvppController";
 import { getConfigManager } from "./electronConfig";
 import { ExhaustiveError } from "@/type/utility";
 import { createLogger } from "@/helpers/log";
+import { Mutex } from "@/helpers/mutex";
 
 const log = createLogger("AppStateController");
-
-const lock = new AsyncLock();
-const lockKey = "onQuitRequest";
 
 /**
  * アプリの状態を管理するシングルトン。
@@ -26,14 +23,16 @@ export class AppStateController {
    */
   private quitState: "unconfirmed" | "dirty" | "done" = "unconfirmed";
 
+  private lock = new Mutex();
+
   onQuitRequest(DI: { preventQuit: () => void }): void {
-    if (lock.isBusy(lockKey)) {
+    if (this.lock.isLocked()) {
       log.info(
         "onQuitRequest is already being processed, preventing quit and trying again later",
       );
       DI.preventQuit();
       void (async () => {
-        await lock.acquire(lockKey, async () => {});
+        await (await this.lock.acquire()).release();
         this.initiateQuit();
       })();
       return;
@@ -42,17 +41,19 @@ export class AppStateController {
     switch (this.quitState) {
       case "unconfirmed": {
         DI.preventQuit();
-        void lock.acquire(lockKey, async () => {
+        void (async () => {
+          await using _lock = await this.lock.acquire();
           this.checkUnsavedEdit();
-        });
+        })();
         break;
       }
       case "dirty": {
         log.info("Performing cleanup before quitting");
         DI.preventQuit();
-        void lock.acquire(lockKey, async () => {
+        void (async () => {
+          await using _lock = await this.lock.acquire();
           await this.onQuitRequestOnDirty();
-        });
+        })();
         break;
       }
       case "done":
@@ -90,7 +91,11 @@ export class AppStateController {
   }
 
   private initiateQuit() {
-    app.quit();
+    // app.quit()を即座に呼び出すと、lockが解放される前にbefore-quitで再度onQuitRequestが呼ばれてしまうため、
+    // setTimeoutで次のイベントループまで遅延させる
+    setTimeout(() => {
+      app.quit();
+    }, 0);
   }
 
   private async onQuitRequestOnDirty() {
