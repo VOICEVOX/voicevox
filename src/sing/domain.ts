@@ -755,7 +755,6 @@ export function applyPitchEdit(
   const frameInfos: {
     isEdited: boolean;
     isVoiced: boolean;
-    indexInTrack: number;
   }[] = [];
   const logF0 = f0.map((value) => Math.log(value));
 
@@ -776,11 +775,7 @@ export function applyPitchEdit(
 
     const isEdited = editValue !== VALUE_INDICATING_NO_DATA;
 
-    frameInfos.push({
-      isEdited,
-      isVoiced,
-      indexInTrack: i,
-    });
+    frameInfos.push({ isEdited, isVoiced });
 
     if (isEdited) {
       const originalLogF0 = logF0[indexInPhrase];
