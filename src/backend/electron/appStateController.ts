@@ -87,6 +87,7 @@ export class AppStateController {
     this.initiateQuit();
   }
 
+  /** アプリの終了を非同期に開始する */
   private initiateQuit() {
     // app.quit()を即座に呼び出すと、lockが解放される前にbefore-quitで再度onQuitRequestが呼ばれてしまうため、
     // setTimeoutで次のイベントループまで遅延させる
@@ -95,6 +96,7 @@ export class AppStateController {
     }, 0);
   }
 
+  /** クリーンアップ処理を行い、その後アプリを終了する */
   private async onQuitRequestOnDirty() {
     log.info("Starting app cleanup process");
     try {
@@ -108,6 +110,7 @@ export class AppStateController {
     }
   }
 
+  /** 後片付けを行う */
   private async cleanup() {
     try {
       log.info("Cleaning up engines before quitting");
