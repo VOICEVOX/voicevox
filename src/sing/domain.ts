@@ -825,9 +825,14 @@ export function applyPitchEdit(
     const editBoundaryIndices: number[] = [];
     const transitionConstraints: { left: number; right: number }[] = [];
 
+    // デフォルトの遷移制約幅（ミリ秒）
+    // NOTE: 短すぎるとスムージングが十分にできず、長すぎると元のカーブを壊すため、30ms程度にしている
+    const BASE_TRANSITION_CONSTRAINT_MS = 30;
+
     // デフォルトの遷移制約幅（フレーム数）
-    // NOTE: 短すぎるとスムージングが十分にできず、長すぎると元のカーブを壊すため、3フレーム程度にしている
-    const BASE_TRANSITION_CONSTRAINT = 3;
+    const baseTransitionConstraint = Math.round(
+      (BASE_TRANSITION_CONSTRAINT_MS / 1000) * phraseQuery.frameRate,
+    );
 
     for (let i = 0; i < frameInfos.length; i++) {
       const currentFrameInfo = frameInfos[i];
@@ -842,8 +847,8 @@ export function applyPitchEdit(
       }
 
       // 左右の遷移許容範囲（制約）の初期値
-      let leftConstraint = BASE_TRANSITION_CONSTRAINT;
-      let rightConstraint = BASE_TRANSITION_CONSTRAINT;
+      let leftConstraint = baseTransitionConstraint;
+      let rightConstraint = baseTransitionConstraint;
 
       // 歌唱表現（しゃくりやフォールなど）を維持するため、
       // 可能な限りスムージングの遷移区間を有声区間から無声区間へ移動させる調整を行う。
