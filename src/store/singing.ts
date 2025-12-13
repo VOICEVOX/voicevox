@@ -11,6 +11,7 @@ import {
   transformCommandStore,
   SingingVoice,
   SequencerEditTarget,
+  ParameterPanelEditTarget,
   PhraseKey,
   SequenceId,
   SingingVolumeKey,
@@ -66,6 +67,7 @@ import {
   tickToSecond,
   VALUE_INDICATING_NO_DATA,
   isValidPitchEditData,
+  isValidVolumeEditData,
   isValidTempos,
   isValidTimeSignatures,
   isValidTpqn,
@@ -700,6 +702,7 @@ export const singingStoreState: SingingStoreState = {
   sequencerNoteTool: "EDIT_FIRST",
   sequencerPitchTool: "DRAW",
   sequencerVolumeTool: "DRAW",
+  parameterPanelEditTarget: "VOLUME",
   sequencerVolumeVisible: false,
   _selectedNoteIds: new Set(),
   nowPlaying: false,
@@ -1133,6 +1136,36 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  SET_VOLUME_EDIT_DATA: {
+    // ボリューム編集データをセットする。
+    // track.volumeEditDataの長さが足りない場合は、伸長も行う。
+    mutation(state, { volumeArray, startFrame, trackId }) {
+      const track = getOrThrow(state.tracks, trackId);
+      const volumeEditData = track.volumeEditData;
+      const tempData = [...volumeEditData];
+      const endFrame = startFrame + volumeArray.length;
+      if (tempData.length < endFrame) {
+        const valuesToPush = new Array<number>(endFrame - tempData.length).fill(
+          VALUE_INDICATING_NO_DATA,
+        );
+        tempData.push(...valuesToPush);
+      }
+      tempData.splice(startFrame, volumeArray.length, ...volumeArray);
+      track.volumeEditData = tempData;
+    },
+    async action({ actions, mutations }, { volumeArray, startFrame, trackId }) {
+      if (startFrame < 0) {
+        throw new Error("startFrame must be greater than or equal to 0.");
+      }
+      if (!isValidVolumeEditData(volumeArray)) {
+        throw new Error("The volume edit data is invalid.");
+      }
+      mutations.SET_VOLUME_EDIT_DATA({ volumeArray, startFrame, trackId });
+
+      void actions.RENDER();
+    },
+  },
+
   ERASE_PITCH_EDIT_DATA: {
     mutation(state, { startFrame, frameLength, trackId }) {
       const track = getOrThrow(state.tracks, trackId);
@@ -1144,6 +1177,17 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  ERASE_VOLUME_EDIT_DATA: {
+    mutation(state, { startFrame, frameLength, trackId }) {
+      const track = getOrThrow(state.tracks, trackId);
+      const volumeEditData = track.volumeEditData;
+      const tempData = [...volumeEditData];
+      const endFrame = Math.min(startFrame + frameLength, tempData.length);
+      tempData.fill(VALUE_INDICATING_NO_DATA, startFrame, endFrame);
+      track.volumeEditData = tempData;
+    },
+  },
+
   CLEAR_PITCH_EDIT_DATA: {
     // ピッチ編集データを失くす。
     mutation(state, { trackId }) {
@@ -1152,6 +1196,19 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
     async action({ actions, mutations }, { trackId }) {
       mutations.CLEAR_PITCH_EDIT_DATA({ trackId });
+
+      void actions.RENDER();
+    },
+  },
+
+  CLEAR_VOLUME_EDIT_DATA: {
+    // ボリューム編集データをクリア
+    mutation(state, { trackId }) {
+      const track = getOrThrow(state.tracks, trackId);
+      track.volumeEditData = [];
+    },
+    async action({ actions, mutations }, { trackId }) {
+      mutations.CLEAR_VOLUME_EDIT_DATA({ trackId });
 
       void actions.RENDER();
     },
@@ -1730,6 +1787,20 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
     async action({ mutations }, { sequencerVolumeTool }) {
       mutations.SET_SEQUENCER_VOLUME_TOOL({ sequencerVolumeTool });
+    },
+  },
+
+  // TODO: これはパラメータパネル内で編集対象を切り替えるためのもの
+  // 最適なUIによっては必要ない場合があり、UIが固まった時点で削除する可能性あり
+  SET_PARAMETER_PANEL_EDIT_TARGET: {
+    mutation(state, { editTarget }: { editTarget: ParameterPanelEditTarget }) {
+      state.parameterPanelEditTarget = editTarget;
+    },
+    async action(
+      { mutations },
+      { editTarget }: { editTarget: ParameterPanelEditTarget },
+    ) {
+      mutations.SET_PARAMETER_PANEL_EDIT_TARGET({ editTarget });
     },
   },
 
@@ -3435,6 +3506,30 @@ export const singingCommandStore = transformCommandStore(
         void actions.RENDER();
       },
     },
+    COMMAND_SET_VOLUME_EDIT_DATA: {
+      mutation(draft, { volumeArray, startFrame, trackId }) {
+        singingStore.mutations.SET_VOLUME_EDIT_DATA(draft, {
+          volumeArray,
+          startFrame,
+          trackId,
+        });
+      },
+      action({ mutations, actions }, { volumeArray, startFrame, trackId }) {
+        if (startFrame < 0) {
+          throw new Error("startFrame must be greater than or equal to 0.");
+        }
+        if (!isValidVolumeEditData(volumeArray)) {
+          throw new Error("The volume edit data is invalid.");
+        }
+        mutations.COMMAND_SET_VOLUME_EDIT_DATA({
+          volumeArray,
+          startFrame,
+          trackId,
+        });
+
+        void actions.RENDER();
+      },
+    },
     COMMAND_ERASE_PITCH_EDIT_DATA: {
       mutation(draft, { startFrame, frameLength, trackId }) {
         singingStore.mutations.ERASE_PITCH_EDIT_DATA(draft, {
@@ -3451,6 +3546,30 @@ export const singingCommandStore = transformCommandStore(
           throw new Error("frameLength must be at least 1.");
         }
         mutations.COMMAND_ERASE_PITCH_EDIT_DATA({
+          startFrame,
+          frameLength,
+          trackId,
+        });
+
+        void actions.RENDER();
+      },
+    },
+    COMMAND_ERASE_VOLUME_EDIT_DATA: {
+      mutation(draft, { startFrame, frameLength, trackId }) {
+        singingStore.mutations.ERASE_VOLUME_EDIT_DATA(draft, {
+          startFrame,
+          frameLength,
+          trackId,
+        });
+      },
+      action({ mutations, actions }, { startFrame, frameLength, trackId }) {
+        if (startFrame < 0) {
+          throw new Error("startFrame must be greater than or equal to 0.");
+        }
+        if (frameLength < 1) {
+          throw new Error("frameLength must be at least 1.");
+        }
+        mutations.COMMAND_ERASE_VOLUME_EDIT_DATA({
           startFrame,
           frameLength,
           trackId,
