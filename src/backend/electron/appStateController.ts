@@ -63,6 +63,7 @@ export class AppStateController {
   private checkUnsavedEdit() {
     log.info("Checking for unsaved edits before quitting");
     try {
+      // TODO: ipcの送信以外で失敗した場合はシャットダウンしないようにする
       ipcMainSendProxy.CHECK_EDITED_AND_NOT_SAVE(
         getWindowManager().getWindow(),
         {
