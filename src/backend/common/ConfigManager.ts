@@ -391,7 +391,7 @@ export abstract class BaseConfigManager {
         return;
       }
     }
-    log.warn("Config save timeout exceeded");
+    throw new Error("Config save timeout");
   }
 
   private migrateHotkeySettings(data: ConfigType): ConfigType {
