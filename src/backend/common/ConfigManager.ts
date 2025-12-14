@@ -385,11 +385,11 @@ export abstract class BaseConfigManager {
   async ensureSaved(): Promise<void> {
     // 10秒待っても保存が終わらなかったら諦める
     for (let i = 0; i < 100; i++) {
-      // 他のスレッドに処理を譲る
-      await new Promise((resolve) => setTimeout(resolve, 100));
       if (!this.lock.isLocked()) {
         return;
       }
+      // 他のスレッドに処理を譲る
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
     throw new Error("Config save timeout");
   }
