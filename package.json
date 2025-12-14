@@ -122,7 +122,7 @@
     "acorn-walk": "8.3.4",
     "chromatic": "13.3.3",
     "cross-env": "10.1.0",
-    "dotenv": "npm:dotenv-v16@16.6.1",
+    "dotenv": "17.2.3",
     "electron": "39.0.0",
     "electron-builder": "26.1.0",
     "electron-devtools-installer": "4.0.0",
