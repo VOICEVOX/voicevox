@@ -821,17 +821,17 @@ export function applyPitchEdit(
       continue;
     }
 
-    // 「編集済み」と「未編集」の境界を検出し、遷移の制約（許容範囲）を計算する
+    // 「編集済み」と「未編集」の境界を検出し、最大遷移長を計算する
     const editBoundaryIndices: number[] = [];
-    const transitionConstraints: { left: number; right: number }[] = [];
+    const maxTransitionLengths: { left: number; right: number }[] = [];
 
-    // デフォルトの遷移制約幅（ミリ秒）
-    // NOTE: 短すぎるとスムージングが十分にできず、長すぎると元のカーブを壊すため、30ms程度にしている
-    const BASE_TRANSITION_CONSTRAINT_MS = 30;
+    // デフォルトの遷移長（ミリ秒）
+    // NOTE: 短すぎるとスムージングが十分にできず、長すぎると元のカーブを壊すため、60ms程度にしている
+    const BASE_TRANSITION_LENGTH_MS = 60;
 
-    // デフォルトの遷移制約幅（フレーム数）
-    const baseTransitionConstraint = Math.round(
-      (BASE_TRANSITION_CONSTRAINT_MS / 1000) * phraseQuery.frameRate,
+    // デフォルトの遷移長（フレーム数）
+    const baseTransitionLength = Math.round(
+      (BASE_TRANSITION_LENGTH_MS / 1000) * phraseQuery.frameRate,
     );
 
     for (let i = 0; i < frameInfos.length; i++) {
@@ -846,9 +846,9 @@ export function applyPitchEdit(
         continue;
       }
 
-      // 左右の遷移許容範囲（制約）の初期値
-      let leftConstraint = baseTransitionConstraint;
-      let rightConstraint = baseTransitionConstraint;
+      // 左右の最大遷移長の初期値
+      let maxLeftTransitionLength = baseTransitionLength / 2;
+      let maxRightTransitionLength = baseTransitionLength / 2;
 
       // 歌唱表現（しゃくりやフォールなど）を維持するため、
       // 可能な限りスムージングの遷移区間を有声区間から無声区間へ移動させる調整を行う。
@@ -858,13 +858,13 @@ export function applyPitchEdit(
         const prevIndex = i - 1;
         for (
           let distance = 0;
-          distance < rightConstraint && prevIndex - distance >= 0;
+          distance < maxRightTransitionLength && prevIndex - distance >= 0;
           distance++
         ) {
           if (!frameInfos[prevIndex - distance].isVoiced) {
-            // 右側（編集済み区間）の遷移幅を短縮し、余った分を左側（無声区間）に追加する
-            leftConstraint += rightConstraint - distance;
-            rightConstraint = distance;
+            // 右側（編集済み区間）の遷移長を短縮し、余った分を左側（無声区間）に追加する
+            maxLeftTransitionLength += maxRightTransitionLength - distance;
+            maxRightTransitionLength = distance;
             break;
           }
         }
@@ -873,23 +873,24 @@ export function applyPitchEdit(
         // 右側（未来方向）にある無声区間を探し、遷移区間をそちらへ割り振る
         for (
           let distance = 0;
-          distance < leftConstraint && i + distance < frameInfos.length;
+          distance < maxLeftTransitionLength &&
+          i + distance < frameInfos.length;
           distance++
         ) {
           if (!frameInfos[i + distance].isVoiced) {
-            // 左側（編集済み区間）の遷移幅を短縮し、余った分を右側（無声区間）に追加する
-            rightConstraint += leftConstraint - distance;
-            leftConstraint = distance;
+            // 左側（編集済み区間）の遷移長を短縮し、余った分を右側（無声区間）に追加する
+            maxRightTransitionLength += maxLeftTransitionLength - distance;
+            maxLeftTransitionLength = distance;
             break;
           }
         }
       }
 
-      if (leftConstraint !== 0 || rightConstraint !== 0) {
+      if (maxLeftTransitionLength !== 0 || maxRightTransitionLength !== 0) {
         editBoundaryIndices.push(i);
-        transitionConstraints.push({
-          left: leftConstraint,
-          right: rightConstraint,
+        maxTransitionLengths.push({
+          left: maxLeftTransitionLength,
+          right: maxRightTransitionLength,
         });
       }
     }
@@ -898,7 +899,7 @@ export function applyPitchEdit(
     applySmoothTransitions(
       logF0Diff,
       editBoundaryIndices,
-      transitionConstraints,
+      maxTransitionLengths,
     );
 
     // 処理結果をphraseQuery.f0に書き戻す
