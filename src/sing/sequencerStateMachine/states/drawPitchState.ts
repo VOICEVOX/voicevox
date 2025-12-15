@@ -224,10 +224,10 @@ export class DrawPitchState
     const previewEditData = context.previewPitchEdit.value.data;
     const editEndFrame = editStartFrame + previewEditData.length;
 
-    const logWithMinOne = (value: number) => Math.log(Math.max(1, value));
-
-    // プレビュー中の編集データを対数スケールに変換する
-    const logPreviewEditData = previewEditData.map(logWithMinOne);
+    // プレビュー中の編集データの値を1以上にして、対数スケールに変換する
+    const logPreviewEditData = previewEditData.map((value) =>
+      Math.log(Math.max(1, value)),
+    );
 
     // 平滑化を行う
     applyGaussianFilter(logPreviewEditData, 0.7);
@@ -265,13 +265,13 @@ export class DrawPitchState
     if (contiguousRegionStartFrame !== editStartFrame) {
       logFrontData = pitchEditData
         .slice(contiguousRegionStartFrame, editStartFrame)
-        .map(logWithMinOne);
+        .map((value) => Math.log(value));
     }
     let logBackData: number[] = [];
     if (contiguousRegionEndFrame !== editEndFrame) {
       logBackData = pitchEditData
         .slice(editEndFrame, contiguousRegionEndFrame)
-        .map(logWithMinOne);
+        .map((value) => Math.log(value));
     }
 
     // 対数スケールでデータを結合
