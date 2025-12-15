@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { applySmoothTransition } from "@/sing/utility";
+import { applySmoothTransitions } from "@/sing/utility";
 
 const smoothStep = (x: number) => {
   const clampedX = Math.min(1.0, Math.max(0.0, x));
@@ -37,28 +37,28 @@ const applySingleTransition = (
   }
 };
 
-describe("applySmoothTransition", () => {
+describe("applySmoothTransitions", () => {
   it("jumpIndices に非整数を含むと例外を投げる", () => {
     const data = [0, 1, 2];
     expect(() =>
-      applySmoothTransition(data, [1.5], [{ left: 3, right: 3 }]),
+      applySmoothTransitions(data, [1.5], [{ left: 3, right: 3 }]),
     ).toThrow();
   });
 
   it("jumpIndex が 0 以下または data.length 以上だと例外を投げる", () => {
     const data = [0, 1, 2, 3];
     expect(() =>
-      applySmoothTransition([...data], [0], [{ left: 3, right: 3 }]),
+      applySmoothTransitions([...data], [0], [{ left: 3, right: 3 }]),
     ).toThrow();
     expect(() =>
-      applySmoothTransition([...data], [data.length], [{ left: 3, right: 3 }]),
+      applySmoothTransitions([...data], [data.length], [{ left: 3, right: 3 }]),
     ).toThrow();
   });
 
   it("jumpIndices が昇順でないと例外を投げる", () => {
     const data = [0, 1, 2, 3, 4, 5];
     expect(() =>
-      applySmoothTransition(
+      applySmoothTransitions(
         data,
         [3, 1],
         [
@@ -72,7 +72,7 @@ describe("applySmoothTransition", () => {
   it("jumpIndices に重複があると例外を投げる", () => {
     const data = [0, 1, 2, 3];
     expect(() =>
-      applySmoothTransition(
+      applySmoothTransitions(
         data,
         [2, 2],
         [
@@ -86,7 +86,7 @@ describe("applySmoothTransition", () => {
   it("maxTransitionLengths の長さが jumpIndices と異なると例外を投げる", () => {
     const data = [0, 1, 2, 3];
     expect(() =>
-      applySmoothTransition(
+      applySmoothTransitions(
         data,
         [2],
         [
@@ -100,33 +100,33 @@ describe("applySmoothTransition", () => {
   it("遷移長が整数でないと例外を投げる", () => {
     const data = [0, 1, 2, 3];
     expect(() =>
-      applySmoothTransition(data, [2], [{ left: NaN, right: 3 }]),
+      applySmoothTransitions(data, [2], [{ left: NaN, right: 3 }]),
     ).toThrow();
     expect(() =>
-      applySmoothTransition(data, [2], [{ left: 3, right: NaN }]),
+      applySmoothTransitions(data, [2], [{ left: 3, right: NaN }]),
     ).toThrow();
     expect(() =>
-      applySmoothTransition(data, [2], [{ left: 1.5, right: 3 }]),
+      applySmoothTransitions(data, [2], [{ left: 1.5, right: 3 }]),
     ).toThrow();
     expect(() =>
-      applySmoothTransition(data, [2], [{ left: 3, right: 2.7 }]),
+      applySmoothTransitions(data, [2], [{ left: 3, right: 2.7 }]),
     ).toThrow();
   });
 
   it("遷移長が負だと例外を投げる", () => {
     const data = [0, 1, 2, 3];
     expect(() =>
-      applySmoothTransition(data, [2], [{ left: -1, right: 3 }]),
+      applySmoothTransitions(data, [2], [{ left: -1, right: 3 }]),
     ).toThrow();
     expect(() =>
-      applySmoothTransition(data, [2], [{ left: 3, right: -1 }]),
+      applySmoothTransitions(data, [2], [{ left: 3, right: -1 }]),
     ).toThrow();
   });
 
   it("両方の遷移長が0だと例外を投げる", () => {
     const data = [0, 1, 2, 3];
     expect(() =>
-      applySmoothTransition(data, [2], [{ left: 0, right: 0 }]),
+      applySmoothTransitions(data, [2], [{ left: 0, right: 0 }]),
     ).toThrow();
   });
 
@@ -134,7 +134,7 @@ describe("applySmoothTransition", () => {
     const data = [0, 1, 2, 3, 4];
     const before = [...data];
 
-    applySmoothTransition(data, [], []);
+    applySmoothTransitions(data, [], []);
 
     for (let i = 0; i < data.length; i++) {
       expect(data[i]).toBe(before[i]);
@@ -145,7 +145,7 @@ describe("applySmoothTransition", () => {
     const data = [0, 0, 0, 0, 0];
     const actual = [...data];
 
-    applySmoothTransition(actual, [3], [{ left: 3, right: 3 }]);
+    applySmoothTransitions(actual, [3], [{ left: 3, right: 3 }]);
 
     for (let i = 0; i < actual.length; i++) {
       expect(actual[i]).toBe(data[i]);
@@ -165,7 +165,7 @@ describe("applySmoothTransition", () => {
     applySingleTransition(helperExpected, 4, { left: 3, right: 3 });
 
     const actual = [...data];
-    applySmoothTransition(actual, jumpIndices, [{ left: 3, right: 3 }]);
+    applySmoothTransitions(actual, jumpIndices, [{ left: 3, right: 3 }]);
 
     for (let i = 0; i < data.length; i++) {
       expect(actual[i]).toBeCloseTo(manualExpected[i], 6);
@@ -185,7 +185,7 @@ describe("applySmoothTransition", () => {
     const helperExpected = [...data];
     applySingleTransition(helperExpected, 4, { left: 3, right: 3 });
 
-    applySmoothTransition(actual, [4], [{ left: 3, right: 3 }]);
+    applySmoothTransitions(actual, [4], [{ left: 3, right: 3 }]);
 
     for (let i = 0; i < data.length; i++) {
       expect(actual[i]).toBeCloseTo(manualExpected[i], 6);
@@ -206,7 +206,7 @@ describe("applySmoothTransition", () => {
     const helperExpected = [...data];
     applySingleTransition(helperExpected, 3, { left: 2, right: 2 });
 
-    applySmoothTransition(actual, [3], [{ left: 2, right: 2 }]);
+    applySmoothTransitions(actual, [3], [{ left: 2, right: 2 }]);
 
     for (let i = 0; i < data.length; i++) {
       expect(actual[i]).toBeCloseTo(manualExpected[i], 6);
@@ -227,7 +227,7 @@ describe("applySmoothTransition", () => {
     applySingleTransition(helperExpected, 4, { left: 1, right: 4 });
 
     const actual = [...data];
-    applySmoothTransition(actual, jumpIndices, [{ left: 1, right: 4 }]);
+    applySmoothTransitions(actual, jumpIndices, [{ left: 1, right: 4 }]);
 
     for (let i = 0; i < data.length; i++) {
       expect(actual[i]).toBeCloseTo(manualExpected[i], 6);
@@ -244,7 +244,7 @@ describe("applySmoothTransition", () => {
     applySingleTransition(expected, 9, { left: 4, right: 2 });
 
     const actual = [...data];
-    applySmoothTransition(actual, jumpIndices, [
+    applySmoothTransitions(actual, jumpIndices, [
       { left: 2, right: 4 },
       { left: 4, right: 2 },
     ]);
@@ -266,7 +266,7 @@ describe("applySmoothTransition", () => {
     const helperExpected = [...data];
     applySingleTransition(helperExpected, 3, { left: 0, right: 3 });
 
-    applySmoothTransition(actual, [3], [{ left: 0, right: 3 }]);
+    applySmoothTransitions(actual, [3], [{ left: 0, right: 3 }]);
 
     for (let i = 0; i < data.length; i++) {
       expect(actual[i]).toBeCloseTo(manualExpected[i], 6);
@@ -286,7 +286,7 @@ describe("applySmoothTransition", () => {
     const helperExpected = [...data];
     applySingleTransition(helperExpected, 3, { left: 3, right: 0 });
 
-    applySmoothTransition(actual, [3], [{ left: 3, right: 0 }]);
+    applySmoothTransitions(actual, [3], [{ left: 3, right: 0 }]);
 
     for (let i = 0; i < data.length; i++) {
       expect(actual[i]).toBeCloseTo(manualExpected[i], 6);
@@ -303,7 +303,7 @@ describe("applySmoothTransition", () => {
     applySingleTransition(expected, 9, { left: 3, right: 3 });
 
     const actual = [...data];
-    applySmoothTransition(actual, jumpIndices, { left: 3, right: 3 });
+    applySmoothTransitions(actual, jumpIndices, { left: 3, right: 3 });
 
     for (let i = 0; i < data.length; i++) {
       expect(actual[i]).toBeCloseTo(expected[i], 6);
@@ -318,7 +318,7 @@ describe("applySmoothTransition", () => {
     applySingleTransition(expected, 1, { left: 1, right: 3 });
 
     const actual = [...data];
-    applySmoothTransition(actual, jumpIndices, [{ left: 3, right: 3 }]);
+    applySmoothTransitions(actual, jumpIndices, [{ left: 3, right: 3 }]);
 
     for (let i = 0; i < data.length; i++) {
       expect(actual[i]).toBeCloseTo(expected[i], 6);
@@ -333,7 +333,7 @@ describe("applySmoothTransition", () => {
     applySingleTransition(expected, 4, { left: 3, right: 1 });
 
     const actual = [...data];
-    applySmoothTransition(actual, jumpIndices, [{ left: 3, right: 3 }]);
+    applySmoothTransitions(actual, jumpIndices, [{ left: 3, right: 3 }]);
 
     for (let i = 0; i < data.length; i++) {
       expect(actual[i]).toBeCloseTo(expected[i], 6);
@@ -349,7 +349,7 @@ describe("applySmoothTransition", () => {
     applySingleTransition(expected, 9, { left: 3, right: 3 });
 
     const actual = [...data];
-    applySmoothTransition(actual, jumpIndices, [
+    applySmoothTransitions(actual, jumpIndices, [
       { left: 3, right: 3 },
       { left: 3, right: 3 },
     ]);
@@ -368,7 +368,7 @@ describe("applySmoothTransition", () => {
     applySingleTransition(expected, 6, { left: 3, right: 3 });
 
     const actual = [...data];
-    applySmoothTransition(actual, jumpIndices, [
+    applySmoothTransitions(actual, jumpIndices, [
       { left: 3, right: 3 },
       { left: 3, right: 3 },
     ]);
@@ -387,7 +387,7 @@ describe("applySmoothTransition", () => {
     applySingleTransition(expected, 4, { left: 1, right: 3 });
 
     const actual = [...data];
-    applySmoothTransition(actual, jumpIndices, [
+    applySmoothTransitions(actual, jumpIndices, [
       { left: 3, right: 3 },
       { left: 3, right: 3 },
     ]);

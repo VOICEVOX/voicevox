@@ -1,5 +1,5 @@
 import {
-  applySmoothTransition,
+  applySmoothTransitions,
   calculateHash,
   getNext,
   getPrev,
@@ -895,7 +895,7 @@ export function applyPitchEdit(
     }
 
     // 計算された制約に基づいて滑らかな遷移を適用
-    applySmoothTransition(
+    applySmoothTransitions(
       logF0Diff,
       editBoundaryIndices,
       transitionConstraints,

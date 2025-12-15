@@ -9,7 +9,7 @@ import {
 import { TrackId } from "@/type/preload";
 import {
   applyGaussianFilter,
-  applySmoothTransition,
+  applySmoothTransitions,
   createArray,
   linearInterpolation,
 } from "@/sing/utility";
@@ -293,7 +293,7 @@ export class DrawPitchState
     // 不連続箇所を滑らかにつなぐ
     // NOTE: 最大6フレーム（左右各3フレーム）かけて滑らかにする
     if (jumpIndices.length !== 0) {
-      applySmoothTransition(logCombinedData, jumpIndices, {
+      applySmoothTransitions(logCombinedData, jumpIndices, {
         left: 3,
         right: 3,
       });

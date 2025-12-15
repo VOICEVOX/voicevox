@@ -215,7 +215,7 @@ function smoothStep(x: number) {
  * @param jumpIndices - ジャンプのインデックスの配列
  * @param transitionConstraints - 各ジャンプの左右の遷移長の制約。配列の場合は各ジャンプごとに異なる遷移長を指定できる。
  */
-export function applySmoothTransition(
+export function applySmoothTransitions(
   data: number[],
   jumpIndices: number[],
   transitionConstraints:
