@@ -62,21 +62,34 @@ export class AppStateController {
 
   private checkUnsavedEdit() {
     log.info("Checking for unsaved edits before quitting");
+    const windowManager = getWindowManager();
     try {
       // TODO: ipcの送信以外で失敗した場合はシャットダウンしないようにする
-      ipcMainSendProxy.CHECK_EDITED_AND_NOT_SAVE(
-        getWindowManager().getWindow(),
-        {
-          closeOrReload: "close",
-        },
-      );
+      ipcMainSendProxy.CHECK_EDITED_AND_NOT_SAVE(windowManager.getWindow(), {
+        closeOrReload: "close",
+      });
     } catch (error) {
       log.error(
         "Error while sending CHECK_EDITED_AND_NOT_SAVE IPC message:",
         error,
       );
-      log.info("Proceeding to shutdown without checking for unsaved edits");
-      this.shutdown();
+      void windowManager
+        .showMessageBox({
+          type: "error",
+          title: "エラー",
+          message: "終了確認に失敗しました。終了してもよろしいですか？",
+          buttons: ["いいえ", "はい"],
+          defaultId: 0,
+          cancelId: 0,
+        })
+        .then((result) => {
+          if (result.response === 1) {
+            log.info("User confirmed to quit despite the error");
+            this.shutdown();
+          } else {
+            log.info("User canceled quit due to the error");
+          }
+        });
     }
   }
 
