@@ -26,6 +26,8 @@ export class AppStateController {
   private lock = new Mutex();
 
   onQuitRequest(DI: { preventQuit: () => void }): void {
+    log.info(`onQuitRequest called. Current quitState: ${this.quitState}`);
+
     if (this.lock.isLocked()) {
       log.info(
         "onQuitRequest is already being processed. Preventing duplicate quit request.",
@@ -33,7 +35,7 @@ export class AppStateController {
       DI.preventQuit();
       return;
     }
-    log.info(`onQuitRequest called. Current quitState: ${this.quitState}`);
+
     switch (this.quitState) {
       case "unconfirmed": {
         DI.preventQuit();
