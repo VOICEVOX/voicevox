@@ -47,7 +47,6 @@ export class AppStateController {
         break;
       }
       case "dirty": {
-        log.info("Performing cleanup before quitting");
         DI.preventQuit();
         void (async () => {
           await using _lock = await this.lock.acquire();
