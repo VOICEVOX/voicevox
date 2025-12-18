@@ -79,8 +79,6 @@ export class AppStateController {
       void windowManager
         .showMessageBox({
           type: "error",
-          title: "エラー",
-          message: "終了確認に失敗しました。終了してもよろしいですか？",
           title: "保存の確認に失敗しました",
           message: "未保存のデータがある場合、終了すると失われます。終了しますか？",
           buttons: ["終了しない", "終了する"],
