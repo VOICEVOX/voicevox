@@ -145,10 +145,10 @@ export class AppStateController {
   }
 }
 
-let appStateController: AppStateController | null = null;
+let appStateController: AppStateController | undefined;
 
 export function getAppStateController() {
-  if (appStateController == null) {
+  if (appStateController == undefined) {
     appStateController = new AppStateController();
   }
   return appStateController;
