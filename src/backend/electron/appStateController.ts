@@ -28,6 +28,7 @@ export class AppStateController {
   onQuitRequest(DI: { preventQuit: () => void }): void {
     log.info(`onQuitRequest called. Current quitState: ${this.quitState}`);
 
+    // NOTE: 同時リクエストされうることを考慮
     if (this.lock.isLocked()) {
       log.info(
         "onQuitRequest is already being processed. Preventing duplicate quit request.",
