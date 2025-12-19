@@ -380,10 +380,8 @@ export class EngineAndVvppController {
 
   /**
    * エンジンの停止とエンジン終了後処理を行う。
-   * 全処理が完了済みの場合 alreadyCompleted を返す。
-   * そうでない場合は Promise を返す。
    */
-  cleanupEngines(): Promise<void> | "alreadyCompleted" {
+  async cleanupEngines(): Promise<void> {
     const killingProcessPromises = this.engineProcessManager.killEngineAll();
     const numLivingEngineProcess = Object.entries(
       killingProcessPromises,
@@ -394,7 +392,7 @@ export class EngineAndVvppController {
       numLivingEngineProcess === 0 &&
       !this.vvppManager.hasMarkedEngineDirs()
     ) {
-      return "alreadyCompleted";
+      return;
     }
 
     let numEngineProcessKilled = 0;
@@ -428,17 +426,6 @@ export class EngineAndVvppController {
       // FIXME: handleMarkedEngineDirsはエラーをthrowしている。エラーがthrowされるとアプリが終了しないので、終了するようにしたい。
       return this.vvppManager.handleMarkedEngineDirs();
     });
-  }
-
-  /**
-   * 安全なシャットダウン処理。
-   * この関数内の処理はelectronの終了シーケンスに合わせ、非同期処理が必要かどうかを判定したあとで非同期処理を実行する必要がある。
-   * FIXME: 判定用の関数と非同期処理関数を分離すれば仕様が簡潔になる。
-   */
-  gracefulShutdown() {
-    const engineCleanupResult = this.cleanupEngines();
-    const configSavedResult = this.configManager.ensureSaved();
-    return { engineCleanupResult, configSavedResult };
   }
 }
 
