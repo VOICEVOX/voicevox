@@ -847,8 +847,8 @@ export function applyPitchEdit(
       }
 
       // 左右の最大遷移長の初期値
-      let maxLeftTransitionLength = baseTransitionLength / 2;
-      let maxRightTransitionLength = baseTransitionLength / 2;
+      let maxLeftTransitionLength = Math.floor(baseTransitionLength / 2);
+      let maxRightTransitionLength = Math.floor(baseTransitionLength / 2);
 
       // 歌唱表現（しゃくりやフォールなど）を維持するため、
       // 可能な限りスムージングの遷移区間を有声区間から無声区間へ移動させる調整を行う。
