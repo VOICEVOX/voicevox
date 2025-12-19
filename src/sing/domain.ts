@@ -850,10 +850,10 @@ export function applyPitchEdit(
       let maxLeftTransitionLength = Math.floor(baseTransitionLength / 2);
       let maxRightTransitionLength = Math.floor(baseTransitionLength / 2);
 
-      // 歌唱表現（しゃくりやフォールなど）を維持するため、
+      // しゃくりやフォールなどの歌唱表現を維持するため、
       // 可能な限りスムージングの遷移区間を有声区間から無声区間へ移動させる調整を行う。
       if (currentFrameInfo.isEdited) {
-        // 「未編集」から「編集済み」への切り替わり（開始点）
+        // 「未編集」から「編集済み」への切り替わり
         // 左側（過去方向）にある無声区間を探し、遷移区間をそちらへ割り振る
         const prevIndex = i - 1;
         for (
@@ -862,14 +862,14 @@ export function applyPitchEdit(
           distance++
         ) {
           if (!frameInfos[prevIndex - distance].isVoiced) {
-            // 右側（編集済み区間）の遷移長を短縮し、余った分を左側（無声区間）に追加する
+            // 右側の遷移長を短縮し、余った分を左側に追加する
             maxLeftTransitionLength += maxRightTransitionLength - distance;
             maxRightTransitionLength = distance;
             break;
           }
         }
       } else {
-        // 「編集済み」から「未編集」への切り替わり（終了点）
+        // 「編集済み」から「未編集」への切り替わり
         // 右側（未来方向）にある無声区間を探し、遷移区間をそちらへ割り振る
         for (
           let distance = 0;
@@ -878,7 +878,7 @@ export function applyPitchEdit(
           distance++
         ) {
           if (!frameInfos[i + distance].isVoiced) {
-            // 左側（編集済み区間）の遷移長を短縮し、余った分を右側（無声区間）に追加する
+            // 左側の遷移長を短縮し、余った分を右側に追加する
             maxRightTransitionLength += maxLeftTransitionLength - distance;
             maxLeftTransitionLength = distance;
             break;
