@@ -56,10 +56,9 @@ jobs:
             package_name: voicevox
             compressed_artifact_name: voicevox-linux-nvidia
             app_asar_dir: prepackage/resources
-            installer_artifact_name: linux-nvidia-appimage
+            installer_artifact_name: voicevox-linux-nvidia-appimage
             linux_artifact_name: "VOICEVOX.${ext}"
             linux_executable_name: voicevox
-            linux_appimage_7z_name: VOICEVOX.AppImage
             os: ubuntu-22.04
           # Linux CPU (x64)
           - artifact_name: linux-cpu-x64-prepackage
@@ -68,10 +67,9 @@ jobs:
             package_name: voicevox-cpu
             compressed_artifact_name: voicevox-linux-cpu-x64
             app_asar_dir: prepackage/resources
-            installer_artifact_name: linux-cpu-x64-appimage
+            installer_artifact_name: voicevox-linux-cpu-x64-appimage
             linux_artifact_name: "VOICEVOX.${version}-x64.${ext}"
             linux_executable_name: voicevox
-            linux_appimage_7z_name: VOICEVOX-CPU-X64.AppImage
             os: ubuntu-22.04
           # Linux CPU (arm64)
           - artifact_name: linux-cpu-arm64-prepackage
@@ -80,10 +78,9 @@ jobs:
             package_name: voicevox-cpu
             compressed_artifact_name: voicevox-linux-cpu-arm64
             app_asar_dir: prepackage/resources
-            installer_artifact_name: linux-cpu-arm64-appimage
+            installer_artifact_name: voicevox-linux-cpu-arm64-appimage
             linux_artifact_name: "VOICEVOX.${version}-arm64.${ext}"
             linux_executable_name: voicevox
-            linux_appimage_7z_name: VOICEVOX-CPU-ARM64.AppImage
             os: ubuntu-22.04-arm
           # Windows CUDA
           - artifact_name: windows-nvidia-prepackage
@@ -452,29 +449,24 @@ jobs:
           cd dist_electron/
 
           for appImageFile in *.AppImage; do
-            echo "Splitting ${appImageFile}"
+            echo "Splitting ${appImageFile} to .AppImage.{1,2,...}"
 
-            # Split to MyArtifact.AppImage.7z.001, MyArtifact.AppImage.7z.002, ...
-            # Use compression level 0 since AppImage is already compressed
-            # .7z is needed for installer_linux.sh yet
-            7z -mx=0 -v1900m a "${{ matrix.linux_appimage_7z_name }}.7z" "${appImageFile}"
+            split --verbose -d -b 1900m "${appImageFile}" "${{ matrix.installer_artifact_name }}.AppImage." |wc -l > "${{ matrix.installer_artifact_name }}"_split
 
-            # Output split archive name<TAB>size<TAB>hash list to myartifact.7z.txt
-            ls "${{ matrix.linux_appimage_7z_name }}.7z".* > archives_name.txt
-            stat --printf="%s\n" "${{ matrix.linux_appimage_7z_name }}.7z".* > archives_size.txt
-            md5sum "${{ matrix.linux_appimage_7z_name }}.7z".* | awk '{print $1}' | tr a-z A-Z > archives_hash.txt
-
-            paste -d '\t' archives_name.txt archives_size.txt archives_hash.txt > archives.txt
-
-            mv archives.txt "${{ matrix.installer_artifact_name }}.7z.txt"
+            # Calc checksum of original file by same func with GitHub
+            sha256sum ${appImageFile} | cut -d ' ' -f 1 > "${{ matrix.installer_artifact_name }}.AppImage.sha256sum"
+            # Save runner's disk space and make release pattern simpler
+            rm ${appImageFile}
           done
 
       - name: Create Linux installer
         if: endsWith(matrix.installer_artifact_name, '-appimage')
         run: |
+          splitnum=$(cat dist_electron/"${{ matrix.installer_artifact_name }}"_split)
           sed \
             -e 's/^NAME=@@PLACEHOLDER@@ # placeholder for CI$/NAME="${{ matrix.installer_artifact_name }}"/' \
             -e 's/^VERSION=@@PLACEHOLDER@@ # placeholder for CI$/VERSION="${{ env.VOICEVOX_EDITOR_VERSION }}"/' \
+            -e "s/^SPLIT=@@SPLIT@@ # placeholder for CI$/SPLIT=${splitnum}/" \
             build/linux/installer_linux.template.sh > VOICEVOX.${{ matrix.installer_artifact_name }}.${{ env.VOICEVOX_EDITOR_VERSION }}.sh
 
           # Check that placeholders were replaced
@@ -486,7 +478,7 @@ jobs:
         with:
           name: ${{ matrix.installer_artifact_name }}-release
           path: |-
-            dist_electron/*.7z.*
+            dist_electron/*.AppImage*
             VOICEVOX.${{ matrix.installer_artifact_name }}.${{ env.VOICEVOX_EDITOR_VERSION }}.sh
 
       - name: Upload Linux AppImage split and installer to Release Assets
@@ -496,7 +488,7 @@ jobs:
           prerelease: ${{ github.event.inputs.prerelease }}
           tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
           files: |-
-            dist_electron/*.7z.*
+            dist_electron/*.AppImage*
             VOICEVOX.${{ matrix.installer_artifact_name }}.${{ env.VOICEVOX_EDITOR_VERSION }}.sh
           target_commitish: ${{ github.sha }}
 
