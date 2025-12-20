@@ -11,10 +11,10 @@ import {
 import windowStateKeeper from "electron-window-state";
 import { getConfigManager } from "../../electronConfig";
 import { ipcMainSendProxy } from "../../ipc";
+import { getAppStateController } from "../../appStateController";
 import { themes } from "@/domain/theme";
 
 export type WindowManagerOption = {
-  appStateGetter: () => { willQuit: boolean };
   staticDir: string;
   isDevelopment: boolean;
   isTest: boolean;
@@ -26,13 +26,11 @@ export type WindowLoadOption = {
 
 export abstract class WindowManager {
   private _win: BrowserWindow | undefined;
-  private appStateGetter: () => { willQuit: boolean };
   private staticDir: string;
   private isDevelopment: boolean;
   private isTest: boolean;
 
   constructor(payload: WindowManagerOption) {
-    this.appStateGetter = payload.appStateGetter;
     this.staticDir = payload.staticDir;
     this.isDevelopment = payload.isDevelopment;
     this.isTest = payload.isTest;
@@ -106,14 +104,10 @@ export abstract class WindowManager {
       }
     });
     win.on("close", (event) => {
-      const appState = this.appStateGetter();
-      if (!appState.willQuit) {
-        event.preventDefault();
-        ipcMainSendProxy.CHECK_EDITED_AND_NOT_SAVE(win, {
-          closeOrReload: "close",
-        });
-        return;
-      }
+      const appStateController = getAppStateController();
+      void appStateController.onQuitRequest({
+        preventQuit: () => event.preventDefault(),
+      });
     });
     win.on("closed", () => {
       this._win = undefined;
