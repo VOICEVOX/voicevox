@@ -13,9 +13,9 @@ import { initializeEngineInfoManager } from "./manager/engineInfoManager";
 import { initializeEngineProcessManager } from "./manager/engineProcessManager";
 import { initializeVvppManager, isVvppFile } from "./manager/vvppManager";
 import {
-  getWindowManager,
-  initializeWindowManager,
-} from "./manager/windowManager";
+  getMainWindowManager,
+  initializeMainWindowManager,
+} from "./manager/windowManager/main";
 import configMigration014 from "./configMigration014";
 import { initializeRuntimeInfoManager } from "./manager/RuntimeInfoManager";
 import { registerIpcMainHandle, ipcMainSendProxy, IpcMainHandle } from "./ipc";
@@ -23,6 +23,7 @@ import { getConfigManager } from "./electronConfig";
 import { getEngineAndVvppController } from "./engineAndVvppController";
 import { getIpcMainHandle } from "./ipcMainHandle";
 import { getAppStateController } from "./appStateController";
+import { initializeWelcomeWindowManager } from "./manager/windowManager/welcome";
 import { assertNonNullable } from "@/type/utility";
 import { EngineInfo } from "@/type/preload";
 import { isMac, isProduction } from "@/helpers/platform";
@@ -210,7 +211,12 @@ const onEngineProcessError = (engineInfo: EngineInfo, error: Error) => {
   dialog.showErrorBox("音声合成エンジンエラー", error.message);
 };
 
-initializeWindowManager({
+initializeMainWindowManager({
+  isDevelopment,
+  isTest,
+  staticDir: staticDir,
+});
+initializeWelcomeWindowManager({
   isDevelopment,
   isTest,
   staticDir: staticDir,
@@ -227,7 +233,7 @@ initializeEngineProcessManager({ onEngineProcessError });
 initializeVvppManager({ vvppEngineDir, tmpDir: app.getPath("temp") });
 
 const configManager = getConfigManager();
-const windowManager = getWindowManager();
+const windowManager = getMainWindowManager();
 const engineAndVvppController = getEngineAndVvppController();
 
 /**

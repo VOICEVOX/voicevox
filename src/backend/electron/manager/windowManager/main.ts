@@ -1,10 +1,14 @@
 import { getEngineAndVvppController } from "../../engineAndVvppController";
-import { WindowManager, type WindowLoadOption } from "./base";
+import {
+  WindowManager,
+  WindowManagerOption,
+  type WindowLoadOption,
+} from "./base";
 import { createLogger } from "@/helpers/log";
 
 const log = createLogger("WindowManager");
 
-export class IndexWindowManager extends WindowManager {
+export class MainWindowManager extends WindowManager {
   protected buildLoadUrl(obj: WindowLoadOption) {
     const url = this.buildBaseUrl("index.html");
     url.searchParams.set(
@@ -23,12 +27,8 @@ export class IndexWindowManager extends WindowManager {
 
     log.info("Checking ENGINE status before reload app");
     const engineAndVvppController = getEngineAndVvppController();
-    const engineCleanupResult = engineAndVvppController.cleanupEngines();
+    await engineAndVvppController.cleanupEngines();
 
-    // エンジンの停止とエンジン終了後処理の待機
-    if (engineCleanupResult != "alreadyCompleted") {
-      await engineCleanupResult;
-    }
     log.info("Post engine kill process done. Now reloading app");
 
     await engineAndVvppController.launchEngines();
@@ -38,4 +38,17 @@ export class IndexWindowManager extends WindowManager {
     });
     win.show();
   }
+}
+
+let windowManager: MainWindowManager | undefined;
+
+export function initializeMainWindowManager(options: WindowManagerOption) {
+  windowManager = new MainWindowManager(options);
+}
+
+export function getMainWindowManager() {
+  if (windowManager == undefined) {
+    throw new Error("WindowManager is not initialized");
+  }
+  return windowManager;
 }
