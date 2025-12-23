@@ -9,22 +9,22 @@ import {
   SaveDialogOptions,
 } from "electron";
 import windowStateKeeper from "electron-window-state";
-import { getConfigManager } from "../electronConfig";
-import { getEngineAndVvppController } from "../engineAndVvppController";
-import { ipcMainSendProxy } from "../ipc";
-import { getAppStateController } from "../appStateController";
+import { getConfigManager } from "../../electronConfig";
+import { ipcMainSendProxy } from "../../ipc";
+import { getAppStateController } from "../../appStateController";
 import { themes } from "@/domain/theme";
-import { createLogger } from "@/helpers/log";
 
-const log = createLogger("WindowManager");
-
-type WindowManagerOption = {
+export type WindowManagerOption = {
   staticDir: string;
   isDevelopment: boolean;
   isTest: boolean;
 };
 
-class WindowManager {
+export type WindowLoadOption = {
+  isMultiEngineOffMode?: boolean;
+};
+
+export abstract class WindowManager {
   private _win: BrowserWindow | undefined;
   private staticDir: string;
   private isDevelopment: boolean;
@@ -76,7 +76,7 @@ class WindowManager {
       titleBarStyle: "hidden",
       trafficLightPosition: { x: 6, y: 4 },
       minWidth: 320,
-      show: false,
+      show: true,
       backgroundColor,
       webPreferences: {
         preload: path.join(import.meta.dirname, "preload.mjs"),
@@ -122,46 +122,42 @@ class WindowManager {
     mainWindowState.manage(win);
     this._win = win;
 
-    await this.load({});
+    await this.load(this.getDefaultLoadOptions());
 
     if (this.isDevelopment && !this.isTest) win.webContents.openDevTools();
   }
+
+  protected getDefaultLoadOptions(): WindowLoadOption {
+    return {};
+  }
+
+  protected buildBaseUrl(entryHtml: string) {
+    const devServerUrl = import.meta.env.VITE_DEV_SERVER_URL;
+    if (devServerUrl != undefined) {
+      const url = new URL(devServerUrl);
+      url.pathname = entryHtml.startsWith("/") ? entryHtml : `/${entryHtml}`;
+      return url;
+    }
+    return new URL(`app://./${entryHtml}`);
+  }
+
+  protected abstract buildLoadUrl(obj: WindowLoadOption): URL;
 
   /**
    * 画面の読み込みを開始する。
    * @param obj.isMultiEngineOffMode マルチエンジンオフモードにするかどうか。無指定時はfalse扱いになる。
    * @returns ロードの完了を待つPromise。
    */
-  public async load(obj: { isMultiEngineOffMode?: boolean }) {
+  public async load(obj?: WindowLoadOption) {
     const win = this.getWindow();
-    const firstUrl =
-      import.meta.env.VITE_DEV_SERVER_URL ?? "app://./index.html";
-    const url = new URL(firstUrl);
-    url.searchParams.append(
-      "isMultiEngineOffMode",
-      (obj?.isMultiEngineOffMode ?? false).toString(),
-    );
+    const url = this.buildLoadUrl(obj ?? this.getDefaultLoadOptions());
     await win.loadURL(url.toString());
   }
 
   public async reload(isMultiEngineOffMode: boolean | undefined) {
-    const win = this.getWindow();
-    win.hide(); // FIXME: ダミーページ表示のほうが良い
-
-    // 一旦適当なURLに飛ばしてページをアンロードする
-    await win.loadURL("about:blank");
-
-    log.info("Checking ENGINE status before reload app");
-    const engineAndVvppController = getEngineAndVvppController();
-    await engineAndVvppController.cleanupEngines();
-    log.info("Post engine kill process done. Now reloading app");
-
-    await engineAndVvppController.launchEngines();
-
     await this.load({
       isMultiEngineOffMode: !!isMultiEngineOffMode,
     });
-    win.show();
   }
 
   public togglePinWindow() {
@@ -264,17 +260,4 @@ class WindowManager {
       ? dialog.showMessageBox(options)
       : dialog.showMessageBox(this.getWindow(), options);
   }
-}
-
-let windowManager: WindowManager | undefined;
-
-export function initializeWindowManager(payload: WindowManagerOption) {
-  windowManager = new WindowManager(payload);
-}
-
-export function getWindowManager() {
-  if (windowManager == undefined) {
-    throw new Error("WindowManager is not initialized");
-  }
-  return windowManager;
 }

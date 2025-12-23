@@ -97,6 +97,12 @@ export default defineConfig((options) => {
       outDir: path.resolve(import.meta.dirname, "dist"),
       chunkSizeWarningLimit: 10000,
       sourcemap,
+      rollupOptions: {
+        input: {
+          main: path.resolve(import.meta.dirname, "src/index.html"),
+          welcome: path.resolve(import.meta.dirname, "src/welcome/index.html"),
+        },
+      },
     },
     publicDir: path.resolve(import.meta.dirname, "public"),
     css: {

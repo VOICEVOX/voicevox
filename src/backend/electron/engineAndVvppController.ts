@@ -9,7 +9,7 @@ import { getEngineInfoManager } from "./manager/engineInfoManager";
 import { getEngineProcessManager } from "./manager/engineProcessManager";
 import { getRuntimeInfoManager } from "./manager/RuntimeInfoManager";
 import { getVvppManager } from "./manager/vvppManager";
-import { getWindowManager } from "./manager/windowManager";
+import { getMainWindowManager } from "./manager/windowManager/main";
 import { EngineId, EngineInfo, engineSettingSchema } from "@/type/preload";
 import {
   PackageInfo,
@@ -113,7 +113,7 @@ export class EngineAndVvppController {
     reloadNeeded: boolean;
     reloadCallback?: () => void; // 再読み込みが必要な場合のコールバック
   }) {
-    const windowManager = getWindowManager();
+    const windowManager = getMainWindowManager();
     const result = windowManager.showMessageBoxSync({
       type: "warning",
       title: "エンジン追加の確認",

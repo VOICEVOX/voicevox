@@ -8,7 +8,7 @@ import { writeFileSafely } from "./fileHelper";
 import { IpcMainHandle } from "./ipc";
 import { getEngineInfoManager } from "./manager/engineInfoManager";
 import { getEngineProcessManager } from "./manager/engineProcessManager";
-import { getWindowManager } from "./manager/windowManager";
+import { getMainWindowManager } from "./manager/windowManager/main";
 import { getAppStateController } from "./appStateController";
 import { AssetTextFileNames } from "@/type/staticResources";
 import { failure, success } from "@/type/result";
@@ -55,7 +55,7 @@ async function retryShowSaveDialogWhileSafeDir<
    * 警告ダイアログを表示し、ユーザーが再試行を選択したかどうかを返す
    */
   const showWarningDialog = async () => {
-    const windowManager = getWindowManager();
+    const windowManager = getMainWindowManager();
     const productName = app.getName().toUpperCase();
     const warningResult = await windowManager.showMessageBox({
       message: `指定された保存先は${productName}により自動的に削除される可能性があります。\n他の場所に保存することをおすすめします。`,
@@ -97,7 +97,7 @@ export function getIpcMainHandle(params: {
   const engineAndVvppController = getEngineAndVvppController();
   const engineInfoManager = getEngineInfoManager();
   const engineProcessManager = getEngineProcessManager();
-  const windowManager = getWindowManager();
+  const windowManager = getMainWindowManager();
   return {
     GET_TEXT_ASSET: async (_, textType) => {
       const fileName = path.join(staticDirPath, AssetTextFileNames[textType]);

@@ -1,6 +1,6 @@
 import { app } from "electron";
 import { ipcMainSendProxy } from "./ipc";
-import { getWindowManager } from "./manager/windowManager";
+import { getMainWindowManager } from "./manager/windowManager/main";
 import { getEngineAndVvppController } from "./engineAndVvppController";
 import { getConfigManager } from "./electronConfig";
 import { ExhaustiveError } from "@/type/utility";
@@ -64,7 +64,7 @@ export class AppStateController {
 
   private checkUnsavedEdit() {
     log.info("Checking for unsaved edits before quitting");
-    const windowManager = getWindowManager();
+    const windowManager = getMainWindowManager();
     try {
       // TODO: ipcの送信以外で失敗した場合はシャットダウンしないようにする
       ipcMainSendProxy.CHECK_EDITED_AND_NOT_SAVE(windowManager.getWindow(), {
@@ -99,7 +99,7 @@ export class AppStateController {
   /** 編集状態に関わらず終了する */
   shutdown() {
     this.quitState = "dirty";
-    getWindowManager().destroyWindow();
+    getMainWindowManager().destroyWindow();
     this.initiateQuit();
   }
 
