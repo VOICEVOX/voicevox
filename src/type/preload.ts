@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { IpcSOData } from "./ipc";
 import { AltPortInfos } from "@/store/type";
 import { Result } from "@/type/result";
 import {
@@ -95,11 +94,20 @@ export interface Sandbox {
   readFile(obj: { filePath: string }): Promise<Result<Uint8Array>>;
   isAvailableGPUMode(): Promise<boolean>;
   isMaximizedWindow(): Promise<boolean>;
-  onReceivedIPCMsg(listeners: {
-    [K in keyof IpcSOData]: (
-      event: unknown,
-      ...args: IpcSOData[K]["args"]
-    ) => Promise<IpcSOData[K]["return"]> | IpcSOData[K]["return"];
+  registerIpcHandler(listeners: {
+    loadProjectFile: (obj: { filePath: string }) => void;
+    detectMaximized: () => void;
+    detectUnmaximized: () => void;
+    detectedEngineError: (obj: { engineId: EngineId }) => void;
+    detectPinned: () => void;
+    detectUnpinned: () => void;
+    detectEnterFullscreen: () => void;
+    detectLeaveFullscreen: () => void;
+    checkEditedAndNotSave: (obj: {
+      closeOrReload: "close" | "reload";
+      isMultiEngineOffMode?: boolean;
+    }) => void;
+    detectResized: (obj: { width: number; height: number }) => void;
   }): void;
   closeWindow(): void;
   minimizeWindow(): void;
