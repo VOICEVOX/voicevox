@@ -23,7 +23,7 @@ import { getConfigManager } from "./electronConfig";
 import { getEngineAndVvppController } from "./engineAndVvppController";
 import { getIpcMainHandle } from "./ipcMainHandle";
 import { getAppStateController } from "./appStateController";
-import { initializeWelcomeWindowManager } from "./manager/windowManager/welcome";
+import { getWelcomeWindowManager, initializeWelcomeWindowManager } from "./manager/windowManager/welcome";
 import { assertNonNullable } from "@/type/utility";
 import { EngineInfo } from "@/type/preload";
 import { isMac, isProduction } from "@/helpers/platform";
@@ -201,7 +201,7 @@ const onEngineProcessError = (engineInfo: EngineInfo, error: Error) => {
 
   // winが作られる前にエラーが発生した場合はwinへの通知を諦める
   // FIXME: winが作られた後にエンジンを起動させる
-  const win = windowManager.win;
+  const win = mainWindowManager.win;
   if (win != undefined) {
     ipcMainSendProxy.DETECTED_ENGINE_ERROR(win, { engineId });
   } else {
@@ -233,7 +233,8 @@ initializeEngineProcessManager({ onEngineProcessError });
 initializeVvppManager({ vvppEngineDir, tmpDir: app.getPath("temp") });
 
 const configManager = getConfigManager();
-const windowManager = getMainWindowManager();
+const mainWindowManager = getMainWindowManager();
+const welcomeWindowManager = getWelcomeWindowManager();
 const engineAndVvppController = getEngineAndVvppController();
 
 /**
@@ -243,7 +244,7 @@ const engineAndVvppController = getEngineAndVvppController();
 function checkMultiEngineEnabled(): boolean {
   const enabled = configManager.get("enableMultiEngine");
   if (!enabled) {
-    windowManager.showMessageBoxSync({
+    mainWindowManager.showMessageBoxSync({
       type: "info",
       title: "マルチエンジン機能が無効です",
       message: `マルチエンジン機能が無効です。vvppファイルを使用するには設定からマルチエンジン機能を有効にしてください。`,
@@ -525,14 +526,15 @@ void app.whenReady().then(async () => {
     }
   }
 
-  await engineAndVvppController.launchEngines();
-  await windowManager.createWindow();
+  await welcomeWindowManager.createWindow();
+  // await engineAndVvppController.launchEngines();
+  // await windowManager.createWindow();
 });
 
 // 他のプロセスが起動したとき、`requestSingleInstanceLock`経由で`rawData`が送信される。
 app.on("second-instance", async (_event, _argv, _workDir, rawData) => {
   const data = rawData as SingleInstanceLockData;
-  const win = windowManager.win;
+  const win = mainWindowManager.win;
   if (win == undefined) {
     // TODO: 起動シーケンス中の場合はWindowが作られるまで待つ
     log.warn("A 'second-instance' event was emitted but there is no window.");
@@ -561,7 +563,7 @@ app.on("second-instance", async (_event, _argv, _workDir, rawData) => {
       filePath: data.filePath,
     });
   }
-  windowManager.restoreAndFocus();
+  mainWindowManager.restoreAndFocus();
 });
 
 if (isDevelopment) {

@@ -7,7 +7,7 @@ import {
 export class WelcomeWindowManager extends WindowManager {
   protected buildLoadUrl(_obj: WindowLoadOption = {}) {
     void _obj;
-    return this.buildBaseUrl("welcome.html");
+    return this.buildBaseUrl("welcome/index.html");
   }
 }
 
