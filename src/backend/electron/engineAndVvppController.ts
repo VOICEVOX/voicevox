@@ -1,6 +1,3 @@
-import path from "node:path";
-import fs from "node:fs";
-import { ReadableStream } from "node:stream/web";
 import { dialog } from "electron";
 
 import semver from "semver";
@@ -10,6 +7,7 @@ import { getEngineProcessManager } from "./manager/engineProcessManager";
 import { getRuntimeInfoManager } from "./manager/RuntimeInfoManager";
 import { getVvppManager } from "./manager/vvppManager";
 import { getWindowManager } from "./manager/windowManager";
+import { MultiDownloader } from "./multiDownloader";
 import { EngineId, EngineInfo, engineSettingSchema } from "@/type/preload";
 import {
   PackageInfo,
@@ -256,80 +254,28 @@ export class EngineAndVvppController {
       throw new UnreachableError("No packages to download");
     }
 
-    let failed = false;
-    const downloadedPaths: string[] = [];
-    try {
-      // ダウンロード
-      callbacks.onProgress({ type: "download", progress: 0 });
-
-      let totalBytes = 0;
-      packageInfo.packages.forEach((p) => {
-        totalBytes += p.size;
-      });
-
-      let downloadedBytes = 0;
-      await Promise.all(
-        packageInfo.packages.map(async (p) => {
-          if (failed) return; // 他のダウンロードが失敗していたら中断
-
-          const { url, name } = p;
-          log.info(`Download ${name} from ${url}`);
-
-          const res = await fetch(url);
-          if (!res.ok || res.body == null)
-            throw new Error(`Failed to download ${name} from ${url}`);
-          const downloadPath = path.join(downloadDir, name);
-          const fileStream = fs.createWriteStream(downloadPath);
-
-          // ファイルに書き込む
-          // NOTE: なぜか型が合わないのでasを使っている
-          for await (const chunk of res.body as ReadableStream<Uint8Array>) {
-            fileStream.write(chunk);
-            downloadedBytes += chunk.length;
-            callbacks.onProgress({
-              type: "download",
-              progress: (downloadedBytes / totalBytes) * 100,
-            });
-          }
-
-          // ファイルを確実に閉じる
-          const { promise, resolve, reject } = Promise.withResolvers<void>();
-          fileStream.on("close", resolve);
-          fileStream.on("error", reject);
-          fileStream.close();
-          await promise;
-
-          downloadedPaths.push(downloadPath);
-          log.info(`Downloaded ${name} to ${downloadPath}`);
-
-          // TODO: ハッシュチェック
-        }),
-      );
-
-      // インストール
-      await this.installVvppEngine({
-        vvppPath: downloadedPaths[0],
-        asDefaultVvppEngine: true,
-        immediate: true,
-        callbacks: {
-          onProgress: ({ progress }) => {
-            callbacks.onProgress({ type: "install", progress });
-          },
+    await using downloader = new MultiDownloader(
+      downloadDir,
+      packageInfo.packages,
+      {
+        onProgress: ({ progress }) => {
+          callbacks.onProgress({ type: "download", progress });
         },
-      });
-    } catch (e) {
-      failed = true;
-      log.error(`Failed to download and install VVPP engine:`, e);
-      throw e;
-    } finally {
-      // ダウンロードしたファイルを削除
-      await Promise.all(
-        downloadedPaths.map(async (path) => {
-          log.info(`Delete downloaded file: ${path}`);
-          await fs.promises.unlink(path);
-        }),
-      );
-    }
+      },
+    );
+    await downloader.download();
+
+    // インストール
+    await this.installVvppEngine({
+      vvppPath: downloader.downloadedPaths[0],
+      asDefaultVvppEngine: true,
+      immediate: true,
+      callbacks: {
+        onProgress: ({ progress }) => {
+          callbacks.onProgress({ type: "install", progress });
+        },
+      },
+    });
   }
 
   /** 各エンジンの設定を初期化する */
