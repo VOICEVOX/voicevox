@@ -10,7 +10,7 @@ import { MultiDownloader } from "@/backend/electron/multiDownloader";
 const epsilon = 10;
 
 /* NOTE:
- * 同時に複数の処理を待ち、片方の処理を待たず終わる、というテストを書くときは、終わらない側の時間を使うようにすること。
+ * 同時に複数の処理を待ち、片方の処理を待たず終わる、というテストを書くときは、終わらない側の時間を基準にすること。
  * 例えば以下のようなテストは避ける：
  *
  * test("1秒で終わる", async () => {
