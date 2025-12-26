@@ -5,7 +5,37 @@ import http from "node:http";
 import { expect, test } from "vitest";
 import { MultiDownloader } from "@/backend/electron/multiDownloader";
 
-const marginTime = 100;
+// タイムアウトの時間でテストするときの余裕。
+// 環境によってTimeoutが少し早く終わることを想定。
+const epsilon = 10;
+
+/* NOTE:
+ * 同時に複数の処理を待ち、片方の処理を待たず終わる、というテストを書くときは、終わらない側の時間を使うようにすること。
+ * 例えば以下のようなテストは避ける：
+ *
+ * test("1秒で終わる", async () => {
+ *   const startTime = Date.now();
+ *   const test = await Promise.race([
+ *     sleep(1000),
+ *     sleep(2000),
+ *   ]);
+ *   const duration = Date.now() - startTime;
+ *   expect(duration).toBeLessThan(1000 + epsilon);
+ * });
+ *
+ * なぜなら、環境によっては1秒ちょっとで終わらず、テストがFlakyになる可能性があるため。
+ * 代わりに以下のように書く：
+ *
+ * test("2秒で終わらない", async () => {
+ *   const startTime = Date.now();
+ *   const test = await Promise.race([
+ *     sleep(1000),
+ *     sleep(2000),
+ *   ])
+ *   const duration = Date.now() - startTime;
+ *   expect(duration).toBeLessThan(2000 - epsilon);
+ * });
+ */
 
 class TestServer {
   server: http.Server;
@@ -160,9 +190,9 @@ test("複数ファイルを同時にダウンロードできる", async () => {
     const startTime = Date.now();
     await downloader.download();
     const duration = Date.now() - startTime;
-    // 200msの遅延 + 多少の余裕。
+
     // 同時ダウンロードできていなかったら600ms以上かかる
-    expect(duration).toBeLessThan(200 + marginTime);
+    expect(duration).toBeLessThan(600 - epsilon);
   }
 });
 
@@ -207,7 +237,7 @@ test("一つエラーが起きると全体が失敗し、かつそのときで�
     const currentTime = Date.now();
     await expect(downloader.download()).rejects.toThrow();
     // 他の長いリクエストを待たずにすぐに失敗しているはず
-    expect(Date.now() - currentTime).toBeLessThan(500 + marginTime);
+    expect(Date.now() - currentTime).toBeLessThan(1000 - epsilon);
   }
 
   const downloadedPaths = [
