@@ -13,6 +13,7 @@ const epsilon = 10;
  * 同時に複数の処理を待ち、片方の処理を待たず終わる、というテストを書くときは、終わらない側の時間を基準にすること。
  * 例えば以下のようなテストは避ける：
  *
+ * ```ts
  * test("Promise.raceは一つでも解決された瞬間に解決される", async () => {
  *   const startTime = Date.now();
  *   const test = await Promise.race([
@@ -22,10 +23,12 @@ const epsilon = 10;
  *   const duration = Date.now() - startTime;
  *   expect(duration).toBeLessThan(1000 + epsilon);
  * });
+ * ```
  *
  * なぜなら、環境によっては1秒ちょっとで終わらず、テストがFlakyになる可能性があるため。
  * 代わりに以下のように書く：
  *
+ * ```ts
  * test("Promise.raceは一つでも解決された瞬間に解決される", async () => {
  *   const startTime = Date.now();
  *   const test = await Promise.race([
@@ -35,6 +38,7 @@ const epsilon = 10;
  *   const duration = Date.now() - startTime;
  *   expect(duration).toBeLessThan(2000 - epsilon);
  * });
+ * ```
  */
 
 class TestServer {
