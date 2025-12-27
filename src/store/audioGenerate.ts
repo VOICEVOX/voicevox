@@ -152,7 +152,7 @@ export function isMorphable(
   const { engineId, styleId } = audioItem.voice;
   const info =
     state.morphableTargetsInfo[engineId]?.[styleId]?.[
-      audioItem.morphingInfo.targetStyleId
+    audioItem.morphingInfo.targetStyleId
     ];
   if (info == undefined) return false;
   return info.isMorphable;
@@ -171,4 +171,26 @@ export function handlePossiblyNotMorphableError(e: unknown) {
     window.backend.logError(e);
     return;
   }
+}
+
+/**
+ * AudioQueryから音声の長さを計算する(秒)
+ */
+export function calculateAudioLength(audioQuery: EditorAudioQuery) {
+  let length = 0;
+  length += audioQuery.prePhonemeLength;
+  audioQuery.accentPhrases.forEach((accentPhrase) => {
+    accentPhrase.moras.forEach((mora) => {
+      if (mora.consonantLength != undefined) {
+        length += mora.consonantLength;
+      }
+      length += mora.vowelLength;
+    });
+    if (accentPhrase.pauseMora != undefined) {
+      length +=
+        accentPhrase.pauseMora.vowelLength * audioQuery.pauseLengthScale;
+    }
+  });
+  length += audioQuery.postPhonemeLength;
+  return length / audioQuery.speedScale;
 }

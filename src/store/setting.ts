@@ -76,6 +76,7 @@ export const settingStoreState: SettingStoreState = {
   playheadPositionDisplayFormat: "MINUTES_SECONDS",
   enableKatakanaEnglish: true,
   enableMultiSelect: true,
+  showAudioLength: false,
 };
 
 export const settingStore = createPartialStore<SettingStoreTypes>({
@@ -156,6 +157,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         "openedEditor",
         "enableKatakanaEnglish",
         "enableMultiSelect",
+        "showAudioLength",
       ] as const;
 
       // rootMiscSettingKeysに値を足し忘れていたときに型エラーを出す検出用コード
