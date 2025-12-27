@@ -152,7 +152,7 @@ export function isMorphable(
   const { engineId, styleId } = audioItem.voice;
   const info =
     state.morphableTargetsInfo[engineId]?.[styleId]?.[
-    audioItem.morphingInfo.targetStyleId
+      audioItem.morphingInfo.targetStyleId
     ];
   if (info == undefined) return false;
   return info.isMorphable;

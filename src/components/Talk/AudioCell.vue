@@ -83,7 +83,7 @@
         文章が長いと正常に動作しない可能性があります。
         句読点の位置で文章を分割してください。
       </template>
-      <template v-if="enableDeleteButton" #after>
+      <template #after>
         <div
           v-if="showAudioLength && audioDuration !== undefined"
           class="q-mr-sm audio-length"
@@ -91,6 +91,7 @@
           {{ audioDuration.toFixed(2) }}s
         </div>
         <QBtn
+          v-if="enableDeleteButton"
           round
           flat
           icon="delete_outline"
@@ -310,7 +311,6 @@ watch(
       audioTextBuffer.value = newText;
     }
   },
-
 );
 
 const showAudioLength = computed(() => store.state.showAudioLength);
@@ -369,7 +369,8 @@ const paste = async (options?: { text?: string }) => {
       NEW_LINE: (text) => text.split(/[\r\n]/),
       OFF: (text) => [text],
     };
-    const texts = textSplitter[textSplitType.value](text);
+    const splitType = textSplitType.value as SplitTextWhenPasteType;
+    const texts = textSplitter[splitType](text);
 
     if (texts.length >= 2 && texts.some((text) => text !== "")) {
       await putMultilineText(texts);

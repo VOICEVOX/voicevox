@@ -198,8 +198,6 @@ export type SplitTextWhenPasteType = "PERIOD_AND_NEW_LINE" | "NEW_LINE" | "OFF";
 
 export type EditorFontType = "default" | "os";
 
-
-
 export const engineSettingSchema = z.object({
   useGpu: z.boolean().default(false),
   outputSamplingRate: z
@@ -226,7 +224,6 @@ export const savingSettingSchema = z
 export type SavingSetting = z.infer<typeof savingSettingSchema>;
 
 export type EngineSettings = Record<EngineId, EngineSettingType>;
-
 
 export type DefaultStyleId = {
   engineId: EngineId;
@@ -303,11 +300,11 @@ export type MorphableTargetInfoTable = Record<
   StyleId,
   | undefined
   | Record<
-    StyleId,
-    {
-      isMorphable: boolean;
-    }
-  >
+      StyleId,
+      {
+        isMorphable: boolean;
+      }
+    >
 >;
 
 export type HotkeyReturnType =
@@ -417,7 +414,6 @@ export const rootMiscSettingSchema = z.object({
   enableMultiSelect: z.boolean().default(true), // 複数選択を有効にするかどうか
   showAudioLength: z.boolean().default(false), // 音声の長さを表示するかどうか
 });
-
 
 export function getConfigSchema({ isMac }: { isMac: boolean }) {
   return z.object({

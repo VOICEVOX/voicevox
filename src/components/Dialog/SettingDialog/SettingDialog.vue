@@ -412,7 +412,11 @@
                       v-for="(value, key) in undoableTrackOperations"
                       :key
                       :checked="value"
-                      :label="undoableTrackOperationsLabels[key]"
+                      :label="
+                        undoableTrackOperationsLabels[
+                          key as keyof typeof undoableTrackOperationsLabels
+                        ]
+                      "
                       @update:checked="
                         (newValue) =>
                           (undoableTrackOperations = {
