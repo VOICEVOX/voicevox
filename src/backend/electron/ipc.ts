@@ -1,6 +1,6 @@
 import { BrowserWindow, ipcMain, IpcMainInvokeEvent } from "electron";
 import { wrapToTransferableResult } from "./transferableResultHelper";
-import { IpcIHData, IpcSOData } from "@/type/ipc";
+import { IpcIHData, IpcSOData } from "./ipcType";
 import { createLogger } from "@/helpers/log";
 
 const log = createLogger("ipc");

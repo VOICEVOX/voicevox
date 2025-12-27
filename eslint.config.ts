@@ -168,6 +168,7 @@ export default defineConfigWithVueTs(
         process.env.NODE_ENV !== "production" ? "warn" : "error", // 開発時のみwarn
         {
           ignoreRestSiblings: true,
+          ignoreUsingDeclarations: true,
         },
       ],
       "import/order": "error",

@@ -1,5 +1,4 @@
 import semver from "semver";
-import AsyncLock from "async-lock";
 import {
   AcceptTermsStatus,
   ConfigType,
@@ -17,8 +16,10 @@ import {
   getDefaultHotkeySettings,
   HotkeySettingType,
 } from "@/domain/hotkeyAction";
+import { Mutex } from "@/helpers/mutex";
+import { createLogger } from "@/helpers/log";
 
-const lockKey = "save";
+const log = createLogger("ConfigManager");
 
 const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
   [
@@ -308,7 +309,7 @@ export abstract class BaseConfigManager {
   protected config: ConfigType | undefined;
   protected isMac: boolean;
 
-  private lock = new AsyncLock();
+  private lock = new Mutex();
 
   protected abstract exists(): Promise<boolean>;
   protected abstract load(): Promise<Record<string, unknown> & Metadata>;
@@ -322,23 +323,26 @@ export abstract class BaseConfigManager {
 
   public reset() {
     this.config = this.getDefaultConfig();
-    this._save();
+    void this._save();
   }
 
   public async initialize(): Promise<this> {
     if (await this.exists()) {
+      log.info("Config file exists. Loading...");
       const data = await this.load();
       const version = data.__internal__.migrations.version;
       for (const [versionRange, migration] of migrations) {
         if (!semver.satisfies(version, versionRange)) {
+          log.info(`Applying migration for version range ${versionRange}...`);
           migration(data);
         }
       }
       this.config = this.migrateHotkeySettings(
         getConfigSchema({ isMac: this.isMac }).parse(data),
       );
-      this._save();
+      void this._save();
     } else {
+      log.info("Config file does not exist. Creating default config...");
       this.reset();
     }
     await this.ensureSaved();
@@ -354,7 +358,7 @@ export abstract class BaseConfigManager {
   public set<K extends keyof ConfigType>(key: K, value: ConfigType[K]) {
     if (!this.config) throw new Error("Config is not initialized");
     this.config[key] = value;
-    this._save();
+    void this._save();
   }
 
   /** 全ての設定を取得する。テスト用。 */
@@ -363,42 +367,35 @@ export abstract class BaseConfigManager {
     return this.config;
   }
 
-  private _save() {
-    void this.lock.acquire(lockKey, async () => {
-      await this.save({
-        ...getConfigSchema({ isMac: this.isMac }).parse({
-          ...this.config,
-        }),
-        __internal__: {
-          migrations: {
-            version: this.getAppVersion(),
-          },
+  private async _save() {
+    await using _lock = await this.lock.acquire();
+    log.info("Saving config...");
+    await this.save({
+      ...getConfigSchema({ isMac: this.isMac }).parse({
+        ...this.config,
+      }),
+      __internal__: {
+        migrations: {
+          version: this.getAppVersion(),
         },
-      });
+      },
     });
   }
 
-  ensureSaved(): Promise<void> | "alreadySaved" {
-    if (!this.lock.isBusy(lockKey)) {
-      return "alreadySaved";
-    }
-
-    return this._ensureSaved();
-  }
-
-  private async _ensureSaved(): Promise<void> {
+  async ensureSaved(): Promise<void> {
     // 10秒待っても保存が終わらなかったら諦める
     for (let i = 0; i < 100; i++) {
-      // 他のスレッドに処理を譲る
-      await new Promise((resolve) => setTimeout(resolve, 100));
-      if (!this.lock.isBusy(lockKey)) {
+      if (!this.lock.isLocked()) {
         return;
       }
+      // 他のスレッドに処理を譲る
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
-    throw new Error("Failed to save config");
+    throw new Error("Config save timeout");
   }
 
   private migrateHotkeySettings(data: ConfigType): ConfigType {
+    log.info("Migrating hotkey settings...");
     const COMBINATION_IS_NONE = HotkeyCombination("####");
     const loadedHotkeys = structuredClone(data.hotkeySettings);
     const hotkeysWithoutNewCombination = getDefaultHotkeySettings({
