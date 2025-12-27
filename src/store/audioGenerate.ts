@@ -177,6 +177,8 @@ export function handlePossiblyNotMorphableError(e: unknown) {
  * AudioQueryから音声の長さを計算する(秒)
  */
 export function calculateAudioLength(audioQuery: EditorAudioQuery) {
+  if (audioQuery.accentPhrases.length === 0) return 0;
+
   let length = 0;
   length += audioQuery.prePhonemeLength;
   audioQuery.accentPhrases.forEach((accentPhrase) => {
