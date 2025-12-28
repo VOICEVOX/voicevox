@@ -24,7 +24,6 @@ const selectedTrack = computed(() => store.getters.SELECTED_TRACK);
 type ColorStyle = {
   noteFill: number;
   noteBorder: number;
-  textFill: number;
 };
 
 // NOTE: ノートの色をテーマに応じて定義
@@ -36,12 +35,10 @@ const noteColorStyles: {
   light: {
     noteFill: 0xdfe3e0,
     noteBorder: 0xffffff,
-    textFill: 0x1a3d2e,
   },
   dark: {
-    noteFill: 0x5a7d65,
-    noteBorder: 0xa5c9ae,
-    textFill: 0xe8f5eb,
+    noteFill: 0x363936,
+    noteBorder: 0x262728,
   },
 };
 
@@ -55,7 +52,7 @@ const noteTextStyles: {
   dark: PIXI.TextStyle;
 } = {
   light: new PIXI.TextStyle({ fill: "#423e3f", fontSize: 14 }),
-  dark: new PIXI.TextStyle({ fill: "#423e3f", fontSize: 14 }),
+  dark: new PIXI.TextStyle({ fill: "#bfbbbc", fontSize: 14 }),
 };
 
 const selectedTrackNotes = computed(() => {

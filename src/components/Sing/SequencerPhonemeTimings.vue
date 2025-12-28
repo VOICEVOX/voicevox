@@ -73,7 +73,7 @@ const phonemeTimingLineStyles: {
     width: 1,
   },
   dark: {
-    color: 0x8abd92,
+    color: 0x82b38b,
     alpha: 1,
     width: 1,
   },
@@ -84,7 +84,7 @@ const phonemeTextStyles: {
   dark: PIXI.TextStyle;
 } = {
   light: new PIXI.TextStyle({ fill: "#252E26", fontSize: 14 }),
-  dark: new PIXI.TextStyle({ fill: "#252E26", fontSize: 14 }),
+  dark: new PIXI.TextStyle({ fill: "#ccc8c9", fontSize: 14 }),
 };
 
 const { mounted } = useMounted();
