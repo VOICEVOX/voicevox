@@ -27,6 +27,7 @@ BANNER
 
 NAME=@@PLACEHOLDER@@ # placeholder for CI
 VERSION=@@PLACEHOLDER@@ # placeholder for CI
+SPLIT=@@SPLIT@@ # placeholder for CI
 REPO_URL=${REPO_URL:-https://github.com/VOICEVOX/voicevox}
 
 # Install directory
@@ -78,162 +79,30 @@ Or
 EOS
 fi
 
-COMMAND_7Z=${COMMAND_7Z:-}
-if [ -n "${COMMAND_7Z}" ]; then
-    # use env var
-    :
-elif command -v 7z &> /dev/null; then
-    # Ubuntu/Debian p7zip-full
-    COMMAND_7Z=7z
-elif command -v 7zr &> /dev/null; then
-    # Ubuntu/Debian p7zip
-    COMMAND_7Z=7zr
-elif command -v 7za &> /dev/null; then
-    # CentOS/Fedora
-    COMMAND_7Z=7za
-elif command -v 7zz &> /dev/null; then
-    # Official 7zip
-    COMMAND_7Z=7zz
-else
-    cat << 'EOS' && exit 1
-[!] Command '7z', '7zr', '7za' or '7zz' not found
-
-Required to extract compressed files
-
-Ubuntu/Debian:
-    sudo apt install p7zip
-
-CentOS (Enable EPEL repository):
-    sudo dnf install epel-release && sudo dnf install p7zip
-Or
-    sudo yum install epel-release && sudo yum install p7zip
-
-Fedora:
-    sudo dnf install p7zip
-Or
-    sudo yum install p7zip
-
-Arch Linux:
-    sudo pacman -S 7zip
-EOS
-fi
-echo "[-] 7z command: ${COMMAND_7Z}"
-
 RELEASE_URL=${REPO_URL}/releases/download/${VERSION}
-ARCHIVE_LIST_URL=${RELEASE_URL}/${NAME}.7z.txt
 
 echo "[-] Install directory: ${APP_DIR}"
 mkdir -p "${APP_DIR}"
 
 cd "${APP_DIR}"
 
-# Download archive list
-if [ "$REUSE_LIST" != "1" ]; then
-    echo "[+] Downloading ${ARCHIVE_LIST_URL}..."
-    curl --fail -L -o "list.txt" "${ARCHIVE_LIST_URL}"
+
+
+# Download separated AppImages and verify it
+curl --fail -L -o sha ${REPO_URL}/releases/download/${VERSION}/${NAME}.AppImage.sha256sum
+# Download AppImage if missing or broken
+if [ "$(cat sha)" != "$(sha256sum ${NAME}.AppImage)" ];then
+    rm -f ${NAME}.AppImage
+    # Do not put duplicated large files on the disk
+    for s in $(seq 0 $(( ${SPLIT} - 1 )) );do
+        curl --fail -L ${REPO_URL}/releases/download/${VERSION}/${NAME}.AppImage.0${s} >> ${NAME}.AppImage
+    done
 fi
-
-echo
-echo "[+] Listing of split archives..."
-_readarray ARCHIVE_LIST < "list.txt"
-# filename<TAB>size<TAB>hash
-_readarray ARCHIVE_NAME_LIST < <(
-    for line in "${ARCHIVE_LIST[@]}"; do
-        echo "$line"
-    done | awk '$0!=""{print $1}'
-)
-_readarray ARCHIVE_SIZE_LIST < <(
-    for line in "${ARCHIVE_LIST[@]}"; do
-        echo "$line"
-    done | awk '$0!=""{print $2}'
-)
-_readarray ARCHIVE_HASH_LIST < <(
-    for line in "${ARCHIVE_LIST[@]}"; do
-        echo "$line"
-    done | awk '$0!=""{print $3}' |
-        tr '[:lower:]' '[:upper:]'
-)
-
-echo
-
-for index in "${!ARCHIVE_NAME_LIST[@]}"; do
-    echo "${index}." \
-        "${ARCHIVE_NAME_LIST[index]}" \
-        "${ARCHIVE_SIZE_LIST[index]}" \
-        "${ARCHIVE_HASH_LIST[index]}"
-done
-echo
-
-# Download archives
-for index in "${!ARCHIVE_LIST[@]}"; do
-    FILENAME=${ARCHIVE_NAME_LIST[index]}
-    SIZE=${ARCHIVE_SIZE_LIST[index]}
-    HASH=${ARCHIVE_HASH_LIST[index]}
-
-    URL=${RELEASE_URL}/${FILENAME}
-
-    echo "[+] Downloading ${URL}..."
-    if [ ! -f "${FILENAME}" ]; then
-        curl --fail -L -C - -o "${FILENAME}.tmp" "${URL}"
-        mv "${FILENAME}.tmp" "${FILENAME}"
-    fi
-
-    # File verification (size, md5 hash)
-    if [ "$SKIP_VERIFY" = "1" ]; then
-        echo "[-] File verification skipped"
-    else
-        if [ "$SIZE" != "x" ]; then
-            echo "[+] Verifying size == ${SIZE}..."
-            if stat --version &>/dev/null; then
-                DOWNLOADED_SIZE=$(stat --printf="%s" "${FILENAME}")
-            else
-                DOWNLOADED_SIZE=$(stat -f%z "${FILENAME}")
-            fi
-
-            if [ "$DOWNLOADED_SIZE" = "$SIZE" ]; then
-                echo "[-] Size OK"
-            else
-                cat << EOS && exit 1
-[!] Invalid size: ${DOWNLOADED_SIZE} != ${SIZE}
-
-Remove the corrupted file and restart installer!
-
-    rm $(realpath "${FILENAME}")
-
-EOS
-            fi
-        fi
-
-        if [ "$HASH" != "x" ]; then
-            echo "[+] Verifying hash == ${HASH}..."
-            DOWNLOADED_HASH=$(md5sum "${FILENAME}" | awk '$0=$1' | tr '[:lower:]' '[:upper:]')
-            if [ "$DOWNLOADED_HASH" = "$HASH" ]; then
-                echo "[-] Hash OK"
-            else
-                cat << EOS && exit 1
-[!] Invalid hash: ${DOWNLOADED_HASH} != ${HASH}
-
-Remove the corrupted file and restart installer!
-
-    rm $(realpath "${FILENAME}")
-
-EOS
-            fi
-        fi
-    fi
-done
-
-# Extract archives
-echo "[+] Extracting archive..."
-FIRST_ARCHIVE=${ARCHIVE_NAME_LIST[0]}
-"${COMMAND_7Z}" x "${FIRST_ARCHIVE}" -y
+[ $(cat sha) != $(sha256sum ${NAME}.AppImage) ] || (echo "Checksum mismatch. Please retry." ;exit 1)
 
 # Rename
 APPIMAGE="VOICEVOX.AppImage"
-EXTRACTED_APPIMAGE_NAME=$("${COMMAND_7Z}" l -slt -ba "${FIRST_ARCHIVE}" | grep 'Path = ' | head -n1 | sed 's/Path = \(.*\)/\1/')
-if [ "$EXTRACTED_APPIMAGE_NAME" != "$APPIMAGE" ]; then
-    mv "$EXTRACTED_APPIMAGE_NAME" "$APPIMAGE"
-fi
+mv -f ${NAME}.AppImage "$APPIMAGE"
 chmod +x "${APPIMAGE}"
 
 # Dump version
