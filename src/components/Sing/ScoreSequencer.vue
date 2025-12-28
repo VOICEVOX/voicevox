@@ -216,7 +216,7 @@
       </div>
     </template>
     <template #after>
-      <SequencerParameterPanel v-if="isParameterPanelOpen" />
+      <SequencerParameterPanel v-if="isParameterPanelOpen" :viewportInfo />
     </template>
   </QSplitter>
 </template>
