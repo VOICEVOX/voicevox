@@ -617,7 +617,7 @@ const createNoteSequenceForPhrase = (
   tempos: Tempo[],
   tpqn: number,
   phraseSequenceInfos: Map<PhraseKey, PhraseSequenceInfo>,
-  onSequenceGeneratedAndRegisted: (
+  onSequenceGeneratedAndRegistered: (
     phraseKey: PhraseKey,
     sequenceId: SequenceId,
   ) => void,
@@ -638,7 +638,7 @@ const createNoteSequenceForPhrase = (
   registerSequence(newSequenceId, noteSequence);
   logger.info(`Registered note sequence. ID: ${newSequenceId}`);
 
-  onSequenceGeneratedAndRegisted(phraseKey, newSequenceId);
+  onSequenceGeneratedAndRegistered(phraseKey, newSequenceId);
 };
 
 /**
