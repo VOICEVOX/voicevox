@@ -444,9 +444,20 @@ const syncPhraseSequences = (
   phraseSingingVoices: Map<SingingVoiceKey, SingingVoice>,
   tempos: Tempo[],
   tpqn: number,
+  callbacks: {
+    onSequenceGeneratedAndRegistered: (
+      phraseKey: PhraseKey,
+      sequenceId: SequenceId,
+    ) => void;
+    onSequenceDeleted: (phraseKey: PhraseKey) => void;
+  },
 ) => {
   // 不要になったシーケンスを削除する
-  deleteUnnecessarySequences(phrases, phraseSequenceInfos);
+  deleteUnnecessarySequences(
+    phrases,
+    phraseSequenceInfos,
+    callbacks.onSequenceDeleted,
+  );
 
   // 不足しているシーケンスを新しく作成する
   createMissingSequences(
@@ -455,6 +466,7 @@ const syncPhraseSequences = (
     tempos,
     tpqn,
     phraseSequenceInfos,
+    callbacks.onSequenceGeneratedAndRegistered,
   );
 };
 
@@ -469,6 +481,7 @@ const syncPhraseSequences = (
 const deleteUnnecessarySequences = (
   phrases: Map<PhraseKey, Phrase>,
   phraseSequenceInfos: Map<PhraseKey, PhraseSequenceInfo>,
+  onSequenceDeleted: (phraseKey: PhraseKey) => void,
 ) => {
   for (const [phraseKey, sequenceInfo] of phraseSequenceInfos) {
     const phrase = phrases.get(phraseKey);
@@ -500,6 +513,8 @@ const deleteUnnecessarySequences = (
       if (isRegisteredSequence(sequenceInfo.sequenceId)) {
         deleteSequence(sequenceInfo.sequenceId);
         logger.info(`Deleted sequence. ID: ${sequenceInfo.sequenceId}`);
+
+        onSequenceDeleted(phraseKey);
       }
     }
   }
@@ -514,6 +529,10 @@ const createMissingSequences = (
   tempos: Tempo[],
   tpqn: number,
   phraseSequenceInfos: Map<PhraseKey, PhraseSequenceInfo>,
+  onSequenceGeneratedAndRegistered: (
+    phraseKey: PhraseKey,
+    sequenceId: SequenceId,
+  ) => void,
 ) => {
   for (const [phraseKey, phrase] of phrases) {
     // 既にシーケンスが存在する場合は、この関数では何もしない
@@ -528,6 +547,7 @@ const createMissingSequences = (
         phrase,
         phraseSingingVoices,
         phraseSequenceInfos,
+        onSequenceGeneratedAndRegistered,
       );
     } else {
       createNoteSequenceForPhrase(
@@ -536,6 +556,7 @@ const createMissingSequences = (
         tempos,
         tpqn,
         phraseSequenceInfos,
+        onSequenceGeneratedAndRegistered,
       );
     }
   }
@@ -549,6 +570,10 @@ const createAudioSequenceForPhrase = (
   phrase: Phrase,
   phraseSingingVoices: Map<SingingVoiceKey, SingingVoice>,
   phraseSequenceInfos: Map<PhraseKey, PhraseSequenceInfo>,
+  onSequenceGeneratedAndRegistered: (
+    phraseKey: PhraseKey,
+    sequenceId: SequenceId,
+  ) => void,
 ) => {
   if (phrase.singingVoiceKey == undefined) {
     throw new UnreachableError("phrase.singingVoiceKey is undefined.");
@@ -577,6 +602,8 @@ const createAudioSequenceForPhrase = (
     ) {
       registerSequence(newSequenceId, audioSequence);
       logger.info(`Registered audio sequence. ID: ${newSequenceId}`);
+
+      onSequenceGeneratedAndRegistered(phraseKey, newSequenceId);
     }
   });
 };
@@ -590,6 +617,10 @@ const createNoteSequenceForPhrase = (
   tempos: Tempo[],
   tpqn: number,
   phraseSequenceInfos: Map<PhraseKey, PhraseSequenceInfo>,
+  onSequenceGeneratedAndRegisted: (
+    phraseKey: PhraseKey,
+    sequenceId: SequenceId,
+  ) => void,
 ) => {
   const newSequenceId = SequenceId(uuid4());
   phraseSequenceInfos.set(phraseKey, {
@@ -606,6 +637,8 @@ const createNoteSequenceForPhrase = (
 
   registerSequence(newSequenceId, noteSequence);
   logger.info(`Registered note sequence. ID: ${newSequenceId}`);
+
+  onSequenceGeneratedAndRegisted(phraseKey, newSequenceId);
 };
 
 /**
@@ -695,6 +728,7 @@ export const singingStoreState: SingingStoreState = {
   phraseQueries: new Map(),
   phraseSingingPitches: new Map(),
   phraseSingingVolumes: new Map(),
+  phraseSequenceIds: new Map(),
   sequencerZoomX: 0.5,
   sequencerZoomY: 0.75,
   sequencerSnapType: 16,
@@ -984,6 +1018,30 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  GET_SEQUENCE_AUDIO_BUFFER: {
+    getter: () => (sequenceId: SequenceId) => {
+      // シーケンスが存在するかチェック
+      if (!isRegisteredSequence(sequenceId)) {
+        throw new Error(`Sequence with id ${sequenceId} is not registered.`);
+      }
+
+      // sequencesからAudioSequenceを取得
+      const sequence = getOrThrow(sequences, sequenceId);
+      if (sequence.type !== "audio") {
+        return undefined;
+      }
+
+      // AudioSequenceのAudioEventが1個ではない場合はエラー
+      if (sequence.audioEvents.length !== 1) {
+        throw new Error("AudioSequence has invalid number of AudioEvents.");
+      }
+
+      // AudioSequenceからAudioBufferを取得
+      const audioBuffer = sequence.audioEvents[0].buffer;
+      return audioBuffer;
+    },
+  },
+
   SET_NOTES: {
     mutation(state, { notes, trackId }) {
       state.editingLyricNoteId = undefined;
@@ -1219,6 +1277,20 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
    */
   CREATE_AND_SETUP_SONG_TRACK_RENDERER: {
     async action({ state, actions, mutations }) {
+      const onSequenceGeneratedAndRegistered = (
+        phraseKey: PhraseKey,
+        sequenceId: SequenceId,
+      ) => {
+        mutations.SET_PHRASE_SEQUENCE_ID({
+          phraseKey,
+          sequenceId,
+        });
+      };
+
+      const onSequenceDeleted = (phraseKey: PhraseKey) => {
+        mutations.DELETE_PHRASE_SEQUENCE_ID({ phraseKey });
+      };
+
       /**
        * `phrasesGenerated` イベントのハンドラ。
        * フレーズが生成された直後に呼び出される。現状ログ出力のみ。
@@ -1332,6 +1404,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           phraseSingingVoices,
           event.snapshot.tempos,
           event.snapshot.tpqn,
+          {
+            onSequenceGeneratedAndRegistered,
+            onSequenceDeleted,
+          },
         );
 
         logger.info("Cache loaded and applied to phrases.");
@@ -1457,6 +1533,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           phraseSingingVoices,
           event.snapshot.tempos,
           event.snapshot.tpqn,
+          {
+            onSequenceGeneratedAndRegistered,
+            onSequenceDeleted,
+          },
         );
 
         logger.info("Phrase rendering complete.");
@@ -1711,6 +1791,33 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       { singingVolumeKey }: { singingVolumeKey: SingingVolumeKey },
     ) {
       state.phraseSingingVolumes.delete(singingVolumeKey);
+    },
+  },
+
+  SET_PHRASE_SEQUENCE_IDS: {
+    mutation(
+      state,
+      { sequenceIds }: { sequenceIds: Map<PhraseKey, SequenceId> },
+    ) {
+      state.phraseSequenceIds = sequenceIds;
+    },
+  },
+
+  SET_PHRASE_SEQUENCE_ID: {
+    mutation(
+      state,
+      {
+        phraseKey,
+        sequenceId,
+      }: { phraseKey: PhraseKey; sequenceId: SequenceId },
+    ) {
+      state.phraseSequenceIds.set(phraseKey, sequenceId);
+    },
+  },
+
+  DELETE_PHRASE_SEQUENCE_ID: {
+    mutation(state, { phraseKey }: { phraseKey: PhraseKey }) {
+      state.phraseSequenceIds.delete(phraseKey);
     },
   },
 
