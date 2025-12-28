@@ -60,9 +60,6 @@ const phraseInfosInSelectedTrack = computed(() => {
   return phraseInfos;
 });
 
-// NOTE: 音素タイミングラインの色をテーマに応じて調節する
-// 動的カラースキーマに対応後、テーマに応じた色をオブジェクトから取得できるようにする
-
 const phonemeTimingLineStyles: {
   light: { color: number; alpha: number; width: number };
   dark: { color: number; alpha: number; width: number };
@@ -89,18 +86,28 @@ const phonemeTextStyles: {
 
 const { mounted } = useMounted();
 
+// DOM参照
 const canvasContainer = ref<HTMLElement | null>(null);
 const canvas = ref<HTMLCanvasElement | null>(null);
+
+// リサイズ監視とCanvasサイズ
 let resizeObserver: ResizeObserver | undefined;
 let canvasWidth: number | undefined;
 let canvasHeight: number | undefined;
 
+// PIXI関連の変数
 let renderer: PIXI.Renderer | undefined;
 let stage: PIXI.Container | undefined;
+
+// 線描画用のGraphicsプール
 const graphics: PIXI.Graphics[] = [];
+// 音素文字ごとのTextオブジェクトプール（キーは音素文字）
 const textsMap = new Map<string, PIXI.Text[]>();
+// Textを内包するContainer（マスク用）のマップ
 const textContainersMap = new Map<PIXI.Text, PIXI.Container>();
+// Textごとのマスク用Graphicsマップ
 const textMasksMap = new Map<PIXI.Text, PIXI.Graphics>();
+
 let lastIsDark: boolean | undefined;
 let requestId: number | undefined;
 let renderInNextFrame = false;
@@ -129,6 +136,7 @@ const render = () => {
     width: canvasWidth,
     height: canvasHeight,
   };
+
   const currentPhonemeTimingLineStyle = isDark.value
     ? phonemeTimingLineStyles.dark
     : phonemeTimingLineStyles.light;
@@ -136,7 +144,8 @@ const render = () => {
     ? phonemeTextStyles.dark
     : phonemeTextStyles.light;
 
-  // テーマが変更された場合、全てのテキスト関連オブジェクトをクリア
+  // テーマ切り替え時の処理
+  // スタイルが変わるため、既存のテキストオブジェクトを全て破棄する
   if (lastIsDark != undefined && lastIsDark !== isDark.value) {
     for (const texts of textsMap.values()) {
       for (const text of texts) {
@@ -155,15 +164,15 @@ const render = () => {
 
   const phonemeInfos: PhonemeInfo[] = [];
 
+  // 描画すべき音素の情報を収集（カリング処理含む）
   for (const phraseInfo of phraseInfosInSelectedTrack.value) {
     const rawPhraseInfo = toRaw(phraseInfo);
-
     const phraseQuery = rawPhraseInfo.query;
     if (phraseQuery == undefined) {
       continue;
     }
 
-    // カリング
+    // フレーズの開始・終了位置を計算
     const phraseStartTime = rawPhraseInfo.startTime;
     const phraseStartTicks = secondToTick(
       phraseStartTime,
@@ -174,7 +183,7 @@ const render = () => {
       tickToBaseX(phraseStartTicks, tpqn.value) * viewportInfo.scaleX -
       viewportInfo.offsetX;
     const phraseFrameLength = phraseQuery.phonemes.reduce(
-      (accFrame, phoneme) => accFrame + phoneme.frameLength,
+      (acc, p) => acc + p.frameLength,
       0,
     );
     const phraseEndTime =
@@ -183,53 +192,52 @@ const render = () => {
     const phraseEndX =
       tickToBaseX(phraseEndTicks, tpqn.value) * viewportInfo.scaleX -
       viewportInfo.offsetX;
+
+    // 画面の左外、または右外にある場合は描画対象外（カリング）
     if (phraseStartX > viewportInfo.width || phraseEndX < 0) {
       continue;
     }
 
+    // フレーズ内の各音素について処理
     let phonemeStartFrame = 0;
     for (let i = 0; i < phraseQuery.phonemes.length; i++) {
       const phoneme = phraseQuery.phonemes[i];
       const prevPhoneme = getPrev(phraseQuery.phonemes, i);
 
+      // 子音・母音とフレーズ最後のpauを描画対象とする
       if (
         phoneme.phoneme !== "pau" ||
         (prevPhoneme != undefined && prevPhoneme.phoneme !== "pau")
       ) {
         const phonemeStartTime =
           phraseStartTime + phonemeStartFrame / phraseQuery.frameRate;
-
         phonemeInfos.push({
           startTime: phonemeStartTime,
           phoneme: phoneme.phoneme,
         });
       }
-
       phonemeStartFrame += phoneme.frameLength;
     }
   }
 
-  const phonemeCount = phonemeInfos.length;
-  const graphicsCount = graphics.length;
-
-  if (graphicsCount < phonemeCount) {
-    for (let i = 0; i < phonemeCount - graphicsCount; i++) {
-      const newGraphic = new PIXI.Graphics();
-
-      stage.addChild(newGraphic);
-      graphics.push(newGraphic);
-    }
+  // 線のGraphicsが足りなければ追加
+  while (graphics.length < phonemeInfos.length) {
+    const newGraphic = new PIXI.Graphics();
+    stage.addChild(newGraphic);
+    graphics.push(newGraphic);
   }
 
+  // 必要なテキスト（音素文字ごと）の数をカウント
   const needTextCountMap = new Map<string, number>();
   for (const phonemeInfo of phonemeInfos) {
     if (phonemeInfo.phoneme === "pau") {
       continue;
     }
     const currentCount = needTextCountMap.get(phonemeInfo.phoneme) ?? 0;
-
     needTextCountMap.set(phonemeInfo.phoneme, currentCount + 1);
   }
+
+  // テキストオブジェクトが足りなければ追加生成
   for (const [phonemeStr, needTextCount] of needTextCountMap) {
     let texts = textsMap.get(phonemeStr);
     if (texts == undefined) {
@@ -243,15 +251,18 @@ const render = () => {
       const container = new PIXI.Container();
       const mask = new PIXI.Graphics();
 
+      // マスクの設定（隣の音素にはみ出さないようにするため）
       container.mask = mask;
       container.addChild(text);
       stage.addChild(container);
+
       texts.push(text);
       textContainersMap.set(text, container);
       textMasksMap.set(text, mask);
     }
   }
 
+  // 先に全てのX座標を計算しておく（次の音素のX座標を知る必要があるため）
   const phonemeStartXArray: number[] = [];
   for (const phonemeInfo of phonemeInfos) {
     const phonemeStartTicks = secondToTick(
@@ -266,18 +277,20 @@ const render = () => {
     phonemeStartXArray.push(phonemeStartX);
   }
 
+  // 割り当て用の一時マップ（プールから取り出す用）
   const unassignedTextsMap = new Map<string, PIXI.Text[]>();
   for (const [phonemeStr, texts] of textsMap) {
     unassignedTextsMap.set(phonemeStr, [...texts]);
   }
 
+  // 更新
   for (let i = 0; i < phonemeInfos.length; i++) {
     const phonemeInfo = phonemeInfos[i];
     const phonemeStartX = phonemeStartXArray[i];
     const nextPhonemeStartX = getNext(phonemeStartXArray, i);
 
+    // 線の更新
     const graphic = graphics[i];
-
     graphic.renderable = true;
     graphic.clear();
     graphic.lineStyle(
@@ -285,10 +298,13 @@ const render = () => {
       currentPhonemeTimingLineStyle.color,
       currentPhonemeTimingLineStyle.alpha,
     );
+    // 線をピクセルパーフェクトにするため0.5ずらす
     graphic.moveTo(phonemeStartX - 0.5, 0);
     graphic.lineTo(phonemeStartX - 0.5, viewportInfo.height);
 
+    // テキストの更新
     if (phonemeInfo.phoneme !== "pau") {
+      // プールから取得
       const text = getOrThrow(unassignedTextsMap, phonemeInfo.phoneme).pop();
       if (text == undefined) {
         throw new UnreachableError("text is undefined.");
@@ -297,9 +313,10 @@ const render = () => {
       const textMask = getOrThrow(textMasksMap, text);
 
       textContainer.renderable = true;
-      textContainer.x = phonemeStartX + 3;
-      textContainer.y = 50;
+      textContainer.x = phonemeStartX + 3; // 線から少し右にずらす
+      textContainer.y = 50; // Y座標は固定
 
+      // マスク幅の計算（次の音素までの距離、または固定最大幅）
       let maskWidth = 36;
       if (nextPhonemeStartX != undefined) {
         maskWidth = Math.min(
@@ -309,6 +326,7 @@ const render = () => {
       }
       const maskHeight = 36;
 
+      // マスクの更新
       textMask
         .clear()
         .beginFill(0xffffff)
@@ -316,11 +334,12 @@ const render = () => {
         .endFill();
     }
   }
-  for (let i = phonemeInfos.length; i < graphics.length; i++) {
-    const graphic = graphics[i];
 
-    graphic.renderable = false;
+  // 余ったGraphicsを非表示
+  for (let i = phonemeInfos.length; i < graphics.length; i++) {
+    graphics[i].renderable = false;
   }
+  // 余ったTextContainerを非表示
   for (const texts of unassignedTextsMap.values()) {
     for (const text of texts) {
       const textContainer = getOrThrow(textContainersMap, text);
@@ -328,6 +347,7 @@ const render = () => {
     }
   }
 
+  // 描画実行
   renderer.render(stage);
 };
 
@@ -352,19 +372,17 @@ watch(
 onMounted(() => {
   const canvasContainerElement = canvasContainer.value;
   const canvasElement = canvas.value;
-  if (!canvasContainerElement) {
-    throw new Error("canvasContainerElement is null.");
-  }
-  if (!canvasElement) {
-    throw new Error("canvasElement is null.");
+  if (!canvasContainerElement || !canvasElement) {
+    throw new Error("canvas elements are missing.");
   }
 
   canvasWidth = canvasContainerElement.clientWidth;
   canvasHeight = canvasContainerElement.clientHeight;
 
+  // PIXI Rendererの初期化
   renderer = new PIXI.Renderer({
     view: canvasElement,
-    backgroundAlpha: 0,
+    backgroundAlpha: 0, // 背景透過
     antialias: true,
     resolution: window.devicePixelRatio || 1,
     autoDensity: true,
@@ -373,6 +391,7 @@ onMounted(() => {
   });
   stage = new PIXI.Container();
 
+  // アニメーションループ（requestAnimationFrame）
   const callback = () => {
     if (renderInNextFrame) {
       render();
@@ -382,16 +401,16 @@ onMounted(() => {
   };
   requestId = window.requestAnimationFrame(callback);
 
+  // リサイズ監視
   resizeObserver = new ResizeObserver(() => {
-    if (renderer == undefined) {
-      throw new Error("renderer is undefined.");
-    }
-    const canvasContainerWidth = canvasContainerElement.clientWidth;
-    const canvasContainerHeight = canvasContainerElement.clientHeight;
+    if (renderer == undefined) return;
 
-    if (canvasContainerWidth > 0 && canvasContainerHeight > 0) {
-      canvasWidth = canvasContainerWidth;
-      canvasHeight = canvasContainerHeight;
+    const newWidth = canvasContainerElement.clientWidth;
+    const newHeight = canvasContainerElement.clientHeight;
+
+    if (newWidth > 0 && newHeight > 0) {
+      canvasWidth = newWidth;
+      canvasHeight = newHeight;
       renderer.resize(canvasWidth, canvasHeight);
       renderInNextFrame = true;
     }
@@ -400,9 +419,12 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+  // アニメーションループの停止
   if (requestId != undefined) {
     window.cancelAnimationFrame(requestId);
   }
+
+  // PIXIオブジェクトのクリーンアップ
   for (const graphic of graphics) {
     stage?.removeChild(graphic);
     graphic.destroy();
@@ -421,6 +443,6 @@ onUnmounted(() => {
   pointer-events: none;
   position: relative;
 
-  contain: strict; // canvasのサイズが変わるのを無視する
+  contain: strict; // ブラウザへの最適化ヒント（レイアウト計算の分離）
 }
 </style>

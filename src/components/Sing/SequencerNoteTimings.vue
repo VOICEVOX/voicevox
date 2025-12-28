@@ -10,6 +10,7 @@ import * as PIXI from "pixi.js";
 import { useStore } from "@/store";
 import { useMounted } from "@/composables/useMounted";
 import { getDoremiFromNoteNumber, tickToBaseX } from "@/sing/viewHelper";
+import { getOrThrow } from "@/helpers/mapHelper";
 
 const props = defineProps<{
   offsetX: number;
@@ -26,8 +27,6 @@ type ColorStyle = {
   noteBorder: number;
 };
 
-// NOTE: ノートの色をテーマに応じて定義
-// ピアノロール上の未選択ノートと同じ色を使用（緑系）
 const noteColorStyles: {
   light: ColorStyle;
   dark: ColorStyle;
@@ -46,7 +45,6 @@ const noteColors = computed(() =>
   isDark.value ? noteColorStyles.dark : noteColorStyles.light,
 );
 
-// NOTE: ノートテキストのスタイルをテーマに応じて定義
 const noteTextStyles: {
   light: PIXI.TextStyle;
   dark: PIXI.TextStyle;
@@ -92,7 +90,8 @@ const render = () => {
   }
 
   const notes = selectedTrackNotes.value;
-  const scaleX = store.state.sequencerZoomX;
+  const scaleX = toRaw(store.state.sequencerZoomX);
+  const offsetXValue = toRaw(props.offsetX);
   const colors = noteColors.value;
   const currentTextStyle = isDark.value
     ? noteTextStyles.dark
@@ -129,8 +128,8 @@ const render = () => {
       rawNote.position + rawNote.duration,
       tpqn.value,
     );
-    const screenStartX = Math.round(baseStartX * scaleX - props.offsetX);
-    const screenEndX = Math.round(baseEndX * scaleX - props.offsetX);
+    const screenStartX = Math.round(baseStartX * scaleX - offsetXValue);
+    const screenEndX = Math.round(baseEndX * scaleX - offsetXValue);
     const screenWidth = screenEndX - screenStartX;
 
     // 可視性をチェック（ビューポートカリング）
@@ -182,10 +181,7 @@ const render = () => {
     text.text = lyric;
     text.anchor.set(0, 0.5);
 
-    const textContainer = textContainersMap.get(text);
-    if (textContainer == undefined) {
-      throw new Error("textContainer is undefined.");
-    }
+    const textContainer = getOrThrow(textContainersMap, text);
     textContainer.renderable = true;
     textContainer.x = screenStartX + 3;
     textContainer.y = canvasHeight / 2;
@@ -273,6 +269,7 @@ onMounted(() => {
   canvasWidth = canvasContainerElement.clientWidth;
   canvasHeight = canvasContainerElement.clientHeight;
 
+  // PIXI Rendererの初期化
   renderer = new PIXI.Renderer({
     view: canvasElement,
     backgroundAlpha: 0,
@@ -284,6 +281,7 @@ onMounted(() => {
   });
   stage = new PIXI.Container();
 
+  // アニメーションループ（requestAnimationFrame）
   const callback = () => {
     if (renderInNextFrame) {
       render();
@@ -293,6 +291,7 @@ onMounted(() => {
   };
   requestId = window.requestAnimationFrame(callback);
 
+  // リサイズ監視
   resizeObserver = new ResizeObserver(() => {
     if (renderer == undefined) {
       throw new Error("renderer is undefined.");
@@ -311,9 +310,12 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+  // アニメーションループの停止
   if (requestId != undefined) {
     window.cancelAnimationFrame(requestId);
   }
+
+  // PIXIオブジェクトのクリーンアップ
   for (const graphic of graphics) {
     stage?.removeChild(graphic);
     graphic.destroy();
