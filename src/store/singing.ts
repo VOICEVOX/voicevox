@@ -1020,25 +1020,18 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
   GET_SEQUENCE_AUDIO_BUFFER: {
     getter: () => (sequenceId: SequenceId) => {
-      // シーケンスが存在するかチェック
-      if (!isRegisteredSequence(sequenceId)) {
+      const sequence = sequences.get(sequenceId);
+      if (sequence == undefined) {
         throw new Error(`Sequence with id ${sequenceId} is not registered.`);
       }
-
-      // sequencesからAudioSequenceを取得
-      const sequence = getOrThrow(sequences, sequenceId);
-      if (sequence.type !== "audio") {
+      if (sequence.type === "audio") {
+        if (sequence.audioEvents.length !== 1) {
+          throw new Error("AudioSequence has invalid number of AudioEvents.");
+        }
+        return sequence.audioEvents[0].buffer;
+      } else {
         return undefined;
       }
-
-      // AudioSequenceのAudioEventが1個ではない場合はエラー
-      if (sequence.audioEvents.length !== 1) {
-        throw new Error("AudioSequence has invalid number of AudioEvents.");
-      }
-
-      // AudioSequenceからAudioBufferを取得
-      const audioBuffer = sequence.audioEvents[0].buffer;
-      return audioBuffer;
     },
   },
 
