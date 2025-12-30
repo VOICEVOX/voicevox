@@ -1787,15 +1787,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  SET_PHRASE_SEQUENCE_IDS: {
-    mutation(
-      state,
-      { sequenceIds }: { sequenceIds: Map<PhraseKey, SequenceId> },
-    ) {
-      state.phraseSequenceIds = sequenceIds;
-    },
-  },
-
   SET_PHRASE_SEQUENCE_ID: {
     mutation(
       state,

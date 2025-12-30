@@ -1157,12 +1157,6 @@ export type SingingStoreTypes = {
     mutation: { singingVolumeKey: SingingVolumeKey };
   };
 
-  SET_PHRASE_SEQUENCE_IDS: {
-    mutation: {
-      sequenceIds: Map<PhraseKey, SequenceId>;
-    };
-  };
-
   SET_PHRASE_SEQUENCE_ID: {
     mutation: { phraseKey: PhraseKey; sequenceId: SequenceId };
   };
