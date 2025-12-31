@@ -1831,8 +1831,12 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         const player = new ContinuousPlayer(state.audioKeys.slice(index), {
           generateAudio: ({ audioKey }) =>
             actions.FETCH_AUDIO({ audioKey }).then((result) => result.blob),
-          playAudioBlob: ({ audioBlob, audioKey }) =>
-            actions.PLAY_AUDIO_BLOB({ audioBlob, audioKey }),
+          playAudioBlob: ({ audioBlob, audioKey }) => {
+            if (currentAudioKey !== audioKey) {
+              mutations.SET_AUDIO_PLAY_START_POINT({ startPoint: undefined });
+            }
+            return actions.PLAY_AUDIO_BLOB({ audioBlob, audioKey });
+          },
         });
         player.addEventListener("playstart", (e) => {
           mutations.SET_ACTIVE_AUDIO_KEY({ audioKey: e.audioKey });
@@ -1840,6 +1844,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         player.addEventListener("waitstart", (e) => {
           void actions.START_PROGRESS();
           mutations.SET_ACTIVE_AUDIO_KEY({ audioKey: e.audioKey });
+          if (currentAudioKey !== e.audioKey) {
+            mutations.SET_AUDIO_PLAY_START_POINT({ startPoint: undefined });
+          }
           mutations.SET_AUDIO_NOW_GENERATING({
             audioKey: e.audioKey,
             nowGenerating: true,
