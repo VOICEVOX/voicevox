@@ -10,8 +10,7 @@
     @click="() => (open = !open)"
   >
     <!-- BaseRowCardのclickイベントが発火しないようにstopする -->
-    <!-- BaseRowCardはdisplay: flexなので、display: contentsでレイアウトを崩さないようにする -->
-    <div style="display: contents" @click.stop>
+    <div @click.stop>
       <BaseSelect ref="select" v-model="model" v-model:open="open" :disabled="disable">
         <BaseSelectItem
           v-for="option in options"
