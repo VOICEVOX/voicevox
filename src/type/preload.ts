@@ -422,6 +422,7 @@ export const rootMiscSettingSchema = z.object({
   enableMultiSelect: z.boolean().default(true), // 複数選択を有効にするかどうか
   showAudioLength: z.boolean().default(false), // 音声の長さを表示するかどうか
 });
+export type RootMiscSettingType = z.infer<typeof rootMiscSettingSchema>;
 
 export function getConfigSchema({ isMac }: { isMac: boolean }) {
   return z.object({
@@ -498,8 +499,6 @@ export function getConfigSchema({ isMac }: { isMac: boolean }) {
   });
 }
 export type ConfigType = z.infer<ReturnType<typeof getConfigSchema>>;
-
-export type RootMiscSettingType = z.infer<typeof rootMiscSettingSchema>;
 
 // workaround. SystemError(https://nodejs.org/api/errors.html#class-systemerror)が2022/05/19時点ではNodeJSの型定義に記述されていないためこれを追加しています。
 export class SystemError extends Error {

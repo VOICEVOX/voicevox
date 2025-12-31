@@ -369,8 +369,7 @@ const paste = async (options?: { text?: string }) => {
       NEW_LINE: (text) => text.split(/[\r\n]/),
       OFF: (text) => [text],
     };
-    const splitType = textSplitType.value as SplitTextWhenPasteType;
-    const texts = textSplitter[splitType](text);
+    const texts = textSplitter[textSplitType.value](text);
 
     if (texts.length >= 2 && texts.some((text) => text !== "")) {
       await putMultilineText(texts);
