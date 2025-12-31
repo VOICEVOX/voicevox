@@ -11,7 +11,12 @@
   >
     <!-- BaseRowCardのclickイベントが発火しないようにstopする -->
     <div @click.stop>
-      <BaseSelect ref="select" v-model="model" v-model:open="open" :disabled="disable">
+      <BaseSelect
+        ref="select"
+        v-model="model"
+        v-model:open="open"
+        :disabled="disable"
+      >
         <BaseSelectItem
           v-for="option in options"
           :key="option.value"
