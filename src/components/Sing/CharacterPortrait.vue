@@ -51,10 +51,14 @@ $portrait-min-height: 500px;
 // 画面右下に固定表示
 // 幅固定、高さ可変、画像のアスペクト比を保持、heightを調整
 .character-portrait-wrap {
+  position: absolute;
+  right: 300px;
+  bottom: 0;
+  width: 0;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  margin-left: auto;
-  overflow: hidden;
+  align-items: center;
 }
 
 // 通常は下部基準だが、親要素が最小高さより小さい場合は上部基準とし頭を残して足から隠れさせる
