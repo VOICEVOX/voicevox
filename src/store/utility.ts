@@ -541,3 +541,20 @@ export async function generateLabelFileData(labels: PhonemeTimingLabel[]) {
 
   return await generateTextFileData({ text: labString });
 }
+
+/**
+ * 指定されたファイルパスに対応するファイルが既に存在する場合、
+ * ファイル名に連番のサフィックスを追加してユニークなファイルパスを生成する。
+ */
+export async function generateUniqueFilePath(
+  filePath: string,
+  extension: string,
+): Promise<string> {
+  let tail = 1;
+  const name = filePath.slice(0, filePath.length - 1 - extension.length);
+  while (await window.backend.checkFileExists(filePath)) {
+    filePath = `${name}[${tail}].${extension}`;
+    tail += 1;
+  }
+  return filePath;
+}
