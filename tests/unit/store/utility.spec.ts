@@ -1,4 +1,4 @@
-import { it, expect, describe, test } from "vitest";
+import { it, expect, describe, test, vi } from "vitest";
 import { AccentPhrase, Mora } from "@/openapi";
 import {
   CharacterInfo,
@@ -20,6 +20,7 @@ import {
   getToolbarButtonName,
   isOnCommandOrCtrlKeyDown,
   filterCharacterInfosByStyleType,
+  generateUniqueFilePath,
 } from "@/store/utility";
 import { uuid4 } from "@/helpers/random";
 import { isMac } from "@/helpers/platform";
@@ -360,5 +361,84 @@ describe("filterCharacterInfosByStyleType", () => {
     expect(filtered[0].metas.styles.length).toBe(1);
     expect(filtered[1].metas.styles.length).toBe(1);
     expect(filtered[2].metas.styles.length).toBe(1);
+  });
+});
+
+describe("generateUniqueFilePath", () => {
+  it("ファイルが存在しない場合は元のパスを返す", async () => {
+    const checkFileExists = vi.fn().mockResolvedValue(false);
+    vi.stubGlobal("window", {
+      backend: {
+        checkFileExists,
+      },
+    });
+
+    const result = await generateUniqueFilePath("test.wav", "wav");
+    expect(result).toBe("test.wav");
+    expect(checkFileExists).toHaveBeenCalledWith("test.wav");
+  });
+
+  it("拡張子なしのパスが渡された場合、拡張子を付与してチェックする", async () => {
+    const checkFileExists = vi.fn().mockResolvedValue(false);
+    vi.stubGlobal("window", {
+      backend: {
+        checkFileExists,
+      },
+    });
+
+    const result = await generateUniqueFilePath("test", "wav");
+    expect(result).toBe("test.wav");
+    expect(checkFileExists).toHaveBeenCalledWith("test.wav");
+  });
+
+  it("ファイルが存在する場合は連番を付与する", async () => {
+    const checkFileExists = vi
+      .fn()
+      .mockResolvedValueOnce(true) // test.wav exists
+      .mockResolvedValueOnce(false); // test[1].wav does not exist
+
+    vi.stubGlobal("window", {
+      backend: {
+        checkFileExists,
+      },
+    });
+
+    const result = await generateUniqueFilePath("test.wav", "wav");
+    expect(result).toBe("test[1].wav");
+    expect(checkFileExists).toHaveBeenCalledWith("test.wav");
+    expect(checkFileExists).toHaveBeenCalledWith("test[1].wav");
+  });
+
+  it("連番ファイルも存在する場合は次の連番を付与する", async () => {
+    const checkFileExists = vi
+      .fn()
+      .mockResolvedValueOnce(true) // test.wav exists
+      .mockResolvedValueOnce(true) // test[1].wav exists
+      .mockResolvedValueOnce(false); // test[2].wav does not exist
+
+    vi.stubGlobal("window", {
+      backend: {
+        checkFileExists,
+      },
+    });
+
+    const result = await generateUniqueFilePath("test.wav", "wav");
+    expect(result).toBe("test[2].wav");
+  });
+
+  it("拡張子が空の場合は連番のみ付与する", async () => {
+    const checkFileExists = vi
+      .fn()
+      .mockResolvedValueOnce(true) // test exists
+      .mockResolvedValueOnce(false); // test[1] does not exist
+
+    vi.stubGlobal("window", {
+      backend: {
+        checkFileExists,
+      },
+    });
+
+    const result = await generateUniqueFilePath("test", "");
+    expect(result).toBe("test[1]");
   });
 });
