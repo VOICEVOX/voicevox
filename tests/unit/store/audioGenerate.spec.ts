@@ -22,7 +22,7 @@ describe("audioGenerate", () => {
       expect(calculateAudioLength(audioQuery)).toBe(0);
     });
 
-    it("アクセント句がある場合の計算が正しいこと(speedScale=1)", () => {
+    it("アクセント句がある場合の計算が正しいこと", () => {
       const audioQuery = {
         accentPhrases: [
           {
