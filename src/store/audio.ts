@@ -57,7 +57,13 @@ import {
 } from "@/type/preload";
 import { AudioQuery, AccentPhrase, Speaker, SpeakerInfo } from "@/openapi";
 import { base64ImageToUri, base64ToUri } from "@/helpers/base64Helper";
-import { getValueOrThrow, ResultError } from "@/type/result";
+import {
+  getValueOrThrow,
+  ResultError,
+  Result,
+  success,
+  failure,
+} from "@/type/result";
 import { generateWriteErrorMessage } from "@/helpers/fileHelper";
 import { uuid4 } from "@/helpers/random";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
@@ -1364,6 +1370,55 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
     ),
   },
 
+  GENERATE_AUDIO: {
+    async action(
+      { state, actions },
+      { audioKey, labOffset },
+    ): Promise<
+      Result<
+        {
+          audio: Blob;
+          lab: string;
+          text: string;
+        },
+        "engine"
+      >
+    > {
+      const audioItem: AudioItem = cloneWithUnwrapProxy(
+        state.audioItems[audioKey],
+      );
+      const instance = await actions.INSTANTIATE_ENGINE_CONNECTOR({
+        engineId: audioItem.voice.engineId,
+      });
+
+      let fetchAudioResult: FetchAudioResult;
+      try {
+        fetchAudioResult = await fetchAudioFromAudioItem(state, instance, {
+          audioItem,
+        });
+      } catch (e) {
+        const errorMessage = handlePossiblyNotMorphableError(e);
+        return failure("engine" as const, new Error(errorMessage));
+      }
+
+      const { blob, audioQuery } = fetchAudioResult;
+      const lab = await generateLabFromAudioQuery(audioQuery, labOffset);
+      if (lab == undefined) {
+        return failure(
+          "engine" as const,
+          new Error("labの生成に失敗しました。"),
+        );
+      }
+
+      const text = extractExportText(state.audioItems[audioKey].text, {
+        enableMemoNotation: state.enableMemoNotation,
+        enableRubyNotation: state.enableRubyNotation,
+      });
+
+      return success({ audio: blob, lab, text });
+    },
+  },
+
   GENERATE_AND_SAVE_AUDIO: {
     action: createUILockAction(
       async (
@@ -1399,48 +1454,37 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           filePath = await changeFileTailToNonExistent(filePath, "wav");
         }
 
-        let fetchAudioResult: FetchAudioResult;
-        try {
-          fetchAudioResult = await actions.FETCH_AUDIO({ audioKey });
-        } catch (e) {
-          const errorMessage = handlePossiblyNotMorphableError(e);
+        const generateAudioResult = await actions.GENERATE_AUDIO({
+          audioKey,
+        });
+
+        if (!generateAudioResult.ok) {
           return {
             result: "ENGINE_ERROR",
             path: filePath,
-            errorMessage,
+            errorMessage: generateAudioResult.error.message,
           };
         }
 
-        const { blob, audioQuery } = fetchAudioResult;
+        const { audio, lab, text } = generateAudioResult.value;
         try {
           await window.backend
             .writeFile({
               filePath,
-              buffer: await blob.arrayBuffer(),
+              buffer: await audio.arrayBuffer(),
             })
             .then(getValueOrThrow);
 
           if (state.savingSetting.exportLab) {
-            const labString = await generateLabFromAudioQuery(audioQuery);
-            if (labString == undefined)
-              return {
-                result: "WRITE_ERROR",
-                path: filePath,
-                errorMessage: "labの生成に失敗しました。",
-              };
-
             await writeTextFile({
-              text: labString,
+              text: lab,
               filePath: filePath.replace(/\.wav$/, ".lab"),
             }).then(getValueOrThrow);
           }
 
           if (state.savingSetting.exportText) {
             await writeTextFile({
-              text: extractExportText(state.audioItems[audioKey].text, {
-                enableMemoNotation: state.enableMemoNotation,
-                enableRubyNotation: state.enableRubyNotation,
-              }),
+              text,
               filePath: filePath.replace(/\.wav$/, ".txt"),
               encoding: state.savingSetting.fileEncoding,
             }).then(getValueOrThrow);
@@ -1503,8 +1547,9 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
               audioKey,
               filePath: path.join(dirPath, name),
             })
-            .then((value) => {
+            .then(async (value) => {
               callback?.(++finishedCount);
+              await new Promise((resolve) => setTimeout(resolve, 0));
               return value;
             });
         });
@@ -1563,41 +1608,36 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
 
         let labOffset = 0;
         for (const audioKey of state.audioKeys) {
-          let fetchAudioResult: FetchAudioResult;
-          try {
-            fetchAudioResult = await actions.FETCH_AUDIO({ audioKey });
-          } catch (e) {
-            const errorMessage = handlePossiblyNotMorphableError(e);
+          const generateAudioResult = await actions.GENERATE_AUDIO({
+            audioKey,
+            labOffset,
+          });
+
+          callback?.(++finishedCount, totalCount);
+          await new Promise((resolve) => setTimeout(resolve, 0));
+
+          if (!generateAudioResult.ok) {
             return {
               result: "ENGINE_ERROR",
               path: filePath,
-              errorMessage,
+              errorMessage: generateAudioResult.error.message,
             };
-          } finally {
-            callback?.(++finishedCount, totalCount);
           }
 
-          const { blob, audioQuery } = fetchAudioResult;
-          const encodedBlob = await base64Encoder(blob);
+          const { audio, lab, text } = generateAudioResult.value;
+          const encodedBlob = await base64Encoder(audio);
           if (encodedBlob == undefined) {
             return { result: "WRITE_ERROR", path: filePath };
           }
           encodedBlobs.push(encodedBlob);
 
-          // 大して処理能力を要しないので、生成設定のon/offにかかわらず生成してしまう
-          const lab = await generateLabFromAudioQuery(audioQuery, labOffset);
           labs.push(lab);
 
           // 最終音素の終了時刻を取得する
           const splitLab = lab.split(" ");
           labOffset = Number(splitLab[splitLab.length - 2]);
 
-          texts.push(
-            extractExportText(state.audioItems[audioKey].text, {
-              enableMemoNotation: state.enableMemoNotation,
-              enableRubyNotation: state.enableRubyNotation,
-            }),
-          );
+          texts.push(text);
         }
 
         const connectedWav = await actions.CONNECT_AUDIO({
