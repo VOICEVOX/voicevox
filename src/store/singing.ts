@@ -30,6 +30,7 @@ import {
   DEFAULT_STYLE_NAME,
   generateLabelFileData,
   PhonemeTimingLabel,
+  generateUniqueFilePath,
   sanitizeFileName,
 } from "./utility";
 import {
@@ -105,7 +106,6 @@ import { generateWavFileData } from "@/helpers/fileDataGenerator";
 import path from "@/helpers/path";
 import { showAlertDialog } from "@/components/Dialog/Dialog";
 import { ufProjectFromVoicevox } from "@/sing/utaformatixProject/fromVoicevox";
-import { generateUniqueFilePath } from "@/sing/fileUtils";
 import {
   isMultiFileProjectFormat,
   isSingleFileProjectFormat,
@@ -3263,11 +3263,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           if (!filePath) {
             return { result: "CANCELED", path: "" };
           }
-          filePath = await generateUniqueFilePath(
-            // 拡張子を除いたファイル名を取得
-            filePath.slice(0, -(extension.length + 1)),
-            extension,
-          );
+          filePath = await generateUniqueFilePath(filePath, extension);
 
           return await actions.EXPORT_FILE({
             filePath,
