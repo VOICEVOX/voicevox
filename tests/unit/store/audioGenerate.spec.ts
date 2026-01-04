@@ -116,5 +116,56 @@ describe("audioGenerate", () => {
       // 0.1 + 0.3 + 0.75 + 0.1 = 1.25
       expect(calculateAudioLength(audioQuery)).toBeCloseTo(1.25);
     });
+    test("prePhonemeLengthが反映されること", () => {
+      const audioQuery: EditorAudioQuery = {
+        ...baseEditorAudioQuery,
+        accentPhrases: [
+          {
+            moras: [
+              {
+                text: "あ",
+                vowel: "a",
+                vowelLength: 0.2,
+                pitch: 0,
+                consonant: "a",
+                consonantLength: 0.1,
+              },
+            ],
+            accent: 1,
+            pauseMora: undefined,
+          },
+        ],
+        prePhonemeLength: 0.5,
+      };
+
+      // 0.5(pre) + 0.3 + 0.1(post) = 0.9
+      expect(calculateAudioLength(audioQuery)).toBeCloseTo(0.9);
+    });
+
+    test("postPhonemeLengthが反映されること", () => {
+      const audioQuery: EditorAudioQuery = {
+        ...baseEditorAudioQuery,
+        accentPhrases: [
+          {
+            moras: [
+              {
+                text: "あ",
+                vowel: "a",
+                vowelLength: 0.2,
+                pitch: 0,
+                consonant: "a",
+                consonantLength: 0.1,
+              },
+            ],
+            accent: 1,
+            pauseMora: undefined,
+          },
+        ],
+        postPhonemeLength: 0.5,
+      };
+
+      // 0.1(pre) + 0.3 + 0.5(post) = 0.9
+      expect(calculateAudioLength(audioQuery)).toBeCloseTo(0.9);
+    });
   });
 });
