@@ -49,7 +49,7 @@ $portrait-min-height: 500px;
 }
 
 // 画面右下に固定表示
-// 幅固定、高さ可変、画像のアスペクト比を保持、heightを調整
+// 横位置を基準にして中央揃えで表示（画像のアスペクト比を保持）
 .character-portrait-wrap {
   position: absolute;
   right: 300px;
