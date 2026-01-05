@@ -348,6 +348,12 @@
                   @update:modelValue="changeShowAudioLength"
                 />
                 <ToggleCell
+                  title="合計再生時間の表示"
+                  description="ONの場合、エディタのツールバー付近に合計再生時間が表示されます。"
+                  :modelValue="showTotalAudioLength"
+                  @update:modelValue="changeShowTotalAudioLength"
+                />
+                <ToggleCell
                   title="テキスト追加ボタンの表示"
                   description="OFFの場合、右下にテキスト追加ボタンが表示されません。（テキスト欄は Shift + Enter で追加できます）"
                   :modelValue="showAddAudioItemButton"
@@ -664,6 +670,11 @@ const [showTextLineNumber, changeShowTextLineNumber] = useRootMiscSetting(
 const [showAudioLength, changeShowAudioLength] = useRootMiscSetting(
   store,
   "showAudioLength",
+);
+
+const [showTotalAudioLength, changeShowTotalAudioLength] = useRootMiscSetting(
+  store,
+  "showTotalAudioLength",
 );
 
 const [_enableKatakanaEnglish, setEnableKatakanaEnglish] = useRootMiscSetting(

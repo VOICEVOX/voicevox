@@ -181,6 +181,10 @@ export type AudioStoreTypes = {
     getter: number | undefined;
   };
 
+  TOTAL_AUDIO_LENGTH: {
+    getter: number;
+  };
+
   LOAD_CHARACTER: {
     action(payload: { engineId: EngineId }): void;
   };

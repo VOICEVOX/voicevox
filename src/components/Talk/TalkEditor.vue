@@ -97,8 +97,14 @@
                           textColor="display-on-primary"
                           :disable="uiLocked"
                           aria-label="テキストを追加"
-                          @click="addAudioItem"
                         ></QBtn>
+                      </div>
+                      <!-- 合計再生時間の表示（ステータス） -->
+                      <div
+                        v-if="showTotalAudioLength"
+                        class="total-audio-status"
+                      >
+                        合計: {{ totalAudioLength.toFixed(2) }}s
                       </div>
                     </div>
                   </template>
@@ -167,6 +173,9 @@ const selectedAudioKeys = computed(() => store.getters.SELECTED_AUDIO_KEYS);
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
 const isMultiSelectEnabled = computed(() => store.state.enableMultiSelect);
+
+const showTotalAudioLength = computed(() => store.state.showTotalAudioLength);
+const totalAudioLength = computed(() => store.getters.TOTAL_AUDIO_LENGTH);
 
 const { registerHotkeyWithCleanup } = useHotkeyManager();
 
@@ -770,5 +779,21 @@ const onAudioCellPaneClick = () => {
 
 .q-splitter > :deep(.home-splitter) {
   background: colors.$splitter !important;
+}
+
+.total-audio-status {
+  position: absolute;
+  right: 20px;
+  bottom: 80px; // 追加ボタンfabの上
+  background-color: colors.$surface;
+  color: colors.$display;
+  padding: 4px 12px;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+  pointer-events: none; // クリックを透過させて操作の邪魔をしない
+  opacity: 0.8;
+  font-size: 0.9em;
+  border: 1px solid colors.$splitter;
 }
 </style>
