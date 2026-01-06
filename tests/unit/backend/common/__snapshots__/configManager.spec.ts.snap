@@ -225,6 +225,7 @@ exports[`0.13.0からマイグレーションできる 1`] = `
   },
   "shouldApplyDefaultPresetOnVoiceChanged": false,
   "showAddAudioItemButton": true,
+  "showAudioLength": false,
   "showSingCharacterPortrait": true,
   "showTextLineNumber": false,
   "splitTextWhenPaste": "PERIOD_AND_NEW_LINE",
