@@ -1,5 +1,11 @@
 import { getDoremiFromNoteNumber } from "./viewHelper";
 import {
+  getNoteDuration,
+  secondToTick,
+  tickToSecond,
+} from "@/sing/foundation/music";
+import { decibelToLinear } from "@/sing/foundation/audio";
+import {
   EditorFrameAudioQuery,
   EditorFrameAudioQueryKey,
   PhraseKey,
@@ -23,13 +29,9 @@ import {
   applyPitchEdit,
   applyVolumeEdit,
   calculatePhraseKey,
-  decibelToLinear,
-  getNoteDuration,
   toPhonemeTimings,
   toPhonemes,
-  secondToTick,
   selectPriorPhrase,
-  tickToSecond,
 } from "@/sing/domain";
 import { FramePhoneme, Note as NoteForRequestToEngine } from "@/openapi";
 import { EngineId, NoteId, StyleId, TrackId } from "@/type/preload";

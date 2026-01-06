@@ -8,7 +8,7 @@ import {
   Refs,
   ViewportInfo,
 } from "@/sing/sequencerStateMachine/common";
-import { getNoteDuration } from "@/sing/domain";
+import { getNoteDuration } from "@/sing/foundation/music";
 import { createSequencerStateMachine } from "@/sing/sequencerStateMachine";
 import { ExhaustiveError } from "@/type/utility";
 
