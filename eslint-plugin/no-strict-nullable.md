@@ -13,8 +13,6 @@ const c = button.text !== null;
 //        ^^^^^^^^^^^^^^^^^^^^ '!== null'ではなく'!= null'を使用してください。
 ```
 
-このルールはVueファイルの`<template>`内でも動作します。
-
 ## リンク
 
 [#1513](https://github.com/VOICEVOX/voicevox/issues/1513)
