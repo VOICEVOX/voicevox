@@ -13,7 +13,7 @@ const c = button.text !== null;
 //        ^^^^^^^^^^^^^^^^^^^^ '!== null'ではなく'!= null'を使用してください。
 ```
 
-このルールはVueファイルの`<template>`内（v-if、v-bind等の式）でも動作します。
+このルールはVueファイルの`<template>`内でも動作します。
 
 ## リンク
 

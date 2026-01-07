@@ -1,4 +1,4 @@
-import { AST_NODE_TYPES, TSESLint, TSESTree } from "@typescript-eslint/utils";
+import { AST_NODE_TYPES, TSESTree } from "@typescript-eslint/utils";
 import { createRule } from "./create-rule";
 import { wrapListenerForVueTemplate } from "./helper";
 
@@ -13,7 +13,7 @@ function isUndefined(node: TSESTree.Expression) {
 const noStrictNullable = createRule({
   create(context) {
     return wrapListenerForVueTemplate(context, {
-      BinaryExpression: (node) => {
+      BinaryExpression(node) {
         if (node.operator !== "===" && node.operator !== "!==") return;
         if (!isNull(node.right) && !isUndefined(node.right)) return;
 
