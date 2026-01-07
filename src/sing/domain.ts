@@ -19,10 +19,7 @@ import type {
   TimeSignature,
   Track,
 } from "@/domain/project/type";
-import {
-  getRepresentableNoteTypes,
-  isValidNotes,
-} from "@/sing/music";
+import { getRepresentableNoteTypes, isValidNotes } from "@/sing/music";
 
 const MAX_SNAP_TYPE = 32;
 

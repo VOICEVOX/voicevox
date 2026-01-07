@@ -1,9 +1,5 @@
 import { getDoremiFromNoteNumber } from "./viewHelper";
-import {
-  getNoteDuration,
-  secondToTick,
-  tickToSecond,
-} from "@/sing/music";
+import { getNoteDuration, secondToTick, tickToSecond } from "@/sing/music";
 import { decibelToLinear } from "@/sing/audio";
 import {
   EditorFrameAudioQuery,
