@@ -22,7 +22,7 @@ import type {
 import {
   getRepresentableNoteTypes,
   isValidNotes,
-} from "@/sing/foundation/music";
+} from "@/sing/music";
 
 const MAX_SNAP_TYPE = 32;
 

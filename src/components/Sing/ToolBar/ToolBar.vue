@@ -179,7 +179,7 @@ import {
   isValidBeats,
   isValidBeatType,
   isValidBpm,
-} from "@/sing/foundation/music";
+} from "@/sing/music";
 import {
   getSnapTypes,
   isValidKeyRangeAdjustment,

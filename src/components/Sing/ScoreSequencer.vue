@@ -254,7 +254,7 @@ import {
   noteNumberToFrequency,
   tickToMeasureNumber,
   tickToSecond,
-} from "@/sing/foundation/music";
+} from "@/sing/music";
 import { getEndTicksOfPhrase, getStartTicksOfPhrase } from "@/sing/domain";
 import {
   tickToBaseX,

@@ -66,7 +66,7 @@ import {
   isValidTpqn,
   secondToTick,
   tickToSecond,
-} from "@/sing/foundation/music";
+} from "@/sing/music";
 import {
   isValidSnapType,
   isValidKeyRangeAdjustment,

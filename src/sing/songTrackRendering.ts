@@ -3,8 +3,8 @@ import {
   getNoteDuration,
   secondToTick,
   tickToSecond,
-} from "@/sing/foundation/music";
-import { decibelToLinear } from "@/sing/foundation/audio";
+} from "@/sing/music";
+import { decibelToLinear } from "@/sing/audio";
 import {
   EditorFrameAudioQuery,
   EditorFrameAudioQueryKey,

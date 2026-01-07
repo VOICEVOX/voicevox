@@ -9,7 +9,7 @@ import {
   getBeatDuration,
   getMeasureDuration,
   getTimeSignaturePositions,
-} from "@/sing/foundation/music";
+} from "@/sing/music";
 import { tickToBaseX } from "@/sing/viewHelper";
 
 /**
