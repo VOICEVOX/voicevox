@@ -1,5 +1,6 @@
 import { AST_NODE_TYPES, TSESLint, TSESTree } from "@typescript-eslint/utils";
 import { createRule } from "./create-rule";
+import { wrapListenerForVueTemplate } from "./helper";
 
 function isNull(node: TSESTree.Expression) {
   return node.type === AST_NODE_TYPES.Literal && node.value == null;
@@ -11,42 +12,27 @@ function isUndefined(node: TSESTree.Expression) {
 
 const noStrictNullable = createRule({
   create(context) {
-    const checkBinaryExpression = (node: TSESTree.BinaryExpression) => {
-      if (node.operator !== "===" && node.operator !== "!==") return;
-      if (!isNull(node.right) && !isUndefined(node.right)) return;
+    return wrapListenerForVueTemplate(context, {
+      BinaryExpression: (node) => {
+        if (node.operator !== "===" && node.operator !== "!==") return;
+        if (!isNull(node.right) && !isUndefined(node.right)) return;
 
-      context.report({
-        node,
-        messageId: "report",
-        data: {
-          operator: node.operator.slice(0, 2),
-          expression: context.getSourceCode().getText(node.right),
-        },
-        fix(fixer) {
-          return fixer.replaceTextRange(
-            [node.left.range[1], node.right.range[0]],
-            node.operator.slice(0, 2) + " ",
-          );
-        },
-      });
-    };
-
-    const listener: TSESLint.RuleListener = {
-      BinaryExpression: checkBinaryExpression,
-    };
-
-    const parserServices = context.parserServices as {
-      defineTemplateBodyVisitor?: (
-        templateBodyVisitor: TSESLint.RuleListener,
-        scriptBodyVisitor?: TSESLint.RuleListener,
-      ) => TSESLint.RuleListener;
-    };
-
-    if (parserServices.defineTemplateBodyVisitor) {
-      return parserServices.defineTemplateBodyVisitor(listener, listener);
-    }
-
-    return listener;
+        context.report({
+          node,
+          messageId: "report",
+          data: {
+            operator: node.operator.slice(0, 2),
+            expression: context.sourceCode.getText(node.right),
+          },
+          fix(fixer) {
+            return fixer.replaceTextRange(
+              [node.left.range[1], node.right.range[0]],
+              node.operator.slice(0, 2) + " ",
+            );
+          },
+        });
+      },
+    });
   },
   name: "no-strict-nullable",
   meta: {
