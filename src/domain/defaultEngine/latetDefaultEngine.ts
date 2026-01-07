@@ -61,7 +61,7 @@ export const getSuitablePackageInfo = (
 
   if (platform === "win32") {
     if (arch === "x64") {
-      return updateInfo.windows.x64["GPU/CPU"];
+      return updateInfo.windows.x64.CPU;
     }
   } else if (platform === "darwin") {
     if (arch === "x64") {
