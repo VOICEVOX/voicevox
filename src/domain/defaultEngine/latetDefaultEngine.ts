@@ -50,7 +50,7 @@ export const fetchLatestDefaultEngineInfo = async (url: string) => {
 };
 
 /**
- * 実行環境に合うパッケージを取得する。WindowsではGPU版、LinuxとmacOSではCPU版を返す。
+ * 実行環境に合うパッケージを取得する。GPU版があってもCPU版を返す。
  * TODO: どのデバイス版にするかはユーザーが選べるようにするべき。
  */
 export const getSuitablePackageInfo = (
