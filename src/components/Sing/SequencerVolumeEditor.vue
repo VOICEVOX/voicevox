@@ -60,8 +60,8 @@ const props = defineProps<{
   offsetX: number;
 }>();
 
-const MIN_DISPLAY_DB = -60;
-const MAX_DISPLAY_DB = 0;
+const MIN_DISPLAY_DB = -25;
+const MAX_DISPLAY_DB = -1;
 const KEY_COLUMN_WIDTH_PX = 48; // ScoreSequencerの左側キー領域と合わせる
 
 const store = useStore();
