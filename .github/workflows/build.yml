@@ -26,8 +26,8 @@ on:
         default: false
 
 env:
-  VOICEVOX_ENGINE_VERSION: 0.25.0
-  VOICEVOX_RESOURCE_VERSION: 0.25.0
+  VOICEVOX_ENGINE_VERSION: 0.25.1
+  VOICEVOX_RESOURCE_VERSION: 0.25.1
   VOICEVOX_EDITOR_VERSION:
     |- # releaseタグ名か、workflow_dispatchでのバージョン名か、999.999.999-developが入る
     ${{ github.event.release.tag_name || github.event.inputs.version || '999.999.999-develop' }}
@@ -457,7 +457,7 @@ jobs:
             # Split to MyArtifact.AppImage.7z.001, MyArtifact.AppImage.7z.002, ...
             # Use compression level 0 since AppImage is already compressed
             # .7z is needed for installer_linux.sh yet
-            7z -mx=0 -v1g a "${{ matrix.linux_appimage_7z_name }}.7z" "${appImageFile}"
+            7z -mx=0 -v1900m a "${{ matrix.linux_appimage_7z_name }}.7z" "${appImageFile}"
 
             # Output split archive name<TAB>size<TAB>hash list to myartifact.7z.txt
             ls "${{ matrix.linux_appimage_7z_name }}.7z".* > archives_name.txt
@@ -469,15 +469,27 @@ jobs:
             mv archives.txt "${{ matrix.installer_artifact_name }}.7z.txt"
           done
 
-      - name: Upload Linux AppImage split to Artifacts
+      - name: Create Linux installer
+        if: endsWith(matrix.installer_artifact_name, '-appimage')
+        run: |
+          sed \
+            -e 's/^NAME=@@PLACEHOLDER@@ # placeholder for CI$/NAME="${{ matrix.installer_artifact_name }}"/' \
+            -e 's/^VERSION=@@PLACEHOLDER@@ # placeholder for CI$/VERSION="${{ env.VOICEVOX_EDITOR_VERSION }}"/' \
+            build/linux/installer_linux.template.sh > VOICEVOX.${{ matrix.installer_artifact_name }}.${{ env.VOICEVOX_EDITOR_VERSION }}.sh
+
+          # Check that placeholders were replaced
+          ! grep "@@PLACEHOLDER@@" VOICEVOX.${{ matrix.installer_artifact_name }}.${{ env.VOICEVOX_EDITOR_VERSION }}.sh
+
+      - name: Upload Linux AppImage split and installer to Artifacts
         if: endsWith(matrix.installer_artifact_name, '-appimage') && github.event.inputs.upload_artifact == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.installer_artifact_name }}-release
           path: |-
             dist_electron/*.7z.*
+            VOICEVOX.${{ matrix.installer_artifact_name }}.${{ env.VOICEVOX_EDITOR_VERSION }}.sh
 
-      - name: Upload Linux AppImage split to Release Assets
+      - name: Upload Linux AppImage split and installer to Release Assets
         if: endsWith(matrix.installer_artifact_name, '-appimage') && (github.event.release.tag_name || github.event.inputs.version) != ''
         uses: softprops/action-gh-release@v2
         with:
@@ -485,6 +497,7 @@ jobs:
           tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
           files: |-
             dist_electron/*.7z.*
+            VOICEVOX.${{ matrix.installer_artifact_name }}.${{ env.VOICEVOX_EDITOR_VERSION }}.sh
           target_commitish: ${{ github.sha }}
 
       - name: Upload macOS dmg to Artifacts

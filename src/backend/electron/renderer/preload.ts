@@ -78,9 +78,41 @@ const api: Sandbox = {
     return ipcRendererInvokeProxy.IS_MAXIMIZED_WINDOW();
   },
 
-  onReceivedIPCMsg: (listeners) => {
-    Object.entries(listeners).forEach(([channel, listener]) => {
-      ipcRenderer.on(channel, listener);
+  registerIpcHandler: (listeners) => {
+    ipcRenderer.on("LOAD_PROJECT_FILE", (_, args) => {
+      listeners.loadProjectFile(args as { filePath: string });
+    });
+    ipcRenderer.on("DETECT_MAXIMIZED", () => {
+      listeners.detectMaximized();
+    });
+    ipcRenderer.on("DETECT_UNMAXIMIZED", () => {
+      listeners.detectUnmaximized();
+    });
+    ipcRenderer.on("DETECTED_ENGINE_ERROR", (_, args) => {
+      listeners.detectedEngineError(args as { engineId: EngineId });
+    });
+    ipcRenderer.on("DETECT_PINNED", () => {
+      void listeners.detectPinned();
+    });
+    ipcRenderer.on("DETECT_UNPINNED", () => {
+      void listeners.detectUnpinned();
+    });
+    ipcRenderer.on("DETECT_ENTER_FULLSCREEN", () => {
+      listeners.detectEnterFullscreen();
+    });
+    ipcRenderer.on("DETECT_LEAVE_FULLSCREEN", () => {
+      listeners.detectLeaveFullscreen();
+    });
+    ipcRenderer.on("CHECK_EDITED_AND_NOT_SAVE", (_, args) => {
+      listeners.checkEditedAndNotSave(
+        args as {
+          closeOrReload: "close" | "reload";
+          isMultiEngineOffMode?: boolean;
+        },
+      );
+    });
+    ipcRenderer.on("DETECT_RESIZED", (_, args) => {
+      listeners.detectResized(args as { width: number; height: number });
     });
   },
 
