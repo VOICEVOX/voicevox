@@ -360,6 +360,7 @@ export const splitterPositionSchema = z.object({
   portraitPaneWidth: z.number().optional(),
   audioInfoPaneWidth: z.number().optional(),
   audioDetailPaneHeight: z.number().optional(),
+  parameterPanelHeight: z.number().optional(),
 });
 export type SplitterPositionType = z.infer<typeof splitterPositionSchema>;
 
