@@ -2,6 +2,7 @@
   <div class="parameter-panel">
     <div class="tool-area">
       パラメータ
+      <!-- 仮のSwitcher -->
       <ParameterPanelEditTargetSwitcher :editTarget :changeEditTarget />
     </div>
     <div class="edit-area">
