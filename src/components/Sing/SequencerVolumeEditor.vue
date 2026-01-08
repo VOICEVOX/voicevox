@@ -34,6 +34,7 @@ import ContextMenu, {
   ContextMenuItemData,
 } from "@/components/Menu/ContextMenu/Container.vue";
 import { useStore } from "@/store";
+import type { VolumeEditTool } from "@/store/type";
 import { useParameterPanelStateMachine } from "@/composables/useParameterPanelStateMachine";
 import { useAutoScrollOnEdge } from "@/composables/useAutoScrollOnEdge";
 import { useMounted } from "@/composables/useMounted";
