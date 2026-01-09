@@ -1,5 +1,10 @@
 [
   {
+    "version": "0.25.1",
+    "descriptions": ["キャラクター「あんこもん」を追加"],
+    "contributors": []
+  },
+  {
     "version": "0.25.0",
     "descriptions": [
       "トーク：複数選択機能を通常機能に",
