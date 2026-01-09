@@ -172,14 +172,16 @@ import { useStore } from "@/store";
 
 import {
   BEAT_TYPES,
-  getSnapTypes,
-  getTimeSignaturePositions,
   getMeasureDuration,
   getNoteDuration,
+  getTimeSignaturePositions,
   isTriplet,
-  isValidBeatType,
   isValidBeats,
+  isValidBeatType,
   isValidBpm,
+} from "@/sing/music";
+import {
+  getSnapTypes,
   isValidKeyRangeAdjustment,
   isValidVolumeRangeAdjustment,
 } from "@/sing/domain";

@@ -48,7 +48,7 @@ import type {
   ParameterPanelInput,
   PositionOnParameterPanel,
 } from "@/sing/parameterPanelStateMachine/common";
-import { tickToSecond } from "@/sing/domain";
+import { tickToSecond } from "@/sing/music";
 import { clamp } from "@/sing/utility";
 import { getTotalTicks } from "@/sing/rulerHelper"; // TODO: ルーラーから切り出して共通化する
 import { numMeasuresInjectionKey } from "@/components/Sing/ScoreSequencer.vue"; // TODO: これも共通化できそう

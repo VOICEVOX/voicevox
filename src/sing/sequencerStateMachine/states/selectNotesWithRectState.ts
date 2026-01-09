@@ -9,7 +9,7 @@ import {
 import { getButton, noteNumberToBaseY, tickToBaseX } from "@/sing/viewHelper";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import { NoteId } from "@/type/preload";
-import { frequencyToNoteNumber } from "@/sing/domain";
+import { frequencyToNoteNumber } from "@/sing/music";
 
 export class SelectNotesWithRectState
   implements State<SequencerStateDefinitions, Input, Context>
