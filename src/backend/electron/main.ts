@@ -23,7 +23,10 @@ import { getConfigManager } from "./electronConfig";
 import { getEngineAndVvppController } from "./engineAndVvppController";
 import { getIpcMainHandle } from "./ipcMainHandle";
 import { getAppStateController } from "./appStateController";
-import { getWelcomeWindowManager, initializeWelcomeWindowManager } from "./manager/windowManager/welcome";
+import {
+  getWelcomeWindowManager,
+  initializeWelcomeWindowManager,
+} from "./manager/windowManager/welcome";
 import { assertNonNullable } from "@/type/utility";
 import { EngineInfo } from "@/type/preload";
 import { isMac, isProduction } from "@/helpers/platform";
