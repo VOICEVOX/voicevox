@@ -3,7 +3,7 @@
   "packages": {
     "windows-x64-cpu": {
       "version": "0.20.0",
-      "packages": [
+      "files": [
         {
           "url": "https://github.com/VOICEVOX/voicevox_engine/releases/download/0.20.0/voicevox_engine-windows-cpu-0.20.0.vvpp",
           "name": "voicevox_engine-windows-cpu-0.20.0.vvpp",
@@ -13,7 +13,7 @@
     },
     "windows-x64-directml": {
       "version": "0.20.0",
-      "packages": [
+      "files": [
         {
           "url": "https://github.com/VOICEVOX/voicevox_engine/releases/download/0.20.0/voicevox_engine-windows-directml-0.20.0.vvpp",
           "name": "voicevox_engine-windows-directml-0.20.0.vvpp",
@@ -23,7 +23,7 @@
     },
     "macos-x64-cpu": {
       "version": "0.20.0",
-      "packages": [
+      "files": [
         {
           "url": "https://github.com/VOICEVOX/voicevox_engine/releases/download/0.20.0/voicevox_engine-macos-x64-0.20.0.001.vvppp",
           "name": "voicevox_engine-macos-x64-0.20.0.001.vvppp",
@@ -33,7 +33,7 @@
     },
     "macos-arm64-cpu": {
       "version": "0.20.0",
-      "packages": [
+      "files": [
         {
           "url": "https://github.com/VOICEVOX/voicevox_engine/releases/download/0.20.0/voicevox_engine-macos-arm64-0.20.0.001.vvppp",
           "name": "voicevox_engine-macos-arm64-0.20.0.001.vvppp",
@@ -43,7 +43,7 @@
     },
     "linux-x64-cpu": {
       "version": "0.20.0",
-      "packages": [
+      "files": [
         {
           "url": "https://github.com/VOICEVOX/voicevox_engine/releases/download/0.20.0/voicevox_engine-linux-cpu-0.20.0.vvpp",
           "name": "voicevox_engine-linux-cpu-0.20.0.vvpp",
@@ -53,7 +53,7 @@
     },
     "linux-x64-cuda": {
       "version": "0.20.0",
-      "packages": [
+      "files": [
         {
           "url": "https://github.com/VOICEVOX/voicevox_engine/releases/download/0.20.0/voicevox_engine-linux-nvidia-0.20.0.001.vvppp",
           "name": "voicevox_engine-linux-nvidia-0.20.0.001.vvppp",

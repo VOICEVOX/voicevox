@@ -7,7 +7,7 @@ import { z } from "zod";
 /** パッケージ情報のスキーマ */
 const packageInfoSchema = z.object({
   version: z.string(),
-  packages: z
+  files: z
     .object({
       url: z.string(),
       name: z.string(),
