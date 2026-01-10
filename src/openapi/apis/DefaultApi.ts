@@ -135,6 +135,15 @@ export interface FrameSynthesisRequest {
     coreVersion?: string;
 }
 
+export interface GuideRequest {
+    query: string;
+    refAudio: Blob;
+    normalize?: boolean;
+    trim?: boolean;
+    assignLength?: boolean;
+    assignPitch?: boolean;
+}
+
 export interface ImportUserDictWordsRequest {
     override: boolean;
     requestBody: { [key: string]: UserDictWord; } | null;
@@ -543,6 +552,26 @@ export interface DefaultApiInterface {
      * Get User Dict Words
      */
     getUserDictWords(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<{ [key: string]: UserDictWord; }>;
+
+    /**
+     * 
+     * @summary 参考音声に合わせて発音タイミングとイントネーションを自動調整したAudioQueryを返します
+     * @param {string} query 
+     * @param {Blob} refAudio 
+     * @param {boolean} [normalize] 
+     * @param {boolean} [trim] 
+     * @param {boolean} [assignLength] 
+     * @param {boolean} [assignPitch] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApiInterface
+     */
+    guideRaw(requestParameters: GuideRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AudioQuery>>;
+
+    /**
+     * 参考音声に合わせて発音タイミングとイントネーションを自動調整したAudioQueryを返します
+     */
+    guide(requestParameters: GuideRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AudioQuery>;
 
     /**
      * 他のユーザー辞書をインポートします。
@@ -1640,6 +1669,81 @@ export class DefaultApi extends runtime.BaseAPI implements DefaultApiInterface {
      */
     async getUserDictWords(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<{ [key: string]: UserDictWord; }> {
         const response = await this.getUserDictWordsRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * 参考音声に合わせて発音タイミングとイントネーションを自動調整したAudioQueryを返します
+     */
+    async guideRaw(requestParameters: GuideRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AudioQuery>> {
+        if (requestParameters.query === null || requestParameters.query === undefined) {
+            throw new runtime.RequiredError('query','Required parameter requestParameters.query was null or undefined when calling guide.');
+        }
+
+        if (requestParameters.refAudio === null || requestParameters.refAudio === undefined) {
+            throw new runtime.RequiredError('refAudio','Required parameter requestParameters.refAudio was null or undefined when calling guide.');
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const consumes: runtime.Consume[] = [
+            { contentType: 'multipart/form-data' },
+        ];
+        // @ts-ignore: canConsumeForm may be unused
+        const canConsumeForm = runtime.canConsumeForm(consumes);
+
+        let formParams: { append(param: string, value: any): any };
+        let useForm = false;
+        // use FormData to transmit files using content-type "multipart/form-data"
+        useForm = canConsumeForm;
+        if (useForm) {
+            formParams = new FormData();
+        } else {
+            formParams = new URLSearchParams();
+        }
+
+        if (requestParameters.query !== undefined) {
+            formParams.append('query', requestParameters.query as any);
+        }
+
+        if (requestParameters.refAudio !== undefined) {
+            formParams.append('ref_audio', requestParameters.refAudio as any);
+        }
+
+        if (requestParameters.normalize !== undefined) {
+            formParams.append('normalize', requestParameters.normalize as any);
+        }
+
+        if (requestParameters.trim !== undefined) {
+            formParams.append('trim', requestParameters.trim as any);
+        }
+
+        if (requestParameters.assignLength !== undefined) {
+            formParams.append('assign_length', requestParameters.assignLength as any);
+        }
+
+        if (requestParameters.assignPitch !== undefined) {
+            formParams.append('assign_pitch', requestParameters.assignPitch as any);
+        }
+
+        const response = await this.request({
+            path: `/guide`,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: formParams,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => AudioQueryFromJSON(jsonValue));
+    }
+
+    /**
+     * 参考音声に合わせて発音タイミングとイントネーションを自動調整したAudioQueryを返します
+     */
+    async guide(requestParameters: GuideRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AudioQuery> {
+        const response = await this.guideRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

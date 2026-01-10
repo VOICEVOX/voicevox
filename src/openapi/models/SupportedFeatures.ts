@@ -97,6 +97,12 @@ export interface SupportedFeatures {
      * @memberof SupportedFeatures
      */
     applyKatakanaEnglish?: boolean;
+    /**
+     * Forced Alignerによる自動調整
+     * @type {boolean}
+     * @memberof SupportedFeatures
+     */
+    guide?: boolean;
 }
 
 /**
@@ -139,6 +145,7 @@ export function SupportedFeaturesFromJSONTyped(json: any, ignoreDiscriminator: b
         'manageLibrary': !exists(json, 'manage_library') ? undefined : json['manage_library'],
         'returnResourceUrl': !exists(json, 'return_resource_url') ? undefined : json['return_resource_url'],
         'applyKatakanaEnglish': !exists(json, 'apply_katakana_english') ? undefined : json['apply_katakana_english'],
+        'guide': !exists(json, 'guide') ? undefined : json['guide'],
     };
 }
 
@@ -164,6 +171,7 @@ export function SupportedFeaturesToJSON(value?: SupportedFeatures | null): any {
         'manage_library': value.manageLibrary,
         'return_resource_url': value.returnResourceUrl,
         'apply_katakana_english': value.applyKatakanaEnglish,
+        'guide': value.guide,
     };
 }
 

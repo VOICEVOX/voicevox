@@ -178,7 +178,7 @@ registerHotkeyWithCleanup({
 });
 
 // detail selector
-type DetailTypes = "accent" | "pitch" | "length";
+export type DetailTypes = "accent" | "pitch" | "length";
 const selectedDetail = ref<DetailTypes>("accent");
 
 // accent phrase
@@ -406,5 +406,14 @@ const isAltKeyDown = useAltKey();
     display: flex;
     overflow-x: scroll;
   }
+}
+
+.action-buttons-wrapper {
+  flex-grow: 1;
+  border: 1px solid red;
+  padding: 0.5rem;
+  display: flex;
+  justify-content: end;
+  align-items: end;
 }
 </style>
