@@ -24,6 +24,7 @@ import {
   TuningTranscription,
   filterCharacterInfosByStyleType,
   DEFAULT_PROJECT_NAME,
+  generateUniqueFilePath,
 } from "./utility";
 import { createPartialStore } from "./vuex";
 import { determineNextPresetKey } from "./preset";
@@ -128,20 +129,6 @@ function parseTextFile(
     audioItems.push({ text: splitText, voice: lastVoice });
   }
   return audioItems;
-}
-
-// TODO: src/sing/fileUtils.tsのgenerateUniqueFilePathと統合する
-async function changeFileTailToNonExistent(
-  filePath: string,
-  extension: string,
-) {
-  let tail = 1;
-  const name = filePath.slice(0, filePath.length - 1 - extension.length);
-  while (await window.backend.checkFileExists(filePath)) {
-    filePath = `${name}[${tail}].${extension}`;
-    tail += 1;
-  }
-  return filePath;
 }
 
 export async function writeTextFile(obj: {
@@ -1396,7 +1383,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         }
 
         if (state.savingSetting.avoidOverwrite) {
-          filePath = await changeFileTailToNonExistent(filePath, "wav");
+          filePath = await generateUniqueFilePath(filePath, "wav");
         }
 
         let fetchAudioResult: FetchAudioResult;
@@ -1546,7 +1533,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         }
 
         if (state.savingSetting.avoidOverwrite) {
-          filePath = await changeFileTailToNonExistent(filePath, "wav");
+          filePath = await generateUniqueFilePath(filePath, "wav");
         }
 
         const encodedBlobs: string[] = [];
@@ -1679,7 +1666,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         }
 
         if (state.savingSetting.avoidOverwrite) {
-          filePath = await changeFileTailToNonExistent(filePath, "txt");
+          filePath = await generateUniqueFilePath(filePath, "txt");
         }
 
         const characters = new Map<string, string>();
