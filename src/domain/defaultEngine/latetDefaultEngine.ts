@@ -68,5 +68,5 @@ export const getSuitablePackageInfo = (
     throw new Error(`Unsupported platform: ${platform} ${arch}`);
   }
 
-  return updateInfo[target];
+  return updateInfo.packages[target];
 };
