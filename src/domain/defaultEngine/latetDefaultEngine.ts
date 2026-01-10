@@ -29,12 +29,14 @@ type RuntimeTarget =
 /** デフォルトエンジンの最新情報のスキーマ */
 const latestDefaultEngineInfoSchema = z.object({
   formatVersion: z.number(),
-  "windows-x64-cpu": packageInfoSchema,
-  "windows-x64-directml": packageInfoSchema,
-  "macos-x64-cpu": packageInfoSchema,
-  "macos-arm64-cpu": packageInfoSchema,
-  "linux-x64-cpu": packageInfoSchema,
-  "linux-x64-cuda": packageInfoSchema,
+  packages: z.object({
+    "windows-x64-cpu": packageInfoSchema,
+    "windows-x64-directml": packageInfoSchema,
+    "macos-x64-cpu": packageInfoSchema,
+    "macos-arm64-cpu": packageInfoSchema,
+    "linux-x64-cpu": packageInfoSchema,
+    "linux-x64-cuda": packageInfoSchema,
+  }),
 });
 
 /** デフォルトエンジンの最新情報を取得する */
