@@ -50,7 +50,7 @@ export const fetchLatestDefaultEngineInfo = async (url: string) => {
 };
 
 /**
- * 実行環境に合うパッケージを取得する。GPU版があればGPU版を返す。
+ * 実行環境に合うパッケージを取得する。GPU版があってもCPU版を返す。
  * TODO: どのデバイス版にするかはユーザーが選べるようにするべき。
  */
 export const getSuitablePackageInfo = (
@@ -61,7 +61,7 @@ export const getSuitablePackageInfo = (
 
   if (platform === "win32") {
     if (arch === "x64") {
-      return updateInfo.windows.x64["GPU/CPU"];
+      return updateInfo.windows.x64.CPU;
     }
   } else if (platform === "darwin") {
     if (arch === "x64") {
@@ -71,7 +71,7 @@ export const getSuitablePackageInfo = (
     }
   } else if (platform === "linux") {
     if (arch === "x64") {
-      return updateInfo.linux.x64["GPU/CPU"];
+      return updateInfo.linux.x64.CPU;
     }
   }
 
