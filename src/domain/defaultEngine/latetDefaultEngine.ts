@@ -18,14 +18,6 @@ const packageInfoSchema = z.object({
 });
 export type PackageInfo = z.infer<typeof packageInfoSchema>;
 
-type RuntimeTarget =
-  | "windows-x64-cpu"
-  | "windows-x64-directml"
-  | "macos-x64-cpu"
-  | "macos-arm64-cpu"
-  | "linux-x64-cpu"
-  | "linux-x64-cuda";
-
 /** デフォルトエンジンの最新情報のスキーマ */
 const latestDefaultEngineInfoSchema = z.object({
   formatVersion: z.number(),
@@ -55,15 +47,15 @@ export const getSuitablePackageInfo = (
   const platform = process.platform;
   const arch = process.arch;
 
-  let target: RuntimeTarget;
+  let target;
   if (platform === "win32" && arch === "x64") {
-    target = "windows-x64-cpu";
+    target = "windows-x64-cpu" as const;
   } else if (platform === "darwin" && arch === "x64") {
-    target = "macos-x64-cpu";
+    target = "macos-x64-cpu" as const;
   } else if (platform === "darwin" && arch === "arm64") {
-    target = "macos-arm64-cpu";
+    target = "macos-arm64-cpu" as const;
   } else if (platform === "linux" && arch === "x64") {
-    target = "linux-x64-cpu";
+    target = "linux-x64-cpu" as const;
   } else {
     throw new Error(`Unsupported platform: ${platform} ${arch}`);
   }
