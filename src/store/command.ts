@@ -65,9 +65,20 @@ export const createCommandMutation =
 const recordPatches =
   <S, P>(recipe: PayloadRecipe<S, P>) =>
   (state: S, payload: P): Command => {
+    // undoCommands/redoCommandsを除外したstateを作成
+    // これによりコマンド履歴が増えてもproduceWithPatchesの処理時間が増加しない
+    const rawState = toRaw(state) as Record<string, unknown>;
+    const { undoCommands, redoCommands, ...stateWithoutCommands } =
+      rawState;
+
     const [, doPatches, undoPatches] = immer.produceWithPatches(
-      toRaw(state),
-      (draft: S) => recipe(draft, payload),
+      stateWithoutCommands as S,
+      (draft: S) => {
+        // draftにundoCommands/redoCommandsを復元してrecipeが正常に動作するようにする
+        (draft as Record<string, unknown>).undoCommands = undoCommands;
+        (draft as Record<string, unknown>).redoCommands = redoCommands;
+        recipe(draft, payload);
+      },
     );
     return {
       id: CommandId(uuid4()),
