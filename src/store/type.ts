@@ -850,7 +850,7 @@ export type PitchEditTool = "DRAW" | "ERASE";
 export type VolumeEditTool = "DRAW" | "ERASE";
 // パラメータパネル内の編集対象
 // NOTE: 音素タイミング編集などを追加する際に拡張
-export type ParameterPanelEditTarget = "VOLUME";
+export type ParameterPanelEditTarget = "PHONEME_TIMING" | "VOLUME";
 
 // プロジェクトの書き出しに使えるファイル形式
 export type ExportSongProjectFileType =
