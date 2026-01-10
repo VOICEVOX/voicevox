@@ -250,13 +250,13 @@ export class EngineAndVvppController {
     packageInfo: PackageInfo,
     callbacks: { onProgress: ProgressCallback<"download" | "install"> },
   ) {
-    if (packageInfo.packages.length === 0) {
+    if (packageInfo.files.length === 0) {
       throw new UnreachableError("No packages to download");
     }
 
     await using downloader = new MultiDownloader(
       downloadDir,
-      packageInfo.packages,
+      packageInfo.files,
       {
         onProgress: ({ progress }) => {
           callbacks.onProgress({ type: "download", progress });
