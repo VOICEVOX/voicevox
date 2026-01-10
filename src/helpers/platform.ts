@@ -5,6 +5,8 @@
 export const isProduction = import.meta.env.MODE === "production";
 export const isElectron = import.meta.env.VITE_TARGET === "electron";
 export const isBrowser = import.meta.env.VITE_TARGET === "browser";
+export const isDevelopment = import.meta.env.DEV;
+export const isTest = import.meta.env.MODE === "test";
 
 // electronのメイン・レンダラープロセス内、ブラウザ内どこでも使用可能なOS判定
 function checkOs(os: "windows" | "mac"): boolean {

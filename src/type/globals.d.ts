@@ -3,6 +3,7 @@ export * from "immer/src/types/globals";
 // showDirectoryPicker などのAPIをブラウザで使用するためにimportしている
 import "@types/wicg-file-system-access";
 import { SandboxKey } from "./preload";
+import { WelcomeSandboxKey } from "../welcome/preloadType";
 
 declare global {
   interface HTMLAudioElement {
@@ -15,6 +16,7 @@ declare global {
 
   interface Window {
     readonly [SandboxKey]: import("./preload").Sandbox;
+    readonly [WelcomeSandboxKey]: import("../welcome/preloadType").WelcomeSandbox;
   }
 
   interface Navigator {

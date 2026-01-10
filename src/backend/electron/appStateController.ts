@@ -1,11 +1,11 @@
 import { app } from "electron";
-import { ipcMainSendProxy } from "./ipc";
-import { getWindowManager } from "./manager/windowManager";
+import { getMainWindowManager } from "./manager/windowManager/main";
 import { getEngineAndVvppController } from "./engineAndVvppController";
 import { getConfigManager } from "./electronConfig";
 import { ExhaustiveError } from "@/type/utility";
 import { createLogger } from "@/helpers/log";
 import { Mutex } from "@/helpers/mutex";
+import { getWelcomeWindowManager } from "./manager/windowManager/welcome";
 
 const log = createLogger("AppStateController");
 
@@ -24,6 +24,94 @@ export class AppStateController {
   private quitState: "unconfirmed" | "dirty" | "done" = "unconfirmed";
 
   private lock = new Mutex();
+
+  async startup() {
+    const engineAndVvppController = getEngineAndVvppController();
+    // VVPPがデフォルトエンジンに指定されていたらインストール・アップデートする
+    // NOTE: この機能は工事中。参照: https://github.com/VOICEVOX/voicevox/issues/1194
+    const packageStatuses =
+      await engineAndVvppController.fetchEnginePackageStatuses();
+
+    const areAllEnginesLatest = packageStatuses.every((status) => {
+      return status.installed.status === "latest";
+    });
+    if (areAllEnginesLatest) {
+      log.info(
+        "All default engines are already at the latest version. Skipping welcome screen.",
+      );
+      await this.launchMainWindow();
+    } else {
+      log.info("Some default engines are not at the latest version.");
+      await this.launchWelcomeWindow();
+    }
+    // for (const status of packageStatuses) {
+    //   // 最新版がインストール済みの場合はスキップ
+    //   if (status.installed.status == "latest") {
+    //     continue;
+    //   }
+    //
+    //   let dialogOptions: {
+    //     title: string;
+    //     message: string;
+    //     okButtonLabel: string;
+    //   };
+    //   if (status.installed.status == "notInstalled") {
+    //     dialogOptions = {
+    //       title: "デフォルトエンジンのインストール",
+    //       message: `${status.package.engineName} をインストールしますか？`,
+    //       okButtonLabel: "インストールする",
+    //     };
+    //   } else {
+    //     dialogOptions = {
+    //       title: "デフォルトエンジンのアップデート",
+    //       message: `${status.package.engineName} の新しいバージョン（${status.package.latestVersion}）にアップデートしますか？`,
+    //       okButtonLabel: "アップデートする",
+    //     };
+    //   }
+    //
+    //   // インストールするか確認
+    //   const result = dialog.showMessageBoxSync({
+    //     type: "info",
+    //     title: dialogOptions.title,
+    //     message: dialogOptions.message,
+    //     buttons: [dialogOptions.okButtonLabel, "キャンセル"],
+    //     cancelId: 1,
+    //   });
+    //   if (result == 1) {
+    //     continue;
+    //   }
+    //
+    //   // ダウンロードしてインストールする
+    //   let lastLogTime = 0; // とりあえずログを0.1秒に1回だけ出力する
+    //   await engineAndVvppController.downloadAndInstallVvppEngine(
+    //     app.getPath("downloads"),
+    //     status.package.packageInfo,
+    //     {
+    //       onProgress: ({ type, progress }) => {
+    //         if (Date.now() - lastLogTime > 100) {
+    //           log.info(
+    //             `VVPP default engine progress: ${type}: ${Math.floor(progress)}%`,
+    //           );
+    //           lastLogTime = Date.now();
+    //         }
+    //       },
+    //     },
+    //   );
+    // }
+  }
+
+  async launchWelcomeWindow() {
+    const welcomeWindowManager = getWelcomeWindowManager();
+    await welcomeWindowManager.createWindow();
+  }
+
+  async launchMainWindow() {
+    const engineAndVvppController = getEngineAndVvppController();
+    const windowManager = getMainWindowManager();
+
+    await engineAndVvppController.launchEngines();
+    await windowManager.createWindow();
+  }
 
   onQuitRequest(DI: { preventQuit: () => void }): void {
     log.info(`onQuitRequest called. Current quitState: ${this.quitState}`);
@@ -64,42 +152,51 @@ export class AppStateController {
 
   private checkUnsavedEdit() {
     log.info("Checking for unsaved edits before quitting");
-    const windowManager = getWindowManager();
-    try {
-      // TODO: ipcの送信以外で失敗した場合はシャットダウンしないようにする
-      ipcMainSendProxy.CHECK_EDITED_AND_NOT_SAVE(windowManager.getWindow(), {
-        closeOrReload: "close",
-      });
-    } catch (error) {
-      log.error(
-        "Error while sending CHECK_EDITED_AND_NOT_SAVE IPC message:",
-        error,
-      );
-      void windowManager
-        .showMessageBox({
-          type: "error",
-          title: "保存の確認に失敗しました",
-          message:
-            "未保存のデータがある場合、終了すると失われます。終了しますか？",
-          buttons: ["終了しない", "終了する"],
-          defaultId: 0,
-          cancelId: 0,
-        })
-        .then((result) => {
-          if (result.response === 1) {
-            log.info("User confirmed to quit despite the error");
-            this.shutdown();
-          } else {
-            log.info("User canceled quit due to the error");
-          }
+    const mainWindowManager = getMainWindowManager();
+    if (mainWindowManager.isInitialized()) {
+      try {
+        mainWindowManager.ipc.CHECK_EDITED_AND_NOT_SAVE({
+          closeOrReload: "close",
         });
+      } catch (error) {
+        log.error(
+          "Error while sending CHECK_EDITED_AND_NOT_SAVE IPC message:",
+          error,
+        );
+        void mainWindowManager
+          .showMessageBox({
+            type: "error",
+            title: "保存の確認に失敗しました",
+            message:
+              "未保存のデータがある場合、終了すると失われます。終了しますか？",
+            buttons: ["終了しない", "終了する"],
+            defaultId: 0,
+            cancelId: 0,
+          })
+          .then((result) => {
+            if (result.response === 1) {
+              log.info("User confirmed to quit despite the error");
+              this.shutdown();
+            } else {
+              log.info("User canceled quit due to the error");
+            }
+          });
+      }
+    } else {
+      log.info(
+        "Main window is not initialized. Proceeding to shutdown without checking for unsaved edits.",
+      );
+      this.shutdown();
     }
   }
 
   /** 編集状態に関わらず終了する */
   shutdown() {
+    const mainWindowManager = getMainWindowManager();
     this.quitState = "dirty";
-    getWindowManager().destroyWindow();
+    if (mainWindowManager.isInitialized()) {
+      mainWindowManager.destroyWindow();
+    }
     this.initiateQuit();
   }
 
