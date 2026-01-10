@@ -24,23 +24,17 @@ import { getEngineAndVvppController } from "./engineAndVvppController";
 import { getIpcMainHandle } from "./ipcMainHandle";
 import { getWelcomeIpcMainHandle } from "./welcomeIpcMainHandle";
 import { getAppStateController } from "./appStateController";
-import {
-  getWelcomeWindowManager,
-  initializeWelcomeWindowManager,
-} from "./manager/windowManager/welcome";
+import { initializeWelcomeWindowManager } from "./manager/windowManager/welcome";
 import { IpcIHData } from "./ipcType";
 import { assertNonNullable } from "@/type/utility";
 import { EngineInfo } from "@/type/preload";
-import { isMac, isProduction } from "@/helpers/platform";
+import { isDevelopment, isMac, isProduction, isTest } from "@/helpers/platform";
 import { createLogger } from "@/helpers/log";
 import { WelcomeIpcIHData } from "@/welcome/ipcType";
 
 type SingleInstanceLockData = {
   filePath: string | undefined;
 };
-
-const isDevelopment = import.meta.env.DEV;
-const isTest = import.meta.env.MODE === "test";
 
 if (isDevelopment) {
   app.commandLine.appendSwitch("remote-debugging-port", "9222");
@@ -239,8 +233,8 @@ initializeEngineProcessManager({ onEngineProcessError });
 initializeVvppManager({ vvppEngineDir, tmpDir: app.getPath("temp") });
 
 const configManager = getConfigManager();
+const appStateController = getAppStateController();
 const mainWindowManager = getMainWindowManager();
-const welcomeWindowManager = getWelcomeWindowManager();
 const engineAndVvppController = getEngineAndVvppController();
 
 /**
@@ -341,7 +335,7 @@ app.on("web-contents-created", (_e, contents) => {
 
 // Called before window closing
 app.on("before-quit", async (event) => {
-  void getAppStateController().onQuitRequest({
+  appStateController.onQuitRequest({
     preventQuit: () => event.preventDefault(),
   });
 });
@@ -442,67 +436,6 @@ void app.whenReady().then(async () => {
       log.error("Vue Devtools failed to install:", e);
     }
   }
-
-  // VVPPがデフォルトエンジンに指定されていたらインストール・アップデートする
-  // NOTE: この機能は工事中。参照: https://github.com/VOICEVOX/voicevox/issues/1194
-  const packageStatuses =
-    await engineAndVvppController.fetchEnginePackageStatuses();
-
-  for (const status of packageStatuses) {
-    // 最新版がインストール済みの場合はスキップ
-    if (status.installed.status == "latest") {
-      continue;
-    }
-
-    let dialogOptions: {
-      title: string;
-      message: string;
-      okButtonLabel: string;
-    };
-    if (status.installed.status == "notInstalled") {
-      dialogOptions = {
-        title: "デフォルトエンジンのインストール",
-        message: `${status.package.engineName} をインストールしますか？`,
-        okButtonLabel: "インストールする",
-      };
-    } else {
-      dialogOptions = {
-        title: "デフォルトエンジンのアップデート",
-        message: `${status.package.engineName} の新しいバージョン（${status.package.latestVersion}）にアップデートしますか？`,
-        okButtonLabel: "アップデートする",
-      };
-    }
-
-    // インストールするか確認
-    const result = dialog.showMessageBoxSync({
-      type: "info",
-      title: dialogOptions.title,
-      message: dialogOptions.message,
-      buttons: [dialogOptions.okButtonLabel, "キャンセル"],
-      cancelId: 1,
-    });
-    if (result == 1) {
-      continue;
-    }
-
-    // ダウンロードしてインストールする
-    let lastLogTime = 0; // とりあえずログを0.1秒に1回だけ出力する
-    await engineAndVvppController.downloadAndInstallVvppEngine(
-      app.getPath("downloads"),
-      status.package.packageInfo,
-      {
-        onProgress: ({ type, progress }) => {
-          if (Date.now() - lastLogTime > 100) {
-            log.info(
-              `VVPP default engine progress: ${type}: ${Math.floor(progress)}%`,
-            );
-            lastLogTime = Date.now();
-          }
-        },
-      },
-    );
-  }
-
   // 多重起動防止
   // TODO: readyを待たずにもっと早く実行すべき
   if (
@@ -533,9 +466,7 @@ void app.whenReady().then(async () => {
     }
   }
 
-  await welcomeWindowManager.createWindow();
-  // await engineAndVvppController.launchEngines();
-  // await windowManager.createWindow();
+  await appStateController.startup();
 });
 
 // 他のプロセスが起動したとき、`requestSingleInstanceLock`経由で`rawData`が送信される。
