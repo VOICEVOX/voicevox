@@ -1,7 +1,5 @@
 <template>
-  <div class="phoneme-timing-editor">
-    音素タイミング編集
-  </div>
+  <div class="phoneme-timing-editor">音素タイミング編集</div>
 </template>
 
 <style scoped lang="scss">
