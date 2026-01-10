@@ -18,29 +18,23 @@ const packageInfoSchema = z.object({
 });
 export type PackageInfo = z.infer<typeof packageInfoSchema>;
 
+type RuntimeTarget =
+  | "windows-x64-cpu"
+  | "windows-x64-directml"
+  | "macos-x64-cpu"
+  | "macos-arm64-cpu"
+  | "linux-x64-cpu"
+  | "linux-x64-cuda";
+
 /** デフォルトエンジンの最新情報のスキーマ */
 const latestDefaultEngineInfoSchema = z.object({
   formatVersion: z.number(),
-  windows: z.object({
-    x64: z.object({
-      CPU: packageInfoSchema,
-      "GPU/CPU": packageInfoSchema,
-    }),
-  }),
-  macos: z.object({
-    x64: z.object({
-      CPU: packageInfoSchema,
-    }),
-    arm64: z.object({
-      CPU: packageInfoSchema,
-    }),
-  }),
-  linux: z.object({
-    x64: z.object({
-      CPU: packageInfoSchema,
-      "GPU/CPU": packageInfoSchema,
-    }),
-  }),
+  "windows-x64-cpu": packageInfoSchema,
+  "windows-x64-directml": packageInfoSchema,
+  "macos-x64-cpu": packageInfoSchema,
+  "macos-arm64-cpu": packageInfoSchema,
+  "linux-x64-cpu": packageInfoSchema,
+  "linux-x64-cuda": packageInfoSchema,
 });
 
 /** デフォルトエンジンの最新情報を取得する */
@@ -59,21 +53,18 @@ export const getSuitablePackageInfo = (
   const platform = process.platform;
   const arch = process.arch;
 
-  if (platform === "win32") {
-    if (arch === "x64") {
-      return updateInfo.windows.x64.CPU;
-    }
-  } else if (platform === "darwin") {
-    if (arch === "x64") {
-      return updateInfo.macos.x64.CPU;
-    } else if (arch === "arm64") {
-      return updateInfo.macos.arm64.CPU;
-    }
-  } else if (platform === "linux") {
-    if (arch === "x64") {
-      return updateInfo.linux.x64.CPU;
-    }
+  let target: RuntimeTarget;
+  if (platform === "win32" && arch === "x64") {
+    target = "windows-x64-cpu";
+  } else if (platform === "darwin" && arch === "x64") {
+    target = "macos-x64-cpu";
+  } else if (platform === "darwin" && arch === "arm64") {
+    target = "macos-arm64-cpu";
+  } else if (platform === "linux" && arch === "x64") {
+    target = "linux-x64-cpu";
+  } else {
+    throw new Error(`Unsupported platform: ${platform} ${arch}`);
   }
 
-  throw new Error(`Unsupported platform: ${platform} ${arch}`);
+  return updateInfo[target];
 };
