@@ -74,7 +74,7 @@ class WelcomeWindowManager {
       minWidth: 320,
       backgroundColor,
       webPreferences: {
-        preload: path.join(import.meta.dirname, "welcomePreload.mjs"),
+        preload: path.join(import.meta.dirname, "welcomePreload.cjs"),
       },
       icon: path.join(this.staticDir, "icon.png"),
     });

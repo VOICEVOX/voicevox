@@ -166,8 +166,8 @@ export default defineConfig((options) => {
               electronTargetVersion,
             },
             {
-              preload: "./backend/electron/renderer/preload.ts",
-              welcomePreload: "./welcome/preload.ts",
+              preload: "./src/backend/electron/renderer/preload.ts",
+              welcomePreload: "./src/welcome/preload.ts",
             },
           ),
         ]),
@@ -288,35 +288,37 @@ const electronPreloadOptions = (
   },
   entries: Record<string, string>,
 ): ElectronOptions[] =>
-  Object.entries(entries).map(([name, entry]) => ({
-    entry,
-    onstart({ reload }) {
-      if (!options.skipLaunchElectron) {
-        reload();
-      }
-    },
-    vite: {
-      plugins: [
-        tsconfigPaths({ root: import.meta.dirname }),
-        isProduction && checkSuspiciousImportsPlugin({}),
-      ],
-      build: {
-        target: options.electronTargetVersion?.chrome,
-        outDir: path.resolve(import.meta.dirname, "dist"),
-        sourcemap: options.sourcemap,
-        rollupOptions: {
-          output: {
-            name,
-            format: "cjs",
-            inlineDynamicImports: true,
-            entryFileNames: `[name].mjs`,
-            chunkFileNames: `[name].mjs`,
-            assetFileNames: `[name].[ext]`,
+  Object.entries(entries).map(
+    ([name, entry]): ElectronOptions => ({
+      onstart({ reload }) {
+        if (!options.skipLaunchElectron) {
+          reload();
+        }
+      },
+      vite: {
+        plugins: [
+          tsconfigPaths({ root: import.meta.dirname }),
+          isProduction && checkSuspiciousImportsPlugin({}),
+        ],
+        build: {
+          outDir: path.resolve(import.meta.dirname, "dist"),
+          sourcemap: options.sourcemap,
+          rollupOptions: {
+            input: {
+              [name]: path.resolve(import.meta.dirname, entry),
+            },
+            output: {
+              format: "cjs",
+              inlineDynamicImports: true,
+              entryFileNames: `[name].cjs`,
+              chunkFileNames: `[name].cjs`,
+              assetFileNames: `[name].[ext]`,
+            },
           },
         },
       },
-    },
-  }));
+    }),
+  );
 
 /** バックエンドAPIをフロントエンドから実行するコードを注入する */
 const injectLoaderScriptPlugin = (

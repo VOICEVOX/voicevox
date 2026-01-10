@@ -85,10 +85,10 @@ class MainWindowManager {
       titleBarStyle: "hidden",
       trafficLightPosition: { x: 6, y: 4 },
       minWidth: 320,
-      show: true,
+      show: false,
       backgroundColor,
       webPreferences: {
-        preload: path.join(import.meta.dirname, "preload.mjs"),
+        preload: path.join(import.meta.dirname, "preload.cjs"),
       },
       icon: path.join(this.staticDir, "icon.png"),
     });
