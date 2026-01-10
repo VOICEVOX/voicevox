@@ -11,12 +11,13 @@ import {
 import windowStateKeeper from "electron-window-state";
 import { getConfigManager } from "../../electronConfig";
 import { getEngineAndVvppController } from "../../engineAndVvppController";
-import { ipcMainSendProxy } from "../../ipc";
+import { createIpcSendProxy, IpcSendProxy } from "../../ipc";
+import { IpcSOData } from "../../ipcType";
 import { getAppStateController } from "../../appStateController";
 import { themes } from "@/domain/theme";
 import { createLogger } from "@/helpers/log";
 
-const log = createLogger("WindowManager");
+const log = createLogger("MainWindowManager");
 
 type WindowManagerOption = {
   staticDir: string;
@@ -26,6 +27,7 @@ type WindowManagerOption = {
 
 class MainWindowManager {
   private _win: BrowserWindow | undefined;
+  private _ipc: IpcSendProxy<IpcSOData> | undefined;
   private staticDir: string;
   private isDevelopment: boolean;
   private isTest: boolean;
@@ -51,6 +53,13 @@ class MainWindowManager {
       throw new Error("_win == undefined");
     }
     return this._win;
+  }
+
+  public get ipc() {
+    if (this._ipc == undefined) {
+      throw new Error("_ipc == undefined");
+    }
+    return this._ipc;
   }
 
   public async createWindow() {
@@ -84,23 +93,27 @@ class MainWindowManager {
       icon: path.join(this.staticDir, "icon.png"),
     });
 
+    this._win = win;
+    const ipc = createIpcSendProxy<IpcSOData>(win);
+    this._ipc = ipc;
+
     win.on("maximize", () => {
-      ipcMainSendProxy.DETECT_MAXIMIZED(win);
+      ipc.DETECT_MAXIMIZED();
     });
     win.on("unmaximize", () => {
-      ipcMainSendProxy.DETECT_UNMAXIMIZED(win);
+      ipc.DETECT_UNMAXIMIZED();
     });
     win.on("enter-full-screen", () => {
-      ipcMainSendProxy.DETECT_ENTER_FULLSCREEN(win);
+      ipc.DETECT_ENTER_FULLSCREEN();
     });
     win.on("leave-full-screen", () => {
-      ipcMainSendProxy.DETECT_LEAVE_FULLSCREEN(win);
+      ipc.DETECT_LEAVE_FULLSCREEN();
     });
     win.on("always-on-top-changed", () => {
       if (win.isAlwaysOnTop()) {
-        ipcMainSendProxy.DETECT_PINNED(win);
+        ipc.DETECT_PINNED();
       } else {
-        ipcMainSendProxy.DETECT_UNPINNED(win);
+        ipc.DETECT_UNPINNED();
       }
     });
     win.on("close", (event) => {
@@ -111,16 +124,16 @@ class MainWindowManager {
     });
     win.on("closed", () => {
       this._win = undefined;
+      this._ipc = undefined;
     });
     win.on("resize", () => {
       const windowSize = win.getSize();
-      ipcMainSendProxy.DETECT_RESIZED(win, {
+      ipc.DETECT_RESIZED({
         width: windowSize[0],
         height: windowSize[1],
       });
     });
     mainWindowState.manage(win);
-    this._win = win;
 
     await this.load({});
 
@@ -233,6 +246,10 @@ class MainWindowManager {
 
   public isMaximized() {
     return this.getWindow().isMaximized();
+  }
+
+  public isInitialized() {
+    return this._win != undefined;
   }
 
   public showOpenDialogSync(options: OpenDialogSyncOptions) {

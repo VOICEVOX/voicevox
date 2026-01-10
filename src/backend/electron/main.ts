@@ -18,19 +18,22 @@ import {
 } from "./manager/windowManager/main";
 import configMigration014 from "./configMigration014";
 import { initializeRuntimeInfoManager } from "./manager/RuntimeInfoManager";
-import { registerIpcMainHandle, ipcMainSendProxy, IpcMainHandle } from "./ipc";
+import { registerIpcMainHandle } from "./ipc";
 import { getConfigManager } from "./electronConfig";
 import { getEngineAndVvppController } from "./engineAndVvppController";
 import { getIpcMainHandle } from "./ipcMainHandle";
+import { getWelcomeIpcMainHandle } from "./welcomeIpcMainHandle";
 import { getAppStateController } from "./appStateController";
 import {
   getWelcomeWindowManager,
   initializeWelcomeWindowManager,
 } from "./manager/windowManager/welcome";
+import { IpcIHData } from "./ipcType";
 import { assertNonNullable } from "@/type/utility";
 import { EngineInfo } from "@/type/preload";
 import { isMac, isProduction } from "@/helpers/platform";
 import { createLogger } from "@/helpers/log";
+import { WelcomeIpcIHData } from "@/welcome/ipcType";
 
 type SingleInstanceLockData = {
   filePath: string | undefined;
@@ -206,7 +209,7 @@ const onEngineProcessError = (engineInfo: EngineInfo, error: Error) => {
   // FIXME: winが作られた後にエンジンを起動させる
   const win = mainWindowManager.win;
   if (win != undefined) {
-    ipcMainSendProxy.DETECTED_ENGINE_ERROR(win, { engineId });
+    mainWindowManager.ipc.DETECTED_ENGINE_ERROR({ engineId });
   } else {
     log.error(`onEngineProcessError: win is undefined`);
   }
@@ -304,13 +307,14 @@ if (isMac) {
 }
 
 // プロセス間通信
-registerIpcMainHandle<IpcMainHandle>(
+registerIpcMainHandle<IpcIHData>(
   getIpcMainHandle({
     staticDirPath: staticDir,
     appDirPath,
     initialFilePathGetter: () => initialFilePath,
   }),
 );
+registerIpcMainHandle<WelcomeIpcIHData>(getWelcomeIpcMainHandle());
 
 // app callback
 app.on("web-contents-created", (_e, contents) => {
@@ -554,7 +558,7 @@ app.on("second-instance", async (_event, _argv, _workDir, rawData) => {
         asDefaultVvppEngine: false,
         reloadNeeded: true,
         reloadCallback: () => {
-          ipcMainSendProxy.CHECK_EDITED_AND_NOT_SAVE(win, {
+          mainWindowManager.ipc.CHECK_EDITED_AND_NOT_SAVE({
             closeOrReload: "reload",
           });
         },
@@ -562,7 +566,7 @@ app.on("second-instance", async (_event, _argv, _workDir, rawData) => {
     }
   } else if (data.filePath.endsWith(".vvproj")) {
     log.info("Second instance launched with vvproj file");
-    ipcMainSendProxy.LOAD_PROJECT_FILE(win, {
+    mainWindowManager.ipc.LOAD_PROJECT_FILE({
       filePath: data.filePath,
     });
   }

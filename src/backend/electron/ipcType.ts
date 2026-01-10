@@ -34,12 +34,12 @@ export type IpcIHData = {
 
   SHOW_SAVE_DIRECTORY_DIALOG: {
     args: [obj: { title: string }];
-    return?: string;
+    return: string | undefined;
   };
 
   SHOW_OPEN_DIRECTORY_DIALOG: {
     args: [obj: { title: string }];
-    return?: string;
+    return: string | undefined;
   };
 
   SHOW_OPEN_FILE_DIALOG: {
@@ -51,7 +51,7 @@ export type IpcIHData = {
         defaultPath?: string;
       },
     ];
-    return?: string;
+    return: string | undefined;
   };
 
   SHOW_WARNING_DIALOG: {
@@ -83,7 +83,7 @@ export type IpcIHData = {
         extensions: string[];
       },
     ];
-    return?: string;
+    return: string | undefined;
   };
 
   IS_AVAILABLE_GPU_MODE: {
@@ -226,6 +226,8 @@ export type IpcIHData = {
     return: Result<Uint8Array>;
   };
 };
+
+export type BaseIpcData = Record<string, { args: unknown[]; return: unknown }>;
 
 /**
  * send, on

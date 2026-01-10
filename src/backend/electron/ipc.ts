@@ -1,32 +1,26 @@
 import { BrowserWindow, ipcMain, IpcMainInvokeEvent } from "electron";
 import { wrapToTransferableResult } from "./transferableResultHelper";
-import { IpcIHData, IpcSOData } from "./ipcType";
+import { BaseIpcData } from "./ipcType";
 import { createLogger } from "@/helpers/log";
+import { objectEntries } from "@/helpers/typedEntries";
 
 const log = createLogger("ipc");
 
-export type IpcMainHandle = {
-  [K in keyof IpcIHData]: (
+export type IpcMainHandle<Ipc extends BaseIpcData> = {
+  [K in keyof Ipc]: (
     event: IpcMainInvokeEvent,
-    ...args: IpcIHData[K]["args"]
-  ) => Promise<IpcIHData[K]["return"]> | IpcIHData[K]["return"];
+    ...args: Ipc[K]["args"]
+  ) => Promise<Ipc[K]["return"]> | Ipc[K]["return"];
 };
 
-type IpcMainSend = {
-  [K in keyof IpcSOData]: (
-    win: BrowserWindow,
-    ...args: IpcSOData[K]["args"]
-  ) => void;
+export type IpcSendProxy<Ipc extends BaseIpcData> = {
+  [K in keyof Ipc]: (...args: Ipc[K]["args"]) => void;
 };
 
-// FIXME: asを使わないようオーバーロードにした。オーバーロードも使わない書き方にしたい。
-export function registerIpcMainHandle<T extends IpcMainHandle>(
-  listeners: T,
-): void;
-export function registerIpcMainHandle(listeners: {
-  [key: string]: (event: IpcMainInvokeEvent, ...args: unknown[]) => unknown;
-}) {
-  Object.entries(listeners).forEach(([channel, listener]) => {
+export function registerIpcMainHandle<Ipc extends BaseIpcData>(
+  listeners: IpcMainHandle<Ipc>,
+): void {
+  objectEntries(listeners).forEach(([channel, listener]) => {
     const errorHandledListener: typeof listener = (event, ...args) => {
       try {
         validateIpcSender(event);
@@ -37,19 +31,22 @@ export function registerIpcMainHandle(listeners: {
 
       return wrapToTransferableResult(() => listener(event, ...args));
     };
-    ipcMain.handle(channel, errorHandledListener);
+    ipcMain.handle(channel as string, errorHandledListener);
   });
 }
 
-export const ipcMainSendProxy = new Proxy(
-  {},
-  {
-    get:
-      (_, channel: string) =>
-      (win: BrowserWindow, ...args: unknown[]) =>
-        win.webContents.send(channel, ...args),
-  },
-) as IpcMainSend;
+export const createIpcSendProxy = <Ipc extends BaseIpcData>(
+  win: BrowserWindow,
+) =>
+  new Proxy(
+    {},
+    {
+      get:
+        (_, channel: string) =>
+        (...args: unknown[]) =>
+          win.webContents.send(channel, ...args),
+    },
+  ) as IpcSendProxy<Ipc>;
 
 /** IPCメッセージの送信元を確認する */
 const validateIpcSender = (event: IpcMainInvokeEvent) => {

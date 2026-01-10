@@ -10,6 +10,7 @@ import { getEngineInfoManager } from "./manager/engineInfoManager";
 import { getEngineProcessManager } from "./manager/engineProcessManager";
 import { getMainWindowManager } from "./manager/windowManager/main";
 import { getAppStateController } from "./appStateController";
+import { IpcIHData } from "./ipcType";
 import { AssetTextFileNames } from "@/type/staticResources";
 import { failure, success } from "@/type/result";
 import {
@@ -90,7 +91,7 @@ export function getIpcMainHandle(params: {
   staticDirPath: string;
   appDirPath: string;
   initialFilePathGetter: () => string | undefined;
-}): IpcMainHandle {
+}): IpcMainHandle<IpcIHData> {
   const { staticDirPath, appDirPath, initialFilePathGetter } = params;
 
   const configManager = getConfigManager();

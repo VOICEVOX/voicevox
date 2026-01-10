@@ -1,5 +1,4 @@
 import { app } from "electron";
-import { ipcMainSendProxy } from "./ipc";
 import { getMainWindowManager } from "./manager/windowManager/main";
 import { getEngineAndVvppController } from "./engineAndVvppController";
 import { getConfigManager } from "./electronConfig";
@@ -64,42 +63,51 @@ export class AppStateController {
 
   private checkUnsavedEdit() {
     log.info("Checking for unsaved edits before quitting");
-    const windowManager = getMainWindowManager();
-    try {
-      // TODO: ipcの送信以外で失敗した場合はシャットダウンしないようにする
-      ipcMainSendProxy.CHECK_EDITED_AND_NOT_SAVE(windowManager.getWindow(), {
-        closeOrReload: "close",
-      });
-    } catch (error) {
-      log.error(
-        "Error while sending CHECK_EDITED_AND_NOT_SAVE IPC message:",
-        error,
-      );
-      void windowManager
-        .showMessageBox({
-          type: "error",
-          title: "保存の確認に失敗しました",
-          message:
-            "未保存のデータがある場合、終了すると失われます。終了しますか？",
-          buttons: ["終了しない", "終了する"],
-          defaultId: 0,
-          cancelId: 0,
-        })
-        .then((result) => {
-          if (result.response === 1) {
-            log.info("User confirmed to quit despite the error");
-            this.shutdown();
-          } else {
-            log.info("User canceled quit due to the error");
-          }
+    const mainWindowManager = getMainWindowManager();
+    if (mainWindowManager.isInitialized()) {
+      try {
+        mainWindowManager.ipc.CHECK_EDITED_AND_NOT_SAVE({
+          closeOrReload: "close",
         });
+      } catch (error) {
+        log.error(
+          "Error while sending CHECK_EDITED_AND_NOT_SAVE IPC message:",
+          error,
+        );
+        void mainWindowManager
+          .showMessageBox({
+            type: "error",
+            title: "保存の確認に失敗しました",
+            message:
+              "未保存のデータがある場合、終了すると失われます。終了しますか？",
+            buttons: ["終了しない", "終了する"],
+            defaultId: 0,
+            cancelId: 0,
+          })
+          .then((result) => {
+            if (result.response === 1) {
+              log.info("User confirmed to quit despite the error");
+              this.shutdown();
+            } else {
+              log.info("User canceled quit due to the error");
+            }
+          });
+      }
+    } else {
+      log.info(
+        "Main window is not initialized. Proceeding to shutdown without checking for unsaved edits.",
+      );
+      this.shutdown();
     }
   }
 
   /** 編集状態に関わらず終了する */
   shutdown() {
+    const mainWindowManager = getMainWindowManager();
     this.quitState = "dirty";
-    getMainWindowManager().destroyWindow();
+    if (mainWindowManager.isInitialized()) {
+      mainWindowManager.destroyWindow();
+    }
     this.initiateQuit();
   }
 
