@@ -31,7 +31,6 @@ REPO_URL=${REPO_URL:-https://github.com/VOICEVOX/voicevox}
 
 # Install directory
 APP_DIR=${APP_DIR:-$HOME/.voicevox}
-LAUNCHER_NAME=voicevox.sh
 # force install if [ ${FORCE_INSTALL} = 1 ]
 FORCE_INSTALL=${FORCE_INSTALL:-}
 # keep archive if [ ${KEEP_ARCHIVE} = 1 ]
@@ -324,25 +323,8 @@ echo "[+] Installing desktop entry..."
 DESKTOP_FILE=$(find squashfs-root -maxdepth 1 -name '*.desktop' | head -1)
 chmod +x "${DESKTOP_FILE}"
 
-LAUNCHER_PATH="${APP_DIR}/${LAUNCHER_NAME}"
-cat << 'EOS' > "${LAUNCHER_PATH}"
-#!/usr/bin/env bash
-set -euo pipefail
-
-APPIMAGE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-APPIMAGE="${APPIMAGE_DIR}/VOICEVOX.AppImage"
-
-wayland_flags=()
-if [ "${XDG_SESSION_TYPE:-}" = "wayland" ] || [ -n "${WAYLAND_DISPLAY:-}" ]; then
-    wayland_flags+=(--enable-features=UseOzonePlatform --ozone-platform=wayland --enable-wayland-ime)
-fi
-
-exec "${APPIMAGE}" "${wayland_flags[@]}" "$@"
-EOS
-chmod +x "${LAUNCHER_PATH}"
-
 ESCAPED_APP_DIR=$(echo "$APP_DIR" | sed 's/\//\\\//g')
-sed "s/Exec=[^[:space:]]*/Exec=${ESCAPED_APP_DIR}\/${LAUNCHER_NAME}/" "${DESKTOP_FILE}" > _
+sed "s/Exec=[^[:space:]]*/Exec=${ESCAPED_APP_DIR}\/${APPIMAGE}/" "${DESKTOP_FILE}" > _
 mv _ "${DESKTOP_FILE}"
 
 mkdir -p "${DESKTOP_ENTRY_INSTALL_DIR}"
