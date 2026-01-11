@@ -110,6 +110,7 @@ export interface Sandbox {
     detectResized: (obj: { width: number; height: number }) => void;
   }): void;
   closeWindow(): void;
+  launchWelcomeWindow(): void;
   minimizeWindow(): void;
   toggleMaximizeWindow(): void;
   toggleFullScreen(): void;

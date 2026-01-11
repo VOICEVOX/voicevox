@@ -101,6 +101,11 @@ export type IpcIHData = {
     return: void;
   };
 
+  LAUNCH_WELCOME_WINDOW: {
+    args: [];
+    return: void;
+  };
+
   MINIMIZE_WINDOW: {
     args: [];
     return: void;

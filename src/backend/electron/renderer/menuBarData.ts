@@ -68,41 +68,48 @@ export const useElectronMenuBarData = (
       );
     }
 
-    const allEnginesSubMenuData = enableMultiEngine.value
-      ? removeNullableAndBoolean<MenuItemData>([
-          {
-            type: "button",
-            label: "全てのエンジンを再起動",
-            onClick: () => {
-              void store.actions.RESTART_ENGINES({
-                engineIds: engineIds.value,
-              });
-            },
-            disableWhenUiLocked: false,
+    const allEnginesSubMenuData = removeNullableAndBoolean<MenuItemData>([
+      enableMultiEngine.value && {
+        type: "button",
+        label: "全てのエンジンを再起動",
+        onClick: () => {
+          void store.actions.RESTART_ENGINES({
+            engineIds: engineIds.value,
+          });
+        },
+        disableWhenUiLocked: false,
+      },
+      enableMultiEngine.value && {
+        type: "button",
+        label: "エンジンの管理",
+        onClick: () => {
+          void store.actions.SET_DIALOG_OPEN({
+            isEngineManageDialogOpen: true,
+          });
+        },
+        disableWhenUiLocked: false,
+      },
+      enableMultiEngine.value &&
+        store.state.isMultiEngineOffMode && {
+          type: "button",
+          label: "マルチエンジンをオンにして再読み込み",
+          onClick() {
+            void store.actions.RELOAD_APP({
+              isMultiEngineOffMode: false,
+            });
           },
-          {
-            type: "button",
-            label: "エンジンの管理",
-            onClick: () => {
-              void store.actions.SET_DIALOG_OPEN({
-                isEngineManageDialogOpen: true,
-              });
-            },
-            disableWhenUiLocked: false,
-          },
-          store.state.isMultiEngineOffMode && {
-            type: "button",
-            label: "マルチエンジンをオンにして再読み込み",
-            onClick() {
-              void store.actions.RELOAD_APP({
-                isMultiEngineOffMode: false,
-              });
-            },
-            disableWhenUiLocked: false,
-            disableWhileReloadingLock: true,
-          },
-        ])
-      : [];
+          disableWhenUiLocked: false,
+          disableWhileReloadingLock: true,
+        },
+      {
+        type: "button",
+        label: "Welcome画面に切り替え",
+        onClick: () => {
+          window.backend.launchWelcomeWindow();
+        },
+        disableWhenUiLocked: false,
+      },
+    ]);
 
     return {
       singleEngine: singleEngineSubMenuData,

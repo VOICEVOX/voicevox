@@ -120,6 +120,10 @@ const api: Sandbox = {
     void ipcRendererInvokeProxy.CLOSE_WINDOW();
   },
 
+  launchWelcomeWindow: () => {
+    void ipcRendererInvokeProxy.LAUNCH_WELCOME_WINDOW();
+  },
+
   minimizeWindow: () => {
     void ipcRendererInvokeProxy.MINIMIZE_WINDOW();
   },
