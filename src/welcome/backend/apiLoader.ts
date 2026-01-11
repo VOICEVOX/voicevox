@@ -2,11 +2,13 @@
  * ElectronのpreloadプロセスとMainWorldプロセスの橋渡し。
  */
 
-import { WelcomeSandboxKey, type WelcomeSandbox } from "./preloadType";
+// TODO: backend/electron/renderer/backendApiLoader.tsと共通化する
+
+import { welcomeSandboxKey, type WelcomeSandbox } from "../preloadType";
 import { getOrThrowTransferableResult } from "@/backend/electron/transferableResultHelper";
 import type { TransferableResult } from "@/backend/electron/transferableResultHelper";
 
-export const WelcomeBridgeKey = "welcomeElectronBridge";
+export const welcomeBridgeKey = "welcomeElectronBridge";
 
 export type WelcomeSandboxWithTransferableResult = {
   [K in keyof WelcomeSandbox]: (
@@ -45,10 +47,10 @@ const unwrapApi = (
   });
 
 // @ts-expect-error readonlyになっているが、初期化処理はここで行うので問題ない
-window[WelcomeSandboxKey] = unwrapApi(
+window[welcomeSandboxKey] = unwrapApi(
   (
     window as unknown as {
-      [WelcomeBridgeKey]: WelcomeSandboxWithTransferableResult;
+      [welcomeBridgeKey]: WelcomeSandboxWithTransferableResult;
     }
-  )[WelcomeBridgeKey],
+  )[welcomeBridgeKey],
 );

@@ -30,7 +30,7 @@ import { assertNonNullable } from "@/type/utility";
 import { EngineInfo } from "@/type/preload";
 import { isDevelopment, isMac, isProduction, isTest } from "@/helpers/platform";
 import { createLogger } from "@/helpers/log";
-import { WelcomeIpcIHData } from "@/welcome/ipcType";
+import { WelcomeIpcIHData } from "@/welcome/backend/ipcType";
 
 type SingleInstanceLockData = {
   filePath: string | undefined;

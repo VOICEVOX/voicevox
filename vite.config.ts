@@ -178,7 +178,7 @@ export default defineConfig((options) => {
         ),
       isElectron &&
         injectLoaderScriptPlugin(
-          "./backendApiLoader.ts",
+          "./backend/apiLoader.ts",
           "<!-- %WELCOME_LOADER_SCRIPT% -->",
         ),
       isBrowser &&

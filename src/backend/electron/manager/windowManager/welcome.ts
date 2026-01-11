@@ -9,12 +9,12 @@ import {
   SaveDialogOptions,
 } from "electron";
 import { getConfigManager } from "../../electronConfig";
-import { getEngineAndVvppController } from "../../engineAndVvppController";
 import { getAppStateController } from "../../appStateController";
 import { createIpcSendProxy, IpcSendProxy } from "../../ipc";
 import { IpcSOData } from "../../ipcType";
 import { themes } from "@/domain/theme";
 import { createLogger } from "@/helpers/log";
+import { WelcomeIpcSOData } from "@/welcome/backend/ipcType";
 
 const log = createLogger("WelcomeWindowManager");
 
@@ -26,7 +26,7 @@ type WindowManagerOption = {
 
 class WelcomeWindowManager {
   private _win: BrowserWindow | undefined;
-  private _ipc: IpcSendProxy<IpcSOData> | undefined;
+  private _ipc: IpcSendProxy<WelcomeIpcSOData> | undefined;
   private staticDir: string;
   private isDevelopment: boolean;
   private isTest: boolean;
@@ -48,6 +48,9 @@ class WelcomeWindowManager {
    * BrowserWindowのIPC送信用プロキシを取得する
    */
   public get ipc() {
+    if (this._ipc == undefined) {
+      throw new Error("_ipc == undefined");
+    }
     return this._ipc;
   }
 

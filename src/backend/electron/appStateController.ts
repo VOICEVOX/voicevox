@@ -27,8 +27,6 @@ export class AppStateController {
 
   async startup() {
     const engineAndVvppController = getEngineAndVvppController();
-    // VVPPがデフォルトエンジンに指定されていたらインストール・アップデートする
-    // NOTE: この機能は工事中。参照: https://github.com/VOICEVOX/voicevox/issues/1194
     const packageStatuses =
       await engineAndVvppController.fetchEnginePackageStatuses();
 
@@ -44,60 +42,6 @@ export class AppStateController {
       log.info("Some default engines are not at the latest version.");
       await this.launchWelcomeWindow();
     }
-    // for (const status of packageStatuses) {
-    //   // 最新版がインストール済みの場合はスキップ
-    //   if (status.installed.status == "latest") {
-    //     continue;
-    //   }
-    //
-    //   let dialogOptions: {
-    //     title: string;
-    //     message: string;
-    //     okButtonLabel: string;
-    //   };
-    //   if (status.installed.status == "notInstalled") {
-    //     dialogOptions = {
-    //       title: "デフォルトエンジンのインストール",
-    //       message: `${status.package.engineName} をインストールしますか？`,
-    //       okButtonLabel: "インストールする",
-    //     };
-    //   } else {
-    //     dialogOptions = {
-    //       title: "デフォルトエンジンのアップデート",
-    //       message: `${status.package.engineName} の新しいバージョン（${status.package.latestVersion}）にアップデートしますか？`,
-    //       okButtonLabel: "アップデートする",
-    //     };
-    //   }
-    //
-    //   // インストールするか確認
-    //   const result = dialog.showMessageBoxSync({
-    //     type: "info",
-    //     title: dialogOptions.title,
-    //     message: dialogOptions.message,
-    //     buttons: [dialogOptions.okButtonLabel, "キャンセル"],
-    //     cancelId: 1,
-    //   });
-    //   if (result == 1) {
-    //     continue;
-    //   }
-    //
-    //   // ダウンロードしてインストールする
-    //   let lastLogTime = 0; // とりあえずログを0.1秒に1回だけ出力する
-    //   await engineAndVvppController.downloadAndInstallVvppEngine(
-    //     app.getPath("downloads"),
-    //     status.package.packageInfo,
-    //     {
-    //       onProgress: ({ type, progress }) => {
-    //         if (Date.now() - lastLogTime > 100) {
-    //           log.info(
-    //             `VVPP default engine progress: ${type}: ${Math.floor(progress)}%`,
-    //           );
-    //           lastLogTime = Date.now();
-    //         }
-    //       },
-    //     },
-    //   );
-    // }
   }
 
   async launchWelcomeWindow() {

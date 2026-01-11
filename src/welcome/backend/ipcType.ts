@@ -1,12 +1,21 @@
+import { EnginePackageStatus } from "@/backend/electron/engineAndVvppController";
 import { EngineId } from "@/type/preload";
-import { Result } from "@/type/result";
 /**
  * invoke, handle
  */
 export type WelcomeIpcIHData = {
   INSTALL_ENGINE: {
-    args: [obj: { filePath: string }];
+    args: [
+      obj: {
+        engineId: EngineId;
+        target: string;
+      },
+    ];
     return: void;
+  };
+  FETCH_LATEST_ENGINE_PACKAGE_STATUSES: {
+    args: [];
+    return: EnginePackageStatus[];
   };
 };
 

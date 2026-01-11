@@ -1,7 +1,9 @@
+import { EnginePackageStatus } from "@/backend/electron/engineAndVvppController";
 import type { EngineId } from "@/type/preload";
 
 export interface WelcomeSandbox {
-  installEngine(obj: { filePath: string }): Promise<void>;
+  installEngine(obj: { engineId: EngineId; target: string }): Promise<void>;
+  fetchLatestEnginePackageStatuses(): Promise<EnginePackageStatus[]>;
   registerIpcHandler(listeners: {
     updateEngineDownloadProgress: (obj: {
       engineId: EngineId;
@@ -13,4 +15,4 @@ export interface WelcomeSandbox {
   logInfo(...params: unknown[]): void;
 }
 
-export const WelcomeSandboxKey = "welcomeBackend";
+export const welcomeSandboxKey = "welcomeBackend";

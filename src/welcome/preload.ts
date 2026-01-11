@@ -1,8 +1,10 @@
 // eslint-disable-next-line no-restricted-imports
 import { contextBridge, ipcRenderer } from "electron";
-import { WelcomeBridgeKey } from "./backendApiLoader";
-import type { WelcomeSandboxWithTransferableResult } from "./backendApiLoader";
-import type { WelcomeIpcIHData } from "./ipcType";
+import {
+  welcomeBridgeKey,
+  type WelcomeSandboxWithTransferableResult,
+} from "./backend/apiLoader";
+import type { WelcomeIpcIHData } from "./backend/ipcType";
 import type { WelcomeSandbox } from "./preloadType";
 import {
   getOrThrowTransferableResult,
@@ -31,8 +33,11 @@ const ipcRendererInvokeProxy = new Proxy(
 ) as WelcomeIpcRendererInvoke;
 
 const api: WelcomeSandbox = {
-  installEngine: ({ filePath }) => {
-    return ipcRendererInvokeProxy.INSTALL_ENGINE({ filePath });
+  installEngine: (obj) => {
+    return ipcRendererInvokeProxy.INSTALL_ENGINE(obj);
+  },
+  fetchLatestEnginePackageStatuses: () => {
+    return ipcRendererInvokeProxy.FETCH_LATEST_ENGINE_PACKAGE_STATUSES();
   },
 
   registerIpcHandler: (listeners) => {
@@ -83,4 +88,4 @@ const wrapApi = (
   return wrappedApi;
 };
 
-contextBridge.exposeInMainWorld(WelcomeBridgeKey, wrapApi(api));
+contextBridge.exposeInMainWorld(welcomeBridgeKey, wrapApi(api));
