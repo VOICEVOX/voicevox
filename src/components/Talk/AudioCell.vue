@@ -85,7 +85,7 @@
       </template>
       <template #after>
         <div
-          v-if="showAudioLength && audioDuration !== undefined"
+          v-if="showAudioLength && audioDuration != undefined"
           class="q-mr-sm audio-length"
         >
           {{ audioDuration.toFixed(2) }}s

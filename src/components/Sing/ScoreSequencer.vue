@@ -249,14 +249,13 @@ import ContextMenu, {
 import { useStore } from "@/store";
 import type { Note } from "@/domain/project/type";
 import {
-  getEndTicksOfPhrase,
   getNoteDuration,
-  getStartTicksOfPhrase,
   getTimeSignaturePositions,
   noteNumberToFrequency,
   tickToMeasureNumber,
   tickToSecond,
-} from "@/sing/domain";
+} from "@/sing/music";
+import { getEndTicksOfPhrase, getStartTicksOfPhrase } from "@/sing/domain";
 import {
   tickToBaseX,
   baseXToTick,

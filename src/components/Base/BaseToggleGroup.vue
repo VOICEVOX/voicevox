@@ -6,7 +6,7 @@
     :disabled
     @update:modelValue="
       (val) => {
-        if (!(props.type === 'single' && val === undefined)) {
+        if (!(props.type === 'single' && val == undefined)) {
           modelValue = val as T | T[];
         }
       }
