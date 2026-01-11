@@ -15,10 +15,14 @@ const appimagetoolPath = path.join(
 const fixedAppRunCode = `#!/bin/bash
 set -e
 apprun="\${APPDIR:-$(dirname "$0")}/AppRunOriginal"
+wayland_flags=()
+if [ "\${XDG_SESSION_TYPE:-}" = "wayland" ] || [ -n "\${WAYLAND_DISPLAY:-}" ]; then
+  wayland_flags+=(--enable-features=UseOzonePlatform --ozone-platform=wayland --enable-wayland-ime)
+fi
 if unshare -Ur true 2>/dev/null ; then
-  exec "$apprun" "$@"
+  exec "$apprun" "\${wayland_flags[@]}" "$@"
 else
-  exec "$apprun" "$@" --no-sandbox
+  exec "$apprun" "\${wayland_flags[@]}" "$@" --no-sandbox
 fi
 `;
 
