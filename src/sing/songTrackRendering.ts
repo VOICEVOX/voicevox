@@ -1,4 +1,3 @@
-import { getDoremiFromNoteNumber } from "./viewHelper";
 import { getNoteDuration, secondToTick, tickToSecond } from "@/sing/music";
 import { decibelToLinear } from "@/sing/audio";
 import {
@@ -28,6 +27,7 @@ import {
   toPhonemeTimings,
   toPhonemes,
   selectPriorPhrase,
+  getDefaultLyric,
 } from "@/sing/domain";
 import { FramePhoneme, Note as NoteForRequestToEngine } from "@/openapi";
 import { EngineId, NoteId, StyleId, TrackId } from "@/type/preload";
@@ -45,6 +45,8 @@ export type SnapshotForRender = Readonly<{
   trackOverlappingNoteIds: Map<TrackId, Set<NoteId>>;
   engineFrameRates: Map<EngineId, number>;
   editorFrameRate: number;
+  defaultLyricMode: "doremi" | "fixed";
+  defaultLyricFixed: string;
 }>;
 
 /**
@@ -83,6 +85,8 @@ type QuerySource = Readonly<{
   keyRangeAdjustment: number;
   minNonPauseStartFrame: number | undefined;
   maxNonPauseEndFrame: number | undefined;
+  defaultLyricMode: "doremi" | "fixed";
+  defaultLyricFixed: string;
 }>;
 
 /**
@@ -97,6 +101,8 @@ type SingingPitchSource = Readonly<{
   notes: Note[];
   keyRangeAdjustment: number;
   queryForPitchGeneration: EditorFrameAudioQuery;
+  defaultLyricMode: "doremi" | "fixed";
+  defaultLyricFixed: string;
 }>;
 
 /**
@@ -112,6 +118,8 @@ type SingingVolumeSource = Readonly<{
   keyRangeAdjustment: number;
   volumeRangeAdjustment: number;
   queryForVolumeGeneration: EditorFrameAudioQuery;
+  defaultLyricMode: "doremi" | "fixed";
+  defaultLyricFixed: string;
 }>;
 
 /**
@@ -174,6 +182,8 @@ const createNotesForRequestToEngine = (
   tempos: Tempo[],
   tpqn: number,
   frameRate: number,
+  defaultLyricMode: "doremi" | "fixed",
+  defaultLyricFixed: string,
 ) => {
   const notesForRequestToEngine: NoteForRequestToEngine[] = [];
 
@@ -206,7 +216,9 @@ const createNotesForRequestToEngine = (
       id: note.id,
       key: note.noteNumber,
       frameLength: noteOffFrame - noteOnFrame,
-      lyric: note.lyric ?? getDoremiFromNoteNumber(note.noteNumber),
+      lyric:
+        note.lyric ??
+        getDefaultLyric(note.noteNumber, defaultLyricMode, defaultLyricFixed),
     });
   }
 
@@ -615,6 +627,8 @@ const generateQuerySource = (
     keyRangeAdjustment: track.keyRangeAdjustment,
     minNonPauseStartFrame: phrase.minNonPauseStartFrame,
     maxNonPauseEndFrame: phrase.maxNonPauseEndFrame,
+    defaultLyricMode: snapshot.defaultLyricMode,
+    defaultLyricFixed: snapshot.defaultLyricFixed,
   };
 };
 
@@ -655,6 +669,8 @@ const generateSingingPitchSource = (
     notes: phrase.notes,
     keyRangeAdjustment: track.keyRangeAdjustment,
     queryForPitchGeneration: clonedQuery,
+    defaultLyricMode: snapshot.defaultLyricMode,
+    defaultLyricFixed: snapshot.defaultLyricFixed,
   };
 };
 
@@ -696,6 +712,8 @@ const generateSingingVolumeSource = (
     keyRangeAdjustment: track.keyRangeAdjustment,
     volumeRangeAdjustment: track.volumeRangeAdjustment,
     queryForVolumeGeneration: clonedQuery,
+    defaultLyricMode: snapshot.defaultLyricMode,
+    defaultLyricFixed: snapshot.defaultLyricFixed,
   };
 };
 
@@ -756,6 +774,8 @@ const generateQuery = async (
     querySource.tempos,
     querySource.tpqn,
     querySource.engineFrameRate,
+    querySource.defaultLyricMode,
+    querySource.defaultLyricFixed,
   );
 
   shiftKeyOfNotes(notesForRequestToEngine, -querySource.keyRangeAdjustment);
@@ -792,6 +812,8 @@ const generateSingingPitch = async (
     singingPitchSource.tempos,
     singingPitchSource.tpqn,
     singingPitchSource.engineFrameRate,
+    singingPitchSource.defaultLyricMode,
+    singingPitchSource.defaultLyricFixed,
   );
   const queryForPitchGeneration = singingPitchSource.queryForPitchGeneration;
 
@@ -824,6 +846,8 @@ const generateSingingVolume = async (
     singingVolumeSource.tempos,
     singingVolumeSource.tpqn,
     singingVolumeSource.engineFrameRate,
+    singingVolumeSource.defaultLyricMode,
+    singingVolumeSource.defaultLyricFixed,
   );
   const queryForVolumeGeneration = singingVolumeSource.queryForVolumeGeneration;
 

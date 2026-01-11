@@ -19,6 +19,8 @@ import type {
   TimeSignature,
   Track,
 } from "@/domain/project/type";
+import { getDoremiFromNoteNumber } from "@/sing/viewHelper";
+import { ExhaustiveError } from "@/type/utility";
 import { getRepresentableNoteTypes, isValidNotes } from "@/sing/music";
 
 const MAX_SNAP_TYPE = 32;
@@ -716,4 +718,27 @@ export const isValidLoopRange = (
     Number.isInteger(endTick) &&
     startTick <= endTick // 範囲差0は許容する
   );
+};
+
+/**
+ * デフォルト歌詞を取得する。
+ *
+ * @param noteNumber MIDIノート番号（0-127）
+ * @param mode デフォルト歌詞のモード（"doremi" または "fixed"）
+ * @param fixedLyric 固定モードで使用する歌詞
+ * @returns デフォルト歌詞
+ */
+export const getDefaultLyric = (
+  noteNumber: number,
+  mode: "doremi" | "fixed",
+  fixedLyric: string,
+) => {
+  switch (mode) {
+    case "doremi":
+      return getDoremiFromNoteNumber(noteNumber);
+    case "fixed":
+      return fixedLyric;
+    default:
+      throw new ExhaustiveError(mode);
+  }
 };

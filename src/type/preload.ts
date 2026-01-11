@@ -415,6 +415,8 @@ export const rootMiscSettingSchema = z.object({
     })
     .prefault({}),
   showSingCharacterPortrait: z.boolean().default(true), // ソングエディタで立ち絵を表示するか
+  defaultLyricMode: z.enum(["doremi", "fixed"]).default("doremi"), // デフォルト歌詞の動作モード
+  defaultLyricFixed: z.string().default("ら"), // 固定モーラモード時に使用するモーラ
   playheadPositionDisplayFormat: z
     .enum(["MINUTES_SECONDS", "MEASURES_BEATS"])
     .default("MINUTES_SECONDS"), // 再生ヘッド位置の表示モード

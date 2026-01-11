@@ -73,6 +73,8 @@ export const settingStoreState: SettingStoreState = {
     panAndGain: true,
   },
   showSingCharacterPortrait: true,
+  defaultLyricMode: "doremi",
+  defaultLyricFixed: "ら",
   playheadPositionDisplayFormat: "MINUTES_SECONDS",
   enableKatakanaEnglish: true,
   enableMultiSelect: true,
@@ -153,6 +155,8 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
         "skipUpdateVersion",
         "undoableTrackOperations",
         "showSingCharacterPortrait",
+        "defaultLyricMode",
+        "defaultLyricFixed",
         "playheadPositionDisplayFormat",
         "openedEditor",
         "enableKatakanaEnglish",
@@ -230,11 +234,13 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       // FIXME: このワークアラウンドをなくす
       state[key] = value;
     },
-    action({ mutations }, { key, value }) {
+    action({ mutations, actions }, { key, value }) {
       void window.backend.setSetting(key, value);
       // @ts-expect-error Vuexの型処理でUnionが解かれてしまうのを迂回している
       // FIXME: このワークアラウンドをなくす
       mutations.SET_ROOT_MISC_SETTING({ key, value });
+
+      void actions.RENDER();
     },
   },
 

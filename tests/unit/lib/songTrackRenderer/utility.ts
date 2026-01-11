@@ -9,6 +9,7 @@ import { uuid4 } from "@/helpers/random";
 import { createOpenAPIEngineMock } from "@/mock/engineMock";
 import {
   PhraseForRender,
+  SnapshotForRender,
   SongTrackRenderer,
   SongTrackRenderingEvent,
   SongTrackRenderingResult,
@@ -113,7 +114,7 @@ export class SongTrackRendererTestUtility {
    */
   createSnapshotObject(
     trackEntries: [TrackId, { singer?: Singer; notes: Note[] }][],
-  ) {
+  ): SnapshotForRender {
     const tracks = new Map<TrackId, Track>();
     for (const trackEntry of trackEntries) {
       tracks.set(trackEntry[0], {
@@ -136,6 +137,8 @@ export class SongTrackRendererTestUtility {
       trackOverlappingNoteIds,
       engineFrameRates: new Map([[this.engineId, this.frameRate]]),
       editorFrameRate: this.frameRate,
+      defaultLyricMode: "doremi",
+      defaultLyricFixed: "ら",
     };
   }
 
