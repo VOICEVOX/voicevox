@@ -286,6 +286,13 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
       }
     },
   ],
+  [
+    ">=0.26",
+    (config) => {
+      config.defaultLyricMode = "doremi";
+      config.defaultLyricFixed = "ら";
+    },
+  ],
 ];
 
 export type Metadata = {
