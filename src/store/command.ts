@@ -74,7 +74,7 @@ const recordPatches =
   <S, P>(recipe: PayloadRecipe<S, P>) =>
   (state: S, payload: P): Command => {
     const [, doPatches, undoPatches] = immer.produceWithPatches(
-      toRaw(state),
+      state,
       (draft: S) => recipe(draft, payload),
     );
     return {
