@@ -25,7 +25,9 @@
                 }}
               </span>
               <progress
-                :value="engineProgressInfo[engineInfo.package.engineId].progress"
+                :value="
+                  engineProgressInfo[engineInfo.package.engineId].progress
+                "
                 max="100"
               />
               <span>

@@ -15,8 +15,6 @@ import { themes } from "@/domain/theme";
 import { createLogger } from "@/helpers/log";
 import { WelcomeIpcSOData } from "@/welcome/backend/ipcType";
 
-const log = createLogger("WelcomeWindowManager");
-
 type WindowManagerOption = {
   staticDir: string;
   isDevelopment: boolean;
