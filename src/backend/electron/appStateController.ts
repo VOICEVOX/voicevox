@@ -53,10 +53,12 @@ export class AppStateController {
   }
 
   async launchWelcomeWindow() {
-    const windowManager = getMainWindowManager();
-    if (windowManager.isInitialized()) {
+    const mainWindowManager = getMainWindowManager();
+    if (mainWindowManager.isInitialized()) {
       this.quitState = "switch";
-      windowManager.destroyWindow();
+      const engineAndVvppController = getEngineAndVvppController();
+      await engineAndVvppController.cleanupEngines();
+      mainWindowManager.destroyWindow();
     }
     const welcomeWindowManager = getWelcomeWindowManager();
     await welcomeWindowManager.createWindow();
@@ -70,10 +72,10 @@ export class AppStateController {
     }
 
     const engineAndVvppController = getEngineAndVvppController();
-    const windowManager = getMainWindowManager();
+    const mainWindowManager = getMainWindowManager();
 
     await engineAndVvppController.launchEngines();
-    await windowManager.createWindow();
+    await mainWindowManager.createWindow();
   }
 
   onQuitRequest(DI: { preventQuit: () => void }): void {
