@@ -39,11 +39,17 @@ const api: WelcomeSandbox = {
   fetchLatestEnginePackageStatuses: () => {
     return ipcRendererInvokeProxy.FETCH_LATEST_ENGINE_PACKAGE_STATUSES();
   },
-
+  launchMainWindow: () => {
+    return ipcRendererInvokeProxy.LAUNCH_MAIN_WINDOW();
+  },
   registerIpcHandler: (listeners) => {
     ipcRenderer.on("UPDATE_ENGINE_DOWNLOAD_PROGRESS", (_, args) => {
       listeners.updateEngineDownloadProgress(
-        args as { engineId: EngineId; progress: number },
+        args as {
+          engineId: EngineId;
+          progress: number;
+          type: "download" | "install";
+        },
       );
     });
   },

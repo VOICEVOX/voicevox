@@ -11,7 +11,6 @@ import {
 import { getConfigManager } from "../../electronConfig";
 import { getAppStateController } from "../../appStateController";
 import { createIpcSendProxy, IpcSendProxy } from "../../ipc";
-import { IpcSOData } from "../../ipcType";
 import { themes } from "@/domain/theme";
 import { createLogger } from "@/helpers/log";
 import { WelcomeIpcSOData } from "@/welcome/backend/ipcType";
@@ -42,6 +41,10 @@ class WelcomeWindowManager {
    */
   public get win() {
     return this._win;
+  }
+
+  public isInitialized() {
+    return this._win != undefined;
   }
 
   /**
@@ -81,7 +84,7 @@ class WelcomeWindowManager {
       },
       icon: path.join(this.staticDir, "icon.png"),
     });
-    this._ipc = createIpcSendProxy<IpcSOData>(win);
+    this._ipc = createIpcSendProxy<WelcomeIpcSOData>(win);
 
     win.on("close", (event) => {
       const appStateController = getAppStateController();

@@ -2,10 +2,10 @@ import { app } from "electron";
 import { getMainWindowManager } from "./manager/windowManager/main";
 import { getEngineAndVvppController } from "./engineAndVvppController";
 import { getConfigManager } from "./electronConfig";
+import { getWelcomeWindowManager } from "./manager/windowManager/welcome";
 import { ExhaustiveError } from "@/type/utility";
 import { createLogger } from "@/helpers/log";
 import { Mutex } from "@/helpers/mutex";
-import { getWelcomeWindowManager } from "./manager/windowManager/welcome";
 
 const log = createLogger("AppStateController");
 
@@ -20,8 +20,10 @@ export class AppStateController {
    * - unconfirmed：ユーザーが終了をリクエストした状態
    * - dirty：クリーンアップ前の状態
    * - done：クリーンアップ処理が完了し、アプリが終了する準備が整った状態
+   * - switch: ウィンドウ切替のために一時的に終了処理を中断している状態
    */
-  private quitState: "unconfirmed" | "dirty" | "done" = "unconfirmed";
+  private quitState: "unconfirmed" | "dirty" | "done" | "switch" =
+    "unconfirmed";
 
   private lock = new Mutex();
 
@@ -30,26 +32,43 @@ export class AppStateController {
     const packageStatuses =
       await engineAndVvppController.fetchEnginePackageStatuses();
 
-    const areAllEnginesLatest = packageStatuses.every((status) => {
-      return status.installed.status === "latest";
-    });
-    if (areAllEnginesLatest) {
+    if (packageStatuses.length === 0) {
       log.info(
-        "All default engines are already at the latest version. Skipping welcome screen.",
+        "No downloadable engine packages found. Launching welcome window.",
       );
+      await this.launchWelcomeWindow();
+      return;
+    }
+
+    const defaultEngineExists = packageStatuses.some((status) => {
+      return status.installed.status !== "notInstalled";
+    });
+    if (defaultEngineExists) {
+      log.info("Default engine found. Launching main window.");
       await this.launchMainWindow();
     } else {
-      log.info("Some default engines are not at the latest version.");
+      log.info("No default engine found. Launching welcome window.");
       await this.launchWelcomeWindow();
     }
   }
 
   async launchWelcomeWindow() {
+    const windowManager = getMainWindowManager();
+    if (windowManager.isInitialized()) {
+      this.quitState = "switch";
+      windowManager.destroyWindow();
+    }
     const welcomeWindowManager = getWelcomeWindowManager();
     await welcomeWindowManager.createWindow();
   }
 
   async launchMainWindow() {
+    const welcomeWindowManager = getWelcomeWindowManager();
+    if (welcomeWindowManager.isInitialized()) {
+      this.quitState = "switch";
+      welcomeWindowManager.destroyWindow();
+    }
+
     const engineAndVvppController = getEngineAndVvppController();
     const windowManager = getMainWindowManager();
 
@@ -88,6 +107,10 @@ export class AppStateController {
       }
       case "done":
         log.info("Quit process already done. Proceeding to quit.");
+        break;
+      case "switch":
+        log.info("Quit process is in switch state. Preventing quit request.");
+        DI.preventQuit();
         break;
       default:
         throw new ExhaustiveError(this.quitState);

@@ -38,6 +38,7 @@ const unwrapApi = (
           value(...args);
 
         if (result instanceof Promise) {
+          // @ts-expect-error 動いているので無視
           return result.then((res) => getOrThrowTransferableResult(res));
         } else {
           return getOrThrowTransferableResult(result);

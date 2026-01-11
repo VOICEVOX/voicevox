@@ -16,10 +16,32 @@
             <button @click="installEngine(engineInfo.package.engineId)">
               インストール
             </button>
+            <div v-if="engineProgressInfo[engineInfo.package.engineId]">
+              <span>
+                {{
+                  progressTypeLabel(
+                    engineProgressInfo[engineInfo.package.engineId].type,
+                  )
+                }}
+              </span>
+              <progress
+                :value="engineProgressInfo[engineInfo.package.engineId].progress"
+                max="100"
+              />
+              <span>
+                {{
+                  Math.floor(
+                    engineProgressInfo[engineInfo.package.engineId].progress,
+                  )
+                }}%
+              </span>
+            </div>
           </div>
         </div>
         <div v-else>最新のエンジン情報を取得中...</div>
       </div>
+
+      <button @click="launchMainWindow">メインウィンドウを起動</button>
     </TooltipProvider>
   </ErrorBoundary>
 </template>
@@ -32,10 +54,22 @@ import { EnginePackageStatus } from "@/backend/electron/engineAndVvppController"
 import { EngineId } from "@/type/preload";
 
 const latestEngineInfos = ref<EnginePackageStatus[] | undefined>(undefined);
+type EngineProgressInfo = {
+  progress: number;
+  type: "download" | "install";
+};
+const engineProgressInfo = ref<Record<EngineId, EngineProgressInfo>>(
+  {} as Record<EngineId, EngineProgressInfo>,
+);
+const progressTypeLabel = (type: EngineProgressInfo["type"]) => {
+  return type === "download" ? "ダウンロード" : "インストール";
+};
 function installEngine(engineId: EngineId) {
+  engineProgressInfo.value[engineId] = { progress: 0, type: "download" };
   void window.welcomeBackend
     .installEngine({
       engineId: engineId,
+      // TODO: 選べるようにする
       target: "linux-x64-cpu",
     })
     .then(() => {
@@ -43,8 +77,18 @@ function installEngine(engineId: EngineId) {
     });
 }
 
+function launchMainWindow() {
+  void window.welcomeBackend.launchMainWindow();
+}
+
 onMounted(() => {
   console.log("Welcome画面TODO");
+
+  window.welcomeBackend.registerIpcHandler({
+    updateEngineDownloadProgress: ({ engineId, progress, type }) => {
+      engineProgressInfo.value[engineId] = { progress, type };
+    },
+  });
 
   void window.welcomeBackend
     .fetchLatestEnginePackageStatuses()

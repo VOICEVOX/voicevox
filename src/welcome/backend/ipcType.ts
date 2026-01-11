@@ -17,6 +17,11 @@ export type WelcomeIpcIHData = {
     args: [];
     return: EnginePackageStatus[];
   };
+
+  LAUNCH_MAIN_WINDOW: {
+    args: [];
+    return: void;
+  };
 };
 
 /**
@@ -24,7 +29,13 @@ export type WelcomeIpcIHData = {
  */
 export type WelcomeIpcSOData = {
   UPDATE_ENGINE_DOWNLOAD_PROGRESS: {
-    args: [obj: { engineId: EngineId; progress: number }];
+    args: [
+      obj: {
+        engineId: EngineId;
+        progress: number;
+        type: "download" | "install";
+      },
+    ];
     return: void;
   };
 };
