@@ -55,7 +55,6 @@ export const createCommandMutation =
     // HACK: コマンド履歴を除外してproduceWithPatchesを高速化
     // ref: https://github.com/VOICEVOX/voicevox/issues/2143
     const { undoCommands, redoCommands, ...stateWithoutHistory } = toRaw(state);
-
     const command = recordPatches(payloadRecipe)(
       stateWithoutHistory as S,
       payload,
