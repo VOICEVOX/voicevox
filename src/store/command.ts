@@ -71,10 +71,10 @@ export const createCommandMutation =
  * @returns Function - レシピの操作を与えられたstateとpayloadを用いて記録したコマンドを返す関数。
  */
 const recordPatches =
-  <S extends CommandStoreState, P>(recipe: PayloadRecipe<S, P>) =>
+  <S, P>(recipe: PayloadRecipe<S, P>) =>
   (state: S, payload: P): Command => {
     const [, doPatches, undoPatches] = immer.produceWithPatches(
-      state,
+      toRaw(state),
       (draft: S) => recipe(draft, payload),
     );
     return {
