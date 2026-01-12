@@ -407,28 +407,16 @@
                   title="ソング：デフォルト歌詞"
                   description="歌詞が未設定の音符に対してデフォルトで設定される歌詞を設定できます。"
                 >
-                  <div class="default-lyric-settings">
-                    <BaseSelect
-                      :modelValue="defaultLyricMode"
-                      @update:modelValue="handleDefaultLyricModeChange"
-                    >
-                      <BaseSelectItem
-                        value="doremi"
-                        label="ドレミ（音階に応じて変化）"
-                      />
-                      <BaseSelectItem value="fixed" label="固定" />
-                    </BaseSelect>
-                    <div
-                      v-if="defaultLyricMode === 'fixed'"
-                      class="text-field-wrapper"
-                    >
-                      <BaseTextField
-                        :modelValue="defaultLyricFixedInput"
-                        placeholder="ら"
-                        @change="handleDefaultLyricFixedInputChange"
-                      />
-                    </div>
-                  </div>
+                  <BaseSelect
+                    :modelValue="defaultLyricMode"
+                    @update:modelValue="handleDefaultLyricModeChange"
+                  >
+                    <BaseSelectItem
+                      value="doremi"
+                      label="ドレミ（階名）"
+                    />
+                    <BaseSelectItem value="la" label="ら" />
+                  </BaseSelect>
                 </BaseRowCard>
                 <BaseRowCard
                   title="ソング：元に戻すトラック操作"
@@ -532,8 +520,6 @@ import BaseSelect from "@/components/Base/BaseSelect.vue";
 import BaseSelectItem from "@/components/Base/BaseSelectItem.vue";
 import BaseCheckbox from "@/components/Base/BaseCheckbox.vue";
 import BaseTooltip from "@/components/Base/BaseTooltip.vue";
-import BaseTextField from "@/components/Base/BaseTextField.vue";
-import { moraPattern } from "@/domain/japanese";
 import { useStore } from "@/store";
 import {
   DEFAULT_AUDIO_FILE_NAME_TEMPLATE,
@@ -768,51 +754,12 @@ const [defaultLyricMode, setDefaultLyricMode] = useRootMiscSetting(
   "defaultLyricMode",
 );
 const handleDefaultLyricModeChange = (
-  value: "doremi" | "fixed" | undefined,
+  value: "doremi" | "la" | undefined,
 ) => {
   if (value == undefined) {
     throw new Error("value is undefined");
   }
   setDefaultLyricMode(value);
-};
-
-const [defaultLyricFixed, setDefaultLyricFixed] = useRootMiscSetting(
-  store,
-  "defaultLyricFixed",
-);
-
-const defaultLyricFixedInput = ref(defaultLyricFixed.value);
-
-watch(defaultLyricFixed, (newValue) => {
-  defaultLyricFixedInput.value = newValue;
-});
-
-const setDefaultLyricFixedInputValue = (value: string) => {
-  const currentValue = defaultLyricFixed.value;
-  const tempValue = currentValue !== "あ" ? "あ" : "い";
-
-  defaultLyricFixedInput.value = tempValue;
-  setTimeout(() => {
-    defaultLyricFixedInput.value = value;
-  });
-};
-
-const handleDefaultLyricFixedInputChange = (event: Event) => {
-  if (!(event.target instanceof HTMLElement)) {
-    throw new Error("Event target is not an HTMLElement");
-  }
-  const inputValue = event.target.textContent;
-  const moras = inputValue.match(moraPattern);
-  const firstMora = moras?.[0];
-
-  const currentValue = defaultLyricFixed.value;
-
-  if (firstMora != undefined) {
-    setDefaultLyricFixed(firstMora);
-    setDefaultLyricFixedInputValue(firstMora);
-  } else {
-    setDefaultLyricFixedInputValue(currentValue);
-  }
 };
 
 const canSetAudioOutputDevice = computed(() => {
@@ -1046,15 +993,5 @@ const renderEngineNameLabel = (engineId: EngineId) => {
 .checkbox-list {
   display: flex;
   gap: vars.$gap-2;
-}
-
-.default-lyric-settings {
-  display: flex;
-  align-items: center;
-  gap: vars.$gap-1;
-
-  .text-field-wrapper {
-    width: 60px;
-  }
 }
 </style>

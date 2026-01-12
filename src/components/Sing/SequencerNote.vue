@@ -172,7 +172,6 @@ const lyricToDisplay = computed(() => {
     getDefaultLyric(
       props.note.noteNumber,
       state.defaultLyricMode,
-      state.defaultLyricFixed,
     );
   return props.previewLyric ?? noteLyric;
 });

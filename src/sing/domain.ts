@@ -724,20 +724,18 @@ export const isValidLoopRange = (
  * デフォルト歌詞を取得する。
  *
  * @param noteNumber MIDIノート番号（0-127）
- * @param mode デフォルト歌詞のモード（"doremi" または "fixed"）
- * @param fixedLyric 固定モードで使用する歌詞
+ * @param mode デフォルト歌詞のモード（"doremi" または "la"）
  * @returns デフォルト歌詞
  */
 export const getDefaultLyric = (
   noteNumber: number,
-  mode: "doremi" | "fixed",
-  fixedLyric: string,
+  mode: "doremi" | "la",
 ) => {
   switch (mode) {
     case "doremi":
       return getDoremiFromNoteNumber(noteNumber);
-    case "fixed":
-      return fixedLyric;
+    case "la":
+      return "ら";
     default:
       throw new ExhaustiveError(mode);
   }

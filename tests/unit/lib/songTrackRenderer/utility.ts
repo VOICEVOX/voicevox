@@ -138,7 +138,6 @@ export class SongTrackRendererTestUtility {
       engineFrameRates: new Map([[this.engineId, this.frameRate]]),
       editorFrameRate: this.frameRate,
       defaultLyricMode: "doremi",
-      defaultLyricFixed: "ら",
     };
   }
 
