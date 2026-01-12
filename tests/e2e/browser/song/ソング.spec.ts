@@ -19,11 +19,9 @@ test("再生ボタンを押して再生できる", async ({ page }) => {
 
   const sequencer = page.getByLabel("シーケンサ");
 
-  let beforePosition: Awaited<ReturnType<typeof getCurrentPlayhead>>;
-
-  await test.step("ノートを追加する", async () => {
+  const beforePosition = await test.step("ノートを追加する", async () => {
     await sequencer.click({ position: { x: 100, y: 171 } });
-    beforePosition = await getCurrentPlayhead(page);
+    return await getCurrentPlayhead(page);
   });
 
   await test.step("再生して停止する", async () => {
