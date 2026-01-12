@@ -286,14 +286,6 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
       }
     },
   ],
-  [
-    ">=0.26",
-    (config) => {
-      // デフォルト歌詞の設定を追加
-      config.defaultLyricMode = "doremi";
-      config.defaultLyricFixed = "ら";
-    },
-  ],
 ];
 
 export type Metadata = {
