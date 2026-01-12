@@ -19,14 +19,24 @@ test("再生ボタンを押して再生できる", async ({ page }) => {
 
   const sequencer = page.getByLabel("シーケンサ");
 
-  await sequencer.click({ position: { x: 100, y: 171 } }); // ノートを追加
-  const beforePosition = await getCurrentPlayhead(page); // 再生ヘッドの初期位置
-  await page.getByText("play_arrow").click(); // 再生ボタンを押す
-  await page.waitForTimeout(3000);
-  await page.getByText("stop").click(); // 停止ボタンを押す
-  const afterPosition = await getCurrentPlayhead(page); // 再生ヘッドの再生後の位置
-  expect(afterPosition.x).not.toEqual(beforePosition.x);
-  expect(afterPosition.y).toEqual(beforePosition.y);
+  let beforePosition: Awaited<ReturnType<typeof getCurrentPlayhead>>;
+
+  await test.step("ノートを追加する", async () => {
+    await sequencer.click({ position: { x: 100, y: 171 } });
+    beforePosition = await getCurrentPlayhead(page);
+  });
+
+  await test.step("再生して停止する", async () => {
+    await page.getByText("play_arrow").click();
+    await page.waitForTimeout(3000);
+    await page.getByText("stop").click();
+  });
+
+  await test.step("再生ヘッドが移動している", async () => {
+    const afterPosition = await getCurrentPlayhead(page);
+    expect(afterPosition.x).not.toEqual(beforePosition.x);
+    expect(afterPosition.y).toEqual(beforePosition.y);
+  });
 });
 
 test("ノートを追加・削除できる", async ({ page }) => {
@@ -74,7 +84,7 @@ test("ドラッグで長いノートを追加できる", async ({ page }) => {
     await page.mouse.up();
   });
 
-  await test.step("ノートが２つ表示されるのを待ち、２つ目のノートが長いことを確認", async () => {
+  await test.step("２つ目のノートが長い", async () => {
     const notes = sequencer.locator(".note");
     await expect(notes).toHaveCount(2);
 
