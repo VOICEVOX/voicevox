@@ -5,7 +5,6 @@
 import { z } from "zod";
 
 import { engineIdSchema } from "@/type/preload";
-import { runtimeTargetSchema } from "@/domain/defaultEngine/latetDefaultEngine";
 import { isElectron, isNode } from "@/helpers/platform";
 
 /** .envに書くデフォルトエンジン情報のスキーマ */
@@ -29,11 +28,10 @@ const envEngineInfoSchema = z
       z.object({
         type: z.literal("downloadVvpp"),
         latestUrl: z.string(),
-        runtimeTarget: runtimeTargetSchema,
       }),
     ]),
   );
-type EnvEngineInfoType = z.infer<typeof envEngineInfoSchema>;
+export type EnvEngineInfo = z.infer<typeof envEngineInfoSchema>;
 
 /**
  * デフォルトエンジン情報の環境変数を取得する
@@ -55,7 +53,7 @@ function getDefaultEngineInfosEnv(): string {
 }
 
 /** .envからデフォルトエンジン情報を読み込む */
-export function loadEnvEngineInfos(): EnvEngineInfoType[] {
+export function loadEnvEngineInfos(): EnvEngineInfo[] {
   const defaultEngineInfosEnv = getDefaultEngineInfosEnv();
 
   // FIXME: 「.envを書き換えてください」というログを出したい

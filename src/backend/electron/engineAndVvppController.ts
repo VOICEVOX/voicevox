@@ -11,8 +11,8 @@ import { EngineId, EngineInfo, engineSettingSchema } from "@/type/preload";
 import {
   PackageInfo,
   fetchLatestDefaultEngineInfo,
-  getPackageInfoByTarget,
 } from "@/domain/defaultEngine/latetDefaultEngine";
+import type { RuntimeTarget } from "@/domain/defaultEngine/latetDefaultEngine";
 import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
 import { UnreachableError } from "@/type/utility";
 import { ProgressCallback } from "@/helpers/progressHelper";
@@ -36,9 +36,15 @@ export type EnginePackageLocalInfo = {
 };
 
 /** オンラインで取得した最新情報（パッケージ） */
+export type RuntimeTargetPackageInfo = {
+  target: RuntimeTarget;
+  packageInfo: PackageInfo;
+};
+
 export type EnginePackageRemoteInfo = {
   package: EnginePackageBase;
-  packageInfo: PackageInfo;
+  defaultRuntimeTarget: RuntimeTarget | undefined;
+  availableRuntimeTargets: RuntimeTargetPackageInfo[];
 };
 
 /**
@@ -248,19 +254,40 @@ export class EngineAndVvppController {
         continue;
       }
 
-      // 実行環境に合うパッケージを取得
-      const packageInfo = getPackageInfoByTarget(
-        latestInfo,
-        envEngineInfo.runtimeTarget,
-      );
-      log.info(`Latest default engine version: ${packageInfo.version}`);
+      const availableRuntimeTargets: RuntimeTargetPackageInfo[] =
+        Object.entries(latestInfo.packages)
+          .map(([target, packageInfo]) => ({
+            target: target,
+            packageInfo,
+          }))
+          .filter((runtimeTargetInfo) =>
+            EngineAndVvppController.isSupportedTarget(runtimeTargetInfo.target),
+          );
+
+      if (availableRuntimeTargets.length === 0) {
+        log.error(
+          `No supported runtime targets were found for ${envEngineInfo.name}`,
+        );
+        continue;
+      }
+
+      const defaultRuntimeTarget = availableRuntimeTargets[0].target;
+      const selectedPackageInfo = availableRuntimeTargets.find(
+        (targetInfo) => targetInfo.target === defaultRuntimeTarget,
+      )?.packageInfo;
+      if (selectedPackageInfo) {
+        log.info(
+          `Latest default engine version: ${selectedPackageInfo.version}`,
+        );
+      }
 
       statuses.push({
         package: {
           engineName: envEngineInfo.name,
           engineId: envEngineInfo.uuid,
         },
-        packageInfo,
+        defaultRuntimeTarget,
+        availableRuntimeTargets,
       });
     }
 
@@ -422,6 +449,9 @@ export class EngineAndVvppController {
         break;
       case "arm64":
         isSupported &&= process.arch === "arm64";
+        break;
+      case "x86":
+        isSupported &&= process.arch === "ia32";
         break;
       default:
         isSupported = false;

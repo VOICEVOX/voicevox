@@ -136,6 +136,31 @@
                         </div>
                       </div>
                       <div class="engine-actions">
+                        <BaseSelect
+                          :disabled="
+                            isDownloadingOrInstalling(
+                              selectedEngine.package.engineId,
+                            )
+                          "
+                          :modelValue="getSelectedRuntimeTarget(selectedEngine)"
+                          placeholder="ターゲットを選択"
+                          @update:modelValue="
+                            (value) =>
+                              setSelectedRuntimeTarget(
+                                selectedEngine.package.engineId,
+                                value,
+                              )
+                          "
+                        >
+                          <BaseSelectItem
+                            v-for="targetInfo in availableRuntimeTargets(
+                              selectedEngine,
+                            )"
+                            :key="targetInfo.target"
+                            :value="targetInfo.target"
+                            :label="runtimeTargetLabel(targetInfo)"
+                          />
+                        </BaseSelect>
                         <BaseButton
                           :label="actionLabel(selectedEngine)"
                           :disabled="isActionDisabled(selectedEngine)"
@@ -173,13 +198,16 @@ import {
   EnginePackageRemoteInfo,
 } from "@/backend/electron/engineAndVvppController";
 import { EngineId } from "@/type/preload";
+import type { RuntimeTarget } from "@/domain/defaultEngine/latetDefaultEngine";
 import { setThemeToCss } from "@/domain/dom";
 import { themes } from "@/domain/theme";
 import BaseButton from "@/components/Base/BaseButton.vue";
 import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 import BaseDocumentView from "@/components/Base/BaseDocumentView.vue";
 import BaseTooltip from "@/components/Base/BaseTooltip.vue";
-import { ExhaustiveError } from "@/type/utility";
+import BaseSelect from "@/components/Base/BaseSelect.vue";
+import BaseSelectItem from "@/components/Base/BaseSelectItem.vue";
+import { ExhaustiveError, UnreachableError } from "@/type/utility";
 
 type DisplayStatus = "notInstalled" | "installed" | "outdated" | "latest";
 
@@ -211,6 +239,81 @@ const engineInfosForDisplay = computed<DisplayEngineInfo[]>(() => {
     };
   });
 });
+const runtimeTargetSelections = ref<
+  Record<EngineId, RuntimeTarget | undefined>
+>({});
+
+const availableRuntimeTargets = (
+  engineInfo: DisplayEngineInfo,
+): EnginePackageRemoteInfo["availableRuntimeTargets"] => {
+  return engineInfo.remoteInfo?.availableRuntimeTargets ?? [];
+};
+
+const getDefaultRuntimeTarget = (
+  engineInfo: DisplayEngineInfo,
+): RuntimeTarget | undefined => {
+  const remoteInfo = engineInfo.remoteInfo;
+  if (!remoteInfo) {
+    return undefined;
+  }
+  if (
+    remoteInfo.defaultRuntimeTarget &&
+    remoteInfo.availableRuntimeTargets.some(
+      (targetInfo) => targetInfo.target === remoteInfo.defaultRuntimeTarget,
+    )
+  ) {
+    return remoteInfo.defaultRuntimeTarget;
+  }
+  return remoteInfo.availableRuntimeTargets[0]?.target;
+};
+
+const getSelectedRuntimeTarget = (
+  engineInfo: DisplayEngineInfo,
+): RuntimeTarget | undefined => {
+  return (
+    runtimeTargetSelections.value[engineInfo.package.engineId] ??
+    getDefaultRuntimeTarget(engineInfo)
+  );
+};
+
+const setSelectedRuntimeTarget = (
+  engineId: EngineId,
+  target: RuntimeTarget | undefined,
+) => {
+  if (!target) {
+    throw new UnreachableError();
+  }
+  runtimeTargetSelections.value = {
+    ...runtimeTargetSelections.value,
+    [engineId]: target,
+  };
+};
+
+const getPackageInfoForTarget = (
+  engineInfo: DisplayEngineInfo,
+  target: RuntimeTarget | undefined,
+) => {
+  if (!target) {
+    return undefined;
+  }
+  return availableRuntimeTargets(engineInfo).find(
+    (targetInfo) => targetInfo.target === target,
+  )?.packageInfo;
+};
+
+const getSelectedPackageInfo = (engineInfo: DisplayEngineInfo) =>
+  getPackageInfoForTarget(engineInfo, getSelectedRuntimeTarget(engineInfo));
+
+const runtimeTargetLabel = (
+  targetInfo:
+    | EnginePackageRemoteInfo["availableRuntimeTargets"][number]
+    | undefined,
+) => {
+  if (!targetInfo) {
+    return "";
+  }
+  return targetInfo.packageInfo.label ?? targetInfo.target;
+};
 type EngineProgressInfo = {
   progress: number;
   type: "download" | "install";
@@ -255,22 +358,24 @@ const determineEngineStatus = (
   if (engineInfo.localInfo.installed.status === "notInstalled") {
     return "notInstalled";
   }
-  if (!engineInfo.remoteInfo) {
+  const packageInfo = getSelectedPackageInfo(engineInfo);
+  if (!packageInfo) {
     return "installed";
   }
   return semver.lt(
     engineInfo.localInfo.installed.installedVersion,
-    engineInfo.remoteInfo.packageInfo.version,
+    packageInfo.version,
   )
     ? "outdated"
     : "latest";
 };
 
 const latestVersionLabel = (engineInfo: DisplayEngineInfo) => {
-  if (!engineInfo.remoteInfo) {
+  const packageInfo = getSelectedPackageInfo(engineInfo);
+  if (!packageInfo) {
     return "（読み込み中）";
   }
-  return engineInfo.remoteInfo.packageInfo.version;
+  return packageInfo.version;
 };
 
 const statusLabel = (status: DisplayStatus) => {
@@ -315,17 +420,26 @@ const actionLabel = (engineInfo: DisplayEngineInfo) => {
 };
 
 const isActionDisabled = (engineInfo: DisplayEngineInfo) => {
+  if (!getSelectedRuntimeTarget(engineInfo)) {
+    return true;
+  }
   return isDownloadingOrInstalling(engineInfo.package.engineId);
 };
 
 const installEngine = async (engineId: EngineId) => {
+  const engineInfo = engineInfosForDisplay.value.find(
+    (info) => info.package.engineId === engineId,
+  );
+  const target = engineInfo ? getSelectedRuntimeTarget(engineInfo) : undefined;
+  if (!target) {
+    return;
+  }
   engineProgressInfo.value[engineId] = { progress: 0, type: "download" };
   try {
     console.log(`Engine package ${engineId} installation started.`);
     await window.welcomeBackend.installEngine({
       engineId,
-      // TODO: 選べるようにする
-      target: "linux-x64-cpu",
+      target,
     });
     console.log(`Engine package ${engineId} installation completed.`);
   } catch (error) {
@@ -575,6 +689,23 @@ onMounted(() => {
   color: colors.$display;
 }
 
+.engine-target-select {
+  display: flex;
+  flex-direction: column;
+  gap: vars.$gap-1;
+  width: 100%;
+}
+
+.engine-target-select-label {
+  font-size: 0.75rem;
+  color: colors.$display-sub;
+  font-weight: 600;
+}
+
+.engine-target-select :deep(.SelectTrigger) {
+  width: 100%;
+}
+
 .engine-progress {
   display: grid;
   grid-template-columns: auto 1fr auto;
@@ -601,6 +732,7 @@ onMounted(() => {
 .engine-actions {
   display: flex;
   justify-content: flex-end;
+  gap: vars.$gap-1;
 }
 
 .empty-state {

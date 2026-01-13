@@ -30,9 +30,20 @@ export function getWelcomeIpcMainHandle(): IpcMainHandle<WelcomeIpcIHData> {
       // ダウンロードしてインストールする
       let lastUpdateTime = 0;
       let lastLogTime = 0;
+      const targetPackageInfo =
+        status.availableRuntimeTargets.find(
+          (targetInfo) => targetInfo.target === obj.target,
+        ) ?? status.availableRuntimeTargets[0];
+
+      if (!targetPackageInfo) {
+        throw new Error(
+          `Runtime target not found for engineId: ${obj.engineId}`,
+        );
+      }
+
       await engineAndVvppController.downloadAndInstallVvppEngine(
         app.getPath("downloads"),
-        status.packageInfo,
+        targetPackageInfo.packageInfo,
         {
           onProgress: ({ type, progress }) => {
             if (Date.now() - lastUpdateTime > 100) {
