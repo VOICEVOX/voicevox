@@ -169,10 +169,7 @@ const hasPhraseError = computed(() => {
 const lyricToDisplay = computed(() => {
   const noteLyric =
     props.note.lyric ??
-    getDefaultLyric(
-      props.note.noteNumber,
-      state.defaultLyricMode,
-    );
+    getDefaultLyric(props.note.noteNumber, state.defaultLyricMode);
   return props.previewLyric ?? noteLyric;
 });
 

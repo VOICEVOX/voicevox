@@ -411,10 +411,7 @@
                     :modelValue="defaultLyricMode"
                     @update:modelValue="handleDefaultLyricModeChange"
                   >
-                    <BaseSelectItem
-                      value="doremi"
-                      label="ドレミ（階名）"
-                    />
+                    <BaseSelectItem value="doremi" label="ドレミ（階名）" />
                     <BaseSelectItem value="la" label="ら" />
                   </BaseSelect>
                 </BaseRowCard>
@@ -507,7 +504,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, watchEffect } from "vue";
+import { computed, ref, watchEffect } from "vue";
 import FileNameTemplateDialog from "./FileNameTemplateDialog.vue";
 import ToggleCell from "./ToggleCell.vue";
 import ButtonToggleCell from "./ButtonToggleCell.vue";
@@ -753,9 +750,7 @@ const [defaultLyricMode, setDefaultLyricMode] = useRootMiscSetting(
   store,
   "defaultLyricMode",
 );
-const handleDefaultLyricModeChange = (
-  value: "doremi" | "la" | undefined,
-) => {
+const handleDefaultLyricModeChange = (value: "doremi" | "la" | undefined) => {
   if (value == undefined) {
     throw new Error("value is undefined");
   }

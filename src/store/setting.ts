@@ -232,7 +232,7 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       // FIXME: このワークアラウンドをなくす
       state[key] = value;
     },
-    action({ mutations, actions }, { key, value }) {
+    action({ mutations }, { key, value }) {
       void window.backend.setSetting(key, value);
       // @ts-expect-error Vuexの型処理でUnionが解かれてしまうのを迂回している
       // FIXME: このワークアラウンドをなくす

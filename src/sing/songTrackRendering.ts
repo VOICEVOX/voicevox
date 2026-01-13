@@ -211,9 +211,7 @@ const createNotesForRequestToEngine = (
       id: note.id,
       key: note.noteNumber,
       frameLength: noteOffFrame - noteOnFrame,
-      lyric:
-        note.lyric ??
-        getDefaultLyric(note.noteNumber, defaultLyricMode),
+      lyric: note.lyric ?? getDefaultLyric(note.noteNumber, defaultLyricMode),
     });
   }
 

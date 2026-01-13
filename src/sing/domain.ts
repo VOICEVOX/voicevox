@@ -727,10 +727,7 @@ export const isValidLoopRange = (
  * @param mode デフォルト歌詞のモード（"doremi" または "la"）
  * @returns デフォルト歌詞
  */
-export const getDefaultLyric = (
-  noteNumber: number,
-  mode: "doremi" | "la",
-) => {
+export const getDefaultLyric = (noteNumber: number, mode: "doremi" | "la") => {
   switch (mode) {
     case "doremi":
       return getDoremiFromNoteNumber(noteNumber);
