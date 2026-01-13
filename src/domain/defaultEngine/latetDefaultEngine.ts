@@ -13,6 +13,7 @@ export type RuntimeTarget = z.infer<typeof runtimeTargetSchema>;
 /** パッケージ情報のスキーマ */
 const packageInfoSchema = z.object({
   version: z.string(),
+  label: z.string(),
   files: z
     .object({
       url: z.string(),

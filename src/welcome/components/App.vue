@@ -4,13 +4,21 @@
       <QLayout reveal container>
         <QHeader class="q-pa-sm">
           <QToolbar>
-            <QToolbarTitle class="text-display">セットアップ</QToolbarTitle>
+            <QToolbarTitle class="text-display"
+              >エンジンのセットアップ</QToolbarTitle
+            >
             <QSpace />
-            <BaseButton
-              label="エディタを起動"
-              :disabled="!canLaunchEditor"
-              @click="switchToMainWindow"
-            />
+
+            <BaseTooltip
+              :label="editorDisabledReason || ''"
+              :disabled="editorDisabledReason == null"
+            >
+              <BaseButton
+                label="エディタを起動"
+                :disabled="editorDisabledReason != null"
+                @click="switchToMainWindow"
+              />
+            </BaseTooltip>
           </QToolbar>
         </QHeader>
 
@@ -19,12 +27,33 @@
             <BaseScrollArea>
               <div class="inner">
                 <BaseDocumentView class="welcome-intro">
-                  <h1>エンジンのセットアップ</h1>
-                  <p>
-                    VOICEVOXエディタを使用するには、音声合成エンジンのインストールが必要です。
-                    以下のエンジン一覧から、インストールまたは更新を行ってください。
-                  </p>
+                  VOICEVOXエディタを使用するには、音声合成エンジンのインストールが必要です。
+                  以下のエンジン一覧から、インストールまたは更新を行ってください。
                 </BaseDocumentView>
+
+                <div v-if="onlineFetchErrorMessage" class="engine-error">
+                  <div class="engine-error-text">
+                    オンラインからエンジン情報を取得できませんでした。
+                    ネットワークの状態を確認するか、再試行してください。
+                    <p
+                      v-if="onlineFetchErrorMessage"
+                      class="engine-error-detail"
+                    >
+                      {{ onlineFetchErrorMessage }}
+                    </p>
+                  </div>
+                  <div class="engine-error-actions">
+                    <BaseButton
+                      label="再試行"
+                      variant="primary"
+                      :disabled="
+                        loadingEngineInfosState === 'loadingLocal' ||
+                        loadingEngineInfosState === 'fetchingLatest'
+                      "
+                      @click="fetchInstalledEngineInfos"
+                    />
+                  </div>
+                </div>
 
                 <div
                   v-if="
@@ -38,7 +67,7 @@
                 </div>
                 <template v-else>
                   <section
-                    v-for="selectedEngine in latestEngineInfos ?? []"
+                    v-for="selectedEngine in engineInfosForDisplay"
                     :key="selectedEngine.package.engineId"
                   >
                     <div class="engine-card">
@@ -48,18 +77,27 @@
                         </div>
                         <span
                           class="status-pill"
-                          :data-status="selectedEngine.installed.status"
+                          :data-status="determineEngineStatus(selectedEngine)"
                         >
-                          {{ statusLabel(selectedEngine.installed.status) }}
+                          {{
+                            statusLabel(determineEngineStatus(selectedEngine))
+                          }}
                         </span>
                       </div>
                       <div class="engine-meta">
                         <div>
-                          最新バージョン:
+                          最新バージョン：
                           {{ latestVersionLabel(selectedEngine) }}
                         </div>
                         <div>
-                          {{ installedLabel(selectedEngine.installed) }}
+                          インストール済み：
+                          {{
+                            selectedEngine.localInfo.installed.status ===
+                            "notInstalled"
+                              ? "未インストール"
+                              : selectedEngine.localInfo.installed
+                                  .installedVersion
+                          }}
                         </div>
                       </div>
                       <div
@@ -102,9 +140,10 @@
                           :label="actionLabel(selectedEngine)"
                           :disabled="isActionDisabled(selectedEngine)"
                           :variant="
-                            selectedEngine.installed.status === 'latest'
-                              ? 'default'
-                              : 'primary'
+                            determineEngineStatus(selectedEngine) ===
+                            'notInstalled'
+                              ? 'primary'
+                              : 'default'
                           "
                           @click="
                             installEngine(selectedEngine.package.engineId)
@@ -124,34 +163,54 @@
 </template>
 
 <script setup lang="ts">
+import semver from "semver";
 import { computed, onMounted, ref } from "vue";
 import { TooltipProvider } from "reka-ui";
 import ErrorBoundary from "@/components/ErrorBoundary.vue";
-import { EnginePackageStatus } from "@/backend/electron/engineAndVvppController";
+import {
+  EnginePackageBase,
+  EnginePackageLocalInfo,
+  EnginePackageRemoteInfo,
+} from "@/backend/electron/engineAndVvppController";
 import { EngineId } from "@/type/preload";
 import { setThemeToCss } from "@/domain/dom";
 import { themes } from "@/domain/theme";
 import BaseButton from "@/components/Base/BaseButton.vue";
 import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 import BaseDocumentView from "@/components/Base/BaseDocumentView.vue";
+import BaseTooltip from "@/components/Base/BaseTooltip.vue";
+import { ExhaustiveError } from "@/type/utility";
 
-const latestEngineInfos = ref<EnginePackageStatus[] | undefined>(undefined);
+type DisplayStatus = "notInstalled" | "installed" | "outdated" | "latest";
+
+type DisplayEngineInfo = {
+  package: EnginePackageBase;
+  localInfo: EnginePackageLocalInfo;
+  remoteInfo: EnginePackageRemoteInfo | undefined;
+};
+
+const localEngineInfos = ref<EnginePackageLocalInfo[] | undefined>(undefined);
+const remoteEngineInfos = ref<EnginePackageRemoteInfo[] | undefined>(undefined);
 const loadingEngineInfosState = ref<
   "uninitialized" | "loadingLocal" | "fetchingLatest" | "fetched"
 >("uninitialized");
-const canLaunchEditor = computed(() => {
-  if (
-    loadingEngineInfosState.value === "uninitialized" ||
-    loadingEngineInfosState.value === "loadingLocal"
-  ) {
-    return false;
+const onlineFetchErrorMessage = ref<string | null>(null);
+const engineInfosForDisplay = computed<DisplayEngineInfo[]>(() => {
+  const localInfos = localEngineInfos.value;
+  if (!localInfos) {
+    return [];
   }
-  const engineInfos = latestEngineInfos.value ?? [];
-  return engineInfos.some(
-    (engineInfo) => engineInfo.installed.status !== "notInstalled",
-  );
+  return localInfos.map((localInfo) => {
+    const remoteInfo = remoteEngineInfos.value?.find(
+      (remote) => remote.package.engineId === localInfo.package.engineId,
+    );
+    return {
+      package: localInfo.package,
+      localInfo,
+      remoteInfo,
+    };
+  });
 });
-
 type EngineProgressInfo = {
   progress: number;
   type: "download" | "install";
@@ -159,14 +218,62 @@ type EngineProgressInfo = {
 const engineProgressInfo = ref<Record<EngineId, EngineProgressInfo>>(
   {} as Record<EngineId, EngineProgressInfo>,
 );
+const editorDisabledReason = computed<string | null>(() => {
+  if (
+    loadingEngineInfosState.value === "uninitialized" ||
+    loadingEngineInfosState.value === "loadingLocal"
+  ) {
+    return "エンジン情報を読み込み中です。";
+  }
+  if (Object.keys(engineProgressInfo.value).length > 0) {
+    return "エンジンのインストールまたは更新中です。";
+  }
+  const engineInfos = localEngineInfos.value ?? [];
+  if (
+    !engineInfos.some(
+      (engineInfo) => engineInfo.installed.status !== "notInstalled",
+    )
+  ) {
+    return "デフォルトエンジンがインストールされていません。";
+  }
+
+  return null;
+});
+
+const clearEngineProgress = (engineId: EngineId) => {
+  const { [engineId]: _, ...rest } = engineProgressInfo.value;
+  engineProgressInfo.value = rest as Record<EngineId, EngineProgressInfo>;
+};
 
 const progressTypeLabel = (type: EngineProgressInfo["type"]) => {
   return type === "download" ? "ダウンロード" : "インストール";
 };
-const latestVersionLabel = (engineInfo: EnginePackageStatus) => {
-  return engineInfo.package.latestVersion ?? "（読み込み中）";
+
+const determineEngineStatus = (
+  engineInfo: DisplayEngineInfo,
+): DisplayStatus => {
+  if (engineInfo.localInfo.installed.status === "notInstalled") {
+    return "notInstalled";
+  }
+  if (!engineInfo.remoteInfo) {
+    return "installed";
+  }
+  return semver.lt(
+    engineInfo.localInfo.installed.installedVersion,
+    engineInfo.remoteInfo.packageInfo.version,
+  )
+    ? "outdated"
+    : "latest";
 };
-const statusLabel = (status: EnginePackageStatus["installed"]["status"]) => {
+
+const latestVersionLabel = (engineInfo: DisplayEngineInfo) => {
+  if (!engineInfo.remoteInfo) {
+    return "（読み込み中）";
+  }
+  return engineInfo.remoteInfo.packageInfo.version;
+};
+
+const statusLabel = (status: DisplayStatus) => {
   switch (status) {
     case "notInstalled":
       return "未インストール";
@@ -177,37 +284,23 @@ const statusLabel = (status: EnginePackageStatus["installed"]["status"]) => {
     case "latest":
       return "最新";
     default:
-      return "不明";
+      throw new ExhaustiveError(status);
   }
 };
-const installedLabel = (installed: EnginePackageStatus["installed"]) => {
-  if (installed.status === "notInstalled") {
-    return "インストール済み: なし";
-  }
-  return `インストール済み: ${installed.installedVersion}`;
-};
+
 const getEngineProgress = (engineId: EngineId) =>
   engineProgressInfo.value[engineId];
-const isProgressing = (engineId: EngineId) => {
+const isDownloadingOrInstalling = (engineId: EngineId) => {
   const progress = getEngineProgress(engineId)?.progress;
   return progress != undefined && progress < 100;
 };
-const hasLatestInfo = (engineInfo: EnginePackageStatus) => {
-  return (
-    engineInfo.package.packageInfo != undefined &&
-    engineInfo.package.latestVersion != undefined
-  );
-};
-const actionLabel = (engineInfo: EnginePackageStatus) => {
-  if (isProgressing(engineInfo.package.engineId)) {
+
+const actionLabel = (engineInfo: DisplayEngineInfo) => {
+  if (isDownloadingOrInstalling(engineInfo.package.engineId)) {
     return "処理中";
   }
-  if (!hasLatestInfo(engineInfo)) {
-    return engineInfo.installed.status === "notInstalled"
-      ? "情報未取得"
-      : "インストール済み";
-  }
-  switch (engineInfo.installed.status) {
+  const engineStatus = determineEngineStatus(engineInfo);
+  switch (engineStatus) {
     case "notInstalled":
       return "インストール";
     case "installed":
@@ -215,49 +308,67 @@ const actionLabel = (engineInfo: EnginePackageStatus) => {
     case "outdated":
       return "更新";
     case "latest":
-      return "最新";
+      return "再インストール";
     default:
-      return "インストール";
+      throw new ExhaustiveError(engineStatus);
   }
-};
-const isActionDisabled = (engineInfo: EnginePackageStatus) => {
-  if (!hasLatestInfo(engineInfo)) {
-    return true;
-  }
-  if (engineInfo.installed.status === "latest") {
-    return true;
-  }
-  return isProgressing(engineInfo.package.engineId);
 };
 
-const installEngine = (engineId: EngineId) => {
+const isActionDisabled = (engineInfo: DisplayEngineInfo) => {
+  return isDownloadingOrInstalling(engineInfo.package.engineId);
+};
+
+const installEngine = async (engineId: EngineId) => {
   engineProgressInfo.value[engineId] = { progress: 0, type: "download" };
-  void window.welcomeBackend
-    .installEngine({
-      engineId: engineId,
+  try {
+    console.log(`Engine package ${engineId} installation started.`);
+    await window.welcomeBackend.installEngine({
+      engineId,
       // TODO: 選べるようにする
       target: "linux-x64-cpu",
-    })
-    .then(() => {
-      console.log(`Engine package ${engineId} installation started.`);
     });
+    console.log(`Engine package ${engineId} installation completed.`);
+  } catch (error) {
+    window.welcomeBackend.logError(
+      `Engine package ${engineId} installation failed`,
+      error,
+    );
+  } finally {
+    clearEngineProgress(engineId);
+    void fetchInstalledEngineInfos();
+  }
 };
 
 const switchToMainWindow = () => {
-  if (!canLaunchEditor.value) {
+  if (editorDisabledReason.value) {
     return;
   }
   void window.welcomeBackend.launchMainWindow();
 };
 
 const fetchInstalledEngineInfos = async () => {
+  onlineFetchErrorMessage.value = null;
   loadingEngineInfosState.value = "loadingLocal";
-  latestEngineInfos.value =
-    await window.welcomeBackend.fetchEnginePackageInstallStatuses();
+  localEngineInfos.value =
+    await window.welcomeBackend.fetchEnginePackageLocalInfos();
   loadingEngineInfosState.value = "fetchingLatest";
-  latestEngineInfos.value =
-    await window.welcomeBackend.fetchLatestEnginePackageStatuses();
-  loadingEngineInfosState.value = "fetched";
+  remoteEngineInfos.value = undefined;
+  try {
+    remoteEngineInfos.value =
+      await window.welcomeBackend.fetchLatestEnginePackageRemoteInfos();
+    onlineFetchErrorMessage.value = null;
+  } catch (error) {
+    onlineFetchErrorMessage.value =
+      error instanceof Error
+        ? error.message
+        : "エンジン情報のオンライン取得に失敗しました。";
+    window.welcomeBackend.logError(
+      "エンジン情報のオンライン取得に失敗しました",
+      error,
+    );
+  } finally {
+    loadingEngineInfosState.value = "fetched";
+  }
 };
 
 const applyThemeFromConfig = async () => {
@@ -291,6 +402,7 @@ onMounted(() => {
 @use "@/styles/v2/colors" as colors;
 @use "@/styles/v2/mixin" as mixin;
 @use "@/styles/v2/variables" as vars;
+@use "@/styles/colors" as colors_v1;
 
 .welcome-actions {
   display: flex;
@@ -381,6 +493,31 @@ onMounted(() => {
   color: colors.$display-sub;
 }
 
+.engine-error {
+  display: flex;
+  flex-direction: column;
+  gap: vars.$gap-1;
+  padding: vars.$padding-2;
+  border-radius: vars.$radius-2;
+  border: 1px solid colors.$warning;
+  background-color: colors.$background-alt;
+  color: colors.$display-warning;
+}
+
+.engine-error-detail {
+  display: block;
+  font-size: 0.75rem;
+  color: colors.$display-warning;
+  margin-top: vars.$gap-1;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.engine-error-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .loading-text {
   font-size: 0.8rem;
 }
@@ -435,8 +572,7 @@ onMounted(() => {
 .engine-meta {
   display: grid;
   gap: 4px;
-  font-size: 0.8rem;
-  color: colors.$display-sub;
+  color: colors.$display;
 }
 
 .engine-progress {
@@ -444,15 +580,14 @@ onMounted(() => {
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: vars.$gap-1;
-  font-size: 0.7rem;
-  color: colors.$display-sub;
+  color: colors.$display;
 }
 
 .engine-progress-bar {
   position: relative;
-  height: 6px;
+  height: 0.5em;
   border-radius: 999px;
-  background-color: colors.$control;
+  background-color: colors_v1.$surface;
   overflow: hidden;
 }
 
@@ -478,12 +613,5 @@ onMounted(() => {
 
 .empty-title {
   font-weight: 600;
-}
-
-@media (max-width: 900px) {
-  .welcome-actions {
-    width: 100%;
-    justify-content: flex-end;
-  }
 }
 </style>

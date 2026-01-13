@@ -17,7 +17,7 @@ export function getWelcomeIpcMainHandle(): IpcMainHandle<WelcomeIpcIHData> {
     INSTALL_ENGINE: async (_, obj) => {
       const welcomeWindowManager = getWelcomeWindowManager();
       const packageStatuses =
-        await engineAndVvppController.fetchLatestEnginePackageStatuses();
+        await engineAndVvppController.fetchLatestEnginePackageRemoteInfos();
       const status = packageStatuses.find(
         (s) => s.package.engineId === obj.engineId,
       );
@@ -26,39 +26,37 @@ export function getWelcomeIpcMainHandle(): IpcMainHandle<WelcomeIpcIHData> {
           `Engine package status not found for engineId: ${obj.engineId}`,
         );
       }
-      if (!status.package.packageInfo) {
-        throw new Error(
-          `Engine package info not found for engineId: ${obj.engineId}`,
-        );
-      }
 
       // ダウンロードしてインストールする
-      let lastLogTime = 0; // とりあえずログを0.1秒に1回だけ出力する
+      let lastUpdateTime = 0;
+      let lastLogTime = 0;
       await engineAndVvppController.downloadAndInstallVvppEngine(
         app.getPath("downloads"),
-        status.package.packageInfo,
+        status.packageInfo,
         {
           onProgress: ({ type, progress }) => {
-            if (Date.now() - lastLogTime > 100) {
-              log.info(
-                `VVPP default engine progress: ${type}: ${Math.floor(progress)}%`,
-              );
-              lastLogTime = Date.now();
+            if (Date.now() - lastUpdateTime > 100) {
+              lastUpdateTime = Date.now();
               welcomeWindowManager.ipc.UPDATE_ENGINE_DOWNLOAD_PROGRESS({
                 engineId: obj.engineId,
                 progress,
                 type,
               });
+            } else if (Date.now() - lastLogTime > 1000) {
+              lastLogTime = Date.now();
+              log.info(
+                `Engine ${obj.engineId} ${type} progress: ${progress.toFixed(2)}%`,
+              );
             }
           },
         },
       );
     },
-    FETCH_ENGINE_PACKAGE_INSTALL_STATUSES: () => {
-      return engineAndVvppController.fetchEnginePackageInstallStatuses();
+    FETCH_ENGINE_PACKAGE_LOCAL_INFOS: () => {
+      return engineAndVvppController.fetchEnginePackageLocalInfos();
     },
-    FETCH_LATEST_ENGINE_PACKAGE_STATUSES: async () => {
-      return engineAndVvppController.fetchLatestEnginePackageStatuses();
+    FETCH_LATEST_ENGINE_PACKAGE_REMOTE_INFOS: async () => {
+      return engineAndVvppController.fetchLatestEnginePackageRemoteInfos();
     },
     GET_CURRENT_THEME: async () => {
       return configManager.get("currentTheme");

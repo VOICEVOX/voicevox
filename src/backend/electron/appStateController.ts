@@ -32,13 +32,11 @@ export class AppStateController {
   async startup() {
     const engineAndVvppController = getEngineAndVvppController();
     const packageStatuses =
-      engineAndVvppController.fetchEnginePackageInstallStatuses();
+      engineAndVvppController.fetchEnginePackageLocalInfos();
 
     if (packageStatuses.length === 0) {
-      log.info(
-        "No downloadable engine packages found. Launching welcome window.",
-      );
-      await this.launchWelcomeWindow();
+      log.info("No downloadable engine packages found. Launching main window.");
+      await this.launchMainWindow();
       return;
     }
 

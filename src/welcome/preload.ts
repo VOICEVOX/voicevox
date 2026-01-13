@@ -36,11 +36,11 @@ const api: WelcomeSandbox = {
   installEngine: (obj) => {
     return ipcRendererInvokeProxy.INSTALL_ENGINE(obj);
   },
-  fetchLatestEnginePackageStatuses: () => {
-    return ipcRendererInvokeProxy.FETCH_LATEST_ENGINE_PACKAGE_STATUSES();
+  fetchEnginePackageLocalInfos: () => {
+    return ipcRendererInvokeProxy.FETCH_ENGINE_PACKAGE_LOCAL_INFOS();
   },
-  fetchEnginePackageInstallStatuses: () => {
-    return ipcRendererInvokeProxy.FETCH_ENGINE_PACKAGE_INSTALL_STATUSES();
+  fetchLatestEnginePackageRemoteInfos: () => {
+    return ipcRendererInvokeProxy.FETCH_LATEST_ENGINE_PACKAGE_REMOTE_INFOS();
   },
   launchMainWindow: () => {
     return ipcRendererInvokeProxy.SWITCH_TO_MAIN_WINDOW();

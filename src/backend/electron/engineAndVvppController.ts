@@ -1,6 +1,5 @@
 import { dialog } from "electron";
 
-import semver from "semver";
 import { getConfigManager } from "./electronConfig";
 import { getEngineInfoManager } from "./manager/engineInfoManager";
 import { getEngineProcessManager } from "./manager/engineProcessManager";
@@ -23,18 +22,23 @@ import { isLinux, isMac, isWindows } from "@/helpers/platform";
 
 const log = createLogger("EngineAndVvppController");
 
-/** エンジンパッケージの状態 */
-export type EnginePackageStatus = {
-  package: {
-    engineName: string;
-    engineId: EngineId;
-    packageInfo?: PackageInfo;
-    latestVersion?: string;
-  };
+export type EnginePackageBase = {
+  engineName: string;
+  engineId: EngineId;
+};
+
+/** ローカルのインストール状況（パッケージ） */
+export type EnginePackageLocalInfo = {
+  package: EnginePackageBase;
   installed:
     | { status: "notInstalled" }
-    | { status: "installed"; installedVersion: string }
-    | { status: "outdated" | "latest"; installedVersion: string };
+    | { status: "installed"; installedVersion: string };
+};
+
+/** オンラインで取得した最新情報（パッケージ） */
+export type EnginePackageRemoteInfo = {
+  package: EnginePackageBase;
+  packageInfo: PackageInfo;
 };
 
 /**
@@ -199,15 +203,14 @@ export class EngineAndVvppController {
 
   private fetchInstalledEngineStatus(
     engineId: EngineId,
-  ): EnginePackageStatus["installed"] {
+  ): EnginePackageLocalInfo["installed"] {
     const isInstalled = this.engineInfoManager.hasEngineInfo(engineId);
     if (!isInstalled) {
       return { status: "notInstalled" };
     }
 
-    const installedEngineInfo = this.engineInfoManager.fetchEngineInfo(
-      engineId,
-    );
+    const installedEngineInfo =
+      this.engineInfoManager.fetchEngineInfo(engineId);
     return {
       status: "installed",
       installedVersion: installedEngineInfo.version,
@@ -217,7 +220,7 @@ export class EngineAndVvppController {
   /**
    * デフォルトエンジンのインストール状況を取得する（オフライン）。
    */
-  fetchEnginePackageInstallStatuses(): EnginePackageStatus[] {
+  fetchEnginePackageLocalInfos(): EnginePackageLocalInfo[] {
     return this.getDownloadableEnvEngineInfos().map((envEngineInfo) => ({
       package: {
         engineName: envEngineInfo.name,
@@ -230,8 +233,10 @@ export class EngineAndVvppController {
   /**
    * 最新のエンジンパッケージの情報や、そのエンジンのインストール状況を取得する（オンライン）。
    */
-  async fetchLatestEnginePackageStatuses(): Promise<EnginePackageStatus[]> {
-    const statuses: EnginePackageStatus[] = [];
+  async fetchLatestEnginePackageRemoteInfos(): Promise<
+    EnginePackageRemoteInfo[]
+  > {
+    const statuses: EnginePackageRemoteInfo[] = [];
 
     for (const envEngineInfo of this.getDownloadableEnvEngineInfos()) {
       const latestUrl = envEngineInfo.latestUrl;
@@ -250,30 +255,12 @@ export class EngineAndVvppController {
       );
       log.info(`Latest default engine version: ${packageInfo.version}`);
 
-      // インストール状況を取得
-      let installedStatus = this.fetchInstalledEngineStatus(
-        envEngineInfo.uuid,
-      );
-      if (installedStatus.status === "installed") {
-        installedStatus = {
-          status: semver.lt(
-            installedStatus.installedVersion,
-            packageInfo.version,
-          )
-            ? "outdated"
-            : "latest",
-          installedVersion: installedStatus.installedVersion,
-        };
-      }
-
       statuses.push({
         package: {
           engineName: envEngineInfo.name,
           engineId: envEngineInfo.uuid,
-          packageInfo,
-          latestVersion: packageInfo.version,
         },
-        installed: installedStatus,
+        packageInfo,
       });
     }
 
@@ -411,7 +398,7 @@ export class EngineAndVvppController {
   }
 
   /** このRuntime Targetはこのプラットフォームで動くか */
-  isSupportedTarget(target: string): boolean {
+  static isSupportedTarget(target: string): boolean {
     let isSupported = true;
     const os = target.split("-")[0];
     switch (os) {

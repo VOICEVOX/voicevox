@@ -1,4 +1,7 @@
-import { EnginePackageStatus } from "@/backend/electron/engineAndVvppController";
+import {
+  EnginePackageLocalInfo,
+  EnginePackageRemoteInfo,
+} from "@/backend/electron/engineAndVvppController";
 import { EngineId } from "@/type/preload";
 /**
  * invoke, handle
@@ -13,13 +16,13 @@ export type WelcomeIpcIHData = {
     ];
     return: void;
   };
-  FETCH_LATEST_ENGINE_PACKAGE_STATUSES: {
+  FETCH_ENGINE_PACKAGE_LOCAL_INFOS: {
     args: [];
-    return: EnginePackageStatus[];
+    return: EnginePackageLocalInfo[];
   };
-  FETCH_ENGINE_PACKAGE_INSTALL_STATUSES: {
+  FETCH_LATEST_ENGINE_PACKAGE_REMOTE_INFOS: {
     args: [];
-    return: EnginePackageStatus[];
+    return: EnginePackageRemoteInfo[];
   };
 
   GET_CURRENT_THEME: {
