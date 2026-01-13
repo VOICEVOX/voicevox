@@ -1,5 +1,6 @@
 import { app } from "electron";
 import { getEngineAndVvppController } from "./engineAndVvppController";
+import { getConfigManager } from "./electronConfig";
 import { IpcMainHandle } from "./ipc";
 import { getWelcomeWindowManager } from "./manager/windowManager/welcome";
 import { getAppStateController } from "./appStateController";
@@ -10,6 +11,7 @@ const log = createLogger("WelcomeIpcMainHandle");
 
 export function getWelcomeIpcMainHandle(): IpcMainHandle<WelcomeIpcIHData> {
   const engineAndVvppController = getEngineAndVvppController();
+  const configManager = getConfigManager();
 
   return {
     INSTALL_ENGINE: async (_, obj) => {
@@ -49,6 +51,9 @@ export function getWelcomeIpcMainHandle(): IpcMainHandle<WelcomeIpcIHData> {
     },
     FETCH_LATEST_ENGINE_PACKAGE_STATUSES: async () => {
       return engineAndVvppController.fetchEnginePackageStatuses();
+    },
+    GET_CURRENT_THEME: async () => {
+      return configManager.get("currentTheme");
     },
     SWITCH_TO_MAIN_WINDOW: async () => {
       // TODO: ちゃんと消していいかチェックしてからメインウィンドウを起動する

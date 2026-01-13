@@ -18,6 +18,11 @@ export type WelcomeIpcIHData = {
     return: EnginePackageStatus[];
   };
 
+  GET_CURRENT_THEME: {
+    args: [];
+    return: string;
+  };
+
   SWITCH_TO_MAIN_WINDOW: {
     args: [];
     return: void;

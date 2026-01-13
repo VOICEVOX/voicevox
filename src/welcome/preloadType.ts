@@ -5,6 +5,7 @@ export interface WelcomeSandbox {
   installEngine(obj: { engineId: EngineId; target: string }): Promise<void>;
   fetchLatestEnginePackageStatuses(): Promise<EnginePackageStatus[]>;
   launchMainWindow(): Promise<void>;
+  getCurrentTheme(): Promise<string>;
   registerIpcHandler(listeners: {
     updateEngineDownloadProgress: (obj: {
       engineId: EngineId;
