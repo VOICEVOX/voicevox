@@ -219,9 +219,9 @@ export function getIpcMainHandle(params: {
       appStateController.shutdown();
     },
 
-    LAUNCH_WELCOME_WINDOW: async () => {
+    SWITCH_TO_WELCOME_WINDOW: async () => {
       const appStateController = getAppStateController();
-      await appStateController.launchWelcomeWindow();
+      await appStateController.switchToWelcomeWindow();
     },
 
     MINIMIZE_WINDOW: () => {

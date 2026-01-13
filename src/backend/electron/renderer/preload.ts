@@ -121,7 +121,7 @@ const api: Sandbox = {
   },
 
   launchWelcomeWindow: () => {
-    void ipcRendererInvokeProxy.LAUNCH_WELCOME_WINDOW();
+    void ipcRendererInvokeProxy.SWITCH_TO_WELCOME_WINDOW();
   },
 
   minimizeWindow: () => {

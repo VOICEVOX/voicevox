@@ -18,7 +18,7 @@ export type WelcomeIpcIHData = {
     return: EnginePackageStatus[];
   };
 
-  LAUNCH_MAIN_WINDOW: {
+  SWITCH_TO_MAIN_WINDOW: {
     args: [];
     return: void;
   };

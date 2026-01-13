@@ -24,6 +24,8 @@ export class AppStateController {
    */
   private quitState: "unconfirmed" | "dirty" | "done" | "switch" =
     "unconfirmed";
+  /** 現在アクティブなウィンドウ */
+  private activeWindow: "main" | "welcome" | null = null;
 
   private lock = new Mutex();
 
@@ -52,27 +54,43 @@ export class AppStateController {
     }
   }
 
-  async launchWelcomeWindow() {
+  async switchToMainWindow() {
+    this.quitState = "switch";
+
+    const welcomeWindowManager = getWelcomeWindowManager();
+    if (welcomeWindowManager.isInitialized()) {
+      welcomeWindowManager.destroyWindow();
+    }
+
+    await this.launchMainWindow();
+    this.quitState = "unconfirmed";
+  }
+  async switchToWelcomeWindow() {
+    this.quitState = "switch";
+
     const mainWindowManager = getMainWindowManager();
     if (mainWindowManager.isInitialized()) {
-      this.quitState = "switch";
       const engineAndVvppController = getEngineAndVvppController();
       await engineAndVvppController.cleanupEngines();
       mainWindowManager.destroyWindow();
     }
+
+    await this.launchWelcomeWindow();
+    this.quitState = "unconfirmed";
+  }
+
+  async launchWelcomeWindow() {
+    this.activeWindow = "welcome";
+
     const welcomeWindowManager = getWelcomeWindowManager();
     await welcomeWindowManager.createWindow();
   }
 
   async launchMainWindow() {
-    const welcomeWindowManager = getWelcomeWindowManager();
-    if (welcomeWindowManager.isInitialized()) {
-      this.quitState = "switch";
-      welcomeWindowManager.destroyWindow();
-    }
-
     const engineAndVvppController = getEngineAndVvppController();
     const mainWindowManager = getMainWindowManager();
+
+    this.activeWindow = "main";
 
     await engineAndVvppController.launchEngines();
     await mainWindowManager.createWindow();
@@ -95,7 +113,12 @@ export class AppStateController {
         DI.preventQuit();
         void (async () => {
           await using _lock = await this.lock.acquire();
-          this.checkUnsavedEdit();
+          if (this.activeWindow === "main") {
+            this.checkUnsavedEdit();
+          } else {
+            log.info("Main window is not active. Proceeding to shutdown.");
+            this.shutdown();
+          }
         })();
         break;
       }
@@ -122,40 +145,33 @@ export class AppStateController {
   private checkUnsavedEdit() {
     log.info("Checking for unsaved edits before quitting");
     const mainWindowManager = getMainWindowManager();
-    if (mainWindowManager.isInitialized()) {
-      try {
-        mainWindowManager.ipc.CHECK_EDITED_AND_NOT_SAVE({
-          closeOrReload: "close",
-        });
-      } catch (error) {
-        log.error(
-          "Error while sending CHECK_EDITED_AND_NOT_SAVE IPC message:",
-          error,
-        );
-        void mainWindowManager
-          .showMessageBox({
-            type: "error",
-            title: "保存の確認に失敗しました",
-            message:
-              "未保存のデータがある場合、終了すると失われます。終了しますか？",
-            buttons: ["終了しない", "終了する"],
-            defaultId: 0,
-            cancelId: 0,
-          })
-          .then((result) => {
-            if (result.response === 1) {
-              log.info("User confirmed to quit despite the error");
-              this.shutdown();
-            } else {
-              log.info("User canceled quit due to the error");
-            }
-          });
-      }
-    } else {
-      log.info(
-        "Main window is not initialized. Proceeding to shutdown without checking for unsaved edits.",
+    try {
+      mainWindowManager.ipc.CHECK_EDITED_AND_NOT_SAVE({
+        closeOrReload: "close",
+      });
+    } catch (error) {
+      log.error(
+        "Error while sending CHECK_EDITED_AND_NOT_SAVE IPC message:",
+        error,
       );
-      this.shutdown();
+      void mainWindowManager
+        .showMessageBox({
+          type: "error",
+          title: "保存の確認に失敗しました",
+          message:
+            "未保存のデータがある場合、終了すると失われます。終了しますか？",
+          buttons: ["終了しない", "終了する"],
+          defaultId: 0,
+          cancelId: 0,
+        })
+        .then((result) => {
+          if (result.response === 1) {
+            log.info("User confirmed to quit despite the error");
+            this.shutdown();
+          } else {
+            log.info("User canceled quit due to the error");
+          }
+        });
     }
   }
 

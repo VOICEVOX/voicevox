@@ -101,7 +101,7 @@ export type IpcIHData = {
     return: void;
   };
 
-  LAUNCH_WELCOME_WINDOW: {
+  SWITCH_TO_WELCOME_WINDOW: {
     args: [];
     return: void;
   };

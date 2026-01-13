@@ -40,7 +40,7 @@ const api: WelcomeSandbox = {
     return ipcRendererInvokeProxy.FETCH_LATEST_ENGINE_PACKAGE_STATUSES();
   },
   launchMainWindow: () => {
-    return ipcRendererInvokeProxy.LAUNCH_MAIN_WINDOW();
+    return ipcRendererInvokeProxy.SWITCH_TO_MAIN_WINDOW();
   },
   registerIpcHandler: (listeners) => {
     ipcRenderer.on("UPDATE_ENGINE_DOWNLOAD_PROGRESS", (_, args) => {

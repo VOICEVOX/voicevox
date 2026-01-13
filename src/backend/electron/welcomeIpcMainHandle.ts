@@ -50,10 +50,10 @@ export function getWelcomeIpcMainHandle(): IpcMainHandle<WelcomeIpcIHData> {
     FETCH_LATEST_ENGINE_PACKAGE_STATUSES: async () => {
       return engineAndVvppController.fetchEnginePackageStatuses();
     },
-    LAUNCH_MAIN_WINDOW: async () => {
+    SWITCH_TO_MAIN_WINDOW: async () => {
       // TODO: ちゃんと消していいかチェックしてからメインウィンドウを起動する
       const appStateController = getAppStateController();
-      await appStateController.launchMainWindow();
+      await appStateController.switchToMainWindow();
     },
   };
 }
