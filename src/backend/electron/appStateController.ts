@@ -55,10 +55,12 @@ export class AppStateController {
   }
 
   async switchToMainWindow() {
+    log.info("Switching to main window");
     this.quitState = "switch";
 
     const welcomeWindowManager = getWelcomeWindowManager();
     if (welcomeWindowManager.isInitialized()) {
+      log.info("Destroying welcome window");
       welcomeWindowManager.destroyWindow();
     }
 
@@ -66,13 +68,15 @@ export class AppStateController {
     this.quitState = "unconfirmed";
   }
   async switchToWelcomeWindow() {
+    log.info("Switching to welcome window");
     this.quitState = "switch";
 
     const mainWindowManager = getMainWindowManager();
     if (mainWindowManager.isInitialized()) {
+      log.info("Destroying main window and cleaning up engines");
       const engineAndVvppController = getEngineAndVvppController();
-      await engineAndVvppController.cleanupEngines();
       mainWindowManager.destroyWindow();
+      await engineAndVvppController.cleanupEngines();
     }
 
     await this.launchWelcomeWindow();
@@ -147,7 +151,7 @@ export class AppStateController {
     const mainWindowManager = getMainWindowManager();
     try {
       mainWindowManager.ipc.CHECK_EDITED_AND_NOT_SAVE({
-        closeOrReload: "close",
+        nextAction: "close",
       });
     } catch (error) {
       log.error(

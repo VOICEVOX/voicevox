@@ -98,7 +98,7 @@ const $q = useQuasar();
 const store = useStore();
 
 const closeWindow = async () => {
-  void store.actions.CHECK_EDITED_AND_NOT_SAVE({ closeOrReload: "close" });
+  void store.actions.CHECK_EDITED_AND_NOT_SAVE({ nextAction: "close" });
 };
 const minimizeWindow = () => window.backend.minimizeWindow();
 const toggleMaximizeWindow = () => window.backend.toggleMaximizeWindow();

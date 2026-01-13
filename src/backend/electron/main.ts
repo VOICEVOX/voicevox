@@ -490,7 +490,7 @@ app.on("second-instance", async (_event, _argv, _workDir, rawData) => {
         reloadNeeded: true,
         reloadCallback: () => {
           mainWindowManager.ipc.CHECK_EDITED_AND_NOT_SAVE({
-            closeOrReload: "reload",
+            nextAction: "reload",
           });
         },
       });

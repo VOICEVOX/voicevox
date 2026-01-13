@@ -106,7 +106,7 @@ const api: Sandbox = {
     ipcRenderer.on("CHECK_EDITED_AND_NOT_SAVE", (_, args) => {
       listeners.checkEditedAndNotSave(
         args as {
-          closeOrReload: "close" | "reload";
+          nextAction: "close" | "reload" | "switchToWelcome";
           isMultiEngineOffMode?: boolean;
         },
       );

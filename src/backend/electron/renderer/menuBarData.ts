@@ -105,7 +105,9 @@ export const useElectronMenuBarData = (
         type: "button",
         label: "Welcome画面に切り替え",
         onClick: () => {
-          window.backend.launchWelcomeWindow();
+          void store.actions.CHECK_EDITED_AND_NOT_SAVE({
+            nextAction: "switchToWelcome",
+          });
         },
         disableWhenUiLocked: false,
       },
