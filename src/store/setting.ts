@@ -237,9 +237,6 @@ export const settingStore = createPartialStore<SettingStoreTypes>({
       // @ts-expect-error Vuexの型処理でUnionが解かれてしまうのを迂回している
       // FIXME: このワークアラウンドをなくす
       mutations.SET_ROOT_MISC_SETTING({ key, value });
-
-      // TODO: 設定画面が閉じたらレンダリングが開始されるようにする
-      void actions.RENDER();
     },
   },
 
