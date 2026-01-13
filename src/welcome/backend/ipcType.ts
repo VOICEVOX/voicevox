@@ -17,6 +17,10 @@ export type WelcomeIpcIHData = {
     args: [];
     return: EnginePackageStatus[];
   };
+  FETCH_ENGINE_PACKAGE_INSTALL_STATUSES: {
+    args: [];
+    return: EnginePackageStatus[];
+  };
 
   GET_CURRENT_THEME: {
     args: [];

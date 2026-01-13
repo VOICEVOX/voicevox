@@ -39,6 +39,9 @@ const api: WelcomeSandbox = {
   fetchLatestEnginePackageStatuses: () => {
     return ipcRendererInvokeProxy.FETCH_LATEST_ENGINE_PACKAGE_STATUSES();
   },
+  fetchEnginePackageInstallStatuses: () => {
+    return ipcRendererInvokeProxy.FETCH_ENGINE_PACKAGE_INSTALL_STATUSES();
+  },
   launchMainWindow: () => {
     return ipcRendererInvokeProxy.SWITCH_TO_MAIN_WINDOW();
   },

@@ -17,13 +17,18 @@ export function getWelcomeIpcMainHandle(): IpcMainHandle<WelcomeIpcIHData> {
     INSTALL_ENGINE: async (_, obj) => {
       const welcomeWindowManager = getWelcomeWindowManager();
       const packageStatuses =
-        await engineAndVvppController.fetchEnginePackageStatuses();
+        await engineAndVvppController.fetchLatestEnginePackageStatuses();
       const status = packageStatuses.find(
         (s) => s.package.engineId === obj.engineId,
       );
       if (!status) {
         throw new Error(
           `Engine package status not found for engineId: ${obj.engineId}`,
+        );
+      }
+      if (!status.package.packageInfo) {
+        throw new Error(
+          `Engine package info not found for engineId: ${obj.engineId}`,
         );
       }
 
@@ -49,8 +54,11 @@ export function getWelcomeIpcMainHandle(): IpcMainHandle<WelcomeIpcIHData> {
         },
       );
     },
+    FETCH_ENGINE_PACKAGE_INSTALL_STATUSES: () => {
+      return engineAndVvppController.fetchEnginePackageInstallStatuses();
+    },
     FETCH_LATEST_ENGINE_PACKAGE_STATUSES: async () => {
-      return engineAndVvppController.fetchEnginePackageStatuses();
+      return engineAndVvppController.fetchLatestEnginePackageStatuses();
     },
     GET_CURRENT_THEME: async () => {
       return configManager.get("currentTheme");

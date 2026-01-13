@@ -28,11 +28,12 @@ export type EnginePackageStatus = {
   package: {
     engineName: string;
     engineId: EngineId;
-    packageInfo: PackageInfo;
-    latestVersion: string;
+    packageInfo?: PackageInfo;
+    latestVersion?: string;
   };
   installed:
     | { status: "notInstalled" }
+    | { status: "installed"; installedVersion: string }
     | { status: "outdated" | "latest"; installedVersion: string };
 };
 
@@ -187,17 +188,52 @@ export class EngineAndVvppController {
   }
 
   /**
-   * 最新のエンジンパッケージの情報や、そのエンジンのインストール状況を取得する。
+   * ダウンロード可能なデフォルトエンジン情報を取得する。
+   * online fetchは行わない。
    */
-  async fetchEnginePackageStatuses(): Promise<EnginePackageStatus[]> {
+  private getDownloadableEnvEngineInfos() {
+    return loadEnvEngineInfos().filter(
+      (engineInfo) => engineInfo.type === "downloadVvpp",
+    );
+  }
+
+  private fetchInstalledEngineStatus(
+    engineId: EngineId,
+  ): EnginePackageStatus["installed"] {
+    const isInstalled = this.engineInfoManager.hasEngineInfo(engineId);
+    if (!isInstalled) {
+      return { status: "notInstalled" };
+    }
+
+    const installedEngineInfo = this.engineInfoManager.fetchEngineInfo(
+      engineId,
+    );
+    return {
+      status: "installed",
+      installedVersion: installedEngineInfo.version,
+    };
+  }
+
+  /**
+   * デフォルトエンジンのインストール状況を取得する（オフライン）。
+   */
+  fetchEnginePackageInstallStatuses(): EnginePackageStatus[] {
+    return this.getDownloadableEnvEngineInfos().map((envEngineInfo) => ({
+      package: {
+        engineName: envEngineInfo.name,
+        engineId: envEngineInfo.uuid,
+      },
+      installed: this.fetchInstalledEngineStatus(envEngineInfo.uuid),
+    }));
+  }
+
+  /**
+   * 最新のエンジンパッケージの情報や、そのエンジンのインストール状況を取得する（オンライン）。
+   */
+  async fetchLatestEnginePackageStatuses(): Promise<EnginePackageStatus[]> {
     const statuses: EnginePackageStatus[] = [];
 
-    for (const envEngineInfo of loadEnvEngineInfos()) {
-      if (envEngineInfo.type != "downloadVvpp") {
-        continue;
-      }
-
-      // 最新情報を取得
+    for (const envEngineInfo of this.getDownloadableEnvEngineInfos()) {
       const latestUrl = envEngineInfo.latestUrl;
       if (latestUrl == undefined) throw new Error("latestUrl is undefined");
 
@@ -215,22 +251,18 @@ export class EngineAndVvppController {
       log.info(`Latest default engine version: ${packageInfo.version}`);
 
       // インストール状況を取得
-      let installedStatus: EnginePackageStatus["installed"];
-      const isInstalled = this.engineInfoManager.hasEngineInfo(
+      let installedStatus = this.fetchInstalledEngineStatus(
         envEngineInfo.uuid,
       );
-      if (!isInstalled) {
-        installedStatus = { status: "notInstalled" };
-      } else {
-        const installedEngineInfo = this.engineInfoManager.fetchEngineInfo(
-          envEngineInfo.uuid,
-        );
-        const installedVersion = installedEngineInfo.version;
+      if (installedStatus.status === "installed") {
         installedStatus = {
-          status: semver.lt(installedVersion, packageInfo.version)
+          status: semver.lt(
+            installedStatus.installedVersion,
+            packageInfo.version,
+          )
             ? "outdated"
             : "latest",
-          installedVersion,
+          installedVersion: installedStatus.installedVersion,
         };
       }
 

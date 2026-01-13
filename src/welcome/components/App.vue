@@ -1,202 +1,130 @@
 <template>
   <ErrorBoundary>
     <TooltipProvider disableHoverableContent :delayDuration="500">
-      <div class="welcome-frame">
-        <QLayout reveal container class="welcome-layout">
-          <QHeader class="welcome-header q-pa-sm">
-            <QToolbar>
-              <QToolbarTitle class="text-display">ようこそ</QToolbarTitle>
-              <QSpace />
-              <div class="welcome-actions">
-                <BaseButton
-                  label="エンジン情報を更新"
-                  icon="refresh"
-                  :disabled="isFetching"
-                  @click="refreshLatestEngineInfos"
-                />
-                <BaseButton
-                  label="メインウィンドウを起動"
-                  variant="primary"
-                  @click="launchMainWindow"
-                />
-              </div>
-            </QToolbar>
-          </QHeader>
+      <QLayout reveal container>
+        <QHeader class="q-pa-sm">
+          <QToolbar>
+            <QToolbarTitle class="text-display">セットアップ</QToolbarTitle>
+            <QSpace />
+            <BaseButton
+              label="エディタを起動"
+              :disabled="!canLaunchEditor"
+              @click="switchToMainWindow"
+            />
+          </QToolbar>
+        </QHeader>
 
-          <QPageContainer>
-            <QPage class="welcome-page">
-              <BaseNavigationView>
-                <template #sidebar>
-                  <div class="list-header">
-                    <div class="list-title">エンジン一覧</div>
-                  </div>
-                  <div v-if="latestEngineInfos" class="engine-list">
-                    <BaseListItem
-                      v-for="engineInfo in latestEngineInfos"
-                      :key="engineInfo.package.engineId"
-                      :selected="
-                        selectedEngineId === engineInfo.package.engineId
-                      "
-                      @click="selectEngine(engineInfo.package.engineId)"
-                    >
-                      <div class="listitem-main">
-                        <div class="listitem-title">
-                          {{ engineInfo.package.engineName }}
+        <QPageContainer>
+          <QPage class="welcome-page">
+            <BaseScrollArea>
+              <div class="inner">
+                <BaseDocumentView class="welcome-intro">
+                  <h1>エンジンのセットアップ</h1>
+                  <p>
+                    VOICEVOXエディタを使用するには、音声合成エンジンのインストールが必要です。
+                    以下のエンジン一覧から、インストールまたは更新を行ってください。
+                  </p>
+                </BaseDocumentView>
+
+                <div
+                  v-if="
+                    loadingEngineInfosState === 'uninitialized' ||
+                    loadingEngineInfosState === 'loadingLocal'
+                  "
+                  class="engine-loading"
+                >
+                  <QSpinner color="primary" size="2.5rem" :thickness="5" />
+                  <div class="loading-text">読み込み中...</div>
+                </div>
+                <template v-else>
+                  <section
+                    v-for="selectedEngine in latestEngineInfos ?? []"
+                    :key="selectedEngine.package.engineId"
+                  >
+                    <div class="engine-card">
+                      <div class="engine-card-head">
+                        <div class="engine-name">
+                          {{ selectedEngine.package.engineName }}
                         </div>
-                        <div class="listitem-sub">
-                          <span
-                            >最新: {{ engineInfo.package.latestVersion }}</span
-                          >
-                          <span>{{ installedLabel(engineInfo.installed) }}</span>
-                        </div>
-                        <div
-                          v-if="getEngineProgress(engineInfo.package.engineId)"
-                          class="listitem-progress"
+                        <span
+                          class="status-pill"
+                          :data-status="selectedEngine.installed.status"
                         >
+                          {{ statusLabel(selectedEngine.installed.status) }}
+                        </span>
+                      </div>
+                      <div class="engine-meta">
+                        <div>
+                          最新バージョン:
+                          {{ latestVersionLabel(selectedEngine) }}
+                        </div>
+                        <div>
+                          {{ installedLabel(selectedEngine.installed) }}
+                        </div>
+                      </div>
+                      <div
+                        v-if="
+                          getEngineProgress(selectedEngine.package.engineId)
+                        "
+                        class="engine-progress"
+                      >
+                        <div class="engine-progress-label">
                           {{
                             progressTypeLabel(
-                              getEngineProgress(engineInfo.package.engineId)
+                              getEngineProgress(selectedEngine.package.engineId)
                                 .type,
                             )
                           }}
+                        </div>
+                        <div class="engine-progress-bar">
+                          <div
+                            class="engine-progress-fill"
+                            :style="{
+                              width: `${Math.floor(
+                                getEngineProgress(
+                                  selectedEngine.package.engineId,
+                                ).progress,
+                              )}%`,
+                            }"
+                          ></div>
+                        </div>
+                        <div class="engine-progress-value">
                           {{
                             Math.floor(
-                              getEngineProgress(engineInfo.package.engineId)
+                              getEngineProgress(selectedEngine.package.engineId)
                                 .progress,
                             )
                           }}%
                         </div>
                       </div>
-                      <div class="listitem-trailing">
-                        <span
-                          class="status-pill"
-                          :data-status="engineInfo.installed.status"
-                        >
-                          {{ statusLabel(engineInfo.installed.status) }}
-                        </span>
+                      <div class="engine-actions">
+                        <BaseButton
+                          :label="actionLabel(selectedEngine)"
+                          :disabled="isActionDisabled(selectedEngine)"
+                          :variant="
+                            selectedEngine.installed.status === 'latest'
+                              ? 'default'
+                              : 'primary'
+                          "
+                          @click="
+                            installEngine(selectedEngine.package.engineId)
+                          "
+                        />
                       </div>
-                    </BaseListItem>
-                  </div>
-                  <div v-else class="engine-loading">
-                    <QSpinner color="primary" size="2rem" />
-                    <div class="loading-text">
-                      最新のエンジン情報を取得中...
                     </div>
-                  </div>
+                  </section>
                 </template>
-
-                <div class="detail">
-                  <BaseScrollArea>
-                    <div class="inner">
-                      <BaseDocumentView class="welcome-intro">
-                        <h1>VOICEVOXへようこそ</h1>
-                        <p>
-                          エンジンのインストールと更新をここから行えます。準備が整ったら、
-                          メインウィンドウを起動して制作を始めましょう。
-                        </p>
-                      </BaseDocumentView>
-
-                      <section v-if="selectedEngine" class="section">
-                        <div class="section-title">選択中のエンジン</div>
-                        <div class="engine-card">
-                          <div class="engine-card-head">
-                            <div class="engine-name">
-                              {{ selectedEngine.package.engineName }}
-                            </div>
-                            <span
-                              class="status-pill"
-                              :data-status="selectedEngine.installed.status"
-                            >
-                              {{ statusLabel(selectedEngine.installed.status) }}
-                            </span>
-                          </div>
-                          <div class="engine-meta">
-                            <div>
-                              最新バージョン:
-                              {{ selectedEngine.package.latestVersion }}
-                            </div>
-                            <div>
-                              {{ installedLabel(selectedEngine.installed) }}
-                            </div>
-                          </div>
-                          <div
-                            v-if="
-                              getEngineProgress(
-                                selectedEngine.package.engineId,
-                              )
-                            "
-                            class="engine-progress"
-                          >
-                            <div class="engine-progress-label">
-                              {{
-                                progressTypeLabel(
-                                  getEngineProgress(
-                                    selectedEngine.package.engineId,
-                                  ).type,
-                                )
-                              }}
-                            </div>
-                            <div class="engine-progress-bar">
-                              <div
-                                class="engine-progress-fill"
-                                :style="{
-                                  width: `${Math.floor(
-                                    getEngineProgress(
-                                      selectedEngine.package.engineId,
-                                    ).progress,
-                                  )}%`,
-                                }"
-                              ></div>
-                            </div>
-                            <div class="engine-progress-value">
-                              {{
-                                Math.floor(
-                                  getEngineProgress(
-                                    selectedEngine.package.engineId,
-                                  ).progress,
-                                )
-                              }}%
-                            </div>
-                          </div>
-                          <div class="engine-actions">
-                            <BaseButton
-                              :label="actionLabel(selectedEngine)"
-                              :disabled="isActionDisabled(selectedEngine)"
-                              :variant="
-                                selectedEngine.installed.status === 'latest'
-                                  ? 'default'
-                                  : 'primary'
-                              "
-                              @click="
-                                installEngine(
-                                  selectedEngine.package.engineId,
-                                )
-                              "
-                            />
-                          </div>
-                        </div>
-                      </section>
-
-                      <section v-else class="section empty-state">
-                        <div class="empty-title">エンジン情報がありません</div>
-                        <div class="empty-text">
-                          右上の更新ボタンでエンジン情報を取得してください。
-                        </div>
-                      </section>
-                    </div>
-                  </BaseScrollArea>
-                </div>
-              </BaseNavigationView>
-            </QPage>
-          </QPageContainer>
-        </QLayout>
-      </div>
+              </div>
+            </BaseScrollArea>
+          </QPage>
+        </QPageContainer>
+      </QLayout>
     </TooltipProvider>
   </ErrorBoundary>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { TooltipProvider } from "reka-ui";
 import ErrorBoundary from "@/components/ErrorBoundary.vue";
 import { EnginePackageStatus } from "@/backend/electron/engineAndVvppController";
@@ -204,14 +132,25 @@ import { EngineId } from "@/type/preload";
 import { setThemeToCss } from "@/domain/dom";
 import { themes } from "@/domain/theme";
 import BaseButton from "@/components/Base/BaseButton.vue";
-import BaseNavigationView from "@/components/Base/BaseNavigationView.vue";
-import BaseListItem from "@/components/Base/BaseListItem.vue";
 import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 import BaseDocumentView from "@/components/Base/BaseDocumentView.vue";
 
 const latestEngineInfos = ref<EnginePackageStatus[] | undefined>(undefined);
-const isFetching = ref(false);
-const selectedEngineId = ref<EngineId | undefined>(undefined);
+const loadingEngineInfosState = ref<
+  "uninitialized" | "loadingLocal" | "fetchingLatest" | "fetched"
+>("uninitialized");
+const canLaunchEditor = computed(() => {
+  if (
+    loadingEngineInfosState.value === "uninitialized" ||
+    loadingEngineInfosState.value === "loadingLocal"
+  ) {
+    return false;
+  }
+  const engineInfos = latestEngineInfos.value ?? [];
+  return engineInfos.some(
+    (engineInfo) => engineInfo.installed.status !== "notInstalled",
+  );
+});
 
 type EngineProgressInfo = {
   progress: number;
@@ -224,10 +163,15 @@ const engineProgressInfo = ref<Record<EngineId, EngineProgressInfo>>(
 const progressTypeLabel = (type: EngineProgressInfo["type"]) => {
   return type === "download" ? "ダウンロード" : "インストール";
 };
+const latestVersionLabel = (engineInfo: EnginePackageStatus) => {
+  return engineInfo.package.latestVersion ?? "（読み込み中）";
+};
 const statusLabel = (status: EnginePackageStatus["installed"]["status"]) => {
   switch (status) {
     case "notInstalled":
       return "未インストール";
+    case "installed":
+      return "インストール済み";
     case "outdated":
       return "更新あり";
     case "latest":
@@ -248,13 +192,26 @@ const isProgressing = (engineId: EngineId) => {
   const progress = getEngineProgress(engineId)?.progress;
   return progress != undefined && progress < 100;
 };
+const hasLatestInfo = (engineInfo: EnginePackageStatus) => {
+  return (
+    engineInfo.package.packageInfo != undefined &&
+    engineInfo.package.latestVersion != undefined
+  );
+};
 const actionLabel = (engineInfo: EnginePackageStatus) => {
   if (isProgressing(engineInfo.package.engineId)) {
     return "処理中";
   }
+  if (!hasLatestInfo(engineInfo)) {
+    return engineInfo.installed.status === "notInstalled"
+      ? "情報未取得"
+      : "インストール済み";
+  }
   switch (engineInfo.installed.status) {
     case "notInstalled":
       return "インストール";
+    case "installed":
+      return "インストール済み";
     case "outdated":
       return "更新";
     case "latest":
@@ -264,19 +221,13 @@ const actionLabel = (engineInfo: EnginePackageStatus) => {
   }
 };
 const isActionDisabled = (engineInfo: EnginePackageStatus) => {
+  if (!hasLatestInfo(engineInfo)) {
+    return true;
+  }
   if (engineInfo.installed.status === "latest") {
     return true;
   }
   return isProgressing(engineInfo.package.engineId);
-};
-const selectedEngine = computed(() =>
-  latestEngineInfos.value?.find(
-    (engineInfo) => engineInfo.package.engineId === selectedEngineId.value,
-  ),
-);
-
-const selectEngine = (engineId: EngineId) => {
-  selectedEngineId.value = engineId;
 };
 
 const installEngine = (engineId: EngineId) => {
@@ -292,18 +243,21 @@ const installEngine = (engineId: EngineId) => {
     });
 };
 
-const launchMainWindow = () => {
+const switchToMainWindow = () => {
+  if (!canLaunchEditor.value) {
+    return;
+  }
   void window.welcomeBackend.launchMainWindow();
 };
 
-const refreshLatestEngineInfos = async () => {
-  isFetching.value = true;
-  try {
-    latestEngineInfos.value =
-      await window.welcomeBackend.fetchLatestEnginePackageStatuses();
-  } finally {
-    isFetching.value = false;
-  }
+const fetchInstalledEngineInfos = async () => {
+  loadingEngineInfosState.value = "loadingLocal";
+  latestEngineInfos.value =
+    await window.welcomeBackend.fetchEnginePackageInstallStatuses();
+  loadingEngineInfosState.value = "fetchingLatest";
+  latestEngineInfos.value =
+    await window.welcomeBackend.fetchLatestEnginePackageStatuses();
+  loadingEngineInfosState.value = "fetched";
 };
 
 const applyThemeFromConfig = async () => {
@@ -320,23 +274,6 @@ const applyThemeFromConfig = async () => {
   }
 };
 
-watch(
-  latestEngineInfos,
-  (infos) => {
-    if (!infos || infos.length === 0) {
-      selectedEngineId.value = undefined;
-      return;
-    }
-    const exists = infos.some(
-      (engineInfo) => engineInfo.package.engineId === selectedEngineId.value,
-    );
-    if (!exists) {
-      selectedEngineId.value = infos[0].package.engineId;
-    }
-  },
-  { immediate: true },
-);
-
 onMounted(() => {
   void applyThemeFromConfig();
 
@@ -346,7 +283,7 @@ onMounted(() => {
     },
   });
 
-  void refreshLatestEngineInfos();
+  void fetchInstalledEngineInfos();
 });
 </script>
 
@@ -354,28 +291,6 @@ onMounted(() => {
 @use "@/styles/v2/colors" as colors;
 @use "@/styles/v2/mixin" as mixin;
 @use "@/styles/v2/variables" as vars;
-
-.welcome-frame {
-  height: 100vh;
-  padding: vars.$padding-2;
-  background-color: colors.$background-alt;
-}
-
-.welcome-layout {
-  height: 100%;
-  width: 100%;
-  max-width: 960px;
-  margin: 0 auto;
-  border: 1px solid colors.$border;
-  border-radius: vars.$radius-2;
-  background-color: colors.$background;
-  overflow: hidden;
-}
-
-.welcome-header {
-  border-bottom: 1px solid colors.$border;
-  background-color: colors.$background;
-}
 
 .welcome-actions {
   display: flex;

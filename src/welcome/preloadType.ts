@@ -4,6 +4,7 @@ import type { EngineId } from "@/type/preload";
 export interface WelcomeSandbox {
   installEngine(obj: { engineId: EngineId; target: string }): Promise<void>;
   fetchLatestEnginePackageStatuses(): Promise<EnginePackageStatus[]>;
+  fetchEnginePackageInstallStatuses(): Promise<EnginePackageStatus[]>;
   launchMainWindow(): Promise<void>;
   getCurrentTheme(): Promise<string>;
   registerIpcHandler(listeners: {

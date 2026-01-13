@@ -32,7 +32,7 @@ export class AppStateController {
   async startup() {
     const engineAndVvppController = getEngineAndVvppController();
     const packageStatuses =
-      await engineAndVvppController.fetchEnginePackageStatuses();
+      engineAndVvppController.fetchEnginePackageInstallStatuses();
 
     if (packageStatuses.length === 0) {
       log.info(
