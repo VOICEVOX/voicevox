@@ -536,7 +536,7 @@ import {
 import { createLogger } from "@/helpers/log";
 import { useRootMiscSetting } from "@/composables/useRootMiscSetting";
 import { isProduction } from "@/helpers/platform";
-import { ExhaustiveError } from "@/type/utility";
+import { assertNonNullable, ExhaustiveError } from "@/type/utility";
 
 type SamplingRateOption = EngineSettingType["outputSamplingRate"];
 
@@ -751,9 +751,7 @@ const [defaultLyricMode, setDefaultLyricMode] = useRootMiscSetting(
   "defaultLyricMode",
 );
 const handleDefaultLyricModeChange = (value: "doremi" | "la" | undefined) => {
-  if (value == undefined) {
-    throw new Error("value is undefined");
-  }
+  assertNonNullable(value);
   setDefaultLyricMode(value);
 };
 
