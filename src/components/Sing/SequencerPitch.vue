@@ -9,12 +9,11 @@ import { ref, watch, computed, onUnmounted, onMounted } from "vue";
 import * as PIXI from "pixi.js";
 import { useStore } from "@/store";
 import { useMounted } from "@/composables/useMounted";
+import { frequencyToNoteNumber, secondToTick } from "@/sing/music";
 import {
   UNVOICED_PHONEMES,
   VALUE_INDICATING_NO_DATA,
   convertToFramePhonemes,
-  frequencyToNoteNumber,
-  secondToTick,
 } from "@/sing/domain";
 import { noteNumberToBaseY, tickToBaseX } from "@/sing/viewHelper";
 import { Color } from "@/sing/graphics/lineStrip";

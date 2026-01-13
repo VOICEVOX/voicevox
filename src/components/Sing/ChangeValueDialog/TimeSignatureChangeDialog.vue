@@ -41,7 +41,7 @@ import { ref } from "vue";
 import CommonDialog from "./CommonDialog.vue";
 import type { TimeSignature } from "@/domain/project/type";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
-import { BEAT_TYPES } from "@/sing/domain";
+import { BEAT_TYPES } from "@/sing/music";
 
 const modelValue = defineModel<boolean>();
 const props = defineProps<{
