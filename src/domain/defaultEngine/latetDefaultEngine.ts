@@ -4,6 +4,12 @@
 
 import { z } from "zod";
 
+/** エンジンパッケージのターゲット */
+export const runtimeTargetSchema = z
+  .string()
+  .regex(/[a-z]+-[a-z0-9]+-[a-z0-9]+/);
+export type RuntimeTarget = z.infer<typeof runtimeTargetSchema>;
+
 /** パッケージ情報のスキーマ */
 const packageInfoSchema = z.object({
   version: z.string(),
@@ -21,20 +27,21 @@ export type PackageInfo = z.infer<typeof packageInfoSchema>;
 /** デフォルトエンジンの最新情報のスキーマ */
 const latestDefaultEngineInfoSchema = z.object({
   formatVersion: z.number(),
-  packages: z.object({
-    "windows-x64-cpu": packageInfoSchema,
-    "windows-x64-directml": packageInfoSchema,
-    "macos-x64-cpu": packageInfoSchema,
-    "macos-arm64-cpu": packageInfoSchema,
-    "linux-x64-cpu": packageInfoSchema,
-    "linux-x64-cuda": packageInfoSchema,
-  }),
+  packages: z.record(runtimeTargetSchema, packageInfoSchema),
 });
 
 /** デフォルトエンジンの最新情報を取得する */
 export const fetchLatestDefaultEngineInfo = async (url: string) => {
   const response = await fetch(url);
   return latestDefaultEngineInfoSchema.parse(await response.json());
+};
+
+/** 指定ターゲットのパッケージを取得する */
+export const getPackageInfoByTarget = (
+  updateInfo: z.infer<typeof latestDefaultEngineInfoSchema>,
+  target: RuntimeTarget,
+): PackageInfo => {
+  return updateInfo.packages[target];
 };
 
 /**

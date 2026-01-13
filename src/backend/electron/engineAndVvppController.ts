@@ -12,13 +12,14 @@ import { EngineId, EngineInfo, engineSettingSchema } from "@/type/preload";
 import {
   PackageInfo,
   fetchLatestDefaultEngineInfo,
-  getSuitablePackageInfo,
+  getPackageInfoByTarget,
 } from "@/domain/defaultEngine/latetDefaultEngine";
 import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
 import { UnreachableError } from "@/type/utility";
 import { ProgressCallback } from "@/helpers/progressHelper";
 import { createLogger } from "@/helpers/log";
 import { DisplayableError, errorToMessage } from "@/helpers/errorHelper";
+import { isLinux, isMac, isWindows } from "@/helpers/platform";
 
 const log = createLogger("EngineAndVvppController");
 
@@ -207,7 +208,10 @@ export class EngineAndVvppController {
       }
 
       // 実行環境に合うパッケージを取得
-      const packageInfo = getSuitablePackageInfo(latestInfo);
+      const packageInfo = getPackageInfoByTarget(
+        latestInfo,
+        envEngineInfo.runtimeTarget,
+      );
       log.info(`Latest default engine version: ${packageInfo.version}`);
 
       // インストール状況を取得
@@ -372,6 +376,39 @@ export class EngineAndVvppController {
       // FIXME: handleMarkedEngineDirsはエラーをthrowしている。エラーがthrowされるとアプリが終了しないので、終了するようにしたい。
       return this.vvppManager.handleMarkedEngineDirs();
     });
+  }
+
+  /** このRuntime Targetはこのプラットフォームで動くか */
+  isSupportedTarget(target: string): boolean {
+    let isSupported = true;
+    const os = target.split("-")[0];
+    switch (os) {
+      case "windows":
+        isSupported &&= isWindows;
+        break;
+      case "mac":
+        isSupported &&= isMac;
+        break;
+      case "linux":
+        isSupported &&= isLinux;
+        break;
+      default:
+        isSupported = false;
+    }
+
+    const arch = target.split("-")[1];
+    switch (arch) {
+      case "x64":
+        isSupported &&= process.arch === "x64";
+        break;
+      case "arm64":
+        isSupported &&= process.arch === "arm64";
+        break;
+      default:
+        isSupported = false;
+    }
+
+    return isSupported;
   }
 }
 

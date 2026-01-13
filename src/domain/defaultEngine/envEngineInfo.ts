@@ -5,6 +5,7 @@
 import { z } from "zod";
 
 import { engineIdSchema } from "@/type/preload";
+import { runtimeTargetSchema } from "@/domain/defaultEngine/latetDefaultEngine";
 import { isElectron, isNode } from "@/helpers/platform";
 
 /** .envに書くデフォルトエンジン情報のスキーマ */
@@ -28,6 +29,7 @@ const envEngineInfoSchema = z
       z.object({
         type: z.literal("downloadVvpp"),
         latestUrl: z.string(),
+        runtimeTarget: runtimeTargetSchema,
       }),
     ]),
   );
