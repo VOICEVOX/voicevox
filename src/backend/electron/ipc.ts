@@ -3,6 +3,7 @@ import { wrapToTransferableResult } from "./transferableResultHelper";
 import { BaseIpcData } from "./ipcType";
 import { createLogger } from "@/helpers/log";
 import { objectEntries } from "@/helpers/typedEntries";
+import { ensureNotNullish } from "@/helpers/errorHelper";
 
 const log = createLogger("ipc");
 
@@ -17,11 +18,20 @@ export type IpcSendProxy<Ipc extends BaseIpcData> = {
   [K in keyof Ipc]: (...args: Ipc[K]["args"]) => void;
 };
 
+const ipcHandlers = new Map<
+  string,
+  ((event: IpcMainInvokeEvent, ...args: unknown[]) => unknown)[]
+>();
+const delegated = Symbol("delegated");
 export function registerIpcMainHandle<Ipc extends BaseIpcData>(
+  win: BrowserWindow,
   listeners: IpcMainHandle<Ipc>,
 ): void {
   objectEntries(listeners).forEach(([channel, listener]) => {
     const errorHandledListener: typeof listener = (event, ...args) => {
+      if (win.isDestroyed() || event.sender.id !== win.webContents.id) {
+        return delegated;
+      }
       try {
         validateIpcSender(event);
       } catch (e) {
@@ -31,7 +41,30 @@ export function registerIpcMainHandle<Ipc extends BaseIpcData>(
 
       return wrapToTransferableResult(() => listener(event, ...args));
     };
-    ipcMain.handle(channel as string, errorHandledListener);
+    if (ipcHandlers.has(channel as string)) {
+      ensureNotNullish(ipcHandlers.get(channel as string)).push(
+        errorHandledListener,
+      );
+    } else {
+      ipcHandlers.set(channel as string, [errorHandledListener]);
+      ipcMain.handle(channel as string, async (event, ...args: unknown[]) => {
+        const handlers = ipcHandlers.get(channel as string);
+        if (!handlers) {
+          throw new Error(
+            `No handlers registered for channel: ${String(channel)}`,
+          );
+        }
+        for (const handler of handlers) {
+          const result = await handler(event, ...args);
+          if (result !== delegated) {
+            return result;
+          }
+        }
+        throw new Error(
+          `No valid handler found for channel: ${String(channel)}`,
+        );
+      });
+    }
   });
 }
 

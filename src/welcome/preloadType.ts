@@ -15,12 +15,20 @@ export interface WelcomeSandbox {
   launchMainWindow(): Promise<void>;
   getCurrentTheme(): Promise<string>;
   registerIpcHandler(listeners: {
-    updateEngineDownloadProgress: (obj: {
+    updateEngineDownloadProgress?: (obj: {
       engineId: EngineId;
       progress: number;
       type: "download" | "install";
     }) => void;
+    detectMaximized?: () => void;
+    detectUnmaximized?: () => void;
+    detectEnterFullscreen?: () => void;
+    detectLeaveFullscreen?: () => void;
   }): void;
+  isMaximizedWindow(): Promise<boolean>;
+  minimizeWindow(): Promise<void>;
+  toggleMaximizeWindow(): Promise<void>;
+  closeWindow(): Promise<void>;
   logError(...params: unknown[]): void;
   logWarn(...params: unknown[]): void;
   logInfo(...params: unknown[]): void;

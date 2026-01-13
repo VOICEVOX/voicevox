@@ -98,7 +98,6 @@ export function getIpcMainHandle(params: {
   const engineAndVvppController = getEngineAndVvppController();
   const engineInfoManager = getEngineInfoManager();
   const engineProcessManager = getEngineProcessManager();
-  const windowManager = getMainWindowManager();
   return {
     GET_TEXT_ASSET: async (_, textType) => {
       const fileName = path.join(staticDirPath, AssetTextFileNames[textType]);
@@ -124,6 +123,7 @@ export function getIpcMainHandle(params: {
      * 保存先になるディレクトリを選ぶダイアログを表示する。
      */
     SHOW_SAVE_DIRECTORY_DIALOG: async (_, { title }) => {
+      const windowManager = getMainWindowManager();
       const result = await retryShowSaveDialogWhileSafeDir(
         () =>
           windowManager.showOpenDialog({
@@ -147,6 +147,7 @@ export function getIpcMainHandle(params: {
      * 保存先として選ぶ場合は SHOW_SAVE_DIRECTORY_DIALOG を使うべき。
      */
     SHOW_OPEN_DIRECTORY_DIALOG: async (_, { title }) => {
+      const windowManager = getMainWindowManager();
       const result = await windowManager.showOpenDialog({
         title,
         properties: [
@@ -162,6 +163,7 @@ export function getIpcMainHandle(params: {
     },
 
     SHOW_WARNING_DIALOG: (_, { title, message }) => {
+      const windowManager = getMainWindowManager();
       return windowManager.showMessageBox({
         type: "warning",
         title,
@@ -170,6 +172,7 @@ export function getIpcMainHandle(params: {
     },
 
     SHOW_ERROR_DIALOG: (_, { title, message }) => {
+      const windowManager = getMainWindowManager();
       return windowManager.showMessageBox({
         type: "error",
         title,
@@ -178,6 +181,7 @@ export function getIpcMainHandle(params: {
     },
 
     SHOW_OPEN_FILE_DIALOG: (_, { title, name, extensions, defaultPath }) => {
+      const windowManager = getMainWindowManager();
       return windowManager.showOpenDialogSync({
         title,
         defaultPath,
@@ -190,6 +194,7 @@ export function getIpcMainHandle(params: {
       _,
       { title, defaultPath, name, extensions },
     ) => {
+      const windowManager = getMainWindowManager();
       const result = await retryShowSaveDialogWhileSafeDir(
         () =>
           windowManager.showSaveDialog({
@@ -211,6 +216,7 @@ export function getIpcMainHandle(params: {
     },
 
     IS_MAXIMIZED_WINDOW: () => {
+      const windowManager = getMainWindowManager();
       return windowManager.isMaximized();
     },
 
@@ -225,29 +231,35 @@ export function getIpcMainHandle(params: {
     },
 
     MINIMIZE_WINDOW: () => {
+      const windowManager = getMainWindowManager();
       windowManager.minimize();
     },
 
     TOGGLE_MAXIMIZE_WINDOW: () => {
+      const windowManager = getMainWindowManager();
       windowManager.toggleMaximizeWindow();
     },
 
     TOGGLE_FULLSCREEN: () => {
+      const windowManager = getMainWindowManager();
       windowManager.toggleFullScreen();
     },
 
     /** UIの拡大 */
     ZOOM_IN: () => {
+      const windowManager = getMainWindowManager();
       windowManager.zoomIn();
     },
 
     /** UIの縮小 */
     ZOOM_OUT: () => {
+      const windowManager = getMainWindowManager();
       windowManager.zoomOut();
     },
 
     /** UIの拡大率リセット */
     ZOOM_RESET: () => {
+      const windowManager = getMainWindowManager();
       windowManager.zoomReset();
     },
 
@@ -283,6 +295,7 @@ export function getIpcMainHandle(params: {
     },
 
     ON_VUEX_READY: () => {
+      const windowManager = getMainWindowManager();
       windowManager.show();
     },
 
@@ -291,6 +304,7 @@ export function getIpcMainHandle(params: {
     },
 
     CHANGE_PIN_WINDOW: () => {
+      const windowManager = getMainWindowManager();
       windowManager.togglePinWindow();
     },
 
@@ -334,6 +348,7 @@ export function getIpcMainHandle(params: {
     },
 
     RELOAD_APP: async (_, { isMultiEngineOffMode }) => {
+      const windowManager = getMainWindowManager();
       await windowManager.reload(isMultiEngineOffMode);
     },
 

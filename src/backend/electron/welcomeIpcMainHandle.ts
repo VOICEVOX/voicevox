@@ -73,9 +73,24 @@ export function getWelcomeIpcMainHandle(): IpcMainHandle<WelcomeIpcIHData> {
       return configManager.get("currentTheme");
     },
     SWITCH_TO_MAIN_WINDOW: async () => {
-      // TODO: ちゃんと消していいかチェックしてからメインウィンドウを起動する
       const appStateController = getAppStateController();
       await appStateController.switchToMainWindow();
+    },
+    MINIMIZE_WINDOW: () => {
+      const welcomeWindowManager = getWelcomeWindowManager();
+      welcomeWindowManager.minimize();
+    },
+    TOGGLE_MAXIMIZE_WINDOW: () => {
+      const welcomeWindowManager = getWelcomeWindowManager();
+      welcomeWindowManager.toggleMaximizeWindow();
+    },
+    CLOSE_WINDOW: () => {
+      const appStateController = getAppStateController();
+      appStateController.shutdown();
+    },
+    IS_MAXIMIZED_WINDOW: () => {
+      const welcomeWindowManager = getWelcomeWindowManager();
+      return welcomeWindowManager.isMaximized();
     },
   };
 }

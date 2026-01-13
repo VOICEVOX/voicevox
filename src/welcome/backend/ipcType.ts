@@ -35,6 +35,22 @@ export type WelcomeIpcIHData = {
     args: [];
     return: void;
   };
+  MINIMIZE_WINDOW: {
+    args: [];
+    return: void;
+  };
+  TOGGLE_MAXIMIZE_WINDOW: {
+    args: [];
+    return: void;
+  };
+  CLOSE_WINDOW: {
+    args: [];
+    return: void;
+  };
+  IS_MAXIMIZED_WINDOW: {
+    args: [];
+    return: boolean;
+  };
 };
 
 /**
@@ -49,6 +65,22 @@ export type WelcomeIpcSOData = {
         type: "download" | "install";
       },
     ];
+    return: void;
+  };
+  DETECT_MAXIMIZED: {
+    args: [];
+    return: void;
+  };
+  DETECT_UNMAXIMIZED: {
+    args: [];
+    return: void;
+  };
+  DETECT_ENTER_FULLSCREEN: {
+    args: [];
+    return: void;
+  };
+  DETECT_LEAVE_FULLSCREEN: {
+    args: [];
     return: void;
   };
 };

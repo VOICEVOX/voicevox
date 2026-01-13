@@ -11,8 +11,13 @@ import {
 import windowStateKeeper from "electron-window-state";
 import { getConfigManager } from "../../electronConfig";
 import { getEngineAndVvppController } from "../../engineAndVvppController";
-import { createIpcSendProxy, IpcSendProxy } from "../../ipc";
-import { IpcSOData } from "../../ipcType";
+import {
+  createIpcSendProxy,
+  IpcMainHandle,
+  IpcSendProxy,
+  registerIpcMainHandle,
+} from "../../ipc";
+import { IpcIHData, IpcSOData } from "../../ipcType";
 import { getAppStateController } from "../../appStateController";
 import { themes } from "@/domain/theme";
 import { createLogger } from "@/helpers/log";
@@ -23,6 +28,8 @@ type WindowManagerOption = {
   staticDir: string;
   isDevelopment: boolean;
   isTest: boolean;
+
+  ipcMainHandle: IpcMainHandle<IpcIHData>;
 };
 
 class MainWindowManager {
@@ -31,11 +38,13 @@ class MainWindowManager {
   private staticDir: string;
   private isDevelopment: boolean;
   private isTest: boolean;
+  private ipcHandle: IpcMainHandle<IpcIHData>;
 
   constructor(payload: WindowManagerOption) {
     this.staticDir = payload.staticDir;
     this.isDevelopment = payload.isDevelopment;
     this.isTest = payload.isTest;
+    this.ipcHandle = payload.ipcMainHandle;
   }
 
   /**
@@ -95,6 +104,7 @@ class MainWindowManager {
 
     this._win = win;
     const ipc = createIpcSendProxy<IpcSOData>(win);
+    registerIpcMainHandle<IpcIHData>(win, this.ipcHandle);
     this._ipc = ipc;
 
     win.on("maximize", () => {

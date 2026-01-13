@@ -18,19 +18,16 @@ import {
 } from "./manager/windowManager/main";
 import configMigration014 from "./configMigration014";
 import { initializeRuntimeInfoManager } from "./manager/RuntimeInfoManager";
-import { registerIpcMainHandle } from "./ipc";
 import { getConfigManager } from "./electronConfig";
 import { getEngineAndVvppController } from "./engineAndVvppController";
 import { getIpcMainHandle } from "./ipcMainHandle";
 import { getWelcomeIpcMainHandle } from "./welcomeIpcMainHandle";
 import { getAppStateController } from "./appStateController";
 import { initializeWelcomeWindowManager } from "./manager/windowManager/welcome";
-import { IpcIHData } from "./ipcType";
 import { assertNonNullable } from "@/type/utility";
 import { EngineInfo } from "@/type/preload";
 import { isDevelopment, isMac, isProduction, isTest } from "@/helpers/platform";
 import { createLogger } from "@/helpers/log";
-import { WelcomeIpcIHData } from "@/welcome/backend/ipcType";
 
 type SingleInstanceLockData = {
   filePath: string | undefined;
@@ -211,16 +208,6 @@ const onEngineProcessError = (engineInfo: EngineInfo, error: Error) => {
   dialog.showErrorBox("音声合成エンジンエラー", error.message);
 };
 
-initializeMainWindowManager({
-  isDevelopment,
-  isTest,
-  staticDir: staticDir,
-});
-initializeWelcomeWindowManager({
-  isDevelopment,
-  isTest,
-  staticDir: staticDir,
-});
 initializeRuntimeInfoManager({
   runtimeInfoPath: path.join(app.getPath("userData"), "runtime-info.json"),
   appVersion: app.getVersion(),
@@ -231,6 +218,23 @@ initializeEngineInfoManager({
 });
 initializeEngineProcessManager({ onEngineProcessError });
 initializeVvppManager({ vvppEngineDir, tmpDir: app.getPath("temp") });
+
+initializeMainWindowManager({
+  isDevelopment,
+  isTest,
+  staticDir: staticDir,
+  ipcMainHandle: getIpcMainHandle({
+    staticDirPath: staticDir,
+    appDirPath,
+    initialFilePathGetter: () => initialFilePath,
+  }),
+});
+initializeWelcomeWindowManager({
+  isDevelopment,
+  isTest,
+  staticDir: staticDir,
+  ipcMainHandle: getWelcomeIpcMainHandle(),
+});
 
 const configManager = getConfigManager();
 const appStateController = getAppStateController();
@@ -299,16 +303,6 @@ if (isMac) {
     Menu.setApplicationMenu(null);
   }
 }
-
-// プロセス間通信
-registerIpcMainHandle<IpcIHData>(
-  getIpcMainHandle({
-    staticDirPath: staticDir,
-    appDirPath,
-    initialFilePathGetter: () => initialFilePath,
-  }),
-);
-registerIpcMainHandle<WelcomeIpcIHData>(getWelcomeIpcMainHandle());
 
 // app callback
 app.on("web-contents-created", (_e, contents) => {

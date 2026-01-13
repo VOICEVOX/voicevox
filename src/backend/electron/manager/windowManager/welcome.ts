@@ -10,15 +10,20 @@ import {
 } from "electron";
 import { getConfigManager } from "../../electronConfig";
 import { getAppStateController } from "../../appStateController";
-import { createIpcSendProxy, IpcSendProxy } from "../../ipc";
+import {
+  createIpcSendProxy,
+  IpcMainHandle,
+  IpcSendProxy,
+  registerIpcMainHandle,
+} from "../../ipc";
 import { themes } from "@/domain/theme";
-import { createLogger } from "@/helpers/log";
-import { WelcomeIpcSOData } from "@/welcome/backend/ipcType";
+import { WelcomeIpcIHData, WelcomeIpcSOData } from "@/welcome/backend/ipcType";
 
 type WindowManagerOption = {
   staticDir: string;
   isDevelopment: boolean;
   isTest: boolean;
+  ipcMainHandle: IpcMainHandle<WelcomeIpcIHData>;
 };
 
 class WelcomeWindowManager {
@@ -27,11 +32,13 @@ class WelcomeWindowManager {
   private staticDir: string;
   private isDevelopment: boolean;
   private isTest: boolean;
+  private ipcMainHandle: IpcMainHandle<WelcomeIpcIHData>;
 
   constructor(payload: WindowManagerOption) {
     this.staticDir = payload.staticDir;
     this.isDevelopment = payload.isDevelopment;
     this.isTest = payload.isTest;
+    this.ipcMainHandle = payload.ipcMainHandle;
   }
 
   /**
@@ -81,9 +88,24 @@ class WelcomeWindowManager {
         preload: path.join(import.meta.dirname, "welcomePreload.cjs"),
       },
       icon: path.join(this.staticDir, "icon.png"),
+      frame: false,
     });
-    this._ipc = createIpcSendProxy<WelcomeIpcSOData>(win);
+    const ipc = createIpcSendProxy<WelcomeIpcSOData>(win);
+    this._ipc = ipc;
+    registerIpcMainHandle<WelcomeIpcIHData>(win, this.ipcMainHandle);
 
+    win.on("maximize", () => {
+      ipc.DETECT_MAXIMIZED();
+    });
+    win.on("unmaximize", () => {
+      ipc.DETECT_UNMAXIMIZED();
+    });
+    win.on("enter-full-screen", () => {
+      ipc.DETECT_ENTER_FULLSCREEN();
+    });
+    win.on("leave-full-screen", () => {
+      ipc.DETECT_LEAVE_FULLSCREEN();
+    });
     win.on("close", (event) => {
       const appStateController = getAppStateController();
       void appStateController.onQuitRequest({

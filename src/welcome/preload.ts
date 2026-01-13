@@ -49,15 +49,49 @@ const api: WelcomeSandbox = {
     return ipcRendererInvokeProxy.GET_CURRENT_THEME();
   },
   registerIpcHandler: (listeners) => {
-    ipcRenderer.on("UPDATE_ENGINE_DOWNLOAD_PROGRESS", (_, args) => {
-      listeners.updateEngineDownloadProgress(
-        args as {
-          engineId: EngineId;
-          progress: number;
-          type: "download" | "install";
-        },
-      );
-    });
+    if (listeners.updateEngineDownloadProgress) {
+      ipcRenderer.on("UPDATE_ENGINE_DOWNLOAD_PROGRESS", (_, args) => {
+        listeners.updateEngineDownloadProgress?.(
+          args as {
+            engineId: EngineId;
+            progress: number;
+            type: "download" | "install";
+          },
+        );
+      });
+    }
+    if (listeners.detectMaximized) {
+      ipcRenderer.on("DETECT_MAXIMIZED", () => {
+        listeners.detectMaximized?.();
+      });
+    }
+    if (listeners.detectUnmaximized) {
+      ipcRenderer.on("DETECT_UNMAXIMIZED", () => {
+        listeners.detectUnmaximized?.();
+      });
+    }
+    if (listeners.detectEnterFullscreen) {
+      ipcRenderer.on("DETECT_ENTER_FULLSCREEN", () => {
+        listeners.detectEnterFullscreen?.();
+      });
+    }
+    if (listeners.detectLeaveFullscreen) {
+      ipcRenderer.on("DETECT_LEAVE_FULLSCREEN", () => {
+        listeners.detectLeaveFullscreen?.();
+      });
+    }
+  },
+  isMaximizedWindow: () => {
+    return ipcRendererInvokeProxy.IS_MAXIMIZED_WINDOW();
+  },
+  minimizeWindow: () => {
+    return ipcRendererInvokeProxy.MINIMIZE_WINDOW();
+  },
+  toggleMaximizeWindow: () => {
+    return ipcRendererInvokeProxy.TOGGLE_MAXIMIZE_WINDOW();
+  },
+  closeWindow: () => {
+    return ipcRendererInvokeProxy.CLOSE_WINDOW();
   },
 
   logError: (...params) => {
