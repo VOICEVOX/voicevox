@@ -150,7 +150,10 @@ done
 if [ "$SKIP_VERIFY" = "1" ]; then
     echo "[-] File verification skipped"
 else
-    sha256sum --check list.txt || (echo "Remove the corrupted files and restart installer!";exit 1)
+    if !sha256sum --check list.txt; then
+        echo "Remove the corrupted files and restart installer!"
+        exit 1
+    fi
 fi
 
 # Extract archives
