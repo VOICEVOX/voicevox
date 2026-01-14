@@ -403,18 +403,15 @@
                     description="ONの場合、エンジンが対応している場合は、未知の英単語をカタカナ読みに変換します。"
                   />
                 </BaseTooltip>
-                <BaseRowCard
+                <ButtonToggleCell
+                  v-model="defaultLyricModeComputed"
                   title="ソング：デフォルト歌詞"
                   description="歌詞が未設定の音符に対してデフォルトで設定される歌詞を設定できます。"
-                >
-                  <BaseSelect
-                    :modelValue="defaultLyricMode"
-                    @update:modelValue="handleDefaultLyricModeChange"
-                  >
-                    <BaseSelectItem value="doremi" label="ドレミ（階名）" />
-                    <BaseSelectItem value="la" label="ら" />
-                  </BaseSelect>
-                </BaseRowCard>
+                  :options="[
+                    { label: 'ドレミ（階名）', value: 'doremi' },
+                    { label: 'ら', value: 'la' },
+                  ]"
+                />
                 <BaseRowCard
                   title="ソング：元に戻すトラック操作"
                   description="「元に戻す」機能の対象とするトラック操作を指定します。"
@@ -536,7 +533,7 @@ import {
 import { createLogger } from "@/helpers/log";
 import { useRootMiscSetting } from "@/composables/useRootMiscSetting";
 import { isProduction } from "@/helpers/platform";
-import { assertNonNullable, ExhaustiveError } from "@/type/utility";
+import { ExhaustiveError } from "@/type/utility";
 
 type SamplingRateOption = EngineSettingType["outputSamplingRate"];
 
@@ -750,10 +747,13 @@ const [defaultLyricMode, setDefaultLyricMode] = useRootMiscSetting(
   store,
   "defaultLyricMode",
 );
-const handleDefaultLyricModeChange = (value: "doremi" | "la" | undefined) => {
-  assertNonNullable(value);
-  setDefaultLyricMode(value);
-};
+
+const defaultLyricModeComputed = computed({
+  get: () => defaultLyricMode.value,
+  set: (value: "doremi" | "la") => {
+    setDefaultLyricMode(value);
+  },
+});
 
 const canSetAudioOutputDevice = computed(() => {
   return !!HTMLAudioElement.prototype.setSinkId;
