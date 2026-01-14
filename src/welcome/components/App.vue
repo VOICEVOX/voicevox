@@ -56,21 +56,13 @@
                     v-for="engine in engineInfosForDisplay"
                     :key="engine.package.engineId"
                     :engineName="engine.package.engineName"
-                    :latestVersionLabel="latestVersionLabel(engine)"
-                    :installedVersionLabel="installedVersionLabel(engine)"
-                    :engineStatus="determineEngineStatus(engine)"
-                    :statusLabel="statusLabel(determineEngineStatus(engine))"
-                    :runtimeTargetOptions="runtimeTargetOptions(engine)"
+                    :localInfo="engine.localInfo"
+                    :remoteInfo="engine.remoteInfo"
                     :selectedRuntimeTarget="getSelectedRuntimeTarget(engine)"
                     :runtimeSelectDisabled="
                       isDownloadingOrInstalling(engine.package.engineId)
                     "
                     :progressInfo="getEngineProgress(engine.package.engineId)"
-                    :actionLabel="actionLabel(engine)"
-                    :actionVariant="
-                      actionVariant(determineEngineStatus(engine))
-                    "
-                    :actionDisabled="isActionDisabled(engine)"
                     @selectRuntimeTarget="
                       (target) =>
                         setSelectedRuntimeTarget(
@@ -93,7 +85,6 @@
 </template>
 
 <script setup lang="ts">
-import semver from "semver";
 import { computed, onMounted, ref } from "vue";
 import { TooltipProvider } from "reka-ui";
 import MenuBar from "./MenuBar.vue";
@@ -112,9 +103,7 @@ import { themes } from "@/domain/theme";
 import BaseButton from "@/components/Base/BaseButton.vue";
 import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 import BaseDocumentView from "@/components/Base/BaseDocumentView.vue";
-import { ExhaustiveError, UnreachableError } from "@/type/utility";
-
-type DisplayStatus = "notInstalled" | "installed" | "outdated" | "latest";
+import { UnreachableError } from "@/type/utility";
 
 type DisplayEngineInfo = {
   package: EnginePackageBase;
@@ -194,40 +183,6 @@ const setSelectedRuntimeTarget = (
   };
 };
 
-const getPackageInfoForTarget = (
-  engineInfo: DisplayEngineInfo,
-  target: RuntimeTarget | undefined,
-) => {
-  if (!target) {
-    return undefined;
-  }
-  return availableRuntimeTargets(engineInfo).find(
-    (targetInfo) => targetInfo.target === target,
-  )?.packageInfo;
-};
-
-const getSelectedPackageInfo = (engineInfo: DisplayEngineInfo) =>
-  getPackageInfoForTarget(engineInfo, getSelectedRuntimeTarget(engineInfo));
-
-const runtimeTargetLabel = (
-  targetInfo:
-    | EnginePackageRemoteInfo["availableRuntimeTargets"][number]
-    | undefined,
-) => {
-  if (!targetInfo) {
-    return "";
-  }
-  return targetInfo.packageInfo.label ?? targetInfo.target;
-};
-const installedVersionLabel = (engineInfo: DisplayEngineInfo) =>
-  engineInfo.localInfo.installed.status === "notInstalled"
-    ? "未インストール"
-    : engineInfo.localInfo.installed.installedVersion;
-const runtimeTargetOptions = (engineInfo: DisplayEngineInfo) =>
-  availableRuntimeTargets(engineInfo).map((targetInfo) => ({
-    target: targetInfo.target,
-    label: runtimeTargetLabel(targetInfo),
-  }));
 type EngineProgressInfo = {
   progress: number;
   type: "download" | "install";
@@ -262,81 +217,11 @@ const clearEngineProgress = (engineId: EngineId) => {
   engineProgressInfo.value = rest as Record<EngineId, EngineProgressInfo>;
 };
 
-const determineEngineStatus = (
-  engineInfo: DisplayEngineInfo,
-): DisplayStatus => {
-  if (engineInfo.localInfo.installed.status === "notInstalled") {
-    return "notInstalled";
-  }
-  const packageInfo = getSelectedPackageInfo(engineInfo);
-  if (!packageInfo) {
-    return "installed";
-  }
-  return semver.lt(
-    engineInfo.localInfo.installed.installedVersion,
-    packageInfo.version,
-  )
-    ? "outdated"
-    : "latest";
-};
-
-const latestVersionLabel = (engineInfo: DisplayEngineInfo) => {
-  const packageInfo = getSelectedPackageInfo(engineInfo);
-  if (!packageInfo) {
-    return "（読み込み中）";
-  }
-  return packageInfo.version;
-};
-
-const statusLabel = (status: DisplayStatus) => {
-  switch (status) {
-    case "notInstalled":
-      return "未インストール";
-    case "installed":
-      return "インストール済み";
-    case "outdated":
-      return "更新あり";
-    case "latest":
-      return "最新";
-    default:
-      throw new ExhaustiveError(status);
-  }
-};
-
-const actionVariant = (status: DisplayStatus): "primary" | "default" =>
-  status === "notInstalled" || status === "outdated" ? "primary" : "default";
-
 const getEngineProgress = (engineId: EngineId) =>
   engineProgressInfo.value[engineId];
 const isDownloadingOrInstalling = (engineId: EngineId) => {
   const progress = getEngineProgress(engineId)?.progress;
   return progress != undefined && progress < 100;
-};
-
-const actionLabel = (engineInfo: DisplayEngineInfo) => {
-  if (isDownloadingOrInstalling(engineInfo.package.engineId)) {
-    return "処理中";
-  }
-  const engineStatus = determineEngineStatus(engineInfo);
-  switch (engineStatus) {
-    case "notInstalled":
-      return "インストール";
-    case "installed":
-      return "インストール済み";
-    case "outdated":
-      return "更新";
-    case "latest":
-      return "再インストール";
-    default:
-      throw new ExhaustiveError(engineStatus);
-  }
-};
-
-const isActionDisabled = (engineInfo: DisplayEngineInfo) => {
-  if (!getSelectedRuntimeTarget(engineInfo)) {
-    return true;
-  }
-  return isDownloadingOrInstalling(engineInfo.package.engineId);
 };
 
 const installEngine = async (engineId: EngineId) => {

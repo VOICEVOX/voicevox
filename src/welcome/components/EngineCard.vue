@@ -47,36 +47,38 @@
 </template>
 
 <script setup lang="ts">
+import semver from "semver";
 import { computed } from "vue";
 import BaseButton from "@/components/Base/BaseButton.vue";
 import BaseSelect from "@/components/Base/BaseSelect.vue";
 import BaseSelectItem from "@/components/Base/BaseSelectItem.vue";
+import {
+  EnginePackageLocalInfo,
+  EnginePackageRemoteInfo,
+} from "@/backend/electron/engineAndVvppController";
 import type { RuntimeTarget } from "@/domain/defaultEngine/latetDefaultEngine";
+
+import { ExhaustiveError } from "@/type/utility";
 
 type DisplayStatus = "notInstalled" | "installed" | "outdated" | "latest";
 type EngineProgressInfo = {
   progress: number;
   type: "download" | "install";
 };
-
 type RuntimeTargetOption = {
   target: RuntimeTarget;
   label: string;
 };
+type RuntimeTargetInfo =
+  EnginePackageRemoteInfo["availableRuntimeTargets"][number];
 
 const props = defineProps<{
   engineName: string;
-  latestVersionLabel: string;
-  installedVersionLabel: string;
-  engineStatus: DisplayStatus;
-  statusLabel: string;
-  runtimeTargetOptions: RuntimeTargetOption[];
+  localInfo: EnginePackageLocalInfo;
+  remoteInfo?: EnginePackageRemoteInfo;
   selectedRuntimeTarget?: RuntimeTarget;
   runtimeSelectDisabled: boolean;
   progressInfo?: EngineProgressInfo;
-  actionLabel: string;
-  actionVariant: "primary" | "default";
-  actionDisabled: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -84,13 +86,77 @@ const emit = defineEmits<{
   installEngine: [];
 }>();
 
+const availableRuntimeTargets = computed(() => {
+  return props.remoteInfo?.availableRuntimeTargets ?? [];
+});
+
+const runtimeTargetOptions = computed<RuntimeTargetOption[]>(() =>
+  availableRuntimeTargets.value.map((targetInfo) => ({
+    target: targetInfo.target,
+    label: targetInfo.packageInfo.label ?? targetInfo.target,
+  })),
+);
+
+const getPackageInfoForTarget = (
+  target: RuntimeTarget | undefined,
+): RuntimeTargetInfo["packageInfo"] | undefined => {
+  if (!target) {
+    return undefined;
+  }
+  return availableRuntimeTargets.value.find(
+    (targetInfo) => targetInfo.target === target,
+  )?.packageInfo;
+};
+
+const selectedPackageInfo = computed(() =>
+  getPackageInfoForTarget(props.selectedRuntimeTarget),
+);
+
+const latestVersionLabel = computed(() =>
+  selectedPackageInfo.value ? selectedPackageInfo.value.version : "（読み込み中）",
+);
+
+const installedVersionLabel = computed(() =>
+  props.localInfo.installed.status === "notInstalled"
+    ? "未インストール"
+    : props.localInfo.installed.installedVersion,
+);
+
+const engineStatus = computed<DisplayStatus>(() => {
+  if (props.localInfo.installed.status === "notInstalled") {
+    return "notInstalled";
+  }
+  if (!selectedPackageInfo.value) {
+    return "installed";
+  }
+  return semver.lt(
+    props.localInfo.installed.installedVersion,
+    selectedPackageInfo.value.version,
+  )
+    ? "outdated"
+    : "latest";
+});
+
+const statusLabel = computed(() => {
+  switch (engineStatus.value) {
+    case "notInstalled":
+      return "未インストール";
+    case "installed":
+      return "インストール済み";
+    case "outdated":
+      return "更新あり";
+    case "latest":
+      return "最新";
+    default:
+      throw new ExhaustiveError(engineStatus.value);
+  }
+});
+
 const progressTypeLabel = computed(() => {
   if (!props.progressInfo) {
     return "";
   }
-  return props.progressInfo.type === "download"
-    ? "ダウンロード"
-    : "インストール";
+  return props.progressInfo.type === "download" ? "ダウンロード" : "インストール";
 });
 
 const progressPercentage = computed(() => {
@@ -98,6 +164,42 @@ const progressPercentage = computed(() => {
     return 0;
   }
   return Math.floor(props.progressInfo.progress);
+});
+
+const isDownloadingOrInstalling = computed(() => {
+  const progress = props.progressInfo?.progress;
+  return progress != undefined && progress < 100;
+});
+
+const actionLabel = computed(() => {
+  if (isDownloadingOrInstalling.value) {
+    return "処理中";
+  }
+  switch (engineStatus.value) {
+    case "notInstalled":
+      return "インストール";
+    case "installed":
+      return "インストール済み";
+    case "outdated":
+      return "更新";
+    case "latest":
+      return "再インストール";
+    default:
+      throw new ExhaustiveError(engineStatus.value);
+  }
+});
+
+const actionVariant = computed<"primary" | "default">(() =>
+  engineStatus.value === "notInstalled" || engineStatus.value === "outdated"
+    ? "primary"
+    : "default",
+);
+
+const actionDisabled = computed(() => {
+  if (!props.selectedRuntimeTarget) {
+    return true;
+  }
+  return isDownloadingOrInstalling.value;
 });
 
 const handleRuntimeTargetChange = (value: RuntimeTarget | undefined) => {

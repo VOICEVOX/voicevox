@@ -21,7 +21,6 @@
 <script setup lang="ts">
 import BaseButton from "@/components/Base/BaseButton.vue";
 import BaseTooltip from "@/components/Base/BaseTooltip.vue";
-import { defineEmits, defineProps } from "vue";
 
 const props = defineProps<{
   editorDisabledReason: string | null;
