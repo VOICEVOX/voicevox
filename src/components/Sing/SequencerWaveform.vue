@@ -250,6 +250,7 @@ function drawWaveform(
   graphic: PIXI.Graphics,
   waveformData: WaveformData,
   startX: number,
+  canvasWidth: number,
   canvasHeight: number,
   color: number,
   alpha: number,
@@ -266,6 +267,9 @@ function drawWaveform(
   // 上半分（最大値）
   for (let i = 0; i < waveformData.maxValues.length; i++) {
     const x = startX + i;
+    if (x < 0 || x > canvasWidth) {
+      continue;
+    }
     const y = centerY - waveformData.maxValues[i] * amplitudeScale;
     points.push(x, y);
   }
@@ -273,6 +277,9 @@ function drawWaveform(
   // 下半分（最小値、逆順）
   for (let i = waveformData.minValues.length - 1; i >= 0; i--) {
     const x = startX + i;
+    if (x < 0 || x > canvasWidth) {
+      continue;
+    }
     const y = centerY - waveformData.minValues[i] * amplitudeScale;
     points.push(x, y);
   }
@@ -333,6 +340,7 @@ const render = () => {
       graphic,
       rawWaveformData,
       startScreenX,
+      canvasWidth,
       canvasHeight,
       waveformColorsValue.color,
       waveformColorsValue.alpha,
