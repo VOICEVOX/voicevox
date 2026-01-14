@@ -133,6 +133,7 @@ if [ "$REUSE_LIST" != "1" ]; then
     curl --fail -L -o "list.txt" "${ARCHIVE_LIST_URL}"
 fi
 
+echo
 # Download archives
 ARCHIVE_NAME_LIST=($(cut -d' ' -f3- list.txt))
 for FILENAME in "${ARCHIVE_NAME_LIST[@]}"; do
