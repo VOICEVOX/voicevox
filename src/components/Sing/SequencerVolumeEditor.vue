@@ -57,8 +57,12 @@ const props = defineProps<{
   offsetX: number;
 }>();
 
-const MIN_DISPLAY_DB = -25;
-const MAX_DISPLAY_DB = -1;
+// NOTE: 最大値・最小値はエンジン出力と表示に合わせたヒューリスティックなもの
+// エディタ側の表示や編集の問題ではないためエンジンが変わったら変更可能だが、既存のプロジェクトで表示が変わる点には注意
+// 最大値: 0dB相当でのエンジン出力品質があまりよくなさそうなため、-0.5dB相当に設定
+// 最小値: -36dB程度以下はエンジンの出力がノイズっぽいのと、オリジナルボリューム(エンジン出力デフォルト)の典型的な範囲で見やすい程度の高さにするため
+const MIN_DISPLAY_DB = -36.5;
+const MAX_DISPLAY_DB = -0.5;
 const KEY_COLUMN_WIDTH_PX = 48; // ScoreSequencerの左側キー領域と合わせる
 
 const store = useStore();
@@ -125,8 +129,7 @@ const enableAutoScrollOnEdge = computed(
 );
 if (sequencerBody != null) {
   useAutoScrollOnEdge(sequencerBody, enableAutoScrollOnEdge, {
-    clampOutsideX: true,
-    clampOutsideY: true,
+    continueScrollOutside: "x",
   });
 }
 
@@ -190,7 +193,7 @@ const cursorClass = computed(() => {
     case "DRAW":
       return "cursor-draw";
     case "ERASE":
-      return "cursor-crosshair";
+      return "cursor-erase";
     default:
       return "cursor-crosshair";
   }

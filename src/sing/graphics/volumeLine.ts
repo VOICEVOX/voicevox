@@ -115,8 +115,7 @@ export class VolumeLine {
         const dashLength = 6;
         const gapLength = 4;
         let drawing = true;
-        let dashRemaining = dashLength;
-        let gapRemaining = gapLength;
+        let remaining = dashLength;
 
         this.line.moveTo(screenPoints[0].x, screenPoints[0].y);
         for (let i = 1; i < screenPoints.length; i++) {
@@ -126,8 +125,7 @@ export class VolumeLine {
           const y1 = screenPoints[i].y;
           let segLen = Math.hypot(x1 - x0, y1 - y0);
           while (segLen > 0.0001) {
-            const need = drawing ? dashRemaining : gapRemaining;
-            const step = Math.min(segLen, need);
+            const step = Math.min(segLen, remaining);
             const t = step / segLen;
             const nx = x0 + (x1 - x0) * t;
             const ny = y0 + (y1 - y0) * t;
@@ -139,19 +137,16 @@ export class VolumeLine {
             }
 
             segLen -= step;
-            dashRemaining -= step;
-            gapRemaining -= step;
+            remaining -= step;
             x0 = nx;
             y0 = ny;
 
-            if (drawing && dashRemaining <= 0) {
+            if (drawing && remaining <= 0) {
               drawing = false;
-              dashRemaining = dashLength;
-              gapRemaining = gapLength;
-            } else if (!drawing && gapRemaining <= 0) {
+              remaining = gapLength;
+            } else if (!drawing && remaining <= 0) {
               drawing = true;
-              dashRemaining = dashLength;
-              gapRemaining = gapLength;
+              remaining = dashLength;
             }
           }
         }

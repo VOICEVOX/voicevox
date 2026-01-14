@@ -11,8 +11,13 @@ export const useAutoScrollOnEdge = (
   element: Ref<HTMLElement | null>,
   enable: ComputedRef<boolean>,
   options?: {
-    clampOutsideX?: boolean;
-    clampOutsideY?: boolean;
+    /**
+     * 要素外に出た時にスクロールを継続する方向
+     * - "none": 要素外で停止（デフォルト）
+     * - "x": 水平スクロールのみ継続
+     * NOTE: "y"や"xy"は必要になった時点で実装する
+     */
+    continueScrollOutside?: "none" | "x";
   },
 ) => {
   const baseSpeed = 100;
@@ -119,29 +124,19 @@ export const useAutoScrollOnEdge = (
         return;
       }
 
-      // outside: either clamp or disable depending on options
-      // - clampOutsideX: UIパネル外にカーソルが出ても水平方向の自動スクロールを続けたい場合（VolumeEditorなど）
-      // - clampOutsideY: 縦方向スクロールは抑えつつ、Xはクランプして継続したい場合
-      // いずれも指定されていない場合は、要素外ではスクロールを止める（ScoreSequencer既存挙動）
-      if (options?.clampOutsideX ?? false) {
-        x = Math.min(Math.max(x, 0), width);
-      } else {
-        // if not clamping X, but outside horizontally, disable
-        if (x < 0 || x > width) {
-          autoScrollState.cursorPos = undefined;
-          return;
-        }
-      }
+      // continueScrollOutside: 要素外に出た時の挙動
+      // - "none"（デフォルト）: 要素外ではスクロールを止める（ScoreSequencer既存挙動）
+      // - "x": 水平スクロールのみ継続（VolumeEditorなど）
+      const continueScroll = options?.continueScrollOutside ?? "none";
 
-      if (options?.clampOutsideY ?? false) {
-        if (y < 0 || y > height) {
-          y = height / 2;
-        }
+      if (continueScroll === "x") {
+        // 水平スクロールのみ継続：Xをクランプ、Yを中央に固定
+        x = Math.min(Math.max(x, 0), width);
+        y = height / 2;
       } else {
-        if (y < 0 || y > height) {
-          autoScrollState.cursorPos = undefined;
-          return;
-        }
+        // 要素外ではスクロール停止
+        autoScrollState.cursorPos = undefined;
+        return;
       }
 
       autoScrollState.cursorPos = new Vector2D(x, y);

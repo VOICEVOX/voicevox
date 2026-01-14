@@ -149,7 +149,7 @@ export class EraseVolumeState
       throw new Error("previewVolumeEdit.value.type is not erase.");
     }
 
-    const cursorFrame = Math.max(0, this.currentCursorPos.frame);
+    const cursorFrame = this.currentCursorPos.frame;
     const temp = { ...context.previewVolumeEdit.value };
 
     // 開始フレームがカーソルフレームより後ろの場合は、カーソルフレームまでの長さを追加する
