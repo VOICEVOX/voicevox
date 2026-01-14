@@ -120,7 +120,7 @@ fi
 echo "[-] 7z command: ${COMMAND_7Z}"
 
 RELEASE_URL=${REPO_URL}/releases/download/${VERSION}
-ARCHIVE_LIST_URL=${RELEASE_URL}/${NAME}.7z.sha256
+ARCHIVE_LIST_URL=${RELEASE_URL}/${NAME}.7z.txt
 
 echo "[-] Install directory: ${APP_DIR}"
 mkdir -p "${APP_DIR}"
