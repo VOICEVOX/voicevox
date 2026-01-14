@@ -140,6 +140,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Purge disk space at background
+        if: startsWith(matrix.os, 'ubuntu-')
+        run: sudo rm -rf /usr/local/lib/android &
+
       # NOTE: The default sed of macOS is BSD sed.
       #       There is a difference in specification between BSD sed and GNU sed,
       #       so you need to install GNU sed.
