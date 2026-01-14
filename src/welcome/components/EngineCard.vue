@@ -37,7 +37,7 @@
         </BaseSelect>
       </div>
       <BaseButton
-        :label="actionLabel"
+        :label="actionLabelWithSize"
         :disabled="actionDisabled"
         :variant="actionVariant"
         @click="emitInstall"
@@ -59,6 +59,7 @@ import {
 import type { RuntimeTarget } from "@/domain/defaultEngine/latetDefaultEngine";
 
 import { ExhaustiveError } from "@/type/utility";
+import { sizeToHumanReadable } from "@/helpers/sizeHelper";
 
 type DisplayStatus = "notInstalled" | "installed" | "outdated" | "latest";
 type EngineProgressInfo = {
@@ -113,7 +114,9 @@ const selectedPackageInfo = computed(() =>
 );
 
 const latestVersionLabel = computed(() =>
-  selectedPackageInfo.value ? selectedPackageInfo.value.version : "（読み込み中）",
+  selectedPackageInfo.value
+    ? selectedPackageInfo.value.version
+    : "（読み込み中）",
 );
 
 const installedVersionLabel = computed(() =>
@@ -156,7 +159,9 @@ const progressTypeLabel = computed(() => {
   if (!props.progressInfo) {
     return "";
   }
-  return props.progressInfo.type === "download" ? "ダウンロード" : "インストール";
+  return props.progressInfo.type === "download"
+    ? "ダウンロード"
+    : "インストール";
 });
 
 const progressPercentage = computed(() => {
@@ -186,6 +191,21 @@ const actionLabel = computed(() => {
       return "再インストール";
     default:
       throw new ExhaustiveError(engineStatus.value);
+  }
+});
+const actionLabelWithSize = computed(() => {
+  if (isDownloadingOrInstalling.value) {
+    return actionLabel.value;
+  }
+
+  const size = selectedPackageInfo.value?.files.reduce(
+    (acc, file) => acc + (file.size ?? 0),
+    0,
+  );
+  if (size) {
+    return `${actionLabel.value}（${sizeToHumanReadable(size)}）`;
+  } else {
+    return actionLabel.value;
   }
 });
 
