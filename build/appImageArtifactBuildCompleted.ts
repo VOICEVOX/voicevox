@@ -4,13 +4,13 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { ArtifactCreated } from "electron-builder";
 
+const vendoredDir = path.join(import.meta.dirname, "..", "vendored");
 const appimagetoolPath = path.join(
-  import.meta.dirname,
-  "..",
-  "vendored",
+  vendoredDir,
   "appimagetool",
   "appimagetool.AppImage",
 );
+const runtimePath = path.join(vendoredDir, "type2-runtime", "runtime");
 
 const fixedAppRunCode = `#!/bin/bash
 set -e
@@ -61,9 +61,11 @@ export async function appImageArtifactBuildCompleted(
     const productFilename = artifactCreated.packager.appInfo.productFilename;
     const desktopfilePath = path.join(appDir, `${productFilename}.desktop`);
     await fixDesktopfile(desktopfilePath);
-    execFileSync(appimagetoolPath, ["--no-appstream", appDir, artifactPath], {
-      stdio: "inherit",
-    });
+    execFileSync(
+      appimagetoolPath,
+      ["--no-appstream", "--runtime-file", runtimePath, appDir, artifactPath],
+      { stdio: "inherit" },
+    );
     // NOTE: AutoUpdaterを使う場合'app-builder-bin blockmap ...'を使用してblockmapを生成する
     // 恐らく以下のコードで動作するようになるかもしれない。
     // import { appBuilderPath } from "app-builder-bin";
