@@ -7,7 +7,7 @@ import { z } from "zod";
 /** パッケージ情報のスキーマ */
 const packageInfoSchema = z.object({
   version: z.string(),
-  packages: z
+  files: z
     .object({
       url: z.string(),
       name: z.string(),
@@ -21,25 +21,13 @@ export type PackageInfo = z.infer<typeof packageInfoSchema>;
 /** デフォルトエンジンの最新情報のスキーマ */
 const latestDefaultEngineInfoSchema = z.object({
   formatVersion: z.number(),
-  windows: z.object({
-    x64: z.object({
-      CPU: packageInfoSchema,
-      "GPU/CPU": packageInfoSchema,
-    }),
-  }),
-  macos: z.object({
-    x64: z.object({
-      CPU: packageInfoSchema,
-    }),
-    arm64: z.object({
-      CPU: packageInfoSchema,
-    }),
-  }),
-  linux: z.object({
-    x64: z.object({
-      CPU: packageInfoSchema,
-      "GPU/CPU": packageInfoSchema,
-    }),
+  packages: z.object({
+    "windows-x64-cpu": packageInfoSchema,
+    "windows-x64-directml": packageInfoSchema,
+    "macos-x64-cpu": packageInfoSchema,
+    "macos-arm64-cpu": packageInfoSchema,
+    "linux-x64-cpu": packageInfoSchema,
+    "linux-x64-cuda": packageInfoSchema,
   }),
 });
 
@@ -50,7 +38,7 @@ export const fetchLatestDefaultEngineInfo = async (url: string) => {
 };
 
 /**
- * 実行環境に合うパッケージを取得する。GPU版があればGPU版を返す。
+ * 実行環境に合うパッケージを取得する。GPU版があってもCPU版を返す。
  * TODO: どのデバイス版にするかはユーザーが選べるようにするべき。
  */
 export const getSuitablePackageInfo = (
@@ -59,21 +47,18 @@ export const getSuitablePackageInfo = (
   const platform = process.platform;
   const arch = process.arch;
 
-  if (platform === "win32") {
-    if (arch === "x64") {
-      return updateInfo.windows.x64["GPU/CPU"];
-    }
-  } else if (platform === "darwin") {
-    if (arch === "x64") {
-      return updateInfo.macos.x64.CPU;
-    } else if (arch === "arm64") {
-      return updateInfo.macos.arm64.CPU;
-    }
-  } else if (platform === "linux") {
-    if (arch === "x64") {
-      return updateInfo.linux.x64["GPU/CPU"];
-    }
+  let target;
+  if (platform === "win32" && arch === "x64") {
+    target = "windows-x64-cpu" as const;
+  } else if (platform === "darwin" && arch === "x64") {
+    target = "macos-x64-cpu" as const;
+  } else if (platform === "darwin" && arch === "arm64") {
+    target = "macos-arm64-cpu" as const;
+  } else if (platform === "linux" && arch === "x64") {
+    target = "linux-x64-cpu" as const;
+  } else {
+    throw new Error(`Unsupported platform: ${platform} ${arch}`);
   }
 
-  throw new Error(`Unsupported platform: ${platform} ${arch}`);
+  return updateInfo.packages[target];
 };

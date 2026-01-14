@@ -38,13 +38,9 @@ import type { VolumeEditTool } from "@/store/type";
 import { useParameterPanelStateMachine } from "@/composables/useParameterPanelStateMachine";
 import { useAutoScrollOnEdge } from "@/composables/useAutoScrollOnEdge";
 import { useMounted } from "@/composables/useMounted";
-import {
-  VALUE_INDICATING_NO_DATA,
-  decibelToLinear,
-  linearToDecibel,
-  secondToTick,
-  tickToSecond,
-} from "@/sing/domain";
+import { VALUE_INDICATING_NO_DATA } from "@/sing/domain";
+import { decibelToLinear, linearToDecibel } from "@/sing/audio";
+import { secondToTick, tickToSecond } from "@/sing/music";
 import { getTotalTicks } from "@/sing/rulerHelper";
 import { clamp } from "@/sing/utility";
 import { baseXToTick, tickToBaseX } from "@/sing/viewHelper";
