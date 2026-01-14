@@ -134,7 +134,7 @@ if [ "$REUSE_LIST" != "1" ]; then
 fi
 
 # Download archives
-ARCHIVE_NAME_LIST=($(cut -d' ' -f3- list.txt)) # names without spaces
+ARCHIVE_NAME_LIST=($(cut -d' ' -f3- list.txt))
 for FILENAME in "${ARCHIVE_NAME_LIST[@]}"; do
     URL=${RELEASE_URL}/${FILENAME}
 
