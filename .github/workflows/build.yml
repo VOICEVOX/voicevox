@@ -26,8 +26,8 @@ on:
         default: false
 
 env:
-  VOICEVOX_ENGINE_VERSION: 0.25.0
-  VOICEVOX_RESOURCE_VERSION: 0.25.0
+  VOICEVOX_ENGINE_VERSION: 0.25.1
+  VOICEVOX_RESOURCE_VERSION: 0.25.1
   VOICEVOX_EDITOR_VERSION:
     |- # releaseタグ名か、workflow_dispatchでのバージョン名か、999.999.999-developが入る
     ${{ github.event.release.tag_name || github.event.inputs.version || '999.999.999-develop' }}
@@ -139,6 +139,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Purge disk space
+        if: startsWith(matrix.os, 'ubuntu-')
+        run: sudo rm -rf /usr/local/lib/android
 
       # NOTE: The default sed of macOS is BSD sed.
       #       There is a difference in specification between BSD sed and GNU sed,

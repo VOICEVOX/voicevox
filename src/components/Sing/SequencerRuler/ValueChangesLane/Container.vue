@@ -21,7 +21,7 @@ import { useStore } from "@/store";
 import { useSequencerLayout } from "@/composables/useSequencerLayout";
 import { snapTickToBeat } from "@/sing/rulerHelper";
 import { baseXToTick } from "@/sing/viewHelper";
-import { tickToMeasureNumber } from "@/sing/domain";
+import { tickToMeasureNumber } from "@/sing/music";
 import type { Tempo, TimeSignature } from "@/domain/project/type";
 import { ContextMenuItemData } from "@/components/Menu/ContextMenu/Presentation.vue";
 import TempoChangeDialog from "@/components/Sing/ChangeValueDialog/TempoChangeDialog.vue";

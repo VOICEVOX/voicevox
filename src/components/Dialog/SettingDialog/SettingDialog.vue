@@ -672,11 +672,11 @@ const [showAudioLength, changeShowAudioLength] = useRootMiscSetting(
   "showAudioLength",
 );
 
+
 const [showTotalAudioLength, changeShowTotalAudioLength] = useRootMiscSetting(
   store,
   "showTotalAudioLength",
 );
-
 const [_enableKatakanaEnglish, setEnableKatakanaEnglish] = useRootMiscSetting(
   store,
   "enableKatakanaEnglish",
