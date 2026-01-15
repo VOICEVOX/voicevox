@@ -7,7 +7,7 @@ import { z } from "zod";
 /** Runtime Target */
 export const runtimeTargetSchema = z
   .string()
-  .regex(/[a-z]+-[a-z0-9]+-[a-z0-9]+/);
+  .regex(/^[a-z]+-[a-z0-9]+-[a-z0-9]+$/);
 export type RuntimeTarget = z.infer<typeof runtimeTargetSchema>;
 
 /** パッケージ情報のスキーマ */
