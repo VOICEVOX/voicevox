@@ -1,6 +1,9 @@
 <template>
   <SelectItem class="SelectItem" :value :disabled>
-    <SelectItemText>{{ label }}</SelectItemText>
+    <div class="SelectItemContent">
+      <SelectItemText as="div">{{ label }}</SelectItemText>
+      <div v-if="hint" class="SelectItemHint">{{ hint }}</div>
+    </div>
     <SelectItemIndicator class="SelectItemIndicator" />
   </SelectItem>
 </template>
@@ -16,6 +19,7 @@ import {
 defineProps<{
   value: T;
   label: string;
+  hint?: string;
   disabled?: boolean;
 }>();
 </script>
@@ -62,6 +66,18 @@ defineProps<{
     opacity: 0.5;
     pointer-events: none;
   }
+}
+
+.SelectItemContent {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex-grow: 1;
+}
+
+.SelectItemHint {
+  font-size: 0.8em;
+  color: colors.$display-sub;
 }
 
 .SelectItemIndicator {

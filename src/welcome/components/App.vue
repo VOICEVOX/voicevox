@@ -137,12 +137,6 @@ const runtimeTargetSelections = ref<
   Record<EngineId, RuntimeTarget | undefined>
 >({});
 
-const availableRuntimeTargets = (
-  engineInfo: DisplayEngineInfo,
-): EnginePackageRemoteInfo["availableRuntimeTargets"] => {
-  return engineInfo.remoteInfo?.availableRuntimeTargets ?? [];
-};
-
 const getDefaultRuntimeTarget = (
   engineInfo: DisplayEngineInfo,
 ): RuntimeTarget | undefined => {
@@ -206,7 +200,7 @@ const editorDisabledReason = computed<string | null>(() => {
       (engineInfo) => engineInfo.installed.status !== "notInstalled",
     )
   ) {
-    return "デフォルトエンジンが最低1つインストールされている必要があります。";
+    return "エンジンがインストールされていません。";
   }
 
   return null;

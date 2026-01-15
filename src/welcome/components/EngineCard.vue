@@ -8,7 +8,9 @@
     </div>
     <div class="engine-meta">
       <div>最新バージョン：{{ latestVersionLabel }}</div>
-      <div>インストール済み：{{ installedVersionLabel }}</div>
+      <div v-if="localInfo.installed.status === 'installed'">
+        インストール済み：{{ localInfo.installed.installedVersion }}
+      </div>
     </div>
     <div v-if="progressInfo" class="engine-progress">
       <div class="engine-progress-label">{{ progressTypeLabel }}</div>
@@ -33,6 +35,7 @@
             :key="targetOption.target"
             :value="targetOption.target"
             :label="targetOption.label"
+            :hint="targetOption.hint"
           />
         </BaseSelect>
       </div>
@@ -69,6 +72,7 @@ type EngineProgressInfo = {
 type RuntimeTargetOption = {
   target: RuntimeTarget;
   label: string;
+  hint?: string;
 };
 type RuntimeTargetInfo =
   EnginePackageRemoteInfo["availableRuntimeTargets"][number];
@@ -92,10 +96,14 @@ const availableRuntimeTargets = computed(() => {
 });
 
 const runtimeTargetOptions = computed<RuntimeTargetOption[]>(() =>
-  availableRuntimeTargets.value.map((targetInfo) => ({
-    target: targetInfo.target,
-    label: targetInfo.packageInfo.label ?? targetInfo.target,
-  })),
+  availableRuntimeTargets.value.map((targetInfo) => {
+    const label = targetInfo.packageInfo.displayInfo.label;
+    return {
+      target: targetInfo.target,
+      label,
+      hint: targetInfo.packageInfo.displayInfo.hint,
+    };
+  }),
 );
 
 const getPackageInfoForTarget = (
@@ -117,12 +125,6 @@ const latestVersionLabel = computed(() =>
   selectedPackageInfo.value
     ? selectedPackageInfo.value.version
     : "（読み込み中）",
-);
-
-const installedVersionLabel = computed(() =>
-  props.localInfo.installed.status === "notInstalled"
-    ? "未インストール"
-    : props.localInfo.installed.installedVersion,
 );
 
 const engineStatus = computed<DisplayStatus>(() => {

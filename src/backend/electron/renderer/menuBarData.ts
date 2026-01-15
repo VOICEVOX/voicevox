@@ -111,7 +111,7 @@ export const useElectronMenuBarData = (
         },
       hasDownloadVvppEngine.value && {
         type: "button",
-        label: "エンジンのセットアップ画面を開く",
+        label: "エンジンのセットアップ",
         onClick: () => {
           void store.actions.CHECK_EDITED_AND_NOT_SAVE({
             nextAction: "switchToWelcome",
