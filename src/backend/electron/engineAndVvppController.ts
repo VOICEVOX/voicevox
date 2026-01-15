@@ -420,7 +420,7 @@ export class EngineAndVvppController {
       case "windows":
         isSupported &&= isWindows;
         break;
-      case "mac":
+      case "macos":
         isSupported &&= isMac;
         break;
       case "linux":
