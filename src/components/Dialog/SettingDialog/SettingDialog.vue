@@ -672,7 +672,6 @@ const [showAudioLength, changeShowAudioLength] = useRootMiscSetting(
   "showAudioLength",
 );
 
-
 const [showTotalAudioLength, changeShowTotalAudioLength] = useRootMiscSetting(
   store,
   "showTotalAudioLength",
