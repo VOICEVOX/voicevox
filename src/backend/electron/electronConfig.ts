@@ -1,5 +1,5 @@
-import { join } from "path";
-import fs from "fs";
+import path from "node:path";
+import fs from "node:fs";
 import { app } from "electron";
 import { writeFileSafely } from "./fileHelper";
 import { BaseConfigManager, Metadata } from "@/backend/common/ConfigManager";
@@ -28,7 +28,7 @@ export class ElectronConfigManager extends BaseConfigManager {
   }
 
   private get configPath(): string {
-    return join(app.getPath("userData"), "config.json");
+    return path.join(app.getPath("userData"), "config.json");
   }
 }
 

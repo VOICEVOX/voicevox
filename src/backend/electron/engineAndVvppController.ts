@@ -1,20 +1,14 @@
-import path from "path";
-import fs from "fs";
-import { ReadableStream } from "node:stream/web";
 import { dialog } from "electron";
 
+import semver from "semver";
 import { getConfigManager } from "./electronConfig";
 import { getEngineInfoManager } from "./manager/engineInfoManager";
 import { getEngineProcessManager } from "./manager/engineProcessManager";
 import { getRuntimeInfoManager } from "./manager/RuntimeInfoManager";
 import { getVvppManager } from "./manager/vvppManager";
 import { getWindowManager } from "./manager/windowManager";
-import {
-  EngineId,
-  EngineInfo,
-  engineSettingSchema,
-  EngineSettingType,
-} from "@/type/preload";
+import { MultiDownloader } from "./multiDownloader";
+import { EngineId, EngineInfo, engineSettingSchema } from "@/type/preload";
 import {
   PackageInfo,
   fetchLatestDefaultEngineInfo,
@@ -24,8 +18,22 @@ import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
 import { UnreachableError } from "@/type/utility";
 import { ProgressCallback } from "@/helpers/progressHelper";
 import { createLogger } from "@/helpers/log";
+import { DisplayableError, errorToMessage } from "@/helpers/errorHelper";
 
 const log = createLogger("EngineAndVvppController");
+
+/** エンジンパッケージの状態 */
+export type EnginePackageStatus = {
+  package: {
+    engineName: string;
+    engineId: EngineId;
+    packageInfo: PackageInfo;
+    latestVersion: string;
+  };
+  installed:
+    | { status: "notInstalled" }
+    | { status: "outdated" | "latest"; installedVersion: string };
+};
 
 /**
  * エンジンとVVPP周りの処理の流れを制御するクラス。
@@ -49,21 +57,42 @@ export class EngineAndVvppController {
 
   /**
    * VVPPエンジンをインストールする。
+   * 失敗した場合は例外を投げる。
+   *
+   * @param asDefaultVvppEngine デフォルトエンジンとしてインストールするかどうか。デフォルトエンジン上書きを防ぐ目的で実装している。
    */
-  async installVvppEngine(
-    vvppPath: string,
-    callbacks?: { onProgress?: ProgressCallback },
-  ) {
+  async installVvppEngine(params: {
+    vvppPath: string;
+    asDefaultVvppEngine: boolean;
+    immediate: boolean;
+    callbacks?: { onProgress?: ProgressCallback };
+  }) {
+    const { vvppPath, asDefaultVvppEngine, immediate, callbacks } = params;
+
     try {
-      await this.vvppManager.install(vvppPath, callbacks);
-      return true;
-    } catch (e) {
-      log.error(`Failed to install ${vvppPath},`, e);
-      dialog.showErrorBox(
-        "インストールエラー",
-        `${vvppPath} をインストールできませんでした。`,
+      const extractedEngineFiles = await this.vvppManager.extract(
+        vvppPath,
+        callbacks,
       );
-      return false;
+
+      const isDefaultEngine = this.engineInfoManager.isDefaultEngine(
+        extractedEngineFiles.getManifest().uuid,
+      );
+      if (asDefaultVvppEngine && !isDefaultEngine) {
+        throw new DisplayableError("これはデフォルトエンジンではありません。");
+      }
+      if (!asDefaultVvppEngine && isDefaultEngine) {
+        throw new DisplayableError(
+          "デフォルトエンジンと同じエンジンはインストールできません。",
+        );
+      }
+
+      await this.vvppManager.install({ extractedEngineFiles, immediate });
+    } catch (e) {
+      throw new DisplayableError(
+        `${vvppPath} をインストールできませんでした。`,
+        { cause: e },
+      );
     }
   }
 
@@ -73,10 +102,12 @@ export class EngineAndVvppController {
    */
   async installVvppEngineWithWarning({
     vvppPath,
+    asDefaultVvppEngine,
     reloadNeeded,
     reloadCallback,
   }: {
     vvppPath: string;
+    asDefaultVvppEngine: boolean;
     reloadNeeded: boolean;
     reloadCallback?: () => void; // 再読み込みが必要な場合のコールバック
   }) {
@@ -93,7 +124,17 @@ export class EngineAndVvppController {
       return;
     }
 
-    await this.installVvppEngine(vvppPath);
+    try {
+      await this.installVvppEngine({
+        vvppPath,
+        asDefaultVvppEngine,
+        immediate: false,
+      });
+    } catch (e) {
+      log.error(e);
+      dialog.showErrorBox("インストールエラー", errorToMessage(e));
+      return;
+    }
 
     if (reloadNeeded) {
       void windowManager
@@ -117,6 +158,7 @@ export class EngineAndVvppController {
   /**
    * VVPPエンジンをアンインストールする。
    * 関数を呼んだタイミングでアンインストール処理を途中まで行い、アプリ終了時に完遂する。
+   * 失敗した場合は例外を投げる。
    */
   async uninstallVvppEngine(engineId: EngineId) {
     let engineInfo: EngineInfo | undefined = undefined;
@@ -135,26 +177,20 @@ export class EngineAndVvppController {
       // Windows環境だとエンジンを終了してから削除する必要がある。
       // そのため、アプリの終了時に削除するようにする。
       this.vvppManager.markWillDelete(engineId);
-      return true;
     } catch (e) {
-      const engineName = engineInfo?.name ?? engineId;
-      dialog.showErrorBox(
-        "アンインストールエラー",
-        `${engineName} をアンインストールできませんでした。`,
+      throw new DisplayableError(
+        `${engineId} をアンインストールできませんでした。`,
+        { cause: e },
       );
-      log.error(`Failed to uninstall ${engineId},`, e);
-      return false;
     }
   }
 
   /**
-   * インストール可能なデフォルトエンジンの情報とパッケージの情報を取得する。
+   * 最新のエンジンパッケージの情報や、そのエンジンのインストール状況を取得する。
    */
-  async fetchInsallablePackageInfos(): Promise<
-    { engineName: string; packageInfo: PackageInfo }[]
-  > {
-    // ダウンロード可能なVVPPのうち、未インストールのものを返す
-    const targetInfos = [];
+  async fetchEnginePackageStatuses(): Promise<EnginePackageStatus[]> {
+    const statuses: EnginePackageStatus[] = [];
+
     for (const envEngineInfo of loadEnvEngineInfos()) {
       if (envEngineInfo.type != "downloadVvpp") {
         continue;
@@ -174,17 +210,38 @@ export class EngineAndVvppController {
       const packageInfo = getSuitablePackageInfo(latestInfo);
       log.info(`Latest default engine version: ${packageInfo.version}`);
 
-      // インストール済みだった場合はスキップ
-      // FIXME: より新しいバージョンがあれば更新できるようにする
-      if (this.engineInfoManager.hasEngineInfo(envEngineInfo.uuid)) {
-        log.info(`Default engine ${envEngineInfo.uuid} is already installed.`);
-        continue;
+      // インストール状況を取得
+      let installedStatus: EnginePackageStatus["installed"];
+      const isInstalled = this.engineInfoManager.hasEngineInfo(
+        envEngineInfo.uuid,
+      );
+      if (!isInstalled) {
+        installedStatus = { status: "notInstalled" };
+      } else {
+        const installedEngineInfo = this.engineInfoManager.fetchEngineInfo(
+          envEngineInfo.uuid,
+        );
+        const installedVersion = installedEngineInfo.version;
+        installedStatus = {
+          status: semver.lt(installedVersion, packageInfo.version)
+            ? "outdated"
+            : "latest",
+          installedVersion,
+        };
       }
 
-      targetInfos.push({ engineName: envEngineInfo.name, packageInfo });
+      statuses.push({
+        package: {
+          engineName: envEngineInfo.name,
+          engineId: envEngineInfo.uuid,
+          packageInfo,
+          latestVersion: packageInfo.version,
+        },
+        installed: installedStatus,
+      });
     }
 
-    return targetInfos;
+    return statuses;
   }
 
   /** VVPPパッケージをダウンロードし、インストールする */
@@ -193,93 +250,36 @@ export class EngineAndVvppController {
     packageInfo: PackageInfo,
     callbacks: { onProgress: ProgressCallback<"download" | "install"> },
   ) {
-    if (packageInfo.packages.length === 0) {
+    if (packageInfo.files.length === 0) {
       throw new UnreachableError("No packages to download");
     }
 
-    let failed = false;
-    const downloadedPaths: string[] = [];
-    try {
-      // ダウンロード
-      callbacks.onProgress({ type: "download", progress: 0 });
+    await using downloader = new MultiDownloader(
+      downloadDir,
+      packageInfo.files,
+      {
+        onProgress: ({ progress }) => {
+          callbacks.onProgress({ type: "download", progress });
+        },
+      },
+    );
+    await downloader.download();
 
-      let totalBytes = 0;
-      packageInfo.packages.forEach((p) => {
-        totalBytes += p.size;
-      });
-
-      let downloadedBytes = 0;
-      await Promise.all(
-        packageInfo.packages.map(async (p) => {
-          if (failed) return; // 他のダウンロードが失敗していたら中断
-
-          const { url, name } = p;
-          log.info(`Download ${name} from ${url}`);
-
-          const res = await fetch(url);
-          if (!res.ok || res.body == null)
-            throw new Error(`Failed to download ${name} from ${url}`);
-          const downloadPath = path.join(downloadDir, name);
-          const fileStream = fs.createWriteStream(downloadPath);
-
-          // ファイルに書き込む
-          // NOTE: なぜか型が合わないのでasを使っている
-          for await (const chunk of res.body as ReadableStream<Uint8Array>) {
-            fileStream.write(chunk);
-            downloadedBytes += chunk.length;
-            callbacks.onProgress({
-              type: "download",
-              progress: (downloadedBytes / totalBytes) * 100,
-            });
-          }
-
-          // ファイルを確実に閉じる
-          const { promise, resolve, reject } = Promise.withResolvers<void>();
-          fileStream.on("close", resolve);
-          fileStream.on("error", reject);
-          fileStream.close();
-          await promise;
-
-          downloadedPaths.push(downloadPath);
-          log.info(`Downloaded ${name} to ${downloadPath}`);
-
-          // TODO: ハッシュチェック
-        }),
-      );
-
-      // インストール
-      await this.installVvppEngine(downloadedPaths[0], {
+    // インストール
+    await this.installVvppEngine({
+      vvppPath: downloader.downloadedPaths[0],
+      asDefaultVvppEngine: true,
+      immediate: true,
+      callbacks: {
         onProgress: ({ progress }) => {
           callbacks.onProgress({ type: "install", progress });
         },
-      });
-    } catch (e) {
-      failed = true;
-      log.error(`Failed to download and install VVPP engine:`, e);
-      throw e;
-    } finally {
-      // ダウンロードしたファイルを削除
-      await Promise.all(
-        downloadedPaths.map(async (path) => {
-          log.info(`Delete downloaded file: ${path}`);
-          await fs.promises.unlink(path);
-        }),
-      );
-    }
+      },
+    });
   }
 
-  /** エンジンの設定を更新し、保存する */
-  updateEngineSetting(engineId: EngineId, engineSetting: EngineSettingType) {
-    const engineSettings = this.configManager.get("engineSettings");
-    engineSettings[engineId] = engineSetting;
-    this.configManager.set(`engineSettings`, engineSettings);
-  }
-
-  // エンジンの準備と起動
-  async launchEngines() {
-    // AltPortInfosを再生成する。
-    this.engineInfoManager.initializeAltPortInfo();
-
+  /** 各エンジンの設定を初期化する */
+  private initializeEngineSettings() {
     // TODO: デフォルトエンジンの処理をConfigManagerに移してブラウザ版と共通化する
     const engineInfos = this.engineInfoManager.fetchEngineInfos();
     const engineSettings = this.configManager.get("engineSettings");
@@ -290,7 +290,16 @@ export class EngineAndVvppController {
       }
     }
     this.configManager.set("engineSettings", engineSettings);
+  }
 
+  // エンジンの準備と起動
+  async launchEngines() {
+    // AltPortInfosを再生成する。
+    this.engineInfoManager.initializeAltPortInfo();
+
+    this.initializeEngineSettings();
+
+    const engineInfos = this.engineInfoManager.fetchEngineInfos();
     await this.engineProcessManager.runEngineAll();
     this.runtimeInfoManager.setEngineInfos(
       engineInfos,
@@ -317,10 +326,8 @@ export class EngineAndVvppController {
 
   /**
    * エンジンの停止とエンジン終了後処理を行う。
-   * 全処理が完了済みの場合 alreadyCompleted を返す。
-   * そうでない場合は Promise を返す。
    */
-  cleanupEngines(): Promise<void> | "alreadyCompleted" {
+  async cleanupEngines(): Promise<void> {
     const killingProcessPromises = this.engineProcessManager.killEngineAll();
     const numLivingEngineProcess = Object.entries(
       killingProcessPromises,
@@ -331,7 +338,7 @@ export class EngineAndVvppController {
       numLivingEngineProcess === 0 &&
       !this.vvppManager.hasMarkedEngineDirs()
     ) {
-      return "alreadyCompleted";
+      return;
     }
 
     let numEngineProcessKilled = 0;
@@ -362,19 +369,9 @@ export class EngineAndVvppController {
       log.info(
         "All ENGINE process kill operations done. Running post engine kill process",
       );
+      // FIXME: handleMarkedEngineDirsはエラーをthrowしている。エラーがthrowされるとアプリが終了しないので、終了するようにしたい。
       return this.vvppManager.handleMarkedEngineDirs();
     });
-  }
-
-  /**
-   * 安全なシャットダウン処理。
-   * この関数内の処理はelectronの終了シーケンスに合わせ、非同期処理が必要かどうかを判定したあとで非同期処理を実行する必要がある。
-   * FIXME: 判定用の関数と非同期処理関数を分離すれば仕様が簡潔になる。
-   */
-  gracefulShutdown() {
-    const engineCleanupResult = this.cleanupEngines();
-    const configSavedResult = this.configManager.ensureSaved();
-    return { engineCleanupResult, configSavedResult };
   }
 }
 

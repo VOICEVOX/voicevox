@@ -1,7 +1,7 @@
-import fs from "fs";
-import os from "os";
-import path from "path";
-import { beforeEach, expect, test } from "vitest";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { beforeAll, afterAll, beforeEach, expect, test } from "vitest";
 import { createVvppFile } from "./helper";
 import { EngineId, MinimumEngineManifestType } from "@/type/preload";
 import VvppManager from "@/backend/electron/manager/vvppManager";
@@ -34,6 +34,7 @@ test<Context>("追加エンジンのディレクトリ名は想定通りか", ({
     uuid: EngineId("295c656b-b800-449f-aee6-b03e493816d7"),
     command: "",
     port: 5021,
+    version: "0.0.0",
     supported_features: {},
   };
 
@@ -44,6 +45,17 @@ test<Context>("追加エンジンのディレクトリ名は想定通りか", ({
   expect(dirName).toMatch(pattern);
 });
 
+test<Context>("エンジンを展開できる", async ({ manager }) => {
+  const targetName = "perfect.vvpp";
+  const vvppFilePath = await createVvppFile(targetName, tmpDir);
+
+  const extractedEngineFiles = await manager.extract(vvppFilePath);
+  await expect(extractedEngineFiles.needsCleanup()).resolves.toBe(true);
+
+  await extractedEngineFiles.cleanup();
+  await expect(extractedEngineFiles.needsCleanup()).resolves.toBe(false);
+});
+
 test<Context>("エンジンをインストールできる", async ({
   vvppEngineDir,
   manager,
@@ -51,8 +63,10 @@ test<Context>("エンジンをインストールできる", async ({
   const targetName = "perfect.vvpp";
   const vvppFilePath = await createVvppFile(targetName, tmpDir);
 
-  await manager.install(vvppFilePath);
+  const extractedEngineFiles = await manager.extract(vvppFilePath);
+  await manager.install({ extractedEngineFiles, immediate: true });
   expect(getEngineDirInfos(vvppEngineDir).length).toBe(1);
+  await expect(extractedEngineFiles.needsCleanup()).resolves.toBe(false);
 });
 
 test<Context>("エンジンを２回インストールすると処理が予約され、後で上書きされる", async ({
@@ -62,11 +76,17 @@ test<Context>("エンジンを２回インストールすると処理が予約�
   const targetName = "perfect.vvpp";
   const vvppFilePath = await createVvppFile(targetName, tmpDir);
 
-  await manager.install(vvppFilePath);
+  await manager.install({
+    extractedEngineFiles: await manager.extract(vvppFilePath),
+    immediate: false,
+  });
   const infos1 = getEngineDirInfos(vvppEngineDir);
   expect(infos1.length).toBe(1);
 
-  await manager.install(vvppFilePath);
+  await manager.install({
+    extractedEngineFiles: await manager.extract(vvppFilePath),
+    immediate: false,
+  });
   const infos2 = getEngineDirInfos(vvppEngineDir);
   expect(infos2.length).toBe(1);
   expect(infos1[0].createdTime).toBe(infos2[0].createdTime); // 同じファイル
@@ -85,7 +105,10 @@ test<Context>("エンジンをアンインストール予約すると、後で�
   const targetUuid = EngineId("00000000-0000-0000-0000-000000000001");
   const vvppFilePath = await createVvppFile(targetName, tmpDir);
 
-  await manager.install(vvppFilePath);
+  await manager.install({
+    extractedEngineFiles: await manager.extract(vvppFilePath),
+    immediate: true,
+  });
   const infos1 = getEngineDirInfos(vvppEngineDir);
   expect(infos1.length).toBe(1);
 

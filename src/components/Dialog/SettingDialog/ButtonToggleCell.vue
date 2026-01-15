@@ -2,7 +2,16 @@
 
 <template>
   <BaseRowCard :title :description :disabled="disable">
-    <BaseToggleGroup v-model="model" type="single" :disabled="disable">
+    <BaseToggleGroup
+      :modelValue="model"
+      type="single"
+      :disabled="disable"
+      @update:modelValue="
+        (val) => {
+          if (typeof val !== 'undefined') model = val;
+        }
+      "
+    >
       <template v-for="option in options" :key="option.label">
         <BaseTooltip
           v-if="option.description != null"
@@ -20,7 +29,8 @@
   </BaseRowCard>
 </template>
 
-<script setup lang="ts" generic="T extends string">
+<script setup lang="ts" generic="T extends AcceptableValue">
+import { AcceptableValue } from "reka-ui";
 import BaseRowCard from "@/components/Base/BaseRowCard.vue";
 import BaseToggleGroup from "@/components/Base/BaseToggleGroup.vue";
 import BaseToggleGroupItem from "@/components/Base/BaseToggleGroupItem.vue";
@@ -33,5 +43,7 @@ defineProps<{
   disable?: boolean;
 }>();
 
-const model = defineModel<string | string[]>({ required: true });
+const model = defineModel<T | T[]>({
+  required: true,
+});
 </script>

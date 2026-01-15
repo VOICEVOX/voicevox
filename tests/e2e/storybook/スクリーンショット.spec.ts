@@ -5,8 +5,8 @@
  * --update-snapshotsをつけてPlaywrightを実行するとスクリーンショットが更新される。
  * 同時に、Storyが消えたスクリーンショットの削除も行う。
  */
-import fs from "fs/promises";
-import path from "path";
+import fs from "node:fs/promises";
+import path from "node:path";
 import { test, expect, Locator } from "@playwright/test";
 import z from "zod";
 
@@ -15,6 +15,7 @@ import z from "zod";
 const storybookIndexSchema = z.object({
   v: z.literal(5),
   entries: z.record(
+    z.string(),
     z.object({
       type: z.string(),
       id: z.string(),
@@ -92,13 +93,17 @@ for (const [story, stories] of Object.entries(allStories)) {
               "div[id^=q-portal--dialog--]",
             );
 
+            const baseDialogContent = page.locator(".DialogContent");
+
             await root.waitFor({ state: "attached" });
 
-            // Quasarのダイアログが存在する場合はダイアログのスクリーンショットを、そうでない場合は#storybook-rootのスクリーンショットを撮る。
+            // BaseDialogかQuasarのダイアログが存在する場合はダイアログのスクリーンショットを、そうでない場合は#storybook-rootのスクリーンショットを撮る。
             // q-portal-dialogはそのまま撮るとvisible扱いにならずtoHaveScreenshotが失敗するので、
             // 子要素にある実際のダイアログ（.q-dialog__inner）を撮る。
             let elementToScreenshot: Locator;
-            if ((await quasarDialogRoot.count()) > 0) {
+            if ((await baseDialogContent.count()) > 0) {
+              elementToScreenshot = baseDialogContent;
+            } else if ((await quasarDialogRoot.count()) > 0) {
               const dialog = quasarDialogRoot.locator(".q-dialog__inner");
 
               elementToScreenshot = dialog;

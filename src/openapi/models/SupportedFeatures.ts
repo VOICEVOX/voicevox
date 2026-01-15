@@ -1,8 +1,8 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * DUMMY Engine
- * DUMMY の音声合成エンジンです。
+ * VOICEVOX ENGINE OSS
+ * VOICEVOX OSS の音声合成エンジンです。
  *
  * The version of the OpenAPI document: latest
  * 
@@ -14,7 +14,7 @@
 
 import { exists, mapValues } from '../runtime';
 /**
- * エンジンが持つ機能の一覧
+ * エンジンが持つ機能の一覧。
  * @export
  * @interface SupportedFeatures
  */
@@ -91,6 +91,12 @@ export interface SupportedFeatures {
      * @memberof SupportedFeatures
      */
     returnResourceUrl?: boolean;
+    /**
+     * 未知の英単語をカタカナ読みに変換
+     * @type {boolean}
+     * @memberof SupportedFeatures
+     */
+    applyKatakanaEnglish?: boolean;
 }
 
 /**
@@ -132,6 +138,7 @@ export function SupportedFeaturesFromJSONTyped(json: any, ignoreDiscriminator: b
         'sing': !exists(json, 'sing') ? undefined : json['sing'],
         'manageLibrary': !exists(json, 'manage_library') ? undefined : json['manage_library'],
         'returnResourceUrl': !exists(json, 'return_resource_url') ? undefined : json['return_resource_url'],
+        'applyKatakanaEnglish': !exists(json, 'apply_katakana_english') ? undefined : json['apply_katakana_english'],
     };
 }
 
@@ -156,6 +163,7 @@ export function SupportedFeaturesToJSON(value?: SupportedFeatures | null): any {
         'sing': value.sing,
         'manage_library': value.manageLibrary,
         'return_resource_url': value.returnResourceUrl,
+        'apply_katakana_english': value.applyKatakanaEnglish,
     };
 }
 

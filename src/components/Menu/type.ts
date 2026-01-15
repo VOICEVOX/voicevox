@@ -11,7 +11,7 @@ export type MenuItemRoot = MenuItemBase<"root"> & {
   icon?: string;
   disabled?: boolean;
   disableWhenUiLocked: boolean;
-  disablreloadingLocked?: boolean;
+  disableWhileReloadingLock?: boolean;
 };
 
 export type MenuItemButton = MenuItemBase<"button"> & {
@@ -19,7 +19,7 @@ export type MenuItemButton = MenuItemBase<"button"> & {
   icon?: string;
   disabled?: boolean;
   disableWhenUiLocked: boolean;
-  disablreloadingLocked?: boolean;
+  disableWhileReloadingLock?: boolean;
 };
 
 export type MenuItemData = MenuItemSeparator | MenuItemRoot | MenuItemButton;

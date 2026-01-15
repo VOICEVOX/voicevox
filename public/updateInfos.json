@@ -1,5 +1,76 @@
 [
   {
+    "version": "0.25.1",
+    "descriptions": ["キャラクター「あんこもん」を追加"],
+    "contributors": []
+  },
+  {
+    "version": "0.25.0",
+    "descriptions": [
+      "トーク：複数選択機能を通常機能に",
+      "ソング：ループ機能",
+      "開発環境の向上",
+      "バグ修正"
+    ],
+    "contributors": [
+      "Hiroshiba",
+      "MT224244",
+      "Segu-g",
+      "akikukeo",
+      "madosuki",
+      "oech3",
+      "qryxip",
+      "romot-co",
+      "sabonerune",
+      "sevenc-nanashi",
+      "sigprogramming",
+      "takusea"
+    ]
+  },
+  {
+    "version": "0.24.2",
+    "descriptions": [
+      "キャラクター「ユーレイちゃん」「東北ずん子」「東北きりたん」「東北イタコ」を追加",
+      "キャラクター「猫使アル」「猫使ビィ」「離途」「黒沢冴白」のスタイルを追加・更新"
+    ],
+    "contributors": []
+  },
+  {
+    "version": "0.24.1",
+    "descriptions": [
+      "ソング：vvproj以外のプロジェクトをインポートできない問題を修正"
+    ],
+    "contributors": ["sevenc-nanashi", "sigprogramming"]
+  },
+  {
+    "version": "0.24.0",
+    "descriptions": [
+      "プロジェクトの複製を保存する機能を追加",
+      "ARM64版Linuxエディタの提供",
+      "トーク：辞書に登録されていない英単語の自然なカタカナ読みを可能に"
+    ],
+    "contributors": [
+      "aoirint",
+      "Hiroshiba",
+      "madosuki",
+      "nanae772",
+      "qryxip",
+      "sevenc-nanashi",
+      "sigprogramming",
+      "raa0121",
+      "sabonerune",
+      "takusea",
+      "tarepan",
+      "terapotan",
+      "yohaku7"
+    ]
+  },
+  {
+    "version": "0.23.1",
+    "descriptions": ["キャラクター「離途」「黒沢冴白」を追加"],
+    "contributors": []
+  },
+  {
     "version": "0.23.0",
     "descriptions": [
       "プリセット管理ダイアログのデザインを刷新",

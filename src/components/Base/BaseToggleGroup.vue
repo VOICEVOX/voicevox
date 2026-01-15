@@ -1,13 +1,13 @@
 <template>
   <ToggleGroupRoot
-    class="ToggleGroup"
-    :type
     :modelValue
+    class="ToggleGroup"
+    :type="rekaType"
     :disabled
     @update:modelValue="
-      (value) => {
-        if (value != undefined) {
-          $emit('update:modelValue', value);
+      (val) => {
+        if (!(props.type === 'single' && val == undefined)) {
+          modelValue = val as T | T[];
         }
       }
     "
@@ -16,18 +16,23 @@
   </ToggleGroupRoot>
 </template>
 
-<script setup lang="ts">
-import { ToggleGroupRoot } from "radix-vue";
+<script setup lang="ts" generic="T extends AcceptableValue">
+import { AcceptableValue, ToggleGroupRoot } from "reka-ui";
+import { computed } from "vue";
 
-defineProps<{
-  type: "single" | "multiple";
-  modelValue: string | string[];
+const props = defineProps<{
+  type: "single" | "optionalSingle" | "multiple";
   disabled?: boolean;
 }>();
 
-defineEmits<{
-  "update:modelValue": [payload: string | string[]];
-}>();
+const modelValue = defineModel<T | T[]>();
+
+const rekaType = computed(() => {
+  if (props.type === "optionalSingle") {
+    return "single";
+  }
+  return props.type;
+});
 </script>
 
 <style scoped lang="scss">

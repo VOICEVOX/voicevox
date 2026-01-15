@@ -1,23 +1,51 @@
 /// <reference types="vitest" />
-import path from "path";
-import { rm } from "fs/promises";
-
-import electron from "vite-plugin-electron/simple";
+import { execFileSync } from "node:child_process";
+import path from "node:path";
+import { rm } from "node:fs/promises";
+import electronPlugin from "vite-plugin-electron/simple";
 import tsconfigPaths from "vite-tsconfig-paths";
 import vue from "@vitejs/plugin-vue";
+import electronDefaultImport from "electron";
 import checker from "vite-plugin-checker";
 import { BuildOptions, defineConfig, loadEnv, Plugin } from "vite";
 import { quasar } from "@quasar/vite-plugin";
+import { playwright as playwrightProvider } from "@vitest/browser-playwright";
 import { z } from "zod";
-
+import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
 import {
   checkSuspiciousImports,
   CheckSuspiciousImportsOptions,
+  SourceFile,
 } from "./tools/checkSuspiciousImports.js";
+
+// @ts-expect-error electronをelectron環境外からimportするとelectronのファイルパスが得られる。
+// https://github.com/electron/electron/blob/a95180e0806f4adba8009f46124b6bb4853ac0a6/npm/index.js
+const electronPath = electronDefaultImport as string;
+
+const nodeTestPaths = ["../tests/unit/**/*.node.{test,spec}.ts"];
+const browserTestPaths = ["../tests/unit/**/*.browser.{test,spec}.ts"];
+const normalTestPaths = ["../tests/unit/**/*.{test,spec}.ts"];
 
 const isElectron = process.env.VITE_TARGET === "electron";
 const isBrowser = process.env.VITE_TARGET === "browser";
 const isProduction = process.env.NODE_ENV === "production";
+
+const ignorePaths = (paths: string[]) => paths.map((path) => `!${path}`);
+
+function getElectronTargetVersion(): {
+  node: string;
+  chrome: string;
+} {
+  const result = execFileSync(
+    electronPath,
+    [path.join(import.meta.dirname, "build/getElectronVersion.mjs")],
+    {
+      encoding: "utf-8",
+      env: { ...process.env, ELECTRON_RUN_AS_NODE: "1" },
+    },
+  );
+  return JSON.parse(result) as { node: string; chrome: string };
+}
 
 export default defineConfig((options) => {
   const mode = z
@@ -53,6 +81,10 @@ export default defineConfig((options) => {
     ? "inline"
     : false;
 
+  const electronTargetVersion = isElectron
+    ? getElectronTargetVersion()
+    : undefined;
+
   // ref: electronの起動をスキップしてデバッグ起動を軽くする
   const skipLaunchElectron =
     mode === "test" || process.env.SKIP_LAUNCH_ELECTRON === "1";
@@ -61,6 +93,7 @@ export default defineConfig((options) => {
     root: path.resolve(import.meta.dirname, "src"),
     envDir: import.meta.dirname,
     build: {
+      target: electronTargetVersion?.chrome,
       outDir: path.resolve(import.meta.dirname, "dist"),
       chunkSizeWarningLimit: 10000,
       sourcemap,
@@ -69,8 +102,7 @@ export default defineConfig((options) => {
     css: {
       preprocessorOptions: {
         scss: {
-          api: "modern",
-          includePaths: [path.resolve(import.meta.dirname, "node_modules")],
+          loadPaths: [path.resolve(import.meta.dirname, "node_modules")],
         },
       },
     },
@@ -90,7 +122,7 @@ export default defineConfig((options) => {
       isElectron && [
         cleanDistPlugin(),
         // TODO: 関数で切り出して共通化できる部分はまとめる
-        electron({
+        electronPlugin({
           main: {
             entry: "./backend/electron/main.ts",
 
@@ -111,23 +143,17 @@ export default defineConfig((options) => {
             vite: {
               plugins: [
                 tsconfigPaths({ root: import.meta.dirname }),
-                isProduction &&
-                  checkSuspiciousImportsPlugin({
-                    allowedInTryCatchModules: [
-                      // systeminformationのoptionalな依存。try-catch内なので許可。
-                      "osx-temperature-sensor",
-                    ],
-                  }),
+                isProduction && checkSuspiciousImportsPlugin({}),
               ],
               build: {
+                target: electronTargetVersion?.node,
                 outDir: path.resolve(import.meta.dirname, "dist"),
                 sourcemap,
               },
             },
           },
           preload: {
-            // ref: https://electron-vite.github.io/guide/preload-not-split.html
-            input: "./src/backend/electron/preload.ts",
+            input: "./src/backend/electron/renderer/preload.ts",
             onstart({ reload }) {
               if (!skipLaunchElectron) {
                 reload();
@@ -139,6 +165,7 @@ export default defineConfig((options) => {
                 isProduction && checkSuspiciousImportsPlugin({}),
               ],
               build: {
+                target: electronTargetVersion?.chrome,
                 outDir: path.resolve(import.meta.dirname, "dist"),
                 sourcemap,
               },
@@ -146,8 +173,93 @@ export default defineConfig((options) => {
           },
         }),
       ],
-      isBrowser && injectBrowserPreloadPlugin(),
+      isElectron &&
+        injectLoaderScriptPlugin(
+          "./backend/electron/renderer/backendApiLoader.ts",
+        ),
+      isBrowser &&
+        injectLoaderScriptPlugin("./backend/browser/backendApiLoader.ts"),
     ],
+
+    test: {
+      projects: [
+        // Node.js環境
+        {
+          extends: "../vite.config.ts",
+          test: {
+            include: nodeTestPaths,
+            name: "node",
+            environment: "node",
+            globals: true,
+          },
+        },
+
+        // happy-domのエミュレート版ブラウザ環境
+        {
+          extends: "../vite.config.ts",
+          plugins: [],
+          test: {
+            include: [
+              ...normalTestPaths,
+              ...ignorePaths(nodeTestPaths),
+              ...ignorePaths(browserTestPaths),
+            ],
+            globals: true,
+            name: "unit",
+            environment: "happy-dom",
+          },
+        },
+
+        // Chromiumブラウザ環境
+        {
+          extends: "../vite.config.ts",
+          test: {
+            include: browserTestPaths,
+            globals: true,
+            name: "browser",
+            browser: {
+              enabled: true,
+              instances: [{ browser: "chromium" }],
+              provider: playwrightProvider(),
+              headless: true,
+              api: 7158,
+              ui: false,
+            },
+          },
+        },
+
+        // Storybook
+        {
+          extends: "../vite.config.ts",
+          plugins: [
+            storybookTest({
+              storybookScript: "storybook --ci --port 7160",
+              storybookUrl: "http://localhost:7160",
+            }),
+          ],
+          resolve: {
+            alias: {
+              // NOTE: Storybookで`template:`指定を使うために必要
+              vue: "vue/dist/vue.esm-bundler.js",
+            },
+          },
+          test: {
+            globals: true,
+            name: "storybook",
+            browser: {
+              enabled: true,
+              instances: [{ browser: "chromium" }],
+              provider: playwrightProvider(),
+              headless: true,
+              api: 7159,
+              ui: false,
+            },
+            isolate: false,
+            setupFiles: ["./.storybook/vitest.setup.ts"],
+          },
+        },
+      ],
+    },
   };
 });
 const cleanDistPlugin = (): Plugin => {
@@ -164,16 +276,18 @@ const cleanDistPlugin = (): Plugin => {
   };
 };
 
-const injectBrowserPreloadPlugin = (): Plugin => {
+/** バックエンドAPIをフロントエンドから実行するコードを注入する */
+const injectLoaderScriptPlugin = (scriptPath: string): Plugin => {
   return {
-    name: "inject-browser-preload",
+    name: "inject-loader-script",
     transformIndexHtml: {
       order: "pre",
-      handler: (html: string) =>
-        html.replace(
-          "<!-- %BROWSER_PRELOAD% -->",
-          `<script type="module" src="./backend/browser/preload.ts"></script>`,
-        ),
+      handler: (html: string) => {
+        return html.replace(
+          "<!-- %LOADER_SCRIPT% -->",
+          `<script type="module" src="${scriptPath}"></script>`,
+        );
+      },
     },
   };
 };
@@ -186,11 +300,13 @@ const checkSuspiciousImportsPlugin = (
     enforce: "post",
     apply: "build",
     writeBundle(_options, bundle) {
+      const files: SourceFile[] = [];
       for (const [file, chunk] of Object.entries(bundle)) {
         if (chunk.type === "chunk") {
-          checkSuspiciousImports(file, chunk.code, options);
+          files.push({ path: file, content: chunk.code });
         }
       }
+      checkSuspiciousImports(files, options);
     },
   };
 };

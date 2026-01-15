@@ -66,7 +66,7 @@
           :accentPhrase
           :index="accentPhraseIndex"
           :isLast="
-            accentPhrases !== undefined &&
+            accentPhrases != undefined &&
             accentPhrases.length - 1 === accentPhraseIndex
           "
           :isActive="accentPhraseIndex === activePoint"
@@ -151,7 +151,7 @@ registerHotkeyWithCleanup({
   name: "全体のイントネーションをリセット",
   callback: () => {
     if (!uiLocked.value && store.getters.ACTIVE_AUDIO_KEY) {
-      const audioKeys = store.state.experimentalSetting.enableMultiSelect
+      const audioKeys = store.state.enableMultiSelect
         ? store.getters.SELECTED_AUDIO_KEYS
         : [store.getters.ACTIVE_AUDIO_KEY];
       void store.actions.COMMAND_MULTI_RESET_MORA_PITCH_AND_LENGTH({

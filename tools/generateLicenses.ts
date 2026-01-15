@@ -1,7 +1,7 @@
-import process from "process";
-import { execFileSync } from "child_process";
-import fs from "fs/promises";
-import path from "path";
+import process from "node:process";
+import { execFileSync } from "node:child_process";
+import fs from "node:fs/promises";
+import path from "node:path";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import * as licenseChecker from "license-checker-rseidelsohn";

@@ -1,6 +1,6 @@
-import path from "path";
-import fs from "fs";
-import shlex from "shlex";
+import path from "node:path";
+import fs from "node:fs";
+import * as shlex from "shlex";
 
 import { dialog } from "electron"; // FIXME: ここでelectronをimportするのは良くない
 
@@ -32,6 +32,15 @@ export class EngineInfoManager {
   constructor(payload: { defaultEngineDir: string; vvppEngineDir: string }) {
     this.defaultEngineDir = payload.defaultEngineDir;
     this.vvppEngineDir = payload.vvppEngineDir;
+  }
+
+  /**
+   * デフォルトエンジンかどうかを判定する。
+   */
+  isDefaultEngine(engineId: EngineId): boolean {
+    return this.envEngineInfos.some(
+      (engineInfo) => engineInfo.uuid === engineId,
+    );
   }
 
   /**
@@ -71,7 +80,8 @@ export class EngineInfoManager {
       executionFilePath: path.join(engineDir, command),
       executionArgs: args,
       type,
-      isDefault: false,
+      isDefault: this.isDefaultEngine(manifest.uuid),
+      version: manifest.version,
     } satisfies EngineInfo);
   }
 
@@ -91,13 +101,14 @@ export class EngineInfoManager {
           hostname,
           defaultPort: port,
           pathname: pathname === "/" ? "" : pathname,
-          isDefault: true,
+          isDefault: this.isDefaultEngine(engineInfo.uuid),
           type: engineInfo.type,
           executionFilePath: path.resolve(engineInfo.executionFilePath),
           path:
             engineInfo.path == undefined
               ? undefined
               : path.resolve(this.defaultEngineDir, engineInfo.path),
+          version: "999.999.999", // FIXME: ダミー値。使わないため問題ない。engine_manifest.jsonから取得すべき。
         } satisfies EngineInfo;
       });
   }

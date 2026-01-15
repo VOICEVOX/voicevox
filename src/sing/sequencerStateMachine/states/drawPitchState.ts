@@ -9,10 +9,13 @@ import {
 import { TrackId } from "@/type/preload";
 import {
   applyGaussianFilter,
+  applySmoothTransitions,
   createArray,
   linearInterpolation,
 } from "@/sing/utility";
 import { getButton } from "@/sing/viewHelper";
+import { getOrThrow } from "@/helpers/mapHelper";
+import { VALUE_INDICATING_NO_DATA } from "@/sing/domain";
 
 export class DrawPitchState
   implements State<SequencerStateDefinitions, Input, Context>
@@ -24,7 +27,7 @@ export class DrawPitchState
   private readonly returnStateId: IdleStateId;
 
   private currentCursorPos: PositionOnSequencer;
-  private applyPreview: boolean;
+  private shouldApplyPreview: boolean;
 
   private innerContext:
     | {
@@ -44,7 +47,7 @@ export class DrawPitchState
     this.returnStateId = args.returnStateId;
 
     this.currentCursorPos = args.cursorPosAtStart;
-    this.applyPreview = false;
+    this.shouldApplyPreview = false;
   }
 
   onEnter(context: Context) {
@@ -94,22 +97,22 @@ export class DrawPitchState
     if (context.previewPitchEdit.value.type !== "draw") {
       throw new Error("previewPitchEdit.type is not draw.");
     }
-    if (input.type === "mouseEvent") {
-      const mouseButton = getButton(input.mouseEvent);
+    if (input.type === "pointerEvent") {
+      const mouseButton = getButton(input.pointerEvent);
 
       if (input.targetArea === "Window") {
-        if (input.mouseEvent.type === "mousemove") {
+        if (input.pointerEvent.type === "pointermove") {
           this.currentCursorPos = input.cursorPos;
           this.innerContext.executePreviewProcess = true;
         } else if (
-          input.mouseEvent.type === "mouseup" &&
+          input.pointerEvent.type === "pointerup" &&
           mouseButton === "LEFT_BUTTON"
         ) {
           // カーソルを動かさずにマウスのボタンを離したときに1フレームのみの変更になり、
           // 1フレームの変更はピッチ編集ラインとして表示されないので、無視する
           const previewPitchEditDataLength =
             context.previewPitchEdit.value.data.length;
-          this.applyPreview = previewPitchEditDataLength >= 2;
+          this.shouldApplyPreview = previewPitchEditDataLength >= 2;
           setNextState(this.returnStateId, undefined);
         }
       }
@@ -129,18 +132,8 @@ export class DrawPitchState
 
     cancelAnimationFrame(this.innerContext.previewRequestId);
 
-    if (this.applyPreview) {
-      // 平滑化を行う
-      let data = context.previewPitchEdit.value.data;
-      data = data.map((value) => Math.log(value));
-      applyGaussianFilter(data, 0.7);
-      data = data.map((value) => Math.exp(value));
-
-      void context.store.actions.COMMAND_SET_PITCH_EDIT_DATA({
-        pitchArray: data,
-        startFrame: context.previewPitchEdit.value.startFrame,
-        trackId: this.targetTrackId,
-      });
+    if (this.shouldApplyPreview) {
+      this.applyPreview(context);
     }
 
     context.previewPitchEdit.value = undefined;
@@ -217,5 +210,102 @@ export class DrawPitchState
 
     context.previewPitchEdit.value = tempPitchEdit;
     this.innerContext.prevCursorPos = this.currentCursorPos;
+  }
+
+  private applyPreview(context: Context) {
+    if (context.previewPitchEdit.value == undefined) {
+      throw new Error("previewPitchEdit is undefined.");
+    }
+    if (context.previewPitchEdit.value.type !== "draw") {
+      throw new Error("previewPitchEdit.type is not draw.");
+    }
+
+    const editStartFrame = context.previewPitchEdit.value.startFrame;
+    const previewEditData = context.previewPitchEdit.value.data;
+    const editEndFrame = editStartFrame + previewEditData.length;
+
+    // プレビュー中の編集データの値を1以上にして、対数スケールに変換する
+    const logPreviewEditData = previewEditData.map((value) =>
+      Math.log(Math.max(1, value)),
+    );
+
+    // 平滑化を行う
+    applyGaussianFilter(logPreviewEditData, 0.7);
+
+    const targetTrack = getOrThrow(
+      context.store.state.tracks,
+      this.targetTrackId,
+    );
+    const pitchEditData = targetTrack.pitchEditData;
+
+    // 前方にどこまで編集データが続いているか探す
+    let contiguousRegionStartFrame = editStartFrame;
+    if (editStartFrame - 1 < pitchEditData.length) {
+      for (let i = editStartFrame - 1; i >= 0; i--) {
+        if (pitchEditData[i] !== VALUE_INDICATING_NO_DATA) {
+          contiguousRegionStartFrame = i;
+        } else {
+          break;
+        }
+      }
+    }
+
+    // 後方にどこまで編集データが続いているか探す
+    let contiguousRegionEndFrame = editEndFrame;
+    for (let i = editEndFrame; i < pitchEditData.length; i++) {
+      if (pitchEditData[i] !== VALUE_INDICATING_NO_DATA) {
+        contiguousRegionEndFrame = i + 1;
+      } else {
+        break;
+      }
+    }
+
+    // 前後の既存編集データを対数スケールで取得
+    let logFrontData: number[] = [];
+    if (contiguousRegionStartFrame !== editStartFrame) {
+      logFrontData = pitchEditData
+        .slice(contiguousRegionStartFrame, editStartFrame)
+        .map((value) => Math.log(value));
+    }
+    let logBackData: number[] = [];
+    if (contiguousRegionEndFrame !== editEndFrame) {
+      logBackData = pitchEditData
+        .slice(editEndFrame, contiguousRegionEndFrame)
+        .map((value) => Math.log(value));
+    }
+
+    // 対数スケールでデータを結合
+    const logCombinedData = [
+      ...logFrontData,
+      ...logPreviewEditData,
+      ...logBackData,
+    ];
+
+    // 既存の編集データと新しい編集データの境界を不連続箇所として記録する
+    const jumpIndices: number[] = [];
+    if (contiguousRegionStartFrame !== editStartFrame) {
+      jumpIndices.push(editStartFrame - contiguousRegionStartFrame);
+    }
+    if (contiguousRegionEndFrame !== editEndFrame) {
+      jumpIndices.push(editEndFrame - contiguousRegionStartFrame);
+    }
+
+    // 不連続箇所を滑らかにつなぐ
+    // NOTE: 最大6フレーム（左右各3フレーム）かけて滑らかにする
+    if (jumpIndices.length !== 0) {
+      applySmoothTransitions(logCombinedData, jumpIndices, {
+        left: 3,
+        right: 3,
+      });
+    }
+
+    // 対数スケールから元のスケールに戻す
+    const finalPitchEditData = logCombinedData.map((value) => Math.exp(value));
+
+    void context.store.actions.COMMAND_SET_PITCH_EDIT_DATA({
+      pitchArray: finalPitchEditData,
+      startFrame: contiguousRegionStartFrame,
+      trackId: this.targetTrackId,
+    });
   }
 }

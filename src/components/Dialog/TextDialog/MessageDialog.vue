@@ -4,50 +4,31 @@
   参照：https://quasar.dev/quasar-plugins/dialog
 -->
 <template>
-  <QDialog
+  <BaseDialog
     ref="dialogRef"
-    v-model="modelValue"
+    v-model:open="modelValue"
+    :title
+    :description="message"
+    :icon="
+      props.type !== 'info'
+        ? { name: `sym_o_${iconName}`, color: color }
+        : undefined
+    "
     :persistent
-    @hide="onDialogHide"
+    @update:open="handleOpenUpdate"
   >
-    <QCard class="q-py-sm q-px-md dialog-card">
-      <QCardSection class="title">
-        <QIcon
-          v-if="props.type !== 'info'"
-          :name="`sym_o_${iconName}`"
-          size="2rem"
-          class="q-mr-sm"
-          :color
-        />
-        <div class="text-h5">{{ props.title }}</div>
-      </QCardSection>
-
-      <QSeparator />
-
-      <QCardSection class="message">
-        {{ props.message }}
-      </QCardSection>
-
-      <QSeparator />
-
-      <QCardActions align="right">
-        <QBtn
-          outline
-          :label="props.ok"
-          color="toolbar-button"
-          textColor="toolbar-button-display"
-          class="text-no-wrap text-bold q-mr-sm"
-          @click="onOk"
-        />
-      </QCardActions>
-    </QCard>
-  </QDialog>
+    <div class="footer">
+      <BaseButton :label="ok" @click="onOk" />
+    </div>
+  </BaseDialog>
 </template>
 
 <script setup lang="ts">
 import { useDialogPluginComponent } from "quasar";
 import { computed } from "vue";
 import { DialogType, getColor, getIcon } from "./common";
+import BaseDialog from "@/components/Base/BaseDialog.vue";
+import BaseButton from "@/components/Base/BaseButton.vue";
 
 const modelValue = defineModel<boolean>({ default: false });
 const props = withDefaults(
@@ -72,18 +53,23 @@ const iconName = computed(() => getIcon(props.type));
 const color = computed(() => getColor(props.type));
 const { dialogRef, onDialogHide, onDialogOK } = useDialogPluginComponent();
 
+function handleOpenUpdate(isOpen: boolean) {
+  if (!isOpen) {
+    onDialogHide();
+  }
+}
+
 function onOk() {
   onDialogOK();
 }
 </script>
 
 <style scoped lang="scss">
-.title {
-  display: flex;
-  align-items: center;
-}
+@use "@/styles/v2/variables" as vars;
 
-.message {
-  white-space: pre-wrap;
+.footer {
+  display: flex;
+  justify-content: end;
+  gap: vars.$gap-1;
 }
 </style>

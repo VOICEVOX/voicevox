@@ -1,6 +1,6 @@
-import { userEvent, within, expect, fn } from "@storybook/test";
+import { userEvent, within, expect, fn } from "storybook/test";
 
-import { Meta, StoryObj } from "@storybook/vue3";
+import { Meta, StoryObj } from "@storybook/vue3-vite";
 import QuestionDialog from "./QuestionDialog.vue";
 import { UnreachableError } from "@/type/utility";
 
@@ -68,7 +68,7 @@ export const ClickBackdropWithoutCancel: Story = {
   name: "persistent: trueで背景を押してもキャンセル扱いにならない",
   args: { ...Opened.args },
   play: async ({ args }) => {
-    const backdrop = document.body.querySelector(".q-dialog__backdrop");
+    const backdrop = document.body.querySelector(".DialogOverlay");
     if (!backdrop) throw new UnreachableError();
     await userEvent.click(backdrop);
 
@@ -81,7 +81,7 @@ export const ClickBackdropWithCancel: Story = {
   name: "persistent: falseで背景を押すとキャンセル扱いになる",
   args: { ...Opened.args, buttons: ["A", "キャンセル"], persistent: false },
   play: async ({ args }) => {
-    const backdrop = document.body.querySelector(".q-dialog__backdrop");
+    const backdrop = document.body.querySelector(".DialogOverlay");
     if (!backdrop) throw new UnreachableError();
     await userEvent.click(backdrop);
 

@@ -73,9 +73,9 @@
             [cursorClass]: true,
           }"
           aria-label="シーケンサ"
-          @mousedown="onMouseDown"
-          @mouseenter="onMouseEnter"
-          @mouseleave="onMouseLeave"
+          @pointerdown="onPointerDown"
+          @pointerenter="onPointerEnter"
+          @pointerleave="onPointerLeave"
           @dblclick.stop="onDoubleClick"
           @wheel="onWheel"
           @scroll="onScroll"
@@ -104,10 +104,10 @@
             :nowPreviewing
             :previewMode
             :cursorClass
-            @barMousedown="onNoteBarMouseDown($event, note)"
+            @barPointerdown="onNoteBarPointerDown($event, note)"
             @barDoubleClick="onNoteBarDoubleClick($event, note)"
-            @leftEdgeMousedown="onNoteLeftEdgeMouseDown($event, note)"
-            @rightEdgeMousedown="onNoteRightEdgeMouseDown($event, note)"
+            @leftEdgePointerdown="onNoteLeftEdgePointerDown($event, note)"
+            @rightEdgePointerdown="onNoteRightEdgePointerDown($event, note)"
           />
           <SequencerLyricInput
             v-if="editingLyricNote != undefined"
@@ -171,7 +171,7 @@
             class="sequencer-playhead"
             data-testid="sequencer-playhead"
             :style="{
-              transform: `translateX(${playheadX - scrollX}px)`,
+              transform: `translateX(${playheadX - scrollX - 1}px)`,
             }"
           ></div>
         </div>
@@ -227,7 +227,7 @@ import type { InjectionKey } from "vue";
 
 export const numMeasuresInjectionKey: InjectionKey<{
   numMeasures: ComputedRef<number>;
-}> = Symbol();
+}> = Symbol("sequencerNumMeasures");
 </script>
 
 <script setup lang="ts">
@@ -247,16 +247,15 @@ import ContextMenu, {
   ContextMenuItemData,
 } from "@/components/Menu/ContextMenu/Container.vue";
 import { useStore } from "@/store";
-import { Note } from "@/store/type";
+import type { Note } from "@/domain/project/type";
 import {
-  getEndTicksOfPhrase,
   getNoteDuration,
-  getStartTicksOfPhrase,
   getTimeSignaturePositions,
   noteNumberToFrequency,
   tickToMeasureNumber,
   tickToSecond,
-} from "@/sing/domain";
+} from "@/sing/music";
+import { getEndTicksOfPhrase, getStartTicksOfPhrase } from "@/sing/domain";
 import {
   tickToBaseX,
   baseXToTick,
@@ -286,7 +285,11 @@ import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import { createLogger } from "@/helpers/log";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import { useSequencerStateMachine } from "@/composables/useSequencerStateMachine";
-import { PositionOnSequencer } from "@/sing/sequencerStateMachine/common";
+import {
+  PositionOnSequencer,
+  ViewportInfo,
+} from "@/sing/sequencerStateMachine/common";
+import { useAutoScrollOnEdge } from "@/composables/useAutoScrollOnEdge";
 
 const { warn } = createLogger("ScoreSequencer");
 const store = useStore();
@@ -398,6 +401,16 @@ provide(numMeasuresInjectionKey, { numMeasures });
 const scrollX = ref(0);
 const scrollY = ref(0);
 
+// ビューポートの情報
+const viewportInfo = computed<ViewportInfo>(() => {
+  return {
+    scaleX: zoomX.value,
+    scaleY: zoomY.value,
+    offsetX: scrollX.value,
+    offsetY: scrollY.value,
+  };
+});
+
 // 再生ヘッドの位置
 const playheadTicks = computed(() => store.getters.PLAYHEAD_POSITION);
 const playheadX = computed(() => {
@@ -453,13 +466,17 @@ const {
   previewPitchEdit,
   cursorState,
   guideLineTicks,
-} = useSequencerStateMachine(store);
+  enableAutoScrollOnEdge,
+} = useSequencerStateMachine({ store, viewportInfo });
 
 const nowPreviewing = computed(() => previewMode.value !== "IDLE");
 
 const previewNoteIds = computed(() => {
   return new Set(previewNotes.value.map((note) => note.id));
 });
+
+// マウスカーソルがシーケンサーの端に行ったときの自動スクロール
+useAutoScrollOnEdge(sequencerBody, enableAutoScrollOnEdge);
 
 // 歌詞を編集中のノート
 const editingLyricNote = computed(() => {
@@ -541,11 +558,11 @@ const getCursorPosOnSequencer = (
   };
 };
 
-const onNoteBarMouseDown = (event: MouseEvent, note: Note) => {
+const onNoteBarPointerDown = (event: PointerEvent, note: Note) => {
   stateMachineProcess({
-    type: "mouseEvent",
+    type: "pointerEvent",
     targetArea: "Note",
-    mouseEvent: event,
+    pointerEvent: event,
     cursorPos: getCursorPosOnSequencer(event),
     note,
   });
@@ -561,27 +578,27 @@ const onNoteBarDoubleClick = (event: MouseEvent, note: Note) => {
   });
 };
 
-const onNoteLeftEdgeMouseDown = (event: MouseEvent, note: Note) => {
+const onNoteLeftEdgePointerDown = (event: PointerEvent, note: Note) => {
   stateMachineProcess({
-    type: "mouseEvent",
+    type: "pointerEvent",
     targetArea: "NoteLeftEdge",
-    mouseEvent: event,
+    pointerEvent: event,
     cursorPos: getCursorPosOnSequencer(event),
     note,
   });
 };
 
-const onNoteRightEdgeMouseDown = (event: MouseEvent, note: Note) => {
+const onNoteRightEdgePointerDown = (event: PointerEvent, note: Note) => {
   stateMachineProcess({
-    type: "mouseEvent",
+    type: "pointerEvent",
     targetArea: "NoteRightEdge",
-    mouseEvent: event,
+    pointerEvent: event,
     cursorPos: getCursorPosOnSequencer(event),
     note,
   });
 };
 
-const onMouseDown = (event: MouseEvent) => {
+const onPointerDown = (event: PointerEvent) => {
   const sequencerBodyElement = sequencerBody.value;
   if (!sequencerBodyElement) {
     throw new Error("sequencerBodyElement is null.");
@@ -593,28 +610,28 @@ const onMouseDown = (event: MouseEvent) => {
     cursorPos.y < sequencerBodyElement.clientHeight
   ) {
     stateMachineProcess({
-      type: "mouseEvent",
+      type: "pointerEvent",
       targetArea: "SequencerBody",
-      mouseEvent: event,
+      pointerEvent: event,
       cursorPos,
     });
   }
 };
 
-const onMouseMove = (event: MouseEvent) => {
+const onPointerMove = (event: PointerEvent) => {
   stateMachineProcess({
-    type: "mouseEvent",
+    type: "pointerEvent",
     targetArea: "Window",
-    mouseEvent: event,
+    pointerEvent: event,
     cursorPos: getCursorPosOnSequencer(event),
   });
 };
 
-const onMouseUp = (event: MouseEvent) => {
+const onPointerUp = (event: PointerEvent) => {
   stateMachineProcess({
-    type: "mouseEvent",
+    type: "pointerEvent",
     targetArea: "Window",
-    mouseEvent: event,
+    pointerEvent: event,
     cursorPos: getCursorPosOnSequencer(event),
   });
 };
@@ -651,11 +668,11 @@ const onLyricInputBlur = () => {
   });
 };
 
-const onMouseEnter = () => {
+const onPointerEnter = () => {
   showGuideLine.value = true;
 };
 
-const onMouseLeave = () => {
+const onPointerLeave = () => {
   showGuideLine.value = false;
 };
 
@@ -864,10 +881,16 @@ const onWheel = (event: WheelEvent) => {
 };
 
 const onScroll = (event: Event) => {
-  if (event.target instanceof HTMLElement) {
-    scrollX.value = event.target.scrollLeft;
-    scrollY.value = event.target.scrollTop;
+  if (!(event.currentTarget instanceof HTMLElement)) {
+    throw new Error("event.currentTarget is not HTMLElement.");
   }
+  scrollX.value = event.currentTarget.scrollLeft;
+  scrollY.value = event.currentTarget.scrollTop;
+
+  stateMachineProcess({
+    type: "scrollEvent",
+    targetArea: "SequencerBody",
+  });
 };
 
 // オートスクロール
@@ -946,16 +969,16 @@ onActivated(() => {
 onActivated(() => {
   document.addEventListener("keydown", handleKeydown);
   document.addEventListener("keyup", handleKeyUp);
-  window.addEventListener("mousemove", onMouseMove);
-  window.addEventListener("mouseup", onMouseUp);
+  window.addEventListener("pointermove", onPointerMove);
+  window.addEventListener("pointerup", onPointerUp);
 });
 
 // リスナー解除
 onDeactivated(() => {
   document.removeEventListener("keydown", handleKeydown);
   document.removeEventListener("keyup", handleKeyUp);
-  window.removeEventListener("mousemove", onMouseMove);
-  window.removeEventListener("mouseup", onMouseUp);
+  window.removeEventListener("pointermove", onPointerMove);
+  window.removeEventListener("pointerup", onPointerUp);
 });
 
 // コンテキストメニュー
@@ -1213,6 +1236,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   backface-visibility: hidden;
   overflow: auto;
   position: relative;
+  touch-action: none;
 
   // スクロールバー上のカーソルが要素のものになってしまうためデフォルトカーソルにする
   &::-webkit-scrollbar-thumb:hover,

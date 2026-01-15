@@ -7,7 +7,7 @@
   >
     <input
       ref="lyricInput"
-      :value="editingLyricNote.lyric"
+      :value="currentLyric"
       class="lyric-input"
       @input="onInput"
       @mousedown.stop
@@ -22,7 +22,7 @@
 import { computed, nextTick, ref, watch } from "vue";
 import { useStore } from "@/store";
 import { tickToBaseX, noteNumberToBaseY } from "@/sing/viewHelper";
-import { Note } from "@/store/type";
+import type { Note } from "@/domain/project/type";
 
 const props = defineProps<{
   editingLyricNote: Note;
@@ -46,6 +46,12 @@ const positionX = computed(() => {
 const positionY = computed(() => {
   const noteNumber = props.editingLyricNote.noteNumber;
   return noteNumberToBaseY(noteNumber + 0.5) * zoomY.value;
+});
+const currentLyric = computed(() => {
+  if (props.editingLyricNote.lyric == undefined) {
+    return "";
+  }
+  return props.editingLyricNote.lyric;
 });
 const lyricInput = ref<HTMLInputElement | null>(null);
 

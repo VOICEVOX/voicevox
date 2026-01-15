@@ -1,11 +1,11 @@
-import { exec } from "child_process";
-import { promisify } from "util";
+import { exec } from "node:child_process";
+import { promisify } from "node:util";
 import path from "@/helpers/path";
 import { uuid4 } from "@/helpers/random";
 
 /** テスト用のVVPPファイルを作成する */
 export async function createVvppFile(targetName: string, tmpDir: string) {
-  const sourceDir = path.join(__dirname, "vvpps", targetName);
+  const sourceDir = path.join(import.meta.dirname, "vvpps", targetName);
   const outputFilePath = path.join(tmpDir, uuid4() + targetName);
   await createZipFile(sourceDir, outputFilePath);
   return outputFilePath;

@@ -1,9 +1,10 @@
 import { ActionContext } from "../type";
 import { showErrorDialog } from "@/components/Dialog/Dialog";
 import { getAppInfos } from "@/domain/appInfo";
-import { LatestProjectType } from "@/domain/project/schema";
+import { LatestProjectType } from "@/infrastructures/projectFile/type";
 import { DisplayableError } from "@/helpers/errorHelper";
 import { ResultError } from "@/type/result";
+import { toProjectFileTrack } from "@/infrastructures/projectFile/conversion";
 
 export async function promptProjectSaveFilePath(
   context: ActionContext,
@@ -45,7 +46,12 @@ export async function writeProjectFile(
       tpqn,
       tempos,
       timeSignatures,
-      tracks: Object.fromEntries(tracks),
+      tracks: Object.fromEntries(
+        [...tracks.entries()].map(([trackId, track]) => {
+          const projectFileTrack = toProjectFileTrack(track);
+          return [trackId, projectFileTrack];
+        }),
+      ),
       trackOrder,
     },
   };

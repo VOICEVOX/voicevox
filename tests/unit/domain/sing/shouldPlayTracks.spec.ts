@@ -1,6 +1,7 @@
+import { it, expect, describe } from "vitest";
 import { uuid4 } from "@/helpers/random";
 import { createDefaultTrack, shouldPlayTracks } from "@/sing/domain";
-import { Track } from "@/store/type";
+import type { Track } from "@/domain/project/type";
 import { TrackId } from "@/type/preload";
 
 const createTrack = ({ solo, mute }: { solo: boolean; mute: boolean }) => {

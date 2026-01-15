@@ -24,7 +24,7 @@ import {
   ScrollAreaScrollbar,
   ScrollAreaThumb,
   ScrollAreaViewport,
-} from "radix-vue";
+} from "reka-ui";
 </script>
 
 <style scoped lang="scss">

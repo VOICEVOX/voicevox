@@ -8,12 +8,8 @@ import {
   SequencerStateDefinitions,
 } from "@/sing/sequencerStateMachine/common";
 import { NoteId, TrackId } from "@/type/preload";
-import { Note } from "@/store/type";
-import {
-  getButton,
-  getDoremiFromNoteNumber,
-  PREVIEW_SOUND_DURATION,
-} from "@/sing/viewHelper";
+import type { Note } from "@/domain/project/type";
+import { getButton, PREVIEW_SOUND_DURATION } from "@/sing/viewHelper";
 import { clamp } from "@/sing/utility";
 import { uuid4 } from "@/helpers/random";
 
@@ -57,7 +53,7 @@ export class AddNoteState
       position: Math.max(0, guideLineTicks),
       duration: context.snapTicks.value,
       noteNumber: clamp(this.cursorPosAtStart.noteNumber, 0, 127),
-      lyric: getDoremiFromNoteNumber(this.cursorPosAtStart.noteNumber),
+      lyric: undefined,
     };
     const noteEndPos = noteToAdd.position + noteToAdd.duration;
 
@@ -65,6 +61,7 @@ export class AddNoteState
     context.cursorState.value = "DRAW";
     context.guideLineTicks.value = noteEndPos;
     context.previewMode.value = "ADD_NOTE";
+    context.enableAutoScrollOnEdge.value = true;
 
     const previewIfNeeded = () => {
       if (this.innerContext == undefined) {
@@ -97,15 +94,15 @@ export class AddNoteState
     if (this.innerContext == undefined) {
       throw new Error("innerContext is undefined.");
     }
-    if (input.type === "mouseEvent") {
-      const mouseButton = getButton(input.mouseEvent);
+    if (input.type === "pointerEvent") {
+      const mouseButton = getButton(input.pointerEvent);
 
       if (input.targetArea === "Window") {
-        if (input.mouseEvent.type === "mousemove") {
+        if (input.pointerEvent.type === "pointermove") {
           this.currentCursorPos = input.cursorPos;
           this.innerContext.executePreviewProcess = true;
         } else if (
-          input.mouseEvent.type === "mouseup" &&
+          input.pointerEvent.type === "pointerup" &&
           mouseButton === "LEFT_BUTTON"
         ) {
           this.applyPreview = true;
@@ -142,6 +139,7 @@ export class AddNoteState
     context.previewNotes.value = [];
     context.cursorState.value = "UNSET";
     context.previewMode.value = "IDLE";
+    context.enableAutoScrollOnEdge.value = false;
   }
 
   private previewAdd(context: Context) {

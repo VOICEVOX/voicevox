@@ -21,7 +21,7 @@ function getDicPath() {
 }
 
 /** テキストをトークン列に変換するトークナイザーを取得する */
-async function createOrGetTokenizer() {
+export async function createOrGetTokenizer() {
   if (_tokenizer != undefined) {
     return _tokenizer;
   }
@@ -178,7 +178,7 @@ export async function textToActtentPhrasesMock(text: string, styleId: number) {
       const pauseMora = {
         text: "、",
         vowel: "pau",
-        vowelLength: 1 - 1 / (accentPhrases.length + 1),
+        vowelLength: 1 - 1 / (accentPhrases.length + 2),
         pitch: 0,
       };
 

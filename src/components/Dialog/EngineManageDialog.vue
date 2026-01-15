@@ -2,6 +2,7 @@
   <QDialog
     v-model="dialogOpened"
     maximized
+    allowFocusOutside
     transitionShow="jump-up"
     transitionHide="jump-down"
     class="setting-dialog transparent-backdrop"
@@ -278,6 +279,8 @@ import { useStore } from "@/store";
 import { EngineDirValidationResult, EngineId } from "@/type/preload";
 import type { SupportedFeatures } from "@/openapi/models/SupportedFeatures";
 import { useEngineIcons } from "@/composables/useEngineIcons";
+import { errorToMessage } from "@/helpers/errorHelper";
+import { ExhaustiveError } from "@/type/utility";
 
 type EngineLoaderType = "dir" | "vvpp";
 
@@ -380,6 +383,7 @@ const getFeatureName = (name: keyof SupportedFeatures) => {
       sing: "歌唱音声合成",
       manageLibrary: "音声ライブラリのインストール・アンインストール",
       returnResourceUrl: "キャラクター情報のリソースをURLで返送",
+      applyKatakanaEnglish: "未知の英単語をカタカナ読みに変換",
     };
   return featureNameMap[name];
 };
@@ -418,14 +422,21 @@ const addEngine = async () => {
         "エンジンを追加しました。反映には再読み込みが必要です。",
       );
     } else {
-      const success = await lockUi(
-        "addingEngine",
-        store.actions.INSTALL_VVPP_ENGINE(vvppFilePath.value),
-      );
-      if (success) {
+      try {
+        await lockUi(
+          "addingEngine",
+          store.actions.INSTALL_VVPP_ENGINE(vvppFilePath.value),
+        );
+
         void requireReload(
           "エンジンを追加しました。反映には再読み込みが必要です。",
         );
+      } catch (e) {
+        console.error(e);
+        void store.actions.SHOW_ALERT_DIALOG({
+          title: "エンジンの追加に失敗しました",
+          message: errorToMessage(e),
+        });
       }
     }
   }
@@ -465,17 +476,23 @@ const deleteEngine = async () => {
         break;
       }
       case "vvpp": {
-        const success = await lockUi(
-          "deletingEngine",
-          store.actions.UNINSTALL_VVPP_ENGINE(engineId),
-        );
-        if (success) {
+        try {
+          await lockUi(
+            "deletingEngine",
+            store.actions.UNINSTALL_VVPP_ENGINE(engineId),
+          );
           void requireReload("エンジンの削除には再読み込みが必要です。");
+        } catch (e) {
+          console.error(e);
+          void store.actions.SHOW_ALERT_DIALOG({
+            title: "エンジンの削除に失敗しました",
+            message: errorToMessage(e),
+          });
         }
         break;
       }
       default:
-        throw new Error("assert engineInfos[selectedId.value].type");
+        throw new ExhaustiveError(engineInfo.type);
     }
   }
 };
