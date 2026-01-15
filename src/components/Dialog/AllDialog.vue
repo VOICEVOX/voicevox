@@ -173,8 +173,8 @@ const isAcceptRetrieveTelemetryDialogOpenComputed = computed({
 const isInitialSettingsDialogOpenComputed = computed({
   get: () =>
     !store.state.isAcceptTermsDialogOpen &&
-    !store.state.isCharacterOrderDialogOpen &&
-    !store.state.isDefaultStyleSelectDialogOpen &&
+    !store.state.isOldCharacterOrderDialogOpen &&
+    !store.state.isOldDefaultStyleSelectDialogOpen &&
     !store.state.isAcceptRetrieveTelemetryDialogOpen &&
     store.state.isInitialSettingsDialogOpen,
   set: (val) =>
