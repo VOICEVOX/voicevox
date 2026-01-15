@@ -1,4 +1,3 @@
-import AsyncLock from "async-lock";
 import { defaultEngine, directoryHandleStoreKey } from "./contract";
 
 import { BaseConfigManager, Metadata } from "@/backend/common/ConfigManager";
@@ -6,6 +5,7 @@ import { ConfigType, EngineId, engineSettingSchema } from "@/type/preload";
 import { ensureNotNullish } from "@/helpers/errorHelper";
 import { UnreachableError } from "@/type/utility";
 import { isMac } from "@/helpers/platform";
+import { Mutex } from "@/helpers/mutex";
 
 const dbName = `${import.meta.env.VITE_APP_NAME}-web`;
 const settingStoreKey = "config";
@@ -15,16 +15,15 @@ const entryKey = "value";
 
 let configManager: BrowserConfigManager | undefined;
 
-const configManagerLock = new AsyncLock();
+const configManagerLock = new Mutex();
 const defaultEngineId = EngineId(defaultEngine.uuid);
 
 export async function getConfigManager() {
-  await configManagerLock.acquire("configManager", async () => {
-    if (!configManager) {
-      configManager = new BrowserConfigManager({ isMac });
-      await configManager.initialize();
-    }
-  });
+  await using _lock = await configManagerLock.acquire();
+  if (!configManager) {
+    configManager = new BrowserConfigManager({ isMac });
+    await configManager.initialize();
+  }
 
   if (!configManager) {
     throw new Error("configManager is undefined");

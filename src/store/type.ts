@@ -63,19 +63,20 @@ import {
   ConfirmDialogOptions,
   WarningDialogOptions,
 } from "@/components/Dialog/Dialog";
-import {
-  LatestProjectType,
-  noteSchema,
-  singerSchema,
-  tempoSchema,
-  timeSignatureSchema,
-  trackSchema,
-} from "@/domain/project/schema";
 import { HotkeySettingType } from "@/domain/hotkeyAction";
 import {
   MultiFileProjectFormat,
   SingleFileProjectFormat,
 } from "@/sing/utaformatixProject/utils";
+import type {
+  Note,
+  Singer,
+  Tempo,
+  TimeSignature,
+  Track,
+} from "@/domain/project/type";
+import { LatestProjectType } from "@/infrastructures/projectFile/type";
+import { WavFormat } from "@/helpers/fileDataGenerator";
 
 /**
  * エディタ用のAudioQuery
@@ -445,14 +446,14 @@ export type AudioStoreTypes = {
       audioKeys: AudioKey[];
       dirPath?: string;
       callback?: (finishedCount: number) => void;
-    }): SaveResultObject[] | undefined;
+    }): SaveResultObject[] | "canceled";
   };
 
   GENERATE_AND_CONNECT_AND_SAVE_AUDIO: {
     action(payload: {
       filePath?: string;
       callback?: (finishedCount: number, totalCount: number) => void;
-    }): SaveResultObject | undefined;
+    }): SaveResultObject;
   };
 
   CONNECT_AND_EXPORT_TEXT: {
@@ -750,23 +751,12 @@ export type AudioPlayerStoreTypes = {
  * Singing Store Types
  */
 
-// schemaはプロジェクトファイル用
-export type Tempo = z.infer<typeof tempoSchema>;
-
-export type TimeSignature = z.infer<typeof timeSignatureSchema>;
-
-export type Note = z.infer<typeof noteSchema>;
-
-export type Singer = z.infer<typeof singerSchema>;
-
-export type Track = z.infer<typeof trackSchema>;
-
 export type PhraseState =
   | "SINGER_IS_NOT_SET"
   | "WAITING_TO_BE_RENDERED"
   | "NOW_RENDERING"
   | "COULD_NOT_RENDER"
-  | "PLAYABLE";
+  | "RENDERED";
 
 /**
  * エディタ用のFrameAudioQuery
@@ -825,12 +815,13 @@ export type Phrase = {
   firstRestDuration: number;
   notes: Note[];
   startTime: number;
+  minNonPauseStartFrame: number | undefined;
+  maxNonPauseEndFrame: number | undefined;
   state: PhraseState;
   queryKey?: EditorFrameAudioQueryKey;
   singingPitchKey?: SingingPitchKey;
   singingVolumeKey?: SingingVolumeKey;
   singingVoiceKey?: SingingVoiceKey;
-  sequenceId?: SequenceId;
   trackId: TrackId; // NOTE: state.tracksと同期していないので使用する際は注意
 };
 
@@ -849,13 +840,17 @@ export type PhraseKey = z.infer<typeof phraseKeySchema>;
 export const PhraseKey = (id: string): PhraseKey => phraseKeySchema.parse(id);
 
 // 編集対象 ノート or ピッチ
-// ボリュームを足すのであれば"VOLUME"を追加する
 export type SequencerEditTarget = "NOTE" | "PITCH";
 
 // ノート編集ツール
 export type NoteEditTool = "SELECT_FIRST" | "EDIT_FIRST";
 // ピッチ編集ツール
 export type PitchEditTool = "DRAW" | "ERASE";
+// ボリューム編集ツール（VolumeEditor 専用）
+export type VolumeEditTool = "DRAW" | "ERASE";
+// パラメータパネル内の編集対象
+// NOTE: 音素タイミング編集などを追加する際に拡張
+export type ParameterPanelEditTarget = "PHONEME_TIMING" | "VOLUME";
 
 // プロジェクトの書き出しに使えるファイル形式
 export type ExportSongProjectFileType =
@@ -871,6 +866,7 @@ export type TrackParameters = {
 export type SongExportSetting = {
   isMono: boolean;
   sampleRate: number;
+  format: WavFormat;
   withLimiter: boolean;
   withTrackParameters: TrackParameters;
 };
@@ -892,12 +888,18 @@ export type SingingStoreState = {
   phraseQueries: Map<EditorFrameAudioQueryKey, EditorFrameAudioQuery>;
   phraseSingingPitches: Map<SingingPitchKey, SingingPitch>;
   phraseSingingVolumes: Map<SingingVolumeKey, SingingVolume>;
+  phraseSequenceIds: Map<PhraseKey, SequenceId>;
   sequencerZoomX: number;
   sequencerZoomY: number;
   sequencerSnapType: number;
+  // sequencerEditTargetはUI上はシーケンサ全体ではなくピアノロールでの編集対象(ノート or ピッチ)を表す
+  // TODO: 編集対象がわかりづらいため、ピアノロールの編集対象を表すものに変更する eg: pianoRollEditTarget
   sequencerEditTarget: SequencerEditTarget;
   sequencerNoteTool: NoteEditTool;
   sequencerPitchTool: PitchEditTool;
+  sequencerVolumeTool: VolumeEditTool;
+  parameterPanelEditTarget: ParameterPanelEditTarget;
+  sequencerVolumeVisible: boolean;
   _selectedNoteIds: Set<NoteId>;
   editingLyricNoteId?: NoteId;
   nowPlaying: boolean;
@@ -908,6 +910,9 @@ export type SingingStoreState = {
   exportState: SongExportState;
   cancellationOfExportRequested: boolean;
   isSongSidebarOpen: boolean;
+  isLoopEnabled: boolean;
+  loopStartTick: number;
+  loopEndTick: number;
 };
 
 export type SingingStoreTypes = {
@@ -1031,13 +1036,35 @@ export type SingingStoreTypes = {
     }): void;
   };
 
+  SET_VOLUME_EDIT_DATA: {
+    mutation: { volumeArray: number[]; startFrame: number; trackId: TrackId };
+    action(payload: {
+      volumeArray: number[];
+      startFrame: number;
+      trackId: TrackId;
+    }): void;
+  };
+
   ERASE_PITCH_EDIT_DATA: {
+    mutation: { startFrame: number; frameLength: number; trackId: TrackId };
+  };
+
+  ERASE_VOLUME_EDIT_DATA: {
     mutation: { startFrame: number; frameLength: number; trackId: TrackId };
   };
 
   CLEAR_PITCH_EDIT_DATA: {
     mutation: { trackId: TrackId };
     action(payload: { trackId: TrackId }): void;
+  };
+
+  CLEAR_VOLUME_EDIT_DATA: {
+    mutation: { trackId: TrackId };
+    action(payload: { trackId: TrackId }): void;
+  };
+
+  CREATE_AND_SETUP_SONG_TRACK_RENDERER: {
+    action(): void;
   };
 
   SET_PHRASES: {
@@ -1079,10 +1106,9 @@ export type SingingStoreTypes = {
     };
   };
 
-  SET_SEQUENCE_ID_TO_PHRASE: {
+  SET_PHRASE_QUERIES: {
     mutation: {
-      phraseKey: PhraseKey;
-      sequenceId: SequenceId | undefined;
+      queries: Map<EditorFrameAudioQueryKey, EditorFrameAudioQuery>;
     };
   };
 
@@ -1097,6 +1123,12 @@ export type SingingStoreTypes = {
     mutation: { queryKey: EditorFrameAudioQueryKey };
   };
 
+  SET_PHRASE_SINGING_PITCHES: {
+    mutation: {
+      singingPitches: Map<SingingPitchKey, SingingPitch>;
+    };
+  };
+
   SET_PHRASE_SINGING_PITCH: {
     mutation: {
       singingPitchKey: SingingPitchKey;
@@ -1108,6 +1140,12 @@ export type SingingStoreTypes = {
     mutation: { singingPitchKey: SingingPitchKey };
   };
 
+  SET_PHRASE_SINGING_VOLUMES: {
+    mutation: {
+      singingVolumes: Map<SingingVolumeKey, SingingVolume>;
+    };
+  };
+
   SET_PHRASE_SINGING_VOLUME: {
     mutation: {
       singingVolumeKey: SingingVolumeKey;
@@ -1117,6 +1155,14 @@ export type SingingStoreTypes = {
 
   DELETE_PHRASE_SINGING_VOLUME: {
     mutation: { singingVolumeKey: SingingVolumeKey };
+  };
+
+  SET_PHRASE_SEQUENCE_ID: {
+    mutation: { phraseKey: PhraseKey; sequenceId: SequenceId };
+  };
+
+  DELETE_PHRASE_SEQUENCE_ID: {
+    mutation: { phraseKey: PhraseKey };
   };
 
   SELECTED_TRACK: {
@@ -1151,6 +1197,21 @@ export type SingingStoreTypes = {
   SET_SEQUENCER_PITCH_TOOL: {
     mutation: { sequencerPitchTool: PitchEditTool };
     action(payload: { sequencerPitchTool: PitchEditTool }): void;
+  };
+
+  SET_SEQUENCER_VOLUME_TOOL: {
+    mutation: { sequencerVolumeTool: VolumeEditTool };
+    action(payload: { sequencerVolumeTool: VolumeEditTool }): void;
+  };
+
+  SET_PARAMETER_PANEL_EDIT_TARGET: {
+    mutation: { editTarget: ParameterPanelEditTarget };
+    action(payload: { editTarget: ParameterPanelEditTarget }): void;
+  };
+
+  SET_SEQUENCER_VOLUME_VISIBLE: {
+    mutation: { sequencerVolumeVisible: boolean };
+    action(payload: { sequencerVolumeVisible: boolean }): void;
   };
 
   EXPORT_LABEL_FILES: {
@@ -1190,13 +1251,39 @@ export type SingingStoreTypes = {
     action(): void;
   };
 
-  FETCH_SING_FRAME_VOLUME: {
-    action(palyoad: {
+  FETCH_SING_FRAME_AUDIO_QUERY: {
+    action(payload: {
+      notes: NoteForRequestToEngine[];
+      engineFrameRate: number;
+      engineId: EngineId;
+      styleId: StyleId;
+    }): Promise<EditorFrameAudioQuery>;
+  };
+
+  FETCH_SING_FRAME_F0: {
+    action(payload: {
       notes: NoteForRequestToEngine[];
       query: EditorFrameAudioQuery;
       engineId: EngineId;
       styleId: StyleId;
     }): Promise<number[]>;
+  };
+
+  FETCH_SING_FRAME_VOLUME: {
+    action(payload: {
+      notes: NoteForRequestToEngine[];
+      query: EditorFrameAudioQuery;
+      engineId: EngineId;
+      styleId: StyleId;
+    }): Promise<number[]>;
+  };
+
+  FRAME_SYNTHESIS: {
+    action(payload: {
+      query: EditorFrameAudioQuery;
+      engineId: EngineId;
+      styleId: StyleId;
+    }): Promise<Blob>;
   };
 
   TICK_TO_SECOND: {
@@ -1378,11 +1465,29 @@ export type SingingStoreTypes = {
     action(payload: { device: string }): void;
   };
 
+  SET_LOOP_ENABLED: {
+    mutation: { isLoopEnabled: boolean };
+    action(payload: { isLoopEnabled: boolean }): void;
+  };
+
+  SET_LOOP_RANGE: {
+    mutation: { loopStartTick: number; loopEndTick: number };
+    action(payload: { loopStartTick: number; loopEndTick: number }): void;
+  };
+
+  CLEAR_LOOP_RANGE: {
+    action(): void;
+  };
+
   EXPORT_SONG_PROJECT: {
     action(payload: {
       fileType: ExportSongProjectFileType;
       fileTypeLabel: string;
     }): Promise<SaveResultObject>;
+  };
+
+  GET_SEQUENCE_AUDIO_BUFFER: {
+    getter(sequenceId: SequenceId): AudioBuffer | undefined;
   };
 };
 
@@ -1459,7 +1564,25 @@ export type SingingCommandStoreTypes = {
     }): void;
   };
 
+  COMMAND_SET_VOLUME_EDIT_DATA: {
+    mutation: { volumeArray: number[]; startFrame: number; trackId: TrackId };
+    action(payload: {
+      volumeArray: number[];
+      startFrame: number;
+      trackId: TrackId;
+    }): void;
+  };
+
   COMMAND_ERASE_PITCH_EDIT_DATA: {
+    mutation: { startFrame: number; frameLength: number; trackId: TrackId };
+    action(payload: {
+      startFrame: number;
+      frameLength: number;
+      trackId: TrackId;
+    }): void;
+  };
+
+  COMMAND_ERASE_VOLUME_EDIT_DATA: {
     mutation: { startFrame: number; frameLength: number; trackId: TrackId };
     action(payload: {
       startFrame: number;
@@ -1690,11 +1813,11 @@ export type EngineStoreTypes = {
   };
 
   INSTALL_VVPP_ENGINE: {
-    action: (path: string) => Promise<boolean>;
+    action: (path: string) => Promise<void>;
   };
 
   UNINSTALL_VVPP_ENGINE: {
-    action: (engineId: EngineId) => Promise<boolean>;
+    action: (engineId: EngineId) => Promise<void>;
   };
 
   SET_ENGINE_INFOS: {
@@ -1836,7 +1959,9 @@ export type ProjectStoreTypes = {
   };
 
   PARSE_PROJECT_FILE: {
-    action(payload: { projectJson: string }): Promise<LatestProjectType>;
+    action(payload: {
+      projectJson: string;
+    }): Promise<LatestProjectType | undefined>;
   };
 
   LOAD_PROJECT_FILE: {
@@ -2017,8 +2142,9 @@ export type UiStoreState = {
 
 export type DialogStates = {
   isSettingDialogOpen: boolean;
-  isCharacterOrderDialogOpen: boolean;
-  isDefaultStyleSelectDialogOpen: boolean;
+  isCharacterListDialogOpen: boolean;
+  isOldCharacterOrderDialogOpen: boolean;
+  isOldDefaultStyleSelectDialogOpen: boolean;
   isHotkeySettingDialogOpen: boolean;
   isToolbarSettingDialogOpen: boolean;
   isAcceptRetrieveTelemetryDialogOpen: boolean;

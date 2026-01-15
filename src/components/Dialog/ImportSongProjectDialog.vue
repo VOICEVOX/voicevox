@@ -102,7 +102,7 @@ import { useStore } from "@/store";
 import { createLogger } from "@/helpers/log";
 import { ExhaustiveError } from "@/type/utility";
 import { IsEqual } from "@/type/utility";
-import { LatestProjectType } from "@/domain/project/schema";
+import { LatestProjectType } from "@/infrastructures/projectFile/type";
 import { DEFAULT_TRACK_NAME } from "@/sing/domain";
 
 const { dialogRef, onDialogOK, onDialogCancel } = useDialogPluginComponent();
@@ -266,6 +266,11 @@ const handleFileChange = async (event: Event) => {
       const parsedProject = await store.actions.PARSE_PROJECT_FILE({
         projectJson: vvproj,
       });
+      if (parsedProject == undefined) {
+        error.value = "oldProject";
+        project.value = null;
+        return;
+      }
       project.value = {
         type: "vvproj",
         project: parsedProject,
@@ -277,6 +282,10 @@ const handleFileChange = async (event: Event) => {
           defaultLyric: "",
         }),
       };
+    }
+    if (project.value == null) {
+      error.value = "unknown";
+      return;
     }
     const firstSelectableTrack = getProjectTracks(project.value).findIndex(
       (track) => !track.disable,

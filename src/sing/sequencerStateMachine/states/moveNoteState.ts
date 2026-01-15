@@ -2,7 +2,7 @@ import { getOrThrow } from "@/helpers/mapHelper";
 import { State, SetNextState } from "@/sing/stateMachine";
 import { clamp } from "@/sing/utility";
 import { getButton, PREVIEW_SOUND_DURATION } from "@/sing/viewHelper";
-import { Note } from "@/store/type";
+import type { Note } from "@/domain/project/type";
 import { TrackId, NoteId } from "@/type/preload";
 import {
   Context,
@@ -11,6 +11,7 @@ import {
   Input,
   PositionOnSequencer,
   SequencerStateDefinitions,
+  shouldStartDrag,
 } from "@/sing/sequencerStateMachine/common";
 
 export class MoveNoteState
@@ -25,6 +26,7 @@ export class MoveNoteState
   private readonly returnStateId: IdleStateId;
 
   private currentCursorPos: PositionOnSequencer;
+  private dragging: boolean;
   private applyPreview: boolean;
 
   private innerContext:
@@ -54,6 +56,7 @@ export class MoveNoteState
     this.returnStateId = args.returnStateId;
 
     this.currentCursorPos = args.cursorPosAtStart;
+    this.dragging = false;
     this.applyPreview = false;
   }
 
@@ -71,6 +74,7 @@ export class MoveNoteState
     context.cursorState.value = "MOVE";
     context.guideLineTicks.value = guideLineTicks;
     context.previewMode.value = "MOVE_NOTE";
+    context.enableAutoScrollOnEdge.value = true;
 
     const previewIfNeeded = () => {
       if (this.innerContext == undefined) {
@@ -105,15 +109,23 @@ export class MoveNoteState
     if (this.innerContext == undefined) {
       throw new Error("innerContext is undefined.");
     }
-    if (input.type === "mouseEvent") {
-      const mouseButton = getButton(input.mouseEvent);
+    if (input.type === "pointerEvent") {
+      const mouseButton = getButton(input.pointerEvent);
 
       if (input.targetArea === "Window") {
-        if (input.mouseEvent.type === "mousemove") {
+        if (input.pointerEvent.type === "pointermove") {
           this.currentCursorPos = input.cursorPos;
-          this.innerContext.executePreviewProcess = true;
+          if (
+            !this.dragging &&
+            shouldStartDrag(this.cursorPosAtStart, this.currentCursorPos)
+          ) {
+            this.dragging = true;
+          }
+          if (this.dragging) {
+            this.innerContext.executePreviewProcess = true;
+          }
         } else if (
-          input.mouseEvent.type === "mouseup" &&
+          input.pointerEvent.type === "pointerup" &&
           mouseButton === "LEFT_BUTTON"
         ) {
           this.applyPreview = this.innerContext.edited;
@@ -152,6 +164,7 @@ export class MoveNoteState
     context.previewNotes.value = [];
     context.cursorState.value = "UNSET";
     context.previewMode.value = "IDLE";
+    context.enableAutoScrollOnEdge.value = false;
   }
 
   private previewMove(context: Context) {

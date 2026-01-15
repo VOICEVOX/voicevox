@@ -32,6 +32,7 @@ import {
   MoraDataRequest,
   SingerInfoRequest,
   SingFrameAudioQueryRequest,
+  SingFrameF0Request,
   SingFrameVolumeRequest,
   Speaker,
   SpeakerInfo,
@@ -101,6 +102,8 @@ export function createOpenAPIEngineMock(): DefaultApiInterface {
         volumeScale: 1.0,
         prePhonemeLength: 0.1,
         postPhonemeLength: 0.1,
+        pauseLength: null,
+        pauseLengthScale: 1.0,
         outputSamplingRate: getEngineManifestMock().defaultSamplingRate,
         outputStereo: false,
       };
@@ -143,7 +146,7 @@ export function createOpenAPIEngineMock(): DefaultApiInterface {
         frameAudioQuery,
         payload.speaker,
       );
-      return new Blob([buffer], { type: "audio/wav" });
+      return new Blob([new Uint8Array(buffer)], { type: "audio/wav" });
     },
 
     // ソング系
@@ -175,6 +178,20 @@ export function createOpenAPIEngineMock(): DefaultApiInterface {
       };
     },
 
+    async singFrameF0(payload: SingFrameF0Request): Promise<Array<number>> {
+      const {
+        speaker: styleId,
+        bodySingFrameF0SingFrameF0Post: { score, frameAudioQuery },
+      } = cloneWithUnwrapProxy(payload);
+
+      const f0 = notesAndFramePhonemesToPitchMock(
+        score.notes,
+        frameAudioQuery.phonemes,
+        styleId,
+      );
+      return f0;
+    },
+
     async singFrameVolume(
       payload: SingFrameVolumeRequest,
     ): Promise<Array<number>> {
@@ -196,7 +213,7 @@ export function createOpenAPIEngineMock(): DefaultApiInterface {
       const { speaker: styleId, frameAudioQuery } =
         cloneWithUnwrapProxy(payload);
       const buffer = synthesisFrameAudioQueryMock(frameAudioQuery, styleId);
-      return new Blob([buffer], { type: "audio/wav" });
+      return new Blob([new Uint8Array(buffer)], { type: "audio/wav" });
     },
 
     // 辞書系

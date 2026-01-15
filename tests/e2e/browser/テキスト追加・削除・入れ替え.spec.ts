@@ -1,19 +1,9 @@
-import { test, expect, Locator, Page } from "@playwright/test";
+import { test, expect, Locator } from "@playwright/test";
 
 import { gotoHome, navigateToTalk } from "../navigators";
+import { fillAudioCell, validateInput } from "./utils";
 
 test.beforeEach(gotoHome);
-
-async function fillInput(page: Page, locator: Locator, text: string) {
-  await locator.fill(text);
-  await locator.press("Enter");
-  await page.waitForTimeout(100);
-  await validateInput(locator, text);
-}
-
-async function validateInput(locator: Locator, expectedText: string) {
-  expect(await locator.inputValue()).toBe(expectedText);
-}
 
 async function getCenter(locator: Locator) {
   const box = (await locator.boundingBox()) || {
@@ -37,9 +27,9 @@ test("テキストの追加・入れ替え・削除", async ({ page }) => {
   await page.getByRole("button").filter({ hasText: "add" }).click();
   await page.getByRole("button").filter({ hasText: "add" }).click();
   await page.waitForTimeout(100);
-  await fillInput(page, page.locator(".audio-cell input").first(), "foo");
-  await fillInput(page, page.locator(".audio-cell input").nth(1), "bar");
-  await fillInput(page, page.locator(".audio-cell input").nth(2), "baz");
+  await fillAudioCell(page, 0, "foo");
+  await fillAudioCell(page, 1, "bar");
+  await fillAudioCell(page, 2, "baz");
   expect(await page.locator(".audio-cell").count()).toBe(4);
   // 一番上のAudioCellを削除しもともと２番めだったものが一番上に来てAudioCellが３つになることを確認
   await page.locator(".audio-cell").first().hover();
@@ -51,6 +41,7 @@ test("テキストの追加・入れ替え・削除", async ({ page }) => {
   await page.waitForTimeout(100);
   expect(await page.locator(".audio-cell").count()).toBe(3);
   await validateInput(page.locator(".audio-cell input").first(), "bar");
+
   // ドラッグして一番上と２番めに上のものを入れ替えて、入れ替わってることを確認
   const dragFrom = await getCenter(
     page.locator(".audio-cell .icon-container").first(),
@@ -67,4 +58,45 @@ test("テキストの追加・入れ替え・削除", async ({ page }) => {
   await validateInput(page.locator(".audio-cell input").first(), "baz");
   await page.waitForTimeout(100);
   await validateInput(page.locator(".audio-cell input").nth(1), "bar");
+});
+
+test("選択中のAudioCellを削除しても正しくフォーカスが移動する", async ({
+  page,
+}) => {
+  await navigateToTalk(page);
+
+  // 3つAudioCellを追加して合計4つにする
+  await page.getByRole("button").filter({ hasText: "add" }).click();
+  await page.getByRole("button").filter({ hasText: "add" }).click();
+  await page.getByRole("button").filter({ hasText: "add" }).click();
+  await page.waitForTimeout(100);
+
+  // それぞれにテキストを入力
+  await fillAudioCell(page, 0, "first");
+  await fillAudioCell(page, 1, "second");
+  await fillAudioCell(page, 2, "third");
+  await fillAudioCell(page, 3, "fourth");
+
+  // 2番目のAudioCellをクリックしてアクティブにする
+  await page.locator(".audio-cell").nth(1).click();
+  await page.waitForTimeout(100);
+
+  // アクティブなAudioCellが2番目であることを確認（activeクラスがついている）
+  await expect(page.locator(".audio-cell").nth(1)).toHaveClass(/active/);
+
+  // 2番目のAudioCellを削除
+  await page.locator(".audio-cell").nth(1).hover();
+  await page
+    .getByRole("button")
+    .filter({ hasText: "delete_outline" })
+    .nth(1)
+    .click();
+  await page.waitForTimeout(100);
+
+  // AudioCellが3つになっていることを確認
+  expect(await page.locator(".audio-cell").count()).toBe(3);
+
+  // 何らかのAudioCellがアクティブ状態を維持していることを確認
+  // （削除後に無選択状態にならないことを確認）
+  await expect(page.locator(".audio-cell.active")).toHaveCount(1);
 });

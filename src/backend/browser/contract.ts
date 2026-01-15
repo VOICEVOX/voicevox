@@ -15,6 +15,7 @@ export const defaultEngine: EngineInfo = (() => {
     defaultPort: port,
     pathname: pathname === "/" ? "" : pathname,
     type: "path", // FIXME: ダミーで"path"にしているので、エンジンAPIのURLを設定できるようにし、type: "URL"にする
+    version: "999.999.999", // FIXME: ダミー値。type: "URL"にし、APIから取得する。
     isDefault: true,
   };
 })();

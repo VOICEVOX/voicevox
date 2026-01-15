@@ -96,7 +96,7 @@ pnpm run storybook
 ```
 
 main ブランチの Storybook は[VOICEVOX/preview-pages](https://github.com/VOICEVOX/preview-pages)から確認できます。  
-<https://voicevox.github.io/preview-pages/preview/branch-main/storybook/index.html>
+<https://voicevox.github.io/preview-pages/preview/editor/branch-main/storybook/index.html>
 
 ### ブラウザ版の実行（開発中）
 
@@ -107,7 +107,7 @@ pnpm run browser:serve
 ```
 
 また、main ブランチのビルド結果が[VOICEVOX/preview-pages](https://github.com/VOICEVOX/preview-pages)にデプロイされています。  
-<https://voicevox.github.io/preview-pages/preview/branch-main/editor/index.html>  
+<https://voicevox.github.io/preview-pages/preview/editor/branch-main/editor/index.html>  
 今はローカル PC 上で音声合成エンジンを起動する必要があります。
 
 ## ビルド
@@ -296,25 +296,18 @@ ShellScript の文法チェックを行います。
 
 ```bash
 shellcheck ./build/*.sh
+shellcheck ./tools/*.bash
 ```
 
 ## OpenAPI generator
 
-音声合成エンジンが起動している状態で以下のコマンドを実行してください。
+[開発版のVOICEVOX ENGINE](https://github.com/voicevox/voicevox_engine)が起動している状態で以下のコマンドを実行してください。
 
 ```bash
-curl http://127.0.0.1:50021/openapi.json >openapi.json
-
-pnpm exec openapi-generator-cli generate \
-    -i openapi.json \
-    -g typescript-fetch \
-    -o src/openapi/ \
-    --additional-properties "modelPropertyNaming=camelCase,supportsES6=true,withInterfaces=true,typescriptThreePlus=true"
-
-pnpm run fmt
+pnpm run generate-openapi
 ```
 
-### OpanAPI generator のバージョンアップ
+### OpenAPI generator のバージョンアップ
 
 新しいバージョンの確認・インストールは次のコマンドで行えます。
 

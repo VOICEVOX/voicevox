@@ -1,99 +1,30 @@
-import { calculateHash, getLast, getNext, getPrev, isSorted } from "./utility";
+import {
+  applySmoothTransitions,
+  calculateHash,
+  getNext,
+  getPrev,
+} from "@/sing/utility";
 import { convertLongVowel, moraPattern } from "@/domain/japanese";
 import {
-  Note,
   Phrase,
   PhraseSource,
-  Tempo,
-  TimeSignature,
   PhraseKey,
-  Track,
   EditorFrameAudioQuery,
 } from "@/store/type";
 import { FramePhoneme } from "@/openapi";
 import { NoteId, TrackId } from "@/type/preload";
+import type {
+  PhonemeTimingEditData,
+  Tempo,
+  TimeSignature,
+  Track,
+} from "@/domain/project/type";
+import { getRepresentableNoteTypes, isValidNotes } from "@/sing/music";
 
-// TODO: 後でdomain/type.tsに移す
-export type MeasuresBeats = {
-  measures: number;
-  beats: number;
-};
-
-export const BEAT_TYPES = [2, 4, 8, 16, 32];
-const MIN_BPM = 40;
 const MAX_SNAP_TYPE = 32;
 
 export const isTracksEmpty = (tracks: Track[]) =>
   tracks.length === 0 || (tracks.length === 1 && tracks[0].notes.length === 0);
-
-export const isValidTpqn = (tpqn: number) => {
-  return (
-    Number.isInteger(tpqn) &&
-    BEAT_TYPES.every((value) => (tpqn * 4) % value === 0) &&
-    tpqn % 3 === 0
-  );
-};
-
-export const isValidBpm = (bpm: number) => {
-  return Number.isFinite(bpm) && bpm >= MIN_BPM;
-};
-
-export const isValidTempo = (tempo: Tempo) => {
-  return (
-    Number.isInteger(tempo.position) &&
-    tempo.position >= 0 &&
-    isValidBpm(tempo.bpm)
-  );
-};
-
-export const isValidBeats = (beats: number) => {
-  return Number.isInteger(beats) && beats >= 1;
-};
-
-export const isValidBeatType = (beatType: number) => {
-  return Number.isInteger(beatType) && BEAT_TYPES.includes(beatType);
-};
-
-export const isValidTimeSignature = (timeSignature: TimeSignature) => {
-  return (
-    Number.isInteger(timeSignature.measureNumber) &&
-    timeSignature.measureNumber >= 1 &&
-    isValidBeats(timeSignature.beats) &&
-    isValidBeatType(timeSignature.beatType)
-  );
-};
-
-export const isValidNote = (note: Note) => {
-  return (
-    Number.isInteger(note.position) &&
-    Number.isInteger(note.duration) &&
-    Number.isInteger(note.noteNumber) &&
-    note.position >= 0 &&
-    note.duration >= 1 &&
-    note.noteNumber >= 0 &&
-    note.noteNumber <= 127
-  );
-};
-
-export const isValidTempos = (tempos: Tempo[]) => {
-  return (
-    tempos.length >= 1 &&
-    tempos[0].position === 0 &&
-    tempos.every((value) => isValidTempo(value))
-  );
-};
-
-export const isValidTimeSignatures = (timeSignatures: TimeSignature[]) => {
-  return (
-    timeSignatures.length >= 1 &&
-    timeSignatures[0].measureNumber === 1 &&
-    timeSignatures.every((value) => isValidTimeSignature(value))
-  );
-};
-
-export const isValidNotes = (notes: Note[]) => {
-  return notes.every((value) => isValidNote(value));
-};
 
 export const isValidTrack = (track: Track) => {
   return (
@@ -102,231 +33,6 @@ export const isValidTrack = (track: Track) => {
     isValidNotes(track.notes)
   );
 };
-
-const tickToSecondForConstantBpm = (
-  ticks: number,
-  bpm: number,
-  tpqn: number,
-) => {
-  const quarterNotesPerMinute = bpm;
-  const quarterNotesPerSecond = quarterNotesPerMinute / 60;
-  return ticks / tpqn / quarterNotesPerSecond;
-};
-
-const secondToTickForConstantBpm = (
-  seconds: number,
-  bpm: number,
-  tpqn: number,
-) => {
-  const quarterNotesPerMinute = bpm;
-  const quarterNotesPerSecond = quarterNotesPerMinute / 60;
-  return seconds * quarterNotesPerSecond * tpqn;
-};
-
-export const tickToSecond = (ticks: number, tempos: Tempo[], tpqn: number) => {
-  let timeOfTempo = 0;
-  let tempo = tempos[tempos.length - 1];
-  for (let i = 0; i < tempos.length; i++) {
-    if (i === tempos.length - 1) {
-      break;
-    }
-    if (tempos[i + 1].position > ticks) {
-      tempo = tempos[i];
-      break;
-    }
-    timeOfTempo += tickToSecondForConstantBpm(
-      tempos[i + 1].position - tempos[i].position,
-      tempos[i].bpm,
-      tpqn,
-    );
-  }
-  return (
-    timeOfTempo +
-    tickToSecondForConstantBpm(ticks - tempo.position, tempo.bpm, tpqn)
-  );
-};
-
-export const secondToTick = (
-  seconds: number,
-  tempos: Tempo[],
-  tpqn: number,
-) => {
-  let timeOfTempo = 0;
-  let tempo = tempos[tempos.length - 1];
-  for (let i = 0; i < tempos.length; i++) {
-    if (i === tempos.length - 1) {
-      break;
-    }
-    const timeOfNextTempo =
-      timeOfTempo +
-      tickToSecondForConstantBpm(
-        tempos[i + 1].position - tempos[i].position,
-        tempos[i].bpm,
-        tpqn,
-      );
-    if (timeOfNextTempo > seconds) {
-      tempo = tempos[i];
-      break;
-    }
-    timeOfTempo = timeOfNextTempo;
-  }
-  return (
-    tempo.position +
-    secondToTickForConstantBpm(seconds - timeOfTempo, tempo.bpm, tpqn)
-  );
-};
-
-// NOTE: 戻り値の単位はtick
-export function getTimeSignaturePositions(
-  timeSignatures: TimeSignature[],
-  tpqn: number,
-) {
-  const tsPositions: number[] = [0];
-  for (let i = 0; i < timeSignatures.length - 1; i++) {
-    const ts = timeSignatures[i];
-    const tsPosition = tsPositions[i];
-    const nextTs = timeSignatures[i + 1];
-    const measureDuration = getMeasureDuration(ts.beats, ts.beatType, tpqn);
-    const numMeasures = nextTs.measureNumber - ts.measureNumber;
-    const nextTsPosition = tsPosition + measureDuration * numMeasures;
-    tsPositions.push(nextTsPosition);
-  }
-  return tsPositions;
-}
-
-/**
- * tick位置に対応する小節番号（整数）を計算する。
- */
-export function tickToMeasureNumber(
-  ticks: number,
-  timeSignatures: TimeSignature[],
-  tpqn: number,
-) {
-  const tsPositions = getTimeSignaturePositions(timeSignatures, tpqn);
-  const nextTsIndex = tsPositions.findIndex((value) => ticks < value);
-  const lastTsIndex = tsPositions.length - 1;
-  const tsIndex = nextTsIndex !== -1 ? nextTsIndex - 1 : lastTsIndex;
-  const ts = timeSignatures[tsIndex];
-  const tsPosition = tsPositions[tsIndex];
-  const ticksWithinTs = ticks - tsPosition;
-  const measureDuration = getMeasureDuration(ts.beats, ts.beatType, tpqn);
-  return ts.measureNumber + Math.floor(ticksWithinTs / measureDuration);
-}
-
-/**
- * 小節番号に対応するtick位置（小節の開始位置）を計算する。
- */
-export function measureNumberToTick(
-  measureNumber: number,
-  timeSignatures: TimeSignature[],
-  tpqn: number,
-) {
-  const tsPositions = getTimeSignaturePositions(timeSignatures, tpqn);
-  const tsIndex = timeSignatures.findLastIndex((value) => {
-    return measureNumber >= value.measureNumber;
-  });
-  const ts = timeSignatures[tsIndex];
-  const tsPosition = tsPositions[tsIndex];
-  const measureOffset = measureNumber - ts.measureNumber;
-  const measureDuration = getMeasureDuration(ts.beats, ts.beatType, tpqn);
-  return tsPosition + measureOffset * measureDuration;
-}
-
-// NOTE: 戻り値の単位はtick
-export function getMeasureDuration(
-  beats: number,
-  beatType: number,
-  tpqn: number,
-) {
-  return ((tpqn * 4) / beatType) * beats;
-}
-
-// NOTE: 戻り値の単位はtick
-export function getBeatDuration(beatType: number, tpqn: number) {
-  return (tpqn * 4) / beatType;
-}
-
-export const ticksToMeasuresBeats = (
-  ticks: number,
-  timeSignatures: (TimeSignature & { position: number })[],
-  tpqn: number,
-): MeasuresBeats => {
-  let tsIndex = 0;
-  if (ticks >= 0) {
-    for (let i = 0; i < timeSignatures.length; i++) {
-      if (
-        i === timeSignatures.length - 1 ||
-        timeSignatures[i + 1].position > ticks
-      ) {
-        tsIndex = i;
-        break;
-      }
-    }
-  }
-  const ts = timeSignatures[tsIndex];
-
-  const measureDuration = getMeasureDuration(ts.beats, ts.beatType, tpqn);
-  const beatDuration = getBeatDuration(ts.beatType, tpqn);
-
-  const posInTs = ticks - ts.position;
-  const measuresInTs = Math.floor(posInTs / measureDuration);
-  const measures = ts.measureNumber + measuresInTs;
-
-  const posInMeasure = posInTs - measureDuration * measuresInTs;
-  const beats = 1 + posInMeasure / beatDuration;
-
-  return { measures, beats };
-};
-
-// NOTE: 戻り値の単位はtick
-export function getNoteDuration(noteType: number, tpqn: number) {
-  return (tpqn * 4) / noteType;
-}
-
-export function getRepresentableNoteTypes(tpqn: number) {
-  const maxNoteType = 128;
-  const wholeNoteDuration = tpqn * 4;
-  const noteTypes = [1];
-  for (let noteType = 2; noteType <= maxNoteType; noteType *= 2) {
-    if (wholeNoteDuration % noteType !== 0) {
-      break;
-    }
-    noteTypes.push(noteType);
-  }
-  for (let noteType = 3; noteType <= maxNoteType; noteType *= 2) {
-    if (wholeNoteDuration % noteType !== 0) {
-      break;
-    }
-    noteTypes.push(noteType);
-  }
-  return noteTypes;
-}
-
-export function isTriplet(noteType: number) {
-  return noteType % 3 === 0;
-}
-
-export function noteNumberToFrequency(noteNumber: number) {
-  return 440 * Math.pow(2, (noteNumber - 69) / 12);
-}
-
-export function frequencyToNoteNumber(frequency: number) {
-  return 69 + Math.log2(frequency / 440) * 12;
-}
-
-export function linearToDecibel(linearValue: number) {
-  if (linearValue === 0) {
-    return -1000;
-  }
-  return 20 * Math.log10(linearValue);
-}
-
-export function decibelToLinear(decibelValue: number) {
-  if (decibelValue <= -1000) {
-    return 0;
-  }
-  return Math.pow(10, decibelValue / 20);
-}
 
 export const DEFAULT_TRACK_NAME = "無名トラック";
 
@@ -382,6 +88,8 @@ export function createDefaultTrack(): Track {
     volumeRangeAdjustment: 0,
     notes: [],
     pitchEditData: [],
+    volumeEditData: [],
+    phonemeTimingEditData: new Map(),
 
     solo: false,
     mute: false,
@@ -424,6 +132,15 @@ export function isValidPitchEditData(pitchEditData: number[]) {
   );
 }
 
+export function isValidVolumeEditData(volumeEditData: number[]) {
+  // NOTE: APIの返却が0未満になる場合があるため、0以上かどうかのみ検証する
+  return volumeEditData.every(
+    (value) =>
+      Number.isFinite(value) &&
+      (value >= 0 || value === VALUE_INDICATING_NO_DATA),
+  );
+}
+
 export const calculatePhraseKey = async (phraseSource: PhraseSource) => {
   const hash = await calculateHash(phraseSource);
   return PhraseKey(hash);
@@ -444,49 +161,54 @@ export function getEndTicksOfPhrase(phrase: Phrase) {
   return lastNote.position + lastNote.duration;
 }
 
-export function toSortedPhrases<K extends string>(phrases: Map<K, Phrase>) {
-  return [...phrases.entries()].sort((a, b) => {
-    const startTicksOfPhraseA = getStartTicksOfPhrase(a[1]);
-    const startTicksOfPhraseB = getStartTicksOfPhrase(b[1]);
-    return startTicksOfPhraseA - startTicksOfPhraseB;
+export type PhraseRange = {
+  startTicks: number;
+  endTicks: number;
+};
+
+export function toSortedPhraseRanges<K extends string>(
+  phraseRanges: Map<K, PhraseRange>,
+) {
+  return [...phraseRanges.entries()].sort((a, b) => {
+    return a[1].startTicks - b[1].startTicks;
   });
 }
 
 /**
  * 次にレンダリングするべきPhraseを探す。
- * phrasesが空の場合はエラー
+ * phraseRangesが空の場合はエラー
  * 優先順：
  * - 再生位置が含まれるPhrase
  * - 再生位置より後のPhrase
  * - 再生位置より前のPhrase
  */
 export function selectPriorPhrase<K extends string>(
-  phrases: Map<K, Phrase>,
-  position: number,
-): [K, Phrase] {
-  if (phrases.size === 0) {
-    throw new Error("Received empty phrases");
+  phraseRanges: Map<K, PhraseRange>,
+  playheadPosition: number,
+): K {
+  if (phraseRanges.size === 0) {
+    throw new Error("phraseRanges.size is 0.");
   }
   // 再生位置が含まれるPhrase
-  for (const [phraseKey, phrase] of phrases) {
+  for (const [phraseKey, phraseRange] of phraseRanges) {
     if (
-      getStartTicksOfPhrase(phrase) <= position &&
-      position <= getEndTicksOfPhrase(phrase)
+      phraseRange.startTicks <= playheadPosition &&
+      playheadPosition <= phraseRange.endTicks
     ) {
-      return [phraseKey, phrase];
+      return phraseKey;
     }
   }
 
-  const sortedPhrases = toSortedPhrases(phrases);
+  const sortedPhraseRanges = toSortedPhraseRanges(phraseRanges);
   // 再生位置より後のPhrase
-  for (const [phraseKey, phrase] of sortedPhrases) {
-    if (getStartTicksOfPhrase(phrase) > position) {
-      return [phraseKey, phrase];
+  for (const [phraseKey, phraseRange] of sortedPhraseRanges) {
+    if (phraseRange.startTicks > playheadPosition) {
+      return phraseKey;
     }
   }
 
   // 再生位置より前のPhrase
-  return sortedPhrases[0];
+  return sortedPhraseRanges[0][0];
 }
 
 export function convertToFramePhonemes(phonemes: FramePhoneme[]) {
@@ -503,24 +225,17 @@ function secondToRoundedFrame(seconds: number, frameRate: number) {
   return Math.round(seconds * frameRate);
 }
 
-type PhonemeTiming = {
+export type PhonemeTiming = {
   noteId: NoteId | undefined;
   startFrame: number;
   endFrame: number;
   phoneme: string;
 };
 
-export type PhonemeTimingEdit = {
-  phonemeIndexInNote: number;
-  offsetSeconds: number;
-};
-
-export type PhonemeTimingEditData = Map<NoteId, PhonemeTimingEdit[]>;
-
 /**
  * 音素列を音素タイミング列に変換する。
  */
-export function phonemesToPhonemeTimings(phonemes: FramePhoneme[]) {
+export function toPhonemeTimings(phonemes: FramePhoneme[]) {
   const phonemeTimings: PhonemeTiming[] = [];
   let cumulativeFrame = 0;
   for (const phoneme of phonemes) {
@@ -538,7 +253,7 @@ export function phonemesToPhonemeTimings(phonemes: FramePhoneme[]) {
 /**
  * 音素タイミング列を音素列に変換する。
  */
-export function phonemeTimingsToPhonemes(phonemeTimings: PhonemeTiming[]) {
+export function toPhonemes(phonemeTimings: PhonemeTiming[]) {
   return phonemeTimings.map(
     (value): FramePhoneme => ({
       phoneme: value.phoneme,
@@ -549,127 +264,9 @@ export function phonemeTimingsToPhonemes(phonemeTimings: PhonemeTiming[]) {
 }
 
 /**
- * フレーズごとの音素列を全体の音素タイミング列に変換する。
- */
-export function toEntirePhonemeTimings(
-  phrasePhonemeSequences: FramePhoneme[][],
-  phraseStartFrames: number[],
-) {
-  // 音素列を繋げて一つの音素タイミング列にする
-  const flattenedPhonemeTimings = phrasePhonemeSequences.flatMap(
-    (phonemes, index) => {
-      const phonemeTimings = phonemesToPhonemeTimings(phonemes);
-      for (const phonemeTiming of phonemeTimings) {
-        phonemeTiming.startFrame += phraseStartFrames[index];
-        phonemeTiming.endFrame += phraseStartFrames[index];
-      }
-      return phonemeTimings;
-    },
-  );
-
-  // 連続するpauseを1つにまとめる
-  const entirePhonemeTimings: PhonemeTiming[] = [];
-  let pauseTiming: PhonemeTiming | null = null;
-  for (const phonemeTiming of flattenedPhonemeTimings) {
-    if (phonemeTiming.phoneme === "pau") {
-      if (pauseTiming == null) {
-        pauseTiming = { ...phonemeTiming };
-      } else {
-        pauseTiming.endFrame = phonemeTiming.endFrame;
-      }
-    } else {
-      if (pauseTiming != null) {
-        entirePhonemeTimings.push(pauseTiming);
-        pauseTiming = null;
-      }
-      entirePhonemeTimings.push(phonemeTiming);
-    }
-  }
-  if (pauseTiming != null) {
-    entirePhonemeTimings.push(pauseTiming);
-  }
-
-  return entirePhonemeTimings;
-}
-
-/**
- * 全体の音素タイミング列をフレーズごとの音素列に変換する。
- */
-function toPhrasePhonemeSequences(
-  entirePhonemeTimings: PhonemeTiming[],
-  phraseStartFrames: number[],
-  phraseEndFrames: number[],
-) {
-  // 音素タイミング列をpauseで分割する
-  const phrasePhonemeTimingSequences: PhonemeTiming[][] = [];
-  for (let i = 0; i < entirePhonemeTimings.length; i++) {
-    const phonemeTiming = entirePhonemeTimings[i];
-    const prevPhonemeTiming = getPrev(entirePhonemeTimings, i);
-
-    if (phonemeTiming.phoneme === "pau") {
-      continue;
-    }
-    if (prevPhonemeTiming == undefined || prevPhonemeTiming.phoneme === "pau") {
-      phrasePhonemeTimingSequences.push([]);
-    }
-    getLast(phrasePhonemeTimingSequences).push(phonemeTiming);
-  }
-
-  // フレーズの音素タイミング列の前後にpauseを追加する
-  for (let i = 0; i < phrasePhonemeTimingSequences.length; i++) {
-    const phrasePhonemeTimings = phrasePhonemeTimingSequences[i];
-    const phraseStartFrame = phraseStartFrames[i];
-    const phraseEndFrame = phraseEndFrames[i];
-
-    const firstPauseTiming: PhonemeTiming = {
-      noteId: undefined,
-      startFrame: phraseStartFrame,
-      endFrame: phrasePhonemeTimings[0].startFrame,
-      phoneme: "pau",
-    };
-    const lastPauseTiming: PhonemeTiming = {
-      noteId: undefined,
-      startFrame: getLast(phrasePhonemeTimings).endFrame,
-      endFrame: phraseEndFrame,
-      phoneme: "pau",
-    };
-
-    phrasePhonemeTimings.unshift(firstPauseTiming);
-    phrasePhonemeTimings.push(lastPauseTiming);
-  }
-
-  // フレーム長が1未満の音素がないかチェックする
-  for (const phonemeTimings of phrasePhonemeTimingSequences) {
-    for (const phonemeTiming of phonemeTimings) {
-      const phonemeFrameLength =
-        phonemeTiming.endFrame - phonemeTiming.startFrame;
-      if (phonemeFrameLength < 1) {
-        throw new Error("The phoneme frame length is less than 1.");
-      }
-    }
-  }
-
-  // 音素タイミング列を音素列に変換する
-  const phrasePhonemeSequences: FramePhoneme[][] = [];
-  for (let i = 0; i < phrasePhonemeTimingSequences.length; i++) {
-    const phraseStartFrame = phraseStartFrames[i];
-    const phonemeTimings = phrasePhonemeTimingSequences[i];
-
-    for (const phonemeTiming of phonemeTimings) {
-      phonemeTiming.startFrame -= phraseStartFrame;
-      phonemeTiming.endFrame -= phraseStartFrame;
-    }
-    const phonemes = phonemeTimingsToPhonemes(phonemeTimings);
-    phrasePhonemeSequences.push(phonemes);
-  }
-
-  return phrasePhonemeSequences;
-}
-
-/**
  * 音素タイミング列に音素タイミング編集を適用する。
  */
-function applyPhonemeTimingEditToPhonemeTimings(
+export function applyPhonemeTimingEdit(
   phonemeTimings: PhonemeTiming[],
   phonemeTimingEditData: PhonemeTimingEditData,
   frameRate: number,
@@ -701,11 +298,10 @@ function applyPhonemeTimingEditToPhonemeTimings(
     }
     for (const phonemeTimingEdit of phonemeTimingEdits) {
       if (phonemeTimingEdit.phonemeIndexInNote === phonemeIndexInNote) {
-        const offsetFrame = secondToRoundedFrame(
+        const roundedOffsetFrame = secondToRoundedFrame(
           phonemeTimingEdit.offsetSeconds,
           frameRate,
         );
-        const roundedOffsetFrame = Math.round(offsetFrame);
 
         phonemeTiming.startFrame += roundedOffsetFrame;
         if (prevPhonemeTiming != undefined) {
@@ -716,11 +312,10 @@ function applyPhonemeTimingEditToPhonemeTimings(
         nextPhonemeTiming?.phoneme === "pau"
       ) {
         // NOTE: フレーズ末尾のpauseはフレーズ最後のノートに含まれるものとして扱う
-        const offsetFrame = secondToRoundedFrame(
+        const roundedOffsetFrame = secondToRoundedFrame(
           phonemeTimingEdit.offsetSeconds,
           frameRate,
         );
-        const roundedOffsetFrame = Math.round(offsetFrame);
 
         phonemeTiming.endFrame += roundedOffsetFrame;
         nextPhonemeTiming.startFrame = phonemeTiming.endFrame;
@@ -730,69 +325,75 @@ function applyPhonemeTimingEditToPhonemeTimings(
 }
 
 /**
- * 音素が重ならないように音素タイミングとフレーズの終了フレームを調整する。
+ * 音素タイミングを調整する。
+ *
+ * - 各音素の長さが1フレーム以上になるように調整。
+ * - 先頭のpauの開始フレームを0に設定。
+ * - pauではない区間の開始フレーム（先頭のpauの終了フレーム）が最小開始フレーム以上になるように調整。
+ * - pauではない区間の終了フレーム（末尾のpauの開始フレーム）が最大終了フレーム以下になるように調整。
+ *   （余裕がない場合は最大終了フレームを超えるので注意）
+ *
+ * @param phonemeTimings - 音素タイミング列（先頭・末尾がpau）
+ * @param minNonPauseStartFrame - pauではない区間（子音・母音の区間）の最小開始フレーム（1以上）
+ * @param maxNonPauseEndFrame - pauではない区間（子音・母音の区間）の最大終了フレーム
  */
-export function adjustPhonemeTimingsAndPhraseEndFrames(
+export function adjustPhonemeTimings(
   phonemeTimings: PhonemeTiming[],
-  phraseStartFrames: number[],
-  phraseEndFrames: number[],
+  minNonPauseStartFrame: number | undefined,
+  maxNonPauseEndFrame: number | undefined,
 ) {
-  // フレーズの最初の（pauseではない）音素の開始フレームがフレーズの開始フレーム+1以上になるように
-  // 開始フレームの最小値を算出する
-  const minStartFrames = new Map<number, number>();
-  let phraseIndex = 0;
-  for (let i = 0; i < phonemeTimings.length; i++) {
-    const phonemeTiming = phonemeTimings[i];
-    const prevPhonemeTiming = getPrev(phonemeTimings, i);
-
-    if (phonemeTiming.phoneme === "pau") {
-      continue;
-    }
-    if (prevPhonemeTiming == undefined || prevPhonemeTiming.phoneme === "pau") {
-      const phraseStartFrame = phraseStartFrames.at(phraseIndex);
-      if (phraseStartFrame == undefined) {
-        throw new Error("phraseStartFrame is undefined.");
-      }
-      minStartFrames.set(i, phraseStartFrame + 1);
-      phraseIndex++;
-    }
-  }
-
-  // 各音素のフレーム長が1以上になるように後方から調整する（音素タイミングを変更）
-  // 最小の開始フレームがある場合はそちらを優先する（フレーム長を1以上にしない）
-  // 最後の音素は開始フレームではなく終了フレームの方を変更する
+  // 末尾のpauのタイミングを調整し、
+  // 各音素のフレーム長が1以上になるように後方から調整する
   for (let i = phonemeTimings.length - 1; i >= 0; i--) {
     const phonemeTiming = phonemeTimings[i];
     const prevPhonemeTiming = getPrev(phonemeTimings, i);
-    const minStartFrame = minStartFrames.get(i);
 
+    // 末尾のpauの場合
     if (i === phonemeTimings.length - 1) {
-      // NOTE: 最後の音素は終了フレームの方を変更する
-      if (phonemeTiming.startFrame >= phonemeTiming.endFrame) {
+      // 開始フレームを制約内に収める
+      // NOTE: 末尾のpauの開始フレーム＝pauではない区間の終了フレーム
+      if (
+        maxNonPauseEndFrame != undefined &&
+        phonemeTiming.startFrame > maxNonPauseEndFrame
+      ) {
+        phonemeTiming.startFrame = maxNonPauseEndFrame;
+      }
+      // フレーム長が1以上になるように終了フレームを調整する
+      if (phonemeTiming.endFrame <= phonemeTiming.startFrame) {
         phonemeTiming.endFrame = phonemeTiming.startFrame + 1;
       }
-    } else {
-      if (phonemeTiming.startFrame >= phonemeTiming.endFrame) {
-        phonemeTiming.startFrame = phonemeTiming.endFrame - 1;
-      }
-      if (
-        minStartFrame != undefined &&
-        phonemeTiming.startFrame < minStartFrame
-      ) {
-        // NOTE: 最小開始フレームを優先する（フレーム長は下のループで1以上にする）
-        phonemeTiming.startFrame = minStartFrame;
-      }
-      if (prevPhonemeTiming != undefined) {
-        prevPhonemeTiming.endFrame = phonemeTiming.startFrame;
-      }
+    }
+
+    // 音素（pauを含む）のフレーム長が1以上になるように開始フレームを調整する
+    if (phonemeTiming.startFrame >= phonemeTiming.endFrame) {
+      phonemeTiming.startFrame = phonemeTiming.endFrame - 1;
+    }
+    if (prevPhonemeTiming != undefined) {
+      prevPhonemeTiming.endFrame = phonemeTiming.startFrame;
     }
   }
 
-  // 各音素のフレーム長が1以上になるように前方から調整する（音素タイミングを変更）
+  // 先頭のpauのタイミングを調整し、
+  // 各音素のフレーム長が1以上になるように前方から調整する
   for (let i = 0; i < phonemeTimings.length; i++) {
     const phonemeTiming = phonemeTimings[i];
     const nextPhonemeTiming = getNext(phonemeTimings, i);
 
+    // 先頭のpauの場合
+    if (i === 0) {
+      // 開始フレームを0に設定
+      phonemeTiming.startFrame = 0;
+      // 終了フレームを制限内に収める
+      // NOTE: 先頭のpauの終了フレーム＝pauではない区間の開始フレーム
+      if (
+        minNonPauseStartFrame != undefined &&
+        phonemeTiming.endFrame < minNonPauseStartFrame
+      ) {
+        phonemeTiming.endFrame = minNonPauseStartFrame;
+      }
+    }
+
+    // 音素（pauを含む）のフレーム長が1以上になるように終了フレームを調整する
     if (phonemeTiming.startFrame >= phonemeTiming.endFrame) {
       phonemeTiming.endFrame = phonemeTiming.startFrame + 1;
     }
@@ -800,165 +401,243 @@ export function adjustPhonemeTimingsAndPhraseEndFrames(
       nextPhonemeTiming.startFrame = phonemeTiming.endFrame;
     }
   }
-
-  // フレーズ末尾のpauseのフレーム長が1以上になるように調整する（フレーズの終了フレームを変更）
-  phraseIndex = 0;
-  for (let i = 0; i < phonemeTimings.length; i++) {
-    const phonemeTiming = phonemeTimings[i];
-    const nextPhonemeTiming = getNext(phonemeTimings, i);
-
-    if (phonemeTiming.phoneme === "pau") {
-      continue;
-    }
-    if (nextPhonemeTiming == undefined || nextPhonemeTiming.phoneme === "pau") {
-      const phraseEndFrame = phraseEndFrames.at(phraseIndex);
-      if (phraseEndFrame == undefined) {
-        throw new Error("phraseEndFrame is undefined.");
-      }
-      if (phonemeTiming.endFrame >= phraseEndFrame) {
-        phraseEndFrames[phraseIndex] = phonemeTiming.endFrame + 1;
-      }
-      phraseIndex++;
-    }
-  }
 }
 
 /**
- * フレーズの開始フレームを算出する。
- * 開始フレームは整数。
+ * ユーザーによるピッチ編集データを、クエリのf0に適用する。
+ * 単純な上書きではなく、編集箇所と未編集箇所の境界（つなぎ目）が自然になるように
+ * スムージング処理も行う。
+ *
+ * @param phraseQuery - 適用対象のクエリ
+ * @param phraseStartTime - フレーズの開始時刻（秒）
+ * @param pitchEditData - ユーザーが編集したピッチデータの配列
+ * @param editorFrameRate - エディターのフレームレート
  */
-export function calcPhraseStartFrames(
-  phraseStartTimes: number[],
-  frameRate: number,
-) {
-  return phraseStartTimes.map((value) =>
-    secondToRoundedFrame(value, frameRate),
-  );
-}
-
-/**
- * フレーズの終了フレームを算出する。
- * 終了フレームは整数。
- */
-export function calcPhraseEndFrames(
-  phraseStartFrames: number[],
-  phraseQueries: EditorFrameAudioQuery[],
-) {
-  const phraseEndFrames: number[] = [];
-  for (let i = 0; i < phraseStartFrames.length; i++) {
-    const phraseStartFrame = phraseStartFrames[i];
-    const phraseQuery = phraseQueries[i];
-
-    let cumulativeFrame = 0;
-    for (const phoneme of phraseQuery.phonemes) {
-      cumulativeFrame += phoneme.frameLength;
-    }
-    phraseEndFrames.push(phraseStartFrame + cumulativeFrame);
-  }
-  return phraseEndFrames;
-}
-
-/**
- * クエリに音素タイミング編集を適用する。
- * 音素タイミングの調整も行う。
- */
-export function applyPhonemeTimingEditAndAdjust(
-  phraseStartTimes: number[],
-  phraseQueries: EditorFrameAudioQuery[],
-  phonemeTimingEditData: PhonemeTimingEditData,
-  frameRate: number,
-) {
-  if (!isSorted(phraseStartTimes, (a, b) => a - b)) {
-    throw new Error("phraseStartTimes is not sorted.");
-  }
-  if (phraseStartTimes.length !== phraseQueries.length) {
-    throw new Error(
-      "phraseStartTimes.length and phraseQueries.length are not equal.",
-    );
-  }
-  for (const phraseQuery of phraseQueries) {
-    // フレーズのクエリのフレームレートとエディターのフレームレートが一致しない場合はエラー
-    // TODO: 補間するようにする
-    if (phraseQuery.frameRate != frameRate) {
-      throw new Error(
-        "The frame rate between the phrase query and the editor does not match.",
-      );
-    }
-  }
-
-  const phraseStartFrames = calcPhraseStartFrames(phraseStartTimes, frameRate);
-  const phraseEndFrames = calcPhraseEndFrames(phraseStartFrames, phraseQueries);
-
-  const phrasePhonemeSequences = phraseQueries.map((query) => {
-    return query.phonemes;
-  });
-  const entirePhonemeTimings = toEntirePhonemeTimings(
-    phrasePhonemeSequences,
-    phraseStartFrames,
-  );
-
-  applyPhonemeTimingEditToPhonemeTimings(
-    entirePhonemeTimings,
-    phonemeTimingEditData,
-    frameRate,
-  );
-  adjustPhonemeTimingsAndPhraseEndFrames(
-    entirePhonemeTimings,
-    phraseStartFrames,
-    phraseEndFrames,
-  );
-
-  const modifiedPhrasePhonemeSequences = toPhrasePhonemeSequences(
-    entirePhonemeTimings,
-    phraseStartFrames,
-    phraseEndFrames,
-  );
-  for (let i = 0; i < phraseQueries.length; i++) {
-    const phraseQuery = phraseQueries[i];
-    const phrasePhonemes = modifiedPhrasePhonemeSequences[i];
-    phraseQuery.phonemes = phrasePhonemes;
-  }
-}
-
 export function applyPitchEdit(
   phraseQuery: EditorFrameAudioQuery,
   phraseStartTime: number,
   pitchEditData: number[],
   editorFrameRate: number,
 ) {
-  // フレーズのクエリのフレームレートとエディターのフレームレートが一致しない場合はエラー
-  // TODO: 補間するようにする
+  // フレーズクエリとエディターのフレームレートの不一致をチェック
+  // TODO: 異なるフレームレート間での補間処理を実装する
   if (phraseQuery.frameRate !== editorFrameRate) {
     throw new Error(
       "The frame rate between the phrase query and the editor does not match.",
     );
   }
-  const unvoicedPhonemes = UNVOICED_PHONEMES;
+
   const f0 = phraseQuery.f0;
   const phonemes = phraseQuery.phonemes;
 
-  // 各フレームの音素の配列を生成する
+  // 各フレームに対応する音素情報を生成
   const framePhonemes = convertToFramePhonemes(phonemes);
   if (f0.length !== framePhonemes.length) {
     throw new Error("f0.length and framePhonemes.length do not match.");
   }
 
-  // フレーズのクエリの開始フレームと終了フレームを計算する
+  // フレーズの開始・終了フレーム（絶対時間軸）を計算
   const phraseQueryFrameLength = f0.length;
   const phraseQueryStartFrame = Math.round(
     phraseStartTime * phraseQuery.frameRate,
   );
   const phraseQueryEndFrame = phraseQueryStartFrame + phraseQueryFrameLength;
 
-  // ピッチ編集をf0に適用する
-  const startFrame = Math.max(0, phraseQueryStartFrame);
-  const endFrame = Math.min(pitchEditData.length, phraseQueryEndFrame);
-  for (let i = startFrame; i < endFrame; i++) {
-    const phoneme = framePhonemes[i - phraseQueryStartFrame];
-    const voiced = !unvoicedPhonemes.includes(phoneme);
-    if (voiced && pitchEditData[i] !== VALUE_INDICATING_NO_DATA) {
-      f0[i - phraseQueryStartFrame] = pitchEditData[i];
+  // 有効なピッチが存在する範囲（f0 >= 1e-5）を抽出する
+  // NOTE: 対数F0の計算で負無限大になるのを防ぐため、1e-5未満の値は無効とみなす
+  const validPitchRanges: { startFrame: number; endFrame: number }[] = [];
+  let currentStartFrame: number | undefined = undefined;
+  for (
+    let i = Math.max(0, phraseQueryStartFrame);
+    i < phraseQueryEndFrame;
+    i++
+  ) {
+    const f0Value = f0[i - phraseQueryStartFrame];
+
+    if (f0Value >= 1e-5) {
+      if (currentStartFrame == undefined) {
+        currentStartFrame = i;
+      }
+    } else {
+      if (currentStartFrame != undefined) {
+        validPitchRanges.push({ startFrame: currentStartFrame, endFrame: i });
+        currentStartFrame = undefined;
+      }
     }
+  }
+  // 最後の区間を閉じる
+  if (currentStartFrame != undefined) {
+    validPitchRanges.push({
+      startFrame: currentStartFrame,
+      endFrame: phraseQueryEndFrame,
+    });
+  }
+
+  // 各有効区間に対してピッチ編集処理を適用
+  for (const validPitchRange of validPitchRanges) {
+    const processStartFrame = validPitchRange.startFrame;
+    const processEndFrame = validPitchRange.endFrame;
+
+    const frameInfos: {
+      isEdited: boolean;
+      isVoiced: boolean;
+    }[] = [];
+    const logF0: number[] = [];
+
+    // 元の（推論された）ピッチとの差分を格納する配列
+    const logF0Diff: number[] = [];
+
+    // 区間内の各フレーム情報を収集し、対数F0の差分を計算する
+    for (let i = processStartFrame; i < processEndFrame; i++) {
+      const indexInPhrase = i - phraseQueryStartFrame;
+      const phoneme = framePhonemes[indexInPhrase];
+      const isVoiced = !UNVOICED_PHONEMES.includes(phoneme);
+
+      // NOTE: 無声区間、またはpitchEditDataの範囲外の場合は「データなし」として扱う
+      let editValue = VALUE_INDICATING_NO_DATA;
+      if (isVoiced && i < pitchEditData.length) {
+        editValue = pitchEditData[i];
+      }
+
+      const isEdited = editValue !== VALUE_INDICATING_NO_DATA;
+      const originalLogF0 = Math.log(f0[indexInPhrase]);
+
+      frameInfos.push({ isEdited, isVoiced });
+      logF0.push(originalLogF0);
+
+      if (isEdited) {
+        const editedLogF0 = Math.log(editValue);
+        logF0Diff.push(editedLogF0 - originalLogF0);
+      } else {
+        logF0Diff.push(0);
+      }
+    }
+
+    // 編集データが一つもない場合はスキップ
+    const hasEditData = frameInfos.some((frameInfo) => frameInfo.isEdited);
+    if (!hasEditData) {
+      continue;
+    }
+
+    // 「編集済み」と「未編集」の境界を検出し、最大遷移長を計算する
+    const editBoundaryIndices: number[] = [];
+    const maxTransitionLengths: { left: number; right: number }[] = [];
+
+    // デフォルトの遷移長（ミリ秒）
+    // NOTE: 短すぎるとスムージングが十分にできず、長すぎると元のカーブを壊すため、60ms程度にしている
+    const BASE_TRANSITION_LENGTH_MS = 60;
+
+    // デフォルトの遷移長（フレーム数）
+    const baseTransitionLength = Math.round(
+      (BASE_TRANSITION_LENGTH_MS / 1000) * phraseQuery.frameRate,
+    );
+
+    for (let i = 0; i < frameInfos.length; i++) {
+      const currentFrameInfo = frameInfos[i];
+      const prevFrameInfo = getPrev(frameInfos, i);
+
+      // 前フレームと編集状態が変わらない場合は境界ではない
+      if (
+        prevFrameInfo == undefined ||
+        currentFrameInfo.isEdited === prevFrameInfo.isEdited
+      ) {
+        continue;
+      }
+
+      // 左右の最大遷移長の初期値
+      let maxLeftTransitionLength = Math.floor(baseTransitionLength / 2);
+      let maxRightTransitionLength = Math.floor(baseTransitionLength / 2);
+
+      // しゃくりやフォールなどの歌唱表現を維持するため、
+      // 可能な限りスムージングの遷移区間を有声区間から無声区間へ移動させる調整を行う。
+      if (currentFrameInfo.isEdited) {
+        // 「未編集」から「編集済み」への切り替わり
+        // 左側（過去方向）にある無声区間を探し、遷移区間をそちらへ割り振る
+        const prevIndex = i - 1;
+        for (
+          let distance = 0;
+          distance < maxRightTransitionLength && prevIndex - distance >= 0;
+          distance++
+        ) {
+          if (!frameInfos[prevIndex - distance].isVoiced) {
+            // 右側の遷移長を短縮し、余った分を左側に追加する
+            maxLeftTransitionLength += maxRightTransitionLength - distance;
+            maxRightTransitionLength = distance;
+            break;
+          }
+        }
+      } else {
+        // 「編集済み」から「未編集」への切り替わり
+        // 右側（未来方向）にある無声区間を探し、遷移区間をそちらへ割り振る
+        for (
+          let distance = 0;
+          distance < maxLeftTransitionLength &&
+          i + distance < frameInfos.length;
+          distance++
+        ) {
+          if (!frameInfos[i + distance].isVoiced) {
+            // 左側の遷移長を短縮し、余った分を右側に追加する
+            maxRightTransitionLength += maxLeftTransitionLength - distance;
+            maxLeftTransitionLength = distance;
+            break;
+          }
+        }
+      }
+
+      if (maxLeftTransitionLength !== 0 || maxRightTransitionLength !== 0) {
+        editBoundaryIndices.push(i);
+        maxTransitionLengths.push({
+          left: maxLeftTransitionLength,
+          right: maxRightTransitionLength,
+        });
+      }
+    }
+
+    // 計算された制約に基づいて滑らかな遷移を適用
+    applySmoothTransitions(
+      logF0Diff,
+      editBoundaryIndices,
+      maxTransitionLengths,
+    );
+
+    // 処理結果をphraseQuery.f0に書き戻す
+    for (let i = 0; i < logF0.length; i++) {
+      const processedLogF0 = logF0[i] + logF0Diff[i];
+
+      const indexInPhrase = processStartFrame + i - phraseQueryStartFrame;
+      phraseQuery.f0[indexInPhrase] = Math.exp(processedLogF0);
+    }
+  }
+}
+
+export function applyVolumeEdit(
+  phraseQuery: EditorFrameAudioQuery,
+  phraseStartTime: number,
+  volumeEditData: number[],
+  editorFrameRate: number,
+) {
+  if (phraseQuery.frameRate !== editorFrameRate) {
+    throw new Error(
+      "The frame rate between the phrase query and the editor does not match.",
+    );
+  }
+
+  const volume = phraseQuery.volume;
+  const phraseQueryFrameLength = volume.length;
+  const phraseQueryStartFrame = Math.round(
+    phraseStartTime * phraseQuery.frameRate,
+  );
+  const phraseQueryEndFrame = phraseQueryStartFrame + phraseQueryFrameLength;
+
+  const startFrame = Math.max(0, phraseQueryStartFrame);
+  const endFrame = Math.min(volumeEditData.length, phraseQueryEndFrame);
+  for (let i = startFrame; i < endFrame; i++) {
+    const editedVolume = volumeEditData[i];
+    if (editedVolume === VALUE_INDICATING_NO_DATA) {
+      continue;
+    }
+    // NOTE: ボリューム編集結果が負値になるケースに備えて0以上にクランプする
+    volume[i - phraseQueryStartFrame] = Math.max(editedVolume, 0);
   }
 }
 
@@ -1020,9 +699,21 @@ export const shouldPlayTracks = (tracks: Map<TrackId, Track>): Set<TrackId> => {
   );
 };
 
-/**
- * 指定されたティックを直近のグリッドに合わせる
+/*
+ * ループ範囲が有効かどうかを判定する
+ * @param startTick ループ開始位置(tick)
+ * @param endTick ループ終了位置(tick)
+ * @returns ループ範囲が有効な場合はtrue
  */
-export function snapTicksToGrid(ticks: number, snapTicks: number): number {
-  return Math.round(ticks / snapTicks) * snapTicks;
-}
+export const isValidLoopRange = (
+  startTick: number,
+  endTick: number,
+): boolean => {
+  return (
+    startTick >= 0 &&
+    endTick >= 0 &&
+    Number.isInteger(startTick) &&
+    Number.isInteger(endTick) &&
+    startTick <= endTick // 範囲差0は許容する
+  );
+};

@@ -7,8 +7,9 @@ import {
   PreviewMode,
 } from "@/sing/viewHelper";
 import { Store } from "@/store";
-import { Note, SequencerEditTarget } from "@/store/type";
+import { SequencerEditTarget } from "@/store/type";
 import { NoteId, TrackId } from "@/type/preload";
+import type { Note, Tempo } from "@/domain/project/type";
 
 export type PositionOnSequencer = {
   readonly x: number;
@@ -17,6 +18,13 @@ export type PositionOnSequencer = {
   readonly noteNumber: number;
   readonly frame: number;
   readonly frequency: number;
+};
+
+export type ViewportInfo = {
+  readonly scaleX: number;
+  readonly scaleY: number;
+  readonly offsetX: number;
+  readonly offsetY: number;
 };
 
 export type Input =
@@ -31,16 +39,37 @@ export type Input =
       readonly keyboardEvent: KeyboardEvent;
     }
   | {
-      readonly type: "mouseEvent";
+      readonly type: "pointerEvent";
       readonly targetArea: "Window";
-      readonly mouseEvent: MouseEvent;
+      readonly pointerEvent: PointerEvent;
       readonly cursorPos: PositionOnSequencer;
     }
   | {
-      readonly type: "mouseEvent";
+      readonly type: "pointerEvent";
       readonly targetArea: "SequencerBody";
-      readonly mouseEvent: MouseEvent;
+      readonly pointerEvent: PointerEvent;
       readonly cursorPos: PositionOnSequencer;
+    }
+  | {
+      readonly type: "pointerEvent";
+      readonly targetArea: "Note";
+      readonly pointerEvent: PointerEvent;
+      readonly cursorPos: PositionOnSequencer;
+      readonly note: Note;
+    }
+  | {
+      readonly type: "pointerEvent";
+      readonly targetArea: "NoteLeftEdge";
+      readonly pointerEvent: PointerEvent;
+      readonly cursorPos: PositionOnSequencer;
+      readonly note: Note;
+    }
+  | {
+      readonly type: "pointerEvent";
+      readonly targetArea: "NoteRightEdge";
+      readonly pointerEvent: PointerEvent;
+      readonly cursorPos: PositionOnSequencer;
+      readonly note: Note;
     }
   | {
       readonly type: "mouseEvent";
@@ -51,17 +80,13 @@ export type Input =
     }
   | {
       readonly type: "mouseEvent";
-      readonly targetArea: "NoteLeftEdge";
+      readonly targetArea: "SequencerBody";
       readonly mouseEvent: MouseEvent;
       readonly cursorPos: PositionOnSequencer;
-      readonly note: Note;
     }
   | {
-      readonly type: "mouseEvent";
-      readonly targetArea: "NoteRightEdge";
-      readonly mouseEvent: MouseEvent;
-      readonly cursorPos: PositionOnSequencer;
-      readonly note: Note;
+      readonly type: "scrollEvent";
+      readonly targetArea: "SequencerBody";
     }
   | {
       readonly type: "inputEvent";
@@ -74,6 +99,9 @@ export type Input =
     };
 
 export type ComputedRefs = {
+  readonly viewportInfo: ComputedRef<ViewportInfo>;
+  readonly tpqn: ComputedRef<number>;
+  readonly tempos: ComputedRef<Tempo[]>;
   readonly snapTicks: ComputedRef<number>;
   readonly editTarget: ComputedRef<SequencerEditTarget>;
   readonly selectedTrackId: ComputedRef<TrackId>;
@@ -97,12 +125,15 @@ export type Refs = {
   >;
   readonly cursorState: Ref<CursorState>;
   readonly guideLineTicks: Ref<number>;
+  readonly enableAutoScrollOnEdge: Ref<boolean>;
 };
 
 export type PartialStore = {
   state: Pick<
     Store["state"],
     | "tpqn"
+    | "tempos"
+    | "tracks"
     | "sequencerSnapType"
     | "sequencerEditTarget"
     | "sequencerNoteTool"
@@ -225,6 +256,21 @@ export type SequencerStateDefinitions = StateDefinitions<
     },
   ]
 >;
+
+const DRAG_START_THRESHOLD_X = 2;
+const DRAG_START_THRESHOLD_Y = 2;
+
+export const shouldStartDrag = (
+  cursorPosAtStart: PositionOnSequencer,
+  currentCursorPos: PositionOnSequencer,
+) => {
+  const dragDistanceX = Math.abs(currentCursorPos.x - cursorPosAtStart.x);
+  const dragDistanceY = Math.abs(currentCursorPos.y - cursorPosAtStart.y);
+  return (
+    dragDistanceX >= DRAG_START_THRESHOLD_X ||
+    dragDistanceY >= DRAG_START_THRESHOLD_Y
+  );
+};
 
 /**
  * カーソル位置に対応する補助線の位置を取得する。

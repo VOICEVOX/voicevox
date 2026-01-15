@@ -1,5 +1,6 @@
-import fs from "fs";
-import { migrateProjectFileObject } from "@/domain/project";
+import fs from "node:fs";
+import { beforeEach, describe, expect, test, vi } from "vitest";
+import { migrateProjectFileObject } from "@/infrastructures/projectFile/migration";
 import { EngineId, SpeakerId, StyleId } from "@/type/preload";
 import { resetMockMode } from "@/helpers/random";
 import path from "@/helpers/path";
@@ -47,9 +48,30 @@ describe("migrateProjectFileObject", () => {
           styleId: StyleId(74),
         },
       ],
+      showNewerVersionWarningDialog: async () => false,
     });
 
     // スナップショットテスト
     expect(project).toMatchSnapshot();
   });
+});
+
+test("未来のバージョンのプロジェクトを読み込むと警告を出す", async () => {
+  const vvprojFile = path.join(vvprojDir, "0.14.11.vvproj");
+  const projectData = JSON.parse(fs.readFileSync(vvprojFile, "utf-8")) as {
+    appVersion: string;
+    [key: string]: unknown;
+  };
+  projectData.appVersion = "9999.9999.9999"; // 未来のバージョンに書き換え
+
+  const showNewerVersionWarningDialog = vi.fn(async () => false);
+  const project = await migrateProjectFileObject(projectData, {
+    fetchMoraData: async () => {
+      throw new Error("fetchMoraData is not implemented");
+    },
+    voices: [],
+    showNewerVersionWarningDialog,
+  });
+  expect(showNewerVersionWarningDialog).toHaveBeenCalled();
+  expect(project).toEqual("projectCreatedByNewerVersion");
 });

@@ -69,8 +69,9 @@ export const uiStoreState: UiStoreState = {
   isSettingDialogOpen: false,
   isHotkeySettingDialogOpen: false,
   isToolbarSettingDialogOpen: false,
-  isCharacterOrderDialogOpen: false,
-  isDefaultStyleSelectDialogOpen: false,
+  isCharacterListDialogOpen: false,
+  isOldCharacterOrderDialogOpen: false,
+  isOldDefaultStyleSelectDialogOpen: false,
   isAcceptRetrieveTelemetryDialogOpen: false,
   isAcceptTermsDialogOpen: false,
   isDictionaryManageDialogOpen: false,
@@ -509,10 +510,7 @@ export const uiStore = createPartialStore<UiStoreTypes>({
       }
 
       const selectedAudioKeys = getters.SELECTED_AUDIO_KEYS;
-      if (
-        state.experimentalSetting.enableMultiSelect &&
-        selectedAudioKeys.length > 1
-      ) {
+      if (state.enableMultiSelect && selectedAudioKeys.length > 1) {
         await multiGenerateAndSaveAudioWithDialog({
           audioKeys: selectedAudioKeys,
           actions: actions,

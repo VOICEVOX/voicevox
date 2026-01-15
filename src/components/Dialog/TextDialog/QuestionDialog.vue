@@ -4,54 +4,40 @@
   参照：https://quasar.dev/quasar-plugins/dialog
 -->
 <template>
-  <QDialog
+  <BaseDialog
     ref="dialogRef"
-    v-model="modelValue"
+    v-model:open="modelValue"
+    :title
+    :description="message"
+    :icon="
+      props.type !== 'info'
+        ? { name: `sym_o_${iconName}`, color: color }
+        : undefined
+    "
     :persistent
-    @hide="onDialogHide"
+    @update:open="handleOpenUpdate"
   >
-    <QCard class="q-py-sm q-px-md dialog-card">
-      <QCardSection class="title">
-        <QIcon
-          v-if="props.type !== 'info'"
-          :name="`sym_o_${iconName}`"
-          size="2rem"
-          class="q-mr-sm"
-          :color
-        />
-        <div class="text-h5">{{ props.title }}</div>
-      </QCardSection>
-
-      <QSeparator />
-
-      <QCardSection class="message">
-        {{ props.message }}
-      </QCardSection>
-
-      <QSeparator />
-
-      <QCardActions align="right">
-        <QSpace />
-        <QBtn
-          v-for="(buttonObject, index) in buttonObjects"
-          ref="buttons"
-          :key="index"
-          :outline="buttonObject.color == 'display'"
-          :unelevated="buttonObject.color != 'display'"
-          :label="buttonObject.text"
-          :color="buttonObject.color"
-          class="text-no-wrap text-bold"
-          @click="onClick(index)"
-        />
-      </QCardActions>
-    </QCard>
-  </QDialog>
+    <div class="footer">
+      <BaseButton
+        v-for="(buttonObject, index) in buttonObjects"
+        ref="buttons"
+        :key="index"
+        :label="buttonObject.text"
+        :variant="toButtonVariant(buttonObject.color)"
+        @click="onClick(index)"
+      />
+    </div>
+  </BaseDialog>
 </template>
 
 <script setup lang="ts">
 import { QBtn, useDialogPluginComponent } from "quasar";
 import { computed, onMounted, useTemplateRef } from "vue";
+import { QuestionDialogButtonColor } from "../Dialog";
 import { getIcon, getColor, DialogType } from "./common";
+import BaseDialog from "@/components/Base/BaseDialog.vue";
+import BaseButton from "@/components/Base/BaseButton.vue";
+import { ExhaustiveError } from "@/type/utility";
 
 const modelValue = defineModel<boolean>({ default: false });
 const props = withDefaults(
@@ -59,7 +45,7 @@ const props = withDefaults(
     type: DialogType;
     title: string;
     message: string;
-    buttons: (string | { text: string; color: string })[];
+    buttons: (string | { text: string; color: QuestionDialogButtonColor })[];
     persistent?: boolean | undefined;
     default?: number | undefined;
   }>(),
@@ -75,7 +61,10 @@ defineEmits({
 const iconName = computed(() => getIcon(props.type));
 const color = computed(() => getColor(props.type));
 const buttonObjects = computed(() =>
-  props.buttons.map((button) =>
+  props.buttons.map<{
+    text: string;
+    color: QuestionDialogButtonColor;
+  }>((button) =>
     typeof button === "string" ? { text: button, color: "display" } : button,
   ),
 );
@@ -83,6 +72,19 @@ const buttonObjects = computed(() =>
 const { dialogRef, onDialogOK, onDialogHide } = useDialogPluginComponent();
 
 const buttonsRef = useTemplateRef<QBtn[]>("buttons");
+
+const toButtonVariant = (color: QuestionDialogButtonColor) => {
+  switch (color) {
+    case "display":
+      return "default";
+    case "primary":
+      return "primary";
+    case "warning":
+      return "danger";
+    default:
+      throw new ExhaustiveError(color);
+  }
+};
 
 onMounted(() => {
   if (props.default != undefined) {
@@ -93,6 +95,12 @@ onMounted(() => {
 
 let buttonClicked = false;
 
+function handleOpenUpdate(isOpen: boolean) {
+  if (!isOpen) {
+    onDialogHide();
+  }
+}
+
 const onClick = (index: number) => {
   if (buttonClicked) return;
   buttonClicked = true;
@@ -101,17 +109,11 @@ const onClick = (index: number) => {
 </script>
 
 <style scoped lang="scss">
-.title {
+@use "@/styles/v2/variables" as vars;
+
+.footer {
   display: flex;
-  align-items: center;
-}
-
-.message {
-  white-space: pre-wrap;
-}
-
-// primary色のボタンのテキスト色は特別扱い
-.q-btn.bg-primary {
-  color: var(--color-display-on-primary) !important;
+  justify-content: end;
+  gap: vars.$gap-1;
 }
 </style>

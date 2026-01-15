@@ -15,8 +15,7 @@
     }"
     @keydown.prevent.up="moveUpCell"
     @keydown.prevent.down="moveDownCell"
-    @focus="onRootFocus"
-    @click.stop=""
+    @click.self="onRootClick"
   >
     <!-- 複数選択用のヒットボックス -->
     <!-- テキスト欄の範囲選択との競合を防ぐため、activeの時はCtrlでしか出現しないようにする。 -->
@@ -84,8 +83,15 @@
         文章が長いと正常に動作しない可能性があります。
         句読点の位置で文章を分割してください。
       </template>
-      <template v-if="enableDeleteButton" #after>
+      <template #after>
+        <div
+          v-if="showAudioLength && audioDuration != undefined"
+          class="q-mr-sm audio-length"
+        >
+          {{ audioDuration.toFixed(2) }}s
+        </div>
         <QBtn
+          v-if="enableDeleteButton"
           round
           flat
           icon="delete_outline"
@@ -124,6 +130,7 @@ import {
   useCommandOrControlKey,
 } from "@/composables/useModifierKey";
 import { getDefaultStyle } from "@/domain/talk";
+import { calculateAudioLength } from "@/store/audioGenerate";
 
 const props = defineProps<{
   audioKey: AudioKey;
@@ -176,9 +183,7 @@ const audioItem = computed(() => store.state.audioItems[props.audioKey]);
 
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
-const isMultiSelectEnabled = computed(
-  () => store.state.experimentalSetting.enableMultiSelect,
-);
+const isMultiSelectEnabled = computed(() => store.state.enableMultiSelect);
 
 const selectAndSetActiveAudioKey = () => {
   void store.actions.SET_ACTIVE_AUDIO_KEY({ audioKey: props.audioKey });
@@ -187,7 +192,7 @@ const selectAndSetActiveAudioKey = () => {
   });
 };
 
-const onRootFocus = () => {
+const onRootClick = () => {
   if (uiLocked.value) return;
 
   selectAndSetActiveAudioKey();
@@ -308,6 +313,18 @@ watch(
   },
 );
 
+const showAudioLength = computed(() => store.state.showAudioLength);
+
+const audioDuration = computed(() => {
+  if (!audioItem.value?.query) return undefined;
+  const engineId = audioItem.value.voice.engineId;
+  const supportedFeatures =
+    store.state.engineManifests[engineId]?.supportedFeatures;
+  if (!supportedFeatures?.adjustPhonemeLength) return undefined;
+
+  return calculateAudioLength(audioItem.value.query);
+});
+
 const pushAudioTextIfNeeded = async (event?: KeyboardEvent) => {
   if (event && event.isComposing) return;
   if (!willRemove.value && isChangeFlag.value && !willFocusOrBlur.value) {
@@ -415,19 +432,15 @@ const moveCell = (offset: number) => (e?: KeyboardEvent) => {
   const index = audioKeys.value.indexOf(props.audioKey) + offset;
   if (index >= 0 && index < audioKeys.value.length) {
     if (isMultiSelectEnabled.value && e?.shiftKey) {
-      // focusCellをemitする前にselectedAudioKeysを保存しておく。
-      // （focusCellでselectedAudioKeysが変更されるため）
-      const selectedAudioKeysBefore = selectedAudioKeys.value;
       emit("focusCell", {
         audioKey: audioKeys.value[index],
         focusTarget: "root",
       });
       void store.actions.SET_SELECTED_AUDIO_KEYS({
-        audioKeys: [
-          ...selectedAudioKeysBefore,
-          props.audioKey,
-          audioKeys.value[index],
-        ],
+        audioKeys: [...selectedAudioKeys.value, audioKeys.value[index]],
+      });
+      void store.actions.SET_ACTIVE_AUDIO_KEY({
+        audioKey: audioKeys.value[index],
       });
     } else {
       emit("focusCell", {
@@ -757,5 +770,13 @@ const isMultipleEngine = computed(() => store.state.engineIds.length > 1);
   background: none;
   z-index: 1;
   cursor: default;
+}
+
+.audio-length {
+  color: colors.$display;
+  opacity: 0.6;
+  white-space: nowrap;
+  font-size: 0.85rem;
+  user-select: none;
 }
 </style>

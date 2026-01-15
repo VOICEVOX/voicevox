@@ -1,9 +1,8 @@
 import { Project as UfProject } from "@sevenc-nanashi/utaformatix-ts";
 import { VoicevoxScore } from "./common";
 import { DEFAULT_TPQN, createDefaultTrack } from "@/sing/domain";
-import { getDoremiFromNoteNumber } from "@/sing/viewHelper";
 import { NoteId } from "@/type/preload";
-import { Note, Tempo, TimeSignature, Track } from "@/store/type";
+import type { Note, Tempo, TimeSignature, Track } from "@/domain/project/type";
 import { uuid4 } from "@/helpers/random";
 
 /** UtaformatixのプロジェクトをVoicevoxの楽譜データに変換する */
@@ -82,7 +81,7 @@ export const ufProjectToVoicevox = (project: UfProject): VoicevoxScore => {
           tpqn,
         ),
         noteNumber: value.key,
-        lyric: value.lyric || getDoremiFromNoteNumber(value.key),
+        lyric: value.lyric || undefined,
       };
     });
 

@@ -1,3 +1,4 @@
+import { vi, expect, test } from "vitest";
 import latestDefaultEngineInfos from "./latestDefaultEngineInfos.json";
 import { fetchLatestDefaultEngineInfo } from "@/domain/defaultEngine/latetDefaultEngine";
 

@@ -10,14 +10,19 @@
   <ToolBarCustomDialog
     v-model:dialogOpened="isToolbarSettingDialogOpenComputed"
   />
+  <CharacterListDialog
+    v-if="orderedAllCharacterInfos.length > 0"
+    v-model:dialogOpened="isCharacterListDialogOpenComputed"
+    :characterInfos="orderedAllCharacterInfos"
+  />
   <CharacterOrderDialog
     v-if="orderedAllCharacterInfos.length > 0"
-    v-model:dialogOpened="isCharacterOrderDialogOpenComputed"
+    v-model:dialogOpened="isOldCharacterOrderDialogOpenComputed"
     :characterInfos="orderedAllCharacterInfos"
   />
   <DefaultStyleListDialog
     v-if="orderedTalkCharacterInfos.length > 0"
-    v-model:dialogOpened="isDefaultStyleSelectDialogOpenComputed"
+    v-model:dialogOpened="isOldDefaultStyleSelectDialogOpenComputed"
     :characterInfos="orderedTalkCharacterInfos"
   />
   <DictionaryManageDialog
@@ -38,8 +43,9 @@ import { computed } from "vue";
 import SettingDialog from "@/components/Dialog/SettingDialog/SettingDialog.vue";
 import HotkeySettingDialog from "@/components/Dialog/HotkeySettingDialog.vue";
 import ToolBarCustomDialog from "@/components/Dialog/ToolBarCustomDialog.vue";
-import DefaultStyleListDialog from "@/components/Dialog/DefaultStyleListDialog.vue";
-import CharacterOrderDialog from "@/components/Dialog/CharacterOrderDialog.vue";
+import DefaultStyleListDialog from "@/components/Dialog/OldDefaultStyleListDialog.vue";
+import CharacterListDialog from "@/components/Dialog/CharacterListDialog.vue";
+import CharacterOrderDialog from "@/components/Dialog/OldCharacterOrderDialog.vue";
 import AcceptRetrieveTelemetryDialog from "@/components/Dialog/AcceptDialog/AcceptRetrieveTelemetryDialog.vue";
 import AcceptTermsDialog from "@/components/Dialog/AcceptDialog/AcceptTermsDialog.vue";
 import DictionaryManageDialog from "@/components/Dialog/DictionaryManageDialog.vue";
@@ -90,17 +96,26 @@ const isAcceptTermsDialogOpenComputed = computed({
     }),
 });
 
+// キャラクター＆スタイルの管理
+const isCharacterListDialogOpenComputed = computed({
+  get: () => store.state.isCharacterListDialogOpen,
+  set: (val) =>
+    store.actions.SET_DIALOG_OPEN({
+      isCharacterListDialogOpen: val,
+    }),
+});
+
 // キャラクター並び替え
 const orderedAllCharacterInfos = computed(
   () => store.getters.GET_ORDERED_ALL_CHARACTER_INFOS,
 );
-const isCharacterOrderDialogOpenComputed = computed({
+const isOldCharacterOrderDialogOpenComputed = computed({
   get: () =>
     !store.state.isAcceptTermsDialogOpen &&
-    store.state.isCharacterOrderDialogOpen,
+    store.state.isOldCharacterOrderDialogOpen,
   set: (val) =>
     store.actions.SET_DIALOG_OPEN({
-      isCharacterOrderDialogOpen: val,
+      isOldCharacterOrderDialogOpen: val,
     }),
 });
 
@@ -111,14 +126,14 @@ const orderedTalkCharacterInfos = computed(() => {
     "talk",
   );
 });
-const isDefaultStyleSelectDialogOpenComputed = computed({
+const isOldDefaultStyleSelectDialogOpenComputed = computed({
   get: () =>
     !store.state.isAcceptTermsDialogOpen &&
-    !store.state.isCharacterOrderDialogOpen &&
-    store.state.isDefaultStyleSelectDialogOpen,
+    !store.state.isOldCharacterOrderDialogOpen &&
+    store.state.isOldDefaultStyleSelectDialogOpen,
   set: (val) =>
     store.actions.SET_DIALOG_OPEN({
-      isDefaultStyleSelectDialogOpen: val,
+      isOldDefaultStyleSelectDialogOpen: val,
     }),
 });
 
@@ -143,8 +158,8 @@ const isDictionaryManageDialogOpenComputed = computed({
 const isAcceptRetrieveTelemetryDialogOpenComputed = computed({
   get: () =>
     !store.state.isAcceptTermsDialogOpen &&
-    !store.state.isCharacterOrderDialogOpen &&
-    !store.state.isDefaultStyleSelectDialogOpen &&
+    !store.state.isOldCharacterOrderDialogOpen &&
+    !store.state.isOldDefaultStyleSelectDialogOpen &&
     store.state.isAcceptRetrieveTelemetryDialogOpen,
   set: (val) =>
     store.actions.SET_DIALOG_OPEN({
@@ -156,8 +171,8 @@ const isAcceptRetrieveTelemetryDialogOpenComputed = computed({
 const canOpenNotificationDialog = computed(() => {
   return (
     !store.state.isAcceptTermsDialogOpen &&
-    !store.state.isCharacterOrderDialogOpen &&
-    !store.state.isDefaultStyleSelectDialogOpen &&
+    !store.state.isOldCharacterOrderDialogOpen &&
+    !store.state.isOldDefaultStyleSelectDialogOpen &&
     !store.state.isAcceptRetrieveTelemetryDialogOpen &&
     props.isEnginesReady
   );

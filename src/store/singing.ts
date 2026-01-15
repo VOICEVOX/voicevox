@@ -1,22 +1,18 @@
-import { ref, toRaw } from "vue";
+import { ref } from "vue";
 import { createPartialStore } from "./vuex";
 import { createUILockAction } from "./ui";
 import {
-  Tempo,
-  TimeSignature,
-  Note,
   SingingStoreState,
   SingingStoreTypes,
   SingingCommandStoreState,
   SingingCommandStoreTypes,
   SaveResultObject,
-  Singer,
   Phrase,
   transformCommandStore,
   SingingVoice,
   SequencerEditTarget,
+  ParameterPanelEditTarget,
   PhraseKey,
-  Track,
   SequenceId,
   SingingVolumeKey,
   SingingVolume,
@@ -32,7 +28,8 @@ import {
   currentDateString,
   DEFAULT_PROJECT_NAME,
   DEFAULT_STYLE_NAME,
-  generateLabelFileDataFromFramePhonemes,
+  generateLabelFileData,
+  PhonemeTimingLabel,
   sanitizeFileName,
 } from "./utility";
 import {
@@ -42,7 +39,7 @@ import {
   StyleId,
   TrackId,
 } from "@/type/preload";
-import { FramePhoneme, Note as NoteForRequestToEngine } from "@/openapi";
+import { Note as NoteForRequestToEngine } from "@/openapi";
 import { ResultError, getValueOrThrow } from "@/type/result";
 import {
   AudioEvent,
@@ -59,51 +56,48 @@ import {
   Transport,
 } from "@/sing/audioRendering";
 import {
-  selectPriorPhrase,
   getNoteDuration,
   isValidNote,
-  isValidSnapType,
+  isValidNotes,
   isValidTempo,
-  isValidTimeSignature,
-  isValidKeyRangeAdjustment,
-  isValidVolumeRangeAdjustment,
-  secondToTick,
-  tickToSecond,
-  VALUE_INDICATING_NO_DATA,
-  isValidPitchEditData,
-  calculatePhraseKey,
   isValidTempos,
+  isValidTimeSignature,
   isValidTimeSignatures,
   isValidTpqn,
+  secondToTick,
+  tickToSecond,
+} from "@/sing/music";
+import {
+  isValidSnapType,
+  isValidKeyRangeAdjustment,
+  isValidVolumeRangeAdjustment,
+  VALUE_INDICATING_NO_DATA,
+  isValidPitchEditData,
+  isValidVolumeEditData,
   DEFAULT_TPQN,
   DEPRECATED_DEFAULT_EDITOR_FRAME_RATE,
   createDefaultTrack,
   createDefaultTempo,
   createDefaultTimeSignature,
-  isValidNotes,
   isValidTrack,
   isTracksEmpty,
   shouldPlayTracks,
-  decibelToLinear,
-  applyPitchEdit,
-  calcPhraseStartFrames,
-  calcPhraseEndFrames,
-  toEntirePhonemeTimings,
-  adjustPhonemeTimingsAndPhraseEndFrames,
-  phonemeTimingsToPhonemes,
+  toPhonemes,
+  toPhonemeTimings,
+  applyPhonemeTimingEdit,
+  adjustPhonemeTimings,
+  isValidLoopRange,
 } from "@/sing/domain";
 import { getOverlappingNoteIds } from "@/sing/storeHelper";
 import {
   AnimationTimer,
-  calculateHash,
   createArray,
   createPromiseThatResolvesWhen,
-  linearInterpolation,
+  getNext,
   round,
 } from "@/sing/utility";
 import { getWorkaroundKeyRangeAdjustment } from "@/sing/workaroundKeyRangeAdjustment";
 import { createLogger } from "@/helpers/log";
-import { noteSchema } from "@/domain/project/schema";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { ufProjectToVoicevox } from "@/sing/utaformatixProject/toVoicevox";
@@ -121,272 +115,29 @@ import {
   ufProjectToMultiFile,
   ufProjectToSingleFile,
 } from "@/sing/utaformatixProject/utils";
+import { ExhaustiveError, UnreachableError } from "@/type/utility";
+import {
+  CacheLoadedEvent,
+  PhraseRenderingCompleteEvent,
+  PhraseRenderingErrorEvent,
+  PhraseRenderingStartedEvent,
+  PitchGenerationCompleteEvent,
+  QueryGenerationCompleteEvent,
+  SongTrackRenderer,
+  VoiceSynthesisCompleteEvent,
+  VolumeGenerationCompleteEvent,
+} from "@/sing/songTrackRendering";
+import type {
+  Note,
+  Singer,
+  Tempo,
+  TimeSignature,
+  Track,
+} from "@/domain/project/type";
+import { noteSchema } from "@/domain/project/schema";
+import { toEditorTrack } from "@/infrastructures/projectFile/conversion";
 
 const logger = createLogger("store/singing");
-
-/**
- * フレーズレンダリングに必要なデータのスナップショット
- */
-type SnapshotForPhraseRender = Readonly<{
-  tpqn: number;
-  tempos: Tempo[];
-  tracks: Map<TrackId, Track>;
-  engineFrameRates: Map<EngineId, number>;
-  editorFrameRate: number;
-}>;
-
-type PhraseRenderStageId =
-  | "queryGeneration"
-  | "singingPitchGeneration"
-  | "singingVolumeGeneration"
-  | "singingVoiceSynthesis";
-
-/**
- * フレーズレンダリングのステージのインターフェイス。
- * フレーズレンダラー内で順に実行される。
- */
-type PhraseRenderStage = Readonly<{
-  id: PhraseRenderStageId;
-
-  /**
-   * このステージが実行されるべきかを判定する。
-   * @param context コンテキスト
-   * @returns 実行が必要かどうかのブール値
-   */
-  needsExecution: (
-    trackId: TrackId,
-    phraseKey: PhraseKey,
-    snapshot: SnapshotForPhraseRender,
-  ) => Promise<boolean>;
-
-  /**
-   * 前回の処理結果を削除する。
-   * @param context コンテキスト
-   */
-  deleteExecutionResult: (phraseKey: PhraseKey) => void;
-
-  /**
-   * ステージの処理を実行する。
-   * @param context コンテキスト
-   */
-  execute: (
-    trackId: TrackId,
-    phraseKey: PhraseKey,
-    snapshot: SnapshotForPhraseRender,
-  ) => Promise<void>;
-}>;
-
-/**
- * クエリの生成に必要なデータ
- */
-type QuerySource = Readonly<{
-  engineId: EngineId;
-  engineFrameRate: number;
-  tpqn: number;
-  tempos: Tempo[];
-  firstRestDuration: number;
-  notes: Note[];
-  keyRangeAdjustment: number;
-}>;
-
-/**
- * 歌唱ピッチの生成に必要なデータ
- */
-type SingingPitchSource = Readonly<{
-  engineId: EngineId;
-  engineFrameRate: number;
-  tpqn: number;
-  tempos: Tempo[];
-  firstRestDuration: number;
-  notes: Note[];
-  keyRangeAdjustment: number;
-  queryForPitchGeneration: EditorFrameAudioQuery;
-}>;
-
-/**
- * 歌唱ボリュームの生成に必要なデータ
- */
-type SingingVolumeSource = Readonly<{
-  engineId: EngineId;
-  engineFrameRate: number;
-  tpqn: number;
-  tempos: Tempo[];
-  firstRestDuration: number;
-  notes: Note[];
-  keyRangeAdjustment: number;
-  volumeRangeAdjustment: number;
-  queryForVolumeGeneration: EditorFrameAudioQuery;
-}>;
-
-/**
- * 歌唱音声の合成に必要なデータ
- */
-type SingingVoiceSource = Readonly<{
-  singer: Singer;
-  queryForSingingVoiceSynthesis: EditorFrameAudioQuery;
-}>;
-
-/**
- * リクエスト用のノーツ（と休符）を作成する。
- */
-const createNotesForRequestToEngine = (
-  firstRestDuration: number,
-  lastRestDurationSeconds: number,
-  notes: Note[],
-  tempos: Tempo[],
-  tpqn: number,
-  frameRate: number,
-) => {
-  const notesForRequestToEngine: NoteForRequestToEngine[] = [];
-
-  // 先頭の休符を変換
-  const firstRestStartSeconds = tickToSecond(
-    notes[0].position - firstRestDuration,
-    tempos,
-    tpqn,
-  );
-  const firstRestStartFrame = Math.round(firstRestStartSeconds * frameRate);
-  const firstRestEndSeconds = tickToSecond(notes[0].position, tempos, tpqn);
-  const firstRestEndFrame = Math.round(firstRestEndSeconds * frameRate);
-  notesForRequestToEngine.push({
-    key: undefined,
-    frameLength: firstRestEndFrame - firstRestStartFrame,
-    lyric: "",
-  });
-
-  // ノートを変換
-  for (const note of notes) {
-    const noteOnSeconds = tickToSecond(note.position, tempos, tpqn);
-    const noteOnFrame = Math.round(noteOnSeconds * frameRate);
-    const noteOffSeconds = tickToSecond(
-      note.position + note.duration,
-      tempos,
-      tpqn,
-    );
-    const noteOffFrame = Math.round(noteOffSeconds * frameRate);
-    notesForRequestToEngine.push({
-      id: note.id,
-      key: note.noteNumber,
-      frameLength: noteOffFrame - noteOnFrame,
-      lyric: note.lyric,
-    });
-  }
-
-  // 末尾に休符を追加
-  const lastRestFrameLength = Math.round(lastRestDurationSeconds * frameRate);
-  notesForRequestToEngine.push({
-    key: undefined,
-    frameLength: lastRestFrameLength,
-    lyric: "",
-  });
-
-  // frameLengthが1以上になるようにする
-  for (let i = 0; i < notesForRequestToEngine.length; i++) {
-    const frameLength = notesForRequestToEngine[i].frameLength;
-    const frameToShift = Math.max(0, 1 - frameLength);
-    notesForRequestToEngine[i].frameLength += frameToShift;
-    if (i < notesForRequestToEngine.length - 1) {
-      notesForRequestToEngine[i + 1].frameLength -= frameToShift;
-    }
-  }
-
-  return notesForRequestToEngine;
-};
-
-const shiftKeyOfNotes = (notes: NoteForRequestToEngine[], keyShift: number) => {
-  for (const note of notes) {
-    if (note.key != undefined) {
-      note.key += keyShift;
-    }
-  }
-};
-
-const getPhonemes = (query: EditorFrameAudioQuery) => {
-  return query.phonemes.map((value) => value.phoneme).join(" ");
-};
-
-const shiftPitch = (f0: number[], pitchShift: number) => {
-  for (let i = 0; i < f0.length; i++) {
-    f0[i] *= Math.pow(2, pitchShift / 12);
-  }
-};
-
-const shiftVolume = (volume: number[], volumeShift: number) => {
-  for (let i = 0; i < volume.length; i++) {
-    volume[i] *= decibelToLinear(volumeShift);
-  }
-};
-
-/**
- * 末尾のpauの区間のvolumeを0にする。（歌とpauの呼吸音が重ならないようにする）
- * fadeOutDurationSecondsが0の場合は即座にvolumeを0にする。
- */
-const muteLastPauSection = (
-  volume: number[],
-  phonemes: FramePhoneme[],
-  frameRate: number,
-  fadeOutDurationSeconds: number,
-) => {
-  const lastPhoneme = phonemes.at(-1);
-  if (lastPhoneme == undefined || lastPhoneme.phoneme !== "pau") {
-    throw new Error("No pau exists at the end.");
-  }
-
-  let lastPauStartFrame = 0;
-  for (let i = 0; i < phonemes.length - 1; i++) {
-    lastPauStartFrame += phonemes[i].frameLength;
-  }
-
-  const lastPauFrameLength = lastPhoneme.frameLength;
-  let fadeOutFrameLength = Math.round(fadeOutDurationSeconds * frameRate);
-  fadeOutFrameLength = Math.max(0, fadeOutFrameLength);
-  fadeOutFrameLength = Math.min(lastPauFrameLength, fadeOutFrameLength);
-
-  // フェードアウト処理を行う
-  if (fadeOutFrameLength === 1) {
-    volume[lastPauStartFrame] *= 0.5;
-  } else {
-    for (let i = 0; i < fadeOutFrameLength; i++) {
-      volume[lastPauStartFrame + i] *= linearInterpolation(
-        0,
-        1,
-        fadeOutFrameLength - 1,
-        0,
-        i,
-      );
-    }
-  }
-  // 音量を0にする
-  for (let i = fadeOutFrameLength; i < lastPauFrameLength; i++) {
-    volume[lastPauStartFrame + i] = 0;
-  }
-};
-
-const calculateQueryKey = async (querySource: QuerySource) => {
-  const hash = await calculateHash(querySource);
-  return EditorFrameAudioQueryKey(hash);
-};
-
-const calculateSingingPitchKey = async (
-  singingPitchSource: SingingPitchSource,
-) => {
-  const hash = await calculateHash(singingPitchSource);
-  return SingingPitchKey(hash);
-};
-
-const calculateSingingVolumeKey = async (
-  singingVolumeSource: SingingVolumeSource,
-) => {
-  const hash = await calculateHash(singingVolumeSource);
-  return SingingVolumeKey(hash);
-};
-
-const calculateSingingVoiceKey = async (
-  singingVoiceSource: SingingVoiceSource,
-) => {
-  const hash = await calculateHash(singingVoiceSource);
-  return SingingVoiceKey(hash);
-};
 
 const generateAudioEvents = async (
   audioContext: BaseAudioContext,
@@ -471,7 +222,7 @@ const offlineRenderTracks = async (
   }
 
   for (const phrase of phrases.values()) {
-    if (phrase.singingVoiceKey == undefined || phrase.state !== "PLAYABLE") {
+    if (phrase.singingVoiceKey == undefined || phrase.state !== "RENDERED") {
       continue;
     }
     const singingVoice = getOrThrow(singingVoices, phrase.singingVoiceKey);
@@ -509,6 +260,17 @@ const offlineRenderTracks = async (
   return audioBuffer;
 };
 
+type PhraseSequenceInfo =
+  | {
+      readonly type: "note";
+      readonly sequenceId: SequenceId;
+    }
+  | {
+      readonly type: "audio";
+      readonly sequenceId: SequenceId;
+      readonly singingVoiceKey: SingingVoiceKey;
+    };
+
 let audioContext: AudioContext | undefined;
 let transport: Transport | undefined;
 let previewSynth: PolySynth | undefined;
@@ -530,19 +292,30 @@ if (window.AudioContext) {
   mainChannelStrip.output.connect(limiter.input);
   limiter.output.connect(clipper.input);
   clipper.output.connect(audioContext.destination);
+
+  audioContext.addEventListener("statechange", () => {
+    logger.info(`AudioContext state changed: ${audioContext?.state}`);
+  });
 }
+
+let songTrackRenderer: SongTrackRenderer | undefined = undefined;
 
 const playheadPosition = ref(0); // 単位はtick
 const phraseSingingVoices = new Map<SingingVoiceKey, SingingVoice>();
+const phraseSequenceInfos = new Map<PhraseKey, PhraseSequenceInfo>();
 const sequences = new Map<SequenceId, Sequence & { trackId: TrackId }>();
 const animationTimer = new AnimationTimer();
 
-const queryCache = new Map<EditorFrameAudioQueryKey, EditorFrameAudioQuery>();
-const singingPitchCache = new Map<SingingPitchKey, SingingPitch>();
-const singingVolumeCache = new Map<SingingVolumeKey, SingingVolume>();
-const singingVoiceCache = new Map<SingingVoiceKey, SingingVoice>();
-
 const initialTrackId = TrackId(uuid4());
+
+const setPhraseSingingVoices = (
+  singingVoices: Map<SingingVoiceKey, SingingVoice>,
+) => {
+  phraseSingingVoices.clear();
+  for (const [key, singingVoice] of singingVoices) {
+    phraseSingingVoices.set(key, singingVoice);
+  }
+};
 
 /**
  * シーケンスの音源の出力を取得する。
@@ -612,6 +385,16 @@ const deleteSequence = (sequenceId: SequenceId) => {
 };
 
 /**
+ * シーケンスが登録されているかどうかを確認する。
+ *
+ * @param sequenceId シーケンスID。
+ * @returns シーケンスが登録されている場合はtrue、そうでない場合はfalse。
+ */
+const isRegisteredSequence = (sequenceId: SequenceId) => {
+  return sequences.has(sequenceId);
+};
+
+/**
  * ノートシーケンスを生成する。
  */
 const generateNoteSequence = (
@@ -652,6 +435,212 @@ const generateAudioSequence = async (
     audioEvents,
     trackId,
   };
+};
+
+/**
+ * フレーズの状態と再生されるシーケンスの状態を同期させる。
+ * 不要なシーケンスを削除し、不足しているシーケンスを生成する。
+ */
+const syncPhraseSequences = (
+  phrases: Map<PhraseKey, Phrase>,
+  phraseSingingVoices: Map<SingingVoiceKey, SingingVoice>,
+  tempos: Tempo[],
+  tpqn: number,
+  callbacks: {
+    onSequenceGeneratedAndRegistered: (
+      phraseKey: PhraseKey,
+      sequenceId: SequenceId,
+    ) => void;
+    onSequenceDeleted: (phraseKey: PhraseKey) => void;
+  },
+) => {
+  // 不要になったシーケンスを削除する
+  deleteUnnecessarySequences(
+    phrases,
+    phraseSequenceInfos,
+    callbacks.onSequenceDeleted,
+  );
+
+  // 不足しているシーケンスを新しく作成する
+  createMissingSequences(
+    phrases,
+    phraseSingingVoices,
+    tempos,
+    tpqn,
+    phraseSequenceInfos,
+    callbacks.onSequenceGeneratedAndRegistered,
+  );
+};
+
+/**
+ * 不要になったフレーズシーケンスを削除する。
+ *
+ * 以下の場合に不要と判断される。
+ * - フレーズ自体が削除された
+ * - レンダリング状態が変わり、シーケンスのタイプが不一致になった
+ * - 歌声が変更された
+ */
+const deleteUnnecessarySequences = (
+  phrases: Map<PhraseKey, Phrase>,
+  phraseSequenceInfos: Map<PhraseKey, PhraseSequenceInfo>,
+  onSequenceDeleted: (phraseKey: PhraseKey) => void,
+) => {
+  for (const [phraseKey, sequenceInfo] of phraseSequenceInfos) {
+    const phrase = phrases.get(phraseKey);
+
+    let needToDelete = false;
+
+    if (phrase == undefined) {
+      // フレーズが無くなった場合は、既存のシーケンスを削除する
+      needToDelete = true;
+    } else if (
+      phrase.state === "RENDERED" &&
+      (sequenceInfo.type === "note" ||
+        sequenceInfo.singingVoiceKey !== phrase.singingVoiceKey)
+    ) {
+      // フレーズがレンダリング済みの状態に更新された、または歌声が変更された場合は、
+      // フレーズは最新の歌声のオーディオシーケンスで再生される必要があるので、
+      // 既存の仮再生用のノートシーケンスまたは歌声が変更される前のオーディオシーケンスを削除する
+      needToDelete = true;
+    } else if (phrase.state !== "RENDERED" && sequenceInfo.type === "audio") {
+      // レンダリング済みのフレーズが、再び未レンダリングの状態に戻った場合は、
+      // フレーズは仮再生用のノートシーケンスで再生される必要があるので、
+      // 既存のオーディオシーケンスを削除する
+      needToDelete = true;
+    }
+
+    // TODO: ピッチを編集したときは行わないようにする
+    if (needToDelete) {
+      phraseSequenceInfos.delete(phraseKey);
+      if (isRegisteredSequence(sequenceInfo.sequenceId)) {
+        deleteSequence(sequenceInfo.sequenceId);
+        logger.info(`Deleted sequence. ID: ${sequenceInfo.sequenceId}`);
+
+        onSequenceDeleted(phraseKey);
+      }
+    }
+  }
+};
+
+/**
+ * 不足しているフレーズシーケンスを状態に応じて生成・登録する。
+ */
+const createMissingSequences = (
+  phrases: Map<PhraseKey, Phrase>,
+  phraseSingingVoices: Map<SingingVoiceKey, SingingVoice>,
+  tempos: Tempo[],
+  tpqn: number,
+  phraseSequenceInfos: Map<PhraseKey, PhraseSequenceInfo>,
+  onSequenceGeneratedAndRegistered: (
+    phraseKey: PhraseKey,
+    sequenceId: SequenceId,
+  ) => void,
+) => {
+  for (const [phraseKey, phrase] of phrases) {
+    // 既にシーケンスが存在する場合は、この関数では何もしない
+    if (phraseSequenceInfos.has(phraseKey)) {
+      continue;
+    }
+
+    // フレーズの状態に応じて、適切なシーケンス生成処理を呼び出す
+    if (phrase.state === "RENDERED") {
+      createAudioSequenceForPhrase(
+        phraseKey,
+        phrase,
+        phraseSingingVoices,
+        phraseSequenceInfos,
+        onSequenceGeneratedAndRegistered,
+      );
+    } else {
+      createNoteSequenceForPhrase(
+        phraseKey,
+        phrase,
+        tempos,
+        tpqn,
+        phraseSequenceInfos,
+        onSequenceGeneratedAndRegistered,
+      );
+    }
+  }
+};
+
+/**
+ * 指定されたフレーズのオーディオシーケンスを非同期で生成・登録する。
+ */
+const createAudioSequenceForPhrase = (
+  phraseKey: PhraseKey,
+  phrase: Phrase,
+  phraseSingingVoices: Map<SingingVoiceKey, SingingVoice>,
+  phraseSequenceInfos: Map<PhraseKey, PhraseSequenceInfo>,
+  onSequenceGeneratedAndRegistered: (
+    phraseKey: PhraseKey,
+    sequenceId: SequenceId,
+  ) => void,
+) => {
+  if (phrase.singingVoiceKey == undefined) {
+    throw new UnreachableError("phrase.singingVoiceKey is undefined.");
+  }
+  const singingVoice = getOrThrow(phraseSingingVoices, phrase.singingVoiceKey);
+
+  const newSequenceId = SequenceId(uuid4());
+  phraseSequenceInfos.set(phraseKey, {
+    type: "audio",
+    sequenceId: newSequenceId,
+    singingVoiceKey: phrase.singingVoiceKey,
+  });
+
+  const audioSequencePromise = generateAudioSequence(
+    phrase.startTime,
+    singingVoice,
+    phrase.trackId,
+  );
+
+  // Promise解決時に、情報が古くなっていないか確認してから登録する
+  void audioSequencePromise.then((audioSequence) => {
+    const currentSequenceInfo = phraseSequenceInfos.get(phraseKey);
+    if (
+      currentSequenceInfo != undefined &&
+      currentSequenceInfo.sequenceId === newSequenceId
+    ) {
+      registerSequence(newSequenceId, audioSequence);
+      logger.info(`Registered audio sequence. ID: ${newSequenceId}`);
+
+      onSequenceGeneratedAndRegistered(phraseKey, newSequenceId);
+    }
+  });
+};
+
+/**
+ * 指定されたフレーズのノートシーケンスを生成・登録する。
+ */
+const createNoteSequenceForPhrase = (
+  phraseKey: PhraseKey,
+  phrase: Phrase,
+  tempos: Tempo[],
+  tpqn: number,
+  phraseSequenceInfos: Map<PhraseKey, PhraseSequenceInfo>,
+  onSequenceGeneratedAndRegistered: (
+    phraseKey: PhraseKey,
+    sequenceId: SequenceId,
+  ) => void,
+) => {
+  const newSequenceId = SequenceId(uuid4());
+  phraseSequenceInfos.set(phraseKey, {
+    type: "note",
+    sequenceId: newSequenceId,
+  });
+
+  const noteSequence = generateNoteSequence(
+    phrase.notes,
+    tempos,
+    tpqn,
+    phrase.trackId,
+  );
+
+  registerSequence(newSequenceId, noteSequence);
+  logger.info(`Registered note sequence. ID: ${newSequenceId}`);
+
+  onSequenceGeneratedAndRegistered(phraseKey, newSequenceId);
 };
 
 /**
@@ -741,12 +730,16 @@ export const singingStoreState: SingingStoreState = {
   phraseQueries: new Map(),
   phraseSingingPitches: new Map(),
   phraseSingingVolumes: new Map(),
+  phraseSequenceIds: new Map(),
   sequencerZoomX: 0.5,
   sequencerZoomY: 0.75,
   sequencerSnapType: 16,
   sequencerEditTarget: "NOTE",
   sequencerNoteTool: "EDIT_FIRST",
   sequencerPitchTool: "DRAW",
+  sequencerVolumeTool: "DRAW",
+  parameterPanelEditTarget: "VOLUME",
+  sequencerVolumeVisible: false,
   _selectedNoteIds: new Set(),
   nowPlaying: false,
   volume: 0,
@@ -756,6 +749,9 @@ export const singingStoreState: SingingStoreState = {
   exportState: "NOT_EXPORTING",
   cancellationOfExportRequested: false,
   isSongSidebarOpen: false,
+  isLoopEnabled: false,
+  loopStartTick: 0,
+  loopEndTick: 0,
 };
 
 export const singingStore = createPartialStore<SingingStoreTypes>({
@@ -1024,6 +1020,23 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  GET_SEQUENCE_AUDIO_BUFFER: {
+    getter: () => (sequenceId: SequenceId) => {
+      const sequence = sequences.get(sequenceId);
+      if (sequence == undefined) {
+        throw new Error(`Sequence with id ${sequenceId} is not registered.`);
+      }
+      if (sequence.type === "audio") {
+        if (sequence.audioEvents.length !== 1) {
+          throw new Error("AudioSequence has invalid number of AudioEvents.");
+        }
+        return sequence.audioEvents[0].buffer;
+      } else {
+        return undefined;
+      }
+    },
+  },
+
   SET_NOTES: {
     mutation(state, { notes, trackId }) {
       state.editingLyricNoteId = undefined;
@@ -1176,6 +1189,36 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  SET_VOLUME_EDIT_DATA: {
+    // ボリューム編集データをセットする。
+    // track.volumeEditDataの長さが足りない場合は、伸長も行う。
+    mutation(state, { volumeArray, startFrame, trackId }) {
+      const track = getOrThrow(state.tracks, trackId);
+      const volumeEditData = track.volumeEditData;
+      const tempData = [...volumeEditData];
+      const endFrame = startFrame + volumeArray.length;
+      if (tempData.length < endFrame) {
+        const valuesToPush = new Array<number>(endFrame - tempData.length).fill(
+          VALUE_INDICATING_NO_DATA,
+        );
+        tempData.push(...valuesToPush);
+      }
+      tempData.splice(startFrame, volumeArray.length, ...volumeArray);
+      track.volumeEditData = tempData;
+    },
+    async action({ actions, mutations }, { volumeArray, startFrame, trackId }) {
+      if (startFrame < 0) {
+        throw new Error("startFrame must be greater than or equal to 0.");
+      }
+      if (!isValidVolumeEditData(volumeArray)) {
+        throw new Error("The volume edit data is invalid.");
+      }
+      mutations.SET_VOLUME_EDIT_DATA({ volumeArray, startFrame, trackId });
+
+      void actions.RENDER();
+    },
+  },
+
   ERASE_PITCH_EDIT_DATA: {
     mutation(state, { startFrame, frameLength, trackId }) {
       const track = getOrThrow(state.tracks, trackId);
@@ -1184,6 +1227,17 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const endFrame = Math.min(startFrame + frameLength, tempData.length);
       tempData.fill(VALUE_INDICATING_NO_DATA, startFrame, endFrame);
       track.pitchEditData = tempData;
+    },
+  },
+
+  ERASE_VOLUME_EDIT_DATA: {
+    mutation(state, { startFrame, frameLength, trackId }) {
+      const track = getOrThrow(state.tracks, trackId);
+      const volumeEditData = track.volumeEditData;
+      const tempData = [...volumeEditData];
+      const endFrame = Math.min(startFrame + frameLength, tempData.length);
+      tempData.fill(VALUE_INDICATING_NO_DATA, startFrame, endFrame);
+      track.volumeEditData = tempData;
     },
   },
 
@@ -1197,6 +1251,366 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       mutations.CLEAR_PITCH_EDIT_DATA({ trackId });
 
       void actions.RENDER();
+    },
+  },
+
+  CLEAR_VOLUME_EDIT_DATA: {
+    // ボリューム編集データをクリア
+    mutation(state, { trackId }) {
+      const track = getOrThrow(state.tracks, trackId);
+      track.volumeEditData = [];
+    },
+    async action({ actions, mutations }, { trackId }) {
+      mutations.CLEAR_VOLUME_EDIT_DATA({ trackId });
+
+      void actions.RENDER();
+    },
+  },
+
+  /**
+   * SongTrackRendererの生成とセットアップ（イベントリスナーの登録）を行う。
+   */
+  CREATE_AND_SETUP_SONG_TRACK_RENDERER: {
+    async action({ state, actions, mutations }) {
+      const onSequenceGeneratedAndRegistered = (
+        phraseKey: PhraseKey,
+        sequenceId: SequenceId,
+      ) => {
+        mutations.SET_PHRASE_SEQUENCE_ID({
+          phraseKey,
+          sequenceId,
+        });
+      };
+
+      const onSequenceDeleted = (phraseKey: PhraseKey) => {
+        mutations.DELETE_PHRASE_SEQUENCE_ID({ phraseKey });
+      };
+
+      /**
+       * `phrasesGenerated` イベントのハンドラ。
+       * フレーズが生成された直後に呼び出される。現状ログ出力のみ。
+       */
+      const onPhrasesGenerated = () => {
+        logger.info("Phrases generated.");
+      };
+
+      /**
+       * `cacheLoaded` イベントのハンドラ。
+       * キャッシュデータが読み込まれた後に呼び出される。
+       * `store.state` を更新し、シーケンスの同期を行う。
+       */
+      const onCacheLoaded = (event: CacheLoadedEvent) => {
+        const newPhrases = new Map<PhraseKey, Phrase>();
+        const newPhraseQueries = new Map<
+          EditorFrameAudioQueryKey,
+          EditorFrameAudioQuery
+        >();
+        const newPhraseSingingPitches = new Map<
+          SingingPitchKey,
+          SingingPitch
+        >();
+        const newPhraseSingingVolumes = new Map<
+          SingingVolumeKey,
+          SingingVolume
+        >();
+        const newPhraseSingingVoices = new Map<SingingVoiceKey, SingingVoice>();
+
+        // イベントで渡された各フレーズを処理
+        for (const [phraseKey, eventPhrase] of event.phrases) {
+          const singerIsNotSet = eventPhrase.singer == undefined;
+          const renderingIsNeeded =
+            eventPhrase.query == undefined ||
+            eventPhrase.singingPitch == undefined ||
+            eventPhrase.singingVolume == undefined ||
+            eventPhrase.singingVoice == undefined;
+
+          // store.state で保持する新しい Phrase オブジェクトを作成
+          const newPhrase: Phrase = {
+            firstRestDuration: eventPhrase.firstRestDuration,
+            notes: eventPhrase.notes,
+            startTime: eventPhrase.startTime,
+            minNonPauseStartFrame: eventPhrase.minNonPauseStartFrame,
+            maxNonPauseEndFrame: eventPhrase.maxNonPauseEndFrame,
+            state: singerIsNotSet
+              ? "SINGER_IS_NOT_SET" // シンガー未設定
+              : renderingIsNeeded
+                ? "WAITING_TO_BE_RENDERED" // レンダリング待ち
+                : "RENDERED", // レンダリング完了 (キャッシュヒット)
+            queryKey: eventPhrase.queryKey,
+            singingPitchKey: eventPhrase.singingPitchKey,
+            singingVolumeKey: eventPhrase.singingVolumeKey,
+            singingVoiceKey: eventPhrase.singingVoiceKey,
+            trackId: eventPhrase.trackId,
+          };
+
+          // フレーズをマップに追加
+          newPhrases.set(phraseKey, newPhrase);
+
+          // キャッシュヒットした各要素を対応するマップに追加
+          if (
+            eventPhrase.queryKey != undefined &&
+            eventPhrase.query != undefined
+          ) {
+            newPhraseQueries.set(eventPhrase.queryKey, eventPhrase.query);
+          }
+          if (
+            eventPhrase.singingPitchKey != undefined &&
+            eventPhrase.singingPitch != undefined
+          ) {
+            newPhraseSingingPitches.set(
+              eventPhrase.singingPitchKey,
+              eventPhrase.singingPitch,
+            );
+          }
+          if (
+            eventPhrase.singingVolumeKey != undefined &&
+            eventPhrase.singingVolume != undefined
+          ) {
+            newPhraseSingingVolumes.set(
+              eventPhrase.singingVolumeKey,
+              eventPhrase.singingVolume,
+            );
+          }
+          if (
+            eventPhrase.singingVoiceKey != undefined &&
+            eventPhrase.singingVoice != undefined
+          ) {
+            newPhraseSingingVoices.set(
+              eventPhrase.singingVoiceKey,
+              eventPhrase.singingVoice,
+            );
+          }
+        }
+
+        // store.state を一括更新
+        mutations.SET_PHRASES({ phrases: newPhrases });
+        mutations.SET_PHRASE_QUERIES({ queries: newPhraseQueries });
+        mutations.SET_PHRASE_SINGING_PITCHES({
+          singingPitches: newPhraseSingingPitches,
+        });
+        mutations.SET_PHRASE_SINGING_VOLUMES({
+          singingVolumes: newPhraseSingingVolumes,
+        });
+        setPhraseSingingVoices(newPhraseSingingVoices);
+
+        // フレーズの状態と再生されるシーケンスの状態を同期させる
+        syncPhraseSequences(
+          state.phrases,
+          phraseSingingVoices,
+          event.snapshot.tempos,
+          event.snapshot.tpqn,
+          {
+            onSequenceGeneratedAndRegistered,
+            onSequenceDeleted,
+          },
+        );
+
+        logger.info("Cache loaded and applied to phrases.");
+      };
+
+      /**
+       * `phraseRenderingStarted` イベントのハンドラ。
+       * 特定のフレーズのレンダリングが開始されたときに呼び出される。
+       * フレーズの状態を 'NOW_RENDERING' に設定する。
+       */
+      const onPhraseRenderingStarted = (event: PhraseRenderingStartedEvent) => {
+        mutations.SET_STATE_TO_PHRASE({
+          phraseKey: event.phraseKey,
+          phraseState: "NOW_RENDERING",
+        });
+
+        logger.info("Phrase rendering started.");
+      };
+
+      /**
+       * `queryGenerationComplete` イベントのハンドラ。
+       * クエリの生成が完了したときに呼び出される。
+       * 生成されたクエリをフレーズと紐づけて `store.state` で保持する。
+       */
+      const onQueryGenerationComplete = (
+        event: QueryGenerationCompleteEvent,
+      ) => {
+        mutations.SET_PHRASE_QUERY({
+          queryKey: event.queryKey,
+          query: event.query,
+        });
+        mutations.SET_QUERY_KEY_TO_PHRASE({
+          phraseKey: event.phraseKey,
+          queryKey: event.queryKey,
+        });
+
+        const phonemes = event.query.phonemes
+          .map((value) => value.phoneme)
+          .join(" ");
+        logger.info(`Generated query. phonemes: ${phonemes}`);
+      };
+
+      /**
+       * `pitchGenerationComplete` イベントのハンドラ。
+       * 歌唱ピッチの生成が完了したときに呼び出される。
+       * 生成された歌唱ピッチをフレーズと紐づけて `store.state` で保持する。
+       */
+      const onPitchGenerationComplete = (
+        event: PitchGenerationCompleteEvent,
+      ) => {
+        mutations.SET_PHRASE_SINGING_PITCH({
+          singingPitchKey: event.singingPitchKey,
+          singingPitch: event.singingPitch,
+        });
+        mutations.SET_SINGING_PITCH_KEY_TO_PHRASE({
+          phraseKey: event.phraseKey,
+          singingPitchKey: event.singingPitchKey,
+        });
+
+        logger.info(`Generated singing pitch.`);
+      };
+
+      /**
+       * `volumeGenerationComplete` イベントのハンドラ。
+       * 歌唱ボリュームの生成が完了したときに呼び出される。
+       * 生成された歌唱ボリュームをフレーズと紐づけて `store.state` で保持する。
+       */
+      const onVolumeGenerationComplete = (
+        event: VolumeGenerationCompleteEvent,
+      ) => {
+        mutations.SET_PHRASE_SINGING_VOLUME({
+          singingVolumeKey: event.singingVolumeKey,
+          singingVolume: event.singingVolume,
+        });
+        mutations.SET_SINGING_VOLUME_KEY_TO_PHRASE({
+          phraseKey: event.phraseKey,
+          singingVolumeKey: event.singingVolumeKey,
+        });
+
+        logger.info(`Generated singing volume.`);
+      };
+
+      /**
+       * `voiceSynthesisComplete` イベントのハンドラ。
+       * 歌声の合成が完了したときに呼び出される。
+       * 合成された歌声をフレーズと紐づけて `phraseSingingVoices` で保持する。
+       */
+      const onVoiceSynthesisComplete = (event: VoiceSynthesisCompleteEvent) => {
+        phraseSingingVoices.set(event.singingVoiceKey, event.singingVoice);
+        mutations.SET_SINGING_VOICE_KEY_TO_PHRASE({
+          phraseKey: event.phraseKey,
+          singingVoiceKey: event.singingVoiceKey,
+        });
+
+        logger.info(`Synthesized singing voice.`);
+      };
+
+      /**
+       * `phraseRenderingComplete` イベントのハンドラ。
+       * 特定のフレーズの全レンダリング工程（クエリ、ピッチ、ボリューム、歌声）が完了したときに呼び出される。
+       * フレーズの状態を 'RENDERED' に設定し、シーケンスの同期を行う。
+       */
+      const onPhraseRenderingComplete = (
+        event: PhraseRenderingCompleteEvent,
+      ) => {
+        const singingVoice = event.phrase.singingVoice;
+        const singingVoiceKey = event.phrase.singingVoiceKey;
+        if (singingVoice == undefined) {
+          throw new Error("singingVoice is undefined.");
+        }
+        if (singingVoiceKey == undefined) {
+          throw new Error("singingVoiceKey is undefined.");
+        }
+
+        mutations.SET_STATE_TO_PHRASE({
+          phraseKey: event.phraseKey,
+          phraseState: "RENDERED",
+        });
+
+        // フレーズの状態と再生されるシーケンスの状態を同期させる
+        syncPhraseSequences(
+          state.phrases,
+          phraseSingingVoices,
+          event.snapshot.tempos,
+          event.snapshot.tpqn,
+          {
+            onSequenceGeneratedAndRegistered,
+            onSequenceDeleted,
+          },
+        );
+
+        logger.info("Phrase rendering complete.");
+      };
+
+      /**
+       * `phraseRenderingError` イベントのハンドラ。
+       * フレーズのレンダリング中にエラーが発生したときに呼び出される。
+       * フレーズの状態を 'COULD_NOT_RENDER' に設定し、エラーログを出力する。
+       */
+      const onPhraseRenderingError = (event: PhraseRenderingErrorEvent) => {
+        mutations.SET_STATE_TO_PHRASE({
+          phraseKey: event.phraseKey,
+          phraseState: "COULD_NOT_RENDER",
+        });
+
+        logger.error("An error occurred while rendering phrase.", event.error);
+      };
+
+      // SongTrackRenderer を作成
+      songTrackRenderer = new SongTrackRenderer({
+        config: {
+          singingTeacherStyleId: StyleId(6000), // TODO: UIで設定できるようにする
+          lastRestDurationSeconds: 0.5,
+          fadeOutDurationSeconds: 0.15,
+          firstRestMinDurationSeconds: 0.12,
+        },
+        engineSongApi: {
+          fetchFrameAudioQuery: async (args) => {
+            return await actions.FETCH_SING_FRAME_AUDIO_QUERY(args);
+          },
+          fetchSingFrameF0: async (args) => {
+            return await actions.FETCH_SING_FRAME_F0(args);
+          },
+          fetchSingFrameVolume: async (args) => {
+            return await actions.FETCH_SING_FRAME_VOLUME(args);
+          },
+          frameSynthesis: async (args) => {
+            return await actions.FRAME_SYNTHESIS(args);
+          },
+        },
+        playheadPositionGetter: () => playheadPosition.value,
+      });
+
+      // イベントリスナーを登録
+      // 各イベントタイプに応じて、上で定義したハンドラ関数を呼び出す
+      songTrackRenderer.addEventListener((event) => {
+        switch (event.type) {
+          case "phrasesGenerated":
+            onPhrasesGenerated();
+            break;
+          case "cacheLoaded":
+            onCacheLoaded(event);
+            break;
+          case "phraseRenderingStarted":
+            onPhraseRenderingStarted(event);
+            break;
+          case "queryGenerationComplete":
+            onQueryGenerationComplete(event);
+            break;
+          case "pitchGenerationComplete":
+            onPitchGenerationComplete(event);
+            break;
+          case "volumeGenerationComplete":
+            onVolumeGenerationComplete(event);
+            break;
+          case "voiceSynthesisComplete":
+            onVoiceSynthesisComplete(event);
+            break;
+          case "phraseRenderingComplete":
+            onPhraseRenderingComplete(event);
+            break;
+          case "phraseRenderingError":
+            onPhraseRenderingError(event);
+            break;
+          default:
+            throw new ExhaustiveError(event);
+        }
+      });
     },
   },
 
@@ -1282,20 +1696,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
-  SET_SEQUENCE_ID_TO_PHRASE: {
+  SET_PHRASE_QUERIES: {
     mutation(
       state,
       {
-        phraseKey,
-        sequenceId,
-      }: {
-        phraseKey: PhraseKey;
-        sequenceId: SequenceId | undefined;
-      },
+        queries,
+      }: { queries: Map<EditorFrameAudioQueryKey, EditorFrameAudioQuery> },
     ) {
-      const phrase = getOrThrow(state.phrases, phraseKey);
-
-      phrase.sequenceId = sequenceId;
+      state.phraseQueries = queries;
     },
   },
 
@@ -1320,6 +1728,17 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  SET_PHRASE_SINGING_PITCHES: {
+    mutation(
+      state,
+      {
+        singingPitches,
+      }: { singingPitches: Map<SingingPitchKey, SingingPitch> },
+    ) {
+      state.phraseSingingPitches = singingPitches;
+    },
+  },
+
   SET_PHRASE_SINGING_PITCH: {
     mutation(
       state,
@@ -1335,6 +1754,17 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   DELETE_PHRASE_SINGING_PITCH: {
     mutation(state, { singingPitchKey }: { singingPitchKey: SingingPitchKey }) {
       state.phraseSingingPitches.delete(singingPitchKey);
+    },
+  },
+
+  SET_PHRASE_SINGING_VOLUMES: {
+    mutation(
+      state,
+      {
+        singingVolumes,
+      }: { singingVolumes: Map<SingingVolumeKey, SingingVolume> },
+    ) {
+      state.phraseSingingVolumes = singingVolumes;
     },
   },
 
@@ -1356,6 +1786,24 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       { singingVolumeKey }: { singingVolumeKey: SingingVolumeKey },
     ) {
       state.phraseSingingVolumes.delete(singingVolumeKey);
+    },
+  },
+
+  SET_PHRASE_SEQUENCE_ID: {
+    mutation(
+      state,
+      {
+        phraseKey,
+        sequenceId,
+      }: { phraseKey: PhraseKey; sequenceId: SequenceId },
+    ) {
+      state.phraseSequenceIds.set(phraseKey, sequenceId);
+    },
+  },
+
+  DELETE_PHRASE_SEQUENCE_ID: {
+    mutation(state, { phraseKey }: { phraseKey: PhraseKey }) {
+      state.phraseSequenceIds.delete(phraseKey);
     },
   },
 
@@ -1426,6 +1874,38 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  SET_SEQUENCER_VOLUME_TOOL: {
+    mutation(state, { sequencerVolumeTool }) {
+      state.sequencerVolumeTool = sequencerVolumeTool;
+    },
+    async action({ mutations }, { sequencerVolumeTool }) {
+      mutations.SET_SEQUENCER_VOLUME_TOOL({ sequencerVolumeTool });
+    },
+  },
+
+  // TODO: これはパラメータパネル内で編集対象を切り替えるためのもの
+  // 最適なUIによっては必要ない場合があり、UIが固まった時点で削除する可能性あり
+  SET_PARAMETER_PANEL_EDIT_TARGET: {
+    mutation(state, { editTarget }: { editTarget: ParameterPanelEditTarget }) {
+      state.parameterPanelEditTarget = editTarget;
+    },
+    async action(
+      { mutations },
+      { editTarget }: { editTarget: ParameterPanelEditTarget },
+    ) {
+      mutations.SET_PARAMETER_PANEL_EDIT_TARGET({ editTarget });
+    },
+  },
+
+  SET_SEQUENCER_VOLUME_VISIBLE: {
+    mutation(state, { sequencerVolumeVisible }) {
+      state.sequencerVolumeVisible = sequencerVolumeVisible;
+    },
+    async action({ mutations }, { sequencerVolumeVisible }) {
+      mutations.SET_SEQUENCER_VOLUME_VISIBLE({ sequencerVolumeVisible });
+    },
+  },
+
   TICK_TO_SECOND: {
     getter: (state) => (position) => {
       return tickToSecond(position, state.tempos, state.tpqn);
@@ -1465,10 +1945,35 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       if (state.nowPlaying) {
         return;
       }
+      if (audioContext == undefined) {
+        throw new Error("audioContext is undefined.");
+      }
       if (!transport) {
         throw new Error("transport is undefined.");
       }
+
+      // TODO: interruptedも考慮する
+      if (audioContext.state === "suspended") {
+        // NOTE: resumeできない場合はエラーが発生する（排他モードで専有中など）
+        await audioContext.resume();
+      }
+
       mutations.SET_PLAYBACK_STATE({ nowPlaying: true });
+
+      // TODO: 以下の処理（ループの設定）は再生開始時に毎回行う必要はないので、
+      //       ソングエディタ初期化時に1回だけ行うようにする
+      // NOTE: 初期化のactionを作った方が良いかも
+      transport.loop = state.isLoopEnabled;
+      transport.loopStartTime = tickToSecond(
+        state.loopStartTick,
+        state.tempos,
+        state.tpqn,
+      );
+      transport.loopEndTime = tickToSecond(
+        state.loopEndTick,
+        state.tempos,
+        state.tpqn,
+      );
 
       transport.start();
       animationTimer.start(() => {
@@ -1680,10 +2185,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
    */
   RENDER: {
     async action({ state, getters, mutations, actions }) {
-      const singingTeacherStyleId = StyleId(6000); // TODO: 設定できるようにする
-      const lastRestDurationSeconds = 0.5; // TODO: 設定できるようにする
-      const fadeOutDurationSeconds = 0.15; // TODO: 設定できるようにする
-
       /**
        * レンダリング中に変更される可能性のあるデータのコピーを作成する。
        */
@@ -1710,941 +2211,34 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         } as const;
       };
 
-      const calcPhraseFirstRestDuration = (
-        prevPhraseLastNote: Note | undefined,
-        phraseFirstNote: Note,
-        phraseFirstRestMinDurationSeconds: number,
-        tempos: Tempo[],
-        tpqn: number,
-      ) => {
-        const quarterNoteDuration = getNoteDuration(4, tpqn);
-        let phraseFirstRestDuration: number | undefined = undefined;
-
-        // 実際のフレーズ先頭の休符の長さを調べる
-        if (prevPhraseLastNote == undefined) {
-          if (phraseFirstNote.position === 0) {
-            // 1小節目の最初から始まっているフレーズの場合は、
-            // とりあえず4分音符の長さをフレーズ先頭の休符の長さにする
-            phraseFirstRestDuration = quarterNoteDuration;
-          } else {
-            phraseFirstRestDuration = phraseFirstNote.position;
-          }
-        } else {
-          const prevPhraseLastNoteEndPos =
-            prevPhraseLastNote.position + prevPhraseLastNote.duration;
-          phraseFirstRestDuration =
-            phraseFirstNote.position - prevPhraseLastNoteEndPos;
+      // SongTrackRendererが未作成の場合は、作成してセットアップを行う
+      if (songTrackRenderer == undefined) {
+        void actions.CREATE_AND_SETUP_SONG_TRACK_RENDERER();
+        if (songTrackRenderer == undefined) {
+          throw new Error("songTrackRenderer is undefined.");
         }
-        // 4分音符の長さ以下にする
-        phraseFirstRestDuration = Math.min(
-          phraseFirstRestDuration,
-          quarterNoteDuration,
-        );
-        // 最小の長さ以上にする
-        phraseFirstRestDuration = Math.max(
-          phraseFirstRestDuration,
-          phraseFirstNote.position -
-            secondToTick(
-              tickToSecond(phraseFirstNote.position, tempos, tpqn) -
-                phraseFirstRestMinDurationSeconds,
-              tempos,
-              tpqn,
-            ),
-        );
-        // 1tick以上にする
-        phraseFirstRestDuration = Math.max(1, phraseFirstRestDuration);
+      }
 
-        return phraseFirstRestDuration;
-      };
-
-      const calculatePhraseStartTime = (
-        phraseFirstRestDuration: number,
-        phraseNotes: Note[],
-        tempos: Tempo[],
-        tpqn: number,
-      ) => {
-        return tickToSecond(
-          phraseNotes[0].position - phraseFirstRestDuration,
-          tempos,
-          tpqn,
-        );
-      };
-
-      const generatePhrases = async (
-        notes: Note[],
-        tempos: Tempo[],
-        tpqn: number,
-        phraseFirstRestMinDurationSeconds: number,
-        trackId: TrackId,
-      ) => {
-        const generatedPhrases = new Map<PhraseKey, Phrase>();
-
-        let phraseNotes: Note[] = [];
-        let prevPhraseLastNote: Note | undefined = undefined;
-
-        for (let i = 0; i < notes.length; i++) {
-          const note = notes[i];
-          const nextNote = notes.at(i + 1);
-          const currentNoteEndPos = note.position + note.duration;
-
-          phraseNotes.push(note);
-
-          // ノートが途切れていたら別のフレーズにする
-          if (
-            nextNote == undefined ||
-            currentNoteEndPos !== nextNote.position
-          ) {
-            const phraseFirstNote = phraseNotes[0];
-            const phraseFirstRestDuration = calcPhraseFirstRestDuration(
-              prevPhraseLastNote,
-              phraseFirstNote,
-              phraseFirstRestMinDurationSeconds,
-              tempos,
-              tpqn,
-            );
-            const phraseStartTime = calculatePhraseStartTime(
-              phraseFirstRestDuration,
-              phraseNotes,
-              tempos,
-              tpqn,
-            );
-            const phraseKey = await calculatePhraseKey({
-              firstRestDuration: phraseFirstRestDuration,
-              notes: phraseNotes,
-              startTime: phraseStartTime,
-              trackId,
-            });
-            generatedPhrases.set(phraseKey, {
-              firstRestDuration: phraseFirstRestDuration,
-              notes: phraseNotes,
-              startTime: phraseStartTime,
-              state: "WAITING_TO_BE_RENDERED",
-              trackId,
-            });
-
-            if (nextNote != undefined) {
-              prevPhraseLastNote = phraseNotes.at(-1);
-              phraseNotes = [];
-            }
-          }
-        }
-        return generatedPhrases;
-      };
-
-      const generateQuerySource = (
-        trackId: TrackId,
-        phraseKey: PhraseKey,
-        snapshot: SnapshotForPhraseRender,
-      ): QuerySource => {
-        const track = getOrThrow(snapshot.tracks, trackId);
-        if (track.singer == undefined) {
-          throw new Error("track.singer is undefined.");
-        }
-        const engineFrameRate = getOrThrow(
-          snapshot.engineFrameRates,
-          track.singer.engineId,
-        );
-        const phrase = getOrThrow(state.phrases, phraseKey);
-        return {
-          engineId: track.singer.engineId,
-          engineFrameRate,
-          tpqn: snapshot.tpqn,
-          tempos: snapshot.tempos,
-          firstRestDuration: phrase.firstRestDuration,
-          notes: phrase.notes,
-          keyRangeAdjustment: track.keyRangeAdjustment,
-        };
-      };
-
-      const fetchQuery = async (
-        engineId: EngineId,
-        engineFrameRate: number,
-        notesForRequestToEngine: NoteForRequestToEngine[],
-      ) => {
-        try {
-          if (!getters.IS_ENGINE_READY(engineId)) {
-            throw new Error("Engine not ready.");
-          }
-          const instance = await actions.INSTANTIATE_ENGINE_CONNECTOR({
-            engineId,
-          });
-          const query = await instance.invoke("singFrameAudioQuery")({
-            score: { notes: notesForRequestToEngine },
-            speaker: singingTeacherStyleId,
-          });
-          const editorQuery: EditorFrameAudioQuery = {
-            ...query,
-            frameRate: engineFrameRate,
-          };
-          return editorQuery;
-        } catch (error) {
-          const lyrics = notesForRequestToEngine
-            .map((value) => value.lyric)
-            .join("");
-          logger.error(
-            `Failed to fetch FrameAudioQuery. Lyrics of score are "${lyrics}".`,
-            error,
-          );
-          throw error;
-        }
-      };
-
-      const generateQuery = async (querySource: QuerySource) => {
-        const notesForRequestToEngine = createNotesForRequestToEngine(
-          querySource.firstRestDuration,
-          lastRestDurationSeconds,
-          querySource.notes,
-          querySource.tempos,
-          querySource.tpqn,
-          querySource.engineFrameRate,
-        );
-
-        shiftKeyOfNotes(
-          notesForRequestToEngine,
-          -querySource.keyRangeAdjustment,
-        );
-
-        const query = await fetchQuery(
-          querySource.engineId,
-          querySource.engineFrameRate,
-          notesForRequestToEngine,
-        );
-
-        shiftPitch(query.f0, querySource.keyRangeAdjustment);
-        return query;
-      };
-
-      const queryGenerationStage: PhraseRenderStage = {
-        id: "queryGeneration",
-        needsExecution: async (
-          trackId: TrackId,
-          phraseKey: PhraseKey,
-          snapshot: SnapshotForPhraseRender,
-        ) => {
-          const track = getOrThrow(snapshot.tracks, trackId);
-          if (track.singer == undefined) {
-            return false;
-          }
-          const phrase = getOrThrow(state.phrases, phraseKey);
-          const phraseQueryKey = phrase.queryKey;
-          const querySource = generateQuerySource(trackId, phraseKey, snapshot);
-          const queryKey = await calculateQueryKey(querySource);
-          return phraseQueryKey == undefined || phraseQueryKey !== queryKey;
-        },
-        deleteExecutionResult: (phraseKey: PhraseKey) => {
-          const phrase = getOrThrow(state.phrases, phraseKey);
-          const phraseQueryKey = phrase.queryKey;
-          if (phraseQueryKey != undefined) {
-            mutations.DELETE_PHRASE_QUERY({ queryKey: phraseQueryKey });
-            mutations.SET_QUERY_KEY_TO_PHRASE({
-              phraseKey,
-              queryKey: undefined,
-            });
-          }
-        },
-        execute: async (
-          trackId: TrackId,
-          phraseKey: PhraseKey,
-          snapshot: SnapshotForPhraseRender,
-        ) => {
-          const querySource = generateQuerySource(trackId, phraseKey, snapshot);
-          const queryKey = await calculateQueryKey(querySource);
-
-          let query = queryCache.get(queryKey);
-          if (query != undefined) {
-            logger.info(`Loaded query from cache.`);
-          } else {
-            query = await generateQuery(querySource);
-            const phonemes = getPhonemes(query);
-            logger.info(`Generated query. phonemes: ${phonemes}`);
-            queryCache.set(queryKey, query);
-          }
-
-          const phrase = getOrThrow(state.phrases, phraseKey);
-          const phraseQueryKey = phrase.queryKey;
-          if (phraseQueryKey != undefined) {
-            throw new Error("The previous query has not been removed.");
-          }
-          mutations.SET_PHRASE_QUERY({ queryKey, query });
-          mutations.SET_QUERY_KEY_TO_PHRASE({ phraseKey, queryKey });
-        },
-      };
-
-      const generateSingingPitchSource = (
-        trackId: TrackId,
-        phraseKey: PhraseKey,
-        snapshot: SnapshotForPhraseRender,
-      ): SingingPitchSource => {
-        const track = getOrThrow(snapshot.tracks, trackId);
-        if (track.singer == undefined) {
-          throw new Error("track.singer is undefined.");
-        }
-        const phrase = getOrThrow(state.phrases, phraseKey);
-        const phraseQueryKey = phrase.queryKey;
-        if (phraseQueryKey == undefined) {
-          throw new Error("phraseQueryKey is undefined.");
-        }
-        const query = getOrThrow(state.phraseQueries, phraseQueryKey);
-        const clonedQuery = cloneWithUnwrapProxy(query);
-        // TODO: 音素タイミングの編集データの適用を行うようにする
-        return {
-          engineId: track.singer.engineId,
-          engineFrameRate: query.frameRate,
-          tpqn: snapshot.tpqn,
-          tempos: snapshot.tempos,
-          firstRestDuration: phrase.firstRestDuration,
-          notes: phrase.notes,
-          keyRangeAdjustment: track.keyRangeAdjustment,
-          queryForPitchGeneration: clonedQuery,
-        };
-      };
-
-      const generateSingingPitch = async (
-        singingPitchSource: SingingPitchSource,
-      ) => {
-        // TODO: ピッチ生成APIに対応する
-        return singingPitchSource.queryForPitchGeneration.f0;
-      };
-
-      const singingPitchGenerationStage: PhraseRenderStage = {
-        id: "singingPitchGeneration",
-        needsExecution: async (
-          trackId: TrackId,
-          phraseKey: PhraseKey,
-          snapshot: SnapshotForPhraseRender,
-        ) => {
-          const track = getOrThrow(snapshot.tracks, trackId);
-          if (track.singer == undefined) {
-            return false;
-          }
-          const phrase = getOrThrow(state.phrases, phraseKey);
-          const phraseSingingPitchKey = phrase.singingPitchKey;
-          const singingPitchSource = generateSingingPitchSource(
-            trackId,
-            phraseKey,
-            snapshot,
-          );
-          const singingPitchKey =
-            await calculateSingingPitchKey(singingPitchSource);
-          return (
-            phraseSingingPitchKey == undefined ||
-            phraseSingingPitchKey !== singingPitchKey
-          );
-        },
-        deleteExecutionResult: (phraseKey: PhraseKey) => {
-          const phrase = getOrThrow(state.phrases, phraseKey);
-          const phraseSingingPitchKey = phrase.singingPitchKey;
-          if (phraseSingingPitchKey != undefined) {
-            mutations.DELETE_PHRASE_SINGING_PITCH({
-              singingPitchKey: phraseSingingPitchKey,
-            });
-            mutations.SET_SINGING_PITCH_KEY_TO_PHRASE({
-              phraseKey,
-              singingPitchKey: undefined,
-            });
-          }
-        },
-        execute: async (
-          trackId: TrackId,
-          phraseKey: PhraseKey,
-          snapshot: SnapshotForPhraseRender,
-        ) => {
-          const singingPitchSource = generateSingingPitchSource(
-            trackId,
-            phraseKey,
-            snapshot,
-          );
-          const singingPitchKey =
-            await calculateSingingPitchKey(singingPitchSource);
-
-          let singingPitch = singingPitchCache.get(singingPitchKey);
-          if (singingPitch != undefined) {
-            logger.info(`Loaded singing pitch from cache.`);
-          } else {
-            singingPitch = await generateSingingPitch(singingPitchSource);
-            logger.info(`Generated singing pitch.`);
-            singingPitchCache.set(singingPitchKey, singingPitch);
-          }
-
-          const phrase = getOrThrow(state.phrases, phraseKey);
-          const phraseSingingPitchKey = phrase.singingPitchKey;
-          if (phraseSingingPitchKey != undefined) {
-            throw new Error("The previous singing pitch has not been removed.");
-          }
-          mutations.SET_PHRASE_SINGING_PITCH({ singingPitchKey, singingPitch });
-          mutations.SET_SINGING_PITCH_KEY_TO_PHRASE({
-            phraseKey,
-            singingPitchKey,
-          });
-        },
-      };
-
-      const generateSingingVolumeSource = (
-        trackId: TrackId,
-        phraseKey: PhraseKey,
-        snapshot: SnapshotForPhraseRender,
-      ): SingingVolumeSource => {
-        const track = getOrThrow(snapshot.tracks, trackId);
-        if (track.singer == undefined) {
-          throw new Error("track.singer is undefined.");
-        }
-        const phrase = getOrThrow(state.phrases, phraseKey);
-        const phraseQueryKey = phrase.queryKey;
-        if (phraseQueryKey == undefined) {
-          throw new Error("phraseQueryKey is undefined.");
-        }
-        // TODO: ピッチ生成ステージで生成したピッチを使用するようにする
-        const query = getOrThrow(state.phraseQueries, phraseQueryKey);
-        const clonedQuery = cloneWithUnwrapProxy(query);
-        applyPitchEdit(
-          clonedQuery,
-          phrase.startTime,
-          track.pitchEditData,
-          snapshot.editorFrameRate,
-        );
-        return {
-          engineId: track.singer.engineId,
-          engineFrameRate: query.frameRate,
-          tpqn: snapshot.tpqn,
-          tempos: snapshot.tempos,
-          firstRestDuration: phrase.firstRestDuration,
-          notes: phrase.notes,
-          keyRangeAdjustment: track.keyRangeAdjustment,
-          volumeRangeAdjustment: track.volumeRangeAdjustment,
-          queryForVolumeGeneration: clonedQuery,
-        };
-      };
-
-      const generateSingingVolume = async (
-        singingVolumeSource: SingingVolumeSource,
-      ) => {
-        const notesForRequestToEngine = createNotesForRequestToEngine(
-          singingVolumeSource.firstRestDuration,
-          lastRestDurationSeconds,
-          singingVolumeSource.notes,
-          singingVolumeSource.tempos,
-          singingVolumeSource.tpqn,
-          singingVolumeSource.engineFrameRate,
-        );
-        const queryForVolumeGeneration =
-          singingVolumeSource.queryForVolumeGeneration;
-
-        shiftKeyOfNotes(
-          notesForRequestToEngine,
-          -singingVolumeSource.keyRangeAdjustment,
-        );
-        shiftPitch(
-          queryForVolumeGeneration.f0,
-          -singingVolumeSource.keyRangeAdjustment,
-        );
-
-        const singingVolume = await actions.FETCH_SING_FRAME_VOLUME({
-          notes: notesForRequestToEngine,
-          query: queryForVolumeGeneration,
-          engineId: singingVolumeSource.engineId,
-          styleId: singingTeacherStyleId,
-        });
-
-        shiftVolume(singingVolume, singingVolumeSource.volumeRangeAdjustment);
-        muteLastPauSection(
-          singingVolume,
-          queryForVolumeGeneration.phonemes,
-          singingVolumeSource.engineFrameRate,
-          fadeOutDurationSeconds,
-        );
-        return singingVolume;
-      };
-
-      const singingVolumeGenerationStage: PhraseRenderStage = {
-        id: "singingVolumeGeneration",
-        needsExecution: async (
-          trackId: TrackId,
-          phraseKey: PhraseKey,
-          snapshot: SnapshotForPhraseRender,
-        ) => {
-          const track = getOrThrow(snapshot.tracks, trackId);
-          if (track.singer == undefined) {
-            return false;
-          }
-          const singingVolumeSource = generateSingingVolumeSource(
-            trackId,
-            phraseKey,
-            snapshot,
-          );
-          const singingVolumeKey =
-            await calculateSingingVolumeKey(singingVolumeSource);
-          const phrase = getOrThrow(state.phrases, phraseKey);
-          const phraseSingingVolumeKey = phrase.singingVolumeKey;
-          return (
-            phraseSingingVolumeKey == undefined ||
-            phraseSingingVolumeKey !== singingVolumeKey
-          );
-        },
-        deleteExecutionResult: (phraseKey: PhraseKey) => {
-          const phrase = getOrThrow(state.phrases, phraseKey);
-          const phraseSingingVolumeKey = phrase.singingVolumeKey;
-          if (phraseSingingVolumeKey != undefined) {
-            mutations.DELETE_PHRASE_SINGING_VOLUME({
-              singingVolumeKey: phraseSingingVolumeKey,
-            });
-            mutations.SET_SINGING_VOLUME_KEY_TO_PHRASE({
-              phraseKey,
-              singingVolumeKey: undefined,
-            });
-          }
-        },
-        execute: async (
-          trackId: TrackId,
-          phraseKey: PhraseKey,
-          snapshot: SnapshotForPhraseRender,
-        ) => {
-          const singingVolumeSource = generateSingingVolumeSource(
-            trackId,
-            phraseKey,
-            snapshot,
-          );
-          const singingVolumeKey =
-            await calculateSingingVolumeKey(singingVolumeSource);
-
-          let singingVolume = singingVolumeCache.get(singingVolumeKey);
-          if (singingVolume != undefined) {
-            logger.info(`Loaded singing volume from cache.`);
-          } else {
-            singingVolume = await generateSingingVolume(singingVolumeSource);
-            logger.info(`Generated singing volume.`);
-            singingVolumeCache.set(singingVolumeKey, singingVolume);
-          }
-
-          const phrase = getOrThrow(state.phrases, phraseKey);
-          const phraseSingingVolumeKey = phrase.singingVolumeKey;
-          if (phraseSingingVolumeKey != undefined) {
-            throw new Error(
-              "The previous singing volume has not been removed.",
-            );
-          }
-          mutations.SET_PHRASE_SINGING_VOLUME({
-            singingVolumeKey,
-            singingVolume,
-          });
-          mutations.SET_SINGING_VOLUME_KEY_TO_PHRASE({
-            phraseKey,
-            singingVolumeKey,
-          });
-        },
-      };
-
-      const generateSingingVoiceSource = (
-        trackId: TrackId,
-        phraseKey: PhraseKey,
-        snapshot: SnapshotForPhraseRender,
-      ): SingingVoiceSource => {
-        const track = getOrThrow(snapshot.tracks, trackId);
-        if (track.singer == undefined) {
-          throw new Error("track.singer is undefined.");
-        }
-        const phrase = getOrThrow(state.phrases, phraseKey);
-        const phraseQueryKey = phrase.queryKey;
-        const phraseSingingVolumeKey = phrase.singingVolumeKey;
-        if (phraseQueryKey == undefined) {
-          throw new Error("phraseQueryKey is undefined.");
-        }
-        if (phraseSingingVolumeKey == undefined) {
-          throw new Error("phraseSingingVolumeKey is undefined.");
-        }
-        const query = getOrThrow(state.phraseQueries, phraseQueryKey);
-        const singingVolume = getOrThrow(
-          state.phraseSingingVolumes,
-          phraseSingingVolumeKey,
-        );
-        const clonedQuery = cloneWithUnwrapProxy(query);
-        const clonedSingingVolume = cloneWithUnwrapProxy(singingVolume);
-        applyPitchEdit(
-          clonedQuery,
-          phrase.startTime,
-          track.pitchEditData,
-          snapshot.editorFrameRate,
-        );
-        clonedQuery.volume = clonedSingingVolume;
-        return {
-          singer: track.singer,
-          queryForSingingVoiceSynthesis: clonedQuery,
-        };
-      };
-
-      const synthesizeSingingVoice = async (
-        singingVoiceSource: SingingVoiceSource,
-      ) => {
-        const singer = singingVoiceSource.singer;
-        const query = singingVoiceSource.queryForSingingVoiceSynthesis;
-
-        if (!getters.IS_ENGINE_READY(singer.engineId)) {
-          throw new Error("Engine not ready.");
-        }
-        try {
-          const instance = await actions.INSTANTIATE_ENGINE_CONNECTOR({
-            engineId: singer.engineId,
-          });
-          return await instance.invoke("frameSynthesis")({
-            frameAudioQuery: query,
-            speaker: singer.styleId,
-          });
-        } catch (error) {
-          const phonemes = query.phonemes
-            .map((value) => value.phoneme)
-            .join(" ");
-          logger.error(
-            `Failed to synthesis. Phonemes are "${phonemes}".`,
-            error,
-          );
-          throw error;
-        }
-      };
-
-      const singingVoiceSynthesisStage: PhraseRenderStage = {
-        id: "singingVoiceSynthesis",
-        needsExecution: async (
-          trackId: TrackId,
-          phraseKey: PhraseKey,
-          snapshot: SnapshotForPhraseRender,
-        ) => {
-          const track = getOrThrow(snapshot.tracks, trackId);
-          if (track.singer == undefined) {
-            return false;
-          }
-          const singingVoiceSource = generateSingingVoiceSource(
-            trackId,
-            phraseKey,
-            snapshot,
-          );
-          const singingVoiceKey =
-            await calculateSingingVoiceKey(singingVoiceSource);
-          const phrase = getOrThrow(state.phrases, phraseKey);
-          const phraseSingingVoiceKey = phrase.singingVoiceKey;
-          return (
-            phraseSingingVoiceKey == undefined ||
-            phraseSingingVoiceKey !== singingVoiceKey
-          );
-        },
-        deleteExecutionResult: (phraseKey: PhraseKey) => {
-          const phrase = getOrThrow(state.phrases, phraseKey);
-          const phraseSingingVoiceKey = phrase.singingVoiceKey;
-          if (phraseSingingVoiceKey != undefined) {
-            phraseSingingVoices.delete(phraseSingingVoiceKey);
-            mutations.SET_SINGING_VOICE_KEY_TO_PHRASE({
-              phraseKey,
-              singingVoiceKey: undefined,
-            });
-          }
-        },
-        execute: async (
-          trackId: TrackId,
-          phraseKey: PhraseKey,
-          snapshot: SnapshotForPhraseRender,
-        ) => {
-          const singingVoiceSource = generateSingingVoiceSource(
-            trackId,
-            phraseKey,
-            snapshot,
-          );
-          const singingVoiceKey =
-            await calculateSingingVoiceKey(singingVoiceSource);
-
-          let singingVoice = singingVoiceCache.get(singingVoiceKey);
-          if (singingVoice != undefined) {
-            logger.info(`Loaded singing voice from cache.`);
-          } else {
-            singingVoice = await synthesizeSingingVoice(singingVoiceSource);
-            logger.info(`Generated singing voice.`);
-            singingVoiceCache.set(singingVoiceKey, singingVoice);
-          }
-
-          const phrase = getOrThrow(state.phrases, phraseKey);
-          const phraseSingingVoiceKey = phrase.singingVoiceKey;
-          if (phraseSingingVoiceKey != undefined) {
-            throw new Error("The previous singing voice has not been removed.");
-          }
-          phraseSingingVoices.set(singingVoiceKey, singingVoice);
-          mutations.SET_SINGING_VOICE_KEY_TO_PHRASE({
-            phraseKey,
-            singingVoiceKey,
-          });
-        },
-      };
-
-      // NOTE: ステージは実行順で保持
-      const stages: readonly PhraseRenderStage[] = [
-        queryGenerationStage,
-        singingPitchGenerationStage,
-        singingVolumeGenerationStage,
-        singingVoiceSynthesisStage,
-      ];
-
-      // NOTE: 型推論でawaitの前か後かが考慮されないので、関数を介して取得する（型がbooleanになるようにする）
-      const startRenderingRequested = () => state.startRenderingRequested;
-      const stopRenderingRequested = () => state.stopRenderingRequested;
-
-      /**
-       * フレーズが持つシーケンスのIDを取得する。
-       * @param phraseKey フレーズのキー
-       * @returns シーケンスID
-       */
-      const getPhraseSequenceId = (phraseKey: PhraseKey) => {
-        return getOrThrow(state.phrases, phraseKey).sequenceId;
-      };
-
-      /**
-       * フレーズが持つ歌声のキーを取得する。
-       * @param phraseKey フレーズのキー
-       * @returns 歌声のキー
-       */
-      const getPhraseSingingVoiceKey = (phraseKey: PhraseKey) => {
-        return getOrThrow(state.phrases, phraseKey).singingVoiceKey;
-      };
-
-      const render = async () => {
-        const firstRestMinDurationSeconds = 0.12;
-        const snapshot = createSnapshot();
-
-        const renderStartStageIds = new Map<PhraseKey, PhraseRenderStageId>();
-
-        // 重なっているノートを削除する
-        const filteredTrackNotes = new Map<TrackId, Note[]>();
-        for (const [trackId, track] of snapshot.tracks) {
-          const overlappingNoteIds = getOrThrow(
-            snapshot.trackOverlappingNoteIds,
-            trackId,
-          );
-          const filteredNotes = track.notes.filter(
-            (value) => !overlappingNoteIds.has(value.id),
-          );
-          filteredTrackNotes.set(trackId, filteredNotes);
-        }
-
-        // ノーツからフレーズを生成する
-        const generatedPhrases = new Map<PhraseKey, Phrase>();
-        for (const trackId of snapshot.tracks.keys()) {
-          const filteredNotes = getOrThrow(filteredTrackNotes, trackId);
-          const phrases = await generatePhrases(
-            filteredNotes,
-            snapshot.tempos,
-            snapshot.tpqn,
-            firstRestMinDurationSeconds,
-            trackId,
-          );
-          for (const [phraseKey, phrase] of phrases) {
-            generatedPhrases.set(phraseKey, phrase);
-          }
-        }
-
-        const mergedPhrases = new Map<PhraseKey, Phrase>();
-        const newlyCreatedPhraseKeys = new Set<PhraseKey>();
-        const disappearedPhraseKeys = new Set<PhraseKey>();
-
-        // 新しく作られたフレーズとstateにある既存のフレーズをマージする
-        // 新しく作られたフレーズと無くなったフレーズのキーのリスト（Set）も作成する
-        for (const phraseKey of state.phrases.keys()) {
-          if (!generatedPhrases.has(phraseKey)) {
-            disappearedPhraseKeys.add(phraseKey);
-          }
-        }
-        for (const [phraseKey, generatedPhrase] of generatedPhrases) {
-          const existingPhrase = state.phrases.get(phraseKey);
-          const isNewlyCreated = existingPhrase == undefined;
-          const phrase = isNewlyCreated
-            ? generatedPhrase
-            : cloneWithUnwrapProxy(existingPhrase);
-
-          mergedPhrases.set(phraseKey, phrase);
-          if (isNewlyCreated) {
-            newlyCreatedPhraseKeys.add(phraseKey);
-          }
-        }
-
-        // 各フレーズのレンダリング開始ステージを決定する
-        // 新しいフレーズの場合は最初からレンダリングする
-        // phrase.stateがCOULD_NOT_RENDERだった場合は最初からレンダリングし直す
-        for (const [phraseKey, phrase] of mergedPhrases) {
-          const trackId = phrase.trackId;
-          const track = getOrThrow(snapshot.tracks, trackId);
-          const isNewlyCreated = newlyCreatedPhraseKeys.has(phraseKey);
-
-          if (track.singer == undefined) {
-            continue;
-          }
-          if (isNewlyCreated || phrase.state === "COULD_NOT_RENDER") {
-            renderStartStageIds.set(phraseKey, stages[0].id);
-          } else {
-            for (const stage of stages) {
-              if (await stage.needsExecution(trackId, phraseKey, snapshot)) {
-                renderStartStageIds.set(phraseKey, stage.id);
-                break;
-              }
-            }
-          }
-        }
-
-        // phrase.stateを更新する
-        for (const [phraseKey, phrase] of mergedPhrases) {
-          const track = getOrThrow(snapshot.tracks, phrase.trackId);
-          if (track.singer == undefined) {
-            phrase.state = "SINGER_IS_NOT_SET";
-          } else {
-            if (renderStartStageIds.has(phraseKey)) {
-              phrase.state = "WAITING_TO_BE_RENDERED";
-            } else {
-              phrase.state = "PLAYABLE";
-            }
-          }
-        }
-
-        // 無くなったフレーズのピッチなどのデータとシーケンスを削除する
-        for (const phraseKey of disappearedPhraseKeys) {
-          const phraseSequenceId = getPhraseSequenceId(phraseKey);
-          if (phraseSequenceId != undefined) {
-            deleteSequence(phraseSequenceId);
-          }
-          for (let i = stages.length - 1; i >= 0; i--) {
-            stages[i].deleteExecutionResult(phraseKey);
-          }
-        }
-
-        // state.phrasesを更新する
-        mutations.SET_PHRASES({ phrases: mergedPhrases });
-
-        logger.info("Phrases updated.");
-
-        // シンガーが設定されていないフレーズとレンダリング未完了のフレーズが
-        // プレビュー音で再生されるようにする
-        for (const [phraseKey, phrase] of state.phrases.entries()) {
-          if (
-            phrase.state === "SINGER_IS_NOT_SET" ||
-            phrase.state === "WAITING_TO_BE_RENDERED"
-          ) {
-            // シーケンスが存在する場合は、シーケンスを削除する
-            // TODO: ピッチを編集したときは行わないようにする
-            const phraseSequenceId = getPhraseSequenceId(phraseKey);
-            if (phraseSequenceId != undefined) {
-              deleteSequence(phraseSequenceId);
-              mutations.SET_SEQUENCE_ID_TO_PHRASE({
-                phraseKey,
-                sequenceId: undefined,
-              });
-            }
-
-            // ノートシーケンスを生成して登録し、プレビュー音が鳴るようにする
-            const sequenceId = SequenceId(uuid4());
-            const noteSequence = generateNoteSequence(
-              phrase.notes,
-              snapshot.tempos,
-              snapshot.tpqn,
-              phrase.trackId,
-            );
-            registerSequence(sequenceId, noteSequence);
-            mutations.SET_SEQUENCE_ID_TO_PHRASE({ phraseKey, sequenceId });
-          }
-        }
-
-        // 各フレーズのレンダリングを行い、レンダリングされた音声が再生されるようにする
-        const phrasesToBeRendered = new Map(
-          [...state.phrases.entries()].filter(([, phrase]) => {
-            return phrase.state === "WAITING_TO_BE_RENDERED";
-          }),
-        );
-        while (phrasesToBeRendered.size > 0) {
-          if (startRenderingRequested() || stopRenderingRequested()) {
-            return;
-          }
-          const [phraseKey, phrase] = selectPriorPhrase(
-            phrasesToBeRendered,
-            playheadPosition.value,
-          );
-          phrasesToBeRendered.delete(phraseKey);
-
-          mutations.SET_STATE_TO_PHRASE({
-            phraseKey,
-            phraseState: "NOW_RENDERING",
-          });
-
-          try {
-            // フレーズのレンダリングを行う
-            const trackId = phrase.trackId;
-            const startStageId = getOrThrow(renderStartStageIds, phraseKey);
-            const startStageIndex = stages.findIndex((value) => {
-              return value.id === startStageId;
-            });
-            if (startStageIndex === -1) {
-              throw new Error("Stage not found.");
-            }
-            for (let i = stages.length - 1; i >= startStageIndex; i--) {
-              stages[i].deleteExecutionResult(phraseKey);
-            }
-            for (let i = startStageIndex; i < stages.length; i++) {
-              await stages[i].execute(trackId, phraseKey, snapshot);
-            }
-
-            // シーケンスが存在する場合、シーケンスを削除する
-            const phraseSequenceId = getPhraseSequenceId(phraseKey);
-            if (phraseSequenceId != undefined) {
-              deleteSequence(phraseSequenceId);
-              mutations.SET_SEQUENCE_ID_TO_PHRASE({
-                phraseKey,
-                sequenceId: undefined,
-              });
-            }
-
-            // オーディオシーケンスを生成して登録する
-            const singingVoiceKey = getPhraseSingingVoiceKey(phraseKey);
-            if (singingVoiceKey == undefined) {
-              throw new Error("singingVoiceKey is undefined.");
-            }
-            const singingVoice = getOrThrow(
-              phraseSingingVoices,
-              singingVoiceKey,
-            );
-            const sequenceId = SequenceId(uuid4());
-            const audioSequence = await generateAudioSequence(
-              phrase.startTime,
-              singingVoice,
-              phrase.trackId,
-            );
-            registerSequence(sequenceId, audioSequence);
-            mutations.SET_SEQUENCE_ID_TO_PHRASE({ phraseKey, sequenceId });
-
-            mutations.SET_STATE_TO_PHRASE({
-              phraseKey,
-              phraseState: "PLAYABLE",
-            });
-          } catch (error) {
-            mutations.SET_STATE_TO_PHRASE({
-              phraseKey,
-              phraseState: "COULD_NOT_RENDER",
-            });
-            // とりあえずエラーはロギングしてcontinueする
-            // NOTE: ほとんどは歌詞のエラー
-            // FIXME: 歌詞以外のエラーの場合はthrowして、エラーダイアログを表示するようにする
-            logger.error("An error occurred while rendering a phrase.", error);
-            continue;
-          }
-        }
-      };
-
+      // レンダリングの開始（レンダリング中の場合は再スタート）を要求する
       mutations.SET_START_RENDERING_REQUESTED({
         startRenderingRequested: true,
       });
-      if (state.nowRendering) {
+
+      // レンダリング中の場合は、レンダリングの中断を要求して終了する
+      if (songTrackRenderer.isRendering) {
+        songTrackRenderer.requestRenderingInterruption();
         return;
       }
 
+      // レンダリングループを実行する
       mutations.SET_NOW_RENDERING({ nowRendering: true });
       try {
-        while (startRenderingRequested()) {
+        while (state.startRenderingRequested && !state.stopRenderingRequested) {
           mutations.SET_START_RENDERING_REQUESTED({
             startRenderingRequested: false,
           });
-          await render();
-          if (stopRenderingRequested()) {
-            break;
-          }
+          const snapshot = createSnapshot();
+          await songTrackRenderer.render(snapshot);
         }
       } catch (error) {
         logger.error("render error", error);
@@ -2664,19 +2258,67 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   STOP_RENDERING: {
     action: createUILockAction(async ({ state, mutations }) => {
       if (state.nowRendering) {
+        if (songTrackRenderer == undefined) {
+          throw new Error("songTrackRenderer is undefined.");
+        }
+
         logger.info("Waiting for rendering to stop...");
+
         mutations.SET_STOP_RENDERING_REQUESTED({
           stopRenderingRequested: true,
         });
+        if (songTrackRenderer.isRendering) {
+          songTrackRenderer.requestRenderingInterruption();
+        }
+
         await createPromiseThatResolvesWhen(() => !state.nowRendering);
+
         logger.info("Rendering stopped.");
       }
     }),
   },
 
-  FETCH_SING_FRAME_VOLUME: {
+  FETCH_SING_FRAME_AUDIO_QUERY: {
     async action(
-      { actions },
+      { getters, actions },
+      {
+        notes,
+        engineFrameRate,
+        engineId,
+        styleId,
+      }: {
+        notes: NoteForRequestToEngine[];
+        engineFrameRate: number;
+        engineId: EngineId;
+        styleId: StyleId;
+      },
+    ) {
+      try {
+        if (!getters.IS_ENGINE_READY(engineId)) {
+          throw new Error("Engine not ready.");
+        }
+        const instance = await actions.INSTANTIATE_ENGINE_CONNECTOR({
+          engineId,
+        });
+        const query = await instance.invoke("singFrameAudioQuery")({
+          score: { notes },
+          speaker: styleId,
+        });
+        return { ...query, frameRate: engineFrameRate };
+      } catch (error) {
+        const lyrics = notes.map((value) => value.lyric).join("");
+        logger.error(
+          `Failed to fetch FrameAudioQuery. Lyrics of score are "${lyrics}".`,
+          error,
+        );
+        throw error;
+      }
+    },
+  },
+
+  FETCH_SING_FRAME_F0: {
+    async action(
+      { getters, actions },
       {
         notes,
         query,
@@ -2689,18 +2331,107 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         styleId: StyleId;
       },
     ) {
-      const instance = await actions.INSTANTIATE_ENGINE_CONNECTOR({
-        engineId,
-      });
-      return await instance.invoke("singFrameVolume")({
-        bodySingFrameVolumeSingFrameVolumePost: {
-          score: {
-            notes,
+      try {
+        if (!getters.IS_ENGINE_READY(engineId)) {
+          throw new Error("Engine not ready.");
+        }
+        const instance = await actions.INSTANTIATE_ENGINE_CONNECTOR({
+          engineId,
+        });
+        return await instance.invoke("singFrameF0")({
+          bodySingFrameF0SingFrameF0Post: {
+            score: {
+              notes,
+            },
+            frameAudioQuery: query,
           },
+          speaker: styleId,
+        });
+      } catch (error) {
+        const lyrics = notes.map((value) => value.lyric).join("");
+        logger.error(
+          `Failed to fetch sing frame f0. Lyrics of score are "${lyrics}".`,
+          error,
+        );
+        throw error;
+      }
+    },
+  },
+
+  FETCH_SING_FRAME_VOLUME: {
+    async action(
+      { getters, actions },
+      {
+        notes,
+        query,
+        engineId,
+        styleId,
+      }: {
+        notes: NoteForRequestToEngine[];
+        query: EditorFrameAudioQuery;
+        engineId: EngineId;
+        styleId: StyleId;
+      },
+    ) {
+      try {
+        if (!getters.IS_ENGINE_READY(engineId)) {
+          throw new Error("Engine not ready.");
+        }
+        const instance = await actions.INSTANTIATE_ENGINE_CONNECTOR({
+          engineId,
+        });
+        return await instance.invoke("singFrameVolume")({
+          bodySingFrameVolumeSingFrameVolumePost: {
+            score: {
+              notes,
+            },
+            frameAudioQuery: query,
+          },
+          speaker: styleId,
+        });
+      } catch (error) {
+        const lyrics = notes.map((value) => value.lyric).join("");
+        logger.error(
+          `Failed to fetch sing frame volume. Lyrics of score are "${lyrics}".`,
+          error,
+        );
+        throw error;
+      }
+    },
+  },
+
+  FRAME_SYNTHESIS: {
+    async action(
+      { getters, actions },
+      {
+        query,
+        engineId,
+        styleId,
+      }: {
+        query: EditorFrameAudioQuery;
+        engineId: EngineId;
+        styleId: StyleId;
+      },
+    ) {
+      if (!getters.IS_ENGINE_READY(engineId)) {
+        throw new Error("Engine not ready.");
+      }
+      try {
+        const instance = await actions.INSTANTIATE_ENGINE_CONNECTOR({
+          engineId,
+        });
+        return await instance.invoke("frameSynthesis")({
           frameAudioQuery: query,
-        },
-        speaker: styleId,
-      });
+          speaker: styleId,
+        });
+      } catch (error) {
+        const phonemes = query.phonemes.map((value) => value.phoneme).join(" ");
+        logger.error(
+          `Failed to synthesize. Phonemes are "${phonemes}".`,
+          error,
+        );
+        throw error;
+      }
     },
   },
 
@@ -2779,7 +2510,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             phraseSingingVoices,
           );
 
-          const fileData = generateWavFileData(audioBuffer);
+          const fileData = generateWavFileData(audioBuffer, setting.format);
 
           const result = await actions.EXPORT_FILE({
             filePath,
@@ -2873,10 +2604,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
                   ([, phrase]) => phrase.trackId === trackId,
                 ),
               ),
-              singingVoiceCache,
+              phraseSingingVoices,
             );
 
-            const fileData = generateWavFileData(audioBuffer);
+            const fileData = generateWavFileData(audioBuffer, setting.format);
 
             const result = await actions.EXPORT_FILE({
               filePath,
@@ -2912,18 +2643,55 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   EXPORT_LABEL_FILES: {
     action: createUILockAction(
       async ({ actions, mutations, state }, { dirPath }) => {
+        /**
+         * 連続するpauseを一つにまとめる。
+         */
+        const mergeConsecutivePauses = (labels: PhonemeTimingLabel[]) => {
+          const mergedLabels: PhonemeTimingLabel[] = [];
+          let accumulatedPause: PhonemeTimingLabel | undefined = undefined;
+
+          for (const label of labels) {
+            if (label.phoneme === "pau") {
+              if (accumulatedPause == undefined) {
+                accumulatedPause = { ...label };
+              } else {
+                accumulatedPause.endTime = label.endTime;
+              }
+            } else {
+              if (accumulatedPause != undefined) {
+                mergedLabels.push(accumulatedPause);
+                accumulatedPause = undefined;
+              }
+              mergedLabels.push(label);
+            }
+          }
+          if (accumulatedPause != undefined) {
+            mergedLabels.push(accumulatedPause);
+          }
+
+          return mergedLabels;
+        };
+
+        /**
+         * 全トラックの音素タイミングをlabファイル形式でエクスポートする。
+         */
         const exportLabelFile = async () => {
+          // 音声が再生中であれば、エクスポート前に停止する
           if (state.nowPlaying) {
             await actions.SING_STOP_AUDIO();
           }
 
+          // 保存先ディレクトリを決定する
           if (state.savingSetting.fixedExportEnabled) {
+            // 保存先が固定されている場合は、設定済みのディレクトリパスを使用する
             dirPath = state.savingSetting.fixedExportDir;
           } else {
+            // 保存先が固定されていない場合、保存先のディレクトリを選択するダイアログを表示する
             dirPath ??= await window.backend.showSaveDirectoryDialog({
               title: "labファイルを保存",
             });
           }
+          // ディレクトリが選択されなかった（キャンセルされた）場合は、全トラックをキャンセル扱いとして処理を中断する
           if (!dirPath) {
             return createArray(
               state.tracks.size,
@@ -2931,10 +2699,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             );
           }
 
+          // レンダリング処理が実行中の場合、終了するかキャンセルされるまで待機する
           if (state.nowRendering) {
             await createPromiseThatResolvesWhen(() => {
               return !state.nowRendering || state.cancellationOfExportRequested;
             });
+            // 待機中にエクスポートがキャンセルされた場合は、全トラックをキャンセル扱いとして処理を中断する
             if (state.cancellationOfExportRequested) {
               return createArray(
                 state.tracks.size,
@@ -2945,110 +2715,119 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
 
           const results: SaveResultObject[] = [];
 
-          for (const trackId of state.tracks.keys()) {
-            const track = getOrThrow(state.tracks, trackId);
+          // トラックごとに音素タイミングの計算とラベルファイルの書き出しを行う
+          for (const [trackId, track] of state.tracks) {
+            // 歌手が設定されていないトラックはスキップする
             if (track.singer == undefined) {
               continue;
             }
 
+            // エクスポートするファイルパスを生成する
             const filePath = await actions.GENERATE_FILE_PATH_FOR_TRACK_EXPORT({
               trackId,
               directoryPath: dirPath,
               extension: "lab",
             });
 
-            const frameRate = state.editorFrameRate;
+            // トラックに属する有効なフレーズ（クエリを持つフレーズ）を取得し、開始時刻でソートする
             const phrases = [...state.phrases.values()]
               .filter((value) => value.trackId === trackId)
               .filter((value) => value.queryKey != undefined)
               .toSorted((a, b) => a.startTime - b.startTime);
 
+            // フレーズが存在しないトラックはスキップする
             if (phrases.length === 0) {
               continue;
             }
 
-            const phraseQueries = phrases.map((value) => {
-              const phraseQuery =
-                value.queryKey != undefined
-                  ? state.phraseQueries.get(value.queryKey)
-                  : undefined;
-              if (phraseQuery == undefined) {
-                throw new Error("phraseQuery is undefined.");
+            let phonemeTimingLabels: PhonemeTimingLabel[] = [];
+
+            // フレーズごとに音素タイミングを計算し、トラック全体の音素ラベル配列を生成する
+            for (const phrase of phrases) {
+              if (phrase.queryKey == undefined) {
+                throw new UnreachableError("phraseQuery is undefined.");
               }
-              return phraseQuery;
-            });
-            const phraseStartTimes = phrases.map((value) => value.startTime);
+              const query = getOrThrow(state.phraseQueries, phrase.queryKey);
 
-            for (const phraseQuery of phraseQueries) {
-              // フレーズのクエリのフレームレートとエディターのフレームレートが一致しない場合はエラー
-              // TODO: 補間するようにする
-              if (phraseQuery.frameRate != frameRate) {
-                throw new Error(
-                  "The frame rate between the phrase query and the editor does not match.",
-                );
+              // 音素タイミング編集の適用と調整を行う
+              const phonemeTimings = toPhonemeTimings(query.phonemes);
+              applyPhonemeTimingEdit(
+                phonemeTimings,
+                track.phonemeTimingEditData,
+                query.frameRate,
+              );
+              adjustPhonemeTimings(
+                phonemeTimings,
+                phrase.minNonPauseStartFrame,
+                phrase.maxNonPauseEndFrame,
+              );
+              const phonemes = toPhonemes(phonemeTimings);
+
+              // 音素情報からラベルを生成する
+              let phonemeStartFrame = 0;
+              let phonemeStartTime = phrase.startTime;
+              for (const phoneme of phonemes) {
+                const phonemeEndTime =
+                  phrase.startTime +
+                  (phonemeStartFrame + phoneme.frameLength) / query.frameRate;
+
+                phonemeTimingLabels.push({
+                  startTime: phonemeStartTime,
+                  endTime: phonemeEndTime,
+                  phoneme: phoneme.phoneme,
+                });
+
+                phonemeStartFrame += phoneme.frameLength;
+                phonemeStartTime = phonemeEndTime;
               }
             }
 
-            const phraseStartFrames = calcPhraseStartFrames(
-              phraseStartTimes,
-              frameRate,
-            );
-            const phraseEndFrames = calcPhraseEndFrames(
-              phraseStartFrames,
-              phraseQueries,
-            );
+            // 連続するpauを一つにまとめる
+            phonemeTimingLabels = mergeConsecutivePauses(phonemeTimingLabels);
 
-            const phrasePhonemeSequences = phraseQueries.map((query) => {
-              return query.phonemes;
-            });
-            const entirePhonemeTimings = toEntirePhonemeTimings(
-              phrasePhonemeSequences,
-              phraseStartFrames,
-            );
+            // 音素長が負の値にならないように前方から調整する
+            // NOTE: ほとんど起こらないが、pauの長さが負になる場合があるため、その対策
+            for (let i = 0; i < phonemeTimingLabels.length; i++) {
+              const phonemeTimingLabel = phonemeTimingLabels[i];
+              const nextPhonemeTimingLabel = getNext(phonemeTimingLabels, i);
 
-            // TODO: 音素タイミング編集データを取得して適用するようにする
-
-            adjustPhonemeTimingsAndPhraseEndFrames(
-              entirePhonemeTimings,
-              phraseStartFrames,
-              phraseEndFrames,
-            );
-
-            // 一番最初のpauseの開始フレームの値が0より大きい場合は0にする
-            if (entirePhonemeTimings.length === 0) {
-              throw new Error("entirePhonemeTimings.length is 0.");
-            }
-            if (entirePhonemeTimings[0].startFrame > 0) {
-              entirePhonemeTimings[0].startFrame = 0;
+              if (phonemeTimingLabel.endTime < phonemeTimingLabel.startTime) {
+                phonemeTimingLabel.endTime = phonemeTimingLabel.startTime;
+              }
+              if (nextPhonemeTimingLabel != undefined) {
+                nextPhonemeTimingLabel.startTime = phonemeTimingLabel.endTime;
+              }
             }
 
-            // 音素の開始・終了フレームの値が0より小さい場合は0にする
+            // 一番最初のpauseの開始時刻の値が0より大きい場合は0にする
+            if (phonemeTimingLabels.length === 0) {
+              throw new UnreachableError("phonemeTimingLabels.length is 0.");
+            }
+            if (phonemeTimingLabels[0].startTime > 0) {
+              phonemeTimingLabels[0].startTime = 0;
+            }
+
+            // 音素の開始時刻・終了時刻の値が0より小さい場合は0にする
             // （マイナス時間のところを書き出さないようにするため）
-            for (const phonemeTiming of entirePhonemeTimings) {
-              if (phonemeTiming.startFrame < 0) {
-                phonemeTiming.startFrame = 0;
+            for (const phonemeTimingLabel of phonemeTimingLabels) {
+              if (phonemeTimingLabel.startTime < 0) {
+                phonemeTimingLabel.startTime = 0;
               }
-              if (phonemeTiming.endFrame < 0) {
-                phonemeTiming.endFrame = 0;
+              if (phonemeTimingLabel.endTime < 0) {
+                phonemeTimingLabel.endTime = 0;
               }
             }
 
-            // フレーム数が1未満の音素を除く
-            const filteredEntirePhonemeTimings = entirePhonemeTimings.filter(
-              (value) => {
-                const frameLength = value.endFrame - value.startFrame;
-                return frameLength >= 1;
-              },
+            // 音素長が0の音素ラベルを除く
+            phonemeTimingLabels = phonemeTimingLabels.filter(
+              (value) => value.endTime - value.startTime > 0,
             );
 
-            const entirePhonemes = phonemeTimingsToPhonemes(
-              filteredEntirePhonemeTimings,
-            );
-            const labFileData = await generateLabelFileDataFromFramePhonemes(
-              entirePhonemes,
-              frameRate,
-            );
+            // ラベルファイルデータを生成する
+            const labFileData =
+              await generateLabelFileData(phonemeTimingLabels);
 
+            // ラベルファイルを書き出す
             try {
               await window.backend
                 .writeFile({
@@ -3230,7 +3009,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   COMMAND_PASTE_NOTES_FROM_CLIPBOARD: {
-    async action({ mutations, state, getters, actions }) {
+    async action({ mutations, getters, actions }) {
       // クリップボードからテキストを読み込む
       let clipboardText;
       try {
@@ -3254,29 +3033,38 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         });
       }
 
-      // パースしたJSONのノートの位置を現在の再生位置に合わせてクオンタイズして貼り付ける
+      // パースしたJSONのノートの位置を現在の再生位置に合わせて貼り付ける
       const currentPlayheadPosition = getters.PLAYHEAD_POSITION;
       const firstNotePosition = notes[0].position;
-      // TODO: クオンタイズの処理を共通化する
-      const snapType = state.sequencerSnapType;
-      const tpqn = state.tpqn;
-      const snapTicks = getNoteDuration(snapType, tpqn);
       const notesToPaste: Note[] = notes.map((note) => {
         // 新しい位置を現在の再生位置に合わせて計算する
-        const pasteOriginPos =
-          Number(note.position) - firstNotePosition + currentPlayheadPosition;
-        // クオンタイズ
-        const quantizedPastePos =
-          Math.round(pasteOriginPos / snapTicks) * snapTicks;
+        const pastePos = Math.round(
+          Number(note.position) - firstNotePosition + currentPlayheadPosition,
+        );
         return {
           id: NoteId(uuid4()),
-          position: quantizedPastePos,
+          position: pastePos,
           duration: Number(note.duration),
           noteNumber: Number(note.noteNumber),
           lyric: String(note.lyric),
         };
       });
       const pastedNoteIds = notesToPaste.map((note) => note.id);
+
+      const existingNoteIds = getters.ALL_NOTE_IDS;
+      const hasDuplicateNoteIds = notesToPaste.some((note) =>
+        existingNoteIds.has(note.id),
+      );
+      if (hasDuplicateNoteIds) {
+        throw new Error("Failed to paste notes: duplicate note IDs detected.");
+      }
+      const hasInvalidNotes = notesToPaste.some((note) => !isValidNote(note));
+      if (hasInvalidNotes) {
+        throw new Error(
+          "Failed to paste notes: invalid note properties detected.",
+        );
+      }
+
       // ノートを追加してレンダリングする
       mutations.COMMAND_ADD_NOTES({
         notes: notesToPaste,
@@ -3428,6 +3216,63 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         state.tpqn,
       );
       return Math.max(1, lastNoteEndTime + 1);
+    },
+  },
+
+  SET_LOOP_ENABLED: {
+    mutation(state, { isLoopEnabled }) {
+      state.isLoopEnabled = isLoopEnabled;
+    },
+    async action({ mutations }, { isLoopEnabled }) {
+      if (!transport) {
+        throw new Error("transport is undefined");
+      }
+      mutations.SET_LOOP_ENABLED({ isLoopEnabled });
+      transport.loop = isLoopEnabled;
+    },
+  },
+
+  SET_LOOP_RANGE: {
+    mutation(state, { loopStartTick, loopEndTick }) {
+      state.loopStartTick = loopStartTick;
+      state.loopEndTick = loopEndTick;
+    },
+    async action({ state, mutations }, { loopStartTick, loopEndTick }) {
+      if (!transport) {
+        throw new Error("transport is undefined");
+      }
+
+      if (!isValidLoopRange(loopStartTick, loopEndTick)) {
+        throw new Error("The loop range is invalid.");
+      }
+
+      mutations.SET_LOOP_RANGE({ loopStartTick, loopEndTick });
+
+      transport.loopStartTime = tickToSecond(
+        loopStartTick,
+        state.tempos,
+        state.tpqn,
+      );
+      transport.loopEndTime = tickToSecond(
+        loopEndTick,
+        state.tempos,
+        state.tpqn,
+      );
+    },
+  },
+
+  CLEAR_LOOP_RANGE: {
+    async action({ actions }) {
+      // ループ範囲をSET_LOOP_RANGEで0指定
+      // transportも
+      void actions.SET_LOOP_RANGE({
+        loopStartTick: 0,
+        loopEndTick: 0,
+      });
+      // ループ範囲をクリアする際はループも無効にする
+      return actions.SET_LOOP_ENABLED({
+        isLoopEnabled: false,
+      });
     },
   },
 
@@ -3754,6 +3599,30 @@ export const singingCommandStore = transformCommandStore(
         void actions.RENDER();
       },
     },
+    COMMAND_SET_VOLUME_EDIT_DATA: {
+      mutation(draft, { volumeArray, startFrame, trackId }) {
+        singingStore.mutations.SET_VOLUME_EDIT_DATA(draft, {
+          volumeArray,
+          startFrame,
+          trackId,
+        });
+      },
+      action({ mutations, actions }, { volumeArray, startFrame, trackId }) {
+        if (startFrame < 0) {
+          throw new Error("startFrame must be greater than or equal to 0.");
+        }
+        if (!isValidVolumeEditData(volumeArray)) {
+          throw new Error("The volume edit data is invalid.");
+        }
+        mutations.COMMAND_SET_VOLUME_EDIT_DATA({
+          volumeArray,
+          startFrame,
+          trackId,
+        });
+
+        void actions.RENDER();
+      },
+    },
     COMMAND_ERASE_PITCH_EDIT_DATA: {
       mutation(draft, { startFrame, frameLength, trackId }) {
         singingStore.mutations.ERASE_PITCH_EDIT_DATA(draft, {
@@ -3770,6 +3639,30 @@ export const singingCommandStore = transformCommandStore(
           throw new Error("frameLength must be at least 1.");
         }
         mutations.COMMAND_ERASE_PITCH_EDIT_DATA({
+          startFrame,
+          frameLength,
+          trackId,
+        });
+
+        void actions.RENDER();
+      },
+    },
+    COMMAND_ERASE_VOLUME_EDIT_DATA: {
+      mutation(draft, { startFrame, frameLength, trackId }) {
+        singingStore.mutations.ERASE_VOLUME_EDIT_DATA(draft, {
+          startFrame,
+          frameLength,
+          trackId,
+        });
+      },
+      action({ mutations, actions }, { startFrame, frameLength, trackId }) {
+        if (startFrame < 0) {
+          throw new Error("startFrame must be greater than or equal to 0.");
+        }
+        if (frameLength < 1) {
+          throw new Error("frameLength must be at least 1.");
+        }
+        mutations.COMMAND_ERASE_VOLUME_EDIT_DATA({
           startFrame,
           frameLength,
           trackId,
@@ -3964,19 +3857,18 @@ export const singingCommandStore = transformCommandStore(
             throw new Error("TPQN does not match. Must be converted.");
           }
 
-          const selectedTrack = getOrThrow(
-            state.tracks,
-            getters.SELECTED_TRACK_ID,
+          const selectedTrack = cloneWithUnwrapProxy(
+            getOrThrow(state.tracks, getters.SELECTED_TRACK_ID),
           );
 
-          const filteredTracks = trackIndexes.map((trackIndex) => {
-            const track = tracks[trackIndex];
-            if (!track) {
+          const filteredTracks = trackIndexes.map((trackIndex): Track => {
+            const importedTrack = tracks[trackIndex];
+            if (!importedTrack) {
               throw new Error("Track not found.");
             }
             return {
-              ...toRaw(selectedTrack),
-              notes: track.notes.map((note) => ({
+              ...selectedTrack,
+              notes: importedTrack.notes.map((note) => ({
                 ...note,
                 id: NoteId(uuid4()),
               })),
@@ -4007,18 +3899,22 @@ export const singingCommandStore = transformCommandStore(
           }
 
           const filteredTracks = trackIndexes.map((trackIndex) => {
-            const track = tracks[trackOrder[trackIndex]];
-            if (!track) {
+            const importedTrack = cloneWithUnwrapProxy(
+              tracks[trackOrder[trackIndex]],
+            );
+            if (!importedTrack) {
               throw new Error("Track not found.");
             }
-            return {
-              ...toRaw(track),
-              notes: track.notes.map((note) => ({
-                ...note,
-                id: NoteId(uuid4()),
-              })),
-            };
+            return toEditorTrack(importedTrack);
           });
+
+          // インポートなので、ノートIDは新しく振り直す
+          for (const track of filteredTracks) {
+            track.notes = track.notes.map((note) => ({
+              ...note,
+              id: NoteId(uuid4()),
+            }));
+          }
 
           await actions.COMMAND_IMPORT_TRACKS({
             tpqn,

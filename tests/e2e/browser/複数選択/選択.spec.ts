@@ -1,5 +1,5 @@
 import { test, expect, Page } from "@playwright/test";
-import { toggleSetting, navigateToTalk, gotoHome } from "../../navigators";
+import { navigateToTalk, gotoHome } from "../../navigators";
 import { ctrlLike, addAudioCells } from "./utils";
 
 test.beforeEach(async ({ page }) => {
@@ -7,7 +7,6 @@ test.beforeEach(async ({ page }) => {
 
   await navigateToTalk(page);
   await page.waitForTimeout(100);
-  await toggleSetting(page, "複数選択");
 
   await addAudioCells(page, 3);
 });

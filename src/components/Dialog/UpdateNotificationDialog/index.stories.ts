@@ -1,6 +1,6 @@
-import { userEvent, within, expect, fn } from "@storybook/test";
+import { userEvent, within, expect, fn } from "storybook/test";
 
-import { Meta, StoryObj } from "@storybook/vue3";
+import { Meta, StoryObj } from "@storybook/vue3-vite";
 import Presentation from "./Presentation.vue";
 
 const meta: Meta<typeof Presentation> = {

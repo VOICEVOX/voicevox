@@ -19,7 +19,7 @@
     </QBadge>
     <!-- NOTE: QTooltipをQSlider内にしたいがquasarが未対応っぽいので兄弟に -->
     <QTooltip
-      v-if="previewSlider.qSliderProps.disable.value"
+      v-if="disable"
       :delay="500"
       transitionShow="jump-up"
       transitionHide="jump-down"

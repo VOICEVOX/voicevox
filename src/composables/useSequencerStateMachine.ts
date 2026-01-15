@@ -1,4 +1,4 @@
-import { computed, ref, watch } from "vue";
+import { computed, ComputedRef, ref, watch } from "vue";
 import { useCommandOrControlKey, useShiftKey } from "./useModifierKey";
 import {
   ComputedRefs,
@@ -6,16 +6,26 @@ import {
   Input,
   PartialStore,
   Refs,
+  ViewportInfo,
 } from "@/sing/sequencerStateMachine/common";
-import { getNoteDuration } from "@/sing/domain";
+import { getNoteDuration } from "@/sing/music";
 import { createSequencerStateMachine } from "@/sing/sequencerStateMachine";
 import { ExhaustiveError } from "@/type/utility";
 
-export const useSequencerStateMachine = (store: PartialStore) => {
+export const useSequencerStateMachine = (args: {
+  store: PartialStore;
+  viewportInfo: ComputedRef<ViewportInfo>;
+}) => {
+  const store = args.store;
+  const viewportInfo = args.viewportInfo;
+
   const isShiftKeyDown = useShiftKey();
   const isCommandOrCtrlKeyDown = useCommandOrControlKey();
 
   const computedRefs: ComputedRefs = {
+    viewportInfo,
+    tpqn: computed(() => store.state.tpqn),
+    tempos: computed(() => store.state.tempos),
     snapTicks: computed(() =>
       getNoteDuration(store.state.sequencerSnapType, store.state.tpqn),
     ),
@@ -37,6 +47,7 @@ export const useSequencerStateMachine = (store: PartialStore) => {
     previewPitchEdit: ref(undefined),
     cursorState: ref("UNSET"),
     guideLineTicks: ref(0),
+    enableAutoScrollOnEdge: ref(false),
   };
 
   const idleStateId = computed((): IdleStateId => {
@@ -88,5 +99,6 @@ export const useSequencerStateMachine = (store: PartialStore) => {
     previewPitchEdit: computed(() => refs.previewPitchEdit.value),
     cursorState: computed(() => refs.cursorState.value),
     guideLineTicks: computed(() => refs.guideLineTicks.value),
+    enableAutoScrollOnEdge: computed(() => refs.enableAutoScrollOnEdge.value),
   };
 };

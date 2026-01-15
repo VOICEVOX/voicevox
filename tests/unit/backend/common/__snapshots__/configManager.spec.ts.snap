@@ -14,8 +14,10 @@ exports[`0.13.0からマイグレーションできる 1`] = `
   "defaultPresetKeys": {},
   "defaultStyleIds": [],
   "editorFont": "default",
+  "enableKatakanaEnglish": true,
   "enableMemoNotation": false,
   "enableMultiEngine": false,
+  "enableMultiSelect": true,
   "enablePreset": false,
   "enableRubyNotation": false,
   "engineSettings": {
@@ -27,7 +29,6 @@ exports[`0.13.0からマイグレーションできる 1`] = `
   "experimentalSetting": {
     "enableInterrogativeUpspeak": false,
     "enableMorphing": false,
-    "enableMultiSelect": false,
     "shouldKeepTuningOnTextChange": false,
     "showParameterPanel": false,
   },
@@ -224,6 +225,7 @@ exports[`0.13.0からマイグレーションできる 1`] = `
   },
   "shouldApplyDefaultPresetOnVoiceChanged": false,
   "showAddAudioItemButton": true,
+  "showAudioLength": false,
   "showSingCharacterPortrait": true,
   "showTextLineNumber": false,
   "splitTextWhenPaste": "PERIOD_AND_NEW_LINE",

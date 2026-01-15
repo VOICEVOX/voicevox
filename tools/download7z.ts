@@ -1,11 +1,11 @@
 /**
  * OSに合った7-Zipのバイナリとライセンスをダウンロードするスクリプト。
  */
-import { spawnSync } from "child_process";
-import fs from "fs";
-import { arch } from "os";
-import path from "path";
-import { retryFetch } from "./helper.mjs";
+import { spawnSync } from "node:child_process";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { retryFetch } from "./helper.js";
 
 const distPath = path.join(import.meta.dirname, "..", "vendored", "7z");
 let url;
@@ -39,7 +39,7 @@ switch (process.platform) {
     break;
   }
   case "linux": {
-    switch (arch()) {
+    switch (os.arch()) {
       case "arm64": {
         url = "https://www.7-zip.org/a/7z2201-linux-arm64.tar.xz";
         break;
