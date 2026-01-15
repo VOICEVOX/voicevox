@@ -114,6 +114,7 @@ class WelcomeWindowManager {
     });
     win.on("closed", () => {
       this._win = undefined;
+      this._ipc = undefined;
     });
     this._win = win;
 
