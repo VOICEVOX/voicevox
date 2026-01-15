@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import { _electron as electron, test } from "@playwright/test";
 import dotenv from "dotenv";
-import { getUserTestDir, setupOldVersionEngine } from "./helper";
+import { getUserTestDir } from "./helper";
 
 test.beforeAll(async () => {
   console.log("Waiting for main.js to be built...");
