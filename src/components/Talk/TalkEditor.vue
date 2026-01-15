@@ -105,7 +105,7 @@
                         v-if="showTotalAudioLength"
                         class="total-audio-status"
                       >
-                        合計: {{ totalAudioLength.toFixed(2) }}s
+                        合計: {{ formattedTotalAudioLength }}
                       </div>
                     </div>
                   </template>
@@ -177,6 +177,12 @@ const isMultiSelectEnabled = computed(() => store.state.enableMultiSelect);
 
 const showTotalAudioLength = computed(() => store.state.showTotalAudioLength);
 const totalAudioLength = computed(() => store.getters.TOTAL_AUDIO_LENGTH);
+const formattedTotalAudioLength = computed(() => {
+  const totalSeconds = Math.floor(totalAudioLength.value);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+});
 
 const { registerHotkeyWithCleanup } = useHotkeyManager();
 
