@@ -152,7 +152,11 @@ const getDefaultRuntimeTarget = (
   ) {
     return remoteInfo.defaultRuntimeTarget;
   }
-  return remoteInfo.availableRuntimeTargets[0]?.target;
+  return (
+    remoteInfo.availableRuntimeTargets.find(
+      (targetInfo) => targetInfo.packageInfo.displayInfo.default,
+    ) || remoteInfo.availableRuntimeTargets[0]
+  ).target;
 };
 
 const getSelectedRuntimeTarget = (

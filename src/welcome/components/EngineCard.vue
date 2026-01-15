@@ -27,7 +27,6 @@
         <BaseSelect
           :disabled="runtimeSelectDisabled"
           :modelValue="selectedRuntimeTarget"
-          placeholder="ターゲットを選択"
           @update:modelValue="handleRuntimeTargetChange"
         >
           <BaseSelectItem
