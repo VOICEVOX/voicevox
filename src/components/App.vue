@@ -110,6 +110,14 @@ watchEffect(() => {
   });
 });
 
+// デフォルト歌詞の設定が変わったら再レンダリング
+watch(
+  () => store.state.defaultLyricMode,
+  () => {
+    void store.actions.RENDER();
+  },
+);
+
 // ソフトウェアを初期化
 const { hotkeyManager } = useHotkeyManager();
 const isEnginesReady = ref(false);

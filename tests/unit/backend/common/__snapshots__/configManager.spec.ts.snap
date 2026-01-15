@@ -11,6 +11,7 @@ exports[`0.13.0からマイグレーションできる 1`] = `
     "tweakableSliderByScroll": false,
   },
   "currentTheme": "Default",
+  "defaultLyricMode": "doremi",
   "defaultPresetKeys": {},
   "defaultStyleIds": [],
   "editorFont": "default",
