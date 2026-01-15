@@ -43,7 +43,6 @@ export type RuntimeTargetPackageInfo = {
 
 export type EnginePackageRemoteInfo = {
   package: EnginePackageBase;
-  defaultRuntimeTarget: RuntimeTarget | undefined;
   availableRuntimeTargets: RuntimeTargetPackageInfo[];
 };
 
@@ -271,22 +270,11 @@ export class EngineAndVvppController {
         continue;
       }
 
-      const defaultRuntimeTarget = availableRuntimeTargets[0].target;
-      const selectedPackageInfo = availableRuntimeTargets.find(
-        (targetInfo) => targetInfo.target === defaultRuntimeTarget,
-      )?.packageInfo;
-      if (selectedPackageInfo) {
-        log.info(
-          `Latest default engine version: ${selectedPackageInfo.version}`,
-        );
-      }
-
       statuses.push({
         package: {
           engineName: envEngineInfo.name,
           engineId: envEngineInfo.uuid,
         },
-        defaultRuntimeTarget,
         availableRuntimeTargets,
       });
     }

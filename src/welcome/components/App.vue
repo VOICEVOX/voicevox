@@ -144,14 +144,6 @@ const getDefaultRuntimeTarget = (
   if (!remoteInfo) {
     return undefined;
   }
-  if (
-    remoteInfo.defaultRuntimeTarget &&
-    remoteInfo.availableRuntimeTargets.some(
-      (targetInfo) => targetInfo.target === remoteInfo.defaultRuntimeTarget,
-    )
-  ) {
-    return remoteInfo.defaultRuntimeTarget;
-  }
   return (
     remoteInfo.availableRuntimeTargets.find(
       (targetInfo) => targetInfo.packageInfo.displayInfo.default,
