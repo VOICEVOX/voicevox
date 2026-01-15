@@ -1,5 +1,5 @@
 import { test, expect, Page } from "@playwright/test";
-import { gotoHome, navigateToMain } from "../navigators";
+import { gotoHome, navigateToTalk } from "../navigators";
 import { getQuasarMenu, getNewestQuasarDialog } from "../locators";
 import {
   mockShowSaveFileDialog,
@@ -36,7 +36,7 @@ async function exportSelectedAudioAndSnapshot(page: Page, name: string) {
 
 test.describe("音声書き出し", () => {
   test.beforeEach(async ({ page }) => {
-    await navigateToMain(page);
+    await navigateToTalk(page);
 
     await test.step("テキスト欄にテキストを入力", async () => {
       const accentPhrase = page.locator(".accent-phrase");
