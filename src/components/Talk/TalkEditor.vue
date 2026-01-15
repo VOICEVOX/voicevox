@@ -97,6 +97,7 @@
                           textColor="display-on-primary"
                           :disable="uiLocked"
                           aria-label="テキストを追加"
+                          @click="addAudioItem"
                         ></QBtn>
                       </div>
                       <!-- 合計再生時間の表示（ステータス） -->
@@ -774,6 +775,7 @@ const onAudioCellPaneClick = () => {
 
     margin-right: 26px;
     margin-bottom: 10px;
+    z-index: 20;
   }
 }
 
