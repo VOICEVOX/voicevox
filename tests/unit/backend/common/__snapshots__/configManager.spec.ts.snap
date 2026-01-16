@@ -228,6 +228,7 @@ exports[`0.13.0からマイグレーションできる 1`] = `
   "showAudioLength": false,
   "showSingCharacterPortrait": true,
   "showTextLineNumber": false,
+  "showTotalAudioLength": false,
   "splitTextWhenPaste": "PERIOD_AND_NEW_LINE",
   "splitterPosition": {},
   "toolbarSetting": [
