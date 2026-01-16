@@ -129,6 +129,7 @@ import {
 } from "@/sing/songTrackRendering";
 import type {
   Note,
+  PhonemeTimingEdit,
   Singer,
   Tempo,
   TimeSignature,
@@ -3710,6 +3711,47 @@ export const singingCommandStore = transformCommandStore(
 
         void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
         void actions.RENDER();
+      },
+    },
+
+    COMMAND_DUPLICATE_TRACK: {
+      async action({ state, actions, mutations }, { trackId }) {
+        const sourceTrack = getOrThrow(state.tracks, trackId);
+        const newTrack = cloneWithUnwrapProxy(sourceTrack);
+
+        const newTrackId = TrackId(uuid4());
+        newTrack.name = `${newTrack.name} - コピー`;
+        // NOTE: ソロ、ミュート状態も複製元から引き継ぐ
+
+        // ノートIDを新しく振り直し、音素タイミング編集データを対応させる
+        const oldNoteIdToNewNoteId = new Map<NoteId, NoteId>();
+        newTrack.notes = newTrack.notes.map((note) => {
+          const newNoteId = NoteId(uuid4());
+          oldNoteIdToNewNoteId.set(note.id, newNoteId);
+          return { ...note, id: newNoteId };
+        });
+
+        // 音素タイミング編集データを新しいノートIDに紐付け直す
+        const newPhonemeTimingEditData = new Map<NoteId, PhonemeTimingEdit[]>();
+        for (const [oldNoteId, edits] of sourceTrack.phonemeTimingEditData) {
+          const newNoteId = oldNoteIdToNewNoteId.get(oldNoteId);
+          if (newNoteId) {
+            newPhonemeTimingEditData.set(newNoteId, edits);
+          }
+        }
+        newTrack.phonemeTimingEditData = newPhonemeTimingEditData;
+
+        mutations.INSERT_TRACK({
+          trackId: newTrackId,
+          track: cloneWithUnwrapProxy(newTrack),
+          prevTrackId: trackId,
+        });
+
+        const syncPromise = actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
+        const renderPromise = actions.RENDER();
+        await Promise.allSettled([syncPromise, renderPromise]);
+
+        await actions.SET_SELECTED_TRACK({ trackId: newTrackId });
       },
     },
 

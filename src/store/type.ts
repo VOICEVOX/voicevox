@@ -1605,6 +1605,10 @@ export type SingingCommandStoreTypes = {
     action(payload: { trackId: TrackId }): void;
   };
 
+  COMMAND_DUPLICATE_TRACK: {
+    action(payload: { trackId: TrackId }): void;
+  };
+
   COMMAND_SET_TRACK_NAME: {
     mutation: { trackId: TrackId; name: string };
     action(payload: { trackId: TrackId; name: string }): void;
