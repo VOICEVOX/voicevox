@@ -88,6 +88,8 @@ class WelcomeWindowManager {
         preload: path.join(import.meta.dirname, "welcomePreload.cjs"),
       },
       icon: path.join(this.staticDir, "icon.png"),
+      titleBarStyle: "hidden",
+      trafficLightPosition: { x: 6, y: 4 },
       frame: false,
     });
     const ipc = createIpcSendProxy<WelcomeIpcSOData>(win);
