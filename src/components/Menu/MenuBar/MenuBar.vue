@@ -178,6 +178,12 @@ watch(uiLocked, () => {
 
 .q-bar {
   min-height: var(--menubar-height);
+
+  .macos & {
+    // MacOSではMenuBarはウィンドウの枠線にかぶるように表示する
+    margin-left: -#{vars.$window-border-width};
+    width: calc(100% + #{vars.$window-border-width} * 2);
+  }
   -webkit-app-region: drag; // Electronのドラッグ領域
   :deep(.q-btn) {
     margin-left: 0;

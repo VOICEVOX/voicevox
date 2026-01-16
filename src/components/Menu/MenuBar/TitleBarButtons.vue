@@ -4,7 +4,7 @@
     transparent
     color="transparent"
     textColor="display"
-    class="full-height cursor-not-allowed no-border-radius"
+    class="full-height cursor-not-allowed no-border-radius mac-pinned-btn"
   >
     <QBtn
       v-if="isPinned"
@@ -109,5 +109,9 @@ const isPinned = computed(() => store.state.isPinned);
 
 .title-bar-buttons {
   overflow: visible;
+}
+
+.mac-pinned-btn {
+  margin-right: 2px;
 }
 </style>
