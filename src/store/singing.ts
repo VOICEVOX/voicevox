@@ -3713,6 +3713,48 @@ export const singingCommandStore = transformCommandStore(
       },
     },
 
+    COMMAND_DUPLICATE_TRACK: {
+      async action({ state, actions, mutations }, { trackId }) {
+        const sourceTrack = getOrThrow(state.tracks, trackId);
+        const newTrack = cloneWithUnwrapProxy(sourceTrack);
+
+        const newTrackId = TrackId(uuid4());
+        newTrack.name = `${newTrack.name} - コピー`;
+        newTrack.solo = false; // ソロ状態は引き継がないのが一般的
+        newTrack.mute = false; // ミュートも解除して複製するのが使いやすい
+
+        // ノートIDを新しく振り直し、音素タイミング編集データを対応させる
+        const oldNoteIdToNewNoteId = new Map<NoteId, NoteId>();
+        newTrack.notes = newTrack.notes.map((note) => {
+          const newNoteId = NoteId(uuid4());
+          oldNoteIdToNewNoteId.set(note.id, newNoteId);
+          return { ...note, id: newNoteId };
+        });
+
+        // 音素タイミング編集データを新しいノートIDに紐付け直す
+        const newPhonemeTimingEditData = new Map();
+        for (const [oldNoteId, edits] of sourceTrack.phonemeTimingEditData) {
+          const newNoteId = oldNoteIdToNewNoteId.get(oldNoteId);
+          if (newNoteId) {
+            newPhonemeTimingEditData.set(newNoteId, edits);
+          }
+        }
+        newTrack.phonemeTimingEditData = newPhonemeTimingEditData;
+
+        mutations.INSERT_TRACK({
+          trackId: newTrackId,
+          track: cloneWithUnwrapProxy(newTrack),
+          prevTrackId: trackId,
+        });
+
+        const syncPromise = actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
+        const renderPromise = actions.RENDER();
+        await Promise.allSettled([syncPromise, renderPromise]);
+
+        await actions.SET_SELECTED_TRACK({ trackId: newTrackId });
+      },
+    },
+
     COMMAND_SET_TRACK_NAME: {
       mutation(draft, { trackId, name }) {
         singingStore.mutations.SET_TRACK_NAME(draft, { trackId, name });

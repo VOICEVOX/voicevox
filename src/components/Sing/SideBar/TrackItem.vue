@@ -19,6 +19,12 @@
           },
           {
             type: 'button',
+            label: 'トラックを複製',
+            onClick: duplicateTrack,
+            disableWhenUiLocked: true,
+          },
+          {
+            type: 'button',
             label: 'トラック削除',
             onClick: deleteTrack,
             disabled: tracks.size === 1,
@@ -286,6 +292,12 @@ const addTrack = async () => {
   });
   await store.actions.SELECT_TRACK({
     trackId: trackOrder.value[willNextSelectedTrackIndex],
+  });
+};
+
+const duplicateTrack = async () => {
+  await store.actions.COMMAND_DUPLICATE_TRACK({
+    trackId: props.trackId,
   });
 };
 
