@@ -1,6 +1,6 @@
 import { beforeEach, expect, test } from "vitest";
 import { store } from "@/store";
-import { TrackId } from "@/type/preload";
+import { NoteId, TrackId } from "@/type/preload";
 import { resetMockMode, uuid4 } from "@/helpers/random";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { createDefaultTrack } from "@/sing/domain";
@@ -37,7 +37,10 @@ test("INSERT_TRACK", () => {
 
 test("COMMAND_DUPLICATE_TRACK", async () => {
   const sourceTrackId = store.state.trackOrder[0];
-  const sourceTrack = store.state.tracks.get(sourceTrackId)!;
+  const sourceTrack = store.state.tracks.get(sourceTrackId);
+  if (!sourceTrack) {
+    throw new Error("sourceTrack not found");
+  }
 
   // 直接代入ではなくミューテーション経由でセットアップ
   store.commit("SET_TRACK_NAME", {
@@ -46,7 +49,7 @@ test("COMMAND_DUPLICATE_TRACK", async () => {
   });
   const notes = [
     {
-      id: uuid4() as any,
+      id: NoteId(uuid4()),
       position: 0,
       duration: 480,
       noteNumber: 60,
@@ -68,7 +71,10 @@ test("COMMAND_DUPLICATE_TRACK", async () => {
   expect(store.state.trackOrder.length).toBe(initialTrackIds.size + 1);
   const newTrackId = store.state.trackOrder[sourceTrackIndex + 1];
   expect(initialTrackIds.has(newTrackId)).toBe(false);
-  const newTrack = store.state.tracks.get(newTrackId)!;
+  const newTrack = store.state.tracks.get(newTrackId);
+  if (!newTrack) {
+    throw new Error("newTrack not found");
+  }
 
   expect(newTrack.name).toBe("Original Track - コピー");
   expect(newTrack.notes.length).toBe(1);

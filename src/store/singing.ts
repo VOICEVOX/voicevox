@@ -129,6 +129,7 @@ import {
 } from "@/sing/songTrackRendering";
 import type {
   Note,
+  PhonemeTimingEdit,
   Singer,
   Tempo,
   TimeSignature,
@@ -3732,7 +3733,7 @@ export const singingCommandStore = transformCommandStore(
         });
 
         // 音素タイミング編集データを新しいノートIDに紐付け直す
-        const newPhonemeTimingEditData = new Map();
+        const newPhonemeTimingEditData = new Map<NoteId, PhonemeTimingEdit[]>();
         for (const [oldNoteId, edits] of sourceTrack.phonemeTimingEditData) {
           const newNoteId = oldNoteIdToNewNoteId.get(oldNoteId);
           if (newNoteId) {
