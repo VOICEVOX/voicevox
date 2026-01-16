@@ -386,8 +386,8 @@ const {
   display: flex;
   flex-flow: column;
   height: calc(
-    100vh - #{vars.$menubar-height + vars.$toolbar-height +
-      vars.$window-border-width}
+    100vh - (var(--menubar-height) + #{vars.$toolbar-height} +
+      #{vars.$window-border-width})
   ) !important;
   overflow: auto;
 }

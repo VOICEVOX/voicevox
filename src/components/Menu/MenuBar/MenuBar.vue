@@ -177,7 +177,7 @@ watch(uiLocked, () => {
 @use "@/styles/colors" as colors;
 
 .q-bar {
-  min-height: vars.$menubar-height;
+  min-height: var(--menubar-height);
   -webkit-app-region: drag; // Electronのドラッグ領域
   :deep(.q-btn) {
     margin-left: 0;
@@ -186,11 +186,12 @@ watch(uiLocked, () => {
 }
 
 .window-logo {
-  height: vars.$menubar-height;
+  height: var(--menubar-height);
 }
 
 .window-title {
-  height: vars.$menubar-height;
+  height: var(--menubar-height);
+  align-content: center;
   margin-right: 10%;
   text-overflow: ellipsis;
   overflow: hidden;
