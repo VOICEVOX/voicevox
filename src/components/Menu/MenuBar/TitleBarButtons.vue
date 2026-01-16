@@ -112,6 +112,7 @@ const isPinned = computed(() => store.state.isPinned);
 }
 
 .mac-pinned-btn {
-  margin-right: 2px;
+  margin-right: 3px;
+  margin-top: 3px;
 }
 </style>
