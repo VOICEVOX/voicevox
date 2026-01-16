@@ -18,7 +18,7 @@ test("INSERT_TRACK", () => {
   // 最後尾に追加
   // NOTE: 最初から１つトラックが登録されている
   const trackId1 = TrackId(uuid4());
-  store.commit("INSERT_TRACK", {
+  store.mutations.INSERT_TRACK({
     trackId: trackId1,
     track: dummyTrack,
     prevTrackId: undefined,
@@ -27,7 +27,7 @@ test("INSERT_TRACK", () => {
 
   // 途中に追加
   const trackId2 = TrackId(uuid4());
-  store.commit("INSERT_TRACK", {
+  store.mutations.INSERT_TRACK({
     trackId: trackId2,
     track: dummyTrack,
     prevTrackId: store.state.trackOrder[0],
@@ -43,9 +43,17 @@ test("COMMAND_DUPLICATE_TRACK", async () => {
   }
 
   // 直接代入ではなくミューテーション経由でセットアップ
-  store.commit("SET_TRACK_NAME", {
+  store.mutations.SET_TRACK_NAME({
     trackId: sourceTrackId,
     name: "Original Track",
+  });
+  store.mutations.COMMAND_SET_TRACK_MUTE({
+    trackId: sourceTrackId,
+    mute: true,
+  });
+  store.mutations.COMMAND_SET_TRACK_SOLO({
+    trackId: sourceTrackId,
+    solo: true,
   });
   const notes = [
     {
@@ -56,7 +64,7 @@ test("COMMAND_DUPLICATE_TRACK", async () => {
       lyric: "test",
     },
   ];
-  store.commit("SET_NOTES", { trackId: sourceTrackId, notes });
+  store.mutations.SET_NOTES({ trackId: sourceTrackId, notes });
 
   // 音素タイミング編集データ
   const sourceTrackClone = cloneWithUnwrapProxy(sourceTrack);
@@ -64,9 +72,13 @@ test("COMMAND_DUPLICATE_TRACK", async () => {
   sourceTrackClone.phonemeTimingEditData.set(noteId, [
     { phonemeIndexInNote: 0, offsetSeconds: 0.1 },
   ]);
+  store.mutations.SET_TRACK({
+    trackId: sourceTrackId,
+    track: sourceTrackClone,
+  });
   const initialTrackIds = new Set(store.state.trackOrder);
   const sourceTrackIndex = store.state.trackOrder.indexOf(sourceTrackId);
-  await store.dispatch("COMMAND_DUPLICATE_TRACK", { trackId: sourceTrackId });
+  await store.actions.COMMAND_DUPLICATE_TRACK({ trackId: sourceTrackId });
 
   expect(store.state.trackOrder.length).toBe(initialTrackIds.size + 1);
   const newTrackId = store.state.trackOrder[sourceTrackIndex + 1];
@@ -77,6 +89,8 @@ test("COMMAND_DUPLICATE_TRACK", async () => {
   }
 
   expect(newTrack.name).toBe("Original Track - コピー");
+  expect(newTrack.mute).toBe(true);
+  expect(newTrack.solo).toBe(true);
   expect(newTrack.notes.length).toBe(1);
   expect(newTrack.notes[0].id).not.toBe(noteId);
   expect(newTrack.notes[0].lyric).toBe("test");
