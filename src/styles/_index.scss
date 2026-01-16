@@ -28,6 +28,7 @@ body:not(#dummy) {
 
     &.macos {
       border-radius: 16px;
+      -electron-corner-smoothing: system-ui;
     }
   }
 }
