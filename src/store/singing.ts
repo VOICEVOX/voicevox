@@ -3721,8 +3721,7 @@ export const singingCommandStore = transformCommandStore(
 
         const newTrackId = TrackId(uuid4());
         newTrack.name = `${newTrack.name} - コピー`;
-        newTrack.solo = false; // ソロ状態は引き継がないのが一般的
-        newTrack.mute = false; // ミュートも解除して複製するのが使いやすい
+        // NOTE: ソロ、ミュート状態も複製元から引き継ぐ
 
         // ノートIDを新しく振り直し、音素タイミング編集データを対応させる
         const oldNoteIdToNewNoteId = new Map<NoteId, NoteId>();
