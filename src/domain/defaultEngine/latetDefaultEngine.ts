@@ -16,6 +16,7 @@ const packageInfoSchema = z.object({
   displayInfo: z.object({
     label: z.string(),
     hint: z.string(),
+    order: z.number(),
     default: z.boolean().optional(),
   }),
   files: z

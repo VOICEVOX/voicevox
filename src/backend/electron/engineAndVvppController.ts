@@ -261,6 +261,10 @@ export class EngineAndVvppController {
           }))
           .filter((runtimeTargetInfo) =>
             EngineAndVvppController.isSupportedTarget(runtimeTargetInfo.target),
+          )
+          .toSorted(
+            (a, b) =>
+              a.packageInfo.displayInfo.order - b.packageInfo.displayInfo.order,
           );
 
       if (availableRuntimeTargets.length === 0) {
