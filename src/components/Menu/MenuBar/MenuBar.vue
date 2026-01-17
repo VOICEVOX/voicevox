@@ -197,7 +197,7 @@ watch(uiLocked, () => {
 
 .window-title {
   height: var(--menubar-height);
-  align-content: center;
+  line-height: var(--menubar-height);
   margin-right: 10%;
   text-overflow: ellipsis;
   overflow: hidden;
