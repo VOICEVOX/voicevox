@@ -220,8 +220,11 @@ const openStyleSelectDialog = (characterInfo: CharacterInfo) => {
 
 .main {
   height: calc(
-    100vh - #{vars.$menubar-height + vars.$toolbar-height +
-      vars.$window-border-width}
+    100vh -
+      (
+        var(--menubar-height) + #{vars.$toolbar-height} +
+          #{vars.$window-border-width}
+      )
   );
 
   display: flex;

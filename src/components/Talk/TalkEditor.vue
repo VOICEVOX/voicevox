@@ -698,7 +698,7 @@ const onAudioCellPaneClick = () => {
 }
 
 .layout-container {
-  min-height: calc(100vh - #{vars.$menubar-height});
+  min-height: calc(100vh - var(--menubar-height));
 }
 
 .q-layout-container > :deep(.absolute-full) {
@@ -718,8 +718,11 @@ const onAudioCellPaneClick = () => {
 
   .q-splitter--horizontal {
     height: calc(
-      100vh - #{vars.$menubar-height + vars.$toolbar-height +
-        vars.$window-border-width}
+      100vh -
+        (
+          var(--menubar-height) + #{vars.$toolbar-height} +
+            #{vars.$window-border-width}
+        )
     );
   }
 }

@@ -65,7 +65,7 @@ class WindowManager {
     const configManager = getConfigManager();
     const currentTheme = configManager.get("currentTheme");
     const backgroundColor = themes.find((value) => value.name == currentTheme)
-      ?.colors.background;
+      ?.colors.primary;
 
     const win = new BrowserWindow({
       x: mainWindowState.x,
@@ -74,7 +74,7 @@ class WindowManager {
       height: mainWindowState.height,
       frame: false,
       titleBarStyle: "hidden",
-      trafficLightPosition: { x: 6, y: 4 },
+      trafficLightPosition: { x: 9, y: 9 },
       minWidth: 320,
       show: false,
       backgroundColor,
