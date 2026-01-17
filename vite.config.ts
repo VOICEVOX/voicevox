@@ -303,6 +303,7 @@ const electronPreloadOptions = (
         build: {
           outDir: path.resolve(import.meta.dirname, "dist"),
           sourcemap: options.sourcemap,
+          target: options.electronTargetVersion?.node,
           rollupOptions: {
             input: {
               [name]: path.resolve(import.meta.dirname, entry),
