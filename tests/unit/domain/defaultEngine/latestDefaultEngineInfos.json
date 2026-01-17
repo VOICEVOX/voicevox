@@ -6,7 +6,7 @@
       "displayInfo": {
         "label": "CPU版",
         "hint": "CPUのみで動作します",
-        "order": 1
+        "order": 0
       },
       "files": [
         {
@@ -21,7 +21,7 @@
       "displayInfo": {
         "label": "GPU / CPU両対応版",
         "hint": "DirectML対応のGPUが必要です",
-        "order": 2,
+        "order": 1,
         "default": true
       },
       "files": [
@@ -37,7 +37,7 @@
       "displayInfo": {
         "label": "CPU版",
         "hint": "CPUのみで動作します",
-        "order": 1
+        "order": 0
       },
       "files": [
         {
@@ -52,7 +52,7 @@
       "displayInfo": {
         "label": "CPU版",
         "hint": "CPUのみで動作します",
-        "order": 1
+        "order": 0
       },
       "files": [
         {
@@ -67,7 +67,7 @@
       "displayInfo": {
         "label": "CPU版",
         "hint": "CPUのみで動作します",
-        "order": 1
+        "order": 0
       },
       "files": [
         {
@@ -82,7 +82,7 @@
       "displayInfo": {
         "label": "CUDA版",
         "hint": "CUDA対応のNVIDIA製GPUが必要です",
-        "order": 2
+        "order": 1
       },
       "files": [
         {
