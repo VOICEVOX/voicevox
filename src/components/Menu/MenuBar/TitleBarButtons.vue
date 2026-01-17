@@ -112,6 +112,7 @@ const isPinned = computed(() => store.state.isPinned);
 }
 
 .mac-pinned-btn {
+  // 少し位置を調整する
   margin-right: 3px;
   margin-top: 3px;
 }
