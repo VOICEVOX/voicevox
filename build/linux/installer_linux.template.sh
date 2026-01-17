@@ -5,16 +5,6 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-_readarray(){
-  [[ -z "$1" ]] && return 1
-  [[ "$1" =~ [[:space:]] ]] && return 1
-  var="$1"
-  eval "$var"'=()'
-  while IFS=$'\n' read -r r; do
-    eval "$var"'+=("'"$r"'")'
-  done
-}
-
 cat << 'BANNER'
 +-+-+-+-+-+-+-+-+
 |V|O|I|C|E|V|O|X|
