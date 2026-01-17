@@ -125,7 +125,7 @@ fi
 
 echo
 # Download archives
-ARCHIVE_NAME_LIST=($(cut -d' ' -f3- list.txt))
+mapfile -t ARCHIVE_NAME_LIST < <(cut -d' ' -f3- list.txt)
 for FILENAME in "${ARCHIVE_NAME_LIST[@]}"; do
     URL=${RELEASE_URL}/${FILENAME}
 
