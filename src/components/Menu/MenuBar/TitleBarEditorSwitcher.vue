@@ -11,6 +11,8 @@
     :disable="uiLocked"
     dense
     toggleColor="primary"
+    :color="$q.platform.is.mac ? 'surface' : 'background'"
+    textColor="display"
     :options="[
       { label: 'トーク', value: 'talk' },
       { label: 'ソング', value: 'song' },
@@ -21,10 +23,12 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
+import { useQuasar } from "quasar";
 import { useStore } from "@/store";
 import { EditorType } from "@/type/preload";
 
 const store = useStore();
+const $q = useQuasar();
 
 const openedEditor = computed(() => store.state.openedEditor);
 const uiLocked = computed(() => store.getters.UI_LOCKED);
