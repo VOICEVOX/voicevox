@@ -1,23 +1,23 @@
 import type {
-  ParameterPanelStateDefinitions,
-  ParameterPanelInput,
-  ParameterPanelContext,
+  VolumeEditorStateDefinitions,
+  VolumeEditorInput,
+  VolumeEditorContext,
 } from "../common";
 import type { SetNextState, State } from "@/sing/stateMachine";
 import { getButton } from "@/sing/viewHelper";
 
-export class DrawVolumeIdleState
+export class EraseVolumeIdleState
   implements
     State<
-      ParameterPanelStateDefinitions,
-      ParameterPanelInput,
-      ParameterPanelContext
+      VolumeEditorStateDefinitions,
+      VolumeEditorInput,
+      VolumeEditorContext
     >
 {
-  readonly id = "drawVolumeIdle";
+  readonly id = "eraseVolumeIdle";
 
-  onEnter(context: ParameterPanelContext) {
-    context.cursorState.value = "DRAW";
+  onEnter(context: VolumeEditorContext) {
+    context.cursorState.value = "ERASE";
   }
 
   process({
@@ -25,9 +25,9 @@ export class DrawVolumeIdleState
     context,
     setNextState,
   }: {
-    input: ParameterPanelInput;
-    context: ParameterPanelContext;
-    setNextState: SetNextState<ParameterPanelStateDefinitions>;
+    input: VolumeEditorInput;
+    context: VolumeEditorContext;
+    setNextState: SetNextState<VolumeEditorStateDefinitions>;
   }) {
     if (input.type === "mouseEvent") {
       const mouseButton = getButton(input.mouseEvent);
@@ -38,7 +38,7 @@ export class DrawVolumeIdleState
         mouseButton === "LEFT_BUTTON" &&
         input.targetArea === "Editor"
       ) {
-        setNextState("drawVolume", {
+        setNextState("eraseVolume", {
           startPosition: input.position,
           targetTrackId: trackId,
           returnStateId: this.id,
@@ -47,7 +47,7 @@ export class DrawVolumeIdleState
     }
   }
 
-  onExit(context: ParameterPanelContext) {
+  onExit(context: VolumeEditorContext) {
     context.cursorState.value = "UNSET";
   }
 }
