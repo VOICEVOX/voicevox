@@ -526,7 +526,7 @@ const requireReload = async (message: string) => {
   toInitialState();
   if (result === "OK") {
     void store.actions.CHECK_EDITED_AND_NOT_SAVE({
-      closeOrReload: "reload",
+      nextAction: "reload",
     });
   }
 };

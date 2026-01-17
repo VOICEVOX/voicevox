@@ -4,9 +4,19 @@
 
 import { z } from "zod";
 
+/** Runtime Target */
+export const runtimeTargetSchema = z.string().regex(/^[^-]+-[^-]+-[^-]+$/);
+export type RuntimeTarget = z.infer<typeof runtimeTargetSchema>;
+
 /** パッケージ情報のスキーマ */
 const packageInfoSchema = z.object({
   version: z.string(),
+  displayInfo: z.object({
+    label: z.string(),
+    hint: z.string(),
+    order: z.number(),
+    default: z.boolean().optional(),
+  }),
   files: z
     .object({
       url: z.string(),
@@ -21,14 +31,7 @@ export type PackageInfo = z.infer<typeof packageInfoSchema>;
 /** デフォルトエンジンの最新情報のスキーマ */
 const latestDefaultEngineInfoSchema = z.object({
   formatVersion: z.number(),
-  packages: z.object({
-    "windows-x64-cpu": packageInfoSchema,
-    "windows-x64-directml": packageInfoSchema,
-    "macos-x64-cpu": packageInfoSchema,
-    "macos-arm64-cpu": packageInfoSchema,
-    "linux-x64-cpu": packageInfoSchema,
-    "linux-x64-cuda": packageInfoSchema,
-  }),
+  packages: z.record(runtimeTargetSchema, packageInfoSchema),
 });
 
 /** デフォルトエンジンの最新情報を取得する */
@@ -37,28 +40,10 @@ export const fetchLatestDefaultEngineInfo = async (url: string) => {
   return latestDefaultEngineInfoSchema.parse(await response.json());
 };
 
-/**
- * 実行環境に合うパッケージを取得する。GPU版があってもCPU版を返す。
- * TODO: どのデバイス版にするかはユーザーが選べるようにするべき。
- */
-export const getSuitablePackageInfo = (
+/** 指定ターゲットのパッケージを取得する */
+export const getPackageInfoByTarget = (
   updateInfo: z.infer<typeof latestDefaultEngineInfoSchema>,
+  target: RuntimeTarget,
 ): PackageInfo => {
-  const platform = process.platform;
-  const arch = process.arch;
-
-  let target;
-  if (platform === "win32" && arch === "x64") {
-    target = "windows-x64-cpu" as const;
-  } else if (platform === "darwin" && arch === "x64") {
-    target = "macos-x64-cpu" as const;
-  } else if (platform === "darwin" && arch === "arm64") {
-    target = "macos-arm64-cpu" as const;
-  } else if (platform === "linux" && arch === "x64") {
-    target = "linux-x64-cpu" as const;
-  } else {
-    throw new Error(`Unsupported platform: ${platform} ${arch}`);
-  }
-
   return updateInfo.packages[target];
 };

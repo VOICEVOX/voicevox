@@ -106,7 +106,7 @@ const api: Sandbox = {
     ipcRenderer.on("CHECK_EDITED_AND_NOT_SAVE", (_, args) => {
       listeners.checkEditedAndNotSave(
         args as {
-          closeOrReload: "close" | "reload";
+          nextAction: "close" | "reload" | "switchToWelcome";
           isMultiEngineOffMode?: boolean;
         },
       );
@@ -118,6 +118,10 @@ const api: Sandbox = {
 
   closeWindow: () => {
     void ipcRendererInvokeProxy.CLOSE_WINDOW();
+  },
+
+  launchWelcomeWindow: () => {
+    void ipcRendererInvokeProxy.SWITCH_TO_WELCOME_WINDOW();
   },
 
   minimizeWindow: () => {

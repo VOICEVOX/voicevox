@@ -18,7 +18,7 @@ const meta: Meta<typeof BaseSelect> = {
       <BaseSelect v-bind="args" v-model="modelValue">
         <BaseSelectItem label="A" value="a" />
         <BaseSelectItem label="B" value="b" />
-        <BaseSelectItem label="C" value="c" />
+        <BaseSelectItem label="C" value="c" hint="This is option C" />
       </BaseSelect>`,
   }),
 };

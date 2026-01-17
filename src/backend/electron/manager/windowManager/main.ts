@@ -9,31 +9,42 @@ import {
   SaveDialogOptions,
 } from "electron";
 import windowStateKeeper from "electron-window-state";
-import { getConfigManager } from "../electronConfig";
-import { getEngineAndVvppController } from "../engineAndVvppController";
-import { ipcMainSendProxy } from "../ipc";
-import { getAppStateController } from "../appStateController";
+import { getConfigManager } from "../../electronConfig";
+import { getEngineAndVvppController } from "../../engineAndVvppController";
+import {
+  createIpcSendProxy,
+  IpcMainHandle,
+  IpcSendProxy,
+  registerIpcMainHandle,
+} from "../../ipc";
+import { IpcIHData, IpcSOData } from "../../ipcType";
+import { getAppStateController } from "../../appStateController";
 import { themes } from "@/domain/theme";
 import { createLogger } from "@/helpers/log";
 
-const log = createLogger("WindowManager");
+const log = createLogger("MainWindowManager");
 
 type WindowManagerOption = {
   staticDir: string;
   isDevelopment: boolean;
   isTest: boolean;
+
+  ipcMainHandle: IpcMainHandle<IpcIHData>;
 };
 
-class WindowManager {
+class MainWindowManager {
   private _win: BrowserWindow | undefined;
+  private _ipc: IpcSendProxy<IpcSOData> | undefined;
   private staticDir: string;
   private isDevelopment: boolean;
   private isTest: boolean;
+  private ipcHandle: IpcMainHandle<IpcIHData>;
 
   constructor(payload: WindowManagerOption) {
     this.staticDir = payload.staticDir;
     this.isDevelopment = payload.isDevelopment;
     this.isTest = payload.isTest;
+    this.ipcHandle = payload.ipcMainHandle;
   }
 
   /**
@@ -51,6 +62,13 @@ class WindowManager {
       throw new Error("_win == undefined");
     }
     return this._win;
+  }
+
+  public get ipc() {
+    if (this._ipc == undefined) {
+      throw new Error("_ipc == undefined");
+    }
+    return this._ipc;
   }
 
   public async createWindow() {
@@ -79,28 +97,33 @@ class WindowManager {
       show: false,
       backgroundColor,
       webPreferences: {
-        preload: path.join(import.meta.dirname, "preload.mjs"),
+        preload: path.join(import.meta.dirname, "preload.cjs"),
       },
       icon: path.join(this.staticDir, "icon.png"),
     });
 
+    this._win = win;
+    const ipc = createIpcSendProxy<IpcSOData>(win);
+    registerIpcMainHandle<IpcIHData>(win, this.ipcHandle);
+    this._ipc = ipc;
+
     win.on("maximize", () => {
-      ipcMainSendProxy.DETECT_MAXIMIZED(win);
+      ipc.DETECT_MAXIMIZED();
     });
     win.on("unmaximize", () => {
-      ipcMainSendProxy.DETECT_UNMAXIMIZED(win);
+      ipc.DETECT_UNMAXIMIZED();
     });
     win.on("enter-full-screen", () => {
-      ipcMainSendProxy.DETECT_ENTER_FULLSCREEN(win);
+      ipc.DETECT_ENTER_FULLSCREEN();
     });
     win.on("leave-full-screen", () => {
-      ipcMainSendProxy.DETECT_LEAVE_FULLSCREEN(win);
+      ipc.DETECT_LEAVE_FULLSCREEN();
     });
     win.on("always-on-top-changed", () => {
       if (win.isAlwaysOnTop()) {
-        ipcMainSendProxy.DETECT_PINNED(win);
+        ipc.DETECT_PINNED();
       } else {
-        ipcMainSendProxy.DETECT_UNPINNED(win);
+        ipc.DETECT_UNPINNED();
       }
     });
     win.on("close", (event) => {
@@ -111,16 +134,16 @@ class WindowManager {
     });
     win.on("closed", () => {
       this._win = undefined;
+      this._ipc = undefined;
     });
     win.on("resize", () => {
       const windowSize = win.getSize();
-      ipcMainSendProxy.DETECT_RESIZED(win, {
+      ipc.DETECT_RESIZED({
         width: windowSize[0],
         height: windowSize[1],
       });
     });
     mainWindowState.manage(win);
-    this._win = win;
 
     await this.load({});
 
@@ -235,6 +258,10 @@ class WindowManager {
     return this.getWindow().isMaximized();
   }
 
+  public isInitialized() {
+    return this._win != undefined;
+  }
+
   public showOpenDialogSync(options: OpenDialogSyncOptions) {
     return this._win == undefined
       ? dialog.showOpenDialogSync(options)
@@ -266,13 +293,13 @@ class WindowManager {
   }
 }
 
-let windowManager: WindowManager | undefined;
+let windowManager: MainWindowManager | undefined;
 
-export function initializeWindowManager(payload: WindowManagerOption) {
-  windowManager = new WindowManager(payload);
+export function initializeMainWindowManager(payload: WindowManagerOption) {
+  windowManager = new MainWindowManager(payload);
 }
 
-export function getWindowManager() {
+export function getMainWindowManager() {
   if (windowManager == undefined) {
     throw new Error("WindowManager is not initialized");
   }

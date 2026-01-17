@@ -104,12 +104,13 @@ export interface Sandbox {
     detectEnterFullscreen: () => void;
     detectLeaveFullscreen: () => void;
     checkEditedAndNotSave: (obj: {
-      closeOrReload: "close" | "reload";
+      nextAction: "close" | "reload" | "switchToWelcome";
       isMultiEngineOffMode?: boolean;
     }) => void;
     detectResized: (obj: { width: number; height: number }) => void;
   }): void;
   closeWindow(): void;
+  launchWelcomeWindow(): void;
   minimizeWindow(): void;
   toggleMaximizeWindow(): void;
   toggleFullScreen(): void;
