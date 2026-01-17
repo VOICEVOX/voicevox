@@ -140,7 +140,7 @@ done
 if [ "$SKIP_VERIFY" = "1" ]; then
     echo "[-] File verification skipped"
 else
-    if !sha256sum --check list.txt; then
+    if ! sha256sum --check list.txt; then
         echo "[!] Invalid hash. Remove the corrupted files and restart installer!"
         exit 1
     fi
