@@ -22,10 +22,7 @@
           <div class="row items-center no-wrap q-gutter-md">
             <div class="row items-center no-wrap" @click.stop>
               <span class="q-mr-sm">表示モード:</span>
-              <BaseToggleGroup
-                v-model="displayMode"
-                type="single"
-              >
+              <BaseToggleGroup v-model="displayMode" type="single">
                 <BaseToggleGroupItem label="トーク" value="talk" />
                 <BaseToggleGroupItem label="ソング" value="singerLike" />
               </BaseToggleGroup>
@@ -168,7 +165,10 @@ const displayMode = ref<"talk" | "singerLike">("talk");
 
 // 表示モードに基づいてフィルタリングされたキャラクター情報
 const filteredCharacterInfos = computed(() => {
-  return filterCharacterInfosByStyleType(props.characterInfos, displayMode.value);
+  return filterCharacterInfosByStyleType(
+    props.characterInfos,
+    displayMode.value,
+  );
 });
 
 // 表示モードに基づいてフィルタリングされた並び替え用キャラクター情報
@@ -182,11 +182,6 @@ const filteredCharacterOrder = computed({
     });
   },
   set: (newFilteredOrder) => {
-    // スタイルに関係なくUUIDで一致するかを確認する
-    const newFilteredUuidSet = new Set(
-      newFilteredOrder.map((info) => info.metas.speakerUuid),
-    );
-
     // 元のリスト内での相対的な順序を維持しつつ、現在のモードのキャラクターのみ順序を入れ替える
     const newOrder: CharacterInfo[] = [];
     let filteredIndex = 0;
@@ -262,8 +257,10 @@ watch(dialogOpened, async (newValue, oldValue) => {
       ...notIncludesCharacterInfos,
     ];
 
-    portrait.value =
-      characterInfosMap.value[selectedCharacter.value].portraitPath;
+    if (selectedCharacter.value && characterInfosMap.value[selectedCharacter.value]) {
+      portrait.value =
+        characterInfosMap.value[selectedCharacter.value].portraitPath;
+    }
   }
 });
 
@@ -328,7 +325,6 @@ const closeDialog = () => {
   stop();
   dialogOpened.value = false;
 };
-
 
 const updatePortrait = (portraitPath: string) => {
   portrait.value = portraitPath;
