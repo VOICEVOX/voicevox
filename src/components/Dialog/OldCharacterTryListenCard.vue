@@ -61,6 +61,7 @@
         <QBtn
           v-for="voiceSampleIndex of [...Array(3).keys()]"
           :key="voiceSampleIndex"
+          v-show="selectedStyle.voiceSamplePaths[voiceSampleIndex]"
           round
           outline
           :icon="
