@@ -109,7 +109,7 @@ fi
 echo "[+] Connecting AppImage..."
 APPIMAGE="VOICEVOX.AppImage"
 mv "${ARCHIVE_NAME_LIST[0]}" "${APPIMAGE}"
-if [ "${#ARCHIVE_NAME_LIST[@]}" -gt 1 ];then
+if [ "${#ARCHIVE_NAME_LIST[@]}" -gt 1 ]; then
     cat "${ARCHIVE_NAME_LIST[@]:1}" >> "${APPIMAGE}"
 fi
 chmod +x "${APPIMAGE}"
