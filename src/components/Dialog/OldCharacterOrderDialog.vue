@@ -257,7 +257,10 @@ watch(dialogOpened, async (newValue, oldValue) => {
       ...notIncludesCharacterInfos,
     ];
 
-    if (selectedCharacter.value && characterInfosMap.value[selectedCharacter.value]) {
+    if (
+      selectedCharacter.value &&
+      characterInfosMap.value[selectedCharacter.value]
+    ) {
       portrait.value =
         characterInfosMap.value[selectedCharacter.value].portraitPath;
     }
