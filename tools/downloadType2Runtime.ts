@@ -1,3 +1,9 @@
+/**
+ * AppImageに埋め込むruntimeをダウンロードする。
+ * 本来はビルド時にappimagetoolがビルド時に常に自動的に最新版をダウンロードをするが、
+ * バージョンを固定するために手動でダウンロードする。
+ */
+
 import fs from "node:fs/promises";
 import path from "node:path";
 import { retryFetch } from "./helper";
