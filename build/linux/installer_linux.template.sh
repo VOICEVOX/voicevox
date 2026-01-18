@@ -105,8 +105,8 @@ else
     fi
 fi
 
-# Connect AppImage.*
-echo "[+] Connecting AppImage..."
+# Concatenate split AppImage files
+echo "[+] Concatenating split AppImage files..."
 APPIMAGE="VOICEVOX.AppImage"
 mv "${ARCHIVE_NAME_LIST[0]}" "${APPIMAGE}"
 if [ "${#ARCHIVE_NAME_LIST[@]}" -gt 1 ]; then
