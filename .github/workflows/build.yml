@@ -453,7 +453,7 @@ jobs:
           cd dist_electron/
 
           for appImageFile in *.AppImage; do
-            echo "Splitting ${appImageFile} to .AppImage.{1,2,...}"
+            echo "Splitting ${appImageFile} to .AppImage.{00,01,...}"
 
             split --verbose -d -b 1900m "${appImageFile}" "${{ matrix.installer_artifact_name }}.AppImage."
 
