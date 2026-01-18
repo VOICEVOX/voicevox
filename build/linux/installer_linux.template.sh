@@ -68,49 +68,8 @@ Or
 EOS
 fi
 
-COMMAND_7Z=${COMMAND_7Z:-}
-if [ -n "${COMMAND_7Z}" ]; then
-    # use env var
-    :
-elif command -v 7z &> /dev/null; then
-    # Ubuntu/Debian p7zip-full
-    COMMAND_7Z=7z
-elif command -v 7zr &> /dev/null; then
-    # Ubuntu/Debian p7zip
-    COMMAND_7Z=7zr
-elif command -v 7za &> /dev/null; then
-    # CentOS/Fedora
-    COMMAND_7Z=7za
-elif command -v 7zz &> /dev/null; then
-    # Official 7zip
-    COMMAND_7Z=7zz
-else
-    cat << 'EOS' && exit 1
-[!] Command '7z', '7zr', '7za' or '7zz' not found
-
-Required to extract compressed files
-
-Ubuntu/Debian:
-    sudo apt install p7zip
-
-CentOS (Enable EPEL repository):
-    sudo dnf install epel-release && sudo dnf install p7zip
-Or
-    sudo yum install epel-release && sudo yum install p7zip
-
-Fedora:
-    sudo dnf install p7zip
-Or
-    sudo yum install p7zip
-
-Arch Linux:
-    sudo pacman -S 7zip
-EOS
-fi
-echo "[-] 7z command: ${COMMAND_7Z}"
-
 RELEASE_URL=${REPO_URL}/releases/download/${VERSION}
-ARCHIVE_LIST_URL=${RELEASE_URL}/${NAME}.7z.txt
+ARCHIVE_LIST_URL=${RELEASE_URL}/${NAME}.AppImage.txt
 
 echo "[-] Install directory: ${APP_DIR}"
 mkdir -p "${APP_DIR}"
@@ -146,16 +105,12 @@ else
     fi
 fi
 
-# Extract archives
-echo "[+] Extracting archive..."
-FIRST_ARCHIVE=${ARCHIVE_NAME_LIST[0]}
-"${COMMAND_7Z}" x "${FIRST_ARCHIVE}" -y
-
-# Rename
+# Connect AppImage.*
+echo "[+] Connecting AppImage..."
 APPIMAGE="VOICEVOX.AppImage"
-EXTRACTED_APPIMAGE_NAME=$("${COMMAND_7Z}" l -slt -ba "${FIRST_ARCHIVE}" | grep 'Path = ' | head -n1 | sed 's/Path = \(.*\)/\1/')
-if [ "$EXTRACTED_APPIMAGE_NAME" != "$APPIMAGE" ]; then
-    mv "$EXTRACTED_APPIMAGE_NAME" "$APPIMAGE"
+mv "${ARCHIVE_NAME_LIST[0]}" "${APPIMAGE}"
+if [ "${#ARCHIVE_NAME_LIST[@]}" -gt 1 ];then
+    cat "${ARCHIVE_NAME_LIST[@]:1}" >> "${APPIMAGE}"
 fi
 chmod +x "${APPIMAGE}"
 
