@@ -3715,6 +3715,11 @@ export const singingCommandStore = transformCommandStore(
     },
 
     COMMAND_DUPLICATE_TRACK: {
+      /**
+       * 指定されたトラックを複製し、元のトラックの直後に挿入する。
+       * ノートやピッチ／ボリューム編集データ、音素タイミング編集データなど
+       * トラックに紐付く情報を引き継いだうえで、ノートIDを新しく振り直す。
+       */
       async action({ state, actions, mutations }, { trackId }) {
         const sourceTrack = getOrThrow(state.tracks, trackId);
         const newTrack = cloneWithUnwrapProxy(sourceTrack);
