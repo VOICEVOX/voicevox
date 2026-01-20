@@ -94,7 +94,7 @@ async function runEngineTest(params: { isUpdate: boolean }) {
 ].forEach(({ envName, envPath, envId }) => {
   test.describe(`${envName}`, () => {
     test.beforeEach(() => {
-      dotenv.config({ path: envPath, override: true });
+      dotenv.config({ path: envPath, override: true, quiet: true });
     });
 
     test("起動したら「利用規約に関するお知らせ」が表示される", async () => {
