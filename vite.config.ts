@@ -153,7 +153,7 @@ export default defineConfig((options) => {
                 isProduction && checkSuspiciousImportsPlugin({}),
               ],
               build: {
-                target: electronTargetVersion?.node,
+                target: electronTargetVersion?.chrome,
                 outDir: path.resolve(import.meta.dirname, "dist"),
                 sourcemap,
               },
