@@ -66,8 +66,11 @@ test("COMMAND_DUPLICATE_TRACK", async () => {
   ];
   store.mutations.SET_NOTES({ trackId: sourceTrackId, notes });
 
-  // 音素タイミング編集データ
+  // ピッチ・音量編集データ
   const sourceTrackClone = cloneWithUnwrapProxy(sourceTrack);
+  sourceTrackClone.pitchEditData = [440, 442, 440];
+  sourceTrackClone.volumeEditData = [1.0, 1.2, 1.0];
+  // 音素タイミング編集データ
   const noteId = notes[0].id;
   sourceTrackClone.phonemeTimingEditData.set(noteId, [
     { phonemeIndexInNote: 0, offsetSeconds: 0.1 },
@@ -94,6 +97,8 @@ test("COMMAND_DUPLICATE_TRACK", async () => {
   expect(newTrack.notes.length).toBe(1);
   expect(newTrack.notes[0].id).not.toBe(noteId);
   expect(newTrack.notes[0].lyric).toBe("test");
+  expect(newTrack.pitchEditData).toEqual([440, 442, 440]);
+  expect(newTrack.volumeEditData).toEqual([1.0, 1.2, 1.0]);
 
   // 音素タイミング編集データが新しいノートIDで引き継がれているか
   const newNoteId = newTrack.notes[0].id;
