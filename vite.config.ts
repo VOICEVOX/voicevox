@@ -176,11 +176,6 @@ export default defineConfig((options) => {
         injectLoaderScriptPlugin(
           "./backend/electron/renderer/backendApiLoader.ts",
         ),
-      isElectron &&
-        injectLoaderScriptPlugin(
-          "./backend/apiLoader.ts",
-          "<!-- %WELCOME_LOADER_SCRIPT% -->",
-        ),
       isBrowser &&
         injectLoaderScriptPlugin("./backend/browser/backendApiLoader.ts"),
     ],
@@ -322,17 +317,14 @@ const electronPreloadOptions = (
   );
 
 /** バックエンドAPIをフロントエンドから実行するコードを注入する */
-const injectLoaderScriptPlugin = (
-  scriptPath: string,
-  placeholder = "<!-- %LOADER_SCRIPT% -->",
-): Plugin => {
+const injectLoaderScriptPlugin = (scriptPath: string): Plugin => {
   return {
     name: "inject-loader-script",
     transformIndexHtml: {
       order: "pre",
       handler: (html: string) => {
         return html.replace(
-          placeholder,
+          "<!-- %LOADER_SCRIPT% -->",
           `<script type="module" src="${scriptPath}"></script>`,
         );
       },
