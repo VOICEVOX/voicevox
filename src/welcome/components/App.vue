@@ -4,7 +4,7 @@
       <MenuBar />
       <QLayout reveal container>
         <WelcomeHeader
-          :editorDisabledReason
+          :launchEditorDisabledReason
           @launchEditor="switchToMainWindow"
         />
 
@@ -180,7 +180,7 @@ type EngineProgressInfo = {
 const engineProgressInfo = ref<Record<EngineId, EngineProgressInfo>>(
   {} as Record<EngineId, EngineProgressInfo>,
 );
-const editorDisabledReason = computed<string | null>(() => {
+const launchEditorDisabledReason = computed<string | null>(() => {
   if (
     loadingEngineInfosState.value === "uninitialized" ||
     loadingEngineInfosState.value === "loadingLocal"
@@ -242,7 +242,7 @@ const installEngine = async (engineId: EngineId) => {
 };
 
 const switchToMainWindow = () => {
-  if (editorDisabledReason.value) {
+  if (launchEditorDisabledReason.value) {
     return;
   }
   void window.welcomeBackend.launchMainWindow();
