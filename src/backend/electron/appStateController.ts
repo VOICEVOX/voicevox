@@ -68,7 +68,7 @@ export class AppStateController {
     try {
       // TODO: ipcの送信以外で失敗した場合はシャットダウンしないようにする
       ipcMainSendProxy.CHECK_EDITED_AND_NOT_SAVE(windowManager.getWindow(), {
-        closeOrReload: "close",
+        nextAction: "close",
       });
     } catch (error) {
       log.error(
