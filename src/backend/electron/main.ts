@@ -544,7 +544,7 @@ app.on("second-instance", async (_event, _argv, _workDir, rawData) => {
         reloadNeeded: true,
         reloadCallback: () => {
           ipcMainSendProxy.CHECK_EDITED_AND_NOT_SAVE(win, {
-            closeOrReload: "reload",
+            nextAction: "reload",
           });
         },
       });

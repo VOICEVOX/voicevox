@@ -274,7 +274,7 @@ export type IpcSOData = {
   CHECK_EDITED_AND_NOT_SAVE: {
     args: [
       obj: {
-        closeOrReload: "close" | "reload";
+        nextAction: "close" | "reload";
         isMultiEngineOffMode?: boolean;
       },
     ];

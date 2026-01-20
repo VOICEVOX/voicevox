@@ -104,7 +104,7 @@ export interface Sandbox {
     detectEnterFullscreen: () => void;
     detectLeaveFullscreen: () => void;
     checkEditedAndNotSave: (obj: {
-      closeOrReload: "close" | "reload";
+      nextAction: "close" | "reload";
       isMultiEngineOffMode?: boolean;
     }) => void;
     detectResized: (obj: { width: number; height: number }) => void;
