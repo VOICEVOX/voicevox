@@ -491,6 +491,13 @@ const deleteEngine = async () => {
         }
         break;
       }
+      case "downloadVvpp": {
+        void store.actions.SHOW_ALERT_DIALOG({
+          title: "エンジンを削除できません",
+          message: "未インストールのエンジンは削除できません。",
+        });
+        break;
+      }
       default:
         throw new ExhaustiveError(engineInfo.type);
     }

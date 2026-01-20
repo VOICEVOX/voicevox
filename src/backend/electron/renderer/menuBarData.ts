@@ -20,8 +20,7 @@ export const useElectronMenuBarData = (
   const hasDownloadVvppEngine = computed(() => {
     return Object.values(engineInfos.value).some((engineInfo) => {
       const manifest = engineInfos.value[engineInfo.uuid];
-      // TODO: ちゃんとdownloadVvppかどうかを判定する
-      return manifest.isDefault && manifest.type === "vvpp";
+      return manifest.type === "downloadVvpp";
     });
   });
 
