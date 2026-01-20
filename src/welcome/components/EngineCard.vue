@@ -34,7 +34,6 @@
             :key="targetOption.target"
             :value="targetOption.target"
             :label="targetOption.label"
-            :hint="targetOption.hint"
           />
         </BaseSelect>
       </div>
@@ -100,6 +99,8 @@ const runtimeTargetOptions = computed<RuntimeTargetOption[]>(() =>
     return {
       target: targetInfo.target,
       label,
+
+      // TODO: ヒントを表示するUIを追加する
       hint: targetInfo.packageInfo.displayInfo.hint,
     };
   }),
