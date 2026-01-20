@@ -140,6 +140,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Purge disk space
+        if: startsWith(matrix.os, 'ubuntu-')
+        run: sudo rm -rf /usr/local/lib/android
+
       # NOTE: The default sed of macOS is BSD sed.
       #       There is a difference in specification between BSD sed and GNU sed,
       #       so you need to install GNU sed.
@@ -459,14 +463,8 @@ jobs:
             # .7z is needed for installer_linux.sh yet
             7z -mx=0 -v1900m a "${{ matrix.linux_appimage_7z_name }}.7z" "${appImageFile}"
 
-            # Output split archive name<TAB>size<TAB>hash list to myartifact.7z.txt
-            ls "${{ matrix.linux_appimage_7z_name }}.7z".* > archives_name.txt
-            stat --printf="%s\n" "${{ matrix.linux_appimage_7z_name }}.7z".* > archives_size.txt
-            md5sum "${{ matrix.linux_appimage_7z_name }}.7z".* | awk '{print $1}' | tr a-z A-Z > archives_hash.txt
-
-            paste -d '\t' archives_name.txt archives_size.txt archives_hash.txt > archives.txt
-
-            mv archives.txt "${{ matrix.installer_artifact_name }}.7z.txt"
+            # Output split archive hash list
+            sha256sum "${{ matrix.linux_appimage_7z_name }}.7z".* > "${{ matrix.installer_artifact_name }}.7z.txt"
           done
 
       - name: Create Linux installer
