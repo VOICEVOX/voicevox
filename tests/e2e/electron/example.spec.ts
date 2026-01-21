@@ -93,6 +93,9 @@ async function runEngineTest(params: { isUpdate: boolean }) {
   },
 ].forEach(({ envName, envPath, envId }) => {
   test.describe(`${envName}`, () => {
+    // NOTE: latestDefaultEngineInfos.json のフォーマットが変更され、release-0.25では新パーサーがないためスキップ
+    if (envId === "vvpp-default-engine") test.skip();
+
     test.beforeEach(() => {
       dotenv.config({ path: envPath, override: true });
     });
