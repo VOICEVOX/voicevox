@@ -36,14 +36,12 @@ export type EnginePackageLocalInfo = {
 };
 
 /** オンラインで取得した最新情報（パッケージ） */
-export type RuntimeTargetPackageInfo = {
-  target: RuntimeTarget;
-  packageInfo: PackageInfo;
-};
-
 export type EnginePackageRemoteInfo = {
   package: EnginePackageBase;
-  availableRuntimeTargets: RuntimeTargetPackageInfo[];
+  availableRuntimeTargets: {
+    target: RuntimeTarget;
+    packageInfo: PackageInfo;
+  }[];
 };
 
 /**
@@ -253,7 +251,7 @@ export class EngineAndVvppController {
         continue;
       }
 
-      const availableRuntimeTargets: RuntimeTargetPackageInfo[] =
+      const availableRuntimeTargets: EnginePackageRemoteInfo["availableRuntimeTargets"] =
         Object.entries(latestInfo.packages)
           .map(([target, packageInfo]) => ({
             target: target,
