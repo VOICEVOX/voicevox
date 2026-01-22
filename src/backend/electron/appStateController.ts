@@ -40,10 +40,10 @@ export class AppStateController {
       return;
     }
 
-    const defaultEngineExists = packageStatuses.some((status) => {
+    const anyDefaultEngineInstalled = packageStatuses.some((status) => {
       return status.installed.status !== "notInstalled";
     });
-    if (defaultEngineExists) {
+    if (anyDefaultEngineInstalled) {
       log.info("Default engine found. Launching main window.");
       await this.launchMainWindow();
     } else {
