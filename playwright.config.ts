@@ -9,7 +9,7 @@
 import type { PlaywrightTestConfig, Project } from "@playwright/test";
 import dotenv from "dotenv";
 
-dotenv.config({ path: ".env.test", override: true });
+dotenv.config({ path: ".env.test", override: true, quiet: true });
 
 let project: Project;
 let webServers: PlaywrightTestConfig["webServer"];
