@@ -8,11 +8,7 @@ import { getButton } from "@/sing/viewHelper";
 
 export class EraseVolumeIdleState
   implements
-    State<
-      VolumeEditorStateDefinitions,
-      VolumeEditorInput,
-      VolumeEditorContext
-    >
+    State<VolumeEditorStateDefinitions, VolumeEditorInput, VolumeEditorContext>
 {
   readonly id = "eraseVolumeIdle";
 

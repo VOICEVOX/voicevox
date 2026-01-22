@@ -48,9 +48,16 @@ export type VolumeEditorComputedRefs = {
 export type VolumeEditorPartialStore = {
   readonly state: Pick<
     Store["state"],
-    "tpqn" | "tempos" | "sequencerZoomX" | "sequencerZoomY" | "sequencerVolumeTool"
+    | "tpqn"
+    | "tempos"
+    | "sequencerZoomX"
+    | "sequencerZoomY"
+    | "sequencerVolumeTool"
   >;
-  readonly getters: Pick<Store["getters"], "SELECTED_TRACK_ID" | "PLAYHEAD_POSITION">;
+  readonly getters: Pick<
+    Store["getters"],
+    "SELECTED_TRACK_ID" | "PLAYHEAD_POSITION"
+  >;
   readonly actions: Pick<
     Store["actions"],
     "COMMAND_SET_VOLUME_EDIT_DATA" | "COMMAND_ERASE_VOLUME_EDIT_DATA"
