@@ -274,7 +274,7 @@ export type EngineInfo = {
   // エンジンの種類。
   // vvpp: vvppファイルから読み込んだエンジン
   // path: パスを指定して追加したエンジン
-  // downloadVvpp: VVPPをダウンロードして追加するエンジン
+  // downloadVvpp: VVPPをダウンロードして追加したエンジン
   type: "vvpp" | "path" | "downloadVvpp";
   isDefault: boolean; // デフォルトエンジンかどうか
 };
