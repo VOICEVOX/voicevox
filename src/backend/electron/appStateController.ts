@@ -149,6 +149,7 @@ export class AppStateController {
     log.info("Checking for unsaved edits before quitting");
     const mainWindowManager = getMainWindowManager();
     try {
+      // TODO: ipcの送信以外で失敗した場合はシャットダウンしないようにする
       mainWindowManager.ipc.CHECK_EDITED_AND_NOT_SAVE({
         nextAction: "close",
       });
