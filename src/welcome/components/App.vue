@@ -177,9 +177,7 @@ type EngineProgressInfo = {
   progress: number;
   type: "download" | "install";
 };
-const engineProgressInfo = ref<Record<EngineId, EngineProgressInfo>>(
-  {} as Record<EngineId, EngineProgressInfo>,
-);
+const engineProgressInfo = ref<Record<EngineId, EngineProgressInfo>>({});
 const launchEditorDisabledReason = computed<string | null>(() => {
   if (
     loadingEngineInfosState.value === "uninitialized" ||
@@ -235,6 +233,7 @@ const installEngine = async (engineId: EngineId) => {
       `Engine package ${engineId} installation failed`,
       error,
     );
+    throw error;
   } finally {
     clearEngineProgress(engineId);
     void fetchInstalledEngineInfos();
@@ -242,8 +241,9 @@ const installEngine = async (engineId: EngineId) => {
 };
 
 const switchToMainWindow = () => {
+  // NOTE: 処理漏れを防ぐために念のため例外を投げる
   if (launchEditorDisabledReason.value) {
-    return;
+    throw new UnreachableError();
   }
   void window.welcomeBackend.launchMainWindow();
 };
@@ -268,6 +268,7 @@ const fetchInstalledEngineInfos = async () => {
       "エンジン情報のオンライン取得に失敗しました",
       error,
     );
+    throw error;
   } finally {
     loadingEngineInfosState.value = "fetched";
   }
