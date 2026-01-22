@@ -65,6 +65,7 @@ export class AppStateController {
     await this.launchMainWindow();
     this.quitState = "unconfirmed";
   }
+
   async switchToWelcomeWindow() {
     log.info("Switching to welcome window");
     this.quitState = "switch";
