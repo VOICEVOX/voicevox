@@ -53,7 +53,7 @@ pnpm i
 
 ### AI エージェントのセットアップ（任意）
 
-Codex CLI や Claude Code などの AI エージェント用のファイルをセットアップする場合は、以下のコマンドを実行してください。
+次のコマンドを実行することで、Codex CLI や Claude Code などの AI エージェント用のファイルがセットアップされます。
 
 ```bash
 pnpm run setup-agents
