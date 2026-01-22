@@ -201,7 +201,7 @@ const actionLabelWithSize = computed(() => {
   }
 
   const size = selectedPackageInfo.value?.files.reduce(
-    (acc, file) => acc + (file.size ?? 0),
+    (acc, file) => acc + file.size,
     0,
   );
   if (size) {
