@@ -9,7 +9,7 @@ import {
   PresetKey,
   EngineId,
 } from "@/type/preload";
-import { ensureNotNullish } from "@/helpers/errorHelper";
+import { ensureNotNullish } from "@/type/utility";
 import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
 import {
   HotkeyCombination,
