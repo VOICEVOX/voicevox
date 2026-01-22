@@ -51,6 +51,14 @@ npm i -g pnpm # 初回のみ
 pnpm i
 ```
 
+### AI エージェントのセットアップ（任意）
+
+Codex CLI や Claude Code などの AI エージェント用のファイルをセットアップする場合は、以下のコマンドを実行してください。
+
+```bash
+pnpm run setup-agents
+```
+
 ## 実行
 
 ### エンジンの準備
