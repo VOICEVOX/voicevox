@@ -54,6 +54,10 @@ class MainWindowManager {
     return this._win;
   }
 
+  public isInitialized() {
+    return this._win != undefined;
+  }
+
   /**
    * BrowserWindowを取得するが存在しない場合は例外を投げる
    */
@@ -64,6 +68,9 @@ class MainWindowManager {
     return this._win;
   }
 
+  /**
+   * BrowserWindowのIPC送信用プロキシを取得する
+   */
   public get ipc() {
     if (this._ipc == undefined) {
       throw new Error("_ipc == undefined");
@@ -256,10 +263,6 @@ class MainWindowManager {
 
   public isMaximized() {
     return this.getWindow().isMaximized();
-  }
-
-  public isInitialized() {
-    return this._win != undefined;
   }
 
   public showOpenDialogSync(options: OpenDialogSyncOptions) {

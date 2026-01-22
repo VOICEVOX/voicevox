@@ -53,16 +53,6 @@ class WelcomeWindowManager {
   }
 
   /**
-   * BrowserWindowのIPC送信用プロキシを取得する
-   */
-  public get ipc() {
-    if (this._ipc == undefined) {
-      throw new Error("_ipc == undefined");
-    }
-    return this._ipc;
-  }
-
-  /**
    * BrowserWindowを取得するが存在しない場合は例外を投げる
    */
   public getWindow() {
@@ -70,6 +60,16 @@ class WelcomeWindowManager {
       throw new Error("_win == undefined");
     }
     return this._win;
+  }
+
+  /**
+   * BrowserWindowのIPC送信用プロキシを取得する
+   */
+  public get ipc() {
+    if (this._ipc == undefined) {
+      throw new Error("_ipc == undefined");
+    }
+    return this._ipc;
   }
 
   public async createWindow() {
