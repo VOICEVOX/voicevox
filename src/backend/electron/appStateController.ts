@@ -90,11 +90,10 @@ export class AppStateController {
   }
 
   private async launchMainWindow() {
-    const engineAndVvppController = getEngineAndVvppController();
-    const mainWindowManager = getMainWindowManager();
-
     this.activeWindow = "main";
 
+    const engineAndVvppController = getEngineAndVvppController();
+    const mainWindowManager = getMainWindowManager();
     await engineAndVvppController.launchEngines();
     await mainWindowManager.createWindow();
   }
