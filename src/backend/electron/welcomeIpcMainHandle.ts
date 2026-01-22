@@ -10,6 +10,7 @@ import { createLogger } from "@/helpers/log";
 const log = createLogger("WelcomeIpcMainHandle");
 
 export function getWelcomeIpcMainHandle(): IpcMainHandle<WelcomeIpcIHData> {
+  const appStateController = getAppStateController();
   const engineAndVvppController = getEngineAndVvppController();
   const configManager = getConfigManager();
 
@@ -73,7 +74,6 @@ export function getWelcomeIpcMainHandle(): IpcMainHandle<WelcomeIpcIHData> {
       return configManager.get("currentTheme");
     },
     SWITCH_TO_MAIN_WINDOW: async () => {
-      const appStateController = getAppStateController();
       await appStateController.switchToMainWindow();
     },
     MINIMIZE_WINDOW: () => {
@@ -85,7 +85,6 @@ export function getWelcomeIpcMainHandle(): IpcMainHandle<WelcomeIpcIHData> {
       welcomeWindowManager.toggleMaximizeWindow();
     },
     CLOSE_WINDOW: () => {
-      const appStateController = getAppStateController();
       appStateController.shutdown();
     },
     IS_MAXIMIZED_WINDOW: () => {

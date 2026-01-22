@@ -95,6 +95,7 @@ export function getIpcMainHandle(params: {
   const { staticDirPath, appDirPath, initialFilePathGetter } = params;
 
   const configManager = getConfigManager();
+  const appStateController = getAppStateController();
   const engineAndVvppController = getEngineAndVvppController();
   const engineInfoManager = getEngineInfoManager();
   const engineProcessManager = getEngineProcessManager();
@@ -226,7 +227,6 @@ export function getIpcMainHandle(params: {
     },
 
     SWITCH_TO_WELCOME_WINDOW: async () => {
-      const appStateController = getAppStateController();
       await appStateController.switchToWelcomeWindow();
     },
 
