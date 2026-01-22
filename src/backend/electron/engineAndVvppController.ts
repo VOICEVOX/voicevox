@@ -255,7 +255,7 @@ export class EngineAndVvppController {
         Object.entries(latestInfo.packages)
           .map(([target, packageInfo]) => ({ target, packageInfo }))
           .filter((runtimeTargetInfo) =>
-            EngineAndVvppController.isSupportedTarget(runtimeTargetInfo.target),
+            isSupportedTarget(runtimeTargetInfo.target),
           )
           .toSorted(
             (a, b) =>
@@ -410,42 +410,42 @@ export class EngineAndVvppController {
       return this.vvppManager.handleMarkedEngineDirs();
     });
   }
+}
 
-  /** このRuntime Targetはこのプラットフォームで動くか */
-  static isSupportedTarget(target: string): boolean {
-    let isSupported = true;
-    const os = target.split("-")[0];
-    switch (os) {
-      case "windows":
-        isSupported &&= isWindows;
-        break;
-      case "macos":
-        isSupported &&= isMac;
-        break;
-      case "linux":
-        isSupported &&= isLinux;
-        break;
-      default:
-        isSupported = false;
-    }
-
-    const arch = target.split("-")[1];
-    switch (arch) {
-      case "x64":
-        isSupported &&= process.arch === "x64";
-        break;
-      case "arm64":
-        isSupported &&= process.arch === "arm64";
-        break;
-      case "x86":
-        isSupported &&= process.arch === "ia32";
-        break;
-      default:
-        isSupported = false;
-    }
-
-    return isSupported;
+/** 指定したRuntime Targetは現在のプラットフォームで動くか */
+function isSupportedTarget(target: string): boolean {
+  let isSupported = true;
+  const os = target.split("-")[0];
+  switch (os) {
+    case "windows":
+      isSupported &&= isWindows;
+      break;
+    case "macos":
+      isSupported &&= isMac;
+      break;
+    case "linux":
+      isSupported &&= isLinux;
+      break;
+    default:
+      isSupported = false;
   }
+
+  const arch = target.split("-")[1];
+  switch (arch) {
+    case "x64":
+      isSupported &&= process.arch === "x64";
+      break;
+    case "arm64":
+      isSupported &&= process.arch === "arm64";
+      break;
+    case "x86":
+      isSupported &&= process.arch === "ia32";
+      break;
+    default:
+      isSupported = false;
+  }
+
+  return isSupported;
 }
 
 let manager: EngineAndVvppController | undefined;
