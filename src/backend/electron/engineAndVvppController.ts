@@ -27,7 +27,7 @@ export type EnginePackageBase = {
   engineId: EngineId;
 };
 
-/** ローカルのインストール状況（パッケージ） */
+/** ローカルのパッケージインストール状況 */
 export type EnginePackageLocalInfo = {
   package: EnginePackageBase;
   installed:
@@ -35,7 +35,7 @@ export type EnginePackageLocalInfo = {
     | { status: "installed"; installedVersion: string };
 };
 
-/** オンラインで取得した最新情報（パッケージ） */
+/** オンラインで取得したパッケージ最新情報 */
 export type EnginePackageRemoteInfo = {
   package: EnginePackageBase;
   availableRuntimeTargets: {
@@ -221,7 +221,7 @@ export class EngineAndVvppController {
   }
 
   /**
-   * デフォルトエンジンのインストール状況を取得する（オフライン）。
+   * オフラインでデフォルトエンジンのインストール状況を取得する。
    */
   getEnginePackageLocalInfos(): EnginePackageLocalInfo[] {
     return this.getDownloadableEnvEngineInfos().map((envEngineInfo) => ({
@@ -234,7 +234,7 @@ export class EngineAndVvppController {
   }
 
   /**
-   * 最新のエンジンパッケージの情報や、そのエンジンのインストール状況を取得する（オンライン）。
+   * オンラインで最新のエンジンパッケージの情報や、そのエンジンのインストール状況を取得する。
    */
   async fetchLatestEnginePackageRemoteInfos(): Promise<
     EnginePackageRemoteInfo[]
