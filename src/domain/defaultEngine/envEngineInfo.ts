@@ -31,7 +31,7 @@ const envEngineInfoSchema = z
       }),
     ]),
   );
-export type EnvEngineInfo = z.infer<typeof envEngineInfoSchema>;
+type EnvEngineInfo = z.infer<typeof envEngineInfoSchema>;
 
 /**
  * デフォルトエンジン情報の環境変数を取得する
