@@ -206,7 +206,7 @@ export class EngineAndVvppController {
     );
   }
 
-  private fetchInstalledEngineStatus(
+  private getInstalledEngineStatus(
     engineId: EngineId,
   ): EnginePackageLocalInfo["installed"] {
     const isInstalled = this.engineInfoManager.hasEngineInfo(engineId);
@@ -231,7 +231,7 @@ export class EngineAndVvppController {
         engineName: envEngineInfo.name,
         engineId: envEngineInfo.uuid,
       },
-      installed: this.fetchInstalledEngineStatus(envEngineInfo.uuid),
+      installed: this.getInstalledEngineStatus(envEngineInfo.uuid),
     }));
   }
 
