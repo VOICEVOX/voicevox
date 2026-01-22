@@ -225,7 +225,7 @@ export class EngineAndVvppController {
   /**
    * デフォルトエンジンのインストール状況を取得する（オフライン）。
    */
-  fetchEnginePackageLocalInfos(): EnginePackageLocalInfo[] {
+  getEnginePackageLocalInfos(): EnginePackageLocalInfo[] {
     return this.getDownloadableEnvEngineInfos().map((envEngineInfo) => ({
       package: {
         engineName: envEngineInfo.name,

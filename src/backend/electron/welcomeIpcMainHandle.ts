@@ -64,7 +64,7 @@ export function getWelcomeIpcMainHandle(): IpcMainHandle<WelcomeIpcIHData> {
       );
     },
     FETCH_ENGINE_PACKAGE_LOCAL_INFOS: () => {
-      return engineAndVvppController.fetchEnginePackageLocalInfos();
+      return engineAndVvppController.getEnginePackageLocalInfos();
     },
     FETCH_LATEST_ENGINE_PACKAGE_REMOTE_INFOS: async () => {
       return engineAndVvppController.fetchLatestEnginePackageRemoteInfos();
