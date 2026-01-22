@@ -204,7 +204,7 @@ const launchEditorDisabledReason = computed<string | null>(() => {
 
 const clearEngineProgress = (engineId: EngineId) => {
   const { [engineId]: _, ...rest } = engineProgressInfo.value;
-  engineProgressInfo.value = rest as Record<EngineId, EngineProgressInfo>;
+  engineProgressInfo.value = rest;
 };
 
 const getEngineProgress = (engineId: EngineId) =>
