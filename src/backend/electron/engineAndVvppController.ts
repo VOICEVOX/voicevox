@@ -253,10 +253,7 @@ export class EngineAndVvppController {
 
       const availableRuntimeTargets: EnginePackageRemoteInfo["availableRuntimeTargets"] =
         Object.entries(latestInfo.packages)
-          .map(([target, packageInfo]) => ({
-            target: target,
-            packageInfo,
-          }))
+          .map(([target, packageInfo]) => ({ target, packageInfo }))
           .filter((runtimeTargetInfo) =>
             EngineAndVvppController.isSupportedTarget(runtimeTargetInfo.target),
           )
