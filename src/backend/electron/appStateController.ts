@@ -82,14 +82,14 @@ export class AppStateController {
     this.quitState = "unconfirmed";
   }
 
-  async launchWelcomeWindow() {
+  private async launchWelcomeWindow() {
     this.activeWindow = "welcome";
 
     const welcomeWindowManager = getWelcomeWindowManager();
     await welcomeWindowManager.createWindow();
   }
 
-  async launchMainWindow() {
+  private async launchMainWindow() {
     const engineAndVvppController = getEngineAndVvppController();
     const mainWindowManager = getMainWindowManager();
 
