@@ -112,7 +112,7 @@ onetimeWatch(
 @use "@/styles/colors" as colors;
 
 .layout-container {
-  min-height: calc(100vh - #{vars.$menubar-height});
+  min-height: calc(100vh - var(--menubar-height));
 }
 .sing-main {
   display: flex;

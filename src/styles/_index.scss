@@ -6,6 +6,14 @@
 @use "./v2/cursor"; // カーソル
 @use "fonts";
 
+body {
+  --menubar-height: 24px;
+
+  &.macos {
+    --menubar-height: 32px;
+  }
+}
+
 // 優先度を強引に上げる
 body:not(#dummy) {
   user-select: none;
@@ -17,6 +25,11 @@ body:not(#dummy) {
     border-left: solid #{vars.$window-border-width} #{colors.$splitter};
     border-right: solid #{vars.$window-border-width} #{colors.$splitter};
     border-bottom: solid #{vars.$window-border-width} #{colors.$splitter};
+
+    &.macos {
+      border-radius: 16px;
+      -electron-corner-smoothing: system-ui;
+    }
   }
 }
 
@@ -96,7 +109,7 @@ img {
   .q-dialog__inner,
   .q-loading,
   .q-loading__backdrop {
-    top: vars.$menubar-height;
+    top: var(--menubar-height);
     left: vars.$window-border-width;
     right: vars.$window-border-width;
     bottom: vars.$window-border-width;

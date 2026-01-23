@@ -464,8 +464,11 @@ provide(dictionaryManageDialogContextKey, {
   // menubar-height + toolbar-height + window-border-width +
   // 36(title & buttons) + 30(margin 15x2)
   height: calc(
-    100vh - #{vars.$menubar-height + vars.$toolbar-height +
-      vars.$window-border-width + 36px + 30px}
+    100vh -
+      (
+        var(--menubar-height) + #{vars.$toolbar-height} +
+          #{vars.$window-border-width} + 36px + 30px
+      )
   );
   width: 100%;
   overflow-y: auto;

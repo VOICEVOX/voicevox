@@ -177,7 +177,13 @@ watch(uiLocked, () => {
 @use "@/styles/colors" as colors;
 
 .q-bar {
-  min-height: vars.$menubar-height;
+  min-height: var(--menubar-height);
+
+  .macos & {
+    // MacOSではMenuBarはウィンドウの枠線にかぶるように表示する
+    margin-left: -#{vars.$window-border-width};
+    width: calc(100% + #{vars.$window-border-width} * 2);
+  }
   -webkit-app-region: drag; // Electronのドラッグ領域
   :deep(.q-btn) {
     margin-left: 0;
@@ -186,11 +192,12 @@ watch(uiLocked, () => {
 }
 
 .window-logo {
-  height: vars.$menubar-height;
+  height: var(--menubar-height);
 }
 
 .window-title {
-  height: vars.$menubar-height;
+  height: var(--menubar-height);
+  line-height: var(--menubar-height);
   margin-right: 10%;
   text-overflow: ellipsis;
   overflow: hidden;
