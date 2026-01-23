@@ -2,7 +2,7 @@
 root: false
 targets: ["*"] 
 description: "エラーハンドリングに関するユーティリティを使うためのガイドライン"
-globs: ["**/*"] # file patterns to match (e.g., ["*.md", "*.txt"])
+globs: ["**/*"]
 ---
 
 # エラーハンドリングに関するユーティリティ
