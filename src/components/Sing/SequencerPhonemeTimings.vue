@@ -10,43 +10,27 @@ import * as PIXI from "pixi.js";
 import { useStore } from "@/store";
 import { useMounted } from "@/composables/useMounted";
 import { secondToTick } from "@/sing/music";
-import { tickToBaseX } from "@/sing/viewHelper";
-import { getNext, getPrev } from "@/sing/utility";
+import { tickToBaseX, type ViewportInfo } from "@/sing/viewHelper";
+import { getNext } from "@/sing/utility";
 import { getOrThrow } from "@/helpers/mapHelper";
-import { EditorFrameAudioQuery } from "@/store/type";
 import { UnreachableError } from "@/type/utility";
 import {
-  adjustPhonemeTimings,
-  applyPhonemeTimingEdit,
-  toPhonemes,
-  toPhonemeTimings,
-} from "@/sing/domain";
-
-type PhraseInfo = Readonly<{
-  startTime: number;
-  query?: EditorFrameAudioQuery;
-  minNonPauseStartFrame: number | undefined;
-  maxNonPauseEndFrame: number | undefined;
-}>;
+  computePhonemeTimingLineInfos,
+  getPhraseInfosForTrack,
+  type PhonemeTimingPreviewEdit,
+} from "@/sing/phonemeTimingEditorStateMachine/common";
 
 type PhonemeInfo = Readonly<{
   phoneme: string;
   isEdited: boolean;
+  isPreview: boolean;
   startTime: number;
-}>;
-
-type ViewportInfo = Readonly<{
-  scaleX: number;
-  scaleY: number;
-  offsetX: number;
-  offsetY: number;
-  width: number;
-  height: number;
 }>;
 
 const props = defineProps<{
   offsetX: number;
   offsetY: number;
+  previewPhonemeTimingEdit?: PhonemeTimingPreviewEdit;
 }>();
 
 const store = useStore();
@@ -57,24 +41,13 @@ const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
 const phonemeTimingEditData = computed(() => {
   return store.getters.SELECTED_TRACK.phonemeTimingEditData;
 });
+const previewPhonemeTimingEdit = computed(() => props.previewPhonemeTimingEdit);
 const phraseInfosInSelectedTrack = computed(() => {
-  const phraseInfos: PhraseInfo[] = [];
-  for (const phrase of store.state.phrases.values()) {
-    if (phrase.trackId !== selectedTrackId.value) {
-      continue;
-    }
-    let query: EditorFrameAudioQuery | undefined = undefined;
-    if (phrase.queryKey != undefined) {
-      query = getOrThrow(store.state.phraseQueries, phrase.queryKey);
-    }
-    phraseInfos.push({
-      startTime: phrase.startTime,
-      query,
-      minNonPauseStartFrame: phrase.minNonPauseStartFrame,
-      maxNonPauseEndFrame: phrase.maxNonPauseEndFrame,
-    });
-  }
-  return phraseInfos;
+  return getPhraseInfosForTrack(
+    store.state.phrases,
+    store.state.phraseQueries,
+    selectedTrackId.value,
+  );
 });
 
 // 音素タイミング線のスタイル定義
@@ -82,19 +55,23 @@ const phonemeTimingLineStyles: {
   light: {
     default: { color: number; alpha: number; width: number };
     edited: { color: number; alpha: number; width: number };
+    preview: { color: number; alpha: number; width: number };
   };
   dark: {
     default: { color: number; alpha: number; width: number };
     edited: { color: number; alpha: number; width: number };
+    preview: { color: number; alpha: number; width: number };
   };
 } = {
   light: {
     default: { color: 0x8bc796, alpha: 1, width: 1 },
     edited: { color: 0x00a73f, alpha: 1, width: 2 },
+    preview: { color: 0x3d7eff, alpha: 1, width: 2 },
   },
   dark: {
     default: { color: 0x82b38b, alpha: 1, width: 1 },
     edited: { color: 0x9ec9a6, alpha: 1, width: 2 },
+    preview: { color: 0x6fa8ff, alpha: 1, width: 2 },
   },
 };
 
@@ -150,14 +127,14 @@ const render = () => {
 
   const rawTempos = toRaw(tempos.value);
   const rawPhonemeTimingEditData = toRaw(phonemeTimingEditData.value);
+  const previewEdit = previewPhonemeTimingEdit.value;
+  const rawPhraseInfos = toRaw(phraseInfosInSelectedTrack.value);
 
   const viewportInfo: ViewportInfo = {
     scaleX: store.state.sequencerZoomX,
     scaleY: store.state.sequencerZoomY,
     offsetX: props.offsetX,
     offsetY: props.offsetY,
-    width: canvasWidth,
-    height: canvasHeight,
   };
 
   const currentTextStyle = isDark.value
@@ -182,82 +159,40 @@ const render = () => {
   }
   lastIsDark = isDark.value;
 
+  // lineInfosを算出
+  const lineInfos = computePhonemeTimingLineInfos(
+    rawPhraseInfos,
+    rawPhonemeTimingEditData,
+    rawTempos,
+    tpqn.value,
+    viewportInfo,
+  );
+
+  // カリングとプレビュー処理を行い、描画用の情報を生成
   const phonemeInfos: PhonemeInfo[] = [];
-
-  // 描画すべき音素の情報を収集（カリング処理含む）
-  for (const phraseInfo of phraseInfosInSelectedTrack.value) {
-    const rawPhraseInfo = toRaw(phraseInfo);
-    const phraseQuery = rawPhraseInfo.query;
-    if (phraseQuery == undefined) {
+  for (const lineInfo of lineInfos) {
+    // カリング：画面外の音素はスキップ
+    if (lineInfo.pixelX < -30 || lineInfo.pixelX > canvasWidth + 30) {
       continue;
     }
 
-    // 編集を適用した音素列を生成
-    const phonemeTimings = toPhonemeTimings(phraseQuery.phonemes);
-    applyPhonemeTimingEdit(
-      phonemeTimings,
-      rawPhonemeTimingEditData,
-      phraseQuery.frameRate,
-    );
-    adjustPhonemeTimings(
-      phonemeTimings,
-      rawPhraseInfo.minNonPauseStartFrame,
-      rawPhraseInfo.maxNonPauseEndFrame,
-    );
-    const editedPhonemes = toPhonemes(phonemeTimings);
+    // プレビュー判定
+    const isPreview =
+      previewEdit != undefined &&
+      previewEdit.noteId === lineInfo.noteId &&
+      previewEdit.phonemeIndexInNote === lineInfo.phonemeIndexInNote;
 
-    // フレーズの開始・終了位置を計算
-    const phraseStartTime = rawPhraseInfo.startTime;
-    const phraseStartTicks = secondToTick(
-      phraseStartTime,
-      rawTempos,
-      tpqn.value,
-    );
-    const phraseStartX =
-      tickToBaseX(phraseStartTicks, tpqn.value) * viewportInfo.scaleX -
-      viewportInfo.offsetX;
-    const phraseFrameLength = editedPhonemes.reduce(
-      (acc, p) => acc + p.frameLength,
-      0,
-    );
-    const phraseEndTime =
-      phraseStartTime + phraseFrameLength / phraseQuery.frameRate;
-    const phraseEndTicks = secondToTick(phraseEndTime, rawTempos, tpqn.value);
-    const phraseEndX =
-      tickToBaseX(phraseEndTicks, tpqn.value) * viewportInfo.scaleX -
-      viewportInfo.offsetX;
+    // プレビュー時は開始時刻を上書き（元の位置 + プレビューオフセット）
+    const startTime = isPreview
+      ? lineInfo.originalStartTimeSeconds + previewEdit.offsetSeconds
+      : lineInfo.editedStartTimeSeconds;
 
-    // 画面の左外、または右外にある場合は描画対象外（カリング）
-    if (phraseStartX > viewportInfo.width || phraseEndX < 0) {
-      continue;
-    }
-
-    // フレーズ内の各音素について処理
-    let phonemeStartFrame = 0;
-    let editedPhonemeStartFrame = 0;
-    for (let i = 0; i < phraseQuery.phonemes.length; i++) {
-      const phoneme = phraseQuery.phonemes[i];
-      const prevPhoneme = getPrev(phraseQuery.phonemes, i);
-      const editedPhoneme = editedPhonemes[i];
-
-      // 子音・母音とフレーズ最後のpauを描画対象とする
-      if (
-        phoneme.phoneme !== "pau" ||
-        (prevPhoneme != undefined && prevPhoneme.phoneme !== "pau")
-      ) {
-        const phonemeStartTime =
-          phraseStartTime + editedPhonemeStartFrame / phraseQuery.frameRate;
-        const isEdited = phonemeStartFrame !== editedPhonemeStartFrame;
-
-        phonemeInfos.push({
-          phoneme: editedPhoneme.phoneme,
-          startTime: phonemeStartTime,
-          isEdited: isEdited,
-        });
-      }
-      phonemeStartFrame += phoneme.frameLength;
-      editedPhonemeStartFrame += editedPhoneme.frameLength;
-    }
+    phonemeInfos.push({
+      phoneme: lineInfo.phoneme,
+      isEdited: lineInfo.hasExistingEdit && !isPreview,
+      isPreview,
+      startTime,
+    });
   }
 
   // 線のGraphicsが足りなければ追加
@@ -337,16 +272,18 @@ const render = () => {
     const themeStyles = isDark.value
       ? phonemeTimingLineStyles.dark
       : phonemeTimingLineStyles.light;
-    const lineStyle = phonemeInfo.isEdited
-      ? themeStyles.edited
-      : themeStyles.default;
+    const lineStyle = phonemeInfo.isPreview
+      ? themeStyles.preview
+      : phonemeInfo.isEdited
+        ? themeStyles.edited
+        : themeStyles.default;
 
     graphic.lineStyle(lineStyle.width, lineStyle.color, lineStyle.alpha);
 
     const lineX =
       (lineStyle.width & 1) === 1 ? phonemeStartX - 0.5 : phonemeStartX;
     graphic.moveTo(lineX, 0);
-    graphic.lineTo(lineX, viewportInfo.height);
+    graphic.lineTo(lineX, canvasHeight);
 
     // テキストの更新
     if (phonemeInfo.phoneme !== "pau") {
@@ -399,7 +336,14 @@ const render = () => {
 
 // NOTE: mountedをwatchしているので、onMountedの直後に必ず１回実行される
 watch(
-  [mounted, phraseInfosInSelectedTrack, tempos, tpqn, phonemeTimingEditData],
+  [
+    mounted,
+    phraseInfosInSelectedTrack,
+    tempos,
+    tpqn,
+    phonemeTimingEditData,
+    previewPhonemeTimingEdit,
+  ],
   ([mounted]) => {
     if (mounted) {
       renderInNextFrame = true;

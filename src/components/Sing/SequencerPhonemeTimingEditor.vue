@@ -1,7 +1,12 @@
 <template>
   <div class="phoneme-timing-editor">
     <div class="axis-area"></div>
-    <div v-if="editTarget === 'PHONEME_TIMING'" class="parameter-area">
+    <div
+      v-if="editTarget === 'PHONEME_TIMING'"
+      ref="parameterArea"
+      class="parameter-area"
+      @pointerdown="onPointerDown"
+    >
       <SequencerParameterGrid
         class="parameter-grid"
         :offsetX="props.viewportInfo.offsetX"
@@ -19,25 +24,96 @@
         class="phoneme-timings"
         :offsetX="props.viewportInfo.offsetX"
         :offsetY="props.viewportInfo.offsetY"
+        :previewPhonemeTimingEdit="phonemeTimingPreviewEdit"
       />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import type { ViewportInfo } from "@/sing/viewHelper";
 import { useStore } from "@/store";
+import { usePhonemeTimingEditorStateMachine } from "@/composables/usePhonemeTimingEditorStateMachine";
+import {
+  onMountedOrActivated,
+  onUnmountedOrDeactivated,
+} from "@/composables/onMountOrActivate";
 import SequencerParameterGrid from "@/components/Sing/SequencerParameterGrid.vue";
 import SequencerWaveform from "@/components/Sing/SequencerWaveform.vue";
 import SequencerPhonemeTimings from "@/components/Sing/SequencerPhonemeTimings.vue";
 import SequencerNoteTimings from "@/components/Sing/SequencerNoteTimings.vue";
+import { assertNonNullable } from "@/type/utility";
 
 const store = useStore();
 const editTarget = computed(() => store.state.parameterPanelEditTarget);
 const props = defineProps<{
   viewportInfo: ViewportInfo;
 }>();
+
+const { stateMachineProcess, cursorState, phonemeTimingPreviewEdit } =
+  usePhonemeTimingEditorStateMachine(
+    store,
+    computed(() => props.viewportInfo),
+  );
+
+const parameterArea = ref<HTMLElement | null>(null);
+
+const cursorStyle = computed(() => {
+  switch (cursorState.value) {
+    case "EW_RESIZE":
+      return "ew-resize";
+    default:
+      return "default";
+  }
+});
+
+const getXInBorderBox = (clientX: number, element: HTMLElement) => {
+  return clientX - element.getBoundingClientRect().left;
+};
+
+const getLocalPositionX = (event: PointerEvent): number => {
+  const parameterAreaElement = parameterArea.value;
+  assertNonNullable(parameterAreaElement);
+  return getXInBorderBox(event.clientX, parameterAreaElement);
+};
+
+const onPointerDown = (event: PointerEvent) => {
+  stateMachineProcess({
+    type: "pointerEvent",
+    targetArea: "PhonemeTimingArea",
+    pointerEvent: event,
+    positionX: getLocalPositionX(event),
+  });
+};
+
+const onWindowPointerMove = (event: PointerEvent) => {
+  stateMachineProcess({
+    type: "pointerEvent",
+    targetArea: "Window",
+    pointerEvent: event,
+    positionX: getLocalPositionX(event),
+  });
+};
+
+const onWindowPointerUp = (event: PointerEvent) => {
+  stateMachineProcess({
+    type: "pointerEvent",
+    targetArea: "Window",
+    pointerEvent: event,
+    positionX: getLocalPositionX(event),
+  });
+};
+
+onMountedOrActivated(() => {
+  window.addEventListener("pointermove", onWindowPointerMove);
+  window.addEventListener("pointerup", onWindowPointerUp);
+});
+
+onUnmountedOrDeactivated(() => {
+  window.removeEventListener("pointermove", onWindowPointerMove);
+  window.removeEventListener("pointerup", onWindowPointerUp);
+});
 </script>
 
 <style scoped lang="scss">
@@ -63,6 +139,7 @@ const props = defineProps<{
 
   display: grid;
   grid-template-rows: 12px 26px 28px 1fr;
+  cursor: v-bind(cursorStyle);
 }
 
 .parameter-grid {
