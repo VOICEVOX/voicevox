@@ -50,7 +50,7 @@
     "preinstall": "npx -y only-allow pnpm",
     "postinstall": "pnpm run postinstall:packages && pnpm run postinstall:download-scripts",
     "postinstall:packages": "electron-builder install-app-deps && playwright install chromium",
-    "postinstall:download-scripts": "tsx tools/download7z.ts && tsx tools/downloadTypos.ts && tsx tools/downloadAppimagetool.ts",
+    "postinstall:download-scripts": "tsx tools/download7z.ts && tsx tools/downloadTypos.ts && tsx tools/downloadAppimagetool.ts && tsx tools/downloadType2Runtime.ts",
     "postuninstall": "electron-builder install-app-deps"
   },
   "dependencies": {
