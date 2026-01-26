@@ -10,7 +10,7 @@
       {{ titleText }}
     </div>
     <QSpace />
-    <WindowControls :isMaximized :isFullscreen />
+    <WindowControls v-if="!$q.platform.is.mac" :isMaximized :isFullscreen />
   </QBar>
 </template>
 
