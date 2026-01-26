@@ -15,7 +15,7 @@
     ></QBtn>
 
     <QBtn
-      v-if="isMaximized || isFullscreen"
+      v-if="props.isMaximized || props.isFullscreen"
       dense
       flat
       :icon="mdiWindowRestore"
@@ -47,25 +47,31 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
 import { mdiWindowRestore } from "@quasar/extras/mdi-v5";
-import { useStore } from "@/store";
 
-const store = useStore();
+const props = defineProps<{
+  isMaximized: boolean;
+  isFullscreen: boolean;
+}>();
 
-const closeWindow = async () => {
-  void store.actions.CHECK_EDITED_AND_NOT_SAVE({ nextAction: "close" });
+const minimizeWindow = () => {
+  void window.welcomeBackend.minimizeWindow();
 };
-const minimizeWindow = () => window.backend.minimizeWindow();
-const toggleMaximizeWindow = () => window.backend.toggleMaximizeWindow();
-
-const isMaximized = computed(() => store.state.isMaximized);
-const isFullscreen = computed(() => store.getters.IS_FULLSCREEN);
+const toggleMaximizeWindow = () => {
+  void window.welcomeBackend.toggleMaximizeWindow();
+};
+const closeWindow = () => {
+  void window.welcomeBackend.closeWindow();
+};
 </script>
 
 <style scoped lang="scss">
 .q-badge {
   padding: 0;
+}
+
+.window-controls-badge {
+  margin-left: 12px;
 }
 
 .title-bar-buttons-root {

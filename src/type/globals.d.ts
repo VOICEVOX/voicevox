@@ -2,6 +2,7 @@
 export * from "immer/src/types/globals";
 // showDirectoryPicker などのAPIをブラウザで使用するためにimportしている
 import "@types/wicg-file-system-access";
+import { welcomeSandboxKey } from "../welcome/preloadType";
 import { SandboxKey } from "./preload";
 
 declare global {
@@ -15,6 +16,7 @@ declare global {
 
   interface Window {
     readonly [SandboxKey]: import("./preload").Sandbox;
+    readonly [welcomeSandboxKey]: import("../welcome/preloadType").WelcomeSandbox;
   }
 
   interface Navigator {
