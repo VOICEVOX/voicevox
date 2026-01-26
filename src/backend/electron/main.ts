@@ -1,12 +1,7 @@
-"use strict";
-
 import path from "node:path";
-
 import fs from "node:fs";
 import { pathToFileURL } from "node:url";
 import { app, dialog, Menu, net, protocol, session, shell } from "electron";
-import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
-
 import electronLog from "electron-log/main";
 import dayjs from "dayjs";
 import { initializeEngineInfoManager } from "./manager/engineInfoManager";
@@ -423,13 +418,6 @@ void app.whenReady().then(async () => {
     }
   });
 
-  if (isDevelopment && !isTest) {
-    try {
-      await installExtension(VUEJS_DEVTOOLS);
-    } catch (e) {
-      log.error("Vue Devtools failed to install:", e);
-    }
-  }
   // 多重起動防止
   // TODO: readyを待たずにもっと早く実行すべき
   if (
