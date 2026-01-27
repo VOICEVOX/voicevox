@@ -238,6 +238,7 @@ initializeWelcomeWindowManager({
 });
 
 const configManager = getConfigManager();
+const appStateController = getAppStateController();
 const mainWindowManager = getMainWindowManager();
 const engineAndVvppController = getEngineAndVvppController();
 
@@ -329,7 +330,7 @@ app.on("web-contents-created", (_e, contents) => {
 
 // Called before window closing
 app.on("before-quit", async (event) => {
-  getAppStateController().onQuitRequest({
+  appStateController.onQuitRequest({
     preventQuit: () => event.preventDefault(),
   });
 });
@@ -453,7 +454,7 @@ void app.whenReady().then(async () => {
     }
   }
 
-  await getAppStateController().startup();
+  await appStateController.startup();
 });
 
 // 他のプロセスが起動したとき、`requestSingleInstanceLock`経由で`rawData`が送信される。
