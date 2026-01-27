@@ -29,6 +29,41 @@ export class AppStateController {
 
   private lock = new Mutex();
 
+  private staticDirPath: string | undefined;
+  private appDirPath: string | undefined;
+  private initialFilePathGetter: (() => string | undefined) | undefined;
+
+  initialize(params: {
+    staticDirPath: string;
+    appDirPath: string;
+    initialFilePathGetter: () => string | undefined;
+  }) {
+    this.staticDirPath = params.staticDirPath;
+    this.appDirPath = params.appDirPath;
+    this.initialFilePathGetter = params.initialFilePathGetter;
+  }
+
+  getStaticDirPath(): string {
+    if (this.staticDirPath == undefined) {
+      throw new Error("AppStateController is not initialized with paths");
+    }
+    return this.staticDirPath;
+  }
+
+  getAppDirPath(): string {
+    if (this.appDirPath == undefined) {
+      throw new Error("AppStateController is not initialized with paths");
+    }
+    return this.appDirPath;
+  }
+
+  getInitialFilePath(): string | undefined {
+    if (this.initialFilePathGetter == undefined) {
+      throw new Error("AppStateController is not initialized with paths");
+    }
+    return this.initialFilePathGetter();
+  }
+
   async startup() {
     const engineAndVvppController = getEngineAndVvppController();
     const packageStatuses =

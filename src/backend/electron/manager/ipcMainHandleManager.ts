@@ -1,16 +1,16 @@
 import fs from "node:fs";
 import path from "node:path";
-import { app, nativeTheme, shell } from "electron";
-import { hasSupportedGpu } from "./device";
-import { getConfigManager } from "./electronConfig";
-import { getEngineAndVvppController } from "./engineAndVvppController";
-import { writeFileSafely } from "./fileHelper";
-import { IpcMainHandle } from "./ipc";
-import { getEngineInfoManager } from "./manager/engineInfoManager";
-import { getEngineProcessManager } from "./manager/engineProcessManager";
-import { getMainWindowManager } from "./manager/windowManager/main";
-import { getAppStateController } from "./appStateController";
-import { IpcIHData } from "./ipcType";
+import { app, BrowserWindow, nativeTheme, shell } from "electron";
+import { hasSupportedGpu } from "../device";
+import { getConfigManager } from "../electronConfig";
+import { getEngineAndVvppController } from "../engineAndVvppController";
+import { writeFileSafely } from "../fileHelper";
+import { IpcMainHandle, registerIpcMainHandle } from "../ipc";
+import { getAppStateController } from "../appStateController";
+import { IpcIHData } from "../ipcType";
+import { getEngineInfoManager } from "./engineInfoManager";
+import { getEngineProcessManager } from "./engineProcessManager";
+import { getMainWindowManager } from "./windowManager/main";
 import { AssetTextFileNames } from "@/type/staticResources";
 import { failure, success } from "@/type/result";
 import {
@@ -87,294 +87,314 @@ async function retryShowSaveDialogWhileSafeDir<
   }
 }
 
-export function getIpcMainHandle(params: {
-  staticDirPath: string;
-  appDirPath: string;
-  initialFilePathGetter: () => string | undefined;
-}): IpcMainHandle<IpcIHData> {
-  const { staticDirPath, appDirPath, initialFilePathGetter } = params;
+class IpcMainHandleManager {
+  getHandle(): IpcMainHandle<IpcIHData> {
+    const appStateController = getAppStateController();
+    const staticDirPath = appStateController.getStaticDirPath();
+    const appDirPath = appStateController.getAppDirPath();
+    const initialFilePathGetter = () => appStateController.getInitialFilePath();
 
-  const configManager = getConfigManager();
-  const appStateController = getAppStateController();
-  const engineAndVvppController = getEngineAndVvppController();
-  const engineInfoManager = getEngineInfoManager();
-  const engineProcessManager = getEngineProcessManager();
-  return {
-    GET_TEXT_ASSET: async (_, textType) => {
-      const fileName = path.join(staticDirPath, AssetTextFileNames[textType]);
-      const text = await fs.promises.readFile(fileName, "utf-8");
-      if (textType === "OssLicenses" || textType === "UpdateInfos") {
-        return JSON.parse(text) as TextAsset[typeof textType];
-      }
-      return text;
-    },
-
-    GET_ALT_PORT_INFOS: () => {
-      return engineInfoManager.altPortInfos;
-    },
-
-    GET_INITIAL_PROJECT_FILE_PATH: async () => {
-      const initialFilePath = initialFilePathGetter();
-      if (initialFilePath && initialFilePath.endsWith(".vvproj")) {
-        return initialFilePath;
-      }
-    },
-
-    /**
-     * 保存先になるディレクトリを選ぶダイアログを表示する。
-     */
-    SHOW_SAVE_DIRECTORY_DIALOG: async (_, { title }) => {
-      const windowManager = getMainWindowManager();
-      const result = await retryShowSaveDialogWhileSafeDir(
-        () =>
-          windowManager.showOpenDialog({
-            title,
-            properties: [
-              "openDirectory",
-              "createDirectory",
-              "treatPackageAsDirectory",
-            ],
-          }),
-        appDirPath,
-      );
-      if (result.canceled) {
-        return undefined;
-      }
-      return result.filePaths[0];
-    },
-
-    /**
-     * ディレクトリ選択ダイアログを表示する。
-     * 保存先として選ぶ場合は SHOW_SAVE_DIRECTORY_DIALOG を使うべき。
-     */
-    SHOW_OPEN_DIRECTORY_DIALOG: async (_, { title }) => {
-      const windowManager = getMainWindowManager();
-      const result = await windowManager.showOpenDialog({
-        title,
-        properties: [
-          "openDirectory",
-          "createDirectory",
-          "treatPackageAsDirectory",
-        ],
-      });
-      if (result.canceled) {
-        return undefined;
-      }
-      return result.filePaths[0];
-    },
-
-    SHOW_WARNING_DIALOG: (_, { title, message }) => {
-      const windowManager = getMainWindowManager();
-      return windowManager.showMessageBox({
-        type: "warning",
-        title,
-        message,
-      });
-    },
-
-    SHOW_ERROR_DIALOG: (_, { title, message }) => {
-      const windowManager = getMainWindowManager();
-      return windowManager.showMessageBox({
-        type: "error",
-        title,
-        message,
-      });
-    },
-
-    SHOW_OPEN_FILE_DIALOG: (_, { title, name, extensions, defaultPath }) => {
-      const windowManager = getMainWindowManager();
-      return windowManager.showOpenDialogSync({
-        title,
-        defaultPath,
-        filters: [{ name, extensions }],
-        properties: ["openFile", "createDirectory", "treatPackageAsDirectory"],
-      })?.[0];
-    },
-
-    SHOW_SAVE_FILE_DIALOG: async (
-      _,
-      { title, defaultPath, name, extensions },
-    ) => {
-      const windowManager = getMainWindowManager();
-      const result = await retryShowSaveDialogWhileSafeDir(
-        () =>
-          windowManager.showSaveDialog({
-            title,
-            defaultPath,
-            filters: [{ name, extensions }],
-            properties: ["createDirectory"],
-          }),
-        appDirPath,
-      );
-      if (result.canceled) {
-        return undefined;
-      }
-      return result.filePath;
-    },
-
-    IS_AVAILABLE_GPU_MODE: () => {
-      return hasSupportedGpu(process.platform);
-    },
-
-    IS_MAXIMIZED_WINDOW: () => {
-      const windowManager = getMainWindowManager();
-      return windowManager.isMaximized();
-    },
-
-    CLOSE_WINDOW: () => {
-      const appStateController = getAppStateController();
-      appStateController.shutdown();
-    },
-
-    SWITCH_TO_WELCOME_WINDOW: async () => {
-      await appStateController.switchToWelcomeWindow();
-    },
-
-    MINIMIZE_WINDOW: () => {
-      const windowManager = getMainWindowManager();
-      windowManager.minimize();
-    },
-
-    TOGGLE_MAXIMIZE_WINDOW: () => {
-      const windowManager = getMainWindowManager();
-      windowManager.toggleMaximizeWindow();
-    },
-
-    TOGGLE_FULLSCREEN: () => {
-      const windowManager = getMainWindowManager();
-      windowManager.toggleFullScreen();
-    },
-
-    /** UIの拡大 */
-    ZOOM_IN: () => {
-      const windowManager = getMainWindowManager();
-      windowManager.zoomIn();
-    },
-
-    /** UIの縮小 */
-    ZOOM_OUT: () => {
-      const windowManager = getMainWindowManager();
-      windowManager.zoomOut();
-    },
-
-    /** UIの拡大率リセット */
-    ZOOM_RESET: () => {
-      const windowManager = getMainWindowManager();
-      windowManager.zoomReset();
-    },
-
-    OPEN_LOG_DIRECTORY: () => {
-      void shell.openPath(app.getPath("logs"));
-    },
-
-    ENGINE_INFOS: () => {
-      // エンジン情報を設定ファイルに保存しないためにelectron-storeは使わない
-      return engineInfoManager.fetchEngineInfos();
-    },
-
-    RESTART_ENGINE: async (_, { engineId }) => {
-      return engineProcessManager.restartEngine(engineId);
-    },
-
-    OPEN_ENGINE_DIRECTORY: async (_, { engineId }) => {
-      openEngineDirectory(engineId);
-    },
-
-    HOTKEY_SETTINGS: (_, { newData }) => {
-      if (newData != undefined) {
-        const hotkeySettings = configManager.get("hotkeySettings");
-        const hotkeySetting = hotkeySettings.find(
-          (hotkey) => hotkey.action == newData.action,
-        );
-        if (hotkeySetting != undefined) {
-          hotkeySetting.combination = newData.combination;
+    const configManager = getConfigManager();
+    const engineAndVvppController = getEngineAndVvppController();
+    const engineInfoManager = getEngineInfoManager();
+    const engineProcessManager = getEngineProcessManager();
+    return {
+      GET_TEXT_ASSET: async (_, textType) => {
+        const fileName = path.join(staticDirPath, AssetTextFileNames[textType]);
+        const text = await fs.promises.readFile(fileName, "utf-8");
+        if (textType === "OssLicenses" || textType === "UpdateInfos") {
+          return JSON.parse(text) as TextAsset[typeof textType];
         }
-        configManager.set("hotkeySettings", hotkeySettings);
-      }
-      return configManager.get("hotkeySettings");
-    },
+        return text;
+      },
 
-    ON_VUEX_READY: () => {
-      const windowManager = getMainWindowManager();
-      windowManager.show();
-    },
+      GET_ALT_PORT_INFOS: () => {
+        return engineInfoManager.altPortInfos;
+      },
 
-    CHECK_FILE_EXISTS: (_, { file }) => {
-      return fs.existsSync(file);
-    },
+      GET_INITIAL_PROJECT_FILE_PATH: async () => {
+        const initialFilePath = initialFilePathGetter();
+        if (initialFilePath && initialFilePath.endsWith(".vvproj")) {
+          return initialFilePath;
+        }
+      },
 
-    CHANGE_PIN_WINDOW: () => {
-      const windowManager = getMainWindowManager();
-      windowManager.togglePinWindow();
-    },
-
-    GET_DEFAULT_TOOLBAR_SETTING: () => {
-      return defaultToolbarButtonSetting;
-    },
-
-    GET_SETTING: (_, key) => {
-      return configManager.get(key);
-    },
-
-    SET_SETTING: (_, key, newValue) => {
-      configManager.set(key, newValue);
-      return configManager.get(key);
-    },
-
-    SET_ENGINE_SETTING: async (_, engineId, engineSetting) => {
-      const engineSettings = configManager.get("engineSettings");
-      engineSettings[engineId] = engineSetting;
-      configManager.set("engineSettings", engineSettings);
-    },
-
-    SET_NATIVE_THEME: (_, source) => {
-      nativeTheme.themeSource = source;
-    },
-
-    INSTALL_VVPP_ENGINE: async (_, path: string) => {
-      await engineAndVvppController.installVvppEngine({
-        vvppPath: path,
-        asDefaultVvppEngine: false,
-        immediate: false,
-      });
-    },
-
-    UNINSTALL_VVPP_ENGINE: async (_, engineId: EngineId) => {
-      await engineAndVvppController.uninstallVvppEngine(engineId);
-    },
-
-    VALIDATE_ENGINE_DIR: (_, { engineDir }) => {
-      return engineInfoManager.validateEngineDir(engineDir);
-    },
-
-    RELOAD_APP: async (_, { isMultiEngineOffMode }) => {
-      const windowManager = getMainWindowManager();
-      await windowManager.reload(isMultiEngineOffMode);
-    },
-
-    WRITE_FILE: (_, { filePath, buffer }) => {
-      try {
-        writeFileSafely(
-          filePath,
-          new DataView(buffer instanceof Uint8Array ? buffer.buffer : buffer),
+      /**
+       * 保存先になるディレクトリを選ぶダイアログを表示する。
+       */
+      SHOW_SAVE_DIRECTORY_DIALOG: async (_, { title }) => {
+        const windowManager = getMainWindowManager();
+        const result = await retryShowSaveDialogWhileSafeDir(
+          () =>
+            windowManager.showOpenDialog({
+              title,
+              properties: [
+                "openDirectory",
+                "createDirectory",
+                "treatPackageAsDirectory",
+              ],
+            }),
+          appDirPath,
         );
-        return success(undefined);
-      } catch (e) {
-        // throwだと`.code`の情報が消えるのでreturn
-        const a = e as SystemError;
-        return failure(a.code, a);
-      }
-    },
+        if (result.canceled) {
+          return undefined;
+        }
+        return result.filePaths[0];
+      },
 
-    READ_FILE: async (_, { filePath }) => {
-      try {
-        const result = await fs.promises.readFile(filePath);
-        return success(new Uint8Array(result.buffer));
-      } catch (e) {
-        // throwだと`.code`の情報が消えるのでreturn
-        const a = e as SystemError;
-        return failure(a.code, a);
-      }
-    },
-  };
+      /**
+       * ディレクトリ選択ダイアログを表示する。
+       * 保存先として選ぶ場合は SHOW_SAVE_DIRECTORY_DIALOG を使うべき。
+       */
+      SHOW_OPEN_DIRECTORY_DIALOG: async (_, { title }) => {
+        const windowManager = getMainWindowManager();
+        const result = await windowManager.showOpenDialog({
+          title,
+          properties: [
+            "openDirectory",
+            "createDirectory",
+            "treatPackageAsDirectory",
+          ],
+        });
+        if (result.canceled) {
+          return undefined;
+        }
+        return result.filePaths[0];
+      },
+
+      SHOW_WARNING_DIALOG: (_, { title, message }) => {
+        const windowManager = getMainWindowManager();
+        return windowManager.showMessageBox({
+          type: "warning",
+          title,
+          message,
+        });
+      },
+
+      SHOW_ERROR_DIALOG: (_, { title, message }) => {
+        const windowManager = getMainWindowManager();
+        return windowManager.showMessageBox({
+          type: "error",
+          title,
+          message,
+        });
+      },
+
+      SHOW_OPEN_FILE_DIALOG: (_, { title, name, extensions, defaultPath }) => {
+        const windowManager = getMainWindowManager();
+        return windowManager.showOpenDialogSync({
+          title,
+          defaultPath,
+          filters: [{ name, extensions }],
+          properties: [
+            "openFile",
+            "createDirectory",
+            "treatPackageAsDirectory",
+          ],
+        })?.[0];
+      },
+
+      SHOW_SAVE_FILE_DIALOG: async (
+        _,
+        { title, defaultPath, name, extensions },
+      ) => {
+        const windowManager = getMainWindowManager();
+        const result = await retryShowSaveDialogWhileSafeDir(
+          () =>
+            windowManager.showSaveDialog({
+              title,
+              defaultPath,
+              filters: [{ name, extensions }],
+              properties: ["createDirectory"],
+            }),
+          appDirPath,
+        );
+        if (result.canceled) {
+          return undefined;
+        }
+        return result.filePath;
+      },
+
+      IS_AVAILABLE_GPU_MODE: () => {
+        return hasSupportedGpu(process.platform);
+      },
+
+      IS_MAXIMIZED_WINDOW: () => {
+        const windowManager = getMainWindowManager();
+        return windowManager.isMaximized();
+      },
+
+      CLOSE_WINDOW: () => {
+        appStateController.shutdown();
+      },
+
+      SWITCH_TO_WELCOME_WINDOW: async () => {
+        await appStateController.switchToWelcomeWindow();
+      },
+
+      MINIMIZE_WINDOW: () => {
+        const windowManager = getMainWindowManager();
+        windowManager.minimize();
+      },
+
+      TOGGLE_MAXIMIZE_WINDOW: () => {
+        const windowManager = getMainWindowManager();
+        windowManager.toggleMaximizeWindow();
+      },
+
+      TOGGLE_FULLSCREEN: () => {
+        const windowManager = getMainWindowManager();
+        windowManager.toggleFullScreen();
+      },
+
+      /** UIの拡大 */
+      ZOOM_IN: () => {
+        const windowManager = getMainWindowManager();
+        windowManager.zoomIn();
+      },
+
+      /** UIの縮小 */
+      ZOOM_OUT: () => {
+        const windowManager = getMainWindowManager();
+        windowManager.zoomOut();
+      },
+
+      /** UIの拡大率リセット */
+      ZOOM_RESET: () => {
+        const windowManager = getMainWindowManager();
+        windowManager.zoomReset();
+      },
+
+      OPEN_LOG_DIRECTORY: () => {
+        void shell.openPath(app.getPath("logs"));
+      },
+
+      ENGINE_INFOS: () => {
+        // エンジン情報を設定ファイルに保存しないためにelectron-storeは使わない
+        return engineInfoManager.fetchEngineInfos();
+      },
+
+      RESTART_ENGINE: async (_, { engineId }) => {
+        return engineProcessManager.restartEngine(engineId);
+      },
+
+      OPEN_ENGINE_DIRECTORY: async (_, { engineId }) => {
+        openEngineDirectory(engineId);
+      },
+
+      HOTKEY_SETTINGS: (_, { newData }) => {
+        if (newData != undefined) {
+          const hotkeySettings = configManager.get("hotkeySettings");
+          const hotkeySetting = hotkeySettings.find(
+            (hotkey) => hotkey.action == newData.action,
+          );
+          if (hotkeySetting != undefined) {
+            hotkeySetting.combination = newData.combination;
+          }
+          configManager.set("hotkeySettings", hotkeySettings);
+        }
+        return configManager.get("hotkeySettings");
+      },
+
+      ON_VUEX_READY: () => {
+        const windowManager = getMainWindowManager();
+        windowManager.show();
+      },
+
+      CHECK_FILE_EXISTS: (_, { file }) => {
+        return fs.existsSync(file);
+      },
+
+      CHANGE_PIN_WINDOW: () => {
+        const windowManager = getMainWindowManager();
+        windowManager.togglePinWindow();
+      },
+
+      GET_DEFAULT_TOOLBAR_SETTING: () => {
+        return defaultToolbarButtonSetting;
+      },
+
+      GET_SETTING: (_, key) => {
+        return configManager.get(key);
+      },
+
+      SET_SETTING: (_, key, newValue) => {
+        configManager.set(key, newValue);
+        return configManager.get(key);
+      },
+
+      SET_ENGINE_SETTING: async (_, engineId, engineSetting) => {
+        const engineSettings = configManager.get("engineSettings");
+        engineSettings[engineId] = engineSetting;
+        configManager.set("engineSettings", engineSettings);
+      },
+
+      SET_NATIVE_THEME: (_, source) => {
+        nativeTheme.themeSource = source;
+      },
+
+      INSTALL_VVPP_ENGINE: async (_, path: string) => {
+        await engineAndVvppController.installVvppEngine({
+          vvppPath: path,
+          asDefaultVvppEngine: false,
+          immediate: false,
+        });
+      },
+
+      UNINSTALL_VVPP_ENGINE: async (_, engineId: EngineId) => {
+        await engineAndVvppController.uninstallVvppEngine(engineId);
+      },
+
+      VALIDATE_ENGINE_DIR: (_, { engineDir }) => {
+        return engineInfoManager.validateEngineDir(engineDir);
+      },
+
+      RELOAD_APP: async (_, { isMultiEngineOffMode }) => {
+        const windowManager = getMainWindowManager();
+        await windowManager.reload(isMultiEngineOffMode);
+      },
+
+      WRITE_FILE: (_, { filePath, buffer }) => {
+        try {
+          writeFileSafely(
+            filePath,
+            new DataView(buffer instanceof Uint8Array ? buffer.buffer : buffer),
+          );
+          return success(undefined);
+        } catch (e) {
+          // throwだと`.code`の情報が消えるのでreturn
+          const a = e as SystemError;
+          return failure(a.code, a);
+        }
+      },
+
+      READ_FILE: async (_, { filePath }) => {
+        try {
+          const result = await fs.promises.readFile(filePath);
+          return success(new Uint8Array(result.buffer));
+        } catch (e) {
+          // throwだと`.code`の情報が消えるのでreturn
+          const a = e as SystemError;
+          return failure(a.code, a);
+        }
+      },
+    };
+  }
+
+  registerToWindow(win: BrowserWindow) {
+    registerIpcMainHandle<IpcIHData>(win, this.getHandle());
+  }
+}
+
+let manager: IpcMainHandleManager | undefined;
+
+export function initializeIpcMainHandleManager() {
+  manager = new IpcMainHandleManager();
+}
+
+export function getIpcMainHandleManager(): IpcMainHandleManager {
+  if (manager == undefined) {
+    throw new Error("IpcMainHandleManager is not initialized");
+  }
+  return manager;
 }
