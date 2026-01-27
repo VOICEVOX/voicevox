@@ -197,6 +197,12 @@ pnpm run test-ui:storybook-vrt # Playwright の UI を表示
    ```
 
 5. Github Workflow が完了すると、更新されたスクリーンショットがコミットされます。
+6. プルした後、空コミットをプッシュしてテストを再実行します。
+
+   ```bash
+   git commit --allow-empty -m "（テストを再実行）"
+   git push
+   ```
 
 > [!NOTE]
 > トークンを作成して Secrets に追加することで、自動的にテストを再実行できます。
