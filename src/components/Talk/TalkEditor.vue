@@ -791,8 +791,8 @@ const onAudioCellPaneClick = () => {
 
 .total-audio-status {
   position: absolute;
-  right: 20px;
-  bottom: 80px; // 追加ボタンfabの上
+  right: 92px;
+  bottom: 22px; // 追加ボタンfabの左側
   background-color: colors.$surface;
   color: colors.$display;
   padding: 4px 12px;
