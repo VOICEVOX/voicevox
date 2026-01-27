@@ -5,16 +5,6 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-_readarray(){
-  [[ -z "$1" ]] && return 1
-  [[ "$1" =~ [[:space:]] ]] && return 1
-  var="$1"
-  eval "$var"'=()'
-  while IFS=$'\n' read -r r; do
-    eval "$var"'+=("'"$r"'")'
-  done
-}
-
 cat << 'BANNER'
 +-+-+-+-+-+-+-+-+
 |V|O|I|C|E|V|O|X|
@@ -134,42 +124,9 @@ if [ "$REUSE_LIST" != "1" ]; then
 fi
 
 echo
-echo "[+] Listing of split archives..."
-_readarray ARCHIVE_LIST < "list.txt"
-# filename<TAB>size<TAB>hash
-_readarray ARCHIVE_NAME_LIST < <(
-    for line in "${ARCHIVE_LIST[@]}"; do
-        echo "$line"
-    done | awk '$0!=""{print $1}'
-)
-_readarray ARCHIVE_SIZE_LIST < <(
-    for line in "${ARCHIVE_LIST[@]}"; do
-        echo "$line"
-    done | awk '$0!=""{print $2}'
-)
-_readarray ARCHIVE_HASH_LIST < <(
-    for line in "${ARCHIVE_LIST[@]}"; do
-        echo "$line"
-    done | awk '$0!=""{print $3}' |
-        tr '[:lower:]' '[:upper:]'
-)
-
-echo
-
-for index in "${!ARCHIVE_NAME_LIST[@]}"; do
-    echo "${index}." \
-        "${ARCHIVE_NAME_LIST[index]}" \
-        "${ARCHIVE_SIZE_LIST[index]}" \
-        "${ARCHIVE_HASH_LIST[index]}"
-done
-echo
-
 # Download archives
-for index in "${!ARCHIVE_LIST[@]}"; do
-    FILENAME=${ARCHIVE_NAME_LIST[index]}
-    SIZE=${ARCHIVE_SIZE_LIST[index]}
-    HASH=${ARCHIVE_HASH_LIST[index]}
-
+mapfile -t ARCHIVE_NAME_LIST < <(cut -d' ' -f3- list.txt)
+for FILENAME in "${ARCHIVE_NAME_LIST[@]}"; do
     URL=${RELEASE_URL}/${FILENAME}
 
     echo "[+] Downloading ${URL}..."
@@ -177,51 +134,17 @@ for index in "${!ARCHIVE_LIST[@]}"; do
         curl --fail -L -C - -o "${FILENAME}.tmp" "${URL}"
         mv "${FILENAME}.tmp" "${FILENAME}"
     fi
-
-    # File verification (size, md5 hash)
-    if [ "$SKIP_VERIFY" = "1" ]; then
-        echo "[-] File verification skipped"
-    else
-        if [ "$SIZE" != "x" ]; then
-            echo "[+] Verifying size == ${SIZE}..."
-            if stat --version &>/dev/null; then
-                DOWNLOADED_SIZE=$(stat --printf="%s" "${FILENAME}")
-            else
-                DOWNLOADED_SIZE=$(stat -f%z "${FILENAME}")
-            fi
-
-            if [ "$DOWNLOADED_SIZE" = "$SIZE" ]; then
-                echo "[-] Size OK"
-            else
-                cat << EOS && exit 1
-[!] Invalid size: ${DOWNLOADED_SIZE} != ${SIZE}
-
-Remove the corrupted file and restart installer!
-
-    rm $(realpath "${FILENAME}")
-
-EOS
-            fi
-        fi
-
-        if [ "$HASH" != "x" ]; then
-            echo "[+] Verifying hash == ${HASH}..."
-            DOWNLOADED_HASH=$(md5sum "${FILENAME}" | awk '$0=$1' | tr '[:lower:]' '[:upper:]')
-            if [ "$DOWNLOADED_HASH" = "$HASH" ]; then
-                echo "[-] Hash OK"
-            else
-                cat << EOS && exit 1
-[!] Invalid hash: ${DOWNLOADED_HASH} != ${HASH}
-
-Remove the corrupted file and restart installer!
-
-    rm $(realpath "${FILENAME}")
-
-EOS
-            fi
-        fi
-    fi
 done
+
+# File verification
+if [ "$SKIP_VERIFY" = "1" ]; then
+    echo "[-] File verification skipped"
+else
+    if ! sha256sum --check list.txt; then
+        echo "[!] Invalid hash. Remove the corrupted files and restart installer!"
+        exit 1
+    fi
+fi
 
 # Extract archives
 echo "[+] Extracting archive..."

@@ -2,7 +2,7 @@
 import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { rm } from "node:fs/promises";
-import electronPlugin from "vite-plugin-electron/simple";
+import electronPlugin, { ElectronOptions } from "vite-plugin-electron";
 import tsconfigPaths from "vite-tsconfig-paths";
 import vue from "@vitejs/plugin-vue";
 import electronDefaultImport from "electron";
@@ -32,10 +32,11 @@ const isProduction = process.env.NODE_ENV === "production";
 
 const ignorePaths = (paths: string[]) => paths.map((path) => `!${path}`);
 
-function getElectronTargetVersion(): {
+type ElectronTargetVersion = {
   node: string;
   chrome: string;
-} {
+};
+function getElectronTargetVersion(): ElectronTargetVersion {
   const result = execFileSync(
     electronPath,
     [path.join(import.meta.dirname, "build/getElectronVersion.mjs")],
@@ -97,6 +98,12 @@ export default defineConfig((options) => {
       outDir: path.resolve(import.meta.dirname, "dist"),
       chunkSizeWarningLimit: 10000,
       sourcemap,
+      rollupOptions: {
+        input: {
+          main: path.resolve(import.meta.dirname, "src/index.html"),
+          welcome: path.resolve(import.meta.dirname, "src/welcome/index.html"),
+        },
+      },
     },
     publicDir: path.resolve(import.meta.dirname, "public"),
     css: {
@@ -122,8 +129,8 @@ export default defineConfig((options) => {
       isElectron && [
         cleanDistPlugin(),
         // TODO: 関数で切り出して共通化できる部分はまとめる
-        electronPlugin({
-          main: {
+        electronPlugin([
+          {
             entry: "./backend/electron/main.ts",
 
             // ref: https://github.com/electron-vite/vite-plugin-electron/pull/122
@@ -152,26 +159,18 @@ export default defineConfig((options) => {
               },
             },
           },
-          preload: {
-            input: "./src/backend/electron/renderer/preload.ts",
-            onstart({ reload }) {
-              if (!skipLaunchElectron) {
-                reload();
-              }
+          ...electronPreloadOptions(
+            {
+              skipLaunchElectron,
+              sourcemap,
+              electronTargetVersion,
             },
-            vite: {
-              plugins: [
-                tsconfigPaths({ root: import.meta.dirname }),
-                isProduction && checkSuspiciousImportsPlugin({}),
-              ],
-              build: {
-                target: electronTargetVersion?.chrome,
-                outDir: path.resolve(import.meta.dirname, "dist"),
-                sourcemap,
-              },
+            {
+              preload: "./src/backend/electron/renderer/preload.ts",
+              welcomePreload: "./src/welcome/preload.ts",
             },
-          },
-        }),
+          ),
+        ]),
       ],
       isElectron &&
         injectLoaderScriptPlugin(
@@ -275,6 +274,47 @@ const cleanDistPlugin = (): Plugin => {
     },
   };
 };
+
+const electronPreloadOptions = (
+  options: {
+    skipLaunchElectron: boolean;
+    sourcemap: BuildOptions["sourcemap"];
+    electronTargetVersion: ElectronTargetVersion | undefined;
+  },
+  entries: Record<string, string>,
+): ElectronOptions[] =>
+  Object.entries(entries).map(
+    ([name, entry]): ElectronOptions => ({
+      onstart({ reload }) {
+        if (!options.skipLaunchElectron) {
+          reload();
+        }
+      },
+      vite: {
+        plugins: [
+          tsconfigPaths({ root: import.meta.dirname }),
+          isProduction && checkSuspiciousImportsPlugin({}),
+        ],
+        build: {
+          outDir: path.resolve(import.meta.dirname, "dist"),
+          sourcemap: options.sourcemap,
+          target: options.electronTargetVersion?.node,
+          rollupOptions: {
+            input: {
+              [name]: path.resolve(import.meta.dirname, entry),
+            },
+            output: {
+              format: "cjs",
+              inlineDynamicImports: true,
+              entryFileNames: `[name].cjs`,
+              chunkFileNames: `[name].cjs`,
+              assetFileNames: `[name].[ext]`,
+            },
+          },
+        },
+      },
+    }),
+  );
 
 /** バックエンドAPIをフロントエンドから実行するコードを注入する */
 const injectLoaderScriptPlugin = (scriptPath: string): Plugin => {

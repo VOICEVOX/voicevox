@@ -1,39 +1,32 @@
-"use strict";
-
 import path from "node:path";
-
 import fs from "node:fs";
 import { pathToFileURL } from "node:url";
 import { app, dialog, Menu, net, protocol, session, shell } from "electron";
-import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
-
 import electronLog from "electron-log/main";
 import dayjs from "dayjs";
 import { initializeEngineInfoManager } from "./manager/engineInfoManager";
 import { initializeEngineProcessManager } from "./manager/engineProcessManager";
 import { initializeVvppManager, isVvppFile } from "./manager/vvppManager";
 import {
-  getWindowManager,
-  initializeWindowManager,
-} from "./manager/windowManager";
+  getMainWindowManager,
+  initializeMainWindowManager,
+} from "./manager/windowManager/main";
 import configMigration014 from "./configMigration014";
 import { initializeRuntimeInfoManager } from "./manager/RuntimeInfoManager";
-import { registerIpcMainHandle, ipcMainSendProxy, IpcMainHandle } from "./ipc";
 import { getConfigManager } from "./electronConfig";
 import { getEngineAndVvppController } from "./engineAndVvppController";
 import { getIpcMainHandle } from "./ipcMainHandle";
+import { getWelcomeIpcMainHandle } from "./welcomeIpcMainHandle";
 import { getAppStateController } from "./appStateController";
+import { initializeWelcomeWindowManager } from "./manager/windowManager/welcome";
 import { assertNonNullable } from "@/type/utility";
 import { EngineInfo } from "@/type/preload";
-import { isMac, isProduction } from "@/helpers/platform";
+import { isDevelopment, isMac, isProduction, isTest } from "@/helpers/platform";
 import { createLogger } from "@/helpers/log";
 
 type SingleInstanceLockData = {
   filePath: string | undefined;
 };
-
-const isDevelopment = import.meta.env.DEV;
-const isTest = import.meta.env.MODE === "test";
 
 if (isDevelopment) {
   app.commandLine.appendSwitch("remote-debugging-port", "9222");
@@ -200,9 +193,9 @@ const onEngineProcessError = (engineInfo: EngineInfo, error: Error) => {
 
   // winが作られる前にエラーが発生した場合はwinへの通知を諦める
   // FIXME: winが作られた後にエンジンを起動させる
-  const win = windowManager.win;
+  const win = mainWindowManager.win;
   if (win != undefined) {
-    ipcMainSendProxy.DETECTED_ENGINE_ERROR(win, { engineId });
+    mainWindowManager.ipc.DETECTED_ENGINE_ERROR({ engineId });
   } else {
     log.error(`onEngineProcessError: win is undefined`);
   }
@@ -210,11 +203,6 @@ const onEngineProcessError = (engineInfo: EngineInfo, error: Error) => {
   dialog.showErrorBox("音声合成エンジンエラー", error.message);
 };
 
-initializeWindowManager({
-  isDevelopment,
-  isTest,
-  staticDir: staticDir,
-});
 initializeRuntimeInfoManager({
   runtimeInfoPath: path.join(app.getPath("userData"), "runtime-info.json"),
   appVersion: app.getVersion(),
@@ -226,8 +214,26 @@ initializeEngineInfoManager({
 initializeEngineProcessManager({ onEngineProcessError });
 initializeVvppManager({ vvppEngineDir, tmpDir: app.getPath("temp") });
 
+initializeMainWindowManager({
+  isDevelopment,
+  isTest,
+  staticDir: staticDir,
+  ipcMainHandle: getIpcMainHandle({
+    staticDirPath: staticDir,
+    appDirPath,
+    initialFilePathGetter: () => initialFilePath,
+  }),
+});
+initializeWelcomeWindowManager({
+  isDevelopment,
+  isTest,
+  staticDir: staticDir,
+  ipcMainHandle: getWelcomeIpcMainHandle(),
+});
+
 const configManager = getConfigManager();
-const windowManager = getWindowManager();
+const appStateController = getAppStateController();
+const mainWindowManager = getMainWindowManager();
 const engineAndVvppController = getEngineAndVvppController();
 
 /**
@@ -237,7 +243,7 @@ const engineAndVvppController = getEngineAndVvppController();
 function checkMultiEngineEnabled(): boolean {
   const enabled = configManager.get("enableMultiEngine");
   if (!enabled) {
-    windowManager.showMessageBoxSync({
+    mainWindowManager.showMessageBoxSync({
       type: "info",
       title: "マルチエンジン機能が無効です",
       message: `マルチエンジン機能が無効です。vvppファイルを使用するには設定からマルチエンジン機能を有効にしてください。`,
@@ -293,15 +299,6 @@ if (isMac) {
   }
 }
 
-// プロセス間通信
-registerIpcMainHandle<IpcMainHandle>(
-  getIpcMainHandle({
-    staticDirPath: staticDir,
-    appDirPath,
-    initialFilePathGetter: () => initialFilePath,
-  }),
-);
-
 // app callback
 app.on("web-contents-created", (_e, contents) => {
   // リンククリック時はブラウザを開く
@@ -327,7 +324,7 @@ app.on("web-contents-created", (_e, contents) => {
 
 // Called before window closing
 app.on("before-quit", async (event) => {
-  void getAppStateController().onQuitRequest({
+  appStateController.onQuitRequest({
     preventQuit: () => event.preventDefault(),
   });
 });
@@ -421,74 +418,6 @@ void app.whenReady().then(async () => {
     }
   });
 
-  if (isDevelopment && !isTest) {
-    try {
-      await installExtension(VUEJS_DEVTOOLS);
-    } catch (e) {
-      log.error("Vue Devtools failed to install:", e);
-    }
-  }
-
-  // VVPPがデフォルトエンジンに指定されていたらインストール・アップデートする
-  // NOTE: この機能は工事中。参照: https://github.com/VOICEVOX/voicevox/issues/1194
-  const packageStatuses =
-    await engineAndVvppController.fetchEnginePackageStatuses();
-
-  for (const status of packageStatuses) {
-    // 最新版がインストール済みの場合はスキップ
-    if (status.installed.status == "latest") {
-      continue;
-    }
-
-    let dialogOptions: {
-      title: string;
-      message: string;
-      okButtonLabel: string;
-    };
-    if (status.installed.status == "notInstalled") {
-      dialogOptions = {
-        title: "デフォルトエンジンのインストール",
-        message: `${status.package.engineName} をインストールしますか？`,
-        okButtonLabel: "インストールする",
-      };
-    } else {
-      dialogOptions = {
-        title: "デフォルトエンジンのアップデート",
-        message: `${status.package.engineName} の新しいバージョン（${status.package.latestVersion}）にアップデートしますか？`,
-        okButtonLabel: "アップデートする",
-      };
-    }
-
-    // インストールするか確認
-    const result = dialog.showMessageBoxSync({
-      type: "info",
-      title: dialogOptions.title,
-      message: dialogOptions.message,
-      buttons: [dialogOptions.okButtonLabel, "キャンセル"],
-      cancelId: 1,
-    });
-    if (result == 1) {
-      continue;
-    }
-
-    // ダウンロードしてインストールする
-    let lastLogTime = 0; // とりあえずログを0.1秒に1回だけ出力する
-    await engineAndVvppController.downloadAndInstallVvppEngine(
-      app.getPath("downloads"),
-      status.package.packageInfo,
-      {
-        onProgress: ({ type, progress }) => {
-          if (Date.now() - lastLogTime > 100) {
-            log.info(
-              `VVPP default engine progress: ${type}: ${Math.floor(progress)}%`,
-            );
-            lastLogTime = Date.now();
-          }
-        },
-      },
-    );
-  }
-
   // 多重起動防止
   // TODO: readyを待たずにもっと早く実行すべき
   if (
@@ -519,14 +448,13 @@ void app.whenReady().then(async () => {
     }
   }
 
-  await engineAndVvppController.launchEngines();
-  await windowManager.createWindow();
+  await appStateController.startup();
 });
 
 // 他のプロセスが起動したとき、`requestSingleInstanceLock`経由で`rawData`が送信される。
 app.on("second-instance", async (_event, _argv, _workDir, rawData) => {
   const data = rawData as SingleInstanceLockData;
-  const win = windowManager.win;
+  const win = mainWindowManager.win;
   if (win == undefined) {
     // TODO: 起動シーケンス中の場合はWindowが作られるまで待つ
     log.warn("A 'second-instance' event was emitted but there is no window.");
@@ -543,19 +471,19 @@ app.on("second-instance", async (_event, _argv, _workDir, rawData) => {
         asDefaultVvppEngine: false,
         reloadNeeded: true,
         reloadCallback: () => {
-          ipcMainSendProxy.CHECK_EDITED_AND_NOT_SAVE(win, {
-            closeOrReload: "reload",
+          mainWindowManager.ipc.CHECK_EDITED_AND_NOT_SAVE({
+            nextAction: "reload",
           });
         },
       });
     }
   } else if (data.filePath.endsWith(".vvproj")) {
     log.info("Second instance launched with vvproj file");
-    ipcMainSendProxy.LOAD_PROJECT_FILE(win, {
+    mainWindowManager.ipc.LOAD_PROJECT_FILE({
       filePath: data.filePath,
     });
   }
-  windowManager.restoreAndFocus();
+  mainWindowManager.restoreAndFocus();
 });
 
 if (isDevelopment) {

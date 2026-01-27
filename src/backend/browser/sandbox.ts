@@ -112,6 +112,9 @@ export const api: Sandbox = {
   closeWindow() {
     throw new Error(`Not supported on Browser version: closeWindow`);
   },
+  launchWelcomeWindow() {
+    throw new Error(`Not supported on Browser version: launchWelcomeWindow`);
+  },
   minimizeWindow() {
     throw new Error(`Not supported on Browser version: minimizeWindow`);
   },

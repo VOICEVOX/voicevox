@@ -850,7 +850,7 @@ export type PitchEditTool = "DRAW" | "ERASE";
 export type VolumeEditTool = "DRAW" | "ERASE";
 // パラメータパネル内の編集対象
 // NOTE: 音素タイミング編集などを追加する際に拡張
-export type ParameterPanelEditTarget = "VOLUME";
+export type ParameterPanelEditTarget = "PHONEME_TIMING" | "VOLUME";
 
 // プロジェクトの書き出しに使えるファイル形式
 export type ExportSongProjectFileType =
@@ -888,6 +888,7 @@ export type SingingStoreState = {
   phraseQueries: Map<EditorFrameAudioQueryKey, EditorFrameAudioQuery>;
   phraseSingingPitches: Map<SingingPitchKey, SingingPitch>;
   phraseSingingVolumes: Map<SingingVolumeKey, SingingVolume>;
+  phraseSequenceIds: Map<PhraseKey, SequenceId>;
   sequencerZoomX: number;
   sequencerZoomY: number;
   sequencerSnapType: number;
@@ -1154,6 +1155,14 @@ export type SingingStoreTypes = {
 
   DELETE_PHRASE_SINGING_VOLUME: {
     mutation: { singingVolumeKey: SingingVolumeKey };
+  };
+
+  SET_PHRASE_SEQUENCE_ID: {
+    mutation: { phraseKey: PhraseKey; sequenceId: SequenceId };
+  };
+
+  DELETE_PHRASE_SEQUENCE_ID: {
+    mutation: { phraseKey: PhraseKey };
   };
 
   SELECTED_TRACK: {
@@ -1475,6 +1484,10 @@ export type SingingStoreTypes = {
       fileType: ExportSongProjectFileType;
       fileTypeLabel: string;
     }): Promise<SaveResultObject>;
+  };
+
+  GET_SEQUENCE_AUDIO_BUFFER: {
+    getter(sequenceId: SequenceId): AudioBuffer | undefined;
   };
 };
 
@@ -2288,11 +2301,12 @@ export type UiStoreTypes = {
   CHECK_EDITED_AND_NOT_SAVE: {
     action(
       obj:
-        | { closeOrReload: "close" }
+        | { nextAction: "close" }
         | {
-            closeOrReload: "reload";
+            nextAction: "reload";
             isMultiEngineOffMode?: boolean;
-          },
+          }
+        | { nextAction: "switchToWelcome" },
     ): Promise<void>;
   };
 

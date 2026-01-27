@@ -104,12 +104,13 @@ export interface Sandbox {
     detectEnterFullscreen: () => void;
     detectLeaveFullscreen: () => void;
     checkEditedAndNotSave: (obj: {
-      closeOrReload: "close" | "reload";
+      nextAction: "close" | "reload" | "switchToWelcome";
       isMultiEngineOffMode?: boolean;
     }) => void;
     detectResized: (obj: { width: number; height: number }) => void;
   }): void;
   closeWindow(): void;
+  launchWelcomeWindow(): void;
   minimizeWindow(): void;
   toggleMaximizeWindow(): void;
   toggleFullScreen(): void;
@@ -273,7 +274,8 @@ export type EngineInfo = {
   // エンジンの種類。
   // vvpp: vvppファイルから読み込んだエンジン
   // path: パスを指定して追加したエンジン
-  type: "vvpp" | "path";
+  // downloadVvpp: VVPPをダウンロードして追加したエンジン
+  type: "vvpp" | "path" | "downloadVvpp";
   isDefault: boolean; // デフォルトエンジンかどうか
 };
 

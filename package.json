@@ -50,7 +50,7 @@
     "preinstall": "npx -y only-allow pnpm",
     "postinstall": "pnpm run postinstall:packages && pnpm run postinstall:download-scripts",
     "postinstall:packages": "electron-builder install-app-deps && playwright install chromium",
-    "postinstall:download-scripts": "tsx tools/download7z.ts && tsx tools/downloadTypos.ts && tsx tools/downloadAppimagetool.ts",
+    "postinstall:download-scripts": "tsx tools/download7z.ts && tsx tools/downloadTypos.ts && tsx tools/downloadAppimagetool.ts && tsx tools/downloadType2Runtime.ts",
     "postuninstall": "electron-builder install-app-deps"
   },
   "dependencies": {
@@ -77,7 +77,6 @@
     "rfdc": "1.4.1",
     "semver": "7.7.3",
     "shlex": "3.0.0",
-    "systeminformation": "5.27.11",
     "tree-kill": "1.2.2",
     "vue": "3.5.22",
     "vuedraggable": "4.1.0",
@@ -125,7 +124,6 @@
     "dotenv": "17.2.3",
     "electron": "39.0.0",
     "electron-builder": "26.1.0",
-    "electron-devtools-installer": "4.0.0",
     "eslint": "9.39.0",
     "eslint-config-flat-gitignore": "2.1.0",
     "eslint-plugin-file-progress": "3.0.2",
