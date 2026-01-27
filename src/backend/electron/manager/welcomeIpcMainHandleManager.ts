@@ -10,7 +10,7 @@ import { createLogger } from "@/helpers/log";
 const log = createLogger("WelcomeIpcMainHandle");
 
 class WelcomeIpcMainHandleManager {
-  getHandle(): IpcMainHandle<WelcomeIpcIHData> {
+  private getHandle(): IpcMainHandle<WelcomeIpcIHData> {
     const appStateController = getAppStateController();
     const engineAndVvppController = getEngineAndVvppController();
     const configManager = getConfigManager();
@@ -29,6 +29,7 @@ class WelcomeIpcMainHandleManager {
           );
         }
 
+        // ダウンロードしてインストールする
         let lastUpdateTime = 0;
         let lastLogTime = 0;
         const targetPackageInfo =

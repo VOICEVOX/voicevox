@@ -15,7 +15,10 @@ import configMigration014 from "./configMigration014";
 import { initializeRuntimeInfoManager } from "./manager/RuntimeInfoManager";
 import { getConfigManager } from "./electronConfig";
 import { getEngineAndVvppController } from "./engineAndVvppController";
-import { getAppStateController } from "./appStateController";
+import {
+  getAppStateController,
+  initializeAppStateController,
+} from "./appStateController";
 import { initializeWelcomeWindowManager } from "./manager/windowManager/welcome";
 import { initializeIpcMainHandleManager } from "./manager/ipcMainHandleManager";
 import { initializeWelcomeIpcMainHandleManager } from "./manager/welcomeIpcMainHandleManager";
@@ -214,8 +217,7 @@ initializeEngineInfoManager({
 initializeEngineProcessManager({ onEngineProcessError });
 initializeVvppManager({ vvppEngineDir, tmpDir: app.getPath("temp") });
 
-const appStateController = getAppStateController();
-appStateController.initialize({
+initializeAppStateController({
   staticDirPath: staticDir,
   appDirPath,
   initialFilePathGetter: () => initialFilePath,
@@ -236,7 +238,6 @@ initializeWelcomeWindowManager({
 });
 
 const configManager = getConfigManager();
-const appStateController = getAppStateController();
 const mainWindowManager = getMainWindowManager();
 const engineAndVvppController = getEngineAndVvppController();
 
@@ -328,7 +329,7 @@ app.on("web-contents-created", (_e, contents) => {
 
 // Called before window closing
 app.on("before-quit", async (event) => {
-  appStateController.onQuitRequest({
+  getAppStateController().onQuitRequest({
     preventQuit: () => event.preventDefault(),
   });
 });
@@ -452,7 +453,7 @@ void app.whenReady().then(async () => {
     }
   }
 
-  await appStateController.startup();
+  await getAppStateController().startup();
 });
 
 // 他のプロセスが起動したとき、`requestSingleInstanceLock`経由で`rawData`が送信される。

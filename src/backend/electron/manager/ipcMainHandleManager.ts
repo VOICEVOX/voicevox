@@ -88,7 +88,7 @@ async function retryShowSaveDialogWhileSafeDir<
 }
 
 class IpcMainHandleManager {
-  getHandle(): IpcMainHandle<IpcIHData> {
+  private getHandle(): IpcMainHandle<IpcIHData> {
     const appStateController = getAppStateController();
     const staticDirPath = appStateController.getStaticDirPath();
     const appDirPath = appStateController.getAppDirPath();

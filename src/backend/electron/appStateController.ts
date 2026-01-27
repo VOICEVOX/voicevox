@@ -29,11 +29,11 @@ export class AppStateController {
 
   private lock = new Mutex();
 
-  private staticDirPath: string | undefined;
-  private appDirPath: string | undefined;
-  private initialFilePathGetter: (() => string | undefined) | undefined;
+  private staticDirPath: string;
+  private appDirPath: string;
+  private initialFilePathGetter: () => string | undefined;
 
-  initialize(params: {
+  constructor(params: {
     staticDirPath: string;
     appDirPath: string;
     initialFilePathGetter: () => string | undefined;
@@ -44,23 +44,14 @@ export class AppStateController {
   }
 
   getStaticDirPath(): string {
-    if (this.staticDirPath == undefined) {
-      throw new Error("AppStateController is not initialized with paths");
-    }
     return this.staticDirPath;
   }
 
   getAppDirPath(): string {
-    if (this.appDirPath == undefined) {
-      throw new Error("AppStateController is not initialized with paths");
-    }
     return this.appDirPath;
   }
 
   getInitialFilePath(): string | undefined {
-    if (this.initialFilePathGetter == undefined) {
-      throw new Error("AppStateController is not initialized with paths");
-    }
     return this.initialFilePathGetter();
   }
 
@@ -265,9 +256,17 @@ export class AppStateController {
 
 let appStateController: AppStateController | undefined;
 
+export function initializeAppStateController(params: {
+  staticDirPath: string;
+  appDirPath: string;
+  initialFilePathGetter: () => string | undefined;
+}) {
+  appStateController = new AppStateController(params);
+}
+
 export function getAppStateController() {
   if (appStateController == undefined) {
-    appStateController = new AppStateController();
+    throw new Error("AppStateController is not initialized");
   }
   return appStateController;
 }
