@@ -30,6 +30,7 @@
     "test-watch:unit": "vitest --watch",
     "test-ui:unit": "vitest --ui",
     "test:electron-e2e": "cross-env VITE_TARGET=electron playwright test",
+    "test-ui:electron-e2e": "cross-env VITE_TARGET=electron playwright test --ui",
     "test-watch:electron-e2e": "cross-env PWTEST_WATCH=1 VITE_TARGET=electron playwright test",
     "test:browser-e2e": "cross-env VITE_TARGET=browser playwright test",
     "test-watch:browser-e2e": "cross-env PWTEST_WATCH=1 VITE_TARGET=browser playwright test",
