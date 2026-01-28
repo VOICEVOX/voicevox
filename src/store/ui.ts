@@ -431,6 +431,8 @@ export const uiStore = createPartialStore<UiStoreTypes>({
         await actions.RELOAD_APP({
           isMultiEngineOffMode: obj.isMultiEngineOffMode,
         });
+      } else if (obj.nextAction == "switchToWelcome") {
+        window.backend.launchWelcomeWindow();
       }
     },
   },

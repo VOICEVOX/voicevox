@@ -2305,7 +2305,8 @@ export type UiStoreTypes = {
         | {
             nextAction: "reload";
             isMultiEngineOffMode?: boolean;
-          },
+          }
+        | { nextAction: "switchToWelcome" },
     ): Promise<void>;
   };
 

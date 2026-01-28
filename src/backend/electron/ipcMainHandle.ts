@@ -8,8 +8,9 @@ import { writeFileSafely } from "./fileHelper";
 import { IpcMainHandle } from "./ipc";
 import { getEngineInfoManager } from "./manager/engineInfoManager";
 import { getEngineProcessManager } from "./manager/engineProcessManager";
-import { getWindowManager } from "./manager/windowManager";
+import { getMainWindowManager } from "./manager/windowManager/main";
 import { getAppStateController } from "./appStateController";
+import { IpcIHData } from "./ipcType";
 import { AssetTextFileNames } from "@/type/staticResources";
 import { failure, success } from "@/type/result";
 import {
@@ -55,7 +56,7 @@ async function retryShowSaveDialogWhileSafeDir<
    * 警告ダイアログを表示し、ユーザーが再試行を選択したかどうかを返す
    */
   const showWarningDialog = async () => {
-    const windowManager = getWindowManager();
+    const windowManager = getMainWindowManager();
     const productName = app.getName().toUpperCase();
     const warningResult = await windowManager.showMessageBox({
       message: `指定された保存先は${productName}により自動的に削除される可能性があります。\n他の場所に保存することをおすすめします。`,
@@ -90,14 +91,14 @@ export function getIpcMainHandle(params: {
   staticDirPath: string;
   appDirPath: string;
   initialFilePathGetter: () => string | undefined;
-}): IpcMainHandle {
+}): IpcMainHandle<IpcIHData> {
   const { staticDirPath, appDirPath, initialFilePathGetter } = params;
 
   const configManager = getConfigManager();
+  const appStateController = getAppStateController();
   const engineAndVvppController = getEngineAndVvppController();
   const engineInfoManager = getEngineInfoManager();
   const engineProcessManager = getEngineProcessManager();
-  const windowManager = getWindowManager();
   return {
     GET_TEXT_ASSET: async (_, textType) => {
       const fileName = path.join(staticDirPath, AssetTextFileNames[textType]);
@@ -123,6 +124,7 @@ export function getIpcMainHandle(params: {
      * 保存先になるディレクトリを選ぶダイアログを表示する。
      */
     SHOW_SAVE_DIRECTORY_DIALOG: async (_, { title }) => {
+      const windowManager = getMainWindowManager();
       const result = await retryShowSaveDialogWhileSafeDir(
         () =>
           windowManager.showOpenDialog({
@@ -146,6 +148,7 @@ export function getIpcMainHandle(params: {
      * 保存先として選ぶ場合は SHOW_SAVE_DIRECTORY_DIALOG を使うべき。
      */
     SHOW_OPEN_DIRECTORY_DIALOG: async (_, { title }) => {
+      const windowManager = getMainWindowManager();
       const result = await windowManager.showOpenDialog({
         title,
         properties: [
@@ -161,6 +164,7 @@ export function getIpcMainHandle(params: {
     },
 
     SHOW_WARNING_DIALOG: (_, { title, message }) => {
+      const windowManager = getMainWindowManager();
       return windowManager.showMessageBox({
         type: "warning",
         title,
@@ -169,6 +173,7 @@ export function getIpcMainHandle(params: {
     },
 
     SHOW_ERROR_DIALOG: (_, { title, message }) => {
+      const windowManager = getMainWindowManager();
       return windowManager.showMessageBox({
         type: "error",
         title,
@@ -177,6 +182,7 @@ export function getIpcMainHandle(params: {
     },
 
     SHOW_OPEN_FILE_DIALOG: (_, { title, name, extensions, defaultPath }) => {
+      const windowManager = getMainWindowManager();
       return windowManager.showOpenDialogSync({
         title,
         defaultPath,
@@ -189,6 +195,7 @@ export function getIpcMainHandle(params: {
       _,
       { title, defaultPath, name, extensions },
     ) => {
+      const windowManager = getMainWindowManager();
       const result = await retryShowSaveDialogWhileSafeDir(
         () =>
           windowManager.showSaveDialog({
@@ -210,6 +217,7 @@ export function getIpcMainHandle(params: {
     },
 
     IS_MAXIMIZED_WINDOW: () => {
+      const windowManager = getMainWindowManager();
       return windowManager.isMaximized();
     },
 
@@ -218,30 +226,40 @@ export function getIpcMainHandle(params: {
       appStateController.shutdown();
     },
 
+    SWITCH_TO_WELCOME_WINDOW: async () => {
+      await appStateController.switchToWelcomeWindow();
+    },
+
     MINIMIZE_WINDOW: () => {
+      const windowManager = getMainWindowManager();
       windowManager.minimize();
     },
 
     TOGGLE_MAXIMIZE_WINDOW: () => {
+      const windowManager = getMainWindowManager();
       windowManager.toggleMaximizeWindow();
     },
 
     TOGGLE_FULLSCREEN: () => {
+      const windowManager = getMainWindowManager();
       windowManager.toggleFullScreen();
     },
 
     /** UIの拡大 */
     ZOOM_IN: () => {
+      const windowManager = getMainWindowManager();
       windowManager.zoomIn();
     },
 
     /** UIの縮小 */
     ZOOM_OUT: () => {
+      const windowManager = getMainWindowManager();
       windowManager.zoomOut();
     },
 
     /** UIの拡大率リセット */
     ZOOM_RESET: () => {
+      const windowManager = getMainWindowManager();
       windowManager.zoomReset();
     },
 
@@ -277,6 +295,7 @@ export function getIpcMainHandle(params: {
     },
 
     ON_VUEX_READY: () => {
+      const windowManager = getMainWindowManager();
       windowManager.show();
     },
 
@@ -285,6 +304,7 @@ export function getIpcMainHandle(params: {
     },
 
     CHANGE_PIN_WINDOW: () => {
+      const windowManager = getMainWindowManager();
       windowManager.togglePinWindow();
     },
 
@@ -328,6 +348,7 @@ export function getIpcMainHandle(params: {
     },
 
     RELOAD_APP: async (_, { isMultiEngineOffMode }) => {
+      const windowManager = getMainWindowManager();
       await windowManager.reload(isMultiEngineOffMode);
     },
 

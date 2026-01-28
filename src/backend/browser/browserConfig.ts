@@ -2,8 +2,7 @@ import { defaultEngine, directoryHandleStoreKey } from "./contract";
 
 import { BaseConfigManager, Metadata } from "@/backend/common/ConfigManager";
 import { ConfigType, EngineId, engineSettingSchema } from "@/type/preload";
-import { ensureNotNullish } from "@/helpers/errorHelper";
-import { UnreachableError } from "@/type/utility";
+import { UnreachableError, ensureNotNullish } from "@/type/utility";
 import { isMac } from "@/helpers/platform";
 import { Mutex } from "@/helpers/mutex";
 
