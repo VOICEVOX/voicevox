@@ -1,5 +1,5 @@
 import fs from "node:fs/promises";
-import { _electron as electron, test } from "@playwright/test";
+import { _electron as electron, expect, test } from "@playwright/test";
 import dotenv from "dotenv";
 import { getUserTestDir } from "./helper";
 
@@ -47,6 +47,11 @@ test("エンジンをインストールできる", async () => {
 
   const reinstall = page.getByText(/再インストール（.+?）/);
   await reinstall.waitFor({
+    timeout: 60000,
+  });
+
+  const launchEditor = page.getByText(/エディタを起動/);
+  await expect(launchEditor).toBeEnabled({
     timeout: 60000,
   });
 
