@@ -104,6 +104,7 @@ import BaseButton from "@/components/Base/BaseButton.vue";
 import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 import BaseDocumentView from "@/components/Base/BaseDocumentView.vue";
 import { UnreachableError } from "@/type/utility";
+import { showErrorDialog } from "@/components/Dialog/Dialog";
 
 type DisplayEngineInfo = {
   package: EnginePackageBase;
@@ -233,7 +234,7 @@ const installEngine = async (engineId: EngineId) => {
       `Engine package ${engineId} installation failed`,
       error,
     );
-    throw error;
+    await showErrorDialog("エンジンのインストールに失敗しました", error);
   } finally {
     clearEngineProgress(engineId);
     void fetchInstalledEngineInfos();
