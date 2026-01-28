@@ -1,4 +1,4 @@
-import { Project as UfProject } from "@sevenc-nanashi/utaformatix-ts";
+import type { Project as UfProject } from "@sevenc-nanashi/utaformatix-ts";
 import { VoicevoxScore } from "./common";
 import { DEFAULT_TPQN, createDefaultTrack } from "@/sing/domain";
 import { NoteId } from "@/type/preload";

@@ -1,6 +1,6 @@
 import { Patch } from "immer";
 import { z } from "zod";
-import { Project as UfProject } from "@sevenc-nanashi/utaformatix-ts";
+import type { Project as UfProject } from "@sevenc-nanashi/utaformatix-ts";
 import {
   MutationTree,
   MutationsBase,
