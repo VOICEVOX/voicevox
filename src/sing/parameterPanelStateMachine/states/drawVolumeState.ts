@@ -172,9 +172,6 @@ export class DrawVolumeState
     // まずはUIが動くようにのみする
     const cursorFrame = this.currentCursorPos.frame;
     const cursorValue = this.currentCursorPos.value;
-    if (cursorFrame < 0) {
-      return;
-    }
 
     const temp = {
       ...context.previewVolumeEdit.value,

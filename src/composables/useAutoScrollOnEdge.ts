@@ -10,6 +10,15 @@ import { getXInBorderBox, getYInBorderBox } from "@/sing/viewHelper";
 export const useAutoScrollOnEdge = (
   element: Ref<HTMLElement | null>,
   enable: ComputedRef<boolean>,
+  options?: {
+    /**
+     * 要素外に出た時にスクロールを継続する方向
+     * - "none": 要素外で停止（デフォルト）
+     * - "x": 水平スクロールのみ継続
+     * NOTE: "y"や"xy"は必要になった時点で実装する
+     */
+    continueScrollOutside?: "none" | "x";
+  },
 ) => {
   const baseSpeed = 100;
   const accelerationFactor = 1.7;
@@ -103,10 +112,34 @@ export const useAutoScrollOnEdge = (
       throw new Error("element.value is null.");
     }
     if (autoScrollState != undefined) {
-      autoScrollState.cursorPos = new Vector2D(
-        getXInBorderBox(event.clientX, element.value),
-        getYInBorderBox(event.clientY, element.value),
-      );
+      let x = getXInBorderBox(event.clientX, element.value);
+      let y = getYInBorderBox(event.clientY, element.value);
+      const width = element.value.clientWidth;
+      const height = element.value.clientHeight;
+
+      const inside = x >= 0 && y >= 0 && x <= width && y <= height;
+
+      if (inside) {
+        autoScrollState.cursorPos = new Vector2D(x, y);
+        return;
+      }
+
+      // continueScrollOutside: 要素外に出た時の挙動
+      // - "none"（デフォルト）: 要素外ではスクロールを止める（ScoreSequencer既存挙動）
+      // - "x": 水平スクロールのみ継続（VolumeEditorなど）
+      const continueScroll = options?.continueScrollOutside ?? "none";
+
+      if (continueScroll === "x") {
+        // 水平スクロールのみ継続：Xをクランプ、Yを中央に固定
+        x = Math.min(Math.max(x, 0), width);
+        y = height / 2;
+      } else {
+        // 要素外ではスクロール停止
+        autoScrollState.cursorPos = undefined;
+        return;
+      }
+
+      autoScrollState.cursorPos = new Vector2D(x, y);
     }
   };
 
