@@ -19,7 +19,14 @@
 
           <QSpace />
 
-          <div class="row items-center no-wrap">
+          <div class="row items-center no-wrap q-gutter-md">
+            <div class="row items-center no-wrap" @click.stop>
+              <span class="q-mr-sm">表示モード:</span>
+              <BaseToggleGroup v-model="displayMode" type="single">
+                <BaseToggleGroupItem label="トーク" value="talk" />
+                <BaseToggleGroupItem label="ソング" value="singerLike" />
+              </BaseToggleGroup>
+            </div>
             <QBtn
               unelevated
               label="完了"
@@ -50,8 +57,8 @@
             <span class="text-h6 q-py-md">サンプルボイス一覧</span>
             <div>
               <CharacterTryListenCard
-                v-for="characterInfo of characterInfos"
-                :key="characterInfo.metas.speakerUuid"
+                v-for="characterInfo of filteredCharacterInfos"
+                :key="characterInfo.metas.speakerUuid + displayMode"
                 :characterInfo
                 :isSelected="
                   selectedCharacter === characterInfo.metas.speakerUuid
@@ -72,7 +79,7 @@
               キャラクター並び替え
             </div>
             <Draggable
-              v-model="characterOrder"
+              v-model="filteredCharacterOrder"
               class="character-order q-px-sm"
               :itemKey="keyOfCharacterOrderItem"
               @start="characterOrderDragging = true"
@@ -107,8 +114,15 @@ import { computed, ref, watch } from "vue";
 import Draggable from "vuedraggable";
 import { useQuasar } from "quasar";
 import CharacterTryListenCard from "./OldCharacterTryListenCard.vue";
+import BaseToggleGroup from "@/components/Base/BaseToggleGroup.vue";
+import BaseToggleGroupItem from "@/components/Base/BaseToggleGroupItem.vue";
 import { useStore } from "@/store";
 import { CharacterInfo, SpeakerId, StyleId, StyleInfo } from "@/type/preload";
+import {
+  isSingingStyle,
+  filterCharacterInfosByStyleType,
+} from "@/store/utility";
+import { debounce } from "@/helpers/timer";
 
 const dialogOpened = defineModel<boolean>("dialogOpened", { default: false });
 const props = defineProps<{
@@ -147,7 +161,67 @@ const selectCharacterWithChangePortrait = (speakerUuid: SpeakerId) => {
 // キャラクター表示順序
 const characterOrder = ref<CharacterInfo[]>([]);
 
+const displayMode = ref<"talk" | "singerLike">("talk");
+
+// 表示モードに基づいてフィルタリングされたキャラクター情報
+const filteredCharacterInfos = computed(() => {
+  return filterCharacterInfosByStyleType(
+    props.characterInfos,
+    displayMode.value,
+  );
+});
+
+// 表示モードに基づいてフィルタリングされた並び替え用キャラクター情報
+const filteredCharacterOrder = computed({
+  get: () => {
+    return characterOrder.value.filter((characterInfo) => {
+      return characterInfo.metas.styles.some((style) => {
+        const isSinging = isSingingStyle(style);
+        return displayMode.value === "singerLike" ? isSinging : !isSinging;
+      });
+    });
+  },
+  set: (newFilteredOrder) => {
+    // 元のリスト内での相対的な順序を維持しつつ、現在のモードのキャラクターのみ順序を入れ替える
+    const newOrder: CharacterInfo[] = [];
+    let filteredIndex = 0;
+    for (const char of characterOrder.value) {
+      const isCurrentMode = char.metas.styles.some((style) => {
+        const isSinging = isSingingStyle(style);
+        return displayMode.value === "singerLike" ? isSinging : !isSinging;
+      });
+      if (isCurrentMode) {
+        newOrder.push(newFilteredOrder[filteredIndex++]);
+      } else {
+        newOrder.push(char);
+      }
+    }
+    characterOrder.value = newOrder;
+    saveCharacterOrder(newOrder);
+  },
+});
+
+const saveCharacterOrder = debounce((characterInfos: CharacterInfo[]) => {
+  void store.actions.SET_USER_CHARACTER_ORDER(
+    characterInfos.map((info) => info.metas.speakerUuid),
+  );
+}, 300);
+
+// モード切り替え時に、選択中のキャラクターが含まれていなければ先頭を選択
+watch(displayMode, () => {
+  stop(); // 音声を停止
+  const isSelectedIncluded = filteredCharacterInfos.value.some(
+    (info) => info.metas.speakerUuid === selectedCharacter.value,
+  );
+  if (!isSelectedIncluded && filteredCharacterInfos.value.length > 0) {
+    selectCharacterWithChangePortrait(
+      filteredCharacterInfos.value[0].metas.speakerUuid,
+    );
+  }
+});
+
 // ダイアログが開かれたときに初期値を求める
+const portrait = ref<string | undefined>();
 watch(dialogOpened, async (newValue, oldValue) => {
   if (!oldValue && newValue) {
     // 新しいキャラクター
@@ -182,6 +256,14 @@ watch(dialogOpened, async (newValue, oldValue) => {
       ...characterOrder.value,
       ...notIncludesCharacterInfos,
     ];
+
+    if (
+      selectedCharacter.value &&
+      characterInfosMap.value[selectedCharacter.value]
+    ) {
+      portrait.value =
+        characterInfosMap.value[selectedCharacter.value].portraitPath;
+    }
   }
 });
 
@@ -206,7 +288,10 @@ const play = (
 ) => {
   if (audio.src !== "") stop();
 
-  audio.src = voiceSamplePaths[index];
+  const samplePath = voiceSamplePaths[index];
+  if (!samplePath) return;
+
+  audio.src = samplePath;
   void audio.play();
   playing.value = { speakerUuid, styleId, index };
 };
@@ -240,16 +325,10 @@ const togglePlayOrStop = (
 const characterOrderDragging = ref(false);
 
 const closeDialog = () => {
-  void store.actions.SET_USER_CHARACTER_ORDER(
-    characterOrder.value.map((info) => info.metas.speakerUuid),
-  );
   stop();
   dialogOpened.value = false;
 };
 
-const portrait = ref<string | undefined>(
-  characterInfosMap.value[selectedCharacter.value].portraitPath,
-);
 const updatePortrait = (portraitPath: string) => {
   portrait.value = portraitPath;
 };
