@@ -100,6 +100,13 @@
                           @click="addAudioItem"
                         ></QBtn>
                       </div>
+                      <!-- 合計再生時間の表示（ステータス） -->
+                      <div
+                        v-if="showTotalAudioLength"
+                        class="total-audio-status"
+                      >
+                        合計: {{ formattedTotalAudioLength }}
+                      </div>
                     </div>
                   </template>
                   <template #after>
@@ -167,6 +174,15 @@ const selectedAudioKeys = computed(() => store.getters.SELECTED_AUDIO_KEYS);
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
 const isMultiSelectEnabled = computed(() => store.state.enableMultiSelect);
+
+const showTotalAudioLength = computed(() => store.state.showTotalAudioLength);
+const totalAudioLength = computed(() => store.getters.TOTAL_AUDIO_LENGTH);
+const formattedTotalAudioLength = computed(() => {
+  const totalSeconds = Math.floor(totalAudioLength.value);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+});
 
 const { registerHotkeyWithCleanup } = useHotkeyManager();
 
@@ -765,10 +781,27 @@ const onAudioCellPaneClick = () => {
 
     margin-right: 26px;
     margin-bottom: 10px;
+    z-index: 20;
   }
 }
 
 .q-splitter > :deep(.home-splitter) {
   background: colors.$splitter !important;
+}
+
+.total-audio-status {
+  position: absolute;
+  right: 92px;
+  bottom: 22px; // 追加ボタンfabの左側
+  background-color: colors.$surface;
+  color: colors.$display;
+  padding: 4px 12px;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+  pointer-events: none; // クリックを透過させて操作の邪魔をしない
+  opacity: 0.8;
+  font-size: 0.9em;
+  border: 1px solid colors.$splitter;
 }
 </style>
