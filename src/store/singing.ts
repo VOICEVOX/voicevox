@@ -2208,6 +2208,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             ),
           ),
           editorFrameRate: state.editorFrameRate,
+          defaultLyricMode: state.defaultLyricMode,
         } as const;
       };
 
