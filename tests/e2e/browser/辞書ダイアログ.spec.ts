@@ -54,76 +54,85 @@ test("「設定」→「読み方＆アクセント辞書」で「読み方＆�
 
   const targetString = "あいうえお";
 
-  // 文字列を入力して読み方を記憶する
-  const yomi = await getYomi(page, targetString);
-
-  // 読み方の設定画面を開く
-  await openDictDialog(page);
-
-  // 単語追加
-  await page.getByRole("button").filter({ hasText: "追加" }).click();
-  const wordInputTag = page
-    .locator(".word-editor .row")
-    .filter({ hasText: "単語" })
-    .locator(".q-field__native");
-  await wordInputTag.evaluate((e: HTMLInputElement, rs: string) => {
-    e.value = rs;
-    e.dispatchEvent(new Event("input"));
-  }, targetString);
-  await page.waitForTimeout(100);
-  await validateInputTag(page, wordInputTag, targetString);
-
-  const yomiInputTag = page
-    .locator(".word-editor .row")
-    .filter({ hasText: "読み" })
-    .locator(".q-field__native");
-
-  await yomiInputTag.evaluate((e: HTMLInputElement) => {
-    e.value = "テスト";
-    e.dispatchEvent(new Event("input"));
+  const yomi = await test.step("文字列を入力して読み方を記憶する", async () => {
+    return await getYomi(page, targetString);
   });
-  await page.waitForTimeout(100);
-  await validateInputTag(page, yomiInputTag, "テスト");
 
-  // 保存して設定画面を閉じる
-  await page.getByText("保存", { exact: true }).click();
-  await page.waitForTimeout(100);
-  await getNewestQuasarDialog(page)
-    .getByRole("button")
-    .filter({ hasText: "close" })
-    .click();
-  await page.waitForTimeout(100);
-  // 辞書が登録されているかどうかを確認
-  await page.getByRole("button").filter({ hasText: "add" }).click();
-  await page.waitForTimeout(100);
-  const yomi2 = await getYomi(page, targetString);
-  expect(yomi2).toBe("テスト");
+  await test.step("読み方の設定画面を開く", async () => {
+    await openDictDialog(page);
+  });
 
-  // もう一度設定を開き辞書から削除
-  await openDictDialog(page);
-  const wordItem = page.getByRole("listitem").filter({ hasText: targetString });
-  await wordItem.hover();
-  await wordItem.getByText("delete").click();
-  await page.waitForTimeout(100);
-  await page
-    .locator(".DialogContent")
-    .last()
-    .getByRole("button")
-    .filter({ hasText: "削除する" })
-    .click();
-  await page.waitForTimeout(100);
+  await test.step("単語を追加する", async () => {
+    await page.getByRole("button").filter({ hasText: "追加" }).click();
+    const wordInputTag = page
+      .locator(".word-editor .row")
+      .filter({ hasText: "単語" })
+      .locator(".q-field__native");
+    await wordInputTag.evaluate((e: HTMLInputElement, rs: string) => {
+      e.value = rs;
+      e.dispatchEvent(new Event("input"));
+    }, targetString);
+    await page.waitForTimeout(100);
+    await validateInputTag(page, wordInputTag, targetString);
 
-  await page
-    .locator("header", { hasText: "読み方＆アクセント辞書" })
-    .filter({ hasText: "close" })
-    .getByRole("button")
-    .click();
-  await page.waitForTimeout(100);
+    const yomiInputTag = page
+      .locator(".word-editor .row")
+      .filter({ hasText: "読み" })
+      .locator(".q-field__native");
 
-  // 辞書から削除されていることを確認
-  // （＝最初の読み方と同じになっていることを確認）
-  await page.getByRole("button").filter({ hasText: "add" }).click();
-  await page.waitForTimeout(100);
-  const yomi3 = await getYomi(page, targetString);
-  expect(yomi3).toBe(yomi);
+    await yomiInputTag.evaluate((e: HTMLInputElement) => {
+      e.value = "テスト";
+      e.dispatchEvent(new Event("input"));
+    });
+    await page.waitForTimeout(100);
+    await validateInputTag(page, yomiInputTag, "テスト");
+  });
+
+  await test.step("保存して設定画面を閉じる", async () => {
+    await page.getByText("保存", { exact: true }).click();
+    await page.waitForTimeout(100);
+    await getNewestQuasarDialog(page)
+      .getByRole("button")
+      .filter({ hasText: "close" })
+      .click();
+    await page.waitForTimeout(100);
+  });
+
+  await test.step("辞書が登録されている", async () => {
+    await page.getByRole("button").filter({ hasText: "add" }).click();
+    await page.waitForTimeout(100);
+    const yomi2 = await getYomi(page, targetString);
+    expect(yomi2).toBe("テスト");
+  });
+
+  await test.step("辞書から単語を削除する", async () => {
+    await openDictDialog(page);
+    const wordItem = page
+      .getByRole("listitem")
+      .filter({ hasText: targetString });
+    await wordItem.hover();
+    await wordItem.getByText("delete").click();
+    await page.waitForTimeout(100);
+    await page
+      .locator(".DialogContent")
+      .last()
+      .getByRole("button")
+      .filter({ hasText: "削除する" })
+      .click();
+    await page.waitForTimeout(100);
+
+    await page
+      .locator("header", { hasText: "読み方＆アクセント辞書" })
+      .filter({ hasText: "close" })
+      .getByRole("button")
+      .click();
+    await page.waitForTimeout(100);
+  });
+
+  await test.step("元の読み方に戻る", async () => {
+    await page.getByRole("button").filter({ hasText: "add" }).click();
+    await page.waitForTimeout(100);
+    const yomi3 = await getYomi(page, targetString);
+    expect(yomi3).toBe(yomi);
+  });
 });

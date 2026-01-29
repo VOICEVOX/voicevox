@@ -9,10 +9,11 @@ test("スクリーンショット", async ({ page }) => {
   await navigateToSettingDialog(page);
   await page.waitForTimeout(500);
 
-  // スクリーンショット撮影とスクロールを繰り返す
   for (let i = 0; i < 6; i++) {
-    await expect(page).toHaveScreenshot(`スクリーンショット_${i}.png`);
-    await page.mouse.wheel(0, 500);
-    await page.waitForTimeout(300);
+    await test.step(`スクロール位置${i}でスクリーンショットを撮る`, async () => {
+      await expect(page).toHaveScreenshot(`スクリーンショット_${i}.png`);
+      await page.mouse.wheel(0, 500);
+      await page.waitForTimeout(300);
+    });
   }
 });
