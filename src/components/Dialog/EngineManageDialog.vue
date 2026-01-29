@@ -381,6 +381,7 @@ const getFeatureName = (name: keyof SupportedFeatures) => {
       interrogativeUpspeak: "疑問文の自動調整",
       synthesisMorphing: "2種類のスタイルでモーフィングした音声を合成",
       sing: "歌唱音声合成",
+      guide: "音声認識による自動調整ガイド機能",
       manageLibrary: "音声ライブラリのインストール・アンインストール",
       returnResourceUrl: "キャラクター情報のリソースをURLで返送",
       applyKatakanaEnglish: "未知の英単語をカタカナ読みに変換",
