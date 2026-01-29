@@ -77,6 +77,7 @@ import type {
 } from "@/domain/project/type";
 import { LatestProjectType } from "@/infrastructures/projectFile/type";
 import { WavFormat } from "@/helpers/fileDataGenerator";
+import { Result } from "@/type/result";
 
 /**
  * エディタ用のAudioQuery
@@ -432,6 +433,19 @@ export type AudioStoreTypes = {
 
   CONNECT_AUDIO: {
     action(payload: { encodedBlobs: string[] }): Blob | null;
+  };
+
+  GENERATE_AUDIO: {
+    action(payload: { audioKey: AudioKey; labOffset?: number }): Promise<
+      Result<
+        {
+          audio: Blob;
+          lab: string;
+          text: string;
+        },
+        "engine"
+      >
+    >;
   };
 
   GENERATE_AND_SAVE_AUDIO: {
