@@ -174,3 +174,10 @@ export const cursorStateSchema = z.enum([
   "ERASE",
 ]);
 export type CursorState = z.infer<typeof cursorStateSchema>;
+
+export type ViewportInfo = {
+  readonly scaleX: number;
+  readonly scaleY: number;
+  readonly offsetX: number;
+  readonly offsetY: number;
+};

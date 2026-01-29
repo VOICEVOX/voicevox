@@ -5,6 +5,7 @@ import {
   CursorState,
   PREVIEW_SOUND_DURATION,
   PreviewMode,
+  ViewportInfo,
 } from "@/sing/viewHelper";
 import { Store } from "@/store";
 import { SequencerEditTarget } from "@/store/type";
@@ -20,12 +21,7 @@ export type PositionOnSequencer = {
   readonly frequency: number;
 };
 
-export type ViewportInfo = {
-  readonly scaleX: number;
-  readonly scaleY: number;
-  readonly offsetX: number;
-  readonly offsetY: number;
-};
+export type { ViewportInfo };
 
 export type Input =
   | {

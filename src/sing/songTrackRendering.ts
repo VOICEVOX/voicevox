@@ -674,10 +674,22 @@ const generateSingingVolumeSource = (
   }
 
   const clonedQuery = structuredClone(phrase.query);
-
-  // ピッチ編集を適用したf0をボリューム生成に使うため、ピッチをクローンして適用する
   const clonedSingingPitch = structuredClone(phrase.singingPitch);
+
   clonedQuery.f0 = clonedSingingPitch;
+
+  const phonemeTimings = toPhonemeTimings(clonedQuery.phonemes);
+  applyPhonemeTimingEdit(
+    phonemeTimings,
+    track.phonemeTimingEditData,
+    clonedQuery.frameRate,
+  );
+  adjustPhonemeTimings(
+    phonemeTimings,
+    phrase.minNonPauseStartFrame,
+    phrase.maxNonPauseEndFrame,
+  );
+  clonedQuery.phonemes = toPhonemes(phonemeTimings);
 
   applyPitchEdit(
     clonedQuery,
@@ -724,18 +736,33 @@ const generateSingingVoiceSource = (
   clonedQuery.f0 = clonedSingingPitch;
   clonedQuery.volume = clonedSingingVolume;
 
+  const phonemeTimings = toPhonemeTimings(clonedQuery.phonemes);
+  applyPhonemeTimingEdit(
+    phonemeTimings,
+    track.phonemeTimingEditData,
+    clonedQuery.frameRate,
+  );
+  adjustPhonemeTimings(
+    phonemeTimings,
+    phrase.minNonPauseStartFrame,
+    phrase.maxNonPauseEndFrame,
+  );
+  clonedQuery.phonemes = toPhonemes(phonemeTimings);
+
   applyPitchEdit(
     clonedQuery,
     phrase.startTime,
     track.pitchEditData,
     snapshot.editorFrameRate,
   );
+
   applyVolumeEdit(
     clonedQuery,
     phrase.startTime,
     track.volumeEditData,
     snapshot.editorFrameRate,
   );
+
   shiftVolume(clonedQuery.volume, track.volumeRangeAdjustment);
 
   return {
