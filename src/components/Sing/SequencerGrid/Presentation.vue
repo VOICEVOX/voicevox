@@ -120,7 +120,7 @@ import {
 } from "@/sing/viewHelper";
 import type { TimeSignature } from "@/domain/project/type";
 import { useSequencerGrid } from "@/composables/useSequencerGridPattern";
-import { getNoteDuration, measureNumberToTick } from "@/sing/domain";
+import { getNoteDuration, measureNumberToTick } from "@/sing/music";
 
 const props = defineProps<{
   tpqn: number;

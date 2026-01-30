@@ -66,7 +66,7 @@
           :accentPhrase
           :index="accentPhraseIndex"
           :isLast="
-            accentPhrases !== undefined &&
+            accentPhrases != undefined &&
             accentPhrases.length - 1 === accentPhraseIndex
           "
           :isActive="accentPhraseIndex === activePoint"

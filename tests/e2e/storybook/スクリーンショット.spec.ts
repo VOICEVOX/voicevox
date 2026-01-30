@@ -15,6 +15,7 @@ import z from "zod";
 const storybookIndexSchema = z.object({
   v: z.literal(5),
   entries: z.record(
+    z.string(),
     z.object({
       type: z.string(),
       id: z.string(),

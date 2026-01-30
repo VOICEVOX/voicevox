@@ -6,7 +6,7 @@
 import { computed, inject } from "vue";
 import { getKeyBaseHeight, getNumKeys, tickToBaseX } from "@/sing/viewHelper";
 import { useStore } from "@/store";
-import { measureNumberToTick } from "@/sing/domain";
+import { measureNumberToTick } from "@/sing/music";
 import { numMeasuresInjectionKey } from "@/components/Sing/ScoreSequencer.vue";
 
 const injectedValue = inject(numMeasuresInjectionKey);

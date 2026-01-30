@@ -34,12 +34,12 @@ export type IpcIHData = {
 
   SHOW_SAVE_DIRECTORY_DIALOG: {
     args: [obj: { title: string }];
-    return?: string;
+    return: string | undefined;
   };
 
   SHOW_OPEN_DIRECTORY_DIALOG: {
     args: [obj: { title: string }];
-    return?: string;
+    return: string | undefined;
   };
 
   SHOW_OPEN_FILE_DIALOG: {
@@ -51,7 +51,7 @@ export type IpcIHData = {
         defaultPath?: string;
       },
     ];
-    return?: string;
+    return: string | undefined;
   };
 
   SHOW_WARNING_DIALOG: {
@@ -83,7 +83,7 @@ export type IpcIHData = {
         extensions: string[];
       },
     ];
-    return?: string;
+    return: string | undefined;
   };
 
   IS_AVAILABLE_GPU_MODE: {
@@ -97,6 +97,11 @@ export type IpcIHData = {
   };
 
   CLOSE_WINDOW: {
+    args: [];
+    return: void;
+  };
+
+  SWITCH_TO_WELCOME_WINDOW: {
     args: [];
     return: void;
   };
@@ -227,6 +232,8 @@ export type IpcIHData = {
   };
 };
 
+export type BaseIpcData = Record<string, { args: unknown[]; return: unknown }>;
+
 /**
  * send, on
  */
@@ -274,7 +281,7 @@ export type IpcSOData = {
   CHECK_EDITED_AND_NOT_SAVE: {
     args: [
       obj: {
-        closeOrReload: "close" | "reload";
+        nextAction: "close" | "reload" | "switchToWelcome";
         isMultiEngineOffMode?: boolean;
       },
     ];

@@ -59,6 +59,7 @@ export function getPitchFromNoteNumber(noteNumber: number) {
   return mapPitches[pitchPos];
 }
 
+// TODO: sing/domain.tsに移動する
 export function getDoremiFromNoteNumber(noteNumber: number) {
   const mapPitches = [
     "ド",

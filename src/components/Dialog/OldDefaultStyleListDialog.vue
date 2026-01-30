@@ -2,8 +2,7 @@
   <DefaultStyleSelectDialog
     v-if="
       selectedCharacterInfo &&
-      selectedStyleIndexes[selectedCharacterInfo.metas.speakerUuid] !==
-        undefined
+      selectedStyleIndexes[selectedCharacterInfo.metas.speakerUuid] != undefined
     "
     v-model:dialogOpened="showStyleSelectDialog"
     v-model:selectedStyleIndex="

@@ -2,7 +2,7 @@
   <QHeader class="q-py-sm">
     <QToolbar>
       <template v-for="button in buttons" :key="button.text">
-        <QSpace v-if="button.text === null" />
+        <QSpace v-if="button.text == null" />
         <QBtn
           v-else
           unelevated

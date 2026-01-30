@@ -244,11 +244,14 @@ export function synthesisFrameAudioQueryMock(
 
   // Blobに変換
   const numberOfChannels = frameAudioQuery.outputStereo ? 2 : 1;
-  const buffer = generateWavFileData({
-    sampleRate,
-    length: wave.length,
-    numberOfChannels,
-    getChannelData: () => wave,
-  });
+  const buffer = generateWavFileData(
+    {
+      sampleRate,
+      length: wave.length,
+      numberOfChannels,
+      getChannelData: () => wave,
+    },
+    "float32",
+  );
   return buffer;
 }

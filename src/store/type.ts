@@ -1,6 +1,6 @@
 import { Patch } from "immer";
 import { z } from "zod";
-import { Project as UfProject } from "@sevenc-nanashi/utaformatix-ts";
+import type { Project as UfProject } from "@sevenc-nanashi/utaformatix-ts";
 import {
   MutationTree,
   MutationsBase,
@@ -76,6 +76,7 @@ import type {
   Track,
 } from "@/domain/project/type";
 import { LatestProjectType } from "@/infrastructures/projectFile/type";
+import { WavFormat } from "@/helpers/fileDataGenerator";
 
 /**
  * エディタ用のAudioQuery
@@ -814,6 +815,8 @@ export type Phrase = {
   firstRestDuration: number;
   notes: Note[];
   startTime: number;
+  minNonPauseStartFrame: number | undefined;
+  maxNonPauseEndFrame: number | undefined;
   state: PhraseState;
   queryKey?: EditorFrameAudioQueryKey;
   singingPitchKey?: SingingPitchKey;
@@ -845,6 +848,9 @@ export type NoteEditTool = "SELECT_FIRST" | "EDIT_FIRST";
 export type PitchEditTool = "DRAW" | "ERASE";
 // ボリューム編集ツール（VolumeEditor 専用）
 export type VolumeEditTool = "DRAW" | "ERASE";
+// パラメータパネル内の編集対象
+// NOTE: 音素タイミング編集などを追加する際に拡張
+export type ParameterPanelEditTarget = "PHONEME_TIMING" | "VOLUME";
 
 // プロジェクトの書き出しに使えるファイル形式
 export type ExportSongProjectFileType =
@@ -860,6 +866,7 @@ export type TrackParameters = {
 export type SongExportSetting = {
   isMono: boolean;
   sampleRate: number;
+  format: WavFormat;
   withLimiter: boolean;
   withTrackParameters: TrackParameters;
 };
@@ -881,6 +888,7 @@ export type SingingStoreState = {
   phraseQueries: Map<EditorFrameAudioQueryKey, EditorFrameAudioQuery>;
   phraseSingingPitches: Map<SingingPitchKey, SingingPitch>;
   phraseSingingVolumes: Map<SingingVolumeKey, SingingVolume>;
+  phraseSequenceIds: Map<PhraseKey, SequenceId>;
   sequencerZoomX: number;
   sequencerZoomY: number;
   sequencerSnapType: number;
@@ -890,6 +898,7 @@ export type SingingStoreState = {
   sequencerNoteTool: NoteEditTool;
   sequencerPitchTool: PitchEditTool;
   sequencerVolumeTool: VolumeEditTool;
+  parameterPanelEditTarget: ParameterPanelEditTarget;
   sequencerVolumeVisible: boolean;
   _selectedNoteIds: Set<NoteId>;
   editingLyricNoteId?: NoteId;
@@ -1027,11 +1036,29 @@ export type SingingStoreTypes = {
     }): void;
   };
 
+  SET_VOLUME_EDIT_DATA: {
+    mutation: { volumeArray: number[]; startFrame: number; trackId: TrackId };
+    action(payload: {
+      volumeArray: number[];
+      startFrame: number;
+      trackId: TrackId;
+    }): void;
+  };
+
   ERASE_PITCH_EDIT_DATA: {
     mutation: { startFrame: number; frameLength: number; trackId: TrackId };
   };
 
+  ERASE_VOLUME_EDIT_DATA: {
+    mutation: { startFrame: number; frameLength: number; trackId: TrackId };
+  };
+
   CLEAR_PITCH_EDIT_DATA: {
+    mutation: { trackId: TrackId };
+    action(payload: { trackId: TrackId }): void;
+  };
+
+  CLEAR_VOLUME_EDIT_DATA: {
     mutation: { trackId: TrackId };
     action(payload: { trackId: TrackId }): void;
   };
@@ -1130,6 +1157,14 @@ export type SingingStoreTypes = {
     mutation: { singingVolumeKey: SingingVolumeKey };
   };
 
+  SET_PHRASE_SEQUENCE_ID: {
+    mutation: { phraseKey: PhraseKey; sequenceId: SequenceId };
+  };
+
+  DELETE_PHRASE_SEQUENCE_ID: {
+    mutation: { phraseKey: PhraseKey };
+  };
+
   SELECTED_TRACK: {
     getter: Track;
   };
@@ -1167,6 +1202,11 @@ export type SingingStoreTypes = {
   SET_SEQUENCER_VOLUME_TOOL: {
     mutation: { sequencerVolumeTool: VolumeEditTool };
     action(payload: { sequencerVolumeTool: VolumeEditTool }): void;
+  };
+
+  SET_PARAMETER_PANEL_EDIT_TARGET: {
+    mutation: { editTarget: ParameterPanelEditTarget };
+    action(payload: { editTarget: ParameterPanelEditTarget }): void;
   };
 
   SET_SEQUENCER_VOLUME_VISIBLE: {
@@ -1445,6 +1485,10 @@ export type SingingStoreTypes = {
       fileTypeLabel: string;
     }): Promise<SaveResultObject>;
   };
+
+  GET_SEQUENCE_AUDIO_BUFFER: {
+    getter(sequenceId: SequenceId): AudioBuffer | undefined;
+  };
 };
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
@@ -1520,7 +1564,25 @@ export type SingingCommandStoreTypes = {
     }): void;
   };
 
+  COMMAND_SET_VOLUME_EDIT_DATA: {
+    mutation: { volumeArray: number[]; startFrame: number; trackId: TrackId };
+    action(payload: {
+      volumeArray: number[];
+      startFrame: number;
+      trackId: TrackId;
+    }): void;
+  };
+
   COMMAND_ERASE_PITCH_EDIT_DATA: {
+    mutation: { startFrame: number; frameLength: number; trackId: TrackId };
+    action(payload: {
+      startFrame: number;
+      frameLength: number;
+      trackId: TrackId;
+    }): void;
+  };
+
+  COMMAND_ERASE_VOLUME_EDIT_DATA: {
     mutation: { startFrame: number; frameLength: number; trackId: TrackId };
     action(payload: {
       startFrame: number;
@@ -2239,11 +2301,12 @@ export type UiStoreTypes = {
   CHECK_EDITED_AND_NOT_SAVE: {
     action(
       obj:
-        | { closeOrReload: "close" }
+        | { nextAction: "close" }
         | {
-            closeOrReload: "reload";
+            nextAction: "reload";
             isMultiEngineOffMode?: boolean;
-          },
+          }
+        | { nextAction: "switchToWelcome" },
     ): Promise<void>;
   };
 

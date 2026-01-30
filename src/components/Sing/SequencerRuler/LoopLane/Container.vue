@@ -33,7 +33,7 @@ import Presentation from "./Presentation.vue";
 import { useStore } from "@/store";
 import { useSequencerLayout } from "@/composables/useSequencerLayout";
 import { baseXToTick } from "@/sing/viewHelper";
-import { getMeasureDuration, getNoteDuration } from "@/sing/domain";
+import { getMeasureDuration, getNoteDuration } from "@/sing/music";
 import { ContextMenuItemData } from "@/components/Menu/ContextMenu/Presentation.vue";
 
 defineOptions({

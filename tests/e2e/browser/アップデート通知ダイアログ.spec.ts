@@ -8,7 +8,7 @@ import { assertNonNullable } from "@/type/utility";
 
 // アップデート通知が出る環境にする
 test.beforeEach(async ({ page }) => {
-  dotenv.config();
+  dotenv.config({ quiet: true });
 
   // 動作環境より新しいバージョン
   const latestVersion = semver.inc(

@@ -1,7 +1,7 @@
 import { test, expect, Page } from "@playwright/test";
 
 import { gotoHome, navigateToSong } from "../../navigators";
-import { ensureNotNullish } from "@/helpers/errorHelper";
+import { ensureNotNullish } from "@/type/utility";
 
 test.beforeEach(gotoHome);
 

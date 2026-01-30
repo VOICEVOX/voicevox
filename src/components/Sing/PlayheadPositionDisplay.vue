@@ -23,7 +23,7 @@ import {
   getTimeSignaturePositions,
   MeasuresBeats,
   ticksToMeasuresBeats,
-} from "@/sing/domain";
+} from "@/sing/music";
 import { useRootMiscSetting } from "@/composables/useRootMiscSetting";
 
 const store = useStore();

@@ -6,10 +6,10 @@
  */
 import type { TimeSignature } from "@/domain/project/type";
 import {
-  getTimeSignaturePositions,
-  getMeasureDuration,
   getBeatDuration,
-} from "@/sing/domain";
+  getMeasureDuration,
+  getTimeSignaturePositions,
+} from "@/sing/music";
 import { tickToBaseX } from "@/sing/viewHelper";
 
 /**

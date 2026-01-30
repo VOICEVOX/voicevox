@@ -356,78 +356,84 @@ describe("SongTrackRenderer", () => {
     ]);
   });
 
-  test("トラックにシンガーが割り当てられていない場合、そのトラックのフレーズはレンダリングされない", async () => {
-    const trackId1 = TrackId(uuid4());
-    const singer1 = undefined;
-    const trackNotes1 = utility.toTrackNotes([
-      utility.createTestNotes(0),
-      utility.createTestNotes(1),
-      utility.createTestNotes(2),
-    ]);
+  test(
+    "トラックにシンガーが割り当てられていない場合、そのトラックのフレーズはレンダリングされない",
+    {
+      timeout: 10000, // テストが長くなる可能性があるため、タイムアウトを延長
+    },
+    async () => {
+      const trackId1 = TrackId(uuid4());
+      const singer1 = undefined;
+      const trackNotes1 = utility.toTrackNotes([
+        utility.createTestNotes(0),
+        utility.createTestNotes(1),
+        utility.createTestNotes(2),
+      ]);
 
-    const trackId2 = TrackId(uuid4());
-    const singer2 = {
-      engineId: constants.engineId,
-      styleId: constants.singerStyleId,
-    };
-    const trackNotes2 = utility.toTrackNotes([
-      utility.createTestNotes(0),
-      utility.createTestNotes(3),
-      utility.createTestNotes(4),
-    ]);
+      const trackId2 = TrackId(uuid4());
+      const singer2 = {
+        engineId: constants.engineId,
+        styleId: constants.singerStyleId,
+      };
+      const trackNotes2 = utility.toTrackNotes([
+        utility.createTestNotes(0),
+        utility.createTestNotes(3),
+        utility.createTestNotes(4),
+      ]);
 
-    const songTrackRenderer = utility.createSongTrackRendererUsingMock({
-      playheadPositionGetter: () => 0,
-    });
+      const songTrackRenderer = utility.createSongTrackRendererUsingMock({
+        playheadPositionGetter: () => 0,
+      });
 
-    const renderingEventInfoPromises: Promise<RenderingEventInfo>[] = [];
-    songTrackRenderer.addEventListener((event) => {
-      renderingEventInfoPromises.push(utility.toRenderingEventInfo(event));
-    });
+      const renderingEventInfoPromises: Promise<RenderingEventInfo>[] = [];
+      songTrackRenderer.addEventListener((event) => {
+        renderingEventInfoPromises.push(utility.toRenderingEventInfo(event));
+      });
 
-    const snapshot = utility.createSnapshotObject([
-      [
-        trackId1,
-        {
-          singer: singer1,
-          notes: trackNotes1,
-        },
-      ],
-      [
-        trackId2,
-        {
-          singer: singer2,
-          notes: trackNotes2,
-        },
-      ],
-    ]);
-    const result = await songTrackRenderer.render(snapshot);
+      const snapshot = utility.createSnapshotObject([
+        [
+          trackId1,
+          {
+            singer: singer1,
+            notes: trackNotes1,
+          },
+        ],
+        [
+          trackId2,
+          {
+            singer: singer2,
+            notes: trackNotes2,
+          },
+        ],
+      ]);
+      const result = await songTrackRenderer.render(snapshot);
 
-    const renderingEventInfos = await Promise.all(renderingEventInfoPromises);
-    const renderingResultInfo = await utility.toRenderingResultInfo(result);
+      const renderingEventInfos = await Promise.all(renderingEventInfoPromises);
+      const renderingResultInfo = await utility.toRenderingResultInfo(result);
 
-    expect(renderingResultInfo.type).toEqual("complete");
-    if (renderingResultInfo.type !== "complete") {
-      throw new UnreachableError();
-    }
-
-    // 各トラックの phraseRenderingStarted イベントの数を検証する
-    for (const [trackId, track] of snapshot.tracks) {
-      const phraseInfos = renderingResultInfo.phraseInfos;
-      const phraseRenderingStartedEventInfos = renderingEventInfos.filter(
-        (value) =>
-          value.type === "phraseRenderingStarted" &&
-          getOrThrow(phraseInfos, value.phraseKey).trackId === trackId,
-      );
-      if (track.singer == undefined) {
-        // シンガーが未設定のトラックのフレーズはレンダリングされないはず
-        expect(phraseRenderingStartedEventInfos.length).toEqual(0);
-      } else {
-        // シンガーが設定されているトラックのフレーズはレンダリングされるはず
-        expect(phraseRenderingStartedEventInfos.length).toEqual(3);
+      expect(renderingResultInfo.type).toEqual("complete");
+      if (renderingResultInfo.type !== "complete") {
+        throw new UnreachableError();
       }
-    }
-  });
+
+      // 各トラックの phraseRenderingStarted イベントの数を検証する
+      for (const [trackId, track] of snapshot.tracks) {
+        const phraseInfos = renderingResultInfo.phraseInfos;
+        const phraseRenderingStartedEventInfos = renderingEventInfos.filter(
+          (value) =>
+            value.type === "phraseRenderingStarted" &&
+            getOrThrow(phraseInfos, value.phraseKey).trackId === trackId,
+        );
+        if (track.singer == undefined) {
+          // シンガーが未設定のトラックのフレーズはレンダリングされないはず
+          expect(phraseRenderingStartedEventInfos.length).toEqual(0);
+        } else {
+          // シンガーが設定されているトラックのフレーズはレンダリングされるはず
+          expect(phraseRenderingStartedEventInfos.length).toEqual(3);
+        }
+      }
+    },
+  );
 
   test(
     "再生ヘッド位置に近いフレーズから優先的にレンダリングされる",

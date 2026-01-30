@@ -3,7 +3,7 @@
  * NOTE: 雑多です
  */
 import { computed, ComputedRef, Ref } from "vue";
-import { getTimeSignaturePositions } from "@/sing/domain";
+import { getTimeSignaturePositions } from "@/sing/music";
 import { tickToBaseX } from "@/sing/viewHelper";
 import { getTotalTicks, calculateMeasureInfos } from "@/sing/rulerHelper";
 import type { TimeSignature } from "@/domain/project/type";

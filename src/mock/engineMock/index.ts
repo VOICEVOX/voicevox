@@ -146,7 +146,7 @@ export function createOpenAPIEngineMock(): DefaultApiInterface {
         frameAudioQuery,
         payload.speaker,
       );
-      return new Blob([buffer], { type: "audio/wav" });
+      return new Blob([new Uint8Array(buffer)], { type: "audio/wav" });
     },
 
     // ソング系
@@ -213,7 +213,7 @@ export function createOpenAPIEngineMock(): DefaultApiInterface {
       const { speaker: styleId, frameAudioQuery } =
         cloneWithUnwrapProxy(payload);
       const buffer = synthesisFrameAudioQueryMock(frameAudioQuery, styleId);
-      return new Blob([buffer], { type: "audio/wav" });
+      return new Blob([new Uint8Array(buffer)], { type: "audio/wav" });
     },
 
     // 辞書系

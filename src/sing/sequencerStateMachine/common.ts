@@ -39,16 +39,37 @@ export type Input =
       readonly keyboardEvent: KeyboardEvent;
     }
   | {
-      readonly type: "mouseEvent";
+      readonly type: "pointerEvent";
       readonly targetArea: "Window";
-      readonly mouseEvent: MouseEvent;
+      readonly pointerEvent: PointerEvent;
       readonly cursorPos: PositionOnSequencer;
     }
   | {
-      readonly type: "mouseEvent";
+      readonly type: "pointerEvent";
       readonly targetArea: "SequencerBody";
-      readonly mouseEvent: MouseEvent;
+      readonly pointerEvent: PointerEvent;
       readonly cursorPos: PositionOnSequencer;
+    }
+  | {
+      readonly type: "pointerEvent";
+      readonly targetArea: "Note";
+      readonly pointerEvent: PointerEvent;
+      readonly cursorPos: PositionOnSequencer;
+      readonly note: Note;
+    }
+  | {
+      readonly type: "pointerEvent";
+      readonly targetArea: "NoteLeftEdge";
+      readonly pointerEvent: PointerEvent;
+      readonly cursorPos: PositionOnSequencer;
+      readonly note: Note;
+    }
+  | {
+      readonly type: "pointerEvent";
+      readonly targetArea: "NoteRightEdge";
+      readonly pointerEvent: PointerEvent;
+      readonly cursorPos: PositionOnSequencer;
+      readonly note: Note;
     }
   | {
       readonly type: "mouseEvent";
@@ -59,17 +80,9 @@ export type Input =
     }
   | {
       readonly type: "mouseEvent";
-      readonly targetArea: "NoteLeftEdge";
+      readonly targetArea: "SequencerBody";
       readonly mouseEvent: MouseEvent;
       readonly cursorPos: PositionOnSequencer;
-      readonly note: Note;
-    }
-  | {
-      readonly type: "mouseEvent";
-      readonly targetArea: "NoteRightEdge";
-      readonly mouseEvent: MouseEvent;
-      readonly cursorPos: PositionOnSequencer;
-      readonly note: Note;
     }
   | {
       readonly type: "scrollEvent";
@@ -120,6 +133,7 @@ export type PartialStore = {
     Store["state"],
     | "tpqn"
     | "tempos"
+    | "tracks"
     | "sequencerSnapType"
     | "sequencerEditTarget"
     | "sequencerNoteTool"
