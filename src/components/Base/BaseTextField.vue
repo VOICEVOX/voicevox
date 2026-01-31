@@ -151,13 +151,18 @@ const replaceSelection = (text: string) => {
   if (selection == null) {
     throw new Error("selection is null");
   }
-
-  if (selection.rangeCount === 0) {
-    throw new Error("No selection range found");
-  }
-
-  const range = selection.getRangeAt(0);
   const input = getInputOrThrow();
+
+  let range: Range;
+  if (selection.rangeCount === 0) {
+    range = document.createRange();
+    range.setStart(input, 0);
+    range.setEnd(input, 0);
+    selection.removeAllRanges();
+    selection.addRange(range);
+  } else {
+    range = selection.getRangeAt(0);
+  }
 
   const before = input.innerText.slice(0, range.startOffset);
   const after = input.innerText.slice(range.endOffset);
@@ -238,6 +243,8 @@ const selectAll = () => {
 
   selectionOffset.value = { start: 0, end: textContent.length };
 };
+
+defineExpose({ focus });
 </script>
 
 <style scoped lang="scss">
