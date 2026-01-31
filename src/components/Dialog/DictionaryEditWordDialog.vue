@@ -89,13 +89,7 @@
           </div>
           <div>
             <div>優先度：{{ wordPriority }}</div>
-            <BaseSlider
-              v-model="wordPriority"
-              :min="0"
-              :max="10"
-              :step="1"
-              @valueCommit="saveWord"
-            />
+            <BaseSlider v-model="wordPriority" :min="0" :max="10" :step="1" />
             <div class="slider-label">
               <span>最低</span>
               <span>標準</span>
