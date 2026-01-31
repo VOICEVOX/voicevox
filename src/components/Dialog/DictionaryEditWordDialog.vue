@@ -101,6 +101,7 @@
     </BaseScrollArea>
     <footer class="footer">
       <BaseButton
+        v-if="!selectedId"
         :disabled="uiLocked"
         label="キャンセル"
         @click="discardOrNotDialog(cancel)"
