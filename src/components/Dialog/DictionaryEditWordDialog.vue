@@ -2,6 +2,9 @@
   <div v-show="wordEditing" class="detail">
     <BaseScrollArea>
       <div class="inner">
+        <h2 class="title">
+          {{ selectedId ? userDict[selectedId].surface : "新しい単語の追加" }}
+        </h2>
         <div class="form-row">
           <h3 class="headline">単語</h3>
           <div>単語は全角と半角は区別しません。</div>
@@ -324,6 +327,11 @@ const changeAccent = async (_: number, accent: number) => {
   flex-direction: column;
   padding: vars.$padding-2;
   gap: vars.$gap-2;
+}
+
+.title {
+  @include mixin.headline-1;
+  word-break: break-all;
 }
 
 .form-row {
