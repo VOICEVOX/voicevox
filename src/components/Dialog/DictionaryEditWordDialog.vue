@@ -317,6 +317,8 @@ const changeAccent = async (_: number, accent: number) => {
 
 .inner {
   min-height: 100%;
+  max-width: 960px;
+  margin: auto;
   width: 100%;
   display: flex;
   flex-direction: column;
