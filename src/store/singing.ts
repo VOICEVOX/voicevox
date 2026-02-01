@@ -3034,19 +3034,30 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
 
       // パースしたJSONのノートの位置を現在の再生位置に合わせて貼り付ける
-      const currentPlayheadPosition = getters.PLAYHEAD_POSITION;
+      const currentPlayheadPosition = Math.round(getters.PLAYHEAD_POSITION);
       const firstNotePosition = notes[0].position;
+
+      // positionとdurationが整数かチェック
+      const hasNonIntegerValues = notes.some(
+        (note) =>
+          !Number.isInteger(note.position) || !Number.isInteger(note.duration),
+      );
+      if (hasNonIntegerValues) {
+        throw new Error(
+          "Failed to paste notes: position and duration must be integers.",
+        );
+      }
+
       const notesToPaste: Note[] = notes.map((note) => {
         // 新しい位置を現在の再生位置に合わせて計算する
-        const pastePos = Math.round(
-          Number(note.position) - firstNotePosition + currentPlayheadPosition,
-        );
+        const pastePos =
+          note.position - firstNotePosition + currentPlayheadPosition;
         return {
           id: NoteId(uuid4()),
           position: pastePos,
-          duration: Number(note.duration),
-          noteNumber: Number(note.noteNumber),
-          lyric: String(note.lyric),
+          duration: note.duration,
+          noteNumber: note.noteNumber,
+          lyric: note.lyric,
         };
       });
       const pastedNoteIds = notesToPaste.map((note) => note.id);
