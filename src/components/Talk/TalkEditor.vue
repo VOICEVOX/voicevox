@@ -100,7 +100,6 @@
                           @click="addAudioItem"
                         ></QBtn>
                       </div>
-                      <!-- 合計再生時間の表示（ステータス） -->
                       <div
                         v-if="showTotalAudioLength"
                         class="total-audio-status"
