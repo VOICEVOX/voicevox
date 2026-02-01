@@ -260,7 +260,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       let total = 0;
       for (const audioKey of state.audioKeys) {
         const item = state.audioItems[audioKey];
-        if (item && item.query) {
+        if (item.query) {
           total += calculateAudioLength(item.query);
         }
       }
