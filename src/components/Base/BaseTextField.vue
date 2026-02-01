@@ -184,6 +184,9 @@ const handleUpdateOpen = (isOpened: boolean) => {
 };
 
 const handleBlur = (event: FocusEvent) => {
+  const selection = window.getSelection();
+  selection?.removeAllRanges();
+
   if (innerValue.value !== model.value) {
     emit("change", event);
   }
