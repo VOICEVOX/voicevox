@@ -98,7 +98,6 @@ import { ensureNotNullish } from "@/type/utility";
 
 function processValue(value: string | null | undefined) {
     const nonNullableValue = ensureNotNullish(value);
-    const anotherNonNullableValue = ensureNotNullish(value, "カスタムエラーメッセージ");
     // ...
 }
 ```
