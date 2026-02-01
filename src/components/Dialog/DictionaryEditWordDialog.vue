@@ -278,6 +278,12 @@ const resetWord = async (id: string) => {
     selectedId.value = id;
     surface.value = userDict.value[id].surface;
     void setYomi(userDict.value[id].yomi, true);
+
+    // 状態に齟齬があるとき（エラー時など）に同期する
+    if (yomi.value !== userDict.value[id].yomi) {
+      yomi.value = userDict.value[id].yomi;
+    }
+
     wordPriority.value = userDict.value[id].priority;
     toWordEditingState();
   }
