@@ -20,7 +20,6 @@
               flat
               icon="close"
               color="display"
-              :disable="wordEditing"
               @click="discardOrNotDialog(closeDialog)"
             />
           </QToolbar>
@@ -46,7 +45,7 @@
                 label="追加"
                 icon="add"
                 :disable="uiLocked"
-                @click="newWord"
+                @click="discardOrNotDialog(newWord)"
               />
             </div>
             <div class="list">
@@ -55,8 +54,9 @@
                 :key
                 :selected="selectedId === key"
                 @click="
-                  selectWord(key);
-                  editWord();
+                  discardOrNotDialog(() => {
+                    editWord(key);
+                  })
                 "
                 @mouseover="hoveredKey = key"
                 @mouseleave="hoveredKey = undefined"
@@ -76,10 +76,7 @@
                     "
                     icon="delete_outline"
                     label="削除"
-                    @click.stop="
-                      selectWord(key);
-                      deleteWord();
-                    "
+                    @click.stop="deleteWord(key)"
                   />
                 </div>
               </BaseListItem>
@@ -300,7 +297,7 @@ const isWordChanged = computed(() => {
   );
 });
 
-const deleteWord = async () => {
+const deleteWord = async (id: string) => {
   const result = await store.actions.SHOW_WARNING_DIALOG({
     title: "単語を削除しますか？",
     message: "削除された単語は元に戻せません。",
@@ -312,7 +309,7 @@ const deleteWord = async () => {
     try {
       await createUILockAction(
         store.actions.DELETE_WORD({
-          wordUuid: selectedId.value,
+          wordUuid: id,
         }),
       );
     } catch {
@@ -347,17 +344,14 @@ const newWord = () => {
   surface.value = "";
   void setYomi("");
   wordPriority.value = defaultDictPriority;
-  editWord();
-};
-const editWord = () => {
   toWordEditingState();
 };
-const selectWord = (id: string) => {
+const editWord = (id: string) => {
   selectedId.value = id;
   surface.value = userDict.value[id].surface;
   void setYomi(userDict.value[id].yomi, true);
   wordPriority.value = userDict.value[id].priority;
-  toWordSelectedState();
+  toWordEditingState();
 };
 const cancel = () => {
   toInitialState();
@@ -374,10 +368,6 @@ const toInitialState = () => {
   surface.value = "";
   void setYomi("");
   wordPriority.value = defaultDictPriority;
-};
-// 単語が選択されているだけの状態
-const toWordSelectedState = () => {
-  wordEditing.value = false;
 };
 // 単語が編集されている状態
 const toWordEditingState = () => {
