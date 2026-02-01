@@ -8,7 +8,9 @@ import {
 import { NoteId, TrackId } from "@/type/preload";
 import { baseXToTick, getButton } from "@/sing/viewHelper";
 import { tickToSecond } from "@/sing/music";
-import { clamp } from "@/sing/utility";
+import { clamp, getPrev } from "@/sing/utility";
+import { getOrThrow } from "@/helpers/mapHelper";
+import { assertNonNullable } from "@/type/utility";
 
 export class PhonemeTimingEditState
   implements
@@ -23,11 +25,6 @@ export class PhonemeTimingEditState
   private readonly targetTrackId: TrackId;
   private readonly noteId: NoteId;
   private readonly phonemeIndexInNote: number;
-  private readonly initialStartTimeSeconds: number;
-  private readonly initialOffsetSeconds: number;
-  private readonly hasExistingEdit: boolean;
-  private readonly minTimeSeconds: number;
-  private readonly maxTimeSeconds: number;
   private readonly startPositionX: number;
   private readonly returnStateId: PhonemeTimingEditorIdleStateId;
 
@@ -45,22 +42,12 @@ export class PhonemeTimingEditState
     targetTrackId: TrackId;
     noteId: NoteId;
     phonemeIndexInNote: number;
-    initialStartTimeSeconds: number;
-    initialOffsetSeconds: number;
-    hasExistingEdit: boolean;
-    minTimeSeconds: number;
-    maxTimeSeconds: number;
     startPositionX: number;
     returnStateId: PhonemeTimingEditorIdleStateId;
   }) {
     this.targetTrackId = args.targetTrackId;
     this.noteId = args.noteId;
     this.phonemeIndexInNote = args.phonemeIndexInNote;
-    this.initialStartTimeSeconds = args.initialStartTimeSeconds;
-    this.initialOffsetSeconds = args.initialOffsetSeconds;
-    this.hasExistingEdit = args.hasExistingEdit;
-    this.minTimeSeconds = args.minTimeSeconds;
-    this.maxTimeSeconds = args.maxTimeSeconds;
     this.startPositionX = args.startPositionX;
     this.returnStateId = args.returnStateId;
 
@@ -69,11 +56,22 @@ export class PhonemeTimingEditState
   }
 
   onEnter(context: PhonemeTimingEditorContext) {
-    context.previewPhonemeTimingEdit.value = {
-      noteId: this.noteId,
-      phonemeIndexInNote: this.phonemeIndexInNote,
-      offsetSeconds: this.initialOffsetSeconds,
-    };
+    const targetInfo = context.phonemeTimingInfos.value.find(
+      (info) =>
+        info.noteId === this.noteId &&
+        info.phonemeIndexInNote === this.phonemeIndexInNote,
+    );
+
+    if (targetInfo != undefined) {
+      const initialOffsetSeconds =
+        targetInfo.editedStartTimeSeconds - targetInfo.originalStartTimeSeconds;
+
+      context.previewPhonemeTimingEdit.value = {
+        noteId: this.noteId,
+        phonemeIndexInNote: this.phonemeIndexInNote,
+        offsetSeconds: initialOffsetSeconds,
+      };
+    }
 
     context.previewMode.value = "PHONEME_TIMING_EDIT";
     context.cursorState.value = "EW_RESIZE";
@@ -123,7 +121,6 @@ export class PhonemeTimingEditState
           input.pointerEvent.type === "pointerup" &&
           mouseButton === "LEFT_BUTTON"
         ) {
-          // 編集適用判定: startPositionXとcurrentPositionXの差があれば適用する
           const pixelDelta = Math.abs(
             this.currentPositionX - this.startPositionX,
           );
@@ -141,7 +138,12 @@ export class PhonemeTimingEditState
 
     cancelAnimationFrame(this.innerContext.previewRequestId);
 
-    if (this.shouldApplyPreview) {
+    const targetInfo = context.phonemeTimingInfos.value.find(
+      (info) =>
+        info.noteId === this.noteId &&
+        info.phonemeIndexInNote === this.phonemeIndexInNote,
+    );
+    if (targetInfo != undefined && this.shouldApplyPreview) {
       this.applyPreview(context);
     }
 
@@ -151,13 +153,58 @@ export class PhonemeTimingEditState
   }
 
   private updatePreview(context: PhonemeTimingEditorContext) {
-    if (context.previewPhonemeTimingEdit.value == undefined) {
-      throw new Error("previewPhonemeTimingEdit is undefined.");
-    }
-
+    const phraseInfos = context.phraseInfos.value;
+    const phonemeTimingInfos = context.phonemeTimingInfos.value;
     const viewportInfo = context.viewportInfo.value;
     const tempos = context.tempos.value;
     const tpqn = context.tpqn.value;
+
+    const targetIndex = phonemeTimingInfos.findIndex(
+      (info) =>
+        info.noteId === this.noteId &&
+        info.phonemeIndexInNote === this.phonemeIndexInNote,
+    );
+    if (targetIndex === -1) {
+      return;
+    }
+
+    const targetInfo = phonemeTimingInfos[targetIndex];
+    const prevInfo = getPrev(phonemeTimingInfos, targetIndex);
+    if (prevInfo == undefined) {
+      throw new Error("Previous phoneme timing info does not exist.");
+    }
+
+    const phraseInfo = getOrThrow(phraseInfos, targetInfo.phraseKey);
+    assertNonNullable(phraseInfo.query);
+    const frameRate = phraseInfo.query.frameRate;
+
+    let minNonPauseStartTime: number | undefined = undefined;
+    if (phraseInfo.minNonPauseStartFrame != undefined) {
+      minNonPauseStartTime =
+        phraseInfo.startTime + phraseInfo.minNonPauseStartFrame / frameRate;
+    }
+
+    let maxNonPauseEndTime: number | undefined = undefined;
+    if (phraseInfo.maxNonPauseEndFrame != undefined) {
+      maxNonPauseEndTime =
+        phraseInfo.startTime + phraseInfo.maxNonPauseEndFrame / frameRate;
+    }
+
+    let minTimeSeconds = prevInfo.editedStartTimeSeconds;
+    if (
+      minNonPauseStartTime != undefined &&
+      minTimeSeconds < minNonPauseStartTime
+    ) {
+      minTimeSeconds = minNonPauseStartTime;
+    }
+
+    let maxTimeSeconds = targetInfo.editedEndTimeSeconds;
+    if (
+      maxNonPauseEndTime != undefined &&
+      maxTimeSeconds > maxNonPauseEndTime
+    ) {
+      maxTimeSeconds = maxNonPauseEndTime;
+    }
 
     // ピクセル座標からbaseXを計算し、tickを経由して秒に変換
     // これによりテンポ変更を正しく考慮できる
@@ -174,18 +221,18 @@ export class PhonemeTimingEditState
 
     const timeDeltaSeconds = currentSeconds - startSeconds;
 
+    const originalStartTimeSeconds = targetInfo.originalStartTimeSeconds;
+    const editedStartTimeSeconds = targetInfo.editedStartTimeSeconds;
+
     // 新しいoffsetSecondsを計算
     // initialStartTimeSeconds + timeDelta が minTimeSeconds と maxTimeSeconds の間になるようにclamp
-    const newStartTime = this.initialStartTimeSeconds + timeDeltaSeconds;
-    const clampedStartTime = clamp(
-      newStartTime,
-      this.minTimeSeconds,
-      this.maxTimeSeconds,
+    const newStartTime = clamp(
+      editedStartTimeSeconds + timeDeltaSeconds,
+      minTimeSeconds,
+      maxTimeSeconds,
     );
 
-    // clampedStartTimeとinitialStartTimeSecondsの差分が実際の変化量
-    const actualTimeDelta = clampedStartTime - this.initialStartTimeSeconds;
-    const newOffsetSeconds = this.initialOffsetSeconds + actualTimeDelta;
+    const newOffsetSeconds = newStartTime - originalStartTimeSeconds;
 
     context.previewPhonemeTimingEdit.value = {
       noteId: this.noteId,
@@ -206,18 +253,10 @@ export class PhonemeTimingEditState
       offsetSeconds,
     };
 
-    if (this.hasExistingEdit) {
-      void context.store.actions.COMMAND_UPDATE_PHONEME_TIMING_EDITS({
-        noteId: this.noteId,
-        phonemeTimingEdits: [phonemeTimingEdit],
-        trackId: this.targetTrackId,
-      });
-    } else {
-      void context.store.actions.COMMAND_ADD_PHONEME_TIMING_EDITS({
-        noteId: this.noteId,
-        phonemeTimingEdits: [phonemeTimingEdit],
-        trackId: this.targetTrackId,
-      });
-    }
+    void context.store.actions.COMMAND_UPSERT_PHONEME_TIMING_EDIT({
+      noteId: this.noteId,
+      phonemeTimingEdit,
+      trackId: this.targetTrackId,
+    });
   }
 }

@@ -1,11 +1,7 @@
 import { ComputedRef, Ref } from "vue";
 import type { Store } from "@/store";
 import { StateDefinitions } from "@/sing/stateMachine";
-import {
-  tickToBaseX,
-  type CursorState,
-  type ViewportInfo,
-} from "@/sing/viewHelper";
+import { type CursorState, type ViewportInfo } from "@/sing/viewHelper";
 import { NoteId, TrackId } from "@/type/preload";
 import type { Note, PhonemeTimingEditData, Tempo } from "@/domain/project/type";
 import type {
@@ -23,7 +19,6 @@ import {
   toPhonemeTimings,
 } from "@/sing/domain";
 import { getPrev } from "@/sing/utility";
-import { secondToTick } from "@/sing/music";
 
 // 音素タイミング編集のプレビューデータ
 export type PhonemeTimingPreviewEdit = {
@@ -33,7 +28,7 @@ export type PhonemeTimingPreviewEdit = {
 };
 
 // フレーズ情報（StateMachine用）
-type PhraseInfo = Readonly<{
+export type PhraseInfo = Readonly<{
   startTime: number;
   query?: EditorFrameAudioQuery;
   notes: Note[];
@@ -42,16 +37,14 @@ type PhraseInfo = Readonly<{
 }>;
 
 // 音素タイミング線情報（StateMachine内部用、ヒットテスト用）
-type PhonemeTimingLineInfo = {
-  pixelX: number;
+export type PhonemeTimingInfo = {
+  phraseKey: PhraseKey;
   phoneme: string;
-  noteId: NoteId;
+  noteId: NoteId | undefined;
   phonemeIndexInNote: number;
   editedStartTimeSeconds: number;
   originalStartTimeSeconds: number;
-  hasExistingEdit: boolean;
-  minTimeSeconds: number;
-  maxTimeSeconds: number;
+  editedEndTimeSeconds: number;
 };
 
 export type PhonemeTimingEditorInput =
@@ -83,6 +76,8 @@ export type PhonemeTimingEditorComputedRefs = {
   readonly viewportInfo: ComputedRef<ViewportInfo>;
   readonly phonemeTimingEditData: ComputedRef<PhonemeTimingEditData>;
   readonly editorFrameRate: ComputedRef<number>;
+  readonly phonemeTimingInfos: ComputedRef<PhonemeTimingInfo[]>;
+  readonly phraseInfos: ComputedRef<Map<PhraseKey, PhraseInfo>>;
 };
 
 export type PhonemeTimingEditorPartialStore = {
@@ -96,7 +91,7 @@ export type PhonemeTimingEditorPartialStore = {
   >;
   readonly actions: Pick<
     Store["actions"],
-    "COMMAND_ADD_PHONEME_TIMING_EDITS" | "COMMAND_UPDATE_PHONEME_TIMING_EDITS"
+    "COMMAND_UPSERT_PHONEME_TIMING_EDIT"
   >;
 };
 
@@ -119,11 +114,6 @@ export type PhonemeTimingEditorStateDefinitions = StateDefinitions<
         targetTrackId: TrackId;
         noteId: NoteId;
         phonemeIndexInNote: number;
-        initialStartTimeSeconds: number;
-        initialOffsetSeconds: number;
-        hasExistingEdit: boolean;
-        minTimeSeconds: number;
-        maxTimeSeconds: number;
         startPositionX: number;
         returnStateId: PhonemeTimingEditorIdleStateId;
       };
@@ -138,9 +128,9 @@ export function getPhraseInfosForTrack(
   phrases: Map<PhraseKey, Phrase>,
   phraseQueries: Map<EditorFrameAudioQueryKey, EditorFrameAudioQuery>,
   trackId: TrackId,
-): PhraseInfo[] {
-  const phraseInfos: PhraseInfo[] = [];
-  for (const phrase of phrases.values()) {
+): Map<PhraseKey, PhraseInfo> {
+  const phraseInfos = new Map<PhraseKey, PhraseInfo>();
+  for (const [phraseKey, phrase] of phrases) {
     if (phrase.trackId !== trackId) {
       continue;
     }
@@ -148,7 +138,7 @@ export function getPhraseInfosForTrack(
     if (phrase.queryKey != undefined) {
       query = getOrThrow(phraseQueries, phrase.queryKey);
     }
-    phraseInfos.push({
+    phraseInfos.set(phraseKey, {
       startTime: phrase.startTime,
       query,
       notes: phrase.notes,
@@ -160,18 +150,15 @@ export function getPhraseInfosForTrack(
 }
 
 /**
- * 音素タイミング線の情報を計算する
+ * 音素タイミングの情報を計算する
  */
-export function computePhonemeTimingLineInfos(
-  phraseInfos: PhraseInfo[],
+export function computePhonemeTimingInfos(
+  phraseInfos: Map<PhraseKey, PhraseInfo>,
   phonemeTimingEditData: PhonemeTimingEditData,
-  tempos: Tempo[],
-  tpqn: number,
-  viewportInfo: ViewportInfo,
-): PhonemeTimingLineInfo[] {
-  const lineInfos: PhonemeTimingLineInfo[] = [];
+): PhonemeTimingInfo[] {
+  const phonemeTimingInfos: PhonemeTimingInfo[] = [];
 
-  for (const phraseInfo of phraseInfos) {
+  for (const [phraseKey, phraseInfo] of phraseInfos) {
     const phraseQuery = phraseInfo.query;
     if (phraseQuery == undefined) {
       continue;
@@ -207,114 +194,53 @@ export function computePhonemeTimingLineInfos(
       const editedPhoneme = editedPhonemes[i];
       const phonemeIndexInNote = phonemeIndices[i];
 
-      // 子音・母音とフレーズ最後のpauを対象とする
-      if (
-        phoneme.phoneme !== "pau" ||
-        (prevPhoneme != undefined && prevPhoneme.phoneme !== "pau")
-      ) {
-        // 編集前の開始時刻
-        const originalStartTimeSeconds =
-          phraseStartTime + phonemeStartFrame / frameRate;
-        // 編集・調整後の開始時刻
-        const editedStartTimeSeconds =
-          phraseStartTime + editedPhonemeStartFrame / frameRate;
+      // 編集前の開始時刻
+      const originalStartTimeSeconds =
+        phraseStartTime + phonemeStartFrame / frameRate;
+      // 編集・調整後の開始時刻
+      const editedStartTimeSeconds =
+        phraseStartTime + editedPhonemeStartFrame / frameRate;
 
-        // ピクセルX座標を計算
-        const phonemeStartTicks = secondToTick(
-          editedStartTimeSeconds,
-          tempos,
-          tpqn,
-        );
-        const phonemeStartBaseX = tickToBaseX(phonemeStartTicks, tpqn);
-        const pixelX = Math.round(
-          phonemeStartBaseX * viewportInfo.scaleX - viewportInfo.offsetX,
-        );
+      // noteIdとphonemeIndexInNoteを取得
+      let noteId: NoteId | undefined;
+      let effectivePhonemeIndexInNote: number;
 
-        // noteIdとphonemeIndexInNoteを取得
-        // 末尾pauの場合は前の音素の情報を使う（前のノートに含まれるものとして扱う）
-        let noteId: NoteId | undefined;
-        let effectivePhonemeIndexInNote: number;
-
-        if (phoneme.phoneme === "pau") {
-          // 末尾pau: 前の音素のnoteIdとphonemeIndexInNote + 1を使う
-          if (prevPhoneme != undefined && prevPhoneme.noteId != undefined) {
-            noteId = NoteId(prevPhoneme.noteId);
-            const prevPhonemeIndexInNote = phonemeIndices[i - 1];
-            effectivePhonemeIndexInNote = prevPhonemeIndexInNote + 1;
-          } else {
-            noteId = undefined;
-            effectivePhonemeIndexInNote = phonemeIndexInNote;
-          }
+      if (phoneme.phoneme === "pau") {
+        if (prevPhoneme?.noteId != undefined) {
+          // 末尾pau: 前の音素のnoteIdとphonemeIndexInNote + 1を使う（前のノートに含まれるものとして扱う）
+          noteId = NoteId(prevPhoneme.noteId);
+          const prevPhonemeIndexInNote = phonemeIndices[i - 1];
+          effectivePhonemeIndexInNote = prevPhonemeIndexInNote + 1;
         } else {
-          noteId =
-            phoneme.noteId != undefined ? NoteId(phoneme.noteId) : undefined;
+          // 先頭pauなど: noteIdはundefined
+          noteId = undefined;
           effectivePhonemeIndexInNote = phonemeIndexInNote;
         }
-
-        if (noteId != undefined) {
-          // 対応する編集データが存在するかを確認
-          const phonemeTimingEdits = phonemeTimingEditData.get(noteId);
-          const existingEdit = phonemeTimingEdits?.find(
-            (edit) => edit.phonemeIndexInNote === effectivePhonemeIndexInNote,
-          );
-          const hasExistingEdit = existingEdit != undefined;
-
-          // 前の音素の時間からminを計算
-          const prevEditedPhoneme = getPrev(editedPhonemes, i);
-
-          let minTimeSeconds = phraseStartTime;
-          if (prevEditedPhoneme != undefined) {
-            // 前の音素の開始フレーム = 現在の音素の開始フレーム - 前の音素のフレーム長
-            const prevStartFrame =
-              editedPhonemeStartFrame - prevEditedPhoneme.frameLength;
-            minTimeSeconds = phraseStartTime + prevStartFrame / frameRate;
-          }
-
-          // 現在の音素の終了時刻 = 次の音素の開始時刻
-          const maxTimeSeconds =
-            phraseStartTime +
-            (editedPhonemeStartFrame + editedPhoneme.frameLength) / frameRate;
-
-          lineInfos.push({
-            pixelX,
-            phoneme: editedPhoneme.phoneme,
-            noteId,
-            phonemeIndexInNote: effectivePhonemeIndexInNote,
-            editedStartTimeSeconds,
-            originalStartTimeSeconds,
-            hasExistingEdit,
-            minTimeSeconds,
-            maxTimeSeconds,
-          });
-        }
+      } else {
+        noteId =
+          phoneme.noteId != undefined ? NoteId(phoneme.noteId) : undefined;
+        effectivePhonemeIndexInNote = phonemeIndexInNote;
       }
+
+      // 現在の音素の終了時刻 = 次の音素の開始時刻
+      const editedEndTimeSeconds =
+        phraseStartTime +
+        (editedPhonemeStartFrame + editedPhoneme.frameLength) / frameRate;
+
+      phonemeTimingInfos.push({
+        phraseKey,
+        noteId,
+        phonemeIndexInNote: effectivePhonemeIndexInNote,
+        phoneme: editedPhoneme.phoneme,
+        originalStartTimeSeconds,
+        editedStartTimeSeconds,
+        editedEndTimeSeconds,
+      });
 
       phonemeStartFrame += phoneme.frameLength;
       editedPhonemeStartFrame += editedPhoneme.frameLength;
     }
   }
 
-  return lineInfos;
-}
-
-/**
- * クリック位置から最寄りの音素タイミング線を見つける
- */
-export function findNearestPhonemeTimingLine(
-  lineInfos: PhonemeTimingLineInfo[],
-  positionX: number,
-  threshold: number,
-): PhonemeTimingLineInfo | undefined {
-  let nearestLine: PhonemeTimingLineInfo | undefined;
-  let minDistance = Infinity;
-
-  for (const lineInfo of lineInfos) {
-    const distance = Math.abs(lineInfo.pixelX - positionX);
-    if (distance < minDistance && distance <= threshold) {
-      minDistance = distance;
-      nearestLine = lineInfo;
-    }
-  }
-
-  return nearestLine;
+  return phonemeTimingInfos;
 }

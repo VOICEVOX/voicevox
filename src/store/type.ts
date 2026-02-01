@@ -1044,6 +1044,14 @@ export type SingingStoreTypes = {
     };
   };
 
+  UPSERT_PHONEME_TIMING_EDIT: {
+    mutation: {
+      noteId: NoteId;
+      phonemeTimingEdit: PhonemeTimingEdit;
+      trackId: TrackId;
+    };
+  };
+
   REMOVE_PHONEME_TIMING_EDITS: {
     mutation: {
       noteId: NoteId;
@@ -1602,6 +1610,19 @@ export type SingingCommandStoreTypes = {
     action(payload: {
       noteId: NoteId;
       phonemeTimingEdits: PhonemeTimingEdit[];
+      trackId: TrackId;
+    }): void;
+  };
+
+  COMMAND_UPSERT_PHONEME_TIMING_EDIT: {
+    mutation: {
+      noteId: NoteId;
+      phonemeTimingEdit: PhonemeTimingEdit;
+      trackId: TrackId;
+    };
+    action(payload: {
+      noteId: NoteId;
+      phonemeTimingEdit: PhonemeTimingEdit;
       trackId: TrackId;
     }): void;
   };

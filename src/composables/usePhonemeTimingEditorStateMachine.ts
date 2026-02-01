@@ -6,14 +6,19 @@ import type {
   PhonemeTimingEditorPreviewMode,
   PhonemeTimingEditorInput,
   PhonemeTimingEditorComputedRefs,
+  PhraseInfo,
 } from "@/sing/phonemeTimingEditorStateMachine/common";
+import type { PhraseKey } from "@/store/type";
 import type { TrackId } from "@/type/preload";
 import type { PhonemeTimingEditData, Tempo } from "@/domain/project/type";
 import { createPhonemeTimingEditorStateMachine } from "@/sing/phonemeTimingEditorStateMachine";
+import type { PhonemeTimingInfo } from "@/sing/phonemeTimingEditorStateMachine/common";
 
 export const usePhonemeTimingEditorStateMachine = (
   store: PhonemeTimingEditorPartialStore,
   viewportInfo: ComputedRef<ViewportInfo>,
+  phonemeTimingInfos: ComputedRef<PhonemeTimingInfo[]>,
+  phraseInfos: ComputedRef<Map<PhraseKey, PhraseInfo>>,
 ) => {
   const refs = {
     previewPhonemeTimingEdit: ref<PhonemeTimingPreviewEdit | undefined>(
@@ -32,6 +37,8 @@ export const usePhonemeTimingEditorStateMachine = (
       () => store.getters.SELECTED_TRACK.phonemeTimingEditData,
     ),
     editorFrameRate: computed<number>(() => store.state.editorFrameRate),
+    phonemeTimingInfos,
+    phraseInfos,
   };
 
   const stateMachine = createPhonemeTimingEditorStateMachine(
@@ -47,7 +54,7 @@ export const usePhonemeTimingEditorStateMachine = (
     stateMachineProcess: (input: PhonemeTimingEditorInput) => {
       stateMachine.process(input);
     },
-    phonemeTimingPreviewEdit: computed(
+    previewPhonemeTimingEdit: computed(
       () => refs.previewPhonemeTimingEdit.value,
     ),
     previewMode: computed(() => refs.previewMode.value),

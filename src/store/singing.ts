@@ -1185,6 +1185,30 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  UPSERT_PHONEME_TIMING_EDIT: {
+    mutation(state, { noteId, phonemeTimingEdit, trackId }) {
+      const targetTrack = getOrThrow(state.tracks, trackId);
+      const existingEdits = targetTrack.phonemeTimingEditData.get(noteId) ?? [];
+
+      const existingIndex = existingEdits.findIndex(
+        (edit) =>
+          edit.phonemeIndexInNote === phonemeTimingEdit.phonemeIndexInNote,
+      );
+
+      let newEdits: PhonemeTimingEdit[];
+      if (existingIndex !== -1) {
+        // 既存編集を更新
+        newEdits = [...existingEdits];
+        newEdits[existingIndex] = phonemeTimingEdit;
+      } else {
+        // 新規追加（ソート付き）
+        newEdits = [...existingEdits, phonemeTimingEdit];
+        newEdits.sort((a, b) => a.phonemeIndexInNote - b.phonemeIndexInNote);
+      }
+      targetTrack.phonemeTimingEditData.set(noteId, newEdits);
+    },
+  },
+
   REMOVE_PHONEME_TIMING_EDITS: {
     mutation(state, { noteId, phonemeIndexesInNote, trackId }) {
       const targetTrack = getOrThrow(state.tracks, trackId);
@@ -3710,6 +3734,31 @@ export const singingCommandStore = transformCommandStore(
         mutations.COMMAND_UPDATE_PHONEME_TIMING_EDITS({
           noteId,
           phonemeTimingEdits,
+          trackId,
+        });
+
+        void actions.RENDER();
+      },
+    },
+    COMMAND_UPSERT_PHONEME_TIMING_EDIT: {
+      mutation(draft, { noteId, phonemeTimingEdit, trackId }) {
+        singingStore.mutations.UPSERT_PHONEME_TIMING_EDIT(draft, {
+          noteId,
+          phonemeTimingEdit,
+          trackId,
+        });
+      },
+      action(
+        { state, mutations, actions },
+        { noteId, phonemeTimingEdit, trackId },
+      ) {
+        const targetTrack = state.tracks.get(trackId);
+        if (targetTrack == undefined) {
+          throw new Error("The trackId is invalid.");
+        }
+        mutations.COMMAND_UPSERT_PHONEME_TIMING_EDIT({
+          noteId,
+          phonemeTimingEdit,
           trackId,
         });
 

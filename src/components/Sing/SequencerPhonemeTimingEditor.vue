@@ -22,9 +22,9 @@
       />
       <SequencerPhonemeTimings
         class="phoneme-timings"
-        :offsetX="props.viewportInfo.offsetX"
-        :offsetY="props.viewportInfo.offsetY"
-        :previewPhonemeTimingEdit="phonemeTimingPreviewEdit"
+        :viewportInfo
+        :previewPhonemeTimingEdit
+        :phonemeTimingInfos
       />
     </div>
   </div>
@@ -44,6 +44,10 @@ import SequencerWaveform from "@/components/Sing/SequencerWaveform.vue";
 import SequencerPhonemeTimings from "@/components/Sing/SequencerPhonemeTimings.vue";
 import SequencerNoteTimings from "@/components/Sing/SequencerNoteTimings.vue";
 import { assertNonNullable } from "@/type/utility";
+import {
+  computePhonemeTimingInfos,
+  getPhraseInfosForTrack,
+} from "@/sing/phonemeTimingEditorStateMachine/common";
 
 const store = useStore();
 const editTarget = computed(() => store.state.parameterPanelEditTarget);
@@ -51,10 +55,31 @@ const props = defineProps<{
   viewportInfo: ViewportInfo;
 }>();
 
-const { stateMachineProcess, cursorState, phonemeTimingPreviewEdit } =
+const viewportInfo = computed(() => props.viewportInfo);
+const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
+const phonemeTimingEditData = computed(
+  () => store.getters.SELECTED_TRACK.phonemeTimingEditData,
+);
+const phraseInfos = computed(() =>
+  getPhraseInfosForTrack(
+    store.state.phrases,
+    store.state.phraseQueries,
+    selectedTrackId.value,
+  ),
+);
+const phonemeTimingInfos = computed(() => {
+  return computePhonemeTimingInfos(
+    phraseInfos.value,
+    phonemeTimingEditData.value,
+  );
+});
+
+const { stateMachineProcess, cursorState, previewPhonemeTimingEdit } =
   usePhonemeTimingEditorStateMachine(
     store,
-    computed(() => props.viewportInfo),
+    viewportInfo,
+    phonemeTimingInfos,
+    phraseInfos,
   );
 
 const parameterArea = ref<HTMLElement | null>(null);

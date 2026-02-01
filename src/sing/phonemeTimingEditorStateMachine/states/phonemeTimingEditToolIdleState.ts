@@ -1,13 +1,12 @@
 import { SetNextState, State } from "@/sing/stateMachine";
 import {
-  computePhonemeTimingLineInfos,
-  findNearestPhonemeTimingLine,
-  getPhraseInfosForTrack,
   PhonemeTimingEditorContext,
   PhonemeTimingEditorInput,
   PhonemeTimingEditorStateDefinitions,
+  PhonemeTimingInfo,
 } from "@/sing/phonemeTimingEditorStateMachine/common";
-import { getButton } from "@/sing/viewHelper";
+import { getButton, tickToBaseX } from "@/sing/viewHelper";
+import { secondToTick } from "@/sing/music";
 
 export class PhonemeTimingEditToolIdleState
   implements
@@ -32,6 +31,9 @@ export class PhonemeTimingEditToolIdleState
     context: PhonemeTimingEditorContext;
     setNextState: SetNextState<PhonemeTimingEditorStateDefinitions>;
   }) {
+    const viewportInfo = context.viewportInfo.value;
+    const phonemeTimingInfos = context.phonemeTimingInfos.value;
+
     if (input.type === "pointerEvent") {
       const mouseButton = getButton(input.pointerEvent);
       const selectedTrackId = context.selectedTrackId.value;
@@ -42,45 +44,52 @@ export class PhonemeTimingEditToolIdleState
         mouseButton === "LEFT_BUTTON" &&
         input.targetArea === "PhonemeTimingArea";
 
-      if (isPointerMove || isPointerDown) {
-        const phraseInfos = getPhraseInfosForTrack(
-          context.store.state.phrases,
-          context.store.state.phraseQueries,
-          selectedTrackId,
-        );
-        const lineInfos = computePhonemeTimingLineInfos(
-          phraseInfos,
-          context.phonemeTimingEditData.value,
+      if (!isPointerMove && !isPointerDown) {
+        return;
+      }
+
+      // ヒットテスト
+      const threshold = 4;
+      let nearest: PhonemeTimingInfo | undefined;
+      let minDistance: number | undefined = undefined;
+      for (const phonemeTimingInfo of phonemeTimingInfos) {
+        const phonemeStartTicks = secondToTick(
+          phonemeTimingInfo.editedStartTimeSeconds,
           context.tempos.value,
           context.tpqn.value,
-          context.viewportInfo.value,
         );
-        const nearestLine = findNearestPhonemeTimingLine(
-          lineInfos,
-          input.positionX,
-          4,
+        const phonemeStartBaseX = tickToBaseX(
+          phonemeStartTicks,
+          context.tpqn.value,
+        );
+        const phonemeStartX = Math.round(
+          phonemeStartBaseX * viewportInfo.scaleX - viewportInfo.offsetX,
         );
 
+        const distance = Math.abs(phonemeStartX - input.positionX);
+        if (
+          distance <= threshold &&
+          (minDistance == undefined || distance < minDistance)
+        ) {
+          minDistance = distance;
+          nearest = phonemeTimingInfo;
+        }
+      }
+
+      if (nearest != undefined && nearest.noteId != undefined) {
         if (isPointerMove) {
-          // ホバー時のカーソル変更
-          context.cursorState.value =
-            nearestLine != undefined ? "EW_RESIZE" : "UNSET";
-        } else if (nearestLine != undefined) {
+          context.cursorState.value = "EW_RESIZE";
+        } else {
           setNextState("phonemeTimingEdit", {
             targetTrackId: selectedTrackId,
-            noteId: nearestLine.noteId,
-            phonemeIndexInNote: nearestLine.phonemeIndexInNote,
-            initialStartTimeSeconds: nearestLine.editedStartTimeSeconds,
-            initialOffsetSeconds:
-              nearestLine.editedStartTimeSeconds -
-              nearestLine.originalStartTimeSeconds,
-            hasExistingEdit: nearestLine.hasExistingEdit,
-            minTimeSeconds: nearestLine.minTimeSeconds,
-            maxTimeSeconds: nearestLine.maxTimeSeconds,
+            noteId: nearest.noteId,
+            phonemeIndexInNote: nearest.phonemeIndexInNote,
             startPositionX: input.positionX,
             returnStateId: this.id,
           });
         }
+      } else if (isPointerMove) {
+        context.cursorState.value = "UNSET";
       }
     }
   }
