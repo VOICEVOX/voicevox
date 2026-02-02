@@ -776,6 +776,21 @@ const onAudioCellPaneClick = () => {
     cursor: grab;
   }
 
+  .total-audio-status {
+    position: absolute;
+    right: 92px;
+    bottom: 22px; // 追加ボタンfabの左側
+    background-color: colors.$surface;
+    color: colors.$display;
+    padding: 4px 12px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    pointer-events: none; // クリックを透過させて操作の邪魔をしない
+    opacity: 0.8;
+    font-size: 0.9em;
+    border: 1px solid colors.$splitter;
+  }
+
   .add-button-wrapper {
     position: absolute;
     right: 0px;
@@ -789,19 +804,4 @@ const onAudioCellPaneClick = () => {
   background: colors.$splitter !important;
 }
 
-.total-audio-status {
-  position: absolute;
-  right: 92px;
-  bottom: 22px; // 追加ボタンfabの左側
-  background-color: colors.$surface;
-  color: colors.$display;
-  padding: 4px 12px;
-  border-radius: 4px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  z-index: 10;
-  pointer-events: none; // クリックを透過させて操作の邪魔をしない
-  opacity: 0.8;
-  font-size: 0.9em;
-  border: 1px solid colors.$splitter;
-}
 </style>
