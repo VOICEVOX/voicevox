@@ -171,16 +171,19 @@ const store = useStore();
 const audioKeys = computed(() => store.state.audioKeys);
 const selectedAudioKeys = computed(() => store.getters.SELECTED_AUDIO_KEYS);
 const uiLocked = computed(() => store.getters.UI_LOCKED);
-
 const isMultiSelectEnabled = computed(() => store.state.enableMultiSelect);
 
-const showTotalAudioLength = computed(() => store.state.showTotalAudioLength);
-const totalAudioLength = computed(() => store.getters.TOTAL_AUDIO_LENGTH);
-const formattedTotalAudioLength = computed(() => {
-  const totalSeconds = Math.floor(totalAudioLength.value);
+const totalAudioLengthDisplay = computed<
+  { show: true; formattedLabel: string } | { show: false }
+>(() => {
+  if (!store.state.showTotalAudioLength) {
+    return { show: false };
+  }
+  const totalSeconds = Math.floor(store.getters.TOTAL_AUDIO_LENGTH);
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
-  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+  const formattedLabel = `${minutes}:${seconds.toString().padStart(2, "0")}`;
+  return { show: true, formattedLabel };
 });
 
 const { registerHotkeyWithCleanup } = useHotkeyManager();
