@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { createLogger } from "@/helpers/log";
-import { ProgressCallback } from "@/helpers/progressHelper";
+import type { ProgressCallback } from "@/helpers/progressHelper";
 
 const log = createLogger("multiDownloader");
 

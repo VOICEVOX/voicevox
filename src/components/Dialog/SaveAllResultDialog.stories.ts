@@ -1,6 +1,6 @@
 import { userEvent, within } from "storybook/test";
 
-import { Meta, StoryObj } from "@storybook/vue3-vite";
+import type { Meta, StoryObj } from "@storybook/vue3-vite";
 import SaveAllResultDialog from "./SaveAllResultDialog.vue";
 
 const meta: Meta<typeof SaveAllResultDialog> = {

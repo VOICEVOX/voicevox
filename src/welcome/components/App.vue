@@ -91,12 +91,12 @@ import MenuBar from "./MenuBar.vue";
 import WelcomeHeader from "./WelcomeHeader.vue";
 import EngineCard from "./EngineCard.vue";
 import ErrorBoundary from "@/components/ErrorBoundary.vue";
-import {
+import type {
   EnginePackageBase,
   EnginePackageLocalInfo,
   EnginePackageRemoteInfo,
 } from "@/backend/electron/engineAndVvppController";
-import { EngineId } from "@/type/preload";
+import type { EngineId } from "@/type/preload";
 import type { RuntimeTarget } from "@/domain/defaultEngine/latetDefaultEngine";
 import { setThemeToCss } from "@/domain/dom";
 import { themes } from "@/domain/theme";

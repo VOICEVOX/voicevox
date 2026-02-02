@@ -1,5 +1,5 @@
-import { ref, computed, Ref, Events } from "vue";
-import { QSliderProps, debounce } from "quasar";
+import { ref, computed, type Ref, type Events } from "vue";
+import { type QSliderProps, debounce } from "quasar";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 
 export type Props = {

@@ -94,7 +94,12 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { CharacterInfo, SpeakerId, StyleId, StyleInfo } from "@/type/preload";
+import type {
+  CharacterInfo,
+  SpeakerId,
+  StyleId,
+  StyleInfo,
+} from "@/type/preload";
 import { DEFAULT_STYLE_NAME } from "@/store/utility";
 
 const props = defineProps<{

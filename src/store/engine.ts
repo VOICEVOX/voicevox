@@ -1,4 +1,4 @@
-import { EngineState, EngineStoreState, EngineStoreTypes } from "./type";
+import type { EngineState, EngineStoreState, EngineStoreTypes } from "./type";
 import { createUILockAction } from "./ui";
 import { createPartialStore } from "./vuex";
 import { createLogger } from "@/helpers/log";
