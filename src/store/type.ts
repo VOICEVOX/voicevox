@@ -70,6 +70,7 @@ import {
 } from "@/sing/utaformatixProject/utils";
 import type {
   Note,
+  PhonemeTimingEdit,
   Singer,
   Tempo,
   TimeSignature,
@@ -1027,6 +1028,38 @@ export type SingingStoreTypes = {
     action(payload: { noteId?: NoteId }): void;
   };
 
+  ADD_PHONEME_TIMING_EDITS: {
+    mutation: {
+      noteId: NoteId;
+      phonemeTimingEdits: PhonemeTimingEdit[];
+      trackId: TrackId;
+    };
+  };
+
+  UPDATE_PHONEME_TIMING_EDITS: {
+    mutation: {
+      noteId: NoteId;
+      phonemeTimingEdits: PhonemeTimingEdit[];
+      trackId: TrackId;
+    };
+  };
+
+  UPSERT_PHONEME_TIMING_EDIT: {
+    mutation: {
+      noteId: NoteId;
+      phonemeTimingEdit: PhonemeTimingEdit;
+      trackId: TrackId;
+    };
+  };
+
+  REMOVE_PHONEME_TIMING_EDITS: {
+    mutation: {
+      noteId: NoteId;
+      phonemeIndexesInNote: number[];
+      trackId: TrackId;
+    };
+  };
+
   SET_PITCH_EDIT_DATA: {
     mutation: { pitchArray: number[]; startFrame: number; trackId: TrackId };
     action(payload: {
@@ -1553,6 +1586,58 @@ export type SingingCommandStoreTypes = {
 
   COMMAND_REMOVE_SELECTED_NOTES: {
     action(): void;
+  };
+
+  COMMAND_ADD_PHONEME_TIMING_EDITS: {
+    mutation: {
+      noteId: NoteId;
+      phonemeTimingEdits: PhonemeTimingEdit[];
+      trackId: TrackId;
+    };
+    action(payload: {
+      noteId: NoteId;
+      phonemeTimingEdits: PhonemeTimingEdit[];
+      trackId: TrackId;
+    }): void;
+  };
+
+  COMMAND_UPDATE_PHONEME_TIMING_EDITS: {
+    mutation: {
+      noteId: NoteId;
+      phonemeTimingEdits: PhonemeTimingEdit[];
+      trackId: TrackId;
+    };
+    action(payload: {
+      noteId: NoteId;
+      phonemeTimingEdits: PhonemeTimingEdit[];
+      trackId: TrackId;
+    }): void;
+  };
+
+  COMMAND_UPSERT_PHONEME_TIMING_EDIT: {
+    mutation: {
+      noteId: NoteId;
+      phonemeTimingEdit: PhonemeTimingEdit;
+      trackId: TrackId;
+    };
+    action(payload: {
+      noteId: NoteId;
+      phonemeTimingEdit: PhonemeTimingEdit;
+      trackId: TrackId;
+    }): void;
+  };
+
+  COMMAND_REMOVE_PHONEME_TIMING_EDITS: {
+    mutation: {
+      noteId: NoteId;
+      phonemeIndexesInNote: number[];
+      trackId: TrackId;
+    };
+    action(payload: {
+      noteId: NoteId;
+      phonemeIndexesInNote: number[];
+      trackId: TrackId;
+    }): void;
   };
 
   COMMAND_SET_PITCH_EDIT_DATA: {

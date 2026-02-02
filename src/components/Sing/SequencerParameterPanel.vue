@@ -6,7 +6,10 @@
       <ParameterPanelEditTargetSwitcher :editTarget :changeEditTarget />
     </div>
     <div class="edit-area">
-      <SequencerPhonemeTimingEditor v-if="editTarget === 'PHONEME_TIMING'" />
+      <SequencerPhonemeTimingEditor
+        v-if="editTarget === 'PHONEME_TIMING'"
+        :viewportInfo
+      />
       <SequencerVolumeEditor
         v-if="editTarget === 'VOLUME'"
         :playheadTicks
@@ -26,8 +29,11 @@ import { useStore } from "@/store";
 import { ParameterPanelEditTarget } from "@/store/type";
 import ParameterPanelEditTargetSwitcher from "@/components/Sing/ParameterPanelEditTargetSwitcher.vue";
 import SequencerPhonemeTimingEditor from "@/components/Sing/SequencerPhonemeTimingEditor.vue";
+import { ViewportInfo } from "@/sing/viewHelper";
 
 const store = useStore();
+
+defineProps<{ viewportInfo: ViewportInfo }>();
 
 const playheadTicks = computed(() => store.getters.PLAYHEAD_POSITION);
 const tempos = computed(() => store.state.tempos);

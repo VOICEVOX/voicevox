@@ -41,13 +41,13 @@ import {
   watch,
 } from "vue";
 import { QBtn } from "quasar";
-import { useParameterPanelStateMachine } from "@/composables/useParameterPanelStateMachine";
+import { useVolumeEditorStateMachine } from "@/composables/useVolumeEditorStateMachine";
 import { useStore } from "@/store";
 import type { VolumeEditTool } from "@/store/type";
 import type {
-  ParameterPanelInput,
-  PositionOnParameterPanel,
-} from "@/sing/parameterPanelStateMachine/common";
+  PositionOnVolumeEditor,
+  VolumeEditorInput,
+} from "@/sing/volumeEditorStateMachine/common";
 import { tickToSecond } from "@/sing/music";
 import { clamp } from "@/sing/utility";
 import { getTotalTicks } from "@/sing/rulerHelper"; // TODO: ルーラーから切り出して共通化する
@@ -56,42 +56,8 @@ import { createLogger } from "@/helpers/log";
 const { info } = createLogger("SequencerPitch");
 
 const store = useStore();
-const { volumePreviewEdit, volumeStateMachineProcess } =
-  useParameterPanelStateMachine({
-    state: {
-      get tpqn() {
-        return store.state.tpqn;
-      },
-      get tempos() {
-        return store.state.tempos;
-      },
-      get sequencerZoomX() {
-        return store.state.sequencerZoomX;
-      },
-      get sequencerZoomY() {
-        return store.state.sequencerZoomY;
-      },
-      get sequencerVolumeTool() {
-        return store.state.sequencerVolumeTool;
-      },
-      get parameterPanelEditTarget() {
-        return store.state.parameterPanelEditTarget;
-      },
-    },
-    getters: {
-      get SELECTED_TRACK_ID() {
-        return store.getters.SELECTED_TRACK_ID;
-      },
-      get PLAYHEAD_POSITION() {
-        return store.getters.PLAYHEAD_POSITION;
-      },
-    },
-    actions: {
-      COMMAND_SET_VOLUME_EDIT_DATA: store.actions.COMMAND_SET_VOLUME_EDIT_DATA,
-      COMMAND_ERASE_VOLUME_EDIT_DATA:
-        store.actions.COMMAND_ERASE_VOLUME_EDIT_DATA,
-    },
-  });
+const { volumePreviewEdit, stateMachineProcess } =
+  useVolumeEditorStateMachine(store);
 
 const tool = computed<VolumeEditTool>(() => store.state.sequencerVolumeTool);
 const selectedTrack = computed(() => store.getters.SELECTED_TRACK);
@@ -122,7 +88,7 @@ const isDragging = ref(false);
 // TODO: マウスイベントのたびに処理を行うのは非効率...現状はデバッグ確認用
 const computeViewportPosition = (
   mouseEvent: MouseEvent,
-): PositionOnParameterPanel => {
+): PositionOnVolumeEditor => {
   const viewport = viewportElement.value;
   if (viewport == null) {
     throw new Error("volume editor viewport element is null.");
@@ -170,11 +136,11 @@ const computeViewportPosition = (
 
 const dispatchVolumeEditorEvent = (
   mouseEvent: MouseEvent,
-  targetArea: ParameterPanelInput["targetArea"],
+  targetArea: VolumeEditorInput["targetArea"],
 ) => {
   const position = computeViewportPosition(mouseEvent);
 
-  volumeStateMachineProcess({
+  stateMachineProcess({
     type: "mouseEvent",
     targetArea,
     mouseEvent,
