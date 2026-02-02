@@ -2030,9 +2030,7 @@ export type SettingStoreState = {
   experimentalSetting: ExperimentalSettingType;
   confirmedTips: ConfirmedTips;
   engineSettings: EngineSettings;
-} & Omit<RootMiscSettingType, "openedEditor"> & {
-    openedEditor: EditorType | undefined; // undefinedのときはどのエディタを開くか定まっていない
-  };
+} & RootMiscSettingType;
 
 // keyとvalueの型を連動するようにしたPayloadを作る
 type KeyValuePayload<R, K extends keyof R = keyof R> = K extends keyof R
@@ -2121,6 +2119,11 @@ export type SettingStoreTypes = {
   APPEND_RECENTLY_USED_PROJECT: {
     action(payload: { filePath: string }): Promise<void>;
   };
+
+  SET_INIT_OPEN_EDITOR: {
+    mutation: { editorType: EditorType };
+    action(payload: { editorType: EditorType }): void;
+  };
 };
 
 /*
@@ -2154,6 +2157,7 @@ export type DialogStates = {
   isUpdateNotificationDialogOpen: boolean;
   isExportSongAudioDialogOpen: boolean;
   isImportSongProjectDialogOpen: boolean;
+  isInitialSettingsDialogOpen: boolean;
   isPresetManageDialogOpen: boolean;
   isHelpDialogOpen: boolean;
 };
