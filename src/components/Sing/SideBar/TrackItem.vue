@@ -19,7 +19,7 @@
           },
           {
             type: 'button',
-            label: 'トラックを複製',
+            label: 'トラック複製',
             onClick: duplicateTrack,
             disableWhenUiLocked: true,
           },
