@@ -3754,9 +3754,10 @@ export const singingCommandStore = transformCommandStore(
 
         const syncPromise = actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
         const renderPromise = actions.RENDER();
-        await Promise.allSettled([syncPromise, renderPromise]);
+        await syncPromise;
 
         await actions.SET_SELECTED_TRACK({ trackId: newTrackId });
+        await renderPromise;
       },
     },
 
