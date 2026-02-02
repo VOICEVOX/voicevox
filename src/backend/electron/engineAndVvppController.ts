@@ -7,15 +7,19 @@ import { getRuntimeInfoManager } from "./manager/RuntimeInfoManager";
 import { getVvppManager } from "./manager/vvppManager";
 import { getMainWindowManager } from "./manager/windowManager/main";
 import { MultiDownloader } from "./multiDownloader";
-import { EngineId, EngineInfo, engineSettingSchema } from "@/type/preload";
 import {
-  PackageInfo,
+  type EngineId,
+  type EngineInfo,
+  engineSettingSchema,
+} from "@/type/preload";
+import {
+  type PackageInfo,
   fetchLatestDefaultEngineInfo,
 } from "@/domain/defaultEngine/latetDefaultEngine";
 import type { RuntimeTarget } from "@/domain/defaultEngine/latetDefaultEngine";
 import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
 import { UnreachableError } from "@/type/utility";
-import { ProgressCallback } from "@/helpers/progressHelper";
+import type { ProgressCallback } from "@/helpers/progressHelper";
 import { createLogger } from "@/helpers/log";
 import { DisplayableError, errorToMessage } from "@/helpers/errorHelper";
 import { isLinux, isMac, isWindows } from "@/helpers/platform";

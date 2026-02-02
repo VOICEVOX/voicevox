@@ -53,7 +53,7 @@ import { computed } from "vue";
 import BaseButton from "@/components/Base/BaseButton.vue";
 import BaseSelect from "@/components/Base/BaseSelect.vue";
 import BaseSelectItem from "@/components/Base/BaseSelectItem.vue";
-import {
+import type {
   EnginePackageLocalInfo,
   EnginePackageRemoteInfo,
 } from "@/backend/electron/engineAndVvppController";

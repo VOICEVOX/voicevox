@@ -1,6 +1,6 @@
-import { BrowserWindow, ipcMain, IpcMainInvokeEvent } from "electron";
+import { type BrowserWindow, ipcMain, type IpcMainInvokeEvent } from "electron";
 import { wrapToTransferableResult } from "./transferableResultHelper";
-import { BaseIpcData } from "./ipcType";
+import type { BaseIpcData } from "./ipcType";
 import { createLogger } from "@/helpers/log";
 import { objectEntries } from "@/helpers/typedEntries";
 import { ensureNotNullish } from "@/type/utility";

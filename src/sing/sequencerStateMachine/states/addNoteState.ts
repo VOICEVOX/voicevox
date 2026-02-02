@@ -1,13 +1,13 @@
-import { SetNextState, State } from "@/sing/stateMachine";
+import type { SetNextState, State } from "@/sing/stateMachine";
 import {
-  Context,
+  type Context,
   getGuideLineTicks,
-  IdleStateId,
-  Input,
-  PositionOnSequencer,
-  SequencerStateDefinitions,
+  type IdleStateId,
+  type Input,
+  type PositionOnSequencer,
+  type SequencerStateDefinitions,
 } from "@/sing/sequencerStateMachine/common";
-import { NoteId, TrackId } from "@/type/preload";
+import { NoteId, type TrackId } from "@/type/preload";
 import type { Note } from "@/domain/project/type";
 import { getButton, PREVIEW_SOUND_DURATION } from "@/sing/viewHelper";
 import { clamp } from "@/sing/utility";
