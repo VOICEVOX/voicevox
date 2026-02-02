@@ -14,7 +14,7 @@
   >
     <div class="character-item-inner">
       <img
-        :src="characterInfo.metas.styles[selectedStyleIndex || 0].iconPath"
+        :src="characterInfo.metas.styles[selectedStyleIndex || 0]?.iconPath"
         :alt="characterInfo.metas.speakerName"
         class="style-icon"
       />
@@ -40,7 +40,7 @@
           "
         />
         <span aria-live="polite">{{
-          selectedStyle.styleName || DEFAULT_STYLE_NAME
+          selectedStyle?.styleName || DEFAULT_STYLE_NAME
         }}</span>
         <QBtn
           flat
@@ -60,6 +60,7 @@
       <div class="voice-samples">
         <QBtn
           v-for="voiceSampleIndex of [...Array(3).keys()]"
+          v-show="selectedStyle?.voiceSamplePaths[voiceSampleIndex]"
           :key="voiceSampleIndex"
           round
           outline
@@ -129,7 +130,7 @@ const selectCharacter = (speakerUuid: SpeakerId) => {
 
 const updatePortrait = () => {
   let portraitPath = props.characterInfo.portraitPath;
-  const stylePortraitPath = selectedStyle.value.portraitPath;
+  const stylePortraitPath = selectedStyle.value?.portraitPath;
   if (stylePortraitPath) {
     portraitPath = stylePortraitPath;
   }
