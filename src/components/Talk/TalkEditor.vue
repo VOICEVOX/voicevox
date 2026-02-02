@@ -101,10 +101,10 @@
                         ></QBtn>
                       </div>
                       <div
-                        v-if="showTotalAudioLength"
+                        v-if="totalAudioLengthDisplay.show"
                         class="total-audio-status"
                       >
-                        合計: {{ formattedTotalAudioLength }}
+                        合計: {{ totalAudioLengthDisplay.formattedLabel }}
                       </div>
                     </div>
                   </template>
@@ -780,10 +780,8 @@ const onAudioCellPaneClick = () => {
     position: absolute;
     right: 0px;
     bottom: 0px;
-
     margin-right: 26px;
     margin-bottom: 10px;
-    z-index: 20;
   }
 }
 
