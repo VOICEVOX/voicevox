@@ -184,6 +184,8 @@ const handleUpdateOpen = (isOpened: boolean) => {
 };
 
 const handleBlur = (event: FocusEvent) => {
+  if (isContextMenuOpened) return;
+
   const selection = window.getSelection();
   selection?.removeAllRanges();
 
