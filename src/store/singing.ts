@@ -3748,7 +3748,7 @@ export const singingCommandStore = transformCommandStore(
 
         mutations.INSERT_TRACK({
           trackId: newTrackId,
-          track: cloneWithUnwrapProxy(newTrack),
+          track: newTrack,
           prevTrackId: trackId,
         });
 
