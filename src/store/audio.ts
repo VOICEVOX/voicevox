@@ -1844,9 +1844,6 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         player.addEventListener("waitstart", (e) => {
           void actions.START_PROGRESS();
           mutations.SET_ACTIVE_AUDIO_KEY({ audioKey: e.audioKey });
-          if (currentAudioKey !== e.audioKey) {
-            mutations.SET_AUDIO_PLAY_START_POINT({ startPoint: undefined });
-          }
           mutations.SET_AUDIO_NOW_GENERATING({
             audioKey: e.audioKey,
             nowGenerating: true,
