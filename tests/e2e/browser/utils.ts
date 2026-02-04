@@ -1,4 +1,4 @@
-import { test, Page, Locator, expect } from "@playwright/test";
+import { test, type Page, type Locator, expect } from "@playwright/test";
 import { getQuasarMenu } from "../locators";
 import {
   mockReadFile,

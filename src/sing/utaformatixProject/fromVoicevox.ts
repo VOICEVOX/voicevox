@@ -4,7 +4,7 @@ import type {
   Project as UfProject,
   UfData,
 } from "@sevenc-nanashi/utaformatix-ts";
-import { VoicevoxScore } from "./common";
+import type { VoicevoxScore } from "./common";
 
 /** Voicevoxの楽譜データをUtaformatixのProjectに変換する */
 export const ufProjectFromVoicevox = async (

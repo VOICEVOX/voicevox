@@ -1,4 +1,4 @@
-import {
+import type {
   EnginePackageLocalInfo,
   EnginePackageRemoteInfo,
 } from "@/backend/electron/engineAndVvppController";

@@ -167,7 +167,7 @@ import SingerIcon from "@/components/Sing/SingerIcon.vue";
 import { useStore } from "@/store";
 import ContextMenu from "@/components/Menu/ContextMenu/Container.vue";
 import { shouldPlayTracks } from "@/sing/domain";
-import { CharacterInfo, StyleInfo, TrackId } from "@/type/preload";
+import type { CharacterInfo, StyleInfo, TrackId } from "@/type/preload";
 
 const props = defineProps<{
   trackId: TrackId;

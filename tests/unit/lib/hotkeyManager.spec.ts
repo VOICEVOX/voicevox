@@ -1,6 +1,13 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { HotkeyManager, HotkeysJs, HotkeyAction } from "@/plugins/hotkeyPlugin";
-import { HotkeyCombination, HotkeySettingType } from "@/domain/hotkeyAction";
+import {
+  HotkeyManager,
+  type HotkeysJs,
+  type HotkeyAction,
+} from "@/plugins/hotkeyPlugin";
+import {
+  HotkeyCombination,
+  type HotkeySettingType,
+} from "@/domain/hotkeyAction";
 
 type DummyHotkeysJs = HotkeysJs & {
   registeredHotkeys: {

@@ -2,14 +2,14 @@ import { getDoremiFromNoteNumber } from "./viewHelper";
 import { getNoteDuration, secondToTick, tickToSecond } from "@/sing/music";
 import { decibelToLinear } from "@/sing/audio";
 import {
-  EditorFrameAudioQuery,
+  type EditorFrameAudioQuery,
   EditorFrameAudioQueryKey,
-  PhraseKey,
-  SingingPitch,
+  type PhraseKey,
+  type SingingPitch,
   SingingPitchKey,
-  SingingVoice,
+  type SingingVoice,
   SingingVoiceKey,
-  SingingVolume,
+  type SingingVolume,
   SingingVolumeKey,
 } from "@/store/type";
 import {
@@ -29,8 +29,8 @@ import {
   toPhonemes,
   selectPriorPhrase,
 } from "@/sing/domain";
-import { FramePhoneme, Note as NoteForRequestToEngine } from "@/openapi";
-import { EngineId, NoteId, StyleId, TrackId } from "@/type/preload";
+import type { FramePhoneme, Note as NoteForRequestToEngine } from "@/openapi";
+import type { EngineId, NoteId, StyleId, TrackId } from "@/type/preload";
 import { getOrThrow } from "@/helpers/mapHelper";
 import type { Note, Singer, Tempo, Track } from "@/domain/project/type";
 import { UnreachableError } from "@/type/utility";

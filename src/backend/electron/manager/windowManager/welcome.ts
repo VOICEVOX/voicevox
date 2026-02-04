@@ -2,22 +2,25 @@ import path from "node:path";
 import {
   BrowserWindow,
   dialog,
-  MessageBoxOptions,
-  MessageBoxSyncOptions,
-  OpenDialogOptions,
-  OpenDialogSyncOptions,
-  SaveDialogOptions,
+  type MessageBoxOptions,
+  type MessageBoxSyncOptions,
+  type OpenDialogOptions,
+  type OpenDialogSyncOptions,
+  type SaveDialogOptions,
 } from "electron";
 import { getConfigManager } from "../../electronConfig";
 import { getAppStateController } from "../../appStateController";
 import {
   createIpcSendProxy,
-  IpcMainHandle,
-  IpcSendProxy,
+  type IpcMainHandle,
+  type IpcSendProxy,
   registerIpcMainHandle,
 } from "../../ipc";
 import { themes } from "@/domain/theme";
-import { WelcomeIpcIHData, WelcomeIpcSOData } from "@/welcome/backend/ipcType";
+import type {
+  WelcomeIpcIHData,
+  WelcomeIpcSOData,
+} from "@/welcome/backend/ipcType";
 
 type WindowManagerOption = {
   staticDir: string;

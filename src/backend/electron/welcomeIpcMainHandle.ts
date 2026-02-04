@@ -1,7 +1,7 @@
 import { app } from "electron";
 import { getEngineAndVvppController } from "./engineAndVvppController";
 import { getConfigManager } from "./electronConfig";
-import { IpcMainHandle } from "./ipc";
+import type { IpcMainHandle } from "./ipc";
 import { getWelcomeWindowManager } from "./manager/windowManager/welcome";
 import { getAppStateController } from "./appStateController";
 import type { WelcomeIpcIHData } from "@/welcome/backend/ipcType";

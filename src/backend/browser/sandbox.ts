@@ -5,20 +5,20 @@ import {
   showSaveFilePickerImpl,
   showOpenDirectoryDialogImpl,
   showOpenFilePickerImpl,
-  WritableFilePath,
+  type WritableFilePath,
   writeFileImpl,
 } from "./fileImpl";
 import { getConfigManager } from "./browserConfig";
 import { isFakePath } from "./fakePath";
 import {
   defaultToolbarButtonSetting,
-  EngineId,
-  EngineSettingType,
-  EngineSettings,
-  Sandbox,
+  type EngineId,
+  type EngineSettingType,
+  type EngineSettings,
+  type Sandbox,
 } from "@/type/preload";
 import { AssetTextFileNames } from "@/type/staticResources";
-import { HotkeySettingType } from "@/domain/hotkeyAction";
+import type { HotkeySettingType } from "@/domain/hotkeyAction";
 import path from "@/helpers/path";
 
 const toStaticPath = (fileName: string) =>

@@ -276,7 +276,7 @@ import BaseNavigationView from "@/components/Base/BaseNavigationView.vue";
 import BaseTextField from "@/components/Base/BaseTextField.vue";
 import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 import { useStore } from "@/store";
-import { EngineDirValidationResult, EngineId } from "@/type/preload";
+import { type EngineDirValidationResult, EngineId } from "@/type/preload";
 import type { SupportedFeatures } from "@/openapi/models/SupportedFeatures";
 import { useEngineIcons } from "@/composables/useEngineIcons";
 import { errorToMessage } from "@/helpers/errorHelper";

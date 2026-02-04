@@ -3,9 +3,12 @@ import {
   wrapToTransferableResult,
   getOrThrowTransferableResult,
 } from "../transferableResultHelper";
-import { type IpcRendererInvoke } from "./ipc";
-import { BridgeKey, SandboxWithTransferableResult } from "./backendApiLoader";
-import { ConfigType, EngineId, Sandbox, TextAsset } from "@/type/preload";
+import type { IpcRendererInvoke } from "./ipc";
+import {
+  BridgeKey,
+  type SandboxWithTransferableResult,
+} from "./backendApiLoader";
+import type { ConfigType, EngineId, Sandbox, TextAsset } from "@/type/preload";
 
 const ipcRendererInvokeProxy = new Proxy(
   {},

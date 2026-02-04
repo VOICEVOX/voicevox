@@ -1,4 +1,4 @@
-import { test, expect, Page, Locator } from "@playwright/test";
+import { test, expect, type Page, type Locator } from "@playwright/test";
 import { gotoHome, navigateToMain } from "../navigators";
 import { getNewestQuasarDialog } from "../locators";
 

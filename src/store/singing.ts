@@ -2,26 +2,26 @@ import { ref } from "vue";
 import { createPartialStore } from "./vuex";
 import { createUILockAction } from "./ui";
 import {
-  SingingStoreState,
-  SingingStoreTypes,
-  SingingCommandStoreState,
-  SingingCommandStoreTypes,
-  SaveResultObject,
-  Phrase,
+  type SingingStoreState,
+  type SingingStoreTypes,
+  type SingingCommandStoreState,
+  type SingingCommandStoreTypes,
+  type SaveResultObject,
+  type Phrase,
   transformCommandStore,
-  SingingVoice,
-  SequencerEditTarget,
-  ParameterPanelEditTarget,
-  PhraseKey,
+  type SingingVoice,
+  type SequencerEditTarget,
+  type ParameterPanelEditTarget,
+  type PhraseKey,
   SequenceId,
-  SingingVolumeKey,
-  SingingVolume,
-  SingingVoiceKey,
-  EditorFrameAudioQueryKey,
-  EditorFrameAudioQuery,
-  TrackParameters,
-  SingingPitchKey,
-  SingingPitch,
+  type SingingVolumeKey,
+  type SingingVolume,
+  type SingingVoiceKey,
+  type EditorFrameAudioQueryKey,
+  type EditorFrameAudioQuery,
+  type TrackParameters,
+  type SingingPitchKey,
+  type SingingPitch,
 } from "./type";
 import {
   buildSongTrackAudioFileNameFromRawData,
@@ -29,30 +29,30 @@ import {
   DEFAULT_PROJECT_NAME,
   DEFAULT_STYLE_NAME,
   generateLabelFileData,
-  PhonemeTimingLabel,
+  type PhonemeTimingLabel,
   sanitizeFileName,
 } from "./utility";
 import {
-  CharacterInfo,
-  EngineId,
+  type CharacterInfo,
+  type EngineId,
   NoteId,
   StyleId,
   TrackId,
 } from "@/type/preload";
-import { Note as NoteForRequestToEngine } from "@/openapi";
+import type { Note as NoteForRequestToEngine } from "@/openapi";
 import { ResultError, getValueOrThrow } from "@/type/result";
 import {
-  AudioEvent,
+  type AudioEvent,
   AudioPlayer,
-  AudioSequence,
+  type AudioSequence,
   ChannelStrip,
   Clipper,
   Limiter,
-  NoteEvent,
-  NoteSequence,
+  type NoteEvent,
+  type NoteSequence,
   OfflineTransport,
   PolySynth,
-  Sequence,
+  type Sequence,
   Transport,
 } from "@/sing/audioRendering";
 import {
@@ -117,15 +117,15 @@ import {
 } from "@/sing/utaformatixProject/utils";
 import { ExhaustiveError, UnreachableError } from "@/type/utility";
 import {
-  CacheLoadedEvent,
-  PhraseRenderingCompleteEvent,
-  PhraseRenderingErrorEvent,
-  PhraseRenderingStartedEvent,
-  PitchGenerationCompleteEvent,
-  QueryGenerationCompleteEvent,
+  type CacheLoadedEvent,
+  type PhraseRenderingCompleteEvent,
+  type PhraseRenderingErrorEvent,
+  type PhraseRenderingStartedEvent,
+  type PitchGenerationCompleteEvent,
+  type QueryGenerationCompleteEvent,
   SongTrackRenderer,
-  VoiceSynthesisCompleteEvent,
-  VolumeGenerationCompleteEvent,
+  type VoiceSynthesisCompleteEvent,
+  type VolumeGenerationCompleteEvent,
 } from "@/sing/songTrackRendering";
 import type {
   Note,
@@ -3034,19 +3034,30 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
 
       // パースしたJSONのノートの位置を現在の再生位置に合わせて貼り付ける
-      const currentPlayheadPosition = getters.PLAYHEAD_POSITION;
+      const currentPlayheadPosition = Math.round(getters.PLAYHEAD_POSITION);
       const firstNotePosition = notes[0].position;
+
+      // positionとdurationが整数かチェック
+      const hasNonIntegerValues = notes.some(
+        (note) =>
+          !Number.isInteger(note.position) || !Number.isInteger(note.duration),
+      );
+      if (hasNonIntegerValues) {
+        throw new Error(
+          "Failed to paste notes: position and duration must be integers.",
+        );
+      }
+
       const notesToPaste: Note[] = notes.map((note) => {
         // 新しい位置を現在の再生位置に合わせて計算する
-        const pastePos = Math.round(
-          Number(note.position) - firstNotePosition + currentPlayheadPosition,
-        );
+        const pastePos =
+          note.position - firstNotePosition + currentPlayheadPosition;
         return {
           id: NoteId(uuid4()),
           position: pastePos,
-          duration: Number(note.duration),
-          noteNumber: Number(note.noteNumber),
-          lyric: String(note.lyric),
+          duration: note.duration,
+          noteNumber: note.noteNumber,
+          lyric: note.lyric,
         };
       });
       const pastedNoteIds = notesToPaste.map((note) => note.id);

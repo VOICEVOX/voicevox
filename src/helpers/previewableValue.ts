@@ -1,4 +1,4 @@
-import { Ref, ComputedRef, ref, computed } from "vue";
+import { type Ref, type ComputedRef, ref, computed } from "vue";
 
 export class PreviewableValue {
   private isPreview: Ref<boolean>;

@@ -20,7 +20,7 @@ import { getWelcomeIpcMainHandle } from "./welcomeIpcMainHandle";
 import { getAppStateController } from "./appStateController";
 import { initializeWelcomeWindowManager } from "./manager/windowManager/welcome";
 import { assertNonNullable } from "@/type/utility";
-import { EngineInfo } from "@/type/preload";
+import type { EngineInfo } from "@/type/preload";
 import { isDevelopment, isMac, isProduction, isTest } from "@/helpers/platform";
 import { createLogger } from "@/helpers/log";
 
