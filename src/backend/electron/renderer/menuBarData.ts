@@ -1,11 +1,11 @@
 import { computed } from "vue";
 import { useEngineIcons } from "@/composables/useEngineIcons";
-import {
+import type {
   MaybeComputedMenuBarContent,
   MenuBarContent,
 } from "@/components/Menu/MenuBar/menuBarData";
-import { MenuItemData } from "@/components/Menu/type";
-import { Store } from "@/store";
+import type { MenuItemData } from "@/components/Menu/type";
+import type { Store } from "@/store";
 import { removeNullableAndBoolean } from "@/helpers/arrayHelper";
 
 export const useElectronMenuBarData = (
@@ -16,6 +16,13 @@ export const useElectronMenuBarData = (
   const engineManifests = computed(() => store.state.engineManifests);
   const engineIcons = useEngineIcons(engineManifests);
   const enableMultiEngine = computed(() => store.state.enableMultiEngine);
+
+  const hasDownloadVvppEngine = computed(() => {
+    return Object.values(engineInfos.value).some((engineInfo) => {
+      const manifest = engineInfos.value[engineInfo.uuid];
+      return manifest.type === "downloadVvpp";
+    });
+  });
 
   // 「エンジン」メニューのエンジン毎の項目
   const engineSubMenuData = computed<MenuBarContent["engine"]>(() => {
@@ -68,41 +75,50 @@ export const useElectronMenuBarData = (
       );
     }
 
-    const allEnginesSubMenuData = enableMultiEngine.value
-      ? removeNullableAndBoolean<MenuItemData>([
-          {
-            type: "button",
-            label: "全てのエンジンを再起動",
-            onClick: () => {
-              void store.actions.RESTART_ENGINES({
-                engineIds: engineIds.value,
-              });
-            },
-            disableWhenUiLocked: false,
+    const allEnginesSubMenuData = removeNullableAndBoolean<MenuItemData>([
+      enableMultiEngine.value && {
+        type: "button",
+        label: "全てのエンジンを再起動",
+        onClick: () => {
+          void store.actions.RESTART_ENGINES({
+            engineIds: engineIds.value,
+          });
+        },
+        disableWhenUiLocked: false,
+      },
+      enableMultiEngine.value && {
+        type: "button",
+        label: "エンジンの管理",
+        onClick: () => {
+          void store.actions.SET_DIALOG_OPEN({
+            isEngineManageDialogOpen: true,
+          });
+        },
+        disableWhenUiLocked: false,
+      },
+      enableMultiEngine.value &&
+        store.state.isMultiEngineOffMode && {
+          type: "button",
+          label: "マルチエンジンをオンにして再読み込み",
+          onClick() {
+            void store.actions.RELOAD_APP({
+              isMultiEngineOffMode: false,
+            });
           },
-          {
-            type: "button",
-            label: "エンジンの管理",
-            onClick: () => {
-              void store.actions.SET_DIALOG_OPEN({
-                isEngineManageDialogOpen: true,
-              });
-            },
-            disableWhenUiLocked: false,
-          },
-          store.state.isMultiEngineOffMode && {
-            type: "button",
-            label: "マルチエンジンをオンにして再読み込み",
-            onClick() {
-              void store.actions.RELOAD_APP({
-                isMultiEngineOffMode: false,
-              });
-            },
-            disableWhenUiLocked: false,
-            disableWhileReloadingLock: true,
-          },
-        ])
-      : [];
+          disableWhenUiLocked: false,
+          disableWhileReloadingLock: true,
+        },
+      hasDownloadVvppEngine.value && {
+        type: "button",
+        label: "エンジンのセットアップ",
+        onClick: () => {
+          void store.actions.CHECK_EDITED_AND_NOT_SAVE({
+            nextAction: "switchToWelcome",
+          });
+        },
+        disableWhenUiLocked: false,
+      },
+    ]);
 
     return {
       singleEngine: singleEngineSubMenuData,

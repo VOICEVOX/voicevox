@@ -222,7 +222,7 @@
 </template>
 
 <script lang="ts">
-import { ComputedRef } from "vue";
+import type { ComputedRef } from "vue";
 import type { InjectionKey } from "vue";
 
 export const numMeasuresInjectionKey: InjectionKey<{
@@ -244,7 +244,7 @@ import {
 import SequencerParameterPanel from "@/components/Sing/SequencerParameterPanel.vue";
 import SequencerGridSpacer from "@/components/Sing/SequencerGridSpacer.vue";
 import ContextMenu, {
-  ContextMenuItemData,
+  type ContextMenuItemData,
 } from "@/components/Menu/ContextMenu/Container.vue";
 import { useStore } from "@/store";
 import type { Note } from "@/domain/project/type";
@@ -285,7 +285,7 @@ import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import { createLogger } from "@/helpers/log";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import { useSequencerStateMachine } from "@/composables/useSequencerStateMachine";
-import {
+import type {
   PositionOnSequencer,
   ViewportInfo,
 } from "@/sing/sequencerStateMachine/common";

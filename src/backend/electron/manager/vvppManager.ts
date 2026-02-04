@@ -1,15 +1,15 @@
 import fs from "node:fs";
 import path from "node:path";
 import { dialog } from "electron";
-import { ExtractedEngineFiles } from "../ExtractedEngineFiles";
-import {
+import type { ExtractedEngineFiles } from "../ExtractedEngineFiles";
+import type {
   EngineId,
   EngineInfo,
   MinimumEngineManifestType,
 } from "@/type/preload";
 import { errorToMessage } from "@/helpers/errorHelper";
 import { VvppFileExtractor } from "@/backend/electron/vvppFile";
-import { ProgressCallback } from "@/helpers/progressHelper";
+import type { ProgressCallback } from "@/helpers/progressHelper";
 import { createLogger } from "@/helpers/log";
 import { isWindows } from "@/helpers/platform";
 import { UnreachableError } from "@/type/utility";

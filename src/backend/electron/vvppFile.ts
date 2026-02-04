@@ -10,9 +10,9 @@ import { app } from "electron";
 import { ExtractedEngineFiles } from "./ExtractedEngineFiles";
 import {
   minimumEngineManifestSchema,
-  MinimumEngineManifestType,
+  type MinimumEngineManifestType,
 } from "@/type/preload";
-import { ProgressCallback } from "@/helpers/progressHelper";
+import type { ProgressCallback } from "@/helpers/progressHelper";
 import { createLogger } from "@/helpers/log";
 import { UnreachableError } from "@/type/utility";
 

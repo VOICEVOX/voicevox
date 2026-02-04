@@ -1,15 +1,20 @@
 import { toRaw } from "vue";
 import { enablePatches, enableMapSet, Immer } from "immer";
 
-import { Command, CommandStoreState, CommandStoreTypes, State } from "./type";
+import type {
+  Command,
+  CommandStoreState,
+  CommandStoreTypes,
+  State,
+} from "./type";
 import { applyPatches } from "@/store/immerPatchUtility";
 import {
   createPartialStore,
-  Mutation,
-  MutationsBase,
-  MutationTree,
+  type Mutation,
+  type MutationsBase,
+  type MutationTree,
 } from "@/store/vuex";
-import { CommandId, EditorType } from "@/type/preload";
+import { CommandId, type EditorType } from "@/type/preload";
 import { uuid4 } from "@/helpers/random";
 import { objectEntries, objectFromEntries } from "@/helpers/typedEntries";
 

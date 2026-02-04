@@ -3,9 +3,12 @@ import {
   wrapToTransferableResult,
   getOrThrowTransferableResult,
 } from "../transferableResultHelper";
-import { type IpcRendererInvoke } from "./ipc";
-import { BridgeKey, SandboxWithTransferableResult } from "./backendApiLoader";
-import { ConfigType, EngineId, Sandbox, TextAsset } from "@/type/preload";
+import type { IpcRendererInvoke } from "./ipc";
+import {
+  BridgeKey,
+  type SandboxWithTransferableResult,
+} from "./backendApiLoader";
+import type { ConfigType, EngineId, Sandbox, TextAsset } from "@/type/preload";
 
 const ipcRendererInvokeProxy = new Proxy(
   {},
@@ -106,7 +109,7 @@ const api: Sandbox = {
     ipcRenderer.on("CHECK_EDITED_AND_NOT_SAVE", (_, args) => {
       listeners.checkEditedAndNotSave(
         args as {
-          closeOrReload: "close" | "reload";
+          nextAction: "close" | "reload" | "switchToWelcome";
           isMultiEngineOffMode?: boolean;
         },
       );
@@ -118,6 +121,10 @@ const api: Sandbox = {
 
   closeWindow: () => {
     void ipcRendererInvokeProxy.CLOSE_WINDOW();
+  },
+
+  launchWelcomeWindow: () => {
+    void ipcRendererInvokeProxy.SWITCH_TO_WELCOME_WINDOW();
   },
 
   minimizeWindow: () => {

@@ -1,6 +1,6 @@
 import { vi, it, expect } from "vitest";
-import { Ref } from "vue";
-import { UpdateInfo, UrlString } from "@/type/preload";
+import type { Ref } from "vue";
+import { type UpdateInfo, UrlString } from "@/type/preload";
 import { useFetchNewUpdateInfos } from "@/composables/useFetchNewUpdateInfos";
 
 // 最新バージョンの情報をfetchするモックを作成する

@@ -1,4 +1,4 @@
-import { spawn, ChildProcess } from "node:child_process";
+import { spawn, type ChildProcess } from "node:child_process";
 import path from "node:path";
 import treeKill from "tree-kill";
 
@@ -14,7 +14,7 @@ import {
 
 import { getConfigManager } from "../electronConfig";
 import { getEngineInfoManager } from "./engineInfoManager";
-import { EngineId, EngineInfo } from "@/type/preload";
+import { EngineId, type EngineInfo } from "@/type/preload";
 import { createLogger } from "@/helpers/log";
 
 const log = createLogger("EngineProcessManager");
