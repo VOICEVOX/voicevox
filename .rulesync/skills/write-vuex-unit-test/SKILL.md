@@ -91,7 +91,7 @@ Good:
 
 ```typescript
 test("音声の合計時間を取得", () => {
-  store.mutations.SET_AUDIO_KEYS([audioKey1, audioKey2]); // state を準備
+  store.mutations.SET_AUDIO_KEYS({ audioKeys: [audioKey1, audioKey2] }); // state を準備
 
   const total = store.getters.TOTAL_AUDIO_LENGTH;
   expect(total).toBeCloseTo(0.65);
