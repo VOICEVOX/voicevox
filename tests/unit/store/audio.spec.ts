@@ -1,142 +1,120 @@
-import { describe, test, expect } from "vitest";
-import { audioStore } from "@/store/audio";
-import { EditorAudioQuery, AudioStoreState, AudioItem } from "@/store/type";
-import { AudioKey } from "@/type/preload";
+import { beforeEach, describe, test, expect } from "vitest";
+import { store } from "@/store";
+import type { EditorAudioQuery, AudioItem } from "@/store/type";
+import { AudioKey, EngineId, SpeakerId, StyleId } from "@/type/preload";
+import { uuid4, resetMockMode } from "@/helpers/random";
+import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 
-const baseEditorAudioQuery: EditorAudioQuery = {
-  accentPhrases: [],
-  speedScale: 1,
-  pitchScale: 0,
-  intonationScale: 1,
-  volumeScale: 1,
-  prePhonemeLength: 0.1,
-  postPhonemeLength: 0.1,
-  pauseLengthScale: 1,
-  outputSamplingRate: 24000,
-  outputStereo: false,
-  kana: "",
-};
+function createEmptyEditorAudioQuery(): EditorAudioQuery {
+  return {
+    accentPhrases: [],
+    speedScale: 1,
+    pitchScale: 0,
+    intonationScale: 1,
+    volumeScale: 1,
+    prePhonemeLength: 0.1,
+    postPhonemeLength: 0.1,
+    pauseLengthScale: 1,
+    outputSamplingRate: 24000,
+    outputStereo: false,
+    kana: "",
+  };
+}
 
-describe("audioStore", () => {
-  describe("TOTAL_AUDIO_LENGTH", () => {
-    test("オーディオアイテムがない場合は0を返すこと", () => {
-      const state: Partial<AudioStoreState> = {
-        audioKeys: [],
-        audioItems: {},
-      };
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment
-      const total = (audioStore.getters as any).TOTAL_AUDIO_LENGTH(
-        state,
-        {},
-        {},
-        {},
-      );
-      expect(total).toBe(0);
-    });
+function createEditorAudioQueryWithLength(
+  lengthInSeconds: number,
+): EditorAudioQuery {
+  const query = createEmptyEditorAudioQuery();
+  const vowelLength =
+    lengthInSeconds - query.prePhonemeLength - query.postPhonemeLength;
 
-    test("複数のオーディオアイテムの合計時間を正しく計算すること", () => {
-      const audioKey1 = "key1" as AudioKey;
-      const audioKey2 = "key2" as AudioKey;
-
-      const query1: EditorAudioQuery = {
-        ...baseEditorAudioQuery,
-        accentPhrases: [
-          {
-            moras: [
-              {
-                text: "あ",
-                vowel: "a",
-                vowelLength: 0.2,
-                pitch: 0,
-                consonant: undefined,
-                consonantLength: undefined,
-              },
-            ],
-            accent: 1,
-            pauseMora: undefined,
-          },
-        ],
-      }; // 0.1 + 0.2 + 0.1 = 0.4
-
-      const query2: EditorAudioQuery = {
-        ...baseEditorAudioQuery,
-        accentPhrases: [
-          {
-            moras: [
-              {
-                text: "い",
-                vowel: "i",
-                vowelLength: 0.3,
-                pitch: 0,
-                consonant: undefined,
-                consonantLength: undefined,
-              },
-            ],
-            accent: 1,
-            pauseMora: undefined,
-          },
-        ],
-        speedScale: 2,
-      }; // (0.1 + 0.3 + 0.1) / 2 = 0.25
-
-      const state: Partial<AudioStoreState> = {
-        audioKeys: [audioKey1, audioKey2],
-        audioItems: {
-          [audioKey1]: { query: query1 } as AudioItem,
-          [audioKey2]: { query: query2 } as AudioItem,
+  query.accentPhrases = [
+    {
+      moras: [
+        {
+          text: "あ",
+          vowel: "a",
+          vowelLength,
+          pitch: 0,
+          consonant: undefined,
+          consonantLength: undefined,
         },
-      };
+      ],
+      accent: 1,
+      pauseMora: undefined,
+    },
+  ];
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment
-      const total = (audioStore.getters as any).TOTAL_AUDIO_LENGTH(
-        state,
-        {},
-        {},
-        {},
-      );
-      expect(total).toBeCloseTo(0.65);
+  return query;
+}
+
+function createAudioItem(query: EditorAudioQuery | undefined): AudioItem {
+  return {
+    text: "テスト",
+    voice: {
+      engineId: EngineId("test"),
+      speakerId: SpeakerId("test-speaker"),
+      styleId: StyleId(0),
+    },
+    query,
+  };
+}
+
+const initialState = cloneWithUnwrapProxy(store.state);
+beforeEach(() => {
+  store.replaceState(cloneWithUnwrapProxy(initialState));
+
+  resetMockMode();
+});
+
+describe("TOTAL_AUDIO_LENGTH", () => {
+  test("複数の AudioItem の合計時間を計算する", () => {
+    const audioKey1 = AudioKey(uuid4());
+    const audioKey2 = AudioKey(uuid4());
+
+    const query1 = createEditorAudioQueryWithLength(0.4); // 0.1 + 0.2 + 0.1 = 0.4
+    const query2 = createEditorAudioQueryWithLength(0.5); // (0.1 + 0.3 + 0.1) / 2 = 0.25
+    query2.speedScale = 2;
+
+    const audioItem1 = createAudioItem(query1);
+    const audioItem2 = createAudioItem(query2);
+
+    store.mutations.INSERT_AUDIO_ITEM({
+      audioKey: audioKey1,
+      audioItem: audioItem1,
+      prevAudioKey: undefined,
+    });
+    store.mutations.INSERT_AUDIO_ITEM({
+      audioKey: audioKey2,
+      audioItem: audioItem2,
+      prevAudioKey: audioKey1,
     });
 
-    test("クエリがないアイテムは無視されること", () => {
-      const audioKey1 = "key1" as AudioKey;
-      const audioKey2 = "key2" as AudioKey;
+    const total = store.getters.TOTAL_AUDIO_LENGTH;
+    expect(total).toBeCloseTo(0.65);
+  });
 
-      const query1: EditorAudioQuery = {
-        ...baseEditorAudioQuery,
-        accentPhrases: [
-          {
-            moras: [
-              {
-                text: "あ",
-                vowel: "a",
-                vowelLength: 0.2,
-                pitch: 0,
-                consonant: undefined,
-                consonantLength: undefined,
-              },
-            ],
-            accent: 1,
-            pauseMora: undefined,
-          },
-        ],
-      }; // 0.4
+  test("クエリがない AudioItem は無視する", () => {
+    const audioKey1 = AudioKey(uuid4());
+    const audioKey2 = AudioKey(uuid4());
 
-      const state: Partial<AudioStoreState> = {
-        audioKeys: [audioKey1, audioKey2],
-        audioItems: {
-          [audioKey1]: { query: query1 } as AudioItem,
-          [audioKey2]: { text: "hello" } as AudioItem, // No query
-        },
-      };
+    const query1 = createEditorAudioQueryWithLength(0.4); // 0.4
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment
-      const total = (audioStore.getters as any).TOTAL_AUDIO_LENGTH(
-        state,
-        {},
-        {},
-        {},
-      );
-      expect(total).toBeCloseTo(0.4);
+    const audioItem1 = createAudioItem(query1);
+    const audioItem2 = createAudioItem(undefined); // query なし
+
+    store.mutations.INSERT_AUDIO_ITEM({
+      audioKey: audioKey1,
+      audioItem: audioItem1,
+      prevAudioKey: undefined,
     });
+    store.mutations.INSERT_AUDIO_ITEM({
+      audioKey: audioKey2,
+      audioItem: audioItem2,
+      prevAudioKey: audioKey1,
+    });
+
+    const total = store.getters.TOTAL_AUDIO_LENGTH;
+    expect(total).toBeCloseTo(0.4);
   });
 });
