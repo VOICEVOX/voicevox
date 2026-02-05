@@ -7,18 +7,18 @@ import { createDefaultTrack } from "@/sing/domain";
 
 const initialState = cloneWithUnwrapProxy(store.state);
 beforeEach(() => {
-  store.replaceState(initialState);
+  store.replaceState(cloneWithUnwrapProxy(initialState));
 
   resetMockMode();
 });
 
-test("INSERT_TRACK", () => {
+test("トラックを挿入する", () => {
   const dummyTrack = createDefaultTrack();
 
   // 最後尾に追加
   // NOTE: 最初から１つトラックが登録されている
   const trackId1 = TrackId(uuid4());
-  store.commit("INSERT_TRACK", {
+  store.mutations.INSERT_TRACK({
     trackId: trackId1,
     track: dummyTrack,
     prevTrackId: undefined,
@@ -27,7 +27,7 @@ test("INSERT_TRACK", () => {
 
   // 途中に追加
   const trackId2 = TrackId(uuid4());
-  store.commit("INSERT_TRACK", {
+  store.mutations.INSERT_TRACK({
     trackId: trackId2,
     track: dummyTrack,
     prevTrackId: store.state.trackOrder[0],
