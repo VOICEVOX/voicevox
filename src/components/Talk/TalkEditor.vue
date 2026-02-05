@@ -810,5 +810,4 @@ const onAudioCellPaneClick = () => {
 .q-splitter > :deep(.home-splitter) {
   background: colors.$splitter !important;
 }
-
 </style>
