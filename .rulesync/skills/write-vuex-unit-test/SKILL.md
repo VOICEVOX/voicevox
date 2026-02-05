@@ -52,7 +52,7 @@ const initialState = cloneWithUnwrapProxy(store.state);
 Good:
 
 ```typescript
-test("INSERT_TRACK", () => {
+test("トラックを挿入する", () => {
   const trackId1 = TrackId(uuid4());
   store.mutations.INSERT_TRACK({
     trackId: trackId1,
