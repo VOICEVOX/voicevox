@@ -1,5 +1,4 @@
 import { createEngineUrl, type EngineUrlParams } from "@/domain/url";
-import { createOpenAPIEngineMock } from "@/mock/engineMock";
 import { Configuration, DefaultApi, type DefaultApiInterface } from "@/openapi";
 
 export interface IEngineConnectorFactory {
@@ -9,43 +8,46 @@ export interface IEngineConnectorFactory {
 }
 
 // 通常エンジン
-const OpenAPIEngineConnectorFactoryImpl = (): IEngineConnectorFactory => {
-  const instanceMapper: Record<string, DefaultApiInterface> = {};
-  return {
-    instance: (host: string) => {
-      const cached = instanceMapper[host];
-      if (cached != undefined) {
-        return cached;
-      }
-      const api = new DefaultApi(new Configuration({ basePath: host }));
-      instanceMapper[host] = api;
+const OpenAPIEngineConnectorFactoryImpl =
+  async (): Promise<IEngineConnectorFactory> => {
+    const instanceMapper: Record<string, DefaultApiInterface> = {};
+    return {
+      instance: (host: string) => {
+        const cached = instanceMapper[host];
+        if (cached != undefined) {
+          return cached;
+        }
+        const api = new DefaultApi(new Configuration({ basePath: host }));
+        instanceMapper[host] = api;
 
-      return api;
-    },
+        return api;
+      },
+    };
   };
-};
 export const OpenAPIEngineConnectorFactory =
   OpenAPIEngineConnectorFactoryImpl();
 
 // モック用エンジン
-const OpenAPIMockEngineConnectorFactoryImpl = (): IEngineConnectorFactory => {
-  let mockInstance: DefaultApiInterface | undefined;
-  return {
-    instance: () => {
-      if (!mockInstance) {
-        mockInstance = createOpenAPIEngineMock();
-      }
-      return mockInstance;
-    },
+const OpenAPIMockEngineConnectorFactoryImpl =
+  async (): Promise<IEngineConnectorFactory> => {
+    let mockInstance: DefaultApiInterface | undefined;
+    const { createOpenAPIEngineMock } = await import("@/mock/engineMock");
+    return {
+      instance: () => {
+        if (!mockInstance) {
+          mockInstance = createOpenAPIEngineMock();
+        }
+        return mockInstance;
+      },
+    };
   };
-};
 export const OpenAPIMockEngineConnectorFactory =
-  OpenAPIMockEngineConnectorFactoryImpl();
+  /* @__PURE__ */ OpenAPIMockEngineConnectorFactoryImpl();
 
 // 通常エンジンとモック用エンジンの両対応
 // モック用エンジンのURLのときはモックを、そうじゃないときは通常エンジンを返す。
 const OpenAPIEngineAndMockConnectorFactoryImpl =
-  (): IEngineConnectorFactory => {
+  async (): Promise<IEngineConnectorFactory> => {
     // モック用エンジンのURLは `mock://mock` とする
     const mockUrlParams: EngineUrlParams = {
       protocol: "mock:",
@@ -53,16 +55,18 @@ const OpenAPIEngineAndMockConnectorFactoryImpl =
       port: "",
       pathname: "",
     };
+    const mockFactory = await OpenAPIMockEngineConnectorFactory;
+    const openAPIFactory = await OpenAPIEngineConnectorFactory;
 
     return {
       instance: (host: string) => {
         if (host == createEngineUrl(mockUrlParams)) {
-          return OpenAPIMockEngineConnectorFactory.instance(host);
+          return mockFactory.instance(host);
         } else {
-          return OpenAPIEngineConnectorFactory.instance(host);
+          return openAPIFactory.instance(host);
         }
       },
     };
   };
 export const OpenAPIEngineAndMockConnectorFactory =
-  OpenAPIEngineAndMockConnectorFactoryImpl();
+  /* @__PURE__ */ OpenAPIEngineAndMockConnectorFactoryImpl();

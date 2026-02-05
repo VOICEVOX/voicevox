@@ -103,6 +103,8 @@ export default defineConfig((options) => {
           main: path.resolve(import.meta.dirname, "src/index.html"),
           welcome: path.resolve(import.meta.dirname, "src/welcome/index.html"),
         },
+        // 明示的に除外しないとリリースビルドでもモックの画像がバンドルされてしまう
+        external: isElectron ? [/.+\/src\/mock\/engineMock\/assets\/.+/] : [],
       },
     },
     publicDir: path.resolve(import.meta.dirname, "public"),

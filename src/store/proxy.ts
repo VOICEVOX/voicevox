@@ -16,20 +16,22 @@ import type { EngineInfo } from "@/type/preload";
 
 export const proxyStoreState: ProxyStoreState = {};
 
-const proxyStoreCreator = (_engineFactory: IEngineConnectorFactory) => {
+const proxyStoreCreator = (
+  _engineFactory: Promise<IEngineConnectorFactory>,
+) => {
   const proxyStore = createPartialStore<ProxyStoreTypes>({
     INSTANTIATE_ENGINE_CONNECTOR: {
-      action({ state }, payload) {
+      async action({ state }, payload) {
         const engineId = payload.engineId;
         const engineInfo: EngineInfo | undefined = state.engineInfos[engineId];
         if (engineInfo == undefined)
-          return Promise.reject(
-            new Error(`No such engineInfo registered: engineId == ${engineId}`),
+          throw new Error(
+            `No such engineInfo registered: engineId == ${engineId}`,
           );
 
         const altPort: string | undefined = state.altPortInfos[engineId];
         const port = altPort ?? engineInfo.defaultPort;
-        const instance = _engineFactory.instance(
+        const instance = (await _engineFactory).instance(
           createEngineUrl({
             protocol: engineInfo.protocol,
             hostname: engineInfo.hostname,
@@ -37,7 +39,7 @@ const proxyStoreCreator = (_engineFactory: IEngineConnectorFactory) => {
             pathname: engineInfo.pathname,
           }),
         );
-        return Promise.resolve({
+        return {
           // FIXME: anyを使わないようにする
           // eslint-disable-next-line @typescript-eslint/no-unsafe-return
           invoke: (v) => (arg) =>
@@ -45,7 +47,7 @@ const proxyStoreCreator = (_engineFactory: IEngineConnectorFactory) => {
             // @ts-ignore
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             instance[v](arg) as any,
-        });
+        };
       },
     },
   });
