@@ -22,7 +22,7 @@ import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 
 const initialState = cloneWithUnwrapProxy(store.state);
 beforeEach(() => {
-  store.replaceState(initialState);
+  store.replaceState(cloneWithUnwrapProxy(initialState));
 
   resetMockMode();
 });
