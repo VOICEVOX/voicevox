@@ -654,12 +654,16 @@ const syncTracksAndTrackChannelStrips = (tracks: Map<TrackId, Track>) => {
   // その場合はトラックのオーディオ接続は行えないため早期に何もしない。
   if (audioContext == undefined) {
     // AudioContext が無い環境（テスト等）ではオーディオ接続処理は行えないため何もしない。
-    logger.info("AudioContext is undefined: skipping track-channel-strip synchronization.");
+    logger.info(
+      "AudioContext is undefined: skipping track-channel-strip synchronization.",
+    );
     return;
   }
   if (mainChannelStrip == undefined) {
     // mainChannelStrip が未作成の場合は何もしない。
-    logger.info("mainChannelStrip is undefined: skipping track-channel-strip synchronization.");
+    logger.info(
+      "mainChannelStrip is undefined: skipping track-channel-strip synchronization.",
+    );
     return;
   }
 

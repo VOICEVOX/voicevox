@@ -119,5 +119,7 @@ test("RENDER is no-op when AudioContext is undefined", async () => {
 
 test("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS is no-op when AudioContext is undefined", async () => {
   // AudioContext が無い環境でも呼び出して例外が出ないことを確認
-  await expect(store.actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS()).resolves.toBeUndefined();
+  await expect(
+    store.actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS(),
+  ).resolves.toBeUndefined();
 });
