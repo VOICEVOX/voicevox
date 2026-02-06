@@ -2196,12 +2196,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
    */
   RENDER: {
     async action({ state, getters, mutations, actions }) {
-      // AudioContext はテスト環境では存在しないことがある。
-      // その場合はレンダリング処理を実行しない（No-op）
-      if (audioContext == undefined) {
-        logger.info("AudioContext is undefined: skipping render.");
-        return;
-      }
+      // AudioContext の存在チェックは syncTracksAndTrackChannelStrips 内で行うためここでは不要
 
       /**
        * レンダリング中に変更される可能性のあるデータのコピーを作成する。
@@ -2260,7 +2255,15 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         }
       } catch (error) {
         logger.error("render error", error);
-        throw error;
+        // AudioContext が未定義であるために発生したエラーはNo-opとする
+        if (
+          error instanceof Error &&
+          error.message.includes("audioContext is undefined")
+        ) {
+          logger.info("AudioContext is undefined: skipping render.");
+        } else {
+          throw error;
+        }
       } finally {
         mutations.SET_STOP_RENDERING_REQUESTED({
           stopRenderingRequested: false,
