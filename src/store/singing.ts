@@ -1072,6 +1072,20 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         notesMap.set(note.id, note);
       }
       const selectedTrack = getOrThrow(state.tracks, trackId);
+
+      const phonemeTimingEditData = selectedTrack.phonemeTimingEditData;
+      for (const existingNote of selectedTrack.notes) {
+        const noteId = existingNote.id;
+        const newNote = notesMap.get(noteId);
+        if (
+          newNote != undefined &&
+          existingNote.lyric !== newNote.lyric &&
+          phonemeTimingEditData.has(noteId)
+        ) {
+          phonemeTimingEditData.delete(noteId);
+        }
+      }
+
       selectedTrack.notes = selectedTrack.notes
         .map((value) => notesMap.get(value.id) ?? value)
         .sort((a, b) => a.position - b.position);
