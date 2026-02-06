@@ -3780,15 +3780,14 @@ export const singingCommandStore = transformCommandStore(
           prevTrackId: trackId,
         });
 
-        const syncPromise = actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
+        // SYNC は同期処理なので待機しない
+        void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
         // テスト環境では AudioContext が存在しないため、レンダリングは行わない
-        const renderPromise = audioContext ? actions.RENDER() : undefined;
-        await syncPromise;
+        if (audioContext) {
+          void actions.RENDER();
+        }
 
         await actions.SET_SELECTED_TRACK({ trackId: newTrackId });
-        if (renderPromise) {
-          await renderPromise;
-        }
       },
     },
 
