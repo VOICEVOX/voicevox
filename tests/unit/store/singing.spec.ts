@@ -115,6 +115,7 @@ test("RENDER is no-op when AudioContext is undefined", async () => {
   expect(window.AudioContext).toBeUndefined();
   // テスト環境では通常 AudioContext が undefined なので、呼び出してエラーが発生しないことを確認
   await store.actions.RENDER();
+  await store.actions.STOP_RENDERING();
   expect(store.state.nowRendering).toBe(false);
 });
 
