@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test } from "vitest";
 import { SongTrackRendererTestUtility } from "./utility";
-import { RenderingEventInfo } from "./type";
+import type { RenderingEventInfo } from "./type";
 import { resetMockMode, uuid4 } from "@/helpers/random";
 import { EngineId, StyleId, TrackId } from "@/type/preload";
 import { createDefaultTempo, DEFAULT_TPQN } from "@/sing/domain";

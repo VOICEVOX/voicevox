@@ -1,12 +1,12 @@
-import {
+import type {
   ParameterPanelStateDefinitions,
   ParameterPanelInput,
   ParameterPanelContext,
   PositionOnParameterPanel,
   ParameterPanelIdleStateId,
 } from "../common";
-import { SetNextState, State } from "@/sing/stateMachine";
-import { TrackId } from "@/type/preload";
+import type { SetNextState, State } from "@/sing/stateMachine";
+import type { TrackId } from "@/type/preload";
 import { createArray } from "@/sing/utility";
 import { getButton } from "@/sing/viewHelper";
 

@@ -1,16 +1,16 @@
 import { getOrThrow } from "@/helpers/mapHelper";
-import { State, SetNextState } from "@/sing/stateMachine";
+import type { State, SetNextState } from "@/sing/stateMachine";
 import { clamp } from "@/sing/utility";
 import { getButton, PREVIEW_SOUND_DURATION } from "@/sing/viewHelper";
 import type { Note } from "@/domain/project/type";
-import { TrackId, NoteId } from "@/type/preload";
+import type { TrackId, NoteId } from "@/type/preload";
 import {
-  Context,
+  type Context,
   getGuideLineTicks,
-  IdleStateId,
-  Input,
-  PositionOnSequencer,
-  SequencerStateDefinitions,
+  type IdleStateId,
+  type Input,
+  type PositionOnSequencer,
+  type SequencerStateDefinitions,
   shouldStartDrag,
 } from "@/sing/sequencerStateMachine/common";
 

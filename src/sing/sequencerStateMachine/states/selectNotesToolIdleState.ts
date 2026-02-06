@@ -1,11 +1,11 @@
-import { SetNextState, State } from "@/sing/stateMachine";
+import type { SetNextState, State } from "@/sing/stateMachine";
 import {
-  Context,
+  type Context,
   getGuideLineTicks,
-  Input,
+  type Input,
   selectNotesInRange,
   selectOnlyThisNoteAndPlayPreviewSound,
-  SequencerStateDefinitions,
+  type SequencerStateDefinitions,
   toggleNoteSelection,
 } from "@/sing/sequencerStateMachine/common";
 import {

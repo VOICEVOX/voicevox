@@ -72,7 +72,7 @@ import BaseButton from "@/components/Base/BaseButton.vue";
 import BaseDocumentView from "@/components/Base/BaseDocumentView.vue";
 import { useStore } from "@/store";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
-import { EngineId, SpeakerId } from "@/type/preload";
+import { EngineId, type SpeakerId } from "@/type/preload";
 import { getOrThrow } from "@/helpers/mapHelper";
 
 type DetailKey = { engine: EngineId; character: SpeakerId };

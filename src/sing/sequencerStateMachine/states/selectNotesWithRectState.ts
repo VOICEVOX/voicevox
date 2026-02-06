@@ -1,5 +1,5 @@
-import { SetNextState, State } from "@/sing/stateMachine";
-import {
+import type { SetNextState, State } from "@/sing/stateMachine";
+import type {
   Context,
   IdleStateId,
   Input,
@@ -8,7 +8,7 @@ import {
 } from "@/sing/sequencerStateMachine/common";
 import { getButton, noteNumberToBaseY, tickToBaseX } from "@/sing/viewHelper";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
-import { NoteId } from "@/type/preload";
+import type { NoteId } from "@/type/preload";
 import { frequencyToNoteNumber } from "@/sing/music";
 
 export class SelectNotesWithRectState

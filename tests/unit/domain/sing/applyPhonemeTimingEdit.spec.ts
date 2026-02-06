@@ -1,8 +1,8 @@
 import { it, expect, describe } from "vitest";
 import { uuid4 } from "@/helpers/random";
-import { FramePhoneme } from "@/openapi";
+import type { FramePhoneme } from "@/openapi";
 import { createArray } from "@/sing/utility";
-import { EditorFrameAudioQuery } from "@/store/type";
+import type { EditorFrameAudioQuery } from "@/store/type";
 import { NoteId } from "@/type/preload";
 import type { PhonemeTimingEdit } from "@/domain/project/type";
 import {
