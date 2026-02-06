@@ -4,8 +4,10 @@ import {
   PhonemeTimingEditorContext,
   PhonemeTimingEditorIdleStateId,
 } from "@/sing/phonemeTimingEditorStateMachine/common";
-import { PhonemeTimingEditToolIdleState } from "@/sing/phonemeTimingEditorStateMachine/states/phonemeTimingEditToolIdleState";
-import { PhonemeTimingEditState } from "@/sing/phonemeTimingEditorStateMachine/states/phonemeTimingEditState";
+import { MovePhonemeTimingToolIdleState } from "@/sing/phonemeTimingEditorStateMachine/states/movePhonemeTimingToolIdleState";
+import { MovePhonemeTimingState } from "@/sing/phonemeTimingEditorStateMachine/states/movePhonemeTimingState";
+import { ErasePhonemeTimingToolIdleState } from "@/sing/phonemeTimingEditorStateMachine/states/erasePhonemeTimingToolIdleState";
+import { ErasePhonemeTimingState } from "@/sing/phonemeTimingEditorStateMachine/states/erasePhonemeTimingState";
 import { StateMachine } from "@/sing/stateMachine";
 
 export const createPhonemeTimingEditorStateMachine = (
@@ -18,8 +20,10 @@ export const createPhonemeTimingEditorStateMachine = (
     PhonemeTimingEditorContext
   >(
     {
-      phonemeTimingEditToolIdle: () => new PhonemeTimingEditToolIdleState(),
-      phonemeTimingEdit: (args) => new PhonemeTimingEditState(args),
+      movePhonemeTimingToolIdle: () => new MovePhonemeTimingToolIdleState(),
+      movePhonemeTiming: (args) => new MovePhonemeTimingState(args),
+      erasePhonemeTimingToolIdle: () => new ErasePhonemeTimingToolIdleState(),
+      erasePhonemeTiming: (args) => new ErasePhonemeTimingState(args),
     },
     context,
     initialState,

@@ -21,11 +21,20 @@ import {
 import { getPrev } from "@/sing/utility";
 
 // 音素タイミング編集のプレビューデータ
-export type PhonemeTimingPreviewEdit = {
-  noteId: NoteId;
-  phonemeIndexInNote: number;
-  offsetSeconds: number;
-};
+export type PhonemeTimingPreview =
+  | {
+      type: "move";
+      noteId: NoteId;
+      phonemeIndexInNote: number;
+      offsetSeconds: number;
+    }
+  | {
+      type: "erase";
+      targets: {
+        noteId: NoteId;
+        phonemeIndexInNote: number;
+      }[];
+    };
 
 // フレーズ情報（StateMachine用）
 export type PhraseInfo = Readonly<{
@@ -36,7 +45,7 @@ export type PhraseInfo = Readonly<{
   maxNonPauseEndFrame: number | undefined;
 }>;
 
-// 音素タイミング線情報（StateMachine内部用、ヒットテスト用）
+// 音素タイミング情報
 export type PhonemeTimingInfo = {
   phraseKey: PhraseKey;
   phoneme: string;
@@ -61,10 +70,13 @@ export type PhonemeTimingEditorInput =
       readonly positionX: number;
     };
 
-export type PhonemeTimingEditorPreviewMode = "IDLE" | "PHONEME_TIMING_EDIT";
+export type PhonemeTimingEditorPreviewMode =
+  | "IDLE"
+  | "MOVE_PHONEME_TIMING"
+  | "ERASE_PHONEME_TIMING";
 
 export type PhonemeTimingEditorRefs = {
-  readonly previewPhonemeTimingEdit: Ref<PhonemeTimingPreviewEdit | undefined>;
+  readonly previewPhonemeTiming: Ref<PhonemeTimingPreview | undefined>;
   readonly previewMode: Ref<PhonemeTimingEditorPreviewMode>;
   readonly cursorState: Ref<CursorState>;
 };
@@ -83,7 +95,12 @@ export type PhonemeTimingEditorComputedRefs = {
 export type PhonemeTimingEditorPartialStore = {
   readonly state: Pick<
     Store["state"],
-    "tpqn" | "tempos" | "phrases" | "phraseQueries" | "editorFrameRate"
+    | "tpqn"
+    | "tempos"
+    | "phrases"
+    | "phraseQueries"
+    | "editorFrameRate"
+    | "sequencerPhonemeTimingTool"
   >;
   readonly getters: Pick<
     Store["getters"],
@@ -91,7 +108,7 @@ export type PhonemeTimingEditorPartialStore = {
   >;
   readonly actions: Pick<
     Store["actions"],
-    "COMMAND_UPSERT_PHONEME_TIMING_EDIT"
+    "COMMAND_UPSERT_PHONEME_TIMING_EDIT" | "COMMAND_ERASE_PHONEME_TIMING_EDITS"
   >;
 };
 
@@ -100,20 +117,34 @@ export type PhonemeTimingEditorContext = PhonemeTimingEditorRefs &
     readonly store: PhonemeTimingEditorPartialStore;
   };
 
-export type PhonemeTimingEditorIdleStateId = "phonemeTimingEditToolIdle";
+export type PhonemeTimingEditorIdleStateId =
+  | "movePhonemeTimingToolIdle"
+  | "erasePhonemeTimingToolIdle";
 
 export type PhonemeTimingEditorStateDefinitions = StateDefinitions<
   [
     {
-      id: "phonemeTimingEditToolIdle";
+      id: "movePhonemeTimingToolIdle";
       factoryArgs: undefined;
     },
     {
-      id: "phonemeTimingEdit";
+      id: "movePhonemeTiming";
       factoryArgs: {
         targetTrackId: TrackId;
         noteId: NoteId;
         phonemeIndexInNote: number;
+        startPositionX: number;
+        returnStateId: PhonemeTimingEditorIdleStateId;
+      };
+    },
+    {
+      id: "erasePhonemeTimingToolIdle";
+      factoryArgs: undefined;
+    },
+    {
+      id: "erasePhonemeTiming";
+      factoryArgs: {
+        targetTrackId: TrackId;
         startPositionX: number;
         returnStateId: PhonemeTimingEditorIdleStateId;
       };

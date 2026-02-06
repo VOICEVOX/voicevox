@@ -12,7 +12,7 @@ import { clamp, getPrev } from "@/sing/utility";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { assertNonNullable } from "@/type/utility";
 
-export class PhonemeTimingEditState
+export class MovePhonemeTimingState
   implements
     State<
       PhonemeTimingEditorStateDefinitions,
@@ -20,7 +20,7 @@ export class PhonemeTimingEditState
       PhonemeTimingEditorContext
     >
 {
-  readonly id = "phonemeTimingEdit";
+  readonly id = "movePhonemeTiming";
 
   private readonly targetTrackId: TrackId;
   private readonly noteId: NoteId;
@@ -31,7 +31,7 @@ export class PhonemeTimingEditState
   private currentPositionX: number;
   private shouldApplyPreview: boolean;
 
-  private innerContext:
+  private animationContext:
     | {
         previewRequestId: number;
         executePreviewProcess: boolean;
@@ -66,30 +66,31 @@ export class PhonemeTimingEditState
       const initialOffsetSeconds =
         targetInfo.editedStartTimeSeconds - targetInfo.originalStartTimeSeconds;
 
-      context.previewPhonemeTimingEdit.value = {
+      context.previewPhonemeTiming.value = {
+        type: "move",
         noteId: this.noteId,
         phonemeIndexInNote: this.phonemeIndexInNote,
         offsetSeconds: initialOffsetSeconds,
       };
     }
 
-    context.previewMode.value = "PHONEME_TIMING_EDIT";
+    context.previewMode.value = "MOVE_PHONEME_TIMING";
     context.cursorState.value = "EW_RESIZE";
 
     const previewIfNeeded = () => {
-      if (this.innerContext == undefined) {
-        throw new Error("innerContext is undefined.");
+      if (this.animationContext == undefined) {
+        throw new Error("animationContext is undefined.");
       }
-      if (this.innerContext.executePreviewProcess) {
+      if (this.animationContext.executePreviewProcess) {
         this.updatePreview(context);
-        this.innerContext.executePreviewProcess = false;
+        this.animationContext.executePreviewProcess = false;
       }
-      this.innerContext.previewRequestId =
+      this.animationContext.previewRequestId =
         requestAnimationFrame(previewIfNeeded);
     };
     const previewRequestId = requestAnimationFrame(previewIfNeeded);
 
-    this.innerContext = {
+    this.animationContext = {
       executePreviewProcess: false,
       previewRequestId,
     };
@@ -103,8 +104,8 @@ export class PhonemeTimingEditState
     context: PhonemeTimingEditorContext;
     setNextState: SetNextState<PhonemeTimingEditorStateDefinitions>;
   }) {
-    if (this.innerContext == undefined) {
-      throw new Error("innerContext is undefined.");
+    if (this.animationContext == undefined) {
+      throw new Error("animationContext is undefined.");
     }
 
     if (input.type === "pointerEvent") {
@@ -116,7 +117,7 @@ export class PhonemeTimingEditState
       ) {
         if (input.pointerEvent.type === "pointermove") {
           this.currentPositionX = input.positionX;
-          this.innerContext.executePreviewProcess = true;
+          this.animationContext.executePreviewProcess = true;
         } else if (
           input.pointerEvent.type === "pointerup" &&
           mouseButton === "LEFT_BUTTON"
@@ -132,11 +133,11 @@ export class PhonemeTimingEditState
   }
 
   onExit(context: PhonemeTimingEditorContext) {
-    if (this.innerContext == undefined) {
-      throw new Error("innerContext is undefined.");
+    if (this.animationContext == undefined) {
+      throw new Error("animationContext is undefined.");
     }
 
-    cancelAnimationFrame(this.innerContext.previewRequestId);
+    cancelAnimationFrame(this.animationContext.previewRequestId);
 
     const targetInfo = context.phonemeTimingInfos.value.find(
       (info) =>
@@ -147,7 +148,7 @@ export class PhonemeTimingEditState
       this.applyPreview(context);
     }
 
-    context.previewPhonemeTimingEdit.value = undefined;
+    context.previewPhonemeTiming.value = undefined;
     context.cursorState.value = "UNSET";
     context.previewMode.value = "IDLE";
   }
@@ -234,7 +235,8 @@ export class PhonemeTimingEditState
 
     const newOffsetSeconds = newStartTime - originalStartTimeSeconds;
 
-    context.previewPhonemeTimingEdit.value = {
+    context.previewPhonemeTiming.value = {
+      type: "move",
       noteId: this.noteId,
       phonemeIndexInNote: this.phonemeIndexInNote,
       offsetSeconds: newOffsetSeconds,
@@ -242,11 +244,12 @@ export class PhonemeTimingEditState
   }
 
   private applyPreview(context: PhonemeTimingEditorContext) {
-    if (context.previewPhonemeTimingEdit.value == undefined) {
-      throw new Error("previewPhonemeTimingEdit is undefined.");
+    const preview = context.previewPhonemeTiming.value;
+    if (preview == undefined || preview.type !== "move") {
+      throw new Error("previewPhonemeTiming is undefined or not move type.");
     }
 
-    const { offsetSeconds } = context.previewPhonemeTimingEdit.value;
+    const { offsetSeconds } = preview;
 
     const phonemeTimingEdit = {
       phonemeIndexInNote: this.phonemeIndexInNote,

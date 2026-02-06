@@ -1,18 +1,19 @@
-import { computed, ComputedRef, ref } from "vue";
+import { computed, ComputedRef, ref, watch } from "vue";
 import type { CursorState, ViewportInfo } from "@/sing/viewHelper";
 import type {
-  PhonemeTimingPreviewEdit,
+  PhonemeTimingPreview,
   PhonemeTimingEditorPartialStore,
   PhonemeTimingEditorPreviewMode,
   PhonemeTimingEditorInput,
   PhonemeTimingEditorComputedRefs,
+  PhonemeTimingEditorIdleStateId,
+  PhonemeTimingInfo,
   PhraseInfo,
 } from "@/sing/phonemeTimingEditorStateMachine/common";
 import type { PhraseKey } from "@/store/type";
 import type { TrackId } from "@/type/preload";
 import type { PhonemeTimingEditData, Tempo } from "@/domain/project/type";
 import { createPhonemeTimingEditorStateMachine } from "@/sing/phonemeTimingEditorStateMachine";
-import type { PhonemeTimingInfo } from "@/sing/phonemeTimingEditorStateMachine/common";
 
 export const usePhonemeTimingEditorStateMachine = (
   store: PhonemeTimingEditorPartialStore,
@@ -21,9 +22,7 @@ export const usePhonemeTimingEditorStateMachine = (
   phraseInfos: ComputedRef<Map<PhraseKey, PhraseInfo>>,
 ) => {
   const refs = {
-    previewPhonemeTimingEdit: ref<PhonemeTimingPreviewEdit | undefined>(
-      undefined,
-    ),
+    previewPhonemeTiming: ref<PhonemeTimingPreview | undefined>(undefined),
     previewMode: ref<PhonemeTimingEditorPreviewMode>("IDLE"),
     cursorState: ref<CursorState>("UNSET"),
   };
@@ -41,22 +40,32 @@ export const usePhonemeTimingEditorStateMachine = (
     phraseInfos,
   };
 
+  const idleStateId = computed<PhonemeTimingEditorIdleStateId>(() =>
+    store.state.sequencerPhonemeTimingTool === "ERASE"
+      ? "erasePhonemeTimingToolIdle"
+      : "movePhonemeTimingToolIdle",
+  );
+
   const stateMachine = createPhonemeTimingEditorStateMachine(
     {
       ...refs,
       ...computedRefs,
       store,
     },
-    "phonemeTimingEditToolIdle",
+    idleStateId.value,
   );
+
+  watch(idleStateId, (value) => {
+    if (stateMachine.currentStateId !== value) {
+      stateMachine.transitionTo(value, undefined);
+    }
+  });
 
   return {
     stateMachineProcess: (input: PhonemeTimingEditorInput) => {
       stateMachine.process(input);
     },
-    previewPhonemeTimingEdit: computed(
-      () => refs.previewPhonemeTimingEdit.value,
-    ),
+    previewPhonemeTiming: computed(() => refs.previewPhonemeTiming.value),
     previewMode: computed(() => refs.previewMode.value),
     cursorState: computed(() => refs.cursorState.value),
   };

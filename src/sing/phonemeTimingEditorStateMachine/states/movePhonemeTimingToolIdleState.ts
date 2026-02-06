@@ -8,7 +8,7 @@ import {
 import { getButton, tickToBaseX } from "@/sing/viewHelper";
 import { secondToTick } from "@/sing/music";
 
-export class PhonemeTimingEditToolIdleState
+export class MovePhonemeTimingToolIdleState
   implements
     State<
       PhonemeTimingEditorStateDefinitions,
@@ -16,7 +16,7 @@ export class PhonemeTimingEditToolIdleState
       PhonemeTimingEditorContext
     >
 {
-  readonly id = "phonemeTimingEditToolIdle";
+  readonly id = "movePhonemeTimingToolIdle";
 
   onEnter(context: PhonemeTimingEditorContext) {
     context.cursorState.value = "UNSET";
@@ -80,7 +80,7 @@ export class PhonemeTimingEditToolIdleState
         if (isPointerMove) {
           context.cursorState.value = "EW_RESIZE";
         } else {
-          setNextState("phonemeTimingEdit", {
+          setNextState("movePhonemeTiming", {
             targetTrackId: selectedTrackId,
             noteId: nearest.noteId,
             phonemeIndexInNote: nearest.phonemeIndexInNote,

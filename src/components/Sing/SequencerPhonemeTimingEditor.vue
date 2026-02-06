@@ -23,8 +23,12 @@
       <SequencerPhonemeTimings
         class="phoneme-timings"
         :viewportInfo
-        :previewPhonemeTimingEdit
+        :previewPhonemeTiming
         :phonemeTimingInfos
+      />
+      <SequencerPhonemeTimingToolPalette
+        :sequencerPhonemeTimingTool
+        @update:sequencerPhonemeTimingTool="setSequencerPhonemeTimingTool"
       />
     </div>
   </div>
@@ -43,14 +47,25 @@ import SequencerParameterGrid from "@/components/Sing/SequencerParameterGrid.vue
 import SequencerWaveform from "@/components/Sing/SequencerWaveform.vue";
 import SequencerPhonemeTimings from "@/components/Sing/SequencerPhonemeTimings.vue";
 import SequencerNoteTimings from "@/components/Sing/SequencerNoteTimings.vue";
+import SequencerPhonemeTimingToolPalette from "@/components/Sing/SequencerPhonemeTimingToolPalette.vue";
 import { assertNonNullable } from "@/type/utility";
 import {
   computePhonemeTimingInfos,
   getPhraseInfosForTrack,
 } from "@/sing/phonemeTimingEditorStateMachine/common";
+import type { PhonemeTimingEditTool } from "@/store/type";
 
 const store = useStore();
 const editTarget = computed(() => store.state.parameterPanelEditTarget);
+const sequencerPhonemeTimingTool = computed(
+  () => store.state.sequencerPhonemeTimingTool,
+);
+
+const setSequencerPhonemeTimingTool = (tool: PhonemeTimingEditTool) => {
+  void store.actions.SET_SEQUENCER_PHONEME_TIMING_TOOL({
+    sequencerPhonemeTimingTool: tool,
+  });
+};
 const props = defineProps<{
   viewportInfo: ViewportInfo;
 }>();
@@ -74,7 +89,7 @@ const phonemeTimingInfos = computed(() => {
   );
 });
 
-const { stateMachineProcess, cursorState, previewPhonemeTimingEdit } =
+const { stateMachineProcess, cursorState, previewPhonemeTiming } =
   usePhonemeTimingEditorStateMachine(
     store,
     viewportInfo,
@@ -161,6 +176,7 @@ onUnmountedOrDeactivated(() => {
   grid-column: 2;
   grid-row: 1;
   overflow: hidden;
+  position: relative;
 
   display: grid;
   grid-template-rows: 12px 26px 28px 1fr;

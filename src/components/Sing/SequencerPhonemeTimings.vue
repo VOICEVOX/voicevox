@@ -11,24 +11,25 @@ import { useStore } from "@/store";
 import { useMounted } from "@/composables/useMounted";
 import { secondToTick } from "@/sing/music";
 import { tickToBaseX, type ViewportInfo } from "@/sing/viewHelper";
-import { getNext } from "@/sing/utility";
+import { getNext, getPrev } from "@/sing/utility";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { UnreachableError } from "@/type/utility";
 import {
-  type PhonemeTimingPreviewEdit,
+  type PhonemeTimingPreview,
   type PhonemeTimingInfo,
 } from "@/sing/phonemeTimingEditorStateMachine/common";
 
-type PhonemeInfo = Readonly<{
-  phoneme: string;
-  isEdited: boolean;
-  isPreview: boolean;
+type PhonemeInfoForRender = {
+  readonly phoneme: string;
+  readonly isEdited: boolean;
+  readonly isMovePreview: boolean;
+  readonly isErasePreview: boolean;
   startTime: number;
-}>;
+};
 
 const props = defineProps<{
   viewportInfo: ViewportInfo;
-  previewPhonemeTimingEdit?: PhonemeTimingPreviewEdit;
+  previewPhonemeTiming?: PhonemeTimingPreview;
   phonemeTimingInfos: PhonemeTimingInfo[];
 }>();
 
@@ -36,7 +37,7 @@ const store = useStore();
 const tpqn = computed(() => store.state.tpqn);
 const isDark = computed(() => store.state.currentTheme === "Dark");
 const tempos = computed(() => store.state.tempos);
-const previewPhonemeTimingEdit = computed(() => props.previewPhonemeTimingEdit);
+const previewPhonemeTiming = computed(() => props.previewPhonemeTiming);
 const phonemeTimingInfos = computed(() => props.phonemeTimingInfos);
 
 // 音素タイミング線のスタイル定義
@@ -115,11 +116,13 @@ const render = () => {
   }
 
   const rawTempos = toRaw(tempos.value);
-  const previewEdit = previewPhonemeTimingEdit.value;
+  const preview = previewPhonemeTiming.value;
   const rawPhonemeTimingInfos = toRaw(phonemeTimingInfos.value);
   const viewportInfo = props.viewportInfo;
   const phonemeTimingEditData =
     store.getters.SELECTED_TRACK.phonemeTimingEditData;
+  const editorFrameRate = store.state.editorFrameRate;
+  const oneFrameSeconds = 1 / editorFrameRate;
 
   const currentTextStyle = isDark.value
     ? phonemeTextStyles.dark
@@ -144,7 +147,7 @@ const render = () => {
   lastIsDark = isDark.value;
 
   // カリングとプレビュー処理を行い、描画用の情報を生成
-  const phonemeInfos: PhonemeInfo[] = [];
+  const phonemeInfos: PhonemeInfoForRender[] = [];
   for (const phonemeTimingInfo of rawPhonemeTimingInfos) {
     // noteIdがundefinedのもの（先頭のpauなど）はスキップ（描画しない）
     if (phonemeTimingInfo.noteId == undefined) {
@@ -166,15 +169,31 @@ const render = () => {
     }
 
     // プレビュー判定
-    const isPreview =
-      previewEdit != undefined &&
-      previewEdit.noteId === phonemeTimingInfo.noteId &&
-      previewEdit.phonemeIndexInNote === phonemeTimingInfo.phonemeIndexInNote;
+    const isMovePreview =
+      preview?.type === "move" &&
+      preview.noteId === phonemeTimingInfo.noteId &&
+      preview.phonemeIndexInNote === phonemeTimingInfo.phonemeIndexInNote;
+    const isErasePreview =
+      preview?.type === "erase" &&
+      preview.targets.some(
+        (t) =>
+          t.noteId === phonemeTimingInfo.noteId &&
+          t.phonemeIndexInNote === phonemeTimingInfo.phonemeIndexInNote,
+      );
 
-    // プレビュー時は開始時刻を上書き（元の位置 + プレビューオフセット）
-    const startTime = isPreview
-      ? phonemeTimingInfo.originalStartTimeSeconds + previewEdit.offsetSeconds
-      : phonemeTimingInfo.editedStartTimeSeconds;
+    // 開始時刻の決定
+    // 削除プレビュー: 元の位置
+    // 移動プレビュー: 元の位置 + オフセット
+    // それ以外: 編集後の位置
+    let startTime: number;
+    if (isErasePreview) {
+      startTime = phonemeTimingInfo.originalStartTimeSeconds;
+    } else if (isMovePreview) {
+      startTime =
+        phonemeTimingInfo.originalStartTimeSeconds + preview.offsetSeconds;
+    } else {
+      startTime = phonemeTimingInfo.editedStartTimeSeconds;
+    }
 
     // 既存編集の有無を判定
     const phonemeTimingEdits = phonemeTimingEditData.get(
@@ -188,10 +207,46 @@ const render = () => {
 
     phonemeInfos.push({
       phoneme: phonemeTimingInfo.phoneme,
-      isEdited: hasExistingEdit && !isPreview,
-      isPreview,
+      isEdited: hasExistingEdit && !isMovePreview && !isErasePreview,
+      isMovePreview,
+      isErasePreview,
       startTime,
     });
+  }
+
+  // 削除プレビュー時の順序入れ替わり防止
+  // 削除すると元の位置（originalStartTimeSeconds）に戻るが、
+  // 他の音素の編集位置と順序が入れ替わる可能性があるため、
+  // 表示上は前後の音素との順序を維持するよう制限する。
+  //
+  // 処理順序:
+  // 1. 逆順ループ: 各削除プレビュー音素が次の音素より後ろにならないよう制限
+  // 2. 順方向ループ: 各削除プレビュー音素が前の音素より前にならないよう制限
+  for (let i = phonemeInfos.length - 1; i >= 0; i--) {
+    const phonemeInfo = phonemeInfos[i];
+    if (!phonemeInfo.isErasePreview) {
+      continue;
+    }
+    const nextPhonemeInfo = getNext(phonemeInfos, i);
+    if (nextPhonemeInfo != undefined) {
+      const maxStartTime = nextPhonemeInfo.startTime - oneFrameSeconds;
+      if (phonemeInfo.startTime > maxStartTime) {
+        phonemeInfo.startTime = maxStartTime;
+      }
+    }
+  }
+  for (let i = 0; i < phonemeInfos.length; i++) {
+    const phonemeInfo = phonemeInfos[i];
+    if (!phonemeInfo.isErasePreview) {
+      continue;
+    }
+    const prevPhonemeInfo = getPrev(phonemeInfos, i);
+    if (prevPhonemeInfo != undefined) {
+      const minStartTime = prevPhonemeInfo.startTime + oneFrameSeconds;
+      if (phonemeInfo.startTime < minStartTime) {
+        phonemeInfo.startTime = minStartTime;
+      }
+    }
   }
 
   // 線のGraphicsが足りなければ追加
@@ -271,11 +326,18 @@ const render = () => {
     const themeStyles = isDark.value
       ? phonemeTimingLineStyles.dark
       : phonemeTimingLineStyles.light;
-    const lineStyle = phonemeInfo.isPreview
-      ? themeStyles.preview
-      : phonemeInfo.isEdited
-        ? themeStyles.edited
-        : themeStyles.default;
+    // スタイルの決定
+    // 削除プレビュー: 未編集スタイル（削除したらこうなるを視覚的に表現）
+    // 移動プレビュー: プレビュースタイル
+    // 編集済み: 編集済みスタイル
+    // それ以外: デフォルトスタイル
+    const lineStyle = phonemeInfo.isErasePreview
+      ? themeStyles.default
+      : phonemeInfo.isMovePreview
+        ? themeStyles.preview
+        : phonemeInfo.isEdited
+          ? themeStyles.edited
+          : themeStyles.default;
 
     graphic.lineStyle(lineStyle.width, lineStyle.color, lineStyle.alpha);
 
@@ -335,7 +397,7 @@ const render = () => {
 
 // NOTE: mountedをwatchしているので、onMountedの直後に必ず１回実行される
 watch(
-  [mounted, phonemeTimingInfos, tempos, tpqn, previewPhonemeTimingEdit],
+  [mounted, phonemeTimingInfos, tempos, tpqn, previewPhonemeTiming],
   ([mounted]) => {
     if (mounted) {
       renderInNextFrame = true;
