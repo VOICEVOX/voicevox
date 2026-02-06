@@ -1094,6 +1094,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       selectedTrack.notes = selectedTrack.notes.filter((value) => {
         return !noteIdsSet.has(value.id);
       });
+
+      const phonemeTimingEditData = selectedTrack.phonemeTimingEditData;
+      for (const noteId of noteIds) {
+        if (phonemeTimingEditData.has(noteId)) {
+          phonemeTimingEditData.delete(noteId);
+        }
+      }
     },
   },
 
