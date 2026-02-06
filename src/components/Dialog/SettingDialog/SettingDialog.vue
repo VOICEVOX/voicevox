@@ -409,7 +409,7 @@
                   description="歌詞が未設定の音符に対してデフォルトで設定される歌詞を設定できます。"
                   :options="[
                     { label: 'ドレミ（階名）', value: 'doremi' },
-                    { label: 'ら', value: 'la' },
+                    { label: 'ら（固定）', value: 'la' },
                   ]"
                 />
                 <BaseRowCard
