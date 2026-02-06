@@ -3785,10 +3785,7 @@ export const singingCommandStore = transformCommandStore(
 
         // SYNC は同期処理なので待機しない
         void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
-        // テスト環境では AudioContext が存在しないため、レンダリングは行わない
-        if (audioContext) {
-          void actions.RENDER();
-        }
+        void actions.RENDER();
 
         await actions.SET_SELECTED_TRACK({ trackId: newTrackId });
       },
