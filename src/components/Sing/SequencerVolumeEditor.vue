@@ -26,7 +26,6 @@ import {
   watch,
 } from "vue";
 import * as PIXI from "pixi.js";
-import AsyncLock from "async-lock";
 import ContextMenu from "@/components/Menu/ContextMenu/Container.vue";
 import type { ContextMenuItemData } from "@/components/Menu/ContextMenu/Container.vue";
 import { useStore } from "@/store";
@@ -34,7 +33,9 @@ import type { VolumeEditTool } from "@/store/type";
 import { useParameterPanelStateMachine } from "@/composables/useParameterPanelStateMachine";
 import { useAutoScrollOnEdge } from "@/composables/useAutoScrollOnEdge";
 import { useMounted } from "@/composables/useMounted";
+import { createLogger } from "@/helpers/log";
 import { getOrThrow } from "@/helpers/mapHelper";
+import { Mutex } from "@/helpers/mutex";
 import { VALUE_INDICATING_NO_DATA } from "@/sing/domain";
 import { decibelToLinear, linearToDecibel } from "@/sing/audio";
 import { secondToTick, tickToSecond } from "@/sing/music";
@@ -64,6 +65,7 @@ const MIN_DISPLAY_DB = -36.5;
 const MAX_DISPLAY_DB = -0.5;
 const KEY_COLUMN_WIDTH_PX = 48; // ScoreSequencerの左側キー領域と合わせる
 
+const { warn } = createLogger("SequencerVolumeEditor");
 const store = useStore();
 const {
   volumePreviewEdit,
@@ -375,7 +377,7 @@ const render = () => {
   renderer.render(stage);
 };
 
-const asyncLock = new AsyncLock({ maxPending: 1 });
+const refreshVolumeSegmentsLock = new Mutex({ maxPending: 1 });
 
 const refreshVolumeSegments = async () => {
   const frameRate = editorFrameRate.value;
@@ -613,18 +615,15 @@ watch(
     numMeasures,
     editorFrameRate,
   ],
-  ([isMounted]) => {
-    asyncLock.acquire(
-      "volume",
-      async () => {
-        if (isMounted) {
-          await refreshVolumeSegments();
-        }
-      },
-      () => {
-        /* ignore */
-      },
-    );
+  async ([isMounted]) => {
+    try {
+      await using _lock = await refreshVolumeSegmentsLock.acquire();
+      if (isMounted) {
+        await refreshVolumeSegments();
+      }
+    } catch (e) {
+      warn("Failed to refresh volume segments.", e);
+    }
   },
 );
 
