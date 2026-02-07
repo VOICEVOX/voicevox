@@ -305,7 +305,6 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
       config.hotkeySettings = newHotkeySettings;
     },
   ],
-  // TODO: マイグレーションすると、ラベルにかかわらずショートカットを使っていた人を救える。どうするか検討する。
 ];
 
 export type Metadata = {
