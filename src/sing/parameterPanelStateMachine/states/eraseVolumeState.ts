@@ -92,22 +92,26 @@ export class EraseVolumeState
       throw new Error("previewVolumeEdit.type is not erase.");
     }
 
-    if (input.type === "mouseEvent") {
-      const { mouseEvent, position, targetArea } = input;
-      const mouseButton = getButton(mouseEvent);
+    if (input.type === "pointerEvent") {
+      const { pointerEvent, position, targetArea } = input;
+      const mouseButton = getButton(pointerEvent);
 
       if (targetArea === "Window") {
-        if (mouseEvent.type === "mousemove") {
+        if (pointerEvent.type === "pointermove") {
           this.currentCursorPos = position;
           this.innerContext.executePreviewProcess = true;
         } else if (
-          mouseEvent.type === "mouseup" &&
-          mouseButton === "LEFT_BUTTON"
+          (pointerEvent.type === "pointerup" &&
+            mouseButton === "LEFT_BUTTON") ||
+          pointerEvent.type === "pointercancel"
         ) {
           this.applyPreview = true;
           setNextState(this.returnStateId, undefined);
         }
-      } else if (targetArea === "Editor" && mouseEvent.type === "mousemove") {
+      } else if (
+        targetArea === "Editor" &&
+        pointerEvent.type === "pointermove"
+      ) {
         this.currentCursorPos = position;
         this.innerContext.executePreviewProcess = true;
       }

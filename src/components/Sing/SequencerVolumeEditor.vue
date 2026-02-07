@@ -3,9 +3,9 @@
     ref="canvasContainer"
     class="volume-editor"
     :class="cursorClass"
-    @mousedown="onSurfaceMouseDown"
-    @mousemove="onSurfaceMouseMove"
-    @mouseleave="onSurfaceMouseLeave"
+    @pointerdown="onSurfacePointerDown"
+    @pointermove="onSurfacePointerMove"
+    @pointerleave="onSurfacePointerLeave"
   >
     <canvas ref="canvas" class="volume-editor-canvas"></canvas>
     <SequencerVolumeToolPalette
@@ -527,27 +527,27 @@ const refreshVolumeSegments = async () => {
 };
 
 const dispatchVolumeEditorEvent = (
-  mouseEvent: MouseEvent,
+  pointerEvent: PointerEvent,
   targetArea: "Editor" | "Window",
 ) => {
-  const position = computeViewportPosition(mouseEvent);
+  const position = computeViewportPosition(pointerEvent);
   volumeStateMachineProcess({
-    type: "mouseEvent",
+    type: "pointerEvent",
     targetArea,
-    mouseEvent,
+    pointerEvent,
     position,
   });
 };
 
-const computeViewportPosition = (mouseEvent: MouseEvent) => {
+const computeViewportPosition = (pointerEvent: PointerEvent) => {
   const viewport = canvasContainer.value;
   if (viewport == null) {
     throw new Error("volume editor viewport element is null.");
   }
 
   const rect = viewport.getBoundingClientRect();
-  const localX = mouseEvent.clientX - rect.left;
-  const localY = mouseEvent.clientY - rect.top;
+  const localX = pointerEvent.clientX - rect.left;
+  const localY = pointerEvent.clientY - rect.top;
   const width = rect.width || 1;
   const height = rect.height || 1;
   const clampedX = clamp(localX, 0, width);
@@ -569,7 +569,7 @@ const computeViewportPosition = (mouseEvent: MouseEvent) => {
   };
 };
 
-const onSurfaceMouseDown = (event: MouseEvent) => {
+const onSurfacePointerDown = (event: PointerEvent) => {
   if (event.button !== 0) {
     return;
   }
@@ -580,39 +580,52 @@ const onSurfaceMouseDown = (event: MouseEvent) => {
   }
   isDragging.value = true;
   dispatchVolumeEditorEvent(event, "Editor");
-  window.addEventListener("mousemove", onWindowMouseMove);
-  window.addEventListener("mouseup", onWindowMouseUp);
+  window.addEventListener("pointermove", onWindowPointerMove);
+  window.addEventListener("pointerup", onWindowPointerUp);
+  window.addEventListener("pointercancel", onWindowPointerCancel);
 };
 
-const onSurfaceMouseMove = (event: MouseEvent) => {
+const onSurfacePointerMove = (event: PointerEvent) => {
   if (!isDragging.value) {
     return;
   }
   dispatchVolumeEditorEvent(event, "Editor");
 };
 
-const onSurfaceMouseLeave = (event: MouseEvent) => {
+const onSurfacePointerLeave = (event: PointerEvent) => {
   if (!isDragging.value) {
     return;
   }
   dispatchVolumeEditorEvent(event, "Window");
 };
 
-const onWindowMouseMove = (event: MouseEvent) => {
+const onWindowPointerMove = (event: PointerEvent) => {
   if (!isDragging.value) {
     return;
   }
   dispatchVolumeEditorEvent(event, "Window");
 };
 
-const onWindowMouseUp = (event: MouseEvent) => {
+const onWindowPointerUp = (event: PointerEvent) => {
   if (!isDragging.value) {
     return;
   }
   dispatchVolumeEditorEvent(event, "Window");
   isDragging.value = false;
-  window.removeEventListener("mousemove", onWindowMouseMove);
-  window.removeEventListener("mouseup", onWindowMouseUp);
+  window.removeEventListener("pointermove", onWindowPointerMove);
+  window.removeEventListener("pointerup", onWindowPointerUp);
+  window.removeEventListener("pointercancel", onWindowPointerCancel);
+};
+
+const onWindowPointerCancel = (event: PointerEvent) => {
+  if (!isDragging.value) {
+    return;
+  }
+  dispatchVolumeEditorEvent(event, "Window");
+  isDragging.value = false;
+  window.removeEventListener("pointermove", onWindowPointerMove);
+  window.removeEventListener("pointerup", onWindowPointerUp);
+  window.removeEventListener("pointercancel", onWindowPointerCancel);
 };
 
 watch(
@@ -740,8 +753,9 @@ onBeforeUnmount(() => {
   stage?.destroy();
   renderer?.destroy(true);
   resizeObserver?.disconnect();
-  window.removeEventListener("mousemove", onWindowMouseMove);
-  window.removeEventListener("mouseup", onWindowMouseUp);
+  window.removeEventListener("pointermove", onWindowPointerMove);
+  window.removeEventListener("pointerup", onWindowPointerUp);
+  window.removeEventListener("pointercancel", onWindowPointerCancel);
 });
 </script>
 

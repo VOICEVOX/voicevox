@@ -29,12 +29,12 @@ export class DrawVolumeIdleState
     context: ParameterPanelContext;
     setNextState: SetNextState<ParameterPanelStateDefinitions>;
   }) {
-    if (input.type === "mouseEvent") {
-      const mouseButton = getButton(input.mouseEvent);
+    if (input.type === "pointerEvent") {
+      const mouseButton = getButton(input.pointerEvent);
       const trackId = context.selectedTrackId.value;
 
       if (
-        input.mouseEvent.type === "mousedown" &&
+        input.pointerEvent.type === "pointerdown" &&
         mouseButton === "LEFT_BUTTON" &&
         input.targetArea === "Editor"
       ) {
