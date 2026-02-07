@@ -4,8 +4,6 @@
     class="volume-editor"
     :class="cursorClass"
     @pointerdown="onSurfacePointerDown"
-    @pointermove="onSurfacePointerMove"
-    @pointerleave="onSurfacePointerLeave"
   >
     <canvas ref="canvas" class="volume-editor-canvas"></canvas>
     <SequencerVolumeToolPalette
@@ -202,7 +200,6 @@ const canvasContainer = ref<HTMLElement | null>(null);
 const canvas = ref<HTMLCanvasElement | null>(null);
 const viewportWidth = ref<number>();
 const viewportHeight = ref<number>();
-const isDragging = ref(false);
 
 let renderer: PIXI.Renderer | undefined;
 let stage: PIXI.Container | undefined;
@@ -578,54 +575,19 @@ const onSurfacePointerDown = (event: PointerEvent) => {
       editTarget: "VOLUME",
     });
   }
-  isDragging.value = true;
   dispatchVolumeEditorEvent(event, "Editor");
-  window.addEventListener("pointermove", onWindowPointerMove);
-  window.addEventListener("pointerup", onWindowPointerUp);
-  window.addEventListener("pointercancel", onWindowPointerCancel);
-};
-
-const onSurfacePointerMove = (event: PointerEvent) => {
-  if (!isDragging.value) {
-    return;
-  }
-  dispatchVolumeEditorEvent(event, "Editor");
-};
-
-const onSurfacePointerLeave = (event: PointerEvent) => {
-  if (!isDragging.value) {
-    return;
-  }
-  dispatchVolumeEditorEvent(event, "Window");
 };
 
 const onWindowPointerMove = (event: PointerEvent) => {
-  if (!isDragging.value) {
-    return;
-  }
   dispatchVolumeEditorEvent(event, "Window");
 };
 
 const onWindowPointerUp = (event: PointerEvent) => {
-  if (!isDragging.value) {
-    return;
-  }
   dispatchVolumeEditorEvent(event, "Window");
-  isDragging.value = false;
-  window.removeEventListener("pointermove", onWindowPointerMove);
-  window.removeEventListener("pointerup", onWindowPointerUp);
-  window.removeEventListener("pointercancel", onWindowPointerCancel);
 };
 
 const onWindowPointerCancel = (event: PointerEvent) => {
-  if (!isDragging.value) {
-    return;
-  }
   dispatchVolumeEditorEvent(event, "Window");
-  isDragging.value = false;
-  window.removeEventListener("pointermove", onWindowPointerMove);
-  window.removeEventListener("pointerup", onWindowPointerUp);
-  window.removeEventListener("pointercancel", onWindowPointerCancel);
 };
 
 watch(
@@ -741,6 +703,10 @@ onMounted(() => {
     }
   });
   resizeObserver.observe(containerEl);
+
+  window.addEventListener("pointermove", onWindowPointerMove);
+  window.addEventListener("pointerup", onWindowPointerUp);
+  window.addEventListener("pointercancel", onWindowPointerCancel);
 });
 
 onBeforeUnmount(() => {
