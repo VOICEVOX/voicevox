@@ -286,6 +286,26 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
       }
     },
   ],
+  [
+    ">=0.26",
+    (config) => {
+      // プロジェクト読み込み → プロジェクトを読み込む
+      const hotkeySettings =
+        config.hotkeySettings as ConfigType["hotkeySettings"];
+      const newHotkeySettings: ConfigType["hotkeySettings"] =
+        hotkeySettings.map((hotkeySetting) => {
+          if (hotkeySetting.action === "テキストを読み込む") {
+            return {
+              ...hotkeySetting,
+              action: "テキストを繋げて書き出す",
+            };
+          }
+          return hotkeySetting;
+        });
+      config.hotkeySettings = newHotkeySettings;
+    },
+  ],
+  // TODO: マイグレーションすると、ラベルにかかわらずショートカットを使っていた人を救える。どうするか検討する。
 ];
 
 export type Metadata = {
