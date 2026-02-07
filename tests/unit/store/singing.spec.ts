@@ -110,3 +110,19 @@ test("COMMAND_DUPLICATE_TRACK", async () => {
   // 新しいトラックが選択されているか
   expect(store.getters.SELECTED_TRACK_ID).toBe(newTrackId);
 });
+
+test("RENDER is no-op when AudioContext is undefined", async () => {
+  expect(window.AudioContext).toBeUndefined();
+  // テスト環境では通常 AudioContext が undefined なので、呼び出してエラーが発生しないことを確認
+  await store.actions.RENDER();
+  await store.actions.STOP_RENDERING();
+  expect(store.state.nowRendering).toBe(false);
+});
+
+test("SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS is no-op when AudioContext is undefined", async () => {
+  expect(window.AudioContext).toBeUndefined();
+  // AudioContext が無い環境でも呼び出して例外が出ないことを確認
+  await expect(
+    store.actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS(),
+  ).resolves.toBeUndefined();
+});
