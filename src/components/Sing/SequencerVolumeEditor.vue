@@ -6,7 +6,6 @@
     @mousedown="onSurfaceMouseDown"
     @mousemove="onSurfaceMouseMove"
     @mouseleave="onSurfaceMouseLeave"
-    @contextmenu.prevent="onContextMenu"
   >
     <canvas ref="canvas" class="volume-editor-canvas"></canvas>
     <SequencerVolumeToolPalette
@@ -30,9 +29,8 @@ import {
 } from "vue";
 import * as PIXI from "pixi.js";
 import AsyncLock from "async-lock";
-import ContextMenu, {
-  ContextMenuItemData,
-} from "@/components/Menu/ContextMenu/Container.vue";
+import ContextMenu from "@/components/Menu/ContextMenu/Container.vue";
+import type { ContextMenuItemData } from "@/components/Menu/ContextMenu/Container.vue";
 import { useStore } from "@/store";
 import type { VolumeEditTool } from "@/store/type";
 import { useParameterPanelStateMachine } from "@/composables/useParameterPanelStateMachine";
@@ -48,7 +46,8 @@ import {
   numMeasuresInjectionKey,
   sequencerBodyInjectionKey,
 } from "@/components/Sing/ScoreSequencer.vue";
-import { VolumeLine, VolumeSegment } from "@/sing/graphics/volumeLine";
+import { VolumeLine } from "@/sing/graphics/volumeLine";
+import type { VolumeSegment } from "@/sing/graphics/volumeLine";
 import { Color } from "@/sing/graphics/lineStrip";
 import { useSequencerGrid } from "@/composables/useSequencerGridPattern";
 import SequencerVolumeToolPalette from "@/components/Sing/SequencerVolumeToolPalette.vue";
@@ -614,10 +613,6 @@ const onWindowMouseUp = (event: MouseEvent) => {
   isDragging.value = false;
   window.removeEventListener("mousemove", onWindowMouseMove);
   window.removeEventListener("mouseup", onWindowMouseUp);
-};
-
-const onContextMenu = (event: MouseEvent) => {
-  contextMenu.value?.show(event);
 };
 
 watch(
