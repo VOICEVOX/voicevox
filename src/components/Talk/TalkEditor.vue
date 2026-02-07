@@ -218,7 +218,7 @@ registerHotkeyWithCleanup({
   name: "テキストを読み込む",
   callback: () => {
     if (!uiLocked.value) {
-      void store.actions.SHOW_CONNECT_AND_EXPORT_TEXT_DIALOG();
+      void store.actions.COMMAND_IMPORT_FROM_FILE({ type: "dialog" });
     }
   },
 });
