@@ -289,7 +289,7 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
   [
     ">=0.26",
     (config) => {
-      // プロジェクト読み込み → プロジェクトを読み込む
+      // テキストを読み込む をショートカットで呼び出すと テキストを繋げて書き出す が動いていたのでキー割り当てを移行する
       const hotkeySettings =
         config.hotkeySettings as ConfigType["hotkeySettings"];
       const newHotkeySettings: ConfigType["hotkeySettings"] =
