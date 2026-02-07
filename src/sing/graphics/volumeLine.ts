@@ -20,6 +20,8 @@ type VolumeLineOptions = {
   color: Color;
   width: number;
   dashed?: boolean;
+  // TODO: 見た目調整のための暫定オプション。
+  // TODO: 調整完了後に isVisible / areaAlpha は削除し、必要最小限に整理する。
   showArea?: boolean;
   areaAlpha?: number;
   isVisible?: boolean;

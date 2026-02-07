@@ -19,8 +19,8 @@
 import {
   computed,
   inject,
-  onBeforeUnmount,
   onMounted,
+  onUnmounted,
   ref,
   toRef,
   watch,
@@ -34,12 +34,14 @@ import type { VolumeEditTool } from "@/store/type";
 import { useParameterPanelStateMachine } from "@/composables/useParameterPanelStateMachine";
 import { useAutoScrollOnEdge } from "@/composables/useAutoScrollOnEdge";
 import { useMounted } from "@/composables/useMounted";
+import { getOrThrow } from "@/helpers/mapHelper";
 import { VALUE_INDICATING_NO_DATA } from "@/sing/domain";
 import { decibelToLinear, linearToDecibel } from "@/sing/audio";
 import { secondToTick, tickToSecond } from "@/sing/music";
 import { getTotalTicks } from "@/sing/rulerHelper";
 import { clamp } from "@/sing/utility";
 import { baseXToTick, tickToBaseX } from "@/sing/viewHelper";
+import { assertNonNullable } from "@/type/utility";
 import {
   numMeasuresInjectionKey,
   sequencerBodyInjectionKey,
@@ -278,13 +280,9 @@ const buildSegments = (framewiseData: number[], frameRate: number) => {
 };
 
 const updateGrid = () => {
-  if (
-    gridGraphics == undefined ||
-    viewportHeight.value == undefined ||
-    viewportWidth.value == undefined
-  ) {
-    return;
-  }
+  assertNonNullable(gridGraphics);
+  assertNonNullable(viewportHeight.value);
+  assertNonNullable(viewportWidth.value);
   gridGraphics.clear();
   const height = viewportHeight.value;
   const width = viewportWidth.value;
@@ -323,16 +321,12 @@ const updateGrid = () => {
 };
 
 const render = () => {
-  if (
-    renderer == undefined ||
-    stage == undefined ||
-    originalVolumeLine == undefined ||
-    editedVolumeLine == undefined ||
-    viewportWidth.value == undefined ||
-    viewportHeight.value == undefined
-  ) {
-    return;
-  }
+  assertNonNullable(renderer);
+  assertNonNullable(stage);
+  assertNonNullable(originalVolumeLine);
+  assertNonNullable(editedVolumeLine);
+  assertNonNullable(viewportWidth.value);
+  assertNonNullable(viewportHeight.value);
 
   const viewInfo = {
     viewportWidth: viewportWidth.value,
@@ -413,12 +407,12 @@ const refreshVolumeSegments = async () => {
     if (phrase.queryKey == undefined) {
       continue;
     }
-    const phraseQuery = store.state.phraseQueries.get(phrase.queryKey);
-    if (phraseQuery == undefined || phraseQuery.volume == undefined) {
-      continue;
-    }
+    const phraseQuery = getOrThrow(store.state.phraseQueries, phrase.queryKey);
+    assertNonNullable(phraseQuery.volume);
     if (phraseQuery.frameRate !== frameRate) {
-      continue;
+      throw new Error(
+        `Frame rate mismatch: expected ${frameRate}, got ${phraseQuery.frameRate}. queryKey: ${phrase.queryKey}`,
+      );
     }
 
     const startFrame = Math.round(phrase.startTime * frameRate);
@@ -690,9 +684,8 @@ onMounted(() => {
   requestId = window.requestAnimationFrame(callback);
 
   resizeObserver = new ResizeObserver(() => {
-    if (renderer == undefined || canvasContainer.value == undefined) {
-      return;
-    }
+    assertNonNullable(renderer);
+    assertNonNullable(canvasContainer.value);
     const width = canvasContainer.value.clientWidth;
     const height = canvasContainer.value.clientHeight;
     if (width > 0 && height > 0) {
@@ -709,7 +702,7 @@ onMounted(() => {
   window.addEventListener("pointercancel", onWindowPointerCancel);
 });
 
-onBeforeUnmount(() => {
+onUnmounted(() => {
   if (requestId != undefined) {
     window.cancelAnimationFrame(requestId);
   }
