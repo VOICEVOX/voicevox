@@ -19,6 +19,7 @@
 import {
   computed,
   inject,
+  onBeforeUnmount,
   onMounted,
   onUnmounted,
   ref,
