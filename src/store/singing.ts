@@ -3766,7 +3766,7 @@ export const singingCommandStore = transformCommandStore(
         const newPhonemeTimingEditData = new Map<NoteId, PhonemeTimingEdit[]>();
         for (const [oldNoteId, edits] of sourceTrack.phonemeTimingEditData) {
           const newNoteId = oldNoteIdToNewNoteId.get(oldNoteId);
-          if (newNoteId) {
+          if (newNoteId != undefined) {
             newPhonemeTimingEditData.set(newNoteId, edits);
           }
         }
