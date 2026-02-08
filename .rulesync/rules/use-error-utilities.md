@@ -124,3 +124,21 @@ function processValue(value: string | null | undefined) {
     // ...
 }
 ```
+
+## getOrThrow
+
+`Map` からキーに対応する値を取得し、存在しない場合はエラーを投げる関数。
+`Map.get` + `undefined` チェックの代わりに `getOrThrow` を使うようにしてください。
+
+```ts
+// Bad
+const phraseQuery = store.state.phraseQueries.get(phrase.queryKey);
+if (phraseQuery == undefined) {
+  throw new Error("phraseQuery is undefined");
+}
+
+// Good
+import { getOrThrow } from "@/helpers/mapHelper";
+
+const phraseQuery = getOrThrow(store.state.phraseQueries, phrase.queryKey);
+```
