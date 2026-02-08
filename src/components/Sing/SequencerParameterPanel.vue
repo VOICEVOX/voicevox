@@ -10,6 +10,9 @@
       <SequencerVolumeEditor
         v-if="editTarget === 'VOLUME'"
         :offsetX="props.offsetX"
+        @update:needsAutoScroll="
+          (value) => emit('update:needsAutoScroll', value)
+        "
       />
     </div>
   </div>
@@ -25,6 +28,10 @@ import SequencerPhonemeTimingEditor from "@/components/Sing/SequencerPhonemeTimi
 
 const props = defineProps<{
   offsetX: number;
+}>();
+
+const emit = defineEmits<{
+  "update:needsAutoScroll": [value: boolean];
 }>();
 
 const store = useStore();

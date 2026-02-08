@@ -216,20 +216,24 @@
       </div>
     </template>
     <template #after>
-      <SequencerParameterPanel v-if="isParameterPanelOpen" :offsetX="scrollX" />
+      <SequencerParameterPanel
+        v-if="isParameterPanelOpen"
+        :offsetX="scrollX"
+        @update:needsAutoScroll="
+          (value) => (parameterPanelNeedsAutoScroll = value)
+        "
+      />
     </template>
   </QSplitter>
 </template>
 
 <script lang="ts">
-import { ComputedRef, Ref } from "vue";
+import { ComputedRef } from "vue";
 import type { InjectionKey } from "vue";
 
 export const numMeasuresInjectionKey: InjectionKey<{
   numMeasures: ComputedRef<number>;
 }> = Symbol("sequencerNumMeasures");
-export const sequencerBodyInjectionKey: InjectionKey<Ref<HTMLElement | null>> =
-  Symbol("sequencerBody");
 </script>
 
 <script setup lang="ts">
@@ -483,7 +487,7 @@ const setParameterPanelHeight = async (height: number) => {
 
 const scrollBarWidth = ref(12);
 const sequencerBody = ref<HTMLElement | null>(null);
-provide(sequencerBodyInjectionKey, sequencerBody);
+const parameterPanelNeedsAutoScroll = ref(false);
 
 // ステートマシン
 const {
@@ -505,7 +509,15 @@ const previewNoteIds = computed(() => {
 });
 
 // マウスカーソルがシーケンサーの端に行ったときの自動スクロール
-useAutoScrollOnEdge(sequencerBody, enableAutoScrollOnEdge);
+const combinedEnableAutoScrollOnEdge = computed(
+  () => enableAutoScrollOnEdge.value || parameterPanelNeedsAutoScroll.value,
+);
+const autoScrollDirection = computed<"x" | "xy">(() =>
+  parameterPanelNeedsAutoScroll.value ? "x" : "xy",
+);
+useAutoScrollOnEdge(sequencerBody, combinedEnableAutoScrollOnEdge, {
+  scrollDirection: autoScrollDirection,
+});
 
 // 歌詞を編集中のノート
 const editingLyricNote = computed(() => {
