@@ -3782,7 +3782,7 @@ export const singingCommandStore = transformCommandStore(
         void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
         void actions.RENDER();
 
-        await actions.SET_SELECTED_TRACK({ trackId: newTrackId });
+        void actions.SET_SELECTED_TRACK({ trackId: newTrackId });
       },
     },
 
