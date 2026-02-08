@@ -1,8 +1,8 @@
-import { ComputedRef, Ref } from "vue";
+import type { ComputedRef, Ref } from "vue";
 import type { Store } from "@/store";
-import { StateDefinitions } from "@/sing/stateMachine";
+import type { StateDefinitions } from "@/sing/stateMachine";
 import type { CursorState } from "@/sing/viewHelper";
-import { TrackId } from "@/type/preload";
+import type { TrackId } from "@/type/preload";
 import type { Tempo } from "@/domain/project/type";
 
 export type PositionOnParameterPanel = {
@@ -12,15 +12,15 @@ export type PositionOnParameterPanel = {
 
 export type ParameterPanelInput =
   | {
-      readonly type: "mouseEvent";
+      readonly type: "pointerEvent";
       readonly targetArea: "Editor";
-      readonly mouseEvent: MouseEvent;
+      readonly pointerEvent: PointerEvent;
       readonly position: PositionOnParameterPanel;
     }
   | {
-      readonly type: "mouseEvent";
+      readonly type: "pointerEvent";
       readonly targetArea: "Window";
-      readonly mouseEvent: MouseEvent;
+      readonly pointerEvent: PointerEvent;
       readonly position: PositionOnParameterPanel;
     };
 

@@ -1,6 +1,6 @@
 import { describe, test, expect } from "vitest";
 import { concatMenuBarData } from "@/components/Menu/MenuBar/menuBarData";
-import { MenuItemData } from "@/components/Menu/type";
+import type { MenuItemData } from "@/components/Menu/type";
 
 const menuItemData1: MenuItemData = {
   type: "button",

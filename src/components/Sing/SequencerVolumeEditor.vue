@@ -3,10 +3,7 @@
     ref="canvasContainer"
     class="volume-editor"
     :class="cursorClass"
-    @mousedown="onSurfaceMouseDown"
-    @mousemove="onSurfaceMouseMove"
-    @mouseleave="onSurfaceMouseLeave"
-    @contextmenu.prevent="onContextMenu"
+    @pointerdown="onSurfacePointerDown"
   >
     <canvas ref="canvas" class="volume-editor-canvas"></canvas>
     <SequencerVolumeToolPalette
@@ -22,29 +19,32 @@
 import {
   computed,
   inject,
-  onBeforeUnmount,
   onMounted,
+  onUnmounted,
   ref,
   toRef,
   watch,
 } from "vue";
 import * as PIXI from "pixi.js";
-import AsyncLock from "async-lock";
-import ContextMenu, {
-  ContextMenuItemData,
-} from "@/components/Menu/ContextMenu/Container.vue";
+import ContextMenu from "@/components/Menu/ContextMenu/Container.vue";
+import type { ContextMenuItemData } from "@/components/Menu/ContextMenu/Container.vue";
 import { useStore } from "@/store";
 import type { VolumeEditTool } from "@/store/type";
 import { useParameterPanelStateMachine } from "@/composables/useParameterPanelStateMachine";
 import { useMounted } from "@/composables/useMounted";
+import { createLogger } from "@/helpers/log";
+import { getOrThrow } from "@/helpers/mapHelper";
+import { Mutex } from "@/helpers/mutex";
 import { VALUE_INDICATING_NO_DATA } from "@/sing/domain";
 import { decibelToLinear, linearToDecibel } from "@/sing/audio";
 import { secondToTick, tickToSecond } from "@/sing/music";
 import { getTotalTicks } from "@/sing/rulerHelper";
 import { clamp } from "@/sing/utility";
 import { baseXToTick, tickToBaseX } from "@/sing/viewHelper";
+import { assertNonNullable } from "@/type/utility";
 import { numMeasuresInjectionKey } from "@/components/Sing/ScoreSequencer.vue";
-import { VolumeLine, VolumeSegment } from "@/sing/graphics/volumeLine";
+import { VolumeLine } from "@/sing/graphics/volumeLine";
+import type { VolumeSegment } from "@/sing/graphics/volumeLine";
 import { Color } from "@/sing/graphics/lineStrip";
 import { useSequencerGrid } from "@/composables/useSequencerGridPattern";
 import SequencerVolumeToolPalette from "@/components/Sing/SequencerVolumeToolPalette.vue";
@@ -65,6 +65,7 @@ const MIN_DISPLAY_DB = -36.5;
 const MAX_DISPLAY_DB = -0.5;
 const KEY_COLUMN_WIDTH_PX = 48; // ScoreSequencerの左側キー領域と合わせる
 
+const { warn } = createLogger("SequencerVolumeEditor");
 const store = useStore();
 const {
   volumePreviewEdit,
@@ -203,7 +204,6 @@ const canvasContainer = ref<HTMLElement | null>(null);
 const canvas = ref<HTMLCanvasElement | null>(null);
 const viewportWidth = ref<number>();
 const viewportHeight = ref<number>();
-const isDragging = ref(false);
 
 let renderer: PIXI.Renderer | undefined;
 let stage: PIXI.Container | undefined;
@@ -282,13 +282,9 @@ const buildSegments = (framewiseData: number[], frameRate: number) => {
 };
 
 const updateGrid = () => {
-  if (
-    gridGraphics == undefined ||
-    viewportHeight.value == undefined ||
-    viewportWidth.value == undefined
-  ) {
-    return;
-  }
+  assertNonNullable(gridGraphics);
+  assertNonNullable(viewportHeight.value);
+  assertNonNullable(viewportWidth.value);
   gridGraphics.clear();
   const height = viewportHeight.value;
   const width = viewportWidth.value;
@@ -327,16 +323,12 @@ const updateGrid = () => {
 };
 
 const render = () => {
-  if (
-    renderer == undefined ||
-    stage == undefined ||
-    originalVolumeLine == undefined ||
-    editedVolumeLine == undefined ||
-    viewportWidth.value == undefined ||
-    viewportHeight.value == undefined
-  ) {
-    return;
-  }
+  assertNonNullable(renderer);
+  assertNonNullable(stage);
+  assertNonNullable(originalVolumeLine);
+  assertNonNullable(editedVolumeLine);
+  assertNonNullable(viewportWidth.value);
+  assertNonNullable(viewportHeight.value);
 
   const viewInfo = {
     viewportWidth: viewportWidth.value,
@@ -385,7 +377,7 @@ const render = () => {
   renderer.render(stage);
 };
 
-const asyncLock = new AsyncLock({ maxPending: 1 });
+const refreshVolumeSegmentsLock = new Mutex({ maxPending: 1 });
 
 const refreshVolumeSegments = async () => {
   const frameRate = editorFrameRate.value;
@@ -417,12 +409,12 @@ const refreshVolumeSegments = async () => {
     if (phrase.queryKey == undefined) {
       continue;
     }
-    const phraseQuery = store.state.phraseQueries.get(phrase.queryKey);
-    if (phraseQuery == undefined || phraseQuery.volume == undefined) {
-      continue;
-    }
+    const phraseQuery = getOrThrow(store.state.phraseQueries, phrase.queryKey);
+    assertNonNullable(phraseQuery.volume);
     if (phraseQuery.frameRate !== frameRate) {
-      continue;
+      throw new Error(
+        `Frame rate mismatch: expected ${frameRate}, got ${phraseQuery.frameRate}. queryKey: ${phrase.queryKey}`,
+      );
     }
 
     const startFrame = Math.round(phrase.startTime * frameRate);
@@ -528,27 +520,27 @@ const refreshVolumeSegments = async () => {
 };
 
 const dispatchVolumeEditorEvent = (
-  mouseEvent: MouseEvent,
+  pointerEvent: PointerEvent,
   targetArea: "Editor" | "Window",
 ) => {
-  const position = computeViewportPosition(mouseEvent);
+  const position = computeViewportPosition(pointerEvent);
   volumeStateMachineProcess({
-    type: "mouseEvent",
+    type: "pointerEvent",
     targetArea,
-    mouseEvent,
+    pointerEvent,
     position,
   });
 };
 
-const computeViewportPosition = (mouseEvent: MouseEvent) => {
+const computeViewportPosition = (pointerEvent: PointerEvent) => {
   const viewport = canvasContainer.value;
   if (viewport == null) {
     throw new Error("volume editor viewport element is null.");
   }
 
   const rect = viewport.getBoundingClientRect();
-  const localX = mouseEvent.clientX - rect.left;
-  const localY = mouseEvent.clientY - rect.top;
+  const localX = pointerEvent.clientX - rect.left;
+  const localY = pointerEvent.clientY - rect.top;
   const width = rect.width || 1;
   const height = rect.height || 1;
   const clampedX = clamp(localX, 0, width);
@@ -570,7 +562,7 @@ const computeViewportPosition = (mouseEvent: MouseEvent) => {
   };
 };
 
-const onSurfaceMouseDown = (event: MouseEvent) => {
+const onSurfacePointerDown = (event: PointerEvent) => {
   if (event.button !== 0) {
     return;
   }
@@ -579,45 +571,19 @@ const onSurfaceMouseDown = (event: MouseEvent) => {
       editTarget: "VOLUME",
     });
   }
-  isDragging.value = true;
-  dispatchVolumeEditorEvent(event, "Editor");
-  window.addEventListener("mousemove", onWindowMouseMove);
-  window.addEventListener("mouseup", onWindowMouseUp);
-};
-
-const onSurfaceMouseMove = (event: MouseEvent) => {
-  if (!isDragging.value) {
-    return;
-  }
   dispatchVolumeEditorEvent(event, "Editor");
 };
 
-const onSurfaceMouseLeave = (event: MouseEvent) => {
-  if (!isDragging.value) {
-    return;
-  }
+const onWindowPointerMove = (event: PointerEvent) => {
   dispatchVolumeEditorEvent(event, "Window");
 };
 
-const onWindowMouseMove = (event: MouseEvent) => {
-  if (!isDragging.value) {
-    return;
-  }
+const onWindowPointerUp = (event: PointerEvent) => {
   dispatchVolumeEditorEvent(event, "Window");
 };
 
-const onWindowMouseUp = (event: MouseEvent) => {
-  if (!isDragging.value) {
-    return;
-  }
+const onWindowPointerCancel = (event: PointerEvent) => {
   dispatchVolumeEditorEvent(event, "Window");
-  isDragging.value = false;
-  window.removeEventListener("mousemove", onWindowMouseMove);
-  window.removeEventListener("mouseup", onWindowMouseUp);
-};
-
-const onContextMenu = (event: MouseEvent) => {
-  contextMenu.value?.show(event);
 };
 
 watch(
@@ -649,18 +615,15 @@ watch(
     numMeasures,
     editorFrameRate,
   ],
-  ([isMounted]) => {
-    asyncLock.acquire(
-      "volume",
-      async () => {
-        if (isMounted) {
-          await refreshVolumeSegments();
-        }
-      },
-      () => {
-        /* ignore */
-      },
-    );
+  async ([isMounted]) => {
+    try {
+      await using _lock = await refreshVolumeSegmentsLock.acquire();
+      if (isMounted) {
+        await refreshVolumeSegments();
+      }
+    } catch (e) {
+      warn("Failed to refresh volume segments.", e);
+    }
   },
 );
 
@@ -720,9 +683,8 @@ onMounted(() => {
   requestId = window.requestAnimationFrame(callback);
 
   resizeObserver = new ResizeObserver(() => {
-    if (renderer == undefined || canvasContainer.value == undefined) {
-      return;
-    }
+    assertNonNullable(renderer);
+    assertNonNullable(canvasContainer.value);
     const width = canvasContainer.value.clientWidth;
     const height = canvasContainer.value.clientHeight;
     if (width > 0 && height > 0) {
@@ -733,9 +695,13 @@ onMounted(() => {
     }
   });
   resizeObserver.observe(containerEl);
+
+  window.addEventListener("pointermove", onWindowPointerMove);
+  window.addEventListener("pointerup", onWindowPointerUp);
+  window.addEventListener("pointercancel", onWindowPointerCancel);
 });
 
-onBeforeUnmount(() => {
+onUnmounted(() => {
   if (requestId != undefined) {
     window.cancelAnimationFrame(requestId);
   }
@@ -745,8 +711,9 @@ onBeforeUnmount(() => {
   stage?.destroy();
   renderer?.destroy(true);
   resizeObserver?.disconnect();
-  window.removeEventListener("mousemove", onWindowMouseMove);
-  window.removeEventListener("mouseup", onWindowMouseUp);
+  window.removeEventListener("pointermove", onWindowPointerMove);
+  window.removeEventListener("pointerup", onWindowPointerUp);
+  window.removeEventListener("pointercancel", onWindowPointerCancel);
 });
 </script>
 

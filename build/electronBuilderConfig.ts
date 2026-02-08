@@ -1,7 +1,7 @@
 import path from "node:path";
 import { readdirSync, existsSync, rmSync } from "node:fs";
-import { config } from "dotenv";
-import { Configuration as ElectronBuilderConfiguration } from "electron-builder";
+import dotenv from "dotenv";
+import type { Configuration as ElectronBuilderConfiguration } from "electron-builder";
 import { z } from "zod";
 import afterAllArtifactBuild from "./afterAllArtifactBuild";
 import afterPack from "./afterPack";
@@ -9,7 +9,7 @@ import artifactBuildCompleted from "./artifactBuildCompleted";
 
 const rootDir = path.join(import.meta.dirname, "..");
 const dotenvPath = path.join(rootDir, ".env.production");
-config({ path: dotenvPath });
+dotenv.config({ path: dotenvPath, quiet: true });
 
 const VOICEVOX_ENGINE_DIR =
   process.env.VOICEVOX_ENGINE_DIR ?? "../voicevox_engine/dist/run/";

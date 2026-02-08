@@ -1,12 +1,12 @@
-import {
+import type {
   ParameterPanelStateDefinitions,
   ParameterPanelInput,
   ParameterPanelContext,
   PositionOnParameterPanel,
   ParameterPanelIdleStateId,
 } from "../common";
-import { SetNextState, State } from "@/sing/stateMachine";
-import { TrackId } from "@/type/preload";
+import type { SetNextState, State } from "@/sing/stateMachine";
+import type { TrackId } from "@/type/preload";
 import { createArray } from "@/sing/utility";
 import { getButton } from "@/sing/viewHelper";
 
@@ -95,21 +95,21 @@ export class DrawVolumeState
       throw new Error("previewVolumeEdit.type is not draw.");
     }
 
-    if (input.type != "mouseEvent") {
+    if (input.type != "pointerEvent") {
       return;
     }
 
-    const { mouseEvent, position, targetArea } = input;
-    const mouseButton = getButton(mouseEvent);
+    const { pointerEvent, position, targetArea } = input;
+    const mouseButton = getButton(pointerEvent);
 
     // 対象がWindow
     if (targetArea === "Window") {
-      if (mouseEvent.type === "mousemove") {
+      if (pointerEvent.type === "pointermove") {
         this.currentCursorPos = position;
         this.innerContext.executePreviewProcess = true;
       } else if (
-        mouseEvent.type === "mouseup" &&
-        mouseButton === "LEFT_BUTTON"
+        (pointerEvent.type === "pointerup" && mouseButton === "LEFT_BUTTON") ||
+        pointerEvent.type === "pointercancel"
       ) {
         // NOTE: ピッチと同様
         // カーソルを動かさずにマウスのボタンを離したときに1フレームのみの変更になり、
@@ -122,7 +122,7 @@ export class DrawVolumeState
 
     // 対象がEditor
     if (targetArea === "Editor") {
-      if (mouseEvent.type === "mousemove") {
+      if (pointerEvent.type === "pointermove") {
         this.currentCursorPos = position;
         this.innerContext.executePreviewProcess = true;
       }
