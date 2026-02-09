@@ -10,14 +10,11 @@ import type { TrackId } from "@/type/preload";
 import { createArray } from "@/sing/utility";
 import { getButton } from "@/sing/viewHelper";
 
-export class DrawVolumeState
-  implements
-    State<
-      ParameterPanelStateDefinitions,
-      ParameterPanelInput,
-      ParameterPanelContext
-    >
-{
+export class DrawVolumeState implements State<
+  ParameterPanelStateDefinitions,
+  ParameterPanelInput,
+  ParameterPanelContext
+> {
   readonly id = "drawVolume";
 
   private readonly cursorPosAtStart: PositionOnParameterPanel;

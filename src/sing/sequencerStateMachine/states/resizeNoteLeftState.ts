@@ -14,9 +14,11 @@ import {
 } from "@/sing/sequencerStateMachine/common";
 import { clamp } from "@/sing/utility";
 
-export class ResizeNoteLeftState
-  implements State<SequencerStateDefinitions, Input, Context>
-{
+export class ResizeNoteLeftState implements State<
+  SequencerStateDefinitions,
+  Input,
+  Context
+> {
   readonly id = "resizeNoteLeft";
 
   private readonly cursorPosAtStart: PositionOnSequencer;

@@ -123,7 +123,7 @@
     </div>
     <!-- settings for edit controls -->
     <div class="sing-controls">
-      <EditTargetSwicher :editTarget :changeEditTarget />
+      <EditTargetSwitcher :editTarget :changeEditTarget />
       <QBtn
         flat
         dense
@@ -167,7 +167,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import PlayheadPositionDisplay from "../PlayheadPositionDisplay.vue";
-import EditTargetSwicher from "./EditTargetSwicher.vue";
+import EditTargetSwitcher from "./EditTargetSwitcher.vue";
 import { useStore } from "@/store";
 
 import {
