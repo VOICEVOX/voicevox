@@ -455,6 +455,13 @@ const syncPhraseSequences = (
     onSequenceDeleted: (phraseKey: PhraseKey) => void;
   },
 ) => {
+  if (audioContext == undefined) {
+    logger.info(
+      "AudioContext is undefined: skipping phrase-sequence synchronization.",
+    );
+    return;
+  }
+
   // 不要になったシーケンスを削除する
   deleteUnnecessarySequences(
     phrases,
@@ -2196,11 +2203,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
    */
   RENDER: {
     async action({ state, getters, mutations, actions }) {
-      if (audioContext == undefined) {
-        logger.info("AudioContext is undefined: skipping render.");
-        return;
-      }
-
       /**
        * レンダリング中に変更される可能性のあるデータのコピーを作成する。
        */
