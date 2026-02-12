@@ -21,39 +21,53 @@ test.beforeEach(async () => {
   });
 });
 
-test("エンジンをインストールできる", async () => {
+test("起動できる", async () => {
   const app = await electron.launch({
     args: ["--no-sandbox", "."], // NOTE: --no-sandbox はUbuntu 24.04で動かすのに必要
     timeout: process.env.CI ? 0 : 60000,
   });
 
-  // ログを表示
-  app.on("console", (msg) => {
-    console.log(msg.text());
+  const page = await test.step("アプリを起動する", async () => {
+    // ログを表示
+    app.on("console", (msg) => {
+      console.log(msg.text());
+    });
+
+    const page = await app.firstWindow({
+      timeout: process.env.CI ? 90000 : 60000,
+    });
+    await page.waitForSelector("text=エンジンのセットアップ", {
+      timeout: 60000,
+    });
+
+    const install = page.getByText(/インストール（.+?）/);
+    await install.waitFor({
+      timeout: 60000,
+    });
+    await install.click();
+
+    const reinstall = page.getByText(/再インストール（.+?）/);
+    await reinstall.waitFor({
+      timeout: 60000,
+    });
+
+    return page;
   });
 
-  const page = await app.firstWindow({
-    timeout: process.env.CI ? 90000 : 60000,
-  });
-  await page.waitForSelector("text=エンジンのセットアップ", {
-    timeout: 60000,
-  });
+  await test.step("エディタを起動する", async () => {
+    const launchEditor = page.getByText(/エディタを起動/);
+    await expect(launchEditor).toBeEnabled({
+      timeout: 60000,
+    });
 
-  const install = page.getByText(/インストール（.+?）/);
-  await install.waitFor({
-    timeout: 60000,
-  });
-  await install.click();
+    await launchEditor.click();
 
-  const reinstall = page.getByText(/再インストール（.+?）/);
-  await reinstall.waitFor({
-    timeout: 60000,
+    // エディタウィンドウが開くのを待つ
+    const editorPage = await app.waitForEvent("window", {
+      timeout: process.env.CI ? 90000 : 60000,
+    });
+    await editorPage.waitForSelector("text=利用規約に関するお知らせ", {
+      timeout: 60000,
+    });
   });
-
-  const launchEditor = page.getByText(/エディタを起動/);
-  await expect(launchEditor).toBeEnabled({
-    timeout: 60000,
-  });
-
-  await app.close();
 });
