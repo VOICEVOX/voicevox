@@ -1,5 +1,5 @@
 import { createApp } from "vue";
-import { Quasar, Dialog, Loading, Notify } from "quasar";
+import { Quasar } from "quasar";
 import iconSet from "quasar/icon-set/material-icons";
 import App from "./components/App.vue";
 import { markdownItPlugin } from "@/plugins/markdownItPlugin";
@@ -24,11 +24,6 @@ createApp(App)
       },
     },
     iconSet,
-    plugins: {
-      Dialog,
-      Loading,
-      Notify,
-    },
   })
   .use(markdownItPlugin)
   .mount("#app");
