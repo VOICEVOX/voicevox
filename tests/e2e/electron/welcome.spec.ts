@@ -27,7 +27,7 @@ test("起動できる", async () => {
     timeout: process.env.CI ? 0 : 60000,
   });
 
-  const page = await test.step("アプリを起動する", async () => {
+  const page = await test.step("エンジンをインストールする", async () => {
     // ログを表示
     app.on("console", (msg) => {
       console.log(msg.text());
