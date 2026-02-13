@@ -93,11 +93,11 @@ import EngineCard from "./EngineCard.vue";
 import ErrorBoundary from "@/components/ErrorBoundary.vue";
 import type {
   EnginePackageBase,
-  EnginePackageLocalInfo,
-  EnginePackageRemoteInfo,
+  EnginePackageCurrentInfo,
+  EnginePackageLatestInfo,
 } from "@/backend/electron/engineAndVvppController";
 import type { EngineId } from "@/type/preload";
-import type { RuntimeTarget } from "@/domain/defaultEngine/latetDefaultEngine";
+import type { RuntimeTarget } from "@/domain/defaultEngine/latestDefaultEngine";
 import { setThemeToCss } from "@/domain/dom";
 import { themes } from "@/domain/theme";
 import BaseButton from "@/components/Base/BaseButton.vue";
@@ -108,12 +108,12 @@ import { showErrorDialog } from "@/components/Dialog/Dialog";
 
 type DisplayEngineInfo = {
   package: EnginePackageBase;
-  localInfo: EnginePackageLocalInfo;
-  remoteInfo: EnginePackageRemoteInfo | undefined;
+  localInfo: EnginePackageCurrentInfo;
+  remoteInfo: EnginePackageLatestInfo | undefined;
 };
 
-const localEngineInfos = ref<EnginePackageLocalInfo[] | undefined>(undefined);
-const remoteEngineInfos = ref<EnginePackageRemoteInfo[] | undefined>(undefined);
+const localEngineInfos = ref<EnginePackageCurrentInfo[] | undefined>(undefined);
+const remoteEngineInfos = ref<EnginePackageLatestInfo[] | undefined>(undefined);
 const loadingEngineInfosState = ref<
   "uninitialized" | "loadingLocal" | "fetchingLatest" | "fetched"
 >("uninitialized");
