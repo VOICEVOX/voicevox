@@ -11,7 +11,7 @@ import { useStore } from "@/store";
 import { useMounted } from "@/composables/useMounted";
 import { secondToTick } from "@/sing/music";
 import { tickToBaseX, type ViewportInfo } from "@/sing/viewHelper";
-import { getNext, getPrev } from "@/sing/utility";
+import { getNext } from "@/sing/utility";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { UnreachableError } from "@/type/utility";
 import {
@@ -146,25 +146,11 @@ const render = () => {
   }
   lastIsDark = isDark.value;
 
-  // カリングとプレビュー処理を行い、描画用の情報を生成
+  // プレビュー処理を行い、描画用の情報を生成
   const phonemeInfos: PhonemeInfoForRender[] = [];
   for (const phonemeTimingInfo of rawPhonemeTimingInfos) {
     // noteIdがundefinedのもの（先頭のpauなど）はスキップ（描画しない）
     if (phonemeTimingInfo.noteId == undefined) {
-      continue;
-    }
-
-    // カリング：画面外の音素はスキップ
-    const phonemeStartTicks = secondToTick(
-      phonemeTimingInfo.editedStartTimeSeconds,
-      rawTempos,
-      tpqn.value,
-    );
-    const phonemeStartBaseX = tickToBaseX(phonemeStartTicks, tpqn.value);
-    const phonemeStartX = Math.round(
-      phonemeStartBaseX * viewportInfo.scaleX - viewportInfo.offsetX,
-    );
-    if (phonemeStartX < -30 || phonemeStartX > canvasWidth + 30) {
       continue;
     }
 
@@ -218,15 +204,8 @@ const render = () => {
   // 削除すると元の位置（originalStartTimeSeconds）に戻るが、
   // 他の音素の編集位置と順序が入れ替わる可能性があるため、
   // 表示上は前後の音素との順序を維持するよう制限する。
-  //
-  // 処理順序:
-  // 1. 逆順ループ: 各削除プレビュー音素が次の音素より後ろにならないよう制限
-  // 2. 順方向ループ: 各削除プレビュー音素が前の音素より前にならないよう制限
   for (let i = phonemeInfos.length - 1; i >= 0; i--) {
     const phonemeInfo = phonemeInfos[i];
-    if (!phonemeInfo.isErasePreview) {
-      continue;
-    }
     const nextPhonemeInfo = getNext(phonemeInfos, i);
     if (nextPhonemeInfo != undefined) {
       const maxStartTime = nextPhonemeInfo.startTime - oneFrameSeconds;
@@ -235,22 +214,26 @@ const render = () => {
       }
     }
   }
-  for (let i = 0; i < phonemeInfos.length; i++) {
-    const phonemeInfo = phonemeInfos[i];
-    if (!phonemeInfo.isErasePreview) {
-      continue;
-    }
-    const prevPhonemeInfo = getPrev(phonemeInfos, i);
-    if (prevPhonemeInfo != undefined) {
-      const minStartTime = prevPhonemeInfo.startTime + oneFrameSeconds;
-      if (phonemeInfo.startTime < minStartTime) {
-        phonemeInfo.startTime = minStartTime;
-      }
+
+  // カリング：画面外の音素を除外
+  const culledPhonemeInfos: PhonemeInfoForRender[] = [];
+  for (const phonemeInfo of phonemeInfos) {
+    const phonemeStartTicks = secondToTick(
+      phonemeInfo.startTime,
+      rawTempos,
+      tpqn.value,
+    );
+    const phonemeStartBaseX = tickToBaseX(phonemeStartTicks, tpqn.value);
+    const phonemeStartX = Math.round(
+      phonemeStartBaseX * viewportInfo.scaleX - viewportInfo.offsetX,
+    );
+    if (phonemeStartX >= -30 && phonemeStartX <= canvasWidth + 30) {
+      culledPhonemeInfos.push(phonemeInfo);
     }
   }
 
   // 線のGraphicsが足りなければ追加
-  while (graphics.length < phonemeInfos.length) {
+  while (graphics.length < culledPhonemeInfos.length) {
     const newGraphic = new PIXI.Graphics();
     stage.addChild(newGraphic);
     graphics.push(newGraphic);
@@ -258,7 +241,7 @@ const render = () => {
 
   // 必要なテキスト（音素文字ごと）の数をカウント
   const needTextCountMap = new Map<string, number>();
-  for (const phonemeInfo of phonemeInfos) {
+  for (const phonemeInfo of culledPhonemeInfos) {
     if (phonemeInfo.phoneme === "pau") {
       continue;
     }
@@ -293,7 +276,7 @@ const render = () => {
 
   // 先に全てのX座標を計算しておく（次の音素のX座標を知る必要があるため）
   const phonemeStartXArray: number[] = [];
-  for (const phonemeInfo of phonemeInfos) {
+  for (const phonemeInfo of culledPhonemeInfos) {
     const phonemeStartTicks = secondToTick(
       phonemeInfo.startTime,
       rawTempos,
@@ -313,8 +296,8 @@ const render = () => {
   }
 
   // 更新
-  for (let i = 0; i < phonemeInfos.length; i++) {
-    const phonemeInfo = phonemeInfos[i];
+  for (let i = 0; i < culledPhonemeInfos.length; i++) {
+    const phonemeInfo = culledPhonemeInfos[i];
     const phonemeStartX = phonemeStartXArray[i];
     const nextPhonemeStartX = getNext(phonemeStartXArray, i);
 
@@ -380,7 +363,7 @@ const render = () => {
   }
 
   // 余ったGraphicsを非表示
-  for (let i = phonemeInfos.length; i < graphics.length; i++) {
+  for (let i = culledPhonemeInfos.length; i < graphics.length; i++) {
     graphics[i].renderable = false;
   }
   // 余ったTextContainerを非表示
