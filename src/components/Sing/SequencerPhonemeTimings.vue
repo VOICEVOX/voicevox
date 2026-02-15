@@ -19,11 +19,11 @@ import {
   type PhonemeTimingInfo,
 } from "@/sing/phonemeTimingEditorStateMachine/common";
 
-type PhonemeInfoForRender = {
+type PhonemeDisplayState = "default" | "edited" | "movePreview";
+
+type PhonemeDisplayInfo = {
   readonly phoneme: string;
-  readonly isEdited: boolean;
-  readonly isMovePreview: boolean;
-  readonly isErasePreview: boolean;
+  readonly displayState: PhonemeDisplayState;
   startTime: number;
 };
 
@@ -41,27 +41,20 @@ const previewPhonemeTiming = computed(() => props.previewPhonemeTiming);
 const phonemeTimingInfos = computed(() => props.phonemeTimingInfos);
 
 // 音素タイミング線のスタイル定義
-const phonemeTimingLineStyles: {
-  light: {
-    default: { color: number; alpha: number; width: number };
-    edited: { color: number; alpha: number; width: number };
-    preview: { color: number; alpha: number; width: number };
-  };
-  dark: {
-    default: { color: number; alpha: number; width: number };
-    edited: { color: number; alpha: number; width: number };
-    preview: { color: number; alpha: number; width: number };
-  };
-} = {
+type PhonemeTimingLineStyle = { color: number; alpha: number; width: number };
+const phonemeTimingLineStyles: Record<
+  "light" | "dark",
+  Record<PhonemeDisplayState, PhonemeTimingLineStyle>
+> = {
   light: {
     default: { color: 0x8bc796, alpha: 1, width: 1 },
     edited: { color: 0x00a73f, alpha: 1, width: 2 },
-    preview: { color: 0x3d7eff, alpha: 1, width: 2 },
+    movePreview: { color: 0x3d7eff, alpha: 1, width: 2 },
   },
   dark: {
     default: { color: 0x82b38b, alpha: 1, width: 1 },
     edited: { color: 0x9ec9a6, alpha: 1, width: 2 },
-    preview: { color: 0x6fa8ff, alpha: 1, width: 2 },
+    movePreview: { color: 0x6fa8ff, alpha: 1, width: 2 },
   },
 };
 
@@ -146,8 +139,8 @@ const render = () => {
   }
   lastIsDark = isDark.value;
 
-  // プレビュー処理を行い、描画用の情報を生成
-  const phonemeInfos: PhonemeInfoForRender[] = [];
+  // 描画用の情報を生成
+  const phonemeDisplayInfos: PhonemeDisplayInfo[] = [];
   for (const phonemeTimingInfo of rawPhonemeTimingInfos) {
     // noteIdがundefinedのもの（先頭のpauなど）はスキップ（描画しない）
     if (phonemeTimingInfo.noteId == undefined) {
@@ -191,35 +184,39 @@ const render = () => {
           edit.phonemeIndexInNote === phonemeTimingInfo.phonemeIndexInNote,
       ) ?? false;
 
-    phonemeInfos.push({
+    let displayState: PhonemeDisplayState = "default";
+    if (isMovePreview) {
+      displayState = "movePreview";
+    } else if (hasExistingEdit && !isErasePreview) {
+      displayState = "edited";
+    }
+
+    phonemeDisplayInfos.push({
       phoneme: phonemeTimingInfo.phoneme,
-      isEdited: hasExistingEdit && !isMovePreview && !isErasePreview,
-      isMovePreview,
-      isErasePreview,
+      displayState,
       startTime,
     });
   }
 
-  // 削除プレビュー時の順序入れ替わり防止
-  // 削除すると元の位置（originalStartTimeSeconds）に戻るが、
-  // 他の音素の編集位置と順序が入れ替わる可能性があるため、
+  // 音素の順序入れ替わり防止
+  // プレビュー等で音素の位置が変わると前後の音素と順序が入れ替わる可能性があるため、
   // 表示上は前後の音素との順序を維持するよう制限する。
-  for (let i = phonemeInfos.length - 1; i >= 0; i--) {
-    const phonemeInfo = phonemeInfos[i];
-    const nextPhonemeInfo = getNext(phonemeInfos, i);
-    if (nextPhonemeInfo != undefined) {
-      const maxStartTime = nextPhonemeInfo.startTime - oneFrameSeconds;
-      if (phonemeInfo.startTime > maxStartTime) {
-        phonemeInfo.startTime = maxStartTime;
+  for (let i = phonemeDisplayInfos.length - 1; i >= 0; i--) {
+    const phonemeDisplayInfo = phonemeDisplayInfos[i];
+    const nextPhonemeDisplayInfo = getNext(phonemeDisplayInfos, i);
+    if (nextPhonemeDisplayInfo != undefined) {
+      const maxStartTime = nextPhonemeDisplayInfo.startTime - oneFrameSeconds;
+      if (phonemeDisplayInfo.startTime > maxStartTime) {
+        phonemeDisplayInfo.startTime = maxStartTime;
       }
     }
   }
 
   // カリング：画面外の音素を除外
-  const culledPhonemeInfos: PhonemeInfoForRender[] = [];
-  for (const phonemeInfo of phonemeInfos) {
+  const culledPhonemeDisplayInfos: PhonemeDisplayInfo[] = [];
+  for (const phonemeDisplayInfo of phonemeDisplayInfos) {
     const phonemeStartTicks = secondToTick(
-      phonemeInfo.startTime,
+      phonemeDisplayInfo.startTime,
       rawTempos,
       tpqn.value,
     );
@@ -228,12 +225,12 @@ const render = () => {
       phonemeStartBaseX * viewportInfo.scaleX - viewportInfo.offsetX,
     );
     if (phonemeStartX >= -30 && phonemeStartX <= canvasWidth + 30) {
-      culledPhonemeInfos.push(phonemeInfo);
+      culledPhonemeDisplayInfos.push(phonemeDisplayInfo);
     }
   }
 
   // 線のGraphicsが足りなければ追加
-  while (graphics.length < culledPhonemeInfos.length) {
+  while (graphics.length < culledPhonemeDisplayInfos.length) {
     const newGraphic = new PIXI.Graphics();
     stage.addChild(newGraphic);
     graphics.push(newGraphic);
@@ -241,12 +238,12 @@ const render = () => {
 
   // 必要なテキスト（音素文字ごと）の数をカウント
   const needTextCountMap = new Map<string, number>();
-  for (const phonemeInfo of culledPhonemeInfos) {
-    if (phonemeInfo.phoneme === "pau") {
+  for (const phonemeDisplayInfo of culledPhonemeDisplayInfos) {
+    if (phonemeDisplayInfo.phoneme === "pau") {
       continue;
     }
-    const currentCount = needTextCountMap.get(phonemeInfo.phoneme) ?? 0;
-    needTextCountMap.set(phonemeInfo.phoneme, currentCount + 1);
+    const currentCount = needTextCountMap.get(phonemeDisplayInfo.phoneme) ?? 0;
+    needTextCountMap.set(phonemeDisplayInfo.phoneme, currentCount + 1);
   }
 
   // テキストオブジェクトが足りなければ追加生成
@@ -276,9 +273,9 @@ const render = () => {
 
   // 先に全てのX座標を計算しておく（次の音素のX座標を知る必要があるため）
   const phonemeStartXArray: number[] = [];
-  for (const phonemeInfo of culledPhonemeInfos) {
+  for (const phonemeDisplayInfo of culledPhonemeDisplayInfos) {
     const phonemeStartTicks = secondToTick(
-      phonemeInfo.startTime,
+      phonemeDisplayInfo.startTime,
       rawTempos,
       tpqn.value,
     );
@@ -296,8 +293,8 @@ const render = () => {
   }
 
   // 更新
-  for (let i = 0; i < culledPhonemeInfos.length; i++) {
-    const phonemeInfo = culledPhonemeInfos[i];
+  for (let i = 0; i < culledPhonemeDisplayInfos.length; i++) {
+    const phonemeDisplayInfo = culledPhonemeDisplayInfos[i];
     const phonemeStartX = phonemeStartXArray[i];
     const nextPhonemeStartX = getNext(phonemeStartXArray, i);
 
@@ -309,18 +306,7 @@ const render = () => {
     const themeStyles = isDark.value
       ? phonemeTimingLineStyles.dark
       : phonemeTimingLineStyles.light;
-    // スタイルの決定
-    // 削除プレビュー: 未編集スタイル（削除したらこうなるを視覚的に表現）
-    // 移動プレビュー: プレビュースタイル
-    // 編集済み: 編集済みスタイル
-    // それ以外: デフォルトスタイル
-    const lineStyle = phonemeInfo.isErasePreview
-      ? themeStyles.default
-      : phonemeInfo.isMovePreview
-        ? themeStyles.preview
-        : phonemeInfo.isEdited
-          ? themeStyles.edited
-          : themeStyles.default;
+    const lineStyle = themeStyles[phonemeDisplayInfo.displayState];
 
     graphic.lineStyle(lineStyle.width, lineStyle.color, lineStyle.alpha);
 
@@ -330,9 +316,12 @@ const render = () => {
     graphic.lineTo(lineX, canvasHeight);
 
     // テキストの更新
-    if (phonemeInfo.phoneme !== "pau") {
+    if (phonemeDisplayInfo.phoneme !== "pau") {
       // プールから取得
-      const text = getOrThrow(unassignedTextsMap, phonemeInfo.phoneme).pop();
+      const text = getOrThrow(
+        unassignedTextsMap,
+        phonemeDisplayInfo.phoneme,
+      ).pop();
       if (text == undefined) {
         throw new UnreachableError("text is undefined.");
       }
@@ -363,7 +352,7 @@ const render = () => {
   }
 
   // 余ったGraphicsを非表示
-  for (let i = culledPhonemeInfos.length; i < graphics.length; i++) {
+  for (let i = culledPhonemeDisplayInfos.length; i < graphics.length; i++) {
     graphics[i].renderable = false;
   }
   // 余ったTextContainerを非表示
