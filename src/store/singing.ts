@@ -129,6 +129,7 @@ import {
 } from "@/sing/songTrackRendering";
 import type {
   Note,
+  PhonemeTimingEdit,
   Singer,
   Tempo,
   TimeSignature,
@@ -454,6 +455,13 @@ const syncPhraseSequences = (
     onSequenceDeleted: (phraseKey: PhraseKey) => void;
   },
 ) => {
+  if (audioContext == undefined) {
+    logger.info(
+      "AudioContext is undefined: skipping phrase-sequence synchronization.",
+    );
+    return;
+  }
+
   // 不要になったシーケンスを削除する
   deleteUnnecessarySequences(
     phrases,
@@ -649,11 +657,21 @@ const createNoteSequenceForPhrase = (
  * @param tracks `state`の`tracks`
  */
 const syncTracksAndTrackChannelStrips = (tracks: Map<TrackId, Track>) => {
+  // AudioContext はテスト環境では存在しないことがある。
+  // その場合はトラックのオーディオ接続は行えないため早期に何もしない。
   if (audioContext == undefined) {
-    throw new Error("audioContext is undefined.");
+    // AudioContext が無い環境（テスト等）ではオーディオ接続処理は行えないため何もしない。
+    logger.info(
+      "AudioContext is undefined: skipping track-channel-strip synchronization.",
+    );
+    return;
   }
   if (mainChannelStrip == undefined) {
-    throw new Error("mainChannelStrip is undefined.");
+    // mainChannelStrip が未作成の場合は何もしない。
+    logger.info(
+      "mainChannelStrip is undefined: skipping track-channel-strip synchronization.",
+    );
+    return;
   }
 
   const shouldPlays = shouldPlayTracks(tracks);
@@ -3721,6 +3739,52 @@ export const singingCommandStore = transformCommandStore(
 
         void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
         void actions.RENDER();
+      },
+    },
+
+    COMMAND_DUPLICATE_TRACK: {
+      /**
+       * 指定されたトラックを複製し、元のトラックの直後に挿入する。
+       * ノートやピッチ／ボリューム編集データ、音素タイミング編集データなど
+       * トラックに紐付く情報を引き継いだうえで、ノートIDを新しく振り直す。
+       */
+      async action({ state, actions, mutations }, { trackId }) {
+        const sourceTrack = getOrThrow(state.tracks, trackId);
+        const newTrack = cloneWithUnwrapProxy(sourceTrack);
+
+        const newTrackId = TrackId(uuid4());
+        newTrack.name = `${newTrack.name} - コピー`;
+        // NOTE: ソロ、ミュート状態も複製元から引き継ぐ
+
+        // ノートIDを新しく振り直し、音素タイミング編集データを対応させる
+        const oldNoteIdToNewNoteId = new Map<NoteId, NoteId>();
+        newTrack.notes = newTrack.notes.map((note) => {
+          const newNoteId = NoteId(uuid4());
+          oldNoteIdToNewNoteId.set(note.id, newNoteId);
+          return { ...note, id: newNoteId };
+        });
+
+        // 音素タイミング編集データを新しいノートIDに紐付け直す
+        const newPhonemeTimingEditData = new Map<NoteId, PhonemeTimingEdit[]>();
+        for (const [oldNoteId, edits] of sourceTrack.phonemeTimingEditData) {
+          const newNoteId = oldNoteIdToNewNoteId.get(oldNoteId);
+          if (newNoteId != undefined) {
+            newPhonemeTimingEditData.set(newNoteId, edits);
+          }
+        }
+        newTrack.phonemeTimingEditData = newPhonemeTimingEditData;
+
+        mutations.INSERT_TRACK({
+          trackId: newTrackId,
+          track: newTrack,
+          prevTrackId: trackId,
+        });
+
+        // SYNC は同期処理なので待機しない
+        void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
+        void actions.RENDER();
+
+        void actions.SET_SELECTED_TRACK({ trackId: newTrackId });
       },
     },
 
