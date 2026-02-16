@@ -33,7 +33,7 @@
                       label="再試行"
                       variant="primary"
                       :disabled="
-                        loadingEngineInfosState === 'loadingLocal' ||
+                        loadingEngineInfosState === 'loadingCurrent' ||
                         loadingEngineInfosState === 'fetchingLatest'
                       "
                       @click="fetchInstalledEngineInfos"
@@ -44,7 +44,7 @@
                 <div
                   v-if="
                     loadingEngineInfosState === 'uninitialized' ||
-                    loadingEngineInfosState === 'loadingLocal'
+                    loadingEngineInfosState === 'loadingCurrent'
                   "
                   class="engine-loading"
                 >
@@ -56,8 +56,8 @@
                     v-for="engine in engineInfosForDisplay"
                     :key="engine.package.engineId"
                     :engineName="engine.package.engineName"
-                    :localInfo="engine.localInfo"
-                    :remoteInfo="engine.remoteInfo"
+                    :currentInfo="engine.currentInfo"
+                    :latestInfo="engine.latestInfo"
                     :selectedRuntimeTarget="getSelectedRuntimeTarget(engine)"
                     :runtimeSelectDisabled="
                       isDownloadingOrInstalling(engine.package.engineId)
@@ -108,29 +108,31 @@ import { showErrorDialog } from "@/components/Dialog/Dialog";
 
 type DisplayEngineInfo = {
   package: EnginePackageBase;
-  localInfo: EnginePackageCurrentInfo;
-  remoteInfo: EnginePackageLatestInfo | undefined;
+  currentInfo: EnginePackageCurrentInfo;
+  latestInfo: EnginePackageLatestInfo | undefined;
 };
 
-const localEngineInfos = ref<EnginePackageCurrentInfo[] | undefined>(undefined);
-const remoteEngineInfos = ref<EnginePackageLatestInfo[] | undefined>(undefined);
+const currentEngineInfos = ref<EnginePackageCurrentInfo[] | undefined>(
+  undefined,
+);
+const latestEngineInfos = ref<EnginePackageLatestInfo[] | undefined>(undefined);
 const loadingEngineInfosState = ref<
-  "uninitialized" | "loadingLocal" | "fetchingLatest" | "fetched"
+  "uninitialized" | "loadingCurrent" | "fetchingLatest" | "fetched"
 >("uninitialized");
 const onlineFetchErrorMessage = ref<string | null>(null);
 const engineInfosForDisplay = computed<DisplayEngineInfo[]>(() => {
-  const localInfos = localEngineInfos.value;
-  if (!localInfos) {
+  const currentInfos = currentEngineInfos.value;
+  if (!currentInfos) {
     return [];
   }
-  return localInfos.map((localInfo) => {
-    const remoteInfo = remoteEngineInfos.value?.find(
-      (remote) => remote.package.engineId === localInfo.package.engineId,
+  return currentInfos.map((currentInfo) => {
+    const latestInfo = latestEngineInfos.value?.find(
+      (latest) => latest.package.engineId === currentInfo.package.engineId,
     );
     return {
-      package: localInfo.package,
-      localInfo,
-      remoteInfo,
+      package: currentInfo.package,
+      currentInfo,
+      latestInfo,
     };
   });
 });
@@ -141,14 +143,14 @@ const runtimeTargetSelections = ref<
 const getDefaultRuntimeTarget = (
   engineInfo: DisplayEngineInfo,
 ): RuntimeTarget | undefined => {
-  const remoteInfo = engineInfo.remoteInfo;
-  if (!remoteInfo) {
+  const latestInfo = engineInfo.latestInfo;
+  if (!latestInfo) {
     return undefined;
   }
   return (
-    remoteInfo.availableRuntimeTargets.find(
+    latestInfo.availableRuntimeTargets.find(
       (targetInfo) => targetInfo.packageInfo.displayInfo.default,
-    ) || remoteInfo.availableRuntimeTargets[0]
+    ) || latestInfo.availableRuntimeTargets[0]
   ).target;
 };
 
@@ -182,14 +184,14 @@ const engineProgressInfo = ref<Record<EngineId, EngineProgressInfo>>({});
 const launchEditorDisabledReason = computed<string | null>(() => {
   if (
     loadingEngineInfosState.value === "uninitialized" ||
-    loadingEngineInfosState.value === "loadingLocal"
+    loadingEngineInfosState.value === "loadingCurrent"
   ) {
     return "エンジン情報を読み込み中です。";
   }
   if (Object.keys(engineProgressInfo.value).length > 0) {
     return "エンジンのインストールまたは更新中です。";
   }
-  const engineInfos = localEngineInfos.value ?? [];
+  const engineInfos = currentEngineInfos.value ?? [];
   if (
     !engineInfos.some(
       (engineInfo) => engineInfo.installed.status !== "notInstalled",
@@ -251,13 +253,13 @@ const switchToMainWindow = () => {
 
 const fetchInstalledEngineInfos = async () => {
   onlineFetchErrorMessage.value = null;
-  loadingEngineInfosState.value = "loadingLocal";
-  localEngineInfos.value =
+  loadingEngineInfosState.value = "loadingCurrent";
+  currentEngineInfos.value =
     await window.welcomeBackend.fetchEnginePackageLocalInfos();
   loadingEngineInfosState.value = "fetchingLatest";
-  remoteEngineInfos.value = undefined;
+  latestEngineInfos.value = undefined;
   try {
-    remoteEngineInfos.value =
+    latestEngineInfos.value =
       await window.welcomeBackend.fetchLatestEnginePackageRemoteInfos();
     onlineFetchErrorMessage.value = null;
   } catch (error) {
