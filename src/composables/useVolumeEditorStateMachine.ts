@@ -12,7 +12,9 @@ import type { TrackId } from "@/type/preload";
 import type { Tempo } from "@/domain/project/type";
 import { createVolumeEditorStateMachine } from "@/sing/volumeEditorStateMachine";
 
-export const useVolumeEditorStateMachine = (store: VolumeEditorPartialStore) => {
+export const useVolumeEditorStateMachine = (
+  store: VolumeEditorPartialStore,
+) => {
   const refs = {
     previewVolumeEdit: ref<VolumePreviewEdit | undefined>(undefined),
     previewMode: ref<VolumeEditorPreviewMode>("IDLE"),

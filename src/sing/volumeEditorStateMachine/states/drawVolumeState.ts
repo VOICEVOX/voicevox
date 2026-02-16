@@ -12,11 +12,7 @@ import { getButton } from "@/sing/viewHelper";
 
 export class DrawVolumeState
   implements
-    State<
-      VolumeEditorStateDefinitions,
-      VolumeEditorInput,
-      VolumeEditorContext
-    >
+    State<VolumeEditorStateDefinitions, VolumeEditorInput, VolumeEditorContext>
 {
   readonly id = "drawVolume";
 

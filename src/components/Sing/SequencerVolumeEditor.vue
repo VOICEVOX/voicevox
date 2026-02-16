@@ -44,7 +44,10 @@ import { QBtn } from "quasar";
 import { useVolumeEditorStateMachine } from "@/composables/useVolumeEditorStateMachine";
 import { useStore } from "@/store";
 import type { VolumeEditTool } from "@/store/type";
-import type { PositionOnVolumeEditor, VolumeEditorInput } from "@/sing/volumeEditorStateMachine/common";
+import type {
+  PositionOnVolumeEditor,
+  VolumeEditorInput,
+} from "@/sing/volumeEditorStateMachine/common";
 import { tickToSecond } from "@/sing/music";
 import { clamp } from "@/sing/utility";
 import { getTotalTicks } from "@/sing/rulerHelper"; // TODO: ルーラーから切り出して共通化する
@@ -53,7 +56,8 @@ import { createLogger } from "@/helpers/log";
 const { info } = createLogger("SequencerPitch");
 
 const store = useStore();
-const { volumePreviewEdit, stateMachineProcess } = useVolumeEditorStateMachine(store);
+const { volumePreviewEdit, stateMachineProcess } =
+  useVolumeEditorStateMachine(store);
 
 const tool = computed<VolumeEditTool>(() => store.state.sequencerVolumeTool);
 const selectedTrack = computed(() => store.getters.SELECTED_TRACK);
