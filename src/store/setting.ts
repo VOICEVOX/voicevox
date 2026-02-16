@@ -1,4 +1,4 @@
-import { SettingStoreState, SettingStoreTypes } from "./type";
+import type { SettingStoreState, SettingStoreTypes } from "./type";
 import { createUILockAction } from "./ui";
 import { createPartialStore } from "./vuex";
 import { themes } from "@/domain/theme";
@@ -9,15 +9,15 @@ import {
   showQuestionDialog,
 } from "@/components/Dialog/Dialog";
 import {
-  SavingSetting,
-  ExperimentalSettingType,
-  ToolbarSettingType,
+  type SavingSetting,
+  type ExperimentalSettingType,
+  type ToolbarSettingType,
   EngineId,
-  ConfirmedTips,
-  RootMiscSettingType,
+  type ConfirmedTips,
+  type RootMiscSettingType,
 } from "@/type/preload";
-import { IsEqual } from "@/type/utility";
-import { HotkeySettingType } from "@/domain/hotkeyAction";
+import type { IsEqual } from "@/type/utility";
+import type { HotkeySettingType } from "@/domain/hotkeyAction";
 
 export const settingStoreState: SettingStoreState = {
   openedEditor: undefined,

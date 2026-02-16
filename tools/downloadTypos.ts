@@ -8,7 +8,7 @@ import os from "node:os";
 import path from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
-import { ReadableStream } from "node:stream/web";
+import type { ReadableStream } from "node:stream/web";
 import { promisify } from "node:util";
 import { retryFetch } from "./helper.js";
 

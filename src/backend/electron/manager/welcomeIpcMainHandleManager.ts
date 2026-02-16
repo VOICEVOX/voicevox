@@ -1,7 +1,7 @@
 import { app, BrowserWindow } from "electron";
 import { getEngineAndVvppController } from "../engineAndVvppController";
 import { getConfigManager } from "../electronConfig";
-import { IpcMainHandle, registerIpcMainHandle } from "../ipc";
+import { type IpcMainHandle, registerIpcMainHandle } from "../ipc";
 import { getAppStateController } from "../appStateController";
 import { getWelcomeWindowManager } from "./windowManager/welcome";
 import type { WelcomeIpcIHData } from "@/welcome/backend/ipcType";

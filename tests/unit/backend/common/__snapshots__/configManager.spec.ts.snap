@@ -130,6 +130,10 @@ exports[`0.13.0からマイグレーションできる 1`] = `
       "combination": "Ctrl O",
     },
     {
+      "action": "テキストを繋げて書き出す",
+      "combination": "",
+    },
+    {
       "action": "テキストを読み込む",
       "combination": "",
     },

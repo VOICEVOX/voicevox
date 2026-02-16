@@ -23,7 +23,7 @@ import { initializeWelcomeWindowManager } from "./manager/windowManager/welcome"
 import { initializeIpcMainHandleManager } from "./manager/ipcMainHandleManager";
 import { initializeWelcomeIpcMainHandleManager } from "./manager/welcomeIpcMainHandleManager";
 import { assertNonNullable } from "@/type/utility";
-import { EngineInfo } from "@/type/preload";
+import type { EngineInfo } from "@/type/preload";
 import { isDevelopment, isMac, isProduction, isTest } from "@/helpers/platform";
 import { createLogger } from "@/helpers/log";
 

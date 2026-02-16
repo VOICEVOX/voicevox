@@ -1,20 +1,20 @@
 import semver from "semver";
 import {
-  AcceptTermsStatus,
-  ConfigType,
+  type AcceptTermsStatus,
+  type ConfigType,
   getConfigSchema,
-  DefaultStyleId,
-  ExperimentalSettingType,
-  VoiceId,
-  PresetKey,
-  EngineId,
+  type DefaultStyleId,
+  type ExperimentalSettingType,
+  type VoiceId,
+  type PresetKey,
+  type EngineId,
 } from "@/type/preload";
 import { ensureNotNullish } from "@/type/utility";
 import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
 import {
   HotkeyCombination,
   getDefaultHotkeySettings,
-  HotkeySettingType,
+  type HotkeySettingType,
 } from "@/domain/hotkeyAction";
 import { Mutex } from "@/helpers/mutex";
 import { createLogger } from "@/helpers/log";
@@ -284,6 +284,25 @@ const migrations: [string, (store: Record<string, unknown>) => unknown][] = [
         if (preset == undefined) throw new Error("preset == undefined");
         preset.pauseLengthScale = 1;
       }
+    },
+  ],
+  [
+    ">=0.26",
+    (config) => {
+      // テキストを読み込む をショートカットで呼び出すと テキストを繋げて書き出す が動いていたのでキー割り当てを移行する
+      const hotkeySettings =
+        config.hotkeySettings as ConfigType["hotkeySettings"];
+      const newHotkeySettings: ConfigType["hotkeySettings"] =
+        hotkeySettings.map((hotkeySetting) => {
+          if (hotkeySetting.action === "テキストを読み込む") {
+            return {
+              ...hotkeySetting,
+              action: "テキストを繋げて書き出す",
+            };
+          }
+          return hotkeySetting;
+        });
+      config.hotkeySettings = newHotkeySettings;
     },
   ],
 ];

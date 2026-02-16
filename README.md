@@ -51,6 +51,14 @@ npm i -g pnpm # 初回のみ
 pnpm i
 ```
 
+### AI エージェントのセットアップ（任意）
+
+次のコマンドを実行することで、Codex CLI や Claude Code などの AI エージェント用のファイルがセットアップされます。
+
+```bash
+pnpm run setup-agents
+```
+
 ## 実行
 
 ### エンジンの準備
@@ -187,14 +195,17 @@ pnpm run test-ui:storybook-vrt # Playwright の UI を表示
 
 1. フォークしたリポジトリの設定で GitHub Actions を有効にします。
 2. リポジトリの設定の Actions > General > Workflow permissions で Read and write permissions を選択します。
-3. `[update snapshots]` という文字列をコミットメッセージに含めてコミットします。
+3. GitHub の Actions タブから「Test」ワークフローを選択し、「Run workflow」をクリックします。
+4. 更新したいブランチを選択し、「スナップショットを更新する」にチェックを入れて実行します。
+
+   gh コマンドでも実行できます。
 
    ```bash
-   git commit -m "UIを変更 [update snapshots]"
+   gh workflow run test.yml -R (ユーザー名)/voicevox --ref (ブランチ名) -f update_snapshots=true
    ```
 
-4. Github Workflow が完了すると、更新されたスクリーンショットがコミットされます。
-5. プルした後、空コミットをプッシュしてテストを再実行します。
+5. Github Workflow が完了すると、更新されたスクリーンショットがコミットされます。
+6. プルした後、空コミットをプッシュしてテストを再実行します。
 
    ```bash
    git commit --allow-empty -m "（テストを再実行）"
