@@ -7,15 +7,15 @@
  * binding: hotkeys-js に登録したコールバック
  * bindingKey: hotkeys-js で使う、キーの文字列表記
  */
-import { Plugin, inject, onMounted, onUnmounted } from "vue";
+import { type Plugin, inject, onMounted, onUnmounted } from "vue";
 import hotkeys from "hotkeys-js";
 import {
-  HotkeyActionNameType,
+  type HotkeyActionNameType,
   HotkeyCombination,
-  HotkeySettingType,
+  type HotkeySettingType,
 } from "@/domain/hotkeyAction";
 import { createLogger } from "@/helpers/log";
-import { Brand } from "@/type/utility";
+import type { Brand } from "@/type/utility";
 
 const hotkeyManagerKey = "hotkeyManager";
 export const useHotkeyManager = () => {
