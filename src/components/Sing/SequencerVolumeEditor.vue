@@ -19,6 +19,7 @@
 import {
   computed,
   inject,
+  onBeforeUnmount,
   onMounted,
   onUnmounted,
   ref,
@@ -31,7 +32,6 @@ import type { ContextMenuItemData } from "@/components/Menu/ContextMenu/Containe
 import { useStore } from "@/store";
 import type { VolumeEditTool } from "@/store/type";
 import { useParameterPanelStateMachine } from "@/composables/useParameterPanelStateMachine";
-import { useAutoScrollOnEdge } from "@/composables/useAutoScrollOnEdge";
 import { useMounted } from "@/composables/useMounted";
 import { createLogger } from "@/helpers/log";
 import { getOrThrow } from "@/helpers/mapHelper";
@@ -43,10 +43,7 @@ import { getTotalTicks } from "@/sing/rulerHelper";
 import { clamp } from "@/sing/utility";
 import { baseXToTick, tickToBaseX } from "@/sing/viewHelper";
 import { assertNonNullable } from "@/type/utility";
-import {
-  numMeasuresInjectionKey,
-  sequencerBodyInjectionKey,
-} from "@/components/Sing/ScoreSequencer.vue";
+import { numMeasuresInjectionKey } from "@/components/Sing/ScoreSequencer.vue";
 import { VolumeLine } from "@/sing/graphics/volumeLine";
 import type { VolumeSegment } from "@/sing/graphics/volumeLine";
 import { Color } from "@/sing/graphics/lineStrip";
@@ -55,6 +52,10 @@ import SequencerVolumeToolPalette from "@/components/Sing/SequencerVolumeToolPal
 
 const props = defineProps<{
   offsetX: number;
+}>();
+
+const emit = defineEmits<{
+  "update:needsAutoScroll": [value: boolean];
 }>();
 
 // NOTE: 最大値・最小値はエンジン出力と表示に合わせたヒューリスティックなもの
@@ -124,15 +125,15 @@ const isDark = computed(() => store.state.currentTheme === "Dark");
 const numMeasuresContext = inject(numMeasuresInjectionKey, null);
 const numMeasures = computed(() => numMeasuresContext?.numMeasures.value ?? 0);
 
-const sequencerBody = inject(sequencerBodyInjectionKey, null);
-const enableAutoScrollOnEdge = computed(
-  () => volumePreviewMode.value !== "IDLE",
-);
-if (sequencerBody != null) {
-  useAutoScrollOnEdge(sequencerBody, enableAutoScrollOnEdge, {
-    continueScrollOutside: "x",
-  });
-}
+watch(volumePreviewMode, (mode) => {
+  emit("update:needsAutoScroll", mode !== "IDLE");
+});
+
+onBeforeUnmount(() => {
+  if (volumePreviewMode.value !== "IDLE") {
+    emit("update:needsAutoScroll", false);
+  }
+});
 
 const setTool = (value: VolumeEditTool) => {
   if (value === tool.value) return;

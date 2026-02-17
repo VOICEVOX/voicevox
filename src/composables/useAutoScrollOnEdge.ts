@@ -12,12 +12,11 @@ export const useAutoScrollOnEdge = (
   enable: ComputedRef<boolean>,
   options?: {
     /**
-     * 要素外に出た時にスクロールを継続する方向
-     * - "none": 要素外で停止（デフォルト）
-     * - "x": 水平スクロールのみ継続
-     * NOTE: "y"や"xy"は必要になった時点で実装する
+     * オートスクロールの方向
+     * - "xy": 水平・垂直両方向（デフォルト）
+     * - "x": 水平方向のみ
      */
-    continueScrollOutside?: "none" | "x";
+    scrollDirection?: ComputedRef<"x" | "xy">;
   },
 ) => {
   const baseSpeed = 100;
@@ -112,7 +111,7 @@ export const useAutoScrollOnEdge = (
       throw new Error("element.value is null.");
     }
     if (autoScrollState != undefined) {
-      let x = getXInBorderBox(event.clientX, element.value);
+      const x = getXInBorderBox(event.clientX, element.value);
       let y = getYInBorderBox(event.clientY, element.value);
       const width = element.value.clientWidth;
       const height = element.value.clientHeight;
@@ -124,19 +123,10 @@ export const useAutoScrollOnEdge = (
         return;
       }
 
-      // continueScrollOutside: 要素外に出た時の挙動
-      // - "none"（デフォルト）: 要素外ではスクロールを止める（ScoreSequencer既存挙動）
-      // - "x": 水平スクロールのみ継続（VolumeEditorなど）
-      const continueScroll = options?.continueScrollOutside ?? "none";
-
-      if (continueScroll === "x") {
-        // 水平スクロールのみ継続：Xをクランプ、Yを中央に固定
-        x = Math.min(Math.max(x, 0), width);
+      const scrollDirection = options?.scrollDirection?.value ?? "xy";
+      if (scrollDirection === "x") {
+        // Yを中央に固定して垂直スクロールを防ぐ
         y = height / 2;
-      } else {
-        // 要素外ではスクロール停止
-        autoScrollState.cursorPos = undefined;
-        return;
       }
 
       autoScrollState.cursorPos = new Vector2D(x, y);
