@@ -44,8 +44,8 @@ importers:
         specifier: 0.1.8
         version: 0.1.8
       hotkeys-js:
-        specifier: 4.0.0
-        version: 4.0.0
+        specifier: 3.13.15
+        version: 3.13.15
       immer:
         specifier: 11.1.3
         version: 11.1.3
@@ -3205,8 +3205,8 @@ packages:
     resolution: {integrity: sha512-HVJyzUrLIL1c0QmviVh5E8VGyUS7xCFPS6yydaVd1UegW+ibV/CohqTH9MkOLDp5o+rb82DMo77PTuc9F/8GKw==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
 
-  hotkeys-js@4.0.0:
-    resolution: {integrity: sha512-gIoeqMWYqPIItc4HaseVbtTRpEpBbeufZMUcoWtN62JZdDq3KadS1ijN6wpaDjTzRK7PjT3QOPUcx+yNT0rrZQ==}
+  hotkeys-js@3.13.15:
+    resolution: {integrity: sha512-gHh8a/cPTCpanraePpjRxyIlxDFrIhYqjuh01UHWEwDpglJKCnvLW8kqSx5gQtOuSsJogNZXLhOdbSExpgUiqg==}
 
   http-assert@1.5.0:
     resolution: {integrity: sha512-uPpH7OKX4H25hBmU6G1jWNaqJGpTXxey+YOUizJUAgu0AjLUeC8D73hTrhvDS5D+GJN1DN1+hhc/eF/wpxtp0w==}
@@ -8855,7 +8855,7 @@ snapshots:
     dependencies:
       lru-cache: 7.18.3
 
-  hotkeys-js@4.0.0: {}
+  hotkeys-js@3.13.15: {}
 
   http-assert@1.5.0:
     dependencies:
