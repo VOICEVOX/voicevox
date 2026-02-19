@@ -67,6 +67,7 @@
     "encoding-japanese": "2.2.0",
     "fast-array-diff": "1.1.0",
     "fast-base64": "0.1.8",
+    "// TODO: hotkeys-js": "メジャーバージョン更新は動作テストしてから https://github.com/VOICEVOX/voicevox/pull/2953#pullrequestreview-3819334546",
     "hotkeys-js": "3.13.15",
     "immer": "11.1.3",
     "kuromoji": "github:VOICEVOX/kuromoji.js#0.0.1",
