@@ -6,14 +6,11 @@ import type {
 import type { SetNextState, State } from "@/sing/stateMachine";
 import { getButton } from "@/sing/viewHelper";
 
-export class DrawVolumeIdleState
-  implements
-    State<
-      ParameterPanelStateDefinitions,
-      ParameterPanelInput,
-      ParameterPanelContext
-    >
-{
+export class DrawVolumeIdleState implements State<
+  ParameterPanelStateDefinitions,
+  ParameterPanelInput,
+  ParameterPanelContext
+> {
   readonly id = "drawVolumeIdle";
 
   onEnter(context: ParameterPanelContext) {

@@ -17,9 +17,11 @@ import { getButton } from "@/sing/viewHelper";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { VALUE_INDICATING_NO_DATA } from "@/sing/domain";
 
-export class DrawPitchState
-  implements State<SequencerStateDefinitions, Input, Context>
-{
+export class DrawPitchState implements State<
+  SequencerStateDefinitions,
+  Input,
+  Context
+> {
   readonly id = "drawPitch";
 
   private readonly cursorPosAtStart: PositionOnSequencer;

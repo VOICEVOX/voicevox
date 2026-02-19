@@ -13,9 +13,11 @@ import {
 import type { Note } from "@/domain/project/type";
 import { getOrThrow } from "@/helpers/mapHelper";
 
-export class ResizeNoteRightState
-  implements State<SequencerStateDefinitions, Input, Context>
-{
+export class ResizeNoteRightState implements State<
+  SequencerStateDefinitions,
+  Input,
+  Context
+> {
   readonly id = "resizeNoteRight";
 
   private readonly cursorPosAtStart: PositionOnSequencer;

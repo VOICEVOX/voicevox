@@ -30,7 +30,7 @@ const TYPOS_DIRECTORY_PATH = path.join(BINARY_BASE_PATH, "typos");
 // typosのバージョンを保存しておくテキストファイル
 const TYPOS_VERSION_FILE_NAME = "version.txt";
 
-const TYPOS_VERSION = "v1.30.0";
+const TYPOS_VERSION = "v1.43.4";
 
 // 各OSとアーキテクチャに対応するtyposバイナリのターゲットトリプル
 const TYPOS_TARGET_TRIPLES = {

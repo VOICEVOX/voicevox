@@ -9,14 +9,11 @@ import type { SetNextState, State } from "@/sing/stateMachine";
 import type { TrackId } from "@/type/preload";
 import { getButton } from "@/sing/viewHelper";
 
-export class EraseVolumeState
-  implements
-    State<
-      ParameterPanelStateDefinitions,
-      ParameterPanelInput,
-      ParameterPanelContext
-    >
-{
+export class EraseVolumeState implements State<
+  ParameterPanelStateDefinitions,
+  ParameterPanelInput,
+  ParameterPanelContext
+> {
   readonly id = "eraseVolume";
 
   private readonly cursorPosAtStart: PositionOnParameterPanel;
