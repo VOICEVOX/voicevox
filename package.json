@@ -55,6 +55,7 @@
     "postinstall:download-scripts": "tsx tools/download7z.ts && tsx tools/downloadTypos.ts && tsx tools/downloadAppimagetool.ts && tsx tools/downloadType2Runtime.ts",
     "postuninstall": "electron-builder install-app-deps"
   },
+  "// TODO: hotkeys-jsのメジャーバージョン更新は動作テストしてから https://github.com/VOICEVOX/voicevox/pull/2953#pullrequestreview-3819334546": "",
   "dependencies": {
     "@gtm-support/vue-gtm": "3.1.0",
     "@quasar/extras": "1.17.0",
@@ -67,7 +68,6 @@
     "encoding-japanese": "2.2.0",
     "fast-array-diff": "1.1.0",
     "fast-base64": "0.1.8",
-    "// TODO: hotkeys-jsのメジャーバージョン更新は動作テストしてから https://github.com/VOICEVOX/voicevox/pull/2953#pullrequestreview-3819334546": "",
     "hotkeys-js": "3.13.15",
     "immer": "11.1.3",
     "kuromoji": "github:VOICEVOX/kuromoji.js#0.0.1",
