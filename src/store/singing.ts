@@ -1177,6 +1177,61 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  // 指定されたノートの指定された音素インデックスの音素タイミング編集データをupsertする。
+  // 既存のデータがあれば更新し、なければ追加する。
+  UPSERT_PHONEME_TIMING_EDIT: {
+    mutation(state, { noteId, phonemeTimingEdit, trackId }) {
+      const targetTrack = getOrThrow(state.tracks, trackId);
+      const existingEdits = targetTrack.phonemeTimingEditData.get(noteId) ?? [];
+
+      const existingIndex = existingEdits.findIndex(
+        (edit) =>
+          edit.phonemeIndexInNote === phonemeTimingEdit.phonemeIndexInNote,
+      );
+
+      let newEdits: PhonemeTimingEdit[];
+      if (existingIndex !== -1) {
+        newEdits = [...existingEdits];
+        newEdits[existingIndex] = phonemeTimingEdit;
+      } else {
+        newEdits = [...existingEdits, phonemeTimingEdit];
+        newEdits.sort((a, b) => a.phonemeIndexInNote - b.phonemeIndexInNote);
+      }
+      targetTrack.phonemeTimingEditData.set(noteId, newEdits);
+    },
+  },
+
+  // 指定された音素タイミング編集データを削除する。
+  ERASE_PHONEME_TIMING_EDITS: {
+    mutation(state, { targets, trackId }) {
+      const targetTrack = getOrThrow(state.tracks, trackId);
+
+      // noteIdごとにグルーピング
+      const targetsByNoteId = new Map<NoteId, number[]>();
+      for (const target of targets) {
+        const phonemeIndexes = targetsByNoteId.get(target.noteId) ?? [];
+        phonemeIndexes.push(target.phonemeIndexInNote);
+        targetsByNoteId.set(target.noteId, phonemeIndexes);
+      }
+
+      // 各ノートの編集データを更新
+      for (const [noteId, phonemeIndexes] of targetsByNoteId) {
+        const currentEdits = getOrThrow(
+          targetTrack.phonemeTimingEditData,
+          noteId,
+        );
+        const newEdits = currentEdits.filter(
+          (edit) => !phonemeIndexes.includes(edit.phonemeIndexInNote),
+        );
+        if (newEdits.length === 0) {
+          targetTrack.phonemeTimingEditData.delete(noteId);
+        } else {
+          targetTrack.phonemeTimingEditData.set(noteId, newEdits);
+        }
+      }
+    },
+  },
+
   SET_PITCH_EDIT_DATA: {
     // ピッチ編集データをセットする。
     // track.pitchEditDataの長さが足りない場合は、伸長も行う。
@@ -3599,6 +3654,86 @@ export const singingCommandStore = transformCommandStore(
         mutations.COMMAND_REMOVE_NOTES({
           noteIds: [...getters.SELECTED_NOTE_IDS],
           trackId: getters.SELECTED_TRACK_ID,
+        });
+
+        void actions.RENDER();
+      },
+    },
+    // 指定されたノートの指定された音素インデックスの音素タイミング編集データをupsertする。
+    // 既存のデータがあれば更新し、なければ追加する。
+    COMMAND_UPSERT_PHONEME_TIMING_EDIT: {
+      mutation(draft, { noteId, phonemeTimingEdit, trackId }) {
+        singingStore.mutations.UPSERT_PHONEME_TIMING_EDIT(draft, {
+          noteId,
+          phonemeTimingEdit,
+          trackId,
+        });
+      },
+      action(
+        { state, mutations, actions },
+        { noteId, phonemeTimingEdit, trackId },
+      ) {
+        const targetTrack = state.tracks.get(trackId);
+        if (targetTrack == undefined) {
+          throw new Error("The trackId is invalid.");
+        }
+        mutations.COMMAND_UPSERT_PHONEME_TIMING_EDIT({
+          noteId,
+          phonemeTimingEdit,
+          trackId,
+        });
+
+        void actions.RENDER();
+      },
+    },
+    // 指定された音素タイミング編集データを削除する。
+    COMMAND_ERASE_PHONEME_TIMING_EDITS: {
+      mutation(draft, { targets, trackId }) {
+        singingStore.mutations.ERASE_PHONEME_TIMING_EDITS(draft, {
+          targets,
+          trackId,
+        });
+      },
+      action({ state, mutations, actions }, { targets, trackId }) {
+        const targetTrack = state.tracks.get(trackId);
+        if (targetTrack == undefined) {
+          throw new Error("The trackId is invalid.");
+        }
+        if (targets.length === 0) {
+          return;
+        }
+        const seenPairs = new Map<NoteId, Set<number>>();
+        for (const target of targets) {
+          const seenIndexes = seenPairs.get(target.noteId) ?? new Set<number>();
+          if (seenIndexes.has(target.phonemeIndexInNote)) {
+            throw new Error(
+              "The targets contain duplicate noteId and phonemeIndexInNote pairs.",
+            );
+          }
+          seenIndexes.add(target.phonemeIndexInNote);
+          seenPairs.set(target.noteId, seenIndexes);
+        }
+        for (const target of targets) {
+          const currentEdits = targetTrack.phonemeTimingEditData.get(
+            target.noteId,
+          );
+          if (currentEdits == undefined) {
+            throw new Error(
+              "The targets contain noteId that has no existing phoneme timing edits.",
+            );
+          }
+          const currentPhonemeIndexes = currentEdits.map(
+            (value) => value.phonemeIndexInNote,
+          );
+          if (!currentPhonemeIndexes.includes(target.phonemeIndexInNote)) {
+            throw new Error(
+              "The targets contain phonemeIndexInNote that does not exist in current edits.",
+            );
+          }
+        }
+        mutations.COMMAND_ERASE_PHONEME_TIMING_EDITS({
+          targets,
+          trackId,
         });
 
         void actions.RENDER();
