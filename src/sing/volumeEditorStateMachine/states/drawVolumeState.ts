@@ -10,10 +10,11 @@ import type { TrackId } from "@/type/preload";
 import { createArray } from "@/sing/utility";
 import { getButton } from "@/sing/viewHelper";
 
-export class DrawVolumeState
-  implements
-    State<VolumeEditorStateDefinitions, VolumeEditorInput, VolumeEditorContext>
-{
+export class DrawVolumeState implements State<
+  VolumeEditorStateDefinitions,
+  VolumeEditorInput,
+  VolumeEditorContext
+> {
   readonly id = "drawVolume";
 
   private readonly cursorPosAtStart: PositionOnVolumeEditor;

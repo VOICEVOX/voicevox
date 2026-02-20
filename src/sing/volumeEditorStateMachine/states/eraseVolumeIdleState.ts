@@ -6,10 +6,11 @@ import type {
 import type { SetNextState, State } from "@/sing/stateMachine";
 import { getButton } from "@/sing/viewHelper";
 
-export class EraseVolumeIdleState
-  implements
-    State<VolumeEditorStateDefinitions, VolumeEditorInput, VolumeEditorContext>
-{
+export class EraseVolumeIdleState implements State<
+  VolumeEditorStateDefinitions,
+  VolumeEditorInput,
+  VolumeEditorContext
+> {
   readonly id = "eraseVolumeIdle";
 
   onEnter(context: VolumeEditorContext) {

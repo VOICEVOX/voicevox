@@ -9,10 +9,11 @@ import type { SetNextState, State } from "@/sing/stateMachine";
 import type { TrackId } from "@/type/preload";
 import { getButton } from "@/sing/viewHelper";
 
-export class EraseVolumeState
-  implements
-    State<VolumeEditorStateDefinitions, VolumeEditorInput, VolumeEditorContext>
-{
+export class EraseVolumeState implements State<
+  VolumeEditorStateDefinitions,
+  VolumeEditorInput,
+  VolumeEditorContext
+> {
   readonly id = "eraseVolume";
 
   private readonly cursorPosAtStart: PositionOnVolumeEditor;
