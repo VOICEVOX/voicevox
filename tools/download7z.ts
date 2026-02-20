@@ -18,7 +18,7 @@ switch (process.platform) {
     // Mac/Linuxと違い、インストーラー以外には7z形式でしか配布されていない。
     // Actionsでインストーラーを動かすことはできないので、単独で配布されている7zr.exeを使い、
     // 7z形式で圧縮されている7za.exeを展開する。
-    const sevenzrUrl = "https://www.7-zip.org/a/7zr.exe";
+    const sevenzrUrl = "https://7-zip.org/a/7zr.exe";
     const sevenzrPath = path.join(distPath, "7zr.exe");
     if (!fs.existsSync(sevenzrPath)) {
       console.log("Downloading 7zr from " + sevenzrUrl);
@@ -31,7 +31,7 @@ switch (process.platform) {
       await fs.promises.writeFile(sevenzrPath, Buffer.from(buffer));
     }
 
-    url = "https://www.7-zip.org/a/7z2201-extra.7z";
+    url = "https://7-zip.org/a/7z2501-extra.7z";
     // 7za.dll、7zxa.dllはなくても動くので、除外する
     // filesToExtract = ["7za.exe", "7za.dll", "7zxa.dll", "License.txt"];
     filesToExtract = ["7za.exe", "License.txt"];
@@ -41,11 +41,11 @@ switch (process.platform) {
   case "linux": {
     switch (os.arch()) {
       case "arm64": {
-        url = "https://www.7-zip.org/a/7z2201-linux-arm64.tar.xz";
+        url = "https://7-zip.org/a/7z2501-linux-arm64.tar.xz";
         break;
       }
       case "x64": {
-        url = "https://www.7-zip.org/a/7z2201-linux-x64.tar.xz";
+        url = "https://7-zip.org/a/7z2501-linux-x64.tar.xz";
         break;
       }
       default: {
@@ -56,7 +56,7 @@ switch (process.platform) {
     break;
   }
   case "darwin": {
-    url = "https://www.7-zip.org/a/7z2107-mac.tar.xz";
+    url = "https://7-zip.org/a/7z2501-mac.tar.xz";
     filesToExtract = ["7zz", "License.txt"];
     break;
   }
