@@ -926,13 +926,24 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       if (!isValidTempos(tempos)) {
         throw new Error("The tempos are invalid.");
       }
-      if (!transport) {
+      if (transport == undefined) {
         throw new Error("transport is undefined.");
       }
       if (state.nowPlaying) {
         await actions.SING_STOP_AUDIO();
       }
       mutations.SET_TEMPOS({ tempos });
+
+      transport.loopStartTime = tickToSecond(
+        state.loopStartTick,
+        state.tempos,
+        state.tpqn,
+      );
+      transport.loopEndTime = tickToSecond(
+        state.loopEndTick,
+        state.tempos,
+        state.tpqn,
+      );
       transport.time = getters.TICK_TO_SECOND(playheadPosition.value);
 
       void actions.RENDER();
@@ -3478,6 +3489,17 @@ export const singingCommandStore = transformCommandStore(
         }
         tempo.bpm = round(tempo.bpm, 2);
         mutations.COMMAND_SET_TEMPO({ tempo });
+
+        transport.loopStartTime = tickToSecond(
+          state.loopStartTick,
+          state.tempos,
+          state.tpqn,
+        );
+        transport.loopEndTime = tickToSecond(
+          state.loopEndTick,
+          state.tempos,
+          state.tpqn,
+        );
         transport.time = getters.TICK_TO_SECOND(playheadPosition.value);
 
         void actions.RENDER();
@@ -3505,6 +3527,17 @@ export const singingCommandStore = transformCommandStore(
           playheadPosition.value = getters.SECOND_TO_TICK(transport.time);
         }
         mutations.COMMAND_REMOVE_TEMPO({ position });
+
+        transport.loopStartTime = tickToSecond(
+          state.loopStartTick,
+          state.tempos,
+          state.tpqn,
+        );
+        transport.loopEndTime = tickToSecond(
+          state.loopEndTick,
+          state.tempos,
+          state.tpqn,
+        );
         transport.time = getters.TICK_TO_SECOND(playheadPosition.value);
 
         void actions.RENDER();
@@ -3887,6 +3920,9 @@ export const singingCommandStore = transformCommandStore(
         { state, mutations, getters, actions },
         { tpqn, tempos, timeSignatures, tracks },
       ) {
+        if (transport == undefined) {
+          throw new Error("transport is undefined.");
+        }
         const payload: ({ track: Track; trackId: TrackId } & (
           | { overwrite: true; prevTrackId?: undefined }
           | { overwrite?: false; prevTrackId: TrackId }
@@ -3916,6 +3952,17 @@ export const singingCommandStore = transformCommandStore(
           timeSignatures,
           tracks: payload,
         });
+
+        transport.loopStartTime = tickToSecond(
+          state.loopStartTick,
+          state.tempos,
+          state.tpqn,
+        );
+        transport.loopEndTime = tickToSecond(
+          state.loopEndTick,
+          state.tempos,
+          state.tpqn,
+        );
 
         void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
         void actions.RENDER();
