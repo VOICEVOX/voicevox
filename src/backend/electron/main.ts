@@ -193,15 +193,9 @@ void app.whenReady().then(() => {
   } else {
     urls = ["app://./*"];
   }
-  const connectSrcUrls = [
-    import.meta.env.VITE_LATEST_UPDATE_INFOS_URL,
-    "https://*.google-analytics.com",
-    "https://*.analytics.google.com",
-    "https://*.googletagmanager.com",
-  ].join(" ");
   const cspHeaderValue = [
     "default-src 'self'",
-    `connect-src 'self' http://127.0.0.1:* ${connectSrcUrls}`,
+    "connect-src 'self' http://127.0.0.1:* https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com",
     "font-src 'self' data:",
     "img-src 'self' blob: data: http://127.0.0.1:* https://*.google-analytics.com https://*.googletagmanager.com",
     "media-src 'self' blob: data: http://127.0.0.1:*",
