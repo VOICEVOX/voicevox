@@ -6,6 +6,11 @@ settings:
 
 pnpmfileChecksum: sha256-z5OZsdei02KuRzaEvbeWmjk8rekL69KSDiN5qP8y6ro=
 
+patchedDependencies:
+  vite-plugin-checker@0.12.0:
+    hash: c1dda7aca78ff2da483fad896ea3abba497b9f8a587e5a5d137d331dbf9d44b6
+    path: patches/vite-plugin-checker@0.12.0.patch
+
 importers:
 
   .:
@@ -13,6 +18,9 @@ importers:
       '@gtm-support/vue-gtm':
         specifier: 3.1.0
         version: 3.1.0(vue@3.5.27(typescript@5.9.3))
+      '@pixi/unsafe-eval':
+        specifier: 7.4.3
+        version: 7.4.3(@pixi/core@7.4.3)
       '@quasar/extras':
         specifier: 1.17.0
         version: 1.17.0
@@ -271,7 +279,7 @@ importers:
         version: 7.3.1(@types/node@24.10.10)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(tsx@4.21.0)
       vite-plugin-checker:
         specifier: 0.12.0
-        version: 0.12.0(eslint@9.39.2(jiti@2.6.1))(optionator@0.9.4)(typescript@5.9.3)(vite@7.3.1(@types/node@24.10.10)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(tsx@4.21.0))(vue-tsc@3.2.4(typescript@5.9.3))
+        version: 0.12.0(patch_hash=c1dda7aca78ff2da483fad896ea3abba497b9f8a587e5a5d137d331dbf9d44b6)(eslint@9.39.2(jiti@2.6.1))(optionator@0.9.4)(typescript@5.9.3)(vite@7.3.1(@types/node@24.10.10)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(tsx@4.21.0))(vue-tsc@3.2.4(typescript@5.9.3))
       vite-plugin-electron:
         specifier: 0.29.0
         version: 0.29.0
@@ -1143,6 +1151,11 @@ packages:
 
   '@pixi/ticker@7.4.3':
     resolution: {integrity: sha512-tHsAD0iOUb6QSGGw+c8cyRBvxsq/NlfzIFBZLEHhWZ+Bx4a0MmXup6I/yJDGmyPCYE+ctCcAfY13wKAzdiVFgQ==}
+
+  '@pixi/unsafe-eval@7.4.3':
+    resolution: {integrity: sha512-iR2iLcMculCSmn3x446ICCL5iokmFuLZDgNo7k1Q5rzNiULELIixfpSJwvlJqrJPY1kda0oqGHgVGRQ2vGfaLg==}
+    peerDependencies:
+      '@pixi/core': 7.4.3
 
   '@pixi/utils@7.4.3':
     resolution: {integrity: sha512-NO3Y9HAn2UKS1YdxffqsPp+kDpVm8XWvkZcS/E+rBzY9VTLnNOI7cawSRm+dacdET3a8Jad3aDKEDZ0HmAqAFA==}
@@ -6481,6 +6494,10 @@ snapshots:
       '@pixi/settings': 7.4.3
       '@pixi/utils': 7.4.3
 
+  '@pixi/unsafe-eval@7.4.3(@pixi/core@7.4.3)':
+    dependencies:
+      '@pixi/core': 7.4.3
+
   '@pixi/utils@7.4.3':
     dependencies:
       '@pixi/color': 7.4.3
@@ -11191,7 +11208,7 @@ snapshots:
       extsprintf: 1.4.1
     optional: true
 
-  vite-plugin-checker@0.12.0(eslint@9.39.2(jiti@2.6.1))(optionator@0.9.4)(typescript@5.9.3)(vite@7.3.1(@types/node@24.10.10)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(tsx@4.21.0))(vue-tsc@3.2.4(typescript@5.9.3)):
+  vite-plugin-checker@0.12.0(patch_hash=c1dda7aca78ff2da483fad896ea3abba497b9f8a587e5a5d137d331dbf9d44b6)(eslint@9.39.2(jiti@2.6.1))(optionator@0.9.4)(typescript@5.9.3)(vite@7.3.1(@types/node@24.10.10)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(tsx@4.21.0))(vue-tsc@3.2.4(typescript@5.9.3)):
     dependencies:
       '@babel/code-frame': 7.29.0
       chokidar: 4.0.3

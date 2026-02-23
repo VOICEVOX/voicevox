@@ -183,6 +183,48 @@ void app.whenReady().then(() => {
   );
 });
 
+// CSPヘッダの設定
+void app.whenReady().then(() => {
+  let urls: string[];
+  if (isDevelopment) {
+    assertNonNullable(import.meta.env.VITE_DEV_SERVER_URL);
+    const { protocol, hostname } = new URL(import.meta.env.VITE_DEV_SERVER_URL);
+    urls = [`${protocol}//${hostname}/*`];
+  } else {
+    urls = ["app://./*"];
+  }
+  const connectSrcUrls = [
+    import.meta.env.VITE_LATEST_UPDATE_INFOS_URL,
+    "https://*.google-analytics.com",
+    "https://*.analytics.google.com",
+    "https://*.googletagmanager.com",
+  ].join(" ");
+  const cspHeaderValue = [
+    "default-src 'self'",
+    `connect-src 'self' http://127.0.0.1:* ${connectSrcUrls}`,
+    "font-src 'self' data:",
+    "img-src 'self' blob: data: http://127.0.0.1:* https://*.google-analytics.com https://*.googletagmanager.com",
+    "media-src 'self' blob: data: http://127.0.0.1:*",
+    "object-src 'none'",
+    "script-src 'self' 'wasm-unsafe-eval' https://*.googletagmanager.com",
+    "style-src 'self' 'unsafe-inline'",
+    "base-uri 'none'",
+    "form-action 'none'",
+    "frame-ancestors 'self'",
+  ].join("; ");
+  session.defaultSession.webRequest.onHeadersReceived(
+    { urls },
+    (details, callback) => {
+      callback({
+        responseHeaders: {
+          ...details.responseHeaders,
+          "Content-Security-Policy": [cspHeaderValue],
+        },
+      });
+    },
+  );
+});
+
 // engine
 const vvppEngineDir = path.join(app.getPath("userData"), "vvpp-engines");
 

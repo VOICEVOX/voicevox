@@ -1,0 +1,14 @@
+diff --git a/dist/main.js b/dist/main.js
+index 8b8b1f36ba0111af75cdf47e2f3e9f374affc56f..ccebdba86de67cd369d5707f4e44537fd2442478 100644
+--- a/dist/main.js
++++ b/dist/main.js
+@@ -112,8 +112,7 @@ function checker(userConfig) {
+       return [
+         {
+           tag: "script",
+-          attrs: { type: "module" },
+-          children: composePreambleCode({ baseWithOrigin, overlayConfig })
++          attrs: { type: 'module', src: RUNTIME_CLIENT_ENTRY_PATH },
+         }
+       ];
+     },
