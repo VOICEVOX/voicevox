@@ -39,44 +39,95 @@
               </div>
             </div>
           </div>
+
+          <!-- 左側のpane -->
           <div class="col-4 word-list-col">
             <div
               v-if="wordEditing"
               class="word-list-disable-overlay"
               @click="discardOrNotDialog(cancel)"
             />
-            <div class="word-list-header text-no-wrap">
-              <div class="row word-list-title">
-                <span class="text-h5 col-8">単語一覧</span>
+            <div class="word-list-header text-no-wrap col">
+              <div class="row">
+                <span class="word-list-header-text text-h5">単語一覧</span>
+                <QSpace />
                 <QBtn
                   outline
                   textColor="display"
-                  class="text-no-wrap text-bold col"
+                  class="text-no-wrap text-bold"
                   :disable="uiLocked"
                   @click="newWord"
                   >追加</QBtn
                 >
+                <QBtn
+                  round
+                  flat
+                  icon="more_horiz"
+                  color="display"
+                  :disable="wordEditing"
+                >
+                  <QMenu>
+                    <QList>
+                      <QItem v-ripple>
+                        <QItemSection side>
+                          <QCheckbox
+                            v-model="showPriorityOnDictionary"
+                            @click="OnClickShowPriorityOnDictionary"
+                            >優先度をリストに表示する</QCheckbox
+                          >
+                        </QItemSection>
+                      </QItem>
+                    </QList>
+                  </QMenu>
+                </QBtn>
               </div>
+              <div class="row">
+                <QSelect v-model="sortType" class="col" :options="sortTypes"
+                  ><template #prepend> <QIcon name="swap_vert" /> </template
+                ></QSelect>
+                <QCheckbox
+                  v-model="isDesc"
+                  checkedIcon="arrow_upward"
+                  uncheckedIcon="arrow_downward"
+                  keepColor
+                  color="display"
+                />
+              </div>
+              <QInput
+                v-model="wordFilter"
+                icon="search"
+                hideBottomSpace
+                dense
+                placeholder="検索"
+                color="display"
+                :disable="uiLocked || wordEditing"
+                class="q-mr-sm search-box"
+                ><template #prepend> <QIcon name="search" /> </template
+              ></QInput>
             </div>
             <QList class="word-list">
               <QItem
-                v-for="(value, key) in userDict"
+                v-for="(value, key) in filteredUserDict"
                 :key
                 v-ripple
                 tag="label"
                 clickable
                 :active="selectedId === key"
                 activeClass="active-word"
-                @click="selectWord(key)"
+                @click="selectWord(String(key))"
                 @dblclick="editWord"
-                @mouseover="hoveredKey = key"
+                @mouseover="hoveredKey = String(key)"
                 @mouseleave="hoveredKey = undefined"
               >
                 <QItemSection>
                   <QItemLabel lines="1" class="text-display">{{
                     value.surface
                   }}</QItemLabel>
-                  <QItemLabel lines="1" caption>{{ value.yomi }}</QItemLabel>
+                  <QItemLabel lines="1" caption
+                    ><template v-if="showPriorityOnDictionary">
+                      [{{ value.priority }}] </template
+                    >{{ value.yomi }}</QItemLabel
+                  >
                 </QItemSection>
 
                 <QItemSection
@@ -162,6 +213,7 @@ import { useStore } from "@/store";
 import type { AccentPhrase, UserDictWord } from "@/openapi";
 import type { EngineId, SpeakerId, StyleId } from "@/type/preload";
 import {
+  convertHankakuToZenkaku,
   convertHiraToKana,
   convertLongVowel,
   createKanaRegex,
@@ -180,6 +232,58 @@ const hoveredKey = ref<string | undefined>(undefined);
 
 const loadingDictState = ref<null | "loading" | "synchronizing">("loading");
 const userDict = ref<Record<string, UserDictWord>>({});
+
+// 検索結果でフィルタリングされたユーザ辞書
+const filteredUserDict = computed(() => {
+  return Object.fromEntries(
+    Object.entries(userDict.value)
+      .sort((a, b) => {
+        let order;
+        switch (sortType.value.value) {
+          case "yomi":
+            order = a[1].yomi.localeCompare(b[1].yomi);
+            break;
+          case "priority":
+            order = b[1].priority - a[1].priority;
+            break;
+          default:
+            order = 0;
+            break;
+        }
+        return order * (isDesc.value ? -1 : 1);
+      })
+      .filter(([, value]) => {
+        // 半角から全角に変換
+        let searchWord = convertHankakuToZenkaku(wordFilter.value);
+        // ひらがなからカタカナに変換
+        searchWord = convertHiraToKana(searchWord);
+        // 長音を適切な音に変換
+        const searchWordLongVowel = convertLongVowel(searchWord);
+        return (
+          value.surface.includes(searchWord) ||
+          value.yomi.includes(searchWord) ||
+          value.surface.includes(searchWordLongVowel) ||
+          value.yomi.includes(searchWordLongVowel)
+        );
+      }),
+  );
+});
+
+// 表示順
+const sortTypes = [
+  {
+    label: "読み順",
+    value: "yomi",
+  },
+  {
+    label: "優先度順",
+    value: "priority",
+  },
+];
+const sortType = ref(sortTypes[0]);
+
+// 降順か？
+const isDesc = ref(false);
 
 const createUILockAction = function <T>(action: Promise<T>) {
   uiLocked.value = true;
@@ -223,6 +327,8 @@ watch(dialogOpened, async (newValue) => {
     toInitialState();
   }
 });
+
+const wordFilter = ref("");
 
 const wordEditing = ref(false);
 const surfaceInput = ref<QInput>();
@@ -307,6 +413,19 @@ const computeDisplayAccent = () => {
 
 const wordPriority = ref(defaultDictPriority);
 
+// 優先度表示
+const showPriorityOnDictionaryKey = "ShowPriorityOnDictionary";
+const showPriorityOnDictionary = ref(
+  localStorage.getItem(showPriorityOnDictionaryKey) === "true",
+);
+// 優先度表示の変更があった時に呼ばれるイベント
+const OnClickShowPriorityOnDictionary = () => {
+  localStorage.setItem(
+    showPriorityOnDictionaryKey,
+    showPriorityOnDictionary.value.toString(),
+  );
+};
+
 // 操作（ステートの移動）
 const isWordChanged = computed(() => {
   if (selectedId.value === "") {
@@ -375,6 +494,7 @@ const newWord = () => {
   wordPriority.value = defaultDictPriority;
   editWord();
 };
+
 const editWord = () => {
   toWordEditingState();
 };
@@ -449,23 +569,25 @@ provide(dictionaryManageDialogContextKey, {
   overflow-x: hidden;
 }
 
+.word-list-header-text {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .word-list-header {
   margin: 1rem;
-
-  gap: 0.5rem;
   align-items: center;
+  vertical-align: middle;
   justify-content: space-between;
-  .word-list-title {
-    flex-grow: 1;
-  }
 }
 
 .word-list {
   // menubar-height + toolbar-height + window-border-width +
-  // 36(title & buttons) + 30(margin 15x2)
+  // 140(title & buttons) + 30(margin 15x2)
   height: calc(
     100vh - #{vars.$menubar-height + vars.$toolbar-height +
-      vars.$window-border-width + 36px + 30px}
+      vars.$window-border-width + 140px + 30px}
   );
   width: 100%;
   overflow-y: auto;
