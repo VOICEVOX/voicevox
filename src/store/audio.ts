@@ -28,6 +28,7 @@ import {
 import { createPartialStore } from "./vuex";
 import { determineNextPresetKey } from "./preset";
 import {
+  calculateAudioLength,
   fetchAudioFromAudioItem,
   generateLabFromAudioQuery,
   handlePossiblyNotMorphableError,
@@ -251,6 +252,19 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
       return length == 0 || length == undefined
         ? undefined
         : Math.min(length - 1, audioPlayStartPoint);
+    },
+  },
+
+  TOTAL_AUDIO_LENGTH: {
+    getter(state) {
+      let total = 0;
+      for (const audioKey of state.audioKeys) {
+        const item = state.audioItems[audioKey];
+        if (item.query) {
+          total += calculateAudioLength(item.query);
+        }
+      }
+      return total;
     },
   },
 

@@ -100,6 +100,12 @@
                           @click="addAudioItem"
                         ></QBtn>
                       </div>
+                      <div
+                        v-if="totalAudioLengthDisplay.show"
+                        class="total-audio-status"
+                      >
+                        合計: {{ totalAudioLengthDisplay.formattedLabel }}
+                      </div>
                     </div>
                   </template>
                   <template #after>
@@ -174,6 +180,19 @@ const selectedAudioKeys = computed(() => store.getters.SELECTED_AUDIO_KEYS);
 const uiLocked = computed(() => store.getters.UI_LOCKED);
 
 const isMultiSelectEnabled = computed(() => store.state.enableMultiSelect);
+
+const totalAudioLengthDisplay = computed<
+  { show: true; formattedLabel: string } | { show: false }
+>(() => {
+  if (!store.state.showTotalAudioLength) {
+    return { show: false };
+  }
+  const totalSeconds = Math.floor(store.getters.TOTAL_AUDIO_LENGTH);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  const formattedLabel = `${minutes}:${seconds.toString().padStart(2, "0")}`;
+  return { show: true, formattedLabel };
+});
 
 const { registerHotkeyWithCleanup } = useHotkeyManager();
 
@@ -772,6 +791,21 @@ const onAudioCellPaneClick = () => {
 
   .draggable-cursor {
     cursor: grab;
+  }
+
+  .total-audio-status {
+    position: absolute;
+    right: 92px;
+    bottom: 22px; // 追加ボタンfabの左側
+    background-color: colors.$surface;
+    color: colors.$display;
+    padding: 4px 12px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    pointer-events: none; // クリックを透過させて操作の邪魔をしない
+    opacity: 0.8;
+    font-size: 0.9em;
+    border: 1px solid colors.$splitter;
   }
 
   .add-button-wrapper {
