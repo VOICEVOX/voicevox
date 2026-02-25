@@ -630,9 +630,9 @@ const generateSingingPitchSource = (
     throw new Error("phrase.query is undefined.");
   }
 
+  // phrase のデータを直接変更しないよう、作業用コピーを作る
   const clonedQuery = structuredClone(phrase.query);
 
-  // 音素タイミング編集を適用して調整を行う
   const phonemeTimings = toPhonemeTimings(clonedQuery.phonemes);
   applyPhonemeTimingEdit(
     phonemeTimings,
@@ -673,6 +673,8 @@ const generateSingingVolumeSource = (
     throw new Error("phrase.singingPitch is undefined.");
   }
 
+  // phrase のデータを直接変更しないよう、作業用コピーを作る
+  // （clonedQuery に代入後も編集適用で変更されるため、singingPitch もクローンが必要）
   const clonedQuery = structuredClone(phrase.query);
   const clonedSingingPitch = structuredClone(phrase.singingPitch);
 
@@ -729,6 +731,8 @@ const generateSingingVoiceSource = (
     throw new Error("phrase.singingVolume is undefined.");
   }
 
+  // phrase のデータを直接変更しないよう、作業用コピーを作る
+  // （clonedQuery に代入後も編集適用で変更されるため、singingPitch/Volume もクローンが必要）
   const clonedQuery = structuredClone(phrase.query);
   const clonedSingingPitch = structuredClone(phrase.singingPitch);
   const clonedSingingVolume = structuredClone(phrase.singingVolume);
