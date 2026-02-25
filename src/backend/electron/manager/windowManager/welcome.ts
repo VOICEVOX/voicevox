@@ -88,7 +88,7 @@ class WelcomeWindowManager {
     const ipc = createIpcSendProxy<WelcomeIpcSOData>(win);
     this._ipc = ipc;
     const welcomeIpcMainHandleManager = getWelcomeIpcMainHandleManager();
-    welcomeIpcMainHandleManager.registerToWindow(win);
+    welcomeIpcMainHandleManager.attachTo(win);
 
     win.on("maximize", () => {
       ipc.DETECT_MAXIMIZED();

@@ -105,7 +105,7 @@ class MainWindowManager {
     const ipc = createIpcSendProxy<IpcSOData>(win);
     this._ipc = ipc;
     const ipcMainHandleManager = getIpcMainHandleManager();
-    ipcMainHandleManager.registerToWindow(win);
+    ipcMainHandleManager.attachTo(win);
 
     win.on("maximize", () => {
       ipc.DETECT_MAXIMIZED();

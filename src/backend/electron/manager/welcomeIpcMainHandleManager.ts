@@ -95,7 +95,7 @@ class WelcomeIpcMainHandleManager {
     };
   }
 
-  registerToWindow(win: BrowserWindow) {
+  attachTo(win: BrowserWindow) {
     registerIpcMainHandle<WelcomeIpcIHData>(win, this.getHandle());
   }
 }
