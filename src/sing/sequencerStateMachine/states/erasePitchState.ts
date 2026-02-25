@@ -9,9 +9,11 @@ import type {
 import type { TrackId } from "@/type/preload";
 import { getButton } from "@/sing/viewHelper";
 
-export class ErasePitchState
-  implements State<SequencerStateDefinitions, Input, Context>
-{
+export class ErasePitchState implements State<
+  SequencerStateDefinitions,
+  Input,
+  Context
+> {
   readonly id = "erasePitch";
 
   private readonly cursorPosAtStart: PositionOnSequencer;

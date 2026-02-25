@@ -1,2 +1,9 @@
 managePackageManagerVersions: true
 minimumReleaseAge: 10080
+onlyBuiltDependencies:
+  - "@nestjs/core"
+  - "@openapitools/openapi-generator-cli"
+  - electron
+  - esbuild
+  - msw
+  - vue-demi

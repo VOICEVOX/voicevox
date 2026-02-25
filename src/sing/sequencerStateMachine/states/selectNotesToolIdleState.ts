@@ -19,9 +19,11 @@ import { NoteId } from "@/type/preload";
 import { clamp } from "@/sing/utility";
 import { uuid4 } from "@/helpers/random";
 
-export class SelectNotesToolIdleState
-  implements State<SequencerStateDefinitions, Input, Context>
-{
+export class SelectNotesToolIdleState implements State<
+  SequencerStateDefinitions,
+  Input,
+  Context
+> {
   readonly id = "selectNotesToolIdle";
 
   onEnter(context: Context) {
