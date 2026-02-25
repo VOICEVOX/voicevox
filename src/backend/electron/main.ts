@@ -217,13 +217,13 @@ initializeEngineInfoManager({
 initializeEngineProcessManager({ onEngineProcessError });
 initializeVvppManager({ vvppEngineDir, tmpDir: app.getPath("temp") });
 
-initializeAppStateController({
+initializeAppStateController();
+
+initializeIpcMainHandleManager({
   staticDirPath: staticDir,
   appDirPath,
   initialFilePathGetter: () => initialFilePath,
 });
-
-initializeIpcMainHandleManager();
 initializeWelcomeIpcMainHandleManager();
 
 initializeMainWindowManager({

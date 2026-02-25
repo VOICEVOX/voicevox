@@ -88,12 +88,26 @@ async function retryShowSaveDialogWhileSafeDir<
 }
 
 class IpcMainHandleManager {
-  private getHandle(): IpcMainHandle<IpcIHData> {
-    const appStateController = getAppStateController();
-    const staticDirPath = appStateController.getStaticDirPath();
-    const appDirPath = appStateController.getAppDirPath();
-    const initialFilePathGetter = () => appStateController.getInitialFilePath();
+  private staticDirPath: string;
+  private appDirPath: string;
+  private initialFilePathGetter: () => string | undefined;
 
+  constructor(params: {
+    staticDirPath: string;
+    appDirPath: string;
+    initialFilePathGetter: () => string | undefined;
+  }) {
+    this.staticDirPath = params.staticDirPath;
+    this.appDirPath = params.appDirPath;
+    this.initialFilePathGetter = params.initialFilePathGetter;
+  }
+
+  private getHandle(): IpcMainHandle<IpcIHData> {
+    const staticDirPath = this.staticDirPath;
+    const appDirPath = this.appDirPath;
+    const initialFilePathGetter = this.initialFilePathGetter;
+
+    const appStateController = getAppStateController();
     const configManager = getConfigManager();
     const engineAndVvppController = getEngineAndVvppController();
     const engineInfoManager = getEngineInfoManager();
@@ -388,8 +402,12 @@ class IpcMainHandleManager {
 
 let manager: IpcMainHandleManager | undefined;
 
-export function initializeIpcMainHandleManager() {
-  manager = new IpcMainHandleManager();
+export function initializeIpcMainHandleManager(params: {
+  staticDirPath: string;
+  appDirPath: string;
+  initialFilePathGetter: () => string | undefined;
+}) {
+  manager = new IpcMainHandleManager(params);
 }
 
 export function getIpcMainHandleManager(): IpcMainHandleManager {

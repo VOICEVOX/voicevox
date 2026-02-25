@@ -29,32 +29,6 @@ export class AppStateController {
 
   private lock = new Mutex();
 
-  private staticDirPath: string;
-  private appDirPath: string;
-  private initialFilePathGetter: () => string | undefined;
-
-  constructor(params: {
-    staticDirPath: string;
-    appDirPath: string;
-    initialFilePathGetter: () => string | undefined;
-  }) {
-    this.staticDirPath = params.staticDirPath;
-    this.appDirPath = params.appDirPath;
-    this.initialFilePathGetter = params.initialFilePathGetter;
-  }
-
-  getStaticDirPath(): string {
-    return this.staticDirPath;
-  }
-
-  getAppDirPath(): string {
-    return this.appDirPath;
-  }
-
-  getInitialFilePath(): string | undefined {
-    return this.initialFilePathGetter();
-  }
-
   async startup() {
     const engineAndVvppController = getEngineAndVvppController();
     const packageStatuses =
@@ -256,12 +230,8 @@ export class AppStateController {
 
 let appStateController: AppStateController | undefined;
 
-export function initializeAppStateController(params: {
-  staticDirPath: string;
-  appDirPath: string;
-  initialFilePathGetter: () => string | undefined;
-}) {
-  appStateController = new AppStateController(params);
+export function initializeAppStateController() {
+  appStateController = new AppStateController();
 }
 
 export function getAppStateController() {
