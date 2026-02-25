@@ -35,7 +35,7 @@ function generateWave(
 ) {
   const duration = f0.length / frameRate;
   const samplesPerOriginal = sampleRate / frameRate;
-  const wave = new Float32Array(sampleRate * duration);
+  const wave = new Float32Array(Math.round(sampleRate * duration));
 
   const seed =
     Math.round(f0.concat(volume).reduce((acc, v) => acc + v, 0)) % 2 ** 31; // そこそこ被らないシード値
