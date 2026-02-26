@@ -19,6 +19,12 @@
           },
           {
             type: 'button',
+            label: 'トラック複製',
+            onClick: duplicateTrack,
+            disableWhenUiLocked: true,
+          },
+          {
+            type: 'button',
             label: 'トラック削除',
             onClick: deleteTrack,
             disabled: tracks.size === 1,
@@ -167,7 +173,7 @@ import SingerIcon from "@/components/Sing/SingerIcon.vue";
 import { useStore } from "@/store";
 import ContextMenu from "@/components/Menu/ContextMenu/Container.vue";
 import { shouldPlayTracks } from "@/sing/domain";
-import { CharacterInfo, StyleInfo, TrackId } from "@/type/preload";
+import type { CharacterInfo, StyleInfo, TrackId } from "@/type/preload";
 
 const props = defineProps<{
   trackId: TrackId;
@@ -286,6 +292,12 @@ const addTrack = async () => {
   });
   await store.actions.SELECT_TRACK({
     trackId: trackOrder.value[willNextSelectedTrackIndex],
+  });
+};
+
+const duplicateTrack = async () => {
+  await store.actions.COMMAND_DUPLICATE_TRACK({
+    trackId: props.trackId,
   });
 };
 

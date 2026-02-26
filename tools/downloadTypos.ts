@@ -8,7 +8,7 @@ import os from "node:os";
 import path from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
-import { ReadableStream } from "node:stream/web";
+import type { ReadableStream } from "node:stream/web";
 import { promisify } from "node:util";
 import { retryFetch } from "./helper.js";
 
@@ -30,7 +30,7 @@ const TYPOS_DIRECTORY_PATH = path.join(BINARY_BASE_PATH, "typos");
 // typosのバージョンを保存しておくテキストファイル
 const TYPOS_VERSION_FILE_NAME = "version.txt";
 
-const TYPOS_VERSION = "v1.30.0";
+const TYPOS_VERSION = "v1.43.4";
 
 // 各OSとアーキテクチャに対応するtyposバイナリのターゲットトリプル
 const TYPOS_TARGET_TRIPLES = {

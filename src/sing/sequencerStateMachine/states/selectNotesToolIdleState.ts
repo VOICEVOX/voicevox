@@ -1,11 +1,11 @@
-import { SetNextState, State } from "@/sing/stateMachine";
+import type { SetNextState, State } from "@/sing/stateMachine";
 import {
-  Context,
+  type Context,
   getGuideLineTicks,
-  Input,
+  type Input,
   selectNotesInRange,
   selectOnlyThisNoteAndPlayPreviewSound,
-  SequencerStateDefinitions,
+  type SequencerStateDefinitions,
   toggleNoteSelection,
 } from "@/sing/sequencerStateMachine/common";
 import {
@@ -19,9 +19,11 @@ import { NoteId } from "@/type/preload";
 import { clamp } from "@/sing/utility";
 import { uuid4 } from "@/helpers/random";
 
-export class SelectNotesToolIdleState
-  implements State<SequencerStateDefinitions, Input, Context>
-{
+export class SelectNotesToolIdleState implements State<
+  SequencerStateDefinitions,
+  Input,
+  Context
+> {
   readonly id = "selectNotesToolIdle";
 
   onEnter(context: Context) {

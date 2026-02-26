@@ -1,4 +1,4 @@
-import { FlatConfig } from "@typescript-eslint/utils/ts-eslint";
+import type { FlatConfig } from "@typescript-eslint/utils/ts-eslint";
 import noStrictNullable from "./no-strict-nullable";
 import pkg from "./package.json" with { type: "json" };
 

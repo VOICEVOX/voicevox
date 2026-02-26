@@ -72,10 +72,10 @@ import {
   getKeyBaseHeight,
   tickToBaseX,
   noteNumberToBaseY,
-  PreviewMode,
+  type PreviewMode,
 } from "@/sing/viewHelper";
 import ContextMenu, {
-  ContextMenuItemData,
+  type ContextMenuItemData,
 } from "@/components/Menu/ContextMenu/Container.vue";
 
 const props = defineProps<{

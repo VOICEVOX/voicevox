@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   wrapToTransferableResult,
   getOrThrowTransferableResult,
-  TransferableResult,
+  type TransferableResult,
 } from "@/backend/electron/transferableResultHelper";
 import { DisplayableError } from "@/helpers/errorHelper";
 import { UnreachableError } from "@/type/utility";

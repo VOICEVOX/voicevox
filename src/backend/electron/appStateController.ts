@@ -1,8 +1,8 @@
 import { app } from "electron";
-import { ipcMainSendProxy } from "./ipc";
-import { getWindowManager } from "./manager/windowManager";
+import { getMainWindowManager } from "./manager/windowManager/main";
 import { getEngineAndVvppController } from "./engineAndVvppController";
 import { getConfigManager } from "./electronConfig";
+import { getWelcomeWindowManager } from "./manager/windowManager/welcome";
 import { ExhaustiveError } from "@/type/utility";
 import { createLogger } from "@/helpers/log";
 import { Mutex } from "@/helpers/mutex";
@@ -20,10 +20,83 @@ export class AppStateController {
    * - unconfirmed：ユーザーが終了をリクエストした状態
    * - dirty：クリーンアップ前の状態
    * - done：クリーンアップ処理が完了し、アプリが終了する準備が整った状態
+   * - switch: ウィンドウ切替のために一時的に終了処理を中断している状態
    */
-  private quitState: "unconfirmed" | "dirty" | "done" = "unconfirmed";
+  private quitState: "unconfirmed" | "dirty" | "done" | "switch" =
+    "unconfirmed";
+  /** 現在アクティブなウィンドウ */
+  private activeWindow: "main" | "welcome" | null = null;
 
   private lock = new Mutex();
+
+  async startup() {
+    const engineAndVvppController = getEngineAndVvppController();
+    const packageStatuses =
+      engineAndVvppController.getEnginePackageLocalInfos();
+
+    if (packageStatuses.length === 0) {
+      log.info("No downloadable engine packages found. Launching main window.");
+      await this.launchMainWindow();
+      return;
+    }
+
+    const anyDefaultEngineInstalled = packageStatuses.some((status) => {
+      return status.installed.status !== "notInstalled";
+    });
+    if (anyDefaultEngineInstalled) {
+      log.info("Default engine found. Launching main window.");
+      await this.launchMainWindow();
+    } else {
+      log.info("No default engine found. Launching welcome window.");
+      await this.launchWelcomeWindow();
+    }
+  }
+
+  async switchToMainWindow() {
+    log.info("Switching to main window");
+    this.quitState = "switch";
+
+    const welcomeWindowManager = getWelcomeWindowManager();
+    if (welcomeWindowManager.isInitialized()) {
+      log.info("Destroying welcome window");
+      welcomeWindowManager.destroyWindow();
+    }
+
+    await this.launchMainWindow();
+    this.quitState = "unconfirmed";
+  }
+
+  async switchToWelcomeWindow() {
+    log.info("Switching to welcome window");
+    this.quitState = "switch";
+
+    const mainWindowManager = getMainWindowManager();
+    if (mainWindowManager.isInitialized()) {
+      log.info("Destroying main window and cleaning up engines");
+      const engineAndVvppController = getEngineAndVvppController();
+      mainWindowManager.destroyWindow();
+      await engineAndVvppController.cleanupEngines();
+    }
+
+    await this.launchWelcomeWindow();
+    this.quitState = "unconfirmed";
+  }
+
+  private async launchWelcomeWindow() {
+    this.activeWindow = "welcome";
+
+    const welcomeWindowManager = getWelcomeWindowManager();
+    await welcomeWindowManager.createWindow();
+  }
+
+  private async launchMainWindow() {
+    this.activeWindow = "main";
+
+    const engineAndVvppController = getEngineAndVvppController();
+    const mainWindowManager = getMainWindowManager();
+    await engineAndVvppController.launchEngines();
+    await mainWindowManager.createWindow();
+  }
 
   onQuitRequest(DI: { preventQuit: () => void }): void {
     log.info(`onQuitRequest called. Current quitState: ${this.quitState}`);
@@ -42,7 +115,12 @@ export class AppStateController {
         DI.preventQuit();
         void (async () => {
           await using _lock = await this.lock.acquire();
-          this.checkUnsavedEdit();
+          if (this.activeWindow === "main") {
+            this.checkUnsavedEdit();
+          } else {
+            log.info("Main window is not active. Proceeding to shutdown.");
+            this.shutdown();
+          }
         })();
         break;
       }
@@ -57,6 +135,10 @@ export class AppStateController {
       case "done":
         log.info("Quit process already done. Proceeding to quit.");
         break;
+      case "switch":
+        log.info("Quit process is in switch state. Preventing quit request.");
+        DI.preventQuit();
+        break;
       default:
         throw new ExhaustiveError(this.quitState);
     }
@@ -64,18 +146,18 @@ export class AppStateController {
 
   private checkUnsavedEdit() {
     log.info("Checking for unsaved edits before quitting");
-    const windowManager = getWindowManager();
+    const mainWindowManager = getMainWindowManager();
     try {
       // TODO: ipcの送信以外で失敗した場合はシャットダウンしないようにする
-      ipcMainSendProxy.CHECK_EDITED_AND_NOT_SAVE(windowManager.getWindow(), {
-        closeOrReload: "close",
+      mainWindowManager.ipc.CHECK_EDITED_AND_NOT_SAVE({
+        nextAction: "close",
       });
     } catch (error) {
       log.error(
         "Error while sending CHECK_EDITED_AND_NOT_SAVE IPC message:",
         error,
       );
-      void windowManager
+      void mainWindowManager
         .showMessageBox({
           type: "error",
           title: "保存の確認に失敗しました",
@@ -98,8 +180,11 @@ export class AppStateController {
 
   /** 編集状態に関わらず終了する */
   shutdown() {
+    const mainWindowManager = getMainWindowManager();
     this.quitState = "dirty";
-    getWindowManager().destroyWindow();
+    if (mainWindowManager.isInitialized()) {
+      mainWindowManager.destroyWindow();
+    }
     this.initiateQuit();
   }
 

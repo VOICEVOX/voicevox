@@ -23,12 +23,12 @@ import { getLast } from "@/sing/utility";
 import { getOrThrow } from "@/helpers/mapHelper";
 import {
   calculatePitchDataHash,
-  PitchData,
-  PitchDataHash,
+  type PitchData,
+  type PitchDataHash,
   PitchLine,
-  ViewInfo,
+  type ViewInfo,
 } from "@/sing/graphics/pitchLine";
-import { FramePhoneme } from "@/openapi";
+import type { FramePhoneme } from "@/openapi";
 import { Mutex } from "@/helpers/mutex";
 
 const props = defineProps<{

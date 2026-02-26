@@ -6,13 +6,13 @@ import {
 } from "@/sing/utility";
 import { convertLongVowel, moraPattern } from "@/domain/japanese";
 import {
-  Phrase,
-  PhraseSource,
+  type Phrase,
+  type PhraseSource,
   PhraseKey,
-  EditorFrameAudioQuery,
+  type EditorFrameAudioQuery,
 } from "@/store/type";
-import { FramePhoneme } from "@/openapi";
-import { NoteId, TrackId } from "@/type/preload";
+import type { FramePhoneme } from "@/openapi";
+import { NoteId, type TrackId } from "@/type/preload";
 import type {
   PhonemeTimingEditData,
   Tempo,
