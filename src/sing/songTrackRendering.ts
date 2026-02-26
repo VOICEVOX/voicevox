@@ -1,4 +1,3 @@
-import { getDoremiFromNoteNumber } from "./viewHelper";
 import { getNoteDuration, secondToTick, tickToSecond } from "@/sing/music";
 import { decibelToLinear } from "@/sing/audio";
 import {
@@ -28,6 +27,7 @@ import {
   toPhonemeTimings,
   toPhonemes,
   selectPriorPhrase,
+  getDefaultLyric,
 } from "@/sing/domain";
 import type { FramePhoneme, Note as NoteForRequestToEngine } from "@/openapi";
 import type { EngineId, NoteId, StyleId, TrackId } from "@/type/preload";
@@ -45,6 +45,7 @@ export type SnapshotForRender = Readonly<{
   trackOverlappingNoteIds: Map<TrackId, Set<NoteId>>;
   engineFrameRates: Map<EngineId, number>;
   editorFrameRate: number;
+  defaultLyricMode: "doremi" | "la";
 }>;
 
 /**
@@ -83,6 +84,7 @@ type QuerySource = Readonly<{
   keyRangeAdjustment: number;
   minNonPauseStartFrame: number | undefined;
   maxNonPauseEndFrame: number | undefined;
+  defaultLyricMode: "doremi" | "la";
 }>;
 
 /**
@@ -97,6 +99,7 @@ type SingingPitchSource = Readonly<{
   notes: Note[];
   keyRangeAdjustment: number;
   queryForPitchGeneration: EditorFrameAudioQuery;
+  defaultLyricMode: "doremi" | "la";
 }>;
 
 /**
@@ -112,6 +115,7 @@ type SingingVolumeSource = Readonly<{
   keyRangeAdjustment: number;
   volumeRangeAdjustment: number;
   queryForVolumeGeneration: EditorFrameAudioQuery;
+  defaultLyricMode: "doremi" | "la";
 }>;
 
 /**
@@ -174,6 +178,7 @@ const createNotesForRequestToEngine = (
   tempos: Tempo[],
   tpqn: number,
   frameRate: number,
+  defaultLyricMode: "doremi" | "la",
 ) => {
   const notesForRequestToEngine: NoteForRequestToEngine[] = [];
 
@@ -206,7 +211,7 @@ const createNotesForRequestToEngine = (
       id: note.id,
       key: note.noteNumber,
       frameLength: noteOffFrame - noteOnFrame,
-      lyric: note.lyric ?? getDoremiFromNoteNumber(note.noteNumber),
+      lyric: note.lyric ?? getDefaultLyric(note.noteNumber, defaultLyricMode),
     });
   }
 
@@ -615,6 +620,7 @@ const generateQuerySource = (
     keyRangeAdjustment: track.keyRangeAdjustment,
     minNonPauseStartFrame: phrase.minNonPauseStartFrame,
     maxNonPauseEndFrame: phrase.maxNonPauseEndFrame,
+    defaultLyricMode: snapshot.defaultLyricMode,
   };
 };
 
@@ -655,6 +661,7 @@ const generateSingingPitchSource = (
     notes: phrase.notes,
     keyRangeAdjustment: track.keyRangeAdjustment,
     queryForPitchGeneration: clonedQuery,
+    defaultLyricMode: snapshot.defaultLyricMode,
   };
 };
 
@@ -696,6 +703,7 @@ const generateSingingVolumeSource = (
     keyRangeAdjustment: track.keyRangeAdjustment,
     volumeRangeAdjustment: track.volumeRangeAdjustment,
     queryForVolumeGeneration: clonedQuery,
+    defaultLyricMode: snapshot.defaultLyricMode,
   };
 };
 
@@ -756,6 +764,7 @@ const generateQuery = async (
     querySource.tempos,
     querySource.tpqn,
     querySource.engineFrameRate,
+    querySource.defaultLyricMode,
   );
 
   shiftKeyOfNotes(notesForRequestToEngine, -querySource.keyRangeAdjustment);
@@ -792,6 +801,7 @@ const generateSingingPitch = async (
     singingPitchSource.tempos,
     singingPitchSource.tpqn,
     singingPitchSource.engineFrameRate,
+    singingPitchSource.defaultLyricMode,
   );
   const queryForPitchGeneration = singingPitchSource.queryForPitchGeneration;
 
@@ -824,6 +834,7 @@ const generateSingingVolume = async (
     singingVolumeSource.tempos,
     singingVolumeSource.tpqn,
     singingVolumeSource.engineFrameRate,
+    singingVolumeSource.defaultLyricMode,
   );
   const queryForVolumeGeneration = singingVolumeSource.queryForVolumeGeneration;
 

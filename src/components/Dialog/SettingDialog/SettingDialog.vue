@@ -403,6 +403,15 @@
                     description="ONの場合、エンジンが対応している場合は、未知の英単語をカタカナ読みに変換します。"
                   />
                 </BaseTooltip>
+                <ButtonToggleCell
+                  v-model="defaultLyricModeComputed"
+                  title="ソング：デフォルト歌詞"
+                  description="歌詞が未設定の音符に対してデフォルトで設定される歌詞を設定できます。"
+                  :options="[
+                    { label: 'ドレミ（階名）', value: 'doremi' },
+                    { label: 'ら（固定）', value: 'la' },
+                  ]"
+                />
                 <BaseRowCard
                   title="ソング：元に戻すトラック操作"
                   description="「元に戻す」機能の対象とするトラック操作を指定します。"
@@ -733,6 +742,18 @@ const [enableMultiSelect, setEnableMultiSelect] = useRootMiscSetting(
   store,
   "enableMultiSelect",
 );
+
+const [defaultLyricMode, setDefaultLyricMode] = useRootMiscSetting(
+  store,
+  "defaultLyricMode",
+);
+
+const defaultLyricModeComputed = computed({
+  get: () => defaultLyricMode.value,
+  set: (value: "doremi" | "la") => {
+    setDefaultLyricMode(value);
+  },
+});
 
 const canSetAudioOutputDevice = computed(() => {
   return !!HTMLAudioElement.prototype.setSinkId;
