@@ -29,13 +29,11 @@ type WaveType = (typeof waveTypes)[number];
 function generateWave(
   f0: Array<number>,
   volume: Array<number>,
-  frameRate: number,
+  samplesPerFrame: number,
   sampleRate: number,
   type: WaveType,
 ) {
-  const duration = f0.length / frameRate;
-  const samplesPerOriginal = sampleRate / frameRate;
-  const wave = new Float32Array(Math.round(sampleRate * duration));
+  const wave = new Float32Array(f0.length * samplesPerFrame);
 
   const seed =
     Math.round(f0.concat(volume).reduce((acc, v) => acc + v, 0)) % 2 ** 31; // そこそこ被らないシード値
@@ -46,8 +44,8 @@ function generateWave(
     const vol = volume[frameIndex];
     const omega = (2 * Math.PI * freq) / sampleRate;
 
-    for (let i = 0; i < samplesPerOriginal; i++) {
-      const sampleIndex = frameIndex * samplesPerOriginal + i;
+    for (let i = 0; i < samplesPerFrame; i++) {
+      const sampleIndex = frameIndex * samplesPerFrame + i;
       switch (type) {
         case "sine":
           wave[sampleIndex] = Math.sin(phase);
@@ -192,13 +190,12 @@ export function synthesisFrameAudioQueryMock(
 ): Uint8Array {
   const sampleRate = frameAudioQuery.outputSamplingRate;
   const samplePerFrame = 256;
-  const frameRate = sampleRate / samplePerFrame;
 
   const _generateWave = (type: WaveType) =>
     generateWave(
       frameAudioQuery.f0,
       frameAudioQuery.volume,
-      frameRate,
+      samplePerFrame,
       sampleRate,
       type,
     );
