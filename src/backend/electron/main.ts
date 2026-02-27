@@ -15,10 +15,13 @@ import configMigration014 from "./configMigration014";
 import { initializeRuntimeInfoManager } from "./manager/RuntimeInfoManager";
 import { getConfigManager } from "./electronConfig";
 import { getEngineAndVvppController } from "./engineAndVvppController";
-import { getIpcMainHandle } from "./ipcMainHandle";
-import { getWelcomeIpcMainHandle } from "./welcomeIpcMainHandle";
-import { getAppStateController } from "./appStateController";
+import {
+  getAppStateController,
+  initializeAppStateController,
+} from "./appStateController";
 import { initializeWelcomeWindowManager } from "./manager/windowManager/welcome";
+import { initializeIpcMainHandleManager } from "./manager/ipcMainHandleManager";
+import { initializeWelcomeIpcMainHandleManager } from "./manager/welcomeIpcMainHandleManager";
 import { assertNonNullable } from "@/type/utility";
 import type { EngineInfo } from "@/type/preload";
 import { isDevelopment, isMac, isProduction, isTest } from "@/helpers/platform";
@@ -214,21 +217,24 @@ initializeEngineInfoManager({
 initializeEngineProcessManager({ onEngineProcessError });
 initializeVvppManager({ vvppEngineDir, tmpDir: app.getPath("temp") });
 
+initializeAppStateController();
+
+initializeIpcMainHandleManager({
+  staticDirPath: staticDir,
+  appDirPath,
+  initialFilePathGetter: () => initialFilePath,
+});
+initializeWelcomeIpcMainHandleManager();
+
 initializeMainWindowManager({
   isDevelopment,
   isTest,
   staticDir: staticDir,
-  ipcMainHandle: getIpcMainHandle({
-    staticDirPath: staticDir,
-    appDirPath,
-    initialFilePathGetter: () => initialFilePath,
-  }),
 });
 initializeWelcomeWindowManager({
   isDevelopment,
   isTest,
   staticDir: staticDir,
-  ipcMainHandle: getWelcomeIpcMainHandle(),
 });
 
 const configManager = getConfigManager();
