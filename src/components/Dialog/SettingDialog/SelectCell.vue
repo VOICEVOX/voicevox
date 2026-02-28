@@ -9,14 +9,22 @@
     tabindex="-1"
     @click="() => (open = !open)"
   >
-    <BaseSelect ref="select" v-model="model" :open :disabled="disable">
-      <BaseSelectItem
-        v-for="option in options"
-        :key="option.value"
-        :value="option.value"
-        :label="option.label"
-      />
-    </BaseSelect>
+    <!-- BaseRowCardのclickイベントが発火しないようにstopする -->
+    <div @click.stop>
+      <BaseSelect
+        ref="select"
+        v-model="model"
+        v-model:open="open"
+        :disabled="disable"
+      >
+        <BaseSelectItem
+          v-for="option in options"
+          :key="option.value"
+          :value="option.value"
+          :label="option.label"
+        />
+      </BaseSelect>
+    </div>
   </BaseRowCard>
 </template>
 
