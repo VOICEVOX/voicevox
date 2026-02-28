@@ -6,9 +6,11 @@ import type {
 } from "@/sing/sequencerStateMachine/common";
 import { getButton } from "@/sing/viewHelper";
 
-export class ErasePitchToolIdleState
-  implements State<SequencerStateDefinitions, Input, Context>
-{
+export class ErasePitchToolIdleState implements State<
+  SequencerStateDefinitions,
+  Input,
+  Context
+> {
   readonly id = "erasePitchToolIdle";
 
   onEnter(context: Context) {
