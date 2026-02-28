@@ -636,9 +636,9 @@ const generateSingingPitchSource = (
     throw new Error("phrase.query is undefined.");
   }
 
+  // phrase のデータを直接変更しないよう、作業用コピーを作る
   const clonedQuery = structuredClone(phrase.query);
 
-  // 音素タイミング編集を適用して調整を行う
   const phonemeTimings = toPhonemeTimings(clonedQuery.phonemes);
   applyPhonemeTimingEdit(
     phonemeTimings,
@@ -680,11 +680,25 @@ const generateSingingVolumeSource = (
     throw new Error("phrase.singingPitch is undefined.");
   }
 
+  // phrase のデータを直接変更しないよう、作業用コピーを作る
+  // （clonedQuery に代入後も編集適用で変更されるため、singingPitch もクローンが必要）
   const clonedQuery = structuredClone(phrase.query);
-
-  // ピッチ編集を適用したf0をボリューム生成に使うため、ピッチをクローンして適用する
   const clonedSingingPitch = structuredClone(phrase.singingPitch);
+
   clonedQuery.f0 = clonedSingingPitch;
+
+  const phonemeTimings = toPhonemeTimings(clonedQuery.phonemes);
+  applyPhonemeTimingEdit(
+    phonemeTimings,
+    track.phonemeTimingEditData,
+    clonedQuery.frameRate,
+  );
+  adjustPhonemeTimings(
+    phonemeTimings,
+    phrase.minNonPauseStartFrame,
+    phrase.maxNonPauseEndFrame,
+  );
+  clonedQuery.phonemes = toPhonemes(phonemeTimings);
 
   applyPitchEdit(
     clonedQuery,
@@ -725,6 +739,8 @@ const generateSingingVoiceSource = (
     throw new Error("phrase.singingVolume is undefined.");
   }
 
+  // phrase のデータを直接変更しないよう、作業用コピーを作る
+  // （clonedQuery に代入後も編集適用で変更されるため、singingPitch/Volume もクローンが必要）
   const clonedQuery = structuredClone(phrase.query);
   const clonedSingingPitch = structuredClone(phrase.singingPitch);
   const clonedSingingVolume = structuredClone(phrase.singingVolume);
@@ -732,18 +748,33 @@ const generateSingingVoiceSource = (
   clonedQuery.f0 = clonedSingingPitch;
   clonedQuery.volume = clonedSingingVolume;
 
+  const phonemeTimings = toPhonemeTimings(clonedQuery.phonemes);
+  applyPhonemeTimingEdit(
+    phonemeTimings,
+    track.phonemeTimingEditData,
+    clonedQuery.frameRate,
+  );
+  adjustPhonemeTimings(
+    phonemeTimings,
+    phrase.minNonPauseStartFrame,
+    phrase.maxNonPauseEndFrame,
+  );
+  clonedQuery.phonemes = toPhonemes(phonemeTimings);
+
   applyPitchEdit(
     clonedQuery,
     phrase.startTime,
     track.pitchEditData,
     snapshot.editorFrameRate,
   );
+
   applyVolumeEdit(
     clonedQuery,
     phrase.startTime,
     track.volumeEditData,
     snapshot.editorFrameRate,
   );
+
   shiftVolume(clonedQuery.volume, track.volumeRangeAdjustment);
 
   return {
