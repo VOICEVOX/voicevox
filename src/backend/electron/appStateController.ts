@@ -89,6 +89,20 @@ export class AppStateController {
     await welcomeWindowManager.createWindow();
   }
 
+  /**
+   * Launch main window and ensure engines are running.
+   *
+   * 責務:
+   * - 必要なエンジンを起動する（`engineAndVvppController.launchEngines()`）
+   * - メインウィンドウを生成する（`mainWindowManager.createWindow()`）
+   *
+   * 副作用:
+   * - `activeWindow` を `main` に設定する
+   * - エンジン起動やウィンドウ生成に失敗すると例外を投げる可能性がある
+   *
+   * 備考:
+   * - この関数はアプリ起動フローの一部であり、メインプロセスの同期的なフロー内で呼ばれることを想定している。
+   */
   private async launchMainWindow() {
     this.activeWindow = "main";
 
