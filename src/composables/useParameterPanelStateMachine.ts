@@ -30,6 +30,7 @@ export const useParameterPanelStateMachine = (
     tpqn: computed<number>(() => store.state.tpqn),
     zoomX: computed<number>(() => store.state.sequencerZoomX),
     zoomY: computed<number>(() => store.state.sequencerZoomY),
+    nowPlaying: computed<boolean>(() => store.state.nowPlaying),
   };
 
   // NOTE: parameterPanelEditTargetは今のところVOLUMEのみ。

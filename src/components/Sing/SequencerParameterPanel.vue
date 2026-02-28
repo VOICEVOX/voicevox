@@ -9,11 +9,10 @@
       <SequencerPhonemeTimingEditor v-if="editTarget === 'PHONEME_TIMING'" />
       <SequencerVolumeEditor
         v-if="editTarget === 'VOLUME'"
-        :playheadTicks
-        :tempos
-        :tpqn
-        :zoomX
-        :zoomY
+        :offsetX="props.offsetX"
+        @update:needsAutoScroll="
+          (value) => emit('update:needsAutoScroll', value)
+        "
       />
     </div>
   </div>
@@ -27,13 +26,15 @@ import type { ParameterPanelEditTarget } from "@/store/type";
 import ParameterPanelEditTargetSwitcher from "@/components/Sing/ParameterPanelEditTargetSwitcher.vue";
 import SequencerPhonemeTimingEditor from "@/components/Sing/SequencerPhonemeTimingEditor.vue";
 
-const store = useStore();
+const props = defineProps<{
+  offsetX: number;
+}>();
 
-const playheadTicks = computed(() => store.getters.PLAYHEAD_POSITION);
-const tempos = computed(() => store.state.tempos);
-const tpqn = computed(() => store.state.tpqn);
-const zoomX = computed(() => store.state.sequencerZoomX);
-const zoomY = computed(() => store.state.sequencerZoomY);
+const emit = defineEmits<{
+  "update:needsAutoScroll": [value: boolean];
+}>();
+
+const store = useStore();
 
 const editTarget = computed(() => store.state.parameterPanelEditTarget);
 
@@ -69,5 +70,7 @@ const changeEditTarget = (editTarget: ParameterPanelEditTarget) => {
 .edit-area {
   grid-column: 1;
   grid-row: 2;
+  position: relative;
+  overflow: hidden;
 }
 </style>

@@ -92,21 +92,21 @@ export class DrawVolumeState implements State<
       throw new Error("previewVolumeEdit.type is not draw.");
     }
 
-    if (input.type != "mouseEvent") {
+    if (input.type != "pointerEvent") {
       return;
     }
 
-    const { mouseEvent, position, targetArea } = input;
-    const mouseButton = getButton(mouseEvent);
+    const { pointerEvent, position, targetArea } = input;
+    const mouseButton = getButton(pointerEvent);
 
     // 対象がWindow
     if (targetArea === "Window") {
-      if (mouseEvent.type === "mousemove") {
+      if (pointerEvent.type === "pointermove") {
         this.currentCursorPos = position;
         this.innerContext.executePreviewProcess = true;
       } else if (
-        mouseEvent.type === "mouseup" &&
-        mouseButton === "LEFT_BUTTON"
+        (pointerEvent.type === "pointerup" && mouseButton === "LEFT_BUTTON") ||
+        pointerEvent.type === "pointercancel"
       ) {
         // NOTE: ピッチと同様
         // カーソルを動かさずにマウスのボタンを離したときに1フレームのみの変更になり、
@@ -119,7 +119,7 @@ export class DrawVolumeState implements State<
 
     // 対象がEditor
     if (targetArea === "Editor") {
-      if (mouseEvent.type === "mousemove") {
+      if (pointerEvent.type === "pointermove") {
         this.currentCursorPos = position;
         this.innerContext.executePreviewProcess = true;
       }
@@ -169,9 +169,6 @@ export class DrawVolumeState implements State<
     // まずはUIが動くようにのみする
     const cursorFrame = this.currentCursorPos.frame;
     const cursorValue = this.currentCursorPos.value;
-    if (cursorFrame < 0) {
-      return;
-    }
 
     const temp = {
       ...context.previewVolumeEdit.value,
