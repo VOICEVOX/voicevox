@@ -19,7 +19,6 @@ import { computed, watchEffect } from "vue";
 import UpdateNotificationDialog from "./Presentation.vue";
 import { useFetchNewUpdateInfos } from "@/composables/useFetchNewUpdateInfos";
 import { useStore } from "@/store";
-import { UrlString } from "@/type/preload";
 import { getAppInfos } from "@/domain/appInfo";
 
 const props = defineProps<{
@@ -37,12 +36,6 @@ const isDialogOpenComputed = computed({
 });
 
 // エディタのアップデート確認
-if (!import.meta.env.VITE_LATEST_UPDATE_INFOS_URL) {
-  throw new Error(
-    "環境変数VITE_LATEST_UPDATE_INFOS_URLが設定されていません。.envに記載してください。",
-  );
-}
-
 // アプリのバージョンとスキップしたバージョンのうち、新しい方を返す
 const currentVersionGetter = async () => {
   const appVersion = getAppInfos().version;
@@ -59,10 +52,7 @@ const currentVersionGetter = async () => {
 };
 
 // 新しいバージョンがあれば取得
-const newUpdateResult = useFetchNewUpdateInfos(
-  currentVersionGetter,
-  UrlString(import.meta.env.VITE_LATEST_UPDATE_INFOS_URL),
-);
+const newUpdateResult = useFetchNewUpdateInfos(currentVersionGetter);
 
 // 新しいバージョンのアップデートがスキップされたときの処理
 const handleSkipThisVersionClick = (version: string) => {

@@ -261,6 +261,10 @@ const api: Sandbox = {
   getPathForFile: async (file) => {
     return webUtils.getPathForFile(file);
   },
+
+  fetchUpdateInfoData() {
+    return ipcRendererInvokeProxy.FETCH_UPDATE_INFO_DATA();
+  },
 };
 
 const wrapApi = (baseApi: Sandbox): SandboxWithTransferableResult => {

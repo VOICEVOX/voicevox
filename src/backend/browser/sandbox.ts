@@ -20,6 +20,7 @@ import {
 import { AssetTextFileNames } from "@/type/staticResources";
 import type { HotkeySettingType } from "@/domain/hotkeyAction";
 import path from "@/helpers/path";
+import { fetchUpdateInfoDataImpl } from "@/backend/common/fetchUpdateInfoDataImpl";
 
 const toStaticPath = (fileName: string) =>
   `${import.meta.env.BASE_URL}/${fileName}`.replaceAll(/\/\/+/g, "/");
@@ -221,5 +222,8 @@ export const api: Sandbox = {
   },
   getPathForFile(/* file: File */) {
     throw new Error(`Not supported on Browser version: getPathForFile`);
+  },
+  fetchUpdateInfoData() {
+    return fetchUpdateInfoDataImpl();
   },
 };

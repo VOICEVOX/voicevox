@@ -1,7 +1,9 @@
 import { vi, it, expect } from "vitest";
 import type { Ref } from "vue";
-import { type UpdateInfo, UrlString } from "@/type/preload";
+import type { UpdateInfo } from "@/type/preload";
 import { useFetchNewUpdateInfos } from "@/composables/useFetchNewUpdateInfos";
+// useFetchNewUpdateInfos内で`window.backend`を使用しているためインポートする
+import "@/backend/browser/backendApiLoader.ts";
 
 // 最新バージョンの情報をfetchするモックを作成する
 const setupFetchMock = (latestVersion: string) => {
@@ -30,10 +32,7 @@ it("新バージョンがある場合、latestVersionに最新バージョンが
   const latestVersion = "2.0.0";
   setupFetchMock(latestVersion);
 
-  const result = useFetchNewUpdateInfos(
-    async () => currentVersion,
-    UrlString("http://example.com"),
-  );
+  const result = useFetchNewUpdateInfos(async () => currentVersion);
 
   await waitFinished(result);
   expect(result.value).toMatchObject({
@@ -47,10 +46,7 @@ it("新バージョンがない場合は状態が変わるだけ", async () => {
   const latestVersion = "1.0.0";
   setupFetchMock(latestVersion);
 
-  const result = useFetchNewUpdateInfos(
-    async () => currentVersion,
-    UrlString("http://example.com"),
-  );
+  const result = useFetchNewUpdateInfos(async () => currentVersion);
 
   await waitFinished(result);
   expect(result.value).toMatchObject({ status: "updateNotAvailable" });
