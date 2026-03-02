@@ -230,9 +230,13 @@ export class AppStateController {
 
 let appStateController: AppStateController | undefined;
 
+export function initializeAppStateController() {
+  appStateController = new AppStateController();
+}
+
 export function getAppStateController() {
   if (appStateController == undefined) {
-    appStateController = new AppStateController();
+    throw new Error("AppStateController is not initialized");
   }
   return appStateController;
 }

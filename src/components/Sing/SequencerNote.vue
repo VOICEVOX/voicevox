@@ -67,12 +67,12 @@
 import { computed, ref } from "vue";
 import { useStore } from "@/store";
 import type { Note } from "@/domain/project/type";
+import { getDefaultLyric } from "@/sing/domain";
 import {
   getKeyBaseHeight,
   tickToBaseX,
   noteNumberToBaseY,
   type PreviewMode,
-  getDoremiFromNoteNumber,
 } from "@/sing/viewHelper";
 import ContextMenu, {
   type ContextMenuItemData,
@@ -168,7 +168,8 @@ const hasPhraseError = computed(() => {
 // 優先度：入力中の歌詞 > 渡された（=Storeの）歌詞
 const lyricToDisplay = computed(() => {
   const noteLyric =
-    props.note.lyric ?? getDoremiFromNoteNumber(props.note.noteNumber);
+    props.note.lyric ??
+    getDefaultLyric(props.note.noteNumber, state.defaultLyricMode);
   return props.previewLyric ?? noteLyric;
 });
 

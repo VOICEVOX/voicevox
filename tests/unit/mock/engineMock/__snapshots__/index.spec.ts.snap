@@ -63,7 +63,7 @@ exports[`createOpenAPIEngineMock > audioQuery 1`] = `
 }
 `;
 
-exports[`createOpenAPIEngineMock > frameSynthesis 1`] = `"714de942c735d44224422e2edf262aeccd056bbe33ccaec89b309ab9476fa165"`;
+exports[`createOpenAPIEngineMock > frameSynthesis 1`] = `"efb9dd4a321b0c3016f9817e2aab57a2a8a9ca2126299ec6de5573d7a0413f3a"`;
 
 exports[`createOpenAPIEngineMock > singFrameAudioQuery 1`] = `
 {

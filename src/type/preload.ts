@@ -417,6 +417,7 @@ export const rootMiscSettingSchema = z.object({
     })
     .prefault({}),
   showSingCharacterPortrait: z.boolean().default(true), // ソングエディタで立ち絵を表示するか
+  defaultLyricMode: z.enum(["doremi", "la"]).default("doremi"), // デフォルト歌詞の動作モード
   playheadPositionDisplayFormat: z
     .enum(["MINUTES_SECONDS", "MEASURES_BEATS"])
     .default("MINUTES_SECONDS"), // 再生ヘッド位置の表示モード
