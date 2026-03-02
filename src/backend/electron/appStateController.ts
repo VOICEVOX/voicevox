@@ -11,8 +11,6 @@ const log = createLogger("AppStateController");
 
 /**
  * アプリの状態を管理するシングルトン。
- *
- * TODO: アプリの起動処理をここに移す
  */
 export class AppStateController {
   /**
@@ -90,7 +88,7 @@ export class AppStateController {
   }
 
   /**
-   * Launch main window and ensure engines are running.
+   * メインウィンドウと必要なエンジンを起動する。
    *
    * 責務:
    * - 必要なエンジンを起動する（`engineAndVvppController.launchEngines()`）
