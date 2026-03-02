@@ -121,7 +121,7 @@ export const ufProjectToVoicevox = (project: UfProject): VoicevoxScore => {
     });
   }
   timeSignatures = removeDuplicateTimeSignatures(timeSignatures);
-  // 先頭にmeasureNumber 1の拍子記号がない場合、デフォルトの拍子記号を追加する
+  // 先頭に拍子記号がない場合は追加する
   if (timeSignatures.length === 0 || timeSignatures[0].measureNumber !== 1) {
     timeSignatures.unshift(createDefaultTimeSignature(1));
   }
