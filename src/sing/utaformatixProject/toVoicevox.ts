@@ -104,7 +104,7 @@ export const ufProjectToVoicevox = (project: UfProject): VoicevoxScore => {
     };
   });
   tempos = removeDuplicateTempos(tempos);
-  // 先頭にposition 0のテンポがない場合、デフォルトのテンポを追加する
+  // 先頭にテンポがない場合は追加する
   if (tempos.length === 0 || tempos[0].position !== 0) {
     tempos.unshift(createDefaultTempo(0));
   }
