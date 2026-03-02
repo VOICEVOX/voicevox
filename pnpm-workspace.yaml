@@ -1,9 +1,14 @@
 managePackageManagerVersions: true
+
 minimumReleaseAge: 10080
+
 onlyBuiltDependencies:
-  - "@nestjs/core"
-  - "@openapitools/openapi-generator-cli"
+  - '@nestjs/core'
+  - '@openapitools/openapi-generator-cli'
   - electron
   - esbuild
   - msw
   - vue-demi
+
+patchedDependencies:
+  vite-plugin-checker@0.12.0: patches/vite-plugin-checker@0.12.0.patch

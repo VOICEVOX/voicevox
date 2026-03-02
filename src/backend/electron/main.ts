@@ -183,6 +183,31 @@ void app.whenReady().then(() => {
   );
 });
 
+// CSPヘッダの設定
+void app.whenReady().then(() => {
+  let urls: string[];
+  if (isDevelopment) {
+    assertNonNullable(import.meta.env.VITE_DEV_SERVER_URL);
+    const { protocol, hostname } = new URL(import.meta.env.VITE_DEV_SERVER_URL);
+    urls = [`${protocol}//${hostname}/*`];
+  } else {
+    urls = ["app://./*"];
+  }
+  const cspHeaderValue =
+    "script-src 'self' 'wasm-unsafe-eval' https://*.googletagmanager.com";
+  session.defaultSession.webRequest.onHeadersReceived(
+    { urls },
+    (details, callback) => {
+      callback({
+        responseHeaders: {
+          ...details.responseHeaders,
+          "Content-Security-Policy": [cspHeaderValue],
+        },
+      });
+    },
+  );
+});
+
 // engine
 const vvppEngineDir = path.join(app.getPath("userData"), "vvpp-engines");
 
