@@ -92,21 +92,21 @@ export class DrawVolumeState implements State<
       throw new Error("previewVolumeEdit.type is not draw.");
     }
 
-    if (input.type != "mouseEvent") {
+    if (input.type != "pointerEvent") {
       return;
     }
 
-    const { mouseEvent, position, targetArea } = input;
-    const mouseButton = getButton(mouseEvent);
+    const { pointerEvent, position, targetArea } = input;
+    const mouseButton = getButton(pointerEvent);
 
     // 対象がWindow
     if (targetArea === "Window") {
-      if (mouseEvent.type === "mousemove") {
+      if (pointerEvent.type === "pointermove") {
         this.currentCursorPos = position;
         this.innerContext.executePreviewProcess = true;
       } else if (
-        mouseEvent.type === "mouseup" &&
-        mouseButton === "LEFT_BUTTON"
+        (pointerEvent.type === "pointerup" && mouseButton === "LEFT_BUTTON") ||
+        pointerEvent.type === "pointercancel"
       ) {
         // NOTE: ピッチと同様
         // カーソルを動かさずにマウスのボタンを離したときに1フレームのみの変更になり、
@@ -119,7 +119,7 @@ export class DrawVolumeState implements State<
 
     // 対象がEditor
     if (targetArea === "Editor") {
-      if (mouseEvent.type === "mousemove") {
+      if (pointerEvent.type === "pointermove") {
         this.currentCursorPos = position;
         this.innerContext.executePreviewProcess = true;
       }
@@ -169,42 +169,36 @@ export class DrawVolumeState implements State<
     // まずはUIが動くようにのみする
     const cursorFrame = this.currentCursorPos.frame;
     const cursorValue = this.currentCursorPos.value;
-    if (cursorFrame < 0) {
-      return;
-    }
 
-    const temp = {
-      ...context.previewVolumeEdit.value,
-      data: [...context.previewVolumeEdit.value.data],
-    };
+    // NOTE: 毎フレームの配列全コピーを避けるため、data配列はin-placeで変更する。
+    // ドラッグ中は配列が線形に伸びるため、コピーすると累計O(n²)のコストになる。
+    let { data, startFrame } = context.previewVolumeEdit.value;
 
     // TODO: 以下の補間は最低限...UIにあわせ修正する予定
 
     // 開始フレームがカーソルフレームより後ろの場合は、カーソルフレームまで前方拡張
-    if (temp.startFrame > cursorFrame) {
-      const prependLength = temp.startFrame - cursorFrame;
-      const prepend = createArray(
-        prependLength,
-        () => temp.data[0] ?? cursorValue,
-      );
-      temp.data = prepend.concat(temp.data);
-      temp.startFrame = cursorFrame;
+    if (startFrame > cursorFrame) {
+      const prependLength = startFrame - cursorFrame;
+      const fillValue = data[0] ?? cursorValue;
+      const prepend = createArray(prependLength, () => fillValue);
+      data = prepend.concat(data);
+      startFrame = cursorFrame;
     }
 
     // 最後のフレームがカーソルフレームより前の場合は、カーソルフレームまで後方拡張
-    const lastFrame = temp.startFrame + temp.data.length - 1;
+    const lastFrame = startFrame + data.length - 1;
     if (lastFrame < cursorFrame) {
       const appendLength = cursorFrame - lastFrame;
-      const append = createArray(
-        appendLength,
-        () => temp.data[temp.data.length - 1] ?? cursorValue,
-      );
-      temp.data = temp.data.concat(append);
+      const fillValue = data[data.length - 1] ?? cursorValue;
+      for (let i = 0; i < appendLength; i++) {
+        data.push(fillValue);
+      }
     }
 
-    temp.data[cursorFrame - temp.startFrame] = cursorValue;
+    data[cursorFrame - startFrame] = cursorValue;
 
-    context.previewVolumeEdit.value = temp;
+    // NOTE: 新しいラッパーオブジェクトを代入することでshallowRefのwatcherに変更を通知する
+    context.previewVolumeEdit.value = { type: "draw", data, startFrame };
     this.innerContext.prevCursorPos = this.currentCursorPos;
   }
 }

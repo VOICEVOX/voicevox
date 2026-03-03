@@ -12,15 +12,15 @@ export type PositionOnParameterPanel = {
 
 export type ParameterPanelInput =
   | {
-      readonly type: "mouseEvent";
+      readonly type: "pointerEvent";
       readonly targetArea: "Editor";
-      readonly mouseEvent: MouseEvent;
+      readonly pointerEvent: PointerEvent;
       readonly position: PositionOnParameterPanel;
     }
   | {
-      readonly type: "mouseEvent";
+      readonly type: "pointerEvent";
       readonly targetArea: "Window";
-      readonly mouseEvent: MouseEvent;
+      readonly pointerEvent: PointerEvent;
       readonly position: PositionOnParameterPanel;
     };
 
@@ -43,6 +43,7 @@ export type ParameterPanelComputedRefs = {
   readonly tpqn: ComputedRef<number>;
   readonly zoomX: ComputedRef<number>;
   readonly zoomY: ComputedRef<number>;
+  readonly nowPlaying: ComputedRef<boolean>;
 };
 
 export type ParameterPanelPartialStore = {
@@ -54,6 +55,7 @@ export type ParameterPanelPartialStore = {
     | "sequencerZoomY"
     | "sequencerVolumeTool"
     | "parameterPanelEditTarget"
+    | "nowPlaying"
   >;
   readonly getters: Pick<
     Store["getters"],
