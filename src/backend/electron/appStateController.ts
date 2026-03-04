@@ -18,7 +18,7 @@ export class AppStateController {
    * - unconfirmed：ユーザーが終了をリクエストした状態
    * - dirty：クリーンアップ前の状態
    * - done：クリーンアップ処理が完了し、アプリが終了する準備が整った状態
-   * - switch: ウィンドウ切替のために一時的に終了処理を中断している状態
+   * - switch: ウィンドウ切替のために終了処理をキャンセルしている状態
    */
   private quitState: "unconfirmed" | "dirty" | "done" | "switch" =
     "unconfirmed";
@@ -27,6 +27,15 @@ export class AppStateController {
 
   private lock = new Mutex();
 
+  /**
+   * アプリ起動時の初期化処理を行う。
+   *
+   * 責務:
+   * - エンジンパッケージの状態を確認し、適切なウィンドウを起動する
+   *
+   * 副作用:
+   * - ウィンドウを起動する（`launchMainWindow()` または `launchWelcomeWindow()`）
+   */
   async startup() {
     const engineAndVvppController = getEngineAndVvppController();
     const packageStatuses =
@@ -50,6 +59,17 @@ export class AppStateController {
     }
   }
 
+  /**
+   * メインウィンドウに切り替える。
+   *
+   * 責務:
+   * - ウェルカムウィンドウを破棄する（`welcomeWindowManager.destroyWindow()`）
+   * - メインウィンドウを起動する（`launchMainWindow()`）
+   *
+   * 副作用:
+   * - `quitState` を "switch" に設定して、切り替え中であることを示す
+   * - ウィンドウの切り替えが完了した後に `quitState` を "unconfirmed" にリセットする
+   */
   async switchToMainWindow() {
     log.info("Switching to main window");
     this.quitState = "switch";
@@ -64,6 +84,17 @@ export class AppStateController {
     this.quitState = "unconfirmed";
   }
 
+  /**
+   * ウェルカムウィンドウに切り替える。
+   *
+   * 責務:
+   * - メインウィンドウを破棄し、必要なエンジンをクリーンアップする（`mainWindowManager.destroyWindow()` と `engineAndVvppController.cleanupEngines()`）
+   * - ウェルカムウィンドウを起動する（`launchWelcomeWindow()`）
+   *
+   *副作用:
+   * - `quitState` を "switch" に設定して、切り替え中であることを示す
+   * - ウィンドウの切り替えが完了した後に `quitState` を "unconfirmed" にリセットする
+   */
   async switchToWelcomeWindow() {
     log.info("Switching to welcome window");
     this.quitState = "switch";
@@ -87,20 +118,6 @@ export class AppStateController {
     await welcomeWindowManager.createWindow();
   }
 
-  /**
-   * メインウィンドウと必要なエンジンを起動する。
-   *
-   * 責務:
-   * - 必要なエンジンを起動する（`engineAndVvppController.launchEngines()`）
-   * - メインウィンドウを生成する（`mainWindowManager.createWindow()`）
-   *
-   * 副作用:
-   * - `activeWindow` を `main` に設定する
-   * - エンジン起動やウィンドウ生成に失敗すると例外を投げる可能性がある
-   *
-   * 備考:
-   * - この関数はアプリ起動フローの一部であり、メインプロセスの同期的なフロー内で呼ばれることを想定している。
-   */
   private async launchMainWindow() {
     this.activeWindow = "main";
 
