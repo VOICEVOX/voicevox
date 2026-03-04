@@ -132,7 +132,7 @@ test("Welcome画面でエンジンを更新できる", async () => {
     });
     await moveToWelcomePage.click();
 
-    const welcomePage = await app.firstWindow({
+    const welcomePage = await app.waitForEvent("window", {
       timeout: process.env.CI ? 90000 : 60000,
     });
     await welcomePage.waitForSelector("text=エンジンのセットアップ", {
