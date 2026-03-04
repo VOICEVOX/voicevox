@@ -83,6 +83,8 @@ test("エディタウィンドウを起動できる", async () => {
       timeout: 60000,
     });
   });
+
+  await app.close();
 });
 
 test("Welcome画面でエンジンを更新できる", async () => {
@@ -155,4 +157,21 @@ test("Welcome画面でエンジンを更新できる", async () => {
       timeout: 60000,
     });
   });
+
+  await test.step("エディタを起動する", async () => {
+    const launchEditor = welcomePage.getByText(/エディタを起動/);
+    await expect(launchEditor).toBeEnabled({
+      timeout: 60000,
+    });
+    await launchEditor.click();
+
+    const editorPage = await app.waitForEvent("window", {
+      timeout: process.env.CI ? 90000 : 60000,
+    });
+    await editorPage.waitForSelector("text=利用規約に関するお知らせ", {
+      timeout: 60000,
+    });
+  });
+
+  await app.close();
 });
