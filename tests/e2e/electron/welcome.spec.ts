@@ -94,6 +94,23 @@ test("Welcome画面でエンジンを更新できる", async () => {
     args: ["--no-sandbox", "."],
     timeout: process.env.CI ? 0 : 60000,
   });
+
+  // ダミーエンジンは起動できずに異常終了するため、エラーダイアログが表示される。
+  // これをモックしてテストが失敗しないようにする。
+  await app.evaluate((electron) => {
+    electron.dialog.showErrorBox = (title: string, content: string) => {
+      if (
+        title === "音声合成エンジンエラー" &&
+        content ===
+          "音声合成エンジンが異常終了しました。エンジンを再起動してください。"
+      ) {
+        return;
+      }
+
+      throw new Error(`Unexpected dialog: title=${title}, content=${content}`);
+    };
+  });
+
   app.on("console", (msg) => {
     console.log(msg.text());
   });
@@ -101,24 +118,6 @@ test("Welcome画面でエンジンを更新できる", async () => {
   const welcomePage = await test.step("Welcome画面に移動する", async () => {
     const mainPage = await app.firstWindow({
       timeout: process.env.CI ? 90000 : 60000,
-    });
-
-    // ダミーエンジンは起動できずに異常終了するため、エラーダイアログが表示される。
-    // これをモックしてテストが失敗しないようにする。
-    await app.evaluate((electron) => {
-      electron.dialog.showErrorBox = (title: string, content: string) => {
-        if (
-          title === "音声合成エンジンエラー" &&
-          content ===
-            "音声合成エンジンが異常終了しました。エンジンを再起動してください。"
-        ) {
-          return;
-        }
-
-        throw new Error(
-          `Unexpected dialog: title=${title}, content=${content}`,
-        );
-      };
     });
 
     const engineMenu = mainPage.getByText("エンジン", { exact: true });
