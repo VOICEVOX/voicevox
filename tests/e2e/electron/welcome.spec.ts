@@ -3,7 +3,6 @@ import path from "node:path";
 import { _electron as electron, expect, test } from "@playwright/test";
 import dotenv from "dotenv";
 import { getUserTestDir } from "./helper";
-import type { MessageBoxSyncOptions } from "electron";
 
 const defaultEngineId = "208cf94d-43d2-4cf5-abc0-9783cac36d29";
 const oldEngineDirName = `VOICEVOX_Nemo_Engine+${defaultEngineId}`;
