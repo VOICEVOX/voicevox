@@ -1,7 +1,21 @@
 import fs from "node:fs/promises";
+import path from "node:path";
 import { _electron as electron, expect, test } from "@playwright/test";
 import dotenv from "dotenv";
 import { getUserTestDir } from "./helper";
+import type { MessageBoxSyncOptions } from "electron";
+
+const defaultEngineId = "208cf94d-43d2-4cf5-abc0-9783cac36d29";
+const oldEngineDirName = `VOICEVOX_Nemo_Engine+${defaultEngineId}`;
+const oldEngineSourceDir = "./tests/e2e/electron/oldEngine";
+
+const installOldEngine = async () => {
+  const vvppEngineDir = path.join(getUserTestDir(), "vvpp-engines");
+  await fs.mkdir(vvppEngineDir, { recursive: true });
+  await fs.cp(oldEngineSourceDir, path.join(vvppEngineDir, oldEngineDirName), {
+    recursive: true,
+  });
+};
 
 test.beforeEach(async () => {
   // キャッシュなどでテスト結果が変化しないように、appDataをテスト起動時に毎回消去する。
@@ -67,6 +81,79 @@ test("エディタウィンドウを起動できる", async () => {
       timeout: process.env.CI ? 90000 : 60000,
     });
     await editorPage.waitForSelector("text=利用規約に関するお知らせ", {
+      timeout: 60000,
+    });
+  });
+});
+
+test("Welcome画面でエンジンを更新できる", async () => {
+  await test.step("古いエンジンを配置する", async () => {
+    await installOldEngine();
+  });
+
+  const app = await electron.launch({
+    args: ["--no-sandbox", "."],
+    timeout: process.env.CI ? 0 : 60000,
+  });
+  app.on("console", (msg) => {
+    console.log(msg.text());
+  });
+
+  const welcomePage = await test.step("Welcome画面に移動する", async () => {
+    const mainPage = await app.firstWindow({
+      timeout: process.env.CI ? 90000 : 60000,
+    });
+
+    // ダミーエンジンは起動できずに異常終了するため、エラーダイアログが表示される。
+    // これをモックしてテストが失敗しないようにする。
+    await app.evaluate((electron) => {
+      electron.dialog.showErrorBox = (title: string, content: string) => {
+        if (
+          title === "音声合成エンジンエラー" &&
+          content ===
+            "音声合成エンジンが異常終了しました。エンジンを再起動してください。"
+        ) {
+          return;
+        }
+
+        throw new Error(
+          `Unexpected dialog: title=${title}, content=${content}`,
+        );
+      };
+    });
+
+    const engineMenu = mainPage.getByText("エンジン", { exact: true });
+    await engineMenu.waitFor({
+      timeout: 60000,
+    });
+    await engineMenu.click();
+
+    const moveToWelcomePage = mainPage.getByText(/エンジンのセットアップ/);
+    await moveToWelcomePage.waitFor({
+      timeout: 60000,
+    });
+    await moveToWelcomePage.click();
+
+    const welcomePage = await app.firstWindow({
+      timeout: process.env.CI ? 90000 : 60000,
+    });
+    await welcomePage.waitForSelector("text=エンジンのセットアップ", {
+      timeout: 60000,
+    });
+    return welcomePage;
+  });
+
+  await test.step("更新を実行する", async () => {
+    const update = welcomePage.getByText(/更新（.+?）/);
+    await update.waitFor({
+      timeout: 60000,
+    });
+    await update.click();
+  });
+
+  await test.step("更新後の状態に切り替わる", async () => {
+    const reinstall = welcomePage.getByText(/再インストール（.+?）/);
+    await reinstall.waitFor({
       timeout: 60000,
     });
   });
