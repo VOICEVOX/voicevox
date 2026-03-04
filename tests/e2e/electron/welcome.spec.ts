@@ -142,16 +142,16 @@ test("Welcome画面でエンジンを更新できる", async () => {
   });
 
   await test.step("更新を実行する", async () => {
-    const update = welcomePage.getByText(/更新（.+?）/);
-    await update.waitFor({
+    const updateButton = welcomePage.getByText(/更新（.+?）/);
+    await updateButton.waitFor({
       timeout: 60000,
     });
-    await update.click();
+    await updateButton.click();
   });
 
   await test.step("更新後の状態に切り替わる", async () => {
-    const reinstall = welcomePage.getByText(/再インストール（.+?）/);
-    await reinstall.waitFor({
+    const reinstallButton = welcomePage.getByText(/再インストール（.+?）/);
+    await reinstallButton.waitFor({
       timeout: 60000,
     });
   });
