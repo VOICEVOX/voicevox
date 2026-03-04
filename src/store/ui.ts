@@ -1,10 +1,10 @@
-import {
+import type {
   ActionsBase,
   DotNotationAction,
   DotNotationActionContext,
   DotNotationDispatch,
 } from "./vuex";
-import {
+import type {
   AllActions,
   AllGetters,
   AllMutations,
@@ -12,12 +12,12 @@ import {
   UiStoreTypes,
 } from "./type";
 import { createPartialStore } from "./vuex";
-import { ActivePointScrollMode } from "@/type/preload";
+import type { ActivePointScrollMode } from "@/type/preload";
 import {
-  MessageDialogOptions,
-  ConfirmDialogOptions,
-  WarningDialogOptions,
-  NotifyAndNotShowAgainButtonOption,
+  type MessageDialogOptions,
+  type ConfirmDialogOptions,
+  type WarningDialogOptions,
+  type NotifyAndNotShowAgainButtonOption,
   connectAndExportTextWithDialog,
   generateAndConnectAndSaveAudioWithDialog,
   generateAndSaveOneAudioWithDialog,

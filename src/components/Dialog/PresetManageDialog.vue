@@ -165,7 +165,7 @@ import BaseTextField from "@/components/Base/BaseTextField.vue";
 import CharacterButton from "@/components/CharacterButton.vue";
 import ParameterSlider from "@/components/Talk/v2/ParameterSlider.vue";
 import { useDefaultPreset } from "@/composables/useDefaultPreset";
-import {
+import type {
   CharacterInfo,
   Preset,
   PresetKey,

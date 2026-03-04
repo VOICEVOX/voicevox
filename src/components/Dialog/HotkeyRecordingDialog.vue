@@ -82,7 +82,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { HotkeyCombination } from "@/domain/hotkeyAction";
+import type { HotkeyCombination } from "@/domain/hotkeyAction";
 
 const dialogOpened = defineModel<boolean>("dialogOpened", { default: false });
 const props = defineProps<{

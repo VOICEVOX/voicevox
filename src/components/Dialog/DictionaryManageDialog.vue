@@ -91,7 +91,7 @@
 </template>
 
 <script lang="ts">
-import { Ref, ComputedRef, type InjectionKey } from "vue";
+import type { Ref, ComputedRef, InjectionKey } from "vue";
 
 export const dictionaryManageDialogContextKey: InjectionKey<{
   wordEditing: Ref<boolean>;
@@ -123,15 +123,15 @@ export const dictionaryManageDialogContextKey: InjectionKey<{
 
 <script setup lang="ts">
 import { computed, ref, watch, provide } from "vue";
-import { QInput } from "quasar";
+import type { QInput } from "quasar";
 import BaseListItem from "../Base/BaseListItem.vue";
 import BaseIconButton from "../Base/BaseIconButton.vue";
 import BaseNavigationView from "../Base/BaseNavigationView.vue";
 import BaseButton from "../Base/BaseButton.vue";
 import DictionaryEditWordDialog from "./DictionaryEditWordDialog.vue";
 import { useStore } from "@/store";
-import { AccentPhrase, UserDictWord } from "@/openapi";
-import { EngineId, SpeakerId, StyleId } from "@/type/preload";
+import type { AccentPhrase, UserDictWord } from "@/openapi";
+import type { EngineId, SpeakerId, StyleId } from "@/type/preload";
 import {
   convertHiraToKana,
   convertLongVowel,

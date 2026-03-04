@@ -23,7 +23,7 @@
 import { computed } from "vue";
 import SequencerVolumeEditor from "@/components/Sing/SequencerVolumeEditor.vue";
 import { useStore } from "@/store";
-import { ParameterPanelEditTarget } from "@/store/type";
+import type { ParameterPanelEditTarget } from "@/store/type";
 import ParameterPanelEditTargetSwitcher from "@/components/Sing/ParameterPanelEditTargetSwitcher.vue";
 import SequencerPhonemeTimingEditor from "@/components/Sing/SequencerPhonemeTimingEditor.vue";
 

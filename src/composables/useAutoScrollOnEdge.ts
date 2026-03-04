@@ -1,8 +1,8 @@
-import { ComputedRef, onMounted, onUnmounted, Ref, watch } from "vue";
+import { type ComputedRef, onMounted, onUnmounted, type Ref, watch } from "vue";
 import { useMounted } from "@/composables/useMounted";
 import {
   calcMinimumDistanceVectorRectAndPoint,
-  Rect,
+  type Rect,
   Vector2D,
 } from "@/sing/utility";
 import { getXInBorderBox, getYInBorderBox } from "@/sing/viewHelper";

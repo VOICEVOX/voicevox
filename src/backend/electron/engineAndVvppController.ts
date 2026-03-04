@@ -7,17 +7,21 @@ import { getRuntimeInfoManager } from "./manager/RuntimeInfoManager";
 import { getVvppManager } from "./manager/vvppManager";
 import { getMainWindowManager } from "./manager/windowManager/main";
 import { MultiDownloader } from "./multiDownloader";
-import { EngineId, EngineInfo, engineSettingSchema } from "@/type/preload";
 import {
-  PackageInfo,
+  type EngineId,
+  type EngineInfo,
+  engineSettingSchema,
+} from "@/type/preload";
+import {
+  type PackageInfo,
   fetchLatestDefaultEngineInfo,
-} from "@/domain/defaultEngine/latetDefaultEngine";
-import type { RuntimeTarget } from "@/domain/defaultEngine/latetDefaultEngine";
+} from "@/domain/defaultEngine/latestDefaultEngine";
+import type { RuntimeTarget } from "@/domain/defaultEngine/latestDefaultEngine";
 import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
-import { UnreachableError } from "@/type/utility";
-import { ProgressCallback } from "@/helpers/progressHelper";
+import type { ProgressCallback } from "@/helpers/progressHelper";
 import { createLogger } from "@/helpers/log";
 import { DisplayableError, errorToMessage } from "@/helpers/errorHelper";
+import { assertNonNullable } from "@/type/utility";
 import { isLinux, isMac, isWindows } from "@/helpers/platform";
 
 const log = createLogger("EngineAndVvppController");
@@ -28,7 +32,7 @@ export type EnginePackageBase = {
 };
 
 /** ローカルのパッケージインストール状況 */
-export type EnginePackageLocalInfo = {
+export type EnginePackageCurrentInfo = {
   package: EnginePackageBase;
   installed:
     | { status: "notInstalled" }
@@ -36,7 +40,7 @@ export type EnginePackageLocalInfo = {
 };
 
 /** オンラインで取得したパッケージ最新情報 */
-export type EnginePackageRemoteInfo = {
+export type EnginePackageLatestInfo = {
   package: EnginePackageBase;
   availableRuntimeTargets: {
     target: RuntimeTarget;
@@ -206,7 +210,7 @@ export class EngineAndVvppController {
 
   private getInstalledEngineStatus(
     engineId: EngineId,
-  ): EnginePackageLocalInfo["installed"] {
+  ): EnginePackageCurrentInfo["installed"] {
     const isInstalled = this.engineInfoManager.hasEngineInfo(engineId);
     if (!isInstalled) {
       return { status: "notInstalled" };
@@ -223,7 +227,7 @@ export class EngineAndVvppController {
   /**
    * オフラインでデフォルトエンジンのインストール状況を取得する。
    */
-  getEnginePackageLocalInfos(): EnginePackageLocalInfo[] {
+  getEnginePackageLocalInfos(): EnginePackageCurrentInfo[] {
     return this.getDownloadableEnvEngineInfos().map((envEngineInfo) => ({
       package: {
         engineName: envEngineInfo.name,
@@ -237,13 +241,16 @@ export class EngineAndVvppController {
    * オンラインで最新のエンジンパッケージの情報や、そのエンジンのインストール状況を取得する。
    */
   async fetchLatestEnginePackageRemoteInfos(): Promise<
-    EnginePackageRemoteInfo[]
+    EnginePackageLatestInfo[]
   > {
-    const statuses: EnginePackageRemoteInfo[] = [];
+    const statuses: EnginePackageLatestInfo[] = [];
 
     for (const envEngineInfo of this.getDownloadableEnvEngineInfos()) {
       const latestUrl = envEngineInfo.latestUrl;
-      if (latestUrl == undefined) throw new Error("latestUrl is undefined");
+      assertNonNullable(
+        latestUrl,
+        `latestUrl is undefined for ${envEngineInfo.name}`,
+      );
 
       const latestInfo = await fetchLatestDefaultEngineInfo(latestUrl);
       if (latestInfo.formatVersion != 1) {
@@ -251,7 +258,7 @@ export class EngineAndVvppController {
         continue;
       }
 
-      const availableRuntimeTargets: EnginePackageRemoteInfo["availableRuntimeTargets"] =
+      const availableRuntimeTargets: EnginePackageLatestInfo["availableRuntimeTargets"] =
         Object.entries(latestInfo.packages)
           .map(([target, packageInfo]) => ({ target, packageInfo }))
           .filter((runtimeTargetInfo) =>
@@ -288,7 +295,7 @@ export class EngineAndVvppController {
     callbacks: { onProgress: ProgressCallback<"download" | "install"> },
   ) {
     if (packageInfo.files.length === 0) {
-      throw new UnreachableError("No packages to download");
+      throw new Error("No packages to download");
     }
 
     await using downloader = new MultiDownloader(

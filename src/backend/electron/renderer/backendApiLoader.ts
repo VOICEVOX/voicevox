@@ -3,10 +3,10 @@
  */
 
 import {
-  TransferableResult,
+  type TransferableResult,
   getOrThrowTransferableResult,
 } from "../transferableResultHelper";
-import { SandboxKey, Sandbox } from "@/type/preload";
+import { SandboxKey, type Sandbox } from "@/type/preload";
 
 export const BridgeKey = "electronBridge";
 

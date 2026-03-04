@@ -102,14 +102,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, Ref } from "vue";
+import { computed, ref, watch, type Ref } from "vue";
 import Draggable from "vuedraggable";
 import BaseSwitch from "@/components/Base/BaseSwitch.vue";
 import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 import BaseRowCard from "@/components/Base/BaseRowCard.vue";
 import BaseTooltip from "@/components/Base/BaseTooltip.vue";
 import { useStore } from "@/store";
-import { ToolbarButtonTagType, ToolbarSettingType } from "@/type/preload";
+import type { ToolbarButtonTagType, ToolbarSettingType } from "@/type/preload";
 import { getToolbarButtonName } from "@/store/utility";
 
 const dialogOpened = defineModel<boolean>("dialogOpened", { default: false });

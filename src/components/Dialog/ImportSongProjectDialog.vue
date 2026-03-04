@@ -97,8 +97,8 @@ import type {
 import { useStore } from "@/store";
 import { createLogger } from "@/helpers/log";
 import { ExhaustiveError } from "@/type/utility";
-import { IsEqual } from "@/type/utility";
-import { LatestProjectType } from "@/infrastructures/projectFile/type";
+import type { IsEqual } from "@/type/utility";
+import type { LatestProjectType } from "@/infrastructures/projectFile/type";
 import { DEFAULT_TRACK_NAME } from "@/sing/domain";
 
 const { dialogRef, onDialogOK, onDialogCancel } = useDialogPluginComponent();
@@ -275,9 +275,8 @@ const handleFileChange = async (event: Event) => {
         project: parsedProject,
       };
     } else {
-      const { Project: UfProject } = await import(
-        "@sevenc-nanashi/utaformatix-ts"
-      );
+      const { Project: UfProject } =
+        await import("@sevenc-nanashi/utaformatix-ts");
       project.value = {
         type: "utaformatix",
         project: await UfProject.fromAny(file, {

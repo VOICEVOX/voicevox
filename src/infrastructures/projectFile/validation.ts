@@ -1,4 +1,4 @@
-import { LatestProjectType } from "@/infrastructures/projectFile/type";
+import type { LatestProjectType } from "@/infrastructures/projectFile/type";
 
 export const validateTalkProject = (talkProject: LatestProjectType["talk"]) => {
   if (

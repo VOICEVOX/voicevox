@@ -1,4 +1,4 @@
-import { BuildResult } from "electron-builder";
+import type { BuildResult } from "electron-builder";
 import { afterNsisWebArtifactBuild } from "./afterNsisWebArtifactBuild";
 
 export default async function afterAllArtifactBuild(buildResult: BuildResult) {

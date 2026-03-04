@@ -1,15 +1,14 @@
-import { getDoremiFromNoteNumber } from "./viewHelper";
 import { getNoteDuration, secondToTick, tickToSecond } from "@/sing/music";
 import { decibelToLinear } from "@/sing/audio";
 import {
-  EditorFrameAudioQuery,
+  type EditorFrameAudioQuery,
   EditorFrameAudioQueryKey,
-  PhraseKey,
-  SingingPitch,
+  type PhraseKey,
+  type SingingPitch,
   SingingPitchKey,
-  SingingVoice,
+  type SingingVoice,
   SingingVoiceKey,
-  SingingVolume,
+  type SingingVolume,
   SingingVolumeKey,
 } from "@/store/type";
 import {
@@ -28,9 +27,10 @@ import {
   toPhonemeTimings,
   toPhonemes,
   selectPriorPhrase,
+  getDefaultLyric,
 } from "@/sing/domain";
-import { FramePhoneme, Note as NoteForRequestToEngine } from "@/openapi";
-import { EngineId, NoteId, StyleId, TrackId } from "@/type/preload";
+import type { FramePhoneme, Note as NoteForRequestToEngine } from "@/openapi";
+import type { EngineId, NoteId, StyleId, TrackId } from "@/type/preload";
 import { getOrThrow } from "@/helpers/mapHelper";
 import type { Note, Singer, Tempo, Track } from "@/domain/project/type";
 import { UnreachableError } from "@/type/utility";
@@ -45,6 +45,7 @@ export type SnapshotForRender = Readonly<{
   trackOverlappingNoteIds: Map<TrackId, Set<NoteId>>;
   engineFrameRates: Map<EngineId, number>;
   editorFrameRate: number;
+  defaultLyricMode: "doremi" | "la";
 }>;
 
 /**
@@ -83,6 +84,7 @@ type QuerySource = Readonly<{
   keyRangeAdjustment: number;
   minNonPauseStartFrame: number | undefined;
   maxNonPauseEndFrame: number | undefined;
+  defaultLyricMode: "doremi" | "la";
 }>;
 
 /**
@@ -97,6 +99,7 @@ type SingingPitchSource = Readonly<{
   notes: Note[];
   keyRangeAdjustment: number;
   queryForPitchGeneration: EditorFrameAudioQuery;
+  defaultLyricMode: "doremi" | "la";
 }>;
 
 /**
@@ -112,6 +115,7 @@ type SingingVolumeSource = Readonly<{
   keyRangeAdjustment: number;
   volumeRangeAdjustment: number;
   queryForVolumeGeneration: EditorFrameAudioQuery;
+  defaultLyricMode: "doremi" | "la";
 }>;
 
 /**
@@ -174,6 +178,7 @@ const createNotesForRequestToEngine = (
   tempos: Tempo[],
   tpqn: number,
   frameRate: number,
+  defaultLyricMode: "doremi" | "la",
 ) => {
   const notesForRequestToEngine: NoteForRequestToEngine[] = [];
 
@@ -206,7 +211,7 @@ const createNotesForRequestToEngine = (
       id: note.id,
       key: note.noteNumber,
       frameLength: noteOffFrame - noteOnFrame,
-      lyric: note.lyric ?? getDoremiFromNoteNumber(note.noteNumber),
+      lyric: note.lyric ?? getDefaultLyric(note.noteNumber, defaultLyricMode),
     });
   }
 
@@ -615,6 +620,7 @@ const generateQuerySource = (
     keyRangeAdjustment: track.keyRangeAdjustment,
     minNonPauseStartFrame: phrase.minNonPauseStartFrame,
     maxNonPauseEndFrame: phrase.maxNonPauseEndFrame,
+    defaultLyricMode: snapshot.defaultLyricMode,
   };
 };
 
@@ -630,9 +636,9 @@ const generateSingingPitchSource = (
     throw new Error("phrase.query is undefined.");
   }
 
+  // phrase のデータを直接変更しないよう、作業用コピーを作る
   const clonedQuery = structuredClone(phrase.query);
 
-  // 音素タイミング編集を適用して調整を行う
   const phonemeTimings = toPhonemeTimings(clonedQuery.phonemes);
   applyPhonemeTimingEdit(
     phonemeTimings,
@@ -655,6 +661,7 @@ const generateSingingPitchSource = (
     notes: phrase.notes,
     keyRangeAdjustment: track.keyRangeAdjustment,
     queryForPitchGeneration: clonedQuery,
+    defaultLyricMode: snapshot.defaultLyricMode,
   };
 };
 
@@ -673,11 +680,25 @@ const generateSingingVolumeSource = (
     throw new Error("phrase.singingPitch is undefined.");
   }
 
+  // phrase のデータを直接変更しないよう、作業用コピーを作る
+  // （clonedQuery に代入後も編集適用で変更されるため、singingPitch もクローンが必要）
   const clonedQuery = structuredClone(phrase.query);
-
-  // ピッチ編集を適用したf0をボリューム生成に使うため、ピッチをクローンして適用する
   const clonedSingingPitch = structuredClone(phrase.singingPitch);
+
   clonedQuery.f0 = clonedSingingPitch;
+
+  const phonemeTimings = toPhonemeTimings(clonedQuery.phonemes);
+  applyPhonemeTimingEdit(
+    phonemeTimings,
+    track.phonemeTimingEditData,
+    clonedQuery.frameRate,
+  );
+  adjustPhonemeTimings(
+    phonemeTimings,
+    phrase.minNonPauseStartFrame,
+    phrase.maxNonPauseEndFrame,
+  );
+  clonedQuery.phonemes = toPhonemes(phonemeTimings);
 
   applyPitchEdit(
     clonedQuery,
@@ -696,6 +717,7 @@ const generateSingingVolumeSource = (
     keyRangeAdjustment: track.keyRangeAdjustment,
     volumeRangeAdjustment: track.volumeRangeAdjustment,
     queryForVolumeGeneration: clonedQuery,
+    defaultLyricMode: snapshot.defaultLyricMode,
   };
 };
 
@@ -717,6 +739,8 @@ const generateSingingVoiceSource = (
     throw new Error("phrase.singingVolume is undefined.");
   }
 
+  // phrase のデータを直接変更しないよう、作業用コピーを作る
+  // （clonedQuery に代入後も編集適用で変更されるため、singingPitch/Volume もクローンが必要）
   const clonedQuery = structuredClone(phrase.query);
   const clonedSingingPitch = structuredClone(phrase.singingPitch);
   const clonedSingingVolume = structuredClone(phrase.singingVolume);
@@ -724,18 +748,33 @@ const generateSingingVoiceSource = (
   clonedQuery.f0 = clonedSingingPitch;
   clonedQuery.volume = clonedSingingVolume;
 
+  const phonemeTimings = toPhonemeTimings(clonedQuery.phonemes);
+  applyPhonemeTimingEdit(
+    phonemeTimings,
+    track.phonemeTimingEditData,
+    clonedQuery.frameRate,
+  );
+  adjustPhonemeTimings(
+    phonemeTimings,
+    phrase.minNonPauseStartFrame,
+    phrase.maxNonPauseEndFrame,
+  );
+  clonedQuery.phonemes = toPhonemes(phonemeTimings);
+
   applyPitchEdit(
     clonedQuery,
     phrase.startTime,
     track.pitchEditData,
     snapshot.editorFrameRate,
   );
+
   applyVolumeEdit(
     clonedQuery,
     phrase.startTime,
     track.volumeEditData,
     snapshot.editorFrameRate,
   );
+
   shiftVolume(clonedQuery.volume, track.volumeRangeAdjustment);
 
   return {
@@ -756,6 +795,7 @@ const generateQuery = async (
     querySource.tempos,
     querySource.tpqn,
     querySource.engineFrameRate,
+    querySource.defaultLyricMode,
   );
 
   shiftKeyOfNotes(notesForRequestToEngine, -querySource.keyRangeAdjustment);
@@ -792,6 +832,7 @@ const generateSingingPitch = async (
     singingPitchSource.tempos,
     singingPitchSource.tpqn,
     singingPitchSource.engineFrameRate,
+    singingPitchSource.defaultLyricMode,
   );
   const queryForPitchGeneration = singingPitchSource.queryForPitchGeneration;
 
@@ -824,6 +865,7 @@ const generateSingingVolume = async (
     singingVolumeSource.tempos,
     singingVolumeSource.tpqn,
     singingVolumeSource.engineFrameRate,
+    singingVolumeSource.defaultLyricMode,
   );
   const queryForVolumeGeneration = singingVolumeSource.queryForVolumeGeneration;
 

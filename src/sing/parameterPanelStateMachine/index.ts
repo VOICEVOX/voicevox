@@ -6,7 +6,7 @@
 // 後で編集対象単位でステートマシンを持つように変更することも可能だと思うので、
 // とりあえず今はScoreSequencer側に合わせておくのがいいかもといったニュアンス
 // たとえば複数のパネルをスタックさせるようなUIにする場合は前提が変わるため、その際に別途判断する
-import {
+import type {
   ParameterPanelStateDefinitions,
   ParameterPanelInput,
   ParameterPanelContext,

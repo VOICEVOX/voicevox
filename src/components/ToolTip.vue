@@ -19,7 +19,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { ConfirmedTips } from "@/type/preload";
+import type { ConfirmedTips } from "@/type/preload";
 import { useStore } from "@/store";
 
 const props = defineProps<{

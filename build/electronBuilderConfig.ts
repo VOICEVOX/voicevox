@@ -1,7 +1,7 @@
 import path from "node:path";
 import { readdirSync, existsSync, rmSync } from "node:fs";
 import dotenv from "dotenv";
-import { Configuration as ElectronBuilderConfiguration } from "electron-builder";
+import type { Configuration as ElectronBuilderConfiguration } from "electron-builder";
 import { z } from "zod";
 import afterAllArtifactBuild from "./afterAllArtifactBuild";
 import afterPack from "./afterPack";

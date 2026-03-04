@@ -1,4 +1,4 @@
-import { Plugin, inject, InjectionKey } from "vue";
+import { type Plugin, inject, type InjectionKey } from "vue";
 import MarkdownIt from "markdown-it";
 import { UnreachableError } from "@/type/utility";
 

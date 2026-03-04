@@ -75,6 +75,7 @@ const typeCheckedRules: Rules = {
       checksVoidReturn: false,
     },
   ],
+  "@typescript-eslint/no-import-type-side-effects": "error",
 };
 
 export default defineConfigWithVueTs(

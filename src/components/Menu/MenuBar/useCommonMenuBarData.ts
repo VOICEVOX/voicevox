@@ -1,9 +1,9 @@
 import { computed, ref, watch } from "vue";
-import { MenuItemData } from "../type";
-import { MaybeComputedMenuBarContent } from "./menuBarData";
+import type { MenuItemData } from "../type";
+import type { MaybeComputedMenuBarContent } from "./menuBarData";
 import { ensureNotNullish } from "@/type/utility";
-import { useHotkeyManager, HotkeyAction } from "@/plugins/hotkeyPlugin";
-import { Store } from "@/store";
+import { useHotkeyManager, type HotkeyAction } from "@/plugins/hotkeyPlugin";
+import type { Store } from "@/store";
 import { isProduction } from "@/helpers/platform";
 
 export const useCommonMenuBarData = (store: Store) => {

@@ -8,8 +8,8 @@
     </div>
     <div class="engine-meta">
       <div>最新バージョン：{{ latestVersionLabel }}</div>
-      <div v-if="localInfo.installed.status === 'installed'">
-        インストール済み：{{ localInfo.installed.installedVersion }}
+      <div v-if="currentInfo.installed.status === 'installed'">
+        インストール済み：{{ currentInfo.installed.installedVersion }}
       </div>
     </div>
     <div v-if="progressInfo" class="engine-progress">
@@ -53,11 +53,11 @@ import { computed } from "vue";
 import BaseButton from "@/components/Base/BaseButton.vue";
 import BaseSelect from "@/components/Base/BaseSelect.vue";
 import BaseSelectItem from "@/components/Base/BaseSelectItem.vue";
-import {
-  EnginePackageLocalInfo,
-  EnginePackageRemoteInfo,
+import type {
+  EnginePackageCurrentInfo,
+  EnginePackageLatestInfo,
 } from "@/backend/electron/engineAndVvppController";
-import type { RuntimeTarget } from "@/domain/defaultEngine/latetDefaultEngine";
+import type { RuntimeTarget } from "@/domain/defaultEngine/latestDefaultEngine";
 
 import { ExhaustiveError } from "@/type/utility";
 import { sizeToHumanReadable } from "@/helpers/sizeHelper";
@@ -73,12 +73,12 @@ type RuntimeTargetOption = {
   hint?: string;
 };
 type RuntimeTargetInfo =
-  EnginePackageRemoteInfo["availableRuntimeTargets"][number];
+  EnginePackageLatestInfo["availableRuntimeTargets"][number];
 
 const props = defineProps<{
   engineName: string;
-  localInfo: EnginePackageLocalInfo;
-  remoteInfo?: EnginePackageRemoteInfo;
+  currentInfo: EnginePackageCurrentInfo;
+  latestInfo?: EnginePackageLatestInfo;
   selectedRuntimeTarget?: RuntimeTarget;
   runtimeSelectDisabled: boolean;
   progressInfo?: EngineProgressInfo;
@@ -90,7 +90,7 @@ const emit = defineEmits<{
 }>();
 
 const availableRuntimeTargets = computed(() => {
-  return props.remoteInfo?.availableRuntimeTargets ?? [];
+  return props.latestInfo?.availableRuntimeTargets ?? [];
 });
 
 const runtimeTargetOptions = computed<RuntimeTargetOption[]>(() =>
@@ -128,14 +128,14 @@ const latestVersionLabel = computed(() =>
 );
 
 const engineStatus = computed<DisplayStatus>(() => {
-  if (props.localInfo.installed.status === "notInstalled") {
+  if (props.currentInfo.installed.status === "notInstalled") {
     return "notInstalled";
   }
   if (!selectedPackageInfo.value) {
     return "installed";
   }
   return semver.lt(
-    props.localInfo.installed.installedVersion,
+    props.currentInfo.installed.installedVersion,
     selectedPackageInfo.value.version,
   )
     ? "outdated"

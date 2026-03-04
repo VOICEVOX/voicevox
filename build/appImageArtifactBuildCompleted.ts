@@ -2,7 +2,7 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { ArtifactCreated } from "electron-builder";
+import type { ArtifactCreated } from "electron-builder";
 
 const vendoredDir = path.join(import.meta.dirname, "..", "vendored");
 const appimagetoolPath = path.join(

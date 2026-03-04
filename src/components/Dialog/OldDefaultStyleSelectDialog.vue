@@ -121,7 +121,7 @@ import { computed, ref, watch } from "vue";
 import { useQuasar } from "quasar";
 import { useStore } from "@/store";
 import { DEFAULT_STYLE_NAME } from "@/store/utility";
-import {
+import type {
   CharacterInfo,
   DefaultStyleId,
   SpeakerId,

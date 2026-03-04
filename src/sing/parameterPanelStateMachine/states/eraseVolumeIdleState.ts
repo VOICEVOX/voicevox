@@ -1,19 +1,16 @@
-import {
+import type {
   ParameterPanelStateDefinitions,
   ParameterPanelInput,
   ParameterPanelContext,
 } from "../common";
-import { SetNextState, State } from "@/sing/stateMachine";
+import type { SetNextState, State } from "@/sing/stateMachine";
 import { getButton } from "@/sing/viewHelper";
 
-export class EraseVolumeIdleState
-  implements
-    State<
-      ParameterPanelStateDefinitions,
-      ParameterPanelInput,
-      ParameterPanelContext
-    >
-{
+export class EraseVolumeIdleState implements State<
+  ParameterPanelStateDefinitions,
+  ParameterPanelInput,
+  ParameterPanelContext
+> {
   readonly id = "eraseVolumeIdle";
 
   onEnter(context: ParameterPanelContext) {

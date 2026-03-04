@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test } from "vitest";
 import { SongTrackRendererTestUtility } from "./utility";
-import { RenderingEventInfo } from "./type";
+import type { RenderingEventInfo } from "./type";
 import { resetMockMode, uuid4 } from "@/helpers/random";
 import { EngineId, StyleId, TrackId } from "@/type/preload";
 import { createDefaultTempo, DEFAULT_TPQN } from "@/sing/domain";
@@ -426,9 +426,11 @@ describe("SongTrackRenderer", () => {
         );
         if (track.singer == undefined) {
           // シンガーが未設定のトラックのフレーズはレンダリングされないはず
+          // eslint-disable-next-line vitest/no-conditional-expect
           expect(phraseRenderingStartedEventInfos.length).toEqual(0);
         } else {
           // シンガーが設定されているトラックのフレーズはレンダリングされるはず
+          // eslint-disable-next-line vitest/no-conditional-expect
           expect(phraseRenderingStartedEventInfos.length).toEqual(3);
         }
       }
