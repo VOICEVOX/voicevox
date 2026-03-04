@@ -142,7 +142,7 @@
     "markdownlint-cli": "0.47.0",
     "playwright": "1.58.1",
     "prettier": "3.8.1",
-    "rulesync": "7.0.0",
+    "rulesync": "7.7.1",
     "sass-embedded": "1.97.3",
     "storybook": "10.1.11",
     "tsx": "4.21.0",
