@@ -257,7 +257,8 @@ const linearToNormalizedY = (linear: number) => {
 
 const frameToBaseX = (frame: number, frameRate: number) => {
   const seconds = frame / frameRate;
-  const ticks = secondToTick(seconds, tempos.value, tpqn.value);
+  const rawTempos = toRaw(tempos.value);
+  const ticks = secondToTick(seconds, rawTempos, tpqn.value);
   return tickToBaseX(ticks, tpqn.value);
 };
 
