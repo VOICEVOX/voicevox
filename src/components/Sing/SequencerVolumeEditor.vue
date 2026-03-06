@@ -265,9 +265,8 @@ const buildSegments = (framewiseData: number[], frameRate: number) => {
   const segments: VolumeSegment[] = [];
   let current: VolumeSegment | undefined;
 
-  for (let frame = 0; frame < framewiseData.length; frame++) {
-    const value = framewiseData[frame];
-    if (value == undefined || value === VALUE_INDICATING_NO_DATA) {
+  for (const [frame, value] of framewiseData.entries()) {
+    if (value === VALUE_INDICATING_NO_DATA) {
       if (current != undefined && current.length >= 2) {
         segments.push(current);
       }
@@ -449,8 +448,8 @@ const refreshOriginalVolumeSegments = () => {
         ),
       );
     }
-    for (let i = 0; i < phraseQuery.volume.length; i++) {
-      const v = Math.max(0, phraseQuery.volume[i]);
+    for (const [i, value] of phraseQuery.volume.entries()) {
+      const v = Math.max(0, value);
       originalFramewise[startFrame + i] = Math.min(v, 1);
     }
   }
@@ -488,10 +487,8 @@ const refreshEffectiveVolumeSegments = () => {
   const editFramewise = new Array<number>(
     Math.max(maxFrame, baseEditData.length),
   ).fill(VALUE_INDICATING_NO_DATA);
-  for (let i = 0; i < baseEditData.length; i++) {
-    if (baseEditData[i] != undefined) {
-      editFramewise[i] = baseEditData[i];
-    }
+  for (const [i, value] of baseEditData.entries()) {
+    editFramewise[i] = value;
   }
 
   const preview = volumePreviewEdit.value;
@@ -506,8 +503,8 @@ const refreshEffectiveVolumeSegments = () => {
           ),
         );
       }
-      for (let i = 0; i < preview.data.length; i++) {
-        const value = Math.min(Math.max(preview.data[i], 0), 1);
+      for (const [i, rawValue] of preview.data.entries()) {
+        const value = Math.min(Math.max(rawValue, 0), 1);
         editFramewise[startFrame + i] = value;
       }
       maxFrame = Math.max(maxFrame, endFrame);
@@ -549,12 +546,12 @@ const refreshEffectiveVolumeSegments = () => {
   const effectiveFramewise = new Array<number>(totalFrames).fill(
     VALUE_INDICATING_NO_DATA,
   );
-  for (let i = 0; i < totalFrames; i++) {
-    const edited = editFramewise[i];
-    if (edited != undefined && edited !== VALUE_INDICATING_NO_DATA) {
+  for (const [i, edited] of editFramewise.entries()) {
+    if (edited !== VALUE_INDICATING_NO_DATA) {
       effectiveFramewise[i] = Math.min(Math.max(edited, 0), 1);
     } else {
-      effectiveFramewise[i] = originalFramewise[i] ?? VALUE_INDICATING_NO_DATA;
+      effectiveFramewise[i] =
+        originalFramewise.at(i) ?? VALUE_INDICATING_NO_DATA;
     }
   }
 
@@ -680,20 +677,16 @@ watch(
   },
 );
 
-// NOTE: mountedをwatchしているので、onMountedの直後に必ず１回実行される
 watch(
   [
-    mounted,
     selectedTrackId,
     () => selectedTrack.value?.volumeEditData,
     volumePreviewEdit,
   ],
-  async ([isMounted]) => {
+  async () => {
     try {
       await using _lock = await refreshVolumeSegmentsLock.acquire();
-      if (isMounted) {
-        refreshEffectiveVolumeSegments();
-      }
+      refreshEffectiveVolumeSegments();
     } catch (e) {
       warn("Failed to refresh effective volume segments.", e);
     }

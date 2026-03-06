@@ -169,36 +169,36 @@ export class DrawVolumeState implements State<
     // まずはUIが動くようにのみする
     const cursorFrame = this.currentCursorPos.frame;
     const cursorValue = this.currentCursorPos.value;
-
-    // NOTE: 毎フレームの配列全コピーを避けるため、data配列はin-placeで変更する。
-    // ドラッグ中は配列が線形に伸びるため、コピーすると累計O(n²)のコストになる。
-    let { data, startFrame } = context.previewVolumeEdit.value;
+    const tempPreviewEdit = {
+      ...context.previewVolumeEdit.value,
+      data: [...context.previewVolumeEdit.value.data],
+    };
 
     // TODO: 以下の補間は最低限...UIにあわせ修正する予定
 
     // 開始フレームがカーソルフレームより後ろの場合は、カーソルフレームまで前方拡張
-    if (startFrame > cursorFrame) {
-      const prependLength = startFrame - cursorFrame;
-      const fillValue = data[0] ?? cursorValue;
+    if (tempPreviewEdit.startFrame > cursorFrame) {
+      const prependLength = tempPreviewEdit.startFrame - cursorFrame;
+      const fillValue = tempPreviewEdit.data.at(0) ?? cursorValue;
       const prepend = createArray(prependLength, () => fillValue);
-      data = prepend.concat(data);
-      startFrame = cursorFrame;
+      tempPreviewEdit.data = prepend.concat(tempPreviewEdit.data);
+      tempPreviewEdit.startFrame = cursorFrame;
     }
 
     // 最後のフレームがカーソルフレームより前の場合は、カーソルフレームまで後方拡張
-    const lastFrame = startFrame + data.length - 1;
+    const lastFrame =
+      tempPreviewEdit.startFrame + tempPreviewEdit.data.length - 1;
     if (lastFrame < cursorFrame) {
       const appendLength = cursorFrame - lastFrame;
-      const fillValue = data[data.length - 1] ?? cursorValue;
-      for (let i = 0; i < appendLength; i++) {
-        data.push(fillValue);
-      }
+      const fillValue = tempPreviewEdit.data.at(-1) ?? cursorValue;
+      tempPreviewEdit.data = tempPreviewEdit.data.concat(
+        createArray(appendLength, () => fillValue),
+      );
     }
 
-    data[cursorFrame - startFrame] = cursorValue;
-
-    // NOTE: 新しいラッパーオブジェクトを代入することでshallowRefのwatcherに変更を通知する
-    context.previewVolumeEdit.value = { type: "draw", data, startFrame };
+    tempPreviewEdit.data[cursorFrame - tempPreviewEdit.startFrame] =
+      cursorValue;
+    context.previewVolumeEdit.value = tempPreviewEdit;
     this.innerContext.prevCursorPos = this.currentCursorPos;
   }
 }
