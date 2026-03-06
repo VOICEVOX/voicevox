@@ -35,7 +35,6 @@ import type { VolumeEditTool } from "@/store/type";
 import { useParameterPanelStateMachine } from "@/composables/useParameterPanelStateMachine";
 import { useMounted } from "@/composables/useMounted";
 import { createLogger } from "@/helpers/log";
-import { getOrThrow } from "@/helpers/mapHelper";
 import { Mutex } from "@/helpers/mutex";
 import { VALUE_INDICATING_NO_DATA } from "@/sing/domain";
 import { decibelToLinear, linearToDecibel } from "@/sing/audio";
@@ -392,26 +391,38 @@ const render = () => {
 
 const refreshVolumeSegmentsLock = new Mutex();
 
-const refreshOriginalVolumeSegments = () => {
+const refreshOriginalVolumeSegments = (): boolean => {
   const frameRate = editorFrameRate.value;
   if (frameRate <= 0) {
-    return;
+    return false;
   }
   const trackId = selectedTrackId.value;
+  let hasIncompletePhrase = false;
 
-  // NOTE: ノート追加直後など、phraseとphraseQueryの更新が段階的に入る場合があり、
-  // データが未確定の中間状態でキャッシュを更新すると一瞬欠けて見えるため、揃うまで更新しない
   for (const phrase of store.state.phrases.values()) {
     if (phrase.trackId !== trackId) {
       continue;
     }
     if (phrase.queryKey == undefined) {
-      return;
+      hasIncompletePhrase = true;
+      continue;
     }
     const phraseQuery = store.state.phraseQueries.get(phrase.queryKey);
     if (phraseQuery?.volume == undefined) {
-      return;
+      hasIncompletePhrase = true;
     }
+  }
+
+  const canKeepCurrentCache =
+    hasOriginalFramewiseCache &&
+    originalTrackIdCache === trackId &&
+    originalFrameRateCache === frameRate;
+
+  // NOTE: 既存キャッシュがある場合は、中間状態での部分更新を避けて表示のちらつきを抑える。
+  // 初回表示やトラック切り替え直後など、表示に使えるキャッシュがまだない場合のみ、
+  // 確定済みのphraseから部分的にキャッシュを構築する。
+  if (hasIncompletePhrase && canKeepCurrentCache) {
+    return false;
   }
 
   const totalTicks = getTotalTicks(
@@ -433,8 +444,12 @@ const refreshOriginalVolumeSegments = () => {
     if (phrase.queryKey == undefined) {
       continue;
     }
-    const phraseQuery = getOrThrow(store.state.phraseQueries, phrase.queryKey);
-    assertNonNullable(phraseQuery.volume);
+    const phraseQuery = store.state.phraseQueries.get(phrase.queryKey);
+    // NOTE: ノート追加直後など、phraseとphraseQueryの更新が段階的に入る場合がある。
+    // 未確定なphraseだけをスキップし、確定済みの範囲から順次表示を更新する。
+    if (phraseQuery?.volume == undefined) {
+      continue;
+    }
     if (phraseQuery.frameRate !== frameRate) {
       throw new Error(
         `Frame rate mismatch: expected ${frameRate}, got ${phraseQuery.frameRate}. queryKey: ${phrase.queryKey}`,
@@ -462,6 +477,7 @@ const refreshOriginalVolumeSegments = () => {
   originalTrackIdCache = trackId;
   volumeOriginalSegmentsData = buildSegments(originalFramewise, frameRate);
   renderInNextFrame = true;
+  return true;
 };
 
 const refreshEffectiveVolumeSegments = () => {
@@ -670,8 +686,9 @@ watch(
     try {
       await using _lock = await refreshVolumeSegmentsLock.acquire();
       if (isMounted) {
-        refreshOriginalVolumeSegments();
-        refreshEffectiveVolumeSegments();
+        if (refreshOriginalVolumeSegments()) {
+          refreshEffectiveVolumeSegments();
+        }
       }
     } catch (e) {
       warn("Failed to refresh original volume segments.", e);
