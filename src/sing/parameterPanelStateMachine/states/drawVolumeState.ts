@@ -7,7 +7,8 @@ import type {
 } from "../common";
 import type { SetNextState, State } from "@/sing/stateMachine";
 import type { TrackId } from "@/type/preload";
-import { createArray } from "@/sing/utility";
+import { decibelToLinear, linearToDecibel } from "@/sing/audio";
+import { createArray, linearInterpolation } from "@/sing/utility";
 import { getButton } from "@/sing/viewHelper";
 
 export class DrawVolumeState implements State<
@@ -165,16 +166,14 @@ export class DrawVolumeState implements State<
       throw new Error("previewVolumeEdit.value.type is not draw.");
     }
 
-    // TODO: 補間処理を実装する...表示含めスケールを先に決める必要ありそう
-    // まずはUIが動くようにのみする
     const cursorFrame = this.currentCursorPos.frame;
     const cursorValue = this.currentCursorPos.value;
+    const prevCursorFrame = this.innerContext.prevCursorPos.frame;
+    const prevCursorValue = this.innerContext.prevCursorPos.value;
     const tempPreviewEdit = {
       ...context.previewVolumeEdit.value,
       data: [...context.previewVolumeEdit.value.data],
     };
-
-    // TODO: 以下の補間は最低限...UIにあわせ修正する予定
 
     // 開始フレームがカーソルフレームより後ろの場合は、カーソルフレームまで前方拡張
     if (tempPreviewEdit.startFrame > cursorFrame) {
@@ -196,8 +195,40 @@ export class DrawVolumeState implements State<
       );
     }
 
-    tempPreviewEdit.data[cursorFrame - tempPreviewEdit.startFrame] =
-      cursorValue;
+    // NOTE: カーソル入力はrequestAnimationFrame単位で処理されるため、
+    // 前回位置との間をdBスケールで補間してフレーム抜けによるギザつきを防ぐ。
+    if (cursorFrame === prevCursorFrame) {
+      const i = cursorFrame - tempPreviewEdit.startFrame;
+      tempPreviewEdit.data[i] = cursorValue;
+    } else if (cursorFrame < prevCursorFrame) {
+      const cursorDb = linearToDecibel(cursorValue);
+      const prevCursorDb = linearToDecibel(prevCursorValue);
+      for (let i = cursorFrame; i <= prevCursorFrame; i++) {
+        tempPreviewEdit.data[i - tempPreviewEdit.startFrame] = decibelToLinear(
+          linearInterpolation(
+            cursorFrame,
+            cursorDb,
+            prevCursorFrame,
+            prevCursorDb,
+            i,
+          ),
+        );
+      }
+    } else {
+      const prevCursorDb = linearToDecibel(prevCursorValue);
+      const cursorDb = linearToDecibel(cursorValue);
+      for (let i = prevCursorFrame; i <= cursorFrame; i++) {
+        tempPreviewEdit.data[i - tempPreviewEdit.startFrame] = decibelToLinear(
+          linearInterpolation(
+            prevCursorFrame,
+            prevCursorDb,
+            cursorFrame,
+            cursorDb,
+            i,
+          ),
+        );
+      }
+    }
     context.previewVolumeEdit.value = tempPreviewEdit;
     this.innerContext.prevCursorPos = this.currentCursorPos;
   }
