@@ -536,7 +536,8 @@ const refreshEffectiveVolumeSegments = () => {
   const effectiveFramewise = new Array<number>(totalFrames).fill(
     VALUE_INDICATING_NO_DATA,
   );
-  for (const [i, edited] of editFramewise.entries()) {
+  for (const [i] of effectiveFramewise.entries()) {
+    const edited = editFramewise.at(i) ?? VALUE_INDICATING_NO_DATA;
     if (edited !== VALUE_INDICATING_NO_DATA) {
       effectiveFramewise[i] = Math.min(Math.max(edited, 0), 1);
     } else {
