@@ -391,39 +391,12 @@ const render = () => {
 
 const refreshVolumeSegmentsLock = new Mutex();
 
-const refreshOriginalVolumeSegments = (): boolean => {
+const refreshOriginalVolumeSegments = () => {
   const frameRate = editorFrameRate.value;
   if (frameRate <= 0) {
-    return false;
+    return;
   }
   const trackId = selectedTrackId.value;
-  let hasIncompletePhrase = false;
-
-  for (const phrase of store.state.phrases.values()) {
-    if (phrase.trackId !== trackId) {
-      continue;
-    }
-    if (phrase.queryKey == undefined) {
-      hasIncompletePhrase = true;
-      continue;
-    }
-    const phraseQuery = store.state.phraseQueries.get(phrase.queryKey);
-    if (phraseQuery?.volume == undefined) {
-      hasIncompletePhrase = true;
-    }
-  }
-
-  const canKeepCurrentCache =
-    hasOriginalFramewiseCache &&
-    originalTrackIdCache === trackId &&
-    originalFrameRateCache === frameRate;
-
-  // NOTE: 既存キャッシュがある場合は、中間状態での部分更新を避けて表示のちらつきを抑える。
-  // 初回表示やトラック切り替え直後など、表示に使えるキャッシュがまだない場合のみ、
-  // 確定済みのphraseから部分的にキャッシュを構築する。
-  if (hasIncompletePhrase && canKeepCurrentCache) {
-    return false;
-  }
 
   const totalTicks = getTotalTicks(
     timeSignatures.value,
@@ -477,7 +450,6 @@ const refreshOriginalVolumeSegments = (): boolean => {
   originalTrackIdCache = trackId;
   volumeOriginalSegmentsData = buildSegments(originalFramewise, frameRate);
   renderInNextFrame = true;
-  return true;
 };
 
 const refreshEffectiveVolumeSegments = () => {
@@ -686,9 +658,8 @@ watch(
     try {
       await using _lock = await refreshVolumeSegmentsLock.acquire();
       if (isMounted) {
-        if (refreshOriginalVolumeSegments()) {
-          refreshEffectiveVolumeSegments();
-        }
+        refreshOriginalVolumeSegments();
+        refreshEffectiveVolumeSegments();
       }
     } catch (e) {
       warn("Failed to refresh original volume segments.", e);
