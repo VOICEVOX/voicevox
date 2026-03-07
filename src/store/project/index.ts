@@ -6,11 +6,14 @@ import {
   writeProjectFile,
 } from "./saveProjectHelper";
 import { createUILockAction } from "@/store/ui";
-import type {
-  AllActions,
-  AudioItem,
-  ProjectStoreState,
-  ProjectStoreTypes,
+import {
+  type AllActions,
+  type AudioItem,
+  EditorFrameAudioQueryKey,
+  type ProjectStoreState,
+  type ProjectStoreTypes,
+  SingingPitchKey,
+  SingingVolumeKey,
 } from "@/store/type";
 import { TrackId } from "@/type/preload";
 import path from "@/helpers/path";
@@ -23,6 +26,7 @@ import {
   createDefaultTrack,
   DEFAULT_TPQN,
 } from "@/sing/domain";
+import type { SongTrackRendererCache } from "@/sing/songTrackRendering";
 import type { EditorType } from "@/type/preload";
 import { type IsEqual, UnreachableError } from "@/type/utility";
 import {
@@ -65,7 +69,16 @@ const applySongProjectToStore = async (
   actions: DotNotationDispatch<AllActions>,
   songProject: LatestProjectType["song"],
 ) => {
-  const { tpqn, tempos, timeSignatures, tracks, trackOrder } = songProject;
+  const {
+    tpqn,
+    tempos,
+    timeSignatures,
+    tracks,
+    trackOrder,
+    phraseQueries,
+    phraseSingingPitches,
+    phraseSingingVolumes,
+  } = songProject;
 
   await actions.SET_TPQN({ tpqn });
   await actions.SET_TEMPOS({ tempos });
@@ -81,6 +94,30 @@ const applySongProjectToStore = async (
         return [trackId, track];
       }),
     ),
+  });
+
+  const rendererCache: SongTrackRendererCache = {
+    queryCache: new Map(
+      Object.entries(phraseQueries).map(([k, v]) => [
+        EditorFrameAudioQueryKey(k),
+        v,
+      ]),
+    ),
+    singingPitchCache: new Map(
+      Object.entries(phraseSingingPitches).map(([k, v]) => [
+        SingingPitchKey(k),
+        v,
+      ]),
+    ),
+    singingVolumeCache: new Map(
+      Object.entries(phraseSingingVolumes).map(([k, v]) => [
+        SingingVolumeKey(k),
+        v,
+      ]),
+    ),
+  };
+  void actions.SET_SONG_TRACK_RENDERER_CACHE({
+    cache: rendererCache,
   });
 };
 
