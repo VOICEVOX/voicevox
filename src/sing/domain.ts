@@ -617,6 +617,8 @@ export function applyVolumeEdit(
   phraseStartTime: number,
   volumeEditData: number[],
   editorFrameRate: number,
+  minNonPauseStartFrame: number | undefined,
+  maxNonPauseEndFrame: number | undefined,
 ) {
   if (phraseQuery.frameRate !== editorFrameRate) {
     throw new Error(
@@ -631,8 +633,17 @@ export function applyVolumeEdit(
   );
   const phraseQueryEndFrame = phraseQueryStartFrame + phraseQueryFrameLength;
 
-  const startFrame = Math.max(0, phraseQueryStartFrame);
-  const endFrame = Math.min(volumeEditData.length, phraseQueryEndFrame);
+  // NOTE: ボリューム編集はpauではない区間にのみ適用する
+  // pau区間を編集できても、出力が不自然になったり、また隣接フレーズ境界のpau区間まで持ち上がって音声が不自然になるため
+  const startFrame = Math.max(
+    0,
+    phraseQueryStartFrame + (minNonPauseStartFrame ?? 0),
+  );
+  const endFrame = Math.min(
+    volumeEditData.length,
+    phraseQueryStartFrame + (maxNonPauseEndFrame ?? phraseQueryFrameLength),
+    phraseQueryEndFrame,
+  );
   for (let i = startFrame; i < endFrame; i++) {
     const editedVolume = volumeEditData[i];
     if (editedVolume === VALUE_INDICATING_NO_DATA) {
