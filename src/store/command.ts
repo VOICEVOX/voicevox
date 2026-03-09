@@ -126,6 +126,8 @@ export const commandStore = createPartialStore<CommandStoreTypes>({
         // TODO: 存在しないノートのみ選択解除、あるいはSELECTED_NOTE_IDS getterを作る
         mutations.DESELECT_ALL_NOTES();
         void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
+        void actions.SYNC_LOOP_RANGE_TO_TRANSPORT();
+        void actions.SYNC_PLAYHEAD_POSITION_TO_TRANSPORT();
         void actions.RENDER();
       }
     },
@@ -145,6 +147,8 @@ export const commandStore = createPartialStore<CommandStoreTypes>({
         // TODO: 存在しないノートのみ選択解除、あるいはSELECTED_NOTE_IDS getterを作る
         mutations.DESELECT_ALL_NOTES();
         void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
+        void actions.SYNC_LOOP_RANGE_TO_TRANSPORT();
+        void actions.SYNC_PLAYHEAD_POSITION_TO_TRANSPORT();
         void actions.RENDER();
       }
     },

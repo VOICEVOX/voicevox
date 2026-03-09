@@ -1461,6 +1461,14 @@ export type SingingStoreTypes = {
     action(): void;
   };
 
+  SYNC_LOOP_RANGE_TO_TRANSPORT: {
+    action(): void;
+  };
+
+  SYNC_PLAYHEAD_POSITION_TO_TRANSPORT: {
+    action(): void;
+  };
+
   APPLY_DEVICE_ID_TO_AUDIO_CONTEXT: {
     action(payload: { device: string }): void;
   };

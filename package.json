@@ -58,6 +58,7 @@
   "// TODO: hotkeys-jsのメジャーバージョン更新は動作テストしてから https://github.com/VOICEVOX/voicevox/pull/2953#pullrequestreview-3819334546": "",
   "dependencies": {
     "@gtm-support/vue-gtm": "3.1.0",
+    "@pixi/unsafe-eval": "7.4.3",
     "@quasar/extras": "1.17.0",
     "@sevenc-nanashi/utaformatix-ts": "jsr:0.4.0",
     "@std/path": "jsr:1.1.4",
@@ -141,7 +142,7 @@
     "markdownlint-cli": "0.47.0",
     "playwright": "1.58.1",
     "prettier": "3.8.1",
-    "rulesync": "7.0.0",
+    "rulesync": "7.7.1",
     "sass-embedded": "1.97.3",
     "storybook": "10.1.11",
     "tsx": "4.21.0",

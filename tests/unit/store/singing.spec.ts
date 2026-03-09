@@ -7,12 +7,12 @@ import { createDefaultTrack } from "@/sing/domain";
 
 const initialState = cloneWithUnwrapProxy(store.state);
 beforeEach(() => {
-  store.replaceState(initialState);
+  store.replaceState(cloneWithUnwrapProxy(initialState));
 
   resetMockMode();
 });
 
-test("INSERT_TRACK", () => {
+test("トラックを挿入する", () => {
   const dummyTrack = createDefaultTrack();
 
   // 最後尾に追加

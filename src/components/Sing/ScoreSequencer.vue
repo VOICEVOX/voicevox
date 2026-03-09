@@ -216,7 +216,13 @@
       </div>
     </template>
     <template #after>
-      <SequencerParameterPanel v-if="isParameterPanelOpen" />
+      <SequencerParameterPanel
+        v-if="isParameterPanelOpen"
+        :offsetX="scrollX"
+        @update:needsAutoScroll="
+          (value) => (parameterPanelNeedsAutoScroll = value)
+        "
+      />
     </template>
   </QSplitter>
 </template>
@@ -270,7 +276,7 @@ import {
   PREVIEW_SOUND_DURATION,
   SEQUENCER_MIN_NUM_MEASURES,
 } from "@/sing/viewHelper";
-import { getLast } from "@/sing/utility";
+import { clamp, getLast } from "@/sing/utility";
 import SequencerGrid from "@/components/Sing/SequencerGrid/Container.vue";
 import SequencerRuler from "@/components/Sing/SequencerRuler/Container.vue";
 import SequencerKeys from "@/components/Sing/SequencerKeys.vue";
@@ -442,19 +448,46 @@ const phraseInfosInOtherTracks = computed(() => {
   );
 });
 
-const parameterPanelHeight = ref(300);
+const DEFAULT_PARAMETER_PANEL_HEIGHT = 200;
+const MIN_PARAMETER_PANEL_HEIGHT = 100;
+const MAX_PARAMETER_PANEL_HEIGHT = 500;
+
+const splitterPosition = computed(() => store.state.splitterPosition);
+const parameterPanelHeight = ref(DEFAULT_PARAMETER_PANEL_HEIGHT);
 const isParameterPanelOpen = computed(
   () => store.state.experimentalSetting.showParameterPanel,
 );
 
-const setParameterPanelHeight = (height: number) => {
-  if (isParameterPanelOpen.value) {
-    parameterPanelHeight.value = height;
-  }
+watch(
+  isParameterPanelOpen,
+  (isOpen) => {
+    if (isOpen) {
+      const saved = splitterPosition.value.parameterPanelHeight;
+      parameterPanelHeight.value = clamp(
+        saved ?? DEFAULT_PARAMETER_PANEL_HEIGHT,
+        MIN_PARAMETER_PANEL_HEIGHT,
+        MAX_PARAMETER_PANEL_HEIGHT,
+      );
+    }
+  },
+  { immediate: true },
+);
+
+const setParameterPanelHeight = async (height: number) => {
+  if (!isParameterPanelOpen.value) return;
+  parameterPanelHeight.value = height;
+  await store.actions.SET_ROOT_MISC_SETTING({
+    key: "splitterPosition",
+    value: {
+      ...splitterPosition.value,
+      parameterPanelHeight: height,
+    },
+  });
 };
 
 const scrollBarWidth = ref(12);
 const sequencerBody = ref<HTMLElement | null>(null);
+const parameterPanelNeedsAutoScroll = ref(false);
 
 // ステートマシン
 const {
@@ -476,7 +509,15 @@ const previewNoteIds = computed(() => {
 });
 
 // マウスカーソルがシーケンサーの端に行ったときの自動スクロール
-useAutoScrollOnEdge(sequencerBody, enableAutoScrollOnEdge);
+const combinedEnableAutoScrollOnEdge = computed(
+  () => enableAutoScrollOnEdge.value || parameterPanelNeedsAutoScroll.value,
+);
+const autoScrollDirection = computed<"x" | "xy">(() =>
+  parameterPanelNeedsAutoScroll.value ? "x" : "xy",
+);
+useAutoScrollOnEdge(sequencerBody, combinedEnableAutoScrollOnEdge, {
+  scrollDirection: autoScrollDirection,
+});
 
 // 歌詞を編集中のノート
 const editingLyricNote = computed(() => {

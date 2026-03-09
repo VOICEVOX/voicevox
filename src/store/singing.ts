@@ -895,10 +895,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     mutation(state, { tpqn }: { tpqn: number }) {
       state.tpqn = tpqn;
     },
-    async action(
-      { state, getters, mutations, actions },
-      { tpqn }: { tpqn: number },
-    ) {
+    async action({ state, mutations, actions }, { tpqn }: { tpqn: number }) {
       if (!isValidTpqn(tpqn)) {
         throw new Error("The tpqn is invalid.");
       }
@@ -909,8 +906,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         await actions.SING_STOP_AUDIO();
       }
       mutations.SET_TPQN({ tpqn });
-      transport.time = getters.TICK_TO_SECOND(playheadPosition.value);
 
+      void actions.SYNC_LOOP_RANGE_TO_TRANSPORT();
+      void actions.SYNC_PLAYHEAD_POSITION_TO_TRANSPORT();
       void actions.RENDER();
     },
   },
@@ -920,21 +918,22 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.tempos = tempos;
     },
     async action(
-      { state, getters, mutations, actions },
+      { state, mutations, actions },
       { tempos }: { tempos: Tempo[] },
     ) {
       if (!isValidTempos(tempos)) {
         throw new Error("The tempos are invalid.");
       }
-      if (!transport) {
+      if (transport == undefined) {
         throw new Error("transport is undefined.");
       }
       if (state.nowPlaying) {
         await actions.SING_STOP_AUDIO();
       }
       mutations.SET_TEMPOS({ tempos });
-      transport.time = getters.TICK_TO_SECOND(playheadPosition.value);
 
+      void actions.SYNC_LOOP_RANGE_TO_TRANSPORT();
+      void actions.SYNC_PLAYHEAD_POSITION_TO_TRANSPORT();
       void actions.RENDER();
     },
   },
@@ -2182,6 +2181,39 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  SYNC_LOOP_RANGE_TO_TRANSPORT: {
+    async action({ state }) {
+      if (transport == undefined) {
+        logger.info(
+          "transport is undefined: skipping loop range synchronization.",
+        );
+        return;
+      }
+      transport.loopStartTime = tickToSecond(
+        state.loopStartTick,
+        state.tempos,
+        state.tpqn,
+      );
+      transport.loopEndTime = tickToSecond(
+        state.loopEndTick,
+        state.tempos,
+        state.tpqn,
+      );
+    },
+  },
+
+  SYNC_PLAYHEAD_POSITION_TO_TRANSPORT: {
+    async action({ getters }) {
+      if (transport == undefined) {
+        logger.info(
+          "transport is undefined: skipping playhead position synchronization.",
+        );
+        return;
+      }
+      transport.time = getters.TICK_TO_SECOND(playheadPosition.value);
+    },
+  },
+
   APPLY_DEVICE_ID_TO_AUDIO_CONTEXT: {
     action(_, { device }) {
       if (!audioContext) {
@@ -2226,6 +2258,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             ),
           ),
           editorFrameRate: state.editorFrameRate,
+          defaultLyricMode: state.defaultLyricMode,
         } as const;
       };
 
@@ -3478,8 +3511,9 @@ export const singingCommandStore = transformCommandStore(
         }
         tempo.bpm = round(tempo.bpm, 2);
         mutations.COMMAND_SET_TEMPO({ tempo });
-        transport.time = getters.TICK_TO_SECOND(playheadPosition.value);
 
+        void actions.SYNC_LOOP_RANGE_TO_TRANSPORT();
+        void actions.SYNC_PLAYHEAD_POSITION_TO_TRANSPORT();
         void actions.RENDER();
       },
     },
@@ -3505,8 +3539,9 @@ export const singingCommandStore = transformCommandStore(
           playheadPosition.value = getters.SECOND_TO_TICK(transport.time);
         }
         mutations.COMMAND_REMOVE_TEMPO({ position });
-        transport.time = getters.TICK_TO_SECOND(playheadPosition.value);
 
+        void actions.SYNC_LOOP_RANGE_TO_TRANSPORT();
+        void actions.SYNC_PLAYHEAD_POSITION_TO_TRANSPORT();
         void actions.RENDER();
       },
     },
@@ -3887,6 +3922,9 @@ export const singingCommandStore = transformCommandStore(
         { state, mutations, getters, actions },
         { tpqn, tempos, timeSignatures, tracks },
       ) {
+        if (transport == undefined) {
+          throw new Error("transport is undefined.");
+        }
         const payload: ({ track: Track; trackId: TrackId } & (
           | { overwrite: true; prevTrackId?: undefined }
           | { overwrite?: false; prevTrackId: TrackId }
@@ -3918,6 +3956,7 @@ export const singingCommandStore = transformCommandStore(
         });
 
         void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
+        void actions.SYNC_LOOP_RANGE_TO_TRANSPORT();
         void actions.RENDER();
       },
     },

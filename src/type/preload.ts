@@ -385,6 +385,7 @@ export const splitterPositionSchema = z.object({
   portraitPaneWidth: z.number().optional(),
   audioInfoPaneWidth: z.number().optional(),
   audioDetailPaneHeight: z.number().optional(),
+  parameterPanelHeight: z.number().optional(),
 });
 export type SplitterPositionType = z.infer<typeof splitterPositionSchema>;
 
@@ -417,6 +418,7 @@ export const rootMiscSettingSchema = z.object({
     })
     .prefault({}),
   showSingCharacterPortrait: z.boolean().default(true), // ソングエディタで立ち絵を表示するか
+  defaultLyricMode: z.enum(["doremi", "la"]).default("doremi"), // デフォルト歌詞の動作モード
   playheadPositionDisplayFormat: z
     .enum(["MINUTES_SECONDS", "MEASURES_BEATS"])
     .default("MINUTES_SECONDS"), // 再生ヘッド位置の表示モード

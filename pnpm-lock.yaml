@@ -6,6 +6,11 @@ settings:
 
 pnpmfileChecksum: sha256-z5OZsdei02KuRzaEvbeWmjk8rekL69KSDiN5qP8y6ro=
 
+patchedDependencies:
+  vite-plugin-checker@0.12.0:
+    hash: 49ea288c505d45c93fb75792438651c59952f14d2d615c2900fe4ef52176a8f2
+    path: patches/vite-plugin-checker@0.12.0.patch
+
 importers:
 
   .:
@@ -13,6 +18,9 @@ importers:
       '@gtm-support/vue-gtm':
         specifier: 3.1.0
         version: 3.1.0(vue@3.5.27(typescript@5.9.3))
+      '@pixi/unsafe-eval':
+        specifier: 7.4.3
+        version: 7.4.3(@pixi/core@7.4.3)
       '@quasar/extras':
         specifier: 1.17.0
         version: 1.17.0
@@ -249,8 +257,8 @@ importers:
         specifier: 3.8.1
         version: 3.8.1
       rulesync:
-        specifier: 7.0.0
-        version: 7.0.0(valibot@1.2.0(typescript@5.9.3))
+        specifier: 7.7.1
+        version: 7.7.1(valibot@1.2.0(typescript@5.9.3))
       sass-embedded:
         specifier: 1.97.3
         version: 1.97.3
@@ -271,7 +279,7 @@ importers:
         version: 7.3.1(@types/node@24.10.10)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(tsx@4.21.0)
       vite-plugin-checker:
         specifier: 0.12.0
-        version: 0.12.0(eslint@9.39.2(jiti@2.6.1))(optionator@0.9.4)(typescript@5.9.3)(vite@7.3.1(@types/node@24.10.10)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(tsx@4.21.0))(vue-tsc@3.2.4(typescript@5.9.3))
+        version: 0.12.0(patch_hash=49ea288c505d45c93fb75792438651c59952f14d2d615c2900fe4ef52176a8f2)(eslint@9.39.2(jiti@2.6.1))(optionator@0.9.4)(typescript@5.9.3)(vite@7.3.1(@types/node@24.10.10)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(tsx@4.21.0))(vue-tsc@3.2.4(typescript@5.9.3))
       vite-plugin-electron:
         specifier: 0.29.0
         version: 0.29.0
@@ -1143,6 +1151,11 @@ packages:
 
   '@pixi/ticker@7.4.3':
     resolution: {integrity: sha512-tHsAD0iOUb6QSGGw+c8cyRBvxsq/NlfzIFBZLEHhWZ+Bx4a0MmXup6I/yJDGmyPCYE+ctCcAfY13wKAzdiVFgQ==}
+
+  '@pixi/unsafe-eval@7.4.3':
+    resolution: {integrity: sha512-iR2iLcMculCSmn3x446ICCL5iokmFuLZDgNo7k1Q5rzNiULELIixfpSJwvlJqrJPY1kda0oqGHgVGRQ2vGfaLg==}
+    peerDependencies:
+      '@pixi/core': 7.4.3
 
   '@pixi/utils@7.4.3':
     resolution: {integrity: sha512-NO3Y9HAn2UKS1YdxffqsPp+kDpVm8XWvkZcS/E+rBzY9VTLnNOI7cawSRm+dacdET3a8Jad3aDKEDZ0HmAqAFA==}
@@ -2543,8 +2556,8 @@ packages:
   ee-first@1.1.1:
     resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
 
-  effect@3.19.16:
-    resolution: {integrity: sha512-7+XC3vGrbAhCHd8LTFHvnZjRpZKZ8YHRZqJTkpNoxcJ2mCyNs2SwI+6VkV/ij8Y3YW7wfBN4EbU06/F5+m/wkQ==}
+  effect@3.19.18:
+    resolution: {integrity: sha512-KlbNuYzzwpOpnpshIhjCaqweQkthAT1oVG61Z2wIHqo6Sb6n/+pgzFXyTvsLyxcx5Cg3aWaQXa0XQHMuzdVW4A==}
 
   ejs@3.1.10:
     resolution: {integrity: sha512-UeJmFfOrAQS8OJWPZ4qtgHyWExa088/MtK5UEyoJGFH67cDEXkZSviOiKRCZ4Xij0zxI3JECgYs3oKx+AizQBA==}
@@ -2904,8 +2917,8 @@ packages:
   fast-uri@3.1.0:
     resolution: {integrity: sha512-iPeeDKJSWf4IEOasVVrknXpaBV0IApz/gp7S2bb7Z4Lljbl2MGJRqInZiUrQwV16cpzw/D3S5j5Julj/gT52AA==}
 
-  fastmcp@3.31.0:
-    resolution: {integrity: sha512-e2LlF8EmPnwjyAg+JMyXnsMq2ametV3PuSWuhVONP2yZitDXkmDo40TiPQ0qUvU9j7TvdPm5YrjCMsxkkU1XXw==}
+  fastmcp@3.33.0:
+    resolution: {integrity: sha512-jmp1uwPMp1fMWF3vjSeWDbQKd2WlBjREKzd4Ro7Ww4Z7fzF9rWcOJN4D2zjR+rSIk44U2/0mu4pFNT/CkMPZyg==}
     hasBin: true
     peerDependencies:
       jose: ^5.0.0
@@ -3133,8 +3146,8 @@ packages:
     resolution: {integrity: sha512-DpLKbNU4WylpxJykQujfCcwYWiV/Jhm50Goo0wrVILAv5jOr9d+H+UR3PhSCD2rCCEIg0uc+G+muBTwD54JhDQ==}
     engines: {node: '>= 0.4'}
 
-  globby@16.1.0:
-    resolution: {integrity: sha512-+A4Hq7m7Ze592k9gZRy4gJ27DrXRNnC1vPjxTt1qQxEY8RxagBkBxivkCwg7FxSTG0iLLEMaUx13oOr0R2/qcQ==}
+  globby@16.1.1:
+    resolution: {integrity: sha512-dW7vl+yiAJSp6aCekaVnVJxurRv7DCOLyXqEG3RYMYUg7AuJ2jCqPkZTA8ooqC2vtnkaMcV5WfFBMuEnTu1OQg==}
     engines: {node: '>=20'}
 
   globrex@0.1.2:
@@ -4506,8 +4519,8 @@ packages:
     resolution: {integrity: sha512-nLTrUKm2UyiL7rlhapu/Zl45FwNgkZGaCpZbIHajDYgwlJCOzLSk+cIPAnsEqV955GjILJnKbdQC1nVPz+gAYQ==}
     engines: {node: '>= 18'}
 
-  rulesync@7.0.0:
-    resolution: {integrity: sha512-0Nrz7uvjD18VVFvmK9bD3EMuOzLVSYtK7d+v8nclKEEf/gBvy397pzIHBnGSOD5Cg8nMEX0SitcSnpeU6BbFpQ==}
+  rulesync@7.7.1:
+    resolution: {integrity: sha512-VpmW6oNC4+ZRKZdu5Y6rQIuoGaaIig3xcQRvntJVm7agojI80V4SzUgfJ4EsO2ZX4vvzZxi1jg8FuscvRJN/zQ==}
     engines: {node: '>=22.0.0'}
     hasBin: true
 
@@ -4973,10 +4986,10 @@ packages:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
 
-  sury@11.0.0-alpha.4:
-    resolution: {integrity: sha512-oeG/GJWZvQCKtGPpLbu0yCZudfr5LxycDo5kh7SJmKHDPCsEPJssIZL2Eb4Tl7g9aPEvIDuRrkS+L0pybsMEMA==}
+  sury@10.0.4:
+    resolution: {integrity: sha512-dWKqOv+6D4AwGCjeKyaWr157RVBtvnPUp1I6RxReYD1dYuBl4k6oUd/t5INh1mBhUuAEC9SP+rZmIunCyNjXzQ==}
     peerDependencies:
-      rescript: 12.x
+      rescript: 11.x
     peerDependenciesMeta:
       rescript:
         optional: true
@@ -6481,6 +6494,10 @@ snapshots:
       '@pixi/settings': 7.4.3
       '@pixi/utils': 7.4.3
 
+  '@pixi/unsafe-eval@7.4.3(@pixi/core@7.4.3)':
+    dependencies:
+      '@pixi/core': 7.4.3
+
   '@pixi/utils@7.4.3':
     dependencies:
       '@pixi/color': 7.4.3
@@ -7972,7 +7989,7 @@ snapshots:
 
   ee-first@1.1.1: {}
 
-  effect@3.19.16:
+  effect@3.19.18:
     dependencies:
       '@standard-schema/spec': 1.1.0
       fast-check: 3.23.2
@@ -8492,7 +8509,7 @@ snapshots:
 
   fast-uri@3.1.0: {}
 
-  fastmcp@3.31.0(@valibot/to-json-schema@1.5.0(valibot@1.2.0(typescript@5.9.3)))(effect@3.19.16)(sury@11.0.0-alpha.4):
+  fastmcp@3.33.0(@valibot/to-json-schema@1.5.0(valibot@1.2.0(typescript@5.9.3)))(effect@3.19.18)(sury@10.0.4):
     dependencies:
       '@modelcontextprotocol/sdk': 1.26.0(zod@4.3.6)
       '@standard-schema/spec': 1.1.0
@@ -8504,7 +8521,7 @@ snapshots:
       strict-event-emitter-types: 2.0.0
       undici: 7.21.0
       uri-templates: 0.2.0
-      xsschema: 0.4.0-beta.5(@valibot/to-json-schema@1.5.0(valibot@1.2.0(typescript@5.9.3)))(effect@3.19.16)(sury@11.0.0-alpha.4)(zod-to-json-schema@3.25.1(zod@4.3.6))(zod@4.3.6)
+      xsschema: 0.4.0-beta.5(@valibot/to-json-schema@1.5.0(valibot@1.2.0(typescript@5.9.3)))(effect@3.19.18)(sury@10.0.4)(zod-to-json-schema@3.25.1(zod@4.3.6))(zod@4.3.6)
       yargs: 18.0.0
       zod: 4.3.6
       zod-to-json-schema: 3.25.1(zod@4.3.6)
@@ -8771,7 +8788,7 @@ snapshots:
       define-properties: 1.2.1
       gopd: 1.2.0
 
-  globby@16.1.0:
+  globby@16.1.1:
     dependencies:
       '@sindresorhus/merge-streams': 4.0.0
       fast-glob: 3.3.3
@@ -10411,7 +10428,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  rulesync@7.0.0(valibot@1.2.0(typescript@5.9.3)):
+  rulesync@7.7.1(valibot@1.2.0(typescript@5.9.3)):
     dependencies:
       '@modelcontextprotocol/sdk': 1.26.0(zod@4.3.6)
       '@octokit/request-error': 7.1.0
@@ -10420,15 +10437,15 @@ snapshots:
       '@valibot/to-json-schema': 1.5.0(valibot@1.2.0(typescript@5.9.3))
       commander: 14.0.3
       consola: 3.4.2
-      effect: 3.19.16
+      effect: 3.19.18
       es-toolkit: 1.44.0
-      fastmcp: 3.31.0(@valibot/to-json-schema@1.5.0(valibot@1.2.0(typescript@5.9.3)))(effect@3.19.16)(sury@11.0.0-alpha.4)
-      globby: 16.1.0
+      fastmcp: 3.33.0(@valibot/to-json-schema@1.5.0(valibot@1.2.0(typescript@5.9.3)))(effect@3.19.18)(sury@10.0.4)
+      globby: 16.1.1
       gray-matter: 4.0.3
       js-yaml: 4.1.1
       jsonc-parser: 3.3.1
       smol-toml: 1.6.0
-      sury: 11.0.0-alpha.4
+      sury: 10.0.4
       zod: 4.3.6
     transitivePeerDependencies:
       - '@cfworker/json-schema'
@@ -10922,7 +10939,7 @@ snapshots:
 
   supports-preserve-symlinks-flag@1.0.0: {}
 
-  sury@11.0.0-alpha.4: {}
+  sury@10.0.4: {}
 
   sync-child-process@1.0.2:
     dependencies:
@@ -11191,7 +11208,7 @@ snapshots:
       extsprintf: 1.4.1
     optional: true
 
-  vite-plugin-checker@0.12.0(eslint@9.39.2(jiti@2.6.1))(optionator@0.9.4)(typescript@5.9.3)(vite@7.3.1(@types/node@24.10.10)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(tsx@4.21.0))(vue-tsc@3.2.4(typescript@5.9.3)):
+  vite-plugin-checker@0.12.0(patch_hash=49ea288c505d45c93fb75792438651c59952f14d2d615c2900fe4ef52176a8f2)(eslint@9.39.2(jiti@2.6.1))(optionator@0.9.4)(typescript@5.9.3)(vite@7.3.1(@types/node@24.10.10)(jiti@2.6.1)(sass-embedded@1.97.3)(sass@1.97.3)(tsx@4.21.0))(vue-tsc@3.2.4(typescript@5.9.3)):
     dependencies:
       '@babel/code-frame': 7.29.0
       chokidar: 4.0.3
@@ -11475,11 +11492,11 @@ snapshots:
 
   xmlbuilder@15.1.1: {}
 
-  xsschema@0.4.0-beta.5(@valibot/to-json-schema@1.5.0(valibot@1.2.0(typescript@5.9.3)))(effect@3.19.16)(sury@11.0.0-alpha.4)(zod-to-json-schema@3.25.1(zod@4.3.6))(zod@4.3.6):
+  xsschema@0.4.0-beta.5(@valibot/to-json-schema@1.5.0(valibot@1.2.0(typescript@5.9.3)))(effect@3.19.18)(sury@10.0.4)(zod-to-json-schema@3.25.1(zod@4.3.6))(zod@4.3.6):
     optionalDependencies:
       '@valibot/to-json-schema': 1.5.0(valibot@1.2.0(typescript@5.9.3))
-      effect: 3.19.16
-      sury: 11.0.0-alpha.4
+      effect: 3.19.18
+      sury: 10.0.4
       zod: 4.3.6
       zod-to-json-schema: 3.25.1(zod@4.3.6)
 

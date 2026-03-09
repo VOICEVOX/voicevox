@@ -1,4 +1,4 @@
-import { computed, ref, watch } from "vue";
+import { computed, ref, shallowRef, watch } from "vue";
 import type { CursorState } from "@/sing/viewHelper";
 import type {
   VolumePreviewEdit,
@@ -16,7 +16,9 @@ export const useVolumeEditorStateMachine = (
   store: VolumeEditorPartialStore,
 ) => {
   const refs = {
-    previewVolumeEdit: ref<VolumePreviewEdit | undefined>(undefined),
+    // NOTE: data配列が大きくなるため、shallowRefで深いリアクティブ化を避ける
+    // 値の変更通知は.valueへの再代入で行う
+    previewVolumeEdit: shallowRef<VolumePreviewEdit | undefined>(undefined),
     previewMode: ref<VolumeEditorPreviewMode>("IDLE"),
     cursorState: ref<CursorState>("UNSET"),
   };
@@ -28,6 +30,7 @@ export const useVolumeEditorStateMachine = (
     tpqn: computed<number>(() => store.state.tpqn),
     zoomX: computed<number>(() => store.state.sequencerZoomX),
     zoomY: computed<number>(() => store.state.sequencerZoomY),
+    nowPlaying: computed<boolean>(() => store.state.nowPlaying),
   };
 
   const idleStateId = computed<VolumeEditorIdleStateId>(() =>
