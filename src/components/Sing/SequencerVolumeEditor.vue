@@ -32,7 +32,7 @@ import ContextMenu from "@/components/Menu/ContextMenu/Container.vue";
 import type { ContextMenuItemData } from "@/components/Menu/ContextMenu/Container.vue";
 import { useStore } from "@/store";
 import type { VolumeEditTool } from "@/store/type";
-import { useParameterPanelStateMachine } from "@/composables/useParameterPanelStateMachine";
+import { useVolumeEditorStateMachine } from "@/composables/useVolumeEditorStateMachine";
 import { useMounted } from "@/composables/useMounted";
 import { createLogger } from "@/helpers/log";
 import { Mutex } from "@/helpers/mutex";
@@ -69,49 +69,8 @@ const KEY_COLUMN_WIDTH_PX = 48; // ScoreSequencerの左側キー領域と合わ�
 
 const { warn } = createLogger("SequencerVolumeEditor");
 const store = useStore();
-const {
-  volumePreviewEdit,
-  volumeStateMachineProcess,
-  volumePreviewMode,
-  volumeCursorState,
-} = useParameterPanelStateMachine({
-  state: {
-    get tpqn() {
-      return store.state.tpqn;
-    },
-    get tempos() {
-      return store.state.tempos;
-    },
-    get sequencerZoomX() {
-      return store.state.sequencerZoomX;
-    },
-    get sequencerZoomY() {
-      return store.state.sequencerZoomY;
-    },
-    get sequencerVolumeTool() {
-      return store.state.sequencerVolumeTool;
-    },
-    get parameterPanelEditTarget() {
-      return store.state.parameterPanelEditTarget;
-    },
-    get nowPlaying() {
-      return store.state.nowPlaying;
-    },
-  },
-  getters: {
-    get SELECTED_TRACK_ID() {
-      return store.getters.SELECTED_TRACK_ID;
-    },
-    get PLAYHEAD_POSITION() {
-      return store.getters.PLAYHEAD_POSITION;
-    },
-  },
-  actions: {
-    COMMAND_SET_VOLUME_EDIT_DATA: store.actions.COMMAND_SET_VOLUME_EDIT_DATA,
-    COMMAND_ERASE_VOLUME_EDIT_DATA:
-      store.actions.COMMAND_ERASE_VOLUME_EDIT_DATA,
-  },
-});
+const { volumePreviewEdit, stateMachineProcess, previewMode, cursorState } =
+  useVolumeEditorStateMachine(store);
 
 const tool = computed<VolumeEditTool>(() => store.state.sequencerVolumeTool);
 const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
@@ -126,12 +85,12 @@ const isDark = computed(() => store.state.currentTheme === "Dark");
 const numMeasuresContext = inject(numMeasuresInjectionKey, null);
 const numMeasures = computed(() => numMeasuresContext?.numMeasures.value ?? 0);
 
-watch(volumePreviewMode, (mode) => {
+watch(previewMode, (mode) => {
   emit("update:needsAutoScroll", mode !== "IDLE");
 });
 
 onBeforeUnmount(() => {
-  if (volumePreviewMode.value !== "IDLE") {
+  if (previewMode.value !== "IDLE") {
     emit("update:needsAutoScroll", false);
   }
 });
@@ -192,7 +151,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => [
 ]);
 
 const cursorClass = computed(() => {
-  switch (volumeCursorState.value) {
+  switch (cursorState.value) {
     case "DRAW":
       return "cursor-draw";
     case "ERASE":
@@ -555,7 +514,7 @@ const dispatchVolumeEditorEvent = (
   targetArea: "Editor" | "Window",
 ) => {
   const position = computeViewportPosition(pointerEvent);
-  volumeStateMachineProcess({
+  stateMachineProcess({
     type: "pointerEvent",
     targetArea,
     pointerEvent,

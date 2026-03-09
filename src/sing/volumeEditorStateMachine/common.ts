@@ -5,38 +5,38 @@ import type { CursorState } from "@/sing/viewHelper";
 import type { TrackId } from "@/type/preload";
 import type { Tempo } from "@/domain/project/type";
 
-export type PositionOnParameterPanel = {
+export type PositionOnVolumeEditor = {
   readonly frame: number;
   readonly value: number;
 };
 
-export type ParameterPanelInput =
+export type VolumeEditorInput =
   | {
       readonly type: "pointerEvent";
       readonly targetArea: "Editor";
       readonly pointerEvent: PointerEvent;
-      readonly position: PositionOnParameterPanel;
+      readonly position: PositionOnVolumeEditor;
     }
   | {
       readonly type: "pointerEvent";
       readonly targetArea: "Window";
       readonly pointerEvent: PointerEvent;
-      readonly position: PositionOnParameterPanel;
+      readonly position: PositionOnVolumeEditor;
     };
 
-export type ParameterPanelVolumePreviewEdit =
+export type VolumePreviewEdit =
   | { type: "draw"; data: number[]; startFrame: number }
   | { type: "erase"; startFrame: number; frameLength: number };
 
-export type ParameterPanelPreviewMode = "IDLE" | "VOLUME_DRAW" | "VOLUME_ERASE";
+export type VolumeEditorPreviewMode = "IDLE" | "VOLUME_DRAW" | "VOLUME_ERASE";
 
-export type ParameterPanelRefs = {
-  readonly previewVolumeEdit: Ref<ParameterPanelVolumePreviewEdit | undefined>;
-  readonly previewMode: Ref<ParameterPanelPreviewMode>;
+export type VolumeEditorRefs = {
+  readonly previewVolumeEdit: Ref<VolumePreviewEdit | undefined>;
+  readonly previewMode: Ref<VolumeEditorPreviewMode>;
   readonly cursorState: Ref<CursorState>;
 };
 
-export type ParameterPanelComputedRefs = {
+export type VolumeEditorComputedRefs = {
   readonly selectedTrackId: ComputedRef<TrackId>;
   readonly playheadTicks: ComputedRef<number>;
   readonly tempos: ComputedRef<Tempo[]>;
@@ -46,7 +46,7 @@ export type ParameterPanelComputedRefs = {
   readonly nowPlaying: ComputedRef<boolean>;
 };
 
-export type ParameterPanelPartialStore = {
+export type VolumeEditorPartialStore = {
   readonly state: Pick<
     Store["state"],
     | "tpqn"
@@ -54,7 +54,6 @@ export type ParameterPanelPartialStore = {
     | "sequencerZoomX"
     | "sequencerZoomY"
     | "sequencerVolumeTool"
-    | "parameterPanelEditTarget"
     | "nowPlaying"
   >;
   readonly getters: Pick<
@@ -67,14 +66,14 @@ export type ParameterPanelPartialStore = {
   >;
 };
 
-export type ParameterPanelContext = ParameterPanelRefs &
-  ParameterPanelComputedRefs & {
-    readonly store: ParameterPanelPartialStore;
+export type VolumeEditorContext = VolumeEditorRefs &
+  VolumeEditorComputedRefs & {
+    readonly store: VolumeEditorPartialStore;
   };
 
-export type ParameterPanelIdleStateId = "drawVolumeIdle" | "eraseVolumeIdle";
+export type VolumeEditorIdleStateId = "drawVolumeIdle" | "eraseVolumeIdle";
 
-export type ParameterPanelStateDefinitions = StateDefinitions<
+export type VolumeEditorStateDefinitions = StateDefinitions<
   [
     {
       id: "drawVolumeIdle";
@@ -87,17 +86,17 @@ export type ParameterPanelStateDefinitions = StateDefinitions<
     {
       id: "drawVolume";
       factoryArgs: {
-        startPosition: PositionOnParameterPanel;
+        startPosition: PositionOnVolumeEditor;
         targetTrackId: TrackId;
-        returnStateId: ParameterPanelIdleStateId;
+        returnStateId: VolumeEditorIdleStateId;
       };
     },
     {
       id: "eraseVolume";
       factoryArgs: {
-        startPosition: PositionOnParameterPanel;
+        startPosition: PositionOnVolumeEditor;
         targetTrackId: TrackId;
-        returnStateId: ParameterPanelIdleStateId;
+        returnStateId: VolumeEditorIdleStateId;
       };
     },
   ]
