@@ -93,7 +93,7 @@ test("Welcome画面でエンジンを更新できる", async () => {
   });
 
   const app = await electron.launch({
-    args: ["--no-sandbox", "."],
+    args: ["--no-sandbox", "."], // NOTE: --no-sandbox はUbuntu 24.04で動かすのに必要
     timeout: process.env.CI ? 0 : 60000,
   });
 
