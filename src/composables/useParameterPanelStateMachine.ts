@@ -1,4 +1,4 @@
-import { computed, ref, watch } from "vue";
+import { computed, ref, shallowRef, watch } from "vue";
 import type { CursorState } from "@/sing/viewHelper";
 import type {
   ParameterPanelVolumePreviewEdit,
@@ -16,7 +16,9 @@ export const useParameterPanelStateMachine = (
   store: ParameterPanelPartialStore,
 ) => {
   const refs = {
-    previewVolumeEdit: ref<ParameterPanelVolumePreviewEdit | undefined>(
+    // NOTE: data配列が大きくなるため、shallowRefで深いリアクティブ化を避ける
+    // 値の変更通知は.valueへの再代入で行う
+    previewVolumeEdit: shallowRef<ParameterPanelVolumePreviewEdit | undefined>(
       undefined,
     ),
     previewMode: ref<ParameterPanelPreviewMode>("IDLE"),
@@ -30,6 +32,7 @@ export const useParameterPanelStateMachine = (
     tpqn: computed<number>(() => store.state.tpqn),
     zoomX: computed<number>(() => store.state.sequencerZoomX),
     zoomY: computed<number>(() => store.state.sequencerZoomY),
+    nowPlaying: computed<boolean>(() => store.state.nowPlaying),
   };
 
   // NOTE: parameterPanelEditTargetは今のところVOLUMEのみ。
