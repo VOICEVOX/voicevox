@@ -99,6 +99,9 @@ test("Welcome画面でエンジンを更新できる", async () => {
 
   // ダミーエンジンは起動できずに異常終了するため、エラーダイアログが表示される。
   // これをモックしてテストが失敗しないようにする。
+  //
+  // NOTE: このモックが差し込まれる前にエンジンが起動して異常終了する可能性がある
+  // TODO: ほかの方法でエラーダイアログを抑制できないか検討する
   await app.evaluate((electron) => {
     electron.dialog.showErrorBox = (title: string, content: string) => {
       if (
