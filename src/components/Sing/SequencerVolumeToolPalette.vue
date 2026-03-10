@@ -60,7 +60,7 @@ defineEmits<{
   outline: 1px solid var(--scheme-color-outline-variant);
   position: absolute;
   top: 12px;
-  left: 64px;
+  left: 16px;
   z-index: var(--z-index-sing-tool-palette);
   padding: 2px;
   border-radius: 24px;
