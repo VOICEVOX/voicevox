@@ -757,7 +757,7 @@ export const singingStoreState: SingingStoreState = {
   sequencerPitchTool: "DRAW",
   sequencerVolumeTool: "DRAW",
   sequencerPhonemeTimingTool: "MOVE",
-  parameterPanelEditTarget: "VOLUME",
+  parameterPanelEditTarget: "PHONEME_TIMING",
   sequencerVolumeVisible: false,
   _selectedNoteIds: new Set(),
   nowPlaying: false,
