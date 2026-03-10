@@ -52,9 +52,9 @@ const phonemeTimingLineStyles: Record<
     movePreview: { color: 0x3d7eff, alpha: 1, width: 2 },
   },
   dark: {
-    default: { color: 0x82b38b, alpha: 1, width: 1 },
-    edited: { color: 0x9ec9a6, alpha: 1, width: 2 },
-    movePreview: { color: 0x6fa8ff, alpha: 1, width: 2 },
+    default: { color: 0x547359, alpha: 1, width: 1 },
+    edited: { color: 0x28a652, alpha: 1, width: 2 },
+    movePreview: { color: 0x699ff0, alpha: 1, width: 2 },
   },
 };
 

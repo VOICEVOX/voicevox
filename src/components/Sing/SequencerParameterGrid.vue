@@ -52,8 +52,8 @@ const gridLineStyles: {
     beatLineColor: 0xeaeaea,
   },
   dark: {
-    measureLineColor: 0x606060,
-    beatLineColor: 0x404040,
+    measureLineColor: 0x363636,
+    beatLineColor: 0x2a2a2a,
   },
 };
 
