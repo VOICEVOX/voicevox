@@ -10,6 +10,7 @@ extend-ignore-re = [
 
 [default.extend-identifiers]
 splited = "splited" # コードで使う時、もっと自然な感じを与える
+StrCpy = "StrCpy" # nsisの文字列操作命令
 
 [default.extend-words]
 ba = "ba" # 7zコマンドの-baオプション

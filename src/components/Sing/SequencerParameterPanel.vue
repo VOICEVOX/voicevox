@@ -12,11 +12,10 @@
       />
       <SequencerVolumeEditor
         v-if="editTarget === 'VOLUME'"
-        :playheadTicks
-        :tempos
-        :tpqn
-        :zoomX
-        :zoomY
+        :offsetX="viewportInfo.offsetX"
+        @update:needsAutoScroll="
+          (value) => emit('update:needsAutoScroll', value)
+        "
       />
     </div>
   </div>
@@ -26,20 +25,18 @@
 import { computed } from "vue";
 import SequencerVolumeEditor from "@/components/Sing/SequencerVolumeEditor.vue";
 import { useStore } from "@/store";
-import { ParameterPanelEditTarget } from "@/store/type";
+import type { ParameterPanelEditTarget } from "@/store/type";
 import ParameterPanelEditTargetSwitcher from "@/components/Sing/ParameterPanelEditTargetSwitcher.vue";
 import SequencerPhonemeTimingEditor from "@/components/Sing/SequencerPhonemeTimingEditor.vue";
-import { ViewportInfo } from "@/sing/viewHelper";
+import { type ViewportInfo } from "@/sing/viewHelper";
+
+const emit = defineEmits<{
+  "update:needsAutoScroll": [value: boolean];
+}>();
 
 const store = useStore();
 
 defineProps<{ viewportInfo: ViewportInfo }>();
-
-const playheadTicks = computed(() => store.getters.PLAYHEAD_POSITION);
-const tempos = computed(() => store.state.tempos);
-const tpqn = computed(() => store.state.tpqn);
-const zoomX = computed(() => store.state.sequencerZoomX);
-const zoomY = computed(() => store.state.sequencerZoomY);
 
 const editTarget = computed(() => store.state.parameterPanelEditTarget);
 
@@ -75,5 +72,7 @@ const changeEditTarget = (editTarget: ParameterPanelEditTarget) => {
 .edit-area {
   grid-column: 1;
   grid-row: 2;
+  position: relative;
+  overflow: hidden;
 }
 </style>

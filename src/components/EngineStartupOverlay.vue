@@ -39,7 +39,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import { useStore } from "@/store";
-import { EngineState } from "@/store/type";
+import type { EngineState } from "@/store/type";
 
 const store = useStore();
 const props = defineProps<{

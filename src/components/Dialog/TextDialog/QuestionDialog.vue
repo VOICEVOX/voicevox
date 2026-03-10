@@ -31,10 +31,10 @@
 </template>
 
 <script setup lang="ts">
-import { QBtn, useDialogPluginComponent } from "quasar";
+import { type QBtn, useDialogPluginComponent } from "quasar";
 import { computed, onMounted, useTemplateRef } from "vue";
-import { QuestionDialogButtonColor } from "../Dialog";
-import { getIcon, getColor, DialogType } from "./common";
+import type { QuestionDialogButtonColor } from "../Dialog";
+import { getIcon, getColor, type DialogType } from "./common";
 import BaseDialog from "@/components/Base/BaseDialog.vue";
 import BaseButton from "@/components/Base/BaseButton.vue";
 import { ExhaustiveError } from "@/type/utility";

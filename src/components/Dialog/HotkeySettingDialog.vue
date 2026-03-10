@@ -129,7 +129,7 @@ import { useStore } from "@/store";
 import { useHotkeyManager, eventToCombination } from "@/plugins/hotkeyPlugin";
 import {
   HotkeyCombination,
-  HotkeyActionNameType,
+  type HotkeyActionNameType,
   getDefaultHotkeySettings,
 } from "@/domain/hotkeyAction";
 import { isMac } from "@/helpers/platform";

@@ -56,10 +56,10 @@
 import { computed, ref, useTemplateRef, onMounted, onUnmounted } from "vue";
 import type { ValueChange } from "./Container.vue";
 import ContextMenu, {
-  ContextMenuItemData,
+  type ContextMenuItemData,
 } from "@/components/Menu/ContextMenu/Presentation.vue";
 import { createLogger } from "@/helpers/log";
-import { FontSpecification, predictTextWidth } from "@/helpers/textWidth";
+import { type FontSpecification, predictTextWidth } from "@/helpers/textWidth";
 
 defineOptions({
   name: "ValueChangesLanePresentation",

@@ -1,7 +1,7 @@
-import { ActionContext } from "../type";
+import type { ActionContext } from "../type";
 import { showErrorDialog } from "@/components/Dialog/Dialog";
 import { getAppInfos } from "@/domain/appInfo";
-import { LatestProjectType } from "@/infrastructures/projectFile/type";
+import type { LatestProjectType } from "@/infrastructures/projectFile/type";
 import { DisplayableError } from "@/helpers/errorHelper";
 import { ResultError } from "@/type/result";
 import { toProjectFileTrack } from "@/infrastructures/projectFile/conversion";

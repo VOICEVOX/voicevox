@@ -6,7 +6,7 @@
 </template>
 
 <script setup lang="ts" generic="T extends AcceptableValue">
-import { AcceptableValue, ToggleGroupItem } from "reka-ui";
+import { type AcceptableValue, ToggleGroupItem } from "reka-ui";
 
 defineProps<{
   label: string;

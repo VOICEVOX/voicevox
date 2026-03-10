@@ -1,4 +1,4 @@
-import { test, expect, Page, Locator } from "@playwright/test";
+import { test, expect, type Page, type Locator } from "@playwright/test";
 
 import { gotoHome, navigateToSong } from "../../navigators";
 import { ensureNotNullish } from "@/type/utility";

@@ -1,15 +1,16 @@
-import {
+import type {
   VolumeEditorStateDefinitions,
   VolumeEditorInput,
   VolumeEditorContext,
 } from "../common";
-import { SetNextState, State } from "@/sing/stateMachine";
+import type { SetNextState, State } from "@/sing/stateMachine";
 import { getButton } from "@/sing/viewHelper";
 
-export class EraseVolumeIdleState
-  implements
-    State<VolumeEditorStateDefinitions, VolumeEditorInput, VolumeEditorContext>
-{
+export class EraseVolumeIdleState implements State<
+  VolumeEditorStateDefinitions,
+  VolumeEditorInput,
+  VolumeEditorContext
+> {
   readonly id = "eraseVolumeIdle";
 
   onEnter(context: VolumeEditorContext) {
@@ -25,12 +26,12 @@ export class EraseVolumeIdleState
     context: VolumeEditorContext;
     setNextState: SetNextState<VolumeEditorStateDefinitions>;
   }) {
-    if (input.type === "mouseEvent") {
-      const mouseButton = getButton(input.mouseEvent);
+    if (input.type === "pointerEvent") {
+      const mouseButton = getButton(input.pointerEvent);
       const trackId = context.selectedTrackId.value;
 
       if (
-        input.mouseEvent.type === "mousedown" &&
+        input.pointerEvent.type === "pointerdown" &&
         mouseButton === "LEFT_BUTTON" &&
         input.targetArea === "Editor"
       ) {

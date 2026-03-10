@@ -34,7 +34,7 @@ import { useStore } from "@/store";
 import { useSequencerLayout } from "@/composables/useSequencerLayout";
 import { baseXToTick } from "@/sing/viewHelper";
 import { getMeasureDuration, getNoteDuration } from "@/sing/music";
-import { ContextMenuItemData } from "@/components/Menu/ContextMenu/Presentation.vue";
+import type { ContextMenuItemData } from "@/components/Menu/ContextMenu/Presentation.vue";
 
 defineOptions({
   name: "LoopLaneContainer",

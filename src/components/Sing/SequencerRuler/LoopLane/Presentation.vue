@@ -105,7 +105,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import ContextMenu, {
-  ContextMenuItemData,
+  type ContextMenuItemData,
 } from "@/components/Menu/ContextMenu/Presentation.vue";
 import type { TimeSignature } from "@/domain/project/type";
 

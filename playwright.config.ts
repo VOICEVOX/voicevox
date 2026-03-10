@@ -54,6 +54,7 @@ const config: PlaywrightTestConfig = {
   // TODO: CIでCPU版をダウンロードするように修正し、タイムアウトを元に戻す。
   timeout: isElectron ? 5 * 60 * 1000 : 60 * 1000,
   globalTimeout: 5 * 60 * 1000,
+  globalSetup: isElectron ? "./tests/e2e/electron/setup.ts" : undefined,
   expect: {
     /**
      * Maximum time expect() should wait for the condition to be met.

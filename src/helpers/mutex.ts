@@ -1,4 +1,4 @@
-import AsyncLock, { AsyncLockOptions } from "async-lock";
+import AsyncLock, { type AsyncLockOptions } from "async-lock";
 
 const key = "lock";
 

@@ -276,7 +276,7 @@ import BaseNavigationView from "@/components/Base/BaseNavigationView.vue";
 import BaseTextField from "@/components/Base/BaseTextField.vue";
 import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 import { useStore } from "@/store";
-import { EngineDirValidationResult, EngineId } from "@/type/preload";
+import { type EngineDirValidationResult, EngineId } from "@/type/preload";
 import type { SupportedFeatures } from "@/openapi/models/SupportedFeatures";
 import { useEngineIcons } from "@/composables/useEngineIcons";
 import { errorToMessage } from "@/helpers/errorHelper";
@@ -489,6 +489,13 @@ const deleteEngine = async () => {
             message: errorToMessage(e),
           });
         }
+        break;
+      }
+      case "downloadVvpp": {
+        void store.actions.SHOW_ALERT_DIALOG({
+          title: "エンジンを削除できません",
+          message: "未インストールのエンジンは削除できません。",
+        });
         break;
       }
       default:

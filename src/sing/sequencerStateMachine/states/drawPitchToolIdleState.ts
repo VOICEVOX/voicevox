@@ -1,5 +1,5 @@
-import { SetNextState, State } from "@/sing/stateMachine";
-import {
+import type { SetNextState, State } from "@/sing/stateMachine";
+import type {
   Context,
   Input,
   SequencerStateDefinitions,
@@ -7,9 +7,11 @@ import {
 import { getButton } from "@/sing/viewHelper";
 import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 
-export class DrawPitchToolIdleState
-  implements State<SequencerStateDefinitions, Input, Context>
-{
+export class DrawPitchToolIdleState implements State<
+  SequencerStateDefinitions,
+  Input,
+  Context
+> {
   readonly id = "drawPitchToolIdle";
 
   onEnter(context: Context) {

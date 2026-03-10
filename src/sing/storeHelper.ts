@@ -1,4 +1,4 @@
-import { NoteId } from "@/type/preload";
+import type { NoteId } from "@/type/preload";
 import type { Note } from "@/domain/project/type";
 
 export function getOverlappingNoteIds(notes: Note[]): Set<NoteId> {

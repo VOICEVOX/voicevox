@@ -127,7 +127,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUpdate, ref, toRaw, VNodeRef, watch } from "vue";
+import {
+  computed,
+  onBeforeUpdate,
+  ref,
+  toRaw,
+  type VNodeRef,
+  watch,
+} from "vue";
 import Draggable from "vuedraggable";
 import { QResizeObserver } from "quasar";
 import AudioCell from "./AudioCell.vue";
@@ -138,8 +145,8 @@ import ToolBar from "./ToolBar.vue";
 import { useStore } from "@/store";
 import ProgressView from "@/components/ProgressView.vue";
 import EngineStartupOverlay from "@/components/EngineStartupOverlay.vue";
-import { AudioItem } from "@/store/type";
-import {
+import type { AudioItem } from "@/store/type";
+import type {
   AudioKey,
   PresetKey,
   SplitterPositionType,
@@ -150,7 +157,7 @@ import onetimeWatch from "@/helpers/onetimeWatch";
 import path from "@/helpers/path";
 import {
   actionPostfixSelectNthCharacter,
-  HotkeyActionNameType,
+  type HotkeyActionNameType,
 } from "@/domain/hotkeyAction";
 import { isElectron } from "@/helpers/platform";
 import { dragAndDropReorder } from "@/helpers/reorderHelper";
@@ -199,10 +206,19 @@ registerHotkeyWithCleanup({
 });
 registerHotkeyWithCleanup({
   editor: "talk",
-  name: "テキストを読み込む",
+  name: "テキストを繋げて書き出す",
   callback: () => {
     if (!uiLocked.value) {
       void store.actions.SHOW_CONNECT_AND_EXPORT_TEXT_DIALOG();
+    }
+  },
+});
+registerHotkeyWithCleanup({
+  editor: "talk",
+  name: "テキストを読み込む",
+  callback: () => {
+    if (!uiLocked.value) {
+      void store.actions.COMMAND_IMPORT_FROM_FILE({ type: "dialog" });
     }
   },
 });

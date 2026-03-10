@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import { moveFile } from "move-file";
-import { MinimumEngineManifestType } from "@/type/preload";
+import type { MinimumEngineManifestType } from "@/type/preload";
 
 /**
  * VVPPインストール直前に展開されたエンジンファイル群。

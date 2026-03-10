@@ -126,7 +126,7 @@ import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 import { useMarkdownIt } from "@/plugins/markdownItPlugin";
 import { useStore } from "@/store";
 import { DEFAULT_STYLE_NAME } from "@/store/utility";
-import {
+import type {
   CharacterInfo,
   DefaultStyleId,
   SpeakerId,

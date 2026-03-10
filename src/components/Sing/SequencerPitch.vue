@@ -6,6 +6,7 @@
 
 <script setup lang="ts">
 import { ref, watch, computed, onUnmounted, onMounted } from "vue";
+import "@pixi/unsafe-eval";
 import * as PIXI from "pixi.js";
 import { useStore } from "@/store";
 import { useMounted } from "@/composables/useMounted";
@@ -23,12 +24,12 @@ import { getLast } from "@/sing/utility";
 import { getOrThrow } from "@/helpers/mapHelper";
 import {
   calculatePitchDataHash,
-  PitchData,
-  PitchDataHash,
+  type PitchData,
+  type PitchDataHash,
   PitchLine,
-  ViewInfo,
+  type ViewInfo,
 } from "@/sing/graphics/pitchLine";
-import { FramePhoneme } from "@/openapi";
+import type { FramePhoneme } from "@/openapi";
 import { Mutex } from "@/helpers/mutex";
 
 const props = defineProps<{

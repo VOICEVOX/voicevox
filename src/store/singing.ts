@@ -2,26 +2,26 @@ import { ref } from "vue";
 import { createPartialStore } from "./vuex";
 import { createUILockAction } from "./ui";
 import {
-  SingingStoreState,
-  SingingStoreTypes,
-  SingingCommandStoreState,
-  SingingCommandStoreTypes,
-  SaveResultObject,
-  Phrase,
+  type SingingStoreState,
+  type SingingStoreTypes,
+  type SingingCommandStoreState,
+  type SingingCommandStoreTypes,
+  type SaveResultObject,
+  type Phrase,
   transformCommandStore,
-  SingingVoice,
-  SequencerEditTarget,
-  ParameterPanelEditTarget,
-  PhraseKey,
+  type SingingVoice,
+  type SequencerEditTarget,
+  type ParameterPanelEditTarget,
+  type PhraseKey,
   SequenceId,
-  SingingVolumeKey,
-  SingingVolume,
-  SingingVoiceKey,
-  EditorFrameAudioQueryKey,
-  EditorFrameAudioQuery,
-  TrackParameters,
-  SingingPitchKey,
-  SingingPitch,
+  type SingingVolumeKey,
+  type SingingVolume,
+  type SingingVoiceKey,
+  type EditorFrameAudioQueryKey,
+  type EditorFrameAudioQuery,
+  type TrackParameters,
+  type SingingPitchKey,
+  type SingingPitch,
 } from "./type";
 import {
   buildSongTrackAudioFileNameFromRawData,
@@ -29,30 +29,30 @@ import {
   DEFAULT_PROJECT_NAME,
   DEFAULT_STYLE_NAME,
   generateLabelFileData,
-  PhonemeTimingLabel,
+  type PhonemeTimingLabel,
   sanitizeFileName,
 } from "./utility";
 import {
-  CharacterInfo,
-  EngineId,
+  type CharacterInfo,
+  type EngineId,
   NoteId,
   StyleId,
   TrackId,
 } from "@/type/preload";
-import { Note as NoteForRequestToEngine } from "@/openapi";
+import type { Note as NoteForRequestToEngine } from "@/openapi";
 import { ResultError, getValueOrThrow } from "@/type/result";
 import {
-  AudioEvent,
+  type AudioEvent,
   AudioPlayer,
-  AudioSequence,
+  type AudioSequence,
   ChannelStrip,
   Clipper,
   Limiter,
-  NoteEvent,
-  NoteSequence,
+  type NoteEvent,
+  type NoteSequence,
   OfflineTransport,
   PolySynth,
-  Sequence,
+  type Sequence,
   Transport,
 } from "@/sing/audioRendering";
 import {
@@ -117,15 +117,15 @@ import {
 } from "@/sing/utaformatixProject/utils";
 import { ExhaustiveError, UnreachableError } from "@/type/utility";
 import {
-  CacheLoadedEvent,
-  PhraseRenderingCompleteEvent,
-  PhraseRenderingErrorEvent,
-  PhraseRenderingStartedEvent,
-  PitchGenerationCompleteEvent,
-  QueryGenerationCompleteEvent,
+  type CacheLoadedEvent,
+  type PhraseRenderingCompleteEvent,
+  type PhraseRenderingErrorEvent,
+  type PhraseRenderingStartedEvent,
+  type PitchGenerationCompleteEvent,
+  type QueryGenerationCompleteEvent,
   SongTrackRenderer,
-  VoiceSynthesisCompleteEvent,
-  VolumeGenerationCompleteEvent,
+  type VoiceSynthesisCompleteEvent,
+  type VolumeGenerationCompleteEvent,
 } from "@/sing/songTrackRendering";
 import type {
   Note,
@@ -455,6 +455,13 @@ const syncPhraseSequences = (
     onSequenceDeleted: (phraseKey: PhraseKey) => void;
   },
 ) => {
+  if (audioContext == undefined) {
+    logger.info(
+      "AudioContext is undefined: skipping phrase-sequence synchronization.",
+    );
+    return;
+  }
+
   // 不要になったシーケンスを削除する
   deleteUnnecessarySequences(
     phrases,
@@ -650,11 +657,21 @@ const createNoteSequenceForPhrase = (
  * @param tracks `state`の`tracks`
  */
 const syncTracksAndTrackChannelStrips = (tracks: Map<TrackId, Track>) => {
+  // AudioContext はテスト環境では存在しないことがある。
+  // その場合はトラックのオーディオ接続は行えないため早期に何もしない。
   if (audioContext == undefined) {
-    throw new Error("audioContext is undefined.");
+    // AudioContext が無い環境（テスト等）ではオーディオ接続処理は行えないため何もしない。
+    logger.info(
+      "AudioContext is undefined: skipping track-channel-strip synchronization.",
+    );
+    return;
   }
   if (mainChannelStrip == undefined) {
-    throw new Error("mainChannelStrip is undefined.");
+    // mainChannelStrip が未作成の場合は何もしない。
+    logger.info(
+      "mainChannelStrip is undefined: skipping track-channel-strip synchronization.",
+    );
+    return;
   }
 
   const shouldPlays = shouldPlayTracks(tracks);
@@ -879,10 +896,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     mutation(state, { tpqn }: { tpqn: number }) {
       state.tpqn = tpqn;
     },
-    async action(
-      { state, getters, mutations, actions },
-      { tpqn }: { tpqn: number },
-    ) {
+    async action({ state, mutations, actions }, { tpqn }: { tpqn: number }) {
       if (!isValidTpqn(tpqn)) {
         throw new Error("The tpqn is invalid.");
       }
@@ -893,8 +907,9 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         await actions.SING_STOP_AUDIO();
       }
       mutations.SET_TPQN({ tpqn });
-      transport.time = getters.TICK_TO_SECOND(playheadPosition.value);
 
+      void actions.SYNC_LOOP_RANGE_TO_TRANSPORT();
+      void actions.SYNC_PLAYHEAD_POSITION_TO_TRANSPORT();
       void actions.RENDER();
     },
   },
@@ -904,21 +919,22 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.tempos = tempos;
     },
     async action(
-      { state, getters, mutations, actions },
+      { state, mutations, actions },
       { tempos }: { tempos: Tempo[] },
     ) {
       if (!isValidTempos(tempos)) {
         throw new Error("The tempos are invalid.");
       }
-      if (!transport) {
+      if (transport == undefined) {
         throw new Error("transport is undefined.");
       }
       if (state.nowPlaying) {
         await actions.SING_STOP_AUDIO();
       }
       mutations.SET_TEMPOS({ tempos });
-      transport.time = getters.TICK_TO_SECOND(playheadPosition.value);
 
+      void actions.SYNC_LOOP_RANGE_TO_TRANSPORT();
+      void actions.SYNC_PLAYHEAD_POSITION_TO_TRANSPORT();
       void actions.RENDER();
     },
   },
@@ -2293,6 +2309,39 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     },
   },
 
+  SYNC_LOOP_RANGE_TO_TRANSPORT: {
+    async action({ state }) {
+      if (transport == undefined) {
+        logger.info(
+          "transport is undefined: skipping loop range synchronization.",
+        );
+        return;
+      }
+      transport.loopStartTime = tickToSecond(
+        state.loopStartTick,
+        state.tempos,
+        state.tpqn,
+      );
+      transport.loopEndTime = tickToSecond(
+        state.loopEndTick,
+        state.tempos,
+        state.tpqn,
+      );
+    },
+  },
+
+  SYNC_PLAYHEAD_POSITION_TO_TRANSPORT: {
+    async action({ getters }) {
+      if (transport == undefined) {
+        logger.info(
+          "transport is undefined: skipping playhead position synchronization.",
+        );
+        return;
+      }
+      transport.time = getters.TICK_TO_SECOND(playheadPosition.value);
+    },
+  },
+
   APPLY_DEVICE_ID_TO_AUDIO_CONTEXT: {
     action(_, { device }) {
       if (!audioContext) {
@@ -2337,6 +2386,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             ),
           ),
           editorFrameRate: state.editorFrameRate,
+          defaultLyricMode: state.defaultLyricMode,
         } as const;
       };
 
@@ -3163,19 +3213,30 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
 
       // パースしたJSONのノートの位置を現在の再生位置に合わせて貼り付ける
-      const currentPlayheadPosition = getters.PLAYHEAD_POSITION;
+      const currentPlayheadPosition = Math.round(getters.PLAYHEAD_POSITION);
       const firstNotePosition = notes[0].position;
+
+      // positionとdurationが整数かチェック
+      const hasNonIntegerValues = notes.some(
+        (note) =>
+          !Number.isInteger(note.position) || !Number.isInteger(note.duration),
+      );
+      if (hasNonIntegerValues) {
+        throw new Error(
+          "Failed to paste notes: position and duration must be integers.",
+        );
+      }
+
       const notesToPaste: Note[] = notes.map((note) => {
         // 新しい位置を現在の再生位置に合わせて計算する
-        const pastePos = Math.round(
-          Number(note.position) - firstNotePosition + currentPlayheadPosition,
-        );
+        const pastePos =
+          note.position - firstNotePosition + currentPlayheadPosition;
         return {
           id: NoteId(uuid4()),
           position: pastePos,
-          duration: Number(note.duration),
-          noteNumber: Number(note.noteNumber),
-          lyric: String(note.lyric),
+          duration: note.duration,
+          noteNumber: note.noteNumber,
+          lyric: note.lyric,
         };
       });
       const pastedNoteIds = notesToPaste.map((note) => note.id);
@@ -3416,7 +3477,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           getters.SELECTED_TRACK,
           getters.CHARACTER_INFO,
         );
-        const project = ufProjectFromVoicevox(
+        const project = await ufProjectFromVoicevox(
           {
             tempos: state.tempos,
             timeSignatures: state.timeSignatures,
@@ -3578,8 +3639,9 @@ export const singingCommandStore = transformCommandStore(
         }
         tempo.bpm = round(tempo.bpm, 2);
         mutations.COMMAND_SET_TEMPO({ tempo });
-        transport.time = getters.TICK_TO_SECOND(playheadPosition.value);
 
+        void actions.SYNC_LOOP_RANGE_TO_TRANSPORT();
+        void actions.SYNC_PLAYHEAD_POSITION_TO_TRANSPORT();
         void actions.RENDER();
       },
     },
@@ -3605,8 +3667,9 @@ export const singingCommandStore = transformCommandStore(
           playheadPosition.value = getters.SECOND_TO_TICK(transport.time);
         }
         mutations.COMMAND_REMOVE_TEMPO({ position });
-        transport.time = getters.TICK_TO_SECOND(playheadPosition.value);
 
+        void actions.SYNC_LOOP_RANGE_TO_TRANSPORT();
+        void actions.SYNC_PLAYHEAD_POSITION_TO_TRANSPORT();
         void actions.RENDER();
       },
     },
@@ -4052,6 +4115,52 @@ export const singingCommandStore = transformCommandStore(
       },
     },
 
+    COMMAND_DUPLICATE_TRACK: {
+      /**
+       * 指定されたトラックを複製し、元のトラックの直後に挿入する。
+       * ノートやピッチ／ボリューム編集データ、音素タイミング編集データなど
+       * トラックに紐付く情報を引き継いだうえで、ノートIDを新しく振り直す。
+       */
+      async action({ state, actions, mutations }, { trackId }) {
+        const sourceTrack = getOrThrow(state.tracks, trackId);
+        const newTrack = cloneWithUnwrapProxy(sourceTrack);
+
+        const newTrackId = TrackId(uuid4());
+        newTrack.name = `${newTrack.name} - コピー`;
+        // NOTE: ソロ、ミュート状態も複製元から引き継ぐ
+
+        // ノートIDを新しく振り直し、音素タイミング編集データを対応させる
+        const oldNoteIdToNewNoteId = new Map<NoteId, NoteId>();
+        newTrack.notes = newTrack.notes.map((note) => {
+          const newNoteId = NoteId(uuid4());
+          oldNoteIdToNewNoteId.set(note.id, newNoteId);
+          return { ...note, id: newNoteId };
+        });
+
+        // 音素タイミング編集データを新しいノートIDに紐付け直す
+        const newPhonemeTimingEditData = new Map<NoteId, PhonemeTimingEdit[]>();
+        for (const [oldNoteId, edits] of sourceTrack.phonemeTimingEditData) {
+          const newNoteId = oldNoteIdToNewNoteId.get(oldNoteId);
+          if (newNoteId != undefined) {
+            newPhonemeTimingEditData.set(newNoteId, edits);
+          }
+        }
+        newTrack.phonemeTimingEditData = newPhonemeTimingEditData;
+
+        mutations.INSERT_TRACK({
+          trackId: newTrackId,
+          track: newTrack,
+          prevTrackId: trackId,
+        });
+
+        // SYNC は同期処理なので待機しない
+        void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
+        void actions.RENDER();
+
+        void actions.SET_SELECTED_TRACK({ trackId: newTrackId });
+      },
+    },
+
     COMMAND_SET_TRACK_NAME: {
       mutation(draft, { trackId, name }) {
         singingStore.mutations.SET_TRACK_NAME(draft, { trackId, name });
@@ -4151,6 +4260,9 @@ export const singingCommandStore = transformCommandStore(
         { state, mutations, getters, actions },
         { tpqn, tempos, timeSignatures, tracks },
       ) {
+        if (transport == undefined) {
+          throw new Error("transport is undefined.");
+        }
         const payload: ({ track: Track; trackId: TrackId } & (
           | { overwrite: true; prevTrackId?: undefined }
           | { overwrite?: false; prevTrackId: TrackId }
@@ -4182,6 +4294,7 @@ export const singingCommandStore = transformCommandStore(
         });
 
         void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
+        void actions.SYNC_LOOP_RANGE_TO_TRANSPORT();
         void actions.RENDER();
       },
     },

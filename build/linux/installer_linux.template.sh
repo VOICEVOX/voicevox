@@ -234,7 +234,7 @@ echo "[+] Removing archive list (list.txt)..."
 rm -f "list.txt"
 
 # Extract desktop entry
-echo "[+] Extacting desktop entry..."
+echo "[+] Extracting desktop entry..."
 
 "./${APPIMAGE}" --appimage-extract '*.desktop'
 "./${APPIMAGE}" --appimage-extract 'usr/share/icons/**'

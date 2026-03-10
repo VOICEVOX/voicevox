@@ -1,18 +1,19 @@
-import {
+import type {
   VolumeEditorStateDefinitions,
   VolumeEditorInput,
   VolumeEditorContext,
   PositionOnVolumeEditor,
   VolumeEditorIdleStateId,
 } from "../common";
-import { SetNextState, State } from "@/sing/stateMachine";
-import { TrackId } from "@/type/preload";
+import type { SetNextState, State } from "@/sing/stateMachine";
+import type { TrackId } from "@/type/preload";
 import { getButton } from "@/sing/viewHelper";
 
-export class EraseVolumeState
-  implements
-    State<VolumeEditorStateDefinitions, VolumeEditorInput, VolumeEditorContext>
-{
+export class EraseVolumeState implements State<
+  VolumeEditorStateDefinitions,
+  VolumeEditorInput,
+  VolumeEditorContext
+> {
   readonly id = "eraseVolume";
 
   private readonly cursorPosAtStart: PositionOnVolumeEditor;
@@ -88,22 +89,26 @@ export class EraseVolumeState
       throw new Error("previewVolumeEdit.type is not erase.");
     }
 
-    if (input.type === "mouseEvent") {
-      const { mouseEvent, position, targetArea } = input;
-      const mouseButton = getButton(mouseEvent);
+    if (input.type === "pointerEvent") {
+      const { pointerEvent, position, targetArea } = input;
+      const mouseButton = getButton(pointerEvent);
 
       if (targetArea === "Window") {
-        if (mouseEvent.type === "mousemove") {
+        if (pointerEvent.type === "pointermove") {
           this.currentCursorPos = position;
           this.innerContext.executePreviewProcess = true;
         } else if (
-          mouseEvent.type === "mouseup" &&
-          mouseButton === "LEFT_BUTTON"
+          (pointerEvent.type === "pointerup" &&
+            mouseButton === "LEFT_BUTTON") ||
+          pointerEvent.type === "pointercancel"
         ) {
           this.applyPreview = true;
           setNextState(this.returnStateId, undefined);
         }
-      } else if (targetArea === "Editor" && mouseEvent.type === "mousemove") {
+      } else if (
+        targetArea === "Editor" &&
+        pointerEvent.type === "pointermove"
+      ) {
         this.currentCursorPos = position;
         this.innerContext.executePreviewProcess = true;
       }
@@ -145,7 +150,7 @@ export class EraseVolumeState
       throw new Error("previewVolumeEdit.value.type is not erase.");
     }
 
-    const cursorFrame = Math.max(0, this.currentCursorPos.frame);
+    const cursorFrame = this.currentCursorPos.frame;
     const temp = { ...context.previewVolumeEdit.value };
 
     // 開始フレームがカーソルフレームより後ろの場合は、カーソルフレームまでの長さを追加する

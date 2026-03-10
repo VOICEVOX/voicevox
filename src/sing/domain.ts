@@ -6,19 +6,21 @@ import {
 } from "@/sing/utility";
 import { convertLongVowel, moraPattern } from "@/domain/japanese";
 import {
-  Phrase,
-  PhraseSource,
+  type Phrase,
+  type PhraseSource,
   PhraseKey,
-  EditorFrameAudioQuery,
+  type EditorFrameAudioQuery,
 } from "@/store/type";
-import { FramePhoneme } from "@/openapi";
-import { NoteId, TrackId } from "@/type/preload";
+import type { FramePhoneme } from "@/openapi";
+import { NoteId, type TrackId } from "@/type/preload";
 import type {
   PhonemeTimingEditData,
   Tempo,
   TimeSignature,
   Track,
 } from "@/domain/project/type";
+import { getDoremiFromNoteNumber } from "@/sing/viewHelper";
+import { ExhaustiveError } from "@/type/utility";
 import { getRepresentableNoteTypes, isValidNotes } from "@/sing/music";
 
 const MAX_SNAP_TYPE = 32;
@@ -633,6 +635,8 @@ export function applyVolumeEdit(
   phraseStartTime: number,
   volumeEditData: number[],
   editorFrameRate: number,
+  minNonPauseStartFrame: number | undefined,
+  maxNonPauseEndFrame: number | undefined,
 ) {
   if (phraseQuery.frameRate !== editorFrameRate) {
     throw new Error(
@@ -647,8 +651,17 @@ export function applyVolumeEdit(
   );
   const phraseQueryEndFrame = phraseQueryStartFrame + phraseQueryFrameLength;
 
-  const startFrame = Math.max(0, phraseQueryStartFrame);
-  const endFrame = Math.min(volumeEditData.length, phraseQueryEndFrame);
+  // NOTE: ボリューム編集はpauではない区間にのみ適用する
+  // pau区間を編集できても、出力が不自然になったり、また隣接フレーズ境界のpau区間まで持ち上がって音声が不自然になるため
+  const startFrame = Math.max(
+    0,
+    phraseQueryStartFrame + (minNonPauseStartFrame ?? 0),
+  );
+  const endFrame = Math.min(
+    volumeEditData.length,
+    phraseQueryStartFrame + (maxNonPauseEndFrame ?? phraseQueryFrameLength),
+    phraseQueryEndFrame,
+  );
   for (let i = startFrame; i < endFrame; i++) {
     const editedVolume = volumeEditData[i];
     if (editedVolume === VALUE_INDICATING_NO_DATA) {
@@ -734,4 +747,22 @@ export const isValidLoopRange = (
     Number.isInteger(endTick) &&
     startTick <= endTick // 範囲差0は許容する
   );
+};
+
+/**
+ * デフォルト歌詞を取得する。
+ *
+ * @param noteNumber MIDIノート番号（0-127）
+ * @param mode デフォルト歌詞のモード（"doremi" または "la"）
+ * @returns デフォルト歌詞
+ */
+export const getDefaultLyric = (noteNumber: number, mode: "doremi" | "la") => {
+  switch (mode) {
+    case "doremi":
+      return getDoremiFromNoteNumber(noteNumber);
+    case "la":
+      return "ら";
+    default:
+      throw new ExhaustiveError(mode);
+  }
 };

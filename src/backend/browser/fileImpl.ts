@@ -1,7 +1,7 @@
 import { directoryHandleStoreKey } from "./contract";
 import { openDB } from "./browserConfig";
-import { createFakePath, FakePath, isFakePath } from "./fakePath";
-import { SandboxKey } from "@/type/preload";
+import { createFakePath, type FakePath, isFakePath } from "./fakePath";
+import type { SandboxKey } from "@/type/preload";
 import { failure, success } from "@/type/result";
 import { createLogger } from "@/helpers/log";
 import { normalizeError } from "@/helpers/normalizeError";

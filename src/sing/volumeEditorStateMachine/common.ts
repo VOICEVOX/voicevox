@@ -1,8 +1,8 @@
-import { ComputedRef, Ref } from "vue";
+import type { ComputedRef, Ref } from "vue";
 import type { Store } from "@/store";
-import { StateDefinitions } from "@/sing/stateMachine";
+import type { StateDefinitions } from "@/sing/stateMachine";
 import type { CursorState } from "@/sing/viewHelper";
-import { TrackId } from "@/type/preload";
+import type { TrackId } from "@/type/preload";
 import type { Tempo } from "@/domain/project/type";
 
 export type PositionOnVolumeEditor = {
@@ -12,15 +12,15 @@ export type PositionOnVolumeEditor = {
 
 export type VolumeEditorInput =
   | {
-      readonly type: "mouseEvent";
+      readonly type: "pointerEvent";
       readonly targetArea: "Editor";
-      readonly mouseEvent: MouseEvent;
+      readonly pointerEvent: PointerEvent;
       readonly position: PositionOnVolumeEditor;
     }
   | {
-      readonly type: "mouseEvent";
+      readonly type: "pointerEvent";
       readonly targetArea: "Window";
-      readonly mouseEvent: MouseEvent;
+      readonly pointerEvent: PointerEvent;
       readonly position: PositionOnVolumeEditor;
     };
 
@@ -43,6 +43,7 @@ export type VolumeEditorComputedRefs = {
   readonly tpqn: ComputedRef<number>;
   readonly zoomX: ComputedRef<number>;
   readonly zoomY: ComputedRef<number>;
+  readonly nowPlaying: ComputedRef<boolean>;
 };
 
 export type VolumeEditorPartialStore = {
@@ -53,6 +54,7 @@ export type VolumeEditorPartialStore = {
     | "sequencerZoomX"
     | "sequencerZoomY"
     | "sequencerVolumeTool"
+    | "nowPlaying"
   >;
   readonly getters: Pick<
     Store["getters"],

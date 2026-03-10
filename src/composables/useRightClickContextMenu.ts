@@ -3,10 +3,10 @@
  * 参考実装: https://github.com/VOICEVOX/voicevox/pull/1374/files#diff-444f263f72d4db11fe82c672d5c232eb4c29d29dbc1ffd20e279d586b1b2c180
  */
 
-import { QInput } from "quasar";
-import { ref, Ref, nextTick } from "vue";
-import { MenuItemButton, MenuItemSeparator } from "@/components/Menu/type";
-import ContextMenu from "@/components/Menu/ContextMenu/Container.vue";
+import type { QInput } from "quasar";
+import { ref, type Ref, nextTick } from "vue";
+import type { MenuItemButton, MenuItemSeparator } from "@/components/Menu/type";
+import type ContextMenu from "@/components/Menu/ContextMenu/Container.vue";
 import { SelectionHelperForQInput } from "@/helpers/SelectionHelperForQInput";
 
 /**
