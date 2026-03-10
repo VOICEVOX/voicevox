@@ -1,5 +1,5 @@
-import { SetNextState, State } from "@/sing/stateMachine";
-import {
+import type { SetNextState, State } from "@/sing/stateMachine";
+import type {
   PhonemeTimingEditorContext,
   PhonemeTimingEditorIdleStateId,
   PhonemeTimingEditorInput,
@@ -9,14 +9,11 @@ import { NoteId, TrackId } from "@/type/preload";
 import { getButton, tickToBaseX } from "@/sing/viewHelper";
 import { secondToTick } from "@/sing/music";
 
-export class ErasePhonemeTimingState
-  implements
-    State<
-      PhonemeTimingEditorStateDefinitions,
-      PhonemeTimingEditorInput,
-      PhonemeTimingEditorContext
-    >
-{
+export class ErasePhonemeTimingState implements State<
+  PhonemeTimingEditorStateDefinitions,
+  PhonemeTimingEditorInput,
+  PhonemeTimingEditorContext
+> {
   readonly id = "erasePhonemeTiming";
 
   private readonly targetTrackId: TrackId;

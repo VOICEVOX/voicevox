@@ -14,9 +14,9 @@ import { tickToBaseX, type ViewportInfo } from "@/sing/viewHelper";
 import { getNext } from "@/sing/utility";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { UnreachableError } from "@/type/utility";
-import {
-  type PhonemeTimingPreview,
-  type PhonemeTimingInfo,
+import type {
+  PhonemeTimingPreview,
+  PhonemeTimingInfo,
 } from "@/sing/phonemeTimingEditorStateMachine/common";
 
 type PhonemeDisplayState = "default" | "edited" | "movePreview";

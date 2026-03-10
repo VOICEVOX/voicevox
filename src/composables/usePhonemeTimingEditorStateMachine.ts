@@ -1,4 +1,4 @@
-import { computed, ComputedRef, ref, watch } from "vue";
+import { computed, type ComputedRef, ref, watch } from "vue";
 import type { CursorState, ViewportInfo } from "@/sing/viewHelper";
 import type {
   PhonemeTimingPreview,

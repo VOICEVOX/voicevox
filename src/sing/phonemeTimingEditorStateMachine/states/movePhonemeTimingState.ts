@@ -1,5 +1,5 @@
-import { SetNextState, State } from "@/sing/stateMachine";
-import {
+import type { SetNextState, State } from "@/sing/stateMachine";
+import type {
   PhonemeTimingEditorContext,
   PhonemeTimingEditorIdleStateId,
   PhonemeTimingEditorInput,
@@ -12,14 +12,11 @@ import { clamp, getPrev } from "@/sing/utility";
 import { getOrThrow } from "@/helpers/mapHelper";
 import { assertNonNullable } from "@/type/utility";
 
-export class MovePhonemeTimingState
-  implements
-    State<
-      PhonemeTimingEditorStateDefinitions,
-      PhonemeTimingEditorInput,
-      PhonemeTimingEditorContext
-    >
-{
+export class MovePhonemeTimingState implements State<
+  PhonemeTimingEditorStateDefinitions,
+  PhonemeTimingEditorInput,
+  PhonemeTimingEditorContext
+> {
   readonly id = "movePhonemeTiming";
 
   private readonly targetTrackId: TrackId;

@@ -1,7 +1,7 @@
-import { ComputedRef, Ref } from "vue";
+import type { ComputedRef, Ref } from "vue";
 import type { Store } from "@/store";
-import { StateDefinitions } from "@/sing/stateMachine";
-import { type CursorState, type ViewportInfo } from "@/sing/viewHelper";
+import type { StateDefinitions } from "@/sing/stateMachine";
+import type { CursorState, ViewportInfo } from "@/sing/viewHelper";
 import { NoteId, TrackId } from "@/type/preload";
 import type { Note, PhonemeTimingEditData, Tempo } from "@/domain/project/type";
 import type {

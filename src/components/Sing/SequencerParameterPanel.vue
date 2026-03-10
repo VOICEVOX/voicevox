@@ -28,7 +28,7 @@ import { useStore } from "@/store";
 import type { ParameterPanelEditTarget } from "@/store/type";
 import ParameterPanelEditTargetSwitcher from "@/components/Sing/ParameterPanelEditTargetSwitcher.vue";
 import SequencerPhonemeTimingEditor from "@/components/Sing/SequencerPhonemeTimingEditor.vue";
-import { type ViewportInfo } from "@/sing/viewHelper";
+import type { ViewportInfo } from "@/sing/viewHelper";
 
 const emit = defineEmits<{
   "update:needsAutoScroll": [value: boolean];

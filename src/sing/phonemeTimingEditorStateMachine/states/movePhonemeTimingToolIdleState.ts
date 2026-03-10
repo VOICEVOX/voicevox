@@ -1,5 +1,5 @@
-import { SetNextState, State } from "@/sing/stateMachine";
-import {
+import type { SetNextState, State } from "@/sing/stateMachine";
+import type {
   PhonemeTimingEditorContext,
   PhonemeTimingEditorInput,
   PhonemeTimingEditorStateDefinitions,
@@ -8,14 +8,11 @@ import {
 import { getButton, tickToBaseX } from "@/sing/viewHelper";
 import { secondToTick } from "@/sing/music";
 
-export class MovePhonemeTimingToolIdleState
-  implements
-    State<
-      PhonemeTimingEditorStateDefinitions,
-      PhonemeTimingEditorInput,
-      PhonemeTimingEditorContext
-    >
-{
+export class MovePhonemeTimingToolIdleState implements State<
+  PhonemeTimingEditorStateDefinitions,
+  PhonemeTimingEditorInput,
+  PhonemeTimingEditorContext
+> {
   readonly id = "movePhonemeTimingToolIdle";
 
   onEnter(context: PhonemeTimingEditorContext) {
