@@ -95,7 +95,7 @@ import type { Ref, ComputedRef, InjectionKey } from "vue";
 
 export const dictionaryManageDialogContextKey: InjectionKey<{
   wordEditing: Ref<boolean>;
-  surfaceInput: Ref<QInput | undefined>;
+  surfaceInput: Ref<typeof BaseTextField | undefined>;
   selectedId: Ref<string>;
   uiLocked: Ref<boolean>;
   userDict: Ref<Record<string, UserDictWord>>;
@@ -122,7 +122,7 @@ export const dictionaryManageDialogContextKey: InjectionKey<{
 
 <script setup lang="ts">
 import { computed, ref, watch, provide } from "vue";
-import type { QInput } from "quasar";
+import type BaseTextField from "../Base/BaseTextField.vue";
 import BaseListItem from "../Base/BaseListItem.vue";
 import BaseIconButton from "../Base/BaseIconButton.vue";
 import BaseNavigationView from "../Base/BaseNavigationView.vue";
@@ -195,7 +195,7 @@ watch(dialogOpened, async (newValue) => {
 });
 
 const wordEditing = ref(false);
-const surfaceInput = ref<QInput>();
+const surfaceInput = ref<typeof BaseTextField>();
 const selectedId = ref("");
 const surface = ref("");
 const yomi = ref("");
