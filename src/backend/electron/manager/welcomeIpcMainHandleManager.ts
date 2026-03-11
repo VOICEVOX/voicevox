@@ -6,6 +6,7 @@ import { getAppStateController } from "../appStateController";
 import { getWelcomeWindowManager } from "./windowManager/welcome";
 import type { WelcomeIpcIHData } from "@/welcome/backend/ipcType";
 import { createLogger } from "@/helpers/log";
+import { assertNonNullable } from "@/type/utility";
 
 const log = createLogger("WelcomeIpcMainHandle");
 
@@ -23,25 +24,21 @@ class WelcomeIpcMainHandleManager {
         const status = packageStatuses.find(
           (s) => s.package.engineId === obj.engineId,
         );
-        if (!status) {
-          throw new Error(
-            `Engine package status not found for engineId: ${obj.engineId}`,
-          );
-        }
+        assertNonNullable(
+          status,
+          `Engine package status not found for engineId: ${obj.engineId}`,
+        );
 
         // ダウンロードしてインストールする
         let lastUpdateTime = 0;
         let lastLogTime = 0;
-        const targetPackageInfo =
-          status.availableRuntimeTargets.find(
-            (targetInfo) => targetInfo.target === obj.target,
-          ) ?? status.availableRuntimeTargets[0];
-
-        if (!targetPackageInfo) {
-          throw new Error(
-            `Runtime target not found for engineId: ${obj.engineId}`,
-          );
-        }
+        const targetPackageInfo = status.availableRuntimeTargets.find(
+          (targetInfo) => targetInfo.target === obj.target,
+        );
+        assertNonNullable(
+          targetPackageInfo,
+          `Runtime target not found for engineId: ${obj.engineId}, target: ${obj.target}`,
+        );
 
         await engineAndVvppController.downloadAndInstallVvppEngine(
           app.getPath("downloads"),
