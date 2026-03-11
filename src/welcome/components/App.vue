@@ -33,8 +33,8 @@
                       label="再試行"
                       variant="primary"
                       :disabled="
-                        loadingEngineInfosState === 'loadingCurrent' ||
-                        loadingEngineInfosState === 'fetchingLatest'
+                        loadingEngineInfosState.type === 'loadingCurrent' ||
+                        loadingEngineInfosState.type === 'fetchingLatest'
                       "
                       @click="fetchInstalledEngineInfos"
                     />
@@ -43,8 +43,8 @@
 
                 <div
                   v-if="
-                    loadingEngineInfosState === 'uninitialized' ||
-                    loadingEngineInfosState === 'loadingCurrent'
+                    loadingEngineInfosState.type === 'uninitialized' ||
+                    loadingEngineInfosState.type === 'loadingCurrent'
                   "
                   class="engine-loading"
                 >
@@ -103,7 +103,7 @@ import { themes } from "@/domain/theme";
 import BaseButton from "@/components/Base/BaseButton.vue";
 import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 import BaseDocumentView from "@/components/Base/BaseDocumentView.vue";
-import { UnreachableError } from "@/type/utility";
+import { assertNonNullable, UnreachableError } from "@/type/utility";
 import { showErrorDialog } from "@/components/Dialog/Dialog";
 
 type DisplayEngineInfo = {
@@ -111,30 +111,57 @@ type DisplayEngineInfo = {
   currentInfo: EnginePackageCurrentInfo;
   latestInfo: EnginePackageLatestInfo | undefined;
 };
+type LoadingEngineInfosState =
+  | { type: "uninitialized" }
+  | { type: "loadingCurrent" }
+  | {
+      type: "fetchingLatest";
+      currentEngineInfos: EnginePackageCurrentInfo[];
+    }
+  | {
+      type: "fetched";
+      currentEngineInfos: EnginePackageCurrentInfo[];
+      latestEngineInfos: EnginePackageLatestInfo[];
+    };
 
-const currentEngineInfos = ref<EnginePackageCurrentInfo[] | undefined>(
-  undefined,
-);
-const latestEngineInfos = ref<EnginePackageLatestInfo[] | undefined>(undefined);
-const loadingEngineInfosState = ref<
-  "uninitialized" | "loadingCurrent" | "fetchingLatest" | "fetched"
->("uninitialized");
+const loadingEngineInfosState = ref<LoadingEngineInfosState>({
+  type: "uninitialized",
+});
 const onlineFetchErrorMessage = ref<string | null>(null);
 const engineInfosForDisplay = computed<DisplayEngineInfo[]>(() => {
-  const currentInfos = currentEngineInfos.value;
-  if (!currentInfos) {
-    return [];
+  switch (loadingEngineInfosState.value.type) {
+    case "uninitialized":
+    case "loadingCurrent":
+      return [];
+    case "fetchingLatest":
+      return loadingEngineInfosState.value.currentEngineInfos.map(
+        (currentInfo) => ({
+          package: currentInfo.package,
+          currentInfo,
+          latestInfo: undefined,
+        }),
+      );
+    case "fetched":
+      return loadingEngineInfosState.value.currentEngineInfos.map(
+        (currentInfo) => {
+          if (loadingEngineInfosState.value.type !== "fetched") {
+            throw new UnreachableError();
+          }
+          const latestInfo =
+            loadingEngineInfosState.value.latestEngineInfos.find(
+              (latest) =>
+                latest.package.engineId === currentInfo.package.engineId,
+            );
+          return {
+            package: currentInfo.package,
+            currentInfo,
+            latestInfo,
+          };
+        },
+      );
+    default:
+      throw new UnreachableError();
   }
-  return currentInfos.map((currentInfo) => {
-    const latestInfo = latestEngineInfos.value?.find(
-      (latest) => latest.package.engineId === currentInfo.package.engineId,
-    );
-    return {
-      package: currentInfo.package,
-      currentInfo,
-      latestInfo,
-    };
-  });
 });
 const runtimeTargetSelections = ref<
   Record<EngineId, RuntimeTarget | undefined>
@@ -147,11 +174,18 @@ const getDefaultRuntimeTarget = (
   if (!latestInfo) {
     return undefined;
   }
-  return (
-    latestInfo.availableRuntimeTargets.find(
-      (targetInfo) => targetInfo.packageInfo.displayInfo.default,
-    ) || latestInfo.availableRuntimeTargets[0]
-  ).target;
+  const defaultRuntimeTargetInfo = latestInfo.availableRuntimeTargets.find(
+    (targetInfo) => targetInfo.packageInfo.displayInfo.default,
+  );
+  if (defaultRuntimeTargetInfo) {
+    return defaultRuntimeTargetInfo.target;
+  }
+  const [firstRuntimeTargetInfo] = latestInfo.availableRuntimeTargets;
+  assertNonNullable(
+    firstRuntimeTargetInfo,
+    `Runtime targets not found: engineId=${engineInfo.package.engineId}`,
+  );
+  return firstRuntimeTargetInfo.target;
 };
 
 const getSelectedRuntimeTarget = (
@@ -183,15 +217,15 @@ type EngineProgressInfo = {
 const engineProgressInfo = ref<Record<EngineId, EngineProgressInfo>>({});
 const launchEditorDisabledReason = computed<string | null>(() => {
   if (
-    loadingEngineInfosState.value === "uninitialized" ||
-    loadingEngineInfosState.value === "loadingCurrent"
+    loadingEngineInfosState.value.type === "uninitialized" ||
+    loadingEngineInfosState.value.type === "loadingCurrent"
   ) {
     return "エンジン情報を読み込み中です。";
   }
   if (Object.keys(engineProgressInfo.value).length > 0) {
     return "エンジンのインストールまたは更新中です。";
   }
-  const engineInfos = currentEngineInfos.value ?? [];
+  const engineInfos = loadingEngineInfosState.value.currentEngineInfos;
   if (
     !engineInfos.some(
       (engineInfo) => engineInfo.installed.status !== "notInstalled",
@@ -219,10 +253,12 @@ const installEngine = async (engineId: EngineId) => {
   const engineInfo = engineInfosForDisplay.value.find(
     (info) => info.package.engineId === engineId,
   );
-  const target = engineInfo ? getSelectedRuntimeTarget(engineInfo) : undefined;
-  if (!target) {
-    return;
-  }
+  assertNonNullable(engineInfo, `Engine info not found: engineId=${engineId}`);
+  const target = getSelectedRuntimeTarget(engineInfo);
+  assertNonNullable(
+    target,
+    `Runtime target not found: engineId=${engineInfo.package.engineId}`,
+  );
   engineProgressInfo.value[engineId] = { progress: 0, type: "download" };
   try {
     console.log(`Engine package ${engineId} installation started.`);
@@ -253,14 +289,21 @@ const switchToMainWindow = () => {
 
 const fetchInstalledEngineInfos = async () => {
   onlineFetchErrorMessage.value = null;
-  loadingEngineInfosState.value = "loadingCurrent";
-  currentEngineInfos.value =
+  loadingEngineInfosState.value = { type: "loadingCurrent" };
+  const currentEngineInfos =
     await window.welcomeBackend.fetchEnginePackageLocalInfos();
-  loadingEngineInfosState.value = "fetchingLatest";
-  latestEngineInfos.value = undefined;
+  loadingEngineInfosState.value = {
+    type: "fetchingLatest",
+    currentEngineInfos,
+  };
   try {
-    latestEngineInfos.value =
+    const latestEngineInfos =
       await window.welcomeBackend.fetchLatestEnginePackageRemoteInfos();
+    loadingEngineInfosState.value = {
+      type: "fetched",
+      currentEngineInfos,
+      latestEngineInfos,
+    };
     onlineFetchErrorMessage.value = null;
   } catch (error) {
     onlineFetchErrorMessage.value =
@@ -273,22 +316,21 @@ const fetchInstalledEngineInfos = async () => {
     );
     throw error;
   } finally {
-    loadingEngineInfosState.value = "fetched";
+    if (loadingEngineInfosState.value.type === "fetchingLatest") {
+      loadingEngineInfosState.value = {
+        type: "fetched",
+        currentEngineInfos,
+        latestEngineInfos: [],
+      };
+    }
   }
 };
 
 const applyThemeFromConfig = async () => {
-  try {
-    const currentTheme = await window.welcomeBackend.getCurrentTheme();
-    const theme =
-      themes.find((value) => value.name === currentTheme) ?? themes[0];
-    if (!theme) {
-      return;
-    }
-    setThemeToCss(theme);
-  } catch (error) {
-    window.welcomeBackend.logError("テーマの適用に失敗しました", error);
-  }
+  const currentTheme = await window.welcomeBackend.getCurrentTheme();
+  const theme = themes.find((value) => value.name === currentTheme);
+  assertNonNullable(theme, `Theme not found: ${currentTheme}`);
+  setThemeToCss(theme);
 };
 
 onMounted(() => {
