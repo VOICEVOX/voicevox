@@ -12,7 +12,12 @@
             ref="surfaceInput"
             v-model="surface"
             :disabled="uiLocked"
-            @change="setSurface(surface)"
+            @change="
+              () => {
+                setSurface(surface);
+                saveWord();
+              }
+            "
             @keydown.enter="yomiInput?.focus()"
           />
         </div>
@@ -24,7 +29,12 @@
             v-model="yomi"
             :disabled="uiLocked"
             :hasError="!isOnlyHiraOrKana"
-            @change="setYomi(yomi)"
+            @change="
+              async () => {
+                await setYomi(yomi);
+                saveWord();
+              }
+            "
           >
             <template #error>
               ひらがなとカタカナ以外の文字が入力されています。
@@ -56,7 +66,12 @@
                   :accentPhrase
                   :accentPhraseIndex="0"
                   :uiLocked
-                  :onChangeAccent="changeAccent"
+                  :onChangeAccent="
+                    async (accentPhraseIndex: number, accent: number) => {
+                      await changeAccent(accentPhraseIndex, accent);
+                      saveWord();
+                    }
+                  "
                 />
                 <template
                   v-for="(mora, moraIndex) in accentPhrase.moras"
@@ -89,7 +104,13 @@
           </div>
           <div>
             <div>優先度：{{ wordPriority }}</div>
-            <BaseSlider v-model="wordPriority" :min="0" :max="10" :step="1" />
+            <BaseSlider
+              v-model="wordPriority"
+              :min="0"
+              :max="10"
+              :step="1"
+              @valueCommit="saveWord"
+            />
             <div class="slider-label">
               <span>最低</span>
               <span>標準</span>
@@ -107,16 +128,11 @@
         @click="discardOrNotDialog(cancel)"
       />
       <BaseButton
-        v-show="!!selectedId"
-        :disabled="uiLocked || !isWordChanged"
-        label="リセット"
-        @click="resetWord(selectedId)"
-      />
-      <BaseButton
+        v-if="!selectedId"
         :disabled="uiLocked || !isWordChanged"
         variant="primary"
-        label="保存"
-        @click="saveWord"
+        label="追加"
+        @click="addWord"
       />
     </footer>
   </div>
@@ -132,6 +148,7 @@ import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 import AudioAccent from "@/components/Talk/AudioAccent.vue";
 import { useStore } from "@/store";
 import type { FetchAudioResult } from "@/store/type";
+import { debounce } from "@/helpers/timer";
 
 const store = useStore();
 
@@ -157,7 +174,6 @@ const {
   computeRegisteredAccent,
   discardOrNotDialog,
   toInitialState,
-  toWordEditingState,
   cancel,
 } = context;
 
@@ -225,72 +241,59 @@ const setSurface = (text: string) => {
   surface.value = convertHankakuToZenkaku(text);
 };
 
-const saveWord = async () => {
+const saveWord = debounce(async () => {
+  if (!selectedId.value || !accentPhrase.value) return;
+  const accent = computeRegisteredAccent();
+
+  const word = {
+    surface: surface.value,
+    accentType: accent,
+    priority: wordPriority.value,
+  };
+
+  try {
+    await store.actions.REWRITE_WORD({
+      ...word,
+      wordUuid: selectedId.value,
+      pronunciation: yomi.value,
+    });
+    userDict.value[selectedId.value] = {
+      ...userDict.value[selectedId.value],
+      ...word,
+      yomi: yomi.value,
+    };
+  } catch (e) {
+    void store.actions.SHOW_ALERT_DIALOG({
+      title: "単語の更新に失敗しました",
+      message: "エンジンの再起動をお試しください。",
+    });
+    throw e;
+  }
+}, 300);
+
+const addWord = async () => {
   if (!accentPhrase.value) throw new Error(`accentPhrase === undefined`);
   const accent = computeRegisteredAccent();
-  if (selectedId.value) {
-    try {
-      await store.actions.REWRITE_WORD({
-        wordUuid: selectedId.value,
+
+  try {
+    await createUILockAction(
+      store.actions.ADD_WORD({
         surface: surface.value,
         pronunciation: yomi.value,
         accentType: accent,
         priority: wordPriority.value,
-      });
-    } catch (e) {
-      void store.actions.SHOW_ALERT_DIALOG({
-        title: "単語の更新に失敗しました",
-        message: "エンジンの再起動をお試しください。",
-      });
-      throw e;
-    }
-  } else {
-    try {
-      await createUILockAction(
-        store.actions.ADD_WORD({
-          surface: surface.value,
-          pronunciation: yomi.value,
-          accentType: accent,
-          priority: wordPriority.value,
-        }),
-      );
-    } catch (e) {
-      void store.actions.SHOW_ALERT_DIALOG({
-        title: "単語の登録に失敗しました",
-        message: "エンジンの再起動をお試しください。",
-      });
-      throw e;
-    }
+      }),
+    );
+  } catch (e) {
+    void store.actions.SHOW_ALERT_DIALOG({
+      title: "単語の登録に失敗しました",
+      message: "エンジンの再起動をお試しください。",
+    });
+    throw e;
   }
   await loadingDictProcess();
   toInitialState();
 };
-
-const resetWord = async (id: string) => {
-  const result = await store.actions.SHOW_WARNING_DIALOG({
-    title: "単語の変更をリセットしますか？",
-    message: "単語の変更は破棄されてリセットされます。",
-    actionName: "リセットする",
-    isWarningColorButton: true,
-    cancel: "リセットしない",
-  });
-  if (result === "OK") {
-    selectedId.value = id;
-    surface.value = userDict.value[id].surface;
-    void setYomi(userDict.value[id].yomi, true);
-
-    // 状態に齟齬があるとき（エラー時など）に同期する
-    if (yomi.value !== userDict.value[id].yomi) {
-      yomi.value = userDict.value[id].yomi;
-    }
-
-    wordPriority.value = userDict.value[id].priority;
-    toWordEditingState();
-  }
-};
-
-// アクセント系
-const accentPhraseTable = ref<HTMLElement>();
 
 const changeAccent = async (_: number, accent: number) => {
   const { engineId, styleId } = voiceComputed.value;

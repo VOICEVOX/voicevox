@@ -116,7 +116,6 @@ export const dictionaryManageDialogContextKey: InjectionKey<{
   computeRegisteredAccent: () => number;
   discardOrNotDialog: (okCallback: () => void) => Promise<void>;
   toInitialState: () => void;
-  toWordEditingState: () => void;
   cancel: () => void;
 }> = Symbol("dictionaryManageDialogContextKey");
 </script>
@@ -398,7 +397,6 @@ provide(dictionaryManageDialogContextKey, {
   computeRegisteredAccent,
   discardOrNotDialog,
   toInitialState,
-  toWordEditingState,
   cancel,
 });
 </script>
