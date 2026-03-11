@@ -40,31 +40,32 @@ test("エディタウィンドウを起動できる", async () => {
     timeout: process.env.CI ? 0 : 60000,
   });
 
-  const welcomePage = await test.step("デフォルトエンジンをインストールする", async () => {
-    app.on("console", (msg) => {
-      console.log(msg.text());
-    });
+  const welcomePage =
+    await test.step("デフォルトエンジンをインストールする", async () => {
+      app.on("console", (msg) => {
+        console.log(msg.text());
+      });
 
-    const welcomePage = await app.firstWindow({
-      timeout: process.env.CI ? 90000 : 60000,
-    });
-    await welcomePage.waitForSelector("text=エンジンのセットアップ", {
-      timeout: 60000,
-    });
+      const welcomePage = await app.firstWindow({
+        timeout: process.env.CI ? 90000 : 60000,
+      });
+      await welcomePage.waitForSelector("text=エンジンのセットアップ", {
+        timeout: 60000,
+      });
 
-    const install = welcomePage.getByText(/インストール（.+?）/);
-    await install.waitFor({
-      timeout: 60000,
-    });
-    await install.click();
+      const install = welcomePage.getByText(/インストール（.+?）/);
+      await install.waitFor({
+        timeout: 60000,
+      });
+      await install.click();
 
-    const reinstall = welcomePage.getByText(/再インストール（.+?）/);
-    await reinstall.waitFor({
-      timeout: 60000,
-    });
+      const reinstall = welcomePage.getByText(/再インストール（.+?）/);
+      await reinstall.waitFor({
+        timeout: 60000,
+      });
 
-    return welcomePage;
-  });
+      return welcomePage;
+    });
 
   await test.step("エディタを起動する", async () => {
     const launchEditor = welcomePage.getByText(/エディタを起動/);
