@@ -305,15 +305,12 @@ const fetchInstalledEngineInfos = async () => {
       "エンジン情報のオンライン取得に失敗しました",
       error,
     );
+    loadingEngineInfosState.value = {
+      type: "fetched",
+      currentEngineInfos,
+      latestEngineInfos: [],
+    };
     throw error;
-  } finally {
-    if (loadingEngineInfosState.value.type === "fetchingLatest") {
-      loadingEngineInfosState.value = {
-        type: "fetched",
-        currentEngineInfos,
-        latestEngineInfos: [],
-      };
-    }
   }
 };
 
