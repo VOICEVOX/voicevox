@@ -43,7 +43,7 @@ async function validateInputTag(
 ) {
   await inputTag.press("Enter");
   await page.waitForTimeout(100);
-  const text = await inputTag.evaluate((e: HTMLInputElement) => e.value);
+  const text = await inputTag.evaluate((e: HTMLElement) => e.innerText);
   expect(text).toBe(expectedWord);
 }
 
@@ -63,36 +63,36 @@ test("「設定」→「読み方＆アクセント辞書」で「読み方＆�
   // 単語追加
   await page.getByRole("button").filter({ hasText: "追加" }).click();
   const wordInputTag = page
-    .locator(".word-editor .row")
+    .locator(".form-row")
     .filter({ hasText: "単語" })
-    .locator(".q-field__native");
-  await wordInputTag.evaluate((e: HTMLInputElement, rs: string) => {
-    e.value = rs;
+    .getByRole("textbox");
+  await wordInputTag.evaluate((e: HTMLElement, rs: string) => {
+    e.innerText = rs;
     e.dispatchEvent(new Event("input"));
   }, targetString);
   await page.waitForTimeout(100);
   await validateInputTag(page, wordInputTag, targetString);
 
   const yomiInputTag = page
-    .locator(".word-editor .row")
+    .locator(".form-row")
     .filter({ hasText: "読み" })
-    .locator(".q-field__native");
+    .getByRole("textbox");
 
-  await yomiInputTag.evaluate((e: HTMLInputElement) => {
-    e.value = "テスト";
+  await yomiInputTag.evaluate((e: HTMLElement) => {
+    e.innerText = "テスト";
     e.dispatchEvent(new Event("input"));
   });
   await page.waitForTimeout(100);
   await validateInputTag(page, yomiInputTag, "テスト");
 
   // 保存して設定画面を閉じる
-  await page.getByText("保存", { exact: true }).click();
+  await page.getByText("追加", { exact: true }).click();
   await page.waitForTimeout(100);
   await getNewestQuasarDialog(page)
     .getByRole("button")
     .filter({ hasText: "close" })
     .click();
-  await page.waitForTimeout(100);
+  await page.waitForTimeout(300);
   // 辞書が登録されているかどうかを確認
   await page.getByRole("button").filter({ hasText: "add" }).click();
   await page.waitForTimeout(100);
@@ -118,7 +118,7 @@ test("「設定」→「読み方＆アクセント辞書」で「読み方＆�
     .filter({ hasText: "close" })
     .getByRole("button")
     .click();
-  await page.waitForTimeout(100);
+  await page.waitForTimeout(300);
 
   // 辞書から削除されていることを確認
   // （＝最初の読み方と同じになっていることを確認）
