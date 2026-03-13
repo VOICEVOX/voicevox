@@ -77,62 +77,69 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("複数選択：キャラクター選択", async ({ page }) => {
-  await page.locator(".audio-cell:nth-child(2)").click();
-  await page.keyboard.down("Shift");
-  await page.keyboard.press("ArrowDown");
-  await page.keyboard.press("ArrowDown");
-  await page.keyboard.up("Shift");
-  await page.waitForTimeout(100);
+  await test.step("2番目から4番目までを複数選択する", async () => {
+    await page.locator(".audio-cell:nth-child(2)").click();
+    await page.keyboard.down("Shift");
+    await page.keyboard.press("ArrowDown");
+    await page.keyboard.press("ArrowDown");
+    await page.keyboard.up("Shift");
+    await page.waitForTimeout(100);
+  });
 
-  await page.locator(".audio-cell:nth-child(2) .character-button").click();
-  await page.waitForTimeout(100);
+  await test.step("キャラクターを変更する", async () => {
+    await page.locator(".audio-cell:nth-child(2) .character-button").click();
+    await page.waitForTimeout(100);
+    await page
+      .locator(".character-item-container > .q-item:nth-child(2)")
+      .click();
+    await page.waitForTimeout(200);
+  });
 
-  await page
-    .locator(".character-item-container > .q-item:nth-child(2)")
-    .click();
-  await page.waitForTimeout(200);
-
-  const characterNames = await getSelectedCharacters(page);
-
-  expect(characterNames[0]).not.toEqual(characterNames[1]);
-  expect(characterNames[1]).toEqual(characterNames[2]);
-  expect(characterNames[1]).toEqual(characterNames[3]);
+  await test.step("選択範囲のキャラクターが変更される", async () => {
+    const characterNames = await getSelectedCharacters(page);
+    expect(characterNames[0]).not.toEqual(characterNames[1]);
+    expect(characterNames[1]).toEqual(characterNames[2]);
+    expect(characterNames[1]).toEqual(characterNames[3]);
+  });
 });
 
 test("複数選択：AudioInfo操作", async ({ page }) => {
-  await page.locator(".audio-cell:nth-child(1)").click();
-  await page.waitForTimeout(100);
+  const beforeParameters =
+    await test.step("1番目のパラメーターを取得する", async () => {
+      await page.locator(".audio-cell:nth-child(1)").click();
+      await page.waitForTimeout(100);
+      return await getAudioInfoParameters(page);
+    });
 
-  const beforeParameters = await getAudioInfoParameters(page);
-
-  await page.locator(".audio-cell:nth-child(2)").click();
-  await page.keyboard.down("Shift");
-  await page.keyboard.press("ArrowDown");
-  await page.keyboard.press("ArrowDown");
-  await page.keyboard.up("Shift");
-  await page.waitForTimeout(100);
-
-  const audioInfo = page.getByTestId("AudioInfo");
-  const parameters = await audioInfo.locator(".parameters > div").all();
-
-  for (const parameter of parameters) {
-    const input = parameter.locator("label input");
-    if (await input.isDisabled()) continue;
-    await input.fill("2");
+  await test.step("2番目から4番目までを複数選択する", async () => {
+    await page.locator(".audio-cell:nth-child(2)").click();
+    await page.keyboard.down("Shift");
+    await page.keyboard.press("ArrowDown");
+    await page.keyboard.press("ArrowDown");
+    await page.keyboard.up("Shift");
     await page.waitForTimeout(100);
-  }
+  });
 
-  // 選択中の他のAudioCellのパラメーターも変更されていることを確認する
-  await page.locator(".audio-cell:nth-child(3)").click();
+  await test.step("パラメーターを変更する", async () => {
+    const audioInfo = page.getByTestId("AudioInfo");
+    const parameters = await audioInfo.locator(".parameters > div").all();
+    for (const parameter of parameters) {
+      const input = parameter.locator("label input");
+      if (await input.isDisabled()) continue;
+      await input.fill("2");
+      await page.waitForTimeout(100);
+    }
+  });
 
-  const afterParameters = await getAudioInfoParameters(page);
+  await test.step("選択中の他のAudioCellのパラメーターも変更される", async () => {
+    await page.locator(".audio-cell:nth-child(3)").click();
+    const afterParameters = await getAudioInfoParameters(page);
+    expect(beforeParameters).not.toEqual(afterParameters);
+  });
 
-  expect(beforeParameters).not.toEqual(afterParameters);
-
-  // 選択外のAudioCellのパラメーターは変更されていないことを確認する
-  await page.locator(".audio-cell:nth-child(1)").click();
-
-  const beforeParameters2 = await getAudioInfoParameters(page);
-
-  expect(beforeParameters).toEqual(beforeParameters2);
+  await test.step("選択外のAudioCellのパラメーターは変更されない", async () => {
+    await page.locator(".audio-cell:nth-child(1)").click();
+    const beforeParameters2 = await getAudioInfoParameters(page);
+    expect(beforeParameters).toEqual(beforeParameters2);
+  });
 });
