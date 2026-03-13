@@ -194,11 +194,8 @@ const getSelectedRuntimeTarget = (
 
 const setSelectedRuntimeTarget = (
   engineId: EngineId,
-  target: RuntimeTarget | undefined,
+  target: RuntimeTarget,
 ) => {
-  if (!target) {
-    throw new UnreachableError();
-  }
   runtimeTargetSelections.value = {
     ...runtimeTargetSelections.value,
     [engineId]: target,
@@ -299,7 +296,6 @@ const fetchInstalledEngineInfos = async () => {
       currentEngineInfos,
       latestEngineInfos,
     };
-    onlineFetchErrorMessage.value = null;
   } catch (error) {
     onlineFetchErrorMessage.value =
       error instanceof Error
