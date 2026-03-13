@@ -103,7 +103,11 @@ import { themes } from "@/domain/theme";
 import BaseButton from "@/components/Base/BaseButton.vue";
 import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 import BaseDocumentView from "@/components/Base/BaseDocumentView.vue";
-import { assertNonNullable, UnreachableError } from "@/type/utility";
+import {
+  assertNonNullable,
+  ExhaustiveError,
+  UnreachableError,
+} from "@/type/utility";
 import { showErrorDialog } from "@/components/Dialog/Dialog";
 
 type DisplayEngineInfo = {
@@ -141,26 +145,21 @@ const engineInfosForDisplay = computed<DisplayEngineInfo[]>(() => {
           latestInfo: undefined,
         }),
       );
-    case "fetched":
-      return loadingEngineInfosState.value.currentEngineInfos.map(
-        (currentInfo) => {
-          if (loadingEngineInfosState.value.type !== "fetched") {
-            throw new UnreachableError();
-          }
-          const latestInfo =
-            loadingEngineInfosState.value.latestEngineInfos.find(
-              (latest) =>
-                latest.package.engineId === currentInfo.package.engineId,
-            );
-          return {
-            package: currentInfo.package,
-            currentInfo,
-            latestInfo,
-          };
-        },
-      );
+    case "fetched": {
+      const state = loadingEngineInfosState.value;
+      return state.currentEngineInfos.map((currentInfo) => {
+        const latestInfo = state.latestEngineInfos.find(
+          (latest) => latest.package.engineId === currentInfo.package.engineId,
+        );
+        return {
+          package: currentInfo.package,
+          currentInfo,
+          latestInfo,
+        };
+      });
+    }
     default:
-      throw new UnreachableError();
+      throw new ExhaustiveError(loadingEngineInfosState.value);
   }
 });
 const runtimeTargetSelections = ref<
