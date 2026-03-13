@@ -103,7 +103,7 @@ import { themes } from "@/domain/theme";
 import BaseButton from "@/components/Base/BaseButton.vue";
 import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 import BaseDocumentView from "@/components/Base/BaseDocumentView.vue";
-import { UnreachableError } from "@/type/utility";
+import { assertNonNullable, UnreachableError } from "@/type/utility";
 import { showErrorDialog } from "@/components/Dialog/Dialog";
 
 type DisplayEngineInfo = {
@@ -147,11 +147,14 @@ const getDefaultRuntimeTarget = (
   if (!latestInfo) {
     return undefined;
   }
-  return (
-    latestInfo.availableRuntimeTargets.find(
-      (targetInfo) => targetInfo.packageInfo.displayInfo.default,
-    ) || latestInfo.availableRuntimeTargets[0]
-  ).target;
+  const defaultRuntimeTargetInfo = latestInfo.availableRuntimeTargets.find(
+    (targetInfo) => targetInfo.packageInfo.displayInfo.default,
+  );
+  assertNonNullable(
+    defaultRuntimeTargetInfo,
+    `Default runtime target not found for engineId: ${engineInfo.package.engineId}`,
+  );
+  return defaultRuntimeTargetInfo.target;
 };
 
 const getSelectedRuntimeTarget = (
@@ -280,11 +283,8 @@ const fetchInstalledEngineInfos = async () => {
 const applyThemeFromConfig = async () => {
   try {
     const currentTheme = await window.welcomeBackend.getCurrentTheme();
-    const theme =
-      themes.find((value) => value.name === currentTheme) ?? themes[0];
-    if (!theme) {
-      return;
-    }
+    const theme = themes.find((value) => value.name === currentTheme);
+    assertNonNullable(theme, `Theme not found: ${currentTheme}`);
     setThemeToCss(theme);
   } catch (error) {
     window.welcomeBackend.logError("テーマの適用に失敗しました", error);
