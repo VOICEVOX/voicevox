@@ -176,15 +176,11 @@ const getDefaultRuntimeTarget = (
   const defaultRuntimeTargetInfo = latestInfo.availableRuntimeTargets.find(
     (targetInfo) => targetInfo.packageInfo.displayInfo.default,
   );
-  if (defaultRuntimeTargetInfo) {
-    return defaultRuntimeTargetInfo.target;
-  }
-  const [firstRuntimeTargetInfo] = latestInfo.availableRuntimeTargets;
   assertNonNullable(
-    firstRuntimeTargetInfo,
-    `Runtime targets not found: engineId=${engineInfo.package.engineId}`,
+    defaultRuntimeTargetInfo,
+    `Default runtime target not found: engineId=${engineInfo.package.engineId}`,
   );
-  return firstRuntimeTargetInfo.target;
+  return defaultRuntimeTargetInfo.target;
 };
 
 const getSelectedRuntimeTarget = (
