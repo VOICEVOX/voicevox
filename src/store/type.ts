@@ -77,6 +77,7 @@ import type {
 } from "@/domain/project/type";
 import type { LatestProjectType } from "@/infrastructures/projectFile/type";
 import type { WavFormat } from "@/helpers/fileDataGenerator";
+import type { SongTrackRendererCache } from "@/sing/songTrackRendering";
 
 /**
  * エディタ用のAudioQuery
@@ -1065,6 +1066,10 @@ export type SingingStoreTypes = {
 
   CREATE_AND_SETUP_SONG_TRACK_RENDERER: {
     action(): void;
+  };
+
+  SET_SONG_TRACK_RENDERER_CACHE: {
+    action(payload: { cache: SongTrackRendererCache }): void;
   };
 
   SET_PHRASES: {
