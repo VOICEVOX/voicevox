@@ -218,7 +218,7 @@
     <template #after>
       <SequencerParameterPanel
         v-if="isParameterPanelOpen"
-        :offsetX="scrollX"
+        :viewportInfo
         @update:needsAutoScroll="
           (value) => (parameterPanelNeedsAutoScroll = value)
         "
@@ -454,9 +454,7 @@ const MAX_PARAMETER_PANEL_HEIGHT = 500;
 
 const splitterPosition = computed(() => store.state.splitterPosition);
 const parameterPanelHeight = ref(DEFAULT_PARAMETER_PANEL_HEIGHT);
-const isParameterPanelOpen = computed(
-  () => store.state.experimentalSetting.showParameterPanel,
-);
+const isParameterPanelOpen = ref(true);
 
 watch(
   isParameterPanelOpen,

@@ -70,6 +70,7 @@ import type {
 } from "@/sing/utaformatixProject/utils";
 import type {
   Note,
+  PhonemeTimingEdit,
   Singer,
   Tempo,
   TimeSignature,
@@ -848,6 +849,8 @@ export type NoteEditTool = "SELECT_FIRST" | "EDIT_FIRST";
 export type PitchEditTool = "DRAW" | "ERASE";
 // ボリューム編集ツール（VolumeEditor 専用）
 export type VolumeEditTool = "DRAW" | "ERASE";
+// 音素タイミング編集ツール
+export type PhonemeTimingEditTool = "MOVE" | "ERASE";
 // パラメータパネル内の編集対象
 // NOTE: 音素タイミング編集などを追加する際に拡張
 export type ParameterPanelEditTarget = "PHONEME_TIMING" | "VOLUME";
@@ -898,6 +901,7 @@ export type SingingStoreState = {
   sequencerNoteTool: NoteEditTool;
   sequencerPitchTool: PitchEditTool;
   sequencerVolumeTool: VolumeEditTool;
+  sequencerPhonemeTimingTool: PhonemeTimingEditTool;
   parameterPanelEditTarget: ParameterPanelEditTarget;
   sequencerVolumeVisible: boolean;
   _selectedNoteIds: Set<NoteId>;
@@ -1027,6 +1031,38 @@ export type SingingStoreTypes = {
     action(payload: { noteId?: NoteId }): void;
   };
 
+  ADD_PHONEME_TIMING_EDITS: {
+    mutation: {
+      noteId: NoteId;
+      phonemeTimingEdits: PhonemeTimingEdit[];
+      trackId: TrackId;
+    };
+  };
+
+  UPDATE_PHONEME_TIMING_EDITS: {
+    mutation: {
+      noteId: NoteId;
+      phonemeTimingEdits: PhonemeTimingEdit[];
+      trackId: TrackId;
+    };
+  };
+
+  UPSERT_PHONEME_TIMING_EDIT: {
+    mutation: {
+      noteId: NoteId;
+      phonemeTimingEdit: PhonemeTimingEdit;
+      trackId: TrackId;
+    };
+  };
+
+  REMOVE_PHONEME_TIMING_EDITS: {
+    mutation: {
+      noteId: NoteId;
+      phonemeIndexesInNote: number[];
+      trackId: TrackId;
+    };
+  };
+
   SET_PITCH_EDIT_DATA: {
     mutation: { pitchArray: number[]; startFrame: number; trackId: TrackId };
     action(payload: {
@@ -1043,6 +1079,13 @@ export type SingingStoreTypes = {
       startFrame: number;
       trackId: TrackId;
     }): void;
+  };
+
+  ERASE_PHONEME_TIMING_EDITS: {
+    mutation: {
+      targets: Array<{ noteId: NoteId; phonemeIndexInNote: number }>;
+      trackId: TrackId;
+    };
   };
 
   ERASE_PITCH_EDIT_DATA: {
@@ -1202,6 +1245,13 @@ export type SingingStoreTypes = {
   SET_SEQUENCER_VOLUME_TOOL: {
     mutation: { sequencerVolumeTool: VolumeEditTool };
     action(payload: { sequencerVolumeTool: VolumeEditTool }): void;
+  };
+
+  SET_SEQUENCER_PHONEME_TIMING_TOOL: {
+    mutation: { sequencerPhonemeTimingTool: PhonemeTimingEditTool };
+    action(payload: {
+      sequencerPhonemeTimingTool: PhonemeTimingEditTool;
+    }): void;
   };
 
   SET_PARAMETER_PANEL_EDIT_TARGET: {
@@ -1561,6 +1611,69 @@ export type SingingCommandStoreTypes = {
 
   COMMAND_REMOVE_SELECTED_NOTES: {
     action(): void;
+  };
+
+  COMMAND_ADD_PHONEME_TIMING_EDITS: {
+    mutation: {
+      noteId: NoteId;
+      phonemeTimingEdits: PhonemeTimingEdit[];
+      trackId: TrackId;
+    };
+    action(payload: {
+      noteId: NoteId;
+      phonemeTimingEdits: PhonemeTimingEdit[];
+      trackId: TrackId;
+    }): void;
+  };
+
+  COMMAND_UPDATE_PHONEME_TIMING_EDITS: {
+    mutation: {
+      noteId: NoteId;
+      phonemeTimingEdits: PhonemeTimingEdit[];
+      trackId: TrackId;
+    };
+    action(payload: {
+      noteId: NoteId;
+      phonemeTimingEdits: PhonemeTimingEdit[];
+      trackId: TrackId;
+    }): void;
+  };
+
+  COMMAND_UPSERT_PHONEME_TIMING_EDIT: {
+    mutation: {
+      noteId: NoteId;
+      phonemeTimingEdit: PhonemeTimingEdit;
+      trackId: TrackId;
+    };
+    action(payload: {
+      noteId: NoteId;
+      phonemeTimingEdit: PhonemeTimingEdit;
+      trackId: TrackId;
+    }): void;
+  };
+
+  COMMAND_REMOVE_PHONEME_TIMING_EDITS: {
+    mutation: {
+      noteId: NoteId;
+      phonemeIndexesInNote: number[];
+      trackId: TrackId;
+    };
+    action(payload: {
+      noteId: NoteId;
+      phonemeIndexesInNote: number[];
+      trackId: TrackId;
+    }): void;
+  };
+
+  COMMAND_ERASE_PHONEME_TIMING_EDITS: {
+    mutation: {
+      targets: Array<{ noteId: NoteId; phonemeIndexInNote: number }>;
+      trackId: TrackId;
+    };
+    action(payload: {
+      targets: Array<{ noteId: NoteId; phonemeIndexInNote: number }>;
+      trackId: TrackId;
+    }): void;
   };
 
   COMMAND_SET_PITCH_EDIT_DATA: {

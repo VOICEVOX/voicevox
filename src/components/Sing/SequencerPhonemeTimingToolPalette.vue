@@ -3,10 +3,10 @@
     <QBtn
       flat
       round
-      :color="sequencerVolumeTool === 'DRAW' ? 'primary' : ''"
-      @click="$emit('update:sequencerVolumeTool', 'DRAW')"
+      :color="sequencerPhonemeTimingTool === 'MOVE' ? 'primary' : ''"
+      @click="$emit('update:sequencerPhonemeTimingTool', 'MOVE')"
     >
-      <i class="material-symbols-outlined">stylus</i>
+      <i class="material-symbols-outlined">swap_horiz</i>
       <QTooltip
         anchor="center right"
         self="center left"
@@ -15,14 +15,14 @@
         transitionShow=""
         transitionHide=""
       >
-        ボリューム描画
+        移動
       </QTooltip>
     </QBtn>
     <QBtn
       flat
       round
-      :color="sequencerVolumeTool === 'ERASE' ? 'primary' : ''"
-      @click="$emit('update:sequencerVolumeTool', 'ERASE')"
+      :color="sequencerPhonemeTimingTool === 'ERASE' ? 'primary' : ''"
+      @click="$emit('update:sequencerPhonemeTimingTool', 'ERASE')"
     >
       <i class="material-symbols-outlined">ink_eraser</i>
       <QTooltip
@@ -33,22 +33,23 @@
         transitionShow=""
         transitionHide=""
       >
-        ボリューム削除
+        削除
       </QTooltip>
     </QBtn>
   </div>
 </template>
 
 <script setup lang="ts">
-import { QBtn, QTooltip } from "quasar";
-import type { VolumeEditTool } from "@/store/type";
+import type { PhonemeTimingEditTool } from "@/store/type";
 
 defineProps<{
-  sequencerVolumeTool: VolumeEditTool;
+  sequencerPhonemeTimingTool: PhonemeTimingEditTool;
 }>();
-
 defineEmits<{
-  (event: "update:sequencerVolumeTool", value: VolumeEditTool): void;
+  (
+    event: "update:sequencerPhonemeTimingTool",
+    value: PhonemeTimingEditTool,
+  ): void;
 }>();
 </script>
 

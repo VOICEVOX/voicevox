@@ -1,17 +1,20 @@
 <template>
-  <div
-    ref="canvasContainer"
-    class="volume-editor"
-    :class="cursorClass"
-    @pointerdown="onSurfacePointerDown"
-  >
-    <canvas ref="canvas" class="volume-editor-canvas"></canvas>
-    <SequencerVolumeToolPalette
-      class="volume-tool-palette"
-      :sequencerVolumeTool="tool"
-      @update:sequencerVolumeTool="setTool"
-    />
-    <ContextMenu ref="contextMenu" :menudata="contextMenuData" />
+  <div class="volume-editor">
+    <div class="axis-area"></div>
+    <div
+      ref="canvasContainer"
+      class="canvas-container"
+      :class="cursorClass"
+      @pointerdown="onSurfacePointerDown"
+    >
+      <canvas ref="canvas" class="volume-editor-canvas"></canvas>
+      <SequencerVolumeToolPalette
+        class="volume-tool-palette"
+        :sequencerVolumeTool="tool"
+        @update:sequencerVolumeTool="setTool"
+      />
+      <ContextMenu ref="contextMenu" :menudata="contextMenuData" />
+    </div>
   </div>
 </template>
 
@@ -65,7 +68,7 @@ const emit = defineEmits<{
 // 最小値: -36dB程度以下はエンジンの出力がノイズっぽいのと、オリジナルボリューム(エンジン出力デフォルト)の典型的な範囲で見やすい程度の高さにするため
 const MIN_DISPLAY_DB = -36.5;
 const MAX_DISPLAY_DB = -0.5;
-const KEY_COLUMN_WIDTH_PX = 48; // ScoreSequencerの左側キー領域と合わせる
+const KEY_COLUMN_WIDTH_PX = 0; // ScoreSequencerの左側キー領域と合わせる
 
 const { warn } = createLogger("SequencerVolumeEditor");
 const store = useStore();
@@ -758,8 +761,25 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
   position: relative;
-  user-select: none;
   overflow: hidden;
+
+  display: grid;
+  grid-template-columns: 48px 1fr;
+}
+
+.axis-area {
+  grid-column: 1;
+  grid-row: 1;
+  border-right: solid 1px var(--scheme-color-sing-piano-keys-right-border);
+}
+
+.canvas-container {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  overflow: hidden;
+
+  user-select: none;
 }
 
 .volume-editor-canvas {
