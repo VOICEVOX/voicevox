@@ -191,6 +191,7 @@ const handleBlur = (event: FocusEvent) => {
 
   if (innerValue.value !== model.value) {
     emit("change", event);
+    innerValue.value = model.value;
   }
 };
 
