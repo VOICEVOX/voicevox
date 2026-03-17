@@ -63,11 +63,11 @@ import {
   position: relative;
 }
 
-.ScrollAreaScrollbar:hover .thumb {
+.ScrollAreaScrollbar:hover .ScrollAreaThumb {
   background-color: colors.$scrollbar-hovered;
 }
 
-.ScrollAreaScrollbar:active .thumb {
+.ScrollAreaScrollbar:active .ScrollAreaThumb {
   background-color: colors.$scrollbar-pressed;
 }
 </style>
