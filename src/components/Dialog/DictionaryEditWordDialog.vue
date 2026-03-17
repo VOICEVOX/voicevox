@@ -56,7 +56,6 @@
           </div>
           <div
             v-if="accentPhrase"
-            ref="accentPhraseTable"
             :key="accentPhrase?.moras.length"
             class="accent-phrase-table"
           >
@@ -222,7 +221,7 @@ const stop = () => {
 };
 
 // メニュー系
-const yomiInput = ref<HTMLElement>();
+const yomiInput = ref<typeof BaseTextField>();
 
 const convertHankakuToZenkaku = (text: string) => {
   // " "などの目に見えない文字をまとめて全角スペース(0x3000)に置き換える
