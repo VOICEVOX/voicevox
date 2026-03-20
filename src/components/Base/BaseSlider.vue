@@ -144,9 +144,7 @@ const onWheel = (event: WheelEvent) => {
 
 .step-markers {
   position: absolute;
-  width: 100%;
-  height: 100%;
-  top: 0;
+  inset: 0;
   padding-inline: 3px;
   display: flex;
   justify-content: space-between;
