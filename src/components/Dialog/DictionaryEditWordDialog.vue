@@ -119,15 +119,13 @@
         </div>
       </div>
     </BaseScrollArea>
-    <footer class="footer">
+    <footer v-if="!selectedId" class="footer">
       <BaseButton
-        v-if="!selectedId"
         :disabled="uiLocked"
         label="キャンセル"
         @click="discardOrNotDialog(cancel)"
       />
       <BaseButton
-        v-if="!selectedId"
         :disabled="uiLocked || !isWordChanged"
         variant="primary"
         label="追加"
