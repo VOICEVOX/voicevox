@@ -44,7 +44,7 @@
               <BaseButton
                 label="追加"
                 icon="add"
-                :disable="uiLocked"
+                :disabled="uiLocked"
                 @click="discardOrNotDialog(newWord)"
               />
             </div>
@@ -66,7 +66,7 @@
                     <span class="listitem-surface">
                       {{ value.surface }}
                     </span>
-                    <span caption class="listitem-yomi">
+                    <span class="listitem-yomi">
                       {{ value.yomi }}
                     </span>
                   </div>
