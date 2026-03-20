@@ -99,10 +99,14 @@
         <div class="form-row">
           <h3 class="headline">単語優先度</h3>
           <div>
-            単語を登録しても反映されない場合は優先度を高くしてください。
+            <div>
+              単語を登録しても反映されない場合は優先度を高くしてください。
+            </div>
+            <div>
+              高くしすぎると意図しない箇所にも反映されることがあります。
+            </div>
           </div>
           <div>
-            <div>優先度：{{ wordPriority }}</div>
             <BaseSlider
               v-model="wordPriority"
               :min="0"
@@ -112,9 +116,9 @@
               @valueCommit="saveWord"
             />
             <div class="slider-label">
-              <span>最低</span>
+              <span>低い</span>
               <span>標準</span>
-              <span>最高</span>
+              <span>高い</span>
             </div>
           </div>
         </div>
