@@ -108,6 +108,7 @@
               :min="0"
               :max="10"
               :step="1"
+              showStepMarkers
               @valueCommit="saveWord"
             />
             <div class="slider-label">
