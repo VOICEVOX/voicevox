@@ -111,6 +111,15 @@ export class AppStateController {
     this.quitState = "unconfirmed";
   }
 
+  /**
+   * ウェルカムウィンドウを起動する。
+   *
+   * 責務:
+   * - ウェルカムウィンドウを作成する（`welcomeWindowManager.createWindow()`）
+   *
+   * 副作用:
+   * - `activeWindow` を "welcome" に設定する
+   */
   private async launchWelcomeWindow() {
     this.activeWindow = "welcome";
 
@@ -118,6 +127,16 @@ export class AppStateController {
     await welcomeWindowManager.createWindow();
   }
 
+  /**
+   * メインウィンドウを起動する。
+   *
+   * 責務:
+   * - エンジンを起動する（`engineAndVvppController.launchEngines()`）
+   * - メインウィンドウを作成する（`mainWindowManager.createWindow()`）
+   *
+   * 副作用:
+   * - `activeWindow` を "main" に設定する
+   */
   private async launchMainWindow() {
     this.activeWindow = "main";
 
