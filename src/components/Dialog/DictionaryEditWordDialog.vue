@@ -320,7 +320,7 @@ const changeAccent = async (_: number, accent: number) => {
 .detail {
   display: flex;
   flex-flow: column;
-  height: calc(100vh - 92px);
+  height: 100%;
 }
 
 .inner {
