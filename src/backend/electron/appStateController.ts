@@ -38,19 +38,7 @@ export class AppStateController {
    */
   async startup() {
     const engineAndVvppController = getEngineAndVvppController();
-    const packageStatuses =
-      engineAndVvppController.getEnginePackageLocalInfos();
-
-    if (packageStatuses.length === 0) {
-      log.info("No downloadable engine packages found. Launching main window.");
-      await this.launchMainWindow();
-      return;
-    }
-
-    const anyDefaultEngineInstalled = packageStatuses.some((status) => {
-      return status.installed.status !== "notInstalled";
-    });
-    if (anyDefaultEngineInstalled) {
+    if (engineAndVvppController.hasInstalledDefaultEngine()) {
       log.info("Default engine found. Launching main window.");
       await this.launchMainWindow();
     } else {
