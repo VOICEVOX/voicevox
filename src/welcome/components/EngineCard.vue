@@ -12,7 +12,7 @@
         インストール済み：{{ currentInfo.installed.installedVersion }}
       </div>
     </div>
-    <div v-if="progressInfo" class="engine-progress">
+    <div v-if="remoteInfo?.progressInfo" class="engine-progress">
       <div class="engine-progress-label">{{ progressTypeLabel }}</div>
       <div class="engine-progress-bar">
         <div
@@ -25,8 +25,8 @@
     <div class="engine-actions">
       <div class="engine-target-select">
         <BaseSelect
-          :disabled="runtimeSelectDisabled"
-          :modelValue="selectedRuntimeTarget"
+          :disabled="remoteInfo?.runtimeSelectDisabled ?? true"
+          :modelValue="remoteInfo?.selectedRuntimeTarget"
           @update:modelValue="handleRuntimeTargetChange"
         >
           <BaseSelectItem
@@ -78,10 +78,12 @@ type RuntimeTargetInfo =
 const props = defineProps<{
   engineName: string;
   currentInfo: EnginePackageCurrentInfo;
-  latestInfo?: EnginePackageLatestInfo;
-  selectedRuntimeTarget?: RuntimeTarget;
-  runtimeSelectDisabled: boolean;
-  progressInfo?: EngineProgressInfo;
+  remoteInfo?: {
+    latestInfo: EnginePackageLatestInfo;
+    selectedRuntimeTarget?: RuntimeTarget;
+    runtimeSelectDisabled: boolean;
+    progressInfo?: EngineProgressInfo;
+  };
 }>();
 
 const emit = defineEmits<{
@@ -90,7 +92,7 @@ const emit = defineEmits<{
 }>();
 
 const availableRuntimeTargets = computed(() => {
-  return props.latestInfo?.availableRuntimeTargets ?? [];
+  return props.remoteInfo?.latestInfo.availableRuntimeTargets ?? [];
 });
 
 const runtimeTargetOptions = computed<RuntimeTargetOption[]>(() =>
@@ -118,12 +120,12 @@ const getPackageInfoForTarget = (
 };
 
 const selectedPackageInfo = computed(() =>
-  getPackageInfoForTarget(props.selectedRuntimeTarget),
+  getPackageInfoForTarget(props.remoteInfo?.selectedRuntimeTarget),
 );
 
 const latestVersionLabel = computed(() =>
-  selectedPackageInfo.value
-    ? selectedPackageInfo.value.version
+  props.remoteInfo
+    ? selectedPackageInfo.value?.version ?? "（読み込み中）"
     : "（読み込み中）",
 );
 
@@ -158,23 +160,23 @@ const statusLabel = computed(() => {
 });
 
 const progressTypeLabel = computed(() => {
-  if (!props.progressInfo) {
+  if (!props.remoteInfo?.progressInfo) {
     return "";
   }
-  return props.progressInfo.type === "download"
+  return props.remoteInfo.progressInfo.type === "download"
     ? "ダウンロード"
     : "インストール";
 });
 
 const progressPercentage = computed(() => {
-  if (!props.progressInfo) {
+  if (!props.remoteInfo?.progressInfo) {
     return 0;
   }
-  return Math.floor(props.progressInfo.progress);
+  return Math.floor(props.remoteInfo.progressInfo.progress);
 });
 
 const isDownloadingOrInstalling = computed(() => {
-  const progress = props.progressInfo?.progress;
+  const progress = props.remoteInfo?.progressInfo?.progress;
   return progress != undefined && progress < 100;
 });
 
@@ -218,7 +220,7 @@ const actionVariant = computed<"primary" | "default">(() =>
 );
 
 const actionDisabled = computed(() => {
-  if (!props.selectedRuntimeTarget) {
+  if (!props.remoteInfo?.selectedRuntimeTarget) {
     return true;
   }
   return isDownloadingOrInstalling.value;

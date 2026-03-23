@@ -57,12 +57,21 @@
                     :key="engine.package.engineId"
                     :engineName="engine.package.engineName"
                     :currentInfo="engine.currentInfo"
-                    :latestInfo="engine.latestInfo"
-                    :selectedRuntimeTarget="getSelectedRuntimeTarget(engine)"
-                    :runtimeSelectDisabled="
-                      isDownloadingOrInstalling(engine.package.engineId)
+                    :remoteInfo="
+                      engine.latestInfo
+                        ? {
+                            latestInfo: engine.latestInfo,
+                            selectedRuntimeTarget:
+                              getSelectedRuntimeTarget(engine),
+                            runtimeSelectDisabled: isDownloadingOrInstalling(
+                              engine.package.engineId,
+                            ),
+                            progressInfo: getEngineProgress(
+                              engine.package.engineId,
+                            ),
+                          }
+                        : undefined
                     "
-                    :progressInfo="getEngineProgress(engine.package.engineId)"
                     @selectRuntimeTarget="
                       (target) =>
                         setSelectedRuntimeTarget(
