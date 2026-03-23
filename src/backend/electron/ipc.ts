@@ -69,12 +69,7 @@ export function registerIpcMainHandle<Ipc extends BaseIpcData>(
     } else {
       ipcHandlers.set(channel as string, new Set([errorHandledListener]));
       ipcMain.handle(channel as string, async (event, ...args: unknown[]) => {
-        const handlers = ipcHandlers.get(channel as string);
-        if (!handlers) {
-          throw new Error(
-            `No handlers registered for channel: ${String(channel)}`,
-          );
-        }
+        const handlers = getOrThrow(ipcHandlers, channel as string);
         for (const handler of handlers) {
           const result = await handler(event, ...args);
           if (result !== delegated) {
