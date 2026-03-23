@@ -92,13 +92,13 @@ const api: WelcomeSandbox = {
     return ipcRendererInvokeProxy.IS_MAXIMIZED_WINDOW();
   },
   minimizeWindow: () => {
-    return ipcRendererInvokeProxy.MINIMIZE_WINDOW();
+    void ipcRendererInvokeProxy.MINIMIZE_WINDOW();
   },
   toggleMaximizeWindow: () => {
-    return ipcRendererInvokeProxy.TOGGLE_MAXIMIZE_WINDOW();
+    void ipcRendererInvokeProxy.TOGGLE_MAXIMIZE_WINDOW();
   },
   closeWindow: () => {
-    return ipcRendererInvokeProxy.CLOSE_WINDOW();
+    void ipcRendererInvokeProxy.CLOSE_WINDOW();
   },
 
   logError: (...params) => {
