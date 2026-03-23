@@ -1,9 +1,11 @@
 import { type BrowserWindow, ipcMain, type IpcMainInvokeEvent } from "electron";
 import { wrapToTransferableResult } from "./transferableResultHelper";
-import type { BaseIpcData } from "./ipcType";
 import { createLogger } from "@/helpers/log";
 import { objectEntries } from "@/helpers/typedEntries";
 import { getOrThrow } from "@/helpers/mapHelper";
+
+/** ipc.tsのジェネリクス境界として使用される汎用IPC型マップ */
+type BaseIpcData = Record<string, { args: unknown[]; return: unknown }>;
 
 /**
  * ipc.ts の設計思想
