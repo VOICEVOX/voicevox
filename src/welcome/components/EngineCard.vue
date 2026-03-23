@@ -59,7 +59,7 @@ import type {
 } from "@/domain/enginePackage";
 import type { RuntimeTarget } from "@/domain/defaultEngine/latestDefaultEngine";
 
-import { ExhaustiveError } from "@/type/utility";
+import { assertNonNullable, ExhaustiveError } from "@/type/utility";
 import { sizeToHumanReadable } from "@/helpers/sizeHelper";
 
 type DisplayStatus = "notInstalled" | "installed" | "outdated" | "latest";
@@ -119,14 +119,18 @@ const getPackageInfoForTarget = (
   )?.packageInfo;
 };
 
-const selectedPackageInfo = computed(() =>
-  getPackageInfoForTarget(props.remoteInfo?.selectedRuntimeTarget),
-);
+const selectedPackageInfo = computed(() => {
+  const info = getPackageInfoForTarget(props.remoteInfo?.selectedRuntimeTarget);
+  if (props.remoteInfo?.selectedRuntimeTarget != null) {
+    assertNonNullable(info);
+  }
+  return info;
+});
 
-const latestVersionLabel = computed(() =>
-  props.remoteInfo
-    ? selectedPackageInfo.value?.version ?? "（読み込み中）"
-    : "（読み込み中）",
+const latestVersionLabel = computed(
+  () =>
+    (props.remoteInfo && selectedPackageInfo.value?.version) ??
+    "（読み込み中）",
 );
 
 const engineStatus = computed<DisplayStatus>(() => {
