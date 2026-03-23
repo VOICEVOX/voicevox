@@ -95,7 +95,7 @@ import type {
   EnginePackageBase,
   EnginePackageCurrentInfo,
   EnginePackageLatestInfo,
-} from "@/backend/electron/engineAndVvppController";
+} from "@/domain/enginePackage";
 import type { EngineId } from "@/type/preload";
 import type { RuntimeTarget } from "@/domain/defaultEngine/latestDefaultEngine";
 import { setThemeToCss } from "@/domain/dom";

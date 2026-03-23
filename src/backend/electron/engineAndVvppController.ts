@@ -16,8 +16,11 @@ import {
   type PackageInfo,
   fetchLatestDefaultEngineInfo,
 } from "@/domain/defaultEngine/latestDefaultEngine";
-import type { RuntimeTarget } from "@/domain/defaultEngine/latestDefaultEngine";
 import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
+import type {
+  EnginePackageCurrentInfo,
+  EnginePackageLatestInfo,
+} from "@/domain/enginePackage";
 import type { ProgressCallback } from "@/helpers/progressHelper";
 import { createLogger } from "@/helpers/log";
 import { DisplayableError, errorToMessage } from "@/helpers/errorHelper";
@@ -25,28 +28,6 @@ import { assertNonNullable } from "@/type/utility";
 import { isLinux, isMac, isWindows } from "@/helpers/platform";
 
 const log = createLogger("EngineAndVvppController");
-
-export type EnginePackageBase = {
-  engineName: string;
-  engineId: EngineId;
-};
-
-/** ローカルのパッケージインストール状況 */
-export type EnginePackageCurrentInfo = {
-  package: EnginePackageBase;
-  installed:
-    | { status: "notInstalled" }
-    | { status: "installed"; installedVersion: string };
-};
-
-/** オンラインで取得したパッケージ最新情報 */
-export type EnginePackageLatestInfo = {
-  package: EnginePackageBase;
-  availableRuntimeTargets: {
-    target: RuntimeTarget;
-    packageInfo: PackageInfo;
-  }[];
-};
 
 /**
  * エンジンとVVPP周りの処理の流れを制御するクラス。

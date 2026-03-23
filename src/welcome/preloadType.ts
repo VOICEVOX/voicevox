@@ -1,7 +1,7 @@
 import type {
   EnginePackageCurrentInfo,
   EnginePackageLatestInfo,
-} from "@/backend/electron/engineAndVvppController";
+} from "@/domain/enginePackage";
 import type { EngineId } from "@/type/preload";
 import type { RuntimeTarget } from "@/domain/defaultEngine/latestDefaultEngine";
 

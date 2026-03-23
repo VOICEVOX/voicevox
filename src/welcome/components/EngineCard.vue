@@ -56,7 +56,7 @@ import BaseSelectItem from "@/components/Base/BaseSelectItem.vue";
 import type {
   EnginePackageCurrentInfo,
   EnginePackageLatestInfo,
-} from "@/backend/electron/engineAndVvppController";
+} from "@/domain/enginePackage";
 import type { RuntimeTarget } from "@/domain/defaultEngine/latestDefaultEngine";
 
 import { ExhaustiveError } from "@/type/utility";
