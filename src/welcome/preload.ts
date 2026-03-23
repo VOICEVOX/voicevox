@@ -49,9 +49,16 @@ const api: WelcomeSandbox = {
     return ipcRendererInvokeProxy.GET_CURRENT_THEME();
   },
   registerIpcHandler: (listeners) => {
-    if (listeners.updateEngineDownloadProgress) {
+    const {
+      updateEngineDownloadProgress,
+      detectMaximized,
+      detectUnmaximized,
+      detectEnterFullscreen,
+      detectLeaveFullscreen,
+    } = listeners;
+    if (updateEngineDownloadProgress) {
       ipcRenderer.on("UPDATE_ENGINE_DOWNLOAD_PROGRESS", (_, args) => {
-        listeners.updateEngineDownloadProgress?.(
+        updateEngineDownloadProgress(
           args as {
             engineId: EngineId;
             progress: number;
@@ -60,24 +67,24 @@ const api: WelcomeSandbox = {
         );
       });
     }
-    if (listeners.detectMaximized) {
+    if (detectMaximized) {
       ipcRenderer.on("DETECT_MAXIMIZED", () => {
-        listeners.detectMaximized?.();
+        detectMaximized();
       });
     }
-    if (listeners.detectUnmaximized) {
+    if (detectUnmaximized) {
       ipcRenderer.on("DETECT_UNMAXIMIZED", () => {
-        listeners.detectUnmaximized?.();
+        detectUnmaximized();
       });
     }
-    if (listeners.detectEnterFullscreen) {
+    if (detectEnterFullscreen) {
       ipcRenderer.on("DETECT_ENTER_FULLSCREEN", () => {
-        listeners.detectEnterFullscreen?.();
+        detectEnterFullscreen();
       });
     }
-    if (listeners.detectLeaveFullscreen) {
+    if (detectLeaveFullscreen) {
       ipcRenderer.on("DETECT_LEAVE_FULLSCREEN", () => {
-        listeners.detectLeaveFullscreen?.();
+        detectLeaveFullscreen();
       });
     }
   },
