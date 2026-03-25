@@ -17,11 +17,8 @@ export const useElectronMenuBarData = (
   const engineIcons = useEngineIcons(engineManifests);
   const enableMultiEngine = computed(() => store.state.enableMultiEngine);
 
-  const hasDownloadVvppEngine = computed(() => {
-    return Object.values(engineInfos.value).some((engineInfo) => {
-      const manifest = engineInfos.value[engineInfo.uuid];
-      return manifest.type === "downloadVvpp";
-    });
+  const hasWelcomeSetupEngine = computed(() => {
+    return store.state.enginePackageLocalInfos.length > 0;
   });
 
   // 「エンジン」メニューのエンジン毎の項目
@@ -108,7 +105,7 @@ export const useElectronMenuBarData = (
           disableWhenUiLocked: false,
           disableWhileReloadingLock: true,
         },
-      hasDownloadVvppEngine.value && {
+      hasWelcomeSetupEngine.value && {
         type: "button",
         label: "エンジンのセットアップ",
         onClick: () => {

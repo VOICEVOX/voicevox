@@ -10,6 +10,8 @@ import { MultiDownloader } from "./multiDownloader";
 import {
   type EngineId,
   type EngineInfo,
+  type EnginePackageBase,
+  type EnginePackageCurrentInfo,
   engineSettingSchema,
 } from "@/type/preload";
 import {
@@ -26,18 +28,7 @@ import { isLinux, isMac, isWindows } from "@/helpers/platform";
 
 const log = createLogger("EngineAndVvppController");
 
-export type EnginePackageBase = {
-  engineName: string;
-  engineId: EngineId;
-};
-
-/** ローカルのパッケージインストール状況 */
-export type EnginePackageCurrentInfo = {
-  package: EnginePackageBase;
-  installed:
-    | { status: "notInstalled" }
-    | { status: "installed"; installedVersion: string };
-};
+export type { EnginePackageBase, EnginePackageCurrentInfo };
 
 /** オンラインで取得したパッケージ最新情報 */
 export type EnginePackageLatestInfo = {

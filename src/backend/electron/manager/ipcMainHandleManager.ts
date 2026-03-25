@@ -392,6 +392,10 @@ class IpcMainHandleManager {
           return failure(a.code, a);
         }
       },
+
+      FETCH_ENGINE_PACKAGE_LOCAL_INFOS: () => {
+        return engineAndVvppController.getEnginePackageLocalInfos();
+      },
     };
   }
 
