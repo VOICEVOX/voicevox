@@ -39,7 +39,9 @@ export class AppStateController {
   async startup() {
     const engineAndVvppController = getEngineAndVvppController();
     if (engineAndVvppController.hasInstalledDefaultEngine()) {
-      log.info("Default engine found. Launching main window.");
+      log.info(
+        "Default engine found or no engine installation required. Launching main window.",
+      );
       await this.launchMainWindow();
     } else {
       log.info("No default engine found. Launching welcome window.");
