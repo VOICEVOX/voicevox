@@ -8,8 +8,7 @@ import { getOrThrow } from "@/helpers/mapHelper";
 
 const initialState = cloneWithUnwrapProxy(store.state);
 beforeEach(() => {
-  const clonedInitialState = cloneWithUnwrapProxy(initialState);
-  store.replaceState(clonedInitialState);
+  store.replaceState(cloneWithUnwrapProxy(initialState));
 
   resetMockMode();
 });
