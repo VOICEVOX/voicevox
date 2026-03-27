@@ -122,6 +122,7 @@ const getPackageInfoForTarget = (
 const selectedPackageInfo = computed(() => {
   const info = getPackageInfoForTarget(props.remoteInfo?.selectedRuntimeTarget);
   if (props.remoteInfo?.selectedRuntimeTarget != null) {
+    // NOTE: 更新によってavailableRuntimeTargetsが減るkことはないはずなので、選択されたtargetに対応するpackageInfoは必ず存在する
     assertNonNullable(info);
   }
   return info;
