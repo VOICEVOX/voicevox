@@ -207,14 +207,20 @@ export class EngineAndVvppController {
 
   /**
    * デフォルトエンジンがインストール済みかどうかを確認する。
-   * ダウンロード可能なエンジンが存在しない場合もtrueを返す（インストール不要）。
    */
   hasInstalledDefaultEngine(): boolean {
     const statuses = this.getEnginePackageLocalInfos();
-    return (
-      statuses.length === 0 ||
-      statuses.some((status) => status.installed.status !== "notInstalled")
+    return statuses.some(
+      (status) => status.installed.status !== "notInstalled",
     );
+  }
+
+  /**
+   * ダウンロード式のデフォルトエンジンが存在するかどうかを確認する。
+   */
+  hasDownloadableDefaultEngine(): boolean {
+    const downloadableEngines = this.getDownloadableEnvEngineInfos();
+    return downloadableEngines.length > 0;
   }
 
   /**
