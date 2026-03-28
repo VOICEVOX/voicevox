@@ -310,6 +310,19 @@ shellcheck ./build/*.sh
 shellcheck ./tools/*.bash
 ```
 
+## GitHub Actions のバージョン固定
+
+[pinact](https://github.com/suzuki-shunsuke/pinact) を使って GitHub Actions のバージョンを full-length commit SHA に固定しています。
+プルリクエストを送ると自動でテストされます。
+
+```bash
+# バージョンを固定する
+pinact run
+
+# バージョンを更新して固定する
+pinact run --update --min-age 7
+```
+
 ## OpenAPI generator
 
 [開発版のVOICEVOX ENGINE](https://github.com/voicevox/voicevox_engine)が起動している状態で以下のコマンドを実行してください。

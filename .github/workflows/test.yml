@@ -42,7 +42,7 @@ jobs:
   build-test:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - name: Setup environment
         uses: ./.github/actions/setup-environment
       - run: pnpm run electron:build
@@ -51,7 +51,7 @@ jobs:
   unit-test:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - name: Setup environment
         uses: ./.github/actions/setup-environment
 
@@ -74,7 +74,7 @@ jobs:
           - os: windows-latest
             voicevox_engine_asset_name: windows-cpu
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - name: Setup environment
         uses: ./.github/actions/setup-environment
 
@@ -138,7 +138,7 @@ jobs:
 
       - name: Upload playwright report to artifact
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: playwright-report-${{ matrix.os }}
           path: playwright-report
@@ -155,7 +155,7 @@ jobs:
 
       - name: Upload patch to artifact
         if: needs.config.outputs.shouldUpdateSnapshots == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: updated-snapshots-${{ matrix.os }}
           path: patch-${{ matrix.os }}.diff
@@ -167,7 +167,7 @@ jobs:
     needs: [config, e2e-test]
     if: needs.config.outputs.shouldUpdateSnapshots == 'true'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           # NOTE: デフォルトの設定だとgithub-push-actionが動いてくれないので設定を変えている。
           # ref: https://github.com/ad-m/github-push-action/issues/44#issuecomment-581706892
@@ -175,7 +175,7 @@ jobs:
           fetch-depth: 0
 
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           pattern: updated-snapshots-*
           path: ${{ runner.temp }}/patches
@@ -213,7 +213,7 @@ jobs:
 
       - name: Show warning if token is not set
         if: steps.commit-updated-snapshots.outputs.changes_exist == 'true'
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
         with:
           script: |
             const pushTokenProvided = `${{ secrets.PUSH_TOKEN }}` !== "";
@@ -229,7 +229,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - name: Setup environment
         uses: ./.github/actions/setup-environment
 
@@ -240,3 +240,9 @@ jobs:
       - run: pnpm run lint
       - run: pnpm run markdownlint
       - run: pnpm run typos
+
+      - name: Check pinact
+        uses: suzuki-shunsuke/pinact-action@28aeb220eb3252ad0d4422dd5d9368e925acbd8d # v1.3.0
+        with:
+          skip_push: "true"
+          min_age: "7"
