@@ -100,25 +100,14 @@ describe("COMMAND_ERASE_PHONEME_TIMING_EDITS", () => {
     ).toThrow("The trackId is invalid.");
   });
 
-  test("targetsが空配列のとき何も変化しない", async () => {
+  test("targetsが空配列のときエラーになる", () => {
     const trackId = store.state.trackOrder[0];
-    const noteId = NoteId(uuid4());
-    store.commit("UPSERT_PHONEME_TIMING_EDIT", {
-      trackId,
-      noteId,
-      phonemeTimingEdit: { phonemeIndexInNote: 0, offsetSeconds: 0.1 },
-    });
-    const before = cloneWithUnwrapProxy(
-      getOrThrow(store.state.tracks, trackId).phonemeTimingEditData,
-    );
-
-    await store.dispatch("COMMAND_ERASE_PHONEME_TIMING_EDITS", {
-      trackId,
-      targets: [],
-    });
-
-    const track = getOrThrow(store.state.tracks, trackId);
-    expect(track.phonemeTimingEditData).toEqual(before);
+    expect(() =>
+      store.dispatch("COMMAND_ERASE_PHONEME_TIMING_EDITS", {
+        trackId,
+        targets: [],
+      }),
+    ).toThrow("The targets must not be empty.");
   });
 
   test("同じ(noteId, phonemeIndexInNote)ペアが重複するとエラーになる", () => {

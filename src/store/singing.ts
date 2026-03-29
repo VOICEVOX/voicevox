@@ -3683,7 +3683,7 @@ export const singingCommandStore = transformCommandStore(
           throw new Error("The trackId is invalid.");
         }
         if (targets.length === 0) {
-          return;
+          throw new Error("The targets must not be empty.");
         }
         const seenPairs = new Map<NoteId, Set<number>>();
         for (const target of targets) {
