@@ -275,9 +275,8 @@ const handleFileChange = async (event: Event) => {
         project: parsedProject,
       };
     } else {
-      const { Project: UfProject } = await import(
-        "@sevenc-nanashi/utaformatix-ts"
-      );
+      const { Project: UfProject } =
+        await import("@sevenc-nanashi/utaformatix-ts");
       project.value = {
         type: "utaformatix",
         project: await UfProject.fromAny(file, {

@@ -1477,6 +1477,14 @@ export type SingingStoreTypes = {
     action(): void;
   };
 
+  SYNC_LOOP_RANGE_TO_TRANSPORT: {
+    action(): void;
+  };
+
+  SYNC_PLAYHEAD_POSITION_TO_TRANSPORT: {
+    action(): void;
+  };
+
   APPLY_DEVICE_ID_TO_AUDIO_CONTEXT: {
     action(payload: { device: string }): void;
   };
@@ -1642,6 +1650,10 @@ export type SingingCommandStoreTypes = {
 
   COMMAND_DELETE_TRACK: {
     mutation: { trackId: TrackId };
+    action(payload: { trackId: TrackId }): void;
+  };
+
+  COMMAND_DUPLICATE_TRACK: {
     action(payload: { trackId: TrackId }): void;
   };
 

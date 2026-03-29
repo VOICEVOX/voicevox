@@ -10,23 +10,15 @@ import {
 } from "electron";
 import { getConfigManager } from "../../electronConfig";
 import { getAppStateController } from "../../appStateController";
-import {
-  createIpcSendProxy,
-  type IpcMainHandle,
-  type IpcSendProxy,
-  registerIpcMainHandle,
-} from "../../ipc";
+import { createIpcSendProxy, type IpcSendProxy } from "../../ipc";
+import { getWelcomeIpcMainHandleManager } from "../welcomeIpcMainHandleManager";
 import { themes } from "@/domain/theme";
-import type {
-  WelcomeIpcIHData,
-  WelcomeIpcSOData,
-} from "@/welcome/backend/ipcType";
+import type { WelcomeIpcSOData } from "@/welcome/backend/ipcType";
 
 type WindowManagerOption = {
   staticDir: string;
   isDevelopment: boolean;
   isTest: boolean;
-  ipcMainHandle: IpcMainHandle<WelcomeIpcIHData>;
 };
 
 class WelcomeWindowManager {
@@ -35,13 +27,11 @@ class WelcomeWindowManager {
   private staticDir: string;
   private isDevelopment: boolean;
   private isTest: boolean;
-  private ipcMainHandle: IpcMainHandle<WelcomeIpcIHData>;
 
   constructor(payload: WindowManagerOption) {
     this.staticDir = payload.staticDir;
     this.isDevelopment = payload.isDevelopment;
     this.isTest = payload.isTest;
-    this.ipcMainHandle = payload.ipcMainHandle;
   }
 
   /**
@@ -97,7 +87,8 @@ class WelcomeWindowManager {
     });
     const ipc = createIpcSendProxy<WelcomeIpcSOData>(win);
     this._ipc = ipc;
-    registerIpcMainHandle<WelcomeIpcIHData>(win, this.ipcMainHandle);
+    const welcomeIpcMainHandleManager = getWelcomeIpcMainHandleManager();
+    welcomeIpcMainHandleManager.attachTo(win);
 
     win.on("maximize", () => {
       ipc.DETECT_MAXIMIZED();

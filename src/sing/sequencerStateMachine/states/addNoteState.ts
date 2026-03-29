@@ -13,9 +13,11 @@ import { getButton, PREVIEW_SOUND_DURATION } from "@/sing/viewHelper";
 import { clamp } from "@/sing/utility";
 import { uuid4 } from "@/helpers/random";
 
-export class AddNoteState
-  implements State<SequencerStateDefinitions, Input, Context>
-{
+export class AddNoteState implements State<
+  SequencerStateDefinitions,
+  Input,
+  Context
+> {
   readonly id = "addNote";
 
   private readonly cursorPosAtStart: PositionOnSequencer;

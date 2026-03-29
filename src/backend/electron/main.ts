@@ -15,10 +15,13 @@ import configMigration014 from "./configMigration014";
 import { initializeRuntimeInfoManager } from "./manager/RuntimeInfoManager";
 import { getConfigManager } from "./electronConfig";
 import { getEngineAndVvppController } from "./engineAndVvppController";
-import { getIpcMainHandle } from "./ipcMainHandle";
-import { getWelcomeIpcMainHandle } from "./welcomeIpcMainHandle";
-import { getAppStateController } from "./appStateController";
+import {
+  getAppStateController,
+  initializeAppStateController,
+} from "./appStateController";
 import { initializeWelcomeWindowManager } from "./manager/windowManager/welcome";
+import { initializeIpcMainHandleManager } from "./manager/ipcMainHandleManager";
+import { initializeWelcomeIpcMainHandleManager } from "./manager/welcomeIpcMainHandleManager";
 import { assertNonNullable } from "@/type/utility";
 import type { EngineInfo } from "@/type/preload";
 import { isDevelopment, isMac, isProduction, isTest } from "@/helpers/platform";
@@ -180,6 +183,31 @@ void app.whenReady().then(() => {
   );
 });
 
+// CSPヘッダの設定
+void app.whenReady().then(() => {
+  let urls: string[];
+  if (isDevelopment) {
+    assertNonNullable(import.meta.env.VITE_DEV_SERVER_URL);
+    const { protocol, hostname } = new URL(import.meta.env.VITE_DEV_SERVER_URL);
+    urls = [`${protocol}//${hostname}/*`];
+  } else {
+    urls = ["app://./*"];
+  }
+  const cspHeaderValue =
+    "script-src 'self' 'wasm-unsafe-eval' https://*.googletagmanager.com";
+  session.defaultSession.webRequest.onHeadersReceived(
+    { urls },
+    (details, callback) => {
+      callback({
+        responseHeaders: {
+          ...details.responseHeaders,
+          "Content-Security-Policy": [cspHeaderValue],
+        },
+      });
+    },
+  );
+});
+
 // engine
 const vvppEngineDir = path.join(app.getPath("userData"), "vvpp-engines");
 
@@ -214,21 +242,24 @@ initializeEngineInfoManager({
 initializeEngineProcessManager({ onEngineProcessError });
 initializeVvppManager({ vvppEngineDir, tmpDir: app.getPath("temp") });
 
+initializeAppStateController();
+
+initializeIpcMainHandleManager({
+  staticDirPath: staticDir,
+  appDirPath,
+  initialFilePathGetter: () => initialFilePath,
+});
+initializeWelcomeIpcMainHandleManager();
+
 initializeMainWindowManager({
   isDevelopment,
   isTest,
   staticDir: staticDir,
-  ipcMainHandle: getIpcMainHandle({
-    staticDirPath: staticDir,
-    appDirPath,
-    initialFilePathGetter: () => initialFilePath,
-  }),
 });
 initializeWelcomeWindowManager({
   isDevelopment,
   isTest,
   staticDir: staticDir,
-  ipcMainHandle: getWelcomeIpcMainHandle(),
 });
 
 const configManager = getConfigManager();

@@ -5,6 +5,29 @@ import { createLogger } from "@/helpers/log";
 import { objectEntries } from "@/helpers/typedEntries";
 import { ensureNotNullish } from "@/type/utility";
 
+/**
+ * ipc.ts の設計思想
+ *
+ * 想定:
+ * - アプリは基本的に単一のフロントエンドウィンドウ（または明示的に切り替えられるウィンドウ）を使用する前提。
+ * - ウィンドウ切替が行われるケース（welcome <-> main）に対応するため、同一チャネルに複数ハンドラを登録できるが、
+ *   実行時には送信元の `webContents.id` とターゲットウィンドウを検証して、適切なハンドラのみを処理する。
+ * - 同期/非同期の戻り値は `IpcMainHandle` の定義に従い Promise/値の両方を許容する。
+ * - 不正な送信元に対しては明示的にエラーを投げ、ハンドラは処理しない。
+ *
+ * 設計上の注意点:
+ * - マルチウィンドウ同時起動をフルサポートする設計にはなっていないため、将来的に複雑化する場合は
+ *   別途チャネル分離やオーソリティチェックを強化すること。
+ *
+ * 使用例（簡易）:
+ * - 型定義側（`ipcType.ts`）でチャネルを定義する
+ *   export type MyIpc = IpcIHData & {
+ *     MY_CHANNEL: { args: [value: number]; return: string };
+ *   };
+ * - 登録側: `registerIpcMainHandle<MyIpc>(win, { MY_CHANNEL: (e, v) => v.toString() })`
+ *
+ * 関連: 型定義は `ipcType.ts` の `IpcIHData` / `IpcSOData` を参照してください。
+ */
 const log = createLogger("ipc");
 
 export type IpcMainHandle<Ipc extends BaseIpcData> = {

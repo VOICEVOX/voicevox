@@ -6,6 +6,7 @@
 
 <script setup lang="ts">
 import { ref, watch, computed, onUnmounted, onMounted } from "vue";
+import "@pixi/unsafe-eval";
 import * as PIXI from "pixi.js";
 import { useStore } from "@/store";
 import { useMounted } from "@/composables/useMounted";

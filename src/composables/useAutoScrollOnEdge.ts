@@ -10,6 +10,14 @@ import { getXInBorderBox, getYInBorderBox } from "@/sing/viewHelper";
 export const useAutoScrollOnEdge = (
   element: Ref<HTMLElement | null>,
   enable: ComputedRef<boolean>,
+  options?: {
+    /**
+     * オートスクロールの方向
+     * - "xy": 水平・垂直両方向（デフォルト）
+     * - "x": 水平方向のみ
+     */
+    scrollDirection?: ComputedRef<"x" | "xy">;
+  },
 ) => {
   const baseSpeed = 100;
   const accelerationFactor = 1.7;
@@ -103,10 +111,25 @@ export const useAutoScrollOnEdge = (
       throw new Error("element.value is null.");
     }
     if (autoScrollState != undefined) {
-      autoScrollState.cursorPos = new Vector2D(
-        getXInBorderBox(event.clientX, element.value),
-        getYInBorderBox(event.clientY, element.value),
-      );
+      const x = getXInBorderBox(event.clientX, element.value);
+      let y = getYInBorderBox(event.clientY, element.value);
+      const width = element.value.clientWidth;
+      const height = element.value.clientHeight;
+
+      const inside = x >= 0 && y >= 0 && x <= width && y <= height;
+
+      if (inside) {
+        autoScrollState.cursorPos = new Vector2D(x, y);
+        return;
+      }
+
+      const scrollDirection = options?.scrollDirection?.value ?? "xy";
+      if (scrollDirection === "x") {
+        // Yを中央に固定して垂直スクロールを防ぐ
+        y = height / 2;
+      }
+
+      autoScrollState.cursorPos = new Vector2D(x, y);
     }
   };
 

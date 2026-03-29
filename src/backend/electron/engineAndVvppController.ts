@@ -18,10 +18,10 @@ import {
 } from "@/domain/defaultEngine/latestDefaultEngine";
 import type { RuntimeTarget } from "@/domain/defaultEngine/latestDefaultEngine";
 import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
-import { UnreachableError } from "@/type/utility";
 import type { ProgressCallback } from "@/helpers/progressHelper";
 import { createLogger } from "@/helpers/log";
 import { DisplayableError, errorToMessage } from "@/helpers/errorHelper";
+import { assertNonNullable } from "@/type/utility";
 import { isLinux, isMac, isWindows } from "@/helpers/platform";
 
 const log = createLogger("EngineAndVvppController");
@@ -247,7 +247,10 @@ export class EngineAndVvppController {
 
     for (const envEngineInfo of this.getDownloadableEnvEngineInfos()) {
       const latestUrl = envEngineInfo.latestUrl;
-      if (latestUrl == undefined) throw new Error("latestUrl is undefined");
+      assertNonNullable(
+        latestUrl,
+        `latestUrl is undefined for ${envEngineInfo.name}`,
+      );
 
       const latestInfo = await fetchLatestDefaultEngineInfo(latestUrl);
       if (latestInfo.formatVersion != 1) {
@@ -292,7 +295,7 @@ export class EngineAndVvppController {
     callbacks: { onProgress: ProgressCallback<"download" | "install"> },
   ) {
     if (packageInfo.files.length === 0) {
-      throw new UnreachableError("No packages to download");
+      throw new Error("No packages to download");
     }
 
     await using downloader = new MultiDownloader(

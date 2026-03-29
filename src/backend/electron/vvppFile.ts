@@ -14,7 +14,7 @@ import {
 } from "@/type/preload";
 import type { ProgressCallback } from "@/helpers/progressHelper";
 import { createLogger } from "@/helpers/log";
-import { UnreachableError } from "@/type/utility";
+import { assertNonNullable } from "@/type/utility";
 
 const log = createLogger("vvppFile");
 
@@ -94,9 +94,7 @@ export class VvppFileExtractor {
 
   private parseFileNumber(filePath: string): number {
     const match = filePath.match(/\.([0-9]+)\.vvppp$/);
-    if (match == null) {
-      throw new UnreachableError(`match is null: filePath=${filePath}`);
-    }
+    assertNonNullable(match, `match is null: filePath=${filePath}`);
     return parseInt(match[1]);
   }
 

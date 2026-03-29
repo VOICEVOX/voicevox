@@ -14,9 +14,11 @@ import {
   shouldStartDrag,
 } from "@/sing/sequencerStateMachine/common";
 
-export class MoveNoteState
-  implements State<SequencerStateDefinitions, Input, Context>
-{
+export class MoveNoteState implements State<
+  SequencerStateDefinitions,
+  Input,
+  Context
+> {
   readonly id = "moveNote";
 
   private readonly cursorPosAtStart: PositionOnSequencer;

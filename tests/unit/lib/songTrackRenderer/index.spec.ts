@@ -426,9 +426,11 @@ describe("SongTrackRenderer", () => {
         );
         if (track.singer == undefined) {
           // シンガーが未設定のトラックのフレーズはレンダリングされないはず
+          // eslint-disable-next-line vitest/no-conditional-expect
           expect(phraseRenderingStartedEventInfos.length).toEqual(0);
         } else {
           // シンガーが設定されているトラックのフレーズはレンダリングされるはず
+          // eslint-disable-next-line vitest/no-conditional-expect
           expect(phraseRenderingStartedEventInfos.length).toEqual(3);
         }
       }
