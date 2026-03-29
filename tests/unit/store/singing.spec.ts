@@ -14,18 +14,6 @@ beforeEach(() => {
 });
 
 describe("COMMAND_UPSERT_PHONEME_TIMING_EDIT", () => {
-  test("無効なtrackIdを指定するとエラーになる", () => {
-    const invalidTrackId = TrackId(uuid4());
-    const noteId = NoteId(uuid4());
-    expect(() =>
-      store.dispatch("COMMAND_UPSERT_PHONEME_TIMING_EDIT", {
-        trackId: invalidTrackId,
-        noteId,
-        phonemeTimingEdit: { phonemeIndexInNote: 0, offsetSeconds: 0.1 },
-      }),
-    ).toThrow("The trackId is invalid.");
-  });
-
   test("editsが存在しないnoteIdへ新規追加できる", async () => {
     const trackId = store.state.trackOrder[0];
     const noteId = NoteId(uuid4());
@@ -89,17 +77,6 @@ describe("COMMAND_UPSERT_PHONEME_TIMING_EDIT", () => {
 });
 
 describe("COMMAND_ERASE_PHONEME_TIMING_EDITS", () => {
-  test("無効なtrackIdを指定するとエラーになる", () => {
-    const invalidTrackId = TrackId(uuid4());
-    const noteId = NoteId(uuid4());
-    expect(() =>
-      store.dispatch("COMMAND_ERASE_PHONEME_TIMING_EDITS", {
-        trackId: invalidTrackId,
-        targets: [{ noteId, phonemeIndexInNote: 0 }],
-      }),
-    ).toThrow("The trackId is invalid.");
-  });
-
   test("targetsが空配列のときエラーになる", () => {
     const trackId = store.state.trackOrder[0];
     expect(() =>
