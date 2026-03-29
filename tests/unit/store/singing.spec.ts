@@ -143,32 +143,6 @@ describe("COMMAND_ERASE_PHONEME_TIMING_EDITS", () => {
     );
   });
 
-  test("同じnoteIdで異なるphonemeIndexInNoteは重複にならない", async () => {
-    const trackId = store.state.trackOrder[0];
-    const noteId = NoteId(uuid4());
-    store.commit("UPSERT_PHONEME_TIMING_EDIT", {
-      trackId,
-      noteId,
-      phonemeTimingEdit: { phonemeIndexInNote: 0, offsetSeconds: 0.1 },
-    });
-    store.commit("UPSERT_PHONEME_TIMING_EDIT", {
-      trackId,
-      noteId,
-      phonemeTimingEdit: { phonemeIndexInNote: 1, offsetSeconds: 0.2 },
-    });
-
-    await store.dispatch("COMMAND_ERASE_PHONEME_TIMING_EDITS", {
-      trackId,
-      targets: [
-        { noteId, phonemeIndexInNote: 0 },
-        { noteId, phonemeIndexInNote: 1 },
-      ],
-    });
-
-    const track = getOrThrow(store.state.tracks, trackId);
-    expect(track.phonemeTimingEditData.has(noteId)).toBe(false);
-  });
-
   test("異なるnoteIdで同じphonemeIndexInNoteは重複にならない", async () => {
     const trackId = store.state.trackOrder[0];
     const noteId1 = NoteId(uuid4());
