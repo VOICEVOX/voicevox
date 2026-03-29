@@ -300,7 +300,7 @@ describe("COMMAND_ERASE_PHONEME_TIMING_EDITS", () => {
   });
 });
 
-test("INSERT_TRACK", () => {
+test("トラックを挿入する", () => {
   const dummyTrack = createDefaultTrack();
 
   // 最後尾に追加
