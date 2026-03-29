@@ -14,14 +14,16 @@ export const useTimelineWheel = (options: {
 }) => {
   const { leftPaddingPx, isWheelDisabled, onPanX, onZoomX } = options;
 
-  const handleWheel = (event: WheelEvent) => {
+  type TimelineWheelAction =
+    | { type: "none" }
+    | { type: "panX"; deltaX: number }
+    | { type: "zoomX"; anchorX: number; deltaY: number };
+
+  const resolveTimelineWheelAction = (
+    event: WheelEvent,
+  ): TimelineWheelAction => {
     if (!(event.currentTarget instanceof HTMLElement)) {
       throw new Error("wheel event target is not HTMLElement.");
-    }
-
-    if (isWheelDisabled()) {
-      event.preventDefault();
-      return;
     }
 
     // Ctrl/Cmd + wheelでズーム処理
@@ -30,18 +32,52 @@ export const useTimelineWheel = (options: {
         0,
         getXInBorderBox(event.clientX, event.currentTarget) - leftPaddingPx,
       );
-      event.preventDefault();
-      onZoomX(anchorX, event.deltaY);
-      return;
+
+      return {
+        type: "zoomX",
+        anchorX,
+        deltaY: event.deltaY,
+      };
     }
 
     // 横wheel(トラックパッドやマウス横スワイプ) → パンスクロール
     if (event.deltaX !== 0) {
-      event.preventDefault();
-      onPanX(event.deltaX);
+      return {
+        type: "panX",
+        deltaX: event.deltaX,
+      };
     }
 
-    // 縦wheelはなにもしない / 必要が出てきたら追加
+    // 縦wheelも時間軸のパンに使う
+    if (event.deltaY !== 0) {
+      return {
+        type: "panX",
+        deltaX: event.deltaY,
+      };
+    }
+
+    return { type: "none" };
+  };
+
+  const handleWheel = (event: WheelEvent) => {
+    if (isWheelDisabled()) {
+      event.preventDefault();
+      return;
+    }
+
+    const action = resolveTimelineWheelAction(event);
+    switch (action.type) {
+      case "zoomX":
+        event.preventDefault();
+        onZoomX(action.anchorX, action.deltaY);
+        return;
+      case "panX":
+        event.preventDefault();
+        onPanX(action.deltaX);
+        return;
+      case "none":
+        return;
+    }
   };
 
   return { handleWheel };
