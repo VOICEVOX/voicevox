@@ -58,19 +58,17 @@
                     :engineName="engine.package.engineName"
                     :currentInfo="engine.currentInfo"
                     :remoteInfo="
-                      engine.latestInfo
+                      engine.latestInfo && engine.latestInfo !== 'fetchError'
                         ? {
+                            type: 'fetched' as const,
                             latestInfo: engine.latestInfo,
                             selectedRuntimeTarget:
-                              getSelectedRuntimeTarget(engine),
-                            runtimeSelectDisabled: isDownloadingOrInstalling(
-                              engine.package.engineId,
-                            ),
+                              getSelectedRuntimeTarget(engine)!,
                             progressInfo: getEngineProgress(
                               engine.package.engineId,
-                            ),
+                            ) ?? { type: 'idle' as const },
                           }
-                        : undefined
+                        : { type: 'notFetched' as const }
                     "
                     @selectRuntimeTarget="
                       (target) =>
@@ -122,7 +120,7 @@ import { showErrorDialog } from "@/components/Dialog/Dialog";
 type DisplayEngineInfo = {
   package: EnginePackageBase;
   currentInfo: EnginePackageCurrentInfo;
-  latestInfo: EnginePackageLatestInfo | undefined;
+  latestInfo: EnginePackageLatestInfo | "fetchError" | undefined;
 };
 type LoadingEngineInfosState =
   | { type: "uninitialized" }
@@ -133,8 +131,10 @@ type LoadingEngineInfosState =
     }
   | {
       type: "fetched";
-      currentEngineInfos: EnginePackageCurrentInfo[];
-      latestEngineInfos: EnginePackageLatestInfo[];
+      engineInfos: {
+        currentInfo: EnginePackageCurrentInfo;
+        latestInfo: EnginePackageLatestInfo | "fetchError";
+      }[];
     };
 
 const loadingEngineInfosState = ref<LoadingEngineInfosState>({
@@ -154,19 +154,14 @@ const engineInfosForDisplay = computed<DisplayEngineInfo[]>(() => {
           latestInfo: undefined,
         }),
       );
-    case "fetched": {
-      const state = loadingEngineInfosState.value;
-      return state.currentEngineInfos.map((currentInfo) => {
-        const latestInfo = state.latestEngineInfos.find(
-          (latest) => latest.package.engineId === currentInfo.package.engineId,
-        );
-        return {
+    case "fetched":
+      return loadingEngineInfosState.value.engineInfos.map(
+        ({ currentInfo, latestInfo }) => ({
           package: currentInfo.package,
           currentInfo,
           latestInfo,
-        };
-      });
-    }
+        }),
+      );
     default:
       throw new ExhaustiveError(loadingEngineInfosState.value);
   }
@@ -179,7 +174,7 @@ const getDefaultRuntimeTarget = (
   engineInfo: DisplayEngineInfo,
 ): RuntimeTarget | undefined => {
   const latestInfo = engineInfo.latestInfo;
-  if (!latestInfo) {
+  if (!latestInfo || latestInfo === "fetchError") {
     return undefined;
   }
   const defaultRuntimeTargetInfo = latestInfo.availableRuntimeTargets.find(
@@ -226,10 +221,9 @@ const launchEditorDisabledReason = computed<string | null>(() => {
   if (Object.keys(engineProgressInfo.value).length > 0) {
     return "エンジンのインストールまたは更新中です。";
   }
-  const engineInfos = loadingEngineInfosState.value.currentEngineInfos;
   if (
-    !engineInfos.some(
-      (engineInfo) => engineInfo.installed.status !== "notInstalled",
+    !engineInfosForDisplay.value.some(
+      ({ currentInfo }) => currentInfo.installed.status !== "notInstalled",
     )
   ) {
     return "エンジンがインストールされていません。";
@@ -245,10 +239,6 @@ const clearEngineProgress = (engineId: EngineId) => {
 
 const getEngineProgress = (engineId: EngineId) =>
   engineProgressInfo.value[engineId];
-const isDownloadingOrInstalling = (engineId: EngineId) => {
-  const progress = getEngineProgress(engineId)?.progress;
-  return progress != undefined && progress < 100;
-};
 
 const installEngine = async (engineId: EngineId) => {
   const engineInfo = engineInfosForDisplay.value.find(
@@ -302,8 +292,14 @@ const fetchInstalledEngineInfos = async () => {
       await window.welcomeBackend.fetchLatestEnginePackageRemoteInfos();
     loadingEngineInfosState.value = {
       type: "fetched",
-      currentEngineInfos,
-      latestEngineInfos,
+      engineInfos: currentEngineInfos.map((currentInfo) => ({
+        currentInfo,
+        latestInfo:
+          latestEngineInfos.find(
+            (latest) =>
+              latest.package.engineId === currentInfo.package.engineId,
+          ) ?? ("fetchError" as const),
+      })),
     };
   } catch (error) {
     onlineFetchErrorMessage.value =
@@ -316,8 +312,10 @@ const fetchInstalledEngineInfos = async () => {
     );
     loadingEngineInfosState.value = {
       type: "fetched",
-      currentEngineInfos,
-      latestEngineInfos: [],
+      engineInfos: currentEngineInfos.map((currentInfo) => ({
+        currentInfo,
+        latestInfo: "fetchError" as const,
+      })),
     };
     throw error;
   }
