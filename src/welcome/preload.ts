@@ -39,8 +39,10 @@ const api: WelcomeSandbox = {
   fetchEnginePackageLocalInfos: () => {
     return ipcRendererInvokeProxy.FETCH_ENGINE_PACKAGE_LOCAL_INFOS();
   },
-  fetchLatestEnginePackageRemoteInfos: () => {
-    return ipcRendererInvokeProxy.FETCH_LATEST_ENGINE_PACKAGE_REMOTE_INFOS();
+  fetchEnginePackageRemoteInfo: (engineId) => {
+    return ipcRendererInvokeProxy.FETCH_ENGINE_PACKAGE_REMOTE_INFO({
+      engineId,
+    });
   },
   launchMainWindow: () => {
     return ipcRendererInvokeProxy.SWITCH_TO_MAIN_WINDOW();

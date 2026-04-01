@@ -19,15 +19,10 @@ class WelcomeIpcMainHandleManager {
     return {
       INSTALL_ENGINE: async (_, obj) => {
         const welcomeWindowManager = getWelcomeWindowManager();
-        const packageStatuses =
-          await engineAndVvppController.fetchLatestEnginePackageRemoteInfos();
-        const status = packageStatuses.find(
-          (s) => s.package.engineId === obj.engineId,
-        );
-        assertNonNullable(
-          status,
-          `Engine package status not found for engineId: ${obj.engineId}`,
-        );
+        const status =
+          await engineAndVvppController.fetchEnginePackageRemoteInfo(
+            obj.engineId,
+          );
 
         // ダウンロードしてインストールする
         let lastUpdateTime = 0;
@@ -65,8 +60,10 @@ class WelcomeIpcMainHandleManager {
       FETCH_ENGINE_PACKAGE_LOCAL_INFOS: () => {
         return engineAndVvppController.getEnginePackageLocalInfos();
       },
-      FETCH_LATEST_ENGINE_PACKAGE_REMOTE_INFOS: async () => {
-        return engineAndVvppController.fetchLatestEnginePackageRemoteInfos();
+      FETCH_ENGINE_PACKAGE_REMOTE_INFO: async (_, obj) => {
+        return engineAndVvppController.fetchEnginePackageRemoteInfo(
+          obj.engineId,
+        );
       },
       GET_CURRENT_THEME: async () => {
         return configManager.get("currentTheme");

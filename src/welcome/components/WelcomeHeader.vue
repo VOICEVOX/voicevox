@@ -5,12 +5,12 @@
       <QSpace />
 
       <BaseTooltip
-        :label="launchEditorDisabledReason || ''"
-        :disabled="launchEditorDisabledReason == null"
+        :label="launchEditorState.enabled ? '' : launchEditorState.reason"
+        :disabled="launchEditorState.enabled"
       >
         <BaseButton
           label="エディタを起動"
-          :disabled="launchEditorDisabledReason != null"
+          disabled
           @click="handleLaunchEditor"
         />
       </BaseTooltip>
@@ -22,15 +22,24 @@
 import BaseButton from "@/components/Base/BaseButton.vue";
 import BaseTooltip from "@/components/Base/BaseTooltip.vue";
 
+export type LaunchEditorState =
+  | {
+      enabled: true;
+    }
+  | {
+      enabled: false;
+      reason: string;
+    };
+
 const props = defineProps<{
-  launchEditorDisabledReason: string | null;
+  launchEditorState: LaunchEditorState;
 }>();
 const emit = defineEmits<{
   (event: "launch-editor"): void;
 }>();
 
 const handleLaunchEditor = () => {
-  if (props.launchEditorDisabledReason) {
+  if (!props.launchEditorState.enabled) {
     return;
   }
   emit("launch-editor");

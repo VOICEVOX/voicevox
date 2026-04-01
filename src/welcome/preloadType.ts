@@ -11,7 +11,9 @@ export interface WelcomeSandbox {
     target: RuntimeTarget;
   }): Promise<void>;
   fetchEnginePackageLocalInfos(): Promise<EnginePackageCurrentInfo[]>;
-  fetchLatestEnginePackageRemoteInfos(): Promise<EnginePackageLatestInfo[]>;
+  fetchEnginePackageRemoteInfo(
+    engineId: EngineId,
+  ): Promise<EnginePackageLatestInfo>;
   launchMainWindow(): Promise<void>;
   getCurrentTheme(): Promise<string>;
   registerIpcHandler(listeners: {

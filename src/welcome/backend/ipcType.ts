@@ -22,9 +22,9 @@ export type WelcomeIpcIHData = {
     args: [];
     return: EnginePackageCurrentInfo[];
   };
-  FETCH_LATEST_ENGINE_PACKAGE_REMOTE_INFOS: {
-    args: [];
-    return: EnginePackageLatestInfo[];
+  FETCH_ENGINE_PACKAGE_REMOTE_INFO: {
+    args: [obj: { engineId: EngineId }];
+    return: EnginePackageLatestInfo;
   };
 
   GET_CURRENT_THEME: {

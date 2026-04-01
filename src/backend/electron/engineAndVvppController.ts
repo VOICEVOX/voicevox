@@ -237,54 +237,56 @@ export class EngineAndVvppController {
   }
 
   /**
-   * オンラインで最新のエンジンパッケージの情報や、そのエンジンのインストール状況を取得する。
+   * オンラインで指定したエンジンの最新パッケージ情報を取得する。
    */
-  async fetchLatestEnginePackageRemoteInfos(): Promise<
-    EnginePackageLatestInfo[]
-  > {
-    const statuses: EnginePackageLatestInfo[] = [];
+  async fetchEnginePackageRemoteInfo(
+    engineId: EngineId,
+  ): Promise<EnginePackageLatestInfo> {
+    const envEngineInfo = this.getDownloadableEnvEngineInfos().find(
+      (info) => info.uuid === engineId,
+    );
+    assertNonNullable(
+      envEngineInfo,
+      `Engine info not found for engineId: ${engineId}`,
+    );
 
-    for (const envEngineInfo of this.getDownloadableEnvEngineInfos()) {
-      const latestUrl = envEngineInfo.latestUrl;
-      assertNonNullable(
-        latestUrl,
-        `latestUrl is undefined for ${envEngineInfo.name}`,
+    const latestUrl = envEngineInfo.latestUrl;
+    assertNonNullable(
+      latestUrl,
+      `latestUrl is undefined for ${envEngineInfo.name}`,
+    );
+
+    const latestInfo = await fetchLatestDefaultEngineInfo(latestUrl);
+    if (latestInfo.formatVersion != 1) {
+      throw new Error(
+        `Unsupported format version: ${latestInfo.formatVersion}`,
       );
-
-      const latestInfo = await fetchLatestDefaultEngineInfo(latestUrl);
-      if (latestInfo.formatVersion != 1) {
-        log.error(`Unsupported format version: ${latestInfo.formatVersion}`);
-        continue;
-      }
-
-      const availableRuntimeTargets: EnginePackageLatestInfo["availableRuntimeTargets"] =
-        Object.entries(latestInfo.packages)
-          .map(([target, packageInfo]) => ({ target, packageInfo }))
-          .filter((runtimeTargetInfo) =>
-            isSupportedTarget(runtimeTargetInfo.target),
-          )
-          .toSorted(
-            (a, b) =>
-              a.packageInfo.displayInfo.order - b.packageInfo.displayInfo.order,
-          );
-
-      if (availableRuntimeTargets.length === 0) {
-        log.error(
-          `No supported runtime targets were found for ${envEngineInfo.name}`,
-        );
-        continue;
-      }
-
-      statuses.push({
-        package: {
-          engineName: envEngineInfo.name,
-          engineId: envEngineInfo.uuid,
-        },
-        availableRuntimeTargets,
-      });
     }
 
-    return statuses;
+    const availableRuntimeTargets: EnginePackageLatestInfo["availableRuntimeTargets"] =
+      Object.entries(latestInfo.packages)
+        .map(([target, packageInfo]) => ({ target, packageInfo }))
+        .filter((runtimeTargetInfo) =>
+          isSupportedTarget(runtimeTargetInfo.target),
+        )
+        .toSorted(
+          (a, b) =>
+            a.packageInfo.displayInfo.order - b.packageInfo.displayInfo.order,
+        );
+
+    if (availableRuntimeTargets.length === 0) {
+      throw new Error(
+        `No supported runtime targets were found for ${envEngineInfo.name}`,
+      );
+    }
+
+    return {
+      package: {
+        engineName: envEngineInfo.name,
+        engineId: envEngineInfo.uuid,
+      },
+      availableRuntimeTargets,
+    };
   }
 
   /** VVPPパッケージをダウンロードし、インストールする */
