@@ -80,22 +80,6 @@ const applySongProjectToStore = async (
     phraseSingingVolumes,
   } = songProject;
 
-  await actions.SET_TPQN({ tpqn });
-  await actions.SET_TEMPOS({ tempos });
-  await actions.SET_TIME_SIGNATURES({ timeSignatures });
-  await actions.SET_TRACKS({
-    tracks: new Map(
-      trackOrder.map((trackId): [TrackId, Track] => {
-        const projectFileTrack = tracks[trackId];
-        if (projectFileTrack == undefined) {
-          throw new Error("projectFileTrack == undefined");
-        }
-        const track = toEditorTrack(projectFileTrack);
-        return [trackId, track];
-      }),
-    ),
-  });
-
   const rendererCache: SongTrackRendererCache = {
     queryCache: new Map(
       Object.entries(phraseQueries).map(([k, v]) => [
@@ -118,6 +102,22 @@ const applySongProjectToStore = async (
   };
   void actions.SET_SONG_TRACK_RENDERER_CACHE({
     cache: rendererCache,
+  });
+
+  await actions.SET_TPQN({ tpqn });
+  await actions.SET_TEMPOS({ tempos });
+  await actions.SET_TIME_SIGNATURES({ timeSignatures });
+  await actions.SET_TRACKS({
+    tracks: new Map(
+      trackOrder.map((trackId): [TrackId, Track] => {
+        const projectFileTrack = tracks[trackId];
+        if (projectFileTrack == undefined) {
+          throw new Error("projectFileTrack == undefined");
+        }
+        const track = toEditorTrack(projectFileTrack);
+        return [trackId, track];
+      }),
+    ),
   });
 };
 
