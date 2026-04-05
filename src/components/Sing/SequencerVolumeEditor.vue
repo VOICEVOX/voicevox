@@ -4,8 +4,22 @@
     class="volume-editor"
     :class="cursorClass"
     @pointerdown="onSurfacePointerDown"
+    @pointermove="onSurfacePointerMove"
+    @pointerleave="onSurfacePointerLeave"
   >
     <canvas ref="canvas" class="volume-editor-canvas"></canvas>
+    <div class="volume-editor-disabled-overlay">
+      <div
+        v-for="rect in disabledOverlayRects"
+        :key="rect.key"
+        class="volume-editor-disabled-rect"
+        :class="{ 'is-dark': isDark }"
+        :style="{
+          left: `${rect.x}px`,
+          width: `${rect.width}px`,
+        }"
+      ></div>
+    </div>
     <SequencerVolumeToolPalette
       class="volume-tool-palette"
       :sequencerVolumeTool="tool"
@@ -50,6 +64,13 @@ import type { VolumeSegment } from "@/sing/graphics/volumeLine";
 import { Color } from "@/sing/graphics/lineStrip";
 import { useSequencerGrid } from "@/composables/useSequencerGridPattern";
 import SequencerVolumeToolPalette from "@/components/Sing/SequencerVolumeToolPalette.vue";
+import {
+  getOverlappingVolumeEditableFrameRanges,
+  isFrameInVolumeEditableRange,
+  maskVolumeEditDataByEditableRanges,
+  mergeVolumeEditableFrameRanges,
+  type VolumeEditableFrameRange,
+} from "@/sing/volumeEditRanges";
 
 const props = defineProps<{
   offsetX: number;
@@ -70,7 +91,9 @@ const KEY_COLUMN_WIDTH_PX = 48; // ScoreSequencerの左側キー領域と合わ�
 const { warn } = createLogger("SequencerVolumeEditor");
 const store = useStore();
 const { volumePreviewEdit, stateMachineProcess, previewMode, cursorState } =
-  useVolumeEditorStateMachine(store);
+  useVolumeEditorStateMachine(store, {
+    getEditableFrameRanges: () => editableFrameRanges.value,
+  });
 
 const tool = computed<VolumeEditTool>(() => store.state.sequencerVolumeTool);
 const selectedTrackId = computed(() => store.getters.SELECTED_TRACK_ID);
@@ -105,7 +128,8 @@ const setTool = (value: VolumeEditTool) => {
 // Mapの中身更新も検知するためのシグネチャ
 const phraseSignature = computed(() =>
   [...store.state.phrases.values()].map(
-    (phrase) => `${phrase.trackId}:${phrase.startTime}:${phrase.notes.length}`,
+    (phrase) =>
+      `${phrase.trackId}:${phrase.startTime}:${phrase.notes.length}:${phrase.minNonPauseStartFrame}:${phrase.maxNonPauseEndFrame}`,
   ),
 );
 const phraseQuerySignature = computed(() =>
@@ -151,6 +175,9 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => [
 ]);
 
 const cursorClass = computed(() => {
+  if (isPointerOnDisabledArea.value) {
+    return "cursor-not-allowed";
+  }
   switch (cursorState.value) {
     case "DRAW":
       return "cursor-draw";
@@ -188,9 +215,9 @@ let originalFramewiseCache: number[] = [];
 let hasOriginalFramewiseCache = false;
 let originalFrameRateCache = 0;
 let originalTrackIdCache: TrackId | undefined;
-const previewEraseRange = ref<{ startBaseX: number; endBaseX: number } | null>(
-  null,
-);
+const editableFrameRanges = ref<VolumeEditableFrameRange[]>([]);
+const previewEraseRanges = ref<{ startBaseX: number; endBaseX: number }[]>([]);
+const hoveredFrame = ref<number | null>(null);
 
 const gridPatterns = useSequencerGrid({
   timeSignatures: toRef(() => timeSignatures.value),
@@ -220,6 +247,94 @@ const frameToBaseX = (frame: number, frameRate: number) => {
   const ticks = secondToTick(seconds, rawTempos, tpqn.value);
   return tickToBaseX(ticks, tpqn.value);
 };
+
+const timelineFrameLength = computed(() => {
+  const frameRate = editorFrameRate.value;
+  if (frameRate <= 0) {
+    return 1;
+  }
+  const totalTicks = getTotalTicks(
+    timeSignatures.value,
+    numMeasures.value,
+    tpqn.value,
+  );
+  const totalSeconds = tickToSecond(totalTicks, tempos.value, tpqn.value);
+  return Math.max(Math.round(totalSeconds * frameRate), 1);
+});
+
+const frameToScreenX = (frame: number, frameRate: number) => {
+  return (
+    frameToBaseX(frame, frameRate) * sequencerZoomX.value -
+    props.offsetX +
+    KEY_COLUMN_WIDTH_PX
+  );
+};
+
+const editableFrameRangeToVisibleRect = (
+  startFrame: number,
+  endFrame: number,
+) => {
+  const width = viewportWidth.value;
+  const frameRate = editorFrameRate.value;
+  if (width == undefined || frameRate <= 0 || startFrame >= endFrame) {
+    return undefined;
+  }
+
+  const startX = frameToScreenX(startFrame, frameRate);
+  const endX = frameToScreenX(endFrame, frameRate);
+  const clampedStart = Math.max(0, startX);
+  const clampedEnd = Math.min(width, endX);
+  if (clampedEnd <= clampedStart) {
+    return undefined;
+  }
+  return {
+    x: clampedStart,
+    width: clampedEnd - clampedStart,
+  };
+};
+
+const disabledOverlayRects = computed(() => {
+  const rects: { key: string; x: number; width: number }[] = [];
+  let cursor = 0;
+  for (const range of editableFrameRanges.value) {
+    if (cursor < range.startFrame) {
+      const rect = editableFrameRangeToVisibleRect(cursor, range.startFrame);
+      if (rect != undefined) {
+        rects.push({
+          key: `${cursor}-${range.startFrame}`,
+          ...rect,
+        });
+      }
+    }
+    cursor = Math.max(cursor, range.endFrame);
+  }
+  // 最後の editable range 以降はビューポート右端まで覆う
+  const width = viewportWidth.value;
+  if (width != undefined) {
+    const cursorX =
+      editableFrameRanges.value.length > 0
+        ? frameToScreenX(cursor, editorFrameRate.value)
+        : 0;
+    if (cursorX < width) {
+      rects.push({
+        key: `trailing-${cursor}`,
+        x: Math.max(0, cursorX),
+        width: width - Math.max(0, cursorX),
+      });
+    }
+  }
+  return rects;
+});
+
+const isPointerOnDisabledArea = computed(() => {
+  if (hoveredFrame.value == null) {
+    return false;
+  }
+  return !isFrameInVolumeEditableRange(
+    hoveredFrame.value,
+    editableFrameRanges.value,
+  );
+});
 
 const buildSegments = (framewiseData: number[], frameRate: number) => {
   const segments: VolumeSegment[] = [];
@@ -314,8 +429,10 @@ const render = () => {
   // 削除中のプレビューオーバーレイ(半透明)
   if (erasePreviewOverlay) {
     erasePreviewOverlay.clear();
-    const range = previewEraseRange.value;
-    if (range && range.endBaseX > range.startBaseX) {
+    for (const range of previewEraseRanges.value) {
+      if (range.endBaseX <= range.startBaseX) {
+        continue;
+      }
       const startX =
         range.startBaseX * viewInfo.zoomX -
         viewInfo.offsetX +
@@ -357,13 +474,7 @@ const refreshOriginalVolumeSegments = () => {
   }
   const trackId = selectedTrackId.value;
 
-  const totalTicks = getTotalTicks(
-    timeSignatures.value,
-    numMeasures.value,
-    tpqn.value,
-  );
-  const totalSeconds = tickToSecond(totalTicks, tempos.value, tpqn.value);
-  const baseFrameLength = Math.max(Math.round(totalSeconds * frameRate), 1);
+  const baseFrameLength = timelineFrameLength.value;
 
   const originalFramewise = new Array<number>(baseFrameLength).fill(
     VALUE_INDICATING_NO_DATA,
@@ -407,8 +518,91 @@ const refreshOriginalVolumeSegments = () => {
   hasOriginalFramewiseCache = true;
   originalFrameRateCache = frameRate;
   originalTrackIdCache = trackId;
-  volumeOriginalSegmentsData = buildSegments(originalFramewise, frameRate);
+
+  // 編集可能区間のみ描画する（ポーズ区間のボリュームを非表示にする）
+  const maskedOriginal = maskVolumeEditDataByEditableRanges(
+    originalFramewise,
+    0,
+    editableFrameRanges.value,
+  );
+  volumeOriginalSegmentsData = buildSegments(maskedOriginal, frameRate);
   renderInNextFrame = true;
+};
+
+const refreshEditableFrameRanges = () => {
+  const frameRate = editorFrameRate.value;
+  if (frameRate <= 0) {
+    editableFrameRanges.value = [];
+    return;
+  }
+
+  const ranges: VolumeEditableFrameRange[] = [];
+  for (const phrase of store.state.phrases.values()) {
+    if (phrase.trackId !== selectedTrackId.value) {
+      continue;
+    }
+    if (phrase.queryKey == undefined) {
+      continue;
+    }
+
+    const phraseQuery = store.state.phraseQueries.get(phrase.queryKey);
+    if (phraseQuery?.volume == undefined) {
+      continue;
+    }
+    if (phraseQuery.frameRate !== frameRate) {
+      throw new Error(
+        `Frame rate mismatch: expected ${frameRate}, got ${phraseQuery.frameRate}. queryKey: ${phrase.queryKey}`,
+      );
+    }
+
+    const phraseStartFrame = Math.round(phrase.startTime * frameRate);
+    const phraseEndFrame = phraseStartFrame + phraseQuery.volume.length;
+    const startFrame = Math.max(
+      0,
+      phraseStartFrame + (phrase.minNonPauseStartFrame ?? 0),
+    );
+    const endFrame = Math.min(
+      phraseEndFrame,
+      phraseStartFrame +
+        (phrase.maxNonPauseEndFrame ?? phraseQuery.volume.length),
+    );
+    if (startFrame < endFrame) {
+      ranges.push({ startFrame, endFrame });
+    }
+  }
+
+  const newRanges = mergeVolumeEditableFrameRanges(ranges);
+  editableFrameRanges.value = newRanges;
+
+  // 不変条件の維持: editableRanges 外の編集データを掃除
+  // NOTE: トラック上のフレーズのうち phraseQuery が未確定のものがある場合は
+  // editable range が不完全なため prune をスキップする。
+  // 全 phrase の query が揃ってから prune を行う。
+  const trackId = selectedTrackId.value;
+  const hasUnresolvedPhrases = [...store.state.phrases.values()].some(
+    (phrase) =>
+      phrase.trackId === trackId &&
+      (phrase.queryKey == undefined ||
+        store.state.phraseQueries.get(phrase.queryKey)?.volume == undefined),
+  );
+  if (hasUnresolvedPhrases) {
+    return;
+  }
+  const currentEditData = selectedTrack.value?.volumeEditData ?? [];
+  if (currentEditData.length > 0) {
+    const pruned = maskVolumeEditDataByEditableRanges(
+      currentEditData,
+      0,
+      newRanges,
+    );
+    if (pruned.some((v, i) => v !== currentEditData[i])) {
+      store.mutations.SET_VOLUME_EDIT_DATA({
+        volumeArray: pruned,
+        startFrame: 0,
+        trackId,
+      });
+    }
+  }
 };
 
 const refreshEffectiveVolumeSegments = () => {
@@ -430,6 +624,7 @@ const refreshEffectiveVolumeSegments = () => {
   }
 
   const originalFramewise = originalFramewiseCache;
+  const editableRanges = editableFrameRanges.value;
   let maxFrame = Math.max(originalFramewise.length, 1);
 
   const baseEditData = selectedTrack.value?.volumeEditData ?? [];
@@ -452,12 +647,18 @@ const refreshEffectiveVolumeSegments = () => {
           ),
         );
       }
-      for (const [i, rawValue] of preview.data.entries()) {
-        const value = Math.min(Math.max(rawValue, 0), 1);
-        editFramewise[startFrame + i] = value;
+      // プレビューデータを editableRanges でマスクして適用
+      const maskedPreview = maskVolumeEditDataByEditableRanges(
+        preview.data,
+        preview.startFrame,
+        editableRanges,
+      );
+      for (const [i, rawValue] of maskedPreview.entries()) {
+        if (rawValue === VALUE_INDICATING_NO_DATA) continue;
+        editFramewise[startFrame + i] = Math.min(Math.max(rawValue, 0), 1);
       }
       maxFrame = Math.max(maxFrame, endFrame);
-      previewEraseRange.value = null;
+      previewEraseRanges.value = [];
     } else if (preview.type === "erase") {
       const start = Math.max(0, preview.startFrame);
       const end = start + preview.frameLength;
@@ -468,15 +669,27 @@ const refreshEffectiveVolumeSegments = () => {
           ),
         );
       }
-      editFramewise.fill(VALUE_INDICATING_NO_DATA, start, end);
+      const overlaps = getOverlappingVolumeEditableFrameRanges(
+        start,
+        preview.frameLength,
+        editableRanges,
+      );
+      for (const overlap of overlaps) {
+        editFramewise.fill(
+          VALUE_INDICATING_NO_DATA,
+          overlap.startFrame,
+          overlap.endFrame,
+        );
+      }
       maxFrame = Math.max(maxFrame, end);
-      const startBaseX = frameToBaseX(start, frameRate);
-      const endBaseX = frameToBaseX(end, frameRate);
-      previewEraseRange.value = { startBaseX, endBaseX };
+      previewEraseRanges.value = overlaps.map((overlap) => ({
+        startBaseX: frameToBaseX(overlap.startFrame, frameRate),
+        endBaseX: frameToBaseX(overlap.endFrame, frameRate),
+      }));
     }
   }
   if (preview == undefined) {
-    previewEraseRange.value = null;
+    previewEraseRanges.value = [];
   }
 
   const totalFrames = Math.max(
@@ -491,7 +704,6 @@ const refreshEffectiveVolumeSegments = () => {
       ),
     );
   }
-
   const effectiveFramewise = new Array<number>(totalFrames).fill(
     VALUE_INDICATING_NO_DATA,
   );
@@ -505,15 +717,22 @@ const refreshEffectiveVolumeSegments = () => {
     }
   }
 
-  volumeEffectiveSegmentsData = buildSegments(effectiveFramewise, frameRate);
+  // 編集不可区間のボリュームを非表示にする
+  const maskedEffective = maskVolumeEditDataByEditableRanges(
+    effectiveFramewise,
+    0,
+    editableRanges,
+  );
+
+  volumeEffectiveSegmentsData = buildSegments(maskedEffective, frameRate);
   renderInNextFrame = true;
 };
 
 const dispatchVolumeEditorEvent = (
   pointerEvent: PointerEvent,
   targetArea: "Editor" | "Window",
+  position = computeViewportPosition(pointerEvent),
 ) => {
-  const position = computeViewportPosition(pointerEvent);
   stateMachineProcess({
     type: "pointerEvent",
     targetArea,
@@ -551,6 +770,10 @@ const computeViewportPosition = (pointerEvent: PointerEvent) => {
   };
 };
 
+const updateHoveredFrame = (pointerEvent: PointerEvent) => {
+  hoveredFrame.value = computeViewportPosition(pointerEvent).frame;
+};
+
 const onSurfacePointerDown = (event: PointerEvent) => {
   if (event.button !== 0) {
     return;
@@ -564,12 +787,27 @@ const onSurfacePointerDown = (event: PointerEvent) => {
       height: rect.height,
     };
   }
+  const position = computeViewportPosition(event);
+  hoveredFrame.value = position.frame;
   if (store.state.parameterPanelEditTarget !== "VOLUME") {
     void store.actions.SET_PARAMETER_PANEL_EDIT_TARGET({
       editTarget: "VOLUME",
     });
   }
-  dispatchVolumeEditorEvent(event, "Editor");
+  if (
+    !isFrameInVolumeEditableRange(position.frame, editableFrameRanges.value)
+  ) {
+    return;
+  }
+  dispatchVolumeEditorEvent(event, "Editor", position);
+};
+
+const onSurfacePointerMove = (event: PointerEvent) => {
+  updateHoveredFrame(event);
+};
+
+const onSurfacePointerLeave = () => {
+  hoveredFrame.value = null;
 };
 
 const onWindowPointerMove = (event: PointerEvent) => {
@@ -618,6 +856,7 @@ watch(
     try {
       await using _lock = await refreshVolumeSegmentsLock.acquire();
       if (isMounted) {
+        refreshEditableFrameRanges();
         refreshOriginalVolumeSegments();
         refreshEffectiveVolumeSegments();
       }
@@ -766,5 +1005,26 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
   display: block;
+}
+
+.volume-editor-disabled-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.volume-editor-disabled-rect {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: rgb(0 0 0 / 0.08);
+
+  &.is-dark {
+    background: rgb(0 0 0 / 0.35);
+  }
+}
+
+.cursor-not-allowed {
+  cursor: not-allowed;
 }
 </style>

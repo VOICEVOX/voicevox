@@ -11,9 +11,13 @@ import type {
 import type { TrackId } from "@/type/preload";
 import type { Tempo } from "@/domain/project/type";
 import { createVolumeEditorStateMachine } from "@/sing/volumeEditorStateMachine";
+import type { VolumeEditableFrameRange } from "@/sing/volumeEditRanges";
 
 export const useVolumeEditorStateMachine = (
   store: VolumeEditorPartialStore,
+  options: {
+    getEditableFrameRanges: () => readonly VolumeEditableFrameRange[];
+  },
 ) => {
   const refs = {
     // NOTE: data配列が大きくなるため、shallowRefで深いリアクティブ化を避ける
@@ -43,6 +47,7 @@ export const useVolumeEditorStateMachine = (
     {
       ...refs,
       ...computedRefs,
+      getEditableFrameRanges: options.getEditableFrameRanges,
       store,
     },
     idleStateId.value,
