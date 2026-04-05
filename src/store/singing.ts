@@ -3757,10 +3757,11 @@ export const singingCommandStore = transformCommandStore(
               "The targets contain noteId that has no existing phoneme timing edits.",
             );
           }
-          const currentPhonemeIndexes = currentEdits.map(
-            (value) => value.phonemeIndexInNote,
-          );
-          if (!currentPhonemeIndexes.includes(target.phonemeIndexInNote)) {
+          if (
+            !currentEdits.some(
+              (edit) => edit.phonemeIndexInNote === target.phonemeIndexInNote,
+            )
+          ) {
             throw new Error(
               "The targets contain phonemeIndexInNote that does not exist in current edits.",
             );
