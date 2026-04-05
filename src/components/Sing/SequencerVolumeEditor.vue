@@ -8,18 +8,6 @@
     @pointerleave="onSurfacePointerLeave"
   >
     <canvas ref="canvas" class="volume-editor-canvas"></canvas>
-    <div class="volume-editor-disabled-overlay">
-      <div
-        v-for="rect in disabledOverlayRects"
-        :key="rect.key"
-        class="volume-editor-disabled-rect"
-        :class="{ 'is-dark': isDark }"
-        :style="{
-          left: `${rect.x}px`,
-          width: `${rect.width}px`,
-        }"
-      ></div>
-    </div>
     <SequencerVolumeToolPalette
       class="volume-tool-palette"
       :sequencerVolumeTool="tool"
@@ -197,6 +185,7 @@ let renderer: PIXI.Renderer | undefined;
 let stage: PIXI.Container | undefined;
 let gridGraphics: PIXI.Graphics | undefined;
 let erasePreviewOverlay: PIXI.Graphics | undefined;
+let disabledOverlayGraphics: PIXI.Graphics | undefined;
 let originalVolumeLine: VolumeLine | undefined;
 let editedVolumeLine: VolumeLine | undefined;
 let requestId: number | undefined;
@@ -270,62 +259,6 @@ const frameToScreenX = (frame: number, frameRate: number) => {
   );
 };
 
-const editableFrameRangeToVisibleRect = (
-  startFrame: number,
-  endFrame: number,
-) => {
-  const width = viewportWidth.value;
-  const frameRate = editorFrameRate.value;
-  if (width == undefined || frameRate <= 0 || startFrame >= endFrame) {
-    return undefined;
-  }
-
-  const startX = frameToScreenX(startFrame, frameRate);
-  const endX = frameToScreenX(endFrame, frameRate);
-  const clampedStart = Math.max(0, startX);
-  const clampedEnd = Math.min(width, endX);
-  if (clampedEnd <= clampedStart) {
-    return undefined;
-  }
-  return {
-    x: clampedStart,
-    width: clampedEnd - clampedStart,
-  };
-};
-
-const disabledOverlayRects = computed(() => {
-  const rects: { key: string; x: number; width: number }[] = [];
-  let cursor = 0;
-  for (const range of editableFrameRanges.value) {
-    if (cursor < range.startFrame) {
-      const rect = editableFrameRangeToVisibleRect(cursor, range.startFrame);
-      if (rect != undefined) {
-        rects.push({
-          key: `${cursor}-${range.startFrame}`,
-          ...rect,
-        });
-      }
-    }
-    cursor = Math.max(cursor, range.endFrame);
-  }
-  // 最後の editable range 以降はビューポート右端まで覆う
-  const width = viewportWidth.value;
-  if (width != undefined) {
-    const cursorX =
-      editableFrameRanges.value.length > 0
-        ? frameToScreenX(cursor, editorFrameRate.value)
-        : 0;
-    if (cursorX < width) {
-      rects.push({
-        key: `trailing-${cursor}`,
-        x: Math.max(0, cursorX),
-        width: width - Math.max(0, cursorX),
-      });
-    }
-  }
-  return rects;
-});
-
 const isPointerOnDisabledArea = computed(() => {
   if (hoveredFrame.value == null) {
     return false;
@@ -374,8 +307,12 @@ const updateGrid = () => {
   gridGraphics.clear();
   const height = viewportHeight.value;
   const width = viewportWidth.value;
-  const beatColor = isDark.value ? 0x4a4a4a : 0xc4c4c4;
-  const measureColor = isDark.value ? 0x6b6b6b : 0x8a8a8a;
+  // NOTE: ScoreSequencerのSVGグリッドは sing-colors.scss の CSS変数で色指定しているが、
+  // PIXI.GraphicsではCSS変数を参照できないため、対応する近似hex値をハードコードしている。
+  // sing-grid-beat-line: light oklch(lr-85), dark oklch(lr-4)
+  // sing-grid-measure-line: light oklch(lr-75), dark oklch(lr-40)
+  const beatColor = isDark.value ? 0x161616 : 0xc4c4c4;
+  const measureColor = isDark.value ? 0x585858 : 0xadadad;
 
   for (const pattern of gridPatterns.value) {
     const measuresInPattern = Math.round(pattern.width / pattern.patternWidth);
@@ -388,7 +325,7 @@ const updateGrid = () => {
       if (measureX < -1 || measureX > width + 1) {
         continue;
       }
-      gridGraphics.lineStyle(1, measureColor, 0.35);
+      gridGraphics.lineStyle(1, measureColor, 1);
       gridGraphics.moveTo(measureX, 0);
       gridGraphics.lineTo(measureX, height);
 
@@ -400,7 +337,7 @@ const updateGrid = () => {
         if (beatX < -1 || beatX > width + 1) {
           continue;
         }
-        gridGraphics.lineStyle(1, beatColor, 0.22);
+        gridGraphics.lineStyle(1, beatColor, 1);
         gridGraphics.moveTo(beatX, 0);
         gridGraphics.lineTo(beatX, height);
       }
@@ -423,6 +360,50 @@ const render = () => {
     offsetX: props.offsetX,
     leftPadding: KEY_COLUMN_WIDTH_PX,
   };
+
+  // 編集不可区間のオーバーレイ
+  if (disabledOverlayGraphics) {
+    disabledOverlayGraphics.clear();
+    const overlayAlpha = isDark.value ? 0.35 : 0.08;
+    const frameRate = editorFrameRate.value;
+    if (frameRate > 0) {
+      let cursor = 0;
+      for (const range of editableFrameRanges.value) {
+        if (cursor < range.startFrame) {
+          const startX = frameToScreenX(cursor, frameRate);
+          const endX = frameToScreenX(range.startFrame, frameRate);
+          const clampedStart = Math.max(0, startX);
+          const clampedEnd = Math.min(viewInfo.viewportWidth, endX);
+          if (clampedEnd > clampedStart) {
+            disabledOverlayGraphics.beginFill(0x000000, overlayAlpha);
+            disabledOverlayGraphics.drawRect(
+              clampedStart,
+              0,
+              clampedEnd - clampedStart,
+              viewInfo.viewportHeight,
+            );
+            disabledOverlayGraphics.endFill();
+          }
+        }
+        cursor = Math.max(cursor, range.endFrame);
+      }
+      // 最後の editable range 以降
+      const trailingStartX =
+        editableFrameRanges.value.length > 0
+          ? frameToScreenX(cursor, frameRate)
+          : 0;
+      if (trailingStartX < viewInfo.viewportWidth) {
+        disabledOverlayGraphics.beginFill(0x000000, overlayAlpha);
+        disabledOverlayGraphics.drawRect(
+          Math.max(0, trailingStartX),
+          0,
+          viewInfo.viewportWidth - Math.max(0, trailingStartX),
+          viewInfo.viewportHeight,
+        );
+        disabledOverlayGraphics.endFill();
+      }
+    }
+  }
 
   updateGrid();
 
@@ -915,6 +896,7 @@ onMounted(() => {
     height: viewportHeight.value,
   });
   stage = new PIXI.Container();
+  disabledOverlayGraphics = new PIXI.Graphics();
   erasePreviewOverlay = new PIXI.Graphics();
   gridGraphics = new PIXI.Graphics();
   originalVolumeLine = new VolumeLine({
@@ -931,8 +913,9 @@ onMounted(() => {
     isVisible: true,
   });
 
-  stage.addChild(erasePreviewOverlay); // 下地
-  stage.addChild(gridGraphics); // グリッドはオーバーレイの上に
+  stage.addChild(disabledOverlayGraphics); // 編集不可区間（最背面）
+  stage.addChild(gridGraphics); // グリッド
+  stage.addChild(erasePreviewOverlay); // 削除プレビュー
   stage.addChild(originalVolumeLine.displayObject);
   stage.addChild(editedVolumeLine.displayObject);
 
@@ -983,6 +966,7 @@ onUnmounted(() => {
   originalVolumeLine?.destroy();
   editedVolumeLine?.destroy();
   gridGraphics?.destroy();
+  disabledOverlayGraphics?.destroy();
   stage?.destroy();
   renderer?.destroy(true);
   resizeObserver?.disconnect();
@@ -1005,23 +989,6 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
   display: block;
-}
-
-.volume-editor-disabled-overlay {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.volume-editor-disabled-rect {
-  position: absolute;
-  top: 0;
-  height: 100%;
-  background: rgb(0 0 0 / 0.08);
-
-  &.is-dark {
-    background: rgb(0 0 0 / 0.35);
-  }
 }
 
 .cursor-not-allowed {
