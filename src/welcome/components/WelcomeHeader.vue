@@ -11,7 +11,7 @@
         <BaseButton
           label="エディタを起動"
           disabled
-          @click="handleLaunchEditor"
+          @click="store.switchToMainWindow"
         />
       </BaseTooltip>
     </QToolbar>
@@ -21,27 +21,8 @@
 <script setup lang="ts">
 import BaseButton from "@/components/Base/BaseButton.vue";
 import BaseTooltip from "@/components/Base/BaseTooltip.vue";
+import { useStore } from "@/welcome/store";
 
-export type LaunchEditorState =
-  | {
-      enabled: true;
-    }
-  | {
-      enabled: false;
-      reason: string;
-    };
-
-const props = defineProps<{
-  launchEditorState: LaunchEditorState;
-}>();
-const emit = defineEmits<{
-  (event: "launch-editor"): void;
-}>();
-
-const handleLaunchEditor = () => {
-  if (!props.launchEditorState.enabled) {
-    return;
-  }
-  emit("launch-editor");
-};
+const store = useStore();
+const { launchEditorState } = store;
 </script>

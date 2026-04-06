@@ -3,7 +3,7 @@
     <TooltipProvider disableHoverableContent :delayDuration="500">
       <MenuBar />
       <QLayout reveal container>
-        <WelcomeHeader :launchEditorState @launchEditor="switchToMainWindow" />
+        <WelcomeHeader />
 
         <QPageContainer>
           <QPage class="welcome-page">
@@ -14,56 +14,7 @@
                   以下のエンジン一覧から、インストールまたは更新を行ってください。
                 </BaseDocumentView>
 
-                <div
-                  v-if="
-                    loadingEngineInfosState.type === 'uninitialized' ||
-                    loadingEngineInfosState.type === 'loadingCurrent'
-                  "
-                  class="engine-loading"
-                >
-                  <QSpinner color="primary" size="2.5rem" :thickness="5" />
-                  <div class="loading-text">読み込み中...</div>
-                </div>
-                <template v-else-if="loadingEngineInfosState.type === 'loaded'">
-                  <EngineCard
-                    v-for="engine in loadingEngineInfosState.engineInfos"
-                    :key="engine.package.engineId"
-                    :engineName="engine.package.engineName"
-                    :currentInfo="engine.currentInfo"
-                    :remoteInfo="
-                      engine.latestInfo.type === 'loading'
-                        ? { type: 'loading' as const }
-                        : engine.latestInfo.type === 'fetched'
-                          ? {
-                              type: 'fetched' as const,
-                              latestInfo: engine.latestInfo.info,
-                              selectedRuntimeTarget:
-                                getSelectedRuntimeTarget(engine)!,
-                              progressInfo: getEngineProgress(
-                                engine.package.engineId,
-                              ) ?? { type: 'idle' as const },
-                            }
-                          : {
-                              type: 'fetchError' as const,
-                              message:
-                                'オンラインからエンジン情報を取得できませんでした。',
-                            }
-                    "
-                    @selectRuntimeTarget="
-                      (target) =>
-                        setSelectedRuntimeTarget(
-                          engine.package.engineId,
-                          target,
-                        )
-                    "
-                    @installEngine="
-                      () => installEngine(engine.package.engineId)
-                    "
-                    @retryFetchRemoteInfo="
-                      () => fetchEngineRemoteInfo(engine.package.engineId)
-                    "
-                  />
-                </template>
+                <EngineList />
               </div>
             </BaseScrollArea>
           </QPage>
@@ -74,249 +25,20 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { onMounted } from "vue";
 import { TooltipProvider } from "reka-ui";
 import MenuBar from "./MenuBar.vue";
-import WelcomeHeader, { type LaunchEditorState } from "./WelcomeHeader.vue";
-import EngineCard from "./EngineCard.vue";
+import WelcomeHeader from "./WelcomeHeader.vue";
+import EngineList from "./EngineList.vue";
 import ErrorBoundary from "@/components/ErrorBoundary.vue";
 import BaseScrollArea from "@/components/Base/BaseScrollArea.vue";
 import BaseDocumentView from "@/components/Base/BaseDocumentView.vue";
-import { showErrorDialog } from "@/components/Dialog/Dialog";
-import type {
-  EnginePackageBase,
-  EnginePackageCurrentInfo,
-  EnginePackageLatestInfo,
-} from "@/domain/enginePackage";
-import type { RuntimeTarget } from "@/domain/defaultEngine/latestDefaultEngine";
-import { setThemeToCss } from "@/domain/dom";
-import { themes } from "@/domain/theme";
-import type { EngineId } from "@/type/preload";
-import {
-  assertNonNullable,
-  ExhaustiveError,
-  UnreachableError,
-} from "@/type/utility";
+import { provideWelcomeStore } from "@/welcome/store";
 
-type LatestInfoState =
-  | { type: "loading" }
-  | { type: "fetched"; info: EnginePackageLatestInfo }
-  | { type: "fetchError" };
-
-type DisplayEngineInfo = {
-  package: EnginePackageBase;
-  currentInfo: EnginePackageCurrentInfo;
-  latestInfo: LatestInfoState;
-};
-
-type LoadingEngineInfosState =
-  | { type: "uninitialized" }
-  | { type: "loadingCurrent" }
-  | { type: "loaded"; engineInfos: DisplayEngineInfo[] };
-
-type EngineProgressInfo = {
-  progress: number;
-  type: "download" | "install";
-};
-
-const loadingEngineInfosState = ref<LoadingEngineInfosState>({
-  type: "uninitialized",
-});
-const runtimeTargetSelections = ref<
-  Record<EngineId, RuntimeTarget | undefined>
->({});
-const engineProgressInfo = ref<Record<EngineId, EngineProgressInfo>>({});
-
-const getDefaultRuntimeTarget = (
-  engineInfo: DisplayEngineInfo,
-): RuntimeTarget | undefined => {
-  if (engineInfo.latestInfo.type !== "fetched") {
-    return undefined;
-  }
-  const defaultRuntimeTargetInfo =
-    engineInfo.latestInfo.info.availableRuntimeTargets.find(
-      (targetInfo) => targetInfo.packageInfo.displayInfo.default,
-    );
-  assertNonNullable(
-    defaultRuntimeTargetInfo,
-    `Default runtime target not found: engineId=${engineInfo.package.engineId}`,
-  );
-  return defaultRuntimeTargetInfo.target;
-};
-
-const getSelectedRuntimeTarget = (
-  engineInfo: DisplayEngineInfo,
-): RuntimeTarget | undefined => {
-  return (
-    runtimeTargetSelections.value[engineInfo.package.engineId] ??
-    getDefaultRuntimeTarget(engineInfo)
-  );
-};
-
-const setSelectedRuntimeTarget = (
-  engineId: EngineId,
-  target: RuntimeTarget,
-) => {
-  runtimeTargetSelections.value = {
-    ...runtimeTargetSelections.value,
-    [engineId]: target,
-  };
-};
-
-const launchEditorState = computed<LaunchEditorState>(() => {
-  if (
-    loadingEngineInfosState.value.type === "uninitialized" ||
-    loadingEngineInfosState.value.type === "loadingCurrent"
-  ) {
-    return {
-      enabled: false,
-      reason: "エンジン情報を読み込み中です。",
-    };
-  }
-  if (Object.keys(engineProgressInfo.value).length > 0) {
-    return {
-      enabled: false,
-      reason: "エンジンをインストール中です。",
-    };
-  }
-  if (loadingEngineInfosState.value.type !== "loaded") {
-    throw new ExhaustiveError(loadingEngineInfosState.value);
-  }
-  if (
-    !loadingEngineInfosState.value.engineInfos.some(
-      ({ currentInfo }) => currentInfo.installed.status !== "notInstalled",
-    )
-  ) {
-    return {
-      enabled: false,
-      reason: "エンジンがインストールされていません。",
-    };
-  }
-
-  return {
-    enabled: true,
-  };
-});
-
-const switchToMainWindow = () => {
-  if (!launchEditorState.value.enabled) {
-    throw new UnreachableError();
-  }
-  void window.welcomeBackend.launchMainWindow();
-};
-
-const clearEngineProgress = (engineId: EngineId) => {
-  const { [engineId]: _, ...rest } = engineProgressInfo.value;
-  engineProgressInfo.value = rest;
-};
-
-const getEngineProgress = (engineId: EngineId) =>
-  engineProgressInfo.value[engineId];
-
-const updateLatestInfoState = (
-  engineId: EngineId,
-  latestInfo: LatestInfoState,
-) => {
-  if (loadingEngineInfosState.value.type !== "loaded") {
-    return;
-  }
-  loadingEngineInfosState.value = {
-    type: "loaded",
-    engineInfos: loadingEngineInfosState.value.engineInfos.map((engineInfo) =>
-      engineInfo.package.engineId === engineId
-        ? {
-            ...engineInfo,
-            latestInfo,
-          }
-        : engineInfo,
-    ),
-  };
-};
-
-const fetchEngineRemoteInfo = async (engineId: EngineId) => {
-  updateLatestInfoState(engineId, { type: "loading" });
-  try {
-    const info =
-      await window.welcomeBackend.fetchEnginePackageRemoteInfo(engineId);
-    updateLatestInfoState(engineId, { type: "fetched", info });
-  } catch (error) {
-    window.welcomeBackend.logWarn(
-      `Engine package ${engineId} remote info fetch failed`,
-      error,
-    );
-    updateLatestInfoState(engineId, { type: "fetchError" });
-  }
-};
-
-const installEngine = async (engineId: EngineId) => {
-  if (loadingEngineInfosState.value.type !== "loaded") {
-    throw new UnreachableError();
-  }
-  const engineInfo = loadingEngineInfosState.value.engineInfos.find(
-    (info) => info.package.engineId === engineId,
-  );
-  assertNonNullable(engineInfo, `Engine info not found: engineId=${engineId}`);
-  const target = getSelectedRuntimeTarget(engineInfo);
-  assertNonNullable(
-    target,
-    `Runtime target not found: engineId=${engineInfo.package.engineId}`,
-  );
-  engineProgressInfo.value[engineId] = { progress: 0, type: "download" };
-  try {
-    console.log(`Engine package ${engineId} installation started.`);
-    await window.welcomeBackend.installEngine({
-      engineId,
-      target,
-    });
-    console.log(`Engine package ${engineId} installation completed.`);
-  } catch (error) {
-    window.welcomeBackend.logError(
-      `Engine package ${engineId} installation failed`,
-      error,
-    );
-    await showErrorDialog("エンジンのインストールに失敗しました", error);
-  } finally {
-    clearEngineProgress(engineId);
-    void fetchInstalledEngineInfos();
-  }
-};
-
-const fetchInstalledEngineInfos = async () => {
-  loadingEngineInfosState.value = { type: "loadingCurrent" };
-  const currentEngineInfos =
-    await window.welcomeBackend.fetchEnginePackageLocalInfos();
-  loadingEngineInfosState.value = {
-    type: "loaded",
-    engineInfos: currentEngineInfos.map((currentInfo) => ({
-      package: currentInfo.package,
-      currentInfo,
-      latestInfo: { type: "loading" },
-    })),
-  };
-  await Promise.all(
-    currentEngineInfos.map((currentInfo) =>
-      fetchEngineRemoteInfo(currentInfo.package.engineId),
-    ),
-  );
-};
-
-const applyThemeFromConfig = async () => {
-  const currentTheme = await window.welcomeBackend.getCurrentTheme();
-  const theme = themes.find((value) => value.name === currentTheme);
-  assertNonNullable(theme, `Theme not found: ${currentTheme}`);
-  setThemeToCss(theme);
-};
+const store = provideWelcomeStore();
 
 onMounted(() => {
-  void applyThemeFromConfig();
-
-  window.welcomeBackend.registerIpcHandler({
-    updateEngineDownloadProgress: ({ engineId, progress, type }) => {
-      engineProgressInfo.value[engineId] = { progress, type };
-    },
-  });
-
-  void fetchInstalledEngineInfos();
+  store.initialize();
 });
 </script>
 
@@ -325,79 +47,8 @@ onMounted(() => {
 @use "@/styles/v2/mixin" as mixin;
 @use "@/styles/v2/variables" as vars;
 
-.welcome-actions {
-  display: flex;
-  align-items: center;
-  gap: vars.$gap-1;
-  flex-wrap: wrap;
-}
-
 .welcome-page {
   padding: 0;
-}
-
-.list-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: vars.$padding-1 vars.$padding-2;
-}
-
-.list-title {
-  @include mixin.headline-2;
-}
-
-.engine-list {
-  display: flex;
-  flex-direction: column;
-  gap: vars.$gap-1;
-  padding: 0 vars.$padding-1 vars.$padding-2;
-}
-
-.listitem-main {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1;
-}
-
-.listitem-title {
-  font-weight: 600;
-}
-
-.listitem-sub {
-  display: flex;
-  flex-wrap: wrap;
-  gap: vars.$gap-1;
-  font-size: 0.75rem;
-  color: colors.$display-sub;
-}
-
-.listitem-progress {
-  font-size: 0.7rem;
-  color: colors.$display-sub;
-}
-
-.listitem-trailing {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-}
-
-.engine-loading {
-  display: grid;
-  place-items: center;
-  gap: vars.$gap-1;
-  padding: vars.$padding-2;
-  color: colors.$display-sub;
-}
-
-.loading-text {
-  font-size: 0.8rem;
-}
-
-.detail {
-  height: 100%;
 }
 
 .inner {
@@ -410,27 +61,5 @@ onMounted(() => {
 
 .welcome-intro :deep(h1) {
   margin-bottom: vars.$gap-1;
-}
-
-.section {
-  display: flex;
-  flex-direction: column;
-  gap: vars.$gap-1;
-}
-
-.section-title {
-  @include mixin.headline-3;
-}
-
-.empty-state {
-  border: 1px solid colors.$border;
-  border-radius: vars.$radius-2;
-  padding: vars.$padding-2;
-  color: colors.$display-sub;
-  background-color: colors.$background-alt;
-}
-
-.empty-title {
-  font-weight: 600;
 }
 </style>
