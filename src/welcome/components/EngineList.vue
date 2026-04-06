@@ -13,32 +13,7 @@
     <EngineCard
       v-for="engine in loadingEngineInfosState.engineInfos"
       :key="engine.package.engineId"
-      :engineName="engine.package.engineName"
-      :currentInfo="engine.currentInfo"
-      :remoteInfo="
-        engine.latestInfo.type === 'loading'
-          ? { type: 'loading' as const }
-          : engine.latestInfo.type === 'fetched'
-            ? {
-                type: 'fetched' as const,
-                latestInfo: engine.latestInfo.info,
-                selectedRuntimeTarget: store.getSelectedRuntimeTarget(engine)!,
-                progressInfo: store.getEngineProgress(
-                  engine.package.engineId,
-                ) ?? { type: 'idle' as const },
-              }
-            : {
-                type: 'fetchError' as const,
-                message: 'オンラインからエンジン情報を取得できませんでした。',
-              }
-      "
-      @selectRuntimeTarget="
-        (target) => store.setSelectedRuntimeTarget(engine.package.engineId, target)
-      "
-      @installEngine="() => store.installEngine(engine.package.engineId)"
-      @retryFetchRemoteInfo="
-        () => store.fetchEngineRemoteInfo(engine.package.engineId)
-      "
+      :engineId="engine.package.engineId"
     />
   </template>
 </template>

@@ -1,54 +1,46 @@
 <template>
   <section class="engine-card">
     <div class="engine-card-head">
-      <div class="engine-name">{{ engineName }}</div>
+      <div class="engine-name">{{ engineInfo.package.engineName }}</div>
       <span class="status-pill">{{
-        props.currentInfo.installed.status === "notInstalled"
+        engineInfo.currentInfo.installed.status === "notInstalled"
           ? "未インストール"
           : "インストール済み"
       }}</span>
     </div>
     <div class="engine-meta">
       <div>最新バージョン：{{ latestVersionLabel }}</div>
-      <div v-if="currentInfo.installed.status === 'installed'">
-        インストール済み：{{ currentInfo.installed.installedVersion }}
+      <div v-if="engineInfo.currentInfo.installed.status === 'installed'">
+        インストール済み：{{
+          engineInfo.currentInfo.installed.installedVersion
+        }}
       </div>
     </div>
-    <div
-      v-if="
-        props.remoteInfo.type === 'fetched' &&
-        props.remoteInfo.progressInfo.type !== 'idle'
-      "
-      class="engine-progress"
-    >
+    <div v-if="progressInfo != null" class="engine-progress">
       <div class="engine-progress-label">
-        {{
-          props.remoteInfo.progressInfo.type === "download"
-            ? "ダウンロード"
-            : "インストール"
-        }}
+        {{ progressInfo.type === "download" ? "ダウンロード" : "インストール" }}
       </div>
       <div class="engine-progress-bar">
         <div
           class="engine-progress-fill"
-          :style="{ width: `${props.remoteInfo.progressInfo.progress}%` }"
+          :style="{ width: `${progressInfo.progress}%` }"
         ></div>
       </div>
       <div class="engine-progress-value">
-        {{ Math.floor(props.remoteInfo.progressInfo.progress) }}%
+        {{ Math.floor(progressInfo.progress) }}%
       </div>
     </div>
     <div class="engine-actions">
       <div class="engine-target-select">
         <BaseSelect
-          v-if="remoteInfo.type === 'fetched'"
+          v-if="latestInfo.type === 'fetched'"
           :disabled="isDownloadingOrInstalling"
-          :modelValue="remoteInfo.selectedRuntimeTarget"
+          :modelValue="selectedRuntimeTarget"
           @update:modelValue="handleRuntimeTargetChange"
         >
           <BaseSelectItem
             v-for="targetOption in computeRuntimeTargetOptions(
-              remoteInfo.latestInfo.availableRuntimeTargets,
+              latestInfo.info.availableRuntimeTargets,
             )"
             :key="targetOption.target"
             :value="targetOption.target"
@@ -56,19 +48,21 @@
           />
         </BaseSelect>
       </div>
-      <div v-if="remoteInfo.type === 'fetchError'" class="engine-fetch-error">
-        <span class="engine-fetch-error-message">{{ remoteInfo.message }}</span>
+      <div v-if="latestInfo.type === 'fetchError'" class="engine-fetch-error">
+        <span class="engine-fetch-error-message">{{
+          FETCH_ERROR_MESSAGE
+        }}</span>
         <BaseButton
           label="再試行"
           variant="default"
-          @click="emit('retryFetchRemoteInfo')"
+          @click="store.fetchEngineRemoteInfo(props.engineId)"
         />
       </div>
       <BaseButton
         :label="currentEngineStatus.actionLabel"
         :disabled="isInstallButtonDisabled"
         :variant="currentEngineStatus.color"
-        @click="emitInstall"
+        @click="store.installEngine(props.engineId)"
       />
     </div>
   </section>
@@ -80,13 +74,15 @@ import { computed } from "vue";
 import BaseButton from "@/components/Base/BaseButton.vue";
 import BaseSelect from "@/components/Base/BaseSelect.vue";
 import BaseSelectItem from "@/components/Base/BaseSelectItem.vue";
-import type {
-  EnginePackageCurrentInfo,
-  EnginePackageLatestInfo,
-} from "@/domain/enginePackage";
+import type { EnginePackageLatestInfo } from "@/domain/enginePackage";
 import type { RuntimeTarget } from "@/domain/defaultEngine/latestDefaultEngine";
 import { sizeToHumanReadable } from "@/helpers/sizeHelper";
 import { assertNonNullable, ExhaustiveError } from "@/type/utility";
+import type { EngineId } from "@/type/preload";
+import { useStore } from "@/welcome/store";
+
+const FETCH_ERROR_MESSAGE =
+  "オンラインからエンジン情報を取得できませんでした。";
 
 type RuntimeTargetOption = {
   target: RuntimeTarget;
@@ -98,36 +94,20 @@ type RuntimeTargetInfo =
   EnginePackageLatestInfo["availableRuntimeTargets"][number];
 
 const props = defineProps<{
-  engineName: string;
-  currentInfo: EnginePackageCurrentInfo;
-  remoteInfo:
-    | {
-        type: "loading";
-      }
-    | {
-        type: "fetched";
-        latestInfo: EnginePackageLatestInfo;
-        selectedRuntimeTarget: RuntimeTarget;
-        progressInfo:
-          | {
-              type: "idle";
-            }
-          | {
-              type: "download" | "install";
-              progress: number;
-            };
-      }
-    | {
-        type: "fetchError";
-        message: string;
-      };
+  engineId: EngineId;
 }>();
 
-const emit = defineEmits<{
-  selectRuntimeTarget: [target: RuntimeTarget];
-  installEngine: [];
-  retryFetchRemoteInfo: [];
-}>();
+const store = useStore();
+
+// TODO: ここらへんレビューする
+const engineInfo = computed(() => store.getEngineInfo(props.engineId));
+const latestInfo = computed(() => engineInfo.value.latestInfo);
+const selectedRuntimeTarget = computed(() =>
+  store.getSelectedRuntimeTarget(engineInfo.value),
+);
+const progressInfo = computed(
+  () => store.getEngineProgress(props.engineId) ?? undefined,
+);
 
 function computeRuntimeTargetOptions(
   availableRuntimeTargets: RuntimeTargetInfo[],
@@ -144,28 +124,30 @@ function computeRuntimeTargetOptions(
 
 function findSelectedPackageInfo(
   availableRuntimeTargets: RuntimeTargetInfo[],
-  selectedRuntimeTarget: RuntimeTarget,
+  selected: RuntimeTarget,
 ) {
   const targetInfo = availableRuntimeTargets.find(
-    (info) => info.target === selectedRuntimeTarget,
+    (info) => info.target === selected,
   );
   assertNonNullable(targetInfo);
   return targetInfo.packageInfo;
 }
 
 const latestVersionLabel = computed(() => {
-  switch (props.remoteInfo.type) {
-    case "fetched":
+  switch (latestInfo.value.type) {
+    case "fetched": {
+      assertNonNullable(selectedRuntimeTarget.value);
       return findSelectedPackageInfo(
-        props.remoteInfo.latestInfo.availableRuntimeTargets,
-        props.remoteInfo.selectedRuntimeTarget,
+        latestInfo.value.info.availableRuntimeTargets,
+        selectedRuntimeTarget.value,
       ).version;
+    }
     case "fetchError":
       return "（取得失敗）";
     case "loading":
       return "（読み込み中）";
     default:
-      throw new ExhaustiveError(props.remoteInfo);
+      throw new ExhaustiveError(latestInfo.value);
   }
 });
 
@@ -174,14 +156,14 @@ const currentEngineStatus = computed<{
   actionLabel: string;
   color: "default" | "primary";
 }>(() => {
-  if (props.currentInfo.installed.status === "notInstalled") {
+  if (engineInfo.value.currentInfo.installed.status === "notInstalled") {
     return {
       type: "notInstalled",
       actionLabel: "未インストール",
       color: "default",
     };
   }
-  if (props.remoteInfo.type !== "fetched") {
+  if (latestInfo.value.type !== "fetched") {
     return {
       type: "installed",
       actionLabel: "インストール済み",
@@ -189,15 +171,16 @@ const currentEngineStatus = computed<{
     };
   }
 
+  assertNonNullable(selectedRuntimeTarget.value);
   const selectedPackageInfo = findSelectedPackageInfo(
-    props.remoteInfo.latestInfo.availableRuntimeTargets,
-    props.remoteInfo.selectedRuntimeTarget,
+    latestInfo.value.info.availableRuntimeTargets,
+    selectedRuntimeTarget.value,
   );
   const humanReadableSize = sizeToHumanReadable(
     selectedPackageInfo.files.reduce((acc, file) => acc + file.size, 0),
   );
   const isOutdated = semver.lt(
-    props.currentInfo.installed.installedVersion,
+    engineInfo.value.currentInfo.installed.installedVersion,
     selectedPackageInfo.version,
   );
   if (isOutdated) {
@@ -214,25 +197,16 @@ const currentEngineStatus = computed<{
   };
 });
 
-const isDownloadingOrInstalling = computed(() => {
-  return (
-    props.remoteInfo.type === "fetched" &&
-    props.remoteInfo.progressInfo.type !== "idle"
-  );
-});
+const isDownloadingOrInstalling = computed(() => progressInfo.value != null);
 
 const isInstallButtonDisabled = computed(() => {
-  return isDownloadingOrInstalling.value || props.remoteInfo.type !== "fetched";
+  return isDownloadingOrInstalling.value || latestInfo.value.type !== "fetched";
 });
 
 const handleRuntimeTargetChange = (value: RuntimeTarget | undefined) => {
   if (value) {
-    emit("selectRuntimeTarget", value);
+    store.setSelectedRuntimeTarget(props.engineId, value);
   }
-};
-
-const emitInstall = () => {
-  emit("installEngine");
 };
 </script>
 

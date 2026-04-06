@@ -112,6 +112,20 @@ function createWelcomeStore() {
     };
   };
 
+  const getEngineInfo = (engineId: EngineId): DisplayEngineInfo => {
+    if (loadingEngineInfosState.value.type !== "loaded") {
+      throw new UnreachableError();
+    }
+    const engineInfo = loadingEngineInfosState.value.engineInfos.find(
+      (info) => info.package.engineId === engineId,
+    );
+    assertNonNullable(
+      engineInfo,
+      `Engine info not found: engineId=${engineId}`,
+    );
+    return engineInfo;
+  };
+
   const getEngineProgress = (engineId: EngineId) =>
     engineProgressInfo.value[engineId];
 
@@ -229,6 +243,7 @@ function createWelcomeStore() {
   return {
     loadingEngineInfosState,
     launchEditorState,
+    getEngineInfo,
     getSelectedRuntimeTarget,
     setSelectedRuntimeTarget,
     getEngineProgress,
