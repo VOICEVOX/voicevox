@@ -10,7 +10,7 @@
       >
         <BaseButton
           label="エディタを起動"
-          disabled
+          :disabled="!launchEditorState.enabled"
           @click="store.switchToMainWindow"
         />
       </BaseTooltip>
