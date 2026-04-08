@@ -200,7 +200,10 @@ function createWelcomeStore() {
     const engineInfo = loadingEngineInfosState.value.engineInfos.find(
       (info) => info.package.engineId === engineId,
     );
-    assertNonNullable(engineInfo, `Engine info not found: engineId=${engineId}`);
+    assertNonNullable(
+      engineInfo,
+      `Engine info not found: engineId=${engineId}`,
+    );
     const target = getSelectedRuntimeTarget(engineInfo);
     assertNonNullable(
       target,
