@@ -10,8 +10,8 @@ export interface WelcomeSandbox {
     engineId: EngineId;
     target: RuntimeTarget;
   }): Promise<void>;
-  fetchEnginePackageLocalInfos(): Promise<EnginePackageCurrentInfo[]>;
-  fetchEnginePackageRemoteInfo(
+  fetchEnginePackageCurrentInfos(): Promise<EnginePackageCurrentInfo[]>;
+  fetchEnginePackageLatestInfo(
     engineId: EngineId,
   ): Promise<EnginePackageLatestInfo>;
   launchMainWindow(): Promise<void>;

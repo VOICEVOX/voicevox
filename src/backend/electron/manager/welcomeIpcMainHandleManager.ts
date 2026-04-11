@@ -20,7 +20,7 @@ class WelcomeIpcMainHandleManager {
       INSTALL_ENGINE: async (_, obj) => {
         const welcomeWindowManager = getWelcomeWindowManager();
         const status =
-          await engineAndVvppController.fetchEnginePackageRemoteInfo(
+          await engineAndVvppController.fetchEnginePackageLatestInfo(
             obj.engineId,
           );
 
@@ -57,11 +57,11 @@ class WelcomeIpcMainHandleManager {
           },
         );
       },
-      FETCH_ENGINE_PACKAGE_LOCAL_INFOS: () => {
-        return engineAndVvppController.getEnginePackageLocalInfos();
+      FETCH_ENGINE_PACKAGE_CURRENT_INFOS: () => {
+        return engineAndVvppController.getEnginePackageCurrentInfos();
       },
-      FETCH_ENGINE_PACKAGE_REMOTE_INFO: async (_, obj) => {
-        return engineAndVvppController.fetchEnginePackageRemoteInfo(
+      FETCH_ENGINE_PACKAGE_LATEST_INFO: async (_, obj) => {
+        return engineAndVvppController.fetchEnginePackageLatestInfo(
           obj.engineId,
         );
       },

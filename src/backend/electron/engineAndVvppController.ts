@@ -209,7 +209,7 @@ export class EngineAndVvppController {
    * デフォルトエンジンがインストール済みかどうかを確認する。
    */
   hasInstalledDefaultEngine(): boolean {
-    const statuses = this.getEnginePackageLocalInfos();
+    const statuses = this.getEnginePackageCurrentInfos();
     return statuses.some(
       (status) => status.installed.status !== "notInstalled",
     );
@@ -226,7 +226,7 @@ export class EngineAndVvppController {
   /**
    * オフラインでデフォルトエンジンのインストール状況を取得する。
    */
-  getEnginePackageLocalInfos(): EnginePackageCurrentInfo[] {
+  getEnginePackageCurrentInfos(): EnginePackageCurrentInfo[] {
     return this.getDownloadableEnvEngineInfos().map((envEngineInfo) => ({
       package: {
         engineName: envEngineInfo.name,
@@ -239,7 +239,7 @@ export class EngineAndVvppController {
   /**
    * オンラインで指定したエンジンの最新パッケージ情報を取得する。
    */
-  async fetchEnginePackageRemoteInfo(
+  async fetchEnginePackageLatestInfo(
     engineId: EngineId,
   ): Promise<EnginePackageLatestInfo> {
     const envEngineInfo = this.getDownloadableEnvEngineInfos().find(

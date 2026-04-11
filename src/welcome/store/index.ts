@@ -139,7 +139,7 @@ function createWelcomeStore() {
     latestInfo: LatestInfoState,
   ) => {
     if (loadingEngineInfosState.value.type !== "loaded") {
-      return;
+      throw new UnreachableError();
     }
     loadingEngineInfosState.value = {
       type: "loaded",
@@ -152,11 +152,11 @@ function createWelcomeStore() {
     };
   };
 
-  const fetchEngineRemoteInfo = async (engineId: EngineId) => {
+  const fetchEngineLatestInfo = async (engineId: EngineId) => {
     updateLatestInfoState(engineId, { type: "loading" });
     try {
       const info =
-        await window.welcomeBackend.fetchEnginePackageRemoteInfo(engineId);
+        await window.welcomeBackend.fetchEnginePackageLatestInfo(engineId);
       updateLatestInfoState(engineId, { type: "fetched", info });
     } catch (error) {
       window.welcomeBackend.logWarn(
@@ -170,7 +170,7 @@ function createWelcomeStore() {
   const fetchInstalledEngineInfos = async () => {
     loadingEngineInfosState.value = { type: "loadingCurrent" };
     const currentEngineInfos =
-      await window.welcomeBackend.fetchEnginePackageLocalInfos();
+      await window.welcomeBackend.fetchEnginePackageCurrentInfos();
     loadingEngineInfosState.value = {
       type: "loaded",
       engineInfos: currentEngineInfos.map((currentInfo) => ({
@@ -181,7 +181,7 @@ function createWelcomeStore() {
     };
     await Promise.all(
       currentEngineInfos.map((currentInfo) =>
-        fetchEngineRemoteInfo(currentInfo.package.engineId),
+        fetchEngineLatestInfo(currentInfo.package.engineId),
       ),
     );
   };
@@ -250,7 +250,7 @@ function createWelcomeStore() {
     getSelectedRuntimeTarget,
     setSelectedRuntimeTarget,
     getEngineProgress,
-    fetchEngineRemoteInfo,
+    fetchEngineLatestInfo,
     installEngine,
     switchToMainWindow,
     initialize,

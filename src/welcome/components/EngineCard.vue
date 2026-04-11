@@ -53,7 +53,7 @@
         <BaseButton
           label="再試行"
           variant="default"
-          @click="store.fetchEngineRemoteInfo(props.engineId)"
+          @click="store.fetchEngineLatestInfo(props.engineId)"
         />
       </div>
       <BaseButton

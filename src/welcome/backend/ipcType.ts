@@ -18,11 +18,11 @@ export type WelcomeIpcIHData = {
     ];
     return: void;
   };
-  FETCH_ENGINE_PACKAGE_LOCAL_INFOS: {
+  FETCH_ENGINE_PACKAGE_CURRENT_INFOS: {
     args: [];
     return: EnginePackageCurrentInfo[];
   };
-  FETCH_ENGINE_PACKAGE_REMOTE_INFO: {
+  FETCH_ENGINE_PACKAGE_LATEST_INFO: {
     args: [obj: { engineId: EngineId }];
     return: EnginePackageLatestInfo;
   };
