@@ -50,6 +50,9 @@ export default createRule({
           context.report({
             node: arg,
             messageId: "unnecessary",
+            data: {
+              functionName: node.callee.name,
+            },
           });
         }
       },
