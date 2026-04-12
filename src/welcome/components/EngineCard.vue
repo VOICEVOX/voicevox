@@ -112,7 +112,6 @@ function findSelectedPackageInfo(
 const latestVersionText = computed(() => {
   switch (latestInfo.value.type) {
     case "fetched": {
-      assertNonNullable(selectedRuntimeTarget.value);
       return findSelectedPackageInfo(
         latestInfo.value.info.availableRuntimeTargets,
         selectedRuntimeTarget.value,
@@ -145,7 +144,6 @@ const currentEngineStatus = computed<{
     };
   }
 
-  assertNonNullable(selectedRuntimeTarget.value);
   const selectedPackageInfo = findSelectedPackageInfo(
     latestInfo.value.info.availableRuntimeTargets,
     selectedRuntimeTarget.value,

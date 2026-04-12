@@ -45,9 +45,7 @@ function createWelcomeStore() {
   const loadingEngineInfosState = ref<LoadingEngineInfosState>({
     type: "uninitialized",
   });
-  const runtimeTargetSelections = ref<
-    Record<EngineId, RuntimeTarget | undefined>
-  >({});
+  const runtimeTargetSelections = ref<Record<EngineId, RuntimeTarget>>({});
   const engineProgressInfo = ref<Record<EngineId, EngineProgressInfo>>({});
 
   const launchEditorState = computed<LaunchEditorState>(() => {
@@ -77,29 +75,22 @@ function createWelcomeStore() {
   });
 
   const getDefaultRuntimeTarget = (
-    engineInfo: DisplayEngineInfo,
-  ): RuntimeTarget | undefined => {
-    if (engineInfo.latestInfo.type !== "fetched") {
-      return undefined;
-    }
-    const defaultRuntimeTargetInfo =
-      engineInfo.latestInfo.info.availableRuntimeTargets.find(
-        (targetInfo) => targetInfo.packageInfo.displayInfo.default,
-      );
+    latestInfo: EnginePackageLatestInfo,
+  ): RuntimeTarget => {
+    const defaultRuntimeTargetInfo = latestInfo.availableRuntimeTargets.find(
+      (targetInfo) => targetInfo.packageInfo.displayInfo.default,
+    );
     assertNonNullable(
       defaultRuntimeTargetInfo,
-      `Default runtime target not found: engineId=${engineInfo.package.engineId}`,
+      `Default runtime target not found: engineId=${latestInfo.package.engineId}`,
     );
     return defaultRuntimeTargetInfo.target;
   };
 
   const getSelectedRuntimeTarget = (
     engineInfo: DisplayEngineInfo,
-  ): RuntimeTarget | undefined => {
-    return (
-      runtimeTargetSelections.value[engineInfo.package.engineId] ??
-      getDefaultRuntimeTarget(engineInfo)
-    );
+  ): RuntimeTarget => {
+    return runtimeTargetSelections.value[engineInfo.package.engineId];
   };
 
   const setSelectedRuntimeTarget = (
@@ -158,6 +149,7 @@ function createWelcomeStore() {
       const info =
         await window.welcomeBackend.fetchEnginePackageLatestInfo(engineId);
       updateLatestInfoState(engineId, { type: "fetched", info });
+      setSelectedRuntimeTarget(engineId, getDefaultRuntimeTarget(info));
     } catch (error) {
       window.welcomeBackend.logWarn(
         `Engine package ${engineId} remote info fetch failed`,
@@ -205,10 +197,6 @@ function createWelcomeStore() {
       `Engine info not found: engineId=${engineId}`,
     );
     const target = getSelectedRuntimeTarget(engineInfo);
-    assertNonNullable(
-      target,
-      `Runtime target not found: engineId=${engineInfo.package.engineId}`,
-    );
     engineProgressInfo.value[engineId] = { progress: 0, type: "download" };
     try {
       console.log(`Engine package ${engineId} installation started.`);
