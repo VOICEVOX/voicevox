@@ -30,11 +30,8 @@ export class AppStateController {
   /**
    * アプリ起動時の初期化処理を行う。
    *
-   * 責務:
-   * - エンジンパッケージの状態を確認し、適切なウィンドウを起動する
-   *
-   * 副作用:
-   * - ウィンドウを起動する（`launchMainWindow()` または `launchWelcomeWindow()`）
+   * 行うこと：
+   * - エンジンパッケージの状態を確認し、ウェルカムウィンドウまたはメインウィンドウのどちらかを起動する
    */
   async startup() {
     const engineAndVvppController = getEngineAndVvppController();
@@ -55,13 +52,9 @@ export class AppStateController {
   /**
    * メインウィンドウに切り替える。
    *
-   * 責務:
-   * - ウェルカムウィンドウを破棄する（`welcomeWindowManager.destroyWindow()`）
-   * - メインウィンドウを起動する（`launchMainWindow()`）
-   *
-   * 副作用:
-   * - `quitState` を "switch" に設定して、切り替え中であることを示す
-   * - ウィンドウの切り替えが完了した後に `quitState` を "unconfirmed" にリセットする
+   * 行うこと：
+   * - ウェルカムウィンドウを破棄する
+   * - メインウィンドウを起動する
    */
   async switchToMainWindow() {
     log.info("Switching to main window");
@@ -80,13 +73,9 @@ export class AppStateController {
   /**
    * ウェルカムウィンドウに切り替える。
    *
-   * 責務:
-   * - メインウィンドウを破棄し、必要なエンジンをクリーンアップする（`mainWindowManager.destroyWindow()` と `engineAndVvppController.cleanupEngines()`）
-   * - ウェルカムウィンドウを起動する（`launchWelcomeWindow()`）
-   *
-   *副作用:
-   * - `quitState` を "switch" に設定して、切り替え中であることを示す
-   * - ウィンドウの切り替えが完了した後に `quitState` を "unconfirmed" にリセットする
+   * 行うこと：
+   * - メインウィンドウを破棄し、必要なエンジンをクリーンアップする
+   * - ウェルカムウィンドウを起動する
    */
   async switchToWelcomeWindow() {
     log.info("Switching to welcome window");
@@ -107,11 +96,8 @@ export class AppStateController {
   /**
    * ウェルカムウィンドウを起動する。
    *
-   * 責務:
-   * - ウェルカムウィンドウを作成する（`welcomeWindowManager.createWindow()`）
-   *
-   * 副作用:
-   * - `activeWindow` を "welcome" に設定する
+   * 行うこと：
+   * - ウェルカムウィンドウを作成する
    */
   private async launchWelcomeWindow() {
     this.activeWindow = "welcome";
@@ -123,12 +109,9 @@ export class AppStateController {
   /**
    * メインウィンドウを起動する。
    *
-   * 責務:
-   * - エンジンを起動する（`engineAndVvppController.launchEngines()`）
-   * - メインウィンドウを作成する（`mainWindowManager.createWindow()`）
-   *
-   * 副作用:
-   * - `activeWindow` を "main" に設定する
+   * 行うこと：
+   * - エンジンを起動する
+   * - メインウィンドウを作成する
    */
   private async launchMainWindow() {
     this.activeWindow = "main";

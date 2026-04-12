@@ -32,10 +32,14 @@ export type LoadingEngineInfosState =
   | { type: "loadingCurrent" }
   | { type: "loaded"; engineInfos: DisplayEngineInfo[] };
 
-export type EngineProgressInfo = {
-  progress: number;
-  type: "download" | "install";
-};
+export type EngineProgressInfo =
+  | {
+      type: "idle";
+    }
+  | {
+      progress: number;
+      type: "download" | "install";
+    };
 
 export type LaunchEditorState =
   | { enabled: true }
@@ -55,7 +59,11 @@ function createWelcomeStore() {
     ) {
       return { enabled: false, reason: "エンジン情報を読み込み中です。" };
     }
-    if (Object.keys(engineProgressInfo.value).length > 0) {
+    if (
+      Object.values(engineProgressInfo.value).some(
+        (info) => info.type !== "idle",
+      )
+    ) {
       return { enabled: false, reason: "エンジンをインストール中です。" };
     }
     if (loadingEngineInfosState.value.type !== "loaded") {
@@ -121,8 +129,7 @@ function createWelcomeStore() {
     engineProgressInfo.value[engineId];
 
   const clearEngineProgress = (engineId: EngineId) => {
-    const { [engineId]: _, ...rest } = engineProgressInfo.value;
-    engineProgressInfo.value = rest;
+    engineProgressInfo.value[engineId] = { type: "idle" };
   };
 
   const updateLatestInfoState = (
@@ -171,6 +178,9 @@ function createWelcomeStore() {
         latestInfo: { type: "loading" },
       })),
     };
+    for (const currentInfo of currentEngineInfos) {
+      engineProgressInfo.value[currentInfo.package.engineId] = { type: "idle" };
+    }
     await Promise.all(
       currentEngineInfos.map((currentInfo) =>
         fetchEngineLatestInfo(currentInfo.package.engineId),
@@ -199,9 +209,13 @@ function createWelcomeStore() {
     const target = getSelectedRuntimeTarget(engineInfo);
     engineProgressInfo.value[engineId] = { progress: 0, type: "download" };
     try {
-      console.log(`Engine package ${engineId} installation started.`);
+      window.welcomeBackend.logInfo(
+        `Engine package ${engineId} installation started.`,
+      );
       await window.welcomeBackend.installEngine({ engineId, target });
-      console.log(`Engine package ${engineId} installation completed.`);
+      window.welcomeBackend.logInfo(
+        `Engine package ${engineId} installation completed.`,
+      );
     } catch (error) {
       window.welcomeBackend.logError(
         `Engine package ${engineId} installation failed`,

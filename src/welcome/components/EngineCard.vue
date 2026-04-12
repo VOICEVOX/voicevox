@@ -16,7 +16,7 @@
         }}
       </div>
     </div>
-    <div v-if="progressInfo != null" class="engine-progress">
+    <div v-if="progressInfo.type !== 'idle'" class="engine-progress">
       <div class="engine-progress-label">
         {{ progressInfo.type === "download" ? "ダウンロード" : "インストール" }}
       </div>
@@ -174,7 +174,9 @@ const currentEngineStatus = computed<{
 });
 
 const isControlDisabled = computed(() => {
-  return progressInfo.value != null || latestInfo.value.type !== "fetched";
+  return (
+    progressInfo.value.type !== "idle" || latestInfo.value.type !== "fetched"
+  );
 });
 
 const handleRuntimeTargetChange = (value: RuntimeTarget | undefined) => {
