@@ -2,11 +2,13 @@
   <section class="engine-card">
     <div class="engine-card-head">
       <div class="engine-name">{{ engineInfo.package.engineName }}</div>
-      <span class="status-pill">{{
-        engineInfo.currentInfo.installed.status === "notInstalled"
-          ? "未インストール"
-          : "インストール済み"
-      }}</span>
+      <span class="status-pill">
+        {{
+          engineInfo.currentInfo.installed.status === "notInstalled"
+            ? "未インストール"
+            : "インストール済み"
+        }}</span
+      >
     </div>
     <div class="engine-meta">
       <div>最新バージョン：{{ latestVersionText }}</div>
@@ -219,18 +221,6 @@ const handleRuntimeTargetChange = (value: RuntimeTarget | undefined) => {
   border: 1px solid colors.$border;
   background-color: colors.$control;
   color: colors.$display-sub;
-}
-
-.status-pill[data-status="latest"] {
-  background-color: colors.$primary;
-  color: colors.$display-oncolor;
-  border-color: transparent;
-}
-
-.status-pill[data-status="outdated"] {
-  background-color: colors.$warning;
-  color: colors.$display-warning;
-  border-color: colors.$display-warning;
 }
 
 .engine-meta {
