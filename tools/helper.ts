@@ -9,11 +9,17 @@ export async function retryFetch(
   retries: number = 3,
 ) {
   for (let i = 0; i < retries - 1; i++) {
-    const response = await fetch(url, options);
-    if (response.ok) {
-      return response;
+    try {
+      const response = await fetch(url, options);
+      if (response.ok) {
+        return response;
+      }
+      console.error(
+        `Fetch failed: ${response.statusText} (${response.status})`,
+      );
+    } catch (error) {
+      console.error("Fetch error:", error);
     }
-    console.error(`Fetch failed: ${response.statusText}`);
     await new Promise((resolve) => setTimeout(resolve, 1000)); // 少し待つ
   }
   return fetch(url, options);
