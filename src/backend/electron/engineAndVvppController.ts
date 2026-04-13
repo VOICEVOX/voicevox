@@ -21,7 +21,6 @@ import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
 import type { ProgressCallback } from "@/helpers/progressHelper";
 import { createLogger } from "@/helpers/log";
 import { DisplayableError, errorToMessage } from "@/helpers/errorHelper";
-import { assertNonNullable } from "@/type/utility";
 import { isLinux, isMac, isWindows } from "@/helpers/platform";
 
 const log = createLogger("EngineAndVvppController");
@@ -247,10 +246,6 @@ export class EngineAndVvppController {
 
     for (const envEngineInfo of this.getDownloadableEnvEngineInfos()) {
       const latestUrl = envEngineInfo.latestUrl;
-      assertNonNullable(
-        latestUrl,
-        `latestUrl is undefined for ${envEngineInfo.name}`,
-      );
 
       const latestInfo = await fetchLatestDefaultEngineInfo(latestUrl);
       if (latestInfo.formatVersion != 1) {
