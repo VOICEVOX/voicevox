@@ -13,11 +13,23 @@ export type IsEqual<X, Y> =
 // undefinedかnullでないことを保証する
 export function assertNonNullable<T>(
   value: T,
+  message = "Value is null or undefined",
 ): asserts value is NonNullable<T> {
   if (value == undefined) {
-    throw new Error("Value is null or undefined");
+    throw new Error(message);
   }
 }
+
+/** 入力がnullかundefinedの場合エラーを投げ、それ以外の場合は入力をそのまま返す */
+export const ensureNotNullish = <T>(
+  value: T | null | undefined,
+  message = "Unexpected nullish value",
+): T => {
+  if (value == null) {
+    throw new Error(message);
+  }
+  return value;
+};
 
 /**
  * never型になるはずの値を使って型システムで非到達をチェックできる便利クラス。
@@ -30,9 +42,12 @@ export class ExhaustiveError extends Error {
 }
 
 /**
- * 到達しないであろうコードに到達したことを示すエラー。
- * TODO: すべてのunreachableをUnreachableErrorに統一する
+ * 実行時に到達しないであろうコードに到達したことを示すエラー。
+ *
+ * nullable検査や入力バリデーション用途には
+ * `assertNonNullable` や `ensureNotNullish` を使用する。
  */
+// TODO: 到達不能分岐には UnreachableError を使用するよう統一する
 export class UnreachableError extends Error {
   constructor(message?: string) {
     super(message || "Unreachable code was executed.");

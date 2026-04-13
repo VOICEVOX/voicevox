@@ -87,7 +87,7 @@
 </template>
 
 <script setup lang="ts">
-import { IsUpdateSupported, UpdateInfo } from "@/type/preload";
+import type { IsUpdateSupported, UpdateInfo } from "@/type/preload";
 
 const dialogOpened = defineModel<boolean>("dialogOpened", { default: false });
 const props = defineProps<{

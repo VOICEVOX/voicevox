@@ -24,7 +24,7 @@ runs:
       uses: actions/cache@v4
       with:
         path: ${{ env.ELECTRON_CACHE }}
-        key: ${{ env.cache-version }}-${{ runner.os }}--electron-cache-${{ hashFiles('**/package-lock.json') }}
+        key: ${{ env.cache-version }}-${{ runner.os }}--electron-cache-${{ hashFiles('**/pnpm-lock.yaml') }}
         restore-keys: |
           ${{ env.cache-version }}-${{ runner.os }}--electron-cache-
 
@@ -32,7 +32,7 @@ runs:
       uses: actions/cache@v4
       with:
         path: ${{ env.ELECTRON_BUILDER_CACHE }}
-        key: ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-${{ hashFiles('**/package-lock.json') }}
+        key: ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-${{ hashFiles('**/pnpm-lock.yaml') }}
         restore-keys: |
           ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-
 

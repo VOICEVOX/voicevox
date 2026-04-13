@@ -1,0 +1,8 @@
+{
+  "name": "VOICEVOX Nemo Engine",
+  "uuid": "208cf94d-43d2-4cf5-abc0-9783cac36d29",
+  "command": "dummy",
+  "port": 50121,
+  "version": "0.0.1",
+  "supported_features": {}
+}

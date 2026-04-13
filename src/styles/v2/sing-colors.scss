@@ -262,6 +262,8 @@ SASSのmapなどで構造化+mixin一括処理などで処理可能ですが、
     var(--lr-80) var(--neutral-variant-c) var(--neutral-variant-h)
   );
 
+  --scheme-color-neutral: oklch(var(--lr-40) var(--neutral-c) var(--neutral-h));
+
   --scheme-color-shadow: oklch(var(--lr-0) var(--neutral-c) var(--neutral-h));
   --scheme-color-scrim: oklch(var(--lr-0) var(--neutral-c) var(--neutral-h));
   --scheme-color-inverse-surface: oklch(
@@ -343,6 +345,9 @@ SASSのmapなどで構造化+mixin一括処理などで処理可能ですが、
 
   --scheme-color-sing-ruler-surface: oklch(
     var(--lr-90) var(--neutral-c) var(--neutral-h)
+  );
+  --scheme-color-sing-ruler-surface-hover: oklch(
+    var(--lr-87) var(--neutral-c) var(--neutral-h)
   );
   --scheme-color-sing-ruler-measure-line: oklch(
     var(--lr-65) var(--neutral-c) var(--neutral-h)
@@ -494,6 +499,8 @@ SASSのmapなどで構造化+mixin一括処理などで処理可能ですが、
     var(--lr-90) var(--error-c) var(--error-h)
   );
 
+  --scheme-color-neutral: oklch(var(--lr-80) var(--neutral-c) var(--neutral-h));
+
   --scheme-color-shadow: oklch(var(--lr-0) var(--neutral-c) var(--neutral-h));
   --scheme-color-scrim: oklch(var(--lr-0) var(--neutral-c) var(--neutral-h));
   --scheme-color-inverse-surface: oklch(
@@ -599,6 +606,9 @@ SASSのmapなどで構造化+mixin一括処理などで処理可能ですが、
 
   --scheme-color-sing-ruler-surface: oklch(
     var(--lr-30) var(--neutral-c) var(--neutral-h)
+  );
+  --scheme-color-sing-ruler-surface-hover: oklch(
+    var(--lr-33) var(--neutral-c) var(--neutral-h)
   );
   --scheme-color-sing-ruler-measure-line: oklch(
     var(--lr-60) var(--neutral-c) var(--neutral-h)

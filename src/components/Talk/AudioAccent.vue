@@ -62,7 +62,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { previewSliderHelper } from "@/helpers/previewSliderHelper";
-import { AccentPhrase } from "@/openapi";
+import type { AccentPhrase } from "@/openapi";
 
 const props = withDefaults(
   defineProps<{

@@ -2,10 +2,18 @@ name: Test
 
 on:
   push:
+    branches:
+      - main
   pull_request:
     branches:
       - "**"
   workflow_dispatch:
+    inputs:
+      update_snapshots:
+        description: "スナップショットを更新する"
+        required: false
+        type: boolean
+        default: false
 
 env:
   VOICEVOX_ENGINE_REPO: "VOICEVOX/voicevox_nemo_engine" # 軽いのでNemoを使う
@@ -21,22 +29,14 @@ jobs:
     outputs:
       shouldUpdateSnapshots: ${{ steps.check-whether-to-update-snapshots.outputs.shouldUpdateSnapshots }}
     steps:
-      - name: Check if commit message includes [update snapshots]
+      - name: Check whether to update snapshots
         id: check-whether-to-update-snapshots
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const commits = ${{ toJson(github.event.commits) }};
-            if (!commits) {
-              // pull_request などでコミットがない場合はスキップ
-              core.setOutput("shouldUpdateSnapshots", false);
-              process.exit(0);
-            }
-            const shouldUpdateSnapshots = commits.some((commit) =>
-              commit.message.toLowerCase().includes("[update snapshots]")
-            );
-            core.setOutput("shouldUpdateSnapshots", shouldUpdateSnapshots);
-            console.log(`shouldUpdateSnapshots: ${shouldUpdateSnapshots}`);
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "shouldUpdateSnapshots=${{ inputs.update_snapshots }}" >> $GITHUB_OUTPUT
+          else
+            echo "shouldUpdateSnapshots=false" >> $GITHUB_OUTPUT
+          fi
 
   # ビルドのテスト
   build-test:

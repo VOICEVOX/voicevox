@@ -1,13 +1,15 @@
 import path from "node:path";
 import { readdirSync, existsSync, rmSync } from "node:fs";
-import { config } from "dotenv";
-import { Configuration as ElectronBuilderConfiguration } from "electron-builder";
+import dotenv from "dotenv";
+import type { Configuration as ElectronBuilderConfiguration } from "electron-builder";
 import { z } from "zod";
 import afterAllArtifactBuild from "./afterAllArtifactBuild";
+import afterPack from "./afterPack";
+import artifactBuildCompleted from "./artifactBuildCompleted";
 
 const rootDir = path.join(import.meta.dirname, "..");
 const dotenvPath = path.join(rootDir, ".env.production");
-config({ path: dotenvPath });
+dotenv.config({ path: dotenvPath, quiet: true });
 
 const VOICEVOX_ENGINE_DIR =
   process.env.VOICEVOX_ENGINE_DIR ?? "../voicevox_engine/dist/run/";
@@ -112,6 +114,9 @@ const builderOptions: ElectronBuilderConfiguration = {
   appId: "jp.hiroshiba.voicevox",
   copyright: "Hiroshiba Kazuyuki",
   afterAllArtifactBuild,
+  afterPack,
+  artifactBuildCompleted,
+  electronLanguages: ["en-US", "ja"],
   win: {
     icon: "public/icon.png",
     target: [
@@ -151,7 +156,7 @@ const builderOptions: ElectronBuilderConfiguration = {
   },
   mac: {
     artifactName: MACOS_ARTIFACT_NAME || undefined,
-    icon: "public/icon-mac.png",
+    icon: "build/icons/icon-mac.png",
     category: "public.app-category.utilities",
     target: [
       {
@@ -159,9 +164,10 @@ const builderOptions: ElectronBuilderConfiguration = {
         arch: [isArm64 ? "arm64" : "x64"],
       },
     ],
+    identity: null, // ad-hoc署名をしない
   },
   dmg: {
-    icon: "public/icon-dmg.icns",
+    icon: "build/icons/icon-dmg.icns",
   },
 };
 

@@ -21,7 +21,7 @@ import { computed, onMounted, ref, watchEffect } from "vue";
 import UpdateNotificationDialog from "./Presentation.vue";
 import { useFetchNewUpdateInfos } from "@/composables/useFetchNewUpdateInfos";
 import { useStore } from "@/store";
-import { IsUpdateSupported, UrlString } from "@/type/preload";
+import { type IsUpdateSupported, UrlString } from "@/type/preload";
 import { getAppInfos } from "@/domain/appInfo";
 
 const props = defineProps<{

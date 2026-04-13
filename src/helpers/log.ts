@@ -1,4 +1,4 @@
-import { type Logger } from "electron-log";
+import type { Logger } from "electron-log";
 import { isElectron, isNode } from "@/helpers/platform";
 
 type LogLevel = "info" | "warn" | "error";
@@ -33,7 +33,8 @@ export function createLogger(scope: string): Record<LogLevel, LogFunction> {
       // Electronのメインプロセスの場合
       if (isNode && isElectron) {
         if (electronLogPromise == undefined) {
-          electronLogPromise = import("electron-log/main");
+          // NOTE: electron-log/mainをインポートするとViteによって警告が出るため、electron-logをインポートする
+          electronLogPromise = import("electron-log");
         }
 
         void electronLogPromise.then((log) => {

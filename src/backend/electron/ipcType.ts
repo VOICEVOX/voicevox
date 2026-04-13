@@ -1,0 +1,334 @@
+import type {
+  ConfigType,
+  EngineDirValidationResult,
+  EngineId,
+  EngineInfo,
+  EngineSettingType,
+  IsUpdateSupported,
+  MessageBoxReturnValue,
+  NativeThemeType,
+  TextAsset,
+  ToolbarSettingType,
+} from "@/type/preload";
+import type { AltPortInfos } from "@/store/type";
+import type { Result } from "@/type/result";
+import type { HotkeySettingType } from "@/domain/hotkeyAction";
+
+/**
+ * invoke, handle
+ */
+export type IpcIHData = {
+  GET_TEXT_ASSET: {
+    args: [textType: keyof TextAsset];
+    return: TextAsset[keyof TextAsset];
+  };
+
+  GET_ALT_PORT_INFOS: {
+    args: [];
+    return: AltPortInfos;
+  };
+
+  GET_INITIAL_PROJECT_FILE_PATH: {
+    args: [];
+    return: string | undefined;
+  };
+
+  SHOW_SAVE_DIRECTORY_DIALOG: {
+    args: [obj: { title: string }];
+    return: string | undefined;
+  };
+
+  SHOW_OPEN_DIRECTORY_DIALOG: {
+    args: [obj: { title: string }];
+    return: string | undefined;
+  };
+
+  SHOW_OPEN_FILE_DIALOG: {
+    args: [
+      obj: {
+        title: string;
+        name: string;
+        extensions: string[];
+        defaultPath?: string;
+      },
+    ];
+    return: string | undefined;
+  };
+
+  SHOW_WARNING_DIALOG: {
+    args: [
+      obj: {
+        title: string;
+        message: string;
+      },
+    ];
+    return: MessageBoxReturnValue;
+  };
+
+  SHOW_ERROR_DIALOG: {
+    args: [
+      obj: {
+        title: string;
+        message: string;
+      },
+    ];
+    return: MessageBoxReturnValue;
+  };
+
+  SHOW_SAVE_FILE_DIALOG: {
+    args: [
+      obj: {
+        title: string;
+        defaultPath?: string;
+        name: string;
+        extensions: string[];
+      },
+    ];
+    return: string | undefined;
+  };
+
+  IS_AVAILABLE_GPU_MODE: {
+    args: [];
+    return: boolean;
+  };
+
+  IS_MAXIMIZED_WINDOW: {
+    args: [];
+    return: boolean;
+  };
+
+  CLOSE_WINDOW: {
+    args: [];
+    return: void;
+  };
+
+  SWITCH_TO_WELCOME_WINDOW: {
+    args: [];
+    return: void;
+  };
+
+  MINIMIZE_WINDOW: {
+    args: [];
+    return: void;
+  };
+
+  TOGGLE_MAXIMIZE_WINDOW: {
+    args: [];
+    return: void;
+  };
+
+  TOGGLE_FULLSCREEN: {
+    args: [];
+    return: void;
+  };
+
+  ZOOM_IN: {
+    args: [];
+    return: void;
+  };
+
+  ZOOM_OUT: {
+    args: [];
+    return: void;
+  };
+
+  ZOOM_RESET: {
+    args: [];
+    return: void;
+  };
+
+  OPEN_LOG_DIRECTORY: {
+    args: [];
+    return: void;
+  };
+
+  ENGINE_INFOS: {
+    args: [];
+    return: EngineInfo[];
+  };
+
+  RESTART_ENGINE: {
+    args: [obj: { engineId: EngineId }];
+    return: void;
+  };
+
+  OPEN_ENGINE_DIRECTORY: {
+    args: [obj: { engineId: EngineId }];
+    return: void;
+  };
+
+  CHECK_FILE_EXISTS: {
+    args: [obj: { file: string }];
+    return: boolean;
+  };
+
+  CHANGE_PIN_WINDOW: {
+    args: [];
+    return: void;
+  };
+
+  HOTKEY_SETTINGS: {
+    args: [obj: { newData?: HotkeySettingType }];
+    return: HotkeySettingType[];
+  };
+
+  GET_DEFAULT_TOOLBAR_SETTING: {
+    args: [];
+    return: ToolbarSettingType;
+  };
+
+  ON_VUEX_READY: {
+    args: [];
+    return: void;
+  };
+
+  GET_SETTING: {
+    args: [key: keyof ConfigType];
+    return: ConfigType[keyof ConfigType];
+  };
+
+  SET_SETTING: {
+    args: [key: keyof ConfigType, newValue: ConfigType[keyof ConfigType]];
+    return: ConfigType[keyof ConfigType];
+  };
+
+  SET_ENGINE_SETTING: {
+    args: [engineId: EngineId, engineSetting: EngineSettingType];
+    return: void;
+  };
+
+  SET_NATIVE_THEME: {
+    args: [source: NativeThemeType];
+    return: void;
+  };
+
+  INSTALL_VVPP_ENGINE: {
+    args: [path: string];
+    return: Promise<void>;
+  };
+
+  UNINSTALL_VVPP_ENGINE: {
+    args: [engineId: EngineId];
+    return: Promise<void>;
+  };
+
+  VALIDATE_ENGINE_DIR: {
+    args: [obj: { engineDir: string }];
+    return: EngineDirValidationResult;
+  };
+
+  RELOAD_APP: {
+    args: [obj: { isMultiEngineOffMode?: boolean }];
+    return: void;
+  };
+
+  WRITE_FILE: {
+    args: [obj: { filePath: string; buffer: ArrayBuffer | Uint8Array }];
+    return: Result<undefined>;
+  };
+
+  READ_FILE: {
+    args: [obj: { filePath: string }];
+    return: Result<Uint8Array>;
+  };
+
+  IS_UPDATE_SUPPORTED: {
+    args: [];
+    return: IsUpdateSupported;
+  };
+
+  UPDATE_APP: {
+    args: [obj: { version: string }];
+    return: void;
+  };
+};
+
+/**
+ * `BaseIpcData` の目的
+ *
+ * - 汎用的な IPC 型マップを表すための薄い wrapper 型です。
+ * - 本リポジトリでは主に `ipc.ts` のジェネリクス境界として使用されます。
+ * - もし `BaseIpcData` が特定のモジュールからしか参照されない場合は、将来的にそのモジュール内で限定的に定義することを検討してください。
+ *
+ * 注意:
+ * - 具体的なチャネル定義（`IpcIHData` / `IpcSOData`）を上書きして使用してください。
+ */
+export type BaseIpcData = Record<string, { args: unknown[]; return: unknown }>;
+
+/**
+ * 使用例（簡易）:
+ * - 独自チャネルを追加する例:
+ *   export type MyIpc = IpcIHData & {
+ *     MY_SIMPLE_CHANNEL: { args: [n: number]; return: string };
+ *   };
+ * - メイン側で登録する例 (ipc.ts の `registerIpcMainHandle` を利用):
+ *   registerIpcMainHandle<MyIpc>(win, { MY_SIMPLE_CHANNEL: (evt, n) => n.toString() });
+ *
+ * 説明: 上記はあくまで短い使用例です。実際の定義では `IpcIHData` / `IpcSOData` を拡張して型安全に扱ってください。
+ * 関連実装: `ipc.ts` を参照してください。
+ */
+
+/**
+ * send, on
+ */
+export type IpcSOData = {
+  LOAD_PROJECT_FILE: {
+    args: [obj: { filePath: string }];
+    return: void;
+  };
+
+  DETECT_MAXIMIZED: {
+    args: [];
+    return: void;
+  };
+
+  DETECT_UNMAXIMIZED: {
+    args: [];
+    return: void;
+  };
+
+  DETECTED_ENGINE_ERROR: {
+    args: [obj: { engineId: EngineId }];
+    return: void;
+  };
+
+  DETECT_PINNED: {
+    args: [];
+    return: void;
+  };
+
+  DETECT_UNPINNED: {
+    args: [];
+    return: void;
+  };
+
+  DETECT_ENTER_FULLSCREEN: {
+    args: [];
+    return: void;
+  };
+
+  DETECT_LEAVE_FULLSCREEN: {
+    args: [];
+    return: void;
+  };
+
+  CHECK_EDITED_AND_NOT_SAVE: {
+    args: [
+      obj: {
+        nextAction: "close" | "reload" | "switchToWelcome";
+        isMultiEngineOffMode?: boolean;
+      },
+    ];
+    return: void;
+  };
+
+  DETECT_RESIZED: {
+    args: [obj: { width: number; height: number }];
+    return: void;
+  };
+
+  ON_UPDATE_DOWNLOAD_PROGRESS: {
+    args: [obj: { numBytes: number; totalBytes: number }];
+    return: void;
+  };
+};

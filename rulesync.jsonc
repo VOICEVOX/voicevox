@@ -1,0 +1,12 @@
+{
+  "targets": ["copilot", "cursor", "claudecode", "codexcli"],
+  "features": ["rules", "ignore", "mcp", "commands", "subagents", "skills"],
+  "baseDirs": ["."],
+  "delete": true,
+  "verbose": false,
+  "global": false,
+  "simulateCommands": false,
+  "simulateSubagents": false,
+  "modularMcp": false
+}
+

@@ -31,9 +31,9 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
 import { useQuasar } from "quasar";
-import { MenuItemButton, MenuItemData, MenuItemRoot } from "../type";
+import type { MenuItemButton, MenuItemData, MenuItemRoot } from "../type";
 import MenuButton from "../MenuButton.vue";
-import { MenuBarCategory } from "./menuBarData";
+import type { MenuBarCategory } from "./menuBarData";
 import TitleBarButtons from "./TitleBarButtons.vue";
 import TitleBarEditorSwitcher from "./TitleBarEditorSwitcher.vue";
 import { useStore } from "@/store";

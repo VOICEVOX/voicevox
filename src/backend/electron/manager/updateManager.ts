@@ -1,12 +1,11 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { autoUpdater as electronUpdater } from "electron-updater";
-import { ipcMainSendProxy } from "../ipc";
-import { getWindowManager } from "./windowManager";
 import { DisplayableError, errorToMessage } from "@/helpers/errorHelper";
 import { createLogger } from "@/helpers/log";
 import { isProduction, isMac } from "@/helpers/platform";
-import { IsUpdateSupported } from "@/type/preload";
+import type { IsUpdateSupported } from "@/type/preload";
+import { getMainWindowManager } from "./windowManager/main";
 
 const log = createLogger("AutoUpdateManager");
 
@@ -21,7 +20,8 @@ electronUpdater.forceDevUpdateConfig = true;
 
 electronUpdater.on("error", (error) => {
   log.error("AutoUpdater error:", error);
-  void getWindowManager().showMessageBox({
+  const windowManager = getMainWindowManager();
+  void windowManager.showMessageBox({
     message: `アップデート中にエラーが発生しました。\n${errorToMessage(error)}`,
     type: "error",
   });
@@ -32,12 +32,13 @@ electronUpdater.on("update-downloaded", (info) => {
 });
 
 electronUpdater.on("download-progress", (info) => {
-  const win = getWindowManager().win;
+  const windowManager = getMainWindowManager();
+  const win = windowManager.win;
   if (win == null) {
     log.error("Window is not available for sending download progress.");
     return;
   }
-  ipcMainSendProxy.ON_UPDATE_DOWNLOAD_PROGRESS(win, {
+  windowManager.ipc.ON_UPDATE_DOWNLOAD_PROGRESS({
     numBytes: info.transferred,
     totalBytes: info.total,
   });

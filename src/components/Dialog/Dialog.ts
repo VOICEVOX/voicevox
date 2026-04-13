@@ -2,15 +2,15 @@ import { Dialog, Notify, Loading } from "quasar";
 import SaveAllResultDialog from "./SaveAllResultDialog.vue";
 import QuestionDialog from "./TextDialog/QuestionDialog.vue";
 import MessageDialog from "./TextDialog/MessageDialog.vue";
-import { DialogType } from "./TextDialog/common";
-import { AudioKey, ConfirmedTips } from "@/type/preload";
-import {
+import type { DialogType } from "./TextDialog/common";
+import type { AudioKey, ConfirmedTips } from "@/type/preload";
+import type {
   AllActions,
   SaveResultObject,
   SaveResult,
   ErrorTypeForSaveAllResultDialog,
 } from "@/store/type";
-import { DotNotationDispatch } from "@/store/vuex";
+import type { DotNotationDispatch } from "@/store/vuex";
 import { withProgress } from "@/store/ui";
 import { errorToMessage } from "@/helpers/errorHelper";
 
@@ -39,11 +39,12 @@ export type WarningDialogOptions = {
   isWarningColorButton?: boolean; // ボタンをWarning色にするか
   cancel?: string;
 };
+export type QuestionDialogButtonColor = "display" | "primary" | "warning";
 export type QuestionDialogOptions = {
   type?: DialogType;
   title: string;
   message: string;
-  buttons: (string | { text: string; color: string })[];
+  buttons: (string | { text: string; color: QuestionDialogButtonColor })[];
   cancel: number;
   default?: number;
 };
@@ -222,7 +223,7 @@ export async function multiGenerateAndSaveAudioWithDialog({
     actions,
   );
 
-  if (result == undefined) return;
+  if (result === "canceled") return;
 
   // 書き出し成功時の出力先パスを配列に格納
   const successArray: (string | undefined)[] = result.flatMap((result) =>
@@ -287,7 +288,6 @@ export async function generateAndConnectAndSaveAudioWithDialog({
     actions,
   );
 
-  if (result == undefined) return;
   notifyResult(result, "audio", actions, disableNotifyOnGenerate);
 }
 

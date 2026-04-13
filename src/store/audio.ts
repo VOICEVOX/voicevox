@@ -1,16 +1,16 @@
 import { toBase64 } from "fast-base64";
 import { createUILockAction, withProgress } from "./ui";
 import {
-  AudioItem,
-  SaveResultObject,
-  State,
-  AudioStoreState,
-  AudioCommandStoreState,
-  AudioStoreTypes,
-  AudioCommandStoreTypes,
+  type AudioItem,
+  type SaveResultObject,
+  type State,
+  type AudioStoreState,
+  type AudioCommandStoreState,
+  type AudioStoreTypes,
+  type AudioCommandStoreTypes,
   transformCommandStore,
-  FetchAudioResult,
-  EditorAudioQuery,
+  type FetchAudioResult,
+  type EditorAudioQuery,
 } from "./type";
 import {
   buildAudioFileNameFromRawData,
@@ -42,20 +42,20 @@ import {
 } from "@/domain/japanese";
 import {
   AudioKey,
-  CharacterInfo,
-  DefaultStyleId,
-  Encoding as EncodingType,
-  EngineId,
-  MoraDataType,
-  MorphingInfo,
-  Preset,
-  PresetKey,
+  type CharacterInfo,
+  type DefaultStyleId,
+  type Encoding as EncodingType,
+  type EngineId,
+  type MoraDataType,
+  type MorphingInfo,
+  type Preset,
+  type PresetKey,
   SpeakerId,
   StyleId,
-  StyleInfo,
-  Voice,
+  type StyleInfo,
+  type Voice,
 } from "@/type/preload";
-import { AudioQuery, AccentPhrase, Speaker, SpeakerInfo } from "@/openapi";
+import type { AudioQuery, AccentPhrase, Speaker, SpeakerInfo } from "@/openapi";
 import { base64ImageToUri, base64ToUri } from "@/helpers/base64Helper";
 import { getValueOrThrow, ResultError } from "@/type/result";
 import { generateWriteErrorMessage } from "@/helpers/fileHelper";
@@ -391,7 +391,7 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
           instance.invoke("speakers")({}),
           state.engineManifests[engineId].supportedFeatures.sing
             ? await instance.invoke("singers")({})
-            : [],
+            : Promise.resolve([]),
         ]).catch((error) => {
           window.backend.logError(error, `Failed to get Speakers.`);
           throw error;
@@ -1485,29 +1485,30 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         if (state.savingSetting.fixedExportEnabled) {
           dirPath = state.savingSetting.fixedExportDir;
         } else {
-          dirPath ??= await window.backend.showSaveDirectoryDialog({
+          const selectedDirPath = await window.backend.showSaveDirectoryDialog({
             title: "音声を保存",
           });
+          if (selectedDirPath == undefined) {
+            return "canceled";
+          }
+          dirPath = selectedDirPath;
         }
-        if (dirPath) {
-          const _dirPath = dirPath;
 
-          let finishedCount = 0;
+        let finishedCount = 0;
 
-          const promises = audioKeys.map((audioKey) => {
-            const name = getters.DEFAULT_AUDIO_FILE_NAME(audioKey);
-            return actions
-              .GENERATE_AND_SAVE_AUDIO({
-                audioKey,
-                filePath: path.join(_dirPath, name),
-              })
-              .then((value) => {
-                callback?.(++finishedCount);
-                return value;
-              });
-          });
-          return Promise.all(promises);
-        }
+        const promises = audioKeys.map((audioKey) => {
+          const name = getters.DEFAULT_AUDIO_FILE_NAME(audioKey);
+          return actions
+            .GENERATE_AND_SAVE_AUDIO({
+              audioKey,
+              filePath: path.join(dirPath, name),
+            })
+            .then((value) => {
+              callback?.(++finishedCount);
+              return value;
+            });
+        });
+        return Promise.all(promises);
       },
     ),
   },
@@ -1833,8 +1834,12 @@ export const audioStore = createPartialStore<AudioStoreTypes>({
         const player = new ContinuousPlayer(state.audioKeys.slice(index), {
           generateAudio: ({ audioKey }) =>
             actions.FETCH_AUDIO({ audioKey }).then((result) => result.blob),
-          playAudioBlob: ({ audioBlob, audioKey }) =>
-            actions.PLAY_AUDIO_BLOB({ audioBlob, audioKey }),
+          playAudioBlob: ({ audioBlob, audioKey }) => {
+            if (currentAudioKey !== audioKey) {
+              mutations.SET_AUDIO_PLAY_START_POINT({ startPoint: undefined });
+            }
+            return actions.PLAY_AUDIO_BLOB({ audioBlob, audioKey });
+          },
         });
         player.addEventListener("playstart", (e) => {
           mutations.SET_ACTIVE_AUDIO_KEY({ audioKey: e.audioKey });

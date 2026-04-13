@@ -1,7 +1,7 @@
 import { createPartialStore } from "./vuex";
-import { UserDictWord, UserDictWordToJSON } from "@/openapi";
-import { DictionaryStoreState, DictionaryStoreTypes } from "@/store/type";
-import { EngineId } from "@/type/preload";
+import { type UserDictWord, UserDictWordToJSON } from "@/openapi";
+import type { DictionaryStoreState, DictionaryStoreTypes } from "@/store/type";
+import type { EngineId } from "@/type/preload";
 
 export const dictionaryStoreState: DictionaryStoreState = {};
 

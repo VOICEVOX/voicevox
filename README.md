@@ -51,6 +51,14 @@ npm i -g pnpm # 初回のみ
 pnpm i
 ```
 
+### AI エージェントのセットアップ（任意）
+
+次のコマンドを実行することで、Codex CLI や Claude Code などの AI エージェント用のファイルがセットアップされます。
+
+```bash
+pnpm run setup-agents
+```
+
 ## 実行
 
 ### エンジンの準備
@@ -61,7 +69,7 @@ pnpm i
 Windows でインストール先を変更していない場合は`C:/Users/(ユーザー名)/AppData/Local/Programs/VOICEVOX/vv-engine/run.exe`を指定してください。  
 パスの区切り文字は`\`ではなく`/`なのでご注意ください。
 
-macOS 向けの`VOICEVOX.app`を利用している場合は`/path/to/VOICEVOX.app/Resources/MacOS/vv-engine/run`を指定してください。
+macOS 向けの`VOICEVOX.app`を利用している場合は`/path/to/VOICEVOX.app/Contents/Resources/vv-engine/run`を指定してください。
 
 Linux の場合は、[Releases](https://github.com/VOICEVOX/voicevox/releases/)から入手できる tar.gz 版に含まれる`vv-engine/run`コマンドを指定してください。
 AppImage 版の場合は`$ /path/to/VOICEVOX.AppImage --appimage-mount`でファイルシステムをマウントできます。
@@ -187,14 +195,17 @@ pnpm run test-ui:storybook-vrt # Playwright の UI を表示
 
 1. フォークしたリポジトリの設定で GitHub Actions を有効にします。
 2. リポジトリの設定の Actions > General > Workflow permissions で Read and write permissions を選択します。
-3. `[update snapshots]` という文字列をコミットメッセージに含めてコミットします。
+3. GitHub の Actions タブから「Test」ワークフローを選択し、「Run workflow」をクリックします。
+4. 更新したいブランチを選択し、「スナップショットを更新する」にチェックを入れて実行します。
+
+   gh コマンドでも実行できます。
 
    ```bash
-   git commit -m "UIを変更 [update snapshots]"
+   gh workflow run test.yml -R (ユーザー名)/voicevox --ref (ブランチ名) -f update_snapshots=true
    ```
 
-4. Github Workflow が完了すると、更新されたスクリーンショットがコミットされます。
-5. プルした後、空コミットをプッシュしてテストを再実行します。
+5. Github Workflow が完了すると、更新されたスクリーンショットがコミットされます。
+6. プルした後、空コミットをプッシュしてテストを再実行します。
 
    ```bash
    git commit --allow-empty -m "（テストを再実行）"

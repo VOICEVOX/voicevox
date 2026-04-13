@@ -33,7 +33,7 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref, watch } from "vue";
 import { useStore } from "@/store";
-import { ProgressOptions } from "@/store/type";
+import type { ProgressOptions } from "@/store/type";
 
 const store = useStore();
 

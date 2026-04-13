@@ -3,7 +3,12 @@
  * VOICEVOX ENGINEリポジトリの処理とほぼ同じ。
  */
 
-import { AccentPhrase, AudioQuery, FrameAudioQuery, Mora } from "@/openapi";
+import type {
+  AccentPhrase,
+  AudioQuery,
+  FrameAudioQuery,
+  Mora,
+} from "@/openapi";
 
 function generateSilenceMora(length: number): Mora {
   return {
