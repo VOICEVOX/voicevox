@@ -3,10 +3,8 @@ import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { rm } from "node:fs/promises";
 import electronPlugin, { type ElectronOptions } from "vite-plugin-electron";
-import tsconfigPaths from "vite-tsconfig-paths";
 import vue from "@vitejs/plugin-vue";
 import electronDefaultImport from "electron";
-import checker from "vite-plugin-checker";
 import { type BuildOptions, defineConfig, loadEnv, type Plugin } from "vite";
 import { quasar } from "@quasar/vite-plugin";
 import { playwright as playwrightProvider } from "@vitest/browser-playwright";
@@ -121,11 +119,6 @@ export default defineConfig((options) => {
     plugins: [
       vue(),
       quasar({ autoImportComponentCase: "pascal" }),
-      mode !== "test" &&
-        checker({
-          overlay: false,
-          vueTsc: true,
-        }),
       isElectron && [
         cleanDistPlugin(),
         // TODO: 関数で切り出して共通化できる部分はまとめる
@@ -148,12 +141,15 @@ export default defineConfig((options) => {
               }
             },
             vite: {
-              plugins: [
-                tsconfigPaths({ root: import.meta.dirname }),
-                isProduction && checkSuspiciousImportsPlugin({}),
-              ],
+              plugins: [isProduction && checkSuspiciousImportsPlugin({})],
+              resolve: {
+                tsconfigPaths: true,
+              },
               build: {
                 target: electronTargetVersion?.node,
+                rolldownOptions: {
+                  platform: "node",
+                },
                 outDir: path.resolve(import.meta.dirname, "dist"),
                 sourcemap,
               },
@@ -291,10 +287,10 @@ const electronPreloadOptions = (
         }
       },
       vite: {
-        plugins: [
-          tsconfigPaths({ root: import.meta.dirname }),
-          isProduction && checkSuspiciousImportsPlugin({}),
-        ],
+        plugins: [isProduction && checkSuspiciousImportsPlugin({})],
+        resolve: {
+          tsconfigPaths: true,
+        },
         build: {
           outDir: path.resolve(import.meta.dirname, "dist"),
           sourcemap: options.sourcemap,
@@ -305,7 +301,7 @@ const electronPreloadOptions = (
             },
             output: {
               format: "cjs",
-              inlineDynamicImports: true,
+              codeSplitting: false,
               entryFileNames: `[name].cjs`,
               chunkFileNames: `[name].cjs`,
               assetFileNames: `[name].[ext]`,
