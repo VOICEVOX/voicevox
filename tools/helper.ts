@@ -14,9 +14,11 @@ export async function retryFetch(
       if (response.ok) {
         return response;
       }
-      console.error(`Fetch failed: ${response.statusText}`);
+      console.error(
+        `Fetch failed: ${response.statusText} (${response.status})`,
+      );
     } catch (error) {
-      console.error(`Fetch error: ${String(error)}`);
+      console.error("Fetch error:", error);
     }
     await new Promise((resolve) => setTimeout(resolve, 1000)); // 少し待つ
   }
