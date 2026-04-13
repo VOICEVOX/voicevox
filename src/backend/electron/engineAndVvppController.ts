@@ -24,8 +24,8 @@ import type {
 import type { ProgressCallback } from "@/helpers/progressHelper";
 import { createLogger } from "@/helpers/log";
 import { DisplayableError, errorToMessage } from "@/helpers/errorHelper";
-import { assertNonNullable } from "@/type/utility";
 import { isLinux, isMac, isWindows } from "@/helpers/platform";
+import { assertNonNullable } from "@/type/utility";
 
 const log = createLogger("EngineAndVvppController");
 
@@ -251,10 +251,6 @@ export class EngineAndVvppController {
     );
 
     const latestUrl = envEngineInfo.latestUrl;
-    assertNonNullable(
-      latestUrl,
-      `latestUrl is undefined for ${envEngineInfo.name}`,
-    );
 
     const latestInfo = await fetchLatestDefaultEngineInfo(latestUrl);
     if (latestInfo.formatVersion != 1) {

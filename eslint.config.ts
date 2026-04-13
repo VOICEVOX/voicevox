@@ -121,7 +121,10 @@ export default defineConfigWithVueTs(
   {
     name: "voicevox/type-checked/typescript",
     files: ["**/*.ts", "**/*.mts"],
-    extends: [...tsConfigs.recommendedTypeChecked],
+    extends: [
+      ...tsConfigs.recommendedTypeChecked,
+      ...pluginConfig(voicevoxPlugin.configs.allTyped),
+    ],
     languageOptions: {
       parser: tsParser,
       parserOptions: {
@@ -136,7 +139,10 @@ export default defineConfigWithVueTs(
   {
     name: "voicevox/type-checked/vue",
     files: ["**/*.vue"],
-    extends: [...tsConfigs.recommendedTypeChecked],
+    extends: [
+      ...tsConfigs.recommendedTypeChecked,
+      ...pluginConfig(voicevoxPlugin.configs.allTyped),
+    ],
     languageOptions: {
       parser: vueParser,
       parserOptions: {

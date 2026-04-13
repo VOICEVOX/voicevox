@@ -49,10 +49,8 @@ export async function saveProject(page: Page): Promise<string> {
     await getQuasarMenu(page, "プロジェクトの複製を保存").click();
     await waitForUiUnlock(page);
     const [fileId] = await saveFileDialogHandle.getFileIds();
-    assertNonNullable(fileId);
     const writtenFiles = await writeFileHandle.getWrittenFileBuffers();
     const writtenFile = writtenFiles[fileId];
-    assertNonNullable(writtenFile);
     return writtenFile.toString("utf-8");
   });
 }
