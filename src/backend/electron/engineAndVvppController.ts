@@ -173,7 +173,7 @@ export class EngineAndVvppController {
    * 失敗した場合は例外を投げる。
    */
   async uninstallVvppEngine(engineId: EngineId) {
-    let engineInfo: EngineInfo | undefined = undefined;
+    let engineInfo: EngineInfo | undefined;
     try {
       engineInfo = this.engineInfoManager.fetchEngineInfo(engineId);
       if (!engineInfo) {

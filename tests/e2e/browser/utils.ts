@@ -6,7 +6,6 @@ import {
   mockShowSaveFileDialog,
   mockWriteFile,
 } from "./mockUtility";
-import { assertNonNullable } from "@/type/utility";
 
 /** UIのロックが解除されるまで待つ */
 export async function waitForUiUnlock(page: Page): Promise<void> {
