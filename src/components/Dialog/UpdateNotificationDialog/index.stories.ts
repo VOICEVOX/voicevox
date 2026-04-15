@@ -20,6 +20,9 @@ const meta: Meta<typeof Presentation> = {
         contributors: ["これは表示されないはず"],
       },
     ],
+    isUpdateSupported: {
+      isUpdateSupported: true,
+    },
     "onUpdate:dialogOpened": fn(),
     onSkipThisVersionClick: fn(),
   },
@@ -33,6 +36,17 @@ export const Opened: Story = {
   name: "開いている",
   args: {
     dialogOpened: true,
+  },
+};
+
+export const NotSupported: Story = {
+  name: "アップデートがサポートされていない",
+  args: {
+    dialogOpened: true,
+    isUpdateSupported: {
+      isUpdateSupported: false,
+      reason: "アップデートできない理由がここに入ります。",
+    },
   },
 };
 

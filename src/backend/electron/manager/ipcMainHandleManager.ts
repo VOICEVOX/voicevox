@@ -11,6 +11,7 @@ import type { IpcIHData } from "../ipcType";
 import { getEngineInfoManager } from "./engineInfoManager";
 import { getEngineProcessManager } from "./engineProcessManager";
 import { getMainWindowManager } from "./windowManager/main";
+import { getUpdateManager } from "./updateManager";
 import { AssetTextFileNames } from "@/type/staticResources";
 import { failure, success } from "@/type/result";
 import {
@@ -112,6 +113,7 @@ class IpcMainHandleManager {
     const engineAndVvppController = getEngineAndVvppController();
     const engineInfoManager = getEngineInfoManager();
     const engineProcessManager = getEngineProcessManager();
+    const updateManager = getUpdateManager();
     return {
       GET_TEXT_ASSET: async (_, textType) => {
         const fileName = path.join(staticDirPath, AssetTextFileNames[textType]);
@@ -391,6 +393,14 @@ class IpcMainHandleManager {
           const a = e as SystemError;
           return failure(a.code, a);
         }
+      },
+
+      IS_UPDATE_SUPPORTED: async () => {
+        return updateManager.isUpdateSupported();
+      },
+
+      UPDATE_APP: async (_, obj) => {
+        await updateManager.updateApp(obj.version);
       },
     };
   }

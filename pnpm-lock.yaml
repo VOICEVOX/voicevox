@@ -39,6 +39,9 @@ importers:
       electron-log:
         specifier: 5.4.3
         version: 5.4.3
+      electron-updater:
+        specifier: 6.6.2
+        version: 6.6.2
       electron-window-state:
         specifier: 5.0.3
         version: 5.0.3
@@ -2094,6 +2097,10 @@ packages:
   buffer@5.7.1:
     resolution: {integrity: sha512-EHcyIPBQ4BSGlvjB16k5KgAJ27CIsHY/2JBmCRReo48y9rQ3MaUzWX3KVlBa4U7MyX02HdVj0K7C3WaB3ju7FQ==}
 
+  builder-util-runtime@9.3.1:
+    resolution: {integrity: sha512-2/egrNDDnRaxVwK3A+cJq6UOlqOdedGA7JPqCeJjN2Zjk1/QB/6QUi3b714ScIGS7HafFXTyzJEOr5b44I3kvQ==}
+    engines: {node: '>=12.0.0'}
+
   builder-util-runtime@9.5.1:
     resolution: {integrity: sha512-qt41tMfgHTllhResqM5DcnHyDIWNgzHvuY2jDcYP9iaGpkWxTUzV6GQjDeLnlR1/DtdlcsWQbA7sByMpmJFTLQ==}
     engines: {node: '>=12.0.0'}
@@ -2578,6 +2585,9 @@ packages:
 
   electron-publish@26.6.0:
     resolution: {integrity: sha512-LsyHMMqbvJ2vsOvuWJ19OezgF2ANdCiHpIucDHNiLhuI+/F3eW98ouzWSRmXXi82ZOPZXC07jnIravY4YYwCLQ==}
+
+  electron-updater@6.6.2:
+    resolution: {integrity: sha512-Cr4GDOkbAUqRHP5/oeOmH/L2Bn6+FQPxVLZtPbcmKZC63a1F3uu5EefYOssgZXG3u/zBlubbJ5PJdITdMVggbw==}
 
   electron-window-state@5.0.3:
     resolution: {integrity: sha512-1mNTwCfkolXl3kMf50yW3vE2lZj0y92P/HYWFBrb+v2S/pCka5mdwN3cagKm458A7NjndSwijynXgcLWRodsVg==}
@@ -3679,6 +3689,13 @@ packages:
 
   lodash.clonedeep@4.5.0:
     resolution: {integrity: sha512-H5ZhCF25riFd9uB5UCkVKo61m3S/xZk1x4wA6yp/L3RFP6Z/eHH1ymQcGLo7J3GMPfm0V/7m1tryHuGVxpqEBQ==}
+
+  lodash.escaperegexp@4.1.2:
+    resolution: {integrity: sha512-TM9YBvyC84ZxE3rgfefxUWiQKLilstD6k7PTGt6wfbtXF8ixIJLOL3VYyV/z+ZiPLsVxAsKAFVwWlWeb2Y8Yyw==}
+
+  lodash.isequal@4.5.0:
+    resolution: {integrity: sha512-pDo3lu8Jhfjqls6GkMgpahsF9kCyayhgykjyLMNFTKWrpVdAQtYyB4muAMWozBB4ig/dtWAmsMxLEI8wuz+DYQ==}
+    deprecated: This package is deprecated. Use require('node:util').isDeepStrictEqual instead.
 
   lodash.merge@4.6.2:
     resolution: {integrity: sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==}
@@ -5025,6 +5042,9 @@ packages:
 
   tiny-invariant@1.3.3:
     resolution: {integrity: sha512-+FbBPE1o9QAYvviau/qC5SE3caw21q3xkvWKBtja5vgqOWIHHJ3ioaq1VPfn/Szqctz2bU/oYeKd9/z5BL+PVg==}
+
+  tiny-typed-emitter@2.1.0:
+    resolution: {integrity: sha512-qVtvMxeXbVej0cQWKqVSSAHmKZEHAvxdF8HEUBFWts8h+xEo5m/lEiPakuyZ3BnCBjOD8i24kzNOiOLLgsSxhA==}
 
   tinybench@2.9.0:
     resolution: {integrity: sha512-0+DUvqWMValLmha6lr4kD8iAMK1HzV0/aKnCtWb9v9641TnP/MFb7Pc2bxoxQjTXAErryXVgUOfv2YqNllqGeg==}
@@ -7547,6 +7567,13 @@ snapshots:
       base64-js: 1.5.1
       ieee754: 1.2.1
 
+  builder-util-runtime@9.3.1:
+    dependencies:
+      debug: 4.4.3
+      sax: 1.4.4
+    transitivePeerDependencies:
+      - supports-color
+
   builder-util-runtime@9.5.1:
     dependencies:
       debug: 4.4.3
@@ -8035,6 +8062,19 @@ snapshots:
       fs-extra: 10.1.0
       lazy-val: 1.0.5
       mime: 2.6.0
+    transitivePeerDependencies:
+      - supports-color
+
+  electron-updater@6.6.2:
+    dependencies:
+      builder-util-runtime: 9.3.1
+      fs-extra: 10.1.0
+      js-yaml: 4.1.1
+      lazy-val: 1.0.5
+      lodash.escaperegexp: 4.1.2
+      lodash.isequal: 4.5.0
+      semver: 7.7.3
+      tiny-typed-emitter: 2.1.0
     transitivePeerDependencies:
       - supports-color
 
@@ -9348,6 +9388,10 @@ snapshots:
       p-locate: 5.0.0
 
   lodash.clonedeep@4.5.0: {}
+
+  lodash.escaperegexp@4.1.2: {}
+
+  lodash.isequal@4.5.0: {}
 
   lodash.merge@4.6.2: {}
 
@@ -10976,6 +11020,8 @@ snapshots:
       semver: 5.7.2
 
   tiny-invariant@1.3.3: {}
+
+  tiny-typed-emitter@2.1.0: {}
 
   tinybench@2.9.0: {}
 
