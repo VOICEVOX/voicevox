@@ -1,11 +1,11 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { autoUpdater as electronUpdater } from "electron-updater";
+import { getMainWindowManager } from "./windowManager/main";
 import { DisplayableError, errorToMessage } from "@/helpers/errorHelper";
 import { createLogger } from "@/helpers/log";
 import { isProduction, isMac } from "@/helpers/platform";
 import type { IsUpdateSupported } from "@/type/preload";
-import { getMainWindowManager } from "./windowManager/main";
 
 const log = createLogger("AutoUpdateManager");
 
