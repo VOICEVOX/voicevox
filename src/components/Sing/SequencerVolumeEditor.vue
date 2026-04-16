@@ -166,6 +166,7 @@ const canvas = ref<HTMLCanvasElement | null>(null);
 const viewportWidth = ref<number>();
 const viewportHeight = ref<number>();
 
+  // TODO: pixi.js関連の変数をまとめてモジュール化し、isUnmountedなどのフラグを無くす
 let renderer: PIXI.Renderer | undefined;
 let stage: PIXI.Container | undefined;
 let gridGraphics: PIXI.Graphics | undefined;

@@ -109,6 +109,7 @@ let resizeObserver: ResizeObserver | undefined;
 let canvasWidth: number | undefined;
 let canvasHeight: number | undefined;
 
+// TODO: pixi.js関連の変数をまとめてモジュール化し、isUnmounted, isInitializedなどのフラグを無くす
 let renderer: PIXI.Renderer | undefined;
 let stage: PIXI.Container | undefined;
 let originalPitchLine: PitchLine | undefined;
