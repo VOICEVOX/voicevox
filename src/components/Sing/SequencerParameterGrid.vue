@@ -39,20 +39,12 @@ if (injectedValue == undefined) {
 const { numMeasures } = injectedValue;
 
 // テーマに応じた線のスタイル
-const gridLineStyles: {
-  light: {
-    measureLineColor: number;
-    measureLineAlpha: number;
-    beatLineColor: number;
-    beatLineAlpha: number;
-  };
-  dark: {
-    measureLineColor: number;
-    measureLineAlpha: number;
-    beatLineColor: number;
-    beatLineAlpha: number;
-  };
-} = {
+const gridLineStyles: Record<"light" | "dark", {
+  measureLineColor: number;
+  measureLineAlpha: number;
+  beatLineColor: number;
+  beatLineAlpha: number;
+}> = {
   light: {
     measureLineColor: 0x8a8a8a,
     measureLineAlpha: 0.35,
