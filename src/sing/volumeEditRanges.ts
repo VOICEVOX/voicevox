@@ -5,6 +5,10 @@ export type VolumeEditableFrameRange = {
   readonly endFrame: number;
 };
 
+/**
+ * 編集可能区間をソートし、重なり・隣接する区間をマージする。
+ * 入力はソート不要。無効な区間（startFrame >= endFrame）は除外される。
+ */
 export const mergeVolumeEditableFrameRanges = (
   ranges: readonly VolumeEditableFrameRange[],
 ) => {
@@ -24,6 +28,10 @@ export const mergeVolumeEditableFrameRanges = (
   return merged;
 };
 
+/**
+ * 指定フレームが編集可能区間内にあるかを判定する。
+ * 区間は半開区間 [startFrame, endFrame) として扱う。
+ */
 export const isFrameInVolumeEditableRange = (
   frame: number,
   ranges: readonly VolumeEditableFrameRange[],
@@ -33,6 +41,10 @@ export const isFrameInVolumeEditableRange = (
   );
 };
 
+/**
+ * 指定範囲 [startFrame, startFrame + frameLength) と編集可能区間の重なりを返す。
+ * rangesはソート済みであること（mergeVolumeEditableFrameRangesの出力を想定）。
+ */
 export const getOverlappingVolumeEditableFrameRanges = (
   startFrame: number,
   frameLength: number,
@@ -64,6 +76,10 @@ export const getOverlappingVolumeEditableFrameRanges = (
   return overlaps;
 };
 
+/**
+ * 編集可能区間外のデータを VALUE_INDICATING_NO_DATA で埋めた新しい配列を返す。
+ * 元の配列は変更しない。
+ */
 export const maskVolumeEditDataByEditableRanges = (
   data: readonly number[],
   startFrame: number,
@@ -84,6 +100,7 @@ export const maskVolumeEditDataByEditableRanges = (
   return masked;
 };
 
+/** データ配列中の有効な編集データ点数（VALUE_INDICATING_NO_DATA でない要素数）を返す。 */
 export const countVolumeEditDataPoints = (data: readonly number[]) => {
   return data.filter((value) => value !== VALUE_INDICATING_NO_DATA).length;
 };
