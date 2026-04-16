@@ -1303,12 +1303,14 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   ERASE_VOLUME_EDIT_DATA: {
-    mutation(state, { startFrame, frameLength, trackId }) {
+    mutation(state, { ranges, trackId }) {
       const track = getOrThrow(state.tracks, trackId);
       const volumeEditData = track.volumeEditData;
       const tempData = [...volumeEditData];
-      const endFrame = Math.min(startFrame + frameLength, tempData.length);
-      tempData.fill(VALUE_INDICATING_NO_DATA, startFrame, endFrame);
+      for (const range of ranges) {
+        const endFrame = Math.min(range.endFrame, tempData.length);
+        tempData.fill(VALUE_INDICATING_NO_DATA, range.startFrame, endFrame);
+      }
       track.volumeEditData = tempData;
     },
   },
@@ -3848,23 +3850,23 @@ export const singingCommandStore = transformCommandStore(
       },
     },
     COMMAND_ERASE_VOLUME_EDIT_DATA: {
-      mutation(draft, { startFrame, frameLength, trackId }) {
+      mutation(draft, { ranges, trackId }) {
         singingStore.mutations.ERASE_VOLUME_EDIT_DATA(draft, {
-          startFrame,
-          frameLength,
+          ranges,
           trackId,
         });
       },
-      action({ mutations, actions }, { startFrame, frameLength, trackId }) {
-        if (startFrame < 0) {
-          throw new Error("startFrame must be greater than or equal to 0.");
-        }
-        if (frameLength < 1) {
-          throw new Error("frameLength must be at least 1.");
+      action({ mutations, actions }, { ranges, trackId }) {
+        for (const range of ranges) {
+          if (range.startFrame < 0) {
+            throw new Error("startFrame must be greater than or equal to 0.");
+          }
+          if (range.endFrame <= range.startFrame) {
+            throw new Error("endFrame must be greater than startFrame.");
+          }
         }
         mutations.COMMAND_ERASE_VOLUME_EDIT_DATA({
-          startFrame,
-          frameLength,
+          ranges,
           trackId,
         });
 

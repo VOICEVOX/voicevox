@@ -53,10 +53,10 @@ import { Color } from "@/sing/graphics/lineStrip";
 import { useSequencerGrid } from "@/composables/useSequencerGridPattern";
 import SequencerVolumeToolPalette from "@/components/Sing/SequencerVolumeToolPalette.vue";
 import {
+  computeVolumeEditableFrameRanges,
   getOverlappingVolumeEditableFrameRanges,
   isFrameInVolumeEditableRange,
   maskVolumeEditDataByEditableRanges,
-  mergeVolumeEditableFrameRanges,
   type VolumeEditableFrameRange,
 } from "@/sing/volumeEditRanges";
 
@@ -517,7 +517,7 @@ const refreshEditableFrameRanges = () => {
     return;
   }
 
-  const ranges: VolumeEditableFrameRange[] = [];
+  const resolvedPhrases = [];
   for (const phrase of store.state.phrases.values()) {
     if (phrase.trackId !== selectedTrackId.value) {
       continue;
@@ -525,7 +525,6 @@ const refreshEditableFrameRanges = () => {
     if (phrase.queryKey == undefined) {
       continue;
     }
-
     const phraseQuery = store.state.phraseQueries.get(phrase.queryKey);
     if (phraseQuery?.volume == undefined) {
       continue;
@@ -535,55 +534,18 @@ const refreshEditableFrameRanges = () => {
         `Frame rate mismatch: expected ${frameRate}, got ${phraseQuery.frameRate}. queryKey: ${phrase.queryKey}`,
       );
     }
-
-    const phraseStartFrame = Math.round(phrase.startTime * frameRate);
-    const phraseEndFrame = phraseStartFrame + phraseQuery.volume.length;
-    const startFrame = Math.max(
-      0,
-      phraseStartFrame + (phrase.minNonPauseStartFrame ?? 0),
-    );
-    const endFrame = Math.min(
-      phraseEndFrame,
-      phraseStartFrame +
-        (phrase.maxNonPauseEndFrame ?? phraseQuery.volume.length),
-    );
-    if (startFrame < endFrame) {
-      ranges.push({ startFrame, endFrame });
-    }
+    resolvedPhrases.push({
+      startTime: phrase.startTime,
+      volumeLength: phraseQuery.volume.length,
+      minNonPauseStartFrame: phrase.minNonPauseStartFrame,
+      maxNonPauseEndFrame: phrase.maxNonPauseEndFrame,
+    });
   }
 
-  const newRanges = mergeVolumeEditableFrameRanges(ranges);
-  editableFrameRanges.value = newRanges;
-
-  // 不変条件の維持: editableRanges 外の編集データを掃除
-  // NOTE: トラック上のフレーズのうち phraseQuery が未確定のものがある場合は
-  // editable range が不完全なため prune をスキップする。
-  // 全 phrase の query が揃ってから prune を行う。
-  const trackId = selectedTrackId.value;
-  const hasUnresolvedPhrases = [...store.state.phrases.values()].some(
-    (phrase) =>
-      phrase.trackId === trackId &&
-      (phrase.queryKey == undefined ||
-        store.state.phraseQueries.get(phrase.queryKey)?.volume == undefined),
+  editableFrameRanges.value = computeVolumeEditableFrameRanges(
+    resolvedPhrases,
+    frameRate,
   );
-  if (hasUnresolvedPhrases) {
-    return;
-  }
-  const currentEditData = selectedTrack.value?.volumeEditData ?? [];
-  if (currentEditData.length > 0) {
-    const pruned = maskVolumeEditDataByEditableRanges(
-      currentEditData,
-      0,
-      newRanges,
-    );
-    if (pruned.some((v, i) => v !== currentEditData[i])) {
-      store.mutations.SET_VOLUME_EDIT_DATA({
-        volumeArray: pruned,
-        startFrame: 0,
-        trackId,
-      });
-    }
-  }
 };
 
 const refreshEffectiveVolumeSegments = () => {

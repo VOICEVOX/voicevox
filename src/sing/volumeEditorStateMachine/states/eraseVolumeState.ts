@@ -136,10 +136,9 @@ export class EraseVolumeState implements State<
         context.previewVolumeEdit.value.frameLength,
         context.getEditableFrameRanges(),
       );
-      for (const overlap of overlaps) {
+      if (overlaps.length > 0) {
         void context.store.actions.COMMAND_ERASE_VOLUME_EDIT_DATA({
-          startFrame: overlap.startFrame,
-          frameLength: overlap.endFrame - overlap.startFrame,
+          ranges: overlaps,
           trackId: this.trackId,
         });
       }

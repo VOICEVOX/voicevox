@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { VALUE_INDICATING_NO_DATA } from "@/sing/domain";
 import {
-  countVolumeEditDataPoints,
+  computeVolumeEditableFrameRanges,
   getOverlappingVolumeEditableFrameRanges,
   isFrameInVolumeEditableRange,
   maskVolumeEditDataByEditableRanges,
@@ -68,14 +68,64 @@ describe("volumeEditRanges", () => {
     expect(isFrameInVolumeEditableRange(24, ranges)).toBe(true);
   });
 
-  it("有効な編集データ点数を数える", () => {
-    const actual = countVolumeEditDataPoints([
-      0.1,
-      VALUE_INDICATING_NO_DATA,
-      0.2,
+  it("空の区間リストをマージすると空が返る", () => {
+    const actual = mergeVolumeEditableFrameRanges([]);
+
+    expect(actual).toEqual([]);
+  });
+
+  it("隣接する区間を1つにマージする", () => {
+    const actual = mergeVolumeEditableFrameRanges([
+      { startFrame: 5, endFrame: 10 },
+      { startFrame: 10, endFrame: 15 },
     ]);
 
-    expect(actual).toBe(2);
+    expect(actual).toEqual([{ startFrame: 5, endFrame: 15 }]);
+  });
+
+  it("操作範囲と編集可能区間が重ならない場合は空を返す", () => {
+    const actual = getOverlappingVolumeEditableFrameRanges(0, 5, [
+      { startFrame: 10, endFrame: 20 },
+    ]);
+
+    expect(actual).toEqual([]);
+  });
+
+  it("編集可能区間が空の場合は全データがマスクされる", () => {
+    const actual = maskVolumeEditDataByEditableRanges([0.1, 0.2, 0.3], 0, []);
+
+    expect(actual).toEqual([
+      VALUE_INDICATING_NO_DATA,
+      VALUE_INDICATING_NO_DATA,
+      VALUE_INDICATING_NO_DATA,
+    ]);
+  });
+
+  it("解決済みフレーズ情報から編集可能区間を計算しマージする", () => {
+    const actual = computeVolumeEditableFrameRanges(
+      [
+        {
+          startTime: 1.0,
+          volumeLength: 100,
+          minNonPauseStartFrame: 10,
+          maxNonPauseEndFrame: 80,
+        },
+        {
+          startTime: 2.0,
+          volumeLength: 50,
+          // minNonPauseStartFrame/maxNonPauseEndFrame が未設定の場合は
+          // フレーズ全体が編集可能
+        },
+      ],
+      100, // frameRate
+    );
+
+    // phrase1: phraseStart=100, startFrame=100+10=110, endFrame=min(200, 100+80)=180
+    // phrase2: phraseStart=200, startFrame=200+0=200, endFrame=min(250, 200+50)=250
+    expect(actual).toEqual([
+      { startFrame: 110, endFrame: 180 },
+      { startFrame: 200, endFrame: 250 },
+    ]);
   });
 
   it("startFrame=0でマスクするとpruneとして機能する", () => {

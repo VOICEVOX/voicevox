@@ -3,7 +3,7 @@ import { store } from "@/store";
 import { NoteId, TrackId } from "@/type/preload";
 import { resetMockMode, uuid4 } from "@/helpers/random";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
-import { createDefaultTrack } from "@/sing/domain";
+import { createDefaultTrack, VALUE_INDICATING_NO_DATA } from "@/sing/domain";
 import { getOrThrow } from "@/helpers/mapHelper";
 
 const initialState = cloneWithUnwrapProxy(store.state);
@@ -274,6 +274,44 @@ describe("COMMAND_ERASE_PHONEME_TIMING_EDITS", () => {
     expect(actualEdits).toEqual([
       { phonemeIndexInNote: 1, offsetSeconds: 0.2 },
     ]);
+  });
+});
+
+describe("COMMAND_ERASE_VOLUME_EDIT_DATA", () => {
+  test("複数範囲を1コマンドで削除し範囲外のデータを保持する", async () => {
+    const trackId = store.state.trackOrder[0];
+    const volumeEditData = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7];
+    store.mutations.SET_VOLUME_EDIT_DATA({
+      volumeArray: volumeEditData,
+      startFrame: 0,
+      trackId,
+    });
+    const undoCommandCount = store.state.undoCommands.song.length;
+
+    await store.actions.COMMAND_ERASE_VOLUME_EDIT_DATA({
+      ranges: [
+        { startFrame: 1, endFrame: 3 },
+        { startFrame: 5, endFrame: 6 },
+      ],
+      trackId,
+    });
+
+    const track = getOrThrow(store.state.tracks, trackId);
+    expect(track.volumeEditData).toEqual([
+      0.1,
+      VALUE_INDICATING_NO_DATA,
+      VALUE_INDICATING_NO_DATA,
+      0.4,
+      0.5,
+      VALUE_INDICATING_NO_DATA,
+      0.7,
+    ]);
+    expect(store.state.undoCommands.song.length).toBe(undoCommandCount + 1);
+
+    await store.actions.UNDO({ editor: "song" });
+
+    const trackAfterUndo = getOrThrow(store.state.tracks, trackId);
+    expect(trackAfterUndo.volumeEditData).toEqual(volumeEditData);
   });
 });
 

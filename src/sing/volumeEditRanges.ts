@@ -87,3 +87,35 @@ export const maskVolumeEditDataByEditableRanges = (
 export const countVolumeEditDataPoints = (data: readonly number[]) => {
   return data.filter((value) => value !== VALUE_INDICATING_NO_DATA).length;
 };
+
+/**
+ * 解決済みフレーズ情報からボリューム編集可能区間を計算する。
+ * 呼び出し側でトラックフィルタやphraseQuery解決を済ませたうえで渡すこと。
+ */
+export const computeVolumeEditableFrameRanges = (
+  resolvedPhrases: readonly {
+    readonly startTime: number;
+    readonly volumeLength: number;
+    readonly minNonPauseStartFrame?: number;
+    readonly maxNonPauseEndFrame?: number;
+  }[],
+  frameRate: number,
+): VolumeEditableFrameRange[] => {
+  const ranges: VolumeEditableFrameRange[] = [];
+  for (const phrase of resolvedPhrases) {
+    const phraseStartFrame = Math.round(phrase.startTime * frameRate);
+    const phraseEndFrame = phraseStartFrame + phrase.volumeLength;
+    const startFrame = Math.max(
+      0,
+      phraseStartFrame + (phrase.minNonPauseStartFrame ?? 0),
+    );
+    const endFrame = Math.min(
+      phraseEndFrame,
+      phraseStartFrame + (phrase.maxNonPauseEndFrame ?? phrase.volumeLength),
+    );
+    if (startFrame < endFrame) {
+      ranges.push({ startFrame, endFrame });
+    }
+  }
+  return mergeVolumeEditableFrameRanges(ranges);
+};
