@@ -30,7 +30,9 @@ const props = defineProps<{
 const store = useStore();
 const tpqn = computed(() => store.state.tpqn);
 const timeSignatures = computed(() => store.state.timeSignatures);
-const isDark = computed(() => store.state.currentTheme === "Dark");
+const currentTheme = computed(() =>
+  store.state.currentTheme === "Dark" ? "dark" : "light",
+);
 
 const injectedValue = inject(numMeasuresInjectionKey);
 if (injectedValue == undefined) {
@@ -38,24 +40,37 @@ if (injectedValue == undefined) {
 }
 const { numMeasures } = injectedValue;
 
+type LineStyle = {
+  color: number;
+  alpha: number;
+};
+
+type GridLineStyle = {
+  measure: LineStyle;
+  beat: LineStyle;
+};
+
 // テーマに応じた線のスタイル
-const gridLineStyles: Record<"light" | "dark", {
-  measureLineColor: number;
-  measureLineAlpha: number;
-  beatLineColor: number;
-  beatLineAlpha: number;
-}> = {
+const gridLineStyles: Record<"light" | "dark", GridLineStyle> = {
   light: {
-    measureLineColor: 0x8a8a8a,
-    measureLineAlpha: 0.35,
-    beatLineColor: 0xc4c4c4,
-    beatLineAlpha: 0.25,
+    measure: {
+      color: 0x8a8a8a,
+      alpha: 0.35,
+    },
+    beat: {
+      color: 0xc4c4c4,
+      alpha: 0.25,
+    },
   },
   dark: {
-    measureLineColor: 0x6b6b6b,
-    measureLineAlpha: 0.35,
-    beatLineColor: 0x4a4a4a,
-    beatLineAlpha: 0.25,
+    measure: {
+      color: 0x6b6b6b,
+      alpha: 0.35,
+    },
+    beat: {
+      color: 0x4a4a4a,
+      alpha: 0.25,
+    },
   },
 };
 
@@ -100,15 +115,6 @@ const render = () => {
     width: canvasWidth,
     height: canvasHeight,
   };
-
-  // 線の色とスタイルを取得
-  const currentGridLineStyle = isDark.value
-    ? gridLineStyles.dark
-    : gridLineStyles.light;
-  const measureLineColor = currentGridLineStyle.measureLineColor;
-  const measureLineAlpha = currentGridLineStyle.measureLineAlpha;
-  const beatLineColor = currentGridLineStyle.beatLineColor;
-  const beatLineAlpha = currentGridLineStyle.beatLineAlpha;
 
   // 小節線と拍線の位置を計算
   const gridLines: GridLineInfo[] = [];
@@ -164,12 +170,11 @@ const render = () => {
     const graphic = graphics[i];
 
     const lineX = Math.round(line.x - props.viewportInfo.offsetX);
-    const color = line.type === "measure" ? measureLineColor : beatLineColor;
-    const alpha = line.type === "measure" ? measureLineAlpha : beatLineAlpha;
+    const currentLineStyle = gridLineStyles[currentTheme.value][line.type];
 
     graphic.renderable = true;
     graphic.clear();
-    graphic.lineStyle(1, color, alpha);
+    graphic.lineStyle(1, currentLineStyle.color, currentLineStyle.alpha);
     graphic.moveTo(lineX - 0.5, 0);
     graphic.lineTo(lineX - 0.5, canvasSize.height);
   }
@@ -183,7 +188,7 @@ const render = () => {
 };
 
 // NOTE: mountedをwatchしているので、onMountedの直後に必ず１回実行される
-watch([mounted, timeSignatures, numMeasures, isDark], ([mounted]) => {
+watch([mounted, timeSignatures, numMeasures, currentTheme], ([mounted]) => {
   if (mounted) {
     renderInNextFrame = true;
   }
