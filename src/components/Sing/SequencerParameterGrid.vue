@@ -16,7 +16,11 @@ import {
 } from "@/sing/viewHelper";
 import { numMeasuresInjectionKey } from "@/components/Sing/ScoreSequencer.vue";
 import type { TimeSignature } from "@/domain/project/type";
-import { getBeatDuration, getMeasureDuration } from "@/sing/music";
+import {
+  getBeatDuration,
+  getMeasureDuration,
+  getTimeSignaturePositions,
+} from "@/sing/music";
 
 type GridLineInfo = {
   x: number;
@@ -121,41 +125,49 @@ const render = () => {
   const viewportLeft = props.viewportInfo.offsetX - 1;
   const viewportRight = props.viewportInfo.offsetX + canvasSize.width + 1;
 
-  let sectionStartX = 0;
-  for (const [i, timeSignature] of timeSignatures.value.entries()) {
-    const nextTimeSignature = timeSignatures.value.at(i + 1);
+  // 各拍子セクションの開始tick位置を事前計算
+  const tsSectionStartTicks = getTimeSignaturePositions(
+    timeSignatures.value,
+    tpqn.value,
+  );
+
+  // 各拍子セクションから可視範囲内の線座標を収集
+  for (const [i, tsSection] of timeSignatures.value.entries()) {
+    const nextTsSection = timeSignatures.value.at(i + 1);
     const nextMeasureNumber =
-      nextTimeSignature?.measureNumber ?? numMeasures.value + 1;
-    const measureCount = nextMeasureNumber - timeSignature.measureNumber;
-    const measureWidth = getMeasureWidth(timeSignature);
-    const beatTicks = getBeatDuration(timeSignature.beatType, tpqn.value);
+      nextTsSection?.measureNumber ?? numMeasures.value + 1;
+    const measureCount = nextMeasureNumber - tsSection.measureNumber;
+    const measureWidth = getMeasureWidth(tsSection);
+    const beatTicks = getBeatDuration(tsSection.beatType, tpqn.value);
     const beatWidth =
       tickToBaseX(beatTicks, tpqn.value) * props.viewportInfo.scaleX;
-    const sectionWidth = measureWidth * measureCount;
+    const tsSectionStartX =
+      tickToBaseX(tsSectionStartTicks[i], tpqn.value) *
+      props.viewportInfo.scaleX;
+    const tsSectionWidth = measureWidth * measureCount;
 
-    // セクションが可視範囲と重ならなければスキップ
+    // 拍子セクションが可視範囲と重ならなければスキップ
     if (
-      sectionStartX + sectionWidth < viewportLeft ||
-      sectionStartX > viewportRight
+      tsSectionStartX + tsSectionWidth < viewportLeft ||
+      tsSectionStartX > viewportRight
     ) {
-      sectionStartX += sectionWidth;
       continue;
     }
 
-    // セクション内で可視範囲に入る最初と最後の小節インデックス（0始まり）を計算
+    // 拍子セクション内で可視範囲に入る最初と最後の小節インデックス（0始まり）を計算
     const firstMeasureIndex = Math.max(
       0,
-      Math.floor((viewportLeft - sectionStartX) / measureWidth),
+      Math.floor((viewportLeft - tsSectionStartX) / measureWidth),
     );
     const lastMeasureIndexExclusive = Math.min(
       measureCount,
-      Math.ceil((viewportRight - sectionStartX) / measureWidth),
+      Math.ceil((viewportRight - tsSectionStartX) / measureWidth),
     );
 
     for (let k = firstMeasureIndex; k < lastMeasureIndexExclusive; k++) {
-      const measureX = sectionStartX + k * measureWidth;
+      const measureX = tsSectionStartX + k * measureWidth;
       // 拍線
-      for (let beat = 1; beat < timeSignature.beats; beat++) {
+      for (let beat = 1; beat < tsSection.beats; beat++) {
         visibleLines.push({
           x: measureX + beatWidth * beat,
           type: "beat",
@@ -164,8 +176,6 @@ const render = () => {
       // 小節線（小節の右端 = 次の小節の左端）。先頭の0位置は出力しない
       visibleLines.push({ x: measureX + measureWidth, type: "measure" });
     }
-
-    sectionStartX += sectionWidth;
   }
 
   // Graphicsは単一インスタンスに集約して描画する
