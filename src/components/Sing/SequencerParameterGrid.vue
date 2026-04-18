@@ -197,11 +197,14 @@ const render = () => {
 };
 
 // NOTE: mountedをwatchしているので、onMountedの直後に必ず１回実行される
-watch([mounted, tpqn, timeSignatures, numMeasures, currentTheme], ([mounted]) => {
-  if (mounted) {
-    renderInNextFrame = true;
-  }
-});
+watch(
+  [mounted, tpqn, timeSignatures, numMeasures, currentTheme],
+  ([mounted]) => {
+    if (mounted) {
+      renderInNextFrame = true;
+    }
+  },
+);
 
 watch(
   () => [props.viewportInfo.scaleX, props.viewportInfo.offsetX],
