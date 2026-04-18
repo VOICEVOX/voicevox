@@ -197,7 +197,7 @@ const render = () => {
 };
 
 // NOTE: mountedをwatchしているので、onMountedの直後に必ず１回実行される
-watch([mounted, timeSignatures, numMeasures, currentTheme], ([mounted]) => {
+watch([mounted, tpqn, timeSignatures, numMeasures, currentTheme], ([mounted]) => {
   if (mounted) {
     renderInNextFrame = true;
   }
