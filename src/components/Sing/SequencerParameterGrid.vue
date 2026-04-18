@@ -116,41 +116,57 @@ const render = () => {
     height: canvasHeight,
   };
 
-  // 小節線と拍線の位置を計算
-  const gridLines: GridLineInfo[] = [];
-  let measureStartX = 0;
+  // 可視範囲内の小節線・拍線の位置を計算
+  const visibleLines: GridLineInfo[] = [];
+  const viewportLeft = props.viewportInfo.offsetX - 1;
+  const viewportRight = props.viewportInfo.offsetX + canvasSize.width + 1;
+
+  let sectionStartX = 0;
   for (const [i, timeSignature] of timeSignatures.value.entries()) {
     const nextTimeSignature = timeSignatures.value.at(i + 1);
     const nextMeasureNumber =
       nextTimeSignature?.measureNumber ?? numMeasures.value + 1;
-    const width = getMeasureWidth(timeSignature);
+    const measureCount = nextMeasureNumber - timeSignature.measureNumber;
+    const measureWidth = getMeasureWidth(timeSignature);
     const beatTicks = getBeatDuration(timeSignature.beatType, tpqn.value);
     const beatWidth =
       tickToBaseX(beatTicks, tpqn.value) * props.viewportInfo.scaleX;
+    const sectionWidth = measureWidth * measureCount;
 
-    for (
-      let measureNumber = timeSignature.measureNumber;
-      measureNumber < nextMeasureNumber;
-      measureNumber++
+    // セクションが可視範囲と重ならなければスキップ
+    if (
+      sectionStartX + sectionWidth < viewportLeft ||
+      sectionStartX > viewportRight
     ) {
+      sectionStartX += sectionWidth;
+      continue;
+    }
+
+    // セクション内で可視範囲に入る最初と最後の小節インデックス（0始まり）を計算
+    const firstMeasureIndex = Math.max(
+      0,
+      Math.floor((viewportLeft - sectionStartX) / measureWidth),
+    );
+    const lastMeasureIndexExclusive = Math.min(
+      measureCount,
+      Math.ceil((viewportRight - sectionStartX) / measureWidth),
+    );
+
+    for (let k = firstMeasureIndex; k < lastMeasureIndexExclusive; k++) {
+      const measureX = sectionStartX + k * measureWidth;
       // 拍線
       for (let beat = 1; beat < timeSignature.beats; beat++) {
-        gridLines.push({
-          x: measureStartX + beatWidth * beat,
+        visibleLines.push({
+          x: measureX + beatWidth * beat,
           type: "beat",
         });
       }
       // 小節線（小節の右端 = 次の小節の左端）。先頭の0位置は出力しない
-      measureStartX += width;
-      gridLines.push({ x: measureStartX, type: "measure" });
+      visibleLines.push({ x: measureX + measureWidth, type: "measure" });
     }
-  }
 
-  // カリング: 画面外の線は除外
-  const visibleLines = gridLines.filter((line) => {
-    const lineScreenX = line.x - props.viewportInfo.offsetX;
-    return lineScreenX >= -1 && lineScreenX <= canvasSize.width + 1;
-  });
+    sectionStartX += sectionWidth;
+  }
 
   // Graphicsは単一インスタンスに集約して描画する
   if (graphics.length === 0) {
