@@ -5,7 +5,6 @@ import {
   Store as BaseStore,
   useStore as baseUseStore,
   type ModuleTree,
-  type Plugin,
   type StoreOptions as OriginalStoreOptions,
   type GetterTree as OriginalGetterTree,
   type ActionTree as OriginalActionTree,
@@ -36,9 +35,16 @@ export class Store<
   M extends MutationsBase,
 > extends BaseStore<S> {
   constructor(options: StoreOptions<S, G, A, M>) {
-    super(options as OriginalStoreOptions<S>);
+    // Vuexはデフォルトでpluginsをコンストラクタ内（resetStoreState直後）で呼ぶが、
+    // その時点ではVV独自のactionsとmutationsがまだ設定されていない。
+    // そのため、pluginsをoptionsから除いてVuexに渡し、
+    // actions/mutations設定後に手動で呼ぶ形にしている。
+    // なお、Vuexはメンテナンスモードであり今後この動作が変わることはないと考えられる。
+    const { plugins, ...restOptions } = options;
+    super(restOptions as OriginalStoreOptions<S>);
     this.actions = dotNotationDispatchProxy(this.dispatch.bind(this));
     this.mutations = dotNotationCommitProxy(this.commit.bind(this));
+    plugins?.forEach((plugin) => plugin(this));
   }
 
   declare readonly getters: G;
@@ -175,7 +181,7 @@ export interface StoreOptions<
   actions: ActionTree<S, S, A, SG, SA, SM>;
   mutations: MutationTree<S, M>;
   modules?: ModuleTree<S>;
-  plugins?: Plugin<S>[];
+  plugins?: ((store: Store<S, SG, SA, SM>) => void)[];
   strict?: boolean;
   devtools?: boolean;
 }
@@ -419,15 +425,18 @@ type PartialStoreOptions<
   G extends GettersBase,
   A extends ActionsBase,
   M extends MutationsBase,
+  SG extends GettersBase = G,
+  SA extends ActionsBase = A,
+  SM extends MutationsBase = M,
 > = {
   [K in keyof T]: {
     [GAM in keyof T[K]]: GAM extends "getter"
       ? K extends keyof G
-        ? Getter<S, S, G, K, AllGetters>
+        ? Getter<S, S, G, K, SG>
         : never
       : GAM extends "action"
         ? K extends keyof A
-          ? DotNotationAction<S, S, A, K, AllGetters, AllActions, AllMutations>
+          ? DotNotationAction<S, S, A, K, SG, SA, SM>
           : never
         : GAM extends "mutation"
           ? K extends keyof M
@@ -435,6 +444,8 @@ type PartialStoreOptions<
             : never
           : never;
   };
+} & {
+  plugins?: ((store: Store<S, SG, SA, SM>) => void)[];
 };
 
 export const createPartialStore = <
@@ -443,11 +454,21 @@ export const createPartialStore = <
   A extends ActionsBase = StoreType<T, "action">,
   M extends MutationsBase = StoreType<T, "mutation">,
 >(
-  options: PartialStoreOptions<State, T, G, A, M>,
+  options: PartialStoreOptions<
+    State,
+    T,
+    G,
+    A,
+    M,
+    AllGetters,
+    AllActions,
+    AllMutations
+  >,
 ): StoreOptions<State, G, A, M, AllGetters, AllActions, AllMutations> => {
-  const obj = Object.keys(options).reduce(
+  const { plugins, ...storeEntries } = options;
+  const obj = Object.keys(storeEntries).reduce(
     (acc, cur) => {
-      const option = options[cur];
+      const option = storeEntries[cur];
 
       if (option.getter) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
@@ -474,5 +495,5 @@ export const createPartialStore = <
     },
   );
 
-  return obj;
+  return { ...obj, plugins };
 };
