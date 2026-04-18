@@ -268,7 +268,7 @@ onUnmounted(() => {
     stage?.removeChild(graphic);
     graphic.destroy();
   }
-  stage?.destroy(true);
+  stage?.destroy();
   renderer?.destroy(true);
   resizeObserver?.disconnect();
 });
