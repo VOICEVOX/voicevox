@@ -152,36 +152,29 @@ const render = () => {
     return lineScreenX >= -1 && lineScreenX <= canvasSize.width + 1;
   });
 
-  // Graphicsオブジェクトの数を調整
-  const neededGraphicsCount = visibleLines.length;
-  const currentGraphicsCount = graphics.length;
-
-  if (currentGraphicsCount < neededGraphicsCount) {
-    for (let i = 0; i < neededGraphicsCount - currentGraphicsCount; i++) {
-      const newGraphic = new PIXI.Graphics();
-      stage.addChild(newGraphic);
-      graphics.push(newGraphic);
+  // Graphicsは単一インスタンスに集約して描画する
+  if (graphics.length === 0) {
+    const newGraphic = new PIXI.Graphics();
+    stage.addChild(newGraphic);
+    graphics.push(newGraphic);
+  } else if (graphics.length > 1) {
+    for (let i = graphics.length - 1; i >= 1; i--) {
+      stage.removeChild(graphics[i]);
+      graphics[i].destroy();
+      graphics.splice(i, 1);
     }
   }
 
-  // 線を描画
-  for (let i = 0; i < visibleLines.length; i++) {
-    const line = visibleLines[i];
-    const graphic = graphics[i];
+  const graphic = graphics[0];
+  graphic.clear();
 
+  // 線をまとめて描画
+  for (const line of visibleLines) {
     const lineX = Math.round(line.x - props.viewportInfo.offsetX);
     const currentLineStyle = gridLineStyles[currentTheme.value][line.type];
-
-    graphic.renderable = true;
-    graphic.clear();
     graphic.lineStyle(1, currentLineStyle.color, currentLineStyle.alpha);
     graphic.moveTo(lineX - 0.5, 0);
     graphic.lineTo(lineX - 0.5, canvasSize.height);
-  }
-
-  // 残りのGraphicsを非表示にする
-  for (let i = visibleLines.length; i < graphics.length; i++) {
-    graphics[i].renderable = false;
   }
 
   renderer.render(stage);
