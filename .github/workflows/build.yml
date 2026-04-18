@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - main
-  release:
-    types:
-      - created
   workflow_dispatch:
     inputs:
       version:
@@ -29,8 +26,8 @@ env:
   VOICEVOX_ENGINE_VERSION: 0.25.1
   VOICEVOX_RESOURCE_VERSION: 0.25.1
   VOICEVOX_EDITOR_VERSION:
-    |- # releaseタグ名か、workflow_dispatchでのバージョン名か、999.999.999-developが入る
-    ${{ github.event.release.tag_name || github.event.inputs.version || '999.999.999-develop' }}
+    |- # workflow_dispatchのバージョン名か、999.999.999-developが入る
+    ${{ github.event.inputs.version || '999.999.999-develop' }}
 
 defaults:
   run:
@@ -354,7 +351,7 @@ jobs:
             ${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}.tar.gz
 
       - name: Upload Linux tar.gz (without nvidia) to Release Assets
-        if: startsWith(matrix.artifact_name, 'linux-') && !contains(matrix.artifact_name, 'nvidia') && (github.event.release.tag_name || github.event.inputs.version) != ''
+        if: startsWith(matrix.artifact_name, 'linux-') && !contains(matrix.artifact_name, 'nvidia') && github.event.inputs.version != ''
         uses: softprops/action-gh-release@v2
         with:
           prerelease: ${{ github.event.inputs.prerelease }}
@@ -384,7 +381,7 @@ jobs:
             ${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}.zip
 
       - name: Upload Windows & Mac zip (without nvidia) to Release Assets
-        if: (startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')) && !contains(matrix.artifact_name, 'nvidia') && (github.event.release.tag_name || github.event.inputs.version) != ''
+        if: (startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')) && !contains(matrix.artifact_name, 'nvidia') && github.event.inputs.version != ''
         uses: softprops/action-gh-release@v2
         with:
           prerelease: ${{ github.event.inputs.prerelease }}
@@ -481,7 +478,7 @@ jobs:
             VOICEVOX.${{ matrix.installer_artifact_name }}.${{ env.VOICEVOX_EDITOR_VERSION }}.sh
 
       - name: Upload Linux AppImage split and installer to Release Assets
-        if: endsWith(matrix.installer_artifact_name, '-appimage') && (github.event.release.tag_name || github.event.inputs.version) != ''
+        if: endsWith(matrix.installer_artifact_name, '-appimage') && github.event.inputs.version != ''
         uses: softprops/action-gh-release@v2
         with:
           prerelease: ${{ github.event.inputs.prerelease }}
@@ -500,7 +497,7 @@ jobs:
             dist_electron/*.dmg
 
       - name: Upload macOS dmg to Release Assets
-        if: endsWith(matrix.installer_artifact_name, '-dmg') && (github.event.release.tag_name || github.event.inputs.version) != ''
+        if: endsWith(matrix.installer_artifact_name, '-dmg') && github.event.inputs.version != ''
         uses: softprops/action-gh-release@v2
         with:
           prerelease: ${{ github.event.inputs.prerelease }}
@@ -519,7 +516,7 @@ jobs:
             dist_electron/nsis-web/*.exe
 
       - name: Upload Windows NSIS Web to Release Assets
-        if: endsWith(matrix.installer_artifact_name, '-nsis-web') && (github.event.release.tag_name || github.event.inputs.version) != ''
+        if: endsWith(matrix.installer_artifact_name, '-nsis-web') && github.event.inputs.version != ''
         uses: softprops/action-gh-release@v2
         with:
           prerelease: ${{ github.event.inputs.prerelease }}
