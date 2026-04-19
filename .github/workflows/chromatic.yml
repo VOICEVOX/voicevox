@@ -19,13 +19,13 @@ jobs:
     runs-on: ubuntu-latest
     if: github.repository_owner == 'VOICEVOX'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-depth: 0
       - name: Setup environment
         uses: ./.github/actions/setup-environment
       - name: Run Chromatic
-        uses: chromaui/action@v11
+        uses: chromaui/action@1cfa065cbdab28f6ca3afaeb3d761383076a35aa # v11.29.0
         with:
           projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
           buildScriptName: "storybook:build"
