@@ -11,6 +11,8 @@ defaults:
 jobs:
   triage:
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
     steps:
     - uses: github/issue-labeler@v3.4
       with:
