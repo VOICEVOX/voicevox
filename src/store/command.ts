@@ -128,7 +128,6 @@ export const commandStore = createPartialStore<CommandStoreTypes>({
         void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
         void actions.SYNC_LOOP_RANGE_TO_TRANSPORT();
         void actions.SYNC_PLAYHEAD_POSITION_TO_TRANSPORT();
-        void actions.RENDER();
       }
     },
   },
@@ -149,7 +148,6 @@ export const commandStore = createPartialStore<CommandStoreTypes>({
         void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
         void actions.SYNC_LOOP_RANGE_TO_TRANSPORT();
         void actions.SYNC_PLAYHEAD_POSITION_TO_TRANSPORT();
-        void actions.RENDER();
       }
     },
   },
