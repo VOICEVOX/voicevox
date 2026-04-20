@@ -2135,7 +2135,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.tracks.set(trackId, track);
       state.trackOrder.splice(index, 0, trackId);
     },
-    action({ state, mutations, actions }, { trackId, track, prevTrackId }) {
+    action({ state, mutations }, { trackId, track, prevTrackId }) {
       if (state.tracks.has(trackId)) {
         throw new Error(`Track ${trackId} is already registered.`);
       }
@@ -2143,8 +2143,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         throw new Error("The track is invalid.");
       }
       mutations.INSERT_TRACK({ trackId, track, prevTrackId });
-
-      void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
     },
   },
 
@@ -2153,13 +2151,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.tracks.delete(trackId);
       state.trackOrder = state.trackOrder.filter((value) => value !== trackId);
     },
-    async action({ state, mutations, actions }, { trackId }) {
+    async action({ state, mutations }, { trackId }) {
       if (!state.tracks.has(trackId)) {
         throw new Error(`Track ${trackId} does not exist.`);
       }
       mutations.DELETE_TRACK({ trackId });
-
-      void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
     },
   },
 
@@ -2181,7 +2177,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     mutation(state, { trackId, track }) {
       state.tracks.set(trackId, track);
     },
-    async action({ state, mutations, actions }, { trackId, track }) {
+    async action({ state, mutations }, { trackId, track }) {
       if (!isValidTrack(track)) {
         throw new Error("The track is invalid.");
       }
@@ -2190,8 +2186,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
 
       mutations.SET_TRACK({ trackId, track });
-
-      void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
     },
   },
 
@@ -2200,13 +2194,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.tracks = tracks;
       state.trackOrder = Array.from(tracks.keys());
     },
-    async action({ mutations, actions }, { tracks }) {
+    async action({ mutations }, { tracks }) {
       if (![...tracks.values()].every((track) => isValidTrack(track))) {
         throw new Error("The track is invalid.");
       }
       mutations.SET_TRACKS({ tracks });
-
-      void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
     },
   },
 
@@ -3220,10 +3212,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const track = getOrThrow(state.tracks, trackId);
       track.mute = mute;
     },
-    action({ mutations, actions }, { trackId, mute }) {
+    action({ mutations }, { trackId, mute }) {
       mutations.SET_TRACK_MUTE({ trackId, mute });
-
-      void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
     },
   },
 
@@ -3232,10 +3222,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const track = getOrThrow(state.tracks, trackId);
       track.solo = solo;
     },
-    action({ mutations, actions }, { trackId, solo }) {
+    action({ mutations }, { trackId, solo }) {
       mutations.SET_TRACK_SOLO({ trackId, solo });
-
-      void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
     },
   },
 
@@ -3244,10 +3232,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const track = getOrThrow(state.tracks, trackId);
       track.gain = gain;
     },
-    action({ mutations, actions }, { trackId, gain }) {
+    action({ mutations }, { trackId, gain }) {
       mutations.SET_TRACK_GAIN({ trackId, gain });
-
-      void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
     },
   },
 
@@ -3256,10 +3242,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const track = getOrThrow(state.tracks, trackId);
       track.pan = pan;
     },
-    action({ mutations, actions }, { trackId, pan }) {
+    action({ mutations }, { trackId, pan }) {
       mutations.SET_TRACK_PAN({ trackId, pan });
-
-      void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
     },
   },
 
@@ -3287,10 +3271,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         track.solo = false;
       }
     },
-    action({ mutations, actions }) {
+    action({ mutations }) {
       mutations.UNSOLO_ALL_TRACKS();
-
-      void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
     },
   },
 
@@ -3482,6 +3464,19 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         ],
         () => {
           void store.actions.RENDER();
+        },
+      );
+
+      store.watch(
+        (state) =>
+          [...state.tracks.values()].map((track) => [
+            track.mute,
+            track.solo,
+            track.gain,
+            track.pan,
+          ]),
+        () => {
+          void store.actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
         },
       );
     },
@@ -3863,8 +3858,6 @@ export const singingCommandStore = transformCommandStore(
           track: cloneWithUnwrapProxy(track),
           prevTrackId,
         });
-
-        void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
       },
     },
 
@@ -3872,10 +3865,8 @@ export const singingCommandStore = transformCommandStore(
       mutation(draft, { trackId }) {
         singingStore.mutations.DELETE_TRACK(draft, { trackId });
       },
-      action({ mutations, actions }, { trackId }) {
+      action({ mutations }, { trackId }) {
         mutations.COMMAND_DELETE_TRACK({ trackId });
-
-        void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
       },
     },
 
@@ -3917,9 +3908,6 @@ export const singingCommandStore = transformCommandStore(
           prevTrackId: trackId,
         });
 
-        // SYNC は同期処理なので待機しない
-        void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
-
         void actions.SET_SELECTED_TRACK({ trackId: newTrackId });
       },
     },
@@ -3937,10 +3925,8 @@ export const singingCommandStore = transformCommandStore(
       mutation(draft, { trackId, mute }) {
         singingStore.mutations.SET_TRACK_MUTE(draft, { trackId, mute });
       },
-      action({ mutations, actions }, { trackId, mute }) {
+      action({ mutations }, { trackId, mute }) {
         mutations.COMMAND_SET_TRACK_MUTE({ trackId, mute });
-
-        void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
       },
     },
 
@@ -3948,10 +3934,8 @@ export const singingCommandStore = transformCommandStore(
       mutation(draft, { trackId, solo }) {
         singingStore.mutations.SET_TRACK_SOLO(draft, { trackId, solo });
       },
-      action({ mutations, actions }, { trackId, solo }) {
+      action({ mutations }, { trackId, solo }) {
         mutations.COMMAND_SET_TRACK_SOLO({ trackId, solo });
-
-        void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
       },
     },
 
@@ -3959,10 +3943,8 @@ export const singingCommandStore = transformCommandStore(
       mutation(draft, { trackId, gain }) {
         singingStore.mutations.SET_TRACK_GAIN(draft, { trackId, gain });
       },
-      action({ mutations, actions }, { trackId, gain }) {
+      action({ mutations }, { trackId, gain }) {
         mutations.COMMAND_SET_TRACK_GAIN({ trackId, gain });
-
-        void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
       },
     },
 
@@ -3970,10 +3952,8 @@ export const singingCommandStore = transformCommandStore(
       mutation(draft, { trackId, pan }) {
         singingStore.mutations.SET_TRACK_PAN(draft, { trackId, pan });
       },
-      action({ mutations, actions }, { trackId, pan }) {
+      action({ mutations }, { trackId, pan }) {
         mutations.COMMAND_SET_TRACK_PAN({ trackId, pan });
-
-        void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
       },
     },
 
@@ -3990,10 +3970,8 @@ export const singingCommandStore = transformCommandStore(
       mutation(draft) {
         singingStore.mutations.UNSOLO_ALL_TRACKS(draft, undefined);
       },
-      action({ mutations, actions }) {
+      action({ mutations }) {
         mutations.COMMAND_UNSOLO_ALL_TRACKS();
-
-        void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
       },
     },
 
@@ -4054,8 +4032,6 @@ export const singingCommandStore = transformCommandStore(
           timeSignatures,
           tracks: payload,
         });
-
-        void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
         void actions.SYNC_LOOP_RANGE_TO_TRANSPORT();
       },
     },
@@ -4094,8 +4070,6 @@ export const singingCommandStore = transformCommandStore(
             timeSignatures,
             tracks: filteredTracks,
           });
-
-          void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
         },
       ),
     },
@@ -4134,8 +4108,6 @@ export const singingCommandStore = transformCommandStore(
             timeSignatures,
             tracks: filteredTracks,
           });
-
-          void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
         },
       ),
     },
