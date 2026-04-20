@@ -900,8 +900,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         await actions.SING_STOP_AUDIO();
       }
       mutations.SET_TPQN({ tpqn });
-
-      void actions.SYNC_PLAYHEAD_POSITION_TO_TRANSPORT();
     },
   },
 
@@ -923,8 +921,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         await actions.SING_STOP_AUDIO();
       }
       mutations.SET_TEMPOS({ tempos });
-
-      void actions.SYNC_PLAYHEAD_POSITION_TO_TRANSPORT();
     },
   },
 
@@ -3482,6 +3478,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         (state) => [state.tpqn, state.tempos],
         () => {
           void store.actions.SYNC_LOOP_RANGE_TO_TRANSPORT();
+          void store.actions.SYNC_PLAYHEAD_POSITION_TO_TRANSPORT();
         },
       );
     },
@@ -3544,10 +3541,7 @@ export const singingCommandStore = transformCommandStore(
         singingStore.mutations.SET_TEMPO(draft, { tempo });
       },
       // テンポを設定する。既に同じ位置にテンポが存在する場合は置き換える。
-      action(
-        { state, getters, mutations, actions },
-        { tempo }: { tempo: Tempo },
-      ) {
+      action({ state, getters, mutations }, { tempo }: { tempo: Tempo }) {
         if (!transport) {
           throw new Error("transport is undefined.");
         }
@@ -3559,8 +3553,6 @@ export const singingCommandStore = transformCommandStore(
         }
         tempo.bpm = round(tempo.bpm, 2);
         mutations.COMMAND_SET_TEMPO({ tempo });
-
-        void actions.SYNC_PLAYHEAD_POSITION_TO_TRANSPORT();
       },
     },
     COMMAND_REMOVE_TEMPO: {
@@ -3569,7 +3561,7 @@ export const singingCommandStore = transformCommandStore(
       },
       // テンポを削除する。先頭のテンポの場合はデフォルトのテンポに置き換える。
       action(
-        { state, getters, mutations, actions },
+        { state, getters, mutations },
         { position }: { position: number },
       ) {
         const exists = state.tempos.some((value) => {
@@ -3585,8 +3577,6 @@ export const singingCommandStore = transformCommandStore(
           playheadPosition.value = getters.SECOND_TO_TICK(transport.time);
         }
         mutations.COMMAND_REMOVE_TEMPO({ position });
-
-        void actions.SYNC_PLAYHEAD_POSITION_TO_TRANSPORT();
       },
     },
     COMMAND_SET_TIME_SIGNATURE: {
