@@ -465,10 +465,10 @@ export const createPartialStore = <
     AllMutations
   >,
 ): StoreOptions<State, G, A, M, AllGetters, AllActions, AllMutations> => {
-  const { plugins, ...storeEntries } = options;
-  const obj = Object.keys(storeEntries).reduce(
+  const { plugins, ...restOptions } = options;
+  const obj = Object.keys(restOptions).reduce(
     (acc, cur) => {
-      const option = storeEntries[cur];
+      const option = restOptions[cur];
 
       if (option.getter) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
