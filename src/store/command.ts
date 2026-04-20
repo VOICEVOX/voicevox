@@ -125,7 +125,6 @@ export const commandStore = createPartialStore<CommandStoreTypes>({
       if (editor === "song") {
         // TODO: 存在しないノートのみ選択解除、あるいはSELECTED_NOTE_IDS getterを作る
         mutations.DESELECT_ALL_NOTES();
-        void actions.SYNC_LOOP_RANGE_TO_TRANSPORT();
         void actions.SYNC_PLAYHEAD_POSITION_TO_TRANSPORT();
       }
     },
@@ -144,7 +143,6 @@ export const commandStore = createPartialStore<CommandStoreTypes>({
       if (editor === "song") {
         // TODO: 存在しないノートのみ選択解除、あるいはSELECTED_NOTE_IDS getterを作る
         mutations.DESELECT_ALL_NOTES();
-        void actions.SYNC_LOOP_RANGE_TO_TRANSPORT();
         void actions.SYNC_PLAYHEAD_POSITION_TO_TRANSPORT();
       }
     },

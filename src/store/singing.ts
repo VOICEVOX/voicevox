@@ -901,7 +901,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       mutations.SET_TPQN({ tpqn });
 
-      void actions.SYNC_LOOP_RANGE_TO_TRANSPORT();
       void actions.SYNC_PLAYHEAD_POSITION_TO_TRANSPORT();
     },
   },
@@ -925,7 +924,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
       mutations.SET_TEMPOS({ tempos });
 
-      void actions.SYNC_LOOP_RANGE_TO_TRANSPORT();
       void actions.SYNC_PLAYHEAD_POSITION_TO_TRANSPORT();
     },
   },
@@ -3479,6 +3477,13 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
           void store.actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
         },
       );
+
+      store.watch(
+        (state) => [state.tpqn, state.tempos],
+        () => {
+          void store.actions.SYNC_LOOP_RANGE_TO_TRANSPORT();
+        },
+      );
     },
   ],
 });
@@ -3555,7 +3560,6 @@ export const singingCommandStore = transformCommandStore(
         tempo.bpm = round(tempo.bpm, 2);
         mutations.COMMAND_SET_TEMPO({ tempo });
 
-        void actions.SYNC_LOOP_RANGE_TO_TRANSPORT();
         void actions.SYNC_PLAYHEAD_POSITION_TO_TRANSPORT();
       },
     },
@@ -3582,7 +3586,6 @@ export const singingCommandStore = transformCommandStore(
         }
         mutations.COMMAND_REMOVE_TEMPO({ position });
 
-        void actions.SYNC_LOOP_RANGE_TO_TRANSPORT();
         void actions.SYNC_PLAYHEAD_POSITION_TO_TRANSPORT();
       },
     },
@@ -4032,7 +4035,6 @@ export const singingCommandStore = transformCommandStore(
           timeSignatures,
           tracks: payload,
         });
-        void actions.SYNC_LOOP_RANGE_TO_TRANSPORT();
       },
     },
 
