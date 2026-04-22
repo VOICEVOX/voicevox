@@ -9,9 +9,7 @@ import { Mutex } from "@/helpers/mutex";
 
 const log = createLogger("AppStateController");
 
-/**
- * アプリの状態を管理するシングルトン。
- */
+/** アプリの状態を管理するシングルトン。 */
 export class AppStateController {
   /**
    * アプリの終了状態を表す。
@@ -29,9 +27,7 @@ export class AppStateController {
 
   /**
    * アプリ起動時の初期化処理を行う。
-   *
-   * 行うこと：
-   * - エンジンパッケージの状態を確認し、ウェルカムウィンドウまたはメインウィンドウのどちらかを起動する
+   * ウェルカムウィンドウまたはメインウィンドウのどちらかを起動する。
    */
   async startup() {
     const engineAndVvppController = getEngineAndVvppController();
@@ -42,20 +38,14 @@ export class AppStateController {
       log.info(
         "Default engine found or no engine installation required. Launching main window.",
       );
-      await this.launchMainWindow();
+      await this.launchEngineAndMainWindow();
     } else {
       log.info("No default engine found. Launching welcome window.");
       await this.launchWelcomeWindow();
     }
   }
 
-  /**
-   * メインウィンドウに切り替える。
-   *
-   * 行うこと：
-   * - ウェルカムウィンドウを破棄する
-   * - メインウィンドウを起動する
-   */
+  /** メインウィンドウに切り替える。 */
   async switchToMainWindow() {
     log.info("Switching to main window");
     this.quitState = "switch";
@@ -66,17 +56,11 @@ export class AppStateController {
       welcomeWindowManager.destroyWindow();
     }
 
-    await this.launchMainWindow();
+    await this.launchEngineAndMainWindow();
     this.quitState = "unconfirmed";
   }
 
-  /**
-   * ウェルカムウィンドウに切り替える。
-   *
-   * 行うこと：
-   * - メインウィンドウを破棄し、必要なエンジンをクリーンアップする
-   * - ウェルカムウィンドウを起動する
-   */
+  /** ウェルカムウィンドウに切り替える。 */
   async switchToWelcomeWindow() {
     log.info("Switching to welcome window");
     this.quitState = "switch";
@@ -93,12 +77,6 @@ export class AppStateController {
     this.quitState = "unconfirmed";
   }
 
-  /**
-   * ウェルカムウィンドウを起動する。
-   *
-   * 行うこと：
-   * - ウェルカムウィンドウを作成する
-   */
   private async launchWelcomeWindow() {
     this.activeWindow = "welcome";
 
@@ -106,14 +84,7 @@ export class AppStateController {
     await welcomeWindowManager.createWindow();
   }
 
-  /**
-   * メインウィンドウを起動する。
-   *
-   * 行うこと：
-   * - エンジンを起動する
-   * - メインウィンドウを作成する
-   */
-  private async launchMainWindow() {
+  private async launchEngineAndMainWindow() {
     this.activeWindow = "main";
 
     const engineAndVvppController = getEngineAndVvppController();
