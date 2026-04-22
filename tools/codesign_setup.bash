@@ -36,12 +36,7 @@ if [ ! -d "$ESIGNERCKA_INSTALL_DIR" ]; then
     curl -fLO --retry 3 --retry-delay 5 \
         "https://github.com/SSLcom/eSignerCKA/releases/download/v1.0.6/SSL.COM-eSigner-CKA_1.0.6.zip"
 
-    EXPECTED_SHA256="e4971440e4ebed94328492cf36e18999554c5c657c856f1cb14a6072c8b1c263"
-    DOWNLOADED_SHA256=$(sha256sum SSL.COM-eSigner-CKA_1.0.6.zip | cut -d' ' -f1)
-    if [ "$DOWNLOADED_SHA256" != "$EXPECTED_SHA256" ]; then
-        echo "チェックサムが一致しません: expected=$EXPECTED_SHA256, got=$DOWNLOADED_SHA256"
-        exit 1
-    fi
+    echo "e4971440e4ebed94328492cf36e18999554c5c657c856f1cb14a6072c8b1c263  SSL.COM-eSigner-CKA_1.0.6.zip" | sha256sum --check
 
     unzip -o SSL.COM-eSigner-CKA_1.0.6.zip
     mv *eSigner*CKA_*.exe eSigner_CKA_Installer.exe
