@@ -57,10 +57,18 @@ class WelcomeIpcMainHandleManager {
           },
         );
       },
-      FETCH_ENGINE_PACKAGE_CURRENT_INFOS: () => {
-        return engineAndVvppController.getEnginePackageCurrentInfos();
+      GET_ENGINE_PACKAGE_IDS: () => {
+        return engineAndVvppController.getEnginePackageIds();
       },
-      FETCH_ENGINE_PACKAGE_LATEST_INFO: async (_, obj) => {
+      GET_ENGINE_PACKAGE_BUILD_INFO: (_, obj) => {
+        return engineAndVvppController.getEnginePackageBuildInfo(obj.engineId);
+      },
+      GET_ENGINE_PACKAGE_CURRENT_INFO: (_, obj) => {
+        return engineAndVvppController.getEnginePackageCurrentInfo(
+          obj.engineId,
+        );
+      },
+      GET_ENGINE_PACKAGE_LATEST_INFO: async (_, obj) => {
         return engineAndVvppController.fetchEnginePackageLatestInfo(
           obj.engineId,
         );

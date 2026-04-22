@@ -1,4 +1,5 @@
 import type {
+  EnginePackageBuildInfo,
   EnginePackageCurrentInfo,
   EnginePackageLatestInfo,
 } from "@/domain/enginePackage";
@@ -10,8 +11,14 @@ export interface WelcomeSandbox {
     engineId: EngineId;
     target: RuntimeTarget;
   }): Promise<void>;
-  fetchEnginePackageCurrentInfos(): Promise<EnginePackageCurrentInfo[]>;
-  fetchEnginePackageLatestInfo(
+  getEnginePackageIds(): Promise<EngineId[]>;
+  getEnginePackageBuildInfo(
+    engineId: EngineId,
+  ): Promise<EnginePackageBuildInfo>;
+  getEnginePackageCurrentInfo(
+    engineId: EngineId,
+  ): Promise<EnginePackageCurrentInfo>;
+  getEnginePackageLatestInfo(
     engineId: EngineId,
   ): Promise<EnginePackageLatestInfo>;
   launchMainWindow(): Promise<void>;

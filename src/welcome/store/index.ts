@@ -1,7 +1,7 @@
 import { computed, inject, provide, ref } from "vue";
 import type { InjectionKey } from "vue";
 import type {
-  EnginePackageBase,
+  EnginePackageBuildInfo,
   EnginePackageCurrentInfo,
   EnginePackageLatestInfo,
 } from "@/domain/enginePackage";
@@ -9,28 +9,29 @@ import type { RuntimeTarget } from "@/domain/defaultEngine/latestDefaultEngine";
 import { setThemeToCss } from "@/domain/dom";
 import { themes } from "@/domain/theme";
 import type { EngineId } from "@/type/preload";
-import {
-  assertNonNullable,
-  ExhaustiveError,
-  UnreachableError,
-} from "@/type/utility";
+import { assertNonNullable, UnreachableError } from "@/type/utility";
 import { showErrorDialog } from "@/components/Dialog/Dialog";
 
-export type LatestInfoState =
+type LatestInfoState =
   | { type: "loading" }
   | { type: "fetched"; info: EnginePackageLatestInfo }
   | { type: "fetchError" };
 
-export type DisplayEngineInfo = {
-  package: EnginePackageBase;
-  currentInfo: EnginePackageCurrentInfo;
-  latestInfo: LatestInfoState;
-};
+type AllEngineState =
+  | {
+      type: "uninitialized";
+    }
+  | { type: "loading" }
+  | {
+      type: "loaded";
+      engineIds: EngineId[];
+      engineStates: Record<EngineId, EngineState>;
+    };
 
-export type LoadingEngineInfosState =
-  | { type: "uninitialized" }
-  | { type: "loadingCurrent" }
-  | { type: "loaded"; engineInfos: DisplayEngineInfo[] };
+// TODO: 移動する
+type MergeToTarget<TUnion, TTarget, TAdded> = TUnion extends TTarget
+  ? TUnion & TAdded
+  : TUnion;
 
 export type EngineProgressInfo =
   | {
@@ -41,38 +42,54 @@ export type EngineProgressInfo =
       type: "download" | "install";
     };
 
+type EngineState = {
+  buildInfo: EnginePackageBuildInfo;
+  currentInfo: EnginePackageCurrentInfo;
+
+  latestInfo: MergeToTarget<
+    LatestInfoState,
+    { type: "fetched" },
+    {
+      progress: EngineProgressInfo;
+      selectedRuntimeTarget: RuntimeTarget;
+    }
+  >;
+};
+
 export type LaunchEditorState =
   | { enabled: true }
   | { enabled: false; reason: string };
 
 function createWelcomeStore() {
-  const loadingEngineInfosState = ref<LoadingEngineInfosState>({
+  const allEngineState = ref<AllEngineState>({
     type: "uninitialized",
   });
-  const runtimeTargetSelections = ref<Record<EngineId, RuntimeTarget>>({});
-  const engineProgressInfo = ref<Record<EngineId, EngineProgressInfo>>({});
 
   const launchEditorState = computed<LaunchEditorState>(() => {
     if (
-      loadingEngineInfosState.value.type === "uninitialized" ||
-      loadingEngineInfosState.value.type === "loadingCurrent"
+      allEngineState.value.type === "uninitialized" ||
+      allEngineState.value.type === "loading"
     ) {
-      return { enabled: false, reason: "エンジン情報を読み込み中です。" };
+      return { enabled: false, reason: "エンジンの情報を読み込み中です。" };
     }
+    const allEngineStateLoaded = allEngineState.value;
     if (
-      Object.values(engineProgressInfo.value).some(
-        (info) => info.type !== "idle",
-      )
+      allEngineState.value.engineIds.some((engineId) => {
+        const latestInfo =
+          allEngineStateLoaded.engineStates[engineId].latestInfo;
+        return (
+          latestInfo.type === "fetched" && latestInfo.progress.type !== "idle"
+        );
+      })
     ) {
       return { enabled: false, reason: "エンジンをインストール中です。" };
     }
-    if (loadingEngineInfosState.value.type !== "loaded") {
-      throw new ExhaustiveError(loadingEngineInfosState.value);
-    }
     if (
-      !loadingEngineInfosState.value.engineInfos.some(
-        ({ currentInfo }) => currentInfo.installed.status !== "notInstalled",
-      )
+      allEngineStateLoaded.engineIds.every((engineId) => {
+        const currentInfo =
+          allEngineStateLoaded.engineStates[engineId].currentInfo;
+        return currentInfo.status === "notInstalled";
+      })
     ) {
       return {
         enabled: false,
@@ -83,6 +100,7 @@ function createWelcomeStore() {
   });
 
   const getDefaultRuntimeTarget = (
+    engineId: EngineId,
     latestInfo: EnginePackageLatestInfo,
   ): RuntimeTarget => {
     const defaultRuntimeTargetInfo = latestInfo.availableRuntimeTargets.find(
@@ -90,73 +108,146 @@ function createWelcomeStore() {
     );
     assertNonNullable(
       defaultRuntimeTargetInfo,
-      `Default runtime target not found: engineId=${latestInfo.package.engineId}`,
+      `Default runtime target not found: engineId=${engineId}`,
     );
     return defaultRuntimeTargetInfo.target;
   };
 
-  const getSelectedRuntimeTarget = (
-    engineInfo: DisplayEngineInfo,
-  ): RuntimeTarget => {
-    return runtimeTargetSelections.value[engineInfo.package.engineId];
+  const getSelectedRuntimeTarget = (engineId: EngineId): RuntimeTarget => {
+    if (allEngineState.value.type !== "loaded") {
+      throw new UnreachableError();
+    }
+    const engineState = allEngineState.value.engineStates[engineId];
+    if (engineState.latestInfo.type !== "fetched") {
+      throw new UnreachableError();
+    }
+    return engineState.latestInfo.selectedRuntimeTarget;
   };
 
   const setSelectedRuntimeTarget = (
     engineId: EngineId,
     target: RuntimeTarget,
   ) => {
-    runtimeTargetSelections.value = {
-      ...runtimeTargetSelections.value,
-      [engineId]: target,
-    };
-  };
-
-  const getEngineInfo = (engineId: EngineId): DisplayEngineInfo => {
-    if (loadingEngineInfosState.value.type !== "loaded") {
+    if (allEngineState.value.type !== "loaded") {
       throw new UnreachableError();
     }
-    const engineInfo = loadingEngineInfosState.value.engineInfos.find(
-      (info) => info.package.engineId === engineId,
-    );
-    assertNonNullable(
-      engineInfo,
-      `Engine info not found: engineId=${engineId}`,
-    );
-    return engineInfo;
+    const engineState = allEngineState.value.engineStates[engineId];
+    if (engineState.latestInfo.type !== "fetched") {
+      throw new UnreachableError();
+    }
+    engineState.latestInfo.selectedRuntimeTarget = target;
   };
 
-  const getEngineProgress = (engineId: EngineId) =>
-    engineProgressInfo.value[engineId];
+  const getEngineInfo = (engineId: EngineId) => {
+    if (allEngineState.value.type !== "loaded") {
+      throw new UnreachableError();
+    }
+    return allEngineState.value.engineStates[engineId];
+  };
+
+  const getEngineProgress = (engineId: EngineId) => {
+    if (allEngineState.value.type !== "loaded") {
+      throw new UnreachableError();
+    }
+    const engineState = allEngineState.value.engineStates[engineId];
+    if (engineState.latestInfo.type !== "fetched") {
+      throw new UnreachableError();
+    }
+    return engineState.latestInfo.progress;
+  };
+
+  const setEngineProgress = (
+    engineId: EngineId,
+    progressInfo: EngineProgressInfo,
+  ) => {
+    if (allEngineState.value.type !== "loaded") {
+      throw new UnreachableError();
+    }
+    const engineState = allEngineState.value.engineStates[engineId];
+    if (engineState.latestInfo.type !== "fetched") {
+      throw new UnreachableError();
+    }
+    engineState.latestInfo.progress = progressInfo;
+  };
 
   const clearEngineProgress = (engineId: EngineId) => {
-    engineProgressInfo.value[engineId] = { type: "idle" };
+    setEngineProgress(engineId, { type: "idle" });
   };
 
   const updateLatestInfoState = (
     engineId: EngineId,
     latestInfo: LatestInfoState,
   ) => {
-    if (loadingEngineInfosState.value.type !== "loaded") {
+    if (allEngineState.value.type !== "loaded") {
       throw new UnreachableError();
     }
-    loadingEngineInfosState.value = {
+    const engineState = allEngineState.value.engineStates[engineId];
+    if (latestInfo.type === "fetched") {
+      engineState.latestInfo = {
+        ...latestInfo,
+        progress: { type: "idle" },
+        selectedRuntimeTarget: getDefaultRuntimeTarget(
+          engineId,
+          latestInfo.info,
+        ),
+      };
+    } else {
+      engineState.latestInfo = latestInfo;
+    }
+  };
+
+  const loadEngineBuildInfos = async () => {
+    allEngineState.value = { type: "loading" };
+    const engineIds = await window.welcomeBackend.getEnginePackageIds();
+    const buildEngineInfos: Record<EngineId, EnginePackageBuildInfo> = {};
+    await Promise.all(
+      engineIds.map(async (engineId) => {
+        const info =
+          await window.welcomeBackend.getEnginePackageBuildInfo(engineId);
+        buildEngineInfos[engineId] = info;
+      }),
+    );
+    allEngineState.value = {
       type: "loaded",
-      engineInfos: loadingEngineInfosState.value.engineInfos.map(
-        (engineInfo) =>
-          engineInfo.package.engineId === engineId
-            ? { ...engineInfo, latestInfo }
-            : engineInfo,
+      engineIds,
+      engineStates: Object.fromEntries(
+        engineIds.map((engineId) => [
+          engineId,
+          {
+            buildInfo: buildEngineInfos[engineId],
+            currentInfo: { status: "notInstalled" },
+            latestInfo: { type: "loading" },
+          } satisfies EngineState,
+        ]),
       ),
     };
+
+    for (const engineId of engineIds) {
+      void fetchInstalledEngineInfo(engineId);
+    }
+  };
+
+  const fetchInstalledEngineInfo = async (engineId: EngineId) => {
+    if (allEngineState.value.type !== "loaded") {
+      throw new UnreachableError();
+    }
+    const currentInfo =
+      await window.welcomeBackend.getEnginePackageCurrentInfo(engineId);
+    const engineState = allEngineState.value.engineStates[engineId];
+    engineState.currentInfo = currentInfo;
+    void fetchEngineLatestInfo(engineId);
   };
 
   const fetchEngineLatestInfo = async (engineId: EngineId) => {
     updateLatestInfoState(engineId, { type: "loading" });
     try {
       const info =
-        await window.welcomeBackend.fetchEnginePackageLatestInfo(engineId);
+        await window.welcomeBackend.getEnginePackageLatestInfo(engineId);
       updateLatestInfoState(engineId, { type: "fetched", info });
-      setSelectedRuntimeTarget(engineId, getDefaultRuntimeTarget(info));
+      setSelectedRuntimeTarget(
+        engineId,
+        getDefaultRuntimeTarget(engineId, info),
+      );
     } catch (error) {
       window.welcomeBackend.logWarn(
         `Engine package ${engineId} remote info fetch failed`,
@@ -164,28 +255,6 @@ function createWelcomeStore() {
       );
       updateLatestInfoState(engineId, { type: "fetchError" });
     }
-  };
-
-  const fetchInstalledEngineInfos = async () => {
-    loadingEngineInfosState.value = { type: "loadingCurrent" };
-    const currentEngineInfos =
-      await window.welcomeBackend.fetchEnginePackageCurrentInfos();
-    loadingEngineInfosState.value = {
-      type: "loaded",
-      engineInfos: currentEngineInfos.map((currentInfo) => ({
-        package: currentInfo.package,
-        currentInfo,
-        latestInfo: { type: "loading" },
-      })),
-    };
-    for (const currentInfo of currentEngineInfos) {
-      engineProgressInfo.value[currentInfo.package.engineId] = { type: "idle" };
-    }
-    await Promise.all(
-      currentEngineInfos.map((currentInfo) =>
-        fetchEngineLatestInfo(currentInfo.package.engineId),
-      ),
-    );
   };
 
   const applyThemeFromConfig = async () => {
@@ -196,18 +265,8 @@ function createWelcomeStore() {
   };
 
   const installEngine = async (engineId: EngineId) => {
-    if (loadingEngineInfosState.value.type !== "loaded") {
-      throw new UnreachableError();
-    }
-    const engineInfo = loadingEngineInfosState.value.engineInfos.find(
-      (info) => info.package.engineId === engineId,
-    );
-    assertNonNullable(
-      engineInfo,
-      `Engine info not found: engineId=${engineId}`,
-    );
-    const target = getSelectedRuntimeTarget(engineInfo);
-    engineProgressInfo.value[engineId] = { progress: 0, type: "download" };
+    const target = getSelectedRuntimeTarget(engineId);
+    setEngineProgress(engineId, { type: "download", progress: 0 });
     try {
       window.welcomeBackend.logInfo(
         `Engine package ${engineId} installation started.`,
@@ -224,7 +283,6 @@ function createWelcomeStore() {
       await showErrorDialog("エンジンのインストールに失敗しました", error);
     } finally {
       clearEngineProgress(engineId);
-      void fetchInstalledEngineInfos();
     }
   };
 
@@ -238,19 +296,19 @@ function createWelcomeStore() {
   const initialize = () => {
     window.welcomeBackend.registerIpcHandler({
       updateEngineDownloadProgress: ({ engineId, progress, type }) => {
-        engineProgressInfo.value[engineId] = { progress, type };
+        setEngineProgress(engineId, { progress, type });
       },
     });
-    void fetchInstalledEngineInfos();
+    void loadEngineBuildInfos();
     void applyThemeFromConfig();
   };
 
   return {
-    loadingEngineInfosState,
+    allEngineState,
     launchEditorState,
-    getEngineInfo,
     getSelectedRuntimeTarget,
     setSelectedRuntimeTarget,
+    getEngineInfo,
     getEngineProgress,
     fetchEngineLatestInfo,
     installEngine,

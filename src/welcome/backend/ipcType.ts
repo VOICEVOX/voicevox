@@ -1,4 +1,5 @@
 import type {
+  EnginePackageBuildInfo,
   EnginePackageCurrentInfo,
   EnginePackageLatestInfo,
 } from "@/domain/enginePackage";
@@ -18,11 +19,19 @@ export type WelcomeIpcIHData = {
     ];
     return: void;
   };
-  FETCH_ENGINE_PACKAGE_CURRENT_INFOS: {
+  GET_ENGINE_PACKAGE_IDS: {
     args: [];
-    return: EnginePackageCurrentInfo[];
+    return: EngineId[];
   };
-  FETCH_ENGINE_PACKAGE_LATEST_INFO: {
+  GET_ENGINE_PACKAGE_BUILD_INFO: {
+    args: [obj: { engineId: EngineId }];
+    return: EnginePackageBuildInfo;
+  };
+  GET_ENGINE_PACKAGE_CURRENT_INFO: {
+    args: [obj: { engineId: EngineId }];
+    return: EnginePackageCurrentInfo;
+  };
+  GET_ENGINE_PACKAGE_LATEST_INFO: {
     args: [obj: { engineId: EngineId }];
     return: EnginePackageLatestInfo;
   };

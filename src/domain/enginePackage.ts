@@ -2,24 +2,22 @@ import type {
   PackageInfo,
   RuntimeTarget,
 } from "@/domain/defaultEngine/latestDefaultEngine";
-import type { EngineId } from "@/type/preload";
 
-export type EnginePackageBase = {
+/** ビルド時に定義されたパッケージ情報
+ *
+ * TODO: BuildInfoという名前よりもっといい名前があるはずなので変える
+ */
+export type EnginePackageBuildInfo = {
   engineName: string;
-  engineId: EngineId;
 };
 
 /** ローカルのパッケージインストール状況 */
-export type EnginePackageCurrentInfo = {
-  package: EnginePackageBase;
-  installed:
-    | { status: "notInstalled" }
-    | { status: "installed"; installedVersion: string };
-};
+export type EnginePackageCurrentInfo =
+  | { status: "notInstalled" }
+  | { status: "installed"; installedVersion: string };
 
 /** オンラインで取得したパッケージ最新情報 */
 export type EnginePackageLatestInfo = {
-  package: EnginePackageBase;
   availableRuntimeTargets: {
     target: RuntimeTarget;
     packageInfo: PackageInfo;

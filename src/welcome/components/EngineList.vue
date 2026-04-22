@@ -1,19 +1,19 @@
 <template>
   <div
     v-if="
-      loadingEngineInfosState.type === 'uninitialized' ||
-      loadingEngineInfosState.type === 'loadingCurrent'
+      allEngineState.type === 'uninitialized' ||
+      allEngineState.type === 'loading'
     "
     class="engine-loading"
   >
     <QSpinner color="primary" size="2.5rem" :thickness="5" />
     <div class="loading-text">読み込み中...</div>
   </div>
-  <template v-else-if="loadingEngineInfosState.type === 'loaded'">
+  <template v-else-if="allEngineState.type === 'loaded'">
     <EngineCard
-      v-for="engine in loadingEngineInfosState.engineInfos"
-      :key="engine.package.engineId"
-      :engineId="engine.package.engineId"
+      v-for="engineId in allEngineState.engineIds"
+      :key="engineId"
+      :engineId
     />
   </template>
 </template>
@@ -23,7 +23,7 @@ import EngineCard from "./EngineCard.vue";
 import { useStore } from "@/welcome/store";
 
 const store = useStore();
-const { loadingEngineInfosState } = store;
+const { allEngineState } = store;
 </script>
 
 <style scoped lang="scss">

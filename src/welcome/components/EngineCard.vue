@@ -1,10 +1,10 @@
 <template>
   <section class="engine-card">
     <div class="engine-card-head">
-      <div class="engine-name">{{ engineInfo.package.engineName }}</div>
+      <div class="engine-name">{{ engineInfo.buildInfo.engineName }}</div>
       <span class="status-pill">
         {{
-          engineInfo.currentInfo.installed.status === "notInstalled"
+          engineInfo.currentInfo.status === "notInstalled"
             ? "未インストール"
             : "インストール済み"
         }}</span
@@ -12,10 +12,8 @@
     </div>
     <div class="engine-meta">
       <div>最新バージョン：{{ latestVersionText }}</div>
-      <div v-if="engineInfo.currentInfo.installed.status === 'installed'">
-        インストール済み：{{
-          engineInfo.currentInfo.installed.installedVersion
-        }}
+      <div v-if="engineInfo.currentInfo.status === 'installed'">
+        インストール済み：{{ engineInfo.currentInfo.installedVersion }}
       </div>
     </div>
     <div v-if="progressInfo.type !== 'idle'" class="engine-progress">
@@ -96,7 +94,7 @@ const store = useStore();
 const engineInfo = computed(() => store.getEngineInfo(props.engineId));
 const latestInfo = computed(() => engineInfo.value.latestInfo);
 const selectedRuntimeTarget = computed(() =>
-  store.getSelectedRuntimeTarget(engineInfo.value),
+  store.getSelectedRuntimeTarget(props.engineId),
 );
 const progressInfo = computed(() => store.getEngineProgress(props.engineId));
 
@@ -133,7 +131,7 @@ const currentEngineStatus = computed<{
   color: "default" | "primary";
 }>(() => {
   if (latestInfo.value.type !== "fetched") {
-    if (engineInfo.value.currentInfo.installed.status === "notInstalled") {
+    if (engineInfo.value.currentInfo.status === "notInstalled") {
       return {
         actionLabel: "未インストール",
         color: "default",
@@ -153,14 +151,14 @@ const currentEngineStatus = computed<{
   const humanReadableSize = sizeToHumanReadable(
     selectedPackageInfo.files.reduce((acc, file) => acc + file.size, 0),
   );
-  if (engineInfo.value.currentInfo.installed.status === "notInstalled") {
+  if (engineInfo.value.currentInfo.status === "notInstalled") {
     return {
       actionLabel: `インストール（${humanReadableSize}）`,
       color: "primary",
     };
   }
   const isOutdated = semver.lt(
-    engineInfo.value.currentInfo.installed.installedVersion,
+    engineInfo.value.currentInfo.installedVersion,
     selectedPackageInfo.version,
   );
   if (isOutdated) {

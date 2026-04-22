@@ -18,6 +18,7 @@ import {
 } from "@/domain/defaultEngine/latestDefaultEngine";
 import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
 import type {
+  EnginePackageBuildInfo,
   EnginePackageCurrentInfo,
   EnginePackageLatestInfo,
 } from "@/domain/enginePackage";
@@ -191,7 +192,7 @@ export class EngineAndVvppController {
 
   private getInstalledEngineStatus(
     engineId: EngineId,
-  ): EnginePackageCurrentInfo["installed"] {
+  ): EnginePackageCurrentInfo {
     const isInstalled = this.engineInfoManager.hasEngineInfo(engineId);
     if (!isInstalled) {
       return { status: "notInstalled" };
@@ -209,9 +210,9 @@ export class EngineAndVvppController {
    * デフォルトエンジンがインストール済みかどうかを確認する。
    */
   hasInstalledDefaultEngine(): boolean {
-    const statuses = this.getEnginePackageCurrentInfos();
-    return statuses.some(
-      (status) => status.installed.status !== "notInstalled",
+    return this.getEnginePackageIds().some(
+      (engineId) =>
+        this.getEnginePackageCurrentInfo(engineId).status !== "notInstalled",
     );
   }
 
@@ -224,16 +225,44 @@ export class EngineAndVvppController {
   }
 
   /**
-   * オフラインでデフォルトエンジンのインストール状況を取得する。
+   * デフォルトエンジンのIDを取得する。
    */
-  getEnginePackageCurrentInfos(): EnginePackageCurrentInfo[] {
-    return this.getDownloadableEnvEngineInfos().map((envEngineInfo) => ({
-      package: {
-        engineName: envEngineInfo.name,
-        engineId: envEngineInfo.uuid,
-      },
-      installed: this.getInstalledEngineStatus(envEngineInfo.uuid),
-    }));
+  getEnginePackageIds(): EngineId[] {
+    return this.getDownloadableEnvEngineInfos().map(
+      (envEngineInfo) => envEngineInfo.uuid,
+    );
+  }
+
+  /**
+   * ビルド時に定義された指定したエンジンの情報を取得する。
+   */
+  getEnginePackageBuildInfo(engineId: EngineId): EnginePackageBuildInfo {
+    const envEngineInfo = this.getDownloadableEnvEngineInfos().find(
+      (info) => info.uuid === engineId,
+    );
+    assertNonNullable(
+      envEngineInfo,
+      `Engine info not found for engineId: ${engineId}`,
+    );
+
+    return {
+      engineName: envEngineInfo.name,
+    };
+  }
+
+  /**
+   * オフラインで指定したエンジンのインストール状況を取得する。
+   */
+  getEnginePackageCurrentInfo(engineId: EngineId): EnginePackageCurrentInfo {
+    const envEngineInfo = this.getDownloadableEnvEngineInfos().find(
+      (info) => info.uuid === engineId,
+    );
+    assertNonNullable(
+      envEngineInfo,
+      `Engine info not found for engineId: ${engineId}`,
+    );
+
+    return this.getInstalledEngineStatus(engineId);
   }
 
   /**
@@ -277,10 +306,6 @@ export class EngineAndVvppController {
     }
 
     return {
-      package: {
-        engineName: envEngineInfo.name,
-        engineId: envEngineInfo.uuid,
-      },
       availableRuntimeTargets,
     };
   }
