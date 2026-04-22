@@ -35,9 +35,7 @@ fi
 if [ ! -d "$ESIGNERCKA_INSTALL_DIR" ]; then
     curl -fLO --retry 3 --retry-delay 5 \
         "https://github.com/SSLcom/eSignerCKA/releases/download/v1.0.6/SSL.COM-eSigner-CKA_1.0.6.zip"
-
     echo "e4971440e4ebed94328492cf36e18999554c5c657c856f1cb14a6072c8b1c263  SSL.COM-eSigner-CKA_1.0.6.zip" | sha256sum --check
-
     unzip -o SSL.COM-eSigner-CKA_1.0.6.zip
     mv *eSigner*CKA_*.exe eSigner_CKA_Installer.exe
     powershell "
