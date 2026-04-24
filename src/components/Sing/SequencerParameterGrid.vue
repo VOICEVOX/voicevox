@@ -9,13 +9,8 @@ import { ref, watch, computed, onUnmounted, onMounted, inject } from "vue";
 import * as PIXI from "pixi.js";
 import { useStore } from "@/store";
 import { useMounted } from "@/composables/useMounted";
-import {
-  tickToBaseX,
-  type ViewportInfo,
-  type CanvasSize,
-} from "@/sing/viewHelper";
+import { tickToBaseX, type ViewportInfo } from "@/sing/viewHelper";
 import { numMeasuresInjectionKey } from "@/components/Sing/ScoreSequencer.vue";
-import type { TimeSignature } from "@/domain/project/type";
 import {
   getBeatDuration,
   getMeasureDuration,
@@ -87,15 +82,6 @@ let graphic: PIXI.Graphics | undefined;
 let requestId: number | undefined;
 let renderInNextFrame = false;
 
-const getMeasureWidth = (timeSignature: TimeSignature) => {
-  const measureTicks = getMeasureDuration(
-    timeSignature.beats,
-    timeSignature.beatType,
-    tpqn.value,
-  );
-  return tickToBaseX(measureTicks, tpqn.value) * props.viewportInfo.scaleX;
-};
-
 const render = () => {
   if (renderer == undefined) {
     throw new Error("renderer is undefined.");
@@ -110,57 +96,56 @@ const render = () => {
     throw new Error("canvasHeight is undefined.");
   }
 
-  const canvasSize: CanvasSize = {
-    width: canvasWidth,
-    height: canvasHeight,
-  };
-
-  // 可視範囲内の小節線・拍線の位置を計算
+  // 可視範囲内の小節線・拍線のX座標を収集する
+  // ±1pxは、丸め誤差で境界線が切れるのを防ぐためのマージン
+  const viewportLeft = props.viewportInfo.offsetX - 1;
+  const viewportRight = props.viewportInfo.offsetX + canvasWidth + 1;
+  const viewportScaleX = props.viewportInfo.scaleX;
   const measureLineXs: number[] = [];
   const beatLineXs: number[] = [];
-  const viewportLeft = props.viewportInfo.offsetX - 1;
-  const viewportRight = props.viewportInfo.offsetX + canvasSize.width + 1;
 
-  // 各拍子セクションの開始tick位置を事前計算
-  const tsSectionStartTicks = getTimeSignaturePositions(
+  // 各拍子のtick位置を事前計算
+  const tsPositions = getTimeSignaturePositions(
     timeSignatures.value,
     tpqn.value,
   );
 
-  // 各拍子セクションから可視範囲内の線座標を収集
+  // 各拍子区間から可視範囲内の線座標を収集
   for (const [i, tsSection] of timeSignatures.value.entries()) {
     const nextTsSection = timeSignatures.value.at(i + 1);
     const nextMeasureNumber =
       nextTsSection?.measureNumber ?? numMeasures.value + 1;
     const measureCount = nextMeasureNumber - tsSection.measureNumber;
-    const measureWidth = getMeasureWidth(tsSection);
+    const measureTicks = getMeasureDuration(
+      tsSection.beats,
+      tsSection.beatType,
+      tpqn.value,
+    );
+    const measureWidth = tickToBaseX(measureTicks, tpqn.value) * viewportScaleX;
     const beatTicks = getBeatDuration(tsSection.beatType, tpqn.value);
-    const beatWidth =
-      tickToBaseX(beatTicks, tpqn.value) * props.viewportInfo.scaleX;
+    const beatWidth = tickToBaseX(beatTicks, tpqn.value) * viewportScaleX;
     const tsSectionStartX =
-      tickToBaseX(tsSectionStartTicks[i], tpqn.value) *
-      props.viewportInfo.scaleX;
-    const tsSectionWidth = measureWidth * measureCount;
+      tickToBaseX(tsPositions[i], tpqn.value) * viewportScaleX;
+    const tsSectionEndX = tsSectionStartX + measureWidth * measureCount;
 
-    // 拍子セクションが可視範囲と重ならなければスキップ
-    if (
-      tsSectionStartX + tsSectionWidth < viewportLeft ||
-      tsSectionStartX > viewportRight
-    ) {
+    // ビューポートと拍子区間の交差
+    const visibleStartX = Math.max(viewportLeft, tsSectionStartX);
+    const visibleEndX = Math.min(viewportRight, tsSectionEndX);
+
+    // 交差が空ならこの拍子区間は見えないのでスキップ
+    if (visibleStartX >= visibleEndX) {
       continue;
     }
 
-    // 拍子セクション内で可視範囲に入る最初と最後の小節インデックス（0始まり）を計算
-    const firstMeasureIndex = Math.max(
-      0,
-      Math.floor((viewportLeft - tsSectionStartX) / measureWidth),
+    // 交差に含まれる小節インデックスの範囲（0始まり）
+    const startMeasureIndex = Math.floor(
+      (visibleStartX - tsSectionStartX) / measureWidth,
     );
-    const lastMeasureIndexExclusive = Math.min(
-      measureCount,
-      Math.ceil((viewportRight - tsSectionStartX) / measureWidth),
+    const endMeasureIndex = Math.ceil(
+      (visibleEndX - tsSectionStartX) / measureWidth,
     );
 
-    for (let k = firstMeasureIndex; k < lastMeasureIndexExclusive; k++) {
+    for (let k = startMeasureIndex; k < endMeasureIndex; k++) {
       const measureX = tsSectionStartX + k * measureWidth;
       // 拍線
       for (let beat = 1; beat < tsSection.beats; beat++) {
@@ -184,7 +169,7 @@ const render = () => {
   for (const x of measureLineXs) {
     const lineX = Math.round(x - props.viewportInfo.offsetX);
     graphic.moveTo(lineX - 0.5, 0);
-    graphic.lineTo(lineX - 0.5, canvasSize.height);
+    graphic.lineTo(lineX - 0.5, canvasHeight);
   }
 
   // 拍線をまとめて描画
@@ -192,7 +177,7 @@ const render = () => {
   for (const x of beatLineXs) {
     const lineX = Math.round(x - props.viewportInfo.offsetX);
     graphic.moveTo(lineX - 0.5, 0);
-    graphic.lineTo(lineX - 0.5, canvasSize.height);
+    graphic.lineTo(lineX - 0.5, canvasHeight);
   }
 
   renderer.render(stage);
