@@ -22,11 +22,6 @@ import {
   getTimeSignaturePositions,
 } from "@/sing/music";
 
-type GridLineInfo = {
-  x: number;
-  type: "measure" | "beat";
-};
-
 const props = defineProps<{
   viewportInfo: ViewportInfo;
 }>();
@@ -121,7 +116,8 @@ const render = () => {
   };
 
   // 可視範囲内の小節線・拍線の位置を計算
-  const visibleLines: GridLineInfo[] = [];
+  const measureLineXs: number[] = [];
+  const beatLineXs: number[] = [];
   const viewportLeft = props.viewportInfo.offsetX - 1;
   const viewportRight = props.viewportInfo.offsetX + canvasSize.width + 1;
 
@@ -168,13 +164,10 @@ const render = () => {
       const measureX = tsSectionStartX + k * measureWidth;
       // 拍線
       for (let beat = 1; beat < tsSection.beats; beat++) {
-        visibleLines.push({
-          x: measureX + beatWidth * beat,
-          type: "beat",
-        });
+        beatLineXs.push(measureX + beatWidth * beat);
       }
       // 小節線（小節の右端 = 次の小節の左端）。先頭の0位置は出力しない
-      visibleLines.push({ x: measureX + measureWidth, type: "measure" });
+      measureLineXs.push(measureX + measureWidth);
     }
   }
 
@@ -184,11 +177,20 @@ const render = () => {
   }
   graphic.clear();
 
-  // 線をまとめて描画
-  for (const line of visibleLines) {
-    const lineX = Math.round(line.x - props.viewportInfo.offsetX);
-    const currentLineStyle = gridLineStyles[currentTheme.value][line.type];
-    graphic.lineStyle(1, currentLineStyle.color, currentLineStyle.alpha);
+  const style = gridLineStyles[currentTheme.value];
+
+  // 小節線をまとめて描画
+  graphic.lineStyle(1, style.measure.color, style.measure.alpha);
+  for (const x of measureLineXs) {
+    const lineX = Math.round(x - props.viewportInfo.offsetX);
+    graphic.moveTo(lineX - 0.5, 0);
+    graphic.lineTo(lineX - 0.5, canvasSize.height);
+  }
+
+  // 拍線をまとめて描画
+  graphic.lineStyle(1, style.beat.color, style.beat.alpha);
+  for (const x of beatLineXs) {
+    const lineX = Math.round(x - props.viewportInfo.offsetX);
     graphic.moveTo(lineX - 0.5, 0);
     graphic.lineTo(lineX - 0.5, canvasSize.height);
   }
