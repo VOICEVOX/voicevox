@@ -3,11 +3,8 @@ import type {
   RuntimeTarget,
 } from "@/domain/defaultEngine/latestDefaultEngine";
 
-/** ビルド時に定義されたパッケージ情報
- *
- * TODO: BuildInfoという名前よりもっといい名前があるはずなので変える
- */
-export type EnginePackageBuildInfo = {
+/** アプリに埋め込まれたパッケージ定義情報 */
+export type EnginePackageEmbeddedInfo = {
   engineName: string;
 };
 
@@ -18,8 +15,10 @@ export type EnginePackageCurrentInfo =
 
 /** オンラインで取得したパッケージ最新情報 */
 export type EnginePackageLatestInfo = {
-  availableRuntimeTargets: {
-    target: RuntimeTarget;
-    packageInfo: PackageInfo;
-  }[];
+  availableRuntimeTargets: RuntimeTargetInfo[];
+};
+
+export type RuntimeTargetInfo = {
+  target: RuntimeTarget;
+  packageInfo: PackageInfo;
 };

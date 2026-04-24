@@ -60,8 +60,10 @@ class WelcomeIpcMainHandleManager {
       GET_ENGINE_PACKAGE_IDS: () => {
         return engineAndVvppController.getEnginePackageIds();
       },
-      GET_ENGINE_PACKAGE_BUILD_INFO: (_, obj) => {
-        return engineAndVvppController.getEnginePackageBuildInfo(obj.engineId);
+      GET_ENGINE_PACKAGE_EMBEDDED_INFO: (_, obj) => {
+        return engineAndVvppController.getEnginePackageEmbeddedInfo(
+          obj.engineId,
+        );
       },
       GET_ENGINE_PACKAGE_CURRENT_INFO: (_, obj) => {
         return engineAndVvppController.getEnginePackageCurrentInfo(

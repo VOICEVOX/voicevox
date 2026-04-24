@@ -1,7 +1,7 @@
 <template>
   <section class="engine-card">
     <div class="engine-card-head">
-      <div class="engine-name">{{ engineInfo.buildInfo.engineName }}</div>
+      <div class="engine-name">{{ engineInfo.embeddedInfo.engineName }}</div>
       <span class="status-pill">
         {{
           engineInfo.currentInfo.status === "notInstalled"
@@ -47,9 +47,9 @@
         </BaseSelect>
       </div>
       <div v-if="latestInfo.type === 'fetchError'" class="engine-fetch-error">
-        <span class="engine-fetch-error-message">{{
-          FETCH_ERROR_MESSAGE
-        }}</span>
+        <span class="engine-fetch-error-message">
+          最新のエンジン情報を取得できませんでした。
+        </span>
         <BaseButton
           label="再試行"
           variant="default"
@@ -72,18 +72,12 @@ import { computed } from "vue";
 import BaseButton from "@/components/Base/BaseButton.vue";
 import BaseSelect from "@/components/Base/BaseSelect.vue";
 import BaseSelectItem from "@/components/Base/BaseSelectItem.vue";
-import type { EnginePackageLatestInfo } from "@/domain/enginePackage";
 import type { RuntimeTarget } from "@/domain/defaultEngine/latestDefaultEngine";
 import { sizeToHumanReadable } from "@/helpers/sizeHelper";
 import { assertNonNullable, ExhaustiveError } from "@/type/utility";
 import type { EngineId } from "@/type/preload";
 import { useStore } from "@/welcome/store";
-
-const FETCH_ERROR_MESSAGE =
-  "オンラインからエンジン情報を取得できませんでした。";
-
-type RuntimeTargetInfo =
-  EnginePackageLatestInfo["availableRuntimeTargets"][number];
+import type { RuntimeTargetInfo } from "@/domain/enginePackage";
 
 const props = defineProps<{
   engineId: EngineId;

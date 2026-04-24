@@ -531,8 +531,3 @@ if (isDevelopment) {
     });
   }
 }
-
-console.log(`Waiting for ready to show main window...`);
-app.whenReady().then(() => {
-  console.log(`Ready to show main window.`);
-});

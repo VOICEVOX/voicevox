@@ -18,9 +18,10 @@ import {
 } from "@/domain/defaultEngine/latestDefaultEngine";
 import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
 import type {
-  EnginePackageBuildInfo,
+  EnginePackageEmbeddedInfo,
   EnginePackageCurrentInfo,
   EnginePackageLatestInfo,
+  RuntimeTargetInfo,
 } from "@/domain/enginePackage";
 import type { ProgressCallback } from "@/helpers/progressHelper";
 import { createLogger } from "@/helpers/log";
@@ -234,9 +235,9 @@ export class EngineAndVvppController {
   }
 
   /**
-   * ビルド時に定義された指定したエンジンの情報を取得する。
+   * アプリに埋め込まれた指定したエンジンの定義情報を取得する。
    */
-  getEnginePackageBuildInfo(engineId: EngineId): EnginePackageBuildInfo {
+  getEnginePackageEmbeddedInfo(engineId: EngineId): EnginePackageEmbeddedInfo {
     const envEngineInfo = this.getDownloadableEnvEngineInfos().find(
       (info) => info.uuid === engineId,
     );
@@ -282,22 +283,23 @@ export class EngineAndVvppController {
     const latestUrl = envEngineInfo.latestUrl;
 
     const latestInfo = await fetchLatestDefaultEngineInfo(latestUrl);
-    if (latestInfo.formatVersion != 1) {
+    if (latestInfo.formatVersion !== 1) {
       throw new Error(
         `Unsupported format version: ${latestInfo.formatVersion}`,
       );
     }
 
-    const availableRuntimeTargets: EnginePackageLatestInfo["availableRuntimeTargets"] =
-      Object.entries(latestInfo.packages)
-        .map(([target, packageInfo]) => ({ target, packageInfo }))
-        .filter((runtimeTargetInfo) =>
-          isSupportedTarget(runtimeTargetInfo.target),
-        )
-        .toSorted(
-          (a, b) =>
-            a.packageInfo.displayInfo.order - b.packageInfo.displayInfo.order,
-        );
+    const availableRuntimeTargets: RuntimeTargetInfo[] = Object.entries(
+      latestInfo.packages,
+    )
+      .map(([target, packageInfo]) => ({ target, packageInfo }))
+      .filter((runtimeTargetInfo) =>
+        isSupportedTarget(runtimeTargetInfo.target),
+      )
+      .toSorted(
+        (a, b) =>
+          a.packageInfo.displayInfo.order - b.packageInfo.displayInfo.order,
+      );
 
     if (availableRuntimeTargets.length === 0) {
       throw new Error(

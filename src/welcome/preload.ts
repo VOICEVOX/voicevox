@@ -39,8 +39,10 @@ const api: WelcomeSandbox = {
   getEnginePackageIds: () => {
     return ipcRendererInvokeProxy.GET_ENGINE_PACKAGE_IDS();
   },
-  getEnginePackageBuildInfo: (engineId) => {
-    return ipcRendererInvokeProxy.GET_ENGINE_PACKAGE_BUILD_INFO({ engineId });
+  getEnginePackageEmbeddedInfo: (engineId) => {
+    return ipcRendererInvokeProxy.GET_ENGINE_PACKAGE_EMBEDDED_INFO({
+      engineId,
+    });
   },
   getEnginePackageCurrentInfo: (engineId) => {
     return ipcRendererInvokeProxy.GET_ENGINE_PACKAGE_CURRENT_INFO({ engineId });
@@ -98,13 +100,13 @@ const api: WelcomeSandbox = {
     return ipcRendererInvokeProxy.IS_MAXIMIZED_WINDOW();
   },
   minimizeWindow: () => {
-    void ipcRendererInvokeProxy.MINIMIZE_WINDOW();
+    return ipcRendererInvokeProxy.MINIMIZE_WINDOW();
   },
   toggleMaximizeWindow: () => {
-    void ipcRendererInvokeProxy.TOGGLE_MAXIMIZE_WINDOW();
+    return ipcRendererInvokeProxy.TOGGLE_MAXIMIZE_WINDOW();
   },
   closeWindow: () => {
-    void ipcRendererInvokeProxy.CLOSE_WINDOW();
+    return ipcRendererInvokeProxy.CLOSE_WINDOW();
   },
 
   logError: (...params) => {

@@ -1,5 +1,5 @@
 import type {
-  EnginePackageBuildInfo,
+  EnginePackageEmbeddedInfo,
   EnginePackageCurrentInfo,
   EnginePackageLatestInfo,
 } from "@/domain/enginePackage";
@@ -23,9 +23,9 @@ export type WelcomeIpcIHData = {
     args: [];
     return: EngineId[];
   };
-  GET_ENGINE_PACKAGE_BUILD_INFO: {
+  GET_ENGINE_PACKAGE_EMBEDDED_INFO: {
     args: [obj: { engineId: EngineId }];
-    return: EnginePackageBuildInfo;
+    return: EnginePackageEmbeddedInfo;
   };
   GET_ENGINE_PACKAGE_CURRENT_INFO: {
     args: [obj: { engineId: EngineId }];

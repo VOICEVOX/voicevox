@@ -1,7 +1,7 @@
 import { computed, inject, provide, ref } from "vue";
 import type { InjectionKey } from "vue";
 import type {
-  EnginePackageBuildInfo,
+  EnginePackageEmbeddedInfo,
   EnginePackageCurrentInfo,
   EnginePackageLatestInfo,
 } from "@/domain/enginePackage";
@@ -43,7 +43,7 @@ export type EngineProgressInfo =
     };
 
 type EngineState = {
-  buildInfo: EnginePackageBuildInfo;
+  embeddedInfo: EnginePackageEmbeddedInfo;
   currentInfo: EnginePackageCurrentInfo;
 
   latestInfo: MergeToTarget<
@@ -196,15 +196,15 @@ function createWelcomeStore() {
     }
   };
 
-  const loadEngineBuildInfos = async () => {
+  const loadEngineEmbeddedInfos = async () => {
     allEngineState.value = { type: "loading" };
     const engineIds = await window.welcomeBackend.getEnginePackageIds();
-    const buildEngineInfos: Record<EngineId, EnginePackageBuildInfo> = {};
+    const embeddedEngineInfos: Record<EngineId, EnginePackageEmbeddedInfo> = {};
     await Promise.all(
       engineIds.map(async (engineId) => {
         const info =
-          await window.welcomeBackend.getEnginePackageBuildInfo(engineId);
-        buildEngineInfos[engineId] = info;
+          await window.welcomeBackend.getEnginePackageEmbeddedInfo(engineId);
+        embeddedEngineInfos[engineId] = info;
       }),
     );
     allEngineState.value = {
@@ -214,7 +214,7 @@ function createWelcomeStore() {
         engineIds.map((engineId) => [
           engineId,
           {
-            buildInfo: buildEngineInfos[engineId],
+            embeddedInfo: embeddedEngineInfos[engineId],
             currentInfo: { status: "notInstalled" },
             latestInfo: { type: "loading" },
           } satisfies EngineState,
@@ -300,7 +300,7 @@ function createWelcomeStore() {
         setEngineProgress(engineId, { progress, type });
       },
     });
-    void loadEngineBuildInfos();
+    void loadEngineEmbeddedInfos();
     void applyThemeFromConfig();
   };
 
