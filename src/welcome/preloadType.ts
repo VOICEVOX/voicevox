@@ -35,9 +35,9 @@ export interface WelcomeSandbox {
     detectLeaveFullscreen?: () => void;
   }): void;
   isMaximizedWindow(): Promise<boolean>;
-  minimizeWindow(): void;
-  toggleMaximizeWindow(): void;
-  closeWindow(): void;
+  minimizeWindow(): Promise<void>;
+  toggleMaximizeWindow(): Promise<void>;
+  closeWindow(): Promise<void>;
   logError(...params: unknown[]): void;
   logWarn(...params: unknown[]): void;
   logInfo(...params: unknown[]): void;
