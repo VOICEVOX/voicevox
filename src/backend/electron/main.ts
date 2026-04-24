@@ -31,7 +31,7 @@ type SingleInstanceLockData = {
   filePath: string | undefined;
 };
 
-if (isDevelopment) {
+if (isDevelopment && !isTest) {
   app.commandLine.appendSwitch("remote-debugging-port", "9222");
 }
 
@@ -531,3 +531,8 @@ if (isDevelopment) {
     });
   }
 }
+
+console.log(`Waiting for ready to show main window...`);
+app.whenReady().then(() => {
+  console.log(`Ready to show main window.`);
+});

@@ -283,6 +283,7 @@ function createWelcomeStore() {
       await showErrorDialog("エンジンのインストールに失敗しました", error);
     } finally {
       clearEngineProgress(engineId);
+      void fetchInstalledEngineInfo(engineId);
     }
   };
 
