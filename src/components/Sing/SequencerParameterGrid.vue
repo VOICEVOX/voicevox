@@ -88,7 +88,7 @@ let canvasHeight: number | undefined;
 
 let renderer: PIXI.Renderer | undefined;
 let stage: PIXI.Container | undefined;
-const graphics: PIXI.Graphics[] = [];
+let graphic: PIXI.Graphics | undefined;
 let requestId: number | undefined;
 let renderInNextFrame = false;
 
@@ -178,20 +178,10 @@ const render = () => {
     }
   }
 
-  // Graphicsは単一インスタンスに集約して描画する
-  if (graphics.length === 0) {
-    const newGraphic = new PIXI.Graphics();
-    stage.addChild(newGraphic);
-    graphics.push(newGraphic);
-  } else if (graphics.length > 1) {
-    for (let i = graphics.length - 1; i >= 1; i--) {
-      stage.removeChild(graphics[i]);
-      graphics[i].destroy();
-      graphics.splice(i, 1);
-    }
+  if (graphic == undefined) {
+    graphic = new PIXI.Graphics();
+    stage.addChild(graphic);
   }
-
-  const graphic = graphics[0];
   graphic.clear();
 
   // 線をまとめて描画
@@ -277,7 +267,7 @@ onUnmounted(() => {
   if (requestId != undefined) {
     window.cancelAnimationFrame(requestId);
   }
-  for (const graphic of graphics) {
+  if (graphic != undefined) {
     stage?.removeChild(graphic);
     graphic.destroy();
   }
