@@ -28,7 +28,48 @@ type AllEngineState =
       engineStates: Record<EngineId, EngineState>;
     };
 
-// TODO: 移動する
+/**
+ * TUnionの中のTTargetに当てはまるものにTAddedをマージした型を返す。
+ *
+ * これを他のファイルで使う場合は、この型を他のユーティリティ系のファイルに移動すること。
+ *
+ * @example
+ * ```ts
+ * type Hoge =
+ *  | {
+ *      type: "type1";
+ *    }
+ *  | {
+ *      type: "type2";
+ *      field1: string;
+ *    }
+ *  | {
+ *      type: "type3";
+ *      field2: string;
+ *    };
+ *
+ * type Result = MergeToTarget<
+ *   Hoge,
+ *   { type: "type2" },
+ *   { newField: string }
+ * >;
+ *
+ * // Resultは以下の型になる
+ * type Result =
+ *  | {
+ *      type: "type1";
+ *    }
+ *  | {
+ *      type: "type2";
+ *      field1: string;
+ *      newField: string; // TAddedがマージされている
+ *    }
+ *  | {
+ *      type: "type3";
+ *      field2: string;
+ *    };
+ * ```
+ */
 type MergeToTarget<TUnion, TTarget, TAdded> = TUnion extends TTarget
   ? TUnion & TAdded
   : TUnion;
