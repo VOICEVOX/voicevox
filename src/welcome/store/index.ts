@@ -211,64 +211,34 @@ function createWelcomeStore() {
     engineState.latestInfo.progress = progressInfo;
   };
 
-  const clearEngineProgress = (engineId: EngineId) => {
-    setEngineProgress(engineId, { type: "idle" });
-  };
-
-  const updateLatestInfoState = (
-    engineId: EngineId,
-    latestInfo: LatestInfoState,
-  ) => {
-    if (allEngineState.value.type !== "loaded") {
-      throw new UnreachableError();
-    }
-    const engineState = allEngineState.value.engineStates[engineId];
-    if (latestInfo.type === "fetched") {
-      engineState.latestInfo = {
-        ...latestInfo,
-        progress: { type: "idle" },
-        selectedRuntimeTarget: getDefaultRuntimeTarget(
-          engineId,
-          latestInfo.info,
-        ),
-      };
-    } else {
-      engineState.latestInfo = latestInfo;
-    }
-  };
-
   const loadEngineEmbeddedInfos = async () => {
     allEngineState.value = { type: "loading" };
+
     const engineIds = await window.welcomeBackend.getEnginePackageIds();
-    const embeddedEngineInfos: Record<EngineId, EnginePackageEmbeddedInfo> = {};
+    const engineStates: Record<EngineId, EngineState> = {};
     await Promise.all(
       engineIds.map(async (engineId) => {
         const info =
           await window.welcomeBackend.getEnginePackageEmbeddedInfo(engineId);
-        embeddedEngineInfos[engineId] = info;
+        engineStates[engineId] = {
+          embeddedInfo: info,
+          currentInfo: { status: "notInstalled" },
+          latestInfo: { type: "loading" },
+        };
       }),
     );
     allEngineState.value = {
       type: "loaded",
       engineIds,
-      engineStates: Object.fromEntries(
-        engineIds.map((engineId) => [
-          engineId,
-          {
-            embeddedInfo: embeddedEngineInfos[engineId],
-            currentInfo: { status: "notInstalled" },
-            latestInfo: { type: "loading" },
-          } satisfies EngineState,
-        ]),
-      ),
+      engineStates,
     };
 
     for (const engineId of engineIds) {
-      void fetchInstalledEngineInfo(engineId);
+      void fetchCurrentEngineInfo(engineId);
     }
   };
 
-  const fetchInstalledEngineInfo = async (engineId: EngineId) => {
+  const fetchCurrentEngineInfo = async (engineId: EngineId) => {
     if (allEngineState.value.type !== "loaded") {
       throw new UnreachableError();
     }
@@ -280,21 +250,26 @@ function createWelcomeStore() {
   };
 
   const fetchEngineLatestInfo = async (engineId: EngineId) => {
-    updateLatestInfoState(engineId, { type: "loading" });
+    if (allEngineState.value.type !== "loaded") {
+      throw new UnreachableError();
+    }
+    const engineState = allEngineState.value.engineStates[engineId];
+    engineState.latestInfo = { type: "loading" };
     try {
       const info =
         await window.welcomeBackend.getEnginePackageLatestInfo(engineId);
-      updateLatestInfoState(engineId, { type: "fetched", info });
-      setSelectedRuntimeTarget(
-        engineId,
-        getDefaultRuntimeTarget(engineId, info),
-      );
+      engineState.latestInfo = {
+        type: "fetched",
+        info,
+        progress: { type: "idle" },
+        selectedRuntimeTarget: getDefaultRuntimeTarget(engineId, info),
+      };
     } catch (error) {
       window.welcomeBackend.logWarn(
         `Engine package ${engineId} remote info fetch failed`,
         error,
       );
-      updateLatestInfoState(engineId, { type: "fetchError" });
+      engineState.latestInfo = { type: "fetchError" };
     }
   };
 
@@ -323,8 +298,8 @@ function createWelcomeStore() {
       );
       await showErrorDialog("エンジンのインストールに失敗しました", error);
     } finally {
-      clearEngineProgress(engineId);
-      void fetchInstalledEngineInfo(engineId);
+      setEngineProgress(engineId, { type: "idle" });
+      void fetchCurrentEngineInfo(engineId);
     }
   };
 
