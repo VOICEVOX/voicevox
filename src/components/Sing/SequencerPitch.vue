@@ -354,6 +354,8 @@ onMounted(async () => {
   canvasHeight = canvasContainerElement.clientHeight;
 
   renderer = await PIXI.autoDetectRenderer({
+    preference: "webgl",
+    preferWebGLVersion: 2,
     canvas: canvasElement,
     backgroundAlpha: 0,
     antialias: true,
