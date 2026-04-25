@@ -1,7 +1,5 @@
-import type {
-  EnginePackageCurrentInfo,
-  EnginePackageLatestInfo,
-} from "@/backend/electron/engineAndVvppController";
+import type { EnginePackageCurrentInfo } from "@/type/preload";
+import type { EnginePackageLatestInfo } from "@/backend/electron/engineAndVvppController";
 import type { EngineId } from "@/type/preload";
 import type { RuntimeTarget } from "@/domain/defaultEngine/latestDefaultEngine";
 

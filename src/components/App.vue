@@ -136,6 +136,7 @@ onMounted(async () => {
 
   // エンジン情報取得
   await store.actions.PULL_AND_INIT_ENGINE_INFOS();
+  await store.actions.PULL_ENGINE_PACKAGE_LOCAL_INFOS();
 
   // URLパラメータに従ってマルチエンジンをオフにする
   const isMultiEngineOffMode = urlParams.get("isMultiEngineOffMode") === "true";

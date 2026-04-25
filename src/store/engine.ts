@@ -9,6 +9,7 @@ export const engineStoreState: EngineStoreState = {
   engineStates: {},
   engineSupportedDevices: {},
   altPortInfos: {},
+  enginePackageLocalInfos: [],
 };
 const { info, error } = createLogger("store/engine");
 
@@ -52,6 +53,20 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
           });
         }
       }
+    },
+  },
+
+  PULL_ENGINE_PACKAGE_LOCAL_INFOS: {
+    async action({ mutations }) {
+      const enginePackageLocalInfos =
+        await window.backend.fetchEnginePackageLocalInfos();
+      mutations.SET_ENGINE_PACKAGE_LOCAL_INFOS({ enginePackageLocalInfos });
+    },
+  },
+
+  SET_ENGINE_PACKAGE_LOCAL_INFOS: {
+    mutation(state, { enginePackageLocalInfos }) {
+      state.enginePackageLocalInfos = enginePackageLocalInfos;
     },
   },
 

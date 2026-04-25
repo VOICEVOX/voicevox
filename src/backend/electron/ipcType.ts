@@ -3,6 +3,7 @@ import type {
   EngineDirValidationResult,
   EngineId,
   EngineInfo,
+  EnginePackageCurrentInfo,
   EngineSettingType,
   MessageBoxReturnValue,
   NativeThemeType,
@@ -229,6 +230,11 @@ export type IpcIHData = {
   READ_FILE: {
     args: [obj: { filePath: string }];
     return: Result<Uint8Array>;
+  };
+
+  FETCH_ENGINE_PACKAGE_LOCAL_INFOS: {
+    args: [];
+    return: EnginePackageCurrentInfo[];
   };
 };
 
