@@ -2,6 +2,7 @@ import type { ComputedRef, Ref } from "vue";
 import type { Store } from "@/store";
 import type { StateDefinitions } from "@/sing/stateMachine";
 import type { CursorState } from "@/sing/viewHelper";
+import type { VolumeEditableFrameRange } from "@/sing/volumeEditRanges";
 import type { TrackId } from "@/type/preload";
 import type { Tempo } from "@/domain/project/type";
 
@@ -68,6 +69,7 @@ export type VolumeEditorPartialStore = {
 
 export type VolumeEditorContext = VolumeEditorRefs &
   VolumeEditorComputedRefs & {
+    readonly getEditableFrameRanges: () => readonly VolumeEditableFrameRange[];
     readonly store: VolumeEditorPartialStore;
   };
 

@@ -1066,7 +1066,10 @@ export type SingingStoreTypes = {
   };
 
   ERASE_VOLUME_EDIT_DATA: {
-    mutation: { startFrame: number; frameLength: number; trackId: TrackId };
+    mutation: {
+      ranges: Array<{ startFrame: number; endFrame: number }>;
+      trackId: TrackId;
+    };
   };
 
   CLEAR_PITCH_EDIT_DATA: {
@@ -1631,10 +1634,12 @@ export type SingingCommandStoreTypes = {
   };
 
   COMMAND_ERASE_VOLUME_EDIT_DATA: {
-    mutation: { startFrame: number; frameLength: number; trackId: TrackId };
+    mutation: {
+      ranges: Array<{ startFrame: number; endFrame: number }>;
+      trackId: TrackId;
+    };
     action(payload: {
-      startFrame: number;
-      frameLength: number;
+      ranges: Array<{ startFrame: number; endFrame: number }>;
       trackId: TrackId;
     }): void;
   };
