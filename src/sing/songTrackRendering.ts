@@ -341,7 +341,7 @@ const calcPhraseFirstRestDuration = (
   tpqn: number,
 ) => {
   const quarterNoteDuration = getNoteDuration(4, tpqn);
-  let phraseFirstRestDuration: number | undefined = undefined;
+  let phraseFirstRestDuration: number;
 
   // 実際のフレーズ先頭の休符の長さを調べる
   if (prevPhraseLastNote == undefined) {

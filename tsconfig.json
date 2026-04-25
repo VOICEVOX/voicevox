@@ -16,9 +16,8 @@
     "verbatimModuleSyntax": true,
     "resolveJsonModule": true,
     "sourceMap": true,
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["./src/*"]
     },
     "lib": ["esnext", "dom", "dom.iterable"]
   },
