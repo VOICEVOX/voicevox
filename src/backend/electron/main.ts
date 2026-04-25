@@ -31,7 +31,7 @@ type SingleInstanceLockData = {
   filePath: string | undefined;
 };
 
-if (isDevelopment) {
+if (isDevelopment && !isTest) {
   app.commandLine.appendSwitch("remote-debugging-port", "9222");
 }
 

@@ -1,9 +1,11 @@
 import { type BrowserWindow, ipcMain, type IpcMainInvokeEvent } from "electron";
 import { wrapToTransferableResult } from "./transferableResultHelper";
-import type { BaseIpcData } from "./ipcType";
 import { createLogger } from "@/helpers/log";
 import { objectEntries } from "@/helpers/typedEntries";
-import { ensureNotNullish } from "@/type/utility";
+import { getOrThrow } from "@/helpers/mapHelper";
+
+/** ipc.tsのジェネリクス境界として使用される汎用IPC型マップ */
+type BaseIpcData = Record<string, { args: unknown[]; return: unknown }>;
 
 /**
  * ipc.ts の設計思想
@@ -43,7 +45,7 @@ export type IpcSendProxy<Ipc extends BaseIpcData> = {
 
 const ipcHandlers = new Map<
   string,
-  ((event: IpcMainInvokeEvent, ...args: unknown[]) => unknown)[]
+  Set<(event: IpcMainInvokeEvent, ...args: unknown[]) => unknown>
 >();
 const delegated = Symbol("delegated");
 export function registerIpcMainHandle<Ipc extends BaseIpcData>(
@@ -65,18 +67,11 @@ export function registerIpcMainHandle<Ipc extends BaseIpcData>(
       return wrapToTransferableResult(() => listener(event, ...args));
     };
     if (ipcHandlers.has(channel as string)) {
-      ensureNotNullish(ipcHandlers.get(channel as string)).push(
-        errorHandledListener,
-      );
+      getOrThrow(ipcHandlers, channel as string).add(errorHandledListener);
     } else {
-      ipcHandlers.set(channel as string, [errorHandledListener]);
+      ipcHandlers.set(channel as string, new Set([errorHandledListener]));
       ipcMain.handle(channel as string, async (event, ...args: unknown[]) => {
-        const handlers = ipcHandlers.get(channel as string);
-        if (!handlers) {
-          throw new Error(
-            `No handlers registered for channel: ${String(channel)}`,
-          );
-        }
+        const handlers = getOrThrow(ipcHandlers, channel as string);
         for (const handler of handlers) {
           const result = await handler(event, ...args);
           if (result !== delegated) {
