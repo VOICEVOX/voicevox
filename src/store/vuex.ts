@@ -410,6 +410,10 @@ export type CustomMutationTree<S, M extends MutationsBase> = {
   [K in keyof M]: Mutation<S, M, K>;
 };
 
+export type StorePlugins = ((
+  store: Store<State, AllGetters, AllActions, AllMutations>,
+) => void)[];
+
 type StoreTypesBase = Record<
   string,
   {
@@ -425,18 +429,15 @@ type PartialStoreOptions<
   G extends GettersBase,
   A extends ActionsBase,
   M extends MutationsBase,
-  SG extends GettersBase = G,
-  SA extends ActionsBase = A,
-  SM extends MutationsBase = M,
 > = {
   [K in keyof T]: {
     [GAM in keyof T[K]]: GAM extends "getter"
       ? K extends keyof G
-        ? Getter<S, S, G, K, SG>
+        ? Getter<S, S, G, K, AllGetters>
         : never
       : GAM extends "action"
         ? K extends keyof A
-          ? DotNotationAction<S, S, A, K, SG, SA, SM>
+          ? DotNotationAction<S, S, A, K, AllGetters, AllActions, AllMutations>
           : never
         : GAM extends "mutation"
           ? K extends keyof M
@@ -444,8 +445,6 @@ type PartialStoreOptions<
             : never
           : never;
   };
-} & {
-  plugins?: ((store: Store<S, SG, SA, SM>) => void)[];
 };
 
 export const createPartialStore = <
@@ -454,21 +453,11 @@ export const createPartialStore = <
   A extends ActionsBase = StoreType<T, "action">,
   M extends MutationsBase = StoreType<T, "mutation">,
 >(
-  options: PartialStoreOptions<
-    State,
-    T,
-    G,
-    A,
-    M,
-    AllGetters,
-    AllActions,
-    AllMutations
-  >,
+  options: PartialStoreOptions<State, T, G, A, M>,
 ): StoreOptions<State, G, A, M, AllGetters, AllActions, AllMutations> => {
-  const { plugins, ...restOptions } = options;
-  const obj = Object.keys(restOptions).reduce(
+  const obj = Object.keys(options).reduce(
     (acc, cur) => {
-      const option = restOptions[cur];
+      const option = options[cur];
 
       if (option.getter) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
@@ -495,5 +484,5 @@ export const createPartialStore = <
     },
   );
 
-  return { ...obj, plugins };
+  return obj;
 };

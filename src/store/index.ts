@@ -25,6 +25,7 @@ import { audioPlayerStoreState, audioPlayerStore } from "./audioPlayer";
 import {
   singingStoreState,
   singingStore,
+  singingStorePlugins,
   singingCommandStoreState,
   singingCommandStore,
 } from "./singing";
@@ -412,22 +413,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
     ...singingStore.actions,
     ...singingCommandStore.actions,
   },
-  plugins: [
-    ...(uiStore.plugins ?? []),
-    ...(audioStore.plugins ?? []),
-    ...(audioPlayerStore.plugins ?? []),
-    ...(engineStore.plugins ?? []),
-    ...(commandStore.plugins ?? []),
-    ...(projectStore.plugins ?? []),
-    ...(settingStore.plugins ?? []),
-    ...(audioCommandStore.plugins ?? []),
-    ...(presetStore.plugins ?? []),
-    ...(dictionaryStore.plugins ?? []),
-    ...(indexStore.plugins ?? []),
-    ...(proxyStore.plugins ?? []),
-    ...(singingStore.plugins ?? []),
-    ...(singingCommandStore.plugins ?? []),
-  ],
+  plugins: [...singingStorePlugins],
   strict: !isProduction,
 });
 

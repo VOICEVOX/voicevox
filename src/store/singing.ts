@@ -1,5 +1,5 @@
 import { ref } from "vue";
-import { createPartialStore } from "./vuex";
+import { createPartialStore, type StorePlugins } from "./vuex";
 import { createUILockAction } from "./ui";
 import {
   type SingingStoreState,
@@ -3439,51 +3439,52 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       },
     ),
   },
-  plugins: [
-    (store) => {
-      store.watch(
-        (state) => [
-          state.tpqn,
-          state.tempos,
-          [...state.tracks.values()].map((track) => [
-            track.singer,
-            track.keyRangeAdjustment,
-            track.volumeRangeAdjustment,
-            track.notes,
-            track.phonemeTimingEditData,
-            track.pitchEditData,
-            track.volumeEditData,
-          ]),
-          state.defaultLyricMode,
-        ],
-        () => {
-          void store.actions.RENDER();
-        },
-      );
-
-      store.watch(
-        (state) =>
-          [...state.tracks.values()].map((track) => [
-            track.mute,
-            track.solo,
-            track.gain,
-            track.pan,
-          ]),
-        () => {
-          void store.actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
-        },
-      );
-
-      store.watch(
-        (state) => [state.tpqn, state.tempos],
-        () => {
-          void store.actions.SYNC_LOOP_RANGE_TO_TRANSPORT();
-          void store.actions.SYNC_PLAYHEAD_POSITION_TO_TRANSPORT();
-        },
-      );
-    },
-  ],
 });
+
+export const singingStorePlugins: StorePlugins = [
+  (store) => {
+    store.watch(
+      (state) => [
+        state.tpqn,
+        state.tempos,
+        [...state.tracks.values()].map((track) => [
+          track.singer,
+          track.keyRangeAdjustment,
+          track.volumeRangeAdjustment,
+          track.notes,
+          track.phonemeTimingEditData,
+          track.pitchEditData,
+          track.volumeEditData,
+        ]),
+        state.defaultLyricMode,
+      ],
+      () => {
+        void store.actions.RENDER();
+      },
+    );
+
+    store.watch(
+      (state) =>
+        [...state.tracks.values()].map((track) => [
+          track.mute,
+          track.solo,
+          track.gain,
+          track.pan,
+        ]),
+      () => {
+        void store.actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
+      },
+    );
+
+    store.watch(
+      (state) => [state.tpqn, state.tempos],
+      () => {
+        void store.actions.SYNC_LOOP_RANGE_TO_TRANSPORT();
+        void store.actions.SYNC_PLAYHEAD_POSITION_TO_TRANSPORT();
+      },
+    );
+  },
+];
 
 export const singingCommandStoreState: SingingCommandStoreState = {};
 
