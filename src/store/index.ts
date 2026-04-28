@@ -415,7 +415,7 @@ export const store = createStore<State, AllGetters, AllActions, AllMutations>({
   },
 
   plugins: [...singingStorePlugins],
-  
+
   strict: !isProduction,
 });
 
