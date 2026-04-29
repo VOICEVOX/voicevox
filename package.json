@@ -58,7 +58,6 @@
   "// TODO: hotkeys-jsのメジャーバージョン更新は動作テストしてから https://github.com/VOICEVOX/voicevox/pull/2953#pullrequestreview-3819334546": "",
   "dependencies": {
     "@gtm-support/vue-gtm": "3.1.0",
-    "@pixi/unsafe-eval": "7.4.3",
     "@quasar/extras": "1.17.0",
     "@sevenc-nanashi/utaformatix-ts": "jsr:0.4.0",
     "@std/path": "jsr:1.1.4",
@@ -76,7 +75,7 @@
     "markdown-it": "14.1.1",
     "move-file": "4.1.0",
     "multistream": "4.1.0",
-    "pixi.js": "7.4.3",
+    "pixi.js": "8.17.1",
     "quasar": "2.18.6",
     "reka-ui": "2.8.0",
     "rfdc": "1.4.1",
