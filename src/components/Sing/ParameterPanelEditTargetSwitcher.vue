@@ -40,8 +40,9 @@ defineProps<{
 <style scoped lang="scss">
 .edit-target-switcher {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  height: 24px;
+  width: 34px;
   padding: 1px;
   border-radius: 7px;
   background: var(--scheme-color-surface);
@@ -50,9 +51,9 @@ defineProps<{
 }
 
 .segment-switch {
-  min-width: 56px;
-  height: 22px;
-  padding: 0 12px;
+  width: 32px;
+  height: 26px;
+  padding: 0;
   border: 0;
   border-radius: 5px;
   background: transparent;

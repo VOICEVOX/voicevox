@@ -58,33 +58,45 @@ const setSequencerVolumeTool = (sequencerVolumeTool: VolumeEditTool) => {
 
 <style scoped lang="scss">
 .parameter-panel {
+  --editor-tool-rail-width: 40px;
+
   position: relative;
   width: 100%;
   height: 100%;
 
   overflow: hidden;
   display: grid;
-  grid-template-rows: 30px 1fr;
+  grid-template-columns: var(--editor-tool-rail-width) minmax(0, 1fr);
+  grid-template-rows: 1fr;
 }
 
 .tool-area {
   grid-column: 1;
   grid-row: 1;
+  background: color-mix(
+    in oklch,
+    var(--scheme-color-surface-container-low) 74%,
+    transparent
+  );
+  border-right: 1px solid
+    color-mix(in oklch, var(--scheme-color-outline-variant) 50%, transparent);
 }
 
 .parameter-panel-toolbar-controls {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: flex-start;
   width: 100%;
   height: 100%;
-  padding: 2px 8px 0 56px;
+  padding-top: 6px;
 }
 
 .parameter-panel-mode-zone {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  width: 100%;
 }
 
 .parameter-panel-mode-zone :deep(.tool-palette) {
@@ -92,8 +104,8 @@ const setSequencerVolumeTool = (sequencerVolumeTool: VolumeEditTool) => {
 }
 
 .edit-area {
-  grid-column: 1;
-  grid-row: 2;
+  grid-column: 2;
+  grid-row: 1;
   position: relative;
   overflow: hidden;
 }

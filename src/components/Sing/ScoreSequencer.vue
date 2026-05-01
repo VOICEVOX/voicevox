@@ -267,7 +267,7 @@
       class="sequencer-full-playhead"
       data-testid="sequencer-full-playhead"
       :style="{
-        transform: `translateX(${playheadX - scrollX + 48 - 1}px)`,
+        transform: `translateX(${playheadX - scrollX + 88 - 1}px)`,
       }"
     ></div>
   </div>
@@ -1311,7 +1311,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 @use "@/styles/colors" as colors;
 
 .score-sequencer-shell {
-  --piano-roll-dock-height: 30px;
+  --editor-tool-rail-width: 40px;
   --sequencer-ruler-height: 40px;
 
   position: relative;
@@ -1321,7 +1321,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 
 .sequencer-full-playhead {
   position: absolute;
-  top: calc(var(--piano-roll-dock-height) + var(--sequencer-ruler-height));
+  top: var(--sequencer-ruler-height);
   bottom: 0;
   left: 0;
   width: 2px;
@@ -1334,27 +1334,36 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 .score-sequencer {
   backface-visibility: hidden;
   display: grid;
-  grid-template-rows:
-    var(--piano-roll-dock-height) var(--sequencer-ruler-height)
-    1fr;
-  grid-template-columns: 48px minmax(0, 1fr);
+  grid-template-rows: var(--sequencer-ruler-height) 1fr;
+  grid-template-columns: var(--editor-tool-rail-width) 48px minmax(0, 1fr);
   position: relative;
 }
 
 .piano-roll-toolbar {
-  grid-row: 1;
+  grid-row: 1 / -1;
   grid-column: 1 / -1;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 28px;
-  padding: 2px 8px 0 56px;
+  display: grid;
+  grid-template-rows: var(--sequencer-ruler-height) 1fr;
+  grid-template-columns: var(--editor-tool-rail-width) 48px minmax(0, 1fr);
+  pointer-events: none;
+  z-index: calc(#{vars.$z-index-sing-playhead} + 2);
 }
 
 .piano-roll-mode-zone {
+  grid-row: 1 / -1;
+  grid-column: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  padding-top: 6px;
+  background: color-mix(
+    in oklch,
+    var(--scheme-color-surface-container-low) 74%,
+    transparent
+  );
+  border-right: 1px solid
+    color-mix(in oklch, var(--scheme-color-outline-variant) 50%, transparent);
 }
 
 .piano-roll-mode-zone :deep(.tool-palette) {
@@ -1363,8 +1372,9 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 
 .piano-roll-edit-target-tabs {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  height: 24px;
+  width: 34px;
   padding: 1px;
   border-radius: 7px;
   background: var(--scheme-color-surface);
@@ -1373,9 +1383,9 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 }
 
 .piano-roll-edit-target-tab {
-  min-width: 52px;
-  height: 22px;
-  padding: 0 10px;
+  width: 32px;
+  height: 26px;
+  padding: 0;
   border: 0;
   border-radius: 5px;
   background: transparent;
@@ -1406,6 +1416,10 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 }
 
 .piano-roll-snap-control {
+  grid-row: 1;
+  grid-column: 3;
+  justify-self: end;
+  align-self: center;
   margin-left: auto;
   display: flex;
   align-items: center;
@@ -1444,34 +1458,34 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 }
 
 .sequencer-corner {
-  grid-row: 2;
-  grid-column: 1;
+  grid-row: 1;
+  grid-column: 2;
   background: var(--scheme-color-sing-ruler-surface);
 }
 
 .sequencer-ruler {
+  grid-row: 1;
+  grid-column: 3;
+}
+
+.sequencer-keys {
   grid-row: 2;
   grid-column: 2;
 }
 
-.sequencer-keys {
-  grid-row: 3;
-  grid-column: 1;
-}
-
 .sequencer-grid {
-  grid-row: 3;
-  grid-column: 2;
+  grid-row: 2;
+  grid-column: 3;
 }
 
 .sequencer-character-portrait {
-  grid-row: 3;
-  grid-column: 2;
+  grid-row: 2;
+  grid-column: 3;
 }
 
 .sequencer-guideline-container {
-  grid-row: 3;
-  grid-column: 2;
+  grid-row: 2;
+  grid-column: 3;
   position: relative;
   overflow: hidden;
   pointer-events: none;
@@ -1485,8 +1499,8 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 }
 
 .sequencer-body {
-  grid-row: 3;
-  grid-column: 2;
+  grid-row: 2;
+  grid-column: 3;
   backface-visibility: hidden;
   overflow: auto;
   position: relative;
@@ -1537,13 +1551,13 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 }
 
 .sequencer-pitch {
-  grid-row: 3;
-  grid-column: 2;
+  grid-row: 2;
+  grid-column: 3;
 }
 
 .sequencer-overlay {
-  grid-row: 3;
-  grid-column: 2;
+  grid-row: 2;
+  grid-column: 3;
   position: relative;
   overflow: hidden;
   pointer-events: none;

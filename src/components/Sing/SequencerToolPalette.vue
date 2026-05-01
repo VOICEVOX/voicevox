@@ -74,8 +74,9 @@ const emit = defineEmits<{
 <style scoped lang="scss">
 .tool-palette {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  height: 24px;
+  width: 34px;
   padding: 1px;
   border-radius: 7px;
   background: color-mix(in oklch, var(--scheme-color-surface) 86%, transparent);
@@ -87,8 +88,8 @@ const emit = defineEmits<{
 .tool-palette-button {
   display: grid;
   place-items: center;
-  width: 24px;
-  height: 22px;
+  width: 32px;
+  height: 28px;
   border: 0;
   border-radius: 6px;
   background: transparent;
