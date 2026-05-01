@@ -1311,6 +1311,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 @use "@/styles/colors" as colors;
 
 .score-sequencer-shell {
+  --piano-roll-dock-height: 30px;
   --sequencer-ruler-height: 40px;
 
   position: relative;
@@ -1320,7 +1321,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 
 .sequencer-full-playhead {
   position: absolute;
-  top: var(--sequencer-ruler-height);
+  top: calc(var(--piano-roll-dock-height) + var(--sequencer-ruler-height));
   bottom: 0;
   left: 0;
   width: 2px;
@@ -1333,27 +1334,24 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 .score-sequencer {
   backface-visibility: hidden;
   display: grid;
-  grid-template-rows: var(--sequencer-ruler-height) 1fr;
+  grid-template-rows:
+    var(--piano-roll-dock-height) var(--sequencer-ruler-height)
+    1fr;
   grid-template-columns: 48px minmax(0, 1fr);
   position: relative;
 }
 
 .piano-roll-toolbar {
-  position: absolute;
-  top: 6px;
-  left: 0;
-  right: 0;
-  z-index: calc(#{vars.$z-index-sing-playhead} + 2);
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  grid-row: 1;
+  grid-column: 1 / -1;
+  display: flex;
   align-items: center;
+  gap: 8px;
   height: 28px;
-  padding: 0 8px;
-  pointer-events: none;
+  padding: 2px 8px 0 56px;
 }
 
 .piano-roll-mode-zone {
-  grid-column: 2;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -1408,8 +1406,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 }
 
 .piano-roll-snap-control {
-  grid-column: 3;
-  justify-self: end;
+  margin-left: auto;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -1447,33 +1444,33 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 }
 
 .sequencer-corner {
-  grid-row: 1;
+  grid-row: 2;
   grid-column: 1;
   background: var(--scheme-color-sing-ruler-surface);
 }
 
 .sequencer-ruler {
-  grid-row: 1;
+  grid-row: 2;
   grid-column: 2;
 }
 
 .sequencer-keys {
-  grid-row: 2;
+  grid-row: 3;
   grid-column: 1;
 }
 
 .sequencer-grid {
-  grid-row: 2;
+  grid-row: 3;
   grid-column: 2;
 }
 
 .sequencer-character-portrait {
-  grid-row: 2;
+  grid-row: 3;
   grid-column: 2;
 }
 
 .sequencer-guideline-container {
-  grid-row: 2;
+  grid-row: 3;
   grid-column: 2;
   position: relative;
   overflow: hidden;
@@ -1488,7 +1485,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 }
 
 .sequencer-body {
-  grid-row: 2;
+  grid-row: 3;
   grid-column: 2;
   backface-visibility: hidden;
   overflow: auto;
@@ -1540,12 +1537,12 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 }
 
 .sequencer-pitch {
-  grid-row: 2;
+  grid-row: 3;
   grid-column: 2;
 }
 
 .sequencer-overlay {
-  grid-row: 2;
+  grid-row: 3;
   grid-column: 2;
   position: relative;
   overflow: hidden;

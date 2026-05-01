@@ -64,29 +64,24 @@ const setSequencerVolumeTool = (sequencerVolumeTool: VolumeEditTool) => {
 
   overflow: hidden;
   display: grid;
-  grid-template-rows: 1fr;
+  grid-template-rows: 30px 1fr;
 }
 
 .tool-area {
-  position: absolute;
-  top: 6px;
-  left: 0;
-  right: 0;
-  z-index: 2;
-  pointer-events: none;
+  grid-column: 1;
+  grid-row: 1;
 }
 
 .parameter-panel-toolbar-controls {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  display: flex;
   align-items: center;
+  gap: 8px;
   width: 100%;
-  height: 28px;
-  padding: 0 8px;
+  height: 100%;
+  padding: 2px 8px 0 56px;
 }
 
 .parameter-panel-mode-zone {
-  grid-column: 2;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -98,7 +93,7 @@ const setSequencerVolumeTool = (sequencerVolumeTool: VolumeEditTool) => {
 
 .edit-area {
   grid-column: 1;
-  grid-row: 1;
+  grid-row: 2;
   position: relative;
   overflow: hidden;
 }
