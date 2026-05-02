@@ -53,6 +53,8 @@
                   </span>
                 </button>
               </div>
+            </div>
+            <div class="piano-roll-floating-tools">
               <SequencerToolPalette
                 :editTarget
                 :sequencerNoteTool
@@ -1363,7 +1365,6 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
   padding-top: 6px;
   background: color-mix(
     in oklch,
@@ -1374,8 +1375,16 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
     color-mix(in oklch, var(--scheme-color-outline-variant) 50%, transparent);
 }
 
-.piano-roll-mode-zone :deep(.tool-palette) {
+.piano-roll-mode-zone,
+.piano-roll-floating-tools {
   pointer-events: auto;
+}
+
+.piano-roll-floating-tools {
+  grid-row: 1;
+  grid-column: 3;
+  align-self: center;
+  justify-self: center;
 }
 
 .piano-roll-edit-target-tabs {

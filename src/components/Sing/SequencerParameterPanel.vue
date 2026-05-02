@@ -1,15 +1,15 @@
 <template>
   <div class="parameter-panel">
     <div class="tool-area" aria-label="パラメータ編集操作">
-      <div class="parameter-panel-toolbar-controls">
-        <div class="parameter-panel-mode-zone">
-          <ParameterPanelEditTargetSwitcher :editTarget :changeEditTarget />
-          <SequencerVolumeToolPalette
-            v-if="editTarget === 'VOLUME'"
-            :sequencerVolumeTool
-            @update:sequencerVolumeTool="setSequencerVolumeTool"
-          />
-        </div>
+      <ParameterPanelEditTargetSwitcher :editTarget :changeEditTarget />
+    </div>
+    <div class="parameter-panel-floating-tools">
+      <div class="parameter-panel-tool-palette">
+        <SequencerVolumeToolPalette
+          v-if="editTarget === 'VOLUME'"
+          :sequencerVolumeTool
+          @update:sequencerVolumeTool="setSequencerVolumeTool"
+        />
       </div>
     </div>
     <div class="edit-area">
@@ -73,6 +73,10 @@ const setSequencerVolumeTool = (sequencerVolumeTool: VolumeEditTool) => {
 .tool-area {
   grid-column: 1;
   grid-row: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 6px;
   background: color-mix(
     in oklch,
     var(--scheme-color-surface-container-low) 74%,
@@ -82,24 +86,21 @@ const setSequencerVolumeTool = (sequencerVolumeTool: VolumeEditTool) => {
     color-mix(in oklch, var(--scheme-color-outline-variant) 50%, transparent);
 }
 
-.parameter-panel-toolbar-controls {
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-start;
-  width: 100%;
-  height: 100%;
-  padding-top: 6px;
+.tool-area :deep(.edit-target-switcher) {
+  pointer-events: auto;
 }
 
-.parameter-panel-mode-zone {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  width: 100%;
+.parameter-panel-floating-tools {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: start;
+  justify-self: center;
+  margin-top: 8px;
+  z-index: 2;
+  pointer-events: none;
 }
 
-.parameter-panel-mode-zone :deep(.tool-palette) {
+.parameter-panel-tool-palette :deep(.tool-palette) {
   pointer-events: auto;
 }
 
