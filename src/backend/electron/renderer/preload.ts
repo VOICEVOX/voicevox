@@ -261,6 +261,10 @@ const api: Sandbox = {
   getPathForFile: async (file) => {
     return webUtils.getPathForFile(file);
   },
+
+  fetchEnginePackageLocalInfos: () => {
+    return ipcRendererInvokeProxy.FETCH_ENGINE_PACKAGE_LOCAL_INFOS();
+  },
 };
 
 const wrapApi = (baseApi: Sandbox): SandboxWithTransferableResult => {

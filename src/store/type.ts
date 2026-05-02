@@ -37,6 +37,7 @@ import type {
   MorphingInfo,
   ActivePointScrollMode,
   EngineInfo,
+  EnginePackageCurrentInfo,
   ConfirmedTips,
   EngineDirValidationResult,
   EngineSettings,
@@ -1767,11 +1768,20 @@ export type EngineStoreState = {
   engineStates: Record<EngineId, EngineState>;
   engineSupportedDevices: Record<EngineId, SupportedDevicesInfo>;
   altPortInfos: AltPortInfos;
+  enginePackageLocalInfos: EnginePackageCurrentInfo[];
 };
 
 export type EngineStoreTypes = {
   PULL_AND_INIT_ENGINE_INFOS: {
     action(): void;
+  };
+
+  PULL_ENGINE_PACKAGE_LOCAL_INFOS: {
+    action(): Promise<void>;
+  };
+
+  SET_ENGINE_PACKAGE_LOCAL_INFOS: {
+    mutation: { enginePackageLocalInfos: EnginePackageCurrentInfo[] };
   };
 
   SET_ENGINE_INFO: {
