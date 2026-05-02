@@ -91,11 +91,11 @@ const setSequencerVolumeTool = (sequencerVolumeTool: VolumeEditTool) => {
 }
 
 .parameter-panel-floating-tools {
-  grid-column: 2;
+  grid-column: 1 / -1;
   grid-row: 1;
   align-self: start;
-  justify-self: center;
-  margin-top: 8px;
+  justify-self: start;
+  margin: 6px 0 0 calc(var(--editor-tool-rail-width) + 4px);
   z-index: 2;
   pointer-events: none;
 }

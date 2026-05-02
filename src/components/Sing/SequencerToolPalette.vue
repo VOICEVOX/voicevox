@@ -74,9 +74,9 @@ const emit = defineEmits<{
 <style scoped lang="scss">
 .tool-palette {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
-  width: auto;
+  width: 34px;
   padding: 1px;
   border-radius: 7px;
   background: color-mix(in oklch, var(--scheme-color-surface) 86%, transparent);

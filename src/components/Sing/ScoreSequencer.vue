@@ -1381,10 +1381,11 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 }
 
 .piano-roll-floating-tools {
-  grid-row: 1;
-  grid-column: 3;
-  align-self: center;
-  justify-self: center;
+  grid-row: 1 / -1;
+  grid-column: 1 / -1;
+  align-self: start;
+  justify-self: start;
+  margin: 6px 0 0 calc(var(--editor-tool-rail-width) + 4px);
 }
 
 .piano-roll-edit-target-tabs {
