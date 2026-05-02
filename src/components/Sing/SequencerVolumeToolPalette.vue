@@ -1,24 +1,18 @@
 <template>
   <div class="tool-palette" aria-label="声量ツール">
     <button
+      v-for="toolItem in toolItems"
+      :key="toolItem.value"
       class="tool-palette-button"
-      :class="{ active: sequencerVolumeTool === 'DRAW' }"
+      :class="{ active: sequencerVolumeTool === toolItem.value }"
       type="button"
-      aria-label="ボリューム描画"
-      title="ボリューム描画"
-      @click="emit('update:sequencerVolumeTool', 'DRAW')"
+      :aria-label="toolItem.label"
+      :title="toolItem.label"
+      @click="emit('update:sequencerVolumeTool', toolItem.value)"
     >
-      <span class="material-symbols-rounded">stylus</span>
-    </button>
-    <button
-      class="tool-palette-button"
-      :class="{ active: sequencerVolumeTool === 'ERASE' }"
-      type="button"
-      aria-label="ボリューム削除"
-      title="ボリューム削除"
-      @click="emit('update:sequencerVolumeTool', 'ERASE')"
-    >
-      <span class="material-symbols-rounded">ink_eraser</span>
+      <span class="material-symbols-rounded" aria-hidden="true">
+        {{ toolItem.icon }}
+      </span>
     </button>
   </div>
 </template>
@@ -33,6 +27,18 @@ defineProps<{
 const emit = defineEmits<{
   (event: "update:sequencerVolumeTool", value: VolumeEditTool): void;
 }>();
+
+const toolItems: {
+  value: VolumeEditTool;
+  label: string;
+  icon: string;
+}[] = [
+  { value: "SELECT", label: "ボリューム選択", icon: "arrow_selector_tool" },
+  { value: "DRAW", label: "ボリューム描画", icon: "stylus" },
+  { value: "ERASE", label: "ボリューム削除", icon: "ink_eraser" },
+  { value: "CUT", label: "ボリューム分割", icon: "content_cut" },
+  { value: "SMOOTH", label: "ボリューム補正", icon: "auto_fix_high" },
+];
 </script>
 
 <style scoped lang="scss">
@@ -45,7 +51,7 @@ const emit = defineEmits<{
   border-radius: 7px;
   background: color-mix(in oklch, var(--scheme-color-surface) 86%, transparent);
   box-shadow: 0 1px 3px oklch(0% 0 0 / 0.12);
-  gap: 2px;
+  gap: 1px;
   pointer-events: auto;
 }
 
@@ -53,9 +59,9 @@ const emit = defineEmits<{
   display: grid;
   place-items: center;
   width: 32px;
-  height: 28px;
+  height: 22px;
   border: 0;
-  border-radius: 6px;
+  border-radius: 5px;
   background: transparent;
   color: var(--scheme-color-on-surface-variant);
   cursor: pointer;
@@ -79,7 +85,7 @@ const emit = defineEmits<{
   }
 
   .material-symbols-rounded {
-    font-size: 18px;
+    font-size: 17px;
     font-variation-settings: "FILL" 1;
     line-height: 1;
   }

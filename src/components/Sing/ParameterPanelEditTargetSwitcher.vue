@@ -9,10 +9,12 @@
       :class="{ active: editTarget === 'PHONEME_TIMING' }"
       type="button"
       role="tab"
+      aria-label="音素タイミング"
+      title="音素タイミング"
       :aria-selected="editTarget === 'PHONEME_TIMING'"
       @click="changeEditTarget('PHONEME_TIMING')"
     >
-      音素
+      <span class="material-symbols-rounded" aria-hidden="true">timer</span>
     </button>
 
     <button
@@ -20,10 +22,14 @@
       :class="{ active: editTarget === 'VOLUME' }"
       type="button"
       role="tab"
+      aria-label="声量"
+      title="声量"
       :aria-selected="editTarget === 'VOLUME'"
       @click="changeEditTarget('VOLUME')"
     >
-      声量
+      <span class="material-symbols-rounded" aria-hidden="true">
+        volume_up
+      </span>
     </button>
   </div>
 </template>
@@ -51,16 +57,15 @@ defineProps<{
 }
 
 .segment-switch {
+  display: grid;
+  place-items: center;
   width: 32px;
-  height: 26px;
+  height: 22px;
   padding: 0;
   border: 0;
   border-radius: 5px;
   background: transparent;
   color: var(--scheme-color-on-surface-variant);
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1;
   cursor: pointer;
 
   &:hover {
@@ -75,11 +80,16 @@ defineProps<{
       var(--scheme-color-surface)
     );
     color: var(--scheme-color-on-secondary-container);
-    font-weight: 700;
     box-shadow:
       inset 0 0 0 1px
         color-mix(in oklch, var(--scheme-color-secondary) 38%, transparent),
       0 1px 2px oklch(0% 0 0 / 0.1);
+  }
+
+  .material-symbols-rounded {
+    font-size: 17px;
+    font-variation-settings: "FILL" 1;
+    line-height: 1;
   }
 }
 </style>

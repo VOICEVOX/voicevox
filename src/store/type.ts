@@ -848,7 +848,7 @@ export type NoteEditTool = "SELECT_FIRST" | "EDIT_FIRST";
 // ピッチ編集ツール
 export type PitchEditTool = "DRAW" | "ERASE";
 // ボリューム編集ツール（VolumeEditor 専用）
-export type VolumeEditTool = "DRAW" | "ERASE";
+export type VolumeEditTool = "SELECT" | "DRAW" | "ERASE" | "CUT" | "SMOOTH";
 // パラメータパネル内の編集対象
 // NOTE: 音素タイミング編集などを追加する際に拡張
 export type ParameterPanelEditTarget = "PHONEME_TIMING" | "VOLUME";

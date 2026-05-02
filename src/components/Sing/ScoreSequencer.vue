@@ -29,20 +29,28 @@
                   :class="{ active: editTarget === 'NOTE' }"
                   type="button"
                   role="tab"
+                  aria-label="ノート"
+                  title="ノート"
                   :aria-selected="editTarget === 'NOTE'"
                   @click="changeEditTarget('NOTE')"
                 >
-                  ノート
+                  <span class="material-symbols-rounded" aria-hidden="true">
+                    music_note
+                  </span>
                 </button>
                 <button
                   class="piano-roll-edit-target-tab"
                   :class="{ active: editTarget === 'PITCH' }"
                   type="button"
                   role="tab"
+                  aria-label="ピッチ"
+                  title="ピッチ"
                   :aria-selected="editTarget === 'PITCH'"
                   @click="changeEditTarget('PITCH')"
                 >
-                  ピッチ
+                  <span class="material-symbols-rounded" aria-hidden="true">
+                    show_chart
+                  </span>
                 </button>
               </div>
               <SequencerToolPalette
@@ -1383,16 +1391,15 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
 }
 
 .piano-roll-edit-target-tab {
+  display: grid;
+  place-items: center;
   width: 32px;
-  height: 26px;
+  height: 24px;
   padding: 0;
   border: 0;
   border-radius: 5px;
   background: transparent;
   color: var(--scheme-color-on-surface-variant);
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1;
   cursor: pointer;
 
   &:hover {
@@ -1407,11 +1414,16 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
       var(--scheme-color-surface)
     );
     color: var(--scheme-color-on-secondary-container);
-    font-weight: 700;
     box-shadow:
       inset 0 0 0 1px
         color-mix(in oklch, var(--scheme-color-secondary) 38%, transparent),
       0 1px 2px oklch(0% 0 0 / 0.1);
+  }
+
+  .material-symbols-rounded {
+    font-size: 18px;
+    font-variation-settings: "FILL" 1;
+    line-height: 1;
   }
 }
 

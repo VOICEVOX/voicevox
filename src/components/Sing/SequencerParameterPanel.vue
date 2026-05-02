@@ -84,7 +84,7 @@ const setSequencerVolumeTool = (sequencerVolumeTool: VolumeEditTool) => {
 
 .parameter-panel-toolbar-controls {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: flex-start;
   width: 100%;
   height: 100%;
