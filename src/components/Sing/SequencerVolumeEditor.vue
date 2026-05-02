@@ -5,7 +5,11 @@
     :class="cursorClass"
     @pointerdown="onSurfacePointerDown"
   >
-    <canvas ref="canvas" class="volume-editor-canvas"></canvas>
+    <canvas
+      ref="canvas"
+      class="volume-editor-canvas"
+      @wheel="handleWheel"
+    ></canvas>
     <SequencerVolumeToolPalette
       class="volume-tool-palette"
       :sequencerVolumeTool="tool"
@@ -49,6 +53,7 @@ import { VolumeLine } from "@/sing/graphics/volumeLine";
 import type { VolumeSegment } from "@/sing/graphics/volumeLine";
 import { Color } from "@/sing/graphics/lineStrip";
 import { useSequencerGrid } from "@/composables/useSequencerGridPattern";
+import { useTimelineWheel } from "@/composables/useTimelineWheel";
 import SequencerVolumeToolPalette from "@/components/Sing/SequencerVolumeToolPalette.vue";
 
 const props = defineProps<{
@@ -57,6 +62,8 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   "update:needsAutoScroll": [value: boolean];
+  panTimeline: [deltaX: number];
+  zoomTimeline: [anchorX: number, deltaY: number];
 }>();
 
 // NOTE: 最大値・最小値はエンジン出力と表示に合わせたヒューリスティックなもの
@@ -159,6 +166,13 @@ const cursorClass = computed(() => {
     default:
       return "cursor-crosshair";
   }
+});
+
+const { handleWheel } = useTimelineWheel({
+  leftPaddingPx: KEY_COLUMN_WIDTH_PX,
+  isWheelDisabled: () => previewMode.value !== "IDLE",
+  onPanX: (deltaX) => emit("panTimeline", deltaX),
+  onZoomX: (anchorX, deltaY) => emit("zoomTimeline", anchorX, deltaY),
 });
 
 const canvasContainer = ref<HTMLElement | null>(null);
