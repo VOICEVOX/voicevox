@@ -9,7 +9,7 @@
 import type { PlaywrightTestConfig, Project } from "@playwright/test";
 import dotenv from "dotenv";
 
-dotenv.config({ path: ".env.test", override: true });
+dotenv.config({ path: ".env.test", override: true, quiet: true });
 
 let project: Project;
 let webServers: PlaywrightTestConfig["webServer"];
@@ -41,19 +41,20 @@ if (isElectron) {
   throw new Error(`VITE_TARGETの指定が不正です。${process.env.VITE_TARGET}`);
 }
 
-/**
- * Read environment variables from file.
- * https://github.com/motdotla/dotenv
- */
+// - ファイルシステムが関連してくるので、Electronテストでは並列化しない
+// - CI環境では安定性のため並列化しない
+const parallel = !isElectron && !process.env.CI;
 
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
 const config: PlaywrightTestConfig = {
   testDir: "./tests/e2e",
-  /* Maximum time one test can run for. */
-  timeout: 60 * 1000,
+  // NOTE: Linux環境ではCIでGPU版をダウンロードしてしまい、かなりの時間がかかってしまうため、タイムアウトを長めに設定する。
+  // TODO: CIでCPU版をダウンロードするように修正し、タイムアウトを元に戻す。
+  timeout: isElectron ? 5 * 60 * 1000 : 60 * 1000,
   globalTimeout: 5 * 60 * 1000,
+  globalSetup: isElectron ? "./tests/e2e/electron/setup.ts" : undefined,
   expect: {
     /**
      * Maximum time expect() should wait for the condition to be met.
@@ -61,9 +62,8 @@ const config: PlaywrightTestConfig = {
      */
     timeout: 5 * 1000,
   },
-  // ファイルシステムが関連してくるので、Electronテストでは並列化しない
-  fullyParallel: !isElectron,
-  workers: isElectron ? 1 : undefined,
+  fullyParallel: parallel,
+  workers: parallel ? undefined : 1,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
   reporter: process.env.CI

@@ -291,11 +291,11 @@
 
 <script setup lang="ts">
 import { computed, ref, watchEffect } from "vue";
-import { QSelectProps } from "quasar";
+import type { QSelectProps } from "quasar";
 import CharacterButton from "@/components/CharacterButton.vue";
 import { useStore } from "@/store";
 
-import {
+import type {
   AudioKey,
   CharacterInfo,
   MorphingInfo,
@@ -306,10 +306,10 @@ import {
 } from "@/type/preload";
 import {
   previewSliderHelper,
-  PreviewSliderHelper,
-  Props as PreviewSliderHelperProps,
+  type PreviewSliderHelper,
+  type Props as PreviewSliderHelperProps,
 } from "@/helpers/previewSliderHelper";
-import { EngineManifest } from "@/openapi";
+import type { EngineManifest } from "@/openapi";
 import { useDefaultPreset } from "@/composables/useDefaultPreset";
 import { SLIDER_PARAMETERS } from "@/store/utility";
 import { createLogger } from "@/helpers/log";

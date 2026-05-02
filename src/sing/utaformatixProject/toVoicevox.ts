@@ -1,7 +1,11 @@
-import { Project as UfProject } from "@sevenc-nanashi/utaformatix-ts";
-import { VoicevoxScore } from "./common";
-import { DEFAULT_TPQN, createDefaultTrack } from "@/sing/domain";
-import { getDoremiFromNoteNumber } from "@/sing/viewHelper";
+import type { Project as UfProject } from "@sevenc-nanashi/utaformatix-ts";
+import type { VoicevoxScore } from "./common";
+import {
+  DEFAULT_TPQN,
+  createDefaultTempo,
+  createDefaultTimeSignature,
+  createDefaultTrack,
+} from "@/sing/domain";
 import { NoteId } from "@/type/preload";
 import type { Note, Tempo, TimeSignature, Track } from "@/domain/project/type";
 import { uuid4 } from "@/helpers/random";
@@ -82,7 +86,7 @@ export const ufProjectToVoicevox = (project: UfProject): VoicevoxScore => {
           tpqn,
         ),
         noteNumber: value.key,
-        lyric: value.lyric || getDoremiFromNoteNumber(value.key),
+        lyric: value.lyric || undefined,
       };
     });
 
@@ -100,6 +104,10 @@ export const ufProjectToVoicevox = (project: UfProject): VoicevoxScore => {
     };
   });
   tempos = removeDuplicateTempos(tempos);
+  // 先頭にテンポがない場合は追加する
+  if (tempos.length === 0 || tempos[0].position !== 0) {
+    tempos.unshift(createDefaultTempo(0));
+  }
 
   let timeSignatures: TimeSignature[] = [];
   for (const ts of projectTimeSignatures) {
@@ -113,6 +121,10 @@ export const ufProjectToVoicevox = (project: UfProject): VoicevoxScore => {
     });
   }
   timeSignatures = removeDuplicateTimeSignatures(timeSignatures);
+  // 先頭に拍子記号がない場合は追加する
+  if (timeSignatures.length === 0 || timeSignatures[0].measureNumber !== 1) {
+    timeSignatures.unshift(createDefaultTimeSignature(1));
+  }
 
   return {
     tracks,

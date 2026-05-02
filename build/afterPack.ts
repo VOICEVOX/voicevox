@@ -1,5 +1,5 @@
-import { FuseConfig, FuseV1Options, FuseVersion } from "@electron/fuses";
-import { AfterPackContext } from "electron-builder";
+import { type FuseConfig, FuseV1Options, FuseVersion } from "@electron/fuses";
+import type { AfterPackContext } from "electron-builder";
 
 export default async function afterPack(context: AfterPackContext) {
   // @electron/fusesで特定の機能や制限を有効化/無効化

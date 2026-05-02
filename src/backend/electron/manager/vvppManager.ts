@@ -1,19 +1,19 @@
 import fs from "node:fs";
 import path from "node:path";
 import { dialog } from "electron";
-import AsyncLock from "async-lock";
-import { ExtractedEngineFiles } from "../ExtractedEngineFiles";
-import {
+import type { ExtractedEngineFiles } from "../ExtractedEngineFiles";
+import type {
   EngineId,
   EngineInfo,
   MinimumEngineManifestType,
 } from "@/type/preload";
 import { errorToMessage } from "@/helpers/errorHelper";
 import { VvppFileExtractor } from "@/backend/electron/vvppFile";
-import { ProgressCallback } from "@/helpers/progressHelper";
+import type { ProgressCallback } from "@/helpers/progressHelper";
 import { createLogger } from "@/helpers/log";
 import { isWindows } from "@/helpers/platform";
-import { UnreachableError } from "@/type/utility";
+import { assertNonNullable } from "@/type/utility";
+import { Mutex } from "@/helpers/mutex";
 
 const log = createLogger("VvppManager");
 
@@ -22,8 +22,6 @@ export const isVvppFile = (filePath: string) => {
     path.extname(filePath) === ".vvpp" || path.extname(filePath) === ".vvppp"
   );
 };
-
-const lockKey = "lock-key-for-vvpp-manager";
 
 type MoveParams = { extractedEngineFiles: ExtractedEngineFiles; to: string };
 
@@ -60,7 +58,7 @@ export class VvppManager {
   private willDeleteEngineIds: Set<EngineId>;
   private willMoveEngineDirs: MoveParams[];
 
-  private lock = new AsyncLock();
+  private lock = new Mutex();
 
   constructor(params: { vvppEngineDir: string; tmpDir: string }) {
     this.vvppEngineDir = params.vvppEngineDir;
@@ -119,10 +117,6 @@ export class VvppManager {
     return true;
   }
 
-  private async withLockAcquired(fn: () => Promise<void>) {
-    await this.lock.acquire(lockKey, () => fn());
-  }
-
   /**
    * 展開
    */
@@ -167,7 +161,8 @@ export class VvppManager {
     extractedEngineFiles: ExtractedEngineFiles;
     immediate: boolean;
   }) {
-    await this.withLockAcquired(() => this._install(params));
+    await using _lock = await this.lock.acquire();
+    await this._install(params);
   }
   private async _install(params: {
     extractedEngineFiles: ExtractedEngineFiles;
@@ -198,15 +193,17 @@ export class VvppManager {
   }
 
   async handleMarkedEngineDirs() {
-    await this.withLockAcquired(() => this._handleMarkedEngineDirs());
+    await using _lock = await this.lock.acquire();
+    await this._handleMarkedEngineDirs();
   }
   private async _handleMarkedEngineDirs() {
     await Promise.all(
       [...this.willDeleteEngineIds].map(async (engineId) => {
         const deletingEngineDir = await this.getInstalledEngineDir(engineId);
-        if (deletingEngineDir == undefined) {
-          throw new UnreachableError("エンジンが見つかりませんでした。");
-        }
+        assertNonNullable(
+          deletingEngineDir,
+          "エンジンが見つかりませんでした。",
+        );
 
         try {
           await deleteDirWithRetry(deletingEngineDir);
@@ -243,11 +240,10 @@ export class VvppManager {
     const engineId = extractedEngineFiles.getManifest().uuid;
 
     const engineDir = await this.getInstalledEngineDir(engineId);
-    if (!engineDir) {
-      throw new UnreachableError(
-        "Engine directory not found after hasOldEngine check",
-      );
-    }
+    assertNonNullable(
+      engineDir,
+      "Engine directory not found after hasOldEngine check",
+    );
 
     await deleteDirWithRetry(engineDir);
     log.info(`Engine ${engineId}: deleted successfully`);

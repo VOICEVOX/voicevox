@@ -73,9 +73,9 @@
             [cursorClass]: true,
           }"
           aria-label="シーケンサ"
-          @mousedown="onMouseDown"
-          @mouseenter="onMouseEnter"
-          @mouseleave="onMouseLeave"
+          @pointerdown="onPointerDown"
+          @pointerenter="onPointerEnter"
+          @pointerleave="onPointerLeave"
           @dblclick.stop="onDoubleClick"
           @wheel="onWheel"
           @scroll="onScroll"
@@ -104,10 +104,10 @@
             :nowPreviewing
             :previewMode
             :cursorClass
-            @barMousedown="onNoteBarMouseDown($event, note)"
+            @barPointerdown="onNoteBarPointerDown($event, note)"
             @barDoubleClick="onNoteBarDoubleClick($event, note)"
-            @leftEdgeMousedown="onNoteLeftEdgeMouseDown($event, note)"
-            @rightEdgeMousedown="onNoteRightEdgeMouseDown($event, note)"
+            @leftEdgePointerdown="onNoteLeftEdgePointerDown($event, note)"
+            @rightEdgePointerdown="onNoteRightEdgePointerDown($event, note)"
           />
           <SequencerLyricInput
             v-if="editingLyricNote != undefined"
@@ -216,13 +216,19 @@
       </div>
     </template>
     <template #after>
-      <SequencerParameterPanel v-if="isParameterPanelOpen" />
+      <SequencerParameterPanel
+        v-if="isParameterPanelOpen"
+        :offsetX="scrollX"
+        @update:needsAutoScroll="
+          (value) => (parameterPanelNeedsAutoScroll = value)
+        "
+      />
     </template>
   </QSplitter>
 </template>
 
 <script lang="ts">
-import { ComputedRef } from "vue";
+import type { ComputedRef } from "vue";
 import type { InjectionKey } from "vue";
 
 export const numMeasuresInjectionKey: InjectionKey<{
@@ -244,19 +250,18 @@ import {
 import SequencerParameterPanel from "@/components/Sing/SequencerParameterPanel.vue";
 import SequencerGridSpacer from "@/components/Sing/SequencerGridSpacer.vue";
 import ContextMenu, {
-  ContextMenuItemData,
+  type ContextMenuItemData,
 } from "@/components/Menu/ContextMenu/Container.vue";
 import { useStore } from "@/store";
 import type { Note } from "@/domain/project/type";
 import {
-  getEndTicksOfPhrase,
   getNoteDuration,
-  getStartTicksOfPhrase,
   getTimeSignaturePositions,
   noteNumberToFrequency,
   tickToMeasureNumber,
   tickToSecond,
-} from "@/sing/domain";
+} from "@/sing/music";
+import { getEndTicksOfPhrase, getStartTicksOfPhrase } from "@/sing/domain";
 import {
   tickToBaseX,
   baseXToTick,
@@ -271,7 +276,7 @@ import {
   PREVIEW_SOUND_DURATION,
   SEQUENCER_MIN_NUM_MEASURES,
 } from "@/sing/viewHelper";
-import { getLast } from "@/sing/utility";
+import { clamp, getLast } from "@/sing/utility";
 import SequencerGrid from "@/components/Sing/SequencerGrid/Container.vue";
 import SequencerRuler from "@/components/Sing/SequencerRuler/Container.vue";
 import SequencerKeys from "@/components/Sing/SequencerKeys.vue";
@@ -286,7 +291,7 @@ import { isOnCommandOrCtrlKeyDown } from "@/store/utility";
 import { createLogger } from "@/helpers/log";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
 import { useSequencerStateMachine } from "@/composables/useSequencerStateMachine";
-import {
+import type {
   PositionOnSequencer,
   ViewportInfo,
 } from "@/sing/sequencerStateMachine/common";
@@ -443,19 +448,46 @@ const phraseInfosInOtherTracks = computed(() => {
   );
 });
 
-const parameterPanelHeight = ref(300);
+const DEFAULT_PARAMETER_PANEL_HEIGHT = 200;
+const MIN_PARAMETER_PANEL_HEIGHT = 100;
+const MAX_PARAMETER_PANEL_HEIGHT = 500;
+
+const splitterPosition = computed(() => store.state.splitterPosition);
+const parameterPanelHeight = ref(DEFAULT_PARAMETER_PANEL_HEIGHT);
 const isParameterPanelOpen = computed(
   () => store.state.experimentalSetting.showParameterPanel,
 );
 
-const setParameterPanelHeight = (height: number) => {
-  if (isParameterPanelOpen.value) {
-    parameterPanelHeight.value = height;
-  }
+watch(
+  isParameterPanelOpen,
+  (isOpen) => {
+    if (isOpen) {
+      const saved = splitterPosition.value.parameterPanelHeight;
+      parameterPanelHeight.value = clamp(
+        saved ?? DEFAULT_PARAMETER_PANEL_HEIGHT,
+        MIN_PARAMETER_PANEL_HEIGHT,
+        MAX_PARAMETER_PANEL_HEIGHT,
+      );
+    }
+  },
+  { immediate: true },
+);
+
+const setParameterPanelHeight = async (height: number) => {
+  if (!isParameterPanelOpen.value) return;
+  parameterPanelHeight.value = height;
+  await store.actions.SET_ROOT_MISC_SETTING({
+    key: "splitterPosition",
+    value: {
+      ...splitterPosition.value,
+      parameterPanelHeight: height,
+    },
+  });
 };
 
 const scrollBarWidth = ref(12);
 const sequencerBody = ref<HTMLElement | null>(null);
+const parameterPanelNeedsAutoScroll = ref(false);
 
 // ステートマシン
 const {
@@ -477,7 +509,15 @@ const previewNoteIds = computed(() => {
 });
 
 // マウスカーソルがシーケンサーの端に行ったときの自動スクロール
-useAutoScrollOnEdge(sequencerBody, enableAutoScrollOnEdge);
+const combinedEnableAutoScrollOnEdge = computed(
+  () => enableAutoScrollOnEdge.value || parameterPanelNeedsAutoScroll.value,
+);
+const autoScrollDirection = computed<"x" | "xy">(() =>
+  parameterPanelNeedsAutoScroll.value ? "x" : "xy",
+);
+useAutoScrollOnEdge(sequencerBody, combinedEnableAutoScrollOnEdge, {
+  scrollDirection: autoScrollDirection,
+});
 
 // 歌詞を編集中のノート
 const editingLyricNote = computed(() => {
@@ -559,11 +599,11 @@ const getCursorPosOnSequencer = (
   };
 };
 
-const onNoteBarMouseDown = (event: MouseEvent, note: Note) => {
+const onNoteBarPointerDown = (event: PointerEvent, note: Note) => {
   stateMachineProcess({
-    type: "mouseEvent",
+    type: "pointerEvent",
     targetArea: "Note",
-    mouseEvent: event,
+    pointerEvent: event,
     cursorPos: getCursorPosOnSequencer(event),
     note,
   });
@@ -579,27 +619,27 @@ const onNoteBarDoubleClick = (event: MouseEvent, note: Note) => {
   });
 };
 
-const onNoteLeftEdgeMouseDown = (event: MouseEvent, note: Note) => {
+const onNoteLeftEdgePointerDown = (event: PointerEvent, note: Note) => {
   stateMachineProcess({
-    type: "mouseEvent",
+    type: "pointerEvent",
     targetArea: "NoteLeftEdge",
-    mouseEvent: event,
+    pointerEvent: event,
     cursorPos: getCursorPosOnSequencer(event),
     note,
   });
 };
 
-const onNoteRightEdgeMouseDown = (event: MouseEvent, note: Note) => {
+const onNoteRightEdgePointerDown = (event: PointerEvent, note: Note) => {
   stateMachineProcess({
-    type: "mouseEvent",
+    type: "pointerEvent",
     targetArea: "NoteRightEdge",
-    mouseEvent: event,
+    pointerEvent: event,
     cursorPos: getCursorPosOnSequencer(event),
     note,
   });
 };
 
-const onMouseDown = (event: MouseEvent) => {
+const onPointerDown = (event: PointerEvent) => {
   const sequencerBodyElement = sequencerBody.value;
   if (!sequencerBodyElement) {
     throw new Error("sequencerBodyElement is null.");
@@ -611,28 +651,28 @@ const onMouseDown = (event: MouseEvent) => {
     cursorPos.y < sequencerBodyElement.clientHeight
   ) {
     stateMachineProcess({
-      type: "mouseEvent",
+      type: "pointerEvent",
       targetArea: "SequencerBody",
-      mouseEvent: event,
+      pointerEvent: event,
       cursorPos,
     });
   }
 };
 
-const onMouseMove = (event: MouseEvent) => {
+const onPointerMove = (event: PointerEvent) => {
   stateMachineProcess({
-    type: "mouseEvent",
+    type: "pointerEvent",
     targetArea: "Window",
-    mouseEvent: event,
+    pointerEvent: event,
     cursorPos: getCursorPosOnSequencer(event),
   });
 };
 
-const onMouseUp = (event: MouseEvent) => {
+const onPointerUp = (event: PointerEvent) => {
   stateMachineProcess({
-    type: "mouseEvent",
+    type: "pointerEvent",
     targetArea: "Window",
-    mouseEvent: event,
+    pointerEvent: event,
     cursorPos: getCursorPosOnSequencer(event),
   });
 };
@@ -669,11 +709,11 @@ const onLyricInputBlur = () => {
   });
 };
 
-const onMouseEnter = () => {
+const onPointerEnter = () => {
   showGuideLine.value = true;
 };
 
-const onMouseLeave = () => {
+const onPointerLeave = () => {
   showGuideLine.value = false;
 };
 
@@ -970,16 +1010,16 @@ onActivated(() => {
 onActivated(() => {
   document.addEventListener("keydown", handleKeydown);
   document.addEventListener("keyup", handleKeyUp);
-  window.addEventListener("mousemove", onMouseMove);
-  window.addEventListener("mouseup", onMouseUp);
+  window.addEventListener("pointermove", onPointerMove);
+  window.addEventListener("pointerup", onPointerUp);
 });
 
 // リスナー解除
 onDeactivated(() => {
   document.removeEventListener("keydown", handleKeydown);
   document.removeEventListener("keyup", handleKeyUp);
-  window.removeEventListener("mousemove", onMouseMove);
-  window.removeEventListener("mouseup", onMouseUp);
+  window.removeEventListener("pointermove", onPointerMove);
+  window.removeEventListener("pointerup", onPointerUp);
 });
 
 // コンテキストメニュー
@@ -1237,6 +1277,7 @@ const contextMenuData = computed<ContextMenuItemData[]>(() => {
   backface-visibility: hidden;
   overflow: auto;
   position: relative;
+  touch-action: none;
 
   // スクロールバー上のカーソルが要素のものになってしまうためデフォルトカーソルにする
   &::-webkit-scrollbar-thumb:hover,

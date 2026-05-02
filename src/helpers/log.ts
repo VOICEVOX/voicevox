@@ -1,4 +1,4 @@
-import { type Logger } from "electron-log";
+import type { Logger } from "electron-log";
 import { isElectron, isNode } from "@/helpers/platform";
 
 type LogLevel = "info" | "warn" | "error";

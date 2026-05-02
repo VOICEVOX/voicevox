@@ -7,7 +7,7 @@
 
 import { createLogger } from "@/helpers/log";
 import type { Singer } from "@/domain/project/type";
-import { CharacterInfo, EngineId } from "@/type/preload";
+import type { CharacterInfo, EngineId } from "@/type/preload";
 
 const logger = createLogger("sing/workaroundKeyRangeAdjustment");
 

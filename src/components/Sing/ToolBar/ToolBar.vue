@@ -123,7 +123,7 @@
     </div>
     <!-- settings for edit controls -->
     <div class="sing-controls">
-      <EditTargetSwicher :editTarget :changeEditTarget />
+      <EditTargetSwitcher :editTarget :changeEditTarget />
       <QBtn
         flat
         dense
@@ -167,25 +167,27 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import PlayheadPositionDisplay from "../PlayheadPositionDisplay.vue";
-import EditTargetSwicher from "./EditTargetSwicher.vue";
+import EditTargetSwitcher from "./EditTargetSwitcher.vue";
 import { useStore } from "@/store";
 
 import {
   BEAT_TYPES,
-  getSnapTypes,
-  getTimeSignaturePositions,
   getMeasureDuration,
   getNoteDuration,
+  getTimeSignaturePositions,
   isTriplet,
-  isValidBeatType,
   isValidBeats,
+  isValidBeatType,
   isValidBpm,
+} from "@/sing/music";
+import {
+  getSnapTypes,
   isValidKeyRangeAdjustment,
   isValidVolumeRangeAdjustment,
 } from "@/sing/domain";
 import CharacterMenuButton from "@/components/Sing/CharacterMenuButton/MenuButton.vue";
 import { useHotkeyManager } from "@/plugins/hotkeyPlugin";
-import { SequencerEditTarget } from "@/store/type";
+import type { SequencerEditTarget } from "@/store/type";
 import { UnreachableError } from "@/type/utility";
 
 const store = useStore();

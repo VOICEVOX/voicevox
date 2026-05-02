@@ -1,14 +1,14 @@
-import { ComputedRef, Ref } from "vue";
-import { StateDefinitions } from "@/sing/stateMachine";
-import { Rect } from "@/sing/utility";
+import type { ComputedRef, Ref } from "vue";
+import type { StateDefinitions } from "@/sing/stateMachine";
+import type { Rect } from "@/sing/utility";
 import {
-  CursorState,
+  type CursorState,
   PREVIEW_SOUND_DURATION,
-  PreviewMode,
+  type PreviewMode,
 } from "@/sing/viewHelper";
-import { Store } from "@/store";
-import { SequencerEditTarget } from "@/store/type";
-import { NoteId, TrackId } from "@/type/preload";
+import type { Store } from "@/store";
+import type { SequencerEditTarget } from "@/store/type";
+import type { NoteId, TrackId } from "@/type/preload";
 import type { Note, Tempo } from "@/domain/project/type";
 
 export type PositionOnSequencer = {
@@ -39,16 +39,37 @@ export type Input =
       readonly keyboardEvent: KeyboardEvent;
     }
   | {
-      readonly type: "mouseEvent";
+      readonly type: "pointerEvent";
       readonly targetArea: "Window";
-      readonly mouseEvent: MouseEvent;
+      readonly pointerEvent: PointerEvent;
       readonly cursorPos: PositionOnSequencer;
     }
   | {
-      readonly type: "mouseEvent";
+      readonly type: "pointerEvent";
       readonly targetArea: "SequencerBody";
-      readonly mouseEvent: MouseEvent;
+      readonly pointerEvent: PointerEvent;
       readonly cursorPos: PositionOnSequencer;
+    }
+  | {
+      readonly type: "pointerEvent";
+      readonly targetArea: "Note";
+      readonly pointerEvent: PointerEvent;
+      readonly cursorPos: PositionOnSequencer;
+      readonly note: Note;
+    }
+  | {
+      readonly type: "pointerEvent";
+      readonly targetArea: "NoteLeftEdge";
+      readonly pointerEvent: PointerEvent;
+      readonly cursorPos: PositionOnSequencer;
+      readonly note: Note;
+    }
+  | {
+      readonly type: "pointerEvent";
+      readonly targetArea: "NoteRightEdge";
+      readonly pointerEvent: PointerEvent;
+      readonly cursorPos: PositionOnSequencer;
+      readonly note: Note;
     }
   | {
       readonly type: "mouseEvent";
@@ -59,17 +80,9 @@ export type Input =
     }
   | {
       readonly type: "mouseEvent";
-      readonly targetArea: "NoteLeftEdge";
+      readonly targetArea: "SequencerBody";
       readonly mouseEvent: MouseEvent;
       readonly cursorPos: PositionOnSequencer;
-      readonly note: Note;
-    }
-  | {
-      readonly type: "mouseEvent";
-      readonly targetArea: "NoteRightEdge";
-      readonly mouseEvent: MouseEvent;
-      readonly cursorPos: PositionOnSequencer;
-      readonly note: Note;
     }
   | {
       readonly type: "scrollEvent";
@@ -120,6 +133,7 @@ export type PartialStore = {
     Store["state"],
     | "tpqn"
     | "tempos"
+    | "tracks"
     | "sequencerSnapType"
     | "sequencerEditTarget"
     | "sequencerNoteTool"

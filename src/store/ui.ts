@@ -1,10 +1,10 @@
-import {
+import type {
   ActionsBase,
   DotNotationAction,
   DotNotationActionContext,
   DotNotationDispatch,
 } from "./vuex";
-import {
+import type {
   AllActions,
   AllGetters,
   AllMutations,
@@ -12,12 +12,12 @@ import {
   UiStoreTypes,
 } from "./type";
 import { createPartialStore } from "./vuex";
-import { ActivePointScrollMode } from "@/type/preload";
+import type { ActivePointScrollMode } from "@/type/preload";
 import {
-  MessageDialogOptions,
-  ConfirmDialogOptions,
-  WarningDialogOptions,
-  NotifyAndNotShowAgainButtonOption,
+  type MessageDialogOptions,
+  type ConfirmDialogOptions,
+  type WarningDialogOptions,
+  type NotifyAndNotShowAgainButtonOption,
   connectAndExportTextWithDialog,
   generateAndConnectAndSaveAudioWithDialog,
   generateAndSaveOneAudioWithDialog,
@@ -425,12 +425,14 @@ export const uiStore = createPartialStore<UiStoreTypes>({
 
       await actions.STOP_RENDERING(); // FIXME: FINISH_VUEXなどを作成して移動すべき
 
-      if (obj.closeOrReload == "close") {
+      if (obj.nextAction == "close") {
         window.backend.closeWindow();
-      } else if (obj.closeOrReload == "reload") {
+      } else if (obj.nextAction == "reload") {
         await actions.RELOAD_APP({
           isMultiEngineOffMode: obj.isMultiEngineOffMode,
         });
+      } else if (obj.nextAction == "switchToWelcome") {
+        window.backend.launchWelcomeWindow();
       }
     },
   },

@@ -6,16 +6,14 @@
 
 <script setup lang="ts">
 import { ref, watch, computed, onUnmounted, onMounted } from "vue";
+import "pixi.js/unsafe-eval";
 import * as PIXI from "pixi.js";
-import AsyncLock from "async-lock";
 import { useStore } from "@/store";
-import { useMounted } from "@/composables/useMounted";
+import { frequencyToNoteNumber, secondToTick } from "@/sing/music";
 import {
   UNVOICED_PHONEMES,
   VALUE_INDICATING_NO_DATA,
   convertToFramePhonemes,
-  frequencyToNoteNumber,
-  secondToTick,
 } from "@/sing/domain";
 import { noteNumberToBaseY, tickToBaseX } from "@/sing/viewHelper";
 import { Color } from "@/sing/graphics/lineStrip";
@@ -25,12 +23,13 @@ import { getLast } from "@/sing/utility";
 import { getOrThrow } from "@/helpers/mapHelper";
 import {
   calculatePitchDataHash,
-  PitchData,
-  PitchDataHash,
+  type PitchData,
+  type PitchDataHash,
   PitchLine,
-  ViewInfo,
+  type ViewInfo,
 } from "@/sing/graphics/pitchLine";
-import { FramePhoneme } from "@/openapi";
+import type { FramePhoneme } from "@/openapi";
+import { Mutex } from "@/helpers/mutex";
 
 const props = defineProps<{
   offsetX: number;
@@ -104,20 +103,21 @@ const isPitchLineVisible = computed(() => {
   return store.getters.SELECTED_TRACK.singer != undefined;
 });
 
-const { mounted } = useMounted();
-
 const canvasContainer = ref<HTMLElement | null>(null);
 const canvas = ref<HTMLCanvasElement | null>(null);
 let resizeObserver: ResizeObserver | undefined;
 let canvasWidth: number | undefined;
 let canvasHeight: number | undefined;
 
+// TODO: pixi.js関連の変数をまとめてモジュール化し、isUnmounted, isInitializedなどのフラグを無くす
 let renderer: PIXI.Renderer | undefined;
 let stage: PIXI.Container | undefined;
 let originalPitchLine: PitchLine | undefined;
 let pitchEditLine: PitchLine | undefined;
 let requestId: number | undefined;
 let renderInNextFrame = false;
+let isUnmounted = false;
+const isInitialized = ref(false);
 
 const render = () => {
   if (renderer == undefined) {
@@ -291,41 +291,38 @@ const updatePitchEditLineDataMap = async () => {
   renderInNextFrame = true;
 };
 
-const asyncLock = new AsyncLock({ maxPending: 1 });
+const originalPitchLock = new Mutex({ maxPending: 1 });
+const pitchEditLock = new Mutex({ maxPending: 1 });
 
-// NOTE: mountedをwatchしているので、onMountedの直後に必ず１回実行される
-watch([mounted, singingGuidesInSelectedTrack, tempos, tpqn], ([mounted]) => {
-  asyncLock.acquire(
-    "originalPitch",
-    async () => {
-      if (mounted) {
+// NOTE: isInitializedをwatchしているので、初期化完了後に必ず１回実行される
+watch(
+  [isInitialized, singingGuidesInSelectedTrack, tempos, tpqn],
+  async ([isInitialized]) => {
+    try {
+      await using _lock = await originalPitchLock.acquire();
+      if (isInitialized) {
         await updateOriginalPitchLineDataMap();
       }
-    },
-    (err) => {
-      if (err != undefined) {
-        warn(`An error occurred.`, err);
-      }
-    },
-  );
-});
+    } catch (e) {
+      warn("Failed to update original pitch line data map.", e);
+    }
+  },
+);
 
-// NOTE: mountedをwatchしているので、onMountedの直後に必ず１回実行される
-watch([mounted, pitchEditData, previewPitchEdit, tempos, tpqn], ([mounted]) => {
-  asyncLock.acquire(
-    "pitchEdit",
-    async () => {
-      if (mounted) {
+// NOTE: isInitializedをwatchしているので、初期化完了後に必ず１回実行される
+watch(
+  [isInitialized, pitchEditData, previewPitchEdit, tempos, tpqn],
+  async ([isInitialized]) => {
+    try {
+      await using _lock = await pitchEditLock.acquire();
+      if (isInitialized) {
         await updatePitchEditLineDataMap();
       }
-    },
-    (err) => {
-      if (err != undefined) {
-        warn(`An error occurred.`, err);
-      }
-    },
-  );
-});
+    } catch (e) {
+      warn("Failed to update pitch edit line data map.", e);
+    }
+  },
+);
 
 watch(isDark, () => {
   renderInNextFrame = true;
@@ -343,7 +340,7 @@ watch(
   },
 );
 
-onMounted(() => {
+onMounted(async () => {
   const canvasContainerElement = canvasContainer.value;
   const canvasElement = canvas.value;
   if (!canvasContainerElement) {
@@ -356,8 +353,10 @@ onMounted(() => {
   canvasWidth = canvasContainerElement.clientWidth;
   canvasHeight = canvasContainerElement.clientHeight;
 
-  renderer = new PIXI.Renderer({
-    view: canvasElement,
+  renderer = await PIXI.autoDetectRenderer({
+    preference: "webgl",
+    preferWebGLVersion: 2,
+    canvas: canvasElement,
     backgroundAlpha: 0,
     antialias: true,
     resolution: window.devicePixelRatio || 1,
@@ -365,6 +364,20 @@ onMounted(() => {
     width: canvasWidth,
     height: canvasHeight,
   });
+  if (isUnmounted) {
+    renderer.destroy({ removeView: true });
+    return;
+  }
+
+  // webGLVersionをチェックする
+  // 2未満の場合、ピッチの表示ができないのでエラーとしてロギングする
+  if (renderer instanceof PIXI.WebGLRenderer) {
+    const webGLVersion = renderer.context.webGLVersion;
+    if (webGLVersion < 2) {
+      error(`webGLVersion is less than 2. webGLVersion: ${webGLVersion}`);
+    }
+  }
+
   stage = new PIXI.Container();
   originalPitchLine = new PitchLine(
     originalPitchLineColor.value,
@@ -377,15 +390,8 @@ onMounted(() => {
     isPitchLineVisible.value,
   );
 
-  stage.addChild(originalPitchLine.displayObject);
-  stage.addChild(pitchEditLine.displayObject);
-
-  // webGLVersionをチェックする
-  // 2未満の場合、ピッチの表示ができないのでエラーとしてロギングする
-  const webGLVersion = renderer.context.webGLVersion;
-  if (webGLVersion < 2) {
-    error(`webGLVersion is less than 2. webGLVersion: ${webGLVersion}`);
-  }
+  stage.addChild(originalPitchLine.container);
+  stage.addChild(pitchEditLine.container);
 
   const callback = () => {
     if (renderInNextFrame) {
@@ -411,16 +417,19 @@ onMounted(() => {
     }
   });
   resizeObserver.observe(canvasContainerElement);
+
+  isInitialized.value = true;
 });
 
 onUnmounted(() => {
+  isUnmounted = true;
   if (requestId != undefined) {
     window.cancelAnimationFrame(requestId);
   }
   originalPitchLine?.destroy();
   pitchEditLine?.destroy();
   stage?.destroy();
-  renderer?.destroy(true);
+  renderer?.destroy({ removeView: true });
   resizeObserver?.disconnect();
 });
 </script>

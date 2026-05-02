@@ -1,4 +1,4 @@
-import { test, expect, Locator } from "@playwright/test";
+import { test, expect, type Locator } from "@playwright/test";
 
 import { gotoHome, navigateToMain } from "../navigators";
 import { fillAudioCell, validateInput } from "./utils";

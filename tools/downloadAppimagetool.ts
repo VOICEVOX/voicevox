@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { retryFetch } from "./helper";
 
-const APPIMAGETOOL_VERSION = "1.9.0";
+const APPIMAGETOOL_VERSION = "1.9.1";
 
 const distDir = path.join(
   import.meta.dirname,

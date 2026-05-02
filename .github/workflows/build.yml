@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - main
-  release:
-    types:
-      - created
   workflow_dispatch:
     inputs:
       version:
@@ -29,8 +26,8 @@ env:
   VOICEVOX_ENGINE_VERSION: 0.25.2
   VOICEVOX_RESOURCE_VERSION: 0.25.2
   VOICEVOX_EDITOR_VERSION:
-    |- # releaseタグ名か、workflow_dispatchでのバージョン名か、999.999.999-developが入る
-    ${{ github.event.release.tag_name || github.event.inputs.version || '999.999.999-develop' }}
+    |- # workflow_dispatchのバージョン名か、999.999.999-developが入る
+    ${{ github.event.inputs.version || '999.999.999-develop' }}
 
 defaults:
   run:
@@ -140,7 +137,11 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Purge disk space
+        if: startsWith(matrix.os, 'ubuntu-')
+        run: sudo rm -rf /usr/local/lib/android
 
       # NOTE: The default sed of macOS is BSD sed.
       #       There is a difference in specification between BSD sed and GNU sed,
@@ -164,35 +165,28 @@ jobs:
 
           $sed -i 's/"version": "999.999.999"/"version": "${{ env.VOICEVOX_EDITOR_VERSION }}"/' package.json
 
-      # for appimagetool v1.9.0
-      - name: install desktop-file-utils
-        if: startsWith(matrix.artifact_name, 'linux-')
-        run: |
-          sudo apt-get update
-          sudo apt-get install desktop-file-utils
-
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version-file: ".node-version"
           cache: "pnpm"
 
       - name: Cache Electron
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ${{ env.ELECTRON_CACHE }}
-          key: ${{ env.cache-version }}-${{ runner.os }}--electron-cache-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ env.cache-version }}-${{ runner.os }}--electron-cache-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ env.cache-version }}-${{ runner.os }}--electron-cache-
 
       - name: Cache Electron-Builder
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ${{ env.ELECTRON_BUILDER_CACHE }}
-          key: ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-${{ hashFiles('**/package-lock.json') }}
+          key: ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ env.cache-version }}-${{ runner.os }}--electron-builder-cache-
 
@@ -200,7 +194,7 @@ jobs:
         run: pnpm i --frozen-lockfile
 
       - name: Checkout Product Version Resource
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           repository: VOICEVOX/voicevox_resource
           ref: ${{ env.VOICEVOX_RESOURCE_VERSION }}
@@ -352,15 +346,15 @@ jobs:
 
       - name: Upload Linux tar.gz (without nvidia) to Artifacts
         if: startsWith(matrix.artifact_name, 'linux-') && !contains(matrix.artifact_name, 'nvidia') && github.event.inputs.upload_artifact == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: ${{ matrix.artifact_name }}-targz
           path: |-
             ${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}.tar.gz
 
       - name: Upload Linux tar.gz (without nvidia) to Release Assets
-        if: startsWith(matrix.artifact_name, 'linux-') && !contains(matrix.artifact_name, 'nvidia') && (github.event.release.tag_name || github.event.inputs.version) != ''
-        uses: softprops/action-gh-release@v2
+        if: startsWith(matrix.artifact_name, 'linux-') && !contains(matrix.artifact_name, 'nvidia') && github.event.inputs.version != ''
+        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2.6.1
         with:
           prerelease: ${{ github.event.inputs.prerelease }}
           tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
@@ -382,15 +376,15 @@ jobs:
 
       - name: Upload Windows & Mac zip (without nvidia) to Artifacts
         if: (startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')) && !contains(matrix.artifact_name, 'nvidia') && github.event.inputs.upload_artifact == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: ${{ matrix.artifact_name }}-zip
           path: |-
             ${{ matrix.compressed_artifact_name }}-${{ env.VOICEVOX_EDITOR_VERSION }}.zip
 
       - name: Upload Windows & Mac zip (without nvidia) to Release Assets
-        if: (startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')) && !contains(matrix.artifact_name, 'nvidia') && (github.event.release.tag_name || github.event.inputs.version) != ''
-        uses: softprops/action-gh-release@v2
+        if: (startsWith(matrix.artifact_name, 'windows-') || startsWith(matrix.artifact_name, 'macos-')) && !contains(matrix.artifact_name, 'nvidia') && github.event.inputs.version != ''
+        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2.6.1
         with:
           prerelease: ${{ github.event.inputs.prerelease }}
           tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
@@ -459,47 +453,54 @@ jobs:
             # Split to MyArtifact.AppImage.7z.001, MyArtifact.AppImage.7z.002, ...
             # Use compression level 0 since AppImage is already compressed
             # .7z is needed for installer_linux.sh yet
-            7z -mx=0 -v1g a "${{ matrix.linux_appimage_7z_name }}.7z" "${appImageFile}"
+            7z -mx=0 -v1900m a "${{ matrix.linux_appimage_7z_name }}.7z" "${appImageFile}"
 
-            # Output split archive name<TAB>size<TAB>hash list to myartifact.7z.txt
-            ls "${{ matrix.linux_appimage_7z_name }}.7z".* > archives_name.txt
-            stat --printf="%s\n" "${{ matrix.linux_appimage_7z_name }}.7z".* > archives_size.txt
-            md5sum "${{ matrix.linux_appimage_7z_name }}.7z".* | awk '{print $1}' | tr a-z A-Z > archives_hash.txt
-
-            paste -d '\t' archives_name.txt archives_size.txt archives_hash.txt > archives.txt
-
-            mv archives.txt "${{ matrix.installer_artifact_name }}.7z.txt"
+            # Output split archive hash list
+            sha256sum "${{ matrix.linux_appimage_7z_name }}.7z".* > "${{ matrix.installer_artifact_name }}.7z.txt"
           done
 
-      - name: Upload Linux AppImage split to Artifacts
+      - name: Create Linux installer
+        if: endsWith(matrix.installer_artifact_name, '-appimage')
+        run: |
+          sed \
+            -e 's/^NAME=@@PLACEHOLDER@@ # placeholder for CI$/NAME="${{ matrix.installer_artifact_name }}"/' \
+            -e 's/^VERSION=@@PLACEHOLDER@@ # placeholder for CI$/VERSION="${{ env.VOICEVOX_EDITOR_VERSION }}"/' \
+            build/linux/installer_linux.template.sh > VOICEVOX.${{ matrix.installer_artifact_name }}.${{ env.VOICEVOX_EDITOR_VERSION }}.sh
+
+          # Check that placeholders were replaced
+          ! grep "@@PLACEHOLDER@@" VOICEVOX.${{ matrix.installer_artifact_name }}.${{ env.VOICEVOX_EDITOR_VERSION }}.sh
+
+      - name: Upload Linux AppImage split and installer to Artifacts
         if: endsWith(matrix.installer_artifact_name, '-appimage') && github.event.inputs.upload_artifact == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: ${{ matrix.installer_artifact_name }}-release
           path: |-
             dist_electron/*.7z.*
+            VOICEVOX.${{ matrix.installer_artifact_name }}.${{ env.VOICEVOX_EDITOR_VERSION }}.sh
 
-      - name: Upload Linux AppImage split to Release Assets
-        if: endsWith(matrix.installer_artifact_name, '-appimage') && (github.event.release.tag_name || github.event.inputs.version) != ''
-        uses: softprops/action-gh-release@v2
+      - name: Upload Linux AppImage split and installer to Release Assets
+        if: endsWith(matrix.installer_artifact_name, '-appimage') && github.event.inputs.version != ''
+        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2.6.1
         with:
           prerelease: ${{ github.event.inputs.prerelease }}
           tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
           files: |-
             dist_electron/*.7z.*
+            VOICEVOX.${{ matrix.installer_artifact_name }}.${{ env.VOICEVOX_EDITOR_VERSION }}.sh
           target_commitish: ${{ github.sha }}
 
       - name: Upload macOS dmg to Artifacts
         if: endsWith(matrix.installer_artifact_name, '-dmg') && github.event.inputs.upload_artifact == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: ${{ matrix.installer_artifact_name }}-release
           path: |-
             dist_electron/*.dmg
 
       - name: Upload macOS dmg to Release Assets
-        if: endsWith(matrix.installer_artifact_name, '-dmg') && (github.event.release.tag_name || github.event.inputs.version) != ''
-        uses: softprops/action-gh-release@v2
+        if: endsWith(matrix.installer_artifact_name, '-dmg') && github.event.inputs.version != ''
+        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2.6.1
         with:
           prerelease: ${{ github.event.inputs.prerelease }}
           tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}
@@ -509,7 +510,7 @@ jobs:
 
       - name: Upload Windows NSIS Web to Artifacts
         if: endsWith(matrix.installer_artifact_name, '-nsis-web') && github.event.inputs.upload_artifact == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: ${{ matrix.installer_artifact_name }}-release
           path: |-
@@ -517,8 +518,8 @@ jobs:
             dist_electron/nsis-web/*.exe
 
       - name: Upload Windows NSIS Web to Release Assets
-        if: endsWith(matrix.installer_artifact_name, '-nsis-web') && (github.event.release.tag_name || github.event.inputs.version) != ''
-        uses: softprops/action-gh-release@v2
+        if: endsWith(matrix.installer_artifact_name, '-nsis-web') && github.event.inputs.version != ''
+        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2.6.1
         with:
           prerelease: ${{ github.event.inputs.prerelease }}
           tag_name: ${{ env.VOICEVOX_EDITOR_VERSION }}

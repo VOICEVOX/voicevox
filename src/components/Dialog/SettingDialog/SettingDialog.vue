@@ -342,6 +342,12 @@
                   @update:modelValue="changeShowTextLineNumber"
                 />
                 <ToggleCell
+                  title="音声の長さの表示"
+                  description="ONの場合、テキスト欄の右側に音声の長さが表示されます。"
+                  :modelValue="showAudioLength"
+                  @update:modelValue="changeShowAudioLength"
+                />
+                <ToggleCell
                   title="テキスト追加ボタンの表示"
                   description="OFFの場合、右下にテキスト追加ボタンが表示されません。（テキスト欄は Shift + Enter で追加できます）"
                   :modelValue="showAddAudioItemButton"
@@ -397,6 +403,15 @@
                     description="ONの場合、エンジンが対応している場合は、未知の英単語をカタカナ読みに変換します。"
                   />
                 </BaseTooltip>
+                <ButtonToggleCell
+                  v-model="defaultLyricModeComputed"
+                  title="ソング：デフォルト歌詞"
+                  description="歌詞が未設定の音符に対してデフォルトで設定される歌詞を設定できます。"
+                  :options="[
+                    { label: 'ドレミ（階名）', value: 'doremi' },
+                    { label: 'ら（固定）', value: 'la' },
+                  ]"
+                />
                 <BaseRowCard
                   title="ソング：元に戻すトラック操作"
                   description="「元に戻す」機能の対象とするトラック操作を指定します。"
@@ -406,7 +421,11 @@
                       v-for="(value, key) in undoableTrackOperations"
                       :key
                       :checked="value"
-                      :label="undoableTrackOperationsLabels[key]"
+                      :label="
+                        undoableTrackOperationsLabels[
+                          key as keyof typeof undoableTrackOperationsLabels
+                        ]
+                      "
                       @update:checked="
                         (newValue) =>
                           (undoableTrackOperations = {
@@ -502,7 +521,7 @@ import {
   buildAudioFileNameFromRawData,
   buildSongTrackAudioFileNameFromRawData,
 } from "@/store/utility";
-import {
+import type {
   SavingSetting,
   EngineSettingType,
   ExperimentalSettingType,
@@ -651,6 +670,11 @@ const [showTextLineNumber, changeShowTextLineNumber] = useRootMiscSetting(
   "showTextLineNumber",
 );
 
+const [showAudioLength, changeShowAudioLength] = useRootMiscSetting(
+  store,
+  "showAudioLength",
+);
+
 const [_enableKatakanaEnglish, setEnableKatakanaEnglish] = useRootMiscSetting(
   store,
   "enableKatakanaEnglish",
@@ -718,6 +742,18 @@ const [enableMultiSelect, setEnableMultiSelect] = useRootMiscSetting(
   store,
   "enableMultiSelect",
 );
+
+const [defaultLyricMode, setDefaultLyricMode] = useRootMiscSetting(
+  store,
+  "defaultLyricMode",
+);
+
+const defaultLyricModeComputed = computed({
+  get: () => defaultLyricMode.value,
+  set: (value: "doremi" | "la") => {
+    setDefaultLyricMode(value);
+  },
+});
 
 const canSetAudioOutputDevice = computed(() => {
   return !!HTMLAudioElement.prototype.setSinkId;

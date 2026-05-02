@@ -1,40 +1,50 @@
-import path from "node:path";
-import fs from "node:fs";
-import { ReadableStream } from "node:stream/web";
 import { dialog } from "electron";
 
-import semver from "semver";
 import { getConfigManager } from "./electronConfig";
 import { getEngineInfoManager } from "./manager/engineInfoManager";
 import { getEngineProcessManager } from "./manager/engineProcessManager";
 import { getRuntimeInfoManager } from "./manager/RuntimeInfoManager";
 import { getVvppManager } from "./manager/vvppManager";
-import { getWindowManager } from "./manager/windowManager";
-import { EngineId, EngineInfo, engineSettingSchema } from "@/type/preload";
+import { getMainWindowManager } from "./manager/windowManager/main";
+import { MultiDownloader } from "./multiDownloader";
 import {
-  PackageInfo,
+  type EngineId,
+  type EngineInfo,
+  engineSettingSchema,
+} from "@/type/preload";
+import {
+  type PackageInfo,
   fetchLatestDefaultEngineInfo,
-  getSuitablePackageInfo,
-} from "@/domain/defaultEngine/latetDefaultEngine";
+} from "@/domain/defaultEngine/latestDefaultEngine";
+import type { RuntimeTarget } from "@/domain/defaultEngine/latestDefaultEngine";
 import { loadEnvEngineInfos } from "@/domain/defaultEngine/envEngineInfo";
-import { UnreachableError } from "@/type/utility";
-import { ProgressCallback } from "@/helpers/progressHelper";
+import type { ProgressCallback } from "@/helpers/progressHelper";
 import { createLogger } from "@/helpers/log";
 import { DisplayableError, errorToMessage } from "@/helpers/errorHelper";
+import { isLinux, isMac, isWindows } from "@/helpers/platform";
 
 const log = createLogger("EngineAndVvppController");
 
-/** エンジンパッケージの状態 */
-export type EnginePackageStatus = {
-  package: {
-    engineName: string;
-    engineId: EngineId;
-    packageInfo: PackageInfo;
-    latestVersion: string;
-  };
+export type EnginePackageBase = {
+  engineName: string;
+  engineId: EngineId;
+};
+
+/** ローカルのパッケージインストール状況 */
+export type EnginePackageCurrentInfo = {
+  package: EnginePackageBase;
   installed:
     | { status: "notInstalled" }
-    | { status: "outdated" | "latest"; installedVersion: string };
+    | { status: "installed"; installedVersion: string };
+};
+
+/** オンラインで取得したパッケージ最新情報 */
+export type EnginePackageLatestInfo = {
+  package: EnginePackageBase;
+  availableRuntimeTargets: {
+    target: RuntimeTarget;
+    packageInfo: PackageInfo;
+  }[];
 };
 
 /**
@@ -113,7 +123,7 @@ export class EngineAndVvppController {
     reloadNeeded: boolean;
     reloadCallback?: () => void; // 再読み込みが必要な場合のコールバック
   }) {
-    const windowManager = getWindowManager();
+    const windowManager = getMainWindowManager();
     const result = windowManager.showMessageBoxSync({
       type: "warning",
       title: "エンジン追加の確認",
@@ -188,19 +198,54 @@ export class EngineAndVvppController {
   }
 
   /**
-   * 最新のエンジンパッケージの情報や、そのエンジンのインストール状況を取得する。
+   * ダウンロード可能なデフォルトエンジン情報を取得する。
+   * online fetchは行わない。
    */
-  async fetchEnginePackageStatuses(): Promise<EnginePackageStatus[]> {
-    const statuses: EnginePackageStatus[] = [];
+  private getDownloadableEnvEngineInfos() {
+    return loadEnvEngineInfos().filter(
+      (engineInfo) => engineInfo.type === "downloadVvpp",
+    );
+  }
 
-    for (const envEngineInfo of loadEnvEngineInfos()) {
-      if (envEngineInfo.type != "downloadVvpp") {
-        continue;
-      }
+  private getInstalledEngineStatus(
+    engineId: EngineId,
+  ): EnginePackageCurrentInfo["installed"] {
+    const isInstalled = this.engineInfoManager.hasEngineInfo(engineId);
+    if (!isInstalled) {
+      return { status: "notInstalled" };
+    }
 
-      // 最新情報を取得
+    const installedEngineInfo =
+      this.engineInfoManager.fetchEngineInfo(engineId);
+    return {
+      status: "installed",
+      installedVersion: installedEngineInfo.version,
+    };
+  }
+
+  /**
+   * オフラインでデフォルトエンジンのインストール状況を取得する。
+   */
+  getEnginePackageLocalInfos(): EnginePackageCurrentInfo[] {
+    return this.getDownloadableEnvEngineInfos().map((envEngineInfo) => ({
+      package: {
+        engineName: envEngineInfo.name,
+        engineId: envEngineInfo.uuid,
+      },
+      installed: this.getInstalledEngineStatus(envEngineInfo.uuid),
+    }));
+  }
+
+  /**
+   * オンラインで最新のエンジンパッケージの情報や、そのエンジンのインストール状況を取得する。
+   */
+  async fetchLatestEnginePackageRemoteInfos(): Promise<
+    EnginePackageLatestInfo[]
+  > {
+    const statuses: EnginePackageLatestInfo[] = [];
+
+    for (const envEngineInfo of this.getDownloadableEnvEngineInfos()) {
       const latestUrl = envEngineInfo.latestUrl;
-      if (latestUrl == undefined) throw new Error("latestUrl is undefined");
 
       const latestInfo = await fetchLatestDefaultEngineInfo(latestUrl);
       if (latestInfo.formatVersion != 1) {
@@ -208,38 +253,30 @@ export class EngineAndVvppController {
         continue;
       }
 
-      // 実行環境に合うパッケージを取得
-      const packageInfo = getSuitablePackageInfo(latestInfo);
-      log.info(`Latest default engine version: ${packageInfo.version}`);
+      const availableRuntimeTargets: EnginePackageLatestInfo["availableRuntimeTargets"] =
+        Object.entries(latestInfo.packages)
+          .map(([target, packageInfo]) => ({ target, packageInfo }))
+          .filter((runtimeTargetInfo) =>
+            isSupportedTarget(runtimeTargetInfo.target),
+          )
+          .toSorted(
+            (a, b) =>
+              a.packageInfo.displayInfo.order - b.packageInfo.displayInfo.order,
+          );
 
-      // インストール状況を取得
-      let installedStatus: EnginePackageStatus["installed"];
-      const isInstalled = this.engineInfoManager.hasEngineInfo(
-        envEngineInfo.uuid,
-      );
-      if (!isInstalled) {
-        installedStatus = { status: "notInstalled" };
-      } else {
-        const installedEngineInfo = this.engineInfoManager.fetchEngineInfo(
-          envEngineInfo.uuid,
+      if (availableRuntimeTargets.length === 0) {
+        log.error(
+          `No supported runtime targets were found for ${envEngineInfo.name}`,
         );
-        const installedVersion = installedEngineInfo.version;
-        installedStatus = {
-          status: semver.lt(installedVersion, packageInfo.version)
-            ? "outdated"
-            : "latest",
-          installedVersion,
-        };
+        continue;
       }
 
       statuses.push({
         package: {
           engineName: envEngineInfo.name,
           engineId: envEngineInfo.uuid,
-          packageInfo,
-          latestVersion: packageInfo.version,
         },
-        installed: installedStatus,
+        availableRuntimeTargets,
       });
     }
 
@@ -252,84 +289,32 @@ export class EngineAndVvppController {
     packageInfo: PackageInfo,
     callbacks: { onProgress: ProgressCallback<"download" | "install"> },
   ) {
-    if (packageInfo.packages.length === 0) {
-      throw new UnreachableError("No packages to download");
+    if (packageInfo.files.length === 0) {
+      throw new Error("No packages to download");
     }
 
-    let failed = false;
-    const downloadedPaths: string[] = [];
-    try {
-      // ダウンロード
-      callbacks.onProgress({ type: "download", progress: 0 });
-
-      let totalBytes = 0;
-      packageInfo.packages.forEach((p) => {
-        totalBytes += p.size;
-      });
-
-      let downloadedBytes = 0;
-      await Promise.all(
-        packageInfo.packages.map(async (p) => {
-          if (failed) return; // 他のダウンロードが失敗していたら中断
-
-          const { url, name } = p;
-          log.info(`Download ${name} from ${url}`);
-
-          const res = await fetch(url);
-          if (!res.ok || res.body == null)
-            throw new Error(`Failed to download ${name} from ${url}`);
-          const downloadPath = path.join(downloadDir, name);
-          const fileStream = fs.createWriteStream(downloadPath);
-
-          // ファイルに書き込む
-          // NOTE: なぜか型が合わないのでasを使っている
-          for await (const chunk of res.body as ReadableStream<Uint8Array>) {
-            fileStream.write(chunk);
-            downloadedBytes += chunk.length;
-            callbacks.onProgress({
-              type: "download",
-              progress: (downloadedBytes / totalBytes) * 100,
-            });
-          }
-
-          // ファイルを確実に閉じる
-          const { promise, resolve, reject } = Promise.withResolvers<void>();
-          fileStream.on("close", resolve);
-          fileStream.on("error", reject);
-          fileStream.close();
-          await promise;
-
-          downloadedPaths.push(downloadPath);
-          log.info(`Downloaded ${name} to ${downloadPath}`);
-
-          // TODO: ハッシュチェック
-        }),
-      );
-
-      // インストール
-      await this.installVvppEngine({
-        vvppPath: downloadedPaths[0],
-        asDefaultVvppEngine: true,
-        immediate: true,
-        callbacks: {
-          onProgress: ({ progress }) => {
-            callbacks.onProgress({ type: "install", progress });
-          },
+    await using downloader = new MultiDownloader(
+      downloadDir,
+      packageInfo.files,
+      {
+        onProgress: ({ progress }) => {
+          callbacks.onProgress({ type: "download", progress });
         },
-      });
-    } catch (e) {
-      failed = true;
-      log.error(`Failed to download and install VVPP engine:`, e);
-      throw e;
-    } finally {
-      // ダウンロードしたファイルを削除
-      await Promise.all(
-        downloadedPaths.map(async (path) => {
-          log.info(`Delete downloaded file: ${path}`);
-          await fs.promises.unlink(path);
-        }),
-      );
-    }
+      },
+    );
+    await downloader.download();
+
+    // インストール
+    await this.installVvppEngine({
+      vvppPath: downloader.downloadedPaths[0],
+      asDefaultVvppEngine: true,
+      immediate: true,
+      callbacks: {
+        onProgress: ({ progress }) => {
+          callbacks.onProgress({ type: "install", progress });
+        },
+      },
+    });
   }
 
   /** 各エンジンの設定を初期化する */
@@ -380,10 +365,8 @@ export class EngineAndVvppController {
 
   /**
    * エンジンの停止とエンジン終了後処理を行う。
-   * 全処理が完了済みの場合 alreadyCompleted を返す。
-   * そうでない場合は Promise を返す。
    */
-  cleanupEngines(): Promise<void> | "alreadyCompleted" {
+  async cleanupEngines(): Promise<void> {
     const killingProcessPromises = this.engineProcessManager.killEngineAll();
     const numLivingEngineProcess = Object.entries(
       killingProcessPromises,
@@ -394,7 +377,7 @@ export class EngineAndVvppController {
       numLivingEngineProcess === 0 &&
       !this.vvppManager.hasMarkedEngineDirs()
     ) {
-      return "alreadyCompleted";
+      return;
     }
 
     let numEngineProcessKilled = 0;
@@ -429,17 +412,42 @@ export class EngineAndVvppController {
       return this.vvppManager.handleMarkedEngineDirs();
     });
   }
+}
 
-  /**
-   * 安全なシャットダウン処理。
-   * この関数内の処理はelectronの終了シーケンスに合わせ、非同期処理が必要かどうかを判定したあとで非同期処理を実行する必要がある。
-   * FIXME: 判定用の関数と非同期処理関数を分離すれば仕様が簡潔になる。
-   */
-  gracefulShutdown() {
-    const engineCleanupResult = this.cleanupEngines();
-    const configSavedResult = this.configManager.ensureSaved();
-    return { engineCleanupResult, configSavedResult };
+/** 指定したRuntime Targetは現在のプラットフォームで動くか */
+function isSupportedTarget(target: string): boolean {
+  let isSupported = true;
+  const os = target.split("-")[0];
+  switch (os) {
+    case "windows":
+      isSupported &&= isWindows;
+      break;
+    case "macos":
+      isSupported &&= isMac;
+      break;
+    case "linux":
+      isSupported &&= isLinux;
+      break;
+    default:
+      isSupported = false;
   }
+
+  const arch = target.split("-")[1];
+  switch (arch) {
+    case "x64":
+      isSupported &&= process.arch === "x64";
+      break;
+    case "arm64":
+      isSupported &&= process.arch === "arm64";
+      break;
+    case "x86":
+      isSupported &&= process.arch === "ia32";
+      break;
+    default:
+      isSupported = false;
+  }
+
+  return isSupported;
 }
 
 let manager: EngineAndVvppController | undefined;

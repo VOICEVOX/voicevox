@@ -1,8 +1,8 @@
 import { createPartialStore } from "./vuex";
 import { cloneWithUnwrapProxy } from "@/helpers/cloneWithUnwrapProxy";
 import { uuid4 } from "@/helpers/random";
-import { PresetStoreState, PresetStoreTypes, State } from "@/store/type";
-import { Preset, PresetKey, Voice, VoiceId } from "@/type/preload";
+import type { PresetStoreState, PresetStoreTypes, State } from "@/store/type";
+import { type Preset, PresetKey, type Voice, VoiceId } from "@/type/preload";
 
 /**
  * configを参照して割り当てるべきpresetKeyとそのPresetを適用すべきかどうかを返す
@@ -126,11 +126,8 @@ export const presetStore = createPartialStore<PresetStoreTypes>({
 
   HYDRATE_PRESET_STORE: {
     async action({ mutations }) {
-      const defaultPresetKeys = (await window.backend.getSetting(
-        "defaultPresetKeys",
-        // z.BRAND型のRecordはPartialになる仕様なのでasで型を変換
-        // TODO: 将来的にzodのバージョンを上げてasを消す https://github.com/colinhacks/zod/pull/2097
-      )) as Record<VoiceId, PresetKey>;
+      const defaultPresetKeys =
+        await window.backend.getSetting("defaultPresetKeys");
 
       mutations.SET_DEFAULT_PRESET_MAP({
         defaultPresetKeys,

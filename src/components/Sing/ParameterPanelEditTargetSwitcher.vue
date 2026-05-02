@@ -1,52 +1,51 @@
 <template>
   <QBtnGroup flat class="edit-target-switcher">
-    <!-- ノート -->
+    <!-- 音素タイミング -->
     <QBtn
       dense
       unelevated
       class="segment-switch"
-      :class="{ active: editTarget === 'NOTE' }"
-      @click="changeEditTarget('NOTE')"
+      :class="{ active: editTarget === 'PHONEME_TIMING' }"
+      @click="changeEditTarget('PHONEME_TIMING')"
     >
-      <QIcon name="piano" size="20px" />
+      <QIcon name="access_time" size="20px" />
       <QTooltip
         :delay="500"
         anchor="bottom middle"
         transitionShow=""
         transitionHide=""
       >
-        ノート編集
+        音素タイミング編集
       </QTooltip>
     </QBtn>
 
-    <!-- ピッチ -->
+    <!-- ボリューム -->
     <QBtn
       dense
       unelevated
       class="segment-switch"
-      :class="{ active: editTarget === 'PITCH' }"
-      @click="changeEditTarget('PITCH')"
+      :class="{ active: editTarget === 'VOLUME' }"
+      @click="changeEditTarget('VOLUME')"
     >
-      <QIcon name="timeline" size="20px" />
+      <QIcon name="volume_down" size="20px" />
       <QTooltip
         :delay="500"
         anchor="bottom middle"
         transitionShow=""
         transitionHide=""
       >
-        ピッチ編集<br />{{ !isMac ? "Ctrl" : "Cmd" }}+クリックで消去
+        ボリューム編集
       </QTooltip>
     </QBtn>
   </QBtnGroup>
 </template>
 
 <script setup lang="ts">
-import { SequencerEditTarget } from "@/store/type";
-import { isMac } from "@/helpers/platform";
+import type { ParameterPanelEditTarget } from "@/store/type";
 
 defineProps<{
-  editTarget: SequencerEditTarget;
-  changeEditTarget: (editTarget: SequencerEditTarget) => void;
+  editTarget: ParameterPanelEditTarget;
+  changeEditTarget: (editTarget: ParameterPanelEditTarget) => void;
 }>();
 </script>
 

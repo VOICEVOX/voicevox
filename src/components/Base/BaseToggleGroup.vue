@@ -6,7 +6,7 @@
     :disabled
     @update:modelValue="
       (val) => {
-        if (!(props.type === 'single' && val === undefined)) {
+        if (!(props.type === 'single' && val == undefined)) {
           modelValue = val as T | T[];
         }
       }
@@ -17,7 +17,7 @@
 </template>
 
 <script setup lang="ts" generic="T extends AcceptableValue">
-import { AcceptableValue, ToggleGroupRoot } from "reka-ui";
+import { type AcceptableValue, ToggleGroupRoot } from "reka-ui";
 import { computed } from "vue";
 
 const props = defineProps<{

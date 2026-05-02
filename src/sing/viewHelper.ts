@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { StyleInfo } from "@/type/preload";
+import type { StyleInfo } from "@/type/preload";
 import { isMac } from "@/helpers/platform";
 
 const BASE_X_PER_QUARTER_NOTE = 120;
@@ -59,6 +59,7 @@ export function getPitchFromNoteNumber(noteNumber: number) {
   return mapPitches[pitchPos];
 }
 
+// TODO: sing/domain.tsに移動する
 export function getDoremiFromNoteNumber(noteNumber: number) {
   const mapPitches = [
     "ド",

@@ -5,16 +5,6 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-_readarray(){
-  [[ -z "$1" ]] && return 1
-  [[ "$1" =~ [[:space:]] ]] && return 1
-  var="$1"
-  eval "$var"'=()'
-  while IFS=$'\n' read -r r; do
-    eval "$var"'+=("'"$r"'")'
-  done
-}
-
 cat << 'BANNER'
 +-+-+-+-+-+-+-+-+
 |V|O|I|C|E|V|O|X|
@@ -25,8 +15,8 @@ cat << 'BANNER'
 +-+-+-+-+-+-+-+-+-+
 BANNER
 
-NAME=$(basename "${NAME:-linux-nvidia-appimage}")
-VERSION=$(basename "${VERSION:-}")
+NAME=@@PLACEHOLDER@@ # placeholder for CI
+VERSION=@@PLACEHOLDER@@ # placeholder for CI
 REPO_URL=${REPO_URL:-https://github.com/VOICEVOX/voicevox}
 
 # Install directory
@@ -37,7 +27,6 @@ FORCE_INSTALL=${FORCE_INSTALL:-}
 KEEP_ARCHIVE=${KEEP_ARCHIVE:-}
 REUSE_LIST=${REUSE_LIST:-}
 SKIP_VERIFY=${SKIP_VERIFY:-}
-IGNORE_RTCOND=${IGNORE_RTCOND:-}
 
 DESKTOP_ENTRY_INSTALL_DIR=${DESKTOP_ENTRY_INSTALL_DIR:-$HOME/.local/share/applications}
 ICON_INSTALL_DIR=${ICON_INSTALL_DIR:-$HOME/.local/share/icons}
@@ -76,9 +65,6 @@ CentOS/Fedora:
     sudo dnf install curl
 Or
     sudo yum install curl
-
-Arch Linux:
-    sudo pacman -S curl
 EOS
 fi
 
@@ -119,73 +105,9 @@ Or
 
 Arch Linux:
     sudo pacman -S 7zip
-
-MacOS:
-    brew install p7zip
 EOS
 fi
 echo "[-] 7z command: ${COMMAND_7Z}"
-
-LATEST_RELEASE_URL=$REPO_URL/releases/latest
-
-if [ -z "${VERSION}" ]; then
-    echo "[+] Checking the latest version..."
-
-    # releases/tag/{version}
-    RELEASE_TAG_URL=$(curl -fsSL -o /dev/null -w '%{url_effective}' "${LATEST_RELEASE_URL}")
-
-    # extract version (release tag name) from URL
-    VERSION=$(echo "${RELEASE_TAG_URL}" | sed 's/.*\/\(.*\)$/\1/')
-    echo "[-] Install version: ${VERSION} (latest)"
-else
-    echo "[-] Install version: ${VERSION}"
-fi
-
-IFS=" " read -r -a VERSION_ARRAY <<< "${VERSION//[.+-]/ }"
-if [ "${VERSION_ARRAY[0]}" -eq 0 ] && [ "${VERSION_ARRAY[1]}" -le 14 ]; then
-    # Check when version < 0.15
-    echo "[+] Checking runtime prerequisites..."
-
-    PATH=${PATH}:/usr/local/sbin:/usr/sbin:/sbin
-    if ! command -v ldconfig &> /dev/null; then
-        cat << EOS && exit 1
-[!] Command 'ldconfig' not found
-
-Required to check existence of required libraries.
-You must add a directory of contain ldconfig command to PATH environment variable.
-
-EOS
-    fi
-
-    if { ldconfig -p | grep 'libsndfile\.so';} &>/dev/null; then
-        echo "[-] libsndfile: OK"
-    elif [ -d /usr/local/Cellar/libsndfile ]; then
-        echo "[-] libsndfile: OK"
-    else
-        cat << 'EOS'
-[!] libsndfile: not found
-
-Required to run VOICEVOX ENGINE
-
-Ubuntu/Debian:
-    sudo apt install libsndfile1
-
-CentOS/Fedora:
-    sudo dnf install libsndfile
-Or
-    sudo yum install libsndfile
-
-Arch Linux
-    sudo pacman -S libsndfile
-
-MacOS:
-    brew install libsndfile
-EOS
-        if [ "${IGNORE_RTCOND}" != "1" ]; then
-            exit 1
-        fi
-    fi
-fi
 
 RELEASE_URL=${REPO_URL}/releases/download/${VERSION}
 ARCHIVE_LIST_URL=${RELEASE_URL}/${NAME}.7z.txt
@@ -202,62 +124,9 @@ if [ "$REUSE_LIST" != "1" ]; then
 fi
 
 echo
-echo "[+] Listing of split archives..."
-_readarray ARCHIVE_LIST < "list.txt"
-
-if [ -z "$(echo "${ARCHIVE_LIST[0]}" | awk '$0=$1')" ]; then
-    # No size/hash information
-    # filename
-    _readarray ARCHIVE_NAME_LIST < <(
-        for line in "${ARCHIVE_LIST[@]}"; do
-            echo "$line"
-        done
-    )
-    _readarray ARCHIVE_SIZE_LIST < <(
-        for index in "${!ARCHIVE_LIST[@]}"; do
-            echo "x"
-        done
-    )
-    _readarray ARCHIVE_HASH_LIST <(
-        for index in "${!ARCHIVE_LIST[@]}"; do
-            echo "x"
-        done
-    )
-else
-    # filename<TAB>size<TAB>hash
-    _readarray ARCHIVE_NAME_LIST < <(
-        for line in "${ARCHIVE_LIST[@]}"; do
-            echo "$line"
-        done | awk '$0!=""{print $1}'
-    )
-    _readarray ARCHIVE_SIZE_LIST < <(
-        for line in "${ARCHIVE_LIST[@]}"; do
-            echo "$line"
-        done | awk '$0!=""{print $2}'
-    )
-    _readarray ARCHIVE_HASH_LIST < <(
-        for line in "${ARCHIVE_LIST[@]}"; do
-            echo "$line"
-        done | awk '$0!=""{print $3}' |
-            tr '[:lower:]' '[:upper:]'
-    )
-fi
-echo
-
-for index in "${!ARCHIVE_NAME_LIST[@]}"; do
-    echo "${index}." \
-        "${ARCHIVE_NAME_LIST[index]}" \
-        "${ARCHIVE_SIZE_LIST[index]}" \
-        "${ARCHIVE_HASH_LIST[index]}"
-done
-echo
-
 # Download archives
-for index in "${!ARCHIVE_LIST[@]}"; do
-    FILENAME=${ARCHIVE_NAME_LIST[index]}
-    SIZE=${ARCHIVE_SIZE_LIST[index]}
-    HASH=${ARCHIVE_HASH_LIST[index]}
-
+mapfile -t ARCHIVE_NAME_LIST < <(cut -d' ' -f3- list.txt)
+for FILENAME in "${ARCHIVE_NAME_LIST[@]}"; do
     URL=${RELEASE_URL}/${FILENAME}
 
     echo "[+] Downloading ${URL}..."
@@ -265,51 +134,17 @@ for index in "${!ARCHIVE_LIST[@]}"; do
         curl --fail -L -C - -o "${FILENAME}.tmp" "${URL}"
         mv "${FILENAME}.tmp" "${FILENAME}"
     fi
-
-    # File verification (size, md5 hash)
-    if [ "$SKIP_VERIFY" = "1" ]; then
-        echo "[-] File verification skipped"
-    else
-        if [ "$SIZE" != "x" ]; then
-            echo "[+] Verifying size == ${SIZE}..."
-            if stat --version &>/dev/null; then
-                DOWNLOADED_SIZE=$(stat --printf="%s" "${FILENAME}")
-            else
-                DOWNLOADED_SIZE=$(stat -f%z "${FILENAME}")
-            fi
-
-            if [ "$DOWNLOADED_SIZE" = "$SIZE" ]; then
-                echo "[-] Size OK"
-            else
-                cat << EOS && exit 1
-[!] Invalid size: ${DOWNLOADED_SIZE} != ${SIZE}
-
-Remove the corrupted file and restart installer!
-
-    rm $(realpath "${FILENAME}")
-
-EOS
-            fi
-        fi
-
-        if [ "$HASH" != "x" ]; then
-            echo "[+] Verifying hash == ${HASH}..."
-            DOWNLOADED_HASH=$(md5sum "${FILENAME}" | awk '$0=$1' | tr '[:lower:]' '[:upper:]')
-            if [ "$DOWNLOADED_HASH" = "$HASH" ]; then
-                echo "[-] Hash OK"
-            else
-                cat << EOS && exit 1
-[!] Invalid hash: ${DOWNLOADED_HASH} != ${HASH}
-
-Remove the corrupted file and restart installer!
-
-    rm $(realpath "${FILENAME}")
-
-EOS
-            fi
-        fi
-    fi
 done
+
+# File verification
+if [ "$SKIP_VERIFY" = "1" ]; then
+    echo "[-] File verification skipped"
+else
+    if ! sha256sum --check list.txt; then
+        echo "[!] Invalid hash. Remove the corrupted files and restart installer!"
+        exit 1
+    fi
+fi
 
 # Extract archives
 echo "[+] Extracting archive..."
@@ -349,7 +184,7 @@ BANNER
 VOICEVOX_INSTALLED_FILES=(
     "${DESKTOP_ENTRY_INSTALL_DIR}/voicevox.desktop"
     "${ICON_INSTALL_DIR}/voicevox.png"
-    "${ICON_INSTALL_DIR}/hicolor/0x0/apps/voicevox.png"
+    "${ICON_INSTALL_DIR}/hicolor/256x256/apps/voicevox.png"
     "${MIME_INSTALL_DIR}/packages/voicevox.xml"
 )
 
@@ -399,7 +234,7 @@ echo "[+] Removing archive list (list.txt)..."
 rm -f "list.txt"
 
 # Extract desktop entry
-echo "[+] Extacting desktop entry..."
+echo "[+] Extracting desktop entry..."
 
 "./${APPIMAGE}" --appimage-extract '*.desktop'
 "./${APPIMAGE}" --appimage-extract 'usr/share/icons/**'
@@ -429,32 +264,7 @@ cp squashfs-root/*.png "${ICON_INSTALL_DIR}"
 echo "[+] Registering file association..."
 
 mkdir -p "${MIME_INSTALL_DIR}/packages"
-cat << EOS > "${MIME_INSTALL_DIR}/packages/voicevox.xml"
-<?xml version="1.0" encoding="utf-8"?>
-<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
-    <mime-type type="application/x-voicevox">
-        <comment>VOICEVOX Project file</comment>
-        <comment xml:lang="ja">VOICEVOX プロジェクトファイル</comment>
-        <sub-class-of type="application/json" />
-        <glob pattern="*.vvproj" />
-        <icon name="voicevox" />
-    </mime-type>
-    <mime-type type="application/x-voicevox-plugin-package">
-        <comment>VOICEVOX Plugin package</comment>
-        <comment xml:lang="ja">VOICEVOX プラグインパッケージ</comment>
-        <sub-class-of type="application/zip" />
-        <glob pattern="*.vvpp" />
-        <icon name="voicevox" />
-    </mime-type>
-    <mime-type type="application/x-voicevox-plugin-package-part">
-        <comment>VOICEVOX Plugin package (part)</comment>
-        <comment xml:lang="ja">VOICEVOX プラグインパッケージ（分割）</comment>
-        <sub-class-of type="application/zip" />
-        <glob pattern="*.vvppp" />
-        <icon name="voicevox" />
-    </mime-type>
-</mime-info>
-EOS
+curl --fail -L -o "${MIME_INSTALL_DIR}/packages/voicevox.xml" "https://raw.githubusercontent.com/VOICEVOX/voicevox/refs/tags/${VERSION}/build/linux/voicevox.xml"
 
 # Update file association database
 echo "[+] Updating file association database..."

@@ -30,7 +30,7 @@ const handler = (acceptTerms: boolean) => {
   });
   if (!acceptTerms) {
     void store.actions.CHECK_EDITED_AND_NOT_SAVE({
-      closeOrReload: "close",
+      nextAction: "close",
     });
   }
 

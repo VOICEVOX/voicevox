@@ -1,17 +1,19 @@
-import { SetNextState, State } from "@/sing/stateMachine";
-import {
+import type { SetNextState, State } from "@/sing/stateMachine";
+import type {
   Context,
   IdleStateId,
   Input,
   PositionOnSequencer,
   SequencerStateDefinitions,
 } from "@/sing/sequencerStateMachine/common";
-import { TrackId } from "@/type/preload";
+import type { TrackId } from "@/type/preload";
 import { getButton } from "@/sing/viewHelper";
 
-export class ErasePitchState
-  implements State<SequencerStateDefinitions, Input, Context>
-{
+export class ErasePitchState implements State<
+  SequencerStateDefinitions,
+  Input,
+  Context
+> {
   readonly id = "erasePitch";
 
   private readonly cursorPosAtStart: PositionOnSequencer;
@@ -80,15 +82,15 @@ export class ErasePitchState
     if (this.innerContext == undefined) {
       throw new Error("innerContext is undefined.");
     }
-    if (input.type === "mouseEvent") {
-      const mouseButton = getButton(input.mouseEvent);
+    if (input.type === "pointerEvent") {
+      const mouseButton = getButton(input.pointerEvent);
 
       if (input.targetArea === "Window") {
-        if (input.mouseEvent.type === "mousemove") {
+        if (input.pointerEvent.type === "pointermove") {
           this.currentCursorPos = input.cursorPos;
           this.innerContext.executePreviewProcess = true;
         } else if (
-          input.mouseEvent.type === "mouseup" &&
+          input.pointerEvent.type === "pointerup" &&
           mouseButton === "LEFT_BUTTON"
         ) {
           this.applyPreview = true;
