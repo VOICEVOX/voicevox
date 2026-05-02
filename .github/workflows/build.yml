@@ -23,8 +23,8 @@ on:
         default: false
 
 env:
-  VOICEVOX_ENGINE_VERSION: 0.25.1
-  VOICEVOX_RESOURCE_VERSION: 0.25.1
+  VOICEVOX_ENGINE_VERSION: 0.25.2
+  VOICEVOX_RESOURCE_VERSION: 0.25.2
   VOICEVOX_EDITOR_VERSION:
     |- # workflow_dispatchのバージョン名か、999.999.999-developが入る
     ${{ github.event.inputs.version || '999.999.999-develop' }}
