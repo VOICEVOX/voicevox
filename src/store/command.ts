@@ -120,15 +120,11 @@ export const commandStore = createPartialStore<CommandStoreTypes>({
         applyPatches(state, command.undoPatches);
       }
     },
-    action({ mutations, actions }, { editor }: { editor: EditorType }) {
+    action({ mutations }, { editor }: { editor: EditorType }) {
       mutations.UNDO({ editor });
       if (editor === "song") {
         // TODO: 存在しないノートのみ選択解除、あるいはSELECTED_NOTE_IDS getterを作る
         mutations.DESELECT_ALL_NOTES();
-        void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
-        void actions.SYNC_LOOP_RANGE_TO_TRANSPORT();
-        void actions.SYNC_PLAYHEAD_POSITION_TO_TRANSPORT();
-        void actions.RENDER();
       }
     },
   },
@@ -141,15 +137,11 @@ export const commandStore = createPartialStore<CommandStoreTypes>({
         applyPatches(state, command.redoPatches);
       }
     },
-    action({ mutations, actions }, { editor }: { editor: EditorType }) {
+    action({ mutations }, { editor }: { editor: EditorType }) {
       mutations.REDO({ editor });
       if (editor === "song") {
         // TODO: 存在しないノートのみ選択解除、あるいはSELECTED_NOTE_IDS getterを作る
         mutations.DESELECT_ALL_NOTES();
-        void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
-        void actions.SYNC_LOOP_RANGE_TO_TRANSPORT();
-        void actions.SYNC_PLAYHEAD_POSITION_TO_TRANSPORT();
-        void actions.RENDER();
       }
     },
   },
