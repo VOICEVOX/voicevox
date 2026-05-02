@@ -1022,6 +1022,16 @@ export type SongTrackRenderingEvent =
   | PhraseRenderingErrorEvent;
 
 /**
+ * ソングトラックレンダラーが保持するキャッシュ。
+ * クエリ・歌唱ピッチ・歌唱ボリュームのそれぞれのキャッシュを含む。
+ */
+export type SongTrackRendererCache = {
+  queryCache: Map<EditorFrameAudioQueryKey, EditorFrameAudioQuery>;
+  singingPitchCache: Map<SingingPitchKey, SingingPitch>;
+  singingVolumeCache: Map<SingingVolumeKey, SingingVolume>;
+};
+
+/**
  * ソングトラックのレンダリング処理を担当するクラス。
  * フレーズ生成、キャッシュ管理、エンジンAPIとの連携、イベント通知などを行う。
  */
@@ -1030,16 +1040,11 @@ export class SongTrackRenderer {
   private readonly engineSongApi: EngineSongApi;
   private readonly playheadPositionGetter: () => number;
 
-  private readonly queryCache: Map<
-    EditorFrameAudioQueryKey,
-    EditorFrameAudioQuery
-  > = new Map();
-  private readonly singingPitchCache: Map<SingingPitchKey, SingingPitch> =
+  private queryCache: Map<EditorFrameAudioQueryKey, EditorFrameAudioQuery> =
     new Map();
-  private readonly singingVolumeCache: Map<SingingVolumeKey, SingingVolume> =
-    new Map();
-  private readonly singingVoiceCache: Map<SingingVoiceKey, SingingVoice> =
-    new Map();
+  private singingPitchCache: Map<SingingPitchKey, SingingPitch> = new Map();
+  private singingVolumeCache: Map<SingingVolumeKey, SingingVolume> = new Map();
+  private singingVoiceCache: Map<SingingVoiceKey, SingingVoice> = new Map();
 
   private readonly listeners: Set<(event: SongTrackRenderingEvent) => void> =
     new Set();
@@ -1072,6 +1077,24 @@ export class SongTrackRenderer {
     this.config = args.config;
     this.engineSongApi = args.engineSongApi;
     this.playheadPositionGetter = args.playheadPositionGetter;
+  }
+
+  /**
+   * キャッシュを設定する。
+   * 指定されたキャッシュのみを上書きし、指定されなかったものは変更しない。
+   *
+   * @param cache 設定するキャッシュ。各フィールドは省略可能。
+   */
+  setCache(cache: Partial<SongTrackRendererCache>) {
+    if (cache.queryCache != undefined) {
+      this.queryCache = new Map(cache.queryCache);
+    }
+    if (cache.singingPitchCache != undefined) {
+      this.singingPitchCache = new Map(cache.singingPitchCache);
+    }
+    if (cache.singingVolumeCache != undefined) {
+      this.singingVolumeCache = new Map(cache.singingVolumeCache);
+    }
   }
 
   /**
