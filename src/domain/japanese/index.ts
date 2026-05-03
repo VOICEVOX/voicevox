@@ -15,6 +15,17 @@ export const createKanaRegex = (includeSeparation?: boolean): RegExp => {
   return /^[\u3041-\u3094\u30A1-\u30F4\u30FC]+$/;
 };
 
+/** 半角文字を全角文字にする */
+export const convertHankakuToZenkaku = (text: string) => {
+  // " "などの目に見えない文字をまとめて全角スペース(0x3000)に置き換える
+  text = text.replace(/\p{Z}/gu, () => String.fromCharCode(0x3000));
+
+  // "!"から"~"までの範囲の文字(数字やアルファベット)を全角に置き換える
+  return text.replace(/[\u0021-\u007e]/g, (s) => {
+    return String.fromCharCode(s.charCodeAt(0) + 0xfee0);
+  });
+};
+
 /** ひらがなをカタカナにする */
 export const convertHiraToKana = (text: string): string => {
   return text.replace(/[\u3041-\u3094]/g, (s) => {
