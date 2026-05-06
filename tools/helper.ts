@@ -1,3 +1,21 @@
+import { createHash } from "node:crypto";
+
+/**
+ * SHA256 ハッシュ値が一致するか検証する。一致しない場合は例外を投げる。
+ */
+export function verifySha256(
+  buffer: ArrayBuffer | Uint8Array,
+  expectedSha256: string,
+): void {
+  const data = buffer instanceof ArrayBuffer ? new Uint8Array(buffer) : buffer;
+  const actual = createHash("sha256").update(data).digest("hex");
+  if (actual !== expectedSha256) {
+    throw new Error(
+      `SHA256 mismatch: expected ${expectedSha256}, got ${actual}`,
+    );
+  }
+}
+
 /**
  * 何度かリトライするfetch。
  * 成功した場合はそのままResponseを返す。
