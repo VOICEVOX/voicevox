@@ -36,17 +36,8 @@ type AllEngineState =
  * @example
  * ```ts
  * type Hoge =
- *  | {
- *      type: "type1";
- *    }
- *  | {
- *      type: "type2";
- *      field1: string;
- *    }
- *  | {
- *      type: "type3";
- *      field2: string;
- *    };
+ *  | { type: "type1" }
+ *  | { type: "type2"; field: string };
  *
  * type Result = MergeToTarget<
  *   Hoge,
@@ -56,18 +47,8 @@ type AllEngineState =
  *
  * // Resultは以下の型になる
  * type Result =
- *  | {
- *      type: "type1";
- *    }
- *  | {
- *      type: "type2";
- *      field1: string;
- *      newField: string; // TAddedがマージされている
- *    }
- *  | {
- *      type: "type3";
- *      field2: string;
- *    };
+ *  | { type: "type1" }
+ *  | { type: "type2"; field: string; newField: string }; // TAddedがマージされている
  * ```
  */
 type MergeToTarget<TUnion, TTarget, TAdded> = TUnion extends TTarget
