@@ -235,7 +235,7 @@ export class EngineAndVvppController {
   }
 
   /**
-   * アプリに埋め込まれた指定したエンジンの定義情報を取得する。
+   * アプリに埋め込まれたエンジンの定義情報を取得する。
    */
   getEnginePackageEmbeddedInfo(engineId: EngineId): EnginePackageEmbeddedInfo {
     const envEngineInfo = this.getDownloadableEnvEngineInfos().find(
@@ -252,7 +252,7 @@ export class EngineAndVvppController {
   }
 
   /**
-   * オフラインで指定したエンジンのインストール状況を取得する。
+   * オフラインでエンジンのインストール状況を取得する。
    */
   getEnginePackageCurrentInfo(engineId: EngineId): EnginePackageCurrentInfo {
     const envEngineInfo = this.getDownloadableEnvEngineInfos().find(
@@ -267,7 +267,7 @@ export class EngineAndVvppController {
   }
 
   /**
-   * オンラインで指定したエンジンの最新パッケージ情報を取得する。
+   * オンラインでエンジンの最新パッケージ情報を取得する。
    */
   async fetchEnginePackageLatestInfo(
     engineId: EngineId,
