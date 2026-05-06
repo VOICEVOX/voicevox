@@ -82,6 +82,7 @@ let stage: PIXI.Container | undefined;
 let graphic: PIXI.Graphics | undefined;
 let requestId: number | undefined;
 let renderInNextFrame = false;
+let isUnmounted = false;
 
 const render = () => {
   assertNonNullable(renderer);
@@ -193,7 +194,7 @@ watch(
   },
 );
 
-onMounted(() => {
+onMounted(async () => {
   const canvasContainerElement = canvasContainer.value;
   const canvasElement = canvas.value;
   assertNonNullable(canvasContainerElement);
@@ -202,8 +203,8 @@ onMounted(() => {
   canvasWidth = canvasContainerElement.clientWidth;
   canvasHeight = canvasContainerElement.clientHeight;
 
-  renderer = new PIXI.Renderer({
-    view: canvasElement,
+  renderer = await PIXI.autoDetectRenderer({
+    canvas: canvasElement,
     backgroundAlpha: 0,
     antialias: true,
     resolution: window.devicePixelRatio || 1,
@@ -211,6 +212,10 @@ onMounted(() => {
     width: canvasWidth,
     height: canvasHeight,
   });
+  if (isUnmounted) {
+    renderer.destroy({ removeView: true });
+    return;
+  }
   stage = new PIXI.Container();
 
   const callback = () => {
@@ -239,6 +244,7 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+  isUnmounted = true;
   if (requestId != undefined) {
     window.cancelAnimationFrame(requestId);
   }
@@ -247,7 +253,7 @@ onUnmounted(() => {
     graphic.destroy();
   }
   stage?.destroy();
-  renderer?.destroy(true);
+  renderer?.destroy({ removeView: true });
   resizeObserver?.disconnect();
 });
 </script>
