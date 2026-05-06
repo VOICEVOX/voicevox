@@ -214,7 +214,8 @@ function createWelcomeStore() {
   const loadEngineEmbeddedInfos = async () => {
     allEngineState.value = { type: "loading" };
 
-    const engineIds = await window.welcomeBackend.getEnginePackageIds();
+    const engineIds =
+      await window.welcomeBackend.getDownloadableDefaultEnginePackageIds();
     const engineStates: Record<EngineId, EngineState> = {};
     await Promise.all(
       engineIds.map(async (engineId) => {

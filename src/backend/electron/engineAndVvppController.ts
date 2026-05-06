@@ -211,7 +211,7 @@ export class EngineAndVvppController {
    * デフォルトエンジンがインストール済みかどうかを確認する。
    */
   hasInstalledDefaultEngine(): boolean {
-    return this.getEnginePackageIds().some(
+    return this.getDownloadableDefaultEnginePackageIds().some(
       (engineId) =>
         this.getEnginePackageCurrentInfo(engineId).status !== "notInstalled",
     );
@@ -226,9 +226,9 @@ export class EngineAndVvppController {
   }
 
   /**
-   * デフォルトエンジンのIDを取得する。
+   * ダウンロード式のデフォルトエンジンのIDを取得する。
    */
-  getEnginePackageIds(): EngineId[] {
+  getDownloadableDefaultEnginePackageIds(): EngineId[] {
     return this.getDownloadableEnvEngineInfos().map(
       (envEngineInfo) => envEngineInfo.uuid,
     );

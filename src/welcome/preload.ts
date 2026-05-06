@@ -36,8 +36,8 @@ const api: WelcomeSandbox = {
   installEngine: (obj) => {
     return ipcRendererInvokeProxy.INSTALL_ENGINE(obj);
   },
-  getEnginePackageIds: () => {
-    return ipcRendererInvokeProxy.GET_ENGINE_PACKAGE_IDS();
+  getDownloadableDefaultEnginePackageIds: () => {
+    return ipcRendererInvokeProxy.GET_DOWNLOADABLE_DEFAULT_ENGINE_PACKAGE_IDS();
   },
   getEnginePackageEmbeddedInfo: (engineId) => {
     return ipcRendererInvokeProxy.GET_ENGINE_PACKAGE_EMBEDDED_INFO({

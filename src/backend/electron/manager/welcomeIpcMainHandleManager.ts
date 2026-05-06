@@ -57,8 +57,8 @@ class WelcomeIpcMainHandleManager {
           },
         );
       },
-      GET_ENGINE_PACKAGE_IDS: () => {
-        return engineAndVvppController.getEnginePackageIds();
+      GET_DOWNLOADABLE_DEFAULT_ENGINE_PACKAGE_IDS: () => {
+        return engineAndVvppController.getDownloadableDefaultEnginePackageIds();
       },
       GET_ENGINE_PACKAGE_EMBEDDED_INFO: (_, obj) => {
         return engineAndVvppController.getEnginePackageEmbeddedInfo(

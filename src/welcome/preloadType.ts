@@ -11,7 +11,7 @@ export interface WelcomeSandbox {
     engineId: EngineId;
     target: RuntimeTarget;
   }): Promise<void>;
-  getEnginePackageIds(): Promise<EngineId[]>;
+  getDownloadableDefaultEnginePackageIds(): Promise<EngineId[]>;
   getEnginePackageEmbeddedInfo(
     engineId: EngineId,
   ): Promise<EnginePackageEmbeddedInfo>;

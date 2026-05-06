@@ -19,7 +19,7 @@ export type WelcomeIpcIHData = {
     ];
     return: void;
   };
-  GET_ENGINE_PACKAGE_IDS: {
+  GET_DOWNLOADABLE_DEFAULT_ENGINE_PACKAGE_IDS: {
     args: [];
     return: EngineId[];
   };
