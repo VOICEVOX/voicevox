@@ -179,7 +179,7 @@ function createWelcomeStore() {
     engineState.latestInfo.selectedRuntimeTarget = target;
   };
 
-  const getEngineInfo = (engineId: EngineId) => {
+  const getEngineState = (engineId: EngineId) => {
     if (allEngineState.value.type !== "loaded") {
       throw new UnreachableError();
     }
@@ -326,7 +326,7 @@ function createWelcomeStore() {
     launchEditorState,
     getSelectedRuntimeTarget,
     setSelectedRuntimeTarget,
-    getEngineInfo,
+    getEngineState,
     getEngineProgress,
     fetchEngineLatestInfo,
     installEngine,
