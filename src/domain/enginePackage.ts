@@ -18,7 +18,7 @@ export type EnginePackageLatestInfo = {
   availableRuntimeTargets: RuntimeTargetInfo[];
 };
 
-export type RuntimeTargetInfo = {
+type RuntimeTargetInfo = {
   target: RuntimeTarget;
   packageInfo: PackageInfo;
 };

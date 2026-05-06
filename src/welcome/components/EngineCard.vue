@@ -77,7 +77,7 @@ import { sizeToHumanReadable } from "@/helpers/sizeHelper";
 import { assertNonNullable, ExhaustiveError } from "@/type/utility";
 import type { EngineId } from "@/type/preload";
 import { useStore } from "@/welcome/store";
-import type { RuntimeTargetInfo } from "@/domain/enginePackage";
+import type { EnginePackageLatestInfo } from "@/domain/enginePackage";
 
 const props = defineProps<{
   engineId: EngineId;
@@ -93,7 +93,7 @@ const selectedRuntimeTarget = computed(() =>
 const progressInfo = computed(() => store.getEngineProgress(props.engineId));
 
 function findSelectedPackageInfo(
-  availableRuntimeTargets: RuntimeTargetInfo[],
+  availableRuntimeTargets: EnginePackageLatestInfo["availableRuntimeTargets"],
   selected: RuntimeTarget,
 ) {
   const targetInfo = availableRuntimeTargets.find(

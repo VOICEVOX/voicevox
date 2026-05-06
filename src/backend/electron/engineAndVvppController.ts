@@ -21,7 +21,6 @@ import type {
   EnginePackageEmbeddedInfo,
   EnginePackageCurrentInfo,
   EnginePackageLatestInfo,
-  RuntimeTargetInfo,
 } from "@/domain/enginePackage";
 import type { ProgressCallback } from "@/helpers/progressHelper";
 import { createLogger } from "@/helpers/log";
@@ -289,17 +288,16 @@ export class EngineAndVvppController {
       );
     }
 
-    const availableRuntimeTargets: RuntimeTargetInfo[] = Object.entries(
-      latestInfo.packages,
-    )
-      .map(([target, packageInfo]) => ({ target, packageInfo }))
-      .filter((runtimeTargetInfo) =>
-        isSupportedTarget(runtimeTargetInfo.target),
-      )
-      .toSorted(
-        (a, b) =>
-          a.packageInfo.displayInfo.order - b.packageInfo.displayInfo.order,
-      );
+    const availableRuntimeTargets: EnginePackageLatestInfo["availableRuntimeTargets"] =
+      Object.entries(latestInfo.packages)
+        .map(([target, packageInfo]) => ({ target, packageInfo }))
+        .filter((runtimeTargetInfo) =>
+          isSupportedTarget(runtimeTargetInfo.target),
+        )
+        .toSorted(
+          (a, b) =>
+            a.packageInfo.displayInfo.order - b.packageInfo.displayInfo.order,
+        );
 
     if (availableRuntimeTargets.length === 0) {
       throw new Error(
