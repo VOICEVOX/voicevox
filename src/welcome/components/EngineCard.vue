@@ -16,7 +16,10 @@
         インストール済み：{{ engineState.currentInfo.installedVersion }}
       </div>
     </div>
-    <div v-if="progressInfo.type !== 'idle'" class="engine-progress">
+    <div
+      v-if="progressInfo.type === 'download' || progressInfo.type === 'install'"
+      class="engine-progress"
+    >
       <div class="engine-progress-label">
         {{ progressInfo.type === "download" ? "ダウンロード" : "インストール" }}
       </div>
@@ -76,7 +79,7 @@ import type { RuntimeTarget } from "@/domain/defaultEngine/latestDefaultEngine";
 import { sizeToHumanReadable } from "@/helpers/sizeHelper";
 import { assertNonNullable, ExhaustiveError } from "@/type/utility";
 import type { EngineId } from "@/type/preload";
-import { useStore } from "@/welcome/store";
+import { useStore, type EngineProgressInfo } from "@/welcome/store";
 import type { EnginePackageLatestInfo } from "@/domain/enginePackage";
 
 const props = defineProps<{
@@ -90,7 +93,17 @@ const latestInfo = computed(() => engineState.value.latestInfo);
 const selectedRuntimeTarget = computed(() =>
   store.getSelectedRuntimeTarget(props.engineId),
 );
-const progressInfo = computed(() => store.getEngineProgress(props.engineId));
+const progressInfo = computed<
+  | EngineProgressInfo
+  | {
+      type: "unavailable";
+    }
+>(() => {
+  if (engineState.value.latestInfo.type !== "fetched") {
+    return { type: "unavailable" };
+  }
+  return store.getEngineProgress(props.engineId);
+});
 
 function findSelectedPackageInfo(
   availableRuntimeTargets: EnginePackageLatestInfo["availableRuntimeTargets"],

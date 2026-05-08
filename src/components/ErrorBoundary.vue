@@ -4,9 +4,16 @@
 
 <script setup lang="ts">
 import { onErrorCaptured, onMounted } from "vue";
+import { UnreachableError } from "@/type/utility";
 
 const logError = (error: Error): void => {
-  window.backend.logError(error);
+  if (window.backend) {
+    window.backend.logError(error);
+  } else if (window.welcomeBackend) {
+    window.welcomeBackend.logError(error);
+  } else {
+    throw new UnreachableError();
+  }
 };
 
 onMounted(() => {

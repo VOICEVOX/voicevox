@@ -1,5 +1,6 @@
 import type { Logger } from "electron-log";
 import { isElectron, isNode } from "@/helpers/platform";
+import { UnreachableError } from "@/type/utility";
 
 type LogLevel = "info" | "warn" | "error";
 type LogFunction = (...args: unknown[]) => void;
@@ -22,12 +23,24 @@ export function createLogger(scope: string): Record<LogLevel, LogFunction> {
       const scopeAndArgs = [`[${scope}]`, ...args];
 
       // フロントエンドの場合
-      if (typeof window != "undefined" && window.backend != undefined) {
-        const method = (
-          { info: "logInfo", warn: "logWarn", error: "logError" } as const
-        )[logType];
-        window.backend[method](...scopeAndArgs);
-        return;
+      if (typeof window != "undefined") {
+        if (window.backend != undefined) {
+          const method = (
+            { info: "logInfo", warn: "logWarn", error: "logError" } as const
+          )[logType];
+          window.backend[method](...scopeAndArgs);
+          return;
+        } else if (window.welcomeBackend != undefined) {
+          const method = (
+            { info: "logInfo", warn: "logWarn", error: "logError" } as const
+          )[logType];
+          window.welcomeBackend[method](...scopeAndArgs);
+          return;
+        } else {
+          throw new UnreachableError(
+            "Neither window.backend nor window.welcomeBackend is available",
+          );
+        }
       }
 
       // Electronのメインプロセスの場合
