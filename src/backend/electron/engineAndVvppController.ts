@@ -207,7 +207,7 @@ export class EngineAndVvppController {
   }
 
   /**
-   * デフォルトエンジンがインストール済みかどうかを確認する。
+   * ダウンロード式のデフォルトエンジンがインストール済みかどうかを確認する。
    */
   hasInstalledDefaultEngine(): boolean {
     return this.getDownloadableDefaultEnginePackageIds().some(
