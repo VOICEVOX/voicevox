@@ -36,6 +36,8 @@ export function createLogger(scope: string): Record<LogLevel, LogFunction> {
           window.welcomeBackend[method](...scopeAndArgs);
           return;
         }
+
+        // NOTE: Vitestのテスト環境ではwindowが存在するが、window.backendもwindow.welcomeBackendも存在しないため、UnreachableErrorにはしない
       }
 
       // Electronのメインプロセスの場合
