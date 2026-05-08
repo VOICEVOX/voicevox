@@ -36,10 +36,6 @@ export function createLogger(scope: string): Record<LogLevel, LogFunction> {
           )[logType];
           window.welcomeBackend[method](...scopeAndArgs);
           return;
-        } else {
-          throw new UnreachableError(
-            "Neither window.backend nor window.welcomeBackend is available",
-          );
         }
       }
 
