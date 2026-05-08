@@ -1,5 +1,6 @@
 import type { Logger } from "electron-log";
 import { isElectron, isNode } from "@/helpers/platform";
+import { UnreachableError } from "@/type/utility";
 
 type LogLevel = "info" | "warn" | "error";
 type LogFunction = (...args: unknown[]) => void;
@@ -20,6 +21,12 @@ export function createLogger(scope: string): Record<LogLevel, LogFunction> {
   function createLogFunction(logType: LogLevel): LogFunction {
     return (...args: unknown[]) => {
       const scopeAndArgs = [`[${scope}]`, ...args];
+      if (import.meta.env.MODE === "test") {
+        // テスト環境の場合は常にconsoleに出力する
+        // eslint-disable-next-line no-console
+        console[logType](...scopeAndArgs);
+        return;
+      }
 
       // フロントエンドの場合
       if (typeof window != "undefined") {
@@ -37,7 +44,7 @@ export function createLogger(scope: string): Record<LogLevel, LogFunction> {
           return;
         }
 
-        // NOTE: Vitestのテスト環境ではwindowが存在するが、window.backendもwindow.welcomeBackendも存在しないため、UnreachableErrorにはしない
+        throw new UnreachableError();
       }
 
       // Electronのメインプロセスの場合

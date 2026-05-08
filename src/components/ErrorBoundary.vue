@@ -4,38 +4,34 @@
 
 <script setup lang="ts">
 import { onErrorCaptured, onMounted } from "vue";
-import { UnreachableError } from "@/type/utility";
+import { createLogger } from "@/helpers/log";
 
-const logError = (error: Error): void => {
-  if (window.backend) {
-    window.backend.logError(error);
-  } else if (window.welcomeBackend) {
-    window.welcomeBackend.logError(error);
-  } else {
-    throw new UnreachableError();
-  }
-};
+const logger = createLogger("ErrorBoundary");
 
 onMounted(() => {
   // FIXME: Promiseのエラーハンドリングもっと考える
   const handlePromiseRejectionEvent = (event: PromiseRejectionEvent) => {
     if (event.reason instanceof Error) {
-      logError(event.reason);
+      logger.error(event.reason);
     } else if (event.reason instanceof Response) {
-      logError(new Error(`HTTP ${event.reason.status} at ${event.reason.url}`));
+      logger.error(
+        new Error(`HTTP ${event.reason.status} at ${event.reason.url}`),
+      );
     } else {
-      logError(new Error(event.reason));
+      logger.error(new Error(event.reason));
     }
   };
   window.addEventListener("error", (event: ErrorEvent) => {
-    logError(event.error);
+    logger.error(event.error);
   });
   window.addEventListener("unhandledrejection", handlePromiseRejectionEvent);
   window.addEventListener("rejectionhandled", handlePromiseRejectionEvent);
 });
 
 onErrorCaptured((error) => {
-  if (error instanceof Error) logError(error);
+  if (error instanceof Error) {
+    logger.error(error);
+  }
   return false;
 });
 </script>
