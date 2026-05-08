@@ -1,6 +1,5 @@
 import type { Logger } from "electron-log";
 import { isElectron, isNode } from "@/helpers/platform";
-import { UnreachableError } from "@/type/utility";
 
 type LogLevel = "info" | "warn" | "error";
 type LogFunction = (...args: unknown[]) => void;
