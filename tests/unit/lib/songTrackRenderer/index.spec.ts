@@ -424,14 +424,10 @@ describe("SongTrackRenderer", () => {
             value.type === "phraseRenderingStarted" &&
             getOrThrow(phraseInfos, value.phraseKey).trackId === trackId,
         );
-        if (track.singer == undefined) {
-          // シンガーが未設定のトラックのフレーズはレンダリングされないはず
-          // eslint-disable-next-line vitest/no-conditional-expect
-          expect(phraseRenderingStartedEventInfos.length).toEqual(0);
-        } else {
-          // シンガーが設定されているトラックのフレーズはレンダリングされるはず
-          // eslint-disable-next-line vitest/no-conditional-expect
-          expect(phraseRenderingStartedEventInfos.length).toEqual(3);
+        // シンガーが未設定のトラックはレンダリングされない（0回）
+        // シンガーが設定されているトラックはレンダリングされる（3回）
+        const expectedCount = track.singer == undefined ? 0 : 3;
+        expect(phraseRenderingStartedEventInfos.length).toEqual(expectedCount);
         }
       }
     },
