@@ -3,6 +3,7 @@ import {
   type ChildProcess,
   type ChildProcessWithoutNullStreams,
 } from "node:child_process";
+import * as fs from "node:fs";
 import path from "node:path";
 import treeKill from "tree-kill";
 
@@ -20,6 +21,40 @@ import { getConfigManager } from "../electronConfig";
 import { getEngineInfoManager } from "./engineInfoManager";
 import { EngineId, type EngineInfo } from "@/type/preload";
 import { createLogger } from "@/helpers/log";
+
+function resolveEnvVarPath(inputPath: string): string {
+    if (!inputPath) return inputPath;
+    
+    let pathToProcess = inputPath;
+    
+    // 如果路径中包含 %LOCALAPPDATA% 但前面有项目路径，截取正确部分
+    if (pathToProcess.includes('%LOCALAPPDATA%')) {
+        const envVarIndex = pathToProcess.indexOf('%LOCALAPPDATA%');
+        if (envVarIndex > 0) {
+            pathToProcess = pathToProcess.substring(envVarIndex);
+            console.warn(`Removed project path prefix: "${inputPath}" -> "${pathToProcess}"`);
+        }
+    }
+    
+    // 如果有多个盘符，取最后一个
+    const driveMatches = pathToProcess.match(/[A-Za-z]:\\.+?(?=[A-Za-z]:|$)/g);
+    if (driveMatches && driveMatches.length > 1) {
+        pathToProcess = driveMatches[driveMatches.length - 1];
+        console.warn(`Multiple drive letters detected, using: "${pathToProcess}"`);
+    }
+    
+    // 展开环境变量
+    const resolved = pathToProcess.replace(/%([^%]+)%/g, (_, envVarName) => {
+        const envValue = process.env[envVarName];
+        if (!envValue) {
+            console.warn(`Environment variable "${envVarName}" not found, keeping as-is`);
+            return `%${envVarName}%`;
+        }
+        return envValue;
+    });
+    
+    return resolved;
+}
 
 const log = createLogger("EngineProcessManager");
 
@@ -154,7 +189,14 @@ export class EngineProcessManager {
     log.info(`ENGINE ${engineId} mode: ${useGpu ? "GPU" : "CPU"}`);
 
     // エンジンプロセスの起動
-    const enginePath = engineInfo.executionFilePath;
+    let enginePath = engineInfo.executionFilePath;
+    enginePath = resolveEnvVarPath(enginePath);
+    
+    // 验证路径是否存在
+    if (!fs.existsSync(enginePath)) {
+        log.error(`ENGINE ${engineId}: Path does not exist: ${enginePath}`);
+        throw new Error(`Engine path not found: ${enginePath}`);
+    }
     const args = engineInfo.executionArgs.concat(useGpu ? ["--use_gpu"] : [], [
       "--host",
       engineHostInfo.hostname,
