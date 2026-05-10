@@ -428,7 +428,6 @@ describe("SongTrackRenderer", () => {
         // シンガーが設定されているトラックはレンダリングされる（3回）
         const expectedCount = track.singer == undefined ? 0 : 3;
         expect(phraseRenderingStartedEventInfos.length).toEqual(expectedCount);
-        }
       }
     },
   );
