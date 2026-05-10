@@ -27,7 +27,7 @@ function resolveEnvVarPath(inputPath: string): string {
 
   let pathToProcess = inputPath;
 
-  // 如果路径中包含 %LOCALAPPDATA% 但前面有项目路径，截取正确部分
+  // パスに %LOCALAPPDATA% が含まれている場合、その前にプロジェクトのパスがある場合は、正しい部分を切り取る。
   if (pathToProcess.includes("%LOCALAPPDATA%")) {
     const envVarIndex = pathToProcess.indexOf("%LOCALAPPDATA%");
     if (envVarIndex > 0) {
@@ -38,14 +38,14 @@ function resolveEnvVarPath(inputPath: string): string {
     }
   }
 
-  // 如果有多个盘符，取最后一个
+  // 複数のドライブがある場合は、最後のものを取得する。
   const driveMatches = pathToProcess.match(/[A-Za-z]:\\.+?(?=[A-Za-z]:|$)/g);
   if (driveMatches && driveMatches.length > 1) {
     pathToProcess = driveMatches[driveMatches.length - 1];
     log.warn(`Multiple drive letters detected, using: "${pathToProcess}"`);
   }
 
-  // 展开环境变量
+  // 環境変数を展開する。
   const resolved = pathToProcess.replace(
     /%([^%]+)%/g,
     (match: string, envVarName: string) => {
