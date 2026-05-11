@@ -3,7 +3,6 @@ import {
   type ChildProcess,
   type ChildProcessWithoutNullStreams,
 } from "node:child_process";
-import * as fs from "node:fs";
 import path from "node:path";
 import treeKill from "tree-kill";
 
@@ -21,47 +20,6 @@ import { getConfigManager } from "../electronConfig";
 import { getEngineInfoManager } from "./engineInfoManager";
 import { EngineId, type EngineInfo } from "@/type/preload";
 import { createLogger } from "@/helpers/log";
-
-function resolveEnvVarPath(inputPath: string): string {
-  if (!inputPath) return inputPath;
-
-  let pathToProcess = inputPath;
-
-  // パスに %LOCALAPPDATA% が含まれている場合、その前にプロジェクトのパスがある場合は、正しい部分を切り取る。
-  if (pathToProcess.includes("%LOCALAPPDATA%")) {
-    const envVarIndex = pathToProcess.indexOf("%LOCALAPPDATA%");
-    if (envVarIndex > 0) {
-      pathToProcess = pathToProcess.substring(envVarIndex);
-      log.warn(
-        `Removed project path prefix: "${inputPath}" -> "${pathToProcess}"`,
-      );
-    }
-  }
-
-  // 複数のドライブがある場合は、最後のものを取得する。
-  const driveMatches = pathToProcess.match(/[A-Za-z]:\\.+?(?=[A-Za-z]:|$)/g);
-  if (driveMatches && driveMatches.length > 1) {
-    pathToProcess = driveMatches[driveMatches.length - 1];
-    log.warn(`Multiple drive letters detected, using: "${pathToProcess}"`);
-  }
-
-  // 環境変数を展開する。
-  const resolved = pathToProcess.replace(
-    /%([^%]+)%/g,
-    (match: string, envVarName: string) => {
-      const envValue = process.env[envVarName];
-      if (!envValue) {
-        log.warn(
-          `Environment variable "${envVarName}" not found, keeping as-is`,
-        );
-        return `%${envVarName}%`;
-      }
-      return envValue;
-    },
-  );
-
-  return resolved;
-}
 
 const log = createLogger("EngineProcessManager");
 
@@ -196,16 +154,7 @@ export class EngineProcessManager {
     log.info(`ENGINE ${engineId} mode: ${useGpu ? "GPU" : "CPU"}`);
 
     // エンジンプロセスの起動
-    let enginePath = engineInfo.executionFilePath;
-    enginePath = resolveEnvVarPath(enginePath);
-
-    if (!fs.existsSync(enginePath)) {
-      const errorMsg = `Engine executable not found: ${enginePath}\nPlease check your engine configuration.`;
-      log.error(`ENGINE ${engineId}: ${errorMsg}`);
-      this.onEngineProcessError(engineInfo, new Error(errorMsg));
-      return;
-    }
-
+    const enginePath = engineInfo.executionFilePath;
     const args = engineInfo.executionArgs.concat(useGpu ? ["--use_gpu"] : [], [
       "--host",
       engineHostInfo.hostname,
