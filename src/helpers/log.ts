@@ -44,7 +44,10 @@ export function createLogger(scope: string): Record<LogLevel, LogFunction> {
           return;
         }
 
-        throw new UnreachableError();
+        // Storybookなどの環境では、window.backendやwindow.welcomeBackendが存在しないため、通常のconsoleを使用する
+        // eslint-disable-next-line no-console
+        console[logType](...scopeAndArgs);
+        return;
       }
 
       // Electronのメインプロセスの場合
@@ -57,11 +60,13 @@ export function createLogger(scope: string): Record<LogLevel, LogFunction> {
         void electronLogPromise.then((log) => {
           log[logType](...scopeAndArgs);
         });
+
+        // eslint-disable-next-line no-console
+        console[logType](...scopeAndArgs);
         return;
       }
 
-      // eslint-disable-next-line no-console
-      console[logType](...scopeAndArgs);
+      throw new UnreachableError();
     };
   }
 }
