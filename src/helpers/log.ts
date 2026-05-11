@@ -21,8 +21,8 @@ export function createLogger(scope: string): Record<LogLevel, LogFunction> {
   function createLogFunction(logType: LogLevel): LogFunction {
     return (...args: unknown[]) => {
       const scopeAndArgs = [`[${scope}]`, ...args];
+      // テスト環境の場合
       if (import.meta.env.MODE === "test") {
-        // テスト環境の場合は常にconsoleに出力する
         // eslint-disable-next-line no-console
         console[logType](...scopeAndArgs);
         return;
