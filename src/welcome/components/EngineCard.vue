@@ -93,17 +93,9 @@ const latestInfo = computed(() => engineState.value.latestInfo);
 const selectedRuntimeTarget = computed(() =>
   store.getSelectedRuntimeTarget(props.engineId),
 );
-const progressInfo = computed<
-  | EngineProgressInfo
-  | {
-      type: "unavailable";
-    }
->(() => {
-  if (engineState.value.latestInfo.type !== "fetched") {
-    return { type: "unavailable" };
-  }
-  return store.getEngineProgress(props.engineId);
-});
+const progressInfo = computed<EngineProgressInfo>(() =>
+  store.getEngineProgress(props.engineId),
+);
 
 function findSelectedPackageInfo(
   availableRuntimeTargets: EnginePackageLatestInfo["availableRuntimeTargets"],

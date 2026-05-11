@@ -57,7 +57,7 @@ type MergeToTarget<TUnion, TTarget, TAdded> = TUnion extends TTarget
 
 export type EngineProgressInfo =
   | {
-      type: "idle";
+      type: "idle" | "unavailable";
     }
   | {
       progress: number;
@@ -167,13 +167,13 @@ function createWelcomeStore() {
     return allEngineState.value.engineStates[engineId];
   };
 
-  const getEngineProgress = (engineId: EngineId) => {
+  const getEngineProgress = (engineId: EngineId): EngineProgressInfo => {
     if (allEngineState.value.type !== "loaded") {
-      throw new UnreachableError();
+      return { type: "unavailable" };
     }
     const engineState = allEngineState.value.engineStates[engineId];
     if (engineState.latestInfo.type !== "fetched") {
-      throw new UnreachableError();
+      return { type: "unavailable" };
     }
     return engineState.latestInfo.progress;
   };
