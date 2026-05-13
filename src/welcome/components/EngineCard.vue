@@ -37,7 +37,7 @@
       <div class="engine-target-select">
         <BaseSelect
           v-if="latestInfo.type === 'fetched'"
-          :disabled="progressInfo.type !== 'idle'"
+          :disabled="isControlDisabled"
           :modelValue="selectedRuntimeTarget"
           @update:modelValue="handleRuntimeTargetChange"
         >
@@ -170,6 +170,10 @@ const currentEngineStatus = computed<{
     actionLabel: `再インストール（${humanReadableSize}）`,
     color: "default",
   };
+});
+
+const isControlDisabled = computed(() => {
+  return progressInfo.value.type !== "idle";
 });
 
 const handleRuntimeTargetChange = (value: RuntimeTarget | undefined) => {
