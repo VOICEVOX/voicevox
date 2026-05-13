@@ -232,23 +232,11 @@ export type IpcIHData = {
     return: Result<Uint8Array>;
   };
 
-  FETCH_ENGINE_PACKAGE_LOCAL_INFOS: {
+  GET_DOWNLOADABLE_DEFAULT_ENGINE_PACKAGE_IDS: {
     args: [];
-    return: EnginePackageCurrentInfo[];
+    return: EngineId[];
   };
 };
-
-/**
- * `BaseIpcData` の目的
- *
- * - 汎用的な IPC 型マップを表すための薄い wrapper 型です。
- * - 本リポジトリでは主に `ipc.ts` のジェネリクス境界として使用されます。
- * - もし `BaseIpcData` が特定のモジュールからしか参照されない場合は、将来的にそのモジュール内で限定的に定義することを検討してください。
- *
- * 注意:
- * - 具体的なチャネル定義（`IpcIHData` / `IpcSOData`）を上書きして使用してください。
- */
-export type BaseIpcData = Record<string, { args: unknown[]; return: unknown }>;
 
 /**
  * 使用例（簡易）:

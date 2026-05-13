@@ -393,8 +393,8 @@ class IpcMainHandleManager {
         }
       },
 
-      FETCH_ENGINE_PACKAGE_LOCAL_INFOS: () => {
-        return engineAndVvppController.getEnginePackageLocalInfos();
+      GET_DOWNLOADABLE_DEFAULT_ENGINE_PACKAGE_IDS: () => {
+        return engineAndVvppController.getDownloadableDefaultEnginePackageIds();
       },
     };
   }

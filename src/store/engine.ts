@@ -9,7 +9,7 @@ export const engineStoreState: EngineStoreState = {
   engineStates: {},
   engineSupportedDevices: {},
   altPortInfos: {},
-  enginePackageLocalInfos: [],
+  hasDownloadableDefaultEngine: false,
 };
 const { info, error } = createLogger("store/engine");
 
@@ -21,6 +21,11 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
   PULL_AND_INIT_ENGINE_INFOS: {
     async action({ state, mutations }) {
       let engineInfos = await window.backend.engineInfos();
+      mutations.SET_HAS_DOWNLOADABLE_DEFAULT_ENGINE({
+        hasDownloadableDefaultEngine: await window.backend
+          .getDownloadableDefaultEnginePackageIds()
+          .then((ids) => ids.length > 0),
+      });
 
       // マルチエンジンオフモード時はデフォルトエンジンだけにする。
       if (state.isMultiEngineOffMode) {
@@ -32,6 +37,12 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
         engineIds,
         engineInfos,
       });
+    },
+  },
+
+  SET_HAS_DOWNLOADABLE_DEFAULT_ENGINE: {
+    mutation(state, { hasDownloadableDefaultEngine }) {
+      state.hasDownloadableDefaultEngine = hasDownloadableDefaultEngine;
     },
   },
 
@@ -53,20 +64,6 @@ export const engineStore = createPartialStore<EngineStoreTypes>({
           });
         }
       }
-    },
-  },
-
-  PULL_ENGINE_PACKAGE_LOCAL_INFOS: {
-    async action({ mutations }) {
-      const enginePackageLocalInfos =
-        await window.backend.fetchEnginePackageLocalInfos();
-      mutations.SET_ENGINE_PACKAGE_LOCAL_INFOS({ enginePackageLocalInfos });
-    },
-  },
-
-  SET_ENGINE_PACKAGE_LOCAL_INFOS: {
-    mutation(state, { enginePackageLocalInfos }) {
-      state.enginePackageLocalInfos = enginePackageLocalInfos;
     },
   },
 

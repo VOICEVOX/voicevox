@@ -71,6 +71,7 @@ import type {
 } from "@/sing/utaformatixProject/utils";
 import type {
   Note,
+  PhonemeTimingEdit,
   Singer,
   Tempo,
   TimeSignature,
@@ -1028,6 +1029,14 @@ export type SingingStoreTypes = {
     action(payload: { noteId?: NoteId }): void;
   };
 
+  UPSERT_PHONEME_TIMING_EDIT: {
+    mutation: {
+      noteId: NoteId;
+      phonemeTimingEdit: PhonemeTimingEdit;
+      trackId: TrackId;
+    };
+  };
+
   SET_PITCH_EDIT_DATA: {
     mutation: { pitchArray: number[]; startFrame: number; trackId: TrackId };
     action(payload: {
@@ -1044,6 +1053,13 @@ export type SingingStoreTypes = {
       startFrame: number;
       trackId: TrackId;
     }): void;
+  };
+
+  ERASE_PHONEME_TIMING_EDITS: {
+    mutation: {
+      targets: Array<{ noteId: NoteId; phonemeIndexInNote: number }>;
+      trackId: TrackId;
+    };
   };
 
   ERASE_PITCH_EDIT_DATA: {
@@ -1564,6 +1580,30 @@ export type SingingCommandStoreTypes = {
     action(): void;
   };
 
+  COMMAND_UPSERT_PHONEME_TIMING_EDIT: {
+    mutation: {
+      noteId: NoteId;
+      phonemeTimingEdit: PhonemeTimingEdit;
+      trackId: TrackId;
+    };
+    action(payload: {
+      noteId: NoteId;
+      phonemeTimingEdit: PhonemeTimingEdit;
+      trackId: TrackId;
+    }): void;
+  };
+
+  COMMAND_ERASE_PHONEME_TIMING_EDITS: {
+    mutation: {
+      targets: Array<{ noteId: NoteId; phonemeIndexInNote: number }>;
+      trackId: TrackId;
+    };
+    action(payload: {
+      targets: Array<{ noteId: NoteId; phonemeIndexInNote: number }>;
+      trackId: TrackId;
+    }): void;
+  };
+
   COMMAND_SET_PITCH_EDIT_DATA: {
     mutation: { pitchArray: number[]; startFrame: number; trackId: TrackId };
     action(payload: {
@@ -1728,7 +1768,7 @@ export type EngineStoreState = {
   engineStates: Record<EngineId, EngineState>;
   engineSupportedDevices: Record<EngineId, SupportedDevicesInfo>;
   altPortInfos: AltPortInfos;
-  enginePackageLocalInfos: EnginePackageCurrentInfo[];
+  hasDownloadableDefaultEngine: boolean;
 };
 
 export type EngineStoreTypes = {
@@ -1736,12 +1776,8 @@ export type EngineStoreTypes = {
     action(): void;
   };
 
-  PULL_ENGINE_PACKAGE_LOCAL_INFOS: {
-    action(): Promise<void>;
-  };
-
-  SET_ENGINE_PACKAGE_LOCAL_INFOS: {
-    mutation: { enginePackageLocalInfos: EnginePackageCurrentInfo[] };
+  SET_HAS_DOWNLOADABLE_DEFAULT_ENGINE: {
+    mutation: { hasDownloadableDefaultEngine: boolean };
   };
 
   SET_ENGINE_INFO: {

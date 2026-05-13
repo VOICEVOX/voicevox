@@ -1,5 +1,8 @@
-import type { EnginePackageCurrentInfo } from "@/type/preload";
-import type { EnginePackageLatestInfo } from "@/backend/electron/engineAndVvppController";
+import type {
+  EnginePackageEmbeddedInfo,
+  EnginePackageCurrentInfo,
+  EnginePackageLatestInfo,
+} from "@/domain/enginePackage";
 import type { EngineId } from "@/type/preload";
 import type { RuntimeTarget } from "@/domain/defaultEngine/latestDefaultEngine";
 
@@ -16,13 +19,21 @@ export type WelcomeIpcIHData = {
     ];
     return: void;
   };
-  FETCH_ENGINE_PACKAGE_LOCAL_INFOS: {
+  GET_DOWNLOADABLE_DEFAULT_ENGINE_PACKAGE_IDS: {
     args: [];
-    return: EnginePackageCurrentInfo[];
+    return: EngineId[];
   };
-  FETCH_LATEST_ENGINE_PACKAGE_REMOTE_INFOS: {
-    args: [];
-    return: EnginePackageLatestInfo[];
+  GET_ENGINE_PACKAGE_EMBEDDED_INFO: {
+    args: [obj: { engineId: EngineId }];
+    return: EnginePackageEmbeddedInfo;
+  };
+  GET_ENGINE_PACKAGE_CURRENT_INFO: {
+    args: [obj: { engineId: EngineId }];
+    return: EnginePackageCurrentInfo;
+  };
+  GET_ENGINE_PACKAGE_LATEST_INFO: {
+    args: [obj: { engineId: EngineId }];
+    return: EnginePackageLatestInfo;
   };
 
   GET_CURRENT_THEME: {

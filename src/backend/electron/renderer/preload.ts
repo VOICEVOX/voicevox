@@ -262,8 +262,8 @@ const api: Sandbox = {
     return webUtils.getPathForFile(file);
   },
 
-  fetchEnginePackageLocalInfos: () => {
-    return ipcRendererInvokeProxy.FETCH_ENGINE_PACKAGE_LOCAL_INFOS();
+  getDownloadableDefaultEnginePackageIds: async () => {
+    return ipcRendererInvokeProxy.GET_DOWNLOADABLE_DEFAULT_ENGINE_PACKAGE_IDS();
   },
 };
 

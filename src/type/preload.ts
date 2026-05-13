@@ -144,7 +144,7 @@ export interface Sandbox {
   validateEngineDir(engineDir: string): Promise<EngineDirValidationResult>;
   reloadApp(obj: { isMultiEngineOffMode?: boolean }): Promise<void>;
   getPathForFile(file: File): Promise<string>;
-  fetchEnginePackageLocalInfos(): Promise<EnginePackageCurrentInfo[]>;
+  getDownloadableDefaultEnginePackageIds(): Promise<EngineId[]>;
 }
 
 export type AppInfos = {
