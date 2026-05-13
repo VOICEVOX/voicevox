@@ -10,7 +10,7 @@ test("起動したら利用規約ダイアログと利用規約内容が表示�
     timeout: 90 * 1000,
   });
 
-  await test.step("利用規約の内容が表示されていることを確認", async () => {
+  await test.step("利用規約の内容が表示される", async () => {
     await expect(page.getByText("ダミー利用規約")).toBeVisible();
   });
 });
@@ -20,8 +20,9 @@ test("利用規約同意前に各種UIが無効になっている", async ({ pag
     timeout: 90 * 1000,
   });
 
-  // ソングボタン
-  const songButton = page.getByRole("toolbar").getByText("ソング");
-  await expect(songButton).toBeVisible();
-  await expect(songButton).toBeDisabled();
+  await test.step("ソングボタンが無効になっている", async () => {
+    const songButton = page.getByRole("toolbar").getByText("ソング");
+    await expect(songButton).toBeVisible();
+    await expect(songButton).toBeDisabled();
+  });
 });
