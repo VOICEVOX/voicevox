@@ -124,6 +124,7 @@ import {
   type PitchGenerationCompleteEvent,
   type QueryGenerationCompleteEvent,
   SongTrackRenderer,
+  type SongTrackRendererCache,
   type VoiceSynthesisCompleteEvent,
   type VolumeGenerationCompleteEvent,
 } from "@/sing/songTrackRendering";
@@ -1661,6 +1662,18 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
             throw new ExhaustiveError(event);
         }
       });
+    },
+  },
+
+  SET_SONG_TRACK_RENDERER_CACHE: {
+    async action({ actions }, { cache }: { cache: SongTrackRendererCache }) {
+      if (songTrackRenderer == undefined) {
+        void actions.CREATE_AND_SETUP_SONG_TRACK_RENDERER();
+        if (songTrackRenderer == undefined) {
+          throw new Error("songTrackRenderer is undefined.");
+        }
+      }
+      songTrackRenderer.setCache(cache);
     },
   },
 
