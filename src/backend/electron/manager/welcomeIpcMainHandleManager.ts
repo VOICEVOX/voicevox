@@ -19,15 +19,10 @@ class WelcomeIpcMainHandleManager {
     return {
       INSTALL_ENGINE: async (_, obj) => {
         const welcomeWindowManager = getWelcomeWindowManager();
-        const packageStatuses =
-          await engineAndVvppController.fetchLatestEnginePackageRemoteInfos();
-        const status = packageStatuses.find(
-          (s) => s.package.engineId === obj.engineId,
-        );
-        assertNonNullable(
-          status,
-          `Engine package status not found for engineId: ${obj.engineId}`,
-        );
+        const status =
+          await engineAndVvppController.fetchEnginePackageLatestInfo(
+            obj.engineId,
+          );
 
         // ダウンロードしてインストールする
         let lastUpdateTime = 0;
@@ -62,11 +57,23 @@ class WelcomeIpcMainHandleManager {
           },
         );
       },
-      FETCH_ENGINE_PACKAGE_LOCAL_INFOS: () => {
-        return engineAndVvppController.getEnginePackageLocalInfos();
+      GET_DOWNLOADABLE_DEFAULT_ENGINE_PACKAGE_IDS: () => {
+        return engineAndVvppController.getDownloadableDefaultEnginePackageIds();
       },
-      FETCH_LATEST_ENGINE_PACKAGE_REMOTE_INFOS: async () => {
-        return engineAndVvppController.fetchLatestEnginePackageRemoteInfos();
+      GET_ENGINE_PACKAGE_EMBEDDED_INFO: (_, obj) => {
+        return engineAndVvppController.getEnginePackageEmbeddedInfo(
+          obj.engineId,
+        );
+      },
+      GET_ENGINE_PACKAGE_CURRENT_INFO: (_, obj) => {
+        return engineAndVvppController.getEnginePackageCurrentInfo(
+          obj.engineId,
+        );
+      },
+      GET_ENGINE_PACKAGE_LATEST_INFO: async (_, obj) => {
+        return engineAndVvppController.fetchEnginePackageLatestInfo(
+          obj.engineId,
+        );
       },
       GET_CURRENT_THEME: async () => {
         return configManager.get("currentTheme");
