@@ -279,19 +279,6 @@ export type EngineInfo = {
   isDefault: boolean; // デフォルトエンジンかどうか
 };
 
-export type EnginePackageBase = {
-  engineName: string;
-  engineId: EngineId;
-};
-
-/** ローカルのパッケージインストール状況 */
-export type EnginePackageCurrentInfo = {
-  package: EnginePackageBase;
-  installed:
-    | { status: "notInstalled" }
-    | { status: "installed"; installedVersion: string };
-};
-
 export type Preset = {
   name: string;
   speedScale: number;

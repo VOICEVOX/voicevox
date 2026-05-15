@@ -37,7 +37,6 @@ import type {
   MorphingInfo,
   ActivePointScrollMode,
   EngineInfo,
-  EnginePackageCurrentInfo,
   ConfirmedTips,
   EngineDirValidationResult,
   EngineSettings,

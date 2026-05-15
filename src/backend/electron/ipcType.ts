@@ -3,7 +3,6 @@ import type {
   EngineDirValidationResult,
   EngineId,
   EngineInfo,
-  EnginePackageCurrentInfo,
   EngineSettingType,
   MessageBoxReturnValue,
   NativeThemeType,

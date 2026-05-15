@@ -17,8 +17,8 @@ export const useElectronMenuBarData = (
   const engineIcons = useEngineIcons(engineManifests);
   const enableMultiEngine = computed(() => store.state.enableMultiEngine);
 
-  const hasWelcomeSetupEngine = computed(() => {
-    return store.state.enginePackageLocalInfos.length > 0;
+  const hasDownloadableDefaultEngine = computed(() => {
+    return store.state.hasDownloadableDefaultEngine;
   });
 
   // 「エンジン」メニューのエンジン毎の項目
@@ -105,7 +105,7 @@ export const useElectronMenuBarData = (
           disableWhenUiLocked: false,
           disableWhileReloadingLock: true,
         },
-      hasWelcomeSetupEngine.value && {
+      hasDownloadableDefaultEngine.value && {
         type: "button",
         label: "エンジンのセットアップ",
         onClick: () => {
