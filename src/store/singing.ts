@@ -1,5 +1,5 @@
 import { ref } from "vue";
-import { createPartialStore } from "./vuex";
+import { createPartialStore, type StorePlugins } from "./vuex";
 import { createUILockAction } from "./ui";
 import {
   type SingingStoreState,
@@ -853,8 +853,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         withRelated,
         trackId,
       });
-
-      void actions.RENDER();
     },
   },
 
@@ -863,13 +861,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const track = getOrThrow(state.tracks, trackId);
       track.keyRangeAdjustment = keyRangeAdjustment;
     },
-    async action({ actions, mutations }, { keyRangeAdjustment, trackId }) {
+    async action({ mutations }, { keyRangeAdjustment, trackId }) {
       if (!isValidKeyRangeAdjustment(keyRangeAdjustment)) {
         throw new Error("The keyRangeAdjustment is invalid.");
       }
       mutations.SET_KEY_RANGE_ADJUSTMENT({ keyRangeAdjustment, trackId });
-
-      void actions.RENDER();
     },
   },
 
@@ -878,7 +874,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const track = getOrThrow(state.tracks, trackId);
       track.volumeRangeAdjustment = volumeRangeAdjustment;
     },
-    async action({ actions, mutations }, { volumeRangeAdjustment, trackId }) {
+    async action({ mutations }, { volumeRangeAdjustment, trackId }) {
       if (!isValidVolumeRangeAdjustment(volumeRangeAdjustment)) {
         throw new Error("The volumeRangeAdjustment is invalid.");
       }
@@ -886,8 +882,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         volumeRangeAdjustment,
         trackId,
       });
-
-      void actions.RENDER();
     },
   },
 
@@ -906,10 +900,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         await actions.SING_STOP_AUDIO();
       }
       mutations.SET_TPQN({ tpqn });
-
-      void actions.SYNC_LOOP_RANGE_TO_TRANSPORT();
-      void actions.SYNC_PLAYHEAD_POSITION_TO_TRANSPORT();
-      void actions.RENDER();
     },
   },
 
@@ -931,10 +921,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         await actions.SING_STOP_AUDIO();
       }
       mutations.SET_TEMPOS({ tempos });
-
-      void actions.SYNC_LOOP_RANGE_TO_TRANSPORT();
-      void actions.SYNC_PLAYHEAD_POSITION_TO_TRANSPORT();
-      void actions.RENDER();
     },
   },
 
@@ -1061,13 +1047,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const selectedTrack = getOrThrow(state.tracks, trackId);
       selectedTrack.notes = notes;
     },
-    async action({ mutations, actions }, { notes, trackId }) {
+    async action({ mutations }, { notes, trackId }) {
       if (!isValidNotes(notes)) {
         throw new Error("The notes are invalid.");
       }
       mutations.SET_NOTES({ notes, trackId });
-
-      void actions.RENDER();
     },
   },
 
@@ -1196,7 +1180,10 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         newEdits = [...existingEdits, phonemeTimingEdit];
         newEdits.sort((a, b) => a.phonemeIndexInNote - b.phonemeIndexInNote);
       }
-      targetTrack.phonemeTimingEditData.set(noteId, newEdits);
+      targetTrack.phonemeTimingEditData = new Map([
+        ...targetTrack.phonemeTimingEditData,
+        [noteId, newEdits],
+      ]);
     },
   },
 
@@ -1214,20 +1201,19 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
 
       // 各ノートの編集データを更新
+      const tempData = new Map(targetTrack.phonemeTimingEditData);
       for (const [noteId, phonemeIndexes] of targetsByNoteId) {
-        const currentEdits = getOrThrow(
-          targetTrack.phonemeTimingEditData,
-          noteId,
-        );
+        const currentEdits = getOrThrow(tempData, noteId);
         const newEdits = currentEdits.filter(
           (edit) => !phonemeIndexes.includes(edit.phonemeIndexInNote),
         );
         if (newEdits.length === 0) {
-          targetTrack.phonemeTimingEditData.delete(noteId);
+          tempData.delete(noteId);
         } else {
-          targetTrack.phonemeTimingEditData.set(noteId, newEdits);
+          tempData.set(noteId, newEdits);
         }
       }
+      targetTrack.phonemeTimingEditData = tempData;
     },
   },
 
@@ -1248,7 +1234,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       tempData.splice(startFrame, pitchArray.length, ...pitchArray);
       track.pitchEditData = tempData;
     },
-    async action({ actions, mutations }, { pitchArray, startFrame, trackId }) {
+    async action({ mutations }, { pitchArray, startFrame, trackId }) {
       if (startFrame < 0) {
         throw new Error("startFrame must be greater than or equal to 0.");
       }
@@ -1256,8 +1242,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         throw new Error("The pitch edit data is invalid.");
       }
       mutations.SET_PITCH_EDIT_DATA({ pitchArray, startFrame, trackId });
-
-      void actions.RENDER();
     },
   },
 
@@ -1278,7 +1262,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       tempData.splice(startFrame, volumeArray.length, ...volumeArray);
       track.volumeEditData = tempData;
     },
-    async action({ actions, mutations }, { volumeArray, startFrame, trackId }) {
+    async action({ mutations }, { volumeArray, startFrame, trackId }) {
       if (startFrame < 0) {
         throw new Error("startFrame must be greater than or equal to 0.");
       }
@@ -1286,8 +1270,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         throw new Error("The volume edit data is invalid.");
       }
       mutations.SET_VOLUME_EDIT_DATA({ volumeArray, startFrame, trackId });
-
-      void actions.RENDER();
     },
   },
 
@@ -1319,10 +1301,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const track = getOrThrow(state.tracks, trackId);
       track.pitchEditData = [];
     },
-    async action({ actions, mutations }, { trackId }) {
+    async action({ mutations }, { trackId }) {
       mutations.CLEAR_PITCH_EDIT_DATA({ trackId });
-
-      void actions.RENDER();
     },
   },
 
@@ -1332,10 +1312,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const track = getOrThrow(state.tracks, trackId);
       track.volumeEditData = [];
     },
-    async action({ actions, mutations }, { trackId }) {
+    async action({ mutations }, { trackId }) {
       mutations.CLEAR_VOLUME_EDIT_DATA({ trackId });
-
-      void actions.RENDER();
     },
   },
 
@@ -2151,7 +2129,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.tracks.set(trackId, track);
       state.trackOrder.splice(index, 0, trackId);
     },
-    action({ state, mutations, actions }, { trackId, track, prevTrackId }) {
+    action({ state, mutations }, { trackId, track, prevTrackId }) {
       if (state.tracks.has(trackId)) {
         throw new Error(`Track ${trackId} is already registered.`);
       }
@@ -2159,9 +2137,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         throw new Error("The track is invalid.");
       }
       mutations.INSERT_TRACK({ trackId, track, prevTrackId });
-
-      void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
-      void actions.RENDER();
     },
   },
 
@@ -2170,14 +2145,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.tracks.delete(trackId);
       state.trackOrder = state.trackOrder.filter((value) => value !== trackId);
     },
-    async action({ state, mutations, actions }, { trackId }) {
+    async action({ state, mutations }, { trackId }) {
       if (!state.tracks.has(trackId)) {
         throw new Error(`Track ${trackId} does not exist.`);
       }
       mutations.DELETE_TRACK({ trackId });
-
-      void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
-      void actions.RENDER();
     },
   },
 
@@ -2199,7 +2171,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
     mutation(state, { trackId, track }) {
       state.tracks.set(trackId, track);
     },
-    async action({ state, mutations, actions }, { trackId, track }) {
+    async action({ state, mutations }, { trackId, track }) {
       if (!isValidTrack(track)) {
         throw new Error("The track is invalid.");
       }
@@ -2208,9 +2180,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       }
 
       mutations.SET_TRACK({ trackId, track });
-
-      void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
-      void actions.RENDER();
     },
   },
 
@@ -2219,14 +2188,11 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       state.tracks = tracks;
       state.trackOrder = Array.from(tracks.keys());
     },
-    async action({ mutations, actions }, { tracks }) {
+    async action({ mutations }, { tracks }) {
       if (![...tracks.values()].every((track) => isValidTrack(track))) {
         throw new Error("The track is invalid.");
       }
       mutations.SET_TRACKS({ tracks });
-
-      void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
-      void actions.RENDER();
     },
   },
 
@@ -3115,7 +3081,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   COMMAND_PASTE_NOTES_FROM_CLIPBOARD: {
-    async action({ mutations, getters, actions }) {
+    async action({ mutations, getters }) {
       // クリップボードからテキストを読み込む
       let clipboardText;
       try {
@@ -3182,13 +3148,12 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         );
       }
 
-      // ノートを追加してレンダリングする
+      // ノートを追加する
       mutations.COMMAND_ADD_NOTES({
         notes: notesToPaste,
         trackId: getters.SELECTED_TRACK_ID,
       });
 
-      void actions.RENDER();
       // 貼り付けたノートを選択する
       mutations.DESELECT_ALL_NOTES();
       mutations.SELECT_NOTES({ noteIds: pastedNoteIds });
@@ -3196,7 +3161,7 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 
   COMMAND_QUANTIZE_SELECTED_NOTES: {
-    action({ state, mutations, getters, actions }) {
+    action({ state, mutations, getters }) {
       const selectedTrack = getters.SELECTED_TRACK;
       const selectedNotes = selectedTrack.notes.filter((note: Note) => {
         return getters.SELECTED_NOTE_IDS.has(note.id);
@@ -3214,8 +3179,6 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         notes: quantizedNotes,
         trackId: getters.SELECTED_TRACK_ID,
       });
-
-      void actions.RENDER();
     },
   },
 
@@ -3243,10 +3206,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const track = getOrThrow(state.tracks, trackId);
       track.mute = mute;
     },
-    action({ mutations, actions }, { trackId, mute }) {
+    action({ mutations }, { trackId, mute }) {
       mutations.SET_TRACK_MUTE({ trackId, mute });
-
-      void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
     },
   },
 
@@ -3255,10 +3216,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const track = getOrThrow(state.tracks, trackId);
       track.solo = solo;
     },
-    action({ mutations, actions }, { trackId, solo }) {
+    action({ mutations }, { trackId, solo }) {
       mutations.SET_TRACK_SOLO({ trackId, solo });
-
-      void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
     },
   },
 
@@ -3267,10 +3226,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const track = getOrThrow(state.tracks, trackId);
       track.gain = gain;
     },
-    action({ mutations, actions }, { trackId, gain }) {
+    action({ mutations }, { trackId, gain }) {
       mutations.SET_TRACK_GAIN({ trackId, gain });
-
-      void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
     },
   },
 
@@ -3279,10 +3236,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
       const track = getOrThrow(state.tracks, trackId);
       track.pan = pan;
     },
-    action({ mutations, actions }, { trackId, pan }) {
+    action({ mutations }, { trackId, pan }) {
       mutations.SET_TRACK_PAN({ trackId, pan });
-
-      void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
     },
   },
 
@@ -3310,11 +3265,8 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
         track.solo = false;
       }
     },
-    action({ mutations, actions }) {
+    action({ mutations }) {
       mutations.UNSOLO_ALL_TRACKS();
-
-      void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
-      void actions.RENDER();
     },
   },
 
@@ -3489,6 +3441,51 @@ export const singingStore = createPartialStore<SingingStoreTypes>({
   },
 });
 
+export const singingStorePlugins: StorePlugins = [
+  (store) => {
+    store.watch(
+      (state) => [
+        state.tpqn,
+        state.tempos,
+        [...state.tracks.values()].map((track) => [
+          track.singer,
+          track.keyRangeAdjustment,
+          track.volumeRangeAdjustment,
+          track.notes,
+          track.phonemeTimingEditData,
+          track.pitchEditData,
+          track.volumeEditData,
+        ]),
+        state.defaultLyricMode,
+      ],
+      () => {
+        void store.actions.RENDER();
+      },
+    );
+
+    store.watch(
+      (state) =>
+        [...state.tracks.values()].map((track) => [
+          track.mute,
+          track.solo,
+          track.gain,
+          track.pan,
+        ]),
+      () => {
+        void store.actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
+      },
+    );
+
+    store.watch(
+      (state) => [state.tpqn, state.tempos],
+      () => {
+        void store.actions.SYNC_LOOP_RANGE_TO_TRANSPORT();
+        void store.actions.SYNC_PLAYHEAD_POSITION_TO_TRANSPORT();
+      },
+    );
+  },
+];
+
 export const singingCommandStoreState: SingingCommandStoreState = {};
 
 export const singingCommandStore = transformCommandStore(
@@ -3504,8 +3501,6 @@ export const singingCommandStore = transformCommandStore(
       async action({ actions, mutations }, { singer, withRelated, trackId }) {
         void actions.SETUP_SINGER({ singer });
         mutations.COMMAND_SET_SINGER({ singer, withRelated, trackId });
-
-        void actions.RENDER();
       },
     },
     COMMAND_SET_KEY_RANGE_ADJUSTMENT: {
@@ -3515,7 +3510,7 @@ export const singingCommandStore = transformCommandStore(
           trackId,
         });
       },
-      async action({ actions, mutations }, { keyRangeAdjustment, trackId }) {
+      async action({ mutations }, { keyRangeAdjustment, trackId }) {
         if (!isValidKeyRangeAdjustment(keyRangeAdjustment)) {
           throw new Error("The keyRangeAdjustment is invalid.");
         }
@@ -3523,8 +3518,6 @@ export const singingCommandStore = transformCommandStore(
           keyRangeAdjustment,
           trackId,
         });
-
-        void actions.RENDER();
       },
     },
     COMMAND_SET_VOLUME_RANGE_ADJUSTMENT: {
@@ -3534,7 +3527,7 @@ export const singingCommandStore = transformCommandStore(
           trackId,
         });
       },
-      async action({ actions, mutations }, { volumeRangeAdjustment, trackId }) {
+      async action({ mutations }, { volumeRangeAdjustment, trackId }) {
         if (!isValidVolumeRangeAdjustment(volumeRangeAdjustment)) {
           throw new Error("The volumeRangeAdjustment is invalid.");
         }
@@ -3542,8 +3535,6 @@ export const singingCommandStore = transformCommandStore(
           volumeRangeAdjustment,
           trackId,
         });
-
-        void actions.RENDER();
       },
     },
     COMMAND_SET_TEMPO: {
@@ -3551,10 +3542,7 @@ export const singingCommandStore = transformCommandStore(
         singingStore.mutations.SET_TEMPO(draft, { tempo });
       },
       // テンポを設定する。既に同じ位置にテンポが存在する場合は置き換える。
-      action(
-        { state, getters, mutations, actions },
-        { tempo }: { tempo: Tempo },
-      ) {
+      action({ state, getters, mutations }, { tempo }: { tempo: Tempo }) {
         if (!transport) {
           throw new Error("transport is undefined.");
         }
@@ -3566,10 +3554,6 @@ export const singingCommandStore = transformCommandStore(
         }
         tempo.bpm = round(tempo.bpm, 2);
         mutations.COMMAND_SET_TEMPO({ tempo });
-
-        void actions.SYNC_LOOP_RANGE_TO_TRANSPORT();
-        void actions.SYNC_PLAYHEAD_POSITION_TO_TRANSPORT();
-        void actions.RENDER();
       },
     },
     COMMAND_REMOVE_TEMPO: {
@@ -3578,7 +3562,7 @@ export const singingCommandStore = transformCommandStore(
       },
       // テンポを削除する。先頭のテンポの場合はデフォルトのテンポに置き換える。
       action(
-        { state, getters, mutations, actions },
+        { state, getters, mutations },
         { position }: { position: number },
       ) {
         const exists = state.tempos.some((value) => {
@@ -3594,10 +3578,6 @@ export const singingCommandStore = transformCommandStore(
           playheadPosition.value = getters.SECOND_TO_TICK(transport.time);
         }
         mutations.COMMAND_REMOVE_TEMPO({ position });
-
-        void actions.SYNC_LOOP_RANGE_TO_TRANSPORT();
-        void actions.SYNC_PLAYHEAD_POSITION_TO_TRANSPORT();
-        void actions.RENDER();
       },
     },
     COMMAND_SET_TIME_SIGNATURE: {
@@ -3637,7 +3617,7 @@ export const singingCommandStore = transformCommandStore(
       mutation(draft, { notes, trackId }) {
         singingStore.mutations.ADD_NOTES(draft, { notes, trackId });
       },
-      action({ getters, mutations, actions }, { notes, trackId }) {
+      action({ getters, mutations }, { notes, trackId }) {
         const existingNoteIds = getters.ALL_NOTE_IDS;
         const isValidNotes = notes.every((value) => {
           return !existingNoteIds.has(value.id) && isValidNote(value);
@@ -3646,15 +3626,13 @@ export const singingCommandStore = transformCommandStore(
           throw new Error("The notes are invalid.");
         }
         mutations.COMMAND_ADD_NOTES({ notes, trackId });
-
-        void actions.RENDER();
       },
     },
     COMMAND_UPDATE_NOTES: {
       mutation(draft, { notes, trackId }) {
         singingStore.mutations.UPDATE_NOTES(draft, { notes, trackId });
       },
-      action({ getters, mutations, actions }, { notes, trackId }) {
+      action({ getters, mutations }, { notes, trackId }) {
         const existingNoteIds = getters.ALL_NOTE_IDS;
         const isValidNotes = notes.every((value) => {
           return existingNoteIds.has(value.id) && isValidNote(value);
@@ -3663,15 +3641,13 @@ export const singingCommandStore = transformCommandStore(
           throw new Error("The notes are invalid.");
         }
         mutations.COMMAND_UPDATE_NOTES({ notes, trackId });
-
-        void actions.RENDER();
       },
     },
     COMMAND_REMOVE_NOTES: {
       mutation(draft, { noteIds, trackId }) {
         singingStore.mutations.REMOVE_NOTES(draft, { noteIds, trackId });
       },
-      action({ getters, mutations, actions }, { noteIds, trackId }) {
+      action({ getters, mutations }, { noteIds, trackId }) {
         const existingNoteIds = getters.ALL_NOTE_IDS;
         const isValidNoteIds = noteIds.every((value) => {
           return existingNoteIds.has(value);
@@ -3680,18 +3656,14 @@ export const singingCommandStore = transformCommandStore(
           throw new Error("The note ids are invalid.");
         }
         mutations.COMMAND_REMOVE_NOTES({ noteIds, trackId });
-
-        void actions.RENDER();
       },
     },
     COMMAND_REMOVE_SELECTED_NOTES: {
-      action({ mutations, getters, actions }) {
+      action({ mutations, getters }) {
         mutations.COMMAND_REMOVE_NOTES({
           noteIds: [...getters.SELECTED_NOTE_IDS],
           trackId: getters.SELECTED_TRACK_ID,
         });
-
-        void actions.RENDER();
       },
     },
     // 指定されたノートの指定された音素インデックスの音素タイミング編集データをupsertする。
@@ -3704,10 +3676,7 @@ export const singingCommandStore = transformCommandStore(
           trackId,
         });
       },
-      action(
-        { state, mutations, actions },
-        { noteId, phonemeTimingEdit, trackId },
-      ) {
+      action({ state, mutations }, { noteId, phonemeTimingEdit, trackId }) {
         const targetTrack = state.tracks.get(trackId);
         if (targetTrack == undefined) {
           throw new Error("The trackId is invalid.");
@@ -3717,8 +3686,6 @@ export const singingCommandStore = transformCommandStore(
           phonemeTimingEdit,
           trackId,
         });
-
-        void actions.RENDER();
       },
     },
     // 指定された音素タイミング編集データを削除する。
@@ -3729,7 +3696,7 @@ export const singingCommandStore = transformCommandStore(
           trackId,
         });
       },
-      action({ state, mutations, actions }, { targets, trackId }) {
+      action({ state, mutations }, { targets, trackId }) {
         const targetTrack = state.tracks.get(trackId);
         if (targetTrack == undefined) {
           throw new Error("The trackId is invalid.");
@@ -3771,8 +3738,6 @@ export const singingCommandStore = transformCommandStore(
           targets,
           trackId,
         });
-
-        void actions.RENDER();
       },
     },
     COMMAND_SET_PITCH_EDIT_DATA: {
@@ -3783,7 +3748,7 @@ export const singingCommandStore = transformCommandStore(
           trackId,
         });
       },
-      action({ mutations, actions }, { pitchArray, startFrame, trackId }) {
+      action({ mutations }, { pitchArray, startFrame, trackId }) {
         if (startFrame < 0) {
           throw new Error("startFrame must be greater than or equal to 0.");
         }
@@ -3795,8 +3760,6 @@ export const singingCommandStore = transformCommandStore(
           startFrame,
           trackId,
         });
-
-        void actions.RENDER();
       },
     },
     COMMAND_SET_VOLUME_EDIT_DATA: {
@@ -3807,7 +3770,7 @@ export const singingCommandStore = transformCommandStore(
           trackId,
         });
       },
-      action({ mutations, actions }, { volumeArray, startFrame, trackId }) {
+      action({ mutations }, { volumeArray, startFrame, trackId }) {
         if (startFrame < 0) {
           throw new Error("startFrame must be greater than or equal to 0.");
         }
@@ -3819,8 +3782,6 @@ export const singingCommandStore = transformCommandStore(
           startFrame,
           trackId,
         });
-
-        void actions.RENDER();
       },
     },
     COMMAND_ERASE_PITCH_EDIT_DATA: {
@@ -3831,7 +3792,7 @@ export const singingCommandStore = transformCommandStore(
           trackId,
         });
       },
-      action({ mutations, actions }, { startFrame, frameLength, trackId }) {
+      action({ mutations }, { startFrame, frameLength, trackId }) {
         if (startFrame < 0) {
           throw new Error("startFrame must be greater than or equal to 0.");
         }
@@ -3843,8 +3804,6 @@ export const singingCommandStore = transformCommandStore(
           frameLength,
           trackId,
         });
-
-        void actions.RENDER();
       },
     },
     COMMAND_ERASE_VOLUME_EDIT_DATA: {
@@ -3855,7 +3814,7 @@ export const singingCommandStore = transformCommandStore(
           trackId,
         });
       },
-      action({ mutations, actions }, { startFrame, frameLength, trackId }) {
+      action({ mutations }, { startFrame, frameLength, trackId }) {
         if (startFrame < 0) {
           throw new Error("startFrame must be greater than or equal to 0.");
         }
@@ -3867,8 +3826,6 @@ export const singingCommandStore = transformCommandStore(
           frameLength,
           trackId,
         });
-
-        void actions.RENDER();
       },
     },
 
@@ -3895,9 +3852,6 @@ export const singingCommandStore = transformCommandStore(
           track: cloneWithUnwrapProxy(track),
           prevTrackId,
         });
-
-        void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
-        void actions.RENDER();
       },
     },
 
@@ -3905,11 +3859,8 @@ export const singingCommandStore = transformCommandStore(
       mutation(draft, { trackId }) {
         singingStore.mutations.DELETE_TRACK(draft, { trackId });
       },
-      action({ mutations, actions }, { trackId }) {
+      action({ mutations }, { trackId }) {
         mutations.COMMAND_DELETE_TRACK({ trackId });
-
-        void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
-        void actions.RENDER();
       },
     },
 
@@ -3951,10 +3902,6 @@ export const singingCommandStore = transformCommandStore(
           prevTrackId: trackId,
         });
 
-        // SYNC は同期処理なので待機しない
-        void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
-        void actions.RENDER();
-
         void actions.SET_SELECTED_TRACK({ trackId: newTrackId });
       },
     },
@@ -3972,10 +3919,8 @@ export const singingCommandStore = transformCommandStore(
       mutation(draft, { trackId, mute }) {
         singingStore.mutations.SET_TRACK_MUTE(draft, { trackId, mute });
       },
-      action({ mutations, actions }, { trackId, mute }) {
+      action({ mutations }, { trackId, mute }) {
         mutations.COMMAND_SET_TRACK_MUTE({ trackId, mute });
-
-        void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
       },
     },
 
@@ -3983,10 +3928,8 @@ export const singingCommandStore = transformCommandStore(
       mutation(draft, { trackId, solo }) {
         singingStore.mutations.SET_TRACK_SOLO(draft, { trackId, solo });
       },
-      action({ mutations, actions }, { trackId, solo }) {
+      action({ mutations }, { trackId, solo }) {
         mutations.COMMAND_SET_TRACK_SOLO({ trackId, solo });
-
-        void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
       },
     },
 
@@ -3994,10 +3937,8 @@ export const singingCommandStore = transformCommandStore(
       mutation(draft, { trackId, gain }) {
         singingStore.mutations.SET_TRACK_GAIN(draft, { trackId, gain });
       },
-      action({ mutations, actions }, { trackId, gain }) {
+      action({ mutations }, { trackId, gain }) {
         mutations.COMMAND_SET_TRACK_GAIN({ trackId, gain });
-
-        void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
       },
     },
 
@@ -4005,10 +3946,8 @@ export const singingCommandStore = transformCommandStore(
       mutation(draft, { trackId, pan }) {
         singingStore.mutations.SET_TRACK_PAN(draft, { trackId, pan });
       },
-      action({ mutations, actions }, { trackId, pan }) {
+      action({ mutations }, { trackId, pan }) {
         mutations.COMMAND_SET_TRACK_PAN({ trackId, pan });
-
-        void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
       },
     },
 
@@ -4025,11 +3964,8 @@ export const singingCommandStore = transformCommandStore(
       mutation(draft) {
         singingStore.mutations.UNSOLO_ALL_TRACKS(draft, undefined);
       },
-      action({ mutations, actions }) {
+      action({ mutations }) {
         mutations.COMMAND_UNSOLO_ALL_TRACKS();
-
-        void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
-        void actions.RENDER();
       },
     },
 
@@ -4090,10 +4026,6 @@ export const singingCommandStore = transformCommandStore(
           timeSignatures,
           tracks: payload,
         });
-
-        void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
-        void actions.SYNC_LOOP_RANGE_TO_TRANSPORT();
-        void actions.RENDER();
       },
     },
 
@@ -4131,9 +4063,6 @@ export const singingCommandStore = transformCommandStore(
             timeSignatures,
             tracks: filteredTracks,
           });
-
-          void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
-          void actions.RENDER();
         },
       ),
     },
@@ -4172,9 +4101,6 @@ export const singingCommandStore = transformCommandStore(
             timeSignatures,
             tracks: filteredTracks,
           });
-
-          void actions.SYNC_TRACKS_AND_TRACK_CHANNEL_STRIPS();
-          void actions.RENDER();
         },
       ),
     },
