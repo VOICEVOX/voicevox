@@ -254,7 +254,7 @@ function createWelcomeStore() {
       );
       engineState.latestInfo = {
         type: "fetchError",
-        message: errorToMessage(error),
+        message: errorToMessage(error).split("\n")[0],
       };
     }
   };

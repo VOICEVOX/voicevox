@@ -284,9 +284,10 @@ export class EngineAndVvppController {
     let latestInfo: Awaited<ReturnType<typeof fetchLatestDefaultEngineInfo>>;
     try {
       latestInfo = await fetchLatestDefaultEngineInfo(latestUrl);
-    } catch {
+    } catch (cause) {
       throw new DisplayableError(
         "ネットワークエラーにより最新のエンジン情報を取得できませんでした。インターネット接続を確認して、再試行してください。",
+        { cause },
       );
     }
     if (latestInfo.formatVersion !== 1) {
