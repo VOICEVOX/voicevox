@@ -68,14 +68,6 @@ export class EngineInfoManager {
 
     const [command, ...args] = shlex.split(manifest.command);
 
-    const isDownloadVvpp =
-      type === "vvpp" &&
-      this.envEngineInfos.some(
-        (engineInfo) =>
-          engineInfo.uuid === manifest.uuid &&
-          engineInfo.type === "downloadVvpp",
-      );
-
     return success({
       uuid: manifest.uuid,
       protocol: "http:",
@@ -87,7 +79,7 @@ export class EngineInfoManager {
       executionEnabled: true,
       executionFilePath: path.join(engineDir, command),
       executionArgs: args,
-      type: isDownloadVvpp ? "downloadVvpp" : type,
+      type,
       isDefault: this.isDefaultEngine(manifest.uuid),
       version: manifest.version,
     } satisfies EngineInfo);

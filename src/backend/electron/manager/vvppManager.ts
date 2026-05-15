@@ -108,6 +108,11 @@ export class VvppManager {
       return false;
     }
 
+    if (engineInfo.isDefault) {
+      log.error(`engine is default: engineId == ${engineId}`);
+      return false;
+    }
+
     const engineDirectory = engineInfo.path;
     if (engineDirectory == null) {
       log.error(`engineDirectory is null: engineId == ${engineId}`);

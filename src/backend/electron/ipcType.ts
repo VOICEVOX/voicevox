@@ -230,6 +230,11 @@ export type IpcIHData = {
     args: [obj: { filePath: string }];
     return: Result<Uint8Array>;
   };
+
+  GET_DOWNLOADABLE_DEFAULT_ENGINE_PACKAGE_IDS: {
+    args: [];
+    return: EngineId[];
+  };
 };
 
 /**

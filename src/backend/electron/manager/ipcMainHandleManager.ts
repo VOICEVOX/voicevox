@@ -392,6 +392,10 @@ class IpcMainHandleManager {
           return failure(a.code, a);
         }
       },
+
+      GET_DOWNLOADABLE_DEFAULT_ENGINE_PACKAGE_IDS: () => {
+        return engineAndVvppController.getDownloadableDefaultEnginePackageIds();
+      },
     };
   }
 
