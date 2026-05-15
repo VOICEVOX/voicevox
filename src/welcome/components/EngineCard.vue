@@ -50,21 +50,22 @@
         </BaseSelect>
       </div>
       <div v-if="latestInfo.type === 'fetchError'" class="engine-fetch-error">
-        <span class="engine-fetch-error-message">
-          最新のエンジン情報を取得できませんでした。
-        </span>
+        {{ latestInfo.message }}
+      </div>
+      <div class="engine-action-buttons">
         <BaseButton
+          v-if="latestInfo.type === 'fetchError'"
           label="再試行"
           variant="default"
           @click="store.fetchEngineLatestInfo(props.engineId)"
         />
+        <BaseButton
+          :label="currentEngineStatus.actionLabel"
+          :disabled="isControlDisabled"
+          :variant="currentEngineStatus.color"
+          @click="store.installEngine(props.engineId)"
+        />
       </div>
-      <BaseButton
-        :label="currentEngineStatus.actionLabel"
-        :disabled="isControlDisabled"
-        :variant="currentEngineStatus.color"
-        @click="store.installEngine(props.engineId)"
-      />
     </div>
   </section>
 </template>
@@ -264,13 +265,13 @@ const handleRuntimeTargetChange = (value: RuntimeTarget | undefined) => {
   flex-wrap: wrap;
 }
 
-.engine-fetch-error {
+.engine-action-buttons {
   display: flex;
   align-items: center;
   gap: vars.$gap-1;
 }
 
-.engine-fetch-error-message {
+.engine-fetch-error {
   font-size: 0.75rem;
   color: colors.$display-warning;
 }
