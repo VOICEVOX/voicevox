@@ -1,0 +1,4 @@
+provider: generic
+url: https://vv-update-api.sevenc7c.workers.dev/linux-cpu-x64-appimage
+useMultipleRangeRequest: false
+updaterCacheDirName: voicevox-updater
