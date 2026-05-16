@@ -234,6 +234,15 @@ export default defineConfigWithVueTs(
     },
   },
 
+  {
+    name: "voicevox/restricted-vuex-dispatch-commit",
+    files: ["src/**/*.{ts,vue}", "tests/**/*.{ts,vue}"],
+    ignores: ["src/store/vuex.ts"],
+    rules: {
+      "@voicevox/no-vuex-dispatch-commit": "error",
+    },
+  },
+
   // Electronのメインプロセス以外でelectronのimportを禁止する
   {
     name: "voicevox/restricted-electron-imports-outside-main-process",
