@@ -19,7 +19,7 @@ describe("COMMAND_UPSERT_PHONEME_TIMING_EDIT", () => {
     const noteId = NoteId(uuid4());
     const edit = { phonemeIndexInNote: 0, offsetSeconds: 0.1 };
 
-    await store.dispatch("COMMAND_UPSERT_PHONEME_TIMING_EDIT", {
+    await store.actions.COMMAND_UPSERT_PHONEME_TIMING_EDIT({
       trackId,
       noteId,
       phonemeTimingEdit: edit,
@@ -33,13 +33,13 @@ describe("COMMAND_UPSERT_PHONEME_TIMING_EDIT", () => {
   test("既存editsに新しいphonemeIndexInNoteを追加すると昇順にソートされる", async () => {
     const trackId = store.state.trackOrder[0];
     const noteId = NoteId(uuid4());
-    store.commit("UPSERT_PHONEME_TIMING_EDIT", {
+    store.mutations.UPSERT_PHONEME_TIMING_EDIT({
       trackId,
       noteId,
       phonemeTimingEdit: { phonemeIndexInNote: 2, offsetSeconds: 0.2 },
     });
 
-    await store.dispatch("COMMAND_UPSERT_PHONEME_TIMING_EDIT", {
+    await store.actions.COMMAND_UPSERT_PHONEME_TIMING_EDIT({
       trackId,
       noteId,
       phonemeTimingEdit: { phonemeIndexInNote: 0, offsetSeconds: 0.0 },
@@ -56,13 +56,13 @@ describe("COMMAND_UPSERT_PHONEME_TIMING_EDIT", () => {
   test("同じphonemeIndexInNoteを指定すると上書き更新できる", async () => {
     const trackId = store.state.trackOrder[0];
     const noteId = NoteId(uuid4());
-    store.commit("UPSERT_PHONEME_TIMING_EDIT", {
+    store.mutations.UPSERT_PHONEME_TIMING_EDIT({
       trackId,
       noteId,
       phonemeTimingEdit: { phonemeIndexInNote: 0, offsetSeconds: 0.1 },
     });
 
-    await store.dispatch("COMMAND_UPSERT_PHONEME_TIMING_EDIT", {
+    await store.actions.COMMAND_UPSERT_PHONEME_TIMING_EDIT({
       trackId,
       noteId,
       phonemeTimingEdit: { phonemeIndexInNote: 0, offsetSeconds: 0.9 },
@@ -80,7 +80,7 @@ describe("COMMAND_ERASE_PHONEME_TIMING_EDITS", () => {
   test("targetsが空配列のときエラーになる", () => {
     const trackId = store.state.trackOrder[0];
     expect(() =>
-      store.dispatch("COMMAND_ERASE_PHONEME_TIMING_EDITS", {
+      store.actions.COMMAND_ERASE_PHONEME_TIMING_EDITS({
         trackId,
         targets: [],
       }),
@@ -90,14 +90,14 @@ describe("COMMAND_ERASE_PHONEME_TIMING_EDITS", () => {
   test("同じ(noteId, phonemeIndexInNote)ペアが重複するとエラーになる", () => {
     const trackId = store.state.trackOrder[0];
     const noteId = NoteId(uuid4());
-    store.commit("UPSERT_PHONEME_TIMING_EDIT", {
+    store.mutations.UPSERT_PHONEME_TIMING_EDIT({
       trackId,
       noteId,
       phonemeTimingEdit: { phonemeIndexInNote: 0, offsetSeconds: 0.1 },
     });
 
     expect(() =>
-      store.dispatch("COMMAND_ERASE_PHONEME_TIMING_EDITS", {
+      store.actions.COMMAND_ERASE_PHONEME_TIMING_EDITS({
         trackId,
         targets: [
           { noteId, phonemeIndexInNote: 0 },
@@ -113,18 +113,18 @@ describe("COMMAND_ERASE_PHONEME_TIMING_EDITS", () => {
     const trackId = store.state.trackOrder[0];
     const noteId1 = NoteId(uuid4());
     const noteId2 = NoteId(uuid4());
-    store.commit("UPSERT_PHONEME_TIMING_EDIT", {
+    store.mutations.UPSERT_PHONEME_TIMING_EDIT({
       trackId,
       noteId: noteId1,
       phonemeTimingEdit: { phonemeIndexInNote: 0, offsetSeconds: 0.1 },
     });
-    store.commit("UPSERT_PHONEME_TIMING_EDIT", {
+    store.mutations.UPSERT_PHONEME_TIMING_EDIT({
       trackId,
       noteId: noteId2,
       phonemeTimingEdit: { phonemeIndexInNote: 0, offsetSeconds: 0.2 },
     });
 
-    await store.dispatch("COMMAND_ERASE_PHONEME_TIMING_EDITS", {
+    await store.actions.COMMAND_ERASE_PHONEME_TIMING_EDITS({
       trackId,
       targets: [
         { noteId: noteId1, phonemeIndexInNote: 0 },
@@ -142,7 +142,7 @@ describe("COMMAND_ERASE_PHONEME_TIMING_EDITS", () => {
     const noteId = NoteId(uuid4());
 
     expect(() =>
-      store.dispatch("COMMAND_ERASE_PHONEME_TIMING_EDITS", {
+      store.actions.COMMAND_ERASE_PHONEME_TIMING_EDITS({
         trackId,
         targets: [{ noteId, phonemeIndexInNote: 0 }],
       }),
@@ -154,14 +154,14 @@ describe("COMMAND_ERASE_PHONEME_TIMING_EDITS", () => {
   test("存在しないphonemeIndexInNoteを指定するとエラーになる", () => {
     const trackId = store.state.trackOrder[0];
     const noteId = NoteId(uuid4());
-    store.commit("UPSERT_PHONEME_TIMING_EDIT", {
+    store.mutations.UPSERT_PHONEME_TIMING_EDIT({
       trackId,
       noteId,
       phonemeTimingEdit: { phonemeIndexInNote: 0, offsetSeconds: 0.1 },
     });
 
     expect(() =>
-      store.dispatch("COMMAND_ERASE_PHONEME_TIMING_EDITS", {
+      store.actions.COMMAND_ERASE_PHONEME_TIMING_EDITS({
         trackId,
         targets: [{ noteId, phonemeIndexInNote: 1 }],
       }),
@@ -173,18 +173,18 @@ describe("COMMAND_ERASE_PHONEME_TIMING_EDITS", () => {
   test("1件削除すると該当editが消え残りは保持される", async () => {
     const trackId = store.state.trackOrder[0];
     const noteId = NoteId(uuid4());
-    store.commit("UPSERT_PHONEME_TIMING_EDIT", {
+    store.mutations.UPSERT_PHONEME_TIMING_EDIT({
       trackId,
       noteId,
       phonemeTimingEdit: { phonemeIndexInNote: 0, offsetSeconds: 0.1 },
     });
-    store.commit("UPSERT_PHONEME_TIMING_EDIT", {
+    store.mutations.UPSERT_PHONEME_TIMING_EDIT({
       trackId,
       noteId,
       phonemeTimingEdit: { phonemeIndexInNote: 1, offsetSeconds: 0.2 },
     });
 
-    await store.dispatch("COMMAND_ERASE_PHONEME_TIMING_EDITS", {
+    await store.actions.COMMAND_ERASE_PHONEME_TIMING_EDITS({
       trackId,
       targets: [{ noteId, phonemeIndexInNote: 0 }],
     });
@@ -199,13 +199,13 @@ describe("COMMAND_ERASE_PHONEME_TIMING_EDITS", () => {
   test("noteId内の全editsを削除するとMapのエントリ自体が消える", async () => {
     const trackId = store.state.trackOrder[0];
     const noteId = NoteId(uuid4());
-    store.commit("UPSERT_PHONEME_TIMING_EDIT", {
+    store.mutations.UPSERT_PHONEME_TIMING_EDIT({
       trackId,
       noteId,
       phonemeTimingEdit: { phonemeIndexInNote: 0, offsetSeconds: 0.1 },
     });
 
-    await store.dispatch("COMMAND_ERASE_PHONEME_TIMING_EDITS", {
+    await store.actions.COMMAND_ERASE_PHONEME_TIMING_EDITS({
       trackId,
       targets: [{ noteId, phonemeIndexInNote: 0 }],
     });
@@ -218,18 +218,18 @@ describe("COMMAND_ERASE_PHONEME_TIMING_EDITS", () => {
     const trackId = store.state.trackOrder[0];
     const noteId1 = NoteId(uuid4());
     const noteId2 = NoteId(uuid4());
-    store.commit("UPSERT_PHONEME_TIMING_EDIT", {
+    store.mutations.UPSERT_PHONEME_TIMING_EDIT({
       trackId,
       noteId: noteId1,
       phonemeTimingEdit: { phonemeIndexInNote: 0, offsetSeconds: 0.1 },
     });
-    store.commit("UPSERT_PHONEME_TIMING_EDIT", {
+    store.mutations.UPSERT_PHONEME_TIMING_EDIT({
       trackId,
       noteId: noteId2,
       phonemeTimingEdit: { phonemeIndexInNote: 0, offsetSeconds: 0.2 },
     });
 
-    await store.dispatch("COMMAND_ERASE_PHONEME_TIMING_EDITS", {
+    await store.actions.COMMAND_ERASE_PHONEME_TIMING_EDITS({
       trackId,
       targets: [
         { noteId: noteId1, phonemeIndexInNote: 0 },
@@ -245,23 +245,23 @@ describe("COMMAND_ERASE_PHONEME_TIMING_EDITS", () => {
   test("同一noteId内の複数phonemeをまとめて削除できる", async () => {
     const trackId = store.state.trackOrder[0];
     const noteId = NoteId(uuid4());
-    store.commit("UPSERT_PHONEME_TIMING_EDIT", {
+    store.mutations.UPSERT_PHONEME_TIMING_EDIT({
       trackId,
       noteId,
       phonemeTimingEdit: { phonemeIndexInNote: 0, offsetSeconds: 0.1 },
     });
-    store.commit("UPSERT_PHONEME_TIMING_EDIT", {
+    store.mutations.UPSERT_PHONEME_TIMING_EDIT({
       trackId,
       noteId,
       phonemeTimingEdit: { phonemeIndexInNote: 1, offsetSeconds: 0.2 },
     });
-    store.commit("UPSERT_PHONEME_TIMING_EDIT", {
+    store.mutations.UPSERT_PHONEME_TIMING_EDIT({
       trackId,
       noteId,
       phonemeTimingEdit: { phonemeIndexInNote: 2, offsetSeconds: 0.3 },
     });
 
-    await store.dispatch("COMMAND_ERASE_PHONEME_TIMING_EDITS", {
+    await store.actions.COMMAND_ERASE_PHONEME_TIMING_EDITS({
       trackId,
       targets: [
         { noteId, phonemeIndexInNote: 0 },

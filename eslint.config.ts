@@ -64,6 +64,7 @@ const typeCheckedRules: Rules = {
   "@typescript-eslint/require-array-sort-compare": "error",
 
   "@typescript-eslint/no-non-null-assertion": "error",
+  "@typescript-eslint/no-deprecated": "error",
 
   "@typescript-eslint/no-misused-promises": [
     "error",
