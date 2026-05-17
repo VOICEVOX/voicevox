@@ -11,11 +11,11 @@
         :class="{ error: hasError, readonly, disabled }"
         :contenteditable="!readonly && !disabled ? 'plaintext-only' : false"
         @click="$emit('click', $event)"
-        @blur="$emit('change', $event)"
+        @blur="handleBlur"
         @focus="handleFocus"
         @input="handleInput"
         @paste="handlePaste"
-        @keydown="preventEnter"
+        @keydown.enter="preventEnter"
       >
         {{ innerValue }}
       </div>
@@ -75,6 +75,7 @@ defineProps<{
 }>();
 
 const emit = defineEmits<{
+  keydown: [payload: KeyboardEvent];
   change: [payload: Event];
   click: [payload: MouseEvent];
 }>();
@@ -82,6 +83,11 @@ const emit = defineEmits<{
 const model = defineModel<string>({ default: "" });
 const slot = useSlots();
 const inputRef = useTemplateRef("inputRef");
+
+const focus = () => {
+  const input = getInputOrThrow();
+  input.focus();
+};
 
 // NOTE: model.valueをそのまま使うとカーソルの位置がリセットされるので、直接使わずバッファを用意する
 const innerValue = ref<string>(model.value);
@@ -145,13 +151,18 @@ const replaceSelection = (text: string) => {
   if (selection == null) {
     throw new Error("selection is null");
   }
-
-  if (selection.rangeCount === 0) {
-    throw new Error("No selection range found");
-  }
-
-  const range = selection.getRangeAt(0);
   const input = getInputOrThrow();
+
+  let range: Range;
+  if (selection.rangeCount === 0) {
+    range = document.createRange();
+    range.setStart(input, 0);
+    range.setEnd(input, 0);
+    selection.removeAllRanges();
+    selection.addRange(range);
+  } else {
+    range = selection.getRangeAt(0);
+  }
 
   const before = input.innerText.slice(0, range.startOffset);
   const after = input.innerText.slice(range.endOffset);
@@ -169,6 +180,18 @@ const handleUpdateOpen = (isOpened: boolean) => {
   if (isOpened) {
     selectionOffset.value = getSelectionRange();
     isContextMenuOpened = true;
+  }
+};
+
+const handleBlur = (event: FocusEvent) => {
+  if (isContextMenuOpened) return;
+
+  const selection = window.getSelection();
+  selection?.removeAllRanges();
+
+  if (innerValue.value !== model.value) {
+    emit("change", event);
+    innerValue.value = model.value;
   }
 };
 
@@ -194,10 +217,9 @@ const handlePaste = async (event: ClipboardEvent) => {
 };
 
 const preventEnter = (event: KeyboardEvent) => {
-  if (event.key == "Enter") {
-    event.preventDefault();
-    emit("change", event);
-  }
+  event.preventDefault();
+  emit("keydown", event);
+  emit("change", event);
 };
 
 const cut = async () => {
@@ -227,6 +249,8 @@ const selectAll = () => {
 
   selectionOffset.value = { start: 0, end: textContent.length };
 };
+
+defineExpose({ focus });
 </script>
 
 <style scoped lang="scss">
@@ -237,6 +261,7 @@ const selectAll = () => {
 .wrapper {
   width: 100%;
   position: relative;
+  display: grid;
 }
 
 .input {
