@@ -159,6 +159,7 @@ const render = () => {
   const style = gridLineStyles[currentTheme.value];
 
   // 小節線をまとめて描画
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   graphic.lineStyle(1, style.measure.color, style.measure.alpha);
   for (const x of measureLineXs) {
     const lineX = Math.round(x - props.viewportInfo.offsetX);
@@ -167,6 +168,7 @@ const render = () => {
   }
 
   // 拍線をまとめて描画
+  // eslint-disable-next-line @typescript-eslint/no-deprecated
   graphic.lineStyle(1, style.beat.color, style.beat.alpha);
   for (const x of beatLineXs) {
     const lineX = Math.round(x - props.viewportInfo.offsetX);

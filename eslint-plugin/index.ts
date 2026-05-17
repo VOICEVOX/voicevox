@@ -1,13 +1,11 @@
 import type { FlatConfig } from "@typescript-eslint/utils/ts-eslint";
 import noStrictNullable from "./no-strict-nullable";
 import noUselessNonNullAssertion from "./no-useless-non-null-assertion";
-import noVuexDispatchCommit from "./no-vuex-dispatch-commit";
 import pkg from "./package.json" with { type: "json" };
 
 const rules: FlatConfig.Plugin["rules"] = {
   "no-strict-nullable": noStrictNullable,
   "no-useless-non-null-assertion": noUselessNonNullAssertion,
-  "no-vuex-dispatch-commit": noVuexDispatchCommit,
 };
 
 const plugin: FlatConfig.Plugin = {

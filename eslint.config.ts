@@ -64,6 +64,7 @@ const typeCheckedRules: Rules = {
   "@typescript-eslint/require-array-sort-compare": "error",
 
   "@typescript-eslint/no-non-null-assertion": "error",
+  "@typescript-eslint/no-deprecated": "error",
 
   "@typescript-eslint/no-misused-promises": [
     "error",
@@ -231,15 +232,6 @@ export default defineConfigWithVueTs(
     ],
     rules: {
       "no-console": "off",
-    },
-  },
-
-  {
-    name: "voicevox/restricted-vuex-dispatch-commit",
-    files: ["src/**/*.{ts,vue}", "tests/**/*.{ts,vue}"],
-    ignores: ["src/store/vuex.ts"],
-    rules: {
-      "@voicevox/no-vuex-dispatch-commit": "error",
     },
   },
 
